@@ -1,0 +1,3 @@
+@startuml
+Object1 <|-- Object2
+@enduml
