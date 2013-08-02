@@ -8,3 +8,10 @@ html,body,table {
 	font-family: Tahoma;
 	font-size: 10pt;
 }
+
+.context_menu {
+	position: absolute;
+	top: -10000px;
+	left: -10000px;
+	visibility: hidden;
+}

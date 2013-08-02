@@ -1,0 +1,5 @@
+The service expects 3 inputs to be sent using POST method:<ul>
+	<li><code>domain</code>: domain of the user to authenticate</li>
+	<li><code>username</code></li>
+	<li><code>password</code></li>
+</ul>
