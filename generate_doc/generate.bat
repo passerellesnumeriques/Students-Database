@@ -10,7 +10,9 @@ del %TEMP%\php_path
 del %TEMP%\php_path_unix
 
 rmdir /S /Q "%CD%\..\generated_doc"
+if exist "%CD%\..\generated_doc" exit 1
 mkdir "%CD%\..\generated_doc"
+if not exist "%CD%\..\generated_doc" exit 1
 
 "%CD%\..\install_dev_env\tools\sed" "s/%%PHP_PATH%%/%PHP_PATH_UNIX%/g" %PHP_PATH%\php.ini > "%CD%\..\generated_doc\php.ini"
 
