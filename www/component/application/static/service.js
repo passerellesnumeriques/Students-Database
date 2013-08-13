@@ -16,7 +16,11 @@ service = {
 			if (typeof input == 'string') data = input;
 			else for (var name in input) {
 				if (data.length > 0) data += "&";
-				data += encodeURIComponent(name)+"="+encodeURIComponent(service._generate_input(input[name]));
+				data += encodeURIComponent(name)+"=";
+				if (typeof input[name] == 'string')
+					data += encodeURIComponent(input[name]);
+				else
+					data += encodeURIComponent(service._generate_input(input[name]));
 			}
 		}
 		ajax.post_parse_result("/dynamic/"+component+"/service/"+service_name, data, 
@@ -25,7 +29,7 @@ service = {
 			},
 			foreground,
 			function(error){
-				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error));
+				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
 			}
 		);
 	},
@@ -48,7 +52,7 @@ service = {
 			}
 			s += "}";
 		} else
-			s += input;
+			s += "\""+input.replace(/"/g, "\\\"")+"\"";
 		return s;
 	}
 };

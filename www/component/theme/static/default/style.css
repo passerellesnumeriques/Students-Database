@@ -82,6 +82,47 @@ html, body {
 	background-color: rgba(255,255,255,0.2);
 }
 
+/* Button */
+button img {
+	vertical-align: bottom;
+}
+.button {
+	cursor: pointer;
+	border: 1px solid rgba(0,0,0,0.2);
+	padding: 2px;
+	border-radius: 3px;
+	box-shadow: 1px 1px 1px rgba(170,170,170,0);
+	display: inline-block;
+	margin: 1px 2px 1px 2px;
+	background-color: rgba(255,255,255,0.2);
+}
+.button:hover {
+	border: 1px solid rgba(0,0,0,0.5);
+	box-shadow: 1px 1px 1px rgba(170,170,170,1);
+}
+.button:active {
+	box-shadow: 0px 0px 0px;
+	margin: 2px 1px 0px 3px;
+}
+.button img {
+	vertical-align: bottom;
+}
+.button.disabled {
+	color: #808080;
+}
+.button.disabled img {
+	opacity: 0.5;
+	-moz-opacity: 0.5;
+	-khtml-opacity: 0.5;
+	filter: alpha(opacity=50);
+	-ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=50);
+}
+.button.disabled:hover,.button.disabled:active {
+	border: 1px solid rgba(0,0,0,0.2);
+	box-shadow: 1px 1px 1px rgba(170,170,170,0);
+	margin: 1px 2px 1px 2px;
+}
+
 /* Popup Window */
 .popup_window {
 	position: fixed;
@@ -169,4 +210,37 @@ html, body {
 }
 .validation_error {
 	border: 1px solid red;
+}
+
+/* Grid */
+
+table.grid {
+	border-collapse: collapse;
+	border-spacing: 0px;
+	border: 1px solid black;
+}
+table.grid, table.grid input, table.grid select {
+	font-size: 11px;
+}
+table.grid td,th {
+	white-space: nowrap;
+}
+table.grid thead tr {
+	background-color: #D0D0FF;
+}
+table.grid thead th {
+	border-right: 1px solid #A0A0FF;
+	border-bottom: 1px solid #A0A0FF;
+}
+table.grid tbody tr:nth-child(even) {
+	background-color: #FFFFFF;
+}
+table.grid tbody tr:nth-child(odd) {
+	background-color: #D8D8FF;
+}
+table.grid tbody tr:nth-child(even).selected {
+	background-color: #FFFFC0;
+}
+table.grid tbody tr:nth-child(odd).selected {
+	background-color: #D8D8C0;
 }

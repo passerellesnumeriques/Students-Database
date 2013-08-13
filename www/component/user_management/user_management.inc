@@ -104,7 +104,7 @@ class user_management extends Component {
 				user_management::compute_rights_implications($rights, $all_rights);
 
 				// if we are not on the local domain, remove all writable rights, to make everything read-only
-				if (PNApplication::$instance->current_domain != file_get_contents("local_domain")) {
+				if (PNApplication::$instance->current_domain != PNApplication::$instance->local_domain) {
 					foreach (PNApplication::$instance->components as $cname=>$c)
 						foreach ($c->get_writable_rights() as $rname=>$rtype)
 							unset($rights[$rname]);
@@ -112,7 +112,7 @@ class user_management extends Component {
 				$this->rights[PNApplication::$instance->current_domain] = $rights;
 			} else {
 				// in case this is an admin, only put names of rights
-				$is_local = PNApplication::$instance->current_domain == file_get_contents("local_domain");
+				$is_local = PNApplication::$instance->current_domain == PNApplication::$instance->local_domain;
 				$rights = array();
 				foreach (PNApplication::$instance->components as $cname=>$c) {
 					foreach ($c->get_readable_rights() as $rname=>$rtype)

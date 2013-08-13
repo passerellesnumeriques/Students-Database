@@ -205,8 +205,9 @@ function popup_window(title,icon,content) {
 			t.content_container.style.width = (getWindowWidth()-30)+"px";
 			t.content_container.style.height = (getWindowHeight()-30)+"px";
 			t.content_container.style.overflow = "";
-			x = getIFrameDocument(t.content).body.scrollWidth;
-			y = getIFrameDocument(t.content).body.scrollHeight;
+			var frame = getIFrameDocument(t.content); 
+			x = frame.body.scrollWidth;
+			y = frame.body.scrollHeight;
 			if (x > getWindowWidth()-30) x = getWindowWidth()-30;
 			if (y > getWindowHeight()-30) y = getWindowHeight()-30;
 			t.content_container.style.height = y+"px";
@@ -221,8 +222,11 @@ function popup_window(title,icon,content) {
 			y = getWindowHeight()/2 - t.table.scrollHeight/2;
 			if (y < 5) {
 				y = 5;
-				t.content_container.style.overflow = "auto";
+				t.content_container.style.overflowX = "auto";
 				t.content_container.style.height = (getWindowHeight()-30)+"px";
+				if (t.content_container.offsetWidth > t.content_container.clientWidth) {
+					t.content_container.style.width = (t.content_container.offsetWidth+(t.content_container.offsetWidth-t.content_container.clientWidth))+"px"; 
+				}
 			}
 			x = getWindowWidth()/2 - t.table.scrollWidth/2;
 			if (x < 5) {

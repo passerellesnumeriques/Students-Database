@@ -45,7 +45,7 @@ class page_profile extends Page {
 <div id='profile_page' icon='/static/people/profile_32.png' title='<?php echo $full_name <> null ? $full_name : "Profile"?>' page='<?php echo $page;?>'>
 <?php 
 foreach ($all_pages as $cp) {
-	echo "<span class='page_menu_item'><a href=\"".$cp[2]."\" target='profile_page_content'><img src='".$cp[0]."'/>".$cp[1]."</span>";
+	echo "<span class='page_menu_item'><a href=\"".$cp[2]."\" target='profile_page_content'><img src='".$cp[0]."'/>".$cp[1]."</a></span>";
 }
 ?>
 </div>

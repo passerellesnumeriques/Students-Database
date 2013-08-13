@@ -56,8 +56,10 @@ class PNApplication {
 		foreach (PNApplication::$errors as $e)
 			echo "<div style='color:#C00000;font-familiy:Tahoma;font-size:10pt'><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> ".$e."</div>";
 		echo "<script type='text/javascript'>";
+		echo "if (typeof window.top.status_manager != 'undefined'){";
 		foreach (PNApplication::$errors as $e)
-			echo "window.top.status_manager.add_status(new window.top.StatusMessageError(null,".json_encode($e)."));"; 
+			echo "window.top.status_manager.add_status(new window.top.StatusMessageError(null,".json_encode($e).",5000));";
+		echo "}"; 
 		echo "</script>";
 	}
 	/**

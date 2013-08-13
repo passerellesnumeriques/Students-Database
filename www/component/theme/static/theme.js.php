@@ -1,4 +1,5 @@
 <?php 
+header("Content-Type: text/javascript");
 require_once("component/Component.inc");
 require_once("component/theme/theme.inc");
 ?>

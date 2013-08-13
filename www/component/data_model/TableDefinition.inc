@@ -258,7 +258,12 @@ class Table {
 		}
 		return $this->name;
 	}
-
+	public function getSQLNameFor($sub_model) {
+		if ($this->model instanceof \SubDataModel)
+			return $this->name."_".$sub_model;
+		return $this->name;
+	}
+	
 	public function getPrimaryKey() {
 		foreach ($this->columns as $c)
 			if ($c instanceof PrimaryKey) {
