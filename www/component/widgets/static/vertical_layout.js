@@ -11,9 +11,17 @@ function vertical_layout(container) {
 	var t = this;
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
-	t.container.style.position = 'relative';
 	
 	t.layout = function() {
+		// reset
+		for (var i = 0; i < t.container.childNodes.length; ++i) {
+			var e = t.container.childNodes[i];
+			if (e.nodeType != 1) continue;
+			var layout;
+			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
+			if (layout == 'fill')
+				e.style.height = "";
+		}
 		var w = t.container.offsetWidth;
 		var h = t.container.offsetHeight;
 		var nb_to_fill = 0;
@@ -28,7 +36,8 @@ function vertical_layout(container) {
 			else if (!isNaN(parseInt(layout)))
 				used += parseInt(layout);
 			else {
-				e.style.width = w+"px";
+				e.style.display = "block";
+				setWidth(e, w);
 				e.style.height = "";
 				used += e.offsetHeight;
 			}
@@ -39,17 +48,15 @@ function vertical_layout(container) {
 			if (e.nodeType != 1) continue;
 			var layout;
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
-			e.style.position = 'absolute';
-			e.style.top = y+"px";
-			e.style.left = "0px";
-			e.style.width = w+"px";
+			e.style.display = "block";
+			setWidth(e, w);
 			if (layout == 'fill') {
 				var hh = Math.floor((h-used)/nb_to_fill--);
-				e.style.height = hh+"px";
+				setHeight(e, hh);
 				y += hh;
 			} else if (!isNaN(parseInt(layout))) {
 				var hh = parseInt(layout);
-				e.style.height = hh+"px";
+				setHeight(e, hh);
 				y += hh;
 			} else {
 				y += e.offsetHeight;

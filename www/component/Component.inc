@@ -30,7 +30,7 @@ abstract class Component {
 			if ($this->name <> "development") {
 				// only allow the login page
 				if ($this->name <> "application" || $path <> "enter") {
-					header("Location: /dynamic/application/page/enter");
+					echo "<script type='text/javascript'>window.top.location.reload();</script>";
 					return;
 				}
 			}

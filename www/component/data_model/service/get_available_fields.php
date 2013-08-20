@@ -17,7 +17,8 @@ TODO
 		$table = $_POST["table"];
 
 		require_once("component/data_model/DataPath.inc");
-		$paths = DataPathBuilder::search_from($table);
+		$ctx = new DataPathBuilderContext();
+		$paths = DataPathBuilder::search_from($ctx, $table);
 		echo "[";
 		for ($i = 0; $i < count($paths); $i++) {
 			if ($i>0) echo ",";
@@ -27,6 +28,7 @@ TODO
 			$disp = $p->table->getDisplayableDataCategoryAndName($p->field_name);
 			echo ",cat:".json_encode($disp[0]);
 			echo ",name:".json_encode($disp[1]);
+			echo ",edit:".($p->table->canModifyField($p->field_name) ? "true" : "false");
 			echo "}";
 		}
 		echo "]";

@@ -130,6 +130,15 @@ class SQLQuery {
 		$this->count = array($alias);
 		return $this;
 	}
+	
+	public function get_field_alias($table, $field) {
+		foreach ($this->fields as $f)
+			if ($f[0] == $table && $f[1] == $field) {
+				if ($f[2] == null) return $field;
+				return $f[2];
+			}
+		return null;
+	}
 
 	public function &bypass_security() { $this->bypass_security = true; return $this; }
 

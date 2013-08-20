@@ -86,6 +86,7 @@ dnd = {
 					var ec = e.cloneNode(true);
 					for (var n in e)
 						if (!ec[n]) try { ec[n] = e[n]; } catch (ex) {};
+					if (ec.drop) ec.drop = null;
 					e = ec;
 					dnd._drag[i] = e;
 					e.style.position = "fixed";

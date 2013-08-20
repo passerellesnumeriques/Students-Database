@@ -4,6 +4,7 @@ if (typeof require != 'undefined') {
 	require("horizontal_layout.js");
 	require("typed_field.js");
 	require("field_text.js");
+	require("context_menu.js");
 }
 function data_list(container, root_table, show_fields) {
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -33,6 +34,7 @@ function data_list(container, root_table, show_fields) {
 		var img = document.createElement("IMG");
 		img.onload = function() { fireLayoutEventFor(t.header); };
 		img.src = get_script_path("data_list.js")+"/table_column.png";
+		div.onclick = function() { t._select_columns_dialog(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
 		t.header.appendChild(t.header_right);
@@ -119,27 +121,11 @@ function data_list(container, root_table, show_fields) {
 		t._load_typed_fields(function(){
 			for (var i = 0; i < t.show_fields.length; ++i) {
 				var f = t.show_fields[i];
-				// TODO typed
-				var col = new GridColumn(f.field, f.name, null, "field_text", false, null, null, {}, f);
-				col.addSorting(function (v1,v2){
-					return v1.localeCompare(v2);
-				}); // TODO external sorting if paged
-				col.addFiltering(); // TODO better + if paged need external filtering
+				var col = t._create_column(f);
 				t.grid.addColumn(col);
 			}
 			// get data
-			t.grid.startLoading();
-			var fields = [];
-			for (var i = 0; i < t.show_fields.length; ++i)
-				fields.push(t.show_fields[i].field);
-			service.json("data_model","get_data_list",{table:root_table,fields:fields},function(result){
-				if (!result) {
-					t.grid.endLoading();
-					return;
-				}
-				t.grid.setData(result.data);
-				t.grid.endLoading();
-			});
+			t._load_data();
 		});
 	};
 	t._load_typed_fields = function(handler) {
@@ -155,4 +141,116 @@ function data_list(container, root_table, show_fields) {
 	
 	t._init_list();
 	t._load_fields();
+	
+	t._create_column = function(f) {
+		// TODO typed
+		var col = new GridColumn(f.field, f.name, null, "field_text", false, null, null, {}, f);
+		col.addSorting(function (v1,v2){
+			return v1.localeCompare(v2);
+		}); // TODO external sorting if paged
+		col.addFiltering(); // TODO better + if paged need external filtering
+		col.onchanged = function(field, data) {
+			// TODO
+		};
+		col.onunchanged = function(field) {
+			// TODO
+		};
+		// TODO onchange + save
+		if (f.edit) {
+			col.addAction(new GridColumnAction(theme.icons_16.edit,function(ev,action,col){
+				col.editable = !col.editable;
+				action.icon = col.editable ? theme.icons_16.no_edit : theme.icons_16.edit;
+				t.grid.rebuildColumn(col);
+			}));
+		}
+		return col;
+	};
+	t._load_data = function() {
+		t.grid.startLoading();
+		var fields = [];
+		for (var i = 0; i < t.show_fields.length; ++i)
+			fields.push(t.show_fields[i].field);
+		service.json("data_model","get_data_list",{table:root_table,fields:fields},function(result){
+			if (!result) {
+				t.grid.endLoading();
+				return;
+			}
+			t.tables = result.tables;
+			t.data = result.data;
+			var data = [];
+			for (var i = 0; i < t.data.length; ++i) {
+				var row = [];
+				for (var j = 0; j < t.data[i].length; ++j)
+					row.push(t.data[i][j].v);
+				data.push(row);
+			}
+			t.grid.setData(data);
+			t.grid.endLoading();
+		});
+	};
+	t._select_columns_dialog = function(button) {
+		var categories = [];
+		for (var i = 0; i < t.available_fields.length; ++i)
+			if (!categories.contains(t.available_fields[i].cat))
+				categories.push(t.available_fields[i].cat);
+		var dialog = document.createElement("DIV");
+		var table = document.createElement("TABLE"); dialog.appendChild(table);
+		table.style.borderCollapse = "collapse";
+		table.style.borderSpacing = "0px";
+		var tr_head = document.createElement("TR"); table.appendChild(tr_head);
+		tr_head.style.backgroundColor = "#C0C0FF";
+		var tr_content = document.createElement("TR"); table.appendChild(tr_content);
+		for (var i = 0; i < categories.length; ++i) {
+			var td = document.createElement("TD");
+			tr_head.appendChild(td);
+			td.style.borderBottom = "1px solid black";
+			td.align = "center";
+			td.style.margin = "0px";
+			td.style.padding = "2px";
+			if (i>0) td.style.borderLeft = "1px solid black";
+			td.innerHTML = categories[i];
+			td = document.createElement("TD");
+			tr_content.appendChild(td);
+			td.style.verticalAlign = "top";
+			td.style.margin = "0px";
+			td.style.padding = "2px";
+			if (i>0) td.style.borderLeft = "1px solid black";
+			for (var j = 0; j < t.available_fields.length; ++j) {
+				var f = t.available_fields[j];
+				if (f.cat != categories[i]) continue;
+				var cb = document.createElement("INPUT");
+				cb.type = 'checkbox';
+				cb.data = f;
+				var found = false;
+				for (var k = 0; k < t.show_fields.length; ++k)
+					if (t.show_fields[k].field == t.available_fields[j].field) { found = true; break; }
+				if (found) cb.checked = 'checked';
+				cb.onclick = function() {
+					if (this.checked) {
+						t.show_fields.push(this.data);
+						var col = t._create_column(this.data);
+						t.grid.addColumn(col);
+						// TODO handle case if not yet loaded...
+						t._load_data();
+					} else {
+						for (var i = 0; i < t.show_fields.length; ++i) {
+							if (t.show_fields[i].field == this.data.field) {
+								t.show_fields.splice(i,1);
+								t.grid.removeColumn(i);
+								break;
+							}
+						}
+					}
+				};
+				td.appendChild(cb);
+				td.appendChild(document.createTextNode(f.name));
+				td.appendChild(document.createElement("BR"));
+			}
+		}
+		require("context_menu.js",function(){
+			var menu = new context_menu();
+			menu.addItem(dialog, true);
+			menu.showBelowElement(button);
+		});
+	};
 }

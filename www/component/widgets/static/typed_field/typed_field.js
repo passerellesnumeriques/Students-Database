@@ -3,8 +3,8 @@
  * @constructor
  * @param data
  * @param {Boolean} editable true to create an editable field, false for a read-only field
- * @param {function} onchanged called when the field is editable, and the user changed the data
- * @param {function} onunchanged called when the field is editable, and the user changed the data but come back to the original data
+ * @param {function} onchanged called when the field is editable, and the user changed the data: onchanged(field, data)
+ * @param {function} onunchanged called when the field is editable, and the user changed the data but come back to the original data: onunchanged(field)
  * @param {Object} config additional information depending on the implementation
  */
 function typed_field(data,editable,onchanged,onunchanged,config){

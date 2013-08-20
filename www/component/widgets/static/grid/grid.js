@@ -1,5 +1,7 @@
-if (typeof require != 'undefined')
+if (typeof require != 'undefined') {
 	require("typed_field.js");
+	require("dragndrop.js");
+}
 
 function GridColumnAction(icon,onclick) {
 	this.icon = icon;
@@ -52,7 +54,7 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 	this.addFiltering = function() {
 		var url = get_script_path("grid.js");
 		var t=this;
-		var a = new GridColumnAction(url+"/filter.gif",function(ev){
+		var a = new GridColumnAction(url+"/filter.gif",function(ev,a,col){
 			if (t.filtered) {
 				t.filtered = false;
 				a.icon = url+"/filter.gif";
@@ -121,10 +123,10 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 	
 	this._refresh_title = function() {
 		var url = get_script_path("grid.js");
+		var t=this;
 		this.th.innerHTML = title;
 		if (this.sort_order) {
 			var img;
-			var t = this;
 			switch (this.sort_order) {
 			case 1: // ascending
 				img = document.createElement("IMG");
@@ -164,7 +166,8 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 			img.src = this.actions[i].icon;
 			img.style.verticalAlign = "middle";
 			img.style.cursor = "pointer";
-			img.onclick = this.actions[i].onclick;
+			img.data = this.actions[i];
+			img.onclick = function(ev) { this.data.onclick(ev, this.data, t); };
 			this.actions[i].element = img;
 			this.th.appendChild(img);
 		}
@@ -224,9 +227,79 @@ function grid(element) {
 		t.header.appendChild(column.th);
 		t.colgroup.appendChild(column.col);
 		column._refresh_title();
+		require("dragndrop.js",function() {
+			dnd.configure_drag_element(column.th, true, null, function(){
+				return column;
+			});
+			dnd.configure_drop_element(column.th, function(data,x,y){
+				if (!data.grid || data.grid != t)
+					return null;
+				return get_script_path("grid.js")+"/move_column.gif";
+			},function(data){
+				if (data == column) return;
+				var i = t.columns.indexOf(column);
+				var j = t.columns.indexOf(data);
+				if (i == j+1) return;
+				t.moveColumn(j,i);
+			});
+		});
 	};
 	t.getNbColumns = function() { return t.columns.length; };
 	t.getColumn = function(index) { return t.columns[index]; };
+	t.removeColumn = function(index) {
+		var col = t.columns[index];
+		t.columns.splice(index,1);
+		t.header.removeChild(col.th);
+		t.colgroup.removeChild(col.col);
+		var td_index = index + (t.selectable ? 1 : 0);
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var row = t.table.childNodes[i];
+			row.removeChild(row.childNodes[td_index]);
+		}
+		t.apply_filters();
+	};
+	t.moveColumn = function(index_src, index_dst) {
+		var col = t.columns[index_src];
+		t.columns.splice(index_src,1);
+		t.header.removeChild(col.th);
+		t.colgroup.removeChild(col.col);
+		var td_index = index_src + (t.selectable ? 1 : 0);
+		var tds = [];
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var row = t.table.childNodes[i];
+			tds.push(row.removeChild(row.childNodes[td_index]));
+		}
+		if (index_dst > index_src) index_dst--;
+		t.columns.splice(index_dst,0,col);
+		var i2 = index_dst + (t.selectable ? 1 : 0);
+		if (i2 == t.header.childNodes.length)
+			t.header.appendChild(col.th);
+		else
+			t.header.insertBefore(col.th, t.header.childNodes[i2]);
+		if (i2 == t.colgroup.childNodes.length)
+			t.colgroup.appendChild(col.col);
+		else
+			t.colgroup.insertBefore(col.col, t.colgroup.childNodes[i2]);
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var row = t.table.childNodes[i];
+			if (i2 == row.childNodes.length)
+				row.appendChild(tds[i]);
+			else
+				row.insertBefore(tds[i], row.childNodes[i2]);
+		}
+	};
+	t.rebuildColumn = function(column) {
+		column._refresh_title();
+		var index = t.columns.indexOf(column);
+		if (t.selectable) index++;
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var row = t.table.childNodes[i];
+			var td = row.childNodes[index];
+			var data = td.field.getCurrentData();
+			td.innerHTML = "";
+			td.field = t._create_cell(column, data, td);
+		}
+	};
 	
 	t.setSelectable = function(selectable) {
 		if (t.selectable == selectable) return;
@@ -311,7 +384,7 @@ function grid(element) {
 				var td = document.createElement("TD");
 				tr.appendChild(td);
 				if (data[i].length <= j) continue;
-				td.field = t._create_field(t.columns[j].field_type, t.columns[j].editable, t.columns[j].onchanged, t.columns[j].onunchanged, t.columns[j].field_args, td, data[i][j]);
+				td.field = t._create_cell(t.columns[j], data[i][j], td);
 			}
 			t.table.appendChild(tr);
 		}
@@ -412,6 +485,9 @@ function grid(element) {
 		t.element.appendChild(t.form);
 		table.className = "grid";
 	};
+	t._create_cell = function(column, data, parent) {
+		return t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data);
+	},
 	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data) {
 		var f = new window[field_type](data, editable, onchanged, onunchanged, field_args);
 		parent.appendChild(f.getHTMLElement());

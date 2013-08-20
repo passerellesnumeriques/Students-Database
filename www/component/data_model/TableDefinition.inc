@@ -16,6 +16,7 @@ class Table {
 	private $displayable_data = array();
 	private $is_customized = false;
 	private $customization = array();
+	private $unique_fields = null;
 	
 	public $_key_submodels = array();
 
@@ -90,11 +91,16 @@ class Table {
 		return $this;
 	}
 	
+	public function &setUnique($fields) {
+		$this->unique_fields = $fields;
+		return $this;
+	}
+	
 	/** Indicate one or several columns should be indexed for faster access.
 	 * As parameters, this method expects the list of columns to be indexed together.
 	 * @return \datamodel\Table
 	 */
-	public function addIndex() {
+	public function &addIndex() {
 		$nb = func_num_args();
 		if ($nb == 1)
 			array_push($this->indexes, array(func_get_arg(0),func_get_arg(0)));
@@ -367,6 +373,10 @@ class Table {
 
 	public function getLinks() {
 		return $this->links;
+	}
+	
+	public function getUnique() {
+		return $this->unique_fields;
 	}
 	
 }

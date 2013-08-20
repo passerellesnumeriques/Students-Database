@@ -44,6 +44,8 @@ function field_enum(data,editable,onchanged,onunchanged,config) {
 		this.element = document.createTextNode(data);
 	}
 }
-if (typeof typed_field != 'undefined')
-field_enum.prototype = new typed_field;
-field_enum.prototype.constructor = field_enum;
+if (typeof require != 'undefined')
+	require("typed_field.js",function(){
+		field_enum.prototype = new typed_field();
+		field_enum.prototype.constructor = field_enum;
+	});

@@ -1,13 +1,12 @@
 <?php 
 class DataPathBuilder {
 	
-	public static function &search_from($table_name, $sub_models = null) {
+	public static function &search_from(&$context, $table_name, $sub_models = null) {
 		require_once("Model.inc");
 		/* @var $model DataModel */
 		$model = DataModel::get();
 		$table = $model->getTable($table_name);
 		$done = array();
-		$context = new DataPathBuilderContext();
 		$final_paths = array();
 		if ($table->getModel() instanceof SubDataModel) {
 			if ($sub_models <> null && isset($sub_models[$table->getModel()->getParentTable()])) {
@@ -205,6 +204,8 @@ abstract class DataPath {
 /** a simple select on a table, as a starting point */
 class DataPath_Table extends DataPath {
 
+	public $table_primarykey_alias = null;
+	
 	/**
 	 * @param \datamodel\Table $table
 	 * @param array|null $sub_models
@@ -223,9 +224,15 @@ class DataPath_Table extends DataPath {
 	
 	/**
 	 * @param SQLQuery $q
+	 * @param DataPathBuilderContext $context
 	 */
-	public function build_sql(&$q) {
-		$q->select(array($this->table->getSQLNameFor($this->sub_model) => $this->table_alias));		
+	public function build_sql(&$q, &$context) {
+		$q->select(array($this->table->getSQLNameFor($this->sub_model) => $this->table_alias));
+		$pk = $this->table->getPrimaryKey();
+		if ($pk <> null) {
+			$this->table_primarykey_alias = $context->new_field_alias();
+			$q->field($this->table->getSQLNameFor($this->sub_model), $pk->name, $this->table_primarykey_alias);		
+		}
 	}
 	
 }
@@ -253,9 +260,10 @@ class DataPath_Field extends DataPath {
 	
 	/**
 	 * @param SQLQuery $q
+	 * @param DataPathBuilderContext $context
 	 */
-	public function append_sql(&$q) {
-		$this->parent->build_sql($q);
+	public function append_sql(&$q, &$context) {
+		$this->parent->build_sql($q, $context);
 		$q->field($this->table_alias, $this->field_name, $this->field_alias);
 	}
 }
@@ -267,6 +275,8 @@ class DataPath_Join extends DataPath {
 	public $from_sub_model;
 	public $from_table_alias;
 	public $matching_fields;
+	
+	public $table_primarykey_alias = null;
 	
 	public function __construct($parent, &$from_table, &$from_sub_model, $from_table_alias, &$to_table, &$to_sub_model, $to_table_alias, $matching_fields) {
 		parent::__construct($parent, $to_table, $to_sub_model, $to_table_alias);
@@ -297,12 +307,19 @@ class DataPath_Join extends DataPath {
 	
 	/**
 	 * @param SQLQuery $q
+	 * @param DataPathBuilderContext $context
 	 */
-	public function build_sql(&$q) {
-		$this->parent->build_sql($q);
+	public function build_sql(&$q, &$context) {
+		$this->parent->build_sql($q, $context);
 		$alias = $q->get_join_alias($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields);
-		if ($alias <> $this->table_alias)
+		if ($alias <> $this->table_alias) {
 			$q->join($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields, $this->table_alias);
+			$pk = $this->table->getPrimaryKey();
+			if ($pk <> null) {
+				$this->table_primarykey_alias = $context->new_field_alias();
+				$q->field($this->table->getSQLName($this->sub_model), $pk->name, $this->table_primarykey_alias);
+			}
+		}
 	}
 	
 }
@@ -314,6 +331,8 @@ class DataPath_ReverseJoin extends DataPath {
 	public $to_sub_model;
 	public $to_table_alias;
 	public $matching_fields;
+
+	public $table_primarykey_alias = null;
 	
 	public function __construct($parent, &$from_table, &$from_sub_model, $from_table_alias, &$to_table, &$to_sub_model, $to_table_alias, $matching_fields) {
 		parent::__construct($parent, $from_table, $from_sub_model, $from_table_alias);
@@ -343,11 +362,18 @@ class DataPath_ReverseJoin extends DataPath {
 	
 	/**
 	 * @param SQLQuery $q
+	 * @param DataPathBuilderContext $context
 	 */
-	public function build_sql(&$q) {
+	public function build_sql(&$q, &$context) {
 		$alias = $q->get_join_alias($this->to_table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields);
-		if ($alias <> $this->table_alias)
+		if ($alias <> $this->table_alias) {
 			$q->join($this->to_table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields, $this->table_alias);
+			$pk = $this->table->getPrimaryKey();
+			if ($pk <> null) {
+				$this->table_primarykey_alias = $context->new_field_alias();
+				$q->field($this->table->getSQLName($this->sub_model), $pk->name, $this->table_primarykey_alias);
+			}
+		}
 	}
 	
 }

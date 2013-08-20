@@ -31,6 +31,8 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 		this.element = document.createTextNode(data);
 	}
 }
-if (typeof typed_field != 'undefined')
-field_text.prototype = new typed_field;
-field_text.prototype.constructor = field_text;
+if (typeof require != 'undefined')
+	require("typed_field.js",function(){
+		field_text.prototype = new typed_field();
+		field_text.prototype.constructor = field_text;		
+	});
