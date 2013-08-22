@@ -29,6 +29,8 @@ TODO
 			echo ",cat:".json_encode($disp[0]);
 			echo ",name:".json_encode($disp[1]);
 			echo ",edit:".($p->table->canModifyField($p->field_name) ? "true" : "false");
+			echo ",table:".json_encode($p->table->getName());
+			echo ",column:".json_encode($p->field_name);
 			echo "}";
 		}
 		echo "]";

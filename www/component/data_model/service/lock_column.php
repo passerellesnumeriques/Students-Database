@@ -1,13 +1,12 @@
 <?php
-class service_lock_entity_field extends Service {
+class service_lock_column extends Service {
 	public function get_required_rights() { return array(); }
-	public function documentation() { echo "Request a lock for a specific cell in a table"; }
+	public function documentation() { echo "Request a lock for a specific column in a table"; }
 	public function input_documentation() {
 ?>
 <ul>
 	<li><code>table</code>: table name of the entity</li>
-	<li><code>field</code>: column name of the cell to lock</li>
-	<li><code>key</code>: primary key of the row to lock</li>
+	<li><code>column</code>: column name of the cell to lock</li>
 </ul>
 <?php
 	}
@@ -15,14 +14,12 @@ class service_lock_entity_field extends Service {
 ?>
 <ul>
 	<li><code>lock</code>: id of the lock</li>
-	<li><code>value</code>: value of the cell</li>
 </ul>
 <?php
 	}
 	public function execute(&$component) {
 		$table = $_POST["table"];
-		$field = $_POST["field"];
-		$key = $_POST["key"];
+		$field = $_POST["column"];
 		require_once("component/data_model/DataBaseLock.inc");
 		require_once("component/data_model/Model.inc");
 		$model = DataModel::get();
@@ -32,13 +29,12 @@ class service_lock_entity_field extends Service {
 			return;
 		}
 		$locked_by = null;
-		$lock = DataBaseLock::lock($table->getName(), array($table->getPrimaryKey()->name=>$key), $locked_by, false);
+		$lock = DataBaseLock::lock_column($table->getName(), $field, $locked_by);
 		if ($lock == null) {
-			PNApplication::error("This data is already locked by ".$locked_by);
+			PNApplication::error("This column is already locked by ".$locked_by);
 			return;
 		}
-		$value = SQLQuery::create()->select($table->getName())->field($field)->where($table->getPrimaryKey()->name,$key)->execute_single_value();
-		echo "{lock:".json_encode($lock).",value:".json_encode($value)."}";
+		echo "{lock:".json_encode($lock)."}";
 	}
 } 
 ?>

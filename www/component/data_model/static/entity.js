@@ -4,7 +4,7 @@ function data_entity_edit(icon, table, field, field_classname, field_arguments, 
 	icon.src = theme.icons_16.loading;
 	icon.onclick = null;
 	require("typed_field.js",function() { require(field_classname+".js"); });
-	service.json("data_model", "lock_entity_field", {table:table,key:key,field:field}, function(result) {
+	service.json("data_model", "lock_cell", {table:table,row_key:key,column:field}, function(result) {
 		if (result == null) {
 			icon.src = theme.icons_16.edit;
 			icon.onclick = function() { data_entity_edit(this, table, field, field_classname, field_arguments, key); };
@@ -67,7 +67,7 @@ function data_entity_save(icon, table, field, field_classname, field_arguments, 
 		return;	
 	}
 	var value = f.getCurrentData();
-	service.call("data_model", "save_entity_field", {lock:lock_id,table:table,key:key,field:field,value:value},function(result) {
+	service.call("data_model", "save_cell", {lock:lock_id,table:table,row_key:key,column:field,value:value},function(result) {
 		window.database_locks.remove_lock(lock_id);
 		icon.src = theme.icons_16.edit;
 		icon.onclick = function() { data_entity_edit(this, table, field, field_classname, field_arguments, key); };

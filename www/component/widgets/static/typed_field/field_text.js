@@ -26,9 +26,27 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 		input.onkeyup = f;
 		input.onblur = f;
 		this.element = input;
+		this.element.typed_field = this;
 		this.getCurrentData = function() { return input.value; };
+		this.setData = function(data) {
+			input.value = data;
+			f();
+		};
 	} else {
 		this.element = document.createTextNode(data);
+		this.element.typed_field = this;
+		this.setData = function(data) {
+			if (this.element.nodeValue == data) return;
+			this.element.nodeValue = data;
+			if (data == this.originalData) {
+				if (onunchanged) onunchanged(this);
+			} else {
+				if (onchanged) onchanged(this, data);
+			}
+		};
+		this.getCurrentData = function() {
+			return this.element.nodeValue;
+		};
 	}
 }
 if (typeof require != 'undefined')

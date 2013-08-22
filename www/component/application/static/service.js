@@ -51,8 +51,10 @@ service = {
 				s += attr + ":" + service._generate_input(input[attr]);
 			}
 			s += "}";
-		} else
+		} else if (typeof input == 'string')
 			s += "\""+input.replace(/"/g, "\\\"")+"\"";
+		else
+			s += input;
 		return s;
 	}
 };

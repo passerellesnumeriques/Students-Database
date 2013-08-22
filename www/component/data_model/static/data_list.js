@@ -150,17 +150,37 @@ function data_list(container, root_table, show_fields) {
 		}); // TODO external sorting if paged
 		col.addFiltering(); // TODO better + if paged need external filtering
 		col.onchanged = function(field, data) {
-			// TODO
+			t._cell_changed(field);
 		};
 		col.onunchanged = function(field) {
-			// TODO
+			t._cell_unchanged(field);
 		};
 		// TODO onchange + save
 		if (f.edit) {
 			col.addAction(new GridColumnAction(theme.icons_16.edit,function(ev,action,col){
-				col.editable = !col.editable;
-				action.icon = col.editable ? theme.icons_16.no_edit : theme.icons_16.edit;
-				t.grid.rebuildColumn(col);
+				var edit_col = function() {
+					col.editable = !col.editable;
+					action.icon = col.editable ? theme.icons_16.no_edit : theme.icons_16.edit;
+					t.grid.rebuildColumn(col);
+					fireLayoutEventFor(container);
+				};
+				t.grid.startLoading();
+				if (col.editable) {
+					service.json("data_model","unlock",{lock:col.lock},function(result){
+						if (result) {
+							t._cancel_column_changes(col);
+							edit_col();
+						}
+						t.grid.endLoading();
+					});
+				} else
+					service.json("data_model","lock_column",{table:f.table,column:f.column},function(result){
+						if (result) {
+							col.lock = result.lock;
+							edit_col();
+						}
+						t.grid.endLoading();
+					});
 			}));
 		}
 		return col;
@@ -252,5 +272,40 @@ function data_list(container, root_table, show_fields) {
 			menu.addItem(dialog, true);
 			menu.showBelowElement(button);
 		});
+	};
+	
+	t._changed_cells = [];
+	t._cancel_column_changes = function(col) {
+		var index = t.grid.getColumnIndex(col);
+		var rows = t.grid.getNbRows();
+		for (var i = 0; i < rows; ++i) {
+			var f = t.grid.getCellContent(i, index);
+			f.typed_field.setData(f.typed_field.getOriginalData());
+		}
+	};
+	t._cell_changed = function(typed_field) {
+		if (t._changed_cells.contains(typed_field)) return;
+		t._changed_cells.push(typed_field);
+		if (t._changed_cells.length == 1) {
+			// first change, display save button
+			t.save_button = document.createElement("IMG");
+			t.save_button.className = "button";
+			t.save_button.src = theme.icons_16.save;
+			t.save_button.onclick = function() { t._save(); };
+			t.header_left.appendChild(t.save_button);
+			fireLayoutEventFor(container);
+		}
+	};
+	t._cell_unchanged = function(typed_field) {
+		t._changed_cells.remove(typed_field);
+		if (t._changed_cells.length == 0 && t.save_button) {
+			// no more change: remove save button
+			t.header_left.removeChild(t.save_button);
+			t.save_button = null;
+			fireLayoutEventFor(container);
+		}
+	};
+	t._save = function() {
+		// TODO
 	};
 }

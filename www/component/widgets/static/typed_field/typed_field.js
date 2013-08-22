@@ -34,5 +34,10 @@ typed_field.prototype = {
 	/**
 	 * @returns the original data (at creation time)
 	 */
-	getOriginalData: function() { return this.originalData; }
+	getOriginalData: function() { return this.originalData; },
+	/**
+	 *  change data
+	 *  @param data new data value
+	 */
+	setData: function(data) {}
 };

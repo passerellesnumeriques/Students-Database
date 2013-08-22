@@ -246,6 +246,7 @@ function grid(element) {
 	};
 	t.getNbColumns = function() { return t.columns.length; };
 	t.getColumn = function(index) { return t.columns[index]; };
+	t.getColumnIndex = function(col) { return t.columns.indexOf(col); };
 	t.removeColumn = function(index) {
 		var col = t.columns[index];
 		t.columns.splice(index,1);
@@ -390,6 +391,9 @@ function grid(element) {
 		}
 	};
 	
+	t.getNbRows = function() {
+		return t.table.childNodes.length;
+	};
 	t.getCellContent = function(row,col) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
