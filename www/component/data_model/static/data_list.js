@@ -6,7 +6,7 @@ if (typeof require != 'undefined') {
 	require("field_text.js");
 	require("context_menu.js");
 }
-function data_list(container, root_table, show_fields) {
+function data_list(container, root_table, show_fields, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
@@ -42,6 +42,7 @@ function data_list(container, root_table, show_fields) {
 		// init grid
 		t.grid_container = document.createElement("DIV");
 		t.grid_container.setAttribute("layout","fill");
+		t.grid_container.style.overflow = "auto";
 		container.appendChild(t.grid_container);
 		require("grid.js",function(){
 			t.grid = new grid(t.grid_container);
@@ -126,6 +127,8 @@ function data_list(container, root_table, show_fields) {
 			}
 			// get data
 			t._load_data();
+			// signal ready
+			if (onready) onready(t);
 		});
 	};
 	t._load_typed_fields = function(handler) {
@@ -190,7 +193,7 @@ function data_list(container, root_table, show_fields) {
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
 			fields.push(t.show_fields[i].field);
-		service.json("data_model","get_data_list",{table:root_table,fields:fields},function(result){
+		service.json("data_model","get_data_list",{table:root_table,fields:fields,actions:true},function(result){
 			if (!result) {
 				t.grid.endLoading();
 				return;
@@ -200,8 +203,8 @@ function data_list(container, root_table, show_fields) {
 			var data = [];
 			for (var i = 0; i < t.data.length; ++i) {
 				var row = [];
-				for (var j = 0; j < t.data[i].length; ++j)
-					row.push(t.data[i][j].v);
+				for (var j = 0; j < t.data[i].values.length; ++j)
+					row.push(t.data[i].values[j].v);
 				data.push(row);
 			}
 			t.grid.setData(data);

@@ -375,6 +375,9 @@ function grid(element) {
 				tr.appendChild(td);
 				var cb = document.createElement("INPUT");
 				cb.type = 'checkbox';
+				cb.style.marginTop = "0px";
+				cb.style.marginBottom = "0px";
+				cb.style.verticalAlign = "middle";
 				cb.onchange = function() {
 					this.parentNode.parentNode.className = this.checked ? "selected" : "";
 					t._selection_changed();

@@ -9,7 +9,7 @@ $model->addTable("Users")
 	->addDisplayableData("domain", "User", "Domain")
 	->addDisplayableData("username", "User", "Username")
 	;
-$model->addDataCategoryLink("User","/dynamic/people/page/profile?plugin=user_management&page=user_rights&domain=%Users.domain%&username=%Users.username%");
+//$model->addDataCategoryLink("User","/dynamic/people/page/profile?plugin=user_management&page=user_rights&domain=%Users.domain%&username=%Users.username%");
 $model->addTable("UserRights")
 	->addString("domain", 100, 1, false)
 	->addString("username", 100, 1, false)

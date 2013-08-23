@@ -6,7 +6,12 @@ class service_get_data_list extends Service {
 	}
 	
 	public function documentation() { echo "Retrieve data from a list of DataPath"; }
-	public function input_documentation() { echo "<ul><li><code>table</code>: name of starting table</li><li><code>fields</code>:[paths]</li></ul>"; }
+	public function input_documentation() {?>
+<ul>
+	<li><code>table</code>: name of starting table</li><li><code>fields</code>:[paths]</li>
+	<li>optional: <code>actions</code>: if true, a list of possible links with icon are returned</li>
+</ul>	
+<?php }
 	public function output_documentation() {
 ?>
 TODO
@@ -46,8 +51,45 @@ TODO
 		foreach ($paths as $p)
 			$p->append_sql($q, $ctx);
 
+		$actions = null;
+		if (isset($_POST["actions"]) && $_POST["actions"]) {
+			$actions = array();
+			$categories = array();
+			foreach ($paths as $p) {
+				$cat_name = $p->parent->table->getDisplayableDataCategoryAndName($p->field_name);
+				if ($cat_name == null) continue;
+				if (!in_array($cat_name[0], $categories))
+					array_push($categories, $cat_name[0]);
+			}
+			$model = DataModel::get();
+			foreach ($categories as $cat) {
+				$link = $model->getDataCategoryLink($cat);
+				$icon = $model->getDataCategoryLinkIcon($cat);
+				if ($link <> null)
+					array_push($actions, array($link,$icon));
+			}
+			foreach ($actions as &$action) {
+				$k = 0;
+				$link = $action[0];
+				while (($k = strpos($link, "%", $k)) !== false) {
+					$kk = strpos($link, "%", $k+1);
+					if ($kk === false) break;
+					$s = substr($link, $k+1, $kk-$k-1);
+					$l = strpos($s, ".");
+					$table = substr($s, 0, $l);
+					$col = substr($s, $l+1);
+					$alias = $q->get_field_alias($q->get_table_alias($table), $col, $ctx->new_field_alias());
+					if ($alias == null)
+						$q->field($table, $col);
+					$k = $kk+1;
+					continue;
+				}
+			}
+		}
+		
 		//PNApplication::error($q->generate());
 		$res = $q->execute();
+
 		echo "{";
 		
 		echo "tables:[";
@@ -69,7 +111,7 @@ TODO
 		echo ",data:[";
 		for ($i = 0; $i < count($res); $i++) {
 			if ($i>0) echo ",";
-			echo "[";
+			echo "{values:[";
 			for ($j = 0; $j < count($paths); $j++) {
 				if ($j>0) echo ",";
 				echo "{v:";
@@ -93,6 +135,34 @@ TODO
 				echo "}";
 			}
 			echo "]";
+			if ($actions !== null) {
+				echo ",actions:[";
+				$first = true;
+				foreach ($actions as $action) {
+					if ($first) $first = false; else echo ",";
+					$k = 0;
+					$link = $action[0];
+					while ($k < strlen($link) && ($k = strpos($link, "%", $k)) !== false) {
+						$kk = strpos($link, "%", $k+1);
+						if ($kk === false) break;
+						$s = substr($link, $k+1, $kk-$k-1);
+						$l = strpos($s, ".");
+						$table = substr($s, 0, $l);
+						$col = substr($s, $l+1);
+						$alias = $q->get_field_alias($q->get_table_alias($table), $col);
+						if ($alias == null) {
+							PNApplication::error("Missing field '".$col."' from table '".$table."' (alias '".$q->get_table_alias($table)."') in SQL request ".$q->generate());
+							$k = $kk+1;
+							continue;
+						}
+						$link = substr($link, 0, $k).$res[$i][$alias].substr($link, $kk+1);
+						$k = $kk + strlen($res[$i][$alias]);
+					}
+					echo "{link:".json_encode($link).",icon:".json_encode($action[1])."}";
+				}
+				echo "]";
+			}
+			echo "}";
 		}
 		echo "]}";
 	}

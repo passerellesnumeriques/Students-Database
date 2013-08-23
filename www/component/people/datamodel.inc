@@ -1,6 +1,6 @@
 <?php
 /* @var $model DataModel */
-$model->addDataCategoryLink("Personal Information", "/dynamic/people/page/profile?plugin=people&people=%People.id%");
+$model->addDataCategoryLink("Personal Information", "/dynamic/people/page/profile?plugin=people&people=%People.id%", "/static/people/profile_16.png");
 $model->addTable("People")
 	->addPrimaryKey("id")
 	->addString("first_name", 100, 1, false)

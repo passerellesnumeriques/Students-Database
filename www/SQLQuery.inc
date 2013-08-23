@@ -139,6 +139,15 @@ class SQLQuery {
 			}
 		return null;
 	}
+	public function get_table_alias($table) {
+		foreach ($this->tables as $t=>$a)
+			if ($t == $table)
+				return $a <> null ? $a : $t;
+		foreach ($this->joins as $j)
+			if ($j[1] == $table)
+				return $j[3] <> null ? $j[3] : $j[1];
+		return $table;
+	}
 
 	public function &bypass_security() { $this->bypass_security = true; return $this; }
 
@@ -444,11 +453,11 @@ class SQLQuery {
 		// lock table
 		require_once("component/data_model/DataBaseLock.inc");
 		if ($lock_id <> null) {
-			if (!DataBaseLock::check($lock_id, $t->getName(), array($t->getPrimaryKey()->name=>$key)))
+			if (!DataBaseLock::check_lock($lock_id, $t->getName(), $key, null))
 				throw new Exception("Access denied");
 		} else {
 			$locker = null;
-			$lock_id = DataBaseLock::lock($t->getName(), array($t->getPrimaryKey()->name=>$key), $locker, false);
+			$lock_id = DataBaseLock::lock_row($t->getName(), $key, $locker);
 			if ($lock_id == null)
 				throw new Exception("This data is already locked by ".$locker);
 		}
@@ -539,7 +548,7 @@ class SQLQuery {
 		// lock the table
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
-		$lock = DataBaseLock::lock($t->getName(), null, $locker, false);
+		$lock = DataBaseLock::lock_table($t->getName(), $locker);
 		if ($lock == null)
 			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
 		$columns = $t->internalGetColumns($sub_models);

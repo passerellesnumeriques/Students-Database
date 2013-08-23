@@ -29,12 +29,14 @@ class DataModel {
 			$file = "component/".$c->name."/datamodel_hidden.inc";
 			if (file_exists($file)) {
 				$hidden = include $file;
-				$hidden = $hidden[PNApplication::$instance->current_domain];
-				foreach ($hidden as $field) {
-					$i = strpos($field, ".");
-					$table = substr($field, 0, $i);
-					$field = substr($field, $i+1);
-					$model->hide($table,$field);
+				if (isset($hidden[PNApplication::$instance->current_domain])) {
+					$hidden = $hidden[PNApplication::$instance->current_domain];
+					foreach ($hidden as $field) {
+						$i = strpos($field, ".");
+						$table = substr($field, 0, $i);
+						$field = substr($field, $i+1);
+						$model->hide($table,$field);
+					}
 				}
 			}
 		}
@@ -118,13 +120,16 @@ class DataModel {
 	}
 
 	/** indicates which page to go in order to display information about the given category */
-	public function addDataCategoryLink($category, $link) {
-		$this->data_category_link[$category] = $link;
+	public function addDataCategoryLink($category, $link, $icon) {
+		$this->data_category_link[$category] = array($link, $icon);
 	}
 	public function getDataCategoryLink($category) {
-		return @$this->data_category_link[$category];
+		return @$this->data_category_link[$category][0];
 	}
-
+	public function getDataCategoryLinkIcon($category) {
+		return @$this->data_category_link[$category][1];
+	}
+	
 	private function hide($table, $field) {
 		$this->tables[$table]->hide($field);
 	}

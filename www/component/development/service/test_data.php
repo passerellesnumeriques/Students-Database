@@ -28,7 +28,7 @@ class service_test_data extends Service {
 	}
 	
 	private $roles = array(
-		"Test"=>array(
+		"Dev"=>array(
 			"Staff"=>array("consult_user_list"=>true),
 			"Student"=>array(),
 			"Alumni"=>array(),
@@ -43,12 +43,13 @@ class service_test_data extends Service {
 			"External Relations Officer"=>array(),
 			"Finance Manager"=>array(),
 		),
+		"Test"=>array(),
 		"PNP"=>array(),
 		"PNV"=>array(),
 		"PNC"=>array(),
 	);
 	private $users = array(
-		"Test"=>array(
+		"Dev"=>array(
 			array("Helene", "Huard", "F", array("General Manager","Staff")),
 			array("Julie", "Tardieu", "F", array("Staff", "Education Manager", "Educator")),
 			array("Eduard", "Bucad", "M", array("Staff", "Educator")),
@@ -66,6 +67,7 @@ class service_test_data extends Service {
 			array("Rhey", "Laurente", "M", array("Alumni")),
 			array("X", "Y", "F", array("Student")),
 		),
+		"Test"=>array(),
 		"PNP"=>array(),
 		"PNV"=>array(),
 		"PNC"=>array(),
