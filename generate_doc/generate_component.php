@@ -1,4 +1,7 @@
-<?php 
+<?php
+require_once("../www/component/PNApplication.inc");
+PNApplication::$instance = new PNApplication();
+
 function get_resources($path, $rel, &$image, &$javascript, &$unknown) {
 	$dir = opendir($path);
 	while (($filename = readdir($dir)) <> null) {
@@ -20,10 +23,10 @@ function get_resources($path, $rel, &$image, &$javascript, &$unknown) {
 	closedir($dir);
 }
 
-function generate_component($name, &$nav) {
+function generate_component($name, &$nav, &$datamodel_uml) {
 	echo "   + Component ".$name."\n";
 	global $generated_dir,$www_dir;
-	mkdir($generated_dir."/component/".$name);
+	//mkdir($generated_dir."/component/".$name);
 	$path = $www_dir."/component/".$name;
 	
 	$comp_nav = array();
@@ -82,23 +85,27 @@ function generate_component($name, &$nav) {
 		
 		$uml = "";
 		foreach ($model->tables as $table) {
-			$uml .= "class ".$table->name." {\n";
+			$table_uml = "class ".$table->name." {\n";
 			foreach ($table->columns as $col) {
 				if (isset($table->displayable_data[$col->name]))
-					$uml .= "+"; // public
+					$table_uml .= "+"; // public
 				else
-					$uml .= "-"; // private
-				$uml .= $col->name." : ".$col->get_type()."\n";
+					$table_uml .= "-"; // private
+				$table_uml .= $col->name." : ".$col->get_type()."\n";
 			}
-			$uml .= "}\n";
+			$table_uml .= "}\n";
 			foreach ($table->columns as $col) {
 				if ($col instanceof ForeignKey) {
-					$uml .= $table->name." --> ".$col->foreign_table."\n";
+					$table_uml .= $table->name." --> ".$col->foreign_table."\n";
 				}
 			}
 			foreach ($table->links as $link) {
-				$uml .= $table->name." --> ".$link->table."\n";
+				$table_uml .= $table->name." --> ".$link->table."\n";
 			}
+			$uml .= $table_uml;
+			$datamodel_uml .= "package ".$name."\n";
+			$datamodel_uml .= $table_uml;
+			$datamodel_uml .= "end package\n";
 		}
 		$uml .= "hide methods\n";
 		
@@ -109,10 +116,10 @@ function generate_component($name, &$nav) {
 	}
 	// TODO rights
 	// functionalities
-	mkdir($generated_dir."/component/".$name."/php");
-	mkdir_rec($generated_dir."/tmp/component/".$name."/php");
-	copy_dir_flat($path, $generated_dir."/tmp/component/".$name."/php");
-	exec(getenv("PHP_PATH")."/php.exe -c ".$generated_dir."/php.ini ".dirname(__FILE__)."/tools/apigen/apigen.php --source ".$generated_dir."/tmp/component/".$name."/php"." --destination ".$generated_dir."/component/".$name."/php --extensions inc,php");
+// 	mkdir($generated_dir."/component/".$name."/php");
+// 	mkdir_rec($generated_dir."/tmp/component/".$name."/php");
+// 	copy_dir_flat($path, $generated_dir."/tmp/component/".$name."/php");
+// 	exec(getenv("PHP_PATH")."/php.exe -c ".$generated_dir."/php.ini ".dirname(__FILE__)."/tools/apigen/apigen.php --source ".$generated_dir."/tmp/component/".$name."/php"." --destination ".$generated_dir."/component/".$name."/php --extensions inc,php");
 	$s = file_get_contents($generated_dir."/component/".$name."/php/class-".$name.".html");
 	
 	$methods_list = array();

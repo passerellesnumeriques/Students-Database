@@ -109,6 +109,7 @@ button img {
 }
 .button.disabled {
 	color: #808080;
+	cursor: default;
 }
 .button.disabled img {
 	opacity: 0.5;
@@ -243,4 +244,16 @@ table.grid tbody tr:nth-child(even).selected {
 }
 table.grid tbody tr:nth-child(odd).selected {
 	background-color: #D8D8C0;
+}
+
+/* Collapsable section */
+.collapsable_section {
+	border: 1px solid black;
+}
+.collapsable_section_header {
+	border-bottom: 1px solid black;
+	background-color: #D0D0FF;
+	cursor: pointer;
+}
+.collapsable_section_content {
 }

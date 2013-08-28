@@ -221,11 +221,17 @@ function grid(element) {
 	t.selectable = false;
 	t.url = get_script_path("grid.js");
 	
-	t.addColumn = function(column) {
+	t.addColumn = function(column, index) {
 		column.grid = t;
-		t.columns.push(column);
-		t.header.appendChild(column.th);
-		t.colgroup.appendChild(column.col);
+		if (index == null || typeof index == 'undefined' || index >= t.columns.length) {
+			t.columns.push(column);
+			t.header.appendChild(column.th);
+			t.colgroup.appendChild(column.col);
+		} else {
+			t.header.insertBefore(column.th, t.columns[index].th);
+			t.colgroup.insertBefore(column.col, t.columns[index].col);
+			t.columns.splice(index,0,column);
+		}
 		column._refresh_title();
 		require("dragndrop.js",function() {
 			dnd.configure_drag_element(column.th, true, null, function(){

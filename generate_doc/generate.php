@@ -27,6 +27,38 @@ function execute($cmd) {
 	global $to_execute;
 	array_push($to_execute, $cmd);
 }
+function execute_commands() {
+	global $generated_dir, $to_execute;
+	echo "Execute external commands\n";
+	mkdir($generated_dir."/batch");
+	$main_batch = "@echo off\r\n";
+	$sub_batch_index = 0;
+	foreach ($to_execute as $cmd) {
+		$name = "batch".($sub_batch_index++);
+		if ($sub_batch_index == 5) {
+			$main_batch .= "ping -n 1 -w 2000 1.2.3.4 > NUL 2>&1\r\n";
+		} else if ($sub_batch_index > 5 && ($sub_batch_index%3) == 0) {
+			$main_batch .= "ping -n 1 -w 1000 1.2.3.4 > NUL 2>&1\r\n";
+		} else {
+			$main_batch .= "ping -n 1 -w 100 1.2.3.4 > NUL 2>&1\r\n";
+		}
+		$main_batch .= "START /B CMD /C CALL ".$name.".bat\r\n";
+		$f = fopen($generated_dir."/batch/".$name.".bat","w");
+		if (is_array($cmd)) {
+			foreach ($cmd as $c)
+				fwrite($f, $c."\r\n");
+		} else {
+			fwrite($f, $cmd."\r\n");
+		}
+		fclose($f);
+	}
+	$f = fopen($generated_dir."/batch/main.bat","w");
+	fwrite($f, $main_batch);
+	fclose($f);
+	system("CD ".$generated_dir."/batch && main.bat");
+	echo "Cleaning temporary files\n";
+	remove_dir($generated_dir."/batch");
+}
 function write_file($filename, $content) {
 	global $generated_dir;
 	$path = $generated_dir."/".$filename;
@@ -113,9 +145,20 @@ function copy_dir_flat($src, $dst) {
 	closedir($dir);
 }
 
+mkdir($generated_dir."/tmp");
+echo " + Prepare PHP documentation\n";
+foreach ($components as $name) {
+	echo "  + Component ".$name."\n";
+	mkdir_rec($generated_dir."/component/".$name."/php");
+	mkdir_rec($generated_dir."/tmp/component/".$name."/php");
+	$path = $www_dir."/component/".$name;
+	copy_dir_flat($path, $generated_dir."/tmp/component/".$name."/php");
+	execute(getenv("PHP_PATH")."/php.exe -c ".$generated_dir."/php.ini ".dirname(__FILE__)."/tools/apigen/apigen.php --source ".$generated_dir."/tmp/component/".$name."/php"." --destination ".$generated_dir."/component/".$name."/php --extensions inc,php");
+}
+execute_commands();
+
 // main structure
 echo " + Generate files\n";
-mkdir($generated_dir."/tmp");
 copy_file("index.html");
 copy_file("style.css");
 copy_file("tree_expand.png");
@@ -158,10 +201,13 @@ mkdir($generated_dir."/general/php");
 execute(getenv("PHP_PATH")."/php.exe -c ".$generated_dir."/php.ini ".dirname(__FILE__)."/tools/apigen/apigen.php --source ".$generated_dir."/tmp/general_php"." --destination ".$generated_dir."/general/php"." --extensions inc,php");
 array_push($nav_general, array("PHP", "general/php/index.html"));
 
+copy_file("general/data_model.html");
+array_push($nav_general, array("Data Model", "general/data_model.html"));
+
 array_push($nav, array("General", null, $nav_general));
 
 // components
-mkdir($generated_dir."/component");
+//mkdir($generated_dir."/component");
 // generate index
 write_file("component/index.html", "<img src='dependencies.png'/>");
 $uml = "";
@@ -189,39 +235,22 @@ generate_uml($uml, "component/dependencies");
 // generate each component
 include "generate_component.php";
 $nav_components = array();
+$datamodel_uml = "";
 foreach ($components as $c)
-	generate_component($c, $nav_components);
+	generate_component($c, $nav_components, $datamodel_uml);
 
 array_push($nav, array("Components", "component/index.html", $nav_components));
+$datamodel_uml .= "hide methods\n";
+generate_uml($datamodel_uml, "general/data_model");
 
 // navigation and home
 generate("navigation");
 generate("home");
 
-echo "Execute external commands\n";
-mkdir($generated_dir."/batch");
-$main_batch = "@echo off\r\n";
-$sub_batch_index = 0;
-foreach ($to_execute as $cmd) {
-	$name = "batch".($sub_batch_index++);
-	$main_batch .= "START /B CMD /C CALL ".$name.".bat\r\n";
-	$f = fopen($generated_dir."/batch/".$name.".bat","w");
-	if (is_array($cmd)) {
-		foreach ($cmd as $c)
-			fwrite($f, $c."\r\n");
-	} else {
-		fwrite($f, $cmd."\r\n");
-	}
-	fclose($f);
-}
-$f = fopen($generated_dir."/batch/main.bat","w");
-fwrite($f, $main_batch);
-fclose($f);
-system("CD ".$generated_dir."/batch && main.bat");
+execute_commands();
 
 echo "Cleaning temporary files\n";
 remove_dir($generated_dir."/tmp");
-remove_dir($generated_dir."/batch");
 
 echo "Generation done.\n";
 /*

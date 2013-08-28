@@ -70,6 +70,7 @@ class DataPathBuilder {
 					}
 				}
 				$p = new DataPath_Join($path, $path->table, $path->sub_model, $path->table_alias, $t, $sm, $context->new_table_alias(), array($col->name=>$t->getPrimaryKey()->name));
+				unset($t);
 				DataPathBuilder::search_from_path($p, $context, $done, $final_paths, $sub_models);
 			} catch (Exception $e) {
 				// not allowed
@@ -103,8 +104,7 @@ class DataPathBuilder {
 	private static function add_links(&$path, &$context, &$done, &$final_paths, $sub_models) {
 		$model = DataModel::get();
 		foreach ($path->table->getLinks() as $link) {
-			// TODO multiple
-			if (!$link->unique) continue;
+			if (!$link->unique && !$path->is_unique()) continue; // double multiplicity: too complex
 			try {
 				$t = $model->getTable($link->table);
 				$sm = null;
@@ -127,6 +127,8 @@ class DataPathBuilder {
 					}
 				}
 				$p = new DataPath_Join($path, $path->table, $path->sub_model, $path->table_alias, $t, $sm, $context->new_table_alias(), $link->fields_matching);
+				$p->unique = $link->unique;
+				unset($t);
 				DataPathBuilder::search_from_path($p, $context, $done, $final_paths, $sub_models);
 			} catch (Exception $e) {
 				// not allowed
@@ -141,8 +143,7 @@ class DataPathBuilder {
 		foreach ($tables as &$ta) {
 			foreach ($ta->getLinks() as $link) {
 				if ($link->table <> $path->table->getName()) continue;
-				// TODO multiple
-				if (!$link->unique) continue;
+				if (!$link->unique && !$path->is_unique()) continue; // double multiplicity: too complex
 				try {
 					$t = $link->table_from;
 					if (!$t->canAccess()) continue;
@@ -155,6 +156,8 @@ class DataPathBuilder {
 						}
 					}
 					$p = new DataPath_ReverseJoin($path, $t, $sm, $context->new_table_alias(), $path->table, $path->sub_model, $path->table_alias, $link->fields_matching);
+					$p->unique = $link->unique;
+					unset($t);
 					DataPathBuilder::search_from_path($p, $context, $done, $final_paths, $sub_models);
 				} catch (Exception $e) {
 					// not allowed
@@ -190,6 +193,8 @@ abstract class DataPath {
 	public $sub_model;
 	public $table_alias;
 	
+	public $unique = true;
+	
 	public function __construct($parent, &$table, $sub_model, $table_alias) {
 		$this->parent = $parent;
 		$this->table = &$table;
@@ -198,6 +203,12 @@ abstract class DataPath {
 	}
 	
 	public abstract function get_string();
+	
+	public final function is_unique() {
+		if (!$this->unique) return false;
+		if ($this->parent == null) return true;
+		return $this->parent->is_unique();
+	}
 	
 }
 
@@ -288,7 +299,9 @@ class DataPath_Join extends DataPath {
 	
 	public function get_string() {
 		$s = $this->parent->get_string();
-		$s .= ">".$this->table->getName();
+		$s .= ">";
+		if (!$this->unique) $s .= ">";
+		$s .= $this->table->getName();
 		if ($this->sub_model <> null)
 			$s .= "[".$this->sub_model."]";
 		$s .= "(";
@@ -310,6 +323,7 @@ class DataPath_Join extends DataPath {
 	 * @param DataPathBuilderContext $context
 	 */
 	public function build_sql(&$q, &$context) {
+		if (!$this->unique) return;
 		$this->parent->build_sql($q, $context);
 		$alias = $q->get_join_alias($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields);
 		if ($alias <> $this->table_alias) {
@@ -344,13 +358,16 @@ class DataPath_ReverseJoin extends DataPath {
 	
 	public function get_string() {
 		$s = $this->parent->get_string();
-		$s .= ">".$this->table->getName();
+		$s .= "<";
+		if (!$this->unique) $s .= "<";
+		$s .= $this->table->getName();
 		if ($this->sub_model <> null)
 			$s .= "[".$this->sub_model."]";
 		$s .= "(";
 		$first = true;
 		foreach ($this->matching_fields as $src=>$dst) {
 			if ($first) $first = false; else $s .= ",";
+			$s .= $src."=";
 			if (is_array($dst))
 				$s .= json_encode($dst);
 			else
@@ -365,6 +382,7 @@ class DataPath_ReverseJoin extends DataPath {
 	 * @param DataPathBuilderContext $context
 	 */
 	public function build_sql(&$q, &$context) {
+		if (!$this->unique) return;
 		$alias = $q->get_join_alias($this->to_table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields);
 		if ($alias <> $this->table_alias) {
 			$q->join($this->to_table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields, $this->table_alias);

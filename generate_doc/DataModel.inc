@@ -26,6 +26,7 @@ class Table {
 	public $fields_read_access = array();
 	public $fields_write_access = array();
 	public $displayable_data = array();
+	private $unique_fields = null;
 	
 	public function __construct($name) {
 		$this->name = $name;
@@ -108,6 +109,11 @@ class Table {
 	/** Indicate a link to another table, not using a foreign key. */
 	public function &addLink($table_name, $fields_matching, $unique) {
 		array_push($this->links, new Link($this, $table_name, $fields_matching, $unique));
+		return $this;
+	}
+	
+	public function &setUnique($fields) {
+		$this->unique_fields = $fields;
 		return $this;
 	}
 

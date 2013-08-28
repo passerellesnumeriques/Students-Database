@@ -4,11 +4,21 @@ if (typeof require != 'undefined') {
 	require("horizontal_layout.js");
 	require("typed_field.js");
 	require("field_text.js");
+	require("field_html.js");
 	require("context_menu.js");
 }
 function data_list(container, root_table, show_fields, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
+	
+	t.addHeader = function(html) {
+		var item = document.createElement("DIV");
+		if (typeof html == 'string')
+			item.innerHTML = html;
+		else
+			item.appendChild(html);
+		t.header_center.appendChild(item);
+	};
 	
 	t._init_list = function() {
 		// analyze and remove container content
@@ -158,7 +168,6 @@ function data_list(container, root_table, show_fields, onready) {
 		col.onunchanged = function(field) {
 			t._cell_unchanged(field);
 		};
-		// TODO onchange + save
 		if (f.edit) {
 			col.addAction(new GridColumnAction(theme.icons_16.edit,function(ev,action,col){
 				var edit_col = function() {
@@ -188,6 +197,7 @@ function data_list(container, root_table, show_fields, onready) {
 		}
 		return col;
 	};
+	t._col_actions = null;
 	t._load_data = function() {
 		t.grid.startLoading();
 		var fields = [];
@@ -200,12 +210,37 @@ function data_list(container, root_table, show_fields, onready) {
 			}
 			t.tables = result.tables;
 			t.data = result.data;
+			var has_actions = false;
 			var data = [];
 			for (var i = 0; i < t.data.length; ++i) {
 				var row = [];
-				for (var j = 0; j < t.data[i].values.length; ++j)
+				for (var j = 0; j < t.data[i].values.length; ++j) {
 					row.push(t.data[i].values[j].v);
+					if (t.data[i].actions)
+						has_actions = true;
+				}
 				data.push(row);
+			}
+			if (has_actions) {
+				if (!t._col_actions) {
+					t._col_actions = new GridColumn('actions', "", null, "field_html", false, null, null, {}, null);
+					t.grid.addColumn(t._col_actions);
+				}
+				for (var i = 0; i < t.data.length; ++i) {
+					var row = data[i];
+					var content = "";
+					if (t.data[i].actions)
+						for (var j = 0; j < t.data[i].actions.length; ++j) {
+							var a = t.data[i].actions[j];
+							content += "<a href=\""+a.link+"\"><img src='"+a.icon+"'/></a> ";
+						}
+					row.push(content);
+				}
+			} else {
+				if (t._col_actions) {
+					t.grid.removeColumn(t.grid.getColumnIndex(t._col_actions));
+					t._col_actions = null;
+				}
 			}
 			t.grid.setData(data);
 			t.grid.endLoading();
@@ -252,7 +287,7 @@ function data_list(container, root_table, show_fields, onready) {
 					if (this.checked) {
 						t.show_fields.push(this.data);
 						var col = t._create_column(this.data);
-						t.grid.addColumn(col);
+						t.grid.addColumn(col, t._col_actions != null ? t.grid.getColumnIndex(t._col_actions) : t.grid.getNbColumns());
 						// TODO handle case if not yet loaded...
 						t._load_data();
 					} else {

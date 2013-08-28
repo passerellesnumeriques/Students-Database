@@ -62,7 +62,9 @@ if ($message <> null) {
 	<tr align=left>
 		<td colspan=3 align=center>
 			<a href="/dynamic/development/page/tools">Development tools</a>
-		</td>
+			<br/>
+			<a href="/dynamic/test/page/home">Tests</a>
+			</td>
 	</tr>
 </table>
 <br/>

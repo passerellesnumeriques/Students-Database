@@ -27,7 +27,7 @@ abstract class Component {
 		// check the user is logged
 		if (PNApplication::$instance->user_management->username == null) {
 			// development mode only
-			if ($this->name <> "development") {
+			if ($this->name <> "development" && $this->name <> "test") {
 				// only allow the login page
 				if ($this->name <> "application" || $path <> "enter") {
 					echo "<script type='text/javascript'>window.top.location.reload();</script>";

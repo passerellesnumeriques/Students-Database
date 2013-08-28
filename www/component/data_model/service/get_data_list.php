@@ -49,7 +49,8 @@ TODO
 		$table_name = $t->getSQLName(null);
 		$q->select(array($table_name=>$alias));
 		foreach ($paths as $p)
-			$p->append_sql($q, $ctx);
+			if ($p->is_unique())
+				$p->append_sql($q, $ctx);
 
 		$actions = null;
 		if (isset($_POST["actions"]) && $_POST["actions"]) {
@@ -114,25 +115,30 @@ TODO
 			echo "{values:[";
 			for ($j = 0; $j < count($paths); $j++) {
 				if ($j>0) echo ",";
-				echo "{v:";
-				echo json_encode($res[$i][$paths[$j]->field_alias]);
-				echo ",k:[";
-				if ($paths[$j]->parent->table_primarykey_alias <> null)
-					echo json_encode($paths[$j]->parent->table->getPrimaryKey()->name).",".json_encode($res[$i][$paths[$j]->parent->table_primarykey_alias]);
-				else {
-					// no primary key
-					$keys = $this->get_keys_for($paths[$j]->parent->table, $paths[$j]->parent->sub_model);
-					for ($k = 0; $k < count($keys); $k++) {
-						if ($k>0) echo ",";
-						$alias = $q->get_field_alias($paths[$j]->parent->table_alias, $keys[$k]->name);
-						if ($alias <> null)
-							echo json_encode($res[$i][$alias]);
-						else // TODO DEBUG
-							PNApplication::error("No alias for ".$paths[$j]->parent->table_alias.".".$keys[$k]->name." in ".$q->generate());
+				if ($paths[$j]->is_unique()) {
+					echo "{v:";
+					echo json_encode($res[$i][$paths[$j]->field_alias]);
+					echo ",k:[";
+					if ($paths[$j]->parent->table_primarykey_alias <> null)
+						echo json_encode($paths[$j]->parent->table->getPrimaryKey()->name).",".json_encode($res[$i][$paths[$j]->parent->table_primarykey_alias]);
+					else {
+						// no primary key
+						$keys = $this->get_keys_for($paths[$j]->parent->table, $paths[$j]->parent->sub_model);
+						for ($k = 0; $k < count($keys); $k++) {
+							if ($k>0) echo ",";
+							$alias = $q->get_field_alias($paths[$j]->parent->table_alias, $keys[$k]->name);
+							if ($alias <> null)
+								echo json_encode($res[$i][$alias]);
+							else // TODO DEBUG
+								PNApplication::error("No alias for ".$paths[$j]->parent->table_alias.".".$keys[$k]->name." in ".$q->generate());
+						}
 					}
+					echo "]";
+					echo "}";
+				} else {
+					echo "{v:\"TODO: multiple values\"}";
+					// TODO multiple
 				}
-				echo "]";
-				echo "}";
 			}
 			echo "]";
 			if ($actions !== null) {
