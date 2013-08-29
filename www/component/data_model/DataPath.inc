@@ -238,11 +238,15 @@ class DataPath_Table extends DataPath {
 	 * @param DataPathBuilderContext $context
 	 */
 	public function build_sql(&$q, &$context) {
+		$this->append_sql($q, $context);
+	}
+	
+	public function append_sql(&$q, &$context) {
 		$q->select(array($this->table->getSQLNameFor($this->sub_model) => $this->table_alias));
 		$pk = $this->table->getPrimaryKey();
 		if ($pk <> null) {
 			$this->table_primarykey_alias = $context->new_field_alias();
-			$q->field($this->table->getSQLNameFor($this->sub_model), $pk->name, $this->table_primarykey_alias);		
+			$q->field($this->table->getSQLNameFor($this->sub_model), $pk->name, $this->table_primarykey_alias);
 		}
 	}
 	
@@ -323,8 +327,11 @@ class DataPath_Join extends DataPath {
 	 * @param DataPathBuilderContext $context
 	 */
 	public function build_sql(&$q, &$context) {
-		if (!$this->unique) return;
 		$this->parent->build_sql($q, $context);
+		$this->append_sql($q, $context);
+	}
+
+	public function append_sql(&$q, &$context) {
 		$alias = $q->get_join_alias($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields);
 		if ($alias <> $this->table_alias) {
 			$q->join($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields, $this->table_alias);
@@ -382,7 +389,10 @@ class DataPath_ReverseJoin extends DataPath {
 	 * @param DataPathBuilderContext $context
 	 */
 	public function build_sql(&$q, &$context) {
-		if (!$this->unique) return;
+		$this->append_sql($q, $context);
+	}
+
+	public function append_sql(&$q, &$context) {
 		$alias = $q->get_join_alias($this->to_table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields);
 		if ($alias <> $this->table_alias) {
 			$q->join($this->to_table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields, $this->table_alias);

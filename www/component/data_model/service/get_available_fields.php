@@ -24,13 +24,12 @@ TODO
 			if ($i>0) echo ",";
 			$p = $paths[$i];
 			echo "{";
-			echo "field:".json_encode($p->get_string());
+			echo "path:".json_encode($p->get_string());
 			$disp = $p->table->getDisplayableDataCategoryAndName($p->field_name);
 			echo ",cat:".json_encode($disp[0]);
 			echo ",name:".json_encode($disp[1]);
-			echo ",edit:".($p->table->canModifyField($p->field_name) ? "true" : "false");
-			echo ",table:".json_encode($p->table->getName());
-			echo ",column:".json_encode($p->field_name);
+			// TODO allow to edit multiple
+			echo ",editable:".($p->table->canModifyField($p->field_name) && $paths[$i]->is_unique() ? "true" : "false");
 			echo "}";
 		}
 		echo "]";

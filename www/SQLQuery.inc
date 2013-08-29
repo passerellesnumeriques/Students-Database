@@ -616,6 +616,7 @@ class SQLQuery {
 		foreach ($rows as $r) array_push($keys, $r[$pk]);
 		$this->remove_keys($keys);
 	}
+	// TODO: do not remove linked entities if the link is not strong
 	/** Remove data with given primary keys */
 	public function remove_keys($table, $keys, $sub_models = null) {
 		require_once("component/data_model/Model.inc");

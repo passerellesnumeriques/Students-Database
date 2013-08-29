@@ -37,9 +37,15 @@ class Table {
 		return $this;
 	}
 
-	/** Add a foreign key to the given table */
-	public function addForeignKey($name, $table) {
-		$c = new ForeignKey($this, $name, $table);
+	/**
+	 * Add a foreign key to the given table 
+	 * @param string $name name of the foreign key
+	 * @param string $table table pointed by the foreign key
+	 * @param boolean $strong indicates if the link is strong or not: if it is strong, it means that if an entity is removed, the linked ones are also removed.
+	 * @return \datamodel\Table
+	 */
+	public function addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed) {
+		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed);
 		array_push($this->columns, $c);
 		return $this;
 	}
@@ -591,9 +597,13 @@ class PrimaryKey extends ColumnInteger {
 class ForeignKey extends ColumnInteger {
 
 	public $foreign_table;
+	public $remove_foreign_when_primary_removed;
+	public $remove_primary_when_foreign_removed;
 
-	public function __construct(&$table, $name, $foreign_table) {
+	public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed) {
 		$this->foreign_table = $foreign_table;
+		$this->remove_foreign_when_primary_removed = $remove_foreign_when_primary_removed;
+		$this->remove_primary_when_foreign_removed = $remove_primary_when_foreign_removed;
 		try { $ft = $table->getModel()->internalGetTable($foreign_table); }
 		catch (\Exception $e) { $ft = null; }
 		if ($ft == null && $table->getModel() instanceof \SubDataModel)

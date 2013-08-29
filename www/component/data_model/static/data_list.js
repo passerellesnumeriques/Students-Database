@@ -70,6 +70,8 @@ function data_list(container, root_table, show_fields, onready) {
 		service.json("data_model","get_available_fields",{table:root_table},function(result){
 			if (result) {
 				t.available_fields = result;
+				for (var i = 0; i < t.available_fields.length; ++i)
+					t.available_fields[i].path = new DataPath(t.available_fields[i].path);
 				t._ready();
 			}
 		});
@@ -81,53 +83,21 @@ function data_list(container, root_table, show_fields, onready) {
 		t.show_fields = [];
 		var add_field = function(field) {
 			for (var i = 0; i < t.show_fields.length; ++i)
-				if (t.show_fields[i].field == field.field)
+				if (t.show_fields[i].path == field.path)
 					return;
 			t.show_fields.push(field);
 		};
 		for (var i = 0; i < show_fields.length; ++i)
 			for (var j = 0; j < t.available_fields.length; ++j)
-				if (show_fields[i] == t.available_fields[j].field) {
+				if (show_fields[i] == t.available_fields[j].path.path ||
+					(show_fields[i] == t.available_fields[j].path.table+'.'+t.available_fields[j].path.column)) {
 					add_field(t.available_fields[j]);
 					show_fields.splice(i,1);
 					i--;
 					break;
 				}
-		for (var i = 0; i < show_fields.length; ++i) {
-			for (var j = 0; j < t.available_fields.length; ++j) {
-				var f = t.available_fields[j].field;
-				// remove parenthesis and brackets
-				do {
-					var a = f.indexOf('(');
-					if (a < 0) break;
-					var b = f.indexOf(')', a);
-					if (b < 0) break;
-					f = f.substring(0,a)+f.substring(b+1);
-				} while (true);
-				do {
-					var a = f.indexOf('[');
-					if (a < 0) break;
-					var b = f.indexOf(']', a);
-					if (b < 0) break;
-					f = f.substring(0,a)+f.substring(b+1);
-				} while (true);
-				if (show_fields[i] == f) {
-					add_field(t.available_fields[j]);
-					show_fields.splice(i,1);
-					i--;
-					break;
-				}
-				if (f.substring(f.length-show_fields[i].length) == show_fields[i]) {
-					var c = f.charAt(f.length-show_fields[i].length-1);
-					if (c == '.' || c == '>') {
-						add_field(t.available_fields[j]);
-						show_fields.splice(i,1);
-						i--;
-						break;
-					}
-				}
-			}
-		}
+		for (var i = 0; i < show_fields.length; ++i)
+			window.top.status_manager.add_status(new window.top.StatusMessageError(null, "DataList: unknown field '"+show_fields[i]+"'"));
 		// initialize grid
 		t._load_typed_fields(function(){
 			for (var i = 0; i < t.show_fields.length; ++i) {
@@ -143,7 +113,7 @@ function data_list(container, root_table, show_fields, onready) {
 	};
 	t._load_typed_fields = function(handler) {
 		require("typed_field.js",function() {
-			var fields = ["field_text.js"];
+			var fields = ["field_text.js","field_html.js"];
 			var nb = fields.length;
 			for (var i = 0; i < fields.length; ++i)
 				require(fields[i],function(){if (--nb == 0) handler(); });
@@ -157,7 +127,7 @@ function data_list(container, root_table, show_fields, onready) {
 	
 	t._create_column = function(f) {
 		// TODO typed
-		var col = new GridColumn(f.field, f.name, null, "field_text", false, null, null, {}, f);
+		var col = new GridColumn(f.path, f.name, null, "field_text", false, null, null, {}, f);
 		col.addSorting(function (v1,v2){
 			return v1.localeCompare(v2);
 		}); // TODO external sorting if paged
@@ -168,7 +138,7 @@ function data_list(container, root_table, show_fields, onready) {
 		col.onunchanged = function(field) {
 			t._cell_unchanged(field);
 		};
-		if (f.edit) {
+		if (f.editable) {
 			col.addAction(new GridColumnAction(theme.icons_16.edit,function(ev,action,col){
 				var edit_col = function() {
 					col.editable = !col.editable;
@@ -186,7 +156,8 @@ function data_list(container, root_table, show_fields, onready) {
 						t.grid.endLoading();
 					});
 				} else
-					service.json("data_model","lock_column",{table:f.table,column:f.column},function(result){
+					// TODO lock full path of data path
+					service.json("data_model","lock_column",{table:f.path.table,column:f.path.column},function(result){
 						if (result) {
 							col.lock = result.lock;
 							edit_col();
@@ -202,7 +173,7 @@ function data_list(container, root_table, show_fields, onready) {
 		t.grid.startLoading();
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
-			fields.push(t.show_fields[i].field);
+			fields.push(t.show_fields[i].path.path);
 		service.json("data_model","get_data_list",{table:root_table,fields:fields,actions:true},function(result){
 			if (!result) {
 				t.grid.endLoading();
@@ -346,4 +317,50 @@ function data_list(container, root_table, show_fields, onready) {
 	t._save = function() {
 		// TODO
 	};
+}
+
+function DataPath(s) {
+	this.path = s;
+	this.parseElement = function(s) {
+		var i = s.indexOf('(');
+		if (i != -1) {
+			this.table = s.substring(0,i);
+			var j = s.indexOf(')');
+			var join = s.substring(i+1,j).split(",");
+			this.join = {};
+			for (i = 0; i < join.length; ++i) {
+				var k = join[i].split("=");
+				this.join[k[0]] = k[1];
+			}
+			if (j < s.length-1 && s.charAt(j+1) == '.')
+				this.column = s.substring(j+2);
+			return;
+		}
+		i = s.indexOf('.');
+		this.table = s.substring(0,i);
+		this.column = s.substring(i+1);
+	};
+	
+	var i = s.lastIndexOf('>');
+	var j = s.lastIndexOf('<');
+	if (i == -1 || (j != -1 && j > i)) i = j;
+	if (i != -1) {
+		var dir = s.charAt(i);
+		var element = s.substring(i+1);
+		var multiple = false;
+		if (s.charAt(i-1) == dir) {
+			multiple = true;
+			i--;
+		}
+		s = s.substring(0,i);
+		this.parseElement(element);
+		this.parent = new DataPath(s);
+		this.parent.multiple = multiple;
+		this.parent.direction = dir == '>' ? 1 : 2;
+	} else {
+		this.parent = null;
+		this.multiple = false;
+		this.direction = 0;
+		this.parseElement(s);
+	}
 }

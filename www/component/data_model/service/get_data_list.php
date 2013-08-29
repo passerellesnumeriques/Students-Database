@@ -108,7 +108,64 @@ TODO
 			echo "}";
 		}
 		echo "]";
-			
+
+		// compute sub-requests
+		foreach ($paths as $p) {
+			if ($p->is_unique()) continue;
+			$sq = SQLQuery::create();
+			$multiple_path = $p->parent;
+			$next_paths = array();
+			while ($multiple_path->unique) {
+				array_push($next_paths, $multiple_path);
+				$multiple_path = $multiple_path->parent;
+			}
+			if ($multiple_path->table_alias == null) $multiple_path->table_alias = $ctx->new_table_alias();
+			$sq->select(array($multiple_path->table->getSQLNameFor($multiple_path->sub_model)=>$multiple_path->table_alias));
+			for ($i = count($next_paths)-1; $i >= 0; $i--)
+				$next_paths[$i]->append_sql($sq, $ctx);
+			$sq->field($p->parent->table_alias, $p->field_name, $p->field_alias);
+			$keys_aliases = array();
+			foreach ($multiple_path->matching_fields as $src=>$dst) {
+				$alias = $ctx->new_field_alias();
+				array_push($keys_aliases, $alias);
+				$sq->field($multiple_path->table_alias, $dst, $alias);
+			}
+			$where = "";
+			foreach ($res as $row) {
+				if (strlen($where) > 0) $where .= " OR ";
+				$where .= "(";
+				$first = true;
+				foreach ($multiple_path->matching_fields as $src=>$dst) {
+					if ($first) $first = false; else $where .= " AND ";
+					$where .= "`".$multiple_path->table_alias."`.`".$dst."`='";
+					$where .= $sq->escape($row[$q->get_field_alias($multiple_path->parent->table_alias, $src)]);
+					$where .= "'";
+				}
+				$where .= ")";
+			}
+			$sq->where($where);
+			//PNApplication::error($sq->generate());
+			$sres = $sq->execute();
+			foreach ($res as &$row) {
+				$l = array();
+				foreach ($sres as $srow) {
+					$match = true;
+					$i = 0;
+					foreach ($multiple_path->matching_fields as $src=>$dst) {
+						//echo "Try: ".$srow[$keys_aliases[$i]]." => ".$row[$q->get_field_alias($multiple_path->parent->table_alias, $src)]."\r\n";
+						if ($srow[$keys_aliases[$i]] <> $row[$q->get_field_alias($multiple_path->parent->table_alias, $src)]) {
+							$match = false;
+							break;
+						}
+						$i++;
+					}
+					if ($match)
+						array_push($l, $srow[$p->field_alias]);
+				}
+				$row[$p->field_alias] = $l;
+			}
+		}
+		
 		echo ",data:[";
 		for ($i = 0; $i < count($res); $i++) {
 			if ($i>0) echo ",";
@@ -136,8 +193,9 @@ TODO
 					echo "]";
 					echo "}";
 				} else {
-					echo "{v:\"TODO: multiple values\"}";
+					//echo "{v:\"TODO: multiple values\"}";
 					// TODO multiple
+					echo "{v:".json_encode($res[$i][$paths[$j]->field_alias])."}";
 				}
 			}
 			echo "]";

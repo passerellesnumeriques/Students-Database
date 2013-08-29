@@ -20,8 +20,32 @@ function list_components() {
 	closedir($dir);
 	return $list;
 }
+function order_components_($name, &$list) {
+	if (in_array($name, $list)) return;
+	global $www_dir;
+	if (file_exists($www_dir."/component/".$name."/dependencies")) {
+		$f = fopen($www_dir."/component/".$name."/dependencies","r");
+		while (($line = fgets($f, 4096)) !== false) {
+			$line = trim($line);
+			if (strlen($line) == 0) continue;
+			$i = strpos($line,":");
+			if ($i === FALSE) $i = strlen($line);
+			$dep = substr($line,0,$i);
+			order_components_($dep, $list);
+		}
+		fclose($f);
+	}
+	array_push($list, $name);
+}
+function order_components($list) {
+	$l = array();
+	foreach ($list as $name)
+		order_components_($name, $l);
+	return $l;
+}
 global $components;
 $components = list_components();
+$components = order_components($components);
 
 function execute($cmd) {
 	global $to_execute;
@@ -37,7 +61,9 @@ function execute_commands() {
 		$name = "batch".($sub_batch_index++);
 		if ($sub_batch_index == 5) {
 			$main_batch .= "ping -n 1 -w 2000 1.2.3.4 > NUL 2>&1\r\n";
-		} else if ($sub_batch_index > 5 && ($sub_batch_index%3) == 0) {
+		} else if ($sub_batch_index < 10) {
+			$main_batch .= "ping -n 1 -w 500 1.2.3.4 > NUL 2>&1\r\n";
+		} else if (($sub_batch_index%3) == 0) {
 			$main_batch .= "ping -n 1 -w 1000 1.2.3.4 > NUL 2>&1\r\n";
 		} else {
 			$main_batch .= "ping -n 1 -w 100 1.2.3.4 > NUL 2>&1\r\n";
