@@ -52,6 +52,9 @@ class user_management extends Component {
 		$this->logged_out->fire();
 		setcookie(session_name(), "", time()-10000, "/dynamic/");
 		session_destroy();
+		$this->domain = null;
+		$this->username = null;
+		$this->auth_token = null;
 	}
 
 	/**

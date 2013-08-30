@@ -24,6 +24,7 @@ theme::$icons_16 = array(
 	"save" => 			"/static/theme/".$theme."/icons_16/save.png",
 	"saving" =>			"/static/theme/".$theme."/icons_16/saving.gif",
 	"search" => 		"/static/theme/".$theme."/icons_16/search.png",
+	"wait" =>	 		"/static/theme/".$theme."/icons_16/wait.png",
 	"warning" => 		"/static/theme/".$theme."/icons_16/warning.png",
 	"yes" => 			"/static/theme/".$theme."/icons_16/ok.png",
 );

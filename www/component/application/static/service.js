@@ -34,6 +34,38 @@ service = {
 		);
 	},
 	
+	/**
+	 * Call a service using XML output
+	 * @param component the component containing the service
+	 * @param service_name the name of the service to call
+	 * @param input data to send to the service: an object, each attribute being a $_POST. If an attribute is a structure or array, it will be converted into a json string.
+	 * @param handler callback that will receive the result, or null if an error occured
+	 * @param foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
+	 */
+	xml: function(component, service_name, input, handler, foreground) {
+		var data = "";
+		if (input != null) {
+			if (typeof input == 'string') data = input;
+			else for (var name in input) {
+				if (data.length > 0) data += "&";
+				data += encodeURIComponent(name)+"=";
+				if (typeof input[name] == 'string')
+					data += encodeURIComponent(input[name]);
+				else
+					data += encodeURIComponent(service._generate_input(input[name]));
+			}
+		}
+		ajax.post_parse_result("/dynamic/"+component+"/service/"+service_name, data, 
+			function(xml){
+				handler(xml);
+			},
+			foreground,
+			function(error){
+				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+			}
+		);
+	},
+	
 	_generate_input: function(input) {
 		var s = "";
 		if (input instanceof Array) {

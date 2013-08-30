@@ -86,7 +86,7 @@ abstract class Component {
 	 */
 	public final function service($path) {
 		// development mode only
-		if ($this->name <> "development") {
+		if ($this->name <> "development" && $this->name <> "test") {
 			// check the user is logged
 			if (PNApplication::$instance->user_management->username == null) {
 				header("Content-Type: text/json;charset=UTF-8");
