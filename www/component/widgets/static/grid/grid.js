@@ -372,6 +372,7 @@ function grid(element) {
 	
 	t.setData = function(data) {
 		// empty table
+		t.unselectAll();
 		while (t.table.childNodes.length > 0) t.table.removeChild(t.table.childNodes[0]);
 		// create rows
 		for (var i = 0; i < data.length; ++i) {

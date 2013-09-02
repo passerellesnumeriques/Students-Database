@@ -58,7 +58,8 @@ var _mandatory_scripts = [
 	"/static/data_model/databaselock.js"
 ];
 var _optional_scripts = [
-	"/static/javascript/animation.js"
+	"/static/javascript/animation.js",
+	"/static/application/service.js"
 ];
 
 function next_mandatory() {

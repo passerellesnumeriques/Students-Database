@@ -79,6 +79,7 @@ class SQLQuery {
 	}
 	public function &set_sub_models($sub_models) {
 		if ($sub_models <> null) foreach ($sub_models as $key_table=>$key) $this->sub_models[$key_table] = $key;
+		return $this;
 	}
 
 	/** Prepares a select in the given tables.
@@ -562,11 +563,11 @@ class SQLQuery {
 						throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
 					$q = SQLQuery::create();
 					if ($this->bypass_security) $q->bypass_security();
-					$r = $q->select($this->name)->where($col->name,$fields[$col->name])->execute_single_row();
+					$r = $q->select($t->getSQLName($sub_models))->where($col->name,$fields_values[$col->name])->execute_single_row();
 					if ($r <> null) {
 						$dname = $t->getDisplayableDataName($col->name);
 						if ($dname == null) $dname = $col->name;
-						throw new Exception("The element already exists: ".$dname);
+						throw new Exception("The element already exists (".$dname.")");
 					}
 				}
 			}
@@ -601,7 +602,7 @@ class SQLQuery {
 
 	/** Remove the data having the given primary key, and all linked data */
 	public function remove_key($table, $key, $sub_models = null) {
-		$this->remove_keys(array($key), $sub_models);		
+		$this->remove_keys($table, array($key), $sub_models);		
 	}
 	/** Remove entries corresponding to the given rows */
 	public function remove_rows($table, $rows) {
@@ -616,7 +617,7 @@ class SQLQuery {
 		foreach ($rows as $r) array_push($keys, $r[$pk]);
 		$this->remove_keys($keys);
 	}
-	// TODO: do not remove linked entities if the link is not strong
+
 	/** Remove data with given primary keys */
 	public function remove_keys($table, $keys, $sub_models = null) {
 		require_once("component/data_model/Model.inc");
@@ -639,25 +640,25 @@ class SQLQuery {
 		// check we can access all the tables
 		if (!$this->bypass_security)
 			foreach ($tables as $ta)
-				if (!$ta->canRemove())
-					throw new \Exception("Access denied: remove data from table ".$ta->getName());
+				if (!$ta[0]->canRemove())
+					throw new \Exception("Access denied: remove data from table ".$ta[0]->getName());
 		
 		// lock all the tables
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
 		$locks = array();
 		foreach ($tables as $ta) {
-			$lock = DataBaseLock::lock($ta->getName(), null, $locker, false);
+			$lock = DataBaseLock::lock_table($ta[0]->getSQLNameFor($ta[1]), $locker);
 			if ($lock == null) {
 				foreach ($locks as $l)
 					DataBaseLock::unlock($l);
-				throw new Exception("Access denied: the table ".$ta->getName()." is locked by ".$locker);
+				throw new Exception("Access denied: the table ".$ta[0]->getName()." is locked by ".$locker);
 			}
 		}
 		
 		// remove data
 		foreach ($keys as $key)
-			$this->perform_remove($t, $key, $sub_model_instance);
+			$this->perform_remove_by_key($t, $key, $sub_model_instance);
 		
 		// clean sub models linked to the table
 		foreach ($t->_key_submodels as &$sm) {
@@ -667,6 +668,50 @@ class SQLQuery {
 		// unlock tables
 		foreach ($locks as $l)
 			DataBaseLock::unlock($l);
+	}
+	/** Remove data with given where clause */
+	public function remove($table, $where, $sub_models = null) {
+		require_once("component/data_model/Model.inc");
+		/* @var $t datamodel\Table */
+		if ($this->bypass_security)
+			$t = DataModel::get()->internalGetTable($table);
+		else
+			$t = DataModel::get()->getTable($table);
+		
+		if ($t->getPrimaryKey() <> null) {
+			// the table has primary key, let's remove by key
+			require_once("component/data_model/DataBaseLock.inc");
+			$locker = null;
+			$lock = DataBaseLock::lock_table($t->getSQLName($sub_models), $locker);
+			if ($lock == null)
+				throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
+			$rows = $this->select($table)->set_sub_models($sub_models)->where($where)->field($t->getPrimaryKey()->name)->execute_single_field();
+			$this->remove_keys($table, $rows, $sub_models);
+			DataBaseLock::unlock($lock);
+			return;
+		}
+
+		// TODO if there are links ?
+		require_once("component/data_model/DataBaseLock.inc");
+		$locker = null;
+		$lock = DataBaseLock::lock_table($t->getSQLName($sub_models), $locker);
+		if ($lock == null)
+			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
+
+		// remove data
+		$sql = "DELETE FROM `".$t->getSQLName($sub_models)."` WHERE ";
+		$first = true;
+		foreach ($where as $col=>$value) {
+			if ($first) $first = false; else $sql .= " AND ";
+			$sql .= "`".$col."`";
+			if ($value === null)
+				$sql .= " IS NULL";
+			else
+				$sql .= "='".SQLQuery::escape($value)."'";
+		}
+		SQLQuery::db()->execute($sql);
+
+		DataBaseLock::unlock($lock);
 	}
 	private function search_tables_for_remove(&$table, &$tables, $sub_model_instance) {
 		// check we didn't reach this table yet
@@ -703,7 +748,8 @@ class SQLQuery {
 			}
 		}
 	}
-	private function perform_remove(&$table, $key, $sub_model_instance) {
+	// TODO on remove, handle foreign_key->remove_primary_when_foreign_removed
+	private function perform_remove_by_key(&$table, $key, $sub_model_instance) {
 		// remove data
 		SQLQuery::db()->execute("DELETE FROM `".$table->getName().($sub_model_instance !== null ? "_".$sub_model_instance : "")."` WHERE `".$table->getPrimaryKey()->name."`=".$key);
 		
@@ -719,13 +765,19 @@ class SQLQuery {
 					foreach ($cols as $col) {
 						if ($col instanceof ForeignKey && $col->foreign_table == $table->getName()) {
 							if ($t->getPrimaryKey() <> null) {
-								$linked = SQLQuery::create()->bypass_security()->select($t->getSQLName($sm))->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();
-								if ($linked)
-									foreach ($linked as $linked_key)
-										$this->perform_remove($t, $linked_key, $sub_model_instance);
+								if ($col->remove_foreign_when_primary_removed) {
+									$linked = SQLQuery::create()->bypass_security()->select($t->getSQLName($sm))->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();
+									if ($linked)
+										foreach ($linked as $linked_key)
+											$this->perform_remove_by_key($t, $linked_key, $sub_model_instance);
+								} else
+									SQLQuery::create()->bypass_security()->update($t->getSQLName($sm), array($col->name=>null), array($col->name=>$key));
 							} else {
 								// no primary key, just remove the entries
-								SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName($sm)."` WHERE `".$col->name."`=".$key);
+								if ($col->remove_foreign_when_primary_removed)
+									SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName($sm)."` WHERE `".$col->name."`=".$key);
+								else
+									SQLQuery::db()->execute("UPDATE FROM `".$t->getSQLName($sm)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
 							}
 						}
 					}
@@ -737,13 +789,19 @@ class SQLQuery {
 						foreach ($cols as $col) {
 							if ($col instanceof ForeignKey && $col->foreign_table == $table->getName()) {
 								if ($t->getPrimaryKey() <> null) {
-									$linked = SQLQuery::create()->bypass_security()->select($t->getSQLName($sm))->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();
-									if ($linked)
-										foreach ($linked as $linked_key)
-											$this->perform_remove($t, $linked_key, $sub_model_instance);
+									if ($col->remove_foreign_when_primary_removed) {
+										$linked = SQLQuery::create()->bypass_security()->select($t->getSQLName($sm))->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();
+										if ($linked)
+											foreach ($linked as $linked_key)
+												$this->perform_remove_by_key($t, $linked_key, $sub_model_instance);
+									} else
+										SQLQuery::create()->bypass_security()->update($t->getSQLName($sm), array($col->name=>null), array($col->name=>$key));
 								} else {
 									// no primary key, just remove the entries
-									SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName($sm)."` WHERE `".$col->name."`=".$key);
+									if ($col->remove_foreign_when_primary_removed)
+										SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName($sm)."` WHERE `".$col->name."`=".$key);
+									else
+										SQLQuery::db()->execute("UPDATE FROM `".$t->getSQLName($sm)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
 								}
 							}
 						}
@@ -757,13 +815,19 @@ class SQLQuery {
 				foreach ($t->internalGetColumns(null) as $col) {
 					if ($col instanceof ForeignKey && $col->foreign_table == $table->getName()) {
 						if ($t->getPrimaryKey() <> null) {
-							$linked = SQLQuery::create()->bypass_security()->select($t->getSQLName(null))->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();
-							if ($linked)
-								foreach ($linked as $linked_key)
-									$this->perform_remove($t, $linked_key, null);
+							if ($col->remove_foreign_when_primary_removed) {
+								$linked = SQLQuery::create()->bypass_security()->select($t->getSQLName(null))->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();
+								if ($linked)
+									foreach ($linked as $linked_key)
+										$this->perform_remove_by_key($t, $linked_key, null);
+							} else
+								SQLQuery::create()->bypass_security()->update($t->getSQLName($sm), array($col->name=>null), array($col->name=>$key));
 						} else {
 							// no primary key, just remove the entries
-							SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName(null)."` WHERE `".$col->name."`=".$key);
+							if ($col->remove_foreign_when_primary_removed)
+								SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName($sm)."` WHERE `".$col->name."`=".$key);
+							else
+								SQLQuery::db()->execute("UPDATE FROM `".$t->getSQLName($sm)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
 						}
 					}
 				}

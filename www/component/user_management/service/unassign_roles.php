@@ -1,7 +1,7 @@
 <?php
-class service_assign_roles extends Service {
+class service_unassign_roles extends Service {
 	public function documentation() {
-?>Assign the given roles to the given users.<?php		
+?>Remove the given roles to the given users.<?php		
 	}
 	public function get_required_rights() {
 		return array("assign_roles");
@@ -32,8 +32,8 @@ class service_assign_roles extends Service {
 		foreach ($users as $user) {
 			$user_roles = SQLQuery::create()->select("UserRole")->field("role_id")->where("domain",$user->domain)->where("username", $user->username)->execute_single_field();
 			foreach ($roles as $role_id)
-				if (!in_array($role_id, $user_roles))
-					SQLQuery::create()->insert("UserRole", array("domain"=>$user->domain,"username"=>$user->username,"role_id"=>$role_id)); 
+				if (in_array($role_id, $user_roles))
+					SQLQuery::create()->remove("UserRole", array("domain"=>$user->domain,"username"=>$user->username,"role_id"=>$role_id)); 
 		}
 		DataBaseLock::unlock($lock_id);
 		echo "true";

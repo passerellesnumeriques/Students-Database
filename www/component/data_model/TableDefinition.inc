@@ -614,7 +614,7 @@ class ForeignKey extends ColumnInteger {
 			$size = 32;
 		} else
 			$size = $ft->getPrimaryKey()->size;
-		parent::__construct($table, $name, $size, true, false);
+		parent::__construct($table, $name, $size, !$remove_foreign_when_primary_removed, false);
 	}
 
 	public function get_sql_type() { 

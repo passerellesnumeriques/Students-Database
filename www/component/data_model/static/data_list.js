@@ -2,6 +2,7 @@ if (typeof require != 'undefined') {
 	require("grid.js");
 	require("vertical_layout.js");
 	require("horizontal_layout.js");
+	require("horizontal_menu.js");
 	require("typed_field.js");
 	require("field_text.js");
 	require("field_html.js");
@@ -17,7 +18,7 @@ function data_list(container, root_table, show_fields, onready) {
 			item.innerHTML = html;
 		else
 			item.appendChild(html);
-		t.header_center.appendChild(item);
+		t.header_center.widget.addItem(item);
 	};
 	
 	t._init_list = function() {
@@ -29,7 +30,7 @@ function data_list(container, root_table, show_fields, onready) {
 		}
 		// init header
 		t.header = document.createElement("DIV");
-		t.header.setAttribute("layout","fixed");
+		t.header.setAttribute("layout","25");
 		t.header.className = "data_list_header";
 		t.header_left = document.createElement("DIV");
 		t.header_left.setAttribute("layout","fixed");
@@ -39,16 +40,31 @@ function data_list(container, root_table, show_fields, onready) {
 		t.header.appendChild(t.header_center);
 		t.header_right = document.createElement("DIV");
 		t.header_right.setAttribute("layout","fixed");
-		var div = document.createElement("DIV");
-		div.className = "button";
-		var img = document.createElement("IMG");
-		img.onload = function() { fireLayoutEventFor(t.header); };
+		t.header.appendChild(t.header_right);
+		container.appendChild(t.header);
+		// init header buttons
+		var div, img;
+		// + select column
+		div = document.createElement("DIV"); div.className = "button";
+		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
 		img.src = get_script_path("data_list.js")+"/table_column.png";
 		div.onclick = function() { t._select_columns_dialog(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
-		t.header.appendChild(t.header_right);
-		container.appendChild(t.header);
+		// + export
+		div = document.createElement("DIV"); div.className = "button";
+		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img.src = theme.icons_16["export"];
+		div.onclick = function() {  };
+		div.appendChild(img);
+		t.header_right.appendChild(div);
+		// + more button for horizontal menu
+		div = document.createElement("DIV"); div.className = "button";
+		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header_center); };
+		img.src = theme.icons_16.more_menu;
+		div.appendChild(img);
+		t.header_center.appendChild(div);
+		t.more_menu = div;
 		// init grid
 		t.grid_container = document.createElement("DIV");
 		t.grid_container.setAttribute("layout","fill");
@@ -61,9 +77,15 @@ function data_list(container, root_table, show_fields, onready) {
 		// layout
 		require("vertical_layout.js",function(){
 			new vertical_layout(container);
+			fireLayoutEventFor(container);
 		});
 		require("horizontal_layout.js",function(){
 			new horizontal_layout(t.header);
+			fireLayoutEventFor(container);
+		});
+		require("horizontal_menu.js",function(){
+			new horizontal_menu(t.header_center);
+			fireLayoutEventFor(container);
 		});
 	};
 	t._load_fields = function() {
@@ -217,6 +239,9 @@ function data_list(container, root_table, show_fields, onready) {
 			t.grid.endLoading();
 		});
 	};
+	t.reload_data = function() {
+		t._load_data();
+	};
 	t._select_columns_dialog = function(button) {
 		var categories = [];
 		for (var i = 0; i < t.available_fields.length; ++i)
@@ -252,7 +277,7 @@ function data_list(container, root_table, show_fields, onready) {
 				cb.data = f;
 				var found = false;
 				for (var k = 0; k < t.show_fields.length; ++k)
-					if (t.show_fields[k].field == t.available_fields[j].field) { found = true; break; }
+					if (t.show_fields[k].path == t.available_fields[j].path) { found = true; break; }
 				if (found) cb.checked = 'checked';
 				cb.onclick = function() {
 					if (this.checked) {
@@ -302,6 +327,7 @@ function data_list(container, root_table, show_fields, onready) {
 			t.save_button.src = theme.icons_16.save;
 			t.save_button.onclick = function() { t._save(); };
 			t.header_left.appendChild(t.save_button);
+			fireLayoutEventFor(t.header);
 			fireLayoutEventFor(container);
 		}
 	};
@@ -311,11 +337,31 @@ function data_list(container, root_table, show_fields, onready) {
 			// no more change: remove save button
 			t.header_left.removeChild(t.save_button);
 			t.save_button = null;
+			fireLayoutEventFor(t.header);
 			fireLayoutEventFor(container);
 		}
 	};
 	t._save = function() {
 		// TODO
+	};
+	
+	t.getRowData = function(row, table, column) {
+		// search a column where we can get it
+		for (var i = 0; i < t.tables.length; ++i) {
+			if (t.tables[i].name != table) continue;
+			for (var j = 0; j < t.tables[i].keys.length; ++j) {
+				if (t.tables[i].keys[j] == column) {
+					// we found it as a key
+					return t.data[row].values[i].k[j];
+				}
+			}
+		}
+		for (var i = 0; i < t.show_fields.length; ++i) {
+			if (t.show_fields[i].path.table != table) continue;
+			if (t.show_fields[i].path.column != column) continue;
+			return t.data[row].values[i].v;
+		}
+		return null;
 	};
 }
 

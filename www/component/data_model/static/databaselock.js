@@ -55,12 +55,12 @@ window.database_locks = {
 				window.top.frames[0].location.href = "/dynamic/application/page/enter";
 		};
 		for (var i = 0; i < this._locks.length; ++i)
-			ajax.post_parse_result("/dynamic/data_model/service/close_db_lock","id="+this._locks[i].id,function(result){
+			service.json("data_model","unlock",{lock:this._locks[i].id},function(result){
 				setTimeout(closed,1);
 			});
 	},
 	_close_lock: function(id,foreground) {
-		ajax.post_parse_result("/dynamic/data_model/service/close_db_lock","id="+id,function(result){
+		service.json("data_model","unlock",{lock:id},function(result){
 		},foreground);
 		this.remove_lock(id);
 	},

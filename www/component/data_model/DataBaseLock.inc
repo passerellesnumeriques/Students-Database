@@ -258,12 +258,12 @@ class DataBaseLock {
 	/** check the given lock is locking the given table by the current user */
 	public static function check_lock($lock_id, $table, $row_key, $column) {
 		$db = SQLQuery::get_db_system_without_security();
-		$r = $db->execute("SELECT * FROM DataLocks WHERE id='".$db->escape_string($id)."'");
+		$r = $db->execute("SELECT * FROM DataLocks WHERE id='".$db->escape_string($lock_id)."'");
 		if ($r == null) return false;
 		$r = $db->next_row($r);
 		if ($r == null) return false;
-		if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-			$row["locker_username"] <> PNApplication::$instance->user_management->username)
+		if ($r["locker_domain"] <> PNApplication::$instance->user_management->domain ||
+			$r["locker_username"] <> PNApplication::$instance->user_management->username)
 			return false;
 		if ($r["table"] <> $table) return false;
 		if ($r["row_key"] == null) {

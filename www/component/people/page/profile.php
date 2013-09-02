@@ -2,8 +2,8 @@
 class page_profile extends Page {
 	public function get_required_rights() { return array(); }
 	public function execute() {
-		$this->add_javascript("/static/widgets/page_header.js");
-		$this->onload("new page_header('profile_page');");
+		$this->add_javascript("/static/widgets/frame_header.js");
+		$this->onload("new frame_header('profile_page');");
 		
 		$plugin = @$_GET["plugin"];
 		$page = @$_GET["page"];

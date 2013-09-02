@@ -20,7 +20,7 @@ service = {
 				if (typeof input[name] == 'string')
 					data += encodeURIComponent(input[name]);
 				else
-					data += encodeURIComponent(service._generate_input(input[name]));
+					data += encodeURIComponent(service.generate_input(input[name]));
 			}
 		}
 		ajax.post_parse_result("/dynamic/"+component+"/service/"+service_name, data, 
@@ -52,7 +52,7 @@ service = {
 				if (typeof input[name] == 'string')
 					data += encodeURIComponent(input[name]);
 				else
-					data += encodeURIComponent(service._generate_input(input[name]));
+					data += encodeURIComponent(service.generate_input(input[name]));
 			}
 		}
 		ajax.post_parse_result("/dynamic/"+component+"/service/"+service_name, data, 
@@ -66,13 +66,13 @@ service = {
 		);
 	},
 	
-	_generate_input: function(input) {
+	generate_input: function(input) {
 		var s = "";
 		if (input instanceof Array) {
 			s += "[";
 			for (var i = 0; i < input.length; ++i) {
 				if (i>0) s += ",";
-				s += service._generate_input(input[i]);
+				s += service.generate_input(input[i]);
 			}
 			s += "]";
 		} else if (typeof input == 'object') {
@@ -80,7 +80,7 @@ service = {
 			var first = true;
 			for (var attr in input) {
 				if (first) first = false; else s += ",";
-				s += attr + ":" + service._generate_input(input[attr]);
+				s += "\""+attr + "\":" + service.generate_input(input[attr]);
 			}
 			s += "}";
 		} else if (typeof input == 'string')
