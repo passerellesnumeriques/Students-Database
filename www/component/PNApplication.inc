@@ -114,6 +114,19 @@ class PNApplication {
 		}
 		$c->init();
 	}
+	
+	public static function sort_components_by_dependencies() {
+		$list = array();
+		foreach (PNApplication::$instance->components as $name=>$c)
+			PNApplication::_sort_components_by_dependencies($c, $list);
+		return $list;
+	}
+	private static function _sort_components_by_dependencies(&$c, &$list) {
+		if (in_array($c, $list)) return;
+		foreach ($c->dependencies() as $dep)
+			PNApplication::_sort_components_by_dependencies(PNApplication::$instance->components[$dep], $list);
+		array_push($list, $c);
+	}
 
 	/**
 	 * @return array associative array of domain=>domain_descriptor

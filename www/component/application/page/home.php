@@ -7,6 +7,7 @@ class page_home extends Page {
 ?>
 TODO: home page<br/><br/>
 <a href="/dynamic/user_management/page/home">User Management</a><br/>
+<a href="/dynamic/excel/page/test">Excel</a><br/>
 <?php 		
 	}
 	

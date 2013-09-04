@@ -66,9 +66,37 @@ function context_menu(menu) {
 	 */
 	t.addIconItem = function(icon, text, onclick) {
 		var div = document.createElement("DIV");
-		div.innerHTML = "<img src='"+icon+"' style='vertical-align:bottom'/> "+text;
+		if (icon) {
+			var img = document.createElement("IMG");
+			img.onload = function() { t.resize(); };
+			img.src = icon;
+			img.style.verticalAlign = "bottom";
+			img.style.marginRight = "5px";
+			div.appendChild(img);
+		}
+		div.appendChild(document.createTextNode(text));
 		div.onclick = onclick;
 		div.className = "context_menu_item";
+		t.addItem(div);
+		return div;
+	};
+	/**
+	 * Append a title to the menu
+	 * @param {string} icon url of the icon of the item
+	 * @param {string} text the text of the item
+	 */
+	t.addTitleItem = function(icon, text) {
+		var div = document.createElement("DIV");
+		if (icon) {
+			var img = document.createElement("IMG");
+			img.onload = function() { t.resize(); };
+			img.src = icon;
+			img.style.verticalAlign = "bottom";
+			img.style.marginRight = "5px";
+			div.appendChild(img);
+		}
+		div.appendChild(document.createTextNode(text));
+		div.className = "context_menu_title";
 		t.addItem(div);
 		return div;
 	};
@@ -92,6 +120,9 @@ function context_menu(menu) {
 	t.showBelowElement = function(from) {
 		menu.style.visibility = "visible";
 		menu.style.position = "absolute";
+		t.show_from = from;
+		menu.style.width = "";
+		menu.style.height = "";
 		document.body.appendChild(menu);
 		var x = absoluteLeft(from);
 		var y = absoluteTop(from);
@@ -133,6 +164,7 @@ function context_menu(menu) {
 		menu.style.position = "absolute";
 		menu.style.top = y+"px";
 		menu.style.left = x+"px";
+		t.show_at = [x,y];
 		for (var i = 0; i < document.body.childNodes.length; ++i)
 			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = -10;
 		document.body.appendChild(menu);
@@ -186,5 +218,16 @@ function context_menu(menu) {
 		if (ev.x >= x && ev.x < x+menu.offsetWidth &&
 			ev.y >= y && ev.y < y+menu.offsetHeight) return;
 		t.hide();
+	};
+	
+	t.resize = function() {
+		if (menu.parentNode != document.body) return;
+		document.body.removeChild(menu);
+		menu.style.top = "";
+		menu.style.left = "";
+		if (t.show_from)
+			t.showBelowElement(t.show_from);
+		else
+			t.showAt(t.show_at[0], t.show_at[1]);
 	};
 }

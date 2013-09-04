@@ -58,4 +58,10 @@ abstract class TestFunctionalitiesScenario extends TestScenario {
 	
 }
 
+abstract class TestServicesScenario extends TestScenario {
+	
+	public abstract function getCoveredServices();
+	
+}
+
 ?>

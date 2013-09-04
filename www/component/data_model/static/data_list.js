@@ -18,7 +18,10 @@ function data_list(container, root_table, show_fields, onready) {
 			item.innerHTML = html;
 		else
 			item.appendChild(html);
-		t.header_center.widget.addItem(item);
+		if (t.header_center.widget)
+			t.header_center.widget.addItem(item);
+		else
+			t.header_center.appendChild(item);
 	};
 	
 	t._init_list = function() {
@@ -55,7 +58,7 @@ function data_list(container, root_table, show_fields, onready) {
 		div = document.createElement("DIV"); div.className = "button";
 		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
 		img.src = theme.icons_16["export"];
-		div.onclick = function() {  };
+		div.onclick = function() { t._export_menu(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
 		// + more button for horizontal menu
@@ -306,6 +309,41 @@ function data_list(container, root_table, show_fields, onready) {
 			menu.addItem(dialog, true);
 			menu.showBelowElement(button);
 		});
+	};
+	t._export_menu = function(button) {
+		require("context_menu.js",function(){
+			var menu = new context_menu();
+			menu.addTitleItem(null, "Export Format");
+			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 2007 (.xlsx)', function() { t.export_list('excel2007'); });
+			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 5 (.xls)', function() { t.export_list('excel5'); });
+			menu.addIconItem('/static/data_model/pdf_16.png', 'PDF', function() { t.export_list('pdf'); });
+			menu.addIconItem('/static/data_model/csv.gif', 'CSV', function() { t.export_list('csv'); });
+			menu.showBelowElement(button);
+		});
+	};
+	t.export_list = function(format) {
+		var fields = [];
+		for (var i = 0; i < t.show_fields.length; ++i)
+			fields.push(t.show_fields[i].path.path);
+
+		var form = document.createElement("FORM");
+		var input;
+		form.appendChild(input = document.createElement("INPUT"));
+		form.action = "/dynamic/data_model/service/get_data_list";
+		form.method = 'POST';
+		input.type = 'hidden';
+		input.name = 'table';
+		input.value = root_table;
+		form.appendChild(input = document.createElement("INPUT"));
+		input.type = 'hidden';
+		input.name = 'fields';
+		input.value = service.generate_input(fields);
+		form.appendChild(input = document.createElement("INPUT"));
+		input.type = 'hidden';
+		input.name = 'export';
+		input.value = format;
+		document.body.appendChild(form);
+		form.submit();
 	};
 	
 	t._changed_cells = [];
