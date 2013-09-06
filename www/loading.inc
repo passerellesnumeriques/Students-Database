@@ -90,7 +90,7 @@ function pn_loading_end() {
 		setTimeout(pn_loading_end, 100);
 		return;
 	}
-	animation.fadeOut(window.pn_loading,1000);
+	animation.fadeOut(window.pn_loading,500);
 }
 </script>
 </body>

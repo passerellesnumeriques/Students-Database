@@ -4,6 +4,7 @@ class Table {
 
 	private $model;
 	private $name;
+	private $display_name = null;
 	private $columns = array();
 	private $indexes = array();
 	private $links = array();
@@ -24,6 +25,9 @@ class Table {
 		$this->model = &$model;
 		$this->name = $name;
 	}
+	
+	public function setDisplayName($name) { $this->display_name = $name; return $this; }
+	public function getDisplayName() { return $this->display_name; }
 	
 	public function _key_for_submodel(&$sm) {
 		array_push($this->_key_submodels, $sm);
