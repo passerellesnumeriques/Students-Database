@@ -258,13 +258,19 @@ class Table {
 		if ($data == null) return null;
 		return $data[1];
 	}
-	/** Returns the localized category and name of the given data */
+	/** Returns the category and name of the given data */
 	public function getDisplayableDataCategoryAndName($field) {
 		$data = @$this->displayable_data[$field];
 		if ($data == null) return "?field ".$field." in table ".$this->name."?";
 		return $data;
 	}
-
+	/** Returns the category of the given data */
+	public function getDisplayableDataCategory($field) {
+		$data = @$this->displayable_data[$field];
+		if ($data == null) return null;
+		return $data[0];
+	}
+	
 	public function &getModel() { return $this->model; }
 	public function getName() { return $this->name; }
 	public function getSQLName($sub_models) {

@@ -165,6 +165,19 @@ class user_management extends Component {
 		} while ($changed);
 	}
 
+	public function get_profile_pages(&$people) {
+		$domain = @$_GET["domain"];
+		$username = @$_GET["username"];
+		if ($domain <> null && $people == null) {
+			$people = PNApplication::$instance->user_people->get_people_from_user($domain, $username);
+		} else if ($domain == null && $people <> null) {
+			$people = PNApplication::$instance->user_people->get_user_from_people($people, $domain, $username);
+		}
+		return array(
+			"user_rights"=>array("/static/user_management/access_list.png", "User Rights", "/dynamic/user_management/page/user_rights?domain=".$domain."&username=".$username, 1000),
+		);
+	}
+	
 }
 
 /**

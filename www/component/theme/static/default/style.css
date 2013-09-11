@@ -102,7 +102,9 @@ button img {
 }
 .button:active {
 	box-shadow: 0px 0px 0px;
-	margin: 2px 1px 0px 3px;
+	position: relative;
+	top: 1px;
+	left: 1px;
 }
 .button img {
 	vertical-align: bottom;

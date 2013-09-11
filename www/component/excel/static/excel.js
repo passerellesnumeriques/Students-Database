@@ -14,6 +14,12 @@ function Excel(container, onready) {
 		sheet.tab = tab;
 		tab.sheet = sheet;
 	};
+	this.getSheet = function(name) {
+		for (var i = 0; i < this.sheets.length; ++i)
+			if (this.sheets[i].name == name)
+				return this.sheets[i];
+		return null;
+	};
 	
 	this._layout = function() {
 		if (t.tabs.selected != -1)
@@ -40,6 +46,8 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	this._init = function() {
 		this.container = document.createElement("DIV");
 		this.container.style.position = "relative";
+		this.container.style.width = "100%";
+		this.container.style.height = "100%";
 		this.content = document.createElement("DIV");
 		this.content.style.position = "relative";
 		this.content.style.top = "0px";
@@ -79,6 +87,7 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 		this.columns = [];
 		this.rows = [];
 		this.cells = [];
+		this.layers = [];
 		for (var i = 0; i < columns; ++i)
 			this.addColumn();
 		for (var i = 0; i < rows; ++i)
@@ -134,6 +143,19 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 		if (this.cursor == null && this.cells.length > 0 && this.cells[0].length > 0)
 			this.cursor = new ExcelSheetCursor(this);
 		this.layout();
+	};
+	
+	this.addLayer = function(start_col, start_row, end_col, end_row, r,g,b, content) {
+		var layer = new ExcelSheetCursor(this);
+		layer.setRange(start_col, start_row, end_col, end_row);
+		layer.setColor(r,g,b);
+		if (content) layer.setContent(content);
+		this.layers.push(layer);
+		return layer;
+	};
+	this.removeLayer = function(layer) {
+		this.layers.remove(layer);
+		layer._removed();
 	};
 	
 	this._init();
@@ -201,6 +223,16 @@ function getExcelColumnName(index) {
 	};
 	return name;
 }
+function getExcelColumnIndex(name) {
+	var i = name.charCodeAt(0)-"A".charCodeAt(0);
+	var s = name.substring(1);
+	while (s.length > 0) {
+		i *= 26;
+		i += s.charCodeAt(0)-"A".charCodeAt(0);
+		s = s.substring(1);
+	}
+	return i;
+}
 
 function ExcelSheetColumn(sheet, index) {
 	this.sheet = sheet;
@@ -223,6 +255,7 @@ function ExcelSheetColumn(sheet, index) {
 			x += sheet.columns[i].width+1;
 		}
 		if (sheet.cursor) sheet.cursor.refresh();
+		for (var i = 0; i < sheet.layers.length; ++i) sheet.layers[i].refresh();
 	};
 	
 	this._init = function() {
@@ -251,7 +284,7 @@ function ExcelSheetColumn(sheet, index) {
 		this.resizer.style.left = (x+this.width-4)+"px";
 		this.resizer.style.cursor = "col-resize";
 		this.resizer.style.zIndex = 4;
-		this.sheet.content.appendChild(this.resizer);
+		this.sheet.column_headers_container.appendChild(this.resizer);
 		var t=this;
 		this.resize_pos = null;
 		this.resizer.onmousedown = function(ev) {
@@ -298,6 +331,7 @@ function ExcelSheetRow(sheet, index) {
 			y += sheet.rows[i].height+1;
 		}
 		if (sheet.cursor) sheet.cursor.refresh();
+		for (var i = 0; i < sheet.layers.length; ++i) sheet.layers[i].refresh();
 	};
 	
 	this._init = function() {
@@ -326,7 +360,7 @@ function ExcelSheetRow(sheet, index) {
 		this.resizer.style.top = (y+this.height-3)+"px";
 		this.resizer.style.cursor = "row-resize";
 		this.resizer.style.zIndex = 4;
-		this.sheet.content.appendChild(this.resizer);
+		this.sheet.row_headers_container.appendChild(this.resizer);
 		var t=this;
 		this.resize_pos = null;
 		this.resizer.onmousedown = function(ev) {
@@ -420,6 +454,7 @@ function ExcelSheetCursor(sheet) {
 	this.select_x_dir = 0;
 	this.select_y_dir = 0;
 	this.mouse_select_start = null;
+	this.color = [192,192,255];
 	
 	this.up = function() { this.setRange(this.col_start, this.row_start-1, this.col_start, this.row_start-1); };
 	this.down = function() { this.setRange(this.col_start, this.row_end+1, this.col_start, this.row_end+1); };
@@ -476,7 +511,7 @@ function ExcelSheetCursor(sheet) {
 		this.div = document.createElement("DIV");
 		this.div.style.zIndex = 2;
 		this.div.style.position = "absolute";
-		this.div.style.border = "2px solid #8080D0";
+		this.div.style.border = "2px solid rgb("+(this.color[0]-64)+","+(this.color[1]-64)+","+(this.color[2]-64);
 		this.div.style.pointerEvents = "none";
 		sheet.content.appendChild(this.div);
 		this.refresh();
@@ -500,9 +535,23 @@ function ExcelSheetCursor(sheet) {
 		this.div.style.width = w+"px";
 		this.div.style.height = h+"px";
 		if (this.col_start != this.col_end || this.row_start != this.row_end)
-			this.div.style.backgroundColor = "rgba(192,192,255,0.33)";
+			this.div.style.backgroundColor = "rgba("+this.color[0]+","+this.color[1]+","+this.color[2]+",0.33)";
 		else
 			this.div.style.backgroundColor = "";
+	};
+	
+	this.setColor = function(r,g,b) {
+		this.color = [r,g,b];
+		this.div.style.border = "2px solid rgb("+(r-64)+","+(g-64)+","+(b-64);
+		this.refresh();
+	};
+	
+	this.setContent = function(content) {
+		// TODO
+	};
+	
+	this._removed = function() {
+		this.div.parentNode.removeChild(this.div);
 	};
 	
 	this._init();

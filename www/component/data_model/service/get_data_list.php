@@ -216,7 +216,7 @@ TODO
 				if ($actions !== null) {
 					echo ",actions:[";
 					$first = true;
-					foreach ($actions as $action) {
+					foreach ($actions as &$action) {
 						if ($first) $first = false; else echo ",";
 						$k = 0;
 						$link = $action[0];
@@ -234,7 +234,7 @@ TODO
 								continue;
 							}
 							$link = substr($link, 0, $k).$res[$i][$alias].substr($link, $kk+1);
-							$k = $kk + strlen($res[$i][$alias]);
+							$k = $k + strlen($res[$i][$alias]);
 						}
 						echo "{link:".json_encode($link).",icon:".json_encode($action[1])."}";
 					}

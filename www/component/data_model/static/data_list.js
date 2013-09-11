@@ -61,6 +61,13 @@ function data_list(container, root_table, show_fields, onready) {
 		div.onclick = function() { t._export_menu(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
+		// + import
+		div = document.createElement("DIV"); div.className = "button";
+		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img.src = theme.icons_16["import"];
+		div.onclick = function() { t._import_menu(this); };
+		div.appendChild(img);
+		t.header_right.appendChild(div);
 		// + more button for horizontal menu
 		div = document.createElement("DIV"); div.className = "button";
 		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header_center); };
@@ -318,6 +325,16 @@ function data_list(container, root_table, show_fields, onready) {
 			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 5 (.xls)', function() { t.export_list('excel5'); });
 			menu.addIconItem('/static/data_model/pdf_16.png', 'PDF', function() { t.export_list('pdf'); });
 			menu.addIconItem('/static/data_model/csv.gif', 'CSV', function() { t.export_list('csv'); });
+			menu.showBelowElement(button);
+		});
+	};
+	t._import_menu = function(button) {
+		require("context_menu.js",function(){
+			var menu = new context_menu();
+			menu.addTitleItem(null, "Import Data");
+			menu.addIconItem('/static/data_import/import_excel_16.png', 'A single file', function() { location.href = '/dynamic/data_import/page/build_excel_import?import=file&root_table='+root_table; });
+			menu.addIconItem('/static/data_import/import_template.png', 'Using a template already defined', function() { location.href = '/dynamic/data_import/page/select_excel_import_template?root_table='+root_table; });
+			menu.addIconItem('/static/data_import/import_template.png', 'Define a template', function() { location.href = '/dynamic/data_import/page/build_excel_import?import=create_template&root_table='+root_table; });
 			menu.showBelowElement(button);
 		});
 	};
