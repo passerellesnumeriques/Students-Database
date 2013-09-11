@@ -5,6 +5,7 @@ class authentication extends Component {
 	 * Return the authentication system for the given domain.
 	 * @param string $domain
 	 * @return AuthenticationSystem
+	 * @not_tested
 	 */
 	public function get_authentication_system($domain) {
 		$local = PNApplication::$instance->local_domain;

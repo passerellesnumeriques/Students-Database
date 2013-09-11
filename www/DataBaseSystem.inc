@@ -11,7 +11,9 @@ abstract class DataBaseSystem {
 
 	/** Executes a SQL request.
 	 * If report_errors is true, and an error occured during execution of the SQL request,
-	 * this error will be automatically reported to the list of errors of the application */
+	 * this error will be automatically reported to the list of errors of the application
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 */
 	public function execute($sql_query, $report_errors = true) {
 		$res = $this->execute_sql($sql_query);
 		if ($res === false && $report_errors) {

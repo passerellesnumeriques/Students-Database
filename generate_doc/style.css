@@ -15,3 +15,49 @@ html,body,table {
 	left: -10000px;
 	visibility: hidden;
 }
+
+h1 {
+	color: #1e5eb6;
+}
+
+.navigation img {
+	vertical-align: bottom;
+	padding-right: 2px;
+}
+
+.service_table {
+	border: 1px solid #CCCCCC;
+	border-collapse: collapse;
+}
+.service_table tr:first-of-type {
+	background-color: #ECEDE5;
+}
+.service_table td {
+	border: 1px solid #CCCCCC;
+	vertical-align: top;
+}
+.service_table ul {
+	margin: 0px;
+}
+
+.small_title {
+	font-size: 11pt;
+	color: #0040C0;
+	font-weight: bold;
+	padding-bottom: 2px;
+	padding-top: 2px;
+}
+
+.php_method {
+	font-family: monospace;
+}
+.php_method a {
+	text-decoration: none;
+	color: #006AEB;
+}
+.php_method var {
+	color: #CA8A04;
+}
+.description.short p {
+	margin: 0px;
+}

@@ -1,0 +1,1 @@
+Detect activity of the user (mouse moving...). Allows to register listeners on user activity and listeners when a window (frame) is closing. This file also automatically logout after long inactivity.
