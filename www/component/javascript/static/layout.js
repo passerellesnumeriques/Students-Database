@@ -123,6 +123,18 @@ function setHeight(element, height) {
 	height -= parseInt(s.paddingBottom);
 	element.style.height = height+"px";
 }
+function getWidth(element) {
+	var s = getComputedStyleSizes(element);
+	var w = element.offsetWidth;
+	w += parseInt(s.marginLeft) + parseInt(s.marginRight);
+	return w;
+}
+function getHeight(element) {
+	var s = getComputedStyleSizes(element);
+	var h = element.offsetHeight;
+	h += parseInt(s.marginTop) + parseInt(s.marginBottom);
+	return h;
+}
 function getComputedStyleSizes(e) {
 	var ss = getComputedStyle(e);
 	var s = {};

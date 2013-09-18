@@ -11,6 +11,7 @@ function vertical_layout(container) {
 	var t = this;
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
+	container.widget = this;
 	
 	t.layout = function() {
 		// reset
@@ -39,7 +40,7 @@ function vertical_layout(container) {
 				e.style.display = "block";
 				setWidth(e, w);
 				e.style.height = "";
-				used += e.offsetHeight;
+				used += getHeight(e);
 			}
 		}
 		var y = 0;
@@ -59,7 +60,7 @@ function vertical_layout(container) {
 				setHeight(e, hh);
 				y += hh;
 			} else {
-				y += e.offsetHeight;
+				y += getHeight(e);
 			}
 		}
 	};

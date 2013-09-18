@@ -117,9 +117,13 @@ class SQLQuery {
 	public function &field($table,$name=null,$alias=null) {
 		if ($name == null)
 			foreach ($this->tables as $t=>$a)
-				array_push($this->fields, array($t,$table,null));
-		else
+				$this->field($t, $table);
+		else {
+			foreach ($this->fields as $f)
+				if ($f[0] == $table && $f[1] == $name && $f[2] == $alias)
+					return $this;
 			array_push($this->fields, array($table,$name,$alias));
+		}
 		return $this;
 	}
 
@@ -289,7 +293,7 @@ class SQLQuery {
 			}
 			if (!$this->bypass_security && !$table->canReadAll())
 				foreach ($table->table_specific_read_access as $specific) {
-					$this->where($specific[0], $specific[1]());
+					$this->where($alias."`.`".$specific[0], $specific[1]());
 				}
 				unset($table);
 		}
@@ -321,7 +325,7 @@ class SQLQuery {
 			}
 			if (!$this->bypass_security && !$table->canReadAll())
 				foreach ($table->table_specific_read_access as $specific) {
-					$this->where($specific[0], $specific[1]());
+					$this->where($alias."`.`".$specific[0], $specific[1]());
 				}
 			unset($table);
 		}
@@ -536,6 +540,14 @@ class SQLQuery {
 		return -1;
 	}
 	
+	/**
+	 * Insert an entry into the given table.
+	 * @param string $table
+	 * @param array $fields_values associated array with column name => value
+	 * @param array|null $sub_models
+	 * @return integer the ID of the inserted data of any
+	 * @throws Exception in case of error (security or database)
+	 */
 	public function insert($table, $fields_values, $sub_models = null) {
 		require_once("component/data_model/Model.inc");
 		/* @var $t datamodel\Table */

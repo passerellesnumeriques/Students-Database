@@ -99,9 +99,6 @@ function generate_component($name, &$nav, &$datamodel_uml) {
 					$table_uml .= $table->name." --> ".$col->foreign_table."\n";
 				}
 			}
-			foreach ($table->links as $link) {
-				$table_uml .= $table->name." --> ".$link->table."\n";
-			}
 			$uml .= $table_uml;
 			$datamodel_uml .= "package ".$name."\n";
 			$datamodel_uml .= $table_uml;

@@ -8,6 +8,8 @@ class page_profile extends Page {
 		$plugin = @$_GET["plugin"];
 		$page = @$_GET["page"];
 		$people = @$_GET["people"];
+		if ($people == null && isset($_GET["user"]))
+			$people = PNApplication::$instance->user_people->get_people_from_user($_GET["user"]);
 		
 		if ($plugin == null) $plugin = "people";
 		if ($page == null) $page = "profile_".$plugin;

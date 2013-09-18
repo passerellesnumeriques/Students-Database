@@ -165,8 +165,8 @@ function context_menu(menu) {
 		menu.style.top = y+"px";
 		menu.style.left = x+"px";
 		t.show_at = [x,y];
-		for (var i = 0; i < document.body.childNodes.length; ++i)
-			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = -10;
+//		for (var i = 0; i < document.body.childNodes.length; ++i)
+//			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = -10;
 		document.body.appendChild(menu);
 		menu.style.zIndex = 100;
 		setTimeout(function() {
@@ -196,8 +196,8 @@ function context_menu(menu) {
 				menu.style.top = "-10000px";
 			}
 		}
-		for (var i = 0; i < document.body.childNodes.length; ++i)
-			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = 1;
+//		for (var i = 0; i < document.body.childNodes.length; ++i)
+//			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = 1;
 		unlistenEvent(window, 'click', t._listener);
 	};
 	t._listener = function(ev) {

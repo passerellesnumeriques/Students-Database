@@ -62,10 +62,24 @@ TODO
 		}
 		$table_name = $t->getSQLName(null);
 		$q->select(array($table_name=>$alias));
-		foreach ($paths as $p)
+		foreach ($paths as $p) {
 			if ($p->is_unique())
 				$p->append_sql($q, $ctx);
-
+			else {
+				// we need the key for the sub-requests
+				$multiple_path = $p->parent;
+				while ($multiple_path->unique)
+					$multiple_path = $multiple_path->parent;
+				$multiple_path->parent->build_sql($q, $ctx);
+				$pk = $multiple_path->parent->table->getPrimaryKey();
+				$alias = $q->get_field_alias($multiple_path->parent->table_alias, $pk->name);
+				if ($alias == null) {
+					$alias = $ctx->new_field_alias();
+					$q->field($multiple_path->parent->table_alias, $pk->name, $alias);
+				}
+			}
+		}
+					
 		$actions = null;
 		if (isset($_POST["actions"]) && $_POST["actions"]) {
 			$actions = array();
@@ -93,9 +107,11 @@ TODO
 					$l = strpos($s, ".");
 					$table = substr($s, 0, $l);
 					$col = substr($s, $l+1);
-					$alias = $q->get_field_alias($q->get_table_alias($table), $col, $ctx->new_field_alias());
-					if ($alias == null)
-						$q->field($table, $col);
+					$alias = $q->get_field_alias($q->get_table_alias($table), $col);
+					if ($alias == null) {
+						$alias = $ctx->new_field_alias();
+						$q->field($table, $col, $alias);
+					}
 					$k = $kk+1;
 					continue;
 				}
@@ -106,56 +122,48 @@ TODO
 		$res = $q->execute();
 
 		// compute sub-requests
+		//echo "\r\nQ=".$q->generate()."\r\n\r\n";
 		foreach ($paths as $p) {
 			if ($p->is_unique()) continue;
 			$sq = SQLQuery::create();
+			
 			$multiple_path = $p->parent;
 			$next_paths = array();
 			while ($multiple_path->unique) {
 				array_push($next_paths, $multiple_path);
 				$multiple_path = $multiple_path->parent;
 			}
+			
+			$pk = $multiple_path->parent->table->getPrimaryKey();
+			$table_alias = $q->get_table_alias($multiple_path->parent->table->getSQLNameFor($multiple_path->parent->sub_model));
+			$key_alias = $q->get_field_alias($table_alias, $pk->name);
+				
 			if ($multiple_path->table_alias == null) $multiple_path->table_alias = $ctx->new_table_alias();
 			$sq->select(array($multiple_path->table->getSQLNameFor($multiple_path->sub_model)=>$multiple_path->table_alias));
 			for ($i = count($next_paths)-1; $i >= 0; $i--)
 				$next_paths[$i]->append_sql($sq, $ctx);
 			$sq->field($p->parent->table_alias, $p->field_name, $p->field_alias);
-			$keys_aliases = array();
-			foreach ($multiple_path->matching_fields as $src=>$dst) {
-				$alias = $ctx->new_field_alias();
-				array_push($keys_aliases, $alias);
-				$sq->field($multiple_path->table_alias, $dst, $alias);
-			}
+
+			$sq_key_alias = $ctx->new_field_alias();
+			$sq->field($multiple_path->table_alias, $multiple_path->foreign_key->name, $sq_key_alias);
+				
 			$where = "";
 			foreach ($res as $row) {
 				if (strlen($where) > 0) $where .= " OR ";
-				$where .= "(";
-				$first = true;
-				foreach ($multiple_path->matching_fields as $src=>$dst) {
-					if ($first) $first = false; else $where .= " AND ";
-					$where .= "`".$multiple_path->table_alias."`.`".$dst."`='";
-					$where .= $sq->escape($row[$q->get_field_alias($multiple_path->parent->table_alias, $src)]);
-					$where .= "'";
-				}
-				$where .= ")";
+				$where .= $multiple_path->table_alias.".".$multiple_path->foreign_key->name."='".$row[$key_alias]."'";
 			}
 			$sq->where($where);
-			//PNApplication::error($sq->generate());
+			
 			$sres = $sq->execute();
+			//echo "\r\nSQ=".$sq->generate()."\r\n\r\n";
+			//PNApplication::error($sq->generate()." = ".count($sres));
 			foreach ($res as &$row) {
 				$l = array();
 				foreach ($sres as $srow) {
 					$match = true;
 					$i = 0;
-					foreach ($multiple_path->matching_fields as $src=>$dst) {
-						//echo "Try: ".$srow[$keys_aliases[$i]]." => ".$row[$q->get_field_alias($multiple_path->parent->table_alias, $src)]."\r\n";
-						if ($srow[$keys_aliases[$i]] <> $row[$q->get_field_alias($multiple_path->parent->table_alias, $src)]) {
-							$match = false;
-							break;
-						}
-						$i++;
-					}
-					if ($match)
+					//echo "\r\n".$sq_key_alias."\r\n".$srow[$sq_key_alias]."\r\n".$key_alias."\r\n".$row[$key_alias];
+					if ($srow[$sq_key_alias] == $row[$key_alias])
 						array_push($l, $srow[$p->field_alias]);
 				}
 				$row[$p->field_alias] = $l;
@@ -308,13 +316,6 @@ TODO
 				array_push($keys, $table->internalGetColumn($u, $sub_model));
 			return $keys;
 		}
-		foreach ($table->getLinks() as $link)
-			if ($link->unique) {
-				$keys = array();
-				foreach ($link->fields_matching as $field=>$field2)
-					array_push($keys, $link->table_from->internalGetColumn($field));
-				return $keys;
-			}
 		return array();
 	}
 		

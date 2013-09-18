@@ -5,8 +5,7 @@ class page_user_rights extends Page {
 	
 	public function execute() {
 // get the user we need to display
-$domain = $_GET["domain"];
-$username = $_GET["username"];
+$user_id = $_GET["user"];
 
 // check the current user has the right to edit
 $can_edit = PNApplication::$instance->user_management->has_right("edit_user_rights");
@@ -20,14 +19,17 @@ if ($can_edit) {
 		$can_edit = false;
 }
 
+// get info about the user
+$user = SQLQuery::create()->select("Users")->where("id", $user_id)->execute_single_row();
+
 // get roles of the user
-$roles = SQLQuery::create()->select("UserRole")->field("UserRole","role_id")->join("UserRole","Role",array("role_id"=>"id"))->field("Role","name")->where("domain",$domain)->where("username",$username)->execute();
+$roles = SQLQuery::create()->select("UserRole")->field("UserRole","role")->join("UserRole","Role",array("role"=>"id"))->field("Role","name")->where("user",$user_id)->execute();
 if (!is_array($roles)) $roles = array();
 
 // check if the user is an administrator
 $is_admin = false;
 foreach ($roles as $role)
-	if ($role["role_id"] == 0) {
+	if ($role["role"] == -1) {
 		$is_admin = true;
 		break;
 	}
@@ -38,7 +40,7 @@ $this->onload("new page_header('user_rights_header');");
 if ($can_edit)
 	DataBaseLock::generate_script($lock_id);
 ?>
-<div id='user_rights_header' icon='/static/user_management/access_list_32.png' title="User Access Rights: &lt;span style='font-family:Courrier New;font-weight:bold;font-style:italic'&gt;<?php echo $domain."\\".$username;?>&lt;/span&gt;">
+<div id='user_rights_header' icon='/static/user_management/access_list_32.png' title="User Access Rights: &lt;span style='font-family:Courrier New;font-weight:bold;font-style:italic'&gt;<?php echo $user["domain"]."\\".$user["username"];?>&lt;/span&gt;">
 <?php 
 	if ($can_edit) {
 		?><div class='button' onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</div><?php
@@ -78,14 +80,14 @@ foreach (PNApplication::$instance->components as $component) {
 }
 
 // get rights directly attached to the user
-$rights = SQLQuery::create()->select("UserRights")->field("right")->field("value")->where("domain",$domain)->where("username",$username)->execute();
+$rights = SQLQuery::create()->select("UserRights")->field("right")->field("value")->where("user",$user_id)->execute();
 if (!is_array($rights)) $rights = array();
 $user_rights = array();
 foreach ($rights as $r) $user_rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 // get rights for each role
 $role_rights = array();
 foreach ($roles as $role) {
-	$rights = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where("role_id", $role["role_id"])->execute();
+	$rights = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where("role", $role["role"])->execute();
 	if (!is_array($rights)) $rights = array();
 	$a = array();
 	foreach ($rights as $r) $a[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
@@ -226,7 +228,7 @@ function um_rights_save() {
 	icon.style.position = "fixed";
 	document.body.appendChild(icon);
 	var form = document.forms["um_rights"];
-	var data = "domain="+encodeURIComponent(<?php echo json_encode($domain)?>)+"&username="+encodeURIComponent(<?php echo json_encode($username)?>);
+	var data = "user="+encodeURIComponent(<?php echo json_encode($user_id)?>);
 	for (var i = 0; i < form.elements.length; ++i) {
 		var e = form.elements[i];
 		var name = e.name;

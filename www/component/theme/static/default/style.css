@@ -320,3 +320,18 @@ table.grid tbody tr:nth-child(odd).selected {
 	border-left: 1px solid rgb(164, 190, 212);
 	border-right: 1px solid rgb(164, 190, 212);
 }
+
+/* Mac Tabs */
+.mac_tabs {
+	border: 1px solid black;
+	display: inline-block;
+	margin: 2px;
+}
+.mac_tab {
+	border-right: 1px solid black;
+	padding: 3px 5px 3px 5px;
+	display: inline-block;
+}
+.mac_tab:last-child {
+	border-right: 0px;
+}

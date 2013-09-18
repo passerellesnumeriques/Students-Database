@@ -7,7 +7,6 @@ class Table {
 	private $display_name = null;
 	private $columns = array();
 	private $indexes = array();
-	private $links = array();
 	private $table_read_access = array();
 	public $table_specific_read_access = array();
 	private $table_add_access = array();
@@ -48,8 +47,8 @@ class Table {
 	 * @param boolean $strong indicates if the link is strong or not: if it is strong, it means that if an entity is removed, the linked ones are also removed.
 	 * @return \datamodel\Table
 	 */
-	public function addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed) {
-		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed);
+	public function addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple) {
+		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple);
 		array_push($this->columns, $c);
 		return $this;
 	}
@@ -120,12 +119,6 @@ class Table {
 				array_push($a, func_get_arg($i));
 			array_push($this->indexes, $a);
 		}
-		return $this;
-	}
-
-	/** Indicate a link to another table, not using a foreign key. */
-	public function &addLink($table_name, $fields_matching, $unique) {
-		array_push($this->links, new Link($this, $table_name, $fields_matching, $unique));
 		return $this;
 	}
 
@@ -387,41 +380,10 @@ class Table {
 		return $cols;
 	}
 
-	public function getLinks() {
-		return $this->links;
-	}
-	
 	public function getUnique() {
 		return $this->unique_fields;
 	}
 	
-}
-
-class Link {
-	public $table_from;
-	public $table;
-	public $fields_matching;
-	public $unique;
-	public function __construct(&$table_from, $table, $fields_matching, $unique) {
-		$this->table_from = &$table_from;
-		$this->table = $table;
-		$this->fields_matching = $fields_matching;
-		$this->unique = $unique;
-	}
-}
-class LinkMultiDataBase {
-	public $table_from;
-	public $table;
-	public $table_field_database;
-	public $fields_matching;
-	public $unique;
-	public function __construct(&$table_from, $table, $table_field_database, $fields_matching, $unique) {
-		$this->table_from = &$table_from;
-		$this->table = $table;
-		$this->table_field_database = $table_field_database;
-		$this->fields_matching = $fields_matching;
-		$this->unique = $unique;
-	}
 }
 
 abstract class Column {
@@ -609,11 +571,13 @@ class ForeignKey extends ColumnInteger {
 	public $foreign_table;
 	public $remove_foreign_when_primary_removed;
 	public $remove_primary_when_foreign_removed;
-
-	public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed) {
+	public $multiple;
+	
+	public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple) {
 		$this->foreign_table = $foreign_table;
 		$this->remove_foreign_when_primary_removed = $remove_foreign_when_primary_removed;
 		$this->remove_primary_when_foreign_removed = $remove_primary_when_foreign_removed;
+		$this->multiple = $multiple;
 		try { $ft = $table->getModel()->internalGetTable($foreign_table); }
 		catch (\Exception $e) { $ft = null; }
 		if ($ft == null && $table->getModel() instanceof \SubDataModel)
@@ -624,7 +588,7 @@ class ForeignKey extends ColumnInteger {
 			$size = 32;
 		} else
 			$size = $ft->getPrimaryKey()->size;
-		parent::__construct($table, $name, $size, !$remove_foreign_when_primary_removed, false);
+		parent::__construct($table, $name, $size, null, null, !$remove_foreign_when_primary_removed, false);
 	}
 
 	public function get_sql_type() { 

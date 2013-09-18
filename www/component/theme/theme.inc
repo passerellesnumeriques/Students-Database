@@ -37,6 +37,7 @@ theme::$icons_16 = array(
 	"wait" =>	 		"/static/theme/".$theme."/icons_16/wait.png",
 	"warning" => 		"/static/theme/".$theme."/icons_16/warning.png",
 	"yes" => 			"/static/theme/".$theme."/icons_16/ok.png",
+	"zoom" => 			"/static/theme/".$theme."/icons_16/search.png",
 );
 theme::$icons_10 = array(
 	"close" => 			"/static/theme/".$theme."/icons_10/close.png",

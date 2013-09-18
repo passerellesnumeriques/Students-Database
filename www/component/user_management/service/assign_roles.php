@@ -9,7 +9,7 @@ class service_assign_roles extends Service {
 	public function input_documentation() {
 ?>
 <ul>
-	<li><code>users:[{domain:"",username:""}]</code>: list of users</li>
+	<li><code>users:[user_id]</code>: list of users</li>
 	<li><code>roles:[id]</code>: list of roles' id</li>
 </ul>
 <?php 
@@ -30,10 +30,10 @@ class service_assign_roles extends Service {
 			return;
 		}
 		foreach ($users as $user) {
-			$user_roles = SQLQuery::create()->select("UserRole")->field("role_id")->where("domain",$user->domain)->where("username", $user->username)->execute_single_field();
+			$user_roles = SQLQuery::create()->select("UserRole")->field("role")->where("user",$user)->execute_single_field();
 			foreach ($roles as $role_id)
 				if (!in_array($role_id, $user_roles))
-					SQLQuery::create()->insert("UserRole", array("domain"=>$user->domain,"username"=>$user->username,"role_id"=>$role_id)); 
+					SQLQuery::create()->insert("UserRole", array("user"=>$user,"role"=>$role_id)); 
 		}
 		DataBaseLock::unlock($lock_id);
 		echo "true";

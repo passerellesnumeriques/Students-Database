@@ -11,6 +11,7 @@ function horizontal_layout(container) {
 	var t = this;
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
+	container.widget = this;
 	
 	t.layout = function() {
 		// reset
@@ -39,7 +40,7 @@ function horizontal_layout(container) {
 				e.style.display = 'inline-block';
 				e.style.width = "";
 				setHeight(e, h);
-				used += e.offsetWidth;
+				used += getWidth(e);
 			}
 		}
 		var x = 0;
@@ -60,7 +61,7 @@ function horizontal_layout(container) {
 				setWidth(e, ww);
 				x += ww;
 			} else {
-				x += e.offsetWidth;
+				x += getWidth(e);
 			}
 		}
 	};

@@ -9,7 +9,7 @@ class page_roles extends Page {
 		$this->add_javascript("/static/javascript/validation.js");
 		$this->onload("new page_header('roles_header');");
 
-		$roles = SQLQuery::create()->select("Role")->field('id')->field('name')->field("UserRole","username")->join("Role","UserRole",array("id"=>"role_id"))->count("nb_users")->group_by("Role","id")->order_by("Role","name",true)->execute();
+		$roles = SQLQuery::create()->select("Role")->field('id')->field('name')->field("UserRole","user")->join("Role","UserRole",array("id"=>"role"))->count("nb_users")->group_by("Role","id")->order_by("Role","name",true)->execute();
 ?>
 		<div id='roles_header' icon="/static/user_management/role_32.png" title="Roles">
 			<div class='button' onclick="new wizard('new_role_wizard').launch()"><img src='<?php echo theme::$icons_16["add"];?>'/> New Role</div>
@@ -23,7 +23,7 @@ class page_roles extends Page {
 			<?php foreach ($roles as $role) {?>
 			<tr>
 				<td><?php echo $role["name"];?></td>
-				<td align=right><?php echo $role["username"] == null ? 0 : $role["nb_users"];?></td>
+				<td align=right><?php echo $role["user"] == null ? 0 : $role["nb_users"];?></td>
 				<td>
 					<img src='<?php echo theme::$icons_16["edit"];?>' title="Rename" style='cursor:pointer' onclick="rename_role(<?php echo $role["id"];?>,'<?php echo $role["name"];?>');"/>
 					<img src='/static/user_management/access_list.png' title="Access Rights" style='cursor:pointer' onclick="location='role_rights?role=<?php echo $role["id"];?>';"/>
