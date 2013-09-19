@@ -162,18 +162,68 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 			this.view.add_event(ev);
 			return;
 		}
+		if (ev.end.getTime() >= this.view.start_date.getTime()) // not before start
+			this.view.add_event(ev); // add the first instance
+		
+		if (ev.frequency == "YEARLY") {
+			var year = ev.start.getFullYear();
+			var instance = 1; // the initial one
+			if (ev.interval) year -= ev.interval; else year--;
+			do {
+				if (ev.interval) year += ev.interval; else year++;
+				var instances = this._yearly_instances(ev, year);
+				if (ev.by_setpos) {
+					var positions = ev.by_setpos.split(",");
+					var stop = false;
+					for (var i = 0; i < positions.length; ++i) {
+						var pos = parseInt(positions[i]);
+						if (pos < 0) pos = instances.length+pos;
+						if (pos >= instances.length || pos <= 0) continue; // does not exist
+						if (instances[pos].start.getTime() == ev.start.getTime()) { instance++; continue; } // same as initial one
+						if (ev.until && instances[pos].start.getTime() > ev.until.getTime()) { stop = true; break; } // reach the until
+						if (ev.count && instance > ev.count) { stop = true; break; } // reach the count
+						if ((instances[pos].start.getTime() >= this.view.start_date.getTime() && 
+							 instances[pos].start.getTime() <= this.view.end_date.getTime())
+							||
+							(instances[pos].end.getTime() >= this.view.start_date.getTime() && 
+							 instances[pos].end.getTime() <= this.view.end_date.getTime()))
+							this.view.add_event(instances[pos]);
+						instance++;
+					}
+					if (stop) break; else continue;
+				} else {
+					for (var i = 0; i < instances.length; ++i) {
+						if (instances[i].start.getTime() == ev.start.getTime()) { instance++; continue; } // same as initial one
+						if (ev.until && instances[i].start.getTime() > ev.until.getTime()) break; // reach the until
+						if (ev.count && instance > ev.count) break; // reach the count
+						if ((instances[i].start.getTime() >= this.view.start_date.getTime() && 
+							 instances[i].start.getTime() <= this.view.end_date.getTime())
+							||
+							(instances[i].end.getTime() >= this.view.start_date.getTime() && 
+							 instances[i].end.getTime() <= this.view.end_date.getTime()))
+							this.view.add_event(instances[i]);
+						instance++;
+					}
+				}
+			} while (new Date(year,0,1,0,0,0,0).getTime() < this.view.end_date.getTime());
+		} else if (ev.frequency == "MONTHLY") {
+			// TODO
+		} else if (ev.frequency == "WEEKLY") {
+			// TODO
+		} else if (ev.frequency == "DAILY") {
+			// TODO
+		} else if (ev.frequency == "HOURLY") {
+			// TODO
+		}
+	};
+	this._yearly_instances = function(ev, year) {
 		// TODO
+		return [];
 	};
 	this.remove_event = function(ev) {
 		this.view.remove_event(ev.uid);
 	};
 	
-	calendar_manager.onloading = function(cal) {
-		window.top.status_manager.add_status(cal.loading_status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING,"Updating calendar "+cal.name));
-	};
-	calendar_manager.onloaded = function(cal) {
-		window.top.status_manager.remove_status(cal.loading_status);
-	};
 	calendar_manager.on_event_added = function(ev) { t.add_event(ev); };
 	calendar_manager.on_event_removed = function(ev) { t.remove_event(ev); };
 	calendar_manager.on_event_updated = function(ev) {

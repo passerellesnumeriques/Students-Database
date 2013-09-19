@@ -1,5 +1,8 @@
-if (typeof add_javascript != 'undefined')
-	add_javascript(get_script_path("calendar_view_day.js")+"day_column_layout.js");
+if (typeof add_javascript != 'undefined') {
+	var url = get_script_path("calendar_view_day.js");
+	add_javascript(url+"day_column_layout.js");
+	add_javascript(url+"day_row_layout.js");
+}
 function calendar_view_day(view, container) {
 
 	this.start_date = view.cursor_date;
@@ -15,6 +18,8 @@ function calendar_view_day(view, container) {
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
 			this.day_column.remove_events();
+		if (this.row_layout)
+			this.row_layout.remove_events();
 		this.events = [];
 		view.load_events();
 	};
@@ -25,6 +30,8 @@ function calendar_view_day(view, container) {
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
 			this.day_column.remove_events();
+		if (this.row_layout)
+			this.row_layout.remove_events();
 		this.events = [];
 		view.load_events();
 	};
@@ -33,15 +40,28 @@ function calendar_view_day(view, container) {
 		this.header = document.createElement("DIV");
 		this.header.setAttribute("layout", "20");
 		this.header.style.borderBottom = "1px solid black";
+		this.day_row_container = document.createElement("DIV");
+		this.day_row_container.setAttribute("layout", "10");
+		this.day_row_container.style.position = "relative";
 		this.content = document.createElement("DIV");
 		this.content.setAttribute("layout", "fill");
 		this.content.style.overflow = "auto";
 		container.appendChild(this.header);
+		container.appendChild(this.day_row_container);
 		container.appendChild(this.content);
 		require("vertical_layout.js", function() { new vertical_layout(container); t._layout(); });
+		require("day_row_layout.js", function() { t.row_layout = new day_row_layout(); t._layout(); });
 		
 		this.corner = document.createElement("DIV");
 		this.corner.setAttribute("layout", "50");
+		var tz = new Date().getTimezoneOffset();
+		this.corner.innerHTML = "GMT";
+		if (tz != 0) {
+			if (tz > 0) this.corner.innerHTML += "+"; else { this.corner.innerHTML += "-"; tz=-tz; }
+			this.corner.innerHTML += this._2digits(Math.floor(tz/60));
+			tz -= Math.floor(tz/60)*60;
+			if (tz > 0) this.corner.innerHTML += ":"+this._2digits(tz);
+		}
 		this.day_title = document.createElement("DIV");
 		this.day_title.setAttribute("layout", "fill");
 		this.day_title.style.borderLeft = "1px solid black";
@@ -49,6 +69,13 @@ function calendar_view_day(view, container) {
 		this.day_title.innerHTML = this.start_date.toDateString();
 		this.header.appendChild(this.corner);
 		this.header.appendChild(this.day_title);
+		this.day_box = document.createElement("DIV");
+		this.day_box.style.borderLeft = "1px solid black";
+		this.day_box.style.borderBottom = "1px solid black";
+		this.day_box.style.height = "10px";
+		this.day_box.style.position = "absolute";
+		this.day_box.style.left = "50px";
+		this.day_row_container.appendChild(this.day_box);
 		require("horizontal_layout.js", function() { new horizontal_layout(t.header); t._layout(); });
 		
 		this.content.style.position = "relative";
@@ -116,10 +143,23 @@ function calendar_view_day(view, container) {
 		var w = container.clientWidth-51;
 		w -= (this.content.offsetWidth-this.content.clientWidth);
 		this.day_content.style.width = w+"px";
+		this.day_box.style.width = w+"px";
 		for (var i = 0; i < this._time_lines.length; ++i)
 			this._time_lines[i].style.width = w+"px";
-		if (this.day_column)
-			this.day_column.layout(this.events, this.day_content, 0, w, 0, view.zoom, 20);
+		if (this.day_column) {
+			var list = [];
+			for (var j = 0; j < this.events.length; ++j)
+				if (!this.events[j].all_day) list.push(this.events[j]);
+			this.day_column.layout(list, this.day_content, 0, w, 0, view.zoom, 20);
+		}
+		if (this.row_layout) {
+			var list = [];
+			for (var j = 0; j < this.events.length; ++j)
+				if (this.events[j].all_day) list.push(this.events[j]);
+			var h = this.row_layout.layout(list, [this.day_box], this.start_date);
+			this.day_row_container.setAttribute("layout",h);
+			container.widget.layout();
+		}
 	};
 	
 	this.add_event = function(ev) {

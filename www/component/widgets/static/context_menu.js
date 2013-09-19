@@ -156,6 +156,49 @@ function context_menu(menu) {
 		document.body.removeChild(menu);
 		t.showAt(x,y);
 	};
+	/** Display the menu above the given element
+	 * @method context_menu#showAboveElement
+	 * @param from the element above which the menu will be displayed
+	 */
+	t.showAboveElement = function(from) {
+		menu.style.visibility = "visible";
+		menu.style.position = "absolute";
+		t.show_from = from;
+		menu.style.width = "";
+		menu.style.height = "";
+		document.body.appendChild(menu);
+		var x = absoluteLeft(from);
+		var y = absoluteTop(from);
+		var w = menu.offsetWidth;
+		var h = menu.offsetHeight;
+		if (y-h < 0) {
+			// not enough space above
+			var space_below = getWindowHeight()-(y+from.offsetHeight);
+			var space_above = y;
+			if (space_below > space_above) {
+				y = y+from.offsetHeight;
+				if (y+h > getWindowHeight()) {
+					// not enough space: scroll bar
+					y = 0;
+					menu.style.overflowY = 'scroll';
+					menu.style.height = space_above+"px";
+				}
+			} else {
+				// not enough space: scroll bar
+				y = 0;
+				menu.style.overflowY = 'scroll';
+				menu.style.height = space_below+"px";
+			}
+		} else {
+			// by default, show it above
+			y = y-h;
+		}
+		if (x+w > getWindowWidth()) {
+			x = getWindowWidth()-w;
+		}
+		document.body.removeChild(menu);
+		t.showAt(x,y);
+	};
 	/** Display the menu at the given position (using absolute positioning)
 	 * @member context_menu#showAt
 	 */

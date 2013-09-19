@@ -1,5 +1,8 @@
-if (typeof add_javascript != 'undefined')
-	add_javascript(get_script_path("calendar_view_week.js")+"day_column_layout.js");
+if (typeof add_javascript != 'undefined') {
+	var url = get_script_path("calendar_view_week.js");
+	add_javascript(url+"day_column_layout.js");
+	add_javascript(url+"day_row_layout.js");
+}
 function calendar_view_week(view, container) {
 
 	this.start_date = view.cursor_date;
@@ -18,6 +21,8 @@ function calendar_view_week(view, container) {
 			this.day_title[i].innerHTML = new Date(this.start_date.getTime()+i*24*60*60*1000).toDateString();
 			if (this.day_column)
 				this.day_column[i].remove_events();
+			if (this.row_layout)
+				this.row_layout.remove_events();
 		}
 		this.events = [[],[],[],[],[],[],[]];
 		view.load_events();
@@ -30,6 +35,8 @@ function calendar_view_week(view, container) {
 			this.day_title[i].innerHTML = new Date(this.start_date.getTime()+i*24*60*60*1000).toDateString();
 			if (this.day_column)
 				this.day_column[i].remove_events();
+			if (this.row_layout)
+				this.row_layout.remove_events();
 		}
 		this.events = [[],[],[],[],[],[],[]];
 		view.load_events();
@@ -39,21 +46,50 @@ function calendar_view_week(view, container) {
 		this.header = document.createElement("DIV");
 		this.header.setAttribute("layout", "20");
 		this.header.style.borderBottom = "1px solid black";
+		this.day_row_container = document.createElement("DIV");
+		this.day_row_container.setAttribute("layout", "10");
+		this.day_row_container.style.position = "relative";
 		this.content = document.createElement("DIV");
 		this.content.setAttribute("layout", "fill");
 		this.content.style.overflow = "auto";
 		container.appendChild(this.header);
+		container.appendChild(this.day_row_container);
 		container.appendChild(this.content);
 		require("vertical_layout.js", function() { new vertical_layout(container); t._layout(); });
+		require("day_row_layout.js", function() { t.row_layout = new day_row_layout(); t._layout(); });
 		
+		this.corner = document.createElement("DIV");
+		this.corner.style.position = "absolute";
+		this.corner.style.width = "50px";
+		this.corner.style.height = "20px";
+		var tz = -(new Date().getTimezoneOffset());
+		this.corner.innerHTML = "GMT";
+		if (tz != 0) {
+			if (tz > 0) this.corner.innerHTML += "+"; else { this.corner.innerHTML += "-"; tz=-tz; }
+			this.corner.innerHTML += this._2digits(Math.floor(tz/60));
+			tz -= Math.floor(tz/60)*60;
+			if (tz > 0) this.corner.innerHTML += ":"+this._2digits(tz);
+		}
+		this.header.appendChild(this.corner);
 		this.day_title = [];
+		this.day_box = [];
 		for (var i = 0; i < 7; ++i) {
 			this.day_title[i] = document.createElement("DIV");
 			this.day_title[i].style.borderLeft = "1px solid black";
+			if (i == 6)
+				this.day_title[i].style.borderRight = "1px solid black";
 			this.day_title[i].style.textAlign = "center";
 			this.day_title[i].style.height = "20px";
 			this.day_title[i].style.position = "absolute";
 			this.header.appendChild(this.day_title[i]);
+			this.day_box[i] = document.createElement("DIV");
+			this.day_box[i].style.borderLeft = "1px solid black";
+			if (i == 6)
+				this.day_box[i].style.borderRight = "1px solid black";
+			this.day_box[i].style.borderBottom = "1px solid black";
+			this.day_box[i].style.height = "10px";
+			this.day_box[i].style.position = "absolute";
+			this.day_row_container.appendChild(this.day_box[i]);
 		}
 		this.header.style.position = "relative";
 		
@@ -132,7 +168,9 @@ function calendar_view_week(view, container) {
 		var dw = Math.floor(w/7);
 		for (var i = 0; i < 7; ++i) {
 			this.day_title[i].style.left = (dw*i+50)+"px";
-			this.day_title[i].style.width = dw+"px";
+			this.day_title[i].style.width = (dw-(i==6?1:0))+"px";
+			this.day_box[i].style.left = (dw*i+50)+"px";
+			this.day_box[i].style.width = (dw-(i==6?1:0))+"px";
 			switch (i) {
 			case 0: this.day_title[i].innerHTML = "Monday "+new Date(this.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
 			case 1: this.day_title[i].innerHTML = "Tuesday "+new Date(this.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
@@ -144,8 +182,21 @@ function calendar_view_week(view, container) {
 			}
 			this.day_content[i].style.left = (dw*i+50)+"px";
 			this.day_content[i].style.width = dw+"px";
-			if (this.day_column)
-				this.day_column[i].layout(this.events[i], this.day_content[i], 0, dw, 0, view.zoom, 20);
+			if (this.day_column) {
+				var list = [];
+				for (var j = 0; j < this.events[i].length; ++j)
+					if (!this.events[i][j].all_day) list.push(this.events[i][j]);
+				this.day_column[i].layout(list, this.day_content[i], 0, dw, 0, view.zoom, 20);
+			}
+		}
+		if (this.row_layout) {
+			var list = [];
+			for (var i = 0; i < 7; ++i)
+				for (var j = 0; j < this.events[i].length; ++j)
+					if (this.events[i][j].all_day) list.push(this.events[i][j]);
+			var h = this.row_layout.layout(list, this.day_box, this.start_date);
+			this.day_row_container.setAttribute("layout",h);
+			container.widget.layout();
 		}
 		setTimeout(function() {
 			var ok = true;

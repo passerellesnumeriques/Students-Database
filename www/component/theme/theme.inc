@@ -41,5 +41,9 @@ theme::$icons_16 = array(
 );
 theme::$icons_10 = array(
 	"close" => 			"/static/theme/".$theme."/icons_10/close.png",
+	"online" => 		"/static/theme/".$theme."/icons_10/online.gif",
+	"offline" => 		"/static/theme/".$theme."/icons_10/offline.gif",
+	"semi_online" => 	"/static/theme/".$theme."/icons_10/semi_online.gif",
+	"no_connection" => 	"/static/theme/".$theme."/icons_10/no_connection.gif",
 );
 ?>

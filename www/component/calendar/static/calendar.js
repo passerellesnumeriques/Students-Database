@@ -1,21 +1,13 @@
 function CalendarManager() {
 	this.calendars = [];
 	
-	this.onloading = null;
-	this.onloaded = null;
-	
-	this.onaction = null;
-	this.onaction_done = null;
-	
 	this.on_event_added = null;
 	this.on_event_removed = null;
 	this.on_event_updated = null;
 
-	this.add_calendar = function(name, color, show, refresher) {
-		var cal = new Calendar(name, color, refresher);
-		cal.show = show;
+	this.add_calendar = function(cal) {
 		this.calendars.push(cal);
-		if (show)
+		if (cal.show)
 			this.refresh_calendar(cal);
 		return cal;
 	};
@@ -49,11 +41,8 @@ function CalendarManager() {
 	this.refresh_calendar = function(cal) {
 		if (cal.updating) return; // already in progress
 		cal.updating = true;
-		if (this.onloading) this.onloading(cal);
-		var t=this;
-		cal.refresher.refresh(this, cal, function() {
+		cal.refresh(this, cal, function() {
 			cal.updating = false;
-			if (t.onloaded) t.onloaded(cal);
 		});
 	};
 	
@@ -63,18 +52,42 @@ function CalendarManager() {
 	};
 }
 
-function Calendar(name, color, refresher) {
+function Calendar(name, color, show) {
 	if (!color) color = "A0A0FF";
 	this.name = name;
 	this.color = color;
-	this.refresher = refresher;
+	this.show = show;
 	this.updating = false;
 	this.events = [];
+	this.refresh = function(manager, calendar, ondone) {
+		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar.refresh not implemented"));
+	};
 }
 
-function PNCalendarRefresher(id) {
+function PNCalendar(id, name, color, show) {
+	Calendar.call(this, name, color, show);
 	this.id = id;
 	this.refresh = function(manager, cal, ondone) {
+		if (!window.top.pn_calendar_loading_status) {
+			window.top.pn_calendar_loading_status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING,"Loading PN Calendars... (1)");
+			window.top.pn_calendar_loading_nb = 1;
+			window.top.status_manager.add_status(window.top.pn_calendar_loading_status);
+		} else {
+			window.top.pn_calendar_loading_nb++;
+			window.top.pn_calendar_loading_status.message = "Loading PN Calendars... ("+window.top.pn_calendar_loading_nb+")";
+			window.top.status_manager.update_status(window.top.pn_calendar_loading_status);
+		}
+		var prev_ondone = ondone;
+		ondone = function() {
+			window.top.pn_calendar_loading_nb--;
+			if (window.top.pn_calendar_loading_nb == 0)
+				window.top.status_manager.remove_status(window.top.pn_calendar_loading_status);
+			else {
+				window.top.pn_calendar_loading_status.message = "Loading PN Calendars... ("+window.top.pn_calendar_loading_nb+")";
+				window.top.status_manager.update_status(window.top.pn_calendar_loading_status);
+			}
+			prev_ondone();
+		};
 		var t=this;
 		service.json("calendar", "get", {id:t.id}, function(result) {
 			if (!result) { ondone(); return; }
@@ -107,3 +120,5 @@ function PNCalendarRefresher(id) {
 		});
 	};
 }
+PNCalendar.prototype = new Calendar();
+PNCalendar.prototype.constructor = PNCalendar;

@@ -81,6 +81,10 @@ browser = {
 };
 browser.detect();
 
+// needed, if utils not yet loaded...
+if (!Array.prototype.contains)
+	Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e)return true;return false;};
+
 /** @class document */
 
 /** If document.getElementById does not exist, it is added  
@@ -410,6 +414,7 @@ function add_javascript(url, onload) {
 	for (var i = 0; i < head.childNodes.length; ++i) {
 		var e = head.childNodes[i];
 		if (e.nodeName != "SCRIPT") continue;
+		if (!e.src || e.src.length == 0) continue;
 		var u = new URL(e.src);
 		if (u.path == p) {
 			// we found a script there
@@ -465,6 +470,7 @@ function add_stylesheet(url) {
 	for (var i = 0; i < head.childNodes.length; ++i) {
 		var e = head.childNodes[i];
 		if (e.nodeName != "LINK") continue;
+		if (!e.href || e.href.length == 0) continue;
 		var u = new URL(e.href);
 		if (u.path == url.path) {
 			// we found it
@@ -488,7 +494,9 @@ function get_script_path(script_filename) {
 	for (var i = 0; i < head.childNodes.length; ++i) {
 		var e = head.childNodes[i];
 		if (e.nodeName != "SCRIPT") continue;
+		if (!e.src || e.src.length == 0) continue;
 		var u = new URL(e.src);
+		if (!u.path) continue;
 		if (u.path.length > script_filename.length && u.path.substring(u.path.length-script_filename.length) == script_filename) {
 			u.path = u.path.substring(0, u.path.length-script_filename.length);
 			return u.toString();

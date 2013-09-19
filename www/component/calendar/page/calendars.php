@@ -4,10 +4,32 @@ class page_calendars extends Page {
 	public function get_required_rights() { return array(); }
 	
 	public function execute() {
-		echo "<div style='height:100%;width:100%' id='calendars'>";
-		echo "<div id='calendars_list' style='overflow:auto'><a href='#' onclick='load_google();return false;'>Load Google</a></div>";
-		echo "<div id='calendars_view'></div>";
-		echo "</div>";
+?>
+<div style='height:100%;width:100%' id='calendars'>
+	<div style='overflow:auto'>
+		<div class='collapsable_section' style='margin:5px'>
+			<div class='collapsable_section_header'>
+				<img src='/static/application/logo.png' width='16px' style='vertical-align:bottom'/>
+				PN Calendars
+			</div>
+			<div class='collapsable_section_content' id='pn_calendars' style='padding:5px'>
+				<img src='<?php echo theme::$icons_16['loading'];?>' id='loading_pn_calendars'/>
+			</div>
+		</div>
+		<br/>
+		<div class='collapsable_section' style='margin:5px'>
+			<div class='collapsable_section_header'>
+				<img src='/static/google/google.png' style='vertical-align:bottom'/>
+				Google Calendars
+			</div>
+			<div class='collapsable_section_content' id='google_calendars' style='padding:5px'>
+				<img src='<?php echo theme::$icons_16['loading'];?>' id='loading_google_calendars'/>
+			</div>
+		</div>
+		</div>
+	<div id='calendars_view'></div>
+</div>
+<?php
 		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("new splitter_vertical('calendars',0.3);");
 		$this->add_javascript("/static/calendar/calendar.js");
@@ -17,61 +39,73 @@ class page_calendars extends Page {
 <script type='text/javascript'>
 function init_calendars() {
 	window.calendars = new CalendarManager();
-	var list = document.getElementById("calendars_list");
+	load_pn_calendars();
+	_load_google_calendars();
+	new CalendarView(window.calendars, 'week', 'calendars_view', function(){ add_test_events(); });
+}
+function load_pn_calendars() {
+	var list = document.getElementById("pn_calendars");
 <?php 
 $ids = PNApplication::$instance->calendar->getAccessibleCalendars();
 $calendars = SQLQuery::create()->bypass_security()->select("Calendar")->where_in("Calendar", "id", $ids)->execute();
-foreach ($calendars as $cal) echo "new CalendarElement(list,window.calendars.add_calendar(".json_encode($cal["name"]).",".json_encode($cal["color"]).",true,new PNCalendarRefresher(".$cal["id"].")));";
+foreach ($calendars as $cal) echo "new CalendarElement(list,window.calendars.add_calendar(new PNCalendar(".$cal["id"].",".json_encode($cal["name"]).",".json_encode($cal["color"]).",true)));";
 ?>
-	new CalendarView(window.calendars, 'week', 'calendars_view',function(){
-		setTimeout(function(){
+	var loading = document.getElementById('loading_pn_calendars');
+	loading.parentNode.removeChild(loading);
+}
+function TestCalendar() {
+	Calendar.call(this, "Test", "D0FFD0", true);
+	this.refresh = function(manager, cal, ondone) {
+		if (cal.events.length > 0) return;
 		var ev = {
 			uid:1,
-			calendar: window.calendars.calendars[0],
+			calendar: cal,
 			start: new Date(new Date().getTime()-30*60*1000),
 			end: new Date(new Date().getTime()+30*60*1000),
 			description: "Before"
 		};
-		window.calendars.calendars[0].events.push(ev);
-		window.calendars.on_event_added(ev);
+		cal.events.push(ev);
+		manager.on_event_added(ev);
 		ev = {
 			uid:2,
-			calendar: window.calendars.calendars[0],
+			calendar: cal,
 			start: new Date(new Date().getTime()+120*60*1000),
 			end: new Date(new Date().getTime()+180*60*1000),
 			description: "After"
 		};
-		window.calendars.calendars[0].events.push(ev);
-		window.calendars.on_event_added(ev);
+		cal.events.push(ev);
+		manager.on_event_added(ev);
 		ev = {
 			uid:3,
-			calendar: window.calendars.calendars[0],
+			calendar: cal,
 			start: new Date(new Date().getTime()-60*60*1000),
 			end: new Date(new Date().getTime()+200*60*1000),
 			description: "Large"
 		};
-		window.calendars.calendars[0].events.push(ev);
-		window.calendars.on_event_added(ev);
+		cal.events.push(ev);
+		manager.on_event_added(ev);
 		ev = {
 			uid:4,
-			calendar: window.calendars.calendars[0],
+			calendar: cal,
 			start: new Date(new Date().getTime()+15*60*1000),
 			end: new Date(new Date().getTime()+75*60*1000),
 			description: "Overlap"
 		};
-		window.calendars.calendars[0].events.push(ev);
-		window.calendars.on_event_added(ev);
+		cal.events.push(ev);
+		manager.on_event_added(ev);
 		ev = {
 			uid:5,
-			calendar: window.calendars.calendars[0],
+			calendar: cal,
 			start: new Date(new Date().getTime()+45*60*1000),
 			end: new Date(new Date().getTime()+90*60*1000),
 			description: "Inside"
 		};
-		window.calendars.calendars[0].events.push(ev);
-		window.calendars.on_event_added(ev);
-		},1000);
-	});
+	};
+}
+TestCalendar.prototype = new Calendar();
+TestCalendar.prototype.constructor = TestCalendar;
+function add_test_events() {
+	new CalendarElement(document.getElementById("pn_calendars"), window.calendars.add_calendar(new TestCalendar())); 
 }
 function CalendarElement(container, cal) {
 	this._init = function() {
@@ -81,85 +115,43 @@ function CalendarElement(container, cal) {
 		this.box.style.width = "10px";
 		this.box.style.height = "10px";
 		this.box.style.border = "1px solid #"+cal.color;
-		this.box.style.backgroundColor = "#"+cal.color;
+		if (cal.show)
+			this.box.style.backgroundColor = "#"+cal.color;
 		this.name = document.createElement("SPAN"); this.div.appendChild(this.name);
 		this.name.style.paddingLeft = "3px";
 		this.name.innerHTML = cal.name;
 	};
 	this._init();
 }
-function load_google() {
-	add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
-}
-function google_api_loaded(){
-	gapi.client.setApiKey("AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
-	gapi.auth.init();
-	gapi.auth.authorize({client_id:"459333498575-p8k0toe6hpcjfe29k83ah77adnocqah4.apps.googleusercontent.com",scope:"https://www.googleapis.com/auth/calendar"},function(auth_token){
-		gapi.client.load('calendar','v3',function(){
-			var req = gapi.client.calendar.calendarList.list();
-			req.execute(function(resp){
-				var list = document.getElementById("calendars_list");
-				for (var i = 0; i < resp.items.length; ++i) {
-					new CalendarElement(list,
-							window.calendars.add_calendar(resp.items[i].summary, resp.items[i].backgroundColor.substring(1), true, new GoogleCalendarRefresher(resp.items[i].id))
-					);
-				}
-			});
+function _load_google_calendars() {
+	var loading = document.getElementById('loading_google_calendars');
+	var doit = function() {
+		load_google_calendars(window.calendars, function(calendars){
+			var list = document.getElementById("google_calendars");
+			for (var i = 0; i < calendars.length; ++i)
+				new CalendarElement(list, calendars[i]);
+			loading.parentNode.removeChild(loading);
+		});		
+	};
+	add_javascript("/static/google/google_calendar.js",function(){
+		window.top.add_javascript("/static/google/google.js",function() {
+			if (window.top.google.connection_status != 1) {
+				var container = loading.parentNode;
+				container.removeChild(loading);
+				loading = document.createElement("DIV");
+				loading.id = 'loading_google_calendars';
+				container.appendChild(loading);
+				loading.innerHTML = window.top.connection_status == 0 ? "Connecting to Google..." : "Not connected to Google";
+				window.top.google.connection_listeners.push(function(){
+					if (window.top.google.connection_status == 1)
+						doit();
+					else
+						loading.innerHTML = window.top.connection_status == 0 ? "Connecting to Google..." : "Not connected to Google";
+				});						
+			} else
+				doit();
 		});
 	});
-}
-function GoogleCalendarRefresher(id) {
-	this.id = id;
-	this.refresh = function(manager, cal, ondone) {
-		var req = gapi.client.calendar.events.list({calendarId:this.id,maxResults:10000});
-		req.execute(function(resp){
-			if (!resp || !resp.items) { ondone(); return; }
-			var removed_events = cal.events;
-			cal.events = [];
-			for (var i = 0; i < resp.items.length; ++i) {
-				var gev = resp.items[i];
-				ev = {};
-				ev.calendar = cal;
-				ev.description = gev.summary;
-				ev.uid = gev.iCalUID;
-				if (gev.start && gev.start.date) {
-					ev.start = new Date();
-					ev.start.setHours(0,0,0,0);
-					var d = gev.start.date.split("-");
-					ev.start.setFullYear(parseInt(d[0]));
-					ev.start.setMonth(parseInt(d[1])-1);
-					ev.start.setDate(parseInt(d[2]));
-				}
-				if (gev.end && gev.end.date) {
-					ev.end = new Date();
-					//ev.end.setHours(3,0,0,0);
-					var d = gev.end.date.split("-");
-					ev.end.setFullYear(parseInt(d[0]));
-					ev.end.setMonth(parseInt(d[1])-1);
-					ev.end.setDate(parseInt(d[2]));
-				}
-				if (!ev.start || !ev.end) continue;
-				var found = false;
-				for (var j = 0; j < removed_events.length; ++j) {
-					if (ev.uid == removed_events[j].uid) {
-						found = true;
-						cal.events.push(ev);
-						if (ev.last_modified != removed_events[j].last_modified)
-							manager.on_event_updated(ev);
-						removed_events.splice(j,1);
-						break;
-					}
-				}
-				if (!found) {
-					cal.events.push(ev);
-					manager.on_event_added(ev);
-				}
-			}
-			for (var i = 0; i < removed_events.length; ++i)
-				manager.on_event_removed(removed_events[i]);
-			ondone();
-		});
-	};
 }
 </script>
 <?php

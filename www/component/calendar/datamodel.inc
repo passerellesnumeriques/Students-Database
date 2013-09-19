@@ -52,6 +52,7 @@ $model->addTable("CalendarEventFrequency")
 	->addString("by_month_day", 0, 100, true, false)
 	->addString("by_week_day", 0, 100, true, false)
 	->addString("by_hour", 0, 100, true, false)
+	->addString("by_setpos", 0, 100, true, false)
 	->addString("week_start", 0, 2, true, false)
 	;
 ?>
