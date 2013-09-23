@@ -49,6 +49,7 @@ function editable_cell(container, table, column, row_key, field_classname, field
 				return;
 			}
 			t.lock = result.lock;
+			t.data = result.value;
 			window.database_locks.add_lock(parseInt(result.lock));
 			t.field = new window[field_classname](t.data,true,null,null,field_arguments);
 			container.appendChild(t.field.getHTMLElement());

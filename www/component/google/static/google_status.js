@@ -39,7 +39,7 @@ function google_status(container) {
 			t.menu.onclose = function() { t.menu = null; };
 			if (window.top.google.connection_status == -1) {
 				t.menu.addIconItem("/static/google/connect.gif","Connect to Google", function() {
-					t.menu.hide();
+					if (t.menu) t.menu.hide();
 					window.top.google.ask_connection();
 				});
 			} else if (window.top.google.connection_status == 0 || !t.profile) {
