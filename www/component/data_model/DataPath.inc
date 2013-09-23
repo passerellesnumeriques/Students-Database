@@ -240,12 +240,7 @@ class DataPath_Join extends DataPath {
 		$s .= $this->table->getName();
 		if ($this->sub_model <> null)
 			$s .= "[".$this->sub_model."]";
-		$s .= "(";
-		if ($this->parent->table == $this->foreign_key->table)
-			$this->foreign_key->name."=".$this->table->getPrimaryKey()->name;
-		else
-			$this->parent->table->getPrimaryKey()->name."=".$this->foreign_key->name;
-		$s .= ")";
+		$s .= "(".$this->foreign_key->name.")";
 		return $s;
 	}
 	
