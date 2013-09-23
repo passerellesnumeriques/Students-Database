@@ -7,7 +7,6 @@ class Table {
 	private $display_name = null;
 	private $columns = array();
 	private $indexes = array();
-	private $links = array();
 	private $table_read_access = array();
 	public $table_specific_read_access = array();
 	private $table_add_access = array();
@@ -48,8 +47,8 @@ class Table {
 	 * @param boolean $strong indicates if the link is strong or not: if it is strong, it means that if an entity is removed, the linked ones are also removed.
 	 * @return \datamodel\Table
 	 */
-	public function addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed) {
-		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed);
+	public function addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple) {
+		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple);
 		array_push($this->columns, $c);
 		return $this;
 	}
@@ -120,12 +119,6 @@ class Table {
 				array_push($a, func_get_arg($i));
 			array_push($this->indexes, $a);
 		}
-		return $this;
-	}
-
-	/** Indicate a link to another table, not using a foreign key. */
-	public function &addLink($table_name, $fields_matching, $unique) {
-		array_push($this->links, new Link($this, $table_name, $fields_matching, $unique));
 		return $this;
 	}
 
@@ -387,41 +380,10 @@ class Table {
 		return $cols;
 	}
 
-	public function getLinks() {
-		return $this->links;
-	}
-	
 	public function getUnique() {
 		return $this->unique_fields;
 	}
 	
-}
-
-class Link {
-	public $table_from;
-	public $table;
-	public $fields_matching;
-	public $unique;
-	public function __construct(&$table_from, $table, $fields_matching, $unique) {
-		$this->table_from = &$table_from;
-		$this->table = $table;
-		$this->fields_matching = $fields_matching;
-		$this->unique = $unique;
-	}
-}
-class LinkMultiDataBase {
-	public $table_from;
-	public $table;
-	public $table_field_database;
-	public $fields_matching;
-	public $unique;
-	public function __construct(&$table_from, $table, $table_field_database, $fields_matching, $unique) {
-		$this->table_from = &$table_from;
-		$this->table = $table;
-		$this->table_field_database = $table_field_database;
-		$this->fields_matching = $fields_matching;
-		$this->unique = $unique;
-	}
 }
 
 abstract class Column {
@@ -446,6 +408,9 @@ abstract class Column {
 	public abstract function get_sql_type();
 
 	public function validate($value) { return $value; }
+	
+	public function validate_javascript($value, $error) {
+	}
 
 	public function create_javascript_field(&$page, $editable = false, $onchanged = null, $onunchanged = null) {
 		$page->add_javascript("/static/common/js/field/field_text.js");
@@ -471,11 +436,14 @@ class ColumnInteger extends Column {
 	public function validate($value) {
 		if ($this->can_be_null && $value === null) return null;
 		if (!is_integer($value)) $value = intval($value);
-		if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min); // TODO locale
-		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max); // TODO locale
+		if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min);
+		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max);
 		return $value;
 	}
 
+	public function validate_javascript($value, $error) {
+		// TODO
+	}
 }
 
 class ColumnBoolean extends ColumnInteger {
@@ -489,6 +457,9 @@ class ColumnBoolean extends ColumnInteger {
 		return $value == true;
 	}
 
+	public function validate_javascript($value, $error) {
+		// TODO
+	}
 }
 
 class ColumnString extends Column {
@@ -506,15 +477,15 @@ class ColumnString extends Column {
 
 	public function validate($value) {
 		if ($value === null) {
-			if (!$this->can_be_null) throw new \Exception(get_locale("common","Cannot be empty"));
+			if (!$this->can_be_null) throw new \Exception("Cannot be empty");
 			return null;
 		}
 		if (strlen($value) < $this->min_length) {
-			if (strlen($value) == 0) throw new \Exception(get_locale("common","Cannot be empty"));
-			throw new \Exception("Must have a length of at least ".$this->min_length); // TODO locale
+			if (strlen($value) == 0) throw new \Exception("Cannot be empty");
+			throw new \Exception("Must have a length of at least ".$this->min_length);
 		}
 		if (strlen($value) > $this->max_length)
-			throw new \Exception("Cannot be greater than ".$this->max_length); // TODO locale
+			throw new \Exception("Cannot be greater than ".$this->max_length);
 		return $value;
 	}
 
@@ -522,6 +493,14 @@ class ColumnString extends Column {
 		if (!$editable) return parent::create_javascript_field($page, false);
 		$page->add_javascript("/static/common/js/field/field_editable_text.js");
 		return "new field_editable_text(".$this->max_length.",".($onchanged <> null ? $onchanged : 'null').",".($onunchanged <> null ? $onunchanged : 'null').")";
+	}
+
+	public function validate_javascript($value, $error) {
+		if ($this->min_length && !$this->can_be_null)
+			echo "if (".$value.".length < ".$this->min_length.") ".$error." = 'Must contain at least ".$this->min_length." character(s)'; else ";
+		if ($this->max_length)
+			echo "if (".$value.".length > ".$this->max_length.") ".$error." = 'Must contain maximum ".$this->max_length." character(s)'; else ";
+		echo $error." = null;";
 	}
 }
 
@@ -553,6 +532,10 @@ class ColumnEnum extends Column {
 		$values .= "]";
 		return "new field_enum(".$this->max_length.",".($onchanged <> null ? $onchanged : 'null').",".($onunchanged <> null ? $onunchanged : 'null').")";
 	}
+
+	public function validate_javascript($value, $error) {
+		// TODO
+	}
 }
 
 class ColumnDate extends Column {
@@ -567,11 +550,15 @@ class ColumnDate extends Column {
 	public function validate($value) {
 		if ($value === "") $value = null;
 		if ($value === null) {
-			if (!$this->can_be_null) throw new \Exception("You must enter a valid date"); // TODO locale
+			if (!$this->can_be_null) throw new \Exception("You must enter a valid date");
 			return null;
 		}
 		// TODO check if valid format
 		return $value;
+	}
+	
+	public function validate_javascript($value, $error) {
+		// TODO
 	}
 }
 
@@ -587,11 +574,15 @@ class ColumnTime extends Column {
 	public function validate($value) {
 		if ($value === "") $value = null;
 		if ($value === null) {
-			if (!$this->can_be_null) throw new \Exception("You must enter a valid time"); // TODO locale
+			if (!$this->can_be_null) throw new \Exception("You must enter a valid time");
 			return null;
 		}
 		// TODO check if valid format
 		return $value;
+	}
+
+	public function validate_javascript($value, $error) {
+		// TODO
 	}
 }
 
@@ -609,11 +600,13 @@ class ForeignKey extends ColumnInteger {
 	public $foreign_table;
 	public $remove_foreign_when_primary_removed;
 	public $remove_primary_when_foreign_removed;
-
-	public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed) {
+	public $multiple;
+	
+	public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple) {
 		$this->foreign_table = $foreign_table;
 		$this->remove_foreign_when_primary_removed = $remove_foreign_when_primary_removed;
 		$this->remove_primary_when_foreign_removed = $remove_primary_when_foreign_removed;
+		$this->multiple = $multiple;
 		try { $ft = $table->getModel()->internalGetTable($foreign_table); }
 		catch (\Exception $e) { $ft = null; }
 		if ($ft == null && $table->getModel() instanceof \SubDataModel)
@@ -624,7 +617,7 @@ class ForeignKey extends ColumnInteger {
 			$size = 32;
 		} else
 			$size = $ft->getPrimaryKey()->size;
-		parent::__construct($table, $name, $size, !$remove_foreign_when_primary_removed, false);
+		parent::__construct($table, $name, $size, null, null, !$remove_foreign_when_primary_removed, false);
 	}
 
 	public function get_sql_type() { 
@@ -634,6 +627,14 @@ class ForeignKey extends ColumnInteger {
 			try { $ft = $this->table->getModel()->getParentModel()->internalGetTable($this->foreign_table); }
 			catch (\Exception $e) { $ft = null; }
 		return "INT(".$ft->getPrimaryKey()->size.")"; 
+	}
+
+	public function validate($value) {
+		if ($value === null) {
+			if (!$this->can_be_null) throw new \Exception("Missing");
+			return null;
+		}
+		return parent::validate($value);
 	}
 }
 }

@@ -23,33 +23,17 @@ if (window == window.top) {
 			for (var i = 0; i < window.top.pnapplication.windows.length; ++i)
 				window.top.pnapplication.windows[i].pnapplication.onactivity.fire();
 			window.top.pnapplication.last_activity = new Date().getTime();
-			window.top.pnapplication.check_inactivity();
 		},
 		/** check if the user is not inactive since long time: if this is the case, automatically logout */
 		check_inactivity: function() {
 			var time = new Date().getTime();
 			time -= window.top.pnapplication.last_activity;
-			if (window.top.frames.length == 0) return;
-			var status = window.top.frames[0].document.getElementById('inactivity_status');
-			if (status == null) return;
-			clearInterval(window.top.pnapplication.update_inactivity_interval);
-			if (time < 10000) {
-				status.style.visibility = 'hidden';
-				status.style.position = 'absolute';
-				window.top.pnapplication.update_inactivity_interval = setInterval(window.top.pnapplication.check_inactivity, 2000);
-			} else if (time > 30*60*1000) {
-				window.top.frames[0].location = "/dynamic/application/page/logout?from=inactivity";
-			} else {
-				status.style.visibility = 'visible';
-				var t = window.top.frames[0].document.getElementById('inactivity_time');
-				var s = "";
-				if (time >= 60*1000) {
-					s += Math.floor(time/(60*1000))+"m";
-					time = time % (60*1000);
+			for (var i = 0; i < window.top.pnapplication.windows.length; ++i) {
+				for (var j = 0; j < window.top.pnapplication.windows[i].pnapplication._inactivity_listeners.length; ++j) {
+					var il = window.top.pnapplication.windows[i].pnapplication._inactivity_listeners[j];
+					if (il.time <= time)
+						il.listener();
 				}
-				s += Math.floor(time/1000)+"s";
-				t.innerHTML = s;
-				window.top.pnapplication.update_inactivity_interval = setInterval(window.top.pnapplication.check_inactivity, 1000);
 			}
 		}
 	};
@@ -66,7 +50,11 @@ if (window == window.top) {
 		close_window: function() {
 			this.onclose.fire();
 			window.top.pnapplication.unregister_window(window);
-		}	
+		},
+		_inactivity_listeners: [],
+		add_inactivity_listener: function(inactivity_time, listener) {
+			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
+		}
 	};
 	window.top.pnapplication.register_window(window);
 }
@@ -86,7 +74,7 @@ function init_pnapplication() {
 				window.pnapplication.close_window();
 		};
 		if (window==window.top)
-			window.pnapplication.update_inactivity_interval = setInterval(window.pnapplication.check_inactivity, 2000);
+			setInterval(window.pnapplication.check_inactivity, 2000);
 	}
 };
 init_pnapplication();

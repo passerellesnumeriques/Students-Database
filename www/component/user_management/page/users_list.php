@@ -56,11 +56,8 @@ function init_users_list() {
 						list.grid.startLoading();
 						var users = [];
 						var sel = list.grid.getSelection();
-						for (var i = 0; i < sel.length; ++i) {
-							var domain = list.getRowData(sel[i], "Users", "domain");
-							var username = list.getRowData(sel[i], "Users", "username");
-							users.push({domain:domain,username:username});
-						}
+						for (var i = 0; i < sel.length; ++i)
+							users.push(list.getRowData(sel[i], "Users", "id"));
 						service.json("user_management","assign_roles",{users:users,roles:roles_id},function(result){
 							window.top.status_manager.remove_status(status);
 							list.grid.endLoading();
@@ -101,11 +98,8 @@ function init_users_list() {
 						list.grid.startLoading();
 						var users = [];
 						var sel = list.grid.getSelection();
-						for (var i = 0; i < sel.length; ++i) {
-							var domain = list.getRowData(sel[i], "Users", "domain");
-							var username = list.getRowData(sel[i], "Users", "username");
-							users.push({domain:domain,username:username});
-						}
+						for (var i = 0; i < sel.length; ++i)
+							users.push(list.getRowData(sel[i], "Users", "id"));
 						service.json("user_management","unassign_roles",{users:users,roles:roles_id},function(result){
 							window.top.status_manager.remove_status(status);
 							list.grid.endLoading();

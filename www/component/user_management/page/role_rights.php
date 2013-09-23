@@ -58,7 +58,7 @@ class page_role_rights extends Page {
 		}
 		
 		// get rights directly attached to the role
-		$res = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where("role_id",$role_id)->execute();
+		$res = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where("role",$role_id)->execute();
 		if (!is_array($res)) $res = array();
 		$final = array();
 		foreach ($res as $r) $final[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);

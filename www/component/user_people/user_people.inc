@@ -13,7 +13,7 @@ class user_people extends Component {
 		$people = SQLQuery::create()
 		->database("students_".PNApplication::$instance->user_management->domain)
 		->select("UserPeople")
-		->where("username",PNApplication::$instance->user_management->username)
+		->where("user",PNApplication::$instance->user_management->user_id)
 		->join("UserPeople", "People", array("people"=>"id"))
 		->field("People", "id")
 		->field("People", "first_name")
@@ -35,15 +35,14 @@ class user_people extends Component {
 		}
 	}
 	
-	public function get_user_from_people($people, &$domain, &$username) {
-		if ($domain == null)
-			$domain = PNApplication::$instance->current_domain;
-		$r = SQLQuery::create()->select("UserPeople")->field("username")->where("people",$people)->execute_single_row();
+	public function get_user_from_people($people_id) {
+		$r = SQLQuery::create()->select("UserPeople")->field("user")->where("people",$people_id)->execute_single_row();
 		if ($r <> null)
-			$username = $r["username"];
+			return $r["user"];
+		return null;
 	}
-	public function get_people_from_user($domain, $username) {
-		return SQLQuery::create()->select("UserPeople")->field("people")->where("username",$username)->execute_single_value();
+	public function get_people_from_user($user_id) {
+		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->execute_single_value();
 	}
 	
 }

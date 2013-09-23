@@ -82,6 +82,17 @@ html, body {
 	background-color: rgba(255,255,255,0.2);
 }
 
+table.all_borders {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+table.all_borders>tbody>tr>td {
+	border: 1px solid black;
+}
+table.all_borders>tbody>tr>th {
+	border: 1px solid black;
+}
+
 /* Button */
 button img {
 	vertical-align: bottom;
@@ -319,4 +330,57 @@ table.grid tbody tr:nth-child(odd).selected {
 	cursor: w-resize;
 	border-left: 1px solid rgb(164, 190, 212);
 	border-right: 1px solid rgb(164, 190, 212);
+}
+
+/* Mac Tabs */
+.mac_tabs {
+	border: 1px solid black;
+	display: inline-block;
+	margin: 2px;
+}
+.mac_tab {
+	border-right: 1px solid black;
+	padding: 3px 5px 3px 5px;
+	display: inline-block;
+}
+.mac_tab:last-child {
+	border-right: 0px;
+}
+
+/* Small Calendar */
+.small_calendar {
+	border: 1px solid black;
+	border-collapse: collapse;
+	background-color: white;
+}
+.small_calendar td {
+	border: 1px solid #8080FF;
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	width: 20px;
+	height: 20px;
+}
+.small_calendar td.disabled {
+	background-color: #C0C0C0;
+	cursor: default;
+}
+.small_calendar td.selected {
+	background-color: #C0C0FF;
+	font-weight: bold;
+	cursor: default;
+}
+
+/* Date Picker */
+.date_picker {
+	border: 1px solid black;
+	background-color: white;
+}
+.date_picker select {
+	font-size: 11px;
+	margin: 0px;
+	padding: 0px;
+}
+.date_picker .small_calendar {
+	border: 0px;
 }

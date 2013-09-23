@@ -19,7 +19,6 @@ class Table {
 	public $display_name = null;
 	public $columns = array();
 	public $indexes = array();
-	public $links = array();
 	public $table_read_access = array();
 	public $table_specific_read_access = array();
 	public $table_add_access = array();
@@ -33,6 +32,9 @@ class Table {
 		$this->name = $name;
 	}
 
+	public function setDisplayName($name) { $this->display_name = $name; return $this; }
+	public function getDisplayName() { return $this->display_name; }
+	
 	public function setDisplayName($name) { $this->display_name = $name; return $this; }
 	public function getDisplayName() { return $this->display_name; }
 	
@@ -110,12 +112,6 @@ class Table {
 		return $this;
 	}
 	
-	/** Indicate a link to another table, not using a foreign key. */
-	public function &addLink($table_name, $fields_matching, $unique) {
-		array_push($this->links, new Link($this, $table_name, $fields_matching, $unique));
-		return $this;
-	}
-	
 	public function &setUnique($fields) {
 		$this->unique_fields = $fields;
 		return $this;
@@ -180,19 +176,6 @@ class Table {
 	public function &addDisplayableData($field, $category, $name) {
 		$this->displayable_data[$field] = array($category, $name);
 		return $this;
-	}
-}
-
-class Link {
-	public $table_from;
-	public $table;
-	public $fields_matching;
-	public $unique;
-	public function __construct(&$table_from, $table, $fields_matching, $unique) {
-		$this->table_from = &$table_from;
-		$this->table = $table;
-		$this->fields_matching = $fields_matching;
-		$this->unique = $unique;
 	}
 }
 

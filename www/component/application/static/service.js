@@ -68,6 +68,7 @@ service = {
 	
 	generate_input: function(input) {
 		var s = "";
+		if (input == null) return s;
 		if (input instanceof Array) {
 			s += "[";
 			for (var i = 0; i < input.length; ++i) {

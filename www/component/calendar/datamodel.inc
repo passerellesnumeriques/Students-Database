@@ -1,0 +1,58 @@
+<?php 
+/* @var $model DataModel */
+$model->addTable("Calendar")
+	->addPrimaryKey("id")
+	->addString("name", 100, 1, false, false)
+	->addString("color", 6, 6, true, false)
+	->addInteger("last_modification")
+	->addString("type", 50, 1, false, false)
+	->addString("data", 4096, 0, true, false)
+	;
+$model->addTable("UserCalendar")
+	->addForeignKey("user", "Users", true, false, true)
+	->addForeignKey("calendar", "Calendar", true, true, false)
+	;
+$model->addTable("CalendarRights")
+	->addForeignKey("calendar", "Calendar", true, false, true)
+	->addString("right_name", 100, 1, false, false)
+	->addString("right_value")
+	->addBoolean("writable", false)
+	;
+$model->addTable("CalendarEvent")
+	->addPrimaryKey("id")
+	->addForeignKey("calendar", "Calendar", true, false, true)
+	->addString("uid", 255, 1, false, false)
+	->addInteger("start")
+	->addInteger("end")
+	->addBoolean("all_day", false)
+	->addInteger("last_modified")
+	->addString("title", 1024, 0, false, false)
+	->addString("description", 4096, 0, false, false)
+	->addString("location_freetext", 1024, 0, true, false)
+	// TODO allow to link to geography for location
+	->addString("organizer", 1024, 0, true, false)
+	->addEnum("participation", array("UNKNOWN","YES","NO","TENTATIVE","DELEGATE"), false, false)
+	->addEnum("role", array("REQUESTED","OPTIONAL","FOR_INFO"), false, false)
+	;
+$model->addTable("CalendarEventAttendee")
+	->addForeignKey("event", "CalendarEvent", true, false, true)
+	->addString("attendee", 1024, 0, true, false)
+	->addEnum("participation", array("UNKNOWN","YES","NO","TENTATIVE","DELEGATE"), false, false)
+	->addEnum("role", array("REQUESTED","OPTIONAL","FOR_INFO"), false, false)
+	;
+$model->addTable("CalendarEventFrequency")
+	->addForeignKey("event", "CalendarEvent", true, false, false)
+	->addEnum("frequency", array("DAILY","WEEKLY","MONTHLY","YEARLY"))
+	->addInteger("until", 32, null, null, true, false)
+	->addInteger("count", 32, 1, null, true, false)
+	->addInteger("interval", 32, 1, null, true, false)
+	->addString("by_month", 0, 100, true, false)
+	->addString("by_week_no", 0, 100, true, false)
+	->addString("by_year_day", 0, 100, true, false)
+	->addString("by_month_day", 0, 100, true, false)
+	->addString("by_week_day", 0, 100, true, false)
+	->addString("by_hour", 0, 100, true, false)
+	->addString("by_setpos", 0, 100, true, false)
+	->addString("week_start", 0, 2, true, false)
+	;
+?>

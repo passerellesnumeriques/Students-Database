@@ -23,30 +23,6 @@ window.database_locks = {
 	},
 	
 	_locks: [],
-	_check_time: 30000,
-	_timeout_time: 120000,
-	_check: function() {
-		var now = new Date().getTime();
-		var popup = false;
-		var t = this;
-		for (var i = 0; i < this._locks.length; ++i) {
-			if (now - this._locks[i].time > this._timeout_time) {
-				add_javascript("/static/widgets/popup_window.js",function() {
-					var p = new popup_window("",null);
-					p.setContentFrame("/static/data_model/databaselock_inactivity.html");
-					p.onclose = function() {
-						setTimeout("window.database_locks._check();", t._check_time);
-					};
-					p.show();
-				});
-				popup = true;
-				break;
-			} else
-				ajax.post_parse_result("/dynamic/data_model/service/update_db_lock","id="+this._locks[i].id,function(result){});
-		}
-		if (!popup)
-			setTimeout("window.database_locks._check();", this._check_time);		
-	},
 	_user_inactive: function() {
 		var remaining = this._locks.length;
 		if (remaining == 0) return;
@@ -83,8 +59,29 @@ function init_databaselock() {
 	window.pnapplication.onclose.add_listener(function() {
 		w.database_locks._close_window();
 	});
+	window.pnapplication.add_inactivity_listener(2*60*1000, function() {
+		if (window.database_locks._has_popup) return;
+		var now = new Date().getTime();
+		var popup = false;
+		window.database_locks._has_popup = true;
+		for (var i = 0; i < window.database_locks._locks.length; ++i) {
+			if (now - window.database_locks._locks[i].time >= 2*60*1000) {
+				add_javascript("/static/widgets/popup_window.js",function() {
+					var p = new popup_window("",null);
+					p.setContentFrame("/static/data_model/databaselock_inactivity.html");
+					p.onclose = function() {
+						window.database_locks._has_popup = false;
+					};
+					p.show();
+				});
+				popup = true;
+				break;
+			} else
+				ajax.post_parse_result("/dynamic/data_model/service/update_db_lock","id="+window.database_locks._locks[i].id,function(result){});
+		}
+		if (!popup)
+			window.database_locks._has_popup = false;
+	});
 }
-if (window.top == window)
-	setTimeout("window.database_locks._check();",database_locks._check_time);
-else
+if (window.top != window)
 	init_databaselock();

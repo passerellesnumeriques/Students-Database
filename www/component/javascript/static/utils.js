@@ -399,3 +399,18 @@ function unlock_screen(div) {
 	} else if (div.parentNode == document.body)
 		document.body.removeChild(div);
 }
+
+function debug_object_to_string(o, indent) {
+	if (!indent) indent = "";
+	if (typeof o == 'object') {
+		if (o instanceof Date)
+			return o.toString();
+		var s = "{\r\n";
+		for (var name in o) {
+			s += indent+"    "+name+":"+debug_object_to_string(o[name], indent+"    ")+",\r\n";
+		}
+		s += "}";
+		return s;
+	}
+	return ""+o;
+}

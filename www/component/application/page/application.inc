@@ -1,8 +1,14 @@
 <?php 
 $this->add_javascript("/static/widgets/vertical_layout.js");
 $this->add_javascript("/static/widgets/context_menu.js");
+$this->add_javascript("/static/google/google_status.js");
 $this->onload("new vertical_layout('pn_application_container');");
+$this->onload("new google_status('google_status');");
 $this->onload("window.top.pn_loading_end();");
+if (PNApplication::$instance->current_domain == "Dev") {
+	$this->add_javascript("/static/development/debug_status.js");
+	$this->onload("new debug_status('debug_status');");
+}
 ?>
 <div style='width:100%;height:100%;overflow:hidden' id='pn_application_container'>
 	<div layout='28' id='pn_application_header'>
@@ -36,12 +42,17 @@ $this->onload("window.top.pn_loading_end();");
 		</table>
 	</div>
 	<iframe layout='fill' src='/dynamic/application/page/home' id='pn_application_content' name='pn_application_content' frameBorder=0 onload='pn_application_content_load();'></iframe>
-	<div layout='15' id='pn_application_footer'>
+	<div layout='17' id='pn_application_footer'>
 		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
-		<span id='application_loading' style='position:fixed;bottom:1px;right:2px;z-index:5;visibility:hidden'><span>Loading application</span> <iframe style='width:100px;height:10px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=10000'></iframe><span id='application_loading_text'></span></span>
-		<span style='position:fixed;bottom:1px;right:3px;z-index:5;visibility:hidden;' id='inactivity_status'>
-			Inactivity: <span id='inactivity_time'></span>
+		<span id='application_loading' style='position:fixed;bottom:1px;left:2px;z-index:5;visibility:hidden'><span>Loading application</span> <iframe style='width:100px;height:10px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=10000'></iframe><span id='application_loading_text'></span></span>
+		<span style='position:fixed;bottom:0px;right:3px;'>
+			<span id='google_status'></span>
 		</span>
+		<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
+		<span style='position:fixed;bottom:0px;right:23px;'>
+			<span id='debug_status'></span>
+		</span>
+		<?php } ?>
 	</div>
 </div>
 <a href="/dynamic/application/page/home" target="pn_application_content" style='position:fixed;top:-2px;left:2px'>

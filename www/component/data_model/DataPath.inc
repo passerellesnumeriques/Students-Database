@@ -33,8 +33,6 @@ class DataPathBuilder {
 		DataPathBuilder::add_fields($path, $context, $final_paths);
 		DataPathBuilder::add_foreign_keys($path, $context, $done, $final_paths, $sub_models);
 		DataPathBuilder::add_external_foreign_keys($path, $context, $done, $final_paths, $sub_models);
-		DataPathBuilder::add_links($path, $context, $done, $final_paths, $sub_models);
-		DataPathBuilder::add_external_links($path, $context, $done, $final_paths, $sub_models);
 	}
 	
 	private static function add_fields(&$path, &$context, &$final_paths) {
@@ -69,9 +67,9 @@ class DataPathBuilder {
 						$sm = $sub_models[$t->getModel()->getParentTable()];
 					}
 				}
-				$p = new DataPath_Join($path, $path->table, $path->sub_model, $path->table_alias, $t, $sm, $context->new_table_alias(), array($col->name=>$t->getPrimaryKey()->name));
-				unset($t);
+				$p = new DataPath_Join($path, $col, $t, $sm, $context->new_table_alias());
 				DataPathBuilder::search_from_path($p, $context, $done, $final_paths, $sub_models);
+				unset($t);
 			} catch (Exception $e) {
 				// not allowed
 				continue;
@@ -95,78 +93,11 @@ class DataPathBuilder {
 				if (!($col instanceof \datamodel\ForeignKey)) continue;
 				if ($col->foreign_table <> $path->table->getName()) continue;
 				// we have one
-				$p = new DataPath_ReverseJoin($path, $t, $sm, $context->new_table_alias(), $path->table, $path->sub_model, $path->table_alias, array($col->name=>$path->table->getPrimaryKey()->name));
+				$p = new DataPath_Join($path, $col, $col->table, $sm, $context->new_table_alias());
 				DataPathBuilder::search_from_path($p, $context, $done, $final_paths, $sub_models);
 			}
 		}
 	}
-	
-	private static function add_links(&$path, &$context, &$done, &$final_paths, $sub_models) {
-		$model = DataModel::get();
-		foreach ($path->table->getLinks() as $link) {
-			if (!$link->unique && !$path->is_unique()) continue; // double multiplicity: too complex
-			try {
-				$t = $model->getTable($link->table);
-				$sm = null;
-				if ($t instanceof SubDataModel) {
-					if ($path->table->getModel() instanceof SubDataModel) {
-						if ($path->table->getModel()->getParentTable() == $t->getModel()->getParentTable()) {
-							// we are on the same sub model
-							$sm = $path->sub_model;
-						} else {
-							// two different sub models
-							if ($sub_models == null || !isset($sub_models[$t->getModel()->getParentTable()]))
-								continue; // we don't have a sub model
-							$sm = $sub_models[$t->getModel()->getParentTable()];
-						}
-					} else {
-						// t is on a sub model, but not path
-						if ($sub_models == null || !isset($sub_models[$t->getModel()->getParentTable()]))
-							continue; // we don't have a sub model
-						$sm = $sub_models[$t->getModel()->getParentTable()];
-					}
-				}
-				$p = new DataPath_Join($path, $path->table, $path->sub_model, $path->table_alias, $t, $sm, $context->new_table_alias(), $link->fields_matching);
-				$p->unique = $link->unique;
-				unset($t);
-				DataPathBuilder::search_from_path($p, $context, $done, $final_paths, $sub_models);
-			} catch (Exception $e) {
-				// not allowed
-				continue;
-			}
-		}
-	}
-	
-	private static function add_external_links(&$path, &$context, &$done, &$final_paths, $sub_models) {
-		$model = DataModel::get();
-		$tables = $model->getTables();
-		foreach ($tables as &$ta) {
-			foreach ($ta->getLinks() as $link) {
-				if ($link->table <> $path->table->getName()) continue;
-				if (!$link->unique && !$path->is_unique()) continue; // double multiplicity: too complex
-				try {
-					$t = $link->table_from;
-					if (!$t->canAccess()) continue;
-					$sm = null;
-					if ($t->getModel() instanceof SubDataModel) {
-						if ($path->table->getModel() instanceof SubDataModel) {
-							if ($path->table->getModel()->getParentTable() <> $t->getModel()->getParentTable())
-								continue; // different sub model
-							$sm = $path->sub_model;
-						}
-					}
-					$p = new DataPath_ReverseJoin($path, $t, $sm, $context->new_table_alias(), $path->table, $path->sub_model, $path->table_alias, $link->fields_matching);
-					$p->unique = $link->unique;
-					unset($t);
-					DataPathBuilder::search_from_path($p, $context, $done, $final_paths, $sub_models);
-				} catch (Exception $e) {
-					// not allowed
-					continue;
-				}
-			}
-		}
-	}
-	
 	
 }
 
@@ -245,8 +176,11 @@ class DataPath_Table extends DataPath {
 		$q->select(array($this->table->getSQLNameFor($this->sub_model) => $this->table_alias));
 		$pk = $this->table->getPrimaryKey();
 		if ($pk <> null) {
-			$this->table_primarykey_alias = $context->new_field_alias();
-			$q->field($this->table->getSQLNameFor($this->sub_model), $pk->name, $this->table_primarykey_alias);
+			$this->table_primarykey_alias = $q->get_field_alias($this->table_alias, $pk->name);
+			if ($this->table_primarykey_alias == null) {
+				$this->table_primarykey_alias = $context->new_field_alias();
+				$q->field($this->table_alias, $pk->name, $this->table_primarykey_alias);
+			}
 		}
 	}
 	
@@ -283,43 +217,40 @@ class DataPath_Field extends DataPath {
 	}
 }
 
-/** simple join, following a foreign key on the current table */
+/** join following a foreign key */
 class DataPath_Join extends DataPath {
 	
-	public $from_table;
-	public $from_sub_model;
-	public $from_table_alias;
-	public $matching_fields;
+	public $foreign_key;
 	
 	public $table_primarykey_alias = null;
-	
-	public function __construct($parent, &$from_table, &$from_sub_model, $from_table_alias, &$to_table, &$to_sub_model, $to_table_alias, $matching_fields) {
-		parent::__construct($parent, $to_table, $to_sub_model, $to_table_alias);
-		$this->from_table = &$from_table;
-		$this->from_sub_model = $from_sub_model;
-		$this->from_table_alias = $from_table_alias;
-		$this->matching_fields = $matching_fields;
+
+	public function __construct($parent, &$foreign_key, &$target_table, $target_sub_model, &$target_table_alias) {
+		$this->foreign_key = $foreign_key;
+		parent::__construct($parent, $target_table, $target_sub_model, $target_table_alias);
+		if ($parent->table == $foreign_key->table)
+			$this->unique = true;
+		else 
+			$this->unique = !$foreign_key->multiple;
 	}
 	
 	public function get_string() {
 		$s = $this->parent->get_string();
-		$s .= ">";
-		if (!$this->unique) $s .= ">";
+		$s .= $this->parent->table == $this->foreign_key->table ? ">" : "<";
+		if (!$this->unique) $this->parent->table == $this->foreign_key->table ? ">" : "<";
 		$s .= $this->table->getName();
 		if ($this->sub_model <> null)
 			$s .= "[".$this->sub_model."]";
 		$s .= "(";
-		$first = true;
-		foreach ($this->matching_fields as $src=>$dst) {
-			if ($first) $first = false; else $s .= ",";
-			$s .= $src."=";
-			if (is_array($dst))
-				$s .= json_encode($dst);
-			else
-				$s .= $dst;
-		}
+		if ($this->parent->table == $this->foreign_key->table)
+			$this->foreign_key->name."=".$this->table->getPrimaryKey()->name;
+		else
+			$this->parent->table->getPrimaryKey()->name."=".$this->foreign_key->name;
 		$s .= ")";
 		return $s;
+	}
+	
+	public function is_reverse() {
+		return $this->parent->table <> $this->foreign_key->table;
 	}
 	
 	/**
@@ -331,75 +262,24 @@ class DataPath_Join extends DataPath {
 		$this->append_sql($q, $context);
 	}
 
-	public function append_sql(&$q, &$context) {
-		$alias = $q->get_join_alias($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields);
-		if ($alias <> $this->table_alias) {
-			$q->join($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields, $this->table_alias);
-			$pk = $this->table->getPrimaryKey();
-			if ($pk <> null) {
-				$this->table_primarykey_alias = $context->new_field_alias();
-				$q->field($this->table->getSQLName($this->sub_model), $pk->name, $this->table_primarykey_alias);
-			}
-		}
-	}
-	
-}
-
-/** join to a table containing a foreign key to the current table */
-class DataPath_ReverseJoin extends DataPath {
-	
-	public $to_table;
-	public $to_sub_model;
-	public $to_table_alias;
-	public $matching_fields;
-
-	public $table_primarykey_alias = null;
-	
-	public function __construct($parent, &$from_table, &$from_sub_model, $from_table_alias, &$to_table, &$to_sub_model, $to_table_alias, $matching_fields) {
-		parent::__construct($parent, $from_table, $from_sub_model, $from_table_alias);
-		$this->to_table = &$to_table;
-		$this->to_sub_model = $to_sub_model;
-		$this->to_table_alias = $to_table_alias;
-		$this->matching_fields = $matching_fields;
-	}
-	
-	public function get_string() {
-		$s = $this->parent->get_string();
-		$s .= "<";
-		if (!$this->unique) $s .= "<";
-		$s .= $this->table->getName();
-		if ($this->sub_model <> null)
-			$s .= "[".$this->sub_model."]";
-		$s .= "(";
-		$first = true;
-		foreach ($this->matching_fields as $src=>$dst) {
-			if ($first) $first = false; else $s .= ",";
-			$s .= $src."=";
-			if (is_array($dst))
-				$s .= json_encode($dst);
-			else
-				$s .= $dst;
-		}
-		$s .= ")";
-		return $s;
-	}
-	
 	/**
 	 * @param SQLQuery $q
 	 * @param DataPathBuilderContext $context
 	 */
-	public function build_sql(&$q, &$context) {
-		$this->append_sql($q, $context);
-	}
-
 	public function append_sql(&$q, &$context) {
-		$alias = $q->get_join_alias($this->to_table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields);
+		$match = array();
+		if ($this->parent->table == $this->foreign_key->table)
+			$match[$this->foreign_key->name] = $this->table->getPrimaryKey()->name;
+		else
+			$match[$this->parent->table->getPrimaryKey()->name] = $this->foreign_key->name;
+		$alias = $q->get_join_alias($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $match);
 		if ($alias <> $this->table_alias) {
-			$q->join($this->to_table_alias, $this->table->getSQLName($this->sub_model), $this->matching_fields, $this->table_alias);
+			$q->join($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $match, $this->table_alias);
 			$pk = $this->table->getPrimaryKey();
 			if ($pk <> null) {
-				$this->table_primarykey_alias = $context->new_field_alias();
-				$q->field($this->table->getSQLName($this->sub_model), $pk->name, $this->table_primarykey_alias);
+				$this->table_primarykey_alias = $q->get_field_alias($this->table_alias, $pk->name);
+				if ($this->table_primarykey_alias == null) $this->table_primarykey_alias = $context->new_field_alias();
+				$q->field($this->table_alias, $pk->name, $this->table_primarykey_alias);
 			}
 		}
 	}

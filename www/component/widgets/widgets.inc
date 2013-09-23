@@ -24,8 +24,7 @@ class widgets extends Component {
 			return array("field_enum",$args);
 		}
 		if ($col instanceof \datamodel\ColumnDate) {
-			// TODO
-			return array("field_text","{}");
+			return array("field_date","{}");
 		}
 		return array("field_text", "{}");
 	}

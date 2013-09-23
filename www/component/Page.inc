@@ -32,7 +32,7 @@ abstract class Page {
 		if (!in_array($path, $this->stylesheets))
 			array_push($this->stylesheets, $path);
 	}
-	public final function onload($script) { $this->onload .= $script; }
+	public final function onload($script) { $this->onload .= str_replace("\"", "&quot;", $script); }
 	
 	public final function generate_id() {
 		return str_replace("/", "_", str_replace(".", "_", $this->path))."_".($this->generate_id++);
@@ -66,6 +66,7 @@ abstract class Page {
 	<link rel="stylesheet" href="<?php echo theme::$style;?>"/>
 	<script type="text/javascript" src="/static/javascript/utils.js"></script>
 	<script type="text/javascript" src="/static/javascript/browser.js"></script>
+	<script type="text/javascript" src="/static/application/application.js"></script>
 	<script type="text/javascript" src="/static/javascript/layout.js"></script>
 	<script type="text/javascript" src="/static/theme/theme.js.php"></script>
 	<script type="text/javascript" src="/static/javascript/ajax.js"></script>

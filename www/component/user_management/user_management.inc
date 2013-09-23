@@ -8,15 +8,20 @@ class user_management extends Component {
 	public $username = null;
 	/** @var string authentication token returned by the authentication system */
 	public $auth_token = null;
+	/** @var integer ID of the user logged in */
+	public $user_id;
 
 	/** @var Event raised when a user logged in */
 	public $logged_in;
 	/** @var Event raised when the user logout */
 	public $logged_out;
-
+	/** @var Event raised when a new user is created */
+	public $local_user_created;
+	
 	function init() {
 		$this->logged_in = new Event();
 		$this->logged_out = new Event();
+		$this->local_user_created = new Event();
 	}
 
 	/**
@@ -40,7 +45,9 @@ class user_management extends Component {
 		$this->username = $username;
 		$user = SQLQuery::create()->bypass_security()->select("Users")->where("domain",$domain)->where("username",$username)->execute_single_row();
 		if ($user == null) // the user does not exist yet in the database, but exists on the authentication system 
-			SQLQuery::create()->bypass_security()->insert("Users",array("domain"=>$domain,"username"=>$username));
+			$this->user_id = $this->create_user($domain, $username);
+		else
+			$this->user_id = $user["id"];
 		$this->logged_in->fire();
 		return null;
 	}
@@ -55,6 +62,14 @@ class user_management extends Component {
 		$this->domain = null;
 		$this->username = null;
 		$this->auth_token = null;
+		$this->user_id = null;
+	}
+	
+	public function create_user($domain, $username) {
+		$user_id = SQLQuery::create()->bypass_security()->insert("Users",array("domain"=>$domain,"username"=>$username));
+		if ($domain == PNApplication::$instance->local_domain)
+			$this->local_user_created->fire($user_id);
+		return $user_id;
 	}
 
 	/**
@@ -81,13 +96,13 @@ class user_management extends Component {
 			}
 
 			// get roles of the user
-			$roles = SQLQuery::create()->bypass_security()->select("UserRole")->field("role")->where("domain",$this->domain)->where("username",$this->username)->execute_single_field();
+			$roles = SQLQuery::create()->bypass_security()->select("UserRole")->field("role")->where("user",$this->user_id)->execute_single_field();
 			// check if the user is an administrator
 			foreach ($roles as $role_id)
-				if ($role_id == 0) { $this->is_admin[PNApplication::$instance->current_domain] = true; break; }
+				if ($role_id == -1) { $this->is_admin[PNApplication::$instance->current_domain] = true; break; }
 			if (!isset($this->is_admin[PNApplication::$instance->current_domain])) {
 				// get rights directly attached to the user
-				$user_rights = SQLQuery::create()->bypass_security()->select("UserRights")->field("right")->field("value")->where("domain",$this->domain)->where("username",$this->username)->execute();
+				$user_rights = SQLQuery::create()->bypass_security()->select("UserRights")->field("right")->field("value")->where("user",$this->user_id)->execute();
 				$rights = array();
 				if ($user_rights)
 				foreach ($user_rights as $r)
@@ -166,15 +181,11 @@ class user_management extends Component {
 	}
 
 	public function get_profile_pages(&$people) {
-		$domain = @$_GET["domain"];
-		$username = @$_GET["username"];
-		if ($domain <> null && $people == null) {
-			$people = PNApplication::$instance->user_people->get_people_from_user($domain, $username);
-		} else if ($domain == null && $people <> null) {
-			$people = PNApplication::$instance->user_people->get_user_from_people($people, $domain, $username);
-		}
+		$user_id = @$_GET["user"];
+		if ($user_id == null && $people <> null)
+			$user_id = PNApplication::$instance->user_people->get_user_from_people($people);
 		return array(
-			"user_rights"=>array("/static/user_management/access_list.png", "User Rights", "/dynamic/user_management/page/user_rights?domain=".$domain."&username=".$username, 1000),
+			"user_rights"=>array("/static/user_management/access_list.png", "User Rights", "/dynamic/user_management/page/user_rights?user=".$user_id, 1000),
 		);
 	}
 	

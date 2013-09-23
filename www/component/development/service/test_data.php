@@ -24,6 +24,7 @@ class service_test_data extends Service {
  			$db_system->execute("USE students_".$domain);
 			$roles_id = $this->create_roles($db_system, $this->roles[$domain]);
 			$this->create_users($db_system, $domain, $this->users[$domain], $roles_id);
+			$db_system->execute("INSERT INTO Role (`id`,`name`) VALUE (-1,'Administrator')");
 		}		
 	}
 	
@@ -57,7 +58,7 @@ class service_test_data extends Service {
 			array("Fatima", "Tiah", "F", array("Staff", "Educator")),
 			array("Stanley", "Vasquez", "M", array("Staff", "Educator")),
 			array("Kranz", "Serino", "F", array("Staff", "Educator")),
-			array("Guillaume", "Le Cousin", "M", array("Staff", "Training Manager", 0)),
+			array("Guillaume", "Le Cousin", "M", array("Staff", "Training Manager", -1)),
 			array("Jovanih", "Alburo", "M", array("Staff", "SNA")),
 			array("Rosalyn", "Minoza", "F", array("Staff", "Selection Manager")),
 			array("Isadora", "Gerona", "F", array("Staff", "Selection Officer")),
@@ -95,13 +96,11 @@ class service_test_data extends Service {
 			$db_system->execute("INSERT INTO People (first_name,last_name,sex) VALUES ('".$user[0]."','".$user[1]."','".$user[2]."')");
 			$people_id = $db_system->get_insert_id();
 			$username = str_replace(" ","-", strtolower($user[0]).".".strtolower($user[1]));
-			$db_system->execute("INSERT INTO Users (domain,username) VALUES ('".$domain."','".$username."')");
-			$db_system->execute("INSERT INTO UserPeople (username,people) VALUES ('".$username."',".$people_id.")");
-			foreach ($user[3] as $role) {
-				$db_system->execute("INSERT INTO UserRole (domain,username,role) VALUES ('".$domain."','".$username."',".($role === 0 ? 0 : $roles_id[$role]).")");
-			}
+			$user_id = PNApplication::$instance->user_management->create_user($domain, $username);
+			$db_system->execute("INSERT INTO UserPeople (user,people) VALUES ('".$user_id."',".$people_id.")");
+			foreach ($user[3] as $role)
+				$db_system->execute("INSERT INTO UserRole (user,role) VALUES ('".$user_id."',".($role === -1 ? -1 : $roles_id[$role]).")");
 		}
-		
 	}
 	
 }
