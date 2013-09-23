@@ -16,6 +16,7 @@ class DataModel {
 class Table {
 
 	public $name;
+	public $display_name = null;
 	public $columns = array();
 	public $indexes = array();
 	public $links = array();
@@ -31,6 +32,9 @@ class Table {
 	public function __construct($name) {
 		$this->name = $name;
 	}
+
+	public function setDisplayName($name) { $this->display_name = $name; return $this; }
+	public function getDisplayName() { return $this->display_name; }
 	
 	/** Add a primary key (integer ID) */
 	public function addPrimaryKey($name, $size=32) {

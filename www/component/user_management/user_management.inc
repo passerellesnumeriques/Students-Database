@@ -81,7 +81,7 @@ class user_management extends Component {
 			}
 
 			// get roles of the user
-			$roles = SQLQuery::create()->bypass_security()->select("UserRole")->field("role_id")->where("domain",$this->domain)->where("username",$this->username)->execute_single_field();
+			$roles = SQLQuery::create()->bypass_security()->select("UserRole")->field("role")->where("domain",$this->domain)->where("username",$this->username)->execute_single_field();
 			// check if the user is an administrator
 			foreach ($roles as $role_id)
 				if ($role_id == 0) { $this->is_admin[PNApplication::$instance->current_domain] = true; break; }
@@ -94,7 +94,7 @@ class user_management extends Component {
 					$rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 				// merge with rights attached to the roles of the user
 				if (count($roles) > 0)
-					$role_rights = SQLQuery::create()->bypass_security()->select("RoleRights")->field("right")->field("value")->where_in("role_id", $roles)->execute();
+					$role_rights = SQLQuery::create()->bypass_security()->select("RoleRights")->field("right")->field("value")->where_in("role", $roles)->execute();
 				else $role_rights = null;
 				if ($role_rights)
 				foreach ($role_rights as $r) {

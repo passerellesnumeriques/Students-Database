@@ -84,7 +84,7 @@ class service_test_data extends Service {
 		foreach ($roles as $role_name=>$role_rights) {
 			$role_id = $roles_id[$role_name];
 			foreach ($role_rights as $right_name=>$right_value) {
-				$db_system->execute("INSERT INTO RoleRights (`role_id`,`right`,`value`) VALUES ('".$role_id."','".$right_name."','".$right_value."')");
+				$db_system->execute("INSERT INTO RoleRights (`role`,`right`,`value`) VALUES ('".$role_id."','".$right_name."','".$right_value."')");
 			}
 		}
 		return $roles_id;
@@ -98,7 +98,7 @@ class service_test_data extends Service {
 			$db_system->execute("INSERT INTO Users (domain,username) VALUES ('".$domain."','".$username."')");
 			$db_system->execute("INSERT INTO UserPeople (username,people) VALUES ('".$username."',".$people_id.")");
 			foreach ($user[3] as $role) {
-				$db_system->execute("INSERT INTO UserRole (domain,username,role_id) VALUES ('".$domain."','".$username."',".($role === 0 ? 0 : $roles_id[$role]).")");
+				$db_system->execute("INSERT INTO UserRole (domain,username,role) VALUES ('".$domain."','".$username."',".($role === 0 ? 0 : $roles_id[$role]).")");
 			}
 		}
 		

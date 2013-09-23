@@ -55,6 +55,7 @@ class SQLQuery {
  	public $tables = array();
  	public $fields = array();
  	public $count = null;
+	public $count_one_field = null;
  	public $where = array();
  	public $joins = array();
  	public $limit_from = 0;
@@ -129,6 +130,10 @@ class SQLQuery {
 	}
 	public function &count($alias = null) {
 		$this->count = array($alias);
+		return $this;
+	}
+	public function &count_one_field($table, $name, $alias=null){
+		$this->count_one_field = array($table,$name,$alias);
 		return $this;
 	}
 	
@@ -300,7 +305,7 @@ class SQLQuery {
 				$table = DataModel::get()->getTable($join[1]);
 			$alias = $join[3];
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-			if (count($this->fields) == 0 && $this->count === null) {
+			if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null) {
 				if ($this->bypass_security)
 					$columns = $table->internalGetColumns();
 				else
@@ -328,7 +333,7 @@ class SQLQuery {
 		$this->fields = $final_fields;
 		
 		$sql = "SELECT ";
-		if (count($this->fields) == 0 && $this->count === null && $this->bypass_security)
+		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count_one_field === null && $this->count === null && $this->bypass_security)
 			$sql .= "*";
 		else {
 			$first = true;
@@ -342,6 +347,12 @@ class SQLQuery {
 				$sql .= "COUNT(*)";
 				if ($this->count[0] <> null)
 					$sql .= " AS `".$this->count[0]."`";
+			}
+			if ($this->count_one_field !== null){
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= " COUNT(`".$this->count_one_field[0]."`.`".$this->count_one_field[1]."`)";
+				if ($this->count_one_field[2] <> null)
+					$sql .= " AS `".$this->count_one_field[2]."`";
 			}
 		}
 		$sql .= " FROM ";
