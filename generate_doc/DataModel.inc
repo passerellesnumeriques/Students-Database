@@ -31,6 +31,9 @@ class Table {
 	public function __construct($name) {
 		$this->name = $name;
 	}
+
+	public function setDisplayName($name) { $this->display_name = $name; return $this; }
+	public function getDisplayName() { return $this->display_name; }
 	
 	public function setDisplayName($name) { $this->display_name = $name; return $this; }
 	public function getDisplayName() { return $this->display_name; }

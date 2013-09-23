@@ -51,7 +51,7 @@ class page_build_excel_import extends Page {
 				break;
 			case "upload":
 				if (!isset($_FILES["excel"]) || $_FILES["excel"]['error'] <> UPLOAD_ERR_OK) {
-					echo "Error uploading file.";
+					echo "Error uploading file (".(isset($_FILES["excel"]) ? $_FILES["excel"]['error'] : "no file received").").";
 					echo "<script type='text/javascript'>window.parent.enable_wizard_page_previous(true);function wizard_page_go_previous() { location.href='?page=select_file'; }</script>";
 				} else {
 					require_once("component/lib_php_excel/PHPExcel.php");
