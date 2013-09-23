@@ -139,7 +139,7 @@ function geographic_area_selection(container, country_code) {
 	/** Edit the table from the new_result[0] level, with only the areas set in new_result
 	* @method geographic_area_selection#buildTable
 	* @param new_result = object with the same structure as result
-	* @param: area_id = id of the area which started the filter function
+	* @param area_id = id of the area which started the filter function
 	*/
 	this.buildTable = function(new_result, area_id){
 		index = this.findIndex(area_id);
@@ -172,6 +172,7 @@ function geographic_area_selection(container, country_code) {
 	/** Get the index in the result object of the given area
 	* @method geographic_area_selection#findIndex
 	* @parameter area_id
+	* @returns an object with two attributes: division_index & area_index
 	*/
 	this.findIndex = function(area_id){
 		var index ={};
@@ -190,6 +191,7 @@ function geographic_area_selection(container, country_code) {
 	/** Get all the children (just one generation after)
 	* @method geographic_area_selection#findChildren
 	* @parameter area_id
+	* @returns an array children, empty if no child. children[i] contains an object with two attributes: area_id & division_id
 	*/
 	this.findChildren = function(area_id){
 		var index = this.findIndex(area_id);
@@ -218,6 +220,7 @@ function geographic_area_selection(container, country_code) {
 	/** Get the parent of the given area
 	* @method geographic_area_selection#findParent
 	* @parameter area_id
+	* @returns an object parent, null if no parent, with two attributes otherwise: division_id & area_id
 	*/
 	this.findParent = function(area_id){
 		var parent ={};
@@ -337,14 +340,13 @@ function geographic_area_selection(container, country_code) {
 			t.setContextMenu(t.context, areaBelongField, areaBelongValue);
 			var input = document.getElementById(id);
 			t.context.showBelowElement(input);
-		});
-		
-		
+		});		
 	}
 	
-	/** Set the first letter as a capital one, lower the case of the others
+	/** Set a uniform case
 	* @method geographic_area_selection#uniformCase
 	* @parameter {string} text
+	* @returns the same string with a capitalized first letter, and other letters or lowered
 	*/
 	this.uniformCase = function(text) {
 		var t = new Array();
@@ -399,10 +401,11 @@ function geographic_area_selection(container, country_code) {
 	}
 	
 	
-	/** Get true if ref starts with str, else return false
+	/** Test if one string starts with an other one
 	* @method geographic_area_selection#startWith
-	* @param ref = string
-	* @param str = string
+	* @param {string} ref
+	* @param {string} str
+	* @returns {boolean} true if ref starts with str, else return false
 	*/	
 	this.startWith = function(ref, str){
 		var answer = false;
@@ -420,10 +423,11 @@ function geographic_area_selection(container, country_code) {
 		return answer;
 	}
 	
-	/** Get true if str belongs to ref, false if ref starts with str, else return false
+	/** Test if a string contains an other one
 	* @method geographic_area_selection#belong
-	* @param: {string} ref
-	* @param: {string} str
+	* @param {string} ref
+	* @param {string} str
+	* @returns {boolean} true if str belongs to ref, false if ref starts with str, else return false
 	*/
 	this.belong = function(ref, str){
 		var answer = false;

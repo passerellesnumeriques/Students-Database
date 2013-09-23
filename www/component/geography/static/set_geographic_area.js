@@ -135,5 +135,16 @@ function set_geographic_area(container, country_code){
 		return parent;
 	}
 	
+	/** Set a uniform case
+	* @method set_geographic_area#uniformCase
+	* @parameter {string} text
+	* @returns the same string with a capitalized first letter, and other letters or lowered
+	*/
+	this.uniformCase = function(text) {
+		text.split
+		//TO DO regexp
+		return t.join('');
+	}
+	
 	
 }
