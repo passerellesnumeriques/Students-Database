@@ -90,6 +90,11 @@ case "dynamic":
 		$_SESSION["app"] = &PNApplication::$instance;
 	} else
 		PNApplication::$instance = &$_SESSION["app"];
+	if (PNApplication::$instance->current_domain == "Dev") {
+		$dev = new DevRequest();
+		$dev->url = $_SERVER["PATH_INFO"];
+		array_push(PNApplication::$instance->development->requests, $dev);
+	}
 
 	if (!isset(PNApplication::$instance->components[$component_name])) invalid("Invalid request: unknown component ".$component_name);
 

@@ -44,7 +44,8 @@ function google_status(container) {
 				});
 			} else if (window.top.google.connection_status == 0 || !t.profile) {
 				t.menu.addIconItem(theme.icons_16.loading, "Connection to Google pending...", function() {
-					t.menu.hide();
+					if (t.menu)
+						t.menu.hide();
 				});
 			} else {
 				t.menu.addTitleItem("/static/google/google.png", t.profile.name);

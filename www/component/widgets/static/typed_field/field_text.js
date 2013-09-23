@@ -32,6 +32,9 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 			input.value = data;
 			f();
 		};
+		this.signal_error = function(error) {
+			input.style.border = error ? "1px solid red" : "";
+		};
 	} else {
 		this.element = document.createTextNode(data);
 		this.element.typed_field = this;
@@ -46,6 +49,9 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 		};
 		this.getCurrentData = function() {
 			return this.element.nodeValue;
+		};
+		this.signal_error = function(error) {
+			this.element.style.color = error ? "red" : "";
 		};
 	}
 }

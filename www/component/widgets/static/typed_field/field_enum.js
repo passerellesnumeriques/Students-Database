@@ -49,6 +49,9 @@ function field_enum(data,editable,onchanged,onunchanged,config) {
 					break;
 				}
 		};
+		this.signal_error = function(error) {
+			select.style.border = error ? "1px solid red" : "";
+		};
 	} else {
 		this.element = document.createTextNode(data);
 		this.element.typed_field = this;
@@ -63,6 +66,9 @@ function field_enum(data,editable,onchanged,onunchanged,config) {
 		};
 		this.getCurrentData = function() {
 			return this.element.nodeValue;
+		};
+		this.signal_error = function(error) {
+			this.element.style.color = error ? "red" : "";
 		};
 	}
 }

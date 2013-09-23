@@ -34,7 +34,7 @@ function data_entity_page(&$page, $table, &$entity, $sub_models = null) {
 		echo "<td>";
 		if ($table->canModifyField($field)) {
 			$typed_field = PNApplication::$instance->widgets->get_typed_field($table->getColumn($field));
-			echo "<img src='".theme::$icons_16["edit"]."' onclick=\"data_entity_edit(this,'".$table->getName()."','".$field."','".$typed_field[0]."','".htmlentities($typed_field[1],ENT_QUOTES,"UTF-8")."','".$entity[$table->getPrimaryKey()->name]."');\" style='cursor:pointer'/>";
+			echo "<img src='".theme::$icons_16["edit"]."' onclick=\"data_entity_edit(event,this,this.parentNode.previousSibling,'".$table->getName()."','".$field."','".$typed_field[0]."','".htmlentities($typed_field[1],ENT_QUOTES,"UTF-8")."','".$entity[$table->getPrimaryKey()->name]."');return false;\" style='cursor:pointer;vertical-align:bottom'/>";
 		}
 		echo "</td>";
 		echo "</tr>";

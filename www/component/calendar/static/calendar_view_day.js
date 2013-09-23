@@ -1,4 +1,4 @@
-if (typeof add_javascript != 'undefined') {
+if (typeof get_script_path != 'undefined') {
 	var url = get_script_path("calendar_view_day.js");
 	add_javascript(url+"day_column_layout.js");
 	add_javascript(url+"day_row_layout.js");

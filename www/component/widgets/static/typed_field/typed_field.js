@@ -39,5 +39,10 @@ typed_field.prototype = {
 	 *  change data
 	 *  @param data new data value
 	 */
-	setData: function(data) {}
+	setData: function(data) {},
+	/**
+	 * highlight the field to signal an error
+	 * @param {Boolean} error if true, the field is highlighted, else it is not
+	 */
+	signal_error: function(error) {}
 };

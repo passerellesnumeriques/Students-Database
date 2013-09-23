@@ -32,7 +32,7 @@ class service_lock_cell extends Service {
 			return;
 		}
 		$locked_by = null;
-		$lock = DataBaseLock::lock_cell($table->getName(), $field, $key, $locked_by);
+		$lock = DataBaseLock::lock_cell($table->getName(), $key, $field, $locked_by);
 		if ($lock == null) {
 			PNApplication::error("This data is already locked by ".$locked_by);
 			return;

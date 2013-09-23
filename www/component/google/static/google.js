@@ -2,6 +2,7 @@ if (!window.top.google) {
 	window.top.google = {
 		connection_status: 0,
 		connection_listeners: [],
+		_connecting_time: 0,
 		need_connection: function(on_connected) {
 			if (window.top.google.connection_status == 1)
 				on_connected();
@@ -21,6 +22,7 @@ if (!window.top.google) {
 			window.top.google.connection_status = 0;
 			for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
 				window.top.google.connection_listeners[i]();
+			window.top.google._connecting_time = new Date().getTime();
 			window.top.gapi.auth.authorize(
 				{
 					client_id:window.top.google._client_id,
@@ -37,7 +39,7 @@ if (!window.top.google) {
 					window.top.google.connection_status = -1;
 					for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
 						window.top.google.connection_listeners[i]();
-					setTimeout(window.top.google.connect, 30000);
+					setTimeout(window.top.google.connect, 60000);
 				}
 			);
 		},
@@ -45,6 +47,7 @@ if (!window.top.google) {
 			window.top.google.connection_status = 0;
 			for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
 				window.top.google.connection_listeners[i]();
+			window.top.google._connecting_time = new Date().getTime();
 			window.top.gapi.auth.authorize(
 				{
 					client_id:window.top.google._client_id,
@@ -69,6 +72,13 @@ if (!window.top.google) {
 		window.top.gapi.client.setApiKey("AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
 		window.top.gapi.auth.init();
 		window.top.google.connect();
+		setTimeout(function(){
+			if (window.top.google.connection_status == 0 && window.top.google._connecting_time < new Date().getTime()-30000) {
+				window.top.google.connection_status = -1;
+				for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
+					window.top.google.connection_listeners[i]();
+			}
+		},10000);
 	};
 	window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 }

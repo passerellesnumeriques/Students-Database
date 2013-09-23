@@ -408,6 +408,9 @@ abstract class Column {
 	public abstract function get_sql_type();
 
 	public function validate($value) { return $value; }
+	
+	public function validate_javascript($value, $error) {
+	}
 
 	public function create_javascript_field(&$page, $editable = false, $onchanged = null, $onunchanged = null) {
 		$page->add_javascript("/static/common/js/field/field_text.js");
@@ -433,11 +436,14 @@ class ColumnInteger extends Column {
 	public function validate($value) {
 		if ($this->can_be_null && $value === null) return null;
 		if (!is_integer($value)) $value = intval($value);
-		if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min); // TODO locale
-		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max); // TODO locale
+		if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min);
+		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max);
 		return $value;
 	}
 
+	public function validate_javascript($value, $error) {
+		// TODO
+	}
 }
 
 class ColumnBoolean extends ColumnInteger {
@@ -451,6 +457,9 @@ class ColumnBoolean extends ColumnInteger {
 		return $value == true;
 	}
 
+	public function validate_javascript($value, $error) {
+		// TODO
+	}
 }
 
 class ColumnString extends Column {
@@ -468,15 +477,15 @@ class ColumnString extends Column {
 
 	public function validate($value) {
 		if ($value === null) {
-			if (!$this->can_be_null) throw new \Exception(get_locale("common","Cannot be empty"));
+			if (!$this->can_be_null) throw new \Exception("Cannot be empty");
 			return null;
 		}
 		if (strlen($value) < $this->min_length) {
-			if (strlen($value) == 0) throw new \Exception(get_locale("common","Cannot be empty"));
-			throw new \Exception("Must have a length of at least ".$this->min_length); // TODO locale
+			if (strlen($value) == 0) throw new \Exception("Cannot be empty");
+			throw new \Exception("Must have a length of at least ".$this->min_length);
 		}
 		if (strlen($value) > $this->max_length)
-			throw new \Exception("Cannot be greater than ".$this->max_length); // TODO locale
+			throw new \Exception("Cannot be greater than ".$this->max_length);
 		return $value;
 	}
 
@@ -484,6 +493,14 @@ class ColumnString extends Column {
 		if (!$editable) return parent::create_javascript_field($page, false);
 		$page->add_javascript("/static/common/js/field/field_editable_text.js");
 		return "new field_editable_text(".$this->max_length.",".($onchanged <> null ? $onchanged : 'null').",".($onunchanged <> null ? $onunchanged : 'null').")";
+	}
+
+	public function validate_javascript($value, $error) {
+		if ($this->min_length && !$this->can_be_null)
+			echo "if (".$value.".length < ".$this->min_length.") ".$error." = 'Must contain at least ".$this->min_length." character(s)'; else ";
+		if ($this->max_length)
+			echo "if (".$value.".length > ".$this->max_length.") ".$error." = 'Must contain maximum ".$this->max_length." character(s)'; else ";
+		echo $error." = null;";
 	}
 }
 
@@ -515,6 +532,10 @@ class ColumnEnum extends Column {
 		$values .= "]";
 		return "new field_enum(".$this->max_length.",".($onchanged <> null ? $onchanged : 'null').",".($onunchanged <> null ? $onunchanged : 'null').")";
 	}
+
+	public function validate_javascript($value, $error) {
+		// TODO
+	}
 }
 
 class ColumnDate extends Column {
@@ -529,11 +550,15 @@ class ColumnDate extends Column {
 	public function validate($value) {
 		if ($value === "") $value = null;
 		if ($value === null) {
-			if (!$this->can_be_null) throw new \Exception("You must enter a valid date"); // TODO locale
+			if (!$this->can_be_null) throw new \Exception("You must enter a valid date");
 			return null;
 		}
 		// TODO check if valid format
 		return $value;
+	}
+	
+	public function validate_javascript($value, $error) {
+		// TODO
 	}
 }
 
@@ -549,11 +574,15 @@ class ColumnTime extends Column {
 	public function validate($value) {
 		if ($value === "") $value = null;
 		if ($value === null) {
-			if (!$this->can_be_null) throw new \Exception("You must enter a valid time"); // TODO locale
+			if (!$this->can_be_null) throw new \Exception("You must enter a valid time");
 			return null;
 		}
 		// TODO check if valid format
 		return $value;
+	}
+
+	public function validate_javascript($value, $error) {
+		// TODO
 	}
 }
 
@@ -598,6 +627,14 @@ class ForeignKey extends ColumnInteger {
 			try { $ft = $this->table->getModel()->getParentModel()->internalGetTable($this->foreign_table); }
 			catch (\Exception $e) { $ft = null; }
 		return "INT(".$ft->getPrimaryKey()->size.")"; 
+	}
+
+	public function validate($value) {
+		if ($value === null) {
+			if (!$this->can_be_null) throw new \Exception("Missing");
+			return null;
+		}
+		return parent::validate($value);
 	}
 }
 }

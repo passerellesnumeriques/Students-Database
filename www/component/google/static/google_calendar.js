@@ -1,17 +1,26 @@
 function load_google_calendars(calendars_manager, ondone) {
+	var onload = function() {
+		var req = window.top.gapi.client.calendar.calendarList.list();
+		req.execute(function(resp){
+			var calendars = [];
+			if (resp.items)
+			for (var i = 0; i < resp.items.length; ++i) {
+				var cal = new GoogleCalendar(resp.items[i].id, resp.items[i].summary, resp.items[i].backgroundColor.substring(1), resp.items[i].selected);
+				calendars_manager.add_calendar(cal);
+				calendars.push(cal);
+			}
+			ondone(calendars);
+		});
+	};
 	window.top.add_javascript("/static/google/google.js",function() {
 		window.top.google.need_connection(function(){
 			window.top.gapi.client.load('calendar','v3',function(){
-				var req = window.top.gapi.client.calendar.calendarList.list();
-				req.execute(function(resp){
-					var calendars = [];
-					if (resp.items)
-					for (var i = 0; i < resp.items.length; ++i) {
-						var cal = new GoogleCalendar(resp.items[i].id, resp.items[i].summary, resp.items[i].backgroundColor.substring(1), resp.items[i].selected);
-						calendars_manager.add_calendar(cal);
-						calendars.push(cal);
-					}
-					ondone(calendars);
+				if (window.top.gapi.client.calendar) { onload(); return; }
+				// try again
+				window.top.gapi.client.load('calendar','v3',function(){
+					if (window.top.gapi.client.calendar) { onload(); return; }
+					// failed again
+					ondone(null);
 				});
 			});
 		});
@@ -65,7 +74,9 @@ function GoogleCalendar(id, name, color, show) {
 					var gev = google_events[i];
 					ev = {};
 					ev.calendar = cal;
-					ev.description = gev.summary;
+					ev.title = gev.summary;
+					ev.description = gev.description ? gev.description : "";
+					if (gev.location) ev.location_freetext = gev.location;
 					ev.uid = gev.iCalUID;
 					if (gev.start && gev.start.date) {
 						ev.start = new Date();
@@ -152,9 +163,10 @@ function GoogleCalendar(id, name, color, show) {
 		next_page(null);
 	};
 }
-GoogleCalendar.prototype = new Calendar();
-GoogleCalendar.prototype.constructor = GoogleCalendar;
-
+if (typeof Calendar != 'undefined') {
+	GoogleCalendar.prototype = new Calendar();
+	GoogleCalendar.prototype.constructor = GoogleCalendar;
+}
 
 function parseGoogleDateTime(d) {
 	var googleDate = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.(\d{3}))?([+-]\d{2}):(\d{2})$/;

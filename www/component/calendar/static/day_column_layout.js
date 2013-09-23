@@ -27,12 +27,19 @@ function DayColumnLayout() {
 		});
 		div.style.backgroundColor = "#"+event.calendar.color;
 		div.style.top = y1+"px";
-		div.style.height = (y2-y1)+"px";
+		div.style.height = (y2-y1-3)+"px";
 		div.style.left = x+"px";
-		div.style.width = (w-2)+"px";
+		div.style.width = (w-3)+"px";
 		div.style.zIndex = 2;
-		div.innerHTML = event.description;
+		div.style.padding = "1px";
+		var head = document.createElement("DIV");
+		head.style.fontSize = "8pt";
+		var time_str = this._2digits(event.start.getHours())+":"+this._2digits(event.start.getMinutes())+"-"+this._2digits(event.end.getHours())+":"+this._2digits(event.end.getMinutes());
+		head.appendChild(document.createTextNode(time_str));
+		div.appendChild(head);
+		div.appendChild(document.createTextNode(event.title));
 		div.style.overflow = "hidden";
+		div.title = event.calendar.name+"\r\n"+time_str+"\r\n"+event.title;
 		container.appendChild(div);
 		this.events.push(div);
 	};
@@ -41,6 +48,12 @@ function DayColumnLayout() {
 		for (var i = 0; i < this.events.length; ++i)
 			this.events[i].parentNode.removeChild(this.events[i]);
 		this.events = [];
+	};
+	
+	this._2digits = function(n) {
+		var s = ""+n;
+		while (s.length < 2) s = "0"+s;
+		return s;
 	};
 	
 	this.layout_boxes = function(cx, cw, cy, ch) {
@@ -64,7 +77,7 @@ function DayColumnLayout() {
 					if (s != null) {
 						// some space is available
 						boxes[i].style.left = s.x+"px";
-						boxes[i].style.width = (s.w-2)+"px";
+						boxes[i].style.width = (s.w-3)+"px";
 						boxes[i].pos.x = s.x;
 						boxes[i].pos.w = s.w;
 						continue;
@@ -73,7 +86,7 @@ function DayColumnLayout() {
 					for (var j = 0; j < i; j++) {
 						var ratio = cw/boxes[j].offsetWidth;
 						var new_w = Math.floor(cw/(ratio+1));
-						boxes[j].style.width = (new_w-2)+"px";
+						boxes[j].style.width = (new_w-3)+"px";
 						boxes[j].pos.w = new_w;
 					}
 					all_ok = false;

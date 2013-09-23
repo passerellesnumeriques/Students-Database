@@ -45,7 +45,7 @@ function day_row_layout() {
 			w -= 2+4+(day_end-day1)+4;
 			div.style.width = w+"px";
 			div.style.padding = "2px";
-			div.innerHTML = ev.description;
+			div.innerHTML = ev.title;
 			day_boxes[0].parentNode.appendChild(div);
 			this.events.push(div);
 		}

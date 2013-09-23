@@ -55,7 +55,7 @@ function calendar_view_agenda(view, container) {
 				var td = document.createElement("TD"); tr.appendChild(td);
 				td.innerHTML = this._2digits(ev.start.getHours())+":"+this._2digits(ev.start.getMinutes())+" - "+this._2digits(ev.end.getHours())+":"+this._2digits(ev.end.getMinutes());
 				td = document.createElement("TD"); tr.appendChild(td);
-				td.innerHTML = ev.description;
+				td.innerHTML = ev.title;
 				tr.event = ev;
 				
 				var index;

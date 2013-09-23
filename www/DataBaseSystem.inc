@@ -16,6 +16,8 @@ abstract class DataBaseSystem {
 	 */
 	public function execute($sql_query, $report_errors = true) {
 		$res = $this->execute_sql($sql_query);
+		if (PNApplication::$instance->current_domain == "Dev")
+			array_push(PNApplication::$instance->development->current_request()->sql_queries, array($sql_query,$this->get_last_error_number(),$this->get_last_error_message()));
 		if ($res === false && $report_errors) {
 			$err = $this->get_last_error_number();
 			if ($err <> 0)

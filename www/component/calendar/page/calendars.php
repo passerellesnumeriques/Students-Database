@@ -62,7 +62,7 @@ function TestCalendar() {
 			calendar: cal,
 			start: new Date(new Date().getTime()-30*60*1000),
 			end: new Date(new Date().getTime()+30*60*1000),
-			description: "Before"
+			title: "Before"
 		};
 		cal.events.push(ev);
 		manager.on_event_added(ev);
@@ -71,7 +71,7 @@ function TestCalendar() {
 			calendar: cal,
 			start: new Date(new Date().getTime()+120*60*1000),
 			end: new Date(new Date().getTime()+180*60*1000),
-			description: "After"
+			title: "After"
 		};
 		cal.events.push(ev);
 		manager.on_event_added(ev);
@@ -80,7 +80,7 @@ function TestCalendar() {
 			calendar: cal,
 			start: new Date(new Date().getTime()-60*60*1000),
 			end: new Date(new Date().getTime()+200*60*1000),
-			description: "Large"
+			title: "Large"
 		};
 		cal.events.push(ev);
 		manager.on_event_added(ev);
@@ -89,7 +89,7 @@ function TestCalendar() {
 			calendar: cal,
 			start: new Date(new Date().getTime()+15*60*1000),
 			end: new Date(new Date().getTime()+75*60*1000),
-			description: "Overlap"
+			title: "Overlap"
 		};
 		cal.events.push(ev);
 		manager.on_event_added(ev);
@@ -98,7 +98,7 @@ function TestCalendar() {
 			calendar: cal,
 			start: new Date(new Date().getTime()+45*60*1000),
 			end: new Date(new Date().getTime()+90*60*1000),
-			description: "Inside"
+			title: "Inside"
 		};
 	};
 }
@@ -127,6 +127,25 @@ function _load_google_calendars() {
 	var loading = document.getElementById('loading_google_calendars');
 	var doit = function() {
 		load_google_calendars(window.calendars, function(calendars){
+			if (calendars == null) {
+				var div = document.createElement("DIV");
+				div.innerHTML = "<span style='color:red'>Unable to connect to Google Calendar</span> ";
+				var a = document.createElement("A");
+				a.href = '#';
+				a.onclick = function() {
+					var d = document.createElement("DIV");
+					d.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
+					loading.parentNode.insertBefore(d, loading);
+					loading.parentNode.removeChild(loading);
+					d.id = 'loading_google_calendars';
+					_load_google_calendars();
+				};
+				a.innerHTML = "Retry";
+				div.appendChild(a);
+				loading.parentNode.insertBefore(div, loading);
+				loading.parentNode.removeChild(loading);
+				div.id = 'loading_google_calendars';
+			}
 			var list = document.getElementById("google_calendars");
 			for (var i = 0; i < calendars.length; ++i)
 				new CalendarElement(list, calendars[i]);

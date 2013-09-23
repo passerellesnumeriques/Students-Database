@@ -458,8 +458,10 @@ class SQLQuery {
 		// lock table
 		require_once("component/data_model/DataBaseLock.inc");
 		if ($lock_id <> null) {
-			if (!DataBaseLock::check_lock($lock_id, $t->getName(), $key, null))
-				throw new Exception("Access denied");
+			$column = null;
+			if (count($fields_values) == 1) { $column = array_keys($fields_values); $column = $column[0]; }
+			if (!DataBaseLock::check_lock($lock_id, $t->getName(), $key, $column))
+				throw new Exception("Access denied: invalid lock");
 		} else {
 			$locker = null;
 			$lock_id = DataBaseLock::lock_row($t->getName(), $key, $locker);
@@ -568,7 +570,10 @@ class SQLQuery {
 		$id = null;
 		$error = null;
 		try {
-			// check unicity
+			// validate values
+			foreach ($fields_values as $field=>$value)
+				$fields_values[$field] = $t->internalGetColumn($field, $sub_models)->validate($value);
+			// check unicity and presence
 			foreach ($columns as $col) {
 				if ($col->unique) {
 					if (!isset($fields_values[$col->name]))
@@ -581,7 +586,8 @@ class SQLQuery {
 						if ($dname == null) $dname = $col->name;
 						throw new Exception("The element already exists (".$dname.")");
 					}
-				}
+				} else if (!$col->can_be_null && !isset($fields_values[$col->name]))
+					throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
 			}
 			// insert
 			$sql = "INSERT INTO `".$t->getSQLName($sub_models)."` (";

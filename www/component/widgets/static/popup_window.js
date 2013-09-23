@@ -159,6 +159,7 @@ function popup_window(title,icon,content) {
 		td.innerHTML = (t.icon ? "<img src='"+t.icon+"' style='vertical-align:bottom'/> " : "")+t.title;
 		td = document.createElement("TD"); t.header.appendChild(td);
 		td.onclick = function() { t.close(); };
+		t.close_button_td = td;
 		td.style.backgroundImage = "url(\""+theme.icons_16.close+"\")";
 		td.style.backgroundPosition = "center";
 		td.style.backgroundRepeat = "no-repeat";
@@ -247,6 +248,41 @@ function popup_window(title,icon,content) {
 		setTimeout(function() { t.table.className = "popup_window"; },300);
 		setTimeout(function() { t.table.className = "popup_window blink"; },400);
 		setTimeout(function() { t.table.className = "popup_window"; },500);
+	};
+	
+	t.freeze = function(freeze_content) {
+		if (t.freezer) return;
+		t.freezer = document.createElement("DIV");
+		t.freezer.style.position = "absolute";
+		t.freezer.style.top = "0px";
+		t.freezer.style.left = "0px";
+		t.freezer.style.width = "100%";
+		t.freezer.style.height = "100%";
+		t.freezer.style.backgroundColor = "#A0A0A0";
+		if (freeze_content) {
+			if (typeof freeze_content == 'string')
+				t.freezer.innerHTML = freeze_content;
+			else
+				t.freezer.appendChild(freeze_content);
+		}
+		setOpacity(t.freezer, 0.5);
+		t.content_container.style.position = "relative";
+		t.content_container.appendChild(t.freezer);
+		t.freeze_button_status = [];
+		for (var i = 0; i < t.buttons.length; ++i) {
+			t.freeze_button_status[i] = t.buttons[i].disabled;
+			t.buttons[i].disabled = 'disabled';
+		}
+		t.close_button_td.onclick = null;
+	};
+	t.unfreeze = function() {
+		if (!t.freezer) return;
+		t.content_container.removeChild(t.freezer);
+		t.freezer = null;
+		for (var i = 0; i < t.buttons.length; ++i)
+			t.buttons[i].disabled = t.freeze_button_status[i];
+		t.freeze_button_status = null;
+		t.close_button_td.onclick = function() { t.close(); };
 	};
 	
 	/** Close this popup window
