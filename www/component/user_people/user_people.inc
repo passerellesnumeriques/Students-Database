@@ -4,6 +4,7 @@ class user_people extends Component {
 	public $user_people_id;
 	public $first_name;
 	public $last_name;
+	// TODO: when finame or last name are updated
 	
 	function init() {
 		PNApplication::$instance->user_management->logged_in->listen($this, "logged_in");

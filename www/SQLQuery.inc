@@ -4,6 +4,8 @@ require_once("DataBaseSystem.inc");
  * Single way to access to the database: create an SQL query, performs security checks, then execute the request 
  */
 class SQLQuery {
+	
+	// TODO: when remove, bypass security for linked tables
 
 	private static $db_system = null;
 	/**

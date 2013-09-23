@@ -100,11 +100,17 @@ function tree(container) {
 		td.appendChild(item.head = document.createElement("SPAN"));
 		item.head.style.paddingLeft = "2px";
 		td.appendChild(item.cells[0].container = document.createElement("SPAN"));
-		item.cells[0].container.innerHTML = item.cells[0].html;
+		if (typeof item.cells[0].html == 'string')
+			item.cells[0].container.innerHTML = item.cells[0].html;
+		else
+			item.cells[0].container.appendChild(item.cells[0].html);
 		for (var i = 1; i < item.cells.length; ++i) {
 			tr.appendChild(item.cells[i].container = document.createElement("TD"));
 			item.cells[i].container.style.padding = "0px";
-			item.cells[i].container.innerHTML = item.cells[i].html;
+			if (typeof item.cells[i].html == 'string')
+				item.cells[i].container.innerHTML = item.cells[i].html;
+			else
+				item.cells[i].container.appendChild(item.cells[i].html);
 		}
 		if (!parent)
 			this.tbody.appendChild(item.tr);
