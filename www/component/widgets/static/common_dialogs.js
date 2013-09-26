@@ -36,7 +36,7 @@ function confirm_dialog(message, handler) {
  * @param default_value
  * @param max_length maximum number of characters
  * @param validation_handler called each time the user change the value: if it returns null it means the value is correct, else it must return the error message describing why the input is not correct
- * @param ok_handler called when the user clicked on Ok (the value is already validated by the validation_handler)
+ * @param ok_handler called when the user clicked on Ok or Cancel. If ok the value is given as parameter (and is already validated by the validation_handler), if cancel, null is given as parameter
  */
 function input_dialog(icon,title,message,default_value,max_length,validation_handler,ok_handler) {
 	require("popup_window.js",function() {
@@ -81,9 +81,11 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 		validate();
 		input.onkeyup = input.onblur = validate;
 		p.onclose = function() {
-			ok_handler(result);
+			var r=result; result=null;
+			ok_handler(r);
 		};
 		p.show();
+		input.focus();
 	});
 }
 

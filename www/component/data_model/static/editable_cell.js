@@ -70,8 +70,15 @@ function editable_cell(container, table, column, row_key, field_classname, field
 		});
 	};
 	t.save = function() {
-		if (!t.field.hasChanged()) { t.unedit(); return; }
 		var new_data = t.field.getCurrentData();
+		if (t.onsave) {
+			var value = t.onsave(new_data);
+			if (value != new_data) {
+				t.field.setData(value);
+				new_data = value;
+			}
+		}
+		if (!t.field.hasChanged()) { t.unedit(); return; }
 		container.removeChild(t.field.getHTMLElement()); t.field = null;
 		container.removeChild(t.save_button); t.save_button = null;
 		container.removeChild(t.unedit_button); t.unedit_button = null;
@@ -84,6 +91,8 @@ function editable_cell(container, table, column, row_key, field_classname, field
 			t.unedit();
 		});
 	};
+	
+	t.onsave = null;
 	
 	t.unedit();
 }

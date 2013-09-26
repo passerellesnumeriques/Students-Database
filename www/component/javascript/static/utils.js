@@ -32,6 +32,34 @@ function isLetter(c) {
 }
 
 /**
+* Set a uniform case according to a given separator
+* @memberOf String
+* @parameter {string} separator
+* @returns the same string with a capitalized first letter
+*/
+String.prototype.firstLetterCapitalizedForSeparator = function(separator) {
+	var text_split = this.split(separator);
+	for(var i = 0; i < text_split.length; i++){
+		var temp_split = text_split[i].split("");
+		text_split[i] = text_split[i].charAt(0).toUpperCase()+text_split[i].substring(1);
+	}
+	return text_split.join(separator);
+}
+
+/**
+* Set a uniform case according to " ", "'" and "-"
+* @memberOf String
+* @returns the same string with a capitalized first letter, and other lowered
+*/
+String.prototype.uniformFirstLetterCapitalized = function(){
+	var text = this.toLowerCase();
+	var result = text.firstLetterCapitalizedForSeparator(" ");
+	result = result.firstLetterCapitalizedForSeparator("-");
+	result = result.firstLetterCapitalizedForSeparator("'");
+	return result;
+}
+
+/**
  * Some useful functions are added to the class Array
  * @class Array
  */

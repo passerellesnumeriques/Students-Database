@@ -44,11 +44,14 @@ class Table {
 	 * Add a foreign key to the given table 
 	 * @param string $name name of the foreign key
 	 * @param string $table table pointed by the foreign key
-	 * @param boolean $strong indicates if the link is strong or not: if it is strong, it means that if an entity is removed, the linked ones are also removed.
+	 * @param boolean $remove_foreign_when_primary_removed indicates if the row in this table should be removed when the associated primary key is removed.
+	 * @param boolean $remove_primary_when_foreign_removed indicates if the associated primary key should be removed when a row in this table is removed.
+	 * @param boolean $multiple indicates if several rows in this table can exist with the same foreign key (n to 1 relation)
+	 * @param boolean|null $can_be_null indicates if this foreign key can be null. If not specified (null) it will be considered that the foreign key can be null if $remove_foreign_when_primary_removed is set to false (example of overriding this info is when we have a foreign key pointing to the same table to create a tree, and the root level needs to be null).
 	 * @return \datamodel\Table
 	 */
-	public function addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple) {
-		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple);
+	public function addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null = null) {
+		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null);
 		array_push($this->columns, $c);
 		return $this;
 	}
@@ -434,7 +437,7 @@ class ColumnInteger extends Column {
 	public function get_sql_type() { return "INT(".$this->size.")"; }
 
 	public function validate($value) {
-		if ($this->can_be_null && $value === null) return null;
+		if ($this->can_be_null && ($value === null || $value === "")) return null;
 		if (!is_integer($value)) $value = intval($value);
 		if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min);
 		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max);
@@ -602,7 +605,7 @@ class ForeignKey extends ColumnInteger {
 	public $remove_primary_when_foreign_removed;
 	public $multiple;
 	
-	public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple) {
+	public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null) {
 		$this->foreign_table = $foreign_table;
 		$this->remove_foreign_when_primary_removed = $remove_foreign_when_primary_removed;
 		$this->remove_primary_when_foreign_removed = $remove_primary_when_foreign_removed;
@@ -617,7 +620,7 @@ class ForeignKey extends ColumnInteger {
 			$size = 32;
 		} else
 			$size = $ft->getPrimaryKey()->size;
-		parent::__construct($table, $name, $size, null, null, !$remove_foreign_when_primary_removed, false);
+		parent::__construct($table, $name, $size, null, null, $can_be_null === null ? !$remove_foreign_when_primary_removed : $can_be_null, false);
 	}
 
 	public function get_sql_type() { 
