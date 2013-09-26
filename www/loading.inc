@@ -50,10 +50,10 @@ function __load_enter_page() {
 var _mandatory_scripts = [
 	"/static/javascript/utils.js",
 	"/static/javascript/browser.js",
+	"/static/application/application.js",
 	"/static/theme/theme.js.php",
 	"/static/widgets/Status.js",
 	"/static/widgets/StatusUI_Top.js",
-	"/static/application/activity.js",
 	"/static/javascript/ajax.js",
 	"/static/data_model/databaselock.js"
 ];

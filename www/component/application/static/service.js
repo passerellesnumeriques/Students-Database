@@ -25,7 +25,11 @@ service = {
 		}
 		ajax.post_parse_result("/dynamic/"+component+"/service/"+service_name, data, 
 			function(result){
-				handler(result);
+				if (result && result.events) {
+					for (var i = 0; i < result.events.length; ++i)
+						window.top.pnapplication.raise_app_event(result.events[i].id, result.events[i].data);
+				}
+				handler(result ? result.result : null);
 			},
 			foreground,
 			function(error){
@@ -68,7 +72,7 @@ service = {
 	
 	generate_input: function(input) {
 		var s = "";
-		if (input == null) return s;
+		if (input == null) return "null";
 		if (input instanceof Array) {
 			s += "[";
 			for (var i = 0; i < input.length; ++i) {
@@ -91,3 +95,11 @@ service = {
 		return s;
 	}
 };
+if (typeof ajax != 'undefined')
+	ajax.http_response_handlers.push(function(xhr){
+		if (xhr.status == 403) {
+			window.top.location = "/";
+			return false;
+		}
+		return true;
+	});

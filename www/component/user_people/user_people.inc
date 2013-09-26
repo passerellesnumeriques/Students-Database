@@ -4,10 +4,21 @@ class user_people extends Component {
 	public $user_people_id;
 	public $first_name;
 	public $last_name;
-	// TODO: when finame or last name are updated
 	
 	function init() {
 		PNApplication::$instance->user_management->logged_in->listen($this, "logged_in");
+		PNApplication::$instance->data_model->register_data_changed("People", "first_name", $this, "_first_name_changed");
+		PNApplication::$instance->data_model->register_data_changed("People", "last_name", $this, "_last_name_changed");
+	}
+	
+	public function _first_name_changed($sub_model, $key, $new_value) {
+		if ($key == $this->user_people_id)
+			$this->first_name = $new_value;
+	}
+	
+	public function _last_name_changed($sub_model, $key, $new_value) {
+		if ($key == $this->user_people_id)
+			$this->last_name = $new_value;
 	}
 	
 	public function logged_in() {

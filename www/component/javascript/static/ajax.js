@@ -9,6 +9,7 @@ ajax = {
 	addInterceptor: function(interceptor) {
 		ajax._interceptors.push(interceptor);
 	},
+	http_response_handlers: [],
 	/**
 	 * Call all interceptors for the given URL, and return the final one.
 	 * @param {string|URL} url
@@ -41,7 +42,14 @@ ajax = {
 		if (content_type != null)
 			xhr.setRequestHeader('Content-type', content_type);
 		var sent = function() {
-	        if (xhr.status != 200) { error_handler("Error "+xhr.status+": "+xhr.statusText); return; }
+	        if (xhr.status != 200) {
+	        	var continu = true;
+	        	for (var i = 0; i < ajax.http_response_handlers.length; ++i)
+	        		continu &= ajax.http_response_handlers[i](xhr);
+	        	if (continu)
+	        		error_handler("Error "+xhr.status+": "+xhr.statusText); 
+	        	return; 
+	        }
 	        success_handler(xhr);
 		};
 		xhr.onreadystatechange = function() {
@@ -140,7 +148,7 @@ ajax = {
 	        		eh("Error: No result from JSON service");
 	        		return;
 	        	}
-	        	handler(output.result);
+	        	handler(output);
 			} else {
 				// considered as free text...
 				handler(xhr.responseText);

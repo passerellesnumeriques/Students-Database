@@ -50,7 +50,7 @@ class page_batches extends Page {
 			$nb_in = 0; $nb_out = 0;
 			foreach ($students as $s)
 				if ($s["excludion_date"] === null) $nb_in++; else $nb_out++;
-			echo "<a href=''>".$nb_in." student(s)</a>";
+			echo "<a href='/dynamic/students/page/batch_list?batch=".$batch["id"]."'>".$nb_in." student(s)</a>";
 			if ($nb_out > 0) echo "<a href=''>".$nb_out." excluded</a>";
 			
 			echo "<table class='all_borders'>";

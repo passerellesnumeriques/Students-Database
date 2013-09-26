@@ -213,7 +213,8 @@ function context_menu(menu) {
 		document.body.appendChild(menu);
 		menu.style.zIndex = 100;
 		setTimeout(function() {
-			listenEvent(window,'click',t._listener);
+			//listenEvent(window,'click',t._listener);
+			window.top.pnapplication.register_onclick(window, t._listener);
 		},1);
 		if (typeof animation != 'undefined') {
 			if (menu.anim) animation.stop(menu.anim);
@@ -241,25 +242,28 @@ function context_menu(menu) {
 		}
 //		for (var i = 0; i < document.body.childNodes.length; ++i)
 //			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = 1;
-		unlistenEvent(window, 'click', t._listener);
+		//unlistenEvent(window, 'click', t._listener);
+		window.top.pnapplication.unregister_onclick(t._listener);
 	};
-	t._listener = function(ev) {
-		// check if the target is inside
-		var elem = ev.target;
-		if (elem) {
-			do {
-				if (elem == menu) return;
-				if (elem.parentNode == elem) break;
-				elem = elem.parentNode;
-				if (elem == null || elem == document.body || elem == window) break;
-			} while (true);
+	t._listener = function(ev, win, orig_win) {
+		if (win == orig_win) {
+			// check if the target is inside
+			var elem = ev.target;
+			if (elem) {
+				do {
+					if (elem == menu) return;
+					if (elem.parentNode == elem) break;
+					elem = elem.parentNode;
+					if (elem == null || elem == document.body || elem == window) break;
+				} while (true);
+			}
+			// check if this is inside
+			ev = getCompatibleMouseEvent(ev);
+			var x = absoluteLeft(menu);
+			var y = absoluteTop(menu);
+			if (ev.x >= x && ev.x < x+menu.offsetWidth &&
+				ev.y >= y && ev.y < y+menu.offsetHeight) return;
 		}
-		// check if this is inside
-		ev = getCompatibleMouseEvent(ev);
-		var x = absoluteLeft(menu);
-		var y = absoluteTop(menu);
-		if (ev.x >= x && ev.x < x+menu.offsetWidth &&
-			ev.y >= y && ev.y < y+menu.offsetHeight) return;
 		t.hide();
 	};
 	

@@ -84,7 +84,15 @@ class page_build_excel_import extends Page {
 								$cols = 0;
 								while ($sheet->cellExistsByColumnAndRow($cols, 1)) $cols++;
 								$rows = 0;
-								while ($sheet->cellExistsByColumnAndRow(0, $rows+1)) $rows++;
+								foreach ($sheet->getRowIterator() as $row) {
+									$rows++;
+									$it = $row->getCellIterator();
+									$it->setIterateOnlyExistingCells(false);
+									$c = 0;
+									foreach ($it as $col) $c++;
+									if ($c > $cols) $cols = $c;
+								}
+								//while ($sheet->cellExistsByColumnAndRow(0, $rows+1)) $rows++;
 								echo "xl.addSheet(".json_encode($sheet->getTitle()).",null,".$cols.",".$rows.",function(sheet){\n";
 								for ($i = 0; $i < $cols; $i++) {
 									$col = $sheet->getColumnDimensionByColumn($i);
@@ -175,6 +183,18 @@ class page_build_excel_import extends Page {
 				<?php
 				break;
 			case "select_fields":
+				?>
+				<script type='text/javascript'>
+				window.parent.parent.enable_wizard_page_previous(true);
+				window.parent.wizard_page_go_previous = function() {
+					var xl = window.parent.excel;
+					for (var i = 0; i < xl.sheets.length; ++i)
+						while (xl.sheets[i].layers.length > 0)
+							xl.sheets[i].removeLayer(xl.sheets[i].layers[0]);
+					location.href = '?page=how_are_data&import=<?php echo $page_type;?>&root_table=<?php echo $_POST["root_table"];?>';
+				};
+				</script>
+				<?php
 				require_once("component/data_model/DataPath.inc");
 				$ctx = new DataPathBuilderContext();
 				$paths = DataPathBuilder::search_from($ctx, $_POST["root_table"]);
@@ -183,7 +203,8 @@ class page_build_excel_import extends Page {
 						?>
 						<div style='padding:2px'>
 						<form name='fields_selection'>
-						Data start at row (not including headers): <input type='text' name='start_row' value='' onchange='row_start_changed(this.value);'/><br/>
+						Data start at row (not including headers): <input type='text' name='start_row' value='' size=5 onchange='row_start_changed(this.value);'/><br/>
+						Data end at row: <input type='text' name='end_row' value='' size=5 onchange='row_end_changed(this.value);'/><br/>
 						Column per information:<br/>
 						<?php
 						$this->add_javascript("/static/widgets/collapsable_section/collapsable_section.js");
@@ -226,8 +247,24 @@ class page_build_excel_import extends Page {
 							var xl = window.parent.excel;
 							for (var i = 0; i < xl.sheets.length; ++i)
 								for (var j = 0; j < xl.sheets[i].layers.length; ++j) {
+									var col = xl.sheets[i].layers[j].col_start;
+									var row_end = xl.sheets[i].layers[j].row_end;
+									xl.sheets[i].layers[j].setRange(col,row,col,row_end);
+								}
+						}
+						function row_end_changed(v) {
+							var row;
+							if (v.length == 0)
+								row = -1;
+							else
+								row = parseInt(v);
+							if (isNaN(row) || row < 1) row = -1;
+							var xl = window.parent.excel;
+							for (var i = 0; i < xl.sheets.length; ++i)
+								for (var j = 0; j < xl.sheets[i].layers.length; ++j) {
 									var col = xl.sheets[i].layers[j].col_start; 
-									xl.sheets[i].layers[j].setRange(col,row,col,xl.sheets[i].rows.length-1);
+									var row_start = xl.sheets[i].layers[j].row_start; 
+									xl.sheets[i].layers[j].setRange(col,row_start,col,row == -1 ? xl.sheets[i].rows.length-1 : row-1);
 								}
 						}
 						var fields_set = [];
@@ -261,10 +298,13 @@ class page_build_excel_import extends Page {
 										var i = this.value.indexOf('!');
 										var sheet = xl.getSheet(this.value.substring(0,i));
 										var col = window.parent.getExcelColumnIndex(this.value.substring(i+1));
-										var row = parseInt(form.elements['start_row'].value);
-										if (isNaN(row) || row < 1) row = 1;
-										row--;
-										var layer = sheet.addLayer(col,row,col,sheet.rows.length-1,192,255,192);
+										var row_start = parseInt(form.elements['start_row'].value);
+										if (isNaN(row_start) || row_start < 1) row_start = 1;
+										row_start--;
+										var row_end = form.elements['end_row'].value.length > 0 ? parseInt(form.elements['end_row'].value) : -1;
+										if (isNaN(row_end) || row_end < 1) row_end = sheet.rows.length;
+										row_end--;
+										var layer = sheet.addLayer(col,row_start,col,row_end,192,255,192);
 										layer.data = this;
 									}
 									field_changed(this);
@@ -282,6 +322,120 @@ class page_build_excel_import extends Page {
 						<?php
 						break;
 					case "multiple":
+						?>
+						<div style='padding:2px'>
+						<form name='fields_selection'>
+						<?php
+						$this->add_javascript("/static/widgets/collapsable_section/collapsable_section.js");
+						$this->add_javascript("/static/widgets/typed_field/typed_field.js");
+						$cats = array();
+						foreach ($paths as $path) {
+							if (!$path->is_unique()) continue;
+							$cat = $path->table->getDisplayableDataCategory($path->field_name);
+							if (isset($cats[$cat]))
+								array_push($cats[$cat], $path);
+							else
+								$cats[$cat] = array($path);
+						}
+						$i_cat = 0;
+						$i_field = 0;
+						foreach ($cats as $cat=>$paths) {
+							echo "<div id='fields_cat_".$i_cat."' style='border: 1px solid black'>";
+							$this->onload("new collapsable_section('fields_cat_".$i_cat."');");
+							$i_cat++;
+							echo "<div class='collapsable_section_header' style='padding: 1px 2px 1px 2px'>".$cat."</div>";
+							echo "<div class='collapsable_section_content' style='padding: 1px 2px 1px 2px'>";
+							echo "<table style='border-spacing: 0px; border:none;'>";
+							foreach ($paths as $path) {
+								$order = array();
+								$pa = $path;
+								while ($pa <> null) {
+									array_splice($order, 0, 0, array($pa));
+									$pa = $pa->parent;
+								}
+								$field_classname = null;
+								$field_args = null;
+								$done = false;
+								for ($j = 0; $j < count($order); $j++) {
+									$pa = $order[$j];
+									if ($pa instanceof DataPath_Join) {
+										if ($pa->foreign_key->multiple) {
+											if ($pa->parent->table == $pa->foreign_key->table) {
+												// n>1: it does not belong to us, we can propose the choice
+												$field_classname = 'field_enum';
+												// build request to have the list of values
+												$q = SQLQuery::create();
+												$q->select(array($pa->table->getSQLNameFor($pa->sub_model)=>$pa->table_alias));
+												$source_table_primarykey_alias = $ctx->new_field_alias();
+												$q->field($pa->table_alias, $pa->table->getPrimaryKey()->name, $source_table_primarykey_alias);
+												for ($k = $j+1; $k < count($order); $k++)
+													$order[$k]->append_sql($q, $ctx);
+												$values = $q->execute();
+												$value_alias = $order[count($order)-1]->field_alias;
+												$field_args = "{possible_values:[";
+												$first = true;
+												foreach ($values as $v) {
+													if ($first) $first = false; else $field_args .= ",";
+													$field_args .= "[".json_encode($v[$source_table_primarykey_alias]).",".json_encode($v[$value_alias])."]";
+												}
+												$field_args .= "]";
+												$field_args .= ",can_be_null:".($pa->foreign_key->remove_foreign_when_primary_removed ? "false" : "true");
+												$field_args .= "}";
+												break;
+											}
+										}
+									}
+								}
+								if ($field_classname == null) {
+									$col = $path->table->getColumn($path->field_name);
+									$f = PNApplication::$instance->widgets->get_typed_field($col);
+									$field_classname = $f[0];
+									$field_args = $f[1];
+								}
+
+								echo "<tr>";
+								echo "<td style='padding:0px'>".$path->table->getDisplayableDataName($path->field_name)."</td>";
+								echo "<td style='padding:0px'>";
+								echo "<select onchange='field_import_changed(this)'>";
+								echo "<option value=''>Not Available</option>";
+								echo "<option value='range'>From Range</option>";
+								echo "<option value='set'>All set to</option>";
+								echo "</select>";
+								echo "<span style='visibility:hidden;position:absolute'>";
+								echo "<input type='text' size=11/>";
+								echo "<img src='/static/excel/select_range.png' style='vertical-align:bottom' class='button'/>";
+								echo "</span>";
+								$id = $this->generate_id();
+								echo "<span style='visibility:hidden;position:absolute' id='".$id."'>";
+								$this->add_javascript("/static/widgets/typed_field/".$field_classname.".js");
+								$this->onload("document.getElementById('".$id."').appendChild(new ".$field_classname."(null,true,null,null,".$field_args.").getHTMLElement());");
+								echo "</span>";
+								echo "</td>";
+								echo "</tr>";
+							}
+							echo "</table></div>";
+						}
+						?>
+						</form>
+						</div>
+						<script type='text/javascript'>
+						function field_import_changed(select) {
+							var range_span = select.nextSibling;
+							var set_span = range_span.nextSibling;
+							range_span.style.visibility = 'hidden';
+							range_span.style.position = 'absolute';
+							set_span.style.visibility = 'hidden';
+							set_span.style.position = 'absolute';
+							if (select.value == 'range') {
+								range_span.style.visibility = 'visible';
+								range_span.style.position = 'static';
+							} else if (select.value == 'set') {
+								set_span.style.visibility = 'visible';
+								set_span.style.position = 'static';
+							}
+						}
+						</script>
+						<?php
 						break;
 					case "single":
 						break;

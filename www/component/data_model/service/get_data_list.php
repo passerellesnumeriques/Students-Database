@@ -64,7 +64,7 @@ TODO
 		$q->select(array($table_name=>$alias));
 		foreach ($paths as $p) {
 			if ($p->is_unique())
-				$p->append_sql($q, $ctx);
+				$p->build_sql($q, $ctx);
 			else {
 				// we need the key for the sub-requests
 				$multiple_path = $p->parent;
@@ -118,6 +118,30 @@ TODO
 			}
 		}
 		
+		if (isset($_POST["sort_field"]) && isset($_POST["sort_order"])) {
+			foreach ($paths as $p) {
+				if ($p->get_string() == $_POST["sort_field"]) {
+					if ($_POST["sort_order"] == "ASC") $asc = true;
+					else if ($_POST["sort_order"] == "DESC") $asc = false;
+					else break;
+					$q->order_by($p->field_alias, $asc);
+					break;
+				}
+			}
+		}
+		$count = null;
+		if (!isset($_POST["export"]) && isset($_POST["page_size"])) {
+			$nb = intval($_POST["page_size"]);
+			if ($nb == 0) $nb = 1000;
+			$page = isset($_POST["page"]) ? intval($_POST["page"]) : 0;
+			if ($page == 0) $page = 1;
+			$q_count = new SQLQuery($q);
+			$q_count->count("count_entries");
+			$count = $q_count->execute_single_row();
+			$count = $count["count_entries"];
+			$q->limit(($page-1)*$nb, $nb);
+		}
+		
 		//PNApplication::error($q->generate());
 		$res = $q->execute();
 
@@ -169,32 +193,74 @@ TODO
 				$row[$p->field_alias] = $l;
 			}
 		}
+		
+		//echo $q->generate()."\r\n\r\n";
 
 		if (!isset($_POST["export"])) {
 			echo "{";
-			
-			echo "tables:[";
-			for ($j = 0; $j < count($paths); $j++) {
-				if ($j>0) echo ",";
-				echo "{name:".json_encode($paths[$j]->parent->table->getName());
-				echo ",sub_model:".json_encode($paths[$j]->parent->sub_model);
-				echo ",keys:[";
-				$keys = $this->get_keys_for($paths[$j]->parent->table, $paths[$j]->parent->sub_model);
-				for ($i = 0; $i < count($keys); $i++) {
-					if ($i>0) echo ",";
-					echo json_encode($keys[$i]->name);
-				};
-				echo "]";
-				echo "}";
-			}
-			echo "]";
-			echo ",data:[";
+			if ($count !== null)
+				echo "count:".$count.",";
+			echo "data:[";
 			for ($i = 0; $i < count($res); $i++) {
 				if ($i>0) echo ",";
 				echo "{values:[";
 				for ($j = 0; $j < count($paths); $j++) {
 					if ($j>0) echo ",";
-					if ($paths[$j]->is_unique()) {
+
+					$order = array();
+					$pa = $paths[$j];
+					while ($pa <> null) {
+						array_splice($order, 0, 0, array($pa));
+						$pa = $pa->parent;
+					}
+					
+					$done = false;
+					for ($k = 0; $k < count($order); $k++) {
+						$pa = $order[$k];
+						if ($pa instanceof DataPath_Join) {
+							if ($pa->foreign_key->multiple && $pa->parent->table <> $pa->foreign_key->table) {
+								// 1<n: list of values
+								// TODO
+								echo "{v:".json_encode($res[$i][$paths[$j]->field_alias])."}";
+								$done = true;
+								break;
+							}
+							
+							// check existence of an entity
+							$key = null;
+							if ($pa->parent->table == $pa->foreign_key->table) {
+								$alias = $q->get_field_alias($pa->table_alias, $pa->table->getPrimaryKey()->name);
+								$key = $res[$i][$alias];
+							} else {
+								$alias = $q->get_field_alias($pa->table_alias, $pa->foreign_key->name);
+								$key = $res[$i][$alias];
+							}
+							if ($key === null) {
+								// cannot continue in the path
+								echo "{invalid:true}";
+								$done = true;
+								break;
+							}
+							
+							// check if multiple link
+							if ($pa->foreign_key->multiple) {
+								// $pa->parent->table == $pa->foreign_key->table
+								// n>1: it does not belong to us, we can propose the choice
+								// here the value we will give is the key to go to the choice
+								$alias = $q->get_field_alias($pa->table_alias, $pa->table->getPrimaryKey()->name);
+								if ($alias == null)
+									$alias = $q->get_field_alias($pa->parent->table_alias, $pa->foreign_key->name);
+								if ($alias == null) {
+									PNApplication::error("Missing primary key and foreign key for n to 1 link");
+									echo "{v:'error'}";
+								} else
+									echo "{v:".json_encode($res[$i][$alias])."}";
+								$done = true;
+								break;
+							}
+						}
+					}
+					if (!$done) {
 						echo "{v:";
 						echo json_encode($res[$i][$paths[$j]->field_alias]);
 						echo ",k:[";
@@ -214,10 +280,6 @@ TODO
 						}
 						echo "]";
 						echo "}";
-					} else {
-						//echo "{v:\"TODO: multiple values\"}";
-						// TODO multiple
-						echo "{v:".json_encode($res[$i][$paths[$j]->field_alias])."}";
 					}
 				}
 				echo "]";

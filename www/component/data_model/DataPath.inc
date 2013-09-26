@@ -211,8 +211,16 @@ class DataPath_Field extends DataPath {
 	 * @param SQLQuery $q
 	 * @param DataPathBuilderContext $context
 	 */
-	public function append_sql(&$q, &$context) {
+	public function build_sql(&$q, &$context) {
 		$this->parent->build_sql($q, $context);
+		$this->append_sql($q, $context);
+	}
+	
+	/**
+	 * @param SQLQuery $q
+	 * @param DataPathBuilderContext $context
+	 */
+	public function append_sql(&$q, &$context) {
 		$q->field($this->table_alias, $this->field_name, $this->field_alias);
 	}
 }
@@ -236,7 +244,7 @@ class DataPath_Join extends DataPath {
 	public function get_string() {
 		$s = $this->parent->get_string();
 		$s .= $this->parent->table == $this->foreign_key->table ? ">" : "<";
-		if (!$this->unique) $this->parent->table == $this->foreign_key->table ? ">" : "<";
+		if (!$this->unique) $s.= $this->parent->table == $this->foreign_key->table ? ">" : "<";
 		$s .= $this->table->getName();
 		if ($this->sub_model <> null)
 			$s .= "[".$this->sub_model."]";
@@ -270,11 +278,20 @@ class DataPath_Join extends DataPath {
 		$alias = $q->get_join_alias($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $match);
 		if ($alias <> $this->table_alias) {
 			$q->join($this->parent->table_alias, $this->table->getSQLName($this->sub_model), $match, $this->table_alias);
+			// add the primary key if it exists
 			$pk = $this->table->getPrimaryKey();
 			if ($pk <> null) {
 				$this->table_primarykey_alias = $q->get_field_alias($this->table_alias, $pk->name);
 				if ($this->table_primarykey_alias == null) $this->table_primarykey_alias = $context->new_field_alias();
 				$q->field($this->table_alias, $pk->name, $this->table_primarykey_alias);
+			}
+			// add the field that allow the join (at least to know if something exist or not)
+			if ($this->parent->table <> $this->foreign_key->table) {
+				$alias = $q->get_field_alias($this->table_alias, $this->foreign_key->name);
+				if ($alias == null) {
+					$alias = $context->new_field_alias();
+					$q->field($this->table_alias, $this->foreign_key->name, $alias);
+				}
 			}
 		}
 	}

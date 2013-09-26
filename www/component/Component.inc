@@ -89,7 +89,7 @@ abstract class Component {
 		if ($this->name <> "development" && $this->name <> "test") {
 			// check the user is logged
 			if (PNApplication::$instance->user_management->username == null) {
-				header("Content-Type: text/json;charset=UTF-8");
+				header("Content-Type: text/json;charset=UTF-8", true, 403);
 				PNApplication::error("Access denied: you must login before to use services");
 				PNApplication::print_json_result(null);
 				return;

@@ -73,7 +73,6 @@ abstract class Page {
 	<script type="text/javascript" src="/static/application/service.js"></script>
 	<script type="text/javascript" src="/static/application/config.js.php"></script>
 	<script type="text/javascript" src="/static/widgets/common_dialogs.js"></script>
-	<script type="text/javascript" src="/static/application/activity.js"></script>
 	<script type="text/javascript" src="/static/data_model/databaselock.js"></script>
 	<?php
 	foreach ($this->javascripts as $js) {
