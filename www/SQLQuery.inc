@@ -776,14 +776,14 @@ class SQLQuery {
 		foreach ($tables as $t)
 			if ($t[0] == $table && $t[1] == $sub_model_instance)
 				return;
-		array_push($tables, array(&$table,$sub_model_instance));
+		array_push($tables, array($table,$sub_model_instance));
 		
 		if ($table->getModel() instanceof SubDataModel) {
 			// we are in a sub model: everything must be inside this sub model
 			foreach ($table->getModel()->internalGetTables() as $t) {
 				$cols = $t->internalGetColumns(array($table->getModel()->getParentTable()=>$sub_model_instance));
 				foreach ($cols as $col)
-					if ($col instanceof ForeignKey && $col->foreign_table == $table->getName())
+					if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName())
 						$this->search_tables_for_remove($t, $tables, $sub_model_instance);
 			}
 		} else {
@@ -794,13 +794,13 @@ class SQLQuery {
 						$sm = array($t->getModel()->getParentTable()=>$smi);
 						$cols = $t->internalGetColumns($sm);
 						foreach ($cols as $col)
-							if ($col instanceof ForeignKey && $col->foreign_table == $table->getName())
+							if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName())
 								$this->search_tables_for_remove($t, $tables, $sm);
 					}
 				} else {
 					$cols = $t->internalGetColumns(null);
 					foreach ($cols as $col)
-						if ($col instanceof ForeignKey && $col->foreign_table == $table->getName())
+						if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName())
 							$this->search_tables_for_remove($t, $tables, null);
 				}
 			}
@@ -821,7 +821,7 @@ class SQLQuery {
 					$sm = array($t->getModel()->getParentTable()=>$sub_model_instance);
 					$cols = $t->internalGetColumns($sm);
 					foreach ($cols as $col) {
-						if ($col instanceof ForeignKey && $col->foreign_table == $table->getName()) {
+						if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName()) {
 							if ($t->getPrimaryKey() <> null) {
 								if ($col->remove_foreign_when_primary_removed) {
 									$linked = SQLQuery::create()->bypass_security()->select($t->getSQLName($sm))->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();
@@ -845,7 +845,7 @@ class SQLQuery {
 						$sm = array($t->getModel()->getParentTable()=>$smi);
 						$cols = $t->internalGetColumns($sm);
 						foreach ($cols as $col) {
-							if ($col instanceof ForeignKey && $col->foreign_table == $table->getName()) {
+							if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName()) {
 								if ($t->getPrimaryKey() <> null) {
 									if ($col->remove_foreign_when_primary_removed) {
 										$linked = SQLQuery::create()->bypass_security()->select($t->getSQLName($sm))->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();
@@ -871,7 +871,7 @@ class SQLQuery {
 				if ($table->getModel() instanceof SubDataModel) continue;
 				// both are on root
 				foreach ($t->internalGetColumns(null) as $col) {
-					if ($col instanceof ForeignKey && $col->foreign_table == $table->getName()) {
+					if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName()) {
 						if ($t->getPrimaryKey() <> null) {
 							if ($col->remove_foreign_when_primary_removed) {
 								$linked = SQLQuery::create()->bypass_security()->select($t->getSQLName(null))->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();

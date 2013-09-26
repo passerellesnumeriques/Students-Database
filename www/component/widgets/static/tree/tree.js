@@ -78,6 +78,22 @@ function tree(container) {
 		this._create_item(null, item);
 		this._refresh_heads();
 	};
+	this.removeItem = function(item) {
+		this._removeItem(item);
+		this._refresh_heads(item.parent);
+		if (item.parent) this._refresh_heads(item.parent.parent);
+	};
+	this.clearItems = function() {
+		while (this.tbody.childNodes.length > 0)
+			this.tbody.removeChild(this.tbody.childNodes[0]);
+		this.items = [];
+	};
+	this._removeItem = function(item) {
+		this.tbody.removeChild(item.tr);
+		if (item.parent == null) this.items.remove(item); else item.parent.children.remove(item);
+		while (item.children.length > 0)
+			this.removeItem(item.children[0]);
+	};
 	this._create_item = function(parent, item) {
 		item.tree = this;
 		item.parent = parent;

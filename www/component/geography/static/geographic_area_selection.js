@@ -305,7 +305,7 @@ function geographic_area_selection(container, country_code) {
 		var area_belong_index = 0;
 		for(var k = 0; k < all_areas.length; k++){
 			if(this.startWith(all_areas[k].area_name, needle)){
-				var name = t.uniformCase(all_areas[k].area_name);
+				var name = all_areas[k].area_name.uniformFirstLetterCapitalized();
 				areaStart[area_start_index] = {
 												area_id: all_areas[k].area_id,
 												area_name: name
@@ -313,7 +313,7 @@ function geographic_area_selection(container, country_code) {
 				area_start_index++;
 			}
 			if(this.belong(all_areas[k].area_name, needle)){
-				var name = t.uniformCase(all_areas[k].area_name);
+				var name = all_areas[k].area_name.uniformFirstLetterCapitalized();
 				areaBelong[area_belong_index] = {
 												area_id: all_areas[k].area_id,
 												area_name: name
@@ -342,20 +342,7 @@ function geographic_area_selection(container, country_code) {
 			t.context.showBelowElement(input);
 		});		
 	}
-	
-	/** Set a uniform case
-	* @method geographic_area_selection#uniformCase
-	* @parameter {string} text
-	* @returns the same string with a capitalized first letter, and other letters or lowered
-	*/
-	this.uniformCase = function(text) {
-		var t = new Array();
-		for(j=0 ; j < text.length ;j++) {
-			if(j == 0) t[j] = text.substr(j,1).toUpperCase();
-			else t[j] = text.substr(j,1).toLowerCase();
-		}
-		return t.join('');
-	}
+
 	
 	/** Set areaField and areaValue
 	* @method geographic_area_selection#setAreaField
@@ -365,13 +352,13 @@ function geographic_area_selection(container, country_code) {
 	*/
 	this.setAreaField = function (areaField, areaValue, areas){
 		for(var i = 0; i < areas.length; i++){
-			areaField[i] = t.uniformCase(areas[i].area_name);
+			areaField[i] = areas[i].area_name.uniformFirstLetterCapitalized();
 			areaValue[i] = areas[i].area_id;
 			var parent = t.findParent(areas[i].area_id);
 			var parent_index = parent != null ? t.findIndex(parent.area_id) : null;
 			while(parent != null){
 				areaField[i] += ", ";
-				var name = t.uniformCase(t.result[parent_index.division_index].areas[parent_index.area_index].area_name);
+				var name = t.result[parent_index.division_index].areas[parent_index.area_index].area_name.uniformFirstLetterCapitalized();
 				areaField[i] += name;
 				parent = t.findParent(parent.area_id);
 				if(parent != null){

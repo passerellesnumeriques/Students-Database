@@ -10,6 +10,7 @@ TODO: home page<br/><br/>
 <a href="/dynamic/excel/page/test">Excel</a><br/>
 <a href="/dynamic/data_import/page/build_excel_import?import=create_template">Create Excel Import Template</a><br/>
 <a href="/dynamic/geography/page/test_geography">Geography</a><br/>
+<a href="/dynamic/geography/page/set_geography_area">Set Geography Area</a><br/>
 <a href="/dynamic/calendar/page/calendars">Calendars</a><br/>
 <a href="/dynamic/students/page/batches">Batches</a><br/>
 
