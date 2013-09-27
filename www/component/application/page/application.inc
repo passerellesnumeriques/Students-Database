@@ -19,7 +19,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 					<img src='<?php echo theme::$icons_16["search"];?>' style='vertical-align:bottom'/><form action="/dynamic/application/page/search" method="get" target="pn_application_content" style='display:inline;'><input name="q" type='text' size=15 style='margin:0px;padding:0px;border:1px solid #8080FF;font-size:11px' autocomplete="off"/></form>
 				</td>
 				<td nowrap="nowrap" class='pn_application_header_section' style='cursor:pointer' onclick="new context_menu('user_settings_menu').showBelowElement(this);">
-					<?php echo PNApplication::$instance->user_people->first_name." ".PNApplication::$instance->user_people->last_name;?>
+					<span id='user_first_name'><?php echo PNApplication::$instance->user_people->first_name;?></span> <span id='user_last_name'><?php echo PNApplication::$instance->user_people->last_name;?></span>
 					<img src='/static/application/settings.png' style='vertical-align:bottom'/>
 					<div id='user_settings_menu' class='context_menu'>
 						<div class='context_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id?>';">
@@ -59,6 +59,9 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	<img src='/static/application/logo.png' height=32px border=0 style='vertical-align:top'/>
 </a>
 <script type='text/javascript'>
+setInterval(function(){
+	service.json("application","ping",null,function(r){});
+},30*1000); // every 30 seconds
 setBackgroundGradient(
 	document.getElementById('pn_application_header'),
 	'vertical',
@@ -68,6 +71,12 @@ setBackgroundGradient(
 	 {pos:100,color:'#686898'}
 	]
 );
+window.pnapplication.register_app_event_listener("data_model_data_changed","People.first_name(<?php echo PNApplication::$instance->user_people->user_people_id;?>)",function(value){
+	document.getElementById('user_first_name').innerHTML = value;
+});
+window.pnapplication.register_app_event_listener("data_model_data_changed","People.last_name(<?php echo PNApplication::$instance->user_people->user_people_id;?>)",function(value){
+	document.getElementById('user_last_name').innerHTML = value;
+});
 function pn_application_content_unload() {
 	if (window.pn_application_content_hider != null) return;
 	var frame = document.getElementById('pn_application_content');

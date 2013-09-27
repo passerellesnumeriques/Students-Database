@@ -389,6 +389,11 @@ class SQLQuery {
 			}
 			unset($table);
 		}
+		for ($i = 0; $i < count($this->where); $i++)
+			if (strlen(trim($this->where[$i]))==0) {
+				array_splice($this->where, $i, 1);
+				$i--;
+			}
 		if (count($this->where) > 0) {
 			$sql .= " WHERE ";
 			$first = true;
@@ -515,6 +520,13 @@ class SQLQuery {
 		}
 		$sql .= " WHERE `".$t->getPrimaryKey()->name."`='".$key."'";
 		SQLQuery::db()->execute($sql);
+		if (SQLQuery::db()->get_last_error_number() == 0) {
+			$sub_model = null;
+			if ($sub_models <> null && $t->getModel() instanceof SubDataModel && isset($sub_models[$t->getParentTable()]))
+				$sub_model = $sub_models[$t->getParentTable()];
+			foreach ($fields_values as $field=>$value)
+				PNApplication::$instance->data_model->signal_data_changed($t->getName(), $field, $sub_model, $key, $value);
+		}
 		$error = DataBaseLock::unlock($lock_id);
 		if ($error <> null) throw new Exception($error);
 	}
@@ -549,9 +561,24 @@ class SQLQuery {
 				}
 			}
 		}
+		$keys = null;
+		if (PNApplication::$instance->data_model->has_data_changed_listeners($t->getName())) {
+			// we need to get the keys
+			$keys = SQLQuery::create()->select($t->getSQLName($sub_models))->field($t->getPrimaryKey()->name)->where($where)->execute_single_field();
+		}
 		SQLQuery::db()->execute($sql);
-		if (SQLQuery::db()->get_last_error_number() == 0)
-			return SQLQuery::db()->affected_rows();
+		if (SQLQuery::db()->get_last_error_number() == 0) {
+			$result = SQLQuery::db()->affected_rows();
+			if ($keys <> null) {
+				$sub_model = null;
+				if ($sub_models <> null && $t->getModel() instanceof SubDataModel && isset($sub_models[$t->getParentTable()]))
+					$sub_model = $sub_models[$t->getParentTable()];
+				foreach ($fields_values as $field=>$value)
+					foreach ($keys as $key)
+						PNApplication::$instance->data_model->signal_data_changed($t->getName(), $field, $sub_model, $key, $value);
+			}
+			return $result;
+		}
 		return -1;
 	}
 	

@@ -415,11 +415,6 @@ abstract class Column {
 	public function validate_javascript($value, $error) {
 	}
 
-	public function create_javascript_field(&$page, $editable = false, $onchanged = null, $onunchanged = null) {
-		$page->add_javascript("/static/common/js/field/field_text.js");
-		return "new field_text()";
-	}
-
 }
 
 class ColumnInteger extends Column {
@@ -492,12 +487,6 @@ class ColumnString extends Column {
 		return $value;
 	}
 
-	public function create_javascript_field(&$page, $editable = false, $onchanged = null, $onunchanged = null) {
-		if (!$editable) return parent::create_javascript_field($page, false);
-		$page->add_javascript("/static/common/js/field/field_editable_text.js");
-		return "new field_editable_text(".$this->max_length.",".($onchanged <> null ? $onchanged : 'null').",".($onunchanged <> null ? $onunchanged : 'null').")";
-	}
-
 	public function validate_javascript($value, $error) {
 		if ($this->min_length && !$this->can_be_null)
 			echo "if (".$value.".length < ".$this->min_length.") ".$error." = 'Must contain at least ".$this->min_length." character(s)'; else ";
@@ -527,15 +516,6 @@ class ColumnEnum extends Column {
 		return $sql;
 	}
 	
-	public function create_javascript_field(&$page, $editable = false, $onchanged = null, $onunchanged = null) {
-		if (!$editable) return parent::create_javascript_field($page, false);
-		$page->add_javascript("/static/common/js/field/field_enum.js");
-		$values = "[";
-		for ($i = 0; $i < count($this->values); $i++)
-		$values .= "]";
-		return "new field_enum(".$this->max_length.",".($onchanged <> null ? $onchanged : 'null').",".($onunchanged <> null ? $onunchanged : 'null').")";
-	}
-
 	public function validate_javascript($value, $error) {
 		// TODO
 	}

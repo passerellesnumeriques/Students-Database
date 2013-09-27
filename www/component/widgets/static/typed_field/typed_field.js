@@ -32,9 +32,13 @@ typed_field.prototype = {
 	 */
 	getCurrentData: function() { return this.originalData; },
 	/**
-	 * @returns the original data (at creation time)
+	 * @returns the original data (at creation time, or set by setOriginalData)
 	 */
 	getOriginalData: function() { return this.originalData; },
+	/**
+	 * Change the original data (for example when the value has been saved, and current data should become the original one)
+	 */
+	setOriginalData: function(data) { return this.originalData = data; },
 	/**
 	 *  change data
 	 *  @param data new data value

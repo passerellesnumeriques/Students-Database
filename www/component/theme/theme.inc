@@ -30,6 +30,7 @@ theme::$icons_16 = array(
 	"ok" => 			"/static/theme/".$theme."/icons_16/ok.png",
 	"question" => 		"/static/theme/".$theme."/icons_16/question.png",
 	"remove" => 		"/static/theme/".$theme."/icons_16/trash.png",
+	"refresh" => 		"/static/theme/".$theme."/icons_16/refresh.png",
 	"right" => 			"/static/theme/".$theme."/icons_16/right.png",
 	"save" => 			"/static/theme/".$theme."/icons_16/save.png",
 	"saving" =>			"/static/theme/".$theme."/icons_16/saving.gif",

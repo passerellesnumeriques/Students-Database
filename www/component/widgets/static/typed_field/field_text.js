@@ -3,12 +3,13 @@
  * @param config can contain: <code>max_length</code>
  */
 function field_text(data,editable,onchanged,onunchanged,config) {
+	if (data == null) data = "";
 	typed_field.call(this, data, editable, onchanged, onunchanged);
 	if (editable) {
 		var t=this;
 		var input = document.createElement("INPUT");
 		input.type = "text";
-		if (config && config.max_length) input.max_length = config.max_length;
+		if (config && config.max_length) input.maxlength = config.max_length;
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";

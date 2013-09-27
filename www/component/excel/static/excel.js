@@ -212,6 +212,18 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	listenEvent(window,'mouseup',function(ev) {
 		if (t.cursor) t.cursor.mouse_select_start = null;
 	});
+	listenEvent(window,'focus',function(ev) {
+		if (t.cursor) {
+			t.cursor.div.style.borderWidth = "2px";
+			t.cursor.div.style.borderStyle = "solid";
+		}
+	});
+	listenEvent(window,'blur',function(ev) {
+		if (t.cursor) {
+			t.cursor.div.style.borderWidth = "2px";
+			t.cursor.div.style.borderStyle = "dotted";
+		}
+	});
 }
 
 function getExcelColumnName(index) {

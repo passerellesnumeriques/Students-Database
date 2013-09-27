@@ -1,7 +1,11 @@
 if (typeof require != 'undefined') {
 	require("typed_field.js");
+	require("field_blank.js");
 	require("dragndrop.js");
 }
+
+// marker to deactivate a cell
+grid_deactivated_cell = { deactivated_cell:'deactivated_cell' };
 
 function GridColumnAction(icon,onclick) {
 	this.icon = icon;
@@ -47,7 +51,8 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 		this.sort_order = 3; // not sorted
 		this.sort_handler = handler;
 		this.onclick.add_listener(function(){
-			// TODO
+			var new_sort = t.sort_order == 1 ? 2 : 1;
+			t._onsort(new_sort);
 		});
 	};
 	
@@ -173,16 +178,16 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 		}
 	};
 	this._onsort = function(sort_order) {
-		if (this.sort_function) {
-			// cancel sorting of other columns
-			for (var i = 0; i < this.grid.columns.length; ++i) {
-				var col = this.grid.columns[i];
-				if (col == this) continue;
-				if (col.sort_order) {
-					col.sort_order = 3;
-					col._refresh_title();
-				}
+		// cancel sorting of other columns
+		for (var i = 0; i < this.grid.columns.length; ++i) {
+			var col = this.grid.columns[i];
+			if (col == this) continue;
+			if (col.sort_order) {
+				col.sort_order = 3;
+				col._refresh_title();
 			}
+		}
+		if (this.sort_function) {
 			// remove all rows
 			var rows = [];
 			while (this.grid.table.childNodes.length > 0) {
@@ -305,6 +310,8 @@ function grid(element) {
 			var data = td.field.getCurrentData();
 			td.innerHTML = "";
 			td.field = t._create_cell(column, data, td);
+			if (data == grid_deactivated_cell)
+				td.style.backgroundColor = "rgba(192,192,192,0.5)";
 		}
 	};
 	
@@ -369,7 +376,13 @@ function grid(element) {
 		}
 		return selection;
 	};
-	
+
+	/**
+	 * Change the data in the grid.
+	 * data is an array, each element representing an entry/row.
+	 * Each entry is an object {row_id:xxx,row_data:[]} where the row_id can be used later to identify the row or to attach data to the row. 
+	 * Each row_data element is an object {col_id:xxx,data_id:yyy,data:zzz} where the data is given to the typed field, col_id identifies the column and data_id can be used later to identify the data or to attach information to the data
+	 */
 	t.setData = function(data) {
 		// empty table
 		t.unselectAll();
@@ -377,6 +390,7 @@ function grid(element) {
 		// create rows
 		for (var i = 0; i < data.length; ++i) {
 			var tr = document.createElement("TR");
+			tr.row_id = data[i].row_id;
 			if (t.selectable) {
 				var td = document.createElement("TD");
 				tr.appendChild(td);
@@ -393,9 +407,15 @@ function grid(element) {
 			}
 			for (var j = 0; j < t.columns.length; ++j) {
 				var td = document.createElement("TD");
+				var row_data = null;
+				for (var k = 0; k < data[i].row_data.length; ++k)
+					if (t.columns[j].id == data[i].row_data[k].col_id) { row_data = data[i].row_data[k]; break; }
+				td.col_id = t.columns[j].id;
+				td.data_id = row_data.data_id;
 				tr.appendChild(td);
-				if (data[i].length <= j) continue;
-				td.field = t._create_cell(t.columns[j], data[i][j], td);
+				td.field = t._create_cell(t.columns[j], row_data.data, td);
+				if (data[i][j] == grid_deactivated_cell)
+					td.style.backgroundColor = "rgba(192,192,192,0.5)";
 			}
 			t.table.appendChild(tr);
 		}
@@ -503,7 +523,11 @@ function grid(element) {
 		return t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data);
 	},
 	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data) {
-		var f = new window[field_type](data, editable, onchanged, onunchanged, field_args);
+		var f;
+		if (data == grid_deactivated_cell)
+			f = new field_blank(document.createElement("DIV"), grid_deactivated_cell);
+		else
+			f = new window[field_type](data, editable, onchanged, onunchanged, field_args);
 		parent.appendChild(f.getHTMLElement());
 		return f;
 	};

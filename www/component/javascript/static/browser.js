@@ -304,8 +304,43 @@ getCompatibleMouseEvent = function(e) {
  * Return a key event, whatever browser is used
  */
 getCompatibleKeyEvent = function(e) {
-	if (browser.IE == 0 || browser.IE >= 9) return e;
-	return window.event;
+	var ev = browser.IE == 0 || browser.IE >= 9 ? e : window.event;
+	if (!ev.keyCode) ev.keyCode = ev.charCode;
+	var done = true;
+	ev.isPrintable = false;
+	switch (ev.keyCode) {
+	case 8: ev.isBackspace = true; break;
+	case 9: ev.isTab = true; break;
+	case 13: ev.isEnter = true; break;
+	case 16: ev.isShift = true; break;
+	case 17: ev.isCtrl = true; break;
+	case 18: ev.isAlt = true; break;
+	case 27: ev.isEscape = true; break;
+	case 32: ev.isSpace = true; ev.isPrintable = true; ev.printableChar = " "; break;
+	case 33: ev.isPageUp = true; break;
+	case 34: ev.isPageDown = true; break;
+	case 35: ev.isEnd = true; break;
+	case 36: ev.isHome = true; break;
+	case 37: ev.isArrowLeft = true; break;
+	case 38: ev.isArrowUp = true; break;
+	case 39: ev.isArrowRight = true; break;
+	case 40: ev.isArrowDown = true; break;
+	case 46: ev.isDelete = true; break;
+	default: done = false; break;
+	}
+	if (!done) {
+		if (ev.keyCode >= 48 && ev.keyCode <= 57) { ev.isPrintable = true; ev.printableChar = String.fromCharCode(ev.keyCode); }
+		else if (ev.keyCode >= 65 && ev.keyCode <= 90) { ev.isPrintable = true; ev.printableChar = String.fromCharCode(ev.keyCode); }
+		else {
+			if (browser.OperaBrowser > 0) {
+			} else {
+				// numpad numbers
+				if (ev.keyCode >= 96 && ev.keyCode <= 105) { ev.isPrintable = true; ev.printableChar = String.fromCharCode(ev.keyCode-(96-48)); }
+			}
+		}
+		// TODO continue http://www.javascripter.net/faq/keycodes.htm
+	}
+	return ev;
 };
 
 /** Return the height of the window in pixels
