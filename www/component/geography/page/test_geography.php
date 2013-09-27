@@ -8,26 +8,20 @@ class page_test_geography extends Page{
 		// $this->add_javascript("/static/geography/set_geographic_area.js");
 		// $this->onload("new set_geographic_area('test','PH');");
 		
-		$this->add_javascript("/static/geography/geographic_area_selection.js");
-		$this->onload("new geographic_area_selection('test','PH');");
+		// $this->add_javascript("/static/geography/geographic_area_selection.js");
+		// $this->onload("new geographic_area_selection('test','PH');");
 		
-		 // $q = SQLQuery::create()->select("Country")
-						// ->field("Country","id","country_id")
-						// ->field("Country","code","country_code")
-						// ->field("Country","name","country_name")
-						// ->field("Country_division","id","division_id")
-						// ->field("Country_division","parent","division_parent_id")
-						// ->field("Country_division","name","division_name")
-						// ->field("Geographic_area","id","area_id")
-						// ->field("Geographic_area","name","area_name")
-						// ->field("Geographic_area","parent","area_parent_id")
-						// ->join("Country","Country_division",array("id"=>"country"))
-						// ->join("Country_division","Geographic_area",array("id"=>"country_division"))
-						// ->where("Country.code='PH'")
-						// ->order_by("division_id");
-		// $country_data=$q->execute();
-		// if(!isset($country_data[0]['division_id'])){
-		// echo "vide";}
+		 echo "<p>Returns a javascript <b>object</b>, giving the geographic structure of the country</p>";
+		echo "<p> This object structure is the following:</p>";
+		echo "<ul>";
+		echo "<li>If no country division: {}</li>";
+		echo "<li>Else: [{division_id: , division_name: ,areas:[<i>One object by area</i>]}]";
+		echo "<ul><li>If no area, areas:[]</li>";
+		echo "<li>Else areas:[{area_id: ,area_parent_id: , area_name: }]</li>";
+		echo "</ul>";
+		echo "</li>";
+		echo "</ul>";
+	
 	}
 }
 ?>
