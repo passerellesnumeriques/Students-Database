@@ -12,6 +12,7 @@ class page_build_excel_import extends Page {
 			if (isset($_GET["root_table"]))
 				$url .= "&root_table=".$_GET["root_table"];
 			create_wizard_page($this, "/static/data_import/import_excel_32.png", $page_type == "create_template" ? "Create Excel Import Template" : "Import Excel", $url);
+			if (isset($_POST["preset"])) {?><script type='text/javascript'>window.import_preset = <?php echo json_encode($_POST["preset"]);?>;</script><?php }
 		} else switch ($_GET["page"]) {
 			case "select_file":
 				?>
@@ -43,7 +44,9 @@ class page_build_excel_import extends Page {
 				Supported formats are: Excel (xls, xlsx), OpenOffice (odf), Sylk (slk), Gnumeric, CSV
 				</form>
 				<script type='text/javascript'>
+				window.parent.wizard_page_loaded();
 				function wizard_page_go_next() {
+					window.parent.wizard_freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Uploading file...");
 					document.forms["excel_example"].submit();
 				}
 				</script>
@@ -72,6 +75,7 @@ class page_build_excel_import extends Page {
 						<iframe src='/dynamic/data_import/page/build_excel_import?page=how_are_data&root_table=<?php echo $_POST["root_table"];?>&import=<?php echo $page_type;?>' frameBorder=0 style='border:none'></iframe>
 					</div>
 					<script type='text/javascript'>
+					window.parent.wizard_page_loaded();
 					window.parent.enable_wizard_page_previous(true);
 					function wizard_page_go_previous() {
 						location.href = '?page=select_file&import=<?php echo $page_type;?>';
@@ -165,6 +169,7 @@ class page_build_excel_import extends Page {
 				<input type='radio' name='import_type' value='single' onchange='import_type_selected();'/> Only one entry (specify the cell for each information)<br/>
 				</form>
 				<script type='text/javascript'>
+				window.parent.parent.wizard_page_loaded();
 				window.parent.parent.enable_wizard_page_previous(true);
 				function import_type_selected() {
 					var form = document.forms['import_type'];
@@ -185,6 +190,7 @@ class page_build_excel_import extends Page {
 			case "select_fields":
 				?>
 				<script type='text/javascript'>
+				window.parent.parent.wizard_page_loaded();
 				window.parent.parent.enable_wizard_page_previous(true);
 				window.parent.wizard_page_go_previous = function() {
 					var xl = window.parent.excel;
@@ -339,6 +345,7 @@ class page_build_excel_import extends Page {
 						}
 						$i_cat = 0;
 						$i_field = 0;
+						$paths_ids = array();
 						foreach ($cats as $cat=>$paths) {
 							echo "<div id='fields_cat_".$i_cat."' style='border: 1px solid black'>";
 							$this->onload("new collapsable_section('fields_cat_".$i_cat."');");
@@ -393,32 +400,41 @@ class page_build_excel_import extends Page {
 									$field_args = $f[1];
 								}
 
+								$id = $this->generate_id();
+								array_push($paths_ids, array($id,$path));
 								echo "<tr>";
 								echo "<td style='padding:0px'>".$path->table->getDisplayableDataName($path->field_name)."</td>";
 								echo "<td style='padding:0px'>";
-								echo "<select onchange='field_import_changed(this)'>";
+								echo "<select onchange='field_import_changed(this)' id='select_".$id."'>";
 								echo "<option value=''>Not Available</option>";
 								echo "<option value='range'>From Range</option>";
 								echo "<option value='set'>All set to</option>";
 								echo "</select>";
 								echo "<span style='visibility:hidden;position:absolute'>";
-								echo "<input type='text' size=11/>";
-								echo "<img src='/static/excel/select_range.png' style='vertical-align:bottom' class='button'/>";
+								echo "<input type='text' size=20 id='range_".$id."'/>";
+								array_push($range_inputs, $id);
+								echo "<img src='/static/excel/select_range.png' style='vertical-align:bottom' class='button' onclick=\"select_range('".$id."')\"/>";
 								echo "</span>";
-								$id = $this->generate_id();
-								echo "<span style='visibility:hidden;position:absolute' id='".$id."'>";
+								echo "<span style='visibility:hidden;position:absolute' id='set_".$id."'>";
 								$this->add_javascript("/static/widgets/typed_field/".$field_classname.".js");
-								$this->onload("document.getElementById('".$id."').appendChild(new ".$field_classname."(null,true,null,null,".$field_args.").getHTMLElement());");
+								$this->onload("document.getElementById('set_".$id."').appendChild(new ".$field_classname."(null,true,null,null,".$field_args.").getHTMLElement());");
 								echo "</span>";
 								echo "</td>";
 								echo "</tr>";
 							}
-							echo "</table></div>";
+							echo "</table></div></div>";
 						}
 						?>
 						</form>
 						</div>
 						<script type='text/javascript'>
+						var import_paths = [<?php
+						$first = true;
+						foreach ($paths_ids as $id) {
+							if ($first) $first = false; else echo ",";
+							echo "{id:".$id[0].",path:".json_encode($id[1]->get_string())."}";
+						} 
+						?>];
 						function field_import_changed(select) {
 							var range_span = select.nextSibling;
 							var set_span = range_span.nextSibling;
@@ -434,6 +450,23 @@ class page_build_excel_import extends Page {
 								set_span.style.position = 'static';
 							}
 						}
+						function select_range(id) {
+							var xl = window.parent.excel;
+							var sheet = xl.getActiveSheet();
+							if (sheet == null) return;
+							var sel = sheet.getSelection();
+							if (sel == null) return;
+							var input = document.getElementById('range_'+id);
+							input.value = window.parent.getExcelRangeString(sheet, sel);
+						}
+						function init() {
+							service.json("data_model","get_available_fields",{table:<?php echo json_encode($_POST["root_table"]);?>},function(r){
+								if (window.parent.parent.import_preset) {
+									var presets = window.parent.parent.import_preset.split(",");
+								}
+							});
+						}
+						init();
 						</script>
 						<?php
 						break;

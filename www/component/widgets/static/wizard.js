@@ -22,6 +22,9 @@ function wizard(container) {
 			t.showPage(0);
 		});
 	};
+	t.createInPage = function(wizard_container) {
+		wizard_container.appendChild(t.element);
+	};
 	t.showPage = function(index) {
 		while (t.page_container.childNodes.length > 0)
 			t.page_container.removeChild(t.page_container.childNodes[0]);

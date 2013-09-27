@@ -41,7 +41,6 @@ class service_get_available_fields extends Service {
 					if ($pa->foreign_key->multiple) {
 						if ($pa->parent->table == $pa->foreign_key->table) {
 							// n>1: it does not belong to us, we can propose the choice
-							echo ",field_classname:'field_enum'";
 							$editable = $pa->parent->table->canModifyField($pa->foreign_key->name);
 							echo ",editable:".($editable ? "true" : "false");
 							echo ",sortable:true";

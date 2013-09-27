@@ -32,6 +32,7 @@ $model->addTable("Student")
 	->restrictWriteAccess("manage_batches", true)
 	->restrictAddAccess("manage_batches", true)
 	->restrictRemoveAccess("manage_batches", true)
+	->setDisplayName("Student")
 	;
 $model->addTable("AcademicPeriod")
 	->addPrimaryKey("id")
