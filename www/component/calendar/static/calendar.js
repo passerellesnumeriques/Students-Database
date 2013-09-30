@@ -1,5 +1,6 @@
 function CalendarManager() {
 	this.calendars = [];
+	this.default_calendar_index = 0;
 	
 	this.on_event_added = null;
 	this.on_event_removed = null;
@@ -71,6 +72,7 @@ function Calendar(name, color, show) {
 	this.refresh = function(manager, calendar, ondone) {
 		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar.refresh not implemented"));
 	};
+	this.save_event = null; // must be overriden if the calendar supports modifications
 	var t=this;
 	var ref = function(){
 		if (t.manager) t.manager.refresh_calendar(t,function(){setTimeout(ref,5*60*1000);});

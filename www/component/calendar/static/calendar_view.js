@@ -3,6 +3,7 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
+	this.calendar_manager = calendar_manager;
 	this.cursor_date = new Date();
 	this.cursor_date.setHours(0, 0, 0, 0);
 	this.zoom = 30;

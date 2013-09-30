@@ -47,10 +47,12 @@ function DayColumnLayout() {
 		div.style.overflow = "hidden";
 		div.title = event.calendar.name+"\r\n"+time_str+"\r\n"+event.title;
 		div.style.cursor = "pointer";
-		div.onclick = function() {
+		div.onclick = function(e) {
 			require("event_screen.js",function() {
 				event_screen(event.original_event);
 			});
+			stopEventPropagation(e);
+			return false;
 		};
 		container.appendChild(div);
 		this.events.push(div);
@@ -69,44 +71,72 @@ function DayColumnLayout() {
 	};
 	
 	this.layout_boxes = function(cx, cw, cy, ch) {
-		for (var i = 0; i < this.events.length; ++i)
-			this.events[i].pos = {x:this.events[i].offsetLeft,w:this.events[i].offsetWidth+1};
+		for (var i = 0; i < this.events.length; ++i) {
+			this.events[i].pos = {x:this.events[i].offsetLeft,w:this.events[i].offsetWidth-1};
+			this.events[i].conflicts = [];
+		}
 		for (var y = cy; y < cy+ch; y++) {
 			var boxes = this.get_boxes_at(y);
 			if (boxes.length < 2) continue;
-			var all_ok;
-			do {
-				all_ok = true;
-				var space = new WidthAvailableSpace(cx,cw);
+			var min_w = 10;
+			if (cw/boxes.length < min_w) min_w = 5;
+			if (cw/boxes.length < min_w) {
+				// too much boxes
 				for (var i = 0; i < boxes.length; ++i) {
-					if (space.reserve(boxes[i].pos.x, boxes[i].pos.w)) continue;
-					// not enough space
-					var s = space.get();
-					while (s != null && s.w < 10) s = space.get();
-					if (s != null) {
-						// some space is available
-						boxes[i].style.left = s.x+"px";
-						boxes[i].style.width = (s.w-3)+"px";
-						boxes[i].pos.x = s.x;
-						boxes[i].pos.w = s.w;
-						continue;
-					}
-					// no more space, reduce the biggest among the previous ones
-					var biggest_ratio = 0, biggest_index = 0;
-					for (var j = 0; j < i; j++) {
-						var ratio = cw/boxes[j].offsetWidth;
-						if (ratio > biggest_ratio) {
-							biggest_ratio = ratio;
-							biggest_index = j;
-						}
-					}
-					var new_w = Math.floor(cw/(biggest_ratio+1));
-					boxes[biggest_index].style.width = (new_w-3)+"px";
-					boxes[biggest_index].pos.w = new_w;
-					all_ok = false;
-					break;
+					boxes[i].style.left = (cx+i*2)+"px";
+					boxes[i].style.width = "3px";
+					boxes[i].pos.x = (cx+i*2);
+					boxes[i].pos.w = 3;
 				}
-			} while (!all_ok);
+			} else {
+				var all_ok;
+				do {
+					all_ok = true;
+					var space = new WidthAvailableSpace(cx,cw);
+					for (var i = 0; i < boxes.length; ++i) {
+						if (space.reserve(boxes[i].pos.x, boxes[i].pos.w)) continue;
+						// not enough space
+						var conflicts = [];
+						for (var j = 0; j < boxes[i].conflicts; ++j)
+							if (!boxes.contains(boxes[i].conflicts[j]))
+								conflicts.push(boxes[i].conflicts[j]);
+						var s = space.get(conflicts);
+						while (s != null && s.w < min_w) s = space.get(conflicts);
+						if (s != null) {
+							// some space is available
+							boxes[i].style.left = s.x+"px";
+							boxes[i].style.width = (s.w-3)+"px";
+							boxes[i].pos.x = s.x;
+							boxes[i].pos.w = s.w;
+							continue;
+						}
+						// no more space, reduce the biggest among the previous ones
+						var lowest_ratio = cw*2, lowest_index = 0;
+						for (var j = 0; j < i; j++) {
+							var ratio = cw/boxes[j].pos.w;
+							if (ratio < lowest_ratio) {
+								lowest_ratio = ratio;
+								lowest_index = j;
+							}
+						}
+						// or among conflicts
+						// TODO
+						var new_w = Math.floor(cw/(lowest_ratio+1));
+						boxes[lowest_index].style.width = (new_w-3)+"px";
+						boxes[lowest_index].pos.w = new_w;
+						all_ok = false;
+						break;
+					}
+				} while (!all_ok);
+				// add the conflicts
+				for (var i = 0; i < boxes.length; ++i) {
+					for (var j = 0; j < boxes.length; ++j) {
+						if (j == i) continue;
+						if (!boxes[i].conflicts.contains(boxes[j]))
+							boxes[i].conflicts.push(boxes[j]);
+					}
+				}
+			}
 		}
 	};
 	
@@ -128,38 +158,160 @@ function WidthAvailableSpace(x,w) {
 	this.reserve = function(x,w) {
 		for (var i = 0; i < this.ranges.length; ++i) {
 			var r = this.ranges[i];
-			if (x < r.x) continue; // area is before range
-			if (r.x+r.w <= x) continue; // range is before area
-			if (r.x >= x+w) continue; // range is after area
-			if (x+w > r.x+r.w) continue; // area is after range
+//			if (x < r.x) continue; // area is before range
+//			if (r.x+r.w <= x) continue; // range is before area
+//			if (r.x >= x+w) continue; // range is after area
+//			if (x+w > r.x+r.w) continue; // area is after range
 			if (r.x == x) {
 				if (r.w == w) {
 					// exact
 					this.ranges.splice(i,1);
 					return true;
 				}
-				// smaller
-				r.x += w;
-				r.w -= w;
-				return true;
+				if (w < r.w) {
+					// smaller
+					r.x += w;
+					r.w -= w;
+					return true;
+				}
+				// bigger
+				if (this.reserve(r.x+r.w,x+w-(r.x-r.w))) {
+					this.ranges.splice(this.ranges.indexOf(r),1);
+					return true;
+				}
+				return false;
 			}
 			if (r.x+r.w == x+w) {
 				// end match
-				r.w -= w;
+				if (x > r.x) {
+					// reserve the end of the range
+					r.w -= w;
+					return true;
+				}
+				// bigger
+				if (this.reserve(x,r.x-x)) {
+					this.ranges.splice(this.ranges.indexOf(r),1);
+					return true;
+				}
+				return false;
+			}
+			if (x > r.x && x+w < r.x+r.w) {
+				// inside: split the range into 2
+				var r2 = {x:x+w,w:(r.x+r.w)-(x+w)};
+				r.w = x-r.x;
+				this.ranges.splice(i+1,0,r2);
 				return true;
 			}
-			// inside: split the range into 2
-			var r2 = {x:r.x+r.w,w:(r.x+r.w)-(x+w)};
-			r.w = x-r.x;
-			this.ranges.splice(i+1,0,r2);
-			return true;
+			if (x < r.x && x+w > r.x+r.w) {
+				// bigger
+				if (!this.reserve(x,r.x-x)) return false; // cannot reserve the area before
+				if (!this.reserve(r.x+r.w,x+w-(r.x-r.w))) return false; // cannot reserve the area after
+				this.ranges.splice(this.ranges.indexOf(r),1);
+				return true;
+			}
+			if (x < r.x && x+w > r.x && x+w < r.x+r.w) {
+				// start before, ends inside
+				if (!this.reserve(x,r.x-x)) return false; // cannot reserve the area before
+				return this.reserve(r.x, x+w-r.x);
+			}
+			if (x >= r.x && x < r.x+r.w && x+w > r.x+r.w) {
+				// start inside, ends after
+				if (!this.reserve(r.x+r.w,x+w-(r.x-r.w))) return false; // cannot reserve the area after
+				return this.reserve(x, r.x+r.w-x);
+			}
 		}
 		return false;
 	};
-	this.get = function() {
+	this.remove = function(x,w) {
+		for (var i = 0; i < this.ranges.length; ++i) {
+			var r = this.ranges[i];
+			if (r.x == x) {
+				if (r.w == w) {
+					// exact
+					this.ranges.splice(i,1);
+					return;
+				}
+				if (w < r.w) {
+					// smaller
+					r.x += w;
+					r.w -= w;
+					return;
+				}
+				// bigger
+				this.ranges.splice(i,1);
+				this.remove(r.x+r.w,x+w-(r.x-r.w));
+				return;
+			}
+			if (r.x+r.w == x+w) {
+				// end match
+				if (x > r.x) {
+					// reserve the end of the range
+					r.w -= w;
+					return;
+				}
+				// bigger
+				this.ranges.splice(i,1);
+				this.remove(x,r.x-x);
+				return;
+			}
+			if (x > r.x && x+w < r.x+r.w) {
+				// inside: split the range into 2
+				var r2 = {x:x+w,w:(r.x+r.w)-(x+w)};
+				r.w = x-r.x;
+				this.ranges.splice(i+1,0,r2);
+				return;
+			}
+			if (x < r.x && x+w > r.x+r.w) {
+				// bigger
+				this.ranges.splice(i,1);
+				this.remove(x,r.x-x);
+				this.remove(r.x+r.w,x+w-(r.x-r.w));
+				return;
+			}
+			if (x < r.x && x+w > r.x && x+w < r.x+r.w) {
+				// start before, ends inside
+				this.remove(x,r.x-x);
+				this.remove(r.x, x+w-r.x);
+				return;
+			}
+			if (x >= r.x && x < r.x+r.w && x+w > r.x+r.w) {
+				// start inside, ends after
+				this.remove(r.x+r.w,x+w-(r.x-r.w));
+				this.remove(x, r.x+r.w-x);
+				return;
+			}
+		}
+	};
+	this.get = function(conflicts) {
 		if (this.ranges.length == 0) return null;
-		var r = this.ranges[0];
-		this.ranges.splice(0,1);
-		return r;
+		for (var i = 0; i < this.ranges.length; ++i) {
+			var r = this.ranges[i];
+			var ok = true;
+			for (var j = 0; j < conflicts.length; ++j) {
+				// start inside
+				if (conflicts[j].pos.x >= r.x && conflicts[j].pos.x < r.x+r.w) { ok = false; break; }
+				// end inside
+				if (conflicts[j].pos.x+conflicts[j].pos.w-1 >= r.x && conflicts[j].pos.x+conflicts[j].pos.w <= r.x+r.w) { ok = false; break; }
+				// start before and end after
+				if (conflicts[j].pos.x <= r.x && conflicts[j].pos.x+conflicts[j].pos.w >= r.x+r.w) { ok = false; break; }
+			}
+			if (ok) {
+				this.ranges.splice(i,1);
+				return r;
+			}
+		}
+		// no range ok, let's take a part of a range
+		for (var i = 0; i < this.ranges.length; ++i) {
+			var r = this.ranges[i];
+			var rr = new WidthAvailableSpace(r.x,r.w);
+			for (var j = 0; j < conflicts.length; ++j)
+				rr.remove(conflicts[j].x, conflicts[j].w);
+			if (rr.ranges.length > 0) {
+				this.ranges.splice(i,1);
+				for (var j = 1; j < rr.ranges.length; ++j)
+					this.ranges.push(rr.ranges[j]);
+				return rr.ranges[0];
+			}
+		}
 	};
 }

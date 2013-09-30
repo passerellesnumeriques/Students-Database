@@ -107,6 +107,20 @@ function calendar_view_week(view, container) {
 			this.day_content[i].style.position = "absolute";
 			this.day_content[i].style.top = "0px";
 			this.day_content[i].style.borderRight = "1px solid black";
+			this.day_content[i].date = new Date(t.start_date.getTime()+i*24*60*60*1000);
+			this.day_content[i].onclick = function(e) {
+				var date = new Date(this.date.getTime());
+				var mev = getCompatibleMouseEvent(e);
+				var y = mev.y-absoluteTop(this);
+				var time = y/20*view.zoom;
+				date.setHours(0, time, 0, 0);
+				// TODO adjust minutes according to zoom
+				require("event_screen.js",function() {
+					event_screen(null,view.calendar_manager.calendars[view.calendar_manager.default_calendar_index],date,false);
+				});
+				stopEventPropagation(e);
+				return false;
+			};
 			this.content.appendChild(this.day_content[i]);
 		}
 		
@@ -135,6 +149,7 @@ function calendar_view_week(view, container) {
 			line.style.position = "absolute";
 			line.style.left = "51px";
 			line.style.top = y+"px";
+			line.style.pointerEvents = 'none';
 			this.content.appendChild(line);
 			this._time_lines.push(line);
 			var d = document.createElement("DIV");

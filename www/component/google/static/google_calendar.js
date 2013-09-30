@@ -46,6 +46,9 @@ function GoogleCalendar(id, name, color, show) {
 						next_page(resp.nextPageToken);
 						return;
 					}
+				} else {
+					// bug
+					ondone();
 				}
 				
 				var removed_events = cal.events;
