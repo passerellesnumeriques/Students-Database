@@ -29,15 +29,14 @@ class page_profile extends Page {
 			if ($res) $full_name = $res["first_name"]." ".$res["last_name"];
 		}
 
+		require_once("component/people/ProfilePlugin.inc");
 		$all_pages = array();
 		foreach (PNApplication::$instance->components as $cname=>$c) {
-			$cl = new ReflectionClass($c);
-			try { if ($cl->getMethod("get_profile_pages") == null) continue; }
-			catch (Exception $e) { continue; }
+			if (!($c instanceof ProfilePlugin)) continue;
 			$pages = @$c->get_profile_pages($people);
 			if ($pages <> null)
 				foreach ($pages as $page_id=>$cp)
-				array_push($all_pages, $cp);
+					array_push($all_pages, $cp);
 		}
 		function pages_sort($p1, $p2) {
 			return $p1[3]-$p2[3];

@@ -1,5 +1,6 @@
-<?php 
-class user_people extends Component {
+<?php
+require_once("component/people/ProfilePlugin.inc"); 
+class user_people extends Component implements ProfilePlugin {
 	
 	public $user_people_id;
 	public $first_name;
@@ -56,6 +57,16 @@ class user_people extends Component {
 	public function get_people_from_user($user_id) {
 		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->execute_single_value();
 	}
+	
+	public function get_profile_pages(&$people) {
+		$user_id = @$_GET["user"];
+		if ($user_id == null && $people <> null)
+			$user_id = $this->get_user_from_people($people);
+		return array(
+			"user_rights"=>array("/static/user_management/access_list.png", "User Rights", "/dynamic/user_management/page/user_rights?user=".$user_id, 1000),
+		);
+	}
+
 	
 }
 ?>

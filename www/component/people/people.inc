@@ -1,5 +1,6 @@
 <?php
-class people extends Component {
+require_once("ProfilePlugin.inc");
+class people extends Component implements ProfilePlugin {
 
 	public function create_people($first_name, $last_name, $middle_name = null, $bypass_security=false) {
 		$q = SQLQuery::create();

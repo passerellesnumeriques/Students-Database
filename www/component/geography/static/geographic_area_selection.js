@@ -258,32 +258,21 @@ function geographic_area_selection(container, country_code) {
 	*/
 	this.createAutoFillInput = function(id){
 		var parent = document.getElementById(id);
-		var input = document.createElement('input');
-		input.id = 'autoFill';
-		input.type = 'text';
-		input.onkeypress = function(){
-			if(t.to){window.clearTimeout(t.to);}
-			t.to = setTimeout(function(){
-				var val = input.value;
-				val = val.toLowerCase();
-				if(val.length > 2){t.autoFill('autoFill', val);/*t.belong("talamban","ban");*/}
-			},300);
-		};
-		var str = 'Manually search';
-		input.value = str;
-		input.style.fontStyle = "italic";
-		input.onclick = function(){input.value = ""; input.style.fontStyle = "";};
-		input.onblur = function(){input.value = str; input.style.fontStyle = "italic";};
-		parent.appendChild(input);
+		require("autocomplete.js",function(){
+			new autocomplete(parent, function(val){
+				return t.autoFill(val);
+			}, 3, 'Manually search', function(item){
+				t.startFilter(item.area);
+			});
+		});
 	}
 	
 	/** Find the string needle in the areas list. Creates two arrays: one with the areas which name begins with
 	* needle; a second one with the areas which name contains needle
 	* @method geographic_area_selection#autoFill
-	* @param id = the id of the autofill input
 	* @param needle = the needle to find in the result object
 	*/
-	this.autoFill = function (id, needle){
+	this.autoFill = function (needle){
 		var all_areas = [];
 		var area_index = 0;
 		for (var i =0; i<this.result.length; i++){
@@ -331,16 +320,10 @@ function geographic_area_selection(container, country_code) {
 		if(areaBelong.length > 0){
 			this.setAreaField(areaBelongField, areaBelongValue, areaBelong);
 		}
-		require('context_menu.js',function(){
-			if(!t.context){
-				t.context = new context_menu();
-			}
-			t.context.clearItems();
-			t.setContextMenu(t.context, areaStartField, areaStartValue);
-			t.setContextMenu(t.context, areaBelongField, areaBelongValue);
-			var input = document.getElementById(id);
-			t.context.showBelowElement(input);
-		});		
+		var items = [];
+		t.setContextMenu(areaStartField, areaStartValue, items);
+		t.setContextMenu(areaBelongField, areaBelongValue, items);
+		return items;
 	}
 
 	
@@ -370,19 +353,17 @@ function geographic_area_selection(container, country_code) {
 	
 	/** Set the context_menu: add the given fields to the context menu
 	* @method geographic_area_selection#setContextMenu
-	* @param context_menu = instance of context_menu
 	* @param areaField = array, each field contains the string to be displayed on a context_menu row
 	* @param areaValue = array, each field contains the value of the context_menu row (not the displayed one)
+	* @param items = array to be filled with autocomplete items
 	*/
-	this.setContextMenu = function(context_menu, areaField, areaValue){
+	this.setContextMenu = function(areaField, areaValue, items){
 		if(areaField.length > 0){
 			for(var i = 0; i < areaField.length; i++){
-				var div = document.createElement('div');
-				div.className = 'context_menu_item';
-				div.innerHTML = areaField[i];
-				div.area_index = i;
-				div.onclick = function(){t.startFilter(areaValue[this.area_index]);};
-				context_menu.addItem(div, false);
+				items.push({
+					text: areaField[i],
+					area: areaValue[i]
+				});
 			}
 		}
 	}
