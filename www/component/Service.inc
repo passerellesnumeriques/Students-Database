@@ -25,7 +25,7 @@ abstract class Service {
 	 * Return the format of the output of this service (by default: text/json) 
 	 * @return string
 	 */
-	public function get_output_format() { return "text/json"; }
+	public function get_output_format($input) { return "text/json"; }
 	/**
 	 * Generate the documentation of the output of this service.
 	 */
@@ -34,7 +34,7 @@ abstract class Service {
 	 * Execute the service
 	 * @param Component $component the component this service belongs to
 	 */
-	public abstract function execute(&$component);
+	public abstract function execute(&$component, $input);
 	
 }
 ?>

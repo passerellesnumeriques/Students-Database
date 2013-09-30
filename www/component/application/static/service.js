@@ -12,18 +12,9 @@ service = {
 	 */
 	json: function(component, service_name, input, handler, foreground) {
 		var data = "";
-		if (input != null) {
-			if (typeof input == 'string') data = input;
-			else for (var name in input) {
-				if (data.length > 0) data += "&";
-				data += encodeURIComponent(name)+"=";
-				if (typeof input[name] == 'string')
-					data += encodeURIComponent(input[name]);
-				else
-					data += encodeURIComponent(service.generate_input(input[name]));
-			}
-		}
-		ajax.post_parse_result("/dynamic/"+component+"/service/"+service_name, data, 
+		if (input != null)
+			data = service.generate_input(input);
+		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json", data, 
 			function(result){
 				if (result && result.events) {
 					for (var i = 0; i < result.events.length; ++i)

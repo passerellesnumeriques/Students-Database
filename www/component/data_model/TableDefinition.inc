@@ -304,6 +304,12 @@ class Table {
 			}
 		return null;
 	}
+	public function getColumnFor($name, $sub_model) {
+		$sub_models = array();
+		if ($sub_model <> null && $this->getModel() instanceof \SubDataModel)
+			$sub_models[$this->getModel()->getParentTable()] = $sub_model;
+		return $this->getColumn($name, $sub_models);
+	}
 	public function getColumns($sub_models = null) {
 		$columns = $this->_getColumns($sub_models);
 		$cols = array();

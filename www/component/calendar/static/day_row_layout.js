@@ -37,6 +37,7 @@ function day_row_layout() {
 			require("color.js", function() {
 				div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(ev.calendar.color), 0x60));
 			});
+			div.style.overflow = 'hidden';
 			div.style.left = (day_boxes[day1].offsetLeft+2)+"px";
 			div.style.top = (1+y*22)+"px";
 			div.style.height = "15px";
@@ -46,6 +47,14 @@ function day_row_layout() {
 			div.style.width = w+"px";
 			div.style.padding = "2px";
 			div.innerHTML = ev.title;
+			div.style.cursor = "pointer";
+			div.event = ev;
+			div.onclick = function() {
+				var ev = this.event;
+				require("event_screen.js",function() {
+					event_screen(ev.original_event);
+				});
+			};
 			day_boxes[0].parentNode.appendChild(div);
 			this.events.push(div);
 		}

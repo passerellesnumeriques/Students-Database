@@ -19,8 +19,8 @@ class service_save_user_rights extends Service {
 	public function output_documentation() {
 	?>return true on success.<?php 
 	}
-	public function execute(&$component) {
-$user_id = $_POST["user"];
+	public function execute(&$component, $input) {
+$user_id = $input["user"];
 
 // check data were locked before
 if (!isset($_GET["lock"]))  { PNApplication::error("missing lock"); return; }
@@ -44,7 +44,7 @@ foreach (PNApplication::$instance->components as $c) {
 }
 
 $rights = array();
-foreach ($_POST as $name=>$value) {
+foreach ($input as $name=>$value) {
 	if ($name == "user") continue;
 	if (!isset($all_rights[$name])) {
 		PNApplication::error("unknown right ".$name);

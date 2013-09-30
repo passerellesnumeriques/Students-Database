@@ -17,9 +17,9 @@ class service_assign_roles extends Service {
 	public function output_documentation() {
 ?>return true on success.<?php 
 	}
-	public function execute(&$component) {
-		$users = json_decode($_POST["users"]);
-		$roles = json_decode($_POST["roles"]);
+	public function execute(&$component, $input) {
+		$users = $input["users"];
+		$roles = $input["roles"];
 		
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;

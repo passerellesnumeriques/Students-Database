@@ -33,6 +33,7 @@ function enable_wizard_page_finish(enabled) {
 	document.getElementById('wizard_page_button_finish').disabled = enabled ? "" : "disabled";
 }
 function wizard_page_previous() {
+	wizard_freeze();
 	var frame = document.getElementById('wizard_page_content');
 	var w = getIFrameWindow(frame);
 	enable_wizard_page_previous(false);
@@ -41,6 +42,7 @@ function wizard_page_previous() {
 	w.wizard_page_go_previous();
 }
 function wizard_page_next() {
+	wizard_freeze();
 	var frame = document.getElementById('wizard_page_content');
 	var w = getIFrameWindow(frame);
 	enable_wizard_page_previous(false);
@@ -49,12 +51,39 @@ function wizard_page_next() {
 	w.wizard_page_go_next();
 }
 function wizard_page_finish() {
+	wizard_freeze();
 	var frame = document.getElementById('wizard_page_content');
 	var w = getIFrameWindow(frame);
 	enable_wizard_page_previous(false);
 	enable_wizard_page_next(false);
 	enable_wizard_page_finish(false);
 	w.wizard_page_go_finish();
+}
+function wizard_page_loaded() {
+	wizard_unfreeze();
+}
+wizard_freeze_div = document.createElement("DIV");
+wizard_freeze_div.style.position = "absolute";
+wizard_freeze_div.style.backgroundColor = "rgba(192, 192, 192, 0.5)";
+wizard_freeze_div.innerHTML = "<table style='width:100%;height:100%'><tr><td align=center valign=middle id='wizard_freezer'></td></tr></table>";
+function wizard_freeze() {
+	var frame = document.getElementById('wizard_page_content');
+	wizard_freeze_div.style.top = absoluteTop(frame)+"px";
+	wizard_freeze_div.style.left = absoluteLeft(frame)+"px";
+	wizard_freeze_div.style.width = getWidth(frame)+"px";
+	wizard_freeze_div.style.height = getHeight(frame)+"px";
+	wizard_freeze_div.frozen = true;
+	frame.parentNode.appendChild(wizard_freeze_div);
+	document.getElementById('wizard_freezer').innerHTML = "";
+}
+function wizard_unfreeze() {
+	if (wizard_freeze_div.frozen) {
+		wizard_freeze_div.parentNode.removeChild(wizard_freeze_div);
+		wizard_freeze_div.frozen = false;
+	}
+}
+function wizard_freeze_message(msg) {
+	document.getElementById('wizard_freezer').innerHTML = msg;
 }
 </script>
 <?php

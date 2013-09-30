@@ -21,11 +21,11 @@ class service_save_entity extends Service {
 		echo "<code>key</code> the key of the entity";
 	}
 	
-	public function execute(&$component) {
-		$table = $_POST["table"];
-		$sub_model = @$_POST["sub_model"]; if ($sub_model == "null") $sub_model = null;
-		$lock_id = @$_POST["lock"];
-		$key = @$_POST["key"];
+	public function execute(&$component, $input) {
+		$table = $input["table"];
+		$sub_model = @$input["sub_model"];
+		$lock_id = @$input["lock"];
+		$key = @$input["key"];
 		
 		require_once("component/data_model/Model.inc");
 		$t = DataModel::get()->getTable($table);
@@ -36,8 +36,8 @@ class service_save_entity extends Service {
 		
 		$fields = array();
 		foreach ($t->getColumns($sub_models) as $col) {
-			if (!isset($_POST["field_".$col->name])) continue;
-			$fields[$col->name] = $_POST["field_".$col->name];
+			if (!isset($input["field_".$col->name])) continue;
+			$fields[$col->name] = $input["field_".$col->name];
 		}
 		
 		if ($lock_id == null || $key == null) {

@@ -17,9 +17,9 @@ class service_rename_role extends Service {
 	public function output_documentation() {
 ?>return true on success.<?php 
 	}
-	public function execute(&$component) {
-		$id = $_POST["id"];
-		$name = $_POST["name"];
+	public function execute(&$component, $input) {
+		$id = $input["id"];
+		$name = $input["name"];
 		try { SQLQuery::create()->update_by_key("Role", $id, array("name"=>$name)); }
 		catch (Exception $e) {
 			PNApplication::error($e->getMessage());

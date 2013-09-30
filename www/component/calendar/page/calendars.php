@@ -62,7 +62,8 @@ function TestCalendar() {
 			calendar: cal,
 			start: new Date(new Date().getTime()-30*60*1000),
 			end: new Date(new Date().getTime()+30*60*1000),
-			title: "Before"
+			title: "Before",
+			description: "La description de l'evenement qui est avant"
 		};
 		cal.events.push(ev);
 		manager.on_event_added(ev);
@@ -100,6 +101,8 @@ function TestCalendar() {
 			end: new Date(new Date().getTime()+90*60*1000),
 			title: "Inside"
 		};
+		cal.events.push(ev);
+		manager.on_event_added(ev);
 	};
 }
 TestCalendar.prototype = new Calendar();
@@ -108,6 +111,7 @@ function add_test_events() {
 	new CalendarElement(document.getElementById("pn_calendars"), window.calendars.add_calendar(new TestCalendar())); 
 }
 function CalendarElement(container, cal) {
+	var t=this;
 	this._init = function() {
 		this.div = document.createElement("DIV"); container.appendChild(this.div);
 		this.box = document.createElement("DIV"); this.div.appendChild(this.box);
@@ -117,9 +121,31 @@ function CalendarElement(container, cal) {
 		this.box.style.border = "1px solid #"+cal.color;
 		if (cal.show)
 			this.box.style.backgroundColor = "#"+cal.color;
+		this.box.onclick = function() {
+			if (!cal.manager) return;
+			if (cal.show) {
+				cal.manager.hide_calendar(cal);
+				t.box.style.backgroundColor = '';
+			} else {
+				cal.manager.show_calendar(cal);
+				t.box.style.backgroundColor = "#"+cal.color;
+	}
+		};
 		this.name = document.createElement("SPAN"); this.div.appendChild(this.name);
 		this.name.style.paddingLeft = "3px";
 		this.name.innerHTML = cal.name;
+		var start_refresh = function() {
+			t.loading = document.createElement("IMG");
+			t.loading.src = theme.icons_10.loading;
+			t.div.appendChild(t.loading);
+		};
+		cal.onrefresh.add_listener(start_refresh);
+		cal.onrefreshdone.add_listener(function(){
+			if (!t.loading) return;
+			t.div.removeChild(t.loading);
+			t.loading = null;
+		});
+		if (cal.updating) start_refresh();
 	};
 	this._init();
 }
@@ -145,11 +171,13 @@ function _load_google_calendars() {
 				loading.parentNode.insertBefore(div, loading);
 				loading.parentNode.removeChild(loading);
 				div.id = 'loading_google_calendars';
+				return;
 			}
 			var list = document.getElementById("google_calendars");
 			for (var i = 0; i < calendars.length; ++i)
 				new CalendarElement(list, calendars[i]);
 			loading.parentNode.removeChild(loading);
+			doit = null;
 		});		
 	};
 	add_javascript("/static/google/google_calendar.js",function(){
@@ -162,6 +190,7 @@ function _load_google_calendars() {
 				container.appendChild(loading);
 				loading.innerHTML = window.top.connection_status == 0 ? "Connecting to Google..." : "Not connected to Google";
 				window.top.google.connection_listeners.push(function(){
+					if (!doit) return;
 					if (window.top.google.connection_status == 1)
 						doit();
 					else

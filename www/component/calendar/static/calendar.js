@@ -6,6 +6,7 @@ function CalendarManager() {
 	this.on_event_updated = null;
 
 	this.add_calendar = function(cal) {
+		cal.manager = this;
 		this.calendars.push(cal);
 		if (cal.show)
 			this.refresh_calendar(cal);
@@ -13,6 +14,7 @@ function CalendarManager() {
 	};
 	
 	this.remove_calendar = function(cal) {
+		cal.manager = null;
 		if (cal.show)
 			this.hide_calendar(cal);
 		for (var i = 0; i < this.calendars.length; ++i)
@@ -38,11 +40,14 @@ function CalendarManager() {
 			this.refresh_calendar(cal);
 	};
 	
-	this.refresh_calendar = function(cal) {
+	this.refresh_calendar = function(cal,ondone) {
 		if (cal.updating) return; // already in progress
 		cal.updating = true;
+		cal.onrefresh.fire();
 		cal.refresh(this, cal, function() {
 			cal.updating = false;
+			if (ondone) ondone();
+			cal.onrefreshdone.fire();
 		});
 	};
 	
@@ -58,36 +63,27 @@ function Calendar(name, color, show) {
 	this.color = color;
 	this.show = show;
 	this.updating = false;
+	if (typeof Custom_Event != 'undefined') { // for auto-loading in wrong order
+		this.onrefresh = new Custom_Event();
+		this.onrefreshdone = new Custom_Event();
+	}
 	this.events = [];
 	this.refresh = function(manager, calendar, ondone) {
 		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar.refresh not implemented"));
 	};
+	var t=this;
+	var ref = function(){
+		if (t.manager) t.manager.refresh_calendar(t,function(){setTimeout(ref,5*60*1000);});
+		else setTimeout(ref,60000);
+	};
+	setTimeout(ref,5*60*1000);
 }
 
 function PNCalendar(id, name, color, show) {
 	Calendar.call(this, name, color, show);
+	this.icon = "/static/application/logo.png";
 	this.id = id;
 	this.refresh = function(manager, cal, ondone) {
-		if (!window.top.pn_calendar_loading_status) {
-			window.top.pn_calendar_loading_status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING,"Loading PN Calendars... (1)");
-			window.top.pn_calendar_loading_nb = 1;
-			window.top.status_manager.add_status(window.top.pn_calendar_loading_status);
-		} else {
-			window.top.pn_calendar_loading_nb++;
-			window.top.pn_calendar_loading_status.message = "Loading PN Calendars... ("+window.top.pn_calendar_loading_nb+")";
-			window.top.status_manager.update_status(window.top.pn_calendar_loading_status);
-		}
-		var prev_ondone = ondone;
-		ondone = function() {
-			window.top.pn_calendar_loading_nb--;
-			if (window.top.pn_calendar_loading_nb == 0)
-				window.top.status_manager.remove_status(window.top.pn_calendar_loading_status);
-			else {
-				window.top.pn_calendar_loading_status.message = "Loading PN Calendars... ("+window.top.pn_calendar_loading_nb+")";
-				window.top.status_manager.update_status(window.top.pn_calendar_loading_status);
-			}
-			prev_ondone();
-		};
 		var t=this;
 		service.json("calendar", "get", {id:t.id}, function(result) {
 			if (!result) { ondone(); return; }

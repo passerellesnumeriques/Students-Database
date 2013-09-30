@@ -17,6 +17,20 @@ function init_batch_list() {
 		'Student',
 		['People.first_name','People.last_name'],
 		function (list) {
+			var import_students = document.createElement("DIV");
+			import_students.className = "button";
+			import_students.innerHTML = "<img src='"+theme.icons_16.import+"' style='vertical-align:bottom'/> Import Students";
+			import_students.onclick = function() {
+				require("data_import.js",function(){
+					new data_import(
+						document.body,
+						"Student",
+						[{table:'Student',column:'batch',value:<?php echo $_GET["batch"];?>}],
+						'file'
+					);
+				});
+			};
+			list.addHeader(import_students);
 		}
 	);
 }

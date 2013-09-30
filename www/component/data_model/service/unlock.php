@@ -6,8 +6,8 @@ class service_unlock extends Service {
 		echo "<code>lock</code>: id of the lock to release"; 
 	}
 	public function output_documentation() { echo "return true on success"; }
-	public function execute(&$component) {
-		$lock = $_POST["lock"];
+	public function execute(&$component, $input) {
+		$lock = $input["lock"];
 		require_once("component/data_model/DataBaseLock.inc");
 		$error = DataBaseLock::unlock($lock);
 		if ($error <> null) PNApplication::error($error);

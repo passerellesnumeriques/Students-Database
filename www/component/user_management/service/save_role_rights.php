@@ -18,8 +18,8 @@ class service_save_role_rights extends Service {
 	public function output_documentation() {
 ?>return true on success.<?php 
 	}
-	public function execute(&$component) {
-		$role_id = $_POST["role_id"];
+	public function execute(&$component, $input) {
+		$role_id = $input["role_id"];
 		require_once("component/data_model/DataBaseLock.inc");
 		if (!DataBaseLock::check_lock($_GET["lock"], "RoleRights", null, null)) {
 			PNApplication::error("You do not have the data locked, meaning you cannot modify them. This may be due to a long inactivity. Please refresh the page and try again");
@@ -40,7 +40,7 @@ class service_save_role_rights extends Service {
 		}
 		
 		$rights = array();
-		foreach ($_POST as $name=>$value) {
+		foreach ($input as $name=>$value) {
 			if ($name == "role_id") continue;
 			if (!isset($all_rights[$name])) {
 				PNApplication::error("Unknown right ".$name);

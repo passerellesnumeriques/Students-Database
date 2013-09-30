@@ -17,9 +17,9 @@ class service_get extends Service {
 ?><?php 
 		}
 		
-	public function execute(&$component) {
-		$calendar_id = $_POST["id"];
-		$since = @$_POST["since"];
+	public function execute(&$component, $input) {
+		$calendar_id = $input["id"];
+		$since = @$input["since"];
 		
 		if (!$component->canReadCalendar($calendar_id)) {
 			PNApplication::error("Access denied");

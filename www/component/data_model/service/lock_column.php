@@ -17,9 +17,9 @@ class service_lock_column extends Service {
 </ul>
 <?php
 	}
-	public function execute(&$component) {
-		$table = $_POST["table"];
-		$field = $_POST["column"];
+	public function execute(&$component, $input) {
+		$table = $input["table"];
+		$field = $input["column"];
 		require_once("component/data_model/DataBaseLock.inc");
 		require_once("component/data_model/Model.inc");
 		$model = DataModel::get();

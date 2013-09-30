@@ -11,8 +11,8 @@ class service_get_available_fields extends Service {
 		/* TODO */
 	}
 	
-	public function execute(&$component) {
-		$table = $_POST["table"];
+	public function execute(&$component, $input) {
+		$table = $input["table"];
 
 		require_once("component/data_model/DataPath.inc");
 		$ctx = new DataPathBuilderContext();
@@ -41,7 +41,6 @@ class service_get_available_fields extends Service {
 					if ($pa->foreign_key->multiple) {
 						if ($pa->parent->table == $pa->foreign_key->table) {
 							// n>1: it does not belong to us, we can propose the choice
-							echo ",field_classname:'field_enum'";
 							$editable = $pa->parent->table->canModifyField($pa->foreign_key->name);
 							echo ",editable:".($editable ? "true" : "false");
 							echo ",sortable:true";
@@ -67,7 +66,7 @@ class service_get_available_fields extends Service {
 								echo ",can_be_null:".($pa->foreign_key->remove_foreign_when_primary_removed ? "false" : "true"); 
 								echo "}";
 								array_push($locks, array("table"=>$pa->parent->table->getSQLNameFor($pa->parent->sub_model),"column"=>$pa->foreign_key->name));
-								echo ",edit:{table:".json_encode($pa->parent->table->getName()).",sub_model:".json_encode($pa->parent->sub_model).",column:".json_encode($pa->foreign_key->name)."}";
+								echo ",edit:{table:".json_encode($pa->parent->table->getName()).",sub_model:".json_encode($pa->parent->sub_model).",column:".json_encode($pa->foreign_key->name).",can_be_null:".($pa->foreign_key->can_be_null ? "true" : "false")."}";
 							} else {
 								//$f = PNApplication::$instance->widgets->get_typed_field($col);
 								//echo ",field_classname:".json_encode($f[0]);
@@ -92,7 +91,7 @@ class service_get_available_fields extends Service {
 				echo ",field_classname:".json_encode($f[0]);
 				echo ",field_args:".$f[1];
 				if ($editable) {
-					echo ",edit:{table:".json_encode($p->table->getName()).",sub_model:".json_encode($p->sub_model).",column:".json_encode($p->field_name)."}";
+					echo ",edit:{table:".json_encode($p->table->getName()).",sub_model:".json_encode($p->sub_model).",column:".json_encode($p->field_name).",can_be_null:".($col->can_be_null ? "true" : "false")."}";
 				}
 			}
 			if ($editable) {

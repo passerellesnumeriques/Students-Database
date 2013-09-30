@@ -24,12 +24,29 @@ class DataPathBuilder {
 			$path = new DataPath_Table($table, null, $context->new_table_alias());
 			DataPathBuilder::search_from_path($path, $context, $done, $final_paths, $sub_models);
 		}
+		unset($table);
 		return $final_paths;
 	}
 	
 	private static function search_from_path(&$path, &$context, &$done, &$final_paths, $sub_models) {
-		if (in_array($path->table->getSQLNameFor($path->sub_model),$done)) return;
-		array_push($done, $path->table->getSQLNameFor($path->sub_model));		
+		$multiple = 0;
+		$tables = array();
+		$p = $path;
+		while ($p <> null) {
+			if (in_array($p->table->getSQLNameFor($p->sub_model), $tables)) return; // 2 times the same table in the path
+			array_push($tables, $p->table->getSQLNameFor($p->sub_model));
+			if (!$p->unique) $multiple++;
+			$p = $p->parent;
+		}
+		if ($multiple > 1) return;
+		if (isset($done[$path->table->getSQLNameFor($path->sub_model)])) {
+			if (in_array($multiple, $done[$path->table->getSQLNameFor($path->sub_model)])) return;
+			array_push($done[$path->table->getSQLNameFor($path->sub_model)],$multiple);
+		} else {
+			$done[$path->table->getSQLNameFor($path->sub_model)] = array($multiple);
+		}
+// 		if (in_array($path->table->getSQLNameFor($path->sub_model),$done)) return;
+// 		array_push($done, $path->table->getSQLNameFor($path->sub_model));		
 		DataPathBuilder::add_fields($path, $context, $final_paths);
 		DataPathBuilder::add_foreign_keys($path, $context, $done, $final_paths, $sub_models);
 		DataPathBuilder::add_external_foreign_keys($path, $context, $done, $final_paths, $sub_models);
@@ -46,6 +63,7 @@ class DataPathBuilder {
 	private static function add_foreign_keys(&$path, &$context, &$done, &$final_paths, $sub_models) {
 		foreach ($path->table->internalGetColumns() as $col) {
 			if (!($col instanceof \datamodel\ForeignKey)) continue;
+			if ($col->foreign_table == $path->table->getName()) continue; // link on itself
 			try {
 				$t = DataModel::get()->getTable($col->foreign_table);
 				$sm = null;
@@ -96,6 +114,7 @@ class DataPathBuilder {
 				$p = new DataPath_Join($path, $col, $col->table, $sm, $context->new_table_alias());
 				DataPathBuilder::search_from_path($p, $context, $done, $final_paths, $sub_models);
 			}
+			unset($t);
 		}
 	}
 	
@@ -204,7 +223,10 @@ class DataPath_Field extends DataPath {
 	}
 	
 	public function get_string() {
-		return $this->parent->get_string().".".$this->field_name;
+		$s = $this->parent->get_string().".";
+		if ($this->table->getColumnFor($this->field_name, $this->sub_model)->can_be_null) $s .= "?";
+		$s .= $this->field_name;
+		return $s;
 	}
 	
 	/**
@@ -245,6 +267,7 @@ class DataPath_Join extends DataPath {
 		$s = $this->parent->get_string();
 		$s .= $this->parent->table == $this->foreign_key->table ? ">" : "<";
 		if (!$this->unique) $s.= $this->parent->table == $this->foreign_key->table ? ">" : "<";
+		if ($this->foreign_key->can_be_null) $s .= "?";
 		$s .= $this->table->getName();
 		if ($this->sub_model <> null)
 			$s .= "[".$this->sub_model."]";

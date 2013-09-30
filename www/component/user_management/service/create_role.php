@@ -16,8 +16,8 @@ class service_create_role extends Service {
 	public function output_documentation() {
 ?>return the id of the new role on success.<?php 
 	}
-	public function execute(&$component) {
-		$name = $_POST["name"];
+	public function execute(&$component, $input) {
+		$name = $input["name"];
 		$id = null;
 		try { $id = SQLQuery::create()->insert("Role",array("name"=>$name)); }
 		catch (Exception $e) {

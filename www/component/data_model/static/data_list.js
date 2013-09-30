@@ -1,4 +1,5 @@
 if (typeof require != 'undefined') {
+	require("DataPath.js");
 	require("grid.js");
 	require("vertical_layout.js");
 	require("horizontal_layout.js");
@@ -118,14 +119,6 @@ function data_list(container, root_table, show_fields, onready) {
 		div.onclick = function() { t._export_menu(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
-		// + import
-		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
-		div.title = "Import data";
-		img.src = theme.icons_16["import"];
-		div.onclick = function() { t._import_menu(this); };
-		div.appendChild(img);
-		t.header_right.appendChild(div);
 		// + more button for horizontal menu
 		div = document.createElement("DIV"); div.className = "button";
 		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header_center); };
@@ -159,10 +152,12 @@ function data_list(container, root_table, show_fields, onready) {
 	t._load_fields = function() {
 		service.json("data_model","get_available_fields",{table:root_table},function(result){
 			if (result) {
-				t.available_fields = result;
-				for (var i = 0; i < t.available_fields.length; ++i)
-					t.available_fields[i].path = new DataPath(t.available_fields[i].path);
-				t._ready();
+				require("DataPath.js",function() {
+					t.available_fields = result;
+					for (var i = 0; i < t.available_fields.length; ++i)
+						t.available_fields[i].path = new DataPath(t.available_fields[i].path);
+					t._ready();
+				});
 			}
 		});
 	};
@@ -450,16 +445,6 @@ function data_list(container, root_table, show_fields, onready) {
 			menu.showBelowElement(button);
 		});
 	};
-	t._import_menu = function(button) {
-		require("context_menu.js",function(){
-			var menu = new context_menu();
-			menu.addTitleItem(null, "Import Data");
-			menu.addIconItem('/static/data_import/import_excel_16.png', 'A single file', function() { location.href = '/dynamic/data_import/page/build_excel_import?import=file&root_table='+root_table; });
-			menu.addIconItem('/static/data_import/import_template.png', 'Using a template already defined', function() { location.href = '/dynamic/data_import/page/select_excel_import_template?root_table='+root_table; });
-			menu.addIconItem('/static/data_import/import_template.png', 'Define a template', function() { location.href = '/dynamic/data_import/page/build_excel_import?import=create_template&root_table='+root_table; });
-			menu.showBelowElement(button);
-		});
-	};
 	t.export_list = function(format) {
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
@@ -565,50 +550,4 @@ function data_list(container, root_table, show_fields, onready) {
 		}
 		return null;
 	};
-}
-
-function DataPath(s) {
-	this.path = s;
-	this.parseElement = function(s) {
-		var i = s.indexOf('(');
-		if (i != -1) {
-			this.table = s.substring(0,i);
-			var j = s.indexOf(')');
-			var join = s.substring(i+1,j).split(",");
-			this.join = {};
-			for (i = 0; i < join.length; ++i) {
-				var k = join[i].split("=");
-				this.join[k[0]] = k[1];
-			}
-			if (j < s.length-1 && s.charAt(j+1) == '.')
-				this.column = s.substring(j+2);
-			return;
-		}
-		i = s.indexOf('.');
-		this.table = s.substring(0,i);
-		this.column = s.substring(i+1);
-	};
-	
-	var i = s.lastIndexOf('>');
-	var j = s.lastIndexOf('<');
-	if (i == -1 || (j != -1 && j > i)) i = j;
-	if (i != -1) {
-		var dir = s.charAt(i);
-		var element = s.substring(i+1);
-		var multiple = false;
-		if (s.charAt(i-1) == dir) {
-			multiple = true;
-			i--;
-		}
-		s = s.substring(0,i);
-		this.parseElement(element);
-		this.parent = new DataPath(s);
-		this.parent.multiple = multiple;
-		this.parent.direction = dir == '>' ? 1 : 2;
-	} else {
-		this.parent = null;
-		this.multiple = false;
-		this.direction = 0;
-		this.parseElement(s);
-	}
 }

@@ -16,13 +16,13 @@ function splitter_vertical(element, position) {
 		var h = t.element.offsetHeight;
 		var sw = t.separator.offsetWidth;
 		var x = Math.floor(w*t.position - sw/2);
-		t.part1.style.width = x+"px";
-		t.part1.style.height = h+"px";
+		setWidth(t.part1, x);
+		setHeight(t.part1, h);
 		t.separator.style.left = x+"px";
 		t.separator.style.height = h+"px";
 		t.part2.style.left = (x+sw)+"px";
-		t.part2.style.width = (w-x-sw-1)+"px";
-		t.part2.style.height = h+"px";
+		setWidth(t.part2, w-x-sw-1);
+		setHeight(t.part2, h);
 		fireLayoutEventFor(t.part1);
 		fireLayoutEventFor(t.part2);
 		if (t.element.offsetHeight != h) {

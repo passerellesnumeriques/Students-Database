@@ -20,9 +20,14 @@ function Excel(container, onready) {
 				return this.sheets[i];
 		return null;
 	};
+	this.getActiveSheet = function() {
+		var sel = container.widget.selected;
+		if (sel < 0) return null;
+		return container.widget.tabs[sel].sheet;
+	};
 	
 	this._layout = function() {
-		if (t.tabs.selected != -1)
+		if (t.tabs.selected != -1 && t.tabs.tabs[t.tabs.selected].sheet)
 			t.tabs.tabs[t.tabs.selected].sheet.layout();
 	};
 	
@@ -158,6 +163,27 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 		layer._removed();
 	};
 	
+	this.getSelection = function() {
+		if (!t.cursor) return null;
+		return {start_row:t.cursor.row_start, start_col:t.cursor.col_start, end_row:t.cursor.row_end, end_col:t.cursor.col_end};
+	};
+	this.make_visible = function(col, row) {
+		if (col >= this.cells.length || row >= this.cells[col].length) return;
+		var cell = this.cells[col][row];
+		var x1 = cell.td.offsetLeft;
+		var y1 = cell.td.offsetTop;
+		var x2 = x1+cell.td.offsetWidth;
+		var y2 = y1+cell.td.offsetHeight;
+		if (x1 < this.content.scrollLeft)
+			this.content.scrollLeft = x1;
+		else if (x2 > this.content.scrollLeft+this.content.clientWidth-50)
+			this.content.scrollLeft = x2-this.content.clientWidth+50;
+		if (y1 < this.content.scrollTop)
+			this.content.scrollTop = y1;
+		else if (y2 > this.content.scrollTop+this.content.clientHeight-16)
+			this.content.scrollTop = y2-this.content.clientHeight+16;
+	};
+	
 	this._init();
 	addLayoutEvent(this.container, function() { t.layout(); });
 	
@@ -224,6 +250,43 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 			t.cursor.div.style.borderStyle = "dotted";
 		}
 	});
+}
+
+function getExcelCoordinateString(coord) {
+	return getExcelColumnName(coord.col)+(coord.row+1);
+}
+function parseExcelCoordinateString(s) {
+	var i = 0;
+	while (i < s.length) {
+		if (s.charCodeAt(i) >= "0".charCodeAt(0) && s.charCodeAt(i) <= "9".charCodeAt(0))
+			break;
+		i++;
+	}
+	var col = s.substring(0,i);
+	var row = parseInt(s.substring(i));
+	col = getExcelColumnIndex(col);
+	return {col:col,row:row-1};
+}
+function getExcelRangeString(sheet, range) {
+	return sheet.name.replace("!","\\!")+"!"+getExcelCoordinateString({col:range.start_col,row:range.start_row})+":"+getExcelCoordinateString({col:range.end_col,row:range.end_row});
+}
+function parseExcelRangeString(s) {
+	var i;
+	var sheet = "";
+	while ((i = s.indexOf('!')) != -1) {
+		if (i > 0 && s.charAt(i-1) == '\\') {
+			sheet += s.substring(0,i-1);
+			s = s.substring(i+1);
+			continue;
+		}
+		sheet += s.substring(0,i);
+		s = s.substring(i+1);
+		break;
+	}
+	i = s.indexOf(':');
+	var start = parseExcelCoordinateString(s.substring(0,i));
+	var end = parseExcelCoordinateString(s.substring(i+1));
+	return {sheet:sheet, range: {start_col:start.col,start_row:start.row,end_col:end.col,end_row:end.row} };
 }
 
 function getExcelColumnName(index) {
@@ -438,6 +501,7 @@ function ExcelSheetCell(sheet, column, row) {
 			if (sheet.cursor) {
 				sheet.cursor.setRange(t.column, t.row, t.column, t.row);
 				sheet.cursor.mouse_select_start = {column:t.column,row:t.row};
+				sheet.make_visible(t.column, t.row);
 			}
 			window.focus();
 			stopEventPropagation(ev);
@@ -452,6 +516,7 @@ function ExcelSheetCell(sheet, column, row) {
 				if (col2 < col1) { var c = col1; col1 = col2; col2 = c; }
 				if (row2 < row1) { var r = row1; row1 = row2; row2 = r; }
 				sheet.cursor.setRange(col1, row1, col2, row2);
+				sheet.make_visible(t.column, t.row);
 			}
 		};
 	};
@@ -459,6 +524,7 @@ function ExcelSheetCell(sheet, column, row) {
 }
 
 function ExcelSheetCursor(sheet) {
+	this.sheet = sheet;
 	this.row_start = 0;
 	this.row_end = 0;
 	this.col_start = 0;
@@ -468,13 +534,14 @@ function ExcelSheetCursor(sheet) {
 	this.mouse_select_start = null;
 	this.color = [192,192,255];
 	
-	this.up = function() { this.setRange(this.col_start, this.row_start-1, this.col_start, this.row_start-1); };
-	this.down = function() { this.setRange(this.col_start, this.row_end+1, this.col_start, this.row_end+1); };
-	this.left = function() { this.setRange(this.col_start-1, this.row_start, this.col_start-1, this.row_start); };
-	this.right = function() { this.setRange(this.col_end+1, this.row_start, this.col_end+1, this.row_start); };
-	this.setPosition = function(col,row) { this.setRange(col,row,col,row); };
+	this.up = function() { this.setRange(this.col_start, this.row_start-1, this.col_start, this.row_start-1); sheet.make_visible(this.col_start,this.row_start); };
+	this.down = function() { this.setRange(this.col_start, this.row_end+1, this.col_start, this.row_end+1); sheet.make_visible(this.col_start,this.row_start); };
+	this.left = function() { this.setRange(this.col_start-1, this.row_start, this.col_start-1, this.row_start); sheet.make_visible(this.col_start,this.row_start); };
+	this.right = function() { this.setRange(this.col_end+1, this.row_start, this.col_end+1, this.row_start); sheet.make_visible(this.col_start,this.row_start); };
+	this.setPosition = function(col,row) { this.setRange(col,row,col,row); sheet.make_visible(this.col_start,this.row_start); };
 	this.select_up = function() {
 		if (this.select_y_dir == 0) this.select_y_dir = -1;
+		sheet.make_visible(this.select_x_dir == -1 ? this.col_start : this.col_end, this.select_y_dir == -1 ? this.row_start-1 : this.row_end-1);
 		if (this.select_y_dir == -1)
 			this.setRange(this.col_start, this.row_start-1, this.col_end, this.row_end);
 		else
@@ -482,6 +549,7 @@ function ExcelSheetCursor(sheet) {
 	};
 	this.select_down = function() {
 		if (this.select_y_dir == 0) this.select_y_dir = 1;
+		sheet.make_visible(this.select_x_dir == -1 ? this.col_start : this.col_end, this.select_y_dir == -1 ? this.row_start+1 : this.row_end+1);
 		if (this.select_y_dir == -1)
 			this.setRange(this.col_start, this.row_start+1, this.col_end, this.row_end);
 		else
@@ -489,6 +557,7 @@ function ExcelSheetCursor(sheet) {
 	};
 	this.select_left = function() {
 		if (this.select_x_dir == 0) this.select_x_dir = -1;
+		sheet.make_visible(this.select_x_dir == -1 ? this.col_start-1 : this.col_end-1, this.select_y_dir == -1 ? this.row_start : this.row_end);
 		if (this.select_x_dir == -1)
 			this.setRange(this.col_start-1, this.row_start, this.col_end, this.row_end);
 		else
@@ -496,6 +565,7 @@ function ExcelSheetCursor(sheet) {
 	};
 	this.select_right = function() {
 		if (this.select_x_dir == 0) this.select_x_dir = 1;
+		sheet.make_visible(this.select_x_dir == -1 ? this.col_start+1 : this.col_end+1, this.select_y_dir == -1 ? this.row_start : this.row_end);
 		if (this.select_x_dir == -1)
 			this.setRange(this.col_start+1, this.row_start, this.col_end, this.row_end);
 		else
@@ -546,6 +616,7 @@ function ExcelSheetCursor(sheet) {
 		w-=3; h-=3;
 		this.div.style.width = w+"px";
 		this.div.style.height = h+"px";
+		this.div.style.fontWeight = "bold";
 		if (this.col_start != this.col_end || this.row_start != this.row_end)
 			this.div.style.backgroundColor = "rgba("+this.color[0]+","+this.color[1]+","+this.color[2]+",0.33)";
 		else
@@ -559,7 +630,12 @@ function ExcelSheetCursor(sheet) {
 	};
 	
 	this.setContent = function(content) {
-		// TODO
+		if (typeof content == 'string')
+			this.div.innerHTML = content;
+		else {
+			this.div.innerHTML = "";
+			this.div.appendChild(content);
+		}
 	};
 	
 	this._removed = function() {

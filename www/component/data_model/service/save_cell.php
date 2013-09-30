@@ -14,12 +14,12 @@ class service_save_cell extends Service {
 <?php		
 	}
 	public function output_documentation() { echo "return true on success"; }
-	public function execute(&$component) {
-		$table = $_POST["table"];
-		$key = $_POST["row_key"];
-		$field = $_POST["column"];
-		$value = $_POST["value"];
-		$lock_id = $_POST["lock"];
+	public function execute(&$component, $input) {
+		$table = $input["table"];
+		$key = $input["row_key"];
+		$field = $input["column"];
+		$value = $input["value"];
+		$lock_id = $input["lock"];
 		require_once("component/data_model/Model.inc");
 		try {
 			SQLQuery::create()->update_by_key($table, $key, array($field=>$value), null, $lock_id);
