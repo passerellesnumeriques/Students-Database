@@ -29,29 +29,9 @@ function load_google_calendars(calendars_manager, ondone) {
 
 function GoogleCalendar(id, name, color, show) {
 	Calendar.call(this, name, color, show);
+	this.icon = '/static/google/google.png';
 	this.id = id;
 	this.refresh = function(manager, cal, ondone) {
-		if (!window.top.google_calendar_loading_status) {
-			window.top.google_calendar_loading_status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING,"Loading Google Calendars... (1)");
-			window.top.google_calendar_loading_nb = 1;
-			window.top.status_manager.add_status(window.top.google_calendar_loading_status);
-		} else {
-			window.top.google_calendar_loading_nb++;
-			window.top.google_calendar_loading_status.message = "Loading Google Calendars... ("+window.top.google_calendar_loading_nb+")";
-			window.top.status_manager.update_status(window.top.google_calendar_loading_status);
-		}
-		var prev_ondone = ondone;
-		ondone = function() {
-			window.top.google_calendar_loading_nb--;
-			if (window.top.google_calendar_loading_nb == 0)
-				window.top.status_manager.remove_status(window.top.google_calendar_loading_status);
-			else {
-				window.top.google_calendar_loading_status.message = "Loading Google Calendars... ("+window.top.google_calendar_loading_nb+")";
-				window.top.status_manager.update_status(window.top.google_calendar_loading_status);
-			}
-			prev_ondone();
-		};
-
 		var t=this;
 		var google_events = [];
 		var next_page = function(token) {

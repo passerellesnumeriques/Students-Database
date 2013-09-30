@@ -223,7 +223,10 @@ class DataPath_Field extends DataPath {
 	}
 	
 	public function get_string() {
-		return $this->parent->get_string().".".$this->field_name;
+		$s = $this->parent->get_string().".";
+		if ($this->table->getColumnFor($this->field_name, $this->sub_model)->can_be_null) $s .= "?";
+		$s .= $this->field_name;
+		return $s;
 	}
 	
 	/**
@@ -264,6 +267,7 @@ class DataPath_Join extends DataPath {
 		$s = $this->parent->get_string();
 		$s .= $this->parent->table == $this->foreign_key->table ? ">" : "<";
 		if (!$this->unique) $s.= $this->parent->table == $this->foreign_key->table ? ">" : "<";
+		if ($this->foreign_key->can_be_null) $s .= "?";
 		$s .= $this->table->getName();
 		if ($this->sub_model <> null)
 			$s .= "[".$this->sub_model."]";

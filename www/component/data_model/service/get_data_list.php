@@ -17,9 +17,9 @@ class service_get_data_list extends Service {
 TODO
 <?php 
 	}
-	public function get_output_format() {
-		if (isset($_POST["export"])) {
-			$format = $_POST["export"];
+	public function get_output_format($input) {
+		if (isset($input["export"])) {
+			$format = $input["export"];
 			if ($format == 'excel2007')
 				return "application/vnd.ms-excel";
 			if ($format == 'excel5')
@@ -32,9 +32,9 @@ TODO
 		return "text/json";
 	}
 	
-	public function execute(&$component) {
-		$table = $_POST["table"];
-		$fields = json_decode($_POST["fields"]);
+	public function execute(&$component, $input) {
+		$table = $input["table"];
+		$fields = $input["fields"];
 		require_once("component/data_model/DataPath.inc");
 		$ctx = new DataPathBuilderContext();
 		$possible = DataPathBuilder::search_from($ctx, $table);
@@ -81,7 +81,7 @@ TODO
 		}
 					
 		$actions = null;
-		if (isset($_POST["actions"]) && $_POST["actions"]) {
+		if (isset($input["actions"]) && $input["actions"]) {
 			$actions = array();
 			$categories = array();
 			foreach ($paths as $p) {
@@ -118,11 +118,11 @@ TODO
 			}
 		}
 		
-		if (isset($_POST["sort_field"]) && isset($_POST["sort_order"])) {
+		if (isset($input["sort_field"]) && isset($input["sort_order"])) {
 			foreach ($paths as $p) {
-				if ($p->get_string() == $_POST["sort_field"]) {
-					if ($_POST["sort_order"] == "ASC") $asc = true;
-					else if ($_POST["sort_order"] == "DESC") $asc = false;
+				if ($p->get_string() == $input["sort_field"]) {
+					if ($input["sort_order"] == "ASC") $asc = true;
+					else if ($input["sort_order"] == "DESC") $asc = false;
 					else break;
 					$q->order_by($p->field_alias, $asc);
 					break;
@@ -130,10 +130,10 @@ TODO
 			}
 		}
 		$count = null;
-		if (!isset($_POST["export"]) && isset($_POST["page_size"])) {
-			$nb = intval($_POST["page_size"]);
+		if (!isset($input["export"]) && isset($input["page_size"])) {
+			$nb = intval($input["page_size"]);
 			if ($nb == 0) $nb = 1000;
-			$page = isset($_POST["page"]) ? intval($_POST["page"]) : 0;
+			$page = isset($input["page"]) ? intval($input["page"]) : 0;
 			if ($page == 0) $page = 1;
 			$q_count = new SQLQuery($q);
 			$q_count->count("count_entries");
@@ -196,7 +196,7 @@ TODO
 		
 		//echo $q->generate()."\r\n\r\n";
 
-		if (!isset($_POST["export"])) {
+		if (!isset($input["export"])) {
 			echo "{";
 			if ($count !== null)
 				echo "count:".$count.",";
@@ -333,7 +333,7 @@ TODO
 				}
 			}
 			
-			$format = $_POST["export"];
+			$format = $input["export"];
 			if ($format == 'excel2007') {
 				header("Content-Type: application/vnd.ms-excel");
 				header("Content-Disposition: attachment; filename=\"list.xlsx\"");

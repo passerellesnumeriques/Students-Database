@@ -19,10 +19,10 @@ class service_lock_cell extends Service {
 </ul>
 <?php
 	}
-	public function execute(&$component) {
-		$table = $_POST["table"];
-		$field = $_POST["column"];
-		$key = $_POST["row_key"];
+	public function execute(&$component, $input) {
+		$table = $input["table"];
+		$field = $input["column"];
+		$key = $input["row_key"];
 		require_once("component/data_model/DataBaseLock.inc");
 		require_once("component/data_model/Model.inc");
 		$model = DataModel::get();

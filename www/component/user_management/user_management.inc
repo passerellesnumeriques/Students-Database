@@ -43,6 +43,7 @@ class user_management extends Component {
 		if ($this->auth_token === null) return $error;
 		$this->domain = $domain;
 		$this->username = $username;
+		// TODO do not allow to create user like this anymore => create a task to do for administrators
 		$user = SQLQuery::create()->bypass_security()->select("Users")->where("domain",$domain)->where("username",$username)->execute_single_row();
 		if ($user == null) // the user does not exist yet in the database, but exists on the authentication system 
 			$this->user_id = $this->create_user($domain, $username);

@@ -11,8 +11,8 @@ class service_unregister_app_event extends Service {
 <?php
 	}
 	public function output_documentation() { echo "true"; }
-	public function execute(&$component) {
-		PNApplication::$instance->unregister_event($_POST["id"]);
+	public function execute(&$component, $input) {
+		PNApplication::$instance->unregister_event($input["id"]);
 		echo "true";
 	}
 	

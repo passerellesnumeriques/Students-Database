@@ -4,8 +4,8 @@ class service_picture extends Service {
 	public function documentation() { echo "Retrieve the profile picture of a people"; }
 	public function input_documentation() { echo "<code>people</code>: id of the people to get the picture"; }
 	public function output_documentation() { echo "The picture"; }
-	public function get_output_format() { return "image/jpeg"; }
-	public function execute(&$component) {
+	public function get_output_format($input) { return "image/jpeg"; }
+	public function execute(&$component, $input) {
 		$people_id = $_GET["people"];
 		if ($people_id <> PNApplication::$instance->user_people->user_people_id) {
 			if (!PNApplication::$instance->user_management->has_right("see_other_people_details")) {

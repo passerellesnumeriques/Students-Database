@@ -6,9 +6,9 @@ class service_execute_functionalities_scenario extends Service {
 	public function input_documentation() {}
 	public function output_documentation() {}
 	
-	public function execute(&$component) {
-		$cname = $_POST["component"];
-		$scenario_path = $_POST["scenario"];
+	public function execute(&$component, $input) {
+		$cname = $input["component"];
+		$scenario_path = $input["scenario"];
 		require_once("component/test/TestScenario.inc");
 		require_once("component/".$cname."/test/functionalities".$scenario_path);
 		$i = strrpos($scenario_path, "/");

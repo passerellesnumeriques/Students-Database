@@ -112,13 +112,19 @@ abstract class Component {
 		/* @var $service Service */
 		$service = new $classname();
 	
+		// build input
+		if ($_SERVER["CONTENT_TYPE"] == "text/json")
+			$input = json_decode(file_get_contents('php://input'), true);
+		else
+			$input = $_POST;
+		
 		// get output format
-		$output_format = $service->get_output_format();
+		$output_format = $service->get_output_format($input);
 		if ($output_format == "text/json")
 			header("Content-Type: text/json;charset=UTF-8");
 		else
 			header("Content-Type: ".$output_format);
-	
+		
 		// check the service is allowed for the current user
 		$required_rights = $service->get_required_rights();
 		if (count($required_rights) == 0)
@@ -147,7 +153,7 @@ abstract class Component {
 		if ($output_format == "text/json") {
 			ob_start();
 			try {
-				$service->execute($this);
+				$service->execute($this, $input);
 			} catch (Exception $e) {
 				PNApplication::error($e);
 			}
@@ -155,7 +161,7 @@ abstract class Component {
 			if ($result === "") $result = null;
 			PNApplication::print_json_result($result);
 		} else
-			$service->execute($this);
+			$service->execute($this, $input);
 	}
 	
 	/**

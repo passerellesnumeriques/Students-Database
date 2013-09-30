@@ -11,9 +11,9 @@ class service_remove_row extends Service {
 <?php		
 	}
 	public function output_documentation() { echo "return true on success"; }
-	public function execute(&$component) {
-		$table = $_POST["table"];
-		$key = $_POST["row_key"];
+	public function execute(&$component, $input) {
+		$table = $input["table"];
+		$key = $input["row_key"];
 		require_once("component/data_model/Model.inc");
 		try {
 			SQLQuery::create()->remove_key($table, $key);

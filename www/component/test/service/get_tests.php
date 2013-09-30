@@ -6,8 +6,8 @@ class service_get_tests extends Service {
 	public function input_documentation() {}
 	public function output_documentation() {}
 	
-	public function execute(&$component) {
-		$cname = $_POST["component"];
+	public function execute(&$component, $input) {
+		$cname = $input["component"];
 		require_once("component/test/TestScenario.inc");
 		$all_functions = $this->get_all_functions($cname);
 		$all_services = $this->get_all_services($cname);

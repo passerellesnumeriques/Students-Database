@@ -16,8 +16,8 @@ class service_remove_role extends Service {
 	public function output_documentation() {
 ?>return true on success.<?php 
 	}
-	public function execute(&$component) {
-		$id = $_POST["id"];
+	public function execute(&$component, $input) {
+		$id = $input["id"];
 		try { SQLQuery::create()->remove_key("Role", $id); }
 		catch (Exception $e) {
 			PNApplication::error($e->getMessage());

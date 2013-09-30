@@ -154,5 +154,78 @@ ajax = {
 				handler(xhr.responseText);
 			}
 		}, foreground);
+	},
+	/**
+	 * Perform a POST call, with custom data type, then on success it will analyze the result
+	 * @param url
+	 * @param data_type
+	 * @param data
+	 * @param handler
+	 * @param foreground
+	 * @param error_handler
+	 */
+	custom_post_parse_result: function(url, data_type, data, handler, foreground, error_handler) {
+		var eh = function(error) {
+			if (error_handler)
+				error_handler(error);
+			else
+				error_dialog(error);
+			handler(null);
+		};
+		ajax.call("POST", url, data_type, data, eh, function(xhr) {
+			var ct = xhr.getResponseHeader("Content-Type");
+			if (ct) {
+				var i = ct.indexOf(';');
+				if (i > 0) ct = ct.substring(0, i);
+			}
+			if (ct == "text/xml" || (!ct && xhr.responseXML)) {
+				// XML
+		        if (xhr.responseXML && xhr.responseXML.childNodes.length > 0) {
+		            if (xhr.responseXML.childNodes[0].nodeName == "ok") {
+		            	handler(xhr.responseXML.childNodes[0]);
+		            	return;
+		            }
+	                if (xhr.responseXML.childNodes[0].nodeName == "error")
+	                	eh(xhr.responseXML.childNodes[0].getAttribute("message"));
+	                else
+	                	eh(xhr.responseText);
+		        } else
+		        	eh(xhr.responseText);
+		        handler(null);
+			} else if (ct == "text/json") {
+				// JSON
+				if (xhr.responseText.length == 0) {
+					eh("Empty response from the server");
+					return;
+				}
+				var output;
+		        try {
+		        	output = eval("("+xhr.responseText+")");
+		        } catch (e) {
+		        	eh("Invalid json output:<br/>Error: "+e+"<br/>Output:<br/>"+xhr.responseText);
+		        	return;
+		        }
+	        	if (output.errors) {
+	        		if (output.errors.length == 1)
+	        			eh(output.errors[0]);
+	        		else {
+	        			var s = "Errors:<ul style='margin:0px'>";
+	        			for (var i = 0; i < output.errors.length; ++i)
+	        				s += "<li>"+output.errors[i]+"</li>";
+	        			s += "</ul>";
+		        		eh(s);
+	        		}
+	        		return;
+	        	}
+	        	if (typeof output.result == 'undefined') {
+	        		eh("Error: No result from JSON service");
+	        		return;
+	        	}
+	        	handler(output);
+			} else {
+				// considered as free text...
+				handler(xhr.responseText);
+			}
+		}, foreground);
 	}
 };

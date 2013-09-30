@@ -32,6 +32,7 @@ function field_date(data,editable,onchanged,onunchanged,config) {
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
+		input.size = 10;
 		var f = function() {
 			setTimeout(function() {
 				if (input.value.length == 0) {

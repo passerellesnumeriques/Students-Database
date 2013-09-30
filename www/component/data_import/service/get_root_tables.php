@@ -11,7 +11,7 @@ class service_get_root_tables extends Service {
 		echo "An array of [{table:xxx,display:yyy}]";
 	}
 	
-	public function execute(&$component) {
+	public function execute(&$component, $input) {
 		echo "[";
 		require_once("component/data_model/Model.inc");
 		$first = true;

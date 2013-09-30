@@ -140,26 +140,30 @@ function calendar_view_day(view, container) {
 	};
 	this._layout = function() {
 		if (!this.day_content) return;
-		var w = container.clientWidth-51;
-		w -= (this.content.offsetWidth-this.content.clientWidth);
-		this.day_content.style.width = w+"px";
-		this.day_box.style.width = w+"px";
-		for (var i = 0; i < this._time_lines.length; ++i)
-			this._time_lines[i].style.width = w+"px";
-		if (this.day_column) {
-			var list = [];
-			for (var j = 0; j < this.events.length; ++j)
-				if (!this.events[j].all_day) list.push(this.events[j]);
-			this.day_column.layout(list, this.day_content, 0, w, 0, view.zoom, 20);
-		}
-		if (this.row_layout) {
-			var list = [];
-			for (var j = 0; j < this.events.length; ++j)
-				if (this.events[j].all_day) list.push(this.events[j]);
-			var h = this.row_layout.layout(list, [this.day_box], this.start_date);
-			this.day_row_container.setAttribute("layout",h);
-			container.widget.layout();
-		}
+		if (!t._timeout)
+			t._timeout = setTimeout(function(){
+				var w = container.clientWidth-51;
+				w -= (t.content.offsetWidth-t.content.clientWidth);
+				t.day_content.style.width = w+"px";
+				t.day_box.style.width = w+"px";
+				for (var i = 0; i < t._time_lines.length; ++i)
+					t._time_lines[i].style.width = w+"px";
+				if (t.day_column) {
+					var list = [];
+					for (var j = 0; j < t.events.length; ++j)
+						if (!t.events[j].all_day) list.push(t);
+					t.day_column.layout(list, t.day_content, 0, w, 0, view.zoom, 20);
+				}
+				if (t.row_layout) {
+					var list = [];
+					for (var j = 0; j < t.events.length; ++j)
+						if (t.events[j].all_day) list.push(t.events[j]);
+					var h = t.row_layout.layout(list, [t.day_box], t.start_date);
+					t.day_row_container.setAttribute("layout",h);
+					container.widget.layout();
+				}
+				t._timeout = null;
+			},10);
 	};
 	
 	this.add_event = function(ev) {

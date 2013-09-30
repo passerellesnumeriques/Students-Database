@@ -161,59 +161,63 @@ function calendar_view_week(view, container) {
 	};
 	this._layout = function() {
 		if (!this.day_content) return;
-		var w = container.clientWidth-51;
-		w -= (this.content.offsetWidth-this.content.clientWidth);
-		for (var i = 0; i < this._time_lines.length; ++i)
-			this._time_lines[i].style.width = w+"px";
-		var dw = Math.floor(w/7);
-		for (var i = 0; i < 7; ++i) {
-			this.day_title[i].style.left = (dw*i+50)+"px";
-			this.day_title[i].style.width = (dw-(i==6?1:0))+"px";
-			this.day_box[i].style.left = (dw*i+50)+"px";
-			this.day_box[i].style.width = (dw-(i==6?1:0))+"px";
-			switch (i) {
-			case 0: this.day_title[i].innerHTML = "Monday "+new Date(this.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-			case 1: this.day_title[i].innerHTML = "Tuesday "+new Date(this.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-			case 2: this.day_title[i].innerHTML = "Wednesday "+new Date(this.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-			case 3: this.day_title[i].innerHTML = "Thursday "+new Date(this.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-			case 4: this.day_title[i].innerHTML = "Friday "+new Date(this.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-			case 5: this.day_title[i].innerHTML = "Saturday "+new Date(this.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-			case 6: this.day_title[i].innerHTML = "Sunday "+new Date(this.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-			}
-			this.day_content[i].style.left = (dw*i+50)+"px";
-			this.day_content[i].style.width = dw+"px";
-			if (this.day_column) {
-				var list = [];
-				for (var j = 0; j < this.events[i].length; ++j)
-					if (!this.events[i][j].all_day) list.push(this.events[i][j]);
-				this.day_column[i].layout(list, this.day_content[i], 0, dw, 0, view.zoom, 20);
-			}
-		}
-		if (this.row_layout) {
-			var list = [];
-			for (var i = 0; i < 7; ++i)
-				for (var j = 0; j < this.events[i].length; ++j)
-					if (this.events[i][j].all_day) list.push(this.events[i][j]);
-			var h = this.row_layout.layout(list, this.day_box, this.start_date);
-			this.day_row_container.setAttribute("layout",h);
-			container.widget.layout();
-		}
-		setTimeout(function() {
-			var ok = true;
-			for (var i = 0; i < 7; ++i)
-				if (t.day_title[i].offsetHeight < t.day_title[i].scrollHeight) { ok = false; break; }
-			if (ok) return;
-			for (var i = 0; i < 7; ++i)
-				switch (i) {
-				case 0: t.day_title[i].innerHTML = "Mon "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-				case 1: t.day_title[i].innerHTML = "Tue "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-				case 2: t.day_title[i].innerHTML = "Wed "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-				case 3: t.day_title[i].innerHTML = "Thu "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-				case 4: t.day_title[i].innerHTML = "Fri "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-				case 5: t.day_title[i].innerHTML = "Sat "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
-				case 6: t.day_title[i].innerHTML = "Sun "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+		if (!t._timeout)
+			t._timeout = setTimeout(function(){
+				var w = container.clientWidth-51;
+				w -= (t.content.offsetWidth-t.content.clientWidth);
+				for (var i = 0; i < t._time_lines.length; ++i)
+					t._time_lines[i].style.width = w+"px";
+				var dw = Math.floor(w/7);
+				for (var i = 0; i < 7; ++i) {
+					t.day_title[i].style.left = (dw*i+50)+"px";
+					t.day_title[i].style.width = (dw-(i==6?1:0))+"px";
+					t.day_box[i].style.left = (dw*i+50)+"px";
+					t.day_box[i].style.width = (dw-(i==6?1:0))+"px";
+					switch (i) {
+					case 0: t.day_title[i].innerHTML = "Monday "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+					case 1: t.day_title[i].innerHTML = "Tuesday "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+					case 2: t.day_title[i].innerHTML = "Wednesday "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+					case 3: t.day_title[i].innerHTML = "Thursday "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+					case 4: t.day_title[i].innerHTML = "Friday "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+					case 5: t.day_title[i].innerHTML = "Saturday "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+					case 6: t.day_title[i].innerHTML = "Sunday "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+					}
+					t.day_content[i].style.left = (dw*i+50)+"px";
+					t.day_content[i].style.width = dw+"px";
+					if (t.day_column) {
+						var list = [];
+						for (var j = 0; j < t.events[i].length; ++j)
+							if (!t.events[i][j].all_day) list.push(t.events[i][j]);
+						t.day_column[i].layout(list, t.day_content[i], 0, dw, 0, view.zoom, 20);
+					}
 				}
-		},1);
+				if (t.row_layout) {
+					var list = [];
+					for (var i = 0; i < 7; ++i)
+						for (var j = 0; j < t.events[i].length; ++j)
+							if (t.events[i][j].all_day) list.push(t.events[i][j]);
+					var h = t.row_layout.layout(list, t.day_box, t.start_date);
+					t.day_row_container.setAttribute("layout",h);
+					container.widget.layout();
+				}
+				setTimeout(function() {
+					var ok = true;
+					for (var i = 0; i < 7; ++i)
+						if (t.day_title[i].offsetHeight < t.day_title[i].scrollHeight) { ok = false; break; }
+					if (ok) return;
+					for (var i = 0; i < 7; ++i)
+						switch (i) {
+						case 0: t.day_title[i].innerHTML = "Mon "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+						case 1: t.day_title[i].innerHTML = "Tue "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+						case 2: t.day_title[i].innerHTML = "Wed "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+						case 3: t.day_title[i].innerHTML = "Thu "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+						case 4: t.day_title[i].innerHTML = "Fri "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+						case 5: t.day_title[i].innerHTML = "Sat "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+						case 6: t.day_title[i].innerHTML = "Sun "+new Date(t.start_date.getTime()+i*24*60*60*1000).getDate(); break; 
+						}
+				},1);
+				t._timeout = null;
+			},10);
 	};
 	
 	this.add_event = function(ev) {
@@ -224,7 +228,7 @@ function calendar_view_week(view, container) {
 	};
 	this.remove_event = function(uid) {
 		for (var j = 0; j < 7; ++j)
-		for (var i = 0; i < this.events.length; ++i)
+		for (var i = 0; i < this.events[j].length; ++i)
 			if (this.events[j][i].uid == uid) {
 				this.events[j].splice(i, 1);
 				i--;

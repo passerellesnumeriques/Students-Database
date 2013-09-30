@@ -155,6 +155,7 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 		}
 	};
 	this.add_event = function(ev) {
+		ev.original_event = ev;
 		if (ev.start.getTime() > this.view.end_date.getTime()) return; // after end
 		if (ev.frequency == null) {
 			// single instance
@@ -348,6 +349,7 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 	};
 	this.create_event_instance = function(ev, date) {
 		var e = object_copy(ev);
+		e.original_event = ev;
 		e.start = date;
 		e.end = new Date(date.getTime()+(ev.end.getTime()-ev.start.getTime()));
 		return e;

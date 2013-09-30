@@ -71,7 +71,6 @@ if (!window.top.google) {
 	window.top.google_api_loaded = function(){
 		window.top.gapi.client.setApiKey("AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
 		window.top.gapi.auth.init();
-		window.top.google.connect();
 		setInterval(function(){
 			if (window.top.google.connection_status == 0 && window.top.google._connecting_time < new Date().getTime()-30000) {
 				window.top.google.connection_status = -1;
@@ -80,6 +79,7 @@ if (!window.top.google) {
 				setTimeout(window.top.google.connect, 60000);
 			}
 		},10000);
+		window.top.google.connect();
 	};
 	window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 }

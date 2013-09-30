@@ -4,8 +4,8 @@ class service_get_temp extends Service {
 	public function documentation() { echo "Retrieve a temporary file"; }
 	public function input_documentation() { echo "<code>id</code>: identifier of the temporary file to retrieve"; }
 	public function output_documentation() { echo "The temporary file"; }
-	public function get_output_format() { return "application/octet-stream"; }
-	public function execute(&$component) {
+	public function get_output_format($input) { return "application/octet-stream"; }
+	public function execute(&$component, $input) {
 		$id = $_GET["id"];
 		
 		$res = SQLQuery::get_db_system_without_security()->execute("SELECT * FROM `Storage` WHERE `id`='".SQLQuery::escape($id)."'");

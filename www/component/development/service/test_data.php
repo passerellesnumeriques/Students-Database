@@ -5,8 +5,8 @@ class service_test_data extends Service {
 	public function documentation() {}
 	public function input_documentation() {}
 	public function output_documentation() {}
-	public function execute(&$component) {
-		$domain = $_POST["domain"];
+	public function execute(&$component, $input) {
+		$domain = $input["domain"];
 		
 		$db_conf = include("conf/local_db");
 		require_once("DataBaseSystem_".$db_conf["type"].".inc");

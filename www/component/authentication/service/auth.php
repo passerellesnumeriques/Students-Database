@@ -18,10 +18,10 @@ class service_auth extends Service {
 	public function output_documentation() {
 ?>On success, the service returns a <i>token</i> that may be used for subsequent requests.<?php 
 	}
-	public function execute(&$component) {
-		$domain = $_POST["domain"];
-		$username = $_POST["username"];
-		$password = $_POST["password"];
+	public function execute(&$component, $input) {
+		$domain = $input["domain"];
+		$username = $input["username"];
+		$password = $input["password"];
 		
 		$auth = $component->get_authentication_system($domain);
 		if ($auth == null) {

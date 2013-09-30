@@ -16,8 +16,8 @@ class service_save_data extends Service {
 <?php		
 	}
 	public function output_documentation() { echo "return true on success"; }
-	public function execute(&$component) {
-		$to_save = json_decode($_POST["to_save"], true);
+	public function execute(&$component, $input) {
+		$to_save = $input["to_save"];
 		$sub_models = array();
 		foreach ($to_save as $t) {
 			if (!isset($sub_models[$t["sub_model"]]))

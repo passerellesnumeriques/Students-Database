@@ -143,34 +143,45 @@ function data_import(container, root_table, preset_fields, import_type) {
 	this.step4_init_multiple = function(handler) {
 		while (t.right_div.childNodes.length > 0) t.right_div.removeChild(t.right_div.childNodes[0]);
 		
+		require("DataPath.js");
 		require("collapsable_section.js");
 		service.json("data_model","get_available_fields",{table:t.root_table},function(fields){
 			var categories = [];
-			for (var i = 0; i < fields.length; ++i)
-				if (!categories.contains(fields[i].cat)) categories.push(fields[i].cat);
-			require("collapsable_section.js",function() {
-				for (var i = 0; i < categories.length; ++i) {
-					var section = new collapsable_section();
-					section.header.appendChild(document.createTextNode(categories[i]));
-					t.right_div.appendChild(section.element);
-					var table = document.createElement("TABLE");
-					section.content.appendChild(table);
-					for (var j = 0; j < fields.length; ++j) {
-						if (fields[j].cat != categories[i]) continue;
-						var tr = document.createElement("TR"); table.appendChild(tr);
-						var td = document.createElement("TD"); tr.appendChild(td);
-						td.style.whiteSpace = 'nowrap';
-						td.appendChild(document.createTextNode(fields[j].name));
-						td = document.createElement("TD"); tr.appendChild(td);
-						td.style.whiteSpace = 'nowrap';
-						fields[j].td = td;
-					}
-					section.element.style.marginBottom = "5px";
+			require("DataPath.js",function() {
+				for (var i = 0; i < fields.length; ++i) {
+					fields[i].p = new DataPath(fields[i].path);
+					if (!categories.contains(fields[i].cat)) categories.push(fields[i].cat);
 				}
-				handler(fields,function() {
-					t.unfreeze();
-					t.previousButton.disabled = '';
-					t.onprevious = function() { t.step3_select_how_are_data(); };
+				require("collapsable_section.js",function() {
+					for (var i = 0; i < categories.length; ++i) {
+						var section = new collapsable_section();
+						section.header.appendChild(document.createTextNode(categories[i]));
+						t.right_div.appendChild(section.element);
+						var table = document.createElement("TABLE");
+						section.content.appendChild(table);
+						for (var j = 0; j < fields.length; ++j) {
+							if (fields[j].cat != categories[i]) continue;
+							var tr = document.createElement("TR"); table.appendChild(tr);
+							var td = document.createElement("TD"); tr.appendChild(td);
+							td.style.whiteSpace = 'nowrap';
+							td.appendChild(document.createTextNode(fields[j].name));
+							if (fields[j].p.is_mandatory()) {
+								var span = document.createElement("SUP");
+								span.style.color = 'red';
+								span.innerHTML = "*";
+								td.appendChild(span);
+							}
+							td = document.createElement("TD"); tr.appendChild(td);
+							td.style.whiteSpace = 'nowrap';
+							fields[j].td = td;
+						}
+						section.element.style.marginBottom = "5px";
+					}
+					handler(fields,function() {
+						t.unfreeze();
+						t.previousButton.disabled = '';
+						t.onprevious = function() { t.step3_select_how_are_data(); };
+					});
 				});
 			});
 		});
@@ -205,7 +216,7 @@ function data_import(container, root_table, preset_fields, import_type) {
 						if (fields[j].edit &&
 							fields[j].edit.table == t.preset_fields[i].table &&
 							fields[j].edit.column == t.preset_fields[i].column) {
-							preset_value(fields[i], t.preset_fields[i].value);
+							preset_value(fields[j], t.preset_fields[i].value);
 							for (var k = 0; k < fields.length; ++k) {
 								if (k == j) continue;
 								if (fields[k].edit && fields[k].edit.table == fields[j].edit.table && fields[k].edit.column == fields[j].edit.column)

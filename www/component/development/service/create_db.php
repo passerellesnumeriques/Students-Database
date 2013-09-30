@@ -5,8 +5,8 @@ class service_create_db extends Service {
 	public function documentation() {}
 	public function input_documentation() {}
 	public function output_documentation() {}
-	public function execute(&$component) {
-		$domain = $_POST["domain"];
+	public function execute(&$component, $input) {
+		$domain = $input["domain"];
 		require_once("component/data_model/Model.inc");
 		require_once("component/development/DataBaseModel.inc");
 		

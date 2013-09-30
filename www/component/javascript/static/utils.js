@@ -32,11 +32,11 @@ function isLetter(c) {
 }
 
 /**
- * Set a uniform case according to a given separator
- * @memberOf String
- * @parameter {string} separator
- * @returns the same string with a capitalized first letter
- */
+* Set a uniform case according to a given separator
+* @memberOf String
+* @parameter {string} separator
+* @returns the same string with a capitalized first letter
+*/
 String.prototype.firstLetterCapitalizedForSeparator = function(separator) {
 	var text_split = this.split(separator);
 	for(var i = 0; i < text_split.length; i++){
@@ -47,33 +47,16 @@ String.prototype.firstLetterCapitalizedForSeparator = function(separator) {
 }
 
 /**
- * Set a uniform case according to " ", "'" and "-"
- * @memberOf String
- * @returns the same string with a capitalized first letter, and other lowered
- */
+* Set a uniform case according to " ", "'" and "-"
+* @memberOf String
+* @returns the same string with a capitalized first letter, and other lowered
+*/
 String.prototype.uniformFirstLetterCapitalized = function(){
 	var text = this.toLowerCase();
 	var result = text.firstLetterCapitalizedForSeparator(" ");
 	result = result.firstLetterCapitalizedForSeparator("-");
 	result = result.firstLetterCapitalizedForSeparator("'");
 	return result;
-}
-
-/**
- * Test if a string is not empty (in terms of visibility)
- * @memberOf String
- * @returns true if the given string is not only made of space or is empty; else return false
- */
-String.prototype.checkVisible = function(){
-	var is_visible = false;
-	var text_split = this.split("");
-	for(var i = 0; i < text_split.length; i++){
-		if(text_split[i] != "" && text_split[i] != " "){
-			is_visible = true;
-			break;
-		}
-	}
-	return is_visible;
 }
 
 /**

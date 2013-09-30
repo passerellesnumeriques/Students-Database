@@ -12,8 +12,8 @@ class service_register_app_event extends Service {
 <?php
 	}
 	public function output_documentation() { echo "id of the event listener"; }
-	public function execute(&$component) {
-		$id = PNApplication::$instance->register_event($_POST["type"], $_POST["identifier"]);
+	public function execute(&$component, $input) {
+		$id = PNApplication::$instance->register_event($input["type"], $input["identifier"]);
 		echo "{id:".$id."}";
 	}
 	
