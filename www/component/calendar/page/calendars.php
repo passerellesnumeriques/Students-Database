@@ -47,8 +47,9 @@ function load_pn_calendars() {
 	var list = document.getElementById("pn_calendars");
 <?php 
 $ids = PNApplication::$instance->calendar->getAccessibleCalendars();
+$write_ids = PNApplication::$instance->calendar->getWritableCalendars();
 $calendars = SQLQuery::create()->bypass_security()->select("Calendar")->where_in("Calendar", "id", $ids)->execute();
-foreach ($calendars as $cal) echo "new CalendarElement(list,window.calendars.add_calendar(new PNCalendar(".$cal["id"].",".json_encode($cal["name"]).",".json_encode($cal["color"]).",true)));";
+foreach ($calendars as $cal) echo "new CalendarElement(list,window.calendars.add_calendar(new PNCalendar(".$cal["id"].",".json_encode($cal["name"]).",".json_encode($cal["color"]).",true,".(in_array($cal["id"], $write_ids) ? "true" : "false").")));";
 ?>
 	var loading = document.getElementById('loading_pn_calendars');
 	loading.parentNode.removeChild(loading);
@@ -120,6 +121,7 @@ function CalendarElement(container, cal) {
 		this.box.style.width = "10px";
 		this.box.style.height = "10px";
 		this.box.style.border = "1px solid #"+cal.color;
+		this.box.title = "Show/Hide Calendar";
 		if (cal.show)
 			this.box.style.backgroundColor = "#"+cal.color;
 		this.box.onclick = function() {
@@ -130,11 +132,17 @@ function CalendarElement(container, cal) {
 			} else {
 				cal.manager.show_calendar(cal);
 				t.box.style.backgroundColor = "#"+cal.color;
-	}
+			}
 		};
 		this.name = document.createElement("SPAN"); this.div.appendChild(this.name);
 		this.name.style.paddingLeft = "3px";
 		this.name.innerHTML = cal.name;
+		if (!cal.save_event) {
+			var img = document.createElement("IMG");
+			img.src = "/static/calendar/read_only.png";
+			img.title = "Read-only: you cannot modify this calendar";
+			t.div.appendChild(img);
+		}
 		var start_refresh = function() {
 			t.loading = document.createElement("IMG");
 			t.loading.src = theme.icons_10.loading;

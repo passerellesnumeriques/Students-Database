@@ -1,6 +1,6 @@
 /* General styles */
 
-html, body, table {
+html, body, table, input, select {
 	font-family: Tahoma;
 	font-size: 10pt;
 }
@@ -8,6 +8,9 @@ html, body {
 	height: 100%;
 	margin: 0px;
 	padding: 0px;
+}
+input[type="text"], input[type="password"] {
+	border: 1px inset #C0C0F0;
 }
 
 /* Application layout */

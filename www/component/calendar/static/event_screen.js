@@ -354,22 +354,24 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 				if (!confirm("You are going to move the event to a different calendar. Are you sure you want to remove it from "+ev.calendar.name+" and create it into "+e.calendar.name+" ?"))
 					return;
 			} else if (ev) {
+				if (ev.id) e.id = ev.id;
 				e.uid = ev.uid;
 			}
 			e.all_day = t.all_day.checked;
 			e.start = t.from_date.parseDate(t.from_date.getCurrentData());
 			if (!e.all_day)
-				e.start.setHours(0,t.from_time.getCurrentData(),0,0);
-			e.end = t.end_date.parseDate(t.end_date.getCurrentData());
+				e.start.setHours(0,t.from_time.getCurrentMinutes(),0,0);
+			e.end = t.to_date.parseDate(t.to_date.getCurrentData());
 			if (!e.all_day)
-				e.end.setHours(0,t.end_time.getCurrentData(),0,0);
+				e.end.setHours(0,t.to_time.getCurrentMinutes(),0,0);
 			if (e.end.getTime() <= e.start.getTime()) {
 				alert("The end of the event must be after its start ! Please correct the dates and times.");
 				return;
 			}
 			e.description = t.description.value;
 			// TODO get and validate the repeat
-			// TODO create or update the event
+			e.calendar.save_event(e);
+			t.popup.close();
 		});
 		if (ev)
 			t.popup.addButton("<img src='"+theme.icons_16.remove+"' style='vertical-align:bottom'/> Remove", 'ok', function(){

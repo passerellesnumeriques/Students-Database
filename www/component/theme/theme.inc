@@ -43,8 +43,10 @@ theme::$icons_16 = array(
 theme::$icons_10 = array(
 	"close" => 			"/static/theme/".$theme."/icons_10/close.png",
 	"loading" =>		"/static/theme/".$theme."/icons_10/loading.gif",
+	"no_edit" => 		"/static/theme/".$theme."/icons_10/no_edit.png",
 	"online" => 		"/static/theme/".$theme."/icons_10/online.gif",
 	"offline" => 		"/static/theme/".$theme."/icons_10/offline.gif",
+	"save" => 			"/static/theme/".$theme."/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/".$theme."/icons_10/semi_online.gif",
 	"no_connection" => 	"/static/theme/".$theme."/icons_10/no_connection.gif",
 );

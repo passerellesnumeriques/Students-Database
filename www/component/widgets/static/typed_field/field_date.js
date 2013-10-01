@@ -32,7 +32,7 @@ function field_date(data,editable,onchanged,onunchanged,config) {
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
-		input.size = 10;
+		require("autoresize_input.js",function(){autoresize_input(input);});
 		var f = function() {
 			setTimeout(function() {
 				if (input.value.length == 0) {
@@ -63,6 +63,7 @@ function field_date(data,editable,onchanged,onunchanged,config) {
 					new date_picker(null,function(picker){
 						picker.onchange = function(picker, date) {
 							input.value = t.dateString(date);
+							if (input.onchange) input.onchange();
 							f();
 						};
 						picker.getElement().style.border = 'none';
@@ -87,6 +88,7 @@ function field_date(data,editable,onchanged,onunchanged,config) {
 		this.setData = function(data) {
 			if (data != null && data.length == 0) data = null;
 			input.value = data == null ? "" : data;
+			if (input.onchange) input.onchange();
 			f();
 		};
 		this.signal_error = function(error) {

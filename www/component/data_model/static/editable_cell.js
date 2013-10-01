@@ -24,17 +24,19 @@ function editable_cell(container, table, column, row_key, field_classname, field
 		require("typed_field.js",function() { 
 			require(field_classname+".js",function(){
 				t.field = new window[field_classname](t.data,false,null,null,field_arguments);
-				t.elem = t.field.getHTMLElement(); 
+				t.elem = t.field.getHTMLElement();
 				container.appendChild(t.elem);
 				if (t.elem.nodeType != 1) t.elem = container;
-				t.elem.onmouseover = function(ev) { this.style.textDecoration = 'underline'; stopEventPropagation(ev); return false; };
-				t.elem.onmouseout = function(ev) { this.style.textDecoration = 'none'; stopEventPropagation(ev); return false; };
+				t.elem.title = "Click to edit";
+				t.elem.onmouseover = function(ev) { this.style.outline = '1px solid #C0C0F0'; stopEventPropagation(ev); return false; };
+				t.elem.onmouseout = function(ev) { this.style.outline = 'none'; stopEventPropagation(ev); return false; };
 				t.elem.onclick = function(ev) { t.edit(); stopEventPropagation(ev); return false; };
 			}); 
 		});
 	};
 	t.edit = function() {
-		t.elem.style.textDecoration = 'none';
+		t.elem.title = "";
+		t.elem.style.outline = 'none';
 		t.elem.onmouseover = null;
 		t.elem.onmouseout = null;
 		t.elem.onclick = null;

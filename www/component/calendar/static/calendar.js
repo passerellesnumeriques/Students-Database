@@ -81,7 +81,7 @@ function Calendar(name, color, show) {
 	setTimeout(ref,5*60*1000);
 }
 
-function PNCalendar(id, name, color, show) {
+function PNCalendar(id, name, color, show, writable) {
 	Calendar.call(this, name, color, show);
 	this.icon = "/static/application/logo.png";
 	this.id = id;
@@ -117,6 +117,30 @@ function PNCalendar(id, name, color, show) {
 			ondone();
 		});
 	};
+	if (writable) {
+		this.save_event = function(event) {
+			var ev = object_copy(event);
+			ev.calendar = event.calendar.id;
+			ev.start = ev.start.getTime();
+			ev.end = ev.end.getTime();
+			// TODO continue conversions
+			service.json("calendar","save_event",{event:ev},function(res){
+				if (!event.uid && res && res.uid) {
+					event.uid = res.uid;
+					event.id = res.id;
+					event.calendar.events.push(event);
+					event.calendar.manager.on_event_added(event);
+				} else if (event.uid && res) {
+					for (var i = 0; i < event.calendar.events.length; ++i)
+						if (event.calendar.events[i].uid == event.uid) {
+							event.calendar.events.splice(i,1,event);
+							event.calendar.manager.on_event_updated(event);
+							break;
+						}
+				}
+			});
+		};
+	}
 }
 PNCalendar.prototype = new Calendar();
 PNCalendar.prototype.constructor = PNCalendar;

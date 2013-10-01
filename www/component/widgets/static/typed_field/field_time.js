@@ -36,11 +36,11 @@ function field_time(data,editable,onchanged,onunchanged,config) {
 		var t=this;
 		var input = document.createElement("INPUT");
 		input.type = "text";
-		input.size = 5;
 		input.maxlength = 5;
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
+		require("autoresize_input.js",function(){autoresize_input(input);});
 		var f = function() {
 			setTimeout(function() {
 				if (input.value != data) {
@@ -63,6 +63,10 @@ function field_time(data,editable,onchanged,onunchanged,config) {
 		this.getCurrentData = function() {
 			if (input.value.length == 0) return config && config.can_be_null ? null : "00:00";
 			return t.getTimeString(t.parseTime(input.value));
+		};
+		this.getCurrentMinutes = function() {
+			if (input.value.length == 0) return config && config.can_be_null ? null : 0;
+			return t.parseTime(input.value);
 		};
 		this.setData = function(data) {
 			if (data == null) input.value = "";
@@ -93,6 +97,11 @@ function field_time(data,editable,onchanged,onunchanged,config) {
 			var s = this.element.nodeValue;
 			if (s.length == 0) return null;
 			return s;
+		};
+		this.getCurrentMinutes = function() {
+			var s = this.element.nodeValue;
+			if (s.length == 0) return config && config.can_be_null ? null : 0;
+			return this.parseTime(s);
 		};
 		this.signal_error = function(error) {
 			this.element.style.color = error ? "red" : "";

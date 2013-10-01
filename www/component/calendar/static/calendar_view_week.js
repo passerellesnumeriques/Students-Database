@@ -111,7 +111,7 @@ function calendar_view_week(view, container) {
 			this.day_content[i].onclick = function(e) {
 				var date = new Date(this.date.getTime());
 				var mev = getCompatibleMouseEvent(e);
-				var y = mev.y-absoluteTop(this);
+				var y = mev.y-absoluteTop(this)+t.content.scrollTop;
 				var time = y/20*view.zoom;
 				date.setHours(0, time, 0, 0);
 				// TODO adjust minutes according to zoom
