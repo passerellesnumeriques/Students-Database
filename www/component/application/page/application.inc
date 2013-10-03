@@ -4,6 +4,7 @@ $this->add_javascript("/static/widgets/context_menu.js");
 $this->add_javascript("/static/google/google_status.js");
 $this->onload("new vertical_layout('pn_application_container');");
 $this->onload("new google_status('google_status');");
+$this->onload("setBorderRadius(document.forms['app_search'].elements['q'],7,7,7,7,7,7,7,7);");
 $this->onload("window.top.pn_loading_end();");
 if (PNApplication::$instance->current_domain == "Dev") {
 	$this->add_javascript("/static/development/debug_status.js");
@@ -16,9 +17,11 @@ if (PNApplication::$instance->current_domain == "Dev") {
 			<tr>
 				<td width='100%' style='padding-left:40px'>Menu</td>
 				<td nowrap="nowrap" class='pn_application_header_section'>
-					<img src='<?php echo theme::$icons_16["search"];?>' style='vertical-align:bottom'/><form action="/dynamic/application/page/search" method="get" target="pn_application_content" style='display:inline;'><input name="q" type='text' size=15 style='margin:0px;padding:0px;border:1px solid #8080FF;font-size:11px' autocomplete="off"/></form>
+					<form name='app_search' action="/dynamic/application/page/search" method="get" target="pn_application_content" style='display:inline;'>
+						<input name="q" type='text' size=15 style="background:#ffffff url('<?php echo theme::$icons_16["search"];?>') no-repeat 3px 1px;margin:0px;padding:2px 4px 2px 23px;border:1px solid #8080FF;font-size:11px" autocomplete="off"/>
+					</form>
 				</td>
-				<td nowrap="nowrap" class='pn_application_header_section' style='cursor:pointer' onclick="new context_menu('user_settings_menu').showBelowElement(this);">
+				<td nowrap="nowrap" class='pn_application_header_section' style='cursor:pointer' onclick="new context_menu('user_settings_menu').showBelowElement(this, true);">
 					<span id='user_first_name'><?php echo PNApplication::$instance->user_people->first_name;?></span> <span id='user_last_name'><?php echo PNApplication::$instance->user_people->last_name;?></span>
 					<img src='/static/application/settings.png' style='vertical-align:bottom'/>
 					<div id='user_settings_menu' class='context_menu'>
@@ -30,8 +33,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 						</div>
 					</div>
 				</td><td nowrap="nowrap" class='pn_application_header_section' title="Database">
-					<img src='/static/application/database.png' style='vertical-align:bottom'/>
-					<select style='padding:0px;margin:0px' onchange="service.json('application','set_domain',{domain:this.value},function(result){if(result)location.reload();});">
+					<select style="padding:0px 0px 0px 16px;margin:0px;background:#ffffff url('/static/application/database.png') no-repeat 0px 1px;" onchange="service.json('application','set_domain',{domain:this.value},function(result){if(result)location.reload();});">
 					<?php
 					foreach (PNApplication::$instance->get_domains() as $domain=>$descr)
 						echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>";
@@ -44,7 +46,9 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	<iframe layout='fill' src='/dynamic/application/page/home' id='pn_application_content' name='pn_application_content' frameBorder=0 onload='pn_application_content_load();'></iframe>
 	<div layout='17' id='pn_application_footer'>
 		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
+		<?php if (PNApplication::$instance->current_domain <> "Dev") {?>
 		<span id='application_loading' style='position:fixed;bottom:1px;left:2px;z-index:5;visibility:hidden'><span>Loading application</span> <iframe style='width:100px;height:10px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=10000'></iframe><span id='application_loading_text'></span></span>
+		<?php } ?>
 		<span style='position:fixed;bottom:0px;right:3px;'>
 			<span id='google_status'></span>
 		</span>

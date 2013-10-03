@@ -1,51 +1,21 @@
 if (typeof require != 'undefined') {
 	require("vertical_layout.js");
 }
-function data_import(container, root_table, preset_fields, import_type) {
+function data_import(container, root_table, import_fields, preset_fields, title) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
 	this.root_table = root_table;
+	this.import_fields = import_fields;
 	this.preset_fields = preset_fields ? preset_fields : [];
-	this.import_type = import_type ? import_type : "file";
 	
-	this.step1_select_root_table = function() {
-		t.unfreeze();
-		if (root_table) { this.step2_upload_file(); return; } // already given in constructor
-		while (t.page_container.childNodes.length > 0) t.page_container.removeChild(t.page_container.childNodes[0]);
-		var div = document.createElement("DIV");
-		t.page_container.appendChild(div);
-		div.style.padding = "5px";
-		div.innerHTML = "Select the type of data you want to import: ";
-		var select = document.createElement("SELECT");
-		div.appendChild(select);
-		t.previousButton.disabled = 'disabled';
-		t.finishButton.disabled = 'disabled';
-		t.nextButton.disabled = 'disabled';
-		service.json("data_import", "get_root_tables", {}, function(r) {
-			if (r) {
-				for (var i = 0; i < r.length; ++i) {
-					var o = document.createElement("OPTION");
-					o.value = r[i].table;
-					o.text = r[i].display;
-					select.add(o);
-				}
-				t.nextButton.disabled = '';
-				t.onnext = function() { t.root_table = select.value; t.step2_upload_file(); };
-			}
-		});
-	};
-	
-	this.step2_upload_file = function() {
+	this.step1_upload_file = function() {
 		t.unfreeze();
 		while (t.page_container.childNodes.length > 0) t.page_container.removeChild(t.page_container.childNodes[0]);
 		var div = document.createElement("DIV");
 		t.page_container.appendChild(div);
 		div.style.padding = "5px";
-		if (import_type == "create_template")
-			div.innerHTML = "Upload an example of file to define the template:";
-		else
-			div. innerHTML = "Upload the file to import:";
+		div. innerHTML = "Upload the file to import:";
 		var form = document.createElement("FORM");
 		form.method = "POST";
 		form.enctype = "multipart/form-data";
@@ -59,12 +29,7 @@ function data_import(container, root_table, preset_fields, import_type) {
 		div.appendChild(document.createElement("BR"));
 		div.appendChild(document.createTextNode("Supported formats are: Excel (xls, xlsx), OpenOffice (odf), Sylk (slk), Gnumeric, CSV"));
 		
-		if (!root_table) {
-			t.previousButton.disabled = '';
-			t.onprevious = function() { t.step1_select_root_table(); };
-		} else {
-			t.previousButton.disabled = 'disabled';
-		}
+		t.previousButton.disabled = 'disabled';
 		t.finishButton.disabled = 'disabled';
 		t.nextButton.disabled = 'disabled';
 		input.onchange = function() {
@@ -83,11 +48,12 @@ function data_import(container, root_table, preset_fields, import_type) {
 					t.right_div.style.overflow = 'auto';
 					t.right_div.style.padding = "5px";
 					t.page_container.appendChild(t.right_div);
-					t.frame.onload = function() { this.onload = null; t.step3_select_how_are_data(); };
+					t.frame.onload = function() { this.onload = null; t.step2_select_data(); };
 					require("splitter_vertical.js",function() {
-						new splitter_vertical(t.page_container, 0.7);
+						new splitter_vertical(t.page_container, 0.5);
 						setTimeout(function(){form.submit();},1);
 					});
+					return true;
 				};
 			} else {
 				t.nextButton.disabled = 'disabled';
@@ -95,73 +61,122 @@ function data_import(container, root_table, preset_fields, import_type) {
 		};
 	};
 	
-	this.step3_select_how_are_data = function() {
+	this.step2_select_data = function() {
 		var w = getIFrameWindow(t.frame);
-		if (!w.excel) {
+		if (!w.excel || !w.excel.tabs) {
 			t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Preparing Excel...");
-			setTimeout(function() {t.step3_select_how_are_data();},25);
+			setTimeout(function() {t.step2_select_data();},25);
 			return;
 		}
-		t.unfreeze();
+		t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Preparing Import...");
+		
+		// initialize data
+		for (var i = 0; i < w.excel.sheets.length; ++i) {
+			w.excel.sheets[i]._data_import_layer = null;
+		}
 		
 		while (t.right_div.childNodes.length > 0) t.right_div.removeChild(t.right_div.childNodes[0]);
-		t.right_div.appendChild(document.createTextNode("How data are organized in the Excel ?"));
-		t.right_div.appendChild(document.createElement("BR"));
-		var radio_by_column = document.createElement("INPUT");
-		var radio_by_range = document.createElement("INPUT");
-		var f = function() {
-			if (radio_by_column.checked) {
-				t.nextButton.disabled = '';
-				t.onnext = function() { t.step4_by_column(); };
-			} else if (radio_by_range.checked) {
-				t.nextButton.disabled = '';
-				t.onnext = function() { t.step4_by_range(); };
-			} else
-				t.nextButton.disabled = 'disabled';
-		};
-		radio_by_column.onchange = f;
-		radio_by_range.onchange = f;
-		radio_by_column.type = "radio";
-		radio_by_column.name = "how_are_data";
-		radio_by_column.value = 'by_column';
-		t.right_div.appendChild(radio_by_column);
-		t.right_div.appendChild(document.createTextNode("Multiple entries, one per row (specify only column for each information)"));
-		t.right_div.appendChild(document.createElement("BR"));
-		radio_by_range.type = "radio";
-		radio_by_range.name = "how_are_data";
-		radio_by_range.value = 'by_range';
-		t.right_div.appendChild(radio_by_range);
-		t.right_div.appendChild(document.createTextNode("Multiple entries, not per row (specify ranges where to find information)"));
-		t.right_div.appendChild(document.createElement("BR"));
 		
-		t.previousButton.disabled = '';
-		t.onprevious = function() {
-			t.step2_upload_file();
+		// header row
+		var header_row_div = document.createElement("DIV"); t.right_div.appendChild(header_row_div);
+		var header_row = document.createElement("INPUT");
+		header_row.type = 'checkbox';
+		header_row_div.appendChild(header_row);
+		header_row_div.appendChild(document.createTextNode("Table contains headers "));
+		var header_row_range = document.createElement("INPUT");
+		header_row_div.appendChild(header_row_range);
+		var icon = document.createElement("IMG");
+		icon.src = "/static/excel/select_range.png";
+		icon.className = "button";
+		icon.style.verticalAlign = 'bottom';
+		header_row_div.appendChild(icon);
+		header_row.onchange = function() {
+			if (header_row.checked) {
+				header_row_range.disabled = '';
+				header_row_range.onchange = function() {
+					t.setRangeLayer(this, "Headers", 192,192,255);
+					w.excel.sheets[w.excel.tabs.selected]._data_import_layer = this.layer;
+				};
+				icon.className = "button";
+				icon.onclick = function() {
+					t.getExcelRange(header_row_range);
+					header_row_range.onchange();
+				};
+			} else {
+				header_row_range.disabled = 'disabled';
+				header_row_range.value = "";
+				if (header_row_range.layer) header_row_range.layer.sheet.removeLayer(header_row_range.layer);
+				w.excel.sheets[w.excel.tabs.selected]._data_import_layer = null;
+				header_row_range.onchange = null;
+				icon.className = "button disabled";
+				icon.onclick = null;
+			}
 		};
-	};
-	
-	this.step4_init_multiple = function(handler) {
-		while (t.right_div.childNodes.length > 0) t.right_div.removeChild(t.right_div.childNodes[0]);
+		header_row.onchange();
+		w.excel.tabs.onselect = function() {
+			if (w.excel.sheets[w.excel.tabs.selected]._data_import_layer) {
+				header_row.checked = 'checked';
+				header_row_range.value = w.getExcelRangeString(w.excel.sheets[w.excel.tabs.selected], w.excel.sheets[w.excel.tabs.selected]._data_import_layer.getRange());
+			} else {
+				header_row.checked = '';
+				header_row_range.value = "";
+			}
+			header_row.onchange();
+			if (header_row_range.onchange) header_row_range.onchange();
+		};
 		
-		require("DataPath.js");
-		require("collapsable_section.js");
+		// Fields
+		require(["DataPath.js","collapsable_section.js","typed_field.js"]);
 		service.json("data_model","get_available_fields",{table:t.root_table},function(fields){
 			var categories = [];
+			var javascripts = [];
+			var avail_fields = fields;
 			require("DataPath.js",function() {
-				for (var i = 0; i < fields.length; ++i) {
+				// analyze fields
+				for (var i = 0; i < fields.length; ++i)
 					fields[i].p = new DataPath(fields[i].path);
-					if (!categories.contains(fields[i].cat)) categories.push(fields[i].cat);
+				
+				// filter according to import_fields
+				var final_fields = [];
+				for (var i = 0; i < import_fields.length; ++i) {
+					var path = import_fields[i].split(">");
+					for (var j = 0; j < path.length; ++j) {
+						var k = path[j].indexOf('.');
+						path[j] = {table:path[j].substring(0,k), column:path[j].substring(k+1)};
+					}
+					if (path[0].table != root_table) {
+						alert("Invalid field to import '"+import_fields[i]+"': starting table must be "+root_table);
+						continue;
+					}
+					for (var j = 0; j < fields.length; ++j) {
+						if (path[path.length-1].table != fields[j].p.table) continue; // not the same final table
+						if (path[path.length-1].column != '*' && fields[j].p.column != path[path.length-1].column) continue; // not the same column
+						// TODO check we have the same path
+						if (!final_fields.contains(fields[j]))
+							final_fields.push(fields[j]);
+					}
 				}
+				fields = final_fields;
+
+				// gather categories and javascripts needed
+				for (var i = 0; i < fields.length; ++i) {
+					if (!categories.contains(fields[i].cat)) categories.push(fields[i].cat);
+					if (!javascripts.contains(fields[i].field_classname)) javascripts.push(fields[i].field_classname);
+				}
+				require(["typed_field.js",javascripts]);
+				// create sections for each category
 				require("collapsable_section.js",function() {
 					for (var i = 0; i < categories.length; ++i) {
 						var section = new collapsable_section();
 						section.header.appendChild(document.createTextNode(categories[i]));
+						section.element.style.display = 'block';
 						t.right_div.appendChild(section.element);
 						var table = document.createElement("TABLE");
 						section.content.appendChild(table);
 						for (var j = 0; j < fields.length; ++j) {
 							if (fields[j].cat != categories[i]) continue;
 							var tr = document.createElement("TR"); table.appendChild(tr);
+							
 							var td = document.createElement("TD"); tr.appendChild(td);
 							td.style.whiteSpace = 'nowrap';
 							td.appendChild(document.createTextNode(fields[j].name));
@@ -173,123 +188,229 @@ function data_import(container, root_table, preset_fields, import_type) {
 							}
 							td = document.createElement("TD"); tr.appendChild(td);
 							td.style.whiteSpace = 'nowrap';
-							fields[j].td = td;
+							
+							td = document.createElement("TD"); tr.appendChild(td);
+							fields[j].select = document.createElement("SELECT");
+							fields[j].select.field = fields[j];
+							td.appendChild(fields[j].select);
+							var o;
+							o = document.createElement("OPTION");
+							o.value = 'na';
+							o.text = "Not Available";
+							fields[j].select.add(o);
+							o = document.createElement("OPTION");
+							o.value = 'set';
+							o.text = "Set all to...";
+							fields[j].select.add(o);
+							for (var sheet_i = 0; sheet_i < w.excel.sheets.length; ++sheet_i) {
+								var sheet = w.excel.sheets[sheet_i];
+								for (var col_i = 0; col_i < sheet.columns.length; ++col_i) {
+									o = document.createElement("OPTION");
+									o.value = 'column';
+									o.sheet = sheet_i;
+									o.column = col_i;
+									o.text = sheet.name+" Column "+w.getExcelColumnName(col_i);
+									fields[j].select.add(o);
+								}
+							}
+							fields[j].select.onchange = function() {
+								if (this.layer) this.layer.sheet.removeLayer(this.layer);
+								this.layer = null;
+								var o = this.options[this.selectedIndex];
+								try { this.parentNode.removeChild(this.field.span_selected); } catch (ex) {}
+								try { this.parentNode.removeChild(this.field.typed_field.getHTMLElement()); } catch (ex) {}
+								if (o.value == 'na') {
+								} else if (o.value == 'set') {
+									this.parentNode.appendChild(this.field.typed_field.getHTMLElement());
+								} else if (o.value == 'column') {
+									var row_start = 0;
+									if (w.excel.sheets[o.sheet]._data_import_layer) {
+										if (o.column >= w.excel.sheets[o.sheet]._data_import_layer.col_start && o.column <= w.excel.sheets[o.sheet]._data_import_layer.col_end)
+											row_start = w.excel.sheets[o.sheet]._data_import_layer.row_end+1;
+									}
+									this.layer = w.excel.sheets[o.sheet].addLayer(o.column,row_start,o.column,w.excel.sheets[o.sheet].rows.length-1,192,255,192,this.field.name);
+									this.parentNode.appendChild(this.field.span_selected);
+									this.field.span_selected.innerHTML = (w.excel.sheets[o.sheet].rows.length-row_start)+" value(s) selected";
+								}
+							};
+							
+							fields[j].span_selected = document.createElement("SPAN");
+							fields[j].typed_field = new window[fields[j].field_classname](null,true,null,null,fields[j].field_args);
 						}
 						section.element.style.marginBottom = "5px";
 					}
-					handler(fields,function() {
-						t.unfreeze();
-						t.previousButton.disabled = '';
-						t.onprevious = function() { t.step3_select_how_are_data(); };
-					});
+					
+					t.unfreeze();
+					t.previousButton.disabled = '';
+					t.onprevious = function() {
+						while (t.page_container.childNodes.length > 0) t.page_container.removeChild(t.page_container.childNodes[0]);
+						t.freeze();
+						t.step1_upload_file();
+					};
+					t.nextButton.disabled = '';
+					t.onnext = function() {
+						var nb_rows = 0;
+						for (var i = 0; i < fields.length; ++i) {
+							if (fields[i].select.value == 'column') {
+								var layer = fields[i].select.layer;
+								var nb = layer.row_end-layer.row_start+1;
+								if (nb > nb_rows) nb_rows = nb;
+							}
+						}
+						if (nb_rows == 0) {
+							alert("Nothing to import. Please select data to import.");
+							return false;
+						}
+						var data = [];
+						var columns = [];
+						for (var i = 0; i < nb_rows; ++i) data.push([]);
+						for (var i = 0; i < fields.length; ++i) {
+							if (fields[i].select.value == 'na' || (fields[i].select.value == 'set' && fields[i].typed_field.getCurrentData() == null)) {								if (fields[i].p.is_mandatory()) {
+									alert(fields[i].name+" is mandatory.");
+									return false;
+								}
+								continue;
+							}
+							if (fields[i].select.value == 'set') {
+								columns.push(fields[i]);
+								for (var row = 0; row < nb_rows; ++row)
+									data[row][columns.length-1] = fields[i].typed_field.getCurrentData();
+							} else {
+								columns.push(fields[i]);
+								var layer = fields[i].select.layer;
+								for (var row = 0; row < nb_rows; ++ row) {
+									var excel_row = row+layer.row_start;
+									if (excel_row > layer.row_end) {
+										if (fields[i].p.is_mandatory()) {
+											alert(fields[i].name+" is mandatory, but some values are missing.");
+											return false;
+										}
+										data[row][columns.length-1] = null;
+									} else
+										data[row][columns.length-1] = layer.sheet.getCell(layer.col_start, excel_row).getValue();
+								}
+							}
+						}
+						t.step3_show_imported_data(columns, data, avail_fields);
+						return true;
+					};
 				});
 			});
 		});
 	};
-	this.step4_by_column = function() {
-		this.step4_init_multiple(function(fields,onready) {
-			onready();
-		});
-	};
-	this.step4_by_range = function() {
-		this.step4_init_multiple(function(fields,onready){
-			var to_be_ready_2 = 1;
-			var ready2 = function() {
-				if (--to_be_ready_2 > 0) return;
-				onready();
-			};
-			var preset_value = function(field, value) {
-				field.select_type.selectedIndex = 2;
-				to_be_ready_2++;
-				field.select_type.onchange(null,function(){
-					field.set_field.setData(value);
-					field.set_field.getHTMLElement().disabled = 'disabled';
-					ready2();
-				});
-				field.select_type.disabled = 'disabled';
-			};
-			var to_be_ready = 1;
-			var ready = function() {
-				if (--to_be_ready > 0) return;
-				for (var i = 0; i < t.preset_fields.length; ++i) {
-					for (var j = 0; j < fields.length; ++j) {
-						if (fields[j].edit &&
-							fields[j].edit.table == t.preset_fields[i].table &&
-							fields[j].edit.column == t.preset_fields[i].column) {
-							preset_value(fields[j], t.preset_fields[i].value);
-							for (var k = 0; k < fields.length; ++k) {
-								if (k == j) continue;
-								if (fields[k].edit && fields[k].edit.table == fields[j].edit.table && fields[k].edit.column == fields[j].edit.column)
-									preset_value(fields[k], t.preset_fields[i].value);
-							}
-							break;
-						}
+	
+	this.step3_show_imported_data = function(fields, data, avail_fields) {
+		var prev_content = t.page_container.childNodes.length;
+		for (var i = 0; i < t.page_container.childNodes.length; ++i) {
+			var e = t.page_container.childNodes[i];
+			e.style.visibility = 'hidden';
+			e.style.position = 'absolute';
+			e.style.top = '-10000px';
+		}
+		
+		var preset = [];
+		for (var i = 0; i < t.preset_fields.length; ++i) {
+			for (var j = 0; j < avail_fields.length; ++j) {
+				if (avail_fields[j].edit) {
+					if (avail_fields[j].edit.table == t.preset_fields[i].table && avail_fields[j].edit.column == t.preset_fields[i].column) {
+						preset.push({field:avail_fields[j],preset:t.preset_fields[i]});
+					}
+				} else {
+					if (avail_fields[j].p.table == t.preset_fields[i].table && avail_fields[j].p.column == t.preset_fields[i].column) {
+						preset.push({field:avail_fields[j],preset:t.preset_fields[i]});
 					}
 				}
-				ready2();
-			};
-			for (var i = 0; i < fields.length; ++i) {
-				fields[i].select_type = document.createElement("SELECT"); fields[i].td.appendChild(fields[i].select_type);
-				var o;
-				o = document.createElement("OPTION");
-				o.value = 'na'; o.text = 'Not Available';
-				fields[i].select_type.add(o);
-				o = document.createElement("OPTION");
-				o.value = 'range'; o.text = 'From Range';
-				fields[i].select_type.add(o);
-				o = document.createElement("OPTION");
-				o.value = 'set'; o.text = 'All set to value';
-				fields[i].select_type.add(o);
-				fields[i].select_type.field = fields[i];
-				fields[i].select_type.onchange = function(ev,onloaded) {
-					var field = this.field;
-					if (field.range && field.range.layer) field.range.layer.sheet.removeLayer(field.range.layer);
-					while (field.select_type.nextSibling) field.td.removeChild(field.select_type.nextSibling);
-					if (field.select_type.value == 'range') {
-						field.range = document.createElement("INPUT");
-						field.range.type = "text";
-						field.range.onblur = function() {
-							if (this.layer) this.layer.sheet.removeLayer(this.layer);
-							this.layer = null;
-							var w = getIFrameWindow(t.frame);
-							var r = w.parseExcelRangeString(this.value);
-							if (!r.sheet) return;
-							var xl = w.excel;
-							var sheet = xl.getSheet(r.sheet);
-							this.layer = sheet.addLayer(r.range.start_col,r.range.start_row,r.range.end_col,r.range.end_row,192,255,192,field.name);
-						};
-						field.td.appendChild(field.range);
-						var button = document.createElement("IMG");
-						button.className = "button";
-						button.style.verticalAlign = 'bottom';
-						button.src = "/static/excel/select_range.png";
-						button.onclick = function() {
-							var w = getIFrameWindow(t.frame);
-							var xl = w.excel;
-							var sheet = xl.getActiveSheet();
-							if (!sheet) return;
-							var sel = sheet.getSelection();
-							if (!sel) return;
-							field.range.value = w.getExcelRangeString(sheet, sel);
-							field.range.onblur();
-						};
-						field.td.appendChild(button);
-						fireLayoutEventFor(t.right_div);
-					} else if (field.select_type.value == 'set') {
-						require("typed_field.js",function(){
-							require(field.field_classname+".js",function(){
-								field.set_field = new window[field.field_classname](null,true,null,null,field.field_args);
-								field.td.appendChild(field.set_field.getHTMLElement());
-								if (onloaded) onloaded();
-								fireLayoutEventFor(t.right_div);
-							});
-						});
-					}
-				};
 			}
-			ready();
-		});
+		}
+		
+		var div = document.createElement("DIV");
+		div.style.width = '100%';
+		div.style.height = '100%';
+		div.style.overflow = 'auto';
+		t.page_container.appendChild(div);
+		var div2 = document.createElement("DIV");
+		div2.style.padding = '3px';
+		div.appendChild(div2);
+		div2.appendChild(document.createTextNode("Please check the data which is about to be imported. You can still modify some values. When ready, click on Finish."));
+		div2.appendChild(document.createElement("BR"));
+		var table = document.createElement("TABLE");
+		div2.appendChild(table);
+		table.style.border = '1px solid black';
+		table.style.borderCollapse = 'collapse';
+		table.style.borderSpacing = '0px';
+		var tr, td;
+		table.appendChild(tr = document.createElement("TR"));
+		for (var i = 0; i < fields.length; ++i) {
+			tr.appendChild(td = document.createElement("TH"));
+			td.style.backgroundColor = '#C0C0F0';
+			td.style.border = '1px solid black';
+			td.appendChild(document.createTextNode(fields[i].name));
+		}
+		for (var i = 0; i < preset.length; ++i) {
+			tr.appendChild(td = document.createElement("TH"));
+			td.style.backgroundColor = '#C0C0F0';
+			td.style.border = '1px solid black';
+			td.appendChild(document.createTextNode(preset[i].field.name));
+		}
+		for (var row = 0; row < data.length; ++row) {
+			table.appendChild(tr = document.createElement("TR"));
+			for (var col = 0; col < fields.length; ++col) {
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.border = '1px solid black';
+				td.style.padding = '1px';
+				var f = new window[fields[col].field_classname](data[row][col],true,null,null,fields[col].field_args);
+				td.appendChild(f.getHTMLElement());
+				td.field = f;
+			}
+			for (var col = 0; col < preset.length; ++col) {
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.border = '1px solid black';
+				td.style.padding = '1px';
+				var f = new window[preset[col].field.field_classname](preset[col].preset.value,false,null,null,preset[col].field.field_args);
+				td.appendChild(f.getHTMLElement());
+				td.field = f;
+			}
+		}
+		
+		t.previousButton.disabled = '';
+		t.onprevious = function() {
+			while (t.page_container.childNodes.length > prev_content)
+				t.page_container.removeChild(t.page_container.childNodes[prev_content]);
+			for (var i = 0; i < t.page_container.childNodes.length; ++i) {
+				var e = t.page_container.childNodes[i];
+				e.style.visibility = 'visible';
+				e.style.position = 'static';
+			}
+			t.unfreeze();
+		};
+		t.finishButton.disabled = '';
+		t.onfinish = function() {
+			// TODO
+		};
+		t.unfreeze();
 	};
+	
+	this.setRangeLayer = function(input, title, r,g,b) {
+		if (input.layer) input.layer.sheet.removeLayer(input.layer);
+		input.layer = null;
+		var w = getIFrameWindow(t.frame);
+		var r = w.parseExcelRangeString(input.value);
+		if (!r.sheet) return;
+		var xl = w.excel;
+		var sheet = xl.getSheet(r.sheet);
+		input.layer = sheet.addLayer(r.range.start_col,r.range.start_row,r.range.end_col,r.range.end_row,r,g,b,title);
+	};
+	this.getExcelRange = function(input) {
+		var w = getIFrameWindow(t.frame);
+		var xl = w.excel;
+		var sheet = xl.getActiveSheet();
+		if (!sheet) return;
+		var sel = sheet.getSelection();
+		if (!sel) return;
+		input.value = w.getExcelRangeString(sheet, sel);
+		if (input.onchange) input.onchange();
+	};
+	
 	
 	this.freezer = null;
 	this.freezer_message_id = generate_id();
@@ -319,7 +440,7 @@ function data_import(container, root_table, preset_fields, import_type) {
 		t.header = document.createElement("DIV"); container.appendChild(t.header);
 		t.header.setAttribute("layout","35");
 		t.header.className = "wizard_header";
-		t.header.innerHTML = "<img src='/static/data_import/import_excel_32.png'/> "+(import_type == "create_template" ? "Create Excel Import Template" : "Import Excel");
+		t.header.innerHTML = "<img src='/static/data_import/import_excel_32.png'/> Import Excel - "+title;
 		t.page_container = document.createElement("DIV"); container.appendChild(t.page_container);
 		t.page_container.setAttribute("layout", "fill");
 		t.buttons = document.createElement("DIV"); container.appendChild(t.buttons);
@@ -337,10 +458,18 @@ function data_import(container, root_table, preset_fields, import_type) {
 		t.nextButton.innerHTML = "<img src='"+theme.icons_16.forward+"'/> Next";
 		t.nextButton.onclick = function() { 
 			t.freeze();
+			var p = t.previousButton.disabled;
+			var f = t.finishButton.disabled;
+			var n = t.nextButton.disabled;
 			t.previousButton.disabled = 'disabled';
 			t.finishButton.disabled = 'disabled';
 			t.nextButton.disabled = 'disabled';
-			t.onnext(); 
+			if (!t.onnext()) {
+				t.previousButton.disabled = p;
+				t.finishButton.disabled = f;
+				t.nextButton.disabled = n;
+				t.unfreeze();
+			} 
 		};
 		t.finishButton = document.createElement("BUTTON"); t.buttons.appendChild(t.finishButton);
 		t.finishButton.innerHTML = "<img src='"+theme.icons_16.ok+"'/> Finish";
@@ -355,7 +484,7 @@ function data_import(container, root_table, preset_fields, import_type) {
 		require("vertical_layout.js",function() {
 			new vertical_layout(container);
 		});
-		t.step1_select_root_table();
+		t.step1_upload_file();
 	};
 	this._create_wizard();
 }

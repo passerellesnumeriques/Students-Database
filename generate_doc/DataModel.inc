@@ -35,9 +35,6 @@ class Table {
 	public function setDisplayName($name) { $this->display_name = $name; return $this; }
 	public function getDisplayName() { return $this->display_name; }
 	
-	public function setDisplayName($name) { $this->display_name = $name; return $this; }
-	public function getDisplayName() { return $this->display_name; }
-	
 	/** Add a primary key (integer ID) */
 	public function addPrimaryKey($name, $size=32) {
 		$c = new PrimaryKey($this, $name, $size);

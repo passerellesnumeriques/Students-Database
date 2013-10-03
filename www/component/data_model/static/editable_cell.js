@@ -55,6 +55,8 @@ function editable_cell(container, table, column, row_key, field_classname, field
 			window.database_locks.add_lock(parseInt(result.lock));
 			t.field = new window[field_classname](t.data,true,null,null,field_arguments);
 			container.appendChild(t.field.getHTMLElement());
+			t.field.getHTMLElement().focus();
+			if (t.field.getHTMLElement().onfocus) t.field.getHTMLElement().onfocus();
 			var prev_click = t.field.getHTMLElement().onclick; 
 			t.field.getHTMLElement().onclick = function (ev) { stopEventPropagation(ev); if (prev_click) prev_click(ev); };
 			t.save_button = document.createElement("IMG");

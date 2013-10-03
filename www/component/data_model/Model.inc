@@ -5,7 +5,9 @@ class DataModel {
 
 	/** @var $model DataModel */
 	private static $model = null;
-	/** @return DataModel */
+	/**
+	 * @static 
+	 * @return DataModel */
 	public static function &get() {
 		if (DataModel::$model == null) {
 			$model = new DataModel();
@@ -17,7 +19,7 @@ class DataModel {
 		}
 		return DataModel::$model;
 	}
-	private static function _get_component($c, $done, &$model) {
+	private static function _get_component($c, &$done, &$model) {
 		if (in_array($c->name, $done)) return;
 		array_push($done, $c->name);
 		foreach ($c->dependencies() as $dep)
@@ -107,6 +109,9 @@ class DataModel {
 		return $a;
 	}
 
+	/**
+	 * @return datamodel\Table[]
+	 */
 	public function &getTables() {
 		$a = array();
 		foreach ($this->tables as $name=>&$table)
@@ -120,20 +125,53 @@ class DataModel {
 	}
 
 	/** indicates which page to go in order to display information about the given category */
-	public function addDataCategoryLink($category, $link, $icon) {
-		$this->data_category_link[$category] = array($link, $icon);
+	public function addDataCategoryLink($category, $link, $icon = null) {
+		if (!isset($this->data_category_link[$category]))
+			$this->data_category_link[$category] = array();
+		array_push($this->data_category_link[$category], new DataCategoryLink($link, $icon));
 	}
-	public function getDataCategoryLink($category) {
-		return @$this->data_category_link[$category][0];
+	public function getDataCategoryLinks($category) {
+		if (isset($this->data_category_link[$category]))
+			return $this->data_category_link[$category];
+		return array();
 	}
-	public function getDataCategoryLinkIcon($category) {
-		return @$this->data_category_link[$category][1];
+	public function getAllDataCategoryLinks() {
+		return $this->data_category_link;
 	}
 	
 	private function hide($table, $field) {
 		$this->tables[$table]->hide($field);
 	}
 
+}
+
+class DataCategoryLink {
+	
+	public $link;
+	public $icon;
+	
+	public function __construct($link, $icon = null) {
+		$this->link = $link;
+		$this->icon = $icon;
+	}
+	
+	public function getParameters() {
+		$params = array();
+		$i = 0;
+		while (($j = strpos($this->link, "%", $i)) !== FALSE) {
+			$k = strpos($this->link, "%", $j+1);
+			if ($k === FALSE) break;
+			$content = substr($this->link, $j+1, $k-$j-1);
+			$l = strpos($content, ".");
+			if ($l === FALSE) {
+				$i = $k;
+				continue;
+			}
+			array_push($params, array("table"=>substr($content,0,$l),"column"=>substr($content,$l+1),"name"=>$content));
+			$i = $k+1;
+		}
+		return $params;
+	}
 }
 
 class SubDataModel extends DataModel {
@@ -157,6 +195,11 @@ class SubDataModel extends DataModel {
 	public function remove_tables($key) {
 		foreach ($this->tables as $t)
 			SQLQuery::get_db_system_without_security()->execute("DROP TABLE `".$t->getName()."_".$key."`");
+	}
+	
+	public function getExistingInstances() {
+		$t = $this->parent_model->internalGetTable($this->parent_table);
+		return SQLQuery::create()->bypass_security()->select($this->parent_table)->field($this->parent_table, $t->getPrimaryKey()->name)->execute_single_field();
 	}
 	
 }

@@ -94,8 +94,8 @@ function PNCalendar(id, name, color, show, writable) {
 			for (var i = 0; i < result.events.length; ++i) {
 				var ev = result.events[i];
 				ev.calendar = cal;
-				ev.start = new Date(ev.start);
-				ev.end = new Date(ev.end);
+				ev.start = new Date(parseInt(ev.start)*1000);
+				ev.end = new Date(parseInt(ev.end)*1000);
 				var found = false;
 				for (var j = 0; j < removed_events.length; ++j) {
 					if (ev.uid == removed_events[j].uid) {
@@ -121,8 +121,8 @@ function PNCalendar(id, name, color, show, writable) {
 		this.save_event = function(event) {
 			var ev = object_copy(event);
 			ev.calendar = event.calendar.id;
-			ev.start = ev.start.getTime();
-			ev.end = ev.end.getTime();
+			ev.start = Math.floor(ev.start.getTime()/1000);
+			ev.end = Math.floor(ev.end.getTime()/1000);
 			// TODO continue conversions
 			service.json("calendar","save_event",{event:ev},function(res){
 				if (!event.uid && res && res.uid) {

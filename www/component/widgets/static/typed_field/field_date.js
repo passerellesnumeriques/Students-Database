@@ -55,7 +55,7 @@ function field_date(data,editable,onchanged,onunchanged,config) {
 			},1);
 		};
 		var show = function(event) {
-			stopEventPropagation(event);
+			if (event) stopEventPropagation(event);
 			input.blur();
 			require("date_picker.js",function(){
 				require("context_menu.js",function(){
@@ -78,7 +78,11 @@ function field_date(data,editable,onchanged,onunchanged,config) {
 			});
 			return false;
 		};
-		input.onclick = show;
+		input.onfocus = show;
+		input.onclick = function(e) {
+			stopEventPropagation(e);
+			return false;
+		};
 		this.element = input;
 		this.element.typed_field = this;
 		this.getCurrentData = function() {

@@ -134,7 +134,7 @@ button img {
 	filter: alpha(opacity=50);
 	-ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=50);
 }
-.button.disabled:hover,.button.disabled:active {
+.button.disabled:hover, .button.disabled:active {
 	border: 1px solid rgba(0,0,0,0.2);
 	box-shadow: 1px 1px 1px rgba(170,170,170,0);
 	margin: 1px 2px 1px 2px;
@@ -150,8 +150,12 @@ button img {
 	border-spacing: 0px;
 }
 .popup_window_title {
+	/*
 	background-color: #A0A0D0;
 	height: 20px;
+	*/
+	background-color: #D0D0F0;
+	height: 30px;
 }
 .popup_window.blink {
 	box-shadow: 0 0 20px 3px #FFA000;
@@ -164,8 +168,9 @@ button img {
 	padding: 2px;
 	color: white;
 	font-weight: bold;
+	font-size: 11pt;
 	text-shadow: black 0.1em 0.1em 0.2em;
-	border-bottom: 1px solid #000080;
+	border-bottom: 1px solid #6060A0;
 	cursor: move;
 }
 .popup_window_title td+td {

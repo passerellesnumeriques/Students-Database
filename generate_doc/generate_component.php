@@ -279,7 +279,7 @@ function generate_component($name, &$nav, &$datamodel_uml) {
 				ob_start();$service->input_documentation();$doc=ob_get_clean();
 				$html .= "<tr><td>Input</td><td>".$doc."</td></tr>";
 				ob_start();$service->output_documentation();$doc=ob_get_clean();
-				$html .= "<tr><td>Output (".$service->get_output_format().")</td><td>".$doc."</td></tr>";
+				$html .= "<tr><td>Output (".$service->get_output_format(array()).")</td><td>".$doc."</td></tr>";
 				$html .= "<tr><td>Rights</td><td>";
 				if (count($service->get_required_rights()) == 0)
 					$html .= "This service is accessible to everyone.<br/>";
@@ -336,7 +336,7 @@ function generate_component($name, &$nav, &$datamodel_uml) {
 					$cmd .= " ".$path."/static/".$filename.".readme";
 				else
 					echo "WARNING: no readme file for JavaScript ".$path."/static/".$filename."\n";
-				execute(array($cmd,"del ".$generated_dir."/component/".$name."/javascript/".$filename));
+				execute("jsdoc",array($cmd,"del ".$generated_dir."/component/".$name."/javascript/".$filename));
 				$html .= "<li><a href='javascript/".$filename."_doc/index.html'>".$filename."</a>";
 				if (file_exists($path."/static/".$filename.".readme"))
 					$html .= ": ".file_get_contents($path."/static/".$filename.".readme");

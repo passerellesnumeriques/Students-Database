@@ -29,7 +29,7 @@ class page_batches extends Page {
 			} else
 				echo $batch["name"];
 			echo "</div>";
-			echo "<div class='collapsable_section_content'>";
+			echo "<div class='collapsable_section_content' style='padding:3px'>";
 			echo "<span style='padding-right:5px'>";
 			$span_id = $this->generate_id();
 			echo "<span id='".$span_id."'>Integration Date: ";

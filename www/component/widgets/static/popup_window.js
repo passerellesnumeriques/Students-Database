@@ -180,6 +180,7 @@ function popup_window(title,icon,content) {
 			td.colSpan = 2;
 			for (var i = 0; i < t.buttons.length; ++i)
 				td.appendChild(t.buttons[i]);
+			t.buttons_tr = tr;
 		}
 		document.body.appendChild(t.table);
 		if (typeof t.content == 'string') t.content_container.innerHTML = t.content;
@@ -224,7 +225,10 @@ function popup_window(title,icon,content) {
 			if (y < 5) {
 				y = 5;
 				t.content_container.style.overflowX = "auto";
-				t.content_container.style.height = (getWindowHeight()-30)+"px";
+				var h = 0;
+				if (t.header) h += getHeight(t.header);
+				if (t.buttons_tr) h += getHeight(t.buttons_tr);
+				t.content_container.style.height = (getWindowHeight()-30-h)+"px";
 				if (t.content_container.offsetWidth > t.content_container.clientWidth) {
 					t.content_container.style.width = (t.content_container.offsetWidth+(t.content_container.offsetWidth-t.content_container.clientWidth))+"px"; 
 				}

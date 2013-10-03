@@ -490,6 +490,22 @@ function javascript_loaded(url) {
 	if (!_scripts_loaded.contains(url.path))
 		_scripts_loaded.push(url.path);
 }
+function remove_javascript(url) {
+	var p = new URL(url).path;
+	_scripts_loaded.remove(p);
+	var head = document.getElementsByTagName("HEAD")[0];
+	for (var i = 0; i < head.childNodes.length; ++i) {
+		var e = head.childNodes[i];
+		if (e.nodeName != "SCRIPT") continue;
+		if (!e.src || e.src.length == 0) continue;
+		var u = new URL(e.src);
+		if (u.path == p) {
+			head.removeChild(e);
+			i--;
+			continue;
+		}
+	}
+}
 
 /**
  * Dynamically load a stylesheet in the page.

@@ -47,9 +47,11 @@ global $components;
 $components = list_components();
 $components = order_components($components);
 
-function execute($cmd) {
+function execute($type,$cmd) {
 	global $to_execute;
-	array_push($to_execute, $cmd);
+	if (!isset($to_execute[$type]))
+		$to_execute[$type] = array();
+	array_push($to_execute[$type], $cmd);
 }
 function execute_commands() {
 	global $generated_dir, $to_execute;
@@ -57,26 +59,35 @@ function execute_commands() {
 	mkdir($generated_dir."/batch");
 	$main_batch = "@echo off\r\n";
 	$sub_batch_index = 0;
-	foreach ($to_execute as $cmd) {
-		$name = "batch".($sub_batch_index++);
-		if ($sub_batch_index == 5) {
-			$main_batch .= "ping -n 1 -w 2000 1.2.3.4 > NUL 2>&1\r\n";
-		} else if ($sub_batch_index < 10) {
-			$main_batch .= "ping -n 1 -w 500 1.2.3.4 > NUL 2>&1\r\n";
-		} else if (($sub_batch_index%3) == 0) {
-			$main_batch .= "ping -n 1 -w 1000 1.2.3.4 > NUL 2>&1\r\n";
-		} else {
-			$main_batch .= "ping -n 1 -w 100 1.2.3.4 > NUL 2>&1\r\n";
+	while (count($to_execute) > 0) {
+		foreach ($to_execute as $type=>$commands) {
+			$cmd = $commands[0];
+			$name = "batch".($sub_batch_index++);
+			if ($sub_batch_index == 5) {
+				$main_batch .= "ping -n 1 -w 2000 1.2.3.4 > NUL 2>&1\r\n";
+			} else if ($sub_batch_index < 10) {
+				$main_batch .= "ping -n 1 -w 500 1.2.3.4 > NUL 2>&1\r\n";
+			} else if (($sub_batch_index%3) == 0) {
+				$main_batch .= "ping -n 1 -w 1000 1.2.3.4 > NUL 2>&1\r\n";
+			} else {
+				$main_batch .= "ping -n 1 -w 100 1.2.3.4 > NUL 2>&1\r\n";
+			}
+			$main_batch .= "START /B CMD /C CALL ".$name.".bat\r\n";
+			$f = fopen($generated_dir."/batch/".$name.".bat","w");
+			if (is_array($cmd)) {
+				foreach ($cmd as $c)
+					fwrite($f, $c."\r\n");
+			} else {
+				fwrite($f, $cmd."\r\n");
+			}
+			fclose($f);
+			if (count($commands) == 1) {
+				unset($to_execute[$type]);
+				break;
+			} else {
+				array_splice($to_execute[$type],0,1);
+			}
 		}
-		$main_batch .= "START /B CMD /C CALL ".$name.".bat\r\n";
-		$f = fopen($generated_dir."/batch/".$name.".bat","w");
-		if (is_array($cmd)) {
-			foreach ($cmd as $c)
-				fwrite($f, $c."\r\n");
-		} else {
-			fwrite($f, $cmd."\r\n");
-		}
-		fclose($f);
 	}
 	$f = fopen($generated_dir."/batch/main.bat","w");
 	fwrite($f, $main_batch);
@@ -102,7 +113,7 @@ function generate($page) {
 function generate_uml($uml, $filename) {
 	write_file($filename.".uml", "@startuml\n".$uml."@enduml\n");
 	$dir = dirname(__FILE__)."/tools";
-	execute("java.exe -jar ".$dir."/plantuml.jar -graphvizdot ".$dir."/graphviz_2.28/bin/dot.exe"." ".dirname(__FILE__)."/../generated_doc/".$filename.".uml");
+	execute("plantuml","java.exe -jar ".$dir."/plantuml.jar -graphvizdot ".$dir."/graphviz_2.28/bin/dot.exe"." ".dirname(__FILE__)."/../generated_doc/".$filename.".uml");
 }
 function copy_file($filename) {
 	global $generated_dir;
@@ -179,7 +190,7 @@ foreach ($components as $name) {
 	mkdir_rec($generated_dir."/tmp/component/".$name."/php");
 	$path = $www_dir."/component/".$name;
 	copy_dir_flat($path, $generated_dir."/tmp/component/".$name."/php");
-	execute(getenv("PHP_PATH")."/php.exe -c ".$generated_dir."/php.ini ".dirname(__FILE__)."/tools/apigen/apigen.php --source ".$generated_dir."/tmp/component/".$name."/php"." --destination ".$generated_dir."/component/".$name."/php --extensions inc,php");
+	execute("phpdoc",getenv("PHP_PATH")."/php.exe -c ".$generated_dir."/php.ini ".dirname(__FILE__)."/tools/apigen/apigen.php --source ".$generated_dir."/tmp/component/".$name."/php"." --destination ".$generated_dir."/component/".$name."/php --extensions inc,php");
 }
 execute_commands();
 
@@ -224,7 +235,7 @@ mkdir($generated_dir."/tmp/general_php/component");
 copy_dir_flat($www_dir,$generated_dir."/tmp/general_php");
 copy_dir_flat($www_dir."/component",$generated_dir."/tmp/general_php/component");
 mkdir($generated_dir."/general/php");
-execute(getenv("PHP_PATH")."/php.exe -c ".$generated_dir."/php.ini ".dirname(__FILE__)."/tools/apigen/apigen.php --source ".$generated_dir."/tmp/general_php"." --destination ".$generated_dir."/general/php"." --extensions inc,php");
+execute("phpdoc",getenv("PHP_PATH")."/php.exe -c ".$generated_dir."/php.ini ".dirname(__FILE__)."/tools/apigen/apigen.php --source ".$generated_dir."/tmp/general_php"." --destination ".$generated_dir."/general/php"." --extensions inc,php");
 array_push($nav_general, array("PHP", "general/php/index.html"));
 
 copy_file("general/data_model.html");

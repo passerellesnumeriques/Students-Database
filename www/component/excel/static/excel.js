@@ -472,6 +472,9 @@ function ExcelSheetCell(sheet, column, row) {
 	this.setValue = function(value) {
 		this.value.innerHTML = value;
 	};
+	this.getValue = function() {
+		return this.value.innerHTML;
+	};
 	this.setStyle = function(styles) {
 		for (var name in styles)
 			this.td.style[name] = styles[name];
@@ -533,6 +536,10 @@ function ExcelSheetCursor(sheet) {
 	this.select_y_dir = 0;
 	this.mouse_select_start = null;
 	this.color = [192,192,255];
+	
+	this.getRange = function() {
+		return {start_col:this.col_start,start_row:this.row_start,end_col:this.col_end,end_row:this.row_end};
+	};
 	
 	this.up = function() { this.setRange(this.col_start, this.row_start-1, this.col_start, this.row_start-1); sheet.make_visible(this.col_start,this.row_start); };
 	this.down = function() { this.setRange(this.col_start, this.row_end+1, this.col_start, this.row_end+1); sheet.make_visible(this.col_start,this.row_start); };
@@ -639,7 +646,8 @@ function ExcelSheetCursor(sheet) {
 	};
 	
 	this._removed = function() {
-		this.div.parentNode.removeChild(this.div);
+		if (this.div.parentNode)
+			this.div.parentNode.removeChild(this.div);
 	};
 	
 	this._init();

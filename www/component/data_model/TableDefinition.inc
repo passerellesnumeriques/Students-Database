@@ -32,7 +32,9 @@ class Table {
 		array_push($this->_key_submodels, $sm);
 	}
 
-	/** Add a primary key (integer ID) */
+	/** Add a primary key (integer ID)
+	 *  @return \datamodel\Table
+	 */
 	public function addPrimaryKey($name, $size=32) {
 		$c = new PrimaryKey($this, $name, $size);
 		array_push($this->columns, $c);
@@ -56,7 +58,9 @@ class Table {
 		return $this;
 	}
 
-	/** Add an integer column. Size is in bits */
+	/** Add an integer column. Size is in bits
+	 * @return \datamodel\Table 
+	 */
 	public function addInteger($name, $size=32, $min = null, $max = null, $can_be_null = true, $unique = false) {
 		$c = new ColumnInteger($this, $name, $size, $min, $max, $can_be_null, $unique);
 		array_push($this->columns, $c);

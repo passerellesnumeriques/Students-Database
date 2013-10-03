@@ -1,7 +1,7 @@
 if (typeof require != 'undefined')
 	require("small_calendar.js");
 function date_picker(max_year, onready) {
-	if (!max_year) max_year = new Date().getFullYear();
+	if (!max_year) max_year = new Date().getFullYear()+100;
 	var t = this;
 	t.element = document.createElement("DIV");
 	t.element.className = 'date_picker';
