@@ -68,7 +68,9 @@ if ($message <> null) {
 	</tr>
 </table>
 <br/>
+<!-- 
 <span id='application_loading' style='visibility:hidden'><span>Loading application</span> <iframe frameBorder=0 style='width:200px;height:15px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=5000' id='frame_loading'></iframe><span id='application_loading_text' style='font-size:8pt'></span></span>
+ -->
 </td></tr></table>
 </form>
 <script type='text/javascript'>

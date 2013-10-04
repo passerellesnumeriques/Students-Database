@@ -83,7 +83,6 @@ if (!window.top.google) {
 		window.top.google.connect();
 	};
 	window.top.load_google_api = function() {
-		window.top.google.start_loading_api = new Date().getTime();
 		window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 		setTimeout(function(){
 			if (window.top.google.api_loaded) return;

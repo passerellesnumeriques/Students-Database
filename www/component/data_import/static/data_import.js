@@ -385,7 +385,39 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 		};
 		t.finishButton.disabled = '';
 		t.onfinish = function() {
-			// TODO
+			var req = {};
+			req.root_table = t.root_table;
+			req.fields = [];
+			for (var i = 0; i < fields.length; ++i) req.fields.push(fields[i]);
+			for (var i = 0; i < preset.length; ++i) req.fields.push(preset[i].field);
+			req.data = data;
+			for (var col = 0; col < preset.length; ++col) {
+				for (var row = 0; row < req.data.length; ++row)
+					data[row].push(preset[col].preset.value);
+			}
+			// remove duplicate columns
+			for (var i = 0; i < req.fields.length; ++i) {
+				for (var j = i+1; j < req.fields.length; ++j) {
+					if (req.fields[i].edit.table != req.fields[j].edit.table) continue;
+					if (req.fields[i].edit.column != req.fields[j].edit.column) continue;
+					if (req.fields[i].edit.sub_model != req.fields[j].edit.sub_model) continue;
+					// duplicate
+					req.fields.splice(j,1);
+					for (var r = 0; r < req.data.length; ++r)
+						req.data[r].splice(j,1);
+					j--;
+				}
+			}
+			var json = service.generate_input(req);
+			var form = document.createElement("FORM");
+			form.method = 'POST';
+			form.action = "/dynamic/data_import/page/data_import";
+			var input = document.createElement("INPUT");
+			input.type = 'hidden';
+			input.name = "data_import_check";
+			input.value = json;
+			form.appendChild(input);
+			form.submit();
 		};
 		t.unfreeze();
 	};
