@@ -9,7 +9,7 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 		var t=this;
 		var input = document.createElement("INPUT");
 		input.type = "text";
-		if (config && config.max_length) input.maxlength = config.max_length;
+		if (config && config.max_length) input.maxLength = config.max_length;
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";

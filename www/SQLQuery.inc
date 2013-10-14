@@ -5,8 +5,6 @@ require_once("DataBaseSystem.inc");
  */
 class SQLQuery {
 	
-	// TODO: when remove, bypass security for linked tables
-
 	private static $db_system = null;
 	/**
 	 * @return DataBaseSystem
@@ -40,6 +38,11 @@ class SQLQuery {
  	/** utility method to ease chained usage: SQLQuery::create()->select(...)->field(...)->.... */
  	public static function &create() { $q = new SQLQuery(); return $q; }
 
+ 	private static $preselected_submodels = array();
+ 	public static function set_submodel($key_table, $key) {
+ 		$preselected_submodels[$key_table] = $key;
+ 	}
+ 	
  	public function __construct($copy = null) {
  		if ($copy) {
  			$this->tables = $copy->tables;
@@ -50,6 +53,7 @@ class SQLQuery {
  			$this->limit_number = $copy->limit_number;
  			$this->group_by = $copy->group_by;
  		}
+ 		$this->sub_models = array_merge(SQLQuery::$preselected_submodels);
  	}
 
  	public $database = null;
@@ -273,6 +277,7 @@ class SQLQuery {
 
 		// validate the query
 		$final_fields = array();
+		$fields = array_merge($this->fields);
 		foreach ($this->tables as $t=>$alias) {
 			if ($this->bypass_security)
 				$table = DataModel::get()->internalGetTable($t);
@@ -287,15 +292,24 @@ class SQLQuery {
 				foreach ($columns as $col)
 					array_push($final_fields, array($alias, $col->name, null));
 				unset($columns);
-			} else foreach ($this->fields as $f) {
-				if ($f[0] == $t || $f[0] == $alias) {
-					// check the field is accessible
-					if ($this->bypass_security)
-						$col = $table->internalGetColumn($f[1]);
-					else
-						$col = $table->getColumn($f[1]);
-					array_push($final_fields, array($f[0], $col->name, $f[2]));
-					unset($col);
+			} else {
+				for ($i = 0; $i < count($fields); $i++) {
+					$f = $fields[$i];
+					if ($f[0] == $t || $f[0] == $alias) {
+						// check the field is accessible
+						if ($this->bypass_security)
+							$col = $table->internalGetColumn($f[1]);
+						else
+							$col = $table->getColumn($f[1]);
+						if ($col == null) {
+							PNApplication::error("Unknown column ".$f[1]." in table ".$table->getName());
+							return null;
+						}
+						array_push($final_fields, array($f[0], $col->name, $f[2]));
+						unset($col);
+						array_splice($fields,$i,1);
+						$i--;
+					}
 				}
 			}
 			if (!$this->bypass_security && !$table->canReadAll())
@@ -319,15 +333,20 @@ class SQLQuery {
 				foreach ($columns as $col)
 					array_push($final_fields, array($alias, $col->name, null));
 				unset($columns);
-			} else foreach ($this->fields as $f) {
-				if ($f[0] == $join[1] || $f[0] == $alias) {
-					// check the field is accessible
-					if ($this->bypass_security)
-						$col = $table->internalGetColumn($f[1]);
-					else
-						$col = $table->getColumn($f[1]);
-					array_push($final_fields, array($alias, $col->name, $f[2]));
-					unset($col);
+			} else {
+				for ($i = 0; $i < count($fields); $i++) {
+					$f = $fields[$i];
+					if ($f[0] == $join[1] || $f[0] == $alias) {
+						// check the field is accessible
+						if ($this->bypass_security)
+							$col = $table->internalGetColumn($f[1]);
+						else
+							$col = $table->getColumn($f[1]);
+						array_push($final_fields, array($alias, $col->name, $f[2]));
+						unset($col);
+						array_splice($fields,$i,1);
+						$i--;
+					}
 				}
 			}
 			if (!$this->bypass_security && !$table->canReadAll())
@@ -335,6 +354,9 @@ class SQLQuery {
 					$this->where($alias."`.`".$specific[0], $specific[1]());
 				}
 			unset($table);
+		}
+		foreach ($fields as $f) {
+			PNApplication::error("Field '".$f[1]."' on table '".$f[0]."' does not exist in SQL query");
 		}
 		$this->fields = $final_fields;
 		
@@ -695,12 +717,6 @@ class SQLQuery {
 		}
 		$this->search_tables_for_remove($t, $tables, $sub_model_instance);
 
-		// check we can access all the tables
-		if (!$this->bypass_security)
-			foreach ($tables as $ta)
-				if (!$ta[0]->canRemove())
-					throw new \Exception("Access denied: remove data from table ".$ta[0]->getName());
-		
 		// lock all the tables
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
@@ -749,13 +765,12 @@ class SQLQuery {
 			return;
 		}
 
-		// TODO if there are links ?
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
 		$lock = DataBaseLock::lock_table($t->getSQLName($sub_models), $locker);
 		if ($lock == null)
 			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
-
+		// TODO check can remove
 		// remove data
 		$sql = "DELETE FROM `".$t->getSQLName($sub_models)."` WHERE ";
 		$first = true;
@@ -783,8 +798,16 @@ class SQLQuery {
 			foreach ($table->getModel()->internalGetTables() as $t) {
 				$cols = $t->internalGetColumns(array($table->getModel()->getParentTable()=>$sub_model_instance));
 				foreach ($cols as $col)
-					if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName())
-						$this->search_tables_for_remove($t, $tables, $sub_model_instance);
+					if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName()) {
+						if ($col->remove_foreign_when_primary_removed) {
+							if (!$this->bypass_security && !$t->canRemove())
+								throw new \Exception("Access denied: remove data from table ".$t->getName());
+							$this->search_tables_for_remove($t, $tables, $sub_model_instance);
+						} else {
+							if (!$this->bypass_security && !$t->canModifyField($col->name))
+								throw new \Exception("Access denied: cannot modify ".$col->name." from table ".$t->getName());
+						}
+					}
 			}
 		} else {
 			// we are on the root model, we may have link everywhere
@@ -794,14 +817,30 @@ class SQLQuery {
 						$sm = array($t->getModel()->getParentTable()=>$smi);
 						$cols = $t->internalGetColumns($sm);
 						foreach ($cols as $col)
-							if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName())
-								$this->search_tables_for_remove($t, $tables, $sm);
+							if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName()) {
+								if ($col->remove_foreign_when_primary_removed) {
+									if (!$this->bypass_security && !$t->canRemove())
+										throw new \Exception("Access denied: remove data from table ".$t->getName());
+									$this->search_tables_for_remove($t, $tables, $sm);
+								} else {
+									if (!$this->bypass_security && !$t->canModifyField($col->name))
+										throw new \Exception("Access denied: cannot modify ".$col->name." from table ".$t->getName());
+								}
+							}
 					}
 				} else {
 					$cols = $t->internalGetColumns(null);
 					foreach ($cols as $col)
-						if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName())
-							$this->search_tables_for_remove($t, $tables, null);
+						if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table->getName()) {
+							if ($col->remove_foreign_when_primary_removed) {
+								if (!$this->bypass_security && !$t->canRemove())
+									throw new \Exception("Access denied: remove data from table ".$t->getName());
+								$this->search_tables_for_remove($t, $tables, null);
+							} else {
+								if (!$this->bypass_security && !$t->canModifyField($col->name))
+									throw new \Exception("Access denied: cannot modify ".$col->name." from table ".$t->getName());
+							}
+						}
 				}
 			}
 		}
@@ -879,13 +918,13 @@ class SQLQuery {
 									foreach ($linked as $linked_key)
 										$this->perform_remove_by_key($t, $linked_key, null);
 							} else
-								SQLQuery::create()->bypass_security()->update($t->getSQLName($sm), array($col->name=>null), array($col->name=>$key));
+								SQLQuery::create()->bypass_security()->update($t->getSQLName(null), array($col->name=>null), array($col->name=>$key));
 						} else {
 							// no primary key, just remove the entries
 							if ($col->remove_foreign_when_primary_removed)
-								SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName($sm)."` WHERE `".$col->name."`=".$key);
+								SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName(null)."` WHERE `".$col->name."`=".$key);
 							else
-								SQLQuery::db()->execute("UPDATE FROM `".$t->getSQLName($sm)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
+								SQLQuery::db()->execute("UPDATE FROM `".$t->getSQLName(null)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
 						}
 					}
 				}

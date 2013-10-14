@@ -155,6 +155,7 @@ ajax = {
 			}
 		}, foreground);
 	},
+	
 	/**
 	 * Perform a POST call, with custom data type, then on success it will analyze the result
 	 * @param url

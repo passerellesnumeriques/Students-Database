@@ -82,6 +82,10 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		},true);
 	}
 	
+	/**
+	 * Remove one area from the tree and update result object (mandatory because the page is not refreshed after removing)
+	 * @parameter area_id
+	 */
 	result.removeArea = function(area_id){
 		/*We remove from the tree*/
 		var index = this.findIndex(area_id);
@@ -90,6 +94,12 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		this[index.division_index].areas[index.area_index] = null;
 	}
 	
+	/**
+	 * Add one area in the tree and then add it in the database and in the result object
+	 * This method is only called when we are not at the root level, so area_parent_id exists
+	 * @parameter area_name: the name of the adding area. This method will set the case of the given name, according to the uniformFirstLetterCapitalized string method
+	 * @parameter area_parent_id
+	 */
 	result.addArea = function(area_name, area_parent_id){
 		var parent_index = this.findIndex(area_parent_id);
 		var country_division = this[parent_index.division_index + 1].division_id;
@@ -106,6 +116,10 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		tr.buildItem(this, div_index, ar_index);
 	}
 	
+	/**
+	 * Add one area, but at the root level: there is no parent_id since we are at the root level
+	 * @parameter area_name: the name of the adding area. This method will set the case of the given name, according to the uniformFirstLetterCapitalized string method
+	 */
 	result.addRoot = function(area_name){
 		var name = area_name.uniformFirstLetterCapitalized();
 		var field_saved_id = null;
@@ -125,7 +139,8 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 	* Get the index in the result object of the given area
 	* @method set_geographic_area#findIndex
 	* @parameter area_id
-	*/
+	 * @returns object {division_index: , area_index: }
+	 */
 	result.findIndex = function(area_id){
 		var index ={};
 		for(var l = 0; l < this.length; l++){
@@ -145,7 +160,8 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 	* Get all the children (just one generation after)
 	* @method set_geographic_area#findChildren
 	* @parameter area_id
-	*/
+	 * @returns empty array if no child, else array of objects {division_id: ,area_id: }
+	 */
 	result.findChildren = function(area_id){
 		var index = this.findIndex(area_id);
 		var division_index = index.division_index;
@@ -176,7 +192,8 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 	* Get the parent of the given area
 	* @method set_geographic_area#findParent
 	* @parameter area_id
-	*/
+	 * @returns null if we are at the root level. Else return an object {division_id: ,area_id: }
+	 */
 	result.findParent = function(area_id){
 		var parent ={};
 		var index = this.findIndex(area_id);
@@ -198,8 +215,9 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 	
 	/**
 	* Create editable cells in the tree
-	* @method set_geographic_area#createEditable
-	*/
+	 * This method will add checkings to the editable cell. Thus, before saving, methods checkVisible and checkUnicity are called
+	 * @method set_geographic_area#createEditable
+	 */
 	result.createEditable = function(division_index, area_index){
 		var div = document.createElement('div');
 		div.style.display ='inline-block';
@@ -213,10 +231,14 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		}
 		else parent_name = '<?php echo $_GET['country_code'];?>';
 		edit.onsave = function(text){
-						if(result.checkUnicity(text, "area", area_parent_id, null)){
+						if(text.checkVisible() && result.checkUnicity(text, "area", area_parent_id, null)){
 							/*We update result*/
 							result[division_index].areas[area_index].area_name = text.uniformFirstLetterCapitalized();
 							return text.uniformFirstLetterCapitalized();
+						}
+						if(!text.checkVisible()){
+							error_dialog("You must enter at least one visible caracter");
+							return result[division_index].areas[area_index].area_name;
 						}
 						else {error_dialog(parent_name + " already has one child called " + text);
 							return result[division_index].areas[area_index].area_name;
@@ -225,14 +247,12 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		container.appendChild(div);
 	}
 	
-	result.checkNotEmpty = function(text){
-		var is_not_empty = true;
-		var text_split = text.split(" ");
-		alert(text_split.length);
-		if (text_split.length == 0) is_not_empty = false;
-		return is_not_empty;
-	}
-	
+	/**
+	 * This method builds the table to manage the country divisions, based on the result object
+	 * The remove button is not added at the root level in order to avoid removing all the data about a country
+	 * The add button is only added in the footer: it is not possible to add a division between two others
+	 * All the divisions name are editable cells: as previously, the methods checkVisible and checkUnicity are called before saving
+	 */
 	result.buildTableDivisions = function(){
 		var container = document.getElementById('manage_divisions');
 		var table = document.createElement('table');
@@ -262,12 +282,16 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 				edit.division_name = result[i].division_name;
 				edit.division_index = i;
 				edit.onsave = function(text){
-					if(result.checkUnicity(text,null,null,"division")){
+					if(result.checkUnicity(text,null,null,"division") && text.checkVisible()){
 						/*We update result*/
 						result[edit.division_index].division_name = text.uniformFirstLetterCapitalized();
 						return text.uniformFirstLetterCapitalized();
 					}
-					else{
+					if(!text.checkVisible()){
+						error_dialog("You must enter at least one visible caracter");
+						return edit.division_name;
+					}
+					if(!result.checkUnicity(text,null,null,"division")){
 						error_dialog("The country <?php echo $_GET['country_code'];?> already has a division called "+ text);
 						return edit.division_name;
 					}
@@ -301,6 +325,10 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		container.appendChild(form_reload);
 	}
 	
+	/**
+	 * Method called to manage the add division button
+	 * The name of the added division is checked by the checkVisible and checkUnicity methods
+	 */
 	result.startAddDivision = function(){
 		input_dialog(theme.icons_16.question,
 					"Add a new division",
@@ -308,17 +336,23 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 					"",
 					50,
 					function(text){
-						if(text.length != 0){ 
+						if(text.checkVisible()){ 
 							if(!result.checkUnicity(text, null, null, "division")){ return "This division name is already set for this country";}
 							else return;
 						}
-						else return "You must enter at least one caracter";
+						else return "You must enter at least one visible caracter";
 					},
 					function(text){
 						if(text) result.addDivision(text.uniformFirstLetterCapitalized());
 					});
 	}
 	
+	/**
+	 * Method which is called by the add division button
+	 * This method add the division in the database
+	 * No need to update the tree nor result object since the page is reloaded after submitting
+	 * @parameter division_name
+	 */
 	result.addDivision = function(division_name){
 		var parent_index = this.length -1;
 		var parent_id = this[parent_index].division_id;
@@ -339,6 +373,11 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		document.getElementById('form_reload').submit();
 	}
 	
+	/**
+	 * Method to create a remove division button
+	 * @parameter td_remove the cell where the button should be added
+	 * @parameter division_id the id that will be removed by clicking on the button
+	 */
 	result.buttonRemoveDivision = function(td_remove, division_id){
 		var remove_button = document.createElement('div');
 		remove_button.className = "button";
@@ -347,11 +386,21 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		td_remove.appendChild(remove_button);
 	}
 	
+	/**
+	 * Method asking the user to confirm the removing
+	 * @parameter division_id
+	 */
 	result.askRemoveDivision = function (division_id){
 		confirm_dialog("Are you sure you want to delete this division? All its children will be removed, even the geographic areas",
 						function(text){if(text) result.removeDivision(division_id);}
 						);
 	}
+	
+	/**
+	 * Remove one division from the database (and all the areas, divisions which are linked by a foreign key)
+	 * Refresh the page after processing
+	 * @parameter division_id
+	 */
 	result.removeDivision = function(division_id){
 		service.json("data_model","remove_row",{table:"Country_division", row_key:division_id}, function(res){
 			if(!res) return;
@@ -360,6 +409,16 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		document.getElementById('form_reload').submit();
 	}
 	
+	/**
+	 * Method called before adding a child to an area or a division
+	 * @parameter {string} text
+	 * @parameter {string} area
+	 * @parameter area_parent_id the id of the current area to which we are trying to insert a child. area_parameter == null means we are at the root level
+	 * @parameter {string} division
+	 * if called with area != null, means the user wants to check the unicity of an area name. In this case, this method will compare text (after lower case) to all the children of the given parent
+	 * if called with division != null, means the user wants to check the unicity of a division name: just compare text with all the divisions names
+	 * @returns {boolean} true if unique, else false
+	 */
 	result.checkUnicity = function(text, area, area_parent_id, division){
 		name = text.toLowerCase();
 		var is_unique = true;
@@ -441,6 +500,13 @@ require('tree.js',function(){
 		}
 	}
 	
+	/**
+	 * Create the remove button in the tree
+	 * The root case is treated separately
+	 * @parameter r the result object
+	 * @parameter division_index the level in the tree
+	 * @parameter area_index the index of the current area
+	 */
 	tr.addRemoveButton = function(r, division_index, area_index){
 		var remove_button = document.createElement('div');
 		remove_button.className = 'button';
@@ -457,10 +523,22 @@ require('tree.js',function(){
 		div.appendChild(remove_button);
 	}
 	
+	/**
+	 * Ask for user opinion before removing one area
+	 * @parameter r the result object
+	 * @parameter area_id the id of the area to remove
+	 */
 	tr.removeChildren = function(r, area_id){
 		confirm_dialog("Are you sure you want to delete this area? All its children will also be deleted.", function(text){if(text == true) r.startRemove(area_id);});
 	}
 	
+	/**
+	 * Method called to add an area on the tree
+	 * This method also calls checkVisible and checkUnicity methods
+	 * @parameter r the result object
+	 * @parameter area_parent_id the id of the area to which the user is trying to add a child
+	 * @parameter root if root == 'root' means we are at the root level, so will call the addRoot method. Else, root == null
+	 */
 	tr.addChild = function(r, area_parent_id, root){
 		if(root == null){
 			input_dialog(theme.icons_16.question,
@@ -469,11 +547,11 @@ require('tree.js',function(){
 									'',
 									50,
 									function(text){
-										if(text.length != 0){ 
+										if(text.checkVisible()){ 
 											if(!r.checkUnicity(text, "area", area_parent_id, null)){ return "The current area already has a child with this name";}
 											else return;
 										}
-										else return "You must enter at least one caracter";
+										else return "You must enter at least one visible caracter";
 									},
 									function(text){if (text) r.addArea(text ,area_parent_id);});
 		}
@@ -484,16 +562,20 @@ require('tree.js',function(){
 									'',
 									50,
 									function(text){
-										if(text.length != 0){ 
+										if(text.checkVisible()){ 
 											if(!r.checkUnicity(text, "area", area_parent_id, null)){ return "The current area already has a child with this name";}
 											else return;
 										}
-										else return "You must enter at least one caracter";
+										else return "You must enter at least one visible caracter";
 									},
 									function(text){if (text) r.addRoot(text);});
 		}
 	}
 	
+	/**
+	 * Build the whole tree, adding a root level
+	 * @parameter r the result object
+	 */
 	tr.buildTree = function (r){
 		tr.addColumn(new TreeColumn(""));
 		/*We add a root level to be able to manage the first level(add, remove)*/
@@ -515,6 +597,12 @@ require('tree.js',function(){
 		}		
 	}
 	
+	/**
+	 * Build an item in the tree
+	 * @parameter r the result object
+	 * @parameter division_index
+	 * @parameter area_index
+	 */
 	tr.buildItem = function(r, division_index, area_index){
 		var div = document.createElement('div');
 		div.id = r[division_index].areas[area_index].area_id;
@@ -540,11 +628,10 @@ require('editable_cell.js',function(){
 	if (result != null && tr != null) everything_ready();
 });
 
+/**
+ * Function called when all the javascripts is ready to initiate the page
+ */
 function everything_ready() {
-	// if(result == {}){
-		// /*We only create the table to manage the divisions*/
-		// result.buildTableDivisions();
-	// }
 	/*We create the tree*/
 	tr.buildTree(result);
 	/*We create the table to manage the divisions*/
@@ -555,8 +642,6 @@ function everything_ready() {
 	div_manage_divisions.style.left = "0px";
 	div_manage_divisions.style.width = "250px";
 	div_manage_divisions.style.marginLeft = "30px";
-	
-	result.checkNotEmpty('to ');
 
 }
 

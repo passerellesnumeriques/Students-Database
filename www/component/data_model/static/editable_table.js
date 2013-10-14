@@ -1,22 +1,19 @@
 if (typeof require != 'undefined')
 	require("typed_field.js");
-	
 	/**
+	 * Use this to create an editable cell linked to an entire row of a given table
 	 * @parameter container
 	 * @parameter table the table to which the data belongs to
-	 * @parameter column the column to which the data belongs to
 	 * @parameter row_key
 	 * @parameter field_classname the typed filed of the data
 	 * @parameter field_arguments (optional) in case this typed_filed needs arguments
-	 * @parameter data the data that initiates the editable_cell
 	 * @parameter style (optional) an object containing all the style attributes to set on the editable_cell(when it is uneditable). For instance style = {verticalAlign:"bottom"}
 	 */
-function editable_cell(container, table, column, row_key, field_classname, field_arguments, data, style) {
+function editable_table(container, table, row_key, field_classname, field_arguments, style) {
 	var t=this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (typeof field_arguments == 'string') field_arguments = eval('('+field_arguments+')');
-	container.editable_cell = this;
-	t.data = data;
+	container.editable_table = this;
 	t.field = null;
 	t.save_button = null;
 	t.unedit_button = null;
@@ -34,7 +31,7 @@ function editable_cell(container, table, column, row_key, field_classname, field
 		if (t.field) { container.removeChild(t.field.getHTMLElement()); t.field = null; }
 		require("typed_field.js",function() { 
 			require(field_classname+".js",function(){
-				t.field = new window[field_classname](t.data,false,null,null,field_arguments);
+				t.field = new window[field_classname](row_key,false,null,null,field_arguments);
 				t.elem = t.field.getHTMLElement(); 
 				container.appendChild(t.elem);
 				if (t.elem.nodeType != 1) t.elem = container;
@@ -58,16 +55,15 @@ function editable_cell(container, table, column, row_key, field_classname, field
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);
-		service.json("data_model", "lock_cell", {table:table,row_key:row_key,column:column}, function(result) {
+		service.json("data_model", "lock_row", {table:table,row_key:row_key}, function(result) {
 			container.removeChild(loading);
 			if (result == null) {
 				t.unedit();
 				return;
 			}
 			t.lock = result.lock;
-			t.data = result.value;
 			window.database_locks.add_lock(parseInt(result.lock));
-			t.field = new window[field_classname](t.data,true,null,null,field_arguments);
+			t.field = new window[field_classname](row_key,true,null,null,field_arguments);
 			container.appendChild(t.field.getHTMLElement());
 			var prev_click = t.field.getHTMLElement().onclick; 
 			t.field.getHTMLElement().onclick = function (ev) { stopEventPropagation(ev); if (prev_click) prev_click(ev); };
@@ -85,8 +81,12 @@ function editable_cell(container, table, column, row_key, field_classname, field
 			container.appendChild(t.unedit_button);
 		});
 	};
+	
+	/**
+	 * This method calls the field.save method
+	 * 
+	 */
 	t.save = function() {
-		t.field.save();
 		var new_data = t.field.getCurrentData();
 		if (t.onsave) {
 			var value = t.onsave(new_data);
@@ -95,18 +95,24 @@ function editable_cell(container, table, column, row_key, field_classname, field
 				new_data = value;
 			}
 		}
-		if (!t.field.hasChanged()) { t.unedit(); return; }
-		container.removeChild(t.field.getHTMLElement()); t.field = null;
-		container.removeChild(t.save_button); t.save_button = null;
-		container.removeChild(t.unedit_button); t.unedit_button = null;
+		container.removeChild(t.field.getHTMLElement());
+		container.removeChild(t.save_button);
+		container.removeChild(t.unedit_button);
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);
-		service.json("data_model", "save_cell", {lock:t.lock,table:table,row_key:row_key,column:column,value:new_data},function(result) {
-			container.removeChild(loading);
-			if (result) t.data = new_data;
-			t.unedit();
-		});
+		/*(!go_next) means the data has not changed*/
+		var go_next = t.field.save(function(){container.removeChild(loading); t.unedit();});
+		if(!go_next) {t.unedit(); return;}
+		t.field = null;
+		t.save_button = null;
+		t.unedit_button = null;
+		
+		// service.json("data_model", "save_cell", {lock:t.lock,table:table,row_key:row_key,column:column,value:new_data},function(result) {
+			// container.removeChild(loading);
+			// if (result) t.data = new_data;
+			// t.unedit();
+		// });
 	};
 	
 	t.onsave = null;

@@ -16,8 +16,17 @@ abstract class Component {
 		$this->name = $name;
 	}
 	
-	/** Initialize the component: by default it does nothing, but a component may override this function. */
+	/** Initialize the component: by default it does nothing, 
+	 * but a component may override this function. 
+	 * This function is called only once, when the session 
+	 * of the user is started, but it is not called 
+	 * for subsequent requests */
 	public function init() {}
+	
+	/** Perform operations at the beginning of every request.
+	 * By default it does nothing, but a component may override this function. 
+	 */
+	public function init_request() {}
 	
 	/**
 	 * Request for a page on this component: check it exists, the user has necessary rights, then execute it
@@ -113,7 +122,7 @@ abstract class Component {
 		$service = new $classname();
 	
 		// build input
-		if ($_SERVER["CONTENT_TYPE"] == "text/json")
+		if (isset($_SERVER["CONTENT_TYPE"]) && $_SERVER["CONTENT_TYPE"] == "text/json")
 			$input = json_decode(file_get_contents('php://input'), true);
 		else
 			$input = $_POST;

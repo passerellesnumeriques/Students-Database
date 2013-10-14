@@ -61,6 +61,30 @@ service = {
 		);
 	},
 	
+	/**
+	 * Call a service with JSON input, but which return a custom format which should not be analyzed automatically.
+	 * @param component the component containing the service
+	 * @param service_name the name of the service to call
+	 * @param input data to send to the service: an object, each attribute being a $_POST. If an attribute is a structure or array, it will be converted into a json string.
+	 * @param handler callback that will receive the raw result, or null if a network error occured
+	 * @param foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
+	 */
+	custom_output: function(component, service_name, input, handler, foreground) {
+		var data = "";
+		if (input != null)
+			data = service.generate_input(input);
+		ajax.call("POST", "/dynamic/"+component+"/service/"+service_name, "text/json", data, 
+			function(error){
+				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+				handler(null);
+			},
+			function(xhr){
+				handler(xhr.responseText);
+			},
+			foreground
+		);
+	},
+
 	generate_input: function(input) {
 		var s = "";
 		if (input == null) return "null";

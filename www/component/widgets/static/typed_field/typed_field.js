@@ -14,6 +14,7 @@ function typed_field(data,editable,onchanged,onunchanged,config){
 	this.onchanged = onchanged;
 	this.onunchanged = onunchanged;
 }
+// TODO toggleEditable
 typed_field.prototype = {
 	/**
 	 * @returns the HTML element representing the field
@@ -48,5 +49,14 @@ typed_field.prototype = {
 	 * highlight the field to signal an error
 	 * @param {Boolean} error if true, the field is highlighted, else it is not
 	 */
-	signal_error: function(error) {}
+	signal_error: function(error) {},
+	/**
+	 * @param onsaved the instance of the editable_table object
+	 * @param container, the one managed by the editable_table object
+	 * In case the field manage a data structure associated to a key, this function will save the changes of the structure in the database
+	 * This method must replace the role of the hasChanged method (the row_key may not have changed whereas the value pointed by the key have)
+	 * onsave method must manage the loading button, ang call unedit method
+	 * @return {boolean} true if the data pointed by the key have changed
+	 */
+	save: function(onsaved) {}
 };

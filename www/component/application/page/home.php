@@ -13,6 +13,7 @@ TODO: home page<br/><br/>
 <a href="/dynamic/geography/page/set_geography_area">Set Geography Area</a><br/>
 <a href="/dynamic/calendar/page/calendars">Calendars</a><br/>
 <a href="/dynamic/students/page/batches">Batches</a><br/>
+<a href="/dynamic/contact/page/organization_profile">Organization profile</a><br/>
 
 <?php 		
 	}

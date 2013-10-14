@@ -13,12 +13,15 @@ class service_save_data extends Service {
 	<li><code>row_key_value</code></li>
 	<li><code>value</code></li>
 </ul>
+<p>All the elements contained in to_save must be locked before calling this service; otherwise, the data update would fail.</p>
 <?php		
 	}
 	public function output_documentation() { echo "return true on success"; }
 	public function execute(&$component, $input) {
 		$to_save = $input["to_save"];
 		$sub_models = array();
+		require_once("component/data_model/Model.inc");
+		$to_be_locked = array();
 		foreach ($to_save as $t) {
 			if (!isset($sub_models[$t["sub_model"]]))
 				$sub_models[$t["sub_model"]] = array();
@@ -28,8 +31,15 @@ class service_save_data extends Service {
 				$sub_models[$t["sub_model"]][$t["table"]][$t["row_key_name"]] = array();
 			if (!isset($sub_models[$t["sub_model"]][$t["table"]][$t["row_key_name"]][$t["row_key_value"]]))
 				$sub_models[$t["sub_model"]][$t["table"]][$t["row_key_name"]][$t["row_key_value"]] = array();
-			$sub_models[$t["sub_model"]][$t["table"]][$t["row_key_name"]][$t["row_key_value"]][$t["column"]] = $t["value"];
+			$sub_models[$t["sub_model"]][$t["table"]][$t["row_key_name"]][$t["row_key_value"]][$t["column"]] = $t["value"];			
+			
+			$lock = array("table"=>$t["table"],"column"=>$t["column"]);
+			$table = DataModel::get()->getTable($t["table"]);
+			if ($table->getPrimaryKey() <> null && $t["row_key_name"] == $table->getPrimaryKey()->name)
+				$lock["row_key"] = $t["row_key_value"];
+			array_push($to_be_locked, $lock);
 		}
+		// TODO DataBaseLock::check_is_locked($to_be_locked);
 		require_once("component/data_model/Model.inc");
 		foreach ($sub_models as $sub_model=>$for_sub_model) {
 			foreach ($for_sub_model as $table=>$for_table) {
