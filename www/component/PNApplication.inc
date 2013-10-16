@@ -9,7 +9,10 @@ require_once("Component.inc");
  */
 class PNApplication {
 
-	/** @var PNApplication */
+	/**
+	 * @static 
+	 * @var PNApplication 
+	 */
 	public static $instance;
 
 	public static $errors = array();

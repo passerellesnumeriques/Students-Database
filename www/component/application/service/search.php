@@ -18,34 +18,34 @@ class service_search extends Service {
 	}
 	
 	public function execute(&$component, $input) {
-		require_once("component/data_model/Model.inc");
-		$results = array();
-		foreach (DataModel::get()->getTables() as $table) {
-			foreach ($table->getDisplayableData() as $field=>$disp) {
-				$this->search($table, $field, $disp, $results, $input["q"]);
-			}
-		}
+// 		require_once("component/data_model/Model.inc");
+// 		$results = array();
+// 		foreach (DataModel::get()->getTables() as $table) {
+// 			foreach ($table->getDisplayableData() as $field=>$disp) {
+// 				$this->search($table, $field, $disp, $results, $input["q"]);
+// 			}
+// 		}
 	}
-	private function search($table, $field, $disp, &$results, $search) {
-		if ($table->getModel() instanceof SubDataModel) {
-			foreach ($table->getModel()->getExistingInstances() as $sm)
-				$this->search($table, $field, $sm, $disp, $results, $search);
-		} else
-			$this->search($table, $field, null, $disp, $results, $search);
-	}
-	private function search($table, $field, $sub_model, $disp, &$results, $search) {
-		$col = $table->getColumn($field, $sub_model);
-		$q = SQLQuery::create();
-		$q->select(array($table->getSQLNameFor($sub_model)=>"the_table"));
-		$q->field("the_table", $col->name, "the_value");
+// 	private function search($table, $field, $disp, &$results, $search) {
+// 		if ($table->getModel() instanceof SubDataModel) {
+// 			foreach ($table->getModel()->getExistingInstances() as $sm)
+// 				$this->search($table, $field, $sm, $disp, $results, $search);
+// 		} else
+// 			$this->search($table, $field, null, $disp, $results, $search);
+// 	}
+// 	private function search($table, $field, $sub_model, $disp, &$results, $search) {
+// 		$col = $table->getColumn($field, $sub_model);
+// 		$q = SQLQuery::create();
+// 		$q->select(array($table->getSQLNameFor($sub_model)=>"the_table"));
+// 		$q->field("the_table", $col->name, "the_value");
 		
-		$q_start = new SQLQuery($q);
-		$q_start->where("`the_table`.`".$col->name."` LIKE '".$q->escape($search)."%'");
-		$q_contains = new SQLQuery($q);
-		$q_contains->where("`the_table`.`".$col->name."` NOT LIKE '".$q->escape($search)."%'");
-		$q_contains->where("`the_table`.`".$col->name."` LIKE '%".$q->escape($search)."%'");
-		// TODO
-	}
+// 		$q_start = new SQLQuery($q);
+// 		$q_start->where("`the_table`.`".$col->name."` LIKE '".$q->escape($search)."%'");
+// 		$q_contains = new SQLQuery($q);
+// 		$q_contains->where("`the_table`.`".$col->name."` NOT LIKE '".$q->escape($search)."%'");
+// 		$q_contains->where("`the_table`.`".$col->name."` LIKE '%".$q->escape($search)."%'");
+// 		// TODO
+// 	}
 		
 		
 // 		require_once("component/data_model/Model.inc");
