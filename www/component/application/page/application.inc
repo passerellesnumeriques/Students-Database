@@ -64,6 +64,8 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	<img src='/static/application/logo.png' height=32px border=0 style='vertical-align:top'/>
 </a>
 <script type='text/javascript'>
+window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
+
 setInterval(function(){
 	service.json("application","ping",null,function(r){});
 },30*1000); // every 30 seconds

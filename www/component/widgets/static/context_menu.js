@@ -16,6 +16,7 @@ function context_menu(menu) {
 		menu = document.createElement("DIV");
 		menu.className = 'context_menu';
 	}
+	menu.context_menu=this;
 	/** Indicate if the menu should be removed when closed, or only hidden
 	 * @member {boolean} context_menu#removeOnClose
 	 */
@@ -157,7 +158,7 @@ function context_menu(menu) {
 			x = getWindowWidth()-w;
 		}
 		document.body.removeChild(menu);
-		t.showAt(x,y);
+		t.showAt(x,y,from);
 	};
 	/** Display the menu above the given element
 	 * @method context_menu#showAboveElement
@@ -203,12 +204,20 @@ function context_menu(menu) {
 			x = getWindowWidth()-w;
 		}
 		document.body.removeChild(menu);
-		t.showAt(x,y);
+		t.showAt(x,y,from);
 	};
 	/** Display the menu at the given position (using absolute positioning)
 	 * @member context_menu#showAt
 	 */
-	t.showAt = function(x,y) {
+	t.showAt = function(x,y,from) {
+		var e = from;
+		var from_inside_menu = false;
+		while (e && e != document.body) { if (e.className == 'context_menu') { from_inside_menu = true; break; } e = e.parentNode; }
+		if (from_inside_menu) {
+			t.parent_menu = e.context_menu;
+			t.parent_menu_listener = t.parent_menu.hide_if_outside_menu;
+			t.parent_menu.hide_if_outside_menu = function(){}
+		}
 		menu.style.visibility = "visible";
 		menu.style.position = "absolute";
 		menu.style.top = y+"px";
@@ -232,6 +241,11 @@ function context_menu(menu) {
 	 */
 	t.hide = function() {
 		if (t.onclose) t.onclose();
+		if (t.parent_menu) {
+			setTimeout(function(){
+				t.parent_menu.hide_if_outside_menu = t.parent_menu_listener;
+			},1);
+		}
 		if (typeof animation != 'undefined') {
 			if (menu.anim) animation.stop(menu.anim);
 			menu.anim = animation.fadeOut(menu,300,function() {
@@ -252,17 +266,23 @@ function context_menu(menu) {
 		window.top.pnapplication.unregister_onclick(t._listener);
 	};
 	t._listener = function(ev, win, orig_win) {
+		t.hide_if_outside_menu(ev, win, orig_win);
+	};
+	t.hide_if_outside_menu = function(ev, win, orig_win) {
 		if (win == orig_win) {
-			// check if the target is inside
-			var elem = ev.target;
-			if (elem) {
-				do {
-					if (elem == menu) return;
-					if (elem.parentNode == elem) break;
-					elem = elem.parentNode;
-					if (elem == null || elem == document.body || elem == window) break;
-				} while (true);
+			var is_inside = function(child,parent) {
+				// check if the target is inside
+				if (child) {
+					do {
+						if (child == parent) return true;
+						if (child.parentNode == child) break;
+						child = child.parentNode;
+						if (child == null || child == document.body || child == window) break;
+					} while (true);
+				}
+				return false;
 			}
+			if (is_inside(ev.target, menu)) return;
 			// check if this is inside
 			ev = getCompatibleMouseEvent(ev);
 			var x = absoluteLeft(menu);

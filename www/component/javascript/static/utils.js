@@ -60,6 +60,23 @@ String.prototype.uniformFirstLetterCapitalized = function(){
 }
 
 /**
+ * Test if a string is not empty (in terms of visibility)
+ * @memberOf String
+ * @returns true if the given string is not only made of space or is empty; else return false
+ */
+String.prototype.checkVisible = function(){
+	var is_visible = false;
+	var text_split = this.split("");
+	for(var i = 0; i < text_split.length; i++){
+		if(text_split[i] != "" && text_split[i] != " " && text_split[i] !='/r' && text_split[i] != '/n' && text_split[i] != '/t'){
+			is_visible = true;
+			break;
+		}
+	}
+	return is_visible;
+}
+
+/**
  * Some useful functions are added to the class Array
  * @class Array
  */

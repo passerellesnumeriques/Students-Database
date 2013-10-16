@@ -88,8 +88,10 @@ case "dynamic":
 		PNApplication::$instance = new PNApplication();
 		PNApplication::$instance->init();
 		$_SESSION["app"] = &PNApplication::$instance;
-	} else
+	} else {
 		PNApplication::$instance = &$_SESSION["app"];
+		PNApplication::$instance->init_request();
+	}
 	if (PNApplication::$instance->current_domain == "Dev") {
 		$dev = new DevRequest();
 		$dev->url = $_SERVER["PATH_INFO"];

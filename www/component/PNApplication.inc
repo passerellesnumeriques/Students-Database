@@ -139,6 +139,11 @@ class PNApplication {
 		foreach ($components_names as $name) $this->create_component($name);
 		$done = array();
 		foreach ($this->components as $c) $this->init_component($c, $done);
+		$this->init_request();
+	}
+	public function init_request() {
+		$done = array();
+		foreach ($this->components as $c) $this->init_request_for_component($c, $done);
 	}
 	private function create_component($name) {
 		require_once("component/".$name."/".$name.".inc");
@@ -154,6 +159,15 @@ class PNApplication {
 			$this->init_component($this->components[$dep], $done);
 		}
 		$c->init();
+	}
+	private function init_request_for_component($c, &$done) {
+		if (in_array($c->name, $done)) return;
+		array_push($done, $c->name);
+		foreach ($c->dependencies() as $dep) {
+			if (!isset($this->components[$dep])) die("Missing component '".$dep."' which is a dependency of component '".$c->name."'");
+			$this->init_request_for_component($this->components[$dep], $done);
+		}
+		$c->init_request();
 	}
 	
 	public static function sort_components_by_dependencies() {

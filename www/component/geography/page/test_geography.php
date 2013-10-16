@@ -5,29 +5,36 @@ class page_test_geography extends Page{
 
 		
 		echo "<div id='test'></div>";
-		// $this->add_javascript("/static/geography/set_geographic_area.js");
-		// $this->onload("new set_geographic_area('test','PH');");
 		
-		$this->add_javascript("/static/geography/geographic_area_selection.js");
-		$this->onload("new geographic_area_selection('test','PH');");
+		// $this->add_javascript("/static/geography/geographic_area_selection.js");
+		// $this->onload("new geographic_area_selection('test','PH');");
+		$this->add_javascript("/static/data_model/editable_table.js");
+		$this->add_javascript("/static/contact/edit_address.js");
+		?>
+		<script type='text/javascript'>
+		// var div = document.getElementById('test');
+		// var add = new get_address_text("1",function(add){add.getAddressText(div);});
+		//var structure = null;
+		// service.json("contact","get_address",{address_id:"1"},function(res){
+			// if(!res) return;
+			// new edit_address('test', res);
+			// });
+			
+		// require("typed_field.js", function(){
+			// require("field_address.js", function(){
+				// var div = document.getElementById("test");
+				// var editableAddress = new field_address("1", true, null, null, null);
+				// div.appendChild(editableAddress.element);
+			// });
+		// });
+		new editable_table("test","Postal_address",1,"field_address",null,null);
 		
-		 // $q = SQLQuery::create()->select("Country")
-						// ->field("Country","id","country_id")
-						// ->field("Country","code","country_code")
-						// ->field("Country","name","country_name")
-						// ->field("Country_division","id","division_id")
-						// ->field("Country_division","parent","division_parent_id")
-						// ->field("Country_division","name","division_name")
-						// ->field("Geographic_area","id","area_id")
-						// ->field("Geographic_area","name","area_name")
-						// ->field("Geographic_area","parent","area_parent_id")
-						// ->join("Country","Country_division",array("id"=>"country"))
-						// ->join("Country_division","Geographic_area",array("id"=>"country_division"))
-						// ->where("Country.code='PH'")
-						// ->order_by("division_id");
-		// $country_data=$q->execute();
-		// if(!isset($country_data[0]['division_id'])){
-		// echo "vide";}
+		
+		//new editable_cell("test", "Postal_address", "geographic_area",1,"field_area", {country_code:"PH"},null);
+		//service.json("contact","get_address_text",{address_id:1},function(res){alert("done");});
+		</script>
+		<?php
+	
 	}
 }
 ?>

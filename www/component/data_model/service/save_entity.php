@@ -11,8 +11,8 @@ class service_save_entity extends Service {
 <ul>
 	<li><code>table</code>: table.</li>
 	<li><code>sub_model</code>: sub model or null.</li>
-	<li><code>lock</code>: id of lock in case the entity already exists. If not specified, a new entity will be created.</li>
 	<li><code>key</code>: primary key of the entity to save. If not specified, a new entity will be created.</li>
+	<li><code>lock</code> (only for existing entity): id of lock in case the entity already exists, or -1 to explicitly specify that we don't care that someone is modifying the same data at the same time.</li>
 	<li><i>fields to save</i>: each name must start with 'field_' to avoid collision with other input parameters.</li>
 </ul>
 <?php
@@ -26,6 +26,10 @@ class service_save_entity extends Service {
 		$sub_model = @$input["sub_model"];
 		$lock_id = @$input["lock"];
 		$key = @$input["key"];
+		if ($key <> null && $lock_id == null) {
+			PNApplication::error("Missing lock to update existing entity");
+			return;
+		}
 		
 		require_once("component/data_model/Model.inc");
 		$t = DataModel::get()->getTable($table);
@@ -40,12 +44,12 @@ class service_save_entity extends Service {
 			$fields[$col->name] = $input["field_".$col->name];
 		}
 		
-		if ($lock_id == null || $key == null) {
+		if ($key == null) {
 			// this is an insert
 			echo "{key:".SQLQuery::create()->insert($table, $fields, $sub_models)."}";
 		} else {
 			// this is an update
-			SQLQuery::create()->update_by_key($table, $key, $fields, $sub_models, $lock_id);
+			SQLQuery::create()->update_by_key($table, $key, $fields, $sub_models, $lock_id == -1 ? null : $lock_id);
 			echo "{key:".$key."}";
 		}
 	}

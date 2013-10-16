@@ -180,15 +180,6 @@ class user_management extends Component {
 			}
 		} while ($changed);
 	}
-
-	public function get_profile_pages(&$people) {
-		$user_id = @$_GET["user"];
-		if ($user_id == null && $people <> null)
-			$user_id = PNApplication::$instance->user_people->get_user_from_people($people);
-		return array(
-			"user_rights"=>array("/static/user_management/access_list.png", "User Rights", "/dynamic/user_management/page/user_rights?user=".$user_id, 1000),
-		);
-	}
 	
 }
 
