@@ -8,7 +8,7 @@ class service_create_db extends Service {
 	public function execute(&$component, $input) {
 		$domain = $input["domain"];
 		require_once("component/data_model/Model.inc");
-		require_once("component/development/DataBaseModel.inc");
+		require_once("component/data_model/DataBaseModel.inc");
 		
 		$db_conf = include("conf/local_db");
 		require_once("DataBaseSystem_".$db_conf["type"].".inc");

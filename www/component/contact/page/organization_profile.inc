@@ -166,7 +166,7 @@ function organization_profile(&$page, $id, $container_id, $title_container_id){
 		if(rights.edit){
 			var style = {};
 			style.fontSize = "x-large";
-			var edit = new editable_cell(div,"Organization","name",s.id,"field_text",null,s.name,style);
+			var edit = new editable_cell(div,"Organization","name",s.id,"field_text",null,s.name,style,style);
 			edit.onsave = function(new_data){
 				if(new_data.checkVisible()){
 					/* Update s */
@@ -528,8 +528,8 @@ function organization_profile(&$page, $id, $container_id, $title_container_id){
 		if(data == "Custom"){
 			var input = document.createElement("INPUT");
 			input.type = 'text';
-			input.maxLength = 10;
-			input.size = 10;
+			input.maxLength = 20;
+			input.size = 15;
 			item.appendChild(input);
 			s.contextDesignation.onclose = function(){
 				if(input.value.checkVisible()){
