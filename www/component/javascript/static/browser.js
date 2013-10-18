@@ -435,7 +435,7 @@ var _scripts_loaded = [];
  * @param {function} onload called once the javascript is loaded
  */
 function add_javascript(url, onload) {
-	var p = new URL(url).path;
+	var p = new URL(url).toString();
 	if (_scripts_loaded.contains(p)) {
 		if (onload) onload();
 		return;
@@ -450,8 +450,8 @@ function add_javascript(url, onload) {
 		var e = head.childNodes[i];
 		if (e.nodeName != "SCRIPT") continue;
 		if (!e.src || e.src.length == 0) continue;
-		var u = new URL(e.src);
-		if (u.path == p) {
+		var eu = new URL(e.src).toString();
+		if (eu == p) {
 			// we found a script there
 			if (e.data) {
 				if (onload)
@@ -480,15 +480,31 @@ function add_javascript(url, onload) {
 	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); };
 	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
-	s.src = new URL(url).toString();
+	s.src = p;
 }
 /**
  * Indicate a javascript is already loaded. This is automatically called by add_javascript, but may be useful in case some scripts are loaded in a different way
  */
 function javascript_loaded(url) {
-	url = new URL(url);
-	if (!_scripts_loaded.contains(url.path))
-		_scripts_loaded.push(url.path);
+	url = new URL(url).toString();
+	if (!_scripts_loaded.contains(url))
+		_scripts_loaded.push(url);
+}
+function remove_javascript(url) {
+	var p = new URL(url).toString();
+	_scripts_loaded.remove(p);
+	var head = document.getElementsByTagName("HEAD")[0];
+	for (var i = 0; i < head.childNodes.length; ++i) {
+		var e = head.childNodes[i];
+		if (e.nodeName != "SCRIPT") continue;
+		if (!e.src || e.src.length == 0) continue;
+		var u = new URL(e.src).toString();
+		if (u == p) {
+			head.removeChild(e);
+			i--;
+			continue;
+		}
+	}
 }
 
 /**
@@ -507,7 +523,7 @@ function add_stylesheet(url) {
 		if (e.nodeName != "LINK") continue;
 		if (!e.href || e.href.length == 0) continue;
 		var u = new URL(e.href);
-		if (u.path == url.path) {
+		if (u.toString() == url.toString()) {
 			// we found it
 			return;
 		}

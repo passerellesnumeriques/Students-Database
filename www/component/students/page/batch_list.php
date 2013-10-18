@@ -7,6 +7,7 @@ class page_batch_list extends Page {
 		$this->add_javascript("/static/widgets/grid/grid.js");
 		$this->add_javascript("/static/data_model/data_list.js");
 		$this->onload("init_batch_list();");
+		$batch = SQLQuery::create()->select("StudentBatch")->where("id",$_GET["batch"])->execute_single_row();
 ?>
 <div style='width:100%;height:100%' id='batch_list'>
 </div>
@@ -25,8 +26,11 @@ function init_batch_list() {
 					new data_import(
 						document.body,
 						"Student",
+						[
+						 	"Student.people>People.*"
+						],
 						[{table:'Student',column:'batch',value:<?php echo $_GET["batch"];?>}],
-						'file'
+						"Students for Batch: <?php echo $batch["name"]?>"
 					);
 				});
 			};

@@ -21,24 +21,35 @@ class page_excel_upload extends Page {
 		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("setTimeout(init_page,1);");
 		?>
-		<div id='excel' style='width:100%;height:100%'>
+		<div id='excel_container' style='width:100%;height:100%'>
 		</div>
 		<script type='text/javascript'>
 		function init_page() {
-			window.excel = new Excel('excel', function(xl) {
+			window.excel = new Excel('excel_container', function(xl) {
 				<?php
 				foreach ($excel->getWorksheetIterator() as $sheet) {
 					$cols = 0;
 					while ($sheet->cellExistsByColumnAndRow($cols, 1)) $cols++;
 					$rows = 0;
+					$nb_rows_without_cells = 0;
 					foreach ($sheet->getRowIterator() as $row) {
 						$rows++;
 						$it = $row->getCellIterator();
 						$it->setIterateOnlyExistingCells(false);
 						$c = 0;
-						foreach ($it as $col) $c++;
+						$has_cells = false;
+						foreach ($it as $col) {
+							$c++;
+							if ($sheet->cellExistsByColumnAndRow($col->getColumn(), $col->getRow()) && $col->getValue() <> null)
+								$has_cells = true;
+						}
 						if ($c > $cols) $cols = $c;
+						if (!$has_cells)
+							$nb_rows_without_cells++;
+						else
+							$nb_rows_without_cells = 0;
 					}
+					$rows -= $nb_rows_without_cells;
 					echo "xl.addSheet(".json_encode($sheet->getTitle()).",null,".$cols.",".$rows.",function(sheet){\n";
 					for ($i = 0; $i < $cols; $i++) {
 						$col = $sheet->getColumnDimensionByColumn($i);

@@ -118,7 +118,7 @@ function context_menu(menu) {
 	 * @method context_menu#showBelowElement
 	 * @param from the element below which the menu will be displayed
 	 */
-	t.showBelowElement = function(from) {
+	t.showBelowElement = function(from, min_width_is_from) {
 		menu.style.visibility = "visible";
 		menu.style.position = "absolute";
 		t.show_from = from;
@@ -129,6 +129,9 @@ function context_menu(menu) {
 		var y = absoluteTop(from);
 		var w = menu.offsetWidth;
 		var h = menu.offsetHeight;
+		if (min_width_is_from && w < from.offsetWidth) {
+			setWidth(menu, w = from.offsetWidth);
+		}
 		if (y+from.offsetHeight+h > getWindowHeight()) {
 			// not enough space below
 			var space_below = getWindowHeight()-(y+from.offsetHeight);
@@ -161,7 +164,7 @@ function context_menu(menu) {
 	 * @method context_menu#showAboveElement
 	 * @param from the element above which the menu will be displayed
 	 */
-	t.showAboveElement = function(from) {
+	t.showAboveElement = function(from, min_width_is_from) {
 		menu.style.visibility = "visible";
 		menu.style.position = "absolute";
 		t.show_from = from;
@@ -172,6 +175,9 @@ function context_menu(menu) {
 		var y = absoluteTop(from);
 		var w = menu.offsetWidth;
 		var h = menu.offsetHeight;
+		if (min_width_is_from && w < from.offsetWidth) {
+			setWidth(menu, w = from.offsetWidth);
+		}
 		if (y-h < 0) {
 			// not enough space above
 			var space_below = getWindowHeight()-(y+from.offsetHeight);

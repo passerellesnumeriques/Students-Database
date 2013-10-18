@@ -24,93 +24,6 @@ function get_resources($path, $rel, &$image, &$javascript, &$unknown) {
 }
 
 function generate_component($name, &$nav, &$datamodel_uml) {
-	echo "   + Component ".$name."\n";
-	global $generated_dir,$www_dir;
-	//mkdir($generated_dir."/component/".$name);
-	$path = $www_dir."/component/".$name;
-	
-	$comp_nav = array();
-	
-	$title2_counter = 1;
-	$html = "<!DOCTYPE html>";
-	$html .= "<html>";
-	$html .= "<head>";
-	$html .= "<link rel='stylesheet' type='text/css' href='../../style.css'/>";
-	$html .= "</head>";
-	$html .= "<body>";
-	
-	$html .= "<h1>".$name."</h1>";
-	$html .= "<div style='margin-left:10px'>";
-	
-	if (file_exists($path."/doc/intro.html")) {
-		$title = ($title2_counter++)." Introduction";
-		$html .= "<a name='intro'><h2>".$title."</h2></a>";
-		$html .= "<div style='margin-left:10px'>";
-		$html .= file_get_contents($path."/doc/intro.html");
-		$html .= "</div>";
-		array_push($comp_nav, array("<img src='text.png'/>"."Introduction", "component/".$name."/index.html#intro"));
-	}
-	if (file_exists($path."/dependencies")) {
-		$title = ($title2_counter++)." Dependencies";
-		$html .= "<a name='dependencies'><h2>".$title."</h2></a>";
-		$html .= "<div style='margin-left:10px'>";
-		$uml = "class ".$name."\n";
-		$f = fopen($path."/dependencies","r");
-		while (($line = fgets($f, 4096)) !== false) {
-			$line = trim($line);
-			if (strlen($line) == 0) continue;
-			$i = strpos($line,":");
-			if ($i === FALSE) $i = strlen($line);
-			$uml .= substr($line,0,$i)." <-- ".$name;
-			$doc = trim(substr($line,$i+1));
-			if (strlen($doc) > 0)
-				$uml .= " : ".$doc;
-			$uml .= "\n";
-		}
-		fclose($f);
-		$uml .= "hide members\n";
-		$uml .= "hide circle\n";
-		generate_uml($uml, "component/".$name."/dependencies");
-		$html .= "<img src='dependencies.png'/>";
-		$html .= "</div>";
-		array_push($comp_nav, array("<img src='dependencies.png'/>"."Dependencies", "component/".$name."/index.html#dependencies"));
-	}
-	if (file_exists($path."/datamodel.inc")) {
-		$title = ($title2_counter++)." Data Model";
-		$html .= "<a name='datamodel'><h2>".$title."</h2></a>";
-		$html .= "<div style='margin-left:10px'>";
-		require_once("DataModel.inc");
-		$model = new DataModel();
-		include $path."/datamodel.inc";
-		
-		$uml = "";
-		foreach ($model->tables as $table) {
-			$table_uml = "class ".$table->name." {\n";
-			foreach ($table->columns as $col) {
-				if (isset($table->displayable_data[$col->name]))
-					$table_uml .= "+"; // public
-				else
-					$table_uml .= "-"; // private
-				$table_uml .= $col->name." : ".$col->get_type()."\n";
-			}
-			$table_uml .= "}\n";
-			foreach ($table->columns as $col) {
-				if ($col instanceof ForeignKey) {
-					$table_uml .= $table->name." --> ".$col->foreign_table."\n";
-				}
-			}
-			$uml .= $table_uml;
-			$datamodel_uml .= "package ".$name."\n";
-			$datamodel_uml .= $table_uml;
-			$datamodel_uml .= "end package\n";
-		}
-		$uml .= "hide methods\n";
-		
-		generate_uml($uml, "component/".$name."/data_model");
-		$html .= "<img src='data_model.png'/>";
-		$html .= "</div>";
-		array_push($comp_nav, array("<img src='datamodel.png'/>"."Data Model", "component/".$name."/index.html#datamodel"));
-	}
 	// TODO rights
 	// functionalities
 // 	mkdir($generated_dir."/component/".$name."/php");
@@ -279,7 +192,7 @@ function generate_component($name, &$nav, &$datamodel_uml) {
 				ob_start();$service->input_documentation();$doc=ob_get_clean();
 				$html .= "<tr><td>Input</td><td>".$doc."</td></tr>";
 				ob_start();$service->output_documentation();$doc=ob_get_clean();
-				$html .= "<tr><td>Output (".$service->get_output_format().")</td><td>".$doc."</td></tr>";
+				$html .= "<tr><td>Output (".$service->get_output_format(array()).")</td><td>".$doc."</td></tr>";
 				$html .= "<tr><td>Rights</td><td>";
 				if (count($service->get_required_rights()) == 0)
 					$html .= "This service is accessible to everyone.<br/>";
@@ -336,7 +249,7 @@ function generate_component($name, &$nav, &$datamodel_uml) {
 					$cmd .= " ".$path."/static/".$filename.".readme";
 				else
 					echo "WARNING: no readme file for JavaScript ".$path."/static/".$filename."\n";
-				execute(array($cmd,"del ".$generated_dir."/component/".$name."/javascript/".$filename));
+				execute("jsdoc",array($cmd,"del ".$generated_dir."/component/".$name."/javascript/".$filename));
 				$html .= "<li><a href='javascript/".$filename."_doc/index.html'>".$filename."</a>";
 				if (file_exists($path."/static/".$filename.".readme"))
 					$html .= ": ".file_get_contents($path."/static/".$filename.".readme");
@@ -372,11 +285,6 @@ function generate_component($name, &$nav, &$datamodel_uml) {
 		array_push($comp_nav, array("<img src='static.png'/>"."Static resources", "component/".$name."/index.html#static_resources", $static_nav));
 	}
 
-	$html .= "</div>";
-	
-	$html .= "</body>";
-	$html .= "</html>";
-	write_file("component/".$name."/index.html", $html);
 	array_push($nav, array("<img src='component.png'/>".$name, "component/".$name."/index.html", $comp_nav));
 }
 ?>

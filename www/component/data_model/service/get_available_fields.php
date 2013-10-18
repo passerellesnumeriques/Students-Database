@@ -17,6 +17,19 @@ class service_get_available_fields extends Service {
 		require_once("component/data_model/DataPath.inc");
 		$ctx = new DataPathBuilderContext();
 		$paths = DataPathBuilder::search_from($ctx, $table);
+		
+// 		// filter paths, to remove the duplicate by passing by different paths
+// 		for($i = 0; $i < count($paths); $i++) {
+// 			$p = $paths[$i];
+// 			$p_strong = true;
+// 			for ($j = $i+1; $j < count($paths); ++$j) {
+// 				$p2 = $paths[$j];
+// 				if ($p->table <> $p2->table) continue;
+// 				if ($p->field_name <> $p2->field_name) continue;
+// 				// same table, same field: is it really 2 different informations ?
+// 			}
+// 		}
+		
 		echo "[";
 		for ($i = 0; $i < count($paths); $i++) {
 			if ($i>0) echo ",";

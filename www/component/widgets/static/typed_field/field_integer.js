@@ -12,11 +12,11 @@ function field_integer(data,editable,onchanged,onunchanged,config) {
 		if (config && config.min && config.max) {
 			var m = Math.max((""+config.min).length,(""+config.max).length);
 			input.maxlength = m;
-			input.size = m;
 		}
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
+		require("autoresize_input.js",function(){autoresize_input(input);});
 		var f = function() {
 			setTimeout(function() {
 				if (input.value != data) {

@@ -4,6 +4,7 @@ function tabs(container, fill_tab_content) {
 	var t=this;
 	t.tabs = [];
 	t.selected = -1;
+	t.onselect = null;
 	
 	t.addTab = function(title,icon,content) {
 		var tab = {
@@ -35,6 +36,7 @@ function tabs(container, fill_tab_content) {
 		t.content.appendChild(t.tabs[index].content);
 		t.selected = index;
 		fireLayoutEventFor(t.tabs[index].content);
+		if (t.onselect) t.onselect(t);
 	};
 
 	t._build_tab_header = function(tab) {

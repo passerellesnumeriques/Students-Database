@@ -1,5 +1,6 @@
 function CalendarManager() {
 	this.calendars = [];
+	this.default_calendar_index = 0;
 	
 	this.on_event_added = null;
 	this.on_event_removed = null;
@@ -71,6 +72,7 @@ function Calendar(name, color, show) {
 	this.refresh = function(manager, calendar, ondone) {
 		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar.refresh not implemented"));
 	};
+	this.save_event = null; // must be overriden if the calendar supports modifications
 	var t=this;
 	var ref = function(){
 		if (t.manager) t.manager.refresh_calendar(t,function(){setTimeout(ref,5*60*1000);});
@@ -79,7 +81,7 @@ function Calendar(name, color, show) {
 	setTimeout(ref,5*60*1000);
 }
 
-function PNCalendar(id, name, color, show) {
+function PNCalendar(id, name, color, show, writable) {
 	Calendar.call(this, name, color, show);
 	this.icon = "/static/application/logo.png";
 	this.id = id;
@@ -92,8 +94,8 @@ function PNCalendar(id, name, color, show) {
 			for (var i = 0; i < result.events.length; ++i) {
 				var ev = result.events[i];
 				ev.calendar = cal;
-				ev.start = new Date(ev.start);
-				ev.end = new Date(ev.end);
+				ev.start = new Date(parseInt(ev.start)*1000);
+				ev.end = new Date(parseInt(ev.end)*1000);
 				var found = false;
 				for (var j = 0; j < removed_events.length; ++j) {
 					if (ev.uid == removed_events[j].uid) {
@@ -115,6 +117,30 @@ function PNCalendar(id, name, color, show) {
 			ondone();
 		});
 	};
+	if (writable) {
+		this.save_event = function(event) {
+			var ev = object_copy(event);
+			ev.calendar = event.calendar.id;
+			ev.start = Math.floor(ev.start.getTime()/1000);
+			ev.end = Math.floor(ev.end.getTime()/1000);
+			// TODO continue conversions
+			service.json("calendar","save_event",{event:ev},function(res){
+				if (!event.uid && res && res.uid) {
+					event.uid = res.uid;
+					event.id = res.id;
+					event.calendar.events.push(event);
+					event.calendar.manager.on_event_added(event);
+				} else if (event.uid && res) {
+					for (var i = 0; i < event.calendar.events.length; ++i)
+						if (event.calendar.events[i].uid == event.uid) {
+							event.calendar.events.splice(i,1,event);
+							event.calendar.manager.on_event_updated(event);
+							break;
+						}
+				}
+			});
+		};
+	}
 }
 PNCalendar.prototype = new Calendar();
 PNCalendar.prototype.constructor = PNCalendar;

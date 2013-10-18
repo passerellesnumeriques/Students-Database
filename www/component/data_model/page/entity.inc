@@ -25,21 +25,23 @@ function data_entity_page(&$page, $table, &$entity, $sub_models = null) {
 	echo "<table>";
 	echo "<tr>";
 	foreach ($table->getDisplayableData() as $field=>$name) {
+		$col = $table->getColumn($field, $sub_models);
 		echo "<td>";
 		echo $table->getDisplayableDataName($field);
 		echo "</td>";
-		echo "<td>";
-		echo $entity[$field];
-		echo "</td>";
-		echo "<td>";
 		if ($table->canModifyField($field)) {
-			$typed_field = PNApplication::$instance->widgets->get_typed_field($table->getColumn($field));
-			echo "<img src='".theme::$icons_16["edit"]."' onclick=\"data_entity_edit(event,this,this.parentNode.previousSibling,'".$table->getName()."','".$field."','".$typed_field[0]."','".htmlentities($typed_field[1],ENT_QUOTES,"UTF-8")."','".$entity[$table->getPrimaryKey()->name]."');return false;\" style='cursor:pointer;vertical-align:bottom'/>";
-		}
+			$id = $page->generate_id();
+			echo "<td id='".$id."'>";
+			$typed_field = PNApplication::$instance->widgets->get_typed_field($col);
+			$page->add_javascript("/static/widgets/typed_field/typed_field.js");
+			$page->add_javascript("/static/widgets/typed_field/"+$typed_field[0]+".js");
+			$page->add_javascript("/static/data_model/editable_cell.js");
+			$page->onload("new editable_cell('".$id."',".json_encode($table->getSQLName($sub_models)).",".json_encode($col->name).",".json_encode($entity[$table->getPrimaryKey()->name]).",'".$typed_field[0]."',".$typed_field[1].",".json_encode($entity[$col->name]).");");
+		} else
+			echo $entity[$col->name];
 		echo "</td>";
 		echo "</tr>";
 	}
 	echo "</table>";
-	$page->add_javascript("/static/data_model/entity.js");
 }
 ?>

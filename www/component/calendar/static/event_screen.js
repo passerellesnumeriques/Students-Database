@@ -1,4 +1,4 @@
-function event_screen(ev,default_calendar) {
+function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	var t=this;
 	t.event = object_copy(ev);
 	t._2digits = function(n) {
@@ -9,8 +9,9 @@ function event_screen(ev,default_calendar) {
 	t.getDateString = function(date) {
 		return date.getFullYear()+"-"+t._2digits(date.getMonth()+1)+"-"+t._2digits(date.getDate());
 	};
-	require([["typed_field.js","field_date.js"],"popup_window.js","calendar_view.js"],function() {
+	require([["typed_field.js",["field_date.js","field_time.js"]],"popup_window.js","calendar_view.js"],function() {
 		var o;
+		var ro = ev && !ev.calendar.save_event;
 
 		t.content = document.createElement("DIV");
 		t.content.style.padding = "5px";
@@ -23,6 +24,7 @@ function event_screen(ev,default_calendar) {
 		t.title.type = 'text';
 		t.title.size = 80;
 		t.title.style.fontSize = '12pt';
+		if (ro) t.title.disabled = 'disabled';
 		t.title_div.appendChild(t.title);
 
 		// event timing
@@ -30,27 +32,33 @@ function event_screen(ev,default_calendar) {
 		t.timing_div.style.marginTop = "3px";
 		t.timing_div.style.marginBottom = "2px";
 		t.timing_div.appendChild(document.createTextNode("From "));
-		t.from_date = new field_date(null,true,null,null,{});
+		t.from_date = new field_date(null,!ro,null,null,{});
 		t.timing_div.appendChild(t.from_date.getHTMLElement());
 		t.from_time_span = document.createElement("SPAN");
 		t.timing_div.appendChild(t.from_time_span);
 		t.from_time_span.appendChild(document.createTextNode(" at "));
+		t.from_time = new field_time(null,!ro,null,null,{});
+		t.from_time_span.appendChild(t.from_time.getHTMLElement());
 		t.timing_div.appendChild(document.createTextNode(" To "));
-		t.to_date = new field_date(null,true,null,null,{});
+		t.to_date = new field_date(null,!ro,null,null,{});
 		t.timing_div.appendChild(t.to_date.getHTMLElement());
 		t.to_time_span = document.createElement("SPAN");
-		t.timing_div.appendChild(t.to_time_span);
 		t.to_time_span.appendChild(document.createTextNode(" at "));
+		t.to_time = new field_time(null,!ro,null,null,{});
+		t.to_time_span.appendChild(t.to_time.getHTMLElement());
+		t.timing_div.appendChild(t.to_time_span);
 		t.timing_div.appendChild(document.createTextNode(" "));
 		t.all_day = document.createElement("INPUT");
 		t.all_day.type = "checkbox";
 		t.all_day.style.verticalAlign = 'bottom';
+		if (ro) t.all_day.disabled = 'disabled';
 		t.timing_div.appendChild(t.all_day);
 		t.timing_div.appendChild(document.createTextNode(" All day"));
 		
 		// calendar
 		t.calendar_div = document.createElement("DIV"); t.content.appendChild(t.calendar_div);
 		t.calendar_div.appendChild(document.createTextNode("Calendar: "));
+		t.calendar_div.selected = ev ? ev.calendar : default_calendar;
 		t.calendar_icon = document.createElement("IMG");
 		t.calendar_icon.width = 16;
 		t.calendar_icon.style.width = '16px';
@@ -71,6 +79,7 @@ function event_screen(ev,default_calendar) {
 		t.repeat = document.createElement("INPUT");
 		t.repeat.type = 'checkbox';
 		t.repeat.style.verticalAlign = 'bottom';
+		if (ro) t.repeat.disabled = 'disabled';
 		t.content.appendChild(t.repeat);
 		t.content.appendChild(document.createTextNode("Repeat..."));
 		t.content.appendChild(document.createElement("BR"));
@@ -85,10 +94,12 @@ function event_screen(ev,default_calendar) {
 		o = document.createElement("OPTION"); o.value = 'MONTHLY'; o.text = 'Monthly'; t.frequency.add(o);
 		o = document.createElement("OPTION"); o.value = 'YEARLY'; o.text = 'Yearly'; t.frequency.add(o);
 		t.frequency.selectedIndex = 1; // by default, weekly
+		if (ro) t.frequency.disabled = 'disabled';
 		t.repeat_div.appendChild(t.frequency);
 		t.repeat_div.appendChild(document.createTextNode(" Every "));
 		t.interval = document.createElement("SELECT");
 		for (var i = 1; i <= 30; ++i) { o = document.createElement("OPTION"); o.value = i; o.text = i; t.interval.add(o); }
+		if (ro) t.interval.disabled = 'disabled';
 		t.repeat_div.appendChild(t.interval);
 		t.repeat_div.appendChild(document.createTextNode(" "));
 		t.interval_text = document.createTextNode("week(s)");
@@ -97,18 +108,25 @@ function event_screen(ev,default_calendar) {
 		t.repeat_div.appendChild(t.repeat_on_div);
 		t.repeat_on_div.appendChild(document.createTextNode("Repeat on: "));
 		t.repeat_on_MO = document.createElement("INPUT"); t.repeat_on_MO.type = 'checkbox'; t.repeat_on_MO.style.verticalAlign = 'bottom';
+		if (ro) t.repeat_on_MO.disabled = 'disabled';
 		t.repeat_on_div.appendChild(t.repeat_on_MO); t.repeat_on_div.appendChild(document.createTextNode(" Mon"));
 		t.repeat_on_TU = document.createElement("INPUT"); t.repeat_on_TU.type = 'checkbox'; t.repeat_on_TU.style.verticalAlign = 'bottom';
+		if (ro) t.repeat_on_TU.disabled = 'disabled';
 		t.repeat_on_div.appendChild(t.repeat_on_TU); t.repeat_on_div.appendChild(document.createTextNode(" Tue"));
 		t.repeat_on_WE = document.createElement("INPUT"); t.repeat_on_WE.type = 'checkbox'; t.repeat_on_WE.style.verticalAlign = 'bottom';
+		if (ro) t.repeat_on_WE.disabled = 'disabled';
 		t.repeat_on_div.appendChild(t.repeat_on_WE); t.repeat_on_div.appendChild(document.createTextNode(" Wed"));
 		t.repeat_on_TH = document.createElement("INPUT"); t.repeat_on_TH.type = 'checkbox'; t.repeat_on_TH.style.verticalAlign = 'bottom';
+		if (ro) t.repeat_on_TH.disabled = 'disabled';
 		t.repeat_on_div.appendChild(t.repeat_on_TH); t.repeat_on_div.appendChild(document.createTextNode(" Thu"));
 		t.repeat_on_FR = document.createElement("INPUT"); t.repeat_on_FR.type = 'checkbox'; t.repeat_on_FR.style.verticalAlign = 'bottom';
+		if (ro) t.repeat_on_FR.disabled = 'disabled';
 		t.repeat_on_div.appendChild(t.repeat_on_FR); t.repeat_on_div.appendChild(document.createTextNode(" Fri"));
 		t.repeat_on_SA = document.createElement("INPUT"); t.repeat_on_SA.type = 'checkbox'; t.repeat_on_SA.style.verticalAlign = 'bottom';
+		if (ro) t.repeat_on_SA.disabled = 'disabled';
 		t.repeat_on_div.appendChild(t.repeat_on_SA); t.repeat_on_div.appendChild(document.createTextNode(" Sat"));
 		t.repeat_on_SU = document.createElement("INPUT"); t.repeat_on_SU.type = 'checkbox'; t.repeat_on_SU.style.verticalAlign = 'bottom';
+		if (ro) t.repeat_on_SU.disabled = 'disabled';
 		t.repeat_on_div.appendChild(t.repeat_on_SU); t.repeat_on_div.appendChild(document.createTextNode(" Sun"));
 		t.repeat_by_div = document.createElement("DIV");
 		t.repeat_div.appendChild(t.repeat_by_div);
@@ -119,12 +137,14 @@ function event_screen(ev,default_calendar) {
 		t.repeat_by_month_day.type = 'radio';
 		t.repeat_by_month_day.name = 'repeat_by';
 		t.repeat_by_month_day.value = 'month_day';
+		if (ro) t.repeat_by_month_day.disabled = 'disabled';
 		t.repeat_by_div.appendChild(t.repeat_by_month_day);
 		t.repeat_by_div.appendChild(document.createTextNode(" day of the month"));
 		t.repeat_by_week_day = document.createElement("INPUT");
 		t.repeat_by_week_day.type = 'radio';
 		t.repeat_by_week_day.name = 'repeat_by';
 		t.repeat_by_week_day.value = 'week_day';
+		if (ro) t.repeat_by_week_day.disabled = 'disabled';
 		t.repeat_by_div.appendChild(t.repeat_by_week_day);
 		t.repeat_by_div.appendChild(document.createTextNode(" day of the week"));
 		// TODO continue
@@ -135,24 +155,28 @@ function event_screen(ev,default_calendar) {
 		t.repeat_until_never.type = 'radio';
 		t.repeat_until_never.name = 'repeat_until';
 		t.repeat_until_never.value = 'never';
+		if (ro) t.repeat_until_never.disabled = 'disabled';
 		t.repeat_until_div.appendChild(t.repeat_until_never); t.repeat_until_div.appendChild(document.createTextNode(" Never "));
 		t.repeat_until_count = document.createElement("INPUT");
 		t.repeat_until_count.type = 'radio';
 		t.repeat_until_count.name = 'repeat_until';
 		t.repeat_until_count.value = 'count';
+		if (ro) t.repeat_until_count.disabled = 'disabled';
 		t.repeat_until_div.appendChild(t.repeat_until_count);
 		t.repeat_until_div.appendChild(document.createTextNode(" After "));
 		t.repeat_count = document.createElement("INPUT"); t.repeat_until_div.appendChild(t.repeat_count);
 		t.repeat_count.type = 'text';
 		t.repeat_count.size = 5;
+		if (ro) t.repeat_count.disabled = 'disabled';
 		t.repeat_until_div.appendChild(document.createTextNode(" occurences "));
 		t.repeat_until_date = document.createElement("INPUT");
 		t.repeat_until_date.type = 'radio';
 		t.repeat_until_date.name = 'repeat_until';
 		t.repeat_until_date.value = 'date';
+		if (ro) t.repeat_until_date.disabled = 'disabled';
 		t.repeat_until_div.appendChild(t.repeat_until_date);
 		t.repeat_until_div.appendChild(document.createTextNode(" On "));
-		t.repeat_until = new field_date(null,true,null,null,{});
+		t.repeat_until = new field_date(null,!ro,null,null,{});
 		t.repeat_until_div.appendChild(t.repeat_until.getHTMLElement());
 		
 		// event details
@@ -161,7 +185,7 @@ function event_screen(ev,default_calendar) {
 		t.description = document.createElement("TEXTAREA");
 		t.description.rows = 4;
 		t.description.cols = 80;
-		if (ev) t.description.value = ev.description;
+		if (ro) t.description.disabled = 'disabled';
 		t.content.appendChild(t.description);
 
 		// handle events
@@ -215,10 +239,12 @@ function event_screen(ev,default_calendar) {
 			}
 		};
 		t.calendar_div.onclick = function() {
+			if (ev && !ev.calendar.save_event) return; // we cannot move it
 			var manager = ev ? ev.calendar.manager : default_calendar.manager;
 			require("context_menu.js",function(){
 				var menu = new context_menu();
 				for (var i = 0; i < manager.calendars.length; ++i) {
+					if (!manager.calendars[i].save_event) continue; // we cannot modify this calendar
 					var item = document.createElement("DIV");
 					item.className = 'context_menu_item';
 					var icon = document.createElement("IMG");
@@ -248,10 +274,13 @@ function event_screen(ev,default_calendar) {
 		// initialize values
 		if (ev) {
 			t.title.value = ev.title;
+			t.description.value = ev.description;
 			t.from_date.setData(t.getDateString(ev.start));
+			t.from_time.setData(ev.start.getHours()*60+ev.start.getMinutes());
 			t.to_date.setData(t.getDateString(ev.end));
+			t.to_time.setData(ev.end.getHours()*60+ev.end.getMinutes());
 			if (ev.all_day) {
-				ev.all_day.checked = 'checked';
+				t.all_day.checked = 'checked';
 				t.from_time_span.style.visibility = 'hidden';
 				t.from_time_span.style.position = 'absolute';
 				t.to_time_span.style.visibility = 'hidden';
@@ -294,13 +323,60 @@ function event_screen(ev,default_calendar) {
 					t.repeat_until_never.checked = 'checked';
 				}
 			}
+		} else {
+			if (new_datetime) {
+				t.from_date.setData(t.getDateString(new_datetime));
+				t.from_time.setData(new_datetime.getHours()*60+new_datetime.getMinutes());
+				var end = new Date(new_datetime.getTime()+60*60*1000);
+				t.to_date.setData(t.getDateString(end));
+				t.to_time.setData(end.getHours()*60+end.getMinutes());
+				if (new_all_day) {
+					ev.all_day.checked = 'checked';
+					t.from_time_span.style.visibility = 'hidden';
+					t.from_time_span.style.position = 'absolute';
+					t.to_time_span.style.visibility = 'hidden';
+					t.to_time_span.style.position = 'absolute';
+				}
+			}
 		}
 		
 		
 		t.popup = new popup_window("Event", "/static/calendar/event.png",content);
 		t.popup.addButton("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> "+(ev ? "Save" : "Create"), 'ok', function(){
-			
+			var e = {};
+			e.title = t.title.value.trim();
+			if (e.title.length == 0) {
+				alert("Please enter a title for the event");
+				return;
+			}
+			e.calendar = t.calendar_div.selected;
+			if (ev && ev.calendar != t.calendar_div.selected) {
+				if (!confirm("You are going to move the event to a different calendar. Are you sure you want to remove it from "+ev.calendar.name+" and create it into "+e.calendar.name+" ?"))
+					return;
+			} else if (ev) {
+				if (ev.id) e.id = ev.id;
+				e.uid = ev.uid;
+			}
+			e.all_day = t.all_day.checked;
+			e.start = t.from_date.parseDate(t.from_date.getCurrentData());
+			if (!e.all_day)
+				e.start.setHours(0,t.from_time.getCurrentMinutes(),0,0);
+			e.end = t.to_date.parseDate(t.to_date.getCurrentData());
+			if (!e.all_day)
+				e.end.setHours(0,t.to_time.getCurrentMinutes(),0,0);
+			if (e.end.getTime() <= e.start.getTime()) {
+				alert("The end of the event must be after its start ! Please correct the dates and times.");
+				return;
+			}
+			e.description = t.description.value;
+			// TODO get and validate the repeat
+			e.calendar.save_event(e);
+			t.popup.close();
 		});
+		if (ev)
+			t.popup.addButton("<img src='"+theme.icons_16.remove+"' style='vertical-align:bottom'/> Remove", 'ok', function(){
+				// TODO ask confirmation, then remove the event
+			});
 		t.popup.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function() { t.popup.close(); });
 		t.popup.show();
 	});

@@ -69,6 +69,7 @@ if (!window.top.google) {
 		}
 	};
 	window.top.google_api_loaded = function(){
+		window.top.google.api_loaded = true;
 		window.top.gapi.client.setApiKey("AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
 		window.top.gapi.auth.init();
 		setInterval(function(){
@@ -81,5 +82,12 @@ if (!window.top.google) {
 		},10000);
 		window.top.google.connect();
 	};
-	window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
+	window.top.load_google_api = function() {
+		window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
+		setTimeout(function(){
+			if (window.top.google.api_loaded) return;
+			window.top.remove_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
+			window.top.load_google_api();
+		},30000);
+	};
 }

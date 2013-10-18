@@ -47,8 +47,9 @@ function load_pn_calendars() {
 	var list = document.getElementById("pn_calendars");
 <?php 
 $ids = PNApplication::$instance->calendar->getAccessibleCalendars();
+$write_ids = PNApplication::$instance->calendar->getWritableCalendars();
 $calendars = SQLQuery::create()->bypass_security()->select("Calendar")->where_in("Calendar", "id", $ids)->execute();
-foreach ($calendars as $cal) echo "new CalendarElement(list,window.calendars.add_calendar(new PNCalendar(".$cal["id"].",".json_encode($cal["name"]).",".json_encode($cal["color"]).",true)));";
+foreach ($calendars as $cal) echo "new CalendarElement(list,window.calendars.add_calendar(new PNCalendar(".$cal["id"].",".json_encode($cal["name"]).",".json_encode($cal["color"]).",true,".(in_array($cal["id"], $write_ids) ? "true" : "false").")));";
 ?>
 	var loading = document.getElementById('loading_pn_calendars');
 	loading.parentNode.removeChild(loading);
@@ -57,11 +58,12 @@ function TestCalendar() {
 	Calendar.call(this, "Test", "D0FFD0", true);
 	this.refresh = function(manager, cal, ondone) {
 		if (cal.events.length > 0) return;
+		var now = new Date().getTime()-120*60*1000;
 		var ev = {
 			uid:1,
 			calendar: cal,
-			start: new Date(new Date().getTime()-30*60*1000),
-			end: new Date(new Date().getTime()+30*60*1000),
+			start: new Date(now-30*60*1000),
+			end: new Date(now+30*60*1000),
 			title: "Before",
 			description: "La description de l'evenement qui est avant"
 		};
@@ -70,8 +72,8 @@ function TestCalendar() {
 		ev = {
 			uid:2,
 			calendar: cal,
-			start: new Date(new Date().getTime()+120*60*1000),
-			end: new Date(new Date().getTime()+180*60*1000),
+			start: new Date(now+120*60*1000),
+			end: new Date(now+180*60*1000),
 			title: "After"
 		};
 		cal.events.push(ev);
@@ -79,8 +81,8 @@ function TestCalendar() {
 		ev = {
 			uid:3,
 			calendar: cal,
-			start: new Date(new Date().getTime()-60*60*1000),
-			end: new Date(new Date().getTime()+200*60*1000),
+			start: new Date(now-60*60*1000),
+			end: new Date(now+200*60*1000),
 			title: "Large"
 		};
 		cal.events.push(ev);
@@ -88,8 +90,8 @@ function TestCalendar() {
 		ev = {
 			uid:4,
 			calendar: cal,
-			start: new Date(new Date().getTime()+15*60*1000),
-			end: new Date(new Date().getTime()+75*60*1000),
+			start: new Date(now+15*60*1000),
+			end: new Date(now+75*60*1000),
 			title: "Overlap"
 		};
 		cal.events.push(ev);
@@ -97,8 +99,8 @@ function TestCalendar() {
 		ev = {
 			uid:5,
 			calendar: cal,
-			start: new Date(new Date().getTime()+45*60*1000),
-			end: new Date(new Date().getTime()+90*60*1000),
+			start: new Date(now+45*60*1000),
+			end: new Date(now+90*60*1000),
 			title: "Inside"
 		};
 		cal.events.push(ev);
@@ -119,6 +121,7 @@ function CalendarElement(container, cal) {
 		this.box.style.width = "10px";
 		this.box.style.height = "10px";
 		this.box.style.border = "1px solid #"+cal.color;
+		this.box.title = "Show/Hide Calendar";
 		if (cal.show)
 			this.box.style.backgroundColor = "#"+cal.color;
 		this.box.onclick = function() {
@@ -129,11 +132,17 @@ function CalendarElement(container, cal) {
 			} else {
 				cal.manager.show_calendar(cal);
 				t.box.style.backgroundColor = "#"+cal.color;
-	}
+			}
 		};
 		this.name = document.createElement("SPAN"); this.div.appendChild(this.name);
 		this.name.style.paddingLeft = "3px";
 		this.name.innerHTML = cal.name;
+		if (!cal.save_event) {
+			var img = document.createElement("IMG");
+			img.src = "/static/calendar/read_only.png";
+			img.title = "Read-only: you cannot modify this calendar";
+			t.div.appendChild(img);
+		}
 		var start_refresh = function() {
 			t.loading = document.createElement("IMG");
 			t.loading.src = theme.icons_10.loading;
@@ -150,8 +159,9 @@ function CalendarElement(container, cal) {
 	this._init();
 }
 function _load_google_calendars() {
-	var loading = document.getElementById('loading_google_calendars');
 	var doit = function() {
+		var loading = document.getElementById('loading_google_calendars');
+		loading.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
 		load_google_calendars(window.calendars, function(calendars){
 			if (calendars == null) {
 				var div = document.createElement("DIV");
@@ -183,18 +193,19 @@ function _load_google_calendars() {
 	add_javascript("/static/google/google_calendar.js",function(){
 		window.top.add_javascript("/static/google/google.js",function() {
 			if (window.top.google.connection_status != 1) {
+				var loading = document.getElementById('loading_google_calendars');
 				var container = loading.parentNode;
 				container.removeChild(loading);
 				loading = document.createElement("DIV");
 				loading.id = 'loading_google_calendars';
 				container.appendChild(loading);
-				loading.innerHTML = window.top.connection_status == 0 ? "Connecting to Google..." : "Not connected to Google";
+				loading.innerHTML = window.top.google.connection_status == 0 ? "Connection to Google in progress..." : "Not connected to Google";
 				window.top.google.connection_listeners.push(function(){
 					if (!doit) return;
 					if (window.top.google.connection_status == 1)
 						doit();
 					else
-						loading.innerHTML = window.top.connection_status == 0 ? "Connecting to Google..." : "Not connected to Google";
+						loading.innerHTML = window.top.google.connection_status == 0 ? "Connection to Google in progress..." : "Not connected to Google";
 				});						
 			} else
 				doit();

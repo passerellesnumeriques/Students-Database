@@ -74,6 +74,18 @@ abstract class Page {
 	<script type="text/javascript" src="/static/application/config.js.php"></script>
 	<script type="text/javascript" src="/static/widgets/common_dialogs.js"></script>
 	<script type="text/javascript" src="/static/data_model/databaselock.js"></script>
+	<script type="text/javascript">
+	javascript_loaded("/static/javascript/utils.js");
+	javascript_loaded("/static/javascript/browser.js");
+	javascript_loaded("/static/application/application.js");
+	javascript_loaded("/static/javascript/layout.js");
+	javascript_loaded("/static/theme/theme.js.php");
+	javascript_loaded("/static/javascript/ajax.js");
+	javascript_loaded("/static/application/service.js");
+	javascript_loaded("/static/application/config.js.php");
+	javascript_loaded("/static/widgets/common_dialogs.js");
+	javascript_loaded("/static/data_model/databaselock.js");
+	</script>
 	<?php
 	foreach ($this->javascripts as $js) {
 		echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1]."'>";

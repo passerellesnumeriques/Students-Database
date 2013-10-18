@@ -344,6 +344,9 @@ function URL(s) {
 		this.path = this.path.substr(0,j+1)+this.path.substr(i+4);
 	}
 	
+	this.host = this.host.toLowerCase();
+	this.path = this.path.toLowerCase();
+	
 	/** create a string representing the URL
 	 * @method URL#toString
 	 */

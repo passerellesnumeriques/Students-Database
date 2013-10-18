@@ -92,10 +92,10 @@ TODO
 			}
 			$model = DataModel::get();
 			foreach ($categories as $cat) {
-				$link = $model->getDataCategoryLink($cat);
-				$icon = $model->getDataCategoryLinkIcon($cat);
-				if ($link <> null)
-					array_push($actions, array($link,$icon));
+				$links = $model->getDataCategoryLinks($cat);
+				if ($links <> null)
+					foreach ($links as $link)
+						array_push($actions, array($link->link,$link->icon));
 			}
 			foreach ($actions as &$action) {
 				$k = 0;

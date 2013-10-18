@@ -42,8 +42,9 @@ function require(javascript,handler) {
 	for (var i = 0; i < javascripts_paths.length; ++i)
 		if (javascripts_paths[i].name == javascript) {
 			add_javascript(javascripts_paths[i].path, handler);
-			break;
+			return;
 		}
+	alert("Unknown javascript '"+javascript+"'");
 }
 function require_sequential(scripts, handler) {
 	var pos = 0;

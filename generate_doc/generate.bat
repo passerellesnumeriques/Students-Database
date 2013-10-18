@@ -16,7 +16,7 @@ if not exist "%CD%\..\generated_doc" exit 1
 
 "%CD%\..\install_dev_env\tools\sed" "s/%%PHP_PATH%%/%PHP_PATH_UNIX%/g" %PHP_PATH%\php.ini > "%CD%\..\generated_doc\php.ini"
 
-%PHP_PATH%\php.exe -c "%CD%\..\generated_doc\php.ini" "%CD%\generate.php"
+%PHP_PATH%\php.exe -c "%CD%\..\generated_doc\php.ini" "%CD%\src\main.php"
 
 del "%CD%\..\generated_doc\php.ini"
 

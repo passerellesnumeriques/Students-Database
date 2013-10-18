@@ -1,3 +1,4 @@
+if (typeof require != 'undefined') require("autoresize_input.js");
 /** Text field: if editable, it will be a text input, else only a simple text node
  * @constructor
  * @param config can contain: <code>max_length</code>
@@ -13,6 +14,7 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
+		require("autoresize_input.js",function(){autoresize_input(input);});
 		var f = function() {
 			setTimeout(function() {
 				if (input.value != data) {
