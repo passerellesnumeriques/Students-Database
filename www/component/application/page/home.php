@@ -15,7 +15,6 @@ TODO: home page<br/><br/>
 <a href="/dynamic/students/page/batches">Batches</a><br/>
 <a href="/dynamic/staff/page/staff">Staff</a><br/>
 <a href="/dynamic/contact/page/organization_profile">Organization profile</a><br/>
-<a href="/dynamic/selection/page/test_selection">Test IS</a><br/>
 
 <?php
 //echo "<br/><br/>".str_replace("\n","<br/>",htmlentities(var_export($_SERVER, true))); 		

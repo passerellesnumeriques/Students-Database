@@ -116,7 +116,7 @@ function organization_profile(&$page, $id, $container_id, $title_container_id){
 	?>
 	
 	var everything_ready = function(){
-		s.init();
+		if(s != null) s.init();
 	}
 	var container = document.getElementById('<?php echo $container_id;?>');
 	var title_container = document.getElementById('<?php echo $title_container_id;?>');
@@ -136,6 +136,7 @@ function organization_profile(&$page, $id, $container_id, $title_container_id){
 		if(s != null && editable != null) everything_ready();
 	});
 	
+	if(s != null){
 	/**
 	 * @method init: starts creating the contact points and types tables
 	 */
@@ -598,15 +599,9 @@ function organization_profile(&$page, $id, $container_id, $title_container_id){
 	s.finish = function(){
 		title_container.appendChild(s.header);
 		var table = document.createElement("table");
-		// var th = document.createElement("th");
-		// var th1 = document.createElement("td");
-		// var th2 = document.createElement("td");
 		var tr = document.createElement("tr");
 		var td1 = document.createElement("td");
 		var td2 = document.createElement("td");
-		// th2.appendChild(s.header);
-		// th.appendChild(th1);
-		// th.appendChild(th2);
 		td1.appendChild(s.span_types);
 		td1.style.paddingRight = "40px";
 		td1.style.verticalAlign = 'top';
@@ -614,14 +609,11 @@ function organization_profile(&$page, $id, $container_id, $title_container_id){
 		td2.appendChild(s.span_points);
 		tr.appendChild(td1);
 		tr.appendChild(td2);
-		//table.appendChild(th);
 		table.appendChild(tr);
-		// s.span_points.style.verticalAlign = 'top';
-		// s.span_types.style.verticalAlign = 'top';
-		// table.style.verticalAlign = 'top';
 		container.appendChild(table);
-		// container.appendChild(s.span_types);
-		// container.appendChild(s.span_points);
+
+	}
+	
 	}
 	//TODO screen "create organization"
 	

@@ -24,15 +24,15 @@ function manage_config(&$page,$container_id){
 	require_once("component/data_model/Model.inc");
 	$rights = array();
 	
-	$fct_name = "create_contact_screen_".$page->generate_id();
-	$page->onload($fct_name."();");
+	$fct_name = "manage_config_".$page->generate_id();
+	//$page->onload($fct_name."();");
 
 	$rights['remove'] = DataModel::get()->getTable("Selection_campaign_config")->canRemove();
 	$rights['edit'] = DataModel::get()->getTable("Selection_campaign_config")->canModifyField('name');
 	$rights['add'] = DataModel::get()->getTable("Selection_campaign_config")->canAdd();
 	
 	/** Get all the possible configs */
-	$all_configs = require_once("config.inc");
+	$all_configs = include("component/selection/config.inc");
 	
 	/* Get the current config */
 	$config = PNApplication::$instance->components["selection"]->get_config();

@@ -31,6 +31,20 @@ input[type="text"], input[type="password"] {
 	text-align: center;
 }
 
+.application_menu_item {
+	font-size: 11pt;
+	font-weight: bold;
+	color: #4040A0;
+	cursor: pointer;
+	position: relative;
+	padding-left: 2px;
+	padding-right: 2px;
+}
+.application_menu_item img {
+	vertical-align: bottom;
+	margin-right: 3px;
+}
+
 .page_header {
 	/* header */
 	background: #e0e0e0; /* Old browsers */

@@ -40,7 +40,7 @@ class SQLQuery {
 
  	private static $preselected_submodels = array();
  	public static function set_submodel($key_table, $key) {
- 		$preselected_submodels[$key_table] = $key;
+ 		SQLQuery::$preselected_submodels[$key_table] = $key;
  	}
  	
  	public function __construct($copy = null) {
@@ -296,6 +296,7 @@ class SQLQuery {
 				for ($i = 0; $i < count($fields); $i++) {
 					$f = $fields[$i];
 					if ($f[0] == $t || $f[0] == $alias) {
+						$table_name = $f[0] == $t ? $table->getSQLName($this->sub_models) : $alias;
 						// check the field is accessible
 						if ($this->bypass_security)
 							$col = $table->internalGetColumn($f[1]);
@@ -305,7 +306,7 @@ class SQLQuery {
 							PNApplication::error("Unknown column ".$f[1]." in table ".$table->getName());
 							return null;
 						}
-						array_push($final_fields, array($f[0], $col->name, $f[2]));
+						array_push($final_fields, array($table_name, $col->name, $f[2]));
 						unset($col);
 						array_splice($fields,$i,1);
 						$i--;

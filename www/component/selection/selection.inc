@@ -1,7 +1,7 @@
 <?php
 class selection extends Component{
 	
-	private $campaign_id;
+	private $campaign_id = null;
 	
 	/**
 	 * When set, config is an array [["name"=>, "value"],[...]]
@@ -9,6 +9,12 @@ class selection extends Component{
 	private $config = null;
 	
 	public function init_request() {
+		if ($this->campaign_id == null) {
+			if (isset($_COOKIE["selection_campaign"])) {
+				if (SQLQuery::create()->select("SelectionCampaign")->where("id",$_COOKIE["selection_campaign"])->execute_single_row() <> null)
+					$this->campaign_id = $_COOKIE["selection_campaign"];
+			}
+		}
 		if ($this->campaign_id <> null)
 			SQLQuery::set_submodel("SelectionCampaign", $this->campaign_id);
 	}
@@ -21,6 +27,7 @@ class selection extends Component{
 		$this->campaign_id = $id;
 		/* Reset the config */
 		$this->config = null;
+		setcookie("selection_campaign",$id,time()+365*24*60*60,"/dynamic/selection/");
 	}
 	
 	public function get_config(){
@@ -43,7 +50,7 @@ class selection extends Component{
 				return $this->config;
 			} else { /* Unset: set the default values */
 				/* Get all the possible configs */
-				$all_configs = require_once("config.inc");
+				$all_configs = include("config.inc");
 				$j = 0;
 				foreach($all_configs as $all_config){
 					if($all_config[2] <> null){
