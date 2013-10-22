@@ -17,7 +17,7 @@ if (!window.top.google) {
 			}
 		},
 		_client_id: "459333498575-p8k0toe6hpcjfe29k83ah77adnocqah4.apps.googleusercontent.com",
-		_scopes: ["https://www.googleapis.com/auth/userinfo.profile","https://www.googleapis.com/auth/calendar"],
+		_scopes: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar",
 		connect: function() {
 			window.top.google.connection_status = 0;
 			for (var i = 0; i < window.top.google.connection_listeners.length; ++i)

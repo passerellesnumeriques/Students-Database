@@ -144,9 +144,13 @@ class page_staff extends Page {
 			html.appendChild(icon);
 			var name = document.createElement("SPAN"); html.appendChild(name);
 			name.appendChild(document.createTextNode(staff.last_name));
+			name.style.cursor = 'pointer';
+			name.onclick = function() { location.href = '/dynamic/people/page/profile?people='+staff.people_id; }
 			cells.push(new TreeCell(html));
 			html = document.createElement("SPAN");
 			html.appendChild(document.createTextNode(staff.first_name));
+			html.style.cursor = 'pointer';
+			html.onclick = function() { location.href = '/dynamic/people/page/profile?people='+staff.people_id; }
 			cells.push(new TreeCell(html));
 			var p = staff.get_last_position();
 			html = document.createElement("SPAN");

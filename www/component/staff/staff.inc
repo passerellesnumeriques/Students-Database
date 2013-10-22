@@ -6,7 +6,7 @@ class staff extends Component implements ProfileGeneralInfoPlugin {
 		try {
 			$staff = SQLQuery::create()->select("StaffPosition")->where("people",$people_id)->execute_single_row();
 			if ($staff == null) return array();
-			return array(array("staff_info","<img src='/static/staff/staff_16.png' style='vertical-align:bottom;padding-right:3px'/>PN Staff",1));
+			return array(array("staff_info","<img src='/static/staff/staff_16.png' style='vertical-align:bottom;padding-right:3px'/>PN Staff",5));
 		} catch (Exception $ex) { return array(); }
 	}
 	
