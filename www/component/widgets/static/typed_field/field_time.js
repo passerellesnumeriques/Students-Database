@@ -108,8 +108,7 @@ function field_time(data,editable,onchanged,onunchanged,config) {
 		};
 	}
 }
-if (typeof require != 'undefined')
-	require("typed_field.js",function(){
-		field_time.prototype = new typed_field();
-		field_time.prototype.constructor = field_time;		
-	});
+if (typeof typed_field != 'undefined') {
+	field_time.prototype = new typed_field();
+	field_time.prototype.constructor = field_time;		
+}

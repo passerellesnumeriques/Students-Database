@@ -42,6 +42,7 @@ theme::$icons_16 = array(
 	"remove_black" => 		"/static/theme/".$theme."/icons_16/trash_black.png",
 );
 theme::$icons_10 = array(
+	"add" => 			"/static/theme/".$theme."/icons_10/add.png",
 	"close" => 			"/static/theme/".$theme."/icons_10/close.png",
 	"loading" =>		"/static/theme/".$theme."/icons_10/loading.gif",
 	"no_edit" => 		"/static/theme/".$theme."/icons_10/no_edit.png",

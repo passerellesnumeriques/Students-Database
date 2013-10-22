@@ -8,38 +8,29 @@ class page_profile_people extends Page {
 	}
 	public function execute() {
 		$people = $_GET["people"];
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_people_details");
-		$people = SQLQuery::create()->select("People")->where("id",$people)->execute_single_row();
-		
-		$this->add_javascript("/static/storage/upload.js");
-		$this->add_javascript("/static/storage/picture.js");
-		?>
-		<table>
-		<tr>
-		<td>
-			<div id='picture'></div>
-			<div id='upload_picture'></div>
-		</td>
-		<td>
-			<?php
-			require_once("component/data_model/page/entity.inc");
-			data_entity_page($this, "People",$people);
+		require_once("component/people/ProfileGeneralInfoPlugin.inc");
+		$sections = array();
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof ProfileGeneralInfoPlugin)) continue;
+			foreach ($c->get_people_profile_general_info_sections($people) as $section) {
+				array_push($section, $c);
+				array_push($sections, $section);
+			}
+		}
+		usort($sections, "compare_people_profile_sections");
+		foreach ($sections as $section) {
 			?>
-		</td>
-		</tr>
-		</table>
-		<script type='text/javascript'>
-		picture('picture','/dynamic/people/service/picture?people=<?php echo $people["id"];?>&version=<?php echo $people["picture_version"]?>',150,200,"<?php echo htmlspecialchars($people["first_name"]." ".$people["last_name"],ENT_QUOTES,"UTF-8");?>");
-		<?php if ($can_edit) {?>
-		new upload('upload_picture',false,'/dynamic/people/page/set_picture?people=<?php echo $people["id"]?>',
-			function(popup){
-				popup.setContentFrame('/dynamic/people/page/set_picture?people=<?php echo $people["id"]?>');
-			},
-			true
-		).addHiddenDropArea('picture');
-		<?php }?>	
-		</script>
-<?php		
+			<div class='section_with_title' style='float:left;margin:5px'>
+				<div><?php echo $section[1];?></div>
+				<div><?php $section[3]->generate_people_profile_general_info_section($this, $people, $section[0]);?></div>
+			</div>
+			<?php
+		}
 	}
+}
+function compare_people_profile_sections($s1, $s2) {
+	if ($s1[2] < $s2[2]) return -1;
+	if ($s1[2] > $s2[2]) return 1;
+	return 0;
 }
 ?>

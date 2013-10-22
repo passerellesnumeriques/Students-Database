@@ -634,7 +634,11 @@ class SQLQuery {
 		try {
 			// validate values
 			foreach ($fields_values as $field=>$value)
-				$fields_values[$field] = $t->internalGetColumn($field, $sub_models)->validate($value);
+				try {
+					$fields_values[$field] = $t->internalGetColumn($field, $sub_models)->validate($value);
+				} catch (Exception $ex) {
+					throw new Exception("Table '".$table."' column '".$field."': ".$ex->getMessage());
+				}
 			// check unicity and presence
 			foreach ($columns as $col) {
 				if ($col->unique) {

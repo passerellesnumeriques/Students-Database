@@ -4,7 +4,7 @@ function create_wizard_page(&$page, $icon, $title, $first_page) {
 <div id='wizard_page' style='width:100%;height:100%'>
 	<div id='wizard_page_header' layout='fixed' class='wizard_header' style='padding-top:3px'>
 		<img src="<?php echo $icon;?>" style='vertical-align:bottom;padding-left:5px;padding-right:5px'/>
-		<?php echo $title;?>
+		<span id='wizard_page_title'><?php echo $title;?></span>
 	</div>
 	<iframe id='wizard_page_content' layout='fill' frameBorder=0 src="<?php echo $first_page;?>"></iframe>
 	<div id='wizard_page_footer' layout='fixed' class='wizard_buttons'>
@@ -16,7 +16,7 @@ function create_wizard_page(&$page, $icon, $title, $first_page) {
 			Next
 			<img src="<?php echo theme::$icons_16["forward"];?>" style='vertical-align:bottom'/>
 		</button>
-		<button id='wizard_page_button_finish' disabled='disabled' onclick='wizard_page_finsh();'>
+		<button id='wizard_page_button_finish' disabled='disabled' onclick='wizard_page_finish();'>
 			<img src="<?php echo theme::$icons_16["ok"];?>" style='vertical-align:bottom'/>
 			Finish
 		</button>

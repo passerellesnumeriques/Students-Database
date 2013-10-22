@@ -1,7 +1,7 @@
 if (typeof require != 'undefined') require("autoresize_input.js");
-/** Text field: if editable, it will be a text input, else only a simple text node
+/** Text field: if editable, it will be an autoresize text input, else only a simple text node
  * @constructor
- * @param config can contain: <code>max_length</code>
+ * @param config can contain: <code>max_length</code> (maximum number of characters), <code>min_size</code> (minimum size for autoresize) or <code>fixed_size</code> (no autoresize)
  */
 function field_text(data,editable,onchanged,onunchanged,config) {
 	if (data == null) data = "";
@@ -14,7 +14,10 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
-		require("autoresize_input.js",function(){autoresize_input(input);});
+		if (config && config.fixed_size)
+			input.size = config.fixed_size;
+		else
+			require("autoresize_input.js",function(){autoresize_input(input,config && config.min_size ? config.min_size : 0);});
 		var f = function() {
 			setTimeout(function() {
 				if (input.value != data) {
@@ -58,8 +61,7 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 		};
 	}
 }
-if (typeof require != 'undefined')
-	require("typed_field.js",function(){
-		field_text.prototype = new typed_field();
-		field_text.prototype.constructor = field_text;		
-	});
+if (typeof typed_field != 'undefined') {
+	field_text.prototype = new typed_field();
+	field_text.prototype.constructor = field_text;		
+}

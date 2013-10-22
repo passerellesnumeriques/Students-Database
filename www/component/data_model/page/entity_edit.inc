@@ -63,7 +63,11 @@ function <?php echo $javascript_object_name;?>(container, on_validate) {
 			echo "tr.appendChild(td = document.createElement('TD'));";
 			$typed = PNApplication::$instance->widgets->get_typed_field($col);
 			$page->add_javascript("/static/widgets/typed_field/".$typed[0].".js");
-			echo "this.field_".$col_name." = new ".$typed[0]."('',true,function(){t.validate();},function(){t.validate();},".$typed[1].");";
+			echo "var cfg = ".$typed[1].";";
+			if ($typed[0] == "field_text") {
+				echo "cfg.fixed_size = 20;";
+			}
+			echo "this.field_".$col_name." = new ".$typed[0]."('',true,function(){t.validate();},function(){t.validate();},cfg);";
 			echo "td.appendChild(this.field_".$col_name.".getHTMLElement());";
 		} 
 ?>

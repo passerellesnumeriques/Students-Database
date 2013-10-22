@@ -34,7 +34,7 @@ function data_entity_page(&$page, $table, &$entity, $sub_models = null) {
 			echo "<td id='".$id."'>";
 			$typed_field = PNApplication::$instance->widgets->get_typed_field($col);
 			$page->add_javascript("/static/widgets/typed_field/typed_field.js");
-			$page->add_javascript("/static/widgets/typed_field/"+$typed_field[0]+".js");
+			$page->add_javascript("/static/widgets/typed_field/".$typed_field[0].".js");
 			$page->add_javascript("/static/data_model/editable_cell.js");
 			$page->onload("new editable_cell('".$id."',".json_encode($table->getSQLName($sub_models)).",".json_encode($col->name).",".json_encode($entity[$table->getPrimaryKey()->name]).",'".$typed_field[0]."',".$typed_field[1].",".json_encode($entity[$col->name]).");");
 		} else

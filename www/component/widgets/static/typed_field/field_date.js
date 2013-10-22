@@ -32,7 +32,7 @@ function field_date(data,editable,onchanged,onunchanged,config) {
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
-		require("autoresize_input.js",function(){autoresize_input(input);});
+		input.size = 10;
 		var f = function() {
 			setTimeout(function() {
 				if (input.value.length == 0) {
@@ -132,8 +132,7 @@ function field_date(data,editable,onchanged,onunchanged,config) {
 		};
 	}
 }
-if (typeof require != 'undefined')
-	require("typed_field.js",function(){
-		field_date.prototype = new typed_field();
-		field_date.prototype.constructor = field_date;		
-	});
+if (typeof typed_field != 'undefined') {
+	field_date.prototype = new typed_field();
+	field_date.prototype.constructor = field_date;		
+}

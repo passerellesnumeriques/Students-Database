@@ -88,7 +88,7 @@ service = {
 	generate_input: function(input) {
 		var s = "";
 		if (input == null) return "null";
-		if (input instanceof Array) {
+		if (input instanceof Array || (typeof input == 'object' && input.constructor.name == "Array")) {
 			s += "[";
 			for (var i = 0; i < input.length; ++i) {
 				if (i>0) s += ",";
@@ -110,6 +110,18 @@ service = {
 		return s;
 	}
 };
+function post_data(url, data) {
+	var form = document.createElement("FORM");
+	var i = document.createElement("INPUT");
+	i.type = "hidden";
+	i.name = "input";
+	i.value = service.generate_input(data);
+	form.appendChild(i);
+	form.method = "POST";
+	form.action = url;
+	document.body.appendChild(form);
+	form.submit();
+}
 if (typeof ajax != 'undefined')
 	ajax.http_response_handlers.push(function(xhr){
 		if (xhr.status == 403) {

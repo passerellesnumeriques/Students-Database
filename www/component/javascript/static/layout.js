@@ -136,6 +136,13 @@ function getHeight(element) {
 	return h;
 }
 function getComputedStyleSizes(e) {
+	if (e.nodeType != 1) {
+		return {
+			borderLeftWidth: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomWidth: 0,
+			marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: 0,
+			paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0
+		};
+	}
 	var ss = getComputedStyle(e);
 	var s = {};
 	if (ss.width.indexOf('%') > 0 || ss.width == "auto") s.width = e.scrollWidth+'px'; else s.width = ss.width;
@@ -148,20 +155,26 @@ function getComputedStyleSizes(e) {
 	s.marginRight = _styleMargin(ss.marginRight);
 	s.marginTop = _styleMargin(ss.marginTop);
 	s.marginBottom = _styleMargin(ss.marginBottom);
-	s.paddingTop = ss.paddingTop;
-	s.paddingBottom = ss.paddingBottom;
-	s.paddingLeft = ss.paddingLeft;
-	s.paddingRight = ss.paddingRight;
+	s.paddingTop = _stylePadding(ss.paddingTop);
+	s.paddingBottom = _stylePadding(ss.paddingBottom);
+	s.paddingLeft = _stylePadding(ss.paddingLeft);
+	s.paddingRight = _stylePadding(ss.paddingRight);
 	return s;
 };
 function _styleBorderValue(t, s) {
 	if (t == "none") return "0px";
 	if (s == "medium") return "4px";
 	if (s == "thick") return "6px";
+	if (s.length == 0) return "0px";
 	return s;
 };
 function _styleMargin(s) {
 	if (s == "auto") return "0px";
+	if (s.length == 0) return "0px";
+	return s;
+};
+function _stylePadding(s) {
+	if (s.length == 0) return "0px";
 	return s;
 };
 

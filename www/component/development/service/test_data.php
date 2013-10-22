@@ -25,7 +25,7 @@ class service_test_data extends Service {
 			$roles_id = $this->create_roles($db_system, $this->roles[$domain]);
 			$this->create_users($db_system, $domain, $this->users[$domain], $roles_id);
 			$db_system->execute("INSERT INTO Role (`id`,`name`) VALUE (-1,'Administrator')");
-			$this->SplitSQL("component/development/data/geography.sql");
+			$this->SplitSQL($db_system, "component/development/data/geography.sql");
 		}		
 	}
 	
@@ -104,57 +104,26 @@ class service_test_data extends Service {
 		}
 	}
 	
-	private function SplitSQL($file, $delimiter = ';')
-	{
+	private function SplitSQL(&$db_system, $file, $delimiter = ';') {
 		set_time_limit(0);
-
-		if (is_file($file) === true)
-		{
+		if (is_file($file) === true) {
 			$file = fopen($file, 'r');
-
-			if (is_resource($file) === true)
-			{
+			if (is_resource($file) === true) {
 				$query = array();
-
-				while (feof($file) === false)
-				{
+				while (feof($file) === false) {
 					$query[] = fgets($file);
-
-					if (preg_match('~' . preg_quote($delimiter, '~') . '\s*$~iS', end($query)) === 1)
-					{
+					if (preg_match('~' . preg_quote($delimiter, '~') . '\s*$~iS', end($query)) === 1) {
 						$query = trim(implode('', $query));
-
-						if (mysql_query($query) === false)
-						{
-							PNApplication::error($query);
-						}
-
-						else
-						{
-							//echo '<h3>SUCCESS: ' . $query . '</h3>' . "\n";
-						}
-
-						while (ob_get_level() > 0)
-						{
-							ob_end_flush();
-						}
-
-						flush();
+						$db_system->execute($query);
 					}
-
 					if (is_string($query) === true)
-					{
 						$query = array();
-					}
 				}
-
 				return fclose($file);
 			}
 		}
-
 		return false;
 	}
-
 	
 }
 ?>

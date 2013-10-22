@@ -68,12 +68,26 @@ if ($message <> null) {
 	</tr>
 </table>
 <br/>
-<!-- 
-<span id='application_loading' style='visibility:hidden'><span>Loading application</span> <iframe frameBorder=0 style='width:200px;height:15px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=5000' id='frame_loading'></iframe><span id='application_loading_text' style='font-size:8pt'></span></span>
- -->
+<div id='application_loading' style='visibility:hidden;position:fixed;top:0px;width:100%'>
+<table style="width:100%">
+	<tr><td align='center'>
+		<table style="border:1px solid #808080;background-color:#F0F0F0;font-size:8pt">
+			<tr><td align='center'>Loading application...</td></tr>
+			<tr><td align='center'>
+				<div>
+				<iframe frameBorder=0 style='width:200px;height:12px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=2500' id='frame_loading'></iframe>
+				<span id='application_loading_text' style='font-size:8pt'></span>
+				</div>
+			</td></tr>
+		</table>
+	</td></tr>
+</table>
+</div>
 </td></tr></table>
 </form>
 <script type='text/javascript'>
+var l = document.getElementById('application_loading');
+window.top.document.body.appendChild(l.parentNode.removeChild(l));
 function login() {
 	var f=document.getElementById('frame_loading');
 	if(f) f.contentWindow.stop_loading = true;

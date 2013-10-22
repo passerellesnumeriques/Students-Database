@@ -81,7 +81,7 @@ window.continue_loading = function() {
 		var text = document.all ? window.parent.document.all['application_loading_text'] : window.parent.document.getElementById('application_loading_text');
 		var now = new Date().getTime();
 		now -= window.loading_start;
-		text.innerHTML = window.size_str(window.size_done)+" / "+window.size_str(window.total_size) + (now > 300 ? " ("+window.size_str(window.size_done*1000/now)+"/s.)" : "");
+		//text.innerHTML = window.size_str(window.size_done)+" / "+window.size_str(window.total_size) + (now > 300 ? " ("+window.size_str(window.size_done*1000/now)+"/s.)" : "");
 	} else {
 		var div = document.all ? window.parent.document.all['application_loading'] : window.parent.document.getElementById('application_loading');
 		div.style.visibility = 'visible';
@@ -137,15 +137,15 @@ window.continue_loading = function() {
 	} else if (window.size_done == window.total_size) {
 		window.loading_end = new Date().getTime();
 		var e = document.all ? window.parent.document.all['application_loading'] : window.parent.document.getElementById('application_loading');
-		for (var i = 0; i < e.childNodes.length; ++i) {
-			if (e.childNodes[i].nodeType != 1) continue;
-			e.childNodes[i].style.visibility = 'hidden';
-			e.childNodes[i].style.position = 'absolute';
-		}
-		var status = document.createElement("SPAN");
-		e.insertBefore(status, e.childNodes[0]);
-		status.innerHTML = window.size_str(window.total_size)+", "+Math.round((window.loading_end-window.loading_start)/1000)+"s.";
-		animation.fadeOut(e,2000,function(){
+//		for (var i = 0; i < e.childNodes.length; ++i) {
+//			if (e.childNodes[i].nodeType != 1) continue;
+//			e.childNodes[i].style.visibility = 'hidden';
+//			e.childNodes[i].style.position = 'absolute';
+//		}
+//		var status = document.createElement("SPAN");
+//		e.insertBefore(status, e.childNodes[0]);
+//		status.innerHTML = window.size_str(window.total_size)+", "+Math.round((window.loading_end-window.loading_start)/1000)+"s.";
+		animation.fadeOut(e,500,function(){
 			e.parentNode.removeChild(e);
 		});
 	}

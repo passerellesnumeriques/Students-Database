@@ -10,7 +10,7 @@ $model->addTable("People")
 	->addString("khmer_last_name", 100, 1, true)
 	->addEnum("sex", array("M","F"))
 	->addDate("birth", true)
-	->addForeignKey("picture", "Storage", true, false, false)
+	->addForeignKey("picture", "Storage", false, false, false)
 	->addInteger("picture_version")
 	->setDisplayName("People (physical person)")
 	->addDisplayableData("first_name", "Personal Information", "First Name")
@@ -22,5 +22,8 @@ $model->addTable("People")
 	->addDisplayableData("birth", "Personal Information", "Birth Date")
 	->restrictReadAccess("see_other_people_details",true)
 	->allowSpecificReadAccess("id",function() { return PNApplication::$instance->user_people->user_people_id; })
-	->restrictWriteAccess("edit_people_details",true);
+	->restrictWriteAccess("edit_people_details",true)
+	->restrictAddAccess("create_people",true)
+	->restrictRemoveAccess("remove_people",true)
+	;
 ?>

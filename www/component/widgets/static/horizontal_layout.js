@@ -20,11 +20,12 @@ function horizontal_layout(container) {
 			if (e.nodeType != 1) continue;
 			var layout;
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
+			e.style.height = "";
 			if (layout == 'fill')
 				e.style.width = "";
 		}
-		var w = t.container.offsetWidth;
-		var h = t.container.offsetHeight;
+		var w = t.container.clientWidth;
+		var h = t.container.clientHeight;
 		var nb_to_fill = 0;
 		var used = 0;
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
@@ -68,4 +69,5 @@ function horizontal_layout(container) {
 	
 	t.layout();
 	addLayoutEvent(t.container, function(){t.layout();});
+	fireLayoutEventFor(t.container.parentNode);
 }

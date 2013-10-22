@@ -93,6 +93,17 @@ function popup_window(title,icon,content) {
 			if (t.buttons[i].id == id)
 				t.buttons[i].disabled = '';
 	};
+	/** Simulate a button pressed
+	 * @param {string} id the button id
+	 */
+	t.pressButton = function(id) {
+		for (var i = 0; i < t.buttons.length; ++i)
+			if (t.buttons[i].id == id) {
+				if (t.buttons[i].disabled == "disabled") return;
+				t.buttons[i].onclick();
+				break;
+			}
+	};
 	/** Add 2 buttons to the window: Ok and Cancel. When Cancel is pressed, the window is closed.
 	 * @method popup_window#addOkCancelButtons
 	 * @param {function} onok handler to be called when the Ok button is pressed. 

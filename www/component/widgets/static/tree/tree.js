@@ -70,6 +70,7 @@ function tree(container) {
 		this.tr_columns.style.position = show ? 'static' : 'absolute';
 	};
 	this.addColumn = function(col) {
+		this.columns.push(col);
 		this.tr_columns.appendChild(col.th = document.createElement("TH"));
 		col.th.innerHTML = col.title;
 	};
@@ -113,15 +114,19 @@ function tree(container) {
 		item.tr.style.position = visible ? 'static' : 'absolute';
 		var td = document.createElement("TD"); item.tr.appendChild(td);
 		td.style.padding = "0px";
-		td.appendChild(item.head = document.createElement("SPAN"));
+		td.appendChild(item.head = document.createElement("DIV"));
+		item.head.style.display = 'inline-block';
+		item.head.style.position = 'relative';
 		item.head.style.paddingLeft = "2px";
 		td.appendChild(item.cells[0].container = document.createElement("SPAN"));
 		if (typeof item.cells[0].html == 'string')
 			item.cells[0].container.innerHTML = item.cells[0].html;
 		else
 			item.cells[0].container.appendChild(item.cells[0].html);
+		if (item.cells.length == 1 && this.columns.length > 1)
+			td.colSpan = this.columns.length;
 		for (var i = 1; i < item.cells.length; ++i) {
-			tr.appendChild(item.cells[i].container = document.createElement("TD"));
+			item.tr.appendChild(item.cells[i].container = document.createElement("TD"));
 			item.cells[i].container.style.padding = "0px";
 			if (typeof item.cells[i].html == 'string')
 				item.cells[i].container.innerHTML = item.cells[i].html;
@@ -147,44 +152,67 @@ function tree(container) {
 		var level = 0;
 		var p = parent;
 		while (p) { level++; p = p.parent; }
+		var url = get_script_path("tree.js");
 		for (var i = 0; i < items.length; ++i) {
 			var item = items[i];
-			var url = get_script_path("tree.js")+"tree";
-			if (item.parent)
-				url += "_child";
-			else
-				url += "_root";
-			if (item.children.length > 0) {
-				if (item.expanded)
-					url += "_open";
-				else
-					url += "_close";
-			} else
-				url += "_nochild";
-			if (i == items.length-1)
-				url += "_last";
-			else
-				url += "_continue";
-			url += ".gif";
+			item.head.style.width = ((level+1)*16)+'px';
+			item.head.style.verticalAlign = "bottom";
+			item.head.style.height = "";
+			item.head.style.height = item.head.parentNode.clientHeight+'px';
 			while (item.head.childNodes.length > 0) item.head.removeChild(item.head.childNodes[0]);
-			var img = document.createElement("IMG");
-			img.src = url;
-			img.style.verticalAlign = "middle";
-			img.style.cursor = "pointer";
-			img.item = item;
-			img.onclick = function() { this.item.toggle_expand(); };
-			item.head.appendChild(img);
-			var base_url = get_script_path("tree.js")+"tree_";
 			var p = parent;
+			var plevel = 1;
 			while (p) {
 				var list = p.parent ? p.parent.children : this.items;
 				var index = list.indexOf(p);
-				var img = document.createElement("IMG");
-				img.style.verticalAlign = "middle";
-				img.style.cursor = "pointer";
-				img.src = base_url + (index == list.length-1 ? "empty" : "continue")+".gif";
-				item.head.insertBefore(img, item.head.childNodes[0]);
+				if (index != list.length-1) {
+					var line = document.createElement("DIV");
+					line.style.position = 'absolute';
+					line.style.width = "1px";
+					line.style.left = (plevel*16+9)+'px';
+					line.style.top = '0px';
+					line.style.height = '100%';
+					line.style.borderLeft = "1px solid #A0A0A0";
+					item.head.appendChild(line);
+				}
 				p = p.parent;
+				plevel++;
+			}
+			
+			// vertical line
+			if (items.length != 1) {
+				var line = document.createElement("DIV");
+				line.style.position = 'absolute';
+				line.style.width = "1px";
+				line.style.right = '7px';
+				line.style.bottom = i < items.length-1 ? "0px" : "5px"; 
+				line.style.height = i == 0 && !item.parent ? "6px" : i < items.length-1 ? "100%" : (getHeight(item.tr)-5)+"px";
+				line.style.borderLeft = "1px solid #A0A0A0";
+				item.head.appendChild(line);
+			}
+			// horizontal line
+			{
+				var line = document.createElement("DIV");
+				line.style.position = 'absolute';
+				line.style.width = "7px";
+				line.style.right = '1px';
+				line.style.bottom = "4px"; 
+				line.style.height = "1px";
+				line.style.borderTop = "1px solid #A0A0A0";
+				item.head.appendChild(line);
+			}
+			
+			// box
+			if (item.children.length > 0) {
+				var img = document.createElement("IMG");
+				img.src = url+(item.expanded ? "minus" : "plus")+".png";
+				img.style.position = 'absolute';
+				img.style.right = '4px';
+				img.style.bottom = '1px';
+				item.head.appendChild(img);
+				img.style.cursor = 'pointer';
+				img.item = item;
+				img.onclick = function() { this.item.toggle_expand(); };
 			}
 		}
 	};
@@ -192,6 +220,7 @@ function tree(container) {
 	this._create = function() {
 		container.appendChild(this.table = document.createElement("TABLE"));
 		this.table.style.borderCollapse = "collapse";
+		this.table.style.borderSpacing = "0px";
 		this.table.appendChild(this.tbody = document.createElement("TBODY"));
 		this.tbody.appendChild(this.tr_columns = document.createElement("TR"));
 		this.setShowColumn(this.show_columns);

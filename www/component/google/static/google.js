@@ -90,4 +90,5 @@ if (!window.top.google) {
 			window.top.load_google_api();
 		},30000);
 	};
+	window.top.load_google_api();
 }

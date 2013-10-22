@@ -489,7 +489,11 @@ class ColumnString extends Column {
 			return null;
 		}
 		if (strlen($value) < $this->min_length) {
-			if (strlen($value) == 0) throw new \Exception("Cannot be empty");
+			if (strlen($value) == 0) {
+				if ($this->can_be_null)
+					return null; // convert empty string into null
+				throw new \Exception("Cannot be empty");
+			}
 			throw new \Exception("Must have a length of at least ".$this->min_length);
 		}
 		if (strlen($value) > $this->max_length)

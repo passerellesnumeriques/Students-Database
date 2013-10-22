@@ -14,8 +14,7 @@ function field_blank(html, value) {
 	this.signal_error = function(error) {
 	};
 }
-if (typeof require != 'undefined')
-	require("typed_field.js",function(){
-		field_blank.prototype = new typed_field();
-		field_blank.prototype.constructor = field_blank;		
-	});
+if (typeof typed_field != 'undefined') {
+	field_blank.prototype = new typed_field();
+	field_blank.prototype.constructor = field_blank;		
+}

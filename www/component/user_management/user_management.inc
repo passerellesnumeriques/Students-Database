@@ -15,13 +15,10 @@ class user_management extends Component {
 	public $logged_in;
 	/** @var Event raised when the user logout */
 	public $logged_out;
-	/** @var Event raised when a new user is created */
-	public $local_user_created;
 	
 	function init() {
 		$this->logged_in = new Event();
 		$this->logged_out = new Event();
-		$this->local_user_created = new Event();
 	}
 
 	/**
@@ -41,14 +38,15 @@ class user_management extends Component {
 		$error = "";
 		$this->auth_token = $auth->authenticate($username, $password, $error);
 		if ($this->auth_token === null) return $error;
+		$user = SQLQuery::create()->bypass_security()->select("Users")->where("domain",$domain)->where("username",$username)->execute_single_row();
+		if ($user == null) {
+			// the user does not exist yet in the database, but exists on the authentication system
+			// TODO add an action for administrator ?
+			return "You are not yet registered in this application. Please contact the Administrator.";
+		} 
 		$this->domain = $domain;
 		$this->username = $username;
-		// TODO do not allow to create user like this anymore => create a task to do for administrators
-		$user = SQLQuery::create()->bypass_security()->select("Users")->where("domain",$domain)->where("username",$username)->execute_single_row();
-		if ($user == null) // the user does not exist yet in the database, but exists on the authentication system 
-			$this->user_id = $this->create_user($domain, $username);
-		else
-			$this->user_id = $user["id"];
+		$this->user_id = $user["id"];
 		$this->logged_in->fire();
 		return null;
 	}
@@ -66,13 +64,6 @@ class user_management extends Component {
 		$this->user_id = null;
 	}
 	
-	public function create_user($domain, $username) {
-		$user_id = SQLQuery::create()->bypass_security()->insert("Users",array("domain"=>$domain,"username"=>$username));
-		if ($domain == PNApplication::$instance->local_domain)
-			$this->local_user_created->fire($user_id);
-		return $user_id;
-	}
-
 	/**
 	 * Once needed, keep the processed list of rights of the user
 	 */

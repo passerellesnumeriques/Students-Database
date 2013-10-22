@@ -96,8 +96,7 @@ function field_integer(data,editable,onchanged,onunchanged,config) {
 		};
 	}
 }
-if (typeof require != 'undefined')
-	require("typed_field.js",function(){
-		field_integer.prototype = new typed_field();
-		field_integer.prototype.constructor = field_integer;		
-	});
+if (typeof typed_field != 'undefined') {
+	field_integer.prototype = new typed_field();
+	field_integer.prototype.constructor = field_integer;		
+}

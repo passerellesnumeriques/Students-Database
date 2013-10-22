@@ -23,8 +23,8 @@ function vertical_layout(container) {
 			if (layout == 'fill')
 				e.style.height = "";
 		}
-		var w = t.container.offsetWidth;
-		var h = t.container.offsetHeight;
+		var w = t.container.clientWidth;
+		var h = t.container.clientHeight;
 		var nb_to_fill = 0;
 		var used = 0;
 		for (var i = 0; i < t.container.childNodes.length; ++i) {

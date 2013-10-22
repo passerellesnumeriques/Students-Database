@@ -22,6 +22,15 @@ class DataBaseLock {
 	}
 	
 	private static function lock($table, $row_key, $column, &$locked_by) {
+		for ($i = 0; $i < 10; $i++) {
+			$locked_by = null;
+			$id = DataBaseLock::try_lock($table, $row_key, $column, $locked_by);
+			if ($id <> null) return $id;
+			if ($i < 9) usleep(100000);
+		}
+		return null;
+	}
+	private static function try_lock($table, $row_key, $column, &$locked_by) {
 		DataBaseLock::clean();
 		$db = SQLQuery::get_db_system_without_security();
 		$db->execute("LOCK TABLES DataLocks WRITE");

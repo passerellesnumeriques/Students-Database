@@ -38,6 +38,9 @@ function page_header(container) {
 		require("horizontal_layout.js",function(){
 			new horizontal_layout(container);
 		});
+		require("vertical_align.js", function() {
+			new vertical_align(menu_container, "middle");
+		});
 	};
 	
 	t._init();

@@ -24,7 +24,7 @@ function field_enum(data,editable,onchanged,onunchanged,config) {
 				o.text = config.possible_values[i];
 			}
 			select.add(o);
-			if (data == config.possible_values[i]) selected = i+(config.can_be_empty?1:0);
+			if (data == o.value) selected = i+(config.can_be_empty?1:0);
 		}
 		select.selectedIndex = selected;
 		select.style.margin = "0px";
@@ -101,8 +101,7 @@ function field_enum(data,editable,onchanged,onunchanged,config) {
 		};
 	}
 }
-if (typeof require != 'undefined')
-	require("typed_field.js",function(){
-		field_enum.prototype = new typed_field();
-		field_enum.prototype.constructor = field_enum;
-	});
+if (typeof typed_field != 'undefined') {
+	field_enum.prototype = new typed_field();
+	field_enum.prototype.constructor = field_enum;
+}

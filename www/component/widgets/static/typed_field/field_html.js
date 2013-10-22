@@ -6,8 +6,7 @@ function field_html(data,editable,onchanged,onunchanged,config) {
 	this.getCurrentData = function() { return this.element.innerHTML; };
 	this.setData = function(data) { this.element.innerHTML = data; };
 }
-if (typeof require != 'undefined')
-	require("typed_field.js",function(){
-		field_html.prototype = new typed_field();
-		field_html.prototype.constructor = field_html;		
-	});
+if (typeof typed_field != 'undefined') {
+	field_html.prototype = new typed_field();
+	field_html.prototype.constructor = field_html;		
+}

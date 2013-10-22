@@ -462,3 +462,18 @@ function debug_object_to_string(o, indent) {
 	}
 	return ""+o;
 }
+
+function parseSQLDate(s) {
+	var d = new Date();
+	d.setHours(0,0,0,0);
+	var a = s.split("-");
+	if (a.length == 3) {
+		d.setFullYear(parseInt(a[0]));
+		d.setMonth(parseInt(a[1])-1);
+		d.setDate(parseInt(a[2]));
+	}
+	return d;
+};
+function dateToSQL(d) {
+	return d.getFullYear()+"-"+this._2digits(d.getMonth()+1)+"-"+this._2digits(d.getDate());
+};
