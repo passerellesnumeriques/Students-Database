@@ -2,6 +2,7 @@
 class page_organization_profile extends Page {
 	public function get_required_rights() { return array(); }
 	public function execute(){
+		$id = 1;
 		?>
 		<table>
 			<th style = "height:100px">
@@ -18,12 +19,18 @@ class page_organization_profile extends Page {
 			</tr>
 		</table>
 		<?php
-		require_once("contact.inc");
-		contact($this,"organization","contact","1");
-		require_once("address.inc");
-		address($this,"organization","address","1");
+		$q = SQLQuery::create()->select("Organization")
+				->field("id")
+				->where("id = ".$id."");
+		$exist = $q->execute();
+		if(isset($exist[0]["id"])){
+			require_once("contact.inc");
+			contact($this,"organization","contact",$id);
+			require_once("address.inc");
+			address($this,"organization","address",$id);
+		}
 		require_once("organization_profile.inc");
-		organization_profile($this,"1","type","organization_title");
+		organization_profile($this,$id,"type","organization_title");
 	}
 	
 }

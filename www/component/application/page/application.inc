@@ -1,8 +1,10 @@
 <?php 
 $this->add_javascript("/static/widgets/vertical_layout.js");
+$this->add_javascript("/static/widgets/horizontal_menu.js");
 $this->add_javascript("/static/widgets/context_menu.js");
 $this->add_javascript("/static/google/google_status.js");
 $this->onload("new vertical_layout('pn_application_container');");
+$this->onload("new horizontal_menu('application_menu');");
 $this->onload("new google_status('google_status');");
 $this->onload("setBorderRadius(document.forms['app_search'].elements['q'],7,7,7,7,7,7,7,7);");
 $this->onload("window.top.pn_loading_end();");
@@ -15,7 +17,12 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	<div layout='28' id='pn_application_header'>
 		<table style='width:100%;height:100%'>
 			<tr>
-				<td width='100%' style='padding-left:40px'>Menu</td>
+				<td width='100%' style='padding-left:40px'>
+					<div class='horizontal_menu' id='application_menu'>
+						<div class='application_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/selection/page/home';"><img src='/static/selection/selection_16.png'/>Selection</div>
+						<div class='application_menu_item'><img src='/static/application/more.png'/>More</div>
+					</div>
+				</td>
 				<td nowrap="nowrap" class='pn_application_header_section'>
 					<form name='app_search' action="/dynamic/application/page/search" method="get" target="pn_application_content" style='display:inline;'>
 						<input name="q" type='text' size=15 style="background:#ffffff url('<?php echo theme::$icons_16["search"];?>') no-repeat 3px 1px;margin:0px;padding:2px 4px 2px 23px;border:1px solid #8080FF;font-size:11px" autocomplete="off"/>

@@ -2,16 +2,17 @@ if (typeof require != 'undefined')
 	require("typed_field.js");
 	
 	/**
-	 * @parameter container
-	 * @parameter table the table to which the data belongs to
-	 * @parameter column the column to which the data belongs to
-	 * @parameter row_key
-	 * @parameter field_classname the typed filed of the data
-	 * @parameter field_arguments (optional) in case this typed_filed needs arguments
-	 * @parameter data the data that initiates the editable_cell
-	 * @parameter style (optional) an object containing all the style attributes to set on the editable_cell(when it is uneditable). For instance style = {verticalAlign:"bottom"}
+	 * @param container
+	 * @param table the table to which the data belongs to
+	 * @param column the column to which the data belongs to
+	 * @param row_key
+	 * @param field_classname the typed filed of the data
+	 * @param field_arguments (optional) in case this typed_filed needs arguments
+	 * @param data the data that initiates the editable_cell
+	 * @param style_unedit (optional) an object containing all the style attributes to set on the editable_cell(when it is uneditable). For instance style = {verticalAlign:"bottom"}
+	 * @param style_edit (optional)
 	 */
-function editable_cell(container, table, column, row_key, field_classname, field_arguments, data, style) {
+function editable_cell(container, table, column, row_key, field_classname, field_arguments, data, style_unedit, style_edit) {
 	var t=this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (typeof field_arguments == 'string') field_arguments = eval('('+field_arguments+')');
@@ -42,9 +43,9 @@ function editable_cell(container, table, column, row_key, field_classname, field
 				t.elem.onmouseover = function(ev) { this.style.outline = '1px solid #C0C0F0'; stopEventPropagation(ev); return false; };
 				t.elem.onmouseout = function(ev) { this.style.outline = 'none'; stopEventPropagation(ev); return false; };
 				t.elem.onclick = function(ev) { t.edit(); stopEventPropagation(ev); return false; };
-				if(style != null && typeof(style) == "object"){
-					for(p in style){
-						t.elem.style[p] = style[p];
+				if(style_unedit != null && typeof(style_unedit) == "object"){
+					for(p in style_unedit){
+						t.elem.style[p] = style_unedit[p];
 					}
 				}
 			}); 
@@ -70,6 +71,11 @@ function editable_cell(container, table, column, row_key, field_classname, field
 			t.data = result.value;
 			window.database_locks.add_lock(parseInt(result.lock));
 			t.field = new window[field_classname](t.data,true,null,null,field_arguments);
+			if(style_edit != null && typeof(style_edit) == "object"){
+				for(p in style_edit){
+					t.field.getHTMLElement().style[p] = style_edit[p];
+				}
+			}
 			container.appendChild(t.field.getHTMLElement());
 			t.field.getHTMLElement().focus();
 			if (t.field.getHTMLElement().onfocus) t.field.getHTMLElement().onfocus();
