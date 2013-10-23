@@ -6,7 +6,10 @@ $this->add_javascript("/static/google/google_status.js");
 $this->onload("new vertical_layout('pn_application_container');");
 $this->onload("new horizontal_menu('application_menu');");
 $this->onload("new google_status('google_status');");
-$this->onload("setBorderRadius(document.forms['app_search'].elements['q'],7,7,7,7,7,7,7,7);");
+$this->onload("setBorderRadius(document.forms['app_search'].elements['q'],8,8,8,8,8,8,8,8);");
+$this->onload("setBoxShadow(document.forms['app_search'].elements['q'],-1,2,2,0,'#D8D8F0',true);");
+$this->onload("setBorderRadius(document.getElementById('app_domain'),5,5,5,5,5,5,5,5);");
+$this->onload("setBoxShadow(document.getElementById('app_domain'),-1,2,2,0,'#D8D8F0',true);");
 $this->onload("window.top.pn_loading_end();");
 if (PNApplication::$instance->current_domain == "Dev") {
 	$this->add_javascript("/static/development/debug_status.js");
@@ -15,12 +18,12 @@ if (PNApplication::$instance->current_domain == "Dev") {
 ?>
 <div style='width:100%;height:100%;overflow:hidden' id='pn_application_container'>
 	<div layout='28' id='pn_application_header'>
-		<table style='width:100%;height:100%'>
+		<table style='width:100%;height:100%;border-collapse:collapse;border-spacing:0;'>
 			<tr>
 				<td width='100%' style='padding-left:40px'>
 					<div class='horizontal_menu' id='application_menu'>
 						<div class='application_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/selection/page/home';"><img src='/static/selection/selection_16.png'/>Selection</div>
-						<div class='application_menu_item'><img src='/static/application/more.png'/>More</div>
+						<div class='application_menu_item'><img src='<?php echo theme::$icons_16["more_menu"];?>'/>More</div>
 					</div>
 				</td>
 				<td nowrap="nowrap" class='pn_application_header_section'>
@@ -40,7 +43,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 						</div>
 					</div>
 				</td><td nowrap="nowrap" class='pn_application_header_section' title="Database">
-					<select style="padding:0px 0px 0px 16px;margin:0px;background:#ffffff url('/static/application/database.png') no-repeat 0px 1px;" onchange="service.json('application','set_domain',{domain:this.value},function(result){if(result)location.reload();});">
+					<select id='app_domain' style="padding:0px 0px 0px 16px;margin:0px;background:#ffffff url('/static/application/database.png') no-repeat 0px 1px;border:1px solid #8080FF;" onchange="service.json('application','set_domain',{domain:this.value},function(result){if(result)location.reload();});">
 					<?php
 					foreach (PNApplication::$instance->get_domains() as $domain=>$descr)
 						echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>";

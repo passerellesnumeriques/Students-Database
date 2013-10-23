@@ -44,26 +44,27 @@ if (!window.top.google) {
 			);
 		},
 		ask_connection: function() {
-			window.top.google.connection_status = 0;
-			for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
-				window.top.google.connection_listeners[i]();
-			window.top.google._connecting_time = new Date().getTime();
-			window.top.gapi.auth.authorize(
+			var wt = window.top;
+			wt.google.connection_status = 0;
+			for (var i = 0; i < wtgoogle.connection_listeners.length; ++i)
+				wt.google.connection_listeners[i]();
+			wt.google._connecting_time = new Date().getTime();
+			wt.gapi.auth.authorize(
 				{
 					client_id:window.top.google._client_id,
 					scope:window.top.google._scopes,
 					immediate:false
 				},function(auth_result){
 					if (auth_result && !auth_result.error) {
-						window.top.google.connection_status = 1;
-						for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
-							window.top.google.connection_listeners[i]();
-						setTimeout(window.top.google.connect, (parseInt(auth_result.expires_in)-30)*1000);
+						wt.google.connection_status = 1;
+						for (var i = 0; i < wt.google.connection_listeners.length; ++i)
+							wt.google.connection_listeners[i]();
+						setTimeout(wt.google.connect, (parseInt(auth_result.expires_in)-30)*1000);
 						return;
 					}
-					window.top.google.connection_status = -1;
-					for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
-						window.top.google.connection_listeners[i]();
+					wt.google.connection_status = -1;
+					for (var i = 0; i < wt.google.connection_listeners.length; ++i)
+						wt.google.connection_listeners[i]();
 				}
 			);
 		}

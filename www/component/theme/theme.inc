@@ -48,6 +48,7 @@ theme::$icons_10 = array(
 	"no_edit" => 		"/static/theme/".$theme."/icons_10/no_edit.png",
 	"online" => 		"/static/theme/".$theme."/icons_10/online.gif",
 	"offline" => 		"/static/theme/".$theme."/icons_10/offline.gif",
+	"remove" => 		"/static/theme/".$theme."/icons_10/close.png",
 	"save" => 			"/static/theme/".$theme."/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/".$theme."/icons_10/semi_online.gif",
 	"no_connection" => 	"/static/theme/".$theme."/icons_10/no_connection.gif",

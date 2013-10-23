@@ -170,16 +170,17 @@ function setOpacity(element, opacity) {
 /**
  * Set box-shadow if the browser has a way to support it 
  * @param elem
- * @param a
- * @param b
- * @param c
- * @param d
+ * @param a horizontal shadow
+ * @param b vertical shadow
+ * @param c blur distance
+ * @param d size of shadow
  * @param color
+ * @param inset
  */
-function setBoxShadow(elem,a,b,c,d,color) { 
-	elem.style.boxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color;
-	elem.style.MozBoxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color;
-	elem.style.WebkitBoxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color;
+function setBoxShadow(elem,a,b,c,d,color,inset) { 
+	elem.style.boxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color+(inset ? " inset" : "");
+	elem.style.MozBoxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color+(inset ? " inset" : "");
+	elem.style.WebkitBoxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color+(inset ? " inset" : "");
 }
 /**
  * Set a border radius if the browser has a way to support it

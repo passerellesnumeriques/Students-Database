@@ -161,7 +161,7 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 				// gather categories and javascripts needed
 				for (var i = 0; i < fields.length; ++i) {
 					if (!categories.contains(fields[i].cat)) categories.push(fields[i].cat);
-					if (!javascripts.contains(fields[i].field_classname)) javascripts.push(fields[i].field_classname);
+					if (!javascripts.contains(fields[i].field_classname)) javascripts.push(fields[i].field_classname+".js");
 				}
 				require(["typed_field.js",javascripts]);
 				// create sections for each category

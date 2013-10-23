@@ -1,7 +1,7 @@
 /* General styles */
 
 html, body, table, input, select {
-	font-family: Tahoma;
+	font-family: Arial, Tahoma, Verdana;
 	font-size: 10pt;
 }
 html, body {
@@ -21,7 +21,7 @@ input[type="text"], input[type="password"] {
 }
 .pn_application_header_section {
 	padding: 2px;
-	border-left: 1px solid #8080C0;
+	border-left: 1px solid #A0A0E0;
 }
 #pn_application_footer {
 	background-color: #C0C0C0;
@@ -390,6 +390,13 @@ table.grid tbody tr:nth-child(odd).selected {
 	border: 1px solid black;
 	border-collapse: collapse;
 	background-color: white;
+}
+.small_calendar th {
+	border: 1px solid #8080FF;
+	text-align: center;
+	vertical-align: middle;
+	font-size: 8pt;
+	color: #404080;
 }
 .small_calendar td {
 	border: 1px solid #8080FF;

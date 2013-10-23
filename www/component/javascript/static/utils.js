@@ -40,11 +40,10 @@ function isLetter(c) {
 String.prototype.firstLetterCapitalizedForSeparator = function(separator) {
 	var text_split = this.split(separator);
 	for(var i = 0; i < text_split.length; i++){
-		var temp_split = text_split[i].split("");
 		text_split[i] = text_split[i].charAt(0).toUpperCase()+text_split[i].substring(1);
 	}
 	return text_split.join(separator);
-}
+};
 
 /**
 * Set a uniform case according to " ", "'" and "-"
@@ -57,7 +56,7 @@ String.prototype.uniformFirstLetterCapitalized = function(){
 	result = result.firstLetterCapitalizedForSeparator("-");
 	result = result.firstLetterCapitalizedForSeparator("'");
 	return result;
-}
+};
 
 /**
  * Test if a string is not empty (in terms of visibility)
@@ -74,7 +73,7 @@ String.prototype.checkVisible = function(){
 		}
 	}
 	return is_visible;
-}
+};
 
 /**
  * Some useful functions are added to the class Array

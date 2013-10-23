@@ -31,6 +31,8 @@ function page_header(container) {
 		container.removeAttribute("title");
 		
 		container.appendChild(menu_container);
+		container.style.whiteSpace = "nowrap";
+		container.style.overflow = "hidden";
 		
 		// set layout
 		header_title.setAttribute("layout", "fixed");

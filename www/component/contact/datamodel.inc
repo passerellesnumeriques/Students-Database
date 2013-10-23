@@ -5,10 +5,6 @@
 		->addEnum("type",array("email","phone","IM"),true,false)
 		->addString("sub_type",10,0,true,false)
 		->addString("contact",100,1,false,false)
-		->setDisplayName("Contact")
-		->addDisplayableData("type","Contact","Contact Type")
-		->addDisplayableData("sub_type","Contact","Contact Sub-Type")
-		->addDisplayableData("contact", "Contact", "Contact")
 		->noRestriction(); // TODO check access with generic services
 		
 	$model->addTable("People_contact")

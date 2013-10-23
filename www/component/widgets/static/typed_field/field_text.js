@@ -42,11 +42,12 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 			input.style.border = error ? "1px solid red" : "";
 		};
 	} else {
-		this.element = document.createTextNode(data);
+		this.element = document.createElement("SPAN");
+		this.element.appendChild(document.createTextNode(data));
 		this.element.typed_field = this;
 		this.setData = function(data) {
-			if (this.element.nodeValue == data) return;
-			this.element.nodeValue = data;
+			if (this.element.childNodes[0].nodeValue == data) return;
+			this.element.childNodes[0].nodeValue = data;
 			if (data == this.originalData) {
 				if (onunchanged) onunchanged(this);
 			} else {
@@ -54,7 +55,7 @@ function field_text(data,editable,onchanged,onunchanged,config) {
 			}
 		};
 		this.getCurrentData = function() {
-			return this.element.nodeValue;
+			return this.element.childNodes[0].nodeValue;
 		};
 		this.signal_error = function(error) {
 			this.element.style.color = error ? "red" : "";

@@ -51,8 +51,8 @@ function popup_window(title,icon,content) {
 			t.content.style.width = "100%";
 			t.content.style.height = "100%";
 			t.resize();
-			var w = getIFrameWindow(t.content);
-			w.listenEvent(w, 'resize', function() { t.resize(); });
+			//var w = getIFrameWindow(t.content);
+			//w.listenEvent(w, 'resize', function() { t.resize(); });
 		};
 		if (t.content_container) {
 			while (t.content_container.childNodes.length > 0) t.content_container.removeChild(t.content_container.childNodes[0]);
@@ -206,6 +206,32 @@ function popup_window(title,icon,content) {
 			t.anim = animation.fadeIn(t.table, 200);
 		}
 	};
+	t._computeFrameWidth = function(body) {
+		var max = 0;
+		for (var i = 0; i < body.childNodes.length; ++i) {
+			var e = body.childNodes[i];
+			var w = null;
+			if (e.nodeType != 1) continue;
+			if (e.nodeName == "FORM")
+				w = absoluteLeft(e) + t._computeFrameWidth(e);
+			if (w == null) w = absoluteLeft(e)+e.offsetWidth;
+			if (w > max) max = w;
+		}
+		return max;
+	};
+	t._computeFrameHeight = function(body) {
+		var max = 0;
+		for (var i = 0; i < body.childNodes.length; ++i) {
+			var e = body.childNodes[i];
+			var h = null;
+			if (e.nodeType != 1) continue;
+			if (e.nodeName == "FORM")
+				h = absoluteTop(e) + t._computeFrameHeight(e);
+			if (h == null) h = absoluteTop(e)+e.offsetHeight;
+			if (h > max) max = h;
+		}
+		return max;
+	};
 	/** Resize the window according to its content: this is normally automatically called. 
 	 * @method popup_window#resize
 	 */
@@ -219,8 +245,8 @@ function popup_window(title,icon,content) {
 			t.content_container.style.height = (getWindowHeight()-30)+"px";
 			t.content_container.style.overflow = "";
 			var frame = getIFrameDocument(t.content); 
-			x = frame.body.scrollWidth;
-			y = frame.body.scrollHeight;
+			x = t._computeFrameWidth(frame.body);
+			y = t._computeFrameHeight(frame.body);
 			if (x > getWindowWidth()-30) x = getWindowWidth()-30;
 			if (y > getWindowHeight()-30) y = getWindowHeight()-30;
 			t.content_container.style.height = y+"px";

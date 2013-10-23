@@ -195,7 +195,7 @@ class SQLQuery {
 				else
 					array_push($this->where, "`".$field."` IS NOT NULL");
 			} else
-				array_push($this->where, "`".$field."`='".SQLQuery::escape($value)."'");
+				array_push($this->where, "`".$field."`".$op."'".SQLQuery::escape($value)."'");
 		}
 		return $this;
 	}
@@ -879,7 +879,7 @@ class SQLQuery {
 								if ($col->remove_foreign_when_primary_removed)
 									SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName($sm)."` WHERE `".$col->name."`=".$key);
 								else
-									SQLQuery::db()->execute("UPDATE FROM `".$t->getSQLName($sm)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
+									SQLQuery::db()->execute("UPDATE `".$t->getSQLName($sm)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
 							}
 						}
 					}
@@ -903,7 +903,7 @@ class SQLQuery {
 									if ($col->remove_foreign_when_primary_removed)
 										SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName($sm)."` WHERE `".$col->name."`=".$key);
 									else
-										SQLQuery::db()->execute("UPDATE FROM `".$t->getSQLName($sm)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
+										SQLQuery::db()->execute("UPDATE `".$t->getSQLName($sm)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
 								}
 							}
 						}
@@ -929,12 +929,22 @@ class SQLQuery {
 							if ($col->remove_foreign_when_primary_removed)
 								SQLQuery::db()->execute("DELETE FROM `".$t->getSQLName(null)."` WHERE `".$col->name."`=".$key);
 							else
-								SQLQuery::db()->execute("UPDATE FROM `".$t->getSQLName(null)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
+								SQLQuery::db()->execute("UPDATE `".$t->getSQLName(null)."` SET `".$col->name."`=NULL WHERE `".$col->name."`=".$key);
 						}
 					}
 				}
 			}
 		}
+	}
+	
+	// some useful shortcuts
+	public static function get_table($table, $sub_models = null) {
+		return SQLQuery::create()->set_sub_models($sub_models)->select($table)->execute();
+	}
+	public static function get_row($table, $key, $sub_models = null) {
+		require_once("component/data_model/Model.inc");
+		$t = DataModel::get()->getTable($table);
+		return SQLQuery::create()->set_sub_models($sub_models)->select($table)->where($t->getPrimaryKey()->name, $key)->execute_single_row();
 	}
 }
 ?>
