@@ -1,4 +1,6 @@
 <?php
+use datamodel\FieldsDisplayHandler;
+
 /* @var $model DataModel */
 $model->addTable("StudentBatch")
 	->addPrimaryKey("id")
@@ -9,6 +11,13 @@ $model->addTable("StudentBatch")
 	->restrictWriteAccess("manage_batches", true)
 	->restrictAddAccess("manage_batches", true)
 	->restrictRemoveAccess("manage_batches", true)
+	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Batch",
+		array(
+			"name"=>"Batch Name",
+			"start_date"=>"Integration Date",
+			"end_date"=>"Graduation Date",
+		)
+	))
 	;
 $model->addTable("Specialization")
 	->addPrimaryKey("id")
@@ -18,9 +27,10 @@ $model->addTable("Specialization")
 	->restrictAddAccess("manage_batches", true)
 	->restrictRemoveAccess("manage_batches", true)
 	;
+
 $model->addTable("Student")
 	->addForeignKey("people", "People", true, true, false)
-	->addForeignKey("batch", "StudentBatch", false, false, true)
+	->addForeignKey("batch", "StudentBatch", true, false, true, false)
 	->addString("exclusion_reason", 5000, 0, true, false)
 	->addDate("exclusion_date", true, false)
 	->addForeignKey("specialization", "Specialization", false, false, true)
@@ -28,6 +38,13 @@ $model->addTable("Student")
 	->restrictWriteAccess("manage_batches", true)
 	->restrictAddAccess("manage_batches", true)
 	->restrictRemoveAccess("manage_batches", true)
+	->setDisplayHandler(null, new \datamodel\MultipleDisplayHandler("Student", "Student", array(
+		new \datamodel\ChoiceDataDisplay(null, "batch", "name", "Batch", "people"),
+		new \datamodel\FieldsDisplayHandler("Student", "", array(
+			"exclusion_reason"=>"Exclusion reason",
+			"exclusion_date"=>"Exclusion date"
+		),null,"people")
+	)))
 	;
 $model->addTable("AcademicPeriod")
 	->addPrimaryKey("id")
@@ -39,6 +56,13 @@ $model->addTable("AcademicPeriod")
 	->restrictWriteAccess("manage_batches", true)
 	->restrictAddAccess("manage_batches", true)
 	->restrictRemoveAccess("manage_batches", true)
+	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Academic Period",
+		array(
+			"name"=>"Period Name",
+			"start_date"=>"Period Start",
+			"end_date"=>"Period End",
+		)
+	))
 	;
 $model->addTable("AcademicClass")
 	->addPrimaryKey("id")
@@ -57,5 +81,6 @@ $model->addTable("StudentClass")
 	->restrictWriteAccess("manage_batches", true)
 	->restrictAddAccess("manage_batches", true)
 	->restrictRemoveAccess("manage_batches", true)
+	->setDisplayHandler("people", new \datamodel\StopDataDisplayHandler())
 	;
 ?>

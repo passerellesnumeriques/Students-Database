@@ -31,6 +31,7 @@ function frame_header(container) {
 		frame.onload = function() { t.frame_load(); };
 		frame.src = container.getAttribute("page");
 		frame.name = container.id+"_content";
+		frame.id = container.id+"_content";
 		frame.frameBorder = 0;
 		frame.style.width = "100%";
 		container.removeAttribute("page");

@@ -7,72 +7,63 @@ class page_batches extends Page {
 		$this->add_javascript("/static/widgets/page_header.js");
 		$this->onload("new page_header('batches_header');");
 		$this->add_javascript("/static/widgets/collapsable_section/collapsable_section.js");
-		$this->add_javascript("/static/widgets/typed_field/typed_field.js");
-		$this->add_javascript("/static/widgets/typed_field/field_text.js");
 		
 		$can_edit = PNApplication::$instance->user_management->has_right("manage_batches");
-		
 		$all_spe = SQLQuery::create()->select("Specialization")->execute();
+		
+		require_once("component/data_model/page/utils.inc");
 		?>
 		<div id='batches_header' icon='/static/students/batch_32.png' title="Batches & Classes">
 			<?php if ($can_edit) {?>
 			<div class='button' onclick="create_new_batch();"><img src='<?php echo theme::$icons_16["add"];?>'/> Create New Batch</div>
 			<?php }?>
-		</div>
-		<div style="margin:3px;padding-bottom:3px;border-bottom:1px solid #808080;">
-			List of specializations: 
-			<?php
-			$first = true;
-			foreach ($all_spe as $spe) {
-				if ($first) $first = false; else echo ", ";
-				if ($can_edit) {
+			<div style="display:inline-block">
+				List of specializations: 
+				<?php
+				$first = true;
+				foreach ($all_spe as $spe) {
+					if ($first) $first = false; else echo ", ";
 					$span_id = $this->generate_id();
 					echo "<span id='".$span_id."'></span>";
-					$this->onload("new editable_cell('".$span_id."','Specialization','name',".$spe["id"].",'field_text',{max_length:100},".json_encode($spe["name"]).");");
-					echo "<img src='".theme::$icons_10["remove"]."' style='vertical-align:bottom;padding-left:2px;padding-right:2px;cursor:pointer;' title='Remove specialization'";
-					$used = SQLQuery::create()->select("AcademicClass")->where("specialization",$spe["id"])->count("nb")->execute_single_value();
-					if ($used == 0)
-						echo " onclick='remove_specialization(".$spe["id"].");stopEventPropagation(event);return false;'";
-					else
-						echo " onclick=\"error_dialog('You cannot remove this specialization because it is still used by ".$used." classes');stopEventPropagation(event);return false;\"";
-					echo "/>";
-				} else
-					echo $spe["name"];
-			} 
-			?>
-			<img class='button' src='<?php echo theme::$icons_16["add"];?>' style='vertical-align:bottom' onclick='create_specialization();' title='Create a new specialization'/>
+					datamodel_cell($this, $span_id, $can_edit, "Specialization", "name", $spe["id"], null, $spe["name"]);
+					if ($can_edit) {
+						echo "<img src='".theme::$icons_10["remove"]."' style='vertical-align:bottom;padding-left:2px;padding-right:2px;cursor:pointer;' title='Remove specialization'";
+						$used = SQLQuery::create()->select("AcademicClass")->where("specialization",$spe["id"])->count("nb")->execute_single_value();
+						if ($used == 0)
+							echo " onclick='remove_specialization(".$spe["id"].");stopEventPropagation(event);return false;'";
+						else
+							echo " onclick=\"error_dialog('You cannot remove this specialization because it is still used by ".$used." classes');stopEventPropagation(event);return false;\"";
+						echo "/>";
+					}
+				}
+				if ($can_edit) { 
+				?>
+				<img class='button' src='<?php echo theme::$icons_16["add"];?>' style='vertical-align:bottom' onclick='create_specialization();' title='Create a new specialization'/>
+				<?php } ?>
+			</div>
 		</div>
-		<span style="padding:3px;">Batches of students:</span>
 <?php 
-		$this->add_javascript("/static/data_model/editable_cell.js");
 		$batches = SQLQuery::create()->select("StudentBatch")->order_by("StudentBatch","start_date",false)->execute();
 		foreach ($batches as $batch) {
 			echo "<div id='batch_".$batch["id"]."' class='collapsable_section' style='margin:2px'>";
 			echo "<div class='collapsable_section_header' style='padding:1px'>";
+			$span_id = $this->generate_id();
+			echo "<span id='".$span_id."'></span>";
+			datamodel_cell($this, $span_id, $can_edit, "StudentBatch", "name", $batch["id"], null, $batch["name"]);
 			if ($can_edit) {
-				$span_id = $this->generate_id();
-				echo "<span id='".$span_id."'></span>";
-				$this->onload("new editable_cell('".$span_id."','StudentBatch','name',".$batch["id"].",'field_text',{max_length:100},".json_encode($batch["name"]).");");
 				echo "<img src='".theme::$icons_16["remove"]."' style='vertical-align:bottom;padding-left:3px;cursor:pointer;' onclick='remove_batch(".$batch["id"].");stopEventPropagation(event);return false;' title='Remove batch'/>";
-			} else
-				echo $batch["name"];
+			}
 			echo "</div>";
 			echo "<div class='collapsable_section_content' style='padding:3px'>";
 			echo "<span style='padding-right:5px'>";
 			$span_id = $this->generate_id();
 			echo "<span id='".$span_id."'>Integration Date: ";
-			if ($can_edit)
-				$this->onload("new editable_cell('".$span_id."','StudentBatch','start_date',".$batch["id"].",'field_date',null,".json_encode($batch["start_date"]).");");
-			else 
-				echo $batch["start_date"];
+			datamodel_cell($this, $span_id, $can_edit, "StudentBatch", "start_date", $batch["id"], null, $batch["start_date"]);
 			echo "</span></span>";
 			echo "<span style='padding-right:5px'>";
 			$span_id = $this->generate_id();
 			echo "<span id='".$span_id."'>Graduation Date: </span>";
-			if ($can_edit)
-				$this->onload("new editable_cell('".$span_id."','StudentBatch','end_date',".$batch["id"].",'field_date',null,".json_encode($batch["end_date"]).");");
-			else
-				echo $batch["end_date"];
+			datamodel_cell($this, $span_id, $can_edit, "StudentBatch", "end_date", $batch["id"], null, $batch["end_date"]);
 			echo "</span></span>";
 			$students = SQLQuery::create()->select("Student")->where("batch",$batch["id"])->execute();
 			$nb_in = 0; $nb_out = 0;
@@ -107,7 +98,7 @@ class page_batches extends Page {
 			}
 			.periods td.class_name {
 				text-align: center;
-				font-style: bold;
+				font-weight: bold;
 				background-color: #D0E0D0;
 			}
 			.periods td.skip {
@@ -180,20 +171,14 @@ class page_batches extends Page {
 				}
 				echo "<tr>";
 				echo "<td rowspan=2>"; // period name, on 2 rows for dates
-				if ($can_edit) {
-					$span_id = $this->generate_id();
-					echo "<span id='".$span_id."'></span>";
-					$this->onload("new editable_cell('".$span_id."','AcademicPeriod','name',".$period["id"].",'field_text',{max_length:100},".json_encode($period["name"]).");");
-				} else
-					echo $period["name"];
+				$span_id = $this->generate_id();
+				echo "<span id='".$span_id."'></span>";
+				datamodel_cell($this, $span_id, $can_edit, "AcademicPeriod", "name", $period["id"], null, $period["name"]);
 				echo "</td>";
 				echo "<td>"; // start date
-				if ($can_edit) {
-					$span_id = $this->generate_id();
-					echo "<span id='".$span_id."'></span>";
-					$this->onload("new editable_cell('".$span_id."','AcademicPeriod','start_date',".$period["id"].",'field_date',null,".json_encode($period["start_date"]).");");
-				} else
-					echo $period["start_date"];
+				$span_id = $this->generate_id();
+				echo "<span id='".$span_id."'></span>";
+				datamodel_cell($this, $span_id, $can_edit, "AcademicPeriod", "start_date", $period["id"], null, $period["start_date"]);
 				echo "</td>";
 				// class list
 				if (count($classes) == 0)
@@ -218,12 +203,9 @@ class page_batches extends Page {
 				echo "</tr>";
 				echo "<tr>";
 				echo "<td>"; // end date
-				if ($can_edit) {
-					$span_id = $this->generate_id();
-					echo "<span id='".$span_id."'></span>";
-					$this->onload("new editable_cell('".$span_id."','AcademicPeriod','end_date',".$period["id"].",'field_date',null,".json_encode($period["end_date"]).");");
-				} else
-					echo $period["end_date"];
+				$span_id = $this->generate_id();
+				echo "<span id='".$span_id."'></span>";
+				datamodel_cell($this, $span_id, $can_edit, "AcademicPeriod", "end_date", $period["id"], null, $period["end_date"]);
 				echo "</td>";
 				echo "</tr>";
 			}
@@ -235,9 +217,9 @@ class page_batches extends Page {
 		}
 		echo "</table>";
 
-require_once("component/data_model/page/entity_edit.inc");
-create_entity_edition_table($this, "StudentBatch", null, "create_new_batch_table");
-create_entity_edition_table($this, "AcademicPeriod", null, "create_academic_period_table");
+require_once("component/data_model/page/table_datadisplay_edit.inc");
+table_datadisplay_edit($this, "StudentBatch", null, null, "create_new_batch_table");
+table_datadisplay_edit($this, "AcademicPeriod", null, null, "create_academic_period_table");
 ?>
 <script type='text/javascript'>
 function create_new_batch() {
@@ -388,15 +370,18 @@ function add_class(period_id) {
 }
 function classname_field(container_id, class_name, class_id) {
 	var not_edit, edit;
+	var f = new field_text(class_name, false, {max_length:100,min_length:1});
+	document.getElementById(container_id).appendChild(f.getHTMLElement());
+	
 	not_edit = function(class_name) {
-		var f = new field_text(class_name, false, null, null, {max_length:100});
+		f.setData(class_name);
+		f.setOriginalData(class_name);
+		f.setEditable(false);
 		var e = f.getHTMLElement();
-		document.getElementById(container_id).appendChild(e);
 		e.title = "Click to rename the class";
 		e.onmouseover = function() { this.style.textDecoration = 'underline'; };
 		e.onmouseout = function() { this.style.textDecoration = 'none'; };
 		e.onclick = function() {
-			e.parentNode.removeChild(e);
 			edit(class_name);
 		};
 	};
@@ -404,20 +389,24 @@ function classname_field(container_id, class_name, class_id) {
 		service.json("data_model","lock_row",{table:"AcademicClass",row_key:class_id},function(res) {
 			var lock_id = res.lock;
 			window.database_locks.add_lock(lock_id);
-			var f = new field_text(class_name, true, null, null, {max_length:100});
+			f.setData(class_name);
+			f.setOriginalData(class_name);
+			f.setEditable(true);
 			var e = f.getHTMLElement();
-			document.getElementById(container_id).appendChild(e);
-			e.onblur = function() {
+			e.title = "";
+			e.onmouseover = null;
+			e.onmouseout = null;
+			e.onclick = null;
+			f.input.onblur = function() {
 				var name = f.getCurrentData();
 				if (name == class_name) { not_edit(name); return; }
 				var lock = lock_screen();
 				service.json("data_model","save_entity",{table:"AcademicClass",key:class_id,field_name:name,lock:lock_id},function(res) {
 					unlock_screen(lock);
-					e.parentNode.removeChild(e);
 					location.reload();
 				});
 			};
-			e.focus();
+			f.input.focus();
 		});
 	};
 	not_edit(class_name);

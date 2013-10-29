@@ -67,7 +67,7 @@ function init_databaselock() {
 		for (var i = 0; i < window.database_locks._locks.length; ++i) {
 			if (now - window.database_locks._locks[i].time >= 2*60*1000) {
 				add_javascript("/static/widgets/popup_window.js",function() {
-					var p = new popup_window("",null);
+					var p = new popup_window("You are inactive",theme.icons_16.warning,null,true);
 					p.setContentFrame("/static/data_model/databaselock_inactivity.html");
 					p.onclose = function() {
 						window.database_locks._has_popup = false;

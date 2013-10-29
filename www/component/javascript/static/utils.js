@@ -101,16 +101,36 @@ function object_copy(o, recursive_depth) {
 	for (var attr in o) {
 		var value = o[attr];
 		if (!recursive_depth) { c[attr] = value; continue; }
+		if (value == null) { c[attr] = null; continue; }
 		if (typeof value == 'object') {
-			if (value instanceof Date)
+			if (value instanceof Date || value.constructor.name == "Date")
 				c[attr] = new Date(value.getTime());
-			else {
+			else if (value instanceof Array || value.constructor.name == "Array") {
+				c[attr] = [];
+				for (var i = 0; i < value.length; ++i)
+					c[attr].push(value_copy(value[i], recursive_depth-1));
+			} else {
 				c[attr] = object_copy(value, recursive_depth-1);
 			}
 		} else
 			c[attr] = value;
 	}
 	return c;
+}
+function value_copy(value, obj_depth) {
+	if (value == null) return null;
+	if (typeof value == 'object') {
+		if (value instanceof Date || value.constructor.name == "Date")
+			return new Date(value.getTime());
+		if (value instanceof Array || value.constructor.name == "Array") {
+			var a = [];
+			for (var i = 0; i < value.length; ++i)
+				a.push(value_copy(value[i], obj_depth-1));
+			return a;
+		}
+		return object_copy(value, obj_depth);
+	}
+	return value;
 }
 
 var _generate_id_counter = 0;
@@ -411,6 +431,7 @@ function lock_screen(onclick, content) {
 	div.style.left = "0px";
 	div.style.width = getWindowWidth()+"px";
 	div.style.height = getWindowHeight()+"px";
+	div.style.zIndex = 10;
 	if (onclick)
 		div.onclick = onclick;
 	if (content) {

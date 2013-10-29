@@ -23,6 +23,8 @@ if (PNApplication::$instance->current_domain == "Dev") {
 				<td width='100%' style='padding-left:40px'>
 					<div class='horizontal_menu' id='application_menu'>
 						<div class='application_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/selection/page/home';"><img src='/static/selection/selection_16.png'/>Selection</div>
+						<div class='application_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/training_education/page/home';"><img src='/static/students/student_16.png'/>Training & Education</div>
+						<div class='application_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/administration/page/home';"><img src='/static/administration/admin_16.png'/>Administration</div>
 						<div class='application_menu_item'><img src='<?php echo theme::$icons_16["more_menu"];?>'/>More</div>
 					</div>
 				</td>

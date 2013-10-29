@@ -1,20 +1,14 @@
 function field_blank(html, value) {
-	typed_field.call(this, null, false, null, null);
-	if (typeof html == 'string') {
-		this.element = document.createElement("DIV");
-		this.element.innerHTML = html;
-	} else
-		this.element = html;
-	this.element.typed_field = this;
-	this.setData = function(data) {
-	};
-	this.getCurrentData = function() {
-		return value;
-	};
-	this.signal_error = function(error) {
-	};
+	this.html = html;
+	typed_field.call(this, value, false, null, null);
 }
-if (typeof typed_field != 'undefined') {
-	field_blank.prototype = new typed_field();
-	field_blank.prototype.constructor = field_blank;		
-}
+field_blank.prototype = new typed_field();
+field_blank.prototype.constructor = field_blank;
+field_blank.prototype._create = function() {
+	if (typeof this.html == 'string') {
+		this.element.innerHTML = this.html;
+	} else {
+		this.element.appendChild(this.html);
+	}
+};
+

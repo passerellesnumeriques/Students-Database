@@ -68,6 +68,7 @@ if ($message <> null) {
 	</tr>
 </table>
 <br/>
+<!-- 
 <div id='application_loading' style='visibility:hidden;position:fixed;top:0px;width:100%'>
 <table style="width:100%">
 	<tr><td align='center'>
@@ -83,11 +84,12 @@ if ($message <> null) {
 	</td></tr>
 </table>
 </div>
+ -->
 </td></tr></table>
 </form>
 <script type='text/javascript'>
-var l = document.getElementById('application_loading');
-window.top.document.body.appendChild(l.parentNode.removeChild(l));
+//var l = document.getElementById('application_loading');
+//window.top.document.body.appendChild(l.parentNode.removeChild(l));
 function login() {
 	var f=document.getElementById('frame_loading');
 	if(f) f.contentWindow.stop_loading = true;

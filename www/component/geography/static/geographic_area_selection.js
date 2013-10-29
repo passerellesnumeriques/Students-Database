@@ -1,74 +1,20 @@
+if (typeof require != 'undefined')
+	require("geography.js");
+
 /**
  * @method geographic_area_selection
  * @parameter container
- * @parameter country_code
+ * @parameter country_id
  * @parameter {function} onready, function that handle the parameter to_return = {area_id: ,field: the string to display}
  */
 
-function geographic_area_selection(container, country_code, onready) {
-	if (typeof container == 'string') {
-	container = document.getElementById(container);
-	}
+function geographic_area_selection(container, country_id, onready) {
+	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	var to_return = null;
 	
 	this.onchange = null;
 	this.getSelectedArea = function() { return to_return; };
-	
-	service.json("geography", "get_country_data", {country_code:country_code}, function(result) {
-		if (!result) return;
-		t.result = result;
-		var table = document.createElement('table');
-		var tbody = document.createElement('tbody');
-		var form = document.createElement('form');
-		form.method ="post";
-		form.action = "";
-		form.onsubmit = function(){return false;}
-		var result_length = result.length;
-		for (var j=0; j<result_length; j++) {
-			var tr = document.createElement('tr');
-			var td_name = document.createElement('td');
-			var td_form = document.createElement('td');
-			var td_name_text = document.createTextNode(result[j].division_name);
-			td_name.appendChild(td_name_text);
-			var select = document.createElement('select');
-			result[j].select = select;
-			var nb_areas = result[j].areas.length;
-			var empty_option = document.createElement('option');
-			empty_option.value = "";
-			select.appendChild(empty_option);
-				for (var i = 0; i < nb_areas; i++){
-					var option = document.createElement('option');
-					option.value = result[j].areas[i].area_id;
-					result[j].areas[i].option = option;
-					option.area_name = result[j].areas[i].area_name;
-					option.area_parent_id = result[j].areas[i].area_parent_id;
-					option.division_id = result[j].division_id;
-					option.text = result[j].areas[i].area_name;
-					select.appendChild(option);
-				}
-			select.onchange = function() {
-				var option = this.options[this.selectedIndex];
-				t.setToReturn(option.value);
-				if(t.onchange) t.onchange(to_return);
-				if(option.value == ""){
-					t.unfilter();
-				}
-				else{
-					t.startFilter(option.value);
-				}
-			}
-			td_form.appendChild(select);
-			tr.appendChild(td_name);
-			tr.appendChild(td_form);
-			tbody.appendChild(tr);		
-		}
-		table.appendChild(tbody);
-		form.appendChild(table);
-		container.appendChild(form);
-		t.createAutoFillInput(form);
-		if (onready) onready();
-	});
 	
 	/**
 	 * Set the to_return object
@@ -97,7 +43,7 @@ function geographic_area_selection(container, country_code, onready) {
 				}
 			}
 		}
-	}
+	};
 	
 	this.startFilter = function(area_id){
 		/*Find the path to the top*/
@@ -120,7 +66,7 @@ function geographic_area_selection(container, country_code, onready) {
 			this.filter(pathTop[i].area_id);
 		}
 		this.filter(area_id);
-	}
+	};
 	
 	/** Sort all the divisions below according to the given area
 	* @method geographic_area_selection#filter
@@ -132,7 +78,7 @@ function geographic_area_selection(container, country_code, onready) {
 		var children = [];
 		var index_children = 0;
 		var child = this.findChildren(area_id);
-		children[0]=[]
+		children[0]=[];
 		for (var l = 0; l < child.length; l++){
 			children[0][index_children] = {division_id:child[l].division_id, area_id:child[l].area_id};
 			index_children++;
@@ -175,7 +121,7 @@ function geographic_area_selection(container, country_code, onready) {
 		option.selected = true;
 		/*Filter the children*/
 		this.buildTable(new_result, area_id);
-	}
+	};
 	
 	/** Edit the table from the new_result[0] level, with only the areas set in new_result
 	* @method geographic_area_selection#buildTable
@@ -208,7 +154,7 @@ function geographic_area_selection(container, country_code, onready) {
 			}
 		}
 		
-	}
+	};
 	
 	
 	/** Get the index in the result object of the given area
@@ -227,7 +173,7 @@ function geographic_area_selection(container, country_code, onready) {
 			}
 		}
 		return index;
-	}
+	};
 
 
 	/** Get all the children (just one generation after)
@@ -238,7 +184,6 @@ function geographic_area_selection(container, country_code, onready) {
 	this.findChildren = function(area_id){
 		var index = this.findIndex(area_id);
 		var division_index = index.division_index;
-		var area_index = index.area_index;
 		var children = [];
 		
 		if (division_index == this.result.length -1){
@@ -257,7 +202,7 @@ function geographic_area_selection(container, country_code, onready) {
 				return children;
 			}
 		}
-	}
+	};
 	
 	/** Get the parent of the given area
 	* @method geographic_area_selection#findParent
@@ -279,7 +224,7 @@ function geographic_area_selection(container, country_code, onready) {
 			}
 		}
 		return parent;
-	}
+	};
 	
 	/** Re initialize the table
 	* @method geographic_area_selection#unfilter
@@ -291,7 +236,7 @@ function geographic_area_selection(container, country_code, onready) {
 		this.buildTable(this.result, area_id);
 		var option = this.result[0].areas[0].option;
 		option.selected = false;
-	}
+	};
 	
 	/** Create the input node which calls the auto fill function
 	* @method geographic_area_selection#createAutoFillInput
@@ -299,15 +244,16 @@ function geographic_area_selection(container, country_code, onready) {
 	*/
 	this.createAutoFillInput = function(parent){
 		require("autocomplete.js",function(){
-			new autocomplete(parent, function(val){
+			var ac = new autocomplete(parent, function(val){
 				return t.autoFill(val);
 			}, 3, 'Manually search', function(item){
 				t.startFilter(item.area);
 				t.setToReturn(item.area);
 				if(t.onchange) t.onchange(to_return);
 			});
+			ac.input.style.width = "100%";
 		});
-	}
+	};
 	
 	/** Find the string needle in the areas list. Creates two arrays: one with the areas which name begins with
 	* needle; a second one with the areas which name contains needle
@@ -366,7 +312,7 @@ function geographic_area_selection(container, country_code, onready) {
 		t.setContextMenu(areaStartField, areaStartValue, items);
 		t.setContextMenu(areaBelongField, areaBelongValue, items);
 		return items;
-	}
+	};
 
 	
 	/** Set areaField and areaValue
@@ -391,7 +337,7 @@ function geographic_area_selection(container, country_code, onready) {
 				}
 			}
 		}
-	}
+	};
 	
 	/** Set the context_menu: add the given fields to the context menu
 	* @method geographic_area_selection#setContextMenu
@@ -408,7 +354,7 @@ function geographic_area_selection(container, country_code, onready) {
 				});
 			}
 		}
-	}
+	};
 	
 	
 	/** Test if one string starts with an other one
@@ -431,7 +377,7 @@ function geographic_area_selection(container, country_code, onready) {
 			answer = temp_answer;
 		}
 		return answer;
-	}
+	};
 	
 	/** Test if a string contains an other one
 	* @method geographic_area_selection#belong
@@ -460,7 +406,65 @@ function geographic_area_selection(container, country_code, onready) {
 			}
 		}
 		return answer;
-	}
+	};
+	
+	// initialize
+	require("geography.js",function() {
+		window.top.geography.getCountryData(country_id, function(country_data) {
+			t.result = [];
+			for (var i = 0; i < country_data.length; ++i)
+				t.result.push(object_copy(country_data[i], 20));
+			var table = document.createElement('table');
+			var tbody = document.createElement('tbody');
+			var form = document.createElement('form');
+			form.method ="post";
+			form.action = "";
+			form.onsubmit = function(){return false;};
+			for (var j=0; j<t.result.length; j++) {
+				var tr = document.createElement('tr');
+				var td_name = document.createElement('td');
+				var td_form = document.createElement('td');
+				var td_name_text = document.createTextNode(t.result[j].division_name);
+				td_name.appendChild(td_name_text);
+				var select = document.createElement('select');
+				t.result[j].select = select;
+				var nb_areas = t.result[j].areas.length;
+				var empty_option = document.createElement('option');
+				empty_option.value = "";
+				select.appendChild(empty_option);
+					for (var i = 0; i < nb_areas; i++){
+						var option = document.createElement('option');
+						option.value = t.result[j].areas[i].area_id;
+						t.result[j].areas[i].option = option;
+						option.area_name = t.result[j].areas[i].area_name;
+						option.area_parent_id = t.result[j].areas[i].area_parent_id;
+						option.division_id = t.result[j].division_id;
+						option.text = t.result[j].areas[i].area_name;
+						select.appendChild(option);
+					}
+				select.onchange = function() {
+					var option = this.options[this.selectedIndex];
+					t.setToReturn(option.value);
+					if(t.onchange) t.onchange(to_return);
+					if(option.value == ""){
+						t.unfilter();
+					}
+					else{
+						t.startFilter(option.value);
+					}
+				};
+				td_form.appendChild(select);
+				tr.appendChild(td_name);
+				tr.appendChild(td_form);
+				tbody.appendChild(tr);		
+			}
+			table.appendChild(tbody);
+			form.appendChild(table);
+			container.appendChild(form);
+			t.createAutoFillInput(form);
+			if (onready) onready(t);
+		});
+	});
 	
 }
 

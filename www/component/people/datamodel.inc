@@ -12,14 +12,17 @@ $model->addTable("People")
 	->addDate("birth", true)
 	->addForeignKey("picture", "Storage", false, false, false)
 	->addInteger("picture_version")
-	->setDisplayName("People (physical person)")
-	->addDisplayableData("first_name", "Personal Information", "First Name")
-	->addDisplayableData("middle_name", "Personal Information", "Middle Name")
-	->addDisplayableData("last_name", "Personal Information", "Last Name")
-	->addDisplayableData("khmer_first_name", "Personal Information", "Khmer First Name")
-	->addDisplayableData("khmer_last_name", "Personal Information", "Khmer Last Name")
-	->addDisplayableData("sex", "Personal Information", "Sex")
-	->addDisplayableData("birth", "Personal Information", "Birth Date")
+	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Personal Information", "Personal Information",
+		array(
+			"first_name"=>"First Name",
+			"middle_name"=>"Middle Name",
+			"last_name"=>"Last Name",
+			"khmer_first_name"=>"Khmer First Name",
+			"khmer_last_name"=>"Khmer Last Name",
+			"sex"=>"Gender",
+			"birth"=>"Birth Date",
+		)
+	))
 	->restrictReadAccess("see_other_people_details",true)
 	->allowSpecificReadAccess("id",function() { return PNApplication::$instance->user_people->user_people_id; })
 	->restrictWriteAccess("edit_people_details",true)

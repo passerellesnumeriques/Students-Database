@@ -25,6 +25,7 @@ class service_test_data extends Service {
 			$roles_id = $this->create_roles($db_system, $this->roles[$domain]);
 			$this->create_users($db_system, $domain, $this->users[$domain], $roles_id);
 			$db_system->execute("INSERT INTO Role (`id`,`name`) VALUE (-1,'Administrator')");
+			$this->SplitSQL($db_system, "component/development/data/countries.sql");
 			$this->SplitSQL($db_system, "component/development/data/geography.sql");
 		}		
 	}

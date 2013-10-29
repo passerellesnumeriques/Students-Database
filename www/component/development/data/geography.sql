@@ -21,13 +21,6 @@ SET time_zone = "+00:00";
 --
 
 --
--- Dumping data for table `country`
---
-
-INSERT INTO `country` (`id`, `code`, `name`) VALUES
-(1, 'PH', 'Philippines');
-
---
 -- Dumping data for table `country_division`
 --
 

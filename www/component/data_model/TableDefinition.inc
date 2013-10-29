@@ -4,7 +4,6 @@ class Table {
 
 	private $model;
 	private $name;
-	private $display_name = null;
 	private $columns = array();
 	private $indexes = array();
 	private $table_read_access = array();
@@ -13,10 +12,10 @@ class Table {
 	private $table_remove_access = array();
 	private $fields_read_access = array();
 	private $fields_write_access = array();
-	private $displayable_data = array();
 	private $is_customized = false;
 	private $customization = array();
 	private $unique_fields = null;
+	private $display_handler = array();
 	
 	public $_key_submodels = array();
 
@@ -24,9 +23,6 @@ class Table {
 		$this->model = &$model;
 		$this->name = $name;
 	}
-	
-	public function setDisplayName($name) { $this->display_name = $name; return $this; }
-	public function getDisplayName() { return $this->display_name; }
 	
 	public function _key_for_submodel(&$sm) {
 		array_push($this->_key_submodels, $sm);
@@ -232,45 +228,29 @@ class Table {
 		return true;
 	}
 
-	/** Indicates that a particular column is a displayable data (not internal).
-	 *
-	 * @param string $category name of the category in which this data will be displayed. This string is supposed to be used with Locale in order to obtain a localized name of the category.
-	 * @param string $name name of the data to display. This string is supposed to be used with Locale, in order to display a localized name.
-	 * @param string $field column corresponding to the data
-	 */
-	public function &addDisplayableData($field, $category, $name) {
-		$this->displayable_data[$field] = array($category, $name);
+	public function &setDisplayHandler($coming_from, $handler) {
+		$this->display_handler[$coming_from] = $handler;
+		$handler->setTable($this);
 		return $this;
+	}
+	/**
+	 * @param string|null $coming_from the name of the foreign key or null
+	 * @return DataDisplayHandler|null
+	 */
+	public function getDisplayHandler($coming_from) {
+		if ($coming_from <> null && isset($this->display_handler[$coming_from]))
+			return $this->display_handler[$coming_from];
+		return @$this->display_handler[null];
 	}
 
 	public function hide($field) {
-		unset($this->displayable_data[$field]);
+		for ($i = 0; $i < count($this->columns); $i++)
+			if ($this->columns[$i]->name == $field) {
+				array_splice($this->columns, $i, 1);
+				return;
+			}
 	}
 
-	/** returns the list of displayable data in this table: field=>array(category,name). category and name are localized string prefixed by namespace:: */
-	public function getDisplayableData() {
-		return $this->displayable_data;
-	}
-
-	/** Returns the name of the given data */
-	public function getDisplayableDataName($field) {
-		$data = @$this->displayable_data[$field];
-		if ($data == null) return null;
-		return $data[1];
-	}
-	/** Returns the category and name of the given data */
-	public function getDisplayableDataCategoryAndName($field) {
-		$data = @$this->displayable_data[$field];
-		if ($data == null) return "?field ".$field." in table ".$this->name."?";
-		return $data;
-	}
-	/** Returns the category of the given data */
-	public function getDisplayableDataCategory($field) {
-		$data = @$this->displayable_data[$field];
-		if ($data == null) return null;
-		return $data[0];
-	}
-	
 	public function &getModel() { return $this->model; }
 	public function getName() { return $this->name; }
 	public function getSQLName($sub_models) {
@@ -321,6 +301,12 @@ class Table {
 			if ($this->canAccessField($c->name))
 				array_push($cols, $c);
 		return $cols;
+	}
+	public function getColumnsFor($sub_model = null) {
+		$sub_models = array();
+		if ($sub_model <> null && $this->model instanceof SubDataModel)
+			$sub_models[$this->model->getParentTable()] = $sub_model;
+		return $this->getColumns($sub_models);
 	}
 	
 	public function internalGetColumns($sub_models = null) { 
@@ -421,9 +407,6 @@ abstract class Column {
 	public abstract function get_sql_type();
 
 	public function validate($value) { return $value; }
-	
-	public function validate_javascript($value, $error) {
-	}
 
 }
 
@@ -448,10 +431,6 @@ class ColumnInteger extends Column {
 		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max);
 		return $value;
 	}
-
-	public function validate_javascript($value, $error) {
-		// TODO
-	}
 }
 
 class ColumnBoolean extends ColumnInteger {
@@ -463,10 +442,6 @@ class ColumnBoolean extends ColumnInteger {
 	public function validate($value) {
 		if ($this->can_be_null && $value === null) return null;
 		return $value == true;
-	}
-
-	public function validate_javascript($value, $error) {
-		// TODO
 	}
 }
 
@@ -500,14 +475,6 @@ class ColumnString extends Column {
 			throw new \Exception("Cannot be greater than ".$this->max_length);
 		return $value;
 	}
-
-	public function validate_javascript($value, $error) {
-		if ($this->min_length && !$this->can_be_null)
-			echo "if (".$value.".length < ".$this->min_length.") ".$error." = 'Must contain at least ".$this->min_length." character(s)'; else ";
-		if ($this->max_length)
-			echo "if (".$value.".length > ".$this->max_length.") ".$error." = 'Must contain maximum ".$this->max_length." character(s)'; else ";
-		echo $error." = null;";
-	}
 }
 
 class ColumnEnum extends Column {
@@ -529,10 +496,6 @@ class ColumnEnum extends Column {
 		$sql .= ")";
 		return $sql;
 	}
-	
-	public function validate_javascript($value, $error) {
-		// TODO
-	}
 }
 
 class ColumnDate extends Column {
@@ -540,7 +503,6 @@ class ColumnDate extends Column {
 	public function __construct(&$table, $name, $can_be_null = true, $unique = false) {
 		parent::__construct($table, $name, $can_be_null, $unique);
 	}
-
 
 	public function get_sql_type() { return "DATE"; }
 
@@ -552,10 +514,6 @@ class ColumnDate extends Column {
 		}
 		// TODO check if valid format
 		return $value;
-	}
-	
-	public function validate_javascript($value, $error) {
-		// TODO
 	}
 }
 
@@ -576,10 +534,6 @@ class ColumnTime extends Column {
 		}
 		// TODO check if valid format
 		return $value;
-	}
-
-	public function validate_javascript($value, $error) {
-		// TODO
 	}
 }
 
@@ -634,5 +588,575 @@ class ForeignKey extends ColumnInteger {
 		return parent::validate($value);
 	}
 }
+
+abstract class DataDisplayHandler {
+	/**
+	 * @var \datamodel\Table
+	 */
+	public $table;
+	/**
+	 * @var string
+	 */
+	public $category;
+	/** @var string */
+	public $display_name;
+	
+	public function __construct($category, $display_name) {
+		$this->category = $category;
+		$this->display_name = $display_name;
+	}
+	
+	public function setTable($table) { $this->table = $table; }
+
+	/**
+	 * @return DataDisplay[]
+	 */
+	public abstract function getDisplayableData();
+	/**
+	 * @return boolean true if we should not follow any foreign key from this table to find other data: everything from here is handled by this handler.
+	 */
+	public function stopHere() { return false; }
+	
+	/**
+	 * Create a new entry in this table
+	 * @param array $data array of array("name"=>the_data_name,"value"=>the_value)
+	 */
+	public abstract function createEntry($data, $sub_model);
+	
 }
+abstract class DataDisplay {
+	
+	/**
+	 * @var \datamodel\DataDisplayHandler
+	 */
+	public $handler;
+	
+	public function __construct($handler) {
+		$this->handler = $handler;
+	}
+	
+	public abstract function getDisplayName();
+	public abstract function getHandledColumns();
+	public abstract function getTypedField($sub_model);
+	public abstract function isEditable();
+	public abstract function getEditLocks($sub_model);
+	public abstract function isSortable();
+	public abstract function isMandatory($sub_model);
+	public function getTypedFilter($sub_model) { return null; }
+	
+	public function getNewData() { return null; }
+	
+	/**
+	 * @param SQLQuery $q
+	 * @param DataPath $path
+	 * @param DataPathSQLBuilder $builder
+	 * @return array("key"=>key_alias,"data"=>data_alias): if data is null or not specified, the function retrieveValue will be called to perform a sub-request retrieving the final value
+	 */
+	public abstract function buildSQL(&$q, $path, &$builder, $filters);
+	/** If buildSQL didn't return a data alias, this function is called to perform a sub-request */
+	public function retrieveValue($row, $sql_aliases, $path, $filters) {}
+	
+	public abstract function getData($key, $sub_model, $row = null);
+	public abstract function saveData($key, $value, $sub_model);
+	
+	public final function javascriptDataDisplay($sub_model) {
+		$s = "new DataDisplay(";
+		$s .= json_encode($this->handler->category);
+		$s .= ",".json_encode($this->getDisplayName());
+		$s .= ",".json_encode($this->handler->table->getName());
+		$tf = $this->getTypedField($sub_model);
+		$s .= ",".json_encode($tf[0]);
+		$s .= ",".$tf[1];
+		$s .= ",".($this->isEditable() ? "true" : "false");
+		$s .= ",".json_encode($this->getEditLocks($sub_model));
+		$s .= ",".json_encode($this->isSortable());
+		$tf = $this->getTypedFilter($sub_model);
+		$s .= ",".json_encode($tf <> null ? $tf[0] : null);
+		$s .= ",".($tf <> null ? $tf[1] : "null");
+		$s .= ")";
+		return $s;
+	}
+	
+}
+
+class FieldsDisplayHandler extends DataDisplayHandler {
+	
+	public $fields;
+	public $specific_config;
+	public $key_column;
+	
+	public function __construct($category, $display_name, $fields, $specific_config = array(), $key_column = null) {
+		parent::__construct($category, $display_name);
+		$this->fields = $fields;
+		$this->specific_config = $specific_config;
+		$this->key_column = $key_column;
+	}
+	
+	public function getDisplayableData() {
+		$list = array();
+		foreach ($this->fields as $f=>$d) {
+			$col = @$this->table->getColumn($f);
+			if ($col <> null)
+				array_push($list, new SimpleDataDisplay($this, $f, $d, @$this->specific_config[$f], $this->key_column));
+		}
+		return $list;
+	}
+	
+	public function createEntry($data, $sub_model) {
+		$list = array();
+		foreach ($data as $d) {
+			$found = false;
+			$err = false;
+			foreach ($this->fields as $f=>$disp)
+				if ($disp == $d["name"]) {
+					$found = true;
+					try {
+						$col = @$this->table->getColumn($f);
+						if ($col <> null)
+							$list[$f] = $col->validate($d["value"]);
+					} catch (\Exception $e) {
+						\PNApplication::error("Invalid data ".$disp->getDisplayName().": ".$d["value"]);
+						$err = true;
+					}
+					break;
+				}
+			if (!$found) {
+				\PNApplication::error("Unknown data ".$d["name"]." in DataDisplayHandler of table ".$this->table->getName());
+				$err = true;
+			}
+			if ($err) return null;
+		}
+		$sub_models = null;
+		if ($sub_model <> null) {
+			$sm = $this->table->getModel()->getParentTable();
+			$sub_models = array($sm=>$sub_model);
+		}
+		return \SQLQuery::create()->insert($this->table->getName(), $list, $sub_models);
+	}
+
+}
+
+class MultipleDisplayHandler extends DataDisplayHandler {
+	
+	public $content;
+	public $stop_here;
+	
+	public function __construct($category, $display_name, $content, $stop_here = false) {
+		parent::__construct($category, $display_name);
+		$this->content = $content;
+		$this->stop_here = $stop_here;
+	}
+	
+	public function setTable($table) {
+		parent::setTable($table);
+		foreach ($this->content as $c)
+			if ($c instanceof DataDisplayHandler)
+				$c->setTable($table);
+			else
+				$c->handler = $this;
+	}
+	
+	public function getDisplayableData() {
+		$list = array();
+		foreach ($this->content as $c)
+			if ($c instanceof DataDisplayHandler)
+				$list = array_merge($list, $c->getDisplayableData());
+			else
+				array_push($list, $c);
+		return $list;
+	}
+	
+	public function createEntry($data, $sub_model) {
+		// TODO ?
+	}
+	
+	public function stopHere() {
+		return $this->stop_here;
+	}
+}
+
+class StopDataDisplayHandler extends DataDisplayHandler {
+	
+	public function __construct() {
+		parent::__construct(null, "");
+	}
+	
+	public function getDisplayableData() { return array(); }
+	public function stopHere() { return true; }
+	public function createEntry($data, $sub_model) {}
+	
+}
+
+class SimpleDataDisplay extends DataDisplay {
+	
+	public $column_name;
+	public $display_name;
+	public $specific_config;
+	public $key_column;
+	
+	public function __construct($handler, $column_name, $display_name, $specific_config = null, $key_column = null) {
+		parent::__construct($handler);
+		$this->column_name = $column_name;
+		$this->display_name = $display_name;
+		$this->specific_config = $specific_config;
+		$this->key_column = $key_column;
+	}
+	
+	public function getDisplayName() {
+		return $this->display_name;
+	}
+	
+	public function getHandledColumns() {
+		return array($this->column_name);
+	}
+	
+	public function getTypedField($sub_model) {
+		$col = $this->handler->table->getColumnFor($this->column_name, $sub_model);
+		return \PNApplication::$instance->widgets->get_typed_field($col);
+	}
+	
+	public function getTypedFilter($sub_model) {
+		$col = $this->handler->table->getColumnFor($this->column_name, $sub_model);
+		return \PNApplication::$instance->widgets->get_typed_filter($col);
+	}
+	
+	public function isEditable() {
+		if ($this->specific_config <> null && in_array("not_editable", $this->specific_config))
+			return false;
+		return true;
+	}
+	public function isSortable() {
+		return true;
+	}
+	public function isMandatory($sub_model) {
+		$col = $this->handler->table->getColumnFor($this->column_name, $sub_model);
+		return !$col->can_be_null;
+	}
+	
+	public function getEditLocks($sub_model) {
+		$key = $this->handler->table->getPrimaryKey();
+		if ($key == null) {
+			// TODO ?
+			return array();
+		} else {
+			return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
+		}
+	}
+	
+	public function buildSQL(&$q, $path, &$builder, $filters) {
+		$table_alias = $builder->build($path, $q);
+		$alias = $q->get_field_alias($table_alias, $this->column_name);
+		if ($alias == null) {
+			$alias = $builder->new_alias();
+			$q->field($table_alias, $this->column_name, $alias);
+		}
+		$result = array("data"=>$alias);
+		$key = $this->handler->table->getPrimaryKey();
+		if ($key == null) $key = $this->key_column; else $key = $key->name;
+		if ($key == null) {
+			PNApplication::error("No key for data '".$this->display_name."' in table '".$this->handler->table->getName()."'");
+			$result["key"] = null;
+			return $result;
+		}
+		$alias = $q->get_field_alias($table_alias, $key);
+		if ($alias == null) {
+			$alias = $builder->new_alias();
+			$q->field($table_alias, $key, $alias);
+		}
+		$result["key"] = $alias;
+		$col = $this->handler->table->getColumnFor($this->column_name, $path->sub_model);
+		$tf = \PNApplication::$instance->widgets->get_typed_filter($col);
+		switch ($tf[0]) {
+			case "filter_text":
+				foreach ($filters as $filter_list) {
+					$w = "";
+					foreach ($filter_list as $filter) {
+						$val = trim($filter["value"]);
+						if ($val == "") continue;
+						if (strlen($w) > 0) $w .= " OR ";
+						$w .= "`".$table_alias."`";
+						$w .= ".`".$this->column_name."`";
+						switch ($filter["type"]) {
+							case "contains": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."%'"; break;
+							case "starts": $w .= " LIKE '".\SQLQuery::escape($filter["value"])."%'"; break;
+							case "ends": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."'"; break;
+							case "exact": $w .= " = '".\SQLQuery::escape($filter["value"])."'"; break;
+						}
+					}
+					if (strlen($w) > 0)
+						$q->where($w);
+				}
+				break;
+		}
+		return $result;
+	}
+	
+	public function getData($key, $sub_model, $row = null) {
+		if ($row <> null) return @$row[$this->column_name];
+		$key_name = $this->handler->table->getPrimaryKey();
+		if ($key_name == null) $key_name = $this->key_column; else $key_name = $key->name;
+		$value = \SQLQuery::create()
+			->select($this->handler->table->getSQLNameFor($sub_model))
+			->field($this->column_name)
+			->where($key_name, $key)
+			->execute_single_value();
+		return $value;
+	}
+	
+	public function saveData($key, $value, $sub_model) {
+		$key_name = $this->handler->table->getPrimaryKey();
+		if ($key_name == null) $key_name = $this->key_column; else $key_name = $key->name;
+		\SQLQuery::create()->update(
+			$this->handler->table->getSQLNameFor($sub_model),
+			array($this->column_name => $value),
+			array($key_name => $key)
+		);
+	}
+	
+}
+
+class ChoiceDataDisplay extends DataDisplay {
+	
+	public $display_name;
+	public $foreign_key_name;
+	public $foreign_column_name;
+	public $key_column;
+	
+	public function __construct($handler, $foreign_key_name, $foreign_column_name, $display_name, $key_column = null) {
+		parent::__construct($handler);
+		$this->display_name = $display_name;
+		$this->foreign_key_name = $foreign_key_name;
+		$this->foreign_column_name = $foreign_column_name;
+		$this->key_column = $key_column;
+	}
+	public function getDisplayName() { return $this->display_name; }
+	public function getHandledColumns() { return array($this->foreign_key_name); }
+	
+	public function getTypedField($sub_model) {
+		$foreign_key = $this->handler->table->getColumnFor($this->foreign_key_name, $sub_model);
+		$cfg = "{";
+		$cfg .= "possible_values:[";
+		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
+		$q = \SQLQuery::create()->select($t->getName());
+		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
+			$q->select_sub_model($t->getModel()->getParentTable(), $sub_model);
+		$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
+		$q->field($t->getName(), $this->foreign_column_name, "VALUE");
+		$res = $q->execute();
+		$first = true;
+		foreach ($res as $row) {
+			if ($first) $first = false; else echo ",";
+			$cfg .= "[";
+			$cfg .= json_encode($row["KEY"]);
+			$cfg .= ",".json_encode($row["VALUE"]);
+			$cfg .= "]";
+		}
+		$cfg .= "]";
+		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= "}";
+		return array("field_enum", $cfg);
+	}
+	
+	public function getTypedFilter($sub_model) {
+		$foreign_key = $this->handler->table->getColumnFor($this->foreign_key_name, $sub_model);
+		$cfg = "{";
+		$cfg .= "possible_values:[";
+		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
+		$q = \SQLQuery::create()->select($t->getName());
+		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
+			$q->select_sub_model($t->getModel()->getParentTable(), $sub_model);
+		$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
+		$q->field($t->getName(), $this->foreign_column_name, "VALUE");
+		$res = $q->execute();
+		$first = true;
+		foreach ($res as $row) {
+			if ($first) $first = false; else echo ",";
+			$cfg .= "[";
+			$cfg .= json_encode($row["KEY"]);
+			$cfg .= ",".json_encode($row["VALUE"]);
+			$cfg .= "]";
+		}
+		$cfg .= "]";
+		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= "}";
+		return array("filter_enum", $cfg);
+	}
+	
+	public function isEditable() { return true; }
+	public function getEditLocks($sub_model) {
+		return array(
+			array("table"=>$this->handler->table->getSQLNameFor($sub_model))
+		);
+	}
+	public function isSortable() { return true; }
+	public function isMandatory($sub_model) {
+		$foreign_key = $this->handler->table->getColumnFor($this->foreign_key_name, $sub_model);
+		return !$foreign_key->can_be_null;
+	}
+	
+	public function buildSQL(&$q, $path, &$builder, $filters) {
+		// we need to get the key, and the value to display
+		$foreign_key = $this->handler->table->getColumnFor($this->foreign_key_name, $path->sub_model);
+		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
+		
+		// go to the table
+		$table_alias = $builder->build($path, $q);
+		// join to foreign table
+		$alias = $q->get_join_alias($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name));
+		if ($alias == null) {
+			$alias = $builder->new_alias();
+			$q->join($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name), $alias);
+		}
+		// get the key and data
+		$col_name = $this->key_column;
+		if ($col_name == null) $col_name = $this->handler->table->getPrimaryKey()->name;
+		$key_alias = $q->get_field_alias($table_alias, $col_name);
+		if ($key_alias == null) {
+			$key_alias = $builder->new_alias();
+			$q->field($table_alias, $col_name, $key_alias);
+		}
+		$data_alias = $q->get_field_alias($table_alias, $foreign_key->name);
+		if ($data_alias == null) {
+			$data_alias = $builder->new_alias();
+			$q->field($table_alias, $foreign_key->name, $data_alias);
+		}
+		
+		foreach ($filters as $filter_list) {
+			$w = "";
+			foreach ($filter_list as $filter) {
+				if ($filter["value"] == "") continue;
+				if (strlen($w) > 0) $w .= " OR ";
+				$w .= "`".$table_alias."`.`".$foreign_key->name."`";
+				if ($filter["value"] == "NULL")
+					$w .= " IS NULL";
+				else if ($filter["value"] == "NOT_NULL")
+					$w .= " IS NOT NULL";
+				else
+					$w .= "='".\SQLQuery::escape($filter["value"])."'";
+			}
+			if (strlen($w) > 0)
+				$q->where($w);
+		}
+		
+		return array("key"=>$key_alias,"data"=>$data_alias);
+	}
+	
+	public function getData($key, $sub_model, $row = null) {
+		if ($row <> null) return $row[$this->foreign_key_name];
+		$q = \SQLQuery::create()->select($this->handler->table->getName());
+		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
+			$q->select_sub_model($t->getModel()->getParentTable(), $sub_model);
+		$q->field($this->handler->table->getName(), $this->foreign_key_name, "VALUE");
+		$col_name = $this->key_column;
+		if ($col_name == null) $col_name = $this->handler->table->getPrimaryKey()->name;
+		$q->where($this->handler->table->getName(), $col_name, $key);
+		return $q->execute_single_value();
+	}
+	
+	public function saveData($key, $value, $sub_model) {
+		// TODO
+	}
+		
+}
+
+class JoiningTableDataDisplay extends DataDisplay {
+	
+	public $display_name;
+	public $joining_key_name;
+	public $foreign_key_name;
+	public $foreign_table_column_name;
+	
+	public function __construct($handler, $display_name, $joining_key_name, $foreign_key_name, $foreign_table_column_name) {
+		parent::__construct($handler);
+		$this->display_name = $display_name;
+		$this->joining_key_name = $joining_key_name;
+		$this->foreign_key_name = $foreign_key_name;
+		$this->foreign_table_column_name = $foreign_table_column_name;
+	}
+	
+	public function getDisplayName() { return $this->display_name; }
+	public function getHandledColumns() { return array($this->foreign_key_name); }
+	
+	public function getTypedField($sub_model) {
+		$foreign_table = $this->handler->table->getColumnFor($this->foreign_key_name, $sub_model)->foreign_table;
+		$foreign_table = \DataModel::get()->getTable($foreign_table);
+		$sub_models = $sub_model == null ? null : array($this->handler->table->getModel()->getParentTable()=>$sub_model);
+		$table_name = $foreign_table->getSQLName($sub_models);
+		$list = \SQLQuery::create()
+			->select($table_name)
+			->field($table_name, $this->foreign_table_column_name, "VALUE")
+			->field($table_name, $foreign_table->getPrimaryKey()->name, "KEY")
+			->execute();
+		$values = "[";
+		$first = true;
+		foreach ($list as $v) {
+			if ($first) $first = false; else $values .= ",";
+			$values .= "[".json_encode($v["KEY"]).",".json_encode($v["VALUE"])."]";
+		}
+		$values .= "]";
+		return array("field_list_of_fixed_values", "{possible_values:$values}");
+	}
+	
+	public function isEditable() {
+		return true;
+	}
+	public function getEditLocks($sub_model) {
+		return array(
+			array("table"=>$this->handler->table->getSQLNameFor($sub_model))
+		);
+	}
+	public function isSortable() {
+		return false;
+	}
+	public function isMandatory($sub_model) {
+		return false;
+	}
+	
+	public function buildSQL(&$q, $path, &$builder, $filters) {
+		// we need to go to the parent, and get the joining key
+		$parent_alias = $builder->build($path->parent, $q);
+		$key_name = $path->is_reverse() ? $path->parent->table->getPrimaryKey()->name : $path->foreign_key->name;
+		$alias = $q->get_field_alias($parent_alias, $key_name);
+		if ($alias == null) {
+			$alias = $builder->new_alias();
+			$q->field($parent_alias, $key_name, $alias);
+		}
+		// TODO filters
+		return array("key"=>$alias,"data"=>null);
+	}
+	
+	public function retrieveValue($row, $sql_aliases, $path) {
+		$table_name = $path->table->getSQLNameFor($path->sub_model);
+		$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
+		$foreign_table = \DataModel::get()->getTable($foreign_table);
+		$sub_models = $path->sub_model == null ? null : array($path->table->getModel()->getParentTable()=>$path->sub_model);
+		
+		$res = \SQLQuery::create()
+			->select($table_name)
+			->join($table_name, $foreign_table->getSQLName($sub_models), array($this->foreign_key_name => $foreign_table->getPrimaryKey()->name), "JOIN_ALIAS")
+			//->field("JOIN_ALIAS", $this->foreign_table_column_name, "VALUE")
+			->field("JOIN_ALIAS", $foreign_table->getPrimaryKey()->name, "KEY")
+			->where_value($table_name, $this->joining_key_name, $row[$sql_aliases["key"]])
+			->execute();
+		$values = array();
+		foreach ($res as $r)
+			//array_push($values, array("key"=>$r["KEY"],"value"=>$r["VALUE"]));
+			array_push($values, $r["KEY"]);
+		return $values;
+	}
+	
+	public function getData($key, $sub_model, $row = null) {
+		// TODO
+	}
+	
+	public function saveData($key, $value, $sub_model) {
+		require_once("component/data_model/DataBaseLock.inc");
+		\SQLQuery::create()->remove($this->handler->table->getSQLNameFor($sub_model), array($this->joining_key_name=>$key));
+		foreach ($value as $v)
+			\SQLQuery::create()->insert($this->handler->table->getSQLNameFor($sub_model), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
+	}
+		
+}
+
+} // namespace datamodel
 ?>

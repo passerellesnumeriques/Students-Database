@@ -35,7 +35,9 @@ class SQLQuery {
 	
 	public static function get_db_system_without_security() { return SQLQuery::db(); }
 
- 	/** utility method to ease chained usage: SQLQuery::create()->select(...)->field(...)->.... */
+ 	/** utility method to ease chained usage: SQLQuery::create()->select(...)->field(...)->....
+ 	 * @return SQLQuery 
+ 	 */
  	public static function &create() { $q = new SQLQuery(); return $q; }
 
  	private static $preselected_submodels = array();
@@ -197,6 +199,14 @@ class SQLQuery {
 			} else
 				array_push($this->where, "`".$field."`".$op."'".SQLQuery::escape($value)."'");
 		}
+		return $this;
+	}
+	
+	public function &where_value($table_name, $field_name, $value) {
+		$w = "`".$table_name."`.`".$field_name."`";
+		if ($value === null) $w .= " IS NULL";
+		else $w .= "='".SQLQuery::escape($value)."'";
+		array_push($this->where, $w);
 		return $this;
 	}
 
@@ -649,9 +659,7 @@ class SQLQuery {
 					if ($this->bypass_security) $q->bypass_security();
 					$r = $q->select($t->getSQLName($sub_models))->where($col->name,$fields_values[$col->name])->execute_single_row();
 					if ($r <> null) {
-						$dname = $t->getDisplayableDataName($col->name);
-						if ($dname == null) $dname = $col->name;
-						throw new Exception("The element already exists (".$dname.")");
+						throw new Exception("The element already exists (".$t->getName().".".$col->name.")");
 					}
 				} else if (!$col->can_be_null && !isset($fields_values[$col->name]))
 					throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());

@@ -9,17 +9,20 @@ function autoresize_input(input, min_size) {
 	var update = function() {
 		input.mirror.innerHTML = "";
 		var s = input.value;
-		if (min_size)
-			while (s.length < min_size) s += "w";
 		input.mirror.appendChild(document.createTextNode(s));
 		var w = getWidth(input.mirror);
-		if (w < 15) w = 15;
+		var min = min_size ? min_size * 10 : 15;
+		if (w < min) w = min;
 		input.style.width = w+"px";
 	};
 	input.onkeydown = update;
 	input.onkeyup = update;
 	input.oninput = update;
 	input.onpropertychange = update;
-	input.onchange = update;
+	var prev_onchange = input.onchange;
+	input.onchange = function() {
+		if (prev_onchange) prev_onchange();
+		update();
+	};
 	update();
 }

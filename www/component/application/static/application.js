@@ -21,12 +21,16 @@ if (window == window.top) {
 					this.onclick_listeners.splice(i,1);
 					i--;
 				}
+			var ids = [];
 			for (var i = 0; i < this.app_events_listeners.length; ++i) {
 				if (this.app_events_listeners[i][0] == w) {
+					ids.push(this.app_events_listeners[i][1]);
 					this.app_events_listeners.splice(i,1);
 					i--;
 				}
 			}
+			if (ids.length > 0)
+				service.json("application","unregister_app_event",{ids:ids},function(){},true);
 		},
 		onclick_listeners: [],
 		register_onclick: function(from_window, listener) {
@@ -106,14 +110,24 @@ if (window == window.top) {
 		add_inactivity_listener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
+		_app_events_to_register: [],
 		register_app_event_listener: function(type, identifier, listener, handler) {
-			service.json("application","register_app_event",{type:type,identifier:identifier},function(result){
-				if (result) {
-					window.top.pnapplication.register_app_event_listener(window, result.id, listener);
-					if (handler)
-						handler(result.id);
-				}
-			});
+			window.pnapplication._app_events_to_register.push({type:type,identifier:identifier,listener:listener,handler:handler});
+			if (window.pnapplication._app_events_to_register.length > 1) return;
+			setTimeout(function(){
+				var events = [];
+				var list = window.pnapplication._app_events_to_register;
+				for (var i = 0; i < window.pnapplication._app_events_to_register.length; ++i)
+					events.push({type:window.pnapplication._app_events_to_register[i].type, identifier:window.pnapplication._app_events_to_register[i].identifier});
+				window.pnapplication._app_events_to_register = [];
+				service.json("application","register_app_event",{events:events},function(result){
+					if (!result) return;
+					for (var i = 0; i < result.length; ++i) {
+						window.top.pnapplication.register_app_event_listener(window, result[i], list[i].listener);
+						if (list[i].handler) list[i].handler(result[i]);
+					}
+				});
+			},10);
 		},
 		unregister_app_event_listener: function(id) {
 			window.top.pnapplication.unregister_app_event_listener(id);

@@ -2,10 +2,6 @@
 require_once("component/people/ProfileGeneralInfoPlugin.inc");
 class contact extends Component implements ProfileGeneralInfoPlugin {
 	
-	public function init() {
-		PNApplication::$instance->widgets->register_table_typed_field("Postal_address", "field_address");
-	}
-	
 	public function get_people_profile_general_info_sections($people_id) {
 		return array(array("contacts","<img src='/static/contact/contact_16.png' style='vertical-align:bottom;padding-right:3px'/>Contacts",2));
 	}
@@ -15,11 +11,9 @@ class contact extends Component implements ProfileGeneralInfoPlugin {
 		$address_div_id = $page->generate_id();
 		echo "<table><tr><td valign=top id='$contact_div_id'></td><td valign=top id='$address_div_id'></td></tr></table>";
 		require_once("page/contact.inc");
-		$fct = contact($page, "people", $contact_div_id, $people_id);
-		$page->onload("new ".$fct."();");
+		contact($page, "people", $contact_div_id, $people_id);
 		require_once("page/address.inc");
-		$fct = address($page, "people", $address_div_id, $people_id);
-		$page->onload("new ".$fct."();");
+		address($page, "people", $address_div_id, $people_id);
 	}
 	
 	public function get_create_people_pages($people_type) {

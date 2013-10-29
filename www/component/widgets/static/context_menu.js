@@ -11,16 +11,18 @@ function context_menu(menu) {
 	if (typeof menu == "string") menu = document.getElementById(menu);
 	if (menu != null && menu.parentNode != null && menu.parentNode.nodeType == 1)
 		menu.parentNode.removeChild(menu);
+	
 	var t = this;
+	/** Indicate if the menu should be removed when closed, or only hidden
+	 * @member {boolean} context_menu#removeOnClose
+	 */
+	t.removeOnClose = menu ? false : true;
+
 	if (menu == null) {
 		menu = document.createElement("DIV");
 		menu.className = 'context_menu';
 	}
 	menu.context_menu=this;
-	/** Indicate if the menu should be removed when closed, or only hidden
-	 * @member {boolean} context_menu#removeOnClose
-	 */
-	t.removeOnClose = false;
 	/** Called when the menu is closed
 	 * @member {function} context_menu#onclose
 	 */
@@ -216,7 +218,7 @@ function context_menu(menu) {
 		if (from_inside_menu) {
 			t.parent_menu = e.context_menu;
 			t.parent_menu_listener = t.parent_menu.hide_if_outside_menu;
-			t.parent_menu.hide_if_outside_menu = function(){}
+			t.parent_menu.hide_if_outside_menu = function(){};
 		}
 		menu.style.visibility = "visible";
 		menu.style.position = "absolute";
@@ -250,11 +252,11 @@ function context_menu(menu) {
 			if (menu.anim) animation.stop(menu.anim);
 			menu.anim = animation.fadeOut(menu,300,function() {
 				if (t.removeOnClose)
-					document.body.removeChild(menu);
+					try { document.body.removeChild(menu); } catch (e) {}
 			});
 		} else {
 			if (t.removeOnClose)
-				document.body.removeChild(menu);
+				try { document.body.removeChild(menu); } catch (e) {}
 			else {
 				menu.style.visibility = "hidden";
 				menu.style.top = "-10000px";
@@ -281,7 +283,7 @@ function context_menu(menu) {
 					} while (true);
 				}
 				return false;
-			}
+			};
 			if (is_inside(ev.target, menu)) return;
 			// check if this is inside
 			ev = getCompatibleMouseEvent(ev);

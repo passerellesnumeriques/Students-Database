@@ -8,7 +8,7 @@ if (typeof require != 'undefined') {
  * @param {string} icon path of the icon, or null
  * @param {string|HTMLElement} content content of the window: either an html element, or a string containing the html
  */
-function popup_window(title,icon,content) {
+function popup_window(title,icon,content,hide_close_button) {
 	var t = this;
 	t.icon = icon;
 	t.title = title;
@@ -168,12 +168,16 @@ function popup_window(title,icon,content) {
 		};
 		var td = document.createElement("TD"); t.header.appendChild(td);
 		td.innerHTML = (t.icon ? "<img src='"+t.icon+"' style='vertical-align:bottom'/> " : "")+t.title;
-		td = document.createElement("TD"); t.header.appendChild(td);
-		td.onclick = function() { t.close(); };
-		t.close_button_td = td;
-		td.style.backgroundImage = "url(\""+theme.icons_16.close+"\")";
-		td.style.backgroundPosition = "center";
-		td.style.backgroundRepeat = "no-repeat";
+		if (hide_close_button)
+			td.colSpan = 2;
+		else {
+			td = document.createElement("TD"); t.header.appendChild(td);
+			td.onclick = function() { t.close(); };
+			t.close_button_td = td;
+			td.style.backgroundImage = "url(\""+theme.icons_16.close+"\")";
+			td.style.backgroundPosition = "center";
+			td.style.backgroundRepeat = "no-repeat";
+		}
 		var tr = document.createElement("TR"); t.table.appendChild(tr);
 		var td = document.createElement("TD"); tr.appendChild(td);
 		td.colSpan = 2;
@@ -357,6 +361,8 @@ function popup_window(title,icon,content) {
  * @returns {popup_window} the popup window containing the given element
  */
 function get_popup_window_from_element(e) {
-	while (e.parentNode.className != 'popup_window') e = e.parentNode;
-	return e.parentNode.data;
+	while (e.parentNode != null && e.parentNode != e && e.parentNode != document.body && e.parentNode.className != 'popup_window') e = e.parentNode;
+	if (e.parentNode != null && e.parentNode.className == 'popup_window')
+		return e.parentNode.data;
+	return null;
 }

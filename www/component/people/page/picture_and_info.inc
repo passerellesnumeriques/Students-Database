@@ -14,8 +14,8 @@ function people_picture_and_info(&$page, $people_id) {
 	</td>
 	<td valign=top>
 		<?php
-		require_once("component/data_model/page/entity.inc");
-		data_entity_page($page, "People",$people);
+		require_once("component/data_model/page/table_datadisplay.inc");
+		table_datadisplay_page($page, "People",$people);
 		?>
 	</td>
 	</tr>

@@ -3,19 +3,33 @@
  * @constructor
  * @param data
  * @param {Boolean} editable true to create an editable field, false for a read-only field
- * @param {function} onchanged called when the field is editable, and the user changed the data: onchanged(field, data)
- * @param {function} onunchanged called when the field is editable, and the user changed the data but come back to the original data: onunchanged(field)
  * @param {Object} config additional information depending on the implementation
  */
-function typed_field(data,editable,onchanged,onunchanged,config){
-	this.element = null;
+function typed_field(data,editable,config){
+	this.element = document.createElement("DIV");
+	this.element.style.display = "inline-block";
+	this.element.typed_field = this;
 	this.originalData = data;
 	this.editable = editable;
-	this.onchanged = onchanged;
-	this.onunchanged = onunchanged;
+	this.onchange = new Custom_Event();
+	this.ondatachanged = new Custom_Event();
+	this.ondataunchanged = new Custom_Event();
+	this._datachange = function() {
+		this.onchange.fire(this);
+		if (this.getCurrentData() == this.getOriginalData())
+			this.ondataunchanged.fire(this);
+		else
+			this.ondatachanged.fire(this);
+	};
+	this.error = null;
+	this.config = config;
+	if (this.constructor.name != 'typed_field')
+		this._create(data);
 }
 // TODO toggleEditable
 typed_field.prototype = {
+	/** Internal function resetting and creating the field */
+	_create: function(data) { alert("Function _create not implemented in typed_field: "+this.constructor.name); },
 	/**
 	 * @returns the HTML element representing the field
 	 */
@@ -24,6 +38,14 @@ typed_field.prototype = {
 	 * @returns true if this field is editable
 	 */
 	isEditable: function() { return this.editable; },
+	/** Set the field as editable or read-only */
+	setEditable: function(editable) {
+		if (this.editable == editable) return;
+		var data = this.getCurrentData();
+		this.editable = editable;
+		while (this.element.childNodes.length > 0) this.element.removeChild(this.element.childNodes[0]);
+		this._create(data);
+	},
 	/**
 	 * @returns {Boolean} true if the data has been changed by the user since the creation of the field
 	 */
@@ -49,14 +71,11 @@ typed_field.prototype = {
 	 * highlight the field to signal an error
 	 * @param {Boolean} error if true, the field is highlighted, else it is not
 	 */
-	signal_error: function(error) {},
-	/**
-	 * @param onsaved the instance of the editable_table object
-	 * @param container, the one managed by the editable_table object
-	 * In case the field manage a data structure associated to a key, this function will save the changes of the structure in the database
-	 * This method must replace the role of the hasChanged method (the row_key may not have changed whereas the value pointed by the key have)
-	 * onsave method must manage the loading button, ang call unedit method
-	 * @return {boolean} true if the data pointed by the key have changed
-	 */
-	save: function(onsaved) {}
+	signal_error: function(error) {
+		this.error = error;
+	},
+	getError: function() {
+		return this.error;
+	}
 };
+typed_field.prototype.constructor = typed_field;
