@@ -1,5 +1,5 @@
-if (typeof require != 'undefined')
-	require("geography.js");
+if (typeof window.top.require != 'undefined')
+	window.top.require("geography.js");
 
 /**
  * @method geographic_area_selection
@@ -409,7 +409,7 @@ function geographic_area_selection(container, country_id, onready) {
 	};
 	
 	// initialize
-	require("geography.js",function() {
+	window.top.require("geography.js",function() {
 		window.top.geography.getCountryData(country_id, function(country_data) {
 			t.result = [];
 			for (var i = 0; i < country_data.length; ++i)

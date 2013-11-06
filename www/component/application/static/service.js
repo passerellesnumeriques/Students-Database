@@ -18,7 +18,7 @@ service = {
 			function(result){
 				if (result && result.events) {
 					for (var i = 0; i < result.events.length; ++i)
-						window.top.pnapplication.raise_app_event(result.events[i].id, result.events[i].data);
+						window.top.pnapplication.signal_event(result.events[i].type, result.events[i].data);
 				}
 				handler(result ? result.result : null);
 			},

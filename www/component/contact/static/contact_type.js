@@ -127,14 +127,14 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 				if (!res) return;
 				/*Update the result object*/
 				var l = contacts.length;
-				contacts[l] = {contact_id:res.id, contact_type: contact_type, sub_type:"Work", contact: text};
+				contacts[l] = {id:res.id, contact_type: contact_type, sub_type:"Work", contact: text};
 				/*Update the table*/
 				t.addContact(contacts[l]);
 			});
 		} else {
 			/*Update the result object*/
 			var l = contacts.length;
-			contacts[l] = {contact_id:-1, contact_type: contact_type, sub_type:"Work", contact: text};
+			contacts[l] = {id:-1, contact_type: contact_type, sub_type:"Work", contact: text};
 			/*Update the table*/
 			t.addContact(contacts[l]);
 		}
@@ -169,6 +169,7 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 	this.removeContact = function (contact){
 		if (join_value != -1) {
 			service.json("data_model","remove_row",{table:"Contact", row_key:contact.id}, function(res){
+				if (!res) return;
 				for (var i = 0; i < t.tbody.childNodes.length; ++i)
 					if (t.tbody.childNodes[i].contact == contact)
 						t.tbody.removeChild(t.tbody.childNodes[i]);
@@ -261,7 +262,7 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 	 * @method saveSubType
 	 * Method called by the items of the category context menu on click
 	 * Update the database, the result object and the displayed table
-	 * @param contact_id the id of the contact to update
+	 * @param contact the contact to update
 	 * @param sub_type the updated one
 	 * @param container the one which contains the category field
 	 */

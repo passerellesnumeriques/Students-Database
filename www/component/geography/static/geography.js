@@ -1,4 +1,4 @@
-if (!window.top.geography) {
+if (window == window.top && !window.top.geography) {
 	var wt = window.top;
 	wt.geography = {
 		_countries: null,

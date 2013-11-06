@@ -5,9 +5,9 @@ $model->addTable("Country")
 	->addString("code",50,0,true,true)
 	->addString("name",50,1,false,false)
 	->allowReadAccess()
-	->restrictWriteAccess("edit_geography",true)
-	->restrictAddAccess("edit_geography",true)
-	->restrictRemoveAccess("manage_geography",true);
+	->addWriteAccess("edit_geography",true)
+	->addInsertAccess("edit_geography",true)
+	->addRemoveAccess("manage_geography",true);
 	
 $model->addTable("Country_division")
 	->addPrimaryKey("id")
@@ -15,9 +15,9 @@ $model->addTable("Country_division")
 	->addForeignKey("parent","Country_division",true,false,true,true)
 	->addString("name",50,0,true,false)
 	->allowReadAccess()
-	->restrictWriteAccess("edit_geography",true)
-	->restrictAddAccess("edit_geography",true)
-	->restrictRemoveAccess("manage_geography",true);
+	->addWriteAccess("edit_geography",true)
+	->addInsertAccess("edit_geography",true)
+	->addRemoveAccess("manage_geography",true);
 	
 $model->addTable("Geographic_area")
 	->addPrimaryKey("id")
@@ -25,6 +25,6 @@ $model->addTable("Geographic_area")
 	->addString("name",100,0,true,false)
 	->addForeignKey("parent","Geographic_area",true,false,true,true)
 	->allowReadAccess()
-	->restrictWriteAccess("edit_geography",true)
-	->restrictAddAccess("edit_geography",true)
-	->restrictRemoveAccess("manage_geography",true);
+	->addWriteAccess("edit_geography",true)
+	->addInsertAccess("edit_geography",true)
+	->addRemoveAccess("manage_geography",true);

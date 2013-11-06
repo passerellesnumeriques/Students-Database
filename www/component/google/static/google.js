@@ -73,7 +73,7 @@ if (!window.top.google) {
 		window.top.google.api_loaded = true;
 		window.top.gapi.client.setApiKey("AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
 		window.top.gapi.auth.init();
-		setInterval(function(){
+		window.top.setInterval(function(){
 			if (window.top.google.connection_status == 0 && window.top.google._connecting_time < new Date().getTime()-30000) {
 				window.top.google.connection_status = -1;
 				for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
@@ -85,7 +85,7 @@ if (!window.top.google) {
 	};
 	window.top.load_google_api = function() {
 		window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
-		setTimeout(function(){
+		window.top.setTimeout(function(){
 			if (window.top.google.api_loaded) return;
 			window.top.remove_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 			window.top.load_google_api();

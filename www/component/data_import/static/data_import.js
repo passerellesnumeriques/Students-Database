@@ -1,13 +1,16 @@
 if (typeof require != 'undefined') {
-	require("vertical_layout.js");
+	require("vertical_layout.js",function(){
+		require("DataDisplay.js");
+		require("typed_field.js");
+		require("collapsable_section.js");
+	});
 }
-function data_import(container, root_table, import_fields, preset_fields, title) {
+function data_import(container, root_table, preset_data, title) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
 	this.root_table = root_table;
-	this.import_fields = import_fields;
-	this.preset_fields = preset_fields ? preset_fields : [];
+	this.preset_data = preset_data ? preset_data : [];
 	
 	this.step1_upload_file = function() {
 		t.unfreeze();
@@ -64,7 +67,17 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 	this.step2_select_data = function() {
 		var w = getIFrameWindow(t.frame);
 		if (!w.excel || !w.excel.tabs) {
-			t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Preparing Excel...");
+			if (w.page_errors) {
+				t.unfreeze();
+				t.previousButton.disabled = '';
+				t.onprevious = function() {
+					while (t.page_container.childNodes.length > 0) t.page_container.removeChild(t.page_container.childNodes[0]);
+					t.freeze();
+					t.step1_upload_file();
+				};
+				return;
+			}
+			t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> "+( w.excel_uploaded ? "Preparing Excel..." : "Uploading File..."));
 			setTimeout(function() {t.step2_select_data();},25);
 			return;
 		}
@@ -126,42 +139,17 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 		};
 		
 		// Fields
-		require(["DataPath.js","collapsable_section.js","typed_field.js"]);
-		service.json("data_model","get_available_fields",{table:t.root_table},function(fields){
-			var categories = [];
-			var javascripts = [];
-			var avail_fields = fields;
-			require("DataPath.js",function() {
-				// analyze fields
-				for (var i = 0; i < fields.length; ++i)
-					fields[i].p = new DataPath(fields[i].path);
+		require("DataDisplay.js",function() {
+			service.json("data_model","get_available_fields",{table:t.root_table},function(fields){
+				var categories = [];
+				var javascripts = [];
+				var avail_fields = fields;
 				
-				// filter according to import_fields
-				var final_fields = [];
-				for (var i = 0; i < import_fields.length; ++i) {
-					var path = import_fields[i].split(">");
-					for (var j = 0; j < path.length; ++j) {
-						var k = path[j].indexOf('.');
-						path[j] = {table:path[j].substring(0,k), column:path[j].substring(k+1)};
-					}
-					if (path[0].table != root_table) {
-						alert("Invalid field to import '"+import_fields[i]+"': starting table must be "+root_table);
-						continue;
-					}
-					for (var j = 0; j < fields.length; ++j) {
-						if (path[path.length-1].table != fields[j].p.table) continue; // not the same final table
-						if (path[path.length-1].column != '*' && fields[j].p.column != path[path.length-1].column) continue; // not the same column
-						// TODO check we have the same path
-						if (!final_fields.contains(fields[j]))
-							final_fields.push(fields[j]);
-					}
-				}
-				fields = final_fields;
-
 				// gather categories and javascripts needed
 				for (var i = 0; i < fields.length; ++i) {
-					if (!categories.contains(fields[i].cat)) categories.push(fields[i].cat);
-					if (!javascripts.contains(fields[i].field_classname)) javascripts.push(fields[i].field_classname+".js");
+					fields[i].path = new DataPath(fields[i].path);
+					if (!categories.contains(fields[i].data.category)) categories.push(fields[i].data.category);
+					if (!javascripts.contains(fields[i].data.field_classname)) javascripts.push(fields[i].data.field_classname+".js");
 				}
 				require(["typed_field.js",javascripts]);
 				// create sections for each category
@@ -174,13 +162,14 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 						var table = document.createElement("TABLE");
 						section.content.appendChild(table);
 						for (var j = 0; j < fields.length; ++j) {
-							if (fields[j].cat != categories[i]) continue;
+							if (fields[j].data.category != categories[i]) continue;
 							var tr = document.createElement("TR"); table.appendChild(tr);
 							
 							var td = document.createElement("TD"); tr.appendChild(td);
 							td.style.whiteSpace = 'nowrap';
-							td.appendChild(document.createTextNode(fields[j].name));
-							if (fields[j].p.is_mandatory()) {
+							td.appendChild(document.createTextNode(fields[j].data.name));
+							fields[j].typed_field = new window[fields[j].data.field_classname](fields[j].data.new_data,true,fields[j].data.field_config);
+							if (fields[j].path.is_mandatory() && !fields[j].typed_field.canBeNull()) {
 								var span = document.createElement("SUP");
 								span.style.color = 'red';
 								span.innerHTML = "*";
@@ -235,7 +224,6 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 							};
 							
 							fields[j].span_selected = document.createElement("SPAN");
-							fields[j].typed_field = new window[fields[j].field_classname](null,true,null,null,fields[j].field_args);
 						}
 						section.element.style.marginBottom = "5px";
 					}

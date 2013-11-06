@@ -1,3 +1,4 @@
+/* #depends[typed_filter.js] */
 function filter_enum(data, config) {
 	if (data == null) data = {value:''};
 	typed_filter.call(this, data, config);

@@ -3,7 +3,7 @@ abstract class page_students_list extends Page {
 	
 	public function get_required_rights() { return array("consult_students_list"); }
 	
-	public function create_list($icon, $title, $filters) {
+	public function create_list($icon, $title, $filters, $import_preset_data) {
 		$this->add_javascript("/static/widgets/grid/grid.js");
 		$this->add_javascript("/static/data_model/data_list.js");
 		$this->onload("init_students_list();");
@@ -20,20 +20,16 @@ function init_students_list() {
 		<?php echo $filters; ?>,
 		function (list) {
 			list.addTitle(<?php echo json_encode($icon).",".json_encode($title);?>);
-			<?php /*
 			var import_students = document.createElement("DIV");
 			import_students.className = "button";
 			import_students.innerHTML = "<img src='"+theme.icons_16.import+"' style='vertical-align:bottom'/> Import Students";
 			import_students.onclick = function() {
-				require("data_import.js",function(){
-					new data_import(
-						document.body,
+				require("data_import.js",function() {
+					data_import(
+						"<?php echo $container_id; ?>",
 						"Student",
-						[
-						 	"Student.people>People.*"
-						],
-						[{table:'Student',column:'batch',value:<?php echo $_GET["batch"];?>}],
-						"Students for Batch: <?php echo $batch["name"]?>"
+						<?php echo json_encode($import_preset_data); ?>,
+						"Import Students"
 					);
 				});
 			};
@@ -42,16 +38,15 @@ function init_students_list() {
 			create_student.className = "button";
 			create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
 			create_student.onclick = function() {
-				post_data("/dynamic/people/page/create_people",{
+/*				post_data("/dynamic/people/page/create_people",{
 					icon: "/static/application/icon.php?main=/static/students/student_32.png&small="+theme.icons_16.add+"&where=right_bottom",
 					title: "Create New Student",
 					people_type: "student",
 					redirect: "/dynamic/students/page/batch_list?batch=<?php echo $_GET["batch"];?>",
 					student_batch: <?php echo $_GET["batch"];?>
-				});
+				});*/
 			};
 			list.addHeader(create_student);
-			*/ ?>
 		}
 	);
 }

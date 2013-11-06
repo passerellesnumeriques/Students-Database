@@ -19,8 +19,15 @@ class service_add_contact extends Service {
 	public function output_documentation() { echo "<code>id</code> the id of the contact created"; }
 	
 	public function execute(&$component, $input) {
+		require_once("component/data_model/Model.inc");
+		$table = DataModel::get()->getTable($input["table"]);
+		if (!$table->acceptInsert(array($input["column"]=>$input["key"]))) {
+			PNApplication::error("You are not allowed to add a contact for this people or organization");
+			echo "false";
+			return;
+		}
 		try {
-			$contact_id = SQLQuery::create()->insert("Contact", array("type"=>$input["type"],"contact"=>$input["contact"],"sub_type"=>$input["sub_type"]));
+			$contact_id = SQLQuery::create()->bypass_security()->insert("Contact", array("type"=>$input["type"],"contact"=>$input["contact"],"sub_type"=>$input["sub_type"]));
 		} catch (Exception $ex) {
 			$contact_id = 0;
 			PNApplication::error($ex);

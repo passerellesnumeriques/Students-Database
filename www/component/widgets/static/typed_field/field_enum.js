@@ -1,3 +1,4 @@
+/* #depends[typed_field.js] */
 /** Enum field: if editable, it will be a combo box (select element), else only a simple text node
  * @constructor
  * @param config must contain:<ul><li><code>can_be_empty</code>: boolean</li><li><code>possible_values</code>: an array of element, each element can be (1) a string, which will be displayed and used as key, (2) an array of 2 elements: the key and the string to display</li></ul>
@@ -7,6 +8,7 @@ function field_enum(data,editable,config) {
 }
 field_enum.prototype = new typed_field();
 field_enum.prototype.constructor = field_enum;
+field_enum.prototype.canBeNull = function() { return this.config.can_be_empty; };		
 field_enum.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;

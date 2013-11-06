@@ -1,3 +1,4 @@
+/* #depends[typed_field.js] */
 if (typeof require != 'undefined') require("autoresize_input.js");
 /** Text field: if editable, it will be an autoresize text input, else only a simple text node
  * @constructor
@@ -9,6 +10,12 @@ function field_text(data,editable,config) {
 }
 field_text.prototype = new typed_field();
 field_text.prototype.constructor = field_text;		
+field_text.prototype.canBeNull = function() {
+	if (!this.config) return true;
+	if (this.config.can_be_null) return true;
+	if ((typeof this.config.min_length != 'undefined') && this.config.min_length == 0) return true;
+	return false;
+};		
 field_text.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;

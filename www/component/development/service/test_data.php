@@ -98,7 +98,7 @@ class service_test_data extends Service {
 			$db_system->execute("INSERT INTO People (first_name,last_name,sex) VALUES ('".$user[0]."','".$user[1]."','".$user[2]."')");
 			$people_id = $db_system->get_insert_id();
 			$username = str_replace(" ","-", strtolower($user[0]).".".strtolower($user[1]));
-			$user_id = PNApplication::$instance->user_management->create_user($domain, $username);
+			$user_id = PNApplication::$instance->user_management->create_user($domain, $username, true);
 			$db_system->execute("INSERT INTO UserPeople (user,people) VALUES ('".$user_id."',".$people_id.")");
 			foreach ($user[3] as $role)
 				$db_system->execute("INSERT INTO UserRole (user,role) VALUES ('".$user_id."',".($role === -1 ? -1 : $roles_id[$role]).")");

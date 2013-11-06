@@ -23,10 +23,62 @@ $model->addTable("People")
 			"birth"=>"Birth Date",
 		)
 	))
-	->restrictReadAccess("see_other_people_details",true)
-	->allowSpecificReadAccess("id",function() { return PNApplication::$instance->user_people->user_people_id; })
-	->restrictWriteAccess("edit_people_details",true)
-	->restrictAddAccess("create_people",true)
-	->restrictRemoveAccess("remove_people",true)
+	->addReadFilter(function(&$q, $table_alias) {
+		// allow to read user own info
+		$w = "(`".$table_alias."`.`id`='".PNApplication::$instance->user_people->user_people_id."')";
+		// restrict by type of people
+		require_once("PeoplePlugin.inc");
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			$wc = $c->filterPeopleReadAccess($q, $table_alias);
+			if ($wc <> null)
+				$w .= " OR (".$wc.")";
+		}
+		$q->where("(".$w.")");
+	})
+	->addWriteFilter(function(&$q, $table_alias) {
+		require_once("PeoplePlugin.inc");
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			$c->prepareSelectPeopleWriteAccess($q, $table_alias);
+		}
+	},function($rows) {
+		require_once("PeoplePlugin.inc");
+		$final = array();
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			foreach ($c->filterPeopleWriteAccess($rows) as $row) {
+				array_push($final, $row);
+				for ($i = 0; $i < count($rows); $i++)
+					if ($rows[$i] == $row) {
+						array_splice($rows, $i, 1);
+						break;
+					}
+			}
+		}
+		return $final;
+	})
+	->addRemoveFilter(function(&$q, $table_alias, &$locks) {
+		require_once("PeoplePlugin.inc");
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			$c->prepareSelectPeopleRemoveAccess($q, $table_alias, $locks);
+		}
+	},function($rows) {
+		require_once("PeoplePlugin.inc");
+		$final = array();
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			foreach ($c->filterPeopleRemoveAccess($rows) as $row) {
+				array_push($final, $row);
+				for ($i = 0; $i < count($rows); $i++)
+					if ($rows[$i] == $row) {
+						array_splice($rows, $i, 1);
+						break;
+					}
+			}
+		}
+		return $final;
+	})
 	;
 ?>

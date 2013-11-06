@@ -1,3 +1,4 @@
+/* #depends[typed_field.js] */
 /** Integer field: if editable, it will be a text input, else only a simple text node
  * @constructor
  * @param config can contain: <code>min</code>, <code>max</code>, <code>can_be_null</code>
@@ -8,6 +9,7 @@ function field_integer(data,editable,config) {
 }
 field_integer.prototype = new typed_field();
 field_integer.prototype.constructor = field_integer;		
+field_integer.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };		
 field_integer.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;

@@ -16,9 +16,8 @@ class ContactDisplayHandler extends datamodel\DataDisplayHandler {
 		);
 	}
 	
-	public function createEntry($data, $sub_model) {
-		// TODO ?
-		PNApplication::error("createEntry not supported by RolesDisplayHandler");
+	public function createEntry($data, $sub_model, $preset_fields) {
+		PNApplication::error("createEntry not supported by ContactDisplayHandler");
 	}
 }
 
@@ -100,9 +99,8 @@ class AddressDisplayHandler extends datamodel\DataDisplayHandler {
 		);
 	}
 
-	public function createEntry($data, $sub_model) {
-		// TODO ?
-		PNApplication::error("createEntry not supported by RolesDisplayHandler");
+	public function createEntry($data, $sub_model, $preset_fields) {
+		PNApplication::error("createEntry not supported by AddressDisplayHandler");
 	}
 }
 class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
@@ -183,16 +181,137 @@ $model->addTable("Contact")
 	->addEnum("type",array("email","phone","IM"),true,false)
 	->addString("sub_type",10,0,true,false)
 	->addString("contact",100,1,false,false)
-	->noRestriction(); // TODO check access with generic services
+	->addReadFilter(function(&$q, $table_alias) {
+		$table_people = Datamodel::get()->getTable("People_contact");
+		$people_alias = $q->get_table_alias("People_contact");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People_contact", array("id"=>"contact"), $people_alias);
+		}
+		$table_people->filterReadAccess($q, $people_alias);
+
+		$table_org = Datamodel::get()->getTable("Organization_contact");
+		$org_alias = $q->get_table_alias("Organization_contact");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization_contact", array("id"=>"contact"), $org_alias);
+		}
+		$table_org->filterReadAccess($q, $org_alias);
+
+		$q->where("(`".$people_alias."`.people IS NOT NULL OR `".$org_alias."`.organization IS NOT NULL)");
+	})
+	->addWriteFilter(function(&$q, $table_alias){
+		$table_people = Datamodel::get()->getTable("People_contact");
+		$people_alias = $q->get_table_alias("People_contact");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People_contact", array("id"=>"contact"), $people_alias);
+		}
+		$q->field($people_alias, "people", "PEOPLE_CONTACT_FIELD");
+		$table_people->prepareSelectToDetermineWriteAccess($q, $people_alias); 
+		
+		$table_org = Datamodel::get()->getTable("Organization_contact");
+		$org_alias = $q->get_table_alias("Organization_contact");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization_contact", array("id"=>"contact"), $org_alias);
+		}
+		$q->field($org_alias, "organization", "ORG_CONTACT_FIELD");
+		$table_org->prepareSelectToDetermineWriteAccess($q, $org_alias); 
+	},function($rows) {
+		$people_rows = array();
+		$org_rows = array();
+		foreach ($rows as $row) {
+			if ($row["PEOPLE_CONTACT_FIELD"] <> null) array_push($people_rows, $row);
+			if ($row["ORG_CONTACT_FIELD"] <> null) array_push($org_rows, $row);
+		}
+		$final = array();
+		$table_people = Datamodel::get()->getTable("People_contact");
+		array_push($final, $table_people->filterWriteAccess($people_rows)); 
+		$table_org = Datamodel::get()->getTable("Organization_contact");
+		array_push($final, $table_org->filterWriteAccess($org_rows));
+		return $final; 
+	})
+	->addRemoveFilter(function(&$q, $table_alias, &$locks){
+		$table_people = Datamodel::get()->getTable("People_contact");
+		$people_alias = $q->get_table_alias("People_contact");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People_contact", array("id"=>"contact"), $people_alias);
+		}
+		$q->field($people_alias, "people", "PEOPLE_CONTACT_FIELD");
+		$table_people->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
+		
+		$table_org = Datamodel::get()->getTable("Organization_contact");
+		$org_alias = $q->get_table_alias("Organization_contact");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization_contact", array("id"=>"contact"), $org_alias);
+		}
+		$q->field($org_alias, "organization", "ORG_CONTACT_FIELD");
+		$table_org->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
+
+		require_once("component/data_model/DataBaseLock.inc");
+		$locked_by = null;
+		$lock_id = DataBaseLock::lock_table("People_contact", $locked_by);
+		if ($lock_id <> null) array_push($locks, $lock_id);
+		else throw new Exception("The contacts are already locked by ".$locked_by.". Please try again later.");
+		$locked_by = null;
+		$lock_id = DataBaseLock::lock_table("Organization_contact", $locked_by);
+		if ($lock_id <> null) array_push($locks, $lock_id);
+		else throw new Exception("The contacts are already locked by ".$locked_by.". Please try again later.");
+	}, function($rows) {
+		$people_rows = array();
+		$org_rows = array();
+		foreach ($rows as $row) {
+			if ($row["PEOPLE_CONTACT_FIELD"] <> null) array_push($people_rows, $row);
+			if ($row["ORG_CONTACT_FIELD"] <> null) array_push($org_rows, $row);
+		}
+		$final = array();
+		$table_people = Datamodel::get()->getTable("People_contact");
+		foreach ($table_people->filterWriteAccess($people_rows) as $row) array_push($final, $row);
+		$table_org = Datamodel::get()->getTable("Organization_contact");
+		foreach ($table_org->filterWriteAccess($org_rows) as $row) array_push($final, $row);
+		return $final;
+	})
+	;
 	
 $model->addTable("People_contact")
 	->addForeignKey("contact","Contact",true,true,true,false)
 	->addForeignKey("people","People",true,false,true,false)
-	->allowSpecificReadAccess("people",function() { return PNApplication::$instance->user_people->user_people_id; })
-	->restrictWriteAccess("edit_people_details",true)
-	->restrictReadAccess("see_other_people_details",true)
-	->restrictAddAccess("edit_people_details",true)
-	->restrictRemoveAccess("edit_people_details",true)
+	->addReadFilter(function(&$q, $table_alias) {
+		$table = Datamodel::get()->getTable("People");
+		$people_alias = $q->get_table_alias("People");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
+		}
+		$table->filterReadAccess($q, $people_alias);
+	})
+	->addRemoveFilter(function(&$q,$table_alias,&$locks){
+		$table = Datamodel::get()->getTable("People");
+		$people_alias = $q->get_table_alias("People");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
+		}
+		$table->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
+	},function($rows){
+		$table = Datamodel::get()->getTable("People");
+		return $table->filterRemoveAccess($rows);
+	})
+	->addInsertFilter(function($values){
+		$q = SQLQuery::create();
+		$table_alias = $q->table_id();
+		$q->select(array("People"=>$table_alias));
+		$q->where_value($table_alias, "id", $values["people"]);
+		$table = DataModel::get()->getTable("People");
+		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
+		$rows = $q->execute();
+		$rows = $table->filterWriteAccess($rows);
+		if (count($rows) == 0) return false;
+		return true;
+	})
 	->setDisplayHandler("people", new ContactDisplayHandler("people"))
 	;
 	
@@ -206,56 +325,228 @@ $model->addTable("Postal_address")
 	->addString("unit",100,0,true,false)
 	->addString("additional",100,0,true,false)
 	->addString("address_type",100,0,true,false)
-	->allowReadAccess()
-	->noRestriction();//TODO: set restrictions!!
+	->addReadFilter(function(&$q, $table_alias) {
+		$table_people = Datamodel::get()->getTable("People_address");
+		$people_alias = $q->get_table_alias("People_address");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People_address", array("id"=>"address"), $people_alias);
+		}
+		$table_people->filterReadAccess($q, $people_alias);
+
+		$table_org = Datamodel::get()->getTable("Organization_address");
+		$org_alias = $q->get_table_alias("Organization_address");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization_address", array("id"=>"address"), $org_alias);
+		}
+		$table_org->filterReadAccess($q, $org_alias);
+
+		$q->where("(`".$people_alias."`.people IS NOT NULL OR `".$org_alias."`.organization IS NOT NULL)");
+	})
+	->addWriteFilter(function(&$q, $table_alias){
+		$table_people = Datamodel::get()->getTable("People_address");
+		$people_alias = $q->get_table_alias("People_address");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People_address", array("id"=>"address"), $people_alias);
+		}
+		$q->field($people_alias, "people", "PEOPLE_ADDRESS_FIELD");
+		$table_people->prepareSelectToDetermineWriteAccess($q, $people_alias); 
+		
+		$table_org = Datamodel::get()->getTable("Organization_address");
+		$org_alias = $q->get_table_alias("Organization_address");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization_address", array("id"=>"address"), $org_alias);
+		}
+		$q->field($org_alias, "organization", "ORG_ADDRESS_FIELD");
+		$table_org->prepareSelectToDetermineWriteAccess($q, $org_alias); 
+	},function($rows) {
+		$people_rows = array();
+		$org_rows = array();
+		foreach ($rows as $row) {
+			if ($row["PEOPLE_ADDRESS_FIELD"] <> null) array_push($people_rows, $row);
+			if ($row["ORG_ADDRESS_FIELD"] <> null) array_push($org_rows, $row);
+		}
+		$final = array();
+		$table_people = Datamodel::get()->getTable("People_address");
+		array_push($final, $table_people->filterWriteAccess($people_rows)); 
+		$table_org = Datamodel::get()->getTable("Organization_address");
+		array_push($final, $table_org->filterWriteAccess($org_rows));
+		return $final; 
+	})
+	->addRemoveFilter(function(&$q, $table_alias, &$locks){
+		$table_people = Datamodel::get()->getTable("People_address");
+		$people_alias = $q->get_table_alias("People_address");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People_address", array("id"=>"address"), $people_alias);
+		}
+		$q->field($people_alias, "people", "PEOPLE_ADDRESS_FIELD");
+		$table_people->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
+		
+		$table_org = Datamodel::get()->getTable("Organization_address");
+		$org_alias = $q->get_table_alias("Organization_address");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization_address", array("id"=>"address"), $org_alias);
+		}
+		$q->field($org_alias, "organization", "ORG_ADDRESS_FIELD");
+		$table_org->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
+
+		require_once("component/data_model/DataBaseLock.inc");
+		$locked_by = null;
+		$lock_id = DataBaseLock::lock_table("People_address", $locked_by);
+		if ($lock_id <> null) array_push($locks, $lock_id);
+		else throw new Exception("The addresses are already locked by ".$locked_by.". Please try again later.");
+		$locked_by = null;
+		$lock_id = DataBaseLock::lock_table("Organization_address", $locked_by);
+		if ($lock_id <> null) array_push($locks, $lock_id);
+		else throw new Exception("The addresses are already locked by ".$locked_by.". Please try again later.");
+	}, function($rows) {
+		$people_rows = array();
+		$org_rows = array();
+		foreach ($rows as $row) {
+			if ($row["PEOPLE_ADDRESS_FIELD"] <> null) array_push($people_rows, $row);
+			if ($row["ORG_ADDRESS_FIELD"] <> null) array_push($org_rows, $row);
+		}
+		$final = array();
+		$table_people = Datamodel::get()->getTable("People_address");
+		foreach ($table_people->filterWriteAccess($people_rows) as $row) array_push($final, $row);
+		$table_org = Datamodel::get()->getTable("Organization_address");
+		foreach ($table_org->filterWriteAccess($org_rows) as $row) array_push($final, $row);
+		return $final;
+	})
+	; // no direct access allowed
 	
 $model->addTable("People_address")
 	->addForeignKey("address","Postal_address",true,true,true,false)
 	->addForeignKey("people","People",true,false,true,false)
-	->allowSpecificReadAccess("people",function() { return PNApplication::$instance->user_people->user_people_id; })
-	->restrictWriteAccess("edit_people_details",true)
-	->restrictReadAccess("see_other_people_details",true)
-	->restrictAddAccess("edit_people_details",true)
-	->restrictRemoveAccess("edit_people_details",true)
 	->setDisplayHandler("people", new AddressDisplayHandler("people"))
+	->addReadFilter(function(&$q, $table_alias) {
+		$table = Datamodel::get()->getTable("People");
+		$people_alias = $q->get_table_alias("People");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
+		}
+		$table->filterReadAccess($q, $people_alias);
+	})
+	->addRemoveFilter(function(&$q,$table_alias, &$locks){
+		$table = Datamodel::get()->getTable("People");
+		$people_alias = $q->get_table_alias("People");
+		if ($people_alias == null) {
+			$people_alias = $q->table_id();
+			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
+		}
+		$table->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
+	},function($rows){
+		$table = Datamodel::get()->getTable("People");
+		return $table->filterRemoveAccess($rows);
+	})
+	->addInsertFilter(function($values){
+		$q = SQLQuery::create();
+		$table_alias = $q->table_id();
+		$q->select(array("People"=>$table_alias));
+		$q->where_value($table_alias, "id", $values["people"]);
+		$table = DataModel::get()->getTable("People");
+		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
+		$rows = $q->execute();
+		$rows = $table->filterWriteAccess($rows);
+		if (count($rows) == 0) return false;
+		return true;
+	})
 	;
-	
+
 $model->addTable("Organization")
 	->addPrimaryKey("id")
-	->addString("name",100,0,true,false)
-	->allowReadAccess()
-	->noRestriction();//TODO: set restrictions
+	->addString("name",100,0,false,false)
+	->addString("creator",100,1,false,false)
+	->addReadFilter(function(&$q, $table_alias){
+		require_once("component/contact/OrganizationPlugin.inc");
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canRead()) array_push($allowed, $c->getCreator());
+		}
+		$q->field($table_alias, "creator", "ORG_CREATOR");
+		$w = "(";
+		$first = true;
+		foreach ($allowed as $creator) {
+			if ($first) $first = false; else $w .= " OR ";
+			$w .= "ORG_CREATOR='".SQLQuery::escape($creator)."'";
+		}
+		$w .= ")";
+		$q->where($w);
+	})
+	->addWriteFilter(function(&$q, $table_alias){
+		$q->field($table_alias, "creator", "ORG_CREATOR");
+	},function($rows){
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canWrite()) array_push($allowed, $c->getCreator());
+		}
+		$final = array();
+		foreach ($rows as $row)
+			if (in_array($row["ORG_CREATOR"], $allowed))
+				array_push($final, $row);
+		return $final;
+	})
+	->addInsertFilter(function($values){
+		if (!isset($values["creator"])) return false;
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->getCreator() == $values["creator"])
+				return $c->canInsert();
+		}
+		return false;
+	})
+	->addRemoveFilter(function(&$q, $table_alias, &$locks){
+		$q->field($table_alias, "creator", "ORG_CREATOR");
+		// TODO locks
+	},function($rows){
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canRemove()) array_push($allowed, $c->getCreator());
+		}
+		$final = array();
+		foreach ($rows as $row)
+			if (in_array($row["ORG_CREATOR"], $allowed))
+			array_push($final, $row);
+		return $final;
+	})
+	;
 	
 $model->addTable("Organization_contact")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("contact","Contact",true,false,true,false)
 	->allowReadAccess()
-	->noRestriction(); //TODO: set restrictions
+	; //TODO: set restrictions
 	
 $model->addTable("Organization_address")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("address","Postal_address",true,false,true,false)
 	->allowReadAccess()
-	->noRestriction(); //TODO: set restrictions
+	; //TODO: set restrictions
 	
 $model->addTable("Contact_point")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("people","People",true,false,true,false)
 	->addString("designation",100,0,true,false)
 	->allowReadAccess()
-	->noRestriction(); //TODO set restrictions
+	; //TODO set restrictions
 	
 $model->addTable("Organization_type")
 	->addPrimaryKey("id")
 	->addString("name",100,1,false,true)
 	->allowReadAccess()
-	->restrictWriteAccess("edit_organization_type",true)
-	->restrictAddAccess("edit_organization_type",true)
-	->restrictRemoveAccess("edit_organization_type",true);
-	//The access to this table must be restricted
+	; //TODO set restrictions
 	
 $model->addTable("Organization_types")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("type","Organization_type",true,false,true,false)
 	->allowReadAccess()
-	->noRestriction(); //TODO set restrictions
+	; //TODO set restrictions

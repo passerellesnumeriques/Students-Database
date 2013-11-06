@@ -1,3 +1,4 @@
+/* #depends[typed_filter.js] */
 function filter_text(data, config) {
 	if (data == null) data = {type:'contains',value:''};
 	typed_filter.call(this, data, config);

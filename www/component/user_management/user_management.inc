@@ -33,10 +33,7 @@ class user_management extends Component implements AdministrationPlugin {
 	 * @return string|null null on success or an error message
 	 */
 	public function login($domain, $username, $password) {
-		if ($this->username <> null) {
-			$this->logged_out->fire();
-			session_destroy();
-		}
+		if ($this->username <> null) return "You are already authenticated as ".$username;
 		$auth = PNApplication::$instance->authentication->get_authentication_system($domain);
 		if ($auth == null) return "Domain not implemented";
 		$error = "";
@@ -61,18 +58,55 @@ class user_management extends Component implements AdministrationPlugin {
 	public function logout() {
 		$this->logged_out->fire();
 		setcookie(session_name(), "", time()-10000, "/dynamic/");
-		session_destroy();
+		@session_destroy();
 		$this->domain = null;
 		$this->username = null;
 		$this->auth_token = null;
 		$this->user_id = null;
+		$this->rights = array();
+		$this->is_admin = array();
 	}
 	
-	public function create_user($domain, $username) {
-		$user_id = SQLQuery::create()->bypass_security()->insert("Users",array("domain"=>$domain,"username"=>$username));
+	public function create_user($domain, $username, $bypass_security = false) {
+		$res = SQLQuery::create()->bypass_security($bypass_security)->select("Users")->where("domain",$domain)->where("username",$username)->execute();
+		if (count($res) > 0) {
+			PNApplication::error("User ".$domain."\\".$username." already exists");
+			return null;
+		}
+		$user_id = SQLQuery::create()->bypass_security($bypass_security)->insert("Users", array("domain"=>$domain,"username"=>$username));
 		if ($domain == PNApplication::$instance->local_domain)
 			$this->local_user_created->fire($user_id);
 		return $user_id;
+	}
+	
+	public function remove_user($user_id, $bypass_security = false) {
+		SQLQuery::create()->bypass_security($bypass_security)->remove_key("Users", $user_id);
+	}
+	
+	public function assign_user_rights($user_id, $rights) {
+		$all_rights = array();
+		foreach (PNApplication::$instance->components as $c) {
+			foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
+			foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
+		}
+		foreach ($rights as $name=>$value)
+			if (!isset($all_rights[$name])) {
+				PNApplication::error("Unknown right '".$name."'");
+				return false;			
+			}
+		
+		// save in database: (1) remove all previous rights, (2) add all rights from the request
+		SQLQuery::get_db_system_without_security()->execute("DELETE FROM UserRights WHERE user='".$user_id."'");
+		if (count($rights) > 0) {
+			$sql = "INSERT INTO UserRights (`user`,`right`,`value`) VALUES ";
+			$first = true;
+			foreach ($rights as $name=>$value) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= "('".$user_id."','".SQLQuery::escape($name)."','".SQLQuery::escape($value)."')";
+			}
+			SQLQuery::get_db_system_without_security()->execute($sql);
+		}
+		return true;
 	}
 	
 	/**

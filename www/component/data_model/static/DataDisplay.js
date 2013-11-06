@@ -1,4 +1,4 @@
-function DataDisplay(category, name, table, field_classname, field_config, editable, edit_locks, sortable, filter_classname, filter_config) {
+function DataDisplay(category, name, table, field_classname, field_config, editable, edit_locks, sortable, filter_classname, filter_config, cell, new_data) {
 	this.category = category;
 	this.name = name;
 	this.table = table;
@@ -9,6 +9,8 @@ function DataDisplay(category, name, table, field_classname, field_config, edita
 	this.sortable = sortable;
 	this.filter_classname = filter_classname;
 	this.filter_config = filter_config;
+	this.cell = cell;
+	this.new_data = new_data;
 }
 
 function DataPath(s) {
@@ -39,4 +41,14 @@ function DataPath(s) {
 		this.next = new DataPath(s);
 	};
 	this.parseElement(s);
+	
+	this.is_mandatory = function() {
+		var p = this.next;
+		while (p) {
+			if (p.can_be_null || p.direction == '<')
+				return false;
+			p = p.next;
+		}
+		return true;
+	};
 }

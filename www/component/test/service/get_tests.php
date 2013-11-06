@@ -8,39 +8,45 @@ class service_get_tests extends Service {
 	
 	public function execute(&$component, $input) {
 		$cname = $input["component"];
-		require_once("component/test/TestScenario.inc");
+		require_once("component/test/ComponentTests.inc");
 		$all_functions = $this->get_all_functions($cname);
 		$all_services = $this->get_all_services($cname);
+		$component_test = null;
+		if (file_exists("component/".$cname."/test/Tests.inc")) {
+			require_once("component/".$cname."/test/Tests.inc");
+			$classname = $cname."_Tests";
+			$component_test = new $classname();
+		}
+		$function_tests = $component_test <> null ? $component_test->getFunctionalitiesTests() : array();
+		$service_tests = $component_test <> null ? $component_test->getServicesTests() : array();
+		$ui_tests = $component_test <> null ? $component_test->getUITests() : array();
 		echo "{";
 		echo "functions:";
-		if (count($all_functions) == 0)
+		if (count($all_functions) == 0 && count($function_tests) == 0)
 			echo "null";
 		else {
 			echo "{scenarios:[";
-			if (file_exists("component/".$cname."/test/functionalities")) {
-				$files = array();
-				$this->browse("component/".$cname."/test/functionalities", "/", $files);
-				foreach ($files as $file) {
-					echo "{";
-					echo "path:".json_encode($file);
-					require_once("component/".$cname."/test/functionalities".$file);
-					$scenario_class = substr($file, 1, strlen($file)-5);
-					$scenario_class = str_replace("/","_",$scenario_class);
-					$scenario = new $scenario_class();
-					echo ",name:".json_encode($scenario->getName());
-					echo ",steps:[";
-					$steps = $scenario->getSteps();
-					for ($i = 0; $i < count($steps); $i++) {
-						if ($i>0) echo ",";
-						echo json_encode($steps[$i]->getName());
-					}
-					echo "]";
-					echo "}";
-					foreach ($scenario->getCoveredFunctions() as $f) {
-						$index = array_search($f, $all_functions);
-						if ($index === FALSE) continue;
-						array_splice($all_functions, $index, 1);
-					}
+			$first = true;
+			foreach ($function_tests as $file) {
+				if ($first) $first = false; else echo ",";
+				echo "{";
+				echo "path:".json_encode($file);
+				require_once("component/".$cname."/test/functionalities/".$file.".php");
+				$scenario_class = str_replace("/","_",$file);
+				$scenario = new $scenario_class();
+				echo ",name:".json_encode($scenario->getName());
+				echo ",steps:[";
+				$steps = $scenario->getSteps();
+				for ($i = 0; $i < count($steps); $i++) {
+					if ($i>0) echo ",";
+					echo json_encode($steps[$i]->getName());
+				}
+				echo "]";
+				echo "}";
+				foreach ($scenario->getCoveredFunctions() as $f) {
+					$index = array_search($f, $all_functions);
+					if ($index === FALSE) continue;
+					array_splice($all_functions, $index, 1);
 				}
 			}
 			echo "]";
@@ -53,34 +59,31 @@ class service_get_tests extends Service {
 			echo "}";
 		}
 		echo ",services:";
-		if (count($all_services) == 0)
+		if (count($all_services) == 0 && count($service_tests) == 0)
 			echo "null";
 		else {
 			echo "{scenarios:[";
-			if (file_exists("component/".$cname."/test/services")) {
-				$files = array();
-				$this->browse("component/".$cname."/test/services", "/", $files);
-				foreach ($files as $file) {
-					echo "{";
-					echo "path:".json_encode($file);
-					require_once("component/".$cname."/test/services".$file);
-					$scenario_class = substr($file, 1, strlen($file)-5);
-					$scenario_class = str_replace("/","_",$scenario_class);
-					$scenario = new $scenario_class();
-					echo ",name:".json_encode($scenario->getName());
-					echo ",steps:[";
-					$steps = $scenario->getSteps();
-					for ($i = 0; $i < count($steps); $i++) {
-						if ($i>0) echo ",";
-						echo json_encode($steps[$i]->getName());
-					}
-					echo "]";
-					echo "}";
-					foreach ($scenario->getCoveredServices() as $f) {
-						$index = array_search($f, $all_services);
-						if ($index === FALSE) continue;
-						array_splice($all_services, $index, 1);
-					}
+			$first = true;
+			foreach ($service_tests as $file) {
+				if ($first) $first = false; else echo ",";
+				echo "{";
+				echo "path:".json_encode($file);
+				require_once("component/".$cname."/test/services/".$file.".php");
+				$scenario_class = str_replace("/","_",$file);
+				$scenario = new $scenario_class();
+				echo ",name:".json_encode($scenario->getName());
+				echo ",steps:[";
+				$steps = $scenario->getSteps();
+				for ($i = 0; $i < count($steps); $i++) {
+					if ($i>0) echo ",";
+					echo json_encode($steps[$i]->getName());
+				}
+				echo "]";
+				echo "}";
+				foreach ($scenario->getCoveredServices() as $f) {
+					$index = array_search($f, $all_services);
+					if ($index === FALSE) continue;
+					array_splice($all_services, $index, 1);
 				}
 			}
 			echo "]";
@@ -88,6 +91,19 @@ class service_get_tests extends Service {
 			for ($i = 0; $i < count($all_services); $i++) {
 				if ($i>0) echo ",";
 				echo json_encode($all_services[$i]);
+			}
+			echo "]";
+			echo "}";
+		}
+		echo ",ui:";
+		if (count($ui_tests) == 0)
+			echo "null";
+		else {
+			echo "{scenarios:[";
+			$first = true;
+			foreach ($ui_tests as $file) {
+				if ($first) $first = false; else echo ",";
+				echo json_encode($file);
 			}
 			echo "]";
 			echo "}";
@@ -114,13 +130,38 @@ class service_get_tests extends Service {
 		$c = PNApplication::$instance->components[$cname];
 		$cl = new ReflectionClass($c);
 		$list = array();
+		$interfaces = $cl->getInterfaces();
+		$parents = array();
+		$pc = $cl->getParentClass();
+		while ($pc <> null) {
+			array_push($parents, $pc);
+			$pc = $pc->getParentClass();
+		}
 		foreach ($cl->getMethods() as $m) {
 			if ($m->isStatic()) continue;
 			if (!$m->isPublic()) continue;
 			if ($m->isConstructor()) continue;
 			if ($m->isDestructor()) continue;
 			if ($m->getDeclaringClass() <> $cl) continue;
-			if ($m->getName() == "init") continue;
+			$from_interface = false;
+			foreach ($interfaces as $iname=>$i) {
+				foreach ($i->getMethods() as $im)
+					if ($im->name == $m->name) {
+						$from_interface = true;
+						break;
+					}
+				if ($from_interface) break;
+			}
+			if ($from_interface) continue;
+			foreach ($parents as $pc) {
+				foreach ($pc->getMethods() as $im)
+					if ($im->name == $m->name) {
+						$from_interface = true;
+						break;
+					}
+				if ($from_interface) break;
+			}
+			if ($from_interface) continue;
 			$doc = $m->getDocComment();
 			if ($doc <> null && strpos($doc, "@not_tested") !== FALSE) continue;
 			array_push($list, $m->getName());

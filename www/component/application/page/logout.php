@@ -5,8 +5,12 @@ class page_logout extends Page {
 		PNApplication::$instance->user_management->logout();
 ?>
 <script type='text/javascript'>
-window.top.pn_loading_start();
-window.location.href = "<?php echo "/dynamic/application/page/enter".(isset($_GET["from"]) ? "?from=".$_GET["from"] : "");?>";
+if (window.top.pn_loading_start) {
+	window.top.pn_loading_start();
+	window.location.href = "<?php echo "/dynamic/application/page/enter".(isset($_GET["from"]) ? "?from=".$_GET["from"] : "");?>";
+} else {
+	window.location.href = "/";
+}
 </script>
 <?php 
 	}

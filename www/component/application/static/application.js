@@ -5,6 +5,7 @@ if (window == window.top) {
 	window.pnapplication = {
 		/** list of windows */
 		windows: [],
+		onwindowclosed: new Custom_Event(),
 		/** register a new window */
 		register_window: function(w) { 
 			window.top.pnapplication.windows.push(w);
@@ -21,17 +22,14 @@ if (window == window.top) {
 					this.onclick_listeners.splice(i,1);
 					i--;
 				}
-			var ids = [];
-			for (var i = 0; i < this.app_events_listeners.length; ++i) {
-				if (this.app_events_listeners[i][0] == w) {
-					ids.push(this.app_events_listeners[i][1]);
-					this.app_events_listeners.splice(i,1);
+			for (var i = 0; i < this.onevent_listeners.length; ++i)
+				if (this.onevent_listeners[i].win == w) {
+					this.onevent_listeners.splice(i,1);
 					i--;
 				}
-			}
-			if (ids.length > 0)
-				service.json("application","unregister_app_event",{ids:ids},function(){},true);
+			window.top.pnapplication.onwindowclosed.fire(w);
 		},
+		
 		onclick_listeners: [],
 		register_onclick: function(from_window, listener) {
 			this.onclick_listeners.push([from_window,listener]);
@@ -43,24 +41,17 @@ if (window == window.top) {
 					break;
 				}
 		},
-		app_events_listeners: [],
-		register_app_event_listener: function(from_window, listener_id, listener) {
-			this.app_events_listeners.push([from_window,listener_id,listener]);
+		
+		onevent_listeners: [],
+		register_onevent: function(win, type, listener) {
+			this.onevent_listeners.push({win:win,type:type,listener:listener});
 		},
-		unregister_app_event_listener: function(id) {
-			for (var i = 0; i < this.app_events_listeners.length; ++i)
-				if (this.app_events_listeners[i][1] == id) {
-					this.app_events_listeners.splice(i,1);
-					break;
-				}
+		signal_event: function(type, data) {
+			for (var i = 0; i < this.onevent_listeners.length; ++i)
+				if (this.onevent_listeners[i].type == type)
+					this.onevent_listeners[i].listener(type, data);
 		},
-		raise_app_event: function(listener_id, data) {
-			for (var i = 0; i < this.app_events_listeners.length; ++i)
-				if (this.app_events_listeners[i][1] == listener_id) {
-					this.app_events_listeners[i][2](data);
-					break;
-				}
-		},
+		
 		/** Event when the whole application is closing */
 		onclose: new Custom_Event(),
 		close_window: function() {

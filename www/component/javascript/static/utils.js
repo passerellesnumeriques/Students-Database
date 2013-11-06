@@ -487,13 +487,15 @@ function parseSQLDate(s) {
 	var d = new Date();
 	d.setHours(0,0,0,0);
 	var a = s.split("-");
-	if (a.length == 3) {
-		d.setFullYear(parseInt(a[0]));
-		d.setMonth(parseInt(a[1])-1);
-		d.setDate(parseInt(a[2]));
-	}
+	if (a.length == 3)
+		d.setFullYear(parseInt(a[0]), parseInt(a[1])-1, parseInt(a[2]));
 	return d;
 };
 function dateToSQL(d) {
-	return d.getFullYear()+"-"+this._2digits(d.getMonth()+1)+"-"+this._2digits(d.getDate());
+	var _2digits = function(n) {
+		var s = ""+n;
+		while (s.length < 2) s = "0"+s;
+		return s;
+	};
+	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
 };

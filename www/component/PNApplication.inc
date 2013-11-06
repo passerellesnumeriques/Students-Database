@@ -22,32 +22,10 @@ class PNApplication {
 	public $local_domain;
 	public $components = array();
 	
-	public $event_listener_id_counter = 0;
 	public $pending_events = array();
-	public $registered_events = array();
 	
-	public function register_event($type, $identifier) {
-		$id = $this->event_listener_id_counter++;
-		array_push($this->registered_events, array($type, $identifier, $id));
-		return $id;
-	}
-	public function unregister_event($id) {
-		for ($i = 0; $i < count($this->registered_events); $i++)
-			if ($this->registered_events[$i][2] == $id) {
-				array_splice($this->registered_events, $i, 1);
-				$i--;
-			}
-		for ($i = 0; $i < count($this->pending_events); $i++)
-			if ($this->pending_events[$i][0] == $id) {
-				array_splice($this->pending_events, $i, 1);
-				$i--;
-			}
-	}
-	
-	public function signal_event($type, $identifier, $data) {
-		foreach ($this->registered_events as $ev)
-			if ($ev[0] == $type && $ev[1] == $identifier)
-				array_push($this->pending_events, array($ev[2], $data));
+	public function signal_event($type, $data) {
+		array_push($this->pending_events, array($type, $data));
 	}
 
 	/**
@@ -90,7 +68,14 @@ class PNApplication {
 		echo "if (typeof window.top.status_manager != 'undefined'){";
 		foreach (PNApplication::$errors as $e)
 			echo "window.top.status_manager.add_status(new window.top.StatusMessageError(null,".json_encode($e).",5000));";
-		echo "}"; 
+		echo "};";
+		echo "window.page_errors=[";
+		$first = true;
+		foreach (PNApplication::$errors as $e) {
+			if ($first) $first = false; else echo ",";
+			echo json_encode($e);
+		}
+		echo "];";
 		echo "</script>";
 	}
 	/**
@@ -113,7 +98,7 @@ class PNApplication {
 			$first = true;
 			foreach (PNApplication::$instance->pending_events as $ev) {
 				if ($first) $first = false; else echo ",";
-				echo "{id:".json_encode($ev[0]).",data:".json_encode($ev[1])."}";
+				echo "{type:".json_encode($ev[0]).",data:".json_encode($ev[1])."}";
 			}
 			echo "],";
 			PNApplication::$instance->pending_events = array();

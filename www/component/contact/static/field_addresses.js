@@ -1,14 +1,18 @@
-function field_addresses(data,editable,onchanged,onunchanged,config){
-	
-	if (editable) {
-		this.element = document.createElement("TABLE");
+function field_addresses(data,editable,config){
+	typed_field.call(this, data, editable, config);
+}
+field_addresses.prototype = new typed_field();
+field_addresses.prototype.constructor = field_addresses;		
+field_addresses.prototype._create = function(data) {
+	if (this.editable) {
+		this.table = document.createElement("TABLE"); this.element.appendChild(this.table);
 		var t=this;
 		require("addresses.js",function() {
-			new addresses(t.element, false, data.table, data.key_name, data.key_value, data.addresses, true, true, true);
+			new addresses(t.table, false, data.table, data.key_name, data.key_value, data.addresses, true, true, true);
 		});
 	} else {
-		this.element = document.createElement("TABLE");
-		this.element.appendChild(this.tr = document.createElement("TR"));
+		this.table = document.createElement("TABLE"); this.element.appendChild(this.table);
+		this.table.appendChild(this.tr = document.createElement("TR"));
 		this.setData = function(data) {
 			this.data = data;
 			while (this.tr.childNodes.length > 0) this.tr.removeChild(this.tr.childNodes[0]);
@@ -29,9 +33,4 @@ function field_addresses(data,editable,onchanged,onunchanged,config){
 			return this.data;
 		};
 	}
-	
-}
-if (typeof typed_field != 'undefined') {
-	field_addresses.prototype = new typed_field();
-	field_addresses.prototype.constructor = field_addresses;		
-}
+};

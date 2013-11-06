@@ -1,3 +1,4 @@
+/* #depends[typed_field.js] */
 function field_html(data,editable,config) {
 	typed_field.call(this, data, editable, config);
 }

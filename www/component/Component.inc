@@ -38,7 +38,7 @@ abstract class Component {
 			// development mode only
 			if ($this->name <> "development" && $this->name <> "test") {
 				// only allow the login page
-				if ($this->name <> "application" || $path <> "enter") {
+				if ($this->name <> "application" || ($path <> "enter" && $path <> "logout")) {
 					echo "<script type='text/javascript'>window.top.location.reload();</script>";
 					return;
 				}
@@ -95,7 +95,7 @@ abstract class Component {
 	 */
 	public final function service($path) {
 		// development mode only
-		if ($this->name <> "development" && $this->name <> "test") {
+		if ($this->name <> "development" && $this->name <> "test" && !($this->name == "application" && $path == "get_static_resources")) {
 			// check the user is logged
 			if (PNApplication::$instance->user_management->username == null) {
 				header("Content-Type: text/json;charset=UTF-8", true, 403);

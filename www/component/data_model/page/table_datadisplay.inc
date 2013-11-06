@@ -1,5 +1,6 @@
 <?php
 require_once("component/data_model/Model.inc");
+require_once("component/data_model/page/utils.inc");
 
 function table_datadisplay_page_from_key(&$page, $table, $key, $sub_models = null) {
 	if (is_string($table)) {
@@ -33,16 +34,7 @@ function table_datadisplay_page(&$page, $table, &$row, $sub_models = null) {
 		$value = $data->getData($row[$table->getPrimaryKey()->name], $sub_model, $row);
 		$id = $page->generate_id();
 		echo "<td id='".$id."'>";
-		$typed_field = $data->getTypedField($sub_model);
-		$page->add_javascript("/static/widgets/typed_field/typed_field.js");
-		$page->add_javascript("/static/widgets/typed_field/".$typed_field[0].".js");
-		if ($data->isEditable()) {
-			$page->add_javascript("/static/data_model/editable_datadisplay.js");
-			$page->add_javascript("/static/data_model/DataDisplay.js");
-			$page->onload("new editable_datadisplay('".$id."',".$data->javascriptDataDisplay($sub_model).",null,".json_encode($row[$table->getPrimaryKey()->name]).",".json_encode($value).");");
-		} else {
-			$page->onload("new ".$typed_field[0]."(".json_encode($value).",false,null,null,".$typed_field[1]);
-		}
+		datamodel_datadisplay($page, $data, $row[$table->getPrimaryKey()->name], $value, $sub_model, $id, true);
 		echo "</td>";
 		echo "</tr>";
 	}

@@ -448,10 +448,13 @@ table.grid>tbody>tr:nth-child(odd).selected {
 	border: 1px solid black;
 	background-color: white;
 }
+.date_picker>div:first-child {
+	padding: 0px 5px 0px 5px;
+	background-color: #C0C0FF;
+}
 .date_picker select {
 	font-size: 11px;
-	margin: 0px;
-	padding: 0px;
+	border: none;
 }
 .date_picker .small_calendar {
 	border: 0px;

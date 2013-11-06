@@ -28,7 +28,21 @@ class widgets extends Component {
 			return array("field_enum",$args);
 		}
 		if ($col instanceof \datamodel\ColumnDate) {
-			return array("field_date","{}");
+			$cfg = "{can_be_empty:".($col->can_be_null ? "true" : "false");
+			if ($col->minimum_date <> null) {
+				if (ctype_digit(substr($col->minimum_date,0,1)))
+					$cfg .= ",minimum:".json_encode($col->minimum_date);
+				else
+					$cfg .= ",minimum_cell:".json_encode($col->minimum_date);
+			}
+			if ($col->maximum_date <> null) {
+				if (ctype_digit(substr($col->maximum_date,0,1)))
+					$cfg .= ",maximum:".json_encode($col->maximum_date);
+				else
+					$cfg .= ",maximum_cell:".json_encode($col->maximum_date);
+			}
+			$cfg .= "}";
+			return array("field_date",$cfg);
 		}
 		return array("field_text", "{}");
 	}

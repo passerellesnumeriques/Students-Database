@@ -1,4 +1,5 @@
 <?php 
+require_once("component/data_model/page/utils.inc");
 $this->add_javascript("/static/widgets/vertical_layout.js");
 $this->add_javascript("/static/widgets/horizontal_menu.js");
 $this->add_javascript("/static/widgets/context_menu.js");
@@ -20,7 +21,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	<div layout='28' id='pn_application_header'>
 		<table style='width:100%;height:100%;border-collapse:collapse;border-spacing:0;'>
 			<tr>
-				<td width='100%' style='padding-left:40px'>
+				<td width='100%' style='padding-left:40px' align=center>
 					<div class='horizontal_menu' id='application_menu'>
 						<div class='application_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/selection/page/home';"><img src='/static/selection/selection_16.png'/>Selection</div>
 						<div class='application_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/training_education/page/home';"><img src='/static/students/student_16.png'/>Training & Education</div>
@@ -34,13 +35,21 @@ if (PNApplication::$instance->current_domain == "Dev") {
 					</form>
 				</td>
 				<td nowrap="nowrap" class='pn_application_header_section' style='cursor:pointer' onclick="new context_menu('user_settings_menu').showBelowElement(this, true);">
-					<span id='user_first_name'><?php echo PNApplication::$instance->user_people->first_name;?></span> <span id='user_last_name'><?php echo PNApplication::$instance->user_people->last_name;?></span>
+					<span id='user_first_name'></span> <span id='user_last_name'></span>
+					<?php 
+					$people = SQLQuery::create()->bypass_security()->select("People")->where("id",PNApplication::$instance->user_people->user_people_id)->execute_single_row();
+					datamodel_cell($this, "user_first_name", false, "People", "first_name", PNApplication::$instance->user_people->user_people_id, null, $people["first_name"]);
+					datamodel_cell($this, "user_last_name", false, "People", "last_name", PNApplication::$instance->user_people->user_people_id, null, $people["last_name"]);
+					?>
 					<img src='/static/application/settings.png' style='vertical-align:bottom'/>
 					<div id='user_settings_menu' class='context_menu'>
 						<div class='context_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id?>';">
 							<img src='/static/people/profile_16.png'/> Profile
 						</div>
-						<div class='context_menu_item' onclick="location='/dynamic/application/page/logout';">
+						<div class='context_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/calendar/page/calendars';">
+							<img src='/static/calendar/event.png'/> Calendars
+						</div>
+						<div class='context_menu_item' onclick="location='/dynamic/application/page/logout';" id='user_logout_menu'>
 							<img src='/static/application/logout.gif'/> Logout
 						</div>
 					</div>
@@ -58,10 +67,6 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	<iframe layout='fill' src='/dynamic/application/page/home' id='pn_application_content' name='pn_application_content' frameBorder=0 onload='pn_application_content_load();'></iframe>
 	<div layout='17' id='pn_application_footer'>
 		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
-<!-- 		<?php if (PNApplication::$instance->current_domain <> "Dev") {?>
-		<span id='application_loading' style='position:fixed;bottom:1px;left:2px;z-index:5;visibility:hidden'><span>Loading application</span> <iframe style='width:100px;height:10px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=10000'></iframe><span id='application_loading_text'></span></span>
-		<?php } ?>
- -->
 		<span style='position:fixed;bottom:0px;right:3px;'>
 			<span id='google_status'></span>
 		</span>
@@ -70,6 +75,9 @@ if (PNApplication::$instance->current_domain == "Dev") {
 			<span id='debug_status'></span>
 		</span>
 		<?php } ?>
+
+		<span style='position:fixed;bottom:0px;left:3px;' id='background_loading_application'>
+		</span>
 	</div>
 </div>
 <a href="/dynamic/application/page/home" target="pn_application_content" style='position:fixed;top:-2px;left:2px'>
@@ -90,12 +98,6 @@ setBackgroundGradient(
 	 {pos:100,color:'#686898'}
 	]
 );
-window.pnapplication.register_app_event_listener("data_model_data_changed","People.first_name(<?php echo PNApplication::$instance->user_people->user_people_id;?>)",function(value){
-	document.getElementById('user_first_name').innerHTML = value;
-});
-window.pnapplication.register_app_event_listener("data_model_data_changed","People.last_name(<?php echo PNApplication::$instance->user_people->user_people_id;?>)",function(value){
-	document.getElementById('user_last_name').innerHTML = value;
-});
 function pn_application_content_unload() {
 	if (window.pn_application_content_hider != null) return;
 	var frame = document.getElementById('pn_application_content');
@@ -126,4 +128,8 @@ function pn_application_content_load() {
 	} else
 		document.body.removeChild(div);
 }
+
+require("load_static.js",function(){
+	new load_static_resources('background_loading_application');
+});
 </script>

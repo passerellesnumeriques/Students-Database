@@ -1,9 +1,11 @@
+/* #depends[typed_field.js] */
 function field_list_of_fixed_values(data,editable,config) {
 	if (data == null) data = [];
 	typed_field.call(this, data, editable, config);
 }
 field_list_of_fixed_values.prototype = new typed_field();
 field_list_of_fixed_values.prototype.constructor = field_list_of_fixed_values;		
+field_list_of_fixed_values.prototype.canBeNull = function() { return true; };		
 field_list_of_fixed_values.prototype._getValue = function(key) {
 	var value = null;
 	for (var j = 0; j < this.config.possible_values.length; ++j)

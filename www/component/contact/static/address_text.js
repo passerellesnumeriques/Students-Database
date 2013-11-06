@@ -1,5 +1,5 @@
-if (typeof require != 'undefined')
-	require("geography.js");
+if (typeof window.top.require != 'undefined')
+	window.top.require("geography.js");
 
 function address_text(address){
 	this.element = document.createElement("DIV");
@@ -14,7 +14,7 @@ function address_text(address){
 		}
 		if(address.unit != null){
 			if(!first) text += ", ";
-			text += "Unit "+t.result.unit;
+			text += "Unit "+address.unit;
 			first = false;
 		}
 		var div = document.createElement("DIV");
@@ -30,7 +30,7 @@ function address_text(address){
 			first = false;
 		}
 		if(address.street_name != null){
-			if(!first) text += " ";
+			if(!first) text += ", ";
 			text += address.street_name;
 			first = false;
 		}
@@ -57,7 +57,7 @@ function address_text(address){
 	if (address.country != null) {
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
-		require("geography.js",function() {
+		window.top.require("geography.js",function() {
 			window.top.geography.getCountryName(address.country,function(country_name){
 				div.appendChild(document.createTextNode(country_name.uniformFirstLetterCapitalized()));
 			});

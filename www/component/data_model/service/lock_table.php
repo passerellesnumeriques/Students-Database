@@ -24,7 +24,7 @@ class service_lock_table extends Service {
 		require_once("component/data_model/Model.inc");
 		$model = DataModel::get();
 		$table = $model->getTable($table); // here check is done is the user can access this table
-		if (!$table->canAdd() || !$table->canRemove()) {
+		if (!$table->mayInsert() || !$table->mayRemove()) {
 			PNApplication::error("Access denied to add or remove in table '".$table->getName()."'");
 			return;
 		}

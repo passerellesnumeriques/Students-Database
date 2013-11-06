@@ -10,13 +10,17 @@ class service_execute_functionalities_scenario extends Service {
 		$cname = $input["component"];
 		$scenario_path = $input["scenario"];
 		require_once("component/test/TestScenario.inc");
-		require_once("component/".$cname."/test/functionalities".$scenario_path);
-		$i = strrpos($scenario_path, "/");
-		$scenario_class = substr($scenario_path, $i+1);
-		$scenario_class = substr($scenario_class, 0, strlen($scenario_class)-4);
+		require_once("component/".$cname."/test/functionalities/".$scenario_path.".php");
+		$scenario_class = str_replace("/","_",$scenario_path);
 		$scenario = new $scenario_class();
-		$results = $scenario->run();
-		echo json_encode($results);
+		$step = intval($input["step"]);
+		$data = @$input["data"];
+		if ($data == null) $data = array();
+		if ($step == -1)
+			$error = $scenario->init($data);
+		else 
+			$error = $scenario->run_step($step, $data);
+		echo "{error:".json_encode($error).",data:".json_encode($data)."}";
 	}
 		
 }

@@ -1,5 +1,12 @@
-<?php 
-$theme = "default"; // TODO
+<?php
+global $theme; 
+if (isset($_COOKIE["theme"]))
+	$theme = $_COOKIE["theme"];
+else {
+	$theme = "default";
+	setcookie("theme",$theme,time()+365*24*60*60,"/");
+}
+
 class theme extends Component {
 
 	public static $style;
@@ -14,6 +21,8 @@ theme::$icons_16 = array(
 	"back" => 			"/static/theme/".$theme."/icons_16/left.png",
 	"cancel" => 		"/static/theme/".$theme."/icons_16/close.png",
 	"close" => 			"/static/theme/".$theme."/icons_16/close.png",
+	"copy" => 			"/static/theme/".$theme."/icons_16/copy.gif",
+	"date_picker" => 	"/static/theme/".$theme."/icons_16/date_picker.png",
 	"edit" => 			"/static/theme/".$theme."/icons_16/edit.png",
 	"error" => 			"/static/theme/".$theme."/icons_16/error.png",
 	"export" =>			"/static/theme/".$theme."/icons_16/export.png",

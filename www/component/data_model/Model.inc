@@ -98,7 +98,9 @@ class DataModel {
 				return $sm->tables[$name];
 		throw new \Exception("Unknown table '".$name."'");
 	}
-	/** should be used only in very specific places, while ensuring that this will not give privileges to the user */
+	/** should be used only in very specific places, while ensuring that this will not give privileges to the user
+	 * @return datamodel\Table[] 
+	 */
 	public function &internalGetTables() {
 		$a = array();
 		foreach ($this->tables as $name=>&$table)

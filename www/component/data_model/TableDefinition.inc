@@ -1,20 +1,48 @@
 <?php
 namespace datamodel {
+/**
+ * 3 types of tables:
+ *  - with a primary key which auto-increment
+ *  - with a foreign key which is also a primary key (1 to 1 relation)
+ *  - a table joining 2 other tables (1 to n relation), where only add and remove can be done 
+ *
+ * Access rights: by default, nothing can be done, then access can be allowed:
+ *  - read:
+ *    - one specific right give read access: apply to all entries
+ *    - only specific rows can be read: where clause will be automatically added to any select to apply the restrictions
+ *    - some columns may have specific restrictions
+ *  - write:
+ *    - one specific right give modification access: apply to all entries
+ *    - only specific rows can be modified: first a select will be done based on primary key to update, then filtered so only the rows allowed to be modified will remain in the update
+ *  - add:
+ *    - one specific right give add access: apply to all entries
+ *    - filter: check inserted values
+ *  - remove:
+ *    - one specific right give remove access: apply to all entries
+ *    - only specific rows with filters: same process as for write access 
+ */
 class Table {
 
+	/** @var \DataModel */
 	private $model;
 	private $name;
 	private $columns = array();
 	private $indexes = array();
-	private $table_read_access = array();
-	public $table_specific_read_access = array();
-	private $table_add_access = array();
-	private $table_remove_access = array();
-	private $fields_read_access = array();
-	private $fields_write_access = array();
+	private $primary_key = null;
+	
+	private $read_access_rights = array();
+	private $read_access_filters = array();
+	private $read_column_access_rights = array();
+	private $write_access_rights = array();
+	private $write_access_filters = array();
+	private $add_access_rights = array();
+	private $add_access_filters = array();
+	private $remove_access_rights = array();
+	private $remove_access_filters = array();
+	
 	private $is_customized = false;
 	private $customization = array();
-	private $unique_fields = null;
+	
 	private $display_handler = array();
 	
 	public $_key_submodels = array();
@@ -28,229 +56,10 @@ class Table {
 		array_push($this->_key_submodels, $sm);
 	}
 
-	/** Add a primary key (integer ID)
-	 *  @return \datamodel\Table
-	 */
-	public function addPrimaryKey($name, $size=32) {
-		$c = new PrimaryKey($this, $name, $size);
-		array_push($this->columns, $c);
-		array_push($this->indexes, array("primary",$name));
-		return $this;
-	}
 
 	/**
-	 * Add a foreign key to the given table 
-	 * @param string $name name of the foreign key
-	 * @param string $table table pointed by the foreign key
-	 * @param boolean $remove_foreign_when_primary_removed indicates if the row in this table should be removed when the associated primary key is removed.
-	 * @param boolean $remove_primary_when_foreign_removed indicates if the associated primary key should be removed when a row in this table is removed.
-	 * @param boolean $multiple indicates if several rows in this table can exist with the same foreign key (n to 1 relation)
-	 * @param boolean|null $can_be_null indicates if this foreign key can be null. If not specified (null) it will be considered that the foreign key can be null if $remove_foreign_when_primary_removed is set to false (example of overriding this info is when we have a foreign key pointing to the same table to create a tree, and the root level needs to be null).
-	 * @return \datamodel\Table
+	 * @return \DataModel
 	 */
-	public function addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null = null) {
-		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null);
-		array_push($this->columns, $c);
-		return $this;
-	}
-
-	/** Add an integer column. Size is in bits
-	 * @return \datamodel\Table 
-	 */
-	public function addInteger($name, $size=32, $min = null, $max = null, $can_be_null = true, $unique = false) {
-		$c = new ColumnInteger($this, $name, $size, $min, $max, $can_be_null, $unique);
-		array_push($this->columns, $c);
-		return $this;
-	}
-
-	/** Add a boolean column */
-	public function addBoolean($name, $can_be_null = true) {
-		$c = new ColumnBoolean($this, $name, $can_be_null);
-		array_push($this->columns, $c);
-		return $this;
-	}
-
-	/** Add a string column */
-	public function addString($name, $max_length=255, $min_length = 0, $can_be_null = true, $unique = false) {
-		$c = new ColumnString($this, $name, $max_length, $min_length, $can_be_null, $unique);
-		array_push($this->columns, $c);
-		return $this;
-	}
-
-	/** Add an enum column, with the given possible values */
-	public function addEnum($name, $values, $can_be_null = true, $unique = false) {
-		$c = new ColumnEnum($this, $name, $values);
-		array_push($this->columns, $c);
-		return $this;
-	}
-
-	/** Add a date column */
-	public function addDate($name, $can_be_null = true, $unique = false) {
-		$c = new ColumnDate($this, $name, $can_be_null, $unique);
-		array_push($this->columns, $c);
-		return $this;
-	}
-
-	/** Add a time column */
-	public function addTime($name, $can_be_null = true, $unique = false) {
-		$c = new ColumnTime($this, $name, $can_be_null, $unique);
-		array_push($this->columns, $c);
-		return $this;
-	}
-	
-	public function &customizable() {
-		$this->is_customized = true;
-		return $this;
-	}
-	
-	public function &setUnique($fields) {
-		$this->unique_fields = $fields;
-		return $this;
-	}
-	
-	/** Indicate one or several columns should be indexed for faster access.
-	 * As parameters, this method expects the list of columns to be indexed together.
-	 * @return \datamodel\Table
-	 */
-	public function &addIndex() {
-		$nb = func_num_args();
-		if ($nb == 1)
-			array_push($this->indexes, array(func_get_arg(0),func_get_arg(0)));
-		else {
-			$a = array("index".count($this->indexes));
-			for ($i = 0; $i < $nb; $i++)
-				array_push($a, func_get_arg($i));
-			array_push($this->indexes, $a);
-		}
-		return $this;
-	}
-
-	public function &allowReadAccess() {
-		$this->table_read_access = null;
-		return $this;
-	}
-	public function &restrictReadAccess($right_name, $right_value) {
-		$this->table_read_access[$right_name] = $right_value;
-		return $this;
-	}
-	public function &allowSpecificReadAccess($field, $value_func) {
-		array_push($this->table_specific_read_access, array($field, $value_func));
-		return $this;
-	}
-	public function &restrictAddAccess($right_name, $right_value) {
-		$this->table_add_access[$right_name] = $right_value;
-		return $this;
-	}
-	public function &restrictRemoveAccess($right_name, $right_value) {
-		$this->table_remove_access[$right_name] = $right_value;
-		return $this;
-	}
-	public function &restrictFieldReadAccess($field, $right_name, $right_value) {
-		if (!isset($this->fields_read_access[$field]))
-			$this->fields_read_access[$field] = array();
-		$this->fields_read_access[$field][$right_name] = $right_value;
-		return $this;
-	}
-	public function &restrictFieldWriteAccess($field, $right_name, $right_value) {
-		if (!isset($this->fields_write_access[$field]))
-			$this->fields_write_access[$field] = array();
-		$this->fields_write_access[$field][$right_name] = $right_value;
-		return $this;
-	}
-	public function &restrictWriteAccess($right_name, $right_value) {
-		foreach ($this->columns as $col)
-			$this->restrictFieldWriteAccess($col->name, $right_name, $right_value);
-		return $this;
-	}
-	public function &preventWriteAccess($field) {
-		$this->fields_write_access[$field] = false;
-	}
-	public function &noRestriction() {
-		$this->table_read_access = null;
-		$this->fields_read_access = array();
-		foreach ($this->columns as $col)
-			$this->fields_write_access[$col->name] = true;
-		$this->table_add_access = null;
-		$this->table_remove_access = null;
-		return $this;
-	}
-
-	public function canAccess() {
-		if ($this->table_read_access === null) return true;
-		if (count($this->table_specific_read_access) > 0) return true;
-		if (count($this->table_read_access) == 0) return false;
-		foreach ($this->table_read_access as $right_name=>$right_value)
-			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
-				return false;
-		return true;
-	}
-	public function canReadAll() {
-		if ($this->table_read_access === null) return true;
-		if (count($this->table_read_access) == 0) return false;
-		foreach ($this->table_read_access as $right_name=>$right_value)
-			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
-				return false;
-		return true;
-	}
-	public function canAccessField($field) {
-		if (!isset($this->fields_read_access[$field])) return true;
-		foreach ($this->fields_read_access[$field] as $right_name=>$right_value)
-			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
-			return false;
-		return true;
-	}
-	public function canModifyField($field) {
-		if (!isset($this->fields_write_access[$field])) return false;
-		$val = $this->fields_write_access[$field];
-		if ($val === true) return true;
-		if ($val === false) return false;
-		foreach ($val as $right_name=>$right_value)
-			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
-				return false;
-		return true;
-	}
-	public function canAdd() {
-		if ($this->table_add_access === null) return true;
-		if (count($this->table_add_access) == 0)
-			return false;
-		foreach ($this->table_add_access as $right_name=>$right_value)
-			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
-				return false;
-		return true;
-	}
-	public function canRemove() {
-		if ($this->table_remove_access === null) return true;
-		if (count($this->table_remove_access) == 0)
-			return false;
-		foreach ($this->table_remove_access as $right_name=>$right_value)
-			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
-			return false;
-		return true;
-	}
-
-	public function &setDisplayHandler($coming_from, $handler) {
-		$this->display_handler[$coming_from] = $handler;
-		$handler->setTable($this);
-		return $this;
-	}
-	/**
-	 * @param string|null $coming_from the name of the foreign key or null
-	 * @return DataDisplayHandler|null
-	 */
-	public function getDisplayHandler($coming_from) {
-		if ($coming_from <> null && isset($this->display_handler[$coming_from]))
-			return $this->display_handler[$coming_from];
-		return @$this->display_handler[null];
-	}
-
-	public function hide($field) {
-		for ($i = 0; $i < count($this->columns); $i++)
-			if ($this->columns[$i]->name == $field) {
-				array_splice($this->columns, $i, 1);
-				return;
-			}
-	}
-
 	public function &getModel() { return $this->model; }
 	public function getName() { return $this->name; }
 	public function getSQLName($sub_models) {
@@ -266,14 +75,6 @@ class Table {
 		return $this->name;
 	}
 	
-	public function getPrimaryKey() {
-		foreach ($this->columns as $c)
-			if ($c instanceof PrimaryKey) {
-				if (!$this->canAccessField($c->name)) throw new \Exception("Access denied");
-				return $c;
-			}
-		return null;
-	}
 	/**
 	 * @param string $name name of the column to get
 	 * @throws \Exception in case the column is not accessible based on the rights of the user
@@ -283,7 +84,7 @@ class Table {
 		$columns = $this->_getColumns($sub_models);
 		foreach ($columns as $c)
 			if ($c->name == $name) {
-				if (!$this->canAccessField($c->name)) throw new \Exception("Access denied");
+				if (!$this->canAccessColumn($c->name)) throw new \Exception("Access denied");
 				return $c;
 			}
 		return null;
@@ -298,7 +99,7 @@ class Table {
 		$columns = $this->_getColumns($sub_models);
 		$cols = array();
 		foreach ($columns as $c)
-			if ($this->canAccessField($c->name))
+			if ($this->canAccessColumn($c->name))
 				array_push($cols, $c);
 		return $cols;
 	}
@@ -309,7 +110,12 @@ class Table {
 		return $this->getColumns($sub_models);
 	}
 	
-	public function internalGetColumns($sub_models = null) { 
+	public function internalGetColumnsFor($sub_model = null) {
+		if ($sub_model == null) $sub_models = null;
+		else $sub_models = array($this->model->getParentTable()=>$sub_model);
+		return $this->_getColumns($sub_models);
+	}
+	public function internalGetColumns($sub_models = null) {
 		return $this->_getColumns($sub_models);
 	}
 	public function internalGetColumn($name, $sub_models = null) {
@@ -333,6 +139,290 @@ class Table {
 			$this->customization[$this->name] = $this->load_customization($this->name);
 		}
 		return array_merge($this->columns, $this->customization[$this->name]);
+	}
+	
+	/** Add a primary key (integer ID)
+	 *  @return \datamodel\Table
+	 */
+	public function &addPrimaryKey($name, $size=32) {
+		$c = new PrimaryKey($this, $name, $size);
+		array_push($this->columns, $c);
+		array_push($this->indexes, array("primary",$name));
+		$this->primary_key = $c;
+		return $this;
+	}
+
+	/**
+	 * Add a foreign key to the given table 
+	 * @param string $name name of the foreign key
+	 * @param string $table table pointed by the foreign key
+	 * @param boolean $remove_foreign_when_primary_removed indicates if the row in this table should be removed when the associated primary key is removed.
+	 * @param boolean $remove_primary_when_foreign_removed indicates if the associated primary key should be removed when a row in this table is removed.
+	 * @param boolean $multiple indicates if several rows in this table can exist with the same foreign key (n to 1 relation)
+	 * @param boolean|null $can_be_null indicates if this foreign key can be null. If not specified (null) it will be considered that the foreign key can be null if $remove_foreign_when_primary_removed is set to false (example of overriding this info is when we have a foreign key pointing to the same table to create a tree, and the root level needs to be null).
+	 * @return \datamodel\Table
+	 */
+	public function &addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null = null) {
+		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null);
+		array_push($this->columns, $c);
+		return $this;
+	}
+	
+	public function &setPrimary($name) {
+		$c = null;
+		foreach ($this->columns as $col) if ($col->name == $name) { $c = $col; break; }
+		if ($c == null) throw new \Exception("Unknown column '".$name."' in table '".$this->name."': setPrimary");
+		if (!$c->unique) throw new \Exception("Column '".$name."' in table '".$this->name."' cannot be a primary: it is not unique");
+		$this->primary_key = $c;
+		return $this;
+	}
+
+	public function getPrimaryKey() {
+		return $this->primary_key;
+	}
+	
+	/** Add an integer column. Size is in bits
+	 * @return \datamodel\Table 
+	 */
+	public function &addInteger($name, $size=32, $min = null, $max = null, $can_be_null = true, $unique = false) {
+		$c = new ColumnInteger($this, $name, $size, $min, $max, $can_be_null, $unique);
+		array_push($this->columns, $c);
+		return $this;
+	}
+
+	/** Add a boolean column */
+	public function &addBoolean($name, $can_be_null = true) {
+		$c = new ColumnBoolean($this, $name, $can_be_null);
+		array_push($this->columns, $c);
+		return $this;
+	}
+
+	/** Add a string column */
+	public function &addString($name, $max_length=255, $min_length = 0, $can_be_null = true, $unique = false) {
+		$c = new ColumnString($this, $name, $max_length, $min_length, $can_be_null, $unique);
+		array_push($this->columns, $c);
+		return $this;
+	}
+
+	/** Add an enum column, with the given possible values */
+	public function &addEnum($name, $values, $can_be_null = true, $unique = false) {
+		$c = new ColumnEnum($this, $name, $values);
+		array_push($this->columns, $c);
+		return $this;
+	}
+
+	/** Add a date column */
+	public function &addDate($name, $can_be_null = true, $unique = false, $minimum_date = null, $maximum_date = null) {
+		$c = new ColumnDate($this, $name, $can_be_null, $unique, $minimum_date, $maximum_date);
+		array_push($this->columns, $c);
+		return $this;
+	}
+
+	/** Add a time column */
+	public function &addTime($name, $can_be_null = true, $unique = false) {
+		$c = new ColumnTime($this, $name, $can_be_null, $unique);
+		array_push($this->columns, $c);
+		return $this;
+	}
+	
+	/** Indicate one or several columns should be indexed for faster access.
+	 * As parameters, this method expects the list of columns to be indexed together.
+	 * @return \datamodel\Table
+	 */
+	public function &addIndex() {
+		$nb = func_num_args();
+		if ($nb == 1)
+			array_push($this->indexes, array(func_get_arg(0),func_get_arg(0)));
+		else {
+			$a = array("index".count($this->indexes));
+			for ($i = 0; $i < $nb; $i++)
+				array_push($a, func_get_arg($i));
+			array_push($this->indexes, $a);
+		}
+		return $this;
+	}
+
+	
+	public function &addReadAccess($right_name, $right_value) {
+		array_push($this->read_access_rights, array($right_name, $right_value));
+		return $this;
+	}
+	/**
+	 * Add a filter which will add where conditions in every select
+	 * @param function $filter function taking 2 parameters: the SQLQuery to modify, and the table alias
+	 */
+	public function &addReadFilter($filter) {
+		array_push($this->read_access_filters, $filter);
+		return $this;
+	}
+	public function &allowReadAccess() {
+		$this->read_access_rights = null;
+		return $this;
+	}
+	public function &addColumnReadAccess($column_name, $right_name, $right_value) {
+		if (!isset($this->read_column_access_rights[$column_name]))
+			$this->read_column_access_rights[$column_name] = array();
+		array_push($this->read_column_access_rights[$column_name], array($right_name, $right_value));
+		return $this;
+	}
+	public function canAccess() {
+		if ($this->read_access_rights === null) return true;
+		if (count($this->read_access_filters) > 0) return true;
+		foreach ($this->read_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+		foreach ($this->read_column_access_rights as $colname=>$list)
+			foreach ($list as $r)
+				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+		return false;
+	}
+	public function canAccessColumn($column_name) {
+		if ($this->read_access_rights === null) return true;
+		foreach ($this->read_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+		if (count($this->read_column_access_rights) > 0) {
+			if (isset($this->read_column_access_rights[$column_name])) {
+				foreach ($this->read_column_access_rights[$column_name] as $r)
+					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+				return false;
+			}
+		}
+		return count($this->read_access_filters) > 0;
+	}
+	public function filterReadAccess(&$q, $table_alias) {
+		if ($this->read_access_rights === null) return;
+		foreach ($this->read_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return; // full access
+		foreach ($this->read_access_filters as $filter)
+			$filter($q, $table_alias);
+	}
+	
+	public function &addWriteAccess($right_name, $right_value) {
+		array_push($this->write_access_rights, array($right_name, $right_value));
+		return $this;
+	}
+	public function &addWriteFilter($prepare_select, $filter) {
+		array_push($this->write_access_filters, array($prepare_select, $filter));
+		return $this;
+	}
+	public function canModifyAny() {
+		foreach ($this->write_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return true;
+		return false;
+	}
+	public function mayModify() {
+		if ($this->canModifyAny()) return true;
+		if (count($this->write_access_filters) > 0) return true;
+		return false;
+	}
+	public function prepareSelectToDetermineWriteAccess(&$q, $table_alias) {
+		foreach ($this->write_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return false; // full access
+		foreach ($this->write_access_filters as $f) {
+			$prepare = $f[0];
+			$prepare($q, $table_alias);
+		}
+		return true;
+	}
+	public function filterWriteAccess($rows) {
+		foreach ($this->write_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return $rows; // full access
+		foreach ($this->write_access_filters as $f) {
+			$filter = $f[1];
+			$rows = $filter($rows);
+		}
+		return $rows;
+	}
+	
+	public function &addInsertAccess($right_name, $right_value) {
+		array_push($this->add_access_rights, array($right_name,$right_value));
+		return $this;
+	}
+	public function &addInsertFilter($filter) {
+		array_push($this->add_access_filters, $filter);
+		return $this;
+	}
+	public function mayInsert() {
+		if ($this->canInsertAll()) return true;
+		return count($this->add_access_filters) > 0;
+	}
+	public function canInsertAll() {
+		foreach ($this->add_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+		return false;
+	}
+	public function acceptInsert($values) {
+		if ($this->canInsertAll()) return true;
+		foreach ($this->add_access_filters as $filter)
+			if ($filter($values)) return true;
+		return false;
+	}
+	
+	public function &addRemoveAccess($right_name, $right_value) {
+		array_push($this->remove_access_rights, array($right_name,$right_value));
+		return $this;
+	}
+	public function &addRemoveFilter($prepare_select, $check) {
+		array_push($this->remove_access_filters, array($prepare_select, $check));
+		return $this;
+	}
+	public function canRemoveAny() {
+		foreach ($this->remove_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return true;
+		return false;
+	}
+	public function mayRemove() {
+		if ($this->canRemoveAny()) return true;
+		return count($this->remove_access_filters) > 0;
+	}
+	public function prepareSelectToDetermineRemoveAccess(&$q, $table_alias, &$locks) {
+		foreach ($this->remove_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return false; // full access
+		foreach ($this->remove_access_filters as $f) {
+			$prepare = $f[0];
+			$prepare($q, $table_alias, $locks);
+		}
+		return true;
+	}
+	public function filterRemoveAccess($rows) {
+		foreach ($this->remove_access_rights as $r)
+			if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return $rows; // full access
+		foreach ($this->remove_access_filters as $f) {
+			$filter = $f[1];
+			$rows = $filter($rows);
+		}
+		return $rows;
+	}
+			
+	
+
+	public function &setDisplayHandler($coming_from, $handler) {
+		$this->display_handler[$coming_from] = $handler;
+		$handler->setTable($this);
+		return $this;
+	}
+	/**
+	 * @param string|null $coming_from the name of the foreign key or null
+	 * @return DataDisplayHandler|null
+	 */
+	public function getDisplayHandler($coming_from) {
+		if ($coming_from <> null && isset($this->display_handler[$coming_from]))
+			return $this->display_handler[$coming_from];
+		return @$this->display_handler[null];
+	}
+
+	
+	public function hide($field) {
+		for ($i = 0; $i < count($this->columns); $i++)
+			if ($this->columns[$i]->name == $field) {
+				array_splice($this->columns, $i, 1);
+				return;
+			}
+	}
+
+	
+	public function &customizable() {
+		$this->is_customized = true;
+		return $this;
 	}
 	private function load_customization($table_name) {
 		$cols = array();
@@ -379,10 +469,6 @@ class Table {
 		return $cols;
 	}
 
-	public function getUnique() {
-		return $this->unique_fields;
-	}
-	
 }
 
 abstract class Column {
@@ -498,10 +584,19 @@ class ColumnEnum extends Column {
 	}
 }
 
+/**
+ * Date column.
+ * minimum and maximum dates are constraints and can be: null, a date, or the name of a date column in the same table
+ */
 class ColumnDate extends Column {
 
-	public function __construct(&$table, $name, $can_be_null = true, $unique = false) {
+	public $minimum_date;
+	public $maximum_date;
+	
+	public function __construct(&$table, $name, $can_be_null = true, $unique = false, $minimum_date = null, $maximum_date = null) {
 		parent::__construct($table, $name, $can_be_null, $unique);
+		$this->minimum_date = $minimum_date;
+		$this->maximum_date = $maximum_date;
 	}
 
 	public function get_sql_type() { return "DATE"; }
@@ -512,7 +607,46 @@ class ColumnDate extends Column {
 			if (!$this->can_be_null) throw new \Exception("You must enter a valid date");
 			return null;
 		}
-		// TODO check if valid format
+		$s = explode("-", $value);
+		if (count($s) <> 3) throw new \Exception("Invalid date format (must be YYYY-MM-DD)");
+		$year = intval($s[0]);
+		$month = intval($s[1]);
+		$day = intval($s[2]);
+		if ($year == 0 || $month == 0 || $day == 0) throw new \Exception("Invalid date format (must be YYYY-MM-DD)");
+		if ($this->minimum_date <> null) {
+			if (ctype_digit(substr($this->minimum_date,0,1))) {
+				$s = explode("-", $this->minimum_date);
+				$y = intval($s[0]);
+				$m = intval($s[1]);
+				$d = intval($s[2]);
+				if ($year < $y) throw new \Exception("Invalid date: minimum is ".$this->minimum_date);
+				if ($year == $y) {
+					if ($month < $m) throw new \Exception("Invalid date: minimum is ".$this->minimum_date);
+					if ($month == $m) {
+						if ($day < $d) throw new \Exception("Invalid date: minimum is ".$this->minimum_date);
+					}
+				}
+			} else {
+				// TODO compare with other column
+			}
+		}
+		if ($this->maximum_date <> null) {
+			if (ctype_digit(substr($this->maximum_date,0,1))) {
+				$s = explode("-", $this->maximum_date);
+				$y = intval($s[0]);
+				$m = intval($s[1]);
+				$d = intval($s[2]);
+				if ($year > $y) throw new \Exception("Invalid date: maximum is ".$this->maximum_date);
+				if ($year == $y) {
+					if ($month > $m) throw new \Exception("Invalid date: maximum is ".$this->maximum_date);
+					if ($month == $m) {
+						if ($day > $d) throw new \Exception("Invalid date: maximum is ".$this->maximum_date);
+					}
+				}
+			} else {
+				// TODO compare with other column
+			}
+		}
 		return $value;
 	}
 }
@@ -621,7 +755,7 @@ abstract class DataDisplayHandler {
 	 * Create a new entry in this table
 	 * @param array $data array of array("name"=>the_data_name,"value"=>the_value)
 	 */
-	public abstract function createEntry($data, $sub_model);
+	public abstract function createEntry($data, $sub_model, $preset_fields);
 	
 }
 abstract class DataDisplay {
@@ -643,6 +777,7 @@ abstract class DataDisplay {
 	public abstract function isSortable();
 	public abstract function isMandatory($sub_model);
 	public function getTypedFilter($sub_model) { return null; }
+	public function getSingleCell() { return null; }
 	
 	public function getNewData() { return null; }
 	
@@ -673,6 +808,8 @@ abstract class DataDisplay {
 		$tf = $this->getTypedFilter($sub_model);
 		$s .= ",".json_encode($tf <> null ? $tf[0] : null);
 		$s .= ",".($tf <> null ? $tf[1] : "null");
+		$s .= ",".json_encode($this->getSingleCell());
+		$s .= ",".json_encode($this->getNewData());
 		$s .= ")";
 		return $s;
 	}
@@ -702,7 +839,7 @@ class FieldsDisplayHandler extends DataDisplayHandler {
 		return $list;
 	}
 	
-	public function createEntry($data, $sub_model) {
+	public function createEntry($data, $sub_model, $preset_fields) {
 		$list = array();
 		foreach ($data as $d) {
 			$found = false;
@@ -726,6 +863,12 @@ class FieldsDisplayHandler extends DataDisplayHandler {
 			}
 			if ($err) return null;
 		}
+		if ($preset_fields <> null)
+			foreach ($preset_fields as $name=>$value) {
+				$col = @$this->table->getColumn($name);
+				if ($col <> null)
+					$list[$name] = $col->validate($value);
+			}
 		$sub_models = null;
 		if ($sub_model <> null) {
 			$sm = $this->table->getModel()->getParentTable();
@@ -766,7 +909,7 @@ class MultipleDisplayHandler extends DataDisplayHandler {
 		return $list;
 	}
 	
-	public function createEntry($data, $sub_model) {
+	public function createEntry($data, $sub_model, $preset_fields) {
 		// TODO ?
 	}
 	
@@ -783,7 +926,7 @@ class StopDataDisplayHandler extends DataDisplayHandler {
 	
 	public function getDisplayableData() { return array(); }
 	public function stopHere() { return true; }
-	public function createEntry($data, $sub_model) {}
+	public function createEntry($data, $sub_model, $preset_fields) {}
 	
 }
 
@@ -792,14 +935,12 @@ class SimpleDataDisplay extends DataDisplay {
 	public $column_name;
 	public $display_name;
 	public $specific_config;
-	public $key_column;
 	
-	public function __construct($handler, $column_name, $display_name, $specific_config = null, $key_column = null) {
+	public function __construct($handler, $column_name, $display_name, $specific_config = null) {
 		parent::__construct($handler);
 		$this->column_name = $column_name;
 		$this->display_name = $display_name;
 		$this->specific_config = $specific_config;
-		$this->key_column = $key_column;
 	}
 	
 	public function getDisplayName() {
@@ -808,6 +949,9 @@ class SimpleDataDisplay extends DataDisplay {
 	
 	public function getHandledColumns() {
 		return array($this->column_name);
+	}
+	public function getSingleCell() {
+		return array("table"=>$this->handler->table->getName(), "column"=>$this->column_name);
 	}
 	
 	public function getTypedField($sub_model) {
@@ -823,7 +967,7 @@ class SimpleDataDisplay extends DataDisplay {
 	public function isEditable() {
 		if ($this->specific_config <> null && in_array("not_editable", $this->specific_config))
 			return false;
-		return true;
+		return $this->handler->table->mayModify();
 	}
 	public function isSortable() {
 		return true;
@@ -834,13 +978,7 @@ class SimpleDataDisplay extends DataDisplay {
 	}
 	
 	public function getEditLocks($sub_model) {
-		$key = $this->handler->table->getPrimaryKey();
-		if ($key == null) {
-			// TODO ?
-			return array();
-		} else {
-			return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
-		}
+		return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
 	}
 	
 	public function buildSQL(&$q, $path, &$builder, $filters) {
@@ -852,12 +990,12 @@ class SimpleDataDisplay extends DataDisplay {
 		}
 		$result = array("data"=>$alias);
 		$key = $this->handler->table->getPrimaryKey();
-		if ($key == null) $key = $this->key_column; else $key = $key->name;
 		if ($key == null) {
 			PNApplication::error("No key for data '".$this->display_name."' in table '".$this->handler->table->getName()."'");
 			$result["key"] = null;
 			return $result;
 		}
+		$key = $key->name;
 		$alias = $q->get_field_alias($table_alias, $key);
 		if ($alias == null) {
 			$alias = $builder->new_alias();
@@ -893,24 +1031,20 @@ class SimpleDataDisplay extends DataDisplay {
 	
 	public function getData($key, $sub_model, $row = null) {
 		if ($row <> null) return @$row[$this->column_name];
-		$key_name = $this->handler->table->getPrimaryKey();
-		if ($key_name == null) $key_name = $this->key_column; else $key_name = $key->name;
 		$value = \SQLQuery::create()
-			->select($this->handler->table->getSQLNameFor($sub_model))
+			->select($this->handler->table->getName())
+			->set_sub_model_for_table($this->handler->table, $sub_model)
 			->field($this->column_name)
-			->where($key_name, $key)
+			->where($this->handler->table->getPrimaryKey()->name, $key)
 			->execute_single_value();
 		return $value;
 	}
 	
 	public function saveData($key, $value, $sub_model) {
-		$key_name = $this->handler->table->getPrimaryKey();
-		if ($key_name == null) $key_name = $this->key_column; else $key_name = $key->name;
-		\SQLQuery::create()->update(
-			$this->handler->table->getSQLNameFor($sub_model),
-			array($this->column_name => $value),
-			array($key_name => $key)
-		);
+		\SQLQuery::create()
+			->set_sub_model_for_table($this->handler->table, $sub_model)
+			->update_by_key($this->handler->table->getName(), $key, array($this->column_name => $value))
+			;
 	}
 	
 }
@@ -945,7 +1079,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		$res = $q->execute();
 		$first = true;
 		foreach ($res as $row) {
-			if ($first) $first = false; else echo ",";
+			if ($first) $first = false; else $cfg .= ",";
 			$cfg .= "[";
 			$cfg .= json_encode($row["KEY"]);
 			$cfg .= ",".json_encode($row["VALUE"]);
@@ -970,7 +1104,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		$res = $q->execute();
 		$first = true;
 		foreach ($res as $row) {
-			if ($first) $first = false; else echo ",";
+			if ($first) $first = false; else $cfg .= ",";
 			$cfg .= "[";
 			$cfg .= json_encode($row["KEY"]);
 			$cfg .= ",".json_encode($row["VALUE"]);

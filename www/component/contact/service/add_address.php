@@ -24,8 +24,15 @@ class service_add_address extends Service {
 	public function output_documentation() { echo "<code>id</code> the id of the address created"; }
 	
 	public function execute(&$component, $input) {
+		require_once("component/data_model/Model.inc");
+		$table = DataModel::get()->getTable($input["table"]);
+		if (!$table->acceptInsert(array($input["column"]=>$input["key"]))) {
+			PNApplication::error("You are not allowed to add an address for this people or organization");
+			echo "false";
+			return;
+		}
 		try {
-			$address_id = SQLQuery::create()->insert("Postal_address", 
+			$address_id = SQLQuery::create()->bypass_security()->insert("Postal_address", 
 				array(
 					"country"=>$input["country"],
 					"geographic_area"=>$input["geographic_area"],

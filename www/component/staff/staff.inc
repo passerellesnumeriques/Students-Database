@@ -1,6 +1,7 @@
 <?php
 require_once("component/people/ProfileGeneralInfoPlugin.inc"); 
-class staff extends Component implements ProfileGeneralInfoPlugin {
+require_once("component/administration/AdministrationPlugin.inc");
+class staff extends Component implements ProfileGeneralInfoPlugin, AdministrationPlugin {
 	
 	public function get_people_profile_general_info_sections($people_id) {
 		try {
@@ -49,6 +50,12 @@ class staff extends Component implements ProfileGeneralInfoPlugin {
 	public function rollback_create_people($people_id, $people_type, $input, &$create_data) {
 		if ($people_type <> "staff") return;
 		SQLQuery::create()->remove_keys("StaffPosition", $create_data["staff_positions"]);
+	}
+	
+	public function getAdministrationPages() {
+		return array(
+			new AdministrationPage("PN Staff", "/dynamic/staff/page/staff", "/static/staff/staff_16.png"),
+		);
 	}
 	
 }

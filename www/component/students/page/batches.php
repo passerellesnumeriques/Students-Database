@@ -139,8 +139,12 @@ class page_batches extends Page {
 						$period_classes = array();
 						foreach ($list as $spe_id=>$spe_classes) {
 							foreach ($spe_classes as $c) array_push($period_classes, $c);
-							echo "<td class='class_name' colspan=".count($spe_classes).">";
-							foreach ($spe as $s) if ($s["id"] == $spe_id) { echo $s["name"]; break; }
+							$td_id = $this->generate_id();
+							echo "<td class='class_name' colspan=".count($spe_classes)." id='$td_id'>";
+							foreach ($spe as $s) if ($s["id"] == $spe_id) { 
+								datamodel_cell($this, $td_id, false, "Specialization", "name", $s["id"], null, $s["name"]);
+								break; 
+							}
 							echo "</td>";
 						}
 						echo "<td rowspan=2 class='skip'></td>"; // skip actions
@@ -181,9 +185,13 @@ class page_batches extends Page {
 				datamodel_cell($this, $span_id, $can_edit, "AcademicPeriod", "start_date", $period["id"], null, $period["start_date"]);
 				echo "</td>";
 				// class list
-				if (count($classes) == 0)
-					echo "<td rowspan=2 colspan=".($max_classes == 0 ? 1 : $max_classes)."></td>";
-				else {
+				if (count($classes) == 0) {
+					echo "<td rowspan=2 colspan=".($max_classes == 0 ? 1 : $max_classes).">";
+					$period_index = array_search($period, $periods, true);
+					if ($period_index > 0)
+						echo "<div class='button' onclick='copy_classes(".$period['id'].",".$periods[$period_index-1]['id'].");'><img src='".theme::$icons_16["copy"]."' style='vertical-align:bottom'/> Copy classes from previous period</div>";
+					echo "</td>";
+				} else {
 					foreach ($classes as $class) {
 						echo "<td rowspan=2>";
 						$nb_students = SQLQuery::create()->select("StudentClass")->where("class",$class["id"])->count()->execute_single_value();
@@ -210,7 +218,7 @@ class page_batches extends Page {
 				echo "</tr>";
 			}
 			echo "</table>";
-			echo "<div class='button' onclick='new_academic_period(".$batch["id"].")'><img src='".theme::$icons_16["add"]."' style='vertical-align:bottom'/> Add Academic Period (quarter, semester...)</div>";
+			echo "<div class='button' onclick='new_academic_period(".$batch["id"].",[{data:\"Period Start\",config:{minimum:".json_encode(count($periods) > 0 ? $periods[count($periods)-1]["end_date"] : $batch["start_date"])."}}])'><img src='".theme::$icons_16["add"]."' style='vertical-align:bottom'/> Add Academic Period (quarter, semester...)</div>";
 			echo "</div>";
 			echo "</div>";
 			$this->onload("new collapsable_section('batch_".$batch["id"]."');");
@@ -268,7 +276,7 @@ function remove_batch(batch_id) {
 		});
 	});
 }
-function new_academic_period(batch_id) {
+function new_academic_period(batch_id, config) {
 	var container = document.createElement("DIV");
 	var error_div = document.createElement("DIV");
 	error_div.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> ";
@@ -292,7 +300,7 @@ function new_academic_period(batch_id) {
 				error_div.style.position = 'absolute';
 				popup.enableButton('ok');
 			}
-		});
+		}, config);
 		popup.addOkCancelButtons(function(){
 			popup.freeze();
 			table.save(function(id){
@@ -410,6 +418,12 @@ function classname_field(container_id, class_name, class_id) {
 		});
 	};
 	not_edit(class_name);
+}
+
+function copy_classes(target_period, source_period) {
+	service.json("students","copy_classes",{target_period:target_period,source_period:source_period},function(res){
+		if (res) location.reload();
+	});
 }
 </script>
 		<?php

@@ -76,6 +76,29 @@ typed_field.prototype = {
 	},
 	getError: function() {
 		return this.error;
+	},
+	canBeNull: function() {
+		alert("Function canBeNull not implemented in typed_field: "+this.constructor.name);
+	},
+	register_datamodel_cell: function(table, column, row_key) {
+		var t=this;
+		window.top.datamodel.register_cell_widget(window, table, column, row_key, function(){
+			return t.getCurrentData();
+		},function(data){
+			t.setData(data);
+		},function(listener) {
+			t.onchange.add_listener(listener);
+		});
+	},
+	register_datamodel_datadisplay: function(data_display, data_key) {
+		var t=this;
+		window.top.datamodel.register_data_widget(window, data_display, data_key, function(){
+			return t.getCurrentData();
+		},function(data){
+			t.setData(data);
+		},function(listener) {
+			t.onchange.add_listener(listener);
+		});
 	}
 };
 typed_field.prototype.constructor = typed_field;

@@ -12,14 +12,14 @@ if (typeof require != 'undefined') {
  * @param field_arguments (optional) in case this typed_filed needs arguments
  * @param data the data that initiates the editable_cell
  */
-function editable_cell(container, table, column, row_key, field_classname, field_arguments, data, onsave) {
+function editable_cell(container, table, column, row_key, field_classname, field_arguments, data, onsave, onchange) {
 	var t=this;
 	require("editable_field.js",function() {
 		t.editable_field = new editable_field(container, field_classname, field_arguments, data, function(data, handler) {
 			service.json("data_model", "lock_cell", {table:table,row_key:row_key,column:column}, function(result) {
 				if (!result) handler(null);
 				else handler([result.lock], result.value);
-			});			
+			});
 		}, function(data, handler) {
 			var new_data = data;
 			if (onsave)
@@ -28,9 +28,7 @@ function editable_cell(container, table, column, row_key, field_classname, field
 				handler(new_data);
 			});
 		});
-		// TODO:
-		//window.pnapplication.register_app_event_listener("data_model_data_changed",table+"."+column+"("+row_key+")",function(value){
-		//	t.editable_field.field.setData(value);
-		//});
+		if (onchange) t.editable_field.field.onchange.add_listener(onchange);
+		t.editable_field.field.register_datamodel_cell(table,column,row_key);
 	});
 }

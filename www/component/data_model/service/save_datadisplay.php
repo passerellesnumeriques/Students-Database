@@ -14,6 +14,7 @@ class service_save_datadisplay extends Service {
 			echo "<li><code>name</code>, <code>data</code>: the name and data of the DataDisplay, for a single data to be saved</li>";
 			echo "<li><code>data:[{name:x,data:y}]</code>: the list of data to save or create</li>";
 		echo "</ul></li>";
+		echo "<li><code>preset_fields</code>: optional, and only while creating a new data, to preset fields which are not included in the data display</li>";
 		echo "</ul>";
 	}
 	public function output_documentation() { echo "return the key on success"; }
@@ -31,11 +32,11 @@ class service_save_datadisplay extends Service {
 		}
 		$key = @$input["key"];
 		if (isset($input["name"]))
-			$list = array("name"=>$input["name"],"data"=>$input["data"]);
+			$list = array(array("name"=>$input["name"],"data"=>$input["data"]));
 		else
 			$list = $input["data"]; 
 		if ($key == null)
-			$key = $display->createEntry($list, $sub_model);
+			$key = $display->createEntry($list, $sub_model, @$input["preset_fields"]);
 		else
 			foreach ($list as $data_to_save) {
 				$found = false;

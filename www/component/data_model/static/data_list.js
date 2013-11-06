@@ -176,7 +176,6 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		require("DataDisplay.js",function() {
 			service.json("data_model","get_available_fields",{table:root_table},function(result){
 				if (result) {
-					t.available_fields = result;
 					t.available_fields = [];
 					for (var i = 0; i < result.length; ++i) {
 						result[i].data.path = new DataPath(result[i].path);
@@ -390,6 +389,32 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				}
 			}
 			t.grid.setData(data);
+			// register data events
+			for (var i = 0; i < t.grid.table.childNodes.length; ++i) {
+				var row = t.grid.table.childNodes[i];
+				for (var j = 0; j < row.childNodes.length; ++j) {
+					var td = row.childNodes[j];
+					if (!td.field) continue;
+					var col = null;
+					for (var k = 0; k < t.grid.columns.length; ++k) if (t.grid.columns[k].id == td.col_id) { col = t.grid.columns[k]; break; }
+					if (!col || !col.attached_data) continue;
+					var closure = {
+						field:td.field,
+						register: function(data_display, data_key) {
+							var t=this;
+							window.top.datamodel.register_data_widget(window, data_display, data_key, function() {
+								return t.field.getCurrentData();
+							}, function(data) {
+								t.field.setData(data);
+							}, function(listener) {
+								t.field.onchange.add_listener(listener);
+							});
+						}
+					};
+					closure.register(col.attached_data, td.data_id);
+				}
+			}
+			
 			t.grid.endLoading();
 		});
 	};

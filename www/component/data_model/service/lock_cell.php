@@ -27,17 +27,18 @@ class service_lock_cell extends Service {
 		require_once("component/data_model/Model.inc");
 		$model = DataModel::get();
 		$table = $model->getTable($table); // here check is done is the user can access this table
-		if (!$table->canModifyField($field)) {
-			PNApplication::error("Access denied to column '".$field."' in table '".$table->getName()."'");
-			return;
-		}
+		// TODO check rights, and create test scenario
+// 		if (!$table->may) {
+// 			PNApplication::error("Access denied to column '".$field."' in table '".$table->getName()."'");
+// 			return;
+// 		}
 		$locked_by = null;
 		$lock = DataBaseLock::lock_cell($table->getName(), $key, $field, $locked_by);
 		if ($lock == null) {
 			PNApplication::error("This data is already locked by ".$locked_by);
 			return;
 		}
-		$value = SQLQuery::create()->select($table->getName())->field($field)->where($table->getPrimaryKey()->name,$key)->execute_single_value();
+		$value = SQLQuery::create()->select($table->getName())->field($field)->where_value($table->getName(),$table->getPrimaryKey()->name,$key)->execute_single_value();
 		echo "{lock:".json_encode($lock).",value:".json_encode($value)."}";
 	}
 } 

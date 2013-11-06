@@ -1,3 +1,4 @@
+/* #depends[typed_field.js] */
 /** Time field: if editable, it will be a text input, else only a simple text node
  * @constructor
  * @param config can contain: <code>can_be_null</code>
@@ -10,6 +11,7 @@ function field_time(data,editable,config) {
 }
 field_time.prototype = new typed_field();
 field_time.prototype.constructor = field_time;		
+field_time.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };		
 field_time.prototype._2digits = function(n) {
 	var s = ""+n;
 	while (s.length < 2) s = "0"+s;
