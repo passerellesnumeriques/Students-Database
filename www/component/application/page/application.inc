@@ -49,7 +49,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 						<div class='context_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/calendar/page/calendars';">
 							<img src='/static/calendar/event.png'/> Calendars
 						</div>
-						<div class='context_menu_item' onclick="location='/dynamic/application/page/logout';" id='user_logout_menu'>
+						<div class='context_menu_item' onclick="logout();" id='user_logout_menu'>
 							<img src='/static/application/logout.gif'/> Logout
 						</div>
 					</div>
@@ -127,6 +127,12 @@ function pn_application_content_load() {
 		animation.fadeOut(div, 300, function(){document.body.removeChild(div);}, 50, 0);
 	} else
 		document.body.removeChild(div);
+}
+
+function logout() {
+	window.top.pn_loading_start();
+	window.top.set_loading_message('Logging out...');
+	location='/dynamic/application/page/logout';
 }
 
 require("load_static.js",function(){

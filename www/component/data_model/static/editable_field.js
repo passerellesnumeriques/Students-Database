@@ -7,7 +7,7 @@ if (typeof require != 'undefined')
  * @param field_arguments (optional) in case this typed_filed needs arguments
  * @param data the data that initiates the editable_cell
  */
-function editable_field(container, field_classname, field_arguments, data, lock_data, save_data) {
+function editable_field(container, field_classname, field_arguments, data, lock_data, save_data, onready) {
 	var t=this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (typeof field_arguments == 'string') field_arguments = eval('('+field_arguments+')');
@@ -16,8 +16,9 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	t.save_button = null;
 	t.unedit_button = null;
 	t.locks = null;
+	t.editable = true;
 
-	t.unedit = function() {
+	t.unedit = function(onready) {
 		if (t.locks) {
 			var locks = t.locks;
 			t.locks = null;
@@ -29,15 +30,18 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		if (t.save_button) { container.removeChild(t.save_button); t.save_button = null; }
 		if (t.unedit_button) { container.removeChild(t.unedit_button); t.unedit_button = null; }
 		var config_field = function() {
-			t.field.getHTMLElement().title = "Click to edit";
-			t.field.getHTMLElement().onmouseover = function(ev) { this.style.outline = '1px solid #C0C0F0'; stopEventPropagation(ev); return false; };
-			t.field.getHTMLElement().onmouseout = function(ev) { this.style.outline = 'none'; stopEventPropagation(ev); return false; };
-			t.field.getHTMLElement().onclick = function(ev) { t.edit(); stopEventPropagation(ev); return false; };
+			if (t.editable) {
+				t.field.getHTMLElement().title = "Click to edit";
+				t.field.getHTMLElement().onmouseover = function(ev) { this.style.outline = '1px solid #C0C0F0'; stopEventPropagation(ev); return false; };
+				t.field.getHTMLElement().onmouseout = function(ev) { this.style.outline = 'none'; stopEventPropagation(ev); return false; };
+				t.field.getHTMLElement().onclick = function(ev) { t.edit(); stopEventPropagation(ev); return false; };
+			}
 		};
 		if (t.field) {
 			t.field.setData(t.field.getOriginalData());
 			t.field.setEditable(false);
 			config_field();
+			if (onready) onready(t);
 		} else {
 			require("typed_field.js",function() { 
 				require(field_classname+".js",function(){
@@ -47,6 +51,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 						t._changed();
 					});
 					config_field();
+					if (onready) onready(t);
 				}); 
 			});
 		}
@@ -121,5 +126,10 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		}
 	};
 	
-	t.unedit();
+	t.cancelEditable = function() {
+		t.editable = false;
+		t.unedit();
+	};
+	
+	t.unedit(onready);
 }

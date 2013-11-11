@@ -51,6 +51,9 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content.style.width = "100%";
 			t.content.style.height = "100%";
 			t.resize();
+			getIFrameWindow(t.content).addLayoutEvent(getIFrameDocument(t.content).body, function() {
+				t.resize();
+			});
 			//var w = getIFrameWindow(t.content);
 			//w.listenEvent(w, 'resize', function() { t.resize(); });
 		};
@@ -211,27 +214,29 @@ function popup_window(title,icon,content,hide_close_button) {
 		}
 	};
 	t._computeFrameWidth = function(body) {
+		var win = getIFrameWindow(t.content);
 		var max = 0;
 		for (var i = 0; i < body.childNodes.length; ++i) {
 			var e = body.childNodes[i];
 			var w = null;
 			if (e.nodeType != 1) continue;
 			if (e.nodeName == "FORM")
-				w = absoluteLeft(e) + t._computeFrameWidth(e);
-			if (w == null) w = absoluteLeft(e)+e.offsetWidth;
+				w = win.absoluteLeft(e) + t._computeFrameWidth(e);
+			if (w == null) w = win.absoluteLeft(e)+win.getWidth(e);
 			if (w > max) max = w;
 		}
 		return max;
 	};
 	t._computeFrameHeight = function(body) {
+		var win = getIFrameWindow(t.content);
 		var max = 0;
 		for (var i = 0; i < body.childNodes.length; ++i) {
 			var e = body.childNodes[i];
 			var h = null;
 			if (e.nodeType != 1) continue;
 			if (e.nodeName == "FORM")
-				h = absoluteTop(e) + t._computeFrameHeight(e);
-			if (h == null) h = absoluteTop(e)+e.offsetHeight;
+				h = win.absoluteTop(e) + t._computeFrameHeight(e);
+			if (h == null) h = win.absoluteTop(e)+win.getHeight(e);
 			if (h > max) max = h;
 		}
 		return max;
@@ -251,8 +256,14 @@ function popup_window(title,icon,content,hide_close_button) {
 			var frame = getIFrameDocument(t.content); 
 			x = t._computeFrameWidth(frame.body);
 			y = t._computeFrameHeight(frame.body);
+			frame.body.style.margin = "0px";
+			frame.body.style.padding = "0px";
+			frame.body.style.border = "none";
+			var h = 0;
+			if (t.header) h += getHeight(t.header);
+			if (t.buttons_tr) h += getHeight(t.buttons_tr);
 			if (x > getWindowWidth()-30) x = getWindowWidth()-30;
-			if (y > getWindowHeight()-30) y = getWindowHeight()-30;
+			if (y > getWindowHeight()-30-h) y = getWindowHeight()-30-h;
 			t.content_container.style.height = y+"px";
 			t.content_container.style.width = x+"px";
 			t.content_container.overflow = "hidden";
@@ -353,6 +364,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		} else
 			do_close();
 	};
+	t.hide = function() { t.close(); };
 }
 
 /**

@@ -1,12 +1,12 @@
 <?php 
 interface OrganizationPlugin {
 	
-	public function getCreator();
+	public function getOrganizationCreator();
 	
-	public function canRead();
-	public function canWrite();
-	public function canInsert();
-	public function canRemove();
+	public function canReadOrganization();
+	public function canWriteOrganization();
+	public function canInsertOrganization();
+	public function canRemoveOrganization();
 	
 }
 ?>

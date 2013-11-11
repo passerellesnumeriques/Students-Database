@@ -9,6 +9,10 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 	this.table.appendChild(this.thead = document.createElement("THEAD"));
 	this.table.appendChild(this.tbody = document.createElement("TBODY"));
 	this.table.appendChild(this.tfoot = document.createElement("TFOOT"));
+	this.getContacts = function() {
+		return contacts;
+	};
+	this.onchange = new Custom_Event();
 	var t=this;
 	if (can_add) {
 		var td_foot_1 = document.createElement('td');
@@ -53,13 +57,9 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 			input.value = contact.contact;
 			input.onchange = function() {
 				contact.contact = input.value;
+				t.onchange.fire(t);
 			};
-			require("autoresize_input.js",function(){
-				var oc = input.onchange; 
-				autoresize_input(input,5);
-				var oc2 = input.onchange;
-				input.onchange = function() { oc2(); oc(); };
-			});
+			require("autoresize_input.js",function(){ autoresize_input(input,5); });
 		} else if(can_edit){
 			/*Manage the category Field*/
 			this.createCategoryField(td_category, contact);
@@ -70,6 +70,8 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 			edit.contact = contact.contact;
 			edit.onsave = function(text){
 				if(text.checkVisible()){
+					this.contact = text;
+					t.onchange.fire(t);
 					return text;
 				}
 				else{
@@ -127,16 +129,18 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 				if (!res) return;
 				/*Update the result object*/
 				var l = contacts.length;
-				contacts[l] = {id:res.id, contact_type: contact_type, sub_type:"Work", contact: text};
+				contacts[l] = {id:res.id, type: contact_type, sub_type:"Work", contact: text};
 				/*Update the table*/
 				t.addContact(contacts[l]);
+				t.onchange.fire(t);
 			});
 		} else {
 			/*Update the result object*/
 			var l = contacts.length;
-			contacts[l] = {id:-1, contact_type: contact_type, sub_type:"Work", contact: text};
+			contacts[l] = {id:-1, type: contact_type, sub_type:"Work", contact: text};
 			/*Update the table*/
 			t.addContact(contacts[l]);
+			t.onchange.fire(t);
 		}
 	};
 	
@@ -174,6 +178,7 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 					if (t.tbody.childNodes[i].contact == contact)
 						t.tbody.removeChild(t.tbody.childNodes[i]);
 				contacts.remove(contact);
+				t.onchange.fire(t);
 				setTimeout(function(){if (ontypechanged) ontypechanged();},1);
 			});
 		} else {
@@ -181,6 +186,7 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 				if (t.tbody.childNodes[i].contact == contact)
 					t.tbody.removeChild(t.tbody.childNodes[i]);
 			contacts.remove(contact);
+			t.onchange.fire(t);
 			setTimeout(function(){if (ontypechanged) ontypechanged();},1);
 		}
 	};
@@ -273,11 +279,13 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 				container.innerHTML = sub_type;
 				/*Update the result object*/
 				contact.sub_type = sub_type;
+				t.onchange.fire(t);
 				setTimeout(function(){if (ontypechanged) ontypechanged();},1);
 			});
 		} else {
 			container.innerHTML = sub_type;
 			contact.sub_type = sub_type;
+			t.onchange.fire(t);
 			setTimeout(function(){if (ontypechanged) ontypechanged();},1);
 		}
 	};

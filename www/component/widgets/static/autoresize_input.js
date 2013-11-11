@@ -1,5 +1,6 @@
 function autoresize_input(input, min_size) {
 	input.mirror = document.createElement("SPAN");
+	if (input.style.fontSize) input.mirror.style.fontSize = input.style.fontSize;
 	input.mirror.style.position = 'absolute';
 	input.mirror.style.whiteSpace = 'pre';
 	input.mirror.style.left = '0px';
@@ -15,14 +16,15 @@ function autoresize_input(input, min_size) {
 		if (w < min) w = min;
 		input.style.width = w+"px";
 	};
-	input.onkeydown = update;
-	input.onkeyup = update;
-	input.oninput = update;
-	input.onpropertychange = update;
+	var prev_onkeydown = input.onkeydown;
+	input.onkeydown = function(e) { if (prev_onkeydown) prev_onkeydown(e); update(); };
+	var prev_onkeyup = input.onkeyup;
+	input.onkeyup = function(e) { if (prev_onkeyup) prev_onkeyup(e); update(); };
+	var prev_oninput = input.oninput;
+	input.oninput = function(e) { if (prev_oninput) prev_oninput(e); update(); };
+	var prev_onpropertychange = input.onpropertychange;
+	input.onpropertychange = function(e) { if (prev_onpropertychange) prev_onpropertychange(e); update(); };
 	var prev_onchange = input.onchange;
-	input.onchange = function() {
-		if (prev_onchange) prev_onchange();
-		update();
-	};
+	input.onchange = function(e) { if (prev_onchange) prev_onchange(e); update(); };
 	update();
 }

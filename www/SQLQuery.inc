@@ -193,8 +193,10 @@ class SQLQuery {
 			if (is_array($o))
 				foreach (func_get_arg(0) as $field=>$value)
 					$this->where($field, "=", $value);
-			else
-				array_push($this->where, $o);
+			else {
+				if (trim($o) <> "")
+					array_push($this->where, $o);
+			}
 		} else if ($nb == 2)
 			$this->where(func_get_arg(0), "=", func_get_arg(1));
 		else {
@@ -229,6 +231,22 @@ class SQLQuery {
 		$w = "`".$table_name."`.`".$field_name."` IS NOT NULL";
 		array_push($this->where, $w);
 		return $this;
+	}
+	
+	/**
+	 * Returns a string containing the current WHERE clause, and reset it in this SQLQuery (remove it)
+	 */
+	public function save_where() {
+		$where = "";
+		$first = true;
+		foreach ($this->where as $w) {
+			if (trim($w) == "") continue;
+			if ($first) $first = false; else $where .= " AND ";
+			$where .= $w;
+		}
+		if (strlen($where) > 0) $where = "(".$where.")";
+		$this->where = array();
+		return $where;
 	}
 	
 	/** if only one table is used, we can use it as ($field,$values), meaning no need to specify the table */
@@ -496,8 +514,11 @@ class SQLQuery {
 		$res = SQLQuery::db()->execute($sql);
 		if ($res === FALSE) return null;
 		$a = array();
-		while (($r = SQLQuery::db()->next_row($res)) !== FALSE)
+		while (($r = SQLQuery::db()->next_row($res)) !== FALSE) {
+			foreach ($r as $key=>$val)
+				if ($val <> null) $r[$key] = utf8_encode($val);
 			array_push($a, $r);
+		}
 		return $a;
 	}
 
@@ -522,6 +543,8 @@ class SQLQuery {
 		if ($res === FALSE) return null;
 		$r = SQLQuery::db()->next_row($res);
 		if ($r === FALSE) return null;
+		foreach ($r as $key=>$val)
+			if ($val <> null) $r[$key] = utf8_encode($val);
 		return $r;
 	}
 	
@@ -551,7 +574,13 @@ class SQLQuery {
 			$table_alias = $q->table_id();
 			$q->select(array($table=>$table_alias));
 			$q->set_sub_models($sub_models);
-			$q->where($t->getPrimaryKey()->name, $key);
+			if ($t->getPrimaryKey() <> null)
+				$q->where($t->getPrimaryKey()->name, $key);
+			else {
+				$keys = $t->getKey();
+				foreach ($keys as $key_name)
+					$q->where_value($table_alias, $key_name, $key[$key_name]);
+			}
 			if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
 				$rows = $q->execute();
 				$rows = $t->filterWriteAccess($rows);
@@ -565,11 +594,11 @@ class SQLQuery {
 		if ($lock_id <> null) {
 			$column = null;
 			if (count($fields_values) == 1) { $column = array_keys($fields_values); $column = $column[0]; }
-			if (!DataBaseLock::check_lock($lock_id, $t->getName(), $key, $column))
+			if (!DataBaseLock::check_lock($lock_id, $t->getSQLName($sub_models), $key, $column))
 				throw new Exception("Access denied: invalid lock");
 		} else {
 			$locker = null;
-			$lock_id = DataBaseLock::lock_row($t->getName(), $key, $locker);
+			$lock_id = DataBaseLock::lock_row($t->getSQLName($sub_models), $key, $locker, $this->bypass_security);
 			if ($lock_id == null)
 				throw new Exception("This data is already locked by ".$locker);
 			$locked = true;
@@ -607,65 +636,23 @@ class SQLQuery {
 			else
 				$sql .= "'".SQLQuery::escape($value)."'";
 		}
-		$sql .= " WHERE `".$t->getPrimaryKey()->name."`='".$key."'";
+		$sql .= " WHERE ";
+		if ($t->getPrimaryKey() <> null) {
+			$sql .= "`".$t->getPrimaryKey()->name."`='".$key."'";
+		} else {
+			$keys = $t->getKey();
+			$first = true;
+			foreach ($keys as $key_name) {
+				if ($first) $first = false; else $sql .= " AND ";
+				$sql .= "`".$key_name."`='".$key[$key_name]."'";
+			}
+		}
 		SQLQuery::db()->execute($sql);
 		if ($locked) {
 			$error = DataBaseLock::unlock($lock_id);
 			if ($error <> null) throw new Exception($error);
 		}
 	}
-	
-	// TODO: security for this kind of update
-// 	public function update($table, $fields_values, $where, $sub_models = null) {
-// 		require_once("component/data_model/Model.inc");
-// 		/* @var $t datamodel\Table */
-// 		if ($this->bypass_security)
-// 			$t = DataModel::get()->internalGetTable($table);
-// 		else
-// 			$t = DataModel::get()->getTable($table);
-		
-// 		$sql = "UPDATE `".$t->getSQLName($sub_models)."` SET ";
-// 		$first = true;
-// 		foreach ($fields_values as $field=>$value) {
-// 			if (!$this->bypass_security && !$t->canModifyField($field)) throw new Exception("Access denied for column '".$field."' on table '".$table."'");
-// 			if ($first) $first = false; else $sql .= ",";
-// 			$sql .= "`".$field."`=";
-// 			if ($value === null) $sql .= "NULL";
-// 			else $sql .= "'".SQLQuery::escape($value)."'";
-// 		}
-// 		if ($where <> null) {
-// 			$sql .= " WHERE ";
-// 			if (is_string($where)) $sql .= $where;
-// 			else {
-// 				$first = true;
-// 				foreach ($where as $field=>$value) {
-// 					if ($first) $first = false; else $sql .= " AND ";
-// 					$sql .= "`".$field."`";
-// 					if ($value === null) $sql .= " IS NULL";
-// 					else $sql .= "='".SQLQuery::escape($value)."'";
-// 				}
-// 			}
-// 		}
-// 		$keys = null;
-// 		if (PNApplication::$instance->data_model->has_data_changed_listeners($t->getName())) {
-// 			// we need to get the keys
-// 			$keys = SQLQuery::create()->select($t->getSQLName($sub_models))->field($t->getPrimaryKey()->name)->where($where)->execute_single_field();
-// 		}
-// 		SQLQuery::db()->execute($sql);
-// 		if (SQLQuery::db()->get_last_error_number() == 0) {
-// 			$result = SQLQuery::db()->affected_rows();
-// 			if ($keys <> null) {
-// 				$sub_model = null;
-// 				if ($sub_models <> null && $t->getModel() instanceof SubDataModel && isset($sub_models[$t->getParentTable()]))
-// 					$sub_model = $sub_models[$t->getParentTable()];
-// 				foreach ($fields_values as $field=>$value)
-// 					foreach ($keys as $key)
-// 						PNApplication::$instance->data_model->signal_data_changed($t->getName(), $field, $sub_model, $key, $value);
-// 			}
-// 			return $result;
-// 		}
-// 		return -1;
-// 	}
 	
 	/**
 	 * Insert an entry into the given table.
@@ -688,10 +675,10 @@ class SQLQuery {
 			if (!$t->mayInsert()) throw new Exception("Access denied: add data to table ".$t->getName());
 			if (!$t->acceptInsert($fields_values)) throw new Exception("Access denied: add data to table ".$t->getName()." denied for those values");
 		}
-		// lock the table
+		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
-		$lock = DataBaseLock::lock_table($t->getName(), $locker);
+		$lock = DataBaseLock::lock_table($t->getName(), $locker, true);
 		if ($lock == null)
 			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
 		$columns = $t->internalGetColumns($sub_models);
@@ -764,7 +751,7 @@ class SQLQuery {
 			$t = DataModel::get()->internalGetTable($table);
 		else
 			$t = DataModel::get()->getTable($table);
-		$pk = $t->getPrimaryKey()->name;
+		$pk = $t->getPrimaryKey()->name; // TODO if no primary key
 		foreach ($rows as $r) array_push($keys, $r[$pk]);
 		$this->remove_keys($keys);
 	}
@@ -800,13 +787,28 @@ class SQLQuery {
 		// everything is allowed, and all tables are locked: do it
 		foreach ($to_remove as $table_name=>$to_remove_in_table) {
 			if (isset($to_remove_in_table["keys"])) {
-				$sql = "DELETE FROM `".$table_name."` WHERE `".$to_remove_in_table["key_name"]."` IN (";
-				$first = true;
-				foreach ($to_remove_in_table["keys"] as $key) {
-					if ($first) $first = false; else $sql .= ",";
-					$sql .= $key;
+				$sql = "DELETE FROM `".$table_name."` WHERE ";
+				if (is_array($to_remove_in_table["key_name"])) {
+					$first_key = true;
+					foreach ($to_remove_in_table["keys"] as $key) {
+						if ($first_key) $first_key = false; else $sql .= " OR ";
+						$sql .= "(";
+						$first = true;
+						foreach ($to_remove_in_table["key_name"] as $key_name) {
+							if ($first) $first = false; else $sql .= " AND ";
+							$sql .= "`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+						}
+						$sql .= ")";
+					}					
+				} else {
+					$sql .= "`".$to_remove_in_table["key_name"]."` IN (";
+					$first = true;
+					foreach ($to_remove_in_table["keys"] as $key) {
+						if ($first) $first = false; else $sql .= ",";
+						$sql .= $key;
+					}
+					$sql .= ")";
 				}
-				$sql .= ")";
 				SQLQuery::db()->execute($sql);
 			} else {
 				$sql = "DELETE FROM `".$table_name."` WHERE ";
@@ -862,13 +864,14 @@ class SQLQuery {
 		}
 		if (count($keys) == 0) return; // nothing to do
 			
-		// lock the table
-		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table($table->getSQLNameFor($sub_model_instance), $locked_by);
-		if ($lock_id == null)
-			throw new Exception("Table '".$table->getName()."' already locked by ".$locked_by);
-		array_push($locks, $lock_id);
-		
+		// lock the rows to remove
+		foreach ($keys as $key) {
+			$locked_by = null;
+			$lock_id = DataBaseLock::lock_row($table->getSQLNameFor($sub_model_instance), $key, $locked_by, $this->bypass_security);
+			if ($lock_id == null)
+				throw new Exception("Table '".$table->getName()."' already locked by ".$locked_by);
+			array_push($locks, $lock_id);
+		}		
 		// check sub models
 		foreach ($table->_key_submodels as &$sm) {
 			array_push($sub_models_to_remove, array($sm,$keys));
@@ -876,7 +879,7 @@ class SQLQuery {
 			foreach ($sm->internalGetTables() as $table_name=>$t) {
 				foreach ($keys as $key) {
 					$locked_by = null;
-					$lock_id = DataBaseLock::lock_table($t->getSQLNameFor($key), $locked_by);
+					$lock_id = DataBaseLock::lock_table($t->getSQLNameFor($key), $locked_by, true);
 					if ($lock_id == null)
 						throw new Exception("Table '".$table->getName()."' already locked by ".$locked_by);
 					array_push($locks, $lock_id);
@@ -896,7 +899,23 @@ class SQLQuery {
 				$q->select(array($table->getName()=>$table_alias));
 				if ($sub_model_instance <> null)
 					$q->select_sub_model($table->getParentTable(), $sub_model_instance);
-				$q->where_in($table_alias, $table->getPrimaryKey()->name, $keys);
+				if ($table->getPrimaryKey() <> null)
+					$q->where_in($table_alias, $table->getPrimaryKey()->name, $keys);
+				else {
+					$pk = $table->getKey();
+					$where = "";
+					foreach ($keys as $key) {
+						if (strlen($where) > 0) $where .= " OR ";
+						$where .= "(";
+						$first = true;
+						foreach ($pk as $pk_name) {
+							if ($first) $first = false; else $where .= " AND ";
+							$where .= "`".$table_alias."`.`".$pk_name."`='".SQLQuery::escape($key[$pk_name])."'";
+						}
+						$where .= ")";
+					}
+					$q->where($where);
+				}
 				$table->prepareSelectToDetermineRemoveAccess($q, $table_alias, $locks);
 				$rows = $q->execute();
 				if (count($rows) <> count($keys)) throw new Exception("Invalid keys to remove in table '".$table->getName()."': ".count($keys)." keys given, ".count($rows)." rows found.");
@@ -907,8 +926,10 @@ class SQLQuery {
 		}
 
 		// we can remove those keys
-		if (!isset($to_remove[$table->getSQLNameFor($sub_model_instance)]))
-			$to_remove[$table->getSQLNameFor($sub_model_instance)] = array("keys"=>array(),"key_name"=>$table->getPrimaryKey()->name);
+		if (!isset($to_remove[$table->getSQLNameFor($sub_model_instance)])) {
+			$key_name = $table->getPrimaryKey() <> null ? $table->getPrimaryKey()->name : $table->getKey();
+			$to_remove[$table->getSQLNameFor($sub_model_instance)] = array("keys"=>array(),"key_name"=>$key_name);
+		}
 		foreach ($keys as $key)
 			array_push($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $key);
 		
@@ -929,7 +950,23 @@ class SQLQuery {
 			$table_alias = $q->table_id();
 			$q->select(array($table->getName()=>$table_alias));
 			if ($sub_model_instance <> null) $q->select_sub_model($table->getModel()->getParentTable(), $sub_model_instance);
-			$q->where_in($table_alias, $table->getPrimaryKey()->name, $keys);
+			if ($table->getPrimaryKey() <> null)
+				$q->where_in($table_alias, $table->getPrimaryKey()->name, $keys);
+			else {
+				$pk = $table->getKey();
+				$where = "";
+				foreach ($keys as $key) {
+					if (strlen($where) > 0) $where .= " OR ";
+					$where .= "(";
+					$first = true;
+					foreach ($pk as $pk_name) {
+						if ($first) $first = false; else $where .= " AND ";
+						$where .= "`".$table_alias."`.`".$pk_name."`='".SQLQuery::escape($key[$pk_name])."'";
+					}
+					$where .= ")";
+				}
+				$q->where($where);
+			}
 			$q->field($table->getName(), $col->name);
 			$rows = $q->execute_single_field();
 			

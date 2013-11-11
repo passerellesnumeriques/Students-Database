@@ -1,32 +1,46 @@
 <?php
-require_once("ProfilePlugin.inc");
-require_once("ProfileGeneralInfoPlugin.inc");
-class people extends Component implements ProfilePlugin, ProfileGeneralInfoPlugin {
+require_once("PeoplePlugin.inc");
+class people extends Component implements PeoplePlugin {
 
-	public function get_profile_pages(&$people) {
+	public function preparePeopleProfilePagesRequest(&$q, $people_id) {}
+	
+	public function getPeopleProfilePages($people_id, $people, $q) {
 		return array(
-			"profile_people"=>array("/static/people/profile_16.png", "General Information", "/dynamic/people/page/profile_people?people=".$people, 1),
+			"profile_people"=>array(
+				"/static/people/profile_16.png",
+				"General Information",
+				"/dynamic/people/page/profile_people?people=".$people_id, 
+				1
+			)
 		);
 	}
 	
-	public function get_people_profile_general_info_sections($people_id) {
-		return array(array("personal_info","<img src='/static/people/people_info.png' style='vertical-align:bottom;padding-right:3px'/>Personal Information",1));
-	}
-	
-	public function generate_people_profile_general_info_section(&$page, $people_id, $section_id) {
-		if ($section_id == "personal_info") {
-			require_once("page/picture_and_info.inc");
-			people_picture_and_info($page, $people_id);
-		}
-	}
-	
-	public function get_create_people_pages($people_type) {
+	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {
 		return array(
-			array("General Information", "component/people/page/create_people__personal_info.inc",1)
+			array(
+				"/static/people/people_info.png",
+				"Personal Information",
+				"component/people/page/profile_people_general.inc",
+				1
+			)
 		);
 	}
-	public function create_people($people_id, $people_type, $input, &$create_data) { return true; }
-	public function rollback_create_people($people_id, $people_type, $input, &$create_data) {}
+	
+	public function getCreatePeopleSupportedTypes() { return array(); }
+	public function isCreatePeopleAllowed($people_type) { return false; }
+	public function getCreatePeoplePages($people_types) {
+		return array(
+			array("/static/people/people_info.png", "General Information", "component/people/page/create_people__personal_info.inc",1)
+		);
+	}
+	public function createPeople($people_id, $people_types, $input, &$create_data) { return true; }
+	public function rollbackCreatePeople($people_id, $people_types, $input, &$create_data) {}
+	
+	public function filterPeopleReadAccess(&$q, $people_table_alias) {}
+	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {}
+	public function filterPeopleWriteAccess($people_rows) { return $people_rows; }
+	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {}
+	public function filterPeopleRemoveAccess($people_rows) { return $people_rows; }
 	
 }
 ?>

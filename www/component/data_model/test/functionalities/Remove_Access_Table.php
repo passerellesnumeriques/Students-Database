@@ -103,7 +103,7 @@ class Remove_Access_Table_Test_Read extends TestStep {
 			$res = SQLQuery::create()->select("TestRemoveAccess_onlyread")->execute();
 			if (count($res) <> 1) return "Select failed: 1 row expected, found: ".count($res);
 		} catch (Exception $e) {
-			return "Cannot select";
+			return "Cannot select: ".$e->getMessage();
 		}
 		try {
 			SQLQuery::create()->remove_key("TestRemoveAccess_onlyread", $scenario_data["onlyread_id1"]);
@@ -280,7 +280,7 @@ class Remove_Access_Table_Test_ReadRemoveFilter_UserReadRemove extends TestStep 
 		try {
 			SQLQuery::create()->remove_key("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id2"]);
 		} catch (Exception $e) {
-			return "Cannot remove with a value which does not match the filter";
+			return "Cannot remove with a value which does not match the filter: ".$e->getMessage();
 		}
 		try {
 			SQLQuery::create()->remove_key("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id3000"]);

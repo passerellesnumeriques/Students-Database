@@ -12,7 +12,9 @@ if (typeof require != 'undefined') {
  * @param field_arguments (optional) in case this typed_filed needs arguments
  * @param data the data that initiates the editable_cell
  */
-function editable_cell(container, table, column, row_key, field_classname, field_arguments, data, onsave, onchange) {
+function editable_cell(container, table, column, row_key, field_classname, field_arguments, data, onsave, onchange, onready) {
+	if (typeof container == 'string') container = document.getElementById(container);
+	container.editable_cell = this;
 	var t=this;
 	require("editable_field.js",function() {
 		t.editable_field = new editable_field(container, field_classname, field_arguments, data, function(data, handler) {
@@ -27,8 +29,14 @@ function editable_cell(container, table, column, row_key, field_classname, field
 			service.json("data_model", "save_cell", {lock:t.lock,table:table,row_key:row_key,column:column,value:new_data},function(result) {
 				handler(new_data);
 			});
+		},function(ef) {
+			if (onchange) ef.field.onchange.add_listener(onchange);
+			ef.field.register_datamodel_cell(table,column,row_key);
+			if (onready) onready(t);
 		});
-		if (onchange) t.editable_field.field.onchange.add_listener(onchange);
-		t.editable_field.field.register_datamodel_cell(table,column,row_key);
 	});
+	
+	t.cancelEditable = function() {
+		t.editable_field.cancelEditable();
+	};
 }

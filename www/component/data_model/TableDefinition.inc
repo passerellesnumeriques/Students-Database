@@ -29,6 +29,7 @@ class Table {
 	private $columns = array();
 	private $indexes = array();
 	private $primary_key = null;
+	private $key = null;
 	
 	private $read_access_rights = array();
 	private $read_access_filters = array();
@@ -181,6 +182,19 @@ class Table {
 		return $this->primary_key;
 	}
 	
+	/**
+	 * Set a list of columns as the key of this table (values on those columns can identify uniquely a row)
+	 * @param string[] $columns
+	 * @return Table
+	 */
+	public function &setKey($columns) {
+		$this->key = $columns;
+		return $this;
+	}
+	public function getKey() {
+		return $this->key;
+	}
+	
 	/** Add an integer column. Size is in bits
 	 * @return \datamodel\Table 
 	 */
@@ -292,8 +306,24 @@ class Table {
 		if ($this->read_access_rights === null) return;
 		foreach ($this->read_access_rights as $r)
 			if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return; // full access
+		$where = $q->save_where();
 		foreach ($this->read_access_filters as $filter)
 			$filter($q, $table_alias);
+		$filters_where = $q->save_where();
+		$q->where($where);
+		if ($filters_where <> "") {
+			$key = $this->primary_key;
+			if ($key == null)
+				foreach ($this->columns as $col)
+					if (!$col->can_be_null) { $key = $col; break; }
+			if ($key == null) {
+				// we cannot do it
+				$q->where($filters_where);
+			} else {
+				// accept rows where there is no entry for this table (join left resulting in NULL values)
+				$q->where("(`".$table_alias."`.`".$key->name."` IS NULL OR (".$filters_where."))");
+			}
+		}
 	}
 	
 	public function &addWriteAccess($right_name, $right_value) {
@@ -791,7 +821,7 @@ abstract class DataDisplay {
 	/** If buildSQL didn't return a data alias, this function is called to perform a sub-request */
 	public function retrieveValue($row, $sql_aliases, $path, $filters) {}
 	
-	public abstract function getData($key, $sub_model, $row = null);
+	public abstract function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null);
 	public abstract function saveData($key, $value, $sub_model);
 	
 	public final function javascriptDataDisplay($sub_model) {
@@ -1029,8 +1059,8 @@ class SimpleDataDisplay extends DataDisplay {
 		return $result;
 	}
 	
-	public function getData($key, $sub_model, $row = null) {
-		if ($row <> null) return @$row[$this->column_name];
+	public function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null) {
+		if ($row <> null) return @$row[$value_alias <> null ? $value_alias : $this->column_name];
 		$value = \SQLQuery::create()
 			->select($this->handler->table->getName())
 			->set_sub_model_for_table($this->handler->table, $sub_model)
@@ -1175,7 +1205,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		return array("key"=>$key_alias,"data"=>$data_alias);
 	}
 	
-	public function getData($key, $sub_model, $row = null) {
+	public function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null) {
 		if ($row <> null) return $row[$this->foreign_key_name];
 		$q = \SQLQuery::create()->select($this->handler->table->getName());
 		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
@@ -1279,7 +1309,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		return $values;
 	}
 	
-	public function getData($key, $sub_model, $row = null) {
+	public function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null) {
 		// TODO
 	}
 	

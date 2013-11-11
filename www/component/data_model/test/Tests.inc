@@ -8,7 +8,7 @@ class data_model_Tests extends ComponentTests {
 			"Insert_Access_Table",
 			"Remove_Access_Table",
 			"RemoveLinks",
-			// TODO Lock
+			"Locks",
 			// TODO Datadisplay
 			// TODO modify/add: check validation of values/unicity...
 			// TODO all tests again with sub models

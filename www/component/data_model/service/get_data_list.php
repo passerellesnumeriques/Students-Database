@@ -203,10 +203,10 @@ class service_get_data_list extends Service {
 				$path = $paths[$i];
 				if ($f) $f = false; else echo ",";
 				echo "{v:";
-				if (isset($a["data"]) && $a["data"] !== null)
-					echo json_encode($row[$a["data"]]);
-				else
-					echo json_encode($data->retrieveValue($row, $a, $path, $filters[$i]));
+ 				if (isset($a["data"]) && $a["data"] !== null)
+ 					echo json_encode($row[$a["data"]]);
+ 				else
+ 					echo json_encode($data->retrieveValue($row, $a, $path, $filters[$i]));
 				if (isset($row[$a["key"]]))
 					echo ",k:".json_encode($row[$a["key"]]);
 				else {

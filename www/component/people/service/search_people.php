@@ -24,15 +24,16 @@ class service_search_people extends Service {
 		echo "[";
 		$first = true;
 		$table = DataModel::get()->getTable("People");
+		$display = $table->getDisplayHandler(null);
 		foreach ($result as $row) {
 			if ($first) $first = false; else echo ",";
-			echo "{";
+			echo "[";
 			$f = true;
-			foreach ($table->getDisplayableData() as $col_name=>$disp) {
+			foreach ($display->getDisplayableData() as $data) {
 				if ($f) $f = false; else echo ",";
-				echo $col_name.":".json_encode($row[$col_name]);
+				echo "{name:".json_encode($data->getDisplayName()).",value:".json_encode($data->getData($row["id"], null, $row))."}";
 			}
-			echo "}";
+			echo "]";
 		}
 		echo "]";
 	}

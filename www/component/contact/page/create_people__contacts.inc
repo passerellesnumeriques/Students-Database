@@ -1,11 +1,9 @@
 <?php
 // TODO if people_id pre-selected 
-require_once("contact.inc");
 $contact_id = $this->generate_id();
-$contact_fct = contact($this,"people",$contact_id,-1);
-require_once("address.inc");
 $address_id = $this->generate_id();
-$address_fct = address($this,"people",$address_id,-1);
+$this->add_javascript("/static/contact/contacts.js");
+$this->add_javascript("/static/contact/addresses.js");
 ?>
 
 <div style='padding:5px'>
@@ -18,19 +16,14 @@ $address_fct = address($this,"people",$address_id,-1);
 </div>
 
 <script type='text/javascript'>
-var contact = new <?php echo $contact_fct;?>(function(contact) {
-	if (window.parent.create_people.contacts) {
-		contact.setResult(window.parent.create_people.contacts);
-	}
-});
-var address = new <?php echo $address_fct;?>(function(address) {
-	if (window.parent.create_people.addresses) {
-		address.setResult(window.parent.create_people.addresses);
-	}
-});
-function save_create_people_info(validate) {
-	window.parent.create_people.contacts = contact.result;
-	window.parent.create_people.addresses = address.result;
-	return true;
+function create_people_contacts_section() {
+	this.contacts = new contacts('<?php echo $contact_id;?>', "People_contact", "people", -1, window.create_people.contacts ? window.create_people.contacts : [], true, true, true);
+	this.addresses = new addresses('<?php echo $address_id;?>', true, "People_address", "people", -1, window.create_people.addresses ? window.create_people.addresses : [], true, true, true);
+	this.validate_and_save = function() {
+		window.create_people.contacts = this.contacts.getContacts();
+		window.create_people.addresses = this.addresses.getAddresses();
+		return true;
+	};
 }
+window.create_people_sections.push(new create_people_contacts_section());
 </script>

@@ -4,7 +4,7 @@ class ContactDisplayHandler extends datamodel\DataDisplayHandler {
 	public $type;
 	
 	public function __construct($type) {
-		parent::__construct("Personal Information", "Contacts");
+		parent::__construct($type == "people" ? "Personal Information" : "Organization", "Contacts");
 		$this->type = $type;
 	}
 	
@@ -19,6 +19,8 @@ class ContactDisplayHandler extends datamodel\DataDisplayHandler {
 	public function createEntry($data, $sub_model, $preset_fields) {
 		PNApplication::error("createEntry not supported by ContactDisplayHandler");
 	}
+	
+	public function stopHere() { return true; }
 }
 
 class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
@@ -89,7 +91,7 @@ class AddressDisplayHandler extends datamodel\DataDisplayHandler {
 	public $type;
 
 	public function __construct($type) {
-		parent::__construct("Personal Information", "Addresses");
+		parent::__construct($type == "people" ? "Personal Information" : "Organization", "Addresses");
 		$this->type = $type;
 	}
 
@@ -102,6 +104,8 @@ class AddressDisplayHandler extends datamodel\DataDisplayHandler {
 	public function createEntry($data, $sub_model, $preset_fields) {
 		PNApplication::error("createEntry not supported by AddressDisplayHandler");
 	}
+	
+	public function stopHere() { return true; }
 }
 class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 
@@ -188,7 +192,9 @@ $model->addTable("Contact")
 			$people_alias = $q->table_id();
 			$q->join($table_alias, "People_contact", array("id"=>"contact"), $people_alias);
 		}
+		$where = $q->save_where();
 		$table_people->filterReadAccess($q, $people_alias);
+		$where_people = $q->save_where();
 
 		$table_org = Datamodel::get()->getTable("Organization_contact");
 		$org_alias = $q->get_table_alias("Organization_contact");
@@ -197,8 +203,15 @@ $model->addTable("Contact")
 			$q->join($table_alias, "Organization_contact", array("id"=>"contact"), $org_alias);
 		}
 		$table_org->filterReadAccess($q, $org_alias);
+		$where_org = $q->save_where();
 
-		$q->where("(`".$people_alias."`.people IS NOT NULL OR `".$org_alias."`.organization IS NOT NULL)");
+		$q->where($where);
+		$where = "((`".$people_alias."`.people IS NOT NULL";
+		if ($where_people <> "") $where .= " AND ".$where_people;
+		$where .= ") OR (`".$org_alias."`.organization IS NOT NULL";
+		if ($where_org <> "") $where .= " AND ".$where_org;
+		$where .= "))";
+		$q->where($where);
 	})
 	->addWriteFilter(function(&$q, $table_alias){
 		$table_people = Datamodel::get()->getTable("People_contact");
@@ -208,7 +221,9 @@ $model->addTable("Contact")
 			$q->join($table_alias, "People_contact", array("id"=>"contact"), $people_alias);
 		}
 		$q->field($people_alias, "people", "PEOPLE_CONTACT_FIELD");
+		$where = $q->save_where();
 		$table_people->prepareSelectToDetermineWriteAccess($q, $people_alias); 
+		$where_people = $q->save_where();
 		
 		$table_org = Datamodel::get()->getTable("Organization_contact");
 		$org_alias = $q->get_table_alias("Organization_contact");
@@ -218,6 +233,15 @@ $model->addTable("Contact")
 		}
 		$q->field($org_alias, "organization", "ORG_CONTACT_FIELD");
 		$table_org->prepareSelectToDetermineWriteAccess($q, $org_alias); 
+		$where_org = $q->save_where();
+
+		$q->where($where);
+		$where = "((`".$people_alias."`.people IS NOT NULL";
+		if ($where_people <> "") $where .= " AND ".$where_people;
+		$where .= ") OR (`".$org_alias."`.organization IS NOT NULL";
+		if ($where_org <> "") $where .= " AND ".$where_org;
+		$where .= "))";
+		$q->where($where);
 	},function($rows) {
 		$people_rows = array();
 		$org_rows = array();
@@ -240,7 +264,9 @@ $model->addTable("Contact")
 			$q->join($table_alias, "People_contact", array("id"=>"contact"), $people_alias);
 		}
 		$q->field($people_alias, "people", "PEOPLE_CONTACT_FIELD");
+		$where = $q->save_where();
 		$table_people->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
+		$where_people = $q->save_where();
 		
 		$table_org = Datamodel::get()->getTable("Organization_contact");
 		$org_alias = $q->get_table_alias("Organization_contact");
@@ -250,7 +276,16 @@ $model->addTable("Contact")
 		}
 		$q->field($org_alias, "organization", "ORG_CONTACT_FIELD");
 		$table_org->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
-
+		$where_org = $q->save_where();
+		
+		$q->where($where);
+		$where = "((`".$people_alias."`.people IS NOT NULL";
+		if ($where_people <> "") $where .= " AND ".$where_people;
+		$where .= ") OR (`".$org_alias."`.organization IS NOT NULL";
+		if ($where_org <> "") $where .= " AND ".$where_org;
+		$where .= "))";
+		$q->where($where);
+		
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
 		$lock_id = DataBaseLock::lock_table("People_contact", $locked_by);
@@ -461,21 +496,20 @@ $model->addTable("People_address")
 
 $model->addTable("Organization")
 	->addPrimaryKey("id")
-	->addString("name",100,0,false,false)
+	->addString("name",100,1,false,false)
 	->addString("creator",100,1,false,false)
 	->addReadFilter(function(&$q, $table_alias){
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
 			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canRead()) array_push($allowed, $c->getCreator());
+			if ($c->canReadOrganization()) array_push($allowed, $c->getOrganizationCreator());
 		}
-		$q->field($table_alias, "creator", "ORG_CREATOR");
 		$w = "(";
 		$first = true;
 		foreach ($allowed as $creator) {
 			if ($first) $first = false; else $w .= " OR ";
-			$w .= "ORG_CREATOR='".SQLQuery::escape($creator)."'";
+			$w .= "`".$table_alias."`.`creator`='".SQLQuery::escape($creator)."'";
 		}
 		$w .= ")";
 		$q->where($w);
@@ -486,7 +520,7 @@ $model->addTable("Organization")
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
 			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canWrite()) array_push($allowed, $c->getCreator());
+			if ($c->canWriteOrganization()) array_push($allowed, $c->getOrganizationCreator());
 		}
 		$final = array();
 		foreach ($rows as $row)
@@ -498,8 +532,8 @@ $model->addTable("Organization")
 		if (!isset($values["creator"])) return false;
 		foreach (PNApplication::$instance->components as $c) {
 			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->getCreator() == $values["creator"])
-				return $c->canInsert();
+			if ($c->getOrganizationCreator() == $values["creator"])
+				return $c->canInsertOrganization();
 		}
 		return false;
 	})
@@ -510,7 +544,154 @@ $model->addTable("Organization")
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
 			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canRemove()) array_push($allowed, $c->getCreator());
+			if ($c->canRemoveOrganization()) array_push($allowed, $c->getOrganizationCreator());
+		}
+		$final = array();
+		foreach ($rows as $row)
+			if (in_array($row["ORG_CREATOR"], $allowed))
+			array_push($final, $row);
+		return $final;
+	})
+	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Contacts", "Contacts", array(
+		"name" => "Name",
+		"creator" => "Managed by",
+	), array(
+		"creator"=>array("not_editable")
+	)))
+	;
+$model->addDataCategoryLink("Contacts", "/dynamic/contact/page/organization_profile?organization=%Organization.id%");
+
+$model->addTable("Organization_type")
+	->addPrimaryKey("id")
+	->addString("name",100,1,false,false)
+	->addString("creator",100,1,false,false)
+	->addReadFilter(function(&$q, $table_alias){
+		require_once("component/contact/OrganizationPlugin.inc");
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canReadOrganization()) array_push($allowed, $c->getOrganizationCreator());
+		}
+		$w = "(";
+		$first = true;
+		foreach ($allowed as $creator) {
+			if ($first) $first = false; else $w .= " OR ";
+			$w .= "`".$table_alias."`.`creator`='".SQLQuery::escape($creator)."'";
+		}
+		$w .= ")";
+		$q->where($w);
+	})
+	->addWriteFilter(function(&$q, $table_alias){
+		$q->field($table_alias, "creator", "ORG_TYPE_CREATOR");
+	},function($rows){
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canWriteOrganization()) array_push($allowed, $c->getOrganizationCreator());
+		}
+		$final = array();
+		foreach ($rows as $row)
+			if (in_array($row["ORG_TYPE_CREATOR"], $allowed))
+				array_push($final, $row);
+		return $final;
+	})
+	->addInsertFilter(function($values){
+		if (!isset($values["creator"])) return false;
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->getOrganizationCreator() == $values["creator"])
+				return $c->canInsertOrganization();
+		}
+		return false;
+	})
+	->addRemoveFilter(function(&$q, $table_alias, &$locks){
+		$q->field($table_alias, "creator", "ORG_TYPE_CREATOR");
+		// TODO locks
+	},function($rows){
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canRemoveOrganization()) array_push($allowed, $c->getOrganizationCreator());
+		}
+		$final = array();
+		foreach ($rows as $row)
+			if (in_array($row["ORG_TYPE_CREATOR"], $allowed))
+			array_push($final, $row);
+		return $final;
+	})
+	;
+
+$model->addTable("Organization_types")
+	->addForeignKey("organization","Organization",true,false,true,false)
+	->addForeignKey("type","Organization_type",true,false,true,false)
+	->setKey(array("organization","type"))
+	->addReadFilter(function(&$q, $table_alias){
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+
+		require_once("component/contact/OrganizationPlugin.inc");
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canReadOrganization()) array_push($allowed, $c->getOrganizationCreator());
+		}
+		$w = "(";
+		$first = true;
+		foreach ($allowed as $creator) {
+			if ($first) $first = false; else $w .= " OR ";
+			$w .= "`".$org_alias."`.`creator`='".SQLQuery::escape($creator)."'";
+		}
+		$w .= ")";
+		$q->where($w);
+	})
+	->addWriteFilter(function(&$q, $table_alias){
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+		$q->field($org_alias, "creator", "ORG_CREATOR");
+	},function($rows){
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canWriteOrganization()) array_push($allowed, $c->getOrganizationCreator());
+		}
+		$final = array();
+		foreach ($rows as $row)
+			if (in_array($row["ORG_CREATOR"], $allowed))
+				array_push($final, $row);
+		return $final;
+	})
+	->addInsertFilter(function($values){
+		try {
+			$org = SQLQuery::create()->select("Organization")->where_value("Organization", "id", $values["organization"])->execute_single_row();
+		} catch (Exception $e) { return false; }
+		if ($org == null) return false;
+		
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->getOrganizationCreator() == $org["creator"])
+				return $c->canInsertOrganization();
+		}
+		return false;
+	})
+	->addRemoveFilter(function(&$q, $table_alias, &$locks){
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+		$q->field($org_alias, "creator", "ORG_CREATOR");
+		// TODO locks
+	},function($rows){
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canRemoveOrganization()) array_push($allowed, $c->getOrganizationCreator());
 		}
 		$final = array();
 		foreach ($rows as $row)
@@ -519,34 +700,90 @@ $model->addTable("Organization")
 		return $final;
 	})
 	;
-	
+
 $model->addTable("Organization_contact")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("contact","Contact",true,false,true,false)
-	->allowReadAccess()
-	; //TODO: set restrictions
+	->addReadFilter(function(&$q, $table_alias) {
+		$table = Datamodel::get()->getTable("Organization");
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+		$table->filterReadAccess($q, $org_alias);
+	})
+	->addRemoveFilter(function(&$q,$table_alias,&$locks){
+		$table = Datamodel::get()->getTable("Organization");
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+		$table->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
+	},function($rows){
+		$table = Datamodel::get()->getTable("Organization");
+		return $table->filterRemoveAccess($rows);
+	})
+	->addInsertFilter(function($values){
+		$q = SQLQuery::create();
+		$table_alias = $q->table_id();
+		$q->select(array("Organization"=>$table_alias));
+		$q->where_value($table_alias, "id", $values["organization"]);
+		$table = DataModel::get()->getTable("Organization");
+		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
+		$rows = $q->execute();
+		$rows = $table->filterWriteAccess($rows);
+		if (count($rows) == 0) return false;
+		return true;
+	})
+	->setDisplayHandler("organization", new ContactDisplayHandler("organization"))
+	;
 	
 $model->addTable("Organization_address")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("address","Postal_address",true,false,true,false)
-	->allowReadAccess()
-	; //TODO: set restrictions
+	->setDisplayHandler("organization", new AddressDisplayHandler("organization"))
+	->addReadFilter(function(&$q, $table_alias) {
+		$table = Datamodel::get()->getTable("Organization");
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+		$table->filterReadAccess($q, $org_alias);
+	})
+	->addRemoveFilter(function(&$q,$table_alias, &$locks){
+		$table = Datamodel::get()->getTable("Organization");
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+		$table->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
+	},function($rows){
+		$table = Datamodel::get()->getTable("Organization");
+		return $table->filterRemoveAccess($rows);
+	})
+	->addInsertFilter(function($values){
+		$q = SQLQuery::create();
+		$table_alias = $q->table_id();
+		$q->select(array("Organization"=>$table_alias));
+		$q->where_value($table_alias, "id", $values["organization"]);
+		$table = DataModel::get()->getTable("Organization");
+		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
+		$rows = $q->execute();
+		$rows = $table->filterWriteAccess($rows);
+		if (count($rows) == 0) return false;
+		return true;
+	})
+	;
 	
 $model->addTable("Contact_point")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("people","People",true,false,true,false)
+	->setKey(array("organization","people"))
 	->addString("designation",100,0,true,false)
 	->allowReadAccess()
-	; //TODO set restrictions
-	
-$model->addTable("Organization_type")
-	->addPrimaryKey("id")
-	->addString("name",100,1,false,true)
-	->allowReadAccess()
-	; //TODO set restrictions
-	
-$model->addTable("Organization_types")
-	->addForeignKey("organization","Organization",true,false,true,false)
-	->addForeignKey("type","Organization_type",true,false,true,false)
-	->allowReadAccess()
+	->setDisplayHandler(null, new datamodel\StopDataDisplayHandler("Organization", "Contacts Points")) // TODO
 	; //TODO set restrictions

@@ -77,6 +77,7 @@ typed_field.prototype = {
 	getError: function() {
 		return this.error;
 	},
+	hasError: function() { return this.error != null; },
 	canBeNull: function() {
 		alert("Function canBeNull not implemented in typed_field: "+this.constructor.name);
 	},

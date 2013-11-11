@@ -3,7 +3,8 @@
 <head>
 	<title>PN Students Database</title>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
-	<style type='text/css'>body,html{width:100%;height:100%;margin:0px;padding:0px;}</style>
+	<style type='text/css'>body,html,table{width:100%;height:100%;margin:0px;padding:0px;font-family:Arial,Tahoma,Verdana;font-size:10pt;}
+}</style>
 </head>
 <body>
 <table id='__loading_table' style='width:100%;height:100%;margin:0px;padding:0px;z-index:100;background-color:white;position:fixed;top:0px;left:0px;'>
@@ -89,7 +90,7 @@ var loaded_size = 0;
 
 function update_size() {
 	var pc = Math.floor(loaded_size*100/total_size);
-	document.getElementById('loading_status').innerHTML = pc+"%";
+	document.getElementById('loading_status').innerHTML = "Loading ("+pc+"%)";
 }
 
 function next_mandatory() {
@@ -136,6 +137,9 @@ function pn_loading_end() {
 		return;
 	}
 	animation.fadeOut(window.pn_loading,500);
+}
+function set_loading_message(msg) {
+	document.getElementById('loading_status').innerHTML = msg;
 }
 </script>
 </body>

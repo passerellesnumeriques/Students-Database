@@ -6,7 +6,7 @@ $model->addTable("DataLocks")
 	->addString("locker_domain")
 	->addString("locker_username")
 	->addString("table")
-	->addInteger("row_key")
+	->addString("row_key",1024,0,true,false)
 	->addString("column")
 	;
 ?>

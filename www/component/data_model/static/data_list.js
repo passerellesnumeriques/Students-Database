@@ -30,12 +30,16 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		var div = document.createElement("DIV");
 		div.style.display = "inline-block";
 		div.className = "data_list_title";
-		var img = document.createElement("IMG");
-		img.src = icon;
-		div.appendChild(img);
-		var span = document.createElement("SPAN");
-		span.appendChild(document.createTextNode(text));
-		div.appendChild(span);
+		if (icon) {
+			var img = document.createElement("IMG");
+			img.src = icon;
+			div.appendChild(img);
+		}
+		if (text) {
+			var span = document.createElement("SPAN");
+			span.appendChild(document.createTextNode(text));
+			div.appendChild(span);
+		}
 		div.setAttribute("layout", "fixed");
 		t.header.insertBefore(div, t.header_left);
 		fireLayoutEventFor(t.header);

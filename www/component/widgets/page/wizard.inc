@@ -32,6 +32,12 @@ function enable_wizard_page_next(enabled) {
 function enable_wizard_page_finish(enabled) {
 	document.getElementById('wizard_page_button_finish').disabled = enabled ? "" : "disabled";
 }
+function hide_wizard_page_previous(hide) {
+	document.getElementById('wizard_page_button_previous').style.visibility = hide ? "hidden" : "visible";
+}
+function hide_wizard_page_next(hide) {
+	document.getElementById('wizard_page_button_next').style.visibility = hide ? "hidden" : "visible";
+}
 function wizard_page_previous() {
 	wizard_freeze();
 	var frame = document.getElementById('wizard_page_content');

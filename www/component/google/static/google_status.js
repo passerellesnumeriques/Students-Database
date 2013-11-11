@@ -11,6 +11,7 @@ function google_status(container) {
 	container.appendChild(t.icon);
 	
 	t.update_icon = function() {
+		if (!w.theme) return; // window closed
 		var url = "/static/application/icon.php?main=/static/google/google.png&where=right_bottom&small=";
 		switch (window.top.google.connection_status) {
 		case 0: url += w.theme.icons_10.no_connection; break;

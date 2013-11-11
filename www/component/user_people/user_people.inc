@@ -1,7 +1,6 @@
 <?php
-require_once("component/people/ProfilePlugin.inc"); 
 require_once("component/people/PeoplePlugin.inc"); 
-class user_people extends Component implements ProfilePlugin, PeoplePlugin {
+class user_people extends Component implements PeoplePlugin {
 	
 	public $user_people_id;
 	
@@ -55,15 +54,36 @@ class user_people extends Component implements ProfilePlugin, PeoplePlugin {
 		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->execute_single_value();
 	}
 	
-	public function get_profile_pages(&$people) {
-		$user_id = @$_GET["user"];
-		if ($user_id == null && $people <> null)
-			$user_id = $this->get_user_from_people($people);
+	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
+		$people_alias = $q->get_table_alias("People");
+		$alias = $q->table_id();
+		$q->join($people_alias, "UserPeople", array("id"=>"people"), $alias);
+		$q->field($alias, "user");
+	}
+	public function getPeopleProfilePages($people_id, $people, $q) {
+		if ($people["user"] == null) return array(); // not a user 
+		$user_id = $people["user"];
 		return array(
-			"user_rights"=>array("/static/user_management/access_list.png", "User Rights", "/dynamic/user_management/page/user_rights?user=".$user_id, 1000),
+			array(
+				"/static/user_management/access_list.png", 
+				"User Rights", 
+				"/dynamic/user_management/page/user_rights?user=".$user_id, 
+				1000
+			)
 		);
 	}
 
+	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {}
+	
+	public function getCreatePeopleSupportedTypes() { return array("user"); }
+	public function isCreatePeopleAllowed($people_type) {
+		if ($people_type <> "user") return false;
+		return PNApplication::$instance->user_management->has_right("manage_users", true);
+	}
+	public function getCreatePeoplePages($people_types) {}
+	public function createPeople($people_id, $people_types, $input, &$create_data) {}
+	public function rollbackCreatePeople($people_id, $people_types, $input, &$create_data) {}
+	
 	public function filterPeopleReadAccess(&$q, $people_table_alias) {
 		if (!PNApplication::$instance->user_management->has_right("consult_user_list")) return null;
 		$alias = $q->get_table_alias("UserPeople");

@@ -66,6 +66,19 @@ function contacts(container, table_join, join_key, join_value, contacts, can_edi
 		contact.thead.appendChild(tr_head);
 	};
 	
+	t.getContacts = function() {
+		var contacts = [];
+		var list = t.email.getContacts();
+		for (var i = 0; i < list.length; ++i) contacts.push(list[i]);
+		var list = t.phone.getContacts();
+		for (var i = 0; i < list.length; ++i) contacts.push(list[i]);
+		var list = t.im.getContacts();
+		for (var i = 0; i < list.length; ++i) contacts.push(list[i]);
+		return contacts;
+	};
+	
+	t.onchange = new Custom_Event();
+	
 	require("contact_type.js",function() {
 		var emails = [], phones = [], im = [];
 		for (var i = 0; i < contacts.length; ++i)
@@ -74,16 +87,22 @@ function contacts(container, table_join, join_key, join_value, contacts, can_edi
 			case "phone": phones.push(contacts[i]); break;
 			case "IM": im.push(contacts[i]); break;
 			}
-		t.email = new contact_type("email", "EMail", table_join, join_key, join_value, emails, can_edit, can_add, can_remove, t._updateCol1, function(email){
+		new contact_type("email", "EMail", table_join, join_key, join_value, emails, can_edit, can_add, can_remove, t._updateCol1, function(email){
 			t._init_table(email, "email", "EMail", "#304060", "#D8D8F0");
+			t.email = email;
+			email.onchange.add_listener(function(){ t.onchange.fire(t); });
 			t._ready();
 		});
-		t.phone = new contact_type("phone", "Phone", table_join, join_key, join_value, phones, can_edit, can_add, can_remove, t._updateCol1, function(phone){
+		new contact_type("phone", "Phone", table_join, join_key, join_value, phones, can_edit, can_add, can_remove, t._updateCol1, function(phone){
 			t._init_table(phone, "phone", "Phone", "#3080b8", "#D0E0FF");
+			t.phone = phone;
+			phone.onchange.add_listener(function(){ t.onchange.fire(t); });
 			t._ready();
 		});
-		t.im = new contact_type("IM", "Instant Messaging", table_join, join_key, join_value, im, can_edit, can_add, can_remove, t._updateCol1, function(im){
+		new contact_type("IM", "Instant Messaging", table_join, join_key, join_value, im, can_edit, can_add, can_remove, t._updateCol1, function(im){
 			t._init_table(im, "IM", "Instant Messaging", "#70a840", "#D8F0D8");
+			t.im = im;
+			im.onchange.add_listener(function(){ t.onchange.fire(t); });
 			t._ready();
 		});
 	});

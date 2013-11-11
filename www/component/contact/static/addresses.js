@@ -7,6 +7,11 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 	this.addresses = addresses;
 	var t=this;
 	
+	this.getAddresses = function() {
+		return this.addresses;
+	};
+	this.onchange = new Custom_Event();
+	
 	this._createTable = function() {
 		container.appendChild(this.table = document.createElement("table"));
 		this.table.appendChild(this.thead = document.createElement("thead"));
@@ -93,6 +98,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 									for (var i = 0; i < t.addresses.length; ++i)
 										if (t.addresses[i] == div_data.address) {
 											t.addresses[i] = edit.address;
+											t.onchange.fire(t);
 											break;
 										}
 									var end = function() {
@@ -171,6 +177,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 				t.addresses[l] = {id:res.id, country:null, geographic_area:null, street_name:null, street_number:null, building:null, unit:null, additional:null, address_type:"Work"};
 				/* Update the table */
 				t.addAddress(t.addresses[l], true);
+				t.onchange.fire(t);
 			});
 		} else {
 			/* Update the result object */
@@ -178,6 +185,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 			t.addresses[l] = {id:-1, country:null, geographic_area:null, street_name:null, street_number:null, building:null, unit:null, additional:null, address_type:"Work"};
 			/* Update the table */
 			t.addAddress(t.addresses[l], true);
+			t.onchange.fire(t);
 		}
 	};
 	
@@ -203,12 +211,14 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 					if (t.tbody.childNodes[i].address == address)
 						t.tbody.removeChild(t.tbody.childNodes[i]);
 				t.addresses.remove(address);
+				t.onchange.fire(t);
 			});
 		} else {
 			for (var i = 0; i < t.tbody.childNodes.length; ++i)
 				if (t.tbody.childNodes[i].address == address)
 					t.tbody.removeChild(t.tbody.childNodes[i]);
 			t.addresses.remove(address);
+			t.onchange.fire(t);
 		}
 	};
 	
@@ -298,10 +308,12 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 				if(!res) return;
 				container.innerHTML = sub_type;
 				address.address_type = sub_type;
+				t.onchange.fire(t);
 			});
 		} else {
 			container.innerHTML = sub_type;
 			address.address_type = sub_type;
+			t.onchange.fire(t);
 		}
 	};
 	

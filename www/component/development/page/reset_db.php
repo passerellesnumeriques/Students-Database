@@ -34,6 +34,14 @@ function next() {
 			div.appendChild(document.createTextNode(' DONE.'));
 			next();
 		});
+	} else {
+		var a = document.createElement("A");
+		a.href = "#";
+		a.onclick = function() {
+			location.href = "/dynamic/application/page/enter";
+		};
+		a.innerHTML = "Back to login page";
+		document.body.appendChild(a);
 	}
 }
 next();

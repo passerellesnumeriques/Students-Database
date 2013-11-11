@@ -6,7 +6,10 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 		setcookie("username",$_POST["username"],time()+30*24*60*60,"/dynamic/application/page/enter");
 		$error = PNApplication::$instance->user_management->login($_POST["domain"], $_POST["username"], $_POST["password"]);
 		if ($error === null) {
-			header("Location: enter");
+			echo "<script type='text/javascript'>";
+			echo "window.top.set_loading_message('Starting application...');";
+			echo "location.href = 'enter';";
+			echo "</script>";
 			return;
 		} else
 			$message = "Authentication failed: ".$error;
@@ -113,7 +116,8 @@ setBackgroundGradient(document.getElementById('login_table'),"vertical",[{pos:0,
 function login() {
 	window.no_loading = true;
 	window.top.pn_loading_start();
-	if (window.loading) window.loading.stop();
+	if (window.loading && window.loading.stop) window.loading.stop();
+	window.top.set_loading_message("Authentication on "+document.forms['login_form'].elements['domain'].value+"...");
 	document.forms["login_form"].onsubmit = null;
 	document.forms["login_form"].submit();
 }

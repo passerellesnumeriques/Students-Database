@@ -10,20 +10,23 @@
 	</select>
 </div>
 <script type='text/javascript'>
-var batch = document.getElementById('student_batch');
-if (window.parent.create_people.student_batch) {
-	for (var i = 0; i < batch.options.length; ++i)
-		if (batch.options[i].value == window.parent.create_people.student_batch) {
-			batch.selectedIndex = i;
-			break;
-		} 
-}
-function save_create_people_info(validate) {
-	window.parent.create_people.student_batch = batch.value;
-	if (window.parent.create_people.student_batch == '') {
-		alert("Please select a batch");
-		return false;
+function create_people_student_section() {
+	this.batch = document.getElementById('student_batch');
+	if (window.create_people.student_batch) {
+		for (var i = 0; i < this.batch.options.length; ++i)
+			if (this.batch.options[i].value == window.create_people.student_batch) {
+				this.batch.selectedIndex = i;
+				break;
+			} 
 	}
-	return true;
+	this.validate_and_save = function() {
+		window.create_people.student_batch = this.batch.value;
+		if (window.create_people.student_batch == '') {
+			alert("Please select a batch");
+			return false;
+		}
+		return true;
+	}
 }
+window.create_people_sections.push(new create_people_student_section());
 </script>

@@ -8,7 +8,7 @@ function people_picture_and_info(&$page, $people_id) {
 	?>
 	<table>
 	<tr>
-	<td>
+	<td valign=top>
 		<div id='picture'></div>
 		<div id='upload_picture' style='width:150px;overflow:hidden'></div>
 	</td>

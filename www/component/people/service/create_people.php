@@ -8,25 +8,39 @@ class service_create_people extends Service {
 	public function output_documentation() { echo "On success, returns the id of the newly created people"; }
 	
 	public function execute(&$component, $input) {
-		$people_id = @$input["people"]["people_id"];
-		$people_created = false;
-		if ($people_id == null) {
-			// new people
-			$people_created = true;
-			$fields = array_merge($input["people"]);
-			unset($fields["people_id"]);
-			try {
-				$people_id = SQLQuery::create()->insert("People", $fields);
-			} catch (Exception $ex) { PNApplication::error($ex); $people_id = 0; }
-			if ($people_id == 0) { echo "false"; return; }
+		$types = array_merge($input["types"]);
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			$supported_types = $c->getCreatePeopleSupportedTypes();
+			for ($i = 0; $i < count($types); $i++) {
+				if (!in_array($types[$i], $supported_types)) continue;
+				if (!$c->isCreatePeopleAllowed($types[$i])) {
+					PNApplication::error("You are not allowed to create a people of type '".$types[$i]."'.");
+					return;
+				}
+				array_splice($types, $i, 1);
+				$i--;
+			}
 		}
+		if (count($types) <> 0) {
+			foreach ($types as $type)
+				PNApplication::error("Invalid people type '".$type."'");
+			return;
+		}
+		$types = $input["types"];
+		
+		$fields = array_merge($input["people"]);
+		unset($fields["people_id"]);
+		try {
+			$people_id = SQLQuery::create()->bypass_security()->insert("People", $fields);
+		} catch (Exception $ex) { PNApplication::error($ex); $people_id = 0; }
+		if ($people_id == 0) { echo "false"; return; }
 		
 		$list = array();
-		require_once("component/people/ProfileGeneralInfoPlugin.inc");
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof ProfileGeneralInfoPlugin)) continue;
-			$cpages = $c->get_create_people_pages($input["people_type"]);
-			if (count($cpages) == 0) continue;
+			if (!($c instanceof PeoplePlugin)) continue;
+			$cpages = $c->getCreatePeoplePages($types);
+			if ($cpages == null || count($cpages) == 0) continue;
 			$min = 99999999;
 			foreach ($cpages as $p) if ($p[2] < $min) $min = $p[2];
 			array_push($list, array($c, $min));
@@ -35,12 +49,11 @@ class service_create_people extends Service {
 		$create_data = array();
 		for ($i = 0; $i < count($list); $i++) {
 			$c = $list[$i][0];
-			if (!$c->create_people($people_id, $input["people_type"], $input, $create_data)) {
+			if (!$c->createPeople($people_id, $types, $input, $create_data)) {
 				// failure: roll back
 				for ($j = $i-1; $j >= 0; --$j)
-					$list[$j][0]->rollback_create_people($people_id, $input["people_type"], $input, $create_data);
-				if ($people_created)
-					SQLQuery::create()->remove_key("People", $people_id);
+					$list[$j][0]->rollbackCreatePeople($people_id, $types, $input, $create_data);
+				SQLQuery::create()->bypass_security()->remove_key("People", $people_id);
 				echo "false";
 				return;
 			}

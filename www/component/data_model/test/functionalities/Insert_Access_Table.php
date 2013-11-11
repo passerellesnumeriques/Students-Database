@@ -170,7 +170,7 @@ class Insert_Access_Table_Test_ReadInsert_UserReadInsert extends TestStep {
 		try {
 			$scenario_data["readinsert_id2"] = SQLQuery::create()->insert("TestInsertAccess_readinsert", array("value"=>111));
 		} catch (Exception $e) {
-			return "Cannot insert";
+			return "Cannot insert: ".$e->getMessage();
 		}
 		try {
 			$res = SQLQuery::create()->select("TestInsertAccess_readinsert")->where("id",$scenario_data["readinsert_id2"])->execute();
@@ -210,7 +210,7 @@ class Insert_Access_Table_Test_ReadInsertFilter_UserReadWrite extends TestStep {
 		try {
 			$scenario_data["readinsertfilter_id2"] = SQLQuery::create()->insert("TestInsertAccess_readinsertfilter", array("value"=>1111));
 		} catch (Exception $e) {
-			return "Cannot insert with a value which match the filter";
+			return "Cannot insert with a value which match the filter: ".$e->getMessage();
 		}
 		try {
 			$res = SQLQuery::create()->select("TestInsertAccess_readinsertfilter")->where("id",$scenario_data["readinsertfilter_id2"])->execute();
@@ -245,7 +245,7 @@ class Insert_Access_Table_Test_ReadInsertFilter_UserReadInsert extends TestStep 
 		try {
 			$scenario_data["readinsertfilter_id3"] = SQLQuery::create()->insert("TestInsertAccess_readinsertfilter", array("value"=>111));
 		} catch (Exception $e) {
-			return "Cannot insert with a value which does not match the filter";
+			return "Cannot insert with a value which does not match the filter: ".$e->getMessage();
 		}
 		try {
 			$res = SQLQuery::create()->select("TestInsertAccess_readinsertfilter")->where("id",$scenario_data["readinsertfilter_id3"])->execute();
@@ -257,7 +257,7 @@ class Insert_Access_Table_Test_ReadInsertFilter_UserReadInsert extends TestStep 
 		try {
 			$scenario_data["readinsertfilter_id4"] = SQLQuery::create()->insert("TestInsertAccess_readinsertfilter", array("value"=>2000));
 		} catch (Exception $e) {
-			return "Cannot insert with a value which match the filter";
+			return "Cannot insert with a value which match the filter: ".$e->getMessage();
 		}
 		try {
 			$res = SQLQuery::create()->select("TestInsertAccess_readinsertfilter")->where("id",$scenario_data["readinsertfilter_id4"])->execute();
