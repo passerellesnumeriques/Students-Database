@@ -12,6 +12,7 @@ class data_model_Tests extends ComponentTests {
 			// TODO Datadisplay
 			// TODO modify/add: check validation of values/unicity...
 			// TODO all tests again with sub models
+			// TODO test on tables with no primary key
 		);
 	}
 	public function getServicesTests() {

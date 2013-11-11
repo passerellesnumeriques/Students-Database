@@ -108,10 +108,19 @@ function organization(container, org, can_edit) {
 						if (!name) return;
 						service.json("contact","new_organization_type",{creator:org.creator,name:name},function(res){
 							if (!res) return;
-							org.types.push(res.id);
-							org.existing_types.push({id:res.id,name:name});
-							t.types.addItem(res.id, name);
-							// TODO save on database
+							if (org.id != -1) {
+								service.json("contact", "assign_organization_type", {organization:org.id,type:res.id}, function(res) {
+									if (res) {
+										org.types.push(res.id);
+										org.existing_types.push({id:res.id,name:name});
+										t.types.addItem(res.id, name);
+									}
+								});
+							} else {
+								org.types.push(res.id);
+								org.existing_types.push({id:res.id,name:name});
+								t.types.addItem(res.id, name);
+							}
 						});
 					});
 				};

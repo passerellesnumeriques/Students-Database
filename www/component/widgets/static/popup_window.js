@@ -51,11 +51,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content.style.width = "100%";
 			t.content.style.height = "100%";
 			t.resize();
-			getIFrameWindow(t.content).addLayoutEvent(getIFrameDocument(t.content).body, function() {
-				t.resize();
-			});
-			//var w = getIFrameWindow(t.content);
-			//w.listenEvent(w, 'resize', function() { t.resize(); });
+			setTimeout(function() { t.resize(); }, 1);
+			setTimeout(function() { t.resize(); }, 100);
 		};
 		if (t.content_container) {
 			while (t.content_container.childNodes.length > 0) t.content_container.removeChild(t.content_container.childNodes[0]);
@@ -241,6 +238,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		}
 		return max;
 	};
+		
 	/** Resize the window according to its content: this is normally automatically called. 
 	 * @method popup_window#resize
 	 */
@@ -264,8 +262,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (t.buttons_tr) h += getHeight(t.buttons_tr);
 			if (x > getWindowWidth()-30) x = getWindowWidth()-30;
 			if (y > getWindowHeight()-30-h) y = getWindowHeight()-30-h;
-			t.content_container.style.height = y+"px";
-			t.content_container.style.width = x+"px";
+			setWidth(t.content_container, x);
+			setHeight(t.content_container, y);
 			t.content_container.overflow = "hidden";
 			x = getWindowWidth()/2 - x/2;
 			y = getWindowHeight()/2 - (y+t.header.scrollHeight)/2;

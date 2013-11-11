@@ -19,6 +19,14 @@ var _layout_events = [];
 function addLayoutEvent(element, handler) {
 	_layout_events.push({element:element,handler:handler});
 }
+function removeLayoutEvent(element, handler) {
+	for (var i = 0; i < _layout_events.length; ++i) {
+		if (_layout_events[i].element == element && _layout_events[i].handler == handler) {
+			_layout_events.splice(i,1);
+			i--;
+		}
+	}
+}
 function _fire_layout_events() {
 	// order elements
 	var list = [];
