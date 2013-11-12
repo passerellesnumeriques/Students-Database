@@ -14,7 +14,10 @@ class students extends Component implements PeoplePlugin {
 	}
 	
 	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {
-		return array(); // TODO
+		if ($people["batch"] == null) return array(); // not a student
+		return array(
+			array("/static/students/student_16.png","Student","component/students/page/people_profile__student.inc",10)
+		);
 	}
 	
 	public function getCreatePeopleSupportedTypes() { return array("student"); }

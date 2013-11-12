@@ -39,7 +39,11 @@ field_enum.prototype._create = function(data) {
 		select.onchange = f;
 		select.onblur = f;
 		this.element.appendChild(select);
-		this.getCurrentData = function() { return select.selectedIndex >= 0 ? select.options[select.selectedIndex].value : null; };
+		this.getCurrentData = function() {
+			if (select.selectedIndex < 0) return null;
+			if (this.config.can_be_empty && select.selectedIndex == 0) return null;
+			return select.options[select.selectedIndex].value; 
+		};
 		this.setData = function(data) {
 			for (var i = 0; i < select.options.length; ++i)
 				if (select.options[i].value == data) {

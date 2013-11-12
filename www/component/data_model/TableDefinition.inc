@@ -163,8 +163,8 @@ class Table {
 	 * @param boolean|null $can_be_null indicates if this foreign key can be null. If not specified (null) it will be considered that the foreign key can be null if $remove_foreign_when_primary_removed is set to false (example of overriding this info is when we have a foreign key pointing to the same table to create a tree, and the root level needs to be null).
 	 * @return \datamodel\Table
 	 */
-	public function &addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null = null) {
-		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null);
+	public function &addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null = null, $unique = false) {
+		$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null, $unique);
 		array_push($this->columns, $c);
 		return $this;
 	}
@@ -612,6 +612,24 @@ class ColumnEnum extends Column {
 		$sql .= ")";
 		return $sql;
 	}
+	
+	public function validate($value) {
+		if ($value === null) {
+			if ($this->can_be_null) return null;
+			throw new \Exception("Cannot be empty");
+		}
+		foreach ($this->values as $v)
+			if ($value == $v) return $v;
+		if ($value == "" && $this->can_be_null) return null;
+		$error = "Invalid value '".$value."' (allowed values are: ";
+		$first = true;
+		foreach ($this->values as $v) {
+			if ($first) $first = false; else $error .= ",";
+			$error .= "'".$v."'";
+		}
+		$error .= ")";
+		throw new \Exception($error);
+	}
 }
 
 /**
@@ -717,7 +735,7 @@ class ForeignKey extends ColumnInteger {
 	public $remove_primary_when_foreign_removed;
 	public $multiple;
 	
-	public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null) {
+	public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null, $unique) {
 		$this->foreign_table = $foreign_table;
 		$this->remove_foreign_when_primary_removed = $remove_foreign_when_primary_removed;
 		$this->remove_primary_when_foreign_removed = $remove_primary_when_foreign_removed;
@@ -732,7 +750,7 @@ class ForeignKey extends ColumnInteger {
 			$size = 32;
 		} else
 			$size = $ft->getPrimaryKey()->size;
-		parent::__construct($table, $name, $size, null, null, $can_be_null === null ? !$remove_foreign_when_primary_removed : $can_be_null, false);
+		parent::__construct($table, $name, $size, null, null, $can_be_null === null ? !$remove_foreign_when_primary_removed : $can_be_null, $unique);
 	}
 
 	public function get_sql_type() { 
@@ -1213,7 +1231,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		$q->field($this->handler->table->getName(), $this->foreign_key_name, "VALUE");
 		$col_name = $this->key_column;
 		if ($col_name == null) $col_name = $this->handler->table->getPrimaryKey()->name;
-		$q->where($this->handler->table->getName(), $col_name, $key);
+		$q->where_value($this->handler->table->getName(), $col_name, $key);
 		return $q->execute_single_value();
 	}
 	

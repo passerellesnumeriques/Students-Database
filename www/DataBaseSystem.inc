@@ -24,8 +24,13 @@ abstract class DataBaseSystem {
 			$res = $this->execute_sql($sql_query);
 		if ($res === false && $report_errors) {
 			$err = $this->get_last_error_number();
-			if ($err <> 0)
-				PNApplication::error("DataBase Error #".$err.": ".$this->get_last_error_message()." [".$sql_query."]");
+			if ($err <> 0) {
+				try {
+					throw new Exception("DataBase Error #".$err.": ".$this->get_last_error_message()." [".$sql_query."]");
+				} catch (Exception $e) {
+					PNApplication::error($e);
+				}
+			}
 		}
 		return $res;
 	}

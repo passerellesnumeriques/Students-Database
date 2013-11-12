@@ -38,13 +38,16 @@ function init_students_list() {
 			create_student.className = "button";
 			create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
 			create_student.onclick = function() {
-/*				post_data("/dynamic/people/page/create_people",{
+				var data = {
 					icon: "/static/application/icon.php?main=/static/students/student_32.png&small="+theme.icons_16.add+"&where=right_bottom",
 					title: "Create New Student",
-					people_type: "student",
-					redirect: "/dynamic/students/page/batch_list?batch=<?php echo $_GET["batch"];?>",
-					student_batch: <?php echo $_GET["batch"];?>
-				});*/
+					types: ["student"]
+				};
+				if (new_student_data)
+					new_student_data(data);
+				else
+					data.redirect = location.href;
+				post_data("/dynamic/people/page/create_people",data);
 			};
 			list.addHeader(create_student);
 		}

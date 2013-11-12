@@ -1,7 +1,7 @@
 <?php 
 function people_picture_and_info(&$page, $people_id) {
 	$can_edit = PNApplication::$instance->user_management->has_right("edit_people_details");
-	$people = SQLQuery::create()->select("People")->where("id",$people_id)->execute_single_row();
+	$people = SQLQuery::create()->select("People")->where_value("People","id",$people_id)->execute_single_row();
 	
 	$page->add_javascript("/static/storage/upload.js");
 	$page->add_javascript("/static/storage/picture.js");
