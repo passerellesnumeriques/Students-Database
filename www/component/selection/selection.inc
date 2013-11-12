@@ -4,7 +4,7 @@ class selection extends Component{
 	private $campaign_id = null;
 	
 	/**
-	 * When set, config is an array [["name"=>, "value"],[...]]
+	 * When set, config is an array [["name"=>"value"],[...]]
 	 */
 	private $config = null;
 	
@@ -53,10 +53,13 @@ class selection extends Component{
 				$all_configs = include("config.inc");
 				$j = 0;
 				foreach($all_configs as $all_config){
-					if($all_config[2] <> null){
+					//if($all_config[2] <> null){
+					//Useless testing because default value is mandatory
 						$this->config[$j] = array("name" => $all_config[0], "value" => $all_config[2]);
 						$j++;
-					}
+						/* The default config must also be set in the database */
+						//$q_default = SQLQuery::create()->insert("Selection_campaign_config",array("name"=>$all_config[0],"value"=>$all_config[2]));
+					//}
 				}
 				return $this->config;
 			}

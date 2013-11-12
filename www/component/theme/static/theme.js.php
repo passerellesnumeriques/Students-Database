@@ -21,5 +21,14 @@ foreach (theme::$icons_10 as $name=>$url) {
 	echo $name.": ".json_encode($url);
 }
 ?>
+	},
+	icons_32: {
+<?php 
+$first = true;
+foreach (theme::$icons_32 as $name=>$url) {
+	if ($first) $first = false; else echo ",\r\n";
+	echo $name.": ".json_encode($url);
+}
+?>
 	}
 };

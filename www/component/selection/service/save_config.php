@@ -50,11 +50,9 @@ class service_save_config extends Service{
 				}
 			/* This is an update */
 				$q_update = SQLQuery::create()->update("Selection_campaign_config", $final_fields, $final_old_config);
-				$q_update->execute();
 			} else {
 			/* This is an insert */
 				$q_insert = SQLQuery::create()->insert("Selection_campaign_config",$final_fields);
-				$q_insert->execute();
 				//TODO: insert method try to get the id of the inserted row: create any problem??
 			}
 		} catch(Exception $e) {

@@ -40,11 +40,15 @@ function manage_config(&$page,$container_id){
 	<script type='text/javascript'>
 	function <?php echo $fct_name; ?>(){
 		var campaign_id = <?php echo $campaign_id.";"; ?>
+		alert(campaign_id);
 		var lock_id = <?php echo $lock_id.";";?>
 		var rights = {};
 		rights.remove = <?php echo json_encode($rights['remove']).";";?>
 		rights.edit = <?php echo json_encode($rights['edit']).";";?>
 		rights.add = <?php echo json_encode($rights['add']).";";?>
+		
+		//TEMP
+		rights.edit = true;
 	
 		var container = document.getElementById(<?php echo json_encode($container_id);?>);
 		
@@ -57,7 +61,7 @@ function manage_config(&$page,$container_id){
 			$first = false;
 			echo "{name:".json_encode($all_config[0]);
 			echo ", ";
-			echo "{text:".json_encode($all_config[1]);
+			echo "text:".json_encode($all_config[1]);
 			echo ", ";
 			echo "default_value:".json_encode($all_config[2]);
 			echo ", ";
@@ -76,10 +80,8 @@ function manage_config(&$page,$container_id){
 		echo "];";
 		?>
 		
-		/** Create an object containing the current config = [{name:, value:}]
-		 * If the config got by get_config method is an empty array,
-		 * this is because no config parameter is set by default.
-		 * In that case, the js config is set as an empty array
+		/**
+		 * Create an object containing the current config = [{name:, value:}]
 		 */
 		var config = <?php
 			echo "[";
@@ -92,6 +94,8 @@ function manage_config(&$page,$container_id){
 				}
 			}
 			echo "];";
+			$q_default = SQLQuery::create()->insert("Selection_campaign_config",array("name"=>"toto","value"=>"tata"));
+			//echo "count:".count($config).", name:".$config["name"].", value:".$config["value"];
 		?>
 		/**
 		 * The old configuration is stocked in the old_config variable
@@ -107,7 +111,8 @@ function manage_config(&$page,$container_id){
 			var table = document.createElement("table");
 			var theader = document.createElement("theader");
 			var tbody = document.createElement("tbody");
-			var tfoot = = document.createElement("tfoot");
+			var ul = document.createElement("ul");
+			var tfoot = document.createElement("tfoot");
 			var form = document.createElement("form");
 			config.setHeader(theader);
 			config.setBody(tbody);
@@ -115,14 +120,16 @@ function manage_config(&$page,$container_id){
 			table.appendChild(theader);
 			table.appendChild(tbody);
 			table.appendChild(tfoot);
-			form.appendChild(table);
+			ul.appendChild(table);
+			form.appendChild(ul);
 			container.appendChild(form);
 		}
 		
 		config.setHeader = function (theader){
 			var div = document.createElement('div');
-			div.innerHTML = "Selection Campaign Configuration";
+			div.innerHTML = "Selection Campaign Configuration <img src='"+theme.icons_32.config+"' />";
 			div.style.fontSize = "x-large";
+			div.style.padding = "30px";
 			theader.appendChild(div);
 		}
 		
@@ -130,6 +137,7 @@ function manage_config(&$page,$container_id){
 			if(!rights.edit){
 				var div = document.createElement("div");
 				div.innerHTML = "You are not allowed to edit the configuration of this campaign";
+				div.style.fontStyle = "italic";
 				tbody.appendChild(div);
 			} else {
 				for(var i = 0; i < all_configs.length; i++){
@@ -142,7 +150,9 @@ function manage_config(&$page,$container_id){
 			var tr = document.createElement("tr");
 			var td1 = document.createElement("td");
 			var td2 = document.createElement("td");
-			td1.innerHTML = all_configs[index].text;
+			var li = document.createElement("li");
+			li.innerHTML = all_configs[index].text;
+			td1.appendChild(li);
 			var config_index = config.findIndex(all_configs[index].name);
 			/* If the type is boolean, create a checkbox */
 			if(all_configs[index].type == "boolean"){
@@ -178,6 +188,9 @@ function manage_config(&$page,$container_id){
 				};
 				td2.appendChild(select);
 			}
+			tr.appendChild(td1);
+			tr.appendChild(td2);
+			tbody.appendChild(tr);
 		}
 		
 		config.findIndex = function(name){
@@ -192,13 +205,15 @@ function manage_config(&$page,$container_id){
 		}
 		
 		config.setFoot = function(tfoot){
-			var submit = document.createElement("button");
-			submit.type = "submit";
-			submit.innerHTML = "Save";
+			var submit = document.createElement("div");
+			submit.innerHTML = "Save <img src='"+theme.icons_16.save+"' />";
+			submit.style.fontWeight = "bold";
+			submit.className = "button";
 			submit.onclick = function(){
 				config.save();
 				return false;
 			};
+			tfoot.appendChild(submit);
 		}
 		
 		config.save = function(){
@@ -210,7 +225,10 @@ function manage_config(&$page,$container_id){
 				});
 			});
 		}
+		if(typeof(container) == "object") config.init();
 	}
+	//Start the process
+	<?php echo $fct_name; ?>();
 	</script>
 	<?php
 

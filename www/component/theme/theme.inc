@@ -5,6 +5,7 @@ class theme extends Component {
 	public static $style;
 	public static $icons_16;
 	public static $icons_10;
+	public static $icons_32;
 	
 }
 
@@ -50,5 +51,9 @@ theme::$icons_10 = array(
 	"save" => 			"/static/theme/".$theme."/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/".$theme."/icons_10/semi_online.gif",
 	"no_connection" => 	"/static/theme/".$theme."/icons_10/no_connection.gif",
+);
+
+theme::$icons_32 = array(
+	"config" => 			"/static/theme/".$theme."/icons_32/config.png",
 );
 ?>

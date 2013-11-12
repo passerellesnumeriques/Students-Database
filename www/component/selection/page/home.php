@@ -96,9 +96,10 @@ class page_home extends Page {
 			$campaigns = SQLQuery::create()->select("SelectionCampaign")->field("id")->field("name")->order_by("name")->execute();
 			if(isset($campaigns[0]["id"])){
 				foreach($campaigns as $campaign){
-					$selected = ($current == $campaign["id"]) ? "true" : "false";
+					$selected = ($current == $campaign["id"]) ? true : false;
 					if($selected) echo "<script type='text/javascript'> init_id = '".$campaign["id"]."';</script>";
-					echo "<option value = '".$campaign["id"]."' selected = '".$selected."'>".$campaign["name"]."</option>";
+					$selected_to_echo = ($selected == true) ? "selected='selected'" : null;
+					echo "<option value = '".$campaign["id"]."'".$selected_to_echo.">".$campaign["name"]."</option>";
 				}
 			}
 			?>
