@@ -245,6 +245,7 @@ function organization(container, org, can_edit) {
 			require("editable_cell.js",function() {
 				new editable_cell(td_design, "Contact_point", "designation", {organization:org.id,people:point.people_id}, "field_text", {min_length:1,max_length:100,can_be_null:false}, point.designation, function(new_data){
 					point.designation = new_data;
+					return new_data;
 				}, null, null);
 			});
 		} else {

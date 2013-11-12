@@ -559,7 +559,7 @@ $model->addTable("Organization")
 		"creator"=>array("not_editable")
 	)))
 	;
-$model->addDataCategoryLink("Contacts", "/dynamic/contact/page/organization_profile?organization=%Organization.id%");
+$model->addDataCategoryLink("Contacts", "/dynamic/contact/page/organization_profile?organization=%Organization.id%", "/static/contact/organization.png");
 
 $model->addTable("Organization_type")
 	->addPrimaryKey("id")
@@ -783,7 +783,7 @@ $model->addTable("Contact_point")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("people","People",true,false,true,false)
 	->setKey(array("organization","people"))
-	->addString("designation",100,0,true,false)
+	->addString("designation",100,1,false,false)
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");
 		$org_alias = $q->get_table_alias("Organization");
@@ -816,6 +816,25 @@ $model->addTable("Contact_point")
 		$rows = $table->filterWriteAccess($rows);
 		if (count($rows) == 0) return false;
 		return true;
+	})
+	->addWriteFilter(function(&$q, $table_alias){
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+		$q->field($org_alias, "creator", "ORG_CREATOR");
+	},function($rows){
+		$allowed = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->canWriteOrganization()) array_push($allowed, $c->getOrganizationCreator());
+		}
+		$final = array();
+		foreach ($rows as $row)
+			if (in_array($row["ORG_CREATOR"], $allowed))
+				array_push($final, $row);
+		return $final;
 	})
 	->setDisplayHandler(null, new datamodel\StopDataDisplayHandler("Organization", "Contacts Points")) // TODO
 	;

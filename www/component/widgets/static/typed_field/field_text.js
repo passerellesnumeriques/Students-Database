@@ -74,9 +74,9 @@ field_text.prototype._create = function(data) {
 			for (var s in this.config.style)
 				this.element.style[s] = this.config.style[s];
 		this.setData = function(data, first) {
-			if (this.element.childNodes[0].nodeValue == data) return;
+			if (!first && this.element.childNodes[0].nodeValue == data) return;
 			this.element.childNodes[0].nodeValue = data;
-			if (data.length == 0) {
+			if (data == null || data.length == 0) {
 				var e = document.createElement("I");
 				e.innerHTML = "&nbsp; &nbsp;";
 				this.element.appendChild(e);
