@@ -17,7 +17,7 @@ if (!window.top.google) {
 			}
 		},
 		_client_id: "459333498575-p8k0toe6hpcjfe29k83ah77adnocqah4.apps.googleusercontent.com",
-		_scopes: ["https://www.googleapis.com/auth/userinfo.profile","https://www.googleapis.com/auth/calendar"],
+		_scopes: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar",
 		connect: function() {
 			window.top.google.connection_status = 0;
 			for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
@@ -44,26 +44,27 @@ if (!window.top.google) {
 			);
 		},
 		ask_connection: function() {
-			window.top.google.connection_status = 0;
-			for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
-				window.top.google.connection_listeners[i]();
-			window.top.google._connecting_time = new Date().getTime();
-			window.top.gapi.auth.authorize(
+			var wt = window.top;
+			wt.google.connection_status = 0;
+			for (var i = 0; i < wtgoogle.connection_listeners.length; ++i)
+				wt.google.connection_listeners[i]();
+			wt.google._connecting_time = new Date().getTime();
+			wt.gapi.auth.authorize(
 				{
 					client_id:window.top.google._client_id,
 					scope:window.top.google._scopes,
 					immediate:false
 				},function(auth_result){
 					if (auth_result && !auth_result.error) {
-						window.top.google.connection_status = 1;
-						for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
-							window.top.google.connection_listeners[i]();
-						setTimeout(window.top.google.connect, (parseInt(auth_result.expires_in)-30)*1000);
+						wt.google.connection_status = 1;
+						for (var i = 0; i < wt.google.connection_listeners.length; ++i)
+							wt.google.connection_listeners[i]();
+						setTimeout(wt.google.connect, (parseInt(auth_result.expires_in)-30)*1000);
 						return;
 					}
-					window.top.google.connection_status = -1;
-					for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
-						window.top.google.connection_listeners[i]();
+					wt.google.connection_status = -1;
+					for (var i = 0; i < wt.google.connection_listeners.length; ++i)
+						wt.google.connection_listeners[i]();
 				}
 			);
 		}
@@ -72,7 +73,7 @@ if (!window.top.google) {
 		window.top.google.api_loaded = true;
 		window.top.gapi.client.setApiKey("AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
 		window.top.gapi.auth.init();
-		setInterval(function(){
+		window.top.setInterval(function(){
 			if (window.top.google.connection_status == 0 && window.top.google._connecting_time < new Date().getTime()-30000) {
 				window.top.google.connection_status = -1;
 				for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
@@ -84,10 +85,11 @@ if (!window.top.google) {
 	};
 	window.top.load_google_api = function() {
 		window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
-		setTimeout(function(){
+		window.top.setTimeout(function(){
 			if (window.top.google.api_loaded) return;
 			window.top.remove_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 			window.top.load_google_api();
 		},30000);
 	};
+	window.top.load_google_api();
 }

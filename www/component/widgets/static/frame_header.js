@@ -8,35 +8,46 @@ function frame_header(container) {
 	container.style.width = "100%";
 	container.style.height = "100%";
 	var t=this;
+	
+	t.setTitle = function(title) {
+		if (typeof title == 'string')
+			t.title.innerHTML = title;
+		else {
+			t.title.innerHTML = "";
+			t.title.appendChild(title);
+		}
+		fireLayoutEventFor(t.header);
+	};
+	
 	t._init = function() {
-		var header, header_title, header_menu, icon, title, frame;
 		// header
-		header = document.createElement("DIV");
-		header.className = "page_header";
-		header.appendChild(header_title = document.createElement("DIV"));
-		header_title.className = "page_header_title";
-		icon = document.createElement('IMG');
-		icon.src = container.getAttribute("icon");
-		icon.onload = function() { fireLayoutEventFor(header); };
-		icon.style.verticalAlign = "middle";
-		header_title.appendChild(icon);
-		title = document.createElement("SPAN");
-		title.innerHTML = container.getAttribute("title");
-		header_title.appendChild(title);
+		t.header = document.createElement("DIV");
+		t.header.className = "page_header";
+		t.header.appendChild(t.header_title = document.createElement("DIV"));
+		t.header_title.className = "page_header_title";
+		t.icon = document.createElement('IMG');
+		t.icon.src = container.getAttribute("icon");
+		t.icon.onload = function() { fireLayoutEventFor(t.header); };
+		t.icon.style.verticalAlign = "middle";
+		t.header_title.appendChild(t.icon);
+		t.title = document.createElement("SPAN");
+		t.title.innerHTML = container.getAttribute("title");
+		t.header_title.appendChild(t.title);
 		container.removeAttribute("icon");
 		container.removeAttribute("title");
 		
 		// frame
-		t.frame = frame = document.createElement("IFRAME");
-		frame.onload = function() { t.frame_load(); };
-		frame.src = container.getAttribute("page");
-		frame.name = container.id+"_content";
-		frame.frameBorder = 0;
-		frame.style.width = "100%";
+		t.frame = document.createElement("IFRAME");
+		t.frame.onload = function() { t.frame_load(); };
+		t.frame.src = container.getAttribute("page");
+		t.frame.name = container.id+"_content";
+		t.frame.id = container.id+"_content";
+		t.frame.frameBorder = 0;
+		t.frame.style.width = "100%";
 		container.removeAttribute("page");
 
 		// menu
-		header.appendChild(header_menu = document.createElement("DIV"));
+		t.header.appendChild(t.header_menu = document.createElement("DIV"));
 		var table = document.createElement("TABLE");
 		table.style.margin = "0px"; table.style.padding = "0px"; table.style.width = "100%"; table.style.height = "100%";
 		var tr = document.createElement("TR");
@@ -46,22 +57,22 @@ function frame_header(container) {
 		td.appendChild(menu_container);
 		tr.appendChild(td);
 		table.appendChild(tr);
-		header_menu.appendChild(table);
+		t.header_menu.appendChild(table);
 		while (container.childNodes.length > 0)
 			menu_container.appendChild(container.removeChild(container.childNodes[0]));
 		
 		// set layout
-		container.appendChild(header);
-		container.appendChild(frame);
-		header.setAttribute("layout", "35");
-		frame.setAttribute("layout", "fill");
+		container.appendChild(t.header);
+		container.appendChild(t.frame);
+		t.header.setAttribute("layout", "35");
+		t.frame.setAttribute("layout", "fill");
 		require("vertical_layout.js",function(){
 			new vertical_layout(container);
 		});
-		header_title.setAttribute("layout", "fixed");
-		header_menu.setAttribute("layout", "fill");
+		t.header_title.setAttribute("layout", "fixed");
+		t.header_menu.setAttribute("layout", "fill");
 		require("horizontal_layout.js",function(){
-			new horizontal_layout(header);
+			new horizontal_layout(t.header);
 		});
 	};
 	t.hider = null;

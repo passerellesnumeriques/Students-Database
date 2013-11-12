@@ -1,139 +1,138 @@
+/* #depends[typed_field.js] */
 /** Date field: if editable, it will be a text input with a date picker, else only a simple text node
  * @constructor
  * @param config nothing for now
  */
-function field_date(data,editable,onchanged,onunchanged,config) {
+function field_date(data,editable,config) {
 	if (data != null && data.length == 0) data = null;
-	typed_field.call(this, data, editable, onchanged, onunchanged);
-	this.parseDate = function(s) {
-		var d = new Date();
-		d.setHours(0,0,0,0);
-		var a = s.split("-");
-		if (a.length == 3) {
-			d.setFullYear(parseInt(a[0]));
-			d.setMonth(parseInt(a[1])-1);
-			d.setDate(parseInt(a[2]));
-		}
-		return d;
+	typed_field.call(this, data, editable, config);
+	
+	var t=this;
+	this._register_datamodel_datadisplay = this.register_datamodel_datadisplay;
+	this.register_datamodel_datadisplay = function(data_display, data_key) {
+		this._register_datamodel_datadisplay(data_display, data_key);
+		if (data_display.cell)
+			this._register_cell(data_display.cell.table,data_display.cell.column,data_key);
 	};
-	this.dateString = function(d) {
-		return d.getFullYear()+"-"+this._2digits(d.getMonth()+1)+"-"+this._2digits(d.getDate());
+	this._register_datamodel_cell = this.register_datamodel_cell;
+	this.register_datamodel_cell = function(table, column, row_key) {
+		this._register_datamodel_cell(table,column,row_key);
+		this._register_cell(table,column,row_key);
 	};
-	this._2digits = function(n) {
-		var s = ""+n;
-		while (s.length < 2) s = "0"+s;
-		return s;
-	};
-	if (editable) {
-		require("date_picker.js"); require("context_menu.js");
-		var t=this;
-		var input = document.createElement("INPUT");
-		input.type = "text";
-		if (data) input.value = data;
-		input.style.margin = "0px";
-		input.style.padding = "0px";
-		require("autoresize_input.js",function(){autoresize_input(input);});
-		var f = function() {
+	this._register_cell = function(table, column, row_key) {
+		if (t.config && t.config.minimum_cell)
 			setTimeout(function() {
-				if (input.value.length == 0) {
-					if (data != null) {
-						if (onchanged)
-							onchanged(t,null);
-					} else {
-						if (onunchanged)
-							onunchanged(t);
+				var listener = function(value){
+					t.config.minimum = value;
+					if (t.select) {
+						var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
+						var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
+						t.select.setLimits(min,max);
 					}
-				} else {
-					if (input.value != data) {
-						if (onchanged)
-							onchanged(t,input.value);
-					} else {
-						if (onunchanged)
-							onunchanged(t);
+				};
+				window.top.datamodel.add_cell_change_listener(window, table,t.config.minimum_cell,row_key, listener);
+				window.top.datamodel.get_cell_value(table,t.config.minimum_cell,row_key,listener);
+			}, 1);
+		if (t.config && t.config.maximum_cell)
+			setTimeout(function() {
+				var listener = function(value){
+					t.config.maximum = value;
+					if (t.select) {
+						var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
+						var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
+						t.select.setLimits(min,max);
 					}
-				}
-			},1);
-		};
-		var show = function(event) {
-			if (event) stopEventPropagation(event);
-			input.blur();
-			require("date_picker.js",function(){
-				require("context_menu.js",function(){
+				};
+				window.top.datamodel.add_cell_change_listener(window, table,t.config.maximum_cell,row_key, listener);
+				window.top.datamodel.get_cell_value(table,t.config.maximum_cell,row_key,listener);
+			}, 1);
+	};
+}
+field_date.prototype = new typed_field();
+field_date.prototype.constructor = field_date;		
+field_date.prototype.canBeNull = function() { return this.config && this.config.can_be_empty; };		
+field_date.prototype._create = function(data) {
+	if (this.editable) {
+		require("date_picker.js"); require("context_menu.js");
+
+		var t=this;
+		this.data = data;
+		require("date_select.js", function() {
+			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
+			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
+			t.select = new date_select(t.element, data == null ? null : parseSQLDate(data), min, max);
+			t.select.onchange = function() {
+				var date = t.select.getDate();
+				if (date) date = dateToSQL(date);
+				if (date == t.data) return;
+				t.data = date;
+				t.validate();
+				setTimeout(function() { t._datachange(); },1);
+			};
+			t.icon = document.createElement("IMG");
+			t.icon.src = theme.icons_16.date_picker;
+			t.icon.style.verticalAlign = "bottom";
+			t.icon.style.cursor = "pointer";
+			t.icon.onclick = function() {
+				require(["date_picker.js","context_menu.js"],function(){
 					var menu = new context_menu();
-					new date_picker(null,function(picker){
+					new date_picker(t.select.getDate(),t.select.minimum,t.select.maximum,function(picker){
 						picker.onchange = function(picker, date) {
-							input.value = t.dateString(date);
-							if (input.onchange) input.onchange();
-							f();
+							t.select.selectDate(date);
 						};
 						picker.getElement().style.border = 'none';
-						var d = t.getCurrentData();
-						if (d != null)
-							picker.setDate(t.parseDate(d));
 						menu.addItem(picker.getElement());
 						picker.getElement().onclick = null;
-						menu.showBelowElement(input);
+						menu.showBelowElement(t.element);
 					});
 				});
-			});
-			return false;
-		};
-		input.onfocus = show;
-		input.onclick = function(e) {
-			stopEventPropagation(e);
-			return false;
-		};
-		this.element = input;
-		this.element.typed_field = this;
+			};
+			t.element.appendChild(t.icon);
+			t.validate = function() {
+				if (t.config && !t.config.can_be_empty && t.data == null)
+					t.signal_error("Please select a valid date");
+				else
+					t.signal_error(null);
+			};
+			t.validate();
+		});
+
 		this.getCurrentData = function() {
-			if (input.value.length == 0) return null;
-			return input.value; 
+			return t.data;
 		};
 		this.setData = function(data) {
-			if (data != null && data.length == 0) data = null;
-			input.value = data == null ? "" : data;
-			if (input.onchange) input.onchange();
-			f();
+			if (data == t.data) return;
+			t.select.selectDate(data == null ? null : parseSQLDate(data));
+			if (data != t.getOriginalData()) setTimeout(function() { t._datachange(); },1);
 		};
 		this.signal_error = function(error) {
-			input.style.border = error ? "1px solid red" : "";
+			this.error = error;
+			if (!t.select) setTimeout(function(){t.signal_error(error);},10);
+			t.select.select_year.style.border = error ? "1px solid red" : "";
+			t.select.select_month.style.border = error ? "1px solid red" : "";
+			t.select.select_day.style.border = error ? "1px solid red" : "";
 		};
 	} else {
-		this.element = document.createElement("SPAN");
-		if (data == null) {
-			this.element.style.fontStyle = 'italic';
-			this.element.innerHTML = "no date";
-		} else
-			this.element.innerHTML = data;
-		this.element.typed_field = this;
-		this.setData = function(data) {
+		this.setData = function(data, first) {
 			if (data != null && data.length == 0) data = null;
-			var val = data == null ? "" : data;
-			if (val == null) {
+			if (data == null) {
 				if (this.element.innerHTML == "no date") return;
 				this.element.style.fontStyle = 'italic';
 				this.element.innerHTML = "no date";
 			} else {
-				if (this.element.innerHTML == val) return;
+				if (this.element.innerHTML == data) return;
 				this.element.style.fontStyle = 'normal';
-				this.element.innerHTML = val;
+				this.element.innerHTML = data;
 			}
-			if (data == this.originalData) {
-				if (onunchanged) onunchanged(this);
-			} else {
-				if (onchanged) onchanged(this, val);
-			}
+			if (!first) this._datachange();
 		};
+		this.setData(data, true);
 		this.getCurrentData = function() {
 			return this.element.innerHTML == "no date" ? null : this.element.innerHTML;
 		};
 		this.signal_error = function(error) {
+			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};
 	}
-}
-if (typeof require != 'undefined')
-	require("typed_field.js",function(){
-		field_date.prototype = new typed_field();
-		field_date.prototype.constructor = field_date;		
-	});
+};

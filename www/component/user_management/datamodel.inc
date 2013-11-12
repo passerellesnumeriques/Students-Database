@@ -1,14 +1,40 @@
 <?php
+use datamodel\JoiningTableDataDisplay;
+
+use datamodel\DataDisplayHandler;
+
+class RolesDisplayHandler extends DataDisplayHandler {
+	
+	public function __construct() {
+		parent::__construct("User", "User's roles");
+	}
+	
+	public function getDisplayableData() {
+		return array(new JoiningTableDataDisplay($this, "Roles", "user", "role", "name"));
+	}
+	
+	public function createEntry($data, $sub_model, $preset_fields) {
+		// TODO ?
+		PNApplication::error("createEntry not supported by RolesDisplayHandler");
+	}
+	
+}
+
 /* @var $model DataModel */
 $model->addTable("Users")
 	->addPrimaryKey("id")
 	->addString("domain",100,1,false)
 	->addString("username",100,1,false)
 	->addIndex("domain","username")
-	->setUnique(array("domain","username"))
-	->restrictReadAccess("consult_user_list",true)
-	->addDisplayableData("domain", "User", "Domain")
-	->addDisplayableData("username", "User", "Username")
+	->addReadAccess("consult_user_list",true)
+	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("User", "User",
+		array(
+			"domain"=>"Domain",
+			"username"=>"Username",
+		), array(
+			"domain"=>array("not_editable")
+		)
+	))
 	;
 $model->addDataCategoryLink("User","/dynamic/people/page/profile?plugin=user_management&page=user_rights&user=%Users.id%", "/static/user_management/access_list.png");
 $model->addTable("UserRights")
@@ -16,24 +42,24 @@ $model->addTable("UserRights")
 	->addString("right", 100, 1, false)
 	->addString("value")
 	->addIndex("user")
-	->restrictReadAccess("consult_user_rights",true)
+	->addReadAccess("consult_user_rights",true)
 	;
 $model->addTable("Role")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false, true)
-	->addDisplayableData("name", "User", "Role")
 	->allowReadAccess()
-	->restrictFieldWriteAccess("name","manage_roles",true)
-	->restrictAddAccess("manage_roles", true)
-	->restrictRemoveAccess("manage_roles", true)
+	->addWriteAccess("name","manage_roles",true)
+	->addInsertAccess("manage_roles", true)
+	->addRemoveAccess("manage_roles", true)
 	;
 $model->addTable("UserRole")
 	->addForeignKey("user", "Users", true, false, true)
 	->addForeignKey("role", "Role", false, false, true)
 	->addIndex("user")
-	->restrictReadAccess("consult_user_roles",true)
-	->restrictAddAccess("assign_role",true)
-	->restrictRemoveAccess("assign_role",true)
+	->addReadAccess("consult_user_roles",true)
+	->addInsertAccess("assign_role",true)
+	->addRemoveAccess("assign_role",true)
+	->setDisplayHandler("user", new RolesDisplayHandler())
 	;
 $model->addTable("RoleRights")
 	->addForeignKey("role", "Role", true, false, true)
@@ -41,7 +67,7 @@ $model->addTable("RoleRights")
 	->addString("value")
 	->addIndex("role")
 	->allowReadAccess()
-	->restrictAddAccess("manage_roles",true)
-	->restrictRemoveAccess("manage_roles",true)
+	->addInsertAccess("manage_roles",true)
+	->addRemoveAccess("manage_roles",true)
 	;
 ?>

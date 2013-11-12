@@ -10,13 +10,38 @@ function organization_profile(&$page, $id, $container_id, $title_container_id){
 	/* Get the user rights */
 	require_once("component/data_model/Model.inc");
 	$rights = array();
-	$rights['remove'] = DataModel::get()->getTable("Organization")->canRemove();
-	$rights['edit'] = DataModel::get()->getTable("Organization")->canModifyField('name');
-	$rights['add'] = DataModel::get()->getTable("Organization")->canAdd();
-		//TODO set the rights (maybe different from one table to an other)
+
+	if ($id <> -1) {
+		$q = SQLQuery::create()->select("Organization");
+		$q->where("id",$id);
+		DataModel::get()->getTable("Organization")->filterReadAccess($q, "Organization");
+		$rows = $q->execute();
+		if (count($rows) == 0) {
+			PNApplication::error("Cannot access to this Organization");
+			return;
+		}
+			
+		$q = SQLQuery::create()->select("Organization");
+		$q->where("id",$id);
+		DataModel::get()->getTable("Organization")->prepareSelectToDetermineRemoveAccess($q, "Organization", $locks);
+		$rows = $q->execute();
+		$rows = DataModel::get()->getTable("Organization")->filterRemoveAccess($rows);
+		$rights['remove'] = count($rows) == 1;
+			
+		$q = SQLQuery::create()->select("Organization");
+		$q->where("id",$id);
+		DataModel::get()->getTable("Organization")->prepareSelectToDetermineWriteAccess($q, "Organization");
+		$rows = $q->execute();
+		$rows = DataModel::get()->getTable("Organization")->filterWriteAccess($rows);
+		$rights['edit'] = count($rows) == 1;
+			
+		$rights['add'] = $rights['remove'];
+	} else {
+		$rights['remove'] = $rights['add'] = $rights['edit'] = true;
+	}
 		
 	/* Get the organisation infos*/
-	if(isset($id)){
+	if($id <> -1){
 		$q_orga_infos = SQLQuery::create()->select("Organization")
 					->field("name")
 					->field("id")
@@ -165,20 +190,20 @@ function organization_profile(&$page, $id, $container_id, $title_container_id){
 		/* Adding and removing rights have no sense here */
 		var div = document.createElement("div");
 		if(rights.edit){
-			var style = {};
-			style.fontSize = "x-large";
-			var edit = new editable_cell(div,"Organization","name",s.id,"field_text",null,s.name,style,style);
-			edit.onsave = function(new_data){
-				if(new_data.checkVisible()){
-					/* Update s */
-					s.name = new_data.uniformFirstLetterCapitalized();
-					return new_data.uniformFirstLetterCapitalized();
+			new editable_cell(div,"Organization","name",s.id,"field_text",{max_length:100,min_length:1,can_be_null:false,style:{fontSize:"x-large"}},s.name,
+				function(new_data){
+					if(new_data.checkVisible()){
+						/* Update s */
+						s.name = new_data.uniformFirstLetterCapitalized();
+						return new_data.uniformFirstLetterCapitalized();
+					}
+					else return this.data;
 				}
-				else return this.data;
-			};
-		} else div.innerHTML = s.name;
+			);
+		} else 
+			div.innerHTML = s.name;
 		s.header.appendChild(div);
-	}
+	};
 	
 	/**
 	 * @method setTable

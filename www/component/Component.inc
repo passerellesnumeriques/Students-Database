@@ -38,7 +38,7 @@ abstract class Component {
 			// development mode only
 			if ($this->name <> "development" && $this->name <> "test") {
 				// only allow the login page
-				if ($this->name <> "application" || $path <> "enter") {
+				if ($this->name <> "application" || ($path <> "enter" && $path <> "logout")) {
 					echo "<script type='text/javascript'>window.top.location.reload();</script>";
 					return;
 				}
@@ -95,7 +95,7 @@ abstract class Component {
 	 */
 	public final function service($path) {
 		// development mode only
-		if ($this->name <> "development" && $this->name <> "test") {
+		if ($this->name <> "development" && $this->name <> "test" && !($this->name == "application" && $path == "get_static_resources")) {
 			// check the user is logged
 			if (PNApplication::$instance->user_management->username == null) {
 				header("Content-Type: text/json;charset=UTF-8", true, 403);
@@ -122,9 +122,15 @@ abstract class Component {
 		$service = new $classname();
 	
 		// build input
-		if (isset($_SERVER["CONTENT_TYPE"]) && $_SERVER["CONTENT_TYPE"] == "text/json")
+		if (isset($_SERVER["CONTENT_TYPE"]) && substr($_SERVER["CONTENT_TYPE"],0,9) == "text/json") {
 			$input = json_decode(file_get_contents('php://input'), true);
-		else
+			$err = json_last_error();
+			if ($input === null && $err <> JSON_ERROR_NONE) {
+				PNApplication::error("Invalid input: JSON error ".$err);
+				PNApplication::print_json_result(null);
+				return;
+			}			
+		} else
 			$input = $_POST;
 		
 		// get output format
@@ -167,7 +173,7 @@ abstract class Component {
 				PNApplication::error($e);
 			}
 			$result = ob_get_clean();
-			if ($result === "") $result = null;
+			if ($result === "" || $result === false) $result = null;
 			PNApplication::print_json_result($result);
 		} else
 			$service->execute($this, $input);

@@ -14,11 +14,11 @@ service = {
 		var data = "";
 		if (input != null)
 			data = service.generate_input(input);
-		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json", data, 
+		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json;charset=UTF-8", data, 
 			function(result){
 				if (result && result.events) {
 					for (var i = 0; i < result.events.length; ++i)
-						window.top.pnapplication.raise_app_event(result.events[i].id, result.events[i].data);
+						window.top.pnapplication.signal_event(result.events[i].type, result.events[i].data);
 				}
 				handler(result ? result.result : null);
 			},
@@ -88,7 +88,7 @@ service = {
 	generate_input: function(input) {
 		var s = "";
 		if (input == null) return "null";
-		if (input instanceof Array) {
+		if (input instanceof Array || (typeof input == 'object' && input.constructor.name == "Array")) {
 			s += "[";
 			for (var i = 0; i < input.length; ++i) {
 				if (i>0) s += ",";
@@ -110,6 +110,19 @@ service = {
 		return s;
 	}
 };
+function post_data(url, data, win) {
+	if (!win) win = window;
+	var form = win.document.createElement("FORM");
+	var i = win.document.createElement("INPUT");
+	i.type = "hidden";
+	i.name = "input";
+	i.value = service.generate_input(data);
+	form.appendChild(i);
+	form.method = "POST";
+	form.action = url;
+	win.document.body.appendChild(form);
+	form.submit();
+}
 if (typeof ajax != 'undefined')
 	ajax.http_response_handlers.push(function(xhr){
 		if (xhr.status == 403) {

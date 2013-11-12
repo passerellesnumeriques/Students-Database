@@ -5,24 +5,13 @@ class page_set_geography_area extends Page {
 	return array();
 	}
 	public function execute(){
-	
-	$q = SQLQuery::create()->select("Country")
-						->field("Country","id","country_id")
-						->field("Country","code","country_code")
-						->field("Country","name","country_name");
-	$countries = $q->execute();
-	echo "<form method='get' action=''>";
-	echo "<select name='country_code'>";
-	foreach ($countries as $c){
-		echo "<option value = '".$c['country_code']."'>".$c['country_name']."</option>";
-	}
-	echo "</select>";
-	echo "<input type = 'submit' value = 'Go'/>";
-	echo "</form>";
-	
+		if (!isset($_GET['country']) || $_GET['country'] == "") {
+			echo "Please select a country to edit";
+			return;
+		}
+		$country = SQLQuery::create()->select("Country")->where("id",$_GET["country"])->execute_single_row();	
 ?>
-<br/><br/>
-<div name = 'container' style = "position:relative">
+<div style = "position:relative">
 	<div id ='manage_divisions' ></div>
 	<div id='set_geography_area' style = "margin-left:300px"></div>
 </div>
@@ -31,11 +20,10 @@ var result = null;
 var tr = null;
 var editable = null;
 
-<?php
-if(isset($_GET['country_code'])){
-?>
-var country_code = "<?php echo $_GET['country_code'];?>";
-service.json("geography","get_country_data", {country_code:country_code}, function(res){
+var country_id = <?php echo $country['id'];?>;
+var country_code = "<?php echo $country['code'];?>";
+var country_name = "<?php echo $country['name'];?>";
+service.json("geography","get_country_data", {country_id:country_id}, function(res){
 	if(!res) return;
 	result = res;
 
@@ -80,7 +68,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		service.json("data_model","remove_row",{table:"Geographic_area", row_key:area_id}, function(res){
 			if(!res) return;
 		},true);
-	}
+	};
 	
 	/**
 	 * Remove one area from the tree and update result object (mandatory because the page is not refreshed after removing)
@@ -92,7 +80,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		tr.removeItem(result[index.division_index].areas[index.area_index].item);
 		/*We update result object*/
 		this[index.division_index].areas[index.area_index] = null;
-	}
+	};
 	
 	/**
 	 * Add one area in the tree and then add it in the database and in the result object
@@ -114,7 +102,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		var ar_index = this[div_index].areas.length;
 		this[div_index].areas[ar_index] = {area_id: field_saved_id, area_name: name, area_parent_id: area_parent_id};
 		tr.buildItem(this, div_index, ar_index);
-	}
+	};
 	
 	/**
 	 * Add one area, but at the root level: there is no parent_id since we are at the root level
@@ -133,7 +121,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		var ar_index = this[div_index].areas.length;
 		this[div_index].areas[ar_index] = {area_id: field_saved_id, area_name: name, area_parent_id: null};
 		tr.buildItem(this, div_index, ar_index);
-	}
+	};
 	
 	/**
 	* Get the index in the result object of the given area
@@ -154,7 +142,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 			}
 		}
 		return index;
-	}
+	};
 	
 	/**
 	* Get all the children (just one generation after)
@@ -165,7 +153,6 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 	result.findChildren = function(area_id){
 		var index = this.findIndex(area_id);
 		var division_index = index.division_index;
-		var area_index = index.area_index;
 		var children = [];
 		
 		if (division_index == this.length -1){
@@ -186,7 +173,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 				return children;
 			}
 		}
-	}
+	};
 	
 	/**
 	* Get the parent of the given area
@@ -211,7 +198,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 			}
 		}
 		return parent;
-	}
+	};
 	
 	/**
 	* Create editable cells in the tree
@@ -229,7 +216,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 			parent_index = this.findIndex(area_parent_id);
 			parent_name = this[parent_index.division_index].areas[parent_index.area_index].area_name;
 		}
-		else parent_name = '<?php echo $_GET['country_code'];?>';
+		else parent_name = country_name;
 		edit.onsave = function(text){
 						if(text.checkVisible() && result.checkUnicity(text, "area", area_parent_id, null)){
 							/*We update result*/
@@ -245,7 +232,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 						}
 						};
 		container.appendChild(div);
-	}
+	};
 	
 	/**
 	 * This method builds the table to manage the country divisions, based on the result object
@@ -292,7 +279,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 						return edit.division_name;
 					}
 					if(!result.checkUnicity(text,null,null,"division")){
-						error_dialog("The country <?php echo $_GET['country_code'];?> already has a division called "+ text);
+						error_dialog("The country "+country_name+" already has a division called "+ text);
 						return edit.division_name;
 					}
 				};
@@ -323,7 +310,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		form_reload_input.value = '';
 		form_reload.appendChild(form_reload_input);
 		container.appendChild(form_reload);
-	}
+	};
 	
 	/**
 	 * Method called to manage the add division button
@@ -345,7 +332,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 					function(text){
 						if(text) result.addDivision(text.uniformFirstLetterCapitalized());
 					});
-	}
+	};
 	
 	/**
 	 * Method which is called by the add division button
@@ -356,22 +343,12 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 	result.addDivision = function(division_name){
 		var parent_index = this.length -1;
 		var parent_id = this[parent_index].division_id;
-		<?php
-			$q2 = SQLQuery::create()->select("Country")
-									->field("id")
-									->where("`code` = '".$_GET['country_code']."'");
-			$country_ids = $q2->execute();
-			$country_id = $country_ids[0];
-		?>
-		var country_id = "<?php echo $country_id['id'];?>";
-		var field_saved_id = null;
 		service.json("data_model","save_entity", {table:"Country_division", field_name:division_name, field_parent:parent_id, field_country:country_id}, function(res){
 			if(!res) return;
-			field_saved_id = res.key;
 		},true);
 		/*We refresh the page*/
 		document.getElementById('form_reload').submit();
-	}
+	};
 	
 	/**
 	 * Method to create a remove division button
@@ -384,7 +361,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		remove_button.innerHTML = "<img src ='"+theme.icons_16.remove+"'/>";
 		remove_button.onclick = function(){result.askRemoveDivision(division_id);};
 		td_remove.appendChild(remove_button);
-	}
+	};
 	
 	/**
 	 * Method asking the user to confirm the removing
@@ -394,7 +371,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		confirm_dialog("Are you sure you want to delete this division? All its children will be removed, even the geographic areas",
 						function(text){if(text) result.removeDivision(division_id);}
 						);
-	}
+	};
 	
 	/**
 	 * Remove one division from the database (and all the areas, divisions which are linked by a foreign key)
@@ -407,7 +384,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 		},true);
 		/*We refresh the page*/
 		document.getElementById('form_reload').submit();
-	}
+	};
 	
 	/**
 	 * Method called before adding a child to an area or a division
@@ -464,7 +441,7 @@ service.json("geography","get_country_data", {country_code:country_code}, functi
 			}
 		}
 		return is_unique;
-	}
+	};
 	
 	if (tr != null && editable != null) everything_ready();
 });
@@ -498,7 +475,7 @@ require('tree.js',function(){
 				div.appendChild(add_button);
 			}
 		}
-	}
+	};
 	
 	/**
 	 * Create the remove button in the tree
@@ -521,7 +498,7 @@ require('tree.js',function(){
 			remove_button.onclick = function(){tr.removeChildren(r, remove_button.area_id);};
 		}
 		div.appendChild(remove_button);
-	}
+	};
 	
 	/**
 	 * Ask for user opinion before removing one area
@@ -530,7 +507,7 @@ require('tree.js',function(){
 	 */
 	tr.removeChildren = function(r, area_id){
 		confirm_dialog("Are you sure you want to delete this area? All its children will also be deleted.", function(text){if(text == true) r.startRemove(area_id);});
-	}
+	};
 	
 	/**
 	 * Method called to add an area on the tree
@@ -570,7 +547,7 @@ require('tree.js',function(){
 									},
 									function(text){if (text) r.addRoot(text);});
 		}
-	}
+	};
 	
 	/**
 	 * Build the whole tree, adding a root level
@@ -582,7 +559,7 @@ require('tree.js',function(){
 		var div = document.createElement('div');
 		div.id ='root';
 		div.style.display ='inline-block';
-		div.innerHTML = "<?php echo $_GET['country_code']; ?>";
+		div.innerHTML = country_name;
 		var item = new TreeItem([new TreeCell(div)]);
 		this.root = item;
 		this.addItem(item);
@@ -595,7 +572,7 @@ require('tree.js',function(){
 				}
 			}
 		}		
-	}
+	};
 	
 	/**
 	 * Build an item in the tree
@@ -618,7 +595,7 @@ require('tree.js',function(){
 		r.createEditable(division_index, area_index);
 		tr.addAddButton(r, division_index, area_index);
 		tr.addRemoveButton(r, division_index, area_index);
-	}
+	};
 	
 	if (result != null && editable != null) everything_ready();
 });
@@ -642,17 +619,9 @@ function everything_ready() {
 	div_manage_divisions.style.left = "0px";
 	div_manage_divisions.style.width = "250px";
 	div_manage_divisions.style.marginLeft = "30px";
-
 }
-
-<?php
-}
-?>
-	
-
 </script>
 	<?php
-	
 	}
 }
 

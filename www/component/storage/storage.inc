@@ -1,6 +1,36 @@
 <?php 
 class storage extends Component {
 	
+	public function get_upload_error($file) {
+		$error = @$file['error'];
+		$msg = $error.": ";
+		switch ($error) {
+			case 1: 
+				$msg .= "The file is too big (maximum is ".ini_get("upload_max_filesize").")";
+				$msg .= ")";
+				if (isset($file['size']) && $file['size'] > 0) {
+					$msg .= ": ";
+					if ($file['size'] >= 1024*1024) $msg .= intval($file['size']/(1024*1204))."MB";
+					else if ($file['size'] >= 1024) $msg .= intval($file['size']/1024)."KB";
+					else $msg .= $file['size']." bytes";
+				}
+				break;
+			case 2: 
+				$msg .= "The file is too big"; 
+				if (isset($file['size']) && $file['size'] > 0) {
+					$msg .= ": ";
+					if ($file['size'] >= 1024*1024) $msg .= intval($file['size']/(1024*1204))."MB";
+					else if ($file['size'] >= 1024) $msg .= intval($file['size']/1024)."KB";
+					else $msg .= $file['size']." bytes";
+				}
+				break;
+			case 3: $msg .= "The transfer was interrupted and only a part of the file was received. Please try again."; break;
+			case 4: $msg .= "No file received"; break;
+			default: $msg .= "Unknown error"; break;
+		}
+		return $msg;
+	}
+	
 	private static function storage_path() {
 		return get_cfg_var("pn.storage");
 	}

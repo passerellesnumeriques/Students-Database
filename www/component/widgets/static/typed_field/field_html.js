@@ -1,13 +1,11 @@
-function field_html(data,editable,onchanged,onunchanged,config) {
-	typed_field.call(this, data, editable, onchanged, onunchanged);
-	this.element = document.createElement("DIV");
+/* #depends[typed_field.js] */
+function field_html(data,editable,config) {
+	typed_field.call(this, data, editable, config);
+}
+field_html.prototype = new typed_field();
+field_html.prototype.constructor = field_html;		
+field_html.prototype._create = function(data) {
 	this.element.innerHTML = data; 
-	this.element.typed_field = this;
 	this.getCurrentData = function() { return this.element.innerHTML; };
 	this.setData = function(data) { this.element.innerHTML = data; };
-}
-if (typeof require != 'undefined')
-	require("typed_field.js",function(){
-		field_html.prototype = new typed_field();
-		field_html.prototype.constructor = field_html;		
-	});
+};

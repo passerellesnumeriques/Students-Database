@@ -3,7 +3,8 @@
 <head>
 	<title>PN Students Database</title>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
-	<style type='text/css'>body,html{width:100%;height:100%;margin:0px;padding:0px;}</style>
+	<style type='text/css'>body,html,table{width:100%;height:100%;margin:0px;padding:0px;font-family:Arial,Tahoma,Verdana;font-size:10pt;}
+}</style>
 </head>
 <body>
 <table id='__loading_table' style='width:100%;height:100%;margin:0px;padding:0px;z-index:100;background-color:white;position:fixed;top:0px;left:0px;'>
@@ -11,9 +12,40 @@
 <img src='/static/application/logo.png'/>
 <br/>
 <img src='/static/application/loading_100.gif'/>
+<br/>
+<span id='loading_status' style='font-size:8pt;color: #606060'></span>
 </td></tr>
 </table>
 <script type='text/javascript'>
+<?php
+$mandatory = array(
+	"/static/javascript/utils.js",
+	"/static/javascript/browser.js",
+	"/static/application/application.js",
+	"/static/theme/theme.js.php",
+	"/static/widgets/Status.js",
+	"/static/widgets/StatusUI_Top.js",
+	"/static/javascript/ajax.js",
+	"/static/data_model/databaselock.js",
+	"/static/data_model/datamodel.js",
+	"/static/application/config.js.php"
+);
+$optional = array(
+	"/static/javascript/animation.js",
+	"/static/application/service.js"
+);
+function get_script_info(&$a) {
+	for ($i = 0; $i < count($a); ++$i) {
+		$j = strpos($a[$i], "/", 8); 
+		$a[$i] = array($a[$i], filesize("component/".substr($a[$i],8,$j-8)."/static/".substr($a[$i],$j)));
+	}
+}
+get_script_info($mandatory);
+get_script_info($optional);
+$total = 0;
+foreach ($mandatory as $s) $total += $s[1];
+foreach ($optional as $s) $total += $s[1];
+?>
 var _loading_ready = 0;
 function _add_javascript(url, callback) {
 	var head = document.getElementsByTagName("HEAD")[0];
@@ -26,6 +58,7 @@ function _add_javascript(url, callback) {
 
 }
 window.pn_loading = document.all ? document.all['__loading_table'] : document.getElementById('__loading_table');
+var pn_loading_visible = true;
 function __load_enter_page() {
 	next_optional();
 	window.status_manager = new StatusManager();
@@ -39,49 +72,62 @@ function __load_enter_page() {
 	frame.style.height = "100%";
 	var url = "/dynamic/application/page/enter";
 	if (location.search) url += location.search;
+	frame.onload = pn_loading_frame_loaded;
+	frame.onerror = pn_loading_frame_loaded;
 	frame.src = url;
 	frame.style.position = "fixed";
 	frame.style.top = "0px";
 	frame.style.left = "0px";
 	frame.style.zIndex = "0";
+	frame.name = "pn_application_frame";
 	document.body.appendChild(frame);
 }
 
-var _mandatory_scripts = [
-	"/static/javascript/utils.js",
-	"/static/javascript/browser.js",
-	"/static/application/application.js",
-	"/static/theme/theme.js.php",
-	"/static/widgets/Status.js",
-	"/static/widgets/StatusUI_Top.js",
-	"/static/javascript/ajax.js",
-	"/static/data_model/databaselock.js"
-];
-var _optional_scripts = [
-	"/static/javascript/animation.js",
-	"/static/application/service.js"
-];
+var _mandatory_scripts = <?php echo json_encode($mandatory);?>;
+var _optional_scripts = <?php echo json_encode($optional);?>;
+var total_size = <?php echo $total;?>;
+var loaded_size = 0;
+
+function update_size() {
+	var pc = Math.floor(loaded_size*100/total_size);
+	document.getElementById('loading_status').innerHTML = "Loading ("+pc+"%)";
+}
 
 function next_mandatory() {
-	_add_javascript(_mandatory_scripts[_loading_ready],function() {
+	_add_javascript(_mandatory_scripts[_loading_ready][0],function() {
+		loaded_size += _mandatory_scripts[_loading_ready][1];
+		update_size();
 		if (++_loading_ready == _mandatory_scripts.length) __load_enter_page();
 		else next_mandatory(); 
 	});
 }
+update_size();
 next_mandatory();
 var optional_index = 0;
 function next_optional() {
-	_add_javascript(_optional_scripts[optional_index],function() {
+	_add_javascript(_optional_scripts[optional_index][0],function() {
+		loaded_size += _optional_scripts[optional_index][1];
+		update_size();
 		if (++optional_index == _optional_scripts.length) return;
 		next_optional(); 
 	});
 }
 
+function pn_loading_frame_loaded() {
+	setTimeout(function() {
+		pn_loading_end();
+	},1000);
+}
 function pn_loading_start() {
+	if (pn_loading_visible) return;
+	pn_loading_visible = true;
 	window.pn_loading.style.visibility = 'visible';
 	setOpacity(window.pn_loading, 1);
 }
 function pn_loading_end() {
+	document.getElementById('loading_status').innerHTML = "";
+	if (!pn_loading_visible) return;
+	pn_loading_visible = false;
 	if (typeof animation == 'undefined') {
 		setTimeout(pn_loading_end, 100);
 		return;
@@ -91,6 +137,9 @@ function pn_loading_end() {
 		return;
 	}
 	animation.fadeOut(window.pn_loading,500);
+}
+function set_loading_message(msg) {
+	document.getElementById('loading_status').innerHTML = msg;
 }
 </script>
 </body>

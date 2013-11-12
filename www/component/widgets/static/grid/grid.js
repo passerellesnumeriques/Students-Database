@@ -1,6 +1,7 @@
 if (typeof require != 'undefined') {
-	require("typed_field.js");
-	require("field_blank.js");
+	require("typed_field.js",function(){
+		require("field_blank.js");
+	});
 	require("dragndrop.js");
 }
 
@@ -32,6 +33,18 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 	this.col = document.createElement('COL');
 	this.onclick = new Custom_Event();
 	this.actions = [];
+	
+	this.toggleEditable = function() {
+		this.editable = !this.editable;
+		var index = this.grid.columns.indexOf(this);
+		if (this.grid.selectable) index++;
+		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
+			var row = this.grid.table.childNodes[i];
+			var td = row.childNodes[index];
+			td.field.setEditable(this.editable);
+		}
+		this._refresh_title();
+	};
 	
 	this.addAction = function(action) {
 		this.actions.push(action);
@@ -339,6 +352,7 @@ function grid(element) {
 		}
 	};
 	t.selectAll = function() {
+		if (!t.selectable) return;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
 			if (tr.style.visibility == "hidden") continue; // do not select filtered/hidden
@@ -350,6 +364,7 @@ function grid(element) {
 		t._selection_changed();
 	};
 	t.unselectAll = function() {
+		if (!t.selectable) return;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
 			var td = tr.childNodes[0];
@@ -407,12 +422,14 @@ function grid(element) {
 			}
 			for (var j = 0; j < t.columns.length; ++j) {
 				var td = document.createElement("TD");
+				tr.appendChild(td);
 				var row_data = null;
 				for (var k = 0; k < data[i].row_data.length; ++k)
 					if (t.columns[j].id == data[i].row_data[k].col_id) { row_data = data[i].row_data[k]; break; }
+				if (row_data == null)
+					row_data = {data_id:null,data:"No data found for this colum"};
 				td.col_id = t.columns[j].id;
 				td.data_id = row_data.data_id;
-				tr.appendChild(td);
 				td.field = t._create_cell(t.columns[j], row_data.data, td);
 				if (data[i][j] == grid_deactivated_cell)
 					td.style.backgroundColor = "rgba(192,192,192,0.5)";
@@ -527,7 +544,9 @@ function grid(element) {
 		if (data == grid_deactivated_cell)
 			f = new field_blank(document.createElement("DIV"), grid_deactivated_cell);
 		else
-			f = new window[field_type](data, editable, onchanged, onunchanged, field_args);
+			f = new window[field_type](data, editable, field_args);
+		if (onchanged) f.ondatachanged.add_listener(onchanged);
+		if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
 		parent.appendChild(f.getHTMLElement());
 		return f;
 	};

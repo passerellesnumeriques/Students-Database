@@ -18,7 +18,7 @@ function autocomplete(container, provider, min_chars, default_message, onselect,
 		require('context_menu.js',function(){
 			if(!t.context){
 				t.context = new context_menu();
-				t.context.onclose = function() { t.context = null; }
+				t.context.onclose = function() { t.context = null; };
 			}
 			t.context.clearItems();
 			for (var i = 0; i < items.length; ++i) {
@@ -42,7 +42,15 @@ function autocomplete(container, provider, min_chars, default_message, onselect,
 	this._init = function() {
 		this.input = document.createElement('input');
 		this.input.type = 'text';
-		this.input.onkeypress = function(){
+		this.input.onkeypress = function(e){
+			var ev = getCompatibleKeyEvent(e);
+			if (ev.isArrowDown) {
+				// TODO
+			} else if (ev.isArrowUp) {
+				// TODO
+			} else if (ev.isEnter) {
+				// TODO
+			}
 			t.input.default_message = false;
 			if(t.to){window.clearTimeout(t.to);}
 			t.to = setTimeout(function(){

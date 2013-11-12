@@ -15,13 +15,22 @@ abstract class DataBaseSystem {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 */
 	public function execute($sql_query, $report_errors = true) {
-		$res = $this->execute_sql($sql_query);
-		if (PNApplication::$instance->current_domain == "Dev")
-			array_push(PNApplication::$instance->development->current_request()->sql_queries, array($sql_query,$this->get_last_error_number(),$this->get_last_error_message()));
+		if (PNApplication::$instance->current_domain == "Dev") {
+			$start = microtime(true);
+			$res = $this->execute_sql($sql_query);
+			$end = microtime(true);
+			array_push(PNApplication::$instance->development->current_request()->sql_queries, array($sql_query,$this->get_last_error_number(),$this->get_last_error_message(),$end-$start));
+		} else
+			$res = $this->execute_sql($sql_query);
 		if ($res === false && $report_errors) {
 			$err = $this->get_last_error_number();
-			if ($err <> 0)
-				PNApplication::error("DataBase Error #".$err.": ".$this->get_last_error_message()." [".$sql_query."]");
+			if ($err <> 0) {
+				try {
+					throw new Exception("DataBase Error #".$err.": ".$this->get_last_error_message()." [".$sql_query."]");
+				} catch (Exception $e) {
+					PNApplication::error($e);
+				}
+			}
 		}
 		return $res;
 	}

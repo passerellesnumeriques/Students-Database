@@ -15,8 +15,14 @@ class service_execute_services_scenario extends Service {
 		$scenario_class = substr($scenario_path, $i+1);
 		$scenario_class = substr($scenario_class, 0, strlen($scenario_class)-4);
 		$scenario = new $scenario_class();
-		$results = $scenario->run();
-		echo json_encode($results);
+		$step = intval($input["step"]);
+		$data = @$input["data"];
+		if ($data == null) $data = array();
+		if ($step == -1)
+			$error = $scenario->init($data);
+		else 
+			$error = $scenario->run_step($step, $data);
+		echo "{error:".json_encode($error).",data:".json_encode($data)."}";
 	}
 		
 }

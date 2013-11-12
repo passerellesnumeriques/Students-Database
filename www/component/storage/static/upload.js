@@ -47,6 +47,21 @@ function upload(container, multiple, target, ondone, send_reset, popup) {
 			return false;
 		};
 	} else {
+		var link_container = document.createElement("DIV");
+		var link = document.createElement("A"); link_container.appendChild(link);
+		link.href = "#";
+		link.onclick = function() { return false; };
+		link.appendChild(document.createTextNode("Select file"+(multiple?"s":"")));
+		t.form.style.position = 'relative';
+		t.form.appendChild(link_container);
+		link_container.style.position = 'absolute';
+		link_container.style.top = '0px'; link_container.style.left = '0px';
+		link_container.style.width = getWidth(t.input)+"px";
+		link_container.style.height = getHeight(t.input)+"px";
+		link_container.style.zIndex = 1;
+		t.input.style.position = 'relative';
+		t.input.style.zIndex = 2;
+		setOpacity(t.input, 0);
 		t.input.addEventListener("change", function(e){t.FileSelectHandler(e);}, false);
 	}
 	
@@ -124,6 +139,7 @@ function upload(container, multiple, target, ondone, send_reset, popup) {
 		t.FileDragHover(e);
 		// fetch FileList object
 		var files = e.target.files || e.dataTransfer.files;
+		if (files.length == 0) return;
 		// show popup
 		require("popup_window.js",function() {
 			if (t.area_hidden) {

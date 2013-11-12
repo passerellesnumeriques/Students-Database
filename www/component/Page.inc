@@ -28,6 +28,33 @@ abstract class Page {
 		if (!in_array($path, $this->javascripts))
 			array_push($this->javascripts, array($path,$onload));
 	}
+	private $javascript_paths = null;
+	public final function require_javascript($js_filename, $onload = "") {
+		if ($this->javascript_paths == null) {
+			$this->javascript_paths = array();
+			$dir = opendir("component");
+			while (($filename = readdir($dir)) <> null) {
+				if (!is_dir("component/".$filename)) continue;
+				if ($filename == "." || $filename == "..") continue;
+				if (file_exists("component/".$filename."/static"))
+					$this->browse_javascripts("component/".$filename."/static", $filename, "/");
+			}
+			closedir($dir);
+		}
+		$this->add_javascript($this->javascript_paths[$js_filename], $onload);
+	}
+	private function browse_javascripts($path, $component, $sub_path) {
+		$d = opendir($path);
+		while (($filename = readdir($d)) <> null) {
+			if ($filename == "." || $filename == "..") continue;
+			if (is_dir($path."/".$filename))
+				$this->browse_javascripts($path."/".$filename, $component, $sub_path.$filename."/");
+			else if (substr($filename,strlen($filename)-3) == ".js")
+				$this->javascript_paths[$filename] = "/static/".$component.$sub_path.$filename;
+		}
+		closedir($d);
+	}
+		
 	public final function add_stylesheet($path) {
 		if (!in_array($path, $this->stylesheets))
 			array_push($this->stylesheets, $path);

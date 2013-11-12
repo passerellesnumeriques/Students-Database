@@ -14,6 +14,19 @@ function vertical_layout(container) {
 	container.widget = this;
 	
 	t.layout = function() {
+		// remove all to get the container size
+		for (var i = 0; i < t.container.childNodes.length; ++i) {
+			var e = t.container.childNodes[i];
+			if (e.nodeType != 1) continue;
+			e.style.position = 'fixed';
+		}		
+		var w = t.container.clientWidth;
+		var h = t.container.clientHeight;
+		for (var i = 0; i < t.container.childNodes.length; ++i) {
+			var e = t.container.childNodes[i];
+			if (e.nodeType != 1) continue;
+			e.style.position = 'static';
+		}		
 		// reset
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];
@@ -23,8 +36,6 @@ function vertical_layout(container) {
 			if (layout == 'fill')
 				e.style.height = "";
 		}
-		var w = t.container.offsetWidth;
-		var h = t.container.offsetHeight;
 		var nb_to_fill = 0;
 		var used = 0;
 		for (var i = 0; i < t.container.childNodes.length; ++i) {

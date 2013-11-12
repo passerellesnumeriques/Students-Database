@@ -1,39 +1,45 @@
 <?php 
 class page_profile extends Page {
 	public function get_required_rights() { return array(); }
+	
 	public function execute() {
 		$this->add_javascript("/static/widgets/frame_header.js");
-		$this->onload("new frame_header('profile_page');");
+		$this->onload("window.profile_header = new frame_header('profile_page'); window.profile_header.setTitle(\"<span id='profile_title_first_name'></span> <span id='profile_title_last_name'></span>\");");
 		
 		$plugin = @$_GET["plugin"];
 		$page = @$_GET["page"];
-		$people = @$_GET["people"];
-		if ($people == null && isset($_GET["user"]))
-			$people = PNApplication::$instance->user_people->get_people_from_user($_GET["user"]);
+		$people_id = $_GET["people"];
+		
+		require_once("component/people/PeoplePlugin.inc");
+		$q = SQLQuery::create();
+		$people_alias = $q->table_id();
+		$q->select(array("People"=>$people_alias));
+		$q->where_value($people_alias, "id", $people_id);
+		$q->field($people_alias, "first_name");
+		$q->field($people_alias, "last_name");
+		foreach (PNApplication::$instance->components as $cname=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			$c->preparePeopleProfilePagesRequest($q, $people_id);
+		}
+		$people = $q->execute_single_row();
 		
 		if ($plugin == null) $plugin = "people";
 		if ($page == null) $page = "profile_".$plugin;
-		$pages = @PNApplication::$instance->components[$plugin]->get_profile_pages($people);
+		$pages = @PNApplication::$instance->components[$plugin]->getPeopleProfilePages($people_id, $people, $q);
 		if ($pages == null || !isset($pages[$page])) {
 			PNApplication::error("Unknow profile page '".$page."' in '".$plugin."'");
 			return;
 		}
 		$page = $pages[$page][2];
 		
-		$full_name = null;
-		if ($people <> null) {
-			$q = SQLQuery::create()->select("People")->field('first_name')->field('last_name')->where('id',$people);
-			if ($people == PNApplication::$instance->user_people->user_people_id)
-				$q->bypass_security();
-			$res = $q->execute_single_row();
-			if ($res) $full_name = $res["first_name"]." ".$res["last_name"];
-		}
+		require_once("component/data_model/page/utils.inc");
+		datamodel_cell($this, "profile_title_first_name", false, "People", "first_name", $people_id, null, $people["first_name"], "function(){fireLayoutEventFor(window.profile_header.header);}");
+		datamodel_cell($this, "profile_title_last_name", false, "People", "last_name", $people_id, null, $people["last_name"], "function(){fireLayoutEventFor(window.profile_header.header);}");
 
-		require_once("component/people/ProfilePlugin.inc");
 		$all_pages = array();
 		foreach (PNApplication::$instance->components as $cname=>$c) {
-			if (!($c instanceof ProfilePlugin)) continue;
-			$pages = @$c->get_profile_pages($people);
+			if (!($c instanceof PeoplePlugin)) continue;
+			$pages = @$c->getPeopleProfilePages($people_id, $people, $q);
 			if ($pages <> null)
 				foreach ($pages as $page_id=>$cp)
 					array_push($all_pages, $cp);
@@ -43,7 +49,7 @@ class page_profile extends Page {
 		}
 		usort($all_pages, "pages_sort");
 ?>
-<div id='profile_page' icon='/static/people/profile_32.png' title='<?php echo $full_name <> null ? $full_name : "Profile"?>' page='<?php echo $page;?>'>
+<div id='profile_page' icon='/static/people/profile_32.png' title='' page='<?php echo $page;?>'>
 <?php 
 foreach ($all_pages as $cp) {
 	echo "<span class='page_menu_item'><a href=\"".$cp[2]."\" target='profile_page_content'><img src='".$cp[0]."'/>".$cp[1]."</a></span>";

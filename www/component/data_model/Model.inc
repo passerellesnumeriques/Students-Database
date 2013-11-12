@@ -88,7 +88,7 @@ class DataModel {
 	}
 
 	/** should be used only in very specific places, while ensuring that this will not give privileges to the user
-	 * @return \datamodel\Table
+	 * @return datamodel\Table
 	 */
 	public function &internalGetTable($name) {
 		if (isset($this->tables[$name]))
@@ -98,7 +98,36 @@ class DataModel {
 				return $sm->tables[$name];
 		throw new \Exception("Unknown table '".$name."'");
 	}
-	/** should be used only in very specific places, while ensuring that this will not give privileges to the user */
+	
+	/**
+	 * @param string $name
+	 * @throws \Exception
+	 * @return datamodel\Table
+	 */
+	public function getTableFromSQLName($name) {
+		if (isset($this->tables[$name]))
+			$t = $this->tables[$name];
+		else {
+			$t = null;
+			foreach ($this->tables as $name=>$tbl) {
+				if (!($tbl->getModel() instanceof SubDataModel)) continue;
+				if (substr($name,0,strlen($tbl->getName())) <> $tbl->getName()) continue;
+				if (substr($name,strlen($tbl->getName()),1) <> "_") continue;
+				$instance = substr($name,strlen($tbl->getName())+1);
+				$id = intval($instance);
+				if ($id == 0) continue;
+				$t = $tbl;
+				break;
+			}
+		}
+		if ($t == null) throw new \Exception("Table '".$name."' does not exist");
+		if ($t->canAccess()) return $t;
+		throw new \Exception("Access denied: table ".$t->getName());
+	}
+	
+	/** should be used only in very specific places, while ensuring that this will not give privileges to the user
+	 * @return datamodel\Table[] 
+	 */
 	public function &internalGetTables() {
 		$a = array();
 		foreach ($this->tables as $name=>&$table)

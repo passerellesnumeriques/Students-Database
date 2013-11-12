@@ -4,7 +4,7 @@
  */
 function error_dialog(message) {
 	require("popup_window.js",function() {
-		var p = new popup_window("Error", theme.icons_16.error, message);
+		var p = new popup_window("Error", theme.icons_16.error, "<div style='padding:5px'>"+message+"</div>");
 		p.show();
 	});
 }
@@ -15,7 +15,7 @@ function error_dialog(message) {
  */
 function confirm_dialog(message, handler) {
 	require("popup_window.js",function() {
-		var p = new popup_window("Confirmation", theme.icons_16.question, message);
+		var p = new popup_window("Confirmation", theme.icons_16.question, "<div style='padding:5px'>"+message+"</div>");
 		var result = false;
 		p.addYesNoButtons(function() {
 			result = true;
@@ -47,6 +47,7 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 		input.type = 'text';
 		input.value = default_value;
 		input.maxLength = max_length;
+		input.style.width = '100%';
 		content.appendChild(input);
 		var error_div = document.createElement("DIV");
 		error_div.style.visibility = 'hidden';
@@ -62,6 +63,10 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 			result = input.value;
 			p.close();
 		});
+		input.onkeypress = function(e) {
+			var ev = getCompatibleKeyEvent(e);
+			if (ev.isEnter) p.pressButton('ok');
+		};
 		var validate = function() {
 			var error = validation_handler(input.value);
 			if (error != null) {

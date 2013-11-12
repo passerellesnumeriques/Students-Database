@@ -8,9 +8,16 @@ function debug_status(container) {
 	container.appendChild(t.icon);
 	
 	t.icon.onclick = function() {
-		require("popup_window.js");
+		require(["popup_window.js","tabs.js"]);
 		service.json("development","get_debug_info",{},function(result){
-			require("popup_window.js",function(){
+			require(["popup_window.js","tabs.js"],function(){
+				var content = document.createElement("DIV");
+				content.style.width = "1000px";
+				content.style.height = "800px";
+				var tabs_control = new tabs(content, false);
+
+				// sql queries
+				var tab = document.createElement("DIV");
 				var table = document.createElement("TABLE");
 				table.style.border = '1px solid black';
 				table.style.borderCollapse = 'collapse';
@@ -21,7 +28,10 @@ function debug_status(container) {
 				td.innerHTML = "URL";
 				tr.appendChild(td = document.createElement("TH"));
 				td.style.border = '1px solid black';
-				td.innerHTML = "DataBase Queries";
+				td.innerHTML = "DataBase Query";
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "Time";
 				for (var i = 0; i < result.requests.length; ++i) {
 					var req = result.requests[i];
 					table.appendChild(tr = document.createElement("TR"));
@@ -50,9 +60,25 @@ function debug_status(container) {
 							div.appendChild(document.createTextNode("Error #"+sql[1]+": "+sql[2]));
 							td.appendChild(div);
 						}
+						tr.appendChild(td = document.createElement("TD"));
+						td.style.border = '1px solid black';
+						td.innerHTML = sql[3]+"s.";
+						if (sql[3] > 1) td.style.color = "#FF0000";
+						else if (sql[3] > 0.5) td.style.color = "#B00000";
+						else if (sql[3] > 0.1) td.style.color = "#700000";
 					}
 				}
-				var popup = new popup_window("Debug Information", "/static/development/debug.png", table);
+				tab.appendChild(table);
+				tabs_control.addTab("DataBase",null,tab);
+				
+				// locks
+				tab = document.createElement("DIV");
+				tab.style.width = "100%";
+				tab.style.height = "100%";
+				tab.style.overflow = "auto";
+				tabs_control.addTab("Locks", null, tab);
+				
+				var popup = new popup_window("Debug Information", "/static/development/debug.png", content);
 				popup.show();
 			});
 		});

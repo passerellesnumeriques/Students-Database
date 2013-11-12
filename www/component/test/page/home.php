@@ -7,198 +7,728 @@ class page_home extends Page {
 		$exclude_components = array("development","test");
 		
 		$this->add_javascript("/static/widgets/collapsable_section/collapsable_section.js");
-
-		echo "Components<br/>";
+		$this->add_javascript("/static/widgets/page_header.js");
+		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->add_javascript("/static/widgets/horizontal_layout.js");
+		$this->add_javascript("/static/widgets/vertical_align.js");
+		$this->add_javascript("/static/development/debug_status.js");
+		$this->add_javascript("/static/test/browser_control.js");
+		
 		$components = PNApplication::sort_components_by_dependencies();
-		foreach ($components as $c) {
-			if (in_array($c->name, $exclude_components)) continue;
-			echo "<div id='section_component_".$c->name."' class='collapsable_section' style='margin:3px'>";
-			echo "<div class='collapsable_section_header'>".$c->name."</div>";
-			echo "<div class='collapsable_section_content' style='padding:3px'><img id='loading_".$c->name."' src='".theme::$icons_16["loading"]."'/></div>";
+		
+		echo "<div id='page' style='height:100%;width:100%'>";
+			echo "<div id='top_status' layout='fixed' icon='/static/test/test_32.png' title='Automatic Tests'></div>";
+			echo "<div style='overflow:auto' layout='fill' id='components'>";
 			echo "</div>";
-			$this->onload("new collapsable_section('section_component_".$c->name."');");
-		}
-
+		echo "</div>";
+		
 ?>
-General reports<br/>
+<!-- General reports<br/>
 phpmd<br/>
 <div id='phpmd' style='width:100%;height:350px;overflow:auto'>
 <img src='<?php echo theme::$icons_16["loading"];?>'/>
 </div>
+ -->
 
 <script type='text/javascript'>
-function load_tests(component, ondone) {
-	service.json("test","get_tests",{component:component},function(tests){
-		var loading = document.getElementById('loading_'+component);
-		if (!loading) { alert('No loading for component '+component); ondone(); return; }
-		var content = loading.parentNode;
-		content.innerHTML = "";
-		if (!tests) { ondone(); return; }
-		tests.func_div = document.createElement("DIV");
-		tests.services_div = document.createElement("DIV");
-		content.appendChild(tests.func_div);
-		content.appendChild(tests.services_div);
-		if (tests.functions == null) {
-			tests.func_div.innerHTML = "No function provided.";
+var components = [
+<?php 
+$first = true;
+foreach (PNApplication::$instance->components as $name=>$c) {
+	if (in_array($name, $exclude_components)) continue;
+	if (substr($name,0,4) == "lib_") continue;
+	if ($first) $first = false; else echo ",";
+	echo "{name:".json_encode($name);
+	echo "}";
+}
+?>
+];
+
+function top_status_widget() {
+	container = document.getElementById('top_status');
+	var t=this;
+	t.widget = new page_header(container);
+
+	t.refresh = document.createElement("IMG");
+	t.refresh.className = 'button';
+	t.refresh.style.verticalAlign = "bottom";
+	t.refresh.src = theme.icons_16.refresh;
+	t.refresh.onclick = function() { location.reload(); };
+	t.widget.menu_container.appendChild(t.refresh);
+
+	var span_debug = document.createElement("SPAN");
+	span_debug.className = 'button';
+	t.widget.menu_container.appendChild(span_debug);
+	new debug_status(span_debug);
+
+	t.play_all = document.createElement("DIV");
+	t.play_all.className = 'button disabled';
+	t.play_all.innerHTML = "<img src='/static/test/play.png' style='vertical-align:bottom'/> Launch all tests";
+	t.widget.menu_container.appendChild(t.play_all);
+
+	t.widget.menu_container.appendChild(t.span_nb_scenarios = document.createElement("SPAN"));
+	t.widget.menu_container.appendChild(t.span_scenarios_waiting = document.createElement("SPAN"));
+	t.widget.menu_container.appendChild(t.span_scenarios_succeed = document.createElement("SPAN"));
+	t.widget.menu_container.appendChild(t.span_scenarios_failed = document.createElement("SPAN"));
+	
+	t.waiting_components = 0;
+	
+	fireLayoutEventFor(container);
+
+	t.getTotalScenarios = function() {
+		var nb = 0;
+		for (var i = 0; i < components.length; ++i)
+			if (components[i].widget) nb += components[i].widget.getTotalScenarios();
+		return nb;
+	};
+	t.getNbScenariosSucceed = function() {
+		var nb = 0;
+		for (var i = 0; i < components.length; ++i)
+			if (components[i].widget) nb += components[i].widget.getNbScenariosSucceed();
+		return nb;
+	};
+	t.getNbScenariosFailed = function() {
+		var nb = 0;
+		for (var i = 0; i < components.length; ++i)
+			if (components[i].widget) nb += components[i].widget.getNbScenariosFailed();
+		return nb;
+	};
+	t.getNbScenariosWaiting = function() {
+		var nb = 0;
+		for (var i = 0; i < components.length; ++i)
+			if (components[i].widget) nb += components[i].widget.getNbScenariosWaiting();
+		return nb;
+	};
+	
+	t.update_status = function() {
+		var nb = t.getTotalScenarios();
+		t.span_nb_scenarios.innerHTML = nb+" scenario"+(nb>1?"s":"")+(nb>0?":":"");
+		nb = t.getNbScenariosWaiting();
+		if (nb == 0)
+			t.span_scenarios_waiting.innerHTML = "";
+		else
+			t.span_scenarios_waiting.innerHTML = "<img src='"+theme.icons_16.wait+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" not run";
+		if (nb == 0 || t.waiting_components > 0) {
+			t.play_all.className = 'button disabled';
+			t.play_all.onclick = null;
 		} else {
-			tests.func_div.innerHTML = "Functionalities";
-			tests.func_content = document.createElement("DIV");
-			tests.func_content.style.marginLeft = "10px";
-			tests.func_div.appendChild(tests.func_content);
-			if (tests.functions.not_covered.length > 0) {
-				var div = document.createElement("DIV");
-				div.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> Not covered: ";
-				for (var i = 0; i < tests.functions.not_covered.length; ++i) {
-					if (i>0) div.innerHTML += ", ";
-					div.innerHTML += tests.functions.not_covered[i];
-				}
-				tests.func_content.appendChild(div);
+			t.play_all.className = 'button';
+			t.play_all.onclick = function() { t.launch_all(); };
+		}
+		nb = t.getNbScenariosSucceed();
+			if (nb == 0)
+				t.span_scenarios_succeed.innerHTML = "";
+			else
+				t.span_scenarios_succeed.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" succeed";
+		nb = t.getNbScenariosFailed();
+		if (nb == 0)
+			t.span_scenarios_failed.innerHTML = "";
+		else
+			t.span_scenarios_failed.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" failed";
+	};
+	t.update_status();
+
+	t.launch_all = function(ondone) {
+		for (var i = 0; i < components.length; ++i) {
+			components[i].widget.disable_refresh();
+			components[i].widget.disable_launch_all();
+		}
+		var next = function(pos) {
+			if (pos == components.length) {
+				if (ondone) ondone();
+				return;
 			}
+			components[pos].widget.launch_all(function(){
+				components[pos].widget.enable_refresh();
+				next(pos+1);
+			});
+		};
+		next(0);
+	};
+
+	t.component_loading = function(component) {
+		t.waiting_components++;
+		t.play_all.className = 'button disabled';
+		t.play_all.onclick = null;
+		t.update_status();
+	};
+	t.component_loaded = function(component) {
+		--t.waiting_components;
+		t.update_status();
+	};
+
+}
+var top_status = new top_status_widget();
+new vertical_layout('page');
+
+function load_tests(component, ondone) {
+	var loading = document.createElement("IMG");
+	loading.src = theme.icons_16.loading;
+	var content = component.widget.collapsable.content;
+	content.innerHTML = "";
+	content.appendChild(loading);
+	service.json("test","get_tests",{component:component.name},function(tests){
+		component.tests = tests;
+		content.innerHTML = "";
+		if (!tests) {
+			content.innerHTML = "Error while calling the service"; 
+			if (ondone) ondone();
+			return; 
+		}
+
+		// first check what is provided
+		if (tests.functions == null) {
+			var div = document.createElement("DIV");
+			div.innerHTML  = "No function provided";
+			content.appendChild(div);
 		}
 		if (tests.services == null) {
-			tests.services_div.innerHTML = "No service provided.";
-		} else {
-			tests.services_div.innerHTML = "Services";
-			tests.services_content = document.createElement("DIV");
-			tests.services_content.style.marginLeft = "10px";
-			tests.services_div.appendChild(tests.services_content);
-			if (tests.services.not_covered.length > 0) {
-				var div = document.createElement("DIV");
-				div.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> Not covered: ";
-				for (var i = 0; i < tests.services.not_covered.length; ++i) {
-					if (i>0) div.innerHTML += ", ";
-					div.innerHTML += tests.services.not_covered[i];
-				}
-				tests.services_content.appendChild(div);
-			}
+			var div = document.createElement("DIV");
+			div.innerHTML  = "No service provided";
+			content.appendChild(div);
 		}
-		process_functions_tests(component, tests, ondone);
+
+		if (tests.functions != null) {
+			var table = build_tests_table("Functionalities", component, tests.functions, play_function_test);
+			content.appendChild(table);
+			for (var i  = 0; i < tests.functions.scenarios.length; ++i)
+				tests.functions.scenarios[i].status = 0;
+		}
+		if (tests.services != null) {
+			var table = build_tests_table("Services", component, tests.services, play_service_test);
+			content.appendChild(table);
+			for (var i  = 0; i < tests.services.scenarios.length; ++i)
+				tests.services.scenarios[i].status = 0;
+		}
+		var next_ui = function(pos) {
+			if (tests.ui == null || pos == tests.ui.scenarios.length) {
+				if (tests.ui != null) {
+					var table = build_tests_table("UI", component, tests.ui, play_ui_test);
+					content.appendChild(table);
+				}
+				if (ondone) ondone();
+				return;
+			}
+			tests.ui.scenarios[pos] = {path:tests.ui.scenarios[pos], status: 0};
+			add_javascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(tests.ui.scenarios[pos].path),function() {
+				tests.ui.scenarios[pos].obj = new window["Test_"+component.name+"_"+tests.ui.scenarios[pos].path]();
+				tests.ui.scenarios[pos].name = tests.ui.scenarios[pos].obj.name;
+				next_ui(pos+1);
+			});
+		};
+		next_ui(0);
 	});
 }
-function process_functions_tests(component, tests, ondone) {
-	if (tests.functions == null) { process_services_tests(component, tests, ondone); return; }
-	if (tests.functions.scenarios.length == 0) {
-		var div = document.createElement("DIV");
-		div.innerHTML = "No test defined.";
-		tests.func_content.appendChild(div);
-		process_services_tests(component, tests, ondone);
-		return;
-	}
-	for (var i = 0; i < tests.functions.scenarios.length; ++i) {
-		tests.functions.scenarios[i].div = document.createElement("DIV");
-		tests.functions.scenarios[i].div.innerHTML = tests.functions.scenarios[i].name;
-		tests.functions.scenarios[i].icon = document.createElement("IMG");
-		tests.functions.scenarios[i].icon.src = theme.icons_16.wait;
-		tests.functions.scenarios[i].icon.style.verticalAlign = "bottom";
-		tests.functions.scenarios[i].div.appendChild(tests.functions.scenarios[i].icon);
-		tests.functions.scenarios[i].div.padding = "3px";
-		for (var j = 0; j < tests.functions.scenarios[i].steps.length; ++j) {
-			var step = {name:tests.functions.scenarios[i].steps[j]};
-			tests.functions.scenarios[i].steps[j] = step;
-			step.div = document.createElement("DIV");
-			step.div.innerHTML = step.name;
-			step.div.style.marginLeft = "10px";
-			tests.functions.scenarios[i].div.appendChild(step.div);			
+
+function build_tests_table(title, component, list, play_function) {
+	var table = document.createElement("TABLE");
+	table.style.borderCollapse = "collapse";
+	table.style.borderSpacing = "0px";
+	table.style.border = "1px solid black";
+	table.style.marginTop = "3px";
+	table.style.width = "100%";
+	table.style.overflowX = "auto";
+	table.style.display = "block";
+	var tr, td;
+	table.appendChild(tr = document.createElement("TR"));
+	tr.appendChild(td = document.createElement("TD"));
+	td.innerHTML = title;
+	td.colSpan = 3;
+	td.style.fontWeight = "bold";
+	td.style.backgroundColor = "#C0C0C0";
+	td.style.borderBottom = "1px solid black";
+	var columns = list.scenarios.length > 0 && list.scenarios[0].steps ? 3 : 2;
+	if (list.not_covered && list.not_covered.length > 0) {
+		table.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td = document.createElement("TD"));
+		td.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> Not covered: ";
+		td.colSpan = columns;
+		td.style.borderBottom = "1px solid black";
+		for (var i = 0; i < list.not_covered.length; ++i) {
+			if (i>0) td.innerHTML += ", ";
+			td.innerHTML += list.not_covered[i];
 		}
-		tests.func_content.appendChild(tests.functions.scenarios[i].div);
 	}
-	var pos = 0;
-	var next_scenario = function() {
-		if (pos == tests.functions.scenarios.length) { process_services_tests(component, tests, ondone); return; }
-		tests.functions.scenarios[pos].icon.src = theme.icons_16.loading;
-		service.json("test","execute_functionalities_scenario",{component:component,scenario:tests.functions.scenarios[pos].path},function(res_scenario){
-			var success = true;
-			if (!res_scenario)
-				success = false;
-			else {
-				for (var i = 0; i < res_scenario.length; ++i) {
-					if (res_scenario[i] == "OK")
-						tests.functions.scenarios[pos].steps[i].div.innerHTML += " <img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/>";
-					else {
-						success = false;
-						if (res_scenario[i] != null)
-							tests.functions.scenarios[pos].steps[i].div.innerHTML += " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res_scenario[i];
-					} 
+	if (list.scenarios.length == 0) {
+		table.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td = document.createElement("TD"));
+		td.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> No test defined";
+		td.colSpan = columns;
+		td.style.borderBottom = "1px solid black";
+	} else {
+		table.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td = document.createElement("TD"));
+		td.innerHTML = "Scenario";
+		td.style.fontWeight = "bold";
+		td.style.backgroundColor = "#D0D0E0";
+		td.style.border = "1px solid black";
+		if (columns == 3) {
+			tr.appendChild(td = document.createElement("TD"));
+			td.innerHTML = "Steps";
+			td.style.fontWeight = "bold";
+			td.style.backgroundColor = "#D0D0E0";
+			td.style.border = "1px solid black";
+		}
+		tr.appendChild(td = document.createElement("TD"));
+		td.innerHTML = "Result";
+		td.style.fontWeight = "bold";
+		td.style.backgroundColor = "#D0D0E0";
+		td.style.border = "1px solid black";
+		for (var i = 0; i < list.scenarios.length; ++i) {
+			if (columns == 3)
+				for (var j = 0; j < list.scenarios[i].steps.length; ++j)
+					list.scenarios[i].steps[j] = {name:list.scenarios[i].steps[j]};
+			table.appendChild(tr = document.createElement("TR"));
+
+			tr.appendChild(td = document.createElement("TD"));
+			td.style.border = "1px solid black";
+			if (columns == 3)
+				td.rowSpan = list.scenarios[i].steps.length+1;
+			td.style.verticalAlign = "top";
+			td.style.whiteSpace = "nowrap";
+			td.innerHTML = ""+(i+1)+"- "+list.scenarios[i].name;
+			list.scenarios[i].button = document.createElement("IMG");
+			list.scenarios[i].button.className = 'button';
+			list.scenarios[i].button.src = '/static/test/play.png';
+			list.scenarios[i].button.style.verticalAlign = "bottom";
+			list.scenarios[i].button.component = component;
+			list.scenarios[i].button.scenario = i;
+			list.scenarios[i].button.onclick = function() {
+				component.widget.disable_refresh();
+				component.widget.disable_launch_all();
+				play_function(this.component, this.scenario, function() {
+					component.widget.enable_refresh();
+				});
+			};
+			td.appendChild(list.scenarios[i].button);
+
+			if (columns == 3) {
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.border = "1px solid black";
+				td.style.whiteSpace = "nowrap";
+				td.innerHTML = ""+(i+1)+".0- Initialize database";
+				list.scenarios[i].init_step = {};
+				list.scenarios[i].init_step.container = td;
+
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.border = "1px solid black";
+				td.style.whiteSpace = "nowrap";
+				list.scenarios[i].init_step.result_container = td;
+
+				for (var j = 0; j < list.scenarios[i].steps.length; ++j) {
+					table.appendChild(tr = document.createElement("TR"));
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = "1px solid black";
+					td.style.whiteSpace = "nowrap";
+					td.innerHTML = ""+(i+1)+"."+(j+1)+"- "+list.scenarios[i].steps[j].name;
+					list.scenarios[i].steps[j].container = td;
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.whiteSpace = "nowrap";
+					td.style.border = "1px solid black";
+					list.scenarios[i].steps[j].result_container = td;
 				}
+			} else {
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.border = "1px solid black";
+				td.style.whiteSpace = "nowrap";
+				list.scenarios[i].result_container = td;
+			}
+		}
+	}
+	return table;
+}
+
+function component_widget(component) {
+	var t=this;
+	component.widget = this;
+
+	t.collapsable = new collapsable_section();
+	t.collapsable.toggle();
+	t.collapsable.element.style.display = "block";
+	t.collapsable.element.style.marginBottom = "2px";
+	t.collapsable.content.style.padding = "5px";
+	t.collapsable.content.style.overflowX = "auto";
+	document.getElementById('components').appendChild(t.collapsable.element);
+	t.collapsable_header = document.createElement("DIV");
+	t.collapsable.header.appendChild(t.collapsable_header);
+	t.title = document.createElement("DIV");
+	t.title.style.backgroundColor = "rgba(255,255,255,0.2)";
+	t.title.style.borderRight = "1px solid #FFFFFF";
+	setBorderRadius(t.title,0,0,0,0,0,0,5,5);
+	t.title.style.padding = "2px 5px 2px 5px";
+	t.title.style.fontSize = "12pt";
+	t.title.style.fontWeight = "bold";
+	t.title.innerHTML = component.name;
+	t.collapsable_header.appendChild(t.title);
+	t.header = document.createElement("DIV");
+	t.collapsable_header.appendChild(t.header);
+	t.fake_for_collapse = document.createElement("DIV");
+	t.collapsable_header.appendChild(t.fake_for_collapse);
+	t.title.setAttribute("layout","fixed");
+	t.header.setAttribute("layout","fill");
+	t.fake_for_collapse.setAttribute("layout","15");
+	t.fake_for_collapse.style.position = "absolute";
+	t.fake_for_collapse.style.top = "-10000px";
+	new horizontal_layout(t.collapsable_header);
+	new vertical_align(t.header, "middle");
+
+	t.load = document.createElement("IMG");
+	t.load.style.verticalAlign = "bottom";
+	t.load.src = theme.icons_16.loading;
+	t.load.className = "button disabled";
+	t.header.appendChild(t.load);
+
+	t.play_all = document.createElement("DIV");
+	t.play_all.innerHTML = "<img src='/static/test/play.png' style='vertical-align:bottom'/> Launch all tests";
+	t.play_all.className = "button disabled";
+	t.header.appendChild(t.play_all);
+
+	t.header.appendChild(t.span_nb_scenarios = document.createElement("SPAN"));
+	t.header.appendChild(t.span_scenarios_waiting = document.createElement("SPAN"));
+	t.header.appendChild(t.span_scenarios_succeed = document.createElement("SPAN"));
+	t.header.appendChild(t.span_scenarios_failed = document.createElement("SPAN"));
+
+	t.getTotalScenarios = function() {
+		if (component.tests == null) return 0;
+		var total = 0;
+		if (component.tests.functions != null)
+			total += component.tests.functions.scenarios.length;
+		if (component.tests.services != null)
+			total += component.tests.services.scenarios.length;
+		if (component.tests.ui != null)
+			total += component.tests.ui.scenarios.length;
+		return total;
+	};
+	t.getNbScenariosSucceed = function() {
+		if (component.tests == null) return 0;
+		var total = 0;
+		if (component.tests.functions != null)
+			for (var i = 0; i < component.tests.functions.scenarios.length; ++i)
+				if (component.tests.functions.scenarios[i].status == 1)
+					total++;
+		if (component.tests.services != null)
+			for (var i = 0; i < component.tests.services.scenarios.length; ++i)
+				if (component.tests.services.scenarios[i].status == 1)
+					total++;
+		if (component.tests.ui != null)
+			for (var i = 0; i < component.tests.ui.scenarios.length; ++i)
+				if (component.tests.ui.scenarios[i].status == 1)
+					total++;
+		return total;
+	};
+	t.getNbScenariosFailed = function() {
+		if (component.tests == null) return 0;
+		var total = 0;
+		if (component.tests.functions != null)
+			for (var i = 0; i < component.tests.functions.scenarios.length; ++i)
+				if (component.tests.functions.scenarios[i].status == -1)
+					total++;
+		if (component.tests.services != null)
+			for (var i = 0; i < component.tests.services.scenarios.length; ++i)
+				if (component.tests.services.scenarios[i].status == -1)
+					total++;
+		if (component.tests.ui != null)
+			for (var i = 0; i < component.tests.ui.scenarios.length; ++i)
+				if (component.tests.ui.scenarios[i].status == -1)
+					total++;
+		return total;
+	};
+	t.getNbScenariosWaiting = function() {
+		if (component.tests == null) return 0;
+		var total = 0;
+		if (component.tests.functions != null)
+			for (var i = 0; i < component.tests.functions.scenarios.length; ++i)
+				if (component.tests.functions.scenarios[i].status == 0)
+					total++;
+		if (component.tests.services != null)
+			for (var i = 0; i < component.tests.services.scenarios.length; ++i)
+				if (component.tests.services.scenarios[i].status == 0)
+					total++;
+		if (component.tests.ui != null)
+			for (var i = 0; i < component.tests.ui.scenarios.length; ++i)
+				if (component.tests.ui.scenarios[i].status == 0)
+					total++;
+		return total;
+	};
+
+	t.disable_refresh = function() {
+		t.load.src = theme.icons_16.loading;
+		t.load.className = "button disabled";
+		t.load.onclick = null;
+	};
+	t.enable_refresh = function() {
+		t.load.src = theme.icons_16.refresh;
+		t.load.className = "button";
+		t.load.onclick = function(e) { t.reload(); stopEventPropagation(e); return false; };
+	};
+	t.disable_launch_all = function() {
+		t.play_all.className = "button disabled";
+		t.play_all.onclick = null;
+	};
+	t.launch_all = function(ondone) {
+		if (component.tests && component.tests.functions)
+			for (var i = 0; i < component.tests.functions.scenarios.length; ++i)
+				if (component.tests.functions.scenarios[i].status == 0)
+					component.tests.functions.scenarios[i].status = -2;
+		if (component.tests && component.tests.services)
+			for (var i = 0; i < component.tests.services.scenarios.length; ++i)
+				if (component.tests.services.scenarios[i].status == 0)
+					component.tests.services.scenarios[i].status = -2;
+		if (component.tests && component.tests.ui)
+			for (var i = 0; i < component.tests.ui.scenarios.length; ++i)
+				if (component.tests.ui.scenarios[i].status == 0)
+					component.tests.ui.scenarios[i].status = -2;
+		t.disable_refresh();
+		t.disable_launch_all();
+		t.update_status();
+		
+		var next_ui = function(pos) {
+			if (component.tests == null || component.tests.ui == null || pos == component.tests.ui.scenarios.length) {
+				t.enable_refresh();
+				t.update_status();
+				if (ondone) ondone();
+				return;
+			}
+			if (component.tests.ui.scenarios[pos].status != -2) {
+				next_ui(pos+1);
+				return;
+			}
+			play_ui_test(component, pos, function() {
+				next_ui(pos+1);
+			});
+		};
+		var next_service = function(pos) {
+			if (component.tests == null || component.tests.services == null || pos == component.tests.services.scenarios.length) {
+				next_ui(0);
+				return;
+			}
+			if (component.tests.services.scenarios[pos].status != -2) {
+				next_service(pos+1);
+				return;
+			}
+			play_service_test(component, pos, function() {
+				next_service(pos+1);
+			});
+		};
+		var next_function = function(pos) {
+			if (component.tests == null || component.tests.functions == null || pos == component.tests.functions.scenarios.length) {
+				next_service(0);
+				return;
+			}
+			if (component.tests.functions.scenarios[pos].status != -2) {
+				next_function(pos+1);
+				return;
+			}
+			play_function_test(component, pos, function() {
+				next_function(pos+1);
+			});
+		};
+		next_function(0);
+	};
+	
+	t.update_status = function() {
+		var nb = t.getTotalScenarios();
+		t.span_nb_scenarios.innerHTML = nb+" scenario"+(nb>1?"s":"")+(nb>0?":":"");
+		nb = t.getNbScenariosWaiting();
+		if (nb == 0)
+			t.span_scenarios_waiting.innerHTML = "";
+		else
+			t.span_scenarios_waiting.innerHTML = "<img src='"+theme.icons_16.wait+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" not run";
+		if (nb == 0)
+			t.disable_launch_all();
+		else {
+			t.play_all.className = "button";
+			t.play_all.onclick = function(e) { t.launch_all(); stopEventPropagation(e); return false; };
+		}
+		nb = t.getNbScenariosSucceed();
+			if (nb == 0)
+				t.span_scenarios_succeed.innerHTML = "";
+			else
+				t.span_scenarios_succeed.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" succeed";
+		nb = t.getNbScenariosFailed();
+		if (nb == 0)
+			t.span_scenarios_failed.innerHTML = "";
+		else
+			t.span_scenarios_failed.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" failed";
+		top_status.update_status();
+	};
+	t.update_status();
+	
+	t.reload = function(onready) {
+		top_status.component_loading(component);
+
+		component.tests = null;
+		t.update_status();
+
+		t.disable_refresh();
+		t.disable_launch_all();
+		
+		load_tests(component, function() {
+			t.enable_refresh();
+
+			t.update_status();
+			
+			top_status.component_loaded(component);
+			if (onready) onready();
+		});
+	};
+}
+
+function load_all(ondone) {
+	for (var i = 0; i < components.length; ++i)
+		new component_widget(components[i]);
+	var nb = components.length;
+	for (var i = 0; i < components.length; ++i)
+		components[i].widget.reload(function(){ if (--nb == 0) ondone(); });
+}
+load_all(function() {
+});
+
+function play_function_test(component, scenario_index, ondone) {
+	var scenario = component.tests.functions.scenarios[scenario_index]; 
+	if (!scenario.button) return;
+	scenario.status = -2;
+	component.widget.update_status();
+
+	if (!scenario.icon) {
+		scenario.icon = document.createElement("IMG");
+		scenario.button.parentNode.insertBefore(scenario.icon, scenario.button);
+	}
+	scenario.button.parentNode.removeChild(scenario.button);
+	scenario.button = null;
+	scenario.icon.src = theme.icons_16.loading;
+	scenario.icon.style.verticalAlign = "bottom";
+	var next_step = function(step_pos, data) {
+		var step = step_pos == -1 ? scenario.init_step : scenario.steps[step_pos];
+		step.icon = document.createElement("IMG");
+		step.icon.src = theme.icons_16.loading;
+		step.icon.style.verticalAlign = "bottom";
+		step.result_container.appendChild(step.icon);
+		service.json("test","execute_functionalities_scenario",{component:component.name,scenario:scenario.path,step:step_pos,data:data},function(res_step){
+			var success;
+			if (!res_step) {
+				success = false;
+				step.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> An error occured during the call";
+			} else if (res_step.error == null) {
+				success = true;
+				step.result_container.innerHTML = " <img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/>";
+			} else {
+				success = false;
+				step.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res_step.error;
 			}
 			if (!success) {
-				tests.functions.scenarios[pos].icon.src = theme.icons_16.error;
+				scenario.icon.src = theme.icons_16.error;
+				scenario.button = document.createElement("IMG");
+				scenario.button.className = 'button';
+				scenario.button.src = '/static/test/replay.png';
+				scenario.button.style.verticalAlign = "bottom";
+				scenario.button.component = component;
+				scenario.button.scenario = scenario_index;
+				scenario.button.onclick = function() {
+					scenario.init_step.result_container.innerHTML = "";
+					for (var i = 0; i < scenario.steps.length; ++i)
+						scenario.steps[i].result_container.innerHTML = "";
+					play_function_test(this.component, this.scenario);
+				};
+				scenario.icon.parentNode.appendChild(scenario.button);
 				// TODO details
-				while (++pos < tests.functions.scenarios.length)
-					tests.functions.scenarios[pos].icon.src = theme.icons_16.error;
-				process_services_tests(component, tests, ondone);
-				return;
+				scenario.status = -1;
+				component.widget.update_status();
+				if (ondone) ondone(false);				
 			} else {
-				tests.functions.scenarios[pos].icon.src = theme.icons_16.ok;
-				pos++;
-				next_scenario();
-			}				
-		});		
-	};
-	next_scenario();
-}
-function process_services_tests(component, tests, ondone) {
-	if (tests.services == null) { ondone(); return; }
-	if (tests.services.scenarios.length == 0) {
-		var div = document.createElement("DIV");
-		div.innerHTML = "No test defined.";
-		tests.services_content.appendChild(div);
-		ondone();
-		return;
-	}
-	for (var i = 0; i < tests.services.scenarios.length; ++i) {
-		tests.services.scenarios[i].div = document.createElement("DIV");
-		tests.services.scenarios[i].div.innerHTML = tests.services.scenarios[i].name;
-		tests.services.scenarios[i].icon = document.createElement("IMG");
-		tests.services.scenarios[i].icon.src = theme.icons_16.wait;
-		tests.services.scenarios[i].icon.style.verticalAlign = "bottom";
-		tests.services.scenarios[i].div.appendChild(tests.services.scenarios[i].icon);
-		tests.services.scenarios[i].div.padding = "3px";
-		for (var j = 0; j < tests.services.scenarios[i].steps.length; ++j) {
-			var step = {name:tests.services.scenarios[i].steps[j]};
-			tests.services.scenarios[i].steps[j] = step;
-			step.div = document.createElement("DIV");
-			step.div.innerHTML = step.name;
-			step.div.style.marginLeft = "10px";
-			tests.services.scenarios[i].div.appendChild(step.div);			
-		}
-		tests.services_content.appendChild(tests.services.scenarios[i].div);
-	}
-	var pos = 0;
-	var next_scenario = function() {
-		if (pos == tests.services.scenarios.length) { ondone(); return; }
-		tests.services.scenarios[pos].icon.src = theme.icons_16.loading;
-		service.json("test","execute_services_scenario",{component:component,scenario:tests.services.scenarios[pos].path},function(res_scenario){
-			var success = true;
-			if (!res_scenario)
-				success = false;
-			else {
-				for (var i = 0; i < res_scenario.length; ++i) {
-					if (res_scenario[i] == "OK")
-						tests.services.scenarios[pos].steps[i].div.innerHTML += " <img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/>";
-					else {
-						success = false;
-						if (res_scenario[i] != null)
-							tests.services.scenarios[pos].steps[i].div.innerHTML += " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res_scenario[i];
-					} 
+				scenario.icon.src = theme.icons_16.ok;
+				if (step_pos == scenario.steps.length-1) {
+					scenario.status = 1;
+					component.widget.update_status();
+					if (ondone) ondone(true);				
+				} else {
+					next_step(step_pos+1, res_step.data);
 				}
 			}
-			if (!success) {
-				tests.services.scenarios[pos].icon.src = theme.icons_16.error;
-				// TODO details
-				while (++pos < tests.services.scenarios.length)
-					tests.services.scenarios[pos].icon.src = theme.icons_16.error;
-				ondone();
-				return;
-			} else {
-				tests.services.scenarios[pos].icon.src = theme.icons_16.ok;
-				pos++;
-				next_scenario();
-			}				
-		});		
+		});	
 	};
-	next_scenario();
+	next_step(-1, {});
 }
+
+function play_service_test(component, scenario_index, ondone) {
+	var scenario = component.tests.services.scenarios[scenario_index]; 
+	if (!scenario.button) return;
+
+	scenario.icon = document.createElement("IMG");
+	scenario.button.parentNode.insertBefore(scenario.icon, scenario.button);
+	scenario.button.parentNode.removeChild(scenario.button);
+	scenario.button = null;
+	scenario.icon.src = theme.icons_16.loading;
+	scenario.icon.style.verticalAlign = "bottom";
+	service.json("test","execute_services_scenario",{component:component.name,scenario:scenario.path},function(res_scenario){
+		var success = true;
+		if (!res_scenario)
+			success = false;
+		else {
+			for (var i = 0; i < res_scenario.length; ++i) {
+				if (res_scenario[i] == "OK")
+					scenario.steps[i].result_container.innerHTML = " <img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/>";
+				else {
+					success = false;
+					if (res_scenario[i] != null)
+						scenario.steps[i].result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res_scenario[i];
+				} 
+			}
+		}
+		if (!success) {
+			scenario.icon.src = theme.icons_16.error;
+			// TODO details
+		} else {
+			scenario.icon.src = theme.icons_16.ok;
+		}				
+		if (ondone) ondone(success);				
+	});		
+}
+
+function play_ui_test(component, scenario_index, ondone) {
+	var scenario = component.tests.ui.scenarios[scenario_index]; 
+	if (!scenario.button) return;
+
+	scenario.icon = document.createElement("IMG");
+	scenario.button.parentNode.insertBefore(scenario.icon, scenario.button);
+	scenario.button.parentNode.removeChild(scenario.button);
+	scenario.button = null;
+	scenario.icon.src = theme.icons_16.loading;
+	scenario.icon.style.verticalAlign = "bottom";
+	scenario.obj.run(function(error) {
+		if (!error)
+			scenario.result_container.innerHTML = " <img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/>";
+		else
+			scenario.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
+		if (error) {
+			scenario.icon.src = theme.icons_16.error;
+			scenario.button = document.createElement("IMG");
+			scenario.button.className = 'button';
+			scenario.button.src = '/static/test/replay.png';
+			scenario.button.style.verticalAlign = "bottom";
+			scenario.button.component = component;
+			scenario.button.scenario = scenario_index;
+			scenario.button.onclick = function() {
+				scenario.result_container.innerHTML = "";
+				play_ui_test(this.component, this.scenario);
+			};
+			scenario.icon.parentNode.appendChild(scenario.button);
+			// TODO details
+			scenario.status = -1;
+			component.widget.update_status();
+			if (ondone) ondone(false);				
+		} else {
+			scenario.icon.src = theme.icons_16.ok;
+			scenario.status = 1;
+			component.widget.update_status();
+			if (ondone) ondone(true);				
+		}
+	},function(action_name) {
+		scenario.result_container.innerHTML = " <img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> "+action_name;
+	});
+}
+
+/*
 
 var current_component = -1;
 var phpmd_done = false;
@@ -264,17 +794,9 @@ function test_next_component() {
 		test_next_component();
 	});
 }
-var components = [
-<?php 
-$first = true;
-foreach (PNApplication::$instance->components as $name=>$c) {
-	if (in_array($name, $exclude_components)) continue;
-	if ($first) $first = false; else echo ",";
-	echo "\"".$name."\"";
-}
-?>
-];
+
 test_next_component();
+*/
 </script>
 <?php
 	}

@@ -5,6 +5,7 @@ if (window == window.top) {
 	window.pnapplication = {
 		/** list of windows */
 		windows: [],
+		onwindowclosed: new Custom_Event(),
 		/** register a new window */
 		register_window: function(w) { 
 			window.top.pnapplication.windows.push(w);
@@ -21,13 +22,14 @@ if (window == window.top) {
 					this.onclick_listeners.splice(i,1);
 					i--;
 				}
-			for (var i = 0; i < this.app_events_listeners.length; ++i) {
-				if (this.app_events_listeners[i][0] == w) {
-					this.app_events_listeners.splice(i,1);
+			for (var i = 0; i < this.onevent_listeners.length; ++i)
+				if (this.onevent_listeners[i].win == w) {
+					this.onevent_listeners.splice(i,1);
 					i--;
 				}
-			}
+			window.top.pnapplication.onwindowclosed.fire(w);
 		},
+		
 		onclick_listeners: [],
 		register_onclick: function(from_window, listener) {
 			this.onclick_listeners.push([from_window,listener]);
@@ -39,24 +41,17 @@ if (window == window.top) {
 					break;
 				}
 		},
-		app_events_listeners: [],
-		register_app_event_listener: function(from_window, listener_id, listener) {
-			this.app_events_listeners.push([from_window,listener_id,listener]);
+		
+		onevent_listeners: [],
+		register_onevent: function(win, type, listener) {
+			this.onevent_listeners.push({win:win,type:type,listener:listener});
 		},
-		unregister_app_event_listener: function(id) {
-			for (var i = 0; i < this.app_events_listeners.length; ++i)
-				if (this.app_events_listeners[i][1] == id) {
-					this.app_events_listeners.splice(i,1);
-					break;
-				}
+		signal_event: function(type, data) {
+			for (var i = 0; i < this.onevent_listeners.length; ++i)
+				if (this.onevent_listeners[i].type == type)
+					this.onevent_listeners[i].listener(type, data);
 		},
-		raise_app_event: function(listener_id, data) {
-			for (var i = 0; i < this.app_events_listeners.length; ++i)
-				if (this.app_events_listeners[i][1] == listener_id) {
-					this.app_events_listeners[i][2](data);
-					break;
-				}
-		},
+		
 		/** Event when the whole application is closing */
 		onclose: new Custom_Event(),
 		close_window: function() {
@@ -106,14 +101,24 @@ if (window == window.top) {
 		add_inactivity_listener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
+		_app_events_to_register: [],
 		register_app_event_listener: function(type, identifier, listener, handler) {
-			service.json("application","register_app_event",{type:type,identifier:identifier},function(result){
-				if (result) {
-					window.top.pnapplication.register_app_event_listener(window, result.id, listener);
-					if (handler)
-						handler(result.id);
-				}
-			});
+			window.pnapplication._app_events_to_register.push({type:type,identifier:identifier,listener:listener,handler:handler});
+			if (window.pnapplication._app_events_to_register.length > 1) return;
+			setTimeout(function(){
+				var events = [];
+				var list = window.pnapplication._app_events_to_register;
+				for (var i = 0; i < window.pnapplication._app_events_to_register.length; ++i)
+					events.push({type:window.pnapplication._app_events_to_register[i].type, identifier:window.pnapplication._app_events_to_register[i].identifier});
+				window.pnapplication._app_events_to_register = [];
+				service.json("application","register_app_event",{events:events},function(result){
+					if (!result) return;
+					for (var i = 0; i < result.length; ++i) {
+						window.top.pnapplication.register_app_event_listener(window, result[i], list[i].listener);
+						if (list[i].handler) list[i].handler(result[i]);
+					}
+				});
+			},10);
 		},
 		unregister_app_event_listener: function(id) {
 			window.top.pnapplication.unregister_app_event_listener(id);

@@ -1,6 +1,7 @@
 function google_status(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
+	var w=window;
 	
 	t.icon = document.createElement("IMG");
 	t.icon.src = "/static/application/icon.php?main=/static/google/google.png&where=right_bottom&small="+theme.icons_10.no_connection;
@@ -10,16 +11,17 @@ function google_status(container) {
 	container.appendChild(t.icon);
 	
 	t.update_icon = function() {
+		if (!w.theme) return; // window closed
 		var url = "/static/application/icon.php?main=/static/google/google.png&where=right_bottom&small=";
 		switch (window.top.google.connection_status) {
-		case 0: url += theme.icons_10.no_connection; break;
-		case 1: url += theme.icons_10.online; break;
-		case -1: url += theme.icons_10.offline; break;
+		case 0: url += w.theme.icons_10.no_connection; break;
+		case 1: url += w.theme.icons_10.online; break;
+		case -1: url += w.theme.icons_10.offline; break;
 		}
 		t.icon.src = url;
-		if (window.top.google.connection_status == 1) {
-			add_javascript("/static/google/userprofile.js",function(){
-				google_userprofile(function(profile){
+		if (w.top.google.connection_status == 1) {
+			w.top.add_javascript("/static/google/userprofile.js",function(){
+				w.top.google_userprofile(function(profile){
 					t.profile = profile;
 					t.icon.title = "Google Account: "+profile.name;
 				});

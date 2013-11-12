@@ -15,7 +15,8 @@ function init_users_list() {
 	new data_list(
 		'users_list',
 		'Users',
-		['Users.domain','Users.username','People.first_name','People.last_name','Role.name'],
+		['User.Domain','User.Username','Personal Information.First Name','Personal Information.Last Name','User.Roles'],
+		null,
 		function (list) {
 			<?php if (PNApplication::$instance->user_management->has_right("assign_roles")) {?>
 			var roles = [<?php

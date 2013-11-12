@@ -5,7 +5,7 @@ class page_excel_upload extends Page {
 	
 	public function execute() {
 		if (!isset($_FILES["excel"]) || $_FILES["excel"]['error'] <> UPLOAD_ERR_OK) {
-			PNApplication::error("Error uploading file (".(isset($_FILES["excel"]) ? $_FILES["excel"]['error'] : "no file received").").");
+			PNApplication::error("Error uploading file (".(isset($_FILES["excel"]) ? PNApplication::$instance->storage->get_upload_error($_FILES["excel"]) : "no file received").").");
 			return;
 		}
 		require_once("component/lib_php_excel/PHPExcel.php");
@@ -23,6 +23,9 @@ class page_excel_upload extends Page {
 		?>
 		<div id='excel_container' style='width:100%;height:100%'>
 		</div>
+		<script type='text/javascript'>
+		window.excel_uploaded = true;
+		</script>
 		<script type='text/javascript'>
 		function init_page() {
 			window.excel = new Excel('excel_container', function(xl) {

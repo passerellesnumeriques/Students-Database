@@ -10,17 +10,75 @@ $model->addTable("People")
 	->addString("khmer_last_name", 100, 1, true)
 	->addEnum("sex", array("M","F"))
 	->addDate("birth", true)
-	->addForeignKey("picture", "Storage", true, false, false)
+	->addForeignKey("picture", "Storage", false, false, false)
 	->addInteger("picture_version")
-	->setDisplayName("People (physical person)")
-	->addDisplayableData("first_name", "Personal Information", "First Name")
-	->addDisplayableData("middle_name", "Personal Information", "Middle Name")
-	->addDisplayableData("last_name", "Personal Information", "Last Name")
-	->addDisplayableData("khmer_first_name", "Personal Information", "Khmer First Name")
-	->addDisplayableData("khmer_last_name", "Personal Information", "Khmer Last Name")
-	->addDisplayableData("sex", "Personal Information", "Sex")
-	->addDisplayableData("birth", "Personal Information", "Birth Date")
-	->restrictReadAccess("see_other_people_details",true)
-	->allowSpecificReadAccess("id",function() { return PNApplication::$instance->user_people->user_people_id; })
-	->restrictWriteAccess("edit_people_details",true);
+	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Personal Information", "Personal Information",
+		array(
+			"first_name"=>"First Name",
+			"middle_name"=>"Middle Name",
+			"last_name"=>"Last Name",
+			"khmer_first_name"=>"Khmer First Name",
+			"khmer_last_name"=>"Khmer Last Name",
+			"sex"=>"Gender",
+			"birth"=>"Birth Date",
+		)
+	))
+	->addReadFilter(function(&$q, $table_alias) {
+		// allow to read user own info
+		$w = "(`".$table_alias."`.`id`='".PNApplication::$instance->user_people->user_people_id."')";
+		// restrict by type of people
+		require_once("PeoplePlugin.inc");
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			$wc = $c->filterPeopleReadAccess($q, $table_alias);
+			if ($wc <> null)
+				$w .= " OR (".$wc.")";
+		}
+		$q->where("(".$w.")");
+	})
+	->addWriteFilter(function(&$q, $table_alias) {
+		require_once("PeoplePlugin.inc");
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			$c->prepareSelectPeopleWriteAccess($q, $table_alias);
+		}
+	},function($rows) {
+		require_once("PeoplePlugin.inc");
+		$final = array();
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			foreach ($c->filterPeopleWriteAccess($rows) as $row) {
+				array_push($final, $row);
+				for ($i = 0; $i < count($rows); $i++)
+					if ($rows[$i] == $row) {
+						array_splice($rows, $i, 1);
+						break;
+					}
+			}
+		}
+		return $final;
+	})
+	->addRemoveFilter(function(&$q, $table_alias, &$locks) {
+		require_once("PeoplePlugin.inc");
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			$c->prepareSelectPeopleRemoveAccess($q, $table_alias, $locks);
+		}
+	},function($rows) {
+		require_once("PeoplePlugin.inc");
+		$final = array();
+		foreach (PNApplication::$instance->components as $name=>$c) {
+			if (!($c instanceof PeoplePlugin)) continue;
+			foreach ($c->filterPeopleRemoveAccess($rows) as $row) {
+				array_push($final, $row);
+				for ($i = 0; $i < count($rows); $i++)
+					if ($rows[$i] == $row) {
+						array_splice($rows, $i, 1);
+						break;
+					}
+			}
+		}
+		return $final;
+	})
+	;
 ?>

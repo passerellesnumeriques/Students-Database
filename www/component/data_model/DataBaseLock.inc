@@ -2,26 +2,83 @@
 class DataBaseLock {
 
 	/** lock a table */
-	public static function lock_table($table, &$locked_by) {
-		return DataBaseLock::lock($table, null, null, $locked_by);
+	public static function lock_table($table, &$locked_by, $bypass_security = false) {
+		return DataBaseLock::lock($table, null, null, $locked_by, $bypass_security);
 	}
 	
 	/** lock a row in a table, based on its primary key */
-	public static function lock_row($table, $row_key, &$locked_by) {
-		return DataBaseLock::lock($table, $row_key, null, $locked_by);
+	public static function lock_row($table, $row_key, &$locked_by, $bypass_security = false) {
+		return DataBaseLock::lock($table, $row_key, null, $locked_by, $bypass_security);
 	}
 	
 	/** lock a column in a table, based on its name */
-	public static function lock_column($table, $column, &$locked_by) {
-		return DataBaseLock::lock($table, null, $column, $locked_by);
+	public static function lock_column($table, $column, &$locked_by, $bypass_security = false) {
+		return DataBaseLock::lock($table, null, $column, $locked_by, $bypass_security);
 	}
 	
 	/** lock a specific cell in a table, based on a primary key and a column */
-	public static function lock_cell($table, $row_key, $column, &$locked_by) {
-		return DataBaseLock::lock($table, $row_key, $column, $locked_by);
+	public static function lock_cell($table, $row_key, $column, &$locked_by, $bypass_security = false) {
+		return DataBaseLock::lock($table, $row_key, $column, $locked_by, $bypass_security);
 	}
 	
-	private static function lock($table, $row_key, $column, &$locked_by) {
+	private static function lock($table, $row_key, $column, &$locked_by, $bypass_security) {
+		for ($i = 0; $i < 10; $i++) {
+			$locked_by = null;
+			$id = DataBaseLock::try_lock($table, $row_key, $column, $locked_by, $bypass_security);
+			if ($id <> null) return $id;
+			if ($i < 9) usleep(100000);
+		}
+		return null;
+	}
+	private static function try_lock($table, $row_key, $column, &$locked_by, $bypass_security) {
+		if (!$bypass_security && !DataBaseLock::is_locked_by_user($table, $row_key, $column)) {
+			require_once("component/data_model/Model.inc");
+			$t = DataModel::get()->getTableFromSQLName($table);
+			if (!($t->mayInsert() || $t->mayModify() || $t->mayRemove()))
+				throw new Exception("Access denied: you cannot lock table '".$t->getName()."'.");
+			if ($row_key == null) {
+				if (!($t->canModifyAny() || $t->canRemoveAny()))
+					throw new Exception("Access denied: you cannot lock table '".$t->getName()."' because you have only partial access to it.");
+			} else if (!($t->canModifyAny() || $t->canRemoveAny())) {
+				$ok = false;
+				if ($t->mayModify()) {
+					$q = SQLQuery::create();
+					$table_alias = $q->table_id();
+					$q->select(array($table=>$table_alias));
+					if ($t->getPrimaryKey() <> null)
+						$q->where_value($table_alias, $t->getPrimaryKey()->name, $row_key);
+					else {
+						$pk = $t->getKey();
+						foreach ($pk as $pk_name)
+							$q->where_value($table_alias, $pk_name, $row_key[$pk_name]);
+					}
+					$t->prepareSelectToDetermineWriteAccess($q, $table_alias);
+					$rows = $q->execute();
+					$rows = $t->filterWriteAccess($rows);
+					if (count($rows) > 0) $ok = true;
+				}
+				if (!$ok && $t->mayRemove()) {
+					$q = SQLQuery::create();
+					$table_alias = $q->table_id();
+					$q->select(array($table=>$table_alias));
+					if ($t->getPrimaryKey() <> null)
+						$q->where_value($table_alias, $t->getPrimaryKey()->name, $row_key);
+					else {
+						$pk = $t->getKey();
+						foreach ($pk as $pk_name)
+							$q->where_value($table_alias, $pk_name, $row_key[$pk_name]);
+					}
+					$locks = array();
+					$t->prepareSelectToDetermineRemoveAccess($q, $table_alias, $locks);
+					$rows = $q->execute();
+					$rows = $t->filterRemoveAccess($rows);
+					if (count($rows) > 0) $ok = true;
+					foreach ($locks as $lock_id) DataBaseLock::unlock($lock_id);
+				}
+				if (!$ok) throw new Exception("Access denied: you cannot lock the row id ".$row_key." in table ".$table);
+			}
+		}
+		
 		DataBaseLock::clean();
 		$db = SQLQuery::get_db_system_without_security();
 		$db->execute("LOCK TABLES DataLocks WRITE");
@@ -39,7 +96,7 @@ class DataBaseLock {
 				",'".$db->escape_string(PNApplication::$instance->user_management->domain)."'".
 				",'".$db->escape_string(PNApplication::$instance->user_management->username)."'".
 				",'".$db->escape_string($table)."'".
-				",".($row_key <> null ? "'".$db->escape_string($row_key)."'" : "NULL").
+				",".($row_key <> null ? "'".$db->escape_string(json_encode($row_key))."'" : "NULL").
 				",".($column <> null ? "'".$db->escape_string($column)."'" : "NULL").
 			")"
 		);
@@ -132,7 +189,7 @@ class DataBaseLock {
 						continue; // same user
 					}
 					if ($row["row_key"] <> null) {
-						if ($row["row_key"] <> $row_key) {
+						if ($row["row_key"] <> json_encode($row_key)) {
 							// not the same row
 							continue;
 						}
@@ -171,7 +228,7 @@ class DataBaseLock {
 								$db->execute("UNLOCK TABLES");
 							return null; // full column already locked by same user
 						}
-						if ($row["row_key"] == $row_key) {
+						if ($row["row_key"] == json_encode($row_key)) {
 							if (!$db_locked)
 								$db->execute("UNLOCK TABLES");
 							return null; // same cell locked by same user
@@ -180,7 +237,7 @@ class DataBaseLock {
 					} else {
 						if ($row["row_key"] <> null) {
 							// a row is locked
-							if ($row["row_key"] <> $row_key)
+							if ($row["row_key"] <> json_encode($row_key))
 								continue; // not on the same row
 							if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 								$row["locker_username"] <> PNApplication::$instance->user_management->username) {
@@ -209,6 +266,43 @@ class DataBaseLock {
 		}
 		if (!$db_locked)
 			$db->execute("UNLOCK TABLES");
+	}
+
+	/** check if the table/row/column/cell is locked by the current user. If it is the case, return true, else return false. */
+	public static function is_locked_by_user($table, $row_key, $column, $db_locked = false) {
+		$db = SQLQuery::get_db_system_without_security();
+		if (!$db_locked)
+			$db->execute("LOCK TABLES DataLocks WRITE");
+		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escape_string($table)."'");
+		while (($row = $db->next_row($res)) <> null) {
+			if ($row["table"] <> $table) continue; // not the same table
+			if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
+				$row["locker_username"] <> PNApplication::$instance->user_management->username) continue;
+			if ($row["row_key"] == null) {
+				if ($row["column"] == null) {
+					if (!$db_locked) $db->execute("UNLOCK TABLES");
+					return true; // full table is locked
+				} else {
+					if ($column == $row["column"]) {
+						if (!$db_locked) $db->execute("UNLOCK TABLES");
+						return true; // full column is locked
+					}
+				}
+			} else {
+				if (json_encode($row_key) == $row["row_key"]) {
+					// same row
+					if ($row["column"] == null) {
+						if (!$db_locked) $db->execute("UNLOCK TABLES");
+						return true; // full row is locked
+					}
+					if ($row["column"] == $column) {
+						if (!$db_locked) $db->execute("UNLOCK TABLES");
+						return true; // same cell is locked				
+					}
+				}
+			}
+		}
+		if (!$db_locked) $db->execute("UNLOCK TABLES");
 	}
 	
 	/** remove a lock (it must be owned by the current user) */
@@ -281,12 +375,12 @@ class DataBaseLock {
 			// a specific cell
 			if ($row_key == null) return false;
 			if ($column == null) return false;
-			if ($row_key <> $r["row_key"]) return false;
+			if (json_encode($row_key) <> $r["row_key"]) return false;
 			if ($column <> $r["column"]) return false;
 			return true;
 		}
 		if ($row_key == null) return false;
-		if ($row_key == $r["row_key"]) return true;
+		if (json_encode($row_key) == $r["row_key"]) return true;
 		return false;
 	}
 

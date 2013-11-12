@@ -40,11 +40,10 @@ function isLetter(c) {
 String.prototype.firstLetterCapitalizedForSeparator = function(separator) {
 	var text_split = this.split(separator);
 	for(var i = 0; i < text_split.length; i++){
-		var temp_split = text_split[i].split("");
 		text_split[i] = text_split[i].charAt(0).toUpperCase()+text_split[i].substring(1);
 	}
 	return text_split.join(separator);
-}
+};
 
 /**
 * Set a uniform case according to " ", "'" and "-"
@@ -57,7 +56,7 @@ String.prototype.uniformFirstLetterCapitalized = function(){
 	result = result.firstLetterCapitalizedForSeparator("-");
 	result = result.firstLetterCapitalizedForSeparator("'");
 	return result;
-}
+};
 
 /**
  * Test if a string is not empty (in terms of visibility)
@@ -74,7 +73,7 @@ String.prototype.checkVisible = function(){
 		}
 	}
 	return is_visible;
-}
+};
 
 /**
  * Some useful functions are added to the class Array
@@ -102,16 +101,36 @@ function object_copy(o, recursive_depth) {
 	for (var attr in o) {
 		var value = o[attr];
 		if (!recursive_depth) { c[attr] = value; continue; }
+		if (value == null) { c[attr] = null; continue; }
 		if (typeof value == 'object') {
-			if (value instanceof Date)
+			if (value instanceof Date || value.constructor.name == "Date")
 				c[attr] = new Date(value.getTime());
-			else {
+			else if (value instanceof Array || value.constructor.name == "Array") {
+				c[attr] = [];
+				for (var i = 0; i < value.length; ++i)
+					c[attr].push(value_copy(value[i], recursive_depth-1));
+			} else {
 				c[attr] = object_copy(value, recursive_depth-1);
 			}
 		} else
 			c[attr] = value;
 	}
 	return c;
+}
+function value_copy(value, obj_depth) {
+	if (value == null) return null;
+	if (typeof value == 'object') {
+		if (value instanceof Date || value.constructor.name == "Date")
+			return new Date(value.getTime());
+		if (value instanceof Array || value.constructor.name == "Array") {
+			var a = [];
+			for (var i = 0; i < value.length; ++i)
+				a.push(value_copy(value[i], obj_depth-1));
+			return a;
+		}
+		return object_copy(value, obj_depth);
+	}
+	return value;
 }
 
 var _generate_id_counter = 0;
@@ -412,6 +431,7 @@ function lock_screen(onclick, content) {
 	div.style.left = "0px";
 	div.style.width = getWindowWidth()+"px";
 	div.style.height = getWindowHeight()+"px";
+	div.style.zIndex = 10;
 	if (onclick)
 		div.onclick = onclick;
 	if (content) {
@@ -462,3 +482,20 @@ function debug_object_to_string(o, indent) {
 	}
 	return ""+o;
 }
+
+function parseSQLDate(s) {
+	var d = new Date();
+	d.setHours(0,0,0,0);
+	var a = s.split("-");
+	if (a.length == 3)
+		d.setFullYear(parseInt(a[0]), parseInt(a[1])-1, parseInt(a[2]));
+	return d;
+};
+function dateToSQL(d) {
+	var _2digits = function(n) {
+		var s = ""+n;
+		while (s.length < 2) s = "0"+s;
+		return s;
+	};
+	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
+};

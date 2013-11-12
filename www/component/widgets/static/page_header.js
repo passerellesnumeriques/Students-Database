@@ -11,9 +11,9 @@ function page_header(container) {
 	var t=this;
 	t._init = function() {
 		// menu
-		var menu_container = document.createElement("DIV");
+		t.menu_container = document.createElement("DIV");
 		while (container.childNodes.length > 0)
-			menu_container.appendChild(container.removeChild(container.childNodes[0]));
+			t.menu_container.appendChild(container.removeChild(container.childNodes[0]));
 		
 		// header
 		var header_title;
@@ -30,13 +30,18 @@ function page_header(container) {
 		container.removeAttribute("icon");
 		container.removeAttribute("title");
 		
-		container.appendChild(menu_container);
+		container.appendChild(t.menu_container);
+		container.style.whiteSpace = "nowrap";
+		container.style.overflow = "hidden";
 		
 		// set layout
 		header_title.setAttribute("layout", "fixed");
-		menu_container.setAttribute("layout", "fill");
+		t.menu_container.setAttribute("layout", "fill");
 		require("horizontal_layout.js",function(){
 			new horizontal_layout(container);
+		});
+		require("vertical_align.js", function() {
+			new vertical_align(t.menu_container, "middle");
 		});
 	};
 	

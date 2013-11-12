@@ -8,7 +8,7 @@ if (typeof require != 'undefined') {
  * @param {string} icon path of the icon, or null
  * @param {string|HTMLElement} content content of the window: either an html element, or a string containing the html
  */
-function popup_window(title,icon,content) {
+function popup_window(title,icon,content,hide_close_button) {
 	var t = this;
 	t.icon = icon;
 	t.title = title;
@@ -51,8 +51,8 @@ function popup_window(title,icon,content) {
 			t.content.style.width = "100%";
 			t.content.style.height = "100%";
 			t.resize();
-			var w = getIFrameWindow(t.content);
-			w.listenEvent(w, 'resize', function() { t.resize(); });
+			setTimeout(function() { t.resize(); }, 1);
+			setTimeout(function() { t.resize(); }, 100);
 		};
 		if (t.content_container) {
 			while (t.content_container.childNodes.length > 0) t.content_container.removeChild(t.content_container.childNodes[0]);
@@ -92,6 +92,17 @@ function popup_window(title,icon,content) {
 		for (var i = 0; i < t.buttons.length; ++i)
 			if (t.buttons[i].id == id)
 				t.buttons[i].disabled = '';
+	};
+	/** Simulate a button pressed
+	 * @param {string} id the button id
+	 */
+	t.pressButton = function(id) {
+		for (var i = 0; i < t.buttons.length; ++i)
+			if (t.buttons[i].id == id) {
+				if (t.buttons[i].disabled == "disabled") return;
+				t.buttons[i].onclick();
+				break;
+			}
 	};
 	/** Add 2 buttons to the window: Ok and Cancel. When Cancel is pressed, the window is closed.
 	 * @method popup_window#addOkCancelButtons
@@ -157,12 +168,16 @@ function popup_window(title,icon,content) {
 		};
 		var td = document.createElement("TD"); t.header.appendChild(td);
 		td.innerHTML = (t.icon ? "<img src='"+t.icon+"' style='vertical-align:bottom'/> " : "")+t.title;
-		td = document.createElement("TD"); t.header.appendChild(td);
-		td.onclick = function() { t.close(); };
-		t.close_button_td = td;
-		td.style.backgroundImage = "url(\""+theme.icons_16.close+"\")";
-		td.style.backgroundPosition = "center";
-		td.style.backgroundRepeat = "no-repeat";
+		if (hide_close_button)
+			td.colSpan = 2;
+		else {
+			td = document.createElement("TD"); t.header.appendChild(td);
+			td.onclick = function() { t.close(); };
+			t.close_button_td = td;
+			td.style.backgroundImage = "url(\""+theme.icons_16.close+"\")";
+			td.style.backgroundPosition = "center";
+			td.style.backgroundRepeat = "no-repeat";
+		}
 		var tr = document.createElement("TR"); t.table.appendChild(tr);
 		var td = document.createElement("TD"); tr.appendChild(td);
 		td.colSpan = 2;
@@ -195,6 +210,35 @@ function popup_window(title,icon,content) {
 			t.anim = animation.fadeIn(t.table, 200);
 		}
 	};
+	t._computeFrameWidth = function(body) {
+		var win = getIFrameWindow(t.content);
+		var max = 0;
+		for (var i = 0; i < body.childNodes.length; ++i) {
+			var e = body.childNodes[i];
+			var w = null;
+			if (e.nodeType != 1) continue;
+			if (e.nodeName == "FORM")
+				w = win.absoluteLeft(e) + t._computeFrameWidth(e);
+			if (w == null) w = win.absoluteLeft(e)+win.getWidth(e);
+			if (w > max) max = w;
+		}
+		return max;
+	};
+	t._computeFrameHeight = function(body) {
+		var win = getIFrameWindow(t.content);
+		var max = 0;
+		for (var i = 0; i < body.childNodes.length; ++i) {
+			var e = body.childNodes[i];
+			var h = null;
+			if (e.nodeType != 1) continue;
+			if (e.nodeName == "FORM")
+				h = win.absoluteTop(e) + t._computeFrameHeight(e);
+			if (h == null) h = win.absoluteTop(e)+win.getHeight(e);
+			if (h > max) max = h;
+		}
+		return max;
+	};
+		
 	/** Resize the window according to its content: this is normally automatically called. 
 	 * @method popup_window#resize
 	 */
@@ -208,12 +252,18 @@ function popup_window(title,icon,content) {
 			t.content_container.style.height = (getWindowHeight()-30)+"px";
 			t.content_container.style.overflow = "";
 			var frame = getIFrameDocument(t.content); 
-			x = frame.body.scrollWidth;
-			y = frame.body.scrollHeight;
+			x = t._computeFrameWidth(frame.body);
+			y = t._computeFrameHeight(frame.body);
+			frame.body.style.margin = "0px";
+			frame.body.style.padding = "0px";
+			frame.body.style.border = "none";
+			var h = 0;
+			if (t.header) h += getHeight(t.header);
+			if (t.buttons_tr) h += getHeight(t.buttons_tr);
 			if (x > getWindowWidth()-30) x = getWindowWidth()-30;
-			if (y > getWindowHeight()-30) y = getWindowHeight()-30;
-			t.content_container.style.height = y+"px";
-			t.content_container.style.width = x+"px";
+			if (y > getWindowHeight()-30-h) y = getWindowHeight()-30-h;
+			setWidth(t.content_container, x);
+			setHeight(t.content_container, y);
 			t.content_container.overflow = "hidden";
 			x = getWindowWidth()/2 - x/2;
 			y = getWindowHeight()/2 - (y+t.header.scrollHeight)/2;
@@ -312,6 +362,7 @@ function popup_window(title,icon,content) {
 		} else
 			do_close();
 	};
+	t.hide = function() { t.close(); };
 }
 
 /**
@@ -320,6 +371,13 @@ function popup_window(title,icon,content) {
  * @returns {popup_window} the popup window containing the given element
  */
 function get_popup_window_from_element(e) {
-	while (e.parentNode.className != 'popup_window') e = e.parentNode;
-	return e.parentNode.data;
+	while (e.parentNode != null && e.parentNode != e && e.parentNode != document.body && e.parentNode.className != 'popup_window') e = e.parentNode;
+	if (e.parentNode != null && e.parentNode.className == 'popup_window')
+		return e.parentNode.data;
+	return null;
+}
+function get_popup_window_from_frame(win) {
+	if (win.frameElement && win.parent.get_popup_window_from_element)
+		return win.parent.get_popup_window_from_element(win.frameElement);
+	return null;
 }

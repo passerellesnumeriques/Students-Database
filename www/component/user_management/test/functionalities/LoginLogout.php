@@ -7,6 +7,12 @@ class LoginLogout extends TestFunctionalitiesScenario {
 		return array("login","logout");
 	}
 	
+	protected function getUsers() {
+		return array(
+			new TestUser("test", array()),
+		);
+	}
+	
 	public function getSteps() {
 		return array(new LoginLogout_Login(), new LoginLogout_Logout(), new LoginLogout_Invalid());
 	}
@@ -15,7 +21,7 @@ class LoginLogout extends TestFunctionalitiesScenario {
 
 class LoginLogout_Login extends TestStep {
 	public function getName() { return "Login"; }
-	public function run() {
+	public function run(&$scenario_data) {
 		if (PNApplication::$instance->user_management->domain <> null ||
 			PNApplication::$instance->user_management->username <> null)
 			return "A user is already logged in";
@@ -29,7 +35,7 @@ class LoginLogout_Login extends TestStep {
 }
 class LoginLogout_Logout extends TestStep {
 	public function getName() { return "Logout"; }
-	public function run() {
+	public function run(&$scenario_data) {
 		if (PNApplication::$instance->user_management->domain == null ||
 			PNApplication::$instance->user_management->username == null)
 			return "Not logged in";
@@ -42,7 +48,7 @@ class LoginLogout_Logout extends TestStep {
 }
 class LoginLogout_Invalid extends TestStep {
 	public function getName() { return "Invalid login"; }
-	public function run() {
+	public function run(&$scenario_data) {
 		if (PNApplication::$instance->user_management->domain <> null ||
 			PNApplication::$instance->user_management->username <> null)
 			return "A user is already logged in";

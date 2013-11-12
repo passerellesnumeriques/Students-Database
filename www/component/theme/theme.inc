@@ -1,5 +1,12 @@
-<?php 
-$theme = "default"; // TODO
+<?php
+global $theme; 
+if (isset($_COOKIE["theme"]))
+	$theme = $_COOKIE["theme"];
+else {
+	$theme = "default";
+	setcookie("theme",$theme,time()+365*24*60*60,"/");
+}
+
 class theme extends Component {
 
 	public static $style;
@@ -15,6 +22,8 @@ theme::$icons_16 = array(
 	"back" => 			"/static/theme/".$theme."/icons_16/left.png",
 	"cancel" => 		"/static/theme/".$theme."/icons_16/close.png",
 	"close" => 			"/static/theme/".$theme."/icons_16/close.png",
+	"copy" => 			"/static/theme/".$theme."/icons_16/copy.gif",
+	"date_picker" => 	"/static/theme/".$theme."/icons_16/date_picker.png",
 	"edit" => 			"/static/theme/".$theme."/icons_16/edit.png",
 	"error" => 			"/static/theme/".$theme."/icons_16/error.png",
 	"export" =>			"/static/theme/".$theme."/icons_16/export.png",
@@ -43,11 +52,13 @@ theme::$icons_16 = array(
 	"remove_black" => 		"/static/theme/".$theme."/icons_16/trash_black.png",
 );
 theme::$icons_10 = array(
+	"add" => 			"/static/theme/".$theme."/icons_10/add.png",
 	"close" => 			"/static/theme/".$theme."/icons_10/close.png",
 	"loading" =>		"/static/theme/".$theme."/icons_10/loading.gif",
 	"no_edit" => 		"/static/theme/".$theme."/icons_10/no_edit.png",
 	"online" => 		"/static/theme/".$theme."/icons_10/online.gif",
 	"offline" => 		"/static/theme/".$theme."/icons_10/offline.gif",
+	"remove" => 		"/static/theme/".$theme."/icons_10/close.png",
 	"save" => 			"/static/theme/".$theme."/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/".$theme."/icons_10/semi_online.gif",
 	"no_connection" => 	"/static/theme/".$theme."/icons_10/no_connection.gif",

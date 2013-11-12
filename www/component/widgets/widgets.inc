@@ -1,19 +1,17 @@
 <?php 
 class widgets extends Component {
 
-	private $table_typed_field = array();
-	
-	public function register_table_typed_field($table, $field_classname, $field_args = "{}") {
-		$this->table_typed_field[$table] = array($field_classname,$field_args);
-	}
-	
 	/**
 	 * @param \datamodel\Column $col
 	 * @return array [classname,arguments_to_append]
 	 */
 	public function get_typed_field($col) {
 		if ($col instanceof \datamodel\ColumnString) {
-			return array("field_text", "{max_length:".$col->max_length."}");
+			$cfg = "{max_length:".$col->max_length;
+			if ($col->min_length > 0) $cfg .= ",min_length:".$col->min_length;
+			$cfg .= ",can_be_null:".json_encode($col->can_be_null);
+			$cfg .= "}";
+			return array("field_text", $cfg);
 		}
 		if ($col instanceof \datamodel\ColumnInteger) {
 			// TODO
@@ -30,15 +28,34 @@ class widgets extends Component {
 			return array("field_enum",$args);
 		}
 		if ($col instanceof \datamodel\ColumnDate) {
-			return array("field_date","{}");
-		}
-		if ($col instanceof \datamodel\ForeignKey) {
-			// TODO create a generic field for a table
-			if (isset($this->table_typed_field[$col->foreign_table]))
-				return $this->table_typed_field[$col->foreign_table];
+			$cfg = "{can_be_empty:".($col->can_be_null ? "true" : "false");
+			if ($col->minimum_date <> null) {
+				if (ctype_digit(substr($col->minimum_date,0,1)))
+					$cfg .= ",minimum:".json_encode($col->minimum_date);
+				else
+					$cfg .= ",minimum_cell:".json_encode($col->minimum_date);
+			}
+			if ($col->maximum_date <> null) {
+				if (ctype_digit(substr($col->maximum_date,0,1)))
+					$cfg .= ",maximum:".json_encode($col->maximum_date);
+				else
+					$cfg .= ",maximum_cell:".json_encode($col->maximum_date);
+			}
+			$cfg .= "}";
+			return array("field_date",$cfg);
 		}
 		return array("field_text", "{}");
 	}
-		
+	/**
+	 * @param \datamodel\Column $col
+	 * @return array [classname,config]
+	 */
+	public function get_typed_filter($col) {
+		if ($col instanceof \datamodel\ColumnString) {
+			return array("filter_text", "null");
+		}
+		return array(null,"null");
+	}
+	
 }
 ?>
