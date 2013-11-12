@@ -32,8 +32,6 @@ class page_create_people extends Page {
 		$types = $input["types"];
 		
 		$this->add_javascript("/static/widgets/vertical_layout.js");
-		$this->onload("new vertical_layout('wizard_page');");
-		
 		?>
 		<script type='text/javascript'>
 		window.create_people = {
@@ -71,6 +69,7 @@ class page_create_people extends Page {
 					<?php
 				}
 				?>
+				<br style='clear: both;'/>
 			</div>
 			<div id='wizard_page_footer' layout='fixed' class='wizard_buttons'>
 				<button id='wizard_page_button_finish' disabled='disabled' onclick='wizard_page_finish();'>
@@ -93,16 +92,26 @@ class page_create_people extends Page {
 					return;
 				}
 			}
-			service.json("people","create_people",window.create_people,function(res) {
-				if (!res) {
-					wizard_unfreeze();
-					enable_wizard_page_finish(true);
-					return;
-				}
-				var u = new URL(window.create_people.redirect);
-				u.params["people_id"] = res.id;
-				window.location.href = u.toString();
-			});
+			if (window.create_people.donotcreate) {
+				var fct = eval('('+window.create_people.donotcreate+')');
+				fct(window.create_people);
+			} else
+				service.json("people","create_people",window.create_people,function(res) {
+					if (!res) {
+						wizard_unfreeze();
+						enable_wizard_page_finish(true);
+						return;
+					}
+					window.create_people.people_id = res.id;
+					if (window.create_people.redirect) {
+						var u = new URL(window.create_people.redirect);
+						u.params["people_id"] = res.id;
+						window.location.href = u.toString();
+					} else if (window.create_people.onsuccess) {
+						var fct = eval('('+window.create_people.onsuccess+')');
+						fct(window.create_people);
+					}
+				});
 		}
 		wizard_freeze_div = document.createElement("DIV");
 		wizard_freeze_div.style.position = "absolute";
@@ -128,6 +137,8 @@ class page_create_people extends Page {
 			document.getElementById('wizard_freezer').innerHTML = msg;
 		}
 		enable_wizard_page_finish(true);
+		if (!window.parent.get_popup_window_from_frame || window.parent.get_popup_window_from_frame(window) == null)
+			new vertical_layout('wizard_page');
 		</script>
 		<?php
 	}

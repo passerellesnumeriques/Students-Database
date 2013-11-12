@@ -376,3 +376,8 @@ function get_popup_window_from_element(e) {
 		return e.parentNode.data;
 	return null;
 }
+function get_popup_window_from_frame(win) {
+	if (win.frameElement && win.parent.get_popup_window_from_element)
+		return win.parent.get_popup_window_from_element(win.frameElement);
+	return null;
+}

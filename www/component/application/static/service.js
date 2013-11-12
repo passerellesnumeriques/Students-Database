@@ -110,16 +110,17 @@ service = {
 		return s;
 	}
 };
-function post_data(url, data) {
-	var form = document.createElement("FORM");
-	var i = document.createElement("INPUT");
+function post_data(url, data, win) {
+	if (!win) win = window;
+	var form = win.document.createElement("FORM");
+	var i = win.document.createElement("INPUT");
 	i.type = "hidden";
 	i.name = "input";
 	i.value = service.generate_input(data);
 	form.appendChild(i);
 	form.method = "POST";
 	form.action = url;
-	document.body.appendChild(form);
+	win.document.body.appendChild(form);
 	form.submit();
 }
 if (typeof ajax != 'undefined')

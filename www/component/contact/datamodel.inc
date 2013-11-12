@@ -784,6 +784,38 @@ $model->addTable("Contact_point")
 	->addForeignKey("people","People",true,false,true,false)
 	->setKey(array("organization","people"))
 	->addString("designation",100,0,true,false)
-	->allowReadAccess()
+	->addReadFilter(function(&$q, $table_alias) {
+		$table = Datamodel::get()->getTable("Organization");
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+		$table->filterReadAccess($q, $org_alias);
+	})
+	->addRemoveFilter(function(&$q,$table_alias, &$locks){
+		$table = Datamodel::get()->getTable("Organization");
+		$org_alias = $q->get_table_alias("Organization");
+		if ($org_alias == null) {
+			$org_alias = $q->table_id();
+			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
+		}
+		$table->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
+	},function($rows){
+		$table = Datamodel::get()->getTable("Organization");
+		return $table->filterRemoveAccess($rows);
+	})
+	->addInsertFilter(function($values){
+		$q = SQLQuery::create();
+		$table_alias = $q->table_id();
+		$q->select(array("Organization"=>$table_alias));
+		$q->where_value($table_alias, "id", $values["organization"]);
+		$table = DataModel::get()->getTable("Organization");
+		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
+		$rows = $q->execute();
+		$rows = $table->filterWriteAccess($rows);
+		if (count($rows) == 0) return false;
+		return true;
+	})
 	->setDisplayHandler(null, new datamodel\StopDataDisplayHandler("Organization", "Contacts Points")) // TODO
-	; //TODO set restrictions
+	;

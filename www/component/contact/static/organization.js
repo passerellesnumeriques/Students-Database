@@ -191,7 +191,46 @@ function organization(container, org, can_edit) {
 			td.style.color = "#808080";
 			td.colSpan = 2;
 			td.onclick = function() {
-				// TODO popup with designation and people info
+				require("popup_window.js",function() {
+					var frame = document.createElement("IFRAME");
+					frame.style.border = "0px";
+					frame.style.width = "100%";
+					frame.style.height = "100%";
+					var p = new popup_window("New Contact Point", '/static/application/icon.php?main=/static/contact/contact_point.png&small='+theme.icons_10.add+'&where=right_bottom',frame);
+					p.show();
+					frame.onload = function() {
+						p.resize();
+					};
+					window.create_contact_point_success = function(people) {
+						var point = {
+							designation: people.contact_point_designation,
+							people_id: people.people_id,
+							first_name: people.people.first_name,
+							last_name: people.people.last_name
+						};
+						if (org.id == -1)
+							point.create_people = people;
+						org.points.push(point);
+						t._addContactPointRow(point, tbody);
+						p.close();
+					};
+					var data =
+					{
+							types:['organization_contact_point'],
+							icon:'/static/application/icon.php?main=/static/contact/contact_point_32.png&small='+theme.icons_16.add+'&where=right_bottom',
+							title:'New Contact Point For '+org.name,
+							contact_point_organization: org.id
+					};
+					if (org.id != -1)
+						data.onsuccess='window.parent.create_contact_point_success';
+					else
+						data.donotcreate='window.parent.create_contact_point_success';
+					post_data(
+						'/dynamic/people/page/create_people',
+						data,
+						getIFrameWindow(frame)
+					);
+				});
 			};
 		}
 		

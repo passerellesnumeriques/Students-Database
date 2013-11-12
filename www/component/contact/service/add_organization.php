@@ -72,6 +72,13 @@ class service_add_organization extends Service {
 			}
 		}
 		
+		// create contact points
+		if (isset($input["points"]) && is_array($input["points"]))
+		foreach ($input["points"] as $cp) {
+			$cp["create_people"]["contact_point_organization"] = $org_id;
+			Service::internal_execution("people", "create_people", $cp["create_people"]);
+		}
+		
 		echo "{id:$org_id}";
 	}
 	
