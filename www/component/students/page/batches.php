@@ -108,6 +108,7 @@ class page_batches extends Page {
 			<?php 
 			echo "<table class='periods'>";
 			echo "<tr><th>Period</th><th>Start<br/>End</th><th colspan=".($max_classes == 0 ? 1 : $max_classes).">Classes</th>".($can_edit?"<th></th>":"")."</tr>";
+			$classes_by_period = array();
 			$classes = array();
 			foreach ($periods as &$period) {
 				$period_classes = $period["classes"];
@@ -184,11 +185,12 @@ class page_batches extends Page {
 				echo "<span id='".$span_id."'></span>";
 				datamodel_cell($this, $span_id, $can_edit, "AcademicPeriod", "start_date", $period["id"], null, $period["start_date"]);
 				echo "</td>";
+				array_push($classes_by_period, $classes);
 				// class list
 				if (count($classes) == 0) {
 					echo "<td rowspan=2 colspan=".($max_classes == 0 ? 1 : $max_classes).">";
 					$period_index = array_search($period, $periods, true);
-					if ($period_index > 0)
+					if ($period_index > 0 && count($classes_by_period[$period_index-1]) > 0)
 						echo "<div class='button' onclick='copy_classes(".$period['id'].",".$periods[$period_index-1]['id'].");'><img src='".theme::$icons_16["copy"]."' style='vertical-align:bottom'/> Copy classes from previous period</div>";
 					echo "</td>";
 				} else {
@@ -218,7 +220,7 @@ class page_batches extends Page {
 				echo "</tr>";
 			}
 			echo "</table>";
-			echo "<div class='button' onclick='new_academic_period(".$batch["id"].",[{data:\"Period Start\",config:{minimum:".json_encode(count($periods) > 0 ? $periods[count($periods)-1]["end_date"] : $batch["start_date"])."}}])'><img src='".theme::$icons_16["add"]."' style='vertical-align:bottom'/> Add Academic Period (quarter, semester...)</div>";
+			echo "<div class='button' onclick='new_academic_period(".$batch["id"].",[{data:\"Period Start\",config:{minimum:".json_encode(count($periods) > 0 ? $periods[count($periods)-1]["end_date"] : $batch["start_date"])."}},{data:\"Period End\",config:{maximum:".json_encode($batch["end_date"])."}}])'><img src='".theme::$icons_16["add"]."' style='vertical-align:bottom'/> Add Academic Period (quarter, semester...)</div>";
 			echo "</div>";
 			echo "</div>";
 			$this->onload("new collapsable_section('batch_".$batch["id"]."');");

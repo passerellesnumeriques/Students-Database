@@ -14,7 +14,7 @@ service = {
 		var data = "";
 		if (input != null)
 			data = service.generate_input(input);
-		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json", data, 
+		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json;charset=UTF-8", data, 
 			function(result){
 				if (result && result.events) {
 					for (var i = 0; i < result.events.length; ++i)

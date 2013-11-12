@@ -192,13 +192,13 @@ class SQLQuery {
 			$o = func_get_arg(0);
 			if (is_array($o))
 				foreach (func_get_arg(0) as $field=>$value)
-					$this->where($field, "=", $value);
+					$this->where($field, "=", utf8_decode($value));
 			else {
 				if (trim($o) <> "")
 					array_push($this->where, $o);
 			}
 		} else if ($nb == 2)
-			$this->where(func_get_arg(0), "=", func_get_arg(1));
+			$this->where(func_get_arg(0), "=", utf8_decode(func_get_arg(1)));
 		else {
 			$field = func_get_arg(0);
 			$op = func_get_arg(1);
@@ -209,7 +209,7 @@ class SQLQuery {
 				else
 					array_push($this->where, "`".$field."` IS NOT NULL");
 			} else
-				array_push($this->where, "`".$field."`".$op."'".SQLQuery::escape($value)."'");
+				array_push($this->where, "`".$field."`".$op."'".SQLQuery::escape(utf8_decode($value))."'");
 		}
 		return $this;
 	}
@@ -217,7 +217,7 @@ class SQLQuery {
 	public function &where_value($table_name, $field_name, $value) {
 		$w = "`".$table_name."`.`".$field_name."`";
 		if ($value === null) $w .= " IS NULL";
-		else $w .= "='".SQLQuery::escape($value)."'";
+		else $w .= "='".SQLQuery::escape(utf8_decode($value))."'";
 		array_push($this->where, $w);
 		return $this;
 	}
@@ -261,7 +261,7 @@ class SQLQuery {
 		$first = true;
 		foreach ($values as $value) {
 			if ($first) $first = false; else $w .= ",";
-			$w .= "'".$value."'";
+			$w .= "'".SQLQuery::escape(utf8_decode($value))."'";
 		}
 		$w .= ")";
 		array_push($this->where, $w);
@@ -634,7 +634,7 @@ class SQLQuery {
 			if ($value === null)
 				$sql .= "NULL";
 			else
-				$sql .= "'".SQLQuery::escape($value)."'";
+				$sql .= "'".SQLQuery::escape(utf8_decode($value))."'";
 		}
 		$sql .= " WHERE ";
 		if ($t->getPrimaryKey() <> null) {
@@ -725,7 +725,7 @@ class SQLQuery {
 		$first = true;
 		foreach ($fields_values as $name=>$value) {
 			if ($first) $first = false; else $sql .= ",";
-			if ($value === null) $sql .= "NULL"; else $sql .= "'".SQLQuery::escape($value)."'";
+			if ($value === null) $sql .= "NULL"; else $sql .= "'".SQLQuery::escape(utf8_decode($value))."'";
 		}
 		$sql .= ")";
 		SQLQuery::db()->execute($sql);
@@ -819,7 +819,7 @@ class SQLQuery {
 					$f = true;
 					foreach ($where as $col=>$val) {
 						if ($f) $f = false; else $sql .= " AND ";
-						$sql .= "`".$col."`='".SQLQuery::escape($val)."'";
+						$sql .= "`".$col."`='".SQLQuery::escape(utf8_decode($val))."'";
 					}
 					$sql .= ")";
 				}
