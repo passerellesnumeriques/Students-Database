@@ -64,7 +64,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 			</tr>
 		</table>
 	</div>
-	<iframe layout='fill' src='/dynamic/application/page/home' id='pn_application_content' name='pn_application_content' frameBorder=0 onload='pn_application_content_load();'></iframe>
+	<iframe layout='fill' src='<?php if (isset($_GET["page"])) echo $_GET["page"]; else echo "/dynamic/application/page/home";?>' id='pn_application_content' name='pn_application_content' frameBorder=0 onload='pn_application_content_load();'></iframe>
 	<div layout='17' id='pn_application_footer'>
 		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
 		<span style='position:fixed;bottom:0px;right:3px;'>

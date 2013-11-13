@@ -1,5 +1,6 @@
 function date_select(container, date, minimum, maximum) {
 	if (typeof container == 'string') container = document.getElementById(container);
+	container.style.whiteSpace = 'nowrap';
 	
 	var t=this;
 	

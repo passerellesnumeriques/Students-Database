@@ -15,10 +15,8 @@ class page_batch_list extends page_students_list {
 		$this->create_list(
 			"/static/students/batch_16.png",
 			$batch["name"],
-			"[{category:'Student',name:'Batch',data:{value:".$batch["id"]."}}]", 
-			array(
-				array("category"=>"Student","name"=>"Batch","value"=>$batch["id"])
-			)
+			"[{category:'Student',name:'Batch',data:{value:".$batch["id"]."}}]",
+			"{batch:".$batch["id"]."}" 
 		);
 	}
 		

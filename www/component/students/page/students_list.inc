@@ -3,7 +3,7 @@ abstract class page_students_list extends Page {
 	
 	public function get_required_rights() { return array("consult_students_list"); }
 	
-	public function create_list($icon, $title, $filters, $import_preset_data) {
+	public function create_list($icon, $title, $filters, $import_students_params) {
 		$this->add_javascript("/static/widgets/grid/grid.js");
 		$this->add_javascript("/static/data_model/data_list.js");
 		$this->onload("init_students_list();");
@@ -24,14 +24,7 @@ function init_students_list() {
 			import_students.className = "button";
 			import_students.innerHTML = "<img src='"+theme.icons_16.import+"' style='vertical-align:bottom'/> Import Students";
 			import_students.onclick = function() {
-				require("data_import.js",function() {
-					data_import(
-						"<?php echo $container_id; ?>",
-						"Student",
-						<?php echo json_encode($import_preset_data); ?>,
-						"Import Students"
-					);
-				});
+				post_data('/dynamic/students/page/import_students',<?php echo $import_students_params;?>);
 			};
 			list.addHeader(import_students);
 			var create_student = document.createElement("DIV");

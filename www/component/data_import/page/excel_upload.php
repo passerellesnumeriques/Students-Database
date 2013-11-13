@@ -4,6 +4,10 @@ class page_excel_upload extends Page {
 	public function get_required_rights() { return array(); }
 	
 	public function execute() {
+		if (isset($_GET["new"])) {
+			echo "Please upload an Excel file";
+			return;
+		}
 		if (!isset($_FILES["excel"]) || $_FILES["excel"]['error'] <> UPLOAD_ERR_OK) {
 			PNApplication::error("Error uploading file (".(isset($_FILES["excel"]) ? PNApplication::$instance->storage->get_upload_error($_FILES["excel"]) : "no file received").").");
 			return;

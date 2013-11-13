@@ -50,17 +50,24 @@ function field_date(data,editable,config) {
 }
 field_date.prototype = new typed_field();
 field_date.prototype.constructor = field_date;		
-field_date.prototype.canBeNull = function() { return this.config && this.config.can_be_empty; };		
+field_date.prototype.canBeNull = function() { return this.config && this.config.can_be_empty; };
+field_date.prototype.parseDate = function(d) {
+	var a = d.split("-");
+	if (a.length == 3) return parseSQLDate(d);
+	a = new Date(d);
+	return a;
+};
 field_date.prototype._create = function(data) {
 	if (this.editable) {
 		require("date_picker.js"); require("context_menu.js");
+		this.element.style.whiteSpace = 'nowrap';
 
 		var t=this;
 		this.data = data;
 		require("date_select.js", function() {
 			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
 			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
-			t.select = new date_select(t.element, data == null ? null : parseSQLDate(data), min, max);
+			t.select = new date_select(t.element, data == null ? null : t.parseDate(data), min, max);
 			t.select.onchange = function() {
 				var date = t.select.getDate();
 				if (date) date = dateToSQL(date);
@@ -102,7 +109,7 @@ field_date.prototype._create = function(data) {
 		};
 		this.setData = function(data) {
 			if (data == t.data) return;
-			t.select.selectDate(data == null ? null : parseSQLDate(data));
+			t.select.selectDate(data == null ? null : t.parseDate(data));
 			if (data != t.getOriginalData()) setTimeout(function() { t._datachange(); },1);
 		};
 		this.signal_error = function(error) {
@@ -120,6 +127,7 @@ field_date.prototype._create = function(data) {
 				this.element.style.fontStyle = 'italic';
 				this.element.innerHTML = "no date";
 			} else {
+				data = dateToSQL(this.parseDate(data));
 				if (this.element.innerHTML == data) return;
 				this.element.style.fontStyle = 'normal';
 				this.element.innerHTML = data;

@@ -121,7 +121,7 @@ abstract class Page {
 	foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."'/>";
 ?>
 </head>
-<body<?php if (strlen($this->onload) > 0) echo " onload=\"".$this->onload."\"";?>>
+<body<?php if (strlen($this->onload) > 0) echo " onload=\"if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search);return;};".$this->onload."\"";?>>
 <?php
 	}
 

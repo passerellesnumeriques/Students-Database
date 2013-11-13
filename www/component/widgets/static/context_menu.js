@@ -59,6 +59,7 @@ function context_menu(menu) {
 			};
 			element.onclickset = true;
 		}
+		return element;
 	};
 	/** Append an item to the menu.
 	 * @method context_menu#addIconItem
@@ -220,6 +221,8 @@ function context_menu(menu) {
 			t.parent_menu_listener = t.parent_menu.hide_if_outside_menu;
 			t.parent_menu.hide_if_outside_menu = function(){};
 		}
+		y += document.body.scrollTop;
+		x += document.body.scrollLeft;
 		menu.style.visibility = "visible";
 		menu.style.position = "absolute";
 		menu.style.top = y+"px";

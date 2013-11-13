@@ -13,6 +13,11 @@ function horizontal_layout(container) {
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
 	container.widget = this;
 	
+	t.removeLayout = function() {
+		t.container.widget = null;
+		removeLayoutEvent(t.container, t.layout);
+	};
+	
 	t.layout = function() {
 		// reset
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
@@ -57,6 +62,7 @@ function horizontal_layout(container) {
 				var ww = Math.floor((w-used)/nb_to_fill--);
 				setWidth(e, ww);
 				x += ww;
+				used += ww;
 			} else if (!isNaN(parseInt(layout))) {
 				var ww = parseInt(layout);
 				setWidth(e, ww);
@@ -68,6 +74,6 @@ function horizontal_layout(container) {
 	};
 	
 	t.layout();
-	addLayoutEvent(t.container, function(){t.layout();});
+	addLayoutEvent(t.container, t.layout);
 	fireLayoutEventFor(t.container.parentNode);
 }

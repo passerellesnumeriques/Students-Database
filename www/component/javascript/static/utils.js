@@ -424,8 +424,7 @@ function lock_screen(onclick, content) {
 	if (div) return;
 	div = document.createElement('DIV');
 	div.id = "lock_screen";
-	div.style.backgroundColor = "#808080";
-	setOpacity(div, 0.5);
+	div.style.backgroundColor = "rgba(128,128,128,0.5)";
 	div.style.position = "fixed";
 	div.style.top = "0px";
 	div.style.left = "0px";
@@ -448,8 +447,22 @@ function lock_screen(onclick, content) {
 			td.appendChild(content);
 	}
 	if (typeof animation != 'undefined')
-		div.anim = animation.fadeIn(div,200,null,10,50);
+		div.anim = animation.fadeIn(div,200,null,10,100);
 	return document.body.appendChild(div);
+}
+function set_lock_screen_content(div, content) {
+	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
+	var table = document.createElement("TABLE"); div.appendChild(table);
+	table.style.width = "100%";
+	table.style.height = "100%";
+	var tr = document.createElement("TR"); table.appendChild(tr);
+	var td = document.createElement("TD"); tr.appendChild(td);
+	td.style.verticalAlign = 'middle';
+	td.style.textAlign = 'center';
+	if (typeof content == 'string')
+		td.innerHTML = content;
+	else
+		td.appendChild(content);
 }
 /**
  * Remove the given element, previously created by using the function lock_screen
@@ -463,7 +476,7 @@ function unlock_screen(div) {
 		animation.fadeOut(div,200,function(){
 			if (div.parentNode == document.body)
 				document.body.removeChild(div);				
-		},50,0);
+		},100,0);
 	} else if (div.parentNode == document.body)
 		document.body.removeChild(div);
 }

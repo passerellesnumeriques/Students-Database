@@ -219,7 +219,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (e.nodeType != 1) continue;
 			if (e.nodeName == "FORM")
 				w = win.absoluteLeft(e) + t._computeFrameWidth(e);
-			if (w == null) w = win.absoluteLeft(e)+win.getWidth(e);
+			if (w == null) w = win.absoluteLeft(e)+(win.getWidth ? win.getWidth(e) : getWidth(e));
 			if (w > max) max = w;
 		}
 		return max;
@@ -233,7 +233,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (e.nodeType != 1) continue;
 			if (e.nodeName == "FORM")
 				h = win.absoluteTop(e) + t._computeFrameHeight(e);
-			if (h == null) h = win.absoluteTop(e)+win.getHeight(e);
+			if (h == null) h = win.absoluteTop(e)+(win.getHeight ? win.getHeight(e) : getHeight(e));
 			if (h > max) max = h;
 		}
 		return max;

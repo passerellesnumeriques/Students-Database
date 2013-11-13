@@ -5,9 +5,6 @@ if (typeof require != 'undefined') {
 	require("dragndrop.js");
 }
 
-// marker to deactivate a cell
-grid_deactivated_cell = { deactivated_cell:'deactivated_cell' };
-
 function GridColumnAction(icon,onclick) {
 	this.icon = icon;
 	this.onclick = onclick;
@@ -17,6 +14,7 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 	// check parameters
 	if (!id) id = generate_id();
 	if (!field_type) field_type = "field_text";
+	require(field_type+".js");
 	if (!field_args) field_args = {};
 	// put values in the object
 	this.id = id;
@@ -404,38 +402,41 @@ function grid(element) {
 		while (t.table.childNodes.length > 0) t.table.removeChild(t.table.childNodes[0]);
 		// create rows
 		for (var i = 0; i < data.length; ++i) {
-			var tr = document.createElement("TR");
-			tr.row_id = data[i].row_id;
-			if (t.selectable) {
-				var td = document.createElement("TD");
-				tr.appendChild(td);
-				var cb = document.createElement("INPUT");
-				cb.type = 'checkbox';
-				cb.style.marginTop = "0px";
-				cb.style.marginBottom = "0px";
-				cb.style.verticalAlign = "middle";
-				cb.onchange = function() {
-					this.parentNode.parentNode.className = this.checked ? "selected" : "";
-					t._selection_changed();
-				};
-				td.appendChild(cb);
-			}
-			for (var j = 0; j < t.columns.length; ++j) {
-				var td = document.createElement("TD");
-				tr.appendChild(td);
-				var row_data = null;
-				for (var k = 0; k < data[i].row_data.length; ++k)
-					if (t.columns[j].id == data[i].row_data[k].col_id) { row_data = data[i].row_data[k]; break; }
-				if (row_data == null)
-					row_data = {data_id:null,data:"No data found for this colum"};
-				td.col_id = t.columns[j].id;
-				td.data_id = row_data.data_id;
-				td.field = t._create_cell(t.columns[j], row_data.data, td);
-				if (data[i][j] == grid_deactivated_cell)
-					td.style.backgroundColor = "rgba(192,192,192,0.5)";
-			}
-			t.table.appendChild(tr);
+			t.addRow(data[i].row_id, data[i].row_data);
 		}
+	};
+	t.addRow = function(row_id, row_data) {
+		var tr = document.createElement("TR");
+		tr.row_id = row_id;
+		if (t.selectable) {
+			var td = document.createElement("TD");
+			tr.appendChild(td);
+			var cb = document.createElement("INPUT");
+			cb.type = 'checkbox';
+			cb.style.marginTop = "0px";
+			cb.style.marginBottom = "0px";
+			cb.style.verticalAlign = "middle";
+			cb.onchange = function() {
+				this.parentNode.parentNode.className = this.checked ? "selected" : "";
+				t._selection_changed();
+			};
+			td.appendChild(cb);
+		}
+		for (var j = 0; j < t.columns.length; ++j) {
+			var td = document.createElement("TD");
+			tr.appendChild(td);
+			var data = null;
+			for (var k = 0; k < row_data.length; ++k)
+				if (t.columns[j].id == row_data[k].col_id) { data = row_data[k]; break; }
+			if (data == null)
+				data = {data_id:null,data:"No data found for this colum"};
+			td.col_id = t.columns[j].id;
+			td.data_id = data.data_id;
+			td.field = t._create_cell(t.columns[j], data.data, td);
+//			if (data[i][j] == grid_deactivated_cell)
+//				td.style.backgroundColor = "rgba(192,192,192,0.5)";
+		}
+		t.table.appendChild(tr);
 	};
 	
 	t.getNbRows = function() {
@@ -446,6 +447,18 @@ function grid(element) {
 		var tr = t.table.childNodes[row];
 		var td = tr.childNodes[col];
 		return td.childNodes[0];
+	};
+	t.getCellField = function(row,col) {
+		if (t.selectable) col++;
+		var tr = t.table.childNodes[row];
+		var td = tr.childNodes[col];
+		return td.field;
+	};
+	t.getCellDataId = function(row,col) {
+		if (t.selectable) col++;
+		var tr = t.table.childNodes[row];
+		var td = tr.childNodes[col];
+		return td.data_id;
 	};
 	
 	t.reset = function() {
@@ -541,9 +554,9 @@ function grid(element) {
 	},
 	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data) {
 		var f;
-		if (data == grid_deactivated_cell)
-			f = new field_blank(document.createElement("DIV"), grid_deactivated_cell);
-		else
+//		if (data == grid_deactivated_cell)
+//			f = new field_blank(document.createElement("DIV"), grid_deactivated_cell);
+//		else
 			f = new window[field_type](data, editable, field_args);
 		if (onchanged) f.ondatachanged.add_listener(onchanged);
 		if (onunchanged) f.ondataunchanged.add_listener(onunchanged);

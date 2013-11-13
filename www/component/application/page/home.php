@@ -9,6 +9,7 @@ TODO: home page<br/><br/>
 <a href="/dynamic/contact/page/organizations?creator=Selection">Organizations for Selection</a><br/>
 <a href="/dynamic/contact/page/organization_profile?organization=1">Organization profile</a><br/>
 <a href="#" onclick="post_data('/dynamic/people/page/create_people',{types:['student'],icon:'/static/application/icon.php?main=/static/students/student_32.png&small='+theme.icons_16.add+'&where=right_bottom',title:'New Student',redirect:'/dynamic/application/page/home'});return false;">Create student</a><br/>
+<a href="#" onclick="post_data('/dynamic/data_model/page/create_data',{root_table:'Student'});return false;">Create data</a><br/>
 <!-- 
 <a href="/dynamic/excel/page/test">Excel</a><br/>
 <a href="/dynamic/data_import/page/build_excel_import?import=create_template">Create Excel Import Template</a><br/>

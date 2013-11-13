@@ -46,7 +46,7 @@ if (!window.top.google) {
 		ask_connection: function() {
 			var wt = window.top;
 			wt.google.connection_status = 0;
-			for (var i = 0; i < wtgoogle.connection_listeners.length; ++i)
+			for (var i = 0; i < wt.google.connection_listeners.length; ++i)
 				wt.google.connection_listeners[i]();
 			wt.google._connecting_time = new Date().getTime();
 			wt.gapi.auth.authorize(

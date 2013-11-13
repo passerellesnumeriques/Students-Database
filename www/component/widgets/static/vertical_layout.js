@@ -13,6 +13,11 @@ function vertical_layout(container) {
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
 	container.widget = this;
 	
+	t.removeLayout = function() {
+		t.container.widget = null;
+		removeLayoutEvent(t.container, t.layout);
+	};
+	
 	t.layout = function() {
 		// remove all to get the container size
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
@@ -77,5 +82,5 @@ function vertical_layout(container) {
 	};
 	
 	t.layout();
-	addLayoutEvent(t.container, function(){t.layout();});
+	addLayoutEvent(t.container, t.layout);
 }

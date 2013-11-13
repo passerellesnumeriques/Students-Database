@@ -9,6 +9,17 @@ function page_header(container) {
 	container.style.height = "35px";
 	container.className = "page_header";
 	var t=this;
+	
+	this.addMenuItem = function(html) {
+		if (typeof html == 'string') {
+			var d = document.createElement("DIV");
+			d.style.display = 'inline-block';
+			d.innerHTML = html;
+			html = d;
+		}
+		this.menu_container.appendChild(html);
+	};
+	
 	t._init = function() {
 		// menu
 		t.menu_container = document.createElement("DIV");
