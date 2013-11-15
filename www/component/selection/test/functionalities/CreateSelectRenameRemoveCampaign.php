@@ -27,7 +27,7 @@ class CreateSelectRenameRemoveCampaign extends TestFunctionalitiesScenario {
 	
 }
 
-class Campaign_Create_Campaign_No_Manage extends TestStep{
+class Campaign_Create_Campaign_No_Manage extends TestFunctionalitiesStep{
 	public function getName(){ return "Create a selection campaign with a user who can only access selection data, but cannot manage the selections campaigns";}
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test", "test_createCampaign_can_access", "");
@@ -41,7 +41,7 @@ class Campaign_Create_Campaign_No_Manage extends TestStep{
 	}
 }
 
-class Campaign_Create_Campaign_Can_Manage extends TestStep{
+class Campaign_Create_Campaign_Can_Manage extends TestFunctionalitiesStep{
 	public function getName(){return "Create a selection campaign with a user who can manage the selections campaigns"; }
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_manage", "");
@@ -57,7 +57,7 @@ class Campaign_Create_Campaign_Can_Manage extends TestStep{
 	}
 }
 
-class Campaign_Select_Campaign_No_Manage extends TestStep{
+class Campaign_Select_Campaign_No_Manage extends TestFunctionalitiesStep{
 	public function getName(){return "Select a selection campaign with a user who can only access selection data, but cannot manage selection campaign";}
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_can_access", "");
@@ -70,7 +70,7 @@ class Campaign_Select_Campaign_No_Manage extends TestStep{
 	}
 }
 
-class Campaign_Select_Campaign_Can_Manage extends TestStep{
+class Campaign_Select_Campaign_Can_Manage extends TestFunctionalitiesStep{
 	public function getName(){return "Select a selection campaign with a user who can manage the selections campaigns";}
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_manage", "");
@@ -83,7 +83,7 @@ class Campaign_Select_Campaign_Can_Manage extends TestStep{
 	}
 }
 
-class Campaign_Rename_Remove_No_Manage extends TestStep{
+class Campaign_Rename_Remove_No_Manage extends TestFunctionalitiesStep{
 	public function getName(){return "Rename and remove a selection campaign with a user who can only access selection data, but cannot manage selection campaign";}
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_can_access", "");
@@ -101,7 +101,7 @@ class Campaign_Rename_Remove_No_Manage extends TestStep{
 	}
 }
 
-class Campaign_Rename_Remove_Can_Manage extends TestStep{
+class Campaign_Rename_Remove_Can_Manage extends TestFunctionalitiesStep{
 	public function getName(){return "Rename and remove a selection campaign with a user who can manage the selections campaigns";}
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_manage", "");

@@ -53,7 +53,7 @@ browser_control = {
 				var doc = getIFrameDocument(browser_control.win.frames.pn_application_frame);
 				var wait_time = doc.getElementById('test_ui_wait_time');
 				if (wait_time) wait_time.innerHTML = "";
-				doc.getElementById('test_ui_footer').widget.layout();
+				if (doc.getElementById('test_ui_footer').widget) doc.getElementById('test_ui_footer').widget.layout();
 			}
 			this._wait = null;
 			onready(); 
@@ -64,7 +64,7 @@ browser_control = {
 			var wait_time = doc.getElementById('test_ui_wait_time');
 			if (wait_time) {
 				wait_time.innerHTML = Math.floor((10000-this._wait_time*100)/1000)+"s. ("+what+")";
-				doc.getElementById('test_ui_footer').widget.layout();
+				if (doc.getElementById('test_ui_footer').widget) doc.getElementById('test_ui_footer').widget.layout();
 			}
 		}
 		if (++this._wait_time == 100) {
@@ -80,7 +80,7 @@ browser_control = {
 					icon.onclick = function() {
 						t._ondone(t._action+": Timeout ("+what+")");
 					};
-					doc.getElementById('test_ui_footer').widget.layout();
+					if (doc.getElementById('test_ui_footer').widget) doc.getElementById('test_ui_footer').widget.layout();
 				} else
 					this._ondone(this._action+": Timeout ("+what+")");
 			} else

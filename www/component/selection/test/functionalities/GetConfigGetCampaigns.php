@@ -23,7 +23,7 @@ class GetConfigGetCampaigns extends TestFunctionalitiesScenario {
 	
 }
 
-class GetConfigCampaigns_Can_Manage extends TestStep{
+class GetConfigCampaigns_Can_Manage extends TestFunctionalitiesStep{
 	public function getName(){ return "Create a selection campaign, get the config and all the campaigns with a user who can manage the selections campaigns";}
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_manage", "");
@@ -51,7 +51,7 @@ class GetConfigCampaigns_Can_Manage extends TestStep{
 	}
 }
 
-class GetConfigCampaigns_No_Manage extends TestStep{
+class GetConfigCampaigns_No_Manage extends TestFunctionalitiesStep{
 	public function getName(){ return "Create a selection campaign, get the config and all the campaigns with a user who can only access selection data, but cannot manage the selections campaigns";}
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_can_access", "");
