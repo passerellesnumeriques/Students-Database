@@ -26,41 +26,16 @@ class service_save_role_rights extends Service {
 			return;
 		}
 		
-		$r = SQLQuery::create()->select("Role")->field("name")->where("id",$role_id);
-		if ($r == null || count($r) == 0) {
-			PNApplication::error("Unknown role");
-			return;
-		}
-		
-		// retrieve all possible rights
-		$all_rights = array();
-		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
-			foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
-		}
-		
 		$rights = array();
 		foreach ($input as $name=>$value) {
 			if ($name == "role_id") continue;
-			if (!isset($all_rights[$name])) {
-				PNApplication::error("Unknown right ".$name);
-				return;
-			}
-			$rights[$name] = $all_rights[$name]->parse_value($value);
+			$rights[$name] = $value;
 		}
-		
-		// save in database: (1) remove all previous rights, (2) add all rights from the request
-		SQLQuery::get_db_system_without_security()->execute("DELETE FROM RoleRights WHERE role_id=".$role_id."");
-		if (count($rights) > 0) {
-			$sql = "INSERT INTO RoleRights (role_id,`right`,`value`) VALUES ";
-			$first = true;
-			foreach ($rights as $name=>$value) {
-				if ($first) $first = false; else $sql .= ",";
-				$sql .= "('".$role_id."','".SQLQuery::escape($name)."','".SQLQuery::escape($value)."')";
-			}
-			SQLQuery::get_db_system_without_security()->execute($sql);
-		}
-		echo "true";
+
+		if ($component->set_role_rights($role_id, $rights))
+			echo "true";
+		else
+			echo "false";
 	}
 }
 ?>
