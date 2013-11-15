@@ -49,7 +49,8 @@ theme::$icons_16 = array(
 	"warning" => 		"/static/theme/".$theme."/icons_16/warning.png",
 	"yes" => 			"/static/theme/".$theme."/icons_16/ok.png",
 	"zoom" => 			"/static/theme/".$theme."/icons_16/search.png",
-	"remove_black" => 		"/static/theme/".$theme."/icons_16/trash_black.png",
+	"remove_black" => 	"/static/theme/".$theme."/icons_16/trash_black.png",
+	"config" => 		"/static/theme/".$theme."/icons_16/config.png",
 );
 theme::$icons_10 = array(
 	"add" => 			"/static/theme/".$theme."/icons_10/add.png",

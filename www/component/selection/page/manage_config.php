@@ -1,0 +1,1 @@
+<?php require_once("selection_page.inc");class page_manage_config extends selection_page {	public function get_required_rights() { return array(); }	public function execute_selection_page(&$page){			?>		<div id ='manage_config'></div>		<?php		require_once("manage_config.inc");		manage_config($page,"manage_config");	}	}

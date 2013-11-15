@@ -459,6 +459,7 @@ function unlock_screen(div) {
 	if (!div) div = document.getElementById('lock_screen');
 	if (!div) return;
 	if (typeof animation != 'undefined') {
+		div.id = '';
 		if (div.anim) animation.stop(div.anim);
 		animation.fadeOut(div,200,function(){
 			if (div.parentNode == document.body)

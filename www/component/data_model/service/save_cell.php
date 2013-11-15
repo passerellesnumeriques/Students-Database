@@ -9,6 +9,7 @@ class service_save_cell extends Service {
 	<li><code>column</code>: column name of the cell to save</li>
 	<li><code>row_key</code>: primary key of the row to save</li>
 	<li><code>value</code>: value to save</li>
+	<li><code>sub_model</code>: optional, only if the table is in a sub model</li>
 	<li><code>lock</code>: id of a lock which is locking at least the cell to save</li>
 </ul>
 <?php		
@@ -22,7 +23,10 @@ class service_save_cell extends Service {
 		$lock_id = $input["lock"];
 		require_once("component/data_model/Model.inc");
 		try {
-			SQLQuery::create()->update_by_key($table, $key, array($field=>$value), null, $lock_id);
+			$q = SQLQuery::create();
+			$sub_model = @$input["sub_model"];
+			if ($sub_model <> null) $q->set_sub_model_for_table(DataModel::get()->getTable($table), $sub_model);
+			$q->update_by_key($table, $key, array($field=>$value), $lock_id);
 		} catch (Exception $e) {
 			PNApplication::error($e->getMessage());
 		}

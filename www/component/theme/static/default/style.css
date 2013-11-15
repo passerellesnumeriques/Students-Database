@@ -170,6 +170,10 @@ button img {
 	box-shadow: 1px 1px 1px rgba(170,170,170,0);
 	margin: 1px 2px 1px 2px;
 }
+.button a, a.button {
+	text-decoration: none;
+	color: black;
+}
 
 /* Popup Window */
 .popup_window {
