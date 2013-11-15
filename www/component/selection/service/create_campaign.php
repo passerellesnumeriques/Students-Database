@@ -18,12 +18,8 @@ class service_create_campaign extends Service{
 	public function execute(&$component,$input){
 		if(!isset($input["name"])) {echo "false"; return;}
 		else{
-			$key = null;
-			$fields = array();
-			$fields["name"] = $input["name"];
-			
 			try{
-				$key = SQLQuery::create()->insert("SelectionCampaign",$fields);
+				$key = $component->create_campaign($input["name"]);
 			} catch(Exception $e) {
 				PNApplication::error($e->getMessage());
 			}

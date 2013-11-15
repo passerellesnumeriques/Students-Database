@@ -345,8 +345,8 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param keep_content_hidden
 	 */
 	t.close = function(keep_content_hidden) {
-		if (t.onclose) t.onclose();
 		unlock_screen(t.locker);
+		if (t.onclose) t.onclose();
 		var do_close = function() {
 			if (keep_content_hidden || t.keep_content_on_close) {
 				t.content.parentNode.removeChild(t.content);

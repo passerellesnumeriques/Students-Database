@@ -105,19 +105,23 @@ class DataModel {
 	 * @return datamodel\Table
 	 */
 	public function getTableFromSQLName($name) {
+		if ($this instanceof SubDataModel) return $this->parent_model->getTableFromSQLName($name);
+		
 		if (isset($this->tables[$name]))
 			$t = $this->tables[$name];
 		else {
 			$t = null;
-			foreach ($this->tables as $name=>$tbl) {
-				if (!($tbl->getModel() instanceof SubDataModel)) continue;
-				if (substr($name,0,strlen($tbl->getName())) <> $tbl->getName()) continue;
-				if (substr($name,strlen($tbl->getName()),1) <> "_") continue;
-				$instance = substr($name,strlen($tbl->getName())+1);
-				$id = intval($instance);
-				if ($id == 0) continue;
-				$t = $tbl;
-				break;
+			foreach ($this->sub_models as $sm) {
+				foreach ($sm->tables as $tbl_name=>$tbl) {
+					if (substr($name,0,strlen($tbl_name)) <> $tbl_name) continue;
+					if (substr($name,strlen($tbl_name),1) <> "_") continue;
+					$instance = substr($name,strlen($tbl_name)+1);
+					$id = intval($instance);
+					if ($id == 0) continue;
+					$t = $tbl;
+					break;
+				}
+				if ($t <> null) break;
 			}
 		}
 		if ($t == null) throw new \Exception("Table '".$name."' does not exist");

@@ -374,16 +374,16 @@ class Table {
 		return $this;
 	}
 	public function mayInsert() {
-		if ($this->canInsertAll()) return true;
+		if ($this->canInsertAny()) return true;
 		return count($this->add_access_filters) > 0;
 	}
-	public function canInsertAll() {
+	public function canInsertAny() {
 		foreach ($this->add_access_rights as $r)
 			if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
 		return false;
 	}
 	public function acceptInsert($values) {
-		if ($this->canInsertAll()) return true;
+		if ($this->canInsertAny()) return true;
 		foreach ($this->add_access_filters as $filter)
 			if ($filter($values)) return true;
 		return false;
@@ -937,7 +937,7 @@ class FieldsDisplayHandler extends DataDisplayHandler {
 			$sm = $this->table->getModel()->getParentTable();
 			$sub_models = array($sm=>$sub_model);
 		}
-		return \SQLQuery::create()->insert($this->table->getName(), $list, $sub_models);
+		return \SQLQuery::create()->set_sub_models($sub_models)->insert($this->table->getName(), $list);
 	}
 
 }
@@ -1350,7 +1350,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		require_once("component/data_model/DataBaseLock.inc");
 		\SQLQuery::create()->remove($this->handler->table->getSQLNameFor($sub_model), array($this->joining_key_name=>$key));
 		foreach ($value as $v)
-			\SQLQuery::create()->insert($this->handler->table->getSQLNameFor($sub_model), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
+			\SQLQuery::create()->set_sub_model_for_table($this->handler->table, $sub_model)->insert($this->handler->table->getName(), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
 	}
 		
 }

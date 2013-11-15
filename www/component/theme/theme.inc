@@ -12,6 +12,7 @@ class theme extends Component {
 	public static $style;
 	public static $icons_16;
 	public static $icons_10;
+	public static $icons_32;
 	
 	public static function make_icon($main, $small, $where = "right_bottom") {
 		return "/static/application/icon.php?main=".urlencode($main)."&small=".urlencode($small)."&where=".urlencode($where);
@@ -54,7 +55,8 @@ theme::$icons_16 = array(
 	"warning" => 		"/static/theme/".$theme."/icons_16/warning.png",
 	"yes" => 			"/static/theme/".$theme."/icons_16/ok.png",
 	"zoom" => 			"/static/theme/".$theme."/icons_16/search.png",
-	"remove_black" => 		"/static/theme/".$theme."/icons_16/trash_black.png",
+	"remove_black" => 	"/static/theme/".$theme."/icons_16/trash_black.png",
+	"config" => 		"/static/theme/".$theme."/icons_16/config.png",
 );
 theme::$icons_10 = array(
 	"add" => 			"/static/theme/".$theme."/icons_10/add.png",
@@ -68,5 +70,9 @@ theme::$icons_10 = array(
 	"save" => 			"/static/theme/".$theme."/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/".$theme."/icons_10/semi_online.gif",
 	"no_connection" => 	"/static/theme/".$theme."/icons_10/no_connection.gif",
+);
+
+theme::$icons_32 = array(
+	"config" => 			"/static/theme/".$theme."/icons_32/config.png",
 );
 ?>

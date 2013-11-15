@@ -50,4 +50,5 @@
 		->addReadAccess("manage_selection_campaign",true)
 		->addInsertAccess("manage_selection_campaign",true)
 		->addRemoveAccess("manage_selection_campaign",true)
-		;
+		->addWriteAccess("manage_selection_campaign",true)
+		->setPrimary("name");
