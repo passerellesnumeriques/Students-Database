@@ -43,7 +43,7 @@ class user_management extends Component implements AdministrationPlugin {
 		if ($user == null) {
 			// the user does not exist yet in the database, but exists on the authentication system
 			// TODO add an action for administrator ?
-			return "You are not yet registered in this application. Please contact the Administrator.";
+			return "You are not yet registered in this application. Please contact the Administrator of domain '".PNApplication::$instance->local_domain."' to create your user '".$domain."\\".$username."'.";
 		} 
 		$this->domain = $domain;
 		$this->username = $username;
@@ -110,6 +110,62 @@ class user_management extends Component implements AdministrationPlugin {
 	}
 	
 	/**
+	 * Assign roles to users
+	 * @param number[] $users users' ids
+	 * @param number[] $roles roles' ids
+	 * @return true on success
+	 */
+	public function assign_roles($users, $roles) {
+		require_once("component/data_model/DataBaseLock.inc");
+		$locked_by = null;
+		$lock_id = DataBaseLock::lock_table("UserRole", $locked_by);
+		if ($lock_id == null) {
+			PNApplication::error("The user ".$locked_by." is currently working on users' roles. Please try again later");
+			return false;
+		}
+		foreach ($users as $user) {
+			$user_roles = SQLQuery::create()->select("UserRole")->field("role")->where("user",$user)->execute_single_field();
+			foreach ($roles as $role_id)
+				if (!in_array($role_id, $user_roles))
+				SQLQuery::create()->insert("UserRole", array("user"=>$user,"role"=>$role_id));
+		}
+		DataBaseLock::unlock($lock_id);
+		return true;
+	}
+	/**
+	 * Unassign roles from users
+	 * @param number[] $users users' ids
+	 * @param number[] $roles roles' ids
+	 * @return true on success
+	 */
+	public function unassign_roles($users, $roles) {
+		require_once("component/data_model/DataBaseLock.inc");
+		$locked_by = null;
+		$lock_id = DataBaseLock::lock_table("UserRole", $locked_by);
+		if ($lock_id == null) {
+			PNApplication::error("The user ".$locked_by." is currently working on users' roles. Please try again later");
+			return false;
+		}
+		foreach ($users as $user) {
+			$user_roles = SQLQuery::create()->select("UserRole")->field("role")->where("user",$user)->execute_single_field();
+			foreach ($roles as $role_id)
+				if (in_array($role_id, $user_roles))
+					SQLQuery::create()->remove("UserRole", array("user"=>$user,"role"=>$role_id)); 
+		}
+		DataBaseLock::unlock($lock_id);
+		return true;
+	}
+	
+	public function create_role($name) {
+		try { return SQLQuery::create()->insert("Role",array("name"=>$name)); }
+		catch (Exception $e) { PNApplication::error($e->getMessage()); return null; }
+	}
+	public function remove_role($role_id) {
+		try { SQLQuery::create()->remove_key("Role", $role_id); return true; }
+		catch (Exception $e) { PNApplication::error($e->getMessage()); return false; }
+	}
+	
+	/**
 	 * Once needed, keep the processed list of rights of the user
 	 */
 	private $rights = array();
@@ -118,20 +174,30 @@ class user_management extends Component implements AdministrationPlugin {
 	 */
 	private $is_admin = array();
 	/**
+	 * Once needed, keep the list of all existing rights
+	 */
+	private $all_rights = null;
+	
+	/**
 	 * Check if the currently logged user has the given right.
 	 * @param string $right_name
 	 * @param unknown $value
 	 * @return boolean
 	 */
 	public function has_right($right_name, $value = true) {
-		if (!isset($this->rights[PNApplication::$instance->current_domain])) {
+		if ($this->all_rights === null) {
 			// retrieve all possible rights
-			$all_rights = array();
+			$this->all_rights = array();
 			foreach (PNApplication::$instance->components as $c) {
-				foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
-				foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
+				foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
+				foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
 			}
-
+		}
+		if (!isset($this->all_rights[$right_name])) {
+			PNApplication::error("Unknown right '".$right_name."'");
+			return false;
+		}
+		if (!isset($this->rights[PNApplication::$instance->current_domain])) {
 			// get roles of the user
 			$roles = SQLQuery::create()->bypass_security()->select("UserRole")->field("role")->where("user",$this->user_id)->execute_single_field();
 			// check if the user is an administrator
@@ -143,7 +209,7 @@ class user_management extends Component implements AdministrationPlugin {
 				$rights = array();
 				if ($user_rights)
 				foreach ($user_rights as $r)
-					$rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
+					$rights[$r["right"]] = $this->all_rights[$r["right"]]->parse_value($r["value"]);
 				// merge with rights attached to the roles of the user
 				if (count($roles) > 0)
 					$role_rights = SQLQuery::create()->bypass_security()->select("RoleRights")->field("right")->field("value")->where_in("role", $roles)->execute();
@@ -151,12 +217,12 @@ class user_management extends Component implements AdministrationPlugin {
 				if ($role_rights)
 				foreach ($role_rights as $r) {
 					if (!isset($rights[$r["right"]]))
-						$rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
+						$rights[$r["right"]] = $this->all_rights[$r["right"]]->parse_value($r["value"]);
 					else
-						$rights[$r["right"]] = $all_rights[$r["right"]]->get_higher_value($rights[$r["right"]], user_management::parse_value($r["value"]));
+						$rights[$r["right"]] = $this->all_rights[$r["right"]]->get_higher_value($rights[$r["right"]], user_management::parse_value($r["value"]));
 				}
 				// check all rights exist, and compute implications
-				user_management::compute_rights_implications($rights, $all_rights);
+				$this->compute_rights_implications($rights);
 
 				// if we are not on the local domain, remove all writable rights, to make everything read-only
 				if (PNApplication::$instance->current_domain != PNApplication::$instance->local_domain) {
@@ -188,12 +254,21 @@ class user_management extends Component implements AdministrationPlugin {
 	 * @param Right[] $rights [right_name=>right_value] list of current rights, where will be added the implied rights
 	 * @param Right[] $all_rights all the existing rights already populated
 	 */
-	public function compute_rights_implications(&$rights, &$all_rights) {
+	public function compute_rights_implications(&$rights) {
+		if ($this->all_rights === null) {
+			// retrieve all possible rights
+			$this->all_rights = array();
+			foreach (PNApplication::$instance->components as $c) {
+				foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
+				foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
+			}
+		}
+		
 		$changed = false;
 		do {
 			$changed = false;
 			foreach ($rights as $name=>$value) {
-				$right = @$all_rights[$name];
+				$right = @$this->all_rights[$name];
 				if ($right === null) {
 					PNApplication::error("Unknown right '".$name."'");
 					unset($rights[$name]);
@@ -203,14 +278,18 @@ class user_management extends Component implements AdministrationPlugin {
 					if ($value == $if_value)
 					foreach ($implications as $rname=>$rvalue) {
 						if (isset($rights[$rname])) {
-							$higher = $all_rights[$rname]->get_higher_value($rights[$name], $rvalue);
+							$higher = $this->all_rights[$rname]->get_higher_value($rights[$name], $rvalue);
 							if ($rights[$rname] !== $higher) {
 								$rights[$rname] = $higher;
 								$changed = true;
 							}
 						} else {
-							$rights[$rname] = $rvalue;
-							$changed = true;
+							if (!isset($this->all_rights[$rname])) {
+								PNApplication::error("Unknown right '".$rname."', implied from right '".$name."'");								
+							} else {
+								$rights[$rname] = $rvalue;
+								$changed = true;
+							}
 						}
 					}
 			}

@@ -22,7 +22,8 @@ field_integer.prototype._create = function(data) {
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
-		require("autoresize_input.js",function(){autoresize_input(input);});
+		var onkeyup = new Custom_Event();
+		input.onkeyup = function(e) { onkeyup.fire(e); };
 		var f = function() { setTimeout(function() { t._datachange(); },1); };
 		input.onkeydown = function(ev) {
 			ev = getCompatibleKeyEvent(ev);
@@ -55,6 +56,7 @@ field_integer.prototype._create = function(data) {
 			if (this.config && this.config.max && i > this.config.max) input.value = this.config.max;
 			f();
 		};
+		require("autoresize_input.js",function(){autoresize_input(input);});
 		this.element.appendChild(input);
 		this.getCurrentData = function() {
 			if (input.value.length == 0) return this.config && this.config.can_be_null ? null : this.config.min;
@@ -68,6 +70,12 @@ field_integer.prototype._create = function(data) {
 		this.signal_error = function(error) {
 			this.error = error;
 			input.style.border = error ? "1px solid red" : "";
+		};
+		this.onenter = function(listener) {
+			onkeyup.add_listener(function(e) {
+				var ev = getCompatibleKeyEvent(e);
+				if (ev.isEnter) listener(t);
+			});
 		};
 	} else {
 		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));

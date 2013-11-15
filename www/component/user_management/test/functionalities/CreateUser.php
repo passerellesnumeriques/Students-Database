@@ -13,7 +13,7 @@ class CreateUser extends TestFunctionalitiesScenario {
 	
 }
 
-class CreateUser_Create extends TestStep {
+class CreateUser_Create extends TestFunctionalitiesStep {
 	public function getName() { return "Create a user"; }
 	public function run(&$scenario_data) {
 		$user_id = PNApplication::$instance->user_management->create_user("Test", "test_user", true);
@@ -26,7 +26,7 @@ class CreateUser_Create extends TestStep {
 		return null;
 	}
 }
-class CreateUser_Remove extends TestStep {
+class CreateUser_Remove extends TestFunctionalitiesStep {
 	public function getName() { return "Remove user"; }
 	public function run(&$scenario_data) {
 		PNApplication::$instance->user_management->remove_user($scenario_data["user_id"], true);

@@ -5,7 +5,16 @@ function field_html(data,editable,config) {
 field_html.prototype = new typed_field();
 field_html.prototype.constructor = field_html;		
 field_html.prototype._create = function(data) {
-	this.element.innerHTML = data; 
+	if (typeof data == 'string')
+		this.element.innerHTML = data;
+	else
+		this.element.appendChild(data);
 	this.getCurrentData = function() { return this.element.innerHTML; };
-	this.setData = function(data) { this.element.innerHTML = data; };
+	this.setData = function(data) {
+		while (this.element.childNodes.length > 0) this.element.removeChild(this.element.childNodes[0]);
+		if (typeof data == 'string')
+			this.element.innerHTML = data;
+		else
+			this.element.appendChild(data);
+	};
 };

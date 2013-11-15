@@ -59,7 +59,7 @@ function Locks__declare_model() {
 		;
 }
 
-class Locks__Prepare_DataModel extends TestStep {
+class Locks__Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		Locks__declare_model();
@@ -80,7 +80,7 @@ class Locks__Prepare_DataModel extends TestStep {
 	}
 }
 
-class Locks__Test_NoRight extends TestStep {
+class Locks__Test_NoRight extends TestFunctionalitiesStep {
 	public function getName() { return "Try to lock with user having no right"; }
 	public function run(&$scenario_data) {
 		Locks__declare_model();
@@ -109,7 +109,7 @@ class Locks__Test_NoRight extends TestStep {
 	}
 }
 
-class Locks__Test_OnlyRead extends TestStep {
+class Locks__Test_OnlyRead extends TestFunctionalitiesStep {
 	public function getName() { return "Try to lock with user who can only read"; }
 	public function run(&$scenario_data) {
 		Locks__declare_model();
@@ -138,7 +138,7 @@ class Locks__Test_OnlyRead extends TestStep {
 	}
 }
 
-class Locks__Test_ReadWrite extends TestStep {
+class Locks__Test_ReadWrite extends TestFunctionalitiesStep {
 	public function getName() { return "Try to lock with user who can read and write all"; }
 	public function run(&$scenario_data) {
 		Locks__declare_model();
@@ -171,7 +171,7 @@ class Locks__Test_ReadWrite extends TestStep {
 	}
 }
 
-class Locks__Test_ReadWriteSpecific extends TestStep {
+class Locks__Test_ReadWriteSpecific extends TestFunctionalitiesStep {
 	public function getName() { return "Try to lock with user who can read all and write only specific row"; }
 	public function run(&$scenario_data) {
 		Locks__declare_model();

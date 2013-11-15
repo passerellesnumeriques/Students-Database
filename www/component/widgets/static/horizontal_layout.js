@@ -11,7 +11,8 @@ function horizontal_layout(container) {
 	var t = this;
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
-	container.widget = this;
+	t.container.widget = this;
+	t.container.style.overflow = "hidden";
 	
 	t.removeLayout = function() {
 		t.container.widget = null;
@@ -22,10 +23,15 @@ function horizontal_layout(container) {
 		// reset
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];
-			if (e.nodeType != 1) continue;
+			if (e.nodeType != 1) {
+				t.container.removeChild(e);
+				i--;
+				continue;
+			}
 			var layout;
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
 			e.style.height = "";
+			e.style.display = "inline-block";
 			if (layout == 'fill')
 				e.style.width = "";
 		}

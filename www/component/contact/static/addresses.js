@@ -45,6 +45,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 			td_foot_2.style.cursor = 'pointer';
 			td_foot_2.style.fontStyle ='italic';
 			td_foot_2.style.color = "#808080";
+			td_foot_2.style.whiteSpace = "nowrap";
 			td_foot_2.onclick = function(){t.createAddress();};
 			tr_foot.appendChild(td_foot_1);
 			tr_foot.appendChild(td_foot_2);

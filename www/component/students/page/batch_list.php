@@ -16,7 +16,7 @@ class page_batch_list extends page_students_list {
 			"/static/students/batch_16.png",
 			$batch["name"],
 			"[{category:'Student',name:'Batch',data:{value:".$batch["id"]."}}]",
-			"{batch:".$batch["id"]."}" 
+			"{batch:".$batch["id"].",redirect:'/dynamic/students/page/batch_list?batch=".$batch["id"]."'}" 
 		);
 	}
 		

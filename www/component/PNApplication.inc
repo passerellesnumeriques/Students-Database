@@ -33,29 +33,53 @@ class PNApplication {
 	 * @param string $message in plain text, which will be converted into html
 	 */
 	public static function error($message) {
-		if ($message instanceof Exception) {
-			$e = $message;
-			$message = htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8")."<ul style='margin:0px'>";
-			foreach ($e->getTrace() as $trace)
-				$message .= "<li>".$trace["file"]." line ".$trace["line"]."</li>";
-			$message .= "</ul>";
-			array_push(PNApplication::$errors, $message);
-			return;
+		if (count(PNApplication::$errors) == 50) {
+			array_push(PNApplication::$errors, "Too much errors");
+			throw new Exception("Too much errors");
 		}
-		array_push(PNApplication::$errors, htmlentities($message, ENT_QUOTES, "UTF-8"));
+		if (count(PNApplication::$errors) > 50) return;
+		if (!($message instanceof Exception)) {
+			try {
+				throw new Exception($message);
+			} catch (Exception $e) {
+				$message = $e;
+			}
+		}
+		$e = $message;
+		$message = htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8");
+		$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';return false;\">details</a>";
+		$message .= "<ul style='margin:0px;visibility:hidden;position:absolute;top:-10000px' id='ex_".count(PNApplication::$errors)."'>";
+		foreach ($e->getTrace() as $trace)
+			if (isset($trace["file"]) && isset($trace["line"]))
+				$message .= "<li>".$trace["file"]." line ".$trace["line"]."</li>";
+			else
+				$message .= "<li>".$trace."</li>";
+		$message .= "</ul>";
+		array_push(PNApplication::$errors, $message);
 	}
 	/**
 	 * Signal an error
 	 * @param string $html_message in html format
 	 */
 	public static function error_html($html_message) {
-		array_push(PNApplication::$errors, $html_message);
+		try {
+			throw new Exception();
+		} catch (Exception $e) {
+			$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';return false;\">details</a>";
+			$message .= "<ul style='margin:0px;visibility:hidden;position:absolute;top:-10000px' id='ex_".count(PNApplication::$errors)."'>";
+			foreach ($e->getTrace() as $trace)
+				$message .= "<li>".$trace["file"]." line ".$trace["line"]."</li>";
+			$message .= "</ul>";
+			array_push(PNApplication::$errors, $message);
+		}
 	}
 
 	/**
 	 * @return boolean true if there are errors
 	 */
 	public static function has_errors() { return count(PNApplication::$errors) > 0; }
+	
+	public static function clear_errors() { PNApplication::$errors = array(); }
 
 	/**
 	 * Generate error messages to the output in html format
@@ -112,7 +136,7 @@ class PNApplication {
 	 * Initialize PNApplication: instantiate and initialize every component
 	 */
 	public function init() {
-		$this->local_domain = file_get_contents("conf/local_domain");
+		$this->local_domain = isset($_GET["testing"]) ? "Test" : file_get_contents("conf/local_domain");
 		$this->current_domain = $this->local_domain;
 		$components_names = array();
 		$dir = @opendir("component");

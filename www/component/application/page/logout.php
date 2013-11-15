@@ -8,9 +8,9 @@ class page_logout extends Page {
 if (window.top.pn_loading_start) {
 	window.top.pn_loading_start();
 	window.top.set_loading_message('Loading authentication page...');
-	window.location.href = "<?php echo "/dynamic/application/page/enter".(isset($_GET["from"]) ? "?from=".$_GET["from"] : "");?>";
+	window.location.href = "<?php echo "/dynamic/application/page/enter?".(isset($_GET["from"]) ? "&from=".$_GET["from"] : "").(isset($_GET["testing"]) ? "&testing=".$_GET["testing"] : "");?>";
 } else {
-	window.location.href = "/";
+	window.location.href = "/?<?php (isset($_GET["from"]) ? "&from=".$_GET["from"] : "").(isset($_GET["testing"]) ? "&testing=".$_GET["testing"] : "")?>";
 }
 </script>
 <?php 

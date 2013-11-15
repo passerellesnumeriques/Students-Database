@@ -17,26 +17,17 @@ class service_assign_roles extends Service {
 	public function output_documentation() {
 ?>return true on success.<?php 
 	}
+	/**
+	 * @param user_management $component
+	 */
 	public function execute(&$component, $input) {
 		$users = $input["users"];
 		$roles = $input["roles"];
-		
-		require_once("component/data_model/DataBaseLock.inc");
-		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table("UserRole", $locked_by);
-		if ($lock_id == null) {
-			PNApplication::error("The user ".$locked_by." is currently working on users' roles. Please try again later");
+
+		if (!$component->assign_roles($users, $roles))
 			echo "false";
-			return;
-		}
-		foreach ($users as $user) {
-			$user_roles = SQLQuery::create()->select("UserRole")->field("role")->where("user",$user)->execute_single_field();
-			foreach ($roles as $role_id)
-				if (!in_array($role_id, $user_roles))
-					SQLQuery::create()->insert("UserRole", array("user"=>$user,"role"=>$role_id)); 
-		}
-		DataBaseLock::unlock($lock_id);
-		echo "true";
+		else
+			echo "true";
 	}
 };
 ?>

@@ -107,7 +107,7 @@ function rename_role(id,name) {
 		},function(new_name) {
 			if (new_name == null) return;
 			if (name == new_name) return;
-			service.json("user_management","rename_role",{id:id,name:new_name},function(result) {
+			service.json("data_model","save_cell",{table:'Role',column:'name',row_key:'id',value:new_name,lock:null},function(result) {
 				if (result) location.reload();
 			}, true);
 		}

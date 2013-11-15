@@ -44,6 +44,9 @@ class students extends Component implements PeoplePlugin {
 		if (!in_array("student", $people_types)) return;
 		// automatically done, when people removed
 	}
+
+	public function getPeopleImportDataDisplay() { return array(); }
+	public function importPeopleData($input, $people_id) { return true; }
 	
 	public function filterPeopleReadAccess(&$q, $people_table_alias) {
 		if (!PNApplication::$instance->user_management->has_right("consult_students_list")) return null;

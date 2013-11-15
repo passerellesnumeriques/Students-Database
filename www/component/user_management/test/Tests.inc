@@ -5,16 +5,18 @@ class user_management_Tests extends ComponentTests {
 		return array(
 			"CreateUser",
 			"LoginLogout",
+			"UserRights",
+			"RolesFunctionalities",
 		);
 	}
 	public function getServicesTests() {
 		return array(
-			
+			"RolesServices",
 		);
 	}
 	public function getUITests() {
 		return array(
-			"LoginLogout",
+			"LoginLogoutUI",
 		);
 	}
 	

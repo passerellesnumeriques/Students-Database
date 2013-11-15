@@ -97,6 +97,9 @@ Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){
  * @returns {Object} the clone
  */
 function object_copy(o, recursive_depth) {
+	if (o == null) return null;
+	if (typeof o == 'string') return ""+o;
+	if (typeof o == 'number') return o;
 	var c = new Object();
 	for (var attr in o) {
 		var value = o[attr];

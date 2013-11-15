@@ -1,4 +1,5 @@
 if (typeof require != 'undefined') {
+	require("layout.js");
 	require("animation.js");
 }
 

@@ -35,10 +35,8 @@ class user_people extends Component implements PeoplePlugin {
 			$this->first_name = $people["first_name"];
 			$this->last_name = $people["last_name"];
 		} else if (PNApplication::$instance->user_management->domain == PNApplication::$instance->local_domain) {
-			// we have a local user without a People => create it
-			$people_id = PNApplication::$instance->people->create_people("?","?",null,true);
-			SQLQuery::create()->bypass_security()->insert("UserPeople", array("username"=>PNApplication::$instance->user_management->username,"people"=>$people_id));
-			$this->user_people_id = $people_id;
+			// we have a local user without a People
+			$this->user_people_id = -1;
 			$this->first_name = "?";
 			$this->last_name = "?";
 		}
@@ -83,6 +81,9 @@ class user_people extends Component implements PeoplePlugin {
 	public function getCreatePeoplePages($people_types) {}
 	public function createPeople($people_id, $people_types, $input, &$create_data) {}
 	public function rollbackCreatePeople($people_id, $people_types, $input, &$create_data) {}
+	
+	public function getPeopleImportDataDisplay() { return array(); }
+	public function importPeopleData($input, $people_id) { return true; }
 	
 	public function filterPeopleReadAccess(&$q, $people_table_alias) {
 		if (!PNApplication::$instance->user_management->has_right("consult_user_list")) return null;

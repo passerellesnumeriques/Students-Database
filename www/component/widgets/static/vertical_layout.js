@@ -11,7 +11,8 @@ function vertical_layout(container) {
 	var t = this;
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
-	container.widget = this;
+	t.container.widget = this;
+	t.container.style.overflow = "hidden";
 	
 	t.removeLayout = function() {
 		t.container.widget = null;

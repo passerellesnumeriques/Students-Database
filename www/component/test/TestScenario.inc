@@ -1,9 +1,16 @@
 <?php 
+/**
+ * A test scenario is composed of several steps.
+ * It provides a name,
+ * a list of test users (with their access rights) which will be used,
+ * and the steps to execute (steps depends on the kind of scenario/implementation of TestScenario).
+ * 
+ * At the beginning, the method init is called, which will reset the Test Database, create the users, and insert initial data in the DataBase.
+ * Then, the steps are executed.
+ */
 abstract class TestScenario {
 	
 	public abstract function getName();
-	
-	public abstract function getSteps();
 	
 	/**
 	 * @return TestUser[]
@@ -25,15 +32,6 @@ abstract class TestScenario {
 		return null;
 	}
 	
-	public function run_step($step_index, &$scenario_data) {
-		$db = SQLQuery::get_db_system_without_security();
-		$db->execute("USE students_test");
-		// run
-		$steps = $this->getSteps();
-		$step = $steps[$step_index];
-		return $step->run($scenario_data);
-	}
-	
 	private function _create_users() {
 		foreach ($this->getUsers() as $user) {
 			$user_id = PNApplication::$instance->user_management->create_user("Test", $user->username, true);
@@ -44,26 +42,16 @@ abstract class TestScenario {
 	}
 	
 	private function _insert_data() {
-		
+		// TODO
 	}
 }
 
+/**
+ * A TestStep is a step in a TestScenario. Its content and execution depends on the type of scenario/implementation of TestScenario.
+ */
 abstract class TestStep {
 	
 	public abstract function getName();
-	public abstract function run(&$scenario_data);
-	
-}
-
-abstract class TestFunctionalitiesScenario extends TestScenario {
-	
-	public abstract function getCoveredFunctions();
-	
-}
-
-abstract class TestServicesScenario extends TestScenario {
-	
-	public abstract function getCoveredServices();
 	
 }
 

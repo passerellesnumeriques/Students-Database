@@ -67,7 +67,7 @@ function Remove_Access_Table_declare_model() {
 		;
 }
 
-class Remove_Access_Table_Prepare_DataModel extends TestStep {
+class Remove_Access_Table_Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		Remove_Access_Table_declare_model();
@@ -88,7 +88,7 @@ class Remove_Access_Table_Prepare_DataModel extends TestStep {
 	}
 }
 
-class Remove_Access_Table_Test_Read extends TestStep {
+class Remove_Access_Table_Test_Read extends TestFunctionalitiesStep {
 	public function getName() { return "Try to remove from a table which can only be read"; }
 	public function run(&$scenario_data) {
 		Remove_Access_Table_declare_model();
@@ -114,7 +114,7 @@ class Remove_Access_Table_Test_Read extends TestStep {
 	}
 }
 
-class Remove_Access_Table_Test_ReadWrite extends TestStep {
+class Remove_Access_Table_Test_ReadWrite extends TestFunctionalitiesStep {
 	public function getName() { return "Try to remove in a table which can only be read and write"; }
 	public function run(&$scenario_data) {
 		Remove_Access_Table_declare_model();
@@ -134,7 +134,7 @@ class Remove_Access_Table_Test_ReadWrite extends TestStep {
 	}
 }
 
-class Remove_Access_Table_Test_ReadRemove_UserReadWrite extends TestStep {
+class Remove_Access_Table_Test_ReadRemove_UserReadWrite extends TestFunctionalitiesStep {
 	public function getName() { return "Try to read,write and remove with a user who can only read and write"; }
 	public function run(&$scenario_data) {
 		Remove_Access_Table_declare_model();
@@ -173,7 +173,7 @@ class Remove_Access_Table_Test_ReadRemove_UserReadWrite extends TestStep {
 	}
 }
 
-class Remove_Access_Table_Test_ReadRemove_UserReadRemove extends TestStep {
+class Remove_Access_Table_Test_ReadRemove_UserReadRemove extends TestFunctionalitiesStep {
 	public function getName() { return "Try to read and remove with a user who can do it"; }
 	public function run(&$scenario_data) {
 		Remove_Access_Table_declare_model();
@@ -206,7 +206,7 @@ class Remove_Access_Table_Test_ReadRemove_UserReadRemove extends TestStep {
 	}
 }
 
-class Remove_Access_Table_Test_ReadRemoveFilter_UserReadWrite extends TestStep {
+class Remove_Access_Table_Test_ReadRemoveFilter_UserReadWrite extends TestFunctionalitiesStep {
 	public function getName() { return "Try to read and remove on a table having a filter for remove, with a user who can read and write, so who can remove if matching the filter"; }
 	public function run(&$scenario_data) {
 		Remove_Access_Table_declare_model();
@@ -259,7 +259,7 @@ class Remove_Access_Table_Test_ReadRemoveFilter_UserReadWrite extends TestStep {
 	}
 }
 
-class Remove_Access_Table_Test_ReadRemoveFilter_UserReadRemove extends TestStep {
+class Remove_Access_Table_Test_ReadRemoveFilter_UserReadRemove extends TestFunctionalitiesStep {
 	public function getName() { return "Try to read and remove on a table having a filter for remove, with a user who can read and remove any value"; }
 	public function run(&$scenario_data) {
 		Remove_Access_Table_declare_model();

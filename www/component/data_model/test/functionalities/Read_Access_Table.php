@@ -63,7 +63,7 @@ function Read_Access_Table__declare_model() {
 		;
 }
 
-class Read_Access_Table__Prepare_DataModel extends TestStep {
+class Read_Access_Table__Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
@@ -82,7 +82,7 @@ class Read_Access_Table__Prepare_DataModel extends TestStep {
 	}
 }
 
-class Read_Access_Table__Test_NoRight extends TestStep {
+class Read_Access_Table__Test_NoRight extends TestFunctionalitiesStep {
 	public function getName() { return "Access to a table which cannot be read"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
@@ -101,7 +101,7 @@ class Read_Access_Table__Test_NoRight extends TestStep {
 	}
 }
 
-class Read_Access_Table__Test_CanReadAll_With_NoRight extends TestStep {
+class Read_Access_Table__Test_CanReadAll_With_NoRight extends TestFunctionalitiesStep {
 	public function getName() { return "Access to a table which can be read with a specific right, but with a user which has not"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
@@ -120,7 +120,7 @@ class Read_Access_Table__Test_CanReadAll_With_NoRight extends TestStep {
 	}
 }
 
-class Read_Access_Table__Test_CanReadAll_With_Right extends TestStep {
+class Read_Access_Table__Test_CanReadAll_With_Right extends TestFunctionalitiesStep {
 	public function getName() { return "Access to a table which can be read with a specific right, with a user who has it"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
@@ -141,7 +141,7 @@ class Read_Access_Table__Test_CanReadAll_With_Right extends TestStep {
 	}
 }
 
-class Read_Access_Table__Test_CanReadColumn_With_NoRight extends TestStep {
+class Read_Access_Table__Test_CanReadColumn_With_NoRight extends TestFunctionalitiesStep {
 	public function getName() { return "Access to a table with right on all and right on column, but with a user which has no right"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
@@ -160,7 +160,7 @@ class Read_Access_Table__Test_CanReadColumn_With_NoRight extends TestStep {
 	}
 }
 
-class Read_Access_Table__Test_CanReadColumn_With_AllRight extends TestStep {
+class Read_Access_Table__Test_CanReadColumn_With_AllRight extends TestFunctionalitiesStep {
 	public function getName() { return "Access to a table with right on all and right on column, with a user which can read all"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
@@ -187,7 +187,7 @@ class Read_Access_Table__Test_CanReadColumn_With_AllRight extends TestStep {
 	}
 }
 
-class Read_Access_Table__Test_CanReadColumn_With_SpecificRight extends TestStep {
+class Read_Access_Table__Test_CanReadColumn_With_SpecificRight extends TestFunctionalitiesStep {
 	public function getName() { return "Access to a table with right on all and right on column, with a user which can read only one column"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
@@ -214,7 +214,7 @@ class Read_Access_Table__Test_CanReadColumn_With_SpecificRight extends TestStep 
 	}
 }
 
-class Read_Access_Table__Test_CanReadFilter_With_NoRight extends TestStep {
+class Read_Access_Table__Test_CanReadFilter_With_NoRight extends TestFunctionalitiesStep {
 	public function getName() { return "Access to a table with right on all, right on column and filter; with a user who has no right"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
@@ -243,7 +243,7 @@ class Read_Access_Table__Test_CanReadFilter_With_NoRight extends TestStep {
 	}
 }
 
-class Read_Access_Table__Test_CanReadFilter_With_AllRight extends TestStep {
+class Read_Access_Table__Test_CanReadFilter_With_AllRight extends TestFunctionalitiesStep {
 	public function getName() { return "Access to a table with right on all, right on column and filter; with a user who has all rights"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
@@ -270,7 +270,7 @@ class Read_Access_Table__Test_CanReadFilter_With_AllRight extends TestStep {
 	}
 }
 
-class Read_Access_Table__Test_CanReadFilter_With_SpecificRight extends TestStep {
+class Read_Access_Table__Test_CanReadFilter_With_SpecificRight extends TestFunctionalitiesStep {
 	public function getName() { return "Access to a table with right on all, right on column and filter; with a user who has right on a single column"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();

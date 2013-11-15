@@ -58,7 +58,7 @@ function Write_Access_Table_declare_model() {
 		;
 }
 
-class Write_Access_Table_Prepare_DataModel extends TestStep {
+class Write_Access_Table_Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		Write_Access_Table_declare_model();
@@ -76,7 +76,7 @@ class Write_Access_Table_Prepare_DataModel extends TestStep {
 	}
 }
 
-class Write_Access_Table_Test_NoRight extends TestStep {
+class Write_Access_Table_Test_NoRight extends TestFunctionalitiesStep {
 	public function getName() { return "Try to modify a table which can only be read"; }
 	public function run(&$scenario_data) {
 		Write_Access_Table_declare_model();
@@ -106,7 +106,7 @@ class Write_Access_Table_Test_NoRight extends TestStep {
 	}
 }
 
-class Write_Access_Table_Test_WriteAll_CannotWrite extends TestStep {
+class Write_Access_Table_Test_WriteAll_CannotWrite extends TestFunctionalitiesStep {
 	public function getName() { return "Try to modify a table which can be read and write, with a user who can only read"; }
 	public function run(&$scenario_data) {
 		Write_Access_Table_declare_model();
@@ -136,7 +136,7 @@ class Write_Access_Table_Test_WriteAll_CannotWrite extends TestStep {
 	}
 }
 
-class Write_Access_Table_Test_WriteAll_CanWriteAll extends TestStep {
+class Write_Access_Table_Test_WriteAll_CanWriteAll extends TestFunctionalitiesStep {
 	public function getName() { return "Try to modify a table which can be read and write, with a user who can read and write all"; }
 	public function run(&$scenario_data) {
 		Write_Access_Table_declare_model();
@@ -167,7 +167,7 @@ class Write_Access_Table_Test_WriteAll_CanWriteAll extends TestStep {
 	}
 }
 
-class Write_Access_Table_Test_WriteAll_CanOnlyWrite extends TestStep {
+class Write_Access_Table_Test_WriteAll_CanOnlyWrite extends TestFunctionalitiesStep {
 	public function getName() { return "Try to modify a table which can be read and write, with a user who can only write so he should not be able to do anything"; }
 	public function run(&$scenario_data) {
 		Write_Access_Table_declare_model();
@@ -193,7 +193,7 @@ class Write_Access_Table_Test_WriteAll_CanOnlyWrite extends TestStep {
 	}
 }
 
-class Write_Access_Table_Test_WriteFilter_OnlyFilter extends TestStep {
+class Write_Access_Table_Test_WriteFilter_OnlyFilter extends TestFunctionalitiesStep {
 	public function getName() { return "Try to modify a table with a user who can only read, and can write according to filter"; }
 	public function run(&$scenario_data) {
 		Write_Access_Table_declare_model();
@@ -232,7 +232,7 @@ class Write_Access_Table_Test_WriteFilter_OnlyFilter extends TestStep {
 	}
 }
 
-class Write_Access_Table_Test_WriteFilter_WriteAll extends TestStep {
+class Write_Access_Table_Test_WriteFilter_WriteAll extends TestFunctionalitiesStep {
 	public function getName() { return "Try to modify a table with a user who can modify everything, including a filter"; }
 	public function run(&$scenario_data) {
 		Write_Access_Table_declare_model();

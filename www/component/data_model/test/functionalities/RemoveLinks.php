@@ -54,7 +54,7 @@ function RemoveLinks_declare_model() {
 		;
 }
 
-class RemoveLinks_Prepare_DataModel extends TestStep {
+class RemoveLinks_Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		RemoveLinks_declare_model();
@@ -75,7 +75,7 @@ class RemoveLinks_Prepare_DataModel extends TestStep {
 	}
 }
 
-class RemoveLinks_RemoveNotAllowedAll extends TestStep {
+class RemoveLinks_RemoveNotAllowedAll extends TestFunctionalitiesStep {
 	public function getName() { return "Try to remove, but user cannot remove or write any table"; }
 	public function run(&$scenario_data) {
 		RemoveLinks_declare_model();
@@ -98,7 +98,7 @@ class RemoveLinks_RemoveNotAllowedAll extends TestStep {
 	}
 }
 
-class RemoveLinks_RemoveButNotModify extends TestStep {
+class RemoveLinks_RemoveButNotModify extends TestFunctionalitiesStep {
 	public function getName() { return "Try to remove, with user who: can remove from all tables, but cannot modify a table having a weak link"; }
 	public function run(&$scenario_data) {
 		RemoveLinks_declare_model();
@@ -121,7 +121,7 @@ class RemoveLinks_RemoveButNotModify extends TestStep {
 	}
 }
 
-class RemoveLinks_NotRemoveInStrongLink extends TestStep {
+class RemoveLinks_NotRemoveInStrongLink extends TestFunctionalitiesStep {
 	public function getName() { return "Try to remove, with user who: can remove from root and weak link tables, can modify in weak link table, but cannot remove on strong link table"; }
 	public function run(&$scenario_data) {
 		RemoveLinks_declare_model();
@@ -144,7 +144,7 @@ class RemoveLinks_NotRemoveInStrongLink extends TestStep {
 	}
 }
 
-class RemoveLinks_RemoveOk extends TestStep {
+class RemoveLinks_RemoveOk extends TestFunctionalitiesStep {
 	public function getName() { return "Try to remove, with user who can do it"; }
 	public function run(&$scenario_data) {
 		RemoveLinks_declare_model();

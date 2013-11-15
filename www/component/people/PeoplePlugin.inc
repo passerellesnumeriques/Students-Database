@@ -23,6 +23,13 @@ interface PeoplePlugin {
 	public function createPeople($people_id, $people_types, $input, &$create_data);
 	public function rollbackCreatePeople($people_id, $people_types, $input, &$create_data);
 	
+	/** returns a list of DataDisplay, which can be imported when importing a people */
+	public function getPeopleImportDataDisplay();
+	/**
+	 * @param array $input array of data=>JavaScriptDataDisplay,value=>value
+	 * @param number $people_id
+	 */
+	public function importPeopleData($input, $people_id);
 	
 	/** return the conditions to put in the where clause, to select only allowed people
 	 * @param SQLQuery $q

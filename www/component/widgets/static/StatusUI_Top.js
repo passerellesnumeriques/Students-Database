@@ -130,6 +130,25 @@ function StatusUI_Top(manager, margin) {
 			s = "<img src='"+theme.icons_16.info+"' hspace=2 style='vertical-align:bottom;margin-bottom:2px'/>";
 		s += status.message;
 		c.innerHTML = s;
+		if (status.timeout && status.type == Status_TYPE_ERROR) {
+			var img = document.createElement("IMG");
+			img.src = theme.icons_10.popup;
+			img.hspace=1;
+			img.style.verticalAlign="top";
+			setOpacity(img,50);
+			img.style.cursor = "pointer";
+			img.onmouseover = function() { setOpacity(this,100); };
+			img.onmouseout = function() { setOpacity(this,50); };
+			img.onclick = function() {
+				require(["popup_window.js","layout.js"],function() {
+					var p = new popup_window("Error", theme.icons_16.error, "<div>"+s+"</div>");
+					p.show();
+					manager.remove_status(status.id);
+				});
+			};
+			c.appendChild(document.createTextNode(" "));
+			c.appendChild(img);
+		}
 		if (status.actions != null)
 			for (var i = 0; i < status.actions.length; ++i) {
 				var a = status.actions[i];

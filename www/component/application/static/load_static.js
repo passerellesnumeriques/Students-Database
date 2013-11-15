@@ -32,7 +32,7 @@ function load_static_resources(container) {
 	this.check_end = function() {
 		if (!t.stopped && window.top.pn_application_static.scripts.length > 0) return;
 		if (!t.stopped && window.top.pn_application_static.images.length > 0) return;
-		if (window.top.pn_application_static.scripts.length == 0 && window.top.pn_application_static.images.length == 0)
+		if (window.top.pn_application_static && window.top.pn_application_static.scripts && window.top.pn_application_static.scripts.length == 0 && window.top.pn_application_static.images.length == 0)
 			window.top.pn_application_static_loaded = true;
 		container.innerHTML = "Application loaded in "+Math.floor((new Date().getTime()-t.start_time.getTime())/1000)+"s.";
 		require("animation.js",function() {
@@ -79,15 +79,17 @@ function load_static_resources(container) {
 		document.body.appendChild(i);
 	};
 	
-	if (!window.top.pn_application_static) {
+	if (!window.top.pn_application_static || !window.top.pn_application_static.service_done) {
 		window.top.pn_application_static = {
 			total_size: 10000,
 			loaded_size: 0,
 			loading_scripts: [],
-			loading_images: []
+			loading_images: [],
+			service_done: false
 		};
 		require("service.js",function(){
 			service.json("application","get_static_resources",{},function(res){
+				window.top.pn_application_static.service_done = true;
 				window.top.pn_application_static.scripts = res.scripts;
 				window.top.pn_application_static.images = res.images;
 				var start_size = window.top.pn_application_static.total_size;

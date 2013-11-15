@@ -26,6 +26,7 @@ class Table {
 	/** @var \DataModel */
 	private $model;
 	private $name;
+	/** @var Column[] */
 	private $columns = array();
 	private $indexes = array();
 	private $primary_key = null;
@@ -44,6 +45,7 @@ class Table {
 	private $is_customized = false;
 	private $customization = array();
 	
+	/** @var DataDisplayHandler[] */
 	private $display_handler = array();
 	
 	public $_key_submodels = array();
@@ -438,6 +440,19 @@ class Table {
 		if ($coming_from <> null && isset($this->display_handler[$coming_from]))
 			return $this->display_handler[$coming_from];
 		return @$this->display_handler[null];
+	}
+	
+	/** Try to find the given DataDisplay
+	 * @return DataDisplay|null 
+	 */
+	public function getDataDisplay($category, $name) {
+		foreach ($this->display_handler as $from=>$display) {
+			if ($display->category <> $category) continue;
+			foreach ($display->getDisplayableData() as $data)
+				if ($data->getDisplayName() == $name)
+					return $data;
+		}
+		return null;
 	}
 
 	

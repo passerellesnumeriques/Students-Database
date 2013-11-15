@@ -1,5 +1,5 @@
 if (typeof require != 'undefined')
-	require(["vertical_layout.js","horizontal_layout.js","grid.js","context_menu.js"]);
+	require(["vertical_layout.js","horizontal_layout.js","grid.js","context_menu.js",["typed_field.js","field_integer.js"]]);
 
 function custom_import(container, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -45,9 +45,13 @@ function custom_import(container, onready) {
 	};
 	
 	this.data_display = [];
-	this.add_data = function(data_display) {
+	this.fixed_values = [];
+	this.prefilled_values = [];
+	this.add_data = function(data_display, fixed_value, prefilled_value) {
 		t.data_display.push(data_display);
-		t.grid.addColumn(new GridColumn(data_display.category+'@'+data_display.name,data_display.name,null,data_display.field_classname,true,null,null,data_display.field_config, data_display));
+		t.fixed_values.push(fixed_value);
+		t.prefilled_values.push(prefilled_value);
+		t.grid.addColumn(new GridColumn(data_display.category+'@'+data_display.name,data_display.name,null,data_display.field_classname,true,null,null,data_display.field_config, data_display), t.grid.getNbColumns()-1);
 	};
 	
 	this.import_from_excel = function(data_display_index, row_start) {
@@ -69,7 +73,11 @@ function custom_import(container, onready) {
 			var value = values[0];
 			values.splice(0,1);
 			var cell = t.grid.getCellField(row_start, data_display_index+1);
-			cell.setData(value);
+			if (cell.isMultiple())
+				cell.addData(value);
+			else
+				cell.setData(value);
+			t.grid.setCellDataId(row_start, data_display_index+1, 1);
 			row_start++;
 		}
 		while (values.length > 0) {
@@ -77,16 +85,44 @@ function custom_import(container, onready) {
 			values.splice(0,1);
 			data = [{col_id:'#',data_id:0,data:""+(t.grid.getNbRows()+1)}];
 			for (var i = 0; i < t.data_display.length; ++i) {
-				var d = {col_id:t.data_display[i].category+'@'+t.data_display[i].name,data_id:0,data:t.data_display[i].new_data};
-				if (i == data_display_index) {
-					d.data = value;
+				var new_data;
+				if (t.fixed_values[i] != null) new_data = t.fixed_values[i];
+				else if (t.prefilled_values[i] != null) new_data = t.prefilled_values[i];
+				else new_data = t.data_display[i].new_data;
+				new_data = object_copy(new_data, 100);
+				var d = {col_id:t.data_display[i].category+'@'+t.data_display[i].name,data_id:0,data:new_data};
+				if (i == data_display_index)
 					d.data_id = 1;
-				}
 				data.push(d);
 			}
+			var remove = document.createElement("IMG");
+			remove.src = theme.icons_16.remove;
+			remove.onmouseover = function() { this.src = theme.icons_16.remove_black; };
+			remove.onmouseout = function() { this.src = theme.icons_16.remove; };
+			remove.onclick = function() {
+				t.grid.removeRow(t.grid.getContainingRow(this));
+			};
+			remove.style.cursor = 'pointer';
+			data.push({
+				col_id:'##',
+				data_id:0,
+				data:remove
+			});
 			t.grid.addRow(generate_id(),data);
-			row_start++;
+			var cell = t.grid.getCellField(t.grid.getNbRows()-1, data_display_index+1);
+			if (cell.isMultiple())
+				cell.addData(value);
+			else
+				cell.setData(value);
+			// check fixed values
+			for (var i = 0; i < t.fixed_values.length; ++i)
+				if (t.fixed_values[i] != null)
+					t.grid.getCellField(t.grid.getNbRows()-1, i+1).setEditable(false);
 		}
+	};
+	
+	this.removeAll = function() {
+		t.grid.removeAllRows();
 	};
 	
 	this._create = function() {
@@ -119,9 +155,10 @@ function custom_import(container, onready) {
 		this.icon_import = document.createElement("IMG");
 		this.icon_import.className = "button";
 		this.icon_import.onclick = function() {
-			require("context_menu.js",function(){
+			require(["context_menu.js",["typed_field.js","field_integer.js"]],function(){
 				var menu = new context_menu();
 				for (var i = 0; i < t.data_display.length; ++i) {
+					if (t.fixed_values[i] != null) continue; // cannot import it, as this is a fixed value
 					var dd = t.data_display[i];
 					var item = document.createElement("DIV");
 					item.className = 'context_menu_item';
@@ -154,7 +191,16 @@ function custom_import(container, onready) {
 								};
 								menu.addItem(item);
 							}
-							// TODO custom row
+							item = document.createElement("DIV"); item.className = 'context_menu_item';
+							item.appendChild(document.createTextNode("At row: "));
+							item.input = new field_integer(1,true,{min:1,max:nb_rows});
+							item.input.dd_index = this.dd_index;
+							item.appendChild(item.input.getHTMLElement());
+							menu.addItem(item, true);
+							item.input.onenter(function(f) {
+								t.import_from_excel(f.dd_index, f.getCurrentData()-1);
+								menu.hide();
+							});
 							menu.showBelowElement(t.icon_import);
 						}
 					};
@@ -174,6 +220,7 @@ function custom_import(container, onready) {
 		require("grid.js",function() {
 			t.grid = new grid(t.import_container);
 			t.grid.addColumn(new GridColumn('#','#',null,'field_text',false,null,null,{},'#'));
+			t.grid.addColumn(new GridColumn('##','',null,'field_html',false,null,null,{},'##'));
 			onready(t);
 		});
 	};

@@ -442,6 +442,15 @@ function grid(element) {
 	t.getNbRows = function() {
 		return t.table.childNodes.length;
 	};
+	
+	t.removeRow = function(row) {
+		t.table.removeChild(t.table.childNodes[row]);
+	};
+	t.removeAllRows = function() {
+		while (t.table.childNodes.length > 0)
+			t.table.removeChild(t.table.childNodes[0]);
+	};
+	
 	t.getCellContent = function(row,col) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
@@ -459,6 +468,24 @@ function grid(element) {
 		var tr = t.table.childNodes[row];
 		var td = tr.childNodes[col];
 		return td.data_id;
+	};
+	t.setCellDataId = function(row,col,data_id) {
+		if (t.selectable) col++;
+		var tr = t.table.childNodes[row];
+		var td = tr.childNodes[col];
+		td.data_id = data_id;
+	};
+	
+	t.getContainingRow = function(element) {
+		while (element && element != document.body) {
+			if (element.nodeName == "TD" && element.col_id) {
+				var tr = element.parentNode;
+				for (var i = 0; i < t.table.childNodes.length; ++i)
+					if (t.table.childNodes[i] == tr) return i;
+			}
+			element = element.parentNode;
+		}
+		return -1;
 	};
 	
 	t.reset = function() {

@@ -70,6 +70,31 @@ class contact extends Component implements PeoplePlugin {
 		if (in_array("organization_contact_point", $people_types))
 			SQLQuery::create()->bypass_security()->remove_key("Contact_point",array("organization"=>$input["contact_point_organization"],"people"=>$people_id));
 	}
+
+	public function getPeopleImportDataDisplay() {
+		return array_merge(
+			DataModel::get()->getTable("People_contact")->getDisplayHandler("people")->getDisplayableData(),
+			DataModel::get()->getTable("People_address")->getDisplayHandler("people")->getDisplayableData()
+		); 
+	}
+	
+	public function importPeopleData($input, $people_id) {
+		$create_data = array("contacts"=>array(),"addresses"=>array());
+		$table = DataModel::get()->getTable("People_contact");
+		$display = $table->getDisplayHandler("people");
+		foreach ($display->getDisplayableData() as $data) {
+			$value = getDataDisplayFromInput($display->category, $data->getDisplayName(), $input);
+			$create_data["contacts"] = array_merge($create_data["contacts"], $value["contacts"]); 
+		}
+		$table = DataModel::get()->getTable("People_address");
+		$display = $table->getDisplayHandler("people");
+		foreach ($display->getDisplayableData() as $data) {
+			$value = getDataDisplayFromInput($display->category, $data->getDisplayName(), $input);
+			$create_data["addresses"] = array_merge($create_data["addresses"], $value["addresses"]);
+		}
+		$created_data = array();
+		return $this->createPeople($people_id, array(), $create_data, $created_data);
+	}
 	
 	public function filterPeopleReadAccess(&$q, $people_table_alias) {
 		$cp_alias = $q->get_table_alias("Contact_point");

@@ -19,7 +19,7 @@ class LoginLogout extends TestFunctionalitiesScenario {
 	
 }
 
-class LoginLogout_Login extends TestStep {
+class LoginLogout_Login extends TestFunctionalitiesStep {
 	public function getName() { return "Login"; }
 	public function run(&$scenario_data) {
 		if (PNApplication::$instance->user_management->domain <> null ||
@@ -33,7 +33,7 @@ class LoginLogout_Login extends TestStep {
 		return null;
 	}
 }
-class LoginLogout_Logout extends TestStep {
+class LoginLogout_Logout extends TestFunctionalitiesStep {
 	public function getName() { return "Logout"; }
 	public function run(&$scenario_data) {
 		if (PNApplication::$instance->user_management->domain == null ||
@@ -46,7 +46,7 @@ class LoginLogout_Logout extends TestStep {
 		return null;
 	}
 }
-class LoginLogout_Invalid extends TestStep {
+class LoginLogout_Invalid extends TestFunctionalitiesStep {
 	public function getName() { return "Invalid login"; }
 	public function run(&$scenario_data) {
 		if (PNApplication::$instance->user_management->domain <> null ||

@@ -1,9 +1,9 @@
 /* #depends[typed_field.js] */
 function field_list_of_fixed_values(data,editable,config) {
 	if (data == null) data = [];
-	typed_field.call(this, data, editable, config);
+	typed_field_multiple.call(this, data, editable, config);
 }
-field_list_of_fixed_values.prototype = new typed_field();
+field_list_of_fixed_values.prototype = new typed_field_multiple();
 field_list_of_fixed_values.prototype.constructor = field_list_of_fixed_values;		
 field_list_of_fixed_values.prototype.canBeNull = function() { return true; };		
 field_list_of_fixed_values.prototype._getValue = function(key) {
@@ -83,12 +83,24 @@ field_list_of_fixed_values.prototype._create = function(data) {
 			this._addElement(data[i]);
 		
 		this.getCurrentData = function() { return this.data; };
+		this.addData = function(new_data) {
+			this._addElement(new_data);
+		};
 	} else {
 		var s = "";
+		this.data = [];
 		for (var i = 0; i < data.length; ++i) {
 			if (s.length > 0) s += ", ";
 			s += this._getValue(data[i]);
+			this.data.push(data[i]);
 		}
 		this.element.appendChild(document.createTextNode(s));
+		this.getCurrentData = function() { return this.data; };
+		this.addData = function(new_data) {
+			var text = this.element.childNodes[0];
+			if (text.nodeValue.length > 0) text.nodeValue += ", ";
+			text.nodeValue += this._getValue(new_data);
+			this.data.push(new_data);
+		};
 	}
 };

@@ -24,6 +24,7 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 		td_foot_2.style.fontStyle ='italic';
 		td_foot_2.style.color = "#808080";
 		td_foot_2.style.paddingLeft = '5px';
+		td_foot_2.style.whiteSpace = 'nowrap';
 		td_foot_2.onclick = function(){t.dialogAddField();};
 		tr_foot.appendChild(td_foot_1);
 		tr_foot.appendChild(td_foot_2);
@@ -40,6 +41,7 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 		td_category.style.color = "#808080";
 		var td_data = document.createElement("td");
 		td_data.style.paddingLeft = '5px';
+		td_data.style.whiteSpace = 'nowrap';
 		var div_data = document.createElement("div");
 		div_data.style.display = 'inline-block';
 		td_data.appendChild(div_data);
@@ -112,7 +114,7 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 				else return "You must enter at least one visible character";
 			},
 			function(text){
-				if(text) t.addField(text);
+				if(text) t.addField({type: contact_type, sub_type:"Work", contact: text});
 			}
 		);
 	};
@@ -122,14 +124,15 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 	 * Add the field in the database, updates the result object, and fianlly updates the displayed table
 	 * @param text {string} the new contact
 	 */
-	this.addField = function (text){
+	this.addField = function (contact){
 		if (join_value != -1) {
 			/*Update the database*/
-			service.json("contact","add_contact",{table:table_join,column:join_key,key:join_value,type:contact_type, contact:text, sub_type:"Work"},function(res){
+			service.json("contact","add_contact",{table:table_join,column:join_key,key:join_value,type:contact.type, contact:contact.contact, sub_type:contact.sub_type},function(res){
 				if (!res) return;
 				/*Update the result object*/
 				var l = contacts.length;
-				contacts[l] = {id:res.id, type: contact_type, sub_type:"Work", contact: text};
+				contact.id = res.id;
+				contacts[l] = contact;
 				/*Update the table*/
 				t.addContact(contacts[l]);
 				t.onchange.fire(t);
@@ -137,7 +140,8 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 		} else {
 			/*Update the result object*/
 			var l = contacts.length;
-			contacts[l] = {id:-1, type: contact_type, sub_type:"Work", contact: text};
+			contact.id = -1;
+			contacts[l] = contact;
 			/*Update the table*/
 			t.addContact(contacts[l]);
 			t.onchange.fire(t);

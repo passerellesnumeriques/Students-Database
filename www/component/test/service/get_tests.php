@@ -103,7 +103,13 @@ class service_get_tests extends Service {
 			$first = true;
 			foreach ($ui_tests as $file) {
 				if ($first) $first = false; else echo ",";
-				echo json_encode($file);
+				echo "{";
+				echo "path:".json_encode($file);
+				require_once("component/".$cname."/test/ui/".$file.".php");
+				$scenario_class = str_replace("/","_",$file);
+				$scenario = new $scenario_class();
+				echo ",name:".json_encode($scenario->getName());
+				echo "}";
 			}
 			echo "]";
 			echo "}";

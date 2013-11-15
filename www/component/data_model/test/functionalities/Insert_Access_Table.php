@@ -62,7 +62,7 @@ function Insert_Access_Table_declare_model() {
 		;
 }
 
-class Insert_Access_Table_Prepare_DataModel extends TestStep {
+class Insert_Access_Table_Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		Insert_Access_Table_declare_model();
@@ -77,7 +77,7 @@ class Insert_Access_Table_Prepare_DataModel extends TestStep {
 	}
 }
 
-class Insert_Access_Table_Test_Read extends TestStep {
+class Insert_Access_Table_Test_Read extends TestFunctionalitiesStep {
 	public function getName() { return "Try to insert in a table which can only be read"; }
 	public function run(&$scenario_data) {
 		Insert_Access_Table_declare_model();
@@ -97,7 +97,7 @@ class Insert_Access_Table_Test_Read extends TestStep {
 	}
 }
 
-class Insert_Access_Table_Test_ReadWrite extends TestStep {
+class Insert_Access_Table_Test_ReadWrite extends TestFunctionalitiesStep {
 	public function getName() { return "Try to insert in a table which can only be read and write"; }
 	public function run(&$scenario_data) {
 		Insert_Access_Table_declare_model();
@@ -117,7 +117,7 @@ class Insert_Access_Table_Test_ReadWrite extends TestStep {
 	}
 }
 
-class Insert_Access_Table_Test_ReadInsert_UserReadWrite extends TestStep {
+class Insert_Access_Table_Test_ReadInsert_UserReadWrite extends TestFunctionalitiesStep {
 	public function getName() { return "Try to read,write and insert with a user who can only read and write"; }
 	public function run(&$scenario_data) {
 		Insert_Access_Table_declare_model();
@@ -149,7 +149,7 @@ class Insert_Access_Table_Test_ReadInsert_UserReadWrite extends TestStep {
 	}
 }
 
-class Insert_Access_Table_Test_ReadInsert_UserReadInsert extends TestStep {
+class Insert_Access_Table_Test_ReadInsert_UserReadInsert extends TestFunctionalitiesStep {
 	public function getName() { return "Try to read and insert with a user who can do it"; }
 	public function run(&$scenario_data) {
 		Insert_Access_Table_declare_model();
@@ -184,7 +184,7 @@ class Insert_Access_Table_Test_ReadInsert_UserReadInsert extends TestStep {
 	}
 }
 
-class Insert_Access_Table_Test_ReadInsertFilter_UserReadWrite extends TestStep {
+class Insert_Access_Table_Test_ReadInsertFilter_UserReadWrite extends TestFunctionalitiesStep {
 	public function getName() { return "Try to read and insert on a table having a filter for insert, with a user who can read and write, so who can insert if matching the filter"; }
 	public function run(&$scenario_data) {
 		Insert_Access_Table_declare_model();
@@ -224,7 +224,7 @@ class Insert_Access_Table_Test_ReadInsertFilter_UserReadWrite extends TestStep {
 	}
 }
 
-class Insert_Access_Table_Test_ReadInsertFilter_UserReadInsert extends TestStep {
+class Insert_Access_Table_Test_ReadInsertFilter_UserReadInsert extends TestFunctionalitiesStep {
 	public function getName() { return "Try to read and insert on a table having a filter for insert, with a user who can read and insert any value"; }
 	public function run(&$scenario_data) {
 		Insert_Access_Table_declare_model();

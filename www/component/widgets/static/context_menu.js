@@ -104,6 +104,13 @@ function context_menu(menu) {
 		t.addItem(div);
 		return div;
 	};
+	t.addSeparator = function() {
+		var sep = document.createElement("DIV");
+		sep.style.borderBottom = "1px solid black";
+		sep.style.marginTop = "3px";
+		sep.style.marginBottom = "3px";
+		t.addItem(sep);
+	};
 	/** Return the items contained in this menu
 	 * @method context_menu#getItems
 	 * @returns the list of html elements contained in the menu

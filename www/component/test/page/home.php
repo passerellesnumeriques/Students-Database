@@ -187,7 +187,12 @@ function load_tests(component, ondone) {
 			div.innerHTML  = "No service provided";
 			content.appendChild(div);
 		}
-
+		if (tests.ui == null) {
+			var div = document.createElement("DIV");
+			div.innerHTML  = "No UI test provided";
+			content.appendChild(div);
+		}
+		
 		if (tests.functions != null) {
 			var table = build_tests_table("Functionalities", component, tests.functions, play_function_test);
 			content.appendChild(table);
@@ -200,23 +205,13 @@ function load_tests(component, ondone) {
 			for (var i  = 0; i < tests.services.scenarios.length; ++i)
 				tests.services.scenarios[i].status = 0;
 		}
-		var next_ui = function(pos) {
-			if (tests.ui == null || pos == tests.ui.scenarios.length) {
-				if (tests.ui != null) {
-					var table = build_tests_table("UI", component, tests.ui, play_ui_test);
-					content.appendChild(table);
-				}
-				if (ondone) ondone();
-				return;
-			}
-			tests.ui.scenarios[pos] = {path:tests.ui.scenarios[pos], status: 0};
-			add_javascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(tests.ui.scenarios[pos].path),function() {
-				tests.ui.scenarios[pos].obj = new window["Test_"+component.name+"_"+tests.ui.scenarios[pos].path]();
-				tests.ui.scenarios[pos].name = tests.ui.scenarios[pos].obj.name;
-				next_ui(pos+1);
-			});
-		};
-		next_ui(0);
+		if (tests.ui != null) {
+			var table = build_tests_table("UI", component, tests.ui, play_ui_test);
+			content.appendChild(table);
+			for (var i  = 0; i < tests.services.scenarios.length; ++i)
+				tests.ui.scenarios[i].status = 0;
+		}
+		if (ondone) ondone();
 	});
 }
 
@@ -654,53 +649,190 @@ function play_service_test(component, scenario_index, ondone) {
 	var scenario = component.tests.services.scenarios[scenario_index]; 
 	if (!scenario.button) return;
 
-	scenario.icon = document.createElement("IMG");
-	scenario.button.parentNode.insertBefore(scenario.icon, scenario.button);
+	scenario.status = -2;
+	component.widget.update_status();
+
+	if (!scenario.icon) {
+		scenario.icon = document.createElement("IMG");
+		scenario.button.parentNode.insertBefore(scenario.icon, scenario.button);
+	}
 	scenario.button.parentNode.removeChild(scenario.button);
 	scenario.button = null;
 	scenario.icon.src = theme.icons_16.loading;
 	scenario.icon.style.verticalAlign = "bottom";
-	service.json("test","execute_services_scenario",{component:component.name,scenario:scenario.path},function(res_scenario){
-		var success = true;
-		if (!res_scenario)
+
+	var update_step_status = function(scenario, step, res_step, keep_running) {
+		var success;
+		if (!res_step) {
 			success = false;
-		else {
-			for (var i = 0; i < res_scenario.length; ++i) {
-				if (res_scenario[i] == "OK")
-					scenario.steps[i].result_container.innerHTML = " <img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/>";
-				else {
-					success = false;
-					if (res_scenario[i] != null)
-						scenario.steps[i].result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res_scenario[i];
-				} 
-			}
+			step.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> An error occured during the call";
+		} else if (res_step.error == null) {
+			success = true;
+			if (!keep_running)
+				step.result_container.innerHTML = " <img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/>";
+		} else {
+			success = false;
+			step.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res_step.error;
 		}
 		if (!success) {
 			scenario.icon.src = theme.icons_16.error;
+			scenario.button = document.createElement("IMG");
+			scenario.button.className = 'button';
+			scenario.button.src = '/static/test/replay.png';
+			scenario.button.style.verticalAlign = "bottom";
+			scenario.button.component = component;
+			scenario.button.scenario = scenario_index;
+			scenario.button.onclick = function() {
+				scenario.init_step.result_container.innerHTML = "";
+				for (var i = 0; i < scenario.steps.length; ++i)
+					scenario.steps[i].result_container.innerHTML = "";
+				play_service_test(this.component, this.scenario);
+			};
+			scenario.icon.parentNode.appendChild(scenario.button);
 			// TODO details
-		} else {
-			scenario.icon.src = theme.icons_16.ok;
-		}				
-		if (ondone) ondone(success);				
-	});		
+			scenario.status = -1;
+			component.widget.update_status();
+			if (ondone) ondone(false);	
+			return false;			
+		}
+		return true;
+	};
+	
+	scenario.init_step.icon = document.createElement("IMG");
+	scenario.init_step.icon.src = theme.icons_16.loading;
+	scenario.init_step.icon.style.verticalAlign = "bottom";
+	scenario.init_step.result_container.appendChild(scenario.init_step.icon);
+	// init db
+	service.json("test","services_scenario_init_db",{component:component.name,scenario:scenario.path},function(res_step){
+		if (!update_step_status(scenario, scenario.init_step, res_step)) return;
+		var next_step = function(pos,step_data) {
+			var step = scenario.steps[pos];
+			step.icon = document.createElement("IMG");
+			step.icon.src = theme.icons_16.loading;
+			step.icon.style.verticalAlign = "bottom";
+			step.result_container.appendChild(step.icon);
+			service.json("test","services_scenario_step_init",{component:component.name,scenario:scenario.path,step:pos,data:step_data},function(res_step) {
+				if (!update_step_status(scenario, step, res_step, true)) return;
+				var input = res_step.service_input;
+				var service_name = res_step.service_name;
+				var service_type = res_step.service_type;
+				var init_step_data = res_step.data;
+				ajax.call(
+					"POST",
+					"/dynamic/"+component.name+"/service/"+service_name,
+					"text/json;charset=UTF-8",
+					service.generate_input(input),
+					function(error) {
+						update_step_status(scenario, step, {error:error});
+					}, function(xhr) {
+						var call_check_output;
+						var ct = xhr.getResponseHeader("Content-Type");
+						if (ct) {
+							var i = ct.indexOf(';');
+							if (i > 0) ct = ct.substring(0, i);
+						}
+						if (service_type == "parse_json") {
+							if (ct != "text/json") {
+								update_step_status(scenario, step, {error:'Output is expected to be JSON, received is: '+ct});
+								return;
+							}
+							if (xhr.responseText.length == 0) {
+								update_step_status(scenario, step, {error:'Empty response from the server'});
+								return;
+							}
+							var output;
+					        try {
+					        	output = eval("("+xhr.responseText+")");
+					        } catch (e) {
+					        	update_step_status(scenario, step, {error:"Invalid json output:<br/>Error: "+e+"<br/>Output:<br/>"+xhr.responseText});
+					        	return;
+					        }
+			        		call_check_output = [output.errors,typeof output.result == 'undefined' ? null : output.result];
+						} else if (service_type == "parse_xml") {
+							if (ct != "text/xml") {
+								update_step_status(scenario, step, {error:'Output is expected to be XML, received is: '+ct});
+								return;
+							}
+							if (!xhr.responseXML || xhr.responseXML.childNodes.length == 0) {
+								update_step_status(scenario, step, {error:'Empty response from the server'});
+								return;
+							}
+				            if (xhr.responseXML.childNodes[0].nodeName == "ok") {
+				            	call_check_output = [null, xhr.responseXML.childNodes[0]];
+				            } else if (xhr.responseXML.childNodes[0].nodeName == "error") {
+				            	call_check_output = [[xhr.responseXML.childNodes[0].getAttribute("message")], null];
+					        } else
+					        	call_check_output = [[xhr.responseText],null];
+						} else {
+							call_check_output = xhr.responseText; 
+						}
+						// call to service is ok
+						service.json("test","services_scenario_step_check_output",{component:component.name,scenario:scenario.path,step:pos,data:init_step_data},function(res_step_output) {
+							var fct = "function(";
+							if (service_type == "parse_json" || service_type == "parse_xml")
+								fct += "errors,result";
+							else
+								fct += "raw_output";
+							fct += "){"+res_step_output.javascript+"}";
+							fct = eval('('+fct+')');
+							var error;
+							if (service_type == "parse_json" || service_type == "parse_xml")
+								error = fct(call_check_output[0], call_check_output[1]);
+							else
+								error = fct(call_check_output[0]);
+							if (!update_step_status(scenario, step, {error:error})) return;
+							// finalize
+							service.json("test","services_scenario_step_finalize",{component:component.name,scenario:scenario.path,step:pos,data:res_step_output.data},function(res_step) {
+								if (!update_step_status(scenario, step, res_step)) return;
+								if (pos == scenario.steps.length-1) {
+									scenario.icon.src = theme.icons_16.ok;
+									scenario.status = 1;
+									component.widget.update_status();
+									if (ondone) ondone(true);				
+								} else {
+									next_step(pos+1, res_step.data);
+								}
+							});
+						});
+					}, false
+				);				
+			});
+		};
+		next_step(0,res_step.data);
+	});
 }
 
 function play_ui_test(component, scenario_index, ondone) {
 	var scenario = component.tests.ui.scenarios[scenario_index]; 
 	if (!scenario.button) return;
 
-	scenario.icon = document.createElement("IMG");
-	scenario.button.parentNode.insertBefore(scenario.icon, scenario.button);
+	scenario.status = -2;
+	component.widget.update_status();
+
+	if (!scenario.icon) {
+		scenario.icon = document.createElement("IMG");
+		scenario.button.parentNode.insertBefore(scenario.icon, scenario.button);
+	}
 	scenario.button.parentNode.removeChild(scenario.button);
 	scenario.button = null;
 	scenario.icon.src = theme.icons_16.loading;
 	scenario.icon.style.verticalAlign = "bottom";
-	scenario.obj.run(function(error) {
-		if (!error)
+
+	scenario.result_container.innerHTML = " <img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Initializing Database";
+	// init db
+	service.json("test","ui_scenario_init_db",{component:component.name,scenario:scenario.path},function(res_step){
+		var success;
+		if (!res_step) {
+			success = false;
+			scenario.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> An error occured during the call";
+		} else if (res_step.error == null) {
+			success = true;
 			scenario.result_container.innerHTML = " <img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/>";
-		else
-			scenario.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
-		if (error) {
+		} else {
+			success = false;
+			scenario.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res_step.error;
+		}
+		if (!success) {
 			scenario.icon.src = theme.icons_16.error;
 			scenario.button = document.createElement("IMG");
 			scenario.button.className = 'button';
@@ -716,87 +848,47 @@ function play_ui_test(component, scenario_index, ondone) {
 			// TODO details
 			scenario.status = -1;
 			component.widget.update_status();
-			if (ondone) ondone(false);				
-		} else {
-			scenario.icon.src = theme.icons_16.ok;
-			scenario.status = 1;
-			component.widget.update_status();
-			if (ondone) ondone(true);				
+			if (ondone) ondone(false);
+			return;			
 		}
-	},function(action_name) {
-		scenario.result_container.innerHTML = " <img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> "+action_name;
-	});
-}
-
-/*
-
-var current_component = -1;
-var phpmd_done = false;
-function test_next_component() {
-	current_component++;
-	if (current_component >= components.length) {
-		if (!phpmd_done) {
-			phpmd_done = true;
-			ajax.post("/dynamic/test/service/phpmd","",function(error){
-				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
-			},function(xhr) {
-				var xml = xhr.responseXML.childNodes[0];
-
-				// remove unwanted rules
-				for (var i = 0; i < xml.childNodes.length; ++i) {
-					var node = xml.childNodes[i];
-					if (node.nodeType != 1) { xml.removeChild(node); i--; continue; }
-					if (node.nodeName != "file") { xml.removeChild(node); i--; continue; }
-					for (var j = 0; j < node.childNodes.length; ++j) {
-						var viol = node.childNodes[j];
-						if (viol.nodeType != 1) { node.removeChild(viol); j--; continue; }
-						if (viol.nodeName != "violation") { node.removeChild(viol); j--; continue; }
-						if (viol.getAttribute("rule") == "StaticAccess") {
-							node.removeChild(viol); j--;
-						}
-					}
-					if (node.childNodes.length == 0) { xml.removeChild(node); i--; continue; }
+		// execute ui
+		add_javascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(scenario.path),function() {
+			var actions = window["Test_"+component.name+"_"+scenario.path](res_step.data);
+			browser_control.run(actions, function(action){
+				scenario.result_container.innerHTML = " <img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> "+action;
+			}, function(error){
+				if (!error)
+					scenario.result_container.innerHTML = " <img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/>";
+				else
+					scenario.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
+				if (error) {
+					scenario.icon.src = theme.icons_16.error;
+					scenario.button = document.createElement("IMG");
+					scenario.button.className = 'button';
+					scenario.button.src = '/static/test/replay.png';
+					scenario.button.style.verticalAlign = "bottom";
+					scenario.button.component = component;
+					scenario.button.scenario = scenario_index;
+					scenario.button.onclick = function() {
+						scenario.result_container.innerHTML = "";
+						play_ui_test(this.component, this.scenario);
+					};
+					scenario.icon.parentNode.appendChild(scenario.button);
+					// TODO details
+					scenario.status = -1;
+					component.widget.update_status();
+					if (ondone) ondone(false);				
+				} else {
+					scenario.icon.src = theme.icons_16.ok;
+					scenario.status = 1;
+					component.widget.update_status();
+					if (ondone) ondone(true);				
 				}
-				
-				var div = document.getElementById('phpmd');
-				div.innerHTML = "";
-				var table = document.createElement("TABLE"); div.appendChild(table);
-				var tr = document.createElement("TR"); table.appendChild(tr);
-				var td;
-				tr.appendChild(td = document.createElement("TH")); td.innerHTML = "Line";
-				tr.appendChild(td = document.createElement("TH")); td.innerHTML = "Rule Set";
-				tr.appendChild(td = document.createElement("TH")); td.innerHTML = "Rule";
-				tr.appendChild(td = document.createElement("TH")); td.innerHTML = "Message";
-				for (var i = 0; i < xml.childNodes.length; ++i) {
-					var node = xml.childNodes[i];
-					table.appendChild(tr = document.createElement("TR"));
-					tr.appendChild(td = document.createElement("TH"));
-					td.colSpan = 4;
-					td.innerHTML = node.getAttribute("name");
-					for (var j = 0; j < node.childNodes.length; ++j) {
-						var viol = node.childNodes[j];
-						table.appendChild(tr = document.createElement("TR"));
-						tr.appendChild(td = document.createElement("TD")); td.innerHTML = viol.getAttribute("beginline");
-						tr.appendChild(td = document.createElement("TD")); td.innerHTML = viol.getAttribute("ruleset");
-						tr.appendChild(td = document.createElement("TD")); td.innerHTML = viol.getAttribute("rule");
-						var text = "";
-						for (var k = 0; k < viol.childNodes.length; ++k)
-							if (viol.childNodes[k].nodeType == 3) { text = viol.childNodes[k].nodeValue; break; }
-						tr.appendChild(td = document.createElement("TD")); td.innerHTML = text;
-					}
-				}
-				test_next_component();
 			});
-		}
-		return;
-	}
-	load_tests(components[current_component],function(){
-		test_next_component();
+		});
+		
 	});
 }
-
-test_next_component();
-*/
 </script>
 <?php
 	}

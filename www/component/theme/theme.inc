@@ -13,6 +13,10 @@ class theme extends Component {
 	public static $icons_16;
 	public static $icons_10;
 	
+	public static function make_icon($main, $small, $where = "right_bottom") {
+		return "/static/application/icon.php?main=".urlencode($main)."&small=".urlencode($small)."&where=".urlencode($where);
+	}
+	
 }
 
 theme::$style = "/static/theme/".$theme."/style.css";
@@ -59,6 +63,7 @@ theme::$icons_10 = array(
 	"no_edit" => 		"/static/theme/".$theme."/icons_10/no_edit.png",
 	"online" => 		"/static/theme/".$theme."/icons_10/online.gif",
 	"offline" => 		"/static/theme/".$theme."/icons_10/offline.gif",
+	"popup" =>	 		"/static/theme/".$theme."/icons_10/popup.png",
 	"remove" => 		"/static/theme/".$theme."/icons_10/close.png",
 	"save" => 			"/static/theme/".$theme."/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/".$theme."/icons_10/semi_online.gif",

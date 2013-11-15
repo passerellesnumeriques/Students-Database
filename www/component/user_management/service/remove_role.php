@@ -17,12 +17,10 @@ class service_remove_role extends Service {
 ?>return true on success.<?php 
 	}
 	public function execute(&$component, $input) {
-		$id = $input["id"];
-		try { SQLQuery::create()->remove_key("Role", $id); }
-		catch (Exception $e) {
-			PNApplication::error($e->getMessage());
-		}
-		echo PNApplication::has_errors() ? "false" : "true";
+		if ($component->remove_role($input["id"]))
+			echo "true";
+		else
+			echo "false";
 	}
 }
 ?>

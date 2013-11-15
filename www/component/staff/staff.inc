@@ -58,6 +58,9 @@ class staff extends Component implements PeoplePlugin, AdministrationPlugin {
 		SQLQuery::create()->bypass_security()->remove_keys("StaffPosition", $create_data["staff_positions"]);
 	}
 	
+	public function getPeopleImportDataDisplay() { return array(); }
+	public function importPeopleData($input, $people_id) { return true; }
+	
 	public function filterPeopleReadAccess(&$q, $people_table_alias) {}
 	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {}
 	public function filterPeopleWriteAccess($people_rows) { return $people_rows; }
