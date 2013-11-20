@@ -44,7 +44,7 @@ class widgets extends Component {
 			$cfg .= "}";
 			return array("field_date",$cfg);
 		}
-		return array("field_text", "{}");
+		return array("field_blank", "{}");
 	}
 	/**
 	 * @param \datamodel\Column $col

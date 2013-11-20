@@ -41,6 +41,7 @@ $model->addTable("Student")
 	->addRemoveAccess("manage_batches", true)
 	->setDisplayHandler(null, new \datamodel\MultipleDisplayHandler("Student", "Student", array(
 		new \datamodel\ChoiceDataDisplay(null, "batch", "name", "Batch", "people"),
+		new \datamodel\ChoiceDataDisplay(null, "specialization", "name", "Specialization", "people"),
 		new \datamodel\FieldsDisplayHandler("Student", "", array(
 			"exclusion_reason"=>"Exclusion reason",
 			"exclusion_date"=>"Exclusion date"
@@ -65,6 +66,18 @@ $model->addTable("AcademicPeriod")
 		)
 	))
 	;
+$model->addTable("AcademicPeriodSpecialization")
+	->addForeignKey("period", "AcademicPeriod", true, false, true, false, false)
+	->addForeignKey("specialization", "Specialization", true, false, true, false, false)
+	->addReadAccess("consult_students_list", true)
+	->addReadAccess("consult_curriculum", true)
+	->addWriteAccess("manage_batches", true)
+	->addInsertAccess("manage_batches", true)
+	->addRemoveAccess("manage_batches", true)
+	->addWriteAccess("edit_curriculum", true)
+	->addInsertAccess("edit_curriculum", true)
+	->addRemoveAccess("edit_curriculum", true)
+	;
 $model->addTable("AcademicClass")
 	->addPrimaryKey("id")
 	->addForeignKey("period", "AcademicPeriod", true, false, true)
@@ -83,5 +96,25 @@ $model->addTable("StudentClass")
 	->addInsertAccess("manage_batches", true)
 	->addRemoveAccess("manage_batches", true)
 	->setDisplayHandler("people", new \datamodel\StopDataDisplayHandler())
+	;
+$model->addTable("CurriculumSubjectCategory")
+	->addPrimaryKey("id")
+	->addString("name", 100, 1, false, false)
+	->addReadAccess("consult_curriculum", true)
+	->addWriteAccess("edit_curriculum", true)
+	->addInsertAccess("edit_curriculum", true)
+	->addRemoveAccess("edit_curriculum", true)
+	;
+$model->addTable("CurriculumSubject")
+	->addPrimaryKey("id")
+	->addForeignKey("category", "CurriculumSubjectCategory", true, false, true)
+	->addForeignKey("period", "AcademicPeriod", true, false, true)
+	->addForeignKey("specialization", "Specialization", true, false, true, true, false)
+	->addString("code", 100, 1, false, false)
+	->addString("name", 100, 1, false, false)
+	->addReadAccess("consult_curriculum", true)
+	->addWriteAccess("edit_curriculum", true)
+	->addInsertAccess("edit_curriculum", true)
+	->addRemoveAccess("edit_curriculum", true)
 	;
 ?>

@@ -34,8 +34,10 @@ class staff extends Component implements PeoplePlugin, AdministrationPlugin {
 	}
 	public function createPeople($people_id, $people_types, $input, &$create_data) {
 		if (!in_array("staff", $people_types)) return true;
+		if (!PNApplication::$instance->user_management->has_right("manage_staff", true)) return false;
 		$create_data["staff_positions"] = array();
 		try {
+			SQLQuery::create()->bypass_security()->insert("Staff", array("people"=>$people_id));
 			foreach ($input["staff_positions"] as $p) {
 				$id = SQLQuery::create()->bypass_security()->insert("StaffPosition", array(
 					"people"=>$people_id,
@@ -61,11 +63,58 @@ class staff extends Component implements PeoplePlugin, AdministrationPlugin {
 	public function getPeopleImportDataDisplay() { return array(); }
 	public function importPeopleData($input, $people_id) { return true; }
 	
-	public function filterPeopleReadAccess(&$q, $people_table_alias) {}
-	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {}
-	public function filterPeopleWriteAccess($people_rows) { return $people_rows; }
-	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {}
-	public function filterPeopleRemoveAccess($people_rows) { return $people_rows; }
+	public function filterPeopleReadAccess(&$q, $people_table_alias) {
+		if (!PNApplication::$instance->user_management->has_right("consult_staff_list")) return null;
+		$staff_alias = $q->get_table_alias("Staff");
+		if ($staff_alias == null) {
+			$staff_alias = $q->table_id();
+			$q->join($people_table_alias, "Staff", array("id"=>"people"), $staff_alias);
+		}
+		return "`".$staff_alias."`.`people` IS NOT NULL";
+		
+	}
+	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {
+		$staff_alias = $q->get_table_alias("Staff");
+		if ($staff_alias == null) {
+			$staff_alias = $q->table_id();
+			$q->join($people_table_alias, "Staff", array("id"=>"people"), $staff_alias);
+		}
+		$alias = $q->get_field_alias($staff_alias, "people");
+		if ($alias == null) {
+			$alias = $q->field_id();
+			$q->field($staff_alias, "people", $alias);
+		}
+	}
+	public function filterPeopleWriteAccess($people_rows) {
+		$staff_alias = $q->get_table_alias("Staff");
+		$alias = $q->get_field_alias($staff_alias, "people");
+		$final = array();
+		if (PNApplication::$instance->user_management->has_right("manage_staff"))
+			foreach ($people_rows as $row)
+				if ($row[$alias] <> null) array_push($final, $row); 
+		return $final; 
+	}
+	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {
+		$staff_alias = $q->get_table_alias("Staff");
+		if ($staff_alias == null) {
+			$staff_alias = $q->table_id();
+			$q->join($people_table_alias, "Staff", array("id"=>"people"), $staff_alias);
+		}
+		$alias = $q->get_field_alias($staff_alias, "people");
+		if ($alias == null) {
+			$alias = $q->field_id();
+			$q->field($staff_alias, "people", $alias);
+		}
+	}
+	public function filterPeopleRemoveAccess($people_rows) { 
+		$staff_alias = $q->get_table_alias("Staff");
+		$alias = $q->get_field_alias($staff_alias, "people");
+		$final = array();
+		if (PNApplication::$instance->user_management->has_right("manage_staff"))
+			foreach ($people_rows as $row)
+				if ($row[$alias] <> null) array_push($final, $row); 
+		return $final; 
+	}
 	
 	public function getAdministrationPages() {
 		return array(

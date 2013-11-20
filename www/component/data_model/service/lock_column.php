@@ -24,10 +24,6 @@ class service_lock_column extends Service {
 		require_once("component/data_model/Model.inc");
 		$model = DataModel::get();
 		$table = $model->getTable($table); // here check is done is the user can access this table
-		if (!$table->canModifyField($field)) {
-			PNApplication::error("Access denied to column '".$field."' in table '".$table->getName()."'");
-			return;
-		}
 		$locked_by = null;
 		$lock = DataBaseLock::lock_column($table->getName(), $field, $locked_by);
 		if ($lock == null) {

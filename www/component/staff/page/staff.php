@@ -59,7 +59,7 @@ class page_staff extends Page {
 		$positions = SQLQuery::create()->select("StaffPosition")->execute();
 		foreach ($positions as $p) {
 			if (!isset($staff[$p["people"]])) {
-				$people = SQLQuery::create()->select("People")->where("id",$p["people"])->execute_single_row();
+				$people = SQLQuery::create()->select("People")->where_value("People","id",$p["people"])->execute_single_row();
 				$people["positions"] = array();
 				$staff[$p["people"]] = $people;
 			}
@@ -92,6 +92,7 @@ class page_staff extends Page {
 		function init_staff_tree() {
 			staff_tree = new tree('staff_tree');
 			staff_tree.setShowColumn(true);
+			staff_tree.addColumn(new TreeColumn(""));
 			staff_tree.addColumn(new TreeColumn("Last Name"));
 			staff_tree.addColumn(new TreeColumn("First Name"));
 			staff_tree.addColumn(new TreeColumn("Position"));
@@ -136,16 +137,15 @@ class page_staff extends Page {
 
 		function staff_item(staff) {
 			var cells = [];
-			var html = document.createElement("SPAN");
 			var icon = document.createElement("IMG");
 			icon.src = "/static/staff/staff_16.png";
 			icon.style.paddingRight = '2px';
 			icon.style.verticalAlign = 'bottom';
-			html.appendChild(icon);
-			var name = document.createElement("SPAN"); html.appendChild(name);
-			name.appendChild(document.createTextNode(staff.last_name));
-			name.style.cursor = 'pointer';
-			name.onclick = function() { location.href = '/dynamic/people/page/profile?people='+staff.people_id; }
+			cells.push(new TreeCell(icon));
+			var html = document.createElement("SPAN");
+			html.appendChild(document.createTextNode(staff.last_name));
+			html.style.cursor = 'pointer';
+			html.onclick = function() { location.href = '/dynamic/people/page/profile?people='+staff.people_id; }
 			cells.push(new TreeCell(html));
 			html = document.createElement("SPAN");
 			html.appendChild(document.createTextNode(staff.first_name));
@@ -187,8 +187,8 @@ class page_staff extends Page {
 		function create_new_staff(department_id) {
 			post_data("/dynamic/people/page/create_people",{
 				icon: "/static/application/icon.php?main=/static/staff/staff_32.png&small="+theme.icons_16.add+"&where=right_bottom",
-				title: "Create New Staff",
-				people_type: "staff",
+				title: "New Staff",
+				types: ["staff"],
 				redirect: "/dynamic/staff/page/staff"
 			});
 		}

@@ -186,6 +186,14 @@ class service_get_data_list extends Service {
 		$count = $count->count("NB_DATA")->execute_single_row();
 		$count = $count["NB_DATA"];
 		
+		// handle pages
+		if (isset($input["page_size"])) {
+			$nb = intval($input["page_size"]);
+			if ($nb == 0) $nb = 1000;
+			$page = isset($input["page"]) ? intval($input["page"]) : 0;
+			if ($page == 0) $page = 1;
+			$q->limit(($page-1)*$nb, $nb);
+		}		
 		// execute the query
 		$res = $q->execute();
 		

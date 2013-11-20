@@ -53,6 +53,21 @@ class user_management extends Component implements AdministrationPlugin {
 	}
 
 	/**
+	 * The user has been authenticated using an external system (like Google, Facebook...) 
+	 */
+	public function external_login($user_id) {
+		if ($this->username <> null) return "You are already authenticated as ".$username;
+		$user = SQLQuery::create()->bypass_security()->select("Users")->where("id",$user_id)->execute_single_row();
+		if ($user == null)
+			return "Invalid user";
+		$this->domain = $user["domain"];
+		$this->username = $user["username"];
+		$this->user_id = $user_id;
+		$this->logged_in->fire();
+		return null;
+	}
+
+	/**
 	 * Logout user: destroy the session.
 	 */
 	public function logout() {

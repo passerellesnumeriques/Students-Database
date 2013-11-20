@@ -28,6 +28,12 @@ abstract class Component {
 	 */
 	public function init_request() {}
 	
+	private static $allowed_pages_without_login = array();
+	protected static function allow_page_without_login($component_name, $page_path) {
+		if (!isset(Component::$allowed_pages_without_login[$component_name]))
+			Component::$allowed_pages_without_login[$component_name] = array();
+		array_push(Component::$allowed_pages_without_login[$component_name], $page_path);
+	}
 	/**
 	 * Request for a page on this component: check it exists, the user has necessary rights, then execute it
 	 * @param string $path
@@ -35,13 +41,9 @@ abstract class Component {
 	public final function page($path) {
 		// check the user is logged
 		if (PNApplication::$instance->user_management->username == null) {
-			// development mode only
-			if ($this->name <> "development" && $this->name <> "test") {
-				// only allow the login page
-				if ($this->name <> "application" || ($path <> "enter" && $path <> "logout")) {
-					echo "<script type='text/javascript'>window.top.location.reload();</script>";
-					return;
-				}
+			if (!isset(Component::$allowed_pages_without_login[$this->name]) || !in_array($path, Component::$allowed_pages_without_login[$this->name])) {
+				echo "<script type='text/javascript'>window.top.location.reload();/* ".$path." // ".var_export(Component::$allowed_pages_without_login,true)." */</script>";
+				return;
 			}
 		}
 		
@@ -89,15 +91,21 @@ abstract class Component {
 		$page->generate($this, $path);
 	}
 
+	private static $allowed_services_without_login = array();
+	protected static function allow_service_without_login($component_name, $service_path) {
+		if (!isset(Component::$allowed_services_without_login[$component_name]))
+			Component::$allowed_services_without_login[$component_name] = array();
+		array_push(Component::$allowed_services_without_login[$component_name], $service_path);
+	}
+	
 	/**
 	 * Request for a service on this component: check it exists, the user has necessary rights, then execute it
 	 * @param string $path
 	 */
 	public final function service($path) {
-		// development mode only
-		if ($this->name <> "development" && $this->name <> "test" && !($this->name == "application" && $path == "get_static_resources")) {
-			// check the user is logged
-			if (PNApplication::$instance->user_management->username == null) {
+		// check the user is logged
+		if (PNApplication::$instance->user_management->username == null) {
+			if (!isset(Component::$allowed_services_without_login[$this->name]) || !in_array($path, Component::$allowed_services_without_login[$this->name])) {
 				header("Content-Type: text/json;charset=UTF-8", true, 403);
 				PNApplication::error("Access denied: you must login before to use services");
 				PNApplication::print_json_result(null);

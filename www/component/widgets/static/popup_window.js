@@ -43,7 +43,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @method popup_window#setContentFrame
 	 * @param {string} url url to load in the frame
 	 */
-	t.setContentFrame = function(url) {
+	t.setContentFrame = function(url, onload) {
 		t.content = document.createElement("IFRAME");
 		t.content.style.border = "0px";
 		t.content.src = url;
@@ -54,6 +54,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.resize();
 			setTimeout(function() { t.resize(); }, 1);
 			setTimeout(function() { t.resize(); }, 100);
+			if (onload) onload(t.content);
 		};
 		if (t.content_container) {
 			while (t.content_container.childNodes.length > 0) t.content_container.removeChild(t.content_container.childNodes[0]);
@@ -313,14 +314,9 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.freezer.style.left = "0px";
 		t.freezer.style.width = "100%";
 		t.freezer.style.height = "100%";
-		t.freezer.style.backgroundColor = "#A0A0A0";
-		if (freeze_content) {
-			if (typeof freeze_content == 'string')
-				t.freezer.innerHTML = freeze_content;
-			else
-				t.freezer.appendChild(freeze_content);
-		}
-		setOpacity(t.freezer, 0.5);
+		t.freezer.style.backgroundColor = "rgba(128,128,128,0.5)";
+		if (freeze_content)
+			set_lock_screen_content(t.freezer, freeze_content);
 		t.content_container.style.position = "relative";
 		t.content_container.appendChild(t.freezer);
 		t.freeze_button_status = [];

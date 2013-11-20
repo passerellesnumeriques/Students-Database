@@ -153,7 +153,9 @@ if (typeof XMLHttpRequest == "undefined")
 	    //Microsoft.XMLHTTP points to Msxml2.XMLHTTP and is redundant
 	    throw new Error("This browser does not support XMLHttpRequest.");
 	};
-
+HTTP_Status_Timeout = browser.IE > 0 ? 12031 : 0;
+HTTP_Status_ConnectionLost = browser.IE > 0 ? 12029 : 0;
+	
 /**
  * Set the opacity of an element (if the browser has a way to support it)
  * @param element

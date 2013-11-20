@@ -45,7 +45,7 @@ input[type="text"], input[type="password"] {
 	margin-right: 3px;
 }
 
-.page_header {
+.page_header, .page_header_small {
 	/* header */
 	background: #e0e0e0; /* Old browsers */
 	background: -moz-linear-gradient(top,  #e0e0e0 50%, #d0d0d0 100%); /* FF3.6+ */
@@ -57,22 +57,29 @@ input[type="text"], input[type="password"] {
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e0e0e0', endColorstr='#d0d0d0',GradientType=0 ); /* IE6-9 */
 	border-bottom: 1px solid #A0A0A0;
 }
+.page_header {
+	height: 35px;
+}
+.page_header_small {
+	height: 25px;
+}
 .page_header_title {
 	/* header_title */
 	border-right: 1px solid #FFFFFF;
 	vertical-align: middle;
-	font-size: 12pt;
 	font-weight: bold;
 	color: #4040A0;
 	background-color: rgba(255,255,255,0.2);
 	border-bottom-right-radius: 10px 10px;
 	-moz-border-radius-bottomright: 10px 10px;
 	-webkit-border-bottom-right-radius: 10px 10px;
-	padding-top: 1px;
+	padding: 3px 6px 2px 3px;
 }
-.page_header_title>span {
-	/* Title text */
-	padding: 2px 6px 2px 3px;
+.page_header .page_header_title {
+	font-size: 12pt;
+}
+.page_header_small .page_header_title {
+	font-size: 10pt;
 }
 
 .page_menu_item img {
@@ -125,6 +132,19 @@ table.all_borders>tbody>tr>th {
 	padding: 5px;
 	border-bottom-left-radius: 5px;
 	border-bottom-right-radius: 5px;
+}
+
+.lock_screen_content {
+	display: inline-block;
+	padding: 5px;
+	background-color: white;
+	border: 1px solid #8080F0;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	box-shadow: 0px 0px 3px 1px #A0A0F0;
+	-moz-box-shadow: 0px 0px 3px 1px #A0A0F0;
+	-webkit-box-shadow: 0px 0px 3px 1px #A0A0F0;
 }
 
 /* Button */

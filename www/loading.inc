@@ -28,7 +28,9 @@ $mandatory = array(
 	"/static/javascript/ajax.js",
 	"/static/data_model/databaselock.js",
 	"/static/data_model/datamodel.js",
-	"/static/application/config.js.php"
+	"/static/application/config.js.php",
+	"/static/google/google.js",
+	"/static/facebook/facebook.js"
 );
 $optional = array(
 	"/static/javascript/animation.js",

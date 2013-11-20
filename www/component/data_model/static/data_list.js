@@ -44,6 +44,18 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header.insertBefore(div, t.header_left);
 		fireLayoutEventFor(t.header);
 	};
+	t.setTitle = function(html) {
+		if (typeof html == 'string') {
+			var div = document.createElement("DIV");
+			div.style.display = "inline-block";
+			div.innerHTML = html;
+			html = div;
+		}
+		html.className = "data_list_title";
+		html.setAttribute("layout", "fixed");
+		t.header.insertBefore(html, t.header_left);
+		fireLayoutEventFor(t.header);
+	};
 	
 	t._init_list = function() {
 		// analyze and remove container content
@@ -105,13 +117,14 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		var page_size_div = div;
 		require("typed_field.js",function(){
 			require("field_integer.js",function(){
-				var onc = function(){
+				t.page_size_field = new field_integer(t.page_size, true, {can_be_null:false,min:1,max:100000});
+				t.page_size_field.onchange.add_listener(function() {
 					t.page_size = t.page_size_field.getCurrentData();
 					t._load_data();
-				};
-				t.page_size_field = new field_integer(t.page_size, true, onc, onc, {can_be_null:false,min:1,max:100000});
+				});
 				page_size_div.appendChild(t.page_size_field.getHTMLElement());
-				t.header.widget.layout();
+				if (t.header && t.header.widget && t.header.widget.layout)
+					t.header.widget.layout();
 			});
 		});
 		// + refresh
@@ -332,7 +345,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			}
 			var start = (t.page_num-1)*t.page_size+1;
 			var end = (t.page_num-1)*t.page_size+result.data.length;
-			t.page_num_div.innerHTML = start+"-"+end+"/"+result.count;
+			if (end == 0)
+				t.page_num_div.innerHTML = "0";
+			else
+				t.page_num_div.innerHTML = start+"-"+end+"/"+result.count;
 			if (start > 1) {
 				t.prev_page_div.className = "button";
 				t.prev_page_div.onclick = t.prev_page_div.doit;
@@ -541,7 +557,28 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 						filter.data = f.getCurrentData();
 						t._load_data();
 					});
+					// TODO button or
 				}
+			}
+			while (filter.or) {
+				tr = document.createElement("TR"); table.appendChild(tr);
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.borderBottom = "1px solid #808080";
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.borderBottom = "1px solid #808080";
+				td.style.textAlign = "right";
+				td.appendChild(document.createTextNode("Or"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.borderBottom = "1px solid #808080";
+				var f = new window[dd.filter_classname](filter.or.data, dd.filter_config);
+				td.appendChild(f.getHTMLElement());
+				f.filter_or = filter.or;
+				f.onchange.add_listener(function (f) {
+					f.filter_or.data = f.getCurrentData();
+					t._load_data();
+				});
+				// TODO button or
+				filter = filter.or;
 			}
 		};
 		require([["typed_filter.js",filter_classes]], function() {

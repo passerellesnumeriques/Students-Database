@@ -4,6 +4,9 @@ require_once("component/Component.inc");
 require_once("component/theme/theme.inc");
 ?>
 theme = {
+	build_icon: function(main,small,where) {
+		return "/static/application/icon.php?main="+encodeURIComponent(main)+"&small="+encodeURIComponent(small)+"&where="+where;
+	},
 	icons_16: {
 <?php 
 $first = true;

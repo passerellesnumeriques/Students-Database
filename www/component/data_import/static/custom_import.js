@@ -1,5 +1,5 @@
 if (typeof require != 'undefined')
-	require(["vertical_layout.js","horizontal_layout.js","grid.js","context_menu.js",["typed_field.js","field_integer.js"]]);
+	require(["vertical_layout.js","horizontal_layout.js","grid.js","upload.js","context_menu.js",["typed_field.js","field_integer.js"]]);
 
 function custom_import(container, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -37,11 +37,43 @@ function custom_import(container, onready) {
 		var input = d.createElement("INPUT");
 		input.type = 'file';
 		input.name = 'excel';
-		input.onchange = function() { if(onbeforeupload) onbeforeupload(); form.submit(); if(onupload) onupload(); };
+		input.onchange = function(e) { 
+			if (window.File && window.FileList && window.FileReader) {
+				var file = e.target.files || e.dataTransfer.files;
+				if (file.length == 0) return;
+				file = file[0];
+				if(onbeforeupload) onbeforeupload(true);
+				var xhr = new XMLHttpRequest();
+				xhr.open("POST", "/dynamic/storage/service/store_temp", true);
+				xhr.setRequestHeader("X_FILENAME", file.name);
+				xhr.setRequestHeader("X_FILETYPE", file.type);
+				xhr.setRequestHeader("X_FILESIZE", file.size);
+				xhr.upload.addEventListener("progress", function(e) {
+					var pc = Math.round(e.loaded*100/e.total);
+					if(onupload) onupload(true, pc);
+				}, false);
+				xhr.onreadystatechange = function(e) {
+					if (xhr.readyState == 4) {
+						if(onupload) onupload(true, 100);
+						t.excel_frame.src = "/dynamic/data_import/page/excel_upload?id="+xhr.responseText;
+						if(onupload) onupload(true, -1);
+					}
+				};
+				xhr.send(file);
+				
+			} else {
+				if(onbeforeupload) onbeforeupload(false);
+				form.submit();
+				if(onupload) onupload(false);
+			}
+		};
 		form.appendChild(input);
 		form.style.visibility = 'hidden';
 		d.body.appendChild(form);
-		triggerEvent(input, 'click', {});
+		if (input.click)
+			input.click();
+		else
+			triggerEvent(input, 'click', {});
 	};
 	
 	this.data_display = [];

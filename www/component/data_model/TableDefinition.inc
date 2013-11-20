@@ -981,6 +981,29 @@ class MultipleDisplayHandler extends DataDisplayHandler {
 	}
 }
 
+class ChoiceFieldDisplayHandler extends DataDisplayHandler {
+	
+	public $foreign_key_name;
+	public $foreign_column_name;
+	
+	public function __construct($category, $display_name, $foreign_key_name, $foreign_column_name) {
+		parent::__construct($category, $display_name);
+		$this->foreign_key_name = $foreign_key_name;
+		$this->foreign_column_name = $foreign_column_name;
+	}
+	
+	public function getDisplayableData() {
+		return array(
+			new ChoiceDataDisplay($this, $this->foreign_key_name, $this->foreign_column_name, $this->display_name)
+		);
+	}
+	
+	public function createEntry($data, $sub_model, $preset_fields) {
+		// TODO ?
+	}
+	
+}
+
 class StopDataDisplayHandler extends DataDisplayHandler {
 	
 	public function __construct() {

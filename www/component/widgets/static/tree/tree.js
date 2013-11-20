@@ -1,14 +1,28 @@
 function TreeColumn(title) {
 	this.title = title;
 }
-function TreeItem(cells) {
+function TreeItem(cells, expanded) {
+	if (typeof cells == 'string') cells = [new TreeCell(cells)];
+	else if (typeof cells == 'object' && !(cells instanceof Array) && cells.constructor.name != "Array")
+		cells = [new TreeCell(cells)];
+	if (!expanded) expanded = false;
 	this.cells = cells;
 	this.children = [];
-	this.expanded = false;
+	this.expanded = expanded;
 	this.addItem = function(item) {
+		item.parent_item = this;
 		this.children.push(item);
 		if (this.tree) {
 			this.tree._create_item(this, item);
+			this.tree._refresh_heads(this.parent);
+			this.tree._refresh_heads(this);
+		}
+	};
+	this.removeItem = function(item) {
+		item.parent_item = null;
+		this.children.remove(item);
+		if (this.tree) {
+			this.tree._removeItem(this, item);
 			this.tree._refresh_heads(this.parent);
 			this.tree._refresh_heads(this);
 		}
@@ -180,7 +194,8 @@ function tree(container) {
 			}
 			
 			// vertical line
-			if (items.length != 1) {
+			//if (items.length != 1) 
+			{
 				var line = document.createElement("DIV");
 				line.style.position = 'absolute';
 				line.style.width = "1px";

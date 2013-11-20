@@ -27,6 +27,11 @@ class service_test_data extends Service {
 			$db_system->execute("INSERT INTO Role (`id`,`name`) VALUE (-1,'Administrator')");
 			$this->SplitSQL($db_system, "component/development/data/countries.sql");
 			$this->SplitSQL($db_system, "component/development/data/geography.sql");
+			if ($domain == "Dev") {
+				$this->SplitSQL($db_system, "component/development/data/students_batches.sql");
+				$this->SplitSQL($db_system, "component/development/data/students_academic_periods.sql");
+				$this->SplitSQL($db_system, "component/development/data/curriculumsubjectcategory.sql");
+			}
 		}		
 	}
 	

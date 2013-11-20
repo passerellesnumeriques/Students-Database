@@ -18,6 +18,7 @@ if (!window.top.google) {
 		},
 		_client_id: "459333498575-p8k0toe6hpcjfe29k83ah77adnocqah4.apps.googleusercontent.com",
 		_scopes: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar",
+		//_scopes: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/calendar",
 		connect: function() {
 			window.top.google.connection_status = 0;
 			for (var i = 0; i < window.top.google.connection_listeners.length; ++i)
@@ -82,6 +83,9 @@ if (!window.top.google) {
 			}
 		},10000);
 		window.top.google.connect();
+		require("userprofile.js",function() {
+			google_userprofile();
+		});
 	};
 	window.top.load_google_api = function() {
 		window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
@@ -91,5 +95,5 @@ if (!window.top.google) {
 			window.top.load_google_api();
 		},30000);
 	};
-	window.top.load_google_api();
+	// TODO window.top.load_google_api();
 }

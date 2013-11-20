@@ -13,6 +13,7 @@ var todo = [
 <?php
 $first = true;
 foreach (PNApplication::$instance->get_domains() as $domain=>$descr) {
+	if ($domain == "Test") continue;
 	if ($first) $first = false; else echo ",";
 	echo "{service:'create_db',data:{domain:'".$domain."'},message:'Initialize database for domain ".$domain."'}";
 	echo ",{service:'test_data',data:{domain:'".$domain."'},message:'Insert test data in domain ".$domain."'}";
