@@ -34,7 +34,7 @@ datamodel = {
 		}
 		for (var i = 0; i < this._data_widgets.length; ++i) {
 			var w = this._data_widgets[i];
-			if (w.data_display.category == data_display.category && w.data_display.name == data_display.name) {
+			if (w.data_display.category == data_display.category && w.data_display.name == data_display.name && w.data_key == data_key) {
 				if (w.data_getter() != value) w.data_setter(value);
 			}
 		}

@@ -150,7 +150,7 @@ class user_management extends Component implements AdministrationPlugin {
 			$user_roles = SQLQuery::create()->select("UserRole")->field("role")->where("user",$user)->execute_single_field();
 			foreach ($roles as $role_id)
 				if (in_array($role_id, $user_roles))
-					SQLQuery::create()->remove("UserRole", array("user"=>$user,"role"=>$role_id)); 
+					SQLQuery::create()->remove_key("UserRole", array("user"=>$user,"role"=>$role_id)); 
 		}
 		DataBaseLock::unlock($lock_id);
 		return true;
@@ -163,6 +163,42 @@ class user_management extends Component implements AdministrationPlugin {
 	public function remove_role($role_id) {
 		try { SQLQuery::create()->remove_key("Role", $role_id); return true; }
 		catch (Exception $e) { PNApplication::error($e->getMessage()); return false; }
+	}
+	
+	public function set_role_rights($role_id, $rights) {
+		require_once("component/data_model/Model.inc");
+		if (!DataModel::get()->getTable("RoleRights")->canRemoveAny()) {
+			PNApplication::error("You are not allowed to set rights on roles");
+			return false;
+		}
+		
+		$r = SQLQuery::create()->select("Role")->field("name")->where("id",$role_id);
+		if ($r == null || count($r) == 0) {
+			PNApplication::error("Unknown role");
+			return false;
+		}
+		
+		$this->load_all_rights();
+		foreach ($rights as $name=>$value) {
+			if (!isset($this->all_rights[$name])) {
+				PNApplication::error("Unknown right ".$name);
+				return false;
+			}
+			$rights[$name] = $this->all_rights[$name]->parse_value($value);
+		}
+		
+		// save in database: (1) remove all previous rights, (2) add all rights from the request
+		SQLQuery::get_db_system_without_security()->execute("DELETE FROM RoleRights WHERE role='".SQLQuery::escape($role_id)."'");
+		if (count($rights) > 0) {
+			$sql = "INSERT INTO RoleRights (role,`right`,`value`) VALUES ";
+			$first = true;
+			foreach ($rights as $name=>$value) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= "('".SQLQuery::escape($role_id)."','".SQLQuery::escape($name)."','".SQLQuery::escape($value)."')";
+			}
+			SQLQuery::get_db_system_without_security()->execute($sql);
+		}
+		return true;
 	}
 	
 	/**
@@ -178,13 +214,7 @@ class user_management extends Component implements AdministrationPlugin {
 	 */
 	private $all_rights = null;
 	
-	/**
-	 * Check if the currently logged user has the given right.
-	 * @param string $right_name
-	 * @param unknown $value
-	 * @return boolean
-	 */
-	public function has_right($right_name, $value = true) {
+	private function load_all_rights() {
 		if ($this->all_rights === null) {
 			// retrieve all possible rights
 			$this->all_rights = array();
@@ -193,6 +223,16 @@ class user_management extends Component implements AdministrationPlugin {
 				foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
 			}
 		}
+	}
+	
+	/**
+	 * Check if the currently logged user has the given right.
+	 * @param string $right_name
+	 * @param unknown $value
+	 * @return boolean
+	 */
+	public function has_right($right_name, $value = true) {
+		$this->load_all_rights();
 		if (!isset($this->all_rights[$right_name])) {
 			PNApplication::error("Unknown right '".$right_name."'");
 			return false;
@@ -219,7 +259,7 @@ class user_management extends Component implements AdministrationPlugin {
 					if (!isset($rights[$r["right"]]))
 						$rights[$r["right"]] = $this->all_rights[$r["right"]]->parse_value($r["value"]);
 					else
-						$rights[$r["right"]] = $this->all_rights[$r["right"]]->get_higher_value($rights[$r["right"]], user_management::parse_value($r["value"]));
+						$rights[$r["right"]] = $this->all_rights[$r["right"]]->get_higher_value($rights[$r["right"]], $this->all_rights[$r["right"]]->parse_value($r["value"]));
 				}
 				// check all rights exist, and compute implications
 				$this->compute_rights_implications($rights);
@@ -255,15 +295,7 @@ class user_management extends Component implements AdministrationPlugin {
 	 * @param Right[] $all_rights all the existing rights already populated
 	 */
 	public function compute_rights_implications(&$rights) {
-		if ($this->all_rights === null) {
-			// retrieve all possible rights
-			$this->all_rights = array();
-			foreach (PNApplication::$instance->components as $c) {
-				foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
-				foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
-			}
-		}
-		
+		$this->load_all_rights();
 		$changed = false;
 		do {
 			$changed = false;

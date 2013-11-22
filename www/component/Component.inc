@@ -80,7 +80,7 @@ abstract class Component {
 			}
 		}
 		if (!$final_allowed) {
-			PNApplication::error("Access denied");
+			PNApplication::error("Access denied to this page");
 			PNApplication::print_errors();
 			return;
 		}
@@ -159,7 +159,7 @@ abstract class Component {
 			}
 		}
 		if (!$final_allowed) {
-			PNApplication::error("Access denied");
+			PNApplication::error("Access denied to this service");
 			PNApplication::print_json_result(null);
 			return;
 		}

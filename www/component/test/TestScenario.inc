@@ -25,18 +25,19 @@ abstract class TestScenario {
 		$service->execute(PNApplication::$instance->development, array("domain"=>"Test"));
 		$db->execute("USE students_test");
 		// insert data
-		$error = $this->_create_users();
+		$error = $this->_create_users($scenario_data);
 		if ($error <> null)
 			return "An error occured while creating users for this scenario: ".$error;
 		$this->init_database($scenario_data);
 		return null;
 	}
 	
-	private function _create_users() {
+	private function _create_users(&$scenario_data) {
 		foreach ($this->getUsers() as $user) {
 			$user_id = PNApplication::$instance->user_management->create_user("Test", $user->username, true);
 			if ($user_id == null) return "Creation of user ".$user->username;
 			PNApplication::$instance->user_management->assign_user_rights($user_id, $user->rights, true);
+			$scenario_data["user_id_".$user->username] = $user_id;
 		}
 		return null;
 	}
