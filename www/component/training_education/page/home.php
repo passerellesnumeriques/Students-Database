@@ -178,11 +178,11 @@ class page_home extends Page {
 			return element;
 		};
 		function init_students_tree() {
-			var all_students = new TreeItem(build_item_element(null, null, "All Students", select_all_students), true);
+			var all_students = new TreeItem(build_item_element(null, null, "All Students", null, select_all_students), true);
 			students_tree.addItem(all_students);
-			var current_batches = new TreeItem(build_item_element(null, null, "Current Students", select_current_students), true);
+			var current_batches = new TreeItem(build_item_element(null, null, "Current Students", null, select_current_students), true);
 			all_students.addItem(current_batches);
-			var alumni = new TreeItem(build_item_element(null, null, "Alumni", select_alumni));
+			var alumni = new TreeItem(build_item_element(null, null, "Alumni", null, select_alumni));
 			all_students.addItem(alumni);
 			for (var batch_i = 0; batch_i < batches.length; ++batch_i) {
 				var batch = batches[batch_i];
@@ -232,6 +232,8 @@ class page_home extends Page {
 						menu.addIconItem(theme.build_icon("/static/students/curriculum_16.png",theme.icons_10.add,"right_bottom"), "Add Specialization", function() { new_specialization(elem.period); });
 						if (period.specializations.length == 0)
 							menu.addIconItem(theme.build_icon("/static/students/batch_16.png",theme.icons_10.add,"right_bottom"), "Add Class", function() { new_class(elem.period); });
+						menu.addSeparator();
+						menu.addIconItem(theme.icons_16.remove, "Remove Period "+period.name, function() { remove_period(elem.period); });
 					}
 				}
 			);
@@ -264,6 +266,8 @@ class page_home extends Page {
 				function(elem, menu) {
 					if (manage_batches) {
 						menu.addIconItem(theme.build_icon("/static/students/batch_16.png",theme.icons_10.add,"right_bottom"), "Add Class", function() { new_class(period, spe); });
+						menu.addSeparator();
+						menu.addIconItem(theme.icons_16.remove, "Remove Specialization "+spe.name, function() { remove_specialization(period, spe); });
 					}
 				}
 			);
@@ -282,8 +286,11 @@ class page_home extends Page {
 				"Class",
 				cl.name,
 				{table:"AcademicClass",column:"name",row_key:cl.id},
-				function() { },
+				function() { select_class(cl); },
 				function(elem, menu) {
+					if (manage_batches) {
+						menu.addIconItem(theme.icons_16.remove, "Remove Class "+cl.name, function() { remove_class(period, spe, cl); });
+					}
 				}
 			);
 			class_element.spe = spe;
@@ -331,53 +338,134 @@ class page_home extends Page {
 			],
 			[],
 			function (list) {
+				_update_data_list_buttons();
 				something_ready();
-				var import_students = document.createElement("DIV");
-				import_students.className = "button";
-				import_students.innerHTML = "<img src='"+theme.icons_16.import+"' style='vertical-align:bottom'/> Import Students";
-				import_students.onclick = function() {
-					var params = {};
-					if (filter_batches != null && filter_batches.length == 1)
-						params.batch = filter_batches[0];
-					params.redirect = "/dynamic/training_education/page/home";
-					post_data('/dynamic/students/page/import_students',params);
-				};
-				list.addHeader(import_students);
-				var create_student = document.createElement("DIV");
-				create_student.className = "button";
-				create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
-				create_student.onclick = function() {
-					var data = {
-						icon: "/static/application/icon.php?main=/static/students/student_32.png&small="+theme.icons_16.add+"&where=right_bottom",
-						title: "Create New Student",
-						types: ["student"]
-					};
-					if (filter_batches != null && filter_batches.length == 1)
-						data.student_batch = filter_batches[0];
-					post_data("/dynamic/people/page/create_people",data);
-				};
-				list.addHeader(create_student);
 			}
 		);
 
 		// selection
 		var filter_batches = [];
+		var filter_period = null;
+		var filter_class = null;
 		function update_data() {
-			// update students list
-			students_list.filters = [];
+			var filters = _update_students_filters();
+			if (filter_class == null && filter_period == null && students_list.getRootTable() != "Student") {
+				students_list.setRootTable("Student", filters, function() {
+					_update_data_list_buttons();
+				});
+			} else if ((filter_class != null || filter_period != null) && students_list.getRootTable() != "StudentClass") {
+				// TODO set filters
+				students_list.setRootTable("StudentClass", filters, function() {
+					_update_data_list_buttons();
+				});
+			} else {
+				students_list.resetFilters();
+				for (var i = 0; i < filters.length; ++i)
+					students_list.addFilter(filters[i]);
+				_update_data_list_buttons();
+				students_list.reload_data();
+			}
+		}
+		function _update_students_filters() {
+			var filters = [];
 			if (filter_batches != null && filter_batches.length > 0) {
-				var filter = {category:'Student',name:'Batch',data:{value:filter_batches[0]}};
+				var filter = {category:'Student',name:'Batch',data:{value:filter_batches[0]},force:true};
 				var f = filter;
 				for (var i = 1; i < filter_batches.length; ++i) {
 					f.or = {data:{value:filter_batches[i]}};
 					f = f.or; 
 				}
-				students_list.filters.push(filter);
+				filters.push(filter);
 			}
-			students_list.reload_data();
+			return filters;
+		}
+		function _update_data_list_buttons() {
+			students_list.resetHeader();
+			if (filter_batches != null && filter_batches.length > 0) {
+				if (filter_batches.length == 1 && filter_class == null && filter_period == null) {
+					var import_students = document.createElement("DIV");
+					import_students.className = "button";
+					import_students.innerHTML = "<img src='"+theme.icons_16.import+"' style='vertical-align:bottom'/> Import Students";
+					import_students.onclick = function() {
+						post_data('/dynamic/students/page/import_students',{
+							batch:filter_batches[0],
+							redirect: "/dynamic/training_education/page/home"
+						});
+					};
+					students_list.addHeader(import_students);
+					var create_student = document.createElement("DIV");
+					create_student.className = "button";
+					create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
+					create_student.onclick = function() {
+						post_data("/dynamic/people/page/create_people",{
+							icon: "/static/application/icon.php?main=/static/students/student_32.png&small="+theme.icons_16.add+"&where=right_bottom",
+							title: "Create New Student",
+							types: ["student"],
+							student_batch: filter_batches[0]
+						});
+					};
+					students_list.addHeader(create_student);
+					var batch = null;
+					for (var i = 0; i < batches.length; ++i)
+						if (batches[i].id == filter_batches[0]) { batch = batches[i]; break; }
+					var batch_specializations_ids = [];
+					for (var i = 0; i < batch.periods.length; ++i) {
+						for (var j = 0; j < batch.periods[i].specializations.length; ++j) {
+							var spe_id = batch.periods[i].specializations[j].id;
+							if (!batch_specializations_ids.contains(spe_id))
+								batch_specializations_ids.push(spe_id);
+						}
+					}
+					if (batch_specializations_ids.length > 0) {
+						var assign_spe = document.createElement("DIV");
+						assign_spe.className = "button";
+						assign_spe.innerHTML = "<img src='/static/application/icon.php?main=/static/students/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign specializations";
+						assign_spe.onclick = function() {
+							require("popup_window.js",function() {
+								var p = new popup_window("Assign Specializations", "/static/application/icon.php?main=/static/students/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
+								var f = p.setContentFrame("/dynamic/students/page/assign_specializations?batch="+batch.id);
+								p.addOkCancelButtons(function() {
+									p.freeze("Saving specializations...");
+									getIFrameWindow(f).save(function(ok){
+										p.unfreeze();
+										if (!ok) return;
+										p.close();
+										students_list.reload_data();
+									});
+								});
+								p.show();
+							});
+						};
+						students_list.addHeader(assign_spe);
+					}
+				} else if (filter_class != null || filter_period != null) {
+					var assign = document.createElement("DIV");
+					assign.className = "button";
+					assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+(filter_class != null ? "class "+filter_class.name : "classes");
+					assign.onclick = function() {
+						require("popup_window.js",function() {
+							var p = new popup_window("Assign Students", "/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
+							var f = p.setContentFrame("/dynamic/students/page/assign_classes?"+(filter_class != null ? "class="+filter_class.id : "period="+filter_period.id));
+							p.addOkCancelButtons(function() {
+								p.freeze("Saving class assignment...");
+								getIFrameWindow(f).save(function(ok){
+									p.unfreeze();
+									if (!ok) return;
+									p.close();
+									students_list.reload_data();
+								});
+							});
+							p.show();
+						});
+					};
+					students_list.addHeader(assign);
+				}
+			}
 		}
 		function select_all_students() {
 			filter_batches = [];
+			filter_period = null;
+			filter_class = null;
 			header.setTitle("All Students");
 			header.resetMenu();
 			show_tabs(["Students List"]);
@@ -385,6 +473,8 @@ class page_home extends Page {
 		}
 		function select_current_students() {
 			filter_batches = [];
+			filter_period = null;
+			filter_class = null;
 			for (var i = 0; i < batches.length; ++i)
 				if (parseSQLDate(batches[i].end_date).getTime() > new Date().getTime())
 					filter_batches.push(batches[i].id);
@@ -395,6 +485,8 @@ class page_home extends Page {
 		}
 		function select_alumni() {
 			filter_batches = [];
+			filter_period = null;
+			filter_class = null;
 			for (var i = 0; i < batches.length; ++i)
 				if (parseSQLDate(batches[i].end_date).getTime() < new Date().getTime())
 					filter_batches.push(batches[i].id);
@@ -405,6 +497,8 @@ class page_home extends Page {
 		}
 		function select_batch(batch) {
 			filter_batches = [batch.id];
+			filter_period = null;
+			filter_class = null;
 			var title = document.createElement("SPAN");
 			title.appendChild(document.createTextNode("Batch "));
 			if (manage_batches) {
@@ -448,7 +542,9 @@ class page_home extends Page {
 		}
 		function select_period(batch, period) {
 			filter_batches = [batch.id];
-			// TODO filter period
+			filter_period = period;
+			filter_class = null;
+			// TODO filter students for this period ??
 			var title = document.createElement("SPAN");
 			title.appendChild(document.createTextNode("Batch "+batch.name+": "));
 			if (manage_batches) {
@@ -488,6 +584,32 @@ class page_home extends Page {
 			}
 			curriculum_frame.src = "/dynamic/students/page/curriculum?period="+period.id;
 			show_tabs(["Students List","Curriculum"]);
+			update_data();
+		}
+		function select_class(cl) {
+			var period = cl.element.period;
+			var spe = cl.element.spe;
+			var batch = period.element.batch;
+			
+			filter_batches = [batch.id];
+			filter_period = null;
+			filter_class = cl;
+			var title = document.createElement("SPAN");
+			title.appendChild(document.createTextNode("Batch "+batch.name+", Period "+period.name+": Class "));
+			if (manage_batches) {
+				var name = document.createElement("SPAN");
+				title.appendChild(name);
+				require("editable_cell.js",function(){
+					new editable_cell(title, "AcademicClass", "name", cl.id, "field_text", {max_length:100,min_length:1,can_be_null:false}, cl.name, null, function(field) {
+						cl.name = field.getCurrentData();
+					});
+				});
+			} else {
+				title.appendChild(document.createTextNode(cl.name));
+			}
+			header.setTitle(title);
+			header.resetMenu();
+			show_tabs(["Students List"]);
 			update_data();
 		}
 
@@ -588,7 +710,8 @@ class page_home extends Page {
 								name: table.get_data("Period Name"),
 								start_date: table.get_data("Period Start"),
 								end_date: table.get_data("Period End"),
-								specializations: []
+								specializations: [],
+								classes:[]
 							};
 							batch.periods.push(period);
 							build_period_tree(batch, period);
@@ -677,6 +800,7 @@ class page_home extends Page {
 						for (var i = 0; i < period.element.batch.periods.length; ++i) {
 							if (!found) {
 								if (period.element.batch.periods[i].id == period.id) found = true;
+								if (period.element.batch.periods[i].id == select_to_period.value) break;
 								continue;
 							}
 							var spe_found = false;
@@ -729,7 +853,19 @@ class page_home extends Page {
 				p.show();
 			});
 		}
-
+		function remove_specialization(period, spe) {
+			confirm_dialog("Are you sure you want to remove the specialization '"+spe.name+"' from the period '"+period.name+"', and all classes of this specialization ?",function(yes){
+				if (!yes) return;
+				var lock = lock_screen();
+				service.json("students","remove_specialization_from_period",{specialization:spe.id,period:period.id},function(res){
+					unlock_screen(lock);
+					if (!res) return;
+					period.specializations.remove(spe);
+					period.item.removeItem(spe.item);
+				});
+			});
+		}
+		
 		function new_class(period, spe) {
 			require("popup_window.js",function() {
 				var content = document.createElement("DIV");
@@ -788,6 +924,7 @@ class page_home extends Page {
 					for (var i = 0; i < period.element.batch.periods.length; ++i) {
 						if (!found) {
 							if (period.element.batch.periods[i].id == period.id) found = true;
+							if (period.element.batch.periods[i].id == select_to_period.value) break;
 							continue;
 						}
 
@@ -839,6 +976,23 @@ class page_home extends Page {
 				p.show();
 			});
 		}
+		function remove_class(period, spe, cl) {
+			confirm_dialog("Are you sure you want to remove the class '"+cl.name+"' ?",function(yes){
+				if (!yes) return;
+				var lock = lock_screen();
+				service.json("data_model","remove_row",{table:"AcademicClass",row_key:cl.id},function(res){
+					unlock_screen(lock);
+					if (!res) return;
+					if (spe) {
+						spe.classes.remove(cl);
+						spe.item.removeItem(cl.item);
+					} else {
+						period.classes.remove(cl);
+						period.item.removeItem(cl.item);
+					}
+				});
+			});
+		}
 		
 		
 		function specialization_added(id ,name) {
@@ -860,12 +1014,13 @@ class page_home extends Page {
 			if (spe == null) return; // should never happend...
 			
 			var s = {id:spe_id,name:spe.name,classes:[]};
-			if (period.specializations.length == 0) {
+			if (period.specializations.length == 0 && period.classes) {
 				// classes have been moved to the new specialization
 				for (var i = 0; i < period.classes.length; ++i) {
 					s.classes.push(period.classes[i]);
-					period.item.removeItem(classes[i].item);
+					period.item.removeItem(period.classes[i].item);
 				}
+				period.classes = [];
 			}
 			period.specializations.push(s);
 			build_spe_tree(period, s);

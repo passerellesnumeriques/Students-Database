@@ -262,8 +262,17 @@ function popup_window(title,icon,content,hide_close_button) {
 			var h = 0;
 			if (t.header) h += getHeight(t.header);
 			if (t.buttons_tr) h += getHeight(t.buttons_tr);
-			if (x > getWindowWidth()-30) x = getWindowWidth()-30;
-			if (y > getWindowHeight()-30-h) y = getWindowHeight()-30-h;
+			if (x > getWindowWidth()-30) {
+				x = getWindowWidth()-30;
+				// anticipate scroll bar
+				y += 20;
+			}
+			if (y > getWindowHeight()-30-h) {
+				y = getWindowHeight()-30-h;
+				// anticipate scroll bar
+				if (x < getWindowWidth()-30) x += 20;
+				if (x > getWindowWidth()-30) x = getWindowWidth()-30;
+			}
 			setWidth(t.content_container, x);
 			setHeight(t.content_container, y);
 			t.content_container.overflow = "hidden";

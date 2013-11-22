@@ -1140,14 +1140,14 @@ class ChoiceDataDisplay extends DataDisplay {
 	public $display_name;
 	public $foreign_key_name;
 	public $foreign_column_name;
-	public $key_column;
+	public $editable;
 	
-	public function __construct($handler, $foreign_key_name, $foreign_column_name, $display_name, $key_column = null) {
+	public function __construct($handler, $foreign_key_name, $foreign_column_name, $display_name, $editable = true) {
 		parent::__construct($handler);
 		$this->display_name = $display_name;
 		$this->foreign_key_name = $foreign_key_name;
 		$this->foreign_column_name = $foreign_column_name;
-		$this->key_column = $key_column;
+		$this->editable = $editable;
 	}
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array($this->foreign_key_name); }
@@ -1202,8 +1202,9 @@ class ChoiceDataDisplay extends DataDisplay {
 		return array("filter_enum", $cfg);
 	}
 	
-	public function isEditable() { return true; }
+	public function isEditable() { return $this->editable; }
 	public function getEditLocks($sub_model) {
+		if (!$this->editable) return array();
 		return array(
 			array("table"=>$this->handler->table->getSQLNameFor($sub_model))
 		);
@@ -1228,8 +1229,7 @@ class ChoiceDataDisplay extends DataDisplay {
 			$q->join($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name), $alias);
 		}
 		// get the key and data
-		$col_name = $this->key_column;
-		if ($col_name == null) $col_name = $this->handler->table->getPrimaryKey()->name;
+		$col_name = $this->handler->table->getPrimaryKey()->name;
 		$key_alias = $q->get_field_alias($table_alias, $col_name);
 		if ($key_alias == null) {
 			$key_alias = $builder->new_alias();
@@ -1267,8 +1267,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
 			$q->select_sub_model($t->getModel()->getParentTable(), $sub_model);
 		$q->field($this->handler->table->getName(), $this->foreign_key_name, "VALUE");
-		$col_name = $this->key_column;
-		if ($col_name == null) $col_name = $this->handler->table->getPrimaryKey()->name;
+		$col_name = $this->handler->table->getPrimaryKey()->name;
 		$q->where_value($this->handler->table->getName(), $col_name, $key);
 		return $q->execute_single_value();
 	}

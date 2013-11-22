@@ -2,6 +2,59 @@
 require_once("component/people/PeoplePlugin.inc"); 
 class students extends Component implements PeoplePlugin {
 	
+	public function assign_student_to_specialization($student_people_id, $specialization_id) {
+		if ($specialization_id <> null) {
+			// check this specialization is available for the batch of this student
+			$possible_specializations = SQLQuery::create()
+				->select("Student")
+				->where_value("Student", "people", $student_people_id)
+				->join("Student", "AcademicPeriod", array("batch"=>"batch"))
+				->join("AcademicPeriod", "AcademicPeriodSpecialization", array("id"=>"period"))
+				->field("AcademicPeriodSpecialization", "specialization", "specialization")
+				->execute_single_field();
+			if (!in_array($specialization_id, $possible_specializations)) {
+				PNApplication::error("The student does not exist or the specialization is not available for this batch of students");
+				return false;
+			}
+			// check the student is not already assigned to a class with a different specialization
+			$different_classes = SQLQuery::create()
+				->select("Student")
+				->where_value("Student", "people", $student_people_id)
+				->join("Student", "StudentClass", array("people"=>"people"))
+				->join("StudentClass", "AcademicClass", array("class"=>"id"))
+				->where("`AcademicClass`.`specialization` IS NOT NULL AND `AcademicClass`.`specialization`!='".SQLQuery::escape($specialization_id)."'")
+				->execute();
+			if (count($different_classes) > 0) {
+				PNApplication::error("This student is already assigned to a class with another specialization");
+				return false;
+			}
+		} else {
+			// check the student exists
+			$student = SQLQuery::create()
+				->select("Student")
+				->where_value("Student", "people", $student_people_id)
+				->execute_single_row();
+			if ($student == null) {
+				PNApplication::error("The student does not exist");
+				return false;
+			}
+			// check the student is not already assigned to a class with a specialization
+			$different_classes = SQLQuery::create()
+				->select("Student")
+				->where_value("Student", "people", $student_people_id)
+				->join("Student", "StudentClass", array("people"=>"people"))
+				->join("StudentClass", "AcademicClass", array("class"=>"id"))
+				->where("`AcademicClass`.`specialization` IS NOT NULL")
+				->execute();
+			if (count($different_classes) > 0) {
+				PNApplication::error("This student is already assigned to a class with a specialization");
+				return false;
+			}
+		}
+		SQLQuery::create()->update_by_key("Student", $student_people_id, array("specialization"=>$specialization_id));
+		return true;
+	}
+	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
 		$alias = $q->table_id();
 		$people_alias = $q->get_table_alias("People");

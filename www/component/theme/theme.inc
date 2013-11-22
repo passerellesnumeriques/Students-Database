@@ -61,6 +61,7 @@ theme::$icons_16 = array(
 theme::$icons_10 = array(
 	"add" => 			"/static/theme/".$theme."/icons_10/add.png",
 	"close" => 			"/static/theme/".$theme."/icons_10/close.png",
+	"edit" => 			"/static/theme/".$theme."/icons_10/edit.gif",
 	"loading" =>		"/static/theme/".$theme."/icons_10/loading.gif",
 	"no_edit" => 		"/static/theme/".$theme."/icons_10/no_edit.png",
 	"online" => 		"/static/theme/".$theme."/icons_10/online.gif",

@@ -40,12 +40,16 @@ $model->addTable("Student")
 	->addInsertAccess("manage_batches", true)
 	->addRemoveAccess("manage_batches", true)
 	->setDisplayHandler(null, new \datamodel\MultipleDisplayHandler("Student", "Student", array(
-		new \datamodel\ChoiceDataDisplay(null, "batch", "name", "Batch", "people"),
-		new \datamodel\ChoiceDataDisplay(null, "specialization", "name", "Specialization", "people"),
+		new \datamodel\ChoiceDataDisplay(null, "batch", "name", "Batch"),
+		new \datamodel\ChoiceDataDisplay(null, "specialization", "name", "Specialization", false),
 		new \datamodel\FieldsDisplayHandler("Student", "", array(
 			"exclusion_reason"=>"Exclusion reason",
 			"exclusion_date"=>"Exclusion date"
-		),null,"people")
+		),
+		array(
+			"exclusion_reason"=>array("not_editable"),
+			"exclusion_date"=>array("not_editable"),
+		),"people")
 	)))
 	;
 $model->addTable("AcademicPeriod")
@@ -69,6 +73,7 @@ $model->addTable("AcademicPeriod")
 $model->addTable("AcademicPeriodSpecialization")
 	->addForeignKey("period", "AcademicPeriod", true, false, true, false, false)
 	->addForeignKey("specialization", "Specialization", true, false, true, false, false)
+	->setKey(array("period","specialization"))
 	->addReadAccess("consult_students_list", true)
 	->addReadAccess("consult_curriculum", true)
 	->addWriteAccess("manage_batches", true)
@@ -87,6 +92,7 @@ $model->addTable("AcademicClass")
 	->addWriteAccess("manage_batches", true)
 	->addInsertAccess("manage_batches", true)
 	->addRemoveAccess("manage_batches", true)
+	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Class", array("name"=>"Class")))
 	;
 $model->addTable("StudentClass")
 	->addForeignKey("people", "People", true, false, true)

@@ -1,0 +1,149 @@
+<?php 
+class page_assign_specializations extends Page {
+	
+	public function get_required_rights() { return array("manage_batches"); }
+	
+	public function execute() {
+		$batch_id = $_GET["batch"];
+		$batch_name = SQLQuery::create()->select("StudentBatch")->field("name")->where_value("StudentBatch", "id", $batch_id)->execute_single_value();
+		$students = SQLQuery::create()
+			->select("Student")
+			->where_value("Student", "batch", $batch_id)
+			->join("Student", "People", array("people"=>"id"))
+			->field("People", "id", "people")
+			->field("People", "first_name", "first_name")
+			->field("People", "last_name", "last_name")
+			->field("Student", "specialization", "specialization")
+			->execute();
+		$specializations = SQLQuery::create()
+			->select("AcademicPeriodSpecialization")
+			->join("AcademicPeriodSpecialization", "AcademicPeriod", array("period"=>"id"))
+			->where_value("AcademicPeriod", "batch", $batch_id)
+			->field("AcademicPeriodSpecialization", "specialization", "BATCH_SPE_ID")
+			->join("AcademicPeriodSpecialization", "Specialization", array("specialization"=>"id"))
+			->field("Specialization", "name", "BATCH_SPE_NAME")
+			->group_by("Specialization", "id")
+			->execute();
+		?>
+		<table class='all_borders' style='white-space:nowrap'>
+		<tr><th colspan=3>Assignment of specialization for students of batch <?php echo htmlentities($batch_name);?></th></tr>
+		<tr>
+			<th>Non-assigned students</th>
+			<th></th>
+			<th>Students assigned to <?php echo $specializations[0]["BATCH_SPE_NAME"];?></th>
+		</tr>
+		<tr>
+			<td rowspan=<?php echo (count($specializations)-1)*2+1;?> id='non_assigned'></td>
+			<td valign='middle'>
+				<div class='button' onclick="assign('<?php echo $specializations[0]["BATCH_SPE_ID"];?>');" title='Assign'><img src='<?php echo theme::$icons_16["right"];?>'/></div>
+				<br/>
+				<div class='button' onclick="unassign('<?php echo $specializations[0]["BATCH_SPE_ID"];?>');" title='Unassign'><img src='<?php echo theme::$icons_16["left"];?>'/></div>
+			</td>
+			<td id='assigned_<?php echo $specializations[0]["BATCH_SPE_ID"];?>'></td>
+		</tr>
+		<?php
+		for ($i = 1; $i < count($specializations); $i++) {
+			echo "<tr><th></th><th>Students assigned to ".htmlentities($specializations[$i]["BATCH_SPE_NAME"])."</th></tr>";
+			echo "<tr>";
+			echo "<td valign='middle'>";
+				echo "<div class='button' onclick='assign(\"".$specializations[$i]["BATCH_SPE_ID"]."\");' title='Assign'><img src='".theme::$icons_16["right"]."'/></div>";
+				echo "<br/>";
+				echo "<div class='button' onclick='unassign(\"".$specializations[$i]["BATCH_SPE_ID"]."\");' title='Assign'><img src='".theme::$icons_16["left"]."'/></div>";
+			echo "</td>";
+			echo "<td id='assigned_".$specializations[$i]["BATCH_SPE_ID"]."'></td>";
+			echo "</tr>";
+		} 
+		?>
+		</table>
+		<script type='text/javascript'>
+		var students = [<?php
+		$first = true;
+		foreach ($students as $student) {
+			if ($first) $first = false; else echo ",";
+			echo "{";
+			echo "people:".$student["people"];
+			echo ",first_name:".json_encode($student["first_name"]);
+			echo ",last_name:".json_encode($student["first_name"]);
+			echo ",original_spe:".json_encode($student["specialization"]);
+			echo ",assigned_spe:".json_encode($student["specialization"]);
+			echo ",can_change:";
+			if ($student["specialization"] == null)
+				echo "true";
+			else {
+				$classes = SQLQuery::create()
+					->select("StudentClass")
+					->where_value("StudentClass", "people", $student["people"])
+					->join("StudentClass", "AcademicClass", array("class"=>"id"))
+					->where_value("AcademicClass", "specialization", $student["specialization"])
+					->execute();
+				if (count($classes) == 0)
+					echo "true";
+				else
+					echo "false";
+			}
+			echo "}";
+		} 
+		?>];
+		var specializations = [<?php
+		$first = true;
+		foreach ($specializations as $spe) {
+			if ($first) $first = false; else echo ",";
+			echo "{";
+			echo "id:".$spe["BATCH_SPE_ID"];
+			echo "}";
+		} 
+		?>];
+		for (var i = 0; i < students.length; ++i) {
+			var s = students[i];
+			s.div = document.createElement("DIV");
+			s.div.appendChild(s.cb = document.createElement("INPUT"));
+			s.cb.type = 'checkbox';
+			if (!s.can_change)
+				s.cb.disabled = 'disabled';
+			s.div.appendChild(document.createTextNode(s.first_name+" "+s.last_name));
+			var e;
+			if (s.original_spe == null)
+				e = document.getElementById("non_assigned");
+			else
+				e = document.getElementById("assigned_"+s.original_spe);
+			e.appendChild(s.div);
+		}
+		function assign(spe_id) {
+			for (var i = 0; i < students.length; ++i) {
+				var s = students[i];
+				if (s.assigned_spe != null) continue;
+				if (!s.cb.checked) continue;
+				s.cb.checked = '';
+				s.assigned_spe = spe_id;
+				s.div.parentNode.removeChild(s.div);
+				document.getElementById("assigned_"+spe_id).appendChild(s.div);
+			}
+		}
+		function unassign(spe_id) {
+			for (var i = 0; i < students.length; ++i) {
+				var s = students[i];
+				if (s.assigned_spe != spe_id) continue;
+				if (!s.cb.checked) continue;
+				s.cb.checked = '';
+				s.assigned_spe = null;
+				s.div.parentNode.removeChild(s.div);
+				document.getElementById("non_assigned").appendChild(s.div);
+			}
+		}
+		function save(ondone) {
+			var data = [];
+			for (var i = 0; i < students.length; ++i) {
+				var s = students[i];
+				if (s.assigned_spe != s.original_spe)
+					data.push({student:s.people,specialization:s.assigned_spe});
+			}
+			service.json("students", "assign_specializations", data, function(res) {
+				ondone(res);
+			});
+		}
+		</script>
+		<?php 
+	}
+	
+}
+?>

@@ -69,12 +69,14 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	<iframe layout='fill' src='<?php if (isset($_GET["page"])) echo $_GET["page"]; else echo "/dynamic/application/page/home";?>' id='pn_application_content' name='pn_application_content' frameBorder=0 onload='pn_application_content_load();'></iframe>
 	<div layout='17' id='pn_application_footer'>
 		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
+		<!-- 
 		<span style='position:fixed;bottom:0px;right:3px;'>
 			<span id='google_status'></span>
 		</span>
 		<span style='position:fixed;bottom:0px;right:23px;'>
 			<span id='facebook_status'></span>
 		</span>
+		 -->
 		<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
 		<span style='position:fixed;bottom:0px;right:43px;'>
 			<span id='debug_status'></span>

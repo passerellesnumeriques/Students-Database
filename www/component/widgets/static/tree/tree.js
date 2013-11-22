@@ -22,7 +22,7 @@ function TreeItem(cells, expanded) {
 		item.parent_item = null;
 		this.children.remove(item);
 		if (this.tree) {
-			this.tree._removeItem(this, item);
+			this.tree._removeItem(item);
 			this.tree._refresh_heads(this.parent);
 			this.tree._refresh_heads(this);
 		}
@@ -94,9 +94,12 @@ function tree(container) {
 		this._refresh_heads();
 	};
 	this.removeItem = function(item) {
-		this._removeItem(item);
-		this._refresh_heads(item.parent);
-		if (item.parent) this._refresh_heads(item.parent.parent);
+		if (item.parent)
+			item.parent.removeItem(item);
+		else {
+			this._removeItem(item);
+			this._refresh_heads();
+		}
 	};
 	this.clearItems = function() {
 		while (this.tbody.childNodes.length > 0)
@@ -104,10 +107,9 @@ function tree(container) {
 		this.items = [];
 	};
 	this._removeItem = function(item) {
-		this.tbody.removeChild(item.tr);
-		if (item.parent == null) this.items.remove(item); else item.parent.children.remove(item);
+		try { this.tbody.removeChild(item.tr); } catch (e) {}
 		while (item.children.length > 0)
-			this.removeItem(item.children[0]);
+			this._removeItem(item.children[0]);
 	};
 	this._create_item = function(parent, item) {
 		item.tree = this;
