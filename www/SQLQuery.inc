@@ -214,8 +214,25 @@ class SQLQuery {
 		return $this;
 	}
 	
+	private function resolve_where_table($table) {
+		// search if this is an alias
+		foreach ($this->tables as $tname=>$talias)
+			if ($table == $talias) return $table;
+		foreach ($this->joins as $j)
+			if ($table == $j[3]) return $table;
+		// not an alias: get sql name
+		try {
+			require_once("component/data_model/Model.inc");
+			$t = DataModel::get()->getTable($table);
+			return $t->getSQLName($this->sub_models);
+		} catch (Exception $e) {
+			// not a table name
+			return $table;
+		}
+	}
+	
 	public function &where_value($table_name, $field_name, $value) {
-		$w = "`".$table_name."`.`".$field_name."`";
+		$w = "`".$this->resolve_where_table($table_name)."`.`".$field_name."`";
 		if ($value === null) $w .= " IS NULL";
 		else $w .= "='".SQLQuery::escape(utf8_decode($value))."'";
 		array_push($this->where, $w);
@@ -223,12 +240,12 @@ class SQLQuery {
 	}
 	
 	public function &where_null($table_name, $field_name) {
-		$w = "`".$table_name."`.`".$field_name."` IS NULL";
+		$w = "`".$this->resolve_where_table($table_name)."`.`".$field_name."` IS NULL";
 		array_push($this->where, $w);
 		return $this;
 	}
 	public function &where_not_null($table_name, $field_name) {
-		$w = "`".$table_name."`.`".$field_name."` IS NOT NULL";
+		$w = "`".$this->resolve_where_table($table_name)."`.`".$field_name."` IS NOT NULL";
 		array_push($this->where, $w);
 		return $this;
 	}
@@ -257,7 +274,7 @@ class SQLQuery {
 			foreach ($this->tables as $name=>$alias)
 				$table = $name;
 		}
-		$w = "`".$table."`.`".$field."` IN (";
+		$w = "`".$this->resolve_where_table($table)."`.`".$field."` IN (";
 		$first = true;
 		foreach ($values as $value) {
 			if ($first) $first = false; else $w .= ",";
@@ -445,13 +462,17 @@ class SQLQuery {
 			}
 		}
 		$sql .= " FROM ";
+		$aliases = array();
 		$first = true;
 		foreach ($this->tables as $name=>$alias) {
 			if ($first) $first = false; else $sql .= ",";
 			if ($this->database) $sql .= "`".$this->database."`.";
 			$table = DataModel::get()->internalGetTable($name);
 			$sql .= "`".$table->getSQLName($this->sub_models)."`";
-			if ($alias <> null) $sql .= " AS `".$alias."`";
+			if ($alias <> null) {
+				$sql .= " AS `".$alias."`";
+				array_push($aliases, $alias);
+			}
 			unset($table);
 		}
 		foreach ($this->joins as $join) {
@@ -461,16 +482,20 @@ class SQLQuery {
 			$sql .= "`".$table->getSQLName($this->sub_models)."`";
 			if ($join[3] <> null) $sql .= " AS `".$join[3]."`";
 			$sql .= " ON ";
+			$source_table = $join[0];
+			if (!in_array($source_table, $aliases))
+				$source_table = DataModel::get()->getTable($join[0])->getSQLName($this->sub_models);
 			$first = true;
 			foreach ($join[2] as $field_from=>$field_to) {
 				if ($first) $first = false; else $sql .= " AND ";
-				$sql .= "`".$join[0]."`.`".$field_from."`=";
+				$sql .= "`".$source_table."`.`".$field_from."`=";
 				if (is_string($field_to))
 					$sql .= "`".($join[3] <> null ? $join[3] : $table->getSQLName($this->sub_models))."`.`".$field_to."`";
 				else
 					$sql .= "'".SQLQuery::escape($field_to[0])."'";
 			}
 			unset($table);
+			if ($join[3] <> null) array_push($aliases, $join[3]);
 		}
 		for ($i = 0; $i < count($this->where); $i++)
 			if (strlen(trim($this->where[$i]))==0) {
@@ -967,7 +992,7 @@ class SQLQuery {
 				}
 				$q->where($where);
 			}
-			$q->field($table->getName(), $col->name);
+			$q->field($table_alias, $col->name);
 			$rows = $q->execute_single_field();
 			
 			if (!isset($new_remove[$col->foreign_table]))

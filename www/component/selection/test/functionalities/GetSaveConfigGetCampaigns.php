@@ -1,5 +1,5 @@
 <?php
-class GetConfigGetCampaigns extends TestFunctionalitiesScenario {
+class GetSaveConfigGetCampaigns extends TestFunctionalitiesScenario {
 	
 	public function getName() { return "Get the config for a campaign, and all the campaigns set in the database"; }
 	
@@ -16,14 +16,16 @@ class GetConfigGetCampaigns extends TestFunctionalitiesScenario {
 	
 	public function getSteps() {
 		return array(
-			new GetConfigCampaigns_Can_Manage(),
-			new GetConfigCampaigns_No_Manage(),
+			new GetSaveConfigCampaigns_Can_Manage(),
+			new GetSaveConfigCampaigns_No_Manage(),
+			new SaveConfig_Can_Manage(),
+			new SaveConfig_No_Manage(),
 		);
 	}
 	
 }
 
-class GetConfigCampaigns_Can_Manage extends TestFunctionalitiesStep{
+class GetSaveConfigCampaigns_Can_Manage extends TestFunctionalitiesStep{
 	public function getName(){ return "Create a selection campaign, get the config and all the campaigns with a user who can manage the selections campaigns";}
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_manage", "");
@@ -51,15 +53,18 @@ class GetConfigCampaigns_Can_Manage extends TestFunctionalitiesStep{
 	}
 }
 
-class GetConfigCampaigns_No_Manage extends TestFunctionalitiesStep{
+class GetSaveConfigCampaigns_No_Manage extends TestFunctionalitiesStep{
 	public function getName(){ return "Create a selection campaign, get the config and all the campaigns with a user who can only access selection data, but cannot manage the selections campaigns";}
 	public function run(&$scenario_data){
 		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_can_access", "");
 		if($error <> null) return "Cannot login with user test_createCampaign_can_access";
 		$id = $scenario_data["campaign_created_can_manage"];
+		PNApplication::$instance->selection->set_campaign_id($id);
+		
 		$config = PNApplication::$instance->selection->get_config();
-		if(!PNApplication::has_errors()) return "Can get the config of the campaign";
-		if($config <> null) return "The config attribute is not set as null";
+		if(PNApplication::has_errors()) return "Cannot get the config of the campaign";
+		if($config == null || $config == array()) return "The config attribute was not set properly";
+		$scenario_data["config"] = $config;
 		
 		$json_campaigns = PNApplication::$instance->selection->get_json_campaigns();
 		if(PNApplication::$instance->has_errors()) return "Cannot get the campaigns from database";
@@ -68,6 +73,61 @@ class GetConfigCampaigns_No_Manage extends TestFunctionalitiesStep{
 		$campaigns = PNApplication::$instance->selection->get_campaigns();
 		if(PNApplication::$instance->has_errors()) return "Cannot get the campaigns from database";
 		if($campaigns == array()) return "The campaigns array was not set properly";
+		
+		PNApplication::$instance->user_management->logout();
+		return null;
+	}
+}
+
+class SaveConfig_Can_Manage extends TestFunctionalitiesStep{
+	public function getName(){return "Save a config with a user who can manage the selections campaigns";}
+	public function run(&$scenario_data){
+		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_manage", "");
+		if($error <> null) return "Cannot login with user test_createCampaign_manage";
+		$id = $scenario_data["campaign_created_can_manage"];
+		PNApplication::$instance->selection->set_campaign_id($id);
+		$fields = $scenario_data["config"];
+		$final_fields = array();
+		foreach($fields as $f){
+			$name = null;
+			$val = null;
+			foreach($f as $index => $value){
+				if($index == "name") $name = $value;
+				if($index == "value") $val = json_encode($value);
+			}
+			$final_fields[$name] = $val;
+		}
+		
+		$error = PNApplication::$instance->selection->save_config($final_fields);
+		if($error <> null) return "Cannot save the config. Error was: ".$error->getMessage();
+		
+		PNApplication::$instance->user_management->logout();
+		return null;
+	}
+}
+
+class SaveConfig_No_Manage extends TestFunctionalitiesStep{
+	public function getName(){return "Save a config with a user who cannot manage the selections campaigns, only access the selection data";}
+	public function run(&$scenario_data){
+		$error = PNApplication::$instance->user_management->login("Test","test_createCampaign_can_access", "");
+		if($error <> null) return "Cannot login with user test_createCampaign_can_access";
+		$id = $scenario_data["campaign_created_can_manage"];
+		$fields = $scenario_data["config"];
+		PNApplication::$instance->selection->set_campaign_id($id);
+		$fields = $scenario_data["config"];
+		$final_fields = array();
+		foreach($fields as $f){
+			$name = null;
+			$val = null;
+			foreach($f as $index => $value){
+				if($index == "name") $name = $value;
+				if($index == "value") $val = json_encode($value);
+			}
+			$final_fields[$name] = $val;
+		}
+		
+		$error = PNApplication::$instance->selection->save_config($final_fields);
+		if($error == null) return "Can save the config";
 		
 		PNApplication::$instance->user_management->logout();
 		return null;

@@ -1,4 +1,8 @@
 <?php
+/**
+ * This page is the only selection page which is not an extension of the selection_page class,
+ * because this page is used to select the selection campaign
+ */
 class page_home extends Page {
 
 	public function get_required_rights() { return array(); } // TODO
@@ -124,7 +128,7 @@ class page_home extends Page {
 		<div id='selection_page'
 			icon='/static/selection/selection_32.png' 
 			title='Selection'
-			page='test_selection'>
+			page='/dynamic/selection/page/selection_main_page'>
 			<?php
 			if($rights["manage"]) echo "<span class = 'button' onclick = 'dialogAddCampaign();'><img style = \"vertical-align:'bottom'\"src = '/static/theme/default/icons_16/add.png'></img> New campaign</span>";
 			if($rights["read"]){
@@ -152,6 +156,7 @@ class page_home extends Page {
 			if($rights["manage"]){
 				echo "<a class = 'button' href='/dynamic/selection/page/manage_config' target='selection_page_content'><img src = '/static/theme/default/icons_16/config.png' /> Configuration<span>";
 			}
+			if($rights["read"]) echo "<a class = 'button' href='/dynamic/selection/page/IS_home' target='selection_page_content'><img src='/static/selection/IS_16.png'/> Information Sessions<span>";
 			?>
 			
 		</div>

@@ -28,7 +28,7 @@ abstract class TestScenario {
 		$error = $this->_create_users();
 		if ($error <> null)
 			return "An error occured while creating users for this scenario: ".$error;
-		$this->init_database();
+		$this->init_database($scenario_data);
 		return null;
 	}
 	
@@ -41,7 +41,7 @@ abstract class TestScenario {
 		return null;
 	}
 	
-	protected function init_database() {
+	protected function init_database(&$scenario_data) {
 	}
 }
 

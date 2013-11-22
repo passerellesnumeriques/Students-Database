@@ -28,15 +28,8 @@ class service_save_config extends Service{
 			}
 			$final_fields[$name] = $val;
 		}
-		try{
-			/* This is an update */
-			foreach($final_fields as $name=>$value){
-				SQLQuery::create()->update_by_key("Selection_campaign_config", $name, array("value"=>$value));
-			}
-
-		} catch(Exception $e) {
-			PNApplication::error($e->getMessage());
-		}
+		$error = PNApplication::$instance->selection->save_config($final_fields);
+		if($error <> null) PNApplication::error($configs);
 		echo PNApplication::has_errors() ? "false" : "true";
 	}
 }	

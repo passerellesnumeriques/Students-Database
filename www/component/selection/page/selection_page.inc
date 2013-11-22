@@ -1,4 +1,8 @@
 <?php
+/**
+ * This abstract class is defined in order to oblige the user to select a selection campaign
+ * In case the campaign_id attribute of the selection instance is set as null, the selection page is not executed
+ */
 abstract class selection_page extends Page{
 	//we don't define get_required_rights this way we will be obliged to define it in selection_page instances
 	final public function execute(){

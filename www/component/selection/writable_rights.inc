@@ -6,4 +6,6 @@ return array(
 		new BooleanRight("manage_selection_campaign","Edit, Add or Remove a selection campaign",array(true=>array("manage_information_session"=>true,"can_access_selection_data"=>true,"see_information_session_details"=>true))),
 	)),
 );
+
+//TODO update the rights for the calendar in selection.inc/create_campaign !
 ?>

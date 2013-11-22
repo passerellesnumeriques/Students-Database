@@ -21,7 +21,7 @@ class service_create_campaign extends Service{
 			try{
 				$key = $component->create_campaign($input["name"]);
 			} catch(Exception $e) {
-				PNApplication::error($e->getMessage());
+				PNApplication::error($e);
 			}
 			if(PNApplication::has_errors()) echo "false";
 			else echo "{key:".$key."}";

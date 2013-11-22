@@ -4,58 +4,125 @@ class selection extends Component implements OrganizationPlugin {
 	
 	private $campaign_id = null;
 	
+	/* A calendar is linked to the selection campaign */
+	private $calendar_id = null;
+	
 	/**
 	 * When set, config is an array [["name"=>"value"],[...]]
 	 */
 	private $config = null;
 	
+	/**
+	 * @method init_request called each time the selection component executes a database query
+	 * Check if a cookie selection_campaign exists; if yes, set the campaign_id attribute to its value
+	 * If the campaign_id is set, the matching submodels is selected in the database
+	 */
 	public function init_request() {
 		if ($this->campaign_id == null) {
 			if (isset($_COOKIE["selection_campaign"])) {
-				if (SQLQuery::create()->select("SelectionCampaign")->where("id",$_COOKIE["selection_campaign"])->execute_single_row() <> null)
-					$this->campaign_id = $_COOKIE["selection_campaign"];
+				try {
+					if (SQLQuery::create()->select("SelectionCampaign")->where("id",$_COOKIE["selection_campaign"])->execute_single_row() <> null){
+						$this->set_campaign_id($_COOKIE["selection_campaign"]);
+					}
+				} catch (Exception $e) {}
 			}
 		}
 		if ($this->campaign_id <> null)
 			SQLQuery::set_submodel("SelectionCampaign", $this->campaign_id);
 	}
 	
+	/**
+	 * @method get_campaign_id
+	 * @return attribute campaign_id
+	 */
 	public function get_campaign_id(){
 		return $this->campaign_id;
 	}
 	
+	/**
+	 * @method get_calendar_id
+	 * @return attribute calendar_id
+	 */
+	public function get_calendar_id(){
+		return $this->calendar_id;
+	}
+	
+	/**
+	 * @method set_campaign_id
+	 * @param $id
+	 * Set the campaign_id attribute to $id, reset the config attribute, set the selection_campaign cookie,
+	 * update the calendar_id attribute, and select the matching submodel
+	 */
 	public function set_campaign_id($id){
 		$this->campaign_id = $id;
 		/* Reset the config */
 		$this->config = null;
 		setcookie("selection_campaign",$id,time()+365*24*60*60,"/dynamic/selection/");
 		SQLQuery::set_submodel("SelectionCampaign", $this->campaign_id);
+		/* Set the calendar id attribute */
+		$calendar_id = SQLQuery::create()->select("SelectionCampaign")->field("calendar")->where("id",$id)->execute_single_value();
+		$this->calendar_id = $calendar_id;
 	}
 	
+	/**
+	 * @method create_campaign
+	 * @param {string} $name
+	 * Create a campaign in the database, set its config to the default values, set the campaign id
+	 * Create a calendar for the selection campaign
+	 * @return $campaign_id the id of the campaign created
+	 */
 	public function create_campaign($name){
-		$key = null;
+		$campaign_id = null;
 		$fields = array();
-		$fields["name"] = $name;
 		$all_configs = include("config.inc");
-		$key = SQLQuery::create()->insert("SelectionCampaign",$fields);
-		$this->set_campaign_id($key);
-		/* Insert the default config in the database */
-		foreach($all_configs as $all_config){
-			SQLQuery::create()->insert("Selection_campaign_config",array("name"=>$all_config[0],"value"=>json_encode($all_config[2])));
+		
+		/* Create a calendar for this campaign */
+		$calendar_id = PNApplication::$instance->calendar->create_shared_calendar($name,array("can_access_selection_data"=>true),array("edit_information_session"=>true));
+		
+		/* if the calendar was properly created, continue */
+		if($calendar_id <> null){
+			$fields["name"] = $name;
+			$fields["calendar"] = $calendar_id;
+			$campaign_id = SQLQuery::create()->insert("SelectionCampaign",$fields);
+			$this->set_campaign_id($campaign_id);
+			
+			/* Insert the default config in the database */
+			foreach($all_configs as $all_config){
+				SQLQuery::create()->insert("Selection_campaign_config",array("name"=>$all_config[0],"value"=>json_encode($all_config[2])));
+			}
+			return $campaign_id;
 		}
-		return $key;
 	}
 	
+	/**
+	 * @method remove_campaign
+	 * @param $id
+	 * Remove the campaign matching with the given ID, and all the linked data. Set the campaign_id attribute to null
+	 */
 	public function remove_campaign($id){
-		SQLQuery::create()->remove_key("SelectionCampaign",$id);
 		/* Set the campaign id to null */
 		$this->campaign_id = null;
+		/* Set the calendar_id to null */
+		$this->calendar_id = null;
+		SQLQuery::create()->remove_key("SelectionCampaign",$id);
+		
 	}
 	
+	/**
+	 * @method rename_campaign
+	 * @param $id
+	 * @param $name
+	 * Set the name of the given campaign (id) to the given value (name) in the database
+	 */
 	public function rename_campaign($id, $name){
 		SQLQuery::create()->update_by_key("SelectionCampaign",$id,array("name"=>$name));
 	}
 	
+	/**
+	 * @method get_config
+	 * @return the config attribute
+	 * If the config attribute is set to null, will get its values in the database and set the config attribute
+	 */
 	public function get_config(){
 		if($this->config <> null) {return $this->config;}
 		else{
@@ -83,13 +150,38 @@ class selection extends Component implements OrganizationPlugin {
 		}
 	}
 	
+	/**
+	 * @method save_config
+	 * @param $config an array [name => value]
+	 * After updating the config into the database, the config attribute is reseted to null.
+	 * This way when a component requires the config attribute, the get_config method will be forced to get the last version in the database
+	 * @return in the case of an error is launched by the database, the exception is catched and returned. Otherwise, null is returned
+	 */
+	public function save_config($configs){
+		$to_return = null;
+		try{
+			foreach($configs as $name=>$value){
+				SQLQuery::create()->update_by_key("Selection_campaign_config", $name, array("value"=>$value));
+			}
+			
+		} catch(Exception $e) {
+			$to_return = $e;
+		}
+		$this->config = null;
+		return $to_return;
+	}
 	
+	/**
+	 * @method get_json_campaigns
+	 * Get all the campaigns set in the database and return a json_encoded string to be used by a javascript
+	 * @return {string} [{id:'',name:''},{id:'',name:''}...]
+	 */
 	public function get_json_campaigns(){
+		$js = "[]";
 		try {$campaigns = SQLQuery::create()->select("SelectionCampaign")->field("id")->field("name")->order_by("name")->execute();
 		} catch (Exception $e){
-			return "[]";
+			PNApplication::error($e);
 		}
-		$js = null;
 		if(isset($campaigns[0]["name"])){
 			$first = true;
 			$js = "[";
@@ -103,10 +195,16 @@ class selection extends Component implements OrganizationPlugin {
 		return $js;
 	}
 	
+	/**
+	 * @method get_campaigns
+	 * Get all the campaigns set in the database and return an array to be used by a php script
+	 * @return {array} [[id=>"",name=>""],[id=>"",name=>""],...]
+	 */
 	public function get_campaigns(){
 		try{
 			$campaigns = SQLQuery::create()->select("SelectionCampaign")->field("id")->field("name")->order_by("name")->execute();
 		} catch (Exception $e){
+			PNApplication::error($e);
 			return array();
 		}
 		$camps = array();
@@ -120,6 +218,89 @@ class selection extends Component implements OrganizationPlugin {
 			}
 		}
 		return $camps;
+	}
+	
+	/**
+	 * @method save_IS
+	 * Update or create an information_session into the database
+	 * @param {integer} $id the id of the IS in case of an update
+	 * @param []{string} the fields to update/insert
+	 * @return $id the id generated in case of an insert
+	 */
+	public function save_IS($id, $fields_values){
+		if(isset($id) && $id <> null){
+			// This is an update
+			SQLQuery::create()->update_by_key("Information_session",$id,$fields_values);
+			return;
+		} else {
+			// This is an insert
+			$id = SQLQuery::create()->insert("Information_session",$fields_values);
+			return $id;
+		}
+	}
+	
+	/**
+	 * @method get_json_IS_data
+	 * @param $id the id of the IS
+	 * @return string {id:,postal_address:,date:,number_expected,number_real:,name:,partners:
+	 * 					[{organization;,host:,host_address:,contact_points_selected:[...]},{organization...}]}
+	 */
+	public function get_json_IS_data($id){
+		$data = "";
+		$IS = SQLQuery::create()
+				->select("Information_session")
+				->field("date")
+				->field("postal_address")
+				->field("number_expected")
+				->field("number_real")
+				->field("name")
+				->where("id",$id)
+				->execute_single_row();
+		$partners = SQLQuery::create()
+				->field("Information_session_partner","organization","organization")
+				->select("Information_session_partner")
+				->field("Information_session_partner","host","host")
+				->field("host_address")
+				->join("Information_session_partner","Information_session_contact_point",array("information_session"=>"information_session","organization"=>"organization"))
+				->field("Information_session_contact_point","people","contact_point")
+				->where_value("Information_session_partner","information_session",$id)
+				->execute();
+		if(isset($IS) && $IS <> null){
+			$data.= "{id:'".$id."', postal_address:".json_encode($IS["postal_address"]).", date:".json_encode($IS["date"]).", number_expected:".json_encode($IS["number_expected"]).", number_real:".json_encode($IS["number_real"]).", name:".json_encode($IS["name"]);
+			$data.= ", partners:";
+			if(isset($partners[0]["organization"]) && $partners[0]["organization"] <> null){
+				$first = true;
+				$current_partner = null;
+				$data.= "[";
+				foreach($partners as $p){
+					if($p["organization"] != $current_partner){
+						if(!$first){
+							$data.= "]}";
+							$data.= ", ";
+						}
+						$first = false;
+						$data.= "{";
+						$data.= "organization:".json_encode($p["organization"]).", ";
+						$data.= "host:".json_encode($p["host"]).", ";
+						$data.= "host_address:".json_encode($p["host_address"]).", ";
+						$data.= "contact_points_selected:";
+						if(isset($p["contact_point"]) && $p["contact_point"] <> null){
+							$data.= "[";
+							$data.= json_encode($p["contact_point"]);
+						} else $data.= "[";
+						$current_partner = $p["organization"];
+					} else {
+						$data.= ", ";
+						$data.= json_encode($p["contact_point"]);
+					}
+				}
+				$data.= "]}";
+				$data.= "]";
+			} else $data.= "[]";
+			
+			$data.= "}";
+		} else $data.="{}";
+		return $data;
 	}
 	
 	public function getOrganizationCreator() {
