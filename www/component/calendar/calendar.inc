@@ -5,7 +5,7 @@ class calendar extends Component {
 		PNApplication::$instance->user_management->local_user_created->listen($this, "local_user_created");
 	}
 	
-	public function create_shared_calendar($name, $readable_rights, $writable_rights) {
+	public function create_shared_calendar($calendar_name, $readable_rights, $writable_rights) {
 		foreach ($readable_rights as $name=>$value)
 			if (!PNApplication::$instance->user_management->has_right($name, $value)) {
 				PNApplication::error("You cannot create a calendar with right ".$name." because you don't have this right");
@@ -20,11 +20,11 @@ class calendar extends Component {
 			PNApplication::error("You must specify a write access for the calendar");
 			return false;
 		}
-		$calendar_id = SQLQuery::create()->bypass_security()->insert("Calendar", array("name"=>$name,"type"=>"internal"));
+		$calendar_id = SQLQuery::create()->bypass_security()->insert("Calendar", array("name"=>$calendar_name,"type"=>"internal"));
 		foreach ($readable_rights as $name=>$value)
-			SQLQuery::create()->bypass_security()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$name,$right_value=>$value,"writable"=>false));
+			SQLQuery::create()->bypass_security()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$name,"right_value"=>$value,"writable"=>false));
 		foreach ($writable_rights as $name=>$value)
-			SQLQuery::create()->bypass_security()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$name,$right_value=>$value,"writable"=>true));
+			SQLQuery::create()->bypass_security()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$name,"right_value"=>$value,"writable"=>true));
 		return $calendar_id;
 	}
 	

@@ -599,7 +599,7 @@ function play_function_test(component, scenario_index, ondone) {
 		step.icon.src = theme.icons_16.loading;
 		step.icon.style.verticalAlign = "bottom";
 		step.result_container.appendChild(step.icon);
-		service.json("test","execute_functionalities_scenario",{component:component.name,scenario:scenario.path,step:step_pos,data:data},function(res_step){
+		service.json("test","execute_functionalities_scenario?testing=true",{component:component.name,scenario:scenario.path,step:step_pos,data:data},function(res_step){
 			var success;
 			if (!res_step) {
 				success = false;
@@ -703,7 +703,7 @@ function play_service_test(component, scenario_index, ondone) {
 	scenario.init_step.icon.style.verticalAlign = "bottom";
 	scenario.init_step.result_container.appendChild(scenario.init_step.icon);
 	// init db
-	service.json("test","services_scenario_init_db",{component:component.name,scenario:scenario.path},function(res_step){
+	service.json("test","services_scenario_init_db?testing=true",{component:component.name,scenario:scenario.path},function(res_step){
 		if (!update_step_status(scenario, scenario.init_step, res_step)) return;
 		var next_step = function(pos,step_data) {
 			var step = scenario.steps[pos];
@@ -711,7 +711,7 @@ function play_service_test(component, scenario_index, ondone) {
 			step.icon.src = theme.icons_16.loading;
 			step.icon.style.verticalAlign = "bottom";
 			step.result_container.appendChild(step.icon);
-			service.json("test","services_scenario_step_init",{component:component.name,scenario:scenario.path,step:pos,data:step_data},function(res_step) {
+			service.json("test","services_scenario_step_init?testing=true",{component:component.name,scenario:scenario.path,step:pos,data:step_data},function(res_step) {
 				if (!update_step_status(scenario, step, res_step, true)) return;
 				var input = res_step.service_input;
 				var service_name = res_step.service_name;
@@ -719,7 +719,7 @@ function play_service_test(component, scenario_index, ondone) {
 				var init_step_data = res_step.data;
 				ajax.call(
 					"POST",
-					"/dynamic/"+component.name+"/service/"+service_name,
+					"/dynamic/"+component.name+"/service/"+service_name+"?testing=true",
 					"text/json;charset=UTF-8",
 					service.generate_input(input),
 					function(error) {
@@ -767,7 +767,7 @@ function play_service_test(component, scenario_index, ondone) {
 							call_check_output = xhr.responseText; 
 						}
 						// call to service is ok
-						service.json("test","services_scenario_step_check_output",{component:component.name,scenario:scenario.path,step:pos,data:init_step_data},function(res_step_output) {
+						service.json("test","services_scenario_step_check_output?testing=true",{component:component.name,scenario:scenario.path,step:pos,data:init_step_data},function(res_step_output) {
 							var fct = "function(";
 							if (service_type == "parse_json" || service_type == "parse_xml")
 								fct += "errors,result";
@@ -782,7 +782,7 @@ function play_service_test(component, scenario_index, ondone) {
 								error = fct(call_check_output[0]);
 							if (!update_step_status(scenario, step, {error:error})) return;
 							// finalize
-							service.json("test","services_scenario_step_finalize",{component:component.name,scenario:scenario.path,step:pos,data:res_step_output.data},function(res_step) {
+							service.json("test","services_scenario_step_finalize?testing=true",{component:component.name,scenario:scenario.path,step:pos,data:init_step_data},function(res_step) {
 								if (!update_step_status(scenario, step, res_step)) return;
 								if (pos == scenario.steps.length-1) {
 									scenario.icon.src = theme.icons_16.ok;

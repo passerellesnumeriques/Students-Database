@@ -29,6 +29,7 @@ class page_organizations extends Page {
 				['Contacts.Name'],
 				[{category:'Contacts',name:'Managed by',data:{type:'exact',value:<?php echo json_encode($_GET["creator"]); ?>}}],
 				function (list) {
+					list.grid.setSelectable(true);
 					list.addTitle(null, "Organizations of <?php echo $_GET["creator"];?>");
 					<?php if ($can_create) {?>
 					var new_org = document.createElement("DIV");

@@ -10,6 +10,7 @@
  */
 return array(
 	array("separate_boys_girls_IS","Separate the boys and girls figures for the information sessions",false,array(true,false),"boolean"),
-	array("test","This is a test","toto",array("toto","titi","tata"),"")
+	array("give_name_to_IS","Be able to set a custom name to the informations sessions",true,array(true,false),"boolean"),
+	array("default_duration_IS","Pre-selected duration of an Information Session","3 hours",array("1 hour","2 hours","3 hours","4 hours","6 hours","8 hours","All day"),""),
 );
 ?>
