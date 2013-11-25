@@ -129,9 +129,9 @@ class page_curriculum extends Page {
 		function build_period(period) {
 			var element = build_element(null, period.name, function(elem,menu) {
 				if (edit) {
-					menu.addIconItem(theme.build_icon("/static/students/curriculum_16.png", theme.icons_10.add,"right_bottom"), "Add Specialization", function() { new_specialization(period) });
+					menu.addIconItem(theme.build_icon("/static/curriculum/curriculum_16.png", theme.icons_10.add,"right_bottom"), "Add Specialization", function() { new_specialization(period) });
 					menu.addSeparator();
-					menu.addIconItem(theme.build_icon("/static/students/subjects_16.png", theme.icons_10.add,"right_bottom"), "Add Subject Category", new_category);
+					menu.addIconItem(theme.build_icon("/static/curriculum/subjects_16.png", theme.icons_10.add,"right_bottom"), "Add Subject Category", new_category);
 				}
 			});
 			var item = new TreeItem(element, true);
@@ -148,7 +148,7 @@ class page_curriculum extends Page {
 			}
 		}
 		function build_specialization(spe, period) {
-			var element = build_element("/static/students/curriculum_16.png", spe.name, function(elem,menu) {
+			var element = build_element("/static/curriculum/curriculum_16.png", spe.name, function(elem,menu) {
 				// TODO
 			});
 			var item = new TreeItem(element, true);
@@ -161,11 +161,11 @@ class page_curriculum extends Page {
 				build_category(categories[i], period, spe);
 		}
 		function build_category(cat, period, spe) {
-			var element = build_element("/static/students/subjects_16.png", cat.name, function(elem,menu) {
+			var element = build_element("/static/curriculum/subjects_16.png", cat.name, function(elem,menu) {
 				if (edit) {
-					menu.addIconItem(theme.build_icon("/static/students/subject_16.png", theme.icons_10.add, "right_bottom"), "Add Subject", function() { new_subject(period, cat, spe); });
+					menu.addIconItem(theme.build_icon("/static/curriculum/subject_16.png", theme.icons_10.add, "right_bottom"), "Add Subject", function() { new_subject(period, cat, spe); });
 					//menu.addSeparator();
-					//menu.addIconItem(theme.build_icon("/static/students/subjects_16.png", theme.icons_10.remove,"right_bottom"), "Remove Category "+cat.name, function() { remove_category(cat); });
+					//menu.addIconItem(theme.build_icon("/static/curriculum/subjects_16.png", theme.icons_10.remove,"right_bottom"), "Remove Category "+cat.name, function() { remove_category(cat); });
 				}
 			});
 			var item = new TreeItem(element, true);
@@ -190,7 +190,7 @@ class page_curriculum extends Page {
 			}
 		}
 		function build_subject(subject, cat_item) {
-			var element = build_element("/static/students/subject_16.png", subject.code+" - "+subject.name);
+			var element = build_element("/static/curriculum/subject_16.png", subject.code+" - "+subject.name);
 			var item = new TreeItem(element);
 			item.subject = subject;
 			element.item = item;
@@ -259,7 +259,7 @@ class page_curriculum extends Page {
 						}
 						var add_spe_to_period = function(period_index) {
 							p.freeze("Add specialization "+spe.name+" to period "+periods_to_add[period_index].name+"...");
-							service.json("students","add_period_specialization",{period:periods_to_add[period_index].id,specialization:spe.id},function(res){
+							service.json("curriculum","add_period_specialization",{period:periods_to_add[period_index].id,specialization:spe.id},function(res){
 								if (!res) { p.unfreeze(); return; }
 								// if we have the period on the screen, update it
 								period = null;
@@ -326,7 +326,7 @@ class page_curriculum extends Page {
 		}
 		function new_category() {
 			input_dialog(
-				theme.build_icon("/static/students/subjects_16.png",theme.icons_10.add,"right_bottom"),
+				theme.build_icon("/static/curriculum/subjects_16.png",theme.icons_10.add,"right_bottom"),
 				"New Subject Category",
 				"Category name",
 				"",
@@ -363,8 +363,8 @@ class page_curriculum extends Page {
 		}
 		function new_subject(period, category, spe) {
 			require("popup_window.js",function() {
-				var p = new popup_window("New Subject", theme.build_icon("/static/students/subject_16.png", theme.icons_10.add, "right_bottom"), "");
-				var frame = p.setContentFrame("/dynamic/students/page/new_subject?period="+period.id+"&category="+category.id+(spe ? "&specialization="+spe.id : ""));
+				var p = new popup_window("New Subject", theme.build_icon("/static/curriculum/subject_16.png", theme.icons_10.add, "right_bottom"), "");
+				var frame = p.setContentFrame("/dynamic/curriculum/page/new_subject?period="+period.id+"&category="+category.id+(spe ? "&specialization="+spe.id : ""));
 				p.addOkCancelButtons(function(){
 					var w = getIFrameWindow(frame);
 					if (!w.validate()) return;

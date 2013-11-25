@@ -335,6 +335,10 @@ function popup_window(title,icon,content,hide_close_button) {
 		}
 		t.close_button_td.onclick = null;
 	};
+	t.set_freeze_content = function(content) {
+		if (!t.freezer) return;
+		set_lock_screen_content(t.freezer, content);
+	};
 	t.unfreeze = function() {
 		if (!t.freezer) return;
 		t.content_container.removeChild(t.freezer);

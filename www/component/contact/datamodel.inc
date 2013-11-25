@@ -20,7 +20,8 @@ class ContactDisplayHandler extends datamodel\DataDisplayHandler {
 		PNApplication::error("createEntry not supported by ContactDisplayHandler");
 	}
 	
-	public function stopHere() { return true; }
+	public function canFollow($foreign_key_name) { return false; }
+	public function canJoin() { return false; }
 }
 
 class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
@@ -105,7 +106,8 @@ class AddressDisplayHandler extends datamodel\DataDisplayHandler {
 		PNApplication::error("createEntry not supported by AddressDisplayHandler");
 	}
 	
-	public function stopHere() { return true; }
+	public function canFollow($foreign_key_name) { return false; }
+	public function canJoin() { return false; }
 }
 class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 
@@ -556,7 +558,7 @@ $model->addTable("Organization")
 		"name" => "Name",
 		"creator" => "Managed by",
 	), array(
-		"creator"=>array("not_editable")
+		"creator"
 	)))
 	;
 $model->addDataCategoryLink("Contacts", "/dynamic/contact/page/organization_profile?organization=%Organization.id%", "/static/contact/organization.png");

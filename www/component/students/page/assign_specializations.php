@@ -33,13 +33,13 @@ class page_assign_specializations extends Page {
 			<th>Students assigned to <?php echo $specializations[0]["BATCH_SPE_NAME"];?></th>
 		</tr>
 		<tr>
-			<td rowspan=<?php echo (count($specializations)-1)*2+1;?> id='non_assigned'></td>
+			<td rowspan=<?php echo (count($specializations)-1)*2+1;?> id='non_assigned' valign=top></td>
 			<td valign='middle'>
 				<div class='button' onclick="assign('<?php echo $specializations[0]["BATCH_SPE_ID"];?>');" title='Assign'><img src='<?php echo theme::$icons_16["right"];?>'/></div>
 				<br/>
 				<div class='button' onclick="unassign('<?php echo $specializations[0]["BATCH_SPE_ID"];?>');" title='Unassign'><img src='<?php echo theme::$icons_16["left"];?>'/></div>
 			</td>
-			<td id='assigned_<?php echo $specializations[0]["BATCH_SPE_ID"];?>'></td>
+			<td id='assigned_<?php echo $specializations[0]["BATCH_SPE_ID"];?>' valign=top></td>
 		</tr>
 		<?php
 		for ($i = 1; $i < count($specializations); $i++) {
@@ -50,7 +50,7 @@ class page_assign_specializations extends Page {
 				echo "<br/>";
 				echo "<div class='button' onclick='unassign(\"".$specializations[$i]["BATCH_SPE_ID"]."\");' title='Assign'><img src='".theme::$icons_16["left"]."'/></div>";
 			echo "</td>";
-			echo "<td id='assigned_".$specializations[$i]["BATCH_SPE_ID"]."'></td>";
+			echo "<td id='assigned_".$specializations[$i]["BATCH_SPE_ID"]."' valign=top></td>";
 			echo "</tr>";
 		} 
 		?>
@@ -63,7 +63,7 @@ class page_assign_specializations extends Page {
 			echo "{";
 			echo "people:".$student["people"];
 			echo ",first_name:".json_encode($student["first_name"]);
-			echo ",last_name:".json_encode($student["first_name"]);
+			echo ",last_name:".json_encode($student["last_name"]);
 			echo ",original_spe:".json_encode($student["specialization"]);
 			echo ",assigned_spe:".json_encode($student["specialization"]);
 			echo ",can_change:";
@@ -90,6 +90,7 @@ class page_assign_specializations extends Page {
 			if ($first) $first = false; else echo ",";
 			echo "{";
 			echo "id:".$spe["BATCH_SPE_ID"];
+			echo ",name:".json_encode($spe["BATCH_SPE_NAME"]);
 			echo "}";
 		} 
 		?>];
@@ -118,6 +119,10 @@ class page_assign_specializations extends Page {
 				s.div.parentNode.removeChild(s.div);
 				document.getElementById("assigned_"+spe_id).appendChild(s.div);
 			}
+			if (window.parent.get_popup_window_from_frame) {
+				var p = window.parent.get_popup_window_from_frame(window);
+				if (p) p.resize();
+			}
 		}
 		function unassign(spe_id) {
 			for (var i = 0; i < students.length; ++i) {
@@ -129,17 +134,32 @@ class page_assign_specializations extends Page {
 				s.div.parentNode.removeChild(s.div);
 				document.getElementById("non_assigned").appendChild(s.div);
 			}
-		}
-		function save(ondone) {
-			var data = [];
-			for (var i = 0; i < students.length; ++i) {
-				var s = students[i];
-				if (s.assigned_spe != s.original_spe)
-					data.push({student:s.people,specialization:s.assigned_spe});
+			if (window.parent.get_popup_window_from_frame) {
+				var p = window.parent.get_popup_window_from_frame(window);
+				if (p) p.resize();
 			}
-			service.json("students", "assign_specializations", data, function(res) {
-				ondone(res);
-			});
+		}
+		function save(onprogress, ondone) {
+			var next = function(i) {
+				if (i == students.length) {
+					ondone();
+					return;
+				}
+				var s = students[i];
+				if (s.assigned_spe == s.original_spe) { next(i+1); return; }
+				var spe = null;
+				if (s.assigned_spe != null)
+					for (var j = 0; j < specializations.length; ++j)
+						if (specializations[j].id == s.assigned_spe) { spe = specializations[j]; break; }
+				if (spe != null)
+					onprogress("Assign "+s.first_name+" "+s.last_name+" to specialization "+spe.name);
+				else
+					onprogress("Unassign "+s.first_name+" "+s.last_name);
+				service.json("students", "assign_specialization", {student:s.people,specialization:s.assigned_spe}, function(res) {
+					next(i+1);
+				});
+			}
+			next(0);
 		}
 		</script>
 		<?php 

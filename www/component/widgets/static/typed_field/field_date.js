@@ -67,7 +67,7 @@ field_date.prototype._create = function(data) {
 		require("date_select.js", function() {
 			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
 			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
-			t.select = new date_select(t.element, data == null ? null : t.parseDate(data), min, max);
+			t.select = new date_select(t.element, t.data == null ? null : t.parseDate(t.data), min, max);
 			t.select.onchange = function() {
 				var date = t.select.getDate();
 				if (date) date = dateToSQL(date);
@@ -109,7 +109,9 @@ field_date.prototype._create = function(data) {
 		};
 		this.setData = function(data) {
 			if (data == t.data) return;
-			t.select.selectDate(data == null ? null : t.parseDate(data));
+			t.data = data;
+			if (t.select)
+				t.select.selectDate(data == null ? null : t.parseDate(data));
 			if (data != t.getOriginalData()) setTimeout(function() { t._datachange(); },1);
 		};
 		this.signal_error = function(error) {

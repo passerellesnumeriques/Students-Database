@@ -86,7 +86,7 @@ class page_new_class extends Page {
 		function submit(ondone) {
 			var form = document.forms['new_class'];
 			var lock = lock_screen();
-			service.json("students","new_class",
+			service.json("curriculum","new_class",
 				{
 					name: form.elements['name'].value,
 					specialization: form.elements['specialization'].value == "NULL" ? null : form.elements['specialization'].value,

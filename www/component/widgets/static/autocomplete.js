@@ -30,7 +30,7 @@ function autocomplete(container, provider, min_chars, default_message, onselect,
 					else
 						div.appendChild(items[i].html);
 				} else
-					div.innerHTML = items[i].text;
+					div.appendChild(document.createTextNode(items[i].text));
 				div.item = items[i];
 				div.onclick = function(){onselect(this.item);t.input.value=this.item.text;};
 				t.context.addItem(div);

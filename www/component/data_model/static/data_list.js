@@ -591,9 +591,11 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			if (t._filters.indexOf(filter) > 0) td.innerHTML = "And";
 			tr.appendChild(td = document.createElement("TD"));
 			td.style.borderBottom = "1px solid #808080";
+			td.style.whiteSpace = 'nowrap';
 			td.appendChild(document.createTextNode(filter.category+": "+filter.name));
 			tr.appendChild(td = document.createElement("TD"));
 			td.style.borderBottom = "1px solid #808080";
+			td.style.whiteSpace = 'nowrap';
 			var dd = null;
 			for (var j = 0; j < t._available_fields.length; ++j)
 				if (t._available_fields[j].category == filter.category && t._available_fields[j].name == filter.name) {
@@ -622,8 +624,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				tr.appendChild(td = document.createElement("TD"));
 				td.style.borderBottom = "1px solid #808080";
 				td.style.textAlign = "right";
+				td.style.whiteSpace = 'nowrap';
 				td.appendChild(document.createTextNode("Or"));
 				tr.appendChild(td = document.createElement("TD"));
+				td.style.whiteSpace = 'nowrap';
 				td.style.borderBottom = "1px solid #808080";
 				var f = new window[dd.filter_classname](filter.or.data, dd.filter_config);
 				td.appendChild(f.getHTMLElement());

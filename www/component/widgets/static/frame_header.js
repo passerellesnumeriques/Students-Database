@@ -75,34 +75,21 @@ function frame_header(container) {
 			new horizontal_layout(t.header);
 		});
 	};
-	t.hider = null;
 	t.frame_unload = function() {
-		if (t.hider != null) return;
-		var div = document.createElement("DIV");
-		div.style.position = 'fixed';
-		div.style.top = absoluteTop(t.frame)+"px";
-		div.style.left = absoluteLeft(t.frame)+"px";
-		div.style.width = t.frame.offsetWidth+"px";
-		div.style.height = t.frame.offsetHeight+"px";
-		div.style.backgroundColor = '#808080';
-		div.style.zIndex = 25;
-		if (typeof animation != 'undefined')
-			div.anim = animation.fadeIn(div, 500, function(){}, 0, 50);
-		else
-			setOpacity(div, 50);
-		document.body.appendChild(div);
-		t.hider = div;
+		if (typeof animation != 'undefined') {
+			if (t.frame.anim) animation.stop(t.frame.anim);
+			t.frame.anim = animation.fadeOut(t.frame, 300, function(){t.frame.style.visibility = 'hidden';});
+		} else
+			t.frame.style.visibility = 'hidden';
 	};
 	t.frame_load = function() {
 		listenEvent(getIFrameWindow(t.frame),'unload',function() { t.frame_unload(); });
-		if (t.hider == null) return;
-		var div = t.hider;
-		t.hider = null;
 		if (typeof animation != 'undefined') {
-			if (div.anim) animation.stop(div.anim);
-			animation.fadeOut(div, 300, function(){document.body.removeChild(div);}, 50, 0);
+			if (t.frame.anim) animation.stop(t.frame.anim);
+			t.frame.anim = animation.fadeIn(t.frame, 300, function(){});
+			t.frame.style.visibility = 'visible';
 		} else
-			document.body.removeChild(div);
+			t.frame.style.visibility = 'visible';
 	};	
 	
 	t._init();

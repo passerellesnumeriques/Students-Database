@@ -14,7 +14,7 @@ class staff extends Component implements PeoplePlugin, AdministrationPlugin {
 				array(
 					"/static/staff/staff_16.png",
 					"PN Staff",
-					"component/staff/page/staff_info.inc.inc",
+					"component/staff/page/profile_people_staff.inc",
 					5
 				)
 			);
@@ -79,19 +79,13 @@ class staff extends Component implements PeoplePlugin, AdministrationPlugin {
 			$staff_alias = $q->table_id();
 			$q->join($people_table_alias, "Staff", array("id"=>"people"), $staff_alias);
 		}
-		$alias = $q->get_field_alias($staff_alias, "people");
-		if ($alias == null) {
-			$alias = $q->field_id();
-			$q->field($staff_alias, "people", $alias);
-		}
+		$q->field($staff_alias, "people", "STAFF_PEOPLE");
 	}
 	public function filterPeopleWriteAccess($people_rows) {
-		$staff_alias = $q->get_table_alias("Staff");
-		$alias = $q->get_field_alias($staff_alias, "people");
 		$final = array();
 		if (PNApplication::$instance->user_management->has_right("manage_staff"))
 			foreach ($people_rows as $row)
-				if ($row[$alias] <> null) array_push($final, $row); 
+				if ($row["STAFF_PEOPLE"] <> null) array_push($final, $row); 
 		return $final; 
 	}
 	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {
@@ -100,19 +94,13 @@ class staff extends Component implements PeoplePlugin, AdministrationPlugin {
 			$staff_alias = $q->table_id();
 			$q->join($people_table_alias, "Staff", array("id"=>"people"), $staff_alias);
 		}
-		$alias = $q->get_field_alias($staff_alias, "people");
-		if ($alias == null) {
-			$alias = $q->field_id();
-			$q->field($staff_alias, "people", $alias);
-		}
+		$q->field($staff_alias, "people", "STAFF_PEOPLE");
 	}
 	public function filterPeopleRemoveAccess($people_rows) { 
-		$staff_alias = $q->get_table_alias("Staff");
-		$alias = $q->get_field_alias($staff_alias, "people");
 		$final = array();
 		if (PNApplication::$instance->user_management->has_right("manage_staff"))
 			foreach ($people_rows as $row)
-				if ($row[$alias] <> null) array_push($final, $row); 
+				if ($row["STAFF_PEOPLE"] <> null) array_push($final, $row); 
 		return $final; 
 	}
 	

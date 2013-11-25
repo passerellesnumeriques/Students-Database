@@ -291,6 +291,12 @@ function setBackgroundGradient(element, orientation, stops) {
 	}
 	// TODO W3C ???
 }
+
+function setRotation(element, degres) {
+	element.style.transform = "rotate("+degres+"deg)";
+	element.style.MsTransform = "rotate("+degres+"deg)";
+	element.style.WebkitTransform = "rotate("+degres+"deg)";
+}
 	
 /**
  * Return an object that will contain the same information whatever browser is used: {x,y,button}

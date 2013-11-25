@@ -132,7 +132,7 @@ class page_staff extends Page {
 				});
 			};
 			html.appendChild(icon);
-			return new TreeItem([new TreeCell(html)]);
+			return new TreeItem([new TreeCell(html)], true);
 		}
 
 		function staff_item(staff) {

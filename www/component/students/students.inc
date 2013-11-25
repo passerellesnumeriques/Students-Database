@@ -55,6 +55,37 @@ class students extends Component implements PeoplePlugin {
 		return true;
 	}
 	
+	public function assign_student_to_class($student_people_id, $class_id, $period_id) {
+		// check the class exists
+		if ($class_id <> null) {
+			$class = SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->execute_single_row();
+			if ($class == null) { PNApplication::error("Invalid class id"); return false; }
+			if ($class["period"] <> $period_id) { PNApplication::error("The class is not in the given academic period"); return false; }
+		}
+		// check the student exists
+		$student = SQLQuery::create()->select("Student")->where("people", $student_people_id)->execute_single_row();
+		if ($student == null) { PNApplication::error("Invalid student id"); return false; }
+		// check the class specialization is compatible to student specialization
+		if ($class_id <> null) {
+			if ($class["specialization"] <> $student["specialization"]) { PNApplication::error("Student's specialization does not match with class' specialization"); return false; }
+		}
+		// get the assignment of this student for this academic period
+		$assigned = SQLQuery::create()
+			->select("StudentClass")
+			->where_value("StudentClass", "people", $student_people_id)
+			->join("StudentClass", "AcademicClass", array("class"=>"id"))
+			->where_value("AcademicClass", "period", $period_id)
+			->field("StudentClass", "class", "class")
+			->execute();
+		// do it
+		foreach ($assigned as $a)
+			SQLQuery::create()->remove_key("StudentClass", array("people"=>$student_people_id,"class"=>$assigned["class"]));
+		if ($class_id <> null) {
+			SQLQuery::create()->insert("StudentClass", array("people"=>$student_people_id,"class"=>$class_id));
+		}
+		return true;
+	}
+	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
 		$alias = $q->table_id();
 		$people_alias = $q->get_table_alias("People");

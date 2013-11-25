@@ -14,8 +14,7 @@ function TreeItem(cells, expanded) {
 		this.children.push(item);
 		if (this.tree) {
 			this.tree._create_item(this, item);
-			this.tree._refresh_heads(this.parent);
-			this.tree._refresh_heads(this);
+			this.tree._refresh_heads();
 		}
 	};
 	this.removeItem = function(item) {
@@ -23,8 +22,7 @@ function TreeItem(cells, expanded) {
 		this.children.remove(item);
 		if (this.tree) {
 			this.tree._removeItem(item);
-			this.tree._refresh_heads(this.parent);
-			this.tree._refresh_heads(this);
+			this.tree._refresh_heads();
 		}
 	};
 	this.get_level = function() {
@@ -39,8 +37,7 @@ function TreeItem(cells, expanded) {
 		this.expanded = true;
 		for (var i = 0; i < this.children.length; ++i)
 			this._show(this.children[i]);
-		this.tree._refresh_heads(this.parent);
-		this.tree._refresh_heads(this);
+		this.tree._refresh_heads();
 	};
 	this._show = function(item) {
 		item.tr.style.visibility = 'visible';
@@ -48,7 +45,7 @@ function TreeItem(cells, expanded) {
 		if (item.expanded) {
 			for (var i = 0; i < item.children.length; ++i)
 				this._show(item.children[i]);
-			this.tree._refresh_heads(item);
+			this.tree._refresh_heads();
 		}
 	};
 	this.collapse = function() {
@@ -56,7 +53,7 @@ function TreeItem(cells, expanded) {
 		this.expanded = false;
 		for (var i = 0; i < this.children.length; ++i)
 			this._hide(this.children[i]);
-		this.tree._refresh_heads(this.parent);
+		this.tree._refresh_heads();
 	};
 	this._hide = function(item) {
 		item.tr.style.visibility = 'hidden';
@@ -74,6 +71,7 @@ function tree(container) {
 	this.columns = [];
 	this.show_columns = false;
 	this.items = [];
+	var url = get_script_path("tree.js");
 	
 	this._build_from_html = function() {
 		// TODO
@@ -163,74 +161,76 @@ function tree(container) {
 		for (var i = 0; i < item.children.length; ++i)
 			this._create_item(item, item.children[i]);
 	};
-	this._refresh_heads = function(parent) {
-		var items = parent ? parent.children : this.items;
-		var level = 0;
-		var p = parent;
-		while (p) { level++; p = p.parent; }
-		var url = get_script_path("tree.js");
-		for (var i = 0; i < items.length; ++i) {
-			var item = items[i];
-			item.head.style.width = ((level+1)*16)+'px';
-			item.head.style.verticalAlign = "bottom";
-			item.head.style.height = "";
-			item.head.style.height = item.head.parentNode.clientHeight+'px';
-			while (item.head.childNodes.length > 0) item.head.removeChild(item.head.childNodes[0]);
-			var p = parent;
-			var plevel = 1;
-			while (p) {
-				var list = p.parent ? p.parent.children : this.items;
-				var index = list.indexOf(p);
-				if (index != list.length-1) {
-					var line = document.createElement("DIV");
-					line.style.position = 'absolute';
-					line.style.width = "1px";
-					line.style.left = (plevel*16+9)+'px';
-					line.style.top = '0px';
-					line.style.height = '100%';
-					line.style.borderLeft = "1px solid #A0A0A0";
-					item.head.appendChild(line);
-				}
-				p = p.parent;
-				plevel++;
+	this._refresh_heads = function() {
+		for (var i = 0; i < this.items.length; ++i)
+			this._refresh_head(this.items[i], [], i > 0, i < this.items.length-1);
+	};
+	this._refresh_head = function(item, parents, has_before, has_after) {
+		item.head.style.width = ((parents.length+1)*16)+'px';
+		item.head.style.verticalAlign = "bottom";
+		item.head.style.height = "";
+		item.head.style.height = item.head.parentNode.clientHeight+'px';
+		while (item.head.childNodes.length > 0) item.head.removeChild(item.head.childNodes[0]);
+		// lines of parents
+		for (var i = 0; i < parents.length; ++i) {
+			if (!parents[i]) continue;
+			var line = document.createElement("DIV");
+			line.style.position = 'absolute';
+			line.style.width = "1px";
+			line.style.left = (i*16+9)+'px';
+			line.style.top = '0px';
+			line.style.height = '100%';
+			line.style.borderLeft = "1px solid #A0A0A0";
+			item.head.appendChild(line);
+		}
+		// vertical line
+		if (has_before || has_after) {
+			var line = document.createElement("DIV");
+			line.style.position = 'absolute';
+			line.style.width = "1px";
+			line.style.right = '7px';
+			if (has_after && has_before) {
+				line.style.top = "0px";
+				line.style.height = "100%";
+			} else if (has_after) {
+				line.style.bottom = "0px";
+				line.style.height = "6px";
+			} else {
+				line.style.bottom = "5px";
+				line.style.height = (getHeight(item.tr)-5)+"px";
 			}
-			
-			// vertical line
-			//if (items.length != 1) 
-			{
-				var line = document.createElement("DIV");
-				line.style.position = 'absolute';
-				line.style.width = "1px";
-				line.style.right = '7px';
-				line.style.bottom = i < items.length-1 ? "0px" : "5px"; 
-				line.style.height = i == 0 && !item.parent ? "6px" : i < items.length-1 ? "100%" : (getHeight(item.tr)-5)+"px";
-				line.style.borderLeft = "1px solid #A0A0A0";
-				item.head.appendChild(line);
-			}
-			// horizontal line
-			{
-				var line = document.createElement("DIV");
-				line.style.position = 'absolute';
-				line.style.width = "7px";
-				line.style.right = '1px';
-				line.style.bottom = "4px"; 
-				line.style.height = "1px";
-				line.style.borderTop = "1px solid #A0A0A0";
-				item.head.appendChild(line);
-			}
-			
-			// box
-			if (item.children.length > 0) {
-				var img = document.createElement("IMG");
-				img.src = url+(item.expanded ? "minus" : "plus")+".png";
-				img.style.position = 'absolute';
-				img.style.right = '4px';
-				img.style.bottom = '1px';
-				item.head.appendChild(img);
-				img.style.cursor = 'pointer';
-				img.item = item;
-				img.onclick = function() { this.item.toggle_expand(); };
-			}
+			line.style.borderLeft = "1px solid #A0A0A0";
+			item.head.appendChild(line);
+		}
+		// horizontal line
+		{
+			var line = document.createElement("DIV");
+			line.style.position = 'absolute';
+			line.style.width = "7px";
+			line.style.right = '1px';
+			line.style.bottom = "4px"; 
+			line.style.height = "1px";
+			line.style.borderTop = "1px solid #A0A0A0";
+			item.head.appendChild(line);
+		}
+		// box
+		if (item.children.length > 0) {
+			var img = document.createElement("IMG");
+			img.src = url+(item.expanded ? "minus" : "plus")+".png";
+			img.style.position = 'absolute';
+			img.style.right = '4px';
+			img.style.bottom = '1px';
+			item.head.appendChild(img);
+			img.style.cursor = 'pointer';
+			img.item = item;
+			img.onclick = function() { this.item.toggle_expand(); };
+		}
+		// children
+		var children_parents = [];
+		for (var i = 0; i < parents.length; ++i) children_parents.push(parents[i]);
+		children_parents.push(has_after);
+		for (var i = 0; i < item.children.length; ++i) {
+			this._refresh_head(item.children[i], children_parents, true, i < item.children.length-1);
 		}
 	};
 

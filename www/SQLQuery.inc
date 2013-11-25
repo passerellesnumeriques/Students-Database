@@ -54,6 +54,8 @@ class SQLQuery {
  			$this->limit_from = $copy->limit_from;
  			$this->limit_number = $copy->limit_number;
  			$this->group_by = $copy->group_by;
+ 			$this->field_id_counter = $copy->field_id_counter;
+ 			$this->table_id_counter = $copy->table_id_counter;
  		}
  		$this->sub_models = array_merge(SQLQuery::$preselected_submodels);
  	}
@@ -203,13 +205,19 @@ class SQLQuery {
 			$field = func_get_arg(0);
 			$op = func_get_arg(1);
 			$value = func_get_arg(2);
+			$table = null;
+			require_once("component/data_model/Model.inc");
+			foreach ($this->tables as $t=>$a) {
+				if ($a <> null) $table = $a; else $table = DataModel::get()->internalGetTable($t)->getSQLName($this->sub_models);
+				break;
+			}
 			if ($value === null) {
 				if ($op == "=")
-					array_push($this->where, "`".$field."` IS NULL");
+					array_push($this->where, "`".$table."`.`".$field."` IS NULL");
 				else
-					array_push($this->where, "`".$field."` IS NOT NULL");
+					array_push($this->where, "`".$table."`.`".$field."` IS NOT NULL");
 			} else
-				array_push($this->where, "`".$field."`".$op."'".SQLQuery::escape(utf8_decode($value))."'");
+				array_push($this->where, "`".$table."`.`".$field."`".$op."'".SQLQuery::escape(utf8_decode($value))."'");
 		}
 		return $this;
 	}
@@ -484,7 +492,7 @@ class SQLQuery {
 			$sql .= " ON ";
 			$source_table = $join[0];
 			if (!in_array($source_table, $aliases))
-				$source_table = DataModel::get()->getTable($join[0])->getSQLName($this->sub_models);
+				$source_table = DataModel::get()->internalGetTable($join[0])->getSQLName($this->sub_models);
 			$first = true;
 			foreach ($join[2] as $field_from=>$field_to) {
 				if ($first) $first = false; else $sql .= " AND ";

@@ -31,6 +31,15 @@ class service_test_data extends Service {
 				$this->SplitSQL($db_system, "component/development/data/students_batches.sql");
 				$this->SplitSQL($db_system, "component/development/data/students_academic_periods.sql");
 				$this->SplitSQL($db_system, "component/development/data/curriculumsubjectcategory.sql");
+				$this->SplitSQL($db_system, "component/development/data/academicperiodspecialization.sql");
+				$this->SplitSQL($db_system, "component/development/data/academicclass.sql");
+				$this->SplitSQL($db_system, "component/development/data/curriculumsubject.sql");
+				$this->SplitSQL($db_system, "component/development/data/specialization.sql");
+				$this->SplitSQL($db_system, "component/development/data/students_people.sql");
+				$this->SplitSQL($db_system, "component/development/data/students_people_contact.sql");
+				$this->SplitSQL($db_system, "component/development/data/students_contact.sql");
+				$this->SplitSQL($db_system, "component/development/data/student.sql");
+				$this->SplitSQL($db_system, "component/development/data/studentclass.sql");
 			}
 		}		
 	}
