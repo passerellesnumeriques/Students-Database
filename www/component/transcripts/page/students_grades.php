@@ -49,7 +49,8 @@ class page_students_grades extends Page {
 			->field("CurriculumSubject","code","code")
 			->field("CurriculumSubject","name","name")
 			->field("CurriculumSubjectGrading","weight","weight")
-			->field("CurriculumSubjectGrading","passing","passing")
+			->field("CurriculumSubjectGrading","passing_grade","passing_grade")
+			->field("CurriculumSubjectGrading","max_grade","max_grade")
 			;
 		if ($spe_id <> null)
 			$q->where_value("CurriculumSubject", "specialization", $spe_id);
@@ -93,7 +94,8 @@ class page_students_grades extends Page {
 				echo ",name:".json_encode($subject["name"]);
 				echo ",code:".json_encode($subject["code"]);
 				echo ",weight:".json_encode($subject["weight"]);
-				echo ",passing:".json_encode($subject["passing"]);
+				echo ",max_grade:".json_encode($subject["max_grade"]);
+				echo ",passing_grade:".json_encode($subject["passing_grade"]);
 				echo "}";
 			}
 			echo "]";

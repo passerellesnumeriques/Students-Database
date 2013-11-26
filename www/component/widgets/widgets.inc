@@ -57,5 +57,15 @@ class widgets extends Component {
 		return array(null,"null");
 	}
 	
+	public function create_typed_field(&$page, $variable_name, $table, $column, $editable, $data) {
+		require_once("component/data_model/Model.inc");
+		$t = DataModel::get()->getTable($table);
+		$col = $t->getColumn($column);
+		$tf = $this->get_typed_field($col);
+		$page->add_javascript("/static/widgets/typed_field/typed_field.js");
+		$page->add_javascript("/static/widgets/typed_field/".$tf[0].".js");
+		echo $variable_name." = new ".$tf[0]."(".$data.",".$editable.",".$tf[1].");";
+	}
+	
 }
 ?>
