@@ -67,7 +67,9 @@
 		->addWriteAccess("edit_information_session",true)
 		->addReadAccess("see_information_session_details",true)
 		->addInsertAccess("manage_information_session",true)
-		->addRemoveAccess("manage_information_session",true);		
+		->addRemoveAccess("manage_information_session",true)
+		->setDisplayHandler("people", new datamodel\StopDataDisplayHandler("Selection", "Selection"))
+		;		
 		
 	$sm->addTable("Selection_campaign_config")
 		->addString("name",255,1,false,true)//the name must be unique (key...)

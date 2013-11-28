@@ -33,9 +33,5 @@ class data_model extends Component {
 		}
 	}
 	
-	public function get_data_list($root_table, $fields) {
-		
-	}
-	
 }
 ?>

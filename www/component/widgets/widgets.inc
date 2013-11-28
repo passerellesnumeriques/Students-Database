@@ -14,8 +14,12 @@ class widgets extends Component {
 			return array("field_text", $cfg);
 		}
 		if ($col instanceof \datamodel\ColumnInteger) {
-			// TODO
-			return array("field_text","{}");
+			$cfg = "{";
+			$cfg .= "can_be_null:".json_encode($col->can_be_null);
+			if ($col->min <> null) $cfg .= ",min:".$col->min;
+			if ($col->max <> null) $cfg .= ",max:".$col->min;
+			$cfg .= "}";
+			return array("field_text",$cfg);
 		}
 		if ($col instanceof \datamodel\ColumnEnum) {
 			$args = "{possible_values:[";

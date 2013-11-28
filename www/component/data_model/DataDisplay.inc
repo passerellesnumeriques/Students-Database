@@ -31,7 +31,7 @@ abstract class DataDisplay {
 	 * @param array $filters list of OR filter, with for each element the data of the filter
 	 * @return array("key"=>key_alias,"data"=>data_alias): if data is null or not specified, the function retrieveValue will be called to perform a sub-request retrieving the final value
 	 */
-	public abstract function buildSQL(&$q, $path, &$builder, $filters);
+	public abstract function buildSQL(&$q, $path, $filters);
 	/** If buildSQL didn't return a data alias, this function is called to perform a sub-request */
 	public function retrieveValue($row, $sql_aliases, $path, $filters) {}
 	
@@ -137,11 +137,11 @@ class SimpleDataDisplay extends DataDisplay {
 		return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
 	}
 	
-	public function buildSQL(&$q, $path, &$builder, $filters) {
-		$table_alias = $builder->build($path, $q);
+	public function buildSQL(&$q, $path, $filters) {
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		$alias = $q->get_field_alias($table_alias, $this->column_name);
 		if ($alias == null) {
-			$alias = $builder->new_alias();
+			$alias = $q->field_id();
 			$q->field($table_alias, $this->column_name, $alias);
 		}
 		$result = array("data"=>$alias);
@@ -154,7 +154,7 @@ class SimpleDataDisplay extends DataDisplay {
 		$key = $key->name;
 		$alias = $q->get_field_alias($table_alias, $key);
 		if ($alias == null) {
-			$alias = $builder->new_alias();
+			$alias = $q->field_id();
 			$q->field($table_alias, $key, $alias);
 		}
 		$result["key"] = $alias;
@@ -263,29 +263,29 @@ class ChoiceDataDisplay extends DataDisplay {
 		return !$foreign_key->can_be_null;
 	}
 	
-	public function buildSQL(&$q, $path, &$builder, $filters) {
+	public function buildSQL(&$q, $path, $filters) {
 		// we need to get the key, and the value to display
 		$foreign_key = $this->handler->table->getColumnFor($this->foreign_key_name, $path->sub_model);
 		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
 		
 		// go to the table
-		$table_alias = $builder->build($path, $q);
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		// join to foreign table
 		$alias = $q->get_join_alias($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name));
 		if ($alias == null) {
-			$alias = $builder->new_alias();
+			$alias = $q->table_id();
 			$q->join($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name), $alias);
 		}
 		// get the key and data
 		$col_name = $this->handler->table->getPrimaryKey()->name;
 		$key_alias = $q->get_field_alias($table_alias, $col_name);
 		if ($key_alias == null) {
-			$key_alias = $builder->new_alias();
+			$key_alias = $q->field_id();
 			$q->field($table_alias, $col_name, $key_alias);
 		}
 		$data_alias = $q->get_field_alias($table_alias, $foreign_key->name);
 		if ($data_alias == null) {
-			$data_alias = $builder->new_alias();
+			$data_alias = $q->field_id();
 			$q->field($table_alias, $foreign_key->name, $data_alias);
 		}
 		
@@ -379,13 +379,13 @@ class JoiningTableDataDisplay extends DataDisplay {
 		return false;
 	}
 	
-	public function buildSQL(&$q, $path, &$builder, $filters) {
+	public function buildSQL(&$q, $path, $filters) {
 		// we need to go to the parent, and get the joining key
-		$parent_alias = $builder->build($path->parent, $q);
+		$parent_alias = \DataPathSQLBuilder::build($path->parent, $q);
 		$key_name = $path->is_reverse() ? $path->parent->table->getPrimaryKey()->name : $path->foreign_key->name;
 		$alias = $q->get_field_alias($parent_alias, $key_name);
 		if ($alias == null) {
-			$alias = $builder->new_alias();
+			$alias = $q->field_id();
 			$q->field($parent_alias, $key_name, $alias);
 		}
 		// TODO filters
@@ -476,11 +476,11 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return array("table"=>$col->table->getName(), "column"=>$col->name);
 	}
 	
-	public function buildSQL(&$q, $path, &$builder, $filters) {
+	public function buildSQL(&$q, $path, $filters) {
 		$columns = explode(".", $this->data_path);
 		$t = $this->handler->table;
 		// go to the table
-		$table_alias = $builder->build($path, $q);
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		for ($i = 0; $i < count($columns); $i++) {
 			$col = $t->getColumnFor($columns[$i], $path->sub_model);
 			if ($i < count($columns)-1) {

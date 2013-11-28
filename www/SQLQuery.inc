@@ -162,11 +162,22 @@ class SQLQuery {
 	}
 	
 	public function get_field_alias($table, $field) {
-		foreach ($this->fields as $f)
-			if ($f[0] == $table && $f[1] == $field) {
+		foreach ($this->fields as $f) {
+			if ($f[1] <> $field) continue; // not the good field
+			$good_table = false;
+			if ($f[0] == $table) $good_table = true;
+			else {
+				foreach ($this->tables as $t=>$a)
+					if ($table == $t && $a == $f[0]) { $good_table = true; break; }
+				if (!$good_table)
+					foreach ($this->joins as $j)
+						if ($j[1] == $table && $f[0] == $j[3]) { $good_table = true; break; }
+			}
+			if ($good_table) {
 				if ($f[2] == null) return $field;
 				return $f[2];
 			}
+		}
 		return null;
 	}
 	public function get_table_alias($table) {

@@ -32,6 +32,7 @@ class service_get_data_list extends Service {
 	public function execute(&$component, $input) {
 		$table = $input["table"];
 		$fields = $input["fields"];
+		// retrieve data paths
 		require_once("component/data_model/DataPath.inc");
 		$possible = DataPathBuilder::search_from($table);
 		$paths = array();
@@ -39,23 +40,24 @@ class service_get_data_list extends Service {
 			$found = false;
 			foreach ($possible as $p)
 				if ($p->get_string() == $f["path"]) {
-					array_push($paths, $p);
-					$found = true;
-					break;
-				}
+				array_push($paths, $p);
+				$found = true;
+				break;
+			}
 			if (!$found) {
 				PNApplication::error("Unknown data path: ".$f["path"]);
 				return;
 			}
 		}
+
 		// init query with root table
 		$q = SQLQuery::create();
 		$t = DataModel::get()->getTable($table);
-		$builder = new DataPathSQLBuilder();
-		$alias = $builder->new_alias();
+		$alias = $q->table_id();
 		$table_name = $t->getSQLName(null);
 		$q->select(array($table_name=>$alias));
-		// finalize query for each data
+		
+		// retrieve DataDisplay, filters, and build the request
 		$data_aliases = array();
 		$display_data = array();
 		$filters = array();
@@ -95,7 +97,7 @@ class service_get_data_list extends Service {
 				array_push($f, $fil);
 			}
 			array_push($filters, $f);
-			array_push($data_aliases, $data->buildSQL($q, $path, $builder, $f));
+			array_push($data_aliases, $data->buildSQL($q, $path, $f));
 		}
 		
 		// add filters not related to a displayed data
@@ -118,7 +120,7 @@ class service_get_data_list extends Service {
 						array_push($fil, $filter["data"]);
 					}
 					$filter_list = array($fil);
-					$data->buildSQL($q, $path, $builder, $filter_list);
+					$data->buildSQL($q, $path, $filter_list);
 					break;
 				}
 				if ($found) break;
@@ -141,7 +143,7 @@ class service_get_data_list extends Service {
 				$links = $model->getDataCategoryLinks($cat);
 				if ($links <> null)
 					foreach ($links as $link)
-						array_push($actions, array($link->link,$link->icon));
+					array_push($actions, array($link->link,$link->icon));
 			}
 			foreach ($actions as &$action) {
 				$k = 0;
@@ -219,7 +221,7 @@ class service_get_data_list extends Service {
 					echo ",k:".json_encode($row[$a["key"]]);
 				else {
 					echo ",k:null";
-					PNApplication::error("Missing key '".$a["key"]."' for data '".$data->getDisplayName()."' in table '".$data->handler->table->getName()."'");
+					//PNApplication::error("Missing key '".$a["key"]."' for data '".$data->getDisplayName()."' in table '".$data->handler->table->getName()."'");
 				} 
 				echo "}";
 			}

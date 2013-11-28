@@ -33,9 +33,9 @@ class PNApplication {
 	 * @param string $message in plain text, which will be converted into html
 	 */
 	public static function error($message) {
-		if (count(PNApplication::$errors) == 50) {
+		if (count(PNApplication::$errors) == 20) {
 			array_push(PNApplication::$errors, "Too much errors");
-			throw new Exception("Too much errors");
+			return;
 		}
 		if (count(PNApplication::$errors) > 50) return;
 		if (!($message instanceof Exception)) {
