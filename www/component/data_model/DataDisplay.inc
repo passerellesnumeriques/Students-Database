@@ -467,8 +467,34 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return false; // TODO
 	}
 
-	public function getTypedFilter($sub_model) { 
-		return \PNApplication::$instance->widgets->get_typed_filter($this->getColumn($sub_model));
+	public function getTypedFilter($sub_model) {
+		$columns = explode(".", $this->data_path);
+		$t = $this->handler->table;
+		$last_key = null;
+		for ($i = 0; $i < count($columns); $i++) {
+			$col = $t->getColumnFor($columns[$i], $sub_model);
+			if ($i < count($columns)-1) {
+				$t = \DataModel::get()->getTable($col->foreign_table);
+				$last_key = $t->getPrimaryKey();
+			}
+		}
+		if ($last_key <> null) {
+			$cfg = "{possible_values:[";
+			$values = \SQLQuery::create()
+				->select($t->getName())
+				->field($t->getName(), $last_key->name, "KEY")
+				->field($t->getName(), $col->name, "VALUE")
+				->execute();
+			$first = true;
+			foreach ($values as $v) {
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= "[".$v["KEY"].",".json_encode($v["VALUE"])."]";
+			}
+			$cfg .= "]}";
+			$filter = array("filter_enum",$cfg);
+			return $filter;
+		} else
+			return \PNApplication::$instance->widgets->get_typed_filter($this->getColumn($sub_model));
 	}
 	
 	public function getSingleCell() { 
@@ -481,10 +507,12 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		$t = $this->handler->table;
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
+		$last_key = null;
 		for ($i = 0; $i < count($columns); $i++) {
 			$col = $t->getColumnFor($columns[$i], $path->sub_model);
 			if ($i < count($columns)-1) {
 				$ft = \DataModel::get()->getTable($col->foreign_table);
+				$last_key = $ft->getPrimaryKey();
 				$fta = $q->table_id();
 				$q->join($table_alias, $col->foreign_table, array($columns[$i]=>$ft->getPrimaryKey()->name), $fta);
 				$t = $ft;
@@ -495,7 +523,27 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		$q->field($table_alias, $t->getPrimaryKey()->name, $key_alias);
 		$data_alias = $q->field_id();
 		$q->field($table_alias, $col->name, $data_alias);
-		$this->applyColumnFilter($table_alias, $col, $filters, $q);
+		if ($last_key == null)
+			$this->applyColumnFilter($table_alias, $col, $filters, $q);
+		else {
+			foreach ($filters as $filter_list) {
+				$w = "";
+				foreach ($filter_list as $filter) {
+					if ($filter["value"] == "") continue;
+					if (strlen($w) > 0) $w .= " OR ";
+					$w .= "`".$table_alias."`.`".$last_key->name."`";
+					if ($filter["value"] == "NULL")
+						$w .= " IS NULL";
+					else if ($filter["value"] == "NOT_NULL")
+						$w .= " IS NOT NULL";
+					else
+						$w .= "='".\SQLQuery::escape($filter["value"])."'";
+				}
+				if (strlen($w) > 0)
+					$q->where($w);
+			}
+		}
+		
 		return array("key"=>$key_alias,"data"=>$data_alias);
 	}
 	

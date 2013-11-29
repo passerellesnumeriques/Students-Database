@@ -1,0 +1,72 @@
+<?php 
+class service_save_subject_evaluations extends Service {
+	
+	public function get_required_rights() { return array(); } // TODO
+	
+	public function documentation() { echo "Save subject grading information, including students' grades"; }
+	public function input_documentation() {
+		echo "<ul>";
+		echo "<li><code>subject_id</code>: id of the subject</li>";
+		echo "<li><code>types</code>: corresponds to the CurriculumSubjectEvaluationType table, including <code>evaluations</code> corresponding to the CurriculumSubjectEvaluation table</li>";
+		echo "</ul>";
+	}
+	public function output_documentation() { echo "true on success"; }
+	
+	public function execute(&$component, $input) {
+		set_time_limit(120);
+		SQLQuery::start_transaction();
+		$subject = SQLQuery::create()->select("CurriculumSubjectGrading")->where_value("CurriculumSubjectGrading", "subject", $input["subject_id"])->execute_single_row();
+		if ($subject == null) {
+			PNApplication::error("No information about this subject regarding grades");
+			SQLQuery::end_transaction();
+			return;
+		}
+		if ($subject["only_final_grade"] == 1) {
+			PNApplication::error("This subject is configured to have only final grades: you cannot change the evaluations");
+			SQLQuery::end_transaction();
+			return;
+		}
+		// update list of evaluations
+		$existing_types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "subject", $input["subject_id"])->execute();
+		foreach ($input["types"] as $type) {
+			if ($type["id"] < 0) {
+				// new evaluation type
+				$type["id"] = $component->create_evaluation_type($input["subject_id"], $type["name"], $type["weight"]);
+			} else {
+				$component->update_evaluation_type($type["id"], $type["name"], $type["weight"]);
+				for ($i = 0; $i < count($existing_types); $i++)
+					if ($existing_types[$i]["id"] == $type["id"]) {
+						array_splice($existing_types, $i, 1);
+						break;
+					}
+			}
+			set_time_limit(120);
+			$existing_evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->where_value("CurriculumSubjectEvaluation", "type", $type["id"])->execute();
+			foreach ($type["evaluations"] as $eval) {
+				if ($eval["id"] < 0) {
+					// new evaluation
+					$eval["id"] = $component->create_evaluation($type["id"], $eval["name"], $eval["weight"], $eval["max_grade"]);
+				} else {
+					$component->update_evaluation($eval["id"], $eval["name"], $eval["weight"], $eval["max_grade"]);
+					for ($i = 0; $i < count($existing_evaluations); $i++)
+						if ($existing_evaluations[$i]["id"] == $eval["id"]) {
+							array_splice($existing_evaluations, $i, 1);
+							break;
+						}
+				}
+			}
+			// remove remaining evaluations
+			foreach ($existing_evaluations as $eval)
+				$component->remove_evaluation($input["subject_id"],$type["id"], $eval["id"]);
+		}
+		set_time_limit(120);
+		// remove remainig types
+		foreach ($existing_types as $type)
+			$component->remove_evaluation_type($input["subject_id"],$type["id"]);
+		set_time_limit(120);
+		SQLQuery::end_transaction();
+		echo "true";
+	}
+	
+}
+?>

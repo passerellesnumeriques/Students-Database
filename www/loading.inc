@@ -110,7 +110,10 @@ function next_optional() {
 	_add_javascript(_optional_scripts[optional_index][0],function() {
 		loaded_size += _optional_scripts[optional_index][1];
 		update_size();
-		if (++optional_index == _optional_scripts.length) return;
+		if (++optional_index == _optional_scripts.length) {
+			document.getElementById('loading_status').innerHTML = "Loading <?php echo PNApplication::$instance->user_management->username <> null ? "Application Home Page" : "Login Page";?>...";
+			return;
+		}
 		next_optional(); 
 	});
 }

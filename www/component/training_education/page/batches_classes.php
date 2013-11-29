@@ -383,13 +383,13 @@ class page_batches_classes extends Page {
 				}
 				filters.push(filter);
 				if (filter_period != null) {
-					filters.push({category:'Student',name:'Period',data:{type:"exact",value:filter_period.name},force:true});
+					filters.push({category:'Student',name:'Period',data:{value:filter_period.id},force:true});
 				}
 				if (filter_spe != null) {
 					filters.push({category:'Student',name:'Specialization',data:{value:filter_spe.id},force:true});
 				}
 				if (filter_class != null) {
-					filters.push({category:'Student',name:'Class',data:{type:"exact",value:filter_class.name},force:true});
+					filters.push({category:'Student',name:'Class',data:{value:filter_class.id},force:true});
 				}
 			}
 			return filters;

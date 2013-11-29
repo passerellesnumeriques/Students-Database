@@ -697,6 +697,274 @@ class SQLQuery {
 			if ($error <> null) throw new Exception($error);
 		}
 	}
+
+	/**
+	 * @param string $table table name
+	 * @param array $keys_fields_values array of key=>array(field=>value)
+	 * @param unknown $lock_id
+	 */
+	public function update_by_keys($table, $keys_fields_values, $lock_id = null) {
+		require_once("component/data_model/Model.inc");
+		/* @var $t datamodel\Table */
+		if ($this->bypass_security)
+			$t = DataModel::get()->internalGetTable($table);
+		else
+			$t = DataModel::get()->getTable($table);
+	
+		// check we are allowed to modify this row
+		if (!$this->bypass_security) {
+			if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
+				
+			$q = SQLQuery::create()->bypass_security();
+			$table_alias = $q->table_id();
+			$q->select(array($table=>$table_alias));
+			$q->set_sub_models($this->sub_models);
+			if ($t->getPrimaryKey() <> null) {
+				$keys = array();
+				foreach ($keys_fields_values as $key=>$fields_values) array_push($keys, $key);
+				$q->where_in($t->getName(), $t->getPrimaryKey()->name, $keys);
+			} else {
+				$keys = $t->getKey();
+				$w = "";
+				foreach ($keys_fields_values as $key=>$fields_values) {
+					$kw = "";
+					foreach ($keys as $key_name) {
+						if (strlen($kw) > 0) $kw .= " AND ";
+						$kw .= "`".$table_alias."`.`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+					}
+					if (strlen($w) > 0) $w .= " OR ";
+					$w .= "(".$kw.")";
+				}
+				$q->where($w);
+			}
+			if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
+				$rows = $q->execute();
+				$rows = $t->filterWriteAccess($rows);
+				if (count($rows) == 0) throw new Exception("Access denied to modify this row in table ".$t->getName());
+			}
+		}
+	
+		// lock table
+		$locked = false;
+		require_once("component/data_model/DataBaseLock.inc");
+		if ($lock_id <> null) {
+			$column = null;
+			$columns = array();
+			foreach ($keys_fields_values as $key=>$fields_values)
+				foreach ($fields_values as $field=>$value)
+					if (!in_array($field, $columns)) array_push($columns, $field);
+			if (count($columns) == 1) $column = $columns[0];
+			if (!DataBaseLock::check_lock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
+				throw new Exception("Access denied: invalid lock");
+		} else {
+			$locker = null;
+			$keys = array();
+			foreach ($keys_fields_values as $key=>$fields_values) array_push($keys, $key);
+			if (count($keys) == 1)
+				$lock_id = DataBaseLock::lock_row($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
+			else
+				$lock_id = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, $this->bypass_security);
+			if ($lock_id == null)
+				throw new Exception("This data is already locked by ".$locker);
+			$locked = true;
+		}
+	
+		// validate values, and check unicity
+		$columns = array();
+		foreach ($keys_fields_values as $key=>&$fields_values) {
+			foreach ($fields_values as $field=>$value) {
+				$col = $t->internalGetColumn($field, $this->sub_models);
+				try { 
+					$value = $col->validate($value);
+					$fields_values[$field] = $value; 
+				} catch (Exception $e) {
+					if ($locked)
+						DataBaseLock::unlock($lock_id);
+					$name = $this->getColumnName($t, $field);
+					throw new Exception($name.": ".$e->getMessage());
+				}
+				if (!isset($columns[$field]))
+					$columns[$field] = array($value);
+				else
+					array_push($columns[$field], $value);				
+			}
+		}
+		foreach ($columns as $field=>&$values) {
+			$col = $t->internalGetColumn($field, $this->sub_models);
+			if ($col->unique) {
+				for ($i = 0; $i < count($values); $i++) {
+					for ($j = $i+1; $j < count($values); $j++) {
+						if ($values[$i] == $values[$j]) {
+							if ($locked)
+								DataBaseLock::unlock($lock_id);
+							$name = $this->getColumnName($t, $field);
+							throw new Exception("You set two rows with the same value in column ".$name);
+						}
+					}
+				}
+				$r = SQLQuery::create()
+					->bypass_security()
+					->select($t->getName())
+					->set_sub_models($this->sub_models)
+					->where_in($col->name, $values)
+					->execute();
+				if ($r <> null && count($r) > 0) {
+					if ($locked)
+						DataBaseLock::unlock($lock_id);
+					$name = $this->getColumnName($t, $field);
+					throw new Exception("Some elements already exist with same value in column ".$name);
+				}
+			}
+		}
+
+		// everything is valid and allowed, we can perform the update
+		foreach ($keys_fields_values as $key=>&$fields_values) {
+			$sql = "UPDATE `".$t->getSQLName($this->sub_models)."` SET ";
+			$first = true;
+			foreach ($fields_values as $field=>$value) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= "`".$field."`=";
+				if ($value === null)
+					$sql .= "NULL";
+				else
+					$sql .= "'".SQLQuery::escape(utf8_decode($value))."'";
+			}
+			$sql .= " WHERE ";
+			if ($t->getPrimaryKey() <> null) {
+				$sql .= "`".$t->getPrimaryKey()->name."`='".$key."'";
+			} else {
+				$keys = $t->getKey();
+				$first = true;
+				foreach ($keys as $key_name) {
+					if ($first) $first = false; else $sql .= " AND ";
+					$sql .= "`".$key_name."`='".$key[$key_name]."'";
+				}
+			}
+			SQLQuery::db()->execute($sql);
+		}
+		if ($locked) {
+			$error = DataBaseLock::unlock($lock_id);
+			if ($error <> null) throw new Exception($error);
+		}
+	}
+
+	/** Update all given keys with the same given values
+	 */
+	public function update_all_keys($table, $keys, $fields_values, $lock_id = null) {
+		require_once("component/data_model/Model.inc");
+		/* @var $t datamodel\Table */
+		if ($this->bypass_security)
+			$t = DataModel::get()->internalGetTable($table);
+		else
+			$t = DataModel::get()->getTable($table);
+	
+		// check we are allowed to modify this row
+		if (!$this->bypass_security) {
+			if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
+	
+			$q = SQLQuery::create()->bypass_security();
+			$table_alias = $q->table_id();
+			$q->select(array($table=>$table_alias));
+			$q->set_sub_models($this->sub_models);
+			if ($t->getPrimaryKey() <> null) {
+				$q->where_in($t->getName(), $t->getPrimaryKey()->name, $keys);
+			} else {
+				$tkeys = $t->getKey();
+				$w = "";
+				foreach ($keys as $key) {
+					$kw = "";
+					foreach ($tkeys as $key_name) {
+						if (strlen($kw) > 0) $kw .= " AND ";
+						$kw .= "`".$table_alias."`.`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+					}
+					if (strlen($w) > 0) $w .= " OR ";
+					$w .= "(".$kw.")";
+				}
+				$q->where($w);
+			}
+			if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
+				$rows = $q->execute();
+				$rows = $t->filterWriteAccess($rows);
+				if (count($rows) == 0) throw new Exception("Access denied to modify this row in table ".$t->getName());
+			}
+		}
+	
+		// lock table
+		$locked = false;
+		require_once("component/data_model/DataBaseLock.inc");
+		if ($lock_id <> null) {
+			$column = null;
+			$columns = array();
+			foreach ($fields_values as $field=>$value)
+				if (!in_array($field, $columns)) array_push($columns, $field);
+			if (count($columns) == 1) $column = $columns[0];
+			if (!DataBaseLock::check_lock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
+				throw new Exception("Access denied: invalid lock");
+		} else {
+			$locker = null;
+			if (count($keys) == 1)
+				$lock_id = DataBaseLock::lock_row($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
+			else
+				$lock_id = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, $this->bypass_security);
+			if ($lock_id == null)
+				throw new Exception("This data is already locked by ".$locker);
+			$locked = true;
+		}
+	
+		// validate values, and check unicity
+		foreach ($fields_values as $field=>$value) {
+			$col = $t->internalGetColumn($field, $this->sub_models);
+			try { $fields_values[$field] = $col->validate($value); }
+			catch (Exception $e) {
+				if ($locked)
+					DataBaseLock::unlock($lock_id);
+				$name = $this->getColumnName($t, $field);
+				throw new Exception($name.": ".$e->getMessage());
+			}
+			if ($col->unique)
+				throw new Exception("Cannot set same value for multiple rows: ".$name);
+		}
+	
+		// everything is valid and allowed, we can perform the update
+		$sql = "UPDATE `".$t->getSQLName($this->sub_models)."` SET ";
+		$first = true;
+		foreach ($fields_values as $field=>$value) {
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "`".$field."`=";
+			if ($value === null)
+				$sql .= "NULL";
+			else
+				$sql .= "'".SQLQuery::escape(utf8_decode($value))."'";
+		}
+		$sql .= " WHERE ";
+		if ($t->getPrimaryKey() <> null) {
+			$sql .= "`".$t->getPrimaryKey()->name."` IN (";
+			$first = true;
+			foreach ($keys as $key) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= "'".$key."'";
+			}
+			$sql .= ")";
+		} else {
+			$tkeys = $t->getKey();
+			$first_key = true;
+			foreach ($keys as $key) {
+				if ($first_key) $first_key = false; else $sql .= " OR ";
+				$first = true;
+				$sql .= "(";
+				foreach ($tkeys as $key_name) {
+					if ($first) $first = false; else $sql .= " AND ";
+					$sql .= "`".$key_name."`='".$key[$key_name]."'";
+				}
+				$sql .= "(";
+			}
+		}
+		SQLQuery::db()->execute($sql);
+		if ($locked) {
+			$error = DataBaseLock::unlock($lock_id);
+			if ($error <> null) throw new Exception($error);
+		}
+	}
 	
 	/**
 	 * Insert an entry into the given table.
@@ -781,7 +1049,108 @@ class SQLQuery {
 		DataBaseLock::unlock($lock);
 		return $id;
 	}
-
+	
+	/**
+	 * Insert multiple entries into the given table.
+	 * @param string $table
+	 * @param array $rows array of array of column name => value
+	 * @param array|null $sub_models
+	 * @throws Exception in case of error (security or database)
+	 */
+	public function insert_multiple($table, $rows) {
+		require_once("component/data_model/Model.inc");
+		/* @var $t datamodel\Table */
+		if ($this->bypass_security)
+			$t = DataModel::get()->internalGetTable($table);
+		else
+			$t = DataModel::get()->getTable($table);
+	
+		// check we are allowed
+		if (!$this->bypass_security) {
+			if (!$t->mayInsert()) throw new Exception("Access denied: add data to table ".$t->getName());
+			foreach ($rows as $fields_values)
+				if (!$t->acceptInsert($fields_values)) throw new Exception("Access denied: add data to table ".$t->getName()." denied for those values");
+		}
+		// lock the table to check it is not locked by anyone else
+		require_once("component/data_model/DataBaseLock.inc");
+		$locker = null;
+		$lock = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, true);
+		if ($lock == null)
+			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
+		$columns = $t->internalGetColumns($this->sub_models);
+		// validate values
+		foreach ($rows as &$fields_values)
+			foreach ($fields_values as $field=>$value)
+				try {
+				$col = $t->internalGetColumn($field, $this->sub_models);
+				if ($col == null)
+					throw new Exception("Unknown column '".$field."' in insert");
+				$fields_values[$field] = $col->validate($value);
+			} catch (Exception $ex) {
+				DataBaseLock::unlock($lock);
+				$name = $this->getColumnName($t, $field);
+				throw new Exception($name.": ".$ex->getMessage());
+			}
+		// check unicity and presence
+		foreach ($columns as $col) {
+			if ($col->unique) {
+				$values = array();
+				foreach ($rows as &$fields_values) {
+					if (!isset($fields_values[$col->name])) {
+						DataBaseLock::unlock($lock);
+						throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
+					}
+					array_push($values, $fields_values[$col->name]);
+				}
+				$q = SQLQuery::create();
+				if ($this->bypass_security) $q->bypass_security();
+				$r = $q->select($t->getName())
+					->set_sub_models($this->sub_models)
+					->where_in($col->name,$values)
+					->execute();
+				if ($r <> null && count($r) > 0) {
+					DataBaseLock::unlock($lock);
+					throw new Exception("An element already exists with same value in column ".$this->getColumnName($t,$col->name));
+				}
+			} else if (!$col->can_be_null) {
+				foreach ($rows as &$fields_values) {
+					if (!isset($fields_values[$col->name])) {
+						DataBaseLock::unlock($lock);
+						throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
+					}
+				}
+			}
+		}
+	
+		// insert
+		$sql = "INSERT INTO `".$t->getSQLName($this->sub_models)."` (";
+		$first = true;
+		foreach ($fields_values as $name=>$value) {
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "`".$name."`";
+		}
+		$sql .= ") VALUES ";
+		$first_value = true;
+		foreach ($rows as &$fields_values) {
+			if ($first_value) $first_value = false; else $sql .= ",";
+			$sql .= "(";
+			$first = true;
+			foreach ($fields_values as $name=>$value) {
+				if ($first) $first = false; else $sql .= ",";
+				if ($value === null) $sql .= "NULL"; else $sql .= "'".SQLQuery::escape(utf8_decode($value))."'";
+			}
+			$sql .= ")";
+		}
+		SQLQuery::db()->execute($sql);
+		$id = SQLQuery::db()->get_insert_id();
+		// sub models
+		foreach ($t->_key_submodels as &$sm)
+			$sm->create_tables($id);
+		// unlock the table
+		DataBaseLock::unlock($lock);
+		return $id;
+	}
+	
 	/** Remove the data having the given primary key, and all linked data */
 	public function remove_key($table, $key) {
 		$this->remove_keys($table, array($key));		
@@ -908,14 +1277,13 @@ class SQLQuery {
 		}
 		if (count($keys) == 0) return; // nothing to do
 			
-		// lock the rows to remove
-		foreach ($keys as $key) {
-			$locked_by = null;
-			$lock_id = DataBaseLock::lock_row($table->getSQLNameFor($sub_model_instance), $key, $locked_by, $this->bypass_security);
-			if ($lock_id == null)
-				throw new Exception("Table '".$table->getName()."' already locked by ".$locked_by);
-			array_push($locks, $lock_id);
-		}		
+		// lock the table to remove
+		$locked_by = null;
+		$lock_id = DataBaseLock::lock_table($table->getSQLNameFor($sub_model_instance), $locked_by, $this->bypass_security);
+		if ($lock_id == null)
+			throw new Exception("Table '".$table->getName()."' already locked by ".$locked_by);
+		array_push($locks, $lock_id);
+
 		// check sub models
 		foreach ($table->_key_submodels as &$sm) {
 			array_push($sub_models_to_remove, array($sm,$keys));
@@ -1315,6 +1683,16 @@ class SQLQuery {
 		require_once("component/data_model/Model.inc");
 		$t = DataModel::get()->getTable($table);
 		return SQLQuery::create()->set_sub_models($sub_models)->select($table)->where($t->getPrimaryKey()->name, $key)->execute_single_row();
+	}
+	
+	public static function start_transaction() {
+		SQLQuery::get_db_system_without_security()->execute("START TRANSACTION");
+	}
+	public static function end_transaction() {
+		SQLQuery::get_db_system_without_security()->execute("COMMIT");
+	}
+	public static function cancel_transaction() {
+		SQLQuery::get_db_system_without_security()->execute("ROLLBACK");
 	}
 }
 ?>

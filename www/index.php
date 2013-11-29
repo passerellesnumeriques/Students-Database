@@ -20,6 +20,25 @@ if (strpos($path, "..") !== FALSE) die("Access denied");
 if ($path == "favicon.ico") { header("Content-Type: image/ico"); readfile("favicon.ico"); die(); }
 
 if ($path == "") {
+	spl_autoload_register('component_auto_loader');
+	require_once("component/PNApplication.inc");
+	session_start();
+	require_once("SQLQuery.inc");
+	spl_autoload_unregister('component_auto_loader');
+
+	if (!isset($_SESSION["app"])) {
+		PNApplication::$instance = new PNApplication();
+		PNApplication::$instance->init();
+		$_SESSION["app"] = &PNApplication::$instance;
+	} else {
+		PNApplication::$instance = &$_SESSION["app"];
+		PNApplication::$instance->init_request();
+	}
+	if (PNApplication::$instance->current_domain == "Dev") {
+		$dev = new DevRequest();
+		$dev->url = $_SERVER["PATH_INFO"];
+		array_push(PNApplication::$instance->development->requests, $dev);
+	}
 	include("loading.inc");
 	die();
 }

@@ -4,7 +4,7 @@ class development extends Component {
 	public $requests = array();
 	
 	public function init() {
-		while (count($this->requests) > 50)
+		while (count($this->requests) > 20)
 			array_splice($this->requests, 0, 1);
 	}
 	

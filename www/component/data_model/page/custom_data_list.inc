@@ -1,5 +1,5 @@
 <?php 
-function custom_data_list(&$page, $root_table, $sub_model, $available_fields, $selected_fields) {
+function custom_data_list(&$page, $root_table, $sub_model, $available_fields, $filters) {
 
 	// init query with root table
 	$q = SQLQuery::create();
@@ -10,8 +10,25 @@ function custom_data_list(&$page, $root_table, $sub_model, $available_fields, $s
 	
 	// build the request
 	$data_aliases = array();
-	foreach ($available_fields as $f)
-		array_push($data_aliases, $f[0]->buildSQL($q, $f[1], array()));
+	$remaining_filters = array_merge($filters);
+	foreach ($available_fields as $f) {
+		$data_filters = array();
+		for ($i = 0; $i < count($remaining_filters); $i++) {
+			$filter = $remaining_filters[$i];
+			if ($filter["category"] <> $f[0]->handler->category) continue;
+			if ($filter["name"] <> $f[0]->getDisplayName()) continue;
+			array_splice($remaining_filters, $i, 1);
+			$i--;
+			$fil = array();
+			array_push($fil, $filter["data"]);
+			while (isset($filter["or"])) {
+				$filter = $filter["or"];
+				array_push($fil, $filter["data"]);
+			}
+			array_push($data_filters, $fil);
+		}
+		array_push($data_aliases, $f[0]->buildSQL($q, $f[1], $data_filters));
+	}
 	
 	$res = $q->execute();
 	
@@ -75,16 +92,8 @@ var custom_data_list = {
 		// create a row for each data
 		for (var i = 0; i < this.data_from_request.length; ++i)
 			this.tbody.appendChild(document.createElement("TR"));
-		<?php
-		foreach ($selected_fields as $sf) {
-			$i = strpos($sf, ".");
-			$cat = substr($sf, 0, $i);
-			$name = substr($sf, $i+1);
-			echo "this.select_field(".json_encode($cat).",".json_encode($name).",true);\n";
-		} 
-		?>
 	},
-	select_field: function(field_category, field_name, show) {
+	select_field: function(field_category, field_name, show, customize_header) {
 		var index;
 		for (index = 0; index < this.fields_from_request.length; ++index)
 			if (this.fields_from_request[index].category == field_category && this.fields_from_request[index].name == field_name) break;
@@ -122,6 +131,8 @@ var custom_data_list = {
 			}
 			// add to list
 			this.selected_fields_from_request.push(index);
+			if (customize_header)
+				customize_header(th);
 		} else {
 			if (col_index == this.selected_fields_from_request.length) return; // not there
 			// remove column header
@@ -148,13 +159,14 @@ var custom_data_list = {
 				count += this._count_columns(cols[i].sub_columns);
 		return count;
 	},
-	addColumn: function(col_id, col_header, content_provider, before_col_id) {
+	addColumn: function(col_id, col_header, content_provider, before_col_id, customize_header) {
 		var col = {id: col_id, content_provider: content_provider, sub_columns: [], parent_column: null};
 		col.th = document.createElement("TH");
 		if (typeof col_header == 'string') col.th.innerHTML = col_header;
 		else col.th.appendChild(col_header);
 		col.th.rowSpan = this.thead.childNodes.length;
 		col.th.style.verticalAlign = "bottom";
+		if (customize_header) customize_header(col.th);
 		var before_col = null, before_col_i = -1;
 		var col_index = this.selected_fields_from_request.length; // after data from request
 		for (var i = 0; i < this.columns.length; ++i) {
@@ -230,7 +242,7 @@ var custom_data_list = {
 			index += this._find_column_index_in(col, p);
 		return index;
 	},
-	addSubColumn: function(parent_col_id, col_id, col_header, content_provider, before_col_id) {
+	addSubColumn: function(parent_col_id, col_id, col_header, content_provider, before_col_id, customize_header) {
 		var parent = this._find_column(parent_col_id);
 		if (parent == null) {
 			alert("Invalid parent column id: "+parent_col_id);
@@ -250,6 +262,7 @@ var custom_data_list = {
 		if (typeof col_header == 'string') col.th.innerHTML = col_header;
 		else col.th.appendChild(col_header);
 		col.th.style.verticalAlign = "bottom";
+		if (customize_header) customize_header(col.th);
 		
 		if (this.thead.childNodes.length == level) {
 			// new level
