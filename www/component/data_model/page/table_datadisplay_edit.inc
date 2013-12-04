@@ -49,6 +49,13 @@ function <?php echo $javascript_object_name;?>(container, on_validate, additiona
 				handler(result.key);
 		});
 	};
+
+	this.get_data = function(name) {
+		for (var i = 0; i < this.fields.length; ++i)
+			if (this.fields[i].name == name)
+				return this.fields[i].field.getCurrentData();
+		return null;
+	};
 	
 	this._create_table = function() {
 		container.appendChild(this.table = document.createElement("TABLE"));

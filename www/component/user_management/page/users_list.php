@@ -18,7 +18,7 @@ function init_users_list() {
 		['User.Domain','User.Username','Personal Information.First Name','Personal Information.Last Name','User.Roles'],
 		null,
 		function (list) {
-			<?php if (PNApplication::$instance->user_management->has_right("assign_roles")) {?>
+			<?php if (PNApplication::$instance->user_management->has_right("assign_role")) {?>
 			var roles = [<?php
 			$roles = SQLQuery::create()->select("Role")->execute();
 			$first = true;

@@ -26,12 +26,24 @@ function import_data(&$page, $icon, $title, $data_list, $fixed_data, $prefilled_
 		upload_excel.className = "button";
 		upload_excel.innerHTML = "<img src='/static/data_import/import_excel_16.png'/> Upload Excel File";
 		upload_excel.onclick = function() {
-			imp.upload_excel(function(){
+			imp.upload_excel(function(async){
 				var win = getIFrameWindow(imp.excel_frame);
 				if (win.excel) win.excel = null;
-			}, function(){
+				if (async) {
+					upload_excel.lock = lock_screen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Uploading Excel file...");
+				}
+			}, function(async, pc){
+				if (async && pc != -1) {
+					set_lock_screen_content(upload_excel.lock,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Uploading Excel file... "+pc+"%");
+					return;
+				}
 				var status = 1;
-				var lock = lock_screen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Uploading Excel file...");
+				var lock;
+				if (async) {
+					lock = upload_excel.lock;
+					set_lock_screen_content(upload_excel.lock,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Analyzing Excel file... ");
+				} else
+					lock = lock_screen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Uploading Excel file...");
 				var check = function() {
 					var win = getIFrameWindow(imp.excel_frame);
 					if (!win.excel || !win.excel.tabs) {

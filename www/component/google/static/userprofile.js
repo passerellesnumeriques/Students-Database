@@ -1,6 +1,6 @@
 function google_userprofile(onready) {
 	if (window.top.google.data && window.top.google.data.userprofile) {
-		onready(window.top.google.data.userprofile);
+		if (onready) onready(window.top.google.data.userprofile);
 		return;
 	}
 		
@@ -11,7 +11,7 @@ function google_userprofile(onready) {
 				req.execute(function(resp){
 					if (!window.top.google.data) window.top.google.data = {};
 					window.top.google.data.userprofile = resp;
-					onready(resp);
+					if (onready) onready(resp);
 				});
 			});
 		});

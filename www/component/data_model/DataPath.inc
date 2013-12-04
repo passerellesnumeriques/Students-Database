@@ -231,19 +231,13 @@ class DataPath_Join extends DataPath {
 
 class DataPathSQLBuilder {
 	
-	private $alias_counter = 0;
-	
-	public function new_alias() {
-		return "a".($this->alias_counter++);
-	}
-	
 	/**
 	 * @param DataPath $path
 	 * @param SQLQuery $q
 	 */
-	public function build($path, &$q) {
+	public static function build($path, &$q) {
 		if ($path instanceof DataPath_Join) {
-			$parent_alias = $this->build($path->parent, $q);
+			$parent_alias = DataPathSQLBuilder::build($path->parent, $q);
 			$match = array();
 			if ($path->is_reverse())
 				$match[$path->parent->table->getPrimaryKey()->name] = $path->foreign_key->name;
@@ -251,7 +245,7 @@ class DataPathSQLBuilder {
 				$match[$path->foreign_key->name] = $path->table->getPrimaryKey()->name; 
 			$alias = $q->get_join_alias($parent_alias, $path->table->getSQLNameFor($path->sub_model), $match);
 			if ($alias == null) {
-				$alias = $this->new_alias();
+				$alias = $q->table_id();
 				$q->join($parent_alias, $path->table->getSQLNameFor($path->sub_model), $match, $alias);
 			}
 			return $alias;

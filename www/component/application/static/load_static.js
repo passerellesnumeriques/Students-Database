@@ -89,6 +89,8 @@ function load_static_resources(container) {
 		};
 		require("service.js",function(){
 			service.json("application","get_static_resources",{},function(res){
+				if (!window.top.pn_application_static) return;
+				if (!res) return;
 				window.top.pn_application_static.service_done = true;
 				window.top.pn_application_static.scripts = res.scripts;
 				window.top.pn_application_static.images = res.images;

@@ -6,6 +6,10 @@ function staff_info(&$page, $people_id, $container_id) {
 	else
 		$positions = null;
 	
+	$table = DataModel::get()->getTable("StaffPosition");
+	
+	require_once("component/data_model/page/utils.inc");
+	
 	$fct_name = $page->generate_id();
 	?>
 	<script type='text/javascript'>
@@ -90,12 +94,13 @@ function staff_info(&$page, $people_id, $container_id) {
 			t.table.appendChild(tr);
 			var td_position = document.createElement("TD");
 			tr.appendChild(td_position);
+			var fake_key = generate_id();
 			if (position.id == -1) {
-				var fp = function(field) {
+				var field;
+				<?php datamodel_datadisplay_new($page, $table->getDataDisplay("Staff", "Position"), null, "field", "fake_key");?>
+				td_position.appendChild(field.getHTMLElement());
+				field.onchange.add_listener(function(field){
 					position.position = field.getCurrentData();
-				};
-				require(["typed_field.js","field_text.js"],function() {
-					td_position.appendChild(new field_text(position.position,true,fp,fp,{max_length:100}).getHTMLElement());
 				});
 			} else {
 				require("editable_cell.js",function(){
@@ -105,15 +110,12 @@ function staff_info(&$page, $people_id, $container_id) {
 			var td_department = document.createElement("TD");
 			tr.appendChild(td_department);
 			if (position.id == -1) {
-				var fd = function(field) {
+				var field;
+				<?php datamodel_datadisplay_new($page, $table->getDataDisplay("Staff", "Department"), null, "field", "fake_key");?>
+				td_department.appendChild(field.getHTMLElement());
+				field.onchange.add_listener(function(field){
 					var s = field.getCurrentData();
 					position.department = s == null || s.length == 0 ? null : parseInt(s);
-				};
-				require(["typed_field.js","field_enum.js"],function() {
-					var values = [];
-					for (var i = 0; i < t.departments.length; ++i)
-						values.push([t.departments[i].id,t.departments[i].name]);
-					td_department.appendChild(new field_enum(position.department,true,fd,fd,{possible_values:values,can_be_empty:true}).getHTMLElement());
 				});
 			} else {
 				require("editable_cell.js",function(){
@@ -126,11 +128,11 @@ function staff_info(&$page, $people_id, $container_id) {
 			var td_start = document.createElement("TD");
 			tr.appendChild(td_start);
 			if (position.id == -1) {
-				var fs = function(field) {
+				var field;
+				<?php datamodel_datadisplay_new($page, $table->getDataDisplay("Staff", "Position Start"), null, "field", "fake_key");?>
+				td_start.appendChild(field.getHTMLElement());
+				field.onchange.add_listener(function(field){
 					position.start = field.getCurrentData();
-				};
-				require(["typed_field.js","field_date.js"],function() {
-					td_start.appendChild(new field_date(position.start,true,fs,fs,{}).getHTMLElement());
 				});
 			} else {
 				require("editable_cell.js",function(){
@@ -140,11 +142,11 @@ function staff_info(&$page, $people_id, $container_id) {
 			var td_end = document.createElement("TD");
 			tr.appendChild(td_end);
 			if (position.id == -1) {
-				var fe = function(field) {
+				var field;
+				<?php datamodel_datadisplay_new($page, $table->getDataDisplay("Staff", "Position End"), null, "field", "fake_key");?>
+				td_end.appendChild(field.getHTMLElement());
+				field.onchange.add_listener(function(field){
 					position.end = field.getCurrentData();
-				};
-				require(["typed_field.js","field_date.js"],function() {
-					td_end.appendChild(new field_date(position.end,true,fe,fe,{}).getHTMLElement());
 				});
 			} else {
 				require("editable_cell.js",function(){

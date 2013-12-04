@@ -63,7 +63,7 @@ class page_role_rights extends Page {
 		$final = array();
 		foreach ($res as $r) $final[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 		// add implications
-		user_management::compute_rights_implications($final, $all_rights);
+		PNApplication::$instance->user_management->compute_rights_implications($final, $all_rights);
 		
 		/** Generate a field according to the type of the right: for example, a checkbox for a boolean right */
 		function generate_right($prefix, $right, $value, $readonly = true, $visible = true) {

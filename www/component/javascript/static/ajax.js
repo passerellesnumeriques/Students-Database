@@ -38,7 +38,11 @@ ajax = {
 			url = new URL(url);
 		url = ajax.process_url(url);
 		var xhr = new XMLHttpRequest();
+		var aborted = false;
+		var timeouted = false;
 		xhr.open(method, url.toString(), !foreground);
+		xhr.onabort = function() { aborted = true; };
+		xhr.ontimeout = function() { timeouted = true; };
 		if (content_type != null)
 			xhr.setRequestHeader('Content-type', content_type);
 		var sent = function() {
@@ -46,8 +50,11 @@ ajax = {
 	        	var continu = true;
 	        	for (var i = 0; i < ajax.http_response_handlers.length; ++i)
 	        		continu &= ajax.http_response_handlers[i](xhr);
-	        	if (continu)
-	        		error_handler("Error "+xhr.status+": "+xhr.statusText); 
+	        	if (continu) {
+	        		if (xhr.status == 0)
+        				return;
+	        		error_handler("Error "+xhr.status+": "+xhr.statusText);
+	        	}
 	        	return; 
 	        }
 	        success_handler(xhr);

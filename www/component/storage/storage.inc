@@ -151,7 +151,7 @@ class storage extends Component {
 			if ($id == null) return true;
 			array_push($ids, $id);
 			array_push($names, $fn);
-			array_push($types, $_SERVER['HTTP_X_FILETYPE']);
+			array_push($types, isset($_SERVER['HTTP_X_FILETYPE']) ? $_SERVER['HTTP_X_FILETYPE'] : "");
 			array_push($sizes, $_SERVER['HTTP_X_FILESIZE']);
 			return false;
 		} else {

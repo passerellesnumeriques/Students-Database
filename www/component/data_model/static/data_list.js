@@ -14,6 +14,12 @@ if (typeof require != 'undefined') {
 function data_list(container, root_table, initial_data_shown, filters, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
+
+	/* Public properties */
+	
+	t.grid = null;
+	
+	/* Public methods */
 	
 	t.addHeader = function(html) {
 		var item = document.createElement("DIV");
@@ -25,6 +31,12 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.header_center.widget.addItem(item);
 		else
 			t.header_center.appendChild(item);
+	};
+	t.resetHeader = function() {
+		if (t.header_center.widget)
+			t.header_center.widget.removeAll();
+		else
+			while (t.header_center.childNodes.length > 0) t.header_center.removeChild(t.header_center.childNodes[0]);
 	};
 	t.addTitle = function(icon, text) {
 		var div = document.createElement("DIV");
@@ -44,12 +56,78 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header.insertBefore(div, t.header_left);
 		fireLayoutEventFor(t.header);
 	};
+	t.setTitle = function(html) {
+		if (typeof html == 'string') {
+			var div = document.createElement("DIV");
+			div.style.display = "inline-block";
+			div.innerHTML = html;
+			html = div;
+		}
+		html.className = "data_list_title";
+		html.setAttribute("layout", "fixed");
+		t.header.insertBefore(html, t.header_left);
+		fireLayoutEventFor(t.header);
+	};
+	t.reload_data = function() {
+		t._load_data();
+	};
+	t.getRowData = function(row, table, column) {
+		// search a column where we can get it
+		for (var i = 0; i < t.tables.length; ++i) {
+			if (t.tables[i].name != table) continue;
+			for (var j = 0; j < t.tables[i].keys.length; ++j) {
+				if (t.tables[i].keys[j] == column) {
+					// we found it as a key
+					return t.data[row].values[i].k[j];
+				}
+			}
+		}
+		for (var i = 0; i < t.show_fields.length; ++i) {
+			if (t.show_fields[i].path.table != table) continue;
+			if (t.show_fields[i].path.column != column) continue;
+			return t.data[row].values[i].v;
+		}
+		return null;
+	};
+	t.resetFilters = function() {
+		t._filters = [];
+	};
+	t.addFilter = function(filter) {
+		t._filters.push(filter);
+	};
+	t.setRootTable = function(root_table, filters, onready) {
+		t._root_table = root_table;
+		t._onready = onready;
+		t.grid = null;
+		t._available_fields = null;
+		t._page_num = 1;
+		t._page_size = 1000;
+		t._sort_column = null;
+		t._sort_order = 3;
+		t._filters = filters ? filters : [];
+		t._col_actions = null;
+		t._init_list();
+		t._load_fields();
+	};
+	t.getRootTable = function() { return t._root_table; };
+	
+	/* Private properties */
+	t._root_table = root_table;
+	t._onready = onready;
+	t._available_fields = null;
+	t._page_num = 1;
+	t._page_size = 1000;
+	t._sort_column = null;
+	t._sort_order = 3;
+	t._filters = filters ? filters : [];
+	t._col_actions = null;
+
+	/* Private methods */
 	
 	t._init_list = function() {
 		// analyze and remove container content
 		while (container.childNodes.length > 0) {
 			var e = container.childNodes[0];
-			// TODO get headers
 			container.removeChild(e);
 		}
 		// init header
@@ -76,13 +154,13 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		div.title = "Previous page";
 		img.src = "/static/data_model/left.png";
 		div.doit = function() {
-			t.page_num--;
+			t._page_num--;
 			t._load_data();
 		};
 		div.appendChild(img);
 		t.header_left.appendChild(div);
 		// + page number
-		t.page_num_div = div = document.createElement("DIV");
+		t._page_num_div = div = document.createElement("DIV");
 		div.style.display = "inline-block";
 		t.header_left.appendChild(div);
 		// + next page
@@ -92,7 +170,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		div.disabled = "disabled";
 		img.src = "/static/data_model/right.png";
 		div.doit = function() { 
-			t.page_num++;
+			t._page_num++;
 			t._load_data();
 		};
 		div.appendChild(img);
@@ -102,16 +180,17 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		div.style.display = "inline-block";
 		div.innerHTML = "Per page:";
 		t.header_left.appendChild(div);
-		var page_size_div = div;
+		var _page_size_div = div;
 		require("typed_field.js",function(){
 			require("field_integer.js",function(){
-				var onc = function(){
-					t.page_size = t.page_size_field.getCurrentData();
+				t._page_size_field = new field_integer(t._page_size, true, {can_be_null:false,min:1,max:100000});
+				t._page_size_field.onchange.add_listener(function() {
+					t._page_size = t._page_size_field.getCurrentData();
 					t._load_data();
-				};
-				t.page_size_field = new field_integer(t.page_size, true, onc, onc, {can_be_null:false,min:1,max:100000});
-				page_size_div.appendChild(t.page_size_field.getHTMLElement());
-				t.header.widget.layout();
+				});
+				_page_size_div.appendChild(t._page_size_field.getHTMLElement());
+				if (t.header && t.header.widget && t.header.widget.layout)
+					t.header.widget.layout();
 			});
 		});
 		// + refresh
@@ -178,12 +257,12 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	};
 	t._load_fields = function() {
 		require("DataDisplay.js",function() {
-			service.json("data_model","get_available_fields",{table:root_table},function(result){
+			service.json("data_model","get_available_fields",{table:t._root_table},function(result){
 				if (result) {
-					t.available_fields = [];
+					t._available_fields = [];
 					for (var i = 0; i < result.length; ++i) {
 						result[i].data.path = new DataPath(result[i].path);
-						t.available_fields.push(result[i].data);
+						t._available_fields.push(result[i].data);
 					}
 					t._ready();
 				}
@@ -192,7 +271,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	};
 	t._ready = function() {
 		if (t.grid == null) return;
-		if (t.available_fields == null) return;
+		if (t._available_fields == null) return;
 		// compute visible fields
 		t.show_fields = [];
 		for (var i = 0; i < initial_data_shown.length; ++i) {
@@ -204,10 +283,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				name = initial_data_shown[i].substring(j+1);
 			}
 			var found = false;
-			for (var j = 0; j < t.available_fields.length; ++j) {
-				if (t.available_fields[j].category != cat) continue;
-				if (name == null || t.available_fields[j].name == name) {
-					t.show_fields.push(t.available_fields[j]);
+			for (var j = 0; j < t._available_fields.length; ++j) {
+				if (t._available_fields[j].category != cat) continue;
+				if (name == null || t._available_fields[j].name == name) {
+					t.show_fields.push(t._available_fields[j]);
 					found = true;
 				}
 			}
@@ -223,27 +302,20 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			// get data
 			t._load_data();
 			// signal ready
-			if (onready) onready(t);
+			if (t._onready) t._onready(t);
 		});
 	};
 	t._load_typed_fields = function(handler) {
 		require("typed_field.js",function() {
 			var fields = [];
-			for (var i = 0; i < t.available_fields.length; ++i)
-				if (!fields.contains(t.available_fields[i].field_classname))
-					fields.push(t.available_fields[i].field_classname+".js");
+			for (var i = 0; i < t._available_fields.length; ++i)
+				if (!fields.contains(t._available_fields[i].field_classname))
+					fields.push(t._available_fields[i].field_classname+".js");
 			var nb = fields.length;
 			for (var i = 0; i < fields.length; ++i)
 				require(fields[i],function(){if (--nb == 0) handler(); });
 		});
 	};
-	t.grid = null;
-	t.available_fields = null;
-	t.page_num = 1;
-	t.page_size = 1000;
-	t.sort_column = null;
-	t.sort_order = 3;
-	t.filters = filters ? filters : [];
 	t.ondataloaded = new Custom_Event();
 	
 	t._init_list();
@@ -252,9 +324,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	t._create_column = function(f) {
 		var col = new GridColumn(f.category+'.'+f.name, f.name, null, f.field_classname, false, null, null, f.field_config, f);
 		if (f.sortable)
-			col.addExternalSorting(function(sort_order){
-				t.sort_column = col;
-				t.sort_order = sort_order;
+			col.addExternalSorting(function(_sort_order){
+				t._sort_column = col;
+				t._sort_order = _sort_order;
 				t._load_data();
 			});
 		//col.addFiltering(); // TODO better + if paged need external filtering
@@ -314,26 +386,28 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		}
 		return col;
 	};
-	t._col_actions = null;
 	t._load_data = function() {
 		t.grid.startLoading();
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
 			fields.push({path:t.show_fields[i].path.path,name:t.show_fields[i].name});
-		var params = {table:root_table,fields:fields,actions:true,page:t.page_num,page_size:t.page_size};
-		if (t.sort_column && t.sort_order != 3) {
-			params.sort_field = t.sort_column.id;
-			params.sort_order = t.sort_order == 1 ? "ASC" : "DESC";
+		var params = {table:t._root_table,fields:fields,actions:true,page:t._page_num,_page_size:t._page_size};
+		if (t._sort_column && t._sort_order != 3) {
+			params.sort_field = t._sort_column.id;
+			params._sort_order = t._sort_order == 1 ? "ASC" : "DESC";
 		}
-		params.filters = t.filters;
+		params.filters = t._filters;
 		service.json("data_model","get_data_list",params,function(result){
 			if (!result) {
 				t.grid.endLoading();
 				return;
 			}
-			var start = (t.page_num-1)*t.page_size+1;
-			var end = (t.page_num-1)*t.page_size+result.data.length;
-			t.page_num_div.innerHTML = start+"-"+end+"/"+result.count;
+			var start = (t._page_num-1)*t._page_size+1;
+			var end = (t._page_num-1)*t._page_size+result.data.length;
+			if (end == 0)
+				t._page_num_div.innerHTML = "0";
+			else
+				t._page_num_div.innerHTML = start+"-"+end+"/"+result.count;
 			if (start > 1) {
 				t.prev_page_div.className = "button";
 				t.prev_page_div.onclick = t.prev_page_div.doit;
@@ -423,14 +497,11 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.grid.endLoading();
 		});
 	};
-	t.reload_data = function() {
-		t._load_data();
-	};
 	t._select_columns_dialog = function(button) {
 		var categories = [];
-		for (var i = 0; i < t.available_fields.length; ++i)
-			if (!categories.contains(t.available_fields[i].category))
-				categories.push(t.available_fields[i].category);
+		for (var i = 0; i < t._available_fields.length; ++i)
+			if (!categories.contains(t._available_fields[i].category))
+				categories.push(t._available_fields[i].category);
 		var dialog = document.createElement("DIV");
 		var table = document.createElement("TABLE"); dialog.appendChild(table);
 		table.style.borderCollapse = "collapse";
@@ -453,16 +524,16 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			td.style.margin = "0px";
 			td.style.padding = "2px";
 			if (i>0) td.style.borderLeft = "1px solid black";
-			for (var j = 0; j < t.available_fields.length; ++j) {
-				var f = t.available_fields[j];
+			for (var j = 0; j < t._available_fields.length; ++j) {
+				var f = t._available_fields[j];
 				if (f.category != categories[i]) continue;
 				var cb = document.createElement("INPUT");
 				cb.type = 'checkbox';
 				cb.data = f;
 				var found = false;
 				for (var k = 0; k < t.show_fields.length; ++k)
-					if (t.show_fields[k].path.path == t.available_fields[j].path.path &&
-						t.show_fields[k].name == t.available_fields[j].name) { found = true; break; }
+					if (t.show_fields[k].path.path == t._available_fields[j].path.path &&
+						t.show_fields[k].name == t._available_fields[j].name) { found = true; break; }
 				if (found) cb.checked = 'checked';
 				cb.onclick = function() {
 					if (this.checked) {
@@ -503,11 +574,11 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		table.style.borderCollapse = "collapse";
 		table.style.borderSpacing = "0px";
 		var filter_classes = [];
-		for (var i = 0; i < t.filters.length; ++i) {
+		for (var i = 0; i < t._filters.length; ++i) {
 			var dd = null;
-			for (var j = 0; j < t.available_fields.length; ++j)
-				if (t.available_fields[j].category == t.filters[i].category && t.available_fields[j].name == t.filters[i].name) {
-					dd = t.available_fields[j];
+			for (var j = 0; j < t._available_fields.length; ++j)
+				if (t._available_fields[j].category == t._filters[i].category && t._available_fields[j].name == t._filters[i].name) {
+					dd = t._available_fields[j];
 					break;
 				}
 			if (dd != null && dd.filter_classname != null)
@@ -518,16 +589,18 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			var td;
 			tr.appendChild(td = document.createElement("TD"));
 			td.style.borderBottom = "1px solid #808080";
-			if (t.filters.indexOf(filter) > 0) td.innerHTML = "And";
+			if (t._filters.indexOf(filter) > 0) td.innerHTML = "And";
 			tr.appendChild(td = document.createElement("TD"));
 			td.style.borderBottom = "1px solid #808080";
+			td.style.whiteSpace = 'nowrap';
 			td.appendChild(document.createTextNode(filter.category+": "+filter.name));
 			tr.appendChild(td = document.createElement("TD"));
 			td.style.borderBottom = "1px solid #808080";
+			td.style.whiteSpace = 'nowrap';
 			var dd = null;
-			for (var j = 0; j < t.available_fields.length; ++j)
-				if (t.available_fields[j].category == filter.category && t.available_fields[j].name == filter.name) {
-					dd = t.available_fields[j];
+			for (var j = 0; j < t._available_fields.length; ++j)
+				if (t._available_fields[j].category == filter.category && t._available_fields[j].name == filter.name) {
+					dd = t._available_fields[j];
 					break;
 				}
 			if (dd == null) {
@@ -536,18 +609,41 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				if (dd.filter_classname == null) {
 					td.innerHTML = "No filter available";
 				} else {
-					var f = new window[dd.filter_classname](filter.data, dd.filter_config);
+					var f = new window[dd.filter_classname](filter.data, dd.filter_config, !filter.force);
 					td.appendChild(f.getHTMLElement());
 					f.onchange.add_listener(function (f) {
 						filter.data = f.getCurrentData();
 						t._load_data();
 					});
+					// TODO button or
 				}
+			}
+			while (filter.or) {
+				tr = document.createElement("TR"); table.appendChild(tr);
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.borderBottom = "1px solid #808080";
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.borderBottom = "1px solid #808080";
+				td.style.textAlign = "right";
+				td.style.whiteSpace = 'nowrap';
+				td.appendChild(document.createTextNode("Or"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.whiteSpace = 'nowrap';
+				td.style.borderBottom = "1px solid #808080";
+				var f = new window[dd.filter_classname](filter.or.data, dd.filter_config);
+				td.appendChild(f.getHTMLElement());
+				f.filter_or = filter.or;
+				f.onchange.add_listener(function (f) {
+					f.filter_or.data = f.getCurrentData();
+					t._load_data();
+				});
+				// TODO button or
+				filter = filter.or;
 			}
 		};
 		require([["typed_filter.js",filter_classes]], function() {
-			for (var i = 0; i < t.filters.length; ++i)
-				create_filter(t.filters[i]);
+			for (var i = 0; i < t._filters.length; ++i)
+				create_filter(t._filters[i]);
 		});
 		var add = document.createElement("DIV");
 		add.style.whiteSpace = 'nowrap';
@@ -555,11 +651,20 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		var select = document.createElement("SELECT"); add.appendChild(select);
 		var o;
 		o = document.createElement("OPTION"); o.value = 0; o.TEXT_NODE = ""; select.add(o);
-		for (var i = 0; i < t.available_fields.length; ++i) {
-			if (t.available_fields[i].filter_classname == null) continue;
+		for (var i = 0; i < t._available_fields.length; ++i) {
+			if (t._available_fields[i].filter_classname == null) continue;
+			var filter_forced = false;
+			for (var j = 0; j < t._filters.length; ++j) {
+				if (!t._filters[j].force) continue;
+				if (t._filters[j].category != t._available_fields[i].category) continue;
+				if (t._filters[j].name != t._available_fields[i].name) continue;
+				filter_forced = true;
+				break;
+			}
+			if (filter_forced) continue;
 			o = document.createElement("OPTION");
-			o.value = t.available_fields[i].category+"."+t.available_fields[i].name;
-			o.text = t.available_fields[i].category+": "+t.available_fields[i].name;
+			o.value = t._available_fields[i].category+"."+t._available_fields[i].name;
+			o.text = t._available_fields[i].category+": "+t._available_fields[i].name;
 			select.add(o);
 		}
 		var add_go = document.createElement("IMG"); add.appendChild(add_go);
@@ -576,11 +681,11 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			add_go.onclick = function() {
 				var field = select.value;
 				if (field == 0) return;
-				for (var i = 0; i < t.available_fields.length; ++i)
-					if (field == t.available_fields[i].category+"."+t.available_fields[i].name) {
-						var filter = {category: t.available_fields[i].category, name: t.available_fields[i].name, data:null};
-						t.filters.push(filter);
-						require([["typed_filter.js",t.available_fields[i].filter_classname+".js"]], function() {
+				for (var i = 0; i < t._available_fields.length; ++i)
+					if (field == t._available_fields[i].category+"."+t._available_fields[i].name) {
+						var filter = {category: t._available_fields[i].category, name: t._available_fields[i].name, data:null};
+						t._filters.push(filter);
+						require([["typed_filter.js",t._available_fields[i].filter_classname+".js"]], function() {
 							create_filter(filter);
 							menu.resize();
 							t._load_data();
@@ -594,14 +699,14 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			var menu = new context_menu();
 			menu.removeOnClose = true;
 			menu.addTitleItem(null, "Export Format");
-			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 2007 (.xlsx)', function() { t.export_list('excel2007'); });
-			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 5 (.xls)', function() { t.export_list('excel5'); });
-			menu.addIconItem('/static/data_model/pdf_16.png', 'PDF', function() { t.export_list('pdf'); });
-			menu.addIconItem('/static/data_model/csv.gif', 'CSV', function() { t.export_list('csv'); });
+			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 2007 (.xlsx)', function() { t._export_list('excel2007'); });
+			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 5 (.xls)', function() { t._export_list('excel5'); });
+			menu.addIconItem('/static/data_model/pdf_16.png', 'PDF', function() { t._export_list('pdf'); });
+			menu.addIconItem('/static/data_model/csv.gif', 'CSV', function() { t._export_list('csv'); });
 			menu.showBelowElement(button);
 		});
 	};
-	t.export_list = function(format) {
+	t._export_list = function(format) {
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
 			fields.push(t.show_fields[i].path.path);
@@ -613,7 +718,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		form.method = 'POST';
 		input.type = 'hidden';
 		input.name = 'table';
-		input.value = root_table;
+		input.value = t._root_table;
 		form.appendChild(input = document.createElement("INPUT"));
 		input.type = 'hidden';
 		input.name = 'fields';
@@ -696,7 +801,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			});
 			t._changed_cells[i].setOriginalData(value);
 		}
-		service.json("data_model","save_data",{root_table:root_table,to_save:to_save},function(result){
+		service.json("data_model","save_data",{root_table:t._root_table,to_save:to_save},function(result){
 			if (result) {
 				for (var i = 0; i < t._changed_cells.length; ++i) {
 					var value = t._changed_cells[i].getCurrentData();
@@ -711,24 +816,5 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			}
 			t.grid.endLoading();
 		});
-	};
-	
-	t.getRowData = function(row, table, column) {
-		// search a column where we can get it
-		for (var i = 0; i < t.tables.length; ++i) {
-			if (t.tables[i].name != table) continue;
-			for (var j = 0; j < t.tables[i].keys.length; ++j) {
-				if (t.tables[i].keys[j] == column) {
-					// we found it as a key
-					return t.data[row].values[i].k[j];
-				}
-			}
-		}
-		for (var i = 0; i < t.show_fields.length; ++i) {
-			if (t.show_fields[i].path.table != table) continue;
-			if (t.show_fields[i].path.column != column) continue;
-			return t.data[row].values[i].v;
-		}
-		return null;
 	};
 }

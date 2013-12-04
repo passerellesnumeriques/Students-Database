@@ -152,7 +152,16 @@ function generate_id() {
  */
 function absoluteLeft(e,relative) {
 	var left = e.offsetLeft;
-	try { if (e.offsetParent && e.offsetParent != relative) left += absoluteLeft(e.offsetParent,relative); } catch (ex) {}
+	try { 
+		if (e.offsetParent && e.offsetParent != relative) {
+			var p = e;
+			do {
+				p = p.parentNode;
+				left -= p.scrollLeft;
+			} while (p != e.offsetParent);
+			left += absoluteLeft(e.offsetParent,relative); 
+		}
+	} catch (ex) {}
 	return left;
 }
 /**
@@ -162,7 +171,16 @@ function absoluteLeft(e,relative) {
  */
 function absoluteTop(e,relative) {
 	var top = e.offsetTop;
-	try { if (e.offsetParent && e.offsetParent != relative) top += absoluteTop(e.offsetParent,relative); } catch (ex) {}
+	try { 
+		if (e.offsetParent && e.offsetParent != relative) {
+			var p = e;
+			do {
+				p = p.parentNode;
+				top -= p.scrollTop;
+			} while (p != e.offsetParent);
+			top += absoluteTop(e.offsetParent,relative); 
+		}
+	} catch (ex) {}
 	return top;
 }
 /**
@@ -436,19 +454,8 @@ function lock_screen(onclick, content) {
 	div.style.zIndex = 10;
 	if (onclick)
 		div.onclick = onclick;
-	if (content) {
-		var table = document.createElement("TABLE"); div.appendChild(table);
-		table.style.width = "100%";
-		table.style.height = "100%";
-		var tr = document.createElement("TR"); table.appendChild(tr);
-		var td = document.createElement("TD"); tr.appendChild(td);
-		td.style.verticalAlign = 'middle';
-		td.style.textAlign = 'center';
-		if (typeof content == 'string')
-			td.innerHTML = content;
-		else
-			td.appendChild(content);
-	}
+	if (content)
+		set_lock_screen_content(div, content);
 	if (typeof animation != 'undefined')
 		div.anim = animation.fadeIn(div,200,null,10,100);
 	return document.body.appendChild(div);
@@ -462,10 +469,13 @@ function set_lock_screen_content(div, content) {
 	var td = document.createElement("TD"); tr.appendChild(td);
 	td.style.verticalAlign = 'middle';
 	td.style.textAlign = 'center';
+	var d = document.createElement("DIV");
+	d.className = 'lock_screen_content';
 	if (typeof content == 'string')
-		td.innerHTML = content;
+		d.innerHTML = content;
 	else
-		td.appendChild(content);
+		d.appendChild(content);
+	td.appendChild(d);
 }
 /**
  * Remove the given element, previously created by using the function lock_screen

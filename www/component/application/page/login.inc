@@ -17,7 +17,8 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 		$message = "Internal error while authenticating";
 		PNApplication::error($e);
 	}
-}
+} else if (isset($_POST["message"]))
+	$message = $_POST["message"];
 $this->onload("window.top.pn_loading_end();");
 ?>
 <form method="post" style="width:100%;height:100%" onsubmit="login();return false;" name="login_form">
@@ -38,7 +39,7 @@ if ($message <> null) {
 			PN Students Management Software
 		</td>
 	</tr>
-	<tr><td rowspan=5 id='login_table_logo'>
+	<tr><td rowspan=7 id='login_table_logo'>
 		<img src='/static/application/logo.png'/>
 	</td></tr>
 	<tr>
@@ -68,6 +69,24 @@ if ($message <> null) {
 			<div class="button" onclick="login();">
 				Login
 				<img src='/static/application/login.gif' style='vertical-align:bottom'/>
+			</div>
+		</td>
+	</tr>
+	<tr>
+		<td></td>
+		<td id='google_tr' style='visibility:hidden;position:absolute;top:-10000px'>
+			<div class="button" onclick="google_login();">
+				<img src='/static/google/google.png'/>
+				Login with Google (<span id='user_from_google'></span>)
+			</div>
+		</td>
+	</tr>
+	<tr>
+		<td></td>
+		<td id='facebook_tr' style='visibility:hidden;position:absolute;top:-10000px'>
+			<div class="button" onclick="facebook_login();">
+				<img src='/static/facebook/facebook.png'/>
+				Login with Facebook (<span id='user_from_facebook'></span>)
 			</div>
 		</td>
 	</tr>
@@ -122,8 +141,50 @@ function login() {
 	document.forms["login_form"].submit();
 }
 
-require("load_static.js",function(){
-	if (window.no_loading) return;
-	window.loading = new load_static_resources('login_table_footer');
+function google_login() {
+	window.no_loading = true;
+	window.top.pn_loading_start();
+	if (window.loading && window.loading.stop) window.loading.stop();
+	window.top.set_loading_message("Authentication on Google...");
+	location.href = "/dynamic/google/page/auth?auth_token="+window.top.gapi.auth.getToken()["access_token"];
+}
+
+function facebook_login() {
+	window.no_loading = true;
+	window.top.pn_loading_start();
+	if (window.loading && window.loading.stop) window.loading.stop();
+	window.top.set_loading_message("Authentication on Facebook...");
+	location.href = "/dynamic/facebook/page/auth?auth_token="+window.top.facebook.access_token;
+}
+
+window.top.require("google.js",function(){
+	window.top.google.need_connection(function(){
+		service.json("google","get_user",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){
+			if (!res) return;
+			document.getElementById('user_from_google').innerHTML = res.user.username;
+			var tr = document.getElementById('google_tr');
+			tr.style.visibility = 'visible';
+			tr.style.position = 'static';
+		});
+	});
+
+	window.top.require("facebook.js",function(){
+		window.top.facebook.onconnect(function() {
+			service.json("facebook","get_user",{auth_token:window.top.facebook.access_token},function(res){
+				if (!res) return;
+				document.getElementById('user_from_facebook').innerHTML = res.user.username;
+				var tr = document.getElementById('facebook_tr');
+				tr.style.visibility = 'visible';
+				tr.style.position = 'static';
+			});
+		});
+	
+		require("load_static.js",function(){
+			setTimeout(function() {
+				if (window.no_loading) return;
+				window.loading = new load_static_resources('login_table_footer');
+			},1000);
+		});
+	});
 });
 </script>

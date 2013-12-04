@@ -531,27 +531,19 @@ function grid(element) {
 	t.startLoading = function() {
 		if (t.loading_back) return;
 		t.loading_back = document.createElement("DIV");
-		t.loading_back.style.backgroundColor = "#A0A0A0";
-		setOpacity(t.loading_back, 0.35);
+		t.loading_back.style.backgroundColor = "rgba(192,192,192,0.35)";
 		t.loading_back.style.position = "absolute";
 		t.loading_back.style.top = absoluteTop(t.element)+"px";
 		t.loading_back.style.left = absoluteLeft(t.element)+"px";
 		t.loading_back.style.width = t.element.offsetWidth+"px";
 		t.loading_back.style.height = t.element.offsetHeight+"px";
 		document.body.appendChild(t.loading_back);
-		t.loading_icon = document.createElement("IMG");
-		t.loading_icon.src = theme.icons_16.loading;
-		t.loading_icon.style.position = "absolute";
-		t.loading_icon.style.top = (absoluteTop(t.element)+t.element.offsetHeight/2-8)+"px";
-		t.loading_icon.style.left = (absoluteLeft(t.element)+t.element.offsetWidth/2-8)+"px";
-		document.body.appendChild(t.loading_icon);
+		set_lock_screen_content(t.loading_back, "<img src='"+theme.icons_16.loading+"'/> Loading data...");
 	};
 	t.endLoading = function() {
 		if (!t.loading_back) return;
 		document.body.removeChild(t.loading_back);
-		document.body.removeChild(t.loading_icon);
 		t.loading_back = null;
-		t.loading_icon = null;
 	};
 	
 	t.apply_filters = function() {

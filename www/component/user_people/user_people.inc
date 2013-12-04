@@ -62,7 +62,7 @@ class user_people extends Component implements PeoplePlugin {
 		if ($people["user"] == null) return array(); // not a user 
 		$user_id = $people["user"];
 		return array(
-			array(
+			"user_rights"=>array(
 				"/static/user_management/access_list.png", 
 				"User Rights", 
 				"/dynamic/user_management/page/user_rights?user=".$user_id, 

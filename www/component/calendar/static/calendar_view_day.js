@@ -40,15 +40,23 @@ function calendar_view_day(view, container) {
 		this.header = document.createElement("DIV");
 		this.header.setAttribute("layout", "20");
 		this.header.style.borderBottom = "1px solid black";
+		this.day_row_container_ = document.createElement("DIV");
+		this.day_row_container_.setAttribute("layout", "10");
 		this.day_row_container = document.createElement("DIV");
-		this.day_row_container.setAttribute("layout", "10");
 		this.day_row_container.style.position = "relative";
+		this.day_row_container.style.width = "100%";
+		this.day_row_container.style.height = "100%";
+		this.day_row_container_.appendChild(this.day_row_container);
+		this.content_ = document.createElement("DIV");
+		this.content_.setAttribute("layout", "fill");
 		this.content = document.createElement("DIV");
-		this.content.setAttribute("layout", "fill");
 		this.content.style.overflow = "auto";
+		this.content.style.width = "100%";
+		this.content.style.height = "100%";
+		this.content_.appendChild(this.content);
 		container.appendChild(this.header);
-		container.appendChild(this.day_row_container);
-		container.appendChild(this.content);
+		container.appendChild(this.day_row_container_);
+		container.appendChild(this.content_);
 		require("vertical_layout.js", function() { new vertical_layout(container); t._layout(); });
 		require("day_row_layout.js", function() { t.row_layout = new day_row_layout(); t._layout(); });
 		
@@ -151,7 +159,7 @@ function calendar_view_day(view, container) {
 				if (t.day_column) {
 					var list = [];
 					for (var j = 0; j < t.events.length; ++j)
-						if (!t.events[j].all_day) list.push(t);
+						if (!t.events[j].all_day) list.push(t.events[j]);
 					t.day_column.layout(list, t.day_content, 0, w, 0, view.zoom, 20);
 				}
 				if (t.row_layout) {

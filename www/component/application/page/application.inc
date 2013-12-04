@@ -4,9 +4,11 @@ $this->add_javascript("/static/widgets/vertical_layout.js");
 $this->add_javascript("/static/widgets/horizontal_menu.js");
 $this->add_javascript("/static/widgets/context_menu.js");
 $this->add_javascript("/static/google/google_status.js");
+$this->add_javascript("/static/facebook/facebook_status.js");
 $this->onload("new vertical_layout('pn_application_container');");
 $this->onload("new horizontal_menu('application_menu');");
-$this->onload("new google_status('google_status');");
+//$this->onload("new google_status('google_status');");
+//$this->onload("new facebook_status('facebook_status');");
 $this->onload("setBorderRadius(document.forms['app_search'].elements['q'],8,8,8,8,8,8,8,8);");
 $this->onload("setBoxShadow(document.forms['app_search'].elements['q'],-1,2,2,0,'#D8D8F0',true);");
 $this->onload("setBorderRadius(document.getElementById('app_domain'),5,5,5,5,5,5,5,5);");
@@ -60,18 +62,29 @@ if (PNApplication::$instance->current_domain == "Dev") {
 						echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>";
 					?>
 					</select>
+				</td><td nowrap="nowrap" class='pn_application_header_section'>
+					<div class='button' onclick='help();'><img src='<?php echo theme::$icons_16["help"];?>'/> Help</div>
 				</td>
 			</tr>
 		</table>
 	</div>
-	<iframe layout='fill' src='<?php if (isset($_GET["page"])) echo $_GET["page"]; else echo "/dynamic/application/page/home";?>' id='pn_application_content' name='pn_application_content' frameBorder=0 onload='pn_application_content_load();'></iframe>
+	<div layout='fill'>
+		<div style='width:100%;height:100%' id='help_split'>
+			<iframe style='width:100%;height:100%;' src='<?php if (isset($_GET["page"])) echo $_GET["page"]; else echo "/dynamic/application/page/home";?>' id='pn_application_content' name='pn_application_content' frameBorder=0 onload='pn_application_content_load();'></iframe>
+		</div>
+	</div>
 	<div layout='17' id='pn_application_footer'>
 		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
+		<!-- 
 		<span style='position:fixed;bottom:0px;right:3px;'>
 			<span id='google_status'></span>
 		</span>
-		<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
 		<span style='position:fixed;bottom:0px;right:23px;'>
+			<span id='facebook_status'></span>
+		</span>
+		 -->
+		<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
+		<span style='position:fixed;bottom:0px;right:43px;'>
 			<span id='debug_status'></span>
 		</span>
 		<?php } ?>
@@ -99,34 +112,23 @@ setBackgroundGradient(
 	]
 );
 function pn_application_content_unload() {
-	if (window.pn_application_content_hider != null) return;
 	var frame = document.getElementById('pn_application_content');
-	var div = document.createElement("DIV");
-	div.style.position = 'fixed';
-	div.style.top = absoluteTop(frame)+"px";
-	div.style.left = absoluteLeft(frame)+"px";
-	div.style.width = frame.offsetWidth+"px";
-	div.style.height = frame.offsetHeight+"px";
-	div.style.backgroundColor = '#808080';
-	div.style.zIndex = 25;
-	if (typeof animation != 'undefined')
-		div.anim = animation.fadeIn(div, 500, function(){}, 0, 50);
-	else
-		setOpacity(div, 50);
-	document.body.appendChild(div);
-	window.pn_application_content_hider = div;
+	if (typeof animation != 'undefined') {
+		if (frame.anim) animation.stop(frame.anim);
+		frame.anim = animation.fadeOut(frame, 300, function(){frame.style.visibility='hidden';});
+	} else
+		frame.style.visibility = 'hidden';
 }
 function pn_application_content_load() {
 	var frame = document.getElementById('pn_application_content');
 	listenEvent(getIFrameWindow(frame),'unload',pn_application_content_unload);
-	if (window.pn_application_content_hider == null) return;
-	var div = window.pn_application_content_hider;
-	window.pn_application_content_hider = null;
+	if (help_frame) update_help();
 	if (typeof animation != 'undefined') {
-		if (div.anim) animation.stop(div.anim);
-		animation.fadeOut(div, 300, function(){document.body.removeChild(div);}, 50, 0);
+		if (frame.anim) animation.stop(frame.anim);
+		frame.anim = animation.fadeIn(frame, 300, function(){});
+		frame.style.visibility = 'visible';
 	} else
-		document.body.removeChild(div);
+		frame.style.visibility = 'visible';
 }
 
 function logout() {
@@ -135,7 +137,52 @@ function logout() {
 	location='/dynamic/application/page/logout';
 }
 
+window.top.require("google.js",function(){
+	window.top.google.need_connection(function(){
+		service.json("google","set_google_id",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){});
+	});
+});
+window.top.require("facebook.js",function(){
+	window.top.facebook.onconnect(function(){
+		service.json("facebook","set_facebook_id",{auth_token:window.top.facebook.access_token},function(res){});
+	});
+});
+
 require("load_static.js",function(){
 	new load_static_resources('background_loading_application');
 });
+
+var help_frame = null;
+function update_help() {
+	var frame = document.getElementById('pn_application_content');
+	var url = new URL(frame.src);
+	url.params = {};
+	url.path = url.path.substring(9); // remove /dynamic/
+	var i = url.path.indexOf('/');
+	var component = url.path.substring(0,i);
+	var path = url.path.substring(i+5); // remove /page/
+	url.path = "/help/"+component+"/"+path;
+	help_frame.src = url.toString(); 
+}
+function help() {
+	var split = document.getElementById('help_split');
+	if (help_frame == null) {
+		help_frame = document.createElement("IFRAME");
+		help_frame.frameBorder = 0;
+		help_frame.style.border = "none";
+		update_help();
+		split.appendChild(help_frame);
+		require("splitter_vertical.js",function() {
+			new splitter_vertical(split, 0.6);
+		});
+	} else {
+		split.widget.remove();
+		split.removeChild(help_frame);
+		help_frame = null;
+		var frame = document.getElementById('pn_application_content');
+		frame.style.width = "100%";
+		frame.style.height = "100%";
+	}
+}
+require("splitter_vertical.js");
 </script>

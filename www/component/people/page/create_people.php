@@ -50,7 +50,7 @@ class page_create_people extends Page {
 				<img src="<?php echo $input["icon"];?>" style='vertical-align:bottom;padding-left:5px;padding-right:5px'/>
 				<span id='wizard_page_title'><?php echo $input["title"];?></span>
 			</div>
-			<div id='wizard_page_content' layout='fill'>
+			<div id='wizard_page_content' layout='fill' style='overflow:auto'>
 				<?php 
 				$pages = array();
 				foreach (PNApplication::$instance->components as $c) {

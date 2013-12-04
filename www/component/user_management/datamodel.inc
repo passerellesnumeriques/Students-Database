@@ -32,17 +32,19 @@ $model->addTable("Users")
 			"domain"=>"Domain",
 			"username"=>"Username",
 		), array(
-			"domain"=>array("not_editable")
+			"domain"
 		)
 	))
 	;
-$model->addDataCategoryLink("User","/dynamic/people/page/profile?plugin=user_management&page=user_rights&user=%Users.id%", "/static/user_management/access_list.png");
 $model->addTable("UserRights")
 	->addForeignKey("user", "Users", true, false, true)
 	->addString("right", 100, 1, false)
 	->addString("value")
 	->addIndex("user")
 	->addReadAccess("consult_user_rights",true)
+	->addWriteAccess("edit_user_rights", true)
+	->addInsertAccess("edit_user_rights", true)
+	->addRemoveAccess("edit_user_rights", true)
 	;
 $model->addTable("Role")
 	->addPrimaryKey("id")

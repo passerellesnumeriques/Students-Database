@@ -25,7 +25,14 @@ abstract class Page {
 	private $generate_id = 0;
 
 	public final function add_javascript($path, $onload = "") {
-		if (!in_array($path, $this->javascripts))
+		$found = false;
+		foreach ($this->javascripts as $js)
+			if ($js[0] == $path) {
+				$found = true;
+				$js[1] .= $onload;
+				break;		
+			}
+		if (!$found)
 			array_push($this->javascripts, array($path,$onload));
 	}
 	private $javascript_paths = null;

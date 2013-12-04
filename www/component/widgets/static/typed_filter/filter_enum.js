@@ -1,13 +1,13 @@
 /* #depends[typed_filter.js] */
-function filter_enum(data, config) {
+function filter_enum(data, config, editable) {
 	if (data == null) data = {value:''};
-	typed_filter.call(this, data, config);
+	typed_filter.call(this, data, config, editable);
 	
 	var t=this;
 	var select = document.createElement("SELECT"); this.element.appendChild(select);
 	var o;
 	o = document.createElement("OPTION"); o.value = ""; o.text = ""; if (data.value == '') o.selected = true; select.add(o);
-	if (config.can_be_empty) {
+	if (config.can_be_empty || true) {
 		o = document.createElement("OPTION"); o.value = "NULL"; o.text = "<All not specified>"; if (data.value == 'NULL') o.selected = true; select.add(o);
 		o = document.createElement("OPTION"); o.value = "NOT_NULL"; o.text = "<All specified>"; if (data.value == 'NOT_NULL') o.selected = true; select.add(o);
 	}
@@ -18,6 +18,7 @@ function filter_enum(data, config) {
 		if (data.value == config.possible_values[i][0]) o.selected = true;
 		select.add(o);
 	}
+	if (!editable) select.disabled = 'disabled';
 	
 	select.onchange = function() {
 		t.onchange.fire(t);

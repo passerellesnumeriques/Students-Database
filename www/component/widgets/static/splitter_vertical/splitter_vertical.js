@@ -3,13 +3,19 @@ function splitter_vertical(element, position) {
 	var t = this;
 	
 	t.element = element;
+	t.element.widget = this;
 	t.position = position;
 	t.element.data = t;
-	while (element.childNodes.length > 0) {
-		var e = element.removeChild(element.childNodes[0]);
-		if (e.nodeType != 1) continue;
-		if (!t.part1) t.part1 = e; else t.part2 = e;
+	for (var i = 0; i < element.childNodes.length; ++i) {
+		var e = element.childNodes[i];
+		if (e.nodeType != 1) {
+			element.removeChild(e);
+			i--;
+			continue;
+		}
 	}
+	t.part1 = element.childNodes[0];
+	t.part2 = element.childNodes[1];
 	
 	t._position = function(prev_h,call) {
 		var w = t.element.offsetWidth;
@@ -41,14 +47,12 @@ function splitter_vertical(element, position) {
 	t.part1.style.left = "0px";
 	t.part2.style.position = "absolute";
 	t.part2.style.top = "0px";
-	element.appendChild(t.part1);
-	element.appendChild(t.separator);
-	element.appendChild(t.part2);
+	element.insertBefore(t.separator, t.part2);
 	t._position();
 	
 	t.positionChanged = new Custom_Event();
 	
-	addLayoutEvent(t.element, function() { t._position(); });
+	addLayoutEvent(t.element, t._position);
 	
 	t._stop_move = function() {
 		unlistenEvent(window, 'mouseup', t._stop_move);
@@ -107,5 +111,12 @@ function splitter_vertical(element, position) {
 		t.part2.style.visibility = 'visible';
 		t.separator.style.visibility = 'visible';
 		t._position();
+	};
+	
+	t.remove = function() {
+		removeLayoutEvent(t.element, t._position);
+		t.element.removeChild(t.separator);
+		t.part1.style.position = 'static';
+		t.part2.style.position = 'static';
 	};
 }

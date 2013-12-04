@@ -2,32 +2,6 @@
 use datamodel\FieldsDisplayHandler;
 
 /* @var $model DataModel */
-$model->addTable("StudentBatch")
-	->addPrimaryKey("id")
-	->addString("name", 100, 1, false, true)
-	->addDate("start_date", false, false, "2004-01-01", "end_date")
-	->addDate("end_date", false, false, "start_date", null)
-	->addReadAccess("consult_students_list", true)
-	->addWriteAccess("manage_batches", true)
-	->addInsertAccess("manage_batches", true)
-	->addRemoveAccess("manage_batches", true)
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Batch",
-		array(
-			"name"=>"Batch Name",
-			"start_date"=>"Integration Date",
-			"end_date"=>"Graduation Date",
-		)
-	))
-	;
-$model->addTable("Specialization")
-	->addPrimaryKey("id")
-	->addString("name", 100, 1, false, true)
-	->addReadAccess("consult_students_list", true)
-	->addWriteAccess("manage_batches", true)
-	->addInsertAccess("manage_batches", true)
-	->addRemoveAccess("manage_batches", true)
-	;
-
 $model->addTable("Student")
 	->addForeignKey("people", "People", true, true, false, false, true)
 	->addForeignKey("batch", "StudentBatch", true, false, true, false)
@@ -40,48 +14,30 @@ $model->addTable("Student")
 	->addInsertAccess("manage_batches", true)
 	->addRemoveAccess("manage_batches", true)
 	->setDisplayHandler(null, new \datamodel\MultipleDisplayHandler("Student", "Student", array(
-		new \datamodel\ChoiceDataDisplay(null, "batch", "name", "Batch", "people"),
+		new \datamodel\ChoiceDataDisplay(null, "batch", "name", "Batch"),
+		new \datamodel\ChoiceDataDisplay(null, "specialization", "name", "Specialization", false),
 		new \datamodel\FieldsDisplayHandler("Student", "", array(
 			"exclusion_reason"=>"Exclusion reason",
 			"exclusion_date"=>"Exclusion date"
-		),null,"people")
-	)))
-	;
-$model->addTable("AcademicPeriod")
-	->addPrimaryKey("id")
-	->addForeignKey("batch", "StudentBatch", true, false, true)
-	->addString("name", 100, 1, false, false)
-	->addDate("start_date", false, false, "2004-01-01", "end_date")
-	->addDate("end_date", false, false, "start_date", null)
-	->addReadAccess("consult_students_list", true)
-	->addWriteAccess("manage_batches", true)
-	->addInsertAccess("manage_batches", true)
-	->addRemoveAccess("manage_batches", true)
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Academic Period",
+		),
 		array(
-			"name"=>"Period Name",
-			"start_date"=>"Period Start",
-			"end_date"=>"Period End",
-		)
-	))
-	;
-$model->addTable("AcademicClass")
-	->addPrimaryKey("id")
-	->addForeignKey("period", "AcademicPeriod", true, false, true)
-	->addForeignKey("specialization", "Specialization", false, false, true)
-	->addString("name", 100, 1, false, false)
-	->addReadAccess("consult_students_list", true)
-	->addWriteAccess("manage_batches", true)
-	->addInsertAccess("manage_batches", true)
-	->addRemoveAccess("manage_batches", true)
+			"exclusion_reason"=>array("not_editable"),
+			"exclusion_date"=>array("not_editable"),
+		),"people")
+	)))
 	;
 $model->addTable("StudentClass")
 	->addForeignKey("people", "People", true, false, true)
 	->addForeignKey("class", "AcademicClass", false, false, true)
+	->setKey(array("people","class"))
 	->addReadAccess("consult_students_list", true)
 	->addWriteAccess("manage_batches", true)
 	->addInsertAccess("manage_batches", true)
 	->addRemoveAccess("manage_batches", true)
 	->setDisplayHandler("people", new \datamodel\StopDataDisplayHandler())
+	->setDisplayHandler(null, new datamodel\MultipleDisplayHandler("Student", "Student", array(
+		new datamodel\ReadOnlyDataDisplay(null, "Class", "class.name"),
+		new datamodel\ReadOnlyDataDisplay(null, "Period", "class.period.name")
+	), array("class")))
 	;
 ?>

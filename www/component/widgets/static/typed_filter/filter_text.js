@@ -1,7 +1,7 @@
 /* #depends[typed_filter.js] */
-function filter_text(data, config) {
+function filter_text(data, config, editable) {
 	if (data == null) data = {type:'contains',value:''};
-	typed_filter.call(this, data, config);
+	typed_filter.call(this, data, config, editable);
 	
 	var t=this;
 	var select = document.createElement("SELECT"); this.element.appendChild(select);
@@ -12,6 +12,10 @@ function filter_text(data, config) {
 	o = document.createElement("OPTION"); o.value = "ends"; o.text = "Ends with"; if (data.type == 'ends') o.selected = true; select.add(o);
 	o = document.createElement("OPTION"); o.value = "exact"; o.text = "Exactly"; if (data.type == 'exact') o.selected = true; select.add(o);
 	input.value = data.value;
+	if (!editable) {
+		select.disabled = 'disabled';
+		input.disabled = 'disabled';
+	}
 	
 	select.onchange = function() {
 		t.onchange.fire(t);

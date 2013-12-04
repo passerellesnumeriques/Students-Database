@@ -8,17 +8,23 @@ class page_excel_upload extends Page {
 			echo "Please upload an Excel file";
 			return;
 		}
-		if (!isset($_FILES["excel"]) || $_FILES["excel"]['error'] <> UPLOAD_ERR_OK) {
+		if (isset($_GET["id"])) {
+			$path = PNApplication::$instance->storage->get_data_path($_GET["id"]);
+		} else if (!isset($_FILES["excel"]) || $_FILES["excel"]['error'] <> UPLOAD_ERR_OK) {
 			PNApplication::error("Error uploading file (".(isset($_FILES["excel"]) ? PNApplication::$instance->storage->get_upload_error($_FILES["excel"]) : "no file received").").");
 			return;
-		}
+		} else
+			$path = $_FILES["excel"]['tmp_name'];
 		require_once("component/lib_php_excel/PHPExcel.php");
 		try {
-			$reader = PHPExcel_IOFactory::createReaderForFile($_FILES["excel"]['tmp_name']);
+			$reader = PHPExcel_IOFactory::createReaderForFile($path);
 			if (get_class($reader) == "PHPExcel_Reader_HTML") throw new Exception();
-			$excel = $reader->load($_FILES["excel"]['tmp_name']);
+			$excel = $reader->load($path);
+			if (isset($_GET["id"])) {
+				PNApplication::$instance->storage->remove_data($_GET["id"]);
+			}
 		} catch (Exception $e) {
-			PNApplication::error("Invalid file format");
+			PNApplication::error("Invalid file format: ".$e->getMessage());
 			return;
 		}
 		$this->add_javascript("/static/excel/excel.js");

@@ -275,7 +275,8 @@ function context_menu(menu) {
 //		for (var i = 0; i < document.body.childNodes.length; ++i)
 //			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = 1;
 		//unlistenEvent(window, 'click', t._listener);
-		window.top.pnapplication.unregister_onclick(t._listener);
+		if (window)
+			window.top.pnapplication.unregister_onclick(t._listener);
 	};
 	t._listener = function(ev, win, orig_win) {
 		t.hide_if_outside_menu(ev, win, orig_win);

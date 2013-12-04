@@ -22,6 +22,10 @@ function horizontal_menu(menu) {
 		t.items.push(new HorizontalMenuItem(element));
 		t.update();
 	};
+	t.removeAll = function() {
+		t.items = [];
+		t.update();
+	};
 	
 	while (menu.childNodes.length > 0) {
 		if (menu.childNodes[0].nodeType == 1)
