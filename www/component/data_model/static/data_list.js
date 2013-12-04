@@ -244,6 +244,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	t.sort_column = null;
 	t.sort_order = 3;
 	t.filters = filters ? filters : [];
+	t.ondataloaded = new Custom_Event();
 	
 	t._init_list();
 	t._load_fields();
@@ -418,7 +419,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 					closure.register(col.attached_data, td.data_id);
 				}
 			}
-			
+			t.ondataloaded.fire(t);
 			t.grid.endLoading();
 		});
 	};

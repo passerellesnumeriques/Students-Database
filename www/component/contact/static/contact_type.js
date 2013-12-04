@@ -204,9 +204,11 @@ function contact_type(contact_type, contact_type_name, table_join, join_key, joi
 	this.createCategoryField = function (container,contact){
 		this.context = null;
 		container.innerHTML = contact.sub_type;
-		container.style.cursor = "pointer";
-		container.onclick = function(){t.addContext(container,contact);};
-		setTimeout(function(){if (ontypechanged) ontypechanged();},1);
+		if(can_edit){
+			container.style.cursor = "pointer";
+			container.onclick = function(){t.addContext(container,contact);};
+			setTimeout(function(){if (ontypechanged) ontypechanged();},1);
+		}
 	};
 	
 	/**

@@ -67,7 +67,8 @@
 		->addWriteAccess("edit_information_session",true)
 		->addReadAccess("see_information_session_details",true)
 		->addInsertAccess("manage_information_session",true)
-		->addRemoveAccess("manage_information_session",true);		
+		->addRemoveAccess("manage_information_session",true);
+//TODO add a field "remark"		
 		
 	$sm->addTable("Selection_campaign_config")
 		->addString("name",255,1,false,true)//the name must be unique (key...)

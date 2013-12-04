@@ -515,7 +515,7 @@ class SQLQuery {
 			$first = true;
 			foreach ($this->group_by as $g) {
 				if ($first) $first = false; else $sql .= ",";
-				$sql .= "`".$g[0]."`.`".$g[1]."`";
+				$sql .= "`".$this->resolve_where_table($g[0])."`.`".$g[1]."`";
 			}
 		}
 		if (count($this->order_by) > 0) {
@@ -524,7 +524,7 @@ class SQLQuery {
 			foreach ($this->order_by as $o) {
 				if ($first) $first = false; else $sql .= ",";
 				if ($o[0] !== null)
-					$sql .= "`".$o[0]."`.";
+					$sql .= "`".$this->resolve_where_table($o[0])."`.";
 				$sql .= "`".$o[1]."` ".($o[2] ? "ASC" : "DESC");
 			}
 		}

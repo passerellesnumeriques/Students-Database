@@ -242,65 +242,81 @@ class selection extends Component implements OrganizationPlugin {
 	/**
 	 * @method get_json_IS_data
 	 * @param $id the id of the IS
-	 * @return string {id:,postal_address:,date:,number_expected,number_real:,name:,partners:
+	 * @return string {id:,address:{address_object},date:,number_expected,number_real:,name:,partners:
 	 * 					[{organization;,host:,host_address:,contact_points_selected:[...]},{organization...}]}
+	 * if $id == -1: the object returned is {id:-1, address:null, date:null, number_expected:null, number_real:null, name:null, partners:[]}
 	 */
-	public function get_json_IS_data($id){
+	public function get_json_IS_data($id, $return_partners_array = false){
 		$data = "";
-		$IS = SQLQuery::create()
-				->select("Information_session")
-				->field("date")
-				->field("postal_address")
-				->field("number_expected")
-				->field("number_real")
-				->field("name")
-				->where("id",$id)
-				->execute_single_row();
-		$partners = SQLQuery::create()
-				->field("Information_session_partner","organization","organization")
-				->select("Information_session_partner")
-				->field("Information_session_partner","host","host")
-				->field("host_address")
-				->join("Information_session_partner","Information_session_contact_point",array("information_session"=>"information_session","organization"=>"organization"))
-				->field("Information_session_contact_point","people","contact_point")
-				->where_value("Information_session_partner","information_session",$id)
-				->execute();
-		if(isset($IS) && $IS <> null){
-			$data.= "{id:'".$id."', postal_address:".json_encode($IS["postal_address"]).", date:".json_encode($IS["date"]).", number_expected:".json_encode($IS["number_expected"]).", number_real:".json_encode($IS["number_real"]).", name:".json_encode($IS["name"]);
-			$data.= ", partners:";
-			if(isset($partners[0]["organization"]) && $partners[0]["organization"] <> null){
-				$first = true;
-				$current_partner = null;
-				$data.= "[";
-				foreach($partners as $p){
-					if($p["organization"] != $current_partner){
-						if(!$first){
-							$data.= "]}";
+		$partners_array = array();
+		if($id == -1 || $id == "-1"){
+		//This is a creation
+		$data.= "{id:-1, address:null, date:null, number_expected:null, number_real:null, name:null, partners:[]}";
+		} else {
+			$IS = SQLQuery::create()
+					->select("Information_session")
+					->field("date")
+					->field("postal_address")
+					->field("number_expected")
+					->field("number_real")
+					->field("name")
+					->where("id",$id)
+					->execute_single_row();
+			$partners = SQLQuery::create()
+					->field("Information_session_partner","organization","organization")
+					->select("Information_session_partner")
+					->field("Information_session_partner","host","host")
+					->field("host_address")
+					->join("Information_session_partner","Information_session_contact_point",array("information_session"=>"information_session","organization"=>"organization"))
+					->field("Information_session_contact_point","people","contact_point")
+					->where_value("Information_session_partner","information_session",$id)
+					->order_by("Information_session_partner","organization")
+					->execute();
+			if(isset($IS) && $IS <> null){
+				$data.= "{id:'".$id."', ";
+				if($IS["postal_address"] <> null){
+					$data.= PNApplication::$instance->contact->get_json_address_good_format_for_address_text($IS["postal_address"]);
+				} else $data.= "address:null";
+				$data.= ", date:".json_encode($IS["date"]).", number_expected:".json_encode($IS["number_expected"]).", number_real:".json_encode($IS["number_real"]).", name:".json_encode($IS["name"]);
+				$data.= ", partners:";
+				if(isset($partners[0]["organization"]) && $partners[0]["organization"] <> null){
+					$first = true;
+					$current_partner = null;
+					$data.= "[";
+					foreach($partners as $p){
+						if($p["organization"] != $current_partner){
+							$name = SQLQuery::create()->select("Organization")->field("name")->where_value("Organization","id",$p["organization"])->execute_single_value();
+							if(!$first){
+								$data.= "]}";
+								$data.= ", ";
+							}
+							$first = false;
+							$data.= "{";
+							array_push($partners_array,$p["organization"]);
+							$data.= "organization:".json_encode($p["organization"]).", ";
+							$data.= "organization_name:".json_encode($name).", ";
+							$data.= "host:".json_encode($p["host"]).", ";
+							$data.= "host_address:".json_encode($p["host_address"]).", ";
+							$data.= "contact_points_selected:";
+							if(isset($p["contact_point"]) && $p["contact_point"] <> null){
+								$data.= "[";
+								$data.= json_encode($p["contact_point"]);
+							} else $data.= "[";
+							$current_partner = $p["organization"];
+						} else {
 							$data.= ", ";
-						}
-						$first = false;
-						$data.= "{";
-						$data.= "organization:".json_encode($p["organization"]).", ";
-						$data.= "host:".json_encode($p["host"]).", ";
-						$data.= "host_address:".json_encode($p["host_address"]).", ";
-						$data.= "contact_points_selected:";
-						if(isset($p["contact_point"]) && $p["contact_point"] <> null){
-							$data.= "[";
 							$data.= json_encode($p["contact_point"]);
-						} else $data.= "[";
-						$current_partner = $p["organization"];
-					} else {
-						$data.= ", ";
-						$data.= json_encode($p["contact_point"]);
+						}
 					}
-				}
-				$data.= "]}";
-				$data.= "]";
-			} else $data.= "[]";
-			
-			$data.= "}";
-		} else $data.="{}";
-		return $data;
+					$data.= "]}";
+					$data.= "]";
+				} else $data.= "[]";
+				
+				$data.= "}";
+			} else $data.="{}";
+		}
+		if(!$return_partners_array) return $data;
+		else return array("data" => $data, "partners" => $partners_array);
 	}
 	
 	public function getOrganizationCreator() {
