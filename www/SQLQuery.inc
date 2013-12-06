@@ -700,7 +700,7 @@ class SQLQuery {
 
 	/**
 	 * @param string $table table name
-	 * @param array $keys_fields_values array of key=>array(field=>value)
+	 * @param array $keys_fields_values array of array(array(keys), array(field=>value))
 	 * @param unknown $lock_id
 	 */
 	public function update_by_keys($table, $keys_fields_values, $lock_id = null) {
@@ -721,12 +721,13 @@ class SQLQuery {
 			$q->set_sub_models($this->sub_models);
 			if ($t->getPrimaryKey() <> null) {
 				$keys = array();
-				foreach ($keys_fields_values as $key=>$fields_values) array_push($keys, $key);
+				foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
 				$q->where_in($t->getName(), $t->getPrimaryKey()->name, $keys);
 			} else {
 				$keys = $t->getKey();
 				$w = "";
-				foreach ($keys_fields_values as $key=>$fields_values) {
+				foreach ($keys_fields_values as $k) {
+					$key = $k[0];
 					$kw = "";
 					foreach ($keys as $key_name) {
 						if (strlen($kw) > 0) $kw .= " AND ";
@@ -750,7 +751,9 @@ class SQLQuery {
 		if ($lock_id <> null) {
 			$column = null;
 			$columns = array();
-			foreach ($keys_fields_values as $key=>$fields_values)
+			foreach ($keys_fields_values as $k)
+				$key = $k[0];
+				$fields_values = $k[1];
 				foreach ($fields_values as $field=>$value)
 					if (!in_array($field, $columns)) array_push($columns, $field);
 			if (count($columns) == 1) $column = $columns[0];
@@ -759,7 +762,7 @@ class SQLQuery {
 		} else {
 			$locker = null;
 			$keys = array();
-			foreach ($keys_fields_values as $key=>$fields_values) array_push($keys, $key);
+			foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
 			if (count($keys) == 1)
 				$lock_id = DataBaseLock::lock_row($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
 			else
@@ -771,7 +774,9 @@ class SQLQuery {
 	
 		// validate values, and check unicity
 		$columns = array();
-		foreach ($keys_fields_values as $key=>&$fields_values) {
+		foreach ($keys_fields_values as $k) {
+			$key = $k[0];
+			$fields_values = $k[1];
 			foreach ($fields_values as $field=>$value) {
 				$col = $t->internalGetColumn($field, $this->sub_models);
 				try { 
@@ -818,7 +823,9 @@ class SQLQuery {
 		}
 
 		// everything is valid and allowed, we can perform the update
-		foreach ($keys_fields_values as $key=>&$fields_values) {
+		foreach ($keys_fields_values as $k) {
+			$key = $k[0];
+			$fields_values = $k[1];
 			$sql = "UPDATE `".$t->getSQLName($this->sub_models)."` SET ";
 			$first = true;
 			foreach ($fields_values as $field=>$value) {
@@ -851,6 +858,8 @@ class SQLQuery {
 	/** Update all given keys with the same given values
 	 */
 	public function update_all_keys($table, $keys, $fields_values, $lock_id = null) {
+		if (count($keys) == 0) return;
+		
 		require_once("component/data_model/Model.inc");
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
@@ -956,7 +965,7 @@ class SQLQuery {
 					if ($first) $first = false; else $sql .= " AND ";
 					$sql .= "`".$key_name."`='".$key[$key_name]."'";
 				}
-				$sql .= "(";
+				$sql .= ")";
 			}
 		}
 		SQLQuery::db()->execute($sql);
@@ -1143,12 +1152,23 @@ class SQLQuery {
 		}
 		SQLQuery::db()->execute($sql);
 		$id = SQLQuery::db()->get_insert_id();
+		$ids = array();
+		if ($id <> 0) {
+			$nb_rows = SQLQuery::db()->affected_rows();
+			if ($nb_rows == count($rows)) {
+				$res = SQLQuery::db()->execute("SELECT LAST_INSERT_ID()");
+				$row = SQLQuery::db()->next_row($res);
+				$id = $row[0];
+				for ($i = 0; $i < $nb_rows; $i++)
+					array_push($ids, $id+$i);
+			}
+		}
 		// sub models
 		foreach ($t->_key_submodels as &$sm)
 			$sm->create_tables($id);
 		// unlock the table
 		DataBaseLock::unlock($lock);
-		return $id;
+		return $ids;
 	}
 	
 	/** Remove the data having the given primary key, and all linked data */

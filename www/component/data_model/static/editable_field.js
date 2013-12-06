@@ -22,10 +22,10 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		if (t.locks) {
 			var locks = t.locks;
 			t.locks = null;
-			for (var i = 0; i < locks.length; ++i)
-				service.json("data_model", "unlock", {lock:locks[i]}, function(result) {
-					window.database_locks.remove_lock(locks[i]);
-				});	
+			for (var i = 0; i < locks.length; ++i) {
+				service.json("data_model", "unlock", {lock:locks[i]}, function(result) {});
+				window.database_locks.remove_lock(locks[i]);
+			}
 		}
 		if (t.save_button) { container.removeChild(t.save_button); t.save_button = null; }
 		if (t.unedit_button) { container.removeChild(t.unedit_button); t.unedit_button = null; }

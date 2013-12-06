@@ -31,6 +31,11 @@ function custom_data_list(&$page, $root_table, $sub_model, $available_fields, $f
 	}
 	
 	$res = $q->execute();
+	for ($i = 0; $i < count($available_fields); $i++) {
+		$data = $available_fields[$i][0];
+		$path = $available_fields[$i][1];
+		$data->performSubRequests($q, $res, $data_aliases[$i], $path, null);
+	}
 	
 	$page->add_javascript("/static/data_model/DataDisplay.js");
 	$page->add_javascript("/static/widgets/typed_field/typed_field.js");
@@ -61,10 +66,7 @@ var custom_data_list = {
 			$path = $available_fields[$i][1];
 			if ($f) $f = false; else echo ",";
 			echo "{v:";
- 			if (isset($a["data"]) && $a["data"] !== null)
- 				echo json_encode($row[$a["data"]]);
- 			else
- 				echo json_encode($data->retrieveValue($row, $a, $path, array()));
+			echo json_encode($row[$a["data"]]);
 			if (isset($row[$a["key"]]))
 				echo ",k:".json_encode($row[$a["key"]]);
 			else {
@@ -127,7 +129,7 @@ var custom_data_list = {
 				if (tr.childNodes.length <= this.selected_fields_from_request.length)
 					tr.appendChild(td);
 				else
-					tr.insertBefore(th, tr.childNodes[this.selected_fields_from_request.length]);
+					tr.insertBefore(td, tr.childNodes[this.selected_fields_from_request.length]);
 			}
 			// add to list
 			this.selected_fields_from_request.push(index);
@@ -174,7 +176,7 @@ var custom_data_list = {
 			if (this.columns[i].sub_columns.length == 0)
 				col_index++;
 			else 
-				col_index += this._count_columns(columns[i].sub_columns);
+				col_index += this._count_columns(this.columns[i].sub_columns);
 		}
 		if (!before_col) {
 			this.thead.childNodes[0].appendChild(col.th);

@@ -428,7 +428,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			var col_id = [];
 			for (var i = 0; i < t.show_fields.length; ++i)
 				for (var j = 0; j < t.grid.columns.length; ++j)
-					if (t.grid.columns[j].attached_data.path.path == t.show_fields[i].path.path &&
+					if (t.grid.columns[j].attached_data && t.grid.columns[j].attached_data.path.path == t.show_fields[i].path.path &&
 						t.grid.columns[j].attached_data.name == t.show_fields[i].name) {
 						col_id.push(t.grid.columns[j].id);
 						break;

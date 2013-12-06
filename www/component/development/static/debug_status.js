@@ -15,13 +15,52 @@ function debug_status(container) {
 				content.style.width = "1000px";
 				content.style.height = "800px";
 				var tabs_control = new tabs(content, false);
-
-				// sql queries
-				var tab = document.createElement("DIV");
-				var table = document.createElement("TABLE");
+				var tab, table, tr, td;
+				
+				// requests
+				tab = document.createElement("DIV");
+				table = document.createElement("TABLE");
 				table.style.border = '1px solid black';
 				table.style.borderCollapse = 'collapse';
-				var tr, td;
+				table.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "URL";
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "Details";
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "Time";
+				for (var i = 0; i < result.requests.length; ++i) {
+					var req = result.requests[i];
+					table.appendChild(tr = document.createElement("TR"));
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					td.style.verticalAlign = "top";
+					td.innerHTML = req.url;
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					td.innerHTML = req.sql_queries.length+" database request(s)";
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					if (req.end_time > 0) {
+						var time = req.end_time-req.start_time;
+						td.innerHTML = time+"s.";
+						if (time > 1) td.style.color = "#FF0000";
+						else if (time > 0.5) td.style.color = "#B00000";
+						else if (time > 0.1) td.style.color = "#700000";
+					}
+				}
+				tab.appendChild(table);
+				tabs_control.addTab("Requests",null,tab);
+				
+
+				// sql queries
+				tab = document.createElement("DIV");
+				table = document.createElement("TABLE");
+				table.style.border = '1px solid black';
+				table.style.borderCollapse = 'collapse';
 				table.appendChild(tr = document.createElement("TR"));
 				tr.appendChild(td = document.createElement("TH"));
 				td.style.border = '1px solid black';
@@ -47,6 +86,7 @@ function debug_status(container) {
 							table.appendChild(tr = document.createElement("TR"));
 						tr.appendChild(td = document.createElement("TD"));
 						td.style.border = '1px solid black';
+						td.innerHTML = (j+1)+". ";
 						var sql = req.sql_queries[j];
 						var img = document.createElement("IMG");
 						img.src = sql[1] == 0 ? theme.icons_16.ok : theme.icons_16.error;
@@ -73,9 +113,55 @@ function debug_status(container) {
 				
 				// locks
 				tab = document.createElement("DIV");
-				tab.style.width = "100%";
-				tab.style.height = "100%";
-				tab.style.overflow = "auto";
+				table = document.createElement("TABLE");
+				table.style.border = '1px solid black';
+				table.style.borderCollapse = 'collapse';
+				table.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "Table";
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "Column";
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "Row";
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "Check";
+				var js_locks = [];
+				for (var i = 0; i < window.top.database_locks._locks.length; ++i) js_locks.push(window.top.database_locks._locks[i].id);
+				for (var i = 0; i < result.locks.length; ++i) {
+					table.appendChild(tr = document.createElement("TR"));
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					td.innerHTML = result.locks[i].table;
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					td.innerHTML = result.locks[i].column;
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					td.innerHTML = result.locks[i].row_key;
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					var found = false;
+					for (var j = 0; j < js_locks.length; ++j) {
+						if (js_locks[j] == result.locks[i].id) {
+							found = true;
+							js_locks.splice(j,1);
+							break;
+						}
+					}
+					td.innerHTML = found ? "OK" : "NOT REGISTERED";
+				}
+				for (var i = 0; i < js_locks.length; ++i) {
+					table.appendChild(tr = document.createElement("TR"));
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					td.colSpan = 4;
+					td.innerHTML = "Lock ID "+js_locks[i]+" is not in database !";
+				}
+				tab.appendChild(table);
 				tabs_control.addTab("Locks", null, tab);
 				
 				var popup = new popup_window("Debug Information", "/static/development/debug.png", content);

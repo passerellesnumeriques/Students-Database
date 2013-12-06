@@ -14,6 +14,21 @@ function datamodel_cell(&$page, $container_id, $editable, $table, $column, $key,
 	}
 }
 
+function datamodel_cell_inline(&$page, $variable_name, $container_variable, $editable, $table, $column, $key_variable, $sub_models, $value_variable, $onchange) {
+	$page->add_javascript("/static/widgets/typed_field/typed_field.js");
+	require_once("component/data_model/Model.inc");
+	$t = DataModel::get()->getTable($table);
+	$col = $t->getColumn($column, $sub_models);
+	$typed_field = PNApplication::$instance->widgets->get_typed_field($col);
+	$page->add_javascript("/static/widgets/typed_field/".$typed_field[0].".js");
+	if ($editable) {
+		$page->add_javascript("/static/data_model/editable_cell.js");
+		echo "$variable_name = new editable_cell($container_variable,".json_encode($table).",".json_encode($column).",$key_variable,".json_encode($typed_field[0]).",".$typed_field[1].",$value_variable,null,".($onchange <> null ? $onchange : "null").");";
+	} else {
+		echo "$variable_name = new ".$typed_field[0]."($value_variable,false,".$typed_field[1].");$variable_name.register_datamodel_cell(".json_encode($table).",".json_encode($column).",$key_variable);$container_variable.appendChild($variable_name.getHTMLElement());".($onchange <> null ? "$variable_name.onchange.add_listener($onchange);" : "");
+	}
+}
+
 function datamodel_cell_new(&$page, $variable_name, $table, $column, $fake_key_variable, $sub_models = null) {
 	$page->add_javascript("/static/widgets/typed_field/typed_field.js");
 	require_once("component/data_model/Model.inc");

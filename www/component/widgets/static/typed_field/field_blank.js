@@ -1,5 +1,6 @@
 /* #depends[typed_field.js] */
 function field_blank(html, value) {
+	if (html == null) html = "";
 	this.html = html;
 	typed_field.call(this, value, false, null, null);
 }

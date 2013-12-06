@@ -19,9 +19,9 @@ abstract class DataBaseSystem {
 			$start = microtime(true);
 			$res = $this->execute_sql($sql_query);
 			$end = microtime(true);
-			if (count(PNApplication::$instance->development->current_request()->sql_queries) == 50)
+			if (count(PNApplication::$instance->development->current_request()->sql_queries) == 200)
 				array_push(PNApplication::$instance->development->current_request()->sql_queries, array("TOO MUCH SQL QUERIES",0,null,0));
-			else if (count(PNApplication::$instance->development->current_request()->sql_queries) < 50)
+			else if (count(PNApplication::$instance->development->current_request()->sql_queries) < 200)
 				array_push(PNApplication::$instance->development->current_request()->sql_queries, array($sql_query,$this->get_last_error_number(),$this->get_last_error_message(),$end-$start));
 		} else
 			$res = $this->execute_sql($sql_query);
