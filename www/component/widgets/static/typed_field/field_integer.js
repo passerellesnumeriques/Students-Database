@@ -25,7 +25,7 @@ field_integer.prototype._create = function(data) {
 		var onkeyup = new Custom_Event();
 		input.onkeyup = function(e) { onkeyup.fire(e); };
 		var f = function() { setTimeout(function() { t._datachange(); },1); };
-		input.onkeydown = function(ev) {
+		input.onkeydown = function(e) {
 			var ev = getCompatibleKeyEvent(e);
 			if (ev.isPrintable) {
 				if (!isNaN(parseInt(ev.printableChar)) || ev.ctrlKey) {

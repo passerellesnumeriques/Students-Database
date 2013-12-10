@@ -10,9 +10,9 @@ abstract class DataBaseSystem {
 	public abstract function connect($server, $username, $password, $db_name = null);
 
 	/** Executes a SQL request.
-	 * If report_errors is true, and an error occured during execution of the SQL request,
-	 * this error will be automatically reported to the list of errors of the application
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @param string $sql_query SQL query to execute
+	 * @param boolean $report_errors if true and an error occurs, the error will be added to <code>PNApplication</code>
 	 */
 	public function execute($sql_query, $report_errors = true) {
 		if (PNApplication::$instance->current_domain == "Dev") {

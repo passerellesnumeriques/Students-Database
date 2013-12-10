@@ -136,7 +136,9 @@ class SimpleDataDisplay extends DataDisplay {
 	}
 	
 	public function getEditLocks($sub_model) {
-		return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
+		if ($this->handler->table->canModifyAny())
+			return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
+		return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name, "lock_each_row"=>true));
 	}
 	
 	public function buildSQL(&$q, $path, $filters) {
@@ -165,8 +167,13 @@ class SimpleDataDisplay extends DataDisplay {
 		return $result;
 	}
 	
-	public function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null) {
-		if ($row <> null) return @$row[$value_alias <> null ? $value_alias : $this->column_name];
+	public function getData($key, $sub_model, $row = null, $query = null, $key_alias = null, $value_alias = null) {
+		if ($row <> null) {
+			if ($value_alias == null && $query <> null) $value_alias = $query->get_field_alias($this->handler->table->getName(), $this->column_name);
+			if ($value_alias == null) $value_alias = $this->column_name;
+			if (isset($row[$value_alias]))
+				return $row[$value_alias];
+		}
 		$value = \SQLQuery::create()
 			->select($this->handler->table->getName())
 			->set_sub_model_for_table($this->handler->table, $sub_model)
@@ -311,8 +318,14 @@ class ChoiceDataDisplay extends DataDisplay {
 		return array("key"=>$key_alias,"data"=>$data_alias);
 	}
 	
-	public function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null) {
-		if ($row <> null) return $row[$this->foreign_key_name];
+	public function getData($key, $sub_model, $row = null, $query = null, $key_alias = null, $value_alias = null) {
+		if ($row <> null) {
+			$alias = null;
+			if ($query <> null) $alias = $query->get_field_alias($this->handler->table->getName(), $this->foreign_key_name);
+			if ($alias == null) $alias = $this->foreign_key_name;
+			if (isset($row[$alias]))
+				return $row[$alias];
+		}
 		$q = \SQLQuery::create()->select($this->handler->table->getName());
 		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
 			$q->select_sub_model($t->getModel()->getParentTable(), $sub_model);

@@ -166,7 +166,7 @@ var custom_data_list = {
 		col.th = document.createElement("TH");
 		if (typeof col_header == 'string') col.th.innerHTML = col_header;
 		else col.th.appendChild(col_header);
-		col.th.rowSpan = this.thead.childNodes.length;
+		col.th.rowSpan = this.thead.childNodes.length == 0 ? 1 : this.thead.childNodes.length;
 		col.th.style.verticalAlign = "bottom";
 		if (customize_header) customize_header(col.th);
 		var before_col = null, before_col_i = -1;

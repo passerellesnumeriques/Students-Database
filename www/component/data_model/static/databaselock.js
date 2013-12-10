@@ -24,16 +24,13 @@ window.database_locks = {
 	
 	_locks: [],
 	_user_inactive: function() {
-		var remaining = this._locks.length;
-		if (remaining == 0) return;
-		var closed = function() {
-			if (--remaining == 0)
-				window.top.frames[0].location.href = "/dynamic/application/page/enter";
-		};
+		if (this._locks.length == 0) return;
+		var locks = [];
 		for (var i = 0; i < this._locks.length; ++i)
-			service.json("data_model","unlock",{lock:this._locks[i].id},function(result){
-				setTimeout(closed,1);
-			});
+			locks.push(this._locks[i].id);
+		service.json("data_model","unlock",{locks:locks},function(result){
+			window.top.frames[0].location.href = "/dynamic/application/page/enter";
+		});
 	},
 	_close_lock: function(id,foreground) {
 		service.json("data_model","unlock",{lock:id},function(result){

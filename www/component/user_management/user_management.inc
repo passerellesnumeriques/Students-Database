@@ -130,19 +130,19 @@ class user_management extends Component implements AdministrationPlugin {
 	 * @param number[] $roles roles' ids
 	 * @return true on success
 	 */
-	public function assign_roles($users, $roles) {
+	public function assign_roles($users, $roles, $bypass_security = false) {
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table("UserRole", $locked_by);
+		$lock_id = DataBaseLock::lock_table("UserRole", $locked_by, $bypass_security);
 		if ($lock_id == null) {
 			PNApplication::error("The user ".$locked_by." is currently working on users' roles. Please try again later");
 			return false;
 		}
 		foreach ($users as $user) {
-			$user_roles = SQLQuery::create()->select("UserRole")->field("role")->where("user",$user)->execute_single_field();
+			$user_roles = SQLQuery::create()->bypass_security($bypass_security)->select("UserRole")->field("role")->where("user",$user)->execute_single_field();
 			foreach ($roles as $role_id)
 				if (!in_array($role_id, $user_roles))
-				SQLQuery::create()->insert("UserRole", array("user"=>$user,"role"=>$role_id));
+				SQLQuery::create()->bypass_security($bypass_security)->insert("UserRole", array("user"=>$user,"role"=>$role_id));
 		}
 		DataBaseLock::unlock($lock_id);
 		return true;
@@ -171,8 +171,8 @@ class user_management extends Component implements AdministrationPlugin {
 		return true;
 	}
 	
-	public function create_role($name) {
-		try { return SQLQuery::create()->insert("Role",array("name"=>$name)); }
+	public function create_role($name, $bypass_security = false) {
+		try { return SQLQuery::create()->bypass_security($bypass_security)->insert("Role",array("name"=>$name)); }
 		catch (Exception $e) { PNApplication::error($e->getMessage()); return null; }
 	}
 	public function remove_role($role_id) {

@@ -98,6 +98,8 @@ if ($message <> null) {
 <br/>
 <a href="/dynamic/development/page/tools">Development tools</a>
 <br/>
+<a href="/dynamic/documentation/page/index">Technical Documentation</a>
+<br/>
 <a href="/dynamic/test/page/home">Tests</a>
 </td></tr></table>
 </form>

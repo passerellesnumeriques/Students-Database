@@ -3,12 +3,16 @@ require_once("component/people/PeoplePlugin.inc");
 class user_people extends Component implements PeoplePlugin {
 	
 	public $user_people_id;
+	/** @var Event raised when a new user is created */
+	public $local_user_people_created;
 	
 	function init() {
 		PNApplication::$instance->user_management->logged_in->listen($this, "logged_in");
+		$this->local_user_people_created = new Event();
 	}
 	
 	public function _first_name_changed($sub_model, $key, $new_value) {
+		// TODO not valid anymore
 		if ($key == $this->user_people_id)
 			$this->first_name = $new_value;
 	}

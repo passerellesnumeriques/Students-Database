@@ -244,11 +244,11 @@ function geographic_area_selection(container, country_id, onready) {
 	*/
 	this.createAutoFillInput = function(parent){
 		require("autocomplete.js",function(){
-			var ac = new autocomplete(parent, function(val){
-				return t.autoFill(val);
-			}, 3, 'Manually search', function(item){
-				t.startFilter(item.area);
-				t.setToReturn(item.area);
+			var ac = new autocomplete(parent, 3, 'Manually search', function(val, handler){
+				handler(t.autoFill(val));
+			}, function(item){
+				t.startFilter(item.value);
+				t.setToReturn(item.value);
 				if(t.onchange) t.onchange(to_return);
 			});
 			ac.input.style.width = "100%";
@@ -348,10 +348,8 @@ function geographic_area_selection(container, country_id, onready) {
 	this.setContextMenu = function(areaField, areaValue, items){
 		if(areaField.length > 0){
 			for(var i = 0; i < areaField.length; i++){
-				items.push({
-					text: areaField[i],
-					area: areaValue[i]
-				});
+				var item = new autocomplete_item(areaValue[i], areaField[i], areaField[i]);
+				items.push(item);
 			}
 		}
 	};

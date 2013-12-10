@@ -37,8 +37,9 @@ class DataBaseLock {
 			if (!($t->mayInsert() || $t->mayModify() || $t->mayRemove()))
 				throw new Exception("Access denied: you cannot lock table '".$t->getName()."'.");
 			if ($row_key == null) {
-				if (!($t->canModifyAny() || $t->canRemoveAny()))
-					throw new Exception("Access denied: you cannot lock table '".$t->getName()."' because you have only partial access to it.");
+				// TODO can we accept that we lock a table or column if we don't have full access ?
+				//if (!($t->canModifyAny() || $t->canRemoveAny()))
+				//	throw new Exception("Access denied: you cannot lock table '".$t->getName()."' because you have only partial access to it.");
 			} else if (!($t->canModifyAny() || $t->canRemoveAny())) {
 				$ok = false;
 				if ($t->mayModify()) {
@@ -324,7 +325,48 @@ class DataBaseLock {
 		$db->execute("UNLOCK TABLES");
 		return $result;
 	}
-
+	/** remove a list of locks (it must be owned by the current user) */
+	public static function unlock_multiple($ids) {
+		if (count($ids) == 0) return null;
+		$result = null;
+		$db = SQLQuery::get_db_system_without_security();
+		$db->execute("LOCK TABLES DataLocks WRITE");
+		$sql = "SELECT id,locker_domain,locker_username FROM DataLocks WHERE id IN (";
+		$first = true;
+		foreach ($ids as $id) {
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "'".$db->escape_string($id)."'";
+		}
+		$sql .= ")";
+		$r = $db->execute($sql);
+		if ($r) {
+			$list = array();
+			while (($row = $db->next_row($r)) !== FALSE) {
+				if ($row) {
+					if ($row["locker_domain"] == PNApplication::$instance->user_management->domain &&
+						$row["locker_username"] == PNApplication::$instance->user_management->username) {
+						array_push($list, $row["id"]);
+					} else {
+						$result = "You are not the owner of the lock id ".$row["id"];
+						break;
+					}
+				}
+			}
+			if ($result == null && count($list) > 0) {
+				$sql = "DELETE FROM DataLocks WHERE id IN(";
+				$first = true;
+				foreach ($list as $id) {
+					if ($first) $first = false; else $sql .= ",";
+					$sql .= "'".$db->escape_string($id)."'";
+				}
+				$sql .= ")";
+				$db->execute($sql);
+			}
+		}
+		$db->execute("UNLOCK TABLES");
+		return $result;
+	}
+	
 	/** extend expiration time of a lock */
 	public static function update($id) {
 		$db = SQLQuery::get_db_system_without_security();

@@ -5,6 +5,7 @@ require_once("DataBaseSystem.inc");
  */
 class SQLQuery {
 	
+	/** @var DataBaseSystem */
 	private static $db_system = null;
 	/**
 	 * @return DataBaseSystem
@@ -60,6 +61,7 @@ class SQLQuery {
  		$this->sub_models = array_merge(SQLQuery::$preselected_submodels);
  	}
 
+ 	/** @var string */
  	public $database = null;
  	public $sub_models = array();
  	public $tables = array();
