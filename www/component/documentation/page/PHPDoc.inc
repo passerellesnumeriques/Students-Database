@@ -27,8 +27,32 @@ class PHPDoc {
 		require_once($filename);
 		$cl = new ReflectionClass($classname);
 		echo "<h1>".$classname."</h1>";
+		
+		echo "<code class='codedoc_keyword'>";
+		foreach (Reflection::getModifierNames($cl->getModifiers()) as $mod)
+			echo $mod." ";
+		echo "class</code> <span class='codedoc_class'>".$cl->getName()."</span>";
+		$list = $cl->getInterfaceNames();
+		if (count($list) > 0) {
+			echo " <code class='codedoc_keyword'>implements</code>";
+			$first = true;
+			foreach ($list as $i) {
+				if ($first) $first = false; else echo ",";
+				echo ", ".PHPDoc::type_link($i);
+			}
+		}
+		if ($cl->getParentClass() <> null) {
+			echo " <code class='codedoc_keyword'>extends</code> ";
+			echo PHPDoc::type_link($cl->getParentClass());
+		}
+		
+		echo "<br/><br/>";
 	
-		if (count($cl->getProperties()) > 0) {
+		$list = array();
+		foreach ($cl->getProperties() as $p)
+			if ($p->getDeclaringClass() == $cl)
+				array_push($list, $p);
+		if (count($list) > 0) {
 			$table = new DocTable();
 			$row = $table->add_row();
 			$row->add_cell("Properties", "codedoc_table_title", 4);
@@ -37,8 +61,7 @@ class PHPDoc {
 			$row->add_cell("Name", "codedoc_table_title2");
 			$row->add_cell("Type", "codedoc_table_title2");
 			$row->add_cell("Description", "codedoc_table_title2");
-			foreach ($cl->getProperties() as $p) {
-				if (!$p->isPublic()) continue;
+			foreach ($list as $p) {
 				$row = $table->add_row();
 				// modifiers
 				$modifiers = "";
@@ -62,8 +85,13 @@ class PHPDoc {
 			}
 			$row = $table->add_row();
 			$table->generate();
+			echo "<br/>";
 		}
-		if (count($cl->getMethods()) > 0) {
+		$list = array();
+		foreach ($cl->getMethods() as $m)
+			if ($m->getDeclaringClass() == $cl)
+				array_push($list, $m);
+		if (count($list) > 0) {
 			$table = new DocTable();
 			$row = $table->add_row();
 			$row->add_cell("Methods", "codedoc_table_title", 4);
@@ -72,8 +100,7 @@ class PHPDoc {
 			$row->add_cell("Name", "codedoc_table_title2");
 			$row->add_cell("Parameters", "codedoc_table_title2");
 			$row->add_cell("Description", "codedoc_table_title2");
-			foreach ($cl->getMethods() as $m) {
-				if (!$m->isPublic()) continue;
+			foreach ($list as $m) {
 				$row = $table->add_row();
 				// modifiers
 				$modifiers = "";
@@ -133,6 +160,7 @@ class PHPDoc {
 				$row->add_cell($comment);
 			}
 			$table->generate();
+			echo "<br/>";
 		}
 	}
 	public static function getWord(&$s) {
@@ -145,6 +173,16 @@ class PHPDoc {
 			$s = trim(substr($s,$i+1));
 		}
 		return $w;
+	}
+	
+	public static function type_link($type) {
+		if (is_string($type)) {
+			// TODO
+			return "<span class='codedoc_class'>".$type."</span>";
+		} else {
+			// TODO
+			return "<span class='codedoc_class'>".$type->getName()."</span>";
+		}
 	}
 		
 	public static function parse_comment($doc, &$general_comment, &$tags) {

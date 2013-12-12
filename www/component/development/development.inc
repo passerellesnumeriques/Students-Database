@@ -15,6 +15,7 @@ class development extends Component {
 		Component::allow_service_without_login("development", "test_data");
 		Component::allow_service_without_login("development", "get_debug_info");
 		Component::allow_service_without_login("development", "check_php");
+		Component::allow_service_without_login("development", "get_js");
 		
 		for ($i = 0; $i < 15; $i++) {
 			if ($i >= count($this->requests)) break;

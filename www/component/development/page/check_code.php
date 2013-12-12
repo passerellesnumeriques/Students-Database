@@ -55,6 +55,13 @@ function build_tree_php(parent_item, path, filename, type) {
 function build_tree_js(parent_item, path, filename) {
 	var item = new TreeItem("<img src='/static/development/javascript.png' style='vertical-align:bottom'/> "+filename, true);
 	parent_item.addItem(item);
+	todo.push({
+		service: "get_js",
+		data: {path:path+filename},
+		handler: function(res) {
+			// TODO
+		}
+	});
 }
 function clean_files(files) {
 	for (var i = 0; i < files.length; ++i) {
@@ -74,10 +81,12 @@ var in_progress = 0;
 var total_todo = 0;
 function next_todo() {
 	var pc = Math.floor((total_todo-todo.length-in_progress)*100/total_todo);
-	set_lock_screen_content(locker, "Checking code... ("+pc+"%)");
+	set_lock_screen_content(locker, "Checking code... ("+pc+"%, "+items_to_add.length+" problem(s) found)");
 	if (todo.length == 0) {
 		if (in_progress == 0) {
 			unlock_screen(locker);
+			var item = new TreeItem(""+items_to_add.length+" problem(s)");
+			tr.insertItem(item, 0);
 			for (var i = 0; i < items_to_add.length; ++i)
 				items_to_add[i].parent.addItem(items_to_add[i].item);
 		}

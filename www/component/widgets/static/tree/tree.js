@@ -91,6 +91,15 @@ function tree(container) {
 		this._create_item(null, item);
 		this._refresh_heads();
 	};
+	this.insertItem = function(item, index) {
+		if (index >= this.items.length) {
+			this.addItem(item);
+			return;
+		}
+		this.items.splice(index,0,item);
+		this._create_item(null, item, index);
+		this._refresh_heads();
+	};
 	this.removeItem = function(item) {
 		if (item.parent)
 			item.parent.removeItem(item);
@@ -109,7 +118,7 @@ function tree(container) {
 		while (item.children.length > 0)
 			this._removeItem(item.children[0]);
 	};
-	this._create_item = function(parent, item) {
+	this._create_item = function(parent, item, index) {
 		item.tree = this;
 		item.parent = parent;
 		item.tr = document.createElement("TR");
@@ -147,15 +156,25 @@ function tree(container) {
 			else
 				item.cells[i].container.appendChild(item.cells[i].html);
 		}
-		if (!parent)
-			this.tbody.appendChild(item.tr);
-		else {
-			if (parent.children.length == 1)
-				this.tbody.insertBefore(item.tr, parent.tr.nextSibling);
-			else {
-				var next = parent.tr.nextSibling;
-				while (next && next.item.get_level() >= item.get_level()) next = next.nextSibling;
-				this.tbody.insertBefore(item.tr, next);
+		if (!parent) {
+			if (typeof index == 'undefined')
+				this.tbody.appendChild(item.tr);
+			else
+				this.tbody.insertBefore(item.tr, this.tbody.childNodes[index]);
+		} else {
+			if (parent.children.length == 1) {
+				if (typeof index == 'undefined')
+					this.tbody.insertBefore(item.tr, parent.tr.nextSibling);
+				else
+					this.tbody.insertBefore(item.tr, parent.tr.childNodes[index]);
+			} else {
+				if (typeof index == 'undefined') {
+					var next = parent.tr.nextSibling;
+					while (next && next.item.get_level() >= item.get_level()) next = next.nextSibling;
+					this.tbody.insertBefore(item.tr, next);
+				} else {
+					this.tbody.insertBefore(item.tr, parent.tr.childNodes[index]);
+				}
 			}
 		}
 		for (var i = 0; i < item.children.length; ++i)

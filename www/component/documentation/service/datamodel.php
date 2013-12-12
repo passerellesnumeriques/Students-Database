@@ -34,7 +34,9 @@ class service_datamodel extends Service {
 		$f = fopen($filename, "w");
 		fwrite($f, $uml);
 		fclose($f);
+		set_time_limit(120);
 		$tools_path = realpath("component/documentation/tools");
+		session_write_close();
 		exec("java.exe -jar \"$tools_path/plantuml.jar\" -graphvizdot \"$tools_path/graphviz_2.28/bin/dot.exe\" \"$filename\"");
 		unlink($filename);
 		$filename = $base_filename.".png";
