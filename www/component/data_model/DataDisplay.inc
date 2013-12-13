@@ -29,11 +29,13 @@ abstract class DataDisplay {
 	 * @param DataPath $path
 	 * @param DataPathSQLBuilder $builder
 	 * @param array $filters list of OR filter, with for each element the data of the filter
-	 * @return array("key"=>key_alias,"data"=>data_alias): if data is null or not specified, the function retrieveValue will be called to perform a sub-request retrieving the final value
+	 * @return array("key"=>key_alias,"data"=>data_alias): if data is null or not specified, the function performSubRequest must be implemented
 	 */
 	public abstract function buildSQL(&$q, $path, $filters);
-	/** If buildSQL didn't return a data alias, this function is called to perform a sub-request */
-	public function retrieveValue($row, $sql_aliases, $path, $filters) {}
+	/** Perform any necessary sub-requests to retrieve the data, once the first one is already executed, and update the rows and aliases as needed so $rows[x][$sql_aliases["data"]] returns the value for row number x
+	 * @param $original_query SQLQuery 
+	 */
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {}
 	
 	public abstract function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null);
 	public abstract function saveData($key, $value, $sub_model);
@@ -134,7 +136,9 @@ class SimpleDataDisplay extends DataDisplay {
 	}
 	
 	public function getEditLocks($sub_model) {
-		return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
+		if ($this->handler->table->canModifyAny())
+			return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
+		return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name, "lock_each_row"=>true));
 	}
 	
 	public function buildSQL(&$q, $path, $filters) {
@@ -163,8 +167,13 @@ class SimpleDataDisplay extends DataDisplay {
 		return $result;
 	}
 	
-	public function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null) {
-		if ($row <> null) return @$row[$value_alias <> null ? $value_alias : $this->column_name];
+	public function getData($key, $sub_model, $row = null, $query = null, $key_alias = null, $value_alias = null) {
+		if ($row <> null) {
+			if ($value_alias == null && $query <> null) $value_alias = $query->get_field_alias($this->handler->table->getName(), $this->column_name);
+			if ($value_alias == null) $value_alias = $this->column_name;
+			if (isset($row[$value_alias]))
+				return $row[$value_alias];
+		}
 		$value = \SQLQuery::create()
 			->select($this->handler->table->getName())
 			->set_sub_model_for_table($this->handler->table, $sub_model)
@@ -309,8 +318,14 @@ class ChoiceDataDisplay extends DataDisplay {
 		return array("key"=>$key_alias,"data"=>$data_alias);
 	}
 	
-	public function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null) {
-		if ($row <> null) return $row[$this->foreign_key_name];
+	public function getData($key, $sub_model, $row = null, $query = null, $key_alias = null, $value_alias = null) {
+		if ($row <> null) {
+			$alias = null;
+			if ($query <> null) $alias = $query->get_field_alias($this->handler->table->getName(), $this->foreign_key_name);
+			if ($alias == null) $alias = $this->foreign_key_name;
+			if (isset($row[$alias]))
+				return $row[$alias];
+		}
 		$q = \SQLQuery::create()->select($this->handler->table->getName());
 		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
 			$q->select_sub_model($t->getModel()->getParentTable(), $sub_model);
@@ -392,24 +407,39 @@ class JoiningTableDataDisplay extends DataDisplay {
 		return array("key"=>$alias,"data"=>null);
 	}
 	
-	public function retrieveValue($row, $sql_aliases, $path) {
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
 		$table_name = $path->table->getSQLNameFor($path->sub_model);
 		$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
 		$foreign_table = \DataModel::get()->getTable($foreign_table);
 		$sub_models = $path->sub_model == null ? null : array($path->table->getModel()->getParentTable()=>$path->sub_model);
 		
-		$res = \SQLQuery::create()
-			->select($table_name)
-			->join($table_name, $foreign_table->getSQLName($sub_models), array($this->foreign_key_name => $foreign_table->getPrimaryKey()->name), "JOIN_ALIAS")
-			//->field("JOIN_ALIAS", $this->foreign_table_column_name, "VALUE")
-			->field("JOIN_ALIAS", $foreign_table->getPrimaryKey()->name, "KEY")
-			->where_value($table_name, $this->joining_key_name, $row[$sql_aliases["key"]])
-			->execute();
-		$values = array();
-		foreach ($res as $r)
-			//array_push($values, array("key"=>$r["KEY"],"value"=>$r["VALUE"]));
-			array_push($values, $r["KEY"]);
-		return $values;
+		$keys = array();
+		foreach ($rows as $row) {
+			if (!in_array($row[$sql_aliases["key"]], $keys))
+				array_push($keys, $row[$sql_aliases["key"]]);
+		}
+		
+		if (count($keys) == 0)
+			$res = array();
+		else
+			$res = \SQLQuery::create()
+				->select($table_name)
+				->join($table_name, $foreign_table->getSQLName($sub_models), array($this->foreign_key_name => $foreign_table->getPrimaryKey()->name), "JOIN_ALIAS")
+				->field("JOIN_ALIAS", $foreign_table->getPrimaryKey()->name, "VALUE")
+				->field($table_name, $this->joining_key_name, "KEY")
+				->where_in($table_name, $this->joining_key_name, $keys)
+				->execute();
+
+		$sql_aliases["data"] = $original_query->field_id();
+		for ($i = 0; $i < count($rows); $i++) {
+			$key = $rows[$i][$sql_aliases["key"]];
+			$values = array();
+			foreach ($res as $r) {
+				if ($r["KEY"] == $key)
+					array_push($values, $r["VALUE"]);
+			}
+			$rows[$i][$sql_aliases["data"]] = $values;
+		}
 	}
 	
 	public function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null) {

@@ -114,6 +114,7 @@ case "dynamic":
 	if (PNApplication::$instance->current_domain == "Dev") {
 		$dev = new DevRequest();
 		$dev->url = $_SERVER["PATH_INFO"];
+		$dev->start_time = microtime(true);
 		array_push(PNApplication::$instance->development->requests, $dev);
 	}
 
@@ -129,6 +130,9 @@ case "dynamic":
 		PNApplication::$instance->components[$component_name]->service($path);
 		break;
 	default: invalid("Invalid request: unknown request type ".$request_type);
+	}
+	if (PNApplication::$instance->current_domain == "Dev") {
+		$dev->end_time = microtime(true);
 	}
 	die();
 case "help":

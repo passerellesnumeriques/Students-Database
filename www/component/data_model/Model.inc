@@ -156,6 +156,10 @@ class DataModel {
 					$a[$name] = &$table;
 		return $a;
 	}
+	
+	public function getSubModels() {
+		return $this->sub_models;
+	}
 
 	/** indicates which page to go in order to display information about the given category */
 	public function addDataCategoryLink($category, $link, $icon = null) {

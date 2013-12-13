@@ -7,10 +7,12 @@ class service_save_subject_evaluations extends Service {
 	public function input_documentation() {
 		echo "<ul>";
 		echo "<li><code>subject_id</code>: id of the subject</li>";
-		echo "<li><code>types</code>: corresponds to the CurriculumSubjectEvaluationType table, including <code>evaluations</code> corresponding to the CurriculumSubjectEvaluation table</li>";
+		echo "<li><code>types</code>: corresponds to the CurriculumSubjectEvaluationType table, including <code>evaluations</code> corresponding to the CurriculumSubjectEvaluation table. Every id less than 0 is considered as a new entry, else an entry to update</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "true on success"; }
+	public function output_documentation() { 
+		echo "On success, returns <code>types</code> and <code>evaluations</code>, as a mapping of new ids: <code>[{input_id,output_id},...]</code> where input_id is a given id less than 0, and output_id is the id of the created entry in database."; 
+	}
 	
 	public function execute(&$component, $input) {
 		set_time_limit(120);
@@ -26,12 +28,16 @@ class service_save_subject_evaluations extends Service {
 			SQLQuery::end_transaction();
 			return;
 		}
+		$output_types_ids = array();
+		$output_evaluations_ids = array();
 		// update list of evaluations
 		$existing_types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "subject", $input["subject_id"])->execute();
 		foreach ($input["types"] as $type) {
 			if ($type["id"] < 0) {
 				// new evaluation type
-				$type["id"] = $component->create_evaluation_type($input["subject_id"], $type["name"], $type["weight"]);
+				$id = $component->create_evaluation_type($input["subject_id"], $type["name"], $type["weight"]);
+				array_push($output_types_ids, array("input_id"=>$type["id"],"output_id"=>$id));
+				$type["id"] = $id;
 			} else {
 				$component->update_evaluation_type($type["id"], $type["name"], $type["weight"]);
 				for ($i = 0; $i < count($existing_types); $i++)
@@ -45,7 +51,9 @@ class service_save_subject_evaluations extends Service {
 			foreach ($type["evaluations"] as $eval) {
 				if ($eval["id"] < 0) {
 					// new evaluation
-					$eval["id"] = $component->create_evaluation($type["id"], $eval["name"], $eval["weight"], $eval["max_grade"]);
+					$id = $component->create_evaluation($type["id"], $eval["name"], $eval["weight"], $eval["max_grade"]);
+					array_push($output_evaluations_ids, array("input_id"=>$eval["id"],"output_id"=>$id));
+					$eval["id"] = $id;
 				} else {
 					$component->update_evaluation($eval["id"], $eval["name"], $eval["weight"], $eval["max_grade"]);
 					for ($i = 0; $i < count($existing_evaluations); $i++)
@@ -65,7 +73,7 @@ class service_save_subject_evaluations extends Service {
 			$component->remove_evaluation_type($input["subject_id"],$type["id"]);
 		set_time_limit(120);
 		SQLQuery::end_transaction();
-		echo "true";
+		echo "{types:".json_encode($output_types_ids).",evaluations:".json_encode($output_evaluations_ids)."}";
 	}
 	
 }

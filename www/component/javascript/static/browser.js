@@ -319,6 +319,7 @@ getCompatibleMouseEvent = function(e) {
  * Return a key event, whatever browser is used
  */
 getCompatibleKeyEvent = function(e) {
+	// source: http://www.javascripter.net/faq/keycodes.htm
 	var ev = browser.IE == 0 || browser.IE >= 9 ? e : window.event;
 	if (!ev.keyCode) ev.keyCode = ev.charCode;
 	var done = true;
@@ -347,13 +348,55 @@ getCompatibleKeyEvent = function(e) {
 		if (ev.keyCode >= 48 && ev.keyCode <= 57) { ev.isPrintable = true; ev.printableChar = String.fromCharCode(ev.keyCode); }
 		else if (ev.keyCode >= 65 && ev.keyCode <= 90) { ev.isPrintable = true; ev.printableChar = String.fromCharCode(ev.keyCode); }
 		else {
-			if (browser.OperaBrowser > 0) {
-			} else {
-				// numpad numbers
-				if (ev.keyCode >= 96 && ev.keyCode <= 105) { ev.isPrintable = true; ev.printableChar = String.fromCharCode(ev.keyCode-(96-48)); }
+			switch (ev.keyCode) {
+			case 188: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "<" : ","; break;
+			case 190: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? ">" : "."; break;
+			case 191: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "?" : "/"; break;
+			case 192: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "~" : "`"; break;
+			case 219: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "{" : "["; break;
+			case 220: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "\\" : "|"; break;
+			case 221: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "}" : "]"; break;
+			case 222: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "'" : "\""; break;
+			default:
+				if (browser.OperaBrowser > 0) {
+					if (ev.keyCode >= 48 && ev.keyCode <= 57) { ev.isPrintable = true; ev.printableChar = String.fromCharCode(ev.keyCode); }
+					switch (ev.keyCode) {
+					case 42: ev.printableChar = true; ev.printableChar = "*"; break;
+					case 43: ev.printableChar = true; ev.printableChar = "+"; break;
+					case 45: ev.printableChar = true; ev.printableChar = "-"; break;
+					case 78: ev.printableChar = true; ev.printableChar = "."; break;
+					case 47: ev.printableChar = true; ev.printableChar = "/"; break;
+					case 59: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? ":" : ";"; break;
+					case 61: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "+" : "="; break;
+					case 109: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "_" : "-"; break;
+					}
+				} else {
+					// numpad numbers
+					if (ev.keyCode >= 96 && ev.keyCode <= 105) { ev.isPrintable = true; ev.printableChar = String.fromCharCode(ev.keyCode-(96-48)); }
+					switch (ev.keyCode) {
+					case 106: ev.printableChar = true; ev.printableChar = "*"; break;
+					case 107: ev.printableChar = true; ev.printableChar = "+"; break;
+					case 109: ev.printableChar = true; ev.printableChar = "-"; break;
+					case 110: ev.printableChar = true; ev.printableChar = "."; break;
+					case 111: ev.printableChar = true; ev.printableChar = "/"; break;
+					default:
+						if (browser.SafariBrowser > 0) {
+							switch (ev.keyCode) {
+							case 59: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? ":" : ";"; break;
+							case 61: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "+" : "="; break;
+							case 109: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "_" : "-"; break;
+							}
+						} else {
+							switch (ev.keyCode) {
+							case 186: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? ":" : ";"; break;
+							case 187: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "+" : "="; break;
+							case 189: ev.isPrintable = true; ev.printableChar = ev.shiftKey ? "_" : "-"; break;
+							}
+						}
+					}
+				}
 			}
 		}
-		// TODO continue http://www.javascripter.net/faq/keycodes.htm
 	}
 	return ev;
 };

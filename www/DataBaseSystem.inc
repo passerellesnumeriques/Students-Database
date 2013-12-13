@@ -10,18 +10,18 @@ abstract class DataBaseSystem {
 	public abstract function connect($server, $username, $password, $db_name = null);
 
 	/** Executes a SQL request.
-	 * If report_errors is true, and an error occured during execution of the SQL request,
-	 * this error will be automatically reported to the list of errors of the application
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @param string $sql_query SQL query to execute
+	 * @param boolean $report_errors if true and an error occurs, the error will be added to <code>PNApplication</code>
 	 */
 	public function execute($sql_query, $report_errors = true) {
 		if (PNApplication::$instance->current_domain == "Dev") {
 			$start = microtime(true);
 			$res = $this->execute_sql($sql_query);
 			$end = microtime(true);
-			if (count(PNApplication::$instance->development->current_request()->sql_queries) == 50)
+			if (count(PNApplication::$instance->development->current_request()->sql_queries) == 200)
 				array_push(PNApplication::$instance->development->current_request()->sql_queries, array("TOO MUCH SQL QUERIES",0,null,0));
-			else if (count(PNApplication::$instance->development->current_request()->sql_queries) < 50)
+			else if (count(PNApplication::$instance->development->current_request()->sql_queries) < 200)
 				array_push(PNApplication::$instance->development->current_request()->sql_queries, array($sql_query,$this->get_last_error_number(),$this->get_last_error_message(),$end-$start));
 		} else
 			$res = $this->execute_sql($sql_query);

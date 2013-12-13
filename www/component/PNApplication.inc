@@ -6,6 +6,33 @@ require_once("Component.inc");
  *   - access to any component
  *   - access to the global data model
  *   - indicate errors along the process, that may be then display to the user
+ * 
+ * @property administration $administration
+ * @property application $application
+ * @property authentication $authentication
+ * @property calendar $calendar
+ * @property contact $contact
+ * @property curriculum $curriculum
+ * @property data_import $data_import
+ * @property data_model $data_model
+ * @property development $development
+ * @property excel $excel
+ * @property facebook $facebook
+ * @property geography $geography
+ * @property google $google
+ * @property javascript $javascript
+ * @property people $people 
+ * @property selection $selection
+ * @property staff $staff
+ * @property storage $storage
+ * @property students $students
+ * @property test $test
+ * @property theme $theme
+ * @property training_education $training_education
+ * @property transcripts $transcripts
+ * @property user_management $user_management
+ * @property user_people $user_people 
+ * @property widgets $widgets
  */
 class PNApplication {
 

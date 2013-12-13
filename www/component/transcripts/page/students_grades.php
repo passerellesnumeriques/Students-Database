@@ -9,34 +9,10 @@ class page_students_grades extends Page {
 			$class_id = $_GET["class"];
 			$class = SQLQuery::create()->select("AcademicClass")->where_value("AcademicClass", "id", $class_id)->execute_single_row();
 			$period_id = $class["period"];
-			$students = SQLQuery::create()
-				->select("StudentClass")
-				->where_value("StudentClass", "class", $class_id)
-				->join("StudentClass", "Student", array("people"=>"people"))
-				->join("StudentClass", "People", array("people"=>"id"))
-				->field("People", "id", "people")
-				->field("People", "first_name", "first_name")
-				->field("People", "last_name", "last_name")
-				->execute();
 			$spe_id = $class["specialization"];
 		} else {
 			$class = null;
 			$spe_id = @$_GET["specialization"];
-			$q = SQLQuery::create()
-				->select("StudentClass")
-				->join("StudentClass", "AcademicClass", array("class"=>"id"))
-				->where_value("AcademicClass", "period", $period_id)
-				->join("StudentClass", "Student", array("people"=>"people"))
-				->join("StudentClass", "People", array("people"=>"id"))
-				->field("People", "id", "people")
-				->field("People", "first_name", "first_name")
-				->field("People", "last_name", "last_name")
-				;
-			if ($spe_id <> null)
-				$q->where_value("AcademicClass", "specialization", $spe_id);
-			else
-				$q->where_null("AcademicClass", "specialization");
-			$students = $q->execute();
 		}
 		$period = SQLQuery::create()->select("AcademicPeriod")->where("id",$period_id)->execute_single_row();
 		$spe = $spe_id <> null ? SQLQuery::create()->select("Specialization")->where("id",$spe_id)->execute_single_row() : null;
@@ -65,32 +41,72 @@ class page_students_grades extends Page {
 				$categories[$subject["category"]]["subjects"] = array();
 			array_push($categories[$subject["category"]]["subjects"], $subject);
 		}
+		
+		// build the table with students info
+		require_once("component/data_model/page/custom_data_list.inc");
+		$available_fields = PNApplication::$instance->data_model->get_available_fields("StudentClass");
+		$filters = array();
+		array_push($filters, array(
+			"category"=>"Student",
+			"name"=>"Period",
+			"data"=>array("value"=>$period["id"])
+		));
+		if ($spe_id <> null)
+			array_push($filters, array(
+				"category"=>"Student",
+				"name"=>"Specialization",
+				"data"=>array("value"=>$spe_id)
+			));
+		if ($class <> null)
+			array_push($filters, array(
+				"category"=>"Student",
+				"name"=>"Class",
+				"data"=>array("value"=>$class["id"])
+			));
+		$data = custom_data_list($this, "StudentClass", null, $available_fields, $filters);
+		$people_id_alias = $data["query"]->get_field_alias("People", "id");
 		$students_ids = array();
-		foreach ($students as $student) array_push($students_ids, $student["people"]);
+		foreach ($data["data"] as $row)
+			array_push($students_ids, $row[$people_id_alias]);
+		
 		$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->where_in("StudentSubjectGrade","people", $students_ids)->execute();
 		
 		$this->add_javascript("/static/widgets/page_header.js");
 		$this->onload("new page_header('grades_page_header', true);");
 		?>
+		<style type='text/css'>
+		#data_list_container table {
+			border-collapse: collapse;
+			border-spacing: 0px;
+		}
+		#data_list_container th, #data_list_container td {
+			border: 1px solid black;
+			padding: 1px;
+		}
+		</style>
 		<div id='grades_page_header' icon='' title='Grades for Period <?php echo $period["name"]; if ($spe <> null) echo ", Specialization ".$spe["name"]; if ($class<>null) echo ", Class ".$class["name"];?>'>
+			<div class='button' onclick='select_students_columns(this);'><img src='/static/data_model/table_column.png'/>Select students information to display</div>
+			<div class='button' onclick=''><img src='<?php echo theme::$icons_16["config"];?>'/>Configure Transcripts</div>
+			<div class='button' onclick=''><img src='/static/transcripts/grades.gif'/>See/Print Transcripts</div>
 		</div>
-		<table id='grades_table' style='border-collapse:collapse;border-spacing:0px;'></table>
+		<div id='grades_container' layout='fill' style='overflow:auto'>
+			<div id='data_list_container'>
+			</div>
+		</div>
 		<script type='text/javascript'>
 		var categories = [<?php
 		$first_cat = true;
 		foreach ($categories as $cat) {
 			if ($first_cat) $first_cat = false; else echo ",";
 			echo "{";
-			echo "show:true";
-			echo ",id:".$cat["id"];
+			echo "id:".$cat["id"];
 			echo ",name:".json_encode($cat["name"]);
 			echo ",subjects:[";
 			$first_subject = true;
 			foreach ($cat["subjects"] as $subject) {
 				if ($first_subject) $first_subject = false; else echo ",";
 				echo "{";
-				echo "show:true";
-				echo ",id:".$subject["id"];
+				echo "id:".$subject["id"];
 				echo ",name:".json_encode($subject["name"]);
 				echo ",code:".json_encode($subject["code"]);
 				echo ",weight:".json_encode($subject["weight"]);
@@ -104,12 +120,10 @@ class page_students_grades extends Page {
 		?>];
 		var students = [<?php
 		$first_student = true;
-		foreach ($students as $student) {
+		foreach ($students_ids as $student_id) {
 			if ($first_student) $first_student = false; else echo ",";
 			echo "{";
-			echo "people:".$student["people"];
-			echo ",first_name:".json_encode($student["first_name"]);
-			echo ",last_name:".json_encode($student["last_name"]);
+			echo "people:".$student_id;
 			echo ",grades:[";
 			$first = true;
 			foreach ($subjects as $subject) {
@@ -119,7 +133,7 @@ class page_students_grades extends Page {
 				echo ",grade:";
 				$grade = null;
 				foreach ($students_grades as $sg) {
-					if ($sg["people"] <> $student["people"]) continue;
+					if ($sg["people"] <> $student_id) continue;
 					if ($sg["subject"] <> $subject["id"]) continue;
 					$grade = $sg["grade"];
 					break;
@@ -131,125 +145,184 @@ class page_students_grades extends Page {
 			echo "}";
 		} 
 		?>];
-		var fields = [
-			{name:"first_name",display:"First Name",show:true}
-			,{name:"last_name",display:"Last Name",show:true}
-		];
+		function calculate_average() {
+			for (var i = 0; i < students.length; ++i) {
+				var student = students[i];
+				var total = 0;
+				var weights = 0;
+				for (var j = 0; j < categories.length; ++j) {
+					for (var k = 0; k < categories[j].subjects.length; ++k) {
+						var subject = categories[j].subjects[k];
+						if (subject.weight == null) {
+							total = -1;
+							break;
+						}
+						var found = false;
+						for (var l = 0; l < student.grades.length; ++l) {
+							if (student.grades[l].subject == subject.id) {
+								if (student.grades[l].grade != null) {
+									found = true;
+									total += parseFloat(student.grades[l].grade)*100/subject.max_grade * parseInt(subject.weight);
+									weights += parseInt(subject.weight);
+								}
+								break;
+							}
+						}
+						if (!found) {
+							total = -1;
+							break;
+						}
+					}
+					if (total == -1) break;
+				}
+				if (total == -1 || weights == 0) {
+					student.average = null;
+				} else {
+					student.average = total/weights;
+				}
+			}
+		}
+		function calculate_rank() {
+			if (students.length == 0) return;
+			var list = [];
+			for (var i = 0; i < students.length; ++i) list.push(students[i]);
+			list.sort(function(a,b){
+				if (a.average == null)
+					return b.average == null ? 0 : -1;
+				if (b.average == null) return 1;
+				if (a.average < b.average) return 1;
+				if (a.average > b.average) return -1;
+				return 0;
+			});
+			var last_grade = null;
+			var last_rank = 0;
+			var last_rank_nb = 1;
+			for (var i = 0; i < list.length; ++i) {
+				if (list[i].average == null) {
+					list[i].rank = null;
+				} else if (list[i].average == last_grade) {
+					list[i].rank = last_rank;
+					last_rank_nb++;
+				} else {
+					list[i].rank = last_rank + last_rank_nb;
+					last_rank = list[i].rank;
+					last_rank_nb = 1;
+					last_grade = list[i].average;
+				}
+			}
+		}
+		calculate_average();
+		calculate_rank();
 
-		function create_table() {
-			var table = document.getElementById('grades_table');
-			while (table.childNodes.length > 0) table.removeChild(table.childNodes[0]);
-			var tr, td;
-			table.appendChild(tr = document.createElement("TR"));
-			for (var i = 0; i < fields.length; ++i) {
-				var field = fields[i];
-				if (!field.show) continue;
-				tr.appendChild(td = document.createElement("TH"));
-				td.rowSpan = 3;
-				td.style.verticalAlign = "bottom";
-				td.style.border = "1px solid black";
-				td.appendChild(document.createTextNode(field.display));
-			}
-			tr.appendChild(td = document.createElement("TH"));
-			td.appendChild(document.createTextNode("Category"));
-			td.style.textAlign = "right";
-			td.style.fontStyle = "italic";
-			td.style.backgroundColor = "#C0C0C0";
-			td.style.border = "1px solid black";
+		function update_grade_color(element, grade, passing, max) {
+			if (typeof grade == 'string') grade = parseFloat(grade);
+			if (typeof passing == 'string') passing = parseFloat(passing);
+			if (typeof max == 'string') max = parseFloat(max);
+			if (grade == null)
+				element.style.backgroundColor = "#C0C0C0";
+			else if (grade < passing)
+				element.style.backgroundColor = "#FF4040";
+			else if (grade < passing+(max-passing)/5) // until 20% above passing grade
+				element.style.backgroundColor = "#FFA040";
+			else
+				element.style.backgroundColor = "#40FF40";
+		}
+
+		function customize_student_header(th) {
+			th.style.backgroundColor = '#FFFFA0';
+		}
+		function customize_total_header(th) {
+			th.style.backgroundColor = '#A0FFFF';
+		}
+		function customize_category_header(th) {
+			th.style.backgroundColor = '#A0A0F0';
+		}
+		function customize_subject_name_header(th) {
+			th.style.backgroundColor = '#C0C0FF';
+		}
+		function customize_subject_weight_header(th) {
+			th.style.backgroundColor = '#C0C0FF';
+		}
+		
+		function init_table() {
+			custom_data_list.init('data_list_container');
+			custom_data_list.select_field('Personal Information', 'First Name', true, customize_student_header);
+			custom_data_list.select_field('Personal Information', 'Last Name', true, customize_student_header);
+			<?php if ($class == null) {?>
+			custom_data_list.select_field('Student', 'Class', true, customize_student_header);
+			<?php } ?>
+			custom_data_list.addColumn('total_average', "Average", function(td,index) {
+				if (students[index].average) td.innerHTML = students[index].average.toFixed(2);
+				td.style.textAlign = 'center';
+				td.style.fontWeight = 'bold';
+			},null, customize_total_header);
+			custom_data_list.addColumn('total_rank', "Rank", function(td,index) {
+				if (students[index].average) td.innerHTML = students[index].rank;
+				td.style.textAlign = 'center';
+			},null, customize_total_header);
+			
 			for (var cat_i = 0; cat_i < categories.length; ++cat_i) {
 				var cat = categories[cat_i];
-				if (!cat.show) continue;
-				var subjects = [];
-				for (var i = 0; i < cat.subjects.length; ++i) if (cat.subjects[i].show) subjects.push(cat.subjects[i]);
-				if (subjects.length == 0) continue;
-				tr.appendChild(td = document.createElement("TH"));
-				td.colSpan = subjects.length;
-				td.style.border = "1px solid black";
-				td.appendChild(document.createTextNode(cat.name));
-			}
-			table.appendChild(tr = document.createElement("TR"));
-			tr.appendChild(td = document.createElement("TH"));
-			td.appendChild(document.createTextNode("Subject"));
-			td.style.textAlign = "right";
-			td.style.fontStyle = "italic";
-			td.style.backgroundColor = "#C0C0C0";
-			td.style.border = "1px solid black";
-			for (var cat_i = 0; cat_i < categories.length; ++cat_i) {
-				var cat = categories[cat_i];
-				if (!cat.show) continue;
-				var subjects = [];
-				for (var i = 0; i < cat.subjects.length; ++i) if (cat.subjects[i].show) subjects.push(cat.subjects[i]);
-				if (subjects.length == 0) continue;
-				for (var subject_i = 0; subject_i < subjects.length; ++subject_i) {
-					var subject = subjects[subject_i];
-					tr.appendChild(td = document.createElement("TH"));
+				if (cat.subjects.length == 0) continue;
+				custom_data_list.addColumn('cat_'+cat.id, cat.name, function(td,index){}, 'total_average', customize_category_header);
+				for (var subject_i = 0; subject_i < cat.subjects.length; ++subject_i) {
+					var subject = cat.subjects[subject_i];
 					var link = document.createElement("A");
 					link.appendChild(document.createTextNode(subject.code));
 					link.href = "/dynamic/transcripts/page/subject_grades?subject="+subject.id<?php if ($class <> null) echo "+'&class=".$class_id."'";?>;
 					link.style.color = "black";
-					td.appendChild(link);
-					td.style.border = "1px solid black";
-					td.title = subject.name;
-				}
-			}
-			table.appendChild(tr = document.createElement("TR"));
-			tr.appendChild(td = document.createElement("TH"));
-			td.appendChild(document.createTextNode("Weight"));
-			td.style.textAlign = "right";
-			td.style.fontStyle = "italic";
-			td.style.backgroundColor = "#C0C0C0";
-			td.style.border = "1px solid black";
-			for (var cat_i = 0; cat_i < categories.length; ++cat_i) {
-				var cat = categories[cat_i];
-				if (!cat.show) continue;
-				var subjects = [];
-				for (var i = 0; i < cat.subjects.length; ++i) if (cat.subjects[i].show) subjects.push(cat.subjects[i]);
-				if (subjects.length == 0) continue;
-				for (var subject_i = 0; subject_i < subjects.length; ++subject_i) {
-					var subject = subjects[subject_i];
-					tr.appendChild(td = document.createElement("TH"));
-					td.appendChild(document.createTextNode(subject.weight));
-					td.style.border = "1px solid black";
-				}
-			}
-			for (var student_i = 0; student_i < students.length; ++student_i) {
-				var student = students[student_i];
-				table.appendChild(tr = document.createElement("TR"));
-				for (var field_i = 0; field_i < fields.length; ++field_i) {
-					var field = fields[field_i];
-					if (!field.show) continue;
-					tr.appendChild(td = document.createElement("TD"));
-					td.style.border = "1px solid black";
-					td.appendChild(document.createTextNode(student[field.name]));
-				}
-				tr.appendChild(td = document.createElement("TD"));
-				td.style.backgroundColor = "#C0C0C0";
-				td.style.border = "1px solid black";
-				for (var cat_i = 0; cat_i < categories.length; ++cat_i) {
-					var cat = categories[cat_i];
-					if (!cat.show) continue;
-					var subjects = [];
-					for (var i = 0; i < cat.subjects.length; ++i) if (cat.subjects[i].show) subjects.push(cat.subjects[i]);
-					if (subjects.length == 0) continue;
-					for (var subject_i = 0; subject_i < subjects.length; ++subject_i) {
-						var subject = subjects[subject_i];
-						tr.appendChild(td = document.createElement("TD"));
-						td.style.border = "1px solid black";
+					link.title = subject.name;
+					custom_data_list.addSubColumn('cat_'+cat.id, 'subject_'+subject.id, link, function(td,index) {
+					}, null, customize_subject_name_header);
+					var span = document.createElement("SPAN");
+					<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) {
+						echo "var cell;";
+						require_once("component/data_model/page/utils.inc");
+						datamodel_cell_inline($this, "cell", "span", true, "CurriculumSubjectGrading", "weight", "subject.id", null, "subject.weight", null); 
+					} else { ?>
+					span.innerHTML = subject.weight;
+					<?php } ?>
+					custom_data_list.addSubColumn('subject_'+subject.id, 'subject_'+subject.id+"_weight", span, function(td,index) {
+						var student = students[index];
 						var grade = null;
-						for (var i = 0; i < student.grades; ++i)
-							if (student.grades[i].subject == subject.id) { grade = student.grades[i].grade; break; }
-						if (grade == null)
-							td.style.backgroundColor = '#C0C0C0';
-						else {
-							td.appendChild(document.createTextNode(grade));
-							td.style.textAlign = "center";
-							// TODO color
-						}
-					}
+						for (var i = 0; i < student.grades.length; ++i)
+							if (student.grades[i].subject == subject.id) {
+								grade = student.grades[i].grade;
+								break;
+							}
+						var field;
+						<?php PNApplication::$instance->widgets->create_typed_field($this, "field", "StudentSubjectGrade", "grade", "false", "grade");?>
+						td.appendChild(field.getHTMLElement());
+						update_grade_color(td, grade, subject.passing_grade, subject.max_grade);
+						td.style.textAlign = 'center';
+					}, null, customize_subject_weight_header);
 				}
-			} 
+			}
 		}
-		create_table();
+		init_table();
+
+		function select_students_columns(button) {
+			var div = document.createElement("DIV");
+			for (var i = 0; i < custom_data_list.fields_from_request.length; ++i) {
+				var f = custom_data_list.fields_from_request[i];
+				var cb = document.createElement("INPUT");
+				cb.type = 'checkbox';
+				cb.checked = custom_data_list.selected_fields_from_request.contains(i) ? 'checked' : '';
+				cb.f = f;
+				cb.onchange = function() {
+					custom_data_list.select_field(this.f.category, this.f.name, this.checked, customize_student_header);
+				};
+				div.appendChild(cb);
+				div.appendChild(document.createTextNode(f.name));
+				div.appendChild(document.createElement("BR"));
+			}
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				menu.addItem(div, true);
+				menu.showBelowElement(button);
+			});
+		}
+		
 		</script>
 		<?php 
 	}

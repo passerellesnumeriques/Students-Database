@@ -398,12 +398,50 @@ class page_subject_grades extends Page {
 					}
 					service.json("transcripts","save_students_final_grade",{subject_id:subject_info.id,students:students},function(res){
 						if (!res) { unlock_screen(locker); return; }
+						set_lock_screen_content(locker, "Grades successfully saved<br/>Reloading data...");
 						location.reload();
 					});
 				} else {
 					set_lock_screen_content(locker, "Saving evaluations");
 					service.json("transcripts","save_subject_evaluations",{subject_id:subject_info.id, types:types},function(res){
 						if (!res) { unlock_screen(locker); return; }
+						// update ids in types, evaluations and students_grades
+						for (var i = 0; i < types.length; ++i) {
+							if (types[i].id < 0) {
+								for (var j = 0; j < res.types.length; ++j)
+									if (res.types[j].input_id == types[i].id) {
+										types[i].id = res.types[j].output_id;
+										for (var k = 0; k < students_grades.length; ++k) {
+											for (var l = 0; l < students_grades[k].types_grades.length; ++l) {
+												if (students_grades[k].types_grades[l].type_id == res.types[j].input_id) {
+													students_grades[k].types_grades[l].type_id = res.types[j].output_id;
+													break;
+												}
+											}
+										}
+										break;
+									}
+							}
+							for (var j = 0; j < types[i].evaluations.length; ++j) {
+								if (types[i].evaluations[j].id < 0) {
+									for (var k = 0; k < res.evaluations.length; ++k) {
+										if (res.evaluations[k].input_id == types[i].evaluations[j].id) {
+											types[i].evaluations[j].id = res.evaluations[k].output_id;
+											for (var l = 0; l < students_grades.length; ++l) {
+												for (var m = 0; m < students_grades[l].eval_grades.length; ++m) {
+													if (students_grades[l].eval_grades[m].eval_id == res.evaluations[k].input_id) {
+														students_grades[l].eval_grades[m].eval_id = res.evaluations[k].output_id;
+														break;
+													}
+												}
+											}
+											break;
+										}
+									}
+								}
+							}
+						}
+						// save students grades
 						set_lock_screen_content(locker, "Saving students' grades");
 						var students = [];
 						for (var i = 0; i < students_grades.length; ++i) {

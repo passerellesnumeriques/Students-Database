@@ -13,6 +13,7 @@ class service_create_db extends Service {
 		$db_conf = include("conf/local_db");
 		require_once("DataBaseSystem_".$db_conf["type"].".inc");
 		$db_system_class = "DataBaseSystem_".$db_conf["type"];
+		/* @var $db_system DataBaseSystem */
 		$db_system = new $db_system_class;
 		$res = $db_system->connect($db_conf["server"], $db_conf["user"], $db_conf["password"]);
 		if ($res <> DataBaseSystem::ERR_OK) {
@@ -24,8 +25,8 @@ class service_create_db extends Service {
 		} else {
 			set_time_limit(240);
 			$model = DataModel::get();
- 			$res = $db_system->execute("DROP DATABASE students_".$domain);
- 			$res = $db_system->execute("CREATE DATABASE IF NOT EXISTS students_".$domain);
+ 			$res = $db_system->execute("DROP DATABASE students_".$domain, false);
+ 			$res = $db_system->execute("CREATE DATABASE students_".$domain);
  			$res = $db_system->execute("USE students_".$domain);
  			$prev_local = PNApplication::$instance->local_domain;
  			$prev_current = PNApplication::$instance->current_domain;

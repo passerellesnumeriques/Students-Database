@@ -365,10 +365,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				};
 				t.grid.startLoading();
 				if (col.editable) {
-					for (var j = 0; j < col.locks.length; ++j) {
+					service.json("data_model","unlock",{locks:col.locks},function(result){});
+					for (var j = 0; j < col.locks.length; ++j)
 						window.database_locks.remove_lock(col.locks[j]);
-						service.json("data_model","unlock",{lock:col.locks[j]},function(result){});
-					}
 					col.locks = null;
 					t._cancel_column_changes(col);
 					edit_col();
@@ -388,8 +387,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 							if (done == f.edit_locks.length) {
 								if (locks.length < done) {
 									// errors occured, cancel all locks
-									for (var j = 0; j < locks.length; ++j)
-										service.json("data_model","unlock",{lock:locks[j]});
+									service.json("data_model","unlock",{locks:locks});
 								} else {
 									// success
 									for (var j = 0; j < locks.length; ++j)
@@ -411,7 +409,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
 			fields.push({path:t.show_fields[i].path.path,name:t.show_fields[i].name});
-		var params = {table:t._root_table,fields:fields,actions:true,page:t._page_num,_page_size:t._page_size};
+		var params = {table:t._root_table,fields:fields,actions:true,page:t._page_num,page_size:t._page_size};
 		if (t._sort_column && t._sort_order != 3) {
 			params.sort_field = t._sort_column.id;
 			params._sort_order = t._sort_order == 1 ? "ASC" : "DESC";
@@ -449,7 +447,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			var col_id = [];
 			for (var i = 0; i < t.show_fields.length; ++i)
 				for (var j = 0; j < t.grid.columns.length; ++j)
-					if (t.grid.columns[j].attached_data.path.path == t.show_fields[i].path.path &&
+					if (t.grid.columns[j].attached_data && t.grid.columns[j].attached_data.path.path == t.show_fields[i].path.path &&
 						t.grid.columns[j].attached_data.name == t.show_fields[i].name) {
 						col_id.push(t.grid.columns[j].id);
 						break;

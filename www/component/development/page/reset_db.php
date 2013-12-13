@@ -11,8 +11,16 @@ class page_reset_db extends Page {
 <script type='text/javascript'>
 var todo = [
 <?php
+if (isset($_GET["dev"]))
+	$domains = array("Dev");
+else {
+	$domains = array();
+	foreach (PNApplication::$instance->get_domains() as $domain=>$descr)
+		array_push($domains, $domain);
+}
+
 $first = true;
-foreach (PNApplication::$instance->get_domains() as $domain=>$descr) {
+foreach ($domains as $domain) {
 	if ($domain == "Test") continue;
 	if ($first) $first = false; else echo ",";
 	echo "{service:'create_db',data:{domain:'".$domain."'},message:'Initialize database for domain ".$domain."'}";

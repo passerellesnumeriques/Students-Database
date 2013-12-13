@@ -58,22 +58,38 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return false;
 	}
 	
-	public function retrieveValue($row, $sql_aliases, $path) {
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
 		$table_name = $this->handler->type == "people" ? "People_contact" : "Organization_contact";
 		
-		$res = \SQLQuery::create()
-			->select($table_name)
-			->join($table_name, "Contact", array("contact" => "id"), "JOIN_ALIAS")
-			->field("JOIN_ALIAS", "id", "KEY")
-			->field("JOIN_ALIAS", "sub_type", "SUB_TYPE")
-			->field("JOIN_ALIAS", "contact", "CONTACT")
-			->where_value($table_name, $this->joining_key_name, $row[$sql_aliases["key"]])
-			->where_value("JOIN_ALIAS", "type", $this->type)
+		$keys = array();
+		foreach ($rows as $row)
+			if (!in_array($row[$sql_aliases["key"]], $keys))
+				array_push($keys, $row[$sql_aliases["key"]]);
+		
+		if (count($keys) == 0)
+			$res = array();
+		else
+			$res = \SQLQuery::create()
+				->select($table_name)
+				->join($table_name, "Contact", array("contact" => "id"), "JOIN_ALIAS")
+				->field($table_name, $this->joining_key_name, "JOIN_KEY")
+				->field("JOIN_ALIAS", "id", "KEY")
+				->field("JOIN_ALIAS", "sub_type", "SUB_TYPE")
+				->field("JOIN_ALIAS", "contact", "CONTACT")
+				->where_in($table_name, $this->joining_key_name, $keys)
+				->where_value("JOIN_ALIAS", "type", $this->type)
 			->execute();
-		$values = array();
-		foreach ($res as $r)
-			array_push($values, array("id"=>$r["KEY"],"sub_type"=>$r["SUB_TYPE"],"contact"=>$r["CONTACT"]));
-		return array("table"=>$table_name,"key_name"=>$this->joining_key_name,"key_value"=>$row[$sql_aliases["key"]],"contacts"=>$values);
+		
+		$sql_aliases["data"] = $original_query->field_id();
+		for ($i = 0; $i < count($rows); $i++) {
+			$key = $rows[$i][$sql_aliases["key"]];
+			$values = array();
+			foreach ($res as $r) {
+				if ($r["JOIN_KEY"] == $key)
+					array_push($values, array("id"=>$r["KEY"],"sub_type"=>$r["SUB_TYPE"],"contact"=>$r["CONTACT"]));
+			}
+			$rows[$i][$sql_aliases["data"]] = array("table"=>$table_name,"key_name"=>$this->joining_key_name,"key_value"=>$row[$sql_aliases["key"]],"contacts"=>$values);
+		}
 	}
 	
 	public function getNewData() {
@@ -134,41 +150,54 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return false;
 	}
 
-	public function retrieveValue($row, $sql_aliases, $path) {
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
 		$table_name = $this->handler->type == "people" ? "People_address" : "Organization_address";
-
-		$res = \SQLQuery::create()
-			->select($table_name)
-			->join($table_name, "Postal_address", array("address" => "id"), "JOIN_ALIAS")
-			->field("JOIN_ALIAS", "id", "KEY")
-			->field("JOIN_ALIAS","country","country")
-			->field("JOIN_ALIAS","geographic_area","geographic_area")
-			->field("JOIN_ALIAS","street","street")
-			->field("JOIN_ALIAS","street_number","street_number")
-			->field("JOIN_ALIAS","building","building")
-			->field("JOIN_ALIAS","unit","unit")
-			->field("JOIN_ALIAS","additional","additional")
-			->field("JOIN_ALIAS","address_type","address_type")
-			->where_value($table_name, $this->joining_key_name, $row[$sql_aliases["key"]])
-			->execute();
-		$values = array();
-		foreach ($res as $r)
-			array_push($values, 
-				array(
-					"id"=>$r["KEY"],
-					"country"=>$r["country"],
-					"geographic_area"=>array("id"=>$r["geographic_area"],"text"=>PNApplication::$instance->geography->get_geographic_area_text($r["geographic_area"])),
-					"street_name"=>$r["street"],
-					"street_number"=>$r["street_number"],
-					"building"=>$r["building"],
-					"unit"=>$r["unit"],
-					"additional"=>$r["additional"],
-					"address_type"=>$r["address_type"]
-				)
-			);
-		return array("table"=>$table_name,"key_name"=>$this->joining_key_name,"key_value"=>$row[$sql_aliases["key"]],"addresses"=>$values);
+				
+		$keys = array();
+		foreach ($rows as $row)
+			if (!in_array($row[$sql_aliases["key"]], $keys))
+				array_push($keys, $row[$sql_aliases["key"]]);
+		
+		if (count($keys) == 0)
+			$res = array();
+		else
+			$res = \SQLQuery::create()
+				->select($table_name)
+				->join($table_name, "Postal_address", array("address" => "id"), "JOIN_ALIAS")
+				->field($table_name, $this->joining_key_name, "JOIN_KEY")
+				->field("JOIN_ALIAS", "id", "KEY")
+				->field("JOIN_ALIAS","country","country")
+				->field("JOIN_ALIAS","geographic_area","geographic_area")
+				->field("JOIN_ALIAS","street","street")
+				->field("JOIN_ALIAS","street_number","street_number")
+				->field("JOIN_ALIAS","building","building")
+				->field("JOIN_ALIAS","unit","unit")
+				->field("JOIN_ALIAS","additional","additional")
+				->field("JOIN_ALIAS","address_type","address_type")
+				->where_in($table_name, $this->joining_key_name, $keys)
+				->execute();
+		
+		$sql_aliases["data"] = $original_query->field_id();
+		for ($i = 0; $i < count($rows); $i++) {
+			$key = $rows[$i][$sql_aliases["key"]];
+			$values = array();
+			foreach ($res as $r) {
+				if ($r["JOIN_KEY"] == $key)
+					array_push($values, array(
+						"id"=>$r["KEY"],
+						"country"=>$r["country"],
+						"geographic_area"=>array("id"=>$r["geographic_area"],"text"=>PNApplication::$instance->geography->get_geographic_area_text($r["geographic_area"])),
+						"street_name"=>$r["street"],
+						"street_number"=>$r["street_number"],
+						"building"=>$r["building"],
+						"unit"=>$r["unit"],
+						"additional"=>$r["additional"],
+						"address_type"=>$r["address_type"]
+					));
+			}
+			$rows[$i][$sql_aliases["data"]] = array("table"=>$table_name,"key_name"=>$this->joining_key_name,"key_value"=>$row[$sql_aliases["key"]],"addresses"=>$values);
+		}
 	}
-
 
 	public function getNewData() {
 		$table_name = $this->handler->type == "people" ? "People_address" : "Organization_address";

@@ -206,6 +206,12 @@ class Table {
 		return $this;
 	}
 
+	public function &addDecimal($name, $integer_digits=10, $decimal_digits = 2, $min = null, $max = null, $can_be_null = true, $unique = false) {
+		$c = new ColumnDecimal($this, $name, $integer_digits, $decimal_digits, $min, $max, $can_be_null, $unique);
+		array_push($this->columns, $c);
+		return $this;
+	}
+	
 	/** Add a boolean column */
 	public function &addBoolean($name, $can_be_null = true) {
 		$c = new ColumnBoolean($this, $name, $can_be_null);
@@ -558,6 +564,30 @@ class ColumnInteger extends Column {
 	public function validate($value) {
 		if ($this->can_be_null && ($value === null || $value === "")) return null;
 		if (!is_integer($value)) $value = intval($value);
+		if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min);
+		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max);
+		return $value;
+	}
+}
+
+class ColumnDecimal extends Column {
+
+	public $integer_digits, $decimal_digits;
+	public $min, $max;
+
+	public function __construct(&$table, $name, $integer_digits, $decimal_digits, $min = null, $max = null, $can_be_null = true, $unique = false) {
+		parent::__construct($table, $name, $can_be_null, $unique);
+		$this->integer_digits = $integer_digits;
+		$this->decimal_digits = $decimal_digits;
+		$this->min = $min;
+		$this->max = $max;
+	}
+
+	public function get_sql_type() { return "DECIMAL(".($this->integer_digits+$this->decimal_digits).",".$this->decimal_digits.")"; }
+
+	public function validate($value) {
+		if ($this->can_be_null && ($value === null || $value === "")) return null;
+		if (!is_double($value)) $value = doubleval($value);
 		if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min);
 		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max);
 		return $value;

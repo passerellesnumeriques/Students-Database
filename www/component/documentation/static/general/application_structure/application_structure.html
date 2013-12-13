@@ -1,0 +1,68 @@
+<html>
+<head>
+	<link rel='stylesheet' type='text/css' href='/static/documentation/style.css'></link>
+</head>
+<body>
+
+<h1>Application Structure</h1>
+
+The application is composed of <i>components</i>.<br/>
+Each component is responsible for one part of the application (example: information about the curriculum, or geographic information, or transcripts...).<br/>
+
+<h2>Component structure overview</h2>
+A component can be composed of:<ul>
+	<li>Back-end functionalities: PHP functions, providing functionalities to the User Interface, or to other components</li>
+	<li>Front-end: web pages composing the User Interface</li>
+	<li>Services: services are functions callable from the Front-End. Typically it uses JSON for its interface (input and output) so it can be easily called by using AJAX calls from a page</li>
+	<li>Static resources: elements that will never change whoever is requesting it (no access restriction, no customization depending on the user, no information coming from database...). This is typically images, javascripts, and CSS.</li>
+</ul>
+A component can also have tables in the database: it will be responsible of this part of the data model. For example, the component <code>user_management</code>, which is responsible of managing the users and their access rights, will have tables like <code>Users</code> containing the list of users, <code>UserRights</code> containing the rights of each user...
+<br/>
+Each kind of element must be located in specific places:<ul>
+	<li>Pages must be in the directory <code>page</code> of the component</li>
+	<li>Services must be in the directoy <code>service</code> of the component</li>
+	<li>Static resources must be in the directory <code>static</code> or the component</li>
+</ul>
+
+<h2>Main concepts before to start</h2>
+
+<h3>Languages</h3>
+
+The application is developped using:<ul>
+	<li>PHP for the Back-end</li>
+	<li>HTML, CSS and JavaScript for the Front-End</li>
+</ul>
+No framework is used, to avoid the need to learn a specific framework before to join the domain.<br/>
+
+<h3>Database Access</h3>
+
+In order to ensure security, the components don't access to the database directly, but through a PHP interface: <code>SQLQuery</code>.<br/>
+Each element of the database is declared with security features, specifying who can read it, modify it, add data, and remove data. The <code>SQLQuery</code> interface is responsible to perform all security checks before to execute any request to the database.<br/>
+This will allow to avoid any mistake in the code, or if a developer forget to check the user rights.<br/>
+This interface will be detailed later.
+
+<h3>Database declaration</h3>
+
+Each component can declares its own part of the database (data model).<br/>
+To do so, it will declares tables, with columns, but also with information about security, that will be used by <code>SQLQuery</code>.<br/>
+The advantages of having the data model declared directly in the code are:<ul>
+	<li>Ensure security when accessing data, as explained before.</li>
+	<li>We can attach information about how to display information: thus, we can develop generic screens that will adapt to the data model.</li>
+	<li>We can analyze the data model, and know all information we can display starting from a table: for example, starting from the table student, we can find personal information (first name, last name...), in which batch the student belongs to, his/her contact information (email, phone...), ...</li>
+</ul>
+
+<h3>URLs</h3>
+
+All the files composing the application are not directly accessible by a client. All requests will be redirected to the <code>index.php</code>, which will analyze the requested URL, and reply to it.<br/>
+<div class='note'>
+Technical note: this redirection to <code>index.php</code> is done using Apache url rewrite extension: by implementing it directly on the web server, we ensure it will not be possible to get around the redirection.
+</div>
+
+The URL accepted by the application must comply to the following rules:<ul>
+	<li><code>/static/&lt;component&gt;/&lt;filename&gt;</code>: to access to the static resource file <code>filename</code> in the given <code>component</code> (the path in the application will be <code>component/&lt;component&gt;/static/&lt;filename&gt;</code>)</li>
+	<li><code>/dynamic/&lt;component&gt;/page/&lt;pagename&gt;</code>: to access to the web page <code>pagename</code> in the given <code>component</code> (the path in the application will be <code>/component/&lt;component&gt;/page/&lt;pagename&gt;.php</code>)</li>
+	<li><code>/dynamic/&lt;component&gt;/service/&lt;servicename&gt;</code>: to access to the service <code>servicename</code> in the given <code>component</code> (the path in the application will be <code>/component/&lt;component&gt;/service/&lt;servicename&gt;.php</code>)</li>
+</ul>
+
+</body>
+</html>

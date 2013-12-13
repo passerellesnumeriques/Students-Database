@@ -69,7 +69,12 @@ class transcripts extends Component {
 			throw new Exception("You cannot update students final grades on a subject which is configured with evaluations: the final grade is automatically computed");
 		$students_ids = array();
 		foreach ($students_grades as $s) array_push($students_ids, $s["people"]);
-		$existing = SQLQuery::create()->select("StudentSubjectGrade")->where_in("StudentSubjectGrade", "people", $students_ids)->execute();
+		$existing = SQLQuery::create()
+			->select("StudentSubjectGrade")
+			->where_value("StudentSubjectGrade", "subject", $subject_id)
+			->where_in("StudentSubjectGrade", "people", $students_ids)
+			->execute();
+		$list = array();
 		foreach ($existing as $s) {
 			$found = false;
 			for ($i = 0; $i < count($students_ids); $i++) {
@@ -82,18 +87,26 @@ class transcripts extends Component {
 			if (!$found) continue;
 			$grade = null;
 			foreach ($students_grades as $sg) if ($sg["people"] == $s["people"]) { $grade = $sg["final_grade"]; break; }
-			SQLQuery::create()->update_by_key("StudentSubjectGrade", array("people"=>$s["people"],"subject"=>$subject_id), array("grade"=>$grade));
+			array_push($list, array(
+				array("people"=>$s["people"],"subject"=>$subject_id),
+				array("grade"=>$grade)
+			)); 
 		}
+		if (count($list) > 0)
+			SQLQuery::create()->update_by_keys("StudentSubjectGrade", $list);
 		// remaining ids are new
+		$list = array();
 		foreach ($students_ids as $people_id) {
 			$grade = null;
 			foreach ($students_grades as $sg) if ($sg["people"] == $people_id) { $grade = $sg["final_grade"]; break; }
-			SQLQuery::create()->insert("StudentSubjectGrade", array(
+			array_push($list, array(
 				"people"=>$people_id,
 				"subject"=>$subject_id,
 				"grade"=>$grade
 			));
 		}
+		if (count($list) > 0)
+			SQLQuery::create()->insert_multiple("StudentSubjectGrade", $list);
 	}
 	
 	public function create_evaluation_type($subject_id, $name, $weight) {
@@ -285,11 +298,11 @@ class transcripts extends Component {
 					}
 				}
 				if ($type_weights == 0) $type_grade = null;
-				if ($type_grade == null) {
+				if ($type_grade === null) {
 					$final_grade = null;
 				} else {
 					$type_grade = $type_grade * $subject_info["max_grade"] / 100 / $type_weights;
-					if ($final_grade != null) {
+					if ($final_grade !== null) {
 						$final_grade += $type_grade * $type["weight"];
 						$final_weights += $type["weight"];
 					}
@@ -299,7 +312,7 @@ class transcripts extends Component {
 				array_push($types_to_insert, array("people"=>$student["people"],"type"=>$type["id"],"grade"=>$type_grade));
 			}
 			if ($final_weights == 0) $final_grade = null;
-			if ($final_grade != null)
+			if ($final_grade !== null)
 				$final_grade /= $final_weights;
 			// set the final grade
 			array_push($final_to_remove, array("people"=>$student["people"],"subject"=>$subject_id));

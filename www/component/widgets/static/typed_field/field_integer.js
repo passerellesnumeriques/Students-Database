@@ -25,10 +25,10 @@ field_integer.prototype._create = function(data) {
 		var onkeyup = new Custom_Event();
 		input.onkeyup = function(e) { onkeyup.fire(e); };
 		var f = function() { setTimeout(function() { t._datachange(); },1); };
-		input.onkeydown = function(ev) {
-			ev = getCompatibleKeyEvent(ev);
+		input.onkeydown = function(e) {
+			var ev = getCompatibleKeyEvent(e);
 			if (ev.isPrintable) {
-				if (!isNaN(parseInt(ev.printableChar))) {
+				if (!isNaN(parseInt(ev.printableChar)) || ev.ctrlKey) {
 					// digit: ok
 					f();
 					return true;
@@ -39,21 +39,20 @@ field_integer.prototype._create = function(data) {
 					f();
 					return true;
 				}
-				stopEventPropagation(ev);
+				stopEventPropagation(e);
 				return false;
 			}
-			if (ev.isArrowLeft || ev.isArrowRight || ev.isBackspace || ev.isDelete || ev.isHome || ev.isEnd) {
-				f();
-				return true;
-			}
-			stopEventPropagation(ev);
-			return false;
+			f();
+			return true;
 		};
 		input.onblur = function(ev) {
-			if (input.value.length == 0 && (!this.config || !this.config.can_be_null)) input.value = this.config && this.config.min ? this.config.min : 0;
-			var i = parseInt(input.value);
-			if (this.config && this.config.min && i < this.config.min) input.value = this.config.min;
-			if (this.config && this.config.max && i > this.config.max) input.value = this.config.max;
+			if (input.value.length == 0 && t.config && t.config.can_be_null) {}
+			else {
+				if (input.value.length == 0 && (!t.config || !t.config.can_be_null)) input.value = t.config && t.config.min ? this.config.min : 0;
+				var i = parseInt(input.value);
+				if (t.config && t.config.min && i < t.config.min) input.value = t.config.min;
+				if (t.config && t.config.max && i > t.config.max) input.value = t.config.max;
+			}
 			f();
 		};
 		require("autoresize_input.js",function(){autoresize_input(input);});
@@ -83,6 +82,13 @@ field_integer.prototype._create = function(data) {
 			var s = data == null ? "" : data;
 			if (this.text.nodeValue == s) return;
 			this.text.nodeValue = s;
+			if (this.element.childNodes.length > 1)
+				this.element.removeChild(this.element.childNodes[1]);
+			if (s.length == 0) {
+				var e = document.createElement("I");
+				e.innerHTML = "&nbsp; &nbsp;";
+				this.element.appendChild(e);
+			}
 			this._datachange();
 		};
 		this.getCurrentData = function() {
