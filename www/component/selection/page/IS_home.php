@@ -76,10 +76,17 @@ class page_IS_home extends selection_page {
 						}
 						
 						td21.innerHTML = "Date: ";
-						var date = new field_date(null,true);
-						td22.appendChild(date.getHTMLElement());
+						// var date = new field_date(null,true);
+						// td22.appendChild(date.getHTMLElement());
 						
 						foot.innerHTML = "<br/><center>You will be able to set the address, the partners...<br/><i/>once the information session is created</i></center>";
+						foot.onclick = function(){
+							d = new Date(1386212249);
+							alert(dateToSQL(d));
+							// alert(d.getFullYear());
+							// alert(d.getMonth());
+							// alert(d.getDay());
+						};
 						
 						tr1.appendChild(td11);
 						tr1.appendChild(td12);

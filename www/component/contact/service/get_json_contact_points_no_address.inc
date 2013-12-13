@@ -10,6 +10,7 @@
  //TODO: update doc!!
 function get_json_contact_points_no_address($organization){
 	$json_result = "";
+	$contacts = null;
 	$q = SQLQuery::create()
 				->select("Organization")
 				->join("Organization","Contact_point",array("id"=>"organization"))
@@ -28,9 +29,17 @@ function get_json_contact_points_no_address($organization){
 				->order_by("Organization","id")
 				->order_by("People","id");
 				
-	if(is_array($organization)) $q->where_in("Organization","id",$organization);
-	else $q->where("Organization","id",$organization);
-	$contacts = $q->execute();
+	if(is_array($organization)){
+		if(count($organization) != 0){
+			$q->where_in("Organization","id",$organization);
+			$contacts = $q->execute();
+		}
+	}
+	else{
+		$q->where("Organization","id",$organization);
+		$contacts = $q->execute();
+	}
+	
 	
 	if(isset($contacts[0]["organization_id"]) && $contacts[0]["organization_id"] <> null){
 		$first = true;

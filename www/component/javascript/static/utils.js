@@ -526,3 +526,22 @@ function dateToSQL(d) {
 	};
 	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
 };
+
+/**
+ * Set the common style to the tables with header
+ * @param table the table to set
+ * @param th_header
+ * @param thead_color the rgb color to display into the header
+ */
+function setCommonStyleTable(table,th_header,thead_color){
+	table.style.borderSpacing = "0";
+	table.style.marginLeft = "5px";
+	table.style.marginBottom = "3px";
+	setBorderRadius(table, 5, 5, 5, 5, 5, 5, 5, 5);
+	table.style.border = "1px solid";
+	th_header.style.textAlign = "left";
+	th_header.style.padding = "2px 5px 2px 5px";
+	th_header.style.backgroundColor = thead_color;
+	th_header.style.width = "100%";
+	setBorderRadius(th_header, 5, 5, 5, 5, 0, 0, 0, 0);
+}

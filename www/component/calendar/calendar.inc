@@ -86,5 +86,14 @@ class calendar extends Component {
 		return $ids;
 	}
 	
+	public function getEvent($id){
+		$event = SQLQuery::create()
+					->bypass_security()
+					->select("CalendarEvent")
+					->where("id = '".$id."'")
+					->execute_single_row();
+		return $event;
+	}
+	
 }
 ?>

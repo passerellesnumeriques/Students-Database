@@ -18,6 +18,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	/* Public properties */
 	
 	t.grid = null;
+	t.ondataloaded = new Custom_Event();
 	
 	/* Public methods */
 	
@@ -110,6 +111,26 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t._load_fields();
 	};
 	t.getRootTable = function() { return t._root_table; };
+	t.selectByTableKey = function(table, key) {
+		for (var col = 0; col < t.show_fields.length; ++col) {
+			if (t.show_fields[col].table == table) {
+				for (var row = 0; row < t.data.length; ++row) {
+					if (t.data[row].values[col].k == key) {
+						t.grid.selectByIndex(row, true);
+						break;
+					}
+				}
+			}
+		}
+	};
+	t.getTableKeyForRow = function(table, row_id) {
+		for (var col = 0; col < t.show_fields.length; ++col) {
+			if (t.show_fields[col].table == table) {
+				return t.data[row_id].values[col].k;
+			}
+		}
+		return null;
+	};
 	
 	/* Private properties */
 	t._root_table = root_table;
@@ -299,10 +320,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				var col = t._create_column(f);
 				t.grid.addColumn(col);
 			}
-			// get data
-			t._load_data();
 			// signal ready
 			if (t._onready) t._onready(t);
+			// get data
+			t._load_data();
 		});
 	};
 	t._load_typed_fields = function(handler) {
@@ -316,7 +337,6 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				require(fields[i],function(){if (--nb == 0) handler(); });
 		});
 	};
-	t.ondataloaded = new Custom_Event();
 	
 	t._init_list();
 	t._load_fields();

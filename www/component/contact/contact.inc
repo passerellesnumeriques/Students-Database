@@ -2,6 +2,28 @@
 require_once("component/people/PeoplePlugin.inc");
 class contact extends Component implements PeoplePlugin {
 	
+	public function add_address_to_organization($organization_id) {
+		//Check the rights
+		require_once("component/data_model/Model.inc");
+		$table = DataModel::get()->getTable("Organization_address");
+		if (!$table->acceptInsert(array("organization"=>$organization_id))) {
+			PNApplication::error("You are not allowed to add an address for this people or organization");
+			return false;
+		} else {
+			$address_id = $this->add_address("Organization_address","Organization",$organization_id)
+			return $address_id;
+		}
+	}
+	public function add_address_to_people($people_id) {
+		
+		
+	}
+	private function add_address($table, $column, $key) {
+		
+	}
+	
+	/* functions for PeoplePlugin */
+	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {}
 	public function getPeopleProfilePages($people_id, $people, $q) {}
 	

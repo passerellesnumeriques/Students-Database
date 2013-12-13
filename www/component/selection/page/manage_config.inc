@@ -391,6 +391,7 @@ function manage_config(&$page,$container_id){
 					var p = new popup_window("", theme.icons_16.info, "The new configuration has been succesfully saved");
 					p.show();
 					unlock_screen(div_locker);
+					// setTimeout(p.close(),3500);
 				});
 			});
 		}

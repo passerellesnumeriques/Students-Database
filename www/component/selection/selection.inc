@@ -242,7 +242,7 @@ class selection extends Component implements OrganizationPlugin {
 	/**
 	 * @method get_json_IS_data
 	 * @param $id the id of the IS
-	 * @return string {id:,address:{address_object},date:,number_expected,number_real:,name:,partners:
+	 * @return string {id:,address:{address_object},date:,number_boys_expected:,number_girls_expected:,number_boys_real:,number_girls_real:,name:,partners:
 	 * 					[{organization;,host:,host_address:,contact_points_selected:[...]},{organization...}]}
 	 * if $id == -1: the object returned is {id:-1, address:null, date:null, number_expected:null, number_real:null, name:null, partners:[]}
 	 */
@@ -257,8 +257,11 @@ class selection extends Component implements OrganizationPlugin {
 					->select("Information_session")
 					->field("date")
 					->field("postal_address")
-					->field("number_expected")
-					->field("number_real")
+					->field("fake_organization")
+					->field("number_boys_expected")
+					->field("number_girls_expected")
+					->field("number_boys_real")
+					->field("number_girls_real")
 					->field("name")
 					->where("id",$id)
 					->execute_single_row();
@@ -274,10 +277,17 @@ class selection extends Component implements OrganizationPlugin {
 					->execute();
 			if(isset($IS) && $IS <> null){
 				$data.= "{id:'".$id."', ";
-				if($IS["postal_address"] <> null){
-					$data.= PNApplication::$instance->contact->get_json_address_good_format_for_address_text($IS["postal_address"]);
-				} else $data.= "address:null";
-				$data.= ", date:".json_encode($IS["date"]).", number_expected:".json_encode($IS["number_expected"]).", number_real:".json_encode($IS["number_real"]).", name:".json_encode($IS["name"]);
+				// if($IS["postal_address"] <> null){
+					// $data.= PNApplication::$instance->contact->get_json_address_good_format_for_address_text($IS["postal_address"]);
+				// } else $data.= "address:null";
+				$data.= "address:".json_encode($IS["postal_address"]);
+				$data.= ", fake_organization:".json_encode($IS["fake_organization"]);
+				$data.= ", date:".json_encode($IS["date"]);
+				$data.= ", number_boys_expected:".json_encode($IS["number_boys_expected"]);
+				$data.= ", number_girls_expected:".json_encode($IS["number_girls_expected"]);
+				$data.= ", number_boys_real:".json_encode($IS["number_boys_real"]);
+				$data.= ", number_girls_real:".json_encode($IS["number_girls_real"]);
+				$data.= ", name:".json_encode($IS["name"]);
 				$data.= ", partners:";
 				if(isset($partners[0]["organization"]) && $partners[0]["organization"] <> null){
 					$first = true;

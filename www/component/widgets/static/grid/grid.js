@@ -236,6 +236,7 @@ function grid(element) {
 	t.columns = [];
 	t.selectable = false;
 	t.url = get_script_path("grid.js");
+	t.onrowselectionchange = null;
 	
 	t.addColumn = function(column, index) {
 		column.grid = t;
@@ -447,6 +448,8 @@ function grid(element) {
 			cb.style.verticalAlign = "middle";
 			cb.onchange = function() {
 				this.parentNode.parentNode.className = this.checked ? "selected" : "";
+				if (t.onrowselectionchange)
+					t.onrowselectionchange(tr.row_id, this.checked);
 				t._selection_changed();
 			};
 			td.appendChild(cb);

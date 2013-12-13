@@ -22,6 +22,7 @@ class page_IS_main_page extends selection_page {
 		echo "<br/><br/>";
 		require_once("component/contact/service/get_json_contact_points_no_address.inc");
 		echo "IS_contacts_points = ".get_json_contact_points_no_address($data["partners"]);
+		
 	}
 	
 }

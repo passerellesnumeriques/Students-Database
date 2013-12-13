@@ -17,13 +17,17 @@ class page_select_organizations_for_IS extends Page {
 				break;
 			}
 		}
-		
+		$id = $_GET["is"];
+		$partners = $_GET["partners"];
+		if(!is_array($partners)) $partners = array();
 		?>
 		<div style='width:100%;height:100%' id='<?php echo $container_id;?>'>
 		</div>
 		<script type='text/javascript'>
+		var selected_partners = <?php echo json_encode($partners).";";?>
+		var dl;
 		function init_organizations_list() {
-			new data_list(
+			dl = new data_list(
 				'<?php echo $container_id;?>',
 				'Organization',
 				['Contacts.Name'],
@@ -53,9 +57,23 @@ class page_select_organizations_for_IS extends Page {
 						});
 					};
 					list.addHeader(new_org);
+					list.ondataloaded.add_listener(organizations_loaded);
+					list.grid.onrowselectionchange = organizations_selection_changed;
 					<?php } ?>
 				}
 			);
+		}
+		function organizations_loaded(list) {
+			for (var i = 0; i < selected_partners.length; ++i) {
+				list.selectByTableKey("Organization", selected_partners[i]);
+			}
+		}
+		function organizations_selection_changed(row_id, selected) {
+			var partner_id = dl.getTableKeyForRow("Organization", row_id);
+			if (selected)
+				selected_partners.push(partner_id);
+			else
+				selected_partners.remove(partner_id);
 		}
 		</script>
 		<?php 

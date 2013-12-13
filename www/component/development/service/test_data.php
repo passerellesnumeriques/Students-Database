@@ -40,6 +40,8 @@ class service_test_data extends Service {
 				$this->SplitSQL($db_system, "component/development/data/students_contact.sql");
 				$this->SplitSQL($db_system, "component/development/data/student.sql");
 				$this->SplitSQL($db_system, "component/development/data/studentclass.sql");
+				$this->SplitSQL($db_system, "component/development/data/organization.sql");
+				$this->SplitSQL($db_system, "component/development/data/people_contact.sql");
 			}
 		}		
 	}

@@ -131,6 +131,12 @@ getIFrameWindow = function(frame) {
 	return frame.contentDocument.window;
 };
 
+getWindowFromDocument = function(doc) {
+	if (browser.IE > 0 && browser.IE <= 8)
+		return doc.parentWindow;
+	return doc.defaultView;
+};
+
 /** define it if this function is not available in the current browser
  * @method getComputedStyle
  */
