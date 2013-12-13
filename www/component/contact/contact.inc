@@ -10,7 +10,7 @@ class contact extends Component implements PeoplePlugin {
 			PNApplication::error("You are not allowed to add an address for this people or organization");
 			return false;
 		} else {
-			$address_id = $this->add_address("Organization_address","Organization",$organization_id)
+			$address_id = $this->add_address("Organization_address","Organization",$organization_id);
 			return $address_id;
 		}
 	}
