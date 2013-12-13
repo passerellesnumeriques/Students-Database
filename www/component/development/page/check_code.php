@@ -5,6 +5,7 @@ class page_check_code extends Page {
 	
 	public function execute() {
 		$this->require_javascript("tree.js");
+		$this->add_javascript("/static/documentation/jsdoc.js");
 ?>
 <div id='page_header'>
 	Code Checking
@@ -52,6 +53,7 @@ function build_tree_php(parent_item, path, filename, type) {
 		}
 	});
 }
+var checking_js = 0;
 function build_tree_js(parent_item, path, filename) {
 	var item = new TreeItem("<img src='/static/development/javascript.png' style='vertical-align:bottom'/> "+filename, true);
 	parent_item.addItem(item);
@@ -59,9 +61,115 @@ function build_tree_js(parent_item, path, filename) {
 		service: "get_js",
 		data: {path:path+filename},
 		handler: function(res) {
-			// TODO
+			var fct;
+			try {
+				fct = eval("(function (){"+res+"this.jsdoc = jsdoc;})");
+			} catch (e) {
+				window.top.status_manager.add_status(new window.top.StatusMessageError(e,"Invalid output:"+res,10000));
+				return;
+			}
+			checking_js++;
+			setTimeout(function() {
+				var doc = new fct();
+				doc = doc.jsdoc;
+				check_js_ns("", doc, item, filename);
+				checking_js--;
+				check_end();
+			},1);
 		}
 	});
+}
+function check_js_ns(ns_path, ns, item, filename) {
+	for (var name in ns.content) {
+		var elem = ns.content[name];
+		if (elem instanceof JSDoc_Namespace) {
+			// check name
+			check_name_small_underscore(name, "Namespace "+ns_path+name, item);
+			// check content
+			check_js_ns(ns_path+name+".", elem, item, filename);
+		} else if (elem instanceof JSDoc_Class) {
+			var i = filename.indexOf(".js");
+			var fname = filename.substring(0,i);
+			if (name != fname && !name.startsWith(fname)) {
+				// not a class corresponding to the filename: must comply
+				check_name_class(name, "Class "+ns_path+name, item);
+			}
+			// check content
+			check_js_ns(ns_path+name+".", elem, item, filename);
+		} else if (elem instanceof JSDoc_Function) {
+			if (name.charAt(0) == '_')
+				check_name_small_then_capital(name.substring(1), "Private Function "+ns_path+name, item);
+			else
+				check_name_small_then_capital(name, "Public Function "+ns_path+name, item);
+		} else if (elem instanceof JSDoc_Value) {
+			if (name.charAt(0) == '_')
+				check_name_small_underscore(name.substring(1), "Private Variable "+ns_path+name, item);
+			else
+				check_name_small_underscore(name, "Public Variable "+ns_path+name, item);
+		}
+	}
+}
+function add_error(item, msg) {
+	var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+msg);
+	items_to_add.push({parent:item,item:e});
+}
+function is_small_letter(letter) {
+	if (letter.toUpperCase() != letter && letter.toLowerCase() == letter)
+		return true;
+	return false;
+}
+function is_capital_letter(letter) {
+	if (letter.toLowerCase() != letter && letter.toUpperCase() == letter)
+		return true;
+	return false;
+}
+function is_letter(letter) {
+	return is_small_letter(letter) || is_capital_letter(letter);
+}
+function is_digit(c) {
+	var code = c.charCodeAt(0);
+	if (code >= "0".charCodeAt(0) && code <= "9".charCodeAt(0))
+		return true;
+	return false;
+}
+function check_name_small_underscore(name, descr, item) {
+	if (!is_small_letter(name.charAt(0))) {
+		add_error(item, descr+": Must start with a small letter");
+		return;
+	}
+	for (var i = 1; i < name.length; ++i) {
+		var c = name.charAt(i);
+		if (c != '_' && !is_small_letter(c) && !is_digit(c)) {
+			add_error(item, descr+": Must contain only small letters, digits, and underscore between words");
+			return;
+		}
+	}
+}
+function check_name_class(name, descr, item) {
+	if (!is_capital_letter(name.charAt(0))) {
+		add_error(item, descr+": Must start with a capital letter");
+		return;
+	}
+	for (var i = 1; i < name.length; ++i) {
+		var c = name.charAt(i);
+		if (!is_letter(c) && !is_digit(c)) {
+			add_error(item, descr+": Must contain only letters or digits");
+			return;
+		}
+	}
+}
+function check_name_small_then_capital(name, descr, item) {
+	if (!is_small_letter(name.charAt(0))) {
+		add_error(item, descr+": Must start with a small letter");
+		return;
+	}
+	for (var i = 1; i < name.length; ++i) {
+		var c = name.charAt(i);
+		if (!is_letter(c) && !is_digit(c)) {
+			add_error(item, descr+": Must contain only letters or digits");
+			return;
+		}
+	}
 }
 function clean_files(files) {
 	for (var i = 0; i < files.length; ++i) {
@@ -77,19 +185,23 @@ function clean_files(files) {
 clean_files(files);
 build_tree(tr, files, "");
 
+function check_end() {
+	if (todo.length == 0 && in_progress == 0 && checking_js == 0) {
+		unlock_screen(locker);
+		var item = new TreeItem(""+items_to_add.length+" problem(s)");
+		tr.insertItem(item, 0);
+		for (var i = 0; i < items_to_add.length; ++i)
+			items_to_add[i].parent.addItem(items_to_add[i].item);
+	}
+}
+
 var in_progress = 0;
 var total_todo = 0;
 function next_todo() {
 	var pc = Math.floor((total_todo-todo.length-in_progress)*100/total_todo);
 	set_lock_screen_content(locker, "Checking code... ("+pc+"%, "+items_to_add.length+" problem(s) found)");
 	if (todo.length == 0) {
-		if (in_progress == 0) {
-			unlock_screen(locker);
-			var item = new TreeItem(""+items_to_add.length+" problem(s)");
-			tr.insertItem(item, 0);
-			for (var i = 0; i < items_to_add.length; ++i)
-				items_to_add[i].parent.addItem(items_to_add[i].item);
-		}
+		check_end();
 		return;
 	}
 	in_progress++;

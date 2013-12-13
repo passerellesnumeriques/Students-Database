@@ -19,6 +19,7 @@ public class JavaScriptDocGenerator {
 			File out = new File(args[1]);
 			if (args.length > 2) {
 				File f = new File(www, args[2]);
+				System.out.println("Parsing file "+f.getAbsolutePath());
 				FileInputStream in = new FileInputStream(f);
 				byte[] buf = new byte[100000];
 				int nb = in.read(buf);
@@ -41,6 +42,7 @@ public class JavaScriptDocGenerator {
 				}
 			}
 			global.evaluate();
+			System.out.println("Generating output");
 			out.delete();
 			out.createNewFile();
 			FileOutputStream fout = new FileOutputStream(out);
@@ -48,8 +50,9 @@ public class JavaScriptDocGenerator {
 			fout.write(global.generate("  ").getBytes());
 			fout.write(";".getBytes());
 			fout.close();
-		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println("Documentation generated.");
+		} catch (Throwable e) {
+			e.printStackTrace(System.out);
 		}
 	}
 	

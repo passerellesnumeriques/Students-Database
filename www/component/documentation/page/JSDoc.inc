@@ -6,8 +6,10 @@ class JSDoc {
 		$filename = tempnam(sys_get_temp_dir(), "pn");
 		unlink($filename);
 		set_time_limit(120);
-		$www_path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]));
-		$tools_path = realpath("component/documentation/tools");
+		$www_path = str_replace("\\","/",realpath(dirname($_SERVER["SCRIPT_FILENAME"])));
+		$tools_path = str_replace("\\","/",realpath("component/documentation/tools"));
+		$file = str_replace("\\","/",$file);
+		session_write_close();
 		exec("java.exe -cp \"$tools_path/rhino/bin;$tools_path/javascript_doc/bin\" org.pn.jsdoc.JavaScriptDocGenerator \"$www_path\" \"$filename\" \"$file\"");
 		$jsdoc = file_get_contents($filename);
 		unlink($filename);
