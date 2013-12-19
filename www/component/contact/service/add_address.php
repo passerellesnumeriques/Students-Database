@@ -24,43 +24,37 @@ class service_add_address extends Service {
 	public function output_documentation() { echo "<code>id</code> the id of the address created"; }
 	
 	public function execute(&$component, $input) {
-		require_once("component/data_model/Model.inc");
-		$table = DataModel::get()->getTable($input["table"]);
-		if (!$table->acceptInsert(array($input["column"]=>$input["key"]))) {
-			PNApplication::error("You are not allowed to add an address for this people or organization");
-			echo "false";
-			return;
-		}
-		try {
-			$address_id = SQLQuery::create()->bypass_security()->insert("Postal_address", 
-				array(
-					"country"=>$input["country"],
-					"geographic_area"=>$input["geographic_area"],
-					"street"=>$input["street"],
-					"street_number"=>$input["street_number"],
-					"building"=>$input["building"],
-					"unit"=>$input["unit"],
-					"additional"=>$input["additional"],
-					"address_type"=>$input["address_type"]
-				)
+		if(isset($input["table"]) && isset($input["key"])){
+			$address_id = false;
+			$new_address = array(
+				"country" => $input["country"],
+				"street_number" => $input["street_number"],
+				"building" => $input["building"],
+				"unit" => $input["unit"],
+				"additional" => $input["additional"],
+				"address_type" => $input["address_type"],
 			);
-		} catch (Exception $ex) {
-			$address_id = 0;
-			PNApplication::error($ex);
-		}
-		if ($address_id == 0) {
-			echo "false";
-			return;
-		}
-		try {
-			SQLQuery::create()->insert($input["table"], array($input["column"]=>$input["key"],"address"=>$address_id));
-		} catch (Exception $ex) {
-			PNApplication::error($ex);
-			SQLQuery::create()->remove_key("Postal_address", $address_id);
-			echo "false";
-			return;
-		}
-		echo "{id:".$address_id."}";
+			
+			if(isset($input["street_name"]))
+				$new_address["street"] = $input["street_name"];
+			else if(isset($input["street"]))
+				$new_address["street"] = $input["street"];
+			else
+				$new_address["street"] = null;
+				
+			if(isset($input["geographic_area"]) && isset($input["geographic_area"]["id"]))
+				$new_address["geographic_area"] = $input["geographic_area"]["id"];
+			else
+				$new_address["geographic_area"] = null;
+				
+			if($input["table"] == "Organization_address")
+				$address_id = PNApplication::$instance->contact->add_address_to_organization($input["key"],$new_address);
+			else if($input["table"] == "People_address")
+				$address_id = PNApplication::$instance->contact->add_address_to_people($input["key"],$new_address);
+			if($address_id == false)
+				echo "false";
+			else echo "{id:".$address_id."}";
+		} else echo "false";
 	}
 }
 ?>

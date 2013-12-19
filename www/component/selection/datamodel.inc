@@ -11,15 +11,21 @@
 		
 	$sm = $model->addSubModel("SelectionCampaign");
 	
+	$sm->addDataCategoryLink("Information Session profile", "/dynamic/selection/page/IS_profile?id=%Information_session.id%", "/static/selection/IS_16.png");
+	
 	$sm->addTable("Information_session")
 		->addPrimaryKey("id")
-		->addForeignKey("date","CalendarEvent",false,false,true,true)
-		->addForeignKey("postal_address","Postal_address",true,false,true,true)
+		->addForeignKey("date","CalendarEvent",false,true,true,true)
+		->addForeignKey("postal_address","Postal_address",false,true,true,true)
 		//This field exists in case the user wants to set an address but no host partner
 		// In case a host partner is choosen, this field must be set to null
-		->addForeignKey("fake_organization","Organization",true,false,false,true)
+		->addForeignKey("fake_organization","Organization",false,false,false,false)
 		//This field is set to link the custom postal address to an organization
 		//Otherwize, the filter of the "contact" component datamodel wont let the user see/manage the address
+		//Because of the reading filter of organization (if fake, cannot be read!),
+		//the fake organization must be removed manually (must use bypass_security method)
+		//so the the remove_primary_when_foreign_removed is set to false
+		
 		->addInteger("number_boys_expected",10)
 		->addInteger("number_girls_expected",10)
 		->addInteger("number_boys_real",10)
@@ -28,7 +34,17 @@
 		->addWriteAccess("edit_information_session",true)
 		->addReadAccess("see_information_session_details",true)
 		->addInsertAccess("manage_information_session",true)
-		->addRemoveAccess("manage_information_session",true);
+		->addRemoveAccess("manage_information_session",true)
+		->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Information Session","Information Session",
+			array(
+				"name" => "Name",
+				"date" => "Date"
+			),
+			array(
+				"name" => array("not_editable"),
+				"date" => array("not_editable")
+			),"selection"
+		));
 		
 	$sm->addTable("Information_session_partner")
 		->addForeignKey("information_session","Information_session",true,false,true,false)

@@ -221,13 +221,13 @@ class selection extends Component implements OrganizationPlugin {
 	}
 	
 	/**
-	 * @method save_IS
+	 * @method saveIS
 	 * Update or create an information_session into the database
 	 * @param {integer} $id the id of the IS in case of an update
 	 * @param []{string} the fields to update/insert
 	 * @return $id the id generated in case of an insert
 	 */
-	public function save_IS($id, $fields_values){
+	public function saveIS($id, $fields_values){
 		if(isset($id) && $id <> null){
 			// This is an update
 			SQLQuery::create()->update_by_key("Information_session",$id,$fields_values);
@@ -237,6 +237,64 @@ class selection extends Component implements OrganizationPlugin {
 			$id = SQLQuery::create()->insert("Information_session",$fields_values);
 			return $id;
 		}
+	}
+	
+	public function removeAllISPartners($IS_id){
+		$partners = SQLQuery::create()->select("Information_session_partner")
+				->field("organization")
+				->where_value("Information_session_partner","information_session",$IS_id)
+				->execute();
+		if(isset($partners[0]["organization"])){
+			foreach($partners as $p)
+				SQLQuery::create()->remove_keys("Information_session_partner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
+		}
+	}	
+	
+	public function removeAllISContactPoints($IS_id){
+		$contact_point = SQLQuery::create()->select("Information_session_contact_point")
+				->field("organization")
+				->field("people")
+				->where_value("Information_session_contact_point","information_session",$IS_id)
+				->execute();
+		if(isset($contact_point[0]["organization"])){
+			foreach($contact_point as $c)
+				SQLQuery::create()
+				->remove_keys("Information_session_contact_point",
+				array(
+					array("information_session" => $IS_id, "organization" => $c["organization"], "people" => $c["people"])
+				));
+		}
+	}
+	
+	public function insertISPartners($rows){
+		SQLQuery::create()->insert_multiple("Information_session_partner",$rows);
+	}
+	
+	public function insertISContactPoints($rows){
+		SQLQuery::create()->insert_multiple("Information_session_contact_point",$rows);
+	}
+	
+	public function removeIS($id, $fake_organization){
+	$this->removeFakeOrganization($id, $fake_organization);
+	SQLQuery::create()->remove_key("Information_session",$id);
+	if(PNApplication::has_errors())
+		return;
+	else
+		return true;
+	}
+	
+	private function removeFakeOrganization($IS_id, $fake_organization){
+		//check the fake_organization matches with the one set in the IS
+		$db_fake = SQLQuery::create()->select("Information_session")
+			->field("fake_organization")
+			->execute_single_value();
+		if(isset($db_fake)){
+			if($db_fake == $fake_organization)
+				SQLQuery::create()->bypass_security()->remove_key("Organization",$fake_organization);
+			else
+				PNApplication::error("The given fake_organization(".$fake_organization.") does not match with the one set into the database(".$db_fake.")");
+		} else
+			PNApplication::error("This fake_organization does not exist into the database");
 	}
 	
 	/**
@@ -251,7 +309,7 @@ class selection extends Component implements OrganizationPlugin {
 		$partners_array = array();
 		if($id == -1 || $id == "-1"){
 		//This is a creation
-		$data.= "{id:-1, address:null, date:null, number_expected:null, number_real:null, name:null, partners:[]}";
+		$data.= "{id:-1, address:null, fake_organization:null, date:null, number_boys_expected:null, number_boys_real:null, number_girls_expected:null, number_girls_real:null, name:null, partners:[]}";
 		} else {
 			$IS = SQLQuery::create()
 					->select("Information_session")

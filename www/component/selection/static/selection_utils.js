@@ -1,0 +1,1 @@
+/* All the main selection methods */		findIndexInConfig = function(config, name){		var index = null;		for(var i = 0; i < config.length; i++){			if(config[i].name == name){				index = i;				break;			}		}		return index;	}

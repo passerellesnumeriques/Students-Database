@@ -15,9 +15,21 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 	});
 	
 	t._init = function(){
+		t._setTextFields();
 		t._setTableHeader();
 		t._setTableBody();
 		container.appendChild(t.table);
+	}
+	
+	t._setTextFields = function(){
+		if(t.boys_expected != null)
+			t.text_boys_expected = t.boys_expected;
+		if(t.boys_real != null)
+			t.text_boys_real = t.boys_real;
+		if(t.girls_expected != null)
+			t.text_girls_expected = t.girls_expected;
+		if(t.girls_real != null)
+			t.text_girls_real = t.girls_real;
 	}
 	
 	t._setTableHeader = function(){

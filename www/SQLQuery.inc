@@ -477,7 +477,7 @@ class SQLQuery {
 			}
 			if ($this->count_one_field !== null){
 				if ($first) $first = false; else $sql .= ",";
-				$sql .= " COUNT(`".$this->count_one_field[0]."`.`".$this->count_one_field[1]."`)";
+				$sql .= " COUNT(`".$this->resolve_where_table($this->count_one_field[0])."`.`".$this->count_one_field[1]."`)";
 				if ($this->count_one_field[2] <> null)
 					$sql .= " AS `".$this->count_one_field[2]."`";
 			}
@@ -1259,6 +1259,7 @@ class SQLQuery {
 					$sql .= ")";
 				}
 				SQLQuery::db()->execute($sql);
+				// $t->getSQLName($this->sub_models)
 			}
 		}
 		foreach ($to_update as $update) {
@@ -1297,6 +1298,9 @@ class SQLQuery {
 				}
 			}
 		}
+		// array_push($to_update, array($t->getSQLNameFor($sm),$col->name,$keys));
+		// array_push($to_update, array($t->getSQLName($this->sub_models),$col->name,$keys));
+		
 		if (count($keys) == 0) return; // nothing to do
 			
 		// lock the table to remove
@@ -1365,7 +1369,8 @@ class SQLQuery {
 			$to_remove[$table->getSQLNameFor($sub_model_instance)] = array("keys"=>array(),"key_name"=>$key_name);
 		}
 		foreach ($keys as $key)
-			array_push($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $key);
+			// array_push($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $key);
+			array_push($to_remove[$table->getSQLName($this->sub_models)]["keys"], $key);
 		
 		// search for foreign keys in this table, which may imply other remove
 		$new_remove = array();
@@ -1477,7 +1482,8 @@ class SQLQuery {
 					if (!isset($to_remove[$t->getSQLNameFor($sm)]))
 						$to_remove[$t->getSQLNameFor($sm)] = array("where"=>array());
 					foreach ($keys as $key)
-						array_push($to_remove[$t->getSQLNameFor($sm)]["where"], array($col->name=>$key));
+						// array_push($to_remove[$t->getSQLNameFor($sm)]["where"], array($col->name=>$key));
+						array_push($to_remove[$t->getSQLName($this->sub_models)]["where"], array($col->name=>$key));
 				}
 			} else {
 				if (!$this->bypass_security) {
@@ -1501,7 +1507,8 @@ class SQLQuery {
 				}
 		
 				// we can update
-				array_push($to_update, array($t->getSQLNameFor($sm),$col->name,$keys));
+				// array_push($to_update, array($t->getSQLNameFor($sm),$col->name,$keys));
+				array_push($to_update, array($t->getSQLName($this->sub_models),$col->name,$keys));
 			}
 		}
 	}

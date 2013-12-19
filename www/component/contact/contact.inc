@@ -2,24 +2,51 @@
 require_once("component/people/PeoplePlugin.inc");
 class contact extends Component implements PeoplePlugin {
 	
-	public function add_address_to_organization($organization_id) {
+	public function add_address_to_organization($organization_id,$new_address,$fake = false) {
 		//Check the rights
 		require_once("component/data_model/Model.inc");
 		$table = DataModel::get()->getTable("Organization_address");
-		if (!$table->acceptInsert(array("organization"=>$organization_id))) {
-			PNApplication::error("You are not allowed to add an address for this people or organization");
+		if (!$fake && !$table->acceptInsert(array("organization"=>$organization_id))) {
+			PNApplication::error("You are not allowed to add an address for this organization");
 			return false;
 		} else {
-			$address_id = $this->add_address("Organization_address","Organization",$organization_id);
+			$address_id = $this->add_address("Organization_address","organization",$organization_id,$new_address,$fake);
 			return $address_id;
 		}
 	}
-	public function add_address_to_people($people_id) {
-		
-		
+	public function add_address_to_people($people_id,$new_address,$fake = false) {
+		//Check the rights
+		require_once("component/data_model/Model.inc");
+		$table = DataModel::get()->getTable("People_address");
+		if (!$fake && !$table->acceptInsert(array("people"=>$people_id))) {
+			PNApplication::error("You are not allowed to add an address for this people");
+			return false;
+		} else {
+			$address_id = $this->add_address("People_address","people",$people_id,$new_address,$fake);
+			return $address_id;
+		}
 	}
-	private function add_address($table, $column, $key) {
-		
+	private function add_address($table, $column, $key, $new_address, $bypass) {
+		try {
+			$address_id = SQLQuery::create()->bypass_security()->insert("Postal_address", $new_address);
+		} catch (Exception $ex) {
+			$address_id = 0;
+			PNApplication::error($ex);
+		}
+		if ($address_id == 0) {
+			return false;
+		}
+		try {
+			if($bypass)
+				SQLQuery::create()->bypass_security()->insert($table, array($column=>$key,"address"=>$address_id));
+			else
+				SQLQuery::create()->insert($table, array($column=>$key,"address"=>$address_id));
+		} catch (Exception $ex) {
+			PNApplication::error($ex);
+			SQLQuery::create()->remove_key("Postal_address", $address_id);
+			return false;
+		}
+		return $address_id;
 	}
 	
 	/* functions for PeoplePlugin */
@@ -245,7 +272,8 @@ class contact extends Component implements PeoplePlugin {
 						->field("unit")
 						->field("additional")
 						->field("address_type")
-						->where("id ='".$id."'");
+						// ->where("id ='".$id."'");
+						->where_value("Postal_address","id",$id);
 						
 		$adrs = $q->execute();
 		
@@ -282,7 +310,7 @@ class contact extends Component implements PeoplePlugin {
 						$parent = $ar[0]["parent"];
 					}
 				}
-				$json_address.= "\"";
+				$json_address.= "\"}";
 			} else $json_address.= "null";
 			if(isset($country[0]["name"])) $json_address.= ", country_name:".json_encode($country[0]["name"]);
 			if(isset($country[0]["code"])) $json_address.= ", country_code:".json_encode($country[0]["code"]);

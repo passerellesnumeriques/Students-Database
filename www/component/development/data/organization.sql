@@ -26,9 +26,9 @@ SET time_zone = "+00:00";
 --
 
 INSERT INTO `contact_point` (`organization`, `people`, `designation`) VALUES
-(1, 1, 'chef'),
-(1, 2, 'boss'),
-(3, 3, 'CEO');
+(1, 91, 'chef'),
+(1, 92, 'boss'),
+(3, 93, 'CEO');
 
 --
 -- Dumping data for table `organization`

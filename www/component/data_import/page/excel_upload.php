@@ -16,6 +16,7 @@ class page_excel_upload extends Page {
 		} else
 			$path = $_FILES["excel"]['tmp_name'];
 		require_once("component/lib_php_excel/PHPExcel.php");
+		set_time_limit(120);
 		try {
 			$reader = PHPExcel_IOFactory::createReaderForFile($path);
 			if (get_class($reader) == "PHPExcel_Reader_HTML") throw new Exception();

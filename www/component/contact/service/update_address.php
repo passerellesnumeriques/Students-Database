@@ -1,5 +1,5 @@
 <?php 
-class service_save_address extends Service {
+class service_update_address extends Service {
 	
 	public function get_required_rights() { return array(); }
 	public function documentation() {}

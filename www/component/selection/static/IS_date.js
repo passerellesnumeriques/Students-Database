@@ -161,6 +161,21 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			}
 			pop.show();
 		};
+		var remove_button = document.createElement("div");
+		remove_button.className = "button";
+		remove_button.onclick = function(){
+			// var locker = lock_screen();
+			t._resetTableAndEvent();
+		};
+		remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"' /> Unset date";
+		remove_button.onmouseover = function(){
+			this.innerHTML = "<img src = '"+theme.icons_16.remove_black+"' /> Unset date";
+		};
+		remove_button.onmouseout = function(){
+			this.innerHTML = "<img src = '"+theme.icons_16.remove+"' /> Unset date";
+		};
+		if(t.event.start != null)
+			td.appendChild(remove_button);
 	}
 	
 	t._popSelectAllDay = function(table,pop){
@@ -168,6 +183,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		// if(custom_event) table.appendChild(t._setTrSetCustomEventName());
 		pop.addOkCancelButtons(function(){
 			var day = t.date.getCurrentData();
+			var locker = lock_screen();
 			if(day != null){
 				// t.setEventName();
 				var start_timestamp = t._getStartTimestamp(day);
@@ -175,9 +191,11 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 				t.event.end = start_timestamp + 23*3600 + 59*60 + 59;
 				t.event.all_day = true;
 				pop.close();
-				var locker = lock_screen();
 				t.resetTable(locker);
-			} else error_dialog("You must select a date");
+			} else {
+				t._resetTableAndEvent(locker);
+				pop.close();
+			}
 		});
 	}
 	
@@ -229,6 +247,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		table.appendChild(t._setTrSelectTime());
 		// if(custom_event) table.appendChild(t._setTrSetCustomEventName());
 		pop.addOkCancelButtons(function(){
+			var locker = lock_screen();
 			var day = t.date.getCurrentData();
 			if(day != null){
 				// t.setEventName();
@@ -243,9 +262,11 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 				t.event.end = t.event.start + duration_hours * 60 * 60;
 				t.event.all_day = false;
 				pop.close();
-				var locker = lock_screen();
 				t.resetTable(locker);
-			} else error_dialog("You must select a date");
+			} else {
+				t._resetTableAndEvent(locker);
+				pop.close();
+			}
 		});
 	}
 	
@@ -302,6 +323,13 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		t.table = document.createElement("table");
 		// container.appendChild(t.table);
 		t._init();
+		if(typeof(locker) != "undefined" && locker != null) unlock_screen(locker);
+	}
+	
+	t._resetTableAndEvent = function(locker){
+		container.removeChild(t.table);
+		t.table = document.createElement("table");
+		t._setEventAttribute();
 		if(typeof(locker) != "undefined" && locker != null) unlock_screen(locker);
 	}
 	

@@ -6,8 +6,6 @@ function select_address(container, data, organization_contacts, can_manage){
 	t.address.country_id = null;
 	t.address.country_code = null;
 	t.address.geographic_area = null;
-	// t.address.geographic_area.id = null;
-	// t.address.geographic_area.text = null;
 	t.address.street_name = null;
 	t.address.street_number = null;
 	t.address.building = null;
@@ -35,11 +33,11 @@ function select_address(container, data, organization_contacts, can_manage){
 		var tfoot = document.createElement("tfoot");
 		var host = t.getHostInData();
 		
-		/* One address is set in the data object */
+		/* One address is set in the data object (and exists into the database)*/
 		if(host != null && host.index == null){
 			// get the address object
-			if(t.address.id == null){
-				service.json("contact","get_address",{id:host.index},function(address){
+			if(t.address.id == null && host.id != -1 && host.id != "-1"){
+				service.json("contact","get_address",{id:host.id},function(address){
 					if(!address){		
 						t.address.id = -1;
 					} else {
@@ -139,7 +137,17 @@ function select_address(container, data, organization_contacts, can_manage){
 			data.partners[host.index].host_address = null;
 		}
 		/* Reset t.address */
-		t.address = null;
+			t.address = {};
+			t.address.id = null;
+			t.address.country_id = null;
+			t.address.country_code = null;
+			t.address.geographic_area = null;
+			t.address.street_name = null;
+			t.address.street_number = null;
+			t.address.building = null;
+			t.address.unit = null;
+			t.address.additional = null;
+			t.address.address_type = null;
 		/* Reset the table */
 		t.resetTableAddress(div_locker);
 	}
@@ -298,7 +306,7 @@ function select_address(container, data, organization_contacts, can_manage){
 	t.getHostInData = function(){
 		var host = {};
 		if(data.address != null && data.address != {}){
-			host.id = data.address.id;
+			host.id = data.address;
 			host.index = null;
 		} else if (data.address == null){
 			var found = false;
