@@ -1,5 +1,5 @@
 <?php 
-class service_remove_IS extends Service {
+class service_remove_exam extends Service {
 	
 	public function get_required_rights() { return array(); }
 	public function documentation() {}
@@ -11,8 +11,8 @@ class service_remove_IS extends Service {
 	 * @see Service::execute()
 	 */
 	public function execute(&$component, $input) {
-		if(isset($input["id"]) && isset($input["fake_organization"])){
-			$res = $component->removeIS($input["id"], $input["fake_organization"]);
+		if(isset($input["id"])){
+			$res = $component->removeExam($input["id"]);
 			if($res)
 				echo "true";
 			else

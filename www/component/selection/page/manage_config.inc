@@ -37,6 +37,14 @@ function manage_config(&$page,$container_id){
 	?>
 	<script type='text/javascript'>
 	function <?php echo $fct_name; ?>(){
+		var t = this;
+		require([["typed_field.js","field_date.js"],"popup_window.js"],function(){
+			if(typeof(container) == "object")
+				t._init();
+		});
+		t.categories = getConfigCategoryIndexes();
+		t.dependencies = {};
+		t.date_fields = []; //contains all the existing fields_date
 		var campaign_id = <?php echo $campaign_id.";"; ?>
 		var lock_id = <?php echo $lock_id.";";?>
 		var rights = {};
@@ -46,27 +54,37 @@ function manage_config(&$page,$container_id){
 		
 		var campaigns = <?php echo(PNApplication::$instance->components["selection"]->get_json_campaigns().";"); ?>
 		
-		/* Create an object all_configs = [{name:, text:, default_value:, values:[]}] */
+		/* Create an object all_configs = [{name:, text:, default_value:, values:[], category:, dependencies:[{name:, value:},...]}] */
 		var all_configs = <?php
 		echo "[";
 		$first = true;
-		foreach($all_configs as $all_config){
+		foreach($all_configs as $name => $data){
 			if(!$first) echo ", ";
 			$first = false;
-			echo "{name:".json_encode($all_config[0]);
+			echo "{name:".json_encode($name);
 			echo ", ";
-			echo "text:".json_encode($all_config[1]);
+			echo "text:".json_encode($data[0]);
 			echo ", ";
-			echo "default_value:".json_encode($all_config[2]);
+			echo "default_value:".json_encode($data[1]);
 			echo ", ";
-			echo "type:".json_encode($all_config[4]);
+			echo "type:".json_encode($data[3]);
 			echo ", ";
 			echo "values:[";
 			$first_value = true;
-			foreach($all_config[3] as $default_value){
+			foreach($data[2] as $default_value){
 				if(!$first_value) echo ", ";
 				$first_value = false;
 				echo json_encode($default_value);
+			}
+			echo "]";
+			echo ",category:".json_encode($data[4]).",";
+			echo "dependencies:[";
+			$first_d = true;
+			foreach($data[5] as $d_name => $d_value){
+				if(!$first_d)
+					echo ", ";
+				$first_d = false;
+				echo "{name:".json_encode($d_name).",value:".json_encode($d_value)."}";
 			}
 			echo "]";
 			echo "}";
@@ -96,36 +114,55 @@ function manage_config(&$page,$container_id){
 		 * Check that the user can manage a selection campaign
 		 * if yes, run the createTable method
 		 */
-		config.init = function(){
+		t._init = function(){
 			if(!rights.manage){
 				var div = document.createElement("div");
 				div.innerHTML = "You are not allowed to edit the configuration of this campaign";
 				div.style.fontStyle = "italic";
 				div.style.color = "red";
 				container.appendChild(div);
-			} else this.createTable();
+			} else {
+				this._setDependencies();
+				this._createTable();
+			}
+		}
+		
+		t.reset = function(){
+			//reset tbody
+			t.table.removeChild(t.tbody);
+			delete t.tbody;
+			//reset t.date_fields
+			delete t.date_fields;
+			t.date_fields = [];
+			t.tbody = document.createElement("tbody");
+			t._setBody();
+			t.table.appendChild(t.tbody);
+		}
+		
+		t._setDependencies = function(){
+			for(var i = 0; i < all_configs.length; i++){
+				if(all_configs[i].dependencies.length > 0){
+					t.dependencies[all_configs[i].name] = all_configs[i].dependencies;
+				}
+			}
 		}
 		
 		/**
 		 * @method createTable
 		 * Creates the manage_config string
 		 */
-		config.createTable = function(){
-			var table = document.createElement("table");
+		t._createTable = function(){
+			t.table = document.createElement("table");
 			var theader = document.createElement("theader");
-			var tbody = document.createElement("tbody");
-			var ul = document.createElement("ul");
+			t.tbody = document.createElement("tbody");
 			var tfoot = document.createElement("tfoot");
-			var form = document.createElement("form");
-			config.setHeader(theader);
-			config.setBody(tbody);
-			config.setFoot(tfoot);
-			table.appendChild(theader);
-			table.appendChild(tbody);
-			table.appendChild(tfoot);
-			ul.appendChild(table);
-			form.appendChild(ul);
-			container.appendChild(form);
+			t._setHeader(theader);
+			t._setBody();
+			t._setFoot(tfoot);
+			t.table.appendChild(theader);
+			t.table.appendChild(t.tbody);
+			t.table.appendChild(tfoot);
+			container.appendChild(t.table);
 		}
 		
 		/**
@@ -133,7 +170,7 @@ function manage_config(&$page,$container_id){
 		 * @param theader the table header to set
 		 * Create the header of the page
 		 */
-		config.setHeader = function (theader){
+		t._setHeader = function (theader){
 			var div = document.createElement('div');
 			div.innerHTML = "<img src='"+theme.icons_32.config+"' /> Selection Campaign Configuration";
 			div.style.fontSize = "x-large";
@@ -143,79 +180,159 @@ function manage_config(&$page,$container_id){
 		
 		/**
 		 * @method setBody
-		 * @param tbody te tbody to set
 		 * Call the method addRow for each config attribute set in the all_config objects
 		 * Call the addButtonsRenameDelete at the end
 		 */
-		config.setBody = function(tbody){		
-			for(var i = 0; i < all_configs.length; i++){
-				config.addRow(i, tbody);
+		t._setBody = function(){	
+			t._setCategoriesOrdered();
+			for(var category_index = 0; category_index < t.ordered.length; category_index++){
+				//create a table for each category
+				var table = document.createElement("table");
+				var th = document.createElement("th");
+				th.colSpan = 2;
+				th.style.textAlign = "left";
+				var tr = document.createElement("tr");
+				var ul = document.createElement("ul");
+				tr.appendChild(th);
+				table.appendChild(tr);
+				th.innerHTML = t.ordered[category_index].uniformFirstLetterCapitalized();
+				for(var i = 0; i < all_configs.length; i++){
+					if(all_configs[i].category == t.ordered[category_index])
+						t._addRowToCategoryTable(all_configs[i].name,ul);
+				}
+				table.appendChild(ul);
+				t.tbody.appendChild(table);
 			}
-			config.addButtonsRenameDelete(tbody);
+			t._addButtonsRenameDelete();
 		}
 		
-		/**
-		 * @method addRow
-		 * @param {integer} index the index of the config attribute (in the all_configs object) that will be managed on this row
-		 * @param tbody the tbody in which this method will add a row
-		 * In case the current config attribute is a boolean, a checkbox is created
-		 * Otherwise, a select is created, containing all the options set ine the all_configs object
-		 * The row generated is set according to the config set into the database
-		 */
-		config.addRow = function(index, tbody){
-			var tr = document.createElement("tr");
-			var td1 = document.createElement("td");
-			var td2 = document.createElement("td");
-			var li = document.createElement("li");
-			li.innerHTML = all_configs[index].text;
-			td1.appendChild(li);
-			var config_index = config.findIndex(all_configs[index].name);
-			/* If the type is boolean, create a checkbox */
-			if(all_configs[index].type == "boolean"){
-				var check = document.createElement("input");
-				check.type = "checkbox";
-				check.value = true;
-				check.name = all_configs[index].name;
-				/* Set the current config */
-				//config_index cannot be null because at least all the config parameters are set to default value
-				if(config[config_index].value == true) check.checked = true;
-				else check.checked = false;
-				
-				check.onchange = function(){
-					/* We update the config object */
-					config[config_index].value = check.checked;
-				};
-				
-				td2.appendChild(check);
-			}
-			/* Else create a select */
-			else{
-				var select = document.createElement("select");
-				for(var i = 0; i < all_configs[index].values.length; i++){
-					var option = document.createElement("option");
-					option.value = all_configs[index].values[i];
-					option.text = all_configs[index].values[i];
-					if(config[config_index].value == all_configs[index].values[i]) option.selected = true;
-					select.appendChild(option);
+		t._setCategoriesOrdered = function(){
+			t.ordered = [];
+			for(var i = 0; i < t.categories.length; i++)
+				t.ordered[i] = t.categories[t._findCategoryIndex(i+1)].name;
+		}
+		
+		t._findCategoryIndex = function(index){
+			var index_in_categories = null;
+			for(var i = 0; i < t.categories.length; i++){
+				if(index == t.categories[i].index){
+					index_in_categories = i;
+					break;
 				}
-				select.onchange = function(){
-					var option = this.options[this.selectedIndex];
-					config[config_index].value = option.value;
-				};
-				td2.appendChild(select);
 			}
-			tr.appendChild(td1);
-			tr.appendChild(td2);
-			tbody.appendChild(tr);
+			return index_in_categories;
+		}
+		
+		t._addRowToCategoryTable = function(config_name,ul){
+			if(t._allowedByDependencies(config_name)){
+				var tr = document.createElement("tr");
+				var td1 = document.createElement("td");
+				var td2 = document.createElement("td");
+				var li = document.createElement("li");
+				var all_configs_index = t._findAllConfigIndex(config_name);
+				li.innerHTML = all_configs[all_configs_index].text;
+				td1.appendChild(li);
+				var config_index = findIndexInConfig(config, config_name);
+				if(all_configs[all_configs_index].type == "boolean"){
+					var check = document.createElement("input");
+					check.type = "checkbox";
+					check.value = true;
+					check.name = all_configs[all_configs_index].name;
+					/* Set the current config */
+					/*config_index cannot be null because at least all the config parameters are set to default value*/
+					if(config[config_index].value == true)
+						check.checked = true;
+					else
+						check.checked = false;
+					check.onchange = function(){
+						/* We update the config object */
+						config[config_index].value = check.checked;
+						if(t._isTargetedByDependencies(this.name))
+							t.reset(); //may have allowed | forbidden some other fields
+					};
+					td2.appendChild(check);
+				} else if(all_configs[all_configs_index].type == "enum"){
+					var select = document.createElement("select");
+					for(var i = 0; i < all_configs[all_configs_index].values.length; i++){
+						var option = document.createElement("option");
+						option.value = all_configs[all_configs_index].values[i];
+						option.text = all_configs[all_configs_index].values[i];
+						if(config[config_index].value == all_configs[all_configs_index].values[i])
+							option.selected = true;
+						select.appendChild(option);
+					}
+					select.onchange = function(){
+						var option = this.options[this.selectedIndex];
+						config[config_index].value = option.value;
+					};
+					td2.appendChild(select);
+				} else if(all_configs[all_configs_index].type == "date"){
+					//add the field_date to the t.date_fields array
+					var index = t.date_fields.length;
+					t.date_fields[index] = {};
+					t.date_fields[index].field_date = new field_date(config[config_index].value,true);
+					t.date_fields[index].config_name = config_name;
+					td2.appendChild(t.date_fields[index].field_date.getHTMLElement());
+				}
+				tr.appendChild(td1);
+				tr.appendChild(td2);
+				ul.appendChild(tr);
+			}
+		}
+		
+		t._findAllConfigIndex = function(name){
+			var index = null;
+			for(var i = 0; i < all_configs.length; i++){
+				if(all_configs[i].name == name){
+					index = i;
+					break;
+				}
+			}
+			return index;
+		}
+		
+		t._allowedByDependencies = function(name){
+			var allowed = true;
+			if(t._hasDependencies(name)){
+				for(var i = 0; i < t.dependencies[name].length; i++){
+					var index = findIndexInConfig(config, t.dependencies[name][i].name);
+					if(config[index].value != t.dependencies[name][i].value){
+						allowed = false;
+						break;
+					}
+				}
+			}
+			return allowed;
+		}
+		
+		t._hasDependencies = function(name){
+			if(typeof(t.dependencies[name]) != "undefined")
+				return true;
+			else
+				return false;
+		}
+		
+		t._isTargetedByDependencies = function(name){
+			var is_targeted = false;
+			for(var i = 0; i < all_configs.length; i++){
+				if(t._hasDependencies(all_configs[i].name)){
+					for(var j = 0; j < t.dependencies[all_configs[i].name].length; j++){
+						if(t.dependencies[all_configs[i].name][j].name == name){
+							is_targeted = true;
+							break;
+						}
+					}
+				}
+			}
+			return is_targeted;
 		}
 		
 		/**
 		 * @method addButtonsRenameDelete
-		 * @param tbody
-		 * Create two buttons at the end of the tbody object
+		 * Create two buttons at the end of the t.tbody object
 		 * One is to Rename the current campaign, the other one is to Delete it
 		 */
-		config.addButtonsRenameDelete = function(tbody){
+		t._addButtonsRenameDelete = function(){
 			var tr = document.createElement("tr");
 			var td1 = document.createElement("td");
 			var td2 = document.createElement("td");
@@ -230,14 +347,14 @@ function manage_config(&$page,$container_id){
 			div_remove.style.fontStyle = "italic";
 			div_remove.style.fontWeight = "bold";
 			div_remove.style.color = "#808080";
-			div_remove.onclick = function(){config.dialogRemoveCampaign()};
+			div_remove.onclick = function(){t._dialogRemoveCampaign()};
 			
 			div_add.innerHTML = "Rename campaign";
 			div_add.style.fontStyle = "italic";
 			div_add.style.fontWeight = "bold";
 			div_add.style.color = "#808080";
 			div_add.className = "button";
-			div_add.onclick = function(){config.dialogRename();}
+			div_add.onclick = function(){t._dialogRename();}
 			
 			div_total.appendChild(div_add);
 			div_total.appendChild(div_remove);
@@ -247,7 +364,7 @@ function manage_config(&$page,$container_id){
 			//td2.appendChild(div_remove);
 			tr.appendChild(td1);
 			tr.appendChild(td2);
-			tbody.appendChild(tr);
+			t.tbody.appendChild(tr);
 		}
 		
 		/**
@@ -273,7 +390,7 @@ function manage_config(&$page,$container_id){
 		 * If not, call the renameCampaign method after uniformizing the case
 		 * The screen is locked by the lock_screen method while the service was not executed
 		 */ 
-		config.dialogRename = function(){
+		t._dialogRename = function(){
 			input_dialog(theme.icons_16.question,
 							"Rename the current selection campaign",
 							"Enter the new name of the selection campaign.<br/><i>You will be redirected after submitting<br/><b>All the unsaved configurations will be lost!</b></i>",
@@ -289,7 +406,7 @@ function manage_config(&$page,$container_id){
 							function(text){
 								if(text){
 									var div_locker = lock_screen();
-									config.renameCampaign(text.uniformFirstLetterCapitalized(),div_locker);
+									t._renameCampaign(text.uniformFirstLetterCapitalized(),div_locker);
 								}
 							}
 				);
@@ -299,11 +416,11 @@ function manage_config(&$page,$container_id){
 		 * @method dialogRemoveCampaign
 		 * Popup a confirm_dialog. If the user answers yes, lock the screen and call the remove campaign method
 		 */
-		config.dialogRemoveCampaign = function(){
+		t._dialogRemoveCampaign = function(){
 			confirm_dialog("Are you sure you want to remove this campaign?<br/><i><b>All the related data will be removed</i></b>",function(res){
 				if(res){
 					var div_locker = lock_screen();
-					config.removeCampaign(div_locker);
+					t._removeCampaign(div_locker);
 				}
 			});
 		}
@@ -314,7 +431,7 @@ function manage_config(&$page,$container_id){
 		 * @param div_locker the id returned by the lock_screen function called by the dialogRename method
 		 * Call the service set_campaign_name, unlock the screen, and reload the page in the case of no error was generated by the service
 		 */
-		config.renameCampaign = function(name, div_locker){
+		t._renameCampaign = function(name, div_locker){
 			service.json("selection","set_campaign_name",{id:campaign_id, name:name},function(res){
 				if(!res){
 					unlock_screen(div_locker);
@@ -330,7 +447,7 @@ function manage_config(&$page,$container_id){
 		 * @param div_locker the id returned by the lock_screen function called by the dialogRemoveCampaign method
 		 * Call the service remove_campaign, unlock the screen, and reload the page in the case of no error was generated by the service
 		 */
-		config.removeCampaign = function(div_locker){
+		t._removeCampaign = function(div_locker){
 			service.json("selection","remove_campaign",{id:campaign_id},function(res){
 				if(!res){
 					unlock_screen(div_locker);
@@ -342,37 +459,26 @@ function manage_config(&$page,$container_id){
 		}
 		
 		/**
-		 * @method findIndex
-		 * @param {string} name
-		 * Look for the given config attribute into the config object, and return its index
-		 * @return index
-		 */
-		config.findIndex = function(name){
-			var index = null;
-			for(var i = 0; i < config.length; i++){
-				if(config[i].name == name){
-					index = i;
-					break;
-				}
-			}
-			return index;
-		}
-		
-		/**
 		 * @method setFoot
 		 * @param tfoot the tfoot to set
 		 * Add the save button into the given footer
 		 */
-		config.setFoot = function(tfoot){
+		t._setFoot = function(tfoot){
 			var submit = document.createElement("div");
 			submit.innerHTML = "<img src='"+theme.icons_16.save+"' /> Save";
 			submit.style.fontWeight = "bold";
 			submit.className = "button";
 			submit.onclick = function(){
-				config.save();
+				t._save();
 				return false;
 			};
 			tfoot.appendChild(submit);
+			// var div = document.createElement("div");
+			// div.innerHTML = "alert config";
+			// div.onclick = function(){
+				// alert(service.generate_input(config));
+			// };
+			// tfoot.appendChild(div);
 		}
 		
 		/**
@@ -380,23 +486,32 @@ function manage_config(&$page,$container_id){
 		 * Method called when clicking on the save button
 		 * Locks the screen, calls the save_config service, and popup a message when it is saved, then unlock the screen
 		 */
-		config.save = function(){
-			var div_locker = lock_screen();
-			service.json("selection","save_config",{fields:config}, function(res){
-				if(!res){
+		t._save = function(){
+			/* Get the data from all the field_dates */
+			var errors = false;
+			for(var i = 0; i < t.date_fields.length; i++){
+				var index = findIndexInConfig(config,t.date_fields[i].config_name);
+				var value = t.date_fields[i].field_date.getCurrentData();
+				if(value == null)
+					errors = true;
+				else
+					config[index].value = value;
+			}
+			if(errors)
+				error_dialog("Please check that all the dates fields are fulfilled");
+			else {
+				var div_locker = lock_screen();
+				service.json("selection","save_config",{fields:config}, function(res){
 					unlock_screen(div_locker);
-					return;
-				}
-				require("popup_window.js",function() {
-					var p = new popup_window("", theme.icons_16.info, "The new configuration has been succesfully saved");
+					if(!res){
+						error_dialog("An error occured, your informations were not saved");
+						return;
+					}
+					var p = new popup_window("Saved!", theme.icons_16.info, "The new configuration has been succesfully saved");
 					p.show();
-					unlock_screen(div_locker);
-					// setTimeout(p.close(),3500);
 				});
-			});
+			}
 		}
-		
-		if(typeof(container) == "object") config.init();
 	}
 	//Start the process
 	<?php echo $fct_name; ?>();

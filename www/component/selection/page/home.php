@@ -11,8 +11,8 @@ class page_home extends Page {
 		$this->add_javascript("/static/widgets/frame_header.js");
 		$this->onload("new frame_header('selection_page');");
 		$rights = array();
-		$rights['manage'] = PNApplication::$instance->components["user_management"]->has_right("manage_selection_campaign",true);
 		$rights["read"] = PNApplication::$instance->components["user_management"]->has_right("can_access_selection_data",true);
+		$rights['manage'] = PNApplication::$instance->components["user_management"]->has_right("manage_selection_campaign",true);
 		$campaigns = PNApplication::$instance->components["selection"]->get_campaigns();
 		?>
 		<script type='text/javascript'>

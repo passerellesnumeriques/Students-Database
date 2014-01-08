@@ -1068,7 +1068,7 @@ class SQLQuery {
 	 * @param array|null $sub_models
 	 * @throws Exception in case of error (security or database)
 	 */
-	public function insert_multiple($table, $rows) {
+	public function insert_multiple($table, $rows, $lock_id = null) {
 		require_once("component/data_model/Model.inc");
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
@@ -1085,9 +1085,12 @@ class SQLQuery {
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
-		$lock = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, true);
-		if ($lock == null)
-			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
+		if(!isset($lock_id)){
+			$lock = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, true);
+			if ($lock == null)
+				throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
+		} else
+			$lock = $lock_id;
 		$columns = $t->internalGetColumns($this->sub_models);
 		// validate values
 		foreach ($rows as &$fields_values)

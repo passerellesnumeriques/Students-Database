@@ -79,12 +79,24 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	/** Disable the given button.
 	 * @method popup_window#disableButton
-	 * @param {string} id if of the button to disable
+	 * @param {string} id of the button to disable
 	 */
 	t.disableButton = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i)
 			if (t.buttons[i].id == id)
 				t.buttons[i].disabled = 'disabled';
+	};
+	
+	/** Return true if the given button is disabled
+	 * @method popup_window#getIsDisabled
+	 * @param {string} id of the button
+	 * @return {boolean}
+	 */
+	t.getIsDisabled = function(id) {
+		for (var i = 0; i < t.buttons.length; ++i){
+			if (t.buttons[i].id == id)
+				return t.buttons[i].disabled;
+		}
 	};
 	/** Enable the given button.
 	 * @method popup_window#enableButton
@@ -109,10 +121,14 @@ function popup_window(title,icon,content,hide_close_button) {
 	/** Add 2 buttons to the window: Ok and Cancel. When Cancel is pressed, the window is closed.
 	 * @method popup_window#addOkCancelButtons
 	 * @param {function} onok handler to be called when the Ok button is pressed. 
+	 * @param {function} (optional) oncancel handler to be called when the Cancel button is pressed. 
 	 */
-	t.addOkCancelButtons = function(onok) {
+	t.addOkCancelButtons = function(onok, oncancel) {
 		t.addButton("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Ok", 'ok', onok);
-		t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function() { t.close(); });
+		if(oncancel)
+			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', oncancel);
+		else
+			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function() { t.close(); });
 	};
 	/** Add 2 buttons to the window: Yes and No. When No is pressed, the window is closed.
 	 * @method popup_window#addYesNoButtons

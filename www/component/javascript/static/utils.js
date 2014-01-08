@@ -545,3 +545,18 @@ function setCommonStyleTable(table,th_header,thead_color){
 	th_header.style.width = "100%";
 	setBorderRadius(th_header, 5, 5, 5, 5, 0, 0, 0, 0);
 }
+
+/**
+ * Add an "s" or not to the given word, in case the given figure is greater than 1
+ * @param {string} word the word to set
+ * @param {number} figure
+ * @return the given word with the good spelling
+ */
+function getGoodSpelling(word, figure){
+	if(figure == null)
+		figure = 0;
+	figure = parseFloat(figure);
+	if(figure > 1 && typeof(word) == "string")
+		word += "s";
+	return word;
+}

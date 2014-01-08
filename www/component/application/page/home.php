@@ -12,6 +12,11 @@ TODO: home page<br/><br/>
 <a href="#" onclick="post_data('/dynamic/data_model/page/create_data',{root_table:'Student'});return false;">Create data</a><br/>
 <a href="/dynamic/excel/page/test">Excel</a><br/>
 <a href="/dynamic/selection/page/IS_profile">IS profile</a><br/>
+<a href="/dynamic/selection/page/exam_subject">exam subject</a><br/>
+<a href="/dynamic/students/page/import_students">import student</a><br/>
+<a href="/dynamic/selection/page/custom_import_applicants">import applicants</a><br/>
+<a href="/dynamic/selection/page/create_exam_subject">create exam</a><br/>
+<a href="/dynamic/selection/page/import_exam_subject">Import exam</a><br/>
 <!-- 
 <a href="/dynamic/data_import/page/build_excel_import?import=create_template">Create Excel Import Template</a><br/>
 <a href="#" onclick="post_data('/dynamic/data_model/page/create_data',{icon:'/static/application/icon.php?main=/static/students/student_32.png&small='+theme.icons_16.add+'&where=right_bottom',title:'Create new student',root_table:'Student'});return false;">Create a student</a><br/>

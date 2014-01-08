@@ -1,5 +1,38 @@
 <?php
 require_once("component/contact/OrganizationPlugin.inc");
+
+	/**
+	 * Return an array("add"=>value,"remove"=>value,"update"=>value)
+	 * where the value is set according to the most restrictive one of the parameters
+	 */
+	function getRestrictedRights($restricted_adds,$restricted_removes,$restricted_updates){
+		$rights = array();
+		if(count($restricted_adds) > 0){
+			$rights["add"] = true;
+			$rights["remove"] = true;
+			$rights["update"] = true;
+			foreach($restricted_adds as $r){
+				if(!$r){
+					$rights["add"] = false;
+					break;
+				}
+			}
+			foreach($restricted_removes as $r){
+				if(!$r){
+					$rights["remove"] = false;
+					break;
+				}
+			}
+			foreach($restricted_updates as $r){
+				if(!$r){
+					$rights["update"] = false;
+					break;
+				}
+			}
+		}
+		return $rights;
+	}
+
 class selection extends Component implements OrganizationPlugin {
 	
 	private $campaign_id = null;
@@ -11,6 +44,10 @@ class selection extends Component implements OrganizationPlugin {
 	 * When set, config is an array [["name"=>"value"],[...]]
 	 */
 	private $config = null;
+	/**
+	 * When set, steps is an array [campaign_id => ["name"=>"value",...], ...]
+	 */
+	private static $steps = array();
 	
 	/**
 	 * @method init_request called each time the selection component executes a database query
@@ -60,14 +97,13 @@ class selection extends Component implements OrganizationPlugin {
 		setcookie("selection_campaign",$id,time()+365*24*60*60,"/dynamic/selection/");
 		SQLQuery::set_submodel("SelectionCampaign", $this->campaign_id);
 		/* Set the calendar id attribute */
-		$calendar_id = SQLQuery::create()->select("SelectionCampaign")->field("calendar")->where("id",$id)->execute_single_value();
-		$this->calendar_id = $calendar_id;
+		$this->calendar_id = SQLQuery::create()->select("SelectionCampaign")->field("calendar")->where("id",$id)->execute_single_value();
 	}
 	
 	/**
 	 * @method create_campaign
 	 * @param {string} $name
-	 * Create a campaign in the database, set its config to the default values, set the campaign id
+	 * Create a campaign in the database, set its config to the default values, set the campaign id, set its steps
 	 * Create a calendar for the selection campaign
 	 * @return $campaign_id the id of the campaign created
 	 */
@@ -76,6 +112,7 @@ class selection extends Component implements OrganizationPlugin {
 		$fields = array();
 		$all_configs = include("config.inc");
 		
+		SQLQuery::start_transaction();
 		/* Create a calendar for this campaign */
 		$calendar_id = PNApplication::$instance->calendar->create_shared_calendar($name,array("can_access_selection_data"=>true),array("edit_information_session"=>true));
 		
@@ -87,11 +124,30 @@ class selection extends Component implements OrganizationPlugin {
 			$this->set_campaign_id($campaign_id);
 			
 			/* Insert the default config in the database */
-			foreach($all_configs as $all_config){
-				SQLQuery::create()->insert("Selection_campaign_config",array("name"=>$all_config[0],"value"=>json_encode($all_config[2])));
-			}
-			return $campaign_id;
+			$default_config_rows = array();
+			foreach($all_configs as $name => $data)
+				array_push($default_config_rows,array(
+					"name" => $name,
+					"value" => json_encode($data[1]),
+				));
+			SQLQuery::create()->insert_multiple("Selection_campaign_config",$default_config_rows);
 		}
+		if(PNApplication::has_errors())
+			SQLQuery::cancel_transaction(); //Rollback
+		else {
+			SQLQuery::end_transaction(); //Commit
+			// /*create the steps array dedicated to this campaign in the steps static attribute*/
+			self::initiateSteps($campaign_id);
+		}
+		return $campaign_id;
+	}
+	
+	private static function initiateSteps($campaign_id){
+		self::$steps[$campaign_id] = null;
+	}
+	
+	private static function unsetSteps($campaign_id){
+		unset(self::$steps[$campaign_id]);
 	}
 	
 	/**
@@ -105,7 +161,8 @@ class selection extends Component implements OrganizationPlugin {
 		/* Set the calendar_id to null */
 		$this->calendar_id = null;
 		SQLQuery::create()->remove_key("SelectionCampaign",$id);
-		
+		/* Unset the steps static attribute */
+		self::unsetSteps($id);
 	}
 	
 	/**
@@ -150,6 +207,13 @@ class selection extends Component implements OrganizationPlugin {
 		}
 	}
 	
+	public function getOneConfigAttributeValue($name){
+		$conf = $this->get_config();
+		for($i = 0; $i < count($conf); $i++){
+			if($conf[$i]["name"] == $name)
+				return $conf[$i]["value"];
+		}
+	}
 	/**
 	 * @method save_config
 	 * @param $config an array [name => value]
@@ -171,6 +235,125 @@ class selection extends Component implements OrganizationPlugin {
 		return $to_return;
 	}
 	
+	public static function getSteps(){
+		$campaign_id = PNApplication::$instance->selection->get_campaign_id();
+		if(isset(self::$steps[$campaign_id]) && self::$steps[$campaign_id] <> null)
+			return self::$steps[$campaign_id];
+		else {
+			// initialize steps attribute
+			self::$steps[$campaign_id] = array();
+			$all_steps = include("steps.inc");
+			foreach($all_steps as $name => $data){
+				self::$steps[$campaign_id][$name] = false;
+				// update
+				selection::updateStep($name, $data[1]);
+			}
+					// var_dump(self::$steps);
+			return self::$steps[$campaign_id];
+		}
+	}
+	
+	public function getJsonSteps(){
+		$steps = self::getSteps();
+		$all_steps = include("steps.inc");
+		$json = "[";
+		$first = true;
+		foreach($steps as $name => $value){
+			if(!$first)
+				$json.= ", ";
+			$first = false;
+			$json.= "{name:".json_encode($name).",value:".json_encode($value);
+			$json.= ",text:".json_encode($all_steps[$name][0])."}";
+		}
+		$json .= "]";
+		return $json;
+	}
+	
+	private static function updateStep($name, $table){
+		$campaign_id = PNApplication::$instance->selection->get_campaign_id();
+		//steps attribute cannot be null because this method is only called by getSteps method
+		$r = SQLQuery::create()
+			->bypass_security() //mandatory
+			->select($table)
+			->limit(0,1) //just check if empty or not, no need of more data
+			->execute();
+		if($r <> null)
+			self::$steps[$campaign_id][$name] = true;
+		else
+			self::$steps[$campaign_id][$name] = false;
+	}
+	
+	public static function resetSteps(){
+		//This method must be called by each "save" and "remove" method (save_IS, remove_IS...)
+		$campaign_id = PNApplication::$instance->selection->get_campaign_id();
+		self::$steps[$campaign_id] = null;
+	}
+	
+	public static function canUpdateStep($name){
+		/* This method must be called by each "save" and "remove" method to valid the call, as a last check
+		 * Can also be called before creating a saving page such as exam_subject to temporarly
+		 * update the user rights
+		 */
+		$campaign_id = PNApplication::$instance->selection->get_campaign_id();
+		$can_valid = true;
+		$can_unvalid = true;
+		$steps = self::getSteps(); //use the method in case === null
+		$all_steps = include("steps.inc");
+		$errors_message = "";
+		$first_error = true;
+		$restricted_rights = array();
+		if($steps[$name]){ 
+			/** Check in the dependencies of all the already validated steps
+			 * and give the restricted rights
+			 */
+			$to_check = array();
+			$restricted_adds = array();
+			$restricted_removes = array();
+			$restricted_updates = array();
+			foreach($steps as $step_name => $value){
+				if($value)
+					array_push($to_check,$step_name);
+			}
+			foreach($to_check as $step_name){
+				foreach($all_steps[$step_name][2] as $d){
+					if(isset($d[0]) && $d[0] == $name){
+						if($d[1]){
+							$can_unvalid = false;
+							if($first_error){
+								$errors_message .= "<center>Your rights have been temporarly updated<br/>because the following steps are already validated:<br/></center>";
+								$first_error = false;
+							}
+							$errors_message.= "<i>".$all_steps[$step_name][0]."</i><br/>";
+							if(isset($d[3]["add"]))
+								array_push($restricted_adds, $d[3]["add"]);
+							if(isset($d[3]["remove"]))
+								array_push($restricted_removes, $d[3]["remove"]);
+							if(isset($d[3]["update"]))
+								array_push($restricted_updates, $d[3]["update"]);
+						}
+					}
+				}
+			}
+			$restricted_rights = getRestrictedRights($restricted_adds,$restricted_removes,$restricted_updates);
+			return array($can_valid,$can_unvalid,$errors_message,$restricted_rights);
+		} else {
+			/** Check the dependencies that allow this validation
+			 */
+			$step_data = $all_steps[$name];
+			foreach($step_data[2] as $d){
+				if(isset($d[0]) && $steps[$d[0]] != $d[1]){
+					$can_valid = false;
+					if(!$first_error)
+						$errors_message.="<br/>";
+					$first_error = false;
+					$errors_message.= $d[2];
+				}
+			}
+			return array($can_valid,$can_unvalid,$errors_message,null);
+		}
+	}
+	
+
 	/**
 	 * @method get_json_campaigns
 	 * Get all the campaigns set in the database and return a json_encoded string to be used by a javascript
@@ -228,6 +411,8 @@ class selection extends Component implements OrganizationPlugin {
 	 * @return $id the id generated in case of an insert
 	 */
 	public function saveIS($id, $fields_values){
+		//reset the steps attribute
+		$this->resetSteps();
 		if(isset($id) && $id <> null){
 			// This is an update
 			SQLQuery::create()->update_by_key("Information_session",$id,$fields_values);
@@ -275,12 +460,14 @@ class selection extends Component implements OrganizationPlugin {
 	}
 	
 	public function removeIS($id, $fake_organization){
-	$this->removeFakeOrganization($id, $fake_organization);
-	SQLQuery::create()->remove_key("Information_session",$id);
-	if(PNApplication::has_errors())
-		return;
-	else
-		return true;
+		//reset steps attribute
+		$this->resetSteps();
+		$this->removeFakeOrganization($id, $fake_organization);
+		SQLQuery::create()->remove_key("Information_session",$id);
+		if(PNApplication::has_errors())
+			return;
+		else
+			return true;
 	}
 	
 	private function removeFakeOrganization($IS_id, $fake_organization){
@@ -385,6 +572,358 @@ class selection extends Component implements OrganizationPlugin {
 		}
 		if(!$return_partners_array) return $data;
 		else return array("data" => $data, "partners" => $partners_array);
+	}
+	
+	public function get_json_exam_subject_data($exam_id){
+		$data = SQLQuery::create()
+			->select("Exam_subject")
+			->field("Exam_subject","name","subject_name")
+			->field("Exam_subject","max_score","subject_max_score")
+			->join("Exam_subject","Exam_subject_part",array("id" => "exam_subject"))
+			->field("Exam_subject_part","id","part_id")
+			->field("Exam_subject_part","index","part_index")
+			->field("Exam_subject_part","max_score","part_max_score")
+			->field("Exam_subject_part","name","part_name")
+			->join("Exam_subject_part","Exam_subject_question",array("id" => "exam_subject_part"))
+			->field("Exam_subject_question","id","question_id")
+			->field("Exam_subject_question","index","question_index")
+			->field("Exam_subject_question","max_score","question_max_score")
+			->field("Exam_subject_question","correct_answer","question_correct_answer")
+			->field("Exam_subject_question","choices","question_choices")
+			->where_value("Exam_subject","id",$exam_id)
+			->order_by("Exam_subject_part","id")
+			->execute();
+			
+		$json = "";
+		if(isset($data[0]["subject_name"])){
+			$json.= "{id:".json_encode($exam_id);
+			$json.= ", name:".json_encode($data[0]["subject_name"]);
+			$json.= ", max_score:".json_encode($data[0]["subject_max_score"]);
+			$json.= ", parts:";
+			$no_part = true;
+			foreach($data as $d){
+				if(isset($d["part_id"])){
+					$no_part = false;
+					break;
+				}
+			}
+			if($no_part){
+				$json.= "[]";
+			} else {
+				$json.= "[";
+				$no_question = true;
+				foreach($data as $d){
+					if(isset($d["question_id"])){
+						$no_question = false;
+						break;
+					}
+				}
+				if($no_question){
+					$first = true;
+					foreach($data as $d){
+						if(!$first)
+							$json.= ", ";
+						$first = false;
+						$json.= "{id:".json_encode($d["part_id"]);
+						$json.= ", index:".json_encode($d["part_index"]);
+						$json.= ", name:".json_encode($d["part_name"]);
+						$json.= ", max_score:".json_encode($d["part_max_score"]);
+						$json.= ", questions:[]";
+						$json.= "}";
+					}
+				} else {
+					$current_part = $data[0]["part_id"];
+					$no_question_before = false;
+					$first_part = true;
+					foreach ($data as $d){
+						if($d["part_id"] != $current_part){
+							if($no_question_before){
+								$json.= "]}, ";
+								$no_question_before = false;
+							} else
+								$json.= "}]}, ";
+							$json.= "{id:".json_encode($d["part_id"]);
+							$json.= ", index:".json_encode($d["part_index"]);
+							$json.= ", name:".json_encode($d["part_name"]);
+							$json.= ", max_score:".json_encode($d["part_max_score"]);
+							if(!isset($d["question_id"])){
+								$json.= ", questions:[";
+								$no_question_before = true;
+							} else {
+								$json.= ", questions:[{";
+								$json.= "id:".json_encode($d["question_id"]);
+								$json.= ", index:".json_encode($d["question_index"]);
+								$json.= ", max_score:".json_encode($d["question_max_score"]);
+								$json.= ", correct_answer:".json_encode($d["question_correct_answer"]);
+								$json.= ", choices:".json_encode($d["question_choices"]);
+							}
+						} else {
+							if(!$first_part){
+								$json.= "}, {";
+								$json.= "id:".json_encode($d["question_id"]);
+								$json.= ", index:".json_encode($d["question_index"]);
+								$json.= ", max_score:".json_encode($d["question_max_score"]);
+								$json.= ", correct_answer:".json_encode($d["question_correct_answer"]);
+								$json.= ", choices:".json_encode($d["question_choices"]);
+							} else {
+								$json.= "{";
+								$json.= "id:".json_encode($d["part_id"]);
+								$json.= ", index:".json_encode($d["part_index"]);
+								$json.= ", name:".json_encode($d["part_name"]);
+								$json.= ", max_score:".json_encode($d["part_max_score"]);
+								$json.= ", questions:[";
+								if(!isset($d["question_id"]))
+									$no_question_before = true;
+								else{
+									$json.= "{id:".json_encode($d["question_id"]);
+									$json.= ", index:".json_encode($d["question_index"]);
+									$json.= ", max_score:".json_encode($d["question_max_score"]);
+									$json.= ", correct_answer:".json_encode($d["question_correct_answer"]);
+									$json.= ", choices:".json_encode($d["question_choices"]);
+								}
+							}
+							$first_part = false;
+						}
+						$current_part = $d["part_id"];
+					}
+					if(!$no_question_before)
+						$json.= "}]}";
+					else
+						$json.= "]}";
+				}
+				$json.= "]";
+			}
+			$json.= "}";
+		} else 
+			$json = "{}";
+		return $json;
+	}
+	
+	public function getAllExamSubjectNames(){
+		$names = SQLQuery::create()
+				->select("Exam_subject")
+				->field("name")
+				->execute_single_field();
+		return $names;
+	}
+	
+	public function canManageExamSubjectQuestions(){
+		$error_messages = "";
+		$can_manage = true;
+		$first_error = false;
+		// check the steps
+		$validation_steps = self::canUpdateStep("manage_exam");
+		if(!$validation_steps[0] || !$validation_steps[1]){
+			$can_manage = false;
+			if(!$first_error)
+				$error_messages .= "<br/>";
+			$first_error = false;
+			$error_messages .= $validation_steps[2];
+		}
+		// check the right
+		if(!PNApplication::$instance->user_management->has_right("manage_exam_subject",true)){
+			if(!$first_error)
+				$error_messages .= "<br/>";
+			$first_error = false;
+			$error_messages .= "You are not allowed to manage the exam subject questions";
+		}
+		return array($can_manage, $error_messages);
+	}
+	
+	public function updateExamTopicsForEligibilityRules($parts){
+		// find out the related topics for eligiblity rules
+		//TODO
+	}
+	
+	public function removeExam($exam_id){
+		$parts = null;
+		//check the rights
+		$can_remove = $this->canManageExamSubjectQuestions();
+		if($can_remove[0]){
+			$parts = SQLQuery::create()
+				->select("Exam_subject_part")
+				->field("id")
+				->where_value("Exam_subject_part","id",$exam_id)
+				->execute_single_field();
+			try{
+				SQLQuery::create()->bypass_security()->remove_key("Exam_subject",$exam_id);
+			} catch (Exception $e) {
+				PNApplication::error($e);
+			}
+		} else
+			PNApplication::error($can_remove[1]);
+		if(PNApplication::has_errors())
+			return false;
+		else {
+			//update the topics
+			$this->updateExamTopicsForEligibilityRules(null,$parts);
+			//reset steps
+			self::resetSteps();
+			return true;
+		}
+	}
+	
+	private function updatePartIdInQuestionsRows($parts_ids,$questions_by_part,$parts_indexes){
+		$rows_questions_table = array();
+		for($i = 0; $i < count($parts_indexes); $i++){
+			foreach($questions_by_part[$parts_indexes[$i]] as $q){
+				$q["exam_subject_part"] = $parts_ids[$i];
+				array_push($rows_questions_table,$q);
+			}
+		}
+		return $rows_questions_table;
+	}
+	
+	public function saveExam($exam_id, $rows_exam_table, $rows_parts_table, $questions_by_part, $parts_indexes){
+		// Check the rights
+		$can_update = $this->canManageExamSubjectQuestions();
+		if($can_update[0]){
+			SQLQuery::start_transaction();
+			$has_questions = false;
+			$has_parts = false;
+			if(count($rows_parts_table) > 0)
+				$has_parts = true;
+			if($has_parts){
+				foreach($questions_by_part as $q){
+					if(count($q) > 0){
+						$has_questions = true;
+						break;
+					}
+				}
+			} else
+				$has_questions = false;
+				
+			if($exam_id == -1 || $exam_id == "-1"){
+				// this an insert
+				$exam_id = SQLQuery::create()
+					->insert("Exam_subject",$rows_exam_table);
+				if($has_parts){
+					// update parts exam_subject id
+					foreach($rows_parts_table as &$p)
+						$p["exam_subject"] = $exam_id;
+					// save
+					$new_parts = SQLQuery::create()
+						->insert_multiple("Exam_subject_part",$rows_parts_table);
+					
+					if($has_questions){
+						// update questions exam_part id
+						$rows_questions_table = $this->updatePartIdInQuestionsRows($new_parts,$questions_by_part,$parts_indexes);
+						// insert using bypass_security
+						SQLQuery::create()
+							->bypass_security()
+							->insert_multiple("Exam_subject_question",$rows_questions_table);
+					}
+				}
+			} else {
+				// this is an update
+				SQLQuery::create()
+					->update_by_key("Exam_subject",$exam_id,$rows_exam_table);
+				
+				$had_parts = false;
+				$had_questions = false;
+				// get the old parts id and old questions id
+				$old_parts = SQLQuery::create()
+					->select("Exam_subject_part")
+					->field("id")
+					->where_value("Exam_subject_part","exam_subject",$exam_id)
+					->execute_single_field();
+				if(count($old_parts) > 0)
+					$had_parts = true;
+				if($had_parts){
+					$old_questions = SQLQuery::create()
+						->select("Exam_subject_question")
+						->field("id")
+						->where_in("Exam_subject_question","exam_subject_part",$old_parts)
+						->execute_single_field();
+					if(count($old_questions) > 0)
+						$had_questions = true;
+				} else
+					$had_questions = false;
+				//remove parts & questions (linked by the foreign key)
+				if($had_parts)
+					SQLQuery::create()->bypass_security()->remove_keys("Exam_subject_part",$old_parts);
+				//insert parts
+				if($has_parts)
+					$new_parts = SQLQuery::create()
+						->insert_multiple("Exam_subject_part",$rows_parts_table);
+				if($has_questions){
+					// update questions exam_part id
+					$rows_questions_table = $this->updatePartIdInQuestionsRows($new_parts,$questions_by_part,$parts_indexes);
+					// insert using bypass_security
+					SQLQuery::create()
+						->bypass_security()
+						->insert_multiple("Exam_subject_question",$rows_questions_table);
+				}
+				if($had_questions){
+					//update the topics
+					$this->updateExamTopicsForEligibilityRules($new_parts,$old_parts);
+				}
+			}
+			if(PNApplication::has_errors())
+				SQLQuery::cancel_transaction(); //Rollback
+			else
+				SQLQuery::end_transaction(); //Commit
+		} else
+			PNApplication::error($can_update[1]);
+		if(PNApplication::has_errors())
+			return false;
+		else {
+			//reset steps
+			self::resetSteps();
+			// return a new subject object
+			return $this->get_json_exam_subject_data($exam_id);
+		}
+	}
+	
+	private function getAllApplicantIds(){
+		$ids = SQLQuery::create()
+			->bypass_security()
+			->select("Applicant")
+			->field("applicant_id")
+			->execute_single_field();
+		return $ids;
+	}
+	
+	public function externalGetAllApplicantsIds(){
+		// check the rights
+		if(PNApplication::$instance->user_management->has_right("see_applicant_info",true))
+			return $this->getAllApplicantIds();
+		else
+			PNApplication::error("You are not allowed to access to the applicants informations");
+	}
+	
+	/**
+	 * @param {array} ids
+	 * @param {boolean} get_names. If true, in case of an unvalid applicant ID
+	 * will get the last name of the applicant who has the same ID
+	 */
+	// public function validateNewApplicantIds($ids,$get_names,$all_ids = null;){
+		// $all_valids = true;
+		// if(!isset($all_ids))
+			// $all_ids = $this->getAllApplicantIds();
+		// $wrong_ids = array();
+		// foreach($ids as $id){
+			// if(in_array($id,$all_ids)){
+				// $all_valids = false;
+				// $error = array();
+				// $error[0] = $id;
+				// if($get_names){
+					// $name = $this->getNameFromApplicantId($id);
+					// array_push($error,$name);
+				// }
+				// array_push($wrong_ids,$error);
+			// }
+		// }
+		// return array($all_valids,$wrong_ids);
+	// }
+	
+	private function getNameFromApplicantId($applicant_id){
+		return SQLQuery::create()
+		->bypass_security()
+		->select("Applicant")
+		->field("last_name")
+		->where_value("Applicant","applicant_id",$applicant_id)
+		->execute_single_value();
 	}
 	
 	public function getOrganizationCreator() {

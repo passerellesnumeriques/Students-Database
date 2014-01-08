@@ -245,7 +245,7 @@ class service_save_IS extends Service{
 				}
 			}
 			if($insert_IS && $everything_ok){
-				// /*create the IS to get the id*/
+				/*create the IS to get the id*/
 				try{
 					$new_IS_id = prepareDataAndSaveIS($data,true);
 					$data["id"] = $new_IS_id;

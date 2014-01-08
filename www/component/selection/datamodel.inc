@@ -80,3 +80,123 @@
 		->addRemoveAccess("manage_selection_campaign",true)
 		->addWriteAccess("manage_selection_campaign",true)
 		->setPrimary("name");
+		
+	// $sm->addTable("Selection_campaign_steps")
+		// ->addString("name",255,1,false,true)
+		// ->addBoolean("value")
+		// ->addReadAccess("can_access_selection_data",true)
+		// ->addInsertAccess("manage_selection_campaign",true)
+		// ->addRemoveAccess("manage_selection_campaign",true)
+		// No write access. This is the selection component that checks the matching rights of the user, and use bypass_security if the user is allowed
+		// ->setPrimary("name");
+		
+	$sm->addTable("Exam_subject")
+		->addPrimaryKey("id")
+		->addString("name",255,1,false,false) //cannot have two exam with the same name on the same campaign
+		->addDecimal("max_score",10,2,0,null,false,false) // must be calculated
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
+		
+	$sm->addTable("Exam_subject_part")
+		->addPrimaryKey("id")
+		->addForeignKey("exam_subject","Exam_subject",true,false,true,false)
+		->addInteger("index",32,null,null,false,false)
+		->addDecimal("max_score",10,2,0,null,false,false) // must be calculated
+		->addString("name",255,0,false)
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
+		
+	$sm->addTable("Exam_subject_question")
+		->addPrimaryKey("id")
+		->addForeignKey("exam_subject_part","Exam_subject_part",true,false,true)
+		->addInteger("index",32,null,null,false,false) // index of the question in this part(in case the parts index is updated)
+		->addDecimal("max_score",10,2,0,null,false,false) // must be editable
+		->addString("correct_answer") //optional
+		->addString("choices") //optional
+		->addReadAccess("see_exam_subject",true)
+		->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Exam Subject Question", "Exam Subject Question",
+			array(
+				"max_score"=>"Max Score",
+				"correct_answer"=>"Correct Answer",
+				"choices"=>"Choices",
+			)
+		))
+		; 
+		//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...
+		
+	$sm->addTable("Exam_topic_for_eligibility_rule")
+		->addPrimaryKey("id")
+		->addString("name",255,0,false)
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
+		
+	$sm->addTable("Exam_part_topic")
+		->addForeignKey("exam_topic_for_eligibility_rule","Exam_topic_for_eligibility_rule",true,false,true,false)
+		->addForeignKey("exam_subject_part","Exam_subject_part",false,false,true,false)
+		/** can be multiple because can appear in a minimum and a threshold
+		 * Not removed in case the part is removed (because #selection#saveExam method will remove all the parts
+		 * and create new ones each time it is called
+		 * This case is handled by #selection#updateExamTopicsForEligibilityRules method
+		 */
+		->setKey(array("exam_topic_for_eligibility_rule","exam_subject_part"))
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
+		
+	$sm->addTable("Applicant")
+		->addPrimaryKey("id")
+		->addInteger("applicant_id",32,1,null,false,true)//applicant_id must be a number
+		->addString("first_name", 100, 1, false)
+		->addString("middle_name", 100, 1, true)
+		->addString("last_name", 100, 1, false)
+		->addString("khmer_first_name", 100, 1, true)
+		->addString("khmer_last_name", 100, 1, true)
+		->addEnum("sex", array("M","F"),false)
+		->addDate("birth", false)
+		->addBoolean("excluded",false)
+		->addString("exclusion_reason", 100, 1, true)
+		->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Applicant Information", "Applicant Information",
+			array(
+				"first_name"=>"First Name",
+				"middle_name"=>"Middle Name",
+				"last_name"=>"Last Name",
+				"khmer_first_name"=>"Khmer First Name",
+				"khmer_last_name"=>"Khmer Last Name",
+				"sex"=>"Gender",
+				"birth"=>"Birth Date",
+				"applicant_id"=>"Applicant ID",
+				// "excluded"=>"Excluded",
+				// "exclusion_reason"=>"Exclusion Reason",
+			)
+		))
+		->addWriteAccess("manage_applicant_info",true)
+		->addReadAccess("see_applicant_info",true)
+		->addInsertAccess("create_applicant",true)
+		->addRemoveAccess("manage_applicant_info",true);
+		//TODO finish + update steps.inc
+		
+	$sm->addTable("Exam_question_result")
+		->addForeignKey("applicant","Applicant",true,false,true,false)
+		->addForeignKey("exam_subject_question","Exam_subject_question",true,false,true,false)
+		->addString("answer")//optional
+		->addDecimal("score",10,2,0,null,false,false)
+		->setKey(array("applicant","exam_subject_question"));
+		//TODO finish + update steps.inc
+		
+		//TODO Exam_part_result, exam_subject_result (reduce the calculation time for statistics...)
+		
+		
+		
+		
+		
+		
+		
+		
+		
