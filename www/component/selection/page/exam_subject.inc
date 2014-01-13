@@ -1,38 +1,45 @@
 <?php
-function exam_subject(&$page,$container_id,$id,$campaign_id){
+function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only){
 	require_once("component/data_model/Model.inc");
 	$rights = array();
-	$rights["read"] = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
-	$rights["edit"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
-	$rights["remove"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
-	$rights["add"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
-	$old_rights = $rights;
-	// Update according to steps
-	$update_rights = selection::canUpdateStep("manage_exam");
 	$pop_error = false;
-	if(!$update_rights[0] || !$update_rights[1]){
-		if(!$update_rights[0]){
-			//we cannot valid this step, so cannot add an exam
-			$rights["edit"] = false;
-			$rights["remove"] = false;
-			$rights["add"] = false;
-			$pop_error = true;
-		} else if(!$update_rights[1]){
-			//we cannot unvalid this step, and the forbidden actions on exam_subject table are given in update_rights
-			if(!$update_rights[3]["add"])
-				$rights["add"] = false;
-			if(!$update_rights[3]["remove"])
-				$rights["remove"] = false;
-			if(!$update_rights[3]["update"])
+	$update_rights = selection::canUpdateStep("manage_exam");
+	if($read_only){
+		$rights["read"] = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
+		$rights["edit"] = false;
+		$rights["remove"] = false;
+		$rights["add"] = false;
+	} else {
+		$rights["read"] = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
+		$rights["edit"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
+		$rights["remove"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
+		$rights["add"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
+		$old_rights = $rights;
+		// Update according to steps				
+		if(!$update_rights[0] || !$update_rights[1]){
+			if(!$update_rights[0]){
+				//we cannot valid this step, so cannot add an exam
 				$rights["edit"] = false;
-			$pop_error = true;
+				$rights["remove"] = false;
+				$rights["add"] = false;
+				$pop_error = true;
+			} else if(!$update_rights[1]){
+				//we cannot unvalid this step, and the forbidden actions on exam_subject table are given in update_rights
+				if(!$update_rights[3]["add"])
+					$rights["add"] = false;
+				if(!$update_rights[3]["remove"])
+					$rights["remove"] = false;
+				if(!$update_rights[3]["update"])
+					$rights["edit"] = false;
+				$pop_error = true;
+			}
 		}
-	}
-	// In case the rights were not updated, no need to pop an error message
-	foreach($rights as $key => $value){
-		if($old_rights[$key] != $value){
-			$pop_error = true;
-			break;
+		// In case the rights were not updated, no need to pop an error message
+		foreach($rights as $key => $value){
+			if($old_rights[$key] != $value){
+				$pop_error = true;
+				break;
+			}
 		}
 	}
 	

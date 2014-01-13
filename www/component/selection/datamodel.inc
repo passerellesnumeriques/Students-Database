@@ -129,20 +129,36 @@
 		//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...
 		
 	$sm->addTable("Exam_topic_for_eligibility_rule")
+		/**
+		 * As exam topics and exam subject are synchronized by some functionalities,
+		 * the rights must be exactly the same!
+		 */
 		->addPrimaryKey("id")
 		->addString("name",255,0,false)
 		->addWriteAccess("manage_exam_subject",true)
 		->addReadAccess("see_exam_subject",true)
 		->addInsertAccess("manage_exam_subject",true)
 		->addRemoveAccess("manage_exam_subject",true);
-		
+	
+	$sm->addTable("Exam_topic_full_exam")
+		/** Table to match an exam topic with exam(s) subject(s)
+		 * if a topic is set in this table, it will be considered as
+		 * "full subject" for all the matching exams subjects
+		 */
+		->addForeignKey("exam_subject","Exam_subject",true,false,true,false)
+		->addForeignKey("exam_topic_for_eligibility_rule","Exam_topic_for_eligibility_rule",true,false,true,false)
+		->setKey(array("exam_subject","exam_topic_for_eligibility_rule"))
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
+	
 	$sm->addTable("Exam_part_topic")
 		->addForeignKey("exam_topic_for_eligibility_rule","Exam_topic_for_eligibility_rule",true,false,true,false)
-		->addForeignKey("exam_subject_part","Exam_subject_part",false,false,true,false)
-		/** can be multiple because can appear in a minimum and a threshold
-		 * Not removed in case the part is removed (because #selection#saveExam method will remove all the parts
-		 * and create new ones each time it is called
-		 * This case is handled by #selection#updateExamTopicsForEligibilityRules method
+		->addForeignKey("exam_subject_part","Exam_subject_part",true,false,false,false,true)
+		/** cannot be multiple because cannot appear in several topics (otherwize the rules are biased...)
+		 * Before removing a part, the method
+		 * #selection#updateExamTopicsForEligibilityRules is called
 		 */
 		->setKey(array("exam_topic_for_eligibility_rule","exam_subject_part"))
 		->addWriteAccess("manage_exam_subject",true)

@@ -10,6 +10,7 @@ class page_IS_main_page extends selection_page {
 		$can_create = null;
 		require_once("IS_status.inc");
 		IS_status($page,"IS_status");
+
 	?>
 		<div id = '<?php echo $container_id; ?>'>
 		</div>

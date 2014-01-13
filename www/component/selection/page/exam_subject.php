@@ -15,11 +15,15 @@ class page_exam_subject extends selection_page {
 		$campaign_id = null;
 		if(isset($_GET["campaign_id"]))
 			$campaign_id = $_GET["campaign_id"];
+		if(isset($_GET["readonly"]))
+			$read_only = $_GET["readonly"];
+		else
+			$read_only = false;
 	?>
 		<div id = '<?php echo $container_id; ?>'>
 	
 	<?php
-		exam_subject($page,$container_id,$id,$campaign_id);
+		exam_subject($page,$container_id,$id,$campaign_id,$read_only);
 	}
 	
 }

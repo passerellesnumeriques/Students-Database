@@ -4,6 +4,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	t.ordered = null;
 	t.onmanagerow = new Custom_Event();
 	t.onupdatescore = new Custom_Event();
+	t.focusonagiveninput = new Custom_Event();
 	//question_index_before is set as an attribute 
 	// that way it can be updated from outside via reset method
 	t.question_index_before = question_index_before;
@@ -83,17 +84,30 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				if(can_edit){
 					var input = document.createElement("input");
 					autoresize_input(input, 5);
+					//give a unique id to the input, to be able to get it at anytime
+					input.id = "question"+part.index+"."+part.questions[t.ordered[i]].index;
 					input.value = part.questions[t.ordered[i]].max_score;
-					input.index = t.ordered[i];
+					input.index_in_ordered = i;
 					input.oninput = function(){
 						var temp = parseFloat(this.value);
 						if(isNaN(temp))
-							part.questions[this.index].max_score = 0;
+							part.questions[t.ordered[this.index_in_ordered]].max_score = 0;
 						else
-							part.questions[this.index].max_score = temp;
+							part.questions[t.ordered[this.index_in_ordered]].max_score = temp;
 						//update the total score of the part
 						t._updateTotalScore();
 						t.onupdatescore.fire();
+					};
+					input.onkeypress = function(e) {
+						var ev = getCompatibleKeyEvent(e);
+						if (ev.isEnter){
+							var new_index = parseInt(part.questions[t.ordered[this.index_in_ordered]].index)+1;
+							var new_input_id = "question"+part.index+"."+new_index;
+							t._onInsertAfter(this.index_in_ordered);
+							t.onupdatescore.fire();
+							t.onmanagerow.fire(t.question_index_before);
+							t.focusonagiveninput.fire(new_input_id);
+						}
 					};
 					div.appendChild(input);
 				} else {
@@ -113,8 +127,11 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 						var remove = t._createButton("remove");
 						remove.index_in_ordered = i;
 						remove.onclick = function(){
+							var new_index = parseInt(part.questions[t.ordered[this.index_in_ordered]].index)-1;
+							var new_input_id = "question"+part.index+"."+new_index;
 							t._onRemove(this.index_in_ordered, t.ordered[this.index_in_ordered]);
 							t.onmanagerow.fire(t.question_index_before);
+							t.focusonagiveninput.fire(new_input_id);
 						};
 						td3.appendChild(remove);
 					}
@@ -124,12 +141,17 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 						before.onclick = function(){
 							t._onInsertBefore(this.index_in_ordered);
 							t.onmanagerow.fire(t.question_index_before);
+							var new_input_id = "question"+part.index+"."+part.questions[t.ordered[this.index_in_ordered]].index;
+							t.focusonagiveninput.fire(new_input_id);
 						};
 						var after = t._createButton("after");
 						after.index_in_ordered = i;
 						after.onclick = function(){
 							t._onInsertAfter(this.index_in_ordered);
 							t.onmanagerow.fire(t.question_index_before);
+							var new_index = parseInt(part.questions[t.ordered[this.index_in_ordered]].index)+1;
+							var new_input_id = "question"+part.index+"."+new_index;
+							t.focusonagiveninput.fire(new_input_id);
 						};
 						td3.appendChild(before);
 						td3.appendChild(after);
@@ -153,6 +175,8 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				insert.onclick = function(){
 					t._onFirstInsert();
 					t.onmanagerow.fire(t.question_index_before);
+					var new_input_id = "question"+part.index+".1";
+					t.focusonagiveninput.fire(new_input_id);
 				};
 				td2.appendChild(insert);
 				tr.appendChild(td2);
@@ -201,13 +225,23 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			var input = document.createElement("input");
 			autoresize_input(input, 5);
 			input.value = part.questions[t.ordered[i]][attribute];
-			input.index = t.ordered[i];
+			input.index_in_ordered = i;
 			input.oninput = function(){
 				if(this.value.checkVisible() && this.value != "")
-					part.questions[this.index][attribute] = this.value;
+					part.questions[t.ordered[this.index_in_ordered]][attribute] = this.value;
 				else
-					part.questions[this.index][attribute] = null;
+					part.questions[t.ordered[this.index_in_ordered]][attribute] = null;
 				// t.onupdatescore.fire();
+			};
+			input.onkeypress = function(e) {
+				var ev = getCompatibleKeyEvent(e);
+				if (ev.isEnter){
+					var new_index = parseInt(part.questions[t.ordered[this.index_in_ordered]].index)+1;
+					var new_input_id = "question"+part.index+"."+new_index;
+					t._onInsertAfter(this.index_in_ordered);
+					t.onmanagerow.fire(t.question_index_before);
+					t.focusonagiveninput.fire(new_input_id);
+				}
 			};
 			td2.appendChild(input);
 		} else {

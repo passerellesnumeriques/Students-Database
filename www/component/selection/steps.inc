@@ -19,7 +19,7 @@
  *
  * (1): the 4th parameter of the dependency array is set to allow the user to step back
  * For instance, during the Selection Process, the user can import interview results after each
- * interviewing session, whereas he still wants to import students (case using the clickers for instance)
+ * interviewing session, whereas he still wants to import applicants (case using the clickers for instance)
  * In that case, the user must be able to add and update an applicant but not to remove any
  */
 return array(
