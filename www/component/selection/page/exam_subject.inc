@@ -95,6 +95,12 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only){
 			?>
 			//Reset the subject id as -1
 			subject.id = -1;
+			//Reset the questions and parts ids as -1
+			for(var i = 0; i < subject.parts.length; i++){
+				for(var j = 0; j < subject.parts[i].questions.length; j++)
+					subject.parts[i].questions[j].id = -1;
+				subject.parts[i].id = -1;
+			}
 		} else {
 			subject = <?php echo PNApplication::$instance->selection->get_json_exam_subject_data($id);?>;
 			
