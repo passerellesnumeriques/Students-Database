@@ -6,6 +6,8 @@ class PHPDoc {
 		for ($i = 0; $i < count($files); $i++)
 			$files[$i] = realpath($files[$i]);
 		$existing = get_declared_classes();
+		$interfaces = get_declared_interfaces();
+		$existing = array_merge($existing, $interfaces);
 		$list = array();
 		foreach ($existing as $clname) {
 			$cl = new ReflectionClass($clname);
@@ -38,7 +40,7 @@ class PHPDoc {
 			$first = true;
 			foreach ($list as $i) {
 				if ($first) $first = false; else echo ",";
-				echo ", ".PHPDoc::type_link($i);
+				echo " ".PHPDoc::type_link($i);
 			}
 		}
 		if ($cl->getParentClass() <> null) {
@@ -47,6 +49,14 @@ class PHPDoc {
 		}
 		
 		echo "<br/><br/>";
+		echo "File: ".$cl->getFileName()."<br/>";
+		
+		$comment = "";
+		$tags = array();
+		PHPDoc::parse_comment($cl->getDocComment(), $comment, $tags);
+		echo "<div class='codedoc_comment' style='margin:10px;padding:3px'>".$comment."</div>";
+		
+		echo "<br/>";
 	
 		$list = array();
 		foreach ($cl->getProperties() as $p)
@@ -76,12 +86,19 @@ class PHPDoc {
 				PHPDoc::parse_comment($p->getDocComment(), $comment, $tags);
 				$type = "";
 				if (isset($tags["var"])) {
-					$type = $tags["var"][0];
-					// TODO link?
+					$type = PHPDoc::getWord($tags["var"][0]);
+					if ($type <> "") {
+						$name = PHPDoc::getWord($tags["var"][0]);
+						if ($name <> "") {
+							if ($name <> "\$".$p->name) $tags["var"][0] = $name." ".$tags["var"][0];
+							if ($comment == "") $comment = trim($tags["var"][0]);
+						}
+						$type = PHPDoc::type_link($type); 
+					}
 				}
 				$row->add_cell($type, "codedoc_class");
 				// description
-				$row->add_cell($comment);
+				$row->add_cell($comment, "codedoc_comment");
 			}
 			$row = $table->add_row();
 			$table->generate();
@@ -106,16 +123,34 @@ class PHPDoc {
 				$modifiers = "";
 				foreach (Reflection::getModifierNames($m->getModifiers()) as $mod)
 					$modifiers .= $mod." ";
-				$row->add_cell($modifiers, "codedoc_modifiers");
+				$cell_modifiers = $row->add_cell($modifiers, "codedoc_modifiers", 1, "vertical-align:top;");
 				// name
-				$row->add_cell($m->name, "codedoc_method");
+				$cell_name = $row->add_cell("<a name='method_".$m->name."'>".$m->name."</a>", "codedoc_method", 1, "vertical-align:top;");
+				// check if inherited
+				$origin = PHPDoc::get_original_method_declaration($m);
+				if ($origin <> $m) {
+					$row->add_cell("<a href='php?file=".urlencode($origin->getFileName())."&class=".urlencode($origin->getDeclaringClass()->getName())."#method_".$origin->getName()."'><i>Inherits from ".$origin->getDeclaringClass()->getName()."</i></a>", null, 2);
+					continue;
+				}
 				// parameters
 				$comment = "";
 				$tags = array();
 				PHPDoc::parse_comment($m->getDocComment(), $comment, $tags);
-				$params = "";
-				foreach ($m->getParameters() as $p) {
-					$params .= "<span class='codedoc_parameter'>".$p->getName()."</span>";
+				$new_row = false;
+				if ($comment <> "") {
+					$row->add_cell($comment, "codedoc_comment", 2);
+					$new_row = true;
+				}
+				$parameters = $m->getParameters();
+				$rows = $new_row ? 1 : 0;
+				$rows += count($parameters);
+				if (isset($tags["return"])) $rows++;
+				if ($rows == 0) $rows = 1;
+				$cell_modifiers->rowspan = $rows;
+				$cell_name->rowspan = $rows;
+				foreach ($parameters as $p) {
+					if ($new_row) $row = $table->add_row();
+					else $new_row = true;
 					$param_doc = "";
 					$param_type = "";
 					if (isset($tags["param"])) {
@@ -141,23 +176,19 @@ class PHPDoc {
 							}
 						}
 					}
+					$s = $p->getName();
 					if ($param_type <> "")
-						$params .= ": <span class='codedoc_class'>".$param_type."</span>";
-					if ($param_doc <> null)
-						$params .= "<div style='margin-left:15px;background-color:#FFFFD0'>".$param_doc."</div>";
-					else
-						$params .= "<br/>";
+						$s .= ": ".PHPDoc::type_link($param_type);
+					$row->add_cell($s, "codedoc_parameter", 1, "vertical-align:top;");
+					$row->add_cell($param_doc, "codedoc_comment");
 				}
 				if (isset($tags["return"])) {
-					$params .= "=&gt; Returns ";
+					if ($new_row) $row = $table->add_row();
+					else $new_row = true;
 					$type = PHPDoc::getWord($tags["return"][0]);
-					$params .= "<span class='codedoc_class'>".$type."</span>";
-					if (strlen($tags["return"][0]) > 0)
-						$params .= "<div style='margin-left:15px;background-color:#FFFFD0'>".$param_doc."</div>";
+					$row->add_cell("Returns: ".PHPDoc::type_link($type));
+					$row->add_cell($tags["return"][0], "codedoc_comment");
 				}
-				$row->add_cell($params);
-				// description
-				$row->add_cell($comment);
 			}
 			$table->generate();
 			echo "<br/>";
@@ -177,11 +208,14 @@ class PHPDoc {
 	
 	public static function type_link($type) {
 		if (is_string($type)) {
-			// TODO
-			return "<span class='codedoc_class'>".$type."</span>";
+			if ($type == "string" || 
+				$type == "boolean" || 
+				$type == "null"
+			)
+				return "<span class='codedoc_class'>".$type."</span>";
+			return "<span class='codedoc_class'><a href='".PHPDoc::get_link_to_type($type)."'>".$type."</a></span>";
 		} else {
-			// TODO
-			return "<span class='codedoc_class'>".$type->getName()."</span>";
+			return "<span class='codedoc_class'><a href='php?file=".urlencode($type->getFileName())."&class=".urlencode($type->getName())."'>".$type->getName()."</a></span>";
 		}
 	}
 		
@@ -216,11 +250,38 @@ class PHPDoc {
 					$comment = trim(substr($line, $i+1));
 				}
 				if (!isset($tags[$tag])) $tags[$tag] = array();
+				PHPDoc::_handle_links($comment);
 				array_push($tags[$tag], $comment);
 			} else {
 				$general_comment .= $line." ";
 			}
 		}
+		PHPDoc::_handle_links($general_comment);
+	}
+	
+	private static function _handle_links(&$comment) {
+		$i = 0;
+		while (($j = strpos($comment, "{@link", $i)) !== FALSE) {
+			$k = strpos($comment, "}", $j);
+			if ($k === FALSE) break;
+			$link = substr($comment, $j+6, $k-$j-6);
+			$link = trim($link);
+			$replace = "<a href='".PHPDoc::get_link_to_type($link)."'><code class='codedoc_class'>".$link."</code></a>";
+			$comment = substr($comment, 0, $j).$replace.substr($comment, $k+1);
+			$i = $j+strlen($replace);
+		}
+	}
+	
+	public static function get_link_to_type($type) {
+		if (substr($type, strlen($type)-2) == "[]") $type = substr($type,0,strlen($type)-2);
+		$all = array_merge(get_declared_classes(), get_declared_interfaces());
+		foreach ($all as $cl) {
+			if ($cl == $type) {
+				$c = new ReflectionClass($cl);
+				return "php?file=".urlencode($c->getFileName())."&class=".urlencode($type);
+			}
+		}
+		return "php_search?type=".urlencode($type);
 	}
 	
 	public static function general_comment($doc) {
@@ -228,6 +289,24 @@ class PHPDoc {
 		$tags = array();
 		PHPDoc::parse_comment($doc, $gc, $tags);
 		return $gc;
+	}
+
+	/**
+	 * 
+	 * @param ReflectionMethod $m
+	 */
+	public static function get_original_method_declaration($m) {
+		$c = $m->getDeclaringClass();
+		$pc = $c->getParentClass();
+		if ($pc <> null) {
+			$pm = $pc->getMethod($m->getName());
+			if ($pm <> null) return PHPDoc::get_original_method_declaration($pm);
+		}
+		foreach ($c->getInterfaces() as $i) {
+			$im = $i->getMethod($m->getName());
+			if ($im <> null) return $im;
+		}
+		return $m;
 	}
 	
 }
@@ -281,12 +360,14 @@ class DocTableCell {
 	public $style = "";
 	public $content = "";
 	public $colspan = 1;
+	public $rowspan = 1;
 
 	public function generate() {
 		echo "<td";
 		if ($this->css_class <> "") echo " class='".$this->css_class."'";
 		if ($this->style <> "") echo " style='".$this->style."'";
 		if ($this->colspan <> 1) echo " colspan=".$this->colspan;
+		if ($this->rowspan <> 1) echo " rowspan=".$this->rowspan;
 		echo ">";
 		echo $this->content;
 		echo "</td>";

@@ -48,12 +48,6 @@ class PNApplication {
 	/** @var string */
 	public $local_domain;
 	public $components = array();
-	
-	public $pending_events = array();
-	
-	public function signal_event($type, $data) {
-		array_push($this->pending_events, array($type, $data));
-	}
 
 	/**
 	 * Signal an error
@@ -143,16 +137,6 @@ class PNApplication {
 				echo json_encode($e);
 			}
 			echo "],";
-		}
-		if (count(PNApplication::$instance->pending_events) > 0) {
-			echo "events:[";
-			$first = true;
-			foreach (PNApplication::$instance->pending_events as $ev) {
-				if ($first) $first = false; else echo ",";
-				echo "{type:".json_encode($ev[0]).",data:".json_encode($ev[1])."}";
-			}
-			echo "],";
-			PNApplication::$instance->pending_events = array();
 		}
 		echo "result:";
 		if ($result === null) echo "null"; else echo $result;

@@ -11,22 +11,28 @@ import org.mozilla.javascript.ast.ReturnStatement;
 
 public class Function extends FinalElement {
 
+	public Container container;
 	public LinkedList<Parameter> parameters = new LinkedList<>();
 	public String description = "";
 	public String return_type = "void";
 	public String return_description = "";
+	public Node[] docs_nodes;
 	
 	public static class Parameter {
 		public String name;
 		public String type = null;
 		public String description = "";
+		public AstNode node;
 	}
 	
-	public Function(String file, FunctionNode node, Node... docs) {
+	public Function(Container container, String file, FunctionNode node, Node... docs) {
 		super(new Location(file, node));
+		this.container = container;
+		this.docs_nodes = docs;
 		for (AstNode n : node.getParams()) {
 			Parameter p = new Parameter();
 			p.name = ((Name)n).getIdentifier();
+			p.node = n;
 			parameters.add(p);
 		}
 		JSDoc doc = new JSDoc(node, docs);
@@ -62,9 +68,9 @@ public class Function extends FinalElement {
 						}
 					}
 					if (!found)
-						System.err.println("Unknown parameter "+name+" in function");
+						error("Unknown parameter "+name+" in function");
 				} else
-					System.err.println("Invalid JSDoc tag param for function");
+					error("Invalid JSDoc tag param for function");
 			} else if (tag.name.equals("returns")) {
 				String s = tag.comment.trim();
 				if (s.startsWith("{")) {
@@ -78,7 +84,7 @@ public class Function extends FinalElement {
 			} else if (tag.name.equals("constructor")) {
 				// ignore
 			} else
-				System.err.println("Unknown JSDoc tag "+tag.name+" for function");
+				error("Unknown JSDoc tag "+tag.name+" for function");
 		}
 		if (return_type.equals("void")) {
 			// try to find if this is really the case
@@ -101,6 +107,17 @@ public class Function extends FinalElement {
 				// TODO return not documented
 			}
 		}
+	}
+	
+	public Function(Container container, String return_type) {
+		super(new Location());
+		this.container = container;
+		this.return_type = return_type;
+	}
+	
+	@Override
+	public String getType() {
+		return return_type;
 	}
 	
 	public String generate(String indent) {

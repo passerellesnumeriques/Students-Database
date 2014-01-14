@@ -12,7 +12,7 @@ function horizontal_layout(container) {
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
 	t.container.widget = this;
-	t.container.style.overflow = "hidden";
+	//t.container.style.overflow = "hidden"; // if we do this, it does not resize correctly 
 	
 	t.removeLayout = function() {
 		t.container.widget = null;

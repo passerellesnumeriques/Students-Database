@@ -457,18 +457,22 @@ require('tree.js',function(){
 	*/
 	tr.addAddButton = function(r, division_index, area_index){
 		if(division_index == null && area_index == null){
-			var add_button = document.createElement('div');
+			var add_button = document.createElement('IMG');
 			add_button.className = 'button';
-			add_button.innerHTML = "<img src='"+theme.icons_16.add+"'/>";
+			add_button.src = theme.icons_16.add;
+			add_button.style.verticalAlign = "bottom";
+			add_button.style.padding = "0px";
 			add_button.onclick = function(){tr.addChild(r, null, 'root');};
 			var div = document.getElementById('root');
 			div.appendChild(add_button);
 		}
 		else{
 			if(division_index != r.length -1){
-				var add_button = document.createElement('div');
+				var add_button = document.createElement('IMG');
 				add_button.className = 'button';
-				add_button.innerHTML = "<img src='"+theme.icons_16.add+"'/>";
+				add_button.src = theme.icons_16.add;
+				add_button.style.verticalAlign = "bottom";
+				add_button.style.padding = "0px";
 				add_button.area_parent_id = r[division_index].areas[area_index].area_id;
 				add_button.onclick = function(){tr.addChild(r, add_button.area_parent_id);};
 				var div = document.getElementById(r[division_index].areas[area_index].area_id);
@@ -485,9 +489,11 @@ require('tree.js',function(){
 	 * @parameter area_index the index of the current area
 	 */
 	tr.addRemoveButton = function(r, division_index, area_index){
-		var remove_button = document.createElement('div');
+		var remove_button = document.createElement('IMG');
 		remove_button.className = 'button';
-		remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+		remove_button.src = theme.icons_16.remove;
+		remove_button.style.verticalAlign = "bottom";
+		remove_button.style.padding = "0px";
 		var div = null;
 		if(division_index == null && area_index == null){
 			div = document.getElementById('root');

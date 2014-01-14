@@ -1,0 +1,185 @@
+<html>
+<head>
+	<link rel='stylesheet' type='text/css' href='/static/documentation/style.css'></link>
+	<link rel='stylesheet' type='text/css' href='/static/documentation/CodeDoc.css'></link>
+	<link rel='stylesheet' type='text/css' href='/static/theme/default/style.css'></link>
+	<script type="text/javascript" src="/static/javascript/utils.js"></script>
+	<script type="text/javascript" src="/static/javascript/browser.js"></script>
+	<script type="text/javascript" src="/static/application/application.js"></script>
+	<script type="text/javascript" src="/static/javascript/layout.js"></script>
+	<script type="text/javascript" src="/static/theme/theme.js.php"></script>
+	<script type="text/javascript" src="/static/javascript/ajax.js"></script>
+	<script type="text/javascript" src="/static/application/service.js"></script>
+	<script type="text/javascript" src="/static/application/config.js.php"></script>
+	<script type="text/javascript" src="/static/widgets/common_dialogs.js"></script>
+	<script type="text/javascript" src="/static/data_model/databaselock.js"></script>
+	<script type="text/javascript" src="/static/widgets/splitter_vertical/splitter_vertical.js"></script>
+	<script type="text/javascript" src="/static/widgets/tree/tree.js"></script>
+	<script type="text/javascript">
+	javascript_loaded("/static/javascript/utils.js");
+	javascript_loaded("/static/javascript/browser.js");
+	javascript_loaded("/static/application/application.js");
+	javascript_loaded("/static/javascript/layout.js");
+	javascript_loaded("/static/theme/theme.js.php");
+	javascript_loaded("/static/javascript/ajax.js");
+	javascript_loaded("/static/application/service.js");
+	javascript_loaded("/static/application/config.js.php");
+	javascript_loaded("/static/widgets/common_dialogs.js");
+	javascript_loaded("/static/data_model/databaselock.js");
+	javascript_loaded("/static/widgets/splitter_vertical/splitter_vertical.js");
+	javascript_loaded("/static/widgets/tree/tree.js");
+	</script>
+	<style type='text/css'>
+	html, body{
+		width: 100%;
+		height: 100%;
+		margin: 0px;
+		padding: 0px;
+	}
+	</style>
+</head>
+<body>
+<div id='split' style='width:100%;height:100%'>
+	<div id='js_nav' style='height:100%;overflow:auto'></div>
+	<div id='js_content' style='height:100%;overflow:auto'></div>
+</div>
+<script type='text/javascript'>
+new splitter_vertical('split',0.2);
+var tr = new tree('js_nav');
+tr.addColumn(new TreeColumn(""));
+
+function build_jsdoc_navigation(ns, parent, path) {
+	if (!path) path = "";
+	var names = [];
+	for (var n in ns.content) names.push(n);
+	names.sort();
+
+	var sub_ns = [];
+	var classes = [];
+	for (var i = 0; i < names.length; ++i) {
+		var name = names[i];
+		var elem = ns.content[name];
+		elem.name = name;
+		if (elem instanceof window.parent.JSDoc_Namespace) {
+			sub_ns.push({elem:elem,name:name});
+		} else if (elem instanceof window.parent.JSDoc_Class) {
+			classes.push({elem:elem,name:name});
+		}
+	}
+
+	for (var i = 0; i < sub_ns.length; ++i) {
+		var div = document.createElement("SPAN");
+		div.style.whiteSpace = 'nowrap';
+		var span = document.createElement("SPAN");
+		span.className = "codedoc_keyword";
+		span.appendChild(document.createTextNode("namespace "));
+		div.appendChild(span);
+		var link = document.createElement("A");
+		link.className = "codedoc_class";
+		link.appendChild(document.createTextNode(sub_ns[i].name));
+		link.href = "#";
+		link.ns = sub_ns[i];
+		link.ns_path = path;
+		link.onclick = function() {
+			window.parent.build_jsdoc_namespace(document.getElementById('js_content'), this.ns.name, this.ns.elem, false, this.ns_path+this.ns.name+".");
+			return false;
+		};
+		div.appendChild(link);
+		var item = new TreeItem([new TreeCell(div)]);
+		parent.addItem(item);
+		build_jsdoc_navigation(sub_ns[i].elem, item, path+sub_ns.name+".");
+	}
+	for (var i = 0; i < classes.length; ++i) {
+		var div = document.createElement("SPAN");
+		div.style.whiteSpace = 'nowrap';
+		var span = document.createElement("SPAN");
+		span.className = "codedoc_keyword";
+		span.appendChild(document.createTextNode("class "));
+		div.appendChild(span);
+		var link = document.createElement("A");
+		link.className = "codedoc_class";
+		link.appendChild(document.createTextNode(classes[i].name));
+		link.href = "?classname="+classes[i].name;
+		div.appendChild(link);
+		var item = new TreeItem([new TreeCell(div)]);
+		parent.addItem(item);
+	}
+}
+
+window.parent.init_jsdoc(function(){
+	var top_link = document.createElement("A");
+	top_link.appendChild(document.createTextNode("Window level"));
+	top_link.href = "#";
+	top_link.onclick = function() {
+		var container = document.getElementById('js_content');
+		while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
+		window.parent.build_jsdoc_namespace_content(container, window.parent.jsdoc, false, "");
+		return false;
+	};
+	var item = new TreeItem([new TreeCell(top_link)], true);
+	tr.addItem(item);
+	build_jsdoc_navigation(window.parent.jsdoc, item);
+	var container = document.getElementById('js_content');
+
+	var url = new URL(location.href);
+	if (url.params.classname) {
+		var ns = window.parent.jsdoc;
+		var name = url.params.classname;
+		var i = name.lastIndexOf('.');
+		var classname;
+		if (i > 0) {
+			classname = name.substring(i+1);
+			name = name.substring(0,i);
+			do {
+				var i = name.indexOf('.');
+				var n;
+				if (i == -1) {
+					n = name;
+					name = null;
+				} else {
+					n = name.substring(0,i);
+					name = name.substring(i+1);
+				}
+				if (!ns.content[n]) { ns = null; break; }
+				ns = ns.content[n];
+			} while (name != null && name.length > 0);
+		} else {
+			classname = name;
+		}
+		if (ns == null) {
+			container.appendChild(document.createTextNode("Unable to find namespace of class "+url.params.classname));
+		} else {
+			if (!ns.content[classname]) {
+				container.appendChild(document.createTextNode("Unable to find class "+url.params.classname));
+			} else {
+				window.parent.build_jsdoc_class(container, classname, ns.content[classname]);
+			}
+		}
+	} else if (url.params.namespace) {
+		var ns = window.parent.jsdoc;
+		var name = url.params.namespace;
+		do {
+			var i = name.indexOf('.');
+			var n;
+			if (i == -1) {
+				n = name;
+				name = null;
+			} else {
+				n = name.substring(0,i);
+				name = name.substring(i+1);
+			}
+			if (!ns.content[n]) { ns = null; break; }
+			ns = ns.content[n];
+		} while (name != null && name.length > 0);
+		if (ns == null) {
+			container.appendChild(document.createTextNode("Unable to find namespace "+url.params.namespace));
+		} else {
+			window.parent.build_jsdoc_namespace(container, url.params.namespace, ns, false, url.params.namespace+".");
+		}
+	} else {
+		window.parent.build_jsdoc_namespace_content(container, window.parent.jsdoc, false, "");
+	}
+});
+</script>
+</body>
+</html>

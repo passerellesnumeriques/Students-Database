@@ -16,10 +16,6 @@ service = {
 			data = service.generate_input(input);
 		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json;charset=UTF-8", data, 
 			function(result){
-				if (result && result.events) {
-					for (var i = 0; i < result.events.length; ++i)
-						window.top.pnapplication.signal_event(result.events[i].type, result.events[i].data);
-				}
 				handler(result ? result.result : null);
 			},
 			foreground,

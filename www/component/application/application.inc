@@ -1,4 +1,7 @@
-<?php 
+<?php
+/**
+ * This component is the main entry point for the application: login page and home page. It contains also some useful functionalities in javascript like calling a service in JSON. 
+ */ 
 class application extends Component {
 
 	public function init_request() {

@@ -1,3 +1,7 @@
+/**
+ * Launch the background loading of all static resources of the application.
+ * @param {DOMNode|string} container the html element where to insert the progress bar, or its ID
+ */
 function load_static_resources(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (window.top.pn_application_static_loaded) {
@@ -6,7 +10,8 @@ function load_static_resources(container) {
 	}
 	
 	var t=this;
-	this.stopped = false;
+	/** indicates if the background loading must be _stopped, meaning nothing will be loaded anymore */
+	this._stopped = false;
 	this.start_time = new Date();
 	
 	container.appendChild(document.createTextNode("Loading application"));
@@ -24,14 +29,14 @@ function load_static_resources(container) {
 	this.pc_container.appendChild(this.pc);
 
 	this.loaded = function(size) {
-		if (t.stopped) return;
+		if (t._stopped) return;
 		window.top.pn_application_static.loaded_size += size;
 		var pc = Math.floor(window.top.pn_application_static.loaded_size*250/window.top.pn_application_static.total_size);
 		t.pc.style.width = pc+"px";
 	};
 	this.check_end = function() {
-		if (!t.stopped && window.top.pn_application_static.scripts.length > 0) return;
-		if (!t.stopped && window.top.pn_application_static.images.length > 0) return;
+		if (!t._stopped && window.top.pn_application_static.scripts.length > 0) return;
+		if (!t._stopped && window.top.pn_application_static.images.length > 0) return;
 		if (window.top.pn_application_static && window.top.pn_application_static.scripts && window.top.pn_application_static.scripts.length == 0 && window.top.pn_application_static.images.length == 0)
 			window.top.pn_application_static_loaded = true;
 		container.innerHTML = "Application loaded in "+Math.floor((new Date().getTime()-t.start_time.getTime())/1000)+"s.";
@@ -40,12 +45,12 @@ function load_static_resources(container) {
 		});
 	};
 	this.stop = function() {
-		this.stopped = true;
+		this._stopped = true;
 		this.check_end();
 	};
 	
 	this.next_script = function() {
-		if (t.stopped) return;
+		if (t._stopped) return;
 		var script = null;
 		for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
 			if (window.top.pn_application_static.scripts[i].dependencies.length == 0) {
@@ -64,7 +69,7 @@ function load_static_resources(container) {
 		});
 	};
 	this.next_image = function() {
-		if (t.stopped) return;
+		if (t._stopped) return;
 		if (window.top.pn_application_static.images.length == 0) { t.check_end(); return; }
 		var image = window.top.pn_application_static.images[0];
 		window.top.pn_application_static.images.splice(0,1);

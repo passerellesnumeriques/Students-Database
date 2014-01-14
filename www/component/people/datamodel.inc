@@ -1,11 +1,12 @@
 <?php
+require_once("utilities.inc");
 /* @var $model DataModel */
 $model->addDataCategoryLink("Personal Information", "/dynamic/people/page/profile?plugin=people&people=%People.id%", "/static/people/profile_16.png");
 $model->addTable("People")
 	->addPrimaryKey("id")
-	->addString("first_name", 100, 1, false)
-	->addString("middle_name", 100, 1, true)
-	->addString("last_name", 100, 1, false)
+	->addString("first_name", 100, 1, false, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter($s); })
+	->addString("middle_name", 100, 1, true, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter($s); })
+	->addString("last_name", 100, 1, false, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter($s); })
 	->addString("khmer_first_name", 100, 1, true)
 	->addString("khmer_last_name", 100, 1, true)
 	->addEnum("sex", array("M","F"))

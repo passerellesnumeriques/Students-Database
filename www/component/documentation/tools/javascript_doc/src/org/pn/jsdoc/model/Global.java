@@ -13,16 +13,33 @@ import org.mozilla.javascript.ast.Name;
 import org.mozilla.javascript.ast.NodeVisitor;
 import org.mozilla.javascript.ast.VariableDeclaration;
 import org.mozilla.javascript.ast.VariableInitializer;
+import org.pn.jsdoc.model.builtin.BuiltinArray;
+import org.pn.jsdoc.model.builtin.BuiltinBoolean;
+import org.pn.jsdoc.model.builtin.BuiltinDate;
+import org.pn.jsdoc.model.builtin.BuiltinDocument;
+import org.pn.jsdoc.model.builtin.BuiltinDOMNode;
+import org.pn.jsdoc.model.builtin.BuiltinHistory;
+import org.pn.jsdoc.model.builtin.BuiltinLocation;
+import org.pn.jsdoc.model.builtin.BuiltinMath;
+import org.pn.jsdoc.model.builtin.BuiltinNavigator;
+import org.pn.jsdoc.model.builtin.BuiltinNumber;
+import org.pn.jsdoc.model.builtin.BuiltinScreen;
+import org.pn.jsdoc.model.builtin.BuiltinString;
+import org.pn.jsdoc.model.builtin.BuiltinWindow;
 
 public class Global extends Container {
 
 	public Global() {
-		super(new Location());
+		super(null, new Location());
 	}
 	
 	@Override
 	protected String getJSDocConstructor() {
 		return "JSDoc_Namespace(";
+	}
+	@Override
+	protected String getDescription() {
+		return "";
 	}
 	
 	@Override
@@ -109,10 +126,26 @@ public class Global extends Container {
 			constructor = is_constructor.value;
 		}
 		if (constructor) {
-			add(node.getName(), new Class(file, node));
+			add(node.getName(), new Class(this, file, node, new Node[0]));
 		} else {
-			add(node.getName(), new Function(file, node, node));
+			add(node.getName(), new Function(this, file, node, node));
 		}
+	}
+	
+	public void addBuiltins() {
+		content.put("window", new BuiltinWindow(this));
+		content.put("document", new BuiltinDocument(this));
+		content.put("location", new BuiltinLocation(this));
+		content.put("navigator", new BuiltinNavigator(this));
+		content.put("screen", new BuiltinScreen(this));
+		content.put("history", new BuiltinHistory(this));
+		content.put("Boolean", new BuiltinBoolean(this));
+		content.put("String", new BuiltinString(this));
+		content.put("Number", new BuiltinNumber(this));
+		content.put("Date", new BuiltinDate(this));
+		content.put("Math", new BuiltinMath(this));
+		content.put("Array", new BuiltinArray(this));
+		content.put("DOMNode", new BuiltinDOMNode(this));
 	}
 	
 }

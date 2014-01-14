@@ -6,6 +6,8 @@ public abstract class FinalElement extends Element {
 		super(location);
 	}
 	
+	public abstract String getType();
+
 	public abstract String generate(String indent);
 	
 }

@@ -34,8 +34,8 @@ function staff_info(&$page, $people_id, $container_id) {
 				echo "id:".$p["id"];
 				echo ",position:".json_encode($p["position"]);
 				echo ",department:".$p["department"];
-				echo ",start:".($p["start"] <> null ? "new Date(".$p["start"]."*1000)" : "null");
-				echo ",end:".($p["end"] <> null ? "new Date(".$p["end"]."*1000)" : "null");
+				echo ",start:".($p["start"] <> null ? json_encode($p["start"]) : "null");
+				echo ",end:".($p["end"] <> null ? json_encode($p["end"]) : "null");
 				echo "}";
 			}
 		}

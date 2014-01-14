@@ -70,6 +70,7 @@ if ($message <> null) {
 				Login
 				<img src='/static/application/login.gif' style='vertical-align:bottom'/>
 			</div>
+			<input type='submit' style='position:absolute;top:-10000px'/>
 		</td>
 	</tr>
 	<tr>
@@ -189,4 +190,5 @@ window.top.require("google.js",function(){
 		});
 	});
 });
+document.forms["login_form"].elements["username"].focus();
 </script>
