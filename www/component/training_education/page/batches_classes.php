@@ -404,7 +404,7 @@ class page_batches_classes extends Page {
 					import_students.onclick = function() {
 						post_data('/dynamic/students/page/import_students',{
 							batch:filter_batches[0],
-							redirect: "/dynamic/training_education/page/home"
+							redirect: "/dynamic/training_education/page/batches_classes"
 						});
 					};
 					students_list.addHeader(import_students);

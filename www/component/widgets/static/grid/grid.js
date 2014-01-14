@@ -236,6 +236,7 @@ function grid(element) {
 	t.columns = [];
 	t.selectable = false;
 	t.url = get_script_path("grid.js");
+	t.onrowselectionchange = null;
 	
 	t.addColumn = function(column, index) {
 		column.grid = t;
@@ -374,11 +375,11 @@ function grid(element) {
 	};
 	t._selection_changed = function() {
 		if (t.onselect) {
-			t.onselect(t.getSelection());
+			t.onselect(t.getSelectionByIndexes(), t.getSelectionByRowId());
 		}
 	};
 	t.onselect = null;
-	t.getSelection = function() {
+	t.getSelectionByIndexes = function() {
 		var selection = [];
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
@@ -388,6 +389,35 @@ function grid(element) {
 				selection.push(i);
 		}
 		return selection;
+	};
+	t.getSelectionByRowId = function() {
+		var selection = [];
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var tr = t.table.childNodes[i];
+			var td = tr.childNodes[0];
+			var cb = td.childNodes[0];
+			if (cb.checked)
+				selection.push(tr.row_id);
+		}
+		return selection;
+	};
+	t.selectByIndex = function(index, selected) {
+		if (!t.selectable) return;
+		var tr = t.table.childNodes[index];
+		var td = tr.childNodes[0];
+		var cb = td.childNodes[0];
+		cb.checked = selected ? 'checked' : '';
+	};
+	t.selectByRowId = function(row_id, selected) {
+		if (!t.selectable) return;
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var tr = t.table.childNodes[i];
+			if (tr.row_id != row_id) continue;
+			var td = tr.childNodes[0];
+			var cb = td.childNodes[0];
+			cb.checked = selected ? 'checked' : '';
+			break;
+		}
 	};
 
 	/**
@@ -418,6 +448,8 @@ function grid(element) {
 			cb.style.verticalAlign = "middle";
 			cb.onchange = function() {
 				this.parentNode.parentNode.className = this.checked ? "selected" : "";
+				if (t.onrowselectionchange)
+					t.onrowselectionchange(tr.row_id, this.checked);
 				t._selection_changed();
 			};
 			td.appendChild(cb);

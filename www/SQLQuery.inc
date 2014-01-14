@@ -75,6 +75,7 @@ class SQLQuery {
  	public $group_by = array();
  	public $order_by = array();
  	public $bypass_security = false;
+	public $distinct = false;
 
  	private $field_id_counter = 0;
  	private $table_id_counter = 0;
@@ -160,6 +161,11 @@ class SQLQuery {
 	}
 	public function &count_one_field($table, $name, $alias=null){
 		$this->count_one_field = array($table,$name,$alias);
+		return $this;
+	}
+	
+	public function &distinct(){
+		$this->distinct = true;
 		return $this;
 	}
 	
@@ -460,12 +466,19 @@ class SQLQuery {
 		$sql = "SELECT ";
 		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && !$this->bypass_security)
 			throw new Exception("Access denied: you don't have access to any column in this request");
-		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && $this->bypass_security)
-			$sql .= "*";
+		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && $this->bypass_security){
+			if($this->distinct)
+				$sql .= "DISTINCT ";
+			$sql .= "*";		
+		}
 		else {
 			$first = true;
 			foreach ($this->fields as $f) {
-				if ($first) $first = false; else $sql .= ",";
+				if ($first){
+					$first = false;
+					if($this->distinct)
+						$sql .= "DISTINCT ";
+				} else $sql .= ",";
 				$sql .= "`".$f[0]."`.`".$f[1]."`";
 				if ($f[2] <> null) $sql .= " AS `".$f[2]."`";
 			}
@@ -477,7 +490,10 @@ class SQLQuery {
 			}
 			if ($this->count_one_field !== null){
 				if ($first) $first = false; else $sql .= ",";
-				$sql .= " COUNT(`".$this->count_one_field[0]."`.`".$this->count_one_field[1]."`)";
+				$sql .= " COUNT(";
+				if($this->distinct)
+					$sql .= "DISTINCT ";
+				$sql .= "`".$this->resolve_where_table($this->count_one_field[0])."`.`".$this->count_one_field[1]."`)";
 				if ($this->count_one_field[2] <> null)
 					$sql .= " AS `".$this->count_one_field[2]."`";
 			}
@@ -536,7 +552,7 @@ class SQLQuery {
 			$first = true;
 			foreach ($this->group_by as $g) {
 				if ($first) $first = false; else $sql .= ",";
-				$sql .= "`".$g[0]."`.`".$g[1]."`";
+				$sql .= "`".$this->resolve_where_table($g[0])."`.`".$g[1]."`";
 			}
 		}
 		if (count($this->order_by) > 0) {
@@ -545,7 +561,7 @@ class SQLQuery {
 			foreach ($this->order_by as $o) {
 				if ($first) $first = false; else $sql .= ",";
 				if ($o[0] !== null)
-					$sql .= "`".$o[0]."`.";
+					$sql .= "`".$this->resolve_where_table($o[0])."`.";
 				$sql .= "`".$o[1]."` ".($o[2] ? "ASC" : "DESC");
 			}
 		}
@@ -1092,7 +1108,7 @@ class SQLQuery {
 	 * @param array|null $sub_models
 	 * @throws Exception in case of error (security or database)
 	 */
-	public function insert_multiple($table, $rows) {
+	public function insert_multiple($table, $rows, $lock_id = null) {
 		require_once("component/data_model/Model.inc");
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
@@ -1109,9 +1125,12 @@ class SQLQuery {
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
-		$lock = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, true);
-		if ($lock == null)
-			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
+		if(!isset($lock_id)){
+			$lock = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, true);
+			if ($lock == null)
+				throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
+		} else
+			$lock = $lock_id;
 		$columns = $t->internalGetColumns($this->sub_models);
 		// validate values
 		foreach ($rows as &$fields_values)
@@ -1297,6 +1316,7 @@ class SQLQuery {
 				}
 				$sql .= ")";
 				SQLQuery::db()->execute($sql);
+				// $t->getSQLName($this->sub_models)
 			}
 			
 			foreach ($sub_models_to_remove as $sm)
@@ -1329,6 +1349,9 @@ class SQLQuery {
 				}
 			}
 		}
+		// array_push($to_update, array($t->getSQLNameFor($sm),$col->name,$keys));
+		// array_push($to_update, array($t->getSQLName($this->sub_models),$col->name,$keys));
+		
 		if (count($keys) == 0) return; // nothing to do
 			
 		// lock the table to remove
@@ -1397,7 +1420,8 @@ class SQLQuery {
 			$to_remove[$table->getSQLNameFor($sub_model_instance)] = array("keys"=>array(),"key_name"=>$key_name);
 		}
 		foreach ($keys as $key)
-			array_push($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $key);
+			// array_push($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $key);
+			array_push($to_remove[$table->getSQLName($this->sub_models)]["keys"], $key);
 		
 		// search for foreign keys in this table, which may imply other remove
 		$new_remove = array();
@@ -1509,7 +1533,8 @@ class SQLQuery {
 					if (!isset($to_remove[$t->getSQLNameFor($sm)]))
 						$to_remove[$t->getSQLNameFor($sm)] = array("where"=>array());
 					foreach ($keys as $key)
-						array_push($to_remove[$t->getSQLNameFor($sm)]["where"], array($col->name=>$key));
+						// array_push($to_remove[$t->getSQLNameFor($sm)]["where"], array($col->name=>$key));
+						array_push($to_remove[$t->getSQLName($this->sub_models)]["where"], array($col->name=>$key));
 				}
 			} else {
 				if (!$this->bypass_security) {
@@ -1533,7 +1558,8 @@ class SQLQuery {
 				}
 		
 				// we can update
-				array_push($to_update, array($t->getSQLNameFor($sm),$col->name,$keys));
+				// array_push($to_update, array($t->getSQLNameFor($sm),$col->name,$keys));
+				array_push($to_update, array($t->getSQLName($this->sub_models),$col->name,$keys));
 			}
 		}
 	}

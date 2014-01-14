@@ -27,7 +27,7 @@ $model->addTable("CalendarEvent")
 	->addBoolean("all_day", false)
 	->addInteger("last_modified")
 	->addString("title", 1024, 0, false, false)
-	->addString("description", 4096, 0, false, false)
+	->addString("description", 4096, 0, true, false)
 	->addString("location_freetext", 1024, 0, true, false)
 	// TODO allow to link to geography for location
 	->addString("organizer", 1024, 0, true, false)

@@ -529,6 +529,7 @@ $model->addTable("Organization")
 	->addPrimaryKey("id")
 	->addString("name",100,1,false,false)
 	->addString("creator",100,1,false,false)
+	->addBoolean("fake",true)
 	->addReadFilter(function(&$q, $table_alias){
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();
@@ -544,6 +545,8 @@ $model->addTable("Organization")
 		}
 		$w .= ")";
 		$q->where($w);
+		// add a filter on the fake aspect of the organization
+		$q->where("`".$table_alias."`.`fake` IS NULL");
 	})
 	->addWriteFilter(function(&$q, $table_alias){
 		$q->field($table_alias, "creator", "ORG_CREATOR");

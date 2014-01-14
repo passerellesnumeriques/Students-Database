@@ -65,7 +65,8 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 		});
 		input.onkeypress = function(e) {
 			var ev = getCompatibleKeyEvent(e);
-			if (ev.isEnter) p.pressButton('ok');
+			if (ev.isEnter && !p.getIsDisabled("ok"))
+				p.pressButton('ok');
 		};
 		var validate = function() {
 			var error = validation_handler(input.value);

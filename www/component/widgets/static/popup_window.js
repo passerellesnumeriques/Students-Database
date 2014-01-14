@@ -79,12 +79,24 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	/** Disable the given button.
 	 * @method popup_window#disableButton
-	 * @param {string} id if of the button to disable
+	 * @param {string} id of the button to disable
 	 */
 	t.disableButton = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i)
 			if (t.buttons[i].id == id)
 				t.buttons[i].disabled = 'disabled';
+	};
+	
+	/** Return true if the given button is disabled
+	 * @method popup_window#getIsDisabled
+	 * @param {string} id of the button
+	 * @return {boolean}
+	 */
+	t.getIsDisabled = function(id) {
+		for (var i = 0; i < t.buttons.length; ++i){
+			if (t.buttons[i].id == id)
+				return t.buttons[i].disabled;
+		}
 	};
 	/** Enable the given button.
 	 * @method popup_window#enableButton
@@ -109,10 +121,14 @@ function popup_window(title,icon,content,hide_close_button) {
 	/** Add 2 buttons to the window: Ok and Cancel. When Cancel is pressed, the window is closed.
 	 * @method popup_window#addOkCancelButtons
 	 * @param {function} onok handler to be called when the Ok button is pressed. 
+	 * @param {function} (optional) oncancel handler to be called when the Cancel button is pressed. 
 	 */
-	t.addOkCancelButtons = function(onok) {
+	t.addOkCancelButtons = function(onok, oncancel) {
 		t.addButton("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Ok", 'ok', onok);
-		t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function() { t.close(); });
+		if(oncancel)
+			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', oncancel);
+		else
+			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function() { t.close(); });
 	};
 	/** Add 2 buttons to the window: Yes and No. When No is pressed, the window is closed.
 	 * @method popup_window#addYesNoButtons
@@ -127,13 +143,23 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @method popup_window#show
 	 */
 	t.show = function() {
-		t.locker = lock_screen(function() {
-			t.blink();
-		});
-		t.table = document.createElement("TABLE");
+		var parent_popup = get_popup_window_from_frame(window);
+		var win,doc;
+		if (!parent_popup) {
+			win = window;
+			doc = document;
+			t.locker = lock_screen(function() {
+				t.blink();
+			});
+		} else {
+			doc = parent_popup.table.ownerDocument;
+			win = getWindowFromDocument(doc);
+			parent_popup.freeze();
+		}
+		t.table = doc.createElement("TABLE");
 		t.table.className = 'popup_window';
 		t.table.data = t;
-		t.header = document.createElement("TR"); t.table.appendChild(t.header);
+		t.header = doc.createElement("TR"); t.table.appendChild(t.header);
 		t.header.className = "popup_window_title";
 		var move_handler = function(ev) {
 			if (!ev) ev = window.event;
@@ -145,11 +171,11 @@ function popup_window(title,icon,content,hide_close_button) {
 			var x = absoluteLeft(t.table);
 			x += diff_x;
 			if (x < 5) x = 5;
-			if (x + t.table.offsetWidth > getWindowWidth()-10) x = getWindowWidth()-5-t.table.offsetWidth;
+			if (x + t.table.offsetWidth > win.getWindowWidth()-10) x = win.getWindowWidth()-5-t.table.offsetWidth;
 			var y = absoluteTop(t.table);
 			y += diff_y;
 			if (y < 5) y = 5;
-			if (y + t.table.offsetHeight > getWindowHeight()-10) y = getWindowHeight()-5-t.table.offsetHeight;
+			if (y + t.table.offsetHeight > win.getWindowHeight()-10) y = win.getWindowHeight()-5-t.table.offsetHeight;
 			t.table.style.top = y+"px";
 			t.table.style.left = x+"px";
 		};
@@ -168,38 +194,38 @@ function popup_window(title,icon,content,hide_close_button) {
 			listenEvent(window,'mouseout',up_handler);
 			return false;
 		};
-		var td = document.createElement("TD"); t.header.appendChild(td);
+		var td = doc.createElement("TD"); t.header.appendChild(td);
 		td.innerHTML = (t.icon ? "<img src='"+t.icon+"' style='vertical-align:bottom'/> " : "")+t.title;
 		if (hide_close_button)
 			td.colSpan = 2;
 		else {
-			td = document.createElement("TD"); t.header.appendChild(td);
+			td = doc.createElement("TD"); t.header.appendChild(td);
 			td.onclick = function() { t.close(); };
 			t.close_button_td = td;
 			td.style.backgroundImage = "url(\""+theme.icons_16.close+"\")";
 			td.style.backgroundPosition = "center";
 			td.style.backgroundRepeat = "no-repeat";
 		}
-		var tr = document.createElement("TR"); t.table.appendChild(tr);
-		var td = document.createElement("TD"); tr.appendChild(td);
+		var tr = doc.createElement("TR"); t.table.appendChild(tr);
+		var td = doc.createElement("TD"); tr.appendChild(td);
 		td.colSpan = 2;
-		t.content_container = document.createElement("DIV");
+		t.content_container = doc.createElement("DIV");
 		t.content_container.style.width = "100%";
 		t.content_container.style.height = "100%";
 		td.appendChild(t.content_container);
 		td.style.padding = "0px";
 		td.style.margin = "0px";
 		if (t.buttons.length > 0) {
-			var tr = document.createElement("TR");
+			var tr = doc.createElement("TR");
 			tr.className = 'popup_window_buttons';
 			t.table.appendChild(tr);
-			td = document.createElement("TD"); tr.appendChild(td);
+			td = doc.createElement("TD"); tr.appendChild(td);
 			td.colSpan = 2;
 			for (var i = 0; i < t.buttons.length; ++i)
 				td.appendChild(t.buttons[i]);
 			t.buttons_tr = tr;
 		}
-		document.body.appendChild(t.table);
+		doc.body.appendChild(t.table);
 		if (typeof t.content == 'string') t.content_container.innerHTML = t.content;
 		else {
 			t.content_container.appendChild(t.content);
@@ -249,9 +275,10 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (t.in_resize) return;
 		t.in_resize = true;
 		var x, y;
+		var win = getWindowFromDocument(t.table.ownerDocument);
 		if (t.content.nodeName == "IFRAME") {
-			t.content_container.style.width = (getWindowWidth()-30)+"px";
-			t.content_container.style.height = (getWindowHeight()-30)+"px";
+			t.content_container.style.width = (win.getWindowWidth()-30)+"px";
+			t.content_container.style.height = (win.getWindowHeight()-30)+"px";
 			t.content_container.style.overflow = "";
 			var frame = getIFrameDocument(t.content); 
 			x = t._computeFrameWidth(frame.body);
@@ -262,43 +289,43 @@ function popup_window(title,icon,content,hide_close_button) {
 			var h = 0;
 			if (t.header) h += getHeight(t.header);
 			if (t.buttons_tr) h += getHeight(t.buttons_tr);
-			if (x > getWindowWidth()-30) {
-				x = getWindowWidth()-30;
+			if (x > win.getWindowWidth()-30) {
+				x = win.getWindowWidth()-30;
 				// anticipate scroll bar
 				y += 20;
 			}
-			if (y > getWindowHeight()-30-h) {
-				y = getWindowHeight()-30-h;
+			if (y > win.getWindowHeight()-30-h) {
+				y = win.getWindowHeight()-30-h;
 				// anticipate scroll bar
-				if (x < getWindowWidth()-30) x += 20;
-				if (x > getWindowWidth()-30) x = getWindowWidth()-30;
+				if (x < win.getWindowWidth()-30) x += 20;
+				if (x > win.getWindowWidth()-30) x = win.getWindowWidth()-30;
 			}
 			setWidth(t.content_container, x);
 			setHeight(t.content_container, y);
 			t.content_container.overflow = "hidden";
-			x = getWindowWidth()/2 - x/2;
-			y = getWindowHeight()/2 - (y+t.header.scrollHeight)/2;
+			x = win.getWindowWidth()/2 - x/2;
+			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight)/2;
 		} else {
 			t.content_container.style.height = "";
 			t.content_container.style.width = "";
 			t.content_container.style.overflow = "";
-			y = getWindowHeight()/2 - t.table.scrollHeight/2;
+			y = win.getWindowHeight()/2 - t.table.scrollHeight/2;
 			if (y < 5) {
 				y = 5;
 				t.content_container.style.overflowX = "auto";
 				var h = 0;
 				if (t.header) h += getHeight(t.header);
 				if (t.buttons_tr) h += getHeight(t.buttons_tr);
-				t.content_container.style.height = (getWindowHeight()-30-h)+"px";
+				t.content_container.style.height = (win.getWindowHeight()-30-h)+"px";
 				if (t.content_container.offsetWidth > t.content_container.clientWidth) {
 					t.content_container.style.width = (t.content_container.offsetWidth+(t.content_container.offsetWidth-t.content_container.clientWidth))+"px"; 
 				}
 			}
-			x = getWindowWidth()/2 - t.table.scrollWidth/2;
+			x = win.getWindowWidth()/2 - t.table.scrollWidth/2;
 			if (x < 5) {
 				x = 5;
 				t.content_container.style.overflow = "auto";
-				t.content_container.style.width = (getWindowWidth()-30)+"px";
+				t.content_container.style.width = (win.getWindowWidth()-30)+"px";
 			}
 		}
 		t.table.style.top = y+"px";
@@ -317,7 +344,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	
 	t.freeze = function(freeze_content) {
 		if (t.freezer) return;
-		t.freezer = document.createElement("DIV");
+		t.freezer = t.table.ownerDocument.createElement("DIV");
 		t.freezer.style.position = "absolute";
 		t.freezer.style.top = "0px";
 		t.freezer.style.left = "0px";
@@ -354,7 +381,12 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param keep_content_hidden
 	 */
 	t.close = function(keep_content_hidden) {
-		unlock_screen(t.locker);
+		if (t.locker)
+			unlock_screen(t.locker);
+		else {
+			var parent_popup = get_popup_window_from_frame(window);
+			if(parent_popup) parent_popup.unfreeze();
+		}
 		if (t.onclose) t.onclose();
 		var do_close = function() {
 			if (keep_content_hidden || t.keep_content_on_close) {
@@ -362,9 +394,9 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content.style.position = 'absolute';
 				t.content.style.visibility = 'hidden';
 				t.content.style.top = '-10000px';
-				document.body.appendChild(t.content);
+				t.content.ownerDocument.body.appendChild(t.content);
 			}
-			document.body.removeChild(t.table);
+			t.table.ownerDocument.body.removeChild(t.table);
 		};
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);

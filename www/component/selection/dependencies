@@ -3,3 +3,4 @@ people
 geography
 contact
 widgets:register postal address typed field
+lib_php_excel:import excel file

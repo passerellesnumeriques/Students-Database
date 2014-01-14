@@ -526,3 +526,37 @@ function dateToSQL(d) {
 	};
 	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
 };
+
+/**
+ * Set the common style to the tables with header
+ * @param table the table to set
+ * @param th_header
+ * @param thead_color the rgb color to display into the header
+ */
+function setCommonStyleTable(table,th_header,thead_color){
+	table.style.borderSpacing = "0";
+	table.style.marginLeft = "5px";
+	table.style.marginBottom = "3px";
+	setBorderRadius(table, 5, 5, 5, 5, 5, 5, 5, 5);
+	table.style.border = "1px solid";
+	th_header.style.textAlign = "left";
+	th_header.style.padding = "2px 5px 2px 5px";
+	th_header.style.backgroundColor = thead_color;
+	th_header.style.width = "100%";
+	setBorderRadius(th_header, 5, 5, 5, 5, 0, 0, 0, 0);
+}
+
+/**
+ * Add an "s" or not to the given word, in case the given figure is greater than 1
+ * @param {string} word the word to set
+ * @param {number} figure
+ * @return the given word with the good spelling
+ */
+function getGoodSpelling(word, figure){
+	if(figure == null)
+		figure = 0;
+	figure = parseFloat(figure);
+	if(figure > 1 && typeof(word) == "string")
+		word += "s";
+	return word;
+}

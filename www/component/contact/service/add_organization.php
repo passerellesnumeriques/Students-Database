@@ -79,7 +79,7 @@ class service_add_organization extends Service {
 			Service::internal_execution("people", "create_people", $cp["create_people"]);
 		}
 		
-		echo "{id:$org_id}";
+		echo "{id:".$org_id."}";
 	}
 	
 }
