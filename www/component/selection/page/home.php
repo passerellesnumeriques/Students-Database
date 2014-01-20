@@ -28,41 +28,36 @@ class page_home extends Page {
 					}
 					if(!init_id)
 						init_id = 0;
+						
 					t.select.select(init_id);
-					t.select.onchange = t._confirmChangeCampaign;
+						t.select.onbeforechange = t._confirmChangeCampaign;
+						t.select.onchange = t._selectCampaign;
 				}
 				
-				/**
-				 * @method _confirmChangeCampaign
-				 * Will ask the user to confirm he wants to change the current campaign
-				 * If no campaign selected (case first = 'true'), the confirmation step is skipped
-				 * If the user uses 'cancel button', the selected option becomes the one selected before change (using init_id)
-				 */
-				t._confirmChangeCampaign = function (){
-					var id = t.select.getSelectedValue();
-					if(id == "add"){
+				
+				t._confirmChangeCampaign = function (old_value, new_value, fire_change){
+					if(new_value == "add"){
 						t._dialogAddCampaign();
 					} else {
-						if(!first) confirm_dialog("Are you sure you want to change the selection campaign?<br/><i>You will be redirected</i>",function(text){
-							if(text == true) t._selectCampaign(id);
-							else
-								t._resetSelectOption();
-						});
-						else t._selectCampaign(id);
+						if(first)
+							fire_change();
+						else if(!first) confirm_dialog("Are you sure you want to change the selection campaign?<br/><i>You will be redirected</i>",function(res){
+								if(res == true) fire_change();
+							});
 					}
 				};
 				
 				/**
 				 * This function calls the service set_campaign_id
-				 * The variable init_id is also updated
 				 */
-				t._selectCampaign = function (id){
-					// init_id = id;
-					service.json("selection","set_campaign_id",{campaign_id:id},function(res){
-						if(!res) return;
-						/* Reload the page */
-						location.reload();
-					});
+				t._selectCampaign = function (){
+					id = t.select.getSelectedValue();
+					if(id != 0 && id != "add")
+						service.json("selection","set_campaign_id",{campaign_id:id},function(res){
+							if(!res) return;
+							/* Reload the page */
+							location.reload();
+						});
 				};
 				
 				/**
@@ -89,7 +84,7 @@ class page_home extends Page {
 				t._dialogAddCampaign = function (){
 					if(!can_add){
 						error_dialog("You are not allowed to manage the selections campaigns");
-						t._resetSelectOption();
+						// t._resetSelectOption();
 					} else {
 						input_dialog(theme.icons_16.question,
 									"Create a selection campaign",
@@ -108,8 +103,8 @@ class page_home extends Page {
 											var div_locker = lock_screen();
 											t._addCampaign(text.uniformFirstLetterCapitalized(), div_locker);
 										}
-									},
-									t._resetSelectOption
+									}
+									// t._resetSelectOption
 						);
 					}
 				}
@@ -124,10 +119,6 @@ class page_home extends Page {
 						if(!res) return;
 						location.reload();
 					});
-				}
-				
-				t._resetSelectOption = function(){
-					t.select.select(init_id,false);
 				}
 				
 				require("select.js",function(){

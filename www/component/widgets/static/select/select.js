@@ -2,10 +2,12 @@ if (typeof require != 'undefined')
 	require("context_menu.js");
 
 function select(container) {
+	var t = this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	
 	this.options = [];
 	this.onchange = null;
+	this.onbeforechange = null;
 	this.value = null;
 	this._max_width = 0;
 	
@@ -38,17 +40,23 @@ function select(container) {
 		},1);
 	};
 	
-	this.select = function(value, fire_onchange) {
-		if(fire_onchange == null)
-			fire_onchange = true;
+	this.select = function(value) {
+		// if (this.onbeforechange && !this.onbeforechange(...)) return;
+		// if(fire_onchange == null)
+			// fire_onchange = true;
 		if(value != this.value){
-			for (var i = 0; i < this.options.length; i++)
-				if (this.options[i].value == value) {
-					this.value = value;
-					this._htmlContainer.innerHTML = this.options[i].html;
-					if (this.onchange && fire_onchange) this.onchange();
-					break;
-				}
+			var change = function() {
+				for (var i = 0; i < t.options.length; i++)
+					if (t.options[i].value == value) {
+						t.value = value;
+						t._htmlContainer.innerHTML = t.options[i].html;
+						if (t.onchange) t.onchange();
+						// alert("after onchange");
+						break;
+					}
+			};
+			if (!this.onbeforechange) change();
+			else this.onbeforechange(this.value, value, function(){ change(); });
 		} // else nothing to do
 	};
 	
