@@ -1,5 +1,5 @@
 <?php
-$span_id = $this->generate_id();
+$span_id = $this->generateID();
 $this->add_javascript("/static/widgets/typed_field/typed_field.js");
 $this->add_javascript("/static/widgets/typed_field/field_text.js");
 ?>

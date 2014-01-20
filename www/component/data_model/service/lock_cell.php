@@ -35,7 +35,7 @@ class service_lock_cell extends Service {
 // 		}
 		$locked_by = null;
 		$sub_model = @$input["sub_model"];
-		$lock = DataBaseLock::lock_cell($table->getSQLNameFor($sub_model), $key, $field, $locked_by);
+		$lock = DataBaseLock::lockCell($table->getSQLNameFor($sub_model), $key, $field, $locked_by);
 		if ($lock == null) {
 			PNApplication::error("This data is already locked by ".$locked_by);
 			return;

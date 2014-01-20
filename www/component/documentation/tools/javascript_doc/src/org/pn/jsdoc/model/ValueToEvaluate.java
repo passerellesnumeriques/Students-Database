@@ -1,5 +1,8 @@
 package org.pn.jsdoc.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.mozilla.javascript.Node;
 import org.mozilla.javascript.Token;
 import org.mozilla.javascript.ast.ArrayLiteral;
@@ -15,6 +18,7 @@ import org.mozilla.javascript.ast.ObjectLiteral;
 import org.mozilla.javascript.ast.PropertyGet;
 import org.mozilla.javascript.ast.StringLiteral;
 import org.mozilla.javascript.ast.UnaryExpression;
+import org.pn.jsdoc.model.Function.Parameter;
 
 public class ValueToEvaluate extends Element implements Evaluable {
 
@@ -39,6 +43,21 @@ public class ValueToEvaluate extends Element implements Evaluable {
 		return "ValueToEvaluate["+value.toSource()+"]";
 	}
 	
+	private static class ContextVariable {
+		ContextVariable(String type, String description) {
+			this.type = type;
+			this.description = description;
+		}
+		String type;
+		String description;
+	}
+	private Map<String,ContextVariable> context = new HashMap<String,ContextVariable>();
+	public void addContext_FunctionParameters(Function f) {
+		for (Parameter p : f.parameters) {
+			context.put(p.name, new ContextVariable(p.type, p.description));
+		}
+	}
+	
 	public FinalElement evaluate(Context ctx) {
 		FinalElement val = null;
 		if (value instanceof FunctionNode) {
@@ -53,7 +72,20 @@ public class ValueToEvaluate extends Element implements Evaluable {
 			val = new ObjectClass(this.location.file, "Array", value, docs);
 		} else if (value instanceof KeywordLiteral) {
 			switch (value.getType()) {
-			case Token.NULL: val = new ObjectClass(this.location.file, "null", value, docs); break;
+			case Token.NULL: {
+				JSDoc doc = new JSDoc(value, docs);
+				String s = doc.description.trim();
+				if (s.startsWith("{")) {
+					int i = s.indexOf('}');
+					String type = s.substring(1, i);
+					doc.description = s.substring(i+1).trim();
+					if (type.toLowerCase().equals("function")) {
+						val = new Function(ctx.container, this.location.file, value, doc.description);
+					} else
+						val = new ObjectClass(this.location.file, type, value, doc.description); break;
+				} else
+					val = new ObjectClass(this.location.file, "null", value, docs); break;
+			}
 			case Token.TRUE: val = new ObjectClass(this.location.file, "Boolean", value, docs); break;
 			case Token.FALSE: val = new ObjectClass(this.location.file, "Boolean", value, docs); break;
 			default: System.err.println("Keyword not supported for value: "+value.toSource());
@@ -68,15 +100,22 @@ public class ValueToEvaluate extends Element implements Evaluable {
 				error("Cannot determine class to instantiate: "+value.toSource(), this.location.file, value);
 		} else if (value instanceof Name) {
 			String name = ((Name)value).getIdentifier();
-			Object o = ctx.container.content.get(name);
-			if (o == this) o = null;
-			if (o == null) o = ctx.global.content.get(name);
-			if (o == this) o = null;
-			if (o == null) {
-				error("Unknown name "+name, this.location.file, value);
-				return null;
+			if (context.containsKey(name)) {
+				ContextVariable v = context.get(name);
+				val = new ObjectClass(this.location.file, v.type, value, docs);
+				if (((ObjectClass)val).description.length() == 0)
+					((ObjectClass)val).description = v.description;
+			} else {
+				Object o = ctx.container.content.get(name);
+				if (o == this) o = null;
+				if (o == null) o = ctx.global.content.get(name);
+				if (o == this) o = null;
+				if (o == null) {
+					error("Unknown name "+name, this.location.file, value);
+					return null;
+				}
+				if (o instanceof FinalElement) val = new ObjectClass(this.location.file, ((FinalElement)o).getType(), value, docs);
 			}
-			if (o instanceof FinalElement) val = new ObjectClass(this.location.file, ((FinalElement)o).getType(), value, docs);
 		} else if (value instanceof PropertyGet) {
 			FinalElement left = new ValueToEvaluate(this.location.file, ((PropertyGet)value).getLeft(), docs).evaluate(ctx);
 			if (left != null) {

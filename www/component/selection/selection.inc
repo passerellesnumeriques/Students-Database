@@ -114,7 +114,7 @@ class selection extends Component implements OrganizationPlugin {
 		
 		SQLQuery::start_transaction();
 		/* Create a calendar for this campaign */
-		$calendar_id = PNApplication::$instance->calendar->create_shared_calendar($name,array("can_access_selection_data"=>true),array("edit_information_session"=>true));
+		$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($name,array("can_access_selection_data"=>true),array("edit_information_session"=>true));
 		
 		/* if the calendar was properly created, continue */
 		if($calendar_id <> null){

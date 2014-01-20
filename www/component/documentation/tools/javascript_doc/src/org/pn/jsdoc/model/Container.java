@@ -72,9 +72,9 @@ public abstract class Container extends FinalElement {
 				Assignment assign = (Assignment)expr;
 				AstNode target = assign.getLeft();
 				if (target instanceof Name) {
-					add(((Name)target).getIdentifier(), new ValueToEvaluate(file, assign.getRight(), (AstNode)node));
+					add(((Name)target).getIdentifier(), new ValueToEvaluate(file, assign.getRight(), (AstNode)node, expr, target));
 				} else if (target instanceof PropertyGet) {
-					assignments_to_evaluate.add(new ValueToEvaluate(file, assign, (AstNode)node));
+					assignments_to_evaluate.add(new ValueToEvaluate(file, assign, (AstNode)node, expr, target));
 				} else {
 					error("Target of assignment not supported: "+target.getClass()+": "+expr.toSource(), file, node);
 				}
@@ -193,13 +193,17 @@ public abstract class Container extends FinalElement {
 								ObjectAnonymous o = new ObjectAnonymous(cl.parent, e.location.file, (ObjectLiteral)assign.getRight(), e.docs);
 								for (Map.Entry<String, Element> entry : o.content.entrySet())
 									cl.add(entry.getKey(), entry.getValue());
+								break;
 							} else {
 								error("Assignment to a class prototype must be a new expression: "+e.value.toSource(), e);
 								break;
 							}
 						}
 						if (names.size() != 2) {
-							error("Not supported: more than 1 level after prototype: "+e.value.toSource(), e);
+							String s = "("+names.size()+" names found: ";
+							for (int i = 0; i < names.size(); ++i) { if (i>0) s+=",";s += names.get(i); }
+							s +=")";
+							error("Not supported: more than 1 level after prototype "+s+": "+e.value.toSource(), e);
 							break;
 						}
 						if (names.get(1).equals("constructor")) break; // skip

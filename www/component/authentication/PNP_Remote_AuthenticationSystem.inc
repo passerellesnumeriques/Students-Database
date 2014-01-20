@@ -1,11 +1,17 @@
 <?php
 require_once("AuthenticationSystem.inc");
+/**
+ * Connect remotely to the PN Philippines authentication system. 
+ */
 class PNP_Remote_AuthenticationSystem extends AuthenticationSystem {
 
 	public function __construct() {
 		$this->base_url = "http://pncebu.dyndns.org:8000/authentication_system.php/";
 	}
 
+	/**
+	 * @var string URL to access to the authentication system using HTTP protocol.
+	 */
 	private $base_url;
 
 	public function authenticate($username, $password, &$error) {
@@ -30,7 +36,7 @@ class PNP_Remote_AuthenticationSystem extends AuthenticationSystem {
 		return substr($result, $i+1);
 	}
 
-	public function get_user_list($token) { 
+	public function getUserList($token) { 
 		$c = curl_init($this->base_url."user_list");
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);

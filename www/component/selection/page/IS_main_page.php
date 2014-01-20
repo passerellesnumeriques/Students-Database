@@ -6,7 +6,7 @@ class page_IS_main_page extends selection_page {
 		$page->add_javascript("/static/widgets/grid/grid.js");
 		$page->add_javascript("/static/data_model/data_list.js");
 		// $page->onload("init_organizations_list();");
-		$container_id = $page->generate_id();
+		$container_id = $page->generateID();
 		$can_create = null;
 		require_once("IS_status.inc");
 		IS_status($page,"IS_status");

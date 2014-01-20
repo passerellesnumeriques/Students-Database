@@ -185,7 +185,7 @@ class page_staff extends Page {
 		}
 
 		function create_new_staff(department_id) {
-			post_data("/dynamic/people/page/create_people",{
+			postData("/dynamic/people/page/create_people",{
 				icon: "/static/application/icon.php?main=/static/staff/staff_32.png&small="+theme.icons_16.add+"&where=right_bottom",
 				title: "New Staff",
 				types: ["staff"],

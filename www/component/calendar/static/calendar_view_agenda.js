@@ -1,34 +1,45 @@
+/**
+ * View agenda for calendars
+ * @param {CalendarView} view view manager
+ * @param {DOMNode} container where to display
+ */
 function calendar_view_agenda(view, container) {
-
+	/** Starting date to display */ 
 	this.start_date = view.cursor_date;
+	/** Maximum date to display */
 	this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
-	this.rows = [];
+	/** List of rows of the agenda */
+	this._rows = [];
 	
+	/** Goes 30 days before */
 	this.back = function() {
 		this.start_date = new Date(this.start_date.getTime()-30*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
 		view.cursor_date = this.start_date;
-		this._reload_table();
-		view.load_events();
+		this._reloadTable();
+		view.loadEvents();
 	};
+	/** Goes 30 days after */
 	this.forward = function() {
 		this.start_date = new Date(this.start_date.getTime()+30*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
 		view.cursor_date = this.start_date;
-		this._reload_table();
-		view.load_events();
+		this._reloadTable();
+		view.loadEvents();
 	};
 	
+	/** Initialize the display */
 	this._init = function() {
 		this.table = document.createElement("TABLE");
 		this.table.style.borderSpacing = 0;
 		this.table.style.width = "100%";
 		container.appendChild(this.table);
-		this._reload_table();
+		this._reloadTable();
 	};
-	this._reload_table = function() {
+	/** Build the content of the display */
+	this._reloadTable = function() {
 		while (this.table.childNodes.length > 0) this.table.removeChild(this.table.childNodes[0]);
-		this.rows = [];
+		this._rows = [];
 		var date = new Date(this.start_date.getTime());
 		while (date.getTime() <= this.end_date.getTime()) {
 			var tr = document.createElement("TR"); this.table.appendChild(tr);
@@ -41,15 +52,18 @@ function calendar_view_agenda(view, container) {
 			var table = document.createElement("TABLE");
 			td.appendChild(table);
 			table.appendChild(tr.table = document.createElement("TBODY"));
-			this.rows.push(tr);
+			this._rows.push(tr);
 			date.setTime(date.getTime()+24*60*60*1000);
 		}
 	};
 	
-	this.add_event = function(ev) {
-		for (var i = 0; i < this.rows.length; ++i) {
-			if (ev.start.getTime() >= this.rows[i].date.getTime() && ev.start.getTime() < this.rows[i].date.getTime()+24*60*60*1000) {
-				var row = this.rows[i];
+	/** Called by the CalendarView when a new event should be displayed.
+	 * @param {Object} ev the event to display
+	 */
+	this.addEvent = function(ev) {
+		for (var i = 0; i < this._rows.length; ++i) {
+			if (ev.start.getTime() >= this._rows[i].date.getTime() && ev.start.getTime() < this._rows[i].date.getTime()+24*60*60*1000) {
+				var row = this._rows[i];
 
 				var tr = document.createElement("TR");
 				var td = document.createElement("TD"); tr.appendChild(td);
@@ -72,9 +86,12 @@ function calendar_view_agenda(view, container) {
 		}
 	};
 	
-	this.remove_event = function(uid) {
-		for (var row_i = 0; row_i < this.rows.length; ++row_i) {
-			var row = this.rows[row_i];
+	/** Called by the CalendarView when an event needs to be removed from the dislpay.
+	 * @param {String} uid the uid of the event to remove
+	 */
+	this.removeEvent = function(uid) {
+		for (var row_i = 0; row_i < this._rows.length; ++row_i) {
+			var row = this._rows[row_i];
 			for (var i = 0; i < row.table.childNodes.length; ++i) {
 				var tr = row.table.childNodes[i];
 				if (tr.event.uid == uid) {
@@ -85,6 +102,9 @@ function calendar_view_agenda(view, container) {
 		}
 	};
 
+	/** Add a 0 if the number is only 1 digit
+	 * @param {Number} n the number
+	 */
 	this._2digits = function(n) {
 		var s = ""+n;
 		while (s.length < 2) s = "0"+s;

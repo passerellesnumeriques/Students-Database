@@ -68,7 +68,7 @@ abstract class Page {
 	}
 	public final function onload($script) { $this->onload .= str_replace("\"", "&quot;", $script); }
 	
-	public final function generate_id() {
+	public final function generateID() {
 		return str_replace("/", "_", str_replace(".", "_", $this->path))."_".($this->generate_id++);
 	}
 

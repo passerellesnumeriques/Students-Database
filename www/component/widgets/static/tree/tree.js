@@ -285,11 +285,13 @@ function tree(container) {
 			}
 		}
 		// children
-		var children_parents = [];
-		for (var i = 0; i < parents.length; ++i) children_parents.push(parents[i]);
-		children_parents.push(has_after);
-		for (var i = 0; i < item.children.length; ++i) {
-			this._refresh_head(item.children[i], children_parents, true, i < item.children.length-1);
+		if (item.expanded && item.children.length > 0) {
+			var children_parents = [];
+			for (var i = 0; i < parents.length; ++i) children_parents.push(parents[i]);
+			children_parents.push(has_after);
+			for (var i = 0; i < item.children.length; ++i) {
+				this._refresh_head(item.children[i], children_parents, true, i < item.children.length-1);
+			}
 		}
 	};
 

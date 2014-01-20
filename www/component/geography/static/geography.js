@@ -1,6 +1,6 @@
 if (window == window.top && !window.top.geography) {
 	var wt = window.top;
-	wt.geography = {
+	window.top.geography = {
 		_countries: null,
 		_countries_ongoing: false,
 		_countries_listeners: [],

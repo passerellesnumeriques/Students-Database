@@ -13,7 +13,7 @@ class service_get_available_fields extends Service {
 	
 	public function execute(&$component, $input) {
 		$table = $input["table"];
-		$list = $component->get_available_fields($table);
+		$list = $component->getAvailableFields($table);
 		echo "[";
 		$first = true;
 		foreach ($list as $d) {

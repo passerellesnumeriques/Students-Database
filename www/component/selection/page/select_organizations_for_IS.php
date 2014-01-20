@@ -7,7 +7,7 @@ class page_select_organizations_for_IS extends Page {
 		$this->add_javascript("/static/widgets/grid/grid.js");
 		$this->add_javascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
-		$container_id = $this->generate_id();
+		$container_id = $this->generateID();
 		
 		$can_create = false;
 		foreach (PNApplication::$instance->components as $c) {

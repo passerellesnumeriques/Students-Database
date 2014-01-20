@@ -21,7 +21,7 @@ class service_save_role_rights extends Service {
 	public function execute(&$component, $input) {
 		$role_id = $input["role_id"];
 		require_once("component/data_model/DataBaseLock.inc");
-		if (!DataBaseLock::check_lock($_GET["lock"], "RoleRights", null, null)) {
+		if (!DataBaseLock::checkLock($_GET["lock"], "RoleRights", null, null)) {
 			PNApplication::error("You do not have the data locked, meaning you cannot modify them. This may be due to a long inactivity. Please refresh the page and try again");
 			return;
 		}

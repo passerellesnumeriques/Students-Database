@@ -25,7 +25,7 @@ class service_lock_column extends Service {
 		$model = DataModel::get();
 		$table = $model->getTable($table); // here check is done is the user can access this table
 		$locked_by = null;
-		$lock = DataBaseLock::lock_column($table->getName(), $field, $locked_by);
+		$lock = DataBaseLock::lockColumn($table->getName(), $field, $locked_by);
 		if ($lock == null) {
 			PNApplication::error("This column is already locked by ".$locked_by);
 			return;

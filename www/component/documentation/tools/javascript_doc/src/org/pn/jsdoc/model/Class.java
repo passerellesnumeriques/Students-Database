@@ -48,8 +48,9 @@ public class Class extends Container {
 						for (String t : is_this)
 							if (s.equals(t)) {
 								AstNode value = ((Assignment)expr).getRight();
-								// TODO add context
-								add(names.get(names.size()-1), new ValueToEvaluate(file, value, new Node[] { node, expr, target, value }));
+								ValueToEvaluate ve = new ValueToEvaluate(file, value, node, expr, target, value);
+								ve.addContext_FunctionParameters(constructor);
+								add(names.get(names.size()-1), ve);
 								break;
 							}
 					}
@@ -59,7 +60,7 @@ public class Class extends Container {
 						if (vi.getInitializer() == null)
 							variables.put(name, new ObjectClass(file, "undefined", vi, node));
 						else
-							variables.put(name, new ValueToEvaluate(file, vi.getInitializer(), node));
+							variables.put(name, new ValueToEvaluate(file, vi.getInitializer(), node, vi, vi.getTarget(), vi.getInitializer()));
 						LinkedList<String> names = getIdentifiers(vi.getInitializer());
 						if (names.isEmpty()) continue;
 						String s = names.get(0);

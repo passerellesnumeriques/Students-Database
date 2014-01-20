@@ -1,7 +1,15 @@
 <?php 
+/**
+ * Provides functionalities to manipulate the data model
+ */
 class data_model extends Component {
 	
-	public function get_available_fields($root_table) {
+	/**
+	 * Return all reachable DataDisplay from the given root table
+	 * @param string $root_table the table to start from
+	 * @return array of array(DataDisplay, DataPath)
+	 */
+	public function getAvailableFields($root_table) {
 		require_once("component/data_model/DataPath.inc");
 		$paths = DataPathBuilder::search_from($root_table);
 		$root = DataPathBuilder::build_paths_tree($paths);
@@ -11,6 +19,12 @@ class data_model extends Component {
 		return $list;
 	}
 	
+	/**
+	 * Browse using the DisplayHandler of the table pointed by the path 
+	 * @param DataPath $path the path to browse
+	 * @param string|null $from the column by which we come from 
+	 * @param array $list the list to be filled
+	 */
 	private function browse($path, $from, &$list) {
 		$display = $path->table->getDisplayHandler($from);
 		$handled = array();

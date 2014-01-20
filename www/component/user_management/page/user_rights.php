@@ -14,7 +14,7 @@ $can_edit = PNApplication::$instance->user_management->has_right("edit_user_righ
 $locked = null;
 if ($can_edit) {
 	require_once("component/data_model/DataBaseLock.inc");
-	$lock_id = DataBaseLock::lock_table("UserRights", $locked);
+	$lock_id = DataBaseLock::lockTable("UserRights", $locked);
 	if ($locked <> null)
 		$can_edit = false;
 }
@@ -38,7 +38,7 @@ $this->add_javascript("/static/widgets/page_header.js");
 $this->onload("new page_header('user_rights_header');");
 
 if ($can_edit)
-	DataBaseLock::generate_script($lock_id);
+	DataBaseLock::generateScript($lock_id);
 ?>
 <div id='user_rights_header' icon='/static/user_management/access_list_32.png' title="User Access Rights: &lt;span style='font-family:Courrier New;font-weight:bold;font-style:italic'&gt;<?php echo $user["domain"]."\\".$user["username"];?>&lt;/span&gt;">
 <?php 

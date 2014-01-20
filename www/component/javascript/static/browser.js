@@ -2,6 +2,7 @@
  * Object to detect which browser and version is used 
  */
 browser = {
+	/** information from the UserAgent */
 	agent_infos: [],
 	/** version of Internet Explorer, or 0 */
 	IE: 0,
@@ -21,7 +22,9 @@ browser = {
 	OperaBrowser: 0,
 	/** version of Presto, or 0 */
 	Presto: 0,
+	/** version */
 	Version: 0,
+	/** Detect the navigator type and version */
 	detect: function() {
 		var s = navigator.userAgent;
 		do {
@@ -53,9 +56,10 @@ browser = {
 				infos: infos
 			});
 		} while (s.length > 0)
-		this.fill();
+		this._fill();
 	},
-	fill: function() {
+	/** Fill navigator type and version from agent infos */
+	_fill: function() {
 		for (var i = 0; i < this.agent_infos.length; ++i) {
 			var a = this.agent_infos[i];
 			switch (a.name.toLowerCase()) {
@@ -87,14 +91,10 @@ if (!Array.prototype.contains)
 
 /** @class document */
 
-/** If document.getElementById does not exist, it is added  
- * @method document.getElementById
- */
+/** If document.getElementById does not exist, it is added */
 if (typeof document.getElementById != "function")
 	document.getElementById = function(id) { return document.all[id]; };
-/** If document.getElementsByClassName does not exist, it is added  
- * @method document.getElementsByClassName
- */
+/** If document.getElementsByClassName does not exist, it is added */
 if (typeof document.getElementsByClassName!='function') {
     document.getElementsByClassName = function() {
         var elms = document.getElementsByTagName('*');
@@ -119,26 +119,35 @@ if (typeof document.getElementsByClassName!='function') {
         return ei;
     };
 }
-/** return the document object of the given frame */
+/** Return the document object of the given frame
+ * @param {DOMNode} frame iframe
+ * @returns {document} the document of the iframe 
+ */
 getIFrameDocument = function(frame) {
 	if (frame.contentDocument) return frame.contentDocument;
 	if (frame.document) return frame.document;
 	return frame.contentWindow.document;
 };
-/** return the window object of the given frame */
+/** return the window object of the given frame 
+ * @param {DOMNode} frame iframe
+ * @returns {window} the window of the iframe
+ */
 getIFrameWindow = function(frame) {
 	if (frame.contentWindow) return frame.contentWindow;
 	return frame.contentDocument.window;
 };
 
+/** Return the window from the given document
+ * @param {document} doc the document
+ * @returns {window} the window containing the given document
+ */
 getWindowFromDocument = function(doc) {
 	if (browser.IE > 0 && browser.IE <= 8)
 		return doc.parentWindow;
 	return doc.defaultView;
 };
 
-/** define it if this function is not available in the current browser
- * @method getComputedStyle
+/** Defined it if this function is not available in the current browser
  */
 if (typeof getComputedStyle == "undefined") {
 	getComputedStyle = function(e,n) {
@@ -146,7 +155,6 @@ if (typeof getComputedStyle == "undefined") {
 	};
 }
 /** If this class is not available in the current browser, it creates it
- * @class XMLHttpRequest
  */
 if (typeof XMLHttpRequest == "undefined")
 	XMLHttpRequest = function () {
@@ -164,8 +172,8 @@ HTTP_Status_ConnectionLost = browser.IE > 0 ? 12029 : 0;
 	
 /**
  * Set the opacity of an element (if the browser has a way to support it)
- * @param element
- * @param opacity from 0 to 1
+ * @param {DOMNode} element
+ * @param {Number} opacity from 0 to 1
  */
 function setOpacity(element, opacity) {
 	element.style.opacity = opacity;
@@ -177,13 +185,13 @@ function setOpacity(element, opacity) {
 }
 /**
  * Set box-shadow if the browser has a way to support it 
- * @param elem
- * @param a horizontal shadow
- * @param b vertical shadow
- * @param c blur distance
- * @param d size of shadow
- * @param color
- * @param inset
+ * @param {DOMNode} elem the HTML element
+ * @param {Number} a horizontal shadow
+ * @param {Number} b vertical shadow
+ * @param {Number} c blur distance
+ * @param {Number} d size of shadow
+ * @param {String} color color string
+ * @param {Boolean} inset if inset
  */
 function setBoxShadow(elem,a,b,c,d,color,inset) { 
 	elem.style.boxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color+(inset ? " inset" : "");
@@ -192,15 +200,15 @@ function setBoxShadow(elem,a,b,c,d,color,inset) {
 }
 /**
  * Set a border radius if the browser has a way to support it
- * @param elem
- * @param topleft_width
- * @param topleft_height
- * @param topright_width
- * @param topright_height
- * @param bottomleft_width
- * @param bottomleft_height
- * @param bottomright_width
- * @param bottomright_height
+ * @param {DOMNode} elem the HTML element
+ * @param {Number} topleft_width in pixels
+ * @param {Number} topleft_height in pixels
+ * @param {Number} topright_width in pixels
+ * @param {Number} topright_height in pixels
+ * @param {Number} bottomleft_width in pixels
+ * @param {Number} bottomleft_height in pixels
+ * @param {Number} bottomright_width in pixels
+ * @param {Number} bottomright_height in pixels
  */
 function setBorderRadius(elem, 
 		topleft_width, topleft_height, 
@@ -223,9 +231,9 @@ function setBorderRadius(elem,
 }
 /**
  * Set a background gradient if the browser has a way to support it
- * @param element
- * @param orientation one of: horizontal, vertical, diagonal-topleft, diagonal-bottomleft, radial
- * @param stops list of objects with 2 attributes: <code>pos</code> between 0 and 100, and <code>color</code> the string defining the color
+ * @param {DOMNode} element the HTML element
+ * @param {String} orientation one of: horizontal, vertical, diagonal-topleft, diagonal-bottomleft, radial
+ * @param {Array} stops list of objects with 2 attributes: <code>pos</code> between 0 and 100, and <code>color</code> the string defining the color
  */
 function setBackgroundGradient(element, orientation, stops) {
 	var start_pos;
@@ -298,6 +306,11 @@ function setBackgroundGradient(element, orientation, stops) {
 	// TODO W3C ???
 }
 
+/**
+ * Rotate an HTML element
+ * @param {DOMNode} element the HTML element
+ * @param {Number} degres degres of rotation
+ */
 function setRotation(element, degres) {
 	element.style.transform = "rotate("+degres+"deg)";
 	element.style.MsTransform = "rotate("+degres+"deg)";
@@ -306,6 +319,8 @@ function setRotation(element, degres) {
 	
 /**
  * Return an object that will contain the same information whatever browser is used: {x,y,button}
+ * @param {Event} e the event
+ * @returns {Object} {x,y,button}
  */
 getCompatibleMouseEvent = function(e) {
 	ev = {};
@@ -316,7 +331,9 @@ getCompatibleMouseEvent = function(e) {
 	return ev;
 };
 /**
- * Return a key event, whatever browser is used
+ * Return a key event, whatever browser is used.
+ * @param {Event} e the event
+ * @returns {Object}
  */
 getCompatibleKeyEvent = function(e) {
 	// source: http://www.javascripter.net/faq/keycodes.htm
@@ -401,12 +418,6 @@ getCompatibleKeyEvent = function(e) {
 	return ev;
 };
 
-/** Return the height of the window in pixels
- * @method getWindowHeight
- */
-/** Return the width of the window in pixels
- * @method getWindowWidth
- */
 if (!browser.IE >= 9) {
 	getWindowHeight = function() { return window.innerHeight; };
 	getWindowWidth = function() { return window.innerWidth; };
@@ -417,10 +428,7 @@ if (!browser.IE >= 9) {
 	getWindowHeight = function() { return document.body.clientHeight; };
 	getWindowWidth = function() { return document.body.clientWidth; };
 }
-/** Stop propagation of the given/current event
- * @method stopEventPropagation
- * @param evt
- */
+
 if (browser.IE == 0) {
 	stopEventPropagation = function(evt) {
 		evt.stopPropagation();
@@ -437,9 +445,9 @@ if (browser.IE == 0) {
 
 /**
  * Attach a listener to the given event type on the given element
- * @param elem the HTML element
- * @param type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
- * @param handler the listener to be called when the event occur
+ * @param {DOMNode} elem the HTML element
+ * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
+ * @param {Function} handler the listener to be called when the event occur
  */
 function listenEvent(elem, type, handler) {
 	if (elem == window && !document.createEvent) elem = document;
@@ -450,9 +458,9 @@ function listenEvent(elem, type, handler) {
 }
 /**
  * Detach a listener
- * @param elem
- * @param type
- * @param handler
+ * @param {DOMNode} elem the HTML element
+ * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
+ * @param {Function} handler the listener to be removed
  */
 function unlistenEvent(elem, type, handler) {
 	if (elem == window && !document.createEvent) elem = document;
@@ -463,9 +471,9 @@ function unlistenEvent(elem, type, handler) {
 }
 /**
  * Trigger an event
- * @param elem
- * @param type
- * @param attributes
+ * @param {DOMNode} elem the HTML element
+ * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
+ * @param {Object} attributes attributes to set in the event
  */
 function triggerEvent(elem, type, attributes) {
 	var event;
@@ -489,8 +497,8 @@ function triggerEvent(elem, type, attributes) {
 var _scripts_loaded = [];
 /**
  * Dynamically load a javascript into the page. If it was already loaded, it will not load it again, but will call <code>onload</code> immediately
- * @param {String} url
- * @param {function} onload called once the javascript is loaded
+ * @param {String} url URL of the JavaScript file to load
+ * @param {Function} onload called once the javascript is loaded
  */
 function add_javascript(url, onload) {
 	var p = new URL(url).toString();
@@ -542,12 +550,17 @@ function add_javascript(url, onload) {
 }
 /**
  * Indicate a javascript is already loaded. This is automatically called by add_javascript, but may be useful in case some scripts are loaded in a different way
+ * @param {String} url the URL of the loaded JavaScript
  */
 function javascript_loaded(url) {
 	url = new URL(url).toString();
 	if (!_scripts_loaded.contains(url))
 		_scripts_loaded.push(url);
 }
+/**
+ * Remove a JavaScript from the HEAD
+ * @param {String} url the URL of the JavaScript file to remove
+ */
 function remove_javascript(url) {
 	var p = new URL(url).toString();
 	_scripts_loaded.remove(p);
@@ -567,6 +580,7 @@ function remove_javascript(url) {
 
 /**
  * Dynamically load a stylesheet in the page.
+ * @param {String} url the URL of the CSS file to load
  */
 function add_stylesheet(url) {
 	if (typeof url == 'string') url = new URL(url);
@@ -596,7 +610,8 @@ function add_stylesheet(url) {
 
 /**
  * Return the URL of the script ending by the given filename, or null if it cannot be found
- * @param script_filename
+ * @param {String} script_filename the file name to search
+ * @returns {String} the URL where it has been found, or null of it was not found
  */
 function get_script_path(script_filename) {
 	var head = document.getElementsByTagName("HEAD")[0];

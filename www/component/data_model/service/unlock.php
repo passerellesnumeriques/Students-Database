@@ -14,7 +14,7 @@ class service_unlock extends Service {
 		if (isset($input["lock"]))
 			$error = DataBaseLock::unlock($input["lock"]);
 		if (isset($input["locks"]))
-			$error = DataBaseLock::unlock_multiple($input["locks"]);
+			$error = DataBaseLock::unlockMultiple($input["locks"]);
 		if ($error <> null) PNApplication::error($error);
 		echo PNApplication::has_errors() ? "false" : "true";
 	}

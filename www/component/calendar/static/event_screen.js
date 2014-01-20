@@ -1,17 +1,32 @@
+/**
+ * Display a popup window with an event details
+ * @param {Object} ev the event to display or null to create a new event
+ * @param {Calendar} default_calendar default calendar for an event creation
+ * @param {Date} new_datetime in case of an event creation, indicates the pre-filled date and time of the event
+ * @param {Boolean} new_all_day in case of an event creation, indicates if the event is pre-filled as an <i>all day</i> event
+ */
 function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	var t=this;
-	t.event = object_copy(ev);
+	/** Copy of the given event, that will be manipulated and updated according to the screen, without modifying directly the event (in case the user finally cancel) */
+	t.event = copyCalendarEvent(ev);
+	/** Add a 0 if the number is only 1 digit
+	 * @param {Number} n the number
+	 */
 	t._2digits = function(n) {
 		var s = ""+n;
 		while (s.length < 2) s = "0"+s;
 		return s;
 	};
+	/** Return a string representation of the given date
+	 * @param {Date} date the date
+	 */
 	t.getDateString = function(date) {
 		return date.getFullYear()+"-"+t._2digits(date.getMonth()+1)+"-"+t._2digits(date.getDate());
 	};
 	require([["typed_field.js",["field_date.js","field_time.js"]],"popup_window.js","calendar_view.js"],function() {
 		var o;
-		var ro = ev && !ev.calendar.save_event;
+		var calendar = ev ? default_calendar.manager.getCalendar(ev.calendar_id) : null;
+		var ro = ev && !calendar.saveEvent;
 
 		t.content = document.createElement("DIV");
 		t.content.style.padding = "5px";
@@ -58,7 +73,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		// calendar
 		t.calendar_div = document.createElement("DIV"); t.content.appendChild(t.calendar_div);
 		t.calendar_div.appendChild(document.createTextNode("Calendar: "));
-		t.calendar_div.selected = ev ? ev.calendar : default_calendar;
+		t.calendar_div.selected = ev ? calendar : default_calendar;
 		t.calendar_icon = document.createElement("IMG");
 		t.calendar_icon.width = 16;
 		t.calendar_icon.style.width = '16px';
@@ -69,10 +84,10 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		t.calendar_box.style.display = "inline-block";
 		t.calendar_box.style.width = "10px";
 		t.calendar_box.style.height = "10px";
-		t.calendar_box.style.border = "1px solid #"+(ev ? ev.calendar.color : default_calendar.color);
-		t.calendar_box.style.backgroundColor = "#"+(ev ? ev.calendar.color : default_calendar.color);
+		t.calendar_box.style.border = "1px solid #"+(ev ? calendar.color : default_calendar.color);
+		t.calendar_box.style.backgroundColor = "#"+(ev ? calendar.color : default_calendar.color);
 		t.calendar_box.style.marginRight = '3px';
-		t.calendar_div.appendChild(document.createTextNode(ev ? ev.calendar.name : default_calendar.name));
+		t.calendar_div.appendChild(document.createTextNode(ev ? calendar.name : default_calendar.name));
 		t.calendar_div.style.cursor = 'pointer';
 		
 		// recurrence
@@ -239,12 +254,12 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 			}
 		};
 		t.calendar_div.onclick = function() {
-			if (ev && !ev.calendar.save_event) return; // we cannot move it
-			var manager = ev ? ev.calendar.manager : default_calendar.manager;
+			if (ev && !calendar.saveEvent) return; // we cannot move it
+			var manager = default_calendar.manager;
 			require("context_menu.js",function(){
 				var menu = new context_menu();
 				for (var i = 0; i < manager.calendars.length; ++i) {
-					if (!manager.calendars[i].save_event) continue; // we cannot modify this calendar
+					if (!manager.calendars[i].saveEvent) continue; // we cannot modify this calendar
 					var item = document.createElement("DIV");
 					item.className = 'context_menu_item';
 					var icon = document.createElement("IMG");
@@ -289,13 +304,13 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 			if (ev.frequency) {
 				t.repeat.checked = 'checked';
 				t.repeat.onchange();
-				if (ev.frequency == "DAILY") {
+				if (ev.frequency.frequency == "DAILY") {
 					t.frequency.selectedIndex = 0;
-				} else if (ev.frequency == "WEEKLY") {
+				} else if (ev.frequency.frequency == "WEEKLY") {
 					t.frequency.selectedIndex = 1;
-					var days = ev.by_week_day.split(",");
+					var days = ev.frequency.by_week_day.split(",");
 					for (var i = 0; i < days.length; ++i) {
-						days[i] = parse_by_day(days[i]);
+						days[i] = parseByDay(days[i]);
 						switch (days[i][1]) {
 							case 0: t.repeat_on_SU.checked = 'checked'; break;
 							case 1: t.repeat_on_MO.checked = 'checked'; break;
@@ -306,19 +321,19 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 							case 6: t.repeat_on_SA.checked = 'checked'; break;
 						}
 					}
-				} else if (ev.frequency == "MONTHLY") {
+				} else if (ev.frequency.frequency == "MONTHLY") {
 					t.frequency.selectedIndex = 2;
 					// TODO
-				} else if (ev.frequency == "YEARLY") {
+				} else if (ev.frequency.frequency == "YEARLY") {
 					t.frequency.selectedIndex = 3;
 				}
 				t.frequency.onchange();
-				if (ev.count) {
+				if (ev.frequency.count) {
 					t.repeat_until_count.checked = 'checked';
-					t.repeat_count.value = ev.count;
-				} else if (ev.until) {
+					t.repeat_count.value = ev.frequency.count;
+				} else if (ev.frequency.until) {
 					t.repeat_until_date.checked = 'checked';
-					t.repeat_until.setData(ev.until);
+					t.repeat_until.setData(ev.frequency.until);
 				} else {
 					t.repeat_until_never.checked = 'checked';
 				}
@@ -343,14 +358,14 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		
 		t.popup = new popup_window("Event", "/static/calendar/event.png",content);
 		t.popup.addButton("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> "+(ev ? "Save" : "Create"), 'ok', function(){
-			var e = {};
+			var e = new CalendarEvent();
 			e.title = t.title.value.trim();
 			if (e.title.length == 0) {
 				alert("Please enter a title for the event");
 				return;
 			}
-			e.calendar = t.calendar_div.selected;
-			if (ev && ev.calendar != t.calendar_div.selected) {
+			e.calendar_id = t.calendar_div.selected.id;
+			if (ev && ev.calendar_id != t.calendar_div.selected.id) {
 				if (!confirm("You are going to move the event to a different calendar. Are you sure you want to remove it from "+ev.calendar.name+" and create it into "+e.calendar.name+" ?"))
 					return;
 			} else if (ev) {
@@ -370,7 +385,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 			}
 			e.description = t.description.value;
 			// TODO get and validate the repeat
-			e.calendar.save_event(e);
+			t.calendar_div.selected.saveEvent(e);
 			t.popup.close();
 		});
 		if (ev)

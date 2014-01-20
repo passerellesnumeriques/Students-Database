@@ -23,12 +23,12 @@ class page_import_exam_subject extends selection_page {
 			// $table = DataModel::get()->getTable("Exam_subject");
 			// $locked_by = null;
 			// $lock_id = null;
-			// $lock_id = DataBaseLock::lock_table($table->getSQLNameFor($campaign_id), $locked_by);
+			// $lock_id = DataBaseLock::lockTable($table->getSQLNameFor($campaign_id), $locked_by);
 			// if($lock_id == null & $locked_by <> null){
 				// PNApplication::error($locked_by." is already managing the exams subjects for this campaign");
 				// return;
 			// } else {
-				// DataBaseLock::generate_script($lock_id);
+				// DataBaseLock::generateScript($lock_id);
 			// }
 			//TODO: lock table?
 			require_once("component/data_import/page/import_data.inc");
@@ -226,7 +226,7 @@ class page_import_exam_subject extends selection_page {
 					
 					t1._onCancel = function(){
 						t1.pop.pressButton("ok");
-						alert(service.generate_input(t1.res));
+						alert(service.generateInput(t1.res));
 						// location.assign("/dynamic/selection/page/selection_main_page");
 					}
 					
@@ -343,7 +343,7 @@ class page_import_exam_subject extends selection_page {
 			function finishImport(questions,locker){				
 				var t = this;
 				t.exam_infos = start_import.getExamInfos();
-				// alert(service.generate_input(t.exam_infos));
+				// alert(service.generateInput(t.exam_infos));
 				t.errors = {};
 				t.errors.number_question = null;
 				

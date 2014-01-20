@@ -1,8 +1,18 @@
 <?php
 require_once("component/people/PeoplePlugin.inc");
+/**
+ * Manage contacts (email, phone, IM, postal address) for people and organizations
+ */
 class contact extends Component implements PeoplePlugin {
 	
-	public function add_address_to_organization($organization_id,$new_address,$fake = false) {
+	/**
+	 * Add a new postal address to an organization
+	 * @param integer $organization_id Organization ID
+	 * @param array $new_address PostalAddress coming from JSON
+	 * @param boolean $fake indicates if this address is attached to a fake organization
+	 * @return integer|boolean the address ID or false if it failed
+	 */
+	public function addAddressToOrganization($organization_id,$new_address,$fake = false) {
 		//Check the rights
 		require_once("component/data_model/Model.inc");
 		$table = DataModel::get()->getTable("Organization_address");
@@ -10,11 +20,18 @@ class contact extends Component implements PeoplePlugin {
 			PNApplication::error("You are not allowed to add an address for this organization");
 			return false;
 		} else {
-			$address_id = $this->add_address("Organization_address","organization",$organization_id,$new_address,$fake);
+			$address_id = $this->addAddress("Organization_address","organization",$organization_id,$new_address,$fake);
 			return $address_id;
 		}
 	}
-	public function add_address_to_people($people_id,$new_address,$fake = false) {
+	/**
+	 * Add a new postal address to a people
+	 * @param integer $people_id People ID
+	 * @param array $new_address PostalAddress coming from JSON
+	 * @param boolean $fake indicates if this address is attached to a fake organization
+	 * @return integer|boolean the address ID or false if it failed
+	 */
+	public function addAddressToPeople($people_id,$new_address,$fake = false) {
 		//Check the rights
 		require_once("component/data_model/Model.inc");
 		$table = DataModel::get()->getTable("People_address");
@@ -22,11 +39,17 @@ class contact extends Component implements PeoplePlugin {
 			PNApplication::error("You are not allowed to add an address for this people");
 			return false;
 		} else {
-			$address_id = $this->add_address("People_address","people",$people_id,$new_address,$fake);
+			$address_id = $this->addAddress("People_address","people",$people_id,$new_address,$fake);
 			return $address_id;
 		}
 	}
-	private function add_address($table, $column, $key, $new_address, $bypass) {
+	private function addAddress($table, $column, $key, $new_address, $bypass) {
+		// convert JSON to database
+		require_once("ContactJSON.inc");
+		$new_address = ContactJSON::PostalAddress2DB($new_address);
+		// remove any id
+		unset($new_address["id"]);
+		// insert
 		try {
 			$address_id = SQLQuery::create()->bypass_security()->insert("Postal_address", $new_address);
 		} catch (Exception $ex) {

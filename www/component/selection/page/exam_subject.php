@@ -4,7 +4,7 @@ require_once("exam_subject.inc");
 class page_exam_subject extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
-		$container_id = $page->generate_id();
+		$container_id = $page->generateID();
 		$id = null;
 		if(!isset($_GET["id"]))
 			$id = -1;

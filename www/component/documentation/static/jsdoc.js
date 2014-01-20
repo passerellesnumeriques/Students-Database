@@ -39,13 +39,17 @@ function filter_jsdoc_namespace(ns, file) {
 		var elem = ns.content[name];
 		if (elem instanceof JSDoc_Namespace) {
 			var ne = filter_jsdoc_namespace(elem, file);
-			if (ne.content.length > 0) n[name] = ne;
+			var has_content = false;
+			for (var nn in ne.content) { has_content = true; break; }
+			if (has_content) n.content[name] = ne;
 		} else if (elem instanceof JSDoc_Class) {
 			var ne = filter_jsdoc_class(elem, file);
-			if (ne.content.length > 0) n[name] = ne;
+			var has_content = false;
+			for (var nn in ne.content) { has_content = true; break; }
+			if (has_content) n.content[name] = ne;
 		} else {
 			if (elem.location.file != file) continue;
-			n[name] = elem;
+			n.content[name] = elem;
 		}
 	}
 	return n;
@@ -55,7 +59,7 @@ function filter_jsdoc_class(cl, file) {
 	for (var name in cl.content) {
 		var elem = cl.content[name];
 		if (elem.location.file != file) continue;
-		n[name] = elem;
+		n.content[name] = elem;
 	}
 	return n;
 }
@@ -136,7 +140,7 @@ function build_jsdoc_namespace_content(container, ns, extend_containers, path) {
 		var sub_ns = ns.content[name];
 		if (!(sub_ns instanceof JSDoc_Namespace)) continue;
 		if (extend_containers)
-			build_jsdoc_namespace(container, name, sub_ns, extends_containers, path+name+".");
+			build_jsdoc_namespace(container, name, sub_ns, extend_containers, path+name+".");
 		else {
 			div = document.createElement("DIV"); container.appendChild(div);
 			span = document.createElement("SPAN"); div.appendChild(span);
@@ -206,7 +210,7 @@ function build_jsdoc_class(container, name, cl) {
 	for (var name in cl.content) {
 		if (name != "constructor") continue;
 		var constr = cl.content[name];
-		build_jsdoc_function(table, "constructor.png", "constructor", constr);
+		build_jsdoc_function(table, "constructor.gif", "constructor", constr);
 	}
 	// 3. attributes
 	for (var i = 0; i < names.length; ++i) {

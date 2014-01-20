@@ -400,7 +400,7 @@ class page_build_excel_import extends Page {
 									$field_args = $f[1];
 								}
 
-								$id = $this->generate_id();
+								$id = $this->generateID();
 								array_push($paths_ids, array($id,$path));
 								echo "<tr>";
 								echo "<td style='padding:0px'>".$path->table->getDisplayableDataName($path->field_name)."</td>";

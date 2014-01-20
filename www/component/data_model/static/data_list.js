@@ -740,7 +740,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		form.appendChild(input = document.createElement("INPUT"));
 		input.type = 'hidden';
 		input.name = 'fields';
-		input.value = service.generate_input(fields);
+		input.value = service.generateInput(fields);
 		form.appendChild(input = document.createElement("INPUT"));
 		input.type = 'hidden';
 		input.name = 'export';

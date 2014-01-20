@@ -396,7 +396,7 @@ function data_import(container, root_table, preset_data, title) {
 					j--;
 				}
 			}
-			var json = service.generate_input(req);
+			var json = service.generateInput(req);
 			var form = document.createElement("FORM");
 			form.method = 'POST';
 			form.action = "/dynamic/data_import/page/data_import";
@@ -433,7 +433,7 @@ function data_import(container, root_table, preset_data, title) {
 	
 	
 	this.freezer = null;
-	this.freezer_message_id = generate_id();
+	this.freezer_message_id = generateID();
 	this.freeze = function() {
 		if (this.freezer) return;
 		this.freezer = document.createElement("DIV");

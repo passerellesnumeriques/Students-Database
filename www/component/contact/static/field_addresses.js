@@ -8,7 +8,7 @@ field_addresses.prototype._create = function(data) {
 		this.table = document.createElement("TABLE"); this.element.appendChild(this.table);
 		var t=this;
 		require("addresses.js",function() {
-			new addresses(t.table, false, data.table, data.key_name, data.key_value, data.addresses, true, true, true);
+			new addresses(t.table, false, data.type, data.type_id, data.addresses, true, true, true);
 		});
 	} else {
 		this.table = document.createElement("TABLE"); this.element.appendChild(this.table);

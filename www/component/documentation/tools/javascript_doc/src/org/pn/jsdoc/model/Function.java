@@ -114,6 +114,11 @@ public class Function extends FinalElement {
 		this.container = container;
 		this.return_type = return_type;
 	}
+
+	public Function(Container container, String file, Node node, String description) {
+		super(new Location(file, node));
+		this.description = description;
+	}
 	
 	@Override
 	public String getType() {

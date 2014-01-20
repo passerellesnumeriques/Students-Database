@@ -1,8 +1,17 @@
+/**
+ * Handle the display and layout of <i>all day</i> events: one box per day, containing boxes for each event
+ */
 function day_row_layout() {
+	/** List of events */
 	this.events = [];
 	
+	/** Layout the given events
+	 * @param {Array} events list of events
+	 * @param {Array} day_boxes list of containers: one per day
+	 * @param {Date} first_day first day displayed
+	 */
 	this.layout = function(events, day_boxes, first_day) {
-		this.remove_events();
+		this.removeEvents();
 		
 		var by_day = [];
 		for (var i = 0; i < day_boxes.length; ++i) by_day.push([]);
@@ -69,7 +78,8 @@ function day_row_layout() {
 		return h;
 	};
 	
-	this.remove_events = function() {
+	/** Remove all events from the display */
+	this.removeEvents = function() {
 		for (var i = 0; i < this.events.length; ++i)
 			this.events[i].parentNode.removeChild(this.events[i]);
 		this.events = [];

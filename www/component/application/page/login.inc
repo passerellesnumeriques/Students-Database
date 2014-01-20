@@ -1,4 +1,7 @@
 <?php
+if (isset($_GET["destroy_session"])) {
+	session_destroy();
+}
 $message = null;
 if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["password"])) {
 	try {
@@ -102,6 +105,8 @@ if ($message <> null) {
 <a href="/dynamic/documentation/page/index">Technical Documentation</a>
 <br/>
 <a href="/dynamic/test/page/home">Tests</a>
+<br/>
+<a href="?destroy_session=true">Destroy session</a>
 </td></tr></table>
 </form>
 <style type="text/css">

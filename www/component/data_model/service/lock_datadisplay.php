@@ -43,14 +43,14 @@ class service_lock_datadisplay extends Service {
 					$locked_by = null;
 					if (isset($lock["column"])) {
 						if (isset($lock["row_key"]))
-							$id = DataBaseLock::lock_cell($lock["table"], $lock["row_key"], $lock["column"], $locked_by);
+							$id = DataBaseLock::lockCell($lock["table"], $lock["row_key"], $lock["column"], $locked_by);
 						else
-							$id = DataBaseLock::lock_column($lock["table"], $lock["column"], $locked_by);
+							$id = DataBaseLock::lockColumn($lock["table"], $lock["column"], $locked_by);
 					} else {
 						if (isset($lock["row_ley"]))
-							$id = DataBaseLock::lock_row($lock["table"], $lock["row_key"], $locked_by);
+							$id = DataBaseLock::lockRow($lock["table"], $lock["row_key"], $locked_by);
 						else
-							$id = DataBaseLock::lock_table($lock["table"], $locked_by);
+							$id = DataBaseLock::lockTable($lock["table"], $locked_by);
 					}
 					if ($id == null) {
 						// rollback

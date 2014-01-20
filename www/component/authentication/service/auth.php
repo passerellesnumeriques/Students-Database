@@ -23,7 +23,7 @@ class service_auth extends Service {
 		$username = $input["username"];
 		$password = $input["password"];
 		
-		$auth = $component->get_authentication_system($domain);
+		$auth = $component->getAuthenticationSystem($domain);
 		if ($auth == null) {
 			PNApplication::error(get_locale("Invalid domain"));
 			return true;

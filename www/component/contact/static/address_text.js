@@ -1,6 +1,10 @@
 if (typeof window.top.require != 'undefined')
 	window.top.require("geography.js");
 
+/**
+ * Creates a DIV containing read-only text representing the given postal address
+ * @param {PostalAddress} address the postal address
+ */
 function address_text(address){
 	this.element = document.createElement("DIV");
 
@@ -54,11 +58,11 @@ function address_text(address){
 		empty &= address.geographic_area.text.trim().length > 0;
 	}
 
-	if (address.country != null) {
+	if (address.country_id != null) {
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
 		window.top.require("geography.js",function() {
-			window.top.geography.getCountryName(address.country,function(country_name){
+			window.top.geography.getCountryName(address.country_id,function(country_name){
 				div.appendChild(document.createTextNode(country_name.uniformFirstLetterCapitalized()));
 			});
 			

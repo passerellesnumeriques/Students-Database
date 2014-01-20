@@ -2,16 +2,33 @@ if (typeof require != 'undefined') {
 	require("address_text.js");
 }
 
-function addresses(container, header, table_join, join_key, join_value, addresses, can_edit, can_add, can_remove, onready) {
+/**
+ * UI Control to display a list of addresses, that can be edited depending on the given rights
+ * @param {DOMNode} container where to put this control
+ * @param {Boolean} header if true, an header with icon and title is displayed at the beginning
+ * @param {String} type either "people" or "organization"
+ * @param {Number} type_id people id, or organization id, or -1 for a new entity (if new, addresses are only kept in memory but not synchronized with the database)
+ * @param {Array} addresses array of PostalAddress
+ * @param {Boolean} can_edit true if the user can edit an existing address
+ * @param {Boolean} can_add true if the user can add a new address
+ * @param {Boolean} can_remove true if the user can remove an existing address
+ * @param {Function} onready called when the control is ready
+ */
+function addresses(container, header, type, type_id, addresses, can_edit, can_add, can_remove, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	this.addresses = addresses;
 	var t=this;
 	
+	/** Returns the list of addresses currently displayed
+	 * @returns {Array} list of PostalAddress
+	 */
 	this.getAddresses = function() {
 		return this.addresses;
 	};
+	/** Called each time a modification is done (edit, add, or remove) */
 	this.onchange = new Custom_Event();
 	
+	/** Create the table that contains the addresses */
 	this._createTable = function() {
 		container.appendChild(this.table = document.createElement("table"));
 		this.table.appendChild(this.thead = document.createElement("thead"));
@@ -55,6 +72,10 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 		if (onready) onready(this);
 	};
 	
+	/** Add a new address
+	 * @param {PostalAddress} address the new postal address
+	 * @param {Boolean} is_new if true, the popup dialog to edit the address will be automatically displayed
+	 */
 	this.addAddress = function(address, is_new){
 		var tr = document.createElement("tr");
 		tr.address = address;
@@ -75,7 +96,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 			var create = function(address) {
 				var text = new address_text(address);
 				div_data.appendChild(text.element);
-				if (join_value == -1 || can_edit) {
+				if (type_id == -1 || can_edit) {
 					div_data.onmouseover = function() {
 						text.element.style.textDecoration = 'underline';
 						text.element.cursor = 'pointer';
@@ -91,7 +112,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 							var show_popup = function(lock_id) {
 								var content = document.createElement("DIV");
 								content.style.padding = "5px";
-								var copy = object_copy(div_data.address);
+								var copy = objectCopy(div_data.address);
 								var edit = new edit_address(content, copy);
 								var p = new popup_window("Edit Postal Address", "/static/contact/address_16.png", content);
 								p.addOkCancelButtons(function() {
@@ -107,7 +128,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 										div_data.removeChild(text.element);
 										create(edit.address);
 									};
-									if (join_value != -1) {
+									if (type_id != -1) {
 										service.json("data_model","save_entity",{
 											table: "Postal_address",
 											key: edit.address.id,
@@ -129,7 +150,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 								});
 								p.show();
 							};
-							if (join_value != -1) {
+							if (type_id != -1) {
 								service.json("data_model", "lock_row", {
 									table: "Postal_address",
 									row_key: div_data.address.id
@@ -147,50 +168,49 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 			};
 			create(address);
 		});
-		t.createCategoryField(td_category,address);
-		if(join_value == -1 || can_remove){
+		t._createCategoryField(td_category,address);
+		if(type_id == -1 || can_remove){
 			var div_remove = document.createElement('div');
 			div_remove.style.display = 'inline-block';
-			this.addRemoveButton(address,div_remove);
+			this._addRemoveButton(address,div_remove);
 			td_data.appendChild(div_remove);
 		}
 		this.tbody.appendChild(tr);
 	};
 	
+	/** Called when the user clicks on "Add address". */
 	this.createAddress = function(){
-		if (join_value != -1) {
+		var address = new PostalAddress(-1,null,null,null,null,null,null,null,"Work");
+		if (type_id != -1) {
 			service.json("contact","add_address",{
-				table:table_join,
-				column:join_key,
-				key:join_value,
-				country:null,
-				geographic_area:null,
-				street:null,
-				street_number:null,
-				building:null,
-				unit:null,
-				additional:null, 
-				address_type:"Work"
+				type:type,
+				type_id:type_id,
+				address:address
 			},function(res){
 				if(!res) return;
 				/* Update the result object */
+				address.id = res.id;
 				var l = t.addresses.length;
-				t.addresses[l] = {id:res.id, country:null, geographic_area:null, street_name:null, street_number:null, building:null, unit:null, additional:null, address_type:"Work"};
+				t.addresses[l] = address;
 				/* Update the table */
-				t.addAddress(t.addresses[l], true);
+				t.addAddress(address, true);
 				t.onchange.fire(t);
 			});
 		} else {
 			/* Update the result object */
 			var l = t.addresses.length;
-			t.addresses[l] = {id:-1, country:null, geographic_area:null, street_name:null, street_number:null, building:null, unit:null, additional:null, address_type:"Work"};
+			t.addresses[l] = address;
 			/* Update the table */
-			t.addAddress(t.addresses[l], true);
+			t.addAddress(address, true);
 			t.onchange.fire(t);
 		}
 	};
 	
-	this.addRemoveButton = function (address, container){
+	/** Add the remove button to the address row
+	 * @param {PostalAddress} address the address
+	 * @param {DOMNode} container where to put the button
+	 */
+	this._addRemoveButton = function (address, container){
 		var remove_button = document.createElement('img');
 		remove_button.src = theme.icons_16.remove;
 		remove_button.onmouseover = function(e){this.src = theme.icons_16.remove_black; stopEventPropagation(e);};
@@ -198,13 +218,16 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 		remove_button.style.cursor = 'pointer';
 		// remove_button.style.verticalAlign = 'bottom';
 		remove_button.onclick = function(){
-			confirm_dialog("Are you sure you want to remove this address?", function(text){if(text) t.removeAddress(address);});
+			confirm_dialog("Are you sure you want to remove this address?", function(yes){if(yes) t.removeAddress(address);});
 		};
 		container.appendChild(remove_button);
 	};
 	
+	/** Called when the user clicks on the remove button and confirms.
+	 * @param {PostalAddress} address the address to remove
+	 */
 	this.removeAddress = function (address){
-		if (join_value != -1) {
+		if (type_id != -1) {
 			/* Remove from database */
 			service.json("data_model","remove_row",{table:"Postal_address", row_key:address.id}, function(res){
 				if(!res) return;
@@ -223,46 +246,44 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 		}
 	};
 	
-	this.createCategoryField = function (container,address){
+	/** Add a 'type' field (Work, Home...) to an address row
+	 * @param {DOMNode} container where to put it
+	 * @param {PostalAddress} address the associated address object
+	 */
+	this._createCategoryField = function (container,address){
 		this.context = null;
 		container.innerHTML = address.address_type;
 		container.style.cursor = "pointer";
-		container.onclick = function(){t.addContext(container,address);};
+		container.onclick = function(){t._showAddressTypeContextMenu(container,address);};
 	};
 	
 	/**
-	 * @method addContext Create the context_menu displayed below the category
-	 *         field after clicking
-	 * @param container
-	 * @param index
-	 *            the index in the result object of the address to which this
-	 *            category is linked
+	 * Create the context_menu displayed below the category field after clicking
+	 * @param {DOMNode} container the category field: the menu will be displayed below this element
+	 * @param {PostalAddress} address the associated address object
 	 */
-	this.addContext = function(container,address){
+	this._showAddressTypeContextMenu = function(container,address){
 		require('context_menu.js',function(){
 			if(!t.context){
 				t.context = new context_menu();
 				t.context.onclose = function() {t.context = null;};
 			}
 			t.context.clearItems();
-			t.setContext(container, "Work", address);
-			t.setContext(container, "Home", address);
-			t.setContext(container, "Custom", address);
+			t._addAddressTypeToContextMenu(container, "Work", address);
+			t._addAddressTypeToContextMenu(container, "Home", address);
+			t._addAddressTypeToContextMenu(container, "Custom", address);
 			
 			t.context.showBelowElement(container);
 		});
 	};
 	
 	/**
-	 * @method setContext Add an item to the category context_menu
-	 * @param container
-	 *            the one which contains the category field
-	 * @param {string}
-	 *            data the value of the item
-	 * @param address
-	 *            In the custom case, an input field is created
+	 * Add an item to the category context_menu
+	 * @param {DOMNode} container the one which contains the category field
+	 * @param {String} data the value of the item
+	 * @param {PostalAddress} address the associated address object
 	 */
-	this.setContext = function(container, data, address){
+	this._addAddressTypeToContextMenu = function(container, data, address){
 		var item = document.createElement('div');
 		item.innerHTML = data;
 		
@@ -275,7 +296,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 			item.appendChild(input);
 			t.context.onclose = function(){
 				if(input.value.checkVisible()){
-					t.saveSubType(address, input.value.uniformFirstLetterCapitalized(),container);
+					t._saveSubType(address, input.value.uniformFirstLetterCapitalized(),container);
 				}
 			};
 			input.onkeypress = function(e){var ev = getCompatibleKeyEvent(e);
@@ -284,7 +305,7 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 		}
 		else{
 			item.onclick = function(){
-				t.saveSubType(address,data,container);
+				t._saveSubType(address,data,container);
 			};
 		}
 		item.className = "context_menu_item";
@@ -293,27 +314,23 @@ function addresses(container, header, table_join, join_key, join_value, addresse
 	};
 	
 	/**
-	 * @method saveSubType Method called by the items of the category context
-	 *         menu on click Update the database, the result object and the
-	 *         displayed table
-	 * @param address_id
-	 *            the id of the contact to update
-	 * @param sub_type
-	 *            the updated one
-	 * @param container
-	 *            the one which contains the category field
+	 * Method called by the items of the category context menu on click Update the database, the result object and the
+	 * displayed table
+	 * @param {PostalAddress} address the address to update
+	 * @param {String} address_type the new value
+	 * @param {DOMNode} container the one which contains the category field
 	 */
-	this.saveSubType = function(address, sub_type,container){
-		if (join_value != -1) {
-			service.json("data_model","save_entity",{table:"Postal_address",key:address.id, field_address_type:sub_type, lock:-1},function(res){
+	this._saveSubType = function(address, address_type, container){
+		if (type_id != -1) {
+			service.json("data_model","save_entity",{table:"Postal_address",key:address.id, field_address_type:address_type, lock:-1},function(res){
 				if(!res) return;
-				container.innerHTML = sub_type;
-				address.address_type = sub_type;
+				container.innerHTML = address_type;
+				address.address_type = address_type;
 				t.onchange.fire(t);
 			});
 		} else {
-			container.innerHTML = sub_type;
-			address.address_type = sub_type;
+			container.innerHTML = address_type;
+			address.address_type = address_type;
 			t.onchange.fire(t);
 		}
 	};

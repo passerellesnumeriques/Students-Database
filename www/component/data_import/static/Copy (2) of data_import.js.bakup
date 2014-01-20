@@ -408,7 +408,7 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 					j--;
 				}
 			}
-			var json = service.generate_input(req);
+			var json = service.generateInput(req);
 			var form = document.createElement("FORM");
 			form.method = 'POST';
 			form.action = "/dynamic/data_import/page/data_import";

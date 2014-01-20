@@ -53,14 +53,14 @@ class page_component extends Page {
 			$files = array();
 			$this->browse_js("component/".$name."/static/", "", $files);
 			if (count($files) > 0) {
-				echo "<h2><a name='js'>JavaScript</a></h2>";
+				echo "<h2><a name='javascript'>JavaScript</a></h2>";
 				
 				require_once("JSDoc.inc");
 				foreach ($files as $file) {
 					echo "<h3><a name='js_$file'>$file</a></h3>";
-					$container_id = $this->generate_id();
+					$container_id = $this->generateID();
 					echo "<div id='$container_id'></div>";
-					$this->onload("window.parent.init_jsdoc(function(){window.parent.build_jsdoc(document.getElementById('$container_id'),window.parent.jsdoc,'component/$name/$file');});");
+					$this->onload("window.parent.init_jsdoc(function(){var js = window.parent.filter_jsdoc(window.parent.jsdoc, 'component/$name/$file'); window.parent.build_jsdoc_namespace_content(document.getElementById('$container_id'),js,true,'');});");
 					//JSDoc::generate_doc($this, "component/".$name."/static/".$file);
 				}
 			}

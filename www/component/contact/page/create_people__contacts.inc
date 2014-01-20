@@ -1,7 +1,7 @@
 <?php
 // TODO if people_id pre-selected 
-$contact_id = $this->generate_id();
-$address_id = $this->generate_id();
+$contact_id = $this->generateID();
+$address_id = $this->generateID();
 $this->add_javascript("/static/contact/contacts.js");
 $this->add_javascript("/static/contact/addresses.js");
 ?>
@@ -18,7 +18,7 @@ $this->add_javascript("/static/contact/addresses.js");
 <script type='text/javascript'>
 function create_people_contacts_section() {
 	this.contacts = new contacts('<?php echo $contact_id;?>', "People_contact", "people", -1, window.create_people.contacts ? window.create_people.contacts : [], true, true, true);
-	this.addresses = new addresses('<?php echo $address_id;?>', true, "People_address", "people", -1, window.create_people.addresses ? window.create_people.addresses : [], true, true, true);
+	this.addresses = new addresses('<?php echo $address_id;?>', true, "people", -1, window.create_people.addresses ? window.create_people.addresses : [], true, true, true);
 	this.validate_and_save = function() {
 		window.create_people.contacts = this.contacts.getContacts();
 		window.create_people.addresses = this.addresses.getAddresses();

@@ -18,7 +18,7 @@ $javascripts = array();
 foreach ($display->getDisplayableData() as $data) {
 	echo "<tr>";
 	echo "<td>".$data->getDisplayName()."</td>";
-	$id = $this->generate_id();
+	$id = $this->generateID();
 	echo "<td id='$id'>";
 	$fields[$id] = $data;
 	$tf = $data->getTypedField(null);

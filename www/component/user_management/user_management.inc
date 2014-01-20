@@ -34,7 +34,7 @@ class user_management extends Component implements AdministrationPlugin {
 	 */
 	public function login($domain, $username, $password) {
 		if ($this->username <> null) return "You are already authenticated as ".$username;
-		$auth = PNApplication::$instance->authentication->get_authentication_system($domain);
+		$auth = PNApplication::$instance->authentication->getAuthenticationSystem($domain);
 		if ($auth == null) return "Domain not implemented";
 		$error = "";
 		$this->auth_token = $auth->authenticate($username, $password, $error);
@@ -133,7 +133,7 @@ class user_management extends Component implements AdministrationPlugin {
 	public function assign_roles($users, $roles, $bypass_security = false) {
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table("UserRole", $locked_by, $bypass_security);
+		$lock_id = DataBaseLock::lockTable("UserRole", $locked_by, $bypass_security);
 		if ($lock_id == null) {
 			PNApplication::error("The user ".$locked_by." is currently working on users' roles. Please try again later");
 			return false;
@@ -156,7 +156,7 @@ class user_management extends Component implements AdministrationPlugin {
 	public function unassign_roles($users, $roles) {
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table("UserRole", $locked_by);
+		$lock_id = DataBaseLock::lockTable("UserRole", $locked_by);
 		if ($lock_id == null) {
 			PNApplication::error("The user ".$locked_by." is currently working on users' roles. Please try again later");
 			return false;

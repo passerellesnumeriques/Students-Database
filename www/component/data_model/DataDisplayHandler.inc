@@ -2,13 +2,9 @@
 namespace datamodel {
 	
 abstract class DataDisplayHandler {
-	/**
-	 * @var \datamodel\Table
-	 */
+	/** @var \datamodel\Table table this handler belongs to (set by the Table, should not be modified) */
 	public $table;
-	/**
-	 * @var string
-	 */
+	/** @var string */
 	public $category;
 	/** @var string */
 	public $display_name;

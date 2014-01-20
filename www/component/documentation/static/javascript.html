@@ -81,7 +81,9 @@ function build_jsdoc_navigation(ns, parent, path) {
 		link.ns = sub_ns[i];
 		link.ns_path = path;
 		link.onclick = function() {
-			window.parent.build_jsdoc_namespace(document.getElementById('js_content'), this.ns.name, this.ns.elem, false, this.ns_path+this.ns.name+".");
+			var container = document.getElementById('js_content');
+			while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
+			window.parent.build_jsdoc_namespace(container, this.ns.name, this.ns.elem, false, this.ns_path+this.ns.name+".");
 			return false;
 		};
 		div.appendChild(link);

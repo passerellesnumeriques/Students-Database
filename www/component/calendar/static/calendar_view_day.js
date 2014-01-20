@@ -1,41 +1,55 @@
 if (typeof get_script_path != 'undefined') {
+	/** url to access the same directory */
 	var url = get_script_path("calendar_view_day.js");
 	add_javascript(url+"day_column_layout.js");
 	add_javascript(url+"day_row_layout.js");
 }
+/**
+ * View of a single day
+ * @param {CalendarView} view the view manager
+ * @param {DomNode} container where to display
+ * @returns
+ */
 function calendar_view_day(view, container) {
 
+	/** The day to display */
 	this.start_date = view.cursor_date;
+	/** The day to display */
 	this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
+	/** Indicates zoom is supported by this view */
 	this.zoom_supported = true;
+	/** List of events */
 	this.events = [];
 	var t=this;
 	
+	/** Goes one ay back */
 	this.back = function() {
 		this.start_date = new Date(this.start_date.getTime()-24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
 		view.cursor_date = this.start_date;
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
-			this.day_column.remove_events();
+			this.day_column.removeEvents();
 		if (this.row_layout)
-			this.row_layout.remove_events();
+			this.row_layout.removeEvents();
 		this.events = [];
-		view.load_events();
+		view.loadEvents();
 	};
+	/** Goes one day forward */
 	this.forward = function() {
 		this.start_date = new Date(this.start_date.getTime()+24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
 		view.cursor_date = this.start_date;
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
-			this.day_column.remove_events();
+			this.day_column.removeEvents();
 		if (this.row_layout)
-			this.row_layout.remove_events();
+			this.row_layout.removeEvents();
 		this.events = [];
-		view.load_events();
+		view.loadEvents();
 	};
 	
+	/** Create the display */
 	this._init = function() {
 		this.header = document.createElement("DIV");
 		this.header.setAttribute("layout", "20");
@@ -100,15 +114,17 @@ function calendar_view_day(view, container) {
 		this.day_content.style.top = "0px";
 		this.content.appendChild(this.day_content);
 		
-		this._create_time_scale();
+		this._createTimeScale();
 		add_javascript(get_script_path("calendar_view_day.js")+"day_column_layout.js",function(){
 			t.day_column = new DayColumnLayout();
 			t._layout();
 		});
 	};
 	
+	/** Stores the rows representing the time lines */
 	this._time_lines = [];
-	this._create_time_scale = function() {
+	/** Create the lines representing the time lines */
+	this._createTimeScale = function() {
 		while (this.time_title.childNodes.length > 0)
 			this.time_title.removeChild(this.time_title.childNodes[0]);
 		for (var i = 0; i < this._time_lines.length; ++i) this.content.removeChild(this._time_lines[i]);
@@ -141,11 +157,15 @@ function calendar_view_day(view, container) {
 		this.time_title.style.height = y+"px";
 		this.day_content.style.height = y+"px";
 	};
+	/** Add a 0 if the number is only 1 digit
+	 * @param {Number} n the number
+	 */
 	this._2digits = function(n) {
 		var s = ""+n;
 		while (s.length < 2) s = "0"+s;
 		return s;
 	};
+	/** Layout and display the events */
 	this._layout = function() {
 		if (!this.day_content) return;
 		if (!t._timeout)
@@ -174,11 +194,17 @@ function calendar_view_day(view, container) {
 			},10);
 	};
 	
-	this.add_event = function(ev) {
+	/** Called by the CalendarView when a new event should be displayed.
+	 * @param {Object} ev the event to display
+	 */
+	this.addEvent = function(ev) {
 		this.events.push(ev);
 		this._layout();
 	};
-	this.remove_event = function(uid) {
+	/** Called by the CalendarView when an event needs to be removed from the dislpay.
+	 * @param {String} uid the uid of the event to remove
+	 */
+	this.removeEvent = function(uid) {
 		for (var i = 0; i < this.events.length; ++i)
 			if (this.events[i].uid == uid) {
 				this.events.splice(i, 1);

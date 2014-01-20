@@ -25,7 +25,7 @@ class service_lock_row extends Service {
 		$model = DataModel::get();
 		$table = $model->getTable($table); // here check is done is the user can access this table
 		$locked_by = null;
-		$lock = DataBaseLock::lock_row($table->getName(), $key, $locked_by);
+		$lock = DataBaseLock::lockRow($table->getName(), $key, $locked_by);
 		if ($lock == null) {
 			PNApplication::error("This row is already locked by ".$locked_by);
 			return;

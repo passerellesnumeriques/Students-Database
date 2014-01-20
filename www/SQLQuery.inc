@@ -659,11 +659,11 @@ class SQLQuery {
 			if ($lock_id <> null) {
 				$column = null;
 				if (count($fields_values) == 1) { $column = array_keys($fields_values); $column = $column[0]; }
-				if (!DataBaseLock::check_lock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
+				if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
 					throw new Exception("Access denied: invalid lock");
 			} else {
 				$locker = null;
-				$lock_id = DataBaseLock::lock_row($t->getSQLName($this->sub_models), $key, $locker, $this->bypass_security);
+				$lock_id = DataBaseLock::lockRow($t->getSQLName($this->sub_models), $key, $locker, $this->bypass_security);
 				if ($lock_id == null)
 					throw new Exception("This data is already locked by ".$locker);
 				$locked = true;
@@ -786,16 +786,16 @@ class SQLQuery {
 					foreach ($fields_values as $field=>$value)
 						if (!in_array($field, $columns)) array_push($columns, $field);
 				if (count($columns) == 1) $column = $columns[0];
-				if (!DataBaseLock::check_lock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
+				if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
 					throw new Exception("Access denied: invalid lock");
 			} else {
 				$locker = null;
 				$keys = array();
 				foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
 				if (count($keys) == 1)
-					$lock_id = DataBaseLock::lock_row($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
+					$lock_id = DataBaseLock::lockRow($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
 				else
-					$lock_id = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, $this->bypass_security);
+					$lock_id = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, $this->bypass_security);
 				if ($lock_id == null)
 					throw new Exception("This data is already locked by ".$locker);
 				$locked = true;
@@ -944,14 +944,14 @@ class SQLQuery {
 				foreach ($fields_values as $field=>$value)
 					if (!in_array($field, $columns)) array_push($columns, $field);
 				if (count($columns) == 1) $column = $columns[0];
-				if (!DataBaseLock::check_lock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
+				if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
 					throw new Exception("Access denied: invalid lock");
 			} else {
 				$locker = null;
 				if (count($keys) == 1)
-					$lock_id = DataBaseLock::lock_row($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
+					$lock_id = DataBaseLock::lockRow($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
 				else
-					$lock_id = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, $this->bypass_security);
+					$lock_id = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, $this->bypass_security);
 				if ($lock_id == null)
 					throw new Exception("This data is already locked by ".$locker);
 				$locked = true;
@@ -1041,7 +1041,7 @@ class SQLQuery {
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
-		$lock = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, true);
+		$lock = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, true);
 		if ($lock == null)
 			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
 		$columns = $t->internalGetColumns($this->sub_models);
@@ -1126,7 +1126,7 @@ class SQLQuery {
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
 		if(!isset($lock_id)){
-			$lock = DataBaseLock::lock_table($t->getSQLName($this->sub_models), $locker, true);
+			$lock = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, true);
 			if ($lock == null)
 				throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
 		} else
@@ -1356,7 +1356,7 @@ class SQLQuery {
 			
 		// lock the table to remove
 		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table($table->getSQLNameFor($sub_model_instance), $locked_by, $this->bypass_security);
+		$lock_id = DataBaseLock::lockTable($table->getSQLNameFor($sub_model_instance), $locked_by, $this->bypass_security);
 		if ($lock_id == null)
 			throw new Exception("Table '".$table->getName()."' already locked by ".$locked_by);
 		array_push($locks, $lock_id);
@@ -1368,7 +1368,7 @@ class SQLQuery {
 			foreach ($sm->internalGetTables() as $table_name=>$t) {
 				foreach ($keys as $key) {
 					$locked_by = null;
-					$lock_id = DataBaseLock::lock_table($t->getSQLNameFor($key), $locked_by, true);
+					$lock_id = DataBaseLock::lockTable($t->getSQLNameFor($key), $locked_by, true);
 					if ($lock_id == null)
 						throw new Exception("Table '".$table->getName()."' already locked by ".$locked_by);
 					array_push($locks, $lock_id);
@@ -1533,8 +1533,7 @@ class SQLQuery {
 					if (!isset($to_remove[$t->getSQLNameFor($sm)]))
 						$to_remove[$t->getSQLNameFor($sm)] = array("where"=>array());
 					foreach ($keys as $key)
-						// array_push($to_remove[$t->getSQLNameFor($sm)]["where"], array($col->name=>$key));
-						array_push($to_remove[$t->getSQLName($this->sub_models)]["where"], array($col->name=>$key));
+						array_push($to_remove[$t->getSQLNameFor($sm)]["where"], array($col->name=>$key));
 				}
 			} else {
 				if (!$this->bypass_security) {
@@ -1558,8 +1557,7 @@ class SQLQuery {
 				}
 		
 				// we can update
-				// array_push($to_update, array($t->getSQLNameFor($sm),$col->name,$keys));
-				array_push($to_update, array($t->getSQLName($this->sub_models),$col->name,$keys));
+				array_push($to_update, array($t->getSQLNameFor($sm),$col->name,$keys));
 			}
 		}
 	}
@@ -1578,7 +1576,7 @@ class SQLQuery {
 // 			// the table has primary key, let's remove by key
 // 			require_once("component/data_model/DataBaseLock.inc");
 // 			$locker = null;
-// 			$lock = DataBaseLock::lock_table($t->getSQLName($sub_models), $locker);
+// 			$lock = DataBaseLock::lockTable($t->getSQLName($sub_models), $locker);
 // 			if ($lock == null)
 // 				throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
 // 			$rows = $this->select($table)->set_sub_models($sub_models)->where($where)->field($t->getPrimaryKey()->name)->execute_single_field();
@@ -1589,7 +1587,7 @@ class SQLQuery {
 
 // 		require_once("component/data_model/DataBaseLock.inc");
 // 		$locker = null;
-// 		$lock = DataBaseLock::lock_table($t->getSQLName($sub_models), $locker);
+// 		$lock = DataBaseLock::lockTable($t->getSQLName($sub_models), $locker);
 // 		if ($lock == null)
 // 			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
 // 		// TODO check can remove
@@ -1754,7 +1752,7 @@ class SQLQuery {
 // 			}
 // 		}
 // 	}
-	
+
 	// some useful shortcuts
 	public static function get_table($table, $sub_models = null) {
 		return SQLQuery::create()->set_sub_models($sub_models)->select($table)->execute();
@@ -1767,19 +1765,23 @@ class SQLQuery {
 
 	private static $transaction_started = false;
 	public static function start_transaction() {
-		SQLQuery::get_db_system_without_security()->execute("START TRANSACTION");
+		SQLQuery::get_db_system_without_security()->log("START TRANSACTION", 0, 0, 0);
+		SQLQuery::get_db_system_without_security()->start_transaction();
 		SQLQuery::$transaction_started = true;
 	}
 	public static function end_transaction() {
-		SQLQuery::get_db_system_without_security()->execute("COMMIT");
+		SQLQuery::get_db_system_without_security()->log("COMMIT", 0, 0, 0);
+		SQLQuery::get_db_system_without_security()->commit();
 		SQLQuery::$transaction_started = false;
 	}
 	public static function cancel_transaction() {
-		SQLQuery::get_db_system_without_security()->execute("ROLLBACK");
+		SQLQuery::get_db_system_without_security()->log("ROLLBACK", 0, 0, 0);
+		SQLQuery::get_db_system_without_security()->rollback();
 		SQLQuery::$transaction_started = false;
 	}
 	public static function transaction_started() {
 		return SQLQuery::$transaction_started;
 	}
+	
 }
 ?>

@@ -33,11 +33,11 @@ if (window == window.top) {
 		/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
 		_onclick_listeners: [],
 		/** Register the given listener, which will be called when the user clicks somewhere in the application (not only on the window, but on all frames)
-		 * @param {window} fromWindow window containing the listener (used to automatically remove the listener when the window is closed)
+		 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
 		 * @param {function} listener function to be called
 		 */
-		registerOnclick: function(fromWindow, listener) {
-			this._onclick_listeners.push([fromWindow,listener]);
+		registerOnclick: function(from_window, listener) {
+			this._onclick_listeners.push([from_window,listener]);
 		},
 		/** Remove a listener, previously registered by registerOnclick
 		 * @param {function} listener function to be removed, previously registered through registerOnclick 
@@ -100,11 +100,11 @@ if (window == window.top) {
 		_inactivity_listeners: [],
 		/**
 		 * Register a listener to be called when the user is inactive for the given amount of time.
-		 * @param {Number} inactivityTime time in milliseconds of the inactivity
+		 * @param {Number} inactivity_time time in milliseconds of the inactivity
 		 * @param {function} listener function to be called
 		 */
-		addInactivityListener: function(inactivityTime, listener) {
-			this._inactivity_listeners.push({time:inactivityTime,listener:listener});
+		addInactivityListener: function(inactivity_time, listener) {
+			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
 	};
 	window.top.pnapplication.registerWindow(window);

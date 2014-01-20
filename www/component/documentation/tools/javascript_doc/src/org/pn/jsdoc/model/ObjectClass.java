@@ -17,6 +17,11 @@ public class ObjectClass extends FinalElement {
 		super(new Location());
 		this.type = type;
 	}
+	public ObjectClass(String file, String type, AstNode node, String description) {
+		super(new Location(file, node));
+		this.type = type;
+		this.description = description;
+	}
 	private void parse_doc(AstNode node, Node... docs) {
 		JSDoc doc = new JSDoc(node, docs);
 		this.description = doc.description;

@@ -3,6 +3,7 @@ class data_model_Tests extends ComponentTests {
 	
 	public function getFunctionalitiesTests() {
 		return array(
+			"Database_Operations",
 			"Read_Access_Table",
 			"Write_Access_Table",
 			"Insert_Access_Table",
