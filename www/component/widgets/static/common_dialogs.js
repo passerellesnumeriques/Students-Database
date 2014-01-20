@@ -37,8 +37,9 @@ function confirm_dialog(message, handler) {
  * @param max_length maximum number of characters
  * @param validation_handler called each time the user change the value: if it returns null it means the value is correct, else it must return the error message describing why the input is not correct
  * @param ok_handler called when the user clicked on Ok or Cancel. If ok the value is given as parameter (and is already validated by the validation_handler), if cancel, null is given as parameter
+ * @param oncancel (optional) called when the user clicks on cancel button
  */
-function input_dialog(icon,title,message,default_value,max_length,validation_handler,ok_handler) {
+function input_dialog(icon,title,message,default_value,max_length,validation_handler,ok_handler, oncancel) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
 		content.innerHTML = message+"<br/>";
@@ -59,10 +60,16 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 		content.appendChild(error_div);
 		var p = new popup_window(title, icon, content);
 		var result = null;
-		p.addOkCancelButtons(function() {
-			result = input.value;
-			p.close();
-		});
+		if(oncancel)
+			p.addOkCancelButtons(function() {
+				result = input.value;
+				p.close();
+			},oncancel);
+		else
+			p.addOkCancelButtons(function() {
+				result = input.value;
+				p.close();
+			});
 		input.onkeypress = function(e) {
 			var ev = getCompatibleKeyEvent(e);
 			if (ev.isEnter && !p.getIsDisabled("ok"))

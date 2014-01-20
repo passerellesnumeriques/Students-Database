@@ -273,7 +273,7 @@ class service_save_IS extends Service{
 				}
 			}
 			
-			if(!$everything_ok){
+			if(!$everything_ok || PNApplication::has_errors()){
 				SQLQuery::cancel_transaction();
 				echo "false";
 			} else {

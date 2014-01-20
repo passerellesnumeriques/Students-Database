@@ -14,6 +14,7 @@ class service_import_applicants extends Service {
 				echo "false";
 			else
 				echo "true";
+			PNApplication::$instance->selection->updateAllSteps();
 		} else
 			echo "false";
 	}

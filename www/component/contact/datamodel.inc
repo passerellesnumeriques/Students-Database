@@ -518,7 +518,7 @@ $model->addTable("Organization")
 	->addPrimaryKey("id")
 	->addString("name",100,1,false,false)
 	->addString("creator",100,1,false,false)
-	->addBoolean("fake",true)
+	->addBoolean("fake",true) //if true, not displayable, internal usage only
 	->addReadFilter(function(&$q, $table_alias){
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();

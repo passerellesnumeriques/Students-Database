@@ -64,6 +64,13 @@ field_date.prototype._create = function(data) {
 
 		var t=this;
 		this.data = data;
+		this.signal_error = function(error) {
+			this.error = error;
+			if (!t.select) setTimeout(function(){t.signal_error(error);},10);
+			t.select.select_year.style.border = error ? "1px solid red" : "";
+			t.select.select_month.style.border = error ? "1px solid red" : "";
+			t.select.select_day.style.border = error ? "1px solid red" : "";
+		};
 		require("date_select.js", function() {
 			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
 			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
@@ -110,16 +117,11 @@ field_date.prototype._create = function(data) {
 		this.setData = function(data) {
 			if (data == t.data) return;
 			t.data = data;
-			if (t.select)
+			if (t.select) {
 				t.select.selectDate(data == null ? null : t.parseDate(data));
+				t.validate();
+			}
 			if (data != t.getOriginalData()) setTimeout(function() { t._datachange(); },1);
-		};
-		this.signal_error = function(error) {
-			this.error = error;
-			if (!t.select) setTimeout(function(){t.signal_error(error);},10);
-			t.select.select_year.style.border = error ? "1px solid red" : "";
-			t.select.select_month.style.border = error ? "1px solid red" : "";
-			t.select.select_day.style.border = error ? "1px solid red" : "";
 		};
 	} else {
 		this.setData = function(data, first) {

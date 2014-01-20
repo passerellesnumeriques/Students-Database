@@ -1,4 +1,4 @@
-function manage_exam_subject_part_questions(part, container, can_edit, can_remove, can_add, display_questions_detail, display_correct_answer,display_choices, question_index_before){	
+function manage_exam_subject_part_questions(part, container, can_edit, can_remove, can_add, display_questions_detail, display_correct_answer,display_choices, question_index_before, no_question){	
 	var t = this;
 	t.table = document.createElement("table");
 	t.ordered = null;
@@ -58,10 +58,16 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	}
 	
 	t._setHeaderContent = function(){
+		var max_score = typeof part.max_score == "number" ? part.max_score : parseFloat(part.max_score);
+		max_score = max_score.toFixed(2);
 		if(display_questions_detail)
-			t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+part.max_score+" "+getGoodSpelling("point",part.max_score);
-		else
-			t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+part.max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length);
+			t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
+		else {
+			if(!no_question)
+				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length);
+			else
+				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
+		}
 	}
 	
 	t._setTableBody = function(){
@@ -366,9 +372,9 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		var button = document.createElement("div");
 		button.className = "button";
 		if(content == "before")
-			button.innerHTML = "<img src = '"+theme.icons_16.add+"'/> Before";
+			button.innerHTML = "<img src = '/static/selection/arrow_up_16.png'/><img src = '"+theme.icons_10.add+"'/>";
 		else if(content == "after")
-			button.innerHTML = "<img src = '"+theme.icons_16.add+"'/> After";
+			button.innerHTML = "<img src = '/static/selection/arrow_down_16.png'/><img src = '"+theme.icons_10.add+"'/>";
 		else if(content == "remove"){
 			button.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
 			// button.onmouseover = function(){

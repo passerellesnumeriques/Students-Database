@@ -3,45 +3,15 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only){
 	require_once("component/data_model/Model.inc");
 	$rights = array();
 	$pop_error = false;
-	$update_rights = selection::canUpdateStep("manage_exam");
-	if($read_only){
-		$rights["read"] = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
-		$rights["edit"] = false;
-		$rights["remove"] = false;
-		$rights["add"] = false;
-	} else {
-		$rights["read"] = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
-		$rights["edit"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
-		$rights["remove"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
-		$rights["add"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
-		$old_rights = $rights;
-		// Update according to steps				
-		if(!$update_rights[0] || !$update_rights[1]){
-			if(!$update_rights[0]){
-				//we cannot valid this step, so cannot add an exam
-				$rights["edit"] = false;
-				$rights["remove"] = false;
-				$rights["add"] = false;
-				$pop_error = true;
-			} else if(!$update_rights[1]){
-				//we cannot unvalid this step, and the forbidden actions on exam_subject table are given in update_rights
-				if(!$update_rights[3]["add"])
-					$rights["add"] = false;
-				if(!$update_rights[3]["remove"])
-					$rights["remove"] = false;
-				if(!$update_rights[3]["update"])
-					$rights["edit"] = false;
-				$pop_error = true;
-			}
-		}
-		// In case the rights were not updated, no need to pop an error message
-		foreach($rights as $key => $value){
-			if($old_rights[$key] != $value){
-				$pop_error = true;
-				break;
-			}
-		}
-	}
+	$update_rights = PNApplication::$instance->selection->canUpdateStep("manage_exam");
+	$rights["read"] = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
+	$rights["edit"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
+	$rights["remove"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
+	$rights["add"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
+	// Update according to steps				
+	$restricted = PNApplication::$instance->selection->updateRightsFromStepsDependenciesRestrictions("manage_exam",$rights["add"],$rights["remove"],$rights["edit"]);
+	// In case the rights were not updated, no need to pop an error message
+	$pop_error = $restricted[0];
 	
 	$config = PNApplication::$instance->selection->get_config();
 	
@@ -65,18 +35,16 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only){
 		var index_choices = findIndexInConfig(config,"set_number_choices");
 		
 		var pop_error = <?php echo json_encode($pop_error);?>;
-		var allowed_by_steps = <?php 
-			if($update_rights[0] && $update_rights[1])
-				echo "true;";
-			else
-				echo "false;";
-			?>
-		var restriction_text = <?php echo json_encode($update_rights[2]);?>;
+
+		var restriction_text = <?php if(isset($restricted)) echo json_encode($restricted[1]);
+			else echo json_encode(false);
+		?>;
 		
 		var container = document.getElementById(<?php echo json_encode($container_id); ?>);
 		
 		var exam_id = <?php echo json_encode($id); ?>;
 		var campaign_id = <?php echo json_encode($campaign_id); ?>;
+		var read_only = <?php echo json_encode($read_only);?>;
 		if((exam_id == -1 || exam_id == "-1")){
 			subject = {};
 			subject.id = -1;
@@ -101,24 +69,23 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only){
 					subject.parts[i].questions[j].id = -1;
 				subject.parts[i].id = -1;
 			}
-		} else {
+			//Reset the name
+			subject.name = "New Exam";
+		} else
 			subject = <?php echo PNApplication::$instance->selection->get_json_exam_subject_data($id);?>;
-			
-		}
 		
 		//init
 		if(!rights.read)
 			error_dialog("You are not allowed to access to the exam subjects informations");
 		else if((exam_id == -1 || exam_id == "-1") && !rights.add){
 			error_dialog("You are not allowed to add an exam subject");
-			if(!allowed_by_steps && pop_error)
+			if(pop_error)
 				error_dialog(restriction_text);
 		} else {
-			if(!pop_error){ // avoid the popup message
-				allowed_by_steps = true;
-				restriction_text = "";
-			}
+			if(pop_error)
+				error_dialog(restriction_text);
 			require("manage_exam_subject.js",function(){
+				var current_campaign_id = <?php echo $current_campaign;?>;
 				new manage_exam_subject(subject,
 										container,
 										rights.edit,
@@ -126,8 +93,9 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only){
 										rights.add,
 										config[index_correct_answer].value,
 										config[index_choices].value,
-										allowed_by_steps,
-										restriction_text
+										false,
+										current_campaign_id,
+										read_only
 										);
 			});
 		}

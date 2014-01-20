@@ -1420,8 +1420,8 @@ class SQLQuery {
 			$to_remove[$table->getSQLNameFor($sub_model_instance)] = array("keys"=>array(),"key_name"=>$key_name);
 		}
 		foreach ($keys as $key)
-			// array_push($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $key);
-			array_push($to_remove[$table->getSQLName($this->sub_models)]["keys"], $key);
+			 array_push($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $key);
+			//array_push($to_remove[$table->getSQLName($this->sub_models)]["keys"], $key);
 		
 		// search for foreign keys in this table, which may imply other remove
 		$new_remove = array();
@@ -1479,7 +1479,7 @@ class SQLQuery {
 			foreach (DataModel::get()->internalGetTables() as $t) {
 				if ($t->getModel() instanceof SubDataModel) {
 					foreach ($t->getModel()->getExistingInstances() as $smi) {
-						$sm = array($t->getModel()->getParentTable()=>$smi);
+						$sm = $smi;
 						$this->check_foreign_keys_for_remove($table, $sub_model_instance, $keys, $t, $sm, $locks, $to_remove, $to_update, $sub_models_to_remove);
 					}
 				} else {

@@ -16,10 +16,13 @@ function page_header(container, small) {
 			d.innerHTML = html;
 			html = d;
 		}
-		this.menu_container.appendChild(html);
+		if (t.more_menu)
+			this.menu_container.insertBefore(html, t.more_menu);
+		else
+			this.menu_container.appendChild(html);
 	};
 	this.resetMenu = function() {
-		while (this.menu_container.childNodes.length > 0)
+		while (this.menu_container.childNodes.length > (t.more_menu ? 1 : 0))
 			this.menu_container.removeChild(this.menu_container.childNodes[0]);
 	};
 	
@@ -65,6 +68,13 @@ function page_header(container, small) {
 		});
 		require("vertical_align.js", function() {
 			new vertical_align(t.menu_container, "middle");
+		});
+		require("horizontal_menu.js",function(){
+			t.more_menu = document.createElement("DIV");
+			t.more_menu.className = "button";
+			t.more_menu.innerHTML = "<img src='"+theme.icons_16.more_menu+"'/> More";
+			t.menu_container.appendChild(t.more_menu);
+			new horizontal_menu(t.menu_container);
 		});
 	};
 	

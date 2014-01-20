@@ -1,9 +1,10 @@
 /**
  * @param container
- * @param data the object given by the get_json_IS_data method (selection.inc)
- * @param default_duration the duration that must be pre_selected when the event is created
+ * @param data the object given by the #selection#get_json_IS_data method
+ * @param default_duration the duration that must be pre_selected when the event is created (coming from config)
  * @param can_read
  * @param can_manage: if true, the user can modify/remove the date
+ * @param all_durations all the possibilities set in #config#["default_duration_IS"][2]
  */
 
 
@@ -38,6 +39,8 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			t.event.all_day = null;
 			t.event.title = null;
 			t.event.description = null;
+			t.event.participation = "UNKNOWN";
+			t.event.role = "OPTIONAL";
 			t._init();
 		}
 	}
