@@ -83,7 +83,6 @@ function _json_normalize_value($s, &$res) {
 			$s = substr($s,1);
 			$c = substr($s,0,1);
 		} while ($c == ' ' || $c == '\t' || $c == '\r' || $c == '\n');
-		continue;
 	}
 	if ($c == "{")
 		return _json_normalize_object(substr($s,1), $res);
@@ -95,6 +94,26 @@ function _json_normalize_value($s, &$res) {
 		return _json_normalize_string(substr($s,1), $c, $res);
 	if (ctype_digit($c))
 		return _json_normalize_number($s, $res);
+	if (substr($s,0,4)=="null") {
+		$res .= "null";
+		return substr($s,4);
+	}
+	if (substr($s,0,4)=="true") {
+		$res .= "true";
+		return substr($s,4);
+	}
+	if (substr($s,0,5)=="false") {
+		$res .= "false";
+		return substr($s,5);
+	}
+	if (substr($s,0,9)=="undefined") {
+		$res .= "undefined";
+		return substr($s,9);
+	}
+	if (substr($s,0,3)=="NaN") {
+		$res .= "NaN";
+		return substr($s,3);
+	}
 	PNApplication::error("Invalid JSON value: ".$s);
 	return "";
 }
@@ -119,7 +138,7 @@ function _json_normalize_object($s, &$res) {
 			$s = substr($s,1);
 			while (strlen($s) > 0) {
 				$c = substr($s,0,1);
-				if (ctype_alnum($c)) {
+				if (ctype_alnum($c) || $c == "_") {
 					$name .= $c;
 					$s = substr($s, 1);
 					continue;

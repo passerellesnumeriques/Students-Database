@@ -126,7 +126,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.addOkCancelButtons = function(onok, oncancel) {
 		t.addButton("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Ok", 'ok', onok);
 		if(oncancel)
-			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', oncancel);
+			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function(){oncancel(); t.close()});
 		else
 			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function() { t.close(); });
 	};

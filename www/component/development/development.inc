@@ -19,10 +19,10 @@ class development extends Component {
 		
 		for ($i = 0; $i < 15; $i++) {
 			if ($i >= count($this->requests)) break;
-			if ($i > 5 && count($this->requests[$i]->sql_queries) > 25) {
-				array_splice($this->requests[$i]->sql_queries, 25, count($this->requests[$i]->sql_queries)-25);
-				array_push($this->requests[$i]->sql_queries, array("TOO MUCH SQL QUERIES",0,null,0));
-			}
+			//if ($i > 5 && count($this->requests[$i]->sql_queries) > 25) {
+			//	array_splice($this->requests[$i]->sql_queries, 25, count($this->requests[$i]->sql_queries)-25);
+			//	array_push($this->requests[$i]->sql_queries, array("TOO MUCH SQL QUERIES",0,null,0));
+			//}
 		}
 		while (count($this->requests) > 15)
 			array_splice($this->requests, 0, 1);

@@ -124,6 +124,8 @@ class calendar extends Component {
 			$data["last_modified"] = time();
 			$data["title"] = $event["title"];
 			$data["description"] = $event["description"];
+			$data["participation"] = $event["participation"];
+			$data["role"] = $event["role"];
 			SQLQuery::create()->bypass_security()->update_by_key("CalendarEvent", $event["id"], $data);
 			if (PNApplication::has_errors())
 				return;
@@ -139,6 +141,8 @@ class calendar extends Component {
 			$data["last_modified"] = time();
 			$data["title"] = $event["title"];
 			$data["description"] = $event["description"];
+			$data["participation"] = $event["participation"];
+			$data["role"] = $event["role"];
 			$event_id = SQLQuery::create()->bypass_security()->insert("CalendarEvent", $data);
 			$event_uid = $data["uid"];
 			if (PNApplication::has_errors()) return;

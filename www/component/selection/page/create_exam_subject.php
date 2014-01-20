@@ -80,7 +80,7 @@ class page_create_exam_subject extends selection_page {
 						t.container.appendChild(ul);
 						//create from zero row
 						var li1 = document.createElement("li");
-						li1.innerHTML = "Create a subject from zero";
+						li1.innerHTML = "Create a subject from scratch";
 						var b_from_zero = t._createButton("<b>Go!</b>");
 						b_from_zero.onclick = function(){
 							location.assign("/dynamic/selection/page/exam_subject");

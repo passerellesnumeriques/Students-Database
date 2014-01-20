@@ -226,8 +226,7 @@ class page_import_exam_subject extends selection_page {
 					
 					t1._onCancel = function(){
 						t1.pop.pressButton("ok");
-						alert(service.generate_input(t1.res));
-						// location.assign("/dynamic/selection/page/selection_main_page");
+						location.assign("/dynamic/selection/page/selection_main_page");
 					}
 					
 					t1._setContent = function(){

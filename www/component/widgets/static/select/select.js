@@ -38,14 +38,18 @@ function select(container) {
 		},1);
 	};
 	
-	this.select = function(value) {
-		for (var i = 0; i < this.options.length; i++)
-			if (this.options[i].value == value) {
-				this.value = value;
-				this._htmlContainer.innerHTML = this.options[i].html;
-				if (this.onchange) this.onchange();
-				break;
-			}
+	this.select = function(value, fire_onchange) {
+		if(fire_onchange == null)
+			fire_onchange = true;
+		if(value != this.value){
+			for (var i = 0; i < this.options.length; i++)
+				if (this.options[i].value == value) {
+					this.value = value;
+					this._htmlContainer.innerHTML = this.options[i].html;
+					if (this.onchange && fire_onchange) this.onchange();
+					break;
+				}
+		} // else nothing to do
 	};
 	
 	this.getSelectedValue = function() {

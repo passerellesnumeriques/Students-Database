@@ -74,6 +74,13 @@ function frame_header(container) {
 		require("horizontal_layout.js",function(){
 			new horizontal_layout(t.header);
 		});
+		require("horizontal_menu.js",function(){
+			var div = document.createElement("DIV");
+			div.className = "button";
+			div.innerHTML = "<img src='"+theme.icons_16.more_menu+"'/> More";
+			menu_container.appendChild(div);
+			new horizontal_menu(menu_container);
+		});
 	};
 	t.frame_unload = function() {
 		if (typeof animation != 'undefined') {

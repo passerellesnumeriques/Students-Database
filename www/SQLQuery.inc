@@ -1388,8 +1388,8 @@ class SQLQuery {
 			$to_remove[$table->getSQLNameFor($sub_model_instance)] = array("keys"=>array(),"key_name"=>$key_name);
 		}
 		foreach ($keys as $key)
-			// array_push($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $key);
-			array_push($to_remove[$table->getSQLName($this->sub_models)]["keys"], $key);
+			 array_push($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $key);
+			//array_push($to_remove[$table->getSQLName($this->sub_models)]["keys"], $key);
 		
 		// search for foreign keys in this table, which may imply other remove
 		$new_remove = array();
@@ -1447,7 +1447,7 @@ class SQLQuery {
 			foreach (DataModel::get()->internalGetTables() as $t) {
 				if ($t->getModel() instanceof SubDataModel) {
 					foreach ($t->getModel()->getExistingInstances() as $smi) {
-						$sm = array($t->getModel()->getParentTable()=>$smi);
+						$sm = $smi;
 						$this->check_foreign_keys_for_remove($table, $sub_model_instance, $keys, $t, $sm, $locks, $to_remove, $to_update, $sub_models_to_remove);
 					}
 				} else {
@@ -1501,8 +1501,8 @@ class SQLQuery {
 					if (!isset($to_remove[$t->getSQLNameFor($sm)]))
 						$to_remove[$t->getSQLNameFor($sm)] = array("where"=>array());
 					foreach ($keys as $key)
-						// array_push($to_remove[$t->getSQLNameFor($sm)]["where"], array($col->name=>$key));
-						array_push($to_remove[$t->getSQLName($this->sub_models)]["where"], array($col->name=>$key));
+						 array_push($to_remove[$t->getSQLNameFor($sm)]["where"], array($col->name=>$key));
+						//array_push($to_remove[$t->getSQLName($this->sub_models)]["where"], array($col->name=>$key));
 				}
 			} else {
 				if (!$this->bypass_security) {
@@ -1734,13 +1734,16 @@ class SQLQuery {
 	}
 	
 	public static function start_transaction() {
+		SQLQuery::get_db_system_without_security()->execute("SET AUTOCOMMIT=0");
 		SQLQuery::get_db_system_without_security()->execute("START TRANSACTION");
 	}
 	public static function end_transaction() {
 		SQLQuery::get_db_system_without_security()->execute("COMMIT");
+		SQLQuery::get_db_system_without_security()->execute("SET AUTOCOMMIT=1");
 	}
 	public static function cancel_transaction() {
 		SQLQuery::get_db_system_without_security()->execute("ROLLBACK");
+		SQLQuery::get_db_system_without_security()->execute("SET AUTOCOMMIT=1");
 	}
 }
 ?>

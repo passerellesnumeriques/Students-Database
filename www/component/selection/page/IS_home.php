@@ -19,7 +19,7 @@ class page_IS_home extends selection_page {
 			title='Information Sessions'
 			page='/dynamic/selection/page/IS_main_page'
 		>
-		<a class = 'button' href = '/dynamic/selection/page/IS_profile'> IS Profile </a>
+		<a class = 'button' href = '/dynamic/selection/page/IS_profile' target = 'IS_home_content'> IS Profile </a>
 		</div>
 		
 	<?php

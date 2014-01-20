@@ -13,6 +13,15 @@
 	
 	$sm->addDataCategoryLink("Information Session profile", "/dynamic/selection/page/IS_profile?id=%Information_session.id%", "/static/selection/IS_16.png");
 	
+	$sm->addTable("Steps")
+		->addString("name",255,1,false,true)
+		->addBoolean("value",false)
+		->setPrimary("name")
+		->addReadAccess("can_access_selection_data",true)
+		->addWriteAccess("can_update_step",true)
+		->addRemoveAccess("manage_selection_campaign",true)
+		->addInsertAccess("manage_selection_campaign",true);
+	
 	$sm->addTable("Information_session")
 		->addPrimaryKey("id")
 		->addForeignKey("date","CalendarEvent",false,true,true,true)
@@ -135,6 +144,8 @@
 		 */
 		->addPrimaryKey("id")
 		->addString("name",255,0,false)
+		->addDecimal("max_score",10,2,0,null,false,false) //calculated
+		->addInteger("number_questions",32,null,null,false,false)
 		->addWriteAccess("manage_exam_subject",true)
 		->addReadAccess("see_exam_subject",true)
 		->addInsertAccess("manage_exam_subject",true)

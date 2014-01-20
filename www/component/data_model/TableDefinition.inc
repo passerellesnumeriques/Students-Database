@@ -228,7 +228,7 @@ class Table {
 
 	/** Add an enum column, with the given possible values */
 	public function &addEnum($name, $values, $can_be_null = true, $unique = false) {
-		$c = new ColumnEnum($this, $name, $values);
+		$c = new ColumnEnum($this, $name, $values, $can_be_null, $unique);
 		array_push($this->columns, $c);
 		return $this;
 	}

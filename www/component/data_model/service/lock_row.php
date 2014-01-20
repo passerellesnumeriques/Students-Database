@@ -7,6 +7,7 @@ class service_lock_row extends Service {
 <ul>
 	<li><code>table</code>: table name of the entity</li>
 	<li><code>row_key</code>: primary key value of the row to lock</li>
+	<li><code>sub_model</code>: (optional) submodel</li>
 </ul>
 <?php
 	}
@@ -20,12 +21,13 @@ class service_lock_row extends Service {
 	public function execute(&$component, $input) {
 		$table = $input["table"];
 		$key = $input["row_key"];
+		$sm = @$input["sub_model"];
 		require_once("component/data_model/DataBaseLock.inc");
 		require_once("component/data_model/Model.inc");
 		$model = DataModel::get();
 		$table = $model->getTable($table); // here check is done is the user can access this table
 		$locked_by = null;
-		$lock = DataBaseLock::lock_row($table->getName(), $key, $locked_by);
+		$lock = DataBaseLock::lock_row($table->getSQLNameFor($sm), $key, $locked_by);
 		if ($lock == null) {
 			PNApplication::error("This row is already locked by ".$locked_by);
 			return;
