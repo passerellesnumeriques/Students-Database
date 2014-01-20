@@ -35,17 +35,17 @@ class ContactJSON {
 	public static function PostalAddress($q, $row) {
 		require_once("component/geography/GeographyJSON.inc");
 		return
-			"new PostalAddress(".
-				$row["address_id"].
-				",".$row["country_id"].
-				",".GeographyJSON.GeographicAreaText($q, $row).
-				",".$row["street"].
-				",".$row["street_number"].
-				",".$row["building"].
-				",".$row["unit"].
-				",".$row["additional"].
-				",".$row["address_type"].
-			")"
+			"{".
+				"id:".$row["address_id"].
+				",country_id:".$row["country_id"].
+				",geographic_area:".GeographyJSON.GeographicAreaText($q, $row).
+				",street:".$row["street"].
+				",street_number:".$row["street_number"].
+				",building:".$row["building"].
+				",unit:".$row["unit"].
+				",additional:".$row["additional"].
+				",address_type:".$row["address_type"].
+			"}"
 			;
 	}
 	

@@ -7,10 +7,10 @@ class GeographyJSON {
 	}
 	
 	public static function GeographicAreaText($q, $row) {
-		return "new GeographicAreaText(".
-			$row["geographic_area_id"].
-			",".json_encode(PNApplication::$instance->geography->get_geographic_area_text($row["geographic_area_id"]))
-		.")";
+		return "{".
+			"id:".$row["geographic_area_id"].
+			",text:".json_encode(PNApplication::$instance->geography->get_geographic_area_text($row["geographic_area_id"]))
+		."}";
 	}
 	
 }
