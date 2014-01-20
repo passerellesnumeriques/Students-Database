@@ -7,7 +7,7 @@ class service_get_campaign_status extends Service{
 	public function execute(&$component,$input){
 		//TODO
 		/** Output format = text/HTML
-		 * use = service.custom_output
+		 * use = service.customOutput
 		 */
 	}
 }	

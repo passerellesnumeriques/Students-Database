@@ -44,7 +44,7 @@ class page_students_grades extends Page {
 		
 		// build the table with students info
 		require_once("component/data_model/page/custom_data_list.inc");
-		$available_fields = PNApplication::$instance->data_model->get_available_fields("StudentClass");
+		$available_fields = PNApplication::$instance->data_model->getAvailableFields("StudentClass");
 		$filters = array();
 		array_push($filters, array(
 			"category"=>"Student",

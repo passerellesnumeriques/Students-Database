@@ -1,7 +1,7 @@
 <?php 
 // TODO if people_id pre-selected
 require_once("staff_info.inc");
-$container_id = $this->generate_id();
+$container_id = $this->generateID();
 $fct = staff_info($this,-1,$container_id);
 ?>
 

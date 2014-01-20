@@ -8,7 +8,7 @@ function tabs(container, fill_tab_content) {
 	
 	t.addTab = function(title,icon,content) {
 		var tab = {
-			id: generate_id(),
+			id: generateID(),
 			title: title,
 			icon: icon,
 			content: content

@@ -9,12 +9,12 @@ function custom_import_applicants (&$page,$fixed_data,$prefilled_data,$all_ids,$
 	$table = DataModel::get()->getTable("Applicant");
 	$locked_by = null;
 	$lock_id = null;
-	$lock_id = DataBaseLock::lock_table($table->getSQLNameFor($campaign_id), $locked_by);
+	$lock_id = DataBaseLock::lockTable($table->getSQLNameFor($campaign_id), $locked_by);
 	if($lock_id == null & $locked_by <> null){
 		PNApplication::error($locked_by." is already managing the applicants for this campaign");
 		return;
 	} else {
-		DataBaseLock::generate_script($lock_id);
+		DataBaseLock::generateScript($lock_id);
 	}
 	
 	require_once("component/data_import/page/import_data.inc");

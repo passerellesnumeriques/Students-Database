@@ -19,12 +19,12 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		// var alert_ordered = document.createElement("div");
 		// alert_ordered.innerHTML = "Alert ordered";
 		// alert_ordered.className = "button";
-		// alert_ordered.onclick = function(){alert(service.generate_input(t.ordered));}
+		// alert_ordered.onclick = function(){alert(service.generateInput(t.ordered));}
 		// container.appendChild(alert_ordered);
 		// var alert_part= document.createElement("div");
 		// alert_part.innerHTML = "alert_part";
 		// alert_part.className = "button";
-		// alert_part.onclick = function(){alert(service.generate_input(part));}
+		// alert_part.onclick = function(){alert(service.generateInput(part));}
 		// container.appendChild(alert_part);
 	}
 	

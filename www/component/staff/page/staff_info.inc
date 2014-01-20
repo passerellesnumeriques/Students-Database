@@ -10,7 +10,7 @@ function staff_info(&$page, $people_id, $container_id) {
 	
 	require_once("component/data_model/page/utils.inc");
 	
-	$fct_name = $page->generate_id();
+	$fct_name = $page->generateID();
 	?>
 	<script type='text/javascript'>
 	function <?php echo $fct_name;?>() {
@@ -34,8 +34,8 @@ function staff_info(&$page, $people_id, $container_id) {
 				echo "id:".$p["id"];
 				echo ",position:".json_encode($p["position"]);
 				echo ",department:".$p["department"];
-				echo ",start:".($p["start"] <> null ? "new Date(".$p["start"]."*1000)" : "null");
-				echo ",end:".($p["end"] <> null ? "new Date(".$p["end"]."*1000)" : "null");
+				echo ",start:".($p["start"] <> null ? json_encode($p["start"]) : "null");
+				echo ",end:".($p["end"] <> null ? json_encode($p["end"]) : "null");
 				echo "}";
 			}
 		}
@@ -94,7 +94,7 @@ function staff_info(&$page, $people_id, $container_id) {
 			t.table.appendChild(tr);
 			var td_position = document.createElement("TD");
 			tr.appendChild(td_position);
-			var fake_key = generate_id();
+			var fake_key = generateID();
 			if (position.id == -1) {
 				var field;
 				<?php datamodel_datadisplay_new($page, $table->getDataDisplay("Staff", "Position"), null, "field", "fake_key");?>

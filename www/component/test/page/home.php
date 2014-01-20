@@ -721,7 +721,7 @@ function play_service_test(component, scenario_index, ondone) {
 					"POST",
 					"/dynamic/"+component.name+"/service/"+service_name+"?testing=true",
 					"text/json;charset=UTF-8",
-					service.generate_input(input),
+					service.generateInput(input),
 					function(error) {
 						update_step_status(scenario, step, {error:error});
 					}, function(xhr) {

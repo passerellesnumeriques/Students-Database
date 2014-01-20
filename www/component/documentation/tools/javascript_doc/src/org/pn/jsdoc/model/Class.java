@@ -20,10 +20,14 @@ public class Class extends Container {
 
 	public Function constructor;
 	public String name;
+	public String description;
+	public String extended_class = null;
 	
-	public Class(final String file, FunctionNode node) {
-		super(new Location(file,node));
-		constructor = new Function(file, node, node);
+	public Class(Container parent, final String file, FunctionNode node, Node[] docs) {
+		super(parent, new Location(file,node));
+		JSDoc doc = new JSDoc(node, docs);
+		description = doc.description;
+		constructor = new Function(this, file, node, node);
 		name = node.getName();
 		add("constructor", constructor);
 		// try to find assignments to this
@@ -44,8 +48,9 @@ public class Class extends Container {
 						for (String t : is_this)
 							if (s.equals(t)) {
 								AstNode value = ((Assignment)expr).getRight();
-								// TODO add context
-								add(names.get(names.size()-1), new ValueToEvaluate(file, value, node));
+								ValueToEvaluate ve = new ValueToEvaluate(file, value, node, expr, target, value);
+								ve.addContext_FunctionParameters(constructor);
+								add(names.get(names.size()-1), ve);
 								break;
 							}
 					}
@@ -53,9 +58,9 @@ public class Class extends Container {
 					for (VariableInitializer vi : ((VariableDeclaration)node).getVariables()) {
 						String name = ((Name)vi.getTarget()).getIdentifier();
 						if (vi.getInitializer() == null)
-							variables.put(name, new SimpleValue(file, "undefined", vi, node));
+							variables.put(name, new ObjectClass(file, "undefined", vi, node));
 						else
-							variables.put(name, new ValueToEvaluate(file, vi.getInitializer(), node));
+							variables.put(name, new ValueToEvaluate(file, vi.getInitializer(), node, vi, vi.getTarget(), vi.getInitializer()));
 						LinkedList<String> names = getIdentifiers(vi.getInitializer());
 						if (names.isEmpty()) continue;
 						String s = names.get(0);
@@ -82,15 +87,22 @@ public class Class extends Container {
 		};
 		Visitor v = new Visitor();
 		for (Parameter p : constructor.parameters) {
-			v.variables.put(p.name, new SimpleValue(file, p.type, node, node));
+			v.variables.put(p.name, new ObjectClass(file, p.type, p.node, new Node[0]));
 		}
 		v.is_this.add("this");
 		body.visit(v);
 	}
+	protected Class(Global global) {
+		super(global, new Location());
+	}
 	
 	@Override
 	protected String getJSDocConstructor() {
-		return "JSDoc_Class(";
+		return "JSDoc_Class("+(extended_class != null ? "\""+extended_class+"\"" : "null")+",";
+	}
+	@Override
+	protected String getDescription() {
+		return description;
 	}
 	
 }

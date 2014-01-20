@@ -63,7 +63,7 @@ class page_organization_profile extends Page {
 		$org_structure .= "]";
 		$org_structure .= "}";
 		$this->add_javascript("/static/contact/organization.js");
-		$container_id = $this->generate_id();
+		$container_id = $this->generateID();
 		$this->onload("window.organization = new organization('$container_id',$org_structure,true);");
 		echo "<div id='$container_id' style='margin:5px'></div>";
 		?>

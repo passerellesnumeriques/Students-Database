@@ -15,17 +15,17 @@ function manage_config(&$page,$container_id){
 	$table = DataModel::get()->getTable("Selection_campaign_config");
 	$locked_by = null;
 	$lock_id = null;
-	$lock_id = DataBaseLock::lock_table($table->getSQLNameFor($campaign_id), $locked_by);
+	$lock_id = DataBaseLock::lockTable($table->getSQLNameFor($campaign_id), $locked_by);
 	if($lock_id == null & $locked_by <> null){
 		PNApplication::error($locked_by." is already setting the configuration parameters of this campaign");
 		return;
 	} else {
-		DataBaseLock::generate_script($lock_id);
+		DataBaseLock::generateScript($lock_id);
 	}
 	
 	$rights = array();
 	
-	$fct_name = "manage_config_".$page->generate_id();
+	$fct_name = "manage_config_".$page->generateID();
 	//$page->onload($fct_name."();");
 
 	$rights['manage'] = PNApplication::$instance->components["user_management"]->has_right("manage_selection_campaign",true);
@@ -476,7 +476,7 @@ function manage_config(&$page,$container_id){
 			// var div = document.createElement("div");
 			// div.innerHTML = "alert config";
 			// div.onclick = function(){
-				// alert(service.generate_input(config));
+				// alert(service.generateInput(config));
 			// };
 			// tfoot.appendChild(div);
 		}

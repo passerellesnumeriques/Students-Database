@@ -160,48 +160,37 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		
 		if (count($keys) == 0)
 			$res = array();
-		else
-			$res = \SQLQuery::create()
+		else {
+			$q = \SQLQuery::create()
 				->select($table_name)
 				->join($table_name, "Postal_address", array("address" => "id"), "JOIN_ALIAS")
 				->field($table_name, $this->joining_key_name, "JOIN_KEY")
-				->field("JOIN_ALIAS", "id", "KEY")
-				->field("JOIN_ALIAS","country","country")
-				->field("JOIN_ALIAS","geographic_area","geographic_area")
-				->field("JOIN_ALIAS","street","street")
-				->field("JOIN_ALIAS","street_number","street_number")
-				->field("JOIN_ALIAS","building","building")
-				->field("JOIN_ALIAS","unit","unit")
-				->field("JOIN_ALIAS","additional","additional")
-				->field("JOIN_ALIAS","address_type","address_type")
 				->where_in($table_name, $this->joining_key_name, $keys)
-				->execute();
+				;
+			require_once("component/contact/ContactJSON.inc");
+			ContactJSON::PostalAddressSQL($q);
+			$res = $q->execute();
+		}
 		
 		$sql_aliases["data"] = $original_query->field_id();
 		for ($i = 0; $i < count($rows); $i++) {
 			$key = $rows[$i][$sql_aliases["key"]];
-			$values = array();
+			$values = "[";
+			$first = true;
 			foreach ($res as $r) {
-				if ($r["JOIN_KEY"] == $key)
-					array_push($values, array(
-						"id"=>$r["KEY"],
-						"country"=>$r["country"],
-						"geographic_area"=>array("id"=>$r["geographic_area"],"text"=>PNApplication::$instance->geography->get_geographic_area_text($r["geographic_area"])),
-						"street_name"=>$r["street"],
-						"street_number"=>$r["street_number"],
-						"building"=>$r["building"],
-						"unit"=>$r["unit"],
-						"additional"=>$r["additional"],
-						"address_type"=>$r["address_type"]
-					));
+				if ($r["JOIN_KEY"] == $key) {
+					if ($first) $first = false; else $values .= ",";
+					$values .= ContactJSON::PostalAddress($q, $r);
+				}
 			}
-			$rows[$i][$sql_aliases["data"]] = array("table"=>$table_name,"key_name"=>$this->joining_key_name,"key_value"=>$row[$sql_aliases["key"]],"addresses"=>$values);
+			$values .= "]";
+			$rows[$i][$sql_aliases["data"]] = "{type:".json_encode($this->handler->type).",type_id:".json_encode($row[$sql_aliases["key"]]).",addresses:".$values."}";
 		}
 	}
 
 	public function getNewData() {
 		$table_name = $this->handler->type == "people" ? "People_address" : "Organization_address";
-		return array("table"=>$table_name,"key_name"=>$this->joining_key_name,"key_value"=>-1,"addresses"=>array());
+		return "{type:".json_encode($this->handler->type).",type_id:-1,addresses:[]}";
 	}
 	
 	public function saveData($key, $value, $sub_model) {
@@ -319,11 +308,11 @@ $model->addTable("Contact")
 		
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table("People_contact", $locked_by);
+		$lock_id = DataBaseLock::lockTable("People_contact", $locked_by);
 		if ($lock_id <> null) array_push($locks, $lock_id);
 		else throw new Exception("The contacts are already locked by ".$locked_by.". Please try again later.");
 		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table("Organization_contact", $locked_by);
+		$lock_id = DataBaseLock::lockTable("Organization_contact", $locked_by);
 		if ($lock_id <> null) array_push($locks, $lock_id);
 		else throw new Exception("The contacts are already locked by ".$locked_by.". Please try again later.");
 	}, function($rows) {
@@ -463,11 +452,11 @@ $model->addTable("Postal_address")
 
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table("People_address", $locked_by);
+		$lock_id = DataBaseLock::lockTable("People_address", $locked_by);
 		if ($lock_id <> null) array_push($locks, $lock_id);
 		else throw new Exception("The addresses are already locked by ".$locked_by.". Please try again later.");
 		$locked_by = null;
-		$lock_id = DataBaseLock::lock_table("Organization_address", $locked_by);
+		$lock_id = DataBaseLock::lockTable("Organization_address", $locked_by);
 		if ($lock_id <> null) array_push($locks, $lock_id);
 		else throw new Exception("The addresses are already locked by ".$locked_by.". Please try again later.");
 	}, function($rows) {

@@ -1,4 +1,7 @@
-<?php 
+<?php
+/**
+ * Provides functionalities to connect to the Facebook account of the user.
+ */ 
 class facebook extends Component {
 	
 	public function init_request() {

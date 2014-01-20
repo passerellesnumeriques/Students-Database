@@ -1,15 +1,9 @@
-/**
- * Some useful functions are added to the class String
- * @class String
- */
 /** 
  * return true if this string starts with the given string
- * @memberOf String
  */
 String.prototype.startsWith=function(s){return this.length<s.length?false:this.substring(0,s.length)==s;};
 /** 
  * remove leading and trailing spaces, and return the result
- * @memberOf String
  */
 String.prototype.trim=function() {
 	if (this.length == 0) return "";
@@ -21,9 +15,15 @@ String.prototype.trim=function() {
 	return this.substring(start, end);
 };
 
-/** return true if the given parameter is a space character */
+/** check if the given character is a space (space, tab, or line return)
+ * @param {String} c the character
+ * @returns {Boolean} if c is a space
+ */
 function isSpace(c) { return (c == ' ' || c == '\t' || c == '\r' || c == '\n'); }
-/** return true if the given parameter is a letter (small or capital) */
+/** check if the given character is a letter (small or capital)
+ * @param {String} c the character
+ * @returns {Boolean} true if the given character is a letter
+ */
 function isLetter(c) {
 	var ord = c.charCodeAt(0);
 	if (ord >= 'a'.charCodeAt(0) && ord <= 'z'.charCodeAt(0)) return true;
@@ -33,9 +33,8 @@ function isLetter(c) {
 
 /**
 * Set a uniform case according to a given separator
-* @memberOf String
-* @parameter {string} separator
-* @returns the same string with a capitalized first letter
+* @parameter {String} separator separator to use between words
+* @returns {String} the same string with a capitalized first letter
 */
 String.prototype.firstLetterCapitalizedForSeparator = function(separator) {
 	var text_split = this.split(separator);
@@ -47,7 +46,6 @@ String.prototype.firstLetterCapitalizedForSeparator = function(separator) {
 
 /**
 * Set a uniform case according to " ", "'" and "-"
-* @memberOf String
 * @returns the same string with a capitalized first letter, and other lowered
 */
 String.prototype.uniformFirstLetterCapitalized = function(){
@@ -60,8 +58,7 @@ String.prototype.uniformFirstLetterCapitalized = function(){
 
 /**
  * Test if a string is not empty (in terms of visibility)
- * @memberOf String
- * @returns true if the given string is not only made of space or is empty; else return false
+ * @returns {Boolean} true if the given string is not only made of space or is empty; else return false
  */
 String.prototype.checkVisible = function(){
 	var is_visible = false;
@@ -75,28 +72,24 @@ String.prototype.checkVisible = function(){
 	return is_visible;
 };
 
-/**
- * Some useful functions are added to the class Array
- * @class Array
- */
-/** 
- * return true if this array contains the given element
- * @memberOf Array
+/** Check if the given element is in the array
+ * @param {any} e the element to search 
+ * @returns true if this array contains the given element
  */
 Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e)return true;return false;};
 /** 
  * remove all occurences of the given element from this array, if any.
- * @memberOf Array
+ * @param {any} e the element to remove
  */
 Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){this.splice(i,1);i--;};};
 
 /**
  * Clone an object structure 
- * @param o the object to clone
- * @param recursive_depth maximum depth of clone
+ * @param {Object} o the object to clone
+ * @param {Number} recursive_depth maximum depth of clone
  * @returns {Object} the clone
  */
-function object_copy(o, recursive_depth) {
+function objectCopy(o, recursive_depth) {
 	if (o == null) return null;
 	if (typeof o == 'string') return ""+o;
 	if (typeof o == 'number') return o;
@@ -111,16 +104,22 @@ function object_copy(o, recursive_depth) {
 			else if (value instanceof Array || value.constructor.name == "Array") {
 				c[attr] = [];
 				for (var i = 0; i < value.length; ++i)
-					c[attr].push(value_copy(value[i], recursive_depth-1));
+					c[attr].push(valueCopy(value[i], recursive_depth-1));
 			} else {
-				c[attr] = object_copy(value, recursive_depth-1);
+				c[attr] = objectCopy(value, recursive_depth-1);
 			}
 		} else
 			c[attr] = value;
 	}
 	return c;
 }
-function value_copy(value, obj_depth) {
+/**
+ * Copy the given value
+ * @param {any} value the value to copy
+ * @param {Number} obj_depth maximum depth in objects to copy
+ * @returns {any} the copy
+ */
+function valueCopy(value, obj_depth) {
 	if (value == null) return null;
 	if (typeof value == 'object') {
 		if (value instanceof Date || value.constructor.name == "Date")
@@ -128,10 +127,10 @@ function value_copy(value, obj_depth) {
 		if (value instanceof Array || value.constructor.name == "Array") {
 			var a = [];
 			for (var i = 0; i < value.length; ++i)
-				a.push(value_copy(value[i], obj_depth-1));
+				a.push(valueCopy(value[i], obj_depth-1));
 			return a;
 		}
-		return object_copy(value, obj_depth);
+		return objectCopy(value, obj_depth);
 	}
 	return value;
 }
@@ -141,7 +140,7 @@ var _generate_id_counter = 0;
  * Generates an unique id. 
  * @returns {String} the generated id
  */
-function generate_id() {
+function generateID() {
 	return "id"+(_generate_id_counter++);
 }
 
@@ -548,9 +547,9 @@ function setCommonStyleTable(table,th_header,thead_color){
 
 /**
  * Add an "s" or not to the given word, in case the given figure is greater than 1
- * @param {string} word the word to set
- * @param {number} figure
- * @return the given word with the good spelling
+ * @param {String} word the word to set
+ * @param {Number} figure
+ * @returns {String} the given word with the good spelling
  */
 function getGoodSpelling(word, figure){
 	if(figure == null)

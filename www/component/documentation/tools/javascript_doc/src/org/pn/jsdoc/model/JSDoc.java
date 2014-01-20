@@ -33,9 +33,19 @@ public class JSDoc {
 		doc = doc.substring(3);
 		int i = doc.indexOf("*/");
 		doc = doc.substring(0,i);
-		String[] lines = doc.split("\n");
+		LinkedList<String> lines = new LinkedList<String>();
+		while (doc.length() > 0) {
+			i = doc.indexOf('\r');
+			int j = doc.indexOf('\n');
+			if (i == -1 || (j != -1 && j < i)) i = j;
+			if (i == -1) {
+				lines.add(doc.trim());
+				break;
+			}
+			lines.add(doc.substring(0,i).trim());
+			doc = doc.substring(i+1);
+		}
 		for (String line : lines) {
-			line = line.trim();
 			if (line.startsWith("*"))
 				line = line.substring(1);
 			line = line.trim();

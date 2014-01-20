@@ -219,14 +219,14 @@ class page_create_data extends Page {
 		$display = $create->table->getDisplayHandler($create->from);
 		if ($display <> null && count($display->getDisplayableData()) == 0) $display = null;
 		if ($display <> null || ($optional && $content <> "")) {
-			$id = $this->generate_id();
+			$id = $this->generateID();
 			$html .= "<div id='$id' style='border:1px solid #C0C0FF;display:inline-block;margin:5px;vertical-align:top'>";
 			$this->onload("setBorderRadius(document.getElementById('$id'),5,5,5,5,5,5,5,5);");
-			$id = $this->generate_id();
+			$id = $this->generateID();
 			$html .= "<div style='background-color:#C0C0FF;padding:2px;' id='$id'>";
 			$this->onload("setBorderRadius(document.getElementById('$id'),5,5,5,5,0,0,0,0);");
-			$hidder_id = $this->generate_id();
-			$content_id = $this->generate_id();
+			$hidder_id = $this->generateID();
+			$content_id = $this->generateID();
 			if ($optional) {
 				$html .= "<input type='checkbox' onchange=\"var e = document.getElementById('$hidder_id'); e.style.visibility = this.checked ? 'hidden' : 'visible'; e.style.zIndex = this.checked ? 1 : 3;\"/> ";
 			}
@@ -243,7 +243,7 @@ class page_create_data extends Page {
 				foreach ($display->getDisplayableData() as $data) {
 					$html .= "<tr>";
 					$html .= "<td>".htmlentities($data->getDisplayName())."</td>";
-					$id = $this->generate_id();
+					$id = $this->generateID();
 					$html .= "<td id='$id'></td>";
 					$tf = $data->getTypedField($create->sub_model);
 					$this->add_javascript("/static/widgets/typed_field/typed_field.js");

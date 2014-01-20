@@ -241,7 +241,7 @@ function context_menu(menu) {
 		menu.style.zIndex = 100;
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);
-			window.top.pnapplication.register_onclick(window, t._listener);
+			window.top.pnapplication.registerOnclick(window, t._listener);
 		},1);
 		if (typeof animation != 'undefined') {
 			if (menu.anim) animation.stop(menu.anim);
@@ -276,7 +276,7 @@ function context_menu(menu) {
 //			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = 1;
 		//unlistenEvent(window, 'click', t._listener);
 		if (window)
-			window.top.pnapplication.unregister_onclick(t._listener);
+			window.top.pnapplication.unregisterOnclick(t._listener);
 	};
 	t._listener = function(ev, win, orig_win) {
 		t.hide_if_outside_menu(ev, win, orig_win);

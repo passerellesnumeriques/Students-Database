@@ -46,7 +46,7 @@ function StatusUI_Top(manager, margin) {
 				if (this.container.childNodes[i].fading) continue;
 				if (typeof animation != 'undefined') {
 					this.container.childNodes[i].fading = true;
-					this.container.childNodes[i].id = generate_id();
+					this.container.childNodes[i].id = generateID();
 					this.container.childNodes[i].anim1 = 
 						animation.fadeOut(this.container.childNodes[i], 400, function(e){
 							var p = e.parentNode;

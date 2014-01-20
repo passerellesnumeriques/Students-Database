@@ -7,9 +7,11 @@ class documentation extends Component {
 		Component::allow_page_without_login("documentation", "home");
 		Component::allow_page_without_login("documentation", "component");
 		Component::allow_page_without_login("documentation", "php");
+		Component::allow_page_without_login("documentation", "php_search");
 		
 		Component::allow_service_without_login("documentation", "datamodel");
 		Component::allow_service_without_login("documentation", "component_dependencies");
+		Component::allow_service_without_login("documentation", "get_js");
 	}
 	
 }

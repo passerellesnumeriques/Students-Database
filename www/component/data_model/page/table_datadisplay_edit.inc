@@ -72,7 +72,7 @@ function <?php echo $javascript_object_name;?>(container, on_validate, additiona
 			echo "td.innerHTML = 'Fields with <sup style=\'color:red\'>*</sup> are mandatory';";
 		}
 			
-		$data_key = $key <> null ? $key : $page->generate_id();
+		$data_key = $key <> null ? $key : $page->generateID();
 		foreach ($display->getDisplayableData() as $data) {
 			echo "this.table.appendChild(tr = document.createElement('TR'));";
 			echo "tr.appendChild(td = document.createElement('TD'));";

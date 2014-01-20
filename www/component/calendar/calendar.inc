@@ -1,11 +1,21 @@
-<?php 
+<?php
+/**
+ * Component managing calendars
+ */ 
 class calendar extends Component {
 	
 	public function init() {
-		PNApplication::$instance->user_management->local_user_created->listen($this, "local_user_created");
+		PNApplication::$instance->user_management->local_user_created->listen($this, "localUserCreated");
 	}
 	
-	public function create_shared_calendar($calendar_name, $readable_rights, $writable_rights) {
+	/**
+	 * Create a new shared (not presonal) calendar. 
+	 * @param string $calendar_name name of the calendar
+	 * @param array $readable_rights associative array of right name =&gt; right value, needed to access the calendar in read access
+	 * @param array $writable_rights associative array of right name =&gt; right value, needed to access the calendar in write access
+	 * @return boolean|number the calendar id, or false if it failed.
+	 */
+	public function createSharedCalendar($calendar_name, $readable_rights, $writable_rights) {
 		foreach ($readable_rights as $name=>$value)
 			if (!PNApplication::$instance->user_management->has_right($name, $value)) {
 				PNApplication::error("You cannot create a calendar with right ".$name." because you don't have this right");
@@ -28,16 +38,30 @@ class calendar extends Component {
 		return $calendar_id;
 	}
 	
-	public function create_user_calendar($user_id) {
+	/**
+	 * Create a calendar, owned by the given user
+	 * @param number $user_id user id
+	 * @return number the calendar id
+	 */
+	public function createUserCalendar($user_id) {
 		$calendar_id = SQLQuery::create()->bypass_security()->insert("Calendar", array("name"=>"Personal","type"=>"internal"));
 		SQLQuery::create()->bypass_security()->insert("UserCalendar", array("user"=>$user_id,"calendar"=>$calendar_id));
 		return $calendar_id;
 	}
 	
-	public function local_user_created($user_id) {
-		$this->create_user_calendar($user_id);
+	/**
+	 * Called when an event is raised to signal that a new local user has just been created
+	 * @param number $user_id user id
+	 */
+	public function localUserCreated($user_id) {
+		$this->createUserCalendar($user_id);
 	}
 
+	/**
+	 * Check if the current user can read the calendar
+	 * @param number $calendar_id calendar id
+	 * @return boolean true if the current user can read it
+	 */
 	public function canReadCalendar($calendar_id) {
 		$r = SQLQuery::create()->bypass_security()->select("UserCalendar")->where("calendar",$calendar_id)->where("user",PNApplication::$instance->user_management->user_id)->execute_single_row();
 		if ($r <> null) return true;
@@ -48,6 +72,11 @@ class calendar extends Component {
 		return false;
 	}
 	
+	/**
+	 * Check if the current user can modify the calendar
+	 * @param number $calendar_id calendar id
+	 * @return boolean true if the current user can modify it
+	 */
 	public function canWriteCalendar($calendar_id) {
 		$r = SQLQuery::create()->bypass_security()->select("UserCalendar")->where("calendar",$calendar_id)->where("user",PNApplication::$instance->user_management->user_id)->execute_single_row();
 		if ($r <> null) return true;
@@ -58,6 +87,10 @@ class calendar extends Component {
 		return false;
 	}
 	
+	/**
+	 * Return a list of calendars the current user can access to
+	 * @return multitype:number ids of the calendars the current user can access to
+	 */
 	public function getAccessibleCalendars() {
 		$ids = array();
 		$res = SQLQuery::create()->bypass_security()->select("UserCalendar")->where("user",PNApplication::$instance->user_management->user_id)->execute();
@@ -72,6 +105,10 @@ class calendar extends Component {
 		return $ids;
 	}
 
+	/**
+	 * Return a list of calendars the current user can modify
+	 * @return multitype:number ids of the calendars the current user can modify
+	 */
 	public function getWritableCalendars() {
 		$ids = array();
 		$res = SQLQuery::create()->bypass_security()->select("UserCalendar")->where("user",PNApplication::$instance->user_management->user_id)->execute();
@@ -86,83 +123,23 @@ class calendar extends Component {
 		return $ids;
 	}
 	
-	public function getEvent($id){
-		$event = SQLQuery::create()
-					->bypass_security()
-					->select("CalendarEvent")
-					->where("id = '".$id."'")
-					->execute_single_row();
-		return $event;
-	}
-	
-	public function saveEvent($event){
-		$calendar_id = $event["calendar"];
-		if (!$this->canWriteCalendar($calendar_id)) {
-			PNApplication::error("Access denied: you cannot modify this calendar.");
-			return;
-		}
-		if (isset($event["id"])) {
-			// this is an update
-			// check the event belongs to the calendar
-			$res = SQLQuery::create()->bypass_security()->select("CalendarEvent")->where("id",$event["id"])->execute_single_row();
-			if ($res == null) {
-				PNApplication::error("Invalid event id: does not exist");
-				return;
-			}
-			if ($res["calendar"] <> $calendar_id) {
-				PNApplication::error("Invalid event id: does not belong to the given calendar");
-				return;
-			}
-			if (isset($event["uid"]) && $event["uid"] <> $res["uid"]) {
-				PNApplication::error("Event id and uid do not match");
-				return;
-			}
-			$data = array();
-			$data["start"] = $event["start"];
-			$data["end"] = $event["end"];
-			$data["all_day"] = $event["all_day"];
-			$data["last_modified"] = time();
-			$data["title"] = $event["title"];
-			$data["description"] = $event["description"];
-			$data["participation"] = $event["participation"];
-			$data["role"] = $event["role"];
-			SQLQuery::create()->bypass_security()->update_by_key("CalendarEvent", $event["id"], $data);
-			if (PNApplication::has_errors())
-				return;
-			$event_id = $event["id"];
-			$event_uid = $res["uid"];
-		} else {
-			// this is a new event
-			$data["calendar"] = $calendar_id;
-			$data["uid"] = $calendar_id."-".time()."-".rand(0, 100000)."@pn.".PNApplication::$instance->current_domain;
-			$data["start"] = $event["start"];
-			$data["end"] = $event["end"];
-			$data["all_day"] = $event["all_day"];
-			$data["last_modified"] = time();
-			$data["title"] = $event["title"];
-			$data["description"] = $event["description"];
-			$data["participation"] = $event["participation"];
-			$data["role"] = $event["role"];
-			$event_id = SQLQuery::create()->bypass_security()->insert("CalendarEvent", $data);
-			$event_uid = $data["uid"];
-			if (PNApplication::has_errors()) return;
-		}
-		if (isset($event["frequency"])) {
-			// TODO
-		}
-		return array("id"=>$event_id,"uid"=>$event_uid);
-	}
-	
+	/** Remove an event
+	 * @param number $event_id id of the event to remove
+	 * @param number $calendar_id calendar id from which the event is
+	 * @return boolean true if it succeed
+	 */
 	public function removeEvent($event_id, $calendar_id){
 		if (!$this->canWriteCalendar($calendar_id)) {
 			PNApplication::error("Access denied: you cannot modify this calendar.");
-			return "false";
+			return false;
 		}
+		// check the event belongs to the calendar
+		$cid = SQLQuery::create()->bypass_security()->select("CalendarEvent")->where_value("CalendarEvent", "id", $event_id)->field("CalendarEvent", "calendar")->execute_single_value();
+		if ($cid == null) return false;
+		if ($cid <> $calendar_id) return false;
 		//perform the remove
 		SQLQuery::create()->bypass_security()->remove_key("CalendarEvent", $event_id);
-		if(PNApplication::has_errors())
-			return "false";
-		return "true";
+		return true;
 	}
 	
 }

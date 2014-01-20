@@ -20,7 +20,7 @@ function IS_status(&$page, $container, $custom_title = null, $custom_header_colo
 	$girls_expected = null;
 	$partners = null;
 	$campaign_name = null;
-	$id = $page->generate_id();
+	$id = $page->generateID();
 	
 	$all_boys_real = SQLQuery::create()
 				->select("Information_session")

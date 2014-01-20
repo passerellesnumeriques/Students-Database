@@ -1,82 +1,81 @@
 if (window == window.top) {
 	/**
-	 * @class window.top.pnapplication
+	 * Handle windows events at application level: list of frames, event when a frame is closed, user activity...
 	 */
-	window.pnapplication = {
-		/** list of windows */
-		windows: [],
+	window.top.pnapplication = {
+		/** list of windows (private: registerWindow and unregisterWindow must be used) */
+		_windows: [],
+		/** event when a window/frame is closed. The window is given as parameter to the listeners. */ 
 		onwindowclosed: new Custom_Event(),
-		/** register a new window */
-		register_window: function(w) { 
-			window.top.pnapplication.windows.push(w);
+		/** register a new window
+		 * @param {window} w new window/frame 
+		 */
+		registerWindow: function(w) { 
+			window.top.pnapplication._windows.push(w);
 			listenEvent(w,'click',function(ev){
-				for (var i = 0; i < window.top.pnapplication.onclick_listeners.length; ++i)
-					window.top.pnapplication.onclick_listeners[i][1](ev, w, window.top.pnapplication.onclick_listeners[i][0]);
+				for (var i = 0; i < window.top.pnapplication._onclick_listeners.length; ++i)
+					window.top.pnapplication._onclick_listeners[i][1](ev, w, window.top.pnapplication._onclick_listeners[i][0]);
 			});
 		},
-		/** unregister a window (when it is closed) */
-		unregister_window: function(w) {
-			window.top.pnapplication.windows.remove(w);
-			for (var i = 0; i < this.onclick_listeners.length; ++i)
-				if (this.onclick_listeners[i][0] == w) {
-					this.onclick_listeners.splice(i,1);
-					i--;
-				}
-			for (var i = 0; i < this.onevent_listeners.length; ++i)
-				if (this.onevent_listeners[i].win == w) {
-					this.onevent_listeners.splice(i,1);
+		/** unregister a window (when it is closed)
+		 * @param {window} w window/frame which has been closed 
+		 */
+		unregisterWindow: function(w) {
+			window.top.pnapplication._windows.remove(w);
+			for (var i = 0; i < this._onclick_listeners.length; ++i)
+				if (this._onclick_listeners[i][0] == w) {
+					this._onclick_listeners.splice(i,1);
 					i--;
 				}
 			window.top.pnapplication.onwindowclosed.fire(w);
 		},
 		
-		onclick_listeners: [],
-		register_onclick: function(from_window, listener) {
-			this.onclick_listeners.push([from_window,listener]);
+		/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
+		_onclick_listeners: [],
+		/** Register the given listener, which will be called when the user clicks somewhere in the application (not only on the window, but on all frames)
+		 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
+		 * @param {function} listener function to be called
+		 */
+		registerOnclick: function(from_window, listener) {
+			this._onclick_listeners.push([from_window,listener]);
 		},
-		unregister_onclick: function(listener) {
-			for (var i = 0; i < this.onclick_listeners.length; ++i)
-				if (this.onclick_listeners[i][1] == listener) {
-					this.onclick_listeners.splice(i,1);
+		/** Remove a listener, previously registered by registerOnclick
+		 * @param {function} listener function to be removed, previously registered through registerOnclick 
+		 */
+		unregisterOnclick: function(listener) {
+			for (var i = 0; i < this._onclick_listeners.length; ++i)
+				if (this._onclick_listeners[i][1] == listener) {
+					this._onclick_listeners.splice(i,1);
 					break;
 				}
 		},
 		
-		onevent_listeners: [],
-		register_onevent: function(win, type, listener) {
-			this.onevent_listeners.push({win:win,type:type,listener:listener});
-		},
-		signal_event: function(type, data) {
-			for (var i = 0; i < this.onevent_listeners.length; ++i)
-				if (this.onevent_listeners[i].type == type)
-					this.onevent_listeners[i].listener(type, data);
-		},
-		
 		/** Event when the whole application is closing */
 		onclose: new Custom_Event(),
-		close_window: function() {
+		/** Called when the top window is closing, meaning the application */
+		closeWindow: function() {
 			window.top.pnapplication.onclose.fire();
 		},
 		/** time of the last activity of the user */
 		last_activity: new Date().getTime(),
 		/** signals the user is active: fire onactivity event on each window */
-		user_is_active: function() {
-			for (var i = 0; i < window.top.pnapplication.windows.length; ++i)
-				window.top.pnapplication.windows[i].pnapplication.onactivity.fire();
+		userIsActive: function() {
+			for (var i = 0; i < window.top.pnapplication._windows.length; ++i)
+				window.top.pnapplication._windows[i].pnapplication.onactivity.fire();
 			window.top.pnapplication.last_activity = new Date().getTime();
 		},
 		/** check if the user is not inactive since long time: if this is the case, automatically logout */
-		check_inactivity: function() {
+		checkInactivity: function() {
 			var time = new Date().getTime();
 			time -= window.top.pnapplication.last_activity;
-			for (var i = 0; i < window.top.pnapplication.windows.length; ++i) {
-				if (window.top.pnapplication.windows[i].closed) {
-					window.top.pnapplication.unregister_window(window.top.pnapplication.windows[i]);
-					window.top.pnapplication.check_inactivity();
+			for (var i = 0; i < window.top.pnapplication._windows.length; ++i) {
+				if (window.top.pnapplication._windows[i].closed) {
+					window.top.pnapplication.unregisterWindow(window.top.pnapplication._windows[i]);
+					window.top.pnapplication.checkInactivity();
 					return;
 				}
-				for (var j = 0; j < window.top.pnapplication.windows[i].pnapplication._inactivity_listeners.length; ++j) {
-					var il = window.top.pnapplication.windows[i].pnapplication._inactivity_listeners[j];
+				for (var j = 0; j < window.top.pnapplication._windows[i].pnapplication._inactivity_listeners.length; ++j) {
+					var il = window.top.pnapplication._windows[i].pnapplication._inactivity_listeners[j];
 					if (il.time <= time)
 						il.listener();
 				}
@@ -85,7 +84,7 @@ if (window == window.top) {
 	};
 } else if (typeof Custom_Event != 'undefined'){
 	/**
-	 * @class window.pnapplication
+	 * Handle events on the current window, transfered to the top window
 	 */
 	window.pnapplication = {
 		/** event fired when user activity is detected */
@@ -93,60 +92,46 @@ if (window == window.top) {
 		/** event fired when the current window is closing */
 		onclose: new Custom_Event(),
 		/** indicates the current window is closing */
-		close_window: function() {
+		closeWindow: function() {
 			this.onclose.fire();
-			window.top.pnapplication.unregister_window(window);
+			window.top.pnapplication.unregisterWindow(window);
 		},
+		/** Internal list of {time,function} to call when the user is inactive */
 		_inactivity_listeners: [],
-		add_inactivity_listener: function(inactivity_time, listener) {
+		/**
+		 * Register a listener to be called when the user is inactive for the given amount of time.
+		 * @param {Number} inactivity_time time in milliseconds of the inactivity
+		 * @param {function} listener function to be called
+		 */
+		addInactivityListener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
-		_app_events_to_register: [],
-		register_app_event_listener: function(type, identifier, listener, handler) {
-			window.pnapplication._app_events_to_register.push({type:type,identifier:identifier,listener:listener,handler:handler});
-			if (window.pnapplication._app_events_to_register.length > 1) return;
-			setTimeout(function(){
-				var events = [];
-				var list = window.pnapplication._app_events_to_register;
-				for (var i = 0; i < window.pnapplication._app_events_to_register.length; ++i)
-					events.push({type:window.pnapplication._app_events_to_register[i].type, identifier:window.pnapplication._app_events_to_register[i].identifier});
-				window.pnapplication._app_events_to_register = [];
-				service.json("application","register_app_event",{events:events},function(result){
-					if (!result) return;
-					for (var i = 0; i < result.length; ++i) {
-						window.top.pnapplication.register_app_event_listener(window, result[i], list[i].listener);
-						if (list[i].handler) list[i].handler(result[i]);
-					}
-				});
-			},10);
-		},
-		unregister_app_event_listener: function(id) {
-			window.top.pnapplication.unregister_app_event_listener(id);
-			service.json("application","unregister_app_event",{id:id},function(){});
-		}
 	};
-	window.top.pnapplication.register_window(window);
+	window.top.pnapplication.registerWindow(window);
 }
 
-function init_pnapplication() {
+/**
+ * Initialize: listen click, mousemove, beforeunload
+ */
+function initPNApplication() {
 	if (typeof listenEvent == 'undefined' || window.top.frames.length == 0)
-		setTimeout(init_pnapplication, 100);
+		setTimeout(initPNApplication, 100);
 	else {
 		var listener = function() {
 			if (!window || !window.top || !window.top.pnapplication) return;
-			window.top.pnapplication.user_is_active();
+			window.top.pnapplication.userIsActive();
 		};
 		listenEvent(window,'click',listener);
 		listenEvent(window,'mousemove',listener);
 		window.onbeforeunload = function() {
 			if (window.pnapplication)
-				window.pnapplication.close_window();
+				window.pnapplication.closeWindow();
 		};
 		if (window==window.top)
-			setInterval(window.pnapplication.check_inactivity, 2000);
+			setInterval(window.pnapplication.checkInactivity, 2000);
 	}
 };
-init_pnapplication();
+initPNApplication();
 
 
 // override add_javascript and add_stylesheet

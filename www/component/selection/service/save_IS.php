@@ -62,7 +62,7 @@ class service_save_IS extends Service{
 			echo "false";
 		else {
 			$data = $input["data"];
-			$address = $input["address"];
+			$address = $input["address"]; // TODO here it must be a PostalAddress, then no need to convert it to database format...
 			$event = $input["event"];
 			$everything_ok = true;
 			$add_event = false;
@@ -219,7 +219,7 @@ class service_save_IS extends Service{
 					if(isset($address["id"]))
 						unset($address["id"]);
 					$address_id = PNApplication::$instance->contact
-						->add_address_to_organization($data["fake_organization"],$address,true);
+						->addAddressToOrganization($data["fake_organization"],$address,true);
 				} catch(Exception $e){
 					$everything_ok = false;
 					PNApplication::error($e);

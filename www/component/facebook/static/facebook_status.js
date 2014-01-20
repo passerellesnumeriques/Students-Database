@@ -1,15 +1,21 @@
+/**
+ * Displays a facebook icon, indicating if the user is connected to its Facebook account
+ * @param {DOMNode} container where to put the icon
+ */
 function facebook_status(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	var w=window;
 	
+	/** icon element */
 	t.icon = document.createElement("IMG");
 	t.icon.style.verticalAlign = "bottom";
 	t.icon.style.cursor = "pointer";
-	t.icon.onclick = function() { t.show_menu(); };
+	t.icon.onclick = function() { t.showMenu(); };
 	container.appendChild(t.icon);
 	
-	t.update_icon = function() {
+	/** updates the icon based on current connection status */
+	t.updateIcon = function() {
 		if (!w.theme) return; // window closed
 		var url = "/static/application/icon.php?main=/static/facebook/facebook.png&where=right_bottom&small=";
 		switch (window.top.facebook.connection_status) {
@@ -27,11 +33,12 @@ function facebook_status(container) {
 	};
 	
 	window.top.add_javascript("/static/facebook/facebook.js",function() {
-		window.top.facebook.add_connection_status_listener(function(){t.update_icon();});
-		t.update_icon();
+		window.top.facebook.addConnectionStatusListener(function(){t.updateIcon();});
+		t.updateIcon();
 	});
 	
-	t.show_menu = function() {
+	/** Displays a menu to the user when it clicks on the icon */
+	t.showMenu = function() {
 /*		if (t.menu) { t.menu.hide(); return; }
 		require("context_menu.js",function() {
 			t.menu = new context_menu();

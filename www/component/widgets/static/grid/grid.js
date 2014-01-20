@@ -12,7 +12,7 @@ function GridColumnAction(icon,onclick) {
 
 function GridColumn(id, title, width, field_type, editable, onchanged, onunchanged, field_args, attached_data) {
 	// check parameters
-	if (!id) id = generate_id();
+	if (!id) id = generateID();
 	if (!field_type) field_type = "field_text";
 	require(field_type+".js");
 	if (!field_args) field_args = {};

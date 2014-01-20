@@ -8,8 +8,8 @@ class service_get_static_resources extends Service {
 	public function output_documentation() { echo "Scripts with dependencies, and images to load"; }
 	
 	public function execute(&$component, $input) {
-		$components = $this->get_components();
-		$components = $this->order_components($components);
+		$components = $this->getComponents();
+		$components = $this->orderComponents($components);
 		$scripts = array();
 		$images = array();
 		// start with theme
@@ -27,7 +27,11 @@ class service_get_static_resources extends Service {
 		echo "{scripts:".json_encode($scripts).",images:".json_encode($images)."}";
 	}
 
-	private function get_components() {
+	/**
+	 * Retrieve the list of components (list of directories in component/) 
+	 * @return string[] list of components' name
+	 */
+	private function getComponents() {
 		$list = array();
 		$dir = @opendir("component");
 		if ($dir == null) return;
@@ -39,19 +43,36 @@ class service_get_static_resources extends Service {
 		closedir($dir);
 		return $list;
 	}
-	private function order_components($list) {
+	/**
+	 * Order the given list of components by dependency
+	 * @param string[] $list list of components to sort
+	 * @return string[] sorted list
+	 */
+	private function orderComponents($list) {
 		$result = array();
 		foreach ($list as $c)
-			$this->_order_components($c, $result);
+			$this->orderComponentsRecurse($c, $result);
 		return $result;
 	}
-	private function _order_components($c, &$result) {
+	/**
+	 * Recursive function to sort components by dependency
+	 * @param string $c component name
+	 * @param string[] $result sorted list
+	 */
+	private function orderComponentsRecurse($c, &$result) {
 		if (in_array($c, $result)) return;
 		foreach (PNApplication::$instance->components[$c]->dependencies() as $dep)
-			$this->_order_components($dep, $result);
+			$this->orderComponentsRecurse($dep, $result);
 		array_push($result, $c);
 	}
 	
+	/**
+	 * Browse the given directory to search javascripts and images files
+	 * @param string $path directory's path
+	 * @param string $url URL to access to this directory
+	 * @param array[] $scripts list of scripts found: array('url'=>x,'size'=>y)
+	 * @param array[] $images list of images found: array('url'=>x,'size'=>y)
+	 */
 	private function browse($path, $url, &$scripts, &$images) {
 		$dir = @opendir($path);
 		if ($dir == null) return;
@@ -64,7 +85,7 @@ class service_get_static_resources extends Service {
 				if ($i === FALSE) continue;
 				$ext = substr($filename, $i+1);
 				switch ($ext) {
-					case "js": $this->add_script($scripts, $path.$filename, $url.$filename); break;
+					case "js": $this->addScript($scripts, $path.$filename, $url.$filename); break;
 					case "gif":
 					case "jpg":
 					case "jpeg":
@@ -77,7 +98,13 @@ class service_get_static_resources extends Service {
 		closedir($dir);
 	}
 	
-	private function add_script(&$scripts, $path, $url) {
+	/**
+	 * Add the given script to the list of scripts found
+	 * @param array[] $scripts list of scripts found: array('url'=>x,'size'=>y)
+	 * @param string $path path of the script to add
+	 * @param string $url URL of the script to add
+	 */
+	private function addScript(&$scripts, $path, $url) {
 		$content = file_get_contents($path);
 		$script = array("url"=>$url,"size"=>filesize($path),"dependencies"=>array());
 		$i = 0;

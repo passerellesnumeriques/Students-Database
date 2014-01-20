@@ -41,7 +41,7 @@ function init_calendars() {
 	window.calendars = new CalendarManager();
 	load_pn_calendars();
 	_load_google_calendars();
-	new CalendarView(window.calendars, 'week', 'calendars_view', function(){ add_test_events(); });
+	new CalendarView(window.calendars, 'week', 'calendars_view', function(){ });
 }
 function load_pn_calendars() {
 	var list = document.getElementById("pn_calendars");
@@ -49,68 +49,10 @@ function load_pn_calendars() {
 $ids = PNApplication::$instance->calendar->getAccessibleCalendars();
 $write_ids = PNApplication::$instance->calendar->getWritableCalendars();
 $calendars = SQLQuery::create()->bypass_security()->select("Calendar")->where_in("Calendar", "id", $ids)->execute();
-foreach ($calendars as $cal) echo "new CalendarElement(list,window.calendars.add_calendar(new PNCalendar(".$cal["id"].",".json_encode($cal["name"]).",".json_encode($cal["color"]).",true,".(in_array($cal["id"], $write_ids) ? "true" : "false").")));";
+foreach ($calendars as $cal) echo "new CalendarElement(list,window.calendars.addCalendar(new PNCalendar(".$cal["id"].",".json_encode($cal["name"]).",".json_encode($cal["color"]).",true,".(in_array($cal["id"], $write_ids) ? "true" : "false").")));";
 ?>
 	var loading = document.getElementById('loading_pn_calendars');
 	loading.parentNode.removeChild(loading);
-}
-function TestCalendar() {
-	Calendar.call(this, "Test", "D0FFD0", true);
-	this.refresh = function(manager, cal, ondone) {
-		if (cal.events.length > 0) return;
-		var now = new Date().getTime()-120*60*1000;
-		var ev = {
-			uid:1,
-			calendar: cal,
-			start: new Date(now-30*60*1000),
-			end: new Date(now+30*60*1000),
-			title: "Before",
-			description: "La description de l'evenement qui est avant"
-		};
-		cal.events.push(ev);
-		manager.on_event_added(ev);
-		ev = {
-			uid:2,
-			calendar: cal,
-			start: new Date(now+120*60*1000),
-			end: new Date(now+180*60*1000),
-			title: "After"
-		};
-		cal.events.push(ev);
-		manager.on_event_added(ev);
-		ev = {
-			uid:3,
-			calendar: cal,
-			start: new Date(now-60*60*1000),
-			end: new Date(now+200*60*1000),
-			title: "Large"
-		};
-		cal.events.push(ev);
-		manager.on_event_added(ev);
-		ev = {
-			uid:4,
-			calendar: cal,
-			start: new Date(now+15*60*1000),
-			end: new Date(now+75*60*1000),
-			title: "Overlap"
-		};
-		cal.events.push(ev);
-		manager.on_event_added(ev);
-		ev = {
-			uid:5,
-			calendar: cal,
-			start: new Date(now+45*60*1000),
-			end: new Date(now+90*60*1000),
-			title: "Inside"
-		};
-		cal.events.push(ev);
-		manager.on_event_added(ev);
-	};
-}
-TestCalendar.prototype = new Calendar();
-TestCalendar.prototype.constructor = TestCalendar;
-function add_test_events() {
-	new CalendarElement(document.getElementById("pn_calendars"), window.calendars.add_calendar(new TestCalendar())); 
 }
 function CalendarElement(container, cal) {
 	var t=this;
@@ -127,17 +69,17 @@ function CalendarElement(container, cal) {
 		this.box.onclick = function() {
 			if (!cal.manager) return;
 			if (cal.show) {
-				cal.manager.hide_calendar(cal);
+				cal.manager.hideCalendar(cal);
 				t.box.style.backgroundColor = '';
 			} else {
-				cal.manager.show_calendar(cal);
+				cal.manager.showCalendar(cal);
 				t.box.style.backgroundColor = "#"+cal.color;
 			}
 		};
 		this.name = document.createElement("SPAN"); this.div.appendChild(this.name);
 		this.name.style.paddingLeft = "3px";
 		this.name.innerHTML = cal.name;
-		if (!cal.save_event) {
+		if (!cal.saveEvent) {
 			var img = document.createElement("IMG");
 			img.src = "/static/calendar/read_only.png";
 			img.title = "Read-only: you cannot modify this calendar";

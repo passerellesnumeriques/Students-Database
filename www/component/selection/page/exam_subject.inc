@@ -17,7 +17,7 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only){
 	
 	$current_campaign = PNApplication::$instance->selection->get_campaign_id();
 	
-	$fct_name = "exam_subject_".$page->generate_id();
+	$fct_name = "exam_subject_".$page->generateID();
 	$page->onload($fct_name."();");
 ?>
 <script type = "text/javascript">

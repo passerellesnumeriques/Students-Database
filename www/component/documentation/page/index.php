@@ -16,10 +16,40 @@ class page_index extends Page {
 				echo "</div>";
 			echo "</div>";
 		echo "</div>";
-		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->require_javascript("vertical_layout.js");
 		$this->onload("new vertical_layout('doc_top_container');");
-		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
+		$this->require_javascript("splitter_vertical.js");
 		$this->onload("new splitter_vertical('doc_container',0.2);");
+		?>
+		<script type='text/javascript'>
+		var w = window;
+		w.jsdoc = null;
+		w.jsdoc_handlers = [];
+		w.jsdoc_loading = false;
+		function init_jsdoc(handler) {
+			if (w.jsdoc) { if (handler) handler(); return; }
+			if (w.jsdoc_loading) { if (handler) w.jsdoc_handlers.push(handler); return; }
+			w.jsdoc_loading = true;
+			if (handler) w.jsdoc_handlers.push(handler);
+			require("jsdoc.js");
+			service.json("documentation","get_js",{},function(res){
+				require("jsdoc.js",function() {
+					var fct;
+					try {
+						fct = eval("(function (){"+res.js+";this.jsdoc = jsdoc;})");
+						var doc = new fct();
+						w.jsdoc = doc.jsdoc;
+					} catch (e) {
+						w.top.status_manager.add_status(new window.top.StatusMessageError(e,"Invalid output for get_js:"+res.js,10000));
+					}
+					for (var i = 0; i < w.jsdoc_handlers.length; ++i)
+						w.jsdoc_handlers[i]();
+				});
+			});
+		}
+		init_jsdoc();
+		</script>
+		<?php 
 	}
 	
 }

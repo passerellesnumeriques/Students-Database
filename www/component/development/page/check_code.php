@@ -18,7 +18,7 @@ var tr = new tree('tree_container');
 function build_tree(parent_item, files, path) {
 	for (var i = 0; i < files.length; ++i) {
 		if (files[i].type != 'dir') continue;
-		var item = new TreeItem("<img src='/static/development/folder.png' style='vertical-align:bottom'/> "+files[i].name, true);
+		var item = new TreeItem("<img src='/static/development/folder.png' style='vertical-align:bottom'/> "+files[i].name, false);
 		parent_item.addItem(item);
 		build_tree(item, files[i].content, path+files[i].name+"/");
 	}
@@ -54,62 +54,106 @@ function build_tree_php(parent_item, path, filename, type) {
 	});
 }
 var checking_js = 0;
+var js_todo = [];
 function build_tree_js(parent_item, path, filename) {
-	var item = new TreeItem("<img src='/static/development/javascript.png' style='vertical-align:bottom'/> "+filename, true);
+	var item = new TreeItem("<img src='/static/development/javascript.png' style='vertical-align:bottom'/> "+filename, false);
 	parent_item.addItem(item);
-	todo.push({
-		service: "get_js",
-		data: {path:path+filename},
-		handler: function(res) {
-			var fct;
-			try {
-				fct = eval("(function (){"+res+"this.jsdoc = jsdoc;})");
-			} catch (e) {
-				window.top.status_manager.add_status(new window.top.StatusMessageError(e,"Invalid output:"+res,10000));
-				return;
-			}
-			checking_js++;
-			setTimeout(function() {
-				var doc = new fct();
-				doc = doc.jsdoc;
-				check_js_ns("", doc, item, filename);
-				checking_js--;
-				check_end();
-			},1);
-		}
+	js_todo.push(function(){
+		checking_js++;
+		setTimeout(function() {
+			check_js_ns("", window.jsdoc, item, filename, path);
+			checking_js--;
+			check_end();
+		},1);
 	});
 }
-function check_js_ns(ns_path, ns, item, filename) {
+function check_js_ns(ns_path, ns, item, filename, path) {
+	var location = path+filename;
+	var i = location.indexOf("/static/");
+	location = location.substring(0,i)+location.substring(i+7);
+	var parent_class = null;
+	if (ns instanceof JSDoc_Class && ns.extended) {
+		parent_class = get_class(window.jsdoc, ns.extended);
+	}
 	for (var name in ns.content) {
+		if (parent_class && parent_class.content[name]) continue; // skip overriden elements
 		var elem = ns.content[name];
 		if (elem instanceof JSDoc_Namespace) {
-			// check name
-			check_name_small_underscore(name, "Namespace "+ns_path+name, item);
-			// check content
-			check_js_ns(ns_path+name+".", elem, item, filename);
-		} else if (elem instanceof JSDoc_Class) {
-			var i = filename.indexOf(".js");
-			var fname = filename.substring(0,i);
-			if (name != fname && !name.startsWith(fname)) {
-				// not a class corresponding to the filename: must comply
-				check_name_class(name, "Class "+ns_path+name, item);
+			if (elem.location.file == location) {
+				// check name
+				check_name_small_underscore(name, "Namespace "+ns_path+name, item);
+				// check doc
+				if (elem.doc.length == 0 && name != "window_top") add_error(item, "Namespace "+ns_path+name+": no comment", elem.location);
 			}
 			// check content
-			check_js_ns(ns_path+name+".", elem, item, filename);
+			check_js_ns(ns_path+name+".", elem, item, filename, path);
+		} else if (elem instanceof JSDoc_Class) {
+			if (elem.location.file == location) {
+				var i = filename.indexOf(".js");
+				var fname = filename.substring(0,i);
+				if (name != fname && !name.startsWith(fname)) {
+					// not a class corresponding to the filename: must comply
+					check_name_class(name, "Class "+ns_path+name, item);
+				}
+				// check doc
+				if (elem.doc.length == 0) add_error(item, "Class "+ns_path+name+": no comment", elem.location);
+			}
+			// check content
+			check_js_ns(ns_path+name+".", elem, item, filename, path);
 		} else if (elem instanceof JSDoc_Function) {
+			if (elem.location.file != location) continue;
 			if (name.charAt(0) == '_')
 				check_name_small_then_capital(name.substring(1), "Private Function "+ns_path+name, item);
 			else
 				check_name_small_then_capital(name, "Public Function "+ns_path+name, item);
+			// check doc
+			if (elem.doc.length == 0) add_error(item, "Function "+ns_path+name+": no comment", elem.location);
+			if (elem.return_type && !elem.return_doc && elem.return_type != "void") add_error(item, "Function "+ns_path+name+": no comment for return value ("+elem.return_type+")", elem.location);
+			for (var j = 0; j < elem.parameters.length; ++j) {
+				var p = elem.parameters[j];
+				if (p.doc.length == 0) add_error(item, "Function "+ns_path+name+": no comment for parameter "+p.name, elem.location);
+				if (!p.type) add_error(item, "Function "+ns_path+name+": no type for parameter "+p.name, elem.location);
+				check_name_small_underscore(p.name, "Parameter "+p.name+" in function "+ns_path+name, item);
+			}
 		} else if (elem instanceof JSDoc_Value) {
+			if (elem.location.file != location) continue;
 			if (name.charAt(0) == '_')
 				check_name_small_underscore(name.substring(1), "Private Variable "+ns_path+name, item);
 			else
 				check_name_small_underscore(name, "Public Variable "+ns_path+name, item);
+			// check doc
+			if (elem.doc.length == 0) add_error(item, "Variable "+ns_path+name+": no comment", elem.location);
 		}
 	}
 }
-function add_error(item, msg) {
+function get_class(ns, name) {
+	var i = name.indexOf('.');
+	var next_name, after;
+	if (i < 0) {
+		next_name = name;
+		after = null;
+	} else {
+		next_name = name.substring(0,i);
+		after = name.substring(i+1);
+	}
+	var cl = null;
+	for (var n in ns.content) {
+		if (n == next_name) {
+			cl = ns.content[n];
+			break;
+		}
+	}
+	if (cl == null) return null;
+	if (after == null) {
+		if (cl instanceof JSDoc_Class) return cl;
+		return null;
+	}
+	if (cl instanceof JSDoc_Namespace)
+		return get_class(cl, after);
+	return null;
+}
+function add_error(item, msg, location) {
+	if (location) msg += " ("+location.file+":"+location.line+")";
 	var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+msg);
 	items_to_add.push({parent:item,item:e});
 }
@@ -159,7 +203,7 @@ function check_name_class(name, descr, item) {
 	}
 }
 function check_name_small_then_capital(name, descr, item) {
-	if (!is_small_letter(name.charAt(0))) {
+	if (!is_small_letter(name.charAt(0)) && !is_digit(name.charAt(0))) {
 		add_error(item, descr+": Must start with a small letter");
 		return;
 	}
@@ -190,9 +234,16 @@ function check_end() {
 		unlock_screen(locker);
 		var item = new TreeItem(""+items_to_add.length+" problem(s)");
 		tr.insertItem(item, 0);
-		for (var i = 0; i < items_to_add.length; ++i)
+		for (var i = 0; i < items_to_add.length; ++i) {
 			items_to_add[i].parent.addItem(items_to_add[i].item);
+			has_error(items_to_add[i].parent);
+		}
 	}
+}
+function has_error(p) {
+	if (p instanceof tree) return;
+	p.expand();
+	if (p.parent_item) has_error(p.parent_item);
 }
 
 var in_progress = 0;
@@ -219,6 +270,28 @@ var locker;
 setTimeout(function() {
 	total_todo = todo.length;
 	locker = lock_screen(null, "Checking code...");
+	// load javascript
+	checking_js++;
+	service.json("documentation","get_js",{},function(res){
+		if (res == null) { checking_js--; return; }
+		var fct;
+		try {
+			fct = eval("(function (){"+res.js+";this.jsdoc = jsdoc;})");
+		} catch (e) {
+			window.top.status_manager.add_status(new window.top.StatusMessageError(e,"Invalid output for get_js: "+res.js,10000));
+			checking_js--;
+			return;
+		}
+		for (var i = 0; i < res.out.length; ++i) {
+			add_error(tr, "JavaScript parsing: "+res.out[i]);
+		}
+		var doc = new fct();
+		window.jsdoc = doc.jsdoc;
+		for (var i = 0; i < js_todo.length; ++i)
+			js_todo[i]();
+		checking_js--;
+	});
+	// call services
 	next_todo();
 	next_todo();
 	setTimeout(function() { next_todo(); }, 50);
@@ -250,7 +323,7 @@ setTimeout(function() {
 				if (substr($filename, 0, 4) == "lib_") continue;
 				if ($first) $first = false; else echo ",";
 				echo "{type:'dir',name:".json_encode($filename).",content:";
-				$this->build_tree_dir($path."/".$filename, $type <> "" ? $type : $filename == "page" ? "page" : $filename == "service" ? "service" : "");
+				$this->build_tree_dir($path."/".$filename, $type <> "" ? $type : ($filename == "page" ? "page" : ($filename == "service" ? "service" : "")));
 				echo "}";
 			} else {
 				if ($filename == "datamodel.inc") continue;

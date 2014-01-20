@@ -117,31 +117,31 @@ class selection extends Component implements OrganizationPlugin {
 		
 		SQLQuery::start_transaction();
 		try{
-			/* Create a calendar for this campaign */
-			$calendar_id = PNApplication::$instance->calendar->create_shared_calendar($name,array("can_access_selection_data"=>true),array("edit_information_session"=>true));
+		/* Create a calendar for this campaign */
+		$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($name,array("can_access_selection_data"=>true),array("edit_information_session"=>true));
+		
+		/* if the calendar was properly created, continue */
+		if($calendar_id <> null){
+			$fields["name"] = $name;
+			$fields["calendar"] = $calendar_id;
+			$campaign_id = SQLQuery::create()->insert("SelectionCampaign",$fields);
+			$this->set_campaign_id($campaign_id);
 			
-			/* if the calendar was properly created, continue */
-			if($calendar_id <> null){
-				$fields["name"] = $name;
-				$fields["calendar"] = $calendar_id;
-				$campaign_id = SQLQuery::create()->insert("SelectionCampaign",$fields);
-				$this->set_campaign_id($campaign_id);
-				
-				/* Insert the default config in the database */
-				$default_config_rows = array();
-				foreach($all_configs as $name => $data)
-					array_push($default_config_rows,array(
-						"name" => $name,
-						"value" => json_encode($data[1]),
-					));
-				SQLQuery::create()->insert_multiple("Selection_campaign_config",$default_config_rows);
+			/* Insert the default config in the database */
+			$default_config_rows = array();
+			foreach($all_configs as $name => $data)
+				array_push($default_config_rows,array(
+					"name" => $name,
+					"value" => json_encode($data[1]),
+				));
+			SQLQuery::create()->insert_multiple("Selection_campaign_config",$default_config_rows);
 				
 				/* Insert the default steps in the database */
 				$rows_steps = array();
 				foreach($all_steps as $name => $temp)
 					array_push($rows_steps, array("name" => $name, "value" => false));
 				SQLQuery::create()->insert_multiple("Steps",$rows_steps);
-			}
+		}
 		} catch (Exception $e) {
 			PNApplication::error($e);
 		}
@@ -252,7 +252,7 @@ class selection extends Component implements OrganizationPlugin {
 	 * @return {array} [["step_name"] => value,...]
 	 */
 	public function getSteps(){
-		$all_steps = include("steps.inc");
+			$all_steps = include("steps.inc");
 		$steps = array();
 		$db_steps = SQLQuery::create()
 			->select("Steps")
@@ -266,9 +266,9 @@ class selection extends Component implements OrganizationPlugin {
 						$steps[$name] = false;
 					else
 						$steps[$name] = true;
-				}
 			}
 		}
+	}
 		return $steps;
 	}
 	
@@ -295,11 +295,11 @@ class selection extends Component implements OrganizationPlugin {
 		$all_steps = include("steps.inc");
 		$steps = $this->getSteps();
 		foreach($steps as $name => $value){
-			$r = SQLQuery::create()
-				->bypass_security() //mandatory
+		$r = SQLQuery::create()
+			->bypass_security() //mandatory
 				->select($all_steps[$name][1])
-				->count() //just check if empty or not, no need of more data
-				->execute_single_value();
+			->count() //just check if empty or not, no need of more data
+			->execute_single_value();
 			if($r <> null && $r != 0 && $r != "0"){
 				if(!$steps[$name]) //must be updated
 					SQLQuery::create()
@@ -310,13 +310,13 @@ class selection extends Component implements OrganizationPlugin {
 					SQLQuery::create()
 						->bypass_security()
 						->update_by_key("Steps",$name, array('value' => false));
-			}
-		}
+	}
+	}
 	}
 	
 	/** This method must be called by each "save" and "remove" method to valid the call, as a last check
-	 * Can also be called before creating a saving page such as exam_subject to temporarly
-	 * update the user rights
+		 * Can also be called before creating a saving page such as exam_subject to temporarly
+		 * update the user rights
 	 * @param {sting} name the step name
 	 * @return {array} [0]: {boolean} true if can valid this step
 	 * 					[1]: {boolean} true if can unvalid this step
@@ -325,7 +325,7 @@ class selection extends Component implements OrganizationPlugin {
 	 *								["add"]: {boolean} true if can add
 	 *								["remove"]: {boolean} true if can remove
 	 *								["update"]: {boolean} true if can update
-	 */
+		 */
 	public function canUpdateStep($name){
 		$all_steps = include("steps.inc");
 		$can_valid = true;
@@ -539,20 +539,20 @@ class selection extends Component implements OrganizationPlugin {
 	 */
 	public function saveIS($id, $fields_values){
 		try {
-			if(isset($id) && $id <> null){
-				// This is an update
-				SQLQuery::create()->update_by_key("Information_session",$id,$fields_values);
-				return;
-			} else {
-				// This is an insert
-				$id = SQLQuery::create()->insert("Information_session",$fields_values);
-				return $id;
-			}
+		if(isset($id) && $id <> null){
+			// This is an update
+			SQLQuery::create()->update_by_key("Information_session",$id,$fields_values);
+			return;
+		} else {
+			// This is an insert
+			$id = SQLQuery::create()->insert("Information_session",$fields_values);
+			return $id;
+		}
 			//update the steps
 			$this->updateAllSteps();
 		} catch (Exception $e) {
 			PNApplication::error($e);
-		}
+	}
 	}
 	
 	/**
@@ -882,7 +882,7 @@ class selection extends Component implements OrganizationPlugin {
 	
 	public function canManageExamSubjectQuestions(){
 		return $this->canUpdateFromRightAndStep("manage_exam","manage_exam_subject","You are not allowed to manage the exam subject questions");
-	}
+		}
 		
 	public function removeExam($exam_id){
 		$parts = null;
@@ -929,159 +929,159 @@ class selection extends Component implements OrganizationPlugin {
 		if($can_update[0]){
 			SQLQuery::start_transaction();
 			try {
-				$has_questions_from_old_parts = false;
-				$has_questions_from_new_parts = false;
-				$has_parts = false;
-				if(count($rows_parts_table) > 0)
-					$has_parts = true;
-				if($has_parts){
-					foreach($questions_by_old_parts as $q){
-						if(count($q) > 0){
-							$has_questions_from_old_parts = true;
-							break;
-						}
-					}
-					foreach($questions_by_new_part as $q){
-						if(count($q) > 0){
-							$has_questions_from_new_parts = true;
-							break;
-						}
+			$has_questions_from_old_parts = false;
+			$has_questions_from_new_parts = false;
+			$has_parts = false;
+			if(count($rows_parts_table) > 0)
+				$has_parts = true;
+			if($has_parts){
+				foreach($questions_by_old_parts as $q){
+					if(count($q) > 0){
+						$has_questions_from_old_parts = true;
+						break;
 					}
 				}
+				foreach($questions_by_new_part as $q){
+					if(count($q) > 0){
+						$has_questions_from_new_parts = true;
+						break;
+					}
+				}
+			}
+				
+			if($exam_id == -1 || $exam_id == "-1"){
+				// this an insert
+				$exam_id = SQLQuery::create()
+					->insert("Exam_subject",$rows_exam_table);
+				if($has_parts){
+					// update parts exam_subject id
+					foreach($rows_parts_table as &$p){
+						$p["exam_subject"] = $exam_id;
+						unset($p["id"]);
+					}
+					// save
+					$new_parts = SQLQuery::create()
+						->insert_multiple("Exam_subject_part",$rows_parts_table);
 					
-				if($exam_id == -1 || $exam_id == "-1"){
-					// this an insert
-					$exam_id = SQLQuery::create()
-						->insert("Exam_subject",$rows_exam_table);
-					if($has_parts){
-						// update parts exam_subject id
-						foreach($rows_parts_table as &$p){
-							$p["exam_subject"] = $exam_id;
-							unset($p["id"]);
-						}
-						// save
-						$new_parts = SQLQuery::create()
-							->insert_multiple("Exam_subject_part",$rows_parts_table);
-						
-						if($has_questions_from_new_parts){
-							$rows_questions_table = $this->updatePartIdInQuestionsRows($new_parts,$questions_by_new_part,$parts_to_insert_indexes);
-							// insert using bypass_security
-							SQLQuery::create()
-								->bypass_security()
-								->insert_multiple("Exam_subject_question",$rows_questions_table);
-						}
+					if($has_questions_from_new_parts){
+						$rows_questions_table = $this->updatePartIdInQuestionsRows($new_parts,$questions_by_new_part,$parts_to_insert_indexes);
+						// insert using bypass_security
+						SQLQuery::create()
+							->bypass_security()
+							->insert_multiple("Exam_subject_question",$rows_questions_table);
+					}
 						// create a topic full_subject
 						$this->createTopicAndInsertFullExamSubject($exam_id,$new_parts);
+				}
+			} else {
+				// this is an update
+				SQLQuery::create()
+					->update_by_key("Exam_subject",$exam_id,$rows_exam_table);
+				
+				$had_parts = false;
+				// get the old parts id and old questions id
+				$old_parts = SQLQuery::create()
+					->select("Exam_subject_part")
+					->field("id")
+					->where_value("Exam_subject_part","exam_subject",$exam_id)
+					->execute_single_field();
+				if(count($old_parts) > 0)
+					$had_parts = true;
+				$new_parts_ids = null;
+				if($had_parts){
+					//Because of the topics for eligibility rules, we must update the parts (instead of remove / insert)
+					$rows_parts_to_update = array();
+					$rows_parts_to_insert = array();
+					$parts_to_remove = array();
+					$parts_ids_to_update = array();
+					$parts_updated = array();
+					foreach($rows_parts_table as $p){
+						if($p["id"] == -1 || $p["id"] == "-1")
+							array_push($rows_parts_to_insert,array(
+								"exam_subject" => $exam_id,
+								"index" => $p["index"],
+								"max_score" => $p["max_score"],
+								"name" => $p["name"]
+							));
+						else {
+							//this is an update
+							array_push($rows_parts_to_update,$p);
+							array_push($parts_ids_to_update,$p["id"]);
+						}
 					}
-				} else {
-					// this is an update
-					SQLQuery::create()
-						->update_by_key("Exam_subject",$exam_id,$rows_exam_table);
-					
-					$had_parts = false;
-					// get the old parts id and old questions id
-					$old_parts = SQLQuery::create()
-						->select("Exam_subject_part")
-						->field("id")
-						->where_value("Exam_subject_part","exam_subject",$exam_id)
-						->execute_single_field();
-					if(count($old_parts) > 0)
-						$had_parts = true;
-					$new_parts_ids = null;
-					if($had_parts){
-						//Because of the topics for eligibility rules, we must update the parts (instead of remove / insert)
-						$rows_parts_to_update = array();
-						$rows_parts_to_insert = array();
-						$parts_to_remove = array();
-						$parts_ids_to_update = array();
-						$parts_updated = array();
-						foreach($rows_parts_table as $p){
-							if($p["id"] == -1 || $p["id"] == "-1")
-								array_push($rows_parts_to_insert,array(
-									"exam_subject" => $exam_id,
-									"index" => $p["index"],
-									"max_score" => $p["max_score"],
-									"name" => $p["name"]
-								));
-							else {
-								//this is an update
-								array_push($rows_parts_to_update,$p);
-								array_push($parts_ids_to_update,$p["id"]);
-							}
-						}
-						//get the parts to remove
-						foreach($old_parts as $old_part){
-							if(!in_array($old_part,$parts_ids_to_update))
-								array_push($parts_to_remove,$old_part);
-						}
-						//remove the questions of the updated parts (removed parts will remove all the other questions)
-						if(count($parts_ids_to_update) > 0){
-							$questions_to_remove_from_parts_to_update = SQLQuery::create()
-									->bypass_security()
-									->select("Exam_subject_question")
-									->field("id")
-									->where_in("Exam_subject_question","exam_subject_part",$parts_ids_to_update)
-									->execute_single_field();
-							if(count($questions_to_remove_from_parts_to_update) > 0)
-								SQLQuery::create()
-									->bypass_security()
-									->remove_keys("Exam_subject_question",$questions_to_remove_from_parts_to_update);
-						}										
-						//update the parts to update
-						if(count($rows_parts_to_update) > 0){
-							foreach($rows_parts_to_update as $row){
-								SQLQuery::create()
-									->update_by_key("Exam_subject_part",$row["id"],array(
-										"exam_subject" => $exam_id,
-										"index" => $row["index"],
-										"max_score" => $row["max_score"],
-										"name" => $row["name"]
-									));
-								array_push($parts_updated,$row["id"]);
-							}
-						}
-						//insert the parts to insert
-						if(count($rows_parts_to_insert) > 0){
-							$new_parts_ids = SQLQuery::create()
-								->insert_multiple("Exam_subject_part",$rows_parts_to_insert);
-						}
-						/** The exam topics for eligibility rules must only be updated in the case of the subject
-						 * already had parts (that could have been selected into any exam topic)
-						 * This method must be called before removing the parts, to remove the topic if empty
-						 */
-						$this->updateExamTopicsForEligibilityRules($parts_to_remove,$new_parts_ids,$exam_id);
-						
-						//remove the parts to remove
-						if(count($parts_to_remove) > 0)
+					//get the parts to remove
+					foreach($old_parts as $old_part){
+						if(!in_array($old_part,$parts_ids_to_update))
+							array_push($parts_to_remove,$old_part);
+					}
+					//remove the questions of the updated parts (removed parts will remove all the other questions)
+					if(count($parts_ids_to_update) > 0){
+						$questions_to_remove_from_parts_to_update = SQLQuery::create()
+								->bypass_security()
+								->select("Exam_subject_question")
+								->field("id")
+								->where_in("Exam_subject_question","exam_subject_part",$parts_ids_to_update)
+								->execute_single_field();
+						if(count($questions_to_remove_from_parts_to_update) > 0)
 							SQLQuery::create()
 								->bypass_security()
-								->remove_keys("Exam_subject_part",$parts_to_remove);
-					} else if($has_parts) {
-						//all the parts must be inserted
+								->remove_keys("Exam_subject_question",$questions_to_remove_from_parts_to_update);
+					}										
+					//update the parts to update
+					if(count($rows_parts_to_update) > 0){
+						foreach($rows_parts_to_update as $row){
+							SQLQuery::create()
+								->update_by_key("Exam_subject_part",$row["id"],array(
+									"exam_subject" => $exam_id,
+									"index" => $row["index"],
+									"max_score" => $row["max_score"],
+									"name" => $row["name"]
+								));
+							array_push($parts_updated,$row["id"]);
+						}
+					}
+					//insert the parts to insert
+					if(count($rows_parts_to_insert) > 0){
 						$new_parts_ids = SQLQuery::create()
-							->insert_multiple("Exam_subject_part",$rows_parts_table);	
+							->insert_multiple("Exam_subject_part",$rows_parts_to_insert);
 					}
-					/** update the part id of the questions coming from new parts
-					 * If !$had_parts, all the questions are in $questions_by_new_part
+					/** The exam topics for eligibility rules must only be updated in the case of the subject
+					 * already had parts (that could have been selected into any exam topic)
+					 * This method must be called before removing the parts, to remove the topic if empty
 					 */
-					if(isset($new_parts_ids)){
-						$rows_questions_of_inserted_parts = $this->updatePartIdInQuestionsRows($new_parts_ids,$questions_by_new_part,$parts_to_insert_indexes);
-						// insert these questions
+						$this->updateExamTopicsForEligibilityRules($parts_to_remove,$new_parts_ids,$exam_id);
+					
+					//remove the parts to remove
+					if(count($parts_to_remove) > 0)
 						SQLQuery::create()
 							->bypass_security()
-							->insert_multiple("Exam_subject_question",$rows_questions_of_inserted_parts);
-					}
-					if(count($questions_by_old_parts) > 0){ //insert the remaining questions
-						$rows_questions_from_old_parts = array();
-						foreach($questions_by_old_parts as $part_questions){
-							foreach($part_questions as $q)
-								array_push($rows_questions_from_old_parts,$q);
-						}					
-						SQLQuery::create()
-							->bypass_security()
-							->insert_multiple("Exam_subject_question",$rows_questions_from_old_parts);
-					}
+							->remove_keys("Exam_subject_part",$parts_to_remove);
+				} else if($has_parts) {
+					//all the parts must be inserted
+					$new_parts_ids = SQLQuery::create()
+						->insert_multiple("Exam_subject_part",$rows_parts_table);	
 				}
+				/** update the part id of the questions coming from new parts
+				 * If !$had_parts, all the questions are in $questions_by_new_part
+				 */
+				if(isset($new_parts_ids)){
+					$rows_questions_of_inserted_parts = $this->updatePartIdInQuestionsRows($new_parts_ids,$questions_by_new_part,$parts_to_insert_indexes);
+					// insert these questions
+					SQLQuery::create()
+						->bypass_security()
+						->insert_multiple("Exam_subject_question",$rows_questions_of_inserted_parts);
+				}
+				if(count($questions_by_old_parts) > 0){ //insert the remaining questions
+					$rows_questions_from_old_parts = array();
+					foreach($questions_by_old_parts as $part_questions){
+						foreach($part_questions as $q)
+							array_push($rows_questions_from_old_parts,$q);
+					}					
+					SQLQuery::create()
+						->bypass_security()
+						->insert_multiple("Exam_subject_question",$rows_questions_from_old_parts);
+				}
+			}
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}
@@ -1133,38 +1133,38 @@ class selection extends Component implements OrganizationPlugin {
 			// find out the related topics for eligibility rules
 			$topics_for_parts_removed = null;
 			if($parts_removed <> null)
-			$topics_for_parts_removed = $this->getTopicsConcernedByParts($parts_removed);
-			$inserted = false;
-			$topics_removed = false;
-			$removed_because_updated_empty = true;
-			if($parts_inserted <> null){
-				// check if this subject is a "full topic" for any of the topic, and in that case insert the new parts
-				$topics_to_be_inserted = $this->getTopicsFullExamForGivenExam($exam_id);
-				if($topics_to_be_inserted <> null){
-					//perform the inserts
-					foreach($topics_to_be_inserted as $t){
-						$rows_inserted = array();
-						foreach($parts_inserted as $p)
-							array_push($rows_inserted, array("exam_subject_part" => $p, "exam_topic_for_eligibility_rule" => $t));
+				$topics_for_parts_removed = $this->getTopicsConcernedByParts($parts_removed);
+				$inserted = false;
+				$topics_removed = false;
+				$removed_because_updated_empty = true;
+				if($parts_inserted <> null){
+						// check if this subject is a "full topic" for any of the topic, and in that case insert the new parts
+						$topics_to_be_inserted = $this->getTopicsFullExamForGivenExam($exam_id);
+						if($topics_to_be_inserted <> null){
+							//perform the inserts
+							foreach($topics_to_be_inserted as $t){
+								$rows_inserted = array();
+								foreach($parts_inserted as $p)
+									array_push($rows_inserted, array("exam_subject_part" => $p, "exam_topic_for_eligibility_rule" => $t));
+								SQLQuery::create()
+									->insert_multiple("Exam_part_topic",$rows_inserted);
+							}
+						}
+				}
+				if($topics_for_parts_removed <> null){
+					// check if any topic is now empty
+					$topics_to_remove = array();
+					foreach($topics_for_parts_removed as $t){
+						if($this->isTopicEmpty($t))
+							array_push($topics_to_remove,$t);
+					}
+					if(count($topics_to_remove) > 0){
 						SQLQuery::create()
-							->insert_multiple("Exam_part_topic",$rows_inserted);
+							->remove_keys("Exam_topic_for_eligibility_rule",$topics_to_remove);
+						$topics_removed = true;
 					}
 				}
-			}
-			if($topics_for_parts_removed <> null){
-				// check if any topic is now empty
-				$topics_to_remove = array();
-				foreach($topics_for_parts_removed as $t){
-					if($this->isTopicEmpty($t))
-						array_push($topics_to_remove,$t);
-				}
-				if(count($topics_to_remove) > 0){
-					SQLQuery::create()
-						->remove_keys("Exam_topic_for_eligibility_rule",$topics_to_remove);
-					$topics_removed = true;
-				}
-			}
-			return array($inserted,$topics_removed);
+				return array($inserted,$topics_removed);
 		} else
 			return;
 	}
@@ -1210,12 +1210,12 @@ class selection extends Component implements OrganizationPlugin {
 	
 	private function getTopicsConcernedByParts($parts){
 		if(isset($parts[0])){
-			$topics = SQLQuery::create()
-				->select("Exam_part_topic")
-				->field("Exam_part_topic","exam_topic_for_eligibility_rule","topic")
-				->where_in("Exam_part_topic","exam_subject_part",$parts)
-				->execute_single_field();
-			return $topics;
+		$topics = SQLQuery::create()
+			->select("Exam_part_topic")
+			->field("Exam_part_topic","exam_topic_for_eligibility_rule","topic")
+			->where_in("Exam_part_topic","exam_subject_part",$parts)
+			->execute_single_field();
+		return $topics;
 		} else
 			return null;
 	}

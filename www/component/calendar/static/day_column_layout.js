@@ -1,9 +1,22 @@
 if (typeof require != 'undefined')
 	require("color.js");
+/**
+ * Layout events on a day column
+ */
 function DayColumnLayout() {
 	var t=this;
+	/** List of events in the day */
 	this.events = [];
 
+	/** Layout and display the given events
+	 * @param {Array} events the list of events
+	 * @param {DOMNode} container where to display
+	 * @param {Number} x the x position of the day column in the container
+	 * @param {Number} w the width of the day column in the container
+	 * @param {Number} y the y position of the day column in the container
+	 * @param {Number} scale_time in minutes, to be used together with scaleHeight
+	 * @param {Number} scale_height number of pixels to display <code>scalTime</code> minutes
+	 */
 	this.layout = function(events, container, x, w, y, scale_time, scale_height) {
 		t._layout_data = {events:events, container:container, x:x, w:w, y:y, scale_time:scale_time, scale_height: scale_height};
 		if (!t._timeout) {
@@ -13,15 +26,25 @@ function DayColumnLayout() {
 				t.events = [];
 				
 				for (var i = 0; i < t._layout_data.events.length; ++i)
-					t.add_event(t._layout_data.events[i], t._layout_data.container, t._layout_data.x, t._layout_data.w, t._layout_data.y, t._layout_data.scale_time, t._layout_data.scale_height);
+					t.addEvent(t._layout_data.events[i], t._layout_data.container, t._layout_data.x, t._layout_data.w, t._layout_data.y, t._layout_data.scale_time, t._layout_data.scale_height);
 				
-				t.layout_boxes(t._layout_data.x, t._layout_data.w, t._layout_data.y, t._layout_data.container.clientHeight-t._layout_data.y);
+				t._layoutBoxes(t._layout_data.x, t._layout_data.w, t._layout_data.y, t._layout_data.container.clientHeight-t._layout_data.y);
 				t._timeout = null;
 			},10);
 		}
 	};
 	
-	this.add_event = function(event, container, x, w, y, scale_time, scale_height) {
+	/**
+	 * Add a new event to be displayed
+	 * @param {Object} event the event to display
+	 * @param {DOMNode} container where to display
+	 * @param {Number} x the x position of the day column in the container
+	 * @param {Number} w the width of the day column in the container
+	 * @param {Number} y the y position of the day column in the container
+	 * @param {Number} scale_time in minutes, to be used together with scaleHeight
+	 * @param {Number} scale_height number of pixels to display <code>scalTime</code> minutes
+	 */
+	this.addEvent = function(event, container, x, w, y, scale_time, scale_height) {
 		var min = event.start.getHours()*60+event.start.getMinutes();
 		var y1 = Math.floor(min*scale_height/scale_time)+y;
 		min = event.end.getHours()*60+event.end.getMinutes();
@@ -58,25 +81,35 @@ function DayColumnLayout() {
 		this.events.push(div);
 	};
 	
-	this.remove_events = function() {
+	/** Remove all events from the display */
+	this.removeEvents = function() {
 		for (var i = 0; i < this.events.length; ++i)
 			this.events[i].parentNode.removeChild(this.events[i]);
 		this.events = [];
 	};
 	
+	/** Add a 0 if the number is only 1 digit
+	 * @param {Number} n the number
+	 */
 	this._2digits = function(n) {
 		var s = ""+n;
 		while (s.length < 2) s = "0"+s;
 		return s;
 	};
 	
-	this.layout_boxes = function(cx, cw, cy, ch) {
+	/** Layout event's boxes so they do not overlap
+	 * @param {Number} cx start x
+	 * @param {Number} cw width
+	 * @param {Number} cy start y
+	 * @param {Number} ch height
+	 */
+	this._layoutBoxes = function(cx, cw, cy, ch) {
 		for (var i = 0; i < this.events.length; ++i) {
 			this.events[i].pos = {x:this.events[i].offsetLeft,w:this.events[i].offsetWidth-1};
 			this.events[i].conflicts = [];
 		}
 		for (var y = cy; y < cy+ch; y++) {
-			var boxes = this.get_boxes_at(y);
+			var boxes = this._getBoxesAt(y);
 			if (boxes.length < 2) continue;
 			var min_w = 10;
 			if (cw/boxes.length < min_w) min_w = 5;
@@ -140,7 +173,11 @@ function DayColumnLayout() {
 		}
 	};
 	
-	this.get_boxes_at = function(y) {
+	/** Returns a list of boxes which are display at the given y vertical position
+	 * @param {Number} y the vertical position
+	 * @returns {Array} the list of boxes
+	 */
+	this._getBoxesAt = function(y) {
 		var boxes = [];
 		for (var i = 0; i < this.events.length; ++i) {
 			var box = this.events[i];
@@ -153,8 +190,19 @@ function DayColumnLayout() {
 	
 }
 
+/**
+ * Store a list of horizontal space ranges available to display boxes
+ * @param {Number} x starting available point
+ * @param {Number} w starting width
+ */
 function WidthAvailableSpace(x,w) {
+	/** List of ranges */
 	this.ranges = [{x:x,w:w}];
+	/** Ask to take a given range
+	 * @param {Number} x the x position of the requested range
+	 * @param {Number} w width of the requested range
+	 * @returns true if the given range is available. In this case it has been removed from the list of available ranges.
+	 */
 	this.reserve = function(x,w) {
 		for (var i = 0; i < this.ranges.length; ++i) {
 			var r = this.ranges[i];
@@ -222,6 +270,10 @@ function WidthAvailableSpace(x,w) {
 		}
 		return false;
 	};
+	/** Remove a range
+	 * @param {Number} x the x position
+	 * @param {Number} w the width
+	 */
 	this.remove = function(x,w) {
 		for (var i = 0; i < this.ranges.length; ++i) {
 			var r = this.ranges[i];
@@ -282,6 +334,10 @@ function WidthAvailableSpace(x,w) {
 			}
 		}
 	};
+	/**
+	 * Return a possible available range, taking into account the given boxes which are in conflict
+	 * @param {Array} conflicts list of boxes in conflict
+	 */
 	this.get = function(conflicts) {
 		if (this.ranges.length == 0) return null;
 		for (var i = 0; i < this.ranges.length; ++i) {

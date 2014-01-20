@@ -4,14 +4,14 @@ Status_TYPE_WARNING = 2;
 Status_TYPE_PROCESSING = 3;
 
 function StatusMessage(type,message,actions,timeout) {
-	this.id = generate_id();
+	this.id = generateID();
 	this.type = type;
 	this.message = message;
 	this.actions = actions;
 	this.timeout = timeout;
 }
 function StatusMessageError(err, message, timeout) {
-	this.id = generate_id();
+	this.id = generateID();
 	this.type = Status_TYPE_ERROR;
 	this.timeout = timeout;
 	this.message = (message != null ? " "+message : "");

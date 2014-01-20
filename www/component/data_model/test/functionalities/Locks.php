@@ -89,19 +89,19 @@ class Locks__Test_NoRight extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
 		try {
-			$lock_id = DataBaseLock::lock_table("Test_noaccess", $locked_by);
+			$lock_id = DataBaseLock::lockTable("Test_noaccess", $locked_by);
 			return "Can lock the table";
 		} catch (Exception $e) {}
 		try {
-			$lock_id = DataBaseLock::lock_column("Test_noaccess", "value", $locked_by);
+			$lock_id = DataBaseLock::lockColumn("Test_noaccess", "value", $locked_by);
 			return "Can lock a column";
 		} catch (Exception $e) {}
 		try {
-			$lock_id = DataBaseLock::lock_row("Test_noaccess", $scenario_data["noaccess_id1"], $locked_by);
+			$lock_id = DataBaseLock::lockRow("Test_noaccess", $scenario_data["noaccess_id1"], $locked_by);
 			return "Can lock a row";
 		} catch (Exception $e) {}
 		try {
-			$lock_id = DataBaseLock::lock_cell("Test_noaccess", $scenario_data["noaccess_id1"], "value", $locked_by);
+			$lock_id = DataBaseLock::lockCell("Test_noaccess", $scenario_data["noaccess_id1"], "value", $locked_by);
 			return "Can lock a cell";
 		} catch (Exception $e) {}
 		PNApplication::$instance->user_management->logout();
@@ -118,19 +118,19 @@ class Locks__Test_OnlyRead extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
 		try {
-			$lock_id = DataBaseLock::lock_table("Test_can_read_all", $locked_by);
+			$lock_id = DataBaseLock::lockTable("Test_can_read_all", $locked_by);
 			return "Can lock the table";
 		} catch (Exception $e) {}
 		try {
-			$lock_id = DataBaseLock::lock_column("Test_can_read_all", "value", $locked_by);
+			$lock_id = DataBaseLock::lockColumn("Test_can_read_all", "value", $locked_by);
 			return "Can lock a column";
 		} catch (Exception $e) {}
 		try {
-			$lock_id = DataBaseLock::lock_row("Test_can_read_all", $scenario_data["can_read_all_id1"], $locked_by);
+			$lock_id = DataBaseLock::lockRow("Test_can_read_all", $scenario_data["can_read_all_id1"], $locked_by);
 			return "Can lock a row";
 		} catch (Exception $e) {}
 		try {
-			$lock_id = DataBaseLock::lock_cell("Test_can_read_all", $scenario_data["can_read_all_id1"], "value", $locked_by);
+			$lock_id = DataBaseLock::lockCell("Test_can_read_all", $scenario_data["can_read_all_id1"], "value", $locked_by);
 			return "Can lock a cell";
 		} catch (Exception $e) {}
 		PNApplication::$instance->user_management->logout();
@@ -147,22 +147,22 @@ class Locks__Test_ReadWrite extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
 		try {
-			$lock_id = DataBaseLock::lock_table("Test_readwrite", $locked_by);
+			$lock_id = DataBaseLock::lockTable("Test_readwrite", $locked_by);
 		} catch (Exception $e) {
 			return "Cannot lock the table: ".$e->getMessage();
 		}
 		try {
-			$lock_id = DataBaseLock::lock_column("Test_readwrite", "value", $locked_by);
+			$lock_id = DataBaseLock::lockColumn("Test_readwrite", "value", $locked_by);
 		} catch (Exception $e) {
 			return "Cannot lock a column: ".$e->getMessage();
 		}
 		try {
-			$lock_id = DataBaseLock::lock_row("Test_readwrite", $scenario_data["readwrite_id1"], $locked_by);
+			$lock_id = DataBaseLock::lockRow("Test_readwrite", $scenario_data["readwrite_id1"], $locked_by);
 		} catch (Exception $e) {
 			return "Cannot lock a row: ".$e->getMessage();
 		}
 		try {
-			$lock_id = DataBaseLock::lock_cell("Test_readwrite", $scenario_data["readwrite_id1"], "value", $locked_by);
+			$lock_id = DataBaseLock::lockCell("Test_readwrite", $scenario_data["readwrite_id1"], "value", $locked_by);
 		} catch (Exception $e) {
 			return "Cannot lock a cell: ".$e->getMessage();
 		}
@@ -180,32 +180,32 @@ class Locks__Test_ReadWriteSpecific extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
 		try {
-			$lock_id = DataBaseLock::lock_table("Test_readwrite_specific", $locked_by);
+			$lock_id = DataBaseLock::lockTable("Test_readwrite_specific", $locked_by);
 			return "Can lock the table";
 		} catch (Exception $e) {
 		}
 		try {
-			$lock_id = DataBaseLock::lock_column("Test_readwrite_specific", "value", $locked_by);
+			$lock_id = DataBaseLock::lockColumn("Test_readwrite_specific", "value", $locked_by);
 			return "Can lock a column";
 		} catch (Exception $e) {
 		}
 		try {
-			$lock_id = DataBaseLock::lock_row("Test_readwrite_specific", $scenario_data["readwrite_specific_id1"], $locked_by);
+			$lock_id = DataBaseLock::lockRow("Test_readwrite_specific", $scenario_data["readwrite_specific_id1"], $locked_by);
 			return "Can lock a row which is protected";
 		} catch (Exception $e) {
 		}
 		try {
-			$lock_id = DataBaseLock::lock_row("Test_readwrite_specific", $scenario_data["readwrite_specific_id2000"], $locked_by);
+			$lock_id = DataBaseLock::lockRow("Test_readwrite_specific", $scenario_data["readwrite_specific_id2000"], $locked_by);
 		} catch (Exception $e) {
 			return "Cannot lock a row which is allowed: ".$e->getMessage();
 		}
 		try {
-			$lock_id = DataBaseLock::lock_cell("Test_readwrite_specific", $scenario_data["readwrite_specific_id1"], "value", $locked_by);
+			$lock_id = DataBaseLock::lockCell("Test_readwrite_specific", $scenario_data["readwrite_specific_id1"], "value", $locked_by);
 			return "Can lock a cell in a row which is protected";
 		} catch (Exception $e) {
 		}
 		try {
-			$lock_id = DataBaseLock::lock_cell("Test_readwrite_specific", $scenario_data["readwrite_specific_id2000"], "value", $locked_by);
+			$lock_id = DataBaseLock::lockCell("Test_readwrite_specific", $scenario_data["readwrite_specific_id2000"], "value", $locked_by);
 		} catch (Exception $e) {
 			return "Cannot lock a cell in a row which is allowed: ".$e->getMessage();
 		}

@@ -78,7 +78,7 @@
 		->addInsertAccess("manage_information_session",true)
 		->addRemoveAccess("manage_information_session",true)
 //TODO add a field "remark"		
-		// ->setDisplayHandler("people", new datamodel\StopDataDisplayHandler("Selection", "Selection"))
+		->setDisplayHandler("people", new datamodel\StopDataDisplayHandler("Selection", "Selection"))
 		;		
 		
 	$sm->addTable("Selection_campaign_config")

@@ -1,3 +1,5 @@
+// #depends[/static/calendar/calendar.js]
+
 function load_google_calendars(calendars_manager, ondone) {
 	var onload = function() {
 		var req = window.top.gapi.client.calendar.calendarList.list();
@@ -8,7 +10,7 @@ function load_google_calendars(calendars_manager, ondone) {
 				// accessRole=reader,owner,writer
 				var write = resp.items[i].accessRole == "owner" || resp.items[i].accessRole == "writer"; 
 				var cal = new GoogleCalendar(resp.items[i].id, resp.items[i].summary, resp.items[i].backgroundColor.substring(1), resp.items[i].selected, write);
-				calendars_manager.add_calendar(cal);
+				calendars_manager.addCalendar(cal);
 				calendars.push(cal);
 			}
 			ondone(calendars);
@@ -29,11 +31,13 @@ function load_google_calendars(calendars_manager, ondone) {
 	});
 }
 
+if (typeof require != 'undefined') require("calendar_objects.js");
+
 function GoogleCalendar(id, name, color, show, writable) {
 	Calendar.call(this, name, color, show);
 	this.icon = '/static/google/google.png';
 	this.id = id;
-	this.refresh = function(manager, cal, ondone) {
+	this.refresh = function(ondone) {
 		var t=this;
 		var google_events = [];
 		var next_page = function(token) {
@@ -53,16 +57,12 @@ function GoogleCalendar(id, name, color, show, writable) {
 					ondone();
 				}
 				
-				var removed_events = cal.events;
-				cal.events = [];
+				var removed_events = t.events;
+				t.events = [];
 				for (var i = 0; i < google_events.length; ++i) {
 					var gev = google_events[i];
-					ev = {};
-					ev.calendar = cal;
-					ev.title = gev.summary;
-					ev.description = gev.description ? gev.description : "";
+					var ev = new CalendarEvent(-1, t.id, gev.iCalUID, null, null, false, gev.last_modified, gev.summary, gev.description ? gev.description : "", "", "", "", "");
 					if (gev.location) ev.location_freetext = gev.location;
-					ev.uid = gev.iCalUID;
 					if (gev.start && gev.start.date) {
 						ev.start = new Date();
 						var d = gev.start.date.split("-");
@@ -96,18 +96,20 @@ function GoogleCalendar(id, name, color, show, writable) {
 									if (l < 0) continue;
 									params[list[k].substring(0,l)] = list[k].substring(l+1);
 								}
-								ev.frequency = params.FREQ;
-								if (params.UNTIL) ev.until = parseRRuleDate(params.UNTIL); 
-								if (params.COUNT) ev.count = parseInt(params.COUNT);
-								if (params.INTERVAL) ev.interval = parseInt(params.INTERVAL);
-								if (params.BYMONTH) ev.by_month = params.BYMONTH;
-								if (params.BYWEEKNO) ev.by_week_no = params.BYWEEKNO;
-								if (params.BYYEARDAY) ev.by_year_day = params.BYYEARDAY;
-								if (params.BYMONTHDAY) ev.by_month_day = params.BYMONTHDAY;
-								if (params.BYDAY) ev.by_week_day = params.BYDAY;
-								if (params.BYHOUR) ev.by_hour = params.BYHOUR;
-								if (params.WKST) ev.week_start = params.WKST;
-								if (params.BYSETPOS) ev.by_setpos = params.BYSETPOS;
+								ev.frequency = new CalendarEventFrequency(
+									params.FREQ,
+									params.UNTIL ? parseRRuleDate(params.UNTIL) : null,
+									params.COUNT ? parseInt(params.COUNT) : null,
+									params.INTERVAL ? parseInt(params.INTERVAL) : null,
+									params.BYMONTH,
+									params.BYWEEKNO,
+									params.BYYEARDAY,
+									params.BYMONTHDAY,
+									params.BYDAY,
+									params.BYHOUR,
+									params.BYSETPOS,
+									params.WKST
+								);
 								break;
 							}
 						}
@@ -118,7 +120,7 @@ function GoogleCalendar(id, name, color, show, writable) {
 					if (!ev.end) err = "No end date";
 					else if (isNaN(ev.end.getDay())) err = "Invalid end date";
 					if (err) {
-						var s = "Error parsing Google event from calendar "+cal.name+":\r\n";
+						var s = "Error parsing Google event from calendar "+t.name+":\r\n";
 						s += err+"\r\n";
 						s += "Details of the event returned from Google:\r\n";
 						s += debug_object_to_string(gev);
@@ -128,35 +130,35 @@ function GoogleCalendar(id, name, color, show, writable) {
 					for (var j = 0; j < removed_events.length; ++j) {
 						if (ev.uid == removed_events[j].uid) {
 							found = true;
-							cal.events.push(ev);
+							t.events.push(ev);
 							if (ev.last_modified != removed_events[j].last_modified)
-								manager.on_event_updated(ev);
+								t.manager.on_event_updated(ev);
 							removed_events.splice(j,1);
 							break;
 						}
 					}
 					if (!found) {
-						cal.events.push(ev);
-						manager.on_event_added(ev);
+						t.events.push(ev);
+						t.manager.on_event_added(ev);
 					}
 				}
 				for (var i = 0; i < removed_events.length; ++i)
-					manager.on_event_removed(removed_events[i]);
+					t.manager.on_event_removed(removed_events[i]);
 				ondone();
 			});
 		};
-		next_page(null);
+		require("calendar_objects.js",function(){
+			next_page(null);
+		});
 	};
 	if (writable) {
-		this.save_event = function(event) {
+		this.saveEvent = function(event) {
 			// TODO
 		};
 	}
 }
-if (typeof Calendar != 'undefined') {
-	GoogleCalendar.prototype = new Calendar();
-	GoogleCalendar.prototype.constructor = GoogleCalendar;
-}
+GoogleCalendar.prototype = new Calendar();
+GoogleCalendar.prototype.constructor = GoogleCalendar;
 
 function parseGoogleDateTime(d) {
 	var googleDate = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.(\d{3}))?([+-]\d{2}):(\d{2})$/;

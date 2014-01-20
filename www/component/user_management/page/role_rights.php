@@ -11,7 +11,7 @@ class page_role_rights extends Page {
 		$locked = null;
 		$can_edit = true;
 		require_once("component/data_model/DataBaseLock.inc");
-		$lock_id = DataBaseLock::lock_table("RoleRights", $locked);
+		$lock_id = DataBaseLock::lockTable("RoleRights", $locked);
 		if ($locked <> null)
 			$can_edit = false;
 
@@ -21,7 +21,7 @@ class page_role_rights extends Page {
 		$this->onload("new page_header('role_rights_header');");
 		
 		if ($can_edit)
-			DataBaseLock::generate_script($lock_id);
+			DataBaseLock::generateScript($lock_id);
 		?>
 		<div id='role_rights_header' icon='/static/user_management/access_list_32.png' title="Role: &lt;span style='font-family:Courrier New;font-weight:bold;font-style:italic'&gt;<?php echo $role["name"];?>&lt;/span&gt;">
 		<?php 

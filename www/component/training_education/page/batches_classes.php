@@ -402,7 +402,7 @@ class page_batches_classes extends Page {
 					import_students.className = "button";
 					import_students.innerHTML = "<img src='"+theme.icons_16.import+"' style='vertical-align:bottom'/> Import Students";
 					import_students.onclick = function() {
-						post_data('/dynamic/students/page/import_students',{
+						postData('/dynamic/students/page/import_students',{
 							batch:filter_batches[0],
 							redirect: "/dynamic/training_education/page/batches_classes"
 						});
@@ -412,7 +412,7 @@ class page_batches_classes extends Page {
 					create_student.className = "button";
 					create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
 					create_student.onclick = function() {
-						post_data("/dynamic/people/page/create_people",{
+						postData("/dynamic/people/page/create_people",{
 							icon: "/static/application/icon.php?main=/static/students/student_32.png&small="+theme.icons_16.add+"&where=right_bottom",
 							title: "Create New Student",
 							types: ["student"],

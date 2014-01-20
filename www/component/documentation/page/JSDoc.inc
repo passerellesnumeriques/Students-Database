@@ -14,8 +14,8 @@ class JSDoc {
 		$jsdoc = file_get_contents($filename);
 		unlink($filename);
 		
-		$fct_name = $page->generate_id();
-		$container_id = $page->generate_id();
+		$fct_name = $page->generateID();
+		$container_id = $page->generateID();
 		echo "<div id='$container_id'></div>";
 		echo "<script type='text/javascript'>\r\n";
 		echo "function $fct_name() {\r\n";

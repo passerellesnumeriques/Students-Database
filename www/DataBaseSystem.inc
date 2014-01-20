@@ -15,16 +15,10 @@ abstract class DataBaseSystem {
 	 * @param boolean $report_errors if true and an error occurs, the error will be added to <code>PNApplication</code>
 	 */
 	public function execute($sql_query, $report_errors = true) {
-		if (PNApplication::$instance->current_domain == "Dev") {
-			$start = microtime(true);
-			$res = $this->execute_sql($sql_query);
-			$end = microtime(true);
-			if (count(PNApplication::$instance->development->current_request()->sql_queries) == 200)
-				array_push(PNApplication::$instance->development->current_request()->sql_queries, array("TOO MUCH SQL QUERIES",0,null,0));
-			else if (count(PNApplication::$instance->development->current_request()->sql_queries) < 200)
-				array_push(PNApplication::$instance->development->current_request()->sql_queries, array($sql_query,$this->get_last_error_number(),$this->get_last_error_message(),$end-$start));
-		} else
-			$res = $this->execute_sql($sql_query);
+		$start = microtime(true);
+		$res = $this->execute_sql($sql_query);
+		$end = microtime(true);
+		$this->log($sql_query,$this->get_last_error_number(),$this->get_last_error_message(),$end-$start);
 		if ($res === false && $report_errors) {
 			$err = $this->get_last_error_number();
 			if ($err <> 0) {
@@ -37,6 +31,14 @@ abstract class DataBaseSystem {
 		}
 		return $res;
 	}
+	
+	public function log($query, $error_number, $error_message, $time) {
+		if (!PNApplication::$instance->current_domain == "Dev") return;
+		if (count(PNApplication::$instance->development->current_request()->sql_queries) == 200)
+			array_push(PNApplication::$instance->development->current_request()->sql_queries, array("TOO MUCH SQL QUERIES",0,null,0));
+		else if (count(PNApplication::$instance->development->current_request()->sql_queries) < 200)
+			array_push(PNApplication::$instance->development->current_request()->sql_queries, array($query, $error_number, $error_message, $time));
+	}
 
 	public abstract function select_db($db_name);
 	protected abstract function execute_sql($query);
@@ -45,6 +47,10 @@ abstract class DataBaseSystem {
 	public abstract function affected_rows();
 	public abstract function get_last_error_number();
 	public abstract function get_last_error_message();
+	
+	public abstract function start_transaction();
+	public abstract function commit();
+	public abstract function rollback();
 
 	public abstract function escape_string($str);
 

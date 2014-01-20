@@ -1,37 +1,82 @@
 <?php
+/**
+ * Provides functionalities to lock data, so several users cannot modify the same data at the same time
+ */
 class DataBaseLock {
 
-	/** lock a table */
-	public static function lock_table($table, &$locked_by, $bypass_security = false) {
+	/** lock a table
+	 * @param string $table the table to lock
+	 * @param string $locked_by in case the table is already locked by someone else, this will be filled by the user who locked it
+	 * @param boolean $bypass_security if true we will not check the current user has the right to lock the table
+	 * @return integer|null the lock id, or null if the table is already locked 
+	 */
+	public static function lockTable($table, &$locked_by, $bypass_security = false) {
 		return DataBaseLock::lock($table, null, null, $locked_by, $bypass_security);
 	}
 	
-	/** lock a row in a table, based on its primary key */
-	public static function lock_row($table, $row_key, &$locked_by, $bypass_security = false) {
+	/** lock a row in a table, based on its primary key
+	 * @param string $table the table in which to lock a row
+	 * @param integer|array $row_key the key of the row: either its primary key, or an array defaining the key
+	 * @param string $locked_by in case the row or the table is already locked by someone else, this will be filled by the user who locked it
+	 * @param boolean $bypass_security if true we will not check the current user has the right to lock the row
+	 * @return integer|null the lock id, or null if the row is already locked
+	 */
+	public static function lockRow($table, $row_key, &$locked_by, $bypass_security = false) {
 		return DataBaseLock::lock($table, $row_key, null, $locked_by, $bypass_security);
 	}
 	
-	/** lock a column in a table, based on its name */
-	public static function lock_column($table, $column, &$locked_by, $bypass_security = false) {
+	/** lock a column in a table, based on its name
+	 * @param string $table the table in which to lock a column
+	 * @param string $column the name of the column to lock
+	 * @param string $locked_by in case the column or the table is already locked by someone else, this will be filled by the user who locked it
+	 * @param boolean $bypass_security if true we will not check the current user has the right to lock the column
+	 * @return integer|null the lock id, or null if the column is already locked
+	 */
+	public static function lockColumn($table, $column, &$locked_by, $bypass_security = false) {
 		return DataBaseLock::lock($table, null, $column, $locked_by, $bypass_security);
 	}
 	
-	/** lock a specific cell in a table, based on a primary key and a column */
-	public static function lock_cell($table, $row_key, $column, &$locked_by, $bypass_security = false) {
+	/** lock a specific cell in a table, based on a primary key and a column
+	 * @param string $table the table in which to lock a cell
+	 * @param integer|array $row_key the key of the row: either its primary key, or an array defaining the key
+	 * @param string $column the name of the column to lock
+	 * @param string $locked_by in case the column, the row or the table is already locked by someone else, this will be filled by the user who locked it
+	 * @param string $bypass_security if true we will not check the current user has the right to lock the cell
+	 * @return integer|null the lock id, or null if the cell is already locked
+	 */
+	public static function lockCell($table, $row_key, $column, &$locked_by, $bypass_security = false) {
 		return DataBaseLock::lock($table, $row_key, $column, $locked_by, $bypass_security);
 	}
 	
+	/**
+	 * Try to lock the given table, row, column or cell: if it is locked, retry 10 times with 100ms interval
+	 * @param string $table table
+	 * @param integer|array|null $row_key key of the row
+	 * @param string|null $column column name
+	 * @param stirng $locked_by filled if this is already locked
+	 * @param boolean $bypass_security do not check if the current user has the right to obtain this lock
+	 * @return integer|null lock id or null
+	 */
 	private static function lock($table, $row_key, $column, &$locked_by, $bypass_security) {
 		for ($i = 0; $i < 10; $i++) {
 			$locked_by = null;
-			$id = DataBaseLock::try_lock($table, $row_key, $column, $locked_by, $bypass_security);
+			$id = DataBaseLock::tryLock($table, $row_key, $column, $locked_by, $bypass_security);
 			if ($id <> null) return $id;
 			if ($i < 9) usleep(100000);
 		}
 		return null;
 	}
-	private static function try_lock($table, $row_key, $column, &$locked_by, $bypass_security) {
-		if (!$bypass_security && !DataBaseLock::is_locked_by_user($table, $row_key, $column)) {
+	/**
+	 * Lock the given table, row, column or cell
+	 * @param string $table table
+	 * @param integer|array|null $row_key key of the row
+	 * @param string|null $column column name
+	 * @param stirng $locked_by filled if this is already locked
+	 * @param boolean $bypass_security do not check if the current user has the right to obtain this lock
+	 * @return integer|null lock id or null
+	 */
+	private static function tryLock($table, $row_key, $column, &$locked_by, $bypass_security) {
+		if (!$bypass_security && !DataBaseLock::isLockedByUser($table, $row_key, $column)) {
 			require_once("component/data_model/Model.inc");
 			$t = DataModel::get()->getTableFromSQLName($table);
 			if (!($t->mayInsert() || $t->mayModify() || $t->mayRemove()))
@@ -82,10 +127,10 @@ class DataBaseLock {
 		
 		DataBaseLock::clean();
 		$db = SQLQuery::get_db_system_without_security();
-		$db->execute("LOCK TABLES DataLocks WRITE");
-		$lock_user = DataBaseLock::is_locked($table, $row_key, $column, true);
+		self::mutexLock();
+		$lock_user = DataBaseLock::isLocked($table, $row_key, $column, true);
 		if ($lock_user <> null) {
-			$db->execute("UNLOCK TABLES");
+			self::mutexUnlock();
 			$locked_by = $lock_user;
 			return null;
 		}
@@ -102,23 +147,35 @@ class DataBaseLock {
 			")"
 		);
 		$id = $db->get_insert_id();
-		$db->execute("UNLOCK TABLES");
+		self::mutexUnlock();
 		return $id;
 	} 
 	
+	/** Used to clean only once per request */
+	private static $cleant = false;
+	
 	/** remove expired locks */
 	public static function clean() {
+		if (self::$cleant) return;
+		self::$cleant = true;
 		$db = SQLQuery::get_db_system_without_security();
-		$db->execute("LOCK TABLES DataLocks WRITE");
+		self::mutexLock();
 		$db->execute("DELETE FROM DataLocks WHERE timestamp <= ".(time()-5*60));
-		$db->execute("UNLOCK TABLES");
+		self::mutexUnlock();
 	}
 	
-	/** check if the table/row/column/cell is locked by someone else. If it is the case, return the username of the locker, else return null (if not locked, or locked by the current user) */
-	public static function is_locked($table, $row_key, $column, $db_locked = false) {
+	/** check if the table/row/column/cell is locked by someone else.
+	 * If it is the case, return the username of the locker, else return null (if not locked, or locked by the current user)
+	 * @param string $table the table name
+	 * @param integer|array|null $row_key the row key or null
+	 * @param string|null $column the column name or null
+	 * @param boolean $db_locked indicates if the database is already locked using the mutex
+	 * @return null|string if this is locked by someone else, returns the user who locked it, else returns null
+	 */
+	public static function isLocked($table, $row_key, $column, $db_locked = false) {
 		$db = SQLQuery::get_db_system_without_security();
 		if (!$db_locked)
-			$db->execute("LOCK TABLES DataLocks WRITE");
+			self::mutexLock();
 		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escape_string($table)."'");
 		while (($row = $db->next_row($res)) <> null) {
 			if ($row["table"] <> $table) continue; // not the same table
@@ -128,13 +185,13 @@ class DataBaseLock {
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 						$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 						if (!$db_locked)
-							$db->execute("UNLOCK TABLES");
+							self::mutexUnlock();
 						return $row["locker_username"]; // not the current user
 					}
 					// same user
 					if ($row["row_key"] == null && $row["column"] == $column) {
 						if (!$db_locked)
-							$db->execute("UNLOCK TABLES");
+							self::mutexUnlock();
 						return null; // same user locked the full table
 					}
 					continue; // same user, but not full table
@@ -145,11 +202,11 @@ class DataBaseLock {
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 						$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 						if (!$db_locked)
-							$db->execute("UNLOCK TABLES");
+							self::mutexUnlock();
 						return $row["locker_username"]; // not the current user
 					}
 					if (!$db_locked)
-						$db->execute("UNLOCK TABLES");
+						self::mutexUnlock();
 					return null; // same user: ok
 				}
 				if ($row["row_key"] <> null) {
@@ -157,7 +214,7 @@ class DataBaseLock {
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 						$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 						if (!$db_locked)
-							$db->execute("UNLOCK TABLES");
+							self::mutexUnlock();
 						return $row["locker_username"]; // not the current user
 					}
 					continue; // same user: ok
@@ -170,11 +227,11 @@ class DataBaseLock {
 				if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 					$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 					if (!$db_locked)
-						$db->execute("UNLOCK TABLES");
+						self::mutexUnlock();
 					return $row["locker_username"]; // not the current user
 				}
 				if (!$db_locked)
-					$db->execute("UNLOCK TABLES");
+					self::mutexUnlock();
 				return null; // same user
 			} else {
 				if ($column == null) {
@@ -184,7 +241,7 @@ class DataBaseLock {
 						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 							$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 							if (!$db_locked)
-								$db->execute("UNLOCK TABLES");
+								self::mutexUnlock();
 							return $row["locker_username"]; // not the current user
 						}
 						continue; // same user
@@ -197,7 +254,7 @@ class DataBaseLock {
 						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 							$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 							if (!$db_locked)
-								$db->execute("UNLOCK TABLES");
+								self::mutexUnlock();
 							return $row["locker_username"]; // not the current user
 						}
 						continue; // same user
@@ -206,11 +263,11 @@ class DataBaseLock {
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 						$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 						if (!$db_locked)
-							$db->execute("UNLOCK TABLES");
+							self::mutexUnlock();
 						return $row["locker_username"]; // not the current user
 					}
 					if (!$db_locked)
-						$db->execute("UNLOCK TABLES");
+						self::mutexUnlock();
 					return null; // same user
 				} else {
 					// a cell is requested
@@ -221,17 +278,17 @@ class DataBaseLock {
 						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 							$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 							if (!$db_locked)
-								$db->execute("UNLOCK TABLES");
+								self::mutexUnlock();
 							return $row["locker_username"]; // not the current user
 						}
 						if ($row["row_key"] == null) {
 							if (!$db_locked)
-								$db->execute("UNLOCK TABLES");
+								self::mutexUnlock();
 							return null; // full column already locked by same user
 						}
 						if ($row["row_key"] == json_encode($row_key)) {
 							if (!$db_locked)
-								$db->execute("UNLOCK TABLES");
+								self::mutexUnlock();
 							return null; // same cell locked by same user
 						}
 						continue; // different cell
@@ -243,22 +300,22 @@ class DataBaseLock {
 							if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 								$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 								if (!$db_locked)
-									$db->execute("UNLOCK TABLES");
+									self::mutexUnlock();
 								return $row["locker_username"]; // not the current user
 							}
 							if (!$db_locked)
-								$db->execute("UNLOCK TABLES");
+								self::mutexUnlock();
 							return null; // same user
 						} else {
 							// full table is locked
 							if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 								$row["locker_username"] <> PNApplication::$instance->user_management->username) {
 								if (!$db_locked)
-									$db->execute("UNLOCK TABLES");
+									self::mutexUnlock();
 								return $row["locker_username"]; // not the current user
 							}
 							if (!$db_locked)
-								$db->execute("UNLOCK TABLES");
+								self::mutexUnlock();
 							return null; // same user
 						}
 					}
@@ -266,14 +323,20 @@ class DataBaseLock {
 			}
 		}
 		if (!$db_locked)
-			$db->execute("UNLOCK TABLES");
+			self::mutexUnlock();
 	}
 
-	/** check if the table/row/column/cell is locked by the current user. If it is the case, return true, else return false. */
-	public static function is_locked_by_user($table, $row_key, $column, $db_locked = false) {
+	/** check if the table/row/column/cell is locked by the current user. If it is the case, return true, else return false.
+	 * @param string $table table name
+	 * @param integer|array|null $row_key key of the row or null
+	 * @param string $column column name or null
+	 * @param boolean $db_locked indicates if the database is already locked using the mutex
+	 * @return boolean true if it is locked by the current user
+	 */
+	public static function isLockedByUser($table, $row_key, $column, $db_locked = false) {
 		$db = SQLQuery::get_db_system_without_security();
 		if (!$db_locked)
-			$db->execute("LOCK TABLES DataLocks WRITE");
+			self::mutexLock();
 		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escape_string($table)."'");
 		while (($row = $db->next_row($res)) <> null) {
 			if ($row["table"] <> $table) continue; // not the same table
@@ -281,11 +344,11 @@ class DataBaseLock {
 				$row["locker_username"] <> PNApplication::$instance->user_management->username) continue;
 			if ($row["row_key"] == null) {
 				if ($row["column"] == null) {
-					if (!$db_locked) $db->execute("UNLOCK TABLES");
+					if (!$db_locked) self::mutexUnlock();
 					return true; // full table is locked
 				} else {
 					if ($column == $row["column"]) {
-						if (!$db_locked) $db->execute("UNLOCK TABLES");
+						if (!$db_locked) self::mutexUnlock();
 						return true; // full column is locked
 					}
 				}
@@ -293,24 +356,27 @@ class DataBaseLock {
 				if (json_encode($row_key) == $row["row_key"]) {
 					// same row
 					if ($row["column"] == null) {
-						if (!$db_locked) $db->execute("UNLOCK TABLES");
+						if (!$db_locked) self::mutexUnlock();
 						return true; // full row is locked
 					}
 					if ($row["column"] == $column) {
-						if (!$db_locked) $db->execute("UNLOCK TABLES");
+						if (!$db_locked) self::mutexUnlock();
 						return true; // same cell is locked				
 					}
 				}
 			}
 		}
-		if (!$db_locked) $db->execute("UNLOCK TABLES");
+		if (!$db_locked) self::mutexUnlock();
 	}
 	
-	/** remove a lock (it must be owned by the current user) */
+	/** remove a lock (it must be owned by the current user)
+	 * @param integer $id lock id
+	 * @return null|string null if it succeed, or error message
+	 */
 	public static function unlock($id) {
 		$result = null;
 		$db = SQLQuery::get_db_system_without_security();
-		$db->execute("LOCK TABLES DataLocks WRITE");
+		self::mutexLock();
 		$r = $db->execute("SELECT locker_domain,locker_username FROM DataLocks WHERE id='".$db->escape_string($id)."'");
 		if ($r) {
 			$row = $db->next_row($r);
@@ -322,15 +388,18 @@ class DataBaseLock {
 					$result = "You are not the owner of this lock";
 			}
 		}
-		$db->execute("UNLOCK TABLES");
+		self::mutexUnlock();
 		return $result;
 	}
-	/** remove a list of locks (it must be owned by the current user) */
-	public static function unlock_multiple($ids) {
+	/** remove a list of locks (it must be owned by the current user)
+	 * @param array $ids lock ids to remove
+	 * @return null|string null if it succeed, or error message
+	 */
+	public static function unlockMultiple($ids) {
 		if (count($ids) == 0) return null;
 		$result = null;
 		$db = SQLQuery::get_db_system_without_security();
-		$db->execute("LOCK TABLES DataLocks WRITE");
+		self::mutexLock();
 		$sql = "SELECT id,locker_domain,locker_username FROM DataLocks WHERE id IN (";
 		$first = true;
 		foreach ($ids as $id) {
@@ -363,16 +432,19 @@ class DataBaseLock {
 				$db->execute($sql);
 			}
 		}
-		$db->execute("UNLOCK TABLES");
+		self::mutexUnlock();
 		return $result;
 	}
 	
-	/** extend expiration time of a lock */
+	/** extend expiration time of a lock
+	 * @param integer $id lock id
+	 * @return null|string null if it succeed, or error message
+	 */
 	public static function update($id) {
 		$db = SQLQuery::get_db_system_without_security();
 		$result = null;
 		$ts = time();
-		$db->execute("LOCK TABLES DataLocks WRITE");
+		self::mutexLock();
 		$r = $db->execute("SELECT locker_domain,locker_username FROM DataLocks WHERE id='".$db->escape_string($id)."'");
 		if ($r) {
 			$row = $db->next_row($r);
@@ -386,13 +458,19 @@ class DataBaseLock {
 				$result = "This lock does not exist";
 		} else
 			$result = "This lock does not exist";
-		$db->execute("UNLOCK TABLES");
+		self::mutexUnlock();
 		DataBaseLock::clean();
 		return $result;
 	}
 	
-	/** check the given lock is locking the given table by the current user */
-	public static function check_lock($lock_id, $table, $row_key, $column) {
+	/** check the given lock is locking the given table by the current user
+	 * @param integer $lock_id lock id to check
+	 * @param string $table table name
+	 * @param integer|array|null $row_key key of the row or null
+	 * @param string|null $column column name or null
+	 * @return boolean true if this is already locked by the current user
+	 */
+	public static function checkLock($lock_id, $table, $row_key, $column) {
 		$db = SQLQuery::get_db_system_without_security();
 		$r = $db->execute("SELECT * FROM DataLocks WHERE id='".$db->escape_string($lock_id)."'");
 		if ($r == null) return false;
@@ -425,8 +503,32 @@ class DataBaseLock {
 		if (json_encode($row_key) == $r["row_key"]) return true;
 		return false;
 	}
+	
+	/** @var handle $mutex handle to the file locked to handle mutual exclusion */
+	private static $mutex = null;
+	/** Lock, to make sure no other request can perform the same operation */
+	private static function mutexLock() {
+		if (self::$mutex <> null) return;
+		self::$mutex = fopen(realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/component/data_model/DataBaseLock.mutex","r+");
+		for ($i = 0; $i < 50; $i++) {
+			if (flock(self::$mutex, LOCK_EX)) return;
+			usleep(50000);
+		}
+		fclose(self::$mutex);
+		self::$mutex = null;
+		throw new Exception("Unable to lock access to database");
+	}
+	/** Unlock */
+	private static function mutexUnlock() {
+		if (self::$mutex == null) return;
+		fclose(self::$mutex);
+		self::$mutex = null;
+	}
 
-	public static function generate_script($id) {
+	/** Generate the necessary JavaScript code so the given lock if will be added to the list of locks
+	 * @param integer $id lock id
+	 */
+	public static function generateScript($id) {
 ?>
 <script type='text/javascript'>
 if (window.database_locks)

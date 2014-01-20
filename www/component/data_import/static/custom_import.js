@@ -121,7 +121,7 @@ function custom_import(container, onready) {
 				if (t.fixed_values[i] != null) new_data = t.fixed_values[i];
 				else if (t.prefilled_values[i] != null) new_data = t.prefilled_values[i];
 				else new_data = t.data_display[i].new_data;
-				new_data = object_copy(new_data, 100);
+				new_data = objectCopy(new_data, 100);
 				var d = {col_id:t.data_display[i].category+'@'+t.data_display[i].name,data_id:0,data:new_data};
 				if (i == data_display_index)
 					d.data_id = 1;
@@ -140,7 +140,7 @@ function custom_import(container, onready) {
 				data_id:0,
 				data:remove
 			});
-			t.grid.addRow(generate_id(),data);
+			t.grid.addRow(generateID(),data);
 			var cell = t.grid.getCellField(t.grid.getNbRows()-1, data_display_index+1);
 			if (cell.isMultiple())
 				cell.addData(value);

@@ -31,7 +31,7 @@ class RolesServices_Test_CreateRole_NoRight extends TestServicesStep {
 	public function getServiceName() { return "create_role"; }
 	public function getServiceInput(&$scenario_data) { return "{name:'test_error'}"; }
 	public function getJavascriptToCheckServiceOutput($scenario_data) {
-		return "if (!errors || errors.length == 0) return 'No error returned'; if (result) return 'Can create role: '+service.generate_input(result); return null;";
+		return "if (!errors || errors.length == 0) return 'No error returned'; if (result) return 'Can create role: '+service.generateInput(result); return null;";
 	}
 	public function finalizationStep(&$scenario_data) {
 		if (SQLQuery::create()->bypass_security()->select("Role")->where("name","test_error")->execute_single_row() <> null)
@@ -51,7 +51,7 @@ class RolesServices_Test_CreateRole_Ok extends TestServicesStep {
 	public function getServiceInput(&$scenario_data) { return "{name:'test_ok'}"; }
 	public function getJavascriptToCheckServiceOutput($scenario_data) {
 		return 
-			"if (errors && errors.length > 0) return 'Cannot create role: '+service.generate_input(errors);".
+			"if (errors && errors.length > 0) return 'Cannot create role: '+service.generateInput(errors);".
 			"if (!result) return 'Cannot create role: result is false';".
 			"return null;";
 	}

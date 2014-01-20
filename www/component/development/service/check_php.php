@@ -17,14 +17,18 @@ class service_check_php extends Service {
 		} catch (Exception $e) {
 			// analyze the error ???
 		}
-		ob_clean();
+		@ob_clean();
 		$output = array();
 		$this->check_classes($path, $type, $output);
+		@ob_clean();
+		@ob_start();
 		echo json_encode($output);
 	}
 	
 	private function check_classes($path, $type, &$output) {
 		$all = get_declared_classes();
+		$all2 = get_declared_interfaces();
+		$all = array_merge($all, $all2);
 		foreach ($all as $cname) {
 			$cl = new ReflectionClass($cname);
 			if (realpath($cl->getFileName()) <> $path) continue;
@@ -41,6 +45,24 @@ class service_check_php extends Service {
 		$comment = trim($comment);
 		if (strlen($comment) == 0 && $type == "")
 			array_push($output, "Class <b>".$cl->getName()."</b>: No comment describing the purpose of the class");
+		if ($type == "service") {
+			$classname = $cl->getName();
+			$service = new $classname();
+			@ob_start();
+			ob_clean();
+			$service->documentation();
+			$doc = ob_get_clean();
+			if (strlen($doc) == 0)
+				array_push($output, "Service <b>".$cl->getName()."</b>: No documentation");
+			$service->input_documentation();
+			$doc = ob_get_clean();
+			if (strlen($doc) == 0)
+				array_push($output, "Service <b>".$cl->getName()."</b>: No documentation for input");
+			$service->output_documentation();
+			$doc = ob_get_clean();
+			if (strlen($doc) == 0)
+				array_push($output, "Service <b>".$cl->getName()."</b>: No documentation for output");
+		}
 		foreach ($cl->getProperties() as $p)
 			if ($p->getDeclaringClass() == $cl)
 				$this->check_property($p, $type, $output);
@@ -56,6 +78,17 @@ class service_check_php extends Service {
 		$comment = "";
 		$tags = "";
 		PHPDoc::parse_comment($p->getDocComment(), $comment, $tags);
+		if ($comment == "" && isset($tags["var"])) {
+			$type = PHPDoc::getWord($tags["var"][0]);
+			if ($type <> "") {
+				$name = PHPDoc::getWord($tags["var"][0]);
+				if ($name <> "") {
+					if ($name <> "\$".$p->name) $tags["var"][0] = $name." ".$tags["var"][0];
+					if ($comment == "") $comment = trim($tags["var"][0]);
+				}
+			}
+				
+		}
 		if ($comment == "")
 			array_push($output, "Class <b>".$p->getDeclaringClass()->getName()."</b>, Property <b>\$".$p->getName()."</b>: No comment");
 		$first = substr($p->getName(),0,1);
@@ -87,8 +120,19 @@ class service_check_php extends Service {
 			}
 			
 		// check method has a description
-		if ($comment == "" && !$from_parent && !$is_language)
-			array_push($output, "Class <b>".$m->getDeclaringClass()->getName()."</b>, Method <b>".$m->getName()."</b>: No comment");
+		if ($comment == "" && !$from_parent && !$is_language) {
+			// accept if the method has no parameter, and output is documented
+			$ok = false;
+			if (count($m->getParameters()) == 0) {
+				if (isset($tags["return"])) {
+					$type = PHPDoc::getWord($tags["return"][0]);
+					if (strlen(trim($tags["return"][0])) > 0)
+						$ok = true;
+				}
+			}
+			if (!$ok)
+				array_push($output, "Class <b>".$m->getDeclaringClass()->getName()."</b>, Method <b>".$m->getName()."</b>: No comment");
+		}
 
 		// check parameters are documented and typed
 		if (!$from_parent) {
@@ -122,6 +166,11 @@ class service_check_php extends Service {
 					array_push($output, "Class <b>".$m->getDeclaringClass()->getName()."</b>, Method <b>".$m->getName()."</b>, Parameter <b>".$p->getName()."</b>: No comment");
 				if ($param_type == "")
 					array_push($output, "Class <b>".$m->getDeclaringClass()->getName()."</b>, Method <b>".$m->getName()."</b>, Parameter <b>".$p->getName()."</b>: No type");
+			}
+			if (isset($tags["return"])) {
+				$type = PHPDoc::getWord($tags["return"][0]);
+				if (strlen(trim($tags["return"][0])) == 0)
+					array_push($output, "Class <b>".$m->getDeclaringClass()->getName()."</b>, Method <b>".$m->getName()."</b>: declares returned type ".$type." without comment");				
 			}
 		}
 		

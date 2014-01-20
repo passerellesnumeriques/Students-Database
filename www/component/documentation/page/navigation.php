@@ -29,6 +29,8 @@ class page_navigation extends Page {
 	php.addItem(item);
 	item = new TreeItem("<a href='php?general=app' target='documentation'>Application and components</a>",false);
 	php.addItem(item);
+	item = new TreeItem("<a href='/static/documentation/javascript.html' target='documentation'>JavaScript</a>",false);
+	general.addItem(item);
 	var comp,js;
 <?php
 	foreach (PNApplication::$instance->components as $c) {
@@ -36,6 +38,8 @@ class page_navigation extends Page {
 		if (file_exists("component/".$c->name."/datamodel.inc"))
 			echo "item = new TreeItem(\"<a href='component?name=".$c->name."#datamodel' target='documentation'>Data Model</a>\",false);comp.addItem(item);\n";
 		echo "item = new TreeItem(\"<a href='component?name=".$c->name."#php' target='documentation'>PHP</a>\",false);comp.addItem(item);\n";
+		if (file_exists("component/".$c->name."/service"))
+			echo "item = new TreeItem(\"<a href='component?name=".$c->name."#services' target='documentation'>Services</a>\",false);comp.addItem(item);\n";
 		if (file_exists("component/".$c->name."/static/")) {
 			$files = array();
 			$this->browse_js("component/".$c->name."/static/", "", $files);

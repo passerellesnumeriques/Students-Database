@@ -411,7 +411,7 @@ function geographic_area_selection(container, country_id, onready) {
 		window.top.geography.getCountryData(country_id, function(country_data) {
 			t.result = [];
 			for (var i = 0; i < country_data.length; ++i)
-				t.result.push(object_copy(country_data[i], 20));
+				t.result.push(objectCopy(country_data[i], 20));
 			var table = document.createElement('table');
 			var tbody = document.createElement('tbody');
 			var form = document.createElement('form');

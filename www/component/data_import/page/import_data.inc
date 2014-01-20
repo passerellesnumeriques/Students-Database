@@ -1,14 +1,14 @@
 <?php 
 function import_data(&$page, $icon, $title, $data_list, $fixed_data, $prefilled_data, $create_button, $create_function) {
 	
-	$page_id = $page->generate_id();
+	$page_id = $page->generateID();
 	echo "<div id='$page_id' style='width:100%;height:100%'>";
 		
-	$header_id = $page->generate_id();
+	$header_id = $page->generateID();
 	echo "<div id='$header_id' icon='$icon' title='$title' layout='fixed'></div>";
 	$page->add_javascript("/static/widgets/page_header.js");
 	
-	$container_id = $page->generate_id();
+	$container_id = $page->generateID();
 	echo "<div layout='fill' id='$container_id' style='overflow:hidden'></div>";
 	$page->add_javascript("/static/data_import/custom_import.js");
 	

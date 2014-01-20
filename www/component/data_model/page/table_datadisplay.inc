@@ -40,7 +40,7 @@ function table_datadisplay_page(&$page, $table, &$row, $row_query, $sub_models =
 		$key_alias = $row_query->get_field_alias($table->getName(), $table->getPrimaryKey()->name);
 		if ($key_alias == null) $key_alias = $table->getPrimaryKey()->name;
 		$value = $data->getData($row[$key_alias], $sub_model, $row, $row_query);
-		$id = $page->generate_id();
+		$id = $page->generateID();
 		echo "<td id='".$id."'>";
 		datamodel_datadisplay($page, $data, $row[$key_alias], $value, $sub_model, $id, true);
 		echo "</td>";

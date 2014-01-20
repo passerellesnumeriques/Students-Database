@@ -152,7 +152,7 @@ function organization(container, org, can_edit) {
 		tr.appendChild(td_addresses = document.createElement("TD"));
 		td_addresses.style.verticalAlign = "top";
 		require("addresses.js", function() {
-			var a = new addresses(td_addresses, true, "Organization_address", "organization", org.id, org.addresses, can_edit, can_edit, can_edit);
+			var a = new addresses(td_addresses, true, "organization", org.id, org.addresses, can_edit, can_edit, can_edit);
 			a.onchange.add_listener(function(a){
 				org.addresses = a.getAddresses();
 			});
@@ -225,7 +225,7 @@ function organization(container, org, can_edit) {
 						data.onsuccess='window.parent.create_contact_point_success';
 					else
 						data.donotcreate='window.parent.create_contact_point_success';
-					post_data(
+					postData(
 						'/dynamic/people/page/create_people',
 						data,
 						getIFrameWindow(frame)

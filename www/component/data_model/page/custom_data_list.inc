@@ -244,6 +244,21 @@ var custom_data_list = {
 			index += this._find_column_index_in(col, p);
 		return index;
 	},
+	_count_sublevels: function(col) {
+		if (col.sub_columns.length == 0) return 0;
+		var max = 0;
+		for (var i = 0; i < col.sub_columns.length; ++i) {
+			var nb = this._count_sublevels(col.sub_columns[i]);
+			if (nb > max) max = nb;
+		}
+		return max+1;
+	},
+	_update_rowspan: function(col, total_rows) {
+		var nb = this._count_sublevels(col);
+		col.th.rowSpan = total_rows-nb;
+		for (var i = 0; i < col.sub_columns.length; ++i)
+			this._update_rowspan(col.sub_columns[i], total_rows-col.th.rowSpan);
+	},
 	addSubColumn: function(parent_col_id, col_id, col_header, content_provider, before_col_id, customize_header) {
 		var parent = this._find_column(parent_col_id);
 		if (parent == null) {
@@ -282,8 +297,7 @@ var custom_data_list = {
 				this.tbody.childNodes[i].removeChild(this.tbody.childNodes[i].childNodes[cell_index]);
 		} else {
 			if (parent.sub_columns.length == 0) {
-				// first of this level
-				top_level.th.rowSpan = top_level.th.rowSpan -1;
+				// first of this level in the parent
 				var before_th = null;
 				if (before_col_id) {
 					for (var i = 0; i < parent.sub_columns.length; ++i)
@@ -300,6 +314,7 @@ var custom_data_list = {
 				else
 					this.thead.childNodes[level].insertBefore(col.th, before_th);
 				parent.sub_columns.push(col);
+				this._update_rowspan(top_level, this.thead.childNodes.length);
 				// remove the cells corresponding to the parent
 				var cell_index = this._column_index(parent);
 				for (var i = 0; i < this.tbody.childNodes.length; ++i)

@@ -29,7 +29,7 @@ class service_lock_table extends Service {
 			return;
 		}
 		$locked_by = null;
-		$lock = DataBaseLock::lock_table($table->getSQLNameFor($sub_model), $locked_by);
+		$lock = DataBaseLock::lockTable($table->getSQLNameFor($sub_model), $locked_by);
 		if ($lock == null) {
 			PNApplication::error("This table is already locked by ".$locked_by);
 			return;
