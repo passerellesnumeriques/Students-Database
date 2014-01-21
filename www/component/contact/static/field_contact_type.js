@@ -1,3 +1,17 @@
+/**
+ * Configuration for a field_contact_type
+ * @param {String} contact_type one of: "email", "phone", or "IM"
+ */
+function field_contact_type_config(contact_type) {
+	this.contact_type = contact_type;
+}
+
+/**
+ * A field that can display/edit a list of contacts
+ * @param {ContactsData} data the list of contacts together with their owner
+ * @param {Boolean} editable initialized as editable or not
+ * @param {field_contact_type_config} config indicates which kind of contacts to display (email, phone or IM)
+ */
 function field_contact_type(data,editable,config) {
 	typed_field_multiple.call(this, data, editable, config);
 }
@@ -13,7 +27,7 @@ field_contact_type.prototype._create = function(data) {
 			case "phone": contact_type_name = "Phone"; break;
 			case "IM": contact_type_name = "Instant Messaging"; break;
 			}
-			t.control = new contact_type(t.config.type, contact_type_name, data.table, data.key_name, data.key_value, data.contacts, true, true, true, null, null);
+			t.control = new contact_type(t.config.type, contact_type_name, data.type, data.type_id, data.contacts, true, true, true, null, null);
 			t.element.appendChild(t.control.table);
 		});
 		this.addData = function(new_data) {
@@ -21,10 +35,10 @@ field_contact_type.prototype._create = function(data) {
 			if (typeof new_data == 'object')
 				contact = new_data;
 			else
-				contact = {contact:new_data,sub_type:"Work",type:t.config.type};
+				contact = new Contact(-1,t.config.type,"Work",new_data);
 			var finalize = function() {
 				if (t.control)
-					t.control.addField(contact);
+					t.control.createContact(contact);
 				else
 					setTimeout(finalize,10);
 			};

@@ -16,7 +16,7 @@ function page_header(container, small) {
 			d.innerHTML = html;
 			html = d;
 		}
-		if (t.more_menu)
+		if (t.more_menu && t.more_menu.parentNode == this.menu_container)
 			this.menu_container.insertBefore(html, t.more_menu);
 		else
 			this.menu_container.appendChild(html);

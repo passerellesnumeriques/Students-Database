@@ -68,33 +68,37 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		
 		if (count($keys) == 0)
 			$res = array();
-		else
-			$res = \SQLQuery::create()
+		else {
+			$q = \SQLQuery::create()
 				->select($table_name)
 				->join($table_name, "Contact", array("contact" => "id"), "JOIN_ALIAS")
 				->field($table_name, $this->joining_key_name, "JOIN_KEY")
-				->field("JOIN_ALIAS", "id", "KEY")
-				->field("JOIN_ALIAS", "sub_type", "SUB_TYPE")
-				->field("JOIN_ALIAS", "contact", "CONTACT")
 				->where_in($table_name, $this->joining_key_name, $keys)
 				->where_value("JOIN_ALIAS", "type", $this->type)
-			->execute();
+				;
+			require_once("ContactJSON.inc");
+			ContactJSON::ContactSQL($q);
+			$res = $q->execute();
+		}
 		
 		$sql_aliases["data"] = $original_query->field_id();
 		for ($i = 0; $i < count($rows); $i++) {
 			$key = $rows[$i][$sql_aliases["key"]];
-			$values = array();
+			$values = "[";
+			$first = true;
 			foreach ($res as $r) {
-				if ($r["JOIN_KEY"] == $key)
-					array_push($values, array("id"=>$r["KEY"],"sub_type"=>$r["SUB_TYPE"],"contact"=>$r["CONTACT"]));
+				if ($r["JOIN_KEY"] == $key) {
+					if ($first) $first = false; else $values .= ",";
+					$values .= ContactJSON::Contact($q, $r);
+				}
 			}
-			$rows[$i][$sql_aliases["data"]] = array("table"=>$table_name,"key_name"=>$this->joining_key_name,"key_value"=>$row[$sql_aliases["key"]],"contacts"=>$values);
+			$values .= "]";
+			$rows[$i][$sql_aliases["data"]] = "{type:".json_encode($this->handler->type).",type_id:".$row[$sql_aliases["key"]].",contacts:".$values."}";
 		}
 	}
 	
 	public function getNewData() {
-		$table_name = $this->handler->type == "people" ? "People_contact" : "Organization_contact";
-		return array("table"=>$table_name,"key_name"=>$this->joining_key_name,"key_value"=>-1,"contacts"=>array());
+		return "{type:".json_encode($this->handler->type).",type_id:-1,contacts:[]}";
 	}
 	
 	public function saveData($key, $value, $sub_model) {

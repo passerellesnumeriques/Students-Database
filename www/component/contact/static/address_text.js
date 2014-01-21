@@ -6,6 +6,7 @@ if (typeof window.top.require != 'undefined')
  * @param {PostalAddress} address the postal address
  */
 function address_text(address){
+	/** DIV containing everything */ 
 	this.element = document.createElement("DIV");
 
 	var empty = true;

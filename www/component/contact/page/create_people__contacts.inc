@@ -17,7 +17,7 @@ $this->add_javascript("/static/contact/addresses.js");
 
 <script type='text/javascript'>
 function create_people_contacts_section() {
-	this.contacts = new contacts('<?php echo $contact_id;?>', "People_contact", "people", -1, window.create_people.contacts ? window.create_people.contacts : [], true, true, true);
+	this.contacts = new contacts('<?php echo $contact_id;?>', "people", -1, window.create_people.contacts ? window.create_people.contacts : [], true, true, true);
 	this.addresses = new addresses('<?php echo $address_id;?>', true, "people", -1, window.create_people.addresses ? window.create_people.addresses : [], true, true, true);
 	this.validate_and_save = function() {
 		window.create_people.contacts = this.contacts.getContacts();

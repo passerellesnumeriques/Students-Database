@@ -3,14 +3,23 @@ if (typeof require != 'undefined') {
 	require([["typed_field.js","field_text.js"]]);
 }
 
-function organization(container, org, can_edit) {
+/**
+ * UI Control for an organization
+ * @param {DOMNode} container where to display
+ * @param {Organization} org organization to display
+ * @param {Array} existing_types list of {id:...,name:...} listing all existing organization types in database that can be used
+ * @param {Boolean} can_edit indicates if the user can modify the organization
+ */
+function organization(container, org, existing_types, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
+	/** Return the Organization structure */
 	this.getStructure = function() {
 		return org;
 	};
 	
+	/** Create the display */
 	this._init = function() {
 		// title: name of organization
 		container.appendChild(t.title_container = document.createElement("DIV"));
@@ -40,10 +49,10 @@ function organization(container, org, can_edit) {
 		t.types_container.appendChild(span);
 		require("labels.js", function() {
 			var types = [];
-			for (var i = 0; i < org.types.length; ++i) {
-				for (var j = 0; j < org.existing_types.length; ++j)
-					if (org.existing_types[j].id == org.types[i]) {
-						types.push(org.existing_types[j]);
+			for (var i = 0; i < org.types_ids.length; ++i) {
+				for (var j = 0; j < existing_types.length; ++j)
+					if (existing_types[j].id == org.types_ids[i]) {
+						types.push(existing_types[j]);
 						break;
 					}
 			}
@@ -66,27 +75,27 @@ function organization(container, org, can_edit) {
 					ok();
 			}, function() {
 				var items = [];
-				for (var i = 0; i < org.existing_types.length; ++i) {
+				for (var i = 0; i < existing_types.length; ++i) {
 					var found = false;
-					for (var j = 0; j < org.types.length; ++j)
-						if (org.types[j] == org.existing_types[i].id) { found = true; break; }
+					for (var j = 0; j < org.types_ids.length; ++j)
+						if (org.types_ids[j] == existing_types[i].id) { found = true; break; }
 					if (!found) {
 						var item = document.createElement("DIV");
 						item.className = "context_menu_item";
-						item.innerHTML = org.existing_types[i].name;
-						item.org_type = org.existing_types[i];
+						item.innerHTML = existing_types[i].name;
+						item.org_type = existing_types[i];
 						item.style.fontSize = "8pt";
 						item.onclick = function() {
 							if (org.id != -1) {
 								var tt=this;
 								service.json("contact", "assign_organization_type", {organization:org.id,type:this.org_type.id}, function(res) {
 									if (res) {
-										org.types.push(tt.org_type.id);
+										org.types_ids.push(tt.org_type.id);
 										t.types.addItem(tt.org_type.id, tt.org_type.name);
 									}
 								});
 							} else {
-								org.types.push(this.org_type.id);
+								org.types_ids.push(this.org_type.id);
 								t.types.addItem(this.org_type.id, this.org_type.name);
 							}
 						};
@@ -100,8 +109,8 @@ function organization(container, org, can_edit) {
 				item.onclick = function() {
 					input_dialog(theme.icons_16.add,"New Organization Type","Enter the name of the organization type","",100,function(name){
 						if (name.length == 0) return "Please enter a name";
-						for (var i = 0; i < org.existing_types.length; ++i)
-							if (org.existing_types[i].name.toLowerCase().trim() == name.toLowerCase().trim())
+						for (var i = 0; i < existing_types.length; ++i)
+							if (existing_types[i].name.toLowerCase().trim() == name.toLowerCase().trim())
 								return "This organization type already exists";
 						return null;
 					},function(name){
@@ -111,14 +120,14 @@ function organization(container, org, can_edit) {
 							if (org.id != -1) {
 								service.json("contact", "assign_organization_type", {organization:org.id,type:res.id}, function(res) {
 									if (res) {
-										org.types.push(res.id);
-										org.existing_types.push({id:res.id,name:name});
+										org.types_ids.push(res.id);
+										existing_types.push({id:res.id,name:name});
 										t.types.addItem(res.id, name);
 									}
 								});
 							} else {
-								org.types.push(res.id);
-								org.existing_types.push({id:res.id,name:name});
+								org.types_ids.push(res.id);
+								existing_types.push({id:res.id,name:name});
 								t.types.addItem(res.id, name);
 							}
 						});
@@ -143,7 +152,7 @@ function organization(container, org, can_edit) {
 		tr.appendChild(td_contacts = document.createElement("TD"));
 		td_contacts.style.verticalAlign = "top";
 		require("contacts.js", function() {
-			var c = new contacts(td_contacts, "Organization_contact", "organization", org.id, org.contacts, can_edit, can_edit, can_edit);
+			var c = new contacts(td_contacts, "organization", org.id, org.contacts, can_edit, can_edit, can_edit);
 			c.onchange.add_listener(function(c){
 				org.contacts = c.getContacts();
 			});
@@ -202,15 +211,10 @@ function organization(container, org, can_edit) {
 						p.resize();
 					};
 					window.create_contact_point_success = function(people) {
-						var point = {
-							designation: people.contact_point_designation,
-							people_id: people.people_id,
-							first_name: people.people.first_name,
-							last_name: people.people.last_name
-						};
+						var point = new ContactPoint(people.people_id, people.people.first_name,people.people.last_name, people.contact_point_designation);
 						if (org.id == -1)
 							point.create_people = people;
-						org.points.push(point);
+						org.contact_points.push(point);
 						t._addContactPointRow(point, tbody);
 						p.close();
 					};
@@ -234,8 +238,8 @@ function organization(container, org, can_edit) {
 			};
 		}
 		
-		for (var i = 0; i < org.points.length; ++i)
-			t._addContactPointRow(org.points[i], tbody);
+		for (var i = 0; i < org.contact_points.length; ++i)
+			t._addContactPointRow(org.contact_points[i], tbody);
 	};
 	this._addContactPointRow = function(point, tbody) {
 		var tr, td_design, td;
