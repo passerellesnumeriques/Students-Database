@@ -135,7 +135,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 											lock: lock_id,
 											field_country: edit.address.country,
 											field_geographic_area: edit.address.geographic_area ? edit.address.geographic_area.id : null,
-											field_street: edit.address.street_name,
+											field_street: edit.address.street,
 											field_street_number: edit.address.street_number,
 											field_building: edit.address.building,
 											field_unit: edit.address.unit,

@@ -18,7 +18,7 @@ function facebook_status(container) {
 	t.updateIcon = function() {
 		if (!w.theme) return; // window closed
 		var url = "/static/application/icon.php?main=/static/facebook/facebook.png&where=right_bottom&small=";
-		switch (window.top.facebook.connection_status) {
+		switch (w.top.facebook.connection_status) {
 		case 0: url += w.theme.icons_10.offline; break;
 		case 1: url += w.theme.icons_10.no_connection; break;
 		case 2: url += w.theme.icons_10.warning; break;

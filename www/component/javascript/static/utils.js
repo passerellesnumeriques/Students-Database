@@ -418,11 +418,16 @@ function Custom_Event() {
 	 * @param listener
 	 */
 	this.add_listener = function(listener) { this.listeners.push(listener); };
+	this.remove_listener = function(listener) { this.listeners.remove(listener); };
 	/**
 	 * Trigger the event: call all listeners with the given data as parameter
 	 * @param data
 	 */
-	this.fire = function(data) { for (var i = 0; i < this.listeners.length; ++i) this.listeners[i](data); };
+	this.fire = function(data) {
+		var list = [];
+		for (var i = 0; i < this.listeners.length; ++i) list.push(this.listeners[i]);
+		for (var i = 0; i < list.length; ++i) list[i](data);
+	};
 } 
 
 /**

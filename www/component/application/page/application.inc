@@ -7,8 +7,8 @@ $this->add_javascript("/static/google/google_status.js");
 $this->add_javascript("/static/facebook/facebook_status.js");
 $this->onload("new vertical_layout('pn_application_container');");
 $this->onload("new horizontal_menu('application_menu');");
-//$this->onload("new google_status('google_status');");
-//$this->onload("new facebook_status('facebook_status');");
+$this->onload("new google_status('google_status');");
+$this->onload("new facebook_status('facebook_status');");
 $this->onload("setBorderRadius(document.forms['app_search'].elements['q'],8,8,8,8,8,8,8,8);");
 $this->onload("setBoxShadow(document.forms['app_search'].elements['q'],-1,2,2,0,'#D8D8F0',true);");
 $this->onload("setBorderRadius(document.getElementById('app_domain'),5,5,5,5,5,5,5,5);");
@@ -75,14 +75,12 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	</div>
 	<div layout='17' id='pn_application_footer'>
 		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
-		<!-- 
 		<span style='position:fixed;bottom:0px;right:3px;'>
 			<span id='google_status'></span>
 		</span>
 		<span style='position:fixed;bottom:0px;right:23px;'>
 			<span id='facebook_status'></span>
 		</span>
-		 -->
 		<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
 		<span style='position:fixed;bottom:0px;right:43px;'>
 			<span id='debug_status'></span>

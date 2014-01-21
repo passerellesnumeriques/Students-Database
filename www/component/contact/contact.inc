@@ -73,14 +73,14 @@ class contact extends Component implements PeoplePlugin {
 	}
 	
 	public function addContactToPeople($people_id, $contact) {
-		$this->addContact("People_contact", "people", $people_id);
+		return $this->addContact("People_contact", "people", $people_id, $contact);
 	}
 	public function addContactToOrganization($org_id, $contact) {
-		$this->addContact("Organization_contact", "organization", $org_id);
+		return $this->addContact("Organization_contact", "organization", $org_id, $contact);
 	}
 	private function addContact($table_name, $join_column, $join_value, $contact) {
 		$table = DataModel::get()->getTable($table_name);
-		if (!$table->acceptInsert(array($join_column=>$join_id))) {
+		if (!$table->acceptInsert(array($join_column=>$join_value))) {
 			PNApplication::error("You are not allowed to add a contact for this ".$join_column);
 			return false;
 		}
