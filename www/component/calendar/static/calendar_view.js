@@ -27,11 +27,16 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 		this.header.setAttribute("layout", "30");
 		this.header.style.backgroundColor = "#D8D8D8";
 		this.header.style.borderBottom = "1px solid #A0A0A0";
+		this.view_container_container = document.createElement("DIV");
+		this.view_container_container.setAttribute("layout", "fill");
+		this.view_container_container.style.overflow = "auto";
 		this.view_container = document.createElement("DIV");
-		this.view_container.setAttribute("layout", "fill");
-		this.view_container.style.overflow = "auto";
+		this.view_container.style.width = "100%";
+		this.view_container.style.height = "100%";
+		this.view_container.style.position = "relative";
+		this.view_container_container.appendChild(this.view_container);
 		container.appendChild(this.header);
-		container.appendChild(this.view_container);
+		container.appendChild(this.view_container_container);
 		var ready_count = 0;
 		var ready = function() {
 			if (++ready_count == 2 && onready)
