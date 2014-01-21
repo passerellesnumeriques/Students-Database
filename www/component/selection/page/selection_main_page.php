@@ -98,7 +98,7 @@ class page_selection_main_page extends selection_page {
 					});
 					var div = document.getElementById("selection_calendar");
 					setBorderRadius(div, 5, 5, 5, 5, 5, 5, 5, 5);
-					var header_calendar = new page_header("header_calendar");
+					var header_calendar = new page_header("header_calendar",true);
 					header_calendar.setTitle("<img src = '/static/calendar/event.png'/> Selection Calendar");
 					var extend = document.createElement("div");
 					extend.className = "button";
@@ -123,8 +123,8 @@ class page_selection_main_page extends selection_page {
 			});
 			
 			function setStatusScreens (unvalid_steps, valid_steps){
-				var header = new page_header("status_header");
-				header.setTitle("Selection Main Steps");
+				var header = new page_header("status_header",true);
+				header.setTitle("<img src = '"+theme.icons_16.dashboard+"'/> Selection Dashboard");
 				var t = this;
 				
 				t._init = function(){

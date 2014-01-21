@@ -132,6 +132,7 @@ class page_home extends Page {
 			icon='/static/selection/selection_32.png' 
 			title='Selection'
 			page='/dynamic/selection/page/selection_main_page'>
+			<div class = "button" onclick = "location.assign('/dynamic/selection/page/home');"><img src = '<?php echo theme::$icons_16["home"];?>'/> Home</div>
 			<?php
 			if($rights["read"]){
 				echo "<div style = 'vertical-align:bottom' id ='select_campaign_header'></div>"; 

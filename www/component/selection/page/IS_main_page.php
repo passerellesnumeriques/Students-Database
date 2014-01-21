@@ -8,13 +8,11 @@ class page_IS_main_page extends selection_page {
 		// $page->onload("init_organizations_list();");
 		$container_id = $page->generateID();
 		$can_create = null;
-		require_once("IS_status.inc");
-		IS_status($page,"IS_status");
 
 	?>
 		<div id = '<?php echo $container_id; ?>'>
 		</div>
-		<div id = "IS_status"></div>
+		<div id = "IS_status"> TODO finish main page</div>
 		
 		<script style='width:100%;height:100%' type='text/javascript'>
 			function init_organizations_list() {

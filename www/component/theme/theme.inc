@@ -58,6 +58,8 @@ theme::$icons_16 = array(
 	"zoom" => 			"/static/theme/".$theme."/icons_16/search.png",
 	"remove_black" => 	"/static/theme/".$theme."/icons_16/trash_black.png",
 	"config" => 		"/static/theme/".$theme."/icons_16/config.png",
+	"home" => 		"/static/theme/".$theme."/icons_16/home.png",
+	"dashboard" => 		"/static/theme/".$theme."/icons_16/dashboard.png",
 );
 theme::$icons_10 = array(
 	"add" => 			"/static/theme/".$theme."/icons_10/add.png",
@@ -77,5 +79,6 @@ theme::$icons_10 = array(
 
 theme::$icons_32 = array(
 	"config" => 			"/static/theme/".$theme."/icons_32/config.png",
+	"home" => 			"/static/theme/".$theme."/icons_32/home.png",
 );
 ?>

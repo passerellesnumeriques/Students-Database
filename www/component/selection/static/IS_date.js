@@ -13,6 +13,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	require(["popup_window.js",["typed_field.js","field_date.js","field_time.js"],"autoresize_input.js"],function(){t._setEventAttribute();});
 	
 	t.table = document.createElement("table");
+	t.table.style.width = "100%";
 	t.event = null;
 	t.custom_event_name = null;
 	t.date = null;
@@ -62,7 +63,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		th_head.innerHTML = "<img src = '"+theme.icons_16.date_picker+"' /> Date";
 		tr_head.appendChild(th_head);
 		thead.appendChild(tr_head);
-		setCommonStyleTable(t.table, th_head, "#34A0FF");
+		setCommonStyleTable(t.table, th_head, "#DADADA");
 		t.table.appendChild(thead);
 	}
 	

@@ -15,6 +15,7 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 	});
 	
 	t._init = function(){
+		t.table.style.width = "100%";
 		t._setTextFields();
 		t._setTableHeader();
 		t._setTableBody();
@@ -38,7 +39,7 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 		var tr = document.createElement("tr");
 		th.colSpan = 3;
 		th.innerHTML = "<img src = '/static/selection/statistics.png' style='vertical-align:bottom'/> Statistics";
-		setCommonStyleTable(t.table, th, "#958DFF");
+		setCommonStyleTable(t.table, th, "#DADADA");
 		tr.appendChild(th);
 		thead.appendChild(th);
 		t.table.appendChild(thead);

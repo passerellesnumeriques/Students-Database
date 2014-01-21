@@ -12,13 +12,17 @@ class page_IS_profile extends selection_page {
 	else
 		$id = $_GET["id"];
 	?>
-
+		<div id = "page_header">
+			<div class = "button" onclick = "location.assign('/dynamic/selection/page/IS_home');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
+			<div id = "save_IS_button"></div>
+			<div id = "remove_IS_button"></div>
+		</div>
 		<div id='IS_profile_<?php echo $name; ?>'></div>
 		
 	<?php
 		// IS_profile($page,"IS_profile_".$name,$id);
 		//temp:
-		IS_profile($page,"IS_profile_".$name,-1);
+		IS_profile($page,"IS_profile_".$name,-1,"save_IS_button","remove_IS_button");
 	}
 	
 }

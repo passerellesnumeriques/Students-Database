@@ -23,6 +23,7 @@ function select_address(container, data, organization_contacts, can_manage){
 	
 	t._setTableAddress = function(){
 		t.table_address = document.createElement("table");
+		t.table_address.style.width = "100%";
 		
 		var theader = document.createElement("thead");
 		var tbody = document.createElement("tbody");
@@ -82,7 +83,7 @@ function select_address(container, data, organization_contacts, can_manage){
 		t.table_address.appendChild(theader);
 		t.table_address.appendChild(tbody);
 		t.table_address.appendChild(tfoot);
-		setCommonStyleTable(t.table_address,th_header,"#E2E2E2");
+		setCommonStyleTable(t.table_address,th_header,"#DADADA");
 	
 		container.appendChild(t.table_address);
 	}

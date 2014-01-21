@@ -9,6 +9,7 @@ function IS_name(container, name, can_edit){
 	});
 	
 	t._init = function(){
+		t.table.style.width = "100%";
 		t._setTableHeader();
 		t._setTableBody();
 		container.appendChild(t.table);
@@ -20,7 +21,7 @@ function IS_name(container, name, can_edit){
 		var tr = document.createElement("tr");
 		// th.colSpan = 2;
 		th.innerHTML = "<img src = '/static/selection/label.png' style='vertical-align:bottom'/> Information Session name";
-		setCommonStyleTable(t.table, th, "#6BFA75");
+		setCommonStyleTable(t.table, th, "#DADADA");
 		tr.appendChild(th);
 		thead.appendChild(th);
 		t.table.appendChild(thead);
@@ -38,7 +39,7 @@ function IS_name(container, name, can_edit){
 		if(can_edit){
 			var input = document.createElement("input");
 			input.value = t.text;
-			autoresize_input(input);
+			autoresize_input(input,15);
 			input.oninput = function(){
 				if(this.value.checkVisible() && this.value != ""){
 					t.name = this.value.uniformFirstLetterCapitalized();
