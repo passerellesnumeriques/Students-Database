@@ -137,9 +137,8 @@ class page_home extends Page {
 				echo "<div style = 'vertical-align:bottom' id ='select_campaign_header'></div>"; 
 				$current = PNApplication::$instance->components["selection"]->get_campaign_id();
 				$first = ($current <> null) ? "false" : "true";
-				$json_all_campaign = "";
+				$json_all_campaign = "[";
 				if(isset($campaigns[0]["id"])){
-					$json_all_campaign .= "[";
 					$first_camp = true;
 					foreach($campaigns as $campaign){
 						if(!$first_camp)
@@ -147,8 +146,8 @@ class page_home extends Page {
 						$first_camp = false;
 						$json_all_campaign .=  "{id:".json_encode($campaign['id']).", name:".json_encode($campaign["name"])."}";
 					}
-					$json_all_campaign .= "]";
 				}
+				$json_all_campaign .= "]";
 				$this->onload("new selectCampaignHeader(".$first.", ".json_encode($rights["manage"]).", ".$json_all_campaign.", ".json_encode($current).");");
 			}
 			?>

@@ -3,6 +3,7 @@ function splitter_vertical(element, position) {
 	var t = this;
 	
 	t.element = element;
+	t.element.style.overflow = "hidden"; // do not allow to scroll, as we must fill all the area
 	t.element.widget = this;
 	t.position = position;
 	t.element.data = t;
