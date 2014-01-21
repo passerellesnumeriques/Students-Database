@@ -310,8 +310,8 @@ class selection extends Component implements OrganizationPlugin {
 					SQLQuery::create()
 						->bypass_security()
 						->update_by_key("Steps",$name, array('value' => false));
-	}
-	}
+			}
+		}
 	}
 	
 	/** This method must be called by each "save" and "remove" method to valid the call, as a last check
