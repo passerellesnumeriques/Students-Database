@@ -27,16 +27,16 @@ function address_text(address){
 		div.appendChild(document.createTextNode(text));
 		empty &= text.trim().length > 0;
 	}
-	if(address.street_name != null || address.street_number != null) {
+	if(address.street != null || address.street_number != null) {
 		var text = "";
 		var first = true;
 		if(address.street_number != null){
 			text += address.street_number;
 			first = false;
 		}
-		if(address.street_name != null){
+		if(address.street != null){
 			if(!first) text += ", ";
-			text += address.street_name;
+			text += address.street;
 			first = false;
 		}
 		var div = document.createElement("DIV");

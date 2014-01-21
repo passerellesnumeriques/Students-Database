@@ -59,5 +59,5 @@ if (!window.top.facebook) {
 			window.top.loadFacebookAPI();
 		},30000);
 	};
-	// TODO window.top.loadFacebookAPI();
+	window.top.loadFacebookAPI();
 }

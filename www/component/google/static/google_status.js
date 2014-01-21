@@ -13,7 +13,7 @@ function google_status(container) {
 	t.update_icon = function() {
 		if (!w.theme) return; // window closed
 		var url = "/static/application/icon.php?main=/static/google/google.png&where=right_bottom&small=";
-		switch (window.top.google.connection_status) {
+		switch (w.top.google.connection_status) {
 		case 0: url += w.theme.icons_10.no_connection; break;
 		case 1: url += w.theme.icons_10.online; break;
 		case -1: url += w.theme.icons_10.offline; break;
@@ -30,7 +30,7 @@ function google_status(container) {
 	};
 	
 	window.top.add_javascript("/static/google/google.js",function() {
-		window.top.google.connection_listeners.push(function(){t.update_icon();});
+		window.top.google.connection_event.add_listener(function(){t.update_icon();});
 		t.update_icon();
 	});
 	

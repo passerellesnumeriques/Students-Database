@@ -46,7 +46,7 @@ class ContactJSON {
 			"{".
 				"id:".$row["address_id"].
 				",country_id:".$row["country_id"].
-				",geographic_area:".GeographyJSON.GeographicAreaText($q, $row).
+				",geographic_area:".GeographyJSON::GeographicAreaText($q, $row).
 				",street:".json_encode(@$row["street"]).
 				",street_number:".json_encode(@$row["street_number"]).
 				",building:".json_encode(@$row["building"]).
