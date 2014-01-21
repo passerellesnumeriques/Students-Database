@@ -24,4 +24,5 @@ function calendar_view_month(view, container) {
 		
 	};
 	
+	container.appendChild(document.createTextNode("The month view is not yet implemented"));
 }

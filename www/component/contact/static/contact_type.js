@@ -1,6 +1,7 @@
-if (typeof require != 'undefined')
+if (typeof require != 'undefined') {
 	require('editable_cell.js');
-
+	require('contact_objects.js');
+}
 /**
  * UI Control to display a list of contacts of a given type (email, phone or IM)
  * @param {String} contact_type type of contact (email, phone, or IM)
@@ -132,7 +133,9 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 				else return "You must enter at least one visible character";
 			},
 			function(text){
-				if(text) t.createContact(new Contact(-1, contact_type, "Work", text));
+				require("contact_objects.js",function(){
+					if(text) t.createContact(new Contact(-1, contact_type, "Work", text));
+				});
 			}
 		);
 	};

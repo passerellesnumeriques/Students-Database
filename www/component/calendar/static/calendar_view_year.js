@@ -24,4 +24,6 @@ function calendar_view_year(view, container) {
 		
 	};
 	
+	container.appendChild(document.createTextNode("The year view is not yet implemented"));
+	
 }

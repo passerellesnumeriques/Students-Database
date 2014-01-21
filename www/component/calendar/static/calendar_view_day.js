@@ -76,7 +76,7 @@ function calendar_view_day(view, container) {
 		
 		this.corner = document.createElement("DIV");
 		this.corner.setAttribute("layout", "50");
-		var tz = new Date().getTimezoneOffset();
+		var tz = -(new Date().getTimezoneOffset());
 		this.corner.innerHTML = "GMT";
 		if (tz != 0) {
 			if (tz > 0) this.corner.innerHTML += "+"; else { this.corner.innerHTML += "-"; tz=-tz; }
