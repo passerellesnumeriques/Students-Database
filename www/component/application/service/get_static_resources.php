@@ -19,10 +19,10 @@ class service_get_static_resources extends Service {
 				break;			
 			}
 		global $theme;
-		$this->browse("component/theme/static/".$theme."/", "/static/theme/".$theme."/", $scripts, $images);
-		// do others
-		foreach ($components as $c)
-			$this->browse("component/".$c."/static/", "/static/".$c."/", $scripts, $images);
+		// $this->browse("component/theme/static/".$theme."/", "/static/theme/".$theme."/", $scripts, $images);
+		/*do others*/
+		// foreach ($components as $c)
+			// $this->browse("component/".$c."/static/", "/static/".$c."/", $scripts, $images);
 		// result
 		echo "{scripts:".json_encode($scripts).",images:".json_encode($images)."}";
 	}

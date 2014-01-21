@@ -68,7 +68,7 @@ class page_selection_main_page extends selection_page {
 				</div>
 				<div id = 'right'>
 					<div id = "header_calendar"></div>
-					<div id = 'selection_calendar' style='height:80%; width:100%; margin-left:10px; margin-right:10px; margin-top:10px; border:1px solid;'></div>
+					<div id = 'selection_calendar' style='height:80%; width:97%; margin-left:10px; margin-right:10px; margin-top:10px; border:1px solid;'></div>
 				</div>
 		</div>
 		<script type = 'text/javascript'>
@@ -105,18 +105,18 @@ class page_selection_main_page extends selection_page {
 					extend.innerHTML = "<img src = '"+theme.icons_10.popup+"'style:'vertical-align:top'/> Extend Calendar";
 					extend.onclick = function(){
 						
-						// var content = document.createElement("div");
-						// content.id = 'content_calendar_extend';
-						// content.style.width = "500px";
-						// content.style.height = "500px";
-						// content_cal_manager = new CalendarManager();
-						// content_PN_cal = new PNCalendar(calendar_id, calendar_name, "C0C0FF", true, true);
-						// content_cal_manager.addCalendar(content_PN_cal);
-						// require("calendar_view.js",function(){
-							// new CalendarView(content_cal_manager, "week", "content_calendar_extend", function(){});
-						// });
-						// var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
-						// pop.show();
+						var content = document.createElement("div");
+						content.id = 'content_calendar_extend';
+						content.style.width = getWindowWidth()+"px";
+						content.style.height = getWindowWidth()+"px";
+						content_cal_manager = new CalendarManager();
+						content_PN_cal = new PNCalendar(calendar_id, calendar_name, "C0C0FF", true, true);
+						content_cal_manager.addCalendar(content_PN_cal);
+						require("calendar_view.js",function(){
+							new CalendarView(content_cal_manager, "week", content, function(){});
+						});
+						var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
+						pop.show();
 					};
 					header_calendar.addMenuItem(extend);
 				}

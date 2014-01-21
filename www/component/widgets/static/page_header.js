@@ -66,9 +66,6 @@ function page_header(container, small) {
 		require("horizontal_layout.js",function(){
 			new horizontal_layout(container);
 		});
-		require("vertical_align.js", function() {
-			new vertical_align(t.menu_container, "middle");
-		});
 		require("horizontal_menu.js",function(){
 			t.more_menu = document.createElement("DIV");
 			t.more_menu.className = "button";
