@@ -1,19 +1,27 @@
 <?php 
 class ContactJSON {
 
+	public static function PostalAddressFromID($id) {
+		$q = SQLQuery::create()->select("Postal_address")->where_value("Postal_address", "id", $id);
+		self::PostalAddressSQL($q);
+		$row = $q->execute_single_row();
+		if ($row == null) return null;
+		return self::PostalAddress($q, $row);
+	}
+	
 	/**
 	 * Prepares a SQL query to retrieve a PostalAddress, to be used with the method PostalAddress
 	 * @param SQLQuery $q the query to update
 	 */
 	public static function PostalAddressSQL(&$q) {
+		$alias = $q->get_table_alias("Postal_address");
 		$area_alias = $q->get_table_alias("Geographic_area");
 		if ($area_alias == null) {
 			$area_alias = $q->table_id();
-			$q->join("Postal_address", "Geographic_area", array("geographic_area"=>"id"), $area_alias);
+			$q->join($alias, "Geographic_area", array("geographic_area"=>"id"), $area_alias);
 		}
 		require_once("component/geography/GeographyJSON.inc");
 		GeographyJSON::GeographicAreaTextSQL($q);
-		$alias = $q->get_table_alias("Postal_address");
 		$q
 			->field($alias,"id","address_id")
 			->field($alias,"country","country_id")
@@ -73,6 +81,7 @@ class ContactJSON {
 	 * @param SQLQuery $q the query to update
 	 */
 	public static function ContactSQL(&$q) {
+		$alias = $q->get_table_alias("Contact");
 		$q
 			->field($alias,"id","contact_id")
 			->field($alias,"type","contact_type")

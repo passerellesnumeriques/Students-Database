@@ -4,15 +4,15 @@ class service_add_organization extends Service {
 	public function get_required_rights() { return array(); }
 	
 	public function documentation() { echo "Create a new organization"; }
-	public function input_documentation() { echo "Structure coming from an organization.js control"; }
+	public function input_documentation() { echo "Organization object (defined in contact_objects.js)"; }
 	public function output_documentation() { echo "On success, return the id of the newly created organization"; }
 	
 	public function execute(&$component, $input) {
 
 		// validate the types
-		if (count($input["types"]) > 0) {
-			$types = SQLQuery::create()->select("Organization_type")->where_in("id", $input["types"])->execute();
-			if (count($types) <> count($input["types"])) {
+		if (count($input["types_ids"]) > 0) {
+			$types = SQLQuery::create()->select("Organization_type")->where_in("id", $input["types_ids"])->execute();
+			if (count($types) <> count($input["types_ids"])) {
 				PNApplication::error("Invalid organization types");
 				return;
 			}
@@ -31,8 +31,8 @@ class service_add_organization extends Service {
 		}
 		
 		// create types
-		if (count($input["types"]) > 0) {
-			foreach ($input["types"] as $type) {
+		if (count($input["types_ids"]) > 0) {
+			foreach ($input["types_ids"] as $type) {
 				try {
 					SQLQuery::create()->insert("Organization_types", array("organization"=>$org_id,"type"=>$type));
 				} catch (Exception $e) {
@@ -47,11 +47,8 @@ class service_add_organization extends Service {
 		// create contacts
 		if (isset($input["contacts"]) && is_array($input["contacts"]))
 		foreach ($input["contacts"] as $contact) {
-			$contact["table"] = "Organization_contact";
-			$contact["column"] = "organization";
-			$contact["key"] = $org_id;
-			$res = Service::internal_execution("contact", "add_contact", $contact);
-			if (!isset($res["id"])) {
+			$contact_id = $component->addContactToOrganization($org_id, $contact);
+			if ($contact_id === false) {
 				// rollback
 				SQLQuery::create()->bypass_security()->remove_key("Organization", $org_id);
 				return;
@@ -61,11 +58,8 @@ class service_add_organization extends Service {
 		// create addresses
 		if (isset($input["addresses"]) && is_array($input["addresses"]))
 		foreach ($input["addresses"] as $address) {
-			$address["table"] = "Organization_address";
-			$address["column"] = "organization";
-			$address["key"] = $org_id;
-			$res = Service::internal_execution("contact", "add_address", $address);
-			if (!isset($res["id"])) {
+			$address_id = $component->addAddressToOrganization($org_id, $address);
+			if ($address_id === false) {
 				// rollback
 				SQLQuery::create()->bypass_security()->remove_key("Organization", $org_id);
 				return;
@@ -73,8 +67,8 @@ class service_add_organization extends Service {
 		}
 		
 		// create contact points
-		if (isset($input["points"]) && is_array($input["points"]))
-		foreach ($input["points"] as $cp) {
+		if (isset($input["contact_points"]) && is_array($input["contact_points"]))
+		foreach ($input["contact_points"] as $cp) {
 			$cp["create_people"]["contact_point_organization"] = $org_id;
 			Service::internal_execution("people", "create_people", $cp["create_people"]);
 		}
