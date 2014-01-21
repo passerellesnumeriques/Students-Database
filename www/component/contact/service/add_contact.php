@@ -1,18 +1,15 @@
 <?php 
 class service_add_contact extends Service {
 	
-	public function get_required_rights() { return array(); } // TODO
+	public function get_required_rights() { return array(); }
 	
 	public function documentation() { echo "Add a contact to a people or to an organization"; }
 	public function input_documentation() {
 ?>
 	<ul>
-		<li><code>table</code>: "People_contact" or "Organization_contact", the table joining the contact to the entity it belongs to</li>
-		<li><code>column</code>: the column joining the people or organization</li>
-		<li><code>key</code>: the people id or organization id</li>
-		<li><code>type</code>: contact type (email, phone, im)</li>
-		<li><code>contact</code>: the text containing the contact</li>
-		<li><code>sub_type</code>: the sub type of contact (i.e. Work, Home...)</li>
+		<li><code>owner_type</code>: "people" or "organization"</li>
+		<li><code>owner_id</code>: people id or organization id</li>
+		<li><code>contact</code>: the Contact structure</li>
 	</ul>
 <?php
 	}
@@ -20,14 +17,21 @@ class service_add_contact extends Service {
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");
-		$table = DataModel::get()->getTable($input["table"]);
-		if (!$table->acceptInsert(array($input["column"]=>$input["key"]))) {
-			PNApplication::error("You are not allowed to add a contact for this people or organization");
+		if ($input["owner_type"] == "people") $table_name = "People_contact";
+		else if ($input["owner_type"] == "organization") $table_name = "Organization_contact";
+		else {
+			PNApplication::error("Invalid owner_type");
+			echo "false";
+			return;
+		}
+		$table = DataModel::get()->getTable($table_name);
+		if (!$table->acceptInsert(array($input["owner_type"]=>$input["owner_id"]))) {
+			PNApplication::error("You are not allowed to add a contact for this ".$input["owner_type"]);
 			echo "false";
 			return;
 		}
 		try {
-			$contact_id = SQLQuery::create()->bypass_security()->insert("Contact", array("type"=>$input["type"],"contact"=>$input["contact"],"sub_type"=>$input["sub_type"]));
+			$contact_id = SQLQuery::create()->bypass_security()->insert("Contact", array("type"=>$input["contact"]["type"],"contact"=>$input["contact"]["contact"],"sub_type"=>$input["contact"]["sub_type"]));
 		} catch (Exception $ex) {
 			$contact_id = 0;
 			PNApplication::error($ex);
@@ -37,7 +41,7 @@ class service_add_contact extends Service {
 			return;
 		}
 		try {
-			SQLQuery::create()->insert($input["table"], array($input["column"]=>$input["key"],"contact"=>$contact_id));
+			SQLQuery::create()->insert($table_name, array($input["owner_type"]=>$input["owner_id"],"contact"=>$contact_id));
 		} catch (Exception $ex) {
 			PNApplication::error($ex);
 			SQLQuery::create()->remove_key("Contact", $contact_id);

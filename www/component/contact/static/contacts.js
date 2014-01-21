@@ -1,10 +1,22 @@
 if (typeof require != 'undefined')
 	require("contact_type.js");
 
-function contacts(container, table_join, join_key, join_value, contacts, can_edit, can_add, can_remove, onready) {
+/**
+ * UI Control to display all contacts of a people or organization
+ * @param {DOMNode} container where to display
+ * @param {String} owner_type "people" or "organization"
+ * @param {Number} owner_id people ID or organization ID
+ * @param {Array} contacts list of Contact
+ * @param {Boolean} can_edit indicates if the user can edit an existing contact
+ * @param {Boolean} can_add indicates if the user can create a new contact attached to the owner
+ * @param {Boolean} can_remove indicates if the user can remove an existing contact
+ * @param {Function} onready called when the display is ready
+ */
+function contacts(container, owner_type, owner_id, contacts, can_edit, can_add, can_remove, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
+	/** Update width of 1rst column, containing the contact sub type, so all rows are aligned */
 	t._updateCol1 = function() {
 		if (t.email.col1) t.email.col1.style.width = "";
 		if (t.phone.col1) t.phone.col1.style.width = "";
@@ -38,7 +50,9 @@ function contacts(container, table_join, join_key, join_value, contacts, can_edi
 		}, 1);
 	};
 	
+	/** counter to check if everything is ready */
 	t._ready_count = 0;
+	/** called when something is ready, to check if everything is now ready */
 	t._ready = function() {
 		if (++t._ready_count == 3) {
 			container.appendChild(t.email.table);
@@ -48,8 +62,16 @@ function contacts(container, table_join, join_key, join_value, contacts, can_edi
 			if (onready) onready(t);
 		}
 	};
-	t._init_table = function(contact, contact_type, contact_type_name, colorBorder, colorBg) {
-		contact.table.style.border = "1px solid "+colorBorder;
+	/**
+	 * Create the table for a type of contact (email, phone, or IM)
+	 * @param {contact_type} contact the contact_type control
+	 * @param {String} contact_type type of contact
+	 * @param {String} contact_type_name how to display the type of contact
+	 * @param {String} color_border color of the border
+	 * @param {String} color_background background color of the title
+	 */
+	t._initTable = function(contact, contact_type, contact_type_name, color_border, color_background) {
+		contact.table.style.border = "1px solid "+color_border;
 		contact.table.style.width = "100%";
 		contact.table.style.borderSpacing = "0";
 		contact.table.style.marginBottom = "3px";
@@ -60,12 +82,15 @@ function contacts(container, table_join, join_key, join_value, contacts, can_edi
 		th_head.style.textAlign = "left";
 		th_head.style.padding = "2px 5px 2px 5px";
 		th_head.innerHTML = "<img src='/static/contact/"+contact_type+"_16.png' style='vertical-align:bottom;padding-right:3px'/>"+contact_type_name;
-		th_head.style.backgroundColor = colorBg;
+		th_head.style.backgroundColor = color_background;
 		setBorderRadius(th_head, 5, 5, 5, 5, 0, 0, 0, 0);
 		tr_head.appendChild(th_head);
 		contact.thead.appendChild(tr_head);
 	};
 	
+	/** Get all contacts displayed
+	 * @returns Array list of Contact
+	 */
 	t.getContacts = function() {
 		var contacts = [];
 		var list = t.email.getContacts();
@@ -77,6 +102,7 @@ function contacts(container, table_join, join_key, join_value, contacts, can_edi
 		return contacts;
 	};
 	
+	/** Called each type something changed */
 	t.onchange = new Custom_Event();
 	
 	require("contact_type.js",function() {
@@ -87,20 +113,20 @@ function contacts(container, table_join, join_key, join_value, contacts, can_edi
 			case "phone": phones.push(contacts[i]); break;
 			case "IM": im.push(contacts[i]); break;
 			}
-		new contact_type("email", "EMail", table_join, join_key, join_value, emails, can_edit, can_add, can_remove, t._updateCol1, function(email){
-			t._init_table(email, "email", "EMail", "#304060", "#D8D8F0");
+		new contact_type("email", "EMail", owner_type, owner_id, emails, can_edit, can_add, can_remove, t._updateCol1, function(email){
+			t._initTable(email, "email", "EMail", "#304060", "#D8D8F0");
 			t.email = email;
 			email.onchange.add_listener(function(){ t.onchange.fire(t); });
 			t._ready();
 		});
-		new contact_type("phone", "Phone", table_join, join_key, join_value, phones, can_edit, can_add, can_remove, t._updateCol1, function(phone){
-			t._init_table(phone, "phone", "Phone", "#3080b8", "#D0E0FF");
+		new contact_type("phone", "Phone", owner_type, owner_id, phones, can_edit, can_add, can_remove, t._updateCol1, function(phone){
+			t._initTable(phone, "phone", "Phone", "#3080b8", "#D0E0FF");
 			t.phone = phone;
 			phone.onchange.add_listener(function(){ t.onchange.fire(t); });
 			t._ready();
 		});
-		new contact_type("IM", "Instant Messaging", table_join, join_key, join_value, im, can_edit, can_add, can_remove, t._updateCol1, function(im){
-			t._init_table(im, "IM", "Instant Messaging", "#70a840", "#D8F0D8");
+		new contact_type("IM", "Instant Messaging", owner_type, owner_id, im, can_edit, can_add, can_remove, t._updateCol1, function(im){
+			t._initTable(im, "IM", "Instant Messaging", "#70a840", "#D8F0D8");
 			t.im = im;
 			im.onchange.add_listener(function(){ t.onchange.fire(t); });
 			t._ready();

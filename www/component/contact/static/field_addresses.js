@@ -1,3 +1,9 @@
+/**
+ * Display a list of addresses
+ * @param {PostalAddressesData} data coming from a AddressDataDisplay, it specifies the list of addresses together with the owner (people or organization)
+ * @param {Boolean} editable created as editable or not
+ * @param {Object} config no configuration supported by this field
+ */
 function field_addresses(data,editable,config){
 	typed_field.call(this, data, editable, config);
 }

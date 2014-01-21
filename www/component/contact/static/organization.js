@@ -3,7 +3,14 @@ if (typeof require != 'undefined') {
 	require([["typed_field.js","field_text.js"]]);
 }
 
-function organization(container, org, can_edit) {
+/**
+ * UI Control for an organization
+ * @param {DOMNode} container where to display
+ * @param {Organization} org organization to display
+ * @param {Array} existing_types list of {id:...,name:...} listing all existing organization types in database that can be used
+ * @param {Boolean} can_edit indicates if the user can modify the organization
+ */
+function organization(container, org, existing_types, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	

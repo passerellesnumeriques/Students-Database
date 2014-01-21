@@ -20,7 +20,7 @@ class page_organization_profile extends Page {
 			$org_structure .= "id:".$org["id"];
 			$org_structure .= ",name:".json_encode($org["name"]);
 			$org_types = SQLQuery::create()->select("Organization_types")->where_value("Organization_types", "organization", $id)->execute();
-			$org_structure .= ",types:[";
+			$org_structure .= ",types_ids:[";
 			$first = true;
 			foreach ($org_types as $t) {
 				if ($first) $first = false; else $org_structure .= ",";
@@ -38,7 +38,7 @@ class page_organization_profile extends Page {
 				->field("People", "first_name")
 				->field("People", "last_name")
 				->execute();
-			$org_structure .= ",points:[";
+			$org_structure .= ",contact_points:[";
 			$first = true;
 			foreach ($points as $p) {
 				if ($first) $first = false; else $org_structure .= ",";
@@ -48,23 +48,23 @@ class page_organization_profile extends Page {
 		} else {
 			$org_structure .= "id:-1";
 			$org_structure .= ",name:''";
-			$org_structure .= ",types:[]";
+			$org_structure .= ",types_ids:[]";
 			$org_structure .= ",contacts:[]";
 			$org_structure .= ",addresses:[]";
-			$org_structure .= ",points:[]";
+			$org_structure .= ",contact_points:[]";
 		}
 		$org_structure .= ",creator:".json_encode($creator);
-		$org_structure .= ",existing_types:[";
+		$org_structure .= "}";
+		$existing_types = "[";
 		$first = true;
 		foreach ($all_types as $t) {
-			if ($first) $first = false; else $org_structure .= ",";
-			$org_structure .= "{id:".$t["id"].",name:".json_encode($t["name"])."}";
+			if ($first) $first = false; else $existing_types .= ",";
+			$existing_types .= "{id:".$t["id"].",name:".json_encode($t["name"])."}";
 		}
-		$org_structure .= "]";
-		$org_structure .= "}";
+		$existing_types .= "]";
 		$this->add_javascript("/static/contact/organization.js");
 		$container_id = $this->generateID();
-		$this->onload("window.organization = new organization('$container_id',$org_structure,true);");
+		$this->onload("window.organization = new organization('$container_id',$org_structure,$existing_types,true);");
 		echo "<div id='$container_id' style='margin:5px'></div>";
 		?>
 <!-- 		<table>
