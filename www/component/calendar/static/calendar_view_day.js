@@ -116,7 +116,7 @@ function calendar_view_day(view, container) {
 		
 		this._createTimeScale();
 		add_javascript(get_script_path("calendar_view_day.js")+"day_column_layout.js",function(){
-			t.day_column = new DayColumnLayout();
+			t.day_column = new DayColumnLayout(view.calendar_manager);
 			t._layout();
 		});
 	};

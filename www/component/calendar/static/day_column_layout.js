@@ -2,8 +2,9 @@ if (typeof require != 'undefined')
 	require("color.js");
 /**
  * Layout events on a day column
+ * @param {CalendarManager} calendar_manager containing the list of calendars
  */
-function DayColumnLayout() {
+function DayColumnLayout(calendar_manager) {
 	var t=this;
 	/** List of events in the day */
 	this.events = [];
@@ -52,9 +53,9 @@ function DayColumnLayout() {
 		var div = document.createElement("DIV");
 		div.style.position = "absolute";
 		require("color.js", function() {
-			div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(event.calendar.color), 0x60));
+			div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(calendar_manager.getCalendar(event.calendar_id).color), 0x60));
 		});
-		div.style.backgroundColor = "#"+event.calendar.color;
+		div.style.backgroundColor = "#"+calendar_manager.getCalendar(event.calendar_id).color;
 		div.style.top = y1+"px";
 		div.style.height = (y2-y1-3)+"px";
 		div.style.left = x+"px";
@@ -68,7 +69,7 @@ function DayColumnLayout() {
 		div.appendChild(head);
 		div.appendChild(document.createTextNode(event.title));
 		div.style.overflow = "hidden";
-		div.title = event.calendar.name+"\r\n"+time_str+"\r\n"+event.title;
+		div.title = calendar_manager.getCalendar(event.calendar_id).name+"\r\n"+time_str+"\r\n"+event.title;
 		div.style.cursor = "pointer";
 		div.onclick = function(e) {
 			require("event_screen.js",function() {

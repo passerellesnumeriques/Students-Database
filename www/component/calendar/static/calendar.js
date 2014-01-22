@@ -168,7 +168,7 @@ function PNCalendar(id, name, color, show, writable) {
 				var removed_events = t.events;
 				t.events = [];
 				for (var i = 0; i < result.length; ++i) {
-					var ev = result.events[i];
+					var ev = result[i];
 					var found = false;
 					for (var j = 0; j < removed_events.length; ++j) {
 						if (ev.uid == removed_events[j].uid) {

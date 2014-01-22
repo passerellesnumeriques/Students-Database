@@ -233,6 +233,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content.style.visibility = 'visible';
 		}
 		t.resize();
+		fireLayoutEventFor(t.content_container);
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);
 			t.anim = animation.fadeIn(t.table, 200);

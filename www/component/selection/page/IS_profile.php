@@ -22,7 +22,7 @@ class page_IS_profile extends selection_page {
 	<?php
 		// IS_profile($page,"IS_profile_".$name,$id);
 		//temp:
-		IS_profile($page,"IS_profile_".$name,-1,"save_IS_button","remove_IS_button");
+		IS_profile($page,"IS_profile_".$name,$id,"save_IS_button","remove_IS_button");
 	}
 	
 }

@@ -149,7 +149,7 @@ function calendar_view_week(view, container) {
 		add_javascript(get_script_path("calendar_view_week.js")+"day_column_layout.js",function(){
 			t.day_column = [];
 			for (var i = 0; i < 7; ++i)
-				t.day_column[i] = new DayColumnLayout();
+				t.day_column[i] = new DayColumnLayout(view.calendar_manager);
 			t._layout();
 		});
 	};
