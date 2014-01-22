@@ -215,6 +215,14 @@ abstract class Component {
 		if (!file_exists("component/".$this->name."/writable_rights.inc")) return array();
 		return include("component/".$this->name."/writable_rights.inc");
 	}
-	
+
+	/**
+	 * Returns all implementations of <i>plug-in</i> for the component. This is used, instead of having the 
+	 * component directly implementing the <i>plug-in</i> interfaces, so the component class is clearer
+	 * (contains only functionalities, without any additional <i>polutant</i> things)
+	 * @return array
+	 */
+	public function getPluginImplementations() { return array(); }
+
 }
 ?>

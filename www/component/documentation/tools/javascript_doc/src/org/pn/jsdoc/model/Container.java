@@ -262,7 +262,7 @@ public abstract class Container extends FinalElement {
 	}
 
 	protected abstract String getJSDocConstructor();
-	protected abstract String getDescription();
+
 	public String generate(String indent) {
 		StringBuilder s = new StringBuilder();
 		s.append("new ").append(getJSDocConstructor()).append("{\r\n");

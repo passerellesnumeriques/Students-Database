@@ -101,8 +101,12 @@ public class Class extends Container {
 		return "JSDoc_Class("+(extended_class != null ? "\""+extended_class+"\"" : "null")+",";
 	}
 	@Override
-	protected String getDescription() {
+	public String getDescription() {
 		return description;
+	}
+	@Override
+	public void setDescription(String doc) {
+		description = doc;
 	}
 	
 }

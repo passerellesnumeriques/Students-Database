@@ -18,14 +18,23 @@ class page_profile extends Page {
 		$q->field($people_alias, "first_name");
 		$q->field($people_alias, "last_name");
 		foreach (PNApplication::$instance->components as $cname=>$c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$c->preparePeopleProfilePagesRequest($q, $people_id);
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$pi->preparePeopleProfilePagesRequest($q, $people_id);
+			}
 		}
 		$people = $q->execute_single_row();
 		
 		if ($plugin == null) $plugin = "people";
 		if ($page == null) $page = "profile_".$plugin;
-		$pages = @PNApplication::$instance->components[$plugin]->getPeopleProfilePages($people_id, $people, $q);
+		$pages = null;
+		if (isset(PNApplication::$instance->components[$plugin])) {
+			foreach (PNApplication::$instance->components[$plugin]->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$pages = $pi->getPeopleProfilePages($people_id, $people, $q);
+				break;
+			}
+		}
 		if ($pages == null || !isset($pages[$page])) {
 			PNApplication::error("Unknow profile page '".$page."' in '".$plugin."'");
 			return;
@@ -38,11 +47,13 @@ class page_profile extends Page {
 
 		$all_pages = array();
 		foreach (PNApplication::$instance->components as $cname=>$c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$pages = @$c->getPeopleProfilePages($people_id, $people, $q);
-			if ($pages <> null)
-				foreach ($pages as $page_id=>$cp)
-					array_push($all_pages, $cp);
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$pages = @$pi->getPeopleProfilePages($people_id, $people, $q);
+				if ($pages <> null)
+					foreach ($pages as $page_id=>$cp)
+						array_push($all_pages, $cp);
+			}
 		}
 		function pages_sort($p1, $p2) {
 			return $p1[3]-$p2[3];

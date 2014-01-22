@@ -299,12 +299,12 @@ class PHPDoc {
 		$c = $m->getDeclaringClass();
 		$pc = $c->getParentClass();
 		if ($pc <> null) {
-			$pm = $pc->getMethod($m->getName());
-			if ($pm <> null) return PHPDoc::get_original_method_declaration($pm);
+			if ($pc->hasMethod($m->getName()))
+				return PHPDoc::get_original_method_declaration($pc->getMethod($m->getName()));
 		}
 		foreach ($c->getInterfaces() as $i) {
-			$im = $i->getMethod($m->getName());
-			if ($im <> null) return $im;
+			if ($i->hasMethod($m->getName()))
+				return $i->getMethod($m->getName());
 		}
 		return $m;
 	}

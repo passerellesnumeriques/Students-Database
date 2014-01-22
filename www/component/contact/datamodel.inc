@@ -527,8 +527,14 @@ $model->addTable("Organization")
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canReadOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canReadOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
+		}
+		if (count($allowed) == 0) {
+			$q->where("`".$table_alias."`.`creator` IS NULL"); // remove all, nothing can be displayed
+			return;
 		}
 		$w = "(";
 		$first = true;
@@ -546,8 +552,10 @@ $model->addTable("Organization")
 	},function($rows){
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canWriteOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canWriteOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
 		}
 		$final = array();
 		foreach ($rows as $row)
@@ -558,9 +566,11 @@ $model->addTable("Organization")
 	->addInsertFilter(function($values){
 		if (!isset($values["creator"])) return false;
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->getOrganizationCreator() == $values["creator"])
-				return $c->canInsertOrganization();
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->getOrganizationCreator() == $values["creator"])
+					return $pi->canInsertOrganization();
+			}
 		}
 		return false;
 	})
@@ -570,13 +580,15 @@ $model->addTable("Organization")
 	},function($rows){
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canRemoveOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canRemoveOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
 		}
 		$final = array();
 		foreach ($rows as $row)
 			if (in_array($row["ORG_CREATOR"], $allowed))
-			array_push($final, $row);
+				array_push($final, $row);
 		return $final;
 	})
 	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Contacts", "Contacts", array(
@@ -596,8 +608,14 @@ $model->addTable("Organization_type")
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canReadOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canReadOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
+		}
+		if (count($allowed) == 0) {
+			$q->where("`".$table_alias."`.`creator` IS NULL"); // remove all, nothing can be displayed
+			return;
 		}
 		$w = "(";
 		$first = true;
@@ -613,8 +631,10 @@ $model->addTable("Organization_type")
 	},function($rows){
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canWriteOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canWriteOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
 		}
 		$final = array();
 		foreach ($rows as $row)
@@ -625,9 +645,11 @@ $model->addTable("Organization_type")
 	->addInsertFilter(function($values){
 		if (!isset($values["creator"])) return false;
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->getOrganizationCreator() == $values["creator"])
-				return $c->canInsertOrganization();
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->getOrganizationCreator() == $values["creator"])
+					return $pi->canInsertOrganization();
+			}
 		}
 		return false;
 	})
@@ -637,8 +659,10 @@ $model->addTable("Organization_type")
 	},function($rows){
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canRemoveOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canRemoveOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
 		}
 		$final = array();
 		foreach ($rows as $row)
@@ -662,8 +686,14 @@ $model->addTable("Organization_types")
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canReadOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canReadOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
+		}
+		if (count($allowed) == 0) {
+			$q->where("`".$org_alias."`.`creator` IS NULL"); // remove all, nothing can be displayed
+			return;
 		}
 		$w = "(";
 		$first = true;
@@ -684,8 +714,10 @@ $model->addTable("Organization_types")
 	},function($rows){
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canWriteOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canWriteOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
 		}
 		$final = array();
 		foreach ($rows as $row)
@@ -700,9 +732,11 @@ $model->addTable("Organization_types")
 		if ($org == null) return false;
 		
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->getOrganizationCreator() == $org["creator"])
-				return $c->canInsertOrganization();
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->getOrganizationCreator() == $org["creator"])
+					return $pi->canInsertOrganization();
+			}
 		}
 		return false;
 	})
@@ -717,8 +751,10 @@ $model->addTable("Organization_types")
 	},function($rows){
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canRemoveOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canRemoveOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
 		}
 		$final = array();
 		foreach ($rows as $row)
@@ -854,8 +890,10 @@ $model->addTable("Contact_point")
 	},function($rows){
 		$allowed = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canWriteOrganization()) array_push($allowed, $c->getOrganizationCreator());
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->canWriteOrganization()) array_push($allowed, $pi->getOrganizationCreator());
+			}
 		}
 		$final = array();
 		foreach ($rows as $row)

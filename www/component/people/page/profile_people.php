@@ -10,19 +10,23 @@ class page_profile_people extends Page {
 		$q->select(array("People"=>$people_alias));
 		$q->where_value($people_alias, "id", $people_id);
 		foreach (PNApplication::$instance->components as $cname=>$c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$c->preparePeopleProfilePagesRequest($q, $people_id);
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$pi->preparePeopleProfilePagesRequest($q, $people_id);
+			}
 		}
 		$people = $q->execute_single_row();
 		
 		$sections = array();
 		foreach (PNApplication::$instance->components as $name=>$c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$pi_sections = $c->getPeopleProfileGeneralInfoSections($people_id, $people, $q);
-			if ($pi_sections <> null)
-			foreach ($pi_sections as $section) {
-				array_push($section, $c);
-				array_push($sections, $section);
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$pi_sections = $pi->getPeopleProfileGeneralInfoSections($people_id, $people, $q);
+				if ($pi_sections <> null)
+				foreach ($pi_sections as $section) {
+					array_push($section, $c);
+					array_push($sections, $section);
+				}
 			}
 		}
 		usort($sections, "compare_people_profile_sections");

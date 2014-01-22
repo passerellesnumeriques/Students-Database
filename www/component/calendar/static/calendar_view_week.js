@@ -11,8 +11,8 @@ if (typeof get_script_path != 'undefined') {
  */
 function calendar_view_week(view, container) {
 
-	/** First day of the week to display */
 	this.start_date = view.cursor_date;
+	/** First day of the week to display */
 	if (this.start_date.getDay() == 0) this.start_date = new Date(this.start_date.getTime()-6*24*60*60*1000);
 	else if (this.start_date.getDay() > 1) this.start_date = new Date(this.start_date.getTime()-(this.start_date.getDay()-1)*24*60*60*1000);
 	/** Last day of the week to display */

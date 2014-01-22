@@ -1,7 +1,14 @@
 <?php
-require_once("component/people/PeoplePlugin.inc"); 
-class transcripts extends Component implements PeoplePlugin {
 
+class transcripts extends Component {
+
+	public function getPluginImplementations() {
+		require_once("TranscriptsPeoplePlugin.inc");
+		return array(
+			new TranscriptsPeoplePlugin()
+		);
+	}
+	
 	public function set_subject_grading($subject_id, $weight, $only_final_grades, $max_grade, $passing_grade) {
 		SQLQuery::start_transaction();
 		try {
@@ -325,36 +332,5 @@ class transcripts extends Component implements PeoplePlugin {
 		SQLQuery::create()->insert_multiple("StudentSubjectGrade", $final_to_insert);
 	}
 	
-	/* PeoplePlugin */
-
-	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
-		$alias = $q->table_id();
-		$people_alias = $q->get_table_alias("People");
-		$q->join($people_alias, "Student", array("id"=>"people"), $alias);
-		$q->field($alias, "batch");
-	}
-	public function getPeopleProfilePages($people_id, $people, $q) {
-		if ($people["batch"] == null) return array(); // not a student
-		return array(
-			"grades"=>array("/static/transcripts/grades.gif", "Grades", "/dynamic/transcripts/page/student_grades?people=".$people_id, 30),
-		);
-	}
-	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) { return array(); }
-
-	
-	public function getCreatePeopleSupportedTypes() {}
-	public function isCreatePeopleAllowed($people_type) {}
-	public function getCreatePeoplePages($people_types) {}
-	public function createPeople($people_id, $people_types, $input, &$create_data) {}
-	public function rollbackCreatePeople($people_id, $people_types, $input, &$create_data) {}
-	
-	public function getPeopleImportDataDisplay() {}
-	public function importPeopleData($input, $people_id) {}
-
-	public function filterPeopleReadAccess(&$q, $people_table_alias) { return null; }
-	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {}
-	public function filterPeopleWriteAccess($people_rows) { return $people_rows; }
-	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {}
-	public function filterPeopleRemoveAccess($people_rows) { return $people_rows; }
 }
 ?>

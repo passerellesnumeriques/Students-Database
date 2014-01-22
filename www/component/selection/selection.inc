@@ -1,5 +1,4 @@
 <?php
-require_once("component/contact/OrganizationPlugin.inc");
 $all_steps = include("steps.inc");
 
 	/**
@@ -34,7 +33,7 @@ $all_steps = include("steps.inc");
 		return $rights;
 	}
 	
-class selection extends Component implements OrganizationPlugin {
+class selection extends Component {
 	
 	private $campaign_id = null;
 	
@@ -63,6 +62,13 @@ class selection extends Component implements OrganizationPlugin {
 		}
 		if ($this->campaign_id <> null)
 			SQLQuery::set_submodel("SelectionCampaign", $this->campaign_id);
+	}
+	
+	public function getPluginImplementations() {
+		require_once("SelectionOrganizationPlugin.inc");
+		return array(
+			new SelectionOrganizationPlugin()
+		);
 	}
 	
 	/**
@@ -1461,25 +1467,6 @@ class selection extends Component implements OrganizationPlugin {
 		->field("last_name")
 		->where_value("Applicant","applicant_id",$applicant_id)
 		->execute_single_value();
-	}
-	
-	public function getOrganizationCreator() {
-		return "Selection";
-	}
-	public function canReadOrganization() {
-		return PNApplication::$instance->user_management->has_right("can_access_selection_data",true);
-	}
-	public function canWriteOrganization() {
-		// TODO put the correct right
-		return PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
-	}
-	public function canInsertOrganization() {
-		// TODO put the correct right
-		return PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
-	}
-	public function canRemoveOrganization() {
-		// TODO put the correct right
-		return PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
 	}
 	
 }
