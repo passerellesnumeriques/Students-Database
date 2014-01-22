@@ -19,7 +19,7 @@ class page_IS_main_page extends selection_page {
 				new data_list(
 					'<?php echo $container_id;?>',
 					'Information_session',
-					['Information Session.Name',"Information Session.Date"],
+					['Information Session.Name'],
 					[],
 					function (list) {
 						list.addTitle(null, "Information Sessions List");

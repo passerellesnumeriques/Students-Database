@@ -44,16 +44,19 @@
 		->addReadAccess("see_information_session_details",true)
 		->addInsertAccess("manage_information_session",true)
 		->addRemoveAccess("manage_information_session",true)
-		->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Information Session","Information Session",
-			array(
-				"name" => "Name",
-				"date" => "Date"
-			),
-			array(
-				"name" => array("not_editable"),
-				"date" => array("not_editable")
-			),"selection"
-		));
+		->setDisplayHandler(null,
+			new datamodel\MultipleDisplayHandler("Information Session","Information Session", array(
+				new datamodel\FieldsDisplayHandler("Information Session","Information Session",
+					array(
+						"name" => "Name",
+					),
+					array(
+						"name",
+					),"selection"
+				),
+				new CalendarEventDateDataDisplay(null, "Date", "date")
+			),array("date","postal_address","fake_organization")) 
+		);
 		
 	$sm->addTable("Information_session_partner")
 		->addForeignKey("information_session","Information_session",true,false,true,false)

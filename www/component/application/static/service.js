@@ -100,7 +100,7 @@ service = {
 			}
 			s += "]";
 		} else if (input instanceof Date) {
-			s += input.getTime();
+			s += input.getTime()/1000;
 		} else if (typeof input == 'object') {
 			s += "{";
 			var first = true;
