@@ -107,8 +107,10 @@ class page_selection_main_page extends selection_page {
 						
 						var content = document.createElement("div");
 						content.id = 'content_calendar_extend';
-						content.style.width = getWindowWidth()+"px";
-						content.style.height = getWindowWidth()+"px";
+						var width = parseFloat(getWindowWidth())-30;
+						var height = parseFloat(getWindowHeight())-60;
+						content.style.width = width.toString()+"px";
+						content.style.height = height.toString()+"px";
 						content_cal_manager = new CalendarManager();
 						content_PN_cal = new PNCalendar(calendar_id, calendar_name, "C0C0FF", true, true);
 						content_cal_manager.addCalendar(content_PN_cal);
