@@ -3,7 +3,7 @@
  * The rights of the user is taken into account to set this page
  * This page needs no service to be generated
  */ 
-function manage_config(&$page,$container_id){
+function manage_config(&$page,$container_id,$header_id){
 	
 	/** Start by locking the row in the database
 	 * In case the data is already locked, generate an error message
@@ -38,9 +38,11 @@ function manage_config(&$page,$container_id){
 	<script type='text/javascript'>
 	function <?php echo $fct_name; ?>(){
 		var t = this;
-		require([["typed_field.js","field_date.js"],"popup_window.js"],function(){
-			if(typeof(container) == "object")
+		require([["typed_field.js","field_date.js"],"popup_window.js","page_header.js"],function(){
+			if(typeof(container) == "object"){
 				t._init();
+				t._setPageHeader();
+			}
 		});
 		t.categories = getConfigCategoryIndexes();
 		t.dependencies = {};
@@ -48,6 +50,7 @@ function manage_config(&$page,$container_id){
 		var campaign_id = <?php echo $campaign_id.";"; ?>
 		var lock_id = <?php echo $lock_id.";";?>
 		var rights = {};
+		t.header_cont = document.getElementById(<?php echo json_encode($header_id);?>);
 		rights.manage = <?php echo json_encode($rights['manage']).";";?>
 	
 		var container = document.getElementById(<?php echo json_encode($container_id);?>);
@@ -153,31 +156,47 @@ function manage_config(&$page,$container_id){
 		 */
 		t._createTable = function(){
 			t.table = document.createElement("table");
-			var theader = document.createElement("theader");
-			t.tbody = document.createElement("tbody");
-			var tfoot = document.createElement("tfoot");
-			t._setHeader(theader);
+			// t._setHeader(theader);
 			t._setBody();
-			t._setFoot(tfoot);
-			t.table.appendChild(theader);
-			t.table.appendChild(t.tbody);
-			t.table.appendChild(tfoot);
+			// t._setFoot(tfoot);
 			container.appendChild(t.table);
 		}
 		
-		/**
-		 * @method setHeader
-		 * @param theader the table header to set
-		 * Create the header of the page
-		 */
-		t._setHeader = function (theader){
-			var div = document.createElement('div');
-			div.innerHTML = "<img src='"+theme.icons_32.config+"' /> Selection Campaign Configuration";
-			div.style.fontSize = "x-large";
-			div.style.padding = "30px";
-			theader.appendChild(div);
+		t._setPageHeader = function(){
+			t.header = new page_header(t.header_cont,true);
+			t.header.setTitle("<img src='"+theme.icons_16.config+"' /> Selection Campaign Configuration");
+			var back = document.createElement("div");
+			back.className = "button";
+			back.innerHTML = "<img src = '"+theme.icons_16.back+"'/> Back to selection";
+			back.onclick = function(){
+				parent.frames["selection_page_content"].location.assign("/dynamic/selection/page/selection_main_page");
+			};
+			t.header.addMenuItem(back);
+			
+			var remove = document.createElement("div");
+			var rename = document.createElement("div");
+			remove.innerHTML = "<img src='"+theme.icons_16.remove+"' /> Remove campaign";
+			remove.onmouseover = function(){this.innerHTML = "<img src='"+theme.icons_16.remove_black+"' /> Remove campaign"};
+			remove.onmouseout = function(){this.innerHTML = "<img src='"+theme.icons_16.remove+"' /> Remove campaign"};
+			remove.className = "button";
+			remove.onclick = t._dialogRemoveCampaign;
+			
+			rename.innerHTML = "Rename campaign";
+			rename.className = "button";
+			rename.onclick = t._dialogRename;
+			
+			var save = document.createElement("div");
+			save.innerHTML = "<img src='"+theme.icons_16.save+"' /> Save";
+			save.style.fontWeight = "bold";
+			save.className = "button";
+			save.onclick = t._save;
+			
+			t.header.addMenuItem(save);
+			t.header.addMenuItem(rename);
+			t.header.addMenuItem(remove);
+			
 		}
-		
+	
 		/**
 		 * @method setBody
 		 * Call the method addRow for each config attribute set in the all_config objects
@@ -201,9 +220,8 @@ function manage_config(&$page,$container_id){
 						t._addRowToCategoryTable(all_configs[i].name,ul);
 				}
 				table.appendChild(ul);
-				t.tbody.appendChild(table);
+				t.table.appendChild(table);
 			}
-			t._addButtonsRenameDelete();
 		}
 		
 		t._setCategoriesOrdered = function(){
@@ -328,46 +346,6 @@ function manage_config(&$page,$container_id){
 		}
 		
 		/**
-		 * @method addButtonsRenameDelete
-		 * Create two buttons at the end of the t.tbody object
-		 * One is to Rename the current campaign, the other one is to Delete it
-		 */
-		t._addButtonsRenameDelete = function(){
-			var tr = document.createElement("tr");
-			var td1 = document.createElement("td");
-			var td2 = document.createElement("td");
-			var div_add = document.createElement("div");
-			var div_remove = document.createElement("div");
-			var div_total = document.createElement("div");
-			
-			div_remove.innerHTML = "<img src='"+theme.icons_16.remove+"' /> Remove campaign";
-			div_remove.onmouseover = function(){div_remove.innerHTML = "<img src='"+theme.icons_16.remove_black+"' /> Remove campaign"};
-			div_remove.onmouseout = function(){div_remove.innerHTML = "<img src='"+theme.icons_16.remove+"' /> Remove campaign"};
-			div_remove.className = "button";
-			div_remove.style.fontStyle = "italic";
-			div_remove.style.fontWeight = "bold";
-			div_remove.style.color = "#808080";
-			div_remove.onclick = function(){t._dialogRemoveCampaign()};
-			
-			div_add.innerHTML = "Rename campaign";
-			div_add.style.fontStyle = "italic";
-			div_add.style.fontWeight = "bold";
-			div_add.style.color = "#808080";
-			div_add.className = "button";
-			div_add.onclick = function(){t._dialogRename();}
-			
-			div_total.appendChild(div_add);
-			div_total.appendChild(div_remove);
-			div_total.style.display = "inline-block";
-			
-			td1.appendChild(div_total);
-			//td2.appendChild(div_remove);
-			tr.appendChild(td1);
-			tr.appendChild(td2);
-			t.tbody.appendChild(tr);
-		}
-		
-		/**
 		 * @method checkCampaignName
 		 * @param name {string} the name to set
 		 * @return {boolean} true if the name passed the test
@@ -456,29 +434,6 @@ function manage_config(&$page,$container_id){
 				unlock_screen(div_locker);
 				window.parent.location.reload();
 			});
-		}
-		
-		/**
-		 * @method setFoot
-		 * @param tfoot the tfoot to set
-		 * Add the save button into the given footer
-		 */
-		t._setFoot = function(tfoot){
-			var submit = document.createElement("div");
-			submit.innerHTML = "<img src='"+theme.icons_16.save+"' /> Save";
-			submit.style.fontWeight = "bold";
-			submit.className = "button";
-			submit.onclick = function(){
-				t._save();
-				return false;
-			};
-			tfoot.appendChild(submit);
-			// var div = document.createElement("div");
-			// div.innerHTML = "alert config";
-			// div.onclick = function(){
-				// alert(service.generateInput(config));
-			// };
-			// tfoot.appendChild(div);
 		}
 		
 		/**

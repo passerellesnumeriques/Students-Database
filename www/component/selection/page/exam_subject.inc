@@ -1,5 +1,5 @@
 <?php
-function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only){
+function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_id){
 	require_once("component/data_model/Model.inc");
 	$rights = array();
 	$pop_error = false;
@@ -95,7 +95,8 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only){
 										config[index_choices].value,
 										false,
 										current_campaign_id,
-										read_only
+										read_only,
+										<?php echo json_encode($header_id);?>
 										);
 			});
 		}
