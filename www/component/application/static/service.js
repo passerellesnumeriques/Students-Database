@@ -20,7 +20,10 @@ service = {
 			},
 			foreground,
 			function(error){
-				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+				if (typeof error == 'string')
+					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+				else for (var i = 0; i < error.length; ++i)
+					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error[i],10000));
 			}
 		);
 	},

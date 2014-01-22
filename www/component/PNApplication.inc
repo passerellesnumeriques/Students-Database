@@ -82,7 +82,7 @@ class PNApplication {
 	 * Signal an error
 	 * @param string $html_message in html format
 	 */
-	public static function error_html($html_message) {
+	public static function error_html($message) {
 		try {
 			throw new Exception();
 		} catch (Exception $e) {

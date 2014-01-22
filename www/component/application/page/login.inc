@@ -176,7 +176,7 @@ window.top.require("google.js",function(){
 		});
 	});
 
-	window.top.require("facebook.js",function(){
+	/*window.top.require("facebook.js",function(){
 		window.top.facebook.onconnect(function() {
 			service.json("facebook","get_user",{auth_token:window.top.facebook.access_token},function(res){
 				if (!res) return;
@@ -186,14 +186,14 @@ window.top.require("google.js",function(){
 				tr.style.position = 'static';
 			});
 		});
-	
+	*/
 		require("load_static.js",function(){
 			setTimeout(function() {
 				if (window.no_loading) return;
 				window.loading = new load_static_resources('login_table_footer');
 			},1000);
 		});
-	});
+	/*});*/
 });
 document.forms["login_form"].elements["username"].focus();
 </script>

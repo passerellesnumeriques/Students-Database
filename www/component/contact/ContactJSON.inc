@@ -63,8 +63,7 @@ class ContactJSON {
 	 * @return array the associative array with column name from the database
 	 */
 	public static function PostalAddress2DB($json) {
-		return array(
-			"id"=>$json["id"],
+		$a = array(
 			"country"=>@$json["country_id"],
 			"geographic_area"=>(isset($json["geographic_area"]) && isset($json["geographic_area"]["id"]) ? $json["geographic_area"]["id"] : null),
 			"street"=>@$json["street"],
@@ -74,6 +73,9 @@ class ContactJSON {
 			"additional"=>@$json["additional"],
 			"address_type"=>@$json["address_type"] 
 		);
+		if (isset($json["id"]))
+			$a["id"] = $json["id"];
+		return $a;
 	}
 	
 	/**

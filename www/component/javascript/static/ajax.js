@@ -142,13 +142,8 @@ ajax = {
 	        	if (output.errors) {
 	        		if (output.errors.length == 1)
 	        			eh(output.errors[0]);
-	        		else {
-	        			var s = "Errors:<ul style='margin:0px'>";
-	        			for (var i = 0; i < output.errors.length; ++i)
-	        				s += "<li>"+output.errors[i]+"</li>";
-	        			s += "</ul>";
-		        		eh(s);
-	        		}
+	        		else
+	        			eh(output.errors);
 	        		return;
 	        	}
 	        	if (typeof output.result == 'undefined') {
@@ -216,13 +211,8 @@ ajax = {
 	        	if (output.errors) {
 	        		if (output.errors.length == 1)
 	        			eh(output.errors[0]);
-	        		else {
-	        			var s = "Errors:<ul style='margin:0px'>";
-	        			for (var i = 0; i < output.errors.length; ++i)
-	        				s += "<li>"+output.errors[i]+"</li>";
-	        			s += "</ul>";
-		        		eh(s);
-	        		}
+	        		else 
+	        			eh(output.errors);
 	        		return;
 	        	}
 	        	if (typeof output.result == 'undefined') {

@@ -103,6 +103,46 @@ class contact extends Component implements PeoplePlugin {
 		return $contact_id;
 	}
 	
+	public function createOrganizationType($creator, $name) {
+		require_once("component/contact/OrganizationPlugin.inc");
+		foreach (PNApplication::$instance->components as $c) {
+			if (!($c instanceof OrganizationPlugin)) continue;
+			if ($c->getOrganizationCreator() == $creator) {
+				if (!($c->canInsertOrganization())) {
+					PNApplication::error("You are not allowed to create orgnization in ".$input["creator"]);
+					return false;
+				}
+				break;
+			}
+		}
+		
+		try {
+			return SQLQuery::create()->insert("Organization_type", array("creator"=>$input["creator"], "name"=>$input["name"]));
+		} catch (Exception $e) {
+			PNApplication::error($e);
+			return false;
+		}
+	}
+	
+	public function assignOrganizationType($organization_id, $type_id) {
+		try {
+			SQLQuery::create()->insert("Organization_types", array("organization"=>$organization_id, "type"=>$type_id));
+			return true;
+		}catch (Exception $e) {
+			PNApplication::error($e);
+			return false;
+		}
+	}
+	public function unassignOrganizationType($organization_id, $type_id) {
+		try {
+			SQLQuery::create()->remove_key("Organization_types", array("organization"=>$organization_id, "type"=>$type_id));
+			return true;
+		}catch (Exception $e) {
+			PNApplication::error($e);
+			return false;
+		}
+	}
+	
 	/* functions for PeoplePlugin */
 	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {}

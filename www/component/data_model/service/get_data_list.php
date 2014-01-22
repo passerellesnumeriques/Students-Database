@@ -232,9 +232,9 @@ class service_get_data_list extends Service {
 			echo "]";
 			if ($actions !== null) {
 				echo ",actions:[";
-				$first = true;
+				$first_action = true;
 				foreach ($actions as &$action) {
-					if ($first) $first = false; else echo ",";
+					if ($first_action) $first_action = false; else echo ",";
 					$k = 0;
 					$link = $action[0];
 					while ($k < strlen($link) && ($k = strpos($link, "%", $k)) !== false) {

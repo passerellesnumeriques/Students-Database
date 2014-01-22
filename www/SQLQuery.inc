@@ -139,6 +139,7 @@ class SQLQuery {
 	 *  (table_name, field_name, field_alias)
 	 */
 	public function &field($table,$name=null,$alias=null) {
+		if ($table == null || strlen($table) == 0) throw new Exception("SQLQuery::field: argument \$table cannot be empty!");
 		if ($name == null)
 			foreach ($this->tables as $t=>$a)
 				$this->field($t, $table);
@@ -459,7 +460,7 @@ class SQLQuery {
 		}
 		// check if we have remaining fields that do not exist
 		foreach ($fields as $f)
-			PNApplication::error("Field '".$f[1]."' on table '".$f[0]."' does not exist in SQL query");
+			PNApplication::error_html("Field '".$f[1]."' on table '".$f[0]."' does not exist in SQL query: ".$this->dump());
 
 		$this->fields = $final_fields;
 		
@@ -1752,6 +1753,58 @@ class SQLQuery {
 // 			}
 // 		}
 // 	}
+
+	public function dump() {
+		$s = "SQL=<ul>";
+		
+		// sub models
+		$s .= "<li>Sub Models: ";
+		if (count($this->sub_models) == 0) $s .= "none";
+		else {
+			$first = true;
+			foreach ($this->sub_models as $t=>$i) {
+				if ($first) $first = false; else $s .= ", ";
+				$s .= $t."=".$i;
+			}
+		}
+		$s .= "</li>";
+		
+		// table
+		$s .= "<li>SELECT tables: ";
+		$first = true;
+		foreach ($this->tables as $name=>$alias) {
+			if ($first) $first = false; else $s .= ", ";
+			$s .= "`".$name."`";
+			if ($alias <> null) $s .= " AS `".$alias."`";
+		}
+		$s .= "</li>";
+		
+		// joins
+		if (count($this->joins) > 0) {
+			$s .= "<li>JOIN:<ul>";
+			foreach ($this->joins as $j) {
+				$s .= "<li>From `".$j[0]."` To `".$j[1]."`";
+				if ($j[3] <> null) $s .= " AS `".$j[3]."`";
+				$s .= " ON ";
+				$first = true;
+				foreach ($j[2] as $f1=>$f2) {
+					if ($first) $first = false; else $s .= ", ";
+					$s .= $f1."=".$f2;
+				}
+				$s .= "</li>";
+			}
+			$s .= "</ul></li>";
+		}
+		
+		// fields
+		$s .= "<li>FIELDS:<ul>";
+		foreach ($this->fields as $f)
+			$s .= "<li>".$f[0].".".$f[1]." AS ".$f[2]."</li>";
+		$s .= "</ul></li>";
+		
+		$s .= "</ul>";
+		return $s;
+	}
 
 	// some useful shortcuts
 	public static function get_table($table, $sub_models = null) {

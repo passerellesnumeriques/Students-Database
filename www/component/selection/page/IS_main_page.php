@@ -5,7 +5,7 @@ class page_IS_main_page extends selection_page {
 	public function execute_selection_page(&$page){
 		$page->add_javascript("/static/widgets/grid/grid.js");
 		$page->add_javascript("/static/data_model/data_list.js");
-		// $page->onload("init_organizations_list();");
+		$page->onload("init_organizations_list();");
 		$container_id = $page->generateID();
 		$can_create = null;
 
