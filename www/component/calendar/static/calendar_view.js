@@ -15,7 +15,7 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 	this.cursor_date = new Date();
 	this.cursor_date.setHours(0, 0, 0, 0);
 	/** zoom in minutes */
-	this.zoom = 30;
+	this.zoom = 60;
 	/** name of the view to be displayed */
 	this.view_name = view_name;
 	
@@ -278,7 +278,7 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 				} else {
 					for (var i = 0; i < instances.length; ++i) {
 						if (instances[i].getTime() == ev.start.getTime()) { instance++; continue; } // same as initial one
-						if (ev.frequency.until && instances[i].getTime() > ev.until.getTime()) break; // reach the until
+						if (ev.frequency.until && instances[i].getTime() > ev.frequency.until.getTime()) break; // reach the until
 						if (ev.frequency.count && instance > ev.frequency.count) break; // reach the count
 						if ((instances[i].getTime() >= this.view.start_date.getTime() && 
 							 instances[i].getTime() <= this.view.end_date.getTime())
@@ -305,7 +305,7 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 				for (var j = 0; j < days.length; ++j)
 					days[j] = parseByDay(days[j]);
 			} else {
-				days = [null,ev.start.getDay()];
+				days = [[null,ev.start.getDay()]];
 			}
 			var wkst = 1;
 			if (ev.frequency.week_start) wkst = parseWeekDay(ev.frequency.week_start);

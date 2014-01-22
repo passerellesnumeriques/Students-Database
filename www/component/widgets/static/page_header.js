@@ -22,8 +22,12 @@ function page_header(container, small) {
 			this.menu_container.appendChild(html);
 	};
 	this.resetMenu = function() {
-		while (this.menu_container.childNodes.length > (t.more_menu ? 1 : 0))
-			this.menu_container.removeChild(this.menu_container.childNodes[0]);
+		var to_remove = [];
+		for (var i = 0; i < this.menu_container.childNodes.length; ++i)
+			if (this.menu_container.childNodes[i] != t.more_menu)
+				to_remove.push(this.menu_container.childNodes);
+		for (var i = 0; i < to_remove.length; ++i)
+			this.menu_container.removeChild(to_remove[i]);
 	};
 	
 	this.setTitle = function(html) {

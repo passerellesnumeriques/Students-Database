@@ -1,7 +1,7 @@
 /**
  * Handle the display and layout of <i>all day</i> events: one box per day, containing boxes for each event
  */
-function day_row_layout() {
+function day_row_layout(calendar_manager) {
 	/** List of events */
 	this.events = [];
 	
@@ -42,9 +42,9 @@ function day_row_layout() {
 			var div = document.createElement("DIV");
 			div.style.position = "absolute";
 			div.style.zIndex = 2;
-			div.style.backgroundColor = "#"+ev.calendar.color;
+			div.style.backgroundColor = "#"+calendar_manager.getCalendar(ev.calendar_id).color;
 			require("color.js", function() {
-				div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(ev.calendar.color), 0x60));
+				div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(calendar_manager.getCalendar(ev.calendar_id).color), 0x60));
 			});
 			div.style.overflow = 'hidden';
 			div.style.left = (day_boxes[day1].offsetLeft+2)+"px";
