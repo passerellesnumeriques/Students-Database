@@ -24,21 +24,21 @@ class service_get extends Service {
 		$first = true;
 		foreach ($events as $ev) {
 			if ($first) $first = false; else echo ",";
-			echo "new CalendarEvent(";
-			echo $ev["id"];
-			echo ",".$ev["calendar"];
-			echo ",".json_encode($ev["uid"]);
-			echo ",new Date(parseInt(".json_encode($ev["start"]).")*1000)";
-			echo ",new Date(parseInt(".json_encode($ev["end"]).")*1000)";
-			echo ",".($ev["all_day"] == "1" ? "true" : "false");
-			echo ",".json_encode($ev["last_modified"]);
-			echo ",".json_encode($ev["title"]);
-			echo ",".json_encode($ev["description"]);
-			echo ",".json_encode($ev["location_freetext"]);
-			echo ",".json_encode($ev["organizer"]);
-			echo ",".json_encode($ev["participation"]);
-			echo ",".json_encode($ev["role"]);
-			echo ")";
+			echo "{";
+			echo "id:".$ev["id"];
+			echo ",calendar_id:".$ev["calendar"];
+			echo ",uid:".json_encode($ev["uid"]);
+			echo ",start:".json_encode($ev["start"]);
+			echo ",end:".json_encode($ev["end"]);
+			echo ",all_day:".($ev["all_day"] == "1" ? "true" : "false");
+			echo ",last_modified:".json_encode($ev["last_modified"]);
+			echo ",title:".json_encode($ev["title"]);
+			echo ",description:".json_encode($ev["description"]);
+			echo ",location_freetext:".json_encode($ev["location_freetext"]);
+			echo ",organizer:".json_encode($ev["organizer"]);
+			echo ",participation:".json_encode($ev["participation"]);
+			echo ",role:".json_encode($ev["role"]);
+			echo "}";
 		}
 		echo "]";
 	}	

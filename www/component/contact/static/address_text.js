@@ -25,7 +25,7 @@ function address_text(address){
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode(text));
-		empty &= text.trim().length > 0;
+		empty &= text.trim().length == 0;
 	}
 	if(address.street != null || address.street_number != null) {
 		var text = "";
@@ -42,21 +42,21 @@ function address_text(address){
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode(text));
-		empty &= text.trim().length > 0;
+		empty &= text.trim().length == 0;
 	}
 	
 	if(address.additional != null){
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode(address.additional));
-		empty &= address.additional.trim().length > 0;
+		empty &= address.additional.trim().length == 0;
 	}
 
 	if (address.geographic_area != null) {
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode(address.geographic_area.text));
-		empty &= address.geographic_area.text.trim().length > 0;
+		empty &= address.geographic_area.text.trim().length == 0;
 	}
 
 	if (address.country_id != null) {

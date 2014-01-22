@@ -142,5 +142,68 @@ class calendar extends Component {
 		return true;
 	}
 	
+	/**
+	 * Save or create an event. If no id is specified, the id and uid attributes of the given event are updated.
+	 * @param array $event JSON structure CalendarEvent 
+	 * @return true on success, or false in case of failure
+	 */
+	public function saveEvent(&$event) {
+		$calendar_id = $event["calendar_id"];
+		if (!$this->canWriteCalendar($calendar_id)) {
+			PNApplication::error("Access denied: you cannot modify this calendar.");
+			return false;
+		}
+		if (isset($event["id"])) {
+			// this is an update
+			// check the event belongs to the calendar
+			$res = SQLQuery::create()->bypass_security()->select("CalendarEvent")->where("id",$event["id"])->execute_single_row();
+			if ($res == null) {
+				PNApplication::error("Invalid event id: does not exist");
+				return false;
+			}
+			if ($res["calendar"] <> $calendar_id) {
+				PNApplication::error("Invalid event id: does not belong to the given calendar");
+				return false;
+			}
+			if (isset($event["uid"]) && $event["uid"] <> $res["uid"]) {
+				PNApplication::error("Event id and uid do not match");
+				return false;
+			}
+			$data = array();
+			$data["start"] = intval($event["start"]);
+			$data["end"] = intval($event["end"]);
+			$data["all_day"] = $event["all_day"];
+			$data["last_modified"] = time();
+			$data["title"] = $event["title"];
+			$data["description"] = $event["description"];
+			$data["organizer"] = $event["organizer"];
+			$data["participation"] = $event["participation"];
+			$data["role"] = $event["role"];
+			SQLQuery::create()->bypass_security()->update_by_key("CalendarEvent", $event["id"], $data);
+			if (PNApplication::has_errors())
+				return false;
+			$event["uid"] = $res["uid"];
+		} else {
+			// this is a new event
+			$data["calendar"] = $calendar_id;
+			$data["uid"] = $calendar_id."-".time()."-".rand(0, 100000)."@pn.".PNApplication::$instance->current_domain;
+			$data["start"] = intval($event["start"]);
+			$data["end"] = intval($event["end"]);
+			$data["all_day"] = $event["all_day"];
+			$data["last_modified"] = time();
+			$data["title"] = $event["title"];
+			$data["description"] = $event["description"];
+			$data["organizer"] = $event["organizer"];
+			$data["participation"] = $event["participation"];
+			$data["role"] = $event["role"];
+			$event["id"] = SQLQuery::create()->bypass_security()->insert("CalendarEvent", $data);
+			$event["uid"] = $data["uid"];
+			if (PNApplication::has_errors()) return false;
+		}
+		if (isset($event["frequency"])) {
+			// TODO
+		}
+		return true;
+	}
 }
 ?>

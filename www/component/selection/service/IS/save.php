@@ -189,9 +189,11 @@ class service_IS_save extends Service{
 				try{
 					if(isset($event["id"]))
 						unset($event["id"]);
+					$event["calendar_id"] = PNApplication::$instance->selection->get_calendar_id();
+					$event["organizer"] = "Selection";
 					// var_dump($event);
-					$event_saved = PNApplication::$instance->calendar->saveEvent($event);
-					$event_id = $event_saved["id"];
+					PNApplication::$instance->calendar->saveEvent($event);
+					$event_id = $event["id"];
 				} catch(Exception $e){
 					$everything_ok = false;
 					PNApplication::error($e);

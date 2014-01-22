@@ -40,7 +40,19 @@ function color_darker(color, amount) {
 }
 
 function color_string(color) {
-	if (color[3] == 1)
+	if (color.length == 3 || color[3] == 1)
 		return "rgb("+color[0]+","+color[1]+","+color[2]+")";
 	return "rgba("+color[0]+","+color[1]+","+color[2]+","+color[3]+")";
+}
+
+function color_between(color_from, color_to, percent) {
+	var col = [
+		Math.floor(color_from[0]+(color_to[0]-color_from[0])*percent/100),
+		Math.floor(color_from[1]+(color_to[1]-color_from[1])*percent/100),
+		Math.floor(color_from[2]+(color_to[2]-color_from[2])*percent/100)
+	];
+	if (col[0] > 255) col[0] = 255;
+	if (col[1] > 255) col[1] = 255;
+	if (col[2] > 255) col[2] = 255;
+	return col;
 }
