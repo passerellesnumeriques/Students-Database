@@ -239,7 +239,7 @@ function calendar_view_week(view, container) {
 						for (var j = 0; j < t.events[i].length; ++j)
 							if (t.events[i][j].all_day) list.push(t.events[i][j]);
 					var h = t.row_layout.layout(list, t.day_box, t.start_date);
-					t.day_row_container.setAttribute("layout",h);
+					t.day_row_container_.setAttribute("layout",h);
 					container.widget.layout();
 				}
 				setTimeout(function() {

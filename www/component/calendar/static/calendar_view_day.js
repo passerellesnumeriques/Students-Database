@@ -187,7 +187,7 @@ function calendar_view_day(view, container) {
 					for (var j = 0; j < t.events.length; ++j)
 						if (t.events[j].all_day) list.push(t.events[j]);
 					var h = t.row_layout.layout(list, [t.day_box], t.start_date);
-					t.day_row_container.setAttribute("layout",h);
+					t.day_row_container_.setAttribute("layout",h);
 					container.widget.layout();
 				}
 				t._timeout = null;

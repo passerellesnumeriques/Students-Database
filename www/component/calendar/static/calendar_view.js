@@ -15,7 +15,7 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 	this.cursor_date = new Date();
 	this.cursor_date.setHours(0, 0, 0, 0);
 	/** zoom in minutes */
-	this.zoom = 30;
+	this.zoom = 60;
 	/** name of the view to be displayed */
 	this.view_name = view_name;
 	
