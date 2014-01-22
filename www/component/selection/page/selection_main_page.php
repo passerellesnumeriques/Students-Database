@@ -62,7 +62,10 @@ class page_selection_main_page extends selection_page {
 									"id" => $id,
 									"name" => $s[2]
 								));
-								$page->add_javascript("/static/selection/".$s[1]);
+								$url = $s[3];
+								$url .= "/";
+								$url .= $s[1];
+								$page->add_javascript("/static/selection/".$url);
 								$js_name = str_replace(".js","",$s[1]);
 								$page->onload("new ".$js_name."('content_".$id."');");
 							}

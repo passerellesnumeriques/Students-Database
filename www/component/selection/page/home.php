@@ -13,7 +13,7 @@ class page_home extends Page {
 		$rights = array();
 		$rights["read"] = PNApplication::$instance->components["user_management"]->has_right("can_access_selection_data",true);
 		$rights['manage'] = PNApplication::$instance->components["user_management"]->has_right("manage_selection_campaign",true);
-		$campaigns = PNApplication::$instance->components["selection"]->get_campaigns();
+		$campaigns = PNApplication::$instance->selection->get_campaigns();
 		?>
 		<script type='text/javascript'>
 			function selectCampaignHeader (first, can_add, campaigns, init_id){
@@ -104,7 +104,6 @@ class page_home extends Page {
 											t._addCampaign(text.uniformFirstLetterCapitalized(), div_locker);
 										}
 									}
-									// t._resetSelectOption
 						);
 					}
 				}
@@ -158,17 +157,17 @@ class page_home extends Page {
 		$campaign_id = PNApplication::$instance->selection->get_campaign_id();
 		if($campaign_id <> null){
 			if($rights["manage"]){
-				echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/manage_config'\"><img src = '/static/theme/default/icons_16/config.png' /> Configuration</div>";
+				echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/config/manage'\"><img src = '/static/theme/default/icons_16/config.png' /> Configuration</div>";
 			}
-			if($rights["read"]) echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/IS_main_page'\"><img src='/static/selection/IS_16.png'/> Information Sessions</div>";
+			if($rights["read"]) echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/IS/main_page'\"><img src='/static/selection/IS/IS_16.png'/> Information Sessions</div>";
 			if(PNApplication::$instance->user_management->has_right("see_exam_subject",true))
-				echo "<span onclick = 'new examMenu(this);'class = 'button'><img src = '/static/selection/exam_16.png'> Exams</span>";
+				echo "<span onclick = 'new examMenu(this);'class = 'button'><img src = '/static/selection/exam_subject/exam_16.png'> Exams</span>";
 
 			// get the steps
 			$steps = selection::getSteps();
 			if($steps["manage_exam"]){
 				if(PNApplication::$instance->user_management->has_right("see_exam_subject",true))
-				echo "<span onclick = 'new topicMenu(this);'class = 'button'><img src = '/static/selection/rules_16.png'> Eligibility Rules</span>";
+				echo "<span onclick = 'new topicMenu(this);'class = 'button'><img src = '/static/selection/eligibility_rules/rules_16.png'> Eligibility Rules</span>";
 			}
 			?>
 		</div>
@@ -186,7 +185,7 @@ class page_home extends Page {
 					t.menu.removeOnClose = true;
 					t.menu.addTitleItem(null, "Entrance Examination");
 					if(t.can_manage_exam){																			
-						t.menu.addIconItem(theme.icons_16.add, 'Create', function() {location.assign("/dynamic/selection/page/create_exam_subject");});
+						t.menu.addIconItem(theme.icons_16.add, 'Create', function() {location.assign("/dynamic/selection/page/exam_subject/create");});
 					}
 					/* check that any exam already exist */
 					if(getStepValue(steps,"manage_exam")){
@@ -229,17 +228,17 @@ class page_home extends Page {
 							location.assign("/dynamic/selection/page/exam_subject?id="+item.id);
 						});
 					temp_menu.addIconItem(theme.icons_16.search,"See subject",function(){
-						location.assign("/dynamic/selection/page/exam_subject?id="+item.id+"&readonly=true");
+						location.assign("/dynamic/selection/page/exam_subject/exam_subject?id="+item.id+"&readonly=true");
 					});
 					temp_menu.addIconItem('/static/data_model/excel_16.png', 'Export to Excel 2007 (.xlsx)', function() { t._export_subject('excel2007',false,item.id); });
 					temp_menu.addIconItem('/static/data_model/excel_16.png', 'Export to Excel 5 (.xls)', function() { t._export_subject('excel5',false,item.id); });
-					temp_menu.addIconItem('/static/selection/sunvote_16.png', 'Export to SunVote ETS compatible format', function() { t._export_subject('excel2007',true,item.id); });
+					temp_menu.addIconItem('/static/selection/exam_subject/sunvote_16.png', 'Export to SunVote ETS compatible format', function() { t._export_subject('excel2007',true,item.id); });
 					temp_menu.showBelowElement(item);
 				}
 				
 				t._export_subject = function(format,compatible_clickers,exam_id){
 					var form = document.createElement('form');
-					form.action = "/dynamic/selection/service/export_exam_subject";
+					form.action = "/dynamic/selection/service/exam_subject/export";
 					form.method = "POST";
 					var input = document.createElement("input");
 					input.type = "hidden";
