@@ -142,7 +142,7 @@ function _load_google_calendars() {
 				loading.id = 'loading_google_calendars';
 				container.appendChild(loading);
 				loading.innerHTML = window.top.google.connection_status == 0 ? "Connection to Google in progress..." : "Not connected to Google";
-				window.top.google.connection_listeners.push(function(){
+				window.top.google.connection_event.add_listener(function(){
 					if (!doit) return;
 					if (window.top.google.connection_status == 1)
 						doit();

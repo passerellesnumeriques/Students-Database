@@ -4,6 +4,13 @@
  */
 class data_model extends Component {
 	
+	public function getPluginImplementations() {
+		require_once("DataModelAdministrationPlugin.inc");
+		return array(
+			new DataModelAdministrationPlugin()
+		);
+	}
+	
 	/**
 	 * Return all reachable DataDisplay from the given root table
 	 * @param string $root_table the table to start from

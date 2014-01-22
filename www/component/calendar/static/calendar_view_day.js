@@ -72,7 +72,7 @@ function calendar_view_day(view, container) {
 		container.appendChild(this.day_row_container_);
 		container.appendChild(this.content_);
 		require("vertical_layout.js", function() { new vertical_layout(container); t._layout(); });
-		require("day_row_layout.js", function() { t.row_layout = new day_row_layout(); t._layout(); });
+		require("day_row_layout.js", function() { t.row_layout = new day_row_layout(view.calendar_manager); t._layout(); });
 		
 		this.corner = document.createElement("DIV");
 		this.corner.setAttribute("layout", "50");
