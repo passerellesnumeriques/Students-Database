@@ -11,7 +11,7 @@
 		
 	$sm = $model->addSubModel("SelectionCampaign");
 	
-	$sm->addDataCategoryLink("Information Session profile", "/dynamic/selection/page/IS_profile?id=%Information_session.id%", "/static/selection/IS_16.png");
+	$model->addDataCategoryLink("Information Session", "/dynamic/selection/page/IS_profile?id=%Information_session.id%", "/static/selection/IS_16.png");
 	
 	$sm->addTable("Steps")
 		->addString("name",255,1,false,true)

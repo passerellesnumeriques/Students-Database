@@ -4,11 +4,11 @@ $this->add_javascript("/static/widgets/vertical_layout.js");
 $this->add_javascript("/static/widgets/horizontal_menu.js");
 $this->add_javascript("/static/widgets/context_menu.js");
 $this->add_javascript("/static/google/google_status.js");
-$this->add_javascript("/static/facebook/facebook_status.js");
+//$this->add_javascript("/static/facebook/facebook_status.js");
 $this->onload("new vertical_layout('pn_application_container');");
 $this->onload("new horizontal_menu('application_menu');");
 $this->onload("new google_status('google_status');");
-$this->onload("new facebook_status('facebook_status');");
+//$this->onload("new facebook_status('facebook_status');");
 $this->onload("setBorderRadius(document.forms['app_search'].elements['q'],8,8,8,8,8,8,8,8);");
 $this->onload("setBoxShadow(document.forms['app_search'].elements['q'],-1,2,2,0,'#D8D8F0',true);");
 $this->onload("setBorderRadius(document.getElementById('app_domain'),5,5,5,5,5,5,5,5);");
@@ -78,11 +78,11 @@ if (PNApplication::$instance->current_domain == "Dev") {
 		<span style='position:fixed;bottom:0px;right:3px;'>
 			<span id='google_status'></span>
 		</span>
-		<span style='position:fixed;bottom:0px;right:23px;'>
+		<!-- <span style='position:fixed;bottom:0px;right:23px;'>
 			<span id='facebook_status'></span>
-		</span>
+		</span> -->
 		<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
-		<span style='position:fixed;bottom:0px;right:43px;'>
+		<span style='position:fixed;bottom:0px;right:23px;'>
 			<span id='debug_status'></span>
 		</span>
 		<?php } ?>
@@ -140,11 +140,11 @@ window.top.require("google.js",function(){
 		service.json("google","set_google_id",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){});
 	});
 });
-window.top.require("facebook.js",function(){
+/*window.top.require("facebook.js",function(){
 	window.top.facebook.onconnect(function(){
 		service.json("facebook","set_facebook_id",{auth_token:window.top.facebook.access_token},function(res){});
 	});
-});
+});*/
 
 require("load_static.js",function(){
 	new load_static_resources('background_loading_application');

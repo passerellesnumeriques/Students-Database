@@ -3,8 +3,8 @@ require_once("selection_page.inc");
 class page_IS_home extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
-		// $this->add_javascript("/static/widgets/frame_header.js");
-		// $this->onload("new frame_header('IS_home');");
+		$this->add_javascript("/static/widgets/frame_header.js");
+		$this->onload("new frame_header('IS_home');");
 		$rights = array();
 		$config = null;
 		$rights["read"] = PNApplication::$instance->user_management->has_right("see_information_session_details",true);

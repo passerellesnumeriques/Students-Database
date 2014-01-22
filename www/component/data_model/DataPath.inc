@@ -17,7 +17,9 @@ class DataPathBuilder {
 				// we need to go to all existing sub models
 				foreach ($table->getModel()->getExistingInstances() as $sm) {
 					$path = new DataPath_Table($table, $sm);
-					DataPathBuilder::search_from_path($path, $done, $final_paths, $sub_models);
+					$new_sub_models = array($table->getModel()->getParentTable()=>$sm);
+					if ($sub_models <> null) $new_sub_models = array_merge($new_sub_models, $sub_models);
+					DataPathBuilder::search_from_path($path, $done, $final_paths, $new_sub_models);
 				}
 			}
 		} else {
@@ -57,7 +59,7 @@ class DataPathBuilder {
 			try {
 				$t = DataModel::get()->getTable($col->foreign_table);
 				$sm = null;
-				if ($t instanceof SubDataModel) {
+				if ($t->getModel() instanceof SubDataModel) {
 					if ($path->table->getModel() instanceof SubDataModel) {
 						if ($path->table->getModel()->getParentTable() == $t->getModel()->getParentTable()) {
 							// we are on the same sub model
@@ -76,7 +78,9 @@ class DataPathBuilder {
 					}
 				}
 				$p = new DataPath_Join($path, $col, $t, $sm);
-				DataPathBuilder::search_from_path($p, $done, $final_paths, $sub_models);
+				$new_sub_models = $sub_models;
+				if ($sm <> null) $new_sub_models[$t->getModel()->getParentTable()] = $sm;
+				DataPathBuilder::search_from_path($p, $done, $final_paths, $new_sub_models);
 				unset($t);
 			} catch (Exception $e) {
 				// not allowed
@@ -95,6 +99,16 @@ class DataPathBuilder {
 					if ($path->table->getModel()->getParentTable() <> $t->getModel()->getParentTable())
 						continue; // different sub model
 					$sm = $path->sub_model;
+				} else {
+					// did we already go through this sub model
+					$p = $path->parent;
+					while ($p <> null) {
+						if (($p->table->getModel() instanceof SubDataModel) && $p->table->getModel()->getParentTable() == $t->getModel()->getParentTable()) {
+							$sm = $p->sub_model;
+							break;
+						} 
+						$p = $p->parent;
+					}
 				}
 			}
 			foreach ($t->internalGetColumns() as $col) {
@@ -102,7 +116,10 @@ class DataPathBuilder {
 				if ($col->foreign_table <> $path->table->getName()) continue;
 				// we have one
 				$p = new DataPath_Join($path, $col, $col->table, $sm);
-				DataPathBuilder::search_from_path($p, $done, $final_paths, $sub_models);
+				$new_sub_models = $sub_models;
+				if ($sm <> null)
+					$new_sub_models[$t->getModel()->getParentTable()] = $sm;
+				DataPathBuilder::search_from_path($p, $done, $final_paths, $new_sub_models);
 			}
 			unset($t);
 		}
@@ -250,7 +267,8 @@ class DataPathSQLBuilder {
 			}
 			return $alias;
 		}
-		return $q->get_table_alias($path->table->getSQLNameFor($path->sub_model));
+		$alias = $q->get_table_alias($path->table->getName());
+		return $alias;
 	}
 	
 }

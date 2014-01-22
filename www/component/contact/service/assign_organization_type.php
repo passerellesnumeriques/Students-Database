@@ -8,12 +8,10 @@ class service_assign_organization_type extends Service {
 	public function output_documentation() { echo "Return true on success"; }
 	
 	public function execute(&$component, $input) {
-		try {
-			SQLQuery::create()->insert("Organization_types", array("organization"=>$input["organization"], "type"=>$input["type"]));
+		if ($component->assignOrganizationType($input["organization"], $input["type"]))
 			echo "true";
-		}catch (Exception $e) {
-			PNApplication::error($e);
-		}
+		else
+			echo "false";
 	}
 	
 }
