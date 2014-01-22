@@ -38,8 +38,11 @@ public class Global extends Container {
 		return "JSDoc_Namespace(";
 	}
 	@Override
-	protected String getDescription() {
+	public String getDescription() {
 		return "";
+	}
+	@Override
+	public void setDescription(String doc) {
 	}
 	
 	@Override

@@ -1,6 +1,15 @@
-<?php 
+<?php
+/**
+ * Provides functionalities to convert structures between JSON and database
+ */ 
 class ContactJSON {
 
+	/**
+	 * Build a PostalAddress JSON structure, for the given postal address ID
+	 * @param number $id the postal address id from database
+	 * @return NULL|string the JSON structure, or null if the postal address does not exist
+	 * @no_name_check
+	 */
 	public static function PostalAddressFromID($id) {
 		$q = SQLQuery::create()->select("Postal_address")->where_value("Postal_address", "id", $id);
 		self::PostalAddressSQL($q);
@@ -12,6 +21,7 @@ class ContactJSON {
 	/**
 	 * Prepares a SQL query to retrieve a PostalAddress, to be used with the method PostalAddress
 	 * @param SQLQuery $q the query to update
+	 * @no_name_check
 	 */
 	public static function PostalAddressSQL(&$q) {
 		$alias = $q->get_table_alias("Postal_address");
@@ -39,6 +49,7 @@ class ContactJSON {
 	 * @param SQLQuery $q the query used
 	 * @param array $row the row corresponding to the postal address
 	 * @return string the PostalAddress object in JSON
+	 * @no_name_check
 	 */
 	public static function PostalAddress($q, $row) {
 		require_once("component/geography/GeographyJSON.inc");
@@ -61,6 +72,7 @@ class ContactJSON {
 	 * Convert an array coming from a JSON structure, into an array ready to use with database (insert or update)
 	 * @param array $json the JSON structure decoded into an associative array
 	 * @return array the associative array with column name from the database
+	 * @no_name_check
 	 */
 	public static function PostalAddress2DB($json) {
 		$a = array(
@@ -81,6 +93,7 @@ class ContactJSON {
 	/**
 	 * Prepares a SQL query to retrieve a Contact, to be used with the method Contact
 	 * @param SQLQuery $q the query to update
+	 * @no_name_check
 	 */
 	public static function ContactSQL(&$q) {
 		$alias = $q->get_table_alias("Contact");
@@ -97,6 +110,7 @@ class ContactJSON {
 	 * @param SQLQuery $q the query used
 	 * @param array $row the row corresponding to the contact
 	 * @return string the Contact object in JSON
+	 * @no_name_check
 	 */
 	public static function Contact($q, $row) {
 		return

@@ -7,6 +7,8 @@ public abstract class FinalElement extends Element {
 	}
 	
 	public abstract String getType();
+	public abstract String getDescription();
+	public abstract void setDescription(String doc);
 
 	public abstract String generate(String indent);
 	

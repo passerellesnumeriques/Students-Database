@@ -11,10 +11,12 @@ class page_organizations extends Page {
 		
 		$can_create = false;
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->getOrganizationCreator() == $_GET["creator"]) {
-				$can_create =  $c->canInsertOrganization();
-				break;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->getOrganizationCreator() == $_GET["creator"]) {
+					$can_create =  $c->canInsertOrganization();
+					break;
+				}
 			}
 		}
 		

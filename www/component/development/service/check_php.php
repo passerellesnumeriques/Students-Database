@@ -91,17 +91,19 @@ class service_check_php extends Service {
 		}
 		if ($comment == "")
 			array_push($output, "Class <b>".$p->getDeclaringClass()->getName()."</b>, Property <b>\$".$p->getName()."</b>: No comment");
-		$first = substr($p->getName(),0,1);
-		if (strtolower($first) <> $first || !ctype_alpha($first))
-			array_push($output, "Class <b>".$p->getDeclaringClass()->getName()."</b>, Property <b>\$".$p->getName()."</b>: Must start with small letter");
-		else
-			for ($i = 0; $i < strlen($p->getName()); $i++) {
-				$c = substr($p->getName(), $i, 1);
-				if (strtolower($c) <> $c) {
-					array_push($output, "Class <b>".$p->getDeclaringClass()->getName()."</b>, Property <b>\$".$p->getName()."</b>: Must contain only small letters");
-					break;
+		if (!isset($tags["no_name_check"])) {
+			$first = substr($p->getName(),0,1);
+			if (strtolower($first) <> $first || !ctype_alpha($first))
+				array_push($output, "Class <b>".$p->getDeclaringClass()->getName()."</b>, Property <b>\$".$p->getName()."</b>: Must start with small letter");
+			else
+				for ($i = 0; $i < strlen($p->getName()); $i++) {
+					$c = substr($p->getName(), $i, 1);
+					if (strtolower($c) <> $c) {
+						array_push($output, "Class <b>".$p->getDeclaringClass()->getName()."</b>, Property <b>\$".$p->getName()."</b>: Must contain only small letters");
+						break;
+					}
 				}
-			}
+		}
 	}
 	
 	/**
@@ -175,7 +177,7 @@ class service_check_php extends Service {
 		}
 		
 		// check name is compliant
-		if (!$from_parent && !$is_language) {
+		if (!$from_parent && !$is_language && !isset($tags["no_name_check"])) {
 			$first = substr($m->getName(),0,1);
 			if (strtolower($first) <> $first || !ctype_alpha($first))
 				array_push($output, "Class <b>".$m->getDeclaringClass()->getName()."</b>, Method <b>".$m->getName()."</b>: Must start with small letter");

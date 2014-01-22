@@ -1,6 +1,6 @@
 <?php
-require_once("component/people/PeoplePlugin.inc"); 
-class user_people extends Component implements PeoplePlugin {
+
+class user_people extends Component {
 	
 	public $user_people_id;
 	/** @var Event raised when a new user is created */
@@ -9,6 +9,13 @@ class user_people extends Component implements PeoplePlugin {
 	function init() {
 		PNApplication::$instance->user_management->logged_in->listen($this, "logged_in");
 		$this->local_user_people_created = new Event();
+	}
+	
+	public function getPluginImplementations() {
+		require_once("UserPeoplePlugin.inc");
+		return array(
+			new UserPeoplePlugin()
+		);
 	}
 	
 	public function _first_name_changed($sub_model, $key, $new_value) {
@@ -54,89 +61,6 @@ class user_people extends Component implements PeoplePlugin {
 	}
 	public function get_people_from_user($user_id) {
 		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->execute_single_value();
-	}
-	
-	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
-		$people_alias = $q->get_table_alias("People");
-		$alias = $q->table_id();
-		$q->join($people_alias, "UserPeople", array("id"=>"people"), $alias);
-		$q->field($alias, "user");
-	}
-	public function getPeopleProfilePages($people_id, $people, $q) {
-		if ($people["user"] == null) return array(); // not a user 
-		$user_id = $people["user"];
-		return array(
-			"user_rights"=>array(
-				"/static/user_management/access_list.png", 
-				"User Rights", 
-				"/dynamic/user_management/page/user_rights?user=".$user_id, 
-				1000
-			)
-		);
-	}
-
-	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {}
-	
-	public function getCreatePeopleSupportedTypes() { return array("user"); }
-	public function isCreatePeopleAllowed($people_type) {
-		if ($people_type <> "user") return false;
-		return PNApplication::$instance->user_management->has_right("manage_users", true);
-	}
-	public function getCreatePeoplePages($people_types) {}
-	public function createPeople($people_id, $people_types, $input, &$create_data) {}
-	public function rollbackCreatePeople($people_id, $people_types, $input, &$create_data) {}
-	
-	public function getPeopleImportDataDisplay() { return array(); }
-	public function importPeopleData($input, $people_id) { return true; }
-	
-	public function filterPeopleReadAccess(&$q, $people_table_alias) {
-		if (!PNApplication::$instance->user_management->has_right("consult_user_list")) return null;
-		$alias = $q->get_table_alias("UserPeople");
-		if ($alias == null) {
-			$alias = $q->table_id();
-			$q->join($people_table_alias, "UserPeople", array("id"=>"people"), $alias);
-		}
-		return "`".$alias."`.`user` IS NOT NULL";
-	}
-	
-	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {
-		if (!PNApplication::$instance->user_management->has_right("manage_users")) return;
-		$alias = $q->get_join_alias($people_table_alias, "UserPeople", array("id"=>"people"));
-		if ($alias == null)
-			$alias = $q->get_join_alias("UserPeople", $people_table_alias, array("people"=>"id"));
-		if ($alias == null) {
-			$alias = $q->table_id();
-			$q->join($people_table_alias, "UserPeople", array("id"=>"people"),$alias);
-		}
-		$q->field($alias, "user", "PEOPLE_USER");
-	}
-	public function filterPeopleWriteAccess($people_rows) {
-		if (!PNApplication::$instance->user_management->has_right("manage_users")) return array();
-		$final = array();
-		foreach ($people_rows as $r)
-			if ($r["PEOPLE_USER"] <> null)
-				array_push($final, $r);
-		return $final;
-	}
-	
-	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {
-		if (!PNApplication::$instance->user_management->has_right("manage_users")) return;
-		$alias = $q->get_join_alias($people_table_alias, "UserPeople", array("id"=>"people"));
-		if ($alias == null)
-			$alias = $q->get_join_alias("UserPeople", $people_table_alias, array("people"=>"id"));
-		if ($alias == null) {
-			$alias = $q->table_id();
-			$q->join($people_table_alias, "UserPeople", array("id"=>"people"),$alias);
-		}
-		$q->field($alias, "user", "PEOPLE_USER");
-	}
-	public function filterPeopleRemoveAccess($people_rows) {
-		if (!PNApplication::$instance->user_management->has_right("manage_users")) return array();
-		$final = array();
-		foreach ($people_rows as $r)
-			if ($r["PEOPLE_USER"] <> null)
-				array_push($final, $r);
-		return $final;
 	}
 	
 }

@@ -27,8 +27,12 @@ public class ObjectAnonymous extends Container {
 		return "JSDoc_Namespace(";
 	}
 	@Override
-	protected String getDescription() {
+	public String getDescription() {
 		return description;
+	}
+	@Override
+	public void setDescription(String doc) {
+		description = doc;
 	}
 	
 }

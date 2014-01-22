@@ -22,6 +22,8 @@ public class ValuesToEvaluate extends Element implements Evaluable {
 		if (e1 instanceof FinalElement) {
 			if (e2 instanceof FinalElement) {
 				// TODO check there are similar
+				if (((FinalElement)e1).getDescription().length() == 0)
+					((FinalElement)e1).setDescription(((FinalElement)e2).getDescription());
 				return (FinalElement)e1;
 			}
 			return (FinalElement)e1;

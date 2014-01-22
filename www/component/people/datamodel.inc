@@ -30,31 +30,37 @@ $model->addTable("People")
 		// restrict by type of people
 		require_once("PeoplePlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$wc = $c->filterPeopleReadAccess($q, $table_alias);
-			if ($wc <> null)
-				$w .= " OR (".$wc.")";
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$wc = $pi->filterPeopleReadAccess($q, $table_alias);
+				if ($wc <> null && $wc <> "")
+					$w .= " OR (".$wc.")";
+			}
 		}
 		$q->where("(".$w.")");
 	})
 	->addWriteFilter(function(&$q, $table_alias) {
 		require_once("PeoplePlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$c->prepareSelectPeopleWriteAccess($q, $table_alias);
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$pi->prepareSelectPeopleWriteAccess($q, $table_alias);
+			}
 		}
 	},function($rows) {
 		require_once("PeoplePlugin.inc");
 		$final = array();
 		foreach (PNApplication::$instance->components as $name=>$c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			foreach ($c->filterPeopleWriteAccess($rows) as $row) {
-				array_push($final, $row);
-				for ($i = 0; $i < count($rows); $i++)
-					if ($rows[$i] == $row) {
-						array_splice($rows, $i, 1);
-						break;
-					}
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				foreach ($pi->filterPeopleWriteAccess($rows) as $row) {
+					array_push($final, $row);
+					for ($i = 0; $i < count($rows); $i++)
+						if ($rows[$i] == $row) {
+							array_splice($rows, $i, 1);
+							break;
+						}
+				}
 			}
 		}
 		return $final;
@@ -62,21 +68,25 @@ $model->addTable("People")
 	->addRemoveFilter(function(&$q, $table_alias, &$locks) {
 		require_once("PeoplePlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$c->prepareSelectPeopleRemoveAccess($q, $table_alias, $locks);
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$pi->prepareSelectPeopleRemoveAccess($q, $table_alias, $locks);
+			}
 		}
 	},function($rows) {
 		require_once("PeoplePlugin.inc");
 		$final = array();
 		foreach (PNApplication::$instance->components as $name=>$c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			foreach ($c->filterPeopleRemoveAccess($rows) as $row) {
-				array_push($final, $row);
-				for ($i = 0; $i < count($rows); $i++)
-					if ($rows[$i] == $row) {
-						array_splice($rows, $i, 1);
-						break;
-					}
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				foreach ($pi->filterPeopleRemoveAccess($rows) as $row) {
+					array_push($final, $row);
+					for ($i = 0; $i < count($rows); $i++)
+						if ($rows[$i] == $row) {
+							array_splice($rows, $i, 1);
+							break;
+						}
+				}
 			}
 		}
 		return $final;

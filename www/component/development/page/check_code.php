@@ -71,12 +71,19 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 	var location = path+filename;
 	var i = location.indexOf("/static/");
 	location = location.substring(0,i)+location.substring(i+7);
-	var parent_class = null;
+	var parent_classes = [];
 	if (ns instanceof JSDoc_Class && ns.extended) {
-		parent_class = get_class(window.jsdoc, ns.extended);
+		var pc = get_class(window.jsdoc, ns.extended);
+		while (pc != null) {
+			parent_classes.push(pc);
+			if (!pc.extended) break;
+			pc = get_class(window.jsdoc, pc.extended);
+		}
 	}
 	for (var name in ns.content) {
-		if (parent_class && parent_class.content[name]) continue; // skip overriden elements
+		var is_overriden = false;
+		for (var i = 0; i < parent_classes.length; ++i) if (parent_classes[i].content[name]) { is_overriden = true; break; }
+		if (is_overriden) continue; // skip overriden elements
 		var elem = ns.content[name];
 		if (elem instanceof JSDoc_Namespace) {
 			if (elem.location.file == location) {

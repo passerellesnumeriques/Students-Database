@@ -1,6 +1,13 @@
 <?php
-require_once("component/administration/AdministrationPlugin.inc");
-class geography extends Component implements AdministrationPlugin {
+
+class geography extends Component {
+	
+	public function getPluginImplementations() {
+		require_once("GeographyAdministrationPlugin.inc");
+		return array(
+			new GeographyAdministrationPlugin()
+		);
+	}
 	
 	public function get_geographic_area_text($area_id) {
 		$text = "";
@@ -11,12 +18,6 @@ class geography extends Component implements AdministrationPlugin {
 			$area_id = $area["parent"];
 		} while ($area_id <> null);
 		return $text;
-	}
-	
-	public function getAdministrationPages() {
-		return array(
-			new AdministrationPage("Geography", "/dynamic/geography/page/admin", "/static/geography/geography_16.png"),
-		);
 	}
 	
 }

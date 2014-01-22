@@ -34,6 +34,14 @@ public class ObjectClass extends FinalElement {
 	public String getType() {
 		return type;
 	}
+	@Override
+	public String getDescription() {
+		return description;
+	}
+	@Override
+	public void setDescription(String doc) {
+		description = doc;
+	}
 	
 	@Override
 	public String generate(String indent) {

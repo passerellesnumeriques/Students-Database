@@ -1,9 +1,15 @@
 <?php
-require_once("component/people/PeoplePlugin.inc");
 /**
  * Manage contacts (email, phone, IM, postal address) for people and organizations
  */
-class contact extends Component implements PeoplePlugin {
+class contact extends Component {
+	
+	public function getPluginImplementations() {
+		require_once("ContactPeoplePlugin.inc");
+		return array(
+			new ContactPeoplePlugin()
+		);
+	}
 	
 	/**
 	 * Add a new postal address to an organization
@@ -43,6 +49,15 @@ class contact extends Component implements PeoplePlugin {
 			return $address_id;
 		}
 	}
+	/**
+	 * Internal method to add a PostalAddress in database
+	 * @param string $table the table where to insert the join (People_address or Organization_address)
+	 * @param string $column column of the join (people or organization)
+	 * @param number $key key of the join (people id or organization id)
+	 * @param array $new_address address to insert
+	 * @param boolean $bypass indicates if we need to bypass the security accessing the database
+	 * @return boolean|number id of the postal address on success, or false
+	 */
 	private function addAddress($table, $column, $key, $new_address, $bypass) {
 		// convert JSON to database
 		require_once("ContactJSON.inc");
@@ -72,12 +87,32 @@ class contact extends Component implements PeoplePlugin {
 		return $address_id;
 	}
 	
+	/**
+	 * Add a contact to a people
+	 * @param number $people_id the people id
+	 * @param array $contact Contact structure
+	 * @return boolean|number the new contact id, or false if it failed
+	 */
 	public function addContactToPeople($people_id, $contact) {
 		return $this->addContact("People_contact", "people", $people_id, $contact);
 	}
+	/**
+	 * Add a contact to an organization
+	 * @param number $org_id the organization id
+	 * @param array $contact Contact structure
+	 * @return boolean|number the new contact id, or false if it failed
+	 */
 	public function addContactToOrganization($org_id, $contact) {
 		return $this->addContact("Organization_contact", "organization", $org_id, $contact);
 	}
+	/**
+	 * Internal method to add a contact to a people or an organization
+	 * @param string $table_name table joining the people or organization to the contact
+	 * @param string $join_column column doing the join
+	 * @param number $join_value id of the join (people id or organization id)
+	 * @param array $contact the contact structure to add
+	 * @return boolean|number the new contact id, or false if it failed
+	 */
 	private function addContact($table_name, $join_column, $join_value, $contact) {
 		$table = DataModel::get()->getTable($table_name);
 		if (!$table->acceptInsert(array($join_column=>$join_value))) {
@@ -103,16 +138,24 @@ class contact extends Component implements PeoplePlugin {
 		return $contact_id;
 	}
 	
+	/**
+	 * Create a new organization type
+	 * @param string $creator indicates to which part of the application it belongs to
+	 * @param string $name the organization type's name
+	 * @return boolean|number the new type id, or false if it failed
+	 */
 	public function createOrganizationType($creator, $name) {
 		require_once("component/contact/OrganizationPlugin.inc");
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->getOrganizationCreator() == $creator) {
-				if (!($c->canInsertOrganization())) {
-					PNApplication::error("You are not allowed to create orgnization in ".$input["creator"]);
-					return false;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->getOrganizationCreator() == $creator) {
+					if (!($pi->canInsertOrganization())) {
+						PNApplication::error("You are not allowed to create orgnization in ".$input["creator"]);
+						return false;
+					}
+					break;
 				}
-				break;
 			}
 		}
 		
@@ -124,6 +167,12 @@ class contact extends Component implements PeoplePlugin {
 		}
 	}
 	
+	/**
+	 * Assign a type to an organization
+	 * @param number $organization_id organization id
+	 * @param number $type_id type id
+	 * @return boolean true if it succeed
+	 */
 	public function assignOrganizationType($organization_id, $type_id) {
 		try {
 			SQLQuery::create()->insert("Organization_types", array("organization"=>$organization_id, "type"=>$type_id));
@@ -133,6 +182,12 @@ class contact extends Component implements PeoplePlugin {
 			return false;
 		}
 	}
+	/**
+	 * Remove a type from an organization
+	 * @param number $organization_id organization id
+	 * @param number $type_id type id
+	 * @return boolean true if it succeed
+	 */
 	public function unassignOrganizationType($organization_id, $type_id) {
 		try {
 			SQLQuery::create()->remove_key("Organization_types", array("organization"=>$organization_id, "type"=>$type_id));
@@ -143,150 +198,6 @@ class contact extends Component implements PeoplePlugin {
 		}
 	}
 	
-	/* functions for PeoplePlugin */
-	
-	public function preparePeopleProfilePagesRequest(&$q, $people_id) {}
-	public function getPeopleProfilePages($people_id, $people, $q) {}
-	
-	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {
-		return array(
-			array(
-				"/static/contact/contact_16.png",
-				"Contacts",
-				"component/contact/page/people_contacts.inc",
-				2
-			)
-		);
-	}
-	
-	public function getCreatePeopleSupportedTypes() { return array("organization_contact_point"); }
-	public function isCreatePeopleAllowed($people_type) {
-		if ($people_type == "organization_contact_point") 
-			return true;
-		return false; 
-	}
-	public function getCreatePeoplePages($people_types) {
-		$pages = array(array("/static/contact/contact_16.png","Contacts","component/contact/page/create_people__contacts.inc",2));
-		if (in_array("organization_contact_point", $people_types))
-			array_push($pages, array("/static/contact/contact_point.png","Contact Point","component/contact/page/create_people__contact_point.inc",5));
-		return $pages;
-	}
-	public function createPeople($people_id, $people_types, $input, &$create_data) {
-		$create_data["contacts"] = array();
-		$create_data["addresses"] = array();
-		try {
-			foreach ($input["contacts"] as $contact) {
-				$contact_id = SQLQuery::create()->bypass_security()->insert("Contact", array("type"=>$contact["type"],"contact"=>$contact["contact"],"sub_type"=>$contact["sub_type"]));
-				array_push($create_data["contacts"], $contact_id);
-				SQLQuery::create()->bypass_security()->insert("People_contact", array("people"=>$people_id,"contact"=>$contact_id));
-			}
-			foreach ($input["addresses"] as $address) {
-				$address_id = SQLQuery::create()->bypass_security()->insert("Postal_address",
-					array(
-						"country"=>$address["country"],
-						"geographic_area"=>$address["geographic_area"],
-						"street"=>$address["street_name"],
-						"street_number"=>$address["street_number"],
-						"building"=>$address["building"],
-						"unit"=>$address["unit"],
-						"additional"=>$address["additional"],
-						"address_type"=>$address["address_type"]
-					)
-				);
-				array_push($create_data["addresses"], $address_id);
-				SQLQuery::create()->bypass_security()->insert("People_address", array("people"=>$people_id,"address"=>$address_id));
-			}
-			if (in_array("organization_contact_point", $people_types))
-				SQLQuery::create()->insert("Contact_point", array("designation"=>$input["contact_point_designation"],"organization"=>$input["contact_point_organization"],"people"=>$people_id));
-			return true;
-		} catch (Exception $ex) {
-			// rollback
-			PNApplication::error($ex);
-			return false;
-		}
-	}
-	public function rollbackCreatePeople($people_id, $people_types, $input, &$create_data) {
-		foreach ($create_data["contacts"] as $contact_id)
-			SQLQuery::create()->bypass_security()->remove_key("Contact", $contact_id);
-		foreach ($create_data["addresses"] as $address_id)
-			SQLQuery::create()->bypass_security()->remove_key("Postal_address", $address_id);
-		if (in_array("organization_contact_point", $people_types))
-			SQLQuery::create()->bypass_security()->remove_key("Contact_point",array("organization"=>$input["contact_point_organization"],"people"=>$people_id));
-	}
-
-	public function getPeopleImportDataDisplay() {
-		return array_merge(
-			DataModel::get()->getTable("People_contact")->getDisplayHandler("people")->getDisplayableData(),
-			DataModel::get()->getTable("People_address")->getDisplayHandler("people")->getDisplayableData()
-		); 
-	}
-	
-	public function importPeopleData($input, $people_id) {
-		$create_data = array("contacts"=>array(),"addresses"=>array());
-		$table = DataModel::get()->getTable("People_contact");
-		$display = $table->getDisplayHandler("people");
-		foreach ($display->getDisplayableData() as $data) {
-			$value = getDataDisplayFromInput($display->category, $data->getDisplayName(), $input);
-			$create_data["contacts"] = array_merge($create_data["contacts"], $value["contacts"]); 
-		}
-		$table = DataModel::get()->getTable("People_address");
-		$display = $table->getDisplayHandler("people");
-		foreach ($display->getDisplayableData() as $data) {
-			$value = getDataDisplayFromInput($display->category, $data->getDisplayName(), $input);
-			$create_data["addresses"] = array_merge($create_data["addresses"], $value["addresses"]);
-		}
-		$created_data = array();
-		return $this->createPeople($people_id, array(), $create_data, $created_data);
-	}
-	
-	public function filterPeopleReadAccess(&$q, $people_table_alias) {
-		$cp_alias = $q->get_table_alias("Contact_point");
-		if ($cp_alias == null) {
-			$cp_alias = $q->table_id();
-			$q->join($people_table_alias, "Contact_point", array("id"=>"people"), $cp_alias);
-		}
-		$org_alias = $q->table_id();
-		$q->join($cp_alias, "Organization", array("organization"=>"id"), $org_alias);
-		$allowed = array();
-		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->canReadOrganization()) array_push($allowed, $c->getOrganizationCreator());
-		}
-		$w = "(";
-		$first = true;
-		foreach ($allowed as $creator) {
-			if ($first) $first = false; else $w .= " OR ";
-			$w .= "`".$org_alias."`.`creator`='".SQLQuery::escape($creator)."'";
-		}
-		$w .= ")";
-		return $w;
-	}
-	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {
-		$cp_alias = $q->get_table_alias("Contact_point");
-		if ($cp_alias == null) {
-			$cp_alias = $q->table_id();
-			$q->join($people_table_alias, "Contact_point", array("id"=>"people"), $cp_alias);
-		}
-		$org_alias = $q->table_id();
-		$q->join($cp_alias, "Organization", array("organization"=>"id"), $org_alias);
-		DataModel::get()->getTable("Organization")->prepareSelectToDetermineWriteAccess($q, $org_alias);
-	}
-	public function filterPeopleWriteAccess($people_rows) {
-		return DataModel::get()->getTable("Organization")->filterWriteAccess($people_rows);
-	}
-	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {
-		$cp_alias = $q->get_table_alias("Contact_point");
-		if ($cp_alias == null) {
-			$cp_alias = $q->table_id();
-			$q->join($people_table_alias, "Contact_point", array("id"=>"people"), $cp_alias);
-		}
-		$org_alias = $q->table_id();
-		$q->join($cp_alias, "Organization", array("organization"=>"id"), $org_alias);
-		DataModel::get()->getTable("Organization")->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
-	}
-	public function filterPeopleRemoveAccess($people_rows) { 
-		return DataModel::get()->getTable("Organization")->filterRemoveAccess($people_rows);
-	}
 	
 	public function get_json_address($id){
 		$json_address = "";

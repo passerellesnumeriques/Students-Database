@@ -11,11 +11,13 @@ class page_home extends Page {
 		<?php
 		require_once("component/administration/AdministrationPlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {
-			if (!($c instanceof AdministrationPlugin)) continue;
-			foreach ($c->getAdministrationPages() as $page) {
-				echo "<span class='page_menu_item'>";
-				echo "<a href='".$page->getPage()."' target='admin_page_content'><img src='".$page->getIcon16()."'/>".$page->getTitle()."</a>";
-				echo "</span>";
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof AdministrationPlugin)) continue;
+				foreach ($pi->getAdministrationPages() as $page) {
+					echo "<span class='page_menu_item'>";
+					echo "<a href='".$page->getPage()."' target='admin_page_content'><img src='".$page->getIcon16()."'/>".$page->getTitle()."</a>";
+					echo "</span>";
+				}
 			}
 		} 
 		?>

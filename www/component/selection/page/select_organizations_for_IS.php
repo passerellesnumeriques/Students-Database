@@ -11,11 +11,14 @@ class page_select_organizations_for_IS extends Page {
 		
 		$can_create = false;
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof OrganizationPlugin)) continue;
-			if ($c->getOrganizationCreator() == $_GET["creator"]) {
-				$can_create =  $c->canInsertOrganization();
-				break;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				if ($pi->getOrganizationCreator() == $_GET["creator"]) {
+					$can_create =  $pi->canInsertOrganization();
+					break;
+				}
 			}
+			if ($can_create) break;
 		}
 		$id = $_GET["is"];
 		$partners = $_GET["partners"];

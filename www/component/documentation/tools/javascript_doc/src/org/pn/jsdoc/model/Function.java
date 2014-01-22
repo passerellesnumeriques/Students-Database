@@ -147,4 +147,12 @@ public class Function extends FinalElement {
 		return s.toString();
 	}
 	
+	@Override
+	public String getDescription() {
+		return description;
+	}
+	@Override
+	public void setDescription(String doc) {
+		description = doc;
+	}
 }

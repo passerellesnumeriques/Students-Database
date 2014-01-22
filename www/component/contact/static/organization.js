@@ -241,6 +241,11 @@ function organization(container, org, existing_types, can_edit) {
 		for (var i = 0; i < org.contact_points.length; ++i)
 			t._addContactPointRow(org.contact_points[i], tbody);
 	};
+	/**
+	 * Add a contact point to the table
+	 * @param {ContactPoint} point the contact point to add
+	 * @param {DOMNode} tbody the table where to put it
+	 */
 	this._addContactPointRow = function(point, tbody) {
 		var tr, td_design, td;
 		tbody.appendChild(tr = document.createElement("TR"));
