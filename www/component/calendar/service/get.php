@@ -28,8 +28,8 @@ class service_get extends Service {
 			echo "id:".$ev["id"];
 			echo ",calendar_id:".$ev["calendar"];
 			echo ",uid:".json_encode($ev["uid"]);
-			echo ",start:".json_encode($ev["start"]);
-			echo ",end:".json_encode($ev["end"]);
+			echo ",start:".$ev["start"];
+			echo ",end:".$ev["end"];
 			echo ",all_day:".($ev["all_day"] == "1" ? "true" : "false");
 			echo ",last_modified:".json_encode($ev["last_modified"]);
 			echo ",title:".json_encode($ev["title"]);

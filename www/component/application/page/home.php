@@ -11,6 +11,7 @@ TODO: home page<br/><br/>
 
 <div id='dev_links'
 	title="Development / test links"
+	style="margin:10px"
 >
 <a href="/dynamic/contact/page/organizations?creator=Selection">Organizations for Selection</a><br/>
 <a href="/dynamic/contact/page/organization_profile?organization=1">Organization profile</a><br/>

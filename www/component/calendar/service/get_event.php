@@ -2,8 +2,8 @@
 		echo "id:".$event["id"];
 		echo ",calendar_id:".$event["calendar"];
 		echo ",uid:".json_encode($event["uid"]);
-		echo ",start:".json_encode($event["start"]);
-		echo ",end:".json_encode($event["end"]);
+		echo ",start:".$event["start"];
+		echo ",end:".$event["end"];
 		echo ",all_day:".($event["all_day"] == "1" ? "true" : "false");
 		echo ",last_modified:".json_encode($event["last_modified"]);
 		echo ",title:".json_encode($event["title"]);
