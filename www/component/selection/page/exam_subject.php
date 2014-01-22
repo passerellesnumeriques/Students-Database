@@ -5,8 +5,8 @@ class page_exam_subject extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
 		$container_id = $page->generateID();
-		$page->add_javascript("/static/widgets/page_header.js");
-		$page->onload("var header = new page_header('exam_subject_header',true); header.setTitle('Exam Subject');");
+		$page->add_javascript("/static/widgets/vertical_layout.js");
+		$page->onload("new vertical_layout('exam_page_container');");
 		$id = null;
 		if(!isset($_GET["id"]))
 			$id = -1;
@@ -21,19 +21,12 @@ class page_exam_subject extends selection_page {
 			$read_only = $_GET["readonly"];
 		else
 			$read_only = false;
-	?>
-		<div id = 'exam_subject_header'>
-			<!--<div id = "rename_exam_subject"></div>
-			<div id = "edit_exam_subject"></div>
-			<div id = "unedit_exam_subject"></div>
-			<div id = "unedit_exam_subject"></div>
-			<div id = "save_exam_subject"></div>
-			<div id = "export_exam_subject"></div>-->
+	?>	<div id = "exam_page_container" style = "width:100%; height:100%">
+			<div id = 'exam_subject_header' ></div>
+			<div id = '<?php echo $container_id; ?>' style = "overflow:auto" layout = "fill"></div>
 		</div>
-		<div id = '<?php echo $container_id; ?>'></div>
-	
 	<?php
-		exam_subject($page,$container_id,$id,$campaign_id,$read_only);
+		exam_subject($page,$container_id,$id,$campaign_id,$read_only,"exam_subject_header");
 	}
 	
 }

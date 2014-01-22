@@ -160,7 +160,7 @@ class page_home extends Page {
 			if($rights["manage"]){
 				echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/manage_config'\"><img src = '/static/theme/default/icons_16/config.png' /> Configuration</div>";
 			}
-			if($rights["read"]) echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/IS_home'\"><img src='/static/selection/IS_16.png'/> Information Sessions</div>";
+			if($rights["read"]) echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/IS_main_page'\"><img src='/static/selection/IS_16.png'/> Information Sessions</div>";
 			if(PNApplication::$instance->user_management->has_right("see_exam_subject",true))
 				echo "<span onclick = 'new examMenu(this);'class = 'button'><img src = '/static/selection/exam_16.png'> Exams</span>";
 

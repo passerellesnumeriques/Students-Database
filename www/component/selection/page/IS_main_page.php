@@ -12,7 +12,7 @@ class page_IS_main_page extends selection_page {
 	?>
 		<div id = '<?php echo $container_id; ?>'>
 		</div>
-		<div id = "IS_status"> TODO finish main page</div>
+		<div id = "IS_status"> TODO finish main page (button add IS, field date, title link IS profile...)</div>
 		
 		<script style='width:100%;height:100%' type='text/javascript'>
 			function init_organizations_list() {

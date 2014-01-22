@@ -26,6 +26,9 @@ class page_selection_main_page extends selection_page {
 		$page->add_javascript("/static/widgets/page_header.js");
 		$page->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$page->onload("new splitter_vertical('selection_main_page_split',0.35);");
+		$page->add_javascript("/static/widgets/vertical_layout.js");
+		$this->onload("new vertical_layout('right');");
+		$this->onload("new vertical_layout('left');");
 		//TODO set rights to calendar table? bypass_security required above...
 		
 		$status_to_display = include("selection_main_page_status_screens.inc");
@@ -41,34 +44,38 @@ class page_selection_main_page extends selection_page {
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
 				<div id = 'left'>
 					<div id = 'status_header'></div>
-					<?php
-					echo "<table style = 'width:100%'>";
-					foreach($status_to_display as $s){
-						$id = $page->generateID();
-						echo "<tr >";
-						echo "<td id = '".$id."' style = 'width:100%'></td>";
-						echo "</tr>";
-						if(!$steps[$s[0]])
-							array_push($unvalid_steps_to_display,array(
-								"id" => $id,
-								"name" => $s[2]
-							));
-						else {
-							array_push($valid_steps_to_display,array(
-								"id" => $id,
-								"name" => $s[2]
-							));
-							$page->add_javascript("/static/selection/".$s[1]);
-							$js_name = str_replace(".js","",$s[1]);
-							$page->onload("new ".$js_name."('content_".$id."');");
+					<div style = "overflow:auto" layout = "fill">
+						<?php
+						echo "<table style = 'width:100%'>";
+						foreach($status_to_display as $s){
+							$id = $page->generateID();
+							echo "<tr >";
+							echo "<td id = '".$id."' style = 'width:100%'></td>";
+							echo "</tr>";
+							if(!$steps[$s[0]])
+								array_push($unvalid_steps_to_display,array(
+									"id" => $id,
+									"name" => $s[2]
+								));
+							else {
+								array_push($valid_steps_to_display,array(
+									"id" => $id,
+									"name" => $s[2]
+								));
+								$page->add_javascript("/static/selection/".$s[1]);
+								$js_name = str_replace(".js","",$s[1]);
+								$page->onload("new ".$js_name."('content_".$id."');");
+							}
 						}
-					}
-					echo "</table>";
-					?>
+						echo "</table>";
+						?>
+					</div>
 				</div>
 				<div id = 'right'>
 					<div id = "header_calendar"></div>
-					<div id = 'selection_calendar' style='height:80%; width:97%; margin-left:10px; margin-right:10px; margin-top:10px; border:1px solid;'></div>
+					<div style = "overflow:auto" layout = "fill">
+						<div id = 'selection_calendar' style='height:80%; width:97%; margin-left:10px; margin-right:10px; margin-top:10px; border:1px solid;'></div>
+					</div>
 				</div>
 		</div>
 		<script type = 'text/javascript'>
