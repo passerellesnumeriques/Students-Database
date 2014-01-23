@@ -39,9 +39,9 @@ function section_from_html(container) {
 }
 
 function section(icon, title, content, collapsable, border_color, title_background_from, title_background_to, title_style) {
-	if (!border_color) border_color = "#4040A0";
-	if (!title_background_from) title_background_from = "#E8E8F8";
-	if (!title_background_to) title_background_to = "#D0D0FF";
+	if (!border_color) border_color = "#80A060";
+	if (!title_background_from) title_background_from = "#D8F0D8";
+	if (!title_background_to) title_background_to = "#A0C890";
 
 	var t=this;
 	this.element = document.createElement("DIV");
@@ -59,7 +59,8 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 			var col_to = parse_color(title_background_to);
 			var intermediate_color = color_string(color_between(col_from, col_to, 20));
 			var intermediate_color2 = color_string(color_between(col_from, col_to, 50));
-			setBackgroundGradient(t.header, "vertical", [{pos:0,color:title_background_from},{pos:55,color:intermediate_color},{pos:56,color:title_background_to},{pos:100,color:intermediate_color2}]);
+			//setBackgroundGradient(t.header, "vertical", [{pos:0,color:title_background_from},{pos:55,color:intermediate_color},{pos:56,color:title_background_to},{pos:100,color:intermediate_color2}]);
+			setBackgroundGradient(t.header, "vertical", [{pos:0,color:title_background_from},{pos:100,color:intermediate_color2}]);
 		});
 		this.header.style.height = "25px";
 
@@ -80,7 +81,7 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		this.title.style.fontWeight = "bold";
 		this.title.style.fontSize = "12pt";
 		this.title.style.display = "inline-block";
-		this.title.style.color = border_color;
+		this.title.style.color = "#505050";
 		this.title.style.fontFamily = "Calibri";
 		if (title_style)
 			for (var att in title_style) this.title.style[att] = title_style[att];
