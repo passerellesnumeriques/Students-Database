@@ -29,6 +29,7 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 		this.header.style.borderBottom = "1px solid #A0A0A0";
 		this.view_container_container = document.createElement("DIV");
 		this.view_container_container.setAttribute("layout", "fill");
+		this.view_container_container.style.backgroundColor = "white";
 		this.view_container_container.style.overflow = "auto";
 		this.view_container = document.createElement("DIV");
 		this.view_container.style.width = "100%";

@@ -9,9 +9,10 @@ function HorizontalMenuItem(element) {
 		this.always_in_menu = true;
 	else
 		this.always_in_menu = false;
+	this.originalMargin = getComputedStyleSizes(element).marginTop;
 }
 
-function horizontal_menu(menu) {
+function horizontal_menu(menu, valign) {
 	if (typeof menu == 'string') menu = document.getElementById(menu);
 	menu.widget = this;
 	var t = this;
@@ -47,6 +48,7 @@ function horizontal_menu(menu) {
 	t.update = function() {
 		while (menu.childNodes.length > 0) menu.removeChild(menu.childNodes[0]);
 		var w = menu.offsetWidth;
+		var h = menu.offsetHeight;
 		var total = 0;
 		for (var i = 0; i < t.items.length; ++i) {
 			if (t.items[i].always_in_menu) continue; // skip if this item is only for context menu
@@ -56,6 +58,15 @@ function horizontal_menu(menu) {
 			menu.appendChild(t.items[i].element);
 			var iw = t.items[i].element.offsetWidth;
 			total += iw;
+			t.items[i].element.style.marginTop = t.items[i].element.originalMargin;
+			if (valign) {
+				if (valign == "middle") {
+					if (t.items[i].element.offsetHeight > 0)
+						t.items[i].element.style.marginTop = Math.floor((h-t.items[i].element.offsetHeight)/2)+'px';
+				} else {
+					// TODO
+				}
+			}
 		}
 		if (t.always_more) {
 			menu.appendChild(t.more_item);

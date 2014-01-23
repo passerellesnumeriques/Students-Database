@@ -52,7 +52,6 @@ function page_header(container, small) {
 		var icon = document.createElement('IMG');
 		icon.src = container.getAttribute("icon");
 		icon.onload = function() { fireLayoutEventFor(container); };
-		icon.style.verticalAlign = "middle";
 		t.header_title.appendChild(icon);
 		var title = document.createElement("SPAN");
 		title.innerHTML = container.getAttribute("title");

@@ -140,7 +140,7 @@ class page_subject_grades extends Page {
 					Back to general grades
 				</div>
 			</div>
-			<div id='header2' style='background-color:#D0D0FF;border-bottom:1px solid #A0A0F0;'>
+			<div id='header2'>
 				<form name='only_final_grade_selection' onsubmit='return false;'>
 				<table>
 					<tr>
@@ -185,6 +185,15 @@ class page_subject_grades extends Page {
 		</div>
 		
 		<script type='text/javascript'>
+		function style() {
+			var e = document.getElementById("header2");
+			setBackgroundGradient(e, "vertical", [{pos:0,color:"#F0F0F0"},{pos:100,color:"#D0D0D0"}]);
+			e.style.borderBottom = "1px solid #D0D0F0";
+			setBorderRadius(e, 0, 0, 0, 0, 8, 8, 8, 8);
+			e.style.marginBottom = "5px";
+			setBoxShadow(e, 3, 3, 3, 0, "#E0E0F0");
+		}
+		style();
 		var subject_info = <?php
 			if ($subject_grading == null) echo "{id:".$subject_id.",weight:1,passing_grade:50,max_grade:100,only_final_grade:true}";
 			else {

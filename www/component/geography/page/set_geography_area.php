@@ -24,7 +24,7 @@ class page_set_geography_area extends Page {
 	</div>
 	<div style='overflow:auto;'>
 		<div id='tree_section' title="Geographic Areas" style='margin:10px'>
-			<div id='set_geography_area' style = "margin:10px"></div>
+			<div id='set_geography_area' style = "padding:10px"></div>
 		</div>
 	</div>
 </div>

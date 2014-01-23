@@ -14,9 +14,7 @@ class page_home extends Page {
 			foreach ($c->getPluginImplementations() as $pi) {
 				if (!($pi instanceof AdministrationPlugin)) continue;
 				foreach ($pi->getAdministrationPages() as $page) {
-					echo "<span class='page_menu_item'>";
-					echo "<a href='".$page->getPage()."' target='admin_page_content'><img src='".$page->getIcon16()."'/>".$page->getTitle()."</a>";
-					echo "</span>";
+					echo "<a class='page_menu_item' href='".$page->getPage()."' target='admin_page_content'><img src='".$page->getIcon16()."'/>".$page->getTitle()."</a>";
 				}
 			}
 		} 

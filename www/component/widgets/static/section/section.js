@@ -40,7 +40,7 @@ function section_from_html(container) {
 
 function section(icon, title, content, collapsable, border_color, title_background_from, title_background_to, title_style) {
 	if (!border_color) border_color = "#4040A0";
-	if (!title_background_from) title_background_from = "#F0F0FF";
+	if (!title_background_from) title_background_from = "#E8E8F8";
 	if (!title_background_to) title_background_to = "#D0D0FF";
 
 	var t=this;
@@ -51,13 +51,15 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		setBorderRadius(this.element, 5, 5, 5, 5, 5, 5, 5, 5);
 		this.header = document.createElement("DIV");
 		this.element.appendChild(this.header);
+		this.header.style.whiteSpace = 'nowrap';
 		setBorderRadius(this.header, 5, 5, 5, 5, 0, 0, 0, 0);
 		this.header.style.borderBottom = "1px solid "+border_color;
 		require("color.js",function() {
 			var col_from = parse_color(title_background_from);
 			var col_to = parse_color(title_background_to);
 			var intermediate_color = color_string(color_between(col_from, col_to, 20));
-			setBackgroundGradient(t.header, "vertical", [{pos:0,color:title_background_from},{pos:30,color:intermediate_color},{pos:100,color:title_background_to}]);
+			var intermediate_color2 = color_string(color_between(col_from, col_to, 50));
+			setBackgroundGradient(t.header, "vertical", [{pos:0,color:title_background_from},{pos:55,color:intermediate_color},{pos:56,color:title_background_to},{pos:100,color:intermediate_color2}]);
 		});
 		this.header.style.height = "25px";
 
@@ -105,6 +107,8 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		});
 		
 		this.content_container = document.createElement("DIV");
+		this.content_container.style.backgroundColor = "#ffffff";
+		setBorderRadius(this.content_container, 0, 0, 0, 0, 5, 5, 5, 5);
 		this.element.appendChild(this.content_container);
 		this.content_container.appendChild(content);
 	};
