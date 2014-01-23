@@ -26,7 +26,7 @@ class page_batches_classes extends Page {
 				<div id='tree_container'>
 					<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches & Classes'>
 						<?php if (PNApplication::$instance->user_management->has_right("manage_batches")) { ?>
-						<div class='button' onclick="create_new_batch();"><img src='/static/application/icon.php?main=/static/curriculum/batch_16.png&small=<?php echo theme::$icons_10["add"];?>&where=right_bottom'/>New batch</div>
+						<div class='button' onclick="create_new_batch();"><img src='/static/application/icon.php?main=/static/curriculum/batch_16.png&small=<?php echo theme::$icons_10["add"];?>&where=right_bottom'/> New batch</div>
 						<?php } ?>
 					</div>
 					<div id='students_tree' style='overflow:auto;cursor:default' layout='fill'>
@@ -191,10 +191,10 @@ class page_batches_classes extends Page {
 					parent_item = alumni;
 				else
 					parent_item = current_batches;
-				build_batch_tree(batch, parent_item);
+				build_batch_tree(batch, parent_item, parent_item == current_batches);
 			}			
 		};
-		function build_batch_tree(batch, parent_item) {
+		function build_batch_tree(batch, parent_item, expand) {
 			var batch_element = build_item_element(
 				"/static/curriculum/batch_16.png",
 				"Batch",
@@ -210,7 +210,7 @@ class page_batches_classes extends Page {
 				}						
 			);
 			batch_element.batch = batch;
-			var batch_item = new TreeItem(batch_element);
+			var batch_item = new TreeItem(batch_element, expand);
 			batch.item = batch_item;
 			batch.element = batch_element;
 			parent_item.addItem(batch_item);
@@ -243,20 +243,20 @@ class page_batches_classes extends Page {
 			period_element.style.color = end < now ? "#4040A0" : start > now ? "#A04040" : "#40A040";
 			period_element.batch = batch;
 			period_element.period = period;
-			var period_item = new TreeItem(period_element);
+			var period_item = new TreeItem(period_element, end > now && start < now);
 			period.item = period_item;
 			period.element = period_element;
 			batch.item.addItem(period_item);
 			
 			for (var spe_i = 0; spe_i < period.specializations.length; ++spe_i) {
 				var spe = period.specializations[spe_i];
-				build_spe_tree(period, spe);
+				build_spe_tree(period, spe, end > now && start < now);
 			}
 			if (period.classes)
 				for (var i = 0; i < period.classes.length; ++i)
 					build_class_tree(period, null, period.classes[i]);
 		}
-		function build_spe_tree(period, spe) {
+		function build_spe_tree(period, spe, expand) {
 			var spe_element = build_item_element(
 				"/static/curriculum/curriculum_16.png",
 				"Specialization",
@@ -273,7 +273,7 @@ class page_batches_classes extends Page {
 			);
 			spe_element.spe = spe;
 			spe_element.period = period;
-			var spe_item = new TreeItem(spe_element);
+			var spe_item = new TreeItem(spe_element, expand);
 			period.item.addItem(spe_item);
 			spe.item = spe_item;
 			spe.element = spe_element;

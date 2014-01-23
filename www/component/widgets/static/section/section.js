@@ -40,8 +40,8 @@ function section_from_html(container) {
 
 function section(icon, title, content, collapsable, border_color, title_background_from, title_background_to, title_style) {
 	if (!border_color) border_color = "#4040A0";
-	if (!title_background_from) title_background_from = "#E0E0FF";
-	if (!title_background_to) title_background_to = "#C0C0F0";
+	if (!title_background_from) title_background_from = "#F0F0FF";
+	if (!title_background_to) title_background_to = "#D0D0FF";
 
 	var t=this;
 	this.element = document.createElement("DIV");
@@ -79,6 +79,7 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		this.title.style.fontSize = "12pt";
 		this.title.style.display = "inline-block";
 		this.title.style.color = border_color;
+		this.title.style.fontFamily = "Calibri";
 		if (title_style)
 			for (var att in title_style) this.title.style[att] = title_style[att];
 		this.title_container.appendChild(this.title);
