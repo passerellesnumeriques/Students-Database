@@ -1,6 +1,6 @@
 <?php
 require_once("/../selection_page.inc");
-class page_exam_subject_import extends selection_page {
+class page_exam_import_subject extends selection_page {
 	
 	public function get_required_rights() {}
 	
@@ -42,12 +42,12 @@ class page_exam_subject_import extends selection_page {
 			// import_data($page, $icon, $title, $data_list, $fixed_data, $prefilled_data, $create_button, $create_function);
 			import_data(
 				$page,
-				"/static/application/icon.php?main=/static/selection/exam_subject/exam_32.png&small=".theme::$icons_16["add"]."&where=right_bottom",
+				"/static/application/icon.php?main=/static/selection/exam/exam_32.png&small=".theme::$icons_16["add"]."&where=right_bottom",
 				"Import Exam Subject",
 				$data_list,
 				$fixed_data,
 				$prefilled_data,
-				"<img src='".theme::make_icon("/static/selection/exam_subject/exam_16.png",theme::$icons_10["add"])."'/> Import Exam",
+				"<img src='".theme::make_icon("/static/selection/exam/exam_16.png",theme::$icons_10["add"])."'/> Import Exam",
 				"finishImport"
 			);
 			?>
@@ -97,7 +97,7 @@ class page_exam_subject_import extends selection_page {
 						t2.table = document.createElement("table");						
 						t2.pop = new popup_window(
 							"Import an exam subject - 2/3",//build_icon: function(main,small,where)
-							theme.build_icon("/static/selection/exam_subject/exam_16.png",theme.icons_10.add,"right_bottom"),
+							theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
 							t2.table,
 							true
 						);
@@ -204,7 +204,7 @@ class page_exam_subject_import extends selection_page {
 						t1._setContent();
 						t1.pop = new popup_window(
 							"Import an exam subject - 1/3",
-							theme.build_icon("/static/selection/exam_subject/exam_16.png",theme.icons_10.add,"right_bottom"),
+							theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
 							t1.table,
 							true
 						);
@@ -416,12 +416,12 @@ class page_exam_subject_import extends selection_page {
 						subject.parts.push(part);
 					}
 					//save					
-					service.json("selection","save_exam",{exam:subject},function(res){
+					service.json("selection","exam/save_subject",{exam:subject},function(res){
 						unlock_screen(locker);
 						if(!res)
 							error_dialog("An error occured, importation failed");
 						else
-							location.assign("/dynamic/selection/page/exam_subject/exam_subject?id="+res.id);
+							location.assign("/dynamic/selection/page/exam/exam_subject?id="+res.id);
 					});
 				}
 				

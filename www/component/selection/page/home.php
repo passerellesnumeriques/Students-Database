@@ -161,14 +161,14 @@ class page_home extends Page {
 			}
 			if($rights["read"]) echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/IS/main_page'\"><img src='/static/selection/IS/IS_16.png'/> Information Sessions</div>";
 			if(PNApplication::$instance->user_management->has_right("see_exam_subject",true))
-				echo "<span onclick = 'new examMenu(this);'class = 'button'><img src = '/static/selection/exam_subject/exam_16.png'> Exams</span>";
+				// echo "<span onclick = 'new examMenu(this);'class = 'button'><img src = '/static/selection/exam_subject/exam_16.png'> Exams</span>";
+				echo "<span onclick = \"window.frames['selection_page_content'].location.href='/dynamic/selection/page/exam/main_page'\" class = 'button'><img src = '/static/selection/exam/exam_16.png'/> Exams</span>";
 
 			// get the steps
 			$steps = selection::getSteps();
-			if($steps["manage_exam"]){
-				if(PNApplication::$instance->user_management->has_right("see_exam_subject",true))
-				echo "<span onclick = 'new topicMenu(this);'class = 'button'><img src = '/static/selection/eligibility_rules/rules_16.png'> Eligibility Rules</span>";
-			}
+			// if($steps["manage_exam"]){
+				// if(PNApplication::$instance->user_management->has_right("see_exam_subject",true))
+			// }
 			?>
 		</div>
 		<script type = "text/javascript">
@@ -185,7 +185,7 @@ class page_home extends Page {
 					t.menu.removeOnClose = true;
 					t.menu.addTitleItem(null, "Entrance Examination");
 					if(t.can_manage_exam){																			
-						t.menu.addIconItem(theme.icons_16.add, 'Create', function() {location.assign("/dynamic/selection/page/exam_subject/create");});
+						t.menu.addIconItem(theme.icons_16.add, 'Create', function() {location.assign("/dynamic/selection/page/exam/create");});
 					}
 					/* check that any exam already exist */
 					if(getStepValue(steps,"manage_exam")){

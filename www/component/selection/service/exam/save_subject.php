@@ -1,5 +1,5 @@
 <?php 
-class service_exam_subject_save extends Service {
+class service_exam_save_subject extends Service {
 	
 	public function get_required_rights() { return array(); }
 	public function documentation() {}

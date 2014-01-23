@@ -1,5 +1,5 @@
 <?php 
-class service_exam_subject_get extends Service {
+class service_exam_get_subject extends Service {
 	public function get_required_rights() { return array(); }
 	public function documentation() { echo "Get the exam subject data"; }
 	public function input_documentation() { 

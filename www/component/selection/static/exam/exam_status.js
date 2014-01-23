@@ -18,7 +18,7 @@ function exam_status(container){
 	}
 	
 	
-	service.json("selection","exam_subject/status",{},function(res){
+	service.json("selection","exam/subject_status",{},function(res){
 		if(res){
 			t.number_exams = res.number_exams;
 			t._init();

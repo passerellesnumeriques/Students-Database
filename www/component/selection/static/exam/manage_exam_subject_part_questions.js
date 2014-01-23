@@ -372,9 +372,9 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		var button = document.createElement("div");
 		button.className = "button";
 		if(content == "before")
-			button.innerHTML = "<img src = '/static/selection/exam_subject/arrow_up_16.png'/><img src = '"+theme.icons_10.add+"'/>";
+			button.innerHTML = "<img src = '/static/selection/exam/arrow_up_16.png'/><img src = '"+theme.icons_10.add+"'/>";
 		else if(content == "after")
-			button.innerHTML = "<img src = '/static/selection/exam_subject/arrow_down_16.png'/><img src = '"+theme.icons_10.add+"'/>";
+			button.innerHTML = "<img src = '/static/selection/exam/arrow_down_16.png'/><img src = '"+theme.icons_10.add+"'/>";
 		else if(content == "remove"){
 			button.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
 			// button.onmouseover = function(){

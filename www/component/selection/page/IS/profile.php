@@ -5,6 +5,8 @@ class page_IS_profile extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
 	$name = $page->generateID();
+	$page->add_javascript("/static/widgets/vertical_layout.js");
+	$page->onload("new vertical_layout('IS_profile_container');");
 	if(!isset($_GET["id"]))
 		$id = -1;
 	else if($_GET["id"] == "-1")
@@ -12,12 +14,14 @@ class page_IS_profile extends selection_page {
 	else
 		$id = $_GET["id"];
 	?>
-		<div id = "page_header">
-			<div class = "button" onclick = "location.assign('/dynamic/selection/page/IS/main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
-			<div id = "save_IS_button"></div>
-			<div id = "remove_IS_button"></div>
+		<div id = "IS_profile_container" style = "width:100%; height:100%">
+			<div id = "page_header">
+				<div class = "button" onclick = "location.assign('/dynamic/selection/page/IS/main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
+				<div id = "save_IS_button"></div>
+				<div id = "remove_IS_button"></div>
+			</div>
+			<div id='IS_profile_<?php echo $name; ?>' style = "overflow:auto" layout = "fill"></div>
 		</div>
-		<div id='IS_profile_<?php echo $name; ?>'></div>
 		
 	<?php
 		// IS_profile($page,"IS_profile_".$name,$id);

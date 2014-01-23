@@ -1,7 +1,7 @@
 <?php
 
 require_once("/../selection_page.inc");
-class page_exam_subject_create extends selection_page {
+class page_exam_create_subject extends selection_page {
 	
 	public function get_required_rights() {}
 	
@@ -39,7 +39,7 @@ class page_exam_subject_create extends selection_page {
 						t._setContainer();
 						t.pop = new popup_window(
 									"Create an Exam Subject",
-									theme.build_icon("/static/selection/exam_subject/exam_16.png",theme.icons_10.add,"right_bottom"),
+									theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
 									t.container,
 									true
 								);
@@ -83,7 +83,7 @@ class page_exam_subject_create extends selection_page {
 						li1.innerHTML = "Create a subject from scratch";
 						var b_from_zero = t._createButton("<b>Go!</b>");
 						b_from_zero.onclick = function(){
-							location.assign("/dynamic/selection/page/exam_subject/exam_subject");
+							location.assign("/dynamic/selection/page/exam/exam_subject");
 						};
 						li1.appendChild(b_from_zero);
 						ul.appendChild(li1);
@@ -93,7 +93,7 @@ class page_exam_subject_create extends selection_page {
 						li3.innerHTML = "Create by importing an Excel questions file";
 						var b_import = t._createButton("<b>Go!</b>");
 						b_import.onclick = function(){
-							location.assign("/dynamic/selection/page/exam_subject/import");
+							location.assign("/dynamic/selection/page/exam/import_subject");
 						};
 						li3.appendChild(b_import);
 						ul.appendChild(li3);
@@ -135,7 +135,7 @@ class page_exam_subject_create extends selection_page {
 							div.campaign_id = campaign_id;
 							div.exam_id = exam_id;
 							div.onclick = function(){
-								location.assign("/dynamic/selection/page/exam_subject/exam_subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
+								location.assign("/dynamic/selection/page/exam/exam_subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
 							};
 						}
 						return div;

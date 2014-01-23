@@ -11,7 +11,7 @@
 	 */
 	return array(
 		array("information_session","IS_status.js","Information Sessions","IS"),
-		array("manage_exam","exam_status.js","Entrance Examination","exam_subject"),
+		array("manage_exam","exam_status.js","Entrance Examination","exam"),
 	);
 
 ?>

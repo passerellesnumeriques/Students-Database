@@ -303,7 +303,7 @@ class selection extends Component {
 		foreach($steps as $name => $value){
 		$r = SQLQuery::create()
 			->bypass_security() //mandatory
-				->select($all_steps[$name][1])
+			->select($all_steps[$name][1])
 			->count() //just check if empty or not, no need of more data
 			->execute_single_value();
 			if($r <> null && $r != 0 && $r != "0"){
@@ -545,20 +545,22 @@ class selection extends Component {
 	 */
 	public function saveIS($id, $fields_values){
 		try {
-		if(isset($id) && $id <> null){
-			// This is an update
-			SQLQuery::create()->update_by_key("Information_session",$id,$fields_values);
-			return;
-		} else {
-			// This is an insert
-			$id = SQLQuery::create()->insert("Information_session",$fields_values);
-			return $id;
-		}
-			//update the steps
-			$this->updateAllSteps();
+			if(isset($id) && $id <> null){
+				// This is an update
+				SQLQuery::create()->update_by_key("Information_session",$id,$fields_values);
+				//update the steps
+				$this->updateAllSteps();
+				return;
+			} else {
+				// This is an insert
+				$id = SQLQuery::create()->insert("Information_session",$fields_values);
+				//update the steps
+				$this->updateAllSteps();
+				return $id;
+			}
 		} catch (Exception $e) {
 			PNApplication::error($e);
-	}
+		}
 	}
 	
 	/**
