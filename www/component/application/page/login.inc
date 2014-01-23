@@ -140,6 +140,7 @@ setBorderRadius(document.getElementById('login_table'),10,10,10,10,10,10,10,10);
 setBorderRadius(document.getElementById('login_table_header'),8,8,8,8,0,0,0,0);
 setBorderRadius(document.getElementById('login_table_footer'),0,0,0,0,8,8,8,8);
 setBackgroundGradient(document.getElementById('login_table'),"vertical",[{pos:0,color:'#FFFFFF'},{pos:30,color:'#FFFFFF'},{pos:100,color:'#E0E0E0'}]);
+setBoxShadow(document.getElementById('login_table'), 0, 0, 5, 5, "#ffffff");
 function login() {
 	window.no_loading = true;
 	window.top.pn_loading_start();

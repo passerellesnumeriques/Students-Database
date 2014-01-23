@@ -8,6 +8,7 @@ html, body {
 	height: 100%;
 	margin: 0px;
 	padding: 0px;
+	background-color: #f0f0f0;
 }
 input[type="text"], input[type="password"] {
 	border: 1px inset #C0C0F0;
@@ -48,8 +49,7 @@ input[type="text"], input[type="password"] {
 	color: #8040A0;
 }
 
-.page_header, .page_header_small {
-	/* header */
+.frame_header {
 	background: #e0e0e0; /* Old browsers */
 	background: -moz-linear-gradient(top,  #e0e0e0 50%, #d0d0d0 80%, #b0b0b0 100%); /* FF3.6+ */
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(50%,#e0e0e0), color-stop(80%,#d0d0d0), color-stop(100%,#b0b0b0)); /* Chrome,Safari4+ */
@@ -59,6 +59,36 @@ input[type="text"], input[type="password"] {
 	background: linear-gradient(to bottom,  #e0e0e0 50%,#d0d0d0 80%,#b0b0b0 100%); /* W3C */
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e0e0e0', endColorstr='#d0d0d0',GradientType=0 ); /* IE6-9 */
 	border-bottom: 1px solid #A0A0A0;
+}
+.frame_header {
+	height: 35px;
+}
+.frame_header_title {
+	/* header_title */
+	border-right: 1px solid #FFFFFF;
+	vertical-align: middle;
+	font-weight: bold;
+	color: #4040A0;
+	background-color: rgba(255,255,255,0.2);
+	border-bottom-right-radius: 10px 10px;
+	-moz-border-radius-bottomright: 10px 10px;
+	-webkit-border-bottom-right-radius: 10px 10px;
+	padding: 3px 6px 2px 3px;
+}
+.frame_header .frame_header_title {
+	font-size: 12pt;
+}
+
+.page_header, .page_header_small {
+	background: #ebf1f6; /* Old browsers */
+	background: -moz-linear-gradient(top,  #ebf1f6 0%, #c8e6ff 50%, #b4dcf0 51%, #d5ebfb 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ebf1f6), color-stop(50%,#c8e6ff), color-stop(51%,#b4dcf0), color-stop(100%,#d5ebfb)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  #ebf1f6 0%,#c8e6ff 50%,#b4dcf0 51%,#d5ebfb 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  #ebf1f6 0%,#c8e6ff 50%,#b4dcf0 51%,#d5ebfb 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  #ebf1f6 0%,#c8e6ff 50%,#b4dcf0 51%,#d5ebfb 100%); /* IE10+ */
+	background: linear-gradient(to bottom,  #ebf1f6 0%,#c8e6ff 50%,#b4dcf0 51%,#d5ebfb 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ebf1f6', endColorstr='#d5ebfb',GradientType=0 ); /* IE6-9 */
+	border-bottom: 1px solid #C0E0FF;
 }
 .page_header {
 	height: 35px;
@@ -71,12 +101,21 @@ input[type="text"], input[type="password"] {
 	border-right: 1px solid #FFFFFF;
 	vertical-align: middle;
 	font-weight: bold;
-	color: #4040A0;
-	background-color: rgba(255,255,255,0.2);
+	color: #3030A0;
+	background-color: rgba(240,240,240,0.6);
 	border-bottom-right-radius: 10px 10px;
 	-moz-border-radius-bottomright: 10px 10px;
 	-webkit-border-bottom-right-radius: 10px 10px;
 	padding: 3px 6px 2px 3px;
+	margin-right: 5px;
+}
+.page_header .page_header_title img {
+	margin-right: 5px;
+	vertical-align: middle;
+}
+.page_header_small .page_header_title img {
+	margin-right: 3px;
+	vertical-align: bottom;
 }
 .page_header .page_header_title {
 	font-size: 12pt;
@@ -92,12 +131,10 @@ input[type="text"], input[type="password"] {
 .page_menu_item {
 	font-size: 11pt;
 	color: #000060;
-	border: 1px solid rgba(0,0,0,0);
 	border-radius: 5px;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	padding: 3px;
-	box-shadow: 1px 1px 1px rgba(170,170,170,0);
 }
 .page_menu_item a, a.page_menu_item {
 	text-decoration: none;
@@ -108,18 +145,9 @@ input[type="text"], input[type="password"] {
 	color: #800080;
 }
 .page_menu_item:hover {
-	border: 1px solid rgba(96,96,96,0.4);
-	background-color: rgba(255,255,255,0.2);
-	background: -webkit-linear-gradient(top,rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* Chrome10+,Safari5.1+ */
-	background: -moz-linear-gradient(top, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0.4)), color-stop(100%,rgba(128,128,128,0.2))); /* Chrome,Safari4+ */
-	background: -o-linear-gradient(top, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(top, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* IE10+ */
-	background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* W3C */
-	box-shadow: 1px 1px 1px rgba(170,170,170,0.8);
+	background-color: rgba(255,255,255,0.4);
 }
 .page_menu_item:active {
-	box-shadow: 0px 0px 0px;
 	position: relative;
 	top: 1px;
 	left: 1px;
@@ -171,25 +199,28 @@ button img {
 }
 .button {
 	cursor: pointer;
-	border: 1px solid rgba(0,0,0,0.2);
+	border: 1px solid rgba(0,0,0,0.4);
 	padding: 2px;
 	border-radius: 3px;
 	box-shadow: 1px 1px 1px rgba(170,170,170,0);
 	display: inline-block;
 	margin: 1px 2px 1px 2px;
 	background-color: rgba(255,255,255,0.2);
-	background: -webkit-linear-gradient(top,rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* Chrome10+,Safari5.1+ */
-	background: -moz-linear-gradient(top, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0.4)), color-stop(100%,rgba(128,128,128,0.2))); /* Chrome,Safari4+ */
-	background: -o-linear-gradient(top, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(top, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* IE10+ */
-	background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* W3C */
-	font-family: Verdana;
+	background: -webkit-linear-gradient(top,rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* Chrome10+,Safari5.1+ */
+	background: -moz-linear-gradient(top, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0.8)), color-stop(100%,rgba(192,192,192,0.6))); /* Chrome,Safari4+ */
+	background: -o-linear-gradient(top, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* IE10+ */
+	background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* W3C */
+	/*font-family: Verdana;*/
+	font-family: Arial;
+	font-weight: bold;
+	color: #200040;
 }
 .button:hover {
-	border: 1px solid rgba(0,0,0,0.5);
+	border: 1px solid rgba(0,0,0,0.6);
 	box-shadow: 1px 1px 1px rgba(170,170,170,1);
-	background-color: rgba(255,255,255,0.4);
+	background-color: rgba(255,255,255,0.6);
 }
 .button:active {
 	box-shadow: 0px 0px 0px;

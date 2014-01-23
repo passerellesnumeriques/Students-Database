@@ -22,9 +22,9 @@ function frame_header(container) {
 	t._init = function() {
 		// header
 		t.header = document.createElement("DIV");
-		t.header.className = "page_header";
+		t.header.className = "frame_header";
 		t.header.appendChild(t.header_title = document.createElement("DIV"));
-		t.header_title.className = "page_header_title";
+		t.header_title.className = "frame_header_title";
 		t.icon = document.createElement('IMG');
 		t.icon.src = container.getAttribute("icon");
 		t.icon.onload = function() { fireLayoutEventFor(t.header); };
@@ -48,18 +48,8 @@ function frame_header(container) {
 
 		// menu
 		t.header.appendChild(t.header_menu = document.createElement("DIV"));
-		var table = document.createElement("TABLE");
-		table.style.margin = "0px"; table.style.padding = "0px"; table.style.width = "100%"; table.style.height = "100%";
-		var tr = document.createElement("TR");
-		var td = document.createElement("TD");
-		td.style.verticalAlign = "middle";
-		var menu_container = document.createElement("DIV");
-		td.appendChild(menu_container);
-		tr.appendChild(td);
-		table.appendChild(tr);
-		t.header_menu.appendChild(table);
 		while (container.childNodes.length > 0)
-			menu_container.appendChild(container.removeChild(container.childNodes[0]));
+			t.header_menu.appendChild(container.removeChild(container.childNodes[0]));
 		
 		// set layout
 		container.appendChild(t.header);
@@ -78,8 +68,8 @@ function frame_header(container) {
 			var div = document.createElement("DIV");
 			div.className = "button";
 			div.innerHTML = "<img src='"+theme.icons_16.more_menu+"'/> More";
-			menu_container.appendChild(div);
-			new horizontal_menu(menu_container);
+			t.header_menu.appendChild(div);
+			new horizontal_menu(t.header_menu, "middle");
 		});
 	};
 	t.frame_unload = function() {

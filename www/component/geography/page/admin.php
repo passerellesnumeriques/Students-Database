@@ -17,6 +17,7 @@ class page_admin extends Page {
 		var select_country = new select('select_country');
 		<?php 
 		$countries = SQLQuery::create()->select("Country")->order_by("Country", "name")->execute();
+		echo "select_country.add('',\"<i>Select a Country</i>\");\n";
 		foreach ($countries as $c)
 			echo "select_country.add(".$c["id"].",\"<img src='/static/geography/flags/".strtolower($c["code"]).".png' style='vertical-align:bottom'/> ".htmlentities($c["name"])."\");\n";
 		?>

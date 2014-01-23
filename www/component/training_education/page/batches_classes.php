@@ -29,7 +29,7 @@ class page_batches_classes extends Page {
 						<div class='button' onclick="create_new_batch();"><img src='/static/application/icon.php?main=/static/curriculum/batch_16.png&small=<?php echo theme::$icons_10["add"];?>&where=right_bottom'/> New batch</div>
 						<?php } ?>
 					</div>
-					<div id='students_tree' style='overflow:auto;cursor:default' layout='fill'>
+					<div id='students_tree' style='overflow:auto;cursor:default;background-color:white' layout='fill'>
 					</div>
 				</div>
 				<div id='students_right'>

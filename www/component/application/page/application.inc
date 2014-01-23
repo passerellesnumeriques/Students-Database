@@ -104,11 +104,20 @@ setBackgroundGradient(
 	document.getElementById('pn_application_header'),
 	'vertical',
 	[
+	 {pos:55,color:'#e0e0ff'},
+	 {pos:85,color:'#d0d0f0'},
+	 {pos:100,color:'#b0b0d0'}
+	]
+);
+/*setBackgroundGradient(
+	document.getElementById('pn_application_header'),
+	'vertical',
+	[
 	 {pos:55,color:'#d0d0f0'},
 	 {pos:85,color:'#b0b0e0'},
 	 {pos:100,color:'#686898'}
 	]
-);
+);*/
 function pn_application_content_unload() {
 	var frame = document.getElementById('pn_application_content');
 	if (typeof animation != 'undefined') {
