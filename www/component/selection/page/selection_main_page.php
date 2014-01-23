@@ -46,12 +46,11 @@ class page_selection_main_page extends selection_page {
 					<div id = 'status_header'></div>
 					<div style = "overflow:auto" layout = "fill">
 						<?php
-						echo "<table style = 'width:100%'>";
+						echo "<div style = 'width:100%'>";
+						$js_to_run = array();
 						foreach($status_to_display as $s){
 							$id = $page->generateID();
-							echo "<tr >";
-							echo "<td id = '".$id."' style = 'width:100%'></td>";
-							echo "</tr>";
+							echo "<div id = '".$id."' style = 'width:100%'></div>";
 							if(!$steps[$s[0]])
 								array_push($unvalid_steps_to_display,array(
 									"id" => $id,
@@ -67,10 +66,10 @@ class page_selection_main_page extends selection_page {
 								$url .= $s[1];
 								$page->add_javascript("/static/selection/".$url);
 								$js_name = str_replace(".js","",$s[1]);
-								$page->onload("new ".$js_name."('content_".$id."');");
+								array_push($js_to_run,"new ".$js_name."('content_".$id."');");
 							}
 						}
-						echo "</table>";
+						echo "</div>";
 						?>
 					</div>
 				</div>
@@ -142,57 +141,55 @@ class page_selection_main_page extends selection_page {
 				t._init = function(){
 					//set the unvalid steps
 					for(var i = 0; i < unvalid_steps.length; i++){
-						var table = document.createElement("table");
-						t._setTableStyle(table);
-						t._setHeaderAndStyle(table, unvalid_steps[i].name);
-						t._setUnvalidContent(table);
-						(document.getElementById(unvalid_steps[i].id)).appendChild(table);
+						var content = document.createElement("div");
+						var container = document.getElementById(unvalid_steps[i].id);
+						t._setContainerStyle(container);
+						t._setUnvalidContent(content);
+						var sec = new section("",unvalid_steps[i].name,content,true);
+						container.appendChild(sec.element);
 					}
 					//set the valid steps
 					for(var i = 0; i < valid_steps.length; i++){
-						var table = document.createElement("table");
-						t._setTableStyle(table);
-						t._setHeaderAndStyle(table, valid_steps[i].name);
-						t._prepareContainerValidContent(table, valid_steps[i].id);
-						(document.getElementById(valid_steps[i].id)).appendChild(table);
+						var content = document.createElement("div");
+						var container = document.getElementById(valid_steps[i].id);
+						t._setContainerStyle(container);
+						t._prepareContainerForValidContent(content, valid_steps[i].id);
+						var sec = new section("",valid_steps[i].name,content,true);
+						container.appendChild(sec.element);
 					}
+					//once everything is set, run the js
+					t._run();
 				}
 				
-				t._setTableStyle = function(table){
-					table.style.width = "98%";
-					table.style.marginLeft = "10px";
-					// table.style.marginRight = "50px";
-					// table.style.paddingRight = "10px";
-					table.style.marginTop = "15px";
+				t._setContainerStyle = function(container){
+					container.style.width = "95%";
+					container.style.marginLeft = "10px";
+					container.style.marginTop = "15px";
 				}
 				
-				t._setHeaderAndStyle = function(table, name){
-					var tr = document.createElement("tr");
-					var th = document.createElement("th");
-					th.innerHTML = name;
-					tr.appendChild(th);
-					table.appendChild(tr);
-					setCommonStyleTable(table,th,"#DADADA");
-				}
-				
-				t._setUnvalidContent = function(table){
-					var tr = document.createElement("tr");
-					var td = document.createElement("td");
+				t._setUnvalidContent = function(content){
 					var back = document.createElement("div");
 					back.style.backgroundColor = "rgba(128,128,128,0.5)";
 					back.innerHTML = "<center><i>This step is not validated yet</i></center>";
-					td.appendChild(back);
-					tr.appendChild(td);
-					table.appendChild(tr);
+					content.appendChild(back);
 				}
 				
-				t._prepareContainerValidContent = function(table, id){
-					var td = document.createElement("td");
-					td.id = "content_"+id;
-					table.appendChild((document.createElement("tr")).appendChild(td));
+				t._prepareContainerForValidContent = function(content, id){
+					var div = document.createElement("div");
+					div.id = "content_"+id;
+					content.appendChild(div);
 				}
 				
-				t._init();
+				t._run = function(){
+					<?php
+					foreach($js_to_run as $js)
+						echo "\n".$js;
+					?>
+				}
+				
+				require("section.js",function(){
+					t._init();
+				});
 			}
 			
 			new setStatusScreens(unvalid_steps_to_display, valid_steps_to_display);

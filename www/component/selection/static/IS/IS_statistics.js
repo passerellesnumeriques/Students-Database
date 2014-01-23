@@ -10,16 +10,23 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 	t.girls_expected = girls_expected;
 	t.girls_real = girls_real;
 	
-	require(["autoresize_input.js"],function(){
+	require(["autoresize_input.js","section.js"],function(){
+		t._setSection();
 		t._init();
 	});
+	
+	t._setSection = function(){
+		t.container_of_section_content = document.createElement("div");
+		t.section = new section("/static/selection/IS/statistics.png","Statistics",t.container_of_section_content,false);
+	}
 	
 	t._init = function(){
 		t.table.style.width = "100%";
 		t._setTextFields();
-		t._setTableHeader();
+		// t._setTableHeader();
 		t._setTableBody();
-		container.appendChild(t.table);
+		t.container_of_section_content.appendChild(t.table);
+		container.appendChild(t.section.element);
 	}
 	
 	t._setTextFields = function(){
@@ -33,17 +40,17 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 			t.text_girls_real = t.girls_real;
 	}
 	
-	t._setTableHeader = function(){
-		var thead = document.createElement("thead");
-		var th = document.createElement("th");
-		var tr = document.createElement("tr");
-		th.colSpan = 3;
-		th.innerHTML = "<img src = '/static/selection/IS/statistics.png' style='vertical-align:bottom'/> Statistics";
-		setCommonStyleTable(t.table, th, "#DADADA");
-		tr.appendChild(th);
-		thead.appendChild(th);
-		t.table.appendChild(thead);
-	}
+	// t._setTableHeader = function(){
+		// var thead = document.createElement("thead");
+		// var th = document.createElement("th");
+		// var tr = document.createElement("tr");
+		// th.colSpan = 3;
+		// th.innerHTML = "<img src = '/static/selection/IS/statistics.png' style='vertical-align:bottom'/> Statistics";
+		// setCommonStyleTable(t.table, th, "#DADADA");
+		// tr.appendChild(th);
+		// thead.appendChild(th);
+		// t.table.appendChild(thead);
+	// }
 	
 	t._setTableBody = function(){
 		var tbody = document.createElement("tbody");

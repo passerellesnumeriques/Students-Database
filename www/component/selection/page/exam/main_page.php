@@ -30,9 +30,14 @@ class page_exam_main_page extends selection_page {
 				t.table = document.createElement('table');
 				
 				t._init = function(){
-					t._setTableHeaderAndStyle();
+					t.section = new section("","Exams Subjects",t.table, false);
 					t._setTableContent();
-					container.appendChild(t.table);
+					container.appendChild(t.section.element);
+					t._setStyle();
+				}
+				
+				t._setStyle = function(){
+					t.section.element.
 				}
 				
 				t._setTableHeaderAndStyle = function(){
@@ -50,7 +55,10 @@ class page_exam_main_page extends selection_page {
 				
 				}
 				
-				t._init();
+				require(["section.js","context_menu.js"],function(){
+					t._init();
+				});
+				
 			}
 		</script>
 		<?php

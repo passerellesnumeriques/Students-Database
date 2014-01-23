@@ -79,9 +79,7 @@ class service_IS_save extends Service{
 			
 			/* Set address to the database format */
 			foreach($address as $f => $v){
-				if($f == "country_id")
-					unset($address[$f]);
-				else if($f == "country_code")
+				if($f == "country_code")
 					unset($address[$f]);
 				else if($f == "street_name"){
 					$address["street"] = $v;

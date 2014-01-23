@@ -13,7 +13,10 @@ function select_address(container, data, organization_contacts, can_manage){
 	t.address.additional = null;
 	t.address.address_type = null;
 	
-	require(["popup_window.js","address_text.js","edit_address.js"],function(){
+	require(["popup_window.js","address_text.js","edit_address.js","section.js"],function(){
+		t.container_of_section_content = document.createElement("div");
+		t.section = new section("/static/contact/address_16.png","Location",t.container_of_section_content,false);
+		container.appendChild(t.section.element);
 		t._setTableAddress();
 	});
 	
@@ -25,7 +28,7 @@ function select_address(container, data, organization_contacts, can_manage){
 		t.table_address = document.createElement("table");
 		t.table_address.style.width = "100%";
 		
-		var theader = document.createElement("thead");
+		// var theader = document.createElement("thead");
 		var tbody = document.createElement("tbody");
 		var tr = document.createElement("tr");
 		var th_header = document.createElement("th");
@@ -75,21 +78,22 @@ function select_address(container, data, organization_contacts, can_manage){
 		tfoot.style.display = "inline-block";
 		
 		
-		th_header.innerHTML = "<img src = '/static/contact/address_16.png' style = 'vertical-align:bottom'/> Location";
-		tr.appendChild(th_header);
-		theader.appendChild(tr);
+		// th_header.innerHTML = "<img src = '/static/contact/address_16.png' style = 'vertical-align:bottom'/> Location";
+		// tr.appendChild(th_header);
+		// theader.appendChild(tr);
 		tr_body.appendChild(td_body);
 		tbody.appendChild(tr_body);
-		t.table_address.appendChild(theader);
+		// t.table_address.appendChild(theader);
 		t.table_address.appendChild(tbody);
 		t.table_address.appendChild(tfoot);
-		setCommonStyleTable(t.table_address,th_header,"#DADADA");
+		// setCommonStyleTable(t.table_address,th_header,"#DADADA");
 	
-		container.appendChild(t.table_address);
+		t.container_of_section_content.appendChild(t.table_address);
 	}
 	
 	t.resetTableAddress = function(div_locker){
-		container.removeChild(t.table_address);
+		t.container_of_section_content.removeChild(t.table_address);
+		delete t.table_address;
 		t._setTableAddress();
 		if(typeof(div_locker) != "undefined" && div_locker != null) unlock_screen(div_locker);
 	}

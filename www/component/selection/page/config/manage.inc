@@ -169,7 +169,7 @@ function manage_config(&$page,$container_id,$header_id){
 			back.className = "button";
 			back.innerHTML = "<img src = '"+theme.icons_16.back+"'/> Back to selection";
 			back.onclick = function(){
-				parent.frames["selection_page_content"].location.assign("/dynamic/selection/page/selection_main_page");
+				location.assign("/dynamic/selection/page/selection_main_page");
 			};
 			t.header.addMenuItem(back);
 			

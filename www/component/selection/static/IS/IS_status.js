@@ -1,7 +1,6 @@
 function IS_status(container){
 	if(typeof(container) == "string")
-		container = document.getElementById(container);
-		
+		container = document.getElementById(container);	
 	var t = this;
 	t.table = document.createElement("table");
 

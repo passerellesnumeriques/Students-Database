@@ -10,7 +10,12 @@
 
 function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_read, can_manage, all_durations){
 	var t = this;
-	require(["popup_window.js",["typed_field.js","field_date.js","field_time.js"],"autoresize_input.js"],function(){t._setEventAttribute();});
+	require(["popup_window.js",["typed_field.js","field_date.js","field_time.js"],"autoresize_input.js","section.js"],function(){
+		t.container_of_section_content = document.createElement("div");
+		t.section = new section(theme.icons_16.date_picker,"Date",t.container_of_section_content,false);
+		container.appendChild(t.section.element);
+		t._setEventAttribute();
+	});
 	
 	t.table = document.createElement("table");
 	t.table.style.width = "100%";
@@ -48,24 +53,24 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	
 	t._init = function(){
 		if(t.event != null && typeof(t.event.id) != "undefined"){
-			t._setThead();
+			// t._setThead();
 			t._setTable();
 			if(can_manage) t._setFooter();
 		}
-		container.appendChild(t.table);
+		t.container_of_section_content.appendChild(t.table);
 	}
 	
-	t._setThead = function(){
-		var thead  = document.createElement("thead");
-		var tr_head = document.createElement("tr");
-		var th_head = document.createElement("th");
-		th_head.colSpan = 2;
-		th_head.innerHTML = "<img src = '"+theme.icons_16.date_picker+"' /> Date";
-		tr_head.appendChild(th_head);
-		thead.appendChild(tr_head);
-		setCommonStyleTable(t.table, th_head, "#DADADA");
-		t.table.appendChild(thead);
-	}
+	// t._setThead = function(){
+		// var thead  = document.createElement("thead");
+		// var tr_head = document.createElement("tr");
+		// var th_head = document.createElement("th");
+		// th_head.colSpan = 2;
+		// th_head.innerHTML = "<img src = '"+theme.icons_16.date_picker+"' /> Date";
+		// tr_head.appendChild(th_head);
+		// thead.appendChild(tr_head);
+		// setCommonStyleTable(t.table, th_head, "#DADADA");
+		// t.table.appendChild(thead);
+	// }
 	
 	t._setTable = function(){
 		var tbody = document.createElement("tbody");
@@ -315,7 +320,8 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	}
 	
 	t.resetTable = function(locker){
-		container.removeChild(t.table);
+		t.container_of_section_content.removeChild(t.table);
+		delete t.table;
 		t.table = document.createElement("table");
 		// container.appendChild(t.table);
 		t._init();
@@ -323,7 +329,8 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	}
 	
 	t._resetTableAndEvent = function(locker){
-		container.removeChild(t.table);
+		t.container_of_section_content.removeChild(t.table);
+		delete t.table;
 		t.table = document.createElement("table");
 		t._setEventAttribute();
 		if(typeof(locker) != "undefined" && locker != null) unlock_screen(locker);
