@@ -12,6 +12,7 @@ class page_search extends Page {
 			// TODO search in each data
 			// TODO specify category where to search, and how to display the results
 		}
+		echo "Search not yet implemented";
 	}
 	
 }

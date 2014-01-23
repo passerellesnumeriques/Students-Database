@@ -6,6 +6,8 @@ function vertical_align(container, align) {
 		var e = container.childNodes[i];
 		var s = getComputedStyleSizes(e);
 		e.originalMargin = s.marginTop;
+		if (e.nodeName == "IMG")
+			listenEvent(e,'load',function(){t.layout();});
 	}
 
 	t.layout = function() {

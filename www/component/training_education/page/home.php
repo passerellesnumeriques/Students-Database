@@ -8,7 +8,7 @@ class page_home extends Page {
 		$this->onload("new frame_header('training_education_page');");
 		?>
 		<div id='training_education_page' style='width:100%;height:100%' icon='/static/students/student_32.png' title='Training & Education' page="batches_classes">
-			<div class='button' onclick="document.getElementById('training_education_page_content').src = 'batches_classes';"><img src='/static/curriculum/batch_16.png'/> Batches & Classes</div>
+			<a class='page_menu_item' target='training_education_page_content' href='batches_classes'><img src='/static/curriculum/batch_16.png'/> Batches &amp; Classes</a>
 			<span id='student_search'></span>
 		</div>
 		<script type='text/javascript'>
