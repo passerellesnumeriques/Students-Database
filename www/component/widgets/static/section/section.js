@@ -85,6 +85,18 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		this.title_container.appendChild(this.title);
 		this.toolbar = document.createElement("DIV");
 		this.header.appendChild(this.toolbar);
+		if (collapsable) {
+			this.collapse_container = document.createElement("DIV");
+			this.collapse_container.style.padding = "4px";
+			this.collapse_button = document.createElement("IMG");
+			this.collapse_button.src = get_script_path("section.js")+"collapse.png";
+			this.collapse_button.onload = function() { fireLayoutEventFor(t.element); };
+			this.collapse_button.style.cursor = 'pointer';
+			this.collapsed = false;
+			this.collapse_button.onclick = function() { t.toggleCollapseExpand(); }; 
+			this.collapse_container.appendChild(this.collapse_button);
+			this.header.appendChild(this.collapse_container);
+		}
 		require("horizontal_layout.js",function(){
 			new horizontal_layout(t.header);
 		});
@@ -96,5 +108,26 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		this.element.appendChild(this.content_container);
 		this.content_container.appendChild(content);
 	};
+	
+	this.toggleCollapseExpand = function() {
+		if (this.collapsed) {
+			this.collapse_button.src = get_script_path("section.js")+"collapse.png";
+			this.collapsed = false;
+			this.content_container.style.position = 'static';
+			this.content_container.style.visibility = 'visible';
+			this.header.style.borderBottom = "1px solid "+border_color;
+			setBorderRadius(this.header, 5, 5, 5, 5, 0, 0, 0, 0);
+		} else {
+			this.collapse_button.src = get_script_path("section.js")+"expand.png";
+			this.collapsed = true;
+			this.content_container.style.position = 'absolute';
+			this.content_container.style.visibility = 'hidden';
+			this.content_container.style.top = '-10000px';
+			this.content_container.style.left = '-10000px';
+			this.header.style.borderBottom = "none";
+			setBorderRadius(this.header, 5, 5, 5, 5, 5, 5, 5, 5);
+		}
+	};
+	
 	this._init();
 }

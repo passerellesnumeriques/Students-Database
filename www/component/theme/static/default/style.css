@@ -44,6 +44,9 @@ input[type="text"], input[type="password"] {
 	vertical-align: bottom;
 	margin-right: 3px;
 }
+.application_menu_item:hover {
+	color: #8040A0;
+}
 
 .page_header, .page_header_small {
 	/* header */
@@ -94,17 +97,32 @@ input[type="text"], input[type="password"] {
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	padding: 3px;
+	box-shadow: 1px 1px 1px rgba(170,170,170,0);
 }
 .page_menu_item a, a.page_menu_item {
 	text-decoration: none;
 	cursor: pointer;
+	color: #000060;
 }
 .page_menu_item a:hover, a.page_menu_item:hover {
-	color: #6060C0;
+	color: #800080;
 }
 .page_menu_item:hover {
-	border: 1px solid rgba(128,128,128,0.2);
+	border: 1px solid rgba(96,96,96,0.4);
 	background-color: rgba(255,255,255,0.2);
+	background: -webkit-linear-gradient(top,rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* Chrome10+,Safari5.1+ */
+	background: -moz-linear-gradient(top, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0.4)), color-stop(100%,rgba(128,128,128,0.2))); /* Chrome,Safari4+ */
+	background: -o-linear-gradient(top, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* IE10+ */
+	background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%,rgba(128,128,128,0.2) 100%); /* W3C */
+	box-shadow: 1px 1px 1px rgba(170,170,170,0.8);
+}
+.page_menu_item:active {
+	box-shadow: 0px 0px 0px;
+	position: relative;
+	top: 1px;
+	left: 1px;
 }
 
 table.all_borders {
@@ -272,8 +290,9 @@ button img {
 .context_menu_item img {
 	vertical-align: bottom;
 }
-.context_menu_item a {
+.context_menu_item a, a.context_menu_item {
 	text-decoration: none;
+	color: black;
 }
 .context_menu_title {
 	background-color: #D0D0FF;

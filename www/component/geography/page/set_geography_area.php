@@ -9,11 +9,24 @@ class page_set_geography_area extends Page {
 			echo "Please select a country to edit";
 			return;
 		}
-		$country = SQLQuery::create()->select("Country")->where("id",$_GET["country"])->execute_single_row();	
+		$country = SQLQuery::create()->select("Country")->where("id",$_GET["country"])->execute_single_row();
+		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
+		$this->onload("new splitter_vertical('page_split',0.25);");
+		$this->add_javascript("/static/widgets/section/section.js");
+		$this->onload("section_from_html('manage_divisions_section');");
+		$this->onload("section_from_html('tree_section');");
 ?>
-<div style = "position:relative">
-	<div id ='manage_divisions' ></div>
-	<div id='set_geography_area' style = "margin-left:300px"></div>
+<div id='page_split' style='width:100%;height:100%'>
+	<div style='overflow:auto;'>
+		<div id='manage_divisions_section' title="Country Divisions" style='margin:10px'>
+			<div id ='manage_divisions' ></div>
+		</div>
+	</div>
+	<div style='overflow:auto;'>
+		<div id='tree_section' title="Geographic Areas" style='margin:10px'>
+			<div id='set_geography_area' style = "margin:10px"></div>
+		</div>
+	</div>
 </div>
 <script type = 'text/javascript'>
 var result = null;
@@ -247,13 +260,13 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		var tbody = document.createElement('tbody');
 		var thead = document.createElement('thead');
 		var tfoot = document.createElement('tfoot');
-		var th = document.createElement('th');
-		var th_remove = document.createElement('th');
-		th.innerHTML = "Manage country divisions";
-		var tr_header = document.createElement('tr');
-		tr_header.appendChild(th);
-		tr_header.appendChild(th_remove);
-		thead.appendChild(tr_header);
+		//var th = document.createElement('th');
+		//var th_remove = document.createElement('th');
+		//th.innerHTML = "Manage country divisions";
+		//var tr_header = document.createElement('tr');
+		//tr_header.appendChild(th);
+		//tr_header.appendChild(th_remove);
+		//thead.appendChild(tr_header);
 		table.appendChild(thead);
 		if(result !={}){
 			for(var i = 0; i < this.length; i++){
@@ -294,7 +307,7 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		var td_foot = document.createElement('td');
 		var add_button = document.createElement('div');
 		add_button.className = 'button';
-		add_button.innerHTML = "<img src='"+theme.icons_16.add+"'/>";
+		add_button.innerHTML = "<img src='"+theme.icons_16.add+"'/> Append a new division";
 		add_button.onclick = function(){result.startAddDivision();};
 		td_foot.appendChild(add_button);
 		tr_foot.appendChild(td_foot);
@@ -459,9 +472,10 @@ require('tree.js',function(){
 		if(division_index == null && area_index == null){
 			var add_button = document.createElement('IMG');
 			add_button.className = 'button';
-			add_button.src = theme.icons_16.add;
+			add_button.src = theme.icons_10.add;
 			add_button.style.verticalAlign = "bottom";
-			add_button.style.padding = "0px";
+			add_button.style.padding = "2px";
+			add_button.title = "Create a sub-area";
 			add_button.onclick = function(){tr.addChild(r, null, 'root');};
 			var div = document.getElementById('root');
 			div.appendChild(add_button);
@@ -470,9 +484,10 @@ require('tree.js',function(){
 			if(division_index != r.length -1){
 				var add_button = document.createElement('IMG');
 				add_button.className = 'button';
-				add_button.src = theme.icons_16.add;
+				add_button.src = theme.icons_10.add;
 				add_button.style.verticalAlign = "bottom";
-				add_button.style.padding = "0px";
+				add_button.style.padding = "2px";
+				add_button.title = "Create a sub-area";
 				add_button.area_parent_id = r[division_index].areas[area_index].area_id;
 				add_button.onclick = function(){tr.addChild(r, add_button.area_parent_id);};
 				var div = document.getElementById(r[division_index].areas[area_index].area_id);
@@ -491,9 +506,10 @@ require('tree.js',function(){
 	tr.addRemoveButton = function(r, division_index, area_index){
 		var remove_button = document.createElement('IMG');
 		remove_button.className = 'button';
-		remove_button.src = theme.icons_16.remove;
+		remove_button.src = theme.icons_10.remove;
 		remove_button.style.verticalAlign = "bottom";
-		remove_button.style.padding = "0px";
+		remove_button.style.padding = "2px";
+		remove_button.title = "Remove this area and all its content";
 		var div = null;
 		if(division_index == null && area_index == null){
 			div = document.getElementById('root');
@@ -619,12 +635,6 @@ function everything_ready() {
 	tr.buildTree(result);
 	/*We create the table to manage the divisions*/
 	result.buildTableDivisions();
-	/*Set the layout*/
-	var div_manage_divisions = document.getElementById('manage_divisions');
-	div_manage_divisions.style.position = "absolute";
-	div_manage_divisions.style.left = "0px";
-	div_manage_divisions.style.width = "250px";
-	div_manage_divisions.style.marginLeft = "30px";
 }
 </script>
 	<?php

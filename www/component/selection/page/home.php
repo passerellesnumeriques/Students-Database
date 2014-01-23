@@ -132,7 +132,6 @@ class page_home extends Page {
 			icon='/static/selection/selection_32.png' 
 			title='Selection'
 			page='/dynamic/selection/page/selection_main_page'>
-			<div class = "button" onclick = "location.assign('/dynamic/selection/page/home');"><img src = '<?php echo theme::$icons_16["home"];?>'/> Home</div>
 			<?php
 			if($rights["read"]){
 				echo "<div style = 'vertical-align:bottom' id ='select_campaign_header'></div>"; 
@@ -152,15 +151,15 @@ class page_home extends Page {
 				$this->onload("new selectCampaignHeader(".$first.", ".json_encode($rights["manage"]).", ".$json_all_campaign.", ".json_encode($current).");");
 			}
 			?>
-			
+			<a class = "page_menu_item" href='home'><img src = '<?php echo theme::$icons_16["home"];?>'/> Home</a>
 		<?php
 		/* All the other buttons need the campaign id to be set */
 		$campaign_id = PNApplication::$instance->selection->get_campaign_id();
 		if($campaign_id <> null){
 			if($rights["manage"]){
-				echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/manage_config'\"><img src = '/static/theme/default/icons_16/config.png' /> Configuration</div>";
+				echo "<a class = 'page_menu_item' target='selection_page_content' href='manage_config'><img src = '/static/theme/default/icons_16/config.png' /> Configuration</a>";
 			}
-			if($rights["read"]) echo "<div class = 'button' onclick=\"window.frames['selection_page_content'].location.href='/dynamic/selection/page/IS_main_page'\"><img src='/static/selection/IS_16.png'/> Information Sessions</div>";
+			if($rights["read"]) echo "<a class = 'page_menu_item' target='selection_page_content' href='IS_main_page'><img src='/static/selection/IS_16.png'/> Information Sessions</a>";
 			if(PNApplication::$instance->user_management->has_right("see_exam_subject",true))
 				echo "<span onclick = 'new examMenu(this);'class = 'button'><img src = '/static/selection/exam_16.png'> Exams</span>";
 

@@ -49,7 +49,13 @@ function context_menu(menu) {
 	t.addItem = function(element, keep_onclick) {
 		element.style.position = 'static';
 		menu.appendChild(element);
-		if (!keep_onclick) {
+		if (element.nodeName == "A") {
+			// this is a link: onclick, close the menu and follow the link
+			element.onclick = function() {
+				t.hide();
+				return true;
+			};
+		} else if (!keep_onclick) {
 			if (typeof element.onclickset == 'undefined' && element.onclick && !element.data)
 				element.data = element.onclick;
 			element.onclick = function() {
