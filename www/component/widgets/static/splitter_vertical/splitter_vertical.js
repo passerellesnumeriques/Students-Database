@@ -55,21 +55,20 @@ function splitter_vertical(element, position) {
 	
 	addLayoutEvent(t.element, t._position);
 	
-	t._stop_move = function() {
-		unlistenEvent(window, 'mouseup', t._stop_move);
-		unlistenEvent(window, 'blur', t._stop_move);
-		unlistenEvent(window, 'mousemove', t._moving);
+	t._stop_move = function(ev, origin_w, this_w) {
+		unlistenEvent(this_w, 'blur', t._stop_move);
+		window.top.pnapplication.unregisterOnMouseMove(t._moving);
+		window.top.pnapplication.unregisterOnMouseUp(t._stop_move);
 		setTimeout(function(){fireLayoutEventFor(t.element);},1);
 	};
-	t._moving = function(event) {
-		if (!event) event = window.event;
-		var diff = event.clientX - t.mouse_pos;
+	t._moving = function(mouse_x, mouse_y) {
+		var diff = mouse_x - t.mouse_pos;
 		if (diff == 0) return;
 		var w = t.element.offsetWidth;
 		var x = w*t.position;
 		x += diff;
 		t.position = x/w;
-		t.mouse_pos = event.clientX;
+		t.mouse_pos = mouse_x;
 		t._position();
 		t.positionChanged.fire(t);
 	};
@@ -77,9 +76,9 @@ function splitter_vertical(element, position) {
 	t.separator.onmousedown = function(event) {
 		if (!event) event = window.event;
 		t.mouse_pos = event.clientX;
-		listenEvent(window, 'mouseup', t._stop_move);
 		listenEvent(window, 'blur', t._stop_move);
-		listenEvent(window, 'mousemove', t._moving);
+		window.top.pnapplication.registerOnMouseMove(window, t._moving);
+		window.top.pnapplication.registerOnMouseUp(window, t._stop_move);
 		return false;
 	};
 	

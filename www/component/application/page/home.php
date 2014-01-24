@@ -11,7 +11,7 @@ class page_home extends Page {
 ?>
 <table style='width:100%'>
 <tr>
-	<td valign='top' style='width:50%'>
+	<td valign='top' style=''>
 		<div id='news' icon='/static/news/news.png' title='Updates' collapsable='true' style="margin:10px">
 			<div style='padding:5px'>
 				Not yet implemented<br/>
@@ -63,7 +63,7 @@ class page_home extends Page {
 			</div>
 		</div>
 	</td>
-	<td valign='top'>
+	<td valign='top' style='width:600px'>
 		<div id='calendars' icon='/static/calendar/event.png' title='Your Calendars' collapsable='true' style="margin:10px;">
 			<div id='calendars_container' style="height:300px;"><img src='<?php echo theme::$icons_16["loading"];?>'/></div>
 		</div>

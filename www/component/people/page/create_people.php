@@ -12,16 +12,19 @@ class page_create_people extends Page {
 		}
 		$types = array_merge($types);
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$supported_types = $c->getCreatePeopleSupportedTypes();
-			for ($i = 0; $i < count($types); $i++) {
-				if (!in_array($types[$i], $supported_types)) continue;
-				if (!$c->isCreatePeopleAllowed($types[$i])) {
-					PNApplication::error("You are not allowed to create a people of type '".$types[$i]."'.");
-					return;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$supported_types = $pi->getCreatePeopleSupportedTypes();
+				if ($supported_types == null) continue;
+				for ($i = 0; $i < count($types); $i++) {
+					if (!in_array($types[$i], $supported_types)) continue;
+					if (!$pi->isCreatePeopleAllowed($types[$i])) {
+						PNApplication::error("You are not allowed to create a people of type '".$types[$i]."'.");
+						return;
+					}
+					array_splice($types, $i, 1);
+					$i--;
 				}
-				array_splice($types, $i, 1);
-				$i--;
 			}
 		}
 		if (count($types) <> 0) {
@@ -54,10 +57,12 @@ class page_create_people extends Page {
 				<?php 
 				$pages = array();
 				foreach (PNApplication::$instance->components as $c) {
-					if (!($c instanceof PeoplePlugin)) continue;
-					$cpages = $c->getCreatePeoplePages($types);
-					if ($cpages <> null)
-					foreach ($cpages as $p) array_push($pages, $p);
+					foreach ($c->getPluginImplementations() as $pi) {
+						if (!($pi instanceof PeoplePlugin)) continue;
+						$cpages = $pi->getCreatePeoplePages($types);
+						if ($cpages <> null)
+						foreach ($cpages as $p) array_push($pages, $p);
+					}
 				}
 				usort($pages, "cmp_create_people_pages");
 				foreach ($pages as $p) {

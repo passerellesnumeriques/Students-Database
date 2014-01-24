@@ -426,7 +426,8 @@ class page_batches_classes extends Page {
 							icon: "/static/application/icon.php?main=/static/students/student_32.png&small="+theme.icons_16.add+"&where=right_bottom",
 							title: "Create New Student",
 							types: ["student"],
-							student_batch: filter_batches[0]
+							student_batch: filter_batches[0],
+							redirect:"/dynamic/training_education/page/batches_classes"
 						});
 					};
 					students_list.addHeader(create_student);
