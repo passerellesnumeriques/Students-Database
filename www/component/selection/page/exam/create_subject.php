@@ -83,7 +83,7 @@ class page_exam_create_subject extends selection_page {
 						li1.innerHTML = "Create a subject from scratch";
 						var b_from_zero = t._createButton("<b>Go!</b>");
 						b_from_zero.onclick = function(){
-							location.assign("/dynamic/selection/page/exam/exam_subject");
+							location.assign("/dynamic/selection/page/exam/subject");
 						};
 						li1.appendChild(b_from_zero);
 						ul.appendChild(li1);
@@ -135,7 +135,7 @@ class page_exam_create_subject extends selection_page {
 							div.campaign_id = campaign_id;
 							div.exam_id = exam_id;
 							div.onclick = function(){
-								location.assign("/dynamic/selection/page/exam/exam_subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
+								location.assign("/dynamic/selection/page/exam/subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
 							};
 						}
 						return div;

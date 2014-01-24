@@ -1,6 +1,7 @@
 <?php
 function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_id){
 	require_once("component/data_model/Model.inc");
+	require_once("/../../SelectionJSON.inc");
 	$rights = array();
 	$pop_error = false;
 	$update_rights = PNApplication::$instance->selection->canUpdateStep("manage_exam");
@@ -56,7 +57,8 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 			<?php
 				if(isset($campaign_id)){
 					SQLQuery::set_submodel("SelectionCampaign", $campaign_id);
-					echo "subject = ".PNApplication::$instance->selection->get_json_exam_subject_data($id).";";
+// 					
+					echo "subject = ".SelectionJSON::ExamSubjectFromID($id).";";
 					//reset the current campaign submodel
 					SQLQuery::set_submodel("SelectionCampaign", $current_campaign);
 				}
@@ -72,7 +74,7 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 			//Reset the name
 			subject.name = "New Exam";
 		} else
-			subject = <?php echo PNApplication::$instance->selection->get_json_exam_subject_data($id);?>;
+			subject = <?php echo SelectionJSON::ExamSubjectFromID($id);?>;
 		
 		//init
 		if(!rights.read)

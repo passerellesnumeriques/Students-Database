@@ -14,18 +14,6 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		if(display_questions_detail)
 			t._setTableBody();
 		container.appendChild(t.table);
-		
-		//dev:
-		// var alert_ordered = document.createElement("div");
-		// alert_ordered.innerHTML = "Alert ordered";
-		// alert_ordered.className = "button";
-		// alert_ordered.onclick = function(){alert(service.generateInput(t.ordered));}
-		// container.appendChild(alert_ordered);
-		// var alert_part= document.createElement("div");
-		// alert_part.innerHTML = "alert_part";
-		// alert_part.className = "button";
-		// alert_part.onclick = function(){alert(service.generateInput(part));}
-		// container.appendChild(alert_part);
 	}
 	
 	t._setTableHeader = function(){
@@ -299,12 +287,12 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	
 	t._createQuestion = function(index_attribute_value){
 		var index = part.questions.length;
-		part.questions[index] = {};
-		part.questions[index].id = -1;
-		part.questions[index].index = index_attribute_value;
-		part.questions[index].max_score = null;
-		part.questions[index].correct_answer = null;
-		part.questions[index].choices = null;
+		part.questions[index] = new ExamSubjectQuestion(-1,index_attribute_value,null,null,null);
+//		part.questions[index].id = -1;
+//		part.questions[index].index = index_attribute_value;
+//		part.questions[index].max_score = null;
+//		part.questions[index].correct_answer = null;
+//		part.questions[index].choices = null;
 	}
 	
 	t._decreaseIndexAttribute = function(index_in_ordered){
@@ -409,7 +397,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		return index;
 	}
 	
-	require(["autoresize_input.js"],function(){
+	require(["autoresize_input.js","exam_objects.js"],function(){
 		t._init();
 	});
 }

@@ -16,18 +16,25 @@ function page_header(container, small) {
 			d.innerHTML = html;
 			html = d;
 		}
-		if (t.more_menu && t.more_menu.parentNode == this.menu_container)
-			this.menu_container.insertBefore(html, t.more_menu);
-		else
-			this.menu_container.appendChild(html);
+		if (t.menu)
+			t.menu.addItem(html);
+		else {
+			if (t.more_menu && t.more_menu.parentNode == this.menu_container)
+				this.menu_container.insertBefore(html, t.more_menu);
+			else
+				this.menu_container.appendChild(html);
+		}
 	};
 	this.resetMenu = function() {
-		var to_remove = [];
-		for (var i = 0; i < this.menu_container.childNodes.length; ++i)
-			if (this.menu_container.childNodes[i] != t.more_menu)
-				to_remove.push(this.menu_container.childNodes);
-		for (var i = 0; i < to_remove.length; ++i)
-			this.menu_container.removeChild(to_remove[i]);
+		if (t.menu) t.menu.removeAll();
+		else {
+			var to_remove = [];
+			for (var i = 0; i < this.menu_container.childNodes.length; ++i)
+				if (this.menu_container.childNodes[i] != t.more_menu)
+					to_remove.push(this.menu_container.childNodes[i]);
+			for (var i = 0; i < to_remove.length; ++i)
+				this.menu_container.removeChild(to_remove[i]);
+		}
 	};
 	
 	this.setTitle = function(html) {
@@ -74,7 +81,7 @@ function page_header(container, small) {
 			t.more_menu.className = "button";
 			t.more_menu.innerHTML = "<img src='"+theme.icons_16.more_menu+"'/> More";
 			t.menu_container.appendChild(t.more_menu);
-			new horizontal_menu(t.menu_container);
+			t.menu = new horizontal_menu(t.menu_container);
 		});
 	};
 	
