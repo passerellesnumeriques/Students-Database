@@ -23,19 +23,30 @@ $mandatory = array(
 	"/static/javascript/browser.js",
 	"/static/application/application.js",
 	"/static/theme/theme.js.php",
-	"/static/widgets/Status.js",
-	"/static/widgets/StatusUI_Top.js",
 	"/static/javascript/ajax.js",
 	"/static/data_model/databaselock.js",
 	"/static/data_model/datamodel.js",
-	"/static/application/config.js.php",
-	"/static/google/google.js"/*,
-	"/static/facebook/facebook.js"*/
+	"/static/application/config.js.php"
 );
-$optional = array(
-	"/static/javascript/animation.js",
-	"/static/application/service.js"
-);
+$optional = array();
+$optional_delayed = array();
+if (PNApplication::$instance->user_management->username == null) {
+	// if we are not yet logged, to allow google or facebook login, we include them as soon as possible
+	array_push($mandatory, "/static/google/google.js");
+	//array_push($mandatory, "/static/facebook/facebook.js");
+	// then the things that are not mandatory on the login page
+	array_push($optional, "/static/javascript/animation.js");
+	array_push($optional, "/static/application/service.js");
+	array_push($optional, "/static/widgets/Status.js");
+	array_push($optional, "/static/widgets/StatusUI_Top.js");
+} else {
+	array_push($mandatory, "/static/application/service.js");
+	array_push($optional, "/static/javascript/animation.js");
+	array_push($optional, "/static/widgets/Status.js");
+	array_push($optional, "/static/widgets/StatusUI_Top.js");
+	array_push($optional_delayed, "/static/google/google.js");
+	//array_push($optional_delayed, "/static/facebook/facebook.js");
+}
 function get_script_info(&$a) {
 	for ($i = 0; $i < count($a); ++$i) {
 		$j = strpos($a[$i], "/", 8); 
@@ -44,6 +55,7 @@ function get_script_info(&$a) {
 }
 get_script_info($mandatory);
 get_script_info($optional);
+get_script_info($optional_delayed);
 $total = 0;
 foreach ($mandatory as $s) $total += $s[1];
 foreach ($optional as $s) $total += $s[1];
@@ -63,8 +75,6 @@ window.pn_loading = document.all ? document.all['__loading_table'] : document.ge
 var pn_loading_visible = true;
 function __load_enter_page() {
 	next_optional();
-	window.status_manager = new StatusManager();
-	window.status_manager.status_ui = new StatusUI_Top(window.status_manager);
 
 	add_stylesheet('/static/theme/default/style.css');
 	
@@ -87,6 +97,7 @@ function __load_enter_page() {
 
 var _mandatory_scripts = <?php echo json_encode($mandatory);?>;
 var _optional_scripts = <?php echo json_encode($optional);?>;
+var _optional_delayed_scripts = <?php echo json_encode($optional_delayed);?>;
 var total_size = <?php echo $total;?>;
 var loaded_size = 0;
 
@@ -112,6 +123,13 @@ function next_optional() {
 		update_size();
 		if (++optional_index == _optional_scripts.length) {
 			document.getElementById('loading_status').innerHTML = "Loading <?php echo PNApplication::$instance->user_management->username <> null ? "Application Home Page" : "Login Page";?>...";
+			window.status_manager = new StatusManager();
+			window.status_manager.status_ui = new StatusUI_Top(window.status_manager);
+			setTimeout(function(){
+				for (var i = 0; i < _optional_delayed_scripts.length; ++i) {
+					_add_javascript(_optional_delayed_scripts[i][0]);
+				}
+			},5000);
 			return;
 		}
 		next_optional(); 

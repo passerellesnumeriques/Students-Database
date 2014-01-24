@@ -1,9 +1,6 @@
-<?php
+<?php 
 require_once("component/people/PeoplePlugin.inc");
-/**
- * Implementation of PeoplePlugin for transcripts, in order to display grades on students' profiles
- */
-class TranscriptsPeoplePlugin implements PeoplePlugin {
+class DisciplinePeoplePlugin implements PeoplePlugin {
 	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
 		$alias = $q->get_table_alias("Student");
@@ -18,7 +15,7 @@ class TranscriptsPeoplePlugin implements PeoplePlugin {
 	public function getPeopleProfilePages($people_id, $people, $q) {
 		if ($people["student_batch"] == null) return array(); // not a student
 		return array(
-			"grades"=>array("/static/transcripts/grades.gif", "Grades", "/dynamic/transcripts/page/student_grades?people=".$people_id, 30),
+			"discipline"=>array("/static/discipline/discipline.png", "Discipline", "/dynamic/discipline/page/home?people=".$people_id, 50), // TODO page
 		);
 	}
 	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) { return array(); }

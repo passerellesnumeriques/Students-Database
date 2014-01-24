@@ -316,6 +316,14 @@ class page_batches_classes extends Page {
 		grades_frame.style.border = 'none';
 		grades_frame.style.width = '100%';
 		grades_frame.style.height = '100%';
+		var discipline_frame = document.createElement("IFRAME");
+		discipline_frame.style.border = 'none';
+		discipline_frame.style.width = '100%';
+		discipline_frame.style.height = '100%';
+		var health_frame = document.createElement("IFRAME");
+		health_frame.style.border = 'none';
+		health_frame.style.width = '100%';
+		health_frame.style.height = '100%';
 		
 		function show_tabs(list) {
 			pages.removeAll();
@@ -324,6 +332,8 @@ class page_batches_classes extends Page {
 				case "Students List": pages.addTab("Students List", "/static/students/student_16.png", students_list_container); break;
 				case "Curriculum": pages.addTab("Curriculum", "/static/curriculum/curriculum_16.png", curriculum_frame); break;
 				case "Grades": pages.addTab("Grades", "/static/transcripts/grades.gif", grades_frame); break;
+				case "Discipline": pages.addTab("Discipline", "/static/discipline/discipline.png", discipline_frame); break;
+				case "Health": pages.addTab("Health", "/static/health/health.png", health_frame); break;
 				}
 			}
 		}
@@ -497,7 +507,9 @@ class page_batches_classes extends Page {
 					filter_batches.push(batches[i].id);
 			header.setTitle("Current Students");
 			header.resetMenu();
-			show_tabs(["Students List"]);
+			show_tabs(["Students List","Discipline","Health"]);
+			discipline_frame.src = "/dynamic/discipline/page/home"; // TODO
+			health_frame.src = "/dynamic/health/page/home"; // TODO
 			update_data();
 		}
 		function select_alumni() {
@@ -556,7 +568,9 @@ class page_batches_classes extends Page {
 				span_graduation.innerHTML = batch.end_date;
 			}
 			curriculum_frame.src = "/dynamic/curriculum/page/curriculum?batch="+batch.id;
-			show_tabs(["Students List","Curriculum"]);
+			show_tabs(["Students List","Curriculum","Discipline","Health"]);
+			discipline_frame.src = "/dynamic/discipline/page/home"; // TODO
+			health_frame.src = "/dynamic/health/page/home"; // TODO
 			update_data();
 		}
 		function select_period(batch, period) {
@@ -608,6 +622,10 @@ class page_batches_classes extends Page {
 				t.push("Grades");
 				grades_frame.src = "/dynamic/transcripts/page/students_grades?period="+period.id;
 			}
+			t.push("Discipline");
+			t.push("Health");
+			discipline_frame.src = "/dynamic/discipline/page/home"; // TODO
+			health_frame.src = "/dynamic/health/page/home"; // TODO
 			show_tabs(t);
 			update_data();
 		}
@@ -624,7 +642,9 @@ class page_batches_classes extends Page {
 			header.resetMenu();
 			curriculum_frame.src = "/dynamic/curriculum/page/curriculum?period="+period.id;
 			grades_frame.src = "/dynamic/transcripts/page/students_grades?period="+period.id+"&specialization="+spe.id;
-			show_tabs(["Students List","Curriculum","Grades"]);
+			discipline_frame.src = "/dynamic/discipline/page/home"; // TODO
+			health_frame.src = "/dynamic/health/page/home"; // TODO
+			show_tabs(["Students List","Curriculum","Grades","Discipline","Health"]);
 			update_data();
 		}
 		function select_class(cl) {
@@ -653,7 +673,9 @@ class page_batches_classes extends Page {
 			header.resetMenu();
 			curriculum_frame.src = "/dynamic/curriculum/page/curriculum?period="+period.id;
 			grades_frame.src = "/dynamic/transcripts/page/students_grades?class="+cl.id;
-			show_tabs(["Students List","Curriculum","Grades"]);
+			discipline_frame.src = "/dynamic/discipline/page/home"; // TODO
+			health_frame.src = "/dynamic/health/page/home"; // TODO
+			show_tabs(["Students List","Curriculum","Grades","Discipline","Health"]);
 			update_data();
 		}
 		

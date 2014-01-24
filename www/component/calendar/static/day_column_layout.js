@@ -73,7 +73,7 @@ function DayColumnLayout(calendar_manager) {
 		div.style.cursor = "pointer";
 		div.onclick = function(e) {
 			require("event_screen.js",function() {
-				event_screen(event.original_event);
+				event_screen(event.original_event, calendar_manager.getCalendar(event.calendar_id));
 			});
 			stopEventPropagation(e);
 			return false;

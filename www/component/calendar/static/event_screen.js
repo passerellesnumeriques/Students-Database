@@ -77,7 +77,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		t.calendar_icon = document.createElement("IMG");
 		t.calendar_icon.width = 16;
 		t.calendar_icon.style.width = '16px';
-		t.calendar_icon.src = ev ? ev.calendar.icon : default_calendar.icon;
+		t.calendar_icon.src = ev ? calendar.icon : default_calendar.icon;
 		t.calendar_icon.style.marginRight = '3px';
 		t.calendar_div.appendChild(t.calendar_icon);
 		t.calendar_box = document.createElement("DIV"); t.calendar_div.appendChild(t.calendar_box);

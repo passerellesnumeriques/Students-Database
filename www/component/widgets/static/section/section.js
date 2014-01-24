@@ -1,4 +1,7 @@
-if (typeof require != 'undefined') require("color.js");
+if (typeof require != 'undefined') {
+	require("color.js");
+	require("animation.js");
+}
 
 function section_from_html(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -126,6 +129,22 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		if (this.collapsed) {
 			this.collapse_button.src = get_script_path("section.js")+"collapse.png";
 			this.collapsed = false;
+			require("animation.js",function() {
+				if (t.content_container.anim1) animation.stop(t.content_container.anim1);
+				if (t.content_container.anim2) animation.stop(t.content_container.anim2);
+				t.content_container.anim1 = animation.create(t.content_container, 0, t.content_container.originalHeight, 500, function(value, element) {
+					element.style.height = Math.floor(value)+'px';
+					element.style.overflow = "hidden";
+				});
+				t.content_container.anim2 = animation.fadeIn(t.content_container, 600, function() {
+					t.content_container.style.position = 'static';
+					t.content_container.style.visibility = 'visible';
+					t.header.style.borderBottom = "1px solid "+border_color;
+					setBorderRadius(t.header, 5, 5, 5, 5, 0, 0, 0, 0);
+					t.content_container.style.height = "";
+					t.content_container.style.overflow = "";
+				});
+			});
 			this.content_container.style.position = 'static';
 			this.content_container.style.visibility = 'visible';
 			this.header.style.borderBottom = "1px solid "+border_color;
@@ -133,12 +152,24 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		} else {
 			this.collapse_button.src = get_script_path("section.js")+"expand.png";
 			this.collapsed = true;
-			this.content_container.style.position = 'absolute';
-			this.content_container.style.visibility = 'hidden';
-			this.content_container.style.top = '-10000px';
-			this.content_container.style.left = '-10000px';
-			this.header.style.borderBottom = "none";
-			setBorderRadius(this.header, 5, 5, 5, 5, 5, 5, 5, 5);
+			require("animation.js",function() {
+				if (t.content_container.anim1) animation.stop(t.content_container.anim1);
+				if (t.content_container.anim2) animation.stop(t.content_container.anim2);
+				var start = t.content_container.offsetHeight;
+				t.content_container.originalHeight = start;
+				t.content_container.anim1 = animation.create(t.content_container, start, 0, 600, function(value, element) {
+					element.style.height = Math.floor(value)+'px';
+					element.style.overflow = "hidden";
+				});
+				t.content_container.anim2 = animation.fadeOut(t.content_container, 500, function() {
+					t.content_container.style.position = 'absolute';
+					t.content_container.style.visibility = 'hidden';
+					t.content_container.style.top = '-10000px';
+					t.content_container.style.left = '-10000px';
+					t.header.style.borderBottom = "none";
+					setBorderRadius(t.header, 5, 5, 5, 5, 5, 5, 5, 5);
+				});
+			});
 		}
 	};
 	
