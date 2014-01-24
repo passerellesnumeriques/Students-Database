@@ -61,7 +61,7 @@ function day_row_layout(calendar_manager) {
 			div.onclick = function() {
 				var ev = this.event;
 				require("event_screen.js",function() {
-					event_screen(ev.original_event);
+					event_screen(ev.original_event, calendar_manager.getCalendar(ev.calendar_id));
 				});
 			};
 			day_boxes[0].parentNode.appendChild(div);

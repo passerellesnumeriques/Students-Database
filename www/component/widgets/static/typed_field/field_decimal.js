@@ -58,6 +58,7 @@ field_decimal.prototype._create = function(data) {
 				if (typeof t.config.min != 'undefined' && i < t.config.min) i = t.config.min;
 				if (typeof t.config.max != 'undefined' && i > t.config.max) i = t.config.max;
 				input.value = i.toFixed(t.config.decimal_digits);
+				if (input.autoresize) input.autoresize();
 			}
 			f();
 		};

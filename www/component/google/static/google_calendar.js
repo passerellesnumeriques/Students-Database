@@ -1,6 +1,6 @@
 // #depends[/static/calendar/calendar.js]
 
-function load_google_calendars(calendars_manager, ondone) {
+function load_google_calendars(ondone) {
 	var onload = function() {
 		var req = window.top.gapi.client.calendar.calendarList.list();
 		req.execute(function(resp){
@@ -10,7 +10,6 @@ function load_google_calendars(calendars_manager, ondone) {
 				// accessRole=reader,owner,writer
 				var write = resp.items[i].accessRole == "owner" || resp.items[i].accessRole == "writer"; 
 				var cal = new GoogleCalendar(resp.items[i].id, resp.items[i].summary, resp.items[i].backgroundColor.substring(1), resp.items[i].selected, write);
-				calendars_manager.addCalendar(cal);
 				calendars.push(cal);
 			}
 			ondone(calendars);
@@ -194,3 +193,19 @@ function parseRRuleDate(s) {
 	}
     return new Date(year, month - 1, day, hour, minute, second, 0);
 }
+
+function GoogleCalendarsProvider() {
+	this.getCalendars = function(handler) {
+		load_google_calendars(handler);
+	};
+	this.getProviderIcon = function() {
+		return '/static/google/google.png';
+	};
+	this.getProviderName = function() {
+		return "Google Calendars";
+	};
+}
+GoogleCalendarsProvider.prototype = new CalendarsProvider();
+GoogleCalendarsProvider.prototype.constructor = GoogleCalendarsProvider;
+
+window.top.CalendarsProviders.add(new GoogleCalendarsProvider());

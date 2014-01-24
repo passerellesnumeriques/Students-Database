@@ -104,6 +104,39 @@ function CalendarManager() {
 	};
 }
 
+function CalendarsProvider() {
+}
+CalendarsProvider.prototype = {
+	getCalendars: function(handler) {
+		
+	},
+	getProviderIcon: function() {
+		
+	},
+	getProviderName: function() {
+		
+	}
+};
+if (!window.top.CalendarsProviders) {
+	window.top.CalendarsProviders = {
+		add: function(provider) {
+			for (var i = 0; i < this._providers.length; ++i)
+				if (this._providers[i].getProviderName() == provider.getProviderName())
+					return; // same
+			this._providers.push(provider);
+			for (var i = 0; i < this._handlers.length; ++i)
+				this._handlers[i](provider);
+		},
+		_providers: [],
+		_handlers: [],
+		get: function(handler_for_each_provider) {
+			for (var i = 0; i < this._providers.length; ++i)
+				handler_for_each_provider(this._providers[i]);
+			this._handlers.push(handler_for_each_provider);
+		}
+	};
+}
+
 /**
  * Abstract class of a calendar.
  * @param {String} name name of the calendar
@@ -216,3 +249,25 @@ function PNCalendar(id, name, color, show, writable) {
 }
 PNCalendar.prototype = new Calendar();
 PNCalendar.prototype.constructor = PNCalendar;
+
+function PNCalendarsProvider() {
+	this.getCalendars = function(handler) {
+		service.json("calendar", "get_my_calendars", {}, function(calendars) {
+			if (!calendars) return;
+			var list = [];
+			for (var i = 0; i < calendars.length; ++i)
+				list.push(new PNCalendar(calendars[i].id, calendars[i].name, calendars[i].color, true, calendars[i].writable));
+			handler(list);
+		});
+	};
+	this.getProviderIcon = function() {
+		return "/static/application/logo.png";
+	};
+	this.getProviderName = function() {
+		return "PN Calendars";
+	};
+}
+PNCalendarsProvider.prototype = new CalendarsProvider();
+PNCalendarsProvider.prototype.constructor = PNCalendarsProvider;
+
+window.top.CalendarsProviders.add(new PNCalendarsProvider());

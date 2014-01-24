@@ -45,6 +45,14 @@ class page_students_grades extends Page {
 		// build the table with students info
 		require_once("component/data_model/page/custom_data_list.inc");
 		$available_fields = PNApplication::$instance->data_model->getAvailableFields("StudentClass");
+		for ($i = 0; $i < count($available_fields); $i++) {
+			$f = $available_fields[$i];
+			if ($f[0]->handler->category <> "Personal Information" &&
+				$f[0]->handler->category <> "Student") {
+				array_splice($available_fields, $i, 1);
+				$i--;
+			}
+		}
 		$filters = array();
 		array_push($filters, array(
 			"category"=>"Student",
@@ -73,6 +81,7 @@ class page_students_grades extends Page {
 		
 		$this->add_javascript("/static/widgets/page_header.js");
 		$this->onload("new page_header('grades_page_header', true);");
+		$this->add_stylesheet("/static/transcripts/grades.css");
 		?>
 		<style type='text/css'>
 		#data_list_container table {
@@ -229,19 +238,19 @@ class page_students_grades extends Page {
 		}
 
 		function customize_student_header(th) {
-			th.style.backgroundColor = '#FFFFA0';
+			th.className = "grades_student_info_header";
 		}
 		function customize_total_header(th) {
-			th.style.backgroundColor = '#A0FFFF';
+			th.className = "grades_total_header";
 		}
 		function customize_category_header(th) {
-			th.style.backgroundColor = '#A0A0F0';
+			th.className = "grades_category_header";
 		}
 		function customize_subject_name_header(th) {
-			th.style.backgroundColor = '#C0C0FF';
+			th.className = "grades_sub_category_header";
 		}
 		function customize_subject_weight_header(th) {
-			th.style.backgroundColor = '#C0C0FF';
+			th.className = "grades_sub_category_header";
 		}
 		
 		function init_table() {
@@ -275,13 +284,11 @@ class page_students_grades extends Page {
 					custom_data_list.addSubColumn('cat_'+cat.id, 'subject_'+subject.id, link, function(td,index) {
 					}, null, customize_subject_name_header);
 					var span = document.createElement("SPAN");
-					<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) {
-						echo "var cell;";
-						require_once("component/data_model/page/utils.inc");
-						datamodel_cell_inline($this, "cell", "span", true, "CurriculumSubjectGrading", "weight", "subject.id", null, "subject.weight", null); 
-					} else { ?>
-					span.innerHTML = subject.weight;
-					<?php } ?>
+					if (subject.weight) {
+						span.appendChild(document.createTextNode("Coef."));
+						span.appendChild(document.createElement("BR"));
+						span.appendChild(document.createTextNode(subject.weight));
+					}
 					custom_data_list.addSubColumn('subject_'+subject.id, 'subject_'+subject.id+"_weight", span, function(td,index) {
 						var student = students[index];
 						var grade = null;

@@ -1,4 +1,7 @@
-if (typeof require != 'undefined') require("color.js");
+if (typeof require != 'undefined') {
+	require("color.js");
+	require("animation.js");
+}
 
 function section_from_html(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -36,15 +39,22 @@ function section_from_html(container) {
 	while (container.childNodes.length > 0) content.appendChild(container.childNodes[0]);
 	var s = new section(icon,title,content,collapsable,border_color,title_background_from,title_background_to);
 	container.appendChild(s.element);
+	return s;
 }
 
 function section(icon, title, content, collapsable, border_color, title_background_from, title_background_to, title_style) {
 	if (!border_color) border_color = "#80A060";
-	if (!title_background_from) title_background_from = "#D8F0D8";
-	if (!title_background_to) title_background_to = "#A0C890";
+	if (!title_background_from) title_background_from = "#E0F0E0";
+	if (!title_background_to) title_background_to = "#C0E8B0";
 
 	var t=this;
 	this.element = document.createElement("DIV");
+	
+	this.addTool = function(element) {
+		this.toolbar.appendChild(element);
+		element.style.display = "inline-block";
+		fireLayoutEventFor(this.element);
+	};
 	
 	this._init = function() {
 		this.element.style.border = "1px solid "+border_color;
@@ -79,10 +89,10 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		this.title = document.createElement("DIV");
 		this.title.innerHTML = title;
 		this.title.style.fontWeight = "bold";
-		this.title.style.fontSize = "12pt";
+		this.title.style.fontSize = "11pt";
 		this.title.style.display = "inline-block";
 		this.title.style.color = "#505050";
-		this.title.style.fontFamily = "Calibri";
+		//this.title.style.fontFamily = "Calibri";
 		if (title_style)
 			for (var att in title_style) this.title.style[att] = title_style[att];
 		this.title_container.appendChild(this.title);
@@ -110,6 +120,7 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		this.content_container = document.createElement("DIV");
 		this.content_container.style.backgroundColor = "#ffffff";
 		setBorderRadius(this.content_container, 0, 0, 0, 0, 5, 5, 5, 5);
+		setBorderRadius(content, 0, 0, 0, 0, 5, 5, 5, 5);
 		this.element.appendChild(this.content_container);
 		this.content_container.appendChild(content);
 	};
@@ -118,6 +129,22 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		if (this.collapsed) {
 			this.collapse_button.src = get_script_path("section.js")+"collapse.png";
 			this.collapsed = false;
+			require("animation.js",function() {
+				if (t.content_container.anim1) animation.stop(t.content_container.anim1);
+				if (t.content_container.anim2) animation.stop(t.content_container.anim2);
+				t.content_container.anim1 = animation.create(t.content_container, 0, t.content_container.originalHeight, 500, function(value, element) {
+					element.style.height = Math.floor(value)+'px';
+					element.style.overflow = "hidden";
+				});
+				t.content_container.anim2 = animation.fadeIn(t.content_container, 600, function() {
+					t.content_container.style.position = 'static';
+					t.content_container.style.visibility = 'visible';
+					t.header.style.borderBottom = "1px solid "+border_color;
+					setBorderRadius(t.header, 5, 5, 5, 5, 0, 0, 0, 0);
+					t.content_container.style.height = "";
+					t.content_container.style.overflow = "";
+				});
+			});
 			this.content_container.style.position = 'static';
 			this.content_container.style.visibility = 'visible';
 			this.header.style.borderBottom = "1px solid "+border_color;
@@ -125,12 +152,24 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		} else {
 			this.collapse_button.src = get_script_path("section.js")+"expand.png";
 			this.collapsed = true;
-			this.content_container.style.position = 'absolute';
-			this.content_container.style.visibility = 'hidden';
-			this.content_container.style.top = '-10000px';
-			this.content_container.style.left = '-10000px';
-			this.header.style.borderBottom = "none";
-			setBorderRadius(this.header, 5, 5, 5, 5, 5, 5, 5, 5);
+			require("animation.js",function() {
+				if (t.content_container.anim1) animation.stop(t.content_container.anim1);
+				if (t.content_container.anim2) animation.stop(t.content_container.anim2);
+				var start = t.content_container.offsetHeight;
+				t.content_container.originalHeight = start;
+				t.content_container.anim1 = animation.create(t.content_container, start, 0, 600, function(value, element) {
+					element.style.height = Math.floor(value)+'px';
+					element.style.overflow = "hidden";
+				});
+				t.content_container.anim2 = animation.fadeOut(t.content_container, 500, function() {
+					t.content_container.style.position = 'absolute';
+					t.content_container.style.visibility = 'hidden';
+					t.content_container.style.top = '-10000px';
+					t.content_container.style.left = '-10000px';
+					t.header.style.borderBottom = "none";
+					setBorderRadius(t.header, 5, 5, 5, 5, 5, 5, 5, 5);
+				});
+			});
 		}
 	};
 	

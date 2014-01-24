@@ -104,7 +104,7 @@ function _load_google_calendars() {
 	var doit = function() {
 		var loading = document.getElementById('loading_google_calendars');
 		loading.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
-		load_google_calendars(window.calendars, function(calendars){
+		load_google_calendars(function(calendars){
 			if (calendars == null) {
 				var div = document.createElement("DIV");
 				div.innerHTML = "<span style='color:red'>Unable to connect to Google Calendar</span> ";
@@ -126,8 +126,10 @@ function _load_google_calendars() {
 				return;
 			}
 			var list = document.getElementById("google_calendars");
-			for (var i = 0; i < calendars.length; ++i)
+			for (var i = 0; i < calendars.length; ++i) {
+				window.calendars.addCalendar(calendars[i]);
 				new CalendarElement(list, calendars[i]);
+			}
 			loading.parentNode.removeChild(loading);
 			doit = null;
 		});		

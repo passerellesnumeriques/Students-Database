@@ -20,7 +20,7 @@ class service_get_static_resources extends Service {
 			}
 		global $theme;
 		$this->browse("component/theme/static/".$theme."/", "/static/theme/".$theme."/", $scripts, $images);
-		// /*do others*/
+		// do others
 		foreach ($components as $c)
 			$this->browse("component/".$c."/static/", "/static/".$c."/", $scripts, $images);
 		// result
