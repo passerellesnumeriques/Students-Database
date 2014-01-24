@@ -130,7 +130,7 @@ class service_get_data_list extends Service {
 		
 		// check if we have actions, then add necessary fields in the SQL request
 		$actions = null;
-		if (isset($input["actions"]) && $input["actions"]) {
+		if (isset($input["actions"]) && $input["actions"] && !isset($input["export"])) {
 			$actions = array();
 			$categories = array();
 			foreach ($display_data as $data) {
@@ -183,19 +183,21 @@ class service_get_data_list extends Service {
 		
 		//echo $q->generate();
 
-		// calculate the total number of entries
-		$count = new SQLQuery($q);
-		$count = $count->count("NB_DATA")->execute_single_row();
-		$count = $count["NB_DATA"];
-		
-		// handle pages
-		if (isset($input["page_size"])) {
-			$nb = intval($input["page_size"]);
-			if ($nb == 0) $nb = 1000;
-			$page = isset($input["page"]) ? intval($input["page"]) : 0;
-			if ($page == 0) $page = 1;
-			$q->limit(($page-1)*$nb, $nb);
-		}		
+		if (!isset($input["export"])) {
+			// calculate the total number of entries
+			$count = new SQLQuery($q);
+			$count = $count->count("NB_DATA")->execute_single_row();
+			$count = $count["NB_DATA"];
+			
+			// handle pages
+			if (isset($input["page_size"])) {
+				$nb = intval($input["page_size"]);
+				if ($nb == 0) $nb = 1000;
+				$page = isset($input["page"]) ? intval($input["page"]) : 0;
+				if ($page == 0) $page = 1;
+				$q->limit(($page-1)*$nb, $nb);
+			}
+		}
 		// execute the query
 		$res = $q->execute();
 		
@@ -206,61 +208,112 @@ class service_get_data_list extends Service {
 			$data->performSubRequests($q, $res, $data_aliases[$i], $path, $filters[$i]);
 		}
 		
-		echo "{";
-		echo "count:".$count;
-		echo ",data:[";
-		$first = true;
-		foreach ($res as $row) {
-			if ($first) $first = false; else echo ",";
-			echo "{values:[";
-			$f = true;
-			for ($i = 0; $i < count($display_data); $i++) {
-				$a = $data_aliases[$i];
-				$data = $display_data[$i];
-				$path = $paths[$i];
-				if ($f) $f = false; else echo ",";
-				echo "{v:";
-				echo json_encode($row[$a["data"]]);
-				if (isset($row[$a["key"]]))
-					echo ",k:".json_encode($row[$a["key"]]);
-				else {
-					echo ",k:null";
-					//PNApplication::error("Missing key '".$a["key"]."' for data '".$data->getDisplayName()."' in table '".$data->handler->table->getName()."'");
-				} 
+		if (!isset($input["export"])) {
+			echo "{";
+			echo "count:".$count;
+			echo ",data:[";
+			$first = true;
+			foreach ($res as $row) {
+				if ($first) $first = false; else echo ",";
+				echo "{values:[";
+				$f = true;
+				for ($i = 0; $i < count($display_data); $i++) {
+					$a = $data_aliases[$i];
+					$data = $display_data[$i];
+					$path = $paths[$i];
+					if ($f) $f = false; else echo ",";
+					echo "{v:";
+					echo json_encode($row[$a["data"]]);
+					if (isset($row[$a["key"]]))
+						echo ",k:".json_encode($row[$a["key"]]);
+					else {
+						echo ",k:null";
+						//PNApplication::error("Missing key '".$a["key"]."' for data '".$data->getDisplayName()."' in table '".$data->handler->table->getName()."'");
+					} 
+					echo "}";
+				}
+				echo "]";
+				if ($actions !== null) {
+					echo ",actions:[";
+					$first_action = true;
+					foreach ($actions as &$action) {
+						if ($first_action) $first_action = false; else echo ",";
+						$k = 0;
+						$link = $action[0];
+						while ($k < strlen($link) && ($k = strpos($link, "%", $k)) !== false) {
+							$kk = strpos($link, "%", $k+1);
+							if ($kk === false) break;
+							$s = substr($link, $k+1, $kk-$k-1);
+							$l = strpos($s, ".");
+							$table = substr($s, 0, $l);
+							$col = substr($s, $l+1);
+							$alias = $q->get_field_alias($q->get_table_alias($table), $col);
+							if ($alias == null) {
+								PNApplication::error("Missing field '".$col."' from table '".$table."' (alias '".$q->get_table_alias($table)."') in SQL request ".$q->generate());
+								$k = $kk+1;
+								continue;
+							}
+							$link = substr($link, 0, $k).$row[$alias].substr($link, $kk+1);
+							$k = $k + strlen($row[$alias]);
+						}
+						echo "{link:".json_encode($link).",icon:".json_encode($action[1])."}";
+					}
+					echo "]";
+				}
 				echo "}";
 			}
 			echo "]";
-			if ($actions !== null) {
-				echo ",actions:[";
-				$first_action = true;
-				foreach ($actions as &$action) {
-					if ($first_action) $first_action = false; else echo ",";
-					$k = 0;
-					$link = $action[0];
-					while ($k < strlen($link) && ($k = strpos($link, "%", $k)) !== false) {
-						$kk = strpos($link, "%", $k+1);
-						if ($kk === false) break;
-						$s = substr($link, $k+1, $kk-$k-1);
-						$l = strpos($s, ".");
-						$table = substr($s, 0, $l);
-						$col = substr($s, $l+1);
-						$alias = $q->get_field_alias($q->get_table_alias($table), $col);
-						if ($alias == null) {
-							PNApplication::error("Missing field '".$col."' from table '".$table."' (alias '".$q->get_table_alias($table)."') in SQL request ".$q->generate());
-							$k = $kk+1;
-							continue;
-						}
-						$link = substr($link, 0, $k).$row[$alias].substr($link, $kk+1);
-						$k = $k + strlen($row[$alias]);
-					}
-					echo "{link:".json_encode($link).",icon:".json_encode($action[1])."}";
-				}
-				echo "]";
-			}
 			echo "}";
+		} else {
+			/* -- export -- */
+			// create excel
+			error_reporting(E_ERROR | E_PARSE);
+			require_once("component/lib_php_excel/PHPExcel.php");
+			$excel = new PHPExcel();
+			$sheet = new PHPExcel_Worksheet($excel, "List");
+			$excel->addSheet($sheet);
+			$excel->removeSheetByIndex(0);
+			// column headers
+			$col_index = 0;
+			for ($i = 0; $i < count($display_data); $i++) {
+				$data = $display_data[$i];
+				$sheet->setCellValueByColumnAndRow($i, 1, $data->getDisplayName());
+			}
+			// put data in excel
+			$row_index = 2;
+			foreach ($res as $row) {
+				$col_index = 0;
+				for ($i = 0; $i < count($display_data); $i++) {
+					$a = $data_aliases[$i];
+					$data = $display_data[$i];
+					$path = $paths[$i];
+					$value = $row[$a["data"]];
+					// TODO make value as exportable...
+					$sheet->setCellValueByColumnAndRow($col_index, $row_index, $value);
+					$col_index++;
+				}
+				$row_index++;
+			}
+			// initialize writer according to requested format
+			$format = $input["export"];
+			if ($format == 'excel2007') {
+				header("Content-Disposition: attachment; filename=\"list.xlsx\"");
+				$writer = new PHPExcel_Writer_Excel2007($excel);
+			} else if ($format == 'excel5') {
+				header("Content-Disposition: attachment; filename=\"list.xls\"");
+				$writer = new PHPExcel_Writer_Excel5($excel);
+			} else if ($format == 'csv') {
+				header("Content-Disposition: attachment; filename=\"list.csv\"");
+				echo "\xEF\xBB\xBF"; // UTF-8 BOM
+				$writer = new PHPExcel_Writer_CSV($excel);
+			} else if ($format == 'pdf') {
+				header("Content-Disposition: attachment; filename=\"list.pdf\"");
+				PHPExcel_Settings::setPdfRenderer(PHPExcel_Settings::PDF_RENDERER_MPDF, "common/MPDF");
+				$writer = new PHPExcel_Writer_PDF($excel);
+			}
+			// write to output
+			$writer->save('php://output');
 		}
-		echo "]";
-		echo "}";
 	}
 }
 ?>

@@ -51,6 +51,14 @@ class page_subject_grades extends Page {
 		// build the table with students info
 		require_once("component/data_model/page/custom_data_list.inc");
 		$available_fields = PNApplication::$instance->data_model->getAvailableFields("StudentClass");
+		for ($i = 0; $i < count($available_fields); $i++) {
+			$f = $available_fields[$i];
+			if ($f[0]->handler->category <> "Personal Information" &&
+				$f[0]->handler->category <> "Student") {
+				array_splice($available_fields, $i, 1);
+				$i--;
+			}
+		}
 		$filters = array();
 		array_push($filters, array(
 			"category"=>"Student",

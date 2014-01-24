@@ -412,7 +412,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		var params = {table:t._root_table,fields:fields,actions:true,page:t._page_num,page_size:t._page_size};
 		if (t._sort_column && t._sort_order != 3) {
 			params.sort_field = t._sort_column.id;
-			params._sort_order = t._sort_order == 1 ? "ASC" : "DESC";
+			params.sort_order = t._sort_order == 1 ? "ASC" : "DESC";
 		}
 		params.filters = t._filters;
 		service.json("data_model","get_data_list",params,function(result){
@@ -727,8 +727,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	t._export_list = function(format) {
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
-			fields.push(t.show_fields[i].path.path);
-
+			fields.push({path:t.show_fields[i].path.path,name:t.show_fields[i].name});
 		var form = document.createElement("FORM");
 		var input;
 		form.appendChild(input = document.createElement("INPUT"));
@@ -741,6 +740,20 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		input.type = 'hidden';
 		input.name = 'fields';
 		input.value = service.generateInput(fields);
+		if (t._sort_column && t._sort_order != 3) {
+			form.appendChild(input = document.createElement("INPUT"));
+			input.type = 'hidden';
+			input.name = 'sort_field';
+			input.value = t._sort_column.id;
+			form.appendChild(input = document.createElement("INPUT"));
+			input.type = 'hidden';
+			input.name = 'sort_order';
+			input.value = t._sort_order == 1 ? "ASC" : "DESC";
+		}
+		form.appendChild(input = document.createElement("INPUT"));
+		input.type = 'hidden';
+		input.name = 'filters';
+		input.value = service.generateInput(t._filters);
 		form.appendChild(input = document.createElement("INPUT"));
 		input.type = 'hidden';
 		input.name = 'export';

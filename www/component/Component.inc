@@ -138,8 +138,13 @@ abstract class Component {
 				PNApplication::print_json_result(null);
 				return;
 			}			
-		} else
-			$input = $_POST;
+		} else {
+			$input = array();
+			foreach ($_POST as $n=>$v) {
+				$input[$n] = @json_decode($v, true);
+				if ($input[$n] === null && $v != "null") $input[$n] = $v;
+			}
+		}
 		
 		// get output format
 		$output_format = $service->get_output_format($input);

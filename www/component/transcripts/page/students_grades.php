@@ -45,6 +45,14 @@ class page_students_grades extends Page {
 		// build the table with students info
 		require_once("component/data_model/page/custom_data_list.inc");
 		$available_fields = PNApplication::$instance->data_model->getAvailableFields("StudentClass");
+		for ($i = 0; $i < count($available_fields); $i++) {
+			$f = $available_fields[$i];
+			if ($f[0]->handler->category <> "Personal Information" &&
+				$f[0]->handler->category <> "Student") {
+				array_splice($available_fields, $i, 1);
+				$i--;
+			}
+		}
 		$filters = array();
 		array_push($filters, array(
 			"category"=>"Student",
@@ -277,15 +285,9 @@ class page_students_grades extends Page {
 					}, null, customize_subject_name_header);
 					var span = document.createElement("SPAN");
 					if (subject.weight) {
-					span.appendChild(document.createTextNode("Coef."));
-					span.appendChild(document.createElement("BR"));
-					<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) {
-						echo "var cell;";
-						require_once("component/data_model/page/utils.inc");
-						datamodel_cell_inline($this, "cell", "span", true, "CurriculumSubjectGrading", "weight", "subject.id", null, "subject.weight", null); 
-					} else { ?>
-					span.appendChild(document.createTextNode(subject.weight));
-					<?php } ?>
+						span.appendChild(document.createTextNode("Coef."));
+						span.appendChild(document.createElement("BR"));
+						span.appendChild(document.createTextNode(subject.weight));
 					}
 					custom_data_list.addSubColumn('subject_'+subject.id, 'subject_'+subject.id+"_weight", span, function(td,index) {
 						var student = students[index];

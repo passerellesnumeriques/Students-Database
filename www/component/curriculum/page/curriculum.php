@@ -14,6 +14,10 @@ class page_curriculum extends Page {
 		
 		$this->add_javascript("/static/widgets/tree/tree.js");
 		?>
+		<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'>
+			<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/>
+			To add, remove or edit the curriculum, Right-click on an element below
+		</div>
 		<div id='curriculum_tree' style='cursor:default;background-color:white'></div>
 		<script type='text/javascript'>
 		var edit = <?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) echo "true"; else echo "false"; ?>;

@@ -94,6 +94,8 @@ var custom_data_list = {
 		// create a row for each data
 		for (var i = 0; i < this.data_from_request.length; ++i)
 			this.tbody.appendChild(document.createElement("TR"));
+
+		this.table.style.backgroundColor = "#FFFFFF";
 	},
 	select_field: function(field_category, field_name, show, customize_header) {
 		var index;
