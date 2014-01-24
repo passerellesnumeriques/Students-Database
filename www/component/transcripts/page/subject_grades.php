@@ -118,6 +118,7 @@ class page_subject_grades extends Page {
 		
 		$this->add_javascript("/static/widgets/page_header.js");
 		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->add_stylesheet("/static/transcripts/grades.css");
 		?>
 		<style type='text/css'>
 		#data_list_container table {
@@ -127,6 +128,21 @@ class page_subject_grades extends Page {
 		#data_list_container th, #data_list_container td {
 			border: 1px solid black;
 			padding: 1px;
+		}
+		.subject_header_table, .subject_header_table input {
+			font-size:8pt;
+			font-family:Verdana;
+		}
+		table.subject_header_table {
+			border-collapse: collapse;
+			border-spacing: 0px;
+		}
+		.subject_header_field {
+			background-color:#FFFFFF;
+		}
+		.subject_header_field input {
+			padding: 0px;
+			margin: 0px;
 		}
 		</style>
 		<div id='page_container' style='width:100%;height:100%'>
@@ -142,30 +158,30 @@ class page_subject_grades extends Page {
 			</div>
 			<div id='header2'>
 				<form name='only_final_grade_selection' onsubmit='return false;'>
-				<table>
+				<table class='subject_header_table'>
 					<tr>
 						<td>Subject Code</td>
-						<td style='background-color:#FFFFFF'><?php echo $subject["code"];?></td>
+						<td class='subject_header_field'><?php echo $subject["code"];?></td>
 						<td>Maximum Grade</td>
-						<td id='subject_max_grade' style='background-color:#FFFFFF'></td>
+						<td id='subject_max_grade' class='subject_header_field'></td>
 						<td>
 							<input type='radio' name='only_final_grade' value='true' disabled='disabled' onchange='grade_type_changed();'/> Give only a final grade for this subject
 						</td>
 					</tr>
 					<tr>
 						<td>Subject Name</td>
-						<td style='background-color:#FFFFFF'><?php echo $subject["name"];?></td>
+						<td class='subject_header_field'><?php echo $subject["name"];?></td>
 						<td>Passing Grade</td>
-						<td id='subject_passing_grade' style='background-color:#FFFFFF'></td>
+						<td id='subject_passing_grade' class='subject_header_field'></td>
 						<td>
 							<input type='radio' name='only_final_grade' value='false' disabled='disabled' onchange='grade_type_changed();'/> Specify evaluations, and automatically compute the final grade<br/>
 						</td>
 					</tr>
 					<tr>
-						<td>Weight</td>
-						<td id='subject_weight' style='background-color:#FFFFFF'></td>
+						<td>Coefficient</td>
+						<td id='subject_weight' class='subject_header_field'></td>
 						<td></td>
-						<td style='background-color:#FFFFFF'></td>
+						<td style=''></td>
 						<td></td>
 					</tr>
 				</table>
@@ -341,7 +357,7 @@ class page_subject_grades extends Page {
 			new vertical_layout('page_container');
 		}
 		function customize_student_header(th) {
-			th.style.backgroundColor = '#FFFFA0';
+			th.className = "grades_student_info_header";
 		}
 		init_page();
 
@@ -519,7 +535,7 @@ class page_subject_grades extends Page {
 					update_grade_color(td, students_grades[index].final_grade, subject_info.passing_grade, subject_info.max_grade);
 				});
 			},null,function(th){
-				th.style.backgroundColor = '#A0FFFF';
+				th.className = "grades_total_header";
 			});
 		}
 		function show_evaluations() {
@@ -532,15 +548,16 @@ class page_subject_grades extends Page {
 				e.style.position = 'static';
 			}
 			custom_data_list.resetColumns();
-			custom_data_list.addColumn("final_grade","Final Grade",function(td,index) {
+			custom_data_list.addColumn("final_grade","Final<br/>Grade",function(td,index) {
 				var grade = students_grades[index].final_grade;
 				<?php PNApplication::$instance->widgets->create_typed_field($this, "students_grades[index].field_final_grade", "StudentSubjectGrade", "grade", "false", "grade");?>
 				td.appendChild(students_grades[index].field_final_grade.getHTMLElement());
 				td.style.textAlign = 'right';
+				td.style.fontWeight = "bold";
 				update_grade_color(td, grade, subject_info.passing_grade, subject_info.max_grade);
 				students_grades[index].td_final_grade = td;
 			},null,function(th){
-				th.style.backgroundColor = '#A0FFFF';
+				th.className = "grades_total_header";
 			});
 			for (var i = 0; i < types.length; ++i) {
 				var type = types[i];
@@ -554,45 +571,58 @@ class page_subject_grades extends Page {
 		function add_type_column(type) {
 			if (!type.col_id)
 				type.col_id = ++col_id_counter;
+
+			var name_node = document.createTextNode(type.name);
+			var coef_node = document.createTextNode(type.weight);
+			
 			var div = document.createElement("DIV");
+			div.appendChild(name_node);
 			if (edit_mode) {
-				div.style.fontWeight = 'normal';
-				var field;
-				<?php PNApplication::$instance->widgets->create_typed_field($this, "field", "CurriculumSubjectEvaluationType", "name", "true", "type.name");?>
-				div.appendChild(field.getHTMLElement());
-				field.onchange.add_listener(function(f){
-					type.name = f.getCurrentData();
-				});
-				var img = document.createElement("IMG");
-				img.src = theme.icons_16.remove;
-				img.className = "button";
-				img.style.padding = "0px";
-				img.style.verticalAlign = "bottom";
-				img.onclick = function() {
-					// TODO
-					types.remove(type);
-					custom_data_list.removeColumn(type.col_id);
+				var menu_icon = document.createElement("IMG");
+				menu_icon.className = "button";
+				menu_icon.style.padding = "0px";
+				menu_icon.src = theme.icons_10.arrow_down_context_menu;
+				menu_icon.style.verticalAlign = "bottom";
+				menu_icon.onclick = function() {
+					require("context_menu.js", function() {
+						var menu = new context_menu();
+						menu.addIconItem(theme.icons_16.edit, "Edit", function() {
+							edit_evaluation_type(type, function() {
+								name_node.nodeValue = type.name;
+								coef_node.nodeValue = type.weight;
+								calculate_all_grades();
+							});
+						});
+						menu.addIconItem(theme.icons_16.remove, "Remove", function() {
+							confirm_dialog("Are you sure to remove the evaluation type '"+type.name+"', and all its content (evaluations and grades) ?",function(yes) {
+								if (yes) {
+									alert('Remove not yet done');
+									//types.remove(type);
+									//custom_data_list.removeColumn(type.col_id); // TODO does not work
+								}
+							});
+						});
+						menu.addSeparator();
+						menu.addIconItem(theme.icons_16.add, "Create a new evaluation", function() {
+							new_evaluation(type);
+						});
+						menu.showBelowElement(menu_icon);
+					});
 				};
-				div.appendChild(img);
-				div.appendChild(document.createElement("BR"));
-				div.appendChild(document.createTextNode("Weight: "));
-				var field_weight;
-				<?php PNApplication::$instance->widgets->create_typed_field($this, "field_weight", "CurriculumSubjectEvaluationType", "weight", "true", "type.weight");?>
-				div.appendChild(field_weight.getHTMLElement());
-				field_weight.onchange.add_listener(function(f){
-					type.weight = f.getCurrentData();
-					calculate_all_grades();
-				});
-			} else {
-				div.appendChild(document.createTextNode(type.name));
-				div.appendChild(document.createElement("BR"));
-				div.appendChild(document.createTextNode("Weight: "+type.weight));
-			}			
+				div.appendChild(menu_icon);
+			}
+			div.appendChild(document.createElement("BR"));
+			var span = document.createElement("SPAN");
+			span.style.fontWeight = "normal";
+			span.appendChild(document.createTextNode("Coefficient "));
+			span.appendChild(coef_node);
+			div.appendChild(span);
+
 			custom_data_list.addColumn("col_"+type.col_id, div, function(td,index){
 			},"final_grade",function(th){
-				th.style.backgroundColor = '#C0C0FF';
+				th.className = "grades_category_header";
 			});
-			custom_data_list.addSubColumn("col_"+type.col_id, "col_"+type.col_id+"_total", "Total (%)", function(td,index) {
+			custom_data_list.addSubColumn("col_"+type.col_id, "col_"+type.col_id+"_total", "Total<br/>(%)", function(td,index) {
 				var tg = null;
 				for (var i = 0; i < students_grades[index].types_grades.length; ++i)
 					if (students_grades[index].types_grades[i].type_id == type.id) { tg = students_grades[index].types_grades[i]; break; }
@@ -602,58 +632,64 @@ class page_subject_grades extends Page {
 				}
 				<?php PNApplication::$instance->widgets->create_typed_field($this, "tg.field", "StudentSubjectEvaluationTypeGrade", "grade", "false", "tg.grade");?>
 				td.appendChild(tg.field.getHTMLElement());
+				td.style.fontWeight = "bold";
 				update_grade_color(td, tg.grade, subject_info.passing_grade, subject_info.max_grade);
 				tg.td = td;
 				td.style.textAlign = 'right';
 			},null,function(th){
-				th.style.backgroundColor = '#A0FFFF';
+				th.className = "grades_total_header";
 			});
 		}
 		function add_eval_column(type, eval) {
 			if (!eval.col_id) eval.col_id = ++col_id_counter;
+
+			var name_node = document.createTextNode(eval.name);
+			var weight_node = document.createTextNode(eval.weight);
+			var max_grade_node = document.createTextNode(eval.max_grade);
+			
 			var div = document.createElement("DIV");
+			div.appendChild(name_node);
+			
 			if (edit_mode) {
-				div.style.fontWeight = 'normal';
-				var field;
-				<?php PNApplication::$instance->widgets->create_typed_field($this, "field", "CurriculumSubjectEvaluation", "name", "true", "eval.name");?>
-				div.appendChild(field.getHTMLElement());
-				field.onchange.add_listener(function(f){
-					eval.name = f.getCurrentData();
-				});
-				var img = document.createElement("IMG");
-				img.src = theme.icons_16.remove;
-				img.className = "button";
-				img.style.padding = "0px";
-				img.style.verticalAlign = "bottom";
-				img.onclick = function() {
-					// TODO
+				var menu_icon = document.createElement("IMG");
+				menu_icon.className = "button";
+				menu_icon.style.padding = "0px";
+				menu_icon.src = theme.icons_10.arrow_down_context_menu;
+				menu_icon.style.verticalAlign = "bottom";
+				menu_icon.onclick = function() {
+					require("context_menu.js", function() {
+						var menu = new context_menu();
+						menu.addIconItem(theme.icons_16.edit, "Edit", function() {
+							edit_evaluation(eval, function() {
+								name_node.nodeValue = eval.name;
+								weight_node.nodeValue = eval.weight;
+								max_grade_node.nodeValue = eval.max_grade;
+								calculate_all_grades();
+							});
+						});
+						menu.addIconItem(theme.icons_16.remove, "Remove", function() {
+							confirm_dialog("Are you sure to remove the evaluation type '"+type.name+"', and all its content (evaluations and grades) ?",function(yes) {
+								if (yes) {
+									// TODO
+									alert('Remove not yet done');
+								}
+							});
+						});
+						menu.showBelowElement(menu_icon);
+					});
 				};
-				div.appendChild(img);
-				div.appendChild(document.createElement("BR"));
-				div.appendChild(document.createTextNode("Weight: "));
-				var field_weight;
-				<?php PNApplication::$instance->widgets->create_typed_field($this, "field_weight", "CurriculumSubjectEvaluation", "weight", "true", "eval.weight");?>
-				div.appendChild(field_weight.getHTMLElement());
-				field_weight.onchange.add_listener(function(f){
-					eval.weight = f.getCurrentData();
-					calculate_all_grades();
-				});
-				div.appendChild(document.createElement("BR"));
-				div.appendChild(document.createTextNode("Max Grade: "));
-				var field_max_grade;
-				<?php PNApplication::$instance->widgets->create_typed_field($this, "field_max_grade", "CurriculumSubjectEvaluation", "max_grade", "true", "eval.max_grade");?>
-				div.appendChild(field_max_grade.getHTMLElement());
-				field_max_grade.onchange.add_listener(function(f){
-					eval.max_grade = f.getCurrentData();
-					calculate_all_grades();
-				});
-			} else {
-				div.appendChild(document.createTextNode(eval.name));
-				div.appendChild(document.createElement("BR"));
-				div.appendChild(document.createTextNode("Weight: "+eval.weight));
-				div.appendChild(document.createElement("BR"));
-				div.appendChild(document.createTextNode("Max Grade: "+eval.max_grade));
+				div.appendChild(menu_icon);
 			}
+
+			var sub_div = document.createElement("DIV");
+			sub_div.style.fontWeight = "normal";
+			div.appendChild(sub_div);
+			sub_div.appendChild(document.createTextNode("Coef "));
+			sub_div.appendChild(weight_node);
+			sub_div.appendChild(document.createElement("BR"));
+			sub_div.appendChild(document.createTextNode("Max "));
+			sub_div.appendChild(max_grade_node);
+			
 			custom_data_list.addSubColumn("col_"+type.col_id, "col_"+eval.col_id, div, function(td,index) {
 				var eg = null;
 				for (var i = 0; i < students_grades[index].eval_grades.length; ++i)
@@ -673,7 +709,7 @@ class page_subject_grades extends Page {
 				});
 				calculate_grades(students_grades[index]);
 			}, "col_"+type.col_id+"_total",function(th){
-				th.style.backgroundColor = '#C0C0FF';
+				th.className = "grades_sub_category_header";
 			});
 		}
 
@@ -738,41 +774,149 @@ class page_subject_grades extends Page {
 		}
 
 		var type_id_counter = -1, eval_id_counter = -1;
+		function edit_evaluation_type(type, onok) {
+			require("popup_window.js",function() {
+				var table = document.createElement("TABLE");
+				var tr_error = document.createElement("TR"); table.appendChild(tr_error);
+				var td_error = document.createElement("TD"); tr_error.appendChild(td_error);
+				td_error.colSpan = 2;
+				tr_error.style.visibility = "hidden";
+				tr_error.style.position = "absolute";
+				var tr, td;
+				table.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.innerHTML = "Name";
+				tr.appendChild(td = document.createElement("TD"));
+				var input_name = document.createElement("INPUT"); td.appendChild(input_name);
+				input_name.maxLength = 100;
+				input_name.value = type.name;
+				table.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.innerHTML = "Coefficient";
+				tr.appendChild(td = document.createElement("TD"));
+				var input_weight = document.createElement("INPUT"); td.appendChild(input_weight);
+				input_weight.maxLength = 100;
+				input_weight.value = type.weight;
+				var popup = new popup_window("Evaluation Type", null, table, false);
+				popup.addOkCancelButtons(function() {
+					var error = null;
+					var name = input_name.value;
+					name = name.trim();
+					if (name.length == 0) error = "Please enter a name";
+					else {
+						for (var i = 0; i < types.length; ++i) {
+							if (types[i].name.toLowerCase() == name.toLowerCase() && types[i].id != type.id) {
+								error = "A type of evaluation already exists with this name";
+								break;
+							}
+						}
+					}
+					var weight = input_weight.value.trim();
+					if (!error) {
+						if (weight.length == 0) error = "Please enter a coefficient";
+						else {
+							weight = parseInt(weight);
+							if (isNaN(weight) || weight <= 0) error = "Invalid coefficient";
+						}
+					}
+					if (!error) {
+						type.name = name;
+						type.weight = weight;
+						popup.close();
+						onok();
+						return;
+					}
+					tr_error.style.visibility = "visible";
+					tr_error.style.position = "static";
+					td_error.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
+					td_error.style.color = 'red';
+				});
+				popup.show();
+			});
+		}
 		function new_evaluation_type() {
-			input_dialog(null,"New Type of Evaluation","Enter a name for the new type of evaluation","",100,function(name){
-				if (name.trim().length == 0) return "Please enter a name";
-				return null;
-			},function(name){
-				if (!name) return;
-				var type = {id:type_id_counter--,name:name.trim(),weight:1,evaluations:[]};
+			var type = {id:type_id_counter--,name:"",weight:"",evaluations:[]};
+			edit_evaluation_type(type, function() {
 				types.push(type);
 				add_type_column(type);
 			});
 		}
+		function edit_evaluation(eval, onok) {
+			require("popup_window.js",function() {
+				var table = document.createElement("TABLE");
+				var tr_error = document.createElement("TR"); table.appendChild(tr_error);
+				var td_error = document.createElement("TD"); tr_error.appendChild(td_error);
+				td_error.colSpan = 2;
+				tr_error.style.visibility = "hidden";
+				tr_error.style.position = "absolute";
+				var tr, td;
+				table.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.innerHTML = "Name";
+				tr.appendChild(td = document.createElement("TD"));
+				var input_name = document.createElement("INPUT"); td.appendChild(input_name);
+				input_name.maxLength = 100;
+				input_name.value = eval.name;
+
+				table.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.innerHTML = "Coefficient";
+				tr.appendChild(td = document.createElement("TD"));
+				var input_weight = document.createElement("INPUT"); td.appendChild(input_weight);
+				input_weight.maxLength = 100;
+				input_weight.value = eval.weight;
+
+				table.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.innerHTML = "Maximum Grade";
+				tr.appendChild(td = document.createElement("TD"));
+				var input_max_grade = document.createElement("INPUT"); td.appendChild(input_max_grade);
+				input_max_grade.maxLength = 100;
+				input_max_grade.value = eval.max_grade;
+
+				var popup = new popup_window("Evaluation", null, table, false);
+				popup.addOkCancelButtons(function() {
+					var error = null;
+					var name = input_name.value;
+					name = name.trim();
+					if (name.length == 0) error = "Please enter a name";
+					var weight = input_weight.value.trim();
+					if (!error) {
+						if (weight.length == 0) error = "Please enter a coefficient";
+						else {
+							weight = parseInt(weight);
+							if (isNaN(weight) || weight <= 0) error = "Invalid coefficient";
+						}
+					}
+					var max_grade = input_max_grade.value.trim();
+					if (!error) {
+						if (max_grade.length == 0) error = "Please enter a maximum grade";
+						else {
+							max_grade = parseInt(max_grade);
+							if (isNaN(max_grade) || max_grade <= 0) error = "Invalid maximum grade";
+						}
+					}
+					if (!error) {
+						eval.name = name;
+						eval.weight = weight;
+						eval.max_grade = max_grade;
+						popup.close();
+						onok();
+						return;
+					}
+					tr_error.style.visibility = "visible";
+					tr_error.style.position = "static";
+					td_error.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
+					td_error.style.color = 'red';
+				});
+				popup.show();
+			});
+		}
 		function new_evaluation(type) {
 			var eval = {id:eval_id_counter--,name:"",weight:1,max_grade:100};
-			type.evaluations.push(eval);
-			add_eval_column(type,eval);			
-		}
-		function new_evaluation_menu(button) {
-			if (types.length == 0) {
-				alert("You must add an evaluation type before to create an evaluation");
-				return;
-			}
-			require("context_menu.js",function(){
-				var menu = new context_menu();
-				menu.addTitleItem(null, "Select evaluation type");
-				for (var i = 0; i < types.length; ++i) {
-					var div = document.createElement("DIV");
-					div.className = 'context_menu_item';
-					div.appendChild(document.createTextNode(types[i].name));
-					div.eval_type = types[i];
-					div.onclick = function() {
-						new_evaluation(this.eval_type);
-					};
-					menu.addItem(div);
-				}
-				menu.showBelowElement(button);
+			edit_evaluation(eval, function() {
+				type.evaluations.push(eval);
+				add_eval_column(type,eval);			
 			});
 		}
 		</script>

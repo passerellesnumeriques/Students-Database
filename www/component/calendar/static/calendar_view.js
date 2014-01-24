@@ -25,7 +25,8 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 			container.removeChild(container.childNodes[0]);
 		this.header = document.createElement("DIV");
 		this.header.setAttribute("layout", "30");
-		this.header.style.backgroundColor = "#D8D8D8";
+		//this.header.style.backgroundColor = "#D8D8D8";
+		this.header.className = "header";
 		this.header.style.borderBottom = "1px solid #A0A0A0";
 		this.view_container_container = document.createElement("DIV");
 		this.view_container_container.setAttribute("layout", "fill");

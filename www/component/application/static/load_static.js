@@ -46,7 +46,7 @@ function load_static_resources(container) {
 		if (!t._stopped && window.top.pn_application_static.images.length > 0) return;
 		if (window.top.pn_application_static && window.top.pn_application_static.scripts && window.top.pn_application_static.scripts.length == 0 && window.top.pn_application_static.images.length == 0)
 			window.top.pn_application_static_loaded = true;
-		container.innerHTML = "Application loaded in "+Math.floor((new Date().getTime()-t._start_time.getTime())/1000)+"s.";
+		container.innerHTML = "Application loaded.";
 		require("animation.js",function() {
 			animation.fadeOut(container, 1000);
 		});
@@ -59,7 +59,13 @@ function load_static_resources(container) {
 	
 	/** Start to load another script */
 	this._nextScript = function() {
+		if (window.top.pnapplication && window.top.pnapplication.last_activity > new Date().getTime()-3000) {
+			container.style.color = "#808080";
+			setTimeout(t._nextScript);
+			return;
+		}
 		if (t._stopped) return;
+		container.style.color = "#000000";
 		var script = null;
 		for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
 			if (window.top.pn_application_static.scripts[i].dependencies.length == 0) {
@@ -79,7 +85,13 @@ function load_static_resources(container) {
 	};
 	/** Start to load another image */
 	this._nextImage = function() {
+		if (window.top.pnapplication && window.top.pnapplication.last_activity > new Date().getTime()-3000) {
+			container.style.color = "#808080";
+			setTimeout(t._nextImage);
+			return;
+		}
 		if (t._stopped) return;
+		container.style.color = "#000000";
 		if (window.top.pn_application_static.images.length == 0) { t._checkEnd(); return; }
 		var image = window.top.pn_application_static.images[0];
 		window.top.pn_application_static.images.splice(0,1);

@@ -100,6 +100,15 @@ window.top.default_country_code = <?php $d = PNApplication::$instance->get_domai
 setInterval(function(){
 	service.json("application","ping",null,function(r){});
 },30*1000); // every 30 seconds
+/*setBackgroundGradient(
+	document.getElementById('pn_application_header'),
+	'vertical',
+	[
+	 {pos:55,color:'#62e8ff'},
+	 {pos:85,color:'#22bbea'},
+	 {pos:100,color:'#0080a0'}
+	]
+);*/
 setBackgroundGradient(
 	document.getElementById('pn_application_header'),
 	'vertical',

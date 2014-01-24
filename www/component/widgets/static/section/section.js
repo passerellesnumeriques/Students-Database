@@ -36,15 +36,22 @@ function section_from_html(container) {
 	while (container.childNodes.length > 0) content.appendChild(container.childNodes[0]);
 	var s = new section(icon,title,content,collapsable,border_color,title_background_from,title_background_to);
 	container.appendChild(s.element);
+	return s;
 }
 
 function section(icon, title, content, collapsable, border_color, title_background_from, title_background_to, title_style) {
 	if (!border_color) border_color = "#80A060";
-	if (!title_background_from) title_background_from = "#D8F0D8";
-	if (!title_background_to) title_background_to = "#A0C890";
+	if (!title_background_from) title_background_from = "#E0F0E0";
+	if (!title_background_to) title_background_to = "#C0E8B0";
 
 	var t=this;
 	this.element = document.createElement("DIV");
+	
+	this.addTool = function(element) {
+		this.toolbar.appendChild(element);
+		element.style.display = "inline-block";
+		fireLayoutEventFor(this.element);
+	};
 	
 	this._init = function() {
 		this.element.style.border = "1px solid "+border_color;
@@ -79,10 +86,10 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		this.title = document.createElement("DIV");
 		this.title.innerHTML = title;
 		this.title.style.fontWeight = "bold";
-		this.title.style.fontSize = "12pt";
+		this.title.style.fontSize = "11pt";
 		this.title.style.display = "inline-block";
 		this.title.style.color = "#505050";
-		this.title.style.fontFamily = "Calibri";
+		//this.title.style.fontFamily = "Calibri";
 		if (title_style)
 			for (var att in title_style) this.title.style[att] = title_style[att];
 		this.title_container.appendChild(this.title);
@@ -110,6 +117,7 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		this.content_container = document.createElement("DIV");
 		this.content_container.style.backgroundColor = "#ffffff";
 		setBorderRadius(this.content_container, 0, 0, 0, 0, 5, 5, 5, 5);
+		setBorderRadius(content, 0, 0, 0, 0, 5, 5, 5, 5);
 		this.element.appendChild(this.content_container);
 		this.content_container.appendChild(content);
 	};

@@ -73,6 +73,7 @@ class page_students_grades extends Page {
 		
 		$this->add_javascript("/static/widgets/page_header.js");
 		$this->onload("new page_header('grades_page_header', true);");
+		$this->add_stylesheet("/static/transcripts/grades.css");
 		?>
 		<style type='text/css'>
 		#data_list_container table {
@@ -229,19 +230,19 @@ class page_students_grades extends Page {
 		}
 
 		function customize_student_header(th) {
-			th.style.backgroundColor = '#FFFFA0';
+			th.className = "grades_student_info_header";
 		}
 		function customize_total_header(th) {
-			th.style.backgroundColor = '#A0FFFF';
+			th.className = "grades_total_header";
 		}
 		function customize_category_header(th) {
-			th.style.backgroundColor = '#A0A0F0';
+			th.className = "grades_category_header";
 		}
 		function customize_subject_name_header(th) {
-			th.style.backgroundColor = '#C0C0FF';
+			th.className = "grades_sub_category_header";
 		}
 		function customize_subject_weight_header(th) {
-			th.style.backgroundColor = '#C0C0FF';
+			th.className = "grades_sub_category_header";
 		}
 		
 		function init_table() {
@@ -275,13 +276,17 @@ class page_students_grades extends Page {
 					custom_data_list.addSubColumn('cat_'+cat.id, 'subject_'+subject.id, link, function(td,index) {
 					}, null, customize_subject_name_header);
 					var span = document.createElement("SPAN");
+					if (subject.weight) {
+					span.appendChild(document.createTextNode("Coef."));
+					span.appendChild(document.createElement("BR"));
 					<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) {
 						echo "var cell;";
 						require_once("component/data_model/page/utils.inc");
 						datamodel_cell_inline($this, "cell", "span", true, "CurriculumSubjectGrading", "weight", "subject.id", null, "subject.weight", null); 
 					} else { ?>
-					span.innerHTML = subject.weight;
+					span.appendChild(document.createTextNode(subject.weight));
 					<?php } ?>
+					}
 					custom_data_list.addSubColumn('subject_'+subject.id, 'subject_'+subject.id+"_weight", span, function(td,index) {
 						var student = students[index];
 						var grade = null;

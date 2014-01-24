@@ -14,7 +14,7 @@ class page_curriculum extends Page {
 		
 		$this->add_javascript("/static/widgets/tree/tree.js");
 		?>
-		<div id='curriculum_tree' style='cursor:default'></div>
+		<div id='curriculum_tree' style='cursor:default;background-color:white'></div>
 		<script type='text/javascript'>
 		var edit = <?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) echo "true"; else echo "false"; ?>;
 		var periods = [<?php 

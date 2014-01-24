@@ -90,3 +90,7 @@ if (!window.top.google) {
 	};
 	window.top.load_google_api();
 }
+if (typeof require != 'undefined') {
+	// declares google as a calendar provider
+	require([["calendar.js","google_calendar.js"]]);
+}

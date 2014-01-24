@@ -63,6 +63,7 @@ theme::$icons_16 = array(
 );
 theme::$icons_10 = array(
 	"add" => 			"/static/theme/".$theme."/icons_10/add.png",
+	"arrow_down_context_menu" => "/static/theme/".$theme."/icons_10/arrow_down_context_menu.gif",
 	"close" => 			"/static/theme/".$theme."/icons_10/close.png",
 	"edit" => 			"/static/theme/".$theme."/icons_10/edit.gif",
 	"forbidden" =>		"/static/theme/".$theme."/icons_10/forbidden_10.png",

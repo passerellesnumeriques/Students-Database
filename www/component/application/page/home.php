@@ -5,7 +5,6 @@ class page_home extends Page {
 	
 	public function execute() {
 		$this->add_javascript("/static/widgets/section/section.js");
-		$this->onload("section_from_html('calendars');");
 		$this->onload("section_from_html('news');");
 		$this->onload("section_from_html('dev_links');");
 ?>
@@ -17,8 +16,8 @@ class page_home extends Page {
 		</div>
 	</td>
 	<td valign='top'>
-		<div id='calendars' icon='/static/calendar/event.png' title='Calendars' collapsable='true' style="margin:10px">
-			TODO
+		<div id='calendars' icon='/static/calendar/event.png' title='Your Calendars' collapsable='true' style="margin:10px;">
+			<div id='calendars_container' style="height:300px;"><img src='<?php echo theme::$icons_16["loading"];?>'/></div>
 		</div>
 
 		<div id='dev_links'
@@ -64,6 +63,34 @@ class page_home extends Page {
 	</td>
 </tr>
 </table>
+<script type='text/javascript'>
+var calendars_section = section_from_html('calendars');
+require("calendar.js");
+require("calendar_view.js");
+require("calendar_view_week.js");
+require("calendar.js",function() {
+	var manager = new CalendarManager();
+	require("calendar_view.js",function() {
+		new CalendarView(manager, "week", 'calendars_container', function() {
+		});
+	});
+	window.top.CalendarsProviders.get(function(provider) {
+		var div = document.createElement("DIV");
+		div.innerHTML = "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> <img src='"+provider.getProviderIcon()+"' width=16px height=16px style='vertical-align:bottom'/> Loading "+provider.getProviderName()+"...";
+		div.style.margin = "2px";
+		div.style.paddingRight = "5px";
+		calendars_section.addTool(div);
+		provider.getCalendars(function(calendars) {
+			div.innerHTML = "<img src='"+provider.getProviderIcon()+"' width=16px height=16px style='vertical-align:bottom'/> "+provider.getProviderName()+" ("+calendars.length+")";
+			div.className = "button";
+			fireLayoutEventFor(calendars_section.element);
+			// TODO onclick
+			for (var i = 0; i < calendars.length; ++i)
+				manager.addCalendar(calendars[i]);
+		});
+	});
+});
+</script>
 <?php
 	}
 	

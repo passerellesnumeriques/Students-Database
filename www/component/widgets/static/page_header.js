@@ -25,7 +25,7 @@ function page_header(container, small) {
 		var to_remove = [];
 		for (var i = 0; i < this.menu_container.childNodes.length; ++i)
 			if (this.menu_container.childNodes[i] != t.more_menu)
-				to_remove.push(this.menu_container.childNodes);
+				to_remove.push(this.menu_container.childNodes[i]);
 		for (var i = 0; i < to_remove.length; ++i)
 			this.menu_container.removeChild(to_remove[i]);
 	};

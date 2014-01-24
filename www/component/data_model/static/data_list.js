@@ -154,7 +154,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		// init header
 		t.header = document.createElement("DIV");
 		t.header.setAttribute("layout","25");
-		t.header.className = "data_list_header";
+		t.header.className = "data_list_header header";
 		t.header_left = document.createElement("DIV");
 		t.header_left.setAttribute("layout","fixed");
 		t.header_left.style.borderRight = "1px solid #808080";

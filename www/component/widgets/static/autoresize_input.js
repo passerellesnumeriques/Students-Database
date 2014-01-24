@@ -27,4 +27,5 @@ function autoresize_input(input, min_size) {
 	var prev_onchange = input.onchange;
 	input.onchange = function(e) { if (prev_onchange) prev_onchange(e); update(); };
 	update();
+	input.autoresize = update;
 }

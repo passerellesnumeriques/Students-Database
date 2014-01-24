@@ -167,7 +167,7 @@ class page_batches_classes extends Page {
 					return false;
 				};
 				var icon = document.createElement("IMG");
-				icon.src = "/static/training_education/arrowDown.gif";
+				icon.src = theme.icons_10.arrow_down_context_menu;
 				icon.className = "button";
 				icon.style.padding = "0px";
 				icon.style.verticalAlign = "bottom";
