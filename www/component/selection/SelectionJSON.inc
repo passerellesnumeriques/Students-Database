@@ -17,7 +17,7 @@ class SelectionJSON{
 		
 		$rows = $q->execute();
 		if($rows == null)
-			return null;
+			return "{}";
 		return self::ExamSubject($q, $rows, $id);
 	}
 	
@@ -194,4 +194,11 @@ class SelectionJSON{
 		return $a;
 	}
 	
+	public static function getAllExamSubjectNames(){
+		$names = SQLQuery::create()
+		->select("Exam_subject")
+		->field("name")
+		->execute_single_field();
+		return $names;
+	}
 }

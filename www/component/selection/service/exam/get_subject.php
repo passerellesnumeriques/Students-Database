@@ -1,4 +1,5 @@
 <?php 
+require_once '/../../SelectionJSON.inc';
 class service_exam_get_subject extends Service {
 	public function get_required_rights() { return array(); }
 	public function documentation() { echo "Get the exam subject data"; }
@@ -9,7 +10,7 @@ class service_exam_get_subject extends Service {
 	public function execute(&$component, $input) {
 		if(isset($input['id'])){
 			try {
-				$subject = PNApplication::$instance->selection->get_json_exam_subject_data($input["id"]);
+				$subject = SelectionJSON::ExamSubjectFromID($input["id"]);
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}

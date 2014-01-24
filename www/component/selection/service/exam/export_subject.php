@@ -1,4 +1,5 @@
 <?php
+require_once '/../../SelectionJSON.inc';
 class service_exam_export_subject extends Service{
 	public function get_required_rights(){return array();}
 	public function input_documentation(){
@@ -13,12 +14,13 @@ class service_exam_export_subject extends Service{
 	public function execute(&$component,$input){
 		$format = $input["format"];
 		$subject = null;
-		if(isset($input["subject"]))
-			$subject = json_decode($input["subject"], true);
-		else
-			$subject = json_decode(json_normalize(PNApplication::$instance->selection->get_json_exam_subject_data($input["id"])),true);
-			// var_dump(PNApplication::$instance->selection->get_json_exam_subject_data($input["id"]));
-			// var_dump(json_normalize(PNApplication::$instance->selection->get_json_exam_subject_data($input["id"])));
+		if(isset($input["subject"])){
+			if(is_string($input["subject"]))
+				$subject = json_decode($input["subject"], true);
+			else 
+				$subject = $input["subject"];
+		} else
+			$subject = json_decode(json_normalize(SelectionJSON::ExamSubjectFromID($input["id"])),true);
 		require_once("component/lib_php_excel/PHPExcel.php");
 		$excel = new PHPExcel();
 		$excel->createSheet();

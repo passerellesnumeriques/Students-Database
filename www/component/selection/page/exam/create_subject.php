@@ -78,7 +78,7 @@ class page_exam_create_subject extends selection_page {
 					t._setContainer = function(){						
 						var ul = document.createElement("ul");
 						t.container.appendChild(ul);
-						//create from zero row
+						//create from scratch row
 						var li1 = document.createElement("li");
 						li1.innerHTML = "Create a subject from scratch";
 						var b_from_zero = t._createButton("<b>Go!</b>");

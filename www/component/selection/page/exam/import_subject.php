@@ -386,35 +386,51 @@ class page_exam_import_subject extends selection_page {
 				
 				t._end = function(){
 					//create an exam object
-					var subject = {};
-					subject.id = -1;
-					subject.name = t.exam_infos.name;
-					subject.max_score = 0; //TODO update
-					subject.parts = [];
+					var new_parts = [];
+					var subject_max_score = 0;
+// 					subject.id = -1;
+// 					subject.name = t.exam_infos.name;
+// 					subject.max_score = 0; //TODO update
+// 					subject.parts = [];
 					var index = 0;
 					for(var i = 0; i < t.exam_infos.questions_by_part.length; i++){
-						var subject_questions = [];
+						var part_questions = [];
 						part_max_score = 0;
 						for(var j = 1; j <= t.exam_infos.questions_by_part[i]; j++){
-							var q = {};
-							q.id = -1;
-							q.index = j;//index in the part
-							q.max_score = t._getData("Exam Subject Question","Max Score",questions[index]);
-							q.correct_answer = t._getData("Exam Subject Question","Correct Answer",questions[index]);
-							q.choices = t._getData("Exam Subject Question","Choices",questions[index]);
+// 							var q = {};
+// 							q.id = -1;
+// 							q.index = j;//index in the part
+// 							q.max_score = t._getData("Exam Subject Question","Max Score",questions[index]);
+// 							q.correct_answer = t._getData("Exam Subject Question","Correct Answer",questions[index]);
+// 							q.choices = t._getData("Exam Subject Question","Choices",questions[index]);
+							var q = new ExamSubjectQuestion(
+									-1,
+									j,
+									t._getData("Exam Subject Question","Correct Answer",questions[index]),
+									t._getData("Exam Subject Question","Choices",questions[index])
+									);
 							index++;
 							part_max_score = part_max_score + parseFloat(q.max_score);
-							subject.max_score = subject.max_score + parseFloat(q.max_score);
-							subject_questions.push(q);
+							subject_max_score = subject_max_score + parseFloat(q.max_score);
+							part_questions.push(q);
 						}
-						var part = {};
-						part.id = -1;
-						part.index = i+1;
-						part.name = "";
-						part.max_score = part_max_score;
-						part.questions = subject_questions;
-						subject.parts.push(part);
+// 						var part = {};
+// 						part.id = -1;
+// 						part.index = i+1;
+// 						part.name = "";
+// 						part.max_score = part_max_score;
+// 						part.questions = subject_questions;
+						var part = new ExamSubjectPart(
+									-1,
+									i+1,
+									"",
+									part_max_score,
+									part_questions
+								);
+// 						subject.parts.push(part);
+						new_parts.push(part);
 					}
+					var subject = new ExamSubject(-1,t.exam_infos.name,subject_max_score,new_parts);
 					//save					
 					service.json("selection","exam/save_subject",{exam:subject},function(res){
 						unlock_screen(locker);
@@ -433,8 +449,10 @@ class page_exam_import_subject extends selection_page {
 					else
 						return true;
 				}
-				
-				t._init();
+
+				require("exam_objects.js",function(){
+					t._init();
+				});
 				
 			}
 				

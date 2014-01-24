@@ -21,6 +21,8 @@ class service_exam_save_subject extends Service {
 			$parts_to_insert_indexes = array();
 			
 			$id = $input["exam"]["id"];
+			if($id == -1 || $id == "-1")
+				unset($input["exam"]["id"]);
 			$rows_exam_table = SelectionJSON::ExamSubject2DB($input["exam"]);
 			
 			if(isset($input["exam"]["parts"])){
