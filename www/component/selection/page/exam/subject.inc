@@ -19,9 +19,12 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 	$current_campaign = PNApplication::$instance->selection->get_campaign_id();
 	
 	$fct_name = "exam_subject_".$page->generateID();
-	$page->onload($fct_name."();");
+// 	$page->onload($fct_name."();");
 ?>
 <script type = "text/javascript">
+	require("exam_objects.js",function(){
+		<?php echo $fct_name."();";?>
+	});
 	function <?php echo $fct_name."(){";?>
 		var subject = null;
 		var rights = {};
@@ -47,11 +50,11 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 		var campaign_id = <?php echo json_encode($campaign_id); ?>;
 		var read_only = <?php echo json_encode($read_only);?>;
 		if((exam_id == -1 || exam_id == "-1")){
-			subject = {};
-			subject.id = -1;
-			subject.name = "New Exam";
-			subject.max_score = 0;
-			subject.parts = [];
+			subject = new ExamSubject(-1,"New Exam",0,[]);
+// 			subject.id = -1;
+// 			subject.name = "New Exam";
+// 			subject.max_score = 0;
+// 			subject.parts = [];
 		} else if(typeof(campaign_id) == "string") {
 			//create an exam subject from an existing one
 			<?php

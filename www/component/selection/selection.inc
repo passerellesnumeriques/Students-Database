@@ -1,4 +1,5 @@
 <?php
+require_once 'SelectionJSON.inc';
 $all_steps = include("steps.inc");
 
 	/**
@@ -872,13 +873,7 @@ class selection extends Component {
 		return $json;
 	}
 	
-	public function getAllExamSubjectNames(){
-		$names = SQLQuery::create()
-				->select("Exam_subject")
-				->field("name")
-				->execute_single_field();
-		return $names;
-	}
+	
 	
 	public function getAllExamSubjects(){
 		return SQLQuery::create()
@@ -1105,7 +1100,7 @@ class selection extends Component {
 			//update steps
 			$this->updateAllSteps();
 			// return a new subject object
-			return $this->get_json_exam_subject_data($exam_id);
+			return SelectionJSON::ExamSubjectFromID($exam_id);
 			//TODO return information message from topic
 		}
 	}
