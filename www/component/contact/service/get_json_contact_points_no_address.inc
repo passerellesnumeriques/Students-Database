@@ -1,13 +1,6 @@
-<?php
-/**
- * @param organization
- * organization can be an array(id1, id2, id3) or only on id
- * $json_result.=  a string with the following structure:
- * [{organization: ,contact_points:[{people_id: ,people_last_name: ,people_first_name: ,people_designation: ,contacts:[{id: ,type: ,sub_type: ,contact:},{...}]}]]
- * each contact in array contacts of a people can be used in contact_type.js as the "contacts" parameter to be displayed
- */
- 
- //TODO: update doc!!
+<?php 
+require_once("component/people/PeopleJSON.inc");
+require_once("component/contact/ContactJSON.inc");
 function get_json_contact_points_no_address($organization){
 	$json_result = "";
 	$contacts = null;
@@ -19,15 +12,10 @@ function get_json_contact_points_no_address($organization){
 				->join("People_contact","Contact",array("contact" => "id"))
 				->field("Organization","id","organization_id")
 				->field("Contact_point","designation","designation")
-				->field("People","first_name","first_name")
-				->field("People","id","id")
-				->field("People","last_name","last_name")
-				->field("Contact","id","contact_id")
-				->field("Contact","type","type")
-				->field("Contact","sub_type","sub_type")
-				->field("Contact","contact","contact")
 				->order_by("Organization","id")
 				->order_by("People","id");
+	PeopleJSON::PeopleSQL($q);
+	ContactJSON::ContactSQL($q);
 				
 	if(is_array($organization)){
 		if(count($organization) != 0){
@@ -36,12 +24,12 @@ function get_json_contact_points_no_address($organization){
 		}
 	}
 	else{
-		$q->where("Organization","id",$organization);
+		$q->where_value("Organization","id",$organization);
 		$contacts = $q->execute();
 	}
 	
 	
-	if(isset($contacts[0]["organization_id"]) && $contacts[0]["organization_id"] <> null){
+	if($contacts <> null){
 		$first = true;
 		$first_people = true;
 		$current_partner = null;
@@ -55,11 +43,7 @@ function get_json_contact_points_no_address($organization){
 			if($c["organization_id"] != $current_partner){
 				if(!$first){
 					if($no_people_before) $json_result.= "]}, ";
-					else if($no_contact_before){
-						$json_result.= "]}]}, ";
-						$no_contact_before = false;
-					}
-					else $json_result.=  "}]}]}, ";
+					else $json_result.=  "]}]}, ";
 					$no_people_before = false;
 				}
 				$current_people = null;
@@ -68,71 +52,56 @@ function get_json_contact_points_no_address($organization){
 				$json_result.=  "{";
 				$json_result.=  "organization:".json_encode($c["organization_id"]).", ";
 				$json_result.=  "contact_points:[";
-				if(isset($c["id"]) && $c["id"] <> null){
+				if(isset($c["people_id"])){
 					$json_result.= "{";
-					if($c["id"] != $current_people){
+					if($c["people_id"] != $current_people){
 						if(!$first_people){
-							if($no_contact_before) $json_result.= "]}, ";
-							else $json_result.= "}]}, ";
+							$json_result.= ']}, ';
 							$no_contact_before = false;
 						}
 						$first_people = false;
 						
-						$json_result.= "people_id:".json_encode($c["id"]).", ";
+						$json_result.= "people_id:".json_encode($c["people_id"]).", ";
 						$json_result.=  "people_last_name:".json_encode($c["last_name"]).", ";
 						$json_result.=  "people_first_name:".json_encode($c["first_name"]).", ";
 						$json_result.=  "people_designation:".json_encode($c["designation"]).", ";
 						$json_result.=  "contacts:[";
-						if(isset($c["contact_id"]) && $c["contact_id"] <> null){
-							$json_result.=  "{id:".json_encode($c["contact_id"]).", ";
-							$json_result.=  "type:".json_encode($c["type"]).", ";
-							$json_result.=  "sub_type:".json_encode($c["sub_type"]).", ";
-							$json_result.=  "contact:".json_encode($c["contact"]);
+						if(isset($c["contact_id"])){
+							$json_result.= ContactJSON::Contact(null, $c);
 						} else $no_contact_before = true;
-						$current_people = $c["id"];
+						$current_people = $c["people_id"];
 					} else {
-						$json_result.=  "id:".json_encode($c["contact_id"]).", ";
-						$json_result.=  "type:".json_encode($c["type"]).", ";
-						$json_result.=  "sub_type:".json_encode($c["sub_type"]).", ";
-						$json_result.=  "contact:".json_encode($c["contact"]);
+						$json_result.= ContactJSON::Contact(null, $c);
 					}
 				} else $no_people_before = true;
 				$current_partner = $c["organization_id"];
 			} else {
-				if(isset($c["id"]) && $c["id"] <> null){
-					if($c["id"] != $current_people){
+				if(isset($c["people_id"])){
+					if($c["people_id"] != $current_people){
 						if(!$first_people){
-							if($no_contact_before) $json_result.= "]}, ";
-							else $json_result.= "}]}, ";
+							$json_result.= "]}, ";
 							$no_contact_before = false;
 						}
 						$first_people = false;
 						$json_result.= "{";
-						$json_result.= "people_id:".json_encode($c["id"]).", ";
+						$json_result.= "people_id:".json_encode($c["people_id"]).", ";
 						$json_result.=  "people_last_name:".json_encode($c["last_name"]).", ";
 						$json_result.=  "people_first_name:".json_encode($c["first_name"]).", ";
 						$json_result.=  "people_designation:".json_encode($c["designation"]).", ";
 						$json_result.=  "contacts:[";
-						if(isset($c["contact_id"]) && $c["contact_id"] <> null){
-							$json_result.=  "{id:".json_encode($c["contact_id"]).", ";
-							$json_result.=  "type:".json_encode($c["type"]).", ";
-							$json_result.=  "sub_type:".json_encode($c["sub_type"]).", ";
-							$json_result.=  "contact:".json_encode($c["contact"]);
-							$current_people = $c["id"];
+						if(isset($c["contact_id"])){
+							$json_result.= ContactJSON::Contact(null, $c);
+							$current_people = $c["people_id"];
 						} else $no_contact_before = true;
 					} else {
-						$json_result.= "}, {";
-						$json_result.=  "id:".json_encode($c["contact_id"]).", ";
-						$json_result.=  "type:".json_encode($c["type"]).", ";
-						$json_result.=  "sub_type:".json_encode($c["sub_type"]).", ";
-						$json_result.=  "contact:".json_encode($c["contact"]);
+						$json_result.= ", ";
+						ContactJSON::Contact(null, $c);
 					}
 				}
 			}
 			if($i == $length -1){
 				if($no_people_before) $json_result.= "]}]";
-				else if($no_contact_before) $json_result.= "]}]}]";
-				else $json_result.=  "}]}]}]";
+				else $json_result.=  "]}]}]";
 			}
 			$i++;
 		}
@@ -141,90 +110,4 @@ function get_json_contact_points_no_address($organization){
 	} else $json_result.=  "[]";
 	return $json_result;
 }
-	
-	
-	
-	// if(isset($contacts[0]["organization_id"]) && $contacts[0]["organization_id"] <> null){
-		// $first = true;
-		// $first_people = true;
-		// $current_partner = null;
-		// $current_people = null;
-		// $json_result.=  "[";
-		// $length = count($contacts);
-		// $i = 0;
-		// foreach($contacts as $c){
-			// if($c["organization_id"] != $current_partner){
-				// if(!$first){
-					// $json_result.=  "}]}]}, ";
-				// }
-				// $current_people = null;
-				// $first_people = true;
-				// $first = false;
-				// $json_result.=  "{";
-				// $json_result.=  "organization:".json_encode($c["organization_id"]).", ";
-				// $json_result.=  "contact_points:[";
-				// if(isset($c["contact_id"]) && $c["contact_id"] <> null){
-					// $json_result.= "{";
-					// if($c["id"] != $current_people){
-						// if(!$first_people){
-							// $json_result.= "}]}, ";
-						// }
-						// $first_people = false;
-						
-						// $json_result.= "people_id:".json_encode($c["id"]).", ";
-						// $json_result.=  "people_last_name:".json_encode($c["last_name"]).", ";
-						// $json_result.=  "people_first_name:".json_encode($c["first_name"]).", ";
-						// $json_result.=  "people_designation:".json_encode($c["designation"]).", ";
-						// $json_result.=  "contacts:[{";
-						// $json_result.=  "id:".json_encode($c["contact_id"]).", ";
-						// $json_result.=  "type:".json_encode($c["type"]).", ";
-						// $json_result.=  "sub_type:".json_encode($c["sub_type"]).", ";
-						// $json_result.=  "contact:".json_encode($c["contact"]);
-						// $current_people = $c["id"];
-					// } else {
-						// $json_result.=  "id:".json_encode($c["contact_id"]).", ";
-						// $json_result.=  "type:".json_encode($c["type"]).", ";
-						// $json_result.=  "sub_type:".json_encode($c["sub_type"]).", ";
-						// $json_result.=  "contact:".json_encode($c["contact"]);
-					// }
-				// }
-				// $current_partner = $c["organization_id"];
-			// } else {
-				// if(isset($c["contact_id"]) && $c["contact_id"] <> null){
-					// if($c["id"] == $current_people) $json_result.= "}, {";
-					// if($c["id"] != $current_people){
-						// if(!$first_people){
-							// $json_result.= "}]}, ";
-						// }
-						// $first_people = false;
-						// $json_result.= "{";
-						// $json_result.= "people_id:".json_encode($c["id"]).", ";
-						// $json_result.=  "people_last_name:".json_encode($c["last_name"]).", ";
-						// $json_result.=  "people_first_name:".json_encode($c["first_name"]).", ";
-						// $json_result.=  "people_designation:".json_encode($c["designation"]).", ";
-						// $json_result.=  "contacts:[{";
-						// $json_result.=  "id:".json_encode($c["contact_id"]).", ";
-						// $json_result.=  "type:".json_encode($c["type"]).", ";
-						// $json_result.=  "sub_type:".json_encode($c["sub_type"]).", ";
-						// $json_result.=  "contact:".json_encode($c["contact"]);
-						// $current_people = $c["id"];
-					// } else {
-						// $json_result.=  "id:".json_encode($c["contact_id"]).", ";
-						// $json_result.=  "type:".json_encode($c["type"]).", ";
-						// $json_result.=  "sub_type:".json_encode($c["sub_type"]).", ";
-						// $json_result.=  "contact:".json_encode($c["contact"]);
-					// }
-				// }
-			// }
-			// if($i == $length -1){
-				// if(!isset($c["contact_id"]) || $c["contact_id"] === null) $json_result.= "]}]";
-				// else $json_result.=  "}]}]}]";
-			// }
-			// $i++;
-		// }
-		
-		
-	// } else $json_result.=  "[]";
-	// return $json_result;
-
 ?>

@@ -10,7 +10,6 @@ class contact extends Component {
 			new ContactPeoplePlugin()
 		);
 	}
-	
 	/**
 	 * Add a new postal address to an organization
 	 * @param integer $organization_id Organization ID

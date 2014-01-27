@@ -1,5 +1,5 @@
 <?php
-require_once '/../../SelectionJSON.inc';
+require_once "component/selection/SelectionJSON.inc";
 class service_exam_export_subject extends Service{
 	public function get_required_rights(){return array();}
 	public function input_documentation(){

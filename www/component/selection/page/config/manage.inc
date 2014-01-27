@@ -132,14 +132,14 @@ function manage_config(&$page,$container_id,$header_id){
 		
 		t.reset = function(){
 			//reset tbody
-			t.table.removeChild(t.tbody);
-			delete t.tbody;
+			container.removeChild(t.table);
+			delete t.table;
 			//reset t.date_fields
 			delete t.date_fields;
 			t.date_fields = [];
-			t.tbody = document.createElement("tbody");
+			t.table = document.createElement("table");
 			t._setBody();
-			t.table.appendChild(t.tbody);
+			container.appendChild(t.table);
 		}
 		
 		t._setDependencies = function(){
@@ -156,6 +156,7 @@ function manage_config(&$page,$container_id,$header_id){
 		 */
 		t._createTable = function(){
 			t.table = document.createElement("table");
+			t.table.style.backgroundColor = "#FFFFFF";
 			// t._setHeader(theader);
 			t._setBody();
 			// t._setFoot(tfoot);

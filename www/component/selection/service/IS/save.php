@@ -81,6 +81,11 @@ class service_IS_save extends Service{
 			foreach($address as $f => $v){
 				if($f == "country_code")
 					unset($address[$f]);
+				else if ($f == "country_id"){
+					$temp = $v;
+					unset($address[$f]);
+					$address["country"] = $temp;
+				}
 				else if($f == "street_name"){
 					$address["street"] = $v;
 					unset($address[$f]);

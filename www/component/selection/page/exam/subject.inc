@@ -1,7 +1,7 @@
 <?php
 function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_id){
 	require_once("component/data_model/Model.inc");
-	require_once("/../../SelectionJSON.inc");
+	require_once("component/selection/SelectionJSON.inc");
 	$rights = array();
 	$pop_error = false;
 	$update_rights = PNApplication::$instance->selection->canUpdateStep("manage_exam");

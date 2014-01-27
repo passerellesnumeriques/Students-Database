@@ -622,7 +622,7 @@ class selection extends Component {
 	 */
 	public function removeIS($id, $fake_organization){
 		// check the rights
-		if(!PNApplication::$instance->user_management()->has_right("",true)){
+		if(!PNApplication::$instance->user_management->has_right("manage_information_session",true)){
 			PNApplication::error("You are not allowed to remove any information session");
 			return;
 		}
