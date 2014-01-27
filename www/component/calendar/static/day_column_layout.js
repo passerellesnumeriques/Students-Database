@@ -64,7 +64,7 @@ function DayColumnLayout(calendar_manager) {
 		div.style.padding = "1px";
 		var head = document.createElement("DIV");
 		head.style.fontSize = "8pt";
-		head.style.color = "#202040";
+		head.style.color = "#404040";
 		var time_str = event.start.getHours()+":"+this._2digits(event.start.getMinutes());
 		time_str += "-"+event.end.getHours()+":"+this._2digits(event.end.getMinutes());
 		head.appendChild(document.createTextNode(time_str));
