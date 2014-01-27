@@ -1,7 +1,8 @@
 // #depends[/static/calendar/calendar.js]
 
-function load_google_calendars(ondone) {
-	var onload = function() {
+function load_google_calendars(ondone, feedback_handler) {
+	var calendarApiReady = function() {
+		if (feedback_handler) feedback_handler("Loading your Google Calendars...");
 		var req = window.top.gapi.client.calendar.calendarList.list();
 		req.execute(function(resp){
 			var calendars = [];
@@ -15,26 +16,47 @@ function load_google_calendars(ondone) {
 			ondone(calendars);
 		});
 	};
-	window.top.add_javascript("/static/google/google.js",function() {
-		window.top.google.need_connection(function(){
+	var googleConnected = function() {
+		if (window.top.gapi.client.calendar) { calendarApiReady(); return; }
+		var load_calendar_api = function() {
+			if (feedback_handler) feedback_handler("Connecting to Google Calendar...");
 			window.top.gapi.client.load('calendar','v3',function(){
-				if (window.top.gapi.client.calendar) { onload(); return; }
-				// try again
-				window.top.gapi.client.load('calendar','v3',function(){
-					if (window.top.gapi.client.calendar) { onload(); return; }
-					// failed again
-					ondone(null);
-				});
+				if (window.top.gapi.client.calendar) { calendarApiReady(); return; }
+				if (feedback_handler) feedback_handler("Connected to Google, but cannot connect to Google Calendar");
+				setTimeout(load_calendar_api, 10000);
 			});
+		};
+		load_calendar_api();
+	};
+	var googleApiReady = function() {
+		if (window.top.google.connection_status == 1) { googleConnected(); return; };
+		var listener = function() {
+			switch (window.top.google.connection_status) {
+			case -1: if (feedback_handler) feedback_handler("Not connected to Google"); break;
+			case 0: if (feedback_handler) feedback_handler("Connecting to Google..."); break;
+			case 1:
+				window.top.google.connection_event.remove_listener(listener);
+				googleConnected();
+				break;
+			}
+		};
+		window.top.google.connection_event.add_listener(listener);
+		listener();
+	};
+	var googleApiNotReady = function() {
+		if (window.top.google) { googleApiReady(); return; }
+		if (feedback_handler) feedback_handler("Loading...");
+		window.top.add_javascript("/static/google/google.js",function() {
+			googleApiReady();
 		});
-	});
+	};
+	googleApiNotReady();
 }
 
 if (typeof require != 'undefined') require("calendar_objects.js");
 
 function GoogleCalendar(id, name, color, show, writable) {
-	Calendar.call(this, name, color, show);
-	this.icon = '/static/google/google.png';
+	Calendar.call(this, window.top.google_calendars_provider, name, color, show, null);
 	this.id = id;
 	this.refresh = function(ondone) {
 		var t=this;
@@ -195,8 +217,8 @@ function parseRRuleDate(s) {
 }
 
 function GoogleCalendarsProvider() {
-	this.getCalendars = function(handler) {
-		load_google_calendars(handler);
+	this.getCalendars = function(handler, feedback_handler) {
+		load_google_calendars(handler, feedback_handler);
 	};
 	this.getProviderIcon = function() {
 		return '/static/google/google.png';
@@ -208,4 +230,4 @@ function GoogleCalendarsProvider() {
 GoogleCalendarsProvider.prototype = new CalendarsProvider();
 GoogleCalendarsProvider.prototype.constructor = GoogleCalendarsProvider;
 
-window.top.CalendarsProviders.add(new GoogleCalendarsProvider());
+window.top.CalendarsProviders.add(window.top.google_calendars_provider = new GoogleCalendarsProvider());

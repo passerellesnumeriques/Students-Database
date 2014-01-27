@@ -11,16 +11,46 @@ function calendar_view_agenda(view, container) {
 	/** List of rows of the agenda */
 	this._rows = [];
 	
-	/** Goes 30 days before */
+	this.getPositionText = function(shorter) {
+		switch (shorter) {
+		case 0: // normal
+			return this.start_date.getDate() + " " + getMonthName(this.start_date.getMonth()+1) + " " + this.start_date.getFullYear() + " - " + this.end_date.getDate() + " " + getMonthName(this.end_date.getMonth()+1) + " " + this.end_date.getFullYear();
+		case 1: // short month name
+			return this.start_date.getDate() + " " + getMonthShortName(this.start_date.getMonth()+1) + " " + this.start_date.getFullYear() + " - " + this.end_date.getDate() + " " + getMonthShortName(this.end_date.getMonth()+1) + " " + this.end_date.getFullYear();
+		case 2: // remove the year
+			return this.start_date.getDate() + " " + getMonthShortName(this.start_date.getMonth()+1) + (new Date().getFullYear() == this.start_date.getFullYear() ? "" : " " + this.start_date.getFullYear()) + " - " + this.end_date.getDate() + " " + getMonthShortName(this.end_date.getMonth()+1);
+		case 3: // month number
+			return this.start_date.getDate() + " " + _2digits(this.start_date.getMonth()+1) + (new Date().getFullYear() == this.start_date.getFullYear() ? "" : " " + this.start_date.getFullYear()) + " - " + this.end_date.getDate() + " " + _2digits(this.end_date.getMonth()+1);
+		};
+		return null;
+	};
+	
+	/** Goes 1 day before */
 	this.back = function() {
+		this.start_date = new Date(this.start_date.getTime()-1*24*60*60*1000);
+		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
+		view.cursor_date = this.start_date;
+		this._reloadTable();
+		view.loadEvents();
+	};
+	/** Goes 30 days before */
+	this.back_step = function() {
 		this.start_date = new Date(this.start_date.getTime()-30*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
 		view.cursor_date = this.start_date;
 		this._reloadTable();
 		view.loadEvents();
 	};
-	/** Goes 30 days after */
+	/** Goes 1 day after */
 	this.forward = function() {
+		this.start_date = new Date(this.start_date.getTime()+1*24*60*60*1000);
+		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
+		view.cursor_date = this.start_date;
+		this._reloadTable();
+		view.loadEvents();
+	};
+	/** Goes 30 days after */
+	this.forward_step = function() {
 		this.start_date = new Date(this.start_date.getTime()+30*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
 		view.cursor_date = this.start_date;

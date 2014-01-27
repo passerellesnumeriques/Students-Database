@@ -7,7 +7,13 @@
 		->addReadAccess("can_access_selection_data",true)
 		->addWriteAccess("manage_selection_campaign",true)
 		->addInsertAccess("manage_selection_campaign",true)
-		->addRemoveAccess("manage_selection_campaign",true);
+		->addRemoveAccess("manage_selection_campaign",true)
+	 	->onInsert(function($fields,$id,$sub_model_instance) {
+			try {
+				PNApplication::$instance->news->post("selection", null, array("campaign".$id), "Creation of campaign <i>".$fields["name"]."</i>");
+			} catch (Exception $e) { PNApplication::error($e); }
+	 	})
+		;
 		
 	$sm = $model->addSubModel("SelectionCampaign");
 	
@@ -56,7 +62,13 @@
 				),
 				new CalendarEventDateDataDisplay(null, "Date", "date")
 			),array("date","postal_address","fake_organization")) 
-		);
+		)
+	 	->onInsert(function($fields,$id,$sub_model_instance) {
+			try {
+				PNApplication::$instance->news->post("selection", null, array("campaign".$sub_model_instance), "New Information Session: <i>".$fields["name"]."</i>");
+			} catch (Exception $e) { PNApplication::error($e); }
+	 	})
+		;
 		
 	$sm->addTable("Information_session_partner")
 		->addForeignKey("information_session","Information_session",true,false,true,false)

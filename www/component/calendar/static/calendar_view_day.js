@@ -22,11 +22,54 @@ function calendar_view_day(view, container) {
 	this.events = [];
 	var t=this;
 	
-	/** Goes one ay back */
+	this.getZoomText = function(zoom) {
+		var d = new Date();
+		d.setHours(0, zoom, 0, 0);
+		var text = "";
+		if (d.getHours() > 0)
+			text += d.getHours()+"h";
+		if (d.getHours() == 0 || d.getMinutes() > 0)
+			text += d.getMinutes()+"m";
+		return text;
+	};
+	this.getPositionText = function(shorter) {
+		switch (shorter) {
+		case 0:
+			// normal
+			return this.start_date.getDate() + " " + getMonthName(this.start_date.getMonth()+1) + " " + this.start_date.getFullYear();
+		case 1:
+			// short month name
+			return this.start_date.getDate() + " " + getMonthShortName(this.start_date.getMonth()+1) + " " + this.start_date.getFullYear();
+		case 2:
+			// remove the year
+			return this.start_date.getDate() + " " + getMonthShortName(this.start_date.getMonth()+1) + (new Date().getFullYear() == this.start_date.getFullYear() ? "" : " " + this.start_date.getFullYear());
+		case 3:
+			// month number
+			return this.start_date.getDate() + " " + _2digits(this.start_date.getMonth()+1) + (new Date().getFullYear() == this.start_date.getFullYear() ? "" : " " + this.start_date.getFullYear());
+		};
+		return null;
+	};
+	
+	/** Goes one day back */
 	this.back = function() {
 		this.start_date = new Date(this.start_date.getTime()-24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
 		view.cursor_date = this.start_date;
+		this._showNow();
+		this.day_title.innerHTML = this.start_date.toDateString();
+		if (this.day_column)
+			this.day_column.removeEvents();
+		if (this.row_layout)
+			this.row_layout.removeEvents();
+		this.events = [];
+		view.loadEvents();
+	};
+	/** Goes 7 days back */
+	this.back_step = function() {
+		this.start_date = new Date(this.start_date.getTime()-7*24*60*60*1000);
+		this.end_date = new Date(this.start_date.getTime()+1*24*60*60*1000-1);
+		view.cursor_date = this.start_date;
+		this._showNow();
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
 			this.day_column.removeEvents();
@@ -40,6 +83,21 @@ function calendar_view_day(view, container) {
 		this.start_date = new Date(this.start_date.getTime()+24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
 		view.cursor_date = this.start_date;
+		this._showNow();
+		this.day_title.innerHTML = this.start_date.toDateString();
+		if (this.day_column)
+			this.day_column.removeEvents();
+		if (this.row_layout)
+			this.row_layout.removeEvents();
+		this.events = [];
+		view.loadEvents();
+	};
+	/** Goes 7 days forward */
+	this.forward_step = function() {
+		this.start_date = new Date(this.start_date.getTime()+7*24*60*60*1000);
+		this.end_date = new Date(this.start_date.getTime()+1*24*60*60*1000-1);
+		view.cursor_date = this.start_date;
+		this._showNow();
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
 			this.day_column.removeEvents();
@@ -119,6 +177,7 @@ function calendar_view_day(view, container) {
 			t.day_column = new DayColumnLayout(view.calendar_manager);
 			t._layout();
 		});
+		this._showNow();
 	};
 	
 	/** Stores the rows representing the time lines */
@@ -157,6 +216,28 @@ function calendar_view_day(view, container) {
 		this.time_title.style.height = y+"px";
 		this.day_content.style.height = y+"px";
 	};
+	this._now = null;
+	this._showNow = function() {
+		var now = new Date();
+		if (t._now) { t._now.parentNode.removeChild(t._now); t._now = null; }
+		if (t._showNowTimeout) clearTimeout(t._showNowTimeout);
+		var d = t.start_date;
+		t._showNowTimeout = setTimeout(t._showNow,10000);
+		if (d.getFullYear() != now.getFullYear()) return;
+		if (d.getMonth() != now.getMonth()) return;
+		if (d.getDate() != now.getDate()) return;
+		t._now = document.createElement("DIV");
+		t._now.style.position = 'absolute';
+		var seconds = now.getHours()*60*60+now.getMinutes()*60+now.getSeconds();
+		t._now.style.top = Math.floor(20*seconds/60/view.zoom)+"px";
+		t._now.style.left = "0px";
+		t._now.style.borderTop = "1px solid #FF0000";
+		t._now.style.borderBottom = "1px solid #808000";
+		t._now.style.height = "0px";
+		t._now.style.width = getWidth(t.day_content)+"px";
+		t._now.style.zIndex = 3;
+		t.day_content.appendChild(t._now);
+	};
 	/** Add a 0 if the number is only 1 digit
 	 * @param {Number} n the number
 	 */
@@ -172,6 +253,7 @@ function calendar_view_day(view, container) {
 			t._timeout = setTimeout(function(){
 				var w = container.clientWidth-51;
 				w -= (t.content.offsetWidth-t.content.clientWidth);
+				if (t._now) t._now.style.width = w+"px";
 				t.day_content.style.width = w+"px";
 				t.day_box.style.width = w+"px";
 				for (var i = 0; i < t._time_lines.length; ++i)

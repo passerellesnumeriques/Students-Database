@@ -45,6 +45,16 @@ class service_test_data extends Service {
 				$this->SplitSQL($db_system, "component/development/data/student.sql");
 				$this->SplitSQL($db_system, "component/development/data/studentclass.sql");
 				$this->SplitSQL($db_system, "component/development/data/organization.sql");
+				// generate events accordingly to data added
+				PNApplication::$instance->user_management->login("Dev", "admin", "");
+				$model = DataModel::get();
+				foreach ($model->internalGetTables() as $t) {
+					if ($t->getModel() instanceof SubDataModel) continue;
+					$rows = SQLQuery::create()->bypass_security()->select($t->getName())->execute();
+					foreach ($rows as $row)
+						$t->fireInsert($row, @$row[$t->getPrimaryKey()->name], null);
+				}
+				PNApplication::$instance->user_management->logout();
 			}
 		}		
 	}

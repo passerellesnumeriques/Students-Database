@@ -18,22 +18,37 @@ function splitter_vertical(element, position) {
 	t.part1 = element.childNodes[0];
 	t.part2 = element.childNodes[1];
 	
+	t._fireLayout = false;
+	t._fireLayoutSizes = null;
 	t._position = function(prev_h,call) {
-		var w = t.element.offsetWidth;
-		var h = t.element.offsetHeight;
-		var sw = t.separator.offsetWidth;
-		var x = Math.floor(w*t.position - sw/2);
-		setWidth(t.part1, x);
-		setHeight(t.part1, h);
-		t.separator.style.left = x+"px";
-		t.separator.style.height = h+"px";
-		t.part2.style.left = (x+sw)+"px";
-		setWidth(t.part2, w-x-sw-1);
-		setHeight(t.part2, h);
-		fireLayoutEventFor(t.part1);
-		fireLayoutEventFor(t.part2);
-		if (t.element.offsetHeight != h) {
-			if (!prev_h || (t.element.offsetHeight != prev_h && call < 3)) t._position(t.element.offsetHeight, call ? 1 : call+1);
+		t._fireLayoutSizes = {};
+		t._fireLayoutSizes.w = t.element.offsetWidth,
+		t._fireLayoutSizes.h = t.element.offsetHeight,
+		t._fireLayoutSizes.sw = t.separator.offsetWidth,
+		t._fireLayoutSizes.x = Math.floor(t._fireLayoutSizes.w*t.position - t._fireLayoutSizes.sw/2);
+		setWidth(t.part1, t._fireLayoutSizes.x);
+		setHeight(t.part1, t._fireLayoutSizes.h);
+		t.separator.style.left = t._fireLayoutSizes.x+"px";
+		t.separator.style.height = t._fireLayoutSizes.h+"px";
+		t.part2.style.left = (t._fireLayoutSizes.x+t._fireLayoutSizes.sw)+"px";
+		setWidth(t.part2, t._fireLayoutSizes.w-t._fireLayoutSizes.x-t._fireLayoutSizes.sw-1);
+		setHeight(t.part2, t._fireLayoutSizes.h);
+		var layout = function() {
+			window.top.pause_layout = false;
+			fireLayoutEventFor(t.part1);
+			fireLayoutEventFor(t.part2);
+			if (t.element.offsetHeight != t._fireLayoutSizes.h) {
+				if (!prev_h || (t.element.offsetHeight != prev_h && call < 3)) t._position(t.element.offsetHeight, call ? 1 : call+1);
+			}
+		};
+		if (call && call > 0) layout();
+		else if (!t._fireLayout) {
+			t._fireLayout = true;
+			window.top.pause_layout = true;
+			setTimeout(function(){
+				t._fireLayout = false;
+				layout();
+			},100);
 		}
 	};
 	

@@ -24,12 +24,17 @@ class page_selection_main_page extends selection_page {
 		$calendar_name = SQLQuery::create()->bypass_security()->select("Calendar")->field("name")->where("id",$calendar_id)->execute_single_value();
 		
 		$page->add_javascript("/static/widgets/page_header.js");
+		$page->onload("new page_header('steps_header',true);");
+
 		$page->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$page->onload("new splitter_vertical('selection_main_page_split',0.35);");
+		
 		$page->add_javascript("/static/widgets/vertical_layout.js");
-		$this->onload("new vertical_layout('right');");
 		$this->onload("new vertical_layout('left');");
 		//TODO set rights to calendar table? bypass_security required above...
+		
+		$page->add_javascript("/static/widgets/section/section.js");
+		$page->add_javascript("/static/news/news.js");
 		
 		$status_to_display = include("selection_main_page_status_screens.inc");
 		$steps = PNApplication::$instance->selection->getSteps();
@@ -37,13 +42,9 @@ class page_selection_main_page extends selection_page {
 		$valid_steps_to_display = array();
 		
 	?>
-		<!--<div style = 'color:red'>
-		TODO main page
-		</div>
-		<div id = 'selection_steps_dashboard'></div>-->
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
 				<div id = 'left'>
-					<div id = 'status_header'></div>
+					<div id = 'steps_header' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
 					<div style = "overflow:auto" layout = "fill">
 						<?php
 						echo "<div style = 'width:100%'>";
@@ -73,10 +74,22 @@ class page_selection_main_page extends selection_page {
 						?>
 					</div>
 				</div>
-				<div id = 'right'>
-					<div id = "header_calendar"></div>
-					<div style = "overflow:auto" layout = "fill">
-						<div id = 'selection_calendar' style='height:80%; width:97%; margin-left:10px; margin-right:10px; margin-top:10px; border:1px solid;'></div>
+				<div id = 'right' style='overflow-y:auto;'>
+					<div id='calendar_section'
+						icon='/static/calendar/event.png'
+						title='Selection Calendar'
+						collapsable='true'
+						style='margin:5px'
+					>
+						<div id='calendar_container' style='height:300px;'></div>
+					</div>
+					<div id='updates_section'
+						icon='/static/news/news.png'
+						title='Selection Updates'
+						collapsable='true'
+						style='margin:5px'
+					>
+						<div id='updates_container' style='padding:5px;'></div>
 					</div>
 				</div>
 		</div>
@@ -97,45 +110,41 @@ class page_selection_main_page extends selection_page {
 			echo ";";
 			
 			?>
+			calendar_section = section_from_html('calendar_section');
 			require(["calendar.js","popup_window.js"],function(){
 				if(calendar_id != null && calendar_name != null){
 					var cal_manager = new CalendarManager();
-					var PN_cal = new PNCalendar(calendar_id, calendar_name, "C0C0FF", true, true);
+					var PN_cal = new PNCalendar(window.top.pn_calendars_provider, calendar_id, calendar_name, "C0C0FF", true, true);
 					cal_manager.addCalendar(PN_cal);
 					require("calendar_view.js",function(){
-						new CalendarView(cal_manager, "week", "selection_calendar", function(){});
+						new CalendarView(cal_manager, "week", 60, "calendar_container", function(){});
 					});
-					var div = document.getElementById("selection_calendar");
-					setBorderRadius(div, 5, 5, 5, 5, 5, 5, 5, 5);
-					var header_calendar = new page_header("header_calendar",true);
-					header_calendar.setTitle("<img src = '/static/calendar/event.png'/> Selection Calendar");
-					var extend = document.createElement("div");
-					extend.className = "button";
-					extend.innerHTML = "<img src = '"+theme.icons_10.popup+"'style:'vertical-align:top'/> Extend Calendar";
+					var extend = document.createElement("IMG");
+					extend.className = "button_verysoft";
+					extend.src = theme.icons_16.window_popup;
 					extend.onclick = function(){
-						
 						var content = document.createElement("div");
 						content.id = 'content_calendar_extend';
 						var width = parseFloat(getWindowWidth())-30;
 						var height = parseFloat(getWindowHeight())-60;
 						content.style.width = width.toString()+"px";
 						content.style.height = height.toString()+"px";
-						content_cal_manager = new CalendarManager();
-						content_PN_cal = new PNCalendar(calendar_id, calendar_name, "C0C0FF", true, true);
-						content_cal_manager.addCalendar(content_PN_cal);
 						require("calendar_view.js",function(){
-							new CalendarView(content_cal_manager, "week", content, function(){});
+							new CalendarView(cal_manager, "week", 30, content, function(){});
 						});
 						var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
 						pop.show();
 					};
-					header_calendar.addMenuItem(extend);
+					window.calendar_section.addToolRight(extend);
 				}
+			});
+
+			updates_section = section_from_html('updates_section');
+			new news('updates_container', [{name:"selection",tags:["campaign<?php echo PNApplication::$instance->selection->get_campaign_id();?>"]}], [], function(){
+			}, function(){
 			});
 			
 			function setStatusScreens (unvalid_steps, valid_steps){
-				var header = new page_header("status_header",true);
-				header.setTitle("<img src = '"+theme.icons_16.dashboard+"'/> Selection Dashboard");
 				var t = this;
 				
 				t._init = function(){

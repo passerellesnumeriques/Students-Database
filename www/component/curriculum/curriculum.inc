@@ -4,5 +4,12 @@
  */ 
 class curriculum extends Component {
 	
+	public function getPluginImplementations() {
+		require_once("CurriculumNewsPlugin.inc");
+		return array(
+			new CurriculumNewsPlugin()
+		);
+	}
+	
 }
 ?>

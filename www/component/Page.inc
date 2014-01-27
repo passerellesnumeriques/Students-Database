@@ -91,6 +91,24 @@ abstract class Page {
 	}
 
 	private function start_page() {
+		pageHeaderStart();
+		foreach ($this->javascripts as $js) {
+			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1]."'>";
+			echo "</script>";
+		}
+		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."'/>";
+		pageHeaderEnd($this->onload);
+	}
+
+	private function end_page() {
+		PNApplication::print_errors();
+		pageFooter();
+	}
+}
+
+function pageHeaderStart() {
+	require_once("component/Component.inc");
+	require_once("component/theme/theme.inc");
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -120,24 +138,18 @@ abstract class Page {
 	javascript_loaded("/static/widgets/common_dialogs.js");
 	javascript_loaded("/static/data_model/databaselock.js");
 	</script>
-	<?php
-	foreach ($this->javascripts as $js) {
-		echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1]."'>";
-		echo "</script>";
-	}
-	foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."'/>";
+<?php 
+}
+function pageHeaderEnd($onload = "") {
 ?>
 </head>
-<body onload="if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search);return;};<?php echo $this->onload;?>">
+<body onload="if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search);return;};<?php echo $onload;?>">
 <?php
-	}
-
-	private function end_page() {
-		PNApplication::print_errors();
+}
+function pageFooter() {
 ?>
 </body>
 </html>
 <?php
-	}
 }
 ?>

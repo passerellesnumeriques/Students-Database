@@ -51,6 +51,15 @@ function next() {
 		};
 		a.innerHTML = "Back to login page";
 		document.body.appendChild(a);
+		document.body.appendChild(document.createElement("BR"));
+		document.body.appendChild(document.createElement("BR"));
+		a = document.createElement("A");
+		a.href = "#";
+		a.onclick = function() {
+			location.reload();
+		};
+		a.innerHTML = "Retry to reset Database";
+		document.body.appendChild(a);
 	}
 }
 next();

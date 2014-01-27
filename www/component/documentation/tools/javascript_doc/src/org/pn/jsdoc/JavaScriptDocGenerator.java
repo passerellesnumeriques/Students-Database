@@ -79,12 +79,17 @@ public class JavaScriptDocGenerator {
 			in.close();
 			String src = new String(buf,0,nb);
 			
-		    CompilerEnvirons environment = new CompilerEnvirons();
-	        environment.setRecordingComments(true);
-	        environment.setRecordingLocalJsDocComments(true);
-			Parser p = new Parser(environment);
-	        AstRoot script = p.parse(src, null, 0);
-	        global.parse(path+f.getName(), script);
+			try {
+			    CompilerEnvirons environment = new CompilerEnvirons();
+		        environment.setRecordingComments(true);
+		        environment.setRecordingLocalJsDocComments(true);
+				Parser p = new Parser(environment);
+		        AstRoot script = p.parse(src, null, 0);
+		        global.parse(path+f.getName(), script);
+			} catch (Throwable t) {
+				System.out.println("Error parsing file "+f.getAbsolutePath());
+				t.printStackTrace(System.out);
+			}
 		}
 	}
 	

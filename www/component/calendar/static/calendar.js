@@ -15,6 +15,9 @@ function CalendarManager() {
 	this.on_event_removed = null;
 	/** listener called when an event is updated in any calendar. The event is given as parameter. */
 	this.on_event_updated = null;
+	
+	this.on_refresh = new Custom_Event();
+	this.on_refresh_done = new Custom_Event();
 
 	/**
 	 * Add a calendar to manage.
@@ -24,6 +27,7 @@ function CalendarManager() {
 	this.addCalendar = function(cal) {
 		cal.manager = this;
 		this.calendars.push(cal);
+		if (!cal.last_update) cal.last_update = 0;
 		if (cal.show)
 			this.refreshCalendar(cal);
 		return cal;
@@ -62,6 +66,7 @@ function CalendarManager() {
 	this.hideCalendar = function(cal) {
 		if (!cal.show) return;
 		cal.show = false;
+		cal.saveShow(false);
 		for (var i = 0; i < cal.events.length; ++i)
 			this.on_event_removed(cal.events[i]);
 	};
@@ -73,10 +78,21 @@ function CalendarManager() {
 	this.showCalendar = function(cal) {
 		if (cal.show) return;
 		cal.show = true;
+		cal.saveShow(true);
 		for (var i = 0; i < cal.events.length; ++i)
 			this.on_event_added(cal.events[i]);
 		if (cal.last_update < new Date().getTime() - 60000)
 			this.refreshCalendar(cal);
+	};
+	
+	this.setCalendarColor = function(cal, color) {
+		if (cal.color == color) return;
+		cal.color = color;
+		cal.saveColor(color);
+		for (var i = 0; i < cal.events.length; ++i)
+			this.on_event_removed(cal.events[i]);
+		for (var i = 0; i < cal.events.length; ++i)
+			this.on_event_added(cal.events[i]);
 	};
 	
 	/**
@@ -88,10 +104,14 @@ function CalendarManager() {
 		if (cal.updating) return; // already in progress
 		cal.updating = true;
 		cal.onrefresh.fire();
+		this.on_refresh.fire(cal);
+		var t=this;
 		cal.refresh(function() {
+			cal.last_update = new Date().getTime();
 			cal.updating = false;
 			if (ondone) ondone();
 			cal.onrefreshdone.fire();
+			t.on_refresh_done.fire(cal);
 		});
 	};
 	
@@ -107,7 +127,7 @@ function CalendarManager() {
 function CalendarsProvider() {
 }
 CalendarsProvider.prototype = {
-	getCalendars: function(handler) {
+	getCalendars: function(handler, feedback_handler) {
 		
 	},
 	getProviderIcon: function() {
@@ -115,7 +135,11 @@ CalendarsProvider.prototype = {
 	},
 	getProviderName: function() {
 		
-	}
+	},
+	canCreateCalendar: function () { return false; },
+	canCreateCalendarWithColor: function() { return false; },
+	canCreateCalendarWithIcon: function() { return false; },
+	createCalendar: function(name, color, icon, oncreate) {}
 };
 if (!window.top.CalendarsProviders) {
 	window.top.CalendarsProviders = {
@@ -143,12 +167,13 @@ if (!window.top.CalendarsProviders) {
  * @param {String} color hexadecimal RGB color or null for a default one. ex: C0C0FF
  * @param {Boolean} show indicates if the events of the calendar should be displayed or not
  */
-function Calendar(name, color, show) {
+function Calendar(provider, name, color, show, icon) {
 	if (!color) color = "A0A0FF";
 	/** {CalendarManager} filled when added to a calendar manager */
 	this.manager = null;
-	/** URL of the icon for the type of calendar. Must be set by the implementation */
-	this.icon = null;
+	this.provider = provider;
+	/** URL of the icon for the calendar */
+	this.icon = icon;
 	/** name of the calendar */
 	this.name = name;
 	/** hexadecimal RGB color or null for a default one. ex: C0C0FF */
@@ -172,6 +197,9 @@ function Calendar(name, color, show) {
 	};
 	/** {Function} function called to save an event. If it is not defined, it means the calendar is read only. This function takes the event to save as parameter. */
 	this.saveEvent = null; // must be overriden if the calendar supports modifications
+	this.saveShow = function(show) {}; // to be overriden if supported
+	this.saveColor = function(color) {}; // to be overriden if supported
+	this.rename = null; // must be overriden if this is supported
 	var t=this;
 	var ref = function(){
 		if (t.manager) t.manager.refreshCalendar(t,function(){setTimeout(ref,5*60*1000);});
@@ -179,6 +207,104 @@ function Calendar(name, color, show) {
 	};
 	setTimeout(ref,5*60*1000);
 }
+
+function CalendarControl(container, cal) {
+	var t=this;
+	this._init = function() {
+		this.div = document.createElement("DIV"); container.appendChild(this.div);
+		this.box = document.createElement("DIV"); this.div.appendChild(this.box);
+		this.box.style.display = "inline-block";
+		this.box.style.width = "10px";
+		this.box.style.height = "10px";
+		this.box.style.border = "1px solid #"+cal.color;
+		this.box.title = "Show/Hide Calendar";
+		this.box.style.cursor = "pointer";
+		if (cal.show)
+			this.box.style.backgroundColor = "#"+cal.color;
+		this.box.onclick = function() {
+			if (!cal.manager) return;
+			if (cal.show) {
+				cal.manager.hideCalendar(cal);
+				t.box.style.backgroundColor = '';
+			} else {
+				cal.manager.showCalendar(cal);
+				t.box.style.backgroundColor = "#"+cal.color;
+			}
+		};
+		if (cal.icon) {
+			this.icon = document.createElement("IMG");
+			this.icon.style.paddingLeft = "3px";
+			this.icon.style.verticalAlign = "bottom";
+			this.icon.src = cal.icon;
+			this.div.appendChild(this.icon);
+		}
+		this.name = document.createElement("SPAN"); this.div.appendChild(this.name);
+		this.name.style.paddingLeft = "3px";
+		this.name.innerHTML = cal.name;
+		if (!cal.saveEvent) {
+			var img = document.createElement("IMG");
+			img.src = "/static/calendar/read_only.png";
+			img.title = "Read-only: you cannot modify this calendar";
+			t.div.appendChild(img);
+		}
+		this.menu_button = document.createElement("IMG");
+		this.menu_button.className = "button";
+		this.menu_button.style.padding = "0px";
+		this.menu_button.src = theme.icons_10.arrow_down_context_menu;
+		this.menu_button.style.verticalAlign = "bottom";
+		this.menu_button.onclick = function() {
+			require("context_menu.js", function() {
+				var menu = new context_menu();
+				menu.addIconItem(cal.show ? theme.icons_16.hide : theme.icons_16.show, cal.show ? "Hide" : "Show", function() {
+					t.box.onclick();
+				});
+				menu.addIconItem(theme.icons_16.color, "Change color", function() {
+					require(["color_choice.js","popup_window.js"], function() {
+						var content = document.createElement("DIV");
+						var chooser = new color_choice(content, "#"+cal.color);
+						var popup = new popup_window("Change Color", theme.icons_16.color, content);
+						popup.addOkCancelButtons(function() {
+							var col = color_string(chooser.color).substring(1);
+							cal.manager.setCalendarColor(cal, col);
+							t.box.style.backgroundColor = "#"+col;
+							t.box.style.border = "1px solid #"+col;
+							popup.hide();
+						});
+						popup.show();
+					});
+				});
+				if (cal.rename != null)
+					menu.addIconItem(theme.icons_16.edit, "Rename", function() {
+						input_dialog(theme.icons_16.edit,"Rename Calendar","Enter the new name",cal.name,100,function(name) {
+							if (name.length == 0) return "Please enter a name";
+							return null;
+						},function(name) {
+							if (!name) return;
+							cal.rename(name,function(){
+								t.name.innerHTML = name;
+							});
+						}, function(){});
+					});
+				menu.showBelowElement(t.menu_button);
+			});
+		};
+		this.div.appendChild(this.menu_button);
+		var start_refresh = function() {
+			t.loading = document.createElement("IMG");
+			t.loading.src = theme.icons_10.loading;
+			t.div.appendChild(t.loading);
+		};
+		cal.onrefresh.add_listener(start_refresh);
+		cal.onrefreshdone.add_listener(function(){
+			if (!t.loading) return;
+			t.div.removeChild(t.loading);
+			t.loading = null;
+		});
+		if (cal.updating) start_refresh();
+	};
+	this._init();
+}
+
 
 /**
  * Implementation of Calendar, for an internal calendar (stored in database)
@@ -188,9 +314,8 @@ function Calendar(name, color, show) {
  * @param {Boolean} show indicates if the events should be displayed
  * @param {Boolean} writable indicates if the calendar can be modified
  */
-function PNCalendar(id, name, color, show, writable) {
-	Calendar.call(this, name, color, show);
-	this.icon = "/static/application/logo.png";
+function PNCalendar(provider, id, name, color, show, writable, icon) {
+	Calendar.call(this, provider, name, color, show, icon);
 	/** Id of this PN Calendar */
 	this.id = id;
 	this.refresh = function(ondone) {
@@ -226,6 +351,12 @@ function PNCalendar(id, name, color, show, writable) {
 			});
 		});
 	};
+	this.saveShow = function(show) {
+		service.json("calendar", "set_configuration", {calendar:id,show:show},function(res){});
+	};
+	this.saveColor = function(color) {
+		service.json("calendar", "set_configuration", {calendar:id,color:color},function(res){});
+	};
 	if (writable) {
 		var t = this;
 		this.saveEvent = function(event) {
@@ -245,29 +376,47 @@ function PNCalendar(id, name, color, show, writable) {
 				}
 			});
 		};
+		this.rename = function(name,ondone) {
+			service.json("calendar","rename_calendar",{id:t.id,name:name},function(res){
+				if (!res) return;
+				t.name = name;
+				if (ondone) ondone();
+			});
+		};
 	}
 }
 PNCalendar.prototype = new Calendar();
 PNCalendar.prototype.constructor = PNCalendar;
 
 function PNCalendarsProvider() {
-	this.getCalendars = function(handler) {
+	var t=this;
+	this.getCalendars = function(handler, feedback_handler) {
+		if (feedback_handler) feedback_handler("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");
 		service.json("calendar", "get_my_calendars", {}, function(calendars) {
 			if (!calendars) return;
 			var list = [];
 			for (var i = 0; i < calendars.length; ++i)
-				list.push(new PNCalendar(calendars[i].id, calendars[i].name, calendars[i].color, true, calendars[i].writable));
+				list.push(new PNCalendar(t, calendars[i].id, calendars[i].name, calendars[i].color, calendars[i].show, calendars[i].writable, calendars[i].icon));
 			handler(list);
 		});
 	};
 	this.getProviderIcon = function() {
-		return "/static/application/logo.png";
+		return "/static/application/logo_16.png";
 	};
 	this.getProviderName = function() {
 		return "PN Calendars";
+	};
+	this.canCreateCalendar = function() { return true; };
+	this.canCreateCalendarWithColor = function() { return true; };
+	this.canCreateCalendarWithIcon = function() { return true; };
+	this.createCalendar = function(name, color, icon, oncreate) {
+		service.json("calendar", "create_user_calendar", {name:name,color:color,icon:icon},function(res) {
+			if (!res || !res.id) return;
+			oncreate(new PNCalendar(t, res.id, name, color, true, true, icon));
+		});
 	};
 }
 PNCalendarsProvider.prototype = new CalendarsProvider();
 PNCalendarsProvider.prototype.constructor = PNCalendarsProvider;
 
-window.top.CalendarsProviders.add(new PNCalendarsProvider());
+window.top.CalendarsProviders.add(window.top.pn_calendars_provider = new PNCalendarsProvider());

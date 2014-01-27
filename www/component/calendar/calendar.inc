@@ -11,11 +11,13 @@ class calendar extends Component {
 	/**
 	 * Create a new shared (not presonal) calendar. 
 	 * @param string $calendar_name name of the calendar
+	 * @param string $calendar_color default color of the calendar (in 6 hex digits), or null
+	 * @param string $calendar_icon url of the icon for this calendar, or null
 	 * @param array $readable_rights associative array of right name =&gt; right value, needed to access the calendar in read access
 	 * @param array $writable_rights associative array of right name =&gt; right value, needed to access the calendar in write access
 	 * @return boolean|number the calendar id, or false if it failed.
 	 */
-	public function createSharedCalendar($calendar_name, $readable_rights, $writable_rights) {
+	public function createSharedCalendar($calendar_name, $calendar_color, $calendar_icon, $readable_rights, $writable_rights) {
 		foreach ($readable_rights as $name=>$value)
 			if (!PNApplication::$instance->user_management->has_right($name, $value)) {
 				PNApplication::error("You cannot create a calendar with right ".$name." because you don't have this right");
@@ -30,7 +32,14 @@ class calendar extends Component {
 			PNApplication::error("You must specify a write access for the calendar");
 			return false;
 		}
-		$calendar_id = SQLQuery::create()->bypass_security()->insert("Calendar", array("name"=>$calendar_name,"type"=>"internal"));
+		$calendar_id = SQLQuery::create()->bypass_security()->insert("Calendar", 
+			array(
+				"name"=>$calendar_name,
+				"type"=>"internal",
+				"color"=>$calendar_color,
+				"icon"=>$calendar_icon
+			)
+		);
 		foreach ($readable_rights as $name=>$value)
 			SQLQuery::create()->bypass_security()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$name,"right_value"=>$value,"writable"=>false));
 		foreach ($writable_rights as $name=>$value)
@@ -43,10 +52,33 @@ class calendar extends Component {
 	 * @param number $user_id user id
 	 * @return number the calendar id
 	 */
-	public function createUserCalendar($user_id) {
-		$calendar_id = SQLQuery::create()->bypass_security()->insert("Calendar", array("name"=>"Personal","type"=>"internal"));
-		SQLQuery::create()->bypass_security()->insert("UserCalendar", array("user"=>$user_id,"calendar"=>$calendar_id));
-		return $calendar_id;
+	public function createUserCalendar($user_id, $name, $color = null, $icon = null) {
+		// check number of calendars for this user
+		$nb = SQLQuery::create()->bypass_security()
+			->select("UserCalendar")
+			->where_value("UserCalendar", "user", $user_id)
+			->count()
+			->execute_single_value();
+		if ($nb >= 50) {
+			PNApplication::error("You reached the limit of 50 personal calendars.");
+			return;
+		}
+		// ok, we can create
+		SQLQuery::start_transaction();
+		try {
+			$calendar_id = SQLQuery::create()->bypass_security()->insert("Calendar", array(
+				"name"=>$name,
+				"color"=>$color,
+				"icon"=>$icon,
+				"type"=>"internal"
+			));
+			SQLQuery::create()->bypass_security()->insert("UserCalendar", array("user"=>$user_id,"calendar"=>$calendar_id));
+			SQLQuery::end_transaction();
+			return $calendar_id;
+		} catch(Exception $e) {
+			SQLQuery::cancel_transaction();
+			throw $e;
+		}
 	}
 	
 	/**
@@ -54,7 +86,7 @@ class calendar extends Component {
 	 * @param number $user_id user id
 	 */
 	public function localUserCreated($user_id) {
-		$this->createUserCalendar($user_id);
+		$this->createUserCalendar($user_id, "Personal", "A0A0FF", null);
 	}
 
 	/**

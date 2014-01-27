@@ -67,8 +67,10 @@ class selection extends Component {
 	
 	public function getPluginImplementations() {
 		require_once("SelectionOrganizationPlugin.inc");
+		require_once("SelectionNewsPlugin.inc");
 		return array(
-			new SelectionOrganizationPlugin()
+			new SelectionOrganizationPlugin(),
+			new SelectionNewsPlugin()
 		);
 	}
 	
@@ -111,7 +113,7 @@ class selection extends Component {
 	 * Create a calendar for the selection campaign
 	 * @return $campaign_id the id of the campaign created
 	 */
-	public function create_campaign($name){
+	public function create_campaign($campaign_name){
 		$campaign_id = null;
 		$fields = array();
 		$all_configs = include("config.inc");
@@ -125,11 +127,11 @@ class selection extends Component {
 		SQLQuery::start_transaction();
 		try{
 		/* Create a calendar for this campaign */
-		$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($name,array("can_access_selection_data"=>true),array("edit_information_session"=>true));
+		$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("edit_information_session"=>true));
 		
 		/* if the calendar was properly created, continue */
 		if($calendar_id <> null){
-			$fields["name"] = $name;
+			$fields["name"] = $campaign_name;
 			$fields["calendar"] = $calendar_id;
 			$campaign_id = SQLQuery::create()->insert("SelectionCampaign",$fields);
 			$this->set_campaign_id($campaign_id);
@@ -143,11 +145,11 @@ class selection extends Component {
 				));
 			SQLQuery::create()->insert_multiple("Selection_campaign_config",$default_config_rows);
 				
-				/* Insert the default steps in the database */
-				$rows_steps = array();
-				foreach($all_steps as $name => $temp)
-					array_push($rows_steps, array("name" => $name, "value" => false));
-				SQLQuery::create()->insert_multiple("Steps",$rows_steps);
+			/* Insert the default steps in the database */
+			$rows_steps = array();
+			foreach($all_steps as $name => $temp)
+				array_push($rows_steps, array("name" => $name, "value" => false));
+			SQLQuery::create()->insert_multiple("Steps",$rows_steps);
 		}
 		} catch (Exception $e) {
 			PNApplication::error($e);
@@ -176,6 +178,8 @@ class selection extends Component {
 		/* Set the calendar_id to null */
 		$this->calendar_id = null;
 		SQLQuery::create()->remove_key("SelectionCampaign",$id);
+		
+		// TODO remove all news having the tag campaignX
 	}
 	
 	/**

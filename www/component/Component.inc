@@ -179,15 +179,19 @@ abstract class Component {
 	
 		// execute the service
 		if ($output_format == "text/json") {
+			$done = new ServiceDone();
+			register_shutdown_function("service_shutdown_catch", $done);
 			ob_start();
 			try {
 				$service->execute($this, $input);
 			} catch (Exception $e) {
 				PNApplication::error($e);
 			}
-			$result = ob_get_clean();
+			$result = ob_get_contents();
+			ob_end_clean();
 			if ($result === "" || $result === false) $result = null;
 			PNApplication::print_json_result($result);
+			$done->done = true;
 		} else
 			$service->execute($this, $input);
 	}
@@ -230,4 +234,18 @@ abstract class Component {
 	public function getPluginImplementations() { return array(); }
 
 }
+
+class ServiceDone { public $done = false; };
+function service_shutdown_catch($done) {
+	if ($done->done) return;
+	$msg = "The service didn't finish correctly.";
+	$error = error_get_last();
+	if ($error <> null)
+		$msg.= " Last error was in ".$error["file"]." line ".$error["line"].": ".$error["message"];
+	PNApplication::error($msg);
+	PNApplication::print_json_result(null);
+	$content = ob_get_clean();
+	echo $content;
+}
+
 ?>

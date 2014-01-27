@@ -99,9 +99,9 @@ function objectCopy(o, recursive_depth) {
 		if (!recursive_depth) { c[attr] = value; continue; }
 		if (value == null) { c[attr] = null; continue; }
 		if (typeof value == 'object') {
-			if (value instanceof Date || value.constructor.name == "Date")
+			if (value instanceof Date || getObjectClassName(value) == "Date")
 				c[attr] = new Date(value.getTime());
-			else if (value instanceof Array || value.constructor.name == "Array") {
+			else if (value instanceof Array || getObjectClassName(value) == "Array") {
 				c[attr] = [];
 				for (var i = 0; i < value.length; ++i)
 					c[attr].push(valueCopy(value[i], recursive_depth-1));
@@ -122,9 +122,9 @@ function objectCopy(o, recursive_depth) {
 function valueCopy(value, obj_depth) {
 	if (value == null) return null;
 	if (typeof value == 'object') {
-		if (value instanceof Date || value.constructor.name == "Date")
+		if (value instanceof Date || getObjectClassName(value) == "Date")
 			return new Date(value.getTime());
-		if (value instanceof Array || value.constructor.name == "Array") {
+		if (value instanceof Array || getObjectClassName(value) == "Array") {
 			var a = [];
 			for (var i = 0; i < value.length; ++i)
 				a.push(valueCopy(value[i], obj_depth-1));
@@ -319,6 +319,33 @@ function scrollToSee(element) {
 				else if (container.scrollTop+container.clientHeight < y+cell.offsetHeight)
 					container.scrollTop = y+cell.offsetHeight-container.clientHeight;
  */	
+}
+
+function scrollTo(element) {
+	var parent = getScrollableContainer(element);
+	var x1 = absoluteLeft(element, parent);
+	var y1 = absoluteTop(element, parent);
+	var x2 = x1+element.offsetWidth;
+	var y2 = y1+element.offsetHeight;
+	if (y1 < parent.scrollTop) {
+		// the element is before, we need to scroll up
+		scrollUp(parent, parent.scrollTop-y1);
+	} else if (y2 > parent.scrollTop+parent.clientHeight) {
+		// the element is after, we need to scroll down
+		scrollDown(parent, y2-(parent.scrollTop+parent.clientHeight));
+	} else {
+		scrollDown(parent, -(y1-(parent.scrollTop+parent.clientHeight)));
+	}
+	if (x1 < parent.scrollLeft) {
+		// the element is before, we need to scroll left
+		scrollLeft(parent, parent.scrollLeft-x1);
+	} else if (x2 > parent.scrollLeft+parent.clientWidth) {
+		// the element is after, we need to scroll down
+		scrollRight(parent, x2-(parent.scrollLeft+parent.clientWidth));
+	} else {
+		scrollRight(parent, -(x1-(parent.scrollLeft+parent.clientWidth)));
+	}
+	// TODO same with parent, which may not be visible...
 }
 
 /** Represent an URL
@@ -531,14 +558,87 @@ function parseSQLDate(s) {
 		d.setFullYear(parseInt(a[0]), parseInt(a[1])-1, parseInt(a[2]));
 	return d;
 };
+function _2digits(n) {
+	var s = ""+n;
+	while (s.length < 2) s = "0"+s;
+	return s;
+};
 function dateToSQL(d) {
-	var _2digits = function(n) {
-		var s = ""+n;
-		while (s.length < 2) s = "0"+s;
-		return s;
-	};
 	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
 };
+function _2Hex(val) {
+	return HexDigit(Math.floor(val/16))+HexDigit(val%16);
+}
+function HexDigit(val) {
+	if (val < 10) return ""+val;
+	return String.fromCharCode("A".charCodeAt(0)+(val-10));
+}
+
+function getMonthName(month) {
+	switch(month) {
+	case 1: return "January";
+	case 2: return "February";
+	case 3: return "March";
+	case 4: return "April";
+	case 5: return "May";
+	case 6: return "June";
+	case 7: return "July";
+	case 8: return "August";
+	case 9: return "September";
+	case 10: return "October";
+	case 11: return "November";
+	case 12: return "December";
+	}
+}
+function getMonthShortName(month) {
+	switch(month) {
+	case 1: return "Jan";
+	case 2: return "Feb";
+	case 3: return "Mar";
+	case 4: return "Apr";
+	case 5: return "May";
+	case 6: return "Jun";
+	case 7: return "Jul";
+	case 8: return "Aug";
+	case 9: return "Sep";
+	case 10: return "Oct";
+	case 11: return "Nov";
+	case 12: return "Dec";
+	}
+}
+function getDayName(d) {
+	switch (d) {
+	case 0: return "Monday";
+	case 1: return "Tuesday";
+	case 2: return "Wednesday";
+	case 3: return "Thursday";
+	case 4: return "Friday";
+	case 5: return "Saturday";
+	case 6: return "Sunday";
+	}
+}
+function getDayShortName(d) {
+	switch (d) {
+	case 0: return "Mon";
+	case 1: return "Tue";
+	case 2: return "Wed";
+	case 3: return "Thu";
+	case 4: return "Fri";
+	case 5: return "Sat";
+	case 6: return "Sun";
+	}
+}
+function getDayLetter(d) {
+	switch (d) {
+	case 0: return "M";
+	case 1: return "T";
+	case 2: return "W";
+	case 3: return "T";
+	case 4: return "F";
+	case 5: return "S";
+	case 6: return "S";
+	}
+}
 
 /**
  * Set the common style to the tables with header

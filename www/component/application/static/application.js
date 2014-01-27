@@ -17,6 +17,7 @@ if (window == window.top) {
 					window.top.pnapplication._onclick_listeners[i][1](ev, w, window.top.pnapplication._onclick_listeners[i][0]);
 			});
 			listenEvent(w,'mousemove',function(ev){
+				if (!window.top.pnapplication) return;
 				var w_pos = getAbsoluteCoordinatesRelativeToWindowTop(w);
 				var cev = getCompatibleMouseEvent(ev);
 				for (var i = 0; i < window.top.pnapplication._onmousemove_listeners.length; ++i) {

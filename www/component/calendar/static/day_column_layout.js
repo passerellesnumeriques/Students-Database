@@ -64,12 +64,17 @@ function DayColumnLayout(calendar_manager) {
 		div.style.padding = "1px";
 		var head = document.createElement("DIV");
 		head.style.fontSize = "8pt";
-		var time_str = this._2digits(event.start.getHours())+":"+this._2digits(event.start.getMinutes())+"-"+this._2digits(event.end.getHours())+":"+this._2digits(event.end.getMinutes());
+		head.style.color = "#202040";
+		var time_str = event.start.getHours()+":"+this._2digits(event.start.getMinutes());
+		time_str += "-"+event.end.getHours()+":"+this._2digits(event.end.getMinutes());
 		head.appendChild(document.createTextNode(time_str));
 		div.appendChild(head);
-		div.appendChild(document.createTextNode(event.title));
+		var title = document.createElement("SPAN");
+		title.appendChild(document.createTextNode(event.title));
+		title.style.fontSize = '9pt';
+		div.appendChild(title);
 		div.style.overflow = "hidden";
-		div.title = calendar_manager.getCalendar(event.calendar_id).name+"\r\n"+time_str+"\r\n"+event.title;
+		div.title = calendar_manager.getCalendar(event.calendar_id).name+"\r\n"+time_str+"\r\n"+event.title+"\r\n"+event.description;
 		div.style.cursor = "pointer";
 		div.onclick = function(e) {
 			require("event_screen.js",function() {

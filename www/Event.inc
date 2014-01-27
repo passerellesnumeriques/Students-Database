@@ -7,10 +7,13 @@ class Event {
 	public function listen($instance, $method) {
 		array_push($this->listeners, array($instance, $method));
 	}
+	public function listenFunction($fct) {
+		array_push($this->listeners, $fct);
+	}
 	
-	public function fire($parameters = null) {
+	public function fire($parameters = array()) {
 		foreach ($this->listeners as $listener) {
-			call_user_func($listener, $parameters);
+			call_user_func_array($listener, $parameters);
 		}
 	}
 	

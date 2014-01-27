@@ -10,5 +10,12 @@ class application extends Component {
 		Component::allow_service_without_login("application", "get_static_resources");
 	}
 	
+	public function getPluginImplementations() {
+		require_once("GeneralNewsPlugin.inc");
+		return array(
+			new GeneralNewsPlugin()
+		);
+	}
+	
 }
 ?>

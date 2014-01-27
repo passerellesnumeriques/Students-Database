@@ -14,7 +14,7 @@ class service_get extends Service {
 		$since = @$input["since"];
 		
 		if (!$component->canReadCalendar($calendar_id)) {
-			PNApplication::error("Access denied");
+			PNApplication::error("Access denied to calendar");
 			return;
 		}
 		

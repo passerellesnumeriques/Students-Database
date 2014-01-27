@@ -21,7 +21,7 @@ class page_IS_main_page extends selection_page {
 					['Information Session.Name','Information Session.Date'],
 					[],
 					function (list) {
-						list.addTitle(null, "Information Sessions List");
+						list.addTitle("/static/selection/IS/IS_16.png", "Information Sessions");
 						var new_IS = document.createElement("DIV");
 						new_IS.className = 'button';
 						new_IS.innerHTML = "<img src='"+theme.icons_16.add+"'/> New Information Session";

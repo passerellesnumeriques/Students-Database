@@ -3,7 +3,7 @@ function TreeColumn(title) {
 }
 function TreeItem(cells, expanded) {
 	if (typeof cells == 'string') cells = [new TreeCell(cells)];
-	else if (typeof cells == 'object' && !(cells instanceof Array) && cells.constructor.name != "Array")
+	else if (typeof cells == 'object' && !(cells instanceof Array) && getObjectClassName(cells) != "Array")
 		cells = [new TreeCell(cells)];
 	if (!expanded) expanded = false;
 	this.cells = cells;

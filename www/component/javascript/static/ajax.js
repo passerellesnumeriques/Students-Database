@@ -129,7 +129,7 @@ ajax = {
 			} else if (ct == "text/json") {
 				// JSON
 				if (xhr.responseText.length == 0) {
-					eh("Empty response from the server");
+					eh("Empty response from the server:<ul><li>Request URL: "+url+"</li><li>Request Data: "+data+"</li></ul>");
 					return;
 				}
 				var output;
@@ -198,7 +198,7 @@ ajax = {
 			} else if (ct == "text/json") {
 				// JSON
 				if (xhr.responseText.length == 0) {
-					eh("Empty response from the server");
+					eh("Empty response from the server:<ul><li>Request URL: "+url+"</li><li>Request Data: "+data+"</li></ul>");
 					return;
 				}
 				var output;

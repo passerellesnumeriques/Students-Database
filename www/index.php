@@ -8,6 +8,8 @@ $version = include("version.inc");
 if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
 	setcookie("pnversion",$version,time()+365*24*60*60,"/");
 	header("Location: ?");
+	session_start();
+	session_destroy();
 	die();
 }
 
@@ -143,8 +145,12 @@ case "help":
 	$expires = time()+365*24*60*60;
 	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
 	header("Content-Type: text/html");
+	require_once("component/Page.inc");
+	pageHeaderStart();
+	pageHeaderEnd();
 	if (!file_exists("component/".$component_name."/page/".$path.".help.html")) invalid("Help not found for page '$path' on component '$component_name'");
 	readfile("component/".$component_name."/page/".$path.".help.html");
+	pageFooter();
 	die();
 default: invalid("Invalid request: unknown resource type ".$type);
 }

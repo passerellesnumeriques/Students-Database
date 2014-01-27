@@ -60,27 +60,40 @@ browser = {
 	},
 	/** Fill navigator type and version from agent infos */
 	_fill: function() {
+		var rv = null;
+		var hasNav = false;
 		for (var i = 0; i < this.agent_infos.length; ++i) {
 			var a = this.agent_infos[i];
 			switch (a.name.toLowerCase()) {
 			case "mozilla":
 				for (var j = 0; j < a.infos.length; ++j) {
 					var s = a.infos[j];
+					if (s.substr(0,3) == "rv:") {
+						rv = parseFloat(s.substring(3));
+						continue;
+					}
 					if (s.substr(0,5).toLowerCase() != "msie ") continue;
 					this.IE = parseFloat(s.substring(5));
+					hasNav = true;
 				}
 				break;
-			case "chrome": this.Chrome = parseFloat(a.version); break;
-			case "applewebkit": this.WebKit = parseFloat(a.version); break;
-			case "safari": this.Safari = parseFloat(a.version); break;
-			case "firefox": this.FireFox = parseFloat(a.version); break;
-			case "opera": this.Opera = parseFloat(a.version); break;
-			case "presto": this.Presto = parseFloat(a.version); break;
-			case "version": this.Version = parseFloat(a.version); break;
+			case "chrome": this.Chrome = parseFloat(a.version); hasNav = true; break;
+			case "applewebkit": this.WebKit = parseFloat(a.version); hasNav = true; break;
+			case "safari": this.Safari = parseFloat(a.version); hasNav = true; break;
+			case "firefox": this.FireFox = parseFloat(a.version); hasNav = true; break;
+			case "opera": this.Opera = parseFloat(a.version); hasNav = true; break;
+			case "presto": this.Presto = parseFloat(a.version); hasNav = true; break;
+			case "version": this.Version = parseFloat(a.version); hasNav = true; break;
 			}
 		}
 		if (this.Safari > 0 && this.Version > 0) this.SafariBrowser = this.Version;
 		if (this.Opera > 0) { if (this.Version > 0) this.OperaBrowser = this.Version; else this.OperaBrowser = this.Opera; }
+		if (!hasNav && rv != null) {
+			var isIE = false;
+			for (var name in window)
+				if (name.substring(0,2) == "ms") { isIE = true; break; }
+			if (isIE) this.IE = rv;
+		}
 	}
 };
 browser.detect();
@@ -326,7 +339,7 @@ getCompatibleMouseEvent = function(e) {
 	ev = {};
 	if (browser.IE == 0 || browser.IE >= 9) { ev.x = e.clientX; ev.y = e.clientY; }
 	else { ev.x = window.event.clientX+document.documentElement.scrollLeft; ev.y = window.event.clientY+document.documentElement.scrollTop; }
-	if (browser.IE == 0) ev.button = e.button;
+	if (browser.IE == 0 || browser.IE >= 11) ev.button = e.button;
 	else switch (window.event.button) { case 1: ev.button = 0; break; case 4: ev.button = 1; break; case 2: ev.button = 2; break; } 
 	return ev;
 };
@@ -441,6 +454,23 @@ if (browser.IE == 0) {
 		window.event.returnValue = false;
 		return false;
 	};
+}
+
+function getObjectClassName(obj) {
+	if (typeof obj.constructor != 'undefined') return getFunctionName(obj.constructor);
+	if (typeof obj.__proto__ != 'undefined') {
+		if (typeof obj.__proto__.constructor != 'undefined') return getFunctionName(obj.__proto__.constructor);
+		return getObjectClassName(obj.__proto__);
+	}
+	return "Object";
+}
+function getFunctionName(f) {
+	if (typeof f.name != 'undefined') return f.name;
+	var s = f.toString();
+	var i = s.indexOf(' ');
+	s = s.substring(i+1);
+	i = s.indexOf('(');
+	return s.substring(0,i);
 }
 
 /**

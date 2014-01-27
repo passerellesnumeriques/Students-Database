@@ -324,6 +324,11 @@ class page_batches_classes extends Page {
 		health_frame.style.border = 'none';
 		health_frame.style.width = '100%';
 		health_frame.style.height = '100%';
+		var updates_frame = document.createElement("IFRAME");
+		updates_frame.style.border = 'none';
+		updates_frame.style.width = '100%';
+		updates_frame.style.height = '100%';
+		updates_frame.src = "/dynamic/news/page/news?sections="+encodeURIComponent("[{name:'education'}]")+"&title="+encodeURIComponent("Education Updates");
 		
 		function show_tabs(list) {
 			pages.removeAll();
@@ -334,10 +339,11 @@ class page_batches_classes extends Page {
 				case "Grades": pages.addTab("Grades", "/static/transcripts/grades.gif", grades_frame); break;
 				case "Discipline": pages.addTab("Discipline", "/static/discipline/discipline.png", discipline_frame); break;
 				case "Health": pages.addTab("Health", "/static/health/health.png", health_frame); break;
+				case "Updates": pages.addTab("Updates", "/static/news/news.png", updates_frame); break;
 				}
 			}
 		}
-		show_tabs(["Students List"]);
+		show_tabs(["Students List","Updates"]);
 
 		// Students List
 		things_to_be_ready++;
@@ -495,7 +501,8 @@ class page_batches_classes extends Page {
 			filter_class = null;
 			header.setTitle("All Students");
 			header.resetMenu();
-			show_tabs(["Students List"]);
+			updates_frame.src = "/dynamic/news/page/news?sections="+encodeURIComponent("[{name:'education'}]")+"&title="+encodeURIComponent("Education Updates");
+			show_tabs(["Students List","Updates"]);
 			update_data();
 		}
 		function select_current_students() {
@@ -508,7 +515,15 @@ class page_batches_classes extends Page {
 					filter_batches.push(batches[i].id);
 			header.setTitle("Current Students");
 			header.resetMenu();
-			show_tabs(["Students List","Discipline","Health"]);
+			var src = "/dynamic/news/page/news?sections="+encodeURIComponent("[{name:'education',tags:[");
+			for (var i = 0; i < batches.length; ++i) {
+				if (parseSQLDate(batches[i].end_date).getTime() < new Date().getTime()) continue;
+				if (i>0) src += encodeURIComponent(",");
+				src += "'batch"+batches[i].id+"'";
+			}
+			src += encodeURIComponent("]}]")+"&title="+encodeURIComponent("Cuurent Students Updates");
+			updates_frame.src = src;
+			show_tabs(["Students List","Discipline","Health","Updates"]);
 			discipline_frame.src = "/dynamic/discipline/page/home"; // TODO
 			health_frame.src = "/dynamic/health/page/home"; // TODO
 			update_data();
@@ -523,7 +538,15 @@ class page_batches_classes extends Page {
 					filter_batches.push(batches[i].id);
 			header.setTitle("Alumni");
 			header.resetMenu();
-			show_tabs(["Students List"]);
+			var src = "/dynamic/news/page/news?sections="+encodeURIComponent("[{name:'education',tags:[");
+			for (var i = 0; i < batches.length; ++i) {
+				if (parseSQLDate(batches[i].end_date).getTime() > new Date().getTime()) continue;
+				if (i>0) src += encodeURIComponent(",");
+				src += "'batch"+batches[i].id+"'";
+			}
+			src += encodeURIComponent("]}]")+"&title="+encodeURIComponent("Alumni Updates");
+			updates_frame.src = src;
+			show_tabs(["Students List","Updates"]);
 			update_data();
 		}
 		function select_batch(batch) {
@@ -569,7 +592,8 @@ class page_batches_classes extends Page {
 				span_graduation.innerHTML = batch.end_date;
 			}
 			curriculum_frame.src = "/dynamic/curriculum/page/curriculum?batch="+batch.id;
-			show_tabs(["Students List","Curriculum","Discipline","Health"]);
+			updates_frame.src = "/dynamic/news/page/news?sections="+encodeURIComponent("[{name:'education',tags:['batch"+batch.id+"']}]")+"&title="+encodeURIComponent("Updates for Batch "+batch.name);
+			show_tabs(["Students List","Curriculum","Discipline","Health","Updates"]);
 			discipline_frame.src = "/dynamic/discipline/page/home"; // TODO
 			health_frame.src = "/dynamic/health/page/home"; // TODO
 			update_data();
@@ -618,7 +642,8 @@ class page_batches_classes extends Page {
 				span_end.innerHTML = period.end_date;
 			}
 			curriculum_frame.src = "/dynamic/curriculum/page/curriculum?period="+period.id;
-			var t = ["Students List","Curriculum"];
+			updates_frame.src = "/dynamic/news/page/news?sections="+encodeURIComponent("[{name:'education',tags:['period"+period.id+"']}]")+"&title="+encodeURIComponent("Updates for Period "+period.name);
+			var t = ["Students List","Curriculum","Updates"];
 			if (period.specializations.length == 0) {
 				t.push("Grades");
 				grades_frame.src = "/dynamic/transcripts/page/students_grades?period="+period.id;

@@ -42,7 +42,7 @@ function google_status(container) {
 			if (window.top.google.connection_status == -1) {
 				t.menu.addIconItem("/static/google/connect.gif","Connect to Google", function() {
 					if (t.menu) t.menu.hide();
-					window.top.google.ask_connection();
+					window.top.google.try_connect_now();
 				});
 			} else if (window.top.google.connection_status == 0 || !t.profile) {
 				t.menu.addIconItem(theme.icons_16.loading, "Connection to Google pending...", function() {

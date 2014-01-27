@@ -21,7 +21,7 @@ function finalize_picture_import($ids) {
 	$people = SQLQuery::create()->select("People")->where("id",$people_id)->execute_single_row();
 	if ($people <> null) {
 		$version = isset($people["picture_version"]) && $people["picture_version"] <> null ? intval($people["picture_version"])+1 : 1;
-		SQLQuery::create()->update("People", array("picture"=>$storage_id,"picture_version"=>$version), array("id"=>$people_id));
+		SQLQuery::create()->update_by_key("People", $people_id, array("picture"=>$storage_id,"picture_version"=>$version));
 		if (!PNApplication::has_errors()) {
 			if (isset($people["picture"]) && $people["picture"] <> null && $people["picture"] <> 0)
 				PNApplication::$instance->storage->remove_data($people["picture"]);
