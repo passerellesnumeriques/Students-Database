@@ -5,8 +5,9 @@
  * @param {DOMNode} container HTML element, or it's id, where to display calendar
  * @param {Function} onready called when the display is ready
  */
-function CalendarView(calendar_manager, view_name, container, onready) {
+function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	if (!view_name) view_name = 'week';
+	if (!zoom) zoom = 60;
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 
@@ -15,7 +16,7 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 	this.cursor_date = new Date();
 	this.cursor_date.setHours(0, 0, 0, 0);
 	/** zoom in minutes */
-	this.zoom = 60;
+	this.zoom = zoom;
 	/** name of the view to be displayed */
 	this.view_name = view_name;
 	
@@ -24,7 +25,8 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 		while (container.childNodes.length > 0)
 			container.removeChild(container.childNodes[0]);
 		this.header = document.createElement("DIV");
-		this.header.setAttribute("layout", "30");
+		this.header.setAttribute("layout", "28");
+		this.header.style.fontSize = '9pt';
 		//this.header.style.backgroundColor = "#D8D8D8";
 		this.header.className = "header";
 		this.header.style.borderBottom = "1px solid #A0A0A0";
@@ -49,104 +51,160 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 			new vertical_layout(container);
 			ready();
 		});
-		require("horizontal_layout.js",function(){
-			new horizontal_layout(t.header);
-			require("mac_tabs.js",function() {
-				t.view_tabs = new mac_tabs();
-				t.view_tabs.addItem("Day", "day");
-				t.view_tabs.addItem("Week", "week");
-				t.view_tabs.addItem("Month", "month");
-				t.view_tabs.addItem("Year", "year");
-				t.view_tabs.addItem("Agenda", "agenda");
-				t.view_tabs.select(t.view_name);
-				t.header.appendChild(t.view_tabs.element);
-				t.view_tabs.onselect = function(view_name) {
-					t.changeView(view_name);
-				};
-				t.position_div = document.createElement("DIV");
-				t.position_div.setAttribute("layout","fill");
-				t.position_div.style.textAlign = "center";
-				t.position_div.style.marginTop = "5px";
-				t.position_div.style.whiteSpace = "nowrap";
-				t.position_minus = document.createElement("IMG"); t.position_div.appendChild(t.position_minus);
-				t.position_text = document.createElement("SPAN"); t.position_div.appendChild(t.position_text);
-				t.position_plus = document.createElement("IMG"); t.position_div.appendChild(t.position_plus);
-				t.position_minus.style.verticalAlign = "bottom";
-				t.position_plus.style.verticalAlign = "bottom";
-				t.position_minus.style.paddingRight = "3px";
-				t.position_plus.style.paddingLeft = "3px";
-				t.position_minus.onload = function() { t.header.widget.layout(); };
-				t.position_minus.src = "/static/calendar/left.png";
-				t.position_plus.onload = function() { t.header.widget.layout(); };
-				t.position_plus.src = "/static/calendar/right.png";
-				t.position_minus.style.cursor = "pointer";
-				t.position_plus.style.cursor = "pointer";
-				t.position_minus.onclick = function() { if (t.view) t.view.back(); t.updatePosition(); };
-				t.position_plus.onclick = function() { if (t.view) t.view.forward(); t.updatePosition(); };
-				t.updatePosition();
-				addLayoutEvent(t.header, function() { t.updatePosition(); });
-				t.header.appendChild(t.position_div);
-				t.zoom_div = document.createElement("DIV");
-				t.zoom_div.innerHTML = "<img src='"+theme.icons_16.zoom+"' style='vertical-align:bottom'/> Zoom: ";
-				t.zoom_div.style.marginTop = "5px";
-				t.zoom_minus = document.createElement("IMG"); t.zoom_div.appendChild(t.zoom_minus);
-				t.zoom_text = document.createElement("SPAN"); t.zoom_div.appendChild(t.zoom_text);
-				t.zoom_plus = document.createElement("IMG"); t.zoom_div.appendChild(t.zoom_plus);
-				t.zoom_minus.style.verticalAlign = "bottom";
-				t.zoom_plus.style.verticalAlign = "bottom";
-				t.zoom_minus.style.paddingRight = "3px";
-				t.zoom_plus.style.paddingLeft = "3px";
-				t.zoom_minus.onload = function() { t.header.widget.layout(); };
-				t.zoom_plus.onload = function() { t.header.widget.layout(); };
-				t.zoom_minus.src = "/static/calendar/down.png";
-				t.zoom_plus.src = "/static/calendar/up.png";
-				t.zoom_minus.style.cursor = "pointer";
-				t.zoom_plus.style.cursor = "pointer";
-				t.zoom_minus.onclick = function() {
-					if (t.zoom == 5) return;
-					if (t.zoom == 15) t.zoom = 10; else t.zoom = Math.floor(t.zoom/2);
-					if (t.zoom == 5) {
-						t.zoom_minus.style.cursor = "";
-					} else {
-						t.zoom_minus.style.cursor = "pointer";
-					}
-					t.updateZoom();
-					t.changeView(t.view_name);
-				};
-				t.zoom_plus.onclick = function() {
-					if (t.zoom == 10) t.zoom = 15; else t.zoom *= 2;
+		require("mac_tabs.js",function() {
+			t.view_tabs = new mac_tabs();
+			t.view_tabs.addItem("Day", "day");
+			t.view_tabs.addItem("Week", "week");
+			t.view_tabs.addItem("Month", "month");
+			t.view_tabs.addItem("Year", "year");
+			t.view_tabs.addItem("Agenda", "agenda");
+			t.view_tabs.select(t.view_name);
+			t.view_tabs.element.style.display = "inline-block";
+			t.header.appendChild(t.view_tabs.element);
+			t.view_tabs.onselect = function(view_name) {
+				t.changeView(view_name);
+			};
+			t.position_div = document.createElement("DIV");
+			t.position_div.style.display = "inline-block";
+			t.position_div.style.textAlign = "center";
+			t.position_div.style.marginTop = "3px";
+			t.position_div.style.whiteSpace = "nowrap";
+			t.position_back_step = document.createElement("IMG"); t.position_div.appendChild(t.position_back_step);
+			t.position_back = document.createElement("IMG"); t.position_div.appendChild(t.position_back);
+			t.position_text = document.createElement("SPAN"); t.position_div.appendChild(t.position_text);
+			t.position_forward = document.createElement("IMG"); t.position_div.appendChild(t.position_forward);
+			t.position_forward_step = document.createElement("IMG"); t.position_div.appendChild(t.position_forward_step);
+			t.position_text.style.paddingLeft = "2px";
+			t.position_text.style.paddingRight = "2px";
+			t.position_back.style.verticalAlign = "middle";
+			t.position_back.style.cursor = "pointer";
+			t.position_back.style.padding = "1px";
+			t.position_back.style.margin = "0px";
+			t.position_back.className = "button_verysoft";
+			t.position_back.onload = function() { t.updateHeader(); };
+			t.position_back.src = "/static/calendar/back.png";
+			t.position_back_step.style.verticalAlign = "middle";
+			t.position_back_step.style.cursor = "pointer";
+			t.position_back_step.style.padding = "1px";
+			t.position_back_step.style.margin = "0px";
+			t.position_back_step.className = "button_verysoft";
+			t.position_back_step.onload = function() { t.updateHeader(); };
+			t.position_back_step.src = "/static/calendar/back_step.png";
+			t.position_forward.style.verticalAlign = "middle";
+			t.position_forward.style.cursor = "pointer";
+			t.position_forward.style.padding = "1px";
+			t.position_forward.style.margin = "0px";
+			t.position_forward.className = "button_verysoft";
+			t.position_forward.onload = function() { t.updateHeader(); };
+			t.position_forward.src = "/static/calendar/forward.png";
+			t.position_forward_step.style.verticalAlign = "middle";
+			t.position_forward_step.style.cursor = "pointer";
+			t.position_forward_step.style.padding = "1px";
+			t.position_forward_step.style.margin = "0px";
+			t.position_forward_step.className = "button_verysoft";
+			t.position_forward_step.onload = function() { t.updateHeader(); };
+			t.position_forward_step.src = "/static/calendar/forward_step.png";
+			t.position_back.onclick = function() { if (t.view) t.view.back(); t.updateHeader(); };
+			t.position_back_step.onclick = function() { if (t.view) t.view.back_step(); t.updateHeader(); };
+			t.position_forward.onclick = function() { if (t.view) t.view.forward(); t.updateHeader(); };
+			t.position_forward_step.onclick = function() { if (t.view) t.view.forward_step(); t.updateHeader(); };
+			t.header.appendChild(t.position_div);
+			t.zoom_div = document.createElement("DIV");
+			t.zoom_div.style.display = "inline-block";
+			t.zoom_div.style.marginTop = "3px";
+			t.zoom_minus = document.createElement("IMG"); t.zoom_div.appendChild(t.zoom_minus);
+			t.zoom_text = document.createElement("SPAN"); t.zoom_div.appendChild(t.zoom_text);
+			t.zoom_plus = document.createElement("IMG"); t.zoom_div.appendChild(t.zoom_plus);
+			t.zoom_minus.style.verticalAlign = "middle";
+			t.zoom_plus.style.verticalAlign = "middle";
+			t.zoom_minus.style.padding = "1px";
+			t.zoom_plus.style.padding = "1px";
+			t.zoom_minus.style.paddingRight = "3px";
+			t.zoom_plus.style.paddingLeft = "3px";
+			t.zoom_minus.className = "button_verysoft";
+			t.zoom_plus.className = "button_verysoft";
+			t.zoom_minus.onload = function() { t.updateHeader(); };
+			t.zoom_plus.onload = function() { t.updateHeader(); };
+			t.zoom_minus.src = theme.icons_16.zoom_in;
+			t.zoom_plus.src = theme.icons_16.zoom_out;
+			t.zoom_minus.style.cursor = "pointer";
+			t.zoom_plus.style.cursor = "pointer";
+			t.zoom_minus.onclick = function() {
+				if (t.zoom == 5) return;
+				if (t.zoom == 15) t.zoom = 10; else t.zoom = Math.floor(t.zoom/2);
+				if (t.zoom == 5) {
+					t.zoom_minus.style.cursor = "";
+				} else {
 					t.zoom_minus.style.cursor = "pointer";
-					t.updateZoom();
-					t.changeView(t.view_name);
-				};
-				t.updateZoom();
-				
-				if (t.view && t.view.zoom_supported)
-					t.header.appendChild(t.zoom_div);
-				t.header.widget.layout();
-			});
+				}
+				t.updateHeader();
+				t.changeView(t.view_name);
+			};
+			t.zoom_plus.onclick = function() {
+				if (t.zoom == 10) t.zoom = 15; else t.zoom *= 2;
+				t.zoom_minus.style.cursor = "pointer";
+				t.updateHeader();
+				t.changeView(t.view_name);
+			};
+			
+			if (t.view && t.view.zoom_supported)
+				t.header.appendChild(t.zoom_div);
+
+			t.updateHeader();
+			addLayoutEvent(t.header, function() { t.updateHeader(); });
 		});
 	};
 	/** Called when the zoom is changed, to update the text displaying zoom information */
-	this.updateZoom = function() {
-		this.zoom_text.innerHTML = "";
-		var d = new Date();
-		d.setHours(0, this.zoom, 0, 0);
-		if (d.getHours() > 0)
-			this.zoom_text.innerHTML += d.getHours()+"h";
-		this.zoom_text.innerHTML += d.getMinutes()+"m";
-	};
-	/** Called when the position/date changed, to update the text displaying the date range displayed */
-	this.updatePosition = function() {
-		if (!this.position_text) return;
-		if (this.view) {
-			var d1 = this.view.start_date;
-			var d2 = this.view.end_date;
-			if (d2.getTime() == d1.getTime()) d2 = null;
-			this.position_text.innerHTML = this.view.start_date.toLocaleDateString();
-			if (d2) this.position_text.innerHTML += " - " + this.view.end_date.toLocaleDateString();
-		} else {
+	this.updateHeader = function() {
+		if (!this.view_tabs || !this.view) return;
+		var w = this.header.clientWidth;
+		w -= this.view_tabs.element.offsetWidth;
+		this.position_div.style.position = "absolute";
+		this.position_div.style.visibility = "hidden";
+		this.position_div.style.top = "-10000px";
+		this.position_div.style.width = "";
+		this.zoom_div.style.position = "absolute";
+		this.zoom_div.style.visibility = "hidden";
+		this.zoom_div.style.top = "-10000px";
+
+		var zoom_width = 0;
+		if (this.view && this.view.zoom_supported) {
+			this.zoom_div.style.position = "static";
+			this.zoom_div.style.visibility = "visible";
+			this.zoom_text.innerHTML = this.view.getZoomText(this.zoom);
+			zoom_width = this.zoom_div.offsetWidth;
+		}
+		
+		this.position_text.innerHTML = this.view.getPositionText(0); 
+		var position_width = this.position_div.offsetWidth;
+
+		var shorter = 1;
+		while (w < position_width + zoom_width) {
+			// try to reduce text
+			var text = this.view.getPositionText(shorter++);
+			if (text == null) break; // cannot reduce anymore
+			this.position_text.innerHTML = text; 
+			position_width = this.position_div.offsetWidth;
+		}
+		if (w < position_width + zoom_width && zoom_width > 0) {
+			// try to reduce zoom, by removing its text
+			this.zoom_text.innerHTML = "";
+			zoom_width = this.zoom_div.offsetWidth;
+		}
+		if (w < position_width + zoom_width) {
+			// reduce again, by removing position text!
 			this.position_text.innerHTML = "";
+			position_width = this.position_div.offsetWidth;
+		}		
+		if (w < position_width + zoom_width) {
+			// we cannot show all
+			// TODO ? menu ? / only one ?...
+		} else {
+			this.position_div.style.position = "static";
+			this.position_div.style.visibility = "visible";
+			this.zoom_div.style.position = "static";
+			this.zoom_div.style.visibility = "visible";
+			this.position_div.style.width = (w-zoom_width-5)+'px';
 		}
 	};
 	
@@ -165,11 +223,15 @@ function CalendarView(calendar_manager, view_name, container, onready) {
 			t.loadEvents();
 			if (t.view && t.view.zoom_supported && t.zoom_div)
 				t.header.appendChild(t.zoom_div);
-			t.updatePosition();
-			if (t.header.widget)
-				t.header.widget.layout();
+			t.updateHeader();
 			if (onready) onready();
 		});
+	};
+	
+	this.setZoom = function(zoom) {
+		this.zoom = zoom;
+		t.updateHeader();
+		t.changeView(t.view_name);		
 	};
 	
 	/** Load all events from all calendars: iterate on all events, and call <code>addEvent</code> for each */

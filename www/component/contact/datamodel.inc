@@ -93,11 +93,13 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 				}
 			}
 			$values .= "]";
+			require_once("component/Service.inc");
 			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:".$row[$sql_aliases["key"]].",contacts:".$values."}"));
 		}
 	}
 	
 	public function getNewData() {
+		require_once("component/Service.inc");
 		return json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:-1,contacts:[]}"));
 	}
 	
@@ -188,11 +190,13 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 				}
 			}
 			$values .= "]";
+			require_once("component/Service.inc");
 			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:".json_encode($row[$sql_aliases["key"]]).",addresses:".$values."}"));
 		}
 	}
 
 	public function getNewData() {
+		require_once("component/Service.inc");
 		$table_name = $this->handler->type == "people" ? "People_address" : "Organization_address";
 		return json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:-1,addresses:[]}"));
 	}

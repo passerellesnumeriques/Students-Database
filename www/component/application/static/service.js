@@ -92,14 +92,14 @@ service = {
 	generateInput: function(input) {
 		var s = "";
 		if (input == null) return "null";
-		if (input instanceof Array || (typeof input == 'object' && input.constructor.name == "Array")) {
+		if (input instanceof Array || (typeof input == 'object' && getObjectClassName(input) == "Array")) {
 			s += "[";
 			for (var i = 0; i < input.length; ++i) {
 				if (i>0) s += ",";
 				s += service.generateInput(input[i]);
 			}
 			s += "]";
-		} else if (input instanceof Date) {
+		} else if (input instanceof Date || (typeof input == 'object' && getObjectClassName(input) == "Date")) {
 			s += input.getTime()/1000;
 		} else if (typeof input == 'object') {
 			s += "{";

@@ -20,11 +20,12 @@ class page_home extends Page {
 				var t = this;
 				
 				t._init = function(){
+					t.select.getHTMLElement().style.backgroundColor = "#FFFFFF";
 					t.select.add(0,"<i><center>Not selected</center></i>");
 					if(can_add)
 						t.select.add("add","<img style = 'vertical-align:bottom' src = '"+theme.icons_16.add+"'/> <i>Create campaign</i>");
 					for(var i = 0; i < campaigns.length; i++){
-						t.select.add(campaigns[i].id, campaigns[i].name);
+						t.select.add(campaigns[i].id, "<span style='padding: 0px 2px 0px 2px'>"+campaigns[i].name+"</span>");
 					}
 					if(!init_id)
 						init_id = 0;
@@ -132,10 +133,9 @@ class page_home extends Page {
 			icon='/static/selection/selection_32.png' 
 			title='Selection'
 			page='/dynamic/selection/page/selection_main_page'>
-			<a class = "page_menu_item" href ='/dynamic/selection/page/selection_main_page' target = "selection_page_content"><img src = '<?php echo theme::$icons_16["home"];?>'/> Home</a>
 			<?php
 			if($rights["read"]){
-				echo "<div style = 'vertical-align:bottom' id ='select_campaign_header'></div>"; 
+				echo "<div style = 'vertical-align:bottom;margin-left:5px;' id ='select_campaign_header'></div>"; 
 				$current = PNApplication::$instance->components["selection"]->get_campaign_id();
 				$first = ($current <> null) ? "false" : "true";
 				$json_all_campaign = "[";
@@ -157,6 +157,9 @@ class page_home extends Page {
 		/* All the other buttons need the campaign id to be set */
 		$campaign_id = PNApplication::$instance->selection->get_campaign_id();
 		if($campaign_id <> null){
+			?>
+			<a class = "page_menu_item" href ='/dynamic/selection/page/selection_main_page' target = "selection_page_content"><img src = '<?php echo theme::$icons_16["dashboard"];?>'/> Dashboard</a>
+			<?php 
 			if($rights["manage"]){
 				echo "<a class = 'page_menu_item' target='selection_page_content' href='/dynamic/selection/page/config/manage'><img src = '/static/theme/default/icons_16/config.png' /> Configuration</a>";
 			}

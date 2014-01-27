@@ -74,6 +74,8 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 			var ev = getCompatibleKeyEvent(e);
 			if (ev.isEnter && !p.getIsDisabled("ok"))
 				p.pressButton('ok');
+			if (ev.isEscape && !p.getIsDisabled("cancel"))
+				p.pressButton('cancel');
 		};
 		var validate = function() {
 			var error = validation_handler(input.value);

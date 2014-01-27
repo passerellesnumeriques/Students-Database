@@ -97,7 +97,7 @@ class user_management extends Component {
 		}
 		$user_id = SQLQuery::create()->bypass_security($bypass_security)->insert("Users", array("domain"=>$domain,"username"=>$username));
 		if ($domain == PNApplication::$instance->local_domain)
-			$this->local_user_created->fire($user_id);
+			$this->local_user_created->fire(array($user_id));
 		return $user_id;
 	}
 	

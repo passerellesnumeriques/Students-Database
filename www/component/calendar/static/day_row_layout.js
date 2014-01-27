@@ -48,14 +48,16 @@ function day_row_layout(calendar_manager) {
 			});
 			div.style.overflow = 'hidden';
 			div.style.left = (day_boxes[day1].offsetLeft+2)+"px";
-			div.style.top = (1+y*22)+"px";
-			div.style.height = "15px";
+			div.style.top = (1+y*18)+"px";
+			div.style.height = "13px";
 			var w = 0;
 			for (var day = day1; day <= day_end; ++day) w += day_boxes[day].offsetWidth;
 			w -= 2+4+(day_end-day1)+4;
 			div.style.width = w+"px";
-			div.style.padding = "2px";
+			div.style.padding = "1px";
+			div.style.fontSize = '8pt';
 			div.innerHTML = ev.title;
+			div.title = calendar_manager.getCalendar(ev.calendar_id).name+"\r\n"+ev.title+"\r\n"+ev.description;
 			div.style.cursor = "pointer";
 			div.event = ev;
 			div.onclick = function() {
@@ -70,7 +72,7 @@ function day_row_layout(calendar_manager) {
 		
 		var h = 0;
 		for (var i = 0; i < by_day.length; ++i)
-			if (by_day[i].length*22 > h) h = by_day[i].length*22;
+			if (by_day[i].length*18 > h) h = by_day[i].length*18;
 		h += 1;
 		if (h < 10) h = 10;
 		for (var i = 0; i < day_boxes.length; ++i)

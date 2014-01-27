@@ -16,11 +16,14 @@ require_once("Component.inc");
  * @property data_import $data_import
  * @property data_model $data_model
  * @property development $development
+ * @property discipline $discipline
  * @property excel $excel
  * @property facebook $facebook
  * @property geography $geography
  * @property google $google
+ * @property health $health
  * @property javascript $javascript
+ * @property news $news
  * @property people $people 
  * @property selection $selection
  * @property staff $staff

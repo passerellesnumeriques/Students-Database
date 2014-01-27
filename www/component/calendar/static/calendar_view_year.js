@@ -7,9 +7,21 @@ function calendar_view_year(view, container) {
 
 	/** The first day of the year to display */
 	this.start_date = view.cursor_date;
+	this.start_date.setMonth(0);
+	this.start_date.setDate(1);
 	/** The last day of the year to display */
-	this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
+	this.end_date = new Date(this.start_date.getTime());
+	this.end_date.setFullYear(this.end_date.getFullYear());
+	this.end_date.setDate(0);
 
+	this.getPositionText = function(shorter) {
+		switch (shorter) {
+		case 0: // normal
+			return ""+this.start_date.getFullYear();
+		}
+		return null;
+	};
+	
 	/** Called by the CalendarView when a new event should be displayed.
 	 * @param {Object} ev the event to display
 	 */

@@ -313,8 +313,10 @@ class SQLQuery {
 		return $this;
 	}
 
-	public function &join($table_from, $table_to, $fields_matching, $alias = null) {
-		array_push($this->joins, array($table_from, $table_to, $fields_matching, $alias));
+	public function &join($table_from, $table_to, $fields_matching, $alias = null, $join_on_values = null) {
+		$join = array($table_from, $table_to, $fields_matching, $alias);
+		if ($join_on_values <> null) array_push($join, $join_on_values);
+		array_push($this->joins, $join);
 		return $this;
 	}
 	public function get_join_alias($table_from, $table_to, $fields_matching) {
@@ -531,6 +533,16 @@ class SQLQuery {
 					$sql .= "`".($join[3] <> null ? $join[3] : $table->getSQLName($this->sub_models))."`.`".$field_to."`";
 				else
 					$sql .= "'".SQLQuery::escape($field_to[0])."'";
+			}
+			if (isset($join[4])) {
+				foreach ($join[4] as $field_to=>$value_to) {
+					if ($first) $first = false; else $sql .= " AND ";
+					$sql .= "`".($join[3] <> null ? $join[3] : $table->getSQLName($this->sub_models))."`.`".$field_to."`";
+					if ($value_to === null)
+						$sql .= " IS NULL";
+					else
+						$sql .= "='".SQLQuery::escape($value_to)."'";
+				}
 			}
 			unset($table);
 			if ($join[3] <> null) array_push($aliases, $join[3]);
@@ -1099,6 +1111,8 @@ class SQLQuery {
 			$sm->create_tables($id);
 		// unlock the table
 		DataBaseLock::unlock($lock);
+		// events
+		$t->fireInsert($fields_values, $id, $t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null);
 		return $id;
 	}
 	
@@ -1214,6 +1228,13 @@ class SQLQuery {
 			$sm->create_tables($id);
 		// unlock the table
 		DataBaseLock::unlock($lock);
+		// events
+		if ($id <> 0) {
+			$i = 0;
+			foreach ($rows as &$fields_values) {
+				$t->fireInsert($fields_values, $ids[$i++], $t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null);
+			}
+		}
 		return $ids;
 	}
 	

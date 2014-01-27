@@ -1,15 +1,23 @@
 // call onresize of window when all images are loaded, to trigger re-layout if needed
+var resize_triggered = false;
 function _all_images_loaded() {
 	var img = document.getElementsByTagName("IMG");
 	for (var i = 0; i < img.length; ++i) {
 		if (img[i].complete || img[i].height != 0) continue;
 		return;
 	}
-	triggerEvent(window, 'resize');
+	if (!resize_triggered) {
+		resize_triggered = true;
+		setTimeout(function() {
+			resize_triggered = false;
+			triggerEvent(window, 'resize');
+		},10);
+	}
 }
 function _init_images() {
 	var img = document.getElementsByTagName("IMG");
 	for (var i = 0; i < img.length; ++i) {
+		img[i]._loaded_event = true;
 		listenEvent(img[i],'load',_all_images_loaded);
 	}
 }
@@ -18,6 +26,8 @@ function _init_images() {
 var _layout_events = [];
 function addLayoutEvent(element, handler) {
 	_layout_events.push({element:element,handler:handler});
+	element._layoutW = element.scrollWidth;
+	element._layoutH = element.scrollHeight;
 }
 function removeLayoutEvent(element, handler) {
 	for (var i = 0; i < _layout_events.length; ++i) {
@@ -28,6 +38,7 @@ function removeLayoutEvent(element, handler) {
 	}
 }
 function _fire_layout_events() {
+	if (window.top.pause_layout) return;
 	// order elements
 	var list = [];
 	for (var i = 0; i < _layout_events.length; ++i) {
@@ -58,10 +69,28 @@ function _fire_layout_events() {
 			var h = list[i].element.offsetHeight;
 			list[i].handler(list[i].element);
 			changed |= w != list[i].element.offsetWidth || h != list[i].element.offsetHeight;
+			list[i].element._layoutW = list[i].element.scrollWidth;
+			list[i].element._layoutH = list[i].element.scrollHeight;
 		}
 	} while (changed && ++count < 5);
 }
+var check_images = false;
 function fireLayoutEventFor(element) {
+	if (window.top.pause_layout) return;
+	// handle possible new images
+	if (!check_images) {
+		check_images = true;
+		setTimeout(function() {
+			var img = document.getElementsByTagName("IMG");
+			for (var i = 0; i < img.length; ++i) {
+				if (img[i]._loaded_event) continue;
+				listenEvent(img[i],'load',_all_images_loaded);
+				img[i]._loaded_event = true;
+			}
+			check_images = false;
+		},10);
+	}
+
 	if (element == document.body) { _fire_layout_events(); return; }
 	// order elements
 	var list = [];
@@ -100,9 +129,21 @@ function fireLayoutEventFor(element) {
 			var h = list[i].element.offsetHeight;
 			list[i].handler(list[i].element);
 			changed |= w != list[i].element.offsetWidth || h != list[i].element.offsetHeight;
+			list[i].element._layoutW = list[i].element.scrollWidth;
+			list[i].element._layoutH = list[i].element.scrollHeight;
 		}
 	} while (changed);
 }
+
+window.top.pause_layout = false;
+setInterval(function(){
+	if (window.top.pause_layout) return;
+	for (var i = 0; i < _layout_events.length; ++i) {
+		var e = _layout_events[i].element;
+		if (e.scrollHeight != e._layoutH || e.scrollWidth != e._layoutW)
+			fireLayoutEventFor(e);
+	}
+},1000);
 
 if (typeof listenEvent != 'undefined') {
 	listenEvent(window, 'load', _all_images_loaded);

@@ -7,9 +7,22 @@ function calendar_view_month(view, container) {
 
 	/** The first day of the month to display */
 	this.start_date = view.cursor_date;
+	if (this.start_date.getDate() != 1) this.start_date.setDate(1);
 	/** The last day of the month to display */
-	this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
+	this.end_date = new Date(this.start_date.getTime());
+	this.end_date.setMonth(this.end_date.getMonth()+1);
+	this.end_date.setDate(this.end_date.getDate()-1);
 
+	this.getPositionText = function(shorter) {
+		switch (shorter) {
+		case 0: // normal
+			return getMonthName(this.start_date.getMonth()+1);
+		case 1: // short name
+			return getMonthShortName(this.start_date.getMonth()+1);
+		}
+		return null;
+	};
+	
 	/** Called by the CalendarView when a new event should be displayed.
 	 * @param {Object} ev the event to display
 	 */

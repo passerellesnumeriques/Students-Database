@@ -1,5 +1,6 @@
 <?php
 namespace datamodel {
+	require_once("Event.inc");
 	/**
 	 * 3 types of tables:
 	 *  - with a primary key which auto-increment
@@ -49,10 +50,15 @@ namespace datamodel {
 		private $display_handler = array();
 
 		public $_key_submodels = array();
+		
+		// events
+		/** @var Event */
+		private $oninsert;
 
 		public function __construct(&$model, $name) {
 			$this->model = &$model;
 			$this->name = $name;
+			$this->oninsert = new \Event();
 		}
 
 		public function _key_for_submodel(&$sm) {
@@ -251,6 +257,13 @@ namespace datamodel {
 			$c = new ColumnTime($this, $name, $can_be_null, $unique);
 			array_push($this->columns, $c);
 			return $this;
+		}
+		
+		public function onInsert($fct) {
+			$this->oninsert->listenFunction($fct);
+		}
+		public function fireInsert($fields_values, $id, $sub_model_instance) {
+			$this->oninsert->fire(array($fields_values,$id,$sub_model_instance));
 		}
 
 		/** Indicate one or several columns should be indexed for faster access.
@@ -572,7 +585,7 @@ namespace datamodel {
 		}
 
 		public function get_sql_type() {
-			return "INT(".$this->size.")";
+			return "INT(".$this->size.")"; //TODO support BIGINT...
 		}
 
 		public function validate($value) {

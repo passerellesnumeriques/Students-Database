@@ -65,6 +65,7 @@ function load_static_resources(container) {
 			return;
 		}
 		if (t._stopped) return;
+		if (!window.top.pn_application_static) return;
 		container.style.color = "#000000";
 		var script = null;
 		for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
@@ -92,6 +93,7 @@ function load_static_resources(container) {
 		}
 		if (t._stopped) return;
 		container.style.color = "#000000";
+		if (!window.top.pn_application_static) return;
 		if (window.top.pn_application_static.images.length == 0) { t._checkEnd(); return; }
 		var image = window.top.pn_application_static.images[0];
 		window.top.pn_application_static.images.splice(0,1);

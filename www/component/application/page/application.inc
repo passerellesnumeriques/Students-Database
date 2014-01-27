@@ -11,8 +11,8 @@ $this->onload("new google_status('google_status');");
 //$this->onload("new facebook_status('facebook_status');");
 $this->onload("setBorderRadius(document.forms['app_search'].elements['q'],8,8,8,8,8,8,8,8);");
 $this->onload("setBoxShadow(document.forms['app_search'].elements['q'],-1,2,2,0,'#D8D8F0',true);");
-$this->onload("setBorderRadius(document.getElementById('app_domain'),5,5,5,5,5,5,5,5);");
-$this->onload("setBoxShadow(document.getElementById('app_domain'),-1,2,2,0,'#D8D8F0',true);");
+//$this->onload("setBorderRadius(document.getElementById('app_domain'),5,5,5,5,5,5,5,5);");
+//$this->onload("setBoxShadow(document.getElementById('app_domain'),-1,2,2,0,'#D8D8F0',true);");
 $this->onload("window.top.pn_loading_end();");
 if (PNApplication::$instance->current_domain == "Dev") {
 	$this->add_javascript("/static/development/debug_status.js");
@@ -37,6 +37,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 					</form>
 				</td>
 				<td nowrap="nowrap" class='pn_application_header_section' style='cursor:pointer' onclick="new context_menu('user_settings_menu').showBelowElement(this, true);">
+					<div id='user_settings_button'>
 					<span id='user_first_name'></span> <span id='user_last_name'></span>
 					<?php 
 					$people = SQLQuery::create()->bypass_security()->select("People")->where("id",PNApplication::$instance->user_people->user_people_id)->execute_single_row();
@@ -44,6 +45,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 					datamodel_cell($this, "user_last_name", false, "People", "last_name", PNApplication::$instance->user_people->user_people_id, null, $people["last_name"]);
 					?>
 					<img src='/static/application/settings.png' style='vertical-align:bottom'/>
+					</div>
 					<div id='user_settings_menu' class='context_menu'>
 						<div class='context_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id?>';">
 							<img src='/static/people/profile_16.png'/> Profile
@@ -56,7 +58,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 						</div>
 					</div>
 				</td><td nowrap="nowrap" class='pn_application_header_section' title="Database">
-					<select id='app_domain' style="padding:0px 0px 0px 16px;margin:0px;background:#ffffff url('/static/application/database.png') no-repeat 0px 1px;border:1px solid #8080FF;" onchange="service.json('application','set_domain',{domain:this.value},function(result){if(result)location.reload();});">
+					<select id='app_domain' style="padding:0px 0px 0px 16px;margin:0px;background:rgba(255,255,255,0) url('/static/application/database.png') no-repeat 0px 1px;border:none;" onchange="service.json('application','set_domain',{domain:this.value},function(result){if(result)location.reload();});">
 					<?php
 					foreach (PNApplication::$instance->get_domains() as $domain=>$descr)
 						echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>";
@@ -94,12 +96,24 @@ if (PNApplication::$instance->current_domain == "Dev") {
 <a href="/dynamic/application/page/home" target="pn_application_content" style='position:fixed;top:-2px;left:2px'>
 	<img src='/static/application/logo.png' height=32px border=0 style='vertical-align:top'/>
 </a>
+<style type='text/css'>
+#user_settings_button {
+	border: 1px solid rgba(0,0,0,0);
+	padding: 3px;
+}
+#user_settings_button:hover {
+	border: 1px solid rgba(128,128,128,0.3);
+	background-color: rgba(255,255,255,0.2);
+};
+</style>
 <script type='text/javascript'>
 window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
 
-setInterval(function(){
-	service.json("application","ping",null,function(r){});
+/*setInterval(function(){
+	if (window.theme) // check the window is still there
+		service.json("application","ping",null,function(r){});
 },30*1000); // every 30 seconds
+*/
 /*setBackgroundGradient(
 	document.getElementById('pn_application_header'),
 	'vertical',
@@ -127,6 +141,9 @@ setBackgroundGradient(
 	 {pos:100,color:'#686898'}
 	]
 );*/
+
+setBorderRadius(document.getElementById('user_settings_button'), 5, 5, 5, 5, 0, 0, 0, 0);
+
 function pn_application_content_unload() {
 	var frame = document.getElementById('pn_application_content');
 	if (typeof animation != 'undefined') {

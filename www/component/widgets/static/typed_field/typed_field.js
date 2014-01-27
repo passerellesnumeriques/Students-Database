@@ -23,13 +23,13 @@ function typed_field(data,editable,config){
 	};
 	this.error = null;
 	this.config = config;
-	if (this.constructor.name != 'typed_field' && this.constructor.name != 'typed_field_multiple')
+	if (getObjectClassName(this) != 'typed_field' && getObjectClassName(this) != 'typed_field_multiple')
 		this._create(data);
 }
 // TODO toggleEditable
 typed_field.prototype = {
 	/** Internal function resetting and creating the field */
-	_create: function(data) { alert("Function _create not implemented in typed_field: "+this.constructor.name); },
+	_create: function(data) { alert("Function _create not implemented in typed_field: "+getObjectClassName(this)); },
 	/**
 	 * @returns the HTML element representing the field
 	 */
@@ -80,7 +80,7 @@ typed_field.prototype = {
 	hasError: function() { return this.error != null; },
 	
 	canBeNull: function() {
-		alert("Function canBeNull not implemented in typed_field: "+this.constructor.name);
+		alert("Function canBeNull not implemented in typed_field: "+getObjectClassName(this));
 	},
 	
 	isMultiple: function() { return false; },
@@ -114,4 +114,4 @@ function typed_field_multiple(data, editable, config) {
 typed_field_multiple.prototype = new typed_field();
 typed_field_multiple.prototype.constructor = typed_field_multiple;		
 typed_field_multiple.prototype.isMultiple = function() { return true; };
-typed_field_multiple.prototype.addData = function(new_data) { alert("Function addData not implemented in typed_field_multiple: "+this.constructor.name); };
+typed_field_multiple.prototype.addData = function(new_data) { alert("Function addData not implemented in typed_field_multiple: "+getObjectClassName(this)); };

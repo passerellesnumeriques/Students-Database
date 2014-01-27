@@ -51,7 +51,20 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 	this.element = document.createElement("DIV");
 	
 	this.addTool = function(element) {
+		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar.appendChild(element);
+		element.style.display = "inline-block";
+		fireLayoutEventFor(this.element);
+	};
+	this.addToolLeft = function(element) {
+		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
+		this.toolbar_left.appendChild(element);
+		element.style.display = "inline-block";
+		fireLayoutEventFor(this.element);
+	};
+	this.addToolRight = function(element) {
+		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
+		this.toolbar_right.appendChild(element);
 		element.style.display = "inline-block";
 		fireLayoutEventFor(this.element);
 	};
@@ -96,8 +109,12 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		if (title_style)
 			for (var att in title_style) this.title.style[att] = title_style[att];
 		this.title_container.appendChild(this.title);
+		this.toolbar_left = document.createElement("DIV");
+		this.header.appendChild(this.toolbar_left);
 		this.toolbar = document.createElement("DIV");
 		this.header.appendChild(this.toolbar);
+		this.toolbar_right = document.createElement("DIV");
+		this.header.appendChild(this.toolbar_right);
 		if (collapsable) {
 			this.collapse_container = document.createElement("DIV");
 			this.collapse_container.style.padding = "4px";
@@ -135,6 +152,7 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 				t.content_container.anim1 = animation.create(t.content_container, 0, t.content_container.originalHeight, 500, function(value, element) {
 					element.style.height = Math.floor(value)+'px';
 					element.style.overflow = "hidden";
+					if (value == t.content_container.originalHeight) fireLayoutEventFor(t.element.parentNode);
 				});
 				t.content_container.anim2 = animation.fadeIn(t.content_container, 600, function() {
 					t.content_container.style.position = 'static';
@@ -160,6 +178,7 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 				t.content_container.anim1 = animation.create(t.content_container, start, 0, 600, function(value, element) {
 					element.style.height = Math.floor(value)+'px';
 					element.style.overflow = "hidden";
+					if (value == 0) fireLayoutEventFor(t.element.parentNode);
 				});
 				t.content_container.anim2 = animation.fadeOut(t.content_container, 500, function() {
 					t.content_container.style.position = 'absolute';

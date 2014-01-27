@@ -41,8 +41,20 @@ function color_darker(color, amount) {
 
 function color_string(color) {
 	if (color.length == 3 || color[3] == 1)
-		return "rgb("+color[0]+","+color[1]+","+color[2]+")";
+		return "#"+_2Hex(color[0])+_2Hex(color[1])+_2Hex(color[2]);
 	return "rgba("+color[0]+","+color[1]+","+color[2]+","+color[3]+")";
+}
+
+function color_equals(c1, c2) {
+	if (c1[0] != c2[0]) return false;
+	if (c1[1] != c2[1]) return false;
+	if (c1[2] != c2[2]) return false;
+	if (c1.length == 3) {
+		if (c2.length == 3) return true;
+		return c2[3] == 1;
+	}
+	if (c2.length == 3) return c1[3] == 1;
+	return c1[3] == c2[3];
 }
 
 function color_between(color_from, color_to, percent) {
