@@ -3,7 +3,180 @@
  * Provides functionalities to convert structures between JSON and database
  */ 
 class SelectionJSON{
+/**
+ * Methods about Information Sessions (IS)
+ */
+// 	$IS = SQLQuery::create()
+// 	->select("Information_session")
+// 	->field("date")
+// 	->field("postal_address")
+// 	->field("fake_organization")
+// 	->field("number_boys_expected")
+// 	->field("number_girls_expected")
+// 	->field("number_boys_real")
+// 	->field("number_girls_real")
+// 	->field("name")
+// 	->where("id",$id)
+// 	->execute_single_row();
+// 	$partners = SQLQuery::create()
+// 	->field("Information_session_partner","organization","organization")
+// 	->select("Information_session_partner")
+// 	->field("Information_session_partner","host","host")
+// 	->field("host_address")
+// 	->join("Information_session_partner","Information_session_contact_point",array("information_session"=>"information_session","organization"=>"organization"))
+// 	->field("Information_session_contact_point","people","contact_point")
+// 	->where_value("Information_session_partner","information_session",$id)
+// 	->order_by("Information_session_partner","organization")
+// 	->execute();
+	public static function InformationSessionFromID($id){
+		$IS_row = self::InformationSessionTableDataFromID($id);
+		$IS_partners_row = self::PartnersDataFromID($id);
+		return self::InformationSession($IS_row, $IS_partners_row);
+	}
 	
+	public static function InformationSessionTableDataFromID($id){
+		$q = SQLQuery::create()
+			->select("Information_session")
+			->where_value("Information_session","id",$id);
+		self::InformationSessionSQL($q);
+		$row = $q->execute_single_row();
+		return $row; 
+	}
+	
+	public static function InformationSessionSQL(&$q){
+		$alias = $q->get_table_alias("Information_session");
+		if(!$alias)
+			$alias = "Information_session";
+		$q
+			->field($alias,"date")
+			->field($alias,"postal_address")
+			->field($alias,"fake_organization")
+			->field($alias,"number_boys_expected")
+			->field($alias,"number_girls_expected")
+			->field($alias,"number_boys_real")
+			->field($alias,"number_girls_real")
+			->field($alias,"name");
+	}
+	
+	public static function PartnersDataFromID($id){
+		$q = SQLQuery::create()
+			->select("Information_session_partner")
+			->join("Information_session_partner","Information_session_contact_point",array("information_session"=>"information_session","organization"=>"organization"))
+			->where_value("Information_session_partner","information_session",$id)
+			->order_by("Information_session_partner","organization");
+		self::ISPartnersSQL($q);
+		$rows = $q->execute();
+		return $rows;
+	}
+	
+	public static function ISPartnersSQL(&$q){
+		$alias = $q->get_table_alias("Information_session_partner");
+		if(!$alias)
+			$alias = "Information_session";
+		$alias_contact_point = $q->get_table_alias("Information_session_contact_point");
+		if(!$alias_contact_point)
+			$alias_contact_point = "Information_session_contact_point";
+		$q
+			->field("Information_session_partner","organization","organization")
+			->field("Information_session_partner","host","host")
+			->field("host_address")
+			->field("Information_session_contact_point","people","contact_point");
+	}
+	
+	public static function InformationSession($row_IS,$rows_partners){
+		//TODO finish (partners array attribute...)
+		$data = "";
+		$partners_array = array();
+		if($id == -1 || $id == "-1"){
+			//This is a creation
+			$data.= "{id:-1, address:null, fake_organization:null, date:null, number_boys_expected:null, number_boys_real:null, number_girls_expected:null, number_girls_real:null, name:null, partners:[]}";
+		} else {
+			$IS = SQLQuery::create()
+			->select("Information_session")
+			->field("date")
+			->field("postal_address")
+			->field("fake_organization")
+			->field("number_boys_expected")
+			->field("number_girls_expected")
+			->field("number_boys_real")
+			->field("number_girls_real")
+			->field("name")
+			->where("id",$id)
+			->execute_single_row();
+			$partners = SQLQuery::create()
+			->field("Information_session_partner","organization","organization")
+			->select("Information_session_partner")
+			->field("Information_session_partner","host","host")
+			->field("host_address")
+			->join("Information_session_partner","Information_session_contact_point",array("information_session"=>"information_session","organization"=>"organization"))
+			->field("Information_session_contact_point","people","contact_point")
+			->where_value("Information_session_partner","information_session",$id)
+			->order_by("Information_session_partner","organization")
+			->execute();
+			if(isset($IS) && $IS <> null){
+				$data.= "{id:'".$id."', ";
+				// if($IS["postal_address"] <> null){
+				// $data.= PNApplication::$instance->contact->get_json_address_good_format_for_address_text($IS["postal_address"]);
+				// } else $data.= "address:null";
+				$data.= "address:".json_encode($IS["postal_address"]);
+				$data.= ", fake_organization:".json_encode($IS["fake_organization"]);
+				$data.= ", date:".json_encode($IS["date"]);
+				$data.= ", number_boys_expected:".json_encode($IS["number_boys_expected"]);
+				$data.= ", number_girls_expected:".json_encode($IS["number_girls_expected"]);
+				$data.= ", number_boys_real:".json_encode($IS["number_boys_real"]);
+				$data.= ", number_girls_real:".json_encode($IS["number_girls_real"]);
+				$data.= ", name:".json_encode($IS["name"]);
+				$data.= ", partners:";
+				if(isset($partners[0]["organization"]) && $partners[0]["organization"] <> null){
+					$first = true;
+					$current_partner = null;
+					$data.= "[";
+					foreach($partners as $p){
+						if($p["organization"] != $current_partner){
+							$name = SQLQuery::create()->select("Organization")->field("name")->where_value("Organization","id",$p["organization"])->execute_single_value();
+							if(!$first){
+								$data.= "]}";
+								$data.= ", ";
+							}
+							$first = false;
+							$data.= "{";
+							array_push($partners_array,$p["organization"]);
+							$data.= "organization:".json_encode($p["organization"]).", ";
+							$data.= "organization_name:".json_encode($name).", ";
+							$data.= "host:".json_encode($p["host"]).", ";
+							$data.= "host_address:".json_encode($p["host_address"]).", ";
+							$data.= "contact_points_selected:";
+							if(isset($p["contact_point"]) && $p["contact_point"] <> null){
+								$data.= "[";
+								$data.= json_encode($p["contact_point"]);
+							} else $data.= "[";
+							$current_partner = $p["organization"];
+						} else {
+							$data.= ", ";
+							$data.= json_encode($p["contact_point"]);
+						}
+					}
+					$data.= "]}";
+					$data.= "]";
+				} else $data.= "[]";
+		
+				$data.= "}";
+			} else $data.="{}";
+		}
+		if(!$return_partners_array) return $data;
+		else return array("data" => $data, "partners" => $partners_array);
+		
+	}
+	
+/**
+ * Methods about Exam Subjects
+ */
+	
+	/**
+	 * Exam Subject From Id
+	 * @param {integer} $id
+	 * @return {string} Exam subject to JSON format
+	 */
 	public static function ExamSubjectFromID($id){
 		$q = SQLQuery::create()
 			->select("Exam_subject")
