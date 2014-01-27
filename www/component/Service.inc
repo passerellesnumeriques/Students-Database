@@ -92,7 +92,7 @@ function _json_normalize_value($s, &$res) {
 		return _json_normalize_string(substr($s,1), $c, $res);
 	if ($c == "\"")
 		return _json_normalize_string(substr($s,1), $c, $res);
-	if (ctype_digit($c))
+	if (ctype_digit($c) || $c == "-")
 		return _json_normalize_number($s, $res);
 	if (substr($s,0,4)=="null") {
 		$res .= "null";
@@ -229,13 +229,16 @@ function _json_normalize_string($s, $quote, &$res) {
 	return "";
 }
 function _json_normalize_number($s, &$res) {
+	$first = true;
 	while (strlen($s) > 0) {
 		$c = substr($s,0,1);
-		if (ctype_digit($c)) {
+		if (ctype_digit($c) || ($c == "-" && $first)) {
 			$res .= $c;
 			$s = substr($s,1);
+			$first = false;
 			continue;
 		}
+		$first = false;
 		if ($c == ".") {
 			// floating number
 			$res .= ".";

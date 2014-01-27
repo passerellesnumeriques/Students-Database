@@ -137,6 +137,7 @@ function tree(container) {
 		item.tr.style.position = visible ? 'static' : 'absolute';
 		var td = document.createElement("TD"); item.tr.appendChild(td);
 		td.style.padding = "0px";
+		td.style.whiteSpace = "nowrap";
 		td.appendChild(item.head = document.createElement("DIV"));
 		item.head.style.display = 'inline-block';
 		item.head.style.position = 'relative';

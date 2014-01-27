@@ -23,11 +23,13 @@ function import_people($input) {
 		return null;
 	}
 	foreach (PNApplication::$instance->components as $c) {
-		if (!($c instanceof PeoplePlugin)) continue;
-		if (!$c->importPeopleData($input, $people_id)) {
-			// error: rollback
-			SQLQuery::create()->bypass_security()->remove_key("People", $people_id);
-			return null;
+		foreach ($c->getPluginImplementations() as $pi) {
+			if (!($pi instanceof PeoplePlugin)) continue;
+			if (!$pi->importPeopleData($input, $people_id)) {
+				// error: rollback
+				SQLQuery::create()->bypass_security()->remove_key("People", $people_id);
+				return null;
+			}
 		}
 	}
 	return $people_id;

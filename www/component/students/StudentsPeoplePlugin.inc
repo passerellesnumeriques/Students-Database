@@ -6,20 +6,24 @@ require_once("component/people/PeoplePlugin.inc");
 class StudentsPeoplePlugin implements PeoplePlugin {
 	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
-		$alias = $q->table_id();
-		$people_alias = $q->get_table_alias("People");
-		$q->join($people_alias, "Student", array("id"=>"people"), $alias);
-		$q->field($alias, "batch");
+		$alias = $q->get_table_alias("Student");
+		if ($alias == null) {
+			$alias = $q->table_id();
+			$people_alias = $q->get_table_alias("People");
+			$q->join($people_alias, "Student", array("id"=>"people"), $alias);
+		}
+		if ($q->get_field_alias("Student", "batch") <> "student_batch")
+			$q->field($alias, "batch", "student_batch");
 	}
 	public function getPeopleProfilePages($people_id, $people, $q) {
-		if ($people["batch"] == null) return array(); // not a student
+		if ($people["student_batch"] == null) return array(); // not a student
 		return array(); // TODO
 	}
 	
 	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {
-		if ($people["batch"] == null) return array(); // not a student
+		if ($people["student_batch"] == null) return array(); // not a student
 		return array(
-				array("/static/students/student_16.png","Student","component/students/page/people_profile__student.inc",10)
+			array("/static/students/student_16.png","Student","component/students/page/people_profile__student.inc",10)
 		);
 	}
 	

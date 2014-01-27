@@ -16,6 +16,22 @@ if (window == window.top) {
 				for (var i = 0; i < window.top.pnapplication._onclick_listeners.length; ++i)
 					window.top.pnapplication._onclick_listeners[i][1](ev, w, window.top.pnapplication._onclick_listeners[i][0]);
 			});
+			listenEvent(w,'mousemove',function(ev){
+				var w_pos = getAbsoluteCoordinatesRelativeToWindowTop(w);
+				var cev = getCompatibleMouseEvent(ev);
+				for (var i = 0; i < window.top.pnapplication._onmousemove_listeners.length; ++i) {
+					var target = window.top.pnapplication._onmousemove_listeners[i][0];
+					var listener = window.top.pnapplication._onmousemove_listeners[i][1];
+					var target_pos = getAbsoluteCoordinatesRelativeToWindowTop(target);
+					var x = cev.x + w_pos.x - target_pos.x;
+					var y = cev.y + w_pos.y - target_pos.y;
+					listener(x,y);
+				}
+			});
+			listenEvent(w,'mouseup',function(ev){
+				for (var i = 0; i < window.top.pnapplication._onmouseup_listeners.length; ++i)
+					window.top.pnapplication._onmouseup_listeners[i][1](ev, w, window.top.pnapplication._onmouseup_listeners[i][0]);
+			});
 		},
 		/** unregister a window (when it is closed)
 		 * @param {window} w window/frame which has been closed 
@@ -25,6 +41,16 @@ if (window == window.top) {
 			for (var i = 0; i < this._onclick_listeners.length; ++i)
 				if (this._onclick_listeners[i][0] == w) {
 					this._onclick_listeners.splice(i,1);
+					i--;
+				}
+			for (var i = 0; i < this._onmousemove_listeners.length; ++i)
+				if (this._onmousemove_listeners[i][0] == w) {
+					this._onmousemove_listeners.splice(i,1);
+					i--;
+				}
+			for (var i = 0; i < this._onmouseup_listeners.length; ++i)
+				if (this._onmouseup_listeners[i][0] == w) {
+					this._onmouseup_listeners.splice(i,1);
 					i--;
 				}
 			window.top.pnapplication.onwindowclosed.fire(w);
@@ -46,6 +72,28 @@ if (window == window.top) {
 			for (var i = 0; i < this._onclick_listeners.length; ++i)
 				if (this._onclick_listeners[i][1] == listener) {
 					this._onclick_listeners.splice(i,1);
+					break;
+				}
+		},
+		_onmousemove_listeners: [],
+		registerOnMouseMove: function(from_window, listener) {
+			this._onmousemove_listeners.push([from_window,listener]);
+		},
+		unregisterOnMouseMove: function(listener) {
+			for (var i = 0; i < this._onmousemove_listeners.length; ++i)
+				if (this._onmousemove_listeners[i][1] == listener) {
+					this._onmousemove_listeners.splice(i,1);
+					break;
+				}
+		},
+		_onmouseup_listeners: [],
+		registerOnMouseUp: function(from_window, listener) {
+			this._onmouseup_listeners.push([from_window,listener]);
+		},
+		unregisterOnMouseUp: function(listener) {
+			for (var i = 0; i < this._onmouseup_listeners.length; ++i)
+				if (this._onmouseup_listeners[i][1] == listener) {
+					this._onmouseup_listeners.splice(i,1);
 					break;
 				}
 		},

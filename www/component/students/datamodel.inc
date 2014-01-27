@@ -21,8 +21,8 @@ $model->addTable("Student")
 			"exclusion_date"=>"Exclusion date"
 		),
 		array(
-			"exclusion_reason"=>array("not_editable"),
-			"exclusion_date"=>array("not_editable"),
+			"exclusion_reason",
+			"exclusion_date",
 		),"people")
 	)))
 	;

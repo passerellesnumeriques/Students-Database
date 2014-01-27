@@ -93,12 +93,12 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 				}
 			}
 			$values .= "]";
-			$rows[$i][$sql_aliases["data"]] = "{type:".json_encode($this->handler->type).",type_id:".$row[$sql_aliases["key"]].",contacts:".$values."}";
+			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:".$row[$sql_aliases["key"]].",contacts:".$values."}"));
 		}
 	}
 	
 	public function getNewData() {
-		return "{type:".json_encode($this->handler->type).",type_id:-1,contacts:[]}";
+		return json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:-1,contacts:[]}"));
 	}
 	
 	public function saveData($key, $value, $sub_model) {
@@ -188,13 +188,13 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 				}
 			}
 			$values .= "]";
-			$rows[$i][$sql_aliases["data"]] = "{type:".json_encode($this->handler->type).",type_id:".json_encode($row[$sql_aliases["key"]]).",addresses:".$values."}";
+			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:".json_encode($row[$sql_aliases["key"]]).",addresses:".$values."}"));
 		}
 	}
 
 	public function getNewData() {
 		$table_name = $this->handler->type == "people" ? "People_address" : "Organization_address";
-		return "{type:".json_encode($this->handler->type).",type_id:-1,addresses:[]}";
+		return json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:-1,addresses:[]}"));
 	}
 	
 	public function saveData($key, $value, $sub_model) {

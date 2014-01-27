@@ -8,18 +8,22 @@ class service_create_people extends Service {
 	public function output_documentation() { echo "On success, returns the id of the newly created people"; }
 	
 	public function execute(&$component, $input) {
+		// TODO transaction
 		$types = array_merge($input["types"]);
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$supported_types = $c->getCreatePeopleSupportedTypes();
-			for ($i = 0; $i < count($types); $i++) {
-				if (!in_array($types[$i], $supported_types)) continue;
-				if (!$c->isCreatePeopleAllowed($types[$i])) {
-					PNApplication::error("You are not allowed to create a people of type '".$types[$i]."'.");
-					return;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$supported_types = $pi->getCreatePeopleSupportedTypes();
+				if ($supported_types == null) continue;
+				for ($i = 0; $i < count($types); $i++) {
+					if (!in_array($types[$i], $supported_types)) continue;
+					if (!$pi->isCreatePeopleAllowed($types[$i])) {
+						PNApplication::error("You are not allowed to create a people of type '".$types[$i]."'.");
+						return;
+					}
+					array_splice($types, $i, 1);
+					$i--;
 				}
-				array_splice($types, $i, 1);
-				$i--;
 			}
 		}
 		if (count($types) <> 0) {
@@ -38,18 +42,20 @@ class service_create_people extends Service {
 		
 		$list = array();
 		foreach (PNApplication::$instance->components as $c) {
-			if (!($c instanceof PeoplePlugin)) continue;
-			$cpages = $c->getCreatePeoplePages($types);
-			if ($cpages == null || count($cpages) == 0) continue;
-			$min = 99999999;
-			foreach ($cpages as $p) if ($p[2] < $min) $min = $p[2];
-			array_push($list, array($c, $min));
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeoplePlugin)) continue;
+				$cpages = $pi->getCreatePeoplePages($types);
+				if ($cpages == null || count($cpages) == 0) continue;
+				$min = 99999999;
+				foreach ($cpages as $p) if ($p[2] < $min) $min = $p[2];
+				array_push($list, array($pi, $min));
+			}
 		}
 		usort($list, "cmp_create_people_component");
 		$create_data = array();
 		for ($i = 0; $i < count($list); $i++) {
-			$c = $list[$i][0];
-			if (!$c->createPeople($people_id, $types, $input, $create_data)) {
+			$pi = $list[$i][0];
+			if (!$pi->createPeople($people_id, $types, $input, $create_data)) {
 				// failure: roll back
 				for ($j = $i-1; $j >= 0; --$j)
 					$list[$j][0]->rollbackCreatePeople($people_id, $types, $input, $create_data);

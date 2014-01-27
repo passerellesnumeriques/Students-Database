@@ -4,6 +4,13 @@ class page_student_grades extends Page {
 	public function get_required_rights() { return array("consult_students_grades"); }
 	
 	public function execute() {
+		?>
+		<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'>
+			<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/>
+			This screen is only a very beginning, and will be better soon...
+		</div>
+		
+		<?php 
 		// get student classes
 		$classes = SQLQuery::create()
 			->select("StudentClass")

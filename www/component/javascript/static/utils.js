@@ -195,6 +195,15 @@ function getAbsoluteParent(e) {
 	} while(p != null && p.nodeType == 1);
 	return document.body;
 }
+
+function getAbsoluteCoordinatesRelativeToWindowTop(frame) {
+	if (frame.parent == null || frame.parent == frame || frame.parent == window.top) return {x:0,y:0};
+	var pos = getAbsoluteCoordinatesRelativeToWindowTop(frame.parent);
+	pos.x += absoluteLeft(frame.frameElement);
+	pos.y += absoluteTop(frame.frameElement);
+	return pos;
+}
+
 /**
  * Return the list of html elements at the given position in the document
  * @param x
