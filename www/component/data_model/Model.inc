@@ -224,12 +224,20 @@ class SubDataModel extends DataModel {
 	public function getParentTable() { return $this->parent_table; }
 	
 	public function create_tables($key) {
+		if (SQLQuery::transaction_started()) {
+			PNApplication::error("You cannot insert in a table which is the key for a SubDataModel, if you are in a transaction: ".$this->getParentTable());
+			return;
+		}
 		require_once("DataBaseModel.inc");
 		foreach ($this->tables as $t)
 			DataBaseModel::create_table(SQLQuery::get_db_system_without_security(), $t, "_".$key);
 	}
 	
 	public function remove_tables($key) {
+		if (SQLQuery::transaction_started()) {
+			PNApplication::error("You cannot delete an entry from a table which is the key for a SubDataModel, if you are in a transaction: ".$this->getParentTable());
+			return;
+		}
 		foreach ($this->tables as $t)
 			SQLQuery::get_db_system_without_security()->execute("DROP TABLE `".$t->getName()."_".$key."`");
 	}

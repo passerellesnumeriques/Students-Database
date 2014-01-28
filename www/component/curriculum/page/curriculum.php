@@ -4,6 +4,13 @@ class page_curriculum extends Page {
 	public function get_required_rights() { return array(); } // TODO
 	
 	public function execute() {
+		if (!isset($_GET["batch"])) {
+			if (!isset($_GET["period"])) {
+				echo "<img src='".theme::$icons_16["info"]."'/> ";
+				echo "Please select a batch, an academic period, or a class, to display its curriculum";
+				return;
+			}
+		}
 		if (isset($_GET["batch"])) {
 			$periods = SQLQuery::create()->select("AcademicPeriod")->where("batch",$_GET["batch"])->order_by("AcademicPeriod","start_date")->execute();
 			$all_periods = $periods;

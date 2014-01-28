@@ -6,7 +6,12 @@ class page_students_grades extends Page {
 	public function execute() {
 		$period_id = @$_GET["period"];
 		if ($period_id == null) {
-			$class_id = $_GET["class"];
+			$class_id = @$_GET["class"];
+			if ($class_id == null) {
+				echo "<img src='".theme::$icons_16["info"]."'/> ";
+				echo "Please select a period or a class to display the grades of the students";
+				return;
+			}
 			$class = SQLQuery::create()->select("AcademicClass")->where_value("AcademicClass", "id", $class_id)->execute_single_row();
 			$period_id = $class["period"];
 			$spe_id = $class["specialization"];

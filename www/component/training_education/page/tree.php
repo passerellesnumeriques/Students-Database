@@ -171,6 +171,8 @@ function AllStudents(root) {
 		menuReset();
 		menuStudentsList("");
 		menuUpdates(null,"Education");
+		menuCurriculum("");
+		menuGrades("");
 		menuDiscipline();
 		menuHealth();
 	};
@@ -207,6 +209,8 @@ function CurrentStudents(all) {
 		}
 		menuStudentsList("batches="+encodeURIComponent(batches));
 		menuUpdates(tags,"Current Students");
+		menuCurriculum("");
+		menuGrades("");
 		menuDiscipline();
 		menuHealth();
 	};
@@ -236,6 +240,8 @@ function Alumni(all) {
 		}
 		menuStudentsList("batches="+encodeURIComponent(batches));
 		menuUpdates(tags,"Current Students");
+		menuCurriculum("");
+		menuGrades("");
 		menuDiscipline();
 		menuHealth();
 	};
@@ -311,6 +317,7 @@ function Batch(current, alumni, id, name, start, end) {
 		menuStudentsList("batches="+id);
 		menuUpdates(["batch"+id],"Batch "+name);
 		menuCurriculum("batch="+id);
+		menuGrades("");
 		menuDiscipline();
 		menuHealth();
 	};
