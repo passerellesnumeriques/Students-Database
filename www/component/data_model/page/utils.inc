@@ -14,7 +14,7 @@ function datamodel_cell(&$page, $container_id, $editable, $table, $column, $key,
 	}
 }
 
-function datamodel_cell_inline(&$page, $variable_name, $container_variable, $editable, $table, $column, $key_variable, $sub_models, $value_variable, $onchange) {
+function datamodel_cell_inline(&$page, $variable_name, $container_variable, $editable, $table, $column, $key_variable, $sub_models, $value_variable, $onchange = null) {
 	$page->add_javascript("/static/widgets/typed_field/typed_field.js");
 	require_once("component/data_model/Model.inc");
 	$t = DataModel::get()->getTable($table);

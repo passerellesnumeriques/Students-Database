@@ -115,8 +115,10 @@ function tree(container) {
 	};
 	this._removeItem = function(item) {
 		try { this.tbody.removeChild(item.tr); } catch (e) {}
-		while (item.children.length > 0)
-			this._removeItem(item.children[0]);
+		var list = item.children;
+		item.children = [];
+		for (var i = 0; i < list.length; ++i)
+			this._removeItem(list[i]);
 	};
 	this._create_item = function(parent, item, index) {
 		item.tree = this;

@@ -18,6 +18,7 @@ function horizontal_menu(menu, valign) {
 	var t = this;
 	
 	t.items = [];
+	t.valign = valign;
 	
 	t.addItem = function(element) {
 		t.items.push(new HorizontalMenuItem(element));
@@ -59,8 +60,8 @@ function horizontal_menu(menu, valign) {
 			var iw = t.items[i].element.offsetWidth;
 			total += iw;
 			t.items[i].element.style.marginTop = t.items[i].element.originalMargin;
-			if (valign) {
-				if (valign == "middle") {
+			if (t.valign) {
+				if (t.valign == "middle") {
 					if (t.items[i].element.offsetHeight > 0)
 						t.items[i].element.style.marginTop = Math.floor((h-t.items[i].element.offsetHeight)/2)+'px';
 				} else {

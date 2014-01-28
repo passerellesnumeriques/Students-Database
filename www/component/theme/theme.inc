@@ -89,7 +89,8 @@ theme::$icons_10 = array(
 );
 
 theme::$icons_32 = array(
-	"config" => 			"/static/theme/".$theme."/icons_32/config.png",
+	"config" => 		"/static/theme/".$theme."/icons_32/config.png",
+	"dashboard" => 		"/static/theme/".$theme."/icons_32/dashboard.png",
 	"home" => 			"/static/theme/".$theme."/icons_32/home.png",
 );
 ?>

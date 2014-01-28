@@ -1,0 +1,1 @@
+addMenuItem('/static/selection/IS/IS_16.png', 'Information Sessions', "/dynamic/selection/page/IS/main_page");

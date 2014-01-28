@@ -100,7 +100,7 @@ function load_static_resources(container) {
 		window.top.pn_application_static.loading_images.push(image);
 		var i = document.createElement("IMG");
 		i.data = image;
-		i.onload = function() { window.top.pn_application_static.loading_images.remove(this.data); t.loaded(this.data.size); t._nextImage(); document.body.removeChild(this); };
+		i.onload = function() { window.top.pn_application_static.loading_images.remove(this.data); t.loaded(this.data.size); t._nextImage(); try { document.body.removeChild(this); } catch (e){} };
 		i.onerror = function() { t.loaded(this.data); t._nextImage(); document.body.removeChild(this); };
 		i.src = image.url;
 		i.style.position = "fixed";

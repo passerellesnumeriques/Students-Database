@@ -270,7 +270,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 					item.calendar = manager.calendars[i]; 
 					item.className = 'context_menu_item';
 					var provider_icon = document.createElement("IMG");
-					provider_icon.src = manager.calendars[i].provider.icon;
+					provider_icon.src = manager.calendars[i].provider.getProviderIcon();
 					provider_icon.width = 16;
 					provider_icon.style.width = '16px';
 					provider_icon.style.paddingRight = '3px';

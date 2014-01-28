@@ -574,6 +574,10 @@ function HexDigit(val) {
 	return String.fromCharCode("A".charCodeAt(0)+(val-10));
 }
 
+function getDateString(d) {
+	return _2digits(d.getDate())+" "+getMonthName(d.getMonth()+1)+" "+d.getFullyear();
+}
+
 function getMonthName(month) {
 	switch(month) {
 	case 1: return "January";

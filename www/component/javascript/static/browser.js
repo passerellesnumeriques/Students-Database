@@ -506,21 +506,23 @@ function unlistenEvent(elem, type, handler) {
  * @param {Object} attributes attributes to set in the event
  */
 function triggerEvent(elem, type, attributes) {
-	var event;
+	var evt;
 	if (document.createEvent) {
-		event = document.createEvent("HTMLEvents");
-		event.initEvent(type, true, true);
+		evt = document.createEvent("HTMLEvents");
+		evt.initEvent(type, true, true);
 	} else {
-		event = document.createEventObject();
-		event.eventType = type;
+		evt = document.createEventObject();
+		evt.eventType = type;
+		evt.type = type;
 	}
-	event.eventName = type;
-	if (attributes) for (var attr in attributes) event[attr] = attributes[attr];
+	evt.eventName = type;
+	if (attributes) for (var attr in attributes) evt[attr] = attributes[attr];
 	if (document.createEvent) {
-		elem.dispatchEvent(event);
+		elem.dispatchEvent(evt);
 	} else {
 		if (elem == window) elem = document;
-		elem.fireEvent("on" + type, event);
+		if (elem == document) elem = document.documentElement;
+		elem.fireEvent("on" + type, evt);
 	}
 }
 
