@@ -76,6 +76,7 @@ function GoogleCalendar(id, name, color, show, writable) {
 				} else {
 					// bug
 					ondone();
+					return;
 				}
 				
 				var removed_events = t.events;

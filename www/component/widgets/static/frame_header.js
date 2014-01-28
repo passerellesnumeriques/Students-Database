@@ -9,6 +9,11 @@ function frame_header(container) {
 	container.style.height = "100%";
 	var t=this;
 	
+	t.setIcon = function(url) {
+		t.icon.src = url;
+		fireLayoutEventFor(t.header);
+	};
+
 	t.setTitle = function(title) {
 		if (typeof title == 'string')
 			t.title.innerHTML = title;
@@ -26,25 +31,31 @@ function frame_header(container) {
 		t.header.appendChild(t.header_title = document.createElement("DIV"));
 		t.header_title.className = "frame_header_title";
 		t.icon = document.createElement('IMG');
-		t.icon.src = container.getAttribute("icon");
+		if (container.hasAttribute("icon")) {
+			t.icon.src = container.getAttribute("icon");
+			container.removeAttribute("icon");
+		}
 		t.icon.onload = function() { fireLayoutEventFor(t.header); };
 		t.icon.style.verticalAlign = "middle";
 		t.header_title.appendChild(t.icon);
 		t.title = document.createElement("SPAN");
-		t.title.innerHTML = container.getAttribute("title");
+		if (container.hasAttribute("title")) {
+			t.title.innerHTML = container.getAttribute("title");
+			container.removeAttribute("title");
+		}
 		t.header_title.appendChild(t.title);
-		container.removeAttribute("icon");
-		container.removeAttribute("title");
 		
 		// frame
 		t.frame = document.createElement("IFRAME");
 		t.frame.onload = function() { t.frame_load(); };
-		t.frame.src = container.getAttribute("page");
+		if (container.hasAttribute("page")) {
+			t.frame.src = container.getAttribute("page");
+			container.removeAttribute("page");
+		}
 		t.frame.name = container.id+"_content";
 		t.frame.id = container.id+"_content";
 		t.frame.frameBorder = 0;
 		t.frame.style.width = "100%";
-		container.removeAttribute("page");
 
 		// menu
 		t.header.appendChild(t.header_menu = document.createElement("DIV"));

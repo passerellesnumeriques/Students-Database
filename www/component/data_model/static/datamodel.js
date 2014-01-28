@@ -16,6 +16,11 @@ datamodel = {
 			window.top.datamodel.cell_changed(table, column, row_key, data_getter());
 		});
 	},
+	register_cell_text: function(win, table, column, row_key, text_node) {
+		window.top.datamodel.add_cell_change_listener(win, table, column, row_key, function(value) {
+			text_node.nodeValue = value;
+		});
+	},
 	
 	_data_change_listeners: [],
 	add_data_change_listener: function(win, data_display, data_key, listener) {

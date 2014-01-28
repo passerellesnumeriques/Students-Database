@@ -24,6 +24,8 @@ function vertical_layout(container) {
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];
 			if (e.nodeType != 1) continue;
+			e._save_scrollTop = e.scrollTop;
+			e._save_scrollLeft = e.scrollLeft;
 			e.style.position = 'fixed';
 		}		
 		var w = t.container.clientWidth;
@@ -31,7 +33,10 @@ function vertical_layout(container) {
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];
 			if (e.nodeType != 1) continue;
-			e.style.position = 'static';
+			if (e.hasAttribute("force_position"))
+				e.style.position = e.getAttribute("force_position");
+			else
+				e.style.position = 'static';
 		}		
 		// reset
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
@@ -79,6 +84,8 @@ function vertical_layout(container) {
 			} else {
 				y += getHeight(e);
 			}
+			e.scrollTop = e._save_scrollTop;
+			e.scrollLeft = e._save_scrollLeft;
 		}
 	};
 	

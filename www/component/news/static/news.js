@@ -231,7 +231,9 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		msg.innerHTML = n.html;
 
 		if (main) {
-			if (sections.length == 0 || t._selected_sections.length > 1) {
+			var has_only_one_section = sections.length == 1 && t._selected_sections.length == 1;
+			var has_only_one_category = has_only_one_section && t._selected_sections[0].categories.length < 2;
+			if (!has_only_one_category) {
 				td = document.createElement("TD"); tr.appendChild(td);
 				td.style.textAlign = "right";
 				td.style.verticalAlign = "top";
@@ -243,8 +245,9 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 				var s = "";
 				for (var i = 0; i < t.sections.length; ++i) {
 					if (t.sections[i].name == n.section) {
-						s += "<table style='border-collapse:collapse;border-spacing:0px;'><tr>";
-						s += "<td valign=top style='padding:0px'><b>"+t.sections[i].display_name+"</b>";
+						s += "<table style='border-collapse:collapse;border-spacing:0px;margin-right:1px'><tr>";
+						s += "<td valign=top style='padding:0px'>";
+						if (!has_only_one_section) s += "<b>"+t.sections[i].display_name+"</b>";
 						if (n.category) {
 							for (var j = 0; j < t.sections[i].categories.length; ++j) {
 								if (t.sections[i].categories[j].name == n.category) {
@@ -257,7 +260,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 							}
 						}
 						s += "</td>";
-						if (t.sections[i].icon) s += "<td valign=top style='padding:0px'><img width='32px' height='32px' src='"+t.sections[i].icon+"'/></td>";
+						if (t.sections[i].icon && !has_only_one_section) s += "<td valign=top style='padding:0px'><img width='32px' height='32px' src='"+t.sections[i].icon+"'/></td>";
 						s += "</tr></table>";
 						break;
 					}

@@ -43,4 +43,14 @@ class AdministrationPage {
 	public function getPage() { return $this->page; }
 	
 }
+
+class AdministrationDashboardPlugin implements AdministrationPlugin {
+	
+	public function getAdministrationPages() {
+		return array(
+			new AdministrationPage("Dashboard", "dynamic/administration/page/dashboard", theme::$icons_16["dashboard"])
+		);
+	}
+	
+}
 ?>
