@@ -1,19 +1,9 @@
 function select_address(container, data, organization_contacts, can_manage){
 	var t = this;
 	t.data = data;
-	t.address = {};
-	t.address.id = null;
-	t.address.country_id = null;
-	t.address.country_code = null;
-	t.address.geographic_area = null;
-	t.address.street_name = null;
-	t.address.street_number = null;
-	t.address.building = null;
-	t.address.unit = null;
-	t.address.additional = null;
-	t.address.address_type = null;
 	
-	require(["popup_window.js","address_text.js","edit_address.js","section.js"],function(){
+	require(["popup_window.js","address_text.js","edit_address.js","section.js","contact_objects.js"],function(){
+		t.address = new PostalAddress(null, null, null, null, null, null, null, null);
 		t.container_of_section_content = document.createElement("div");
 		t.section = new section("/static/contact/address_16.png","Location",t.container_of_section_content,false);
 		container.appendChild(t.section.element);
@@ -142,17 +132,8 @@ function select_address(container, data, organization_contacts, can_manage){
 			data.partners[host.index].host_address = null;
 		}
 		/* Reset t.address */
-			t.address = {};
-			t.address.id = null;
-			t.address.country_id = null;
-			t.address.country_code = null;
-			t.address.geographic_area = null;
-			t.address.street_name = null;
-			t.address.street_number = null;
-			t.address.building = null;
-			t.address.unit = null;
-			t.address.additional = null;
-			t.address.address_type = null;
+			delete t.address;
+			t.address = new PostalAddress(null, null, null, null, null, null, null, null);
 		/* Reset the table */
 		t.resetTableAddress(div_locker);
 	}
@@ -181,20 +162,7 @@ function select_address(container, data, organization_contacts, can_manage){
 	}
 	
 	t._manuallySetStepTwo = function(cont_manually_set,host){
-		var pop_manually_set = new popup_window("Set the location - 2/2 - <i>Manually set the address</i>","/static/contact/address_16.png",cont_manually_set);
-		// if(data.address == null || data.address == "null"){
-			// data.address = {};			
-			// data.address.id = -1;
-			// data.address.country_id = null;
-			// data.address.country_code = null;
-			// data.address.area_id = null;
-			// data.address.street_name = null;
-			// data.address.street_number = null;
-			// data.address.building = null;
-			// data.address.unit = null;
-			// data.address.additional = null;
-			// data.address.address_type = null;
-		// }	
+		var pop_manually_set = new popup_window("Set the location - 2/2 - <i>Manually set the address</i>","/static/contact/address_16.png",cont_manually_set);	
 		pop_manually_set.addOkCancelButtons(function(){
 			pop_manually_set.close();
 			var div_locker = lock_screen();
