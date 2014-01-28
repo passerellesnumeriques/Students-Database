@@ -4,6 +4,7 @@ require_once("profile.inc");
 class page_IS_profile extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
+		
 	$name = $page->generateID();
 	$page->add_javascript("/static/widgets/vertical_layout.js");
 	$page->onload("new vertical_layout('IS_profile_container');");
