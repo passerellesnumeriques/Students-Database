@@ -1,5 +1,5 @@
 <?php
-
+require_once("component/contact/ContactJSON.inc");
 function prepareDataAndSaveIS($data,$create){
 	$fields_values_IS = array(
 		"date" => $data["date"],
@@ -76,30 +76,6 @@ class service_IS_save extends Service{
 			$address_to_remove = null;
 			$event_to_remove = null;
 			$new_IS_id = null;
-			
-			/* Set address to the database format */
-			foreach($address as $f => $v){
-				if($f == "country_code")
-					unset($address[$f]);
-				else if ($f == "country_id"){
-					$temp = $v;
-					unset($address[$f]);
-					$address["country"] = $temp;
-				}
-				else if($f == "street_name"){
-					$address["street"] = $v;
-					unset($address[$f]);
-				}
-				else if($f == "area_id")
-					unset($address[$f]);
-				else if($f == "area_text")
-					unset($address[$f]);
-			}
-			if(isset($address["geographic_area"]["id"])){
-				$temp = $address["geographic_area"]["id"];
-				unset($address["geographic_area"]);
-				$address["geographic_area"] = $temp;
-			}
 			
 			if($data["id"] == -1 || $data["id"] == "-1"){
 				//This is an insert

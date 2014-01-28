@@ -14,7 +14,8 @@ function geographic_area_selection(container, country_id, onready) {
 	var to_return = null;
 	
 	this.onchange = null;
-	this.getSelectedArea = function() { return to_return; };
+	this.getSelectedArea = function() { 
+		return to_return; };
 	
 	/**
 	 * Set the to_return object
@@ -27,16 +28,16 @@ function geographic_area_selection(container, country_id, onready) {
 			to_return = null;
 		}
 		else{
-			to_return = {};
-			to_return.area_id = area_id;
+			to_return = {};//geographic_area object
+			to_return.id = area_id;
 			var index = t.findIndex(area_id);
-			to_return.field = t.result[index.division_index].areas[index.area_index].area_name.uniformFirstLetterCapitalized();
+			to_return.text = t.result[index.division_index].areas[index.area_index].area_name.uniformFirstLetterCapitalized();
 			var parent = t.findParent(area_id);
 			var parent_index = parent != null ? t.findIndex(parent.area_id) : null;
 			while(parent != null){
-				to_return.field += ", ";
+				to_return.text += ", ";
 				var name = t.result[parent_index.division_index].areas[parent_index.area_index].area_name.uniformFirstLetterCapitalized();
-				to_return.field += name;
+				to_return.text += name;
 				parent = t.findParent(parent.area_id);
 				if(parent != null){
 					parent_index = t.findIndex(parent.area_id);

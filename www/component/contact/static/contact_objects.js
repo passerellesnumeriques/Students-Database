@@ -17,7 +17,13 @@ if (typeof require != 'undefined') require("geography_objects.js");
 function PostalAddress(id, country_id, geographic_area, street, street_number, building, unit, additional, address_type) {
 	this.id = id;
 	this.country_id = country_id;
-	this.geographic_area = geographic_area;
+	if(geographic_area)
+		this.geographic_area = geographic_area;
+	else{
+		this.geographic_area = {};
+		this.geographic_area.id = null;
+		this.geographic_area.text = null;
+	}
 	this.street = street;
 	this.street_number = street_number;
 	this.building = building;
