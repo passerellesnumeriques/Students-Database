@@ -68,6 +68,7 @@ TreeNode.prototype = {
 		this.element.style.border = "1px solid rgba(0,0,0,0)";
 		this.element.style.cursor = 'pointer';
 		this.element.style.padding = "1px 2px 1px 1px";
+		setBorderRadius(this.element, 3, 3, 3, 3, 3, 3, 3, 3);
 		this.element.onmouseover = function() { if(!t.selected) this.style.border = "1px solid #F0D080"; };
 		this.element.onmouseout = function() { if (!t.selected) this.style.border = "1px solid rgba(0,0,0,0)"; };
 		this.element.onclick = function() { t.select(); };

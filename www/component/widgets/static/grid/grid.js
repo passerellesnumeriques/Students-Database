@@ -474,6 +474,9 @@ function grid(element) {
 	t.getNbRows = function() {
 		return t.table.childNodes.length;
 	};
+	t.getRow = function(index) {
+		return t.table.childNodes[index];
+	};
 	
 	t.removeRow = function(row) {
 		t.table.removeChild(t.table.childNodes[row]);

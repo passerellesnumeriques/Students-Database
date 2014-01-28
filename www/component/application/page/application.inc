@@ -37,6 +37,11 @@ $sections = array(
 $this->require_javascript("vertical_layout.js");
 $this->require_javascript("horizontal_layout.js");
 $this->require_javascript("horizontal_menu.js");
+
+if (PNApplication::$instance->current_domain == "Dev") {
+	$this->add_javascript("/static/development/debug_status.js");
+	$this->onload("new debug_status('debug_status');");
+}
 ?>
 <div id='pn_application_container' style='width:100%;height:100%'>
 	<div id='pn_application_header' layout='35' style='border-bottom:1px solid #A0A0A0'>
@@ -55,6 +60,18 @@ $this->require_javascript("horizontal_menu.js");
 	<iframe id='pn_application_content' name='pn_application_content' layout='fill'>
 	</iframe>
 	<div id='pn_application_footer' layout='17' style='border-top:1px solid black;background-color:#C0C0C0'>
+		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
+		<span style='position:fixed;bottom:0px;right:3px;'>
+			<span id='google_status'></span>
+		</span>
+		<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
+		<span style='position:fixed;bottom:0px;right:23px;'>
+			<span id='debug_status'></span>
+		</span>
+		<?php } ?>
+
+		<span style='position:fixed;bottom:0px;left:3px;' id='background_loading_application'>
+		</span>
 	</div>
 </div>
 <div id='user_menu_content' class='context_menu' style='font-size: 11pt; font-weight: bold;color:#000060;border:1px solid #808080;border-top:0px;background-color:#ffffff;'>
@@ -64,6 +81,9 @@ $this->require_javascript("horizontal_menu.js");
 	<div id='logout' class='context_menu_item' onclick="location.href='/dynamic/application/page/logout'">
 		<img src='/static/application/logout.png' style='vertical-align:middle' title='Exit'/>
 	</div>
+</div>
+<div id='show_the_menu_to_the_user' style='position:fixed;top:5px;left:500px'>
+	<img src='/static/theme/default/icons_16/left.png' style='vertical-align: bottom'/> Click here to access the menu
 </div>
 <style type='text/css'>
 .pn_application_menu_item {
@@ -118,6 +138,13 @@ function user_menu() {
 		}
 	});
 }
+require("animation.js",function() {
+	var e = document.getElementById('show_the_menu_to_the_user');
+	var end = sections_bar.childNodes[0].offsetWidth+10;
+	animation.create(e, 500, end, 2000, function(value) {
+		e.style.left = Math.floor(value)+'px';
+	});
+});
 
 var sections = [<?php
 $first = true;
@@ -184,6 +211,8 @@ for (var i = 0; i < sections.length; ++i) {
 document.body.appendChild(sections_bar);
 
 function expandBar() {
+	var e = document.getElementById('show_the_menu_to_the_user');
+	if (e && e.parentNode) e.parentNode.removeChild(e);
 	require("animation.js",function() {
 		animation.create(sections_bar, sections_bar.offsetLeft, 0, 500, function(value, element) {
 			element.style.left = Math.floor(value)+'px';
@@ -247,6 +276,9 @@ function populateMenu() {
 selectSection(selected_section_index);
 
 require("animation.js");
+require("google_status.js",function() {
+	new google_status('google_status');
+});
 
 function resetMenu() {
 	section_menu.removeAll();
