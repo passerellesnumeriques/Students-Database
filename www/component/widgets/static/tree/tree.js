@@ -17,6 +17,17 @@ function TreeItem(cells, expanded) {
 			this.tree._refresh_heads();
 		}
 	};
+	this.insertItem = function(item, index) {
+		if (index >= this.items.length) {
+			this.addItem(item);
+			return;
+		}
+		this.children.splice(index,0,item);
+		if (this.tree) {
+			this.tree._create_item(this, item, index);
+			this.tree._refresh_heads();
+		}
+	};
 	this.removeItem = function(item) {
 		item.parent_item = null;
 		this.children.remove(item);

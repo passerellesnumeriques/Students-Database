@@ -24,10 +24,10 @@ SET time_zone = "+00:00";
 -- Dumping data for table `curriculumsubject`
 --
 
-INSERT INTO `curriculumsubject` (`id`, `category`, `period`, `specialization`, `code`, `name`) VALUES
-(1, 1, 1, NULL, 'SNA 111A', 'Basic Programming (Lectures)'),
-(2, 1, 1, NULL, 'SNA 111AL', 'Basic Programming (Laboratory)'),
-(3, 2, 1, NULL, 'LM 111', 'Life Mathematics 1');
+INSERT INTO `curriculumsubject` (`id`, `category`, `period`, `specialization`, `code`, `name`, `hours`, `hours_type`) VALUES
+(1, 1, 1, NULL, 'SNA 111A', 'Basic Programming (Lectures)', '3', 'Per week'),
+(2, 1, 1, NULL, 'SNA 111AL', 'Basic Programming (Laboratory)', '3', 'Per week'),
+(3, 2, 1, NULL, 'LM 111', 'Life Mathematics 1', '3', 'Per week');
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

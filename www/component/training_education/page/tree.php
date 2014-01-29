@@ -275,8 +275,7 @@ function Batch(current, alumni, id, name, start, end) {
 	this._select = function() {
 		var title = document.createElement("SPAN");
 		title.appendChild(document.createTextNode("Batch "));
-		var cell;
-		<?php datamodel_cell_inline($this, "cell", "title", $can_edit, "StudentBatch", "name", "id", null, "name"); ?>
+		<?php datamodel_cell_inline($this, "this.cell_name", "title", $can_edit, "StudentBatch", "name", "id", null, "name"); ?>
 		header.setTitle(title);
 		header.resetMenu();
 
@@ -303,16 +302,16 @@ function Batch(current, alumni, id, name, start, end) {
 		
 		<?php if ($can_edit) {?>
 			require("editable_cell.js",function(){
-				new editable_cell(span_integration, "StudentBatch", "start_date", id, "field_date", {maximum_cell:"end_date",can_be_empty:false}, dateToSQL(start), null, function(field) {
+				t.cell_start = new editable_cell(span_integration, "StudentBatch", "start_date", id, "field_date", {maximum_cell:"end_date",can_be_empty:false}, dateToSQL(start), null, function(field) {
 					t.start = field.getCurrentData();
 				});
-				new editable_cell(span_graduation, "StudentBatch", "end_date", id, "field_date", {minimum_cell:"start_date",can_be_empty:false}, dateToSQL(end), null, function(field) {
+				t.cell_end = new editable_cell(span_graduation, "StudentBatch", "end_date", id, "field_date", {minimum_cell:"start_date",can_be_empty:false}, dateToSQL(end), null, function(field) {
 					t.end = field.getCurrentData();
 				});
 			});
 		<?php } else {
-			datamodel_cell_inline($this, "cell", "span_integration", $can_edit, "StudentBatch", "start_date", "id", null, "dateToSQL(start)");
-			datamodel_cell_inline($this, "cell", "span_graduation", $can_edit, "StudentBatch", "end_date", "id", null, "dateToSQL(end)");
+			datamodel_cell_inline($this, "this.cell_start", "span_integration", $can_edit, "StudentBatch", "start_date", "id", null, "dateToSQL(start)");
+			datamodel_cell_inline($this, "this.cell_end", "span_graduation", $can_edit, "StudentBatch", "end_date", "id", null, "dateToSQL(end)");
 		} ?>
 		
 		menuReset();
@@ -325,10 +324,15 @@ function Batch(current, alumni, id, name, start, end) {
 	};
 	<?php if ($can_edit) {?>
 	this._build_context_menu = function(menu) {
-		var t=this;
-		menu.addIconItem(theme.build_icon("/static/curriculum/academic_16.png",theme.icons_10.add,"right_bottom"), "New Academic Period", function() { new_academic_period(t); });
-		menu.addSeparator();
+		menu.addIconItem(theme.icons_16.edit, "Edit Batch Information", function() {
+			t.select(); 
+			t.cell_name.editable_field.edit();
+			t.cell_start.editable_field.edit();
+			t.cell_end.editable_field.edit();
+		});
 		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.remove,"right_bottom"), "Remove Batch", function() { remove_batch(t); });
+		menu.addSeparator();
+		menu.addIconItem(theme.build_icon("/static/curriculum/academic_16.png",theme.icons_10.add,"right_bottom"), "New Academic Period", function() { new_academic_period(t); });
 	};
 	<?php } ?>
 }
@@ -358,10 +362,9 @@ function AcademicPeriod(batch, id, name, start, end) {
 	this._select = function() {
 		var title = document.createElement("SPAN");
 		title.appendChild(document.createTextNode("Batch "));
-		var cell;
-		<?php datamodel_cell_inline($this, "cell", "title", $can_edit, "StudentBatch", "name", "batch.id", null, "batch.name"); ?>
+		<?php datamodel_cell_inline($this, "t.cell_batch", "title", $can_edit, "StudentBatch", "name", "batch.id", null, "batch.name"); ?>
 		title.appendChild(document.createTextNode(" > Period "));
-		<?php datamodel_cell_inline($this, "cell", "title", $can_edit, "AcademicPeriod", "name", "id", null, "name"); ?>
+		<?php datamodel_cell_inline($this, "t.cell_name", "title", $can_edit, "AcademicPeriod", "name", "id", null, "name"); ?>
 		header.setTitle(title);
 		header.resetMenu();
 
@@ -388,16 +391,16 @@ function AcademicPeriod(batch, id, name, start, end) {
 		
 		<?php if ($can_edit) {?>
 			require("editable_cell.js",function(){
-				new editable_cell(span_start, "AcademicPeriod", "start_date", id, "field_date", {maximum_cell:"end_date",can_be_empty:false}, dateToSQL(start), null, function(field) {
+				t.cell_start = new editable_cell(span_start, "AcademicPeriod", "start_date", id, "field_date", {maximum_cell:"end_date",can_be_empty:false}, dateToSQL(start), null, function(field) {
 					t.start = field.getCurrentData();
 				});
-				new editable_cell(span_end, "AcademicPeriod", "end_date", id, "field_date", {minimum_cell:"start_date",can_be_empty:false}, dateToSQL(end), null, function(field) {
+				t.cell_end = new editable_cell(span_end, "AcademicPeriod", "end_date", id, "field_date", {minimum_cell:"start_date",can_be_empty:false}, dateToSQL(end), null, function(field) {
 					t.end = field.getCurrentData();
 				});
 			});
 		<?php } else {
-			datamodel_cell_inline($this, "cell", "span_start", $can_edit, "AcademicPeriod", "start_date", "id", null, "dateToSQL(start)");
-			datamodel_cell_inline($this, "cell", "span_end", $can_edit, "AcademicPeriod", "end_date", "id", null, "dateToSQL(end)");
+			datamodel_cell_inline($this, "t.cell_start", "span_start", $can_edit, "AcademicPeriod", "start_date", "id", null, "dateToSQL(start)");
+			datamodel_cell_inline($this, "t.cell_end", "span_end", $can_edit, "AcademicPeriod", "end_date", "id", null, "dateToSQL(end)");
 		} ?>
 		
 		menuReset();
@@ -411,6 +414,14 @@ function AcademicPeriod(batch, id, name, start, end) {
 	<?php if ($can_edit) {?>
 	this._build_context_menu = function(menu) {
 		var t=this;
+		menu.addIconItem(theme.icons_16.edit, "Edit Period Information", function() {
+			t.select(); 
+			t.cell_name.editable_field.edit();
+			t.cell_start.editable_field.edit();
+			t.cell_end.editable_field.edit();
+		});
+		menu.addIconItem(theme.build_icon("/static/curriculum/academic_16.png",theme.icons_10.remove,"right_bottom"), "Remove Academic Period", function() { remove_period(t); });
+		menu.addSeparator();
 		var has_classes = false, has_spe = false;
 		for (var i = 0; i < t.children.length; ++i)
 			if (t.children[i] instanceof Specialization) has_spe = true;
@@ -419,8 +430,6 @@ function AcademicPeriod(batch, id, name, start, end) {
 			menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add,"right_bottom"), "New Class", function() { new_class(t,null); });
 		if (has_spe || !has_classes)
 			menu.addIconItem(theme.build_icon("/static/curriculum/academic_16.png",theme.icons_10.add,"right_bottom"), "New Specialization", function() { new_specialization(t); });
-		menu.addSeparator();
-		menu.addIconItem(theme.build_icon("/static/curriculum/academic_16.png",theme.icons_10.remove,"right_bottom"), "Remove Academic Period", function() { remove_period(t); });
 	};
 	<?php } ?>
 }

@@ -1340,14 +1340,16 @@ class SQLQuery {
 				SQLQuery::db()->execute($sql);
 				// $t->getSQLName($this->sub_models)
 			}
-			
+
+			// end transaction before removing tables of sub-model
+			if (!$in_transaction) SQLQuery::end_transaction();
+				
 			foreach ($sub_models_to_remove as $sm)
 				foreach ($sm[1] as $key)
 					$sm[0]->remove_tables($key);
 			
 			// unlock
 			foreach ($locks as $lock) DataBaseLock::unlock($lock);
-			if (!$in_transaction) SQLQuery::end_transaction();
 		} catch (Exception $e) {
 			if (!$in_transaction) SQLQuery::cancel_transaction();
 			throw $e;

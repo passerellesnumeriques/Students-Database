@@ -351,7 +351,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 					t.repeat_count.value = ev.frequency.count;
 				} else if (ev.frequency.until) {
 					t.repeat_until_date.checked = 'checked';
-					t.repeat_until.setData(ev.frequency.until);
+					t.repeat_until.setData(dateToSQL(ev.frequency.until));
 				} else {
 					t.repeat_until_never.checked = 'checked';
 				}

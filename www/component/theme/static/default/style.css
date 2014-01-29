@@ -169,10 +169,10 @@ table.all_borders {
 	border: 1px solid black;
 	border-collapse: collapse;
 }
-table.all_borders>tbody>tr>td {
+table.all_borders>tbody>tr>td, table.all_borders>tr>td {
 	border: 1px solid black;
 }
-table.all_borders>tbody>tr>th {
+table.all_borders>tbody>tr>th, table.all_borders>tr>th {
 	border: 1px solid black;
 }
 
