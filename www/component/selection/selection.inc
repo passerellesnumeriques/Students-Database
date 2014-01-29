@@ -108,10 +108,10 @@ class selection extends Component {
 	
 	/**
 	 * @method create_campaign
-	 * @param {string} $name
+	 * @param string $name
 	 * Create a campaign in the database, set its config to the default values, set the campaign id, set its steps
 	 * Create a calendar for the selection campaign
-	 * @return $campaign_id the id of the campaign created
+	 * @return integer | boolean $campaign_id the id of the campaign created, false if an error occured
 	 */
 	public function create_campaign($campaign_name){
 		$campaign_id = null;
@@ -123,8 +123,9 @@ class selection extends Component {
 			PNApplication::error("You are not allowed to manage the selection campaigns");
 			return;
 		}
-		
-		SQLQuery::start_transaction();
+		/**
+		 * Cannot do a transaction beacuse we are inserting tables (submodel) 
+		 */
 		try{
 		/* Create a calendar for this campaign */
 		$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("edit_information_session"=>true));
@@ -153,11 +154,14 @@ class selection extends Component {
 		}
 		} catch (Exception $e) {
 			PNApplication::error($e);
-		}
-		if(PNApplication::has_errors())
-			SQLQuery::cancel_transaction(); //Rollback
-		else {
-			SQLQuery::end_transaction(); //Commit
+			/**
+			 * Manually RollBack
+			 */
+			if($calendar_id <> null)
+				SQLQuery::create()->remove_key("Calendar",$calendar_id);
+			if($campaign_id <> null)
+				SQLQuery::create()->remove_key("SelectionCampaign",$campaign_id);
+			return false;
 		}
 		return $campaign_id;
 	}
@@ -184,8 +188,8 @@ class selection extends Component {
 	
 	/**
 	 * @method rename_campaign
-	 * @param $id
-	 * @param $name
+	 * @param integer $id
+	 * @param string $name
 	 * Set the name of the given campaign (id) to the given value (name) in the database
 	 */
 	public function rename_campaign($id, $name){

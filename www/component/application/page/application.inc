@@ -11,7 +11,7 @@ $sections = array(
 		"name" => "Selection",
 		"icon" => "/static/selection/selection_32.png",
 		"menu_provider" => "selection",
-		"default_page" => "/dynamic/selection/page/home"
+		"default_page" => "/dynamic/selection/page/selection_main_page"
 	),
 	array(
 		"name" => "Education",
