@@ -39,6 +39,10 @@ var country_name = "<?php echo $country['name'];?>";
 service.json("geography","get_country_data", {country_id:country_id}, function(res){
 	if(!res) return;
 	result = res;
+	var res_size = 0;
+	for(a in res)
+		res_size++;
+	var new_country = (res_size == 0) ? true : false;
 
 	/**
 	* Call the remove function for one area and all its children
@@ -354,13 +358,17 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 	 * @parameter division_name
 	 */
 	result.addDivision = function(division_name){
-		var parent_index = this.length -1;
-		var parent_id = this[parent_index].division_id;
+		var parent_index = null;
+		var parent_id = null;
+		if (!new_country){
+			parent_index = this.length -1;
+			parent_id = this[parent_index].division_id;
+		}
 		service.json("data_model","save_entity", {table:"Country_division", field_name:division_name, field_parent:parent_id, field_country:country_id}, function(res){
 			if(!res) return;
 		},true);
 		/*We refresh the page*/
-		document.getElementById('form_reload').submit();
+		location.reload();
 	};
 	
 	/**

@@ -28,7 +28,7 @@ class service_config_save extends Service{
 			}
 			$final_fields[$name] = $val;
 		}
-		$error = PNApplication::$instance->selection->save_config($final_fields);
+		$error = PNApplication::$instance->selection->saveConfig($final_fields);
 		if($error <> null) PNApplication::error($configs);
 		echo PNApplication::has_errors() ? "false" : "true";
 	}

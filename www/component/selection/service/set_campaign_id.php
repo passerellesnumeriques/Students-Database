@@ -15,7 +15,7 @@ class service_set_campaign_id extends Service{
 	public function documentation(){}//TODO
 	public function execute(&$component,$input){
 		if(isset($input['campaign_id'])){
-			$component->set_campaign_id($input["campaign_id"]);
+			$component->setCampaignId($input["campaign_id"]);
 			echo "true";
 		}
 		else echo "false";

@@ -22,7 +22,7 @@ return array(
 );
 
 
-//TODO update the rights for the calendar in selection.inc#create_campaign
+//TODO update the rights for the calendar in selection.inc#createCampaign
 
 
 

@@ -4,7 +4,7 @@
 	$rights = array();
 	$rights["read"] = PNApplication::$instance->components["user_management"]->has_right("can_access_selection_data",true);
 	$rights['manage'] = PNApplication::$instance->components["user_management"]->has_right("manage_selection_campaign",true);
-	$campaigns = PNApplication::$instance->selection->get_campaigns();
+	$campaigns = PNApplication::$instance->selection->getCampaigns();
 	?>
 function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 	var t = this;
@@ -19,7 +19,6 @@ function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 		}
 		if(!init_id)
 			init_id = 0;
-			
 		t.select.select(init_id);
 			t.select.onbeforechange = t._confirmChangeCampaign;
 			t.select.onchange = t._selectCampaign;
@@ -47,7 +46,8 @@ function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 			service.json("selection","set_campaign_id",{campaign_id:id},function(res){
 				if(!res) return;
 				/* Reload the page */
-				location.reload();
+				window.frames["pn_application_content"].location.reload();
+				populateMenu();
 			});
 
 	};
@@ -102,7 +102,7 @@ function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 	
 	/**
 	 * function _addCampaign
-	 * calls the service createCampaign and then reload the page
+	 * calls the service create_campaign and then reload the page
 	 */
 	t._addCampaign = function (name,div_locker){
 		service.json("selection","create_campaign",{name:name},function(res){
@@ -121,7 +121,7 @@ function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 
 <?php
 	if($rights["read"]){ 
-		$current = PNApplication::$instance->components["selection"]->get_campaign_id();
+		$current = PNApplication::$instance->components["selection"]->getCampaignId();
 		$first = ($current <> null) ? "false" : "true";
 		$json_all_campaign = "[";
 		if(isset($campaigns[0]["id"])){
@@ -139,7 +139,7 @@ function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 		echo "addLeftControl(select_element);";
 	
 		/* All the other buttons need the campaign id to be set */
-		$campaign_id = PNApplication::$instance->selection->get_campaign_id();
+		$campaign_id = PNApplication::$instance->selection->getCampaignId();
 		if($campaign_id <> null){
 			echo "addMenuItem('".theme::$icons_16["dashboard"]."','Dashboard','/dynamic/selection/page/selection_main_page');";
 			if($rights["manage"]){

@@ -17,7 +17,7 @@ class service_set_campaign_name extends Service{
 	public function execute(&$component,$input){
 		if(isset($input['name']) && isset($input["id"])){
 			try{
-				$component->rename_campaign($input["id"],$input["name"]);
+				$component->renameCampaign($input["id"],$input["name"]);
 			} catch(Exception $e) {
 				PNApplication::error($e->getMessage());
 			}

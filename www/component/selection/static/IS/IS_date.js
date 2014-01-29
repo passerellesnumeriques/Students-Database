@@ -1,6 +1,6 @@
 /**
  * @param container
- * @param data the object given by the #selection#get_json_IS_data method
+ * @param data the object given by the #SelectionJSON#InformationSessionFromID method
  * @param default_duration the duration that must be pre_selected when the event is created (coming from config)
  * @param can_read
  * @param can_manage: if true, the user can modify/remove the date

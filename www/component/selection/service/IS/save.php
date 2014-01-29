@@ -168,7 +168,7 @@ class service_IS_save extends Service{
 				try{
 					if(isset($event["id"]))
 						unset($event["id"]);
-					$event["calendar_id"] = PNApplication::$instance->selection->get_calendar_id();
+					$event["calendar_id"] = PNApplication::$instance->selection->getCalendarId();
 					$event["organizer"] = "Selection";
 					// var_dump($event);
 					PNApplication::$instance->calendar->saveEvent($event);
@@ -187,7 +187,7 @@ class service_IS_save extends Service{
 				}
 			} else if($remove_event && $everything_ok) {
 				try{
-					PNApplication::$instance->calendar->removeEvent($event_to_remove,PNApplication::$instance->selection->get_calendar_id());
+					PNApplication::$instance->calendar->removeEvent($event_to_remove,PNApplication::$instance->selection->getCalendarId());
 					$data["date"] = null;
 				} catch(Exception $e){
 					$everything_ok = false;

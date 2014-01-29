@@ -18,7 +18,7 @@ class page_exam_import_subject extends selection_page {
 			 * exam names, so must be sure that no one is updating it;
 			 */
 			// require_once("component/data_model/DataBaseLock.inc");
-			// $campaign_id = PNApplication::$instance->selection->get_campaign_id();
+			// $campaign_id = PNApplication::$instance->selection->getCampaignId();
 			// require_once("component/data_model/Model.inc");
 			// $table = DataModel::get()->getTable("Exam_subject");
 			// $locked_by = null;

@@ -31,7 +31,7 @@ class CreateRenameRemoveCampaign_Test_Create_No_Right extends TestServicesStep{
 		return null;
 	}
 	
-	public function getServiceName(){return "create_campaign";}
+	public function getServiceName(){return "createCampaign";}
 	public function getServiceInput(&$scenario_data){return "{name:'test_error'}";}
 	public function getJavascriptToCheckServiceOutput($scenario_data){
 		return "if(!errors || errors.length == 0) return 'No error returned';
@@ -54,7 +54,7 @@ class CreateRenameRemoveCampaign_Test_Create_With_Right extends TestServicesStep
 		return null;
 	}
 	
-	public function getServiceName(){return "create_campaign";}
+	public function getServiceName(){return "createCampaign";}
 	public function getServiceInput(&$scenario_data){return "{name:'test_ok'}";}
 	public function getJavascriptToCheckServiceOutput($scenario_data){
 		return "if(errors) return 'Error: last error was '+errors[errors.length -1];
@@ -126,7 +126,7 @@ class CreateRenameRemoveCampaign_Test_Remove_No_Right extends TestServicesStep{
 		if ($error <> null) return "Cannot login with test_CreateRenameRemove_can_access: ".$error;
 		return null;
 	}
-	public function getServiceName(){return "remove_campaign";}
+	public function getServiceName(){return "removeCampaign";}
 	public function getServiceInput(&$scenario_data){return "{id:'".$scenario_data["id"]."'}";}
 	public function getJavascriptToCheckServiceOutput($scenario_data){
 		return "if(!errors || errors.length == 0) return 'No error returned';
@@ -149,7 +149,7 @@ class CreateRenameRemoveCampaign_Test_Remove_With_Right extends TestServicesStep
 		if ($error <> null) return "Cannot login with test_CreateRenameRemoveCampaign_manage: ".$error;
 		return null;
 	}
-	public function getServiceName(){return "remove_campaign";}
+	public function getServiceName(){return "removeCampaign";}
 	public function getServiceInput(&$scenario_data){return "{id:'".$scenario_data["id"]."'}";}
 	public function getJavascriptToCheckServiceOutput($scenario_data){
 		return "if(errors) return 'Error. Last error was: '+errors[errors.length -1];

@@ -14,9 +14,9 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 	// In case the rights were not updated, no need to pop an error message
 	$pop_error = $restricted[0];
 	
-	$config = PNApplication::$instance->selection->get_config();
+	$config = PNApplication::$instance->selection->getConfig();
 	
-	$current_campaign = PNApplication::$instance->selection->get_campaign_id();
+	$current_campaign = PNApplication::$instance->selection->getCampaignId();
 	
 	$fct_name = "exam_subject_".$page->generateID();
 // 	$page->onload($fct_name."();");
