@@ -11,7 +11,7 @@ $sections = array(
 		"name" => "Selection",
 		"icon" => "/static/selection/selection_32.png",
 		"menu_provider" => "selection",
-		"default_page" => "/dynamic/selection/page/home"
+		"default_page" => "/dynamic/selection/page/selection_main_page"
 	),
 	array(
 		"name" => "Education",
@@ -234,6 +234,15 @@ sections_bar.onclick = expandBar;
 
 function populateMenu() {
 	section_menu.removeAll();
+	/* Remove all the left children */
+	var left = document.getElementById('pn_application_left_controls');
+	while(left.firstChild != null)
+		left.removeChild(left.firstChild);
+	/* Remove all the right children */
+	var right = document.getElementById('pn_application_right_controls');
+	while(right.firstChild != null)
+		right.removeChild(right.firstChild);
+	
 	if (sections[selected_section_index].menu_provider == null) return;
 	service.customOutput("application", "application_menu_builder", {component:sections[selected_section_index].menu_provider},function(code){
 		if (code == null) {
@@ -247,6 +256,10 @@ function populateMenu() {
 selectSection(selected_section_index);
 
 require("animation.js");
+require("vertical_align.js",function(){
+	new vertical_align("pn_application_right_controls","middle");
+	new vertical_align("pn_application_left_controls","middle");
+});
 
 function resetMenu() {
 	section_menu.removeAll();
@@ -271,7 +284,7 @@ function addMenuControl(control) {
 }
 function addRightControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
-	document.getElementById('pn_application_reight_controls').appendChild(control);
+	document.getElementById('pn_application_right_controls').appendChild(control);
 }
 function addLeftControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
