@@ -62,11 +62,40 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		element.style.display = "inline-block";
 		fireLayoutEventFor(this.element);
 	};
+	this.resetToolLeft = function() {
+		while (this.toolbar_left.childNodes.length > 0) this.toolbar_left.removeChild(this.toolbar_left.childNodes[0]);
+		fireLayoutEventFor(this.element);
+	};
 	this.addToolRight = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar_right.appendChild(element);
 		element.style.display = "inline-block";
 		fireLayoutEventFor(this.element);
+	};
+	this.resetToolRight = function() {
+		while (this.toolbar_right.childNodes.length > 0) this.toolbar_right.removeChild(this.toolbar_right.childNodes[0]);
+		fireLayoutEventFor(this.element);
+	};
+	this.addToolBottom = function(element) {
+		if (this.footer.childNodes.length == 0) {
+			setBorderRadius(this.footer, 0, 0, 0, 0, 5, 5, 5, 5);
+			setBorderRadius(content, 0, 0, 0, 0, 0, 0, 0, 0);
+			this.footer.style.borderTop = "1px solid #808080";
+			this.footer.style.backgroundColor = "#D0D0D0";
+		}
+		if (typeof element == 'string') {
+			var div = document.createElement("DIV");
+			div.style.display = "inline-block";
+			div.innerHTML = element;
+			element = div;
+		}
+		this.footer.appendChild(element);
+	};
+	this.resetToolBottom = function() {
+		setBorderRadius(content, 0, 0, 0, 0, 5, 5, 5, 5);
+		this.footer.style.borderTop = "";
+		this.footer.style.backgroundColor = "";
+		while (this.footer.childNodes.length > 0) this.footer.removeChild(this.footer.childNodes[0]);
 	};
 	
 	this._init = function() {
@@ -136,10 +165,12 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		
 		this.content_container = document.createElement("DIV");
 		this.content_container.style.backgroundColor = "#ffffff";
+		this.content_container.appendChild(content);
+		this.footer = document.createElement("DIV");
+		this.content_container.appendChild(this.footer);
 		setBorderRadius(this.content_container, 0, 0, 0, 0, 5, 5, 5, 5);
 		setBorderRadius(content, 0, 0, 0, 0, 5, 5, 5, 5);
 		this.element.appendChild(this.content_container);
-		this.content_container.appendChild(content);
 	};
 	
 	this.toggleCollapseExpand = function() {

@@ -685,6 +685,7 @@ class SQLQuery {
 			// validate values, and check unicity
 			foreach ($fields_values as $field=>$value) {
 				$col = $t->internalGetColumn($field, $this->sub_models);
+				if ($col == null) throw new Exception("Unknown column ".$field." in table ".$t->getName());
 				try { $fields_values[$field] = $col->validate($value); }
 				catch (Exception $e) {
 					if ($locked)

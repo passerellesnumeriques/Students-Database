@@ -18,8 +18,8 @@ class page_IS_profile extends selection_page {
 		<div id = "IS_profile_container" style = "width:100%; height:100%">
 			<div id = "page_header">
 				<div class = "button" onclick = "location.assign('/dynamic/selection/page/IS/main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
-				<div id = "save_IS_button"></div>
-				<div id = "remove_IS_button"></div>
+				<div class = "button" id = "save_IS_button"><img src = '<?php echo theme::$icons_16["save"];?>' /> <b>Save</b></div>
+				<div class = "button" id = "remove_IS_button"><img src = '<?php echo theme::$icons_16["remove"];?>' /> Remove Information Session</div>
 			</div>
 			<div id='IS_profile_<?php echo $name; ?>' style = "overflow:auto" layout = "fill"></div>
 		</div>

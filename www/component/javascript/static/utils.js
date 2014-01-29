@@ -156,7 +156,7 @@ function absoluteLeft(e,relative) {
 			var p = e;
 			do {
 				p = p.parentNode;
-				left -= p.scrollLeft;
+				left -= p == p.scrollLeft;
 			} while (p != e.offsetParent);
 			left += absoluteLeft(e.offsetParent,relative); 
 		}

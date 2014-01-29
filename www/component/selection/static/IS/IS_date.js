@@ -148,18 +148,10 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	}
 	
 	t._setFooter = function(){
-		var tfoot = document.createElement("tfoot");
-		var tr = document.createElement("tr");
-		var td = document.createElement("td");
 		var div_set_date = document.createElement("div");
 		div_set_date.className = "button";
 		div_set_date.innerHTML = "<img src = '/static/selection/IS/date_clock_picker.png' style='vertical-align:bottom'/> Set the date";
-		td.style.borderTop = "1px solid #959595";
-		td.appendChild(div_set_date);
-		td.colSpan = 2;
-		tr.appendChild(td);
-		tfoot.appendChild(tr);
-		t.table.appendChild(tfoot);
+		t.section.addToolBottom(div_set_date);
 		div_set_date.onclick = function(){
 			var table = document.createElement("table");
 			var pop = new popup_window("Set the date",theme.icons_16.date_picker,table);
@@ -184,7 +176,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			this.innerHTML = "<img src = '"+theme.icons_16.remove+"' /> Unset date";
 		};
 		if(t.event.start != null)
-			td.appendChild(remove_button);
+			t.section.addToolBottom(remove_button);
 	}
 	
 	t._popSelectAllDay = function(table,pop){
@@ -321,6 +313,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	
 	t.resetTable = function(locker){
 		t.container_of_section_content.removeChild(t.table);
+		t.section.resetToolBottom();
 		delete t.table;
 		t.table = document.createElement("table");
 		// container.appendChild(t.table);
@@ -330,6 +323,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	
 	t._resetTableAndEvent = function(locker){
 		t.container_of_section_content.removeChild(t.table);
+		t.section.resetToolBottom();
 		delete t.table;
 		t.table = document.createElement("table");
 		t._setEventAttribute();

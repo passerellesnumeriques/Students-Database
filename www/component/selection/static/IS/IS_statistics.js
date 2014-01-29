@@ -91,10 +91,12 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 			td21.innerHTML = "<font color='#808080'><b>Attendees </b></font>";
 			if(can_edit){
 				var input22 = document.createElement("input");
+				input22.type = 'text';
 				autoresize_input(input22);
 				input22.style.marginLeft = "15px";				
 				var input23 = document.createElement("input");
 				input23.style.marginLeft = "15px";
+				input23.type = 'text';
 				autoresize_input(input23);
 				input22.value = t.text_boys_expected + t.text_girls_expected;
 				input23.value = t.text_boys_real + t.text_girls_real;
@@ -132,6 +134,10 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 				var input23 = document.createElement("input");
 				var input32 = document.createElement("input");
 				var input33 = document.createElement("input");
+				input22.type = 'text';
+				input23.type = 'text';
+				input32.type = 'text';
+				input33.type = 'text';
 				input22.style.marginLeft = "15px";
 				input23.style.marginLeft = "15px";
 				input32.style.marginLeft = "15px";

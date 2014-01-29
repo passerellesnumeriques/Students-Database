@@ -24,7 +24,6 @@ function select_address(container, data, organization_contacts, can_manage){
 		var th_header = document.createElement("th");
 		var tr_body = document.createElement("tr");
 		var td_body = document.createElement("td");
-		var tfoot = document.createElement("tfoot");
 		var host = t.getHostInData();
 		
 		/* One address is set in the data object (and exists into the database)*/
@@ -39,12 +38,12 @@ function select_address(container, data, organization_contacts, can_manage){
 					}
 					var text = new address_text(t.address);
 					td_body.appendChild(text.element);
-					if(can_manage) t._addSetAddressButton(tfoot, host);
+					if(can_manage) t._addSetAddressButton(host);
 				});
 			} else {
 				var text = new address_text(t.address);
 				td_body.appendChild(text.element);
-				if(can_manage) t._addSetAddressButton(tfoot, host);
+				if(can_manage) t._addSetAddressButton(host);
 			}
 		}
 		/* No address is set in the data object but one host is set */
@@ -53,19 +52,18 @@ function select_address(container, data, organization_contacts, can_manage){
 			if(t.address != null && t.address != {}){
 				var text = new address_text(t.address);
 				td_body.appendChild(text.element);
-				if(can_manage) t._addSetAddressButton(tfoot, host);
+				if(can_manage) t._addSetAddressButton(host);
 			}
 		}		
 		/* No address nor host is set */
 		if(host == null){
 			td_body.innerHTML = "No location is set for this Information Session";
 			td_body.style.fontStyle = "italic";
-			if(can_manage) t._addSetAddressButton(tfoot, host);
+			if(can_manage) t._addSetAddressButton(host);
 		}
 		
 		/* Add remove address button */
-		if(can_manage && host != null) t._addRemoveAddressButton(tfoot);
-		tfoot.style.display = "inline-block";
+		if(can_manage && host != null) t._addRemoveAddressButton();
 		
 		
 		// th_header.innerHTML = "<img src = '/static/contact/address_16.png' style = 'vertical-align:bottom'/> Location";
@@ -75,7 +73,6 @@ function select_address(container, data, organization_contacts, can_manage){
 		tbody.appendChild(tr_body);
 		// t.table_address.appendChild(theader);
 		t.table_address.appendChild(tbody);
-		t.table_address.appendChild(tfoot);
 		// setCommonStyleTable(t.table_address,th_header,"#DADADA");
 	
 		t.container_of_section_content.appendChild(t.table_address);
@@ -83,12 +80,13 @@ function select_address(container, data, organization_contacts, can_manage){
 	
 	t.resetTableAddress = function(div_locker){
 		t.container_of_section_content.removeChild(t.table_address);
+		t.section.resetToolBottom();
 		delete t.table_address;
 		t._setTableAddress();
 		if(typeof(div_locker) != "undefined" && div_locker != null) unlock_screen(div_locker);
 	}
 	
-	t._addSetAddressButton = function(cont, host){
+	t._addSetAddressButton = function(host){
 		var div = document.createElement("div");
 		// var host = t.getHostInData();
 		if(host == null){
@@ -103,10 +101,10 @@ function select_address(container, data, organization_contacts, can_manage){
 			if(data.partners.length > 0 && t._noAllAddressesEmptyInOrganization_contacts()) t._setOrSelectPartnerAddressDialog(host);
 			else t._setAddressNoPartnerDialog(host);
 		};
-		cont.appendChild(div);
-	}
+		t.section.addToolBottom(div);
+	};
 	
-	t._addRemoveAddressButton = function(cont){
+	t._addRemoveAddressButton = function(){
 		var div = document.createElement("div");
 		div.innerHTML = "<img src = '"+theme.icons_16.remove+"'/> Unset location";
 		div.onmouseover = function(){div.innerHTML = "<img src = '"+theme.icons_16.remove_black+"'/> Unset location";};
@@ -120,8 +118,8 @@ function select_address(container, data, organization_contacts, can_manage){
 				}
 			});
 		};
-		cont.appendChild(div);
-	}
+		t.section.addToolBottom(div);
+	};
 	
 	t._removeAddress = function(div_locker){
 		/* Reset data object */

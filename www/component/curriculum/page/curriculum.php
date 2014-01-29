@@ -530,6 +530,8 @@ class page_curriculum extends Page {
 			});
 		}
 
+		// TODO lock the curriculum ?
+
 		function edit_subject(subject, onchanged) {
 			require("popup_window.js",function() {
 				var control = new EditSubjectControl(subject);
@@ -551,6 +553,7 @@ class page_curriculum extends Page {
 					service.json("data_model","save_entity",{
 						table: "CurriculumSubject",
 						key: subject.id,
+						lock: -1, // TODO
 						field_code: code,
 						field_name: name,
 						field_hours: hours,

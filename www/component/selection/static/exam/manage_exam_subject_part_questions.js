@@ -77,6 +77,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				div.innerHTML = parseInt(t.question_index_before) + i + 1 +" - ";
 				if(can_edit){
 					var input = document.createElement("input");
+					input.type = 'text';
 					autoresize_input(input, 5);
 					//give a unique id to the input, to be able to get it at anytime
 					input.id = "question"+part.index+"."+part.questions[t.ordered[i]].index;
@@ -358,7 +359,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	
 	t._createButton = function(content){
 		var button = document.createElement("div");
-		button.className = "button";
+		button.className = "button_verysoft";
 		if(content == "before")
 			button.innerHTML = "<img src = '/static/selection/exam/arrow_up_16.png'/><img src = '"+theme.icons_10.add+"'/>";
 		else if(content == "after")

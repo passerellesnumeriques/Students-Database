@@ -45,6 +45,7 @@ function IS_name(container, name, can_edit){
 		} else t.text = t.name.uniformFirstLetterCapitalized();
 		if(can_edit){
 			var input = document.createElement("input");
+			input.type = 'text';
 			input.value = t.text;
 			autoresize_input(input,15);
 			input.oninput = function(){

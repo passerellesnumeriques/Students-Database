@@ -211,7 +211,7 @@ class service_IS_save extends Service{
 					/* Unset address id in case it exists (address coming from a partner and then customized*/
 					if(isset($address["id"]))
 						unset($address["id"]);
-					SQLQuery::create()->update_by_key("Postal_address",$data["address"],$address);
+					SQLQuery::create()->update_by_key("Postal_address",$data["address"],ContactJSON::PostalAddress2DB($address));
 				} catch(Exception $e){
 					$everything_ok = false;
 					PNApplication::error($e);

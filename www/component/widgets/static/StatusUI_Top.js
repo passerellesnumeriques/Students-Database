@@ -116,6 +116,7 @@ function StatusUI_Top(manager, margin) {
 			status.type == Status_TYPE_ERROR ? "#FF8080" :
 			status.type == Status_TYPE_WARNING ? "#FFC040" :
 			status.type == Status_TYPE_PROCESSING ? "#FFFF80" :
+			status.type == Status_TYPE_OK ? "#C0E0C0" :
 			"#808080";
 		var s;
 		if (status.no_icon)
@@ -126,6 +127,8 @@ function StatusUI_Top(manager, margin) {
 			s = "<img src='"+theme.icons_16.warning+"' hspace=2 style='vertical-align:bottom;margin-bottom:2px'/>";
 		else if (status.type == Status_TYPE_PROCESSING)
 			s = "<img src='"+theme.icons_16.loading+"' hspace=2 style='vertical-align:bottom;margin-bottom:2px'/>";
+		else if (status.type == Status_TYPE_OK)
+			s = "<img src='"+theme.icons_16.ok+"' hspace=2 style='vertical-align:bottom;margin-bottom:2px'/>";
 		else
 			s = "<img src='"+theme.icons_16.info+"' hspace=2 style='vertical-align:bottom;margin-bottom:2px'/>";
 		s += status.message;
