@@ -112,8 +112,6 @@ class SelectionJSON{
 	
 			$data.= "}";
 		} else $data.="{}";
-// 		if(!$return_partners_array) return $data;
-// 		else return array("data" => $data, "partners" => $partners_array);
 		return $data;
 		
 	}
