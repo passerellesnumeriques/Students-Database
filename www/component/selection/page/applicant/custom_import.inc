@@ -4,7 +4,7 @@ function custom_import_applicants (&$page,$fixed_data,$prefilled_data,$all_ids,$
 	 * applicant ids (given or generated), so must be sure that no one is updating it;
 	 */
 	require_once("component/data_model/DataBaseLock.inc");
-	$campaign_id = PNApplication::$instance->selection->get_campaign_id();
+	$campaign_id = PNApplication::$instance->selection->getCampaignId();
 	require_once("component/data_model/Model.inc");
 	$table = DataModel::get()->getTable("Applicant");
 	$locked_by = null;

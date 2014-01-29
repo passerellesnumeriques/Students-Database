@@ -4,6 +4,56 @@
  */ 
 class SelectionJSON{
 /**
+ * Methods about campaigns
+ */
+	/**
+	 * Campaigns
+	 * Get all the existing campaigns
+	 * @return string [{id:'',name:''},{id:'',name:''}...]
+	 */
+	public static function Campaigns(){
+		$js = "[]";
+		try {$campaigns = SQLQuery::create()->select("SelectionCampaign")->field("id")->field("name")->order_by("name")->execute();
+		} catch (Exception $e){
+			PNApplication::error($e);
+		}
+		if(isset($campaigns[0]["name"])){
+			$first = true;
+			$js = "[";
+			foreach($campaigns as $c){
+				if(!$first) $js.= ", ";
+				$js.= "{id:".json_encode($c["id"]).", name:".json_encode($c["name"])."}";
+				$first = false;
+			}
+			$js.= "]";
+		}
+		return $js;
+	}
+	
+/**
+ * Methods about steps
+ */
+	/**
+	 * Steps
+	 * @return string [{name:'',value:'', text:''},{name:'',value:'', text:''}...]
+	 */
+	public static function Steps(){
+		$all_steps = include("steps.inc");
+		$steps = PNApplication::$instance->selection->getSteps();
+		$json = "[";
+		$first = true;
+		foreach($steps as $name => $value){
+			if(!$first)
+				$json.= ", ";
+			$first = false;
+			$json.= "{name:".json_encode($name).",value:".json_encode($value);
+			$json.= ",text:".json_encode($all_steps[$name][0])."}";
+		}
+		$json .= "]";
+		return $json;
+	}
+	
+/**
  * Methods about Information Sessions (IS)
  */
 	public static function InformationSessionFromID($id){
@@ -147,6 +197,7 @@ class SelectionJSON{
 		if(!$alias)
 			$alias = "Exam_subject";
 		$q
+			->field($alias, "id","subject_id")
 			->field($alias,"name","subject_name")
 			->field($alias,"max_score","subject_max_score");
 	}
@@ -321,5 +372,141 @@ class SelectionJSON{
 		->field("name")
 		->execute_single_field();
 		return $names;
+	}
+	
+/**
+ * Methods about Exam Topics for Eligibility Rules
+ */
+
+	public static function ExamTopicForEligibilityRulesFromID ($id){
+		$q = SQLQuery::create()
+			->select("Exam_topic_for_eligibility_rule")
+			->join("Exam_topic_for_eligibility_rule","Exam_part_topic",array("id" => "exam_topic_for_eligibility_rule"))
+			->join("Exam_part_topic","Exam_subject_part",array("exam_subject_part" => "id"))
+			->join("Exam_subject_part","Exam_subject",array("exam_subject" => "id"))
+			->where_value("Exam_topic_for_eligibility_rule","id",$id)
+			->order_by("Exam_subject","id");
+		self::ExamSubjectPartSQL($q);
+		self::ExamSubjectSQL($q);
+		$rows = $q->execute();
+		if($rows <> null)
+			return self::ExamTopic($q, $rows, $id);
+		else 
+			return "{}";
+	}
+	
+	public static function ExamTopicSQL(&$q){
+		$alias = $q->get_table_alias("Exam_topic_for_eligibility_rule");
+		if(!$alias)
+			$alias = "Exam_topic_for_eligibility_rule";
+		$q
+			->field($alias, "id","topic_id")
+			->field($alias,"name","topic_name")
+			->field($alias,"max_score","topic_max_score")
+			->field($alias,"number_questions","topic_number_questions");
+	}
+	
+	/**
+	 * Exam Topic PHP
+	 * @param integer topic_id the id of the topic
+	 * @return array [id => ""
+	 * 					name => ""
+	 * 					subjects => [
+	 *							id => [
+	 *								name => ""
+	 *								max_score => ""
+	 *								full_subject => boolean
+	 * 								parts => array(
+	 *									id =>[
+	 *										name => ""
+	 *										max_score => ""
+	 *										index => ""
+	 *									],...)
+	 * 							],...]
+	 *					]
+	 * subjects & parts arrays use the subject id (respectively part id) as key
+	 */
+	public static function ExamTopicPHP($q, $rows, $id){
+		$full_exams = SQLQuery::create()
+			->select("Exam_topic_full_exam")
+			->field("exam_subject")
+			->where_value("Exam_topic_full_exam","exam_topic_for_eligibility_rule",$id)
+			->execute_single_field();
+		
+		if(isset($rows[0]["name"])){
+			$topic = array();
+			$topic["id"] = $id;
+			$topic["name"] = $$rows[0]["topic_name"];
+			$topic["max_score"] = $rows[0]["topic_max_score"];
+			$topic["number_questions"] = $rows[0]["topic_number_questions"];
+			$topic["subjects"] = array();
+			foreach($rows as $row){
+				if(isset($topic["subjects"][$row["subject_id"]])){
+					$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
+							"name" => $row["part_name"],
+							"max_score" => $row["part_max_score"],
+							"index" => $row["part_index"]
+					);
+				} else {
+					//create the subject array
+					$topic["subjects"][$row["subject_id"]] = array(
+							"name" => $row["subject_name"],
+							"max_score" => $$row["subject_max_score"],
+							"parts" => array()
+					);
+					if(in_array($row["subject_id"],$full_exams))
+						$topic["subjects"][$row["subject_id"]]["full_subject"] = true;
+					else
+						$topic["subjects"][$row["subject_id"]]["full_subject"] = false;
+					//create the part
+					$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
+							"name" => $row["part_name"],
+							"max_score" => $row["part_max_score"],
+							"index" => $row["part_index"]
+					);
+				}
+				//a topic part cannot be empty because removed by #selection#updateExamTopicsForEligibilityRules
+			}
+			return $topic;
+		} else
+			return;
+	}
+	
+	public static function ExamTopic($q, $rows, $id){
+		$topic = self::ExamTopicPHP($q, $rows, $id);
+		$json = "";
+		if(!isset($topic["id"]))
+			$json = "{}";
+		else {
+			$json .= "{id:".json_encode($id).", name:".json_encode($topic["name"]);
+			$json .= ", max_score:".json_encode($topic["max_score"]).", number_questions:".json_encode($topic["number_questions"]).", subjects:";
+			if(count($topic["subjects"] > 0)){
+				$json .= "[";
+				$first_subject = true;
+				foreach($topic["subjects"] as $subject_id => $s){
+					if(!$first_subject)
+						$json .= ", ";
+					$first_subject = false;
+					$json .= "{id: ".json_encode($subject_id).", name:".json_encode($s["name"]).", max_score:".json_encode($s["max_score"]);
+					$json .= ", full_subject:".json_encode($s["full_subject"]);
+					$json .= ", parts:[";
+					if(count($s["parts"]) > 0){
+						$first_part = true;
+						foreach($s["parts"] as $part_id => $p){
+							if(!$first_part)
+								$json .= ", ";
+							$first_part = false;
+							$json .= "{id:".json_encode($part_id).", name:".json_encode($p["name"]);
+							$json .= ", max_score:".json_encode($p["max_score"]).", index:".json_encode($p["index"]).", questions:[]}";
+						}
+					}
+					$json .= "]}";
+				}
+				$json .= "]";
+			} else
+				$json .= "[]";
+			$json .= "}";
+		}
+		return $json;
 	}
 }

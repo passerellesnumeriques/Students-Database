@@ -20,7 +20,7 @@ require_once("selection_page.inc");
 class page_selection_main_page extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
-		$calendar_id = PNApplication::$instance->selection->get_calendar_id();
+		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		$calendar_name = SQLQuery::create()->bypass_security()->select("Calendar")->field("name")->where("id",$calendar_id)->execute_single_value();
 		
 		$page->add_javascript("/static/widgets/page_header.js");
@@ -140,7 +140,7 @@ class page_selection_main_page extends selection_page {
 			});
 
 			updates_section = section_from_html('updates_section');
-			new news('updates_container', [{name:"selection",tags:["campaign<?php echo PNApplication::$instance->selection->get_campaign_id();?>"]}], [], function(){
+			new news('updates_container', [{name:"selection",tags:["campaign<?php echo PNApplication::$instance->selection->getCampaignId();?>"]}], [], function(){
 			}, function(){
 			});
 			

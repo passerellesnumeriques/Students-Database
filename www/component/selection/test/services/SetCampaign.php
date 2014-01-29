@@ -34,7 +34,7 @@ class SetCampaign_Test_Select_No_Manage extends TestServicesStep{
 		return null;
 	}
 	
-	public function getServiceName(){return "set_campaign_id";}
+	public function getServiceName(){return "setCampaignId";}
 	
 	public function getServiceInput(&$scenario_data){return "{campaign_id:'".$scenario_data["id"]."'}";}
 	
@@ -43,7 +43,7 @@ class SetCampaign_Test_Select_No_Manage extends TestServicesStep{
 	}
 	
 	public function finalizationStep(&$scenario_data){
-		$attribute_id = PNApplication::$instance->selection->get_campaign_id();
+		$attribute_id = PNApplication::$instance->selection->getCampaignId();
 		if($attribute_id != $scenario_data["id"]) return "The campaign id attribute was not set properly: attribute value is ".$attribute_id." and the id created is ".$scenario_data["id"].".";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -59,7 +59,7 @@ class SetCampaign_Test_Select_Can_Manage extends TestServicesStep{
 		return null;
 	}
 	
-	public function getServiceName(){return "set_campaign_id";}
+	public function getServiceName(){return "setCampaignId";}
 	
 	public function getServiceInput(&$scenario_data){return "{campaign_id:'".$scenario_data["id"]."'}";}
 	
@@ -68,7 +68,7 @@ class SetCampaign_Test_Select_Can_Manage extends TestServicesStep{
 	}
 	
 	public function finalizationStep(&$scenario_data){
-		$attribute_id = PNApplication::$instance->selection->get_campaign_id();
+		$attribute_id = PNApplication::$instance->selection->getCampaignId();
 		if($attribute_id != $scenario_data["id"]) return "The campaign id attribute was not set properly: attribute value is ".$attribute_id." and the id created is ".$scenario_data["id"].".";
 		PNApplication::$instance->user_management->logout();
 		return null;

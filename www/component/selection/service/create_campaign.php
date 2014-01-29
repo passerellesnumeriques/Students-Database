@@ -19,7 +19,7 @@ class service_create_campaign extends Service{
 		if(!isset($input["name"])) {echo "false"; return;}
 		else{
 			try{
-				$key = $component->create_campaign($input["name"]);
+				$key = $component->createCampaign($input["name"]);
 			} catch(Exception $e) {
 				PNApplication::error($e);
 			}

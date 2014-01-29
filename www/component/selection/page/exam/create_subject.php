@@ -11,10 +11,10 @@ class page_exam_create_subject extends selection_page {
 			echo "<div style='font-color:red;>You are not allowed to add any exam subject</div>'";
 		else {
 			$other_campaigns = false;
-			$all_campaigns = PNApplication::$instance->selection->get_campaigns();
+			$all_campaigns = PNApplication::$instance->selection->getCampaigns();
 			/* remove the current campaign */
 			$index = null;
-			$current_campaign = PNApplication::$instance->selection->get_campaign_id();
+			$current_campaign = PNApplication::$instance->selection->getCampaignId();
 			for($i=0; $i < count($all_campaigns); $i++){
 				if($all_campaigns[$i]["id"] == $current_campaign){
 					$index = $i;

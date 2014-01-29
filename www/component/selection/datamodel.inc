@@ -105,15 +105,6 @@
 		->addWriteAccess("manage_selection_campaign",true)
 		->setPrimary("name");
 		
-	// $sm->addTable("Selection_campaign_steps")
-		// ->addString("name",255,1,false,true)
-		// ->addBoolean("value")
-		// ->addReadAccess("can_access_selection_data",true)
-		// ->addInsertAccess("manage_selection_campaign",true)
-		// ->addRemoveAccess("manage_selection_campaign",true)
-		// No write access. This is the selection component that checks the matching rights of the user, and use bypass_security if the user is allowed
-		// ->setPrimary("name");
-		
 	$sm->addTable("Exam_subject")
 		->addPrimaryKey("id")
 		->addString("name",255,1,false,false) //cannot have two exam with the same name on the same campaign

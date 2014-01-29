@@ -16,9 +16,9 @@ class service_remove_campaign extends Service{
 	public function execute(&$component,$input){
 		if(isset($input["id"])){
 			try{
-				PNApplication::$instance->components["selection"]->remove_campaign($input["id"]);
+				PNApplication::$instance->selection->removeCampaign($input["id"]);
 			} catch(Exception $e) {
-				PNApplication::error($e->getMessage());
+				PNApplication::error($e);
 			}
 			$to_echo = PNApplication::has_errors() ? "false" : "true";
 			echo $to_echo;
