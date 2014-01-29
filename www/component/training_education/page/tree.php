@@ -68,6 +68,7 @@ TreeNode.prototype = {
 		this.element.style.border = "1px solid rgba(0,0,0,0)";
 		this.element.style.cursor = 'pointer';
 		this.element.style.padding = "1px 2px 1px 1px";
+		setBorderRadius(this.element, 3, 3, 3, 3, 3, 3, 3, 3);
 		this.element.onmouseover = function() { if(!t.selected) this.style.border = "1px solid #F0D080"; };
 		this.element.onmouseout = function() { if (!t.selected) this.style.border = "1px solid rgba(0,0,0,0)"; };
 		this.element.onclick = function() { t.select(); };
@@ -171,6 +172,8 @@ function AllStudents(root) {
 		menuReset();
 		menuStudentsList("");
 		menuUpdates(null,"Education");
+		menuCurriculum("");
+		menuGrades("");
 		menuDiscipline();
 		menuHealth();
 	};
@@ -207,6 +210,8 @@ function CurrentStudents(all) {
 		}
 		menuStudentsList("batches="+encodeURIComponent(batches));
 		menuUpdates(tags,"Current Students");
+		menuCurriculum("");
+		menuGrades("");
 		menuDiscipline();
 		menuHealth();
 	};
@@ -236,6 +241,8 @@ function Alumni(all) {
 		}
 		menuStudentsList("batches="+encodeURIComponent(batches));
 		menuUpdates(tags,"Current Students");
+		menuCurriculum("");
+		menuGrades("");
 		menuDiscipline();
 		menuHealth();
 	};
@@ -311,6 +318,7 @@ function Batch(current, alumni, id, name, start, end) {
 		menuStudentsList("batches="+id);
 		menuUpdates(["batch"+id],"Batch "+name);
 		menuCurriculum("batch="+id);
+		menuGrades("");
 		menuDiscipline();
 		menuHealth();
 	};

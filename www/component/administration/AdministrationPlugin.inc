@@ -48,7 +48,7 @@ class AdministrationDashboardPlugin implements AdministrationPlugin {
 	
 	public function getAdministrationPages() {
 		return array(
-			new AdministrationPage("Dashboard", "dynamic/administration/page/dashboard", theme::$icons_16["dashboard"])
+			new AdministrationPage("Dashboard", "/dynamic/administration/page/dashboard", theme::$icons_16["dashboard"])
 		);
 	}
 	

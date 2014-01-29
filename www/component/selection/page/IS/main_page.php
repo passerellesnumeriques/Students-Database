@@ -29,6 +29,10 @@ class page_IS_main_page extends selection_page {
 							location.assign("/dynamic/selection/page/IS/profile");
 						};
 						list.addHeader(new_IS);
+						list.makeRowsClickable(function(row){
+							var is_id = list.getTableKeyForRow('Information_session',row.row_id);
+							location.href = "/dynamic/selection/page/IS/profile?id="+is_id;
+						});
 					}
 				);
 			}

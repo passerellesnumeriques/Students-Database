@@ -132,6 +132,12 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		return null;
 	};
 	
+	t.makeRowsClickable = function(handler) {
+		t._row_onclick = handler;
+		for (var i = 0; i < t.grid.getNbRows(); ++i)
+			t._make_clickable(t.grid.getRow(i));
+	};
+	
 	/* Private properties */
 	t._root_table = root_table;
 	t._onready = onready;
@@ -142,6 +148,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	t._sort_order = 3;
 	t._filters = filters ? filters : [];
 	t._col_actions = null;
+	t._row_onclick = null;
 
 	/* Private methods */
 	
@@ -489,6 +496,8 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			// register data events
 			for (var i = 0; i < t.grid.table.childNodes.length; ++i) {
 				var row = t.grid.table.childNodes[i];
+				if (t._row_onclick)
+					t._make_clickable(row);
 				for (var j = 0; j < row.childNodes.length; ++j) {
 					var td = row.childNodes[j];
 					if (!td.field) continue;
@@ -847,5 +856,13 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			}
 			t.grid.endLoading();
 		});
+	};
+	t._make_clickable = function(row) {
+		row.onmouseover = function() { this.className = "selected"; };
+		row.onmouseout = function() { this.className = ""; };
+		row.style.cursor = 'pointer';
+		row.onclick = function() {
+			t._row_onclick(this);
+		};
 	};
 }
