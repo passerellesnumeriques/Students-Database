@@ -1,6 +1,13 @@
 if (typeof require != 'undefined')
 	require(["vertical_layout.js","horizontal_layout.js","grid.js","upload.js","context_menu.js",["typed_field.js","field_integer.js"]]);
 
+/**
+ * Custom import allows to import manually data from an Excel file.
+ * This can be used with import_data.inc, in PHP, which will prepare this import according to given parameters.
+ * @param container
+ * @param onready
+ * @returns
+ */
 function custom_import(container, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;

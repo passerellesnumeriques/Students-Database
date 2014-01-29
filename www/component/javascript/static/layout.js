@@ -138,10 +138,25 @@ function fireLayoutEventFor(element) {
 window.top.pause_layout = false;
 setInterval(function(){
 	if (window.top.pause_layout) return;
+	var done = [];
 	for (var i = 0; i < _layout_events.length; ++i) {
 		var e = _layout_events[i].element;
 		if (e.scrollHeight != e._layoutH || e.scrollWidth != e._layoutW)
 			fireLayoutEventFor(e);
+		done.push(e);
+	}
+	// process the containers, until body
+	for (var i = 0; i < _layout_events.length; ++i) {
+		var e = _layout_events[i].element;
+		e = e.parentNode;
+		while (e != null && e != document.body) {
+			if (!done.contains(e)) {
+				if (e.scrollHeight != e._layoutH || e.scrollWidth != e._layoutW)
+					fireLayoutEventFor(e);
+				done.push(e);
+			}
+			e = e.parentNode;
+		}
 	}
 },1000);
 

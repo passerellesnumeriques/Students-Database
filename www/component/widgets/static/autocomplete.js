@@ -81,7 +81,7 @@ function autocomplete_menu(ac, onselectitem) {
 	require("animation.js");
 	var t=this;
 	
-	this.div = document.createElement("DIV");
+	this.div = ac.input.ownerDocument.createElement("DIV");
 	this.div.style.position = "absolute";
 	this.div.className = "context_menu";
 	this.div.style.zIndex = 100;
@@ -89,7 +89,7 @@ function autocomplete_menu(ac, onselectitem) {
 	this.loading = function() {
 		this.highlighted = -1;
 		this.div.innerHTML = "";
-		var img = document.createElement("IMG");
+		var img = ac.input.ownerDocument.createElement("IMG");
 		img.onload = function() {
 			t.resize();
 		};
@@ -108,7 +108,7 @@ function autocomplete_menu(ac, onselectitem) {
 		this.div.innerHTML = "";
 		this.div.style.fontStyle = "";
 		for (var i = 0; i < items.length; ++i) {
-			var d = document.createElement("DIV");
+			var d = ac.input.ownerDocument.createElement("DIV");
 			if (typeof items[i].html == 'string')
 				d.innerHTML = items[i].html;
 			else
@@ -176,9 +176,9 @@ function autocomplete_menu(ac, onselectitem) {
 		if (w < iw) w = iw;
 		var x = absoluteLeft(ac.input);
 		var y = absoluteTop(ac.input);
-		if (y+ac.input.offsetHeight+h > getWindowHeight()) {
+		if (y+ac.input.offsetHeight+h > getWindowFromDocument(ac.input.ownerDocument).getWindowHeight()) {
 			// not enough space below
-			var space_below = getWindowHeight()-(y+ac.input.offsetHeight);
+			var space_below = getWindowFromDocument(ac.input.ownerDocument).getWindowHeight()-(y+ac.input.offsetHeight);
 			var space_above = y;
 			if (space_above > space_below) {
 				y = y-h;
@@ -198,15 +198,15 @@ function autocomplete_menu(ac, onselectitem) {
 			// by default, show it below
 			y = y+ac.input.offsetHeight;
 		}
-		if (x+w > getWindowWidth()) {
-			x = getWindowWidth()-w;
+		if (x+w > getWindowFromDocument(ac.input.ownerDocument).getWindowWidth()) {
+			x = getWindowFromDocument(ac.input.ownerDocument).getWindowWidth()-w;
 		}
-		y += document.body.scrollTop;
-		x += document.body.scrollLeft;
+		y += ac.input.ownerDocument.body.scrollTop;
+		x += ac.input.ownerDocument.body.scrollLeft;
 		this.div.style.top = y+"px";
 		this.div.style.left = x+"px";
-		if (this.div.parentNode != document.body)
-			document.body.appendChild(this.div);
+		if (this.div.parentNode != ac.input.ownerDocument.body)
+			ac.input.ownerDocument.body.appendChild(this.div);
 	};
 	this.item_selected = function(item) {
 		ac.input.value = item.text;

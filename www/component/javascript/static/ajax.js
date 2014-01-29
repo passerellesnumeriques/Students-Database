@@ -37,7 +37,11 @@ ajax = {
 		if (typeof url == 'string')
 			url = new URL(url);
 		url = ajax.process_url(url);
-		var xhr = new XMLHttpRequest();
+		var xhr;
+		try { xhr = new XMLHttpRequest(); }
+		catch (e) {
+			return;
+		}
 		var aborted = false;
 		var timeouted = false;
 		xhr.open(method, url.toString(), !foreground);

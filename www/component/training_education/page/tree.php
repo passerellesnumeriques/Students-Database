@@ -293,6 +293,7 @@ function Batch(current, alumni, id, name, start, end) {
 		span = document.createElement("SPAN");
 		title = document.createElement("SPAN");
 		title.style.fontWeight = "bold";
+		title.style.paddingLeft = "5px";
 		title.appendChild(document.createTextNode("Graduation"));
 		span.appendChild(title);
 		span.appendChild(document.createTextNode(": "));
@@ -377,6 +378,7 @@ function AcademicPeriod(batch, id, name, start, end) {
 		span = document.createElement("SPAN");
 		title = document.createElement("SPAN");
 		title.style.fontWeight = "bold";
+		title.style.paddingLeft = "5px";
 		title.appendChild(document.createTextNode("End"));
 		span.appendChild(title);
 		span.appendChild(document.createTextNode(": "));
@@ -633,6 +635,31 @@ var url = new URL(location.href);
 var component = url.params['section'];
 root.findTag(url.hash).select();
 document.getElementById('training_education_page').src = url.params['page'];
+
+// Put the search student control
+require("autocomplete.js",function() {
+	var container = document.createElement("DIV");
+	container.style.display = "inline-block";
+	var ac = new autocomplete(container, 3, 'Search a student', function(name, handler) {
+		service.json("students","search_student_by_name", {name:name}, function(res) {
+			if (!res) { handler([]); return; }
+			var items = [];
+			for (var i = 0; i < res.length; ++i) {
+				var item = new autocomplete_item(res[i].people_id, res[i].first_name+' '+res[i].last_name, res[i].first_name+' '+res[i].last_name+" (Batch "+res[i].batch_name+")");
+				items.push(item); 
+			}
+			handler(items);
+		});
+	}, function(item) {
+		document.getElementById('training_education_page').src = "/dynamic/people/page/profile?people="+item.value;
+	}, 250);
+	setBorderRadius(ac.input,8,8,8,8,8,8,8,8);
+	setBoxShadow(ac.input,-1,2,2,0,'#D8D8F0',true);
+	ac.input.style.background = "#ffffff url('"+theme.icons_16.search+"') no-repeat 3px 1px";
+	ac.input.style.padding = "2px 4px 2px 23px";
+	window.parent.addRightControl(container);
+});
+
 </script>
 <?php
 	}
