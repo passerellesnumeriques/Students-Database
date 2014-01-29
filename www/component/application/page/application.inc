@@ -46,9 +46,9 @@ if (PNApplication::$instance->current_domain == "Dev") {
 <div id='pn_application_container' style='width:100%;height:100%'>
 	<div id='pn_application_header' layout='35' style='border-bottom:1px solid #A0A0A0'>
 		<div id='pn_application_section_title'></div>
-		<div id='pn_application_left_controls' style='visibility:hidden'></div>
+		<div id='pn_application_left_controls' style='visibility:hidden;padding-right:3px'></div>
 		<div id='pn_application_menu' layout='fill'>
-			<div>More</div>
+			<div class='button'><img src='<?php echo theme::$icons_16["more_menu"];?>'/> More</div>
 		</div>
 		<div id='pn_application_right_controls' style='visibility:hidden'></div>
 		<div id='pn_application_right_menu' style='margin-right:3px'>

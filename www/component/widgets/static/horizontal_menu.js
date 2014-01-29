@@ -48,7 +48,7 @@ function horizontal_menu(menu, valign) {
 	
 	t.update = function() {
 		while (menu.childNodes.length > 0) menu.removeChild(menu.childNodes[0]);
-		var w = menu.offsetWidth;
+		var w = menu.clientWidth;
 		var h = menu.offsetHeight;
 		var total = 0;
 		for (var i = 0; i < t.items.length; ++i) {
