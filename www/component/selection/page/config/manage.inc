@@ -56,7 +56,7 @@ function manage_config(&$page,$container_id,$header_id){
 		var container = document.getElementById(<?php echo json_encode($container_id);?>);
 		
 		var campaigns = <?php require_once 'component/selection/SelectionJSON.inc';
-		echoSelectionJSON::Steps().";"; ?>
+		echo SelectionJSON::Steps().";"; ?>
 		
 		/* Create an object all_configs = [{name:, text:, default_value:, values:[], category:, dependencies:[{name:, value:},...]}] */
 		var all_configs = <?php
