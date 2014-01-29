@@ -75,6 +75,32 @@ var students_list = new data_list(
 				students_list.addHeader(create_student);
 			}
 		}
+		if (url.params['period'] || url.params['class']) {
+			var assign = document.createElement("DIV");
+			assign.className = "button";
+			assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+(url.params['class'] ? "class" : "classes");
+			assign.onclick = function() {
+				require("popup_window.js",function() {
+					var p = new popup_window("Assign Students", "/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
+					var f = p.setContentFrame("/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period']));
+					p.addOkCancelButtons(function() {
+						p.freeze("Saving class assignment...");
+						getIFrameWindow(f).save(function(msg){
+							p.set_freeze_content(msg);
+						},function(){
+							p.close();
+							students_list.reload_data();
+						});
+					});
+					p.show();
+				});
+			};
+			students_list.addHeader(assign);
+		}
+		// buttons that need additional info: dynamic
+		service.customOutput("training_education","list_buttons",url.params,function(js){
+			eval(js);
+		});
 	}
 );
 

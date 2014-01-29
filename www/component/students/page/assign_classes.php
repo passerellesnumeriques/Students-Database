@@ -133,7 +133,8 @@ class page_assign_classes extends Page {
 					e = document.getElementById("non_assigned_"+specializations[i].id);
 				else
 					e = document.getElementById("assigned_"+specializations[i].id+"_"+s.original_class);
-				e.appendChild(s.div);
+				if (e)
+					e.appendChild(s.div);
 			}
 		}
 		function assign(spe, cl) {

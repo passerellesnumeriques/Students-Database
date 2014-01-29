@@ -46,11 +46,11 @@ if (PNApplication::$instance->current_domain == "Dev") {
 <div id='pn_application_container' style='width:100%;height:100%'>
 	<div id='pn_application_header' layout='35' style='border-bottom:1px solid #A0A0A0'>
 		<div id='pn_application_section_title'></div>
-		<div id='pn_application_left_controls'></div>
+		<div id='pn_application_left_controls' style='visibility:hidden'></div>
 		<div id='pn_application_menu' layout='fill'>
 			<div>More</div>
 		</div>
-		<div id='pn_application_right_controls'></div>
+		<div id='pn_application_right_controls' style='visibility:hidden'></div>
 		<div id='pn_application_right_menu' style='margin-right:3px'>
 			<div id='user_menu' style='display:inline-block;' onclick='user_menu();'>
 				<img id='user_menu_picture' src='/dynamic/people/service/picture?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' style='width:30px;height:30px'/>
@@ -78,12 +78,12 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	<div class='context_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>'">
 		<img src='/static/people/profile_32.png' style='vertical-align:middle' title='Your Profile'/>
 	</div>
+	<div class='context_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/calendar/page/calendars'">
+		<img src='/static/calendar/calendar_32.png' style='vertical-align:middle' title='Your Calendars'/>
+	</div>
 	<div id='logout' class='context_menu_item' onclick="location.href='/dynamic/application/page/logout'">
 		<img src='/static/application/logout.png' style='vertical-align:middle' title='Exit'/>
 	</div>
-</div>
-<div id='show_the_menu_to_the_user' style='position:fixed;top:5px;left:500px'>
-	<img src='/static/theme/default/icons_16/left.png' style='vertical-align: bottom'/> Click here to access the menu
 </div>
 <style type='text/css'>
 .pn_application_menu_item {
@@ -138,13 +138,6 @@ function user_menu() {
 		}
 	});
 }
-require("animation.js",function() {
-	var e = document.getElementById('show_the_menu_to_the_user');
-	var end = sections_bar.childNodes[0].offsetWidth+10;
-	animation.create(e, 500, end, 2000, function(value) {
-		e.style.left = Math.floor(value)+'px';
-	});
-});
 
 var sections = [<?php
 $first = true;
@@ -170,6 +163,15 @@ function initLayout() {
 	setBackgroundGradient(header, "vertical", [{pos:50,color:'#e0e0e0'},{pos:80,color:'#d0d0d0'},{pos:100,color:'#b0b0b0'}]);
 	setBorderRadius(document.getElementById('user_menu_picture'), 5, 5, 5, 5, 5, 5, 5, 5);
 	setBorderRadius(document.getElementById('user_menu'), 5, 5, 5, 5, 5, 5, 5, 5);
+	var div = document.getElementById('pn_application_left_controls');
+	div.style.borderRight = "1px solid #C0C0C0";
+	setBorderRadius(div, 0, 0, 0, 0, 0, 0, 10, 10);
+	div = document.getElementById('pn_application_right_controls');
+	div.style.borderRight = "1px solid #C0C0C0";
+	setBorderRadius(div, 0, 0, 0, 0, 0, 0, 10, 10);
+	div = document.getElementById('pn_application_menu');
+	div.style.borderRight = "1px solid #C0C0C0";
+	setBorderRadius(div, 0, 0, 0, 0, 0, 0, 10, 10);
 }
 initLayout();
 var sections_bar = document.createElement("DIV");
@@ -210,7 +212,9 @@ for (var i = 0; i < sections.length; ++i) {
 }
 document.body.appendChild(sections_bar);
 
+var bar_expanded = false;
 function expandBar() {
+	bar_expanded = true;
 	var e = document.getElementById('show_the_menu_to_the_user');
 	if (e && e.parentNode) e.parentNode.removeChild(e);
 	require("animation.js",function() {
@@ -233,10 +237,13 @@ function expandBar() {
 		animation.fadeOut(document.getElementById('pn_application_right_controls'), 300);
 	});
 }
-function selectSection(index) {
+function selectSection(index, onlyCollapseBar) {
 	selected_section_index = index;
-	populateMenu();
-	document.getElementById('pn_application_content').src = sections[index].default_page;
+	bar_expanded = false;
+	if (!onlyCollapseBar) {
+		populateMenu();
+		document.getElementById('pn_application_content').src = sections[index].default_page;
+	}
 	if (typeof animation != 'undefined')
 		animation.create(sections_bar, 0, -sections_bar.childNodes[index].offsetLeft, 500, function(value, element) {
 			element.style.left = Math.floor(value)+'px';
@@ -254,15 +261,26 @@ function selectSection(index) {
 	document.getElementById('pn_application_section_title').setAttribute("layout", sections_bar.childNodes[index].offsetWidth+10);
 	fireLayoutEventFor(document.getElementById('pn_application_header'));
 	if (typeof animation != 'undefined') {
-		animation.fadeIn(document.getElementById('pn_application_left_controls'), 800);
+		var div = document.getElementById('pn_application_left_controls');
+		if (div.childNodes.length > 0) animation.fadeIn(div, 800);
 		animation.fadeIn(document.getElementById('pn_application_menu'), 800);
-		animation.fadeIn(document.getElementById('pn_application_right_controls'), 800);
+		var div = document.getElementById('pn_application_right_controls');
+		if (div.childNodes.length > 0) animation.fadeIn(div, 800);
 	}
 }
 sections_bar.onclick = expandBar;
 
+// when clicking outside of expanded bar, collapse it
+listenEvent(window, 'click', function(ev) {
+	if (!bar_expanded) return;
+	var e = getCompatibleMouseEvent(ev);
+	if (e.x > sections_bar.offsetWidth) selectSection(selected_section_index, true);
+});
+
 function populateMenu() {
-	section_menu.removeAll();
+	resetMenu();
+	resetLeftControls();
+	resetRightControls();
 	if (sections[selected_section_index].menu_provider == null) return;
 	service.customOutput("application", "application_menu_builder", {component:sections[selected_section_index].menu_provider},function(code){
 		if (code == null) {
@@ -276,12 +294,26 @@ function populateMenu() {
 selectSection(selected_section_index);
 
 require("animation.js");
+require("vertical_align.js",function() {
+	new vertical_align('pn_application_left_controls', 'middle');
+	new vertical_align('pn_application_right_controls', 'middle');
+});
 require("google_status.js",function() {
 	new google_status('google_status');
 });
 
 function resetMenu() {
 	section_menu.removeAll();
+}
+function resetLeftControls() {
+	var div = document.getElementById('pn_application_left_controls');
+	div.style.visibility = 'hidden';
+	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
+}
+function resetRightControls() {
+	var div = document.getElementById('pn_application_right_controls');
+	div.style.visibility = 'hidden';
+	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
 }
 function addMenuItem(icon, text, url) {
 	var item = document.createElement("A");
@@ -295,6 +327,29 @@ function addMenuItem(icon, text, url) {
 	item.href = url;
 	item.target = "pn_application_content";
 	section_menu.addItem(item);
+	item.onclick = function(ev) {
+		if (!this.target) return true;
+		var frame = findFrame(this.target);
+		if (!frame) {
+			// missing, reload the default page first
+			frame = document.getElementById('pn_application_content');
+			var target = this.target;
+			frame.onload = function() {
+				frame.onload = null;
+				var f = findFrame(target);
+				if (!f) {
+					// cannot find it..
+					frame.src = url;
+					return;
+				}
+				f.src = url;
+			};
+			frame.src = sections[selected_section_index].default_page;
+			stopEventPropagation(ev);
+			return false;
+		}
+		return true;
+	};
 	return item;
 }
 function addMenuControl(control) {
@@ -303,10 +358,19 @@ function addMenuControl(control) {
 }
 function addRightControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
-	document.getElementById('pn_application_reight_controls').appendChild(control);
+	var div = document.getElementById('pn_application_right_controls');
+	div.appendChild(control);
+	div.style.visibility = 'visible';
+	setOpacity(div, 100);
 }
 function addLeftControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
-	document.getElementById('pn_application_left_controls').appendChild(control);
+	var div = document.getElementById('pn_application_left_controls');
+	div.appendChild(control);
+	div.style.visibility = 'visible';
+	setOpacity(div, 100);
 }
+
+// at the beginning, show all sections to user
+setTimeout(expandBar, 2000);
 </script>

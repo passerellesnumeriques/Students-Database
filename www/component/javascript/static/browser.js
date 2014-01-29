@@ -660,3 +660,19 @@ function get_script_path(script_filename) {
 	}
 	return null;
 }
+
+function findFrame(name) {
+	return _findFrame(window.top, name);
+}
+function _findFrame(win, name) {
+	for (var i = 0; i < win.frames.length; ++i) {
+		var f = win.frames[i];
+		try {
+			if (f.frameElement && (f.frameElement.name == name || f.frameElement.id == name)) return f.frameElement;
+		} catch (e) {}
+		if (f == win) continue;
+		f = _findFrame(f, name);
+		if (f) return f;
+	}
+	return null;
+}
