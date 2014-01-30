@@ -852,6 +852,7 @@ function play_ui_test(component, scenario_index, ondone) {
 			return;			
 		}
 		// execute ui
+		remove_javascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(scenario.path));
 		add_javascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(scenario.path),function() {
 			var actions = window["Test_"+component.name+"_"+scenario.path](res_step.data);
 			browser_control.run(actions, function(action){

@@ -22,6 +22,10 @@ function calendar_view_day(view, container) {
 	this.events = [];
 	var t=this;
 	
+	/** Returns a text to describe the zoom value for this view
+	 * @param {Number} zoom current zoom value
+	 * @return {String} the text
+	 */
 	this.getZoomText = function(zoom) {
 		var d = new Date();
 		d.setHours(0, zoom, 0, 0);
@@ -32,6 +36,10 @@ function calendar_view_day(view, container) {
 			text += d.getMinutes()+"m";
 		return text;
 	};
+	/** Returns a text to describe the current position of the view
+	 * @param {Number} shorter indicates an index of how small we should try to make the text
+	 * @return {String} the text
+	 */
 	this.getPositionText = function(shorter) {
 		switch (shorter) {
 		case 0:
@@ -65,7 +73,7 @@ function calendar_view_day(view, container) {
 		view.loadEvents();
 	};
 	/** Goes 7 days back */
-	this.back_step = function() {
+	this.backStep = function() {
 		this.start_date = new Date(this.start_date.getTime()-7*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+1*24*60*60*1000-1);
 		view.cursor_date = this.start_date;
@@ -93,7 +101,7 @@ function calendar_view_day(view, container) {
 		view.loadEvents();
 	};
 	/** Goes 7 days forward */
-	this.forward_step = function() {
+	this.forwardStep = function() {
 		this.start_date = new Date(this.start_date.getTime()+7*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+1*24*60*60*1000-1);
 		view.cursor_date = this.start_date;
@@ -216,7 +224,9 @@ function calendar_view_day(view, container) {
 		this.time_title.style.height = y+"px";
 		this.day_content.style.height = y+"px";
 	};
+	/** {DOMNode} line which indicates the actual time */
 	this._now = null;
+	/** Displays/layout the line indicating the actual time */
 	this._showNow = function() {
 		var now = new Date();
 		if (t._now) { t._now.parentNode.removeChild(t._now); t._now = null; }

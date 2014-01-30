@@ -44,6 +44,9 @@ class AdministrationPage {
 	
 }
 
+/**
+ * Implementation of AdministrationPlugin to provide the Dashboard page
+ */
 class AdministrationDashboardPlugin implements AdministrationPlugin {
 	
 	public function getAdministrationPages() {

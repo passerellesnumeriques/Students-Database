@@ -23,6 +23,10 @@ function calendar_view_week(view, container) {
 	this.events = [[],[],[],[],[],[],[]];
 	var t=this;
 	
+	/** Returns a text to describe the zoom value for this view
+	 * @param {Number} zoom current zoom value
+	 * @return {String} the text
+	 */
 	this.getZoomText = function(zoom) {
 		var d = new Date();
 		d.setHours(0, zoom, 0, 0);
@@ -33,6 +37,10 @@ function calendar_view_week(view, container) {
 			text += d.getMinutes()+"m";
 		return text;
 	};
+	/** Returns a text to describe the current position of the view
+	 * @param {Number} shorter indicates an index of how small we should try to make the text
+	 * @return {String} the text
+	 */
 	this.getPositionText = function(shorter) {
 		switch (shorter) {
 		case 0: // normal
@@ -66,7 +74,7 @@ function calendar_view_week(view, container) {
 		view.loadEvents();
 	};
 	/** Goes one week before */
-	this.back_step = function() {
+	this.backStep = function() {
 		this.start_date = new Date(this.start_date.getTime()-7*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+7*24*60*60*1000-1);
 		view.cursor_date = this.start_date;
@@ -102,7 +110,7 @@ function calendar_view_week(view, container) {
 		view.loadEvents();
 	};
 	/** Goes one week after */
-	this.forward_step = function() {
+	this.forwardStep = function() {
 		this.start_date = new Date(this.start_date.getTime()+7*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+7*24*60*60*1000-1);
 		view.cursor_date = this.start_date;
@@ -268,7 +276,9 @@ function calendar_view_week(view, container) {
 		for (var i = 0; i < 7; ++i)
 			this.day_content[i].style.height = y+"px";
 	};
+	/** {DOMNode} line which indicates the actual time */
 	this._now = null;
+	/** Displays/layout the line indicating the actual time */
 	this._showNow = function() {
 		var now = new Date();
 		if (t._now) { t._now.parentNode.removeChild(t._now); t._now = null; }
@@ -339,6 +349,11 @@ function calendar_view_week(view, container) {
 				t._timeout = null;
 			},10);
 	};
+	/** Put the text in the title box of a day (the text will depend on the width available)
+	 * @param {DOMNode} box the title box
+	 * @param {Number} w the width of of box
+	 * @param {Date} date the day
+	 */
 	this._setDayTitle = function(box, w, date) {
 		var day = date.getDay()-1;
 		if (day == -1) day = 6;

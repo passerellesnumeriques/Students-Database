@@ -68,6 +68,18 @@ class widgets extends Component {
 		if ($col instanceof \datamodel\ColumnString) {
 			return array("filter_text", "null");
 		}
+		if ($col instanceof \datamodel\ColumnEnum) {
+			$cfg = "{possible_values:[";
+			$first = true;
+			foreach ($col->values as $v) {
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= json_encode($v);
+			}
+			$cfg .= "]";
+			$cfg .= ",can_be_empty:".($col->can_be_null ? "true" : "false");
+			$cfg .= "}";
+			return array("filter_enum", $cfg);
+		}
 		return array(null,"null");
 	}
 	

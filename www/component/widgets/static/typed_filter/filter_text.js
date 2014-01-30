@@ -11,6 +11,7 @@ function filter_text(data, config, editable) {
 	o = document.createElement("OPTION"); o.value = "starts"; o.text = "Starts with"; if (data.type == 'starts') o.selected = true; select.add(o);
 	o = document.createElement("OPTION"); o.value = "ends"; o.text = "Ends with"; if (data.type == 'ends') o.selected = true; select.add(o);
 	o = document.createElement("OPTION"); o.value = "exact"; o.text = "Exactly"; if (data.type == 'exact') o.selected = true; select.add(o);
+	input.type = 'text';
 	input.value = data.value;
 	if (!editable) {
 		select.disabled = 'disabled';

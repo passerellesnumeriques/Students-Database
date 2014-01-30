@@ -2,6 +2,7 @@
  * Manage the display of calendars from the given calendar manager. It instantiates the correct view (day, week, month...) for the display, and manage the switch between views.
  * @param {CalendarManager} calendar_manager the manager containing the list of calendars to display
  * @param {String} view_name name of the view to display first, or null for the default view (week)
+ * @param {Number} zoom the initial zoom value, or null to use a default value
  * @param {DOMNode} container HTML element, or it's id, where to display calendar
  * @param {Function} onready called when the display is ready
  */
@@ -105,9 +106,9 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			t.position_forward_step.onload = function() { t.updateHeader(); };
 			t.position_forward_step.src = "/static/calendar/forward_step.png";
 			t.position_back.onclick = function() { if (t.view) t.view.back(); t.updateHeader(); };
-			t.position_back_step.onclick = function() { if (t.view) t.view.back_step(); t.updateHeader(); };
+			t.position_back_step.onclick = function() { if (t.view) t.view.backStep(); t.updateHeader(); };
 			t.position_forward.onclick = function() { if (t.view) t.view.forward(); t.updateHeader(); };
-			t.position_forward_step.onclick = function() { if (t.view) t.view.forward_step(); t.updateHeader(); };
+			t.position_forward_step.onclick = function() { if (t.view) t.view.forwardStep(); t.updateHeader(); };
 			t.header.appendChild(t.position_div);
 			t.zoom_div = document.createElement("DIV");
 			t.zoom_div.style.display = "inline-block";
@@ -228,6 +229,9 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		});
 	};
 	
+	/** Set the zoom for the current view
+	 * @param {Number} zoom the new zoom value
+	 */
 	this.setZoom = function(zoom) {
 		this.zoom = zoom;
 		t.updateHeader();

@@ -13,6 +13,10 @@ function calendar_view_month(view, container) {
 	this.end_date.setMonth(this.end_date.getMonth()+1);
 	this.end_date.setDate(this.end_date.getDate()-1);
 
+	/** Returns a text to describe the current position of the view
+	 * @param {Number} shorter indicates an index of how small we should try to make the text
+	 * @return {String} the text
+	 */
 	this.getPositionText = function(shorter) {
 		switch (shorter) {
 		case 0: // normal

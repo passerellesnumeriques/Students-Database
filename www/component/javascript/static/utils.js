@@ -498,6 +498,11 @@ function lock_screen(onclick, content) {
 		set_lock_screen_content(div, content);
 	if (typeof animation != 'undefined')
 		div.anim = animation.fadeIn(div,200,null,10,100);
+	div.listener = function() {
+		div.style.width = getWindowWidth()+"px";
+		div.style.height = getWindowHeight()+"px";
+	};
+	listenEvent(window, 'resize', div.listener);
 	return document.body.appendChild(div);
 }
 function set_lock_screen_content(div, content) {
@@ -524,6 +529,7 @@ function set_lock_screen_content(div, content) {
 function unlock_screen(div) {
 	if (!div) div = document.getElementById('lock_screen');
 	if (!div) return;
+	unlistenEvent(window, 'resize', div.listener);
 	if (typeof animation != 'undefined') {
 		div.id = '';
 		if (div.anim) animation.stop(div.anim);

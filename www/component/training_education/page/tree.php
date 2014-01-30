@@ -439,7 +439,7 @@ function Specialization(period, id, name) {
 	this.children = new Array();
 	this.parent = period;
 	period.children.push(this);
-	this.tag = "specialization"+id;
+	this.tag = "period"+period.id+"_specialization"+id;
 	var span = document.createElement("SPAN");
 	span.appendChild(document.createTextNode("Sepcialization "));
 	var spe_name = document.createTextNode(name);

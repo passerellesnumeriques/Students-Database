@@ -83,6 +83,24 @@ abstract class DataDisplay {
 						$q->where($w);
 				}
 				break;
+			case "filter_enum":
+				foreach ($filters as $filter_list) {
+					$w = "";
+					foreach ($filter_list as $filter) {
+						if ($filter["value"] == "") continue;
+						if (strlen($w) > 0) $w .= " OR ";
+						$w .= "`".$table_alias."`.`".$col->name."`";
+						if ($filter["value"] == "NULL")
+							$w .= " IS NULL";
+						else if ($filter["value"] == "NOT_NULL")
+							$w .= " IS NOT NULL";
+						else
+							$w .= "='".\SQLQuery::escape($filter["value"])."'";
+					}
+					if (strlen($w) > 0)
+						$q->where($w);
+				}
+				break;
 		}
 	}
 	

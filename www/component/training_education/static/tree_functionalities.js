@@ -89,7 +89,7 @@ function new_academic_period(batch) {
 			table.save(function(id){
 				if (id) { 
 					popup.close(); 
-					new AcademicPeriod(batch, id, table.get_data("Period Name"), parseSQLDate(table.get_data("Period Start")), parseSQLDate(table.get_data("Period End")));
+					academic_period_added.fire({batch_id:batch.id, period_id: id, period_name: table.get_data("Period Name"), period_start: parseSQLDate(table.get_data("Period Start")), period_end: parseSQLDate(table.get_data("Period End"))});
 					return; 
 				}
 				popup.unfreeze();
@@ -105,7 +105,7 @@ function remove_period(period) {
 		service.json("data_model","remove_row",{table:"AcademicPeriod",row_key:period.id},function(res){
 			unlock_screen(lock);
 			if (!res) return;
-			period.remove();
+			academic_period_removed.fire(period.id);
 		});
 	});
 }
@@ -154,6 +154,7 @@ function new_specialization(period) {
 				if (period.parent.children[i].id == period.id) found = true;
 				continue;
 			}
+			// add the period in the possibilities
 			o = document.createElement("OPTION");
 			o.value = period.parent.children[i].id;
 			o.text = period.parent.children[i].name;
@@ -178,7 +179,7 @@ function new_specialization(period) {
 					}
 					var spe_found = false;
 					for (var j = 0; j < period.parent.children[i].children.length; ++j)
-						if (period.parent.children[i].children[j].id == spe.id) { spe_found = true; break; }
+						if (period.parent.children[i].children[j] instanceof Specialization && period.parent.children[i].children[j].id == spe.id) { spe_found = true; break; }
 					if (!spe_found)
 						periods.push(period.parent.children[i]);
 					if (period.parent.children[i].id == select_to_period.value) break;
@@ -187,7 +188,7 @@ function new_specialization(period) {
 					p.freeze("Add specialization "+spe.name+" to period "+periods[period_index].name+"...");
 					service.json("curriculum","add_period_specialization",{period:periods[period_index].id,specialization:spe.id},function(res){
 						if (!res) { p.unfreeze(); return; }
-						specialization_added_to_period(periods[period_index].id, spe.id);
+						specialization_added_to_period.fire({period_id:periods[period_index].id, specialization_id:spe.id});
 						p.unfreeze();
 						if (period_index == periods.length-1)
 							p.close();
@@ -212,8 +213,7 @@ function new_specialization(period) {
 					p.unfreeze();
 					if (!res || !res.key) return;
 					var spe = {id:res.key,name:input.value.trim()};
-					specializations.push(spe);
-					specialization_added(spe.id, spe.name);
+					specialization_added.fire(spe);
 					add_spe(spe);
 				});
 				return;
@@ -233,7 +233,7 @@ function remove_specialization(spe) {
 		service.json("curriculum","remove_specialization_from_period",{specialization:spe.id,period:spe.parent.id},function(res){
 			unlock_screen(lock);
 			if (!res) return;
-			spe.remove();
+			specialization_removed_from_period.fire({specialization_id:spe.id,period_id:spe.parent.id});
 		});
 	});
 }
@@ -367,10 +367,27 @@ function remove_class(cl) {
 	});
 }
 
-function specialization_added(id ,name) {
-	specializations.push({id:id,name:name});
-}
-function specialization_added_to_period(period_id, spe_id) {
+academic_period_added = new Custom_Event();
+academic_period_removed = new Custom_Event();
+specialization_added = new Custom_Event();
+specialization_removed = new Custom_Event();
+specialization_added_to_period = new Custom_Event();
+specialization_removed_from_period = new Custom_Event();
+
+academic_period_added.add_listener(function (add) {
+	var batch = root.findTag("batch"+add.batch_id);
+	new AcademicPeriod(batch, add.period_id, add.period_name, add.period_start, add.period_end);
+});
+academic_period_removed.add_listener(function (id) {
+	root.findTag("period"+id).remove();
+});
+
+specialization_added.add_listener(function(spe) {
+	specializations.push(spe);
+});
+specialization_added_to_period.add_listener(function (add) {
+	var period_id = add.period_id;
+	var spe_id = add.specialization_id;
 	var batches = [];
 	for (var i = 0; i < root.children[0].children.length; ++i)
 		for (var j = 0; j < root.children[0].children[i].children.length; ++j)
@@ -409,4 +426,7 @@ function specialization_added_to_period(period_id, spe_id) {
 	var s = new Specialization(period, spe_id, spe.name);
 	for (var i = 0; i < classes.length; ++i)
 		new Class(s, classes[i].id, classes[i].name);
-}
+});
+specialization_removed_from_period.add_listener(function (remove) {
+	root.findTag("period"+remove.period_id+"_specialization"+remove.specialization_id).remove();
+});

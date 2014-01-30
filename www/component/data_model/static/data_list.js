@@ -356,7 +356,25 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				t._sort_order = _sort_order;
 				t._load_data();
 			});
-		//col.addFiltering(); // TODO better + if paged need external filtering
+		if (f.filter_classname) {
+			var a = new GridColumnAction("/static/widgets/grid/filter.gif",function(ev,a,col){
+				require(["context_menu.js","typed_filter.js",f.filter_classname+'.js'], function() {
+					var menu = new context_menu();
+					var filter = null;
+					for (var i = 0; i < t._filters.length; ++i)
+						if (t._filters[i].category == f.category && t._filters[i].name == f.name) { filter = t._filters[i]; break; }
+					if (filter == null) {
+						filter = {category: f.category, name: f.name, data:null};
+						t._filters.push(filter);
+					}
+					var table = document.createElement("TABLE");
+					menu.addItem(table, true);
+					t._createFilter(filter, table);
+					menu.showBelowElement(a.element);
+				});
+			});
+			col.addAction(a);
+		}
 		col.onchanged = function(field, data) {
 			t._cell_changed(field);
 		};
@@ -592,6 +610,63 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			menu.showBelowElement(button);
 		});
 	};
+	t._createFilter = function(filter, table) {
+		var tr = document.createElement("TR"); table.appendChild(tr);
+		var td;
+		tr.appendChild(td = document.createElement("TD"));
+		td.style.borderBottom = "1px solid #808080";
+		if (t._filters.indexOf(filter) > 0) td.innerHTML = "And";
+		tr.appendChild(td = document.createElement("TD"));
+		td.style.borderBottom = "1px solid #808080";
+		td.style.whiteSpace = 'nowrap';
+		td.appendChild(document.createTextNode(filter.category+": "+filter.name));
+		tr.appendChild(td = document.createElement("TD"));
+		td.style.borderBottom = "1px solid #808080";
+		td.style.whiteSpace = 'nowrap';
+		var dd = null;
+		for (var j = 0; j < t._available_fields.length; ++j)
+			if (t._available_fields[j].category == filter.category && t._available_fields[j].name == filter.name) {
+				dd = t._available_fields[j];
+				break;
+			}
+		if (dd == null) {
+			td.innerHTML = "Unknown data";
+		} else {
+			if (dd.filter_classname == null) {
+				td.innerHTML = "No filter available";
+			} else {
+				var f = new window[dd.filter_classname](filter.data, dd.filter_config, !filter.force);
+				td.appendChild(f.getHTMLElement());
+				f.onchange.add_listener(function (f) {
+					filter.data = f.getCurrentData();
+					t._load_data();
+				});
+				// TODO button or
+			}
+		}
+		while (filter.or) {
+			tr = document.createElement("TR"); table.appendChild(tr);
+			tr.appendChild(td = document.createElement("TD"));
+			td.style.borderBottom = "1px solid #808080";
+			tr.appendChild(td = document.createElement("TD"));
+			td.style.borderBottom = "1px solid #808080";
+			td.style.textAlign = "right";
+			td.style.whiteSpace = 'nowrap';
+			td.appendChild(document.createTextNode("Or"));
+			tr.appendChild(td = document.createElement("TD"));
+			td.style.whiteSpace = 'nowrap';
+			td.style.borderBottom = "1px solid #808080";
+			var f = new window[dd.filter_classname](filter.or.data, dd.filter_config);
+			td.appendChild(f.getHTMLElement());
+			f.filter_or = filter.or;
+			f.onchange.add_listener(function (f) {
+				f.filter_or.data = f.getCurrentData();
+				t._load_data();
+			});
+			// TODO button or
+			filter = filter.or;
+		}
+	},
 	t._filters_dialog = function(button) {
 		require("context_menu.js");
 		require("typed_filter.js");
@@ -611,66 +686,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			if (dd != null && dd.filter_classname != null)
 				filter_classes.push(dd.filter_classname+".js");
 		}
-		var create_filter = function(filter) {
-			var tr = document.createElement("TR"); table.appendChild(tr);
-			var td;
-			tr.appendChild(td = document.createElement("TD"));
-			td.style.borderBottom = "1px solid #808080";
-			if (t._filters.indexOf(filter) > 0) td.innerHTML = "And";
-			tr.appendChild(td = document.createElement("TD"));
-			td.style.borderBottom = "1px solid #808080";
-			td.style.whiteSpace = 'nowrap';
-			td.appendChild(document.createTextNode(filter.category+": "+filter.name));
-			tr.appendChild(td = document.createElement("TD"));
-			td.style.borderBottom = "1px solid #808080";
-			td.style.whiteSpace = 'nowrap';
-			var dd = null;
-			for (var j = 0; j < t._available_fields.length; ++j)
-				if (t._available_fields[j].category == filter.category && t._available_fields[j].name == filter.name) {
-					dd = t._available_fields[j];
-					break;
-				}
-			if (dd == null) {
-				td.innerHTML = "Unknown data";
-			} else {
-				if (dd.filter_classname == null) {
-					td.innerHTML = "No filter available";
-				} else {
-					var f = new window[dd.filter_classname](filter.data, dd.filter_config, !filter.force);
-					td.appendChild(f.getHTMLElement());
-					f.onchange.add_listener(function (f) {
-						filter.data = f.getCurrentData();
-						t._load_data();
-					});
-					// TODO button or
-				}
-			}
-			while (filter.or) {
-				tr = document.createElement("TR"); table.appendChild(tr);
-				tr.appendChild(td = document.createElement("TD"));
-				td.style.borderBottom = "1px solid #808080";
-				tr.appendChild(td = document.createElement("TD"));
-				td.style.borderBottom = "1px solid #808080";
-				td.style.textAlign = "right";
-				td.style.whiteSpace = 'nowrap';
-				td.appendChild(document.createTextNode("Or"));
-				tr.appendChild(td = document.createElement("TD"));
-				td.style.whiteSpace = 'nowrap';
-				td.style.borderBottom = "1px solid #808080";
-				var f = new window[dd.filter_classname](filter.or.data, dd.filter_config);
-				td.appendChild(f.getHTMLElement());
-				f.filter_or = filter.or;
-				f.onchange.add_listener(function (f) {
-					f.filter_or.data = f.getCurrentData();
-					t._load_data();
-				});
-				// TODO button or
-				filter = filter.or;
-			}
-		};
 		require([["typed_filter.js",filter_classes]], function() {
 			for (var i = 0; i < t._filters.length; ++i)
-				create_filter(t._filters[i]);
+				t._createFilter(t._filters[i], table);
 		});
 		var add = document.createElement("DIV");
 		add.style.whiteSpace = 'nowrap';
@@ -713,7 +731,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 						var filter = {category: t._available_fields[i].category, name: t._available_fields[i].name, data:null};
 						t._filters.push(filter);
 						require([["typed_filter.js",t._available_fields[i].filter_classname+".js"]], function() {
-							create_filter(filter);
+							t._createFilter(filter, table);
 							menu.resize();
 							t._load_data();
 						});

@@ -37,7 +37,9 @@ function CalendarEvent(id, calendar_id, uid, start, end, all_day, last_modified,
 	this.id = id;
 	this.calendar_id = calendar_id;
 	this.uid = uid;
+	/** {Date} start timestamp in seconds of the start of the event */
 	this.start = typeof start == 'number' ? new Date(start*1000) : typeof start == 'string' ? new Date(parseInt(start)*1000) : start;
+	/** {Date} end timestamp in seconds of the end of the event */
 	this.end = typeof end == 'number' ? new Date(end*1000) : typeof end == 'string' ? new Date(parseInt(end)*1000) : end;
 	this.all_day = all_day;
 	this.last_modified = last_modified;

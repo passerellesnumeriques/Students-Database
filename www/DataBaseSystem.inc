@@ -33,7 +33,7 @@ abstract class DataBaseSystem {
 	}
 	
 	public function log($query, $error_number, $error_message, $time) {
-		if (!PNApplication::$instance->current_domain == "Dev") return;
+		if (PNApplication::$instance->current_domain <> "Dev") return;
 		if (count(PNApplication::$instance->development->current_request()->sql_queries) == 200)
 			array_push(PNApplication::$instance->development->current_request()->sql_queries, array("TOO MUCH SQL QUERIES",0,null,0));
 		else if (count(PNApplication::$instance->development->current_request()->sql_queries) < 200)
