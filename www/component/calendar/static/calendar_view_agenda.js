@@ -11,6 +11,10 @@ function calendar_view_agenda(view, container) {
 	/** List of rows of the agenda */
 	this._rows = [];
 	
+	/** Returns a text to describe the current position of the view
+	 * @param {Number} shorter indicates an index of how small we should try to make the text
+	 * @return {String} the text
+	 */
 	this.getPositionText = function(shorter) {
 		switch (shorter) {
 		case 0: // normal
@@ -34,7 +38,7 @@ function calendar_view_agenda(view, container) {
 		view.loadEvents();
 	};
 	/** Goes 30 days before */
-	this.back_step = function() {
+	this.backStep = function() {
 		this.start_date = new Date(this.start_date.getTime()-30*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
 		view.cursor_date = this.start_date;
@@ -50,7 +54,7 @@ function calendar_view_agenda(view, container) {
 		view.loadEvents();
 	};
 	/** Goes 30 days after */
-	this.forward_step = function() {
+	this.forwardStep = function() {
 		this.start_date = new Date(this.start_date.getTime()+30*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
 		view.cursor_date = this.start_date;

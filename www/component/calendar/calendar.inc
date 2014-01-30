@@ -50,6 +50,9 @@ class calendar extends Component {
 	/**
 	 * Create a calendar, owned by the given user
 	 * @param number $user_id user id
+	 * @param string $name name of the calendar
+	 * @param string $color default color of the calendar or null
+	 * @param string $icon icon's URL of the calendar or null
 	 * @return number the calendar id
 	 */
 	public function createUserCalendar($user_id, $name, $color = null, $icon = null) {

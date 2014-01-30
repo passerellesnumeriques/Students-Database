@@ -1,11 +1,17 @@
 <?php 
 require_once("component/news/NewsPlugin.inc");
+/**
+ * Implementation of NewsPlugin, to provide General section of updates.
+ */
 class GeneralNewsPlugin implements NewsPlugin {
 	
 	public function getSections() { return array(new ApplicationSection()); }
 	
 }
 
+/**
+ * General section of updates
+ */
 class ApplicationSection implements NewsSection {
 
 	public function getName() { return "application"; }

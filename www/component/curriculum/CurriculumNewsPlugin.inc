@@ -1,5 +1,8 @@
 <?php 
 require_once("component/news/NewsPlugin.inc");
+/**
+ * Implementation of NewsPlugin for the curriculum
+ */
 class CurriculumNewsPlugin implements NewsPlugin {
 	
 	public function getSections() {
@@ -8,6 +11,7 @@ class CurriculumNewsPlugin implements NewsPlugin {
 	
 }
 
+/** Education section of updates, for the curriculum */
 class CurriculumEducationNewsSection implements NewsSection {
 	
 	public function getName() { return "education"; }
@@ -25,6 +29,7 @@ class CurriculumEducationNewsSection implements NewsSection {
 	
 }
 
+/** Category for curriculum updates */
 class CurriculumNewsCategory implements NewsCategory {
 
 	public function getName() { return "curriculum"; }
@@ -35,6 +40,7 @@ class CurriculumNewsCategory implements NewsCategory {
 	}
 	
 }
+/** Category for batches updates */
 class BatchNewsCategory implements NewsCategory {
 
 	public function getName() { return "batch"; }

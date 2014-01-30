@@ -16,7 +16,9 @@ function CalendarManager() {
 	/** listener called when an event is updated in any calendar. The event is given as parameter. */
 	this.on_event_updated = null;
 	
+	/** Event when a calendar is going to be refreshed */
 	this.on_refresh = new Custom_Event();
+	/** Event when a calendar just finished to be refreshed */
 	this.on_refresh_done = new Custom_Event();
 
 	/**
@@ -85,6 +87,11 @@ function CalendarManager() {
 			this.refreshCalendar(cal);
 	};
 	
+	/**
+	 * Set the color of a calendar: save the color, remove all events from view, add back all events (so the events in the view will be in the new color)
+	 * @param {Calendar} cal the calendar
+	 * @param {String} color the new color
+	 */
 	this.setCalendarColor = function(cal, color) {
 		if (cal.color == color) return;
 		cal.color = color;
@@ -124,25 +131,67 @@ function CalendarManager() {
 	};
 }
 
+/**
+ * Abstract class of a calendars provider
+ */
 function CalendarsProvider() {
 }
 CalendarsProvider.prototype = {
+	/**
+	 * Retrieve the list of calendars for the current user
+	 * @param {Function} handler called with the list of Calendar
+	 * @param {Function} feedback_handler called with a message as parameter, at each step, in order to provide a feedback to the user while retrieving the list of calendars
+	 */
 	getCalendars: function(handler, feedback_handler) {
 		
 	},
+	/**
+	 * Icon (16x16) of the provider
+	 * @returns {String} the url of the icon
+	 */
 	getProviderIcon: function() {
 		
 	},
+	/**
+	 * Name of the provider
+	 * @returns {String} name of the provider
+	 */
 	getProviderName: function() {
 		
 	},
+	/**
+	 * Indicates if the provider supports the creation of calendars
+	 * @returns {Boolean} true if the user can create calendars using this provider
+	 */
 	canCreateCalendar: function () { return false; },
+	/**
+	 * Indicates if the provider supports specifying a color when creating a calendar
+	 * @returns {Boolean} true if the functionality is supported
+	 */
 	canCreateCalendarWithColor: function() { return false; },
+	/**
+	 * Indicates if the provider supports specifying an icon when creating a calendar
+	 * @returns {Boolean} true if the functionality is supported
+	 */
 	canCreateCalendarWithIcon: function() { return false; },
+	/**
+	 * Create a calendar
+	 * @param {String} name name of the calendar to create
+	 * @param {String} color color of the calendar to create, or null
+	 * @param {String} icon icon of the calendar to create, or null
+	 * @param {Function} oncreate called with the calendar's id when the creation succeed
+	 */
 	createCalendar: function(name, color, icon, oncreate) {}
 };
 if (!window.top.CalendarsProviders) {
+	/**
+	 * Handle the list of existing providers of calendars (PN, Google...)
+	 */
 	window.top.CalendarsProviders = {
+		/**
+		 * Add a calendar provider 
+		 * @param {CalendarsProvider} provider the new calendar provider
+		 */
 		add: function(provider) {
 			for (var i = 0; i < this._providers.length; ++i)
 				if (this._providers[i].getProviderName() == provider.getProviderName())
@@ -151,8 +200,13 @@ if (!window.top.CalendarsProviders) {
 			for (var i = 0; i < this._handlers.length; ++i)
 				this._handlers[i](provider);
 		},
+		/** List of providers */
 		_providers: [],
+		/** List of handlers to call when a new provider is available */
 		_handlers: [],
+		/** Gives a function to be called for each available provider first, then each time a new provider becomes available
+		 * @param {Function} handler_for_each_provider function which will be called, with a CalendarProvider as parameter
+		 */
 		get: function(handler_for_each_provider) {
 			for (var i = 0; i < this._providers.length; ++i)
 				handler_for_each_provider(this._providers[i]);
@@ -163,6 +217,7 @@ if (!window.top.CalendarsProviders) {
 
 /**
  * Abstract class of a calendar.
+ * @param {CalendarProvider} CalendarProvider providing this calendar
  * @param {String} name name of the calendar
  * @param {String} color hexadecimal RGB color or null for a default one. ex: C0C0FF
  * @param {Boolean} show indicates if the events of the calendar should be displayed or not
@@ -197,8 +252,15 @@ function Calendar(provider, name, color, show, icon) {
 	};
 	/** {Function} function called to save an event. If it is not defined, it means the calendar is read only. This function takes the event to save as parameter. */
 	this.saveEvent = null; // must be overriden if the calendar supports modifications
+	/** Save the visibility of the calendar (if supported by the provider)
+	 * @param {Boolean} show visibility: true to be visible, false to be hidden
+	 */
 	this.saveShow = function(show) {}; // to be overriden if supported
+	/** Save the color of the calendar (if supported by the provider)
+	 * @param {String} color the color to save
+	 */
 	this.saveColor = function(color) {}; // to be overriden if supported
+	/** {Function} function to rename the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.rename = null; // must be overriden if this is supported
 	var t=this;
 	var ref = function(){
@@ -208,8 +270,14 @@ function Calendar(provider, name, color, show, icon) {
 	setTimeout(ref,5*60*1000);
 }
 
+/**
+ * UI Control for a calendar: controls its color, visibility, name...
+ * @param {DOMNode} container where to put it
+ * @param {Calendar} cal the calendar to control
+ */
 function CalendarControl(container, cal) {
 	var t=this;
+	/** Creates the control */
 	this._init = function() {
 		this.div = document.createElement("DIV"); container.appendChild(this.div);
 		this.box = document.createElement("DIV"); this.div.appendChild(this.box);
@@ -308,6 +376,7 @@ function CalendarControl(container, cal) {
 
 /**
  * Implementation of Calendar, for an internal calendar (stored in database)
+ * @param {PNCalendarsProvider} provider the provider
  * @param {Number} id the calendar id
  * @param {String} name the name of the calendar
  * @param {String} color the color
@@ -388,6 +457,7 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 PNCalendar.prototype = new Calendar();
 PNCalendar.prototype.constructor = PNCalendar;
 
+/** Implementation of CalendarsProvider for internal(PN) calendar (stored in the database) */
 function PNCalendarsProvider() {
 	var t=this;
 	this.getCalendars = function(handler, feedback_handler) {

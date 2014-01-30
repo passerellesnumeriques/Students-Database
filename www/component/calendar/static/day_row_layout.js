@@ -1,5 +1,6 @@
 /**
  * Handle the display and layout of <i>all day</i> events: one box per day, containing boxes for each event
+ * @param {CalendarManager} calendar_manager calendar manager
  */
 function day_row_layout(calendar_manager) {
 	/** List of events */

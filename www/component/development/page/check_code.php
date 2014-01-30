@@ -88,7 +88,7 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 		if (elem instanceof JSDoc_Namespace) {
 			if (elem.location.file == location) {
 				// check name
-				check_name_small_underscore(name, "Namespace "+ns_path+name, item);
+				//check_name_small_underscore(name, "Namespace "+ns_path+name, item);
 				// check doc
 				if (elem.doc.length == 0 && name != "window_top") add_error(item, "Namespace "+ns_path+name+": no comment", elem.location);
 			}
