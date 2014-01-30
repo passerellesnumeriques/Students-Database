@@ -4,7 +4,7 @@ function custom_data_list(&$page, $root_table, $sub_model, $available_fields, $f
 	// init query with root table
 	$q = SQLQuery::create();
 	$t = DataModel::get()->getTable($root_table);
-	$alias = $q->table_id();
+	$alias = $q->generateTableAlias();
 	$table_name = $t->getSQLName(null);
 	$q->select(array($table_name=>$alias));
 	

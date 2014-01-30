@@ -7,12 +7,12 @@ class service_get_debug_info extends Service {
 	public function output_documentation() {}
 	
 	public function execute(&$component, $input) {
-		$locks = SQLQuery::get_db_system_without_security()->execute("SELECT * FROM datalocks WHERE locker_domain='".PNApplication::$instance->user_management->domain."' AND locker_username='".PNApplication::$instance->user_management->username."'");
+		$locks = SQLQuery::getDataBaseAccessWithoutSecurity()->execute("SELECT * FROM datalocks WHERE locker_domain='".PNApplication::$instance->user_management->domain."' AND locker_username='".PNApplication::$instance->user_management->username."'");
 		echo "{";
 		echo "requests:".json_encode($component->requests);
 		echo ",locks:[";
 		$first = true;
-		while (($lock = SQLQuery::get_db_system_without_security()->next_row($locks)) <> false) {
+		while (($lock = SQLQuery::getDataBaseAccessWithoutSecurity()->nextRow($locks)) <> false) {
 			if ($first) $first = false; else echo ",";
 			echo "{";
 			echo "id:".$lock["id"];

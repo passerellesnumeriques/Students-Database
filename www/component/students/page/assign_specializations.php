@@ -5,10 +5,10 @@ class page_assign_specializations extends Page {
 	
 	public function execute() {
 		$batch_id = $_GET["batch"];
-		$batch_name = SQLQuery::create()->select("StudentBatch")->field("name")->where_value("StudentBatch", "id", $batch_id)->execute_single_value();
+		$batch_name = SQLQuery::create()->select("StudentBatch")->field("name")->whereValue("StudentBatch", "id", $batch_id)->executeSingleValue();
 		$students = SQLQuery::create()
 			->select("Student")
-			->where_value("Student", "batch", $batch_id)
+			->whereValue("Student", "batch", $batch_id)
 			->join("Student", "People", array("people"=>"id"))
 			->field("People", "id", "people")
 			->field("People", "first_name", "first_name")
@@ -18,11 +18,11 @@ class page_assign_specializations extends Page {
 		$specializations = SQLQuery::create()
 			->select("AcademicPeriodSpecialization")
 			->join("AcademicPeriodSpecialization", "AcademicPeriod", array("period"=>"id"))
-			->where_value("AcademicPeriod", "batch", $batch_id)
+			->whereValue("AcademicPeriod", "batch", $batch_id)
 			->field("AcademicPeriodSpecialization", "specialization", "BATCH_SPE_ID")
 			->join("AcademicPeriodSpecialization", "Specialization", array("specialization"=>"id"))
 			->field("Specialization", "name", "BATCH_SPE_NAME")
-			->group_by("Specialization", "id")
+			->groupBy("Specialization", "id")
 			->execute();
 		?>
 		<table class='all_borders' style='white-space:nowrap'>
@@ -72,9 +72,9 @@ class page_assign_specializations extends Page {
 			else {
 				$classes = SQLQuery::create()
 					->select("StudentClass")
-					->where_value("StudentClass", "people", $student["people"])
+					->whereValue("StudentClass", "people", $student["people"])
 					->join("StudentClass", "AcademicClass", array("class"=>"id"))
-					->where_value("AcademicClass", "specialization", $student["specialization"])
+					->whereValue("AcademicClass", "specialization", $student["specialization"])
 					->execute();
 				if (count($classes) == 0)
 					echo "true";

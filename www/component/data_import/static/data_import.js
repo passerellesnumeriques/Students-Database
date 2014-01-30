@@ -169,7 +169,7 @@ function data_import(container, root_table, preset_data, title) {
 							td.style.whiteSpace = 'nowrap';
 							td.appendChild(document.createTextNode(fields[j].data.name));
 							fields[j].typed_field = new window[fields[j].data.field_classname](fields[j].data.new_data,true,fields[j].data.field_config);
-							if (fields[j].path.is_mandatory() && !fields[j].typed_field.canBeNull()) {
+							if (fields[j].path.isMandatory() && !fields[j].typed_field.canBeNull()) {
 								var span = document.createElement("SUP");
 								span.style.color = 'red';
 								span.innerHTML = "*";
@@ -253,7 +253,8 @@ function data_import(container, root_table, preset_data, title) {
 						var columns = [];
 						for (var i = 0; i < nb_rows; ++i) data.push([]);
 						for (var i = 0; i < fields.length; ++i) {
-							if (fields[i].select.value == 'na' || (fields[i].select.value == 'set' && fields[i].typed_field.getCurrentData() == null)) {								if (fields[i].p.is_mandatory()) {
+							if (fields[i].select.value == 'na' || (fields[i].select.value == 'set' && fields[i].typed_field.getCurrentData() == null)) {
+								if (fields[i].p.isMandatory()) {
 									alert(fields[i].name+" is mandatory.");
 									return false;
 								}
@@ -269,7 +270,7 @@ function data_import(container, root_table, preset_data, title) {
 								for (var row = 0; row < nb_rows; ++ row) {
 									var excel_row = row+layer.row_start;
 									if (excel_row > layer.row_end) {
-										if (fields[i].p.is_mandatory()) {
+										if (fields[i].p.isMandatory()) {
 											alert(fields[i].name+" is mandatory, but some values are missing.");
 											return false;
 										}

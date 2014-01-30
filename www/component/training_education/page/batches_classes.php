@@ -49,7 +49,7 @@ class page_batches_classes extends Page {
 		
 		var manage_batches = <?php echo PNApplication::$instance->user_management->has_right("manage_batches") ? "true" : "false"; ?>;
 		var batches = [<?php
-		$batches = SQLQuery::create()->select("StudentBatch")->order_by("StudentBatch","start_date", false)->execute();
+		$batches = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch","start_date", false)->execute();
 		$first_batch = true;
 		foreach ($batches as $batch) {
 			if ($first_batch) $first_batch = false; else echo ",";
@@ -59,7 +59,7 @@ class page_batches_classes extends Page {
 			echo ",start_date:".json_encode($batch["start_date"]);
 			echo ",end_date:".json_encode($batch["end_date"]);
 			echo ",periods:[";
-			$periods = SQLQuery::create()->select("AcademicPeriod")->where_value("AcademicPeriod", "batch", $batch["id"])->order_by("AcademicPeriod", "start_date", true)->execute();
+			$periods = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod", "batch", $batch["id"])->orderBy("AcademicPeriod", "start_date", true)->execute();
 			$first_period = true;
 			foreach ($periods as $period) {
 				if ($first_period) $first_period = false; else echo ",";
@@ -69,7 +69,7 @@ class page_batches_classes extends Page {
 				echo ",start_date:".json_encode($period["start_date"]);
 				echo ",end_date:".json_encode($period["end_date"]);
 				echo ",specializations:[";
-				$spe = SQLQuery::create()->select("AcademicPeriodSpecialization")->where_value("AcademicPeriodSpecialization","period",$period["id"])->join("AcademicPeriodSpecialization","Specialization",array("specialization"=>"id"))->execute();
+				$spe = SQLQuery::create()->select("AcademicPeriodSpecialization")->whereValue("AcademicPeriodSpecialization","period",$period["id"])->join("AcademicPeriodSpecialization","Specialization",array("specialization"=>"id"))->execute();
 				$first_spe = true;
 				foreach ($spe as $s) {
 					if ($first_spe) $first_spe = false; else echo ",";
@@ -77,7 +77,7 @@ class page_batches_classes extends Page {
 					echo "id:".$s["id"];
 					echo ",name:".json_encode($s["name"]);
 					echo ",classes:[";
-					$classes = SQLQuery::create()->select("AcademicClass")->where_value("AcademicClass", "period", $period["id"])->where_value("AcademicClass", "specialization", $s["id"])->execute();
+					$classes = SQLQuery::create()->select("AcademicClass")->whereValue("AcademicClass", "period", $period["id"])->whereValue("AcademicClass", "specialization", $s["id"])->execute();
 					$first_class = true;
 					foreach ($classes as $class) {
 						if ($first_class) $first_class = false; else echo ",";
@@ -92,7 +92,7 @@ class page_batches_classes extends Page {
 				echo "]";
 				if (count($spe) == 0) {
 					echo ",classes:[";
-					$classes = SQLQuery::create()->select("AcademicClass")->where_value("AcademicClass", "period", $period["id"])->where_null("AcademicClass", "specialization")->execute();
+					$classes = SQLQuery::create()->select("AcademicClass")->whereValue("AcademicClass", "period", $period["id"])->whereNull("AcademicClass", "specialization")->execute();
 					$first_class = true;
 					foreach ($classes as $class) {
 						if ($first_class) $first_class = false; else echo ",";
@@ -145,7 +145,7 @@ class page_batches_classes extends Page {
 			var node = document.createTextNode(text);
 			span.appendChild(node);
 			if (cell) {
-				window.top.datamodel.add_cell_change_listener(window, cell.table, cell.column, cell.row_key, function(value) {
+				window.top.datamodel.addCellChangeListener(window, cell.table, cell.column, cell.row_key, function(value) {
 					node.nodeValue = value;
 				});
 			}

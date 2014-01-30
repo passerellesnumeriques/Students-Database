@@ -224,27 +224,27 @@ class SubDataModel extends DataModel {
 	public function getParentTable() { return $this->parent_table; }
 	
 	public function create_tables($key) {
-		if (SQLQuery::transaction_started()) {
+		if (SQLQuery::isTransactionStarted()) {
 			PNApplication::error("You cannot insert in a table which is the key for a SubDataModel, if you are in a transaction: ".$this->getParentTable());
 			return;
 		}
 		require_once("DataBaseModel.inc");
 		foreach ($this->tables as $t)
-			DataBaseModel::create_table(SQLQuery::get_db_system_without_security(), $t, "_".$key);
+			DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
 	}
 	
 	public function remove_tables($key) {
-		if (SQLQuery::transaction_started()) {
+		if (SQLQuery::isTransactionStarted()) {
 			PNApplication::error("You cannot delete an entry from a table which is the key for a SubDataModel, if you are in a transaction: ".$this->getParentTable());
 			return;
 		}
 		foreach ($this->tables as $t)
-			SQLQuery::get_db_system_without_security()->execute("DROP TABLE `".$t->getName()."_".$key."`");
+			SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DROP TABLE `".$t->getName()."_".$key."`");
 	}
 	
 	public function getExistingInstances() {
 		$t = $this->parent_model->internalGetTable($this->parent_table);
-		return SQLQuery::create()->bypass_security()->select($this->parent_table)->field($this->parent_table, $t->getPrimaryKey()->name)->execute_single_field();
+		return SQLQuery::create()->bypassSecurity()->select($this->parent_table)->field($this->parent_table, $t->getPrimaryKey()->name)->executeSingleField();
 	}
 	
 }

@@ -50,7 +50,7 @@ class service_test_data extends Service {
 				$model = DataModel::get();
 				foreach ($model->internalGetTables() as $t) {
 					if ($t->getModel() instanceof SubDataModel) continue;
-					$rows = SQLQuery::create()->bypass_security()->select($t->getName())->execute();
+					$rows = SQLQuery::create()->bypassSecurity()->select($t->getName())->execute();
 					foreach ($rows as $row)
 						$t->fireInsert($row, @$row[$t->getPrimaryKey()->name], null);
 				}

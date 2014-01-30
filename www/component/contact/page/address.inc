@@ -7,7 +7,7 @@
 	}	if($type == "organization"){		$table_address = "Organization_address";		$join_address_column = "organization";	}	$q_addresses = SQLQuery::create()->select($table_address)
 		->join($table_address,"Postal_address",array("address"=>"id"))		->where($table_address.".".$join_address_column." = '".SQLQuery::escape($join_value)."'");	require_once("component/contact/ContactJSON.inc");	ContactJSON::PostalAddressSQL($q_addresses);	$addresses = $q_addresses->execute();		$s = "[";	$first = true;	foreach($addresses as $address){		if($first) $first = false; else $s .= ", ";		$s .= ContactJSON::PostalAddress($q_addresses, $address);	}	$s .= "]";	return $s;}/** * The rights of the user is taken into account to set this page * This page needs no service to be generated * @param $type {string} can be 'people' or 'organization' * @param $container_id {string} the id of the container which will contain the page * @param $id the people_id or organization_id, or -1 for a new one * @return string the name of the javascript constructor to call */ function address(&$page,$type,$container_id,$id){	require_once("component/data_model/Model.inc");	$rights = array();		if($type == "people"){		if ($id <> -1) {
 			$q = SQLQuery::create()->select("People");
-			$q->where_value("People","id",$id);
+			$q->whereValue("People","id",$id);
 			DataModel::get()->getTable("People")->filterReadAccess($q, "People");
 			$rows = $q->execute();
 			if (count($rows) == 0) {
@@ -16,13 +16,13 @@
 			}
 				
 			$q = SQLQuery::create()->select("People");
-			$q->where_value("People","id",$id);			DataModel::get()->getTable("People")->prepareSelectToDetermineRemoveAccess($q, "People", $locks);
+			$q->whereValue("People","id",$id);			DataModel::get()->getTable("People")->prepareSelectToDetermineRemoveAccess($q, "People", $locks);
 			$rows = $q->execute();
 			$rows = DataModel::get()->getTable("People")->filterRemoveAccess($rows);
 			$rights['remove'] = count($rows) == 1;
 				
 			$q = SQLQuery::create()->select("People");
-			$q->where_value("People","id",$id);			DataModel::get()->getTable("People")->prepareSelectToDetermineWriteAccess($q, "People");
+			$q->whereValue("People","id",$id);			DataModel::get()->getTable("People")->prepareSelectToDetermineWriteAccess($q, "People");
 			$rows = $q->execute();
 			$rows = DataModel::get()->getTable("People")->filterWriteAccess($rows);
 			$rights['edit'] = count($rows) == 1;

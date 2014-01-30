@@ -65,7 +65,7 @@ class contact extends Component {
 		unset($new_address["id"]);
 		// insert
 		try {
-			$address_id = SQLQuery::create()->bypass_security()->insert("Postal_address", $new_address);
+			$address_id = SQLQuery::create()->bypassSecurity()->insert("Postal_address", $new_address);
 		} catch (Exception $ex) {
 			$address_id = 0;
 			PNApplication::error($ex);
@@ -75,12 +75,12 @@ class contact extends Component {
 		}
 		try {
 			if($bypass)
-				SQLQuery::create()->bypass_security()->insert($table, array($column=>$key,"address"=>$address_id));
+				SQLQuery::create()->bypassSecurity()->insert($table, array($column=>$key,"address"=>$address_id));
 			else
 				SQLQuery::create()->insert($table, array($column=>$key,"address"=>$address_id));
 		} catch (Exception $ex) {
 			PNApplication::error($ex);
-			SQLQuery::create()->remove_key("Postal_address", $address_id);
+			SQLQuery::create()->removeKey("Postal_address", $address_id);
 			return false;
 		}
 		return $address_id;
@@ -119,7 +119,7 @@ class contact extends Component {
 			return false;
 		}
 		try {
-			$contact_id = SQLQuery::create()->bypass_security()->insert("Contact", array("type"=>$contact["type"],"contact"=>$contact["contact"],"sub_type"=>$contact["sub_type"]));
+			$contact_id = SQLQuery::create()->bypassSecurity()->insert("Contact", array("type"=>$contact["type"],"contact"=>$contact["contact"],"sub_type"=>$contact["sub_type"]));
 		} catch (Exception $ex) {
 			$contact_id = 0;
 			PNApplication::error($ex);
@@ -130,7 +130,7 @@ class contact extends Component {
 			SQLQuery::create()->insert($table_name, array($join_column=>$join_value,"contact"=>$contact_id));
 		} catch (Exception $ex) {
 			PNApplication::error($ex);
-			SQLQuery::create()->remove_key("Contact", $contact_id);
+			SQLQuery::create()->removeKey("Contact", $contact_id);
 			return false;
 		}
 
@@ -189,7 +189,7 @@ class contact extends Component {
 	 */
 	public function unassignOrganizationType($organization_id, $type_id) {
 		try {
-			SQLQuery::create()->remove_key("Organization_types", array("organization"=>$organization_id, "type"=>$type_id));
+			SQLQuery::create()->removeKey("Organization_types", array("organization"=>$organization_id, "type"=>$type_id));
 			return true;
 		}catch (Exception $e) {
 			PNApplication::error($e);
@@ -277,7 +277,7 @@ class contact extends Component {
 						->field("additional")
 						->field("address_type")
 						// ->where("id ='".$id."'");
-						->where_value("Postal_address","id",$id);
+						->whereValue("Postal_address","id",$id);
 						
 		$adrs = $q->execute();
 		

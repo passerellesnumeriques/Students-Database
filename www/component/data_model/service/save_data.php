@@ -74,7 +74,7 @@ class service_save_data extends Service {
 // 						if ($sub_model <> null)
 // 							$sub_models = array($t->getModel()->getParentTable() => $sub_model);
 // 						if ($t->getPrimaryKey()->name == $row_key_name)
-// 							$q->update_by_key($table, $row_key_value, $to_update, $sub_models);
+// 							$q->updateByKey($table, $row_key_value, $to_update, $sub_models);
 // 						else
 // 							$q->update($table, $to_update, array($row_key_name=>$row_key_value), $sub_models);
 // 					}

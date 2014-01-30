@@ -12,12 +12,12 @@ class page_curriculum extends Page {
 			}
 		}
 		if (isset($_GET["batch"])) {
-			$periods = SQLQuery::create()->select("AcademicPeriod")->where("batch",$_GET["batch"])->order_by("AcademicPeriod","start_date")->execute();
+			$periods = SQLQuery::create()->select("AcademicPeriod")->where("batch",$_GET["batch"])->orderBy("AcademicPeriod","start_date")->execute();
 			$all_periods = $periods;
 			$batch_id = $_GET["batch"];
 		} else {
 			$periods = SQLQuery::create()->select("AcademicPeriod")->where("id",$_GET["period"])->execute();
-			$all_periods = SQLQuery::create()->select("AcademicPeriod")->where("batch",$periods[0]["batch"])->order_by("AcademicPeriod","start_date")->execute();
+			$all_periods = SQLQuery::create()->select("AcademicPeriod")->where("batch",$periods[0]["batch"])->orderBy("AcademicPeriod","start_date")->execute();
 			$batch_id = $periods[0]["batch"];
 		}
 		
@@ -34,7 +34,7 @@ class page_curriculum extends Page {
 		$first = true;
 		foreach ($periods as $period) {
 			if ($first) $first = false; else echo ",";
-			$period_spe = SQLQuery::create()->select("AcademicPeriodSpecialization")->where_value("AcademicPeriodSpecialization","period",$period["id"])->join("AcademicPeriodSpecialization","Specialization",array("specialization"=>"id"))->execute();
+			$period_spe = SQLQuery::create()->select("AcademicPeriodSpecialization")->whereValue("AcademicPeriodSpecialization","period",$period["id"])->join("AcademicPeriodSpecialization","Specialization",array("specialization"=>"id"))->execute();
 			echo "{";
 			echo "id:".$period["id"];
 			echo ",name:".json_encode($period["name"]);
@@ -58,7 +58,7 @@ class page_curriculum extends Page {
 				echo "id:".$s["specialization"];
 				echo ",name:".json_encode($s["name"]);
 				echo ",subjects:[";
-				$subjects = SQLQuery::create()->select("CurriculumSubject")->where_value("CurriculumSubject", "period", $period["id"])->where_value("CurriculumSubject", "specialization", $s["specialization"])->execute();
+				$subjects = SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject", "period", $period["id"])->whereValue("CurriculumSubject", "specialization", $s["specialization"])->execute();
 				$first_subject = true;
 				foreach ($subjects as $subject) {
 					if ($first_subject) $first_subject = false; else echo ",";
@@ -75,7 +75,7 @@ class page_curriculum extends Page {
 			echo "]";
 			echo ",subjects:[";
 			if (count($period_spe) == 0) {
-				$subjects = SQLQuery::create()->select("CurriculumSubject")->where_value("CurriculumSubject", "period", $period["id"])->execute();
+				$subjects = SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject", "period", $period["id"])->execute();
 				$first_subject = true;
 				foreach ($subjects as $subject) {
 					if ($first_subject) $first_subject = false; else echo ",";

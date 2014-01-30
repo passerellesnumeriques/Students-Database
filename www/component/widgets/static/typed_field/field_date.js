@@ -30,8 +30,8 @@ function field_date(data,editable,config) {
 						t.select.setLimits(min,max);
 					}
 				};
-				window.top.datamodel.add_cell_change_listener(window, table,t.config.minimum_cell,row_key, listener);
-				window.top.datamodel.get_cell_value(table,t.config.minimum_cell,row_key,listener);
+				window.top.datamodel.addCellChangeListener(window, table,t.config.minimum_cell,row_key, listener);
+				window.top.datamodel.getCellValue(table,t.config.minimum_cell,row_key,listener);
 			}, 1);
 		if (t.config && t.config.maximum_cell)
 			setTimeout(function() {
@@ -43,8 +43,8 @@ function field_date(data,editable,config) {
 						t.select.setLimits(min,max);
 					}
 				};
-				window.top.datamodel.add_cell_change_listener(window, table,t.config.maximum_cell,row_key, listener);
-				window.top.datamodel.get_cell_value(table,t.config.maximum_cell,row_key,listener);
+				window.top.datamodel.addCellChangeListener(window, table,t.config.maximum_cell,row_key, listener);
+				window.top.datamodel.getCellValue(table,t.config.maximum_cell,row_key,listener);
 			}, 1);
 	};
 }

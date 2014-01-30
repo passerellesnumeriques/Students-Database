@@ -36,7 +36,7 @@ class storage extends Component {
 	}
 	
 	private function remove_old() {
-		SQLQuery::get_db_system_without_security()->execute("DELETE FROM `Storage` WHERE `expire` IS NOT NULL AND `expire` < ".time());
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `expire` IS NOT NULL AND `expire` < ".time());
 	}
 	
 	private function allocate_id($mime = null, $expire = null) {
@@ -48,8 +48,8 @@ class storage extends Component {
 		else
 			$q .= "NULL,NULL";
 		$q .= ")";
-		SQLQuery::get_db_system_without_security()->execute($q);
-		$id = SQLQuery::get_db_system_without_security()->get_insert_id();
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute($q);
+		$id = SQLQuery::getDataBaseAccessWithoutSecurity()->getInsertID();
 		$dir1 = $id%100;
 		$dir2 = ($id/100)%100;
 		$dir3 = ($id/10000)%100;
@@ -58,7 +58,7 @@ class storage extends Component {
 		if (!file_exists($path."/".$dir1)) {
 			if (!mkdir($path."/".$dir1)) {
 				PNApplication::error("Unable to create directory ".$path."/".$dir1);
-				SQLQuery::get_db_system_without_security()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 				return null;
 			}
 		}
@@ -66,7 +66,7 @@ class storage extends Component {
 		if (!file_exists($path."/".$dir2)) {
 			if (!mkdir($path."/".$dir2)) {
 				PNApplication::error("Unable to create directory ".$path."/".$dir2);
-				SQLQuery::get_db_system_without_security()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 				return null;
 			}
 		}
@@ -74,7 +74,7 @@ class storage extends Component {
 		if (!file_exists($path."/".$dir3)) {
 			if (!mkdir($path."/".$dir3)) {
 				PNApplication::error("Unable to create directory ".$path."/".$dir3);
-				SQLQuery::get_db_system_without_security()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 				return null;
 			}
 		}
@@ -82,7 +82,7 @@ class storage extends Component {
 		if (file_exists($path)) {
 			if (!unlink($path)) {
 				PNApplication::error("File ".$path." already exists, but we cannot remove it");
-				SQLQuery::get_db_system_without_security()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 				return null;
 			}
 		}
@@ -94,7 +94,7 @@ class storage extends Component {
 		$f = @fopen($path, "w");
 		if ($f == null) {
 			PNApplication::error("Unable to create file ".$path);
-			SQLQuery::get_db_system_without_security()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
+			SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 			return null;
 		}
 		fwrite($f, $data);
@@ -117,12 +117,12 @@ class storage extends Component {
 		$data = file_get_contents($path);
 		if ($data === false) return null;
 		if ($new_expire <> null)
-			SQLQuery::get_db_system_without_security()->execute("UPDATE `Storage` SET `expire`=".$new_expire." WHERE `id`=".$id);
+			SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `expire`=".$new_expire." WHERE `id`=".$id);
 		return $data;
 	}
 
 	function set_expire($id, $new_expire) {
-		SQLQuery::get_db_system_without_security()->execute("UPDATE `Storage` SET `expire`=".($new_expire == null ? "NULL" : $new_expire)." WHERE `id`=".$id);
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `expire`=".($new_expire == null ? "NULL" : $new_expire)." WHERE `id`=".$id);
 	}
 	function set_expires($ids, $new_expire) {
 		if (count($ids) == 0) return;
@@ -132,13 +132,13 @@ class storage extends Component {
 			$q .= "`id`=".$ids[$i];
 		}
 		$q .= ")";
-		SQLQuery::get_db_system_without_security()->execute($q);
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute($q);
 	}
 	
 	function remove_data($id) {
 		$path = $this->get_data_path($id);
 		unlink($path);
-		SQLQuery::get_db_system_without_security()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 	}
 	
 	/** return true if this is the final call (either form sent, or no file uploaded), or false if this is an asynchronous upload */
@@ -170,7 +170,7 @@ class storage extends Component {
 						$path = $this->get_data_path($id);
 						if (!move_uploaded_file($files['tmp_name'][$file_id], $path)) {
 							PNApplication::error("Unable to create file ".$path);
-							SQLQuery::get_db_system_without_security()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
+							SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 						} else {
 							array_push($ids, $id);
 							array_push($names, $fn);

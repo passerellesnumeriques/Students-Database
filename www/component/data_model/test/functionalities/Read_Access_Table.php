@@ -70,13 +70,13 @@ class Read_Access_Table__Prepare_DataModel extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseModel.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,15) == "TestReadAccess_")
-				DataBaseModel::create_table(SQLQuery::get_db_system_without_security(), $table);
-		SQLQuery::create()->bypass_security()->insert("TestReadAccess_specific_column", array("column_ok"=>1,"column_nok"=>2));
-		SQLQuery::create()->bypass_security()->insert("TestReadAccess_filter", array("column_ok"=>1,"column_nok"=>2));
-		SQLQuery::create()->bypass_security()->insert("TestReadAccess_filter", array("column_ok"=>10,"column_nok"=>20));
-		SQLQuery::create()->bypass_security()->insert("TestReadAccess_filter", array("column_ok"=>1664,"column_nok"=>51));
-		SQLQuery::create()->bypass_security()->insert("TestReadAccess_filter", array("column_ok"=>100,"column_nok"=>200));
-		SQLQuery::create()->bypass_security()->insert("TestReadAccess_filter", array("column_ok"=>1000,"column_nok"=>2000));
+				DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
+		SQLQuery::create()->bypassSecurity()->insert("TestReadAccess_specific_column", array("column_ok"=>1,"column_nok"=>2));
+		SQLQuery::create()->bypassSecurity()->insert("TestReadAccess_filter", array("column_ok"=>1,"column_nok"=>2));
+		SQLQuery::create()->bypassSecurity()->insert("TestReadAccess_filter", array("column_ok"=>10,"column_nok"=>20));
+		SQLQuery::create()->bypassSecurity()->insert("TestReadAccess_filter", array("column_ok"=>1664,"column_nok"=>51));
+		SQLQuery::create()->bypassSecurity()->insert("TestReadAccess_filter", array("column_ok"=>100,"column_nok"=>200));
+		SQLQuery::create()->bypassSecurity()->insert("TestReadAccess_filter", array("column_ok"=>1000,"column_nok"=>2000));
 		PNApplication::$instance->user_management->logout();
 		return null;
 	}

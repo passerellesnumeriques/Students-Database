@@ -12,9 +12,9 @@ class page_profile extends Page {
 		
 		require_once("component/people/PeoplePlugin.inc");
 		$q = SQLQuery::create();
-		$people_alias = $q->table_id();
+		$people_alias = $q->generateTableAlias();
 		$q->select(array("People"=>$people_alias));
-		$q->where_value($people_alias, "id", $people_id);
+		$q->whereValue($people_alias, "id", $people_id);
 		$q->field($people_alias, "first_name");
 		$q->field($people_alias, "last_name");
 		foreach (PNApplication::$instance->components as $cname=>$c) {
@@ -23,7 +23,7 @@ class page_profile extends Page {
 				$pi->preparePeopleProfilePagesRequest($q, $people_id);
 			}
 		}
-		$people = $q->execute_single_row();
+		$people = $q->executeSingleRow();
 		
 		if ($plugin == null) $plugin = "people";
 		if ($page == null) $page = "profile_".$plugin;

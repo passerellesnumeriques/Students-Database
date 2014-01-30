@@ -39,48 +39,48 @@ class service_IS_status extends Service{
 		$partners = null;
 		
 		$all_boys_real = SQLQuery::create()
-					->bypass_security()
+					->bypassSecurity()
 					->select("Information_session")
 					->field("number_boys_real")
-					->execute_single_field();
+					->executeSingleField();
 		
 		$boys_real = getFigure($all_boys_real);
 		
 		$all_boys_expected = SQLQuery::create()
-					->bypass_security()
+					->bypassSecurity()
 					->select("Information_session")
 					->field("number_boys_expected")
-					->execute_single_field();
+					->executeSingleField();
 		
 		$boys_expected = getFigure($all_boys_expected);
 		
 		$all_girls_real = SQLQuery::create()
-					->bypass_security()
+					->bypassSecurity()
 					->select("Information_session")
 					->field("number_girls_real")
-					->execute_single_field();
+					->executeSingleField();
 		
 		$girls_real = getFigure($all_girls_real);
 		
 		$all_girls_expected = SQLQuery::create()
-					->bypass_security()
+					->bypassSecurity()
 					->select("Information_session")
 					->field("number_girls_expected")
-					->execute_single_field();
+					->executeSingleField();
 					
 		$girls_expected = getFigure($all_girls_expected);
 					
 		$partners = SQLQuery::create()
-					->bypass_security()
+					->bypassSecurity()
 					->select("Information_session_partner")
 					->count()
-					->execute_single_value();
+					->executeSingleValue();
 					
 		$number_IS = SQLQuery::create()
-					->bypass_security()
+					->bypassSecurity()
 					->select("Information_session")
 					->count()
-					->execute_single_value();
+					->executeSingleValue();
 
 		echo "{boys_real:".json_encode($boys_real).", ";
 		echo "boys_expected:".json_encode($boys_expected).", ";

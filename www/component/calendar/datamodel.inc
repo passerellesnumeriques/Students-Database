@@ -87,9 +87,9 @@ class CalendarEventDateDataDisplay extends datamodel\DataDisplay {
 	
 	public function buildSQL(&$q, $path, $filters) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
-		$alias = $q->get_field_alias($table_alias, $this->event_foreign_key);
+		$alias = $q->getFieldAlias($table_alias, $this->event_foreign_key);
 		if ($alias == null) {
-			$alias = $q->field_id();
+			$alias = $q->generateFieldAlias();
 			$q->field($table_alias, $this->event_foreign_key, $alias);
 		}
 		$result = array("data"=>null,"key"=>$alias);
@@ -107,7 +107,7 @@ class CalendarEventDateDataDisplay extends datamodel\DataDisplay {
 				array_push($events_ids, $row[$sql_aliases["key"]]);
 		}
 		if (count($events_ids) == 0) return;
-		$events = SQLQuery::create()->bypass_security()->select("CalendarEvent")->where_in("id",$events_ids)->field("CalendarEvent","calendar")->field("CalendarEvent","id")->field("CalendarEvent","start")->execute();
+		$events = SQLQuery::create()->bypassSecurity()->select("CalendarEvent")->whereIn("id",$events_ids)->field("CalendarEvent","calendar")->field("CalendarEvent","id")->field("CalendarEvent","start")->execute();
 		$accessible_calendars = PNApplication::$instance->calendar->getAccessibleCalendars();
 		foreach ($rows as &$row) {
 			if ($row[$sql_aliases["key"]] == null) continue;

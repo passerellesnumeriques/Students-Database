@@ -17,17 +17,17 @@ class page_new_subject extends Page {
 		<table>
 		<tr><th></th><th>Code</th><th>Name</th></tr>
 		<?php
-		$q = SQLQuery::create()->select("CurriculumSubject")->where_value("CurriculumSubject", "category", $_GET["category"])->group_by("CurriculumSubject", "code")->group_by("CurriculumSubject","name");
+		$q = SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject", "category", $_GET["category"])->groupBy("CurriculumSubject", "code")->group_by("CurriculumSubject","name");
 		if (isset($_GET["specialization"]))
-			$q->where_value("CurriculumSubject", "specialization", $_GET["specialization"]);
+			$q->whereValue("CurriculumSubject", "specialization", $_GET["specialization"]);
 		else
-			$q->where_null("CurriculumSubject", "specialization");
+			$q->whereNull("CurriculumSubject", "specialization");
 		$subjects = $q->execute();
-		$q = SQLQuery::create()->select("CurriculumSubject")->where_value("CurriculumSubject", "category", $_GET["category"])->where_value("CurriculumSubject", "period", $_GET["period"]);
+		$q = SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject", "category", $_GET["category"])->whereValue("CurriculumSubject", "period", $_GET["period"]);
 		if (isset($_GET["specialization"]))
-			$q->where_value("CurriculumSubject", "specialization", $_GET["specialization"]);
+			$q->whereValue("CurriculumSubject", "specialization", $_GET["specialization"]);
 		else
-			$q->where_null("CurriculumSubject", "specialization");
+			$q->whereNull("CurriculumSubject", "specialization");
 		$already = $q->execute(); 
 		foreach ($subjects as $subject) {
 			$found = false;

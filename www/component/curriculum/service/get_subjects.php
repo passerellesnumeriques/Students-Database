@@ -16,12 +16,12 @@ class service_get_subjects extends Service {
 	public function execute(&$component, $input) {
 		$q = SQLQuery::create()
 			->select("CurriculumSubject")
-			->where_value("CurriculumSubject", "category", $input["category"])
+			->whereValue("CurriculumSubject", "category", $input["category"])
 			->where("`CurriculumSubject`.`period` != '".SQLQuery::escape($input["period_to_exclude"])."'");
 		if (isset($input["specialization"]) && $input["specialization"] <> null)
-			$q->where_value("CurriculumSubject", "specialization", $input["specialization"]);
+			$q->whereValue("CurriculumSubject", "specialization", $input["specialization"]);
 		else
-			$q->where_null("CurriculumSubject", "specialization");
+			$q->whereNull("CurriculumSubject", "specialization");
 		$list = $q->execute();
 		echo "[";
 		$first = true;

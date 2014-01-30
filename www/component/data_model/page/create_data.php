@@ -55,8 +55,8 @@ class page_create_data extends Page {
 		echo "</div>"; 
 	}
 	
-	/**
-	 * @param CreateRow $tc
+	/** Debug information
+	 * @param CreateRow $tc row to debug about
 	 */
 	private function debug($tc) {
 		echo "Create row in table '".$tc->table->getName()."'";

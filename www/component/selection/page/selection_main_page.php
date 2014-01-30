@@ -21,7 +21,7 @@ class page_selection_main_page extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
-		$calendar_name = SQLQuery::create()->bypass_security()->select("Calendar")->field("name")->where("id",$calendar_id)->execute_single_value();
+		$calendar_name = SQLQuery::create()->bypassSecurity()->select("Calendar")->field("name")->where("id",$calendar_id)->executeSingleValue();
 		
 		$page->add_javascript("/static/widgets/page_header.js");
 		$page->onload("new page_header('steps_header',true);");

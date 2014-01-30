@@ -42,18 +42,18 @@ class service_lock_cell extends Service {
 		}
 		
 		$q = SQLQuery::create();
-		$table_alias = $q->table_id();
+		$table_alias = $q->generateTableAlias();
 		$q->select(array($table->getName()=>$table_alias));
-		if ($sub_model <> null) $q->set_sub_model_for_table($table, $sub_model);
+		if ($sub_model <> null) $q->setSubModelForTable($table, $sub_model);
 		$q->field($table_alias, $field);
 		if ($table->getPrimaryKey() <> null)
-			$q->where_value($table_alias, $table->getPrimaryKey()->name, $key);
+			$q->whereValue($table_alias, $table->getPrimaryKey()->name, $key);
 		else {
 			$pk = $table->getKey();
 			foreach ($pk as $pk_name)
-				$q->where_value($table_alias, $pk_name, $key[$pk_name]);
+				$q->whereValue($table_alias, $pk_name, $key[$pk_name]);
 		}
-		$value = $q->execute_single_value();
+		$value = $q->executeSingleValue();
 		
 		echo "{lock:".json_encode($lock).",value:".json_encode($value)."}";
 	}

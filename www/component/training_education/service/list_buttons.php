@@ -18,7 +18,7 @@ class service_list_buttons extends Service {
 				// => check if specializations exist in any period of this batch
 				$specializations = SQLQuery::create()
 					->select("AcademicPeriod")
-					->where_value("AcademicPeriod", "batch", $batches[0])
+					->whereValue("AcademicPeriod", "batch", $batches[0])
 					->join("AcademicPeriod", "AcademicPeriodSpecialization", array("id"=>"period"))
 					->execute();
 				if (count($specializations) > 0) {

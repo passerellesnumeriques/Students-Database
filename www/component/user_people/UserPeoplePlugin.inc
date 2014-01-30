@@ -6,8 +6,8 @@ require_once("component/people/PeoplePlugin.inc");
 class UserPeoplePlugin implements PeoplePlugin {
 	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
-		$people_alias = $q->get_table_alias("People");
-		$alias = $q->table_id();
+		$people_alias = $q->getTableAlias("People");
+		$alias = $q->generateTableAlias();
 		$q->join($people_alias, "UserPeople", array("id"=>"people"), $alias);
 		$q->field($alias, "user");
 	}
@@ -40,9 +40,9 @@ class UserPeoplePlugin implements PeoplePlugin {
 	
 	public function filterPeopleReadAccess(&$q, $people_table_alias) {
 		if (!PNApplication::$instance->user_management->has_right("consult_user_list")) return null;
-		$alias = $q->get_table_alias("UserPeople");
+		$alias = $q->getTableAlias("UserPeople");
 		if ($alias == null) {
-			$alias = $q->table_id();
+			$alias = $q->generateTableAlias();
 			$q->join($people_table_alias, "UserPeople", array("id"=>"people"), $alias);
 		}
 		return "`".$alias."`.`user` IS NOT NULL";
@@ -50,11 +50,11 @@ class UserPeoplePlugin implements PeoplePlugin {
 	
 	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {
 		if (!PNApplication::$instance->user_management->has_right("manage_users")) return;
-		$alias = $q->get_join_alias($people_table_alias, "UserPeople", array("id"=>"people"));
+		$alias = $q->getJoinAlias($people_table_alias, "UserPeople", array("id"=>"people"));
 		if ($alias == null)
-			$alias = $q->get_join_alias("UserPeople", $people_table_alias, array("people"=>"id"));
+			$alias = $q->getJoinAlias("UserPeople", $people_table_alias, array("people"=>"id"));
 		if ($alias == null) {
-			$alias = $q->table_id();
+			$alias = $q->generateTableAlias();
 			$q->join($people_table_alias, "UserPeople", array("id"=>"people"),$alias);
 		}
 		$q->field($alias, "user", "PEOPLE_USER");
@@ -70,11 +70,11 @@ class UserPeoplePlugin implements PeoplePlugin {
 	
 	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {
 		if (!PNApplication::$instance->user_management->has_right("manage_users")) return;
-		$alias = $q->get_join_alias($people_table_alias, "UserPeople", array("id"=>"people"));
+		$alias = $q->getJoinAlias($people_table_alias, "UserPeople", array("id"=>"people"));
 		if ($alias == null)
-			$alias = $q->get_join_alias("UserPeople", $people_table_alias, array("people"=>"id"));
+			$alias = $q->getJoinAlias("UserPeople", $people_table_alias, array("people"=>"id"));
 		if ($alias == null) {
-			$alias = $q->table_id();
+			$alias = $q->generateTableAlias();
 			$q->join($people_table_alias, "UserPeople", array("id"=>"people"),$alias);
 		}
 		$q->field($alias, "user", "PEOPLE_USER");

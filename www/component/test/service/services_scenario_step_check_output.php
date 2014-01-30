@@ -7,7 +7,7 @@ class service_services_scenario_step_check_output extends Service {
 	public function output_documentation() {}
 	
 	public function execute(&$component, $input) {
-		$db = SQLQuery::get_db_system_without_security();
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$db->execute("USE students_test");
 		
 		$cname = $input["component"];

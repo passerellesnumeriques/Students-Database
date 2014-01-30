@@ -39,7 +39,7 @@ class Campaign_Create_Campaign_No_Manage extends TestFunctionalitiesStep{
 			if(!PNApplication::has_errors())return "Can create a campaign";
 			else PNApplication::clear_errors();
 		} catch (Exception $e){}
-		if(SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("name")->where("name","createCampaign_Create_Campaign_No_Manage")->execute_single_value() <> null) return "The campaign was created in the database";
+		if(SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("name")->where("name","createCampaign_Create_Campaign_No_Manage")->executeSingleValue() <> null) return "The campaign was created in the database";
 		PNApplication::$instance->user_management->logout();
 		return null;
 	}
@@ -56,7 +56,7 @@ class Campaign_Create_Campaign_Can_Manage extends TestFunctionalitiesStep{
 		} catch (Exception $e){
 			return "Cannot create campaign. Error was: ".$e->getMessage();
 		}
-		if(SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("name")->where("id",$id)->execute_single_value() != "Campaign_Create_Campaign_Can_Manage") return "The campaign was not created in the database";
+		if(SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("name")->where("id",$id)->executeSingleValue() != "Campaign_Create_Campaign_Can_Manage") return "The campaign was not created in the database";
 		PNApplication::$instance->user_management->logout();
 		return null;
 	}
@@ -98,7 +98,7 @@ class Calendar_Get_Calendar_No_manage extends TestFunctionalitiesStep{
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		if($calendar_id == "notYet") return "Nothing was returned by the getCalendarId method";
 		if($calendar_id == null) return "The calendar_id attribute was not set when the campaign was created. Its current value is ".$calendar_id;
-		if($calendar_id != SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("calendar")->where("id",$scenario_data["campaign_created_can_manage"])->execute_single_value()) return "The calendar_id attribute set does not match with the one in the database";
+		if($calendar_id != SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("calendar")->where("id",$scenario_data["campaign_created_can_manage"])->executeSingleValue()) return "The calendar_id attribute set does not match with the one in the database";
 		$scenario_data["calendar_id"] = $calendar_id;
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -115,7 +115,7 @@ class Calendar_Get_Calendar_Can_manage extends TestFunctionalitiesStep{
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		if($calendar_id == "notYet") return "Nothing was returned by the getCalendarId method";
 		if($calendar_id == null) return "The calendar_id attribute was not set when the campaign was created. Its current value is ".$calendar_id;
-		if($calendar_id != SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("calendar")->where("id",$scenario_data["campaign_created_can_manage"])->execute_single_value()) return "The calendar_id attribute set does not match with the one in the database";
+		if($calendar_id != SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("calendar")->where("id",$scenario_data["campaign_created_can_manage"])->executeSingleValue()) return "The calendar_id attribute set does not match with the one in the database";
 		$scenario_data["calendar_id"] = $calendar_id;
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -131,7 +131,7 @@ class Campaign_Rename_Remove_No_Manage extends TestFunctionalitiesStep{
 			PNApplication::$instance->selection->renameCampaign($scenario_data["campaign_created_can_manage"],"campaign_created_can_manage_2");
 			return "Can rename a campaign";
 		} catch(Exception $e){}
-		if(SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("name")->where("id",$scenario_data["campaign_created_can_manage"])->execute_single_value() == "campaign_created_can_manage_2") return "The name was set in the database";
+		if(SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("name")->where("id",$scenario_data["campaign_created_can_manage"])->executeSingleValue() == "campaign_created_can_manage_2") return "The name was set in the database";
 		try{
 			PNApplication::$instance->selection->removeCampaign($scenario_data["campaign_created_can_manage"]);
 			return "Can remove a campaign";
@@ -151,7 +151,7 @@ class Campaign_Rename_Remove_Can_Manage extends TestFunctionalitiesStep{
 		} catch(Exception $e){
 			return "Cannot rename a campaign. Error was: ".$e->getMessage();
 		}
-		if(SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("name")->where("id",$scenario_data["campaign_created_can_manage"])->execute_single_value() != "campaign_created_can_manage_2") return "The name was not set in the database";
+		if(SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("name")->where("id",$scenario_data["campaign_created_can_manage"])->executeSingleValue() != "campaign_created_can_manage_2") return "The name was not set in the database";
 		try{
 			PNApplication::$instance->selection->removeCampaign($scenario_data["campaign_created_can_manage"]);
 		} catch(Exception $e){

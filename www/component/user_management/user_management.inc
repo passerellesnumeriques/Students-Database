@@ -46,7 +46,7 @@ class user_management extends Component {
 		$error = "";
 		$this->auth_token = $auth->authenticate($username, $password, $error);
 		if ($this->auth_token === null) return $error;
-		$user = SQLQuery::create()->bypass_security()->select("Users")->where("domain",$domain)->where("username",$username)->execute_single_row();
+		$user = SQLQuery::create()->bypassSecurity()->select("Users")->where("domain",$domain)->where("username",$username)->executeSingleRow();
 		if ($user == null) {
 			// the user does not exist yet in the database, but exists on the authentication system
 			// TODO add an action for administrator ?
@@ -64,7 +64,7 @@ class user_management extends Component {
 	 */
 	public function external_login($user_id) {
 		if ($this->username <> null) return "You are already authenticated as ".$username;
-		$user = SQLQuery::create()->bypass_security()->select("Users")->where("id",$user_id)->execute_single_row();
+		$user = SQLQuery::create()->bypassSecurity()->select("Users")->where("id",$user_id)->executeSingleRow();
 		if ($user == null)
 			return "Invalid user";
 		$this->domain = $user["domain"];
@@ -90,19 +90,19 @@ class user_management extends Component {
 	}
 	
 	public function create_user($domain, $username, $bypass_security = false) {
-		$res = SQLQuery::create()->bypass_security($bypass_security)->select("Users")->where("domain",$domain)->where("username",$username)->execute();
+		$res = SQLQuery::create()->bypassSecurity($bypass_security)->select("Users")->where("domain",$domain)->where("username",$username)->execute();
 		if (count($res) > 0) {
 			PNApplication::error("User ".$domain."\\".$username." already exists");
 			return null;
 		}
-		$user_id = SQLQuery::create()->bypass_security($bypass_security)->insert("Users", array("domain"=>$domain,"username"=>$username));
+		$user_id = SQLQuery::create()->bypassSecurity($bypass_security)->insert("Users", array("domain"=>$domain,"username"=>$username));
 		if ($domain == PNApplication::$instance->local_domain)
 			$this->local_user_created->fire(array($user_id));
 		return $user_id;
 	}
 	
 	public function remove_user($user_id, $bypass_security = false) {
-		SQLQuery::create()->bypass_security($bypass_security)->remove_key("Users", $user_id);
+		SQLQuery::create()->bypassSecurity($bypass_security)->removeKey("Users", $user_id);
 	}
 	
 	public function assign_user_rights($user_id, $rights) {
@@ -118,7 +118,7 @@ class user_management extends Component {
 			}
 		
 		// save in database: (1) remove all previous rights, (2) add all rights from the request
-		SQLQuery::get_db_system_without_security()->execute("DELETE FROM UserRights WHERE user='".$user_id."'");
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM UserRights WHERE user='".$user_id."'");
 		if (count($rights) > 0) {
 			$sql = "INSERT INTO UserRights (`user`,`right`,`value`) VALUES ";
 			$first = true;
@@ -126,7 +126,7 @@ class user_management extends Component {
 				if ($first) $first = false; else $sql .= ",";
 				$sql .= "('".$user_id."','".SQLQuery::escape($name)."','".SQLQuery::escape($value)."')";
 			}
-			SQLQuery::get_db_system_without_security()->execute($sql);
+			SQLQuery::getDataBaseAccessWithoutSecurity()->execute($sql);
 		}
 		return true;
 	}
@@ -146,10 +146,10 @@ class user_management extends Component {
 			return false;
 		}
 		foreach ($users as $user) {
-			$user_roles = SQLQuery::create()->bypass_security($bypass_security)->select("UserRole")->field("role")->where("user",$user)->execute_single_field();
+			$user_roles = SQLQuery::create()->bypassSecurity($bypass_security)->select("UserRole")->field("role")->where("user",$user)->executeSingleField();
 			foreach ($roles as $role_id)
 				if (!in_array($role_id, $user_roles))
-				SQLQuery::create()->bypass_security($bypass_security)->insert("UserRole", array("user"=>$user,"role"=>$role_id));
+				SQLQuery::create()->bypassSecurity($bypass_security)->insert("UserRole", array("user"=>$user,"role"=>$role_id));
 		}
 		DataBaseLock::unlock($lock_id);
 		return true;
@@ -169,21 +169,21 @@ class user_management extends Component {
 			return false;
 		}
 		foreach ($users as $user) {
-			$user_roles = SQLQuery::create()->select("UserRole")->field("role")->where("user",$user)->execute_single_field();
+			$user_roles = SQLQuery::create()->select("UserRole")->field("role")->where("user",$user)->executeSingleField();
 			foreach ($roles as $role_id)
 				if (in_array($role_id, $user_roles))
-					SQLQuery::create()->remove_key("UserRole", array("user"=>$user,"role"=>$role_id)); 
+					SQLQuery::create()->removeKey("UserRole", array("user"=>$user,"role"=>$role_id)); 
 		}
 		DataBaseLock::unlock($lock_id);
 		return true;
 	}
 	
 	public function create_role($name, $bypass_security = false) {
-		try { return SQLQuery::create()->bypass_security($bypass_security)->insert("Role",array("name"=>$name)); }
+		try { return SQLQuery::create()->bypassSecurity($bypass_security)->insert("Role",array("name"=>$name)); }
 		catch (Exception $e) { PNApplication::error($e->getMessage()); return null; }
 	}
 	public function remove_role($role_id) {
-		try { SQLQuery::create()->remove_key("Role", $role_id); return true; }
+		try { SQLQuery::create()->removeKey("Role", $role_id); return true; }
 		catch (Exception $e) { PNApplication::error($e->getMessage()); return false; }
 	}
 	
@@ -210,7 +210,7 @@ class user_management extends Component {
 		}
 		
 		// save in database: (1) remove all previous rights, (2) add all rights from the request
-		SQLQuery::get_db_system_without_security()->execute("DELETE FROM RoleRights WHERE role='".SQLQuery::escape($role_id)."'");
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM RoleRights WHERE role='".SQLQuery::escape($role_id)."'");
 		if (count($rights) > 0) {
 			$sql = "INSERT INTO RoleRights (role,`right`,`value`) VALUES ";
 			$first = true;
@@ -218,7 +218,7 @@ class user_management extends Component {
 				if ($first) $first = false; else $sql .= ",";
 				$sql .= "('".SQLQuery::escape($role_id)."','".SQLQuery::escape($name)."','".SQLQuery::escape($value)."')";
 			}
-			SQLQuery::get_db_system_without_security()->execute($sql);
+			SQLQuery::getDataBaseAccessWithoutSecurity()->execute($sql);
 		}
 		return true;
 	}
@@ -261,20 +261,20 @@ class user_management extends Component {
 		}
 		if (!isset($this->rights[PNApplication::$instance->current_domain])) {
 			// get roles of the user
-			$roles = SQLQuery::create()->bypass_security()->select("UserRole")->field("role")->where("user",$this->user_id)->execute_single_field();
+			$roles = SQLQuery::create()->bypassSecurity()->select("UserRole")->field("role")->where("user",$this->user_id)->executeSingleField();
 			// check if the user is an administrator
 			foreach ($roles as $role_id)
 				if ($role_id == -1) { $this->is_admin[PNApplication::$instance->current_domain] = true; break; }
 			if (!isset($this->is_admin[PNApplication::$instance->current_domain])) {
 				// get rights directly attached to the user
-				$user_rights = SQLQuery::create()->bypass_security()->select("UserRights")->field("right")->field("value")->where("user",$this->user_id)->execute();
+				$user_rights = SQLQuery::create()->bypassSecurity()->select("UserRights")->field("right")->field("value")->where("user",$this->user_id)->execute();
 				$rights = array();
 				if ($user_rights)
 				foreach ($user_rights as $r)
 					$rights[$r["right"]] = $this->all_rights[$r["right"]]->parse_value($r["value"]);
 				// merge with rights attached to the roles of the user
 				if (count($roles) > 0)
-					$role_rights = SQLQuery::create()->bypass_security()->select("RoleRights")->field("right")->field("value")->where_in("role", $roles)->execute();
+					$role_rights = SQLQuery::create()->bypassSecurity()->select("RoleRights")->field("right")->field("value")->whereIn("role", $roles)->execute();
 				else $role_rights = null;
 				if ($role_rights)
 				foreach ($role_rights as $r) {

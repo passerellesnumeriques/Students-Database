@@ -17,7 +17,7 @@ class service_IS_get_partners_array extends Service{
 			$q = SQLQuery::create()->select("Organization")
 						->field("id")
 						->field("name")
-						->where_in("Organization","id",$input["partners_id"])
+						->whereIn("Organization","id",$input["partners_id"])
 						->execute();
 						
 			if(PNApplication::has_errors() || !isset($q[0]["id"])) echo "false";

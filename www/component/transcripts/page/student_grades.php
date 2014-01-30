@@ -14,10 +14,10 @@ class page_student_grades extends Page {
 		// get student classes
 		$classes = SQLQuery::create()
 			->select("StudentClass")
-			->where_value("StudentClass", "people", $_GET["people"])
+			->whereValue("StudentClass", "people", $_GET["people"])
 			->join("StudentClass", "AcademicClass", array("class"=>"id"))
 			->join("AcademicClass","AcademicPeriod", array("period"=>"id"))
-			->order_by("AcademicPeriod", "start_date", true)
+			->orderBy("AcademicPeriod", "start_date", true)
 			->field("AcademicPeriod", "id", "period_id")
 			->field("AcademicPeriod", "name", "period_name")
 			->field("AcademicClass", "name", "class_name")
@@ -40,8 +40,8 @@ class page_student_grades extends Page {
 			// get the list of subjects
 			$subjects = SQLQuery::create()
 				->select("CurriculumSubject")
-				->where_value("CurriculumSubject", "period", $c["period_id"])
-				->where_value("CurriculumSubject", "specialization", $c["spe_id"])
+				->whereValue("CurriculumSubject", "period", $c["period_id"])
+				->whereValue("CurriculumSubject", "specialization", $c["spe_id"])
 				->join("CurriculumSubject", "CurriculumSubjectCategory", array("category"=>"id"))
 				->join("CurriculumSubject", "CurriculumSubjectGrading", array("id"=>"subject"))
 				->field("CurriculumSubject", "id", "subject_id")
@@ -64,8 +64,8 @@ class page_student_grades extends Page {
 			if (count($subjects_ids) > 0)
 				$grades = SQLQuery::create()
 					->select("StudentSubjectGrade")
-					->where_value("StudentSubjectGrade", "people", $_GET["people"])
-					->where_in("StudentSubjectGrade", "subject", $subjects_ids)
+					->whereValue("StudentSubjectGrade", "people", $_GET["people"])
+					->whereIn("StudentSubjectGrade", "subject", $subjects_ids)
 					->execute();
 			else
 				$grades = array();

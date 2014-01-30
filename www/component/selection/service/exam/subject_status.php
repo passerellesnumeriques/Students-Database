@@ -26,10 +26,10 @@ class service_exam_subject_status extends Service{
 	}
 	public function execute(&$component,$input){
 		$number_exams = SQLQuery::create()
-			->bypass_security()
+			->bypassSecurity()
 			->select("Exam_subject")
 			->count()
-			->execute_single_value();
+			->executeSingleValue();
 			
 		echo "{number_exams:".json_encode($number_exams);
 		echo "}";

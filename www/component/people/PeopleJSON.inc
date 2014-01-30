@@ -11,9 +11,9 @@ class PeopleJSON {
 	public static function PeopleFromID($id){
 		$q = SQLQuery::create()
 			->select("People")
-			->where_value("People", "id", $id);
+			->whereValue("People", "id", $id);
 		self::PeopleSQL($q);
-		$row = $q->execute_single_row();
+		$row = $q->executeSingleRow();
 		if($row <> null)
 			return People($q, $row);
 		else 
@@ -26,7 +26,7 @@ class PeopleJSON {
 	 * @param SQLQuery $q
 	 */
 	public static function PeopleSQL(&$q){
-		$alias = $q->get_table_alias("People");
+		$alias = $q->getTableAlias("People");
 		if($alias == null)
 			$alias = "People";
 		$q
@@ -43,7 +43,7 @@ class PeopleJSON {
 	/**
 	 * Return a People JSON Object, compatible with the People2DB method
 	 * @param SQLQuery $q
-	 * @param Array $row result of execute_single_row from $q
+	 * @param Array $row result of executeSingleRow from $q
 	 * @return string
 	 */
 	public static function People($q, $row){

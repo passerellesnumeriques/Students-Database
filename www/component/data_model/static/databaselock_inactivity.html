@@ -23,7 +23,7 @@ function db_lock_still_here() {
 	window.parent.get_popup_window_from_element(window.frameElement).close();
 }
 function db_lock_not_there() {
-	window.top.database_locks._user_inactive();
+	window.top.databaselock._user_inactive();
 	window.parent.get_popup_window_from_element(window.frameElement).close();
 }
 var timing = 60;

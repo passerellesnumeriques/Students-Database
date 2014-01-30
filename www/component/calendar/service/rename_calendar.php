@@ -11,18 +11,18 @@ class service_rename_calendar extends Service {
 	public function output_documentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
-		$check = SQLQuery::create()->bypass_security()
+		$check = SQLQuery::create()->bypassSecurity()
 			->select("UserCalendar")
-			->where_value("UserCalendar", "calendar", $input["id"])
-			->where_value("UserCalendar", "user", PNApplication::$instance->user_management->user_id)
-			->execute_single_row();
+			->whereValue("UserCalendar", "calendar", $input["id"])
+			->whereValue("UserCalendar", "user", PNApplication::$instance->user_management->user_id)
+			->executeSingleRow();
 		if ($check == null) {
 			// not owned
 			PNApplication::error("You are not allowed to rename this calendar");
 			echo "false";
 			return;
 		}
-		SQLQuery::create()->bypass_security()->update_by_key("Calendar", $input["id"], array("name"=>$input["name"]));
+		SQLQuery::create()->bypassSecurity()->updateByKey("Calendar", $input["id"], array("name"=>$input["name"]));
 		echo "true";
 	}
 	

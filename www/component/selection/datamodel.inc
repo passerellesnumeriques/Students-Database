@@ -38,7 +38,7 @@
 		//This field is set to link the custom postal address to an organization
 		//Otherwize, the filter of the "contact" component datamodel wont let the user see/manage the address
 		//Because of the reading filter of organization (if fake, cannot be read!),
-		//the fake organization must be removed manually (must use bypass_security method)
+		//the fake organization must be removed manually (must use bypassSecurity method)
 		//so the the remove_primary_when_foreign_removed is set to false
 		
 		->addInteger("number_boys_expected",10)

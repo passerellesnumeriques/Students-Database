@@ -38,8 +38,8 @@ class user_people extends Component {
 		->field("People", "id")
 		->field("People", "first_name")
 		->field("People", "last_name")
-		->bypass_security() // here we just get name of the user, no need to check if he can see it
-		->execute_single_row();
+		->bypassSecurity() // here we just get name of the user, no need to check if he can see it
+		->executeSingleRow();
 		if ($people <> null) {
 			if (PNApplication::$instance->user_management->domain == PNApplication::$instance->current_domain)
 				$this->user_people_id = $people["id"];
@@ -54,13 +54,13 @@ class user_people extends Component {
 	}
 	
 	public function get_user_from_people($people_id) {
-		$r = SQLQuery::create()->select("UserPeople")->field("user")->where("people",$people_id)->execute_single_row();
+		$r = SQLQuery::create()->select("UserPeople")->field("user")->where("people",$people_id)->executeSingleRow();
 		if ($r <> null)
 			return $r["user"];
 		return null;
 	}
 	public function get_people_from_user($user_id) {
-		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->execute_single_value();
+		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->executeSingleValue();
 	}
 	
 }

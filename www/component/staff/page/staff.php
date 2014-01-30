@@ -29,7 +29,7 @@ class page_staff extends Page {
 		</div>
 		<script type='text/javascript'>
 		var staff_dept = [<?php 
-		$list = SQLQuery::create()->select("PNDepartment")->order_by("PNDepartment","name",true)->execute();
+		$list = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();
 		$first = true;
 		foreach ($list as $d) {
 			if ($first) $first = false; else echo ",";
@@ -59,7 +59,7 @@ class page_staff extends Page {
 		$positions = SQLQuery::create()->select("StaffPosition")->execute();
 		foreach ($positions as $p) {
 			if (!isset($staff[$p["people"]])) {
-				$people = SQLQuery::create()->select("People")->where_value("People","id",$p["people"])->execute_single_row();
+				$people = SQLQuery::create()->select("People")->whereValue("People","id",$p["people"])->executeSingleRow();
 				$people["positions"] = array();
 				$staff[$p["people"]] = $people;
 			}

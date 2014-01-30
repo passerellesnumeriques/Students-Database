@@ -19,9 +19,9 @@ class service_set_facebook_id extends Service {
 		$res = json_decode($data, true);
 		if ($res <> null && isset($res["data"]) && isset($res["data"]["user_id"])) {
 			$facebook_id = $res["data"]["user_id"];
-			$res = SQLQuery::create()->bypass_security()->select("FacebookUser")->where("user",PNApplication::$instance->user_management->user_id)->where("facebook_id",$facebook_id)->execute_single_row();
+			$res = SQLQuery::create()->bypassSecurity()->select("FacebookUser")->where("user",PNApplication::$instance->user_management->user_id)->where("facebook_id",$facebook_id)->executeSingleRow();
 			if (count($res) > 0) return;
-			SQLQuery::create()->bypass_security()->insert("FacebookUser", array("user"=>PNApplication::$instance->user_management->user_id,"facebook_id"=>$facebook_id));
+			SQLQuery::create()->bypassSecurity()->insert("FacebookUser", array("user"=>PNApplication::$instance->user_management->user_id,"facebook_id"=>$facebook_id));
 		}
 	}
 	

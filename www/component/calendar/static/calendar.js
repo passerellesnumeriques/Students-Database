@@ -217,10 +217,11 @@ if (!window.top.CalendarsProviders) {
 
 /**
  * Abstract class of a calendar.
- * @param {CalendarProvider} CalendarProvider providing this calendar
+ * @param {CalendarProvider} provider providing this calendar
  * @param {String} name name of the calendar
  * @param {String} color hexadecimal RGB color or null for a default one. ex: C0C0FF
  * @param {Boolean} show indicates if the events of the calendar should be displayed or not
+ * @param {String} icon URL
  */
 function Calendar(provider, name, color, show, icon) {
 	if (!color) color = "A0A0FF";

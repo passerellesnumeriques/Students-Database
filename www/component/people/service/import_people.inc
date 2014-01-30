@@ -17,7 +17,7 @@ function import_people($input) {
 			$cols = $data->getHandledColumns();
 			$values[$cols[0]] = $value;
 		}
-		$people_id = SQLQuery::create()->bypass_security()->insert("People", $values);
+		$people_id = SQLQuery::create()->bypassSecurity()->insert("People", $values);
 	} catch (Exception $e) {
 		PNApplication::error($e);
 		return null;
@@ -27,7 +27,7 @@ function import_people($input) {
 			if (!($pi instanceof PeoplePlugin)) continue;
 			if (!$pi->importPeopleData($input, $people_id)) {
 				// error: rollback
-				SQLQuery::create()->bypass_security()->remove_key("People", $people_id);
+				SQLQuery::create()->bypassSecurity()->removeKey("People", $people_id);
 				return null;
 			}
 		}

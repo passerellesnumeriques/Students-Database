@@ -13,7 +13,7 @@ class service_picture extends Service {
 				return;
 			}
 		}
-		$people = SQLQuery::create()->select("People")->where("id",$people_id)->execute_single_row();
+		$people = SQLQuery::create()->select("People")->where("id",$people_id)->executeSingleRow();
 		
 		if ($people["picture"] <> null) {
 			$data = PNApplication::$instance->storage->get_data($people["picture"]);

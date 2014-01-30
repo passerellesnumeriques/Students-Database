@@ -4,14 +4,14 @@ table_datadisplay_page_from_key($this, "Student", $people_id);
 
 $student = SQLQuery::create()
 	->select("Student")
-	->where_value("Student", "people", $people_id)
+	->whereValue("Student", "people", $people_id)
 	->join("Student", "People", array("people"=>"id"))
-	->execute_single_row();
+	->executeSingleRow();
 
 $batch = SQLQuery::create()
 	->select("StudentBatch")
-	->where_value("StudentBatch", "id", $student["batch"])
-	->execute_single_row();
+	->whereValue("StudentBatch", "id", $student["batch"])
+	->executeSingleRow();
 
 if ($student["exclusion_date"] == null) {
 	echo "<div class='button' onclick='exclude();'><img src='".theme::make_icon("/static/students/student_16.png", theme::$icons_10["forbidden"])."'/> Exclude</div>";

@@ -9,24 +9,24 @@ class page_subject_grades extends Page {
 		// get subject
 		$subject = SQLQuery::create()
 		->select("CurriculumSubject")
-		->where_value("CurriculumSubject", "id", $_GET["subject"])
-		->execute_single_row();
+		->whereValue("CurriculumSubject", "id", $_GET["subject"])
+		->executeSingleRow();
 		$subject_grading = SQLQuery::create()
 		->select("CurriculumSubjectGrading")
 		->where("subject", $subject["id"])
-		->execute_single_row();
+		->executeSingleRow();
 		
 		// get period
 		$period = SQLQuery::create()
 		->select("AcademicPeriod")
-		->where_value("AcademicPeriod", "id", $subject["period"])
-		->execute_single_row();
+		->whereValue("AcademicPeriod", "id", $subject["period"])
+		->executeSingleRow();
 		
 		// get specialization or null
-		$specialization = $subject["specialization"] <> null ? SQLQuery::create()->select("Specialization")->where("id",$subject["specialization"])->execute_single_row() : null;
+		$specialization = $subject["specialization"] <> null ? SQLQuery::create()->select("Specialization")->where("id",$subject["specialization"])->executeSingleRow() : null;
 		
 		// get batch
-		$batch = SQLQuery::create()->select("StudentBatch")->where("id", $period["batch"])->execute_single_row();
+		$batch = SQLQuery::create()->select("StudentBatch")->where("id", $period["batch"])->executeSingleRow();
 		
 		// get list of classes
 		$class_id = @$_GET["class"];
@@ -36,13 +36,13 @@ class page_subject_grades extends Page {
 			->where("period", $subject["period"])
 			;
 			if ($specialization <> null)
-				$q->where_value("AcademicClass", "specialization", $specialization["id"]);
+				$q->whereValue("AcademicClass", "specialization", $specialization["id"]);
 			else
-				$q->where_null("AcademicClass", "specialization");
+				$q->whereNull("AcademicClass", "specialization");
 			$classes = $q->execute();
 			$class = null;
 		} else {
-			$class = SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->execute_single_row();
+			$class = SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->executeSingleRow();
 			$classes = array($class);
 		}
 		$classes_ids = array();
@@ -102,24 +102,24 @@ class page_subject_grades extends Page {
 		}
 		
 		// get students grades
-		$people_id_alias = $data["query"]->get_field_alias("People", "id");
+		$people_id_alias = $data["query"]->getFieldAlias("People", "id");
 		$students_ids = array();
 		foreach ($data["data"] as $row)
 			array_push($students_ids, $row[$people_id_alias]);
 		$final_grades = count($students_ids) == 0 ? array() : SQLQuery::create()
 			->select("StudentSubjectGrade")
-			->where_value("StudentSubjectGrade", "subject", $subject_id)
-			->where_in("StudentSubjectGrade", "people", $students_ids)
+			->whereValue("StudentSubjectGrade", "subject", $subject_id)
+			->whereIn("StudentSubjectGrade", "people", $students_ids)
 			->execute();
 		$types_grades = count($types_ids) == 0 || count($students_ids) == 0 ? array() : SQLQuery::create()
 			->select("StudentSubjectEvaluationTypeGrade")
-			->where_in("StudentSubjectEvaluationTypeGrade", "type", $types_ids)
-			->where_in("StudentSubjectEvaluationTypeGrade", "people", $students_ids)
+			->whereIn("StudentSubjectEvaluationTypeGrade", "type", $types_ids)
+			->whereIn("StudentSubjectEvaluationTypeGrade", "people", $students_ids)
 			->execute();
 		$eval_grades = count($evaluations_ids) == 0 || count($students_ids) == 0 ? array() : SQLQuery::create()
 			->select("StudentSubjectEvaluationGrade")
-			->where_in("StudentSubjectEvaluationGrade", "evaluation", $evaluations_ids)
-			->where_in("StudentSubjectEvaluationGrade", "people", $students_ids)
+			->whereIn("StudentSubjectEvaluationGrade", "evaluation", $evaluations_ids)
+			->whereIn("StudentSubjectEvaluationGrade", "people", $students_ids)
 			->execute();
 		
 		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");

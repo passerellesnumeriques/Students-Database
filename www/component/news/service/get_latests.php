@@ -16,10 +16,10 @@ class service_get_latests extends Service {
 	public function execute(&$component, $input) {
 		require_once("component/news/NewsPlugin.inc");
 
-		$q = SQLQuery::create()->bypass_security()->select("News");
-		$q->where_null("News", "reply_to");
+		$q = SQLQuery::create()->bypassSecurity()->select("News");
+		$q->whereNull("News", "reply_to");
 		$q->where("update_timestamp", ">=", $input["latests_timestamp"]);
-		$q->order_by("News", "update_timestamp", false);
+		$q->orderBy("News", "update_timestamp", false);
 		
 		$where = "(";
 		foreach (PNApplication::$instance->components as $c) {
@@ -87,10 +87,10 @@ class service_get_latests extends Service {
 		if (count($people_names) > 0) {
 			$a = array();
 			foreach ($people_names as $domain=>$users) {
-				$res = SQLQuery::create()->bypass_security()
+				$res = SQLQuery::create()->bypassSecurity()
 					->database("students_".$domain)
 					->select("Users")
-					->where_in("Users", "username", $users)
+					->whereIn("Users", "username", $users)
 					->join("Users", "UserPeople", array("id"=>"user"))
 					->join("UserPeople", "People", array("people"=>"id"))
 					->field("Users", "username", "username")
