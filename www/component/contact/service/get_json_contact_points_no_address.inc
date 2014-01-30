@@ -12,19 +12,19 @@ function get_json_contact_points_no_address($organization){
 				->join("People_contact","Contact",array("contact" => "id"))
 				->field("Organization","id","organization_id")
 				->field("Contact_point","designation","designation")
-				->order_by("Organization","id")
-				->order_by("People","id");
+				->orderBy("Organization","id")
+				->orderBy("People","id");
 	PeopleJSON::PeopleSQL($q);
 	ContactJSON::ContactSQL($q);
 				
 	if(is_array($organization)){
 		if(count($organization) != 0){
-			$q->where_in("Organization","id",$organization);
+			$q->whereIn("Organization","id",$organization);
 			$contacts = $q->execute();
 		}
 	}
 	else{
-		$q->where_value("Organization","id",$organization);
+		$q->whereValue("Organization","id",$organization);
 		$contacts = $q->execute();
 	}
 	

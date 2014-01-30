@@ -18,10 +18,10 @@ class page_set_picture extends Page {
 function finalize_picture_import($ids) {
 	global $people_id;
 	$storage_id = $ids[0];
-	$people = SQLQuery::create()->select("People")->where("id",$people_id)->execute_single_row();
+	$people = SQLQuery::create()->select("People")->where("id",$people_id)->executeSingleRow();
 	if ($people <> null) {
 		$version = isset($people["picture_version"]) && $people["picture_version"] <> null ? intval($people["picture_version"])+1 : 1;
-		SQLQuery::create()->update_by_key("People", $people_id, array("picture"=>$storage_id,"picture_version"=>$version));
+		SQLQuery::create()->updateByKey("People", $people_id, array("picture"=>$storage_id,"picture_version"=>$version));
 		if (!PNApplication::has_errors()) {
 			if (isset($people["picture"]) && $people["picture"] <> null && $people["picture"] <> 0)
 				PNApplication::$instance->storage->remove_data($people["picture"]);

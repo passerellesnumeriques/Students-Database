@@ -2,7 +2,7 @@
 function staff_info(&$page, $people_id, $container_id) {
 	$departments = SQLQuery::create()->select("PNDepartment")->execute();
 	if ($people_id <> -1)
-		$positions = SQLQuery::create()->select("StaffPosition")->where("people",$people_id)->order_by("StaffPosition", "start", false)->execute();
+		$positions = SQLQuery::create()->select("StaffPosition")->where("people",$people_id)->orderBy("StaffPosition", "start", false)->execute();
 	else
 		$positions = null;
 	

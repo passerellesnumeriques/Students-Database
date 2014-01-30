@@ -15,12 +15,12 @@ class service_user_picture extends Service {
 		if ($_GET["domain"] == PNApplication::$instance->local_domain) {
 			require_once("component/people/service/picture.php");
 			$service = new service_picture();
-			$people_id = SQLQuery::create()->bypass_security()
+			$people_id = SQLQuery::create()->bypassSecurity()
 				->select("Users")
-				->where_value("Users", "username", $_GET["username"])
+				->whereValue("Users", "username", $_GET["username"])
 				->join("Users", "UserPeople", array("id"=>"user"))
 				->field("UserPeople", "people", "people_id")
-				->execute_single_value();
+				->executeSingleValue();
 			$_GET["people"] = $people_id;
 			$service->execute(PNApplication::$instance->people, array());
 		} else {

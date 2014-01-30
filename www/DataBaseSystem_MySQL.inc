@@ -17,42 +17,42 @@ class DataBaseSystem_MySQL extends DataBaseSystem {
 
 	private $conn = null;
 
-	public function select_db($db_name) {
+	public function selectDatabase($db_name) {
 		return mysqli_select_db($this->conn, $db_name);
 	}
 
-	protected function execute_sql($sql_query) {
+	protected function executeSQL($sql_query) {
 		//echo $sql_query."<br/><br/>";
 		return mysqli_query($this->conn, $sql_query);
 	}
 
-	public function next_row($query_result) {
+	public function nextRow($query_result) {
 		$row = mysqli_fetch_array($query_result);
 		if ($row === NULL) return false;
 		return $row;
 	}
 
-	public function get_insert_id() {
+	public function getInsertID() {
 		return mysqli_insert_id($this->conn);
 	}
 
-	public function affected_rows() {
+	public function affectedRows() {
 		return mysqli_affected_rows($this->conn);
 	}
 
-	public function get_last_error_number() {
+	public function getLastErrorNumber() {
 		return mysqli_errno($this->conn);
 	}
 
-	public function get_last_error_message() {
+	public function getLastErrorMessage() {
 		return mysqli_error($this->conn);
 	}
 
-	public function escape_string($str) {
+	public function escapeString($str) {
 		return mysqli_real_escape_string($this->conn, $str);
 	}
 	
-	public function start_transaction() {
+	public function startTransaction() {
 		mysqli_autocommit($this->conn, false);
 		mysqli_query($this->conn, "START TRANSACTION;");
 	}

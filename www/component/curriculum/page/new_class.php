@@ -5,8 +5,8 @@ class page_new_class extends Page {
 	
 	public function execute() {
 		$period_id = $_GET["period"];
-		$period = SQLQuery::get_row("AcademicPeriod", $period_id);
-		$periods_after = SQLQuery::create()->select("AcademicPeriod")->where("batch",$period["batch"])->where("start_date",">",$period["start_date"])->order_by("AcademicPeriod","start_date")->execute();
+		$period = SQLQuery::getRow("AcademicPeriod", $period_id);
+		$periods_after = SQLQuery::create()->select("AcademicPeriod")->where("batch",$period["batch"])->where("start_date",">",$period["start_date"])->orderBy("AcademicPeriod","start_date")->execute();
 		$this->add_javascript("/static/javascript/validation.js");
 		?>
 		<form name='new_class' onsubmit='return false'>
@@ -51,7 +51,7 @@ class page_new_class extends Page {
 		$periods_ids = array();
 		array_push($periods_ids, $period["id"]);
 		foreach ($periods_after as $p) array_push($periods_ids,$p["id"]);
-		$classes = SQLQuery::create()->select("AcademicClass")->where_in("AcademicClass","period",$periods_ids)->execute();
+		$classes = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass","period",$periods_ids)->execute();
 		$first = true;
 		foreach ($classes as $c) {
 			if ($first) $first = false; else echo ",";

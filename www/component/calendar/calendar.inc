@@ -32,7 +32,7 @@ class calendar extends Component {
 			PNApplication::error("You must specify a write access for the calendar");
 			return false;
 		}
-		$calendar_id = SQLQuery::create()->bypass_security()->insert("Calendar", 
+		$calendar_id = SQLQuery::create()->bypassSecurity()->insert("Calendar", 
 			array(
 				"name"=>$calendar_name,
 				"type"=>"internal",
@@ -41,9 +41,9 @@ class calendar extends Component {
 			)
 		);
 		foreach ($readable_rights as $name=>$value)
-			SQLQuery::create()->bypass_security()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$name,"right_value"=>$value,"writable"=>false));
+			SQLQuery::create()->bypassSecurity()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$name,"right_value"=>$value,"writable"=>false));
 		foreach ($writable_rights as $name=>$value)
-			SQLQuery::create()->bypass_security()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$name,"right_value"=>$value,"writable"=>true));
+			SQLQuery::create()->bypassSecurity()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$name,"right_value"=>$value,"writable"=>true));
 		return $calendar_id;
 	}
 	
@@ -57,29 +57,29 @@ class calendar extends Component {
 	 */
 	public function createUserCalendar($user_id, $name, $color = null, $icon = null) {
 		// check number of calendars for this user
-		$nb = SQLQuery::create()->bypass_security()
+		$nb = SQLQuery::create()->bypassSecurity()
 			->select("UserCalendar")
-			->where_value("UserCalendar", "user", $user_id)
+			->whereValue("UserCalendar", "user", $user_id)
 			->count()
-			->execute_single_value();
+			->executeSingleValue();
 		if ($nb >= 50) {
 			PNApplication::error("You reached the limit of 50 personal calendars.");
 			return;
 		}
 		// ok, we can create
-		SQLQuery::start_transaction();
+		SQLQuery::startTransaction();
 		try {
-			$calendar_id = SQLQuery::create()->bypass_security()->insert("Calendar", array(
+			$calendar_id = SQLQuery::create()->bypassSecurity()->insert("Calendar", array(
 				"name"=>$name,
 				"color"=>$color,
 				"icon"=>$icon,
 				"type"=>"internal"
 			));
-			SQLQuery::create()->bypass_security()->insert("UserCalendar", array("user"=>$user_id,"calendar"=>$calendar_id));
-			SQLQuery::end_transaction();
+			SQLQuery::create()->bypassSecurity()->insert("UserCalendar", array("user"=>$user_id,"calendar"=>$calendar_id));
+			SQLQuery::commitTransaction();
 			return $calendar_id;
 		} catch(Exception $e) {
-			SQLQuery::cancel_transaction();
+			SQLQuery::rollbackTransaction();
 			throw $e;
 		}
 	}
@@ -98,9 +98,9 @@ class calendar extends Component {
 	 * @return boolean true if the current user can read it
 	 */
 	public function canReadCalendar($calendar_id) {
-		$r = SQLQuery::create()->bypass_security()->select("UserCalendar")->where("calendar",$calendar_id)->where("user",PNApplication::$instance->user_management->user_id)->execute_single_row();
+		$r = SQLQuery::create()->bypassSecurity()->select("UserCalendar")->where("calendar",$calendar_id)->where("user",PNApplication::$instance->user_management->user_id)->executeSingleRow();
 		if ($r <> null) return true;
-		$rights = SQLQuery::create()->bypass_security()->select("CalendarRights")->where("calendar", $calendar_id)->execute();
+		$rights = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->where("calendar", $calendar_id)->execute();
 		foreach ($rights as $r)
 			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
 				return true;
@@ -113,9 +113,9 @@ class calendar extends Component {
 	 * @return boolean true if the current user can modify it
 	 */
 	public function canWriteCalendar($calendar_id) {
-		$r = SQLQuery::create()->bypass_security()->select("UserCalendar")->where("calendar",$calendar_id)->where("user",PNApplication::$instance->user_management->user_id)->execute_single_row();
+		$r = SQLQuery::create()->bypassSecurity()->select("UserCalendar")->where("calendar",$calendar_id)->where("user",PNApplication::$instance->user_management->user_id)->executeSingleRow();
 		if ($r <> null) return true;
-		$rights = SQLQuery::create()->bypass_security()->select("CalendarRights")->where("calendar", $calendar_id)->where("writable",true)->execute();
+		$rights = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->where("calendar", $calendar_id)->where("writable",true)->execute();
 		foreach ($rights as $r)
 			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
 				return true;
@@ -128,10 +128,10 @@ class calendar extends Component {
 	 */
 	public function getAccessibleCalendars() {
 		$ids = array();
-		$res = SQLQuery::create()->bypass_security()->select("UserCalendar")->where("user",PNApplication::$instance->user_management->user_id)->execute();
+		$res = SQLQuery::create()->bypassSecurity()->select("UserCalendar")->where("user",PNApplication::$instance->user_management->user_id)->execute();
 		foreach ($res as $r)
 			array_push($ids, $r["calendar"]);
-		$res = SQLQuery::create()->bypass_security()->select("CalendarRights")->execute();
+		$res = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->execute();
 		foreach ($res as $r) {
 			if (in_array($r["calendar"], $ids)) continue;
 			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
@@ -146,10 +146,10 @@ class calendar extends Component {
 	 */
 	public function getWritableCalendars() {
 		$ids = array();
-		$res = SQLQuery::create()->bypass_security()->select("UserCalendar")->where("user",PNApplication::$instance->user_management->user_id)->execute();
+		$res = SQLQuery::create()->bypassSecurity()->select("UserCalendar")->where("user",PNApplication::$instance->user_management->user_id)->execute();
 		foreach ($res as $r)
 			array_push($ids, $r["calendar"]);
-		$res = SQLQuery::create()->bypass_security()->select("CalendarRights")->where("writable",true)->execute();
+		$res = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->where("writable",true)->execute();
 		foreach ($res as $r) {
 			if (in_array($r["calendar"], $ids)) continue;
 			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
@@ -169,11 +169,11 @@ class calendar extends Component {
 			return false;
 		}
 		// check the event belongs to the calendar
-		$cid = SQLQuery::create()->bypass_security()->select("CalendarEvent")->where_value("CalendarEvent", "id", $event_id)->field("CalendarEvent", "calendar")->execute_single_value();
+		$cid = SQLQuery::create()->bypassSecurity()->select("CalendarEvent")->whereValue("CalendarEvent", "id", $event_id)->field("CalendarEvent", "calendar")->executeSingleValue();
 		if ($cid == null) return false;
 		if ($cid <> $calendar_id) return false;
 		//perform the remove
-		SQLQuery::create()->bypass_security()->remove_key("CalendarEvent", $event_id);
+		SQLQuery::create()->bypassSecurity()->removeKey("CalendarEvent", $event_id);
 		return true;
 	}
 	
@@ -191,7 +191,7 @@ class calendar extends Component {
 		if (isset($event["id"])) {
 			// this is an update
 			// check the event belongs to the calendar
-			$res = SQLQuery::create()->bypass_security()->select("CalendarEvent")->where("id",$event["id"])->execute_single_row();
+			$res = SQLQuery::create()->bypassSecurity()->select("CalendarEvent")->where("id",$event["id"])->executeSingleRow();
 			if ($res == null) {
 				PNApplication::error("Invalid event id: does not exist");
 				return false;
@@ -214,7 +214,7 @@ class calendar extends Component {
 			$data["organizer"] = $event["organizer"];
 			$data["participation"] = $event["participation"];
 			$data["role"] = $event["role"];
-			SQLQuery::create()->bypass_security()->update_by_key("CalendarEvent", $event["id"], $data);
+			SQLQuery::create()->bypassSecurity()->updateByKey("CalendarEvent", $event["id"], $data);
 			if (PNApplication::has_errors())
 				return false;
 			$event["uid"] = $res["uid"];
@@ -231,7 +231,7 @@ class calendar extends Component {
 			$data["organizer"] = $event["organizer"];
 			$data["participation"] = $event["participation"];
 			$data["role"] = $event["role"];
-			$event["id"] = SQLQuery::create()->bypass_security()->insert("CalendarEvent", $data);
+			$event["id"] = SQLQuery::create()->bypassSecurity()->insert("CalendarEvent", $data);
 			$event["uid"] = $data["uid"];
 			if (PNApplication::has_errors()) return false;
 		}

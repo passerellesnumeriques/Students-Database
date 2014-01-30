@@ -34,7 +34,7 @@ class RolesServices_Test_CreateRole_NoRight extends TestServicesStep {
 		return "if (!errors || errors.length == 0) return 'No error returned'; if (result) return 'Can create role: '+service.generateInput(result); return null;";
 	}
 	public function finalizationStep(&$scenario_data) {
-		if (SQLQuery::create()->bypass_security()->select("Role")->where("name","test_error")->execute_single_row() <> null)
+		if (SQLQuery::create()->bypassSecurity()->select("Role")->where("name","test_error")->executeSingleRow() <> null)
 			return "Create role returned error, but the role exists in the database";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -56,7 +56,7 @@ class RolesServices_Test_CreateRole_Ok extends TestServicesStep {
 			"return null;";
 	}
 	public function finalizationStep(&$scenario_data) {
-		if (SQLQuery::create()->bypass_security()->select("Role")->where("name","test_ok")->execute_single_row() == null)
+		if (SQLQuery::create()->bypassSecurity()->select("Role")->where("name","test_ok")->executeSingleRow() == null)
 			return "Create role succeed, but the role does not exist in the database";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -78,7 +78,7 @@ class RolesServices_Test_CreateRole_Again extends TestServicesStep {
 		"return null;";
 	}
 	public function finalizationStep(&$scenario_data) {
-		$nb = count(SQLQuery::create()->bypass_security()->select("Role")->where("name","test_ok")->execute());
+		$nb = count(SQLQuery::create()->bypassSecurity()->select("Role")->where("name","test_ok")->execute());
 		if ($nb <> 1)
 			return "The creation of a duplicate failed, but ".$nb." found in database (should be 1)";
 		PNApplication::$instance->user_management->logout();

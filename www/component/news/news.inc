@@ -36,7 +36,7 @@ class news extends Component {
 				sort($tags);
 				foreach ($tags as $tag) $s .= "/".$tag."/";
 			}
-			return SQLQuery::create()->bypass_security()->insert("News", array(
+			return SQLQuery::create()->bypassSecurity()->insert("News", array(
 				"section"=>$section,
 				"category"=>$category,
 				"html"=>$message,
@@ -54,7 +54,7 @@ class news extends Component {
 	
 	public function post_reply($parent_id, $message) {
 		// first get the parent
-		$parent = SQLQuery::create()->bypass_security()->select("News")->where_value("News", "id", $parent_id)->execute_single_row();
+		$parent = SQLQuery::create()->bypassSecurity()->select("News")->whereValue("News", "id", $parent_id)->executeSingleRow();
 		if ($parent == null) {
 			PNApplication::error("Invalid parent news id");
 			return false;
@@ -89,7 +89,7 @@ class news extends Component {
 		}
 		try {
 			$now = time();
-			$reply_id = SQLQuery::create()->bypass_security()->insert("News", array(
+			$reply_id = SQLQuery::create()->bypassSecurity()->insert("News", array(
 				"section"=>$parent["section"],
 				"category"=>$parent["category"],
 				"html"=>$message,
@@ -100,7 +100,7 @@ class news extends Component {
 				"tags"=>null
 			));
 			// update time of parent
-			SQLQuery::create()->bypass_security()->update_by_key("News", $parent_id, array("update_timestamp"=>$now));
+			SQLQuery::create()->bypassSecurity()->updateByKey("News", $parent_id, array("update_timestamp"=>$now));
 			return $reply_id;
 		} catch (Exception $e) {
 			PNApplication::error($e);

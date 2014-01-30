@@ -73,15 +73,15 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 				->select($table_name)
 				->join($table_name, "Contact", array("contact" => "id"), "JOIN_ALIAS")
 				->field($table_name, $this->joining_key_name, "JOIN_KEY")
-				->where_in($table_name, $this->joining_key_name, $keys)
-				->where_value("JOIN_ALIAS", "type", $this->type)
+				->whereIn($table_name, $this->joining_key_name, $keys)
+				->whereValue("JOIN_ALIAS", "type", $this->type)
 				;
 			require_once("ContactJSON.inc");
 			ContactJSON::ContactSQL($q);
 			$res = $q->execute();
 		}
 		
-		$sql_aliases["data"] = $original_query->field_id();
+		$sql_aliases["data"] = $original_query->generateFieldAlias();
 		for ($i = 0; $i < count($rows); $i++) {
 			$key = $rows[$i][$sql_aliases["key"]];
 			$values = "[";
@@ -171,14 +171,14 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 				->select($table_name)
 				->join($table_name, "Postal_address", array("address" => "id"), "JOIN_ALIAS")
 				->field($table_name, $this->joining_key_name, "JOIN_KEY")
-				->where_in($table_name, $this->joining_key_name, $keys)
+				->whereIn($table_name, $this->joining_key_name, $keys)
 				;
 			require_once("component/contact/ContactJSON.inc");
 			ContactJSON::PostalAddressSQL($q);
 			$res = $q->execute();
 		}
 		
-		$sql_aliases["data"] = $original_query->field_id();
+		$sql_aliases["data"] = $original_query->generateFieldAlias();
 		for ($i = 0; $i < count($rows); $i++) {
 			$key = $rows[$i][$sql_aliases["key"]];
 			$values = "[";
@@ -215,23 +215,23 @@ $model->addTable("Contact")
 	->addString("contact",100,1,false,false)
 	->addReadFilter(function(&$q, $table_alias) {
 		$table_people = Datamodel::get()->getTable("People_contact");
-		$people_alias = $q->get_table_alias("People_contact");
+		$people_alias = $q->getTableAlias("People_contact");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People_contact", array("id"=>"contact"), $people_alias);
 		}
-		$where = $q->save_where();
+		$where = $q->saveWhere();
 		$table_people->filterReadAccess($q, $people_alias);
-		$where_people = $q->save_where();
+		$where_people = $q->saveWhere();
 
 		$table_org = Datamodel::get()->getTable("Organization_contact");
-		$org_alias = $q->get_table_alias("Organization_contact");
+		$org_alias = $q->getTableAlias("Organization_contact");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization_contact", array("id"=>"contact"), $org_alias);
 		}
 		$table_org->filterReadAccess($q, $org_alias);
-		$where_org = $q->save_where();
+		$where_org = $q->saveWhere();
 
 		$q->where($where);
 		$where = "((`".$people_alias."`.people IS NOT NULL";
@@ -243,25 +243,25 @@ $model->addTable("Contact")
 	})
 	->addWriteFilter(function(&$q, $table_alias){
 		$table_people = Datamodel::get()->getTable("People_contact");
-		$people_alias = $q->get_table_alias("People_contact");
+		$people_alias = $q->getTableAlias("People_contact");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People_contact", array("id"=>"contact"), $people_alias);
 		}
 		$q->field($people_alias, "people", "PEOPLE_CONTACT_FIELD");
-		$where = $q->save_where();
+		$where = $q->saveWhere();
 		$table_people->prepareSelectToDetermineWriteAccess($q, $people_alias); 
-		$where_people = $q->save_where();
+		$where_people = $q->saveWhere();
 		
 		$table_org = Datamodel::get()->getTable("Organization_contact");
-		$org_alias = $q->get_table_alias("Organization_contact");
+		$org_alias = $q->getTableAlias("Organization_contact");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization_contact", array("id"=>"contact"), $org_alias);
 		}
 		$q->field($org_alias, "organization", "ORG_CONTACT_FIELD");
 		$table_org->prepareSelectToDetermineWriteAccess($q, $org_alias); 
-		$where_org = $q->save_where();
+		$where_org = $q->saveWhere();
 
 		$q->where($where);
 		$where = "((`".$people_alias."`.people IS NOT NULL";
@@ -286,25 +286,25 @@ $model->addTable("Contact")
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks){
 		$table_people = Datamodel::get()->getTable("People_contact");
-		$people_alias = $q->get_table_alias("People_contact");
+		$people_alias = $q->getTableAlias("People_contact");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People_contact", array("id"=>"contact"), $people_alias);
 		}
 		$q->field($people_alias, "people", "PEOPLE_CONTACT_FIELD");
-		$where = $q->save_where();
+		$where = $q->saveWhere();
 		$table_people->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
-		$where_people = $q->save_where();
+		$where_people = $q->saveWhere();
 		
 		$table_org = Datamodel::get()->getTable("Organization_contact");
-		$org_alias = $q->get_table_alias("Organization_contact");
+		$org_alias = $q->getTableAlias("Organization_contact");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization_contact", array("id"=>"contact"), $org_alias);
 		}
 		$q->field($org_alias, "organization", "ORG_CONTACT_FIELD");
 		$table_org->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
-		$where_org = $q->save_where();
+		$where_org = $q->saveWhere();
 		
 		$q->where($where);
 		$where = "((`".$people_alias."`.people IS NOT NULL";
@@ -344,18 +344,18 @@ $model->addTable("People_contact")
 	->addForeignKey("people","People",true,false,true,false)
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("People");
-		$people_alias = $q->get_table_alias("People");
+		$people_alias = $q->getTableAlias("People");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
 		}
 		$table->filterReadAccess($q, $people_alias);
 	})
 	->addRemoveFilter(function(&$q,$table_alias,&$locks){
 		$table = Datamodel::get()->getTable("People");
-		$people_alias = $q->get_table_alias("People");
+		$people_alias = $q->getTableAlias("People");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
 		}
 		$table->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
@@ -365,9 +365,9 @@ $model->addTable("People_contact")
 	})
 	->addInsertFilter(function($values){
 		$q = SQLQuery::create();
-		$table_alias = $q->table_id();
+		$table_alias = $q->generateTableAlias();
 		$q->select(array("People"=>$table_alias));
-		$q->where_value($table_alias, "id", $values["people"]);
+		$q->whereValue($table_alias, "id", $values["people"]);
 		$table = DataModel::get()->getTable("People");
 		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
 		$rows = $q->execute();
@@ -390,17 +390,17 @@ $model->addTable("Postal_address")
 	->addString("address_type",100,0,true,false)
 	->addReadFilter(function(&$q, $table_alias) {
 		$table_people = Datamodel::get()->getTable("People_address");
-		$people_alias = $q->get_table_alias("People_address");
+		$people_alias = $q->getTableAlias("People_address");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People_address", array("id"=>"address"), $people_alias);
 		}
 		$table_people->filterReadAccess($q, $people_alias);
 
 		$table_org = Datamodel::get()->getTable("Organization_address");
-		$org_alias = $q->get_table_alias("Organization_address");
+		$org_alias = $q->getTableAlias("Organization_address");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization_address", array("id"=>"address"), $org_alias);
 		}
 		$table_org->filterReadAccess($q, $org_alias);
@@ -409,18 +409,18 @@ $model->addTable("Postal_address")
 	})
 	->addWriteFilter(function(&$q, $table_alias){
 		$table_people = Datamodel::get()->getTable("People_address");
-		$people_alias = $q->get_table_alias("People_address");
+		$people_alias = $q->getTableAlias("People_address");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People_address", array("id"=>"address"), $people_alias);
 		}
 		$q->field($people_alias, "people", "PEOPLE_ADDRESS_FIELD");
 		$table_people->prepareSelectToDetermineWriteAccess($q, $people_alias); 
 		
 		$table_org = Datamodel::get()->getTable("Organization_address");
-		$org_alias = $q->get_table_alias("Organization_address");
+		$org_alias = $q->getTableAlias("Organization_address");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization_address", array("id"=>"address"), $org_alias);
 		}
 		$q->field($org_alias, "organization", "ORG_ADDRESS_FIELD");
@@ -441,18 +441,18 @@ $model->addTable("Postal_address")
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks){
 		$table_people = Datamodel::get()->getTable("People_address");
-		$people_alias = $q->get_table_alias("People_address");
+		$people_alias = $q->getTableAlias("People_address");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People_address", array("id"=>"address"), $people_alias);
 		}
 		$q->field($people_alias, "people", "PEOPLE_ADDRESS_FIELD");
 		$table_people->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
 		
 		$table_org = Datamodel::get()->getTable("Organization_address");
-		$org_alias = $q->get_table_alias("Organization_address");
+		$org_alias = $q->getTableAlias("Organization_address");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization_address", array("id"=>"address"), $org_alias);
 		}
 		$q->field($org_alias, "organization", "ORG_ADDRESS_FIELD");
@@ -489,18 +489,18 @@ $model->addTable("People_address")
 	->setDisplayHandler("people", new AddressDisplayHandler("people"))
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("People");
-		$people_alias = $q->get_table_alias("People");
+		$people_alias = $q->getTableAlias("People");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
 		}
 		$table->filterReadAccess($q, $people_alias);
 	})
 	->addRemoveFilter(function(&$q,$table_alias, &$locks){
 		$table = Datamodel::get()->getTable("People");
-		$people_alias = $q->get_table_alias("People");
+		$people_alias = $q->getTableAlias("People");
 		if ($people_alias == null) {
-			$people_alias = $q->table_id();
+			$people_alias = $q->generateTableAlias();
 			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
 		}
 		$table->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
@@ -510,9 +510,9 @@ $model->addTable("People_address")
 	})
 	->addInsertFilter(function($values){
 		$q = SQLQuery::create();
-		$table_alias = $q->table_id();
+		$table_alias = $q->generateTableAlias();
 		$q->select(array("People"=>$table_alias));
-		$q->where_value($table_alias, "id", $values["people"]);
+		$q->whereValue($table_alias, "id", $values["people"]);
 		$table = DataModel::get()->getTable("People");
 		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
 		$rows = $q->execute();
@@ -681,9 +681,9 @@ $model->addTable("Organization_types")
 	->addForeignKey("type","Organization_type",true,false,true,false)
 	->setKey(array("organization","type"))
 	->addReadFilter(function(&$q, $table_alias){
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 
@@ -709,9 +709,9 @@ $model->addTable("Organization_types")
 		$q->where($w);
 	})
 	->addWriteFilter(function(&$q, $table_alias){
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 		$q->field($org_alias, "creator", "ORG_CREATOR");
@@ -731,7 +731,7 @@ $model->addTable("Organization_types")
 	})
 	->addInsertFilter(function($values){
 		try {
-			$org = SQLQuery::create()->select("Organization")->where_value("Organization", "id", $values["organization"])->execute_single_row();
+			$org = SQLQuery::create()->select("Organization")->whereValue("Organization", "id", $values["organization"])->executeSingleRow();
 		} catch (Exception $e) { return false; }
 		if ($org == null) return false;
 		
@@ -745,9 +745,9 @@ $model->addTable("Organization_types")
 		return false;
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks){
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 		$q->field($org_alias, "creator", "ORG_CREATOR");
@@ -773,18 +773,18 @@ $model->addTable("Organization_contact")
 	->addForeignKey("contact","Contact",true,false,true,false)
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 		$table->filterReadAccess($q, $org_alias);
 	})
 	->addRemoveFilter(function(&$q,$table_alias,&$locks){
 		$table = Datamodel::get()->getTable("Organization");
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 		$table->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
@@ -794,9 +794,9 @@ $model->addTable("Organization_contact")
 	})
 	->addInsertFilter(function($values){
 		$q = SQLQuery::create();
-		$table_alias = $q->table_id();
+		$table_alias = $q->generateTableAlias();
 		$q->select(array("Organization"=>$table_alias));
-		$q->where_value($table_alias, "id", $values["organization"]);
+		$q->whereValue($table_alias, "id", $values["organization"]);
 		$table = DataModel::get()->getTable("Organization");
 		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
 		$rows = $q->execute();
@@ -813,18 +813,18 @@ $model->addTable("Organization_address")
 	->setDisplayHandler("organization", new AddressDisplayHandler("organization"))
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 		$table->filterReadAccess($q, $org_alias);
 	})
 	->addRemoveFilter(function(&$q,$table_alias, &$locks){
 		$table = Datamodel::get()->getTable("Organization");
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 		$table->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
@@ -834,9 +834,9 @@ $model->addTable("Organization_address")
 	})
 	->addInsertFilter(function($values){
 		$q = SQLQuery::create();
-		$table_alias = $q->table_id();
+		$table_alias = $q->generateTableAlias();
 		$q->select(array("Organization"=>$table_alias));
-		$q->where_value($table_alias, "id", $values["organization"]);
+		$q->whereValue($table_alias, "id", $values["organization"]);
 		$table = DataModel::get()->getTable("Organization");
 		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
 		$rows = $q->execute();
@@ -853,18 +853,18 @@ $model->addTable("Contact_point")
 	->addString("designation",100,1,false,false)
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 		$table->filterReadAccess($q, $org_alias);
 	})
 	->addRemoveFilter(function(&$q,$table_alias, &$locks){
 		$table = Datamodel::get()->getTable("Organization");
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 		$table->prepareSelectToDetermineRemoveAccess($q, $org_alias, $locks);
@@ -874,9 +874,9 @@ $model->addTable("Contact_point")
 	})
 	->addInsertFilter(function($values){
 		$q = SQLQuery::create();
-		$table_alias = $q->table_id();
+		$table_alias = $q->generateTableAlias();
 		$q->select(array("Organization"=>$table_alias));
-		$q->where_value($table_alias, "id", $values["organization"]);
+		$q->whereValue($table_alias, "id", $values["organization"]);
 		$table = DataModel::get()->getTable("Organization");
 		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
 		$rows = $q->execute();
@@ -885,9 +885,9 @@ $model->addTable("Contact_point")
 		return true;
 	})
 	->addWriteFilter(function(&$q, $table_alias){
-		$org_alias = $q->get_table_alias("Organization");
+		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
-			$org_alias = $q->table_id();
+			$org_alias = $q->generateTableAlias();
 			$q->join($table_alias, "Organization", array("organization"=>"id"), $org_alias);
 		}
 		$q->field($org_alias, "creator", "ORG_CREATOR");

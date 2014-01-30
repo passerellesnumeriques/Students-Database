@@ -19,8 +19,8 @@ class service_remove_row extends Service {
 		try {
 			$q = SQLQuery::create();
 			$sub_model = @$input["sub_model"];
-			if ($sub_model <> null) $q->set_sub_model_for_table(DataModel::get()->getTable($table), $sub_model);
-			$q->remove_key($table, $key);
+			if ($sub_model <> null) $q->selectSubModelForTable(DataModel::get()->getTable($table), $sub_model);
+			$q->removeKey($table, $key);
 		} catch (Exception $e) {
 			PNApplication::error($e->getMessage());
 		}

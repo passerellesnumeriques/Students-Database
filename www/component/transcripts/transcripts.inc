@@ -10,9 +10,9 @@ class transcripts extends Component {
 	}
 	
 	public function set_subject_grading($subject_id, $weight, $only_final_grades, $max_grade, $passing_grade) {
-		SQLQuery::start_transaction();
+		SQLQuery::startTransaction();
 		try {
-			$current = SQLQuery::create()->select("CurriculumSubjectGrading")->where_value("CurriculumSubjectGrading", "subject", $subject_id)->execute_single_row();
+			$current = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $subject_id)->executeSingleRow();
 			if ($current == null) {
 				// first time the subject is configured
 				SQLQuery::create()->insert("CurriculumSubjectGrading", array(
@@ -26,22 +26,22 @@ class transcripts extends Component {
 				$current["only_final_grade"] = $current["only_final_grade"] == 1;
 				if (!$current["only_final_grade"] && $only_final_grades) {
 					// if only_final_grade is set to true, we need to remove all evaluations informatino
-					$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
-					SQLQuery::create()->remove_rows("CurriculumSubjectEvaluationType", $types);
+					$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
+					SQLQuery::create()->removeRows("CurriculumSubjectEvaluationType", $types);
 				}
 				if (($current["only_final_grade"] && !$only_final_grades) ||
 					$current["max_grade"] <> $max_grade) {
 					// if only_final_grade is set to false,
 					// or max_grade changed, 
 					// we need to remove all final grades of the students
-					$students = SQLQuery::create()->select("StudentSubjectGrade")->where_value("StudentSubjectGrade", "subject", $subject_id)->execute();
+					$students = SQLQuery::create()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade", "subject", $subject_id)->execute();
 					$keys = array();
 					foreach ($students as $s)
 						array_push($keys, array("people"=>$s["people"],"subject"=>$subject_id));
-					SQLQuery::create()->remove_keys("StudentSubjectGrade", $keys);
+					SQLQuery::create()->removeKeys("StudentSubjectGrade", $keys);
 				}
 				// update the configuration
-				SQLQuery::create()->update_by_key("CurriculumSubjectGrading", $subject_id, array(
+				SQLQuery::create()->updateByKey("CurriculumSubjectGrading", $subject_id, array(
 					"weight"=>$weight,
 					"only_final_grade"=>$only_final_grades,
 					"max_grade"=>$max_grade,
@@ -52,12 +52,12 @@ class transcripts extends Component {
 					// max_grade changed, we need to update students grades
 					if ($only_final_grades) {
 						// just make sure no grade are higher
-						$students = SQLQuery::create()->select("StudentSubjectGrade")->where_value("StudentSubjectGrade", "subject", $subject_id)->execute();
+						$students = SQLQuery::create()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade", "subject", $subject_id)->execute();
 						$keys = array();
 						foreach ($students as $s)
 							if ($s["grade"] <> null && $s["grade"] > $max_grade)
 								array_push($keys, array("people"=>$s["people"], "subject"=>$subject_id));
-						SQLQuery::create()->update_all_keys("StudentSubjectGrade", $keys, array("grade"=>null));
+						SQLQuery::create()->updateAllKeys("StudentSubjectGrade", $keys, array("grade"=>null));
 					} else {
 						// we need to re-compute all the grades
 						$this->compute_subject_grades($subject_id);
@@ -65,22 +65,22 @@ class transcripts extends Component {
 				}
 			}
 		} catch (Exception $e) {
-			SQLQuery::cancel_transaction();
+			SQLQuery::rollbackTransaction();
 			throw $e;
 		}
-		SQLQuery::end_transaction();
+		SQLQuery::commitTransaction();
 	}
 	
 	public function update_students_final_grade($subject_id, $students_grades) {
-		$subject_info = SQLQuery::create()->select("CurriculumSubjectGrading")->where_value("CurriculumSubjectGrading", "subject", $subject_id)->execute_single_row();
+		$subject_info = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $subject_id)->executeSingleRow();
 		if (!$subject_info["only_final_grade"])
 			throw new Exception("You cannot update students final grades on a subject which is configured with evaluations: the final grade is automatically computed");
 		$students_ids = array();
 		foreach ($students_grades as $s) array_push($students_ids, $s["people"]);
 		$existing = SQLQuery::create()
 			->select("StudentSubjectGrade")
-			->where_value("StudentSubjectGrade", "subject", $subject_id)
-			->where_in("StudentSubjectGrade", "people", $students_ids)
+			->whereValue("StudentSubjectGrade", "subject", $subject_id)
+			->whereIn("StudentSubjectGrade", "people", $students_ids)
 			->execute();
 		$list = array();
 		foreach ($existing as $s) {
@@ -101,7 +101,7 @@ class transcripts extends Component {
 			)); 
 		}
 		if (count($list) > 0)
-			SQLQuery::create()->update_by_keys("StudentSubjectGrade", $list);
+			SQLQuery::create()->updateByKeys("StudentSubjectGrade", $list);
 		// remaining ids are new
 		$list = array();
 		foreach ($students_ids as $people_id) {
@@ -114,7 +114,7 @@ class transcripts extends Component {
 			));
 		}
 		if (count($list) > 0)
-			SQLQuery::create()->insert_multiple("StudentSubjectGrade", $list);
+			SQLQuery::create()->insertMultiple("StudentSubjectGrade", $list);
 	}
 	
 	public function create_evaluation_type($subject_id, $name, $weight) {
@@ -124,28 +124,28 @@ class transcripts extends Component {
 			"weight"=>$weight
 		));
 		// must reset all final grades
-		$students = SQLQuery::create()->select("StudentSubjectGrade")->where_value("StudentSubjectGrade", "subject", $subject_id)->execute();
+		$students = SQLQuery::create()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade", "subject", $subject_id)->execute();
 		$keys = array();
 		foreach ($students as $s)
 			array_push($keys, array("people"=>$s["people"],"subject"=>$subject_id));
-		SQLQuery::create()->update_all_keys("StudentSubjectGrade", $keys, array("grade"=>null));
+		SQLQuery::create()->updateAllKeys("StudentSubjectGrade", $keys, array("grade"=>null));
 		
 		return $id;
 	}
 	public function update_evaluation_type($type_id, $name, $weight) {
-		$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "id", $type_id)->execute_single_row();
+		$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "id", $type_id)->executeSingleRow();
 		if ($type == null)
 			throw new Exception("Invalid evaluation type id");
 		if ($type["name"] == $name && $type["weight"] == $weight)
 			return; // no change
-		SQLQuery::create()->update_by_key("CurriculumSubjectEvaluationType", $type_id, array("name"=>$name,"weight"=>$weight));
+		SQLQuery::create()->updateByKey("CurriculumSubjectEvaluationType", $type_id, array("name"=>$name,"weight"=>$weight));
 		if ($type["weight"] <> $weight) {
 			// weight changed, we need to recompute all grades
 			$this->compute_subject_grades($type["subject"]);
 		}
 	}
 	public function create_evaluation($type_id, $name, $weight, $max_grade) {
-		$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "id", $type_id)->execute_single_row();
+		$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "id", $type_id)->executeSingleRow();
 		if ($type == null)
 			throw new Exception("Invalid evaluation type id");
 		$id = SQLQuery::create()->insert("CurriculumSubjectEvaluation", array(
@@ -155,65 +155,65 @@ class transcripts extends Component {
 			"max_grade"=>$max_grade
 		));
 		// we must reset all grades of this evaluation type, and the final grades
-		$students = SQLQuery::create()->select("StudentSubjectEvaluationTypeGrade")->where_value("StudentSubjectEvaluationTypeGrade", "type", $type_id)->execute();
+		$students = SQLQuery::create()->select("StudentSubjectEvaluationTypeGrade")->whereValue("StudentSubjectEvaluationTypeGrade", "type", $type_id)->execute();
 		$keys = array();
 		foreach ($students as $s)
 			array_push($keys, array("people"=>$s["people"],"type"=>$type_id));
-		SQLQuery::create()->update_all_keys("StudentSubjectEvaluationTypeGrade", $keys, array("grade"=>null));
-		$students = SQLQuery::create()->select("StudentSubjectGrade")->where_value("StudentSubjectGrade", "subject", $type["subject"])->execute();
+		SQLQuery::create()->updateAllKeys("StudentSubjectEvaluationTypeGrade", $keys, array("grade"=>null));
+		$students = SQLQuery::create()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade", "subject", $type["subject"])->execute();
 		$keys = array();
 		foreach ($students as $s)
 			array_push($keys, array("people"=>$s["people"],"subject"=>$type["subject"]));
-		SQLQuery::create()->update_all_keys("StudentSubjectGrade", $keys, array("grade"=>null));
+		SQLQuery::create()->updateAllKeys("StudentSubjectGrade", $keys, array("grade"=>null));
 		return $id;
 	}
 	public function update_evaluation($eval_id, $name, $weight, $max_grade) {
-		$eval = SQLQuery::create()->select("CurriculumSubjectEvaluation")->where_value("CurriculumSubjectEvaluation", "id", $eval_id)->execute_single_row();
+		$eval = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereValue("CurriculumSubjectEvaluation", "id", $eval_id)->executeSingleRow();
 		if ($eval == null)
 			throw new Exception("Invalid evaluation id");
 		if ($eval["name"] == $name && $eval["weight"] == $weight && $eval["max_grade"] == $max_grade)
 			return; // no change
-		SQLQuery::create()->update_by_key("CurriculumSubjectEvaluation", $eval_id, array(
+		SQLQuery::create()->updateByKey("CurriculumSubjectEvaluation", $eval_id, array(
 			"name"=>$name,
 			"weight"=>$weight,
 			"max_grade"=>$max_grade
 		));
 		if ($weight <> $eval["weight"] || $max_grade <> $eval["max_grade"]) {
 			// we need to recompute all the grades
-			$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "id", $eval["type"])->execute_single_row();
+			$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "id", $eval["type"])->executeSingleRow();
 			$this->compute_subject_grades($type["subject"]);
 		}
 	}
 	
 	public function remove_evaluation($subject_id, $type_id, $eval_id) {
-		$subject_info = SQLQuery::create()->select("CurriculumSubjectGrading")->where_value("CurriculumSubjectGrading", "subject", $subject_id)->execute_single_row();
+		$subject_info = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $subject_id)->executeSingleRow();
 		if ($subject_info == null) throw new Exception("Invalid subject id");
-		$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "id", $type_id)->execute_single_row();
+		$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "id", $type_id)->executeSingleRow();
 		if ($type == null) throw new Exception("Invalid evaluation type id");
 		if ($type["subject"] <> $subject_id) throw new Exception("Subject id does not match with the subject found in the evaluation type");
-		$eval = SQLQuery::create()->select("CurriculumSubjectEvaluation")->where_value("CurriculumSubjectEvaluation", "id", $eval_id)->execute_single_row();
+		$eval = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereValue("CurriculumSubjectEvaluation", "id", $eval_id)->executeSingleRow();
 		if ($eval == null) throw new Exception("Invalid evaluation id");
 		if ($eval["type"] <> $type_id) throw new Exception("Evaluation type id does not match with the type found in the evaluation");
 		
-		SQLQuery::create()->remove_key("CurriculumSubjectEvaluation", $eval_id);
+		SQLQuery::create()->removeKey("CurriculumSubjectEvaluation", $eval_id);
 		$this->compute_subject_grades($subject_id);
 	}
 	public function remove_evaluation_type($subject_id, $type_id) {
-		$subject_info = SQLQuery::create()->select("CurriculumSubjectGrading")->where_value("CurriculumSubjectGrading", "subject", $subject_id)->execute_single_row();
+		$subject_info = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $subject_id)->executeSingleRow();
 		if ($subject_info == null) throw new Exception("Invalid subject id");
-		$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "id", $type_id)->execute_single_row();
+		$type = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "id", $type_id)->executeSingleRow();
 		if ($type == null) throw new Exception("Invalid evaluation type id");
 		if ($type["subject"] <> $subject_id) throw new Exception("Subject id does not match with the subject found in the evaluation type");
 		
-		SQLQuery::create()->remove_key("CurriculumSubjectEvaluationType", $type_id);
+		SQLQuery::create()->removeKey("CurriculumSubjectEvaluationType", $type_id);
 		$this->compute_subject_grades($subject_id);
 	}
 	
 	public function update_students_evaluation_grades($subject_id, $students_evaluations_grades) {
-		$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
+		$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
 		$types_ids = array();
 		foreach ($types as $type) array_push($types_ids, $type["id"]);
-		$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->where_in("CurriculumSubjectEvaluation", "type", $types_ids)->execute();
+		$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation", "type", $types_ids)->execute();
 		// remove all previous grades for the given students
 		$keys_types = array();
 		$keys_evals = array();
@@ -224,8 +224,8 @@ class transcripts extends Component {
 			foreach ($evaluations as $eval)
 				array_push($keys_evals, array("people"=>$people_id,"evaluation"=>$eval["id"]));
 		}
-		SQLQuery::create()->remove_keys("StudentSubjectEvaluationGrade", $keys_evals);
-		SQLQuery::create()->remove_keys("StudentSubjectEvaluationTypeGrade", $keys_types);
+		SQLQuery::create()->removeKeys("StudentSubjectEvaluationGrade", $keys_evals);
+		SQLQuery::create()->removeKeys("StudentSubjectEvaluationTypeGrade", $keys_types);
 		$rows = array();
 		foreach ($students_evaluations_grades as $s) {
 			foreach ($s["grades"] as $eval_grade) {
@@ -236,19 +236,19 @@ class transcripts extends Component {
 				));
 			}
 		}
-		SQLQuery::create()->insert_multiple("StudentSubjectEvaluationGrade", $rows);
+		SQLQuery::create()->insertMultiple("StudentSubjectEvaluationGrade", $rows);
 		$this->compute_subject_grades($subject_id);
 	}
 	
 	public function compute_subject_grades($subject_id) {
 		// get subject, evaluation types, and evaluations
-		$subject_info = SQLQuery::create()->select("CurriculumSubjectGrading")->where_value("CurriculumSubjectGrading", "subject", $subject_id)->execute_single_row();
+		$subject_info = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $subject_id)->executeSingleRow();
 		if ($subject_info == null) throw new Exception("Invalid subject id");
-		$subject = SQLQuery::create()->select("CurriculumSubject")->where_value("CurriculumSubject", "id", $subject_id)->execute_single_row();
-		$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
+		$subject = SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject", "id", $subject_id)->executeSingleRow();
+		$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
 		$types_ids = array();
 		foreach ($types as $type) array_push($types_ids, $type["id"]);
-		$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->where_in("CurriculumSubjectEvaluation", "type", $types_ids)->execute();
+		$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation", "type", $types_ids)->execute();
 		// put evaluations inside their respective types
 		foreach ($types as &$type) {
 			$type["evaluations"] = array();
@@ -259,14 +259,14 @@ class transcripts extends Component {
 		// get all students attached to this subject, with their grades
 		$classes = SQLQuery::create()
 			->select("AcademicClass")
-			->where_value("AcademicClass", "period", $subject["period"])
-			->where_value("AcademicClass", "specialization", $subject["specialization"])
+			->whereValue("AcademicClass", "period", $subject["period"])
+			->whereValue("AcademicClass", "specialization", $subject["specialization"])
 			->execute();
 		$classes_ids = array();
 		foreach ($classes as $c) array_push($classes_ids, $c["id"]);
 		$students = SQLQuery::create()
 			->select("StudentClass")
-			->where_in("StudentClass", "class", $classes_ids)
+			->whereIn("StudentClass", "class", $classes_ids)
 			->execute();
 		$students_ids = array();
 		foreach ($students as $s) array_push($students_ids, $s["people"]);
@@ -274,8 +274,8 @@ class transcripts extends Component {
 		foreach ($evaluations as $eval) array_push($evaluations_ids, $eval["id"]);
 		$students_grades = SQLQuery::create()
 			->select("StudentSubjectEvaluationGrade")
-			->where_in("StudentSubjectEvaluationGrade", "evaluation", $evaluations_ids)
-			->where_in("StudentSubjectEvaluationGrade", "people", $students_ids)
+			->whereIn("StudentSubjectEvaluationGrade", "evaluation", $evaluations_ids)
+			->whereIn("StudentSubjectEvaluationGrade", "people", $students_ids)
 			->execute();
 		// compute grades, for each student
 		$types_to_remove = array();
@@ -326,10 +326,10 @@ class transcripts extends Component {
 			array_push($final_to_remove, array("people"=>$student["people"],"subject"=>$subject_id));
 			array_push($final_to_insert, array("people"=>$student["people"],"subject"=>$subject_id,"grade"=>$final_grade));
 		}
-		SQLQuery::create()->remove_keys("StudentSubjectEvaluationTypeGrade", $types_to_remove);
-		SQLQuery::create()->insert_multiple("StudentSubjectEvaluationTypeGrade", $types_to_insert);
-		SQLQuery::create()->remove_keys("StudentSubjectGrade", $final_to_remove);
-		SQLQuery::create()->insert_multiple("StudentSubjectGrade", $final_to_insert);
+		SQLQuery::create()->removeKeys("StudentSubjectEvaluationTypeGrade", $types_to_remove);
+		SQLQuery::create()->insertMultiple("StudentSubjectEvaluationTypeGrade", $types_to_insert);
+		SQLQuery::create()->removeKeys("StudentSubjectGrade", $final_to_remove);
+		SQLQuery::create()->insertMultiple("StudentSubjectGrade", $final_to_insert);
 	}
 	
 }

@@ -66,15 +66,15 @@ class Locks__Prepare_DataModel extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseModel.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,5) == "Test_")
-				DataBaseModel::create_table(SQLQuery::get_db_system_without_security(), $table);
-		$scenario_data["noaccess_id1"] = SQLQuery::create()->bypass_security()->insert("Test_noaccess", array("value"=>1));
-		$scenario_data["noaccess_id2000"] = SQLQuery::create()->bypass_security()->insert("Test_noaccess", array("value"=>2000));
-		$scenario_data["can_read_all_id1"] = SQLQuery::create()->bypass_security()->insert("Test_can_read_all", array("value"=>1));
-		$scenario_data["can_read_all_id2000"] = SQLQuery::create()->bypass_security()->insert("Test_can_read_all", array("value"=>2000));
-		$scenario_data["readwrite_id1"] = SQLQuery::create()->bypass_security()->insert("Test_readwrite", array("value"=>1));
-		$scenario_data["readwrite_id2000"] = SQLQuery::create()->bypass_security()->insert("Test_readwrite", array("value"=>2000));
-		$scenario_data["readwrite_specific_id1"] = SQLQuery::create()->bypass_security()->insert("Test_readwrite_specific", array("value"=>1));
-		$scenario_data["readwrite_specific_id2000"] = SQLQuery::create()->bypass_security()->insert("Test_readwrite_specific", array("value"=>2000));
+				DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
+		$scenario_data["noaccess_id1"] = SQLQuery::create()->bypassSecurity()->insert("Test_noaccess", array("value"=>1));
+		$scenario_data["noaccess_id2000"] = SQLQuery::create()->bypassSecurity()->insert("Test_noaccess", array("value"=>2000));
+		$scenario_data["can_read_all_id1"] = SQLQuery::create()->bypassSecurity()->insert("Test_can_read_all", array("value"=>1));
+		$scenario_data["can_read_all_id2000"] = SQLQuery::create()->bypassSecurity()->insert("Test_can_read_all", array("value"=>2000));
+		$scenario_data["readwrite_id1"] = SQLQuery::create()->bypassSecurity()->insert("Test_readwrite", array("value"=>1));
+		$scenario_data["readwrite_id2000"] = SQLQuery::create()->bypassSecurity()->insert("Test_readwrite", array("value"=>2000));
+		$scenario_data["readwrite_specific_id1"] = SQLQuery::create()->bypassSecurity()->insert("Test_readwrite_specific", array("value"=>1));
+		$scenario_data["readwrite_specific_id2000"] = SQLQuery::create()->bypassSecurity()->insert("Test_readwrite_specific", array("value"=>2000));
 		PNApplication::$instance->user_management->logout();
 		return null;
 	}

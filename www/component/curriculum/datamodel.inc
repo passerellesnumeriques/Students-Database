@@ -57,7 +57,7 @@ $model->addTable("AcademicPeriod")
 	))
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			$batch = SQLQuery::create()->bypass_security()->select("StudentBatch")->where_value("StudentBatch","id",$fields["batch"])->field("StudentBatch","name")->execute_single_value();
+			$batch = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$fields["batch"])->field("StudentBatch","name")->executeSingleValue();
 			PNApplication::$instance->news->post("education", "curriculum", array("batch".$fields["batch"]), "Academic period ".$fields["name"]." created for batch ".$batch.".");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
@@ -87,18 +87,18 @@ $model->addTable("AcademicClass")
 	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Class Name", array("name"=>"Class Name")))
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			$period = SQLQuery::create()->bypass_security()
+			$period = SQLQuery::create()->bypassSecurity()
 				->select("AcademicPeriod")
-				->where_value("AcademicPeriod","id",$fields["period"])
+				->whereValue("AcademicPeriod","id",$fields["period"])
 				->field("AcademicPeriod","name","period_name")
 				->join("AcademicPeriod", "StudentBatch", array("batch"=>"id"))
 				->field("StudentBatch", "name", "batch_name")
 				->field("StudentBatch", "id", "batch_id")
-				->execute_single_row()
+				->executeSingleRow()
 				;
 			$message = "Class <i>".$fields["name"]."</i> created for period ".$period["period_name"]." of batch ".$period["batch_name"];
 			if (isset($fields["specialization"]) && $fields["specialization"] <> null) {
-				$spe = SQLQuery::create()->bypass_security()->select("Specialization")->where_value("Specialization", "id", $fields["specialization"])->field("Specialization","name")->execute_single_value();
+				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
 				$message .= " with specialization ".$spe;
 			}
 			PNApplication::$instance->news->post("education", "batch", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
@@ -133,19 +133,19 @@ $model->addTable("CurriculumSubject")
 	->addRemoveAccess("edit_curriculum", true)
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			$category = SQLQuery::create()->bypass_security()->select("CurriculumSubjectCategory")->where_value("CurriculumSubjectCategory","id",$fields["category"])->field("CurriculumSubjectCategory","name")->execute_single_value();
-			$period = SQLQuery::create()->bypass_security()
+			$category = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectCategory")->whereValue("CurriculumSubjectCategory","id",$fields["category"])->field("CurriculumSubjectCategory","name")->executeSingleValue();
+			$period = SQLQuery::create()->bypassSecurity()
 				->select("AcademicPeriod")
-				->where_value("AcademicPeriod","id",$fields["period"])
+				->whereValue("AcademicPeriod","id",$fields["period"])
 				->field("AcademicPeriod","name","period_name")
 				->join("AcademicPeriod", "StudentBatch", array("batch"=>"id"))
 				->field("StudentBatch", "name", "batch_name")
 				->field("StudentBatch", "id", "batch_id")
-				->execute_single_row()
+				->executeSingleRow()
 				;
 			$message = "Subject <i>".$fields["name"]."</i> (code <i>".$fields["code"]."</i>) created in category ".$category." for period ".$period["period_name"]." of batch ".$period["batch_name"];
 			if (isset($fields["specialization"]) && $fields["specialization"] <> null) {
-				$spe = SQLQuery::create()->bypass_security()->select("Specialization")->where_value("Specialization", "id", $fields["specialization"])->field("Specialization","name")->execute_single_value();
+				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
 				$message .= " in specialization ".$spe;
 			}
 			PNApplication::$instance->news->post("education", "curriculum", array("batch".$period["batch_id"],"period".$fields["period"]), $message);

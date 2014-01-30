@@ -9,7 +9,7 @@ class page_set_geography_area extends Page {
 			echo "Please select a country to edit";
 			return;
 		}
-		$country = SQLQuery::create()->select("Country")->where("id",$_GET["country"])->execute_single_row();
+		$country = SQLQuery::create()->select("Country")->where("id",$_GET["country"])->executeSingleRow();
 		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("new splitter_vertical('page_split',0.25);");
 		$this->add_javascript("/static/widgets/section/section.js");

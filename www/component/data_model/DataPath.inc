@@ -260,14 +260,14 @@ class DataPathSQLBuilder {
 				$match[$path->parent->table->getPrimaryKey()->name] = $path->foreign_key->name;
 			else
 				$match[$path->foreign_key->name] = $path->table->getPrimaryKey()->name; 
-			$alias = $q->get_join_alias($parent_alias, $path->table->getSQLNameFor($path->sub_model), $match);
+			$alias = $q->getJoinAlias($parent_alias, $path->table->getSQLNameFor($path->sub_model), $match);
 			if ($alias == null) {
-				$alias = $q->table_id();
+				$alias = $q->generateTableAlias();
 				$q->join($parent_alias, $path->table->getSQLNameFor($path->sub_model), $match, $alias);
 			}
 			return $alias;
 		}
-		$alias = $q->get_table_alias($path->table->getName());
+		$alias = $q->getTableAlias($path->table->getName());
 		return $alias;
 	}
 	

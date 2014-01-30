@@ -9,7 +9,7 @@ class page_roles extends Page {
 		$this->add_javascript("/static/javascript/validation.js");
 		$this->onload("new page_header('roles_header');");
 
-		$roles = SQLQuery::create()->select("Role")->field('id')->field('name')->field("UserRole","user")->join("Role","UserRole",array("id"=>"role"))->count("nb_users")->group_by("Role","id")->order_by("Role","name",true)->execute();
+		$roles = SQLQuery::create()->select("Role")->field('id')->field('name')->field("UserRole","user")->join("Role","UserRole",array("id"=>"role"))->count("nb_users")->groupBy("Role","id")->orderBy("Role","name",true)->execute();
 ?>
 		<div id='roles_header' icon="/static/user_management/role_32.png" title="Roles">
 			<div class='button' onclick="new wizard('new_role_wizard').launch()"><img src='<?php echo theme::$icons_16["add"];?>'/> New Role</div>

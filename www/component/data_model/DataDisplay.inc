@@ -161,9 +161,9 @@ class SimpleDataDisplay extends DataDisplay {
 	
 	public function buildSQL(&$q, $path, $filters) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
-		$alias = $q->get_field_alias($table_alias, $this->column_name);
+		$alias = $q->getFieldAlias($table_alias, $this->column_name);
 		if ($alias == null) {
-			$alias = $q->field_id();
+			$alias = $q->generateFieldAlias();
 			$q->field($table_alias, $this->column_name, $alias);
 		}
 		$result = array("data"=>$alias);
@@ -174,9 +174,9 @@ class SimpleDataDisplay extends DataDisplay {
 			return $result;
 		}
 		$key = $key->name;
-		$alias = $q->get_field_alias($table_alias, $key);
+		$alias = $q->getFieldAlias($table_alias, $key);
 		if ($alias == null) {
-			$alias = $q->field_id();
+			$alias = $q->generateFieldAlias();
 			$q->field($table_alias, $key, $alias);
 		}
 		$result["key"] = $alias;
@@ -187,24 +187,24 @@ class SimpleDataDisplay extends DataDisplay {
 	
 	public function getData($key, $sub_model, $row = null, $query = null, $key_alias = null, $value_alias = null) {
 		if ($row <> null) {
-			if ($value_alias == null && $query <> null) $value_alias = $query->get_field_alias($this->handler->table->getName(), $this->column_name);
+			if ($value_alias == null && $query <> null) $value_alias = $query->getFieldAlias($this->handler->table->getName(), $this->column_name);
 			if ($value_alias == null) $value_alias = $this->column_name;
 			if (isset($row[$value_alias]))
 				return $row[$value_alias];
 		}
 		$value = \SQLQuery::create()
 			->select($this->handler->table->getName())
-			->set_sub_model_for_table($this->handler->table, $sub_model)
+			->selectSubModelForTable($this->handler->table, $sub_model)
 			->field($this->column_name)
 			->where($this->handler->table->getPrimaryKey()->name, $key)
-			->execute_single_value();
+			->executeSingleValue();
 		return $value;
 	}
 	
 	public function saveData($key, $value, $sub_model) {
 		\SQLQuery::create()
-			->set_sub_model_for_table($this->handler->table, $sub_model)
-			->update_by_key($this->handler->table->getName(), $key, array($this->column_name => $value))
+			->selectSubModelForTable($this->handler->table, $sub_model)
+			->updateByKey($this->handler->table->getName(), $key, array($this->column_name => $value))
 			;
 	}
 	
@@ -234,7 +234,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
 		$q = \SQLQuery::create()->select($t->getName());
 		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
-			$q->select_sub_model($t->getModel()->getParentTable(), $sub_model);
+			$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
 		$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
 		$q->field($t->getName(), $this->foreign_column_name, "VALUE");
 		$res = $q->execute();
@@ -259,7 +259,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
 		$q = \SQLQuery::create()->select($t->getName());
 		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
-			$q->select_sub_model($t->getModel()->getParentTable(), $sub_model);
+			$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
 		$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
 		$q->field($t->getName(), $this->foreign_column_name, "VALUE");
 		$res = $q->execute();
@@ -298,21 +298,21 @@ class ChoiceDataDisplay extends DataDisplay {
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		// join to foreign table
-		$alias = $q->get_join_alias($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name));
+		$alias = $q->getJoinAlias($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name));
 		if ($alias == null) {
-			$alias = $q->table_id();
+			$alias = $q->generateTableAlias();
 			$q->join($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name), $alias);
 		}
 		// get the key and data
 		$col_name = $this->handler->table->getPrimaryKey()->name;
-		$key_alias = $q->get_field_alias($table_alias, $col_name);
+		$key_alias = $q->getFieldAlias($table_alias, $col_name);
 		if ($key_alias == null) {
-			$key_alias = $q->field_id();
+			$key_alias = $q->generateFieldAlias();
 			$q->field($table_alias, $col_name, $key_alias);
 		}
-		$data_alias = $q->get_field_alias($table_alias, $foreign_key->name);
+		$data_alias = $q->getFieldAlias($table_alias, $foreign_key->name);
 		if ($data_alias == null) {
-			$data_alias = $q->field_id();
+			$data_alias = $q->generateFieldAlias();
 			$q->field($table_alias, $foreign_key->name, $data_alias);
 		}
 		
@@ -339,18 +339,18 @@ class ChoiceDataDisplay extends DataDisplay {
 	public function getData($key, $sub_model, $row = null, $query = null, $key_alias = null, $value_alias = null) {
 		if ($row <> null) {
 			$alias = null;
-			if ($query <> null) $alias = $query->get_field_alias($this->handler->table->getName(), $this->foreign_key_name);
+			if ($query <> null) $alias = $query->getFieldAlias($this->handler->table->getName(), $this->foreign_key_name);
 			if ($alias == null) $alias = $this->foreign_key_name;
 			if (isset($row[$alias]))
 				return $row[$alias];
 		}
 		$q = \SQLQuery::create()->select($this->handler->table->getName());
 		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
-			$q->select_sub_model($t->getModel()->getParentTable(), $sub_model);
+			$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
 		$q->field($this->handler->table->getName(), $this->foreign_key_name, "VALUE");
 		$col_name = $this->handler->table->getPrimaryKey()->name;
-		$q->where_value($this->handler->table->getName(), $col_name, $key);
-		return $q->execute_single_value();
+		$q->whereValue($this->handler->table->getName(), $col_name, $key);
+		return $q->executeSingleValue();
 	}
 	
 	public function saveData($key, $value, $sub_model) {
@@ -416,9 +416,9 @@ class JoiningTableDataDisplay extends DataDisplay {
 		// we need to go to the parent, and get the joining key
 		$parent_alias = \DataPathSQLBuilder::build($path->parent, $q);
 		$key_name = $path->is_reverse() ? $path->parent->table->getPrimaryKey()->name : $path->foreign_key->name;
-		$alias = $q->get_field_alias($parent_alias, $key_name);
+		$alias = $q->getFieldAlias($parent_alias, $key_name);
 		if ($alias == null) {
-			$alias = $q->field_id();
+			$alias = $q->generateFieldAlias();
 			$q->field($parent_alias, $key_name, $alias);
 		}
 		// TODO filters
@@ -445,10 +445,10 @@ class JoiningTableDataDisplay extends DataDisplay {
 				->join($table_name, $foreign_table->getSQLName($sub_models), array($this->foreign_key_name => $foreign_table->getPrimaryKey()->name), "JOIN_ALIAS")
 				->field("JOIN_ALIAS", $foreign_table->getPrimaryKey()->name, "VALUE")
 				->field($table_name, $this->joining_key_name, "KEY")
-				->where_in($table_name, $this->joining_key_name, $keys)
+				->whereIn($table_name, $this->joining_key_name, $keys)
 				->execute();
 
-		$sql_aliases["data"] = $original_query->field_id();
+		$sql_aliases["data"] = $original_query->generateFieldAlias();
 		for ($i = 0; $i < count($rows); $i++) {
 			$key = $rows[$i][$sql_aliases["key"]];
 			$values = array();
@@ -468,7 +468,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		require_once("component/data_model/DataBaseLock.inc");
 		\SQLQuery::create()->remove($this->handler->table->getSQLNameFor($sub_model), array($this->joining_key_name=>$key));
 		foreach ($value as $v)
-			\SQLQuery::create()->set_sub_model_for_table($this->handler->table, $sub_model)->insert($this->handler->table->getName(), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
+			\SQLQuery::create()->selectSubModelForTable($this->handler->table, $sub_model)->insert($this->handler->table->getName(), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
 	}
 		
 }
@@ -561,15 +561,15 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			if ($i < count($columns)-1) {
 				$ft = \DataModel::get()->getTable($col->foreign_table);
 				$last_key = $ft->getPrimaryKey();
-				$fta = $q->table_id();
+				$fta = $q->generateTableAlias();
 				$q->join($table_alias, $col->foreign_table, array($columns[$i]=>$ft->getPrimaryKey()->name), $fta);
 				$t = $ft;
 				$table_alias = $fta;
 			}
 		}
-		$key_alias = $q->field_id();
+		$key_alias = $q->generateFieldAlias();
 		$q->field($table_alias, $t->getPrimaryKey()->name, $key_alias);
-		$data_alias = $q->field_id();
+		$data_alias = $q->generateFieldAlias();
 		$q->field($table_alias, $col->name, $data_alias);
 		if ($last_key == null)
 			$this->applyColumnFilter($table_alias, $col, $filters, $q);

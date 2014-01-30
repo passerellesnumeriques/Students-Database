@@ -20,7 +20,7 @@ if ($can_edit) {
 }
 
 // get info about the user
-$user = SQLQuery::create()->select("Users")->where("id", $user_id)->execute_single_row();
+$user = SQLQuery::create()->select("Users")->where("id", $user_id)->executeSingleRow();
 
 // get roles of the user
 $roles = SQLQuery::create()->select("UserRole")->field("UserRole","role")->join("UserRole","Role",array("role"=>"id"))->field("Role","name")->where("user",$user_id)->execute();

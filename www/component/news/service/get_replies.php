@@ -8,7 +8,7 @@ class service_get_replies extends Service {
 	public function output_documentation() { echo "List of NewsObject"; }
 	
 	public function execute(&$component, $input) {
-		$news = SQLQuery::create()->bypass_security()->select("News")->where_value("News", "id", $input["id"])->field("News", "section")->field("News", "category")->execute_single_row();
+		$news = SQLQuery::create()->bypassSecurity()->select("News")->whereValue("News", "id", $input["id"])->field("News", "section")->field("News", "category")->executeSingleRow();
 		if ($news == null) {
 			PNApplication::error("Invalid news id");
 			return;
@@ -41,11 +41,11 @@ class service_get_replies extends Service {
 			PNApplication::error("Invalid section/category");
 			return;
 		}
-		$news = SQLQuery::create()->bypass_security()
+		$news = SQLQuery::create()->bypassSecurity()
 			->select("News")
-			->where_value("News", "reply_to", $input["id"])
-			->order_by("News", "timestamp", true)
-			->order_by("News", "id", true)
+			->whereValue("News", "reply_to", $input["id"])
+			->orderBy("News", "timestamp", true)
+			->orderBy("News", "id", true)
 			->execute();
 		
 		echo "[";
@@ -61,10 +61,10 @@ class service_get_replies extends Service {
 		if (count($people_names) > 0) {
 			$a = array();
 			foreach ($people_names as $domain=>$users) {
-				$res = SQLQuery::create()->bypass_security()
+				$res = SQLQuery::create()->bypassSecurity()
 				->database("students_".$domain)
 				->select("Users")
-				->where_in("Users", "username", $users)
+				->whereIn("Users", "username", $users)
 				->join("Users", "UserPeople", array("id"=>"user"))
 				->join("UserPeople", "People", array("people"=>"id"))
 				->field("Users", "username", "username")

@@ -40,7 +40,7 @@ class CreateRenameRemoveCampaign_Test_Create_No_Right extends TestServicesStep{
 		";
 	}
 	public function finalizationStep(&$scenario_data){
-		if(SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("id")->where("name","test_error")->execute_single_row() <> null) return "No error but the campaign has been created in the database";
+		if(SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("id")->where("name","test_error")->executeSingleRow() <> null) return "No error but the campaign has been created in the database";
 		PNApplication::$instance->user_management->logout();
 		return null;
 	}
@@ -63,7 +63,7 @@ class CreateRenameRemoveCampaign_Test_Create_With_Right extends TestServicesStep
 		";
 	}
 	public function finalizationStep(&$scenario_data){
-		$id = SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("id")->field("name")->where("name","test_ok")->execute();
+		$id = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("id")->field("name")->where("name","test_ok")->execute();
 		if(!isset($id[0]["id"])) return "The campaign was not created properly in the database";
 		$scenario_data["id"] = $id[0]["id"];
 		PNApplication::$instance->user_management->logout();
@@ -88,7 +88,7 @@ class CreateRenameRemoveCampaign_Test_Rename_No_Right extends TestServicesStep{
 		";
 	}
 	public function finalizationStep(&$scenario_data){
-		if(SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("name")->where("id",$scenario_data["id"])->execute_single_value() == "test_error_2")
+		if(SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("name")->where("id",$scenario_data["id"])->executeSingleValue() == "test_error_2")
 			return "Rename service returned an error but the name was set in the database";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -112,7 +112,7 @@ class CreateRenameRemoveCampaign_Test_Rename_With_Right extends TestServicesStep
 		";
 	}
 	public function finalizationStep(&$scenario_data){
-		if(SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("name")->where("id",$scenario_data["id"])->execute_single_value() <> "test_ok_2")
+		if(SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("name")->where("id",$scenario_data["id"])->executeSingleValue() <> "test_ok_2")
 			return "Rename service returned no error but the name was not set in the database";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -135,7 +135,7 @@ class CreateRenameRemoveCampaign_Test_Remove_No_Right extends TestServicesStep{
 		";
 	}
 	public function finalizationStep(&$scenario_data){
-		$camp = SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("id")->where("id",$scenario_data['id'])->execute();
+		$camp = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("id")->where("id",$scenario_data['id'])->execute();
 		if(!isset($camp[0]["id"])) return "Remove service returned an error but the campaign was removed in the database";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -158,7 +158,7 @@ class CreateRenameRemoveCampaign_Test_Remove_With_Right extends TestServicesStep
 		";
 	}
 	public function finalizationStep(&$scenario_data){
-		$camp = SQLQuery::create()->bypass_security()->select("SelectionCampaign")->field("id")->where("id",$scenario_data['id'])->execute();
+		$camp = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("id")->where("id",$scenario_data['id'])->execute();
 		if(isset($camp[0]["id"])) return "Remove service returned no error but the campaign was not removed in the database";
 		PNApplication::$instance->user_management->logout();
 		return null;

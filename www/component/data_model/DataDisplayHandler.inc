@@ -94,7 +94,7 @@ class FieldsDisplayHandler extends DataDisplayHandler {
 			$sm = $this->table->getModel()->getParentTable();
 			$sub_models = array($sm=>$sub_model);
 		}
-		return \SQLQuery::create()->set_sub_models($sub_models)->insert($this->table->getName(), $list);
+		return \SQLQuery::create()->selectSubModels($sub_models)->insert($this->table->getName(), $list);
 	}
 
 }

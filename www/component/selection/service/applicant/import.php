@@ -9,7 +9,7 @@ class service_applicant_import extends Service {
 	
 	public function execute(&$component, $input) {
 		if(isset($input["data"])){
-			SQLQuery::create()->insert_multiple("Applicant",$input["data"],$input["db_lock"]);
+			SQLQuery::create()->insertMultiple("Applicant",$input["data"],$input["db_lock"]);
 			if(PNApplication::has_errors())
 				echo "false";
 			else

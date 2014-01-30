@@ -16,22 +16,22 @@ class service_save_subject_evaluations extends Service {
 	
 	public function execute(&$component, $input) {
 		set_time_limit(120);
-		SQLQuery::start_transaction();
-		$subject = SQLQuery::create()->select("CurriculumSubjectGrading")->where_value("CurriculumSubjectGrading", "subject", $input["subject_id"])->execute_single_row();
+		SQLQuery::startTransaction();
+		$subject = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $input["subject_id"])->executeSingleRow();
 		if ($subject == null) {
 			PNApplication::error("No information about this subject regarding grades");
-			SQLQuery::end_transaction();
+			SQLQuery::commitTransaction();
 			return;
 		}
 		if ($subject["only_final_grade"] == 1) {
 			PNApplication::error("This subject is configured to have only final grades: you cannot change the evaluations");
-			SQLQuery::end_transaction();
+			SQLQuery::commitTransaction();
 			return;
 		}
 		$output_types_ids = array();
 		$output_evaluations_ids = array();
 		// update list of evaluations
-		$existing_types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->where_value("CurriculumSubjectEvaluationType", "subject", $input["subject_id"])->execute();
+		$existing_types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $input["subject_id"])->execute();
 		foreach ($input["types"] as $type) {
 			if ($type["id"] < 0) {
 				// new evaluation type
@@ -47,7 +47,7 @@ class service_save_subject_evaluations extends Service {
 					}
 			}
 			set_time_limit(120);
-			$existing_evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->where_value("CurriculumSubjectEvaluation", "type", $type["id"])->execute();
+			$existing_evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereValue("CurriculumSubjectEvaluation", "type", $type["id"])->execute();
 			foreach ($type["evaluations"] as $eval) {
 				if ($eval["id"] < 0) {
 					// new evaluation
@@ -72,7 +72,7 @@ class service_save_subject_evaluations extends Service {
 		foreach ($existing_types as $type)
 			$component->remove_evaluation_type($input["subject_id"],$type["id"]);
 		set_time_limit(120);
-		SQLQuery::end_transaction();
+		SQLQuery::commitTransaction();
 		echo "{types:".json_encode($output_types_ids).",evaluations:".json_encode($output_evaluations_ids)."}";
 	}
 	

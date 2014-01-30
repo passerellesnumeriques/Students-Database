@@ -61,14 +61,14 @@ class RemoveLinks_Prepare_DataModel extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseModel.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,12) == "RemoveLinks_")
-				DataBaseModel::create_table(SQLQuery::get_db_system_without_security(), $table);
+				DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
 		// root1
-		$scenario_data["root1_id1"] = SQLQuery::create()->bypass_security()->insert("RemoveLinks_1_Root", array("value"=>1));
-		$scenario_data["root1_id2"] = SQLQuery::create()->bypass_security()->insert("RemoveLinks_1_Root", array("value"=>2));
-		SQLQuery::create()->bypass_security()->insert("RemoveLinks_1_Linked_weak", array("root"=>$scenario_data["root1_id1"]));
-		SQLQuery::create()->bypass_security()->insert("RemoveLinks_1_Linked_weak", array("root"=>$scenario_data["root1_id2"]));
-		SQLQuery::create()->bypass_security()->insert("RemoveLinks_1_Linked_strong", array("root"=>$scenario_data["root1_id1"]));
-		SQLQuery::create()->bypass_security()->insert("RemoveLinks_1_Linked_strong", array("root"=>$scenario_data["root1_id2"]));
+		$scenario_data["root1_id1"] = SQLQuery::create()->bypassSecurity()->insert("RemoveLinks_1_Root", array("value"=>1));
+		$scenario_data["root1_id2"] = SQLQuery::create()->bypassSecurity()->insert("RemoveLinks_1_Root", array("value"=>2));
+		SQLQuery::create()->bypassSecurity()->insert("RemoveLinks_1_Linked_weak", array("root"=>$scenario_data["root1_id1"]));
+		SQLQuery::create()->bypassSecurity()->insert("RemoveLinks_1_Linked_weak", array("root"=>$scenario_data["root1_id2"]));
+		SQLQuery::create()->bypassSecurity()->insert("RemoveLinks_1_Linked_strong", array("root"=>$scenario_data["root1_id1"]));
+		SQLQuery::create()->bypassSecurity()->insert("RemoveLinks_1_Linked_strong", array("root"=>$scenario_data["root1_id2"]));
 		
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -83,7 +83,7 @@ class RemoveLinks_RemoveNotAllowedAll extends TestFunctionalitiesStep {
 		$error = PNApplication::$instance->user_management->login("Test", "test_readonly", "");
 		if ($error <> null) return "Cannot login with user test_readonly";
 		try {
-			SQLQuery::create()->remove_key("RemoveLinks_1_Root", $scenario_data["root1_id1"]);
+			SQLQuery::create()->removeKey("RemoveLinks_1_Root", $scenario_data["root1_id1"]);
 			return "Can remove";
 		} catch (Exception $e) {
 		}
@@ -106,7 +106,7 @@ class RemoveLinks_RemoveButNotModify extends TestFunctionalitiesStep {
 		$error = PNApplication::$instance->user_management->login("Test", "test_remove_notmodify", "");
 		if ($error <> null) return "Cannot login with user test_remove_notmodify";
 		try {
-			SQLQuery::create()->remove_key("RemoveLinks_1_Root", $scenario_data["root1_id1"]);
+			SQLQuery::create()->removeKey("RemoveLinks_1_Root", $scenario_data["root1_id1"]);
 			return "Can remove";
 		} catch (Exception $e) {
 		}
@@ -129,7 +129,7 @@ class RemoveLinks_NotRemoveInStrongLink extends TestFunctionalitiesStep {
 		$error = PNApplication::$instance->user_management->login("Test", "test_remove_notinstrong", "");
 		if ($error <> null) return "Cannot login with user test_remove_notinstrong";
 		try {
-			SQLQuery::create()->remove_key("RemoveLinks_1_Root", $scenario_data["root1_id1"]);
+			SQLQuery::create()->removeKey("RemoveLinks_1_Root", $scenario_data["root1_id1"]);
 			return "Can remove";
 		} catch (Exception $e) {
 		}
@@ -152,7 +152,7 @@ class RemoveLinks_RemoveOk extends TestFunctionalitiesStep {
 		$error = PNApplication::$instance->user_management->login("Test", "test_remove_ok", "");
 		if ($error <> null) return "Cannot login with user test_remove_ok";
 		try {
-			SQLQuery::create()->remove_key("RemoveLinks_1_Root", $scenario_data["root1_id1"]);
+			SQLQuery::create()->removeKey("RemoveLinks_1_Root", $scenario_data["root1_id1"]);
 		} catch (Exception $e) {
 			return "Cannot remove: ".$e->getMessage();
 		}

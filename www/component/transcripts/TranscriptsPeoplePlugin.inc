@@ -6,13 +6,13 @@ require_once("component/people/PeoplePlugin.inc");
 class TranscriptsPeoplePlugin implements PeoplePlugin {
 	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
-		$alias = $q->get_table_alias("Student");
+		$alias = $q->getTableAlias("Student");
 		if ($alias == null) {
-			$alias = $q->table_id();
-			$people_alias = $q->get_table_alias("People");
+			$alias = $q->generateTableAlias();
+			$people_alias = $q->getTableAlias("People");
 			$q->join($people_alias, "Student", array("id"=>"people"), $alias);
 		}
-		if ($q->get_field_alias("Student", "batch") <> "student_batch")
+		if ($q->getFieldAlias("Student", "batch") <> "student_batch")
 			$q->field($alias, "batch", "student_batch");
 	}
 	public function getPeopleProfilePages($people_id, $people, $q) {

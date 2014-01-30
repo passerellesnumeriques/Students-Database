@@ -74,15 +74,15 @@ class Remove_Access_Table_Prepare_DataModel extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseModel.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,17) == "TestRemoveAccess_")
-			DataBaseModel::create_table(SQLQuery::get_db_system_without_security(), $table);
-		$scenario_data["onlyread_id1"] = SQLQuery::create()->bypass_security()->insert("TestRemoveAccess_onlyread", array("value"=>51));
-		$scenario_data["readwrite_id1"] = SQLQuery::create()->bypass_security()->insert("TestRemoveAccess_readwrite", array("value"=>51));
-		$scenario_data["readremove_id1"] = SQLQuery::create()->bypass_security()->insert("TestRemoveAccess_readremove", array("value"=>51));
-		$scenario_data["readremove_id2"] = SQLQuery::create()->bypass_security()->insert("TestRemoveAccess_readremove", array("value"=>1));
-		$scenario_data["readremovefilter_id1"] = SQLQuery::create()->bypass_security()->insert("TestRemoveAccess_readremovefilter", array("value"=>51));
-		$scenario_data["readremovefilter_id2"] = SQLQuery::create()->bypass_security()->insert("TestRemoveAccess_readremovefilter", array("value"=>2));
-		$scenario_data["readremovefilter_id2000"] = SQLQuery::create()->bypass_security()->insert("TestRemoveAccess_readremovefilter", array("value"=>2000));
-		$scenario_data["readremovefilter_id3000"] = SQLQuery::create()->bypass_security()->insert("TestRemoveAccess_readremovefilter", array("value"=>3000));
+			DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
+		$scenario_data["onlyread_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_onlyread", array("value"=>51));
+		$scenario_data["readwrite_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_readwrite", array("value"=>51));
+		$scenario_data["readremove_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_readremove", array("value"=>51));
+		$scenario_data["readremove_id2"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_readremove", array("value"=>1));
+		$scenario_data["readremovefilter_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_readremovefilter", array("value"=>51));
+		$scenario_data["readremovefilter_id2"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_readremovefilter", array("value"=>2));
+		$scenario_data["readremovefilter_id2000"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_readremovefilter", array("value"=>2000));
+		$scenario_data["readremovefilter_id3000"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_readremovefilter", array("value"=>3000));
 		PNApplication::$instance->user_management->logout();
 		return null;
 	}
@@ -106,7 +106,7 @@ class Remove_Access_Table_Test_Read extends TestFunctionalitiesStep {
 			return "Cannot select: ".$e->getMessage();
 		}
 		try {
-			SQLQuery::create()->remove_key("TestRemoveAccess_onlyread", $scenario_data["onlyread_id1"]);
+			SQLQuery::create()->removeKey("TestRemoveAccess_onlyread", $scenario_data["onlyread_id1"]);
 			return "Can remove";
 		} catch (Exception $e) {}
 		PNApplication::$instance->user_management->logout();
@@ -126,7 +126,7 @@ class Remove_Access_Table_Test_ReadWrite extends TestFunctionalitiesStep {
 			return "Cannot get table: ".$e->getMessage();
 		}
 			try {
-			SQLQuery::create()->remove_key("TestRemoveAccess_readwrite", $scenario_data["readwrite_id1"]);
+			SQLQuery::create()->removeKey("TestRemoveAccess_readwrite", $scenario_data["readwrite_id1"]);
 			return "Can remove";
 		} catch (Exception $e) {}
 		PNApplication::$instance->user_management->logout();
@@ -153,11 +153,11 @@ class Remove_Access_Table_Test_ReadRemove_UserReadWrite extends TestFunctionalit
 			return "Cannot read: ".$e->getMessage();
 		}
 		try {
-			SQLQuery::create()->update_by_key("TestRemoveAccess_readremove", $scenario_data["readremove_id1"], array("value"=>1664));
+			SQLQuery::create()->updateByKey("TestRemoveAccess_readremove", $scenario_data["readremove_id1"], array("value"=>1664));
 			return "Can modify";
 		} catch (Exception $e) {}
 		try {
-			SQLQuery::create()->remove_key("TestRemoveAccess_readremove", $scenario_data["readremove_id1"]);
+			SQLQuery::create()->removeKey("TestRemoveAccess_readremove", $scenario_data["readremove_id1"]);
 			return "Can remove";
 		} catch (Exception $e) {
 		}
@@ -185,7 +185,7 @@ class Remove_Access_Table_Test_ReadRemove_UserReadRemove extends TestFunctionali
 			return "Cannot get table: ".$e->getMessage();
 		}
 		try {
-			SQLQuery::create()->remove_key("TestRemoveAccess_readremove", $scenario_data["readremove_id2"]);
+			SQLQuery::create()->removeKey("TestRemoveAccess_readremove", $scenario_data["readremove_id2"]);
 		} catch (Exception $e) {
 			return "Cannot remove: ".$e->getMessage();
 		}
@@ -225,12 +225,12 @@ class Remove_Access_Table_Test_ReadRemoveFilter_UserReadWrite extends TestFuncti
 			return "Cannot read: ".$e->getMessage();
 		}
 		try {
-			SQLQuery::create()->remove_key("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id2"]);
+			SQLQuery::create()->removeKey("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id2"]);
 			return "Can remove with a value which does not match the filter";
 		} catch (Exception $e) {
 		}
 		try {
-			SQLQuery::create()->remove_key("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id2000"]);
+			SQLQuery::create()->removeKey("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id2000"]);
 		} catch (Exception $e) {
 			return "Cannot remove with a value which match the filter: ".$e->getMessage();
 		}
@@ -278,12 +278,12 @@ class Remove_Access_Table_Test_ReadRemoveFilter_UserReadRemove extends TestFunct
 			return "Cannot read: ".$e->getMessage();
 		}
 		try {
-			SQLQuery::create()->remove_key("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id2"]);
+			SQLQuery::create()->removeKey("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id2"]);
 		} catch (Exception $e) {
 			return "Cannot remove with a value which does not match the filter: ".$e->getMessage();
 		}
 		try {
-			SQLQuery::create()->remove_key("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id3000"]);
+			SQLQuery::create()->removeKey("TestRemoveAccess_readremovefilter", $scenario_data["readremovefilter_id3000"]);
 		} catch (Exception $e) {
 			return "Cannot remove with a value which match the filter: ".$e->getMessage();
 		}

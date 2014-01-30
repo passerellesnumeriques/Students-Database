@@ -19,9 +19,9 @@ class service_set_google_id extends Service {
 		$res = json_decode($data, true);
 		if ($res <> null && isset($res["id"])) {
 			$google_id = $res["id"];
-			$res = SQLQuery::create()->bypass_security()->select("GoogleUser")->where("user",PNApplication::$instance->user_management->user_id)->where("google_id",$google_id)->execute_single_row();
+			$res = SQLQuery::create()->bypassSecurity()->select("GoogleUser")->where("user",PNApplication::$instance->user_management->user_id)->where("google_id",$google_id)->executeSingleRow();
 			if (count($res) > 0) return;
-			SQLQuery::create()->bypass_security()->insert("GoogleUser", array("user"=>PNApplication::$instance->user_management->user_id,"google_id"=>$google_id));
+			SQLQuery::create()->bypassSecurity()->insert("GoogleUser", array("user"=>PNApplication::$instance->user_management->user_id,"google_id"=>$google_id));
 		}
 	}
 	

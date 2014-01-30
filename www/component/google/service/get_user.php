@@ -20,9 +20,9 @@ class service_get_user extends Service {
 		if ($res <> null && isset($res["id"])) {
 			$google_id = $res["id"];
 			$res = SQLQuery::create()
-				->bypass_security()
+				->bypassSecurity()
 				->select("GoogleUser")
-				->where_value("GoogleUser","google_id",$google_id)
+				->whereValue("GoogleUser","google_id",$google_id)
 				->join("GoogleUser","Users",array("user"=>"id"))
 				->execute();
 			if (count($res) <> 1) { echo "false"; return; }

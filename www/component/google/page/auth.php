@@ -15,9 +15,9 @@ class page_auth extends Page {
 		if ($res <> null && isset($res["id"])) {
 			$google_id = $res["id"];
 			$res = SQLQuery::create()
-			->bypass_security()
+			->bypassSecurity()
 			->select("GoogleUser")
-			->where_value("GoogleUser","google_id",$google_id)
+			->whereValue("GoogleUser","google_id",$google_id)
 			->execute();
 			if (count($res) == 1) {
 				$error = PNApplication::$instance->user_management->external_login($res[0]["user"]);

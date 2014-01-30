@@ -11,7 +11,7 @@ class service_add_organization extends Service {
 
 		// validate the types
 		if (count($input["types_ids"]) > 0) {
-			$types = SQLQuery::create()->select("Organization_type")->where_in("id", $input["types_ids"])->execute();
+			$types = SQLQuery::create()->select("Organization_type")->whereIn("id", $input["types_ids"])->execute();
 			if (count($types) <> count($input["types_ids"])) {
 				PNApplication::error("Invalid organization types");
 				return;
@@ -38,7 +38,7 @@ class service_add_organization extends Service {
 				} catch (Exception $e) {
 					PNApplication::error($e);
 					// rollback
-					SQLQuery::create()->bypass_security()->remove_key("Organization", $org_id);
+					SQLQuery::create()->bypassSecurity()->removeKey("Organization", $org_id);
 					return;
 				}
 			}
@@ -50,7 +50,7 @@ class service_add_organization extends Service {
 			$contact_id = $component->addContactToOrganization($org_id, $contact);
 			if ($contact_id === false) {
 				// rollback
-				SQLQuery::create()->bypass_security()->remove_key("Organization", $org_id);
+				SQLQuery::create()->bypassSecurity()->removeKey("Organization", $org_id);
 				return;
 			}
 		}
@@ -61,7 +61,7 @@ class service_add_organization extends Service {
 			$address_id = $component->addAddressToOrganization($org_id, $address);
 			if ($address_id === false) {
 				// rollback
-				SQLQuery::create()->bypass_security()->remove_key("Organization", $org_id);
+				SQLQuery::create()->bypassSecurity()->removeKey("Organization", $org_id);
 				return;
 			}
 		}

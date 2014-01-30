@@ -12,18 +12,18 @@ class page_students_grades extends Page {
 				echo "Please select a period or a class to display the grades of the students";
 				return;
 			}
-			$class = SQLQuery::create()->select("AcademicClass")->where_value("AcademicClass", "id", $class_id)->execute_single_row();
+			$class = SQLQuery::create()->select("AcademicClass")->whereValue("AcademicClass", "id", $class_id)->executeSingleRow();
 			$period_id = $class["period"];
 			$spe_id = $class["specialization"];
 		} else {
 			$class = null;
 			$spe_id = @$_GET["specialization"];
 		}
-		$period = SQLQuery::create()->select("AcademicPeriod")->where("id",$period_id)->execute_single_row();
-		$spe = $spe_id <> null ? SQLQuery::create()->select("Specialization")->where("id",$spe_id)->execute_single_row() : null;
+		$period = SQLQuery::create()->select("AcademicPeriod")->where("id",$period_id)->executeSingleRow();
+		$spe = $spe_id <> null ? SQLQuery::create()->select("Specialization")->where("id",$spe_id)->executeSingleRow() : null;
 		$q = SQLQuery::create()
 			->select("CurriculumSubject")
-			->where_value("CurriculumSubject", "period", $period_id)
+			->whereValue("CurriculumSubject", "period", $period_id)
 			->join("CurriculumSubject","CurriculumSubjectGrading",array("id"=>"subject"))
 			->field("CurriculumSubject","id","id")
 			->field("CurriculumSubject","category","category")
@@ -34,9 +34,9 @@ class page_students_grades extends Page {
 			->field("CurriculumSubjectGrading","max_grade","max_grade")
 			;
 		if ($spe_id <> null)
-			$q->where_value("CurriculumSubject", "specialization", $spe_id);
+			$q->whereValue("CurriculumSubject", "specialization", $spe_id);
 		else
-			$q->where_null("CurriculumSubject", "specialization");
+			$q->whereNull("CurriculumSubject", "specialization");
 		$subjects = $q->execute();
 		if (count($subjects) == 0) {
 			echo "<img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> There is no subject for this period. Please edit the <a href='/dynamic/curriculum/page/curriculum?period=".$period_id."'>curriculum</a> first and add subjects.";
@@ -45,7 +45,7 @@ class page_students_grades extends Page {
 		$categories = array();
 		foreach ($subjects as $subject) {
 			if (!isset($categories[$subject["category"]]))
-				$categories[$subject["category"]] = SQLQuery::create()->select("CurriculumSubjectCategory")->where("id", $subject["category"])->execute_single_row();
+				$categories[$subject["category"]] = SQLQuery::create()->select("CurriculumSubjectCategory")->where("id", $subject["category"])->executeSingleRow();
 			if (!isset($categories[$subject["category"]]["subjects"]))
 				$categories[$subject["category"]]["subjects"] = array();
 			array_push($categories[$subject["category"]]["subjects"], $subject);
@@ -81,7 +81,7 @@ class page_students_grades extends Page {
 				"data"=>array("value"=>$class["id"])
 			));
 		$data = custom_data_list($this, "StudentClass", null, $available_fields, $filters);
-		$people_id_alias = $data["query"]->get_field_alias("People", "id");
+		$people_id_alias = $data["query"]->getFieldAlias("People", "id");
 		$students_ids = array();
 		foreach ($data["data"] as $row)
 			array_push($students_ids, $row[$people_id_alias]);
@@ -90,7 +90,7 @@ class page_students_grades extends Page {
 			echo "<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> There is no student for this period. Please <a href='/dynamic/training_education/page/list?period=".$period_id."'>add students</a> first.</div>";
 			$students_grades = array();
 		} else
-			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->where_in("StudentSubjectGrade","people", $students_ids)->execute();
+			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","people", $students_ids)->execute();
 		
 		$this->add_javascript("/static/widgets/page_header.js");
 		$this->onload("new page_header('grades_page_header', true);");

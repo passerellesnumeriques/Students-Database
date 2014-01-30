@@ -14,11 +14,11 @@ class students extends Component {
 			// check this specialization is available for the batch of this student
 			$possible_specializations = SQLQuery::create()
 				->select("Student")
-				->where_value("Student", "people", $student_people_id)
+				->whereValue("Student", "people", $student_people_id)
 				->join("Student", "AcademicPeriod", array("batch"=>"batch"))
 				->join("AcademicPeriod", "AcademicPeriodSpecialization", array("id"=>"period"))
 				->field("AcademicPeriodSpecialization", "specialization", "specialization")
-				->execute_single_field();
+				->executeSingleField();
 			if (!in_array($specialization_id, $possible_specializations)) {
 				PNApplication::error("The student does not exist or the specialization is not available for this batch of students");
 				return false;
@@ -26,7 +26,7 @@ class students extends Component {
 			// check the student is not already assigned to a class with a different specialization
 			$different_classes = SQLQuery::create()
 				->select("Student")
-				->where_value("Student", "people", $student_people_id)
+				->whereValue("Student", "people", $student_people_id)
 				->join("Student", "StudentClass", array("people"=>"people"))
 				->join("StudentClass", "AcademicClass", array("class"=>"id"))
 				->where("`AcademicClass`.`specialization` IS NOT NULL AND `AcademicClass`.`specialization`!='".SQLQuery::escape($specialization_id)."'")
@@ -39,8 +39,8 @@ class students extends Component {
 			// check the student exists
 			$student = SQLQuery::create()
 				->select("Student")
-				->where_value("Student", "people", $student_people_id)
-				->execute_single_row();
+				->whereValue("Student", "people", $student_people_id)
+				->executeSingleRow();
 			if ($student == null) {
 				PNApplication::error("The student does not exist");
 				return false;
@@ -48,7 +48,7 @@ class students extends Component {
 			// check the student is not already assigned to a class with a specialization
 			$different_classes = SQLQuery::create()
 				->select("Student")
-				->where_value("Student", "people", $student_people_id)
+				->whereValue("Student", "people", $student_people_id)
 				->join("Student", "StudentClass", array("people"=>"people"))
 				->join("StudentClass", "AcademicClass", array("class"=>"id"))
 				->where("`AcademicClass`.`specialization` IS NOT NULL")
@@ -58,19 +58,19 @@ class students extends Component {
 				return false;
 			}
 		}
-		SQLQuery::create()->update_by_key("Student", $student_people_id, array("specialization"=>$specialization_id));
+		SQLQuery::create()->updateByKey("Student", $student_people_id, array("specialization"=>$specialization_id));
 		return true;
 	}
 	
 	public function assign_student_to_class($student_people_id, $class_id, $period_id) {
 		// check the class exists
 		if ($class_id <> null) {
-			$class = SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->execute_single_row();
+			$class = SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->executeSingleRow();
 			if ($class == null) { PNApplication::error("Invalid class id"); return false; }
 			if ($class["period"] <> $period_id) { PNApplication::error("The class is not in the given academic period"); return false; }
 		}
 		// check the student exists
-		$student = SQLQuery::create()->select("Student")->where("people", $student_people_id)->execute_single_row();
+		$student = SQLQuery::create()->select("Student")->where("people", $student_people_id)->executeSingleRow();
 		if ($student == null) { PNApplication::error("Invalid student id"); return false; }
 		// check the class specialization is compatible to student specialization
 		if ($class_id <> null) {
@@ -79,14 +79,14 @@ class students extends Component {
 		// get the assignment of this student for this academic period
 		$assigned = SQLQuery::create()
 			->select("StudentClass")
-			->where_value("StudentClass", "people", $student_people_id)
+			->whereValue("StudentClass", "people", $student_people_id)
 			->join("StudentClass", "AcademicClass", array("class"=>"id"))
-			->where_value("AcademicClass", "period", $period_id)
+			->whereValue("AcademicClass", "period", $period_id)
 			->field("StudentClass", "class", "class")
 			->execute();
 		// do it
 		foreach ($assigned as $a)
-			SQLQuery::create()->remove_key("StudentClass", array("people"=>$student_people_id,"class"=>$assigned["class"]));
+			SQLQuery::create()->removeKey("StudentClass", array("people"=>$student_people_id,"class"=>$assigned["class"]));
 		if ($class_id <> null) {
 			SQLQuery::create()->insert("StudentClass", array("people"=>$student_people_id,"class"=>$class_id));
 		}

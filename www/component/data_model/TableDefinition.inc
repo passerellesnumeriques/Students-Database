@@ -333,10 +333,10 @@ namespace datamodel {
 			if ($this->read_access_rights === null) return;
 			foreach ($this->read_access_rights as $r)
 				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return; // full access
-			$where = $q->save_where();
+			$where = $q->saveWhere();
 			foreach ($this->read_access_filters as $filter)
 				$filter($q, $table_alias);
-			$filters_where = $q->save_where();
+			$filters_where = $q->saveWhere();
 			$q->where($where);
 			if ($filters_where <> "") {
 				$key = $this->primary_key;
@@ -498,9 +498,9 @@ namespace datamodel {
 		}
 		private function load_customization($table_name) {
 			$cols = array();
-			$res = \SQLQuery::get_db_system_without_security()->execute("SHOW FULL COLUMNS FROM `".$table_name."`");
+			$res = \SQLQuery::getDataBaseAccessWithoutSecurity()->execute("SHOW FULL COLUMNS FROM `".$table_name."`");
 			if ($res)
-				while (($r = \SQLQuery::get_db_system_without_security()->next_row($res)) <> null) {
+				while (($r = \SQLQuery::getDataBaseAccessWithoutSecurity()->nextRow($res)) <> null) {
 				$col_name = $r["Field"];
 				// check if this column is a normal one
 				$found = false;

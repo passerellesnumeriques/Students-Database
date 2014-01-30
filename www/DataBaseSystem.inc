@@ -16,14 +16,14 @@ abstract class DataBaseSystem {
 	 */
 	public function execute($sql_query, $report_errors = true) {
 		$start = microtime(true);
-		$res = $this->execute_sql($sql_query);
+		$res = $this->executeSQL($sql_query);
 		$end = microtime(true);
-		$this->log($sql_query,$this->get_last_error_number(),$this->get_last_error_message(),$end-$start);
+		$this->log($sql_query,$this->getLastErrorNumber(),$this->getLastErrorMessage(),$end-$start);
 		if ($res === false && $report_errors) {
-			$err = $this->get_last_error_number();
+			$err = $this->getLastErrorNumber();
 			if ($err <> 0) {
 				try {
-					throw new Exception("DataBase Error #".$err.": ".$this->get_last_error_message()." [".$sql_query."]");
+					throw new Exception("DataBase Error #".$err.": ".$this->getLastErrorMessage()." [".$sql_query."]");
 				} catch (Exception $e) {
 					PNApplication::error($e);
 				}
@@ -40,19 +40,19 @@ abstract class DataBaseSystem {
 			array_push(PNApplication::$instance->development->current_request()->sql_queries, array($query, $error_number, $error_message, $time));
 	}
 
-	public abstract function select_db($db_name);
-	protected abstract function execute_sql($query);
-	public abstract function next_row($query_result);
-	public abstract function get_insert_id();
-	public abstract function affected_rows();
-	public abstract function get_last_error_number();
-	public abstract function get_last_error_message();
+	public abstract function selectDatabase($db_name);
+	protected abstract function executeSQL($query);
+	public abstract function nextRow($query_result);
+	public abstract function getInsertID();
+	public abstract function affectedRows();
+	public abstract function getLastErrorNumber();
+	public abstract function getLastErrorMessage();
 	
-	public abstract function start_transaction();
+	public abstract function startTransaction();
 	public abstract function commit();
 	public abstract function rollback();
 
-	public abstract function escape_string($str);
+	public abstract function escapeString($str);
 
 }
 ?>

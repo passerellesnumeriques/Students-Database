@@ -11,13 +11,13 @@ class page_assign_classes extends Page {
 		} else {
 			$classes = SQLQuery::create()->select("AcademicClass")->where("period", $period_id)->execute();
 		}
-		$period = SQLQuery::create()->select("AcademicPeriod")->where("id", $period_id)->execute_single_row();
+		$period = SQLQuery::create()->select("AcademicPeriod")->where("id", $period_id)->executeSingleRow();
 		$specializations = array();
 		foreach ($classes as $cl) if ($cl["specialization"] <> null && !in_array($cl["specialization"], $specializations)) array_push($specializations, $cl["specialization"]);
 		if (count($specializations) == 0)
 			$specializations = array(array("id"=>0, "classes"=>$classes));
 		else {
-			$specializations = SQLQuery::create()->select("Specialization")->where_in("Specialization", "id", $specializations)->execute();
+			$specializations = SQLQuery::create()->select("Specialization")->whereIn("Specialization", "id", $specializations)->execute();
 			foreach ($specializations as &$spe) {
 				$spe["classes"] = array();
 				foreach ($classes as $cl)
@@ -30,13 +30,13 @@ class page_assign_classes extends Page {
 			->select("Student")
 			->join("Student", "StudentClass", array("people"=>"people"))
 			->join("StudentClass", "AcademicClass", array("class"=>"id"))
-			->where_value("AcademicClass", "period", $period_id)
+			->whereValue("AcademicClass", "period", $period_id)
 			->field("Student", "people", "people")
 			->field("StudentClass", "class", "class")
 			->execute();
 		$students_period = SQLQuery::create()
 			->select("Student")
-			->where_value("Student", "batch", $period["batch"])
+			->whereValue("Student", "batch", $period["batch"])
 			->where("Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start_date"]."'")
 			->join("Student", "People", array("people"=>"id"))
 			->field("Student", "specialization", "specialization")

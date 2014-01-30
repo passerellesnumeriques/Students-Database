@@ -36,7 +36,7 @@ class service_create_people extends Service {
 		$fields = array_merge($input["people"]);
 		unset($fields["people_id"]);
 		try {
-			$people_id = SQLQuery::create()->bypass_security()->insert("People", $fields);
+			$people_id = SQLQuery::create()->bypassSecurity()->insert("People", $fields);
 		} catch (Exception $ex) { PNApplication::error($ex); $people_id = 0; }
 		if ($people_id == 0) { echo "false"; return; }
 		
@@ -59,7 +59,7 @@ class service_create_people extends Service {
 				// failure: roll back
 				for ($j = $i-1; $j >= 0; --$j)
 					$list[$j][0]->rollbackCreatePeople($people_id, $types, $input, $create_data);
-				SQLQuery::create()->bypass_security()->remove_key("People", $people_id);
+				SQLQuery::create()->bypassSecurity()->removeKey("People", $people_id);
 				echo "false";
 				return;
 			}

@@ -20,9 +20,9 @@ class service_get_user extends Service {
 		if ($res <> null && isset($res["data"]) && isset($res["data"]["user_id"])) {
 			$facebook_id = $res["data"]["user_id"];
 			$res = SQLQuery::create()
-				->bypass_security()
+				->bypassSecurity()
 				->select("FacebookUser")
-				->where_value("FacebookUser","facebook_id",$facebook_id)
+				->whereValue("FacebookUser","facebook_id",$facebook_id)
 				->join("FacebookUser","Users",array("user"=>"id"))
 				->execute();
 			if (count($res) <> 1) { echo "false"; return; }

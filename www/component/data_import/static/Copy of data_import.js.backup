@@ -165,7 +165,7 @@ function data_import(container, root_table, preset_fields, import_type) {
 							var td = document.createElement("TD"); tr.appendChild(td);
 							td.style.whiteSpace = 'nowrap';
 							td.appendChild(document.createTextNode(fields[j].name));
-							if (fields[j].p.is_mandatory()) {
+							if (fields[j].p.isMandatory()) {
 								var span = document.createElement("SUP");
 								span.style.color = 'red';
 								span.innerHTML = "*";

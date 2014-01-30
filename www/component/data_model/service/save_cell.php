@@ -25,8 +25,8 @@ class service_save_cell extends Service {
 		try {
 			$q = SQLQuery::create();
 			$sub_model = @$input["sub_model"];
-			if ($sub_model <> null) $q->set_sub_model_for_table(DataModel::get()->getTable($table), $sub_model);
-			$q->update_by_key($table, $key, array($field=>$value), $lock_id);
+			if ($sub_model <> null) $q->selectSubModelForTable(DataModel::get()->getTable($table), $sub_model);
+			$q->updateByKey($table, $key, array($field=>$value), $lock_id);
 		} catch (Exception $e) {
 			PNApplication::error($e->getMessage());
 		}
