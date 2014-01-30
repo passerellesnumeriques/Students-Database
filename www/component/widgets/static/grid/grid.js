@@ -133,9 +133,6 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 		});
 		this.addAction(a);
 	};
-	this.addExternalFiltering = function() {
-		// TODO
-	};
 	
 	this._refresh_title = function() {
 		var url = get_script_path("grid.js");

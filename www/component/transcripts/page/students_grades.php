@@ -38,6 +38,10 @@ class page_students_grades extends Page {
 		else
 			$q->where_null("CurriculumSubject", "specialization");
 		$subjects = $q->execute();
+		if (count($subjects) == 0) {
+			echo "<img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> There is no subject for this period. Please edit the <a href='/dynamic/curriculum/page/curriculum?period=".$period_id."'>curriculum</a> first and add subjects.";
+			return;
+		}
 		$categories = array();
 		foreach ($subjects as $subject) {
 			if (!isset($categories[$subject["category"]]))
@@ -82,7 +86,11 @@ class page_students_grades extends Page {
 		foreach ($data["data"] as $row)
 			array_push($students_ids, $row[$people_id_alias]);
 		
-		$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->where_in("StudentSubjectGrade","people", $students_ids)->execute();
+		if (count($students_ids) == 0) {
+			echo "<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> There is no student for this period. Please <a href='/dynamic/training_education/page/list?period=".$period_id."'>add students</a> first.</div>";
+			$students_grades = array();
+		} else
+			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->where_in("StudentSubjectGrade","people", $students_ids)->execute();
 		
 		$this->add_javascript("/static/widgets/page_header.js");
 		$this->onload("new page_header('grades_page_header', true);");
@@ -98,7 +106,7 @@ class page_students_grades extends Page {
 			padding: 1px;
 		}
 		</style>
-		<div id='grades_page_header' icon='' title='Grades for Period <?php echo $period["name"]; if ($spe <> null) echo ", Specialization ".$spe["name"]; if ($class<>null) echo ", Class ".$class["name"];?>'>
+		<div id='grades_page_header' icon='' title="&lt;img src='/static/transcripts/grades.gif'/&gt;Grades for Period <?php echo $period["name"]; if ($spe <> null) echo ", Specialization ".$spe["name"]; if ($class<>null) echo ", Class ".$class["name"];?>">
 			<div class='button' onclick='select_students_columns(this);'><img src='/static/data_model/table_column.png'/>Select students information to display</div>
 			<div class='button' onclick="alert('Not yet done');"><img src='<?php echo theme::$icons_16["config"];?>'/>Configure Transcripts</div>
 			<div class='button' onclick="alert('Not yet done');"><img src='/static/transcripts/grades.gif'/>See/Print Transcripts</div>

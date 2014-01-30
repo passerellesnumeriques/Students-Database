@@ -8,12 +8,19 @@ class service_remove_specialization_from_period extends Service {
 	public function output_documentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
+		SQLQuery::start_transaction();
+		
 		// remove all linked classes
 		$classes = SQLQuery::create()->select("AcademicClass")->where("period", $input["period"])->where("specialization", $input["specialization"])->execute();
 		foreach ($classes as $cl)
 			SQLQuery::create()->remove_key("AcademicClass", $cl["id"]);
 		// remove the specialization
 		SQLQuery::create()->remove_key("AcademicPeriodSpecialization", array("period"=>$input["period"], "specialization"=>$input["specialization"]));
+		// remove all subjects related
+		$subjects = SQLQuery::create()->select("CurriculumSubject")->where_value("CurriculumSubject","period", $input["period"])->where_value("CurriculumSubject", "specialization", $input["specialization"])->execute();
+		SQLQuery::create()->remove_rows("CurriculumSubject", $subjects);
+		
+		SQLQuery::end_transaction();
 		echo "true";
 	}
 	

@@ -13,9 +13,15 @@ function filter_enum(data, config, editable) {
 	}
 	for (var i = 0; i < config.possible_values.length; ++i) {
 		o = document.createElement("OPTION");
-		o.value = config.possible_values[i][0];
-		o.text = config.possible_values[i][1];
-		if (data.value == config.possible_values[i][0]) o.selected = true;
+		if (this.config.possible_values[i] instanceof Array) {
+			o.value = this.config.possible_values[i][0];
+			o.text = this.config.possible_values[i][1];
+			if (data.value == config.possible_values[i][0]) o.selected = true;
+		} else {
+			o.value = this.config.possible_values[i];
+			o.text = this.config.possible_values[i];
+			if (data.value == config.possible_values[i]) o.selected = true;
+		}
 		select.add(o);
 	}
 	if (!editable) select.disabled = 'disabled';
