@@ -312,6 +312,25 @@ class SQLQuery {
 		array_push($this->where, $w);
 		return $this;
 	}
+	
+	/** if only one table is used, we can use it as ($field,$values), meaning no need to specify the table */
+	public function &where_not_in($table, $field, $values = null) {
+		if ($values === null) {
+			$values = $field;
+			$field = $table;
+			foreach ($this->tables as $name=>$alias)
+				$table = $name;
+		}
+		$w = "`".$this->resolve_where_table($table)."`.`".$field."` NOT IN (";
+		$first = true;
+		foreach ($values as $value) {
+			if ($first) $first = false; else $w .= ",";
+			$w .= "'".SQLQuery::escape(utf8_decode($value))."'";
+		}
+		$w .= ")";
+		array_push($this->where, $w);
+		return $this;
+	}
 
 	public function &join($table_from, $table_to, $fields_matching, $alias = null, $join_on_values = null) {
 		$join = array($table_from, $table_to, $fields_matching, $alias);

@@ -366,11 +366,13 @@ class SelectionJSON{
 		return $a;
 	}
 	
-	public static function getAllExamSubjectNames(){
-		$names = SQLQuery::create()
+	public static function getAllExamSubjectNames($exclude_id = null){
+		$q = SQLQuery::create()
 		->select("Exam_subject")
-		->field("name")
-		->execute_single_field();
+		->field("name");
+		if($exclude_id <> null)
+			$q->where_not_in("Exam_subject", "id", array($exclude_id));
+		$names = $q->execute_single_field();
 		return $names;
 	}
 	

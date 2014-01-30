@@ -179,7 +179,7 @@ class page_selection_main_page extends selection_page {
 				t._setUnvalidContent = function(content){
 					var back = document.createElement("div");
 					// back.style.backgroundColor = "rgba(128,128,128,0.5)";
-					back.innerHTML = "<center><i>This step is not validated yet</i></center>";
+					back.innerHTML = "<center><i>This step is not started yet</i></center>";
 					content.appendChild(back);
 				}
 				

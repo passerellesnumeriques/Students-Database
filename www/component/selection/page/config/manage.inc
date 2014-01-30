@@ -464,8 +464,7 @@ function manage_config(&$page,$container_id,$header_id){
 						error_dialog("An error occured, your informations were not saved");
 						return;
 					}
-					var p = new popup_window("Saved!", theme.icons_16.info, "The new configuration has been succesfully saved");
-					p.show();
+					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Your informations have been successfuly saved!", [{action:"close"}], 5000));
 				});
 			}
 		}

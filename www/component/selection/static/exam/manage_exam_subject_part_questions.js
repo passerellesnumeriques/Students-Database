@@ -360,12 +360,15 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	t._createButton = function(content){
 		var button = document.createElement("div");
 		button.className = "button_verysoft";
-		if(content == "before")
+		if(content == "before"){
 			button.innerHTML = "<img src = '/static/selection/exam/arrow_up_16.png'/><img src = '"+theme.icons_10.add+"'/>";
-		else if(content == "after")
+			button.title = "Insert a question before";
+		} else if(content == "after"){
 			button.innerHTML = "<img src = '/static/selection/exam/arrow_down_16.png'/><img src = '"+theme.icons_10.add+"'/>";
-		else if(content == "remove"){
+			button.title = "Insert a question after";
+		} else if(content == "remove"){
 			button.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
+			button.title = "Remove question";
 			// button.onmouseover = function(){
 				// this.innerHTML = "<img src = '"+theme.icons_16.remove_black+"'/>";
 			// };
