@@ -118,35 +118,48 @@ class SQLQuery {
 
 	/** Use a sepcific database, instead of the default one which is the one of the current domain
 	 * @param string $db_name name of the database to use
-	 * @returns SQLQuery this
+	 * @return SQLQuery this
 	 */
 	public function &database($db_name) { $this->database = $db_name; return $this; }
 	
+	/** Select a sub model
+	 * @param string $key_table the table defining the sub model
+	 * @param number $key the key defining the sub model instance
+	 * @return SQLQuery this
+	 */
 	public function &selectSubModel($key_table, $key) {
 		$this->sub_models[$key_table] = $key;
 		return $this;
 	}
-	public function &setSubModels($sub_models) {
+	
+	/**
+	 * Select a set of sub models
+	 * @param array $sub_models associative array of key_table/key
+	 * @return this
+	 */
+	public function &selectSubModels($sub_models) {
 		if ($sub_models <> null) foreach ($sub_models as $key_table=>$key) $this->sub_models[$key_table] = $key;
 		return $this;
 	}
-	/**
-	 * @param datamodel\Table $table_obj
-	 * @param string $sub_model
+	/** Same as selectSubModel except that the table given is directly the Table object instead of the name of the table
+	 * @param datamodel\Table $table_obj the table defining the sub model
+	 * @param number $sub_model the key defining the sub model instance
+	 * @return this
 	 */
-	public function &setSubModelForTable($table_obj, $sub_model) {
+	public function &selectSubModelForTable($table_obj, $sub_model) {
 		if ($sub_model == null) return $this;
 		if (!($table_obj->getModel() instanceof SubDataModel)) return $this;
 		$this->sub_models[$table_obj->getModel()->getParentTable()] = $sub_model;
 		return $this;
 	}
 	
-	/** Prepares a select in the given tables.
-	 * Usage:
-	 *  - 1 parameter as string: the name of the table in which the select will be performed
-	 *  - 1 parameter as array: array containing the list of table_name=>table_alias
-	 *  - more than 1 parameter: list of table names (no aliases)
-	 * @return SQLQuery
+	/** Prepares a select in the given tables.<br/>
+	 * Usage:<ul>
+	 *  <li> 1 parameter as string: the name of the table in which the select will be performed</li>
+	 *  <li> 1 parameter as array: array containing the list of table_name=&gt;table_alias</li>
+	 *  <li> more than 1 parameter: list of table names (no aliases)</li>
+	 * </ul>
+	 * @return SQLQuery this
 	 */
 	public function &select() {
 		$nb = func_num_args();
@@ -167,11 +180,16 @@ class SQLQuery {
 	}
 
 	/**
-	 * Indicates a field should be returned by the queyr.
-	 * Usage:
-	 *  (field_name): in case only one table was indicated in the select() method, this table will be used together with the given field
-	 *  (table_name, field_name)
-	 *  (table_name, field_name, field_alias)
+	 * Indicates a field should be returned by the query.<br/>
+	 * Usage:<ul>
+	 *  <li>(field_name): in case only one table was indicated in the select() method, this table will be used together with the given field</li>
+	 *  <li>(table_name, field_name)</li>
+	 *  <li>(table_name, field_name, field_alias)</li>
+	 * </ul>
+	 * @param string $table field_name for first option, else table_name
+	 * @param string $name field_name, or null for first option
+	 * @param string $alias field_alias, or null for first 2 options
+	 * @return SQLQuery this 
 	 */
 	public function &field($table,$name=null,$alias=null) {
 		if ($table == null || strlen($table) == 0) throw new Exception("SQLQuery::field: argument \$table cannot be empty!");
@@ -187,24 +205,45 @@ class SQLQuery {
 		return $this;
 	}
 
+	/** Remove all selected fields
+	 * @return SQLQuery this
+	 */
 	public function &resetFields() {
 		$this->fields = array();
 		return $this;
 	}
+	/** COUNT(*) AS alias
+	 * @param string $alias alias or null
+	 * @return SQLQuery this
+	 */
 	public function &count($alias = null) {
 		$this->count = array($alias);
 		return $this;
 	}
+	/** COUNT(table.name) AS alias
+	 * @param string $table table name
+	 * @param string $name field name
+	 * @param string $alias alias or null
+	 * @return this
+	 */
 	public function &countOneField($table, $name, $alias=null){
 		$this->count_one_field = array($table,$name,$alias);
 		return $this;
 	}
 	
+	/** add a DISTINCT in the SELECT
+	 * @return SQLQuery this 
+	 */
 	public function &distinct(){
 		$this->distinct = true;
 		return $this;
 	}
 	
+	/** Retrieve the alias used for the given field (either in select, or in a join)
+	 * @param string $table table name
+	 * @param string $field column name in the table
+	 * @return string|null the alias, or null if it is not found
+	 */
 	public function getFieldAlias($table, $field) {
 		foreach ($this->fields as $f) {
 			if ($f[1] <> $field) continue; // not the good field
@@ -224,6 +263,10 @@ class SQLQuery {
 		}
 		return null;
 	}
+	/** Retrieve the alias used for the given table
+	 * @param string $table table name
+	 * @return string|null alias of the table, or null if not found
+	 */
 	public function getTableAlias($table) {
 		foreach ($this->tables as $t=>$a)
 			if ($t == $table)
@@ -234,14 +277,20 @@ class SQLQuery {
 		return null;
 	}
 
+	/** Disable/Enable security checks. To be used very carefully !
+	 * @param boolean $bypass true to disable security checks, false to enable them
+	 * @return SQLQuery this
+	 */
 	public function &bypassSecurity($bypass = true) { $this->bypass_security = $bypass; return $this; }
 
-	/**
-	 * Usages:
-	 *  - SQL condition: where("`field1`='value'")
-	 *  - map of values: where(array("field1"=>"value1","field2"=>"value2",...))
-	 *  - single value:  where("field1","value1")
-	 *  - condition:     where("field1", "<=", "value1")
+	/** Add a AND xxx in the WHERE statement.<br/>
+	 * Usages:<ul>
+	 *  <li> SQL condition: where("`field1`='value'")</li>
+	 *  <li> map of values: where(array("field1"=&gt;"value1","field2"=>"value2",...))</li>
+	 *  <li> single value:  where("field1","value1")</li>
+	 *  <li> condition:     where("field1", "&lt;=", "value1")</li>
+	 * </li>
+	 * @return SQLQuery this
 	 */
 	public function &where() {
 		$nb = func_num_args();
@@ -705,7 +754,7 @@ class SQLQuery {
 				$q = SQLQuery::create()->bypassSecurity();
 				$table_alias = $q->generateTableAlias();
 				$q->select(array($table=>$table_alias));
-				$q->setSubModels($this->sub_models);
+				$q->selectSubModels($this->sub_models);
 				if ($t->getPrimaryKey() <> null)
 					$q->where($t->getPrimaryKey()->name, $key);
 				else {
@@ -748,7 +797,7 @@ class SQLQuery {
 					throw new Exception($name.": ".$e->getMessage());
 				}
 				if ($col->unique) {
-					$r = SQLQuery::create()->bypassSecurity()->select($t->getName())->setSubModels($this->sub_models)->where($col->name, $fields_values[$field])->executeSingleRow();
+					$r = SQLQuery::create()->bypassSecurity()->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field])->executeSingleRow();
 					if ($r <> null) {
 						if ($locked)
 							DataBaseLock::unlock($lock_id);
@@ -815,7 +864,7 @@ class SQLQuery {
 				$q = SQLQuery::create()->bypassSecurity();
 				$table_alias = $q->generateTableAlias();
 				$q->select(array($table=>$table_alias));
-				$q->setSubModels($this->sub_models);
+				$q->selectSubModels($this->sub_models);
 				if ($t->getPrimaryKey() <> null) {
 					$keys = array();
 					foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
@@ -907,7 +956,7 @@ class SQLQuery {
 					$r = SQLQuery::create()
 						->bypassSecurity()
 						->select($t->getName())
-						->setSubModels($this->sub_models)
+						->selectSubModels($this->sub_models)
 						->whereIn($col->name, $values)
 						->execute();
 					if ($r <> null && count($r) > 0) {
@@ -979,7 +1028,7 @@ class SQLQuery {
 				$q = SQLQuery::create()->bypassSecurity();
 				$table_alias = $q->generateTableAlias();
 				$q->select(array($table=>$table_alias));
-				$q->setSubModels($this->sub_models);
+				$q->selectSubModels($this->sub_models);
 				if ($t->getPrimaryKey() <> null) {
 					$q->whereIn($t->getName(), $t->getPrimaryKey()->name, $keys);
 				} else {
@@ -1134,7 +1183,7 @@ class SQLQuery {
 				}
 				$q = SQLQuery::create();
 				if ($this->bypass_security) $q->bypassSecurity();
-				$r = $q->select($t->getName())->setSubModels($this->sub_models)->where($col->name,$fields_values[$col->name])->executeSingleRow();
+				$r = $q->select($t->getName())->selectSubModels($this->sub_models)->where($col->name,$fields_values[$col->name])->executeSingleRow();
 				if ($r <> null) {
 					DataBaseLock::unlock($lock);
 					throw new Exception("The element already exists: ".$this->getColumnName($t,$col->name));
@@ -1229,7 +1278,7 @@ class SQLQuery {
 				$q = SQLQuery::create();
 				if ($this->bypassSecurity) $q->bypass_security();
 				$r = $q->select($t->getName())
-					->setSubModels($this->sub_models)
+					->selectSubModels($this->sub_models)
 					->whereIn($col->name,$values)
 					->execute();
 				if ($r <> null && count($r) > 0) {
@@ -1696,12 +1745,12 @@ class SQLQuery {
 
 	// some useful shortcuts
 	public static function getTable($table, $sub_models = null) {
-		return SQLQuery::create()->setSubModels($sub_models)->select($table)->execute();
+		return SQLQuery::create()->selectSubModels($sub_models)->select($table)->execute();
 	}
 	public static function getRow($table, $key, $sub_models = null) {
 		require_once("component/data_model/Model.inc");
 		$t = DataModel::get()->getTable($table);
-		return SQLQuery::create()->setSubModels($sub_models)->select($table)->where($t->getPrimaryKey()->name, $key)->executeSingleRow();
+		return SQLQuery::create()->selectSubModels($sub_models)->select($table)->where($t->getPrimaryKey()->name, $key)->executeSingleRow();
 	}
 
 	private static $transaction_started = false;

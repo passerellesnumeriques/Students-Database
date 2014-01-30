@@ -10,7 +10,7 @@ function table_datadisplay_page_from_key(&$page, $table, $key, $sub_models = nul
 			return;
 		}
 	}
-	$q = SQLQuery::create()->setSubModels($sub_models);
+	$q = SQLQuery::create()->selectSubModels($sub_models);
 	$table_alias = $q->generateTableAlias();
 	$q->select(array($table->getName() => $table_alias));
 	$q->where($table->getPrimaryKey()->name,$key);

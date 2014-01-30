@@ -194,7 +194,7 @@ class SimpleDataDisplay extends DataDisplay {
 		}
 		$value = \SQLQuery::create()
 			->select($this->handler->table->getName())
-			->setSubModelForTable($this->handler->table, $sub_model)
+			->selectSubModelForTable($this->handler->table, $sub_model)
 			->field($this->column_name)
 			->where($this->handler->table->getPrimaryKey()->name, $key)
 			->executeSingleValue();
@@ -203,7 +203,7 @@ class SimpleDataDisplay extends DataDisplay {
 	
 	public function saveData($key, $value, $sub_model) {
 		\SQLQuery::create()
-			->setSubModelForTable($this->handler->table, $sub_model)
+			->selectSubModelForTable($this->handler->table, $sub_model)
 			->updateByKey($this->handler->table->getName(), $key, array($this->column_name => $value))
 			;
 	}
@@ -468,7 +468,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		require_once("component/data_model/DataBaseLock.inc");
 		\SQLQuery::create()->remove($this->handler->table->getSQLNameFor($sub_model), array($this->joining_key_name=>$key));
 		foreach ($value as $v)
-			\SQLQuery::create()->setSubModelForTable($this->handler->table, $sub_model)->insert($this->handler->table->getName(), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
+			\SQLQuery::create()->selectSubModelForTable($this->handler->table, $sub_model)->insert($this->handler->table->getName(), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
 	}
 		
 }

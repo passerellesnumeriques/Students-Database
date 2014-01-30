@@ -65,7 +65,7 @@ function color_choice(container, current_color) {
 				this.innerHTML = "Default Colors";
 				var frame = document.createElement("IFRAME");
 				t.frame = frame;
-				frame.src = "/static/widgets/color_choice/colorpicker/default.html"+color_string(t.color);
+				frame.src = "/static/widgets/color_choice/lib_colorpicker/default.html"+color_string(t.color);
 				frame.onload = function() { 
 					fireLayoutEventFor(container); 
 				};
