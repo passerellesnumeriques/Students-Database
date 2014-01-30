@@ -47,6 +47,7 @@ theme::$icons_16 = array(
 	"loading" => 		"/static/theme/".$theme."/icons_16/loading.gif",
 	"lock" => 			"/static/theme/".$theme."/icons_16/lock.png",
 	"more_menu" => 		"/static/theme/".$theme."/icons_16/more_menu.png",
+	"move" => 			"/static/theme/".$theme."/icons_16/move.png",
 	"no" => 			"/static/theme/".$theme."/icons_16/close.png",
 	"no_edit" => 		"/static/theme/".$theme."/icons_16/no_edit.png",
 	"ok" => 			"/static/theme/".$theme."/icons_16/ok.png",
