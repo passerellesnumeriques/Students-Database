@@ -71,8 +71,8 @@ class SQLQuery {
  			$this->limit_from = $copy->limit_from;
  			$this->limit_number = $copy->limit_number;
  			$this->group_by = $copy->group_by;
- 			$this->field_id_counter = $copy->field_id_counter;
- 			$this->table_id_counter = $copy->table_id_counter;
+ 			$this->field_alias_counter = $copy->field_alias_counter;
+ 			$this->table_alias_counter = $copy->table_alias_counter;
  		}
  		$this->sub_models = array_merge(SQLQuery::$preselected_submodels);
  	}
@@ -1133,7 +1133,7 @@ class SQLQuery {
 					throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
 				}
 				$q = SQLQuery::create();
-				if ($this->bypassSecurity) $q->bypass_security();
+				if ($this->bypass_security) $q->bypassSecurity();
 				$r = $q->select($t->getName())->setSubModels($this->sub_models)->where($col->name,$fields_values[$col->name])->executeSingleRow();
 				if ($r <> null) {
 					DataBaseLock::unlock($lock);
