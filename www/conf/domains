@@ -1,0 +1,9 @@
+<?php
+return array(
+	"PNP" => array("country_code"=>"ph"),
+	"PNC" => array("country_code"=>"kh"),
+	"PNV" => array("country_code"=>"vn"),
+	"Test" => array("country_code"=>"ph"),
+	"Dev" => array("country_code"=>"ph"),
+);
+?>

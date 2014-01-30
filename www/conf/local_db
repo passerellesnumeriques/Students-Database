@@ -1,0 +1,8 @@
+<?php
+return array(
+	"type"=>"MySQL",
+	"server"=>"localhost",
+	"user"=>"root",
+	"password"=>""
+);
+?>

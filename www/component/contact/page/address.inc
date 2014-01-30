@@ -1,0 +1,34 @@
+<?phpfunction addresses_structure($type, $id) {	$table_address = null;
+	$join_address_column = null;
+	$join_value = $id;
+	if($type == "people"){
+		$table_address = "People_address";
+		$join_address_column = "people";
+	}	if($type == "organization"){		$table_address = "Organization_address";		$join_address_column = "organization";	}	$q_addresses = SQLQuery::create()->select($table_address)
+		->join($table_address,"Postal_address",array("address"=>"id"))		->where($table_address.".".$join_address_column." = '".SQLQuery::escape($join_value)."'");	require_once("component/contact/ContactJSON.inc");	ContactJSON::PostalAddressSQL($q_addresses);	$addresses = $q_addresses->execute();		$s = "[";	$first = true;	foreach($addresses as $address){		if($first) $first = false; else $s .= ", ";		$s .= ContactJSON::PostalAddress($q_addresses, $address);	}	$s .= "]";	return $s;}/** * The rights of the user is taken into account to set this page * This page needs no service to be generated * @param $type {string} can be 'people' or 'organization' * @param $container_id {string} the id of the container which will contain the page * @param $id the people_id or organization_id, or -1 for a new one * @return string the name of the javascript constructor to call */ function address(&$page,$type,$container_id,$id){	require_once("component/data_model/Model.inc");	$rights = array();		if($type == "people"){		if ($id <> -1) {
+			$q = SQLQuery::create()->select("People");
+			$q->where_value("People","id",$id);
+			DataModel::get()->getTable("People")->filterReadAccess($q, "People");
+			$rows = $q->execute();
+			if (count($rows) == 0) {
+				PNApplication::error("Cannot access to this People");
+				return;
+			}
+				
+			$q = SQLQuery::create()->select("People");
+			$q->where_value("People","id",$id);			DataModel::get()->getTable("People")->prepareSelectToDetermineRemoveAccess($q, "People", $locks);
+			$rows = $q->execute();
+			$rows = DataModel::get()->getTable("People")->filterRemoveAccess($rows);
+			$rights['remove'] = count($rows) == 1;
+				
+			$q = SQLQuery::create()->select("People");
+			$q->where_value("People","id",$id);			DataModel::get()->getTable("People")->prepareSelectToDetermineWriteAccess($q, "People");
+			$rows = $q->execute();
+			$rows = DataModel::get()->getTable("People")->filterWriteAccess($rows);
+			$rights['edit'] = count($rows) == 1;
+				
+			$rights['add'] = $rights['remove'];
+		} else {
+			$rights['remove'] = $rights['add'] = $rights['edit'] = true;
+		}
+	}	if($type == "organization"){		if ($id <> -1) {			$q = SQLQuery::create()->select("Organization");			$q->where("id",$id);			DataModel::get()->getTable("Organization")->filterReadAccess($q, "Organization");			$rows = $q->execute();			if (count($rows) == 0) {				PNApplication::error("Cannot access to this Organization");				return;			}							$q = SQLQuery::create()->select("Organization");			$q->where("id",$id);			DataModel::get()->getTable("Organization")->prepareSelectToDetermineRemoveAccess($q, "Organization", $locks);			$rows = $q->execute();			$rows = DataModel::get()->getTable("Organization")->filterRemoveAccess($rows);			$rights['remove'] = count($rows) == 1;							$q = SQLQuery::create()->select("Organization");			$q->where("id",$id);			DataModel::get()->getTable("Organization")->prepareSelectToDetermineWriteAccess($q, "Organization");			$rows = $q->execute();			$rows = DataModel::get()->getTable("Organization")->filterWriteAccess($rows);			$rights['edit'] = count($rows) == 1;							$rights['add'] = $rights['remove'];		} else {			$rights['remove'] = $rights['add'] = $rights['edit'] = true;		}	}	if($id <> -1) $addresses = addresses_structure($type, $id);	$addresses_var_name = $page->generateID();	?>	<script type='text/javascript'>	<?php	echo $addresses_var_name." = ";	if ($id <> -1) echo $addresses;	else echo "[]";	$page->add_javascript("/static/contact/contact_objects.js");	$page->add_javascript("/static/contact/addresses.js");	$var_id = $page->generateID();	$page->onload("window.$var_id = new addresses(".json_encode($container_id).",true,".json_encode($type).",".json_encode($id).",".$addresses_var_name.",".json_encode($rights['edit']).",".json_encode($rights['add']).",".json_encode($rights['remove']).");");	?>	</script>	<?php	return $var_id;}?>

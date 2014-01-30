@@ -1,0 +1,24 @@
+<?php
+
+class geography extends Component {
+	
+	public function getPluginImplementations() {
+		require_once("GeographyAdministrationPlugin.inc");
+		return array(
+			new GeographyAdministrationPlugin()
+		);
+	}
+	
+	public function get_geographic_area_text($area_id) {
+		$text = "";
+		do {
+			$area = SQLQuery::create()->select("Geographic_area")->where("id",$area_id)->execute_single_row();
+			if (strlen($text) > 0) $text .= ", ";
+			$text .= $area["name"];
+			$area_id = $area["parent"];
+		} while ($area_id <> null);
+		return $text;
+	}
+	
+}
+?>

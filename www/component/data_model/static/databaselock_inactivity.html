@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+	<link rel="stylesheet" href="/static/theme/default/style.css"/>
+	<script type="text/javascript" src="/static/javascript/utils.js"></script>
+	<script type="text/javascript" src="/static/javascript/browser.js"></script>
+</head>
+<body>
+<div style="padding:5px;display:inline-block">
+You are currently on a page where you can edit some data.<br/>
+<br/>
+Those data are locked, meaning nobody else can edit them, in order to ensure someone else will not modify it at the same time as you.<br/>
+<br/>
+You seem to be inactive since several minutes. Please click on the button below to continue working,<br/>
+else the data will be automatically unlocked, your data not saved, and you will be redirected to another page in <span style='font-weight:bold'><span id='seconds'></span> second(s).</span><br/>
+<br/>
+<button onclick='db_lock_still_here();'>I am still there !</button>
+</div>
+<script type='text/javascript'>
+function db_lock_still_here() {
+	window.top.pnapplication.userIsActive();
+	window.parent.get_popup_window_from_element(window.frameElement).close();
+}
+function db_lock_not_there() {
+	window.top.database_locks._user_inactive();
+	window.parent.get_popup_window_from_element(window.frameElement).close();
+}
+var timing = 60;
+function update_timing() {
+	if (--timing < 0) timing = 0;
+	document.getElementById('seconds').innerHTML = timing;
+	if (timing > 0)
+		setTimeout(update_timing,1000);
+	else
+		db_lock_not_there();
+}
+update_timing();
+</script>
+</body>
+</html>
