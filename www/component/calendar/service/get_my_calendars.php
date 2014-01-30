@@ -9,6 +9,7 @@ class service_get_my_calendars extends Service {
 	
 	public function execute(&$component, $input) {
 		$readable = $component->getAccessibleCalendars();
+		if (count($readable) == 0) { echo "[]"; return; }
 		$writable = $component->getWritableCalendars();
 		$list = SQLQuery::create()->bypass_security()
 			->select("Calendar")
