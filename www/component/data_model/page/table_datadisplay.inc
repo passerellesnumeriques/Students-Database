@@ -10,13 +10,13 @@ function table_datadisplay_page_from_key(&$page, $table, $key, $sub_models = nul
 			return;
 		}
 	}
-	$q = SQLQuery::create()->set_sub_models($sub_models);
-	$table_alias = $q->table_id();
+	$q = SQLQuery::create()->setSubModels($sub_models);
+	$table_alias = $q->generateTableAlias();
 	$q->select(array($table->getName() => $table_alias));
 	$q->where($table->getPrimaryKey()->name,$key);
 	foreach ($table->getColumns($sub_models) as $col)
 		$q->field($table_alias, $col->name, "DATA_COL_".$col->name);
-	$row = $q->execute_single_row();
+	$row = $q->executeSingleRow();
 	if ($row == null) return;
 	table_datadisplay_page($page, $table, $row, $q, $sub_models);
 }
@@ -37,7 +37,7 @@ function table_datadisplay_page(&$page, $table, &$row, $row_query, $sub_models =
 		echo "<td>";
 		echo $data->getDisplayName();
 		echo "</td>";
-		$key_alias = $row_query->get_field_alias($table->getName(), $table->getPrimaryKey()->name);
+		$key_alias = $row_query->getFieldAlias($table->getName(), $table->getPrimaryKey()->name);
 		if ($key_alias == null) $key_alias = $table->getPrimaryKey()->name;
 		$value = $data->getData($row[$key_alias], $sub_model, $row, $row_query);
 		$id = $page->generateID();

@@ -6,13 +6,13 @@ class DataBase {
 	public static $conn;
 
 	public static function execute($sql_query, $report_errors = true) { return DataBase::$conn->execute($sql_query, $report_errors); }
-	public static function next_row($query_result) { return DataBase::$conn->next_row($query_result); }
-	public static function get_insert_id() { return DataBase::$conn->get_insert_id(); }
-	public static function affected_rows() { return DataBase::$conn->affected_rows(); }
-	public static function get_last_error_number() { return DataBase::$conn->get_last_error_number(); }
-	public static function get_last_error_message() { return DataBase::$conn->get_last_error_message(); }
+	public static function nextRow($query_result) { return DataBase::$conn->nextRow($query_result); }
+	public static function getInsertID() { return DataBase::$conn->getInsertID(); }
+	public static function affectedRows() { return DataBase::$conn->affectedRows(); }
+	public static function getLastErrorNumber() { return DataBase::$conn->getLastErrorNumber(); }
+	public static function getLastErrorMessage() { return DataBase::$conn->getLastErrorMessage(); }
 
-	public static function escape_string($str) { return DataBase::$conn->escape_string($str); }
+	public static function escapeString($str) { return DataBase::$conn->escapeString($str); }
 
 }
 

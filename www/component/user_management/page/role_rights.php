@@ -15,7 +15,7 @@ class page_role_rights extends Page {
 		if ($locked <> null)
 			$can_edit = false;
 
-		$role = SQLQuery::create()->select("Role")->where("id",$role_id)->execute_single_row();
+		$role = SQLQuery::create()->select("Role")->where("id",$role_id)->executeSingleRow();
 
 		$this->add_javascript("/static/widgets/page_header.js");
 		$this->onload("new page_header('role_rights_header');");

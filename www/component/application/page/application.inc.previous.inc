@@ -40,7 +40,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 					<div id='user_settings_button'>
 					<span id='user_first_name'></span> <span id='user_last_name'></span>
 					<?php 
-					$people = SQLQuery::create()->bypass_security()->select("People")->where("id",PNApplication::$instance->user_people->user_people_id)->execute_single_row();
+					$people = SQLQuery::create()->bypassSecurity()->select("People")->where("id",PNApplication::$instance->user_people->user_people_id)->executeSingleRow();
 					datamodel_cell($this, "user_first_name", false, "People", "first_name", PNApplication::$instance->user_people->user_people_id, null, $people["first_name"]);
 					datamodel_cell($this, "user_last_name", false, "People", "last_name", PNApplication::$instance->user_people->user_people_id, null, $people["last_name"]);
 					?>

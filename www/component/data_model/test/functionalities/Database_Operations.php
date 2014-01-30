@@ -19,10 +19,10 @@ class Database_Operations extends TestFunctionalitiesScenario {
 class Database_Operations_Test_Transaction_Rollback extends TestFunctionalitiesStep {
 	public function getName() { return "Transaction Rollback"; }
 	public function run(&$scenario_data) {
-		SQLQuery::start_transaction();
-		SQLQuery::create()->bypass_security()->insert("DataLocks", array("timestamp"=>time(), "locker_domain"=>"Test", "locker_username"=>"test_transaction", "table"=>"does_not_exist"));
-		SQLQuery::cancel_transaction();
-		$res = SQLQuery::create()->bypass_security()->select("DataLocks")->where_value("DataLocks", "table", "does_not_exist")->execute();
+		SQLQuery::startTransaction();
+		SQLQuery::create()->bypassSecurity()->insert("DataLocks", array("timestamp"=>time(), "locker_domain"=>"Test", "locker_username"=>"test_transaction", "table"=>"does_not_exist"));
+		SQLQuery::rollbackTransaction();
+		$res = SQLQuery::create()->bypassSecurity()->select("DataLocks")->whereValue("DataLocks", "table", "does_not_exist")->execute();
 		if (count($res) > 0) return "Insert visible in database after transaction rollback (".count($res).")";
 		return null;
 	}
@@ -30,10 +30,10 @@ class Database_Operations_Test_Transaction_Rollback extends TestFunctionalitiesS
 class Database_Operations_Test_Transaction_Commit extends TestFunctionalitiesStep {
 	public function getName() { return "Transaction Commit"; }
 	public function run(&$scenario_data) {
-		SQLQuery::start_transaction();
-		SQLQuery::create()->bypass_security()->insert("DataLocks", array("timestamp"=>time(), "locker_domain"=>"Test", "locker_username"=>"test_transaction", "table"=>"does_not_exist"));
-		SQLQuery::end_transaction();
-		$res = SQLQuery::create()->bypass_security()->select("DataLocks")->where_value("DataLocks", "table", "does_not_exist")->execute();
+		SQLQuery::startTransaction();
+		SQLQuery::create()->bypassSecurity()->insert("DataLocks", array("timestamp"=>time(), "locker_domain"=>"Test", "locker_username"=>"test_transaction", "table"=>"does_not_exist"));
+		SQLQuery::commitTransaction();
+		$res = SQLQuery::create()->bypassSecurity()->select("DataLocks")->whereValue("DataLocks", "table", "does_not_exist")->execute();
 		if (count($res) == 0) return "Insert not visible in database after transaction commit";
 		return null;
 	}

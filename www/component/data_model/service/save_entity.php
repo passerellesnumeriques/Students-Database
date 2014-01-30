@@ -46,10 +46,10 @@ class service_save_entity extends Service {
 		
 		if ($key == null) {
 			// this is an insert
-			echo "{key:".SQLQuery::create()->set_sub_models($sub_models)->insert($table, $fields)."}";
+			echo "{key:".SQLQuery::create()->setSubModels($sub_models)->insert($table, $fields)."}";
 		} else {
 			// this is an update
-			SQLQuery::create()->set_sub_models($sub_models)->update_by_key($table, $key, $fields, $lock_id == -1 ? null : $lock_id);
+			SQLQuery::create()->setSubModels($sub_models)->updateByKey($table, $key, $fields, $lock_id == -1 ? null : $lock_id);
 			echo "{key:".$key."}";
 		}
 	}

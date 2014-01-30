@@ -69,9 +69,9 @@ class Insert_Access_Table_Prepare_DataModel extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseModel.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,17) == "TestInsertAccess_")
-			DataBaseModel::create_table(SQLQuery::get_db_system_without_security(), $table);
-		$scenario_data["readinsert_id1"] = SQLQuery::create()->bypass_security()->insert("TestInsertAccess_readinsert", array("value"=>51));
-		$scenario_data["readinsertfilter_id1"] = SQLQuery::create()->bypass_security()->insert("TestInsertAccess_readinsertfilter", array("value"=>51));
+			DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
+		$scenario_data["readinsert_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestInsertAccess_readinsert", array("value"=>51));
+		$scenario_data["readinsertfilter_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestInsertAccess_readinsertfilter", array("value"=>51));
 		PNApplication::$instance->user_management->logout();
 		return null;
 	}
@@ -136,7 +136,7 @@ class Insert_Access_Table_Test_ReadInsert_UserReadWrite extends TestFunctionalit
 			return "Cannot read: ".$e->getMessage();
 		}
 		try {
-			SQLQuery::create()->update_by_key("TestInsertAccess_readinsert", $scenario_data["readinsert_id1"], array("value"=>1664));
+			SQLQuery::create()->updateByKey("TestInsertAccess_readinsert", $scenario_data["readinsert_id1"], array("value"=>1664));
 			return "Can modify";
 		} catch (Exception $e) {}
 		try {

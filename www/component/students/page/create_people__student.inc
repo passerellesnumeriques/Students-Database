@@ -3,7 +3,7 @@
 	<select id='student_batch'>
 	<option value=''></option>
 	<?php
-	$batches = SQLQuery::create()->select("StudentBatch")->order_by("StudentBatch","start_date",false)->execute();
+	$batches = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch","start_date",false)->execute();
 	foreach ($batches as $b)
 		echo "<option value='".$b["id"]."'>".htmlentities($b["name"])."</option>"; 
 	?>

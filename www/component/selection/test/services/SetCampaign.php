@@ -18,7 +18,7 @@ class SetCampaign extends TestServicesScenario{
 	
 	protected function init_database(&$scenario_data){
 		// Create one selection campaign into the database
-		$key = SQLQuery::create()->bypass_security()->insert("SelectionCampaign",array("name"=>"Test_SetCampaign"));
+		$key = SQLQuery::create()->bypassSecurity()->insert("SelectionCampaign",array("name"=>"Test_SetCampaign"));
 		$scenario_data["id"] = $key;
 		if(!$key <> null) return "The campaign was not inserted properly into the database";
 	}

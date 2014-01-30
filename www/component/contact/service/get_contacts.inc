@@ -5,7 +5,7 @@ function get_contacts($table_contact, $join_contact_column, $table_address, $joi
 		$q_contacts = SQLQuery::create()->select($table_contact)
 						->join($table_contact,"Contact",array("contact"=>"id"))
 						->where($table_contact.".".$join_contact_column." = '".SQLQuery::escape($join_value)."'")
-						->order_by("contact_type");
+						->orderBy("contact_type");
 		ContactJSON::ContactSQL($q_contacts);
 		$contacts = $q_contacts->execute();
 		

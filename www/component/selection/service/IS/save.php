@@ -117,8 +117,8 @@ class service_IS_save extends Service{
 					$remove_address = false;
 				} else {
 					//it can be a remove or nothing
-					$q = SQLQuery::create()->select("Information_session")->field("postal_address")->where_value("Information_session","id",$data["id"])
-							->execute_single_value();
+					$q = SQLQuery::create()->select("Information_session")->field("postal_address")->whereValue("Information_session","id",$data["id"])
+							->executeSingleValue();
 					if($q <> null){
 						$address_to_remove = $q;
 						$remove_address = true;
@@ -139,8 +139,8 @@ class service_IS_save extends Service{
 					$remove_event = false;
 				} else {
 					//it can be a remove or nothing
-					$q = SQLQuery::create()->select("Information_session")->field("date")->where_value("Information_session","id",$data["id"])
-							->execute_single_value();
+					$q = SQLQuery::create()->select("Information_session")->field("date")->whereValue("Information_session","id",$data["id"])
+							->executeSingleValue();
 					if($q <> null){
 						$event_to_remove = $q;
 						$remove_event = true;
@@ -150,7 +150,7 @@ class service_IS_save extends Service{
 				}
 			}
 			//start the transaction
-			SQLQuery::start_transaction();
+			SQLQuery::startTransaction();
 			if($create_fake_organization){
 				try{
 					$fake_organization = SQLQuery::create()->insert("Organization", array(
@@ -211,14 +211,14 @@ class service_IS_save extends Service{
 					/* Unset address id in case it exists (address coming from a partner and then customized*/
 					if(isset($address["id"]))
 						unset($address["id"]);
-					SQLQuery::create()->update_by_key("Postal_address",$data["address"],ContactJSON::PostalAddress2DB($address));
+					SQLQuery::create()->updateByKey("Postal_address",$data["address"],ContactJSON::PostalAddress2DB($address));
 				} catch(Exception $e){
 					$everything_ok = false;
 					PNApplication::error($e);
 				}
 			} else if($remove_address && $everything_ok) {
 				try{
-					SQLQuery::create()->bypass_security()->remove_key("Postal_address",$address_to_remove);
+					SQLQuery::create()->bypassSecurity()->removeKey("Postal_address",$address_to_remove);
 					$data["address"] = null;
 				} catch(Exception $e){
 					$everything_ok = false;
@@ -231,7 +231,7 @@ class service_IS_save extends Service{
 					$new_IS_id = prepareDataAndSaveIS($data,true);
 					$data["id"] = $new_IS_id;
 					//update the fake_organization_name with the good name
-					SQLQuery::create()->bypass_security()->update_by_key("Organization",$data["fake_organization"],array("name" => "fake_for_IS_".$data["id"]));
+					SQLQuery::create()->bypassSecurity()->updateByKey("Organization",$data["fake_organization"],array("name" => "fake_for_IS_".$data["id"]));
 				} catch (Exception $e){
 					$everything_ok = false;
 					PNApplication::error($e);
@@ -255,10 +255,10 @@ class service_IS_save extends Service{
 			}
 			
 			if(!$everything_ok || PNApplication::has_errors()){
-				SQLQuery::cancel_transaction();
+				SQLQuery::rollbackTransaction();
 				echo "false";
 			} else {
-				SQLQuery::end_transaction();
+				SQLQuery::commitTransaction();
 				echo "{id:".json_encode($data["id"]);
 				echo ",fake_organization:".json_encode($data["fake_organization"]);
 				echo ",address:".json_encode($data["address"]);

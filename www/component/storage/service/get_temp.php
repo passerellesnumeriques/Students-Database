@@ -8,9 +8,9 @@ class service_get_temp extends Service {
 	public function execute(&$component, $input) {
 		$id = $_GET["id"];
 		
-		$res = SQLQuery::get_db_system_without_security()->execute("SELECT * FROM `Storage` WHERE `id`='".SQLQuery::escape($id)."'");
+		$res = SQLQuery::getDataBaseAccessWithoutSecurity()->execute("SELECT * FROM `Storage` WHERE `id`='".SQLQuery::escape($id)."'");
 		if (!$res) return;
-		$res = SQLQuery::get_db_system_without_security()->next_row($res);
+		$res = SQLQuery::getDataBaseAccessWithoutSecurity()->nextRow($res);
 		if ($res == null) return;
 		if ($res["expire"] == null || $res["username"] <> PNApplication::$instance->user_management->username) return;
 		$path = $component->get_data_path($id);

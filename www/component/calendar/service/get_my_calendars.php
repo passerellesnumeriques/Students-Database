@@ -11,9 +11,9 @@ class service_get_my_calendars extends Service {
 		$readable = $component->getAccessibleCalendars();
 		if (count($readable) == 0) { echo "[]"; return; }
 		$writable = $component->getWritableCalendars();
-		$list = SQLQuery::create()->bypass_security()
+		$list = SQLQuery::create()->bypassSecurity()
 			->select("Calendar")
-			->where_in("Calendar", "id", $readable)
+			->whereIn("Calendar", "id", $readable)
 			->join("Calendar", "UserCalendarConfiguration", array("id"=>"calendar"), null, array("user"=>PNApplication::$instance->user_management->user_id))
 			->field("Calendar", "id", "id")
 			->field("Calendar", "name", "name")

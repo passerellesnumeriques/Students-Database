@@ -130,7 +130,7 @@ function debug_status(container) {
 				td.style.border = '1px solid black';
 				td.innerHTML = "Check";
 				var js_locks = [];
-				for (var i = 0; i < window.top.database_locks._locks.length; ++i) js_locks.push(window.top.database_locks._locks[i].id);
+				for (var i = 0; i < window.top.databaselock._locks.length; ++i) js_locks.push(window.top.databaselock._locks[i].id);
 				for (var i = 0; i < result.locks.length; ++i) {
 					table.appendChild(tr = document.createElement("TR"));
 					tr.appendChild(td = document.createElement("TD"));

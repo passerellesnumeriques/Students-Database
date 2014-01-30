@@ -16,7 +16,7 @@ abstract class TestFunctionalitiesScenario extends TestScenario {
 	public abstract function getSteps();
 
 	public function run_step($step_index, &$scenario_data) {
-		$db = SQLQuery::get_db_system_without_security();
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$db->execute("USE students_test");
 		// run
 		$steps = $this->getSteps();

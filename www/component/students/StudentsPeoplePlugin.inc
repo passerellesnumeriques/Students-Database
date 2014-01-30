@@ -6,13 +6,13 @@ require_once("component/people/PeoplePlugin.inc");
 class StudentsPeoplePlugin implements PeoplePlugin {
 	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
-		$alias = $q->get_table_alias("Student");
+		$alias = $q->getTableAlias("Student");
 		if ($alias == null) {
-			$alias = $q->table_id();
-			$people_alias = $q->get_table_alias("People");
+			$alias = $q->generateTableAlias();
+			$people_alias = $q->getTableAlias("People");
 			$q->join($people_alias, "Student", array("id"=>"people"), $alias);
 		}
-		if ($q->get_field_alias("Student", "batch") <> "student_batch")
+		if ($q->getFieldAlias("Student", "batch") <> "student_batch")
 			$q->field($alias, "batch", "student_batch");
 	}
 	public function getPeopleProfilePages($people_id, $people, $q) {
@@ -41,7 +41,7 @@ class StudentsPeoplePlugin implements PeoplePlugin {
 	
 	public function createPeople($people_id, $people_types, $input, &$create_data) {
 		if (!in_array("student", $people_types)) return true;
-		SQLQuery::create()->bypass_security()->insert("Student", array(
+		SQLQuery::create()->bypassSecurity()->insert("Student", array(
 		"people"=>$people_id,
 		"batch"=>$input["student_batch"]
 		));
@@ -57,9 +57,9 @@ class StudentsPeoplePlugin implements PeoplePlugin {
 	
 	public function filterPeopleReadAccess(&$q, $people_table_alias) {
 		if (!PNApplication::$instance->user_management->has_right("consult_students_list")) return null;
-		$student_alias = $q->get_table_alias("Student");
+		$student_alias = $q->getTableAlias("Student");
 		if ($student_alias == null) {
-			$student_alias = $q->table_id();
+			$student_alias = $q->generateTableAlias();
 			$q->join($people_table_alias, "Student", array("id"=>"people"), $student_alias);
 		}
 		return "`".$student_alias."`.`batch` IS NOT NULL";

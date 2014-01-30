@@ -53,7 +53,7 @@ class service_get_data_list extends Service {
 		// init query with root table
 		$q = SQLQuery::create();
 		$t = DataModel::get()->getTable($table);
-		$alias = $q->table_id();
+		$alias = $q->generateTableAlias();
 		$table_name = $t->getSQLName(null);
 		$q->select(array($table_name=>$alias));
 		
@@ -155,10 +155,10 @@ class service_get_data_list extends Service {
 					$l = strpos($s, ".");
 					$table = substr($s, 0, $l);
 					$col = substr($s, $l+1);
-					$alias = $q->get_field_alias($q->get_table_alias($table), $col);
+					$alias = $q->getFieldAlias($q->getTableAlias($table), $col);
 					if ($alias == null) {
 						$alias = $builder->new_alias();
-						$q->field($q->get_table_alias($table), $col, $alias);
+						$q->field($q->getTableAlias($table), $col, $alias);
 					}
 					$k = $kk+1;
 					continue;
@@ -175,7 +175,7 @@ class service_get_data_list extends Service {
 					else if ($input["sort_order"] == "DESC") $asc = false;
 					else break;
 					$alias = $data_aliases[$i]["data"];
-					$q->order_by($alias, $asc);
+					$q->orderBy($alias, $asc);
 					break;
 				}
 			}
@@ -186,7 +186,7 @@ class service_get_data_list extends Service {
 		if (!isset($input["export"])) {
 			// calculate the total number of entries
 			$count = new SQLQuery($q);
-			$count = $count->count("NB_DATA")->execute_single_row();
+			$count = $count->count("NB_DATA")->executeSingleRow();
 			$count = $count["NB_DATA"];
 			
 			// handle pages
@@ -247,9 +247,9 @@ class service_get_data_list extends Service {
 							$l = strpos($s, ".");
 							$table = substr($s, 0, $l);
 							$col = substr($s, $l+1);
-							$alias = $q->get_field_alias($q->get_table_alias($table), $col);
+							$alias = $q->getFieldAlias($q->getTableAlias($table), $col);
 							if ($alias == null) {
-								PNApplication::error("Missing field '".$col."' from table '".$table."' (alias '".$q->get_table_alias($table)."') in SQL request ".$q->generate());
+								PNApplication::error("Missing field '".$col."' from table '".$table."' (alias '".$q->getTableAlias($table)."') in SQL request ".$q->generate());
 								$k = $kk+1;
 								continue;
 							}

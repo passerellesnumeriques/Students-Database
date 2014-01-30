@@ -87,7 +87,7 @@ typed_field.prototype = {
 	
 	register_datamodel_cell: function(table, column, row_key) {
 		var t=this;
-		window.top.datamodel.register_cell_widget(window, table, column, row_key, function(){
+		window.top.datamodel.registerCellWidget(window, table, column, row_key, function(){
 			return t.getCurrentData();
 		},function(data){
 			t.setData(data);
@@ -97,7 +97,7 @@ typed_field.prototype = {
 	},
 	register_datamodel_datadisplay: function(data_display, data_key) {
 		var t=this;
-		window.top.datamodel.register_data_widget(window, data_display, data_key, function(){
+		window.top.datamodel.registerDataWidget(window, data_display, data_key, function(){
 			return t.getCurrentData();
 		},function(data){
 			t.setData(data);

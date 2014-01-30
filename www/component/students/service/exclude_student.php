@@ -12,7 +12,7 @@ class service_exclude_student extends Service {
 		$date = $input["date"];
 		$reason = $input["reason"];
 		
-		$student = SQLQuery::create()->select("Student")->where_value("Student", "people", $people_id)->execute_single_row();
+		$student = SQLQuery::create()->select("Student")->whereValue("Student", "people", $people_id)->executeSingleRow();
 		if ($student == null) {
 			PNApplication::error("Invalid student");
 			echo "false";
@@ -23,7 +23,7 @@ class service_exclude_student extends Service {
 				echo "true";
 				return;
 			}
-			SQLQuery::create()->update_by_key("Student", $people_id, array("exclusion_date"=>null,"exclusion_reason"=>null));
+			SQLQuery::create()->updateByKey("Student", $people_id, array("exclusion_date"=>null,"exclusion_reason"=>null));
 			echo "true";
 			return;
 		}
@@ -36,7 +36,7 @@ class service_exclude_student extends Service {
 			echo "false";
 			return;
 		}
-		SQLQuery::create()->update_by_key("Student", $people_id, array("exclusion_date"=>$date,"exclusion_reason"=>$reason));
+		SQLQuery::create()->updateByKey("Student", $people_id, array("exclusion_date"=>$date,"exclusion_reason"=>$reason));
 		echo "true";
 	}
 	

@@ -21,7 +21,7 @@ class service_import_student extends Service {
 		} catch (Exception $e) {
 			PNApplication::error($e);
 			// rollback
-			SQLQuery::create()->bypass_security()->remove_key("People", $people_id);
+			SQLQuery::create()->bypassSecurity()->removeKey("People", $people_id);
 			return;
 		}
 		echo "{id:".$people_id."}";

@@ -392,7 +392,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				if (col.editable) {
 					service.json("data_model","unlock",{locks:col.locks},function(result){});
 					for (var j = 0; j < col.locks.length; ++j)
-						window.database_locks.remove_lock(col.locks[j]);
+						window.databaselock.remove_lock(col.locks[j]);
 					col.locks = null;
 					t._cancel_column_changes(col);
 					edit_col();
@@ -416,7 +416,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 								} else {
 									// success
 									for (var j = 0; j < locks.length; ++j)
-										window.database_locks.add_lock(locks[j]);
+										window.databaselock.add_lock(locks[j]);
 									col.locks = locks;
 									edit_col();
 								}
@@ -526,7 +526,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 						field:td.field,
 						register: function(data_display, data_key) {
 							var t=this;
-							window.top.datamodel.register_data_widget(window, data_display, data_key, function() {
+							window.top.datamodel.registerDataWidget(window, data_display, data_key, function() {
 								return t.field.getCurrentData();
 							}, function(data) {
 								t.field.setData(data);

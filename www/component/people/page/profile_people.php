@@ -6,16 +6,16 @@ class page_profile_people extends Page {
 		require_once("component/people/PeoplePlugin.inc");
 
 		$q = SQLQuery::create();
-		$people_alias = $q->table_id();
+		$people_alias = $q->generateTableAlias();
 		$q->select(array("People"=>$people_alias));
-		$q->where_value($people_alias, "id", $people_id);
+		$q->whereValue($people_alias, "id", $people_id);
 		foreach (PNApplication::$instance->components as $cname=>$c) {
 			foreach ($c->getPluginImplementations() as $pi) {
 				if (!($pi instanceof PeoplePlugin)) continue;
 				$pi->preparePeopleProfilePagesRequest($q, $people_id);
 			}
 		}
-		$people = $q->execute_single_row();
+		$people = $q->executeSingleRow();
 		
 		$sections = array();
 		foreach (PNApplication::$instance->components as $name=>$c) {

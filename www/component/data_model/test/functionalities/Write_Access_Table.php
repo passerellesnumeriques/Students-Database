@@ -65,12 +65,12 @@ class Write_Access_Table_Prepare_DataModel extends TestFunctionalitiesStep {
 		require_once("component/data_model/DataBaseModel.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,16) == "TestWriteAccess_")
-			DataBaseModel::create_table(SQLQuery::get_db_system_without_security(), $table);
-		$scenario_data["onlyread_id"] = SQLQuery::create()->bypass_security()->insert("TestWriteAccess_onlyread", array("value"=>51));
-		$scenario_data["writeall_id"] = SQLQuery::create()->bypass_security()->insert("TestWriteAccess_writeall", array("value"=>51));
-		$scenario_data["writeall_id2"] = SQLQuery::create()->bypass_security()->insert("TestWriteAccess_writeall", array("value"=>51));
-		$scenario_data["writefilter_id1"] = SQLQuery::create()->bypass_security()->insert("TestWriteAccess_writefilter", array("value"=>1));
-		$scenario_data["writefilter_id2"] = SQLQuery::create()->bypass_security()->insert("TestWriteAccess_writefilter", array("value"=>2));
+			DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
+		$scenario_data["onlyread_id"] = SQLQuery::create()->bypassSecurity()->insert("TestWriteAccess_onlyread", array("value"=>51));
+		$scenario_data["writeall_id"] = SQLQuery::create()->bypassSecurity()->insert("TestWriteAccess_writeall", array("value"=>51));
+		$scenario_data["writeall_id2"] = SQLQuery::create()->bypassSecurity()->insert("TestWriteAccess_writeall", array("value"=>51));
+		$scenario_data["writefilter_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestWriteAccess_writefilter", array("value"=>1));
+		$scenario_data["writefilter_id2"] = SQLQuery::create()->bypassSecurity()->insert("TestWriteAccess_writefilter", array("value"=>2));
 		PNApplication::$instance->user_management->logout();
 		return null;
 	}
@@ -93,7 +93,7 @@ class Write_Access_Table_Test_NoRight extends TestFunctionalitiesStep {
 			if ($res[0]["value"] <> 51) return "Wrong value found in select";
 		} catch (Exception $e) {}
 		try {
-			SQLQuery::create()->update_by_key("TestWriteAccess_onlyread", $scenario_data["onlyread_id"], array("value"=>1664));
+			SQLQuery::create()->updateByKey("TestWriteAccess_onlyread", $scenario_data["onlyread_id"], array("value"=>1664));
 			return "Can modify table";
 		} catch (Exception $e) {}
 		try {
@@ -123,7 +123,7 @@ class Write_Access_Table_Test_WriteAll_CannotWrite extends TestFunctionalitiesSt
 			if ($res[0]["value"] <> 51) return "Wrong value found in select";
 		} catch (Exception $e) {}
 		try {
-			SQLQuery::create()->update_by_key("TestWriteAccess_writeall", $scenario_data["writeall_id"], array("value"=>1664));
+			SQLQuery::create()->updateByKey("TestWriteAccess_writeall", $scenario_data["writeall_id"], array("value"=>1664));
 			return "Can modify table";
 		} catch (Exception $e) {}
 		try {
@@ -153,7 +153,7 @@ class Write_Access_Table_Test_WriteAll_CanWriteAll extends TestFunctionalitiesSt
 			if ($res[0]["value"] <> 51) return "Wrong value found in select";
 		} catch (Exception $e) {}
 		try {
-			SQLQuery::create()->update_by_key("TestWriteAccess_writeall", $scenario_data["writeall_id"], array("value"=>1664));
+			SQLQuery::create()->updateByKey("TestWriteAccess_writeall", $scenario_data["writeall_id"], array("value"=>1664));
 		} catch (Exception $e) {
 			return "Cannot modify table: ".$e->getMessage();
 		}
@@ -184,7 +184,7 @@ class Write_Access_Table_Test_WriteAll_CanOnlyWrite extends TestFunctionalitiesS
 		} catch (Exception $e) {
 		}
 		try {
-			SQLQuery::create()->update_by_key("TestWriteAccess_writeall", $scenario_data["writeall_id2"], array("value"=>1664));
+			SQLQuery::create()->updateByKey("TestWriteAccess_writeall", $scenario_data["writeall_id2"], array("value"=>1664));
 			return "Can modify table";
 		} catch (Exception $e) {
 		}
@@ -209,11 +209,11 @@ class Write_Access_Table_Test_WriteFilter_OnlyFilter extends TestFunctionalities
 			if (count($res) <> 2) return "Unexpected result on select: 2 rows expected, found: ".count($res);
 		} catch (Exception $e) {}
 		try {
-			SQLQuery::create()->update_by_key("TestWriteAccess_writefilter", $scenario_data["writefilter_id1"], array("value"=>0));
+			SQLQuery::create()->updateByKey("TestWriteAccess_writefilter", $scenario_data["writefilter_id1"], array("value"=>0));
 			return "Can modify table for entry which does not match the filter";
 		} catch (Exception $e) {}
 		try {
-			SQLQuery::create()->update_by_key("TestWriteAccess_writefilter", $scenario_data["writefilter_id2"], array("value"=>3));
+			SQLQuery::create()->updateByKey("TestWriteAccess_writefilter", $scenario_data["writefilter_id2"], array("value"=>3));
 		} catch (Exception $e) {
 			return "Cannot modify table for entry which matches the filter";
 		}
@@ -223,7 +223,7 @@ class Write_Access_Table_Test_WriteFilter_OnlyFilter extends TestFunctionalities
 			if ($res[0]["value"] <> 3) return "After trying to modify: Wrong value found in select";
 		} catch (Exception $e) {}
 		try {
-			SQLQuery::create()->update_by_key("TestWriteAccess_writefilter", $scenario_data["writefilter_id2"], array("value"=>2));
+			SQLQuery::create()->updateByKey("TestWriteAccess_writefilter", $scenario_data["writefilter_id2"], array("value"=>2));
 		} catch (Exception $e) {
 			return "Cannot modify a second time the table for entry which matches the filter";
 		}
@@ -248,12 +248,12 @@ class Write_Access_Table_Test_WriteFilter_WriteAll extends TestFunctionalitiesSt
 			if (count($res) <> 2) return "Unexpected result on select: 2 rows expected, found: ".count($res);
 		} catch (Exception $e) {}
 		try {
-			SQLQuery::create()->update_by_key("TestWriteAccess_writefilter", $scenario_data["writefilter_id1"], array("value"=>0));
+			SQLQuery::create()->updateByKey("TestWriteAccess_writefilter", $scenario_data["writefilter_id1"], array("value"=>0));
 		} catch (Exception $e) {
 			return "Cannot modify table for entry which does not match the filter";
 		}
 		try {
-			SQLQuery::create()->update_by_key("TestWriteAccess_writefilter", $scenario_data["writefilter_id2"], array("value"=>3));
+			SQLQuery::create()->updateByKey("TestWriteAccess_writefilter", $scenario_data["writefilter_id2"], array("value"=>3));
 		} catch (Exception $e) {
 			return "Cannot modify table for entry which matches the filter";
 		}

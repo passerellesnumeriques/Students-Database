@@ -18,7 +18,7 @@ abstract class TestScenario {
 	protected function getUsers() { return array(); }
 	
 	public function init(&$scenario_data) {
-		$db = SQLQuery::get_db_system_without_security();
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		// initialize database
 		require_once("component/development/service/create_db.php");
 		$service = new service_create_db();

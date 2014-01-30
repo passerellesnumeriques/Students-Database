@@ -14,16 +14,16 @@ class service_save_students_final_grade extends Service {
 	
 	public function execute(&$component, $input) {
 		set_time_limit(120);
-		SQLQuery::start_transaction();
-		$subject = SQLQuery::create()->select("CurriculumSubjectGrading")->where_value("CurriculumSubjectGrading", "subject", $input["subject_id"])->execute_single_row();
+		SQLQuery::startTransaction();
+		$subject = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $input["subject_id"])->executeSingleRow();
 		if ($subject == null) {
 			PNApplication::error("No information about this subject regarding grades");
-			SQLQuery::end_transaction();
+			SQLQuery::commitTransaction();
 			return;
 		}
 		if ($subject["only_final_grade"] <> 1) {
 			PNApplication::error("This subject is configured to have evaluations specified: you cannot change the final grade, it is automatically computed");
-			SQLQuery::end_transaction();
+			SQLQuery::commitTransaction();
 			return;
 		}
 		// update final grade of students
@@ -34,7 +34,7 @@ class service_save_students_final_grade extends Service {
 		if (count($input["students"]) > 0)
 			$component->update_students_final_grade($input["subject_id"], $input["students"]);
 		set_time_limit(120);
-		SQLQuery::end_transaction();
+		SQLQuery::commitTransaction();
 		echo "true";
 	}
 	

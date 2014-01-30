@@ -9,7 +9,7 @@ function table_datadisplay_edit(&$page, $table, $sub_models, $key, $javascript_o
 		return;
 	}
 	$sub_model = $sub_models <> null && $t->getModel() instanceof SubDataModel && isset($sub_models[$t->getModel()->getParentTable()]) ? $sub_models[$t->getModel()->getParentTable()] : null;
-	$row = $key <> null ? SQLQuery::create()->select($table)->set_sub_models($sub_models)->where($t->getPrimaryKey()->name, $key)->execute_single_row() : null;
+	$row = $key <> null ? SQLQuery::create()->select($table)->setSubModels($sub_models)->where($t->getPrimaryKey()->name, $key)->executeSingleRow() : null;
 	
 	$page->add_javascript("/static/data_model/DataDisplay.js");
 	$page->add_javascript("/static/widgets/typed_field/typed_field.js");

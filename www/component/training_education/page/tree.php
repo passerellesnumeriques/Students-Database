@@ -262,7 +262,7 @@ function Batch(current, alumni, id, name, start, end) {
 	span.appendChild(document.createTextNode("Batch "));
 	var batch_name = document.createTextNode(name);
 	var t=this;
-	window.top.datamodel.add_cell_change_listener(window, 'StudentBatch', 'name', id, function(value){
+	window.top.datamodel.addCellChangeListener(window, 'StudentBatch', 'name', id, function(value){
 		batch_name.nodeValue = value;
 		t.name = value;
 	});
@@ -348,7 +348,7 @@ function AcademicPeriod(batch, id, name, start, end) {
 	span.appendChild(document.createTextNode("Period "));
 	var period_name = document.createTextNode(name);
 	var t=this;
-	window.top.datamodel.add_cell_change_listener(window, 'AcademicPeriod', 'name', id, function(value){
+	window.top.datamodel.addCellChangeListener(window, 'AcademicPeriod', 'name', id, function(value){
 		period_name.nodeValue = value;
 		t.name = value;
 	});
@@ -444,7 +444,7 @@ function Specialization(period, id, name) {
 	span.appendChild(document.createTextNode("Sepcialization "));
 	var spe_name = document.createTextNode(name);
 	var t=this;
-	window.top.datamodel.add_cell_change_listener(window, 'Specialization', 'name', id, function(value){
+	window.top.datamodel.addCellChangeListener(window, 'Specialization', 'name', id, function(value){
 		spe_name.nodeValue = value;
 		t.name = value;
 	});
@@ -498,7 +498,7 @@ function Class(parent, id, name) {
 	span.appendChild(document.createTextNode("Class "));
 	var cl_name = document.createTextNode(name);
 	var t=this;
-	window.top.datamodel.add_cell_change_listener(window, 'AcademicClass', 'name', id, function(value){
+	window.top.datamodel.addCellChangeListener(window, 'AcademicClass', 'name', id, function(value){
 		cl_name.nodeValue = value;
 		t.name = value;
 	});
@@ -557,8 +557,8 @@ function build_tree() {
 	var alumni = new Alumni(all);
 	var batch, period, spe, cl;
 <?php 
-		$batches = SQLQuery::create()->select("StudentBatch")->order_by("StudentBatch","start_date", false)->execute();
-		$periods = SQLQuery::create()->select("AcademicPeriod")->order_by("AcademicPeriod", "start_date", true)->execute();
+		$batches = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch","start_date", false)->execute();
+		$periods = SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod", "start_date", true)->execute();
 		$spe = SQLQuery::create()->select("AcademicPeriodSpecialization")->join("AcademicPeriodSpecialization","Specialization",array("specialization"=>"id"))->execute();
 		$classes = SQLQuery::create()->select("AcademicClass")->execute();
 		foreach ($batches as $batch) {

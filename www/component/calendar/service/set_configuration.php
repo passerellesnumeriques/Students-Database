@@ -16,12 +16,12 @@ class service_set_configuration extends Service {
 			PNApplication::error("You don't have access to this calendar");
 			return;
 		}
-		SQLQuery::start_transaction();
-		$check = SQLQuery::create()->bypass_security()
+		SQLQuery::startTransaction();
+		$check = SQLQuery::create()->bypassSecurity()
 			->select("UserCalendarConfiguration")
-			->where_value("UserCalendarConfiguration", "calendar", $input["calendar"])
-			->where_value("UserCalendarConfiguration", "user", PNApplication::$instance->user_management->user_id)
-			->execute_single_row();
+			->whereValue("UserCalendarConfiguration", "calendar", $input["calendar"])
+			->whereValue("UserCalendarConfiguration", "user", PNApplication::$instance->user_management->user_id)
+			->executeSingleRow();
 		if ($check == null) {
 			// configuration does not exist yet
 			$data = array();
@@ -29,7 +29,7 @@ class service_set_configuration extends Service {
 			$data["user"] = PNApplication::$instance->user_management->user_id;
 			if (isset($input["show"])) $data["show"] = $input["show"]; else $data["show"] = true;
 			if (isset($input["color"])) $data["color"] = $input["color"];
-			SQLQuery::create()->bypass_security()->insert("UserCalendarConfiguration", $data);
+			SQLQuery::create()->bypassSecurity()->insert("UserCalendarConfiguration", $data);
 		} else {
 			// configuration exists
 			$key = array(
@@ -39,13 +39,13 @@ class service_set_configuration extends Service {
 			$data = array();
 			if (isset($input["show"])) $data["show"] = $input["show"];
 			if (isset($input["color"])) $data["color"] = $input["color"];
-			SQLQuery::create()->bypass_security()->update_by_key("UserCalendarConfiguration", $key, $data);
+			SQLQuery::create()->bypassSecurity()->updateByKey("UserCalendarConfiguration", $key, $data);
 		}
 		if (!PNApplication::has_errors()) {
-			SQLQuery::end_transaction();
+			SQLQuery::commitTransaction();
 			echo "true";
 		} else {
-			SQLQuery::cancel_transaction();
+			SQLQuery::rollbackTransaction();
 			echo "false";
 		}
 	}

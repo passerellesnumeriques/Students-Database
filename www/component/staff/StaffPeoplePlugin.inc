@@ -10,7 +10,7 @@ class StaffPeoplePlugin implements PeoplePlugin {
 	
 	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {
 		try {
-			$staff = SQLQuery::create()->select("StaffPosition")->where("people",$people_id)->execute_single_row();
+			$staff = SQLQuery::create()->select("StaffPosition")->where("people",$people_id)->executeSingleRow();
 			if ($staff == null) return array();
 			return array(
 					array(
@@ -39,9 +39,9 @@ class StaffPeoplePlugin implements PeoplePlugin {
 		if (!PNApplication::$instance->user_management->has_right("manage_staff", true)) return false;
 		$create_data["staff_positions"] = array();
 		try {
-			SQLQuery::create()->bypass_security()->insert("Staff", array("people"=>$people_id));
+			SQLQuery::create()->bypassSecurity()->insert("Staff", array("people"=>$people_id));
 			foreach ($input["staff_positions"] as $p) {
-				$id = SQLQuery::create()->bypass_security()->insert("StaffPosition", array(
+				$id = SQLQuery::create()->bypassSecurity()->insert("StaffPosition", array(
 						"people"=>$people_id,
 						"position"=>$p["position"],
 						"department"=>$p["department"],
@@ -59,7 +59,7 @@ class StaffPeoplePlugin implements PeoplePlugin {
 	}
 	public function rollbackCreatePeople($people_id, $people_types, $input, &$create_data) {
 		if (!in_array("staff", $people_types)) return;
-		SQLQuery::create()->bypass_security()->remove_keys("StaffPosition", $create_data["staff_positions"]);
+		SQLQuery::create()->bypassSecurity()->removeKeys("StaffPosition", $create_data["staff_positions"]);
 	}
 	
 	public function getPeopleImportDataDisplay() { return array(); }
@@ -67,18 +67,18 @@ class StaffPeoplePlugin implements PeoplePlugin {
 	
 	public function filterPeopleReadAccess(&$q, $people_table_alias) {
 		if (!PNApplication::$instance->user_management->has_right("consult_staff_list")) return null;
-		$staff_alias = $q->get_table_alias("Staff");
+		$staff_alias = $q->getTableAlias("Staff");
 		if ($staff_alias == null) {
-			$staff_alias = $q->table_id();
+			$staff_alias = $q->generateTableAlias();
 			$q->join($people_table_alias, "Staff", array("id"=>"people"), $staff_alias);
 		}
 		return "`".$staff_alias."`.`people` IS NOT NULL";
 	
 	}
 	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {
-		$staff_alias = $q->get_table_alias("Staff");
+		$staff_alias = $q->getTableAlias("Staff");
 		if ($staff_alias == null) {
-			$staff_alias = $q->table_id();
+			$staff_alias = $q->generateTableAlias();
 			$q->join($people_table_alias, "Staff", array("id"=>"people"), $staff_alias);
 		}
 		$q->field($staff_alias, "people", "STAFF_PEOPLE");
@@ -91,9 +91,9 @@ class StaffPeoplePlugin implements PeoplePlugin {
 		return $final;
 	}
 	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {
-		$staff_alias = $q->get_table_alias("Staff");
+		$staff_alias = $q->getTableAlias("Staff");
 		if ($staff_alias == null) {
-			$staff_alias = $q->table_id();
+			$staff_alias = $q->generateTableAlias();
 			$q->join($people_table_alias, "Staff", array("id"=>"people"), $staff_alias);
 		}
 		$q->field($staff_alias, "people", "STAFF_PEOPLE");

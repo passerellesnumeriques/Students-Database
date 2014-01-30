@@ -37,7 +37,7 @@ class service_create_db extends Service {
  			PNApplication::$instance->current_domain = $prev_current;
 // 			$res = $db_system->execute("SHOW TABLES");
 // 			if ($res !== FALSE) {
-// 				while (($table = $db_system->next_row($res)) !== FALSE) {
+// 				while (($table = $db_system->nextRow($res)) !== FALSE) {
 // 					$db_system->execute("DROP TABLE `".$table[0]."`");
 // 				}
 // 				DataBaseModel::update_model($model);

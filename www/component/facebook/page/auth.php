@@ -15,9 +15,9 @@ class page_auth extends Page {
 		if ($res <> null && isset($res["data"]) && isset($res["data"]["user_id"])) {
 			$facebook_id = $res["data"]["user_id"];
 			$res = SQLQuery::create()
-			->bypass_security()
+			->bypassSecurity()
 			->select("FacebookUser")
-			->where_value("FacebookUser","facebook_id",$facebook_id)
+			->whereValue("FacebookUser","facebook_id",$facebook_id)
 			->execute();
 			if (count($res) == 1) {
 				$error = PNApplication::$instance->user_management->external_login($res[0]["user"]);

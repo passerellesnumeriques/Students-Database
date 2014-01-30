@@ -13,7 +13,7 @@ class SelectionJSON{
 	 */
 	public static function Campaigns(){
 		$js = "[]";
-		try {$campaigns = SQLQuery::create()->select("SelectionCampaign")->field("id")->field("name")->order_by("name")->execute();
+		try {$campaigns = SQLQuery::create()->select("SelectionCampaign")->field("id")->field("name")->orderBy("name")->execute();
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
@@ -67,14 +67,14 @@ class SelectionJSON{
 	public static function InformationSessionTableDataFromID($id){
 		$q = SQLQuery::create()
 			->select("Information_session")
-			->where_value("Information_session","id",$id);
+			->whereValue("Information_session","id",$id);
 		self::InformationSessionSQL($q);
-		$row = $q->execute_single_row();
+		$row = $q->executeSingleRow();
 		return $row; 
 	}
 	
 	public static function InformationSessionSQL(&$q){
-		$alias = $q->get_table_alias("Information_session");
+		$alias = $q->getTableAlias("Information_session");
 		if(!$alias)
 			$alias = "Information_session";
 		$q
@@ -93,18 +93,18 @@ class SelectionJSON{
 		$q = SQLQuery::create()
 			->select("Information_session_partner")
 			->join("Information_session_partner","Information_session_contact_point",array("information_session"=>"information_session","organization"=>"organization"))
-			->where_value("Information_session_partner","information_session",$id)
-			->order_by("Information_session_partner","organization");
+			->whereValue("Information_session_partner","information_session",$id)
+			->orderBy("Information_session_partner","organization");
 		self::ISPartnersSQL($q);
 		$rows = $q->execute();
 		return $rows;
 	}
 	
 	public static function ISPartnersSQL(&$q){
-		$alias = $q->get_table_alias("Information_session_partner");
+		$alias = $q->getTableAlias("Information_session_partner");
 		if(!$alias)
 			$alias = "Information_session";
-		$alias_contact_point = $q->get_table_alias("Information_session_contact_point");
+		$alias_contact_point = $q->getTableAlias("Information_session_contact_point");
 		if(!$alias_contact_point)
 			$alias_contact_point = "Information_session_contact_point";
 		$q
@@ -133,7 +133,7 @@ class SelectionJSON{
 				$data.= "[";
 				foreach($rows_partners as $p){
 					if($p["organization"] != $current_partner){
-						$name = SQLQuery::create()->select("Organization")->field("name")->where_value("Organization","id",$p["organization"])->execute_single_value();
+						$name = SQLQuery::create()->select("Organization")->field("name")->whereValue("Organization","id",$p["organization"])->executeSingleValue();
 						if(!$first){
 							$data.= "]}";
 							$data.= ", ";
@@ -180,8 +180,8 @@ class SelectionJSON{
 			->select("Exam_subject")
 			->join("Exam_subject","Exam_subject_part",array("id" => "exam_subject"))
 			->join("Exam_subject_part","Exam_subject_question",array("id" => "exam_subject_part"))
-			->where_value("Exam_subject","id",$id)
-			->order_by("Exam_subject_part","id");
+			->whereValue("Exam_subject","id",$id)
+			->orderBy("Exam_subject_part","id");
 		self::ExamSubjectSQL($q);
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectQuestionSQL($q);
@@ -193,7 +193,7 @@ class SelectionJSON{
 	}
 	
 	public static function ExamSubjectSQL(&$q){
-		$alias = $q->get_table_alias("Exam_subject");
+		$alias = $q->getTableAlias("Exam_subject");
 		if(!$alias)
 			$alias = "Exam_subject";
 		$q
@@ -203,7 +203,7 @@ class SelectionJSON{
 	}
 	
 	public static function ExamSubjectPartSQL(&$q){
-		$alias = $q->get_table_alias("Exam_subject_part");
+		$alias = $q->getTableAlias("Exam_subject_part");
 		if(!$alias)
 			$alias = "Exam_subject_part";
 		$q
@@ -214,7 +214,7 @@ class SelectionJSON{
 	}
 	
 	public static function ExamSubjectQuestionSQL(&$q){
-		$alias = $q->get_table_alias("Exam_subject_question");
+		$alias = $q->getTableAlias("Exam_subject_question");
 		if(!$alias)
 			$alias = "Exam_subject_question";
 		$q
@@ -371,8 +371,8 @@ class SelectionJSON{
 		->select("Exam_subject")
 		->field("name");
 		if($exclude_id <> null)
-			$q->where_not_in("Exam_subject", "id", array($exclude_id));
-		$names = $q->execute_single_field();
+			$q->whereNotIn("Exam_subject", "id", array($exclude_id));
+		$names = $q->executeSingleField();
 		return $names;
 	}
 	
@@ -386,8 +386,8 @@ class SelectionJSON{
 			->join("Exam_topic_for_eligibility_rule","Exam_part_topic",array("id" => "exam_topic_for_eligibility_rule"))
 			->join("Exam_part_topic","Exam_subject_part",array("exam_subject_part" => "id"))
 			->join("Exam_subject_part","Exam_subject",array("exam_subject" => "id"))
-			->where_value("Exam_topic_for_eligibility_rule","id",$id)
-			->order_by("Exam_subject","id");
+			->whereValue("Exam_topic_for_eligibility_rule","id",$id)
+			->orderBy("Exam_subject","id");
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectSQL($q);
 		$rows = $q->execute();
@@ -398,7 +398,7 @@ class SelectionJSON{
 	}
 	
 	public static function ExamTopicSQL(&$q){
-		$alias = $q->get_table_alias("Exam_topic_for_eligibility_rule");
+		$alias = $q->getTableAlias("Exam_topic_for_eligibility_rule");
 		if(!$alias)
 			$alias = "Exam_topic_for_eligibility_rule";
 		$q
@@ -432,8 +432,8 @@ class SelectionJSON{
 		$full_exams = SQLQuery::create()
 			->select("Exam_topic_full_exam")
 			->field("exam_subject")
-			->where_value("Exam_topic_full_exam","exam_topic_for_eligibility_rule",$id)
-			->execute_single_field();
+			->whereValue("Exam_topic_full_exam","exam_topic_for_eligibility_rule",$id)
+			->executeSingleField();
 		
 		if(isset($rows[0]["name"])){
 			$topic = array();

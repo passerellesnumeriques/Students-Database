@@ -3,13 +3,13 @@ function people_picture_and_info(&$page, $people_id) {
 	$can_edit = PNApplication::$instance->user_management->has_right("edit_people_details");
 	$q = SQLQuery::create()
 		->select("People")
-		->where_value("People","id",$people_id)
+		->whereValue("People","id",$people_id)
 		;
 	require_once("component/data_model/Model.inc");
 	foreach (DataModel::get()->getTable("People")->getColumns() as $col) {
 		$q->field("People", $col->name, "PEOPLE_COL_".$col->name);
 	}
-	$people = $q->execute_single_row();
+	$people = $q->executeSingleRow();
 	
 	$page->add_javascript("/static/storage/upload.js");
 	$page->add_javascript("/static/storage/picture.js");
