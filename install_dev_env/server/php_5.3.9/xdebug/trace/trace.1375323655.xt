@@ -1,7 +1,0 @@
-<table class='xdebug-trace' dir='ltr' border='1' cellspacing='0'>
-	<tr><th>#</th><th>Time</th><th>Mem</th><th colspan='2'>Function</th><th>Location</th></tr>
-	<tr><td>2</td><td>0.001243</td><td align='right'>338792</td><td align='left'>&nbsp; &nbsp;-&gt;</td><td>A->__construct()</td><td>D:\sdb\v0.1_nicolas\www\index.php:25</td></tr>
-	<tr><td>3</td><td>0.001341</td><td align='right'>338840</td><td align='left'>&nbsp; &nbsp;-&gt;</td><td>B::say()</td><td>D:\sdb\v0.1_nicolas\www\index.php:27</td></tr>
-	<tr><td>4</td><td>0.001415</td><td align='right'>338840</td><td align='left'>&nbsp; &nbsp;&nbsp; &nbsp;-&gt;</td><td>A->getText()</td><td>D:\sdb\v0.1_nicolas\www\index.php:22</td></tr>
-	<tr><td>5</td><td>0.001497</td><td align='right'>338872</td><td align='left'>&nbsp; &nbsp;-&gt;</td><td>xdebug_stop_trace()</td><td>D:\sdb\v0.1_nicolas\www\index.php:28</td></tr>
-</table>

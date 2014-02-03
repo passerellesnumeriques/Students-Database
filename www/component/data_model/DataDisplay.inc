@@ -13,6 +13,7 @@ abstract class DataDisplay {
 	}
 	
 	public abstract function getDisplayName();
+	public final function getCategory() { return $this->handler->category; }
 	public abstract function getHandledColumns();
 	public abstract function getTypedField($sub_model);
 	public abstract function isEditable();

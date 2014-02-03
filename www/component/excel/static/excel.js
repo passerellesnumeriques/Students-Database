@@ -25,9 +25,12 @@ function Excel(container, onready) {
 		if (sel < 0) return null;
 		return container.widget.tabs[sel].sheet;
 	};
+	this.getActiveSheetIndex = function() {
+		return container.widget.selected;
+	};
 	
 	this._layout = function() {
-		if (t.tabs.selected != -1 && t.tabs.tabs[t.tabs.selected].sheet)
+		if (t.tabs && t.tabs.selected != -1 && t.tabs.tabs[t.tabs.selected].sheet)
 			t.tabs.tabs[t.tabs.selected].sheet.layout();
 	};
 	

@@ -1,5 +1,8 @@
 @echo off
 
+echo Installing Visual Studio Redistributable files...
+vc9_redist_x86.exe /q /norestart
+
 call server\versions.bat
 
 set repository_path=%CD%\..
@@ -30,8 +33,8 @@ GoTo ask_remove
 rmdir /S /Q "%deploy_path%"
 
 :deploy
-set /p web_port="Enter the port number that will be used by Web Server [80]: "
-if "%web_port%"=="" set web_port=80
+set /p web_port="Enter the port number that will be used by Web Server [8000]: "
+if "%web_port%"=="" set web_port=8000
 echo ---
 echo Creating directories
 mkdir %deploy_path%

@@ -168,11 +168,13 @@ function upload(container, multiple, target, ondone, send_reset, popup) {
 			var upload_files = function() {
 				// process all File objects
 				var nb = files.length;
+				var received = [];
 				for (var i = 0, f; f = files[i]; i++) {
 					if (t.CheckFile(f))
-						t.UploadFile(f,function(){
+						t.UploadFile(f,function(xhr){
+							received.push(xhr.responseText);
 							if (--nb == 0) {
-								if (ondone) ondone(t.popup);
+								if (ondone) ondone(t.popup, received);
 							}
 						});
 				}
