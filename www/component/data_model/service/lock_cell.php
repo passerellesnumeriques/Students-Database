@@ -44,7 +44,7 @@ class service_lock_cell extends Service {
 		$q = SQLQuery::create();
 		$table_alias = $q->generateTableAlias();
 		$q->select(array($table->getName()=>$table_alias));
-		if ($sub_model <> null) $q->setSubModelForTable($table, $sub_model);
+		if ($sub_model <> null) $q->selectSubModelForTable($table, $sub_model);
 		$q->field($table_alias, $field);
 		if ($table->getPrimaryKey() <> null)
 			$q->whereValue($table_alias, $table->getPrimaryKey()->name, $key);

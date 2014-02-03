@@ -44,6 +44,7 @@ public class JavaScriptDocGenerator {
 				File component = new File(www, "component");
 				for (File comp : component.listFiles()) {
 					if (!comp.isDirectory()) continue;
+					if (comp.getName().startsWith("lib_")) continue; // skip external libraries
 					File stati = new File(comp, "static");
 					if (!stati.exists()) continue;
 					browse(stati, global, comp.getName(), "component/"+comp.getName()+"/");
@@ -67,6 +68,7 @@ public class JavaScriptDocGenerator {
 	private static void browse(File dir, Global global, String component_name, String path) throws IOException {
 		for (File f : dir.listFiles()) {
 			if (f.isDirectory()) {
+				if (f.getName().startsWith("lib_")) continue; // skip external libraries
 				browse(f, global, component_name, path+f.getName()+"/");
 				continue;
 			}

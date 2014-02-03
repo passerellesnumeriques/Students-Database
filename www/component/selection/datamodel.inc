@@ -119,7 +119,7 @@
 		->addForeignKey("exam_subject","Exam_subject",true,false,true,false)
 		->addInteger("index",32,null,null,false,false)
 		->addDecimal("max_score",10,2,0,null,false,false) // must be calculated
-		->addString("name",255,0,false)
+		->addString("name",255,0,true)
 		->addWriteAccess("manage_exam_subject",true)
 		->addReadAccess("see_exam_subject",true)
 		->addInsertAccess("manage_exam_subject",true)

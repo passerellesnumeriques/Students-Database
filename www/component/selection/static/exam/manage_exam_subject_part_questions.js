@@ -1,4 +1,4 @@
-function manage_exam_subject_part_questions(part, container, can_edit, can_remove, can_add, display_questions_detail, display_correct_answer,display_choices, question_index_before, no_question){	
+function manage_exam_subject_part_questions(part, container, can_edit, can_remove, can_add, display_questions_detail, display_correct_answer,display_choices, question_index_before, no_question, element_ending_title){	
 	var t = this;
 	t.table = document.createElement("table");
 	t.ordered = null;
@@ -17,10 +17,22 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	}
 	
 	t._setTableHeader = function(){
-		var thead = document.createElement("thead");
-		var tr = document.createElement("tr");
+		thead = document.createElement("thead");
+		t.tr_head = document.createElement("tr");
 		t.th_head = document.createElement("th");
 		t._setHeaderContent();
+		t.tr_head.appendChild(t.th_head);
+		thead.appendChild(t.tr_head);
+		t.table.appendChild(thead);
+	}
+	
+	t._setHeaderContent = function(){
+		if(t.th_head.parentNode == t.tr_head){
+			t.tr_head.removeChild(t.th_head);
+			delete t.th_head;
+			t.th_head = document.createElement("th");
+			t.tr_head.appendChild(t.th_head);
+		}
 		if(display_correct_answer && (can_edit || can_remove || can_add)){
 			if(!display_choices)
 				t.th_head.colSpan = 4;
@@ -40,22 +52,80 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				t.th_head.colSpan = 2;
 		}
 		t.th_head.style.textAlign = "left";
-		tr.appendChild(t.th_head);
-		thead.appendChild(tr);
-		t.table.appendChild(thead);
-	}
-	
-	t._setHeaderContent = function(){
+		
 		var max_score = typeof part.max_score == "number" ? part.max_score : parseFloat(part.max_score);
 		max_score = max_score.toFixed(2);
-		if(display_questions_detail)
-			t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
-		else {
-			if(!no_question)
-				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length);
-			else
-				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
+		if(can_edit){
+			var text1 = document.createTextNode("PART "+part.index+" - ");
+			var input = document.createElement("input");
+			input.type = "text";
+			new autoresize_input(input,7);
+			if(part.name == null || (part.name != null && !part.name.checkVisible())){
+				part.name = null;
+				input.value = "Part name";
+				input.style.fontStyle = "italic";
+				input.style.color = "#808080";
+			} else {
+				input.value = part.name.uniformFirstLetterCapitalized();
+			}
+			input.onfocus = function(){
+				if(this.value == "Part name")
+					this.value = null;
+				this.style.color = "";
+				this.style.fontStyle = "";
+			};
+			input.onblur = function(){
+				if(this.value == null){
+					input.value = "Part name";
+					input.style.fontStyle = "italic";
+					input.style.color = "#808080";
+					part.name = null;
+				} else if (!this.value.checkVisible()){
+					input.value = "Part name";
+					input.style.fontStyle = "italic";
+					input.style.color = "#808080";
+					part.name = null;
+				} else {
+					part.name = this.value.uniformFirstLetterCapitalized();
+					this.value = this.value.uniformFirstLetterCapitalized();
+				}
+			};
+		} else {
+			//temporary update the part name not to display "null"
+			if(part.name == null)
+				part.name = "";
 		}
+		if(display_questions_detail){
+			if(!can_edit)
+				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
+			else{
+				var text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score));
+			}
+		} else {
+			
+			if(!no_question){
+				if(can_edit){
+					var text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length));
+				} else
+					t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length);
+			} else {
+				if(can_edit){
+					var text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score));
+					
+				} else
+				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
+			}
+		}
+		if(can_edit){
+			t.th_head.appendChild(text1);
+			t.th_head.appendChild(input);
+			t.th_head.appendChild(text2);
+		} else {
+			if(part.name = "")
+				part.name = null;
+		}
+		if(element_ending_title)
+			t.th_head.appendChild(element_ending_title);
 	}
 	
 	t._setTableBody = function(){
@@ -65,10 +135,14 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			for(var i = 0; i < t.ordered.length; i++){
 				if(i == 0){
 					var tr_head = document.createElement("tr");
-					th1 = document.createElement("th");
-					th1.innerHTML = "Score";
-					if(!can_edit)
-						th1.style.textAlign = "left";
+					th1 = document.createElement("td");
+					var cont = document.createElement("div");
+					cont.innerHTML = "<b>Score</b>";
+					cont.style.paddingLeft = "25px";
+					th1.appendChild(cont);
+					th1.style.textAlign = "left";
+//					if(!can_edit)
+//						th1.style.textAlign = "left";
 					tr_head.appendChild(th1);
 				}
 				var tr = document.createElement("tr");
@@ -78,10 +152,11 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				if(can_edit){
 					var input = document.createElement("input");
 					input.type = 'text';
-					autoresize_input(input, 5);
+					new autoresize_input(input, 5);
 					//give a unique id to the input, to be able to get it at anytime
 					input.id = "question"+part.index+"."+part.questions[t.ordered[i]].index;
 					input.value = part.questions[t.ordered[i]].max_score;
+					input.style.textAlign = "right";
 					input.index_in_ordered = i;
 					input.oninput = function(){
 						var temp = parseFloat(this.value);
@@ -108,9 +183,11 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				} else {
 					div.innerHTML += part.questions[t.ordered[i]].max_score;
 				}
-				td1.appendChild(div);
 				if(can_edit)
-					td1.style.textAlign = "center";
+					div.style.height = "29px";
+				td1.appendChild(div);
+//				if(can_edit)
+//					td1.style.textAlign = "center";
 				tr.appendChild(td1);
 				if(display_correct_answer)
 					t._addOptionalData("correct_answer", i, tr_head, tr);
@@ -118,6 +195,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 					t._addOptionalData("choices", i , tr_head,tr);
 				if(can_remove || can_add){
 					var td3 = document.createElement("td");
+					tr.menu = [];
 					if(can_remove){
 						var remove = t._createButton("remove");
 						remove.index_in_ordered = i;
@@ -129,6 +207,8 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 							t.focusonagiveninput.fire(new_input_id);
 						};
 						td3.appendChild(remove);
+						tr.menu.push(remove);
+						remove.style.visibility = "hidden";
 					}
 					if(can_add){
 						var before = t._createButton("before");
@@ -150,8 +230,23 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 						};
 						td3.appendChild(before);
 						td3.appendChild(after);
+						before.style.visibility = "hidden";
+						after.style.visibility = "hidden";
+						tr.menu.push(before);
+						tr.menu.push(after);
 					}
 					tr.appendChild(td3);
+					/**
+					 * Display the remove, and inserts buttons only when the mouse is over the tr
+					 */
+					tr.onmouseover = function(){
+						for(var m = 0; m < tr.menu.length; m++)
+							this.menu[m].style.visibility = "visible";
+					};
+					tr.onmouseout = function(){
+						for(var m = 0; m < tr.menu.length; m++)
+							this.menu[m].style.visibility = "hidden";
+					};
 				}
 				if(i == 0)
 					tbody.appendChild(tr_head);
@@ -218,9 +313,11 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		var td2 = document.createElement("td");
 		if(can_edit){
 			var input = document.createElement("input");
-			autoresize_input(input, 5);
+			input.type = "text";
+			new autoresize_input(input, 5);
 			input.value = part.questions[t.ordered[i]][attribute];
 			input.index_in_ordered = i;
+			input.style.textAlign = "right";
 			input.oninput = function(){
 				if(this.value.checkVisible() && this.value != "")
 					part.questions[t.ordered[this.index_in_ordered]][attribute] = this.value;
