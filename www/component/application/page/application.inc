@@ -57,7 +57,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 			</div>
 		</div>
 	</div>
-	<iframe id='pn_application_content' name='pn_application_content' layout='fill'>
+	<iframe id='pn_application_content' name='pn_application_content' layout='fill'<?php if (isset($_GET["page"])) echo "src='".$_GET["page"]."'";?>>
 	</iframe>
 	<div id='pn_application_footer' layout='17' style='border-top:1px solid black;background-color:#C0C0C0'>
 		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
@@ -291,7 +291,9 @@ function populateMenu() {
 	});
 }
 
+<?php if (!isset($_GET["page"])) { ?>
 selectSection(selected_section_index);
+<?php } ?>
 
 require("animation.js");
 require("vertical_align.js",function() {
