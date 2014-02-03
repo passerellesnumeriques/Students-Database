@@ -1276,7 +1276,7 @@ class SQLQuery {
 					array_push($values, $fields_values[$col->name]);
 				}
 				$q = SQLQuery::create();
-				if ($this->bypassSecurity) $q->bypass_security();
+				if ($this->bypass_security) $q->bypassSecurity();
 				$r = $q->select($t->getName())
 					->selectSubModels($this->sub_models)
 					->whereIn($col->name,$values)
