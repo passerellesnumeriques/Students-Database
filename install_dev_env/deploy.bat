@@ -1,5 +1,8 @@
 @echo off
 
+echo Installing Visual Studio Redistributable files...
+vc9_redist_x86.exe /q /norestart
+
 call server\versions.bat
 
 set repository_path=%CD%\..

@@ -1,4 +1,4 @@
-set apache_version=2.2.21
-set php_version=5.3.9
+set apache_version=2.4.7
+set php_version=5.4.24
 set mysql_version=5.5.23
-set phpmyadmin_version=3.5.2.2
+set phpmyadmin_version=4.1.6
