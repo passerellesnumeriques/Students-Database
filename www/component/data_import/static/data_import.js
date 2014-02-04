@@ -17,6 +17,7 @@ function data_import(container, root_table, preset_data, title) {
 	var t=this;
 	
 	this.root_table = root_table;
+	/** values pre-filled */
 	this.preset_data = preset_data ? preset_data : [];
 	
 	/** Show the first screen: ask the user to upload a file */
@@ -297,7 +298,11 @@ function data_import(container, root_table, preset_data, title) {
 		});
 	};
 	
-	/** Third screen: show the data which will be imported, and allow the user to modify it before to confirm */
+	/** Third screen: show the data which will be imported, and allow the user to modify it before to confirm
+	 * @param {Array} fields list of imported fields
+	 * @param {Array} data list of imported data
+	 * @param {Array} avail_fields original list of available fields
+	 */
 	this.step3ShowImportedData = function(fields, data, avail_fields) {
 		var prev_content = t.page_container.childNodes.length;
 		for (var i = 0; i < t.page_container.childNodes.length; ++i) {

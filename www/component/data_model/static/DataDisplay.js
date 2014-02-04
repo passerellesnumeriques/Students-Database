@@ -35,7 +35,7 @@ function DataDisplay(category, name, table, field_classname, field_config, edita
 function DataPath(s) {
 	this.path = s;
 	/** Parse the first section of the path in the given string, then call recursively on the remaining string
-	 * {String} s the string to parse
+	 * @param {String} s the string to parse
 	 */
 	this._parseElement = function(s) {
 		var i = s.indexOf('>');
@@ -64,7 +64,9 @@ function DataPath(s) {
 	};
 	this._parseElement(s);
 	
-	/** Indicates if the data is mandatory or not (if it cannot be null in the data model) */
+	/** Indicates if the data is mandatory or not (if it cannot be null in the data model)
+	 * @returns {Boolean} true if it is mandatory 
+	 */
 	this.isMandatory = function() {
 		var p = this.next;
 		while (p) {

@@ -32,7 +32,7 @@ class page_create_data extends Page {
 		echo "</ul>";
 		*/
 
-		echo $this->build_page($root_create, $to_create, false, true);
+		echo $this->buildPage($root_create, $to_create, false, true);
 		
 		if (count($to_create) > 0) {
 			echo "Remaining:<ul style='color:red'>";
@@ -101,10 +101,13 @@ class page_create_data extends Page {
 		echo "</ul>";
 	}
 	
-	/**
-	 * @param datamodel\Table $table
-	 * @param unknown $sub_model
-	 * @param array $to_create
+	/** Go through the given table to find data
+	 * @param datamodel\Table $table the table
+	 * @param number $sub_model the sub model instance or null
+	 * @param array $to_create filled
+	 * @param CreateRow $for if it depends from another CreateRow
+	 * @param boolean $optional indicates if to fill the table is optional
+	 * @param string $from column name from which we arrived to the table
 	 */
 	private function &create($table, $sub_model, &$to_create, $for, $optional, $from) {
 		$create = new CreateRow($table, $sub_model, $for, $optional, $from);
@@ -188,7 +191,14 @@ class page_create_data extends Page {
 		return $create;
 	}
 	
-	private function build_page($create, &$to_create, $optional, $straight) {
+	/** Build the page
+	 * @param CreateRow $create the one to build on the page
+	 * @param array $to_create list of remaining things
+	 * @param boolean $optional are we in an optional path
+	 * @param boolean $straight are we directly attached, with 1 to 1 relation, to the root
+	 * @return string the html generated
+	 */
+	private function buildPage($create, &$to_create, $optional, $straight) {
 		$html = "";
 		// remove from to_create
 		for ($i = 0; $i < count($to_create); $i++)
@@ -208,11 +218,11 @@ class page_create_data extends Page {
 		$content = "";
 		// first, all mandatory
 		foreach ($mandatory as $tc)
-			$content .= $this->build_page($tc, $to_create, false, $straight);
+			$content .= $this->buildPage($tc, $to_create, false, $straight);
 		
 		// then, optionals
 		foreach ($optionals as $tc)
-			$content .= $this->build_page($tc, $to_create, true, false);
+			$content .= $this->buildPage($tc, $to_create, true, false);
 		
 		
 		// the table
@@ -272,23 +282,27 @@ class page_create_data extends Page {
 
 class CreateRow {
 	
-	/** @var datamodel\Table */
+	/** @var datamodel\Table the table */
 	public $table;
+	/** @var number|null the sub model instance */
 	public $sub_model;
+	/** @var array list of field */
 	public $fields = array();
-	/** @var datamodel\DataDisplay */
+	/** @var datamodel\DataDisplay list of data */
 	public $data = array();
-	/** @var CreateRow */
+	/** @var CreateRow parent */
 	public $for;
-	/** @var boolean */
+	/** @var boolean optional or not to fill the table */
 	public $optional;
+	/** @var string column from which we arrived to the table */
 	public $from;
 	
 	/**
-	 * @param datamodel\Table $table
-	 * @param unknown $sub_model
-	 * @param CreateRow $for
-	 * @param boolean $optional
+	 * @param datamodel\Table $table the table
+	 * @param number|null $sub_model the sub model instance
+	 * @param CreateRow $for parent
+	 * @param boolean $optional optional or not to fill the table
+	 * @param string $from column from which we arrived to the table
 	 */
 	public function __construct($table, $sub_model, $for, $optional, $from) {
 		$this->table = $table;

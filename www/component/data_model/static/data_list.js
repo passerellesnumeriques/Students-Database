@@ -11,17 +11,29 @@ if (typeof require != 'undefined') {
 	});
 	require("context_menu.js");
 }
+/** A data list is a generic view of data: starting from a table, the user can choose what data to display, apply filters, sort data...
+ * @param {DOMNode} container where to put it
+ * @param {String} root_table starting point in the data model
+ * @param {Array} initial_data_shown list of data to show at the beginning, with format 'Category'.'Name' where Category is the category of the DataDisplayHandler, and Name is the display name of the DataDisplay
+ * @param {Array} filters list of {category:a,name:b,force:c,data:d,or:e}: category = from DataDisplayHandler; name = display name of the DataDisplay; force = true if the user cannot remove it; data = data of the filter, format depends on filter type; or=another filter data to do a 'or' condition
+ * @param {Function} onready called when everything is ready, and we can start to use this object
+ */
 function data_list(container, root_table, initial_data_shown, filters, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 
 	/* Public properties */
 	
+	/** {grid} the data list use the grid widget to display data, we can access it directly here */
 	t.grid = null;
+	/** Event when data has been loaded/refreshed */
 	t.ondataloaded = new Custom_Event();
 	
 	/* Public methods */
 	
+	/** Add some html in the header of the data list
+	 * @param {DOMNode} html element or string
+	 */
 	t.addHeader = function(html) {
 		var item = document.createElement("DIV");
 		if (typeof html == 'string')
@@ -33,12 +45,17 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		else
 			t.header_center.appendChild(item);
 	};
+	/** Remove everything in the header, previously added through addHeader */
 	t.resetHeader = function() {
 		if (t.header_center.widget)
 			t.header_center.widget.removeAll();
 		else
 			while (t.header_center.childNodes.length > 0) t.header_center.removeChild(t.header_center.childNodes[0]);
 	};
+	/** Set a title, with optionally an icon
+	 * @param {string} icon URL of the icon 16x16, or null if no icon
+	 * @param {string} text the title
+	 */
 	t.addTitle = function(icon, text) {
 		var div = document.createElement("DIV");
 		div.style.display = "inline-block";
@@ -57,6 +74,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header.insertBefore(div, t.header_left);
 		fireLayoutEventFor(t.header);
 	};
+	/** Set the title, with some html
+	 * @param {DOMNode} html the html element, or a string
+	 */
 	t.setTitle = function(html) {
 		if (typeof html == 'string') {
 			var div = document.createElement("DIV");
@@ -69,9 +89,16 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header.insertBefore(html, t.header_left);
 		fireLayoutEventFor(t.header);
 	};
-	t.reload_data = function() {
-		t._load_data();
+	/** Force to refresh the data from the server */
+	t.reloadData = function() {
+		t._loadData();
 	};
+	/** Get the key if we found it, or the value, for a given table.column of the data model, for the given row of the grid
+	 * @param {Number} row row index
+	 * @param {String} table table name
+	 * @param {String} column column name
+	 * @returns {Object} the key, or the value, or null
+	 */
 	t.getRowData = function(row, table, column) {
 		// search a column where we can get it
 		for (var i = 0; i < t.tables.length; ++i) {
@@ -90,12 +117,30 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		}
 		return null;
 	};
-	t.resetFilters = function() {
-		t._filters = [];
+	/** Remove all filters
+	 * @param {Boolean} removeForced true to remove also the filters which cannot be remove by the user 
+	 */
+	t.resetFilters = function(removeForced) {
+		if (removeForced)
+			t._filters = [];
+		else
+			for (var i = 0; i < t._filters.length; ++i)
+				if (!t._filters[i].forced) {
+					t._filters.splice(i,1);
+					i--;
+				}
 	};
+	/** Add a new filter
+	 * @param {Object} filter {category,name,force,data,or}
+	 */
 	t.addFilter = function(filter) {
 		t._filters.push(filter);
 	};
+	/** Reset everything in the data list
+	 * @param {String} root_table the new starting point
+	 * @param {Array} filters the new filters
+	 * @param {Function} onready called when everything is ready with the new parameters
+	 */
 	t.setRootTable = function(root_table, filters, onready) {
 		t._root_table = root_table;
 		t._onready = onready;
@@ -107,10 +152,17 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t._sort_order = 3;
 		t._filters = filters ? filters : [];
 		t._col_actions = null;
-		t._init_list();
-		t._load_fields();
+		t._initList();
+		t._loadFields();
 	};
+	/** Return the root table
+	 * @returns {String} root table name
+	 */
 	t.getRootTable = function() { return t._root_table; };
+	/** Select a row, if available, correspondig to the given key in the given table
+	 * @param {String} table table name
+	 * @param {Number} key the key in the table identifying the row to search
+	 */
 	t.selectByTableKey = function(table, key) {
 		for (var col = 0; col < t.show_fields.length; ++col) {
 			if (t.show_fields[col].table == table) {
@@ -123,6 +175,11 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			}
 		}
 	};
+	/** Get the key of the given table, for the given row
+	 * @param {String} table table name
+	 * @param {Number} row_id ID of the row in the grid, which is just its index
+	 * @returns {Object} the key or null if not found
+	 */
 	t.getTableKeyForRow = function(table, row_id) {
 		for (var col = 0; col < t.show_fields.length; ++col) {
 			if (t.show_fields[col].table == table) {
@@ -132,10 +189,13 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		return null;
 	};
 	
+	/** Allows the user to click on a row
+	 * @param {Function} handler called when the user clicks on a row, with the clicked row (from the grid) as parameter
+	 */
 	t.makeRowsClickable = function(handler) {
 		t._row_onclick = handler;
 		for (var i = 0; i < t.grid.getNbRows(); ++i)
-			t._make_clickable(t.grid.getRow(i));
+			t._makeClickable(t.grid.getRow(i));
 	};
 	
 	/* Private properties */
@@ -152,7 +212,8 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 
 	/* Private methods */
 	
-	t._init_list = function() {
+	/** Initialize the data list display */
+	t._initList = function() {
 		// analyze and remove container content
 		while (container.childNodes.length > 0) {
 			var e = container.childNodes[0];
@@ -183,7 +244,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		img.src = "/static/data_model/left.png";
 		div.doit = function() {
 			t._page_num--;
-			t._load_data();
+			t._loadData();
 		};
 		div.appendChild(img);
 		t.header_left.appendChild(div);
@@ -199,7 +260,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		img.src = "/static/data_model/right.png";
 		div.doit = function() { 
 			t._page_num++;
-			t._load_data();
+			t._loadData();
 		};
 		div.appendChild(img);
 		t.header_left.appendChild(div);
@@ -214,7 +275,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				t._page_size_field = new field_integer(t._page_size, true, {can_be_null:false,min:1,max:100000});
 				t._page_size_field.onchange.add_listener(function() {
 					t._page_size = t._page_size_field.getCurrentData();
-					t._load_data();
+					t._loadData();
 				});
 				_page_size_div.appendChild(t._page_size_field.getHTMLElement());
 				if (t.header && t.header.widget && t.header.widget.layout)
@@ -226,7 +287,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
 		div.title = "Refresh";
 		img.src = theme.icons_16.refresh;
-		div.onclick = function() { t._load_data(); };
+		div.onclick = function() { t._loadData(); };
 		div.appendChild(img);
 		t.header_left.appendChild(div);
 		// + select column
@@ -242,7 +303,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
 		div.title = "Filters";
 		img.src = get_script_path("data_list.js")+"/filter.gif";
-		div.onclick = function() { t._filters_dialog(this); };
+		div.onclick = function() { t._filtersDialog(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
 		// + export
@@ -250,7 +311,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
 		div.title = "Export list";
 		img.src = theme.icons_16["export"];
-		div.onclick = function() { t._export_menu(this); };
+		div.onclick = function() { t._exportMenu(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
 		// + more button for horizontal menu
@@ -283,7 +344,8 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			fireLayoutEventFor(container);
 		});
 	};
-	t._load_fields = function() {
+	/** Load the available fields for the root table */
+	t._loadFields = function() {
 		require("DataDisplay.js",function() {
 			service.json("data_model","get_available_fields",{table:t._root_table},function(result){
 				if (result) {
@@ -297,6 +359,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			});
 		});
 	};
+	/** Called when something is ready, to continue loading */
 	t._ready = function() {
 		if (t.grid == null) return;
 		if (t._available_fields == null) return;
@@ -321,19 +384,20 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			if (!found) alert("Data '"+initial_data_shown[i]+"' does not exist in the list of available data");
 		}
 		// initialize grid
-		t._load_typed_fields(function(){
+		t._loadTypedFields(function(){
 			for (var i = 0; i < t.show_fields.length; ++i) {
 				var f = t.show_fields[i];
-				var col = t._create_column(f);
+				var col = t._createColumn(f);
 				t.grid.addColumn(col);
 			}
 			// signal ready
 			if (t._onready) t._onready(t);
 			// get data
-			t._load_data();
+			t._loadData();
 		});
 	};
-	t._load_typed_fields = function(handler) {
+	/** Load JavaScript files that may be needed for all the available fields retrieved */
+	t._loadTypedFields = function(handler) {
 		require("typed_field.js",function() {
 			var fields = [];
 			for (var i = 0; i < t._available_fields.length; ++i)
@@ -345,16 +409,20 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		});
 	};
 	
-	t._init_list();
-	t._load_fields();
+	t._initList();
+	t._loadFields();
 	
-	t._create_column = function(f) {
+	/** Create the column in the grid for the given DataDisplay
+	 * @param {DataDisplay} f the field
+	 * @returns {GridColumn} the column created
+	 */
+	t._createColumn = function(f) {
 		var col = new GridColumn(f.category+'.'+f.name, f.name, null, f.field_classname, false, null, null, f.field_config, f);
 		if (f.sortable)
 			col.addExternalSorting(function(_sort_order){
 				t._sort_column = col;
 				t._sort_order = _sort_order;
-				t._load_data();
+				t._loadData();
 			});
 		if (f.filter_classname) {
 			var a = new GridColumnAction("/static/widgets/grid/filter.gif",function(ev,a,col){
@@ -376,10 +444,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			col.addAction(a);
 		}
 		col.onchanged = function(field, data) {
-			t._cell_changed(field);
+			t._cellChanged(field);
 		};
 		col.onunchanged = function(field) {
-			t._cell_unchanged(field);
+			t._cellUnchanged(field);
 		};
 		if (f.editable) {
 			col.addAction(new GridColumnAction(theme.icons_16.edit,function(ev,action,col){
@@ -394,7 +462,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 					for (var j = 0; j < col.locks.length; ++j)
 						window.databaselock.removeLock(col.locks[j]);
 					col.locks = null;
-					t._cancel_column_changes(col);
+					t._cancelColumnChanges(col);
 					edit_col();
 					t.grid.endLoading();
 				} else {
@@ -429,7 +497,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		}
 		return col;
 	};
-	t._load_data = function() {
+	t._loadData = function() {
 		t.grid.startLoading();
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
@@ -515,7 +583,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			for (var i = 0; i < t.grid.table.childNodes.length; ++i) {
 				var row = t.grid.table.childNodes[i];
 				if (t._row_onclick)
-					t._make_clickable(row);
+					t._makeClickable(row);
 				for (var j = 0; j < row.childNodes.length; ++j) {
 					var td = row.childNodes[j];
 					if (!td.field) continue;
@@ -583,10 +651,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				cb.onclick = function() {
 					if (this.checked) {
 						t.show_fields.push(this.data);
-						var col = t._create_column(this.data);
+						var col = t._createColumn(this.data);
 						t.grid.addColumn(col, t._col_actions != null ? t.grid.getColumnIndex(t._col_actions) : t.grid.getNbColumns());
 						// TODO handle case if not yet loaded...
-						t._load_data();
+						t._loadData();
 					} else {
 						for (var i = 0; i < t.show_fields.length; ++i) {
 							if (t.show_fields[i].path.path == this.data.path.path &&
@@ -639,7 +707,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				td.appendChild(f.getHTMLElement());
 				f.onchange.add_listener(function (f) {
 					filter.data = f.getCurrentData();
-					t._load_data();
+					t._loadData();
 				});
 				// TODO button or
 			}
@@ -661,13 +729,13 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			f.filter_or = filter.or;
 			f.onchange.add_listener(function (f) {
 				f.filter_or.data = f.getCurrentData();
-				t._load_data();
+				t._loadData();
 			});
 			// TODO button or
 			filter = filter.or;
 		}
 	},
-	t._filters_dialog = function(button) {
+	t._filtersDialog = function(button) {
 		require("context_menu.js");
 		require("typed_filter.js");
 		var dialog = document.createElement("DIV");
@@ -733,25 +801,25 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 						require([["typed_filter.js",t._available_fields[i].filter_classname+".js"]], function() {
 							t._createFilter(filter, table);
 							menu.resize();
-							t._load_data();
+							t._loadData();
 						});
 					}
 			};
 		});
 	};
-	t._export_menu = function(button) {
+	t._exportMenu = function(button) {
 		require("context_menu.js",function(){
 			var menu = new context_menu();
 			menu.removeOnClose = true;
 			menu.addTitleItem(null, "Export Format");
-			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 2007 (.xlsx)', function() { t._export_list('excel2007'); });
-			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 5 (.xls)', function() { t._export_list('excel5'); });
-			menu.addIconItem('/static/data_model/pdf_16.png', 'PDF', function() { t._export_list('pdf'); });
-			menu.addIconItem('/static/data_model/csv.gif', 'CSV', function() { t._export_list('csv'); });
+			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 2007 (.xlsx)', function() { t._exportList('excel2007'); });
+			menu.addIconItem('/static/data_model/excel_16.png', 'Excel 5 (.xls)', function() { t._exportList('excel5'); });
+			menu.addIconItem('/static/data_model/pdf_16.png', 'PDF', function() { t._exportList('pdf'); });
+			menu.addIconItem('/static/data_model/csv.gif', 'CSV', function() { t._exportList('csv'); });
 			menu.showBelowElement(button);
 		});
 	};
-	t._export_list = function(format) {
+	t._exportList = function(format) {
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
 			fields.push({path:t.show_fields[i].path.path,name:t.show_fields[i].name});
@@ -790,7 +858,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	};
 	
 	t._changed_cells = [];
-	t._cancel_column_changes = function(col) {
+	t._cancelColumnChanges = function(col) {
 		var index = t.grid.getColumnIndex(col);
 		var rows = t.grid.getNbRows();
 		for (var i = 0; i < rows; ++i) {
@@ -798,7 +866,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			f.typed_field.setData(f.typed_field.getOriginalData());
 		}
 	};
-	t._cell_changed = function(typed_field) {
+	t._cellChanged = function(typed_field) {
 		if (!t._changed_cells.contains(typed_field))
 			t._changed_cells.push(typed_field);
 		if (t._changed_cells.length > 0) {
@@ -828,7 +896,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			}
 		}
 	};
-	t._cell_unchanged = function(typed_field) {
+	t._cellUnchanged = function(typed_field) {
 		t._changed_cells.remove(typed_field);
 		if (t._changed_cells.length == 0 && t.save_button) {
 			// no more change: remove save button
@@ -875,7 +943,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.grid.endLoading();
 		});
 	};
-	t._make_clickable = function(row) {
+	t._makeClickable = function(row) {
 		row.onmouseover = function() { this.className = "selected"; };
 		row.onmouseout = function() { this.className = ""; };
 		row.style.cursor = 'pointer';

@@ -1,8 +1,8 @@
 package org.pn.jsdoc.model.builtin;
 
 import org.pn.jsdoc.model.Class;
+import org.pn.jsdoc.model.Function;
 import org.pn.jsdoc.model.Global;
-import org.pn.jsdoc.model.ObjectClass;
 
 public class BuiltinWindow extends Class implements Builtin {
 
@@ -28,6 +28,11 @@ public class BuiltinWindow extends Class implements Builtin {
 		add("screenX", new BuiltinAttribute("Number"));
 		add("screenY", new BuiltinAttribute("Number"));
 		add("status", new BuiltinAttribute("String"));
+		add("setTimeout", new Function(this, "Object"));
+		add("clearTimeout", new Function(this, "Object"));
+		add("setInterval", new Function(this, "Object"));
+		add("clearInterval", new Function(this, "Object"));
+		add("eval", new Function(this, "Object"));
 	}
 	
 }

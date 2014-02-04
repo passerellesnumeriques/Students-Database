@@ -385,7 +385,7 @@ class page_batches_classes extends Page {
 				for (var i = 0; i < filters.length; ++i)
 					students_list.addFilter(filters[i]);
 				_update_data_list_buttons();
-				students_list.reload_data();
+				students_list.reloadData();
 			}
 		}
 		function _update_students_filters() {
@@ -462,7 +462,7 @@ class page_batches_classes extends Page {
 										p.set_freeze_content(msg);
 									},function(){
 										p.close();
-										students_list.reload_data();
+										students_list.reloadData();
 									});
 								});
 								p.show();
@@ -484,7 +484,7 @@ class page_batches_classes extends Page {
 									p.set_freeze_content(msg);
 								},function(){
 									p.close();
-									students_list.reload_data();
+									students_list.reloadData();
 								});
 							});
 							p.show();
