@@ -38,6 +38,20 @@ function color_darker(color, amount) {
 	c[2] -= amount; if (c[2] < 0) c[2] = 0;
 	return c;
 }
+function color_lighter(color, amount) {
+	var c = [color[0],color[1],color[2],color[3]];
+	c[0] += amount; if (c[0] > 255) c[0] = 255;
+	c[1] += amount; if (c[1] > 255) c[1] = 255;
+	c[2] += amount; if (c[2] > 255) c[2] = 255;
+	return c;
+}
+function color_darker_or_lighter(color, amount) {
+	var tot = color[0]+color[1]+color[2];
+	if (tot < 128*3)
+		color_lighter(color, amount);
+	else
+		color_darker(color, amount);
+}
 
 function color_string(color) {
 	if (color.length == 3 || color[3] == 1)

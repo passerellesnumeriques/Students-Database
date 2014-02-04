@@ -47,7 +47,7 @@ class page_organizations extends Page {
 								var org = win.organization.getStructure();
 								service.json("contact", "add_organization", org, function(res) {
 									if (!res) { p.unfreeze(); return; }
-									list.reload_data();
+									list.reloadData();
 									p.close();
 								});
 							});

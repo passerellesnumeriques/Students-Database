@@ -10,11 +10,13 @@ import org.mozilla.javascript.ast.AstNode;
 import org.mozilla.javascript.ast.ConditionalExpression;
 import org.mozilla.javascript.ast.FunctionCall;
 import org.mozilla.javascript.ast.FunctionNode;
+import org.mozilla.javascript.ast.InfixExpression;
 import org.mozilla.javascript.ast.KeywordLiteral;
 import org.mozilla.javascript.ast.Name;
 import org.mozilla.javascript.ast.NewExpression;
 import org.mozilla.javascript.ast.NumberLiteral;
 import org.mozilla.javascript.ast.ObjectLiteral;
+import org.mozilla.javascript.ast.ParenthesizedExpression;
 import org.mozilla.javascript.ast.PropertyGet;
 import org.mozilla.javascript.ast.StringLiteral;
 import org.mozilla.javascript.ast.UnaryExpression;
@@ -148,6 +150,19 @@ public class ValueToEvaluate extends Element implements Evaluable {
 			).evaluate(ctx);
 			if (val == null)
 				error("Cannot evaluate conditional expression: "+value.toSource(), this.location.file, value);
+		} else if (value instanceof ParenthesizedExpression) {
+			return new ValueToEvaluate(this.location.file, ((ParenthesizedExpression)value).getExpression(), docs).evaluate(ctx);
+		} else if (value instanceof InfixExpression) {
+			AstNode left = ((InfixExpression)value).getLeft();
+			AstNode right = ((InfixExpression)value).getRight();
+			FinalElement left_e = new ValueToEvaluate(this.location.file, left, docs).evaluate(ctx);
+			FinalElement right_e = new ValueToEvaluate(this.location.file, right, docs).evaluate(ctx);
+			if (left_e != null && right_e != null) {
+				if ("String".equals(left_e.getType())) val = left_e;
+				else if ("String".equals(right_e.getType())) val = right_e;
+				else if ("Number".equals(left_e.getType()) && "Number".equals(right_e.getType())) val = left_e;
+				else error("Unable to determine type for operation between '"+left_e.getType()+"' and '"+right_e.getType()+"': "+value.toSource(), this.location.file, value);
+			}
 		} else {
 			error("Value not supported: "+value.getClass()+": "+value.toSource(), this.location.file, value);
 		}

@@ -4,15 +4,18 @@ if (typeof require != 'undefined')
 /**
  * Custom import allows to import manually data from an Excel file.
  * This can be used with import_data.inc, in PHP, which will prepare this import according to given parameters.
- * @param container
- * @param onready
- * @returns
+ * @param {DOMNode} container where to put it
+ * @param {Function} onready called when everything is ready and the object can be used
  */
 function custom_import(container, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
+	/** vertical or horizontal layout */
 	this.container_layout = null;
+	/** Change the orientation
+	 * @param {string} ori either "horizontal" or "vertical"
+	 */
 	this.setOrientation = function(ori) {
 		this.orientation = ori;
 		if (this.container_layout)
@@ -28,6 +31,7 @@ function custom_import(container, onready) {
 			this.icon_toggle_layout.src = "/static/widgets/horizontal_layout.gif";
 		}
 	};
+	/** Switch between horizontal and vertical layout */
 	this.toggleOrientation = function() {
 		if (this.orientation == "horizontal")
 			this.setOrientation("vertical");
@@ -35,7 +39,12 @@ function custom_import(container, onready) {
 			this.setOrientation("horizontal");
 	};
 	
-	this.upload_excel = function(onbeforeupload, onupload) {
+	/**
+	 * Ask for uploading an Excel file
+	 * @param {Function} onbeforeupload called before the upload operation is started, with a boolean parameter: true if the upload will be asynchronous with HTML5, or false if this is done the old way with form submission
+	 * @param {Function} onupload called when the upload is done (or in progress), with first parameter same as onbeforeupload, if it is true, a second parameter is the percentage of progress between 0 and 100, or -1 for the final call.
+	 */
+	this.uploadExcel = function(onbeforeupload, onupload) {
 		var d = getIFrameDocument(this.excel_frame);
 		var form = d.createElement("FORM");
 		form.action = "/dynamic/data_import/page/excel_upload";
@@ -83,17 +92,30 @@ function custom_import(container, onready) {
 			triggerEvent(input, 'click', {});
 	};
 	
+	/** List of DataDisplay which can be imported */
 	this.data_display = [];
+	/** List of values which will be imported and cannot be changed by the user */
 	this.fixed_values = [];
+	/** List of values pre-filled, but which can be changed by the user */
 	this.prefilled_values = [];
-	this.add_data = function(data_display, fixed_value, prefilled_value) {
+	/** Add a new DataDisplay that can be imported
+	 * @param {DataDisplay} data_display the data
+	 * @param {object} fixed_value value which cannot be changed by the user, or null
+	 * @param {object} prefilled_value value by default, but which can be changed by the user, or null
+	 */
+	this.addData = function(data_display, fixed_value, prefilled_value) {
 		t.data_display.push(data_display);
 		t.fixed_values.push(fixed_value);
 		t.prefilled_values.push(prefilled_value);
 		t.grid.addColumn(new GridColumn(data_display.category+'@'+data_display.name,data_display.name,null,data_display.field_classname,true,null,null,data_display.field_config, data_display), t.grid.getNbColumns()-1);
 	};
 	
-	this.import_from_excel = function(data_display_index, row_start) {
+	/**
+	 * Get values from the Excel frame
+	 * @param {number} data_display_index index
+	 * @param {number} row_start first row in the imported data where to insert the values from Excel
+	 */
+	this.importFromExcel = function(data_display_index, row_start) {
 		var win = getIFrameWindow(this.excel_frame);
 		if (!win.excel) { alert('Please upload an Excel file first'); return; }
 		var xl = win.excel;
@@ -160,10 +182,14 @@ function custom_import(container, onready) {
 		}
 	};
 	
+	/**
+	 * Remove all rows/data to import
+	 */
 	this.removeAll = function() {
 		t.grid.removeAllRows();
 	};
 	
+	/** Initialize the display */
 	this._create = function() {
 		this.excel_container = document.createElement("DIV");
 		this.middle_container = document.createElement("DIV");
@@ -206,7 +232,7 @@ function custom_import(container, onready) {
 					item.onclick = function() {
 						var nb_rows = t.grid.getNbRows();
 						if (nb_rows == 0)
-							t.import_from_excel(this.dd_index, 0);
+							t.importFromExcel(this.dd_index, 0);
 						else {
 							var menu = new context_menu();
 							var item;
@@ -214,7 +240,7 @@ function custom_import(container, onready) {
 							item.appendChild(document.createTextNode("At the end of the list (new rows)"));
 							item.dd_index = this.dd_index;
 							item.onclick = function() {
-								t.import_from_excel(this.dd_index, t.grid.getNbRows());
+								t.importFromExcel(this.dd_index, t.grid.getNbRows());
 							};
 							menu.addItem(item);
 							var first_empty = 0;
@@ -226,7 +252,7 @@ function custom_import(container, onready) {
 								item.dd_index = this.dd_index;
 								item.row_index = first_empty;
 								item.onclick = function() {
-									t.import_from_excel(this.dd_index, this.row_index);
+									t.importFromExcel(this.dd_index, this.row_index);
 								};
 								menu.addItem(item);
 							}
@@ -237,7 +263,7 @@ function custom_import(container, onready) {
 							item.appendChild(item.input.getHTMLElement());
 							menu.addItem(item, true);
 							item.input.onenter(function(f) {
-								t.import_from_excel(f.dd_index, f.getCurrentData()-1);
+								t.importFromExcel(f.dd_index, f.getCurrentData()-1);
 								menu.hide();
 							});
 							menu.showBelowElement(t.icon_import);

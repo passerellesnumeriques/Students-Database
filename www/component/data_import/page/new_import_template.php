@@ -33,7 +33,11 @@ function wait_ready() {
 	unlock_screen(locker);
 }
 new upload('upload', false, '/dynamic/storage/service/store_temp', function(popup, received) {
-	var id = received[0];
+	if (received.length == 0 || received[0] == null || !received[0].id) {
+		popup.close();
+		return;
+	}
+	var id = received[0].id;
 	popup.freeze();
 	var split = document.createElement("DIV");
 	excel_frame = document.createElement("IFRAME");

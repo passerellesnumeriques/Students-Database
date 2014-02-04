@@ -282,7 +282,7 @@ function populateMenu() {
 	resetLeftControls();
 	resetRightControls();
 	if (sections[selected_section_index].menu_provider == null) return;
-	service.customOutput("application", "application_menu_builder", {component:sections[selected_section_index].menu_provider},function(code){
+	service.customOutput(sections[selected_section_index].menu_provider, "application_menu_builder", {},function(code){
 		if (code == null) {
 			// TODO
 			return;

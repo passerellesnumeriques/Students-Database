@@ -89,7 +89,7 @@ var students_list = new data_list(
 							p.set_freeze_content(msg);
 						},function(){
 							p.close();
-							students_list.reload_data();
+							students_list.reloadData();
 						});
 					});
 					p.show();

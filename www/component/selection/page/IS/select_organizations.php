@@ -53,7 +53,7 @@ class page_IS_select_organizations extends selection_page {
 								var org = win.organization.getStructure();
 								service.json("contact", "add_organization", org, function(res) {
 									if (!res) { p.unfreeze(); return; }
-									list.reload_data();
+									list.reloadData();
 									p.close();
 								});
 							});

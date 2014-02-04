@@ -3,7 +3,7 @@ window.databaselock = {
 	/** Register a lock, present on the page, so when the page is closed, the lock will be released automatically
 	 * @param {Number} id lock id
 	 */
-	add_lock: function(id) {
+	addLock: function(id) {
 		for (var i = 0; i < this._locks.length; ++i)
 			if (this._locks[i].id == id) return;
 		if (window != window.top) {
@@ -20,7 +20,7 @@ window.databaselock = {
 	/** Unregister a lock
 	 * @param {Number} id lock id
 	 */
-	remove_lock: function(id) {
+	removeLock: function(id) {
 		for (var i = 0; i < window.top.databaselock._locks.length; ++i)
 			if (window.top.databaselock._locks[i].id == id)
 				window.top.databaselock._locks.splice(i,1);
@@ -32,7 +32,7 @@ window.databaselock = {
 	/** List of locks on the application */
 	_locks: [],
 	/** Called when the user is inactive, so that we can release the locks and redirect the user to the home page */
-	_user_inactive: function() {
+	_userInactive: function() {
 		if (this._locks.length == 0) return;
 		var locks = [];
 		for (var i = 0; i < this._locks.length; ++i)
@@ -45,15 +45,15 @@ window.databaselock = {
 	 * @param {Number} id lock id
 	 * @param {Boolean} foreground blocking mode or asynchronous mode
 	 */
-	_close_lock: function(id,foreground) {
+	_closeLock: function(id,foreground) {
 		service.json("data_model","unlock",{lock:id},function(result){
 		},foreground);
-		this.remove_lock(id);
+		this.removeLock(id);
 	},
 	/** Called when the window is closed, so we can release all the locks */
-	_close_window: function() {
+	_closeWindow: function() {
 		while (this._locks.length > 0)
-			this._close_lock(this._locks[0].id, true);
+			this._closeLock(this._locks[0].id, true);
 	}
 };
 
@@ -69,7 +69,7 @@ function initDatabaselock() {
 			w.databaselock._locks[i].time = new Date().getTime();
 	});
 	window.pnapplication.onclose.add_listener(function() {
-		w.databaselock._close_window();
+		w.databaselock._closeWindow();
 	});
 	window.pnapplication.addInactivityListener(2*60*1000, function() {
 		if (window.databaselock._has_popup) return;

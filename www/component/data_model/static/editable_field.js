@@ -24,7 +24,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.locks = null;
 			for (var i = 0; i < locks.length; ++i) {
 				service.json("data_model", "unlock", {lock:locks[i]}, function(result) {});
-				window.databaselock.remove_lock(locks[i]);
+				window.databaselock.removeLock(locks[i]);
 			}
 		}
 		if (t.save_button) { container.removeChild(t.save_button); t.save_button = null; }
@@ -78,7 +78,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.field.setData(data);
 			t.field.setOriginalData(data);
 			for (var i = 0; i < locks.length; ++i)
-				window.databaselock.add_lock(parseInt(locks[i]));
+				window.databaselock.addLock(parseInt(locks[i]));
 			t.field.setEditable(true);
 			t.field.getHTMLElement().focus();
 			if (t.field.getHTMLElement().onfocus) t.field.getHTMLElement().onfocus();

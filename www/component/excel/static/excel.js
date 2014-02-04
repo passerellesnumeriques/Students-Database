@@ -808,7 +808,12 @@ function ExcelSheetCursor(sheet) {
 		this.div = document.createElement("DIV");
 		this.div.style.zIndex = 2;
 		this.div.style.position = "absolute";
-		this.div.style.border = "2px solid rgb("+(this.color[0]-64)+","+(this.color[1]-64)+","+(this.color[2]-64);
+		var t=this;
+		require("color.js",function() {
+			var c = [t.color[0],t.color[1],t.color[2]];
+			color_darker(c, 64);
+			t.div.style.border = "2px solid rgb("+c[0]+","+c[1]+","+c[2];
+		});
 		this.div.style.pointerEvents = "none";
 		sheet.content.appendChild(this.div);
 		this.refresh();
@@ -840,17 +845,32 @@ function ExcelSheetCursor(sheet) {
 	
 	this.setColor = function(r,g,b) {
 		this.color = [r,g,b];
-		this.div.style.border = "2px solid rgb("+(r-64)+","+(g-64)+","+(b-64);
+		var t=this;
+		require("color.js",function() {
+			var c = [t.color[0],t.color[1],t.color[2]];
+			color_darker(c, 64);
+			t.div.style.border = "2px solid rgb("+c[0]+","+c[1]+","+c[2];
+		});
 		this.refresh();
 	};
 	
 	this.setContent = function(content) {
+		this.div.innerHTML = "";
+		var span = document.createElement("SPAN");
+		span.style.padding = "3px";
 		if (typeof content == 'string')
-			this.div.innerHTML = content;
+			span.innerHTML = content;
 		else {
-			this.div.innerHTML = "";
-			this.div.appendChild(content);
+			span.innerHTML = "";
+			span.appendChild(content);
 		}
+		var t=this;
+		require("color.js",function() {
+			var c = [t.color[0],t.color[1],t.color[2]];
+			color_darker_or_lighter(c, 64);
+			span.style.backgroundColor = "rgba("+c[0]+","+c[1]+","+c[2]+",0.8)";
+		});
+		this.div.appendChild(span);
 	};
 	
 	this._removed = function() {
@@ -860,3 +880,4 @@ function ExcelSheetCursor(sheet) {
 	
 	this._init();
 }
+require("color.js");
