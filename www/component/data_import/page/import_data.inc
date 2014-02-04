@@ -26,7 +26,7 @@ function import_data(&$page, $icon, $title, $data_list, $fixed_data, $prefilled_
 		upload_excel.className = "button";
 		upload_excel.innerHTML = "<img src='/static/data_import/import_excel_16.png'/> Upload Excel File";
 		upload_excel.onclick = function() {
-			imp.upload_excel(function(async){
+			imp.uploadExcel(function(async){
 				var win = getIFrameWindow(imp.excel_frame);
 				if (win.excel) win.excel = null;
 				if (async) {
@@ -110,7 +110,7 @@ function import_data(&$page, $icon, $title, $data_list, $fixed_data, $prefilled_
 		fireLayoutEventFor(document.getElementById('<?php echo $page_id;?>'));
 		<?php 
 		foreach ($data_list as $data) {
-			echo "imp.add_data(".$data->javascriptDataDisplay(null);
+			echo "imp.addData(".$data->javascriptDataDisplay(null);
 			$found = false;
 			foreach ($fixed_data as $fd)
 				if ($fd["category"] == $data->handler->category && $fd["name"] == $data->getDisplayName()) {

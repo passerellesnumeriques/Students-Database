@@ -5,6 +5,13 @@ if (typeof require != 'undefined') {
 		require("collapsable_section.js");
 	});
 }
+/**
+ * Import data from Excel file
+ * @param {DOMNode} container where to put it
+ * @param {String} root_table starting point in the data model, to find the list of DataDisplay we can import
+ * @param {Array} preset_data values pre-filled
+ * @param {String} title title of the page
+ */
 function data_import(container, root_table, preset_data, title) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
@@ -12,7 +19,8 @@ function data_import(container, root_table, preset_data, title) {
 	this.root_table = root_table;
 	this.preset_data = preset_data ? preset_data : [];
 	
-	this.step1_upload_file = function() {
+	/** Show the first screen: ask the user to upload a file */
+	this.step1UploadFile = function() {
 		t.unfreeze();
 		while (t.page_container.childNodes.length > 0) t.page_container.removeChild(t.page_container.childNodes[0]);
 		var div = document.createElement("DIV");
@@ -41,7 +49,7 @@ function data_import(container, root_table, preset_data, title) {
 				t.onnext = function() {
 					while (t.page_container.childNodes.length > 0) t.page_container.removeChild(t.page_container.childNodes[0]);
 					t.freeze();
-					t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Uploading file...");
+					t.freezeMessage("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Uploading file...");
 					t.frame = document.createElement("IFRAME");
 					t.frame.style.border = 'none';
 					t.frame.frameBorder = 0;
@@ -51,7 +59,7 @@ function data_import(container, root_table, preset_data, title) {
 					t.right_div.style.overflow = 'auto';
 					t.right_div.style.padding = "5px";
 					t.page_container.appendChild(t.right_div);
-					t.frame.onload = function() { this.onload = null; t.step2_select_data(); };
+					t.frame.onload = function() { this.onload = null; t.step2SelectData(); };
 					require("splitter_vertical.js",function() {
 						new splitter_vertical(t.page_container, 0.5);
 						setTimeout(function(){form.submit();},1);
@@ -64,7 +72,8 @@ function data_import(container, root_table, preset_data, title) {
 		};
 	};
 	
-	this.step2_select_data = function() {
+	/** Second screen: ask the user to select the data to be imported */
+	this.step2SelectData = function() {
 		var w = getIFrameWindow(t.frame);
 		if (!w.excel || !w.excel.tabs) {
 			if (w.page_errors) {
@@ -73,15 +82,15 @@ function data_import(container, root_table, preset_data, title) {
 				t.onprevious = function() {
 					while (t.page_container.childNodes.length > 0) t.page_container.removeChild(t.page_container.childNodes[0]);
 					t.freeze();
-					t.step1_upload_file();
+					t.step1UploadFile();
 				};
 				return;
 			}
-			t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> "+( w.excel_uploaded ? "Preparing Excel..." : "Uploading File..."));
-			setTimeout(function() {t.step2_select_data();},25);
+			t.freezeMessage("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> "+( w.excel_uploaded ? "Preparing Excel..." : "Uploading File..."));
+			setTimeout(function() {t.step2SelectData();},25);
 			return;
 		}
-		t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Preparing Import...");
+		t.freezeMessage("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Preparing Import...");
 		
 		// initialize data
 		for (var i = 0; i < w.excel.sheets.length; ++i) {
@@ -233,7 +242,7 @@ function data_import(container, root_table, preset_data, title) {
 					t.onprevious = function() {
 						while (t.page_container.childNodes.length > 0) t.page_container.removeChild(t.page_container.childNodes[0]);
 						t.freeze();
-						t.step1_upload_file();
+						t.step1UploadFile();
 					};
 					t.nextButton.disabled = '';
 					t.onnext = function() {
@@ -280,7 +289,7 @@ function data_import(container, root_table, preset_data, title) {
 								}
 							}
 						}
-						t.step3_show_imported_data(columns, data, avail_fields);
+						t.step3ShowImportedData(columns, data, avail_fields);
 						return true;
 					};
 				});
@@ -288,7 +297,8 @@ function data_import(container, root_table, preset_data, title) {
 		});
 	};
 	
-	this.step3_show_imported_data = function(fields, data, avail_fields) {
+	/** Third screen: show the data which will be imported, and allow the user to modify it before to confirm */
+	this.step3ShowImportedData = function(fields, data, avail_fields) {
 		var prev_content = t.page_container.childNodes.length;
 		for (var i = 0; i < t.page_container.childNodes.length; ++i) {
 			var e = t.page_container.childNodes[i];
@@ -411,6 +421,13 @@ function data_import(container, root_table, preset_data, title) {
 		t.unfreeze();
 	};
 	
+	/** Add a layer to the Excel file
+	 * @param {DOMNode} input the input containing the range
+	 * @param {String} title title to put on the layer
+	 * @param {Number} r red
+	 * @param {Number} g green
+	 * @param {Number} b blue
+	 */
 	this.setRangeLayer = function(input, title, r,g,b) {
 		if (input.layer) input.layer.sheet.removeLayer(input.layer);
 		input.layer = null;
@@ -421,6 +438,9 @@ function data_import(container, root_table, preset_data, title) {
 		var sheet = xl.getSheet(r.sheet);
 		input.layer = sheet.addLayer(r.range.start_col,r.range.start_row,r.range.end_col,r.range.end_row,r,g,b,title);
 	};
+	/** Get the Excel range, from the text of the given input
+	 * @param {DOMNode} input the input element
+	 */
 	this.getExcelRange = function(input) {
 		var w = getIFrameWindow(t.frame);
 		var xl = w.excel;
@@ -433,8 +453,11 @@ function data_import(container, root_table, preset_data, title) {
 	};
 	
 	
+	/** {DOMNode} Locks the screen to avoid user interactions */
 	this.freezer = null;
+	/** {String} ID of the element containing the message */ 
 	this.freezer_message_id = generateID();
+	/** Locks the screen */
 	this.freeze = function() {
 		if (this.freezer) return;
 		this.freezer = document.createElement("DIV");
@@ -447,16 +470,21 @@ function data_import(container, root_table, preset_data, title) {
 		this.freezer.innerHTML = "<table style='width:100%;height:100%'><tr><td id='"+this.freezer_message_id+"' align=center valign=middle></td></tr></table>";
 		container.appendChild(this.freezer);
 	};
+	/** Unlock the screen */
 	this.unfreeze = function() {
 		if (!this.freezer) return;
 		container.removeChild(this.freezer);
 		this.freezer = null;
 	};
-	this.freeze_message = function(msg) {
+	/** Set the message on the freezer
+	 * @param {String} msg the message
+	 */
+	this.freezeMessage = function(msg) {
 		var td = document.getElementById(this.freezer_message_id);
 		if (td) td.innerHTML = msg;
 	};
-	this._create_wizard = function() {
+	/** Initialize the screen */
+	this._createWizard = function() {
 		while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
 		t.header = document.createElement("DIV"); container.appendChild(t.header);
 		t.header.setAttribute("layout","35");
@@ -505,7 +533,7 @@ function data_import(container, root_table, preset_data, title) {
 		require("vertical_layout.js",function() {
 			new vertical_layout(container);
 		});
-		t.step1_upload_file();
+		t.step1UploadFile();
 	};
-	this._create_wizard();
+	this._createWizard();
 }
