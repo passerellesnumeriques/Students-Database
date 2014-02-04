@@ -532,11 +532,11 @@ class DataBaseLock {
 ?>
 <script type='text/javascript'>
 if (window.databaselock)
-	window.databaselock.add_lock(<?php echo $id?>);
+	window.databaselock.addLock(<?php echo $id?>);
 else {
 	var f = function() {
 		if (window.databaselock)
-			window.databaselock.add_lock(<?php echo $id?>);
+			window.databaselock.addLock(<?php echo $id?>);
 		else
 			setTimeout(f,100);
 	};

@@ -142,7 +142,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 											field_additional: edit.address.additional
 										},function(res) {
 											if (!res) { p.unfreeze(); return; }
-											window.databaselock.remove_lock(lock_id);
+											window.databaselock.removeLock(lock_id);
 											end();
 										});
 									} else
@@ -156,7 +156,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 									row_key: div_data.address.id
 								}, function(res) {
 									if (!res) return;
-									window.databaselock.add_lock(res.lock);
+									window.databaselock.addLock(res.lock);
 									show_popup(res.lock);
 								});
 							} else

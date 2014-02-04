@@ -38,7 +38,7 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 				t.onnext = function() {
 					while (t.page_container.childNodes.length > 0) t.page_container.removeChild(t.page_container.childNodes[0]);
 					t.freeze();
-					t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Uploading file...");
+					t.freezeMessage("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Uploading file...");
 					t.frame = document.createElement("IFRAME");
 					t.frame.style.border = 'none';
 					t.frame.frameBorder = 0;
@@ -64,11 +64,11 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 	this.step2_select_data = function() {
 		var w = getIFrameWindow(t.frame);
 		if (!w.excel || !w.excel.tabs) {
-			t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Preparing Excel...");
+			t.freezeMessage("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Preparing Excel...");
 			setTimeout(function() {t.step2_select_data();},25);
 			return;
 		}
-		t.freeze_message("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Preparing Import...");
+		t.freezeMessage("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Preparing Import...");
 		
 		// initialize data
 		for (var i = 0; i < w.excel.sheets.length; ++i) {
@@ -463,7 +463,7 @@ function data_import(container, root_table, import_fields, preset_fields, title)
 		container.removeChild(this.freezer);
 		this.freezer = null;
 	};
-	this.freeze_message = function(msg) {
+	this.freezeMessage = function(msg) {
 		var td = document.getElementById(this.freezer_message_id);
 		if (td) td.innerHTML = msg;
 	};
