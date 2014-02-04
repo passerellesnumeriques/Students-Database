@@ -22,12 +22,15 @@ function _init_images() {
 	}
 }
 
+var _last_layout_activity = 0;
+
 // handle resize event for layout, in hierarchy order
 var _layout_events = [];
 function addLayoutEvent(element, handler) {
 	_layout_events.push({element:element,handler:handler});
 	element._layoutW = element.scrollWidth;
 	element._layoutH = element.scrollHeight;
+	_last_layout_activity = new Date().getTime();
 }
 function removeLayoutEvent(element, handler) {
 	for (var i = 0; i < _layout_events.length; ++i) {
@@ -73,6 +76,7 @@ function _fire_layout_events() {
 			list[i].element._layoutH = list[i].element.scrollHeight;
 		}
 	} while (changed && ++count < 5);
+	if (count > 0) _last_layout_activity = new Date().getTime();
 }
 var check_images = false;
 function fireLayoutEventFor(element) {
@@ -132,11 +136,12 @@ function fireLayoutEventFor(element) {
 			list[i].element._layoutW = list[i].element.scrollWidth;
 			list[i].element._layoutH = list[i].element.scrollHeight;
 		}
+		if (changed) _last_layout_activity = new Date().getTime();
 	} while (changed);
 }
 
 window.top.pause_layout = false;
-setInterval(function(){
+function _layout_auto() {
 	if (window.top.pause_layout) return;
 	var done = [];
 	for (var i = 0; i < _layout_events.length; ++i) {
@@ -158,7 +163,20 @@ setInterval(function(){
 			e = e.parentNode;
 		}
 	}
-},1000);
+	var now = new Date().getTime();
+	var timing;
+	if (now - _last_layout_activity < 5000) timing = 1000;
+	else if (now - _last_layout_activity < 10000) timing = 2000;
+	else if (now - _last_layout_activity < 20000) timing = 4000;
+	else timing = 5000;
+	if (_layout_interval_time != timing) {
+		clearInterval(_layout_interval);
+		_layout_interval = setInterval(_layout_auto, timing);
+		_layout_interval_time = timing;
+	}
+}
+var _layout_interval_time = 1000;
+var _layout_interval = setInterval(_layout_auto,1000);
 
 if (typeof listenEvent != 'undefined') {
 	listenEvent(window, 'load', _all_images_loaded);

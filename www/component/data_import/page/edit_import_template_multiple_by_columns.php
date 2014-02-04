@@ -83,6 +83,7 @@ function createSelectColumn(container) {
 			if (o.sheet != sheet_index) continue;
 			if (o.col != col) continue;
 			select.selectedIndex = i;
+			select.onchange();
 			break;
 		} 
 	};
@@ -91,11 +92,36 @@ function createSelectColumn(container) {
 }
 
 function Field(container, field) {
-	var select = createSelectColumn(container);
+	this.select = createSelectColumn(container);
+	var t=this;
+	this.select.onchange = function() {
+		if (t.select._layer) {
+			t.select._layer.sheet.removeLayer(t.select._layer);
+			t.select._layer = null;
+		}
+		if (t.select.selectedIndex > 0) {
+			var o = t.select.options[t.select.selectedIndex];
+			var sheet = excel.sheets[o.sheet];
+			t.select._layer = sheet.addLayer(o.col,sheet._import_header_rows,o.col,sheet.rows.length-1, 128, 255, 128, field.data.name);
+		}
+	};
 }
 
 function updateHeader(sheet_index, data) {
-	
+	var sheet = excel.sheets[sheet_index];
+	sheet._import_header_rows = data;
+	if (sheet._import_header_layer) {
+		sheet.removeLayer(sheet._import_header_layer);
+		sheet._import_header_layer = null;
+	}
+	if (data > 0) {
+		sheet._import_header_layer = sheet.addLayer(0,0,sheet.columns.length-1,data-1, 128, 128, 255, "Header");
+	}
+	for (var i = 0; i < fields.length; ++i) {
+		if (fields[i].select._layer && fields[i].select._layer.sheet == sheet) {
+			fields[i].select._layer.setRange(fields[i].select._layer.col_start,data,fields[i].select._layer.col_end,fields[i].select._layer.row_end);
+		} 
+	}
 }
 
 function buildHeader() {
@@ -112,9 +138,10 @@ function buildHeader() {
 		var td = document.createElement("TD"); tr.appendChild(td);
 		td.appendChild(document.createTextNode("Sheet "+excel.sheets[i].name));
 		td = document.createElement("TD"); tr.appendChild(td);
+		excel.sheets[i]._import_header_rows = 0;
 		var tf = new field_integer(0,true,{min:0,max:excel.sheets[i].rows.length});
 		tf.sheet_index = i;
-		td.onchange.add_listener(function(tf){
+		tf.onchange.add_listener(function(tf){
 			updateHeader(tf.sheet_index, tf.getCurrentData());
 		});
 		td.appendChild(tf.getHTMLElement());
@@ -122,6 +149,7 @@ function buildHeader() {
 	document.body.appendChild(div);
 }
 
+var fields = [];
 function buildCategories() {
 	for (var i = 0; i < categories.length; ++i) {
 		var content = document.createElement("TABLE");
@@ -135,7 +163,7 @@ function buildCategories() {
 			td.style.verticalAlign = "top";
 			td.appendChild(document.createTextNode(field.data.name));
 			td = document.createElement("TD"); tr.appendChild(td);
-			new Field(td, field);
+			fields.push(new Field(td, field));
 		}
 	}
 }

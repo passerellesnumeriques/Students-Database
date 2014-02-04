@@ -172,7 +172,24 @@ function upload(container, multiple, target, ondone, send_reset, popup) {
 				for (var i = 0, f; f = files[i]; i++) {
 					if (t.CheckFile(f))
 						t.UploadFile(f,function(xhr){
-							received.push(xhr.responseText);
+							var errors = [];
+							var output = null;
+							if (xhr.status != 200)
+								errors.push("Error returned by the server: "+xhr.status+" "+xhr.statusText);
+							else {
+								try {
+									var json = eval("("+xhr.responseText+")");
+									if (json.errors)
+										for (var j = 0; j < json.errors.length; ++j)
+											errors.push(json.errors[j]);
+									if (json.result) output = json.result;
+								} catch (e) {
+									errors.push("Invalid response: "+e+"<br/>"+xhr.responseText);
+								}
+							}
+							for (var j = 0; j < errors.length; ++j)
+								window.top.status_manager.add_status(new window.top.StatusMessageError(null, errors[j], 10000));
+							received.push(output);
 							if (--nb == 0) {
 								if (ondone) ondone(t.popup, received);
 							}

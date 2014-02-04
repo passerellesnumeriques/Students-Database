@@ -32,7 +32,7 @@ class storage extends Component {
 	}
 	
 	private static function storage_path() {
-		return get_cfg_var("pn.storage");
+		return realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data");
 	}
 	
 	private function remove_old() {
@@ -143,7 +143,8 @@ class storage extends Component {
 	
 	/** return true if this is the final call (either form sent, or no file uploaded), or false if this is an asynchronous upload */
 	function receive_upload(&$ids, &$names, &$types, &$sizes, $expire_seconds) {
-		$fn = (isset($_SERVER['HTTP_X_FILENAME']) ? $_SERVER['HTTP_X_FILENAME'] : false);
+		$headers = getallheaders();
+		$fn = (isset($headers['X_FILENAME']) ? $headers['X_FILENAME'] : false);
 		if ($fn) {
 			// AJAX call
 			$data = file_get_contents('php://input');
@@ -151,8 +152,8 @@ class storage extends Component {
 			if ($id == null) return true;
 			array_push($ids, $id);
 			array_push($names, $fn);
-			array_push($types, isset($_SERVER['HTTP_X_FILETYPE']) ? $_SERVER['HTTP_X_FILETYPE'] : "");
-			array_push($sizes, $_SERVER['HTTP_X_FILESIZE']);
+			array_push($types, isset($headers['X_FILETYPE']) ? $headers['X_FILETYPE'] : "");
+			array_push($sizes, $headers['X_FILESIZE']);
 			return false;
 		} else {
 			// form submit

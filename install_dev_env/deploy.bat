@@ -44,7 +44,6 @@ mkdir %deploy_path%\php_sessions
 mkdir %deploy_path%\server
 mkdir %deploy_path%\database
 mkdir %deploy_path%\log
-mkdir %deploy_path%\pn_storage
 
 echo Copying files
 xcopy /E /Q "server" "%deploy_path%"\server
