@@ -121,7 +121,7 @@ function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 
 <?php
 	if($rights["read"]){ 
-		$current = PNApplication::$instance->components["selection"]->getCampaignId();
+		$current = PNApplication::$instance->selection->getCampaignId();
 		$first = ($current <> null) ? "false" : "true";
 		$json_all_campaign = "[";
 		if(isset($campaigns[0]["id"])){

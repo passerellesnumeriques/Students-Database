@@ -55,24 +55,24 @@ class page_exam_main_page extends selection_page {
 					t._setTableContent();
 					container.appendChild(t.section.element);
 					t._setStyle();
-				}
+				};
 				
 				t._setStyle = function(){
 					container.style.paddingTop = "20px";
 					container.style.paddingLeft = "20px";
 					container.style.paddingRight = "20px";
-				}
+				};
 				
-				t._setTableHeaderAndStyle = function(){
-					var th = document.createElement("th");
-					th.innerHTML = "Exams Subjects";
-					t.table.appendChild((document.createElement("tr")).appendChild(th));
-					//Set the style
-					setCommonStyleTable(t.table, th, "#DADADA");
-					t.table.marginLeft = "10px";
-					t.table.marginRight = "10px";
-					t.table.width = "98%";
-				}
+// 				t._setTableHeaderAndStyle = function(){
+// 					var th = document.createElement("th");
+// 					th.innerHTML = "Exams Subjects";
+// 					t.table.appendChild((document.createElement("tr")).appendChild(th));
+// 					//Set the style
+// 					setCommonStyleTable(t.table, th, "#DADADA");
+// 					t.table.marginLeft = "10px";
+// 					t.table.marginRight = "10px";
+// 					t.table.width = "98%";
+// 				}
 				
 				t._setTableContent = function(){
 					//set the body
@@ -91,29 +91,30 @@ class page_exam_main_page extends selection_page {
 					var td_foot = document.createElement("td");
 					var create_button = document.createElement("div");
 					create_button.className = "button";
-					create_button.innerHTML = "<img src = '"+theme.icons_16.add+"'/> Create a subject";
+					create_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom")+"'/> Create a subject";
 					create_button.onclick = function(){
-						location.assign("/dynamic/selection/page/exam/create_subject");
+// 						location.assign("/dynamic/selection/page/exam/create_subject");
+						var pop = new popup_window("Create an Exam Subject",
+													theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
+													t.container,
+													false
+												);
+						pop.setContentFrame("/dynamic/selection/page/exam/create_subject");
+						pop.show();
 					};
 					td_foot.appendChild(create_button);
 					tr_foot.appendChild(td_foot);
 					t.table.appendChild(tr_foot);
-				}
+				};
 				
 				t._addExamRow = function(tr,i){
 					var td_name = document.createElement("td");
 					var li = document.createElement("li");
 					li.innerHTML = t.all_exams[i].name;
 					td_name.appendChild(li);
+					td_name.id = t.all_exams[i].id+"_td";
 					tr.appendChild(td_name);
-					
-					see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/> See",t.all_exams[i].id);
-					see_button.onclick = function(){
-						location.assign("/dynamic/selection/page/exam/subject?id="+this.id+"&readonly=true");
-					};
-					td_see = document.createElement("td")
-					td_see.appendChild(see_button);
-					tr.appendChild(td_see);
+					tr.menu = []; // menu to display on mouse over
 					
 					export_button = t._createButton("<img src = '"+theme.icons_16.export+"'/> Export",t.all_exams[i].id);
 					export_button.onclick = function(){
@@ -123,22 +124,48 @@ class page_exam_main_page extends selection_page {
 						menu.addIconItem('/static/data_model/excel_16.png', 'Excel 2007 (.xlsx)', function() { t._export_subject('excel2007',false,t2.id); });
 						menu.addIconItem('/static/data_model/excel_16.png', 'Excel 5 (.xls)', function() { t._export_subject('excel5',false,t2.id); });
 						menu.addIconItem('/static/selection/exam/sunvote_16.png', 'SunVote ETS compatible format', function() { t._export_subject('excel2007',true,t2.id); });
-						menu.showBelowElement(this);
+						menu.showBelowElement(document.getElementById(this.id+"_td"));
 					};
+					export_button.style.visibility = "hidden";
+					export_button.className = "button_verysoft";
 					td_export = document.createElement("td")
 					td_export.appendChild(export_button);
 					tr.appendChild(td_export);
+					tr.menu.push(export_button);
+
+					see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/> See",t.all_exams[i].id);
+					see_button.onclick = function(){
+						location.assign("/dynamic/selection/page/exam/subject?id="+this.id+"&readonly=true");
+					};
+					see_button.style.visibility = "hidden";
+					see_button.className = "button_verysoft";
+					td_see = document.createElement("td")
+					td_see.appendChild(see_button);
+					tr.appendChild(td_see);
+					tr.menu.push(see_button);
 					
 					if(t.can_manage){
 						edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/> Edit",t.all_exams[i].id);
 						edit_button.onclick = function(){
 							location.assign("/dynamic/selection/page/exam/subject?id="+this.id);
 						};
+						edit_button.style.visibility = "hidden";
+						edit_button.className = "button_verysoft";
 						td_edit = document.createElement("td")
 						td_edit.appendChild(edit_button);
 						tr.appendChild(td_edit);
+						tr.menu.push(edit_button);
 					}
-				}
+
+					tr.onmouseover = function(){
+						for(var i = 0; i < this.menu.length; i++)
+							this.menu[i].style.visibility = "visible";
+					};
+					tr.onmouseout = function(){
+						for(var i = 0; i < this.menu.length; i++)
+							this.menu[i].style.visibility = "hidden";
+					};
+				};
 				
 				t._createButton = function(content, id){
 					var div = document.createElement("div");
@@ -146,7 +173,7 @@ class page_exam_main_page extends selection_page {
 					div.className = "button";
 					div.id = id;
 					return div;
-				}				
+				};			
 				
 				t._export_subject = function(format,compatible_clickers,exam_id){
 					var form = document.createElement('form');
@@ -171,9 +198,9 @@ class page_exam_main_page extends selection_page {
 					}
 					document.body.appendChild(form);
 					form.submit();
-				}
+				};
 				
-				require(["section.js","context_menu.js"],function(){
+				require(["section.js","context_menu.js","popup_window.js"],function(){
 					t._init();
 				});
 				
