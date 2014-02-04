@@ -21,7 +21,7 @@ class DataBaseModel {
 		if ($res === FALSE) { DataBaseModel::create_table($db_system, $table); return; }
 		// TODO update if necessary
 	}
-	public static function create_table(&$db_system, &$table, $suffix = null) {
+	public static function create_table($db_system, &$table, $suffix = null) {
 		$sql = "CREATE TABLE `".$table->getName().($suffix <> null ? $suffix : "")."` (";
 		
 		$ref = new ReflectionClass("\datamodel\Table");

@@ -1634,7 +1634,7 @@ class SQLQuery {
 				$primary = $t->getPrimaryKey();
 				if ($primary <> null) {
 					// search keys for rows matching
-					$q = SQLQuery::create();
+					$q = SQLQuery::create()->bypassSecurity($this->bypass_security);
 					$table_alias = $q->generateTableAlias();
 					$q->select(array($t->getName()=>$table_alias));
 					if ($sm <> null)
@@ -1646,7 +1646,7 @@ class SQLQuery {
 				} else {
 					// no primary key, this must be done with a where
 					if (!$this->bypass_security && !$t->canRemoveAny()) {
-						$q = SQLQuery::create();
+						$q = SQLQuery::create()->bypassSecurity($this->bypass_security);
 						$table_alias = $q->generateTableAlias();
 						$q->select(array($t->getName()=>$table_alias));
 						if ($sm <> null)

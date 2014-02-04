@@ -100,7 +100,7 @@ class page_selection_main_page extends selection_page {
 			<?php
 			if(isset($calendar_id)) echo "calendar_id = ".json_encode($calendar_id).";";
 			if(isset($calendar_name)) echo "calendar_name = ".json_encode($calendar_name).";";
-			if(isset($steps)) echo "steps = ".$steps.";";
+			if(isset($steps)) echo "steps = ".json_encode($steps).";";
 			
 			echo "var unvalid_steps_to_display = ";
 			echo getArrayStepsToDisplay($unvalid_steps_to_display);

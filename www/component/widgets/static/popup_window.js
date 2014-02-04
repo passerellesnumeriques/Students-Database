@@ -246,10 +246,20 @@ function popup_window(title,icon,content,hide_close_button) {
 			var e = body.childNodes[i];
 			var w = null;
 			if (e.nodeType != 1) continue;
+			if (e.nodeName == "DIV") {
+				e._display = e.style && e.style.display ? e.style.display : "";
+				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
+				e.style.display = 'inline-block';
+				e.style.whiteSpace = 'nowrap';
+			}
 			if (e.nodeName == "FORM")
 				w = win.absoluteLeft(e) + t._computeFrameWidth(e);
 			if (w == null) w = win.absoluteLeft(e)+(win.getWidth ? win.getWidth(e) : getWidth(e));
 			if (w > max) max = w;
+			if (e.nodeName == "DIV") {
+				e.style.display = e._display;
+				e.style.whiteSpace = e._whiteSpace;
+			}
 		}
 		return max;
 	};
@@ -260,10 +270,20 @@ function popup_window(title,icon,content,hide_close_button) {
 			var e = body.childNodes[i];
 			var h = null;
 			if (e.nodeType != 1) continue;
+			if (e.nodeName == "DIV") {
+				e._display = e.style && e.style.display ? e.style.display : "";
+				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
+				e.style.display = 'inline-block';
+				e.style.whiteSpace = 'nowrap';
+			}
 			if (e.nodeName == "FORM")
 				h = win.absoluteTop(e) + t._computeFrameHeight(e);
 			if (h == null) h = win.absoluteTop(e)+(win.getHeight ? win.getHeight(e) : getHeight(e));
 			if (h > max) max = h;
+			if (e.nodeName == "DIV") {
+				e.style.display = e._display;
+				e.style.whiteSpace = e._whiteSpace;
+			}
 		}
 		return max;
 	};
@@ -301,9 +321,11 @@ function popup_window(title,icon,content,hide_close_button) {
 				if (x < win.getWindowWidth()-30) x += 20;
 				if (x > win.getWindowWidth()-30) x = win.getWindowWidth()-30;
 			}
+			getIFrameDocument(t.content).body.style.overflow = "hidden";
 			setWidth(t.content_container, x);
 			setHeight(t.content_container, y);
 			t.content_container.overflow = "hidden";
+			getIFrameDocument(t.content).body.style.overflow = "";
 			x = win.getWindowWidth()/2 - x/2;
 			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight)/2;
 		} else {

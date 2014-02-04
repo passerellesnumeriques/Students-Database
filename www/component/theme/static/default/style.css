@@ -13,6 +13,9 @@ html, body {
 input[type="text"], input[type="password"] {
 	border: 1px inset #C0C0F0;
 }
+ul {
+	margin: 0px;
+}
 
 /* Application layout */
 #pn_application_content {

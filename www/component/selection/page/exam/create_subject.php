@@ -8,7 +8,7 @@ class page_exam_create_subject extends selection_page {
 	public function execute_selection_page(&$page) {
 		/* Check the rights */
 		if(!PNApplication::$instance->user_management->has_right("manage_exam_subject",true))
-			echo "<div style='font-color:red;>You are not allowed to add any exam subject</div>'";
+			echo "<div style='font-color:red;'>You are not allowed to add any exam subject</div>'";
 		else {
 			echo "<div id = 'create_subject'></div>";
 			$other_campaigns = false;
