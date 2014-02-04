@@ -36,7 +36,7 @@ class service_list_buttons extends Service {
 									p.set_freeze_content(msg);
 								},function(){
 									p.close();
-									students_list.reload_data();
+									students_list.reloadData();
 								});
 							});
 							p.show();
