@@ -1,8 +1,12 @@
 <?php
+
 /**
  * The rights of the user is taken into account to set this page
  * This page needs no service to be generated
- */ 
+ * @param instance $page
+ * @param string $container_id id of the container to fill up
+ * @param string $header_id id of the page_header, to manage the displayed buttons 
+ */
 function manage_config(&$page,$container_id,$header_id){
 	
 	/** Start by locking the row in the database
@@ -129,8 +133,11 @@ function manage_config(&$page,$container_id,$header_id){
 				this._setDependencies();
 				this._createTable();
 			}
-		}
-		
+		};
+
+		/**
+		 * Reset all the container content
+		 */
 		t.reset = function(){
 			//reset tbody
 			container.removeChild(t.table);
@@ -141,15 +148,20 @@ function manage_config(&$page,$container_id,$header_id){
 			t.table = document.createElement("table");
 			t._setBody();
 			container.appendChild(t.table);
-		}
-		
+		};
+
+		/**
+		 * Set the dependencies attribute
+		 * t.dependencies is an object with the following structure
+		 * {config_name: [{config_name: ,value:},...],...}
+		 */
 		t._setDependencies = function(){
 			for(var i = 0; i < all_configs.length; i++){
 				if(all_configs[i].dependencies.length > 0){
 					t.dependencies[all_configs[i].name] = all_configs[i].dependencies;
 				}
 			}
-		}
+		};
 		
 		/**
 		 * @method createTable
@@ -162,8 +174,11 @@ function manage_config(&$page,$container_id,$header_id){
 			t._setBody();
 			// t._setFoot(tfoot);
 			container.appendChild(t.table);
-		}
-		
+		};
+
+		/**
+		 * Set the page header buttons
+		 */
 		t._setPageHeader = function(){
 			t.header = new page_header(t.header_cont,true);
 			t.header.setTitle("<img src='"+theme.icons_16.config+"' /> Selection Campaign Configuration");
@@ -197,12 +212,11 @@ function manage_config(&$page,$container_id,$header_id){
 			t.header.addMenuItem(rename);
 			t.header.addMenuItem(remove);
 			
-		}
+		};
 	
 		/**
 		 * @method setBody
 		 * Call the method addRow for each config attribute set in the all_config objects
-		 * Call the addButtonsRenameDelete at the end
 		 */
 		t._setBody = function(){	
 			t._setCategoriesOrdered();
@@ -224,14 +238,22 @@ function manage_config(&$page,$container_id,$header_id){
 				table.appendChild(ul);
 				t.table.appendChild(table);
 			}
-		}
-		
+		};
+
+		/**
+		 * Set the ordered attribute
+		 * ordered is an array containing the categories name ordered
+		 */
 		t._setCategoriesOrdered = function(){
 			t.ordered = [];
 			for(var i = 0; i < t.categories.length; i++)
 				t.ordered[i] = t.categories[t._findCategoryIndex(i+1)].name;
-		}
-		
+		};
+
+		/**
+		 * Find the category index in t.categories object, from the willing index in ordered
+		 * @param {number} index the index in the ordered array 
+		 */
 		t._findCategoryIndex = function(index){
 			var index_in_categories = null;
 			for(var i = 0; i < t.categories.length; i++){
@@ -241,8 +263,14 @@ function manage_config(&$page,$container_id,$header_id){
 				}
 			}
 			return index_in_categories;
-		}
-		
+		};
+
+		/**
+		 * Each category as its own related table in the container
+		 * This method adds a row for a given config attribute into the matching category table
+		 * @param string config_name the name of the config attribute
+		 * @param ul the ul into which the row would be inserted
+		 */
 		t._addRowToCategoryTable = function(config_name,ul){
 			if(t._allowedByDependencies(config_name)){
 				var tr = document.createElement("tr");
@@ -298,8 +326,13 @@ function manage_config(&$page,$container_id,$header_id){
 				tr.appendChild(td2);
 				ul.appendChild(tr);
 			}
-		}
-		
+		};
+
+		/**
+		 * Find the config index into the all_configs object
+		 * @param {string} name the name of the config attribute
+		 * @return {number | null} index
+		 */
 		t._findAllConfigIndex = function(name){
 			var index = null;
 			for(var i = 0; i < all_configs.length; i++){
@@ -309,8 +342,12 @@ function manage_config(&$page,$container_id,$header_id){
 				}
 			}
 			return index;
-		}
-		
+		};
+
+		/**
+		 * Check that a row can be displayed, according to the config dependencies
+		 * @param {boolean} true if can be displayed, els false
+		 */
 		t._allowedByDependencies = function(name){
 			var allowed = true;
 			if(t._hasDependencies(name)){
@@ -323,15 +360,24 @@ function manage_config(&$page,$container_id,$header_id){
 				}
 			}
 			return allowed;
-		}
-		
+		};
+
+		/**
+		 * Check that a config attribute has dependencies
+		 * @param {string} name the name of the config attribute
+		 * @return {boolean}
+		 */
 		t._hasDependencies = function(name){
 			if(typeof(t.dependencies[name]) != "undefined")
 				return true;
 			else
 				return false;
-		}
-		
+		};
+
+		/**
+		 * Check if the given config attribute is targeted by some other attributes dependencies
+		 * @return {boolean}
+		 */
 		t._isTargetedByDependencies = function(name){
 			var is_targeted = false;
 			for(var i = 0; i < all_configs.length; i++){
@@ -345,7 +391,7 @@ function manage_config(&$page,$container_id,$header_id){
 				}
 			}
 			return is_targeted;
-		}
+		};
 		
 		/**
 		 * @method checkCampaignName
@@ -361,7 +407,7 @@ function manage_config(&$page,$container_id,$header_id){
 				}
 			}
 			return is_unique;
-		}
+		};
 		
 		/**
 		 * @method dialogRename
@@ -390,7 +436,7 @@ function manage_config(&$page,$container_id,$header_id){
 								}
 							}
 				);
-		}
+		};
 		
 		/**
 		 * @method dialogRemoveCampaign
@@ -403,7 +449,7 @@ function manage_config(&$page,$container_id,$header_id){
 					t._removeCampaign(div_locker);
 				}
 			});
-		}
+		};
 		
 		/**
 		 * @method renameCampaign
@@ -420,7 +466,7 @@ function manage_config(&$page,$container_id,$header_id){
 				unlock_screen(div_locker);
 				window.parent.location.reload();
 			});
-		}
+		};
 		
 		/**
 		 * @method removeCampaign
@@ -436,7 +482,7 @@ function manage_config(&$page,$container_id,$header_id){
 				unlock_screen(div_locker);
 				window.parent.location.reload();
 			});
-		}
+		};
 		
 		/**
 		 * @method save
@@ -467,7 +513,7 @@ function manage_config(&$page,$container_id,$header_id){
 					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Your informations have been successfuly saved!", [{action:"close"}], 5000));
 				});
 			}
-		}
+		};
 	}
 	//Start the process
 	<?php echo $fct_name; ?>();
