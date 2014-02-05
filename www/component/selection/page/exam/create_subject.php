@@ -8,8 +8,9 @@ class page_exam_create_subject extends selection_page {
 	public function execute_selection_page(&$page) {
 		/* Check the rights */
 		if(!PNApplication::$instance->user_management->has_right("manage_exam_subject",true))
-			echo "<div style='font-color:red;>You are not allowed to add any exam subject</div>'";
+			echo "<div style='font-color:red;'>You are not allowed to add any exam subject</div>'";
 		else {
+			echo "<div id = 'create_subject'></div>";
 			$other_campaigns = false;
 			$all_campaigns = PNApplication::$instance->selection->getCampaigns();
 			/* remove the current campaign */
@@ -35,15 +36,16 @@ class page_exam_create_subject extends selection_page {
 					var t = this;
 					
 					t._init = function(){
-						t.container = document.createElement("div");
+// 						t.container = document.createElement("div");
+						t.container = document.getElementById("create_subject");
 						t._setContainer();
-						t.pop = new popup_window(
-									"Create an Exam Subject",
-									theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
-									t.container,
-									true
-								);
-						t.pop.show();
+// 						t.pop = new popup_window(
+// 									"Create an Exam Subject",
+// 									theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
+// 									t.container,
+// 									true
+// 								);
+// 						t.pop.show();
 					}
 					
 					t.other_campaigns = <?php echo json_encode($other_campaigns);?>;
@@ -83,7 +85,7 @@ class page_exam_create_subject extends selection_page {
 						li1.innerHTML = "Create a subject from scratch";
 						var b_from_zero = t._createButton("<b>Go!</b>");
 						b_from_zero.onclick = function(){
-							location.assign("/dynamic/selection/page/exam/subject");
+							window.parent.location.assign("/dynamic/selection/page/exam/subject");
 						};
 						li1.appendChild(b_from_zero);
 						ul.appendChild(li1);
@@ -93,7 +95,7 @@ class page_exam_create_subject extends selection_page {
 						li3.innerHTML = "Create by importing an Excel questions file";
 						var b_import = t._createButton("<b>Go!</b>");
 						b_import.onclick = function(){
-							location.assign("/dynamic/selection/page/exam/import_subject");
+							window.parent.location.assign("/dynamic/selection/page/exam/import_subject");
 						};
 						li3.appendChild(b_import);
 						ul.appendChild(li3);
@@ -135,15 +137,16 @@ class page_exam_create_subject extends selection_page {
 							div.campaign_id = campaign_id;
 							div.exam_id = exam_id;
 							div.onclick = function(){
-								location.assign("/dynamic/selection/page/exam/subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
+								window.parent.location.assign("/dynamic/selection/page/exam/subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
 							};
 						}
 						return div;
 					};
 					
-					require("popup_window.js",function(){
-						t._init();
-					});
+// 					require("popup_window.js",function(){
+// 						t._init();
+// 					});
+					t._init();
 				}
 				create_exam();
 			</script>

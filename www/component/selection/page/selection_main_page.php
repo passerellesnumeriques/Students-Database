@@ -100,7 +100,7 @@ class page_selection_main_page extends selection_page {
 			<?php
 			if(isset($calendar_id)) echo "calendar_id = ".json_encode($calendar_id).";";
 			if(isset($calendar_name)) echo "calendar_name = ".json_encode($calendar_name).";";
-			if(isset($steps)) echo "steps = ".$steps.";";
+			if(isset($steps)) echo "steps = ".json_encode($steps).";";
 			
 			echo "var unvalid_steps_to_display = ";
 			echo getArrayStepsToDisplay($unvalid_steps_to_display);
@@ -143,10 +143,18 @@ class page_selection_main_page extends selection_page {
 			new news('updates_container', [{name:"selection",tags:["campaign<?php echo PNApplication::$instance->selection->getCampaignId();?>"]}], [], function(){
 			}, function(){
 			});
-			
+
+			/**
+			 * Create the left part of the selection main_page
+			 * @param {array} unvalid_steps coming from getArrayStepsToDisplay function
+			 * @param {array} valid_steps coming from getArrayStepsToDisplay function
+			 */
 			function setStatusScreens (unvalid_steps, valid_steps){
 				var t = this;
-				
+
+				/**
+				 * start creating the page
+				 */
 				t._init = function(){
 					//set the unvalid steps
 					for(var i = 0; i < unvalid_steps.length; i++){
@@ -168,27 +176,40 @@ class page_selection_main_page extends selection_page {
 					}
 					//once everything is set, run the js
 					t._run();
-				}
-				
+				};
+
+				/**
+				 * Set the container style
+				 */
 				t._setContainerStyle = function(container){
 					container.style.width = "95%";
 					container.style.marginLeft = "10px";
 					container.style.marginTop = "15px";
-				}
-				
+				};
+
+				/**
+				 * The set the section content with the default message when the current step is not validated yet
+				 */
 				t._setUnvalidContent = function(content){
 					var back = document.createElement("div");
 					// back.style.backgroundColor = "rgba(128,128,128,0.5)";
 					back.innerHTML = "<center><i>This step is not started yet</i></center>";
 					content.appendChild(back);
-				}
-				
+				};
+
+				/**
+				 * Create the container for the valid content with a suitable id
+				 */
 				t._prepareContainerForValidContent = function(content, id){
 					var div = document.createElement("div");
 					div.id = "content_"+id;
 					content.appendChild(div);
-				}
-				
+				};
+
+				/**
+				 * Launch all the scripts defined for each selection sub component
+				 * that appear in the selection_main_page_status_screen array
+				 */
 				t._run = function(){
 					<?php
 					foreach($js_to_run as $js)

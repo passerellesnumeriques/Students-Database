@@ -1,14 +1,16 @@
 <?php
-function getFigure ($db_array){
-	$total = 0;
-	if(isset($db_array[0])){
+if(!function_exists("getFigure")){
+	function getFigure ($db_array){
 		$total = 0;
-		foreach($db_array as $value){
-			$fig = intval($value);
-			$total = $total + $fig;
+		if(isset($db_array[0])){
+			$total = 0;
+			foreach($db_array as $value){
+				$fig = intval($value);
+				$total = $total + $fig;
+			}
 		}
+		return $total;
 	}
-	return $total;
 }
 class service_exam_subject_status extends Service{
 	public function get_required_rights(){return array();}

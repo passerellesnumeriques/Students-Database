@@ -107,7 +107,7 @@ class selection extends Component {
 	
 	/**
 	 * @method createCampaign
-	 * @param string $name
+	 * @param string $campaign_name
 	 * Create a campaign in the database, set its config to the default values, set the campaign id, set its steps
 	 * Create a calendar for the selection campaign
 	 * @return integer | boolean $campaign_id the id of the campaign created, false if an error occured
@@ -123,43 +123,45 @@ class selection extends Component {
 			return;
 		}
 		/**
-		 * Cannot do a transaction beacuse we are inserting tables (submodel) 
+		 * Cannot do a transaction because we are inserting tables (submodel) 
 		 */
 		try{
-		/* Create a calendar for this campaign */
-		$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("edit_information_session"=>true));
-		
-		/* if the calendar was properly created, continue */
-		if($calendar_id <> null){
-			$fields["name"] = $campaign_name;
-			$fields["calendar"] = $calendar_id;
-			$campaign_id = SQLQuery::create()->insert("SelectionCampaign",$fields);
-			$this->setCampaignId($campaign_id);
+			/* Create a calendar for this campaign */
+			$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("edit_information_session"=>true));
 			
-			/* Insert the default config in the database */
-			$default_config_rows = array();
-			foreach($all_configs as $name => $data)
-				array_push($default_config_rows,array(
-					"name" => $name,
-					"value" => json_encode($data[1]),
-				));
-			SQLQuery::create()->insertMultiple("Selection_campaign_config",$default_config_rows);
+			/* if the calendar was properly created, continue */
+			if($calendar_id <> null){
+				$fields["name"] = $campaign_name;
+				$fields["calendar"] = $calendar_id;
+				$campaign_id = SQLQuery::create()->insert("SelectionCampaign",$fields);
+				$this->setCampaignId($campaign_id);
 				
-			/* Insert the default steps in the database */
-			$rows_steps = array();
-			foreach($all_steps as $name => $temp)
-				array_push($rows_steps, array("name" => $name, "value" => false));
-			SQLQuery::create()->insertMultiple("Steps",$rows_steps);
-		}
+				/* Insert the default config in the database */
+				$default_config_rows = array();
+				foreach($all_configs as $name => $data)
+					array_push($default_config_rows,array(
+						"name" => $name,
+						"value" => json_encode($data[1]),
+					));
+				SQLQuery::create()->insertMultiple("Selection_campaign_config",$default_config_rows);
+					
+				/* Insert the default steps in the database */
+				$rows_steps = array();
+				foreach($all_steps as $name => $temp)
+					array_push($rows_steps, array("name" => $name, "value" => false));
+				SQLQuery::create()->insertMultiple("Steps",$rows_steps);
+			}
 		} catch (Exception $e) {
 			PNApplication::error($e);
+		}
+		if(PNApplication::has_errors()){
 			/**
 			 * Manually RollBack
 			 */
 			if($calendar_id <> null)
-				SQLQuery::create()->removeKey("Calendar",$calendar_id);
+				SQLQuery::create()->bypassSecurity()->removeKey("Calendar",$calendar_id);
 			if($campaign_id <> null)
-				SQLQuery::create()->removeKey("SelectionCampaign",$campaign_id);
+				SQLQuery::create()->bypassSecurity()->removeKey("SelectionCampaign",$campaign_id);
 			return false;
 		}
 		return $campaign_id;
@@ -232,6 +234,11 @@ class selection extends Component {
 		}
 	}
 	
+	/**
+	 * Get the value of the given config attribute
+	 * @param string $name
+	 * @return boolean
+	 */
 	public function getOneConfigAttributeValue($name){
 		$conf = $this->getConfig();
 		for($i = 0; $i < count($conf); $i++){
@@ -241,7 +248,7 @@ class selection extends Component {
 	}
 	/**
 	 * @method saveConfig
-	 * @param $config an array [name => value]
+	 * @param $configs an array [name => value]
 	 * After updating the config into the database, the config attribute is reseted to null.
 	 * This way when a component requires the config attribute, the getConfig method will be forced to get the last version in the database
 	 * @return in the case of an error is launched by the database, the exception is catched and returned. Otherwise, null is returned
@@ -263,7 +270,7 @@ class selection extends Component {
 	/**
 	 * The steps are always checked into the database, to be sure
 	 * that each user is having the same steps values
-	 * @return {array} [["step_name"] => value,...]
+	 * @return array [["step_name"] => value,...]
 	 */
 	public function getSteps(){
 			$all_steps = include("steps.inc");
@@ -287,6 +294,7 @@ class selection extends Component {
 	}
 	
 	/**
+	 * Update all the steps values field in the database according to the data set into the db
 	 * This method must be called every time a saving / remove method is called
 	 */
 	public function updateAllSteps(){
@@ -312,18 +320,23 @@ class selection extends Component {
 		}
 	}
 	
-	/** This method must be called by each "save" and "remove" method to valid the call, as a last check
-		 * Can also be called before creating a saving page such as exam_subject to temporarly
-		 * update the user rights
-	 * @param {sting} name the step name
-	 * @return {array} [0]: {boolean} true if can valid this step
+	/**
+	 * Check the possibility to update (valid/unvalid) a step, based on the steps dependencies
+	 * If the given step is already validated, meaning that the user can potentialy unvalidate it,
+	 * check all the dependencies that need the current step to be valid
+	 * Else, the user can potentialy validate the step, so check that it is allowed by the dependencies
+	 * This method must be called by each "save" and "remove" method to valid the call, as a last check
+	 * Can also be called before creating a saving page such as exam_subject to temporarly
+	 * update the user rights
+	 * @param string name the step name
+	 * @return array	[0]: {boolean} true if can valid this step
 	 * 					[1]: {boolean} true if can unvalid this step
 	 * 					[2]: {string} error message to display in case cannot be updated
 	 * 					[3]: {array | null} restricted rights if [1] == false
 	 *								["add"]: {boolean} true if can add
 	 *								["remove"]: {boolean} true if can remove
 	 *								["update"]: {boolean} true if can update
-		 */
+	 */
 	public function canUpdateStep($name){
 		$all_steps = include("steps.inc");
 		$can_valid = true;
@@ -384,8 +397,14 @@ class selection extends Component {
 	}
 	
 	/**
+	 * Check that the user can update a data, based on the user rights and on the step values
 	 * This method don't consider the case of the steps can only restrict any rights,
 	 * so is having a all-or-nothing basis
+	 * @param string $step_name
+	 * @param string $right_name the right name that must be ok for updating the data
+	 * @param string $error_message_if_no_right error message added to the errors list in case of missing right_name
+	 * @return array:	[0]: boolean $can_update true if steps and rights for user_management ok
+	 * 					[1]: string $error_messages the list of errors to display (error from rights & errors from steps)
 	 */
 	public function canUpdateFromRightAndStep($step_name, $right_name, $error_message_if_no_right){
 		$error_messages = "";
@@ -410,14 +429,16 @@ class selection extends Component {
 	}
 	
 	/**
-	 * @param {string} step_name
-	 * @param {string} remove_right_name
-	 * @param {string} edit_right_name
-	 * @param {string} remove_right_name
-	 * This method gets the user rights from user_management and handle the restrictions due to the steps
-	 * @return {array} [0]: {array} rights values
-	 *					[1]: {boolean} true if the rights were restricted
-	 *					[2]: {string} restriction message
+	 * Get the user rights from user_management and handle the restrictions due to the steps
+	 * The user rights can only be temporarly restricted (never increased) since the first values comes from
+	 * user_management
+	 * @param string step_name
+	 * @param string remove_right_name the right name for user_management component
+	 * @param string edit_right_name the right name for user_management component
+	 * @param string remove_right_name the right name for user_management component
+	 * @return array 	[0]: array rights values
+	 *					[1]: boolean true if the rights were restricted
+	 *					[2]: string restriction message
 	 */
 	public function getRestrictedRightsFromStepsAndUserManagement($step_name, $add_right_name, $remove_right_name, $edit_right_name){
 		//First get the rights
@@ -433,13 +454,13 @@ class selection extends Component {
 	}
 	
 	/**
-	 * @param {boolean} can_add
-	 * @param {boolean} can_remove
-	 * @param {boolean} can_edit
+	 * @param boolean can_add
+	 * @param boolean can_remove
+	 * @param boolean can_edit
 	 * This method restricts (but never increase) the given rights according to the steps dependencies restrictions
 	 * The rights given as parameters shall be coming from user_management functionalities
-	 * @return  {array} [0]:{boolean} restricted, true if the steps dependencies have restricted the rights
-	 *					[1]: {string} restriction message
+	 * @return  array 	[0]:boolean restricted, true if the steps dependencies have restricted the rights
+	 *					[1]: string restriction message
 	 */
 	public function updateRightsFromStepsDependenciesRestrictions($step_name,&$can_add, &$can_remove, &$can_edit){
 		$validation_step = $this->canUpdateStep($step_name);
@@ -473,10 +494,9 @@ class selection extends Component {
 	}
 	
 	/**
-	 * @method getCampaigns
-	 * @param {boolean} (optional) asc true if the campaigns must be ordered by an ascendant order
 	 * Get all the campaigns set in the database and return an array to be used by a php script
-	 * @return {array} [[id=>"",name=>""],[id=>"",name=>""],...]
+	 * @param boolean (optional) asc true if the campaigns must be ordered by an ascendant order
+	 * @return array [[id=>"",name=>""],[id=>"",name=>""],...]
 	 */
 	public function getCampaigns($asc = false){
 		try{
@@ -504,11 +524,10 @@ class selection extends Component {
 	}
 	
 	/**
-	 * @method saveIS
 	 * Update or create an information_session into the database
 	 * The rights must be checked before calling this method
-	 * @param {integer} $id the id of the IS in case of an update
-	 * @param []{string} the fields to update/insert
+	 * @param integer $id the id of the IS in case of an update
+	 * @param array the fields_values to update/insert into the Information_session table
 	 * @return $id the id generated in case of an insert
 	 */
 	public function saveIS($id, $fields_values){
@@ -532,9 +551,9 @@ class selection extends Component {
 	}
 	
 	/**
-	 * @param {integer} IS_id the IS id from which the partners must be removed
 	 * Remove all the partners of the given information session
 	 * The rights must be checked before calling this method
+	 * @param integer IS_id the IS id from which the partners must be removed
 	 */
 	public function removeAllISPartners($IS_id){
 		$partners = SQLQuery::create()->select("Information_session_partner")
@@ -548,9 +567,9 @@ class selection extends Component {
 	}	
 	
 	/**
-	 * @param {integer} IS_id
 	 * Remove all the contact points of the given information session
 	 * The rights must be checked before calling this method
+	 * @param integer IS_id
 	 */
 	public function removeAllISContactPoints($IS_id){
 		$contact_point = SQLQuery::create()->select("Information_session_contact_point")
@@ -569,23 +588,26 @@ class selection extends Component {
 	}
 	
 	/**
-	 * @param {array} rows to insert in information_session_partner table
+	 * Insert the partners of an information session into the database
 	 * The rights must be checked before calling this method
+	 * @param array rows to insert in information_session_partner table
 	 */
 	public function insertISPartners($rows){
 		SQLQuery::create()->insertMultiple("Information_session_partner",$rows);
 	}
 	
 	/**
-	 * @param {array} rows to insert in Information_session_contact_point table
+	 * Insert the contact points of an information session into the database
 	 * The rights must be checked before calling this method
+	 * @param array rows to insert in Information_session_contact_point table
 	 */
 	public function insertISContactPoints($rows){
 		SQLQuery::create()->insertMultiple("Information_session_contact_point",$rows);
 	}
 	/**
-	 * @param {integer} id the one of the IS to remove
-	 * @param {integer} fake_organization the id of the fake organization linked to this IS
+	 * Remove an information session from the database
+	 * @param integer id the one of the IS to remove
+	 * @param integer fake_organization the id of the fake organization linked to this IS
 	 */
 	public function removeIS($id, $fake_organization){
 		// check the rights
@@ -604,11 +626,11 @@ class selection extends Component {
 	}
 	
 	/**
-	 * @param {integer} IS_id
-	 * @param {integer} fake_organization id
 	 * Remove the fake organization linked to an information session
 	 * after checking it is really the one linked to the given IS
 	 * The rights must be checked before calling this method
+	 * @param integer IS_id
+	 * @param integer fake_organization id
 	 */
 	private function removeFakeOrganization($IS_id, $fake_organization){
 		//check the fake_organization matches with the one set in the IS
@@ -625,6 +647,10 @@ class selection extends Component {
 			PNApplication::error("This fake_organization does not exist into the database");
 	}
 	
+	/**
+	 * Get all the existing exam subjects from the database
+	 * @return array [["id" => , "name" =>],...]
+	 */
 	public function getAllExamSubjects(){
 		return SQLQuery::create()
 				->select("Exam_subject")
@@ -633,10 +659,22 @@ class selection extends Component {
 				->execute();
 	}
 	
+	/**
+	 * Check if the questions of an exam subject can be updated,
+	 * calling the selection#canUpdateFromRightAndStep method
+	 * @return array:	[0]: boolean $can_update true if steps and rights for user_management ok
+	 * 					[1]: string $error_messages the list of errors to display
+	 */
 	public function canManageExamSubjectQuestions(){
 		return $this->canUpdateFromRightAndStep("manage_exam","manage_exam_subject","You are not allowed to manage the exam subject questions");
 		}
 		
+	/**
+	 * Remove an exam subject from database and all the related data
+	 * This method checks the rights before performing the remove
+	 * @param integer $exam_id
+	 * @return boolean true if done
+	 */
 	public function removeExam($exam_id){
 		$parts = null;
 		//check the rights
@@ -665,6 +703,16 @@ class selection extends Component {
 		}
 	}
 	
+	/**
+	 * Method called by the selection#saveExam method
+	 * After inserting the exam subject parts into the database, update the
+	 * exam subject questions part_id attribute with the value got from the matching part insert
+	 * @param array $parts_ids all the part ids to update
+	 * @param array $questions_by_part 
+	 * @param array $parts_indexes
+	 * See selection#service#exam#save_subject for more details
+	 * @return array the questions rows to insert into the database, using SQLQuery#insert_multiple method
+	 */
 	private function updatePartIdInQuestionsRows($parts_ids,$questions_by_part,$parts_indexes){
 		$rows_questions_table = array();
 		for($i = 0; $i < count($parts_indexes); $i++){
@@ -676,6 +724,17 @@ class selection extends Component {
 		return $rows_questions_table;
 	}
 	
+	/**
+	 * Save an exam subject: insert or update one in the database
+	 * For more details about the parameters, see selection#service#exam#save_subject
+	 * @param integer $exam_id
+	 * @param array $rows_exam_table row to insert using SQLQuery::insert_multiple method
+	 * @param array $rows_parts_table row to insert using SQLQuery::insert_multiple method
+	 * @param array $questions_by_old_parts questions linked to parts that already existed in the database (updated)
+	 * @param array $questions_by_new_part questions linked to parts that will be inserted
+	 * @param array $parts_to_insert_indexes 
+	 * @return boolean|string false if an error occured, else json exam subject object with the new values set into the database
+	 */
 	public function saveExam($exam_id, $rows_exam_table, $rows_parts_table, $questions_by_old_parts ,$questions_by_new_part, $parts_to_insert_indexes){
 		// Check the rights
 		$can_update = $this->canManageExamSubjectQuestions();
@@ -723,8 +782,8 @@ class selection extends Component {
 							->bypassSecurity()
 							->insertMultiple("Exam_subject_question",$rows_questions_table);
 					}
-						// create a topic full_subject
-						$this->createTopicAndInsertFullExamSubject($exam_id,$new_parts);
+						// create a topic full_subject for this new subject
+						$this->createTopicAndInsertFullExamSubject($exam_id);
 				}
 			} else {
 				// this is an update
@@ -855,6 +914,11 @@ class selection extends Component {
 		}
 	}
 	
+	/**
+	 * Get all the applicants ids already set into the database
+	 * This method does not check the user rights
+	 * @return array applicants ids
+	 */
 	private function getAllApplicantIds(){
 		$ids = SQLQuery::create()
 			->bypassSecurity()
@@ -864,6 +928,11 @@ class selection extends Component {
 		return $ids;
 	}
 	
+	/**
+	 * Get all applicants ids already set into the database after
+	 * checking the user rights
+	 * @return array applicants ids
+	 */
 	public function externalGetAllApplicantsIds(){
 		// check the rights
 		if(PNApplication::$instance->user_management->has_right("see_applicant_info",true))
@@ -871,11 +940,11 @@ class selection extends Component {
 		else
 			PNApplication::error("You are not allowed to access to the applicants informations");
 	}
-	/** @method selection#updateExamTopicsForEligibilityRules
+	/**
 	 * Handle the consequences on the exam topics of saving an exam
 	 * In case a topic gets empty after removing parts, it is automatically deleted
-	 * @param {array} parts_removed containing the ids of the removed parts
-	 * @param {array} parts_inserted containing the ids of the inserted parts,
+	 * @param array parts_removed containing the ids of the removed parts
+	 * @param array parts_inserted containing the ids of the inserted parts,
 	 * used to generate a message + in case the topic is a full subject one (added to the topic)
 	 */	
 	public function updateExamTopicsForEligibilityRules($parts_removed,$parts_inserted,$exam_id){
@@ -892,7 +961,7 @@ class selection extends Component {
 				$removed_because_updated_empty = true;
 				if($parts_inserted <> null){
 						// check if this subject is a "full topic" for any of the topic, and in that case insert the new parts
-						$topics_to_be_inserted = $this->getTopicsFullExamForGivenExam($exam_id);
+						$topics_to_be_inserted = $this->getTopicsFullSubjectForGivenExamSubject($exam_id);
 						if($topics_to_be_inserted <> null){
 							//perform the inserts
 							foreach($topics_to_be_inserted as $t){
@@ -922,7 +991,12 @@ class selection extends Component {
 			return;
 	}
 	
-	private function getTopicsFullExamForGivenExam($exam_id){
+	/**
+	 * Get all the topics declared as full subject for the given exam subject
+	 * @param integer $exam_id
+	 * @return array containing the matching topics ids
+	 */
+	private function getTopicsFullSubjectForGivenExamSubject($exam_id){
 		$topics = SQLQuery::create()
 			->select("Exam_topic_full_exam")
 			->field("Exam_topic_full_exam","exam_topic_for_eligibility_rule","topic_id")
@@ -931,6 +1005,11 @@ class selection extends Component {
 		return $topics;
 	}
 	
+	/**
+	 * Check if a topic is empty
+	 * @param integer $topic_id
+	 * @return boolean
+	 */
 	private function isTopicEmpty($topic_id){
 		$q = SQLQuery::create()
 			->select("Exam_part_topic")
@@ -946,6 +1025,11 @@ class selection extends Component {
 			return true;
 	}
 	
+	/**
+	 * Check if a part is empty
+	 * @param integer $part_id
+	 * @return boolean
+	 */
 	private function isPartEmpty($part_id){
 		$q = SQLQuery::create()
 			->select("Exam_subject_question")
@@ -961,6 +1045,11 @@ class selection extends Component {
 			return true;
 	}
 	
+	/**
+	 * Get all the topics that contain the given parts
+	 * @param array $parts all the parts ids
+	 * @return array | null array containing all the matching part ids, null if empty result
+	 */
 	private function getTopicsConcernedByParts($parts){
 		if(isset($parts[0])){
 		$topics = SQLQuery::create()
@@ -973,6 +1062,14 @@ class selection extends Component {
 			return null;
 	}
 	
+	/**
+	 * Create an exam topic for eligibility rules
+	 * @param string $name
+	 * @param array $parts_to_insert all the parts ids contained by the topic
+	 * @param number | null (optional) $topic_max_score
+	 * @param number | null (optional) $topic_number_questions
+	 * @return number the id of the new topic
+	 */
 	public function createTopic($name, $parts_to_insert, $topic_max_score = null, $topic_number_questions = null){
 		if($parts_to_insert <> null){
 			//insert the topic
@@ -992,7 +1089,21 @@ class selection extends Component {
 		}
 	}
 	
-	private function createTopicAndInsertFullExamSubject($exam_id, $parts_to_insert){
+	/**
+	 * Create a full subject topic for eligibility rules into the database
+	 * for a given exam subject
+	 * All the parts of this exam subject are inserted into the topic
+	 * These topic and exam subject are inserted into the exam_topic_full_exam table 
+	 * @param unknown $exam_id
+	 * @return number the id of the new topic
+	 */
+	private function createTopicAndInsertFullExamSubject($exam_id){
+		$parts_to_insert = SQLQuery::create()
+			->bypassSecurity()
+			->select("Exam_subject_part")
+			->field("Exam_subject_part","id","id")
+			->whereValue("Exam_subject_part", "exam_subject", $exam_id)
+			->executeSingleField();
 		if($parts_to_insert <> null){
 			//Get the exam name
 			$name = SQLQuery::create()
@@ -1157,30 +1268,7 @@ class selection extends Component {
 // // 		return $json;
 // 	}
 	
-	public function getAllJsonTopics($excluded_id = null){
-		$all_ids = SQLQuery::create()
-			->select("Exam_topic_for_eligibility_rule")
-			->field("id")
-			->executeSingleField();
-		$all_ids_after_exclusion = array();
-		if(isset($excluded_id)){
-			foreach($all_ids as $id){
-				if($id != $excluded_id)
-					array_push($all_ids_after_exclusion,$id);
-			}
-		} else
-			$all_ids_after_exclusion = $all_ids;
-		$json = "[";
-		$first = true;
-		foreach($all_ids_after_exclusion as $id){
-			if(!$first)
-				$json .= ", ";
-			$first = false;
-			$json .= $this->getJsonExamTopicForEligibilityRules($id);
-		}
-		$json .= "]";
-		return $json;
-	}
+
 	
 	/**
 	 * @param {array} ids
@@ -1207,14 +1295,14 @@ class selection extends Component {
 		// return array($all_valids,$wrong_ids);
 	// }
 	
-	private function getNameFromApplicantId($applicant_id){
-		return SQLQuery::create()
-		->bypassSecurity()
-		->select("Applicant")
-		->field("last_name")
-		->whereValue("Applicant","applicant_id",$applicant_id)
-		->executeSingleValue();
-	}
+// 	private function getNameFromApplicantId($applicant_id){
+// 		return SQLQuery::create()
+// 		->bypassSecurity()
+// 		->select("Applicant")
+// 		->field("last_name")
+// 		->whereValue("Applicant","applicant_id",$applicant_id)
+// 		->executeSingleValue();
+// 	}
 	
 }
 ?>
