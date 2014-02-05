@@ -48,21 +48,40 @@ function prepareDataAndSavePartnersAndContactsPoints($data){
 }
 
 class service_IS_save extends Service{
-	public function get_required_rights(){return array();}
+	public function get_required_rights(){return array("manage_information_session");}
 	public function input_documentation(){
-	
+		?>
+		<ul>
+			<li><code>data</code> {array} Information session data, coming from IS_profile.js</li>
+			<li><code>address</code> {array} Postal Address object</li>
+			<li><code>event</code> {array} Calendar eevnt object</li>
+		</ul>
+		<?php
 	}
 	public function output_documentation(){
-	
+		?>
+		<ul>
+			<li><code>false</code> {boolean} if an error occured</li>
+			<li><code>array</code> id, fake_orga, address, date
+				<ul>
+					<li><code>id</code> id of the information session</li>
+					<li><code>fake_organization</code> id of the fake_organization linked to this information session</li>
+					<li><code>address</code> id of the custom postal address if set</li>
+					<li><code>date</code> id of the calendar event linked to this information session, if set</li>
+				</ul>
+			</li>
+		</ul>
+		<?php
 	}
 	public function documentation(){
+		echo 'Save an information session object. All the query are performed into a transaction in the case of any error happen';
 	}
 	public function execute(&$component,$input){
 		if(!isset($input["event"]) || !isset($input["address"]) || !isset($input["data"]))
 			echo "false";
 		else {
 			$data = $input["data"];
-			$address = $input["address"]; // TODO here it must be a PostalAddress, then no need to convert it to database format...
+			$address = $input["address"];
 			$event = $input["event"];
 			$everything_ok = true;
 			$add_event = false;

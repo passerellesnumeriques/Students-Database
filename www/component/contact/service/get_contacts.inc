@@ -1,4 +1,5 @@
 <?php
+//TODO doc
 require_once("component/contact/ContactJSON.inc");
 function get_contacts($table_contact, $join_contact_column, $table_address, $join_address_column, $join_value, $no_address = false, $no_contacts = false) {
 	if(!$no_contacts){	

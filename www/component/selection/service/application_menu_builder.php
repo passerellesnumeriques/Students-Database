@@ -1,7 +1,7 @@
 <?php 
 class service_application_menu_builder extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function get_required_rights() { return array("can_access_selection_data"); }
 	
 	public function documentation() { echo "Provides JavaScript to build the application menu"; }
 	public function input_documentation() { echo "No"; }
@@ -17,7 +17,10 @@ class service_application_menu_builder extends Service {
 		?>
 		function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 			var t = this;
-			
+			/**
+			 * Start the process
+			 * Set the select element with the good value
+			 */
 			t._init = function(){
 				t.select.getHTMLElement().style.backgroundColor = "#FFFFFF";
 				t.select.add(0,"<i><center>Not selected</center></i>");
@@ -33,7 +36,12 @@ class service_application_menu_builder extends Service {
 					t.select.onchange = t._selectCampaign;
 			}
 			
-			
+			/**
+			 * Method called onbeforechange by the select object
+			 * @param {String} old_value
+			 * @param {String} new_value
+			 * @param {Function} fire_change, method given by select#select method when calling onbeforechange
+			 */
 			t._confirmChangeCampaign = function (old_value, new_value, fire_change){
 				if(new_value == "add"){
 					t._dialogAddCampaign();
@@ -62,9 +70,8 @@ class service_application_menu_builder extends Service {
 			};
 			
 			/**
-			 * @method _checkCampaignName
-			 * @param name {string} the name to set
-			 * @return {boolean} true if the name passed the test
+			 * @param {String} name the name to set
+			 * @return {Boolean} true if the name passed the test
 			 */
 			t._checkCampaignName = function (name){
 				var is_unique = true;
@@ -78,8 +85,7 @@ class service_application_menu_builder extends Service {
 			}
 			 
 			/**
-			 * function _dialogAddCampaign
-			 * popup an input dialog to create a campaign
+			 * Popup an input dialog to create a campaign
 			 * After submitting, the _addCampaign function is called
 			 */
 			t._dialogAddCampaign = function (){
@@ -110,8 +116,9 @@ class service_application_menu_builder extends Service {
 			}
 			
 			/**
-			 * function _addCampaign
 			 * calls the service create_campaign and then reload the page
+			 * @param {String} name the new campaign name
+			 * @param {String} div_locker id of the screen locker
 			 */
 			t._addCampaign = function (name,div_locker){
 				service.json("selection","create_campaign",{name:name},function(res){

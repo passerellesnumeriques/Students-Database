@@ -1,7 +1,7 @@
 <?php 
 require_once "component/selection/SelectionJSON.inc";
 class service_exam_get_subject extends Service {
-	public function get_required_rights() { return array(); }
+	public function get_required_rights() { return array("see_exam_subject"); }
 	public function documentation() { echo "Get the exam subject data"; }
 	public function input_documentation() { 
 		echo "<code>id</code>: id of the exam subject to get";

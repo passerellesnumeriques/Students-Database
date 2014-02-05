@@ -13,8 +13,9 @@ if(!function_exists("getFigure")){
 	}
 }
 class service_exam_subject_status extends Service{
-	public function get_required_rights(){return array();}
+	public function get_required_rights(){return array("can_access_selection_data");}
 	public function input_documentation(){
+		echo "No";
 	}
 	public function output_documentation(){
 //TODO
