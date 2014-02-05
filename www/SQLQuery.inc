@@ -1212,7 +1212,7 @@ class SQLQuery {
 		$id = SQLQuery::db()->getInsertID();
 		// sub models
 		foreach ($t->_key_submodels as &$sm)
-			$sm->create_tables($id);
+			$sm->createTables($id);
 		// unlock the table
 		DataBaseLock::unlock($lock);
 		// events
@@ -1329,7 +1329,7 @@ class SQLQuery {
 		}
 		// sub models
 		foreach ($t->_key_submodels as &$sm)
-			$sm->create_tables($id);
+			$sm->createTables($id);
 		// unlock the table
 		DataBaseLock::unlock($lock);
 		// events
@@ -1450,7 +1450,7 @@ class SQLQuery {
 				
 			foreach ($sub_models_to_remove as $sm)
 				foreach ($sm[1] as $key)
-					$sm[0]->remove_tables($key);
+					$sm[0]->removeTables($key);
 			
 			// unlock
 			foreach ($locks as $lock) DataBaseLock::unlock($lock);

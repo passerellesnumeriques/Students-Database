@@ -118,10 +118,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		return null;
 	};
 	/** Remove all filters
-	 * @param {Boolean} removeForced true to remove also the filters which cannot be remove by the user 
+	 * @param {Boolean} remove_forced true to remove also the filters which cannot be remove by the user 
 	 */
-	t.resetFilters = function(removeForced) {
-		if (removeForced)
+	t.resetFilters = function(remove_forced) {
+		if (remove_forced)
 			t._filters = [];
 		else
 			for (var i = 0; i < t._filters.length; ++i)
@@ -193,7 +193,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	 * @param {Function} handler called when the user clicks on a row, with the clicked row (from the grid) as parameter
 	 */
 	t.makeRowsClickable = function(handler) {
-		t._row_onclick = handler;
+		t._rowOnclick = handler;
 		for (var i = 0; i < t.grid.getNbRows(); ++i)
 			t._makeClickable(t.grid.getRow(i));
 	};
@@ -201,14 +201,22 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	/* Private properties */
 	t._root_table = root_table;
 	t._onready = onready;
+	/** {Array} List of available fields retrieved through the service get_available_fields */
 	t._available_fields = null;
+	/** Page number */
 	t._page_num = 1;
+	/** Maximum rows per page */
 	t._page_size = 1000;
+	/** {GridColumn} column on which a sort is applied, or null if no sort */
 	t._sort_column = null;
+	/** 1 for ASC, 2 for DESC, 3 for no sort */
 	t._sort_order = 3;
+	/** List of filters to apply */
 	t._filters = filters ? filters : [];
+	/** {GridColumn} last column for actions, or null if there is no such a column */
 	t._col_actions = null;
-	t._row_onclick = null;
+	/** {Function} called when rows are clickable, and the user clicks on a row */
+	t._rowOnclick = null;
 
 	/* Private methods */
 	
@@ -295,7 +303,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
 		div.title = "Select columns to display";
 		img.src = get_script_path("data_list.js")+"/table_column.png";
-		div.onclick = function() { t._select_columns_dialog(this); };
+		div.onclick = function() { t._selectColumnsDialog(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
 		// + filter
@@ -396,7 +404,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t._loadData();
 		});
 	};
-	/** Load JavaScript files that may be needed for all the available fields retrieved */
+	/** Load JavaScript files that may be needed for all the available fields retrieved
+	 * @param {Function} handler called when everything is loaded
+	 */
 	t._loadTypedFields = function(handler) {
 		require("typed_field.js",function() {
 			var fields = [];
@@ -497,6 +507,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		}
 		return col;
 	};
+	/** (Re)load the data from the server */
 	t._loadData = function() {
 		t.grid.startLoading();
 		var fields = [];
@@ -582,7 +593,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			// register data events
 			for (var i = 0; i < t.grid.table.childNodes.length; ++i) {
 				var row = t.grid.table.childNodes[i];
-				if (t._row_onclick)
+				if (t._rowOnclick)
 					t._makeClickable(row);
 				for (var j = 0; j < row.childNodes.length; ++j) {
 					var td = row.childNodes[j];
@@ -610,7 +621,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.grid.endLoading();
 		});
 	};
-	t._select_columns_dialog = function(button) {
+	/** Show the menu to select the columns/fields to display
+	 * @param {DOMNode} button the menu will be display below this element
+	 */
+	t._selectColumnsDialog = function(button) {
 		var categories = [];
 		for (var i = 0; i < t._available_fields.length; ++i)
 			if (!categories.contains(t._available_fields[i].category))
@@ -678,6 +692,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			menu.showBelowElement(button);
 		});
 	};
+	/** Create the display for a filter, inside the given table
+	 * @param {Object} filter the filter
+	 * @param {DOMNode} table the table where to insert a row to display the filter
+	 */
 	t._createFilter = function(filter, table) {
 		var tr = document.createElement("TR"); table.appendChild(tr);
 		var td;
@@ -735,6 +753,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			filter = filter.or;
 		}
 	},
+	/** Display the menu to edit/add/remove filters
+	 * @param {DOMNode} button the menu will be displayed below this element
+	 */
 	t._filtersDialog = function(button) {
 		require("context_menu.js");
 		require("typed_filter.js");
@@ -807,6 +828,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			};
 		});
 	};
+	/** Display the menu to export the list
+	 * @param {DOMNode} button the menu will be displayed below this element
+	 */
 	t._exportMenu = function(button) {
 		require("context_menu.js",function(){
 			var menu = new context_menu();
@@ -819,6 +843,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			menu.showBelowElement(button);
 		});
 	};
+	/** Launch the export in the given format
+	 * @param {String} format format to export
+	 */
 	t._exportList = function(format) {
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
@@ -857,7 +884,11 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		form.submit();
 	};
 	
+	/** List of cells that have been edited (used for the save action) */
 	t._changed_cells = [];
+	/** Cancel any change made in the given column
+	 * @param {GridColumn} col the column
+	 */
 	t._cancelColumnChanges = function(col) {
 		var index = t.grid.getColumnIndex(col);
 		var rows = t.grid.getNbRows();
@@ -866,6 +897,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			f.typed_field.setData(f.typed_field.getOriginalData());
 		}
 	};
+	/** Called when a cell changed
+	 * @param {typed_field} typed_field field that have been edited
+	 */
 	t._cellChanged = function(typed_field) {
 		if (!t._changed_cells.contains(typed_field))
 			t._changed_cells.push(typed_field);
@@ -896,6 +930,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			}
 		}
 	};
+	/** Called when the content of a cell come back to its original value
+	 * @param {typed_field} typed_field the field
+	 */
 	t._cellUnchanged = function(typed_field) {
 		t._changed_cells.remove(typed_field);
 		if (t._changed_cells.length == 0 && t.save_button) {
@@ -905,6 +942,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.header.widget.layout();
 		}
 	};
+	/** Save all edited data */
 	t._save = function() {
 		t.grid.startLoading();
 		var to_save = [];
@@ -943,12 +981,15 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.grid.endLoading();
 		});
 	};
+	/** Make the row clickable
+	 * @param {DOMNode} row the TR element corresponding to the row in the grid
+	 */
 	t._makeClickable = function(row) {
 		row.onmouseover = function() { this.className = "selected"; };
 		row.onmouseout = function() { this.className = ""; };
 		row.style.cursor = 'pointer';
 		row.onclick = function() {
-			t._row_onclick(this);
+			t._rowOnclick(this);
 		};
 	};
 }

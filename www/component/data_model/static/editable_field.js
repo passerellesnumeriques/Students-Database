@@ -1,23 +1,34 @@
 if (typeof require != 'undefined')
 	require("typed_field.js");
 	
-/**
- * @param container
- * @param field_classname the typed filed of the data
- * @param field_arguments (optional) in case this typed_filed needs arguments
- * @param data the data that initiates the editable_cell
+/** Generic control to display a field, allow the user to switch between editable and non-editable mode. When the user is in editable mode, the user can save the value or cancel modifications. This is used by editable_cell and editable_datadisplay.
+ * @param {DOMNode} container where to put it
+ * @param {String} field_classname the typed filed of the data
+ * @param {Object} field_arguments (optional) in case this typed_filed needs arguments
+ * @param {Object} data the initial data for the typed field
+ * @param {Function} lock_data ask to lock the data. Parameters are: (data, function(locks,data)) the given data is the current data, before locking, then it must call the given function with a list of locks, and the new data coming from the server at the time of the lock
+ * @param {Function} save_data ask to save the data. Parameters are: (data, function(data)) the given data is the data saved, then the given function must be called with the data really saved as parameter
+ * @param {Function} onready called when this editable field is ready to use
  */
 function editable_field(container, field_classname, field_arguments, data, lock_data, save_data, onready) {
 	var t=this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (typeof field_arguments == 'string') field_arguments = eval('('+field_arguments+')');
 	container.editable_cell = this;
+	/** {typed_field} the typed field */
 	t.field = null;
+	/** {DOMNode} the save button when in editable mode */ 
 	t.save_button = null;
+	/** {DOMNode} the cancel edit when in editable mode */
 	t.unedit_button = null;
+	/** {Array} list of locks when in editable mode */
 	t.locks = null;
+	/** indicates if we are currently in editabled mode */
 	t.editable = true;
 
+	/** Goes to non-editable mode
+	 * @param {Function} onready called when non-editable mode is ready
+	 */
 	t.unedit = function(onready) {
 		if (t.locks) {
 			var locks = t.locks;
@@ -56,6 +67,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			});
 		}
 	};
+	/** Goes to editable mode */
 	t.edit = function() {
 		t.field.getHTMLElement().title = "";
 		t.field.getHTMLElement().style.outline = 'none';
@@ -98,6 +110,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			container.appendChild(t.unedit_button);
 		});
 	};
+	/** Save current data */
 	t.save = function() {
 		var data = t.field.getCurrentData();
 		container.removeChild(t.field.getHTMLElement());
@@ -114,6 +127,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.unedit();
 		});
 	};
+	/** Called when the user is editing the value, to display or not the save button */
 	t._changed = function() {
 		if (t.save_button) {
 			if (t.field.getError() == null) {
@@ -126,6 +140,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		}
 	};
 	
+	/** Stop editing */
 	t.cancelEditable = function() {
 		t.editable = false;
 		t.unedit();

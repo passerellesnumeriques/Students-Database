@@ -12,7 +12,7 @@ class service_get_data_list extends Service {
 	<li>optional: <code>actions</code>: if true, a list of possible links with icon are returned</li>
 </ul>";
 	}
-	public function output_documentation() { /* TODO */ }
+	public function output_documentation() { echo "TODO"; }
 
 	public function get_output_format($input) {
 		if (isset($input["export"])) {

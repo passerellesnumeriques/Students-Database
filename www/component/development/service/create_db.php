@@ -8,7 +8,7 @@ class service_create_db extends Service {
 	public function execute(&$component, $input) {
 		$domain = $input["domain"];
 		require_once("component/data_model/Model.inc");
-		require_once("component/data_model/DataBaseModel.inc");
+		require_once("component/data_model/DataBaseUtilities.inc");
 		
 		$db_conf = include("conf/local_db");
 		require_once("DataBaseSystem_".$db_conf["type"].".inc");
@@ -32,7 +32,14 @@ class service_create_db extends Service {
  			$prev_current = PNApplication::$instance->current_domain;
  			PNApplication::$instance->local_domain = $domain;
  			PNApplication::$instance->current_domain = $domain;
- 			DataBaseModel::update_model($model, $db_system);
+ 			
+ 			$ref = new ReflectionClass("DataModel");
+ 			$p = $ref->getProperty("tables");
+ 			$p->setAccessible(true);
+ 			$tables = $p->getValue($model);
+ 			foreach ($tables as $table)
+ 				DataBaseUtilities::createTable($db_system, $table);
+ 			
  			PNApplication::$instance->local_domain = $prev_local;
  			PNApplication::$instance->current_domain = $prev_current;
 // 			$res = $db_system->execute("SHOW TABLES");

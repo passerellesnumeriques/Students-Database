@@ -1,5 +1,8 @@
 <?php
-require_once("component/administration/AdministrationPlugin.inc"); 
+require_once("component/administration/AdministrationPlugin.inc");
+/**
+ * Implementation of AdministrationPlugin, to provide pages in the administration section to manage database functionalities
+ */ 
 class DataModelAdministrationPlugin implements AdministrationPlugin {
 	
 	public function getAdministrationPages() {
