@@ -139,11 +139,13 @@ if (typeof ajax != 'undefined')
 	ajax.http_response_handlers.push(function(xhr){
 		if (xhr.status == 403) {
 			try {
-				var loc = window.top.fraes['pn_application_frame'].location;
+				var loc = window.top.frames['pn_application_frame'].location;
 				var url = new URL(loc.href);
 				if (url.path.startsWith("/dynamic/development/") || url.path.startsWith("/dynamic/test/"))
 					return false;
 			} catch (e) { return false; }
+			if (window.top.pnapplication)
+				window.top.pnapplication.onlogout.fire();
 			window.top.location = "/";
 			return false;
 		}

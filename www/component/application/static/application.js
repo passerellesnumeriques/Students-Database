@@ -3,6 +3,8 @@ if (window == window.top) {
 	 * Handle windows events at application level: list of frames, event when a frame is closed, user activity...
 	 */
 	window.top.pnapplication = {
+		/** Event raised when the user logout, so we can clean some objects that may be on the top window */
+		onlogout: new Custom_Event(),
 		/** list of windows (private: registerWindow and unregisterWindow must be used) */
 		_windows: [],
 		/** event when a window/frame is closed. The window is given as parameter to the listeners. */ 

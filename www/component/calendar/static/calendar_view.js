@@ -727,12 +727,12 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		this.view.removeEvent(ev.uid);
 	};
 	
-	this.calendar_manager.on_event_added = function(ev) { t.addEvent(ev); };
-	this.calendar_manager.on_event_removed = function(ev) { t.removeEvent(ev); };
-	this.calendar_manager.on_event_updated = function(ev) {
+	this.calendar_manager.on_event_added.add_listener(function(ev) { t.addEvent(ev); });
+	this.calendar_manager.on_event_removed.add_listener(function(ev) { t.removeEvent(ev); });
+	this.calendar_manager.on_event_updated.add_listener(function(ev) {
 		t.view.removeEvent(ev);
 		t.view.addEvent(ev);
-	};
+	});
 	this._init();
 }
 

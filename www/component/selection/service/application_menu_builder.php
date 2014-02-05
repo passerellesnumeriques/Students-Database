@@ -101,7 +101,7 @@ class service_application_menu_builder extends Service {
 								},
 								function(text){
 									if(text){
-										var div_locker = lock_screen();
+										var div_locker = lock_screen(null,"Creation of the new selection campaign...");
 										t._addCampaign(text.uniformFirstLetterCapitalized(), div_locker);
 									}
 								}

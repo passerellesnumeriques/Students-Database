@@ -121,6 +121,8 @@ if (PNApplication::$instance->current_domain == "Dev") {
 }
 </style>
 <script type='text/javascript'>
+window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
+
 setBorderRadius(document.getElementById('user_menu_content'), 0, 0, 0, 0, 5, 5, 5, 5);
 setBorderRadius(document.getElementById('logout'), 0, 0, 0, 0, 5, 5, 5, 5);
 function user_menu() {
@@ -375,4 +377,10 @@ function addLeftControl(control) {
 
 // at the beginning, show all sections to user
 setTimeout(expandBar, 2000);
+
+// background loading of the application
+require("load_static.js",function(){
+	new load_static_resources('background_loading_application');
+});
+
 </script>

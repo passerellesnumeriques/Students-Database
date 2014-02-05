@@ -13,7 +13,7 @@ function load_google_calendars(ondone, feedback_handler) {
 				var cal = new GoogleCalendar(resp.items[i].id, resp.items[i].summary, resp.items[i].backgroundColor.substring(1), resp.items[i].selected, write);
 				calendars.push(cal);
 			}
-			ondone(calendars);
+			try { ondone(calendars); } catch (e) {} // in case the page requesting it already disappear
 		});
 	};
 	var googleConnected = function() {
@@ -154,18 +154,18 @@ function GoogleCalendar(id, name, color, show, writable) {
 							found = true;
 							t.events.push(ev);
 							if (ev.last_modified != removed_events[j].last_modified)
-								t.manager.on_event_updated(ev);
+								t.manager.on_event_updated.fire(ev);
 							removed_events.splice(j,1);
 							break;
 						}
 					}
 					if (!found) {
 						t.events.push(ev);
-						t.manager.on_event_added(ev);
+						t.manager.on_event_added.fire(ev);
 					}
 				}
 				for (var i = 0; i < removed_events.length; ++i)
-					t.manager.on_event_removed(removed_events[i]);
+					t.manager.on_event_removed.fire(removed_events[i]);
 				ondone();
 			});
 		};

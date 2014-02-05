@@ -653,7 +653,7 @@ function get_script_path(script_filename) {
 		if (!e.src || e.src.length == 0) continue;
 		var u = new URL(e.src);
 		if (!u.path) continue;
-		if (u.path.length > script_filename.length && u.path.substring(u.path.length-script_filename.length) == script_filename) {
+		if (u.path.length > script_filename.length && u.path.substring(u.path.length-script_filename.length-1) == "/"+script_filename) {
 			u.path = u.path.substring(0, u.path.length-script_filename.length);
 			return u.toString();
 		}
