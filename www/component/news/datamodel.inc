@@ -12,6 +12,7 @@ $model->addTable("News")
 	->addInteger("update_timestamp")
 	->addString("tags", 2000, 0, true)
 	->addForeignKey("reply_to", "News", true, false, true, true, false)
+	->setRoot()
 	;
 
 ?>

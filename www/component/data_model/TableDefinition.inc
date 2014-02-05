@@ -56,6 +56,9 @@ namespace datamodel {
 
 		private $is_customized = false;
 		private $customization = array();
+		
+		/** @var boolean indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed */
+		private $is_root = false;
 
 		/** @var DataDisplayHandler[] */
 		private $display_handler = array();
@@ -164,6 +167,19 @@ namespace datamodel {
 			}
 			return array_merge($this->columns, $this->customization[$this->name]);
 		}
+		
+		/** Indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed
+		 * @param string $is_root true to mark the table as root table
+		 * @return \datamodel\Table this 
+		 */
+		public function &setRoot($is_root = true) {
+			$this->is_root = $is_root;
+			return $this;
+		}
+		/** Indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed
+		 * @return boolean true if the table is marked as root table
+		 */
+		public function isRoot() { return $this->is_root; }
 
 		/** Add a primary key (integer ID)
 		 *  @return \datamodel\Table
