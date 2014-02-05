@@ -2,10 +2,21 @@
 require_once("component/selection/SelectionJSON.inc");
 class service_exam_save_subject extends Service {
 	
-	public function get_required_rights() { return array(); }
-	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function get_required_rights() { return array("manage_exam_subject"); }
+	public function documentation() {
+		echo "Save / insert an exam subject object into the database";
+	}
+	public function input_documentation() {
+		echo "<code>exam</code> the exam subject object";
+	}
+	public function output_documentation() {
+		?>
+		<ul>
+			<li><code>false</code> if an error occured</li>
+			<li><code>exam_subject</code> else exam_subject object</li>
+		</ul>
+		<?php
+	}
 	
 	/**
 	 * @param $component selection

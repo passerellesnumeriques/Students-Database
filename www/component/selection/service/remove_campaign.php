@@ -1,6 +1,6 @@
 <?php
 class service_remove_campaign extends Service{
-	public function get_required_rights(){return array();}
+	public function get_required_rights(){return array("manage_selection_campaign");}
 	public function input_documentation(){
 		echo "<ul>";
 		echo "<li>id = the campaign id</li>";

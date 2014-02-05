@@ -1,6 +1,6 @@
 <?php
 class service_set_campaign_name extends Service{
-	public function get_required_rights(){return array();}
+	public function get_required_rights(){return array("can_access_selection_data");}
 	public function input_documentation(){
 		echo "<ul>";
 		echo "<li>id = the campaign id</li>";

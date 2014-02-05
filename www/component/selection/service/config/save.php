@@ -1,6 +1,6 @@
 <?php
 class service_config_save extends Service{
-	public function get_required_rights(){return array();}
+	public function get_required_rights(){return array("manage_selection_campaign");}
 	public function input_documentation(){
 ?>
 <ul>
@@ -14,7 +14,9 @@ class service_config_save extends Service{
 		echo "<li>{boolean} else false</li>";
 		echo "</ul>";
 	}
-	public function documentation(){}//TODO
+	public function documentation(){
+		echo "Save the selection campaign config into the database";
+	}
 	
 	public function execute(&$component,$input){
 		$fields = @$input["fields"];
