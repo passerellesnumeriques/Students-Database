@@ -354,11 +354,13 @@ function addMenuItem(icon, text, url) {
 		}
 		return true;
 	};
+	fireLayoutEventFor(document.getElementById('pn_application_header'));
 	return item;
 }
 function addMenuControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
 	section_menu.addItem(control);
+	fireLayoutEventFor(document.getElementById('pn_application_header'));
 }
 function addRightControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -366,6 +368,7 @@ function addRightControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
+	fireLayoutEventFor(document.getElementById('pn_application_header'));
 }
 function addLeftControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -373,6 +376,7 @@ function addLeftControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
+	fireLayoutEventFor(document.getElementById('pn_application_header'));
 }
 
 // at the beginning, show all sections to user

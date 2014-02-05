@@ -170,6 +170,10 @@ class service_IS_save extends Service{
 						unset($event["id"]);
 					$event["calendar_id"] = PNApplication::$instance->selection->getCalendarId();
 					$event["organizer"] = "Selection";
+					if (!$insert_IS) {
+						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
+						$event["app_link_name"] = "This event is an Information Session: click to see it";
+					}
 					// var_dump($event);
 					PNApplication::$instance->calendar->saveEvent($event);
 					$event_id = $event["id"];
@@ -230,6 +234,11 @@ class service_IS_save extends Service{
 				try{
 					$new_IS_id = prepareDataAndSaveIS($data,true);
 					$data["id"] = $new_IS_id;
+					if ($add_event) {
+						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
+						$event["app_link_name"] = "This event is an Information Session: click to see it";
+						PNApplication::$instance->calendar->saveEvent($event);
+					}
 					//update the fake_organization_name with the good name
 					SQLQuery::create()->bypassSecurity()->updateByKey("Organization",$data["fake_organization"],array("name" => "fake_for_IS_".$data["id"]));
 				} catch (Exception $e){

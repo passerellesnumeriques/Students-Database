@@ -32,8 +32,10 @@ calendar_event_role_for_info = "FOR_INFO";
  * @param {String} participation participation of the organizer
  * @param {String} role role of the organizer
  * @param {CalendarEventFrequency} frequency recurrence
+ * @param {String} app_link url
+ * @param {String} app_link_name name to display
  */
-function CalendarEvent(id, calendar_id, uid, start, end, all_day, last_modified, title, description, location_freetext, organizer, participation, role, frequency) {
+function CalendarEvent(id, calendar_id, uid, start, end, all_day, last_modified, title, description, location_freetext, organizer, participation, role, frequency, app_link, app_link_name) {
 	this.id = id;
 	this.calendar_id = calendar_id;
 	this.uid = uid;
@@ -50,6 +52,8 @@ function CalendarEvent(id, calendar_id, uid, start, end, all_day, last_modified,
 	this.participation = participation;
 	this.role = role;
 	this.frequency = frequency;
+	this.app_link = app_link;
+	this.app_link_name = app_link_name;
 }
 /**
  * Create a copy of this event
@@ -72,7 +76,9 @@ function copyCalendarEvent(ev) {
 		ev.organizer,
 		ev.participation,
 		ev.role,
-		copyCalendarEventFrequency(ev.frequency)
+		copyCalendarEventFrequency(ev.frequency),
+		ev.app_link,
+		ev.app_link_name
 	);
 };
 

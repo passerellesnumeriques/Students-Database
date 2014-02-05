@@ -41,6 +41,8 @@ $model->addTable("CalendarEvent")
 	->addString("organizer", 1024, 0, true, false)
 	->addEnum("participation", array("UNKNOWN","YES","NO","TENTATIVE","DELEGATE"), false, false)
 	->addEnum("role", array("REQUESTED","OPTIONAL","FOR_INFO"), false, false)
+	->addString("app_link", 1024, 0, true, false)
+	->addString("app_link_name", 1024, 0, true, false)
 	;
 $model->addTable("CalendarEventAttendee")
 	->addForeignKey("event", "CalendarEvent", true, false, true)
