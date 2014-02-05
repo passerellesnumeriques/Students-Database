@@ -314,6 +314,7 @@ function calendar_view_week(view, container) {
 	/** Layout and display the events */
 	this._layout = function() {
 		if (!this.day_content) return;
+		if (typeof setTimeout == 'undefined') return; // not there anymore
 		if (!t._timeout)
 			t._timeout = setTimeout(function(){
 				var w = container.clientWidth-51;

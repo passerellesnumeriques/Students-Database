@@ -373,9 +373,15 @@ function URL(s) {
 		} else
 			this.port = null;
 	} else {
-		this.protocol = window.location.protocol.substr(0,window.location.protocol.length-1);
-		this.host = window.location.hostname;
-		this.port = window.location.port;
+		if (window) {
+			this.protocol = window.location.protocol.substr(0,window.location.protocol.length-1);
+			this.host = window.location.hostname;
+			this.port = window.location.port;
+		} else {
+			this.protocol = "";
+			this.host = "";
+			this.port = "";
+		}
 	}
 	i = s.indexOf('#');
 	if (i > 0) {

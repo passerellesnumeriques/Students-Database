@@ -47,8 +47,10 @@ function CalendarManager() {
 	 */
 	this.removeCalendar = function(cal) {
 		cal.manager = null;
-		if (cal.show)
-			this.hideCalendar(cal);
+		if (cal.show) {
+			for (var i = 0; i < cal.events.length; ++i)
+				this.on_event_removed.fire(cal.events[i]);
+		}
 		for (var i = 0; i < this.calendars.length; ++i)
 			if (this.calendars[i] == cal) {
 				this.calendars.splice(i, 1);
