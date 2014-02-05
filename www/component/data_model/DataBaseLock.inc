@@ -134,6 +134,8 @@ class DataBaseLock {
 			$locked_by = $lock_user;
 			return null;
 		}
+		if ($row_key <> null && is_string($row_key) && ctype_digit($row_key))
+			$row_key = intval($row_key);
 		$db->execute(
 			"INSERT INTO DataLocks".
 			" (`timestamp`,`locker_domain`,`locker_username`,`table`,`row_key`,`column`)".

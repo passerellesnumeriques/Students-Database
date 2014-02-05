@@ -71,7 +71,25 @@ function custom_import(container, onready) {
 				xhr.onreadystatechange = function(e) {
 					if (xhr.readyState == 4) {
 						if(onupload) onupload(true, 100);
-						t.excel_frame.src = "/dynamic/data_import/page/excel_upload?id="+xhr.responseText;
+						var errors = [];
+						var output = null;
+						if (xhr.status != 200)
+							errors.push("Error returned by the server: "+xhr.status+" "+xhr.statusText);
+						else {
+							try {
+								var json = eval("("+xhr.responseText+")");
+								if (json.errors)
+									for (var j = 0; j < json.errors.length; ++j)
+										errors.push(json.errors[j]);
+								if (json.result) output = json.result;
+							} catch (e) {
+								errors.push("Invalid response: "+e+"<br/>"+xhr.responseText);
+							}
+						}
+						for (var j = 0; j < errors.length; ++j)
+							window.top.status_manager.add_status(new window.top.StatusMessageError(null, errors[j], 10000));
+						if (output && output.id)
+							t.excel_frame.src = "/dynamic/data_import/page/excel_upload?id="+output.id;
 						if(onupload) onupload(true, -1);
 					}
 				};

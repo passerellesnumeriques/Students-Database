@@ -9,18 +9,24 @@ function CalendarManager() {
 	/** Index of the calendar used by default to create new events */
 	this.default_calendar_index = 0;
 	
-	/** listener called when an event is added to any calendar. The new event is given as parameter. */
-	this.on_event_added = null;
-	/** listener called when an event is removed from any calendar. The event is given as parameter. */
-	this.on_event_removed = null;
-	/** listener called when an event is updated in any calendar. The event is given as parameter. */
-	this.on_event_updated = null;
+	/** Event called when an event is added to any calendar. The new event is given as parameter. */
+	this.on_event_added = new Custom_Event();
+	/** Event called when an event is removed from any calendar. The event is given as parameter. */
+	this.on_event_removed = new Custom_Event();
+	/** Event called when an event is updated in any calendar. The event is given as parameter. */
+	this.on_event_updated = new Custom_Event;
 	
 	/** Event when a calendar is going to be refreshed */
 	this.on_refresh = new Custom_Event();
 	/** Event when a calendar just finished to be refreshed */
 	this.on_refresh_done = new Custom_Event();
 
+	var w = window;
+	var t=this;
+	window.top.pnapplication.onlogout.add_listener(function() {
+		while (t.calendars.length > 0) t.removeCalendar(t.calendars[0]);
+	});
+	
 	/**
 	 * Add a calendar to manage.
 	 * @param {Calendar} cal the calendar to add
@@ -41,13 +47,15 @@ function CalendarManager() {
 	 */
 	this.removeCalendar = function(cal) {
 		cal.manager = null;
-		if (cal.show)
-			this.hideCalendar(cal);
+		if (cal.show) {
+			for (var i = 0; i < cal.events.length; ++i)
+				this.on_event_removed.fire(cal.events[i]);
+		}
 		for (var i = 0; i < this.calendars.length; ++i)
 			if (this.calendars[i] == cal) {
 				this.calendars.splice(i, 1);
 				break;
-			}
+			};
 	};
 	
 	/**
@@ -70,7 +78,7 @@ function CalendarManager() {
 		cal.show = false;
 		cal.saveShow(false);
 		for (var i = 0; i < cal.events.length; ++i)
-			this.on_event_removed(cal.events[i]);
+			this.on_event_removed.fire(cal.events[i]);
 	};
 	
 	/**
@@ -82,7 +90,7 @@ function CalendarManager() {
 		cal.show = true;
 		cal.saveShow(true);
 		for (var i = 0; i < cal.events.length; ++i)
-			this.on_event_added(cal.events[i]);
+			this.on_event_added.fire(cal.events[i]);
 		if (cal.last_update < new Date().getTime() - 60000)
 			this.refreshCalendar(cal);
 	};
@@ -97,9 +105,9 @@ function CalendarManager() {
 		cal.color = color;
 		cal.saveColor(color);
 		for (var i = 0; i < cal.events.length; ++i)
-			this.on_event_removed(cal.events[i]);
+			this.on_event_removed.fire(cal.events[i]);
 		for (var i = 0; i < cal.events.length; ++i)
-			this.on_event_added(cal.events[i]);
+			this.on_event_added.fire(cal.events[i]);
 	};
 	
 	/**
@@ -108,6 +116,7 @@ function CalendarManager() {
 	 * @param {Function} ondone called when the calendar is updated. Note that it is not called in case the calendar is already in process of refreshing.
 	 */
 	this.refreshCalendar = function(cal,ondone) {
+		if (!w.theme) return; // our window does not exist anymore
 		if (cal.updating) return; // already in progress
 		cal.updating = true;
 		cal.onrefresh.fire();
@@ -405,18 +414,18 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 							found = true;
 							t.events.push(ev);
 							if (ev.last_modified != removed_events[j].last_modified)
-								t.manager.on_event_updated(ev);
+								t.manager.on_event_updated.fire(ev);
 							removed_events.splice(j,1);
 							break;
 						}
 					}
 					if (!found) {
 						t.events.push(ev);
-						t.manager.on_event_added(ev);
+						t.manager.on_event_added.fire(ev);
 					}
 				}
 				for (var i = 0; i < removed_events.length; ++i)
-					t.manager.on_event_removed(removed_events[i]);
+					t.manager.on_event_removed.fire(removed_events[i]);
 				ondone();
 			});
 		});
@@ -435,12 +444,12 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 					event.uid = res.uid;
 					event.id = res.id;
 					t.events.push(event);
-					t.manager.on_event_added(event);
+					t.manager.on_event_added.fire(event);
 				} else if (event.uid && res) {
 					for (var i = 0; i < cal.events.length; ++i)
 						if (t.events[i].uid == event.uid) {
 							t.events.splice(i,1,event);
-							t.manager.on_event_updated(event);
+							t.manager.on_event_updated.fire(event);
 							break;
 						}
 				}
@@ -468,7 +477,7 @@ function PNCalendarsProvider() {
 			var list = [];
 			for (var i = 0; i < calendars.length; ++i)
 				list.push(new PNCalendar(t, calendars[i].id, calendars[i].name, calendars[i].color, calendars[i].show, calendars[i].writable, calendars[i].icon));
-			handler(list);
+			try { handler(list); } catch (e) {} // in case the page requesting it already disappear
 		});
 	};
 	this.getProviderIcon = function() {

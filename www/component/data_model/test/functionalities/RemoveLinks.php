@@ -58,10 +58,10 @@ class RemoveLinks_Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		RemoveLinks_declare_model();
-		require_once("component/data_model/DataBaseModel.inc");
+		require_once("component/data_model/DataBaseUtilities.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,12) == "RemoveLinks_")
-				DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
+				DataBaseUtilities::createTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
 		// root1
 		$scenario_data["root1_id1"] = SQLQuery::create()->bypassSecurity()->insert("RemoveLinks_1_Root", array("value"=>1));
 		$scenario_data["root1_id2"] = SQLQuery::create()->bypassSecurity()->insert("RemoveLinks_1_Root", array("value"=>2));

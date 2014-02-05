@@ -96,6 +96,16 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		t.calendar_div.appendChild(t.calendar_name_node = document.createTextNode(ev ? calendar.name : default_calendar.name));
 		t.calendar_div.style.cursor = 'pointer';
 		
+		if (ev && ev.app_link) {
+			// link
+			var div = document.createElement("DIV");
+			t.content.appendChild(div);
+			var link = document.createElement("A");
+			link.href = ev.app_link;
+			link.innerHTML = ev.app_link_name;
+			div.appendChild(link);
+		}
+		
 		// recurrence
 		t.repeat = document.createElement("INPUT");
 		t.repeat.type = 'checkbox';

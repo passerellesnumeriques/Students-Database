@@ -38,6 +38,8 @@ class service_get extends Service {
 			echo ",organizer:".json_encode($ev["organizer"]);
 			echo ",participation:".json_encode($ev["participation"]);
 			echo ",role:".json_encode($ev["role"]);
+			echo ",app_link:".json_encode($ev["app_link"]);
+			echo ",app_link_name:".json_encode($ev["app_link_name"]);
 			echo "}";
 		}
 		echo "]";

@@ -3,14 +3,17 @@ if (typeof require != 'undefined') {
 	require("editable_field.js");
 }
 	
-/**
- * @param container
- * @param table the table to which the data belongs to
- * @param column the column to which the data belongs to
- * @param row_key
- * @param field_classname the typed filed of the data
- * @param field_arguments (optional) in case this typed_filed needs arguments
- * @param data the data that initiates the editable_cell
+/** UI control to display a cell, which can be edited by the user. The user can switch between editable and non-editable. When editable, a lock is first obtain.
+ * @param {DOMNode} container where to put it
+ * @param {String} table the table to which the data belongs to
+ * @param {String} column the column to which the data belongs to
+ * @param {Number} row_key key identifying the row
+ * @param {String} field_classname the typed filed of the data
+ * @param {Object} field_arguments (optional) in case this typed_filed needs arguments
+ * @param {Object} data the data that initiates the editable_cell
+ * @param {Function} onsave (optional) called when the user save a value. As parameter, the new data is given, and the function must return the new data, eventually modified. This allows to <i>intercept</i> the new value being saved, just before it is send to the server
+ * @param {Function} onchange (optional) called each time the value is changed in the UI (not on the server), meaning while the user is editing the value
+ * @param {Function} onready (optional) called when this control is ready to be used
  */
 function editable_cell(container, table, column, row_key, field_classname, field_arguments, data, onsave, onchange, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -36,6 +39,7 @@ function editable_cell(container, table, column, row_key, field_classname, field
 		});
 	});
 	
+	/** Cancel any change, and goes to non-editable mode */
 	t.cancelEditable = function() {
 		t.editable_field.cancelEditable();
 	};

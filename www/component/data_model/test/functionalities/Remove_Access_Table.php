@@ -71,10 +71,10 @@ class Remove_Access_Table_Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		Remove_Access_Table_declare_model();
-		require_once("component/data_model/DataBaseModel.inc");
+		require_once("component/data_model/DataBaseUtilities.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,17) == "TestRemoveAccess_")
-			DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
+			DataBaseUtilities::createTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
 		$scenario_data["onlyread_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_onlyread", array("value"=>51));
 		$scenario_data["readwrite_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_readwrite", array("value"=>51));
 		$scenario_data["readremove_id1"] = SQLQuery::create()->bypassSecurity()->insert("TestRemoveAccess_readremove", array("value"=>51));
