@@ -8,6 +8,7 @@ $model->addTable("Calendar")
 	->addInteger("last_modification")
 	->addString("type", 50, 1, false, false)
 	->addString("data", 4096, 0, true, false)
+	->setRoot()
 	;
 $model->addTable("UserCalendar")
 	->addForeignKey("user", "Users", true, false, true)
