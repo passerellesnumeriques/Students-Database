@@ -403,7 +403,7 @@ class selection extends Component {
 	 * @param string $step_name
 	 * @param string $right_name the right name that must be ok for updating the data
 	 * @param string $error_message_if_no_right error message added to the errors list in case of missing right_name
-	 * @return array:	[0]: boolean $can_update true if steps and rights for user_management ok
+	 * @return array	[0]: boolean $can_update true if steps and rights for user_management ok
 	 * 					[1]: string $error_messages the list of errors to display (error from rights & errors from steps)
 	 */
 	public function canUpdateFromRightAndStep($step_name, $right_name, $error_message_if_no_right){

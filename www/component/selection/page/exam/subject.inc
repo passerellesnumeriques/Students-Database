@@ -4,7 +4,6 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 	require_once("component/selection/SelectionJSON.inc");
 	$rights = array();
 	$pop_error = false;
-	$update_rights = PNApplication::$instance->selection->canUpdateStep("manage_exam");
 	$rights["read"] = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
 	$rights["edit"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);
 	$rights["remove"] = PNApplication::$instance->user_management->has_right("manage_exam_subject",true);

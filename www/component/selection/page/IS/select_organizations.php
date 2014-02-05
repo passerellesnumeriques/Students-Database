@@ -4,6 +4,10 @@ class page_IS_select_organizations extends selection_page {
 	
 	public function get_required_rights() { return array(); }
 	
+	/**
+	 * Create a data_list with all the selection organizations
+	 * with the possibility to pick any
+	 */
 	public function execute_selection_page(&$page) {
 		$page->add_javascript("/static/widgets/grid/grid.js");
 		$page->add_javascript("/static/data_model/data_list.js");

@@ -2,7 +2,7 @@
 require_once("/../selection_page.inc");
 require_once("subject.inc");
 class page_exam_subject extends selection_page {
-	public function get_required_rights() { return array(); }
+	public function get_required_rights() { return array("see_exam_subject"); }
 	public function execute_selection_page(&$page){
 		$container_id = $page->generateID();
 		$page->add_javascript("/static/widgets/vertical_layout.js");

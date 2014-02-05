@@ -3,7 +3,7 @@
 require_once("/../selection_page.inc");
 class page_exam_main_page extends selection_page {
 	
-	public function get_required_rights() {}
+	public function get_required_rights() {return array("see_exam_subject");}
 	
 	public function execute_selection_page(&$page) {
 		$page->add_javascript("/static/widgets/page_header.js");
@@ -11,6 +11,10 @@ class page_exam_main_page extends selection_page {
 		$page->onload("new vertical_layout('container');");
 		$page->onload("new page_header('page_header',true);");
 		$page->onload("new exam_subject_main_page('exam_content');");
+		
+		//Rights based on the steps
+		$can_see = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
+		$can_manage = PNApplication::$instance->selection->canUpdateFromRightAndStep("manage_exam", "manage_exam_subject", "");
 		?>
 		<div id = "container" style = "width:100%; height:100%">
 			<div id = "page_header" icon = "/static/selection/exam/exam_16.png" title = "Entrance Examinations">
@@ -29,12 +33,10 @@ class page_exam_main_page extends selection_page {
 				if(typeof container == "string")
 					container = document.getElementById(container);
 				t.table = document.createElement('table');
+
+				t.can_see = <?php echo json_encode($can_see);?>;
+				t.can_manage = <?php echo json_encode($can_manage);?>;
 				
-				t.can_manage = <?php
-						$can_manage = PNApplication::$instance->selection->canManageExamSubjectQuestions();
-						echo json_encode($can_manage[0]).";";?>
-				t.can_see = <?php echo json_encode(PNApplication::$instance->user_management->has_right("see_exam_subject"));?>;
-						
 				t.all_exams = <?php $exams = PNApplication::$instance->selection->getAllExamSubjects();
 						echo "[";
 						$first = true;
@@ -46,7 +48,11 @@ class page_exam_main_page extends selection_page {
 						}
 						echo "];";
 					?>
-				
+				/**
+				 * Start the process
+				 * Create a table based on the user rights, showing the existing exam subjects
+				 * Some functionalities are added according to the user rights
+				 */
 				t._init = function(){
 					// Check the readable right
 					if(!t.can_see)
@@ -56,24 +62,20 @@ class page_exam_main_page extends selection_page {
 					container.appendChild(t.section.element);
 					t._setStyle();
 				};
-				
+
+				/**
+				 * Set the seection layout into the container
+				 */
 				t._setStyle = function(){
 					container.style.paddingTop = "20px";
 					container.style.paddingLeft = "20px";
 					container.style.paddingRight = "20px";
 				};
 				
-// 				t._setTableHeaderAndStyle = function(){
-// 					var th = document.createElement("th");
-// 					th.innerHTML = "Exams Subjects";
-// 					t.table.appendChild((document.createElement("tr")).appendChild(th));
-// 					//Set the style
-// 					setCommonStyleTable(t.table, th, "#DADADA");
-// 					t.table.marginLeft = "10px";
-// 					t.table.marginRight = "10px";
-// 					t.table.width = "98%";
-// 				}
-				
+				/**
+				 * Set the section content
+				 * One row is created by exam subject and functional buttons are added if allowed
+				 */
 				t._setTableContent = function(){
 					//set the body
 					if(t.all_exams.length > 0)
@@ -106,7 +108,12 @@ class page_exam_main_page extends selection_page {
 					tr_foot.appendChild(td_foot);
 					t.table.appendChild(tr_foot);
 				};
-				
+
+				/**
+				 * Create an exam subject row
+				 * @param {HTML} tr where the row will be inserted
+				 * @param {Number} i the index of the exam subject in the all_exams object
+				 */
 				t._addExamRow = function(tr,i){
 					var td_name = document.createElement("td");
 					var li = document.createElement("li");
@@ -166,7 +173,13 @@ class page_exam_main_page extends selection_page {
 							this.menu[i].style.visibility = "hidden";
 					};
 				};
-				
+
+				/**
+				 * Create a button div
+				 * @param {HTML | String} content to set into the button
+				 * @param {Number} id the id to set to the div
+				 * @returns {HTML} the created button
+				 */
 				t._createButton = function(content, id){
 					var div = document.createElement("div");
 					div.innerHTML = content;
@@ -174,7 +187,15 @@ class page_exam_main_page extends selection_page {
 					div.id = id;
 					return div;
 				};			
-				
+
+				/**
+				 * Export an exam subject
+				 * this method creates a hidden form that refers to the exam/export_subject service
+				 * @param {String} format the exporting format
+				 * @param {Boolean} compatible_clickers true if the exported file must match with SunVote ETS requirements
+				 * @param {Number} exam_id the id of the exam subject to export
+				 * For more details about the parameters, refer to export_subject service
+				 */
 				t._export_subject = function(format,compatible_clickers,exam_id){
 					var form = document.createElement('form');
 					form.action = "/dynamic/selection/service/exam/export_subject";
