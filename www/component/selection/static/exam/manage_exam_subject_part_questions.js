@@ -1,4 +1,4 @@
-function manage_exam_subject_part_questions(part, container, can_edit, can_remove, can_add, display_questions_detail, display_correct_answer,display_choices, question_index_before, no_question, element_ending_title){	
+function manage_exam_subject_part_questions(part, container, can_edit, can_remove, can_add, display_questions_detail, display_correct_answer,display_choices, question_index_before, no_question, element_ending_title, td_head_instead_of_th){	
 	var t = this;
 	t.table = document.createElement("table");
 	t.ordered = null;
@@ -19,7 +19,10 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	t._setTableHeader = function(){
 		thead = document.createElement("thead");
 		t.tr_head = document.createElement("tr");
-		t.th_head = document.createElement("th");
+		if(!td_head_instead_of_th)
+			t.th_head = document.createElement("th");
+		else
+			t.th_head = document.createElement("td");
 		t._setHeaderContent();
 		t.tr_head.appendChild(t.th_head);
 		thead.appendChild(t.tr_head);
@@ -30,7 +33,10 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		if(t.th_head.parentNode == t.tr_head){
 			t.tr_head.removeChild(t.th_head);
 			delete t.th_head;
-			t.th_head = document.createElement("th");
+			if(!td_head_instead_of_th)
+				t.th_head = document.createElement("th");
+			else
+				t.th_head = document.createElement("td");
 			t.tr_head.appendChild(t.th_head);
 		}
 		if(display_correct_answer && (can_edit || can_remove || can_add)){
@@ -121,7 +127,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			t.th_head.appendChild(input);
 			t.th_head.appendChild(text2);
 		} else {
-			if(part.name = "")
+			if(part.name == "")
 				part.name = null;
 		}
 		if(element_ending_title)

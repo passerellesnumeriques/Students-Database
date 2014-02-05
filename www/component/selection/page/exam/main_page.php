@@ -24,7 +24,7 @@ class page_exam_main_page extends selection_page {
 			</div>
 			<div id = "page_content" style = "overflow:auto" layout = "fill">
 				<div id = "exam_content"></div>
-				<div id = "eligibility_rules_content">TODO eligibility rules main screen</div>
+				<div id = "eligibility_rules_content"><a href = "/dynamic/selection/page/eligibility_rules/manage_exam_topic" target = "pn_application_content"> Topic screen</a><br/>TODO eligibility rules main screen</div>
 			</div>
 		</div>
 		<script type = "text/javascript">

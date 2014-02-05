@@ -111,7 +111,7 @@ class service_IS_save extends Service{
 					$update_address = false;
 					$remove_address = false;
 				}
-				if(isset($event["start"]) && $event["start"] <> null && $event["start"] != "null"){
+				if(isset($event["start"])&& $event["start"] != "null"){
 					$add_event = true;
 					$update_event = false;
 					$remove_event = false;
@@ -150,6 +150,7 @@ class service_IS_save extends Service{
 					if($event["id"] == -1 || $event["id"] == "-1"){
 						unset($event["id"]);
 						$add_event = true;
+// 						echo "here2";
 						$update_event = false;
 					} else {
 						$add_event = false;
@@ -193,7 +194,6 @@ class service_IS_save extends Service{
 						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
 						$event["app_link_name"] = "This event is an Information Session: click to see it";
 					}
-					// var_dump($event);
 					PNApplication::$instance->calendar->saveEvent($event);
 					$event_id = $event["id"];
 				} catch(Exception $e){

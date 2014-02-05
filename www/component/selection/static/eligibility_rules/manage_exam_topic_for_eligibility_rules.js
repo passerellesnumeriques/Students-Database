@@ -6,18 +6,20 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	t.total_score = 0;
 	t.total_parts = 0;
 	
+	//TODO global rights? (edit/read_only)
+	
 	t.reset = function(){
 		container.removeChild(t.table);
 		delete t.table;
 		t.table = document.createElement("table");
 		t._resetTotalAttributes();
 		t._init();
-	}
+	};
 	
 	t._resetTotalAttributes = function(){
 		t.total_score = 0;
 		t.total_parts = 0;
-	}
+	};
 		
 	t._init = function(){
 		t._setTableHeader();
@@ -25,26 +27,70 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t._setTableFooter();
 		container.appendChild(t.table);
 		// alert(service.generate_input(all_parts));
-	}
+	};
 	
 	t._setTableHeader = function(){
 		var thead = document.createElement("thead");
 		var th = document.createElement("th");
-		var text = topic.name.uniformFirstLetterCapitalized();
-		text += " - "+topic.subjects.length+" "+getGoodSpelling("subject",topic.subjects.length);
+		var div = document.createElement("div");
+		var text = " - "+topic.subjects.length+" "+getGoodSpelling("subject",topic.subjects.length);
 		text += " - "+t.total_parts+" "+getGoodSpelling("part",t.total_parts);
 		text += " - "+t.total_score+" "+getGoodSpelling("point",t.total_score);
-		th.innerHTML = text;
+		if(can_edit){
+			var input = document.createElement("input");
+			input.type = "text";
+			input.style.textAlign = "right";
+			input.style.fontWeight = "bold";
+			new autoresize_input(input,7);
+			if(topic.name && topic.name.checkVisible())
+				input.value = topic.name.uniformFirstLetterCapitalized();
+			else {
+				input.value = "New Topic";
+				input.style.color = "#808080";
+				input.style.fontStyle = "italic";
+			}
+			input.onfocus = function(){
+				if(this.value == "New Topic"){
+					this.value = null;
+					this.style.color = "";
+					this.style.fontStyle = "";
+				}
+			};
+			input.onblur = function(){
+				if(this.value && this.value.checkVisible()){
+					topic.name = this.value.uniformFirstLetterCapitalized();
+					this.value = this.value.uniformFirstLetterCapitalized();
+				} else {
+					topic.name = "";
+					this.value = "New Topic";
+					this.style.color = "#808080";
+					this.style.fontStyle = "italic";
+				}
+			};
+			div.appendChild(input);
+		} else {
+			var name = topic.name.uniformFirstLetterCapitalized();
+			if (name == null)
+				name = ""; //avoid displaying "null"
+			div.appendChild(document.createTextNode(text_node));
+		}
+		div.appendChild(document.createTextNode(text));
+		th.appendChild(div);
 		thead.appendChild(th);
 		th.colSpan = 2;
 		t.table.appendChild(thead);
-	}
+	};
 	
 	t._setTableBody = function(){
 		var tbody = document.createElement("tbody");
 		//display the selected parts
 		if(topic.subjects.length == 0){
-			//TODO
+			var tr = document.createElement("tr");
+			var td = document.createElement("td");
+			td.innerHTML = "This topic contains no part yet";
+			td.style.fontStyle = "italic";
+			tr.appendchild(td);
+			tbody.appendChild(tr);
 		} else {
 			for(var i = 0; i < topic.subjects.length; i++){
 				var tr_subject_header = document.createElement("tr");
@@ -68,19 +114,16 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 				}
 			}
 		}
+		t._setAllPartsList(tbody);
 		t.table.appendChild(tbody);
-		
-		//display the other parts (only the free ones)
-	}
+	};
 	
 	t._createPartRemovable = function(subject_index, part_index, td, td2){
-		var div = document.createElement("div");
-		new manage_exam_subject_part_questions(topic.subjects[subject_index].parts[part_index], div, false, false, false, false, false,false,0,true);
-		td.appendChild(div);
+		new manage_exam_subject_part_questions(topic.subjects[subject_index].parts[part_index], td, false, false, false, false, false,false,0,true,null,true);
 		var remove_button = document.createElement("div");
 		remove_button.subject_index = subject_index;
 		remove_button.part_index = part_index;
-		remove_button.className = "button";
+		remove_button.className = "button_verysoft";
 		remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
 		// remove_button.onmouseover = function(){
 			// this.innerHTML = "<img src = '"+theme.icons_16.remove_black+"'/>";
@@ -92,14 +135,12 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			t._removePart(this.subject_index, this.part_index);
 		};
 		td2.appendChild(remove_button);
-	}
+	};
 	
 	t._createPartNotRemovable = function(subject_index, part_index, td){
-		var div = document.createElement("div");
-		new manage_exam_subject_part_questions(topic.subjects[subject_index].parts[part_index], div, false, false, false, false, false,false,0,true);
-		td.appendChild(div);
+		new manage_exam_subject_part_questions(topic.subjects[subject_index].parts[part_index], td, false, false, false, false, false,false,0,true,null,true);
 		td.colSpan = 2;
-	}
+	};
 	
 	t._setSubjectHeader = function(tr, index){
 		//TODO
@@ -122,28 +163,103 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 					error_dialog(can_do);
 					this.checked = false;
 				} else {
+					topic.subjects[this.index].full_subject = true;
 					t._addAllMissingPartsFromASubject();
 					t.reset();
 				}
+			} else {
+				topic.subjects[this.index].full_subject = false;
+				t.reset();
 			}
 		};
 		td.appendChild(check);
+		td.style.verticalAlign = "bottom";
 		tr.appendChild(th);
 		tr.appendChild(td);
-	}
+	};
+	
+	/**
+	 * Add all the free parts that the user can pick up
+	 */
+	t._setAllPartsList = function(table){
+		// set the header
+		var tr_head = document.createElement("tr");
+		var th_head = document.createElement("th");
+		th_head.innerHTML = "Free parts";
+		th_head.style.fontSize = "large";
+		tr_head.appendChild(th_head);
+		table.appendChild(tr_head);
+		
+		//Set the content
+		var free_parts = t._getAllFreeParts();
+		for(s in free_parts){
+			// add the subject name as a section title
+			var tr_title = document.createElement("tr");
+			var th = document.createElement("th");
+			th.innerHTML = s.uniformFirstLetterCapitalized();
+			tr_title.appendChild(th);
+			table.appendChilf(tr_title);
+			
+			// add the free parts
+			t.free_parts_to_had = {};
+			for(var i = 0; i < free_parts[s].length; i++){
+				var tr = document.createElement("tr");
+				var td = document.createElement("td");
+				var td2 = document.createElement("td");
+				new manage_exam_subject_part_questions(free_parts[s][i], td, false, false, false, false, false,false,0,true,null,true);
+				var check = document.createElement("input");
+				check.type = "checkbox";
+				check.subject_name = s; //no need to work with the subject id because subject name is unique (cf datamodel)
+				check.id = free_parts[s][i].id;
+				check.oninput = function(){
+					if(this.checked){
+						if(typeof(free_parts_to_had[this.subject_name]) == "undefined")
+							free_parts_to_had[this.subject_name] = [];
+						if(!free_parts_to_had[this.subject_name].contains(this.id))
+							free_parts_to_had[this.subject_name].push(this.id);
+					} else {
+						if(free_parts_to_had[this.subject_name].contains(this.id))
+							free_parts_to_had[this.subject_name].remove(e);
+					}
+				};
+				td2.appendChild(check);
+				tr.appendChild(td);
+				tr.appendChild(td2);
+				table.appendChild(tr);
+			}
+		}
+	};
+	
+	/**
+	 * Get from all_parts the free ones
+	 * @returns {object} free_parts = {subject_name: [free_parts_ids],...}
+	 */
+	t._getAllFreeParts = function(){
+		var free_parts = {};
+		for(var i = 0; i < all_parts.length; i++){
+			for(var j = 0; j < all_parts[i].parts.length; j++){
+				if(!t._isPartInOtherTopics(all_parts[i].parts[j].id)){
+					if(typeof free_parts[all_parts[i].name] == "undefined")
+						free_parts[all_parts[i].name] = [];
+					free_parts[all_parts[i].name].push(all_parts[i].parts[j].id);
+				}
+			}
+		}
+		return free_parts;
+	};
 	
 	t._setTableFooter = function(){
-		//TODO
-	}
+		//TODO add button see in which topics are the not free parts
+	};
 	
 	
 	t._addAllMissingPartsFromASubject = function(){
 		//TODO
-	}
+	};
 	
-	/** @method _canSetSubjectAsFullSubject
-	 * @param {integer} subject_index in topic.subjects array
-	 * @return {string} null if no part of this exam appear in any other topic
+	/**
+	 * @param {Integer} subject_index in topic.subjects array
+	 * @return {String} null if no part of this exam appear in any other topic
 	 * else error message to display
 	 */
 	t._canSetSubjectAsFullSubject = function(subject_index){
@@ -152,8 +268,8 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		var error = null;
 		var first = true;
 		for(var i = 0; i < all_parts[index_in_all_parts].parts.length; i++){
-			var temp = t._isPartInOtherTopics(all_parts[index_in_all_parts].parts[i].id);
-			if(!temp.res){
+			var in_other_topic = t._isPartInOtherTopics(all_parts[index_in_all_parts].parts[i].id);
+			if(in_other_topic.res){
 				if(first)
 					error = "<ul> Some parts from this subject already appear in other topics:";
 				first = false;
@@ -163,7 +279,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		if(!first)
 			error += "</ul>";
 		return error;
-	}
+	};
 	
 	t._removePart = function(subject_index, part_index){
 		// delete from topic object
@@ -172,7 +288,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			topic.subjects.splice(subject_index,1);
 		// reset
 		t.reset();
-	}
+	};
 		
 	/** @method _getPartsOrdered
 	 * Return the parts ordered according to their index (can accept skipping indexes)
@@ -204,7 +320,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		for(var j = 0; j < ordered.length; j++)
 			ordered_indexes.push(t._getPartIndexFromIndexAttribute(subject,ordered[j]));
 		return ordered_indexes;
-	}
+	};
 	
 	t._getPartIndexFromIndexAttribute = function(subject,index_attribute){
 		var index = null;
@@ -215,7 +331,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			}
 		}
 		return index;
-	}
+	};
 	
 	t._isPartInOtherTopics = function(part_id){
 		var res = false;
@@ -235,7 +351,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		r.res = res;
 		r.text = text;
 		return r;
-	}
+	};
 	
 	t._findSubjectIndexInAllParts = function(subject_id){
 		var index = null;
@@ -246,9 +362,9 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			}
 		}
 		return index;
-	}
+	};
 	
-	require("manage_exam_subject_part_questions.js",function(){
+	require(["manage_exam_subject_part_questions.js","autoresize_input.js"],function(){
 		t._init();
 	});
 }

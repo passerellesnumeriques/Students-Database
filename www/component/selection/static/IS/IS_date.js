@@ -330,6 +330,10 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		if(typeof(locker) != "undefined" && locker != null) unlock_screen(locker);
 	}
 	
+	t.setEventId = function(id){
+		t.event.id = id;
+	};
+	
 	t.getEvent = function(){
 		return t.event;
 	}
