@@ -463,6 +463,7 @@ class SelectionJSON{
 			->join("Exam_subject_part","Exam_subject",array("exam_subject" => "id"))
 			->whereValue("Exam_topic_for_eligibility_rule","id",$id)
 			->orderBy("Exam_subject","id");
+		self::ExamTopicSQL($q);
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectSQL($q);
 		$rows = $q->execute();
@@ -482,7 +483,7 @@ class SelectionJSON{
 		if(!$alias)
 			$alias = "Exam_topic_for_eligibility_rule";
 		$q
-			->field($alias, "id","topic_id")
+			->field($alias,"id","topic_id")
 			->field($alias,"name","topic_name")
 			->field($alias,"max_score","topic_max_score")
 			->field($alias,"number_questions","topic_number_questions");
@@ -515,11 +516,10 @@ class SelectionJSON{
 			->field("exam_subject")
 			->whereValue("Exam_topic_full_exam","exam_topic_for_eligibility_rule",$id)
 			->executeSingleField();
-		
-		if(isset($rows[0]["name"])){
+		if($rows <> null){
 			$topic = array();
 			$topic["id"] = $id;
-			$topic["name"] = $$rows[0]["topic_name"];
+			$topic["name"] = $rows[0]["topic_name"];
 			$topic["max_score"] = $rows[0]["topic_max_score"];
 			$topic["number_questions"] = $rows[0]["topic_number_questions"];
 			$topic["subjects"] = array();
@@ -534,7 +534,7 @@ class SelectionJSON{
 					//create the subject array
 					$topic["subjects"][$row["subject_id"]] = array(
 							"name" => $row["subject_name"],
-							"max_score" => $$row["subject_max_score"],
+							"max_score" => $row["subject_max_score"],
 							"parts" => array()
 					);
 					if(in_array($row["subject_id"],$full_exams))
