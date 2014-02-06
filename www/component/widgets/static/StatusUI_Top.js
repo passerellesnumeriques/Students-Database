@@ -160,7 +160,7 @@ function StatusUI_Top(manager, margin) {
 			img.onmouseout = function() { setOpacity(this,50); };
 			img.onclick = function() {
 				require(["popup_window.js","layout.js"],function() {
-					var p = new popup_window("Error", theme.icons_16.error, "<div>"+s+"</div>");
+					var p = new popup_window("Error", theme.icons_16.error, "<div>"+status.message+"</div>");
 					p.show();
 					manager.remove_status(status.id);
 				});
