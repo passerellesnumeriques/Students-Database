@@ -52,7 +52,7 @@ var students_list = new data_list(
 			if (batches.length == 1) {
 				var import_students = document.createElement("DIV");
 				import_students.className = "button";
-				import_students.innerHTML = "<img src='"+theme.icons_16.import+"' style='vertical-align:bottom'/> Import Students";
+				import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
 				import_students.onclick = function() {
 					postData('/dynamic/students/page/import_students',{
 						batch:batches[0],

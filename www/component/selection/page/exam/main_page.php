@@ -123,7 +123,7 @@ class page_exam_main_page extends selection_page {
 					tr.appendChild(td_name);
 					tr.menu = []; // menu to display on mouse over
 					
-					export_button = t._createButton("<img src = '"+theme.icons_16.export+"'/> Export",t.all_exams[i].id);
+					export_button = t._createButton("<img src = '"+theme.icons_16._export+"'/> Export",t.all_exams[i].id);
 					export_button.onclick = function(){
 						var t2 = this;
 						var menu = new context_menu();

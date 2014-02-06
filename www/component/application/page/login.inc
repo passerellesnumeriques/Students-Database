@@ -45,7 +45,7 @@ if ($message <> null) {
 	<tr><td rowspan=7 id='login_table_logo'>
 		<img src='/static/application/logo.png'/>
 	</td></tr>
-	<tr>
+	<tr align=left>
 		<td>Domain</td>
 		<td>
 			<select name="domain">

@@ -318,7 +318,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		div = document.createElement("DIV"); div.className = "button";
 		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
 		div.title = "Export list";
-		img.src = theme.icons_16["export"];
+		img.src = theme.icons_16["_export"];
 		div.onclick = function() { t._exportMenu(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);

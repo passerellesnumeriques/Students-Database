@@ -472,7 +472,7 @@ function Custom_Event() {
 	this.fire = function(data) {
 		var list = [];
 		for (var i = 0; i < this.listeners.length; ++i) list.push(this.listeners[i]);
-		for (var i = 0; i < list.length; ++i) list[i](data);
+		for (var i = 0; i < list.length; ++i) try { list[i](data); } catch (e) {}
 	};
 } 
 

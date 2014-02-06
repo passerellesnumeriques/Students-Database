@@ -3986,12 +3986,14 @@ Object.extend(document, {
 
   } else {
     document.write("<script id=__onDOMContentLoaded defer src=//:><\/script>");
+    try {
     $("__onDOMContentLoaded").onreadystatechange = function() {
       if (this.readyState == "complete") {
         this.onreadystatechange = null;
         fireContentLoadedEvent();
       }
     };
+    }catch(e){}
   }
 })();
 /*------------------------------- DEPRECATED -------------------------------*/

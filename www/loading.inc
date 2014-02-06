@@ -68,7 +68,7 @@ function _add_javascript(url, callback) {
 	head.appendChild(s);
 	s.src = url;
 	s.onload = function() { this._loaded = true; if (callback) setTimeout(callback,1); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { this._loaded = true; if (callback) setTimeout(callback,1); this.onreadystatechange = null; } };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { this._loaded = true; if (callback) setTimeout(callback,1); this.onreadystatechange = null; } };
 
 }
 window.pn_loading = document.all ? document.all['__loading_table'] : document.getElementById('__loading_table');
