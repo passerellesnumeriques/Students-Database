@@ -1,12 +1,10 @@
-function NewsObject(id, section, category, html, domain, username, people_id, people_name, timestamp, update_timestamp) {
+function NewsObject(id, section, category, html, people, user, timestamp, update_timestamp) {
 	this.id = id;
 	this.section = section;
 	this.category = category;
 	this.html = html;
-	this.domain = domain;
-	this.username = username;
-	this.people_id = people_id;
-	this.people_name = people_name;
+	this.people = people;
+	this.user = user;
 	this.timestamp = timestamp;
 	this.update_timestamp;
 }
@@ -198,7 +196,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		picture.style.width = "35px";
 		picture.style.height = "35px";
 		picture.style.verticalAlign = "top";
-		picture.src = "/dynamic/user_people/service/user_picture?domain="+n.domain+"&username="+n.username;
+		picture.src = "/dynamic/user_people/service/user_picture?domain="+n.user.domain+"&username="+n.user.username;
 		setBorderRadius(picture, 5,5,5,5,5,5,5,5);
 		td.appendChild(picture);
 		var content = document.createElement("TD");
@@ -211,13 +209,11 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		people_name.style.fontWeight = "bold";
 		people_name.style.fontSize = "10pt";
 		people_name.style.color = "#000060";
-		people_name.appendChild(document.createTextNode(n.people_name));
-		if (n.people_id) {
-			people_name.style.cursor = "pointer";
-			people_name.onmouseover = function() { this.style.color = "#600060"; };
-			people_name.onmouseout = function() { this.style.color = "#000060"; };
-			people_name.onclick = function() { location.href = "/dynamic/people/page/profile?people="+n.people_id+"&domain="+n.domain; };
-		}
+		people_name.appendChild(document.createTextNode(n.people.first_name+" "+n.people.last_name));
+		people_name.style.cursor = "pointer";
+		people_name.onmouseover = function() { this.style.color = "#600060"; };
+		people_name.onmouseout = function() { this.style.color = "#000060"; };
+		people_name.onclick = function() { location.href = "/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain; };
 		var timing = document.createElement("SPAN"); header.appendChild(timing);
 		timing.style.color = "#808080";
 		timing.style.fontSize = "8pt";

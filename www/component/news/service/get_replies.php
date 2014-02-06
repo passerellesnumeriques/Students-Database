@@ -61,24 +61,19 @@ class service_get_replies extends Service {
 		if (count($people_names) > 0) {
 			$a = array();
 			foreach ($people_names as $domain=>$users) {
-				$res = SQLQuery::create()->bypassSecurity()
-				->database("students_".$domain)
-				->select("Users")
-				->whereIn("Users", "username", $users)
-				->join("Users", "UserPeople", array("id"=>"user"))
-				->join("UserPeople", "People", array("people"=>"id"))
-				->field("Users", "username", "username")
-				->field("People", "id", "people_id")
-				->field("People", "first_name", "first_name")
-				->field("People", "last_name", "last_name")
-				->execute();
+				$q = PNApplication::$instance->user_management->selectUsers($users, $domain);
+				PNApplication::$instance->user_people->joinPeopleToUsers($q);
+				$res = $q->execute();
 				$a[$domain] = array();
-				foreach ($res as $r)
-					$a[$domain][$r["username"]] = $r;
+				foreach ($res as $r) {
+					$username = PNApplication::$instance->user_management->getSelectedUsername($r);
+					$a[$domain][$username] = array($q,$r);
+				}
 			}
 			$people_names = $a;
 		}
 			
+		require_once("component/people/PeopleJSON.inc");
 		$first = true;
 		foreach ($news as $n) {
 			if ($first) $first = false; else echo ",";
@@ -87,13 +82,9 @@ class service_get_replies extends Service {
 			echo ",section:".json_encode($n["section"]);
 			echo ",category:".json_encode($n["category"]);
 			echo ",html:".json_encode($n["html"]);
-			echo ",domain:".json_encode($n["domain"]);
-			echo ",username:".json_encode($n["username"]);
-			$r = @$people_names[$n["domain"]][$n["username"]];
-			echo ",people_id:".json_encode(@$r["people_id"]);
-			echo ",people_name:";
-			if ($r == null) echo "\"\"";
-			else echo json_encode($r["first_name"]." ".$r["last_name"]);
+			echo ",user:{domain:".json_encode($n["domain"]).",username:".json_encode($n["username"])."}";
+			$r = $people_names[$n["domain"]][$n["username"]];
+			echo ",people:".PeopleJSON::People($r[0], $r[1]);
 			echo ",timestamp:".$n["timestamp"];
 			echo "}";
 		}

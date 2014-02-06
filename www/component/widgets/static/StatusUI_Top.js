@@ -93,24 +93,26 @@ function StatusUI_Top(manager, margin) {
 	this.create_control = function(status) {
 		var c = document.createElement("DIV");
 		c.style.padding = "2px";
-		this.container.appendChild(c);
-		this.update_status_control(c, status);
+		c.style.display = "inline-block";
 		c.name = status.id;
 		setBoxShadow(c,1,1,4,3,"#A0A0A0");
 		setBorderRadius(c,4,4,4,4,4,4,4,4);
 		c.style.textAlign = "left";
 		c.style.overflow = "hidden";
-		c.style.marginBottom = "4px";
 		this.container.appendChild(c);
+		this.update_status_control(c, status);
+
 		c = document.createElement("DIV");
 		c.name = 'br_'+status.id;
 		c.innerHTML = "<table height='5px' border=0 style='empty-cells:show'><tr><td></td></tr></table>";
-		c.style.height = "5px";
+		c.style.height = "2px";
+		this.container.appendChild(c);
 		if (status.timeout) {
 			setTimeout(function(){manager.remove_status(status.id);}, status.timeout);
 		}
 	};
 	this.update_status_control = function(c, status) {
+		var t=this;
 		c.innerHTML = "";
 		c.style.backgroundColor = 
 			status.type == Status_TYPE_INFO ? "#FFFF80" :
@@ -135,6 +137,9 @@ function StatusUI_Top(manager, margin) {
 			img.style.verticalAlign = "top";
 			img.marginBottom = "2px";
 			img.marginRight = "2px";
+			img.onload = function() {
+				t.container.style.left = (getWindowWidth()/2-t.container.scrollWidth/2)+'px';				
+			};
 			c.appendChild(img);
 		}
 		var div = document.createElement("DIV");
@@ -149,25 +154,6 @@ function StatusUI_Top(manager, margin) {
 			div.style.height = "100px";
 			div.style.overflowY = "auto";
 		}
-		if (status.timeout && status.type == Status_TYPE_ERROR) {
-			var img = document.createElement("IMG");
-			img.src = theme.icons_10.popup;
-			img.hspace=1;
-			img.style.verticalAlign="top";
-			setOpacity(img,50);
-			img.style.cursor = "pointer";
-			img.onmouseover = function() { setOpacity(this,100); };
-			img.onmouseout = function() { setOpacity(this,50); };
-			img.onclick = function() {
-				require(["popup_window.js","layout.js"],function() {
-					var p = new popup_window("Error", theme.icons_16.error, "<div>"+status.message+"</div>");
-					p.show();
-					manager.remove_status(status.id);
-				});
-			};
-			c.appendChild(document.createTextNode(" "));
-			c.appendChild(img);
-		}
 		if (status.actions != null)
 			for (var i = 0; i < status.actions.length; ++i) {
 				var a = status.actions[i];
@@ -181,6 +167,30 @@ function StatusUI_Top(manager, margin) {
 					img.onmouseover = function() { setOpacity(this,100); };
 					img.onmouseout = function() { setOpacity(this,50); };
 					img.onclick = function() { manager.remove_status(status.id); };
+					img.onload = function() {
+						t.container.style.left = (getWindowWidth()/2-t.container.scrollWidth/2)+'px';				
+					};
+					c.appendChild(document.createTextNode(" "));
+					c.appendChild(img);
+				} else if (a.action == "popup") {
+					var img = document.createElement("IMG");
+					img.src = theme.icons_10.popup;
+					img.hspace=1;
+					img.style.verticalAlign="top";
+					setOpacity(img,50);
+					img.style.cursor = "pointer";
+					img.onmouseover = function() { setOpacity(this,100); };
+					img.onmouseout = function() { setOpacity(this,50); };
+					img.onclick = function() {
+						require(["popup_window.js","layout.js"],function() {
+							var p = new popup_window("Error", theme.icons_16.error, "<div>"+status.message+"</div>");
+							p.show();
+							manager.remove_status(status.id);
+						});
+					};
+					img.onload = function() {
+						t.container.style.left = (getWindowWidth()/2-t.container.scrollWidth/2)+'px';				
+					};
 					c.appendChild(document.createTextNode(" "));
 					c.appendChild(img);
 				} else {

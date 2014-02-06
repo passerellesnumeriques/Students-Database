@@ -37,6 +37,7 @@ $sections = array(
 $this->require_javascript("vertical_layout.js");
 $this->require_javascript("horizontal_layout.js");
 $this->require_javascript("horizontal_menu.js");
+$this->require_javascript("calendar.js");
 
 if (PNApplication::$instance->current_domain == "Dev") {
 	$this->add_javascript("/static/development/debug_status.js");
@@ -122,6 +123,16 @@ if (PNApplication::$instance->current_domain == "Dev") {
 </style>
 <script type='text/javascript'>
 window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
+
+if (!window.top.calendar_manager) {
+	window.top.calendar_manager = new CalendarManager();
+	window.top.CalendarsProviders.get(function(provider) {
+		provider.getCalendars(function(calendars) {
+			for (var i = 0; i < calendars.length; ++i)
+				window.top.calendar_manager.addCalendar(calendars[i]);
+		});
+	});
+}
 
 setBorderRadius(document.getElementById('user_menu_content'), 0, 0, 0, 0, 5, 5, 5, 5);
 setBorderRadius(document.getElementById('logout'), 0, 0, 0, 0, 5, 5, 5, 5);

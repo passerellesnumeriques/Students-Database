@@ -18,7 +18,9 @@ function StatusMessageError(err, message, timeout) {
 	this.message = (message != null ? " "+message : "");
 	if (err != null)
 		this.message += ": "+err.message;
-	this.actions = [{action:"close"}];
+	this.actions = [];
+	if (timeout) this.actions.push({action:"popup"});
+	this.actions.push({action:"close"});
 	if (err != null) {
 		if (err.stack)
 			this.stack = err.stack;

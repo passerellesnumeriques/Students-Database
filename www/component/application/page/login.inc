@@ -136,6 +136,7 @@ if ($message <> null) {
 }
 </style>
 <script type='text/javascript'>
+window.top.pnapplication.onlogout.fire();
 setBorderRadius(document.getElementById('login_table'),10,10,10,10,10,10,10,10);
 setBorderRadius(document.getElementById('login_table_header'),8,8,8,8,0,0,0,0);
 setBorderRadius(document.getElementById('login_table_footer'),0,0,0,0,8,8,8,8);

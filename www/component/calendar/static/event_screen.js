@@ -26,7 +26,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	};
 	require([["typed_field.js",["field_date.js","field_time.js"]],"popup_window.js","calendar_view.js"],function() {
 		var o;
-		var calendar = ev ? default_calendar.manager.getCalendar(ev.calendar_id) : null;
+		var calendar = ev ? window.top.calendar_manager.getCalendar(ev.calendar_id) : null;
 		var ro = ev && !calendar.saveEvent;
 
 		t.content = document.createElement("DIV");
@@ -292,7 +292,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		};
 		calendar_td.onclick = function() {
 			if (ev && !calendar.saveEvent) return; // we cannot move it
-			var manager = default_calendar.manager;
+			var manager = window.top.calendar_manager;
 			require("context_menu.js",function(){
 				var menu = new context_menu();
 				for (var i = 0; i < manager.calendars.length; ++i) {
