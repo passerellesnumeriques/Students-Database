@@ -34,12 +34,12 @@ class service_get_data_list extends Service {
 		$fields = $input["fields"];
 		// retrieve data paths
 		require_once("component/data_model/DataPath.inc");
-		$possible = DataPathBuilder::search_from($table);
+		$possible = DataPathBuilder::searchFrom($table);
 		$paths = array();
 		foreach ($fields as $f) {
 			$found = false;
 			foreach ($possible as $p)
-				if ($p->get_string() == $f["path"]) {
+				if ($p->getString() == $f["path"]) {
 				array_push($paths, $p);
 				$found = true;
 				break;
@@ -66,7 +66,7 @@ class service_get_data_list extends Service {
 			$name = $fields[$i]["name"];
 			$path = $paths[$i];
 			$from = null;
-			if ($path instanceof DataPath_Join && $path->is_reverse())
+			if ($path instanceof DataPath_Join && $path->isReverse())
 				$from = $path->foreign_key->name;
 			$handler = $path->table->getDisplayHandler($from);
 			if ($handler == null) {
@@ -105,7 +105,7 @@ class service_get_data_list extends Service {
 			$found = false;
 			foreach ($possible as $path) {
 				$from = null;
-				if ($path instanceof DataPath_Join && $path->is_reverse())
+				if ($path instanceof DataPath_Join && $path->isReverse())
 					$from = $path->foreign_key->name;
 				$display = $path->table->getDisplayHandler($from);
 				if ($display == null) continue;

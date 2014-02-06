@@ -21,10 +21,10 @@ SET time_zone = "+00:00";
 --
 
 --
--- Dumping data for table `people_contact`
+-- Dumping data for table `PeopleContact`
 --
 
-INSERT INTO `people_contact` (`contact`, `people`) VALUES
+INSERT INTO `PeopleContact` (`contact`, `people`) VALUES
 (1, 17),
 (2, 18),
 (3, 19),

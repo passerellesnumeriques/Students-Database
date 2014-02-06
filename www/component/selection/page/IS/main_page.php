@@ -17,7 +17,7 @@ class page_IS_main_page extends selection_page {
 			function init_organizations_list() {
 				new data_list(
 					'<?php echo $container_id;?>',
-					'Information_session',
+					'InformationSession',
 					['Information Session.Name','Information Session.Date'],
 					[],
 					function (list) {

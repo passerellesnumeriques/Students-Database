@@ -20,12 +20,12 @@ class contact extends Component {
 	public function addAddressToOrganization($organization_id,$new_address,$fake = false) {
 		//Check the rights
 		require_once("component/data_model/Model.inc");
-		$table = DataModel::get()->getTable("Organization_address");
+		$table = DataModel::get()->getTable("OrganizationAddress");
 		if (!$fake && !$table->acceptInsert(array("organization"=>$organization_id))) {
 			PNApplication::error("You are not allowed to add an address for this organization");
 			return false;
 		} else {
-			$address_id = $this->addAddress("Organization_address","organization",$organization_id,$new_address,$fake);
+			$address_id = $this->addAddress("OrganizationAddress","organization",$organization_id,$new_address,$fake);
 			return $address_id;
 		}
 	}
@@ -39,18 +39,18 @@ class contact extends Component {
 	public function addAddressToPeople($people_id,$new_address,$fake = false) {
 		//Check the rights
 		require_once("component/data_model/Model.inc");
-		$table = DataModel::get()->getTable("People_address");
+		$table = DataModel::get()->getTable("PeopleAddress");
 		if (!$fake && !$table->acceptInsert(array("people"=>$people_id))) {
 			PNApplication::error("You are not allowed to add an address for this people");
 			return false;
 		} else {
-			$address_id = $this->addAddress("People_address","people",$people_id,$new_address,$fake);
+			$address_id = $this->addAddress("PeopleAddress","people",$people_id,$new_address,$fake);
 			return $address_id;
 		}
 	}
 	/**
 	 * Internal method to add a PostalAddress in database
-	 * @param string $table the table where to insert the join (People_address or Organization_address)
+	 * @param string $table the table where to insert the join (PeopleAddress or OrganizationAddress)
 	 * @param string $column column of the join (people or organization)
 	 * @param number $key key of the join (people id or organization id)
 	 * @param array $new_address address to insert
@@ -65,7 +65,7 @@ class contact extends Component {
 		unset($new_address["id"]);
 		// insert
 		try {
-			$address_id = SQLQuery::create()->bypassSecurity()->insert("Postal_address", $new_address);
+			$address_id = SQLQuery::create()->bypassSecurity()->insert("PostalAddress", $new_address);
 		} catch (Exception $ex) {
 			$address_id = 0;
 			PNApplication::error($ex);
@@ -80,7 +80,7 @@ class contact extends Component {
 				SQLQuery::create()->insert($table, array($column=>$key,"address"=>$address_id));
 		} catch (Exception $ex) {
 			PNApplication::error($ex);
-			SQLQuery::create()->removeKey("Postal_address", $address_id);
+			SQLQuery::create()->removeKey("PostalAddress", $address_id);
 			return false;
 		}
 		return $address_id;
@@ -93,7 +93,7 @@ class contact extends Component {
 	 * @return boolean|number the new contact id, or false if it failed
 	 */
 	public function addContactToPeople($people_id, $contact) {
-		return $this->addContact("People_contact", "people", $people_id, $contact);
+		return $this->addContact("PeopleContact", "people", $people_id, $contact);
 	}
 	/**
 	 * Add a contact to an organization
@@ -102,7 +102,7 @@ class contact extends Component {
 	 * @return boolean|number the new contact id, or false if it failed
 	 */
 	public function addContactToOrganization($org_id, $contact) {
-		return $this->addContact("Organization_contact", "organization", $org_id, $contact);
+		return $this->addContact("OrganizationContact", "organization", $org_id, $contact);
 	}
 	/**
 	 * Internal method to add a contact to a people or an organization
@@ -159,7 +159,7 @@ class contact extends Component {
 		}
 		
 		try {
-			return SQLQuery::create()->insert("Organization_type", array("creator"=>$input["creator"], "name"=>$input["name"]));
+			return SQLQuery::create()->insert("OrganizationType", array("creator"=>$input["creator"], "name"=>$input["name"]));
 		} catch (Exception $e) {
 			PNApplication::error($e);
 			return false;
@@ -174,7 +174,7 @@ class contact extends Component {
 	 */
 	public function assignOrganizationType($organization_id, $type_id) {
 		try {
-			SQLQuery::create()->insert("Organization_types", array("organization"=>$organization_id, "type"=>$type_id));
+			SQLQuery::create()->insert("OrganizationTypes", array("organization"=>$organization_id, "type"=>$type_id));
 			return true;
 		}catch (Exception $e) {
 			PNApplication::error($e);
@@ -189,7 +189,7 @@ class contact extends Component {
 	 */
 	public function unassignOrganizationType($organization_id, $type_id) {
 		try {
-			SQLQuery::create()->removeKey("Organization_types", array("organization"=>$organization_id, "type"=>$type_id));
+			SQLQuery::create()->removeKey("OrganizationTypes", array("organization"=>$organization_id, "type"=>$type_id));
 			return true;
 		}catch (Exception $e) {
 			PNApplication::error($e);
@@ -200,10 +200,10 @@ class contact extends Component {
 	
 	public function get_json_address($id){
 		$json_address = "";
-		$q = SQLQuery::create()->select("Postal_address")
+		$q = SQLQuery::create()->select("PostalAddress")
 						->field('id')
-						->field("Postal_address","country","country_id")
-						->field("Postal_address","geographic_area","area_id")
+						->field("PostalAddress","country","country_id")
+						->field("PostalAddress","geographic_area","area_id")
 						->field("street")
 						->field("street_number")
 						->field("building")
@@ -228,7 +228,7 @@ class contact extends Component {
 			$json_address.= "address_type: ".json_encode($adrs[0]["address_type"]).", ";
 			$json_address.= "area_text:";
 			if(isset($adrs[0]['area_id']) && $adrs[0]['area_id'] <> null){
-				$q = SQLQuery::create()->select("Geographic_area")
+				$q = SQLQuery::create()->select("GeographicArea")
 							->field("parent")
 							->field("name")
 							->where("id = '".$adrs[0]['area_id']."'");
@@ -236,16 +236,16 @@ class contact extends Component {
 				$q_country = SQLQuery::create()->select("Country")
 							->field("name")
 							->field("code")
-							->join("Country","Country_division",array("id"=>"country"))
-							->join("Country_division","Geographic_area",array("id"=>"country_division"))
-							->where("Geographic_area.id = '".$adrs[0]['area_id']."'");
+							->join("Country","CountryDivision",array("id"=>"country"))
+							->join("CountryDivision","GeographicArea",array("id"=>"country_division"))
+							->where("GeographicArea.id = '".$adrs[0]['area_id']."'");
 				$country = $q_country->execute();
 				if(isset($areas[0]["name"])){
 					$json_address.= "[";
 					$json_address.= json_encode($areas[0]["name"]);
 					$parent = $areas[0]['parent'];
 					while($parent <> null){
-						$q = SQLQuery::create()->select("Geographic_area")
+						$q = SQLQuery::create()->select("GeographicArea")
 										->field("parent")
 										->field("name")
 										->where("id = '".$parent."'");
@@ -266,10 +266,10 @@ class contact extends Component {
 	
 	public function get_json_address_good_format_for_address_text($id){
 		$json_address = "";
-		$q = SQLQuery::create()->select("Postal_address")
+		$q = SQLQuery::create()->select("PostalAddress")
 						->field('id')
-						->field("Postal_address","country","country_id")
-						->field("Postal_address","geographic_area","area_id")
+						->field("PostalAddress","country","country_id")
+						->field("PostalAddress","geographic_area","area_id")
 						->field("street")
 						->field("street_number")
 						->field("building")
@@ -277,7 +277,7 @@ class contact extends Component {
 						->field("additional")
 						->field("address_type")
 						// ->where("id ='".$id."'");
-						->whereValue("Postal_address","id",$id);
+						->whereValue("PostalAddress","id",$id);
 						
 		$adrs = $q->execute();
 		
@@ -295,7 +295,7 @@ class contact extends Component {
 			$json_address.= "geographic_area:";
 			if(isset($adrs[0]['area_id']) && $adrs[0]['area_id'] <> null){
 				$json_address.= "{id:".json_encode($adrs[0]['area_id']).", text:\"";
-				$q = SQLQuery::create()->select("Geographic_area")
+				$q = SQLQuery::create()->select("GeographicArea")
 							->field("parent")
 							->field("name")
 							->where("id = '".$adrs[0]['area_id']."'");
@@ -305,7 +305,7 @@ class contact extends Component {
 					$json_address.= $areas[0]["name"];
 					$parent = $areas[0]['parent'];
 					while($parent <> null){
-						$q = SQLQuery::create()->select("Geographic_area")
+						$q = SQLQuery::create()->select("GeographicArea")
 										->field("parent")
 										->field("name")
 										->where("id = '".$parent."'");

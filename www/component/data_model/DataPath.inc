@@ -1,7 +1,16 @@
-<?php 
+<?php
+/**
+ * Search paths to reach data starting from a table, and going through foreign keys 
+ */ 
 class DataPathBuilder {
 	
-	public static function &search_from($table_name, $sub_models = null) {
+	/**
+	 * Search paths from the given table
+	 * @param string $table_name the starting point of the search
+	 * @param array $sub_models sub models 
+	 * @return DataPath[] list of paths found
+	 */
+	public static function &searchFrom($table_name, $sub_models = null) {
 		require_once("Model.inc");
 		/* @var $model DataModel */
 		$model = DataModel::get();
@@ -12,25 +21,32 @@ class DataPathBuilder {
 			if ($sub_models <> null && isset($sub_models[$table->getModel()->getParentTable()])) {
 				// we are in a defined sub model
 				$path = new DataPath_Table($table, $sub_models[$table->getModel()->getParentTable()]);
-				DataPathBuilder::search_from_path($path, $done, $final_paths, $sub_models);
+				DataPathBuilder::searchFromPath($path, $done, $final_paths, $sub_models);
 			} else {
 				// we need to go to all existing sub models
 				foreach ($table->getModel()->getExistingInstances() as $sm) {
 					$path = new DataPath_Table($table, $sm);
 					$new_sub_models = array($table->getModel()->getParentTable()=>$sm);
 					if ($sub_models <> null) $new_sub_models = array_merge($new_sub_models, $sub_models);
-					DataPathBuilder::search_from_path($path, $done, $final_paths, $new_sub_models);
+					DataPathBuilder::searchFromPath($path, $done, $final_paths, $new_sub_models);
 				}
 			}
 		} else {
 			$path = new DataPath_Table($table, null);
-			DataPathBuilder::search_from_path($path, $done, $final_paths, $sub_models);
+			DataPathBuilder::searchFromPath($path, $done, $final_paths, $sub_models);
 		}
 		unset($table);
 		return $final_paths;
 	}
 	
-	private static function search_from_path(&$path, &$done, &$final_paths, $sub_models) {
+	/**
+	 * Search from the given path
+	 * @param DataPath $path starting point
+	 * @param string[] $done list of tables already analyzed 
+	 * @param DataPath[] $final_paths list of paths to a final data found
+	 * @param array $sub_models sub models
+	 */
+	private static function searchFromPath(&$path, &$done, &$final_paths, $sub_models) {
 		$multiple = 0;
 		$tables = array();
 		$p = $path;
@@ -48,11 +64,18 @@ class DataPathBuilder {
 		} else {
 			$done[$path->table->getSQLNameFor($path->sub_model)] = array($multiple);
 		}
-		DataPathBuilder::add_foreign_keys($path, $done, $final_paths, $sub_models);
-		DataPathBuilder::add_external_foreign_keys($path, $done, $final_paths, $sub_models);
+		DataPathBuilder::addForeignKeys($path, $done, $final_paths, $sub_models);
+		DataPathBuilder::addExternalForeignKeys($path, $done, $final_paths, $sub_models);
 	}
 	
-	private static function add_foreign_keys(&$path, &$done, &$final_paths, $sub_models) {
+	/**
+	 * Go through foreign keys at the given path
+	 * @param DataPath $path the path where to start
+	 * @param string[] $done list of tables already analyzed
+	 * @param DataPath[] $final_paths list of final paths already found
+	 * @param array $sub_models list of sub models selection
+	 */
+	private static function addForeignKeys(&$path, &$done, &$final_paths, $sub_models) {
 		foreach ($path->table->internalGetColumns() as $col) {
 			if (!($col instanceof \datamodel\ForeignKey)) continue;
 			if ($col->foreign_table == $path->table->getName()) continue; // link on itself
@@ -80,7 +103,7 @@ class DataPathBuilder {
 				$p = new DataPath_Join($path, $col, $t, $sm);
 				$new_sub_models = $sub_models;
 				if ($sm <> null) $new_sub_models[$t->getModel()->getParentTable()] = $sm;
-				DataPathBuilder::search_from_path($p, $done, $final_paths, $new_sub_models);
+				DataPathBuilder::searchFromPath($p, $done, $final_paths, $new_sub_models);
 				unset($t);
 			} catch (Exception $e) {
 				// not allowed
@@ -89,7 +112,14 @@ class DataPathBuilder {
 		}
 	}
 	
-	private static function add_external_foreign_keys(&$path, &$done, &$final_paths, $sub_models) {
+	/**
+	 * Search other tables containing foreign keys to the current table
+	 * @param DataPath $path the path where to start
+	 * @param string[] $done list of tables already analyzed
+	 * @param DataPath[] $final_paths list of paths already found
+	 * @param array $sub_models selection of sub models
+	 */
+	private static function addExternalForeignKeys(&$path, &$done, &$final_paths, $sub_models) {
 		$model = DataModel::get();
 		$tables = $model->getTables();
 		foreach ($tables as &$t) {
@@ -119,24 +149,33 @@ class DataPathBuilder {
 				$new_sub_models = $sub_models;
 				if ($sm <> null)
 					$new_sub_models[$t->getModel()->getParentTable()] = $sm;
-				DataPathBuilder::search_from_path($p, $done, $final_paths, $new_sub_models);
+				DataPathBuilder::searchFromPath($p, $done, $final_paths, $new_sub_models);
 			}
 			unset($t);
 		}
 	}
 	
-	public static function build_paths_tree($paths) {
+	/**
+	 * Build a hierarchy of path, from a flat list of DataPath, by adding a children attribute
+	 * @param DataPath[] $paths the flat list of paths
+	 * @return DataPath the root data path
+	 */
+	public static function buildPathsTree($paths) {
 		if (count($paths) == 0) return null;
 		$root = $paths[0];
 		while ($root->parent <> null) $root = $root->parent;
 		$root->{"children"} = array();
 		foreach ($paths as $p) {
 			$p->{"children"} = array();
-			DataPathBuilder::add_tree($root, $p);
+			DataPathBuilder::addTree($root, $p);
 		}
 		return $root;
 	}
-	private static function add_tree(&$root, $path) {
+	/** Add the given path to the hierarchy
+	 * @param DataPath $root the root of the hierarchy
+	 * @param DataPath $path the path to add
+	 */
+	private static function addTree(&$root, $path) {
 		$list = array();
 		$p = $path;
 		while ($p->parent <> null) {
@@ -164,19 +203,22 @@ class DataPathBuilder {
 	
 }
 
+/** Abstract class to represent a path to a data */
 abstract class DataPath {
 
-	/** @var DataPath */
+	/** @var DataPath previous section of the path */
 	public $parent;
-	/** @var datamodel\Table */
+	/** @var datamodel\Table table this path points to */
 	public $table;
+	/** @var number|null sub model instance */
 	public $sub_model;
+	/** @var boolean indicates if the data pointed by this path is unique or not (only 1 to 1 relations) */
 	public $unique = true;
 	
 	/**
-	 * @param DataPath $parent
-	 * @param datamodel\Table $table
-	 * @param unknown $sub_model
+	 * @param DataPath $parent parent path
+	 * @param datamodel\Table $table table
+	 * @param number|null $sub_model sub model instance
 	 */
 	public function __construct($parent, &$table, $sub_model) {
 		$this->parent = $parent;
@@ -184,12 +226,18 @@ abstract class DataPath {
 		$this->sub_model = $sub_model;
 	}
 	
-	public abstract function get_string();
+	/** Get a representation of this path in a string
+	 * @return string representation of this path
+	 */
+	public abstract function getString();
 	
-	public final function is_unique() {
+	/** Indicates if the data pointed by this path is unique or not (only 1 to 1 relations)
+	 * @return boolean true if it is unique
+	 */
+	public final function isUnique() {
 		if (!$this->unique) return false;
 		if ($this->parent == null) return true;
-		return $this->parent->is_unique();
+		return $this->parent->isUnique();
 	}
 	
 }
@@ -205,7 +253,7 @@ class DataPath_Table extends DataPath {
 		parent::__construct(null, $table, $sub_model);
 	}
 
-	public function get_string() {
+	public function getString() {
 		$s = $this->table->getName();
 		if ($this->sub_model <> null)
 			$s .= "[".$this->sub_model."]";
@@ -217,6 +265,7 @@ class DataPath_Table extends DataPath {
 /** join following a foreign key */
 class DataPath_Join extends DataPath {
 	
+	/** @var \datamodel\ForeignKey the foreign key used for the join */
 	public $foreign_key;
 
 	public function __construct($parent, &$foreign_key, &$target_table, $target_sub_model) {
@@ -228,8 +277,8 @@ class DataPath_Join extends DataPath {
 			$this->unique = !$foreign_key->multiple;
 	}
 	
-	public function get_string() {
-		$s = $this->parent->get_string();
+	public function getString() {
+		$s = $this->parent->getString();
 		$s .= $this->parent->table == $this->foreign_key->table ? ">" : "<";
 		if (!$this->unique) $s.= $this->parent->table == $this->foreign_key->table ? ">" : "<";
 		if ($this->foreign_key->can_be_null) $s .= "?";
@@ -240,23 +289,28 @@ class DataPath_Join extends DataPath {
 		return $s;
 	}
 	
-	public function is_reverse() {
+	/** Indicates the direction of the join: reverse means the foreign table is the one pointing to our current table, if not reverse this is the current table which contains a foreign key to the foreign table
+	 * @return boolean true if this is a reverse join
+	 */
+	public function isReverse() {
 		return $this->parent->table <> $this->foreign_key->table;
 	}
 	
 }
 
+/** Builds an SQL request to reach the table pointed by a DataPath */
 class DataPathSQLBuilder {
 	
-	/**
-	 * @param DataPath $path
-	 * @param SQLQuery $q
+	/** Builds an SQL request to reach the table pointed by a DataPath
+	 * @param DataPath $path the path
+	 * @param SQLQuery $q the query to fill
+	 * @return string the alias of the table pointed by the path
 	 */
 	public static function build($path, &$q) {
 		if ($path instanceof DataPath_Join) {
 			$parent_alias = DataPathSQLBuilder::build($path->parent, $q);
 			$match = array();
-			if ($path->is_reverse())
+			if ($path->isReverse())
 				$match[$path->parent->table->getPrimaryKey()->name] = $path->foreign_key->name;
 			else
 				$match[$path->foreign_key->name] = $path->table->getPrimaryKey()->name; 

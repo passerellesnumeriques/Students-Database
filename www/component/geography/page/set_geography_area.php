@@ -82,7 +82,7 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		/*We remove the current area*/
 		this.removeArea(area_id);
 		/*We remove from the database*/
-		service.json("data_model","remove_row",{table:"Geographic_area", row_key:area_id}, function(res){
+		service.json("data_model","remove_row",{table:"GeographicArea", row_key:area_id}, function(res){
 			if(!res) return;
 		},true);
 	};
@@ -110,7 +110,7 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		var country_division = this[parent_index.division_index + 1].division_id;
 		var name = area_name.uniformFirstLetterCapitalized();
 		var field_saved_id = null;
-		service.json("data_model","save_entity", {table:"Geographic_area", field_name:name, field_parent:area_parent_id, field_country_division:country_division}, function(res){
+		service.json("data_model","save_entity", {table:"GeographicArea", field_name:name, field_parent:area_parent_id, field_country_division:country_division}, function(res){
 			if(!res) return;
 			field_saved_id = res.key;
 		},true);
@@ -130,7 +130,7 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		var field_saved_id = null;
 		//var area_parent_id = null;
 		var country_division = this[0].division_id;
-		service.json("data_model","save_entity", {table:"Geographic_area", field_name:name, field_parent:null, field_country_division:country_division}, function(res){
+		service.json("data_model","save_entity", {table:"GeographicArea", field_name:name, field_parent:null, field_country_division:country_division}, function(res){
 			if(!res) return;
 			field_saved_id = res.key;
 		},true);
@@ -226,7 +226,7 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		var div = document.createElement('div');
 		div.style.display ='inline-block';
 		var container = document.getElementById(this[division_index].areas[area_index].area_id);
-		var edit = new editable_cell(div, 'Geographic_area', 'name', this[division_index].areas[area_index].area_id, 'field_text', null, this[division_index].areas[area_index].area_name);
+		var edit = new editable_cell(div, 'GeographicArea', 'name', this[division_index].areas[area_index].area_id, 'field_text', null, this[division_index].areas[area_index].area_name);
 		var area_parent_id = this[division_index].areas[area_index].area_parent_id;
 		var parent_name = null;
 		if(area_parent_id != null){
@@ -282,7 +282,7 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 					result.buttonRemoveDivision(td_remove, division_id);
 				}
 				var div = document.createElement('div');
-				var edit = new editable_cell(div, 'Country_division', 'name', division_id, 'field_text', null, this[i].division_name);
+				var edit = new editable_cell(div, 'CountryDivision', 'name', division_id, 'field_text', null, this[i].division_name);
 				edit.division_name = result[i].division_name;
 				edit.division_index = i;
 				edit.onsave = function(text){
@@ -364,7 +364,7 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 			parent_index = this.length -1;
 			parent_id = this[parent_index].division_id;
 		}
-		service.json("data_model","save_entity", {table:"Country_division", field_name:division_name, field_parent:parent_id, field_country:country_id}, function(res){
+		service.json("data_model","save_entity", {table:"CountryDivision", field_name:division_name, field_parent:parent_id, field_country:country_id}, function(res){
 			if(!res) return;
 		},true);
 		/*We refresh the page*/
@@ -400,7 +400,7 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 	 * @parameter division_id
 	 */
 	result.removeDivision = function(division_id){
-		service.json("data_model","remove_row",{table:"Country_division", row_key:division_id}, function(res){
+		service.json("data_model","remove_row",{table:"CountryDivision", row_key:division_id}, function(res){
 			if(!res) return;
 		},true);
 		/*We refresh the page*/

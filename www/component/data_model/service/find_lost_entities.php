@@ -33,6 +33,7 @@ class service_find_lost_entities extends Service {
 	 * @param \datamodel\Table $table the table
 	 * @param array $sub_models list of sub model instances
 	 * @param array $rows rows to check
+	 * @param array $tables_done list of tables already analyzed, to avoid infinite recursivity
 	 */
 	private function findLinked($table, $sub_models, &$rows, $tables_done) {
 		if (in_array($table->getSQLName($sub_models), $tables_done)) return;

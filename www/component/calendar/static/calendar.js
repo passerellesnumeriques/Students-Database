@@ -9,7 +9,9 @@ function CalendarManager() {
 	/** Index of the calendar used by default to create new events */
 	this.default_calendar_index = 0;
 	
+	/** Event called when a new calendar is added to this manager */
 	this.on_calendar_added = new Custom_Event();
+	/** Event called when a calendar is removed from this manager */
 	this.on_calendar_removed = new Custom_Event();
 	
 	/** Event called when an event is added to any calendar. The new event is given as parameter. */
@@ -24,6 +26,7 @@ function CalendarManager() {
 	/** Event when a calendar just finished to be refreshed */
 	this.on_refresh_done = new Custom_Event();
 	
+	/** Listeners this manager registered to its calendars, stored there to unregister when removing a calendar */
 	this._calendars_listeners = [];
 
 	var t=this;
@@ -178,8 +181,13 @@ CalendarsProvider.prototype = {
 	getProviderName: function() {
 		
 	},
+	/** Indicates a status about the connection to the provider, or empty if it is connected */
 	connection_status: "",
+	/** Event called when the connection_status changed */
 	on_connection_status: new Custom_Event(),
+	/** Update the connection_status
+	 * @param {String} status the new status (empty string if it is already connected)
+	 */
 	connectionStatus: function(status) {
 		this.connection_status = status;
 		this.on_connection_status.fire(status);
@@ -265,8 +273,11 @@ function Calendar(provider, name, color, show, icon) {
 	this.onrefresh = new Custom_Event();
 	/** event called when the calendar has been refreshed */
 	this.onrefreshdone = new Custom_Event();
+	/** Event called when a new event appear on this calendar */
 	this.on_event_added = new Custom_Event();
+	/** Event called when an event was updated on this calendar */
 	this.on_event_updated = new Custom_Event();
+	/** Event called when an event disappear from this calendar */
 	this.on_event_removed = new Custom_Event();
 	/** list of events in the calendar */
 	this.events = [];

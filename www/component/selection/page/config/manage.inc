@@ -16,7 +16,7 @@ function manage_config(&$page,$container_id,$header_id){
 	require_once("component/data_model/DataBaseLock.inc");
 	$campaign_id = PNApplication::$instance->components["selection"]->getCampaignId();
 	require_once("component/data_model/Model.inc");
-	$table = DataModel::get()->getTable("Selection_campaign_config");
+	$table = DataModel::get()->getTable("SelectionCampaignConfig");
 	$locked_by = null;
 	$lock_id = null;
 	$lock_id = DataBaseLock::lockTable($table->getSQLNameFor($campaign_id), $locked_by);

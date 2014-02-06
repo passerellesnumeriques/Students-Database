@@ -43,7 +43,7 @@ class service_IS_status extends Service{
 		
 		$all_boys_real = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->field("number_boys_real")
 					->executeSingleField();
 		
@@ -51,7 +51,7 @@ class service_IS_status extends Service{
 		
 		$all_boys_expected = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->field("number_boys_expected")
 					->executeSingleField();
 		
@@ -59,7 +59,7 @@ class service_IS_status extends Service{
 		
 		$all_girls_real = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->field("number_girls_real")
 					->executeSingleField();
 		
@@ -67,7 +67,7 @@ class service_IS_status extends Service{
 		
 		$all_girls_expected = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->field("number_girls_expected")
 					->executeSingleField();
 					
@@ -75,13 +75,13 @@ class service_IS_status extends Service{
 					
 		$partners = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session_partner")
+					->select("InformationSessionPartner")
 					->count()
 					->executeSingleValue();
 					
 		$number_IS = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->count()
 					->executeSingleValue();
 

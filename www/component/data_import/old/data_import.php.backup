@@ -10,7 +10,7 @@ class page_data_import extends Page {
 		require_once("component/data_model/DataPath.inc");
 		
 		$context = new DataPathBuilderContext();
-		$paths = DataPathBuilder::search_from($context, $input["root_table"]);
+		$paths = DataPathBuilder::searchFrom($context, $input["root_table"]);
 		$current_path = $paths[0];
 		while ($current_path->parent <> null) $current_path = $current_path->parent;
 		

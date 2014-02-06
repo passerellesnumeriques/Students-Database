@@ -11,7 +11,7 @@ class ContactJSON {
 	 * @no_name_check
 	 */
 	public static function PostalAddressFromID($id) {
-		$q = SQLQuery::create()->select("Postal_address")->whereValue("Postal_address", "id", $id);
+		$q = SQLQuery::create()->select("PostalAddress")->whereValue("PostalAddress", "id", $id);
 		self::PostalAddressSQL($q);
 		$row = $q->executeSingleRow();
 		if ($row == null) return null;
@@ -24,11 +24,11 @@ class ContactJSON {
 	 * @no_name_check
 	 */
 	public static function PostalAddressSQL(&$q) {
-		$alias = $q->getTableAlias("Postal_address");
-		$area_alias = $q->getTableAlias("Geographic_area");
+		$alias = $q->getTableAlias("PostalAddress");
+		$area_alias = $q->getTableAlias("GeographicArea");
 		if ($area_alias == null) {
 			$area_alias = $q->generateTableAlias();
-			$q->join($alias, "Geographic_area", array("geographic_area"=>"id"), $area_alias);
+			$q->join($alias, "GeographicArea", array("geographic_area"=>"id"), $area_alias);
 		}
 		require_once("component/geography/GeographyJSON.inc");
 		GeographyJSON::GeographicAreaTextSQL($q);

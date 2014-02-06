@@ -136,7 +136,7 @@ class service_IS_save extends Service{
 					$remove_address = false;
 				} else {
 					//it can be a remove or nothing
-					$q = SQLQuery::create()->select("Information_session")->field("postal_address")->whereValue("Information_session","id",$data["id"])
+					$q = SQLQuery::create()->select("InformationSession")->field("postal_address")->whereValue("InformationSession","id",$data["id"])
 							->executeSingleValue();
 					if($q <> null){
 						$address_to_remove = $q;
@@ -159,7 +159,7 @@ class service_IS_save extends Service{
 					$remove_event = false;
 				} else {
 					//it can be a remove or nothing
-					$q = SQLQuery::create()->select("Information_session")->field("date")->whereValue("Information_session","id",$data["id"])
+					$q = SQLQuery::create()->select("InformationSession")->field("date")->whereValue("InformationSession","id",$data["id"])
 							->executeSingleValue();
 					if($q <> null){
 						$event_to_remove = $q;
@@ -234,14 +234,14 @@ class service_IS_save extends Service{
 					/* Unset address id in case it exists (address coming from a partner and then customized*/
 					if(isset($address["id"]))
 						unset($address["id"]);
-					SQLQuery::create()->updateByKey("Postal_address",$data["address"],ContactJSON::PostalAddress2DB($address));
+					SQLQuery::create()->updateByKey("PostalAddress",$data["address"],ContactJSON::PostalAddress2DB($address));
 				} catch(Exception $e){
 					$everything_ok = false;
 					PNApplication::error($e);
 				}
 			} else if($remove_address && $everything_ok) {
 				try{
-					SQLQuery::create()->bypassSecurity()->removeKey("Postal_address",$address_to_remove);
+					SQLQuery::create()->bypassSecurity()->removeKey("PostalAddress",$address_to_remove);
 					$data["address"] = null;
 				} catch(Exception $e){
 					$everything_ok = false;

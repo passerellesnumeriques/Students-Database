@@ -19,13 +19,13 @@ class service_save_data extends Service {
 	public function execute(&$component, $input) {
 		$to_save = $input["to_save"];
 		require_once("component/data_model/DataPath.inc");
-		$paths = DataPathBuilder::search_from($input["root_table"]);
+		$paths = DataPathBuilder::searchFrom($input["root_table"]);
 		foreach ($to_save as $t) {
 			$path_found = false;
 			foreach ($paths as $path) {
-				if ($path->get_string() == $t["path"]) {
+				if ($path->getString() == $t["path"]) {
 					$come_from = null;
-					if ($path instanceof DataPath_Join && $path->is_reverse())
+					if ($path instanceof DataPath_Join && $path->isReverse())
 						$come_from = $path->foreign_key->name;
 					$display = $path->table->getDisplayHandler($come_from);
 					$data_found = false;

@@ -30,7 +30,7 @@ class service_exam_subject_status extends Service{
 	public function execute(&$component,$input){
 		$number_exams = SQLQuery::create()
 			->bypassSecurity()
-			->select("Exam_subject")
+			->select("ExamSubject")
 			->count()
 			->executeSingleValue();
 			

@@ -18,8 +18,8 @@ class data_model extends Component {
 	 */
 	public function getAvailableFields($root_table) {
 		require_once("component/data_model/DataPath.inc");
-		$paths = DataPathBuilder::search_from($root_table);
-		$root = DataPathBuilder::build_paths_tree($paths);
+		$paths = DataPathBuilder::searchFrom($root_table);
+		$root = DataPathBuilder::buildPathsTree($paths);
 		$list = array();
 		if ($root <> null)
 			$this->browse($root, null, $list);
@@ -44,7 +44,7 @@ class data_model extends Component {
 			}
 		}
 		foreach ($path->children as $c) {
-			if ($c->is_reverse()) {
+			if ($c->isReverse()) {
 				if ($display <> null && !$display->canJoin()) continue;
 				$this->browse($c, $c->foreign_key->name, $list);
 			} else if (!in_array($c->foreign_key->name, $handled)) {
