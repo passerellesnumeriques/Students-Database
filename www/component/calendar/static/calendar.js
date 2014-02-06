@@ -226,7 +226,7 @@ if (!window.top.CalendarsProviders) {
 
 /**
  * Abstract class of a calendar.
- * @param {CalendarProvider} provider providing this calendar
+ * @param {CalendarsProvider} provider providing this calendar
  * @param {String} name name of the calendar
  * @param {String} color hexadecimal RGB color or null for a default one. ex: C0C0FF
  * @param {Boolean} show indicates if the events of the calendar should be displayed or not
@@ -254,7 +254,6 @@ function Calendar(provider, name, color, show, icon) {
 	/** list of events in the calendar */
 	this.events = [];
 	/** called to refresh the calendar. It must be overrided by the implementation of the calendar.
-	 * @param {CalendarManager} manager the CalendarManager calling
 	 * @param {Function} ondone to be called when the refresh is done
 	 */
 	this.refresh = function(ondone) {

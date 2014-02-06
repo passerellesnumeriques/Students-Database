@@ -63,13 +63,13 @@ if (window == window.top) {
 		_onclick_listeners: [],
 		/** Register the given listener, which will be called when the user clicks somewhere in the application (not only on the window, but on all frames)
 		 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
-		 * @param {function} listener function to be called
+		 * @param {Function} listener function to be called
 		 */
 		registerOnclick: function(from_window, listener) {
 			this._onclick_listeners.push([from_window,listener]);
 		},
 		/** Remove a listener, previously registered by registerOnclick
-		 * @param {function} listener function to be removed, previously registered through registerOnclick 
+		 * @param {Function} listener function to be removed, previously registered through registerOnclick 
 		 */
 		unregisterOnclick: function(listener) {
 			for (var i = 0; i < this._onclick_listeners.length; ++i)
@@ -82,13 +82,13 @@ if (window == window.top) {
 		_onmousemove_listeners: [],
 		/** Register the given listener, which will be called when the user moves the mouse somewhere in the application (not only on the window, but on all frames)
 		 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
-		 * @param {function} listener function to be called, it takes 2 parameters: <code>x</code> and <code>y</code>
+		 * @param {Function} listener function to be called, it takes 2 parameters: <code>x</code> and <code>y</code>
 		 */
 		registerOnMouseMove: function(from_window, listener) {
 			this._onmousemove_listeners.push([from_window,listener]);
 		},
 		/** Remove a listener, previously registered by registerOnMouseMove
-		 * @param {function} listener function to be removed, previously registered through registerOnMouseMove 
+		 * @param {Function} listener function to be removed, previously registered through registerOnMouseMove 
 		 */
 		unregisterOnMouseMove: function(listener) {
 			for (var i = 0; i < this._onmousemove_listeners.length; ++i)
@@ -101,13 +101,13 @@ if (window == window.top) {
 		_onmouseup_listeners: [],
 		/** Register the given listener
 		 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
-		 * @param {function} listener function to be called
+		 * @param {Function} listener function to be called
 		 */
 		registerOnMouseUp: function(from_window, listener) {
 			this._onmouseup_listeners.push([from_window,listener]);
 		},
 		/** Remove a listener, previously registered by registerOnMouseUp
-		 * @param {function} listener function to be removed, previously registered through registerOnMouseUp 
+		 * @param {Function} listener function to be removed, previously registered through registerOnMouseUp 
 		 */
 		unregisterOnMouseUp: function(listener) {
 			for (var i = 0; i < this._onmouseup_listeners.length; ++i)
@@ -168,7 +168,7 @@ if (window == window.top) {
 		/**
 		 * Register a listener to be called when the user is inactive for the given amount of time.
 		 * @param {Number} inactivity_time time in milliseconds of the inactivity
-		 * @param {function} listener function to be called
+		 * @param {Function} listener function to be called
 		 */
 		addInactivityListener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});

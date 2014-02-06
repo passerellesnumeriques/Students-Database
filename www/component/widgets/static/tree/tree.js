@@ -93,6 +93,10 @@ function tree(container) {
 		this.show_columns = show;
 		this.tr_columns.style.visibility = show ? 'visible' : 'hidden';
 		this.tr_columns.style.position = show ? 'static' : 'absolute';
+		if (!show) {
+			this.tr_columns.style.top = "-9000px";
+			this.tr_columns.style.left = "-9000px";
+		}
 	};
 	this.addColumn = function(col) {
 		this.columns.push(col);
@@ -180,7 +184,7 @@ function tree(container) {
 			if (typeof index == 'undefined')
 				this.tbody.appendChild(item.tr);
 			else
-				this.tbody.insertBefore(item.tr, this.tbody.childNodes[index]);
+				this.tbody.insertBefore(item.tr, this.tbody.childNodes[index+1]); // +1 to skip the tr_columns
 		} else {
 			if (parent.children.length == 1) {
 				if (typeof index == 'undefined')

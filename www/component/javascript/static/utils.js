@@ -3,6 +3,10 @@
  */
 String.prototype.startsWith=function(s){return this.length<s.length?false:this.substring(0,s.length)==s;};
 /** 
+ * return true if this string ends with the given string
+ */
+String.prototype.endsWith=function(s){return this.length<s.length?false:this.substring(this.length-s.length)==s;};
+/** 
  * remove leading and trailing spaces, and return the result
  */
 String.prototype.trim=function() {
