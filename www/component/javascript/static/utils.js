@@ -689,3 +689,16 @@ function getGoodSpelling(word, figure){
 		word += "s";
 	return word;
 }
+
+/**
+ * Get the size of an object (number of attributes)
+ * @param {Object} object
+ * @returns {Number} size of the object
+ */
+function getObjectSize(object){
+	s = 0;
+	for(a in object){
+		s++;
+	}
+	return s;
+}

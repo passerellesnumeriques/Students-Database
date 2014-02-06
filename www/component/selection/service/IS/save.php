@@ -202,6 +202,8 @@ class service_IS_save extends Service{
 				}
 				$data["date"] = $event_id;
 			} else if($update_event && $everything_ok){
+// 				echo "update";
+// 				var_dump($event);
 				try{
 					PNApplication::$instance->calendar->saveEvent($event);
 				} catch(Exception $e){

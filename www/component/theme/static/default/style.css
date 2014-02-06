@@ -267,6 +267,66 @@ button img {
 	color: black;
 }
 
+.button_soft {
+	cursor: pointer;
+	border: 1px solid rgba(0,0,0,0.4);
+	padding: 2px;
+	border-radius: 3px;
+	box-shadow: 1px 1px 1px rgba(170,170,170,0);
+	display: inline-block;
+	margin: 1px 2px 1px 2px;
+	background-color: rgba(255,255,255,0.2);
+	background: -webkit-linear-gradient(top,rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* Chrome10+,Safari5.1+ */
+	background: -moz-linear-gradient(top, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0.8)), color-stop(100%,rgba(192,192,192,0.6))); /* Chrome,Safari4+ */
+	background: -o-linear-gradient(top, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* IE10+ */
+	background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* W3C */
+	/*font-family: Verdana;*/
+	font-family: Arial;
+	/* font-weight: bold;
+	color: #808080; */
+}
+
+.button_soft:hover {
+	border: 1px solid rgba(0,0,0,0.6);
+	box-shadow: 1px 1px 1px rgba(170,170,170,1);
+	background-color: rgba(255,255,255,0.6);
+}
+.button_soft:active {
+	box-shadow: 0px 0px 0px;
+	position: relative;
+	top: 1px;
+	left: 1px;
+}
+.button_soft img {
+	vertical-align: bottom;
+}
+.button_soft.disabled {
+	color: #808080;
+	cursor: default;
+}
+.button_soft.disabled img {
+	opacity: 0.5;
+	-moz-opacity: 0.5;
+	-khtml-opacity: 0.5;
+	filter: alpha(opacity=50);
+	-ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=50);
+}
+.button_soft.disabled:hover, .button.disabled:active {
+	border: 1px solid rgba(0,0,0,0.2);
+	box-shadow: 1px 1px 1px rgba(170,170,170,0);
+	margin: 1px 2px 1px 2px;
+}
+.button_soft a, a.button_soft {
+	text-decoration: none;
+	color: black;
+}
+
+
+
+
+
 .button_verysoft {
 	cursor: pointer;
 	border: 1px solid rgba(0,0,0,0);
