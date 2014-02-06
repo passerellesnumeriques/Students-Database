@@ -98,9 +98,9 @@ function StatusUI_Top(manager, margin) {
 		c.name = status.id;
 		setBoxShadow(c,1,1,4,3,"#A0A0A0");
 		setBorderRadius(c,4,4,4,4,4,4,4,4);
-		c.style.display = "inline-block";
 		c.style.textAlign = "left";
 		c.style.overflow = "hidden";
+		c.style.marginBottom = "4px";
 		this.container.appendChild(c);
 		c = document.createElement("DIV");
 		c.name = 'br_'+status.id;
