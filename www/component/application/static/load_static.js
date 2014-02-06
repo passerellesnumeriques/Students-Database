@@ -1,6 +1,6 @@
 /**
  * Launch the background loading of all static resources of the application.
- * @param {DOMNode|string} container the html element where to insert the progress bar, or its ID
+ * @param {DOMNode|String} container the html element where to insert the progress bar, or its ID
  */
 function load_static_resources(container) {
 	if (typeof container == 'string') container = document.getElementById(container);

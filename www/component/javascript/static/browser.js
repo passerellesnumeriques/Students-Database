@@ -576,7 +576,7 @@ function add_javascript(url, onload) {
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
 	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); this.onreadystatechange = null; } };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
 	s.src = p;
 }

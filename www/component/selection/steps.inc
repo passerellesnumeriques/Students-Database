@@ -23,14 +23,14 @@
  * In that case, the user must be able to add and update an applicant but not to remove any
  */
 return array(
-	"information_session" => array("Some informations sessions have been planed","Information_session",array()),
+	"information_session" => array("Some informations sessions have been planed","InformationSession",array()),
 	"import_applicant" => array("Some applicants have been imported","Applicant",array()),
-	"manage_exam" => array("Some exam subjects have been created","Exam_subject",array()),
-	"import_exam_results" => array("Some exam results have been imported","Exam_question_result",array(
+	"manage_exam" => array("Some exam subjects have been created","ExamSubject",array()),
+	"import_exam_results" => array("Some exam results have been imported","ExamQuestionResult",array(
 			array("manage_exam", true, "Exam results cannot be imported because no exam is set into the database",array("add" => false,"remove" => false, "update" => false)), //exam must be the same for each applicant
 			array("import_applicant",true,"Exam results cannot be imported because no applicant is set in the database",array("add" => true,"remove" => false, "update" => true)), //can update the applicant info even if he already has results
 		)),
-	"define_topic_for_eligibility_rules" => array("Some topics for eligibility rules have been defined","Exam_topic_for_eligibility_rule", array(
+	"define_topic_for_eligibility_rules" => array("Some topics for eligibility rules have been defined","ExamTopicForEligibilityRule", array(
 			// array("manage_exam", true, "Eligibility rules cannot be defined because no exam is set in the database"),
 			array(),
 		)),

@@ -15,7 +15,7 @@ function calendar_view_month(view, container) {
 
 	/** Returns a text to describe the current position of the view
 	 * @param {Number} shorter indicates an index of how small we should try to make the text
-	 * @return {String} the text
+	 * @returns {String} the text
 	 */
 	this.getPositionText = function(shorter) {
 		switch (shorter) {

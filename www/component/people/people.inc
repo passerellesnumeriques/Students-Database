@@ -11,5 +11,10 @@ class people extends Component {
 		);
 	}
 		
+	public function joinPeople(&$q, $from_table, $from_key) {
+		require_once("PeopleJSON.inc");
+		$q->join($from_table, "People", array($from_key=>"id"));
+		PeopleJSON::PeopleSQL($q);
+	}
 }
 ?>

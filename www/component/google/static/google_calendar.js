@@ -58,7 +58,7 @@ if (typeof require != 'undefined') require("calendar_objects.js");
 function GoogleCalendar(id, name, color, show, writable) {
 	Calendar.call(this, window.top.google_calendars_provider, name, color, show, null);
 	this.id = id;
-	this.refresh = function(ondone) {
+	this._refresh = function(ondone) {
 		var t=this;
 		var google_events = [];
 		var next_page = function(token) {
@@ -154,18 +154,18 @@ function GoogleCalendar(id, name, color, show, writable) {
 							found = true;
 							t.events.push(ev);
 							if (ev.last_modified != removed_events[j].last_modified)
-								t.manager.on_event_updated.fire(ev);
+								t.on_event_updated.fire(ev);
 							removed_events.splice(j,1);
 							break;
 						}
 					}
 					if (!found) {
 						t.events.push(ev);
-						t.manager.on_event_added.fire(ev);
+						t.on_event_added.fire(ev);
 					}
 				}
 				for (var i = 0; i < removed_events.length; ++i)
-					t.manager.on_event_removed.fire(removed_events[i]);
+					t.on_event_removed.fire(removed_events[i]);
 				ondone();
 			});
 		};
@@ -218,8 +218,14 @@ function parseRRuleDate(s) {
 }
 
 function GoogleCalendarsProvider() {
-	this.getCalendars = function(handler, feedback_handler) {
-		load_google_calendars(handler, feedback_handler);
+	var t=this;
+	this.getCalendars = function(handler) {
+		load_google_calendars(function(calendars) {
+			t.connectionStatus("");
+			handler(calendars);
+		}, function(feedback) {
+			t.connectionStatus(feedback);
+		});
 	};
 	this.getProviderIcon = function() {
 		return '/static/google/google.png';
@@ -231,4 +237,5 @@ function GoogleCalendarsProvider() {
 GoogleCalendarsProvider.prototype = new CalendarsProvider();
 GoogleCalendarsProvider.prototype.constructor = GoogleCalendarsProvider;
 
-window.top.CalendarsProviders.add(window.top.google_calendars_provider = new GoogleCalendarsProvider());
+if (!window.top.google_calendars_provider)
+	window.top.CalendarsProviders.add(window.top.google_calendars_provider = new GoogleCalendarsProvider());

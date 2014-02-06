@@ -15,7 +15,17 @@ class service_find_lost_entities extends Service {
 			if ($table->isRoot()) continue;
 			// not a root table
 			if ($table->getModel() instanceof SubDataModel) {
-				// TODO
+				// do it for each instance
+				foreach ($table->getModel()->getExistingInstances() as $sm) {
+					$rows = SQLQuery::create()->bypassSecurity()->select($table->getName())->selectSubModelForTable($table, $sm)->execute();
+					if (count($rows) == 0) continue;
+					$sub_models = array();
+					$sub_models[$table->getModel()->getParentTable()] = $sm;
+					$this->findLinked($table, $sub_models, $rows, array());
+					if (count($rows) == 0) continue;
+					if ($first) $first = false; else echo ",";
+					$this->printRows($table, $sm, $rows);
+				}
 			} else {
 				$rows = SQLQuery::create()->bypassSecurity()->select($table->getName())->execute();
 				if (count($rows) == 0) continue;
@@ -33,48 +43,63 @@ class service_find_lost_entities extends Service {
 	 * @param \datamodel\Table $table the table
 	 * @param array $sub_models list of sub model instances
 	 * @param array $rows rows to check
+	 * @param array $tables_done list of tables already analyzed, to avoid infinite recursivity
 	 */
 	private function findLinked($table, $sub_models, &$rows, $tables_done) {
 		if (in_array($table->getSQLName($sub_models), $tables_done)) return;
 		if (count($rows) == 0) return;
 		array_push($tables_done, $table->getSQLName($sub_models));
-		if ($table->getModel() instanceof SubDataModel) {
-			// TODO
-		} else {
-			// first, look at root tables directly linked
-			// look for foreign keys on this table
-			foreach ($table->internalGetColumnsFor(null) as $col) {
-				if (!($col instanceof \datamodel\ForeignKey)) continue;
-				$ft = DataModel::get()->internalGetTable($col->foreign_table);
-				if (!$ft->isRoot()) continue;
-				$keys = array();
-				foreach ($rows as $r) if ($r[$col->name] <> null) array_push($keys, $r[$col->name]);
-				if (count($keys) == 0) continue;
-				$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->whereIn($ft->getName(), $ft->getPrimaryKey()->name, $keys)->field($ft->getName(), $ft->getPrimaryKey()->name)->executeSingleField();
-				for ($i = 0; $i < count($rows); $i++) {
-					if (in_array($rows[$i][$col->name], $found)) {
-						// ok, we have a link
-						array_splice($rows, $i, 1);
-						$i--;
-						continue;
-					}
+		$sm = null;
+		if ($table->getModel() instanceof SubDataModel)
+			$sm = $sub_models[$table->getModel()->getParentTable()];
+		// first, look at root tables directly linked
+		// look for foreign keys on this table
+		foreach ($table->internalGetColumnsFor($sm) as $col) {
+			if (!($col instanceof \datamodel\ForeignKey)) continue;
+			$ft = DataModel::get()->internalGetTable($col->foreign_table);
+			if (!$ft->isRoot()) continue;
+			$keys = array();
+			foreach ($rows as $r) if ($r[$col->name] <> null) array_push($keys, $r[$col->name]);
+			if (count($keys) == 0) continue;
+			$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($sub_models)->whereIn($ft->getName(), $ft->getPrimaryKey()->name, $keys)->field($ft->getName(), $ft->getPrimaryKey()->name)->executeSingleField();
+			for ($i = 0; $i < count($rows); $i++) {
+				if (in_array($rows[$i][$col->name], $found)) {
+					// ok, we have a link
+					array_splice($rows, $i, 1);
+					$i--;
+					continue;
 				}
-				if (count($rows) == 0) return; // we are done
 			}
-			// look for tables having a foreign key to this table
-			$pk = $table->getPrimaryKey();
-			if ($pk <> null) {
-				foreach (DataModel::get()->internalGetTables() as $ft) {
-					if ($ft->getModel() instanceof SubDataModel) continue; // TODO
-					if ($ft == $table) continue;
-					if (!$ft->isRoot()) continue;
-					foreach ($ft->internalGetColumnsFor(null) as $col) {
+			if (count($rows) == 0) return; // we are done
+		}
+		// look for tables having a foreign key to this table
+		$pk = $table->getPrimaryKey();
+		if ($pk <> null) {
+			foreach ($table->getModel()->internalGetTables() as $ft) {
+				if ($ft == $table) continue;
+				if (!$ft->isRoot()) continue;
+				$ft_sub_models = array();
+				if ($ft->getModel() instanceof SubDataModel) {
+					if ($table->getModel() instanceof SubDataModel) {
+						// we are on the same
+						$ft_sub_models = array($sm);
+					} else {
+						$ft_sm = @$sub_models[$ft->getModel()->getParentTable()];
+						if ($ft_sm <> null) $ft_sub_models = array($ft_sm); // go back to the sub model
+						else $ft_sub_models = $ft->getModel()->getExistingInstances(); // go through all
+					}
+				} else
+					$ft_sub_models = array(null);
+				foreach ($ft_sub_models as $ft_sm) {
+					foreach ($ft->internalGetColumnsFor($ft_sm) as $col) {
 						if (!($col instanceof \datamodel\ForeignKey)) continue;
 						if ($col->foreign_table <> $table->getName()) continue;
 						// we have a foreign key here
 						$keys = array();
 						foreach ($rows as $r) array_push($keys, $r[$pk->name]);
-						$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->whereIn($ft->getName(), $col->name, $keys)->field($ft->getName(), $col->name)->executeSingleField();
+						$new_sub_models = array_merge($sub_models);
+						if ($ft_sm <> null) $new_sub_models[$ft->getModel()->getParentTable()] = $ft_sm;
+						$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($new_sub_models)->whereIn($ft->getName(), $col->name, $keys)->field($ft->getName(), $col->name)->executeSingleField();
 						for ($i = 0; $i < count($rows); $i++) {
 							if (in_array($rows[$i][$pk->name], $found)) {
 								// ok, we have a link
@@ -87,53 +112,68 @@ class service_find_lost_entities extends Service {
 					}
 				}
 			}
-			
-			// second step: indirect links
-			// look for foreign keys on this table
-			foreach ($table->internalGetColumnsFor(null) as $col) {
-				if (!($col instanceof \datamodel\ForeignKey)) continue;
-				$ft = DataModel::get()->internalGetTable($col->foreign_table);
-				if ($ft->isRoot()) continue;
-				$keys = array();
-				foreach ($rows as $r) if ($r[$col->name] <> null) array_push($keys, $r[$col->name]);
-				if (count($keys) == 0) continue;
-				$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->whereIn($ft->getName(), $ft->getPrimaryKey()->name, $keys)->execute();
-				if (count($found) == 0) continue;
-				$keys_found = array();
-				foreach ($found as $f) array_push($keys_found, $f[$ft->getPrimaryKey()->name]);
-				$this->findLinked($ft, $sub_models, $found, $tables_done);
-				// found are the rows which didn't find any link
-				// so keys_found which are not anymore in found are rows which have link
-				foreach ($keys_found as $key) {
-					$has_link = true;
-					foreach ($found as $f) if ($f[$ft->getPrimaryKey()->name] == $key) { $has_link = false; break; }
-					if ($has_link) {
-						// remove rows
-						for ($i = 0; $i < count($rows); $i++) {
-							if ($rows[$i][$col->name] == $key) {
-								array_splice($rows, $i, 1);
-								$i--;
-								continue;
-							}
+		}
+		
+		// second step: indirect links
+		// look for foreign keys on this table
+		foreach ($table->internalGetColumnsFor($sm) as $col) {
+			if (!($col instanceof \datamodel\ForeignKey)) continue;
+			$ft = DataModel::get()->internalGetTable($col->foreign_table);
+			if ($ft->isRoot()) continue;
+			$keys = array();
+			foreach ($rows as $r) if ($r[$col->name] <> null) array_push($keys, $r[$col->name]);
+			if (count($keys) == 0) continue;
+			$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($sub_models)->whereIn($ft->getName(), $ft->getPrimaryKey()->name, $keys)->execute();
+			if (count($found) == 0) continue;
+			$keys_found = array();
+			foreach ($found as $f) array_push($keys_found, $f[$ft->getPrimaryKey()->name]);
+			$this->findLinked($ft, $sub_models, $found, $tables_done);
+			// found are the rows which didn't find any link
+			// so keys_found which are not anymore in found are rows which have link
+			foreach ($keys_found as $key) {
+				$has_link = true;
+				foreach ($found as $f) if ($f[$ft->getPrimaryKey()->name] == $key) { $has_link = false; break; }
+				if ($has_link) {
+					// remove rows
+					for ($i = 0; $i < count($rows); $i++) {
+						if ($rows[$i][$col->name] == $key) {
+							array_splice($rows, $i, 1);
+							$i--;
+							continue;
 						}
-						if (count($rows) == 0) return; // we are done
 					}
+					if (count($rows) == 0) return; // we are done
 				}
 			}
-			// look for tables having a foreign key to this table
-			$pk = $table->getPrimaryKey();
-			if ($pk <> null) {
-				foreach (DataModel::get()->internalGetTables() as $ft) {
-					if ($ft->getModel() instanceof SubDataModel) continue; // TODO
-					if ($ft == $table) continue;
-					if ($ft->isRoot()) continue;
-					foreach ($ft->internalGetColumnsFor(null) as $col) {
+		}
+		// look for tables having a foreign key to this table
+		$pk = $table->getPrimaryKey();
+		if ($pk <> null) {
+			foreach (DataModel::get()->internalGetTables() as $ft) {
+				if ($ft == $table) continue;
+				if ($ft->isRoot()) continue;
+				$ft_sub_models = array();
+				if ($ft->getModel() instanceof SubDataModel) {
+					if ($table->getModel() instanceof SubDataModel) {
+						// we are on the same
+						$ft_sub_models = array($sm);
+					} else {
+						$ft_sm = @$sub_models[$ft->getModel()->getParentTable()];
+						if ($ft_sm <> null) $ft_sub_models = array($ft_sm); // go back to the sub model
+						else $ft_sub_models = $ft->getModel()->getExistingInstances(); // go through all
+					}
+				} else
+					$ft_sub_models = array(null);
+				foreach ($ft_sub_models as $ft_sm) {
+					foreach ($ft->internalGetColumnsFor($ft_sm) as $col) {
 						if (!($col instanceof \datamodel\ForeignKey)) continue;
 						if ($col->foreign_table <> $table->getName()) continue;
 						// we have a foreign key here
 						$keys = array();
 						foreach ($rows as $r) array_push($keys, $r[$pk->name]);
-						$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->whereIn($ft->getName(), $col->name, $keys)->execute();
+						$new_sub_models = array_merge($sub_models);
+						if ($ft_sm <> null) $new_sub_models[$ft->getModel()->getParentTable()] = $ft_sm;
+						$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($new_sub_models)->whereIn($ft->getName(), $col->name, $keys)->execute();
 						$no_link = array();
 						foreach ($found as $f) array_push($no_link, $f);
 						$this->findLinked($ft, $sub_models, $no_link, $tables_done);

@@ -60,6 +60,13 @@ public class ValueToEvaluate extends Element implements Evaluable {
 		}
 	}
 	
+	private ValueToEvaluate sub(AstNode value, Node... docs) {
+		ValueToEvaluate ve = new ValueToEvaluate(location.file, value, docs);
+		for (String name : context.keySet())
+			ve.context.put(name, context.get(name));
+		return ve;
+	}
+	
 	public FinalElement evaluate(Context ctx) {
 		FinalElement val = null;
 		if (value instanceof FunctionNode) {
@@ -93,7 +100,7 @@ public class ValueToEvaluate extends Element implements Evaluable {
 			default: System.err.println("Keyword not supported for value: "+value.toSource());
 			}
 		} else if (value instanceof UnaryExpression) {
-			return new ValueToEvaluate(this.location.file, ((UnaryExpression)value).getOperand(), docs).evaluate(ctx);
+			return sub(((UnaryExpression)value).getOperand(), docs).evaluate(ctx);
 		} else if (value instanceof NewExpression) {
 			AstNode target = ((NewExpression)value).getTarget();
 			if (target instanceof Name)
@@ -113,13 +120,16 @@ public class ValueToEvaluate extends Element implements Evaluable {
 				if (o == null) o = ctx.global.content.get(name);
 				if (o == this) o = null;
 				if (o == null) {
-					error("Unknown name "+name, this.location.file, value);
+					String known = "";
+					for (Map.Entry<String, ContextVariable> e : context.entrySet())
+						known += (known.length() > 0 ? "," : "")+e.getKey();
+					error("Unknown name <i>"+name+"</i>; known in this context: "+known, this.location.file, value);
 					return null;
 				}
 				if (o instanceof FinalElement) val = new ObjectClass(this.location.file, ((FinalElement)o).getType(), value, docs);
 			}
 		} else if (value instanceof PropertyGet) {
-			FinalElement left = new ValueToEvaluate(this.location.file, ((PropertyGet)value).getLeft(), docs).evaluate(ctx);
+			FinalElement left = sub(((PropertyGet)value).getLeft(), docs).evaluate(ctx);
 			if (left != null) {
 				Container cont = null;
 				if (left instanceof Container) cont = (Container)left;
@@ -141,22 +151,22 @@ public class ValueToEvaluate extends Element implements Evaluable {
 				}
 			}
 		} else if (value instanceof FunctionCall) {
-			val = new ValueToEvaluate(this.location.file, ((FunctionCall)value).getTarget(), docs).evaluate(ctx);
+			val = sub(((FunctionCall)value).getTarget(), docs).evaluate(ctx);
 		} else if (value instanceof ConditionalExpression) {
 			ConditionalExpression ce = (ConditionalExpression)value;
 			val = new ValuesToEvaluate(
-				new ValueToEvaluate(this.location.file, ce.getTrueExpression(), docs), 
-				new ValueToEvaluate(this.location.file, ce.getFalseExpression(), docs)
+				sub(ce.getTrueExpression(), docs), 
+				sub(ce.getFalseExpression(), docs)
 			).evaluate(ctx);
 			if (val == null)
 				error("Cannot evaluate conditional expression: "+value.toSource(), this.location.file, value);
 		} else if (value instanceof ParenthesizedExpression) {
-			return new ValueToEvaluate(this.location.file, ((ParenthesizedExpression)value).getExpression(), docs).evaluate(ctx);
+			return sub(((ParenthesizedExpression)value).getExpression(), docs).evaluate(ctx);
 		} else if (value instanceof InfixExpression) {
 			AstNode left = ((InfixExpression)value).getLeft();
 			AstNode right = ((InfixExpression)value).getRight();
-			FinalElement left_e = new ValueToEvaluate(this.location.file, left, docs).evaluate(ctx);
-			FinalElement right_e = new ValueToEvaluate(this.location.file, right, docs).evaluate(ctx);
+			FinalElement left_e = sub(left, docs).evaluate(ctx);
+			FinalElement right_e = sub(right, docs).evaluate(ctx);
 			if (left_e != null && right_e != null) {
 				if ("String".equals(left_e.getType())) val = left_e;
 				else if ("String".equals(right_e.getType())) val = right_e;

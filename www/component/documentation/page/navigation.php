@@ -10,28 +10,34 @@ class page_navigation extends Page {
 	</div>
 	<script type='text/javascript'>
 	var nav = new tree('navigation_tree');
-	var general = new TreeItem("Getting Started",true);
-	nav.addItem(general);
+	var intro = new TreeItem("Getting Started",true);
+	nav.addItem(intro);
+	var global = new TreeItem("Global documentation",true);
+	nav.addItem(global);
 	var components = new TreeItem("<a href='/static/documentation/components.html' target='documentation'>Components</a>",true);
 	nav.addItem(components);
+	
 	var item;
 	item = new TreeItem("<a href='/static/documentation/general/general_architecture/general_architecture.html' target='documentation'>General Architecture</a>",false);
-	general.addItem(item);
+	intro.addItem(item);
 	item = new TreeItem("<a href='/static/documentation/general/application_structure/application_structure.html' target='documentation'>Application Structure</a>",false);
-	general.addItem(item);
+	intro.addItem(item);
 	item = new TreeItem("<a href='/static/documentation/general/code/coding_conventions.html' target='documentation'>Coding Conventions</a>",false);
-	general.addItem(item);
-	item = new TreeItem("<a href='/static/documentation/global_datamodel.html' target='documentation'>Global Data Model</a>",false);
-	general.addItem(item);
+	intro.addItem(item);
 	var php = new TreeItem("PHP",false);
-	general.addItem(php);
+	intro.addItem(php);
 	item = new TreeItem("<a href='php?general=database' target='documentation'>Database access</a>",false);
 	php.addItem(item);
 	item = new TreeItem("<a href='php?general=app' target='documentation'>Application and components</a>",false);
 	php.addItem(item);
+	var js = new TreeItem("JavaScript",false);
+	intro.addItem(js);
+
+	item = new TreeItem("<a href='/static/documentation/global_datamodel.html' target='documentation'>Global Data Model</a>",false);
+	global.addItem(item);
 	item = new TreeItem("<a href='/static/documentation/javascript.html' target='documentation'>JavaScript</a>",false);
-	general.addItem(item);
-	var comp,js;
+	global.addItem(item);
+	var comp;
 <?php
 	foreach (PNApplication::$instance->components as $c) {
 		echo "comp = new TreeItem(\"<a href='component?name=".$c->name."' target='documentation'>".$c->name."</a>\",false);components.addItem(comp);\n";

@@ -531,7 +531,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 	public function buildSQL(&$q, $path, $filters) {
 		// we need to go to the parent, and get the joining key
 		$parent_alias = \DataPathSQLBuilder::build($path->parent, $q);
-		$key_name = $path->is_reverse() ? $path->parent->table->getPrimaryKey()->name : $path->foreign_key->name;
+		$key_name = $path->isReverse() ? $path->parent->table->getPrimaryKey()->name : $path->foreign_key->name;
 		$alias = $q->getFieldAlias($parent_alias, $key_name);
 		if ($alias == null) {
 			$alias = $q->generateFieldAlias();

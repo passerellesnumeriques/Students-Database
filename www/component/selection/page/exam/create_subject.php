@@ -190,9 +190,9 @@ class page_exam_create_subject extends selection_page {
 			$first = true;
 			SQLQuery::set_submodel("SelectionCampaign", $c["id"]);
 			$exams = SQLQuery::create()
-						->select("Exam_subject")
-						->field("Exam_subject","id","id")
-						->field("Exam_subject","name","name")
+						->select("ExamSubject")
+						->field("ExamSubject","id","id")
+						->field("ExamSubject","name","name")
 						->execute();
 			if(isset($exams[0]["id"])){
 				// the first attribute is the campaign id

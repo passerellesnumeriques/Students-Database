@@ -54,9 +54,27 @@ class DataModel {
 	 * @return \datamodel\Table
 	 */
 	public function &addTable($name) {
-		if (isset($thos->tables[$name])) throw new Exception("Table ".$name." already defined in the data model");
+		if (isset($this->tables[$name])) throw new Exception("Table ".$name." already defined in the data model");
 		$table = new \datamodel\Table($this, $name);
 		$this->tables[$name] = &$table;
+		if (PNApplication::$instance->current_domain == "Dev") {
+			$table->{"declaring_component"} = "unknown";
+			try { throw new Exception(); }
+			catch (Exception $e) {
+				$root = str_replace("\\","/",realpath("component"))."/";
+				foreach ($e->getTrace() as $trace) {
+					$file = str_replace("\\","/",realpath($trace["file"]));
+					if (substr($file,0,strlen($root)) <> $root) continue;
+					$component = substr($file,strlen($root));
+					$i = strpos($component, "/");
+					if ($i === FALSE) continue;
+					$component = substr($component,0,$i);
+					$table->{"declaring_component"} = $component;
+					//$table->{"file"} = $file;
+					break;
+				}
+			}
+		}
 		return $table;
 	}
 

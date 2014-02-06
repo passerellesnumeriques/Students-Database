@@ -14,7 +14,7 @@ function custom_import(container, onready) {
 	/** vertical or horizontal layout */
 	this.container_layout = null;
 	/** Change the orientation
-	 * @param {string} ori either "horizontal" or "vertical"
+	 * @param {String} ori either "horizontal" or "vertical"
 	 */
 	this.setOrientation = function(ori) {
 		this.orientation = ori;
@@ -118,8 +118,8 @@ function custom_import(container, onready) {
 	this.prefilled_values = [];
 	/** Add a new DataDisplay that can be imported
 	 * @param {DataDisplay} data_display the data
-	 * @param {object} fixed_value value which cannot be changed by the user, or null
-	 * @param {object} prefilled_value value by default, but which can be changed by the user, or null
+	 * @param {Object} fixed_value value which cannot be changed by the user, or null
+	 * @param {Object} prefilled_value value by default, but which can be changed by the user, or null
 	 */
 	this.addData = function(data_display, fixed_value, prefilled_value) {
 		t.data_display.push(data_display);
@@ -130,8 +130,8 @@ function custom_import(container, onready) {
 	
 	/**
 	 * Get values from the Excel frame
-	 * @param {number} data_display_index index
-	 * @param {number} row_start first row in the imported data where to insert the values from Excel
+	 * @param {Number} data_display_index index
+	 * @param {Number} row_start first row in the imported data where to insert the values from Excel
 	 */
 	this.importFromExcel = function(data_display_index, row_start) {
 		var win = getIFrameWindow(this.excel_frame);

@@ -165,18 +165,50 @@ class SQLQuery {
 		$nb = func_num_args();
 		if ($nb > 1) {
 			for ($i = 0; i < $nb; $i++)
-				$this->tables[func_get_arg($i)] = null;
+				$this->selectTable(func_get_arg($i), null);
 		} else {
 			$o = func_get_arg(0);
 			if (is_string($o))
-				$this->tables[$o] = null;
+				$this->selectTable($o, null);
 			else foreach ($o as $table_name=>$alias)
 				if (is_string($table_name))
-					$this->tables[$table_name] = $alias;
+					$this->selectTable($table_name, $alias);
 				else
-					$this->tables[$alias] = null;
+					$this->selectTable($alias, null);
 		}
 		return $this;
+	}
+	
+	public function &selectTable($table_name, $table_alias = null) {
+		$this->tables[$table_name] = $table_alias;
+		if (PNApplication::$instance->current_domain == "Dev") $this->checkTableAccess($table_name);
+		return $this;
+	}
+	private function checkTableAccess($table_name) {
+		try { throw new Exception(); }
+		catch (Exception $e) {
+			$root = str_replace("\\","/",realpath("component"))."/";
+			foreach ($e->getTrace() as $trace) {
+				$file = str_replace("\\","/",realpath($trace["file"]));
+				if (substr($file,0,strlen($root)) <> $root) continue;
+				$component = substr($file,strlen($root));
+				$i = strpos($component, "/");
+				if ($i === FALSE) continue;
+				$component = substr($component,0,$i);
+				if ($component == "data_model" && (
+						substr($file,strlen($root),19) == "data_model/service/" ||
+						substr($file,strlen($root)) == "data_model/Model.inc" ||
+						substr($file,strlen($root)) == "data_model/DataDisplay.inc" ||
+						substr($file,strlen($root)) == "data_model/DataPath.inc" ||
+						substr($file,strlen($root)) == "data_model/DataBaseLock.inc"
+				)) break; // generic service of data model
+				require_once("component/data_model/Model.inc");
+				$decl = DataModel::get()->internalGetTable($table_name)->declaring_component;
+				if ($component <> $decl)
+					PNApplication::warning("Select table ".$table_name." from component ".$component." (".substr($file,strlen($root)).":".$trace["line"]."), but this table is own by ".$decl);
+				break;
+			}
+		}
 	}
 
 	/**
@@ -420,6 +452,7 @@ class SQLQuery {
 		$join = array($table_from, $table_to, $fields_matching, $alias);
 		if ($join_on_values <> null) array_push($join, $join_on_values);
 		array_push($this->joins, $join);
+		if (PNApplication::$instance->current_domain == "Dev") $this->checkTableAccess($table_to);
 		return $this;
 	}
 	public function getJoinAlias($table_from, $table_to, $fields_matching) {

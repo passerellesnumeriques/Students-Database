@@ -234,8 +234,8 @@ function context_menu(menu) {
 			t.parent_menu_listener = t.parent_menu.hide_if_outside_menu;
 			t.parent_menu.hide_if_outside_menu = function(){};
 		}
-		y += document.body.scrollTop;
-		x += document.body.scrollLeft;
+		y += document.documentElement.scrollTop;
+		x += document.documentElement.scrollLeft;
 		menu.style.visibility = "visible";
 		menu.style.position = "absolute";
 		menu.style.top = y+"px";

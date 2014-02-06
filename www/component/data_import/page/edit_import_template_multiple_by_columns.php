@@ -39,7 +39,7 @@ foreach ($categories as $cat_name=>$fields) {
 		if ($first_field) $first_field = false; else echo ",";
 		echo "{";
 		echo "data:".$f[0]->javascriptDataDisplay(null);
-		echo ",path:new DataPath(".json_encode($f[1]->get_string()).")";
+		echo ",path:new DataPath(".json_encode($f[1]->getString()).")";
 		echo "}";
 	}
 	echo "]";

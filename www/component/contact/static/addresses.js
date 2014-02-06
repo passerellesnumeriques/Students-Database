@@ -130,7 +130,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 									};
 									if (type_id != -1) {
 										service.json("data_model","save_entity",{
-											table: "Postal_address",
+											table: "PostalAddress",
 											key: edit.address.id,
 											lock: lock_id,
 											field_country: edit.address.country,
@@ -152,7 +152,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 							};
 							if (type_id != -1) {
 								service.json("data_model", "lock_row", {
-									table: "Postal_address",
+									table: "PostalAddress",
 									row_key: div_data.address.id
 								}, function(res) {
 									if (!res) return;
@@ -229,7 +229,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	this.removeAddress = function (address){
 		if (type_id != -1) {
 			/* Remove from database */
-			service.json("data_model","remove_row",{table:"Postal_address", row_key:address.id}, function(res){
+			service.json("data_model","remove_row",{table:"PostalAddress", row_key:address.id}, function(res){
 				if(!res) return;
 				for (var i = 0; i < t.tbody.childNodes.length; ++i)
 					if (t.tbody.childNodes[i].address == address)
@@ -322,7 +322,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 */
 	this._saveSubType = function(address, address_type, container){
 		if (type_id != -1) {
-			service.json("data_model","save_entity",{table:"Postal_address",key:address.id, field_address_type:address_type, lock:-1},function(res){
+			service.json("data_model","save_entity",{table:"PostalAddress",key:address.id, field_address_type:address_type, lock:-1},function(res){
 				if(!res) return;
 				container.innerHTML = address_type;
 				address.address_type = address_type;

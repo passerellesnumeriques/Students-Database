@@ -350,6 +350,20 @@ class user_management extends Component {
 		} while ($changed);
 	}
 	
+	public function &selectUsers($usernames = null, $domain = null) {
+		$q = SQLQuery::create()->select("Users");
+		if ($domain <> null) $q->database("students_".$domain);
+		if ($usernames <> null) $q->whereIn("Users", "username", $usernames);
+		$q->field("Users", "id", "user_id");
+		$q->field("Users", "username", "username");
+		return $q;
+	}
+	public function getSelectedUserID($row) {
+		return $row["user_id"];
+	}
+	public function getSelectedUsername($row) {
+		return $row["username"];
+	}
 }
 
 /**

@@ -12,7 +12,7 @@ class geography extends Component {
 	public function get_geographic_area_text($area_id) {
 		$text = "";
 		do {
-			$area = SQLQuery::create()->select("Geographic_area")->where("id",$area_id)->executeSingleRow();
+			$area = SQLQuery::create()->select("GeographicArea")->where("id",$area_id)->executeSingleRow();
 			if (strlen($text) > 0) $text .= ", ";
 			$text .= $area["name"];
 			$area_id = $area["parent"];

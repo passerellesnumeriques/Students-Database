@@ -16,6 +16,9 @@ service = {
 			data = service.generateInput(input);
 		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json;charset=UTF-8", data, 
 			function(result){
+				if (result && result.warnings)
+					for (var i = 0; i < result.warnings.length; ++i)
+						window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,result.warnings[i],[{action:"popup"},{action:"close"}],5000));
 				handler(result ? result.result : null);
 			},
 			foreground,

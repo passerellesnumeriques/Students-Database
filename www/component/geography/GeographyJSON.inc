@@ -2,7 +2,7 @@
 class GeographyJSON {
 	
 	public static function GeographicAreaTextSQL(&$q) {
-		$alias = $q->getTableAlias("Geographic_area");
+		$alias = $q->getTableAlias("GeographicArea");
 		$q->field($alias, "id", "geographic_area_id");
 	}
 	

@@ -21,7 +21,7 @@ class page_exam_import_subject extends selection_page {
 			// require_once("component/data_model/DataBaseLock.inc");
 			// $campaign_id = PNApplication::$instance->selection->getCampaignId();
 			// require_once("component/data_model/Model.inc");
-			// $table = DataModel::get()->getTable("Exam_subject");
+			// $table = DataModel::get()->getTable("ExamSubject");
 			// $locked_by = null;
 			// $lock_id = null;
 			// $lock_id = DataBaseLock::lockTable($table->getSQLNameFor($campaign_id), $locked_by);
@@ -34,7 +34,7 @@ class page_exam_import_subject extends selection_page {
 			//TODO: lock table?
 			require_once("component/data_import/page/import_data.inc");
 			$data_list = array();
-			$questions = DataModel::get()->getTable("Exam_subject_question");
+			$questions = DataModel::get()->getTable("ExamSubjectQuestion");
 			$display = $questions->getDisplayHandler(null);
 			$data_list = array_merge($data_list, $display->getDisplayableData());	
 			$fixed_data = array();

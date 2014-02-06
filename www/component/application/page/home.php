@@ -25,11 +25,9 @@ class page_home extends Page {
 </div>
 <script type='text/javascript'>
 var calendars_section = section_from_html('calendars');
-require("calendar.js");
 require("calendar_view.js");
 require("calendar_view_week.js");
-require("calendar.js",function() {
-	var manager = new CalendarManager();
+function init_calendars() {
 	var icon_loading = document.createElement("IMG");
 	icon_loading.style.verticalAlign = "middle";
 	icon_loading.src = theme.icons_16.loading;
@@ -37,42 +35,58 @@ require("calendar.js",function() {
 	icon_loading.counter = 0;
 	calendars_section.addToolRight(icon_loading);
 	calendars_section.addToolRight("<a class='button_verysoft' href='/dynamic/calendar/page/calendars'><img src='"+theme.icons_16.window_maximize+"'/></a>");
-	manager.on_refresh.add_listener(function() {
+	window.top.calendar_manager.on_refresh.add_listener(function() {
 		icon_loading.counter++;
 		icon_loading.style.visibility = 'visible';
 	});
-	manager.on_refresh_done.add_listener(function() {
+	window.top.calendar_manager.on_refresh_done.add_listener(function() {
 		if (--icon_loading.counter == 0)
 			icon_loading.style.visibility = 'hidden';
 	});
 	require("calendar_view.js",function() {
-		new CalendarView(manager, "week", 60, 'calendars_container', function() {
+		new CalendarView(window.top.calendar_manager, "week", 60, 'calendars_container', function() {
 		});
 	});
-	window.top.CalendarsProviders.get(function(provider) {
-		provider.getCalendars(function(calendars) {
-			var div = document.createElement("DIV");
-			div.innerHTML = "<img src='"+provider.getProviderIcon()+"' width=16px height=16px style='vertical-align:bottom'/> "+provider.getProviderName()+" ("+calendars.length+")";
-			div.className = "button";
-			div.style.margin = "2px";
-			div.style.paddingRight = "5px";
-			calendars_section.addTool(div);
-			fireLayoutEventFor(calendars_section.element);
-			div.onclick = function() {
-				require("popup_window.js",function() {
-					var content = document.createElement("DIV");
-					content.style.padding = "5px";
-					for (var i = 0; i < calendars.length; ++i)
-						new CalendarControl(content, calendars[i]);
-					var popup = new popup_window(provider.getProviderName(), provider.getProviderIcon(), content);
-					popup.show();
-				});
-			};
-			for (var i = 0; i < calendars.length; ++i)
-				manager.addCalendar(calendars[i]);
-		});
-	});
-});
+	var providers = [];
+	var new_calendar = function(cal) {
+		for (var i = 0; i < providers.length; ++i) {
+			if (providers[i].provider == cal.provider) {
+				var nb = parseInt(providers[i].span_nb.innerHTML);
+				providers[i].span_nb.innerHTML = ""+(nb+1);
+				providers[i].calendars.push(cal);
+				return;
+			}
+		}
+		var provider = {provider:cal.provider,calendars:[cal]};
+		var div = document.createElement("DIV");
+		div.innerHTML = "<img src='"+cal.provider.getProviderIcon()+"' width=16px height=16px style='vertical-align:bottom'/> "+cal.provider.getProviderName()+" (";
+		provider.span_nb = document.createElement("SPAN");
+		provider.span_nb.innerHTML = "1";
+		div.appendChild(provider.span_nb);
+		div.appendChild(document.createTextNode(")"));
+		div.className = "button";
+		div.style.margin = "2px";
+		div.style.paddingRight = "5px";
+		calendars_section.addTool(div);
+		fireLayoutEventFor(calendars_section.element);
+		div.provider = provider;
+		div.onclick = function() {
+			var t=this;
+			require(["popup_window.js","calendar.js"],function() {
+				var content = document.createElement("DIV");
+				content.style.padding = "5px";
+				for (var i = 0; i < t.provider.calendars.length; ++i)
+					new CalendarControl(content, t.provider.calendars[i]);
+				var popup = new popup_window(t.provider.provider.getProviderName(), t.provider.provider.getProviderIcon(), content);
+				popup.show();
+			});
+		};
+		providers.push(provider);
+	};
+	for (var i = 0; i < window.top.calendar_manager.calendars.length; ++i)
+		new_calendar(window.top.calendar_manager.calendars[i]);
+	window.top.calendar_manager.on_calendar_added.add_listener(new_calendar);
+}
 
 var general_news_section = section_from_html('general_news');
 var general_news_loading = document.createElement("IMG");
@@ -120,6 +134,7 @@ require("news.js",function() {
 		}
 	});
 });
+init_calendars();
 </script>
 <?php
 	}

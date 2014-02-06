@@ -9,6 +9,11 @@ function CalendarManager() {
 	/** Index of the calendar used by default to create new events */
 	this.default_calendar_index = 0;
 	
+	/** Event called when a new calendar is added to this manager */
+	this.on_calendar_added = new Custom_Event();
+	/** Event called when a calendar is removed from this manager */
+	this.on_calendar_removed = new Custom_Event();
+	
 	/** Event called when an event is added to any calendar. The new event is given as parameter. */
 	this.on_event_added = new Custom_Event();
 	/** Event called when an event is removed from any calendar. The event is given as parameter. */
@@ -20,11 +25,15 @@ function CalendarManager() {
 	this.on_refresh = new Custom_Event();
 	/** Event when a calendar just finished to be refreshed */
 	this.on_refresh_done = new Custom_Event();
+	
+	/** Listeners this manager registered to its calendars, stored there to unregister when removing a calendar */
+	this._calendars_listeners = [];
 
-	var w = window;
 	var t=this;
+	var w=window;
 	window.top.pnapplication.onlogout.add_listener(function() {
 		while (t.calendars.length > 0) t.removeCalendar(t.calendars[0]);
+		if (w.top && w.top.calendar_manager) w.top.calendar_manager = null;
 	});
 	
 	/**
@@ -33,11 +42,25 @@ function CalendarManager() {
 	 * @returns {Calendar} the given calendar
 	 */
 	this.addCalendar = function(cal) {
-		cal.manager = this;
 		this.calendars.push(cal);
+		var t=this;
+		var listeners = {calendar:cal,listeners:[
+		  function() { t.on_refresh.fire(cal); },
+		  function() { t.on_refresh_done.fire(cal); },
+		  function(ev) { t.on_event_added.fire(ev); },
+		  function(ev) { t.on_event_updated.fire(ev); },
+		  function(ev) { t.on_event_removed.fire(ev); }
+		]};
+		this._calendars_listeners.push(listeners);
+		cal.onrefresh.add_listener(listeners.listeners[0]);
+		cal.onrefreshdone.add_listener(listeners.listeners[1]);
+		cal.on_event_added.add_listener(listeners.listeners[2]);
+		cal.on_event_updated.add_listener(listeners.listeners[3]);
+		cal.on_event_removed.add_listener(listeners.listeners[4]);
 		if (!cal.last_update) cal.last_update = 0;
-		if (cal.show)
-			this.refreshCalendar(cal);
+		if (cal.show && cal.last_update < new Date().getTime() - 60000)
+			cal.refresh();
+		this.on_calendar_added.fire(cal);
 		return cal;
 	};
 	
@@ -46,7 +69,18 @@ function CalendarManager() {
 	 * @param {Calendar} cal the calendar to remove
 	 */
 	this.removeCalendar = function(cal) {
-		cal.manager = null;
+		for (var i = 0; i < this._calendars_listeners.length; ++i) {
+			if (this._calendars_listeners[i].calendar == cal) {
+				var listeners = this._calendars_listeners[i].listeners;
+				cal.onrefresh.remove_listener(listeners[0]);
+				cal.onrefreshdone.remove_listener(listeners[1]);
+				cal.on_event_added.remove_listener(listeners[2]);
+				cal.on_event_updated.remove_listener(listeners[3]);
+				cal.on_event_removed.remove_listener(listeners[4]);
+				this._calendars_listeners.splice(i,1);
+				break;
+			}
+		}
 		if (cal.show) {
 			for (var i = 0; i < cal.events.length; ++i)
 				this.on_event_removed.fire(cal.events[i]);
@@ -56,6 +90,7 @@ function CalendarManager() {
 				this.calendars.splice(i, 1);
 				break;
 			};
+		this.on_calendar_removed.fire(cal);
 	};
 	
 	/**
@@ -92,7 +127,7 @@ function CalendarManager() {
 		for (var i = 0; i < cal.events.length; ++i)
 			this.on_event_added.fire(cal.events[i]);
 		if (cal.last_update < new Date().getTime() - 60000)
-			this.refreshCalendar(cal);
+			cal.refresh();
 	};
 	
 	/**
@@ -111,32 +146,11 @@ function CalendarManager() {
 	};
 	
 	/**
-	 * Request to update the given calendar.
-	 * @param {Calendar} cal the calendar to refresh
-	 * @param {Function} ondone called when the calendar is updated. Note that it is not called in case the calendar is already in process of refreshing.
-	 */
-	this.refreshCalendar = function(cal,ondone) {
-		if (!w.theme) return; // our window does not exist anymore
-		if (cal.updating) return; // already in progress
-		cal.updating = true;
-		cal.onrefresh.fire();
-		this.on_refresh.fire(cal);
-		var t=this;
-		cal.refresh(function() {
-			cal.last_update = new Date().getTime();
-			cal.updating = false;
-			if (ondone) ondone();
-			cal.onrefreshdone.fire();
-			t.on_refresh_done.fire(cal);
-		});
-	};
-	
-	/**
 	 * Refresh all calendars of this CalendarManager.
 	 */
 	this.refreshCalendars = function() {
 		for (var i = 0; i < this.calendars.length; ++i)
-			this.refreshCalendar(this.calendars[i]);
+			this.calendars[i].refresh();
 	};
 }
 
@@ -149,9 +163,8 @@ CalendarsProvider.prototype = {
 	/**
 	 * Retrieve the list of calendars for the current user
 	 * @param {Function} handler called with the list of Calendar
-	 * @param {Function} feedback_handler called with a message as parameter, at each step, in order to provide a feedback to the user while retrieving the list of calendars
 	 */
-	getCalendars: function(handler, feedback_handler) {
+	getCalendars: function(handler) {
 		
 	},
 	/**
@@ -167,6 +180,17 @@ CalendarsProvider.prototype = {
 	 */
 	getProviderName: function() {
 		
+	},
+	/** Indicates a status about the connection to the provider, or empty if it is connected */
+	connection_status: "",
+	/** Event called when the connection_status changed */
+	on_connection_status: new Custom_Event(),
+	/** Update the connection_status
+	 * @param {String} status the new status (empty string if it is already connected)
+	 */
+	connectionStatus: function(status) {
+		this.connection_status = status;
+		this.on_connection_status.fire(status);
 	},
 	/**
 	 * Indicates if the provider supports the creation of calendars
@@ -226,7 +250,7 @@ if (!window.top.CalendarsProviders) {
 
 /**
  * Abstract class of a calendar.
- * @param {CalendarProvider} provider providing this calendar
+ * @param {CalendarsProvider} provider providing this calendar
  * @param {String} name name of the calendar
  * @param {String} color hexadecimal RGB color or null for a default one. ex: C0C0FF
  * @param {Boolean} show indicates if the events of the calendar should be displayed or not
@@ -234,8 +258,6 @@ if (!window.top.CalendarsProviders) {
  */
 function Calendar(provider, name, color, show, icon) {
 	if (!color) color = "A0A0FF";
-	/** {CalendarManager} filled when added to a calendar manager */
-	this.manager = null;
 	this.provider = provider;
 	/** URL of the icon for the calendar */
 	this.icon = icon;
@@ -251,14 +273,36 @@ function Calendar(provider, name, color, show, icon) {
 	this.onrefresh = new Custom_Event();
 	/** event called when the calendar has been refreshed */
 	this.onrefreshdone = new Custom_Event();
+	/** Event called when a new event appear on this calendar */
+	this.on_event_added = new Custom_Event();
+	/** Event called when an event was updated on this calendar */
+	this.on_event_updated = new Custom_Event();
+	/** Event called when an event disappear from this calendar */
+	this.on_event_removed = new Custom_Event();
 	/** list of events in the calendar */
 	this.events = [];
 	/** called to refresh the calendar. It must be overrided by the implementation of the calendar.
-	 * @param {CalendarManager} manager the CalendarManager calling
 	 * @param {Function} ondone to be called when the refresh is done
 	 */
 	this.refresh = function(ondone) {
-		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar.refresh not implemented"));
+		if (this.updating) return; // already in progress
+		this.updating = true;
+		this.onrefresh.fire();
+		var t=this;
+		this._refresh(function() {
+			t.last_update = new Date().getTime();
+			t.updating = false;
+			if (ondone) ondone();
+			t.onrefreshdone.fire();
+		});
+		
+	};
+	/** called to refresh the calendar. It must be overrided by the implementation of the calendar.
+	 * @param {Function} ondone to be called when the refresh is done
+	 */
+	this._refresh = function(ondone) {
+		var type = getObjectClassName(this);
+		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar._refresh not implemented: "+type));
 	};
 	/** {Function} function called to save an event. If it is not defined, it means the calendar is read only. This function takes the event to save as parameter. */
 	this.saveEvent = null; // must be overriden if the calendar supports modifications
@@ -272,12 +316,13 @@ function Calendar(provider, name, color, show, icon) {
 	this.saveColor = function(color) {}; // to be overriden if supported
 	/** {Function} function to rename the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.rename = null; // must be overriden if this is supported
-	var t=this;
-	var ref = function(){
-		if (t.manager) t.manager.refreshCalendar(t,function(){setTimeout(ref,5*60*1000);});
-		else setTimeout(ref,60000);
-	};
-	setTimeout(ref,5*60*1000);
+	if (name) { // check we are really on an instance, not the prototype
+		var t=this;
+		var ref = function(){
+			t.refresh(function(){setTimeout(ref,5*60*1000);});
+		};
+		setTimeout(ref,5*60*1000);
+	}
 }
 
 /**
@@ -397,7 +442,7 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 	Calendar.call(this, provider, name, color, show, icon);
 	/** Id of this PN Calendar */
 	this.id = id;
-	this.refresh = function(ondone) {
+	this._refresh = function(ondone) {
 		var t=this;
 		require("calendar_objects.js", function(){
 			service.json("calendar", "get", {id:t.id}, function(result) {
@@ -414,18 +459,18 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 							found = true;
 							t.events.push(ev);
 							if (ev.last_modified != removed_events[j].last_modified)
-								t.manager.on_event_updated.fire(ev);
+								t.on_event_updated.fire(ev);
 							removed_events.splice(j,1);
 							break;
 						}
 					}
 					if (!found) {
 						t.events.push(ev);
-						t.manager.on_event_added.fire(ev);
+						t.on_event_added.fire(ev);
 					}
 				}
 				for (var i = 0; i < removed_events.length; ++i)
-					t.manager.on_event_removed.fire(removed_events[i]);
+					t.on_event_removed.fire(removed_events[i]);
 				ondone();
 			});
 		});
@@ -444,12 +489,12 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 					event.uid = res.uid;
 					event.id = res.id;
 					t.events.push(event);
-					t.manager.on_event_added.fire(event);
+					t.on_event_added.fire(event);
 				} else if (event.uid && res) {
 					for (var i = 0; i < cal.events.length; ++i)
 						if (t.events[i].uid == event.uid) {
 							t.events.splice(i,1,event);
-							t.manager.on_event_updated.fire(event);
+							t.on_event_updated.fire(event);
 							break;
 						}
 				}
@@ -470,9 +515,10 @@ PNCalendar.prototype.constructor = PNCalendar;
 /** Implementation of CalendarsProvider for internal(PN) calendar (stored in the database) */
 function PNCalendarsProvider() {
 	var t=this;
-	this.getCalendars = function(handler, feedback_handler) {
-		if (feedback_handler) feedback_handler("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");
+	this.getCalendars = function(handler) {
+		this.connectionStatus("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");
 		service.json("calendar", "get_my_calendars", {}, function(calendars) {
+			t.connectionStatus("");
 			if (!calendars) return;
 			var list = [];
 			for (var i = 0; i < calendars.length; ++i)
@@ -499,4 +545,5 @@ function PNCalendarsProvider() {
 PNCalendarsProvider.prototype = new CalendarsProvider();
 PNCalendarsProvider.prototype.constructor = PNCalendarsProvider;
 
-window.top.CalendarsProviders.add(window.top.pn_calendars_provider = new PNCalendarsProvider());
+if (!window.top.pn_calendars_provider)
+	window.top.CalendarsProviders.add(window.top.pn_calendars_provider = new PNCalendarsProvider());

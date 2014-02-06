@@ -114,7 +114,7 @@ class page_selection_main_page extends selection_page {
 			require(["calendar.js","popup_window.js"],function(){
 				if(calendar_id != null && calendar_name != null){
 					var cal_manager = new CalendarManager();
-					var PN_cal = new PNCalendar(window.top.pn_calendars_provider, calendar_id, calendar_name, "C0C0FF", true, true);
+					var PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
 					cal_manager.addCalendar(PN_cal);
 					require("calendar_view.js",function(){
 						new CalendarView(cal_manager, "week", 60, "calendar_container", function(){});

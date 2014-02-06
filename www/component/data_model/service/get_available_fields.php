@@ -22,7 +22,7 @@ class service_get_available_fields extends Service {
 			$path = $d[1];
 				echo "{data:";
 				echo $data->javascriptDataDisplay($path->sub_model);
-				echo ",path:".json_encode($path->get_string());
+				echo ",path:".json_encode($path->getString());
 				echo "}";
 		}
 		echo "]";

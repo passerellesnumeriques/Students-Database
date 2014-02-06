@@ -416,7 +416,7 @@ class page_batches_classes extends Page {
 				if (filter_batches.length == 1 && filter_class == null && filter_period == null) {
 					var import_students = document.createElement("DIV");
 					import_students.className = "button";
-					import_students.innerHTML = "<img src='"+theme.icons_16.import+"' style='vertical-align:bottom'/> Import Students";
+					import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
 					import_students.onclick = function() {
 						postData('/dynamic/students/page/import_students',{
 							batch:filter_batches[0],

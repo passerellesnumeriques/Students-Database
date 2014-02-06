@@ -53,8 +53,8 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			while (t.header_center.childNodes.length > 0) t.header_center.removeChild(t.header_center.childNodes[0]);
 	};
 	/** Set a title, with optionally an icon
-	 * @param {string} icon URL of the icon 16x16, or null if no icon
-	 * @param {string} text the title
+	 * @param {String} icon URL of the icon 16x16, or null if no icon
+	 * @param {String} text the title
 	 */
 	t.addTitle = function(icon, text) {
 		var div = document.createElement("DIV");
@@ -318,7 +318,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		div = document.createElement("DIV"); div.className = "button";
 		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
 		div.title = "Export list";
-		img.src = theme.icons_16["export"];
+		img.src = theme.icons_16["_export"];
 		div.onclick = function() { t._exportMenu(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);

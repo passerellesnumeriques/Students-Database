@@ -1,3 +1,6 @@
+if (typeof require != 'undefined')
+	require("calendar_objects.js");
+
 /**
  * Manage the display of calendars from the given calendar manager. It instantiates the correct view (day, week, month...) for the display, and manage the switch between views.
  * @param {CalendarManager} calendar_manager the manager containing the list of calendars to display
@@ -727,13 +730,15 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		this.view.removeEvent(ev.uid);
 	};
 	
-	this.calendar_manager.on_event_added.add_listener(function(ev) { t.addEvent(ev); });
-	this.calendar_manager.on_event_removed.add_listener(function(ev) { t.removeEvent(ev); });
-	this.calendar_manager.on_event_updated.add_listener(function(ev) {
-		t.view.removeEvent(ev);
-		t.view.addEvent(ev);
+	require("calendar_objects.js",function() {
+		t.calendar_manager.on_event_added.add_listener(function(ev) { t.addEvent(ev); });
+		t.calendar_manager.on_event_removed.add_listener(function(ev) { t.removeEvent(ev); });
+		t.calendar_manager.on_event_updated.add_listener(function(ev) {
+			t.view.removeEvent(ev);
+			t.view.addEvent(ev);
+		});
+		t._init();
 	});
-	this._init();
 }
 
 /**
