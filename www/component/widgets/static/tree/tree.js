@@ -69,6 +69,8 @@ function TreeItem(cells, expanded) {
 	this._hide = function(item) {
 		item.tr.style.visibility = 'hidden';
 		item.tr.style.position = 'absolute';
+		item.tr.style.top = "-10000px";
+		item.tr.style.left = "-10000px";
 		for (var i = 0; i < item.children.length; ++i)
 			this._hide(item.children[i]);
 	};
@@ -148,6 +150,10 @@ function tree(container) {
 		}
 		item.tr.style.visibility = visible ? 'visible' : 'hidden';
 		item.tr.style.position = visible ? 'static' : 'absolute';
+		if (!visible) {
+			item.tr.style.top = "-10000px";
+			item.tr.style.left = "-10000px";
+		}
 		var td = document.createElement("TD"); item.tr.appendChild(td);
 		td.style.padding = "0px";
 		td.style.whiteSpace = "nowrap";

@@ -5,6 +5,7 @@
 	font-family: Verdana;
 	font-size: 10pt;
 	margin-bottom: 5px;
+	background-color: white;
 }
 .codedoc_table td, .codedoc_table th {
 	border: 1px solid black;
@@ -22,7 +23,7 @@
 	font-weight: bold;
 }
 
-.codedoc_class {
+.codedoc_class, .codedoc_class a {
 	font-family: Courier New;
 	font-size: 9pt;
 	color: #000080;

@@ -1,7 +1,7 @@
 <?php
 require_once("DataBaseSystem.inc");
 /** 
- * Single way to access to the database: create an SQL query, performs security checks, then execute the request 
+ * Single way to access to the database: creates an SQL query, performs security checks, then executes the request 
  */
 class SQLQuery {
 	
@@ -48,7 +48,7 @@ class SQLQuery {
  	 */
  	public static function &create() { $q = new SQLQuery(); return $q; }
 
- 	/** array Pre-selected sub models, automatically used with every new SQLQuery */
+ 	/** @var array Pre-selected sub models, automatically used with every new SQLQuery */
  	private static $preselected_submodels = array();
  	/** Pre-select sub models, which will be automatically selected in every new SQLQuery
  	 * @param string $key_table the table of the sub model
@@ -1753,6 +1753,7 @@ class SQLQuery {
 		return SQLQuery::create()->selectSubModels($sub_models)->select($table)->where($t->getPrimaryKey()->name, $key)->executeSingleRow();
 	}
 
+	/** @var boolean indicates if we are currently in a transaction */
 	private static $transaction_started = false;
 	public static function startTransaction() {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->log("START TRANSACTION", 0, 0, 0);

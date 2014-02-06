@@ -6,7 +6,7 @@ class page_navigation extends Page {
 	public function execute() {
 		$this->require_javascript("tree.js");
 ?>
-	<div id='navigation_tree'>
+	<div id='navigation_tree' style='background-color:white'>
 	</div>
 	<script type='text/javascript'>
 	var nav = new tree('navigation_tree');

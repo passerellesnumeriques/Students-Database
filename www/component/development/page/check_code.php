@@ -120,6 +120,7 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 				var p = elem.parameters[j];
 				if (p.doc.length == 0) add_error(item, "Function "+ns_path+name+": no comment for parameter "+p.name, elem.location);
 				if (!p.type) add_error(item, "Function "+ns_path+name+": no type for parameter "+p.name, elem.location);
+				else check_js_type(p.type, "Function "+ns_path+name+", Parameter "+p.name, item, elem.location);
 				check_name_small_underscore(p.name, "Parameter "+p.name+" in function "+ns_path+name, item);
 			}
 		} else if (elem instanceof JSDoc_Value) {
@@ -130,8 +131,30 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 				check_name_small_underscore(name, "Public Variable "+ns_path+name, item);
 			// check doc
 			if (elem.doc.length == 0) add_error(item, "Variable "+ns_path+name+": no comment", elem.location);
+			if (!elem.type) add_error(item, "Variable "+ns_path+name+": no type", elem.location);
+			else check_js_type(elem.type, "Variable "+ns_path+name, item, elem.location);
 		}
 	}
+}
+function check_js_type(type, descr, item, location) {
+	var i = type.indexOf('|');
+	if (i > 0) {
+		check_js_type(type.substring(0,i).trim(), descr, item, location);
+		check_js_type(type.substring(i+1).trim(), descr, item, location);
+		return;
+	}
+	if (type == "String") return;
+	if (type == "Array") return;
+	if (type == "Date") return;
+	if (type == "Number") return;
+	if (type == "Boolean") return;
+	if (type == "window") return;
+	if (type == "DOMNode") return;
+	if (type == "Function") return;
+	if (type == "Object") return;
+	var cl = get_class(window.jsdoc, type);
+	if (cl == null)
+		add_error(item, descr+": unknown type <i>"+type+"</i>", location); 
 }
 function get_class(ns, name) {
 	var i = name.indexOf('.');

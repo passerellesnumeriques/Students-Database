@@ -16,13 +16,26 @@ A component can be composed of:<ul>
 	<li>Services: services are functions callable from the Front-End. Typically it uses JSON for its interface (input and output) so it can be easily called by using AJAX calls from a page</li>
 	<li>Static resources: elements that will never change whoever is requesting it (no access restriction, no customization depending on the user, no information coming from database...). This is typically images, javascripts, and CSS.</li>
 </ul>
-A component can also have tables in the database: it will be responsible of this part of the data model. For example, the component <code>user_management</code>, which is responsible of managing the users and their access rights, will have tables like <code>Users</code> containing the list of users, <code>UserRights</code> containing the rights of each user...
 <br/>
-Each kind of element must be located in specific places:<ul>
+Each component is located in a separate sub-directory of <code>www/component</code>.<br/>
+Then, each kind of element must be located in a specific sub-directory of the component:<ul>
 	<li>Pages must be in the directory <code>page</code> of the component</li>
 	<li>Services must be in the directoy <code>service</code> of the component</li>
 	<li>Static resources must be in the directory <code>static</code> or the component</li>
 </ul>
+<br/>
+Each component must provide an implementation of the abstract class 
+<a class='code' href='/dynamic/documentation/page/php_search?type=Component'>Component</a>. 
+This class must have exactly the name of the component, and be located in a PHP file having also the name 
+of the component, with extension <code>.inc</code>, and located directly in the component's directory. 
+For example, for the component <code>user_management</code>, the class will be in 
+<code>www/component/user_management/user_management.inc</code><br/>
+This is described in more details in the section 
+<i><a href='/dynamic/documentation/page/php?general=app'>PHP/Application and components</a></i> of this documentation.<br/> 
+<br/>
+A component can also have tables in the database: it will be responsible of this part of the data model, meaning it should provide necessary functionalities to access it, and other components should not access directly to those tables, but use the functionalities provided by the component defining the tables.<br/>
+For example, the component <code>user_management</code>, which is responsible of managing the users and their access rights, will have tables like <code>Users</code> containing the list of users, <code>UserRights</code> containing the rights of each user...<br/>
+Those tables are defined in the file <code>datamodel.inc</code> of the component, but this will be described later in more details.
 
 <h2>Main concepts before to start</h2>
 
@@ -32,14 +45,17 @@ The application is developped using:<ul>
 	<li>PHP for the Back-end</li>
 	<li>HTML, CSS and JavaScript for the Front-End</li>
 </ul>
-No framework is used, to avoid the need to learn a specific framework before to join the domain.<br/>
+No framework is used, to avoid the need to learn a specific framework before to join the development team.<br/>
+An external library can be used, when its usage is very located and do not impact other parts of the application. For example, a library to manipulate Excel files (import/export...). 
 
 <h3>Database Access</h3>
 
-In order to ensure security, the components don't access to the database directly, but through a PHP interface: <code>SQLQuery</code>.<br/>
+In order to ensure security, the components don't access to the database directly, but through a PHP interface: <a class='code' href='/dynamic/documentation/page/php_search?type=SQLQuery'>SQLQuery</a>.<br/>
 Each element of the database is declared with security features, specifying who can read it, modify it, add data, and remove data. The <code>SQLQuery</code> interface is responsible to perform all security checks before to execute any request to the database.<br/>
+<br/>
 This will allow to avoid any mistake in the code, or if a developer forget to check the user rights.<br/>
-This interface will be detailed later.
+This will also allow to provide generic services/functionalities to access database from an external system, but still ensuring security and consistency of the database.<br/>
+This <code>SQLQuery</code> interface will be detailed later.<br/>
 
 <h3>Database declaration</h3>
 
@@ -55,7 +71,7 @@ The advantages of having the data model declared directly in the code are:<ul>
 
 All the files composing the application are not directly accessible by a client. All requests will be redirected to the <code>index.php</code>, which will analyze the requested URL, and reply to it.<br/>
 <div class='note'>
-Technical note: this redirection to <code>index.php</code> is done using Apache url rewrite extension: by implementing it directly on the web server, we ensure it will not be possible to get around the redirection.
+Technical note: this redirection to <code>index.php</code> is done using Apache url rewrite module: by implementing it directly on the web server, we ensure it will not be possible to get around the redirection.
 </div>
 
 The URL accepted by the application must comply to the following rules:<ul>
@@ -63,6 +79,7 @@ The URL accepted by the application must comply to the following rules:<ul>
 	<li><code>/dynamic/&lt;component&gt;/page/&lt;pagename&gt;</code>: to access to the web page <code>pagename</code> in the given <code>component</code> (the path in the application will be <code>/component/&lt;component&gt;/page/&lt;pagename&gt;.php</code>)</li>
 	<li><code>/dynamic/&lt;component&gt;/service/&lt;servicename&gt;</code>: to access to the service <code>servicename</code> in the given <code>component</code> (the path in the application will be <code>/component/&lt;component&gt;/service/&lt;servicename&gt;.php</code>)</li>
 </ul>
+Static files are sent directly, but pages and services are wrapped by the <a class='code' href='/dynamic/documentation/page/php_search?type=Component'>Component</a> class. More detailed information is provided in the documentation of this class.
 
 </body>
 </html>

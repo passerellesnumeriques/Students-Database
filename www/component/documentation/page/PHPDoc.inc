@@ -111,83 +111,97 @@ class PHPDoc {
 		if (count($list) > 0) {
 			$table = new DocTable();
 			$row = $table->add_row();
-			$row->add_cell("Methods", "codedoc_table_title", 4);
+			$row->add_cell("Methods", "codedoc_table_title", 3);
 			$row = $table->add_row();
 			$row->add_cell("Modifiers", "codedoc_table_title2");
-			$row->add_cell("Name", "codedoc_table_title2");
-			$row->add_cell("Parameters", "codedoc_table_title2");
+			$row->add_cell("Name and parameters", "codedoc_table_title2");
 			$row->add_cell("Description", "codedoc_table_title2");
 			foreach ($list as $m) {
 				$row = $table->add_row();
-				// modifiers
+				
+				// get infos
 				$modifiers = "";
 				foreach (Reflection::getModifierNames($m->getModifiers()) as $mod)
 					$modifiers .= $mod." ";
-				$cell_modifiers = $row->add_cell($modifiers, "codedoc_modifiers", 1, "vertical-align:top;");
-				// name
-				$cell_name = $row->add_cell("<a name='method_".$m->name."'>".$m->name."</a>", "codedoc_method", 1, "vertical-align:top;");
-				// check if inherited
-				$origin = PHPDoc::get_original_method_declaration($m);
-				if ($origin <> $m) {
-					$row->add_cell("<a href='php?file=".urlencode($origin->getFileName())."&class=".urlencode($origin->getDeclaringClass()->getName())."#method_".$origin->getName()."'><i>Inherits from ".$origin->getDeclaringClass()->getName()."</i></a>", null, 2);
-					continue;
-				}
-				// parameters
+				$parameters = $m->getParameters();
 				$comment = "";
 				$tags = array();
 				PHPDoc::parse_comment($m->getDocComment(), $comment, $tags);
-				$new_row = false;
-				if ($comment <> "") {
-					$row->add_cell($comment, "codedoc_comment", 2);
-					$new_row = true;
-				}
-				$parameters = $m->getParameters();
-				$rows = $new_row ? 1 : 0;
-				$rows += count($parameters);
-				if (isset($tags["return"])) $rows++;
-				if ($rows == 0) $rows = 1;
+				
+				$rows = 1;
+				if (count($parameters) > 0) $rows += count($parameters) + 1;
+				else if (isset($tags["return"])) $rows ++;
+				
+				// modifiers
+				$cell_modifiers = $row->add_cell($modifiers, "codedoc_modifiers", 1, "vertical-align:top;");
 				$cell_modifiers->rowspan = $rows;
-				$cell_name->rowspan = $rows;
-				foreach ($parameters as $p) {
-					if ($new_row) $row = $table->add_row();
-					else $new_row = true;
-					$param_doc = "";
-					$param_type = "";
-					if (isset($tags["param"])) {
-						foreach ($tags["param"] as $t) {
-							$name = null;
-							$type = null;
-							$doc = null;
-							$w = PHPDoc::getWord($t);
-							if (substr($w,0,1) <> "$") {
-								$type = $w;
-								if (strlen($t) > 0) {
-									$name = substr(PHPDoc::getWord($t),1);
+				// name
+				$cell_name = $row->add_cell("<a name='method_".$m->name."' class='codedoc_method'>".$m->name."</a> (", "codedoc_code", 1, "vertical-align:top;white-space:nowrap;");
+				if (count($parameters) == 0) $cell_name->content .= ")";
+				if (count($parameters) > 0 || isset($tags["return"])) $cell_name->style .= "border-bottom: 0px;";
+
+				// document
+				// check if inherited
+				$origin = PHPDoc::get_original_method_declaration($m);
+				if ($origin <> $m) {
+					if ($comment <> "") $comment .= "<br/>";
+					$comment .= "<a href='php?file=".urlencode($origin->getFileName())."&class=".urlencode($origin->getDeclaringClass()->getName())."#method_".$origin->getName()."'><i>Inherits from ".$origin->getDeclaringClass()->getName()."</i></a>";
+				}
+				$row->add_cell($comment, "codedoc_comment");
+				
+				// parameters
+				if (count($parameters) > 0) {
+					foreach ($parameters as $p) {
+						$row = $table->add_row();
+						$param_doc = "";
+						$param_type = "";
+						if (isset($tags["param"])) {
+							foreach ($tags["param"] as $t) {
+								$name = null;
+								$type = null;
+								$doc = null;
+								$w = PHPDoc::getWord($t);
+								if (substr($w,0,1) <> "$") {
+									$type = $w;
+									if (strlen($t) > 0) {
+										$name = substr(PHPDoc::getWord($t),1);
+										$doc = $t;
+									}
+								} else {
+									$name = substr($w,1);
 									$doc = $t;
 								}
-							} else {
-								$name = substr($w,1);
-								$doc = $t;
-							}
-							if ($name == $p->getName()) {
-								$param_doc = $doc;
-								$param_type = $type;
-								break;
+								if ($name == $p->getName()) {
+									$param_doc = $doc;
+									$param_type = $type;
+									break;
+								}
 							}
 						}
+						$s = $p->getName();
+						if ($param_type <> "")
+							$s .= ": ".PHPDoc::type_link($param_type);
+						$row->add_cell($s, "codedoc_parameter", 1, "vertical-align:top;border-top: 0px;border-bottom: 0px;padding-left: 10px;");
+						$row->add_cell($param_doc, "codedoc_comment");
 					}
-					$s = $p->getName();
-					if ($param_type <> "")
-						$s .= ": ".PHPDoc::type_link($param_type);
-					$row->add_cell($s, "codedoc_parameter", 1, "vertical-align:top;");
-					$row->add_cell($param_doc, "codedoc_comment");
 				}
+
+				// return
 				if (isset($tags["return"])) {
-					if ($new_row) $row = $table->add_row();
-					else $new_row = true;
+					$row = $table->add_row();
 					$type = PHPDoc::getWord($tags["return"][0]);
-					$row->add_cell("Returns: ".PHPDoc::type_link($type));
+					$s = "";
+					if (count($parameters) > 0) $s .= ") ";
+					$s .= "=&gt; ".PHPDoc::type_link($type);
+					$row->add_cell($s, null, 1, "border-top: 0px");
 					$row->add_cell($tags["return"][0], "codedoc_comment");
+				} else {
+					if (count($parameters) > 0) {
+						$row = $table->add_row();
+						$cell = $row->add_cell(")");
+						$cell->style .= "border-top: 0px;";
+						$row->add_cell("");
+					}
 				}
 			}
 			$table->generate();
@@ -210,6 +224,8 @@ class PHPDoc {
 		if (is_string($type)) {
 			if ($type == "string" || 
 				$type == "boolean" || 
+				$type == "array" || 
+				$type == "number" || 
 				$type == "null"
 			)
 				return "<span class='codedoc_class'>".$type."</span>";
