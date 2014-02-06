@@ -27,9 +27,10 @@ function CalendarManager() {
 	this._calendars_listeners = [];
 
 	var t=this;
+	var w=window;
 	window.top.pnapplication.onlogout.add_listener(function() {
 		while (t.calendars.length > 0) t.removeCalendar(t.calendars[0]);
-		if (window.top.calendar_manager) window.top.calendar_manager = null;
+		if (w.top && w.top.calendar_manager) w.top.calendar_manager = null;
 	});
 	
 	/**
