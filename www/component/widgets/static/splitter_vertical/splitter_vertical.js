@@ -1,3 +1,6 @@
+if (typeof theme != 'undefined')
+	theme.css("splitter_vertical.css");
+
 function splitter_vertical(element, position) {
 	if (typeof element == 'string') element = document.getElementById(element);
 	var t = this;
@@ -24,7 +27,7 @@ function splitter_vertical(element, position) {
 		t._fireLayoutSizes = {};
 		t._fireLayoutSizes.w = t.element.offsetWidth,
 		t._fireLayoutSizes.h = t.element.offsetHeight,
-		t._fireLayoutSizes.sw = t.separator.offsetWidth,
+		t._fireLayoutSizes.sw = 7,
 		t._fireLayoutSizes.x = Math.floor(t._fireLayoutSizes.w*t.position - t._fireLayoutSizes.sw/2);
 		setWidth(t.part1, t._fireLayoutSizes.x);
 		setHeight(t.part1, t._fireLayoutSizes.h);

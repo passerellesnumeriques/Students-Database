@@ -4,8 +4,12 @@ class students extends Component {
 	
 	public function getPluginImplementations() {
 		require_once("StudentsPeoplePlugin.inc");
+		require_once("StudentsApplicationPlugin.inc");
+		require_once("StudentsNewsPlugin.inc");
 		return array(
-			new StudentsPeoplePlugin()
+			new StudentsPeoplePlugin(),
+			new StudentsApplicationPlugin(),
+			new StudentsNewsPlugin()
 		);
 	}
 	

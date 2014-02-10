@@ -98,8 +98,12 @@ var students_list = new data_list(
 			students_list.addHeader(assign);
 		}
 		// buttons that need additional info: dynamic
-		service.customOutput("training_education","list_buttons",url.params,function(js){
+		service.customOutput("students","list_buttons",url.params,function(js){
 			eval(js);
+		});
+
+		list.makeRowsClickable(function(row){
+			location.href = "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id);
 		});
 	}
 );

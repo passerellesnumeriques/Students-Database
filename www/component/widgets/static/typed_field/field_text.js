@@ -22,6 +22,7 @@ field_text.prototype._create = function(data) {
 		var input = document.createElement("INPUT");
 		t.input = input;
 		input.type = "text";
+		input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
 		if (this.config && this.config.max_length) input.maxLength = this.config.max_length;
 		if (data) input.value = data;
 		input.style.margin = "0px";

@@ -6,7 +6,6 @@ class page_home extends Page {
 	public function execute() {
 		$exclude_components = array("development","test");
 		
-		$this->add_javascript("/static/widgets/collapsable_section/collapsable_section.js");
 		$this->add_javascript("/static/widgets/page_header.js");
 		$this->add_javascript("/static/widgets/vertical_layout.js");
 		$this->add_javascript("/static/widgets/horizontal_layout.js");

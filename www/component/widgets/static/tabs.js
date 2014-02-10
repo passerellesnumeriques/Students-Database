@@ -1,3 +1,6 @@
+if (typeof theme != 'undefined')
+	theme.css("tabs.css");
+
 function tabs(container, fill_tab_content) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	container.widget = this;
@@ -44,12 +47,10 @@ function tabs(container, fill_tab_content) {
 	
 	t.select = function(index) {
 		if (t.selected != -1) {
-			t.tabs[t.selected].header.style.backgroundColor = "#C0C0D0";
-			t.tabs[t.selected].header.style.color = "#505050";
+			t.tabs[t.selected].className = "tab_header";
 			t.content.removeChild(t.tabs[t.selected].content);
 		}
-		t.tabs[index].header.style.backgroundColor = "#FFFFFF";
-		t.tabs[index].header.style.color = "#000000";
+		t.tabs[index].header.className = "tab_header selected";
 		t.content.appendChild(t.tabs[index].content);
 		t.selected = index;
 		fireLayoutEventFor(t.tabs[index].content);
@@ -58,17 +59,9 @@ function tabs(container, fill_tab_content) {
 
 	t._build_tab_header = function(tab) {
 		var div = document.createElement("DIV");
-		div.style.borderTop = "1px solid black";
-		div.style.borderLeft = "1px solid black";
-		div.style.borderRight = "1px solid black";
-		setBorderRadius(div, 3, 3, 3, 3, 0, 0, 0, 0);
+		div.className = "tab_header";
 		div.style.display = "inline-block";
-		div.style.padding = "2px";
-		div.style.margin = "1px 2px 0px 1px";
 		div.innerHTML = (tab.icon != null ? "<img src='"+tab.icon+"' style='vertical-align:bottom'/> " : "")+tab.title;
-		div.style.cursor = "pointer";
-		div.style.backgroundColor = "#C0C0D0";
-		div.style.color = "#505050";
 		div.id = tab.id;
 		div.onclick = function() { t.select(t.getTabIndexById(this.id)); };
 		tab.header = div;

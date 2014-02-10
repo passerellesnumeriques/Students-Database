@@ -7,7 +7,7 @@ class GeographyAdministrationPlugin implements AdministrationPlugin {
 	
 	public function getAdministrationPages() {
 		return array(
-				new AdministrationPage("Geography", "/dynamic/geography/page/admin", "/static/geography/geography_16.png"),
+			new AdministrationPage("Geography", "/dynamic/geography/page/admin", "/static/geography/geography_16.png", "/static/geography/geography_32.png", "Edit geographic information by country"),
 		);
 	}
 	

@@ -3,11 +3,12 @@ require_once("TableDefinition.inc");
 /** Defines the data model of the application. Each component is supposed to populate this model with its own part of the model */
 class DataModel {
 
-	/** @var $model DataModel */
+	/** @static 
+	 * @var DataModel singleton*/
 	private static $model = null;
-	/**
+	/** retrieve the singleton instance of the data model
 	 * @static 
-	 * @return DataModel */
+	 * @return DataModel the data model */
 	public static function &get() {
 		if (DataModel::$model == null) {
 			$model = new DataModel();

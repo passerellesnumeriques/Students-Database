@@ -1,26 +1,12 @@
 <?php 
+require_once("component/students/StudentsPlugin.inc");
 require_once("component/news/NewsPlugin.inc");
 /**
  * Implementation of NewsPlugin for the curriculum
  */
-class CurriculumNewsPlugin implements NewsPlugin {
+class CurriculumStudentsPlugin implements StudentsPlugin {
 	
-	public function getSections() {
-		return array(new CurriculumEducationNewsSection());
-	}
-	
-}
-
-/** Education section of updates, for the curriculum */
-class CurriculumEducationNewsSection implements NewsSection {
-	
-	public function getName() { return "education"; }
-	public function getDisplayName() { return "Education"; }
-	public function getIcon() { return "/static/students/student_32.png"; }
-	public function getAccessRight() {
-		return 2; // TODO
-	}
-	public function getCategories() {
+	public function getNewsCategories() {
 		return array(
 			new CurriculumNewsCategory(),
 			new BatchNewsCategory()
@@ -31,7 +17,7 @@ class CurriculumEducationNewsSection implements NewsSection {
 
 /** Category for curriculum updates */
 class CurriculumNewsCategory implements NewsCategory {
-
+	
 	public function getName() { return "curriculum"; }
 	public function getDisplayName() { return "Curriculum"; }
 	public function getIcon() { return "/static/curriculum/curriculum_16.png"; }
@@ -40,6 +26,7 @@ class CurriculumNewsCategory implements NewsCategory {
 	}
 	
 }
+
 /** Category for batches updates */
 class BatchNewsCategory implements NewsCategory {
 

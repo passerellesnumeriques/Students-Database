@@ -89,7 +89,11 @@ case "static":
 	default: invalid("Invalid static resource type");
 	}
 	if (!file_exists("component/".$component_name."/static/".$path)) invalid("Static resource not found");
-	readfile("component/".$component_name."/static/".$path);
+	if ($ext == "css") {
+		require_once("css_cross_browser.inc");
+		parse_css("component/".$component_name."/static/".$path);
+	} else
+		readfile("component/".$component_name."/static/".$path);
 	die();
 case "dynamic":
 	// get the type of request

@@ -1,26 +1,28 @@
 <?php 
-class page_home extends Page {
+class page_dashboard extends Page {
 	
 	public function get_required_rights() { return array(); }
 	
 	public function execute() {
-		$this->add_javascript("/static/widgets/section/section.js");
+		$this->require_javascript("section.js");
+		theme::css($this, "application.css");
 ?>
-<div style='position:absolute;width:50%;height:100%;overflow-y:auto;top:0px;left:0px;'>
-	<div id='general_news' icon='/static/news/news.png' title='General Updates' collapsable='true' style="margin:5px 5px 0px 5px;">
+<div style='position:absolute;top:0px;left:0px;width:50%;'>
+	<div id='general_news' icon='/static/news/news.png' title='General Updates' collapsable='true' style="margin:10px 10px 20px 10px;">
 		<div style='padding:2px 3px 0px 3px;' id='general_news_container'>
 			<img id='general_news_loading' src='/static/news/loading.gif'/>
 		</div>
 	</div>
-	<div id='other_news' icon='/static/news/news.png' title='Other Updates' collapsable='true' style="margin:5px 5px 0px 5px;">
+	<div id='other_news' icon='/static/news/news.png' title='Other Updates' collapsable='true' style="margin:10px 10px 20px 10px;">
 		<div style='padding:2px 3px 0px 3px;' id='other_news_container'>
 			<img id='other_news_loading' src='/static/news/loading.gif'/>
 		</div>
 	</div>
 </div>
-<div style='position:absolute;width:50%;top:0px;left:50%'>
-	<div id='calendars' icon='/static/calendar/event.png' title='Your Calendars' collapsable='true' style="margin:5px 5px 0px 5px;">
-		<div id='calendars_container' style="height:300px;"><img src='<?php echo theme::$icons_16["loading"];?>'/></div>
+
+<div style='position:absolute;top:0px;left:50%;width:50%;'>
+	<div id='calendars' icon='/static/calendar/event.png' title='Your Calendars' collapsable='true' style="margin:10px 10px 20px 10px;">
+		<div id='calendars_container'><img src='<?php echo theme::$icons_16["loading"];?>'/></div>
 	</div>
 </div>
 <script type='text/javascript'>

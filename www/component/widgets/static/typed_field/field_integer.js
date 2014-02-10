@@ -15,6 +15,7 @@ field_integer.prototype._create = function(data) {
 		var t=this;
 		var input = document.createElement("INPUT");
 		input.type = "text";
+		input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
 		if (this.config && this.config.min && this.config.max) {
 			var m = Math.max((""+this.config.min).length,(""+this.config.max).length);
 			input.maxLength = m;

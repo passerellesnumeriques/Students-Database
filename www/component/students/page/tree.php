@@ -9,6 +9,7 @@ class page_tree extends Page {
 		$this->require_javascript("page_header.js");
 		$this->require_javascript("tree.js");
 		$this->require_javascript("tree_functionalities.js");
+		theme::css($this, "information_bar.css");
 		$can_edit = PNApplication::$instance->user_management->has_right("manage_batches");
 		
 		require_once("component/data_model/page/utils.inc");
@@ -19,29 +20,21 @@ class page_tree extends Page {
 ?>
 <div style='width:100%;height:100%' id='container'>
 	<div id='left'>
-		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches & Classes'>
-		</div>
-		<div id='tree' layout='fill' style='overflow-y:auto;overflow-x:hidden;background-color:white'></div>
+		<div id='tree' style='overflow-y:auto;overflow-x:auto;background-color:white;width:100%;height:100%'></div>
 	</div>
-	<div id='right' layout='fill'>
-		<div id='page_header'></div>
-		<iframe id='training_education_page' name='training_education_page' layout='fill' style='border:0px' frameBorder=0>
+	<div id='right'>
+		<div id='page_header' class='information_bar'>
+			<div id='page_header_title' class='information_bar_title'></div>
+			<div class='information_bar_separator'></div>
+			<div id='page_header_content'></div>
+		</div>
+		<iframe id='students_page' name='students_page' layout='fill' style='border:0px' frameBorder=0>
 		</iframe>
 	</div>
 </div>
 <script type='text/javascript'>
-tree_header = new page_header('tree_header',true);
-header = new page_header('page_header',true);
-new vertical_layout('left');
 new vertical_layout('right');
 new splitter_vertical('container',0.25);
-require("horizontal_menu.js",function() {
-	var doit = function() {
-		if (typeof header.menu != 'undefined') { setTimeout(doit, 10); }
-		header.menu.valign = "middle";
-	};
-	doit();
-});
 
 // List of specializations
 var specializations = [<?php
@@ -123,19 +116,16 @@ TreeNode.prototype = {
 			setBackgroundGradient(this.element, "vertical", [{pos:0,color:'#FFF0D0'},{pos:100,color:'#F0D080'}]);
 		}
 		this._select();
+		updateMenu();
 		// refresh frame
-		var frame = document.getElementById('training_education_page');
+		var frame = document.getElementById('students_page');
 		var url = new URL(getIFrameWindow(frame).location.href);
-		var found = false;
 		for (var i = 0; i < menu_items.length; ++i) {
-			var menu_url = new URL(menu_items[i].href);
-			if (menu_url.path == url.path) {
-				found = true;
-				getIFrameWindow(frame).location.href = menu_url.toString();
+			if (menu_items[i].page == url.path) {
+				getIFrameWindow(frame).location.href = menu_items[i].page+"?"+menu_items[i].params;
 				break;
 			}
 		}
-		if (!found) frame.src = menu_items[0].href;
 	},
 	_select: function(){},
 	findTag: function(tag) {
@@ -167,26 +157,19 @@ function AllStudents(root) {
 	this._build_item(null, "All Students", true);
 	this.element.style.fontWeight = "bold";
 	this._select = function() {
-		header.setTitle("All Students");
-		header.resetMenu();
-		menuReset();
-		menuStudentsList("");
-		menuUpdates(null,"Education");
-		menuCurriculum("");
-		menuGrades("");
-		menuDiscipline();
-		menuHealth();
+		document.getElementById('page_header_title').innerHTML = "<img src='/static/curriculum/batch_32.png'/> All Students";
+		var nb_batches = 0;
+		for (var i = 0; i < this.children.length; ++i)
+			nb_batches += this.children[i].children.length;
+		document.getElementById('page_header_content').innerHTML = nb_batches+" batch(s)";
+		setMenuParams("list", "");
+		setMenuParams("pictures", "");
+		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students'}]")); 
+		setMenuParams("curriculum", "");
+		setMenuParams("grades", "");
+		setMenuParams("discipline", "");
+		setMenuParams("health", "");
 	};
-	<?php if ($can_edit) {?>
-	var create_batch_button = document.createElement("DIV");
-	create_batch_button.className = "button";
-	create_batch_button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add,"right_bottom")+"'/> New batch";
-	tree_header.addMenuItem(create_batch_button);
-	create_batch_button.onclick = create_new_batch;
-	this._build_context_menu = function(menu) {
-		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add,"right_bottom"), "New Batch", create_new_batch);
-	};
-	<?php } ?>
 }
 extendsTreeNode(AllStudents);
 
@@ -198,22 +181,22 @@ function CurrentStudents(all) {
 	this._build_item(null, "Current Students", true);
 	this.element.style.fontWeight = "bold";
 	this._select = function() {
-		header.setTitle("Current Students");
-		header.resetMenu();
-		menuReset();
+		document.getElementById('page_header_title').innerHTML = "<img src='/static/curriculum/batch_32.png'/> Current Students";
+		document.getElementById('page_header_content').innerHTML = this.children.length+" batch(s)";
 		var batches = "";
-		var tags = [];
+		var tags = "";
 		for (var i = 0; i < this.children.length; ++i) {
-			if (batches.length > 0) batches += ",";
+			if (batches.length > 0) { batches += ","; tags += ","; }
 			batches += this.children[i].id;
-			tags.push("batch"+this.children[i].id);
+			tags += "'batch"+this.children[i].id+"'";
 		}
-		menuStudentsList("batches="+encodeURIComponent(batches));
-		menuUpdates(tags,"Current Students");
-		menuCurriculum("");
-		menuGrades("");
-		menuDiscipline();
-		menuHealth();
+		setMenuParams("list", "batches="+encodeURIComponent(batches));
+		setMenuParams("pictures", "batches="+encodeURIComponent(batches));
+		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:["+tags+"]}]")); 
+		setMenuParams("curriculum", "");
+		setMenuParams("grades", "");
+		setMenuParams("discipline", "");
+		setMenuParams("health", "");
 	};
 	<?php if ($can_edit) {?>
 	this._build_context_menu = all._build_context_menu;
@@ -229,22 +212,22 @@ function Alumni(all) {
 	this._build_item(null, "Alumni", false);
 	this.element.style.fontWeight = "bold";
 	this._select = function() {
-		header.setTitle("Alumni");
-		header.resetMenu();
-		menuReset();
+		document.getElementById('page_header_title').innerHTML = "<img src='/static/curriculum/batch_32.png'/> Alumni";
+		document.getElementById('page_header_content').innerHTML = this.children.length+" batch(s)";
 		var batches = "";
 		var tags = [];
 		for (var i = 0; i < this.children.length; ++i) {
-			if (batches.length > 0) batches += ",";
+			if (batches.length > 0) { batches += ","; tags += ","; }
 			batches += this.children[i].id;
-			tags.push("batch"+this.children[i].id);
+			tags += "'batch"+this.children[i].id+"'";
 		}
-		menuStudentsList("batches="+encodeURIComponent(batches));
-		menuUpdates(tags,"Current Students");
-		menuCurriculum("");
-		menuGrades("");
-		menuDiscipline();
-		menuHealth();
+		setMenuParams("list", "batches="+encodeURIComponent(batches));
+		setMenuParams("pictures", "batches="+encodeURIComponent(batches));
+		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:["+tags+"]}]")); 
+		setMenuParams("curriculum", "");
+		setMenuParams("grades", "");
+		setMenuParams("discipline", "");
+		setMenuParams("health", "");
 	};
 	<?php if ($can_edit) {?>
 	this._build_context_menu = all._build_context_menu;
@@ -276,9 +259,10 @@ function Batch(current, alumni, id, name, start, end) {
 		var title = document.createElement("SPAN");
 		title.appendChild(document.createTextNode("Batch "));
 		<?php datamodel_cell_inline($this, "this.cell_name", "title", $can_edit, "StudentBatch", "name", "id", null, "name"); ?>
-		header.setTitle(title);
-		header.resetMenu();
+		document.getElementById('page_header_title').innerHTML = "<img src='/static/curriculum/batch_32.png'/> ";
+		document.getElementById('page_header_title').appendChild(title);
 
+		document.getElementById('page_header_content').innerHTML = "";
 		var span = document.createElement("SPAN");
 		title = document.createElement("SPAN");
 		title.style.fontWeight = "bold";
@@ -287,18 +271,19 @@ function Batch(current, alumni, id, name, start, end) {
 		span.appendChild(document.createTextNode(": "));
 		var span_integration = document.createElement("SPAN");
 		span.appendChild(span_integration);
-		header.addMenuItem(span);
+		document.getElementById('page_header_content').appendChild(span);
+		document.getElementById('page_header_content').appendChild(document.createElement("BR"));
 
 		span = document.createElement("SPAN");
 		title = document.createElement("SPAN");
 		title.style.fontWeight = "bold";
-		title.style.paddingLeft = "5px";
 		title.appendChild(document.createTextNode("Graduation"));
 		span.appendChild(title);
 		span.appendChild(document.createTextNode(": "));
 		var span_graduation = document.createElement("SPAN");
 		span.appendChild(span_graduation);
-		header.addMenuItem(span);
+		document.getElementById('page_header_content').appendChild(span);
+		document.getElementById('page_header_content').appendChild(document.createElement("BR"));
 		
 		<?php if ($can_edit) {?>
 			require("editable_cell.js",function(){
@@ -314,13 +299,13 @@ function Batch(current, alumni, id, name, start, end) {
 			datamodel_cell_inline($this, "this.cell_end", "span_graduation", $can_edit, "StudentBatch", "end_date", "id", null, "dateToSQL(end)");
 		} ?>
 		
-		menuReset();
-		menuStudentsList("batches="+id);
-		menuUpdates(["batch"+id],"Batch "+name);
-		menuCurriculum("batch="+id);
-		menuGrades("");
-		menuDiscipline();
-		menuHealth();
+		setMenuParams("list", "batches="+id);
+		setMenuParams("pictures", "batches="+id);
+		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['batch"+id+"']}]")); 
+		setMenuParams("curriculum", "batch="+id);
+		setMenuParams("grades", "");
+		setMenuParams("discipline", "");
+		setMenuParams("health", "");
 	};
 	<?php if ($can_edit) {?>
 	this._build_context_menu = function(menu) {
@@ -365,9 +350,10 @@ function AcademicPeriod(batch, id, name, start, end) {
 		<?php datamodel_cell_inline($this, "t.cell_batch", "title", $can_edit, "StudentBatch", "name", "batch.id", null, "batch.name"); ?>
 		title.appendChild(document.createTextNode(" > Period "));
 		<?php datamodel_cell_inline($this, "t.cell_name", "title", $can_edit, "AcademicPeriod", "name", "id", null, "name"); ?>
-		header.setTitle(title);
-		header.resetMenu();
+		document.getElementById('page_header_title').innerHTML = "";
+		document.getElementById('page_header_title').appendChild(title);
 
+		document.getElementById('page_header_content').innerHTML = "";
 		var span = document.createElement("SPAN");
 		title = document.createElement("SPAN");
 		title.style.fontWeight = "bold";
@@ -376,19 +362,20 @@ function AcademicPeriod(batch, id, name, start, end) {
 		span.appendChild(document.createTextNode(": "));
 		var span_start = document.createElement("SPAN");
 		span.appendChild(span_start);
-		header.addMenuItem(span);
-
+		document.getElementById('page_header_content').appendChild(span);
+		document.getElementById('page_header_content').appendChild(document.createElement("BR"));
+		
 		span = document.createElement("SPAN");
 		title = document.createElement("SPAN");
 		title.style.fontWeight = "bold";
-		title.style.paddingLeft = "5px";
 		title.appendChild(document.createTextNode("End"));
 		span.appendChild(title);
 		span.appendChild(document.createTextNode(": "));
 		var span_end = document.createElement("SPAN");
 		span.appendChild(span_end);
-		header.addMenuItem(span);
-		
+		document.getElementById('page_header_content').appendChild(span);
+		document.getElementById('page_header_content').appendChild(document.createElement("BR"));
+				
 		<?php if ($can_edit) {?>
 			require("editable_cell.js",function(){
 				t.cell_start = new editable_cell(span_start, "AcademicPeriod", "start_date", id, "field_date", {maximum_cell:"end_date",can_be_empty:false}, dateToSQL(start), null, function(field) {
@@ -403,13 +390,13 @@ function AcademicPeriod(batch, id, name, start, end) {
 			datamodel_cell_inline($this, "t.cell_end", "span_end", $can_edit, "AcademicPeriod", "end_date", "id", null, "dateToSQL(end)");
 		} ?>
 		
-		menuReset();
-		menuStudentsList("period="+id);
-		menuUpdates(["period"+id],"Period "+name);
-		menuCurriculum("period="+id);
-		menuGrades("period="+id);
-		menuDiscipline();
-		menuHealth();
+		setMenuParams("list", "period="+id);
+		setMenuParams("pictures", "period="+id);
+		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['period"+id+"']}]")); 
+		setMenuParams("curriculum", "period="+id);
+		setMenuParams("grades", "period="+id);
+		setMenuParams("discipline", "");
+		setMenuParams("health", "");
 	};
 	<?php if ($can_edit) {?>
 	this._build_context_menu = function(menu) {
@@ -441,7 +428,7 @@ function Specialization(period, id, name) {
 	period.children.push(this);
 	this.tag = "period"+period.id+"_specialization"+id;
 	var span = document.createElement("SPAN");
-	span.appendChild(document.createTextNode("Sepcialization "));
+	span.appendChild(document.createTextNode("Specialization "));
 	var spe_name = document.createTextNode(name);
 	var t=this;
 	window.top.datamodel.addCellChangeListener(window, 'Specialization', 'name', id, function(value){
@@ -461,22 +448,16 @@ function Specialization(period, id, name) {
 		<?php datamodel_cell_inline($this, "cell", "title", $can_edit, "AcademicPeriod", "name", "period.id", null, "period.name"); ?>
 		title.appendChild(document.createTextNode(" > Sepcialization "));
 		<?php datamodel_cell_inline($this, "cell", "title", $can_edit, "Specialization", "name", "id", null, "name"); ?>
-		header.setTitle(title);
-		header.resetMenu();
-		menuReset();
-		menuStudentsList("period="+period.id+"&spe="+id);
-		var tags = [];
-		for (var i = 0; i < this.children.length; ++i) {
-			if (this.children[i] instanceof Class) tags.push("class"+this.children[i].id);
-			else if (this.children[i] instanceof Specialization)
-				for (var j = 0; j < this.children[i].children.length; ++j)
-					tags.push("class"+this.children[i].children[j].id);
-		}
-		menuUpdates(tags,"Class "+name);
-		menuCurriculum("period="+period.id);
-		menuGrades("period="+period.id+"&speclialization="+id);
-		menuDiscipline();
-		menuHealth();
+		document.getElementById('page_header_title').innerHTML = "";
+		document.getElementById('page_header_title').appendChild(title);
+		document.getElementById('page_header_content').innerHTML = "";
+		setMenuParams("list", "period="+period.id+"&spe="+id);
+		setMenuParams("pictures", "period="+period.id+"&spe="+id);
+		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['period"+period.id+"']}]")); // TODO better 
+		setMenuParams("curriculum", "period="+period.id);
+		setMenuParams("grades", "period="+period.id+"&specialization="+id);
+		setMenuParams("discipline", "");
+		setMenuParams("health", "");
 	};
 	<?php if ($can_edit) {?>
 	this._build_context_menu = function(menu) {
@@ -529,15 +510,16 @@ function Class(parent, id, name) {
 		}
 		title.appendChild(document.createTextNode(" > Class "));
 		<?php datamodel_cell_inline($this, "cell", "title", $can_edit, "AcademicClass", "name", "id", null, "name"); ?>
-		header.setTitle(title);
-		header.resetMenu();
-		menuReset();
-		menuStudentsList("class="+id);
-		menuUpdates(["class"+id],"Class "+name);
-		menuCurriculum("period="+period.id);
-		menuGrades("class="+id);
-		menuDiscipline();
-		menuHealth();
+		document.getElementById('page_header_title').innerHTML = "";
+		document.getElementById('page_header_title').appendChild(title);
+		document.getElementById('page_header_content').innerHTML = "";
+		setMenuParams("list", "class="+id);
+		setMenuParams("pictures", "class="+id);
+		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['class"+id+"']}]")); // TODO better 
+		setMenuParams("curriculum", "period="+period.id);
+		setMenuParams("grades", "class="+id);
+		setMenuParams("discipline", "");
+		setMenuParams("health", "");
 	};
 	<?php if ($can_edit) {?>
 	this._build_context_menu = function(menu) {
@@ -583,69 +565,111 @@ function build_tree() {
 ?>
 }
 
-build_tree();
+
+//Initilization of the page
+var url = new URL(location.href);
+var page = typeof url.params.page != 'undefined' ? url.params.page : "list";
 
 // Menu
-var menu_items = [];
-function menuReset() {
-	menu_items = [];
-	window.parent.resetMenu();
-}
-function menuStudentsList(params) {
-	var item = window.parent.addMenuItem("/static/curriculum/batch_16.png", "List", "/dynamic/training_education/page/list?"+params);
-	item.target = 'training_education_page';
-	menu_items.push(item);
-	var item = window.parent.addMenuItem("/static/training_education/pictures_16.png", "Pictures", "/dynamic/training_education/page/pictures?"+params);
-	item.target = 'training_education_page';
-	menu_items.push(item);
-}
-function menuUpdates(tags, title) {
-	var s;
-	if (!tags) s = "null";
-	else {
-		s = "[";
-		for (var i = 0; i < tags.length; ++i) {
-			if (s.length > 1) s += ",";
-			s += "'"+tags[i]+"'";
-		}
-		s += "]";
+var menu_items = [
+	{
+		id: "list",
+		icon: "/static/curriculum/batch_16.png",
+		name: "List",
+		info_text: "List of students",
+		page: "/dynamic/students/page/list",
+		params: ""
+	},
+	{
+		id: "pictures",
+		icon: "/static/students/pictures_16.png",
+		name: "Pictures",
+		info_text: "Pictures of students",
+		page: "/dynamic/students/page/pictures",
+		params: ""
+	},
+	{
+		id: "updates",
+		icon: "/static/news/news.png",
+		name: "Updates",
+		info_text: "What's happening ? What other users did recently ?",
+		page: "/dynamic/news/page/news",
+		params: ""
+	},
+	{
+		id: "curriculum",
+		icon: "/static/curriculum/curriculum_16.png",
+		name: "Curriculum",
+		info_text: "List of subjects for each academic period",
+		page: "/dynamic/curriculum/page/curriculum",
+		params: ""
+	},
+	{
+		id: "grades",
+		icon: "/static/transcripts/grades.gif",
+		name: "Grades",
+		info_text: "Grades of students for an academic period",
+		page: "/dynamic/transcripts/page/students_grades",
+		params: ""
+	},
+	{
+		id: "discipline",
+		icon: "/static/discipline/discipline.png",
+		name: "Discipline",
+		info_text: "Follow-up violations, abscences, lateness...",
+		page: "/dynamic/discipline/page/home",
+		params: ""
+	},
+	{
+		id: "health",
+		icon: "/static/health/health.png",
+		name: "Health",
+		info_text: "Follow-up health situation and medical information",
+		page: "/dynamic/health/page/home",
+		params: ""
 	}
-	var item = window.parent.addMenuItem("/static/news/news.png", "Updates", "/dynamic/news/page/news?sections="+encodeURIComponent("[{name:'education',tags:"+s+"}]")+"&title="+encodeURIComponent("Updates for "+title));
-	item.target = 'training_education_page';
-	menu_items.push(item);
+];
+function selectPage(id) {
+	var item = menu_items[0];
+	for (var i = 0; i < menu_items.length; ++i)
+		if (menu_items[i].id == id) { item = menu_items[i]; break; }
+	document.getElementById('students_page').src = item.page+"?"+item.params;
 }
-function menuCurriculum(params) {
-	if (component != 'training') return;
-	var item = window.parent.addMenuItem("/static/curriculum/curriculum_16.png", "Curriculum", "/dynamic/curriculum/page/curriculum?"+params);
-	item.target = 'training_education_page';
-	menu_items.push(item);
+function updateMenu() {
+	for (var i = 0; i < menu_items.length; ++i) {
+		if (menu_items[i].menu_link)
+			menu_items[i].menu_link.href = "/dynamic/students/page/tree?page="+menu_items[i].id+"#"+selected_node.tag;
+	}
 }
-function menuGrades(params) {
-	if (component != 'training') return;
-	var item = window.parent.addMenuItem("/static/transcripts/grades.gif", "Grades", "/dynamic/transcripts/page/students_grades?"+params);
-	item.target = 'training_education_page';
-	menu_items.push(item);
-}
-function menuDiscipline() {
-	if (component != 'education') return;
-	var item = window.parent.addMenuItem("/static/discipline/discipline.png", "Discipline", "/dynamic/discipline/page/home");
-	item.target = 'training_education_page';
-	menu_items.push(item);
-}
-function menuHealth() {
-	if (component != 'education') return;
-	var item = window.parent.addMenuItem("/static/health/health.png", "Health", "/dynamic/health/page/home");
-	item.target = 'training_education_page';
-	menu_items.push(item);
+function setMenuParams(id, params) {
+	for (var i = 0; i < menu_items.length; ++i) {
+		if (menu_items[i].id != id) continue;
+		menu_items[i].params = params;
+		break;
+	}
 }
 
-// Initilization of the page
-var url = new URL(location.href);
-var component = url.params['section'];
-root.findTag(url.hash).select();
-document.getElementById('training_education_page').src = url.params['page'];
+//Initilization of the page and menu
+build_tree();
+var node = root.findTag(url.hash);
+if (node) node.select();
+
+if (window.parent.addMenuItem)
+for (var i = 0; i < menu_items.length; ++i) {
+	var item = menu_items[i];
+	var m = window.parent.addMenuItem(item.icon, item.name, item.info_text, "/dynamic/students/page/tree?page="+item.id+"#"+selected_node.tag);
+	m._menu_item_id = item.id;
+	m.onclick = function(ev) {
+		selectPage(this._menu_item_id);
+		stopEventPropagation(ev);
+		return false;
+	};
+	item.menu_link = m;
+}
+selectPage(page);
 
 // Put the search student control
+if (window.parent.addMenuItem)
 require("autocomplete.js",function() {
 	var container = document.createElement("DIV");
 	container.style.display = "inline-block";

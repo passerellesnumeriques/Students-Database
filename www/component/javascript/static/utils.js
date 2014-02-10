@@ -160,7 +160,7 @@ function absoluteLeft(e,relative) {
 			var p = e;
 			do {
 				p = p.parentNode;
-				left -= p.nodeName == "BODY" ? p.documentElement.scrollLeft : p.scrollLeft;
+				left -= p.scrollLeft;
 			} while (p != e.offsetParent);
 			left += absoluteLeft(e.offsetParent,relative); 
 		}
@@ -179,7 +179,7 @@ function absoluteTop(e,relative) {
 			var p = e;
 			do {
 				p = p.parentNode;
-				top -= p.nodeName == "BODY" ? p.documentElement.scrollTop : p.scrollTop;
+				top -= p.scrollTop;
 			} while (p != e.offsetParent);
 			top += absoluteTop(e.offsetParent,relative); 
 		}

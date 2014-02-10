@@ -58,6 +58,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 				require(field_classname+".js",function(){
 					t.field = new window[field_classname](data,false,field_arguments);
 					container.appendChild(t.field.getHTMLElement());
+					t.field.getHTMLElement().style.verticalAlign = "top";
 					t.field.onchange.add_listener(function() {
 						t._changed();
 					});
@@ -98,13 +99,13 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.field.getHTMLElement().onclick = function (ev) { stopEventPropagation(ev); if (prev_click) prev_click(ev); };
 			t.save_button = document.createElement("IMG");
 			t.save_button.src = theme.icons_16.save;
-			t.save_button.style.verticalAlign = 'bottom';
+			t.save_button.style.verticalAlign = 'top';
 			t.save_button.style.cursor = 'pointer';
 			t.save_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.save(); stopEventPropagation(ev); return false; };
 			container.appendChild(t.save_button);
 			t.unedit_button = document.createElement("IMG");
 			t.unedit_button.src = theme.icons_16.no_edit;
-			t.unedit_button.style.verticalAlign = 'bottom';
+			t.unedit_button.style.verticalAlign = 'top';
 			t.unedit_button.style.cursor = 'pointer';
 			t.unedit_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.unedit(); stopEventPropagation(ev); return false; };
 			container.appendChild(t.unedit_button);

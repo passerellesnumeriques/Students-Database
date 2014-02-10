@@ -5,9 +5,9 @@
 class curriculum extends Component {
 	
 	public function getPluginImplementations() {
-		require_once("CurriculumNewsPlugin.inc");
+		require_once("CurriculumStudentsPlugin.inc");
 		return array(
-			new CurriculumNewsPlugin()
+			new CurriculumStudentsPlugin()
 		);
 	}
 	

@@ -11,6 +11,9 @@ function date_select(container, date, minimum, maximum) {
 	t.select_day = document.createElement("SELECT");
 	t.select_month = document.createElement("SELECT");
 	t.select_year = document.createElement("SELECT");
+	t.select_day.onclick = function(ev) { stopEventPropagation(ev); return false; };
+	t.select_month.onclick = function(ev) { stopEventPropagation(ev); return false; };
+	t.select_year.onclick = function(ev) { stopEventPropagation(ev); return false; };
 	var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 	t.select_day.style.margin = "0px";

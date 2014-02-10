@@ -3,10 +3,20 @@ function import_data(&$page, $icon, $title, $data_list, $fixed_data, $prefilled_
 	
 	$page_id = $page->generateID();
 	echo "<div id='$page_id' style='width:100%;height:100%'>";
-		
+
 	$header_id = $page->generateID();
-	echo "<div id='$header_id' icon='$icon' title='$title' layout='fixed'></div>";
-	$page->add_javascript("/static/widgets/page_header.js");
+	echo "<div class='toolbar_big' id='$header_id'>";
+		echo "<div class='toolbar_title'>";
+			echo "<img src='".$icon."'/> ".htmlentities($title);
+		echo "</div>";
+	echo "</div>";
+	$page->add_javascript("/static/widgets/vertical_align.js");
+	$page->onload("new vertical_align('$header_id','middle');");
+	
+	echo "<div style='background-color: #fffff0;padding: 5px;border-bottom:1px solid #808080'>";
+		echo "<img src='".theme::$icons_16["help"]."' style='vertical-align:bottom'/> ";
+		echo "Left side is Excel file, Right side is the data that will be imported. Select cells in Excel and click on the arrow button to put them in the list";
+	echo "</div>";
 	
 	$container_id = $page->generateID();
 	echo "<div layout='fill' id='$container_id' style='overflow:hidden'></div>";
@@ -20,7 +30,7 @@ function import_data(&$page, $icon, $title, $data_list, $fixed_data, $prefilled_
 	require("vertical_layout.js",function() {
 		new vertical_layout('<?php echo $page_id;?>');
 	});
-	var header = new page_header('<?php echo $header_id;?>');
+	var header = document.getElementById('<?php echo $header_id;?>');
 	new custom_import('<?php echo $container_id;?>',function(imp) {
 		var upload_excel = document.createElement("DIV");
 		upload_excel.className = "button";
@@ -65,14 +75,14 @@ function import_data(&$page, $icon, $title, $data_list, $fixed_data, $prefilled_
 				check();
 			});
 		};
-		header.addMenuItem(upload_excel);
+		header.appendChild(upload_excel);
 		var reset_all = document.createElement("DIV");
 		reset_all.className = "button";
 		reset_all.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove all";
 		reset_all.onclick = function() {
 			imp.removeAll();
 		};
-		header.addMenuItem(reset_all);
+		header.appendChild(reset_all);
 		var create = document.createElement("DIV");
 		create.className = "button";
 		create.innerHTML = <?php echo json_encode($create_button);?>;
@@ -106,7 +116,7 @@ function import_data(&$page, $icon, $title, $data_list, $fixed_data, $prefilled_
 			// ok: call the creation
 			<?php echo $create_function;?>(data, lock);
 		};
-		header.addMenuItem(create);
+		header.appendChild(create);
 		fireLayoutEventFor(document.getElementById('<?php echo $page_id;?>'));
 		<?php 
 		foreach ($data_list as $data) {

@@ -160,13 +160,31 @@ function CalendarManager() {
 function CalendarsProvider() {
 }
 CalendarsProvider.prototype = {
-	/**
-	 * Retrieve the list of calendars for the current user
-	 * @param {Function} handler called with the list of Calendar
-	 */
-	getCalendars: function(handler) {
-		
+	calendars: [],
+	on_calendar_added: new Custom_Event(),
+	on_calendar_removed: new Custom_Event(),
+	refreshCalendars: function() {
+		var t=this;
+		this._retrieveCalendars(function (list) {
+			var removed = [];
+			for (var i = 0; i < t.calendars.length; ++i) removed.push(t.calendars[i]);
+			t.calendars = list;
+			for (var i = 0; i < list.length; ++i) {
+				var found = false;
+				for (var j = 0; j < removed.length; ++j) {
+					if (removed[j].id == list[i].id) {
+						found = true;
+						removed.splice(j,1);
+						break;
+					}
+				}
+				if (!found) t.on_calendar_added.fire(list[i]);
+			}
+			for (var i = 0; i < removed.length; ++i)
+				t.on_calendar_removed.fire(removed[i]);
+		});
 	},
+	_retrieveCalendars: function(handler) { },
 	/**
 	 * Icon (16x16) of the provider
 	 * @returns {String} the url of the icon
@@ -232,6 +250,10 @@ if (!window.top.CalendarsProviders) {
 			this._providers.push(provider);
 			for (var i = 0; i < this._handlers.length; ++i)
 				this._handlers[i](provider);
+			provider._refresh_interval = setInterval(function() {
+				provider.refreshCalendars();
+			},5*60*1000);
+			provider.refreshCalendars();
 		},
 		/** List of providers */
 		_providers: [],
@@ -515,7 +537,7 @@ PNCalendar.prototype.constructor = PNCalendar;
 /** Implementation of CalendarsProvider for internal(PN) calendar (stored in the database) */
 function PNCalendarsProvider() {
 	var t=this;
-	this.getCalendars = function(handler) {
+	this._retrieveCalendars = function(handler) {
 		this.connectionStatus("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");
 		service.json("calendar", "get_my_calendars", {}, function(calendars) {
 			t.connectionStatus("");

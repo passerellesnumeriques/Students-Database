@@ -1,0 +1,9 @@
+.splitter_vertical_separator {
+	width: 5px;
+	background-color: rgb(227, 239, 255);
+	background-repeat: no-repeat!important;
+	background-position: 50% center!important;
+	cursor: w-resize;
+	border-left: 1px solid rgb(164, 190, 212);
+	border-right: 1px solid rgb(164, 190, 212);
+}

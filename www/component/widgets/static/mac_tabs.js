@@ -1,3 +1,6 @@
+if (typeof theme != 'undefined')
+	theme.css("mac_tabs.css");
+
 function mac_tabs() {
 	var t=this;
 	t.element = document.createElement("DIV");
@@ -10,9 +13,6 @@ function mac_tabs() {
 			div.innerHTML = content;
 		else
 			div.appendChild(content);
-		div.style.backgroundColor = "#D0D0D0";
-		div.style.cursor = "pointer";
-		setBackgroundGradient(div, "vertical", [{pos:0,color:"#F0F0F0"},{pos:100,color:"#D0D0D0"}]);
 		div.data = id;
 		t.element.appendChild(div);
 		div.onclick = function() { t.select(this.data); };
@@ -29,13 +29,10 @@ function mac_tabs() {
 	t.select = function(id) {
 		for (var i = 0; i < t.element.childNodes.length; ++i) {
 			var tab = t.element.childNodes[i];
-			if (tab.data == id) {
-				tab.style.backgroundColor = "#A0A0A0";
-				setBackgroundGradient(tab, "vertical", [{pos:0,color:"#C0C0C0"},{pos:50,color:"#A0A0A0"},{pos:100,color:"#C0C0C0"}]);
-			} else {
-				tab.style.backgroundColor = "#D0D0D0";
-				setBackgroundGradient(tab, "vertical", [{pos:0,color:"#F0F0F0"},{pos:100,color:"#D0D0D0"}]);
-			}
+			if (tab.data == id)
+				tab.className = "mac_tab selected";
+			else
+				tab.className = "mac_tab";
 		}
 		if (t.onselect) t.onselect(id);
 	};

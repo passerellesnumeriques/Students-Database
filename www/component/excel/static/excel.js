@@ -14,6 +14,10 @@ function Excel(container, onready) {
 		sheet.tab = tab;
 		tab.sheet = sheet;
 	};
+	this.removeSheet = function(index) {
+		this.sheets.splice(index,1);
+		container.widget.removeTab(index);
+	};
 	this.getSheet = function(name) {
 		for (var i = 0; i < this.sheets.length; ++i)
 			if (this.sheets[i].name == name)
@@ -53,6 +57,7 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	
 	this._init = function() {
 		this.container = document.createElement("DIV");
+		this.container.style.backgroundColor = "white";
 		this.container.style.position = "relative";
 		this.container.style.width = "100%";
 		this.container.style.height = "100%";
@@ -152,6 +157,14 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 			this.cursor = new ExcelSheetCursor(this);
 		this.layout();
 	};
+	this.removeRow = function(index) {
+		var row = this.rows[index];
+		this.rows.splice(index,1);
+		this.row_headers_container.removeChild(row.header);
+		this.row_headers_container.removeChild(row.resizer);
+		row.tr.parentNode.removeChild(row.tr);
+		this.layout();
+	};
 	
 	this.addLayer = function(start_col, start_row, end_col, end_row, r,g,b, content) {
 		var layer = new ExcelSheetCursor(this);
@@ -173,6 +186,7 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	this.make_visible = function(col, row) {
 		if (col >= this.cells.length || row >= this.cells[col].length) return;
 		var cell = this.cells[col][row];
+		if (!cell) return;
 		var x1 = cell.td.offsetLeft;
 		var y1 = cell.td.offsetTop;
 		var x2 = x1+cell.td.offsetWidth;

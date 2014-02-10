@@ -23,24 +23,34 @@ class AdministrationPage {
 	private $page;
 	/** @var string $icon16 Icon to be displayed next to the title */
 	private $icon16;
+	/** @var string $icon32 Icon to be displayed next to the title */
+	private $icon32;
+	/** @var string $info_text The tooltip to explain the page */
+	private $info_text;
 	
 	/**
 	 * @param string $title Title of the page
 	 * @param string $page URL of the page
 	 * @param string $icon16 Icon (16x16 pixels) of the page
 	 */
-	public function __construct($title, $page, $icon16) {
+	public function __construct($title, $page, $icon16, $icon32, $info_text) {
 		$this->title = $title;
 		$this->page = $page;
 		$this->icon16 = $icon16;
+		$this->icon32 = $icon32;
+		$this->info_text = $info_text;
 	}
 	
 	/** @return string URL of the 16x16 pixels icon */
 	public function getIcon16() { return $this->icon16; }
+	/** @return string URL of the 32x32 pixels icon */
+	public function getIcon32() { return $this->icon32; }
 	/** @return string The title of the page */
 	public function getTitle() { return $this->title; }
 	/** @return string The URL of the page */
 	public function getPage() { return $this->page; }
+	/** @return string The tooltip to explain the page */
+	public function getInfoText() { return $this->info_text; }
 	
 }
 
@@ -51,7 +61,7 @@ class AdministrationDashboardPlugin implements AdministrationPlugin {
 	
 	public function getAdministrationPages() {
 		return array(
-			new AdministrationPage("Dashboard", "/dynamic/administration/page/dashboard", theme::$icons_16["dashboard"])
+			new AdministrationPage("Dashboard", "/dynamic/administration/page/dashboard", theme::$icons_16["dashboard"], theme::$icons_32["dashboard"], "Go back to the administration dashboard")
 		);
 	}
 	

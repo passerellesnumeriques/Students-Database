@@ -35,7 +35,7 @@ function people_picture_and_info(&$page, $people_id) {
 		function(popup){
 			popup.setContentFrame('/dynamic/people/page/set_picture?people=<?php echo $people["PEOPLE_COL_id"]?>');
 		},
-		true
+		true, null, "Change picture"
 	).addHiddenDropArea('picture');
 	<?php }?>	
 	</script>

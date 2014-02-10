@@ -15,7 +15,7 @@ class service_application_menu_builder extends Service {
 			foreach ($c->getPluginImplementations() as $pi) {
 				if (!($pi instanceof AdministrationPlugin)) continue;
 				foreach ($pi->getAdministrationPages() as $page) {
-					echo "addMenuItem(".json_encode($page->getIcon16()).", ".json_encode($page->getTitle()).", ".json_encode($page->getPage()).");";
+					echo "addMenuItem(".json_encode($page->getIcon16()).", ".json_encode($page->getTitle()).", ".json_encode($page->getInfoText()).", ".json_encode($page->getPage()).");";
 				}
 			}
 		}

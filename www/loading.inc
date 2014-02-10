@@ -76,7 +76,7 @@ var pn_loading_visible = true;
 function __load_enter_page() {
 	next_optional();
 
-	add_stylesheet('/static/theme/default/style.css');
+	add_stylesheet('/static/theme/default/style/global.css');
 	
 	var frame = document.createElement("IFRAME");
 	frame.frameBorder = "0";
@@ -122,7 +122,7 @@ function next_optional() {
 		loaded_size += _optional_scripts[optional_index][1];
 		update_size();
 		if (++optional_index == _optional_scripts.length) {
-			document.getElementById('loading_status').innerHTML = "Loading <?php echo PNApplication::$instance->user_management->username <> null ? "Application Home Page" : "Login Page";?>...";
+			document.getElementById('loading_status').innerHTML = "<?php echo PNApplication::$instance->user_management->username <> null ? "Starting Application" : "Loading Authentication Page";?>...";
 			window.status_manager = new StatusManager();
 			window.status_manager.status_ui = new StatusUI_Top(window.status_manager);
 			setTimeout(function(){

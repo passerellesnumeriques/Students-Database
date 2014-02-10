@@ -32,6 +32,7 @@ field_enum.prototype._create = function(data) {
 			select.add(o);
 			if (data == o.value) selected = i+(this.config.can_be_empty?1:0);
 		}
+		select.onclick = function(ev) { stopEventPropagation(ev); };
 		select.selectedIndex = selected;
 		select.style.margin = "0px";
 		select.style.padding = "0px";

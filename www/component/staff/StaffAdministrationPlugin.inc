@@ -7,7 +7,7 @@ class StaffAdministrationPlugin implements AdministrationPlugin {
 	
 	public function getAdministrationPages() {
 		return array(
-				new AdministrationPage("PN Staff", "/dynamic/staff/page/staff", "/static/staff/staff_16.png"),
+				new AdministrationPage("PN Staff", "/dynamic/staff/page/staff", "/static/staff/staff_16.png", "/static/staff/staff_32.png", "Manage list of staff and their position in PN"),
 		);
 	}
 	

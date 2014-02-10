@@ -1,0 +1,32 @@
+.context_menu {
+	position: absolute;
+	visibility: hidden;
+	top: -10000px;
+	border: 1px solid black;
+	background-color: #F0F0F0;
+	box-shadow: 3px 3px 3px #C0C0D0;
+}
+.context_menu_item {
+	background-color: #F0F0F0;
+	text-align: left;
+	cursor: pointer;
+	padding: 1px;
+	border: 1px solid #F0F0F0;
+}
+.context_menu_item:hover, .context_menu_item_selected {
+	background-color: #FFF0D0;
+	border: 1px solid #F0E0C0;
+}
+.context_menu_item img {
+	vertical-align: bottom;
+}
+.context_menu_item a, a.context_menu_item {
+	text-decoration: none;
+	color: black;
+}
+.context_menu_title {
+	background-color: #D0D0FF;
+	border-bottom: 1px solid #8080C0;
+	text-align: center;
+	padding: 2px;
+}

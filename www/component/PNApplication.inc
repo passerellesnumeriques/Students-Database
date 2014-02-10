@@ -31,7 +31,6 @@ require_once("Component.inc");
  * @property students $students
  * @property test $test
  * @property theme $theme
- * @property training_education $training_education
  * @property transcripts $transcripts
  * @property user_management $user_management
  * @property user_people $user_people 

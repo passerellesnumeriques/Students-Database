@@ -75,6 +75,9 @@ field_date.prototype._create = function(data) {
 			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
 			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
 			t.select = new date_select(t.element, t.data == null ? null : t.parseDate(t.data), min, max);
+			t.select.select_day.style.verticalAlign = "top";
+			t.select.select_month.style.verticalAlign = "top";
+			t.select.select_year.style.verticalAlign = "top";
 			t.select.onchange = function() {
 				var date = t.select.getDate();
 				if (date) date = dateToSQL(date);
@@ -85,7 +88,7 @@ field_date.prototype._create = function(data) {
 			};
 			t.icon = document.createElement("IMG");
 			t.icon.src = theme.icons_16.date_picker;
-			t.icon.style.verticalAlign = "bottom";
+			t.icon.style.verticalAlign = "top";
 			t.icon.style.cursor = "pointer";
 			t.icon.onclick = function() {
 				require(["date_picker.js","context_menu.js"],function(){
@@ -97,6 +100,7 @@ field_date.prototype._create = function(data) {
 						picker.getElement().style.border = 'none';
 						menu.addItem(picker.getElement());
 						picker.getElement().onclick = null;
+						menu.element.className = menu.element.className+" popup_date_picker";
 						menu.showBelowElement(t.element);
 					});
 				});

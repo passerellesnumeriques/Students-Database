@@ -1,0 +1,32 @@
+.data_list_title {
+	background-color: rgba(255,255,255,0.3);
+	border-right: 1px solid rgba(255,255,255,0.7);
+	border-bottom-right-radius: 5px;
+	padding-left: 2px;
+	padding-right: 5px;
+	margin-right: 5px;
+	padding-top: 3px;
+}
+.data_list_title>img {
+	vertical-align: top;
+	padding-right: 5px;
+}
+.data_list_title>span {
+	color: #404080;
+	font-weight: bold;
+	font-size: 12pt;
+}
+
+.data_list_header {
+	height: 30px;
+	background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
+	border-bottom: 1px solid #808080;
+}
+.data_list_header>div {
+}
+.data_list_header>div+div {
+	border-left: 1px solid #808080;
+}
+.data_list_header>div+div+div {
+	border-left: 1px solid #808080;
+}

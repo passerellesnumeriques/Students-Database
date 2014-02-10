@@ -2,6 +2,8 @@ if (typeof require != 'undefined') {
 	require("layout.js");
 	require("animation.js");
 }
+if (typeof theme != 'undefined')
+	theme.css("popup_window.css");
 
 /**
  * @constructor
@@ -139,28 +141,29 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addButton("<img src='"+theme.icons_16.no+"' style='vertical-align:bottom'/> No", 'no', function() { t.close(); });
 	};
 	
+	t.isShown = function() {
+		return t.table != null;
+	};
+	
+	t.showPercent = function(width, height) {
+		var win = t._buildTable();
+		t.resize = function() {
+			t.table.style.left = (win.getWindowWidth()*(100-width)/200)+"px";
+			t.table.style.top = (win.getWindowHeight()*(100-height)/200)+"px";
+			t.table.style.width = (win.getWindowWidth()*width/100)+"px";
+			t.table.style.height = (win.getWindowHeight()*height/100)+"px";
+		};
+		t.resize();
+		win.listenEvent(win, "resize", function() {
+			t.resize();
+		});
+	};
+	
 	/** Display the popup window
 	 * @method popup_window#show
 	 */
 	t.show = function() {
-		var parent_popup = get_popup_window_from_frame(window);
-		var win,doc;
-		if (!parent_popup) {
-			win = window;
-			doc = document;
-			t.locker = lock_screen(function() {
-				t.blink();
-			});
-		} else {
-			doc = parent_popup.table.ownerDocument;
-			win = getWindowFromDocument(doc);
-			parent_popup.freeze();
-		}
-		t.table = doc.createElement("TABLE");
-		t.table.className = 'popup_window';
-		t.table.data = t;
-		t.header = doc.createElement("TR"); t.table.appendChild(t.header);
-		t.header.className = "popup_window_title";
+		var win = t._buildTable();
 		var move_handler = function(ev) {
 			if (!ev) ev = window.event;
 			var diff_x = ev.clientX - t._move_x;
@@ -194,6 +197,35 @@ function popup_window(title,icon,content,hide_close_button) {
 			listenEvent(window,'mouseout',up_handler);
 			return false;
 		};
+		t.resize();
+		fireLayoutEventFor(t.content_container);
+		if (typeof animation != 'undefined') {
+			if (t.anim) animation.stop(t.anim);
+			t.anim = animation.fadeIn(t.table, 200);
+		}
+	};
+	
+	t._buildTable = function() {
+		var parent_popup = get_popup_window_from_frame(window);
+		var win,doc;
+		if (!parent_popup) {
+			win = window;
+			doc = document;
+			t.locker = lock_screen(function() {
+				t.blink();
+			});
+		} else {
+			doc = parent_popup.table.ownerDocument;
+			win = getWindowFromDocument(doc);
+			parent_popup.freeze();
+		}
+
+		t.table = doc.createElement("TABLE");
+		t.table.className = 'popup_window';
+		t.table.data = t;
+		t.header = doc.createElement("TR"); t.table.appendChild(t.header);
+		t.header.className = "popup_window_title";
+		
 		var td = doc.createElement("TD"); t.header.appendChild(td);
 		td.innerHTML = (t.icon ? "<img src='"+t.icon+"' style='vertical-align:bottom'/> " : "")+t.title;
 		if (hide_close_button)
@@ -232,13 +264,9 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content.style.position = 'static';
 			t.content.style.visibility = 'visible';
 		}
-		t.resize();
-		fireLayoutEventFor(t.content_container);
-		if (typeof animation != 'undefined') {
-			if (t.anim) animation.stop(t.anim);
-			t.anim = animation.fadeIn(t.table, 200);
-		}
+		return win;
 	};
+	
 	t._computeFrameWidth = function(body) {
 		var win = getIFrameWindow(t.content);
 		var max = 0;
@@ -411,6 +439,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			if(parent_popup) parent_popup.unfreeze();
 		}
 		if (t.onclose) t.onclose();
+		var table = t.table;
+		t.table = null;
 		var do_close = function() {
 			if (keep_content_hidden || t.keep_content_on_close) {
 				t.content.parentNode.removeChild(t.content);
@@ -419,11 +449,11 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content.style.top = '-10000px';
 				t.content.ownerDocument.body.appendChild(t.content);
 			}
-			t.table.ownerDocument.body.removeChild(t.table);
+			table.ownerDocument.body.removeChild(table);
 		};
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);
-			animation.fadeOut(t.table, 200, do_close);
+			animation.fadeOut(table, 200, do_close);
 		} else
 			do_close();
 	};

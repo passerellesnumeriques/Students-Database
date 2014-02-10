@@ -199,6 +199,7 @@ class page_subject_grades extends Page {
 					<?php if ($can_edit) {?>
 					<div class='button' id='new_evaluation_type_button' onclick='new_evaluation_type();' style='visibility:hidden;position:absolute;top:-10000px'>New type of evaluation</div>
 					<div class='button' id='new_evaluation_button' onclick='new_evaluation_menu(this);' style='visibility:hidden;position:absolute;top:-10000px'>New evaluation</div>
+					<div class='button' id='import_grades_button' onclick='import_grades();' style='visibility:hidden;position:absolute;top:-10000px'><img src='/static/data_import/import_excel_16.png'/> Import grades</div>
 					<?php } ?>
 				</div>
 			</div>
@@ -407,13 +408,18 @@ class page_subject_grades extends Page {
 			else
 				show_only_final_grades();
 			
-			edit_mode = true;
 			var button = document.getElementById('edit_button');
 			button.innerHTML = "<img src='"+theme.icons_16.no_edit+"'/> Cancel";
 			button.onclick = function() { location.reload(); };
 			button = document.getElementById('save_button');
 			button.style.visibility = 'visible';
 			button.style.position = 'static';
+
+			require(["upload.js","popup_window.js"],function() {
+				button = document.getElementById("import_grades_button");
+				button.style.visibility = 'visible';
+				button.style.position = 'static';
+			});			
 		}
 		function save() {
 			var locker = lock_screen(null, "Saving subject information");
@@ -925,6 +931,142 @@ class page_subject_grades extends Page {
 			edit_evaluation(eval, function() {
 				type.evaluations.push(eval);
 				add_eval_column(type,eval);			
+			});
+		}
+
+		function import_grades() {
+			require("people_objects.js");
+			var excel_frame = null;
+			var peoples = null;
+			var javascript_ready = false;
+			var ready = function() {
+				if (!excel_frame) return;
+				if (!peoples) return;
+				if (!javascript_ready) return;
+				var excel_container = excel_frame.document.getElementById('excel_container');
+				excel_frame.document.body.innerHTML = "";
+				var container = excel_frame.document.createElement("DIV");
+				container.style.width = "100%";
+				container.style.height = "100%";
+				excel_frame.document.body.appendChild(container);
+				var wiz = new wizard_simple(container);
+				require("splitter_vertical.js");
+				match_people_in_excel(peoples, excel_frame, excel_container, wiz, function(matched_peoples, sheet_index) {
+					wiz.resetContent();
+					wiz.resetButtons();
+					wiz.setTitle("/static/transcripts/grades_32.gif", "Select a column in the Excel file, and import the grades from this column");
+					var split = document.createElement("DIV");
+					var right = document.createElement("DIV");
+					split.appendChild(excel_container);
+					split.appendChild(right);
+					wiz.setContent(split);
+					require("splitter_vertical.js",function() {
+						new splitter_vertical(split, 0.5);
+					});
+					right.style.overflow = "auto";
+					// keep only the sheet containing the names, and so the grades
+					for (var i = 0; i < sheet_index; ++i) excel_frame.excel.removeSheet(0);
+					while (excel_frame.excel.sheets.length > 1) excel_frame.excel.removeSheet(1);
+					var sheet = excel_frame.excel.sheets[0];
+					// keep only the rows containing the names
+					var first_row = sheet.rows.length;
+					var last_row = -1;
+					for (var i = 0; i < matched_peoples.length; ++i) {
+						if (matched_peoples[i].row < first_row) first_row = matched_peoples[i].row; 
+						if (matched_peoples[i].row > last_row) last_row = matched_peoples[i].row; 
+					}
+					// put the grades that can be imported
+					var table = document.createElement("TABLE"); right.appendChild(table);
+					table.className = 'all_borders';
+					var tbody = document.createElement("TBODY"); table.appendChild(tbody);
+					var tr, td;
+					var import_grades = function(col) {
+						var sel = sheet.getSelection();
+						if (sel == null) return;
+						for (var i = 0; i < matched_peoples.length; ++i) {
+							tr = tbody.childNodes[2+i];
+							td = tr.childNodes[col];
+							var cell = sheet.getCell(sel.start_col,matched_peoples[i].row);
+							if (cell != null)
+								td.innerHTML = cell.getValue();
+						}
+					};
+					tbody.appendChild(tr = document.createElement("TR"));
+					tr.appendChild(td = document.createElement("TH"));
+					td.style.verticalAlign = "bottom";
+					td.rowSpan = 2;
+					td.innerHTML = "First Name";
+					tr.appendChild(td = document.createElement("TH"));
+					td.style.verticalAlign = "bottom";
+					td.rowSpan = 2;
+					td.innerHTML = "Last Name";
+					if (subject_info.only_final_grade) {
+						tr.appendChild(td = document.createElement("TH"));
+						td.style.verticalAlign = "bottom";
+						td.innerHTML = "Final Grade";
+						tbody.appendChild(tr = document.createElement("TR"));
+						tr.appendChild(td = document.createElement("TD"));
+						td.style.textAlign = "center";
+						var button = document.createElement("IMG");
+						button.src = theme.icons_16._import;
+						button.className = "button";
+						button.onclick = function() {
+							import_grades(2);
+						};
+						td.appendChild(button);
+					} else {
+						// TODO
+					}
+					for (var i = 0; i < matched_peoples.length; ++i) {
+						tbody.appendChild(tr = document.createElement("TR"));
+						tr.appendChild(td = document.createElement("TD"));
+						td.appendChild(document.createTextNode(matched_peoples[i].first_name));
+						tr.appendChild(td = document.createElement("TD"));
+						td.appendChild(document.createTextNode(matched_peoples[i].last_name));
+						if (subject_info.only_final_grade) {
+							tr.appendChild(td = document.createElement("TD"));
+						} else {
+							// TODO
+						}
+					}
+					fireLayoutEventFor(split);
+				});
+			};
+			require(["match_people_in_excel.js","wizard_simple.js"], function() { javascript_ready = true; ready(); });
+			upload_temp_file_now(function (temp_id) {
+				var popup = new popup_window("Import Grades", "/static/data_import/import_excel_16.png", "");
+				popup.setContentFrame("/dynamic/data_import/page/excel_upload?id="+temp_id);
+				popup.showPercent(90,90);
+				popup.freeze("Opening Excel file...");
+				var check = function() {
+					var w = getIFrameWindow(popup.content);
+					if (!w.excel || !w.excel.tabs) {
+						if (w.page_errors) {
+							popup.unfreeze();
+							return;
+						}
+						setTimeout(check, 100);
+						return;
+					}
+					popup.unfreeze();
+					excel_frame = w;
+					ready();
+				};
+				setTimeout(check, 100);
+				require("people_objects.js",function() {
+					var list = [];
+					for (var i = 0; i < students_grades.length; ++i) {
+						var people_id = students_grades[i].people;
+						var row_index = custom_data_list.getDataIndex("People", people_id);
+						var first_name = custom_data_list.getData(row_index, "Personal Information", "First Name");
+						var last_name = custom_data_list.getData(row_index, "Personal Information", "Last Name");
+						var middle_name = custom_data_list.getData(row_index, "Personal Information", "Middle Name");
+						var people = new People(people_id, first_name, last_name, middle_name);
+						list.push(people);
+					}
+					peoples = list;
+					ready();
+				});
 			});
 		}
 		</script>

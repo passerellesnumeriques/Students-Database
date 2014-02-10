@@ -3,6 +3,7 @@ if (typeof require != 'undefined') {
 		require("field_blank.js");
 	});
 	require("dragndrop.js");
+	theme.css("grid.css");
 }
 
 function GridColumnAction(icon,onclick) {

@@ -115,27 +115,39 @@ class page_selection_main_page extends selection_page {
 				if(calendar_id != null && calendar_name != null){
 					var cal_manager = new CalendarManager();
 					var PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
-					cal_manager.addCalendar(PN_cal);
-					require("calendar_view.js",function(){
-						new CalendarView(cal_manager, "week", 60, "calendar_container", function(){});
-					});
-					var extend = document.createElement("IMG");
-					extend.className = "button_verysoft";
-					extend.src = theme.icons_16.window_popup;
-					extend.onclick = function(){
-						var content = document.createElement("div");
-						content.id = 'content_calendar_extend';
-						var width = parseFloat(getWindowWidth())-30;
-						var height = parseFloat(getWindowHeight())-60;
-						content.style.width = width.toString()+"px";
-						content.style.height = height.toString()+"px";
+					var init_calendar = function() {
+						cal_manager.addCalendar(PN_cal);
 						require("calendar_view.js",function(){
-							new CalendarView(cal_manager, "week", 30, content, function(){});
+							new CalendarView(cal_manager, "week", 60, "calendar_container", function(){});
 						});
-						var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
-						pop.show();
-					};
-					window.calendar_section.addToolRight(extend);
+						var extend = document.createElement("IMG");
+						extend.className = "button_verysoft";
+						extend.src = theme.icons_16.window_popup;
+						extend.onclick = function(){
+							var content = document.createElement("div");
+							content.id = 'content_calendar_extend';
+							var width = parseFloat(getWindowWidth())-30;
+							var height = parseFloat(getWindowHeight())-60;
+							content.style.width = width.toString()+"px";
+							content.style.height = height.toString()+"px";
+							require("calendar_view.js",function(){
+								new CalendarView(cal_manager, "week", 30, content, function(){});
+							});
+							var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
+							pop.show();
+						};
+						window.calendar_section.addToolRight(extend);
+					}
+					if (PN_cal) init_calendar();
+					else {
+						var retry_calendar = function() {
+							PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
+							if (PN_cal) init_calendar();
+							else setTimeout(retry_calendar, 500);
+						};
+						window.top.pn_calendars_provider.refreshCalendars();
+						retry_calendar();
+					}
 				}
 			});
 

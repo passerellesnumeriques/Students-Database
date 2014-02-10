@@ -15,6 +15,7 @@ field_decimal.prototype._create = function(data) {
 		var t=this;
 		var input = document.createElement("INPUT");
 		input.type = "text";
+		input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
 		input.maxLength = this.config.integer_digits + 1 + this.config.decimal_digits;
 		if (data) input.value = data;
 		input.style.margin = "0px";

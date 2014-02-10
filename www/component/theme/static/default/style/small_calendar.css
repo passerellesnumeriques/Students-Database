@@ -1,0 +1,29 @@
+.small_calendar {
+	border: 1px solid black;
+	border-collapse: collapse;
+	background-color: white;
+}
+.small_calendar th {
+	border: 1px solid #8080FF;
+	text-align: center;
+	vertical-align: middle;
+	font-size: 8pt;
+	color: #404080;
+}
+.small_calendar td {
+	border: 1px solid #8080FF;
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	width: 25px;
+	height: 25px;
+}
+.small_calendar td.disabled {
+	background-color: #C0C0C0;
+	cursor: default;
+}
+.small_calendar td.selected {
+	background-color: #C0C0FF;
+	font-weight: bold;
+	cursor: default;
+}

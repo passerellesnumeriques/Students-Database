@@ -1,3 +1,4 @@
+theme.css("statusui.css");
 function StatusUI_Top(manager, margin) {
 	manager.status_ui = this;
 	if (!margin) margin = 0;
@@ -92,12 +93,9 @@ function StatusUI_Top(manager, margin) {
 	},
 	this.create_control = function(status) {
 		var c = document.createElement("DIV");
-		c.style.padding = "2px";
+		c.className = "status_item";
 		c.style.display = "inline-block";
 		c.name = status.id;
-		setBoxShadow(c,1,1,4,3,"#A0A0A0");
-		setBorderRadius(c,4,4,4,4,4,4,4,4);
-		c.style.textAlign = "left";
 		c.style.overflow = "hidden";
 		this.container.appendChild(c);
 		this.update_status_control(c, status);

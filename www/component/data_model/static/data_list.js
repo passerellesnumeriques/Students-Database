@@ -4,12 +4,14 @@ if (typeof require != 'undefined') {
 	require("vertical_layout.js");
 	require("horizontal_layout.js");
 	require("horizontal_menu.js");
+	require("vertical_align.js");
 	require("typed_field.js",function(){
 		require("field_text.js");
 		require("field_html.js");
 		require("field_integer.js");
 	});
 	require("context_menu.js");
+	theme.css("data_list.css");
 }
 /** A data list is a generic view of data: starting from a table, the user can choose what data to display, apply filters, sort data...
  * @param {DOMNode} container where to put it
@@ -229,18 +231,15 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		}
 		// init header
 		t.header = document.createElement("DIV");
-		t.header.setAttribute("layout","25");
-		t.header.className = "data_list_header header";
+		t.header.className = "data_list_header";
 		t.header_left = document.createElement("DIV");
 		t.header_left.setAttribute("layout","fixed");
-		t.header_left.style.borderRight = "1px solid #808080";
 		t.header.appendChild(t.header_left);
 		t.header_center = document.createElement("DIV");
 		t.header_center.setAttribute("layout","fill");
 		t.header.appendChild(t.header_center);
 		t.header_right = document.createElement("DIV");
 		t.header_right.setAttribute("layout","fixed");
-		t.header_right.style.borderLeft = "1px solid #808080";
 		t.header.appendChild(t.header_right);
 		container.appendChild(t.header);
 		// init header buttons
@@ -348,8 +347,12 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			fireLayoutEventFor(container);
 		});
 		require("horizontal_menu.js",function(){
-			new horizontal_menu(t.header_center);
+			new horizontal_menu(t.header_center, "middle");
 			fireLayoutEventFor(container);
+		});
+		require("vertical_align.js",function(){
+			new vertical_align(t.header_left, "middle");
+			new vertical_align(t.header_right, "middle");
 		});
 	};
 	/** Load the available fields for the root table */

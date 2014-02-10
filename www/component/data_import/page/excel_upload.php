@@ -104,13 +104,16 @@ class page_excel_upload extends Page {
 							echo "overflow:'hidden'";
 							if ($style <> null) {
 								$font = $style->getFont();
-								if ($font <> null) {
-									if ($font->getName() <> null) echo ",fontFamily:".json_encode($font->getName());
-									if ($font->getBold()) echo ",fontWeight:'bold'";
-									if ($font->getItalic()) echo ",fontStyle:'italic'";
-									if ($font->getColor() <> null) echo ",color:'#".$font->getColor()->getRGB()."'";
-									if ($font->getSize() <> null) echo ",fontSize:'".floor($font->getSize())."pt'";
-								}
+								$font_name = $font <> null && $font->getName() <> null ? $font->getName() : "Calibri";
+								$font_size = $font <> null && $font->getSize() <> null ? $font->getSize() : "11";
+								$font_weight = $font <> null && $font->getBold() ? "bold" : "normal";
+								$font_style = $font <> null && $font->getItalic() ? "italic" : "normal";
+								$font_color = $font <> null && $font->getColor() <> null ? "#".$font->getColor()->getRGB() : "black";
+								echo ",fontFamily:".json_encode($font_name);
+								echo ",fontSize:".json_encode($font_size);
+								echo ",fontWeight:".json_encode($font_weight);
+								echo ",fontStyle:".json_encode($font_style);
+								echo ",color:".json_encode($font_color);
 								if ($style->getFill() <> null && $style->getFill()->getFillType() == PHPExcel_Style_Fill::FILL_SOLID && $style->getFill()->getStartColor() <> null)
 									echo ",backgroundColor:'#".$style->getFill()->getStartColor()->getRGB()."'";
 							}

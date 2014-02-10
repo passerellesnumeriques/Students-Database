@@ -1,0 +1,47 @@
+.frame_header {
+	background: linear-gradient(to bottom,  #e0e0e0 50%,#d0d0d0 80%,#b0b0b0 100%); /* W3C */
+	border-bottom: 1px solid #A0A0A0;
+}
+.frame_header {
+	height: 35px;
+}
+.frame_header_title {
+	/* header_title */
+	border-right: 1px solid #FFFFFF;
+	vertical-align: middle;
+	font-weight: bold;
+	color: #4040A0;
+	background-color: rgba(255,255,255,0.4);
+	border-bottom-right-radius: 10px 10px;
+	padding: 3px 6px 2px 3px;
+}
+.frame_header .frame_header_title {
+	font-size: 12pt;
+}
+
+.page_menu_item img {
+	vertical-align: bottom;
+	padding-right: 5px;
+}
+.page_menu_item {
+	font-size: 11pt;
+	color: #000060;
+	border-radius: 5px;
+	padding: 3px;
+}
+.page_menu_item a, a.page_menu_item {
+	text-decoration: none;
+	cursor: pointer;
+	color: #000060;
+}
+.page_menu_item a:hover, a.page_menu_item:hover {
+	color: #800080;
+}
+.page_menu_item:hover {
+	background-color: rgba(255,255,255,0.4);
+}
+.page_menu_item:active {
+	position: relative;
+	top: 1px;
+	left: 1px;
+}

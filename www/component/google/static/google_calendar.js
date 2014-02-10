@@ -219,7 +219,7 @@ function parseRRuleDate(s) {
 
 function GoogleCalendarsProvider() {
 	var t=this;
-	this.getCalendars = function(handler) {
+	this._retrieveCalendars = function(handler) {
 		load_google_calendars(function(calendars) {
 			t.connectionStatus("");
 			handler(calendars);
