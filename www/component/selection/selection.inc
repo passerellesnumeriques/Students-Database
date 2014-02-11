@@ -1153,6 +1153,10 @@ class selection extends Component {
 		} else {
 			$parts_fields_values = array();
 			$full_subject_field_values = array();
+			foreach($parts as $p)
+				array_push($parts_fields_values, array("exam_subject_part" => $p, "exam_topic_for_eligibility_rule" => $id));
+			foreach ($full_subjects as $subject)
+				array_push($full_subject_field_values, array("exam_subject" => $subject, "exam_topic_for_eligibility_rule" => $id));
 			SQLQuery::startTransaction();
 			if($topic["id"] == -1 || $topic["id"] == "-1"){
 				//This is an insert
@@ -1162,27 +1166,45 @@ class selection extends Component {
 				} catch (Exception $e){
 					PNApplication::error($e);
 				}
-				foreach($parts as $p)
-					array_push($parts_fields_values, array("exam_subject_part" => $p, "exam_topic_for_eligibility_rule" => $id));
-				SQLQuery::create()->insertMultiple("ExamPartTopic", $parts_fields_values, $db_lock);
-				
-				foreach ($full_subjects as $subject)
-					array_push($full_subject_field_values, array("exam_subject" => $subject, "exam_topic_for_eligibility_rule" => $id));
-				SQLQuery::create()->insertMultiple("ExamTopicFullExam", $full_subject_field_values, $db_lock);
 				
 			} else {
 				//This is an update
-				
-				//Get all the parts before
-				$parts_to_remove = SQLQuery::create()
+				$id = $topic["id"];
+				unset($topic["id"]);
+				try {
+					SQLQuery::create()->updateByKey("ExamTopicForEligibilityRule", $id, $topic);
+					//Get and remove all the parts set into the database
+					$parts_to_remove = SQLQuery::create()
+						->bypass_security()
+						->select("ExamPartTopic")
+						->field("ExamPartTopic","exam_subject_part","part")
+						->execute_single_field();
+					if($parts_to_remove <> null){
+						//SQLQuery::create()->removeKeys("InformationSessionPartner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
+						foreach($parts_to_remove as $p)
+							SQLQuery::create()->removeKeys("ExamPartTopic", array(array("exam_topic_for_eligibility_rule" => $id, "exam_subject_part" => $p)));
+					}
+					//Get and remove all the full subjects set into the database
+					$full_subjects_to_remove = SQLQuery::create()
 					->bypass_security()
-					->select("ExamPartTopic")
-					->field("ExamPartTopic","exam_subject_part","part")
+					->select("ExamTopicFullExam")
+					->field("ExamTopicFullExam","exam_subject","subject")
 					->execute_single_field();
-				if($parts_to_remove <> null){
-					//SQLQuery::create()->removeKeys("InformationSessionPartner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
-					
+					if($full_subjects_to_remove <> null){
+						//SQLQuery::create()->removeKeys("InformationSessionPartner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
+						foreach($full_subjects_to_remove as $s)
+							SQLQuery::create()->removeKeys("ExamTopicFullExam", array(array("exam_topic_for_eligibility_rule" => $id, "exam_subject" => $s)));
+					}
+				} catch (Exception $e){
+					PNApplication::error($e);
 				}
+			}
+			//Insert all the new values
+			try {
+				SQLQuery::create()->insertMultiple("ExamPartTopic", $parts_fields_values, $db_lock);
+				SQLQuery::create()->insertMultiple("ExamTopicFullExam", $full_subject_field_values, $db_lock);
+			} catch (Exception $e){
+				PNApplication::error($e);
 			}
 			if(PNApplication::has_errors()){
 				SQLQuery::rollbackTransaction();
