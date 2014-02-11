@@ -1,6 +1,7 @@
 function autoresize_input(input, min_size) {
 	input.mirror = document.createElement("SPAN");
 	if (input.style.fontSize) input.mirror.style.fontSize = input.style.fontSize;
+	if (input.style.fontWeight) input.mirror.style.fontWeight = input.style.fontWeight;
 	input.mirror.style.position = 'absolute';
 	input.mirror.style.whiteSpace = 'pre';
 	input.mirror.style.left = '0px';

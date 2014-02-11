@@ -1,4 +1,4 @@
-function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_edit, can_remove, other_topics, all_parts){
+function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_edit, can_remove, other_topics, all_parts, db_lock){
 	var t = this;
 	if(typeof(container) == "string")
 		container = document.getElementById(container);

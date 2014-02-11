@@ -1144,6 +1144,56 @@ class selection extends Component {
 		// }
 	// }
 
+	public function saveTopic($topic, $parts, $full_subjects, $db_lock){
+		//Check the rights
+		$rights = $this->canUpdateFromRightAndStep("define_topic_for_eligibility_rules", "manage_exam_subject", "You are not allowed to manage the exam topics for eligibility rules");
+		if(!$rights[0]){
+			PNApplication::error_html($rights[1]);
+			return false;
+		} else {
+			$parts_fields_values = array();
+			$full_subject_field_values = array();
+			SQLQuery::startTransaction();
+			if($topic["id"] == -1 || $topic["id"] == "-1"){
+				//This is an insert
+				unset($topic["id"]);
+				try {
+					$id = SQLQuery::create()->insert("ExamTopicForEligibilityRule", $topic, $db_lock);
+				} catch (Exception $e){
+					PNApplication::error($e);
+				}
+				foreach($parts as $p)
+					array_push($parts_fields_values, array("exam_subject_part" => $p, "exam_topic_for_eligibility_rule" => $id));
+				SQLQuery::create()->insertMultiple("ExamPartTopic", $parts_fields_values, $db_lock);
+				
+				foreach ($full_subjects as $subject)
+					array_push($full_subject_field_values, array("exam_subject" => $subject, "exam_topic_for_eligibility_rule" => $id));
+				SQLQuery::create()->insertMultiple("ExamTopicFullExam", $full_subject_field_values, $db_lock);
+				
+			} else {
+				//This is an update
+				
+				//Get all the parts before
+				$parts_to_remove = SQLQuery::create()
+					->bypass_security()
+					->select("ExamPartTopic")
+					->field("ExamPartTopic","exam_subject_part","part")
+					->execute_single_field();
+				if($parts_to_remove <> null){
+					//SQLQuery::create()->removeKeys("InformationSessionPartner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
+					
+				}
+			}
+			if(PNApplication::has_errors()){
+				SQLQuery::rollbackTransaction();
+				return false;
+			} else {
+				SQLQuery::commitTransaction();
+				return true;
+			}
+		}
+	}
+	
 	public function checkAllPartsAppearOneTimeInATopicForEligibilityRules(){
 		//TODO
 		// check that each exam subject part appears at least one time in a topic for eligibility rules
