@@ -560,7 +560,7 @@ class selection extends Component {
 	public function removeAllISPartners($IS_id){
 		$partners = SQLQuery::create()->select("InformationSessionPartner")
 				->field("organization")
-				->whereValue("InformationSessionPartner","InformationSession",$IS_id)
+				->whereValue("InformationSessionPartner","information_session",$IS_id)
 				->execute();
 		if(isset($partners[0]["organization"])){
 			foreach($partners as $p)
