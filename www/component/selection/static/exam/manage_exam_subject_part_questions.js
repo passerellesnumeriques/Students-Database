@@ -14,7 +14,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		if(display_questions_detail)
 			t._setTableBody();
 		container.appendChild(t.table);
-	}
+	};
 	
 	t._setTableHeader = function(){
 		thead = document.createElement("thead");
@@ -27,7 +27,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t.tr_head.appendChild(t.th_head);
 		thead.appendChild(t.tr_head);
 		t.table.appendChild(thead);
-	}
+	};
 	
 	t._setHeaderContent = function(){
 		if(t.th_head.parentNode == t.tr_head){
@@ -132,7 +132,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		}
 		if(element_ending_title)
 			t.th_head.appendChild(element_ending_title);
-	}
+	};
 	
 	t._setTableBody = function(){
 		var tbody = document.createElement("tbody");		
@@ -305,7 +305,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			tbody.appendChild(tr);
 		}
 		t.table.appendChild(tbody);
-	}
+	};
 	
 	t._addOptionalData = function(attribute, i, tr_head, tr){
 		if(i == 0){
@@ -349,14 +349,14 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		}
 		td2.style.textAlign = "center";
 		tr.appendChild(td2);
-	}
+	};
 	
 	t._onFirstInsert = function(){
 		//create the question
 		t._createQuestion(1);
 		//reset table
 		t.reset();
-	}
+	};
 	
 	t._onRemove = function(index_in_ordered,index_in_questions){
 		//update the index attribute of the following questions
@@ -365,7 +365,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		part.questions.splice(index_in_questions,1);
 		//reset table
 		t.reset();
-	}
+	};
 	
 	t._onInsertBefore = function(index_in_ordered){
 		//update the index attribute of the following questions
@@ -376,7 +376,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t._createQuestion(index_in_ordered +1);
 		//reset table
 		t.reset();
-	}
+	};
 	
 	t._onInsertAfter = function(index_in_ordered){
 		if(typeof(index_in_ordered) != "number")
@@ -387,17 +387,13 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t._createQuestion(index_in_ordered +2);
 		//reset table
 		t.reset();
-	}
+	};
 	
 	t._createQuestion = function(index_attribute_value){
 		var index = part.questions.length;
-		part.questions[index] = new ExamSubjectQuestion(-1,index_attribute_value,null,null,null);
-//		part.questions[index].id = -1;
-//		part.questions[index].index = index_attribute_value;
-//		part.questions[index].max_score = null;
-//		part.questions[index].correct_answer = null;
-//		part.questions[index].choices = null;
-	}
+		//the question is created with 1 as default score
+		part.questions[index] = new ExamSubjectQuestion(-1,index_attribute_value,1,null,null);
+	};
 	
 	t._decreaseIndexAttribute = function(index_in_ordered){
 		if(typeof(index_in_ordered != "number"))
@@ -413,7 +409,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				j = index_in_ordered + i;
 			}
 		}
-	}
+	};
 	
 	t._increaseIndexAttribute = function(index_in_ordered){
 		index_in_ordered = parseInt(index_in_ordered);
@@ -427,7 +423,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				j = index_in_ordered + i;
 			}
 		}
-	}
+	};
 	
 	t.reset = function(new_questions_before){
 		if(typeof(new_questions_before) != "undefined")
@@ -439,11 +435,11 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t.ordered = null;
 		t._updateTotalScore();
 		t._init();
-	}
+	};
 	
 	t.getDisplayQuestionDetail = function(){
 		return display_questions_detail;
-	}
+	};
 	
 	t._updateTotalScore = function(){
 		var total = 0;
@@ -458,7 +454,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		}
 		part.max_score = total;
 		t._setHeaderContent();
-	}
+	};
 	
 	t._createButton = function(content){
 		var button = document.createElement("div");
@@ -482,7 +478,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		else
 			button.innerHTML = content;
 		return button;
-	}
+	};
 	
 	t._getOrderedQuestionsIndexInQuestions = function(){
 		var ordered = [];
@@ -491,8 +487,8 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			ordered[i] = t._getQuestionIndexInQuestions(i+1); // question_index must start at 1
 		}
 		return ordered;
-	}
-	
+	};
+
 	t._getQuestionIndexInQuestions = function(question_index_attribute){
 		var index = null;
 		for(var i = 0; i < part.questions.length; i++){
@@ -502,7 +498,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			}
 		}
 		return index;
-	}
+	};
 	
 	require(["autoresize_input.js","exam_objects.js"],function(){
 		t._init();
