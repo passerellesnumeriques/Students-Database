@@ -462,7 +462,8 @@ class SelectionJSON{
 			->join("ExamPartTopic","ExamSubjectPart",array("exam_subject_part" => "id"))
 			->join("ExamSubjectPart","ExamSubject",array("exam_subject" => "id"))
 			->whereValue("ExamTopicForEligibilityRule","id",$id)
-			->orderBy("ExamSubject","id");
+			->orderBy("ExamSubject","id")
+			->orderBy("ExamSubjectPart","index");
 		self::ExamTopicSQL($q);
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectSQL($q);
