@@ -1,4 +1,4 @@
-function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_edit, can_remove, other_topics, all_parts, db_lock){
+function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_edit, can_remove, other_topics, all_parts, db_lock, save_button, remove_button, header){
 	var t = this;
 	if(typeof(container) == "string")
 		container = document.getElementById(container);
@@ -6,7 +6,20 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	t.total_score = 0;
 	t.total_parts = 0;
 	
-	//TODO global rights? (edit/read_only)
+	if(typeof save_button == "string")
+		t.save_button = document.getElementById(save_button);
+	else
+		t.save_button = save_button;
+	
+	if(typeof remove_button == "string")
+		t.remove_button = document.getElementById(remove_button);
+	else
+		t.remove_button = remove_button;
+	
+	if(typeof header == "string")
+		t.header = document.getElementById(header);
+	else
+		t.header = header;
 	
 	t.reset = function(){
 		container.removeChild(t.table);
@@ -27,6 +40,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t._setTableFooter();
 		container.appendChild(t.table);
 		t._updateTheadText();
+		t._manageButtons();
 	};
 	
 	t._updateTheadText = function(){
@@ -720,7 +734,73 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return index;
 	};
 	
+	t._save = function(){
+		//check the name
+		var error_name = t._isNameOK();
+		if( error_name != null)
+			error_dialog(error_name);
+		else {
+			var locker = lock_screen();
+			service.json("selection","eligibility_rules/save_topic",{topic:topic, db_lock:db_lock},function(res){
+				if(!res){
+					unlock_screen(locker);
+					error_dialog("An error occured, your informations were not saved");
+				} else {
+					topic = res;
+	//				update other_topics
+					service.json("selection","eligibility_rules/get_json_all_topics",{exclude_id:topic.id},function(r){
+						if(!r){
+							error_dialog("An error occured and the page must be reloaded");
+							setTimeout(function(){
+								location.reload();
+							},5000);
+						} else {
+							window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Your informations have been successfuly saved!", [{action:"close"}], 5000));
+							other_topics = r;
+							// No need to update the all_parts object
+							t.reset();
+							unlock_screen(locker);
+						}
+					});
+				}
+			});
+		}
+	};
+	
+	t._isNameOK = function(){
+		//TODO
+	};
+	
+	t._removeTopic = function(){
+		new confirm_dialog("Do you really want to remove this topic for eligibility rules?",function(res){
+			if(res){
+				service.json("selection","eligibility_rules/remove_topic",{id:topic.id},function(r){
+					if(!r){
+						error_dialog("An error occured, the data were not removed");
+					} else {
+						location.assign("/dynamic/selection/page/exam/main_page");
+						window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "The topic has been succesfully removed", [{action:"close"}], 5000));
+					}
+				});
+			}
+		});
+	};
+	
+	t._manageButtons = function(){
+		if(!can_edit)
+			t.save_button.style.display = "none";
+		else
+			t.save_button.style.display = "";
+		
+		if(!can_remove || topic.id == -1 || topic.id == "-1")
+			t.remove_button.style.display = "none";
+		else
+			t.remove_button.style.display = "";
+	};
+	
 	require(["manage_exam_subject_part_questions.js","autoresize_input.js","popup_window.js","exam_objects.js"],function(){
 		t._init();
+		t.save_button.onclick = t._save;
+		t.remove_button.onclick = t._removeTopic;
 	});
 }

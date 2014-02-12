@@ -607,7 +607,7 @@ class SelectionJSON{
 	 * @param number (optional) $excluded_id topic id not to retrieve when the query is executed
 	 * @return string JSON structure
 	 */
-	public static function getAllJsonTopics($excluded_id = null){
+	public static function getJsonAllTopics($excluded_id = null){
 		$all_ids = SQLQuery::create()
 		->select("ExamTopicForEligibilityRule")
 		->field("id")
@@ -630,5 +630,44 @@ class SelectionJSON{
 		}
 		$json .= "]";
 		return $json;
+	}
+	
+	public static function getJsonAllParts(){
+		$all_parts = SQLQuery::create()
+		->select("ExamSubjectPart")
+		->join("ExamSubjectPart","ExamSubject",array("exam_subject" => "id"))
+		->field("ExamSubjectPart","id","part_id")
+		->field("ExamSubjectPart","max_score","max_score")
+		->field("ExamSubjectPart","name","part_name")
+		->field("ExamSubjectPart","index","index")
+		->field("ExamSubject","id","id")
+		->field("ExamSubject","name","name")
+		->orderBy("ExamSubject","id")
+		->orderBy("ExamSubjectPart","index")
+		->execute();
+		if($all_parts <> null){
+			$json = "[{id:".json_encode($all_parts[0]["id"]);
+			$json .= ", name:".json_encode($all_parts[0]["name"]);
+			$json .= ", parts:[";
+			$first_part = true;
+			$current_subject = $all_parts[0]["id"];
+			foreach($all_parts as $p){
+				if($p["id"] != $current_subject){
+					$current_subject = $p["id"];
+					$json .= "]}, {id:".json_encode($p["id"]).", name:".json_encode($p["name"]).", parts:[";
+					$first_part = true;
+				}
+				if(!$first_part)
+					$json .= ", ";
+				$first_part = false;
+				$json .= "{id:".json_encode($p["part_id"]).", ";
+				$json .= "name:".json_encode($p["part_name"]).", ";
+				$json .= "max_score:".json_encode($p["max_score"]).", ";
+				$json .= "index:".json_encode($p["index"])."}";
+			}
+			$json .= "]}]";
+			return $json;
+		} else
+			return "[]";
 	}
 }
