@@ -1194,7 +1194,7 @@ class SQLQuery {
 		if($lock_id <> null){
 			$column = null;
 			if (count($fields_values) == 1) { $column = array_keys($fields_values); $column = $column[0]; }
-			if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
+			if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), null, $column))
 				throw new Exception("Access denied: invalid lock");
 		} else {
 			$lock = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, true);
@@ -1254,7 +1254,8 @@ class SQLQuery {
 		foreach ($t->_key_submodels as &$sm)
 			$sm->createTables($id);
 		// unlock the table
-		DataBaseLock::unlock($lock);
+		if($lock_id == null)
+			DataBaseLock::unlock($lock);
 		// events
 		$t->fireInsert($fields_values, $id, $t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null);
 		return $id;

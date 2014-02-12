@@ -26,6 +26,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		delete t.table;
 		t.table = document.createElement("table");
 		t._resetTotalAttributes();
+		t._resetFreePartsToAdd();
 		t._init();
 	};
 	
@@ -66,6 +67,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			input.type = "text";
 			input.style.textAlign = "right";
 			input.style.fontWeight = "bold";
+			input.id = "topic_name_input";
 			new autoresize_input(input,7);
 			if(topic.name && topic.name.checkVisible())
 				input.value = topic.name.uniformFirstLetterCapitalized();
@@ -236,7 +238,9 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 		var tr_head = document.createElement("tr");
 		var th_head = document.createElement("th");
-		th_head.innerHTML = "Whole subject";
+		th_head.innerHTML = "All free parts from subject";
+		th_head.colSpan = 2;
+		th_head.style.textAlign = "left";
 //		th_head.style.fontSize = "large";
 		tr_head.appendChild(th_head);
 //		var td2 = document.createElement("td");
@@ -281,7 +285,6 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 				var td2 = document.createElement("td");
 				var input = document.createElement("input");
 				input.subject_id = free_full_subjects_ids[i].id;
-				//TODO? if already in potential_full_subjects, pre check the check box (after reset..)
 				input.type = "checkbox";
 				input.onchange = function(){
 					var free_parts = t._getAllFreePartsIdsAndNamesForASubject(this.subject_id);
@@ -289,7 +292,6 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 					if(this.checked){
 						if(!t.potential_full_subjects.contains(this.subject_id))
 							t.potential_full_subjects.push(this.subject_id);
-						//TODO if full subject to add, check the full subject checkbox and update object
 //						t._updateAddFullSubjectVisibility();
 						
 						//Check all the matching checkboxes
@@ -351,16 +353,13 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t.add_free_parts.innerHTML = "<img src = '/static/selection/exam/arrow_up_16.png'/>";
 		t.add_free_parts.title = "Add the selected parts to the current topic";
 		t.add_free_parts.onclick = function(){
+			//update potential_full_subjects attribute
+			t._cleanPotentialFullSubjects();
 			if(t.potential_full_subjects.length > 0){
 				var pop = new popup_window("Add the parts",theme.icons_16.question,"Do you want to set the \"Whole subject\" selected as full subject?<br/><i>If yes, when a part is added to the subject, it is automatically added to the topic</i>");
 				pop.addButton("<img src='"+theme.icons_16.yes+"' style='vertical-align:bottom'/> Yes", 'yes', function(){
-					//set the selected subjects as full_subjects
-						for(var i = 0; i < t.potential_full_subjects.length; i++){
-							var index = t._findSubjectIndexInTopic(t.potential_full_subjects[i]);
-							topic.subjects[index].full_subject = true;
-						}
-					//add the parts
-					t._addFreeParts();
+					//add the parts and the full subjects
+					t._addFreeParts(true);
 					pop.close();
 				});
 				pop.addButton("<img src='"+theme.icons_16.no+"' style='vertical-align:bottom'/> No", 'no', function() {
@@ -427,7 +426,17 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
-	t._addFreeParts = function(){
+	/**
+	 * Only keep the subjects ids that can really be set as full subjects
+	 */
+	t._cleanPotentialFullSubjects = function(){
+		for(var i = 0; i < t.potential_full_subjects.length; i++){
+			if(t._cannotSetSubjectAsFullSubject(t.potential_full_subjects[i]))
+				t.potential_full_subjects.remove(t.potential_full_subjects[i]);
+		}
+	};
+	
+	t._addFreeParts = function(add_potential_full_subjects){
 		for(s in t.free_parts_to_add){
 			var subject_id = t._getSubjectIdFromName(s);
 //			var subject_index = t._findSubjectIndexInTopic(subject_id);
@@ -438,6 +447,13 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 				subject.full_subject = false;
 				index = topic.subjects.length;
 				topic.subjects.push(subject);
+			}
+			if(add_potential_full_subjects){
+				//set the selected subjects as full_subjects
+				for(var i = 0; i < t.potential_full_subjects.length; i++){
+					var index = t._findSubjectIndexInTopic(t.potential_full_subjects[i]);
+					topic.subjects[index].full_subject = true;
+				}
 			}
 			var index_in_all_parts = t._findSubjectIndexInAllParts(subject_id);
 			//insert the parts
@@ -452,11 +468,13 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 				topic.subjects[index].parts.push(all_parts[index_in_all_parts].parts[part_index_in_all_parts]);
 			}
 		}
-		//reset free_parts_to_add
-		delete t.free_parts_to_add;
-		t.free_parts_to_add = {};
 		//reset
 		t.reset();
+	};
+	
+	t._resetFreePartsToAdd = function(){
+		delete t.free_parts_to_add;
+		t.free_parts_to_add = {};
 	};
 	
 	t._oncheckFreePartsCheckBox = function(subject_name, part_id){
@@ -614,7 +632,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			}
 		}
 		if(!first)
-			error += "</ul>";
+			error += "</ul><br/> So you cannot set it as a full subject for this topic";
 		return error;
 	};
 	
@@ -679,7 +697,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 					if(other_topics[i].subjects[j].parts[k].id == part_id){
 						res = true;
 						if(other_topics[i].subjects[j].parts[k].name != null && other_topics[i].subjects[j].parts[k].index != "")
-							text = "Part "+other_topics[i].subjects[j].parts[k].index+" ("+other_topics[i].subjects[j].parts[k].name+") from "+other_topics[i].subjects[j].name+" subject, in "+other_topics[i].name+ " topic";
+							text = "Part "+other_topics[i].subjects[j].parts[k].index+" - "+other_topics[i].subjects[j].parts[k].name+" - from "+other_topics[i].subjects[j].name+" subject, in "+other_topics[i].name+ " topic";
 						else
 							text = "Part "+other_topics[i].subjects[j].parts[k].index+" from "+other_topics[i].subjects[j].name+" subject, in "+other_topics[i].name+ " topic";
 						break;
@@ -737,9 +755,14 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	t._save = function(){
 		//check the name
 		var error_name = t._isNameOK();
-		if( error_name != null)
+		if(error_name != null){
 			error_dialog(error_name);
-		else {
+			var input = document.getElementById("topic_name_input");
+			if(input){
+				input.focus();
+				input.select();
+			}
+		} else {
 			var locker = lock_screen();
 			service.json("selection","eligibility_rules/save_topic",{topic:topic, db_lock:db_lock},function(res){
 				if(!res){
@@ -747,7 +770,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 					error_dialog("An error occured, your informations were not saved");
 				} else {
 					topic = res;
-	//				update other_topics
+					//update other_topics
 					service.json("selection","eligibility_rules/get_json_all_topics",{exclude_id:topic.id},function(r){
 						if(!r){
 							error_dialog("An error occured and the page must be reloaded");
@@ -768,7 +791,15 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	};
 	
 	t._isNameOK = function(){
-		//TODO
+		if(topic.name == "New Topic" || topic.name == "" || topic.name == null)
+			return 'You must set a topic name';
+		else {
+			for(var i = 0; i < other_topics.length; i++){
+				if(other_topics[i].name.uniformFirstLetterCapitalized() == topic.name.uniformFirstLetterCapitalized())
+					return "An exam topic for eligibility rules is already named "+topic.name.uniformFirstLetterCapitalized();
+			}
+			return;
+		}
 	};
 	
 	t._removeTopic = function(){
@@ -792,9 +823,9 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		else
 			t.save_button.style.display = "";
 		
-		if(!can_remove || topic.id == -1 || topic.id == "-1")
+		if(!can_remove || topic.id == -1 || topic.id == "-1"){
 			t.remove_button.style.display = "none";
-		else
+		} else
 			t.remove_button.style.display = "";
 	};
 	

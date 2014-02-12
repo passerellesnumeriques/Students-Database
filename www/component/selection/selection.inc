@@ -1214,8 +1214,10 @@ class selection extends Component {
 			foreach ($full_subjects as $subject)
 				array_push($full_subject_field_values, array("exam_subject" => $subject, "exam_topic_for_eligibility_rule" => $id));
 			try {
-				SQLQuery::create()->insertMultiple("ExamPartTopic", $parts_fields_values, $db_lock);
-				SQLQuery::create()->insertMultiple("ExamTopicFullExam", $full_subject_field_values, $db_lock);
+				if(count($parts_fields_values) > 0)
+					SQLQuery::create()->insertMultiple("ExamPartTopic", $parts_fields_values, $db_lock);
+				if(count($full_subject_field_values) >0)
+					SQLQuery::create()->insertMultiple("ExamTopicFullExam", $full_subject_field_values, $db_lock);
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}
@@ -1258,11 +1260,11 @@ class selection extends Component {
 	}
 	
 	/**
-	 * Method to call before applying the eligibility rules
+	 * Method to call before applying the eligibility rules<br>
 	 * Check that all the exam subject parts appear one time and only one
 	 * in the exam topics. By this check we are sure that <br/><ul>
 	 * <li>No part has an implicite coefficient (case appears in several topics)</li>
-	 * <li>No part is useless (case never appear in any topic</li>
+	 * <li>No part is useless (case never appear in any topic)</li>
 	 * </ul>
 	 * @return null|string null if no error detected, else the error message to display
 	 */
@@ -1322,7 +1324,7 @@ class selection extends Component {
 					->execute();
 				
 				foreach ($missing_parts_data as $p){
-					$error_missing .= "<li>Part ".$p["part_index"]."- ".$p["part_name"]." - ".$p["subject_name"]." subject</li>";
+					$error_missing .= "<li>Part ".$p["part_index"]." - ".$p["part_name"]." - ".$p["subject_name"]." subject</li>";
 				}
 				$error_missing .= "</ul>";
 			}
@@ -1344,7 +1346,7 @@ class selection extends Component {
 					->field("ExamTopicForEligibilityRule","name","topic_name")
 					->execute();
 				foreach ($parts_multiple_data as $p){
-					$error_multiple_entries .= "<li>Part ".$p["part_index"]."- ".$p["part_name"]." - ".$p["subject_name"]." subject, in topic ".$p["topic_name"]."</li>";
+					$error_multiple_entries .= "<li>Part ".$p["part_index"]." - ".$p["part_name"]." - ".$p["subject_name"]." subject, in topic ".$p["topic_name"]."</li>";
 				}
 				$error_multiple_entries .= "</ul>";
 			}

@@ -525,31 +525,32 @@ class SelectionJSON{
 			$topic["number_questions"] = $rows[0]["topic_number_questions"];
 			$topic["subjects"] = array();
 			foreach($rows as $row){
-				if(isset($topic["subjects"][$row["subject_id"]])){
-					$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
-							"name" => $row["part_name"],
-							"max_score" => $row["part_max_score"],
-							"index" => $row["part_index"]
-					);
-				} else {
-					//create the subject array
-					$topic["subjects"][$row["subject_id"]] = array(
-							"name" => $row["subject_name"],
-							"max_score" => $row["subject_max_score"],
-							"parts" => array()
-					);
-					if(in_array($row["subject_id"],$full_exams))
-						$topic["subjects"][$row["subject_id"]]["full_subject"] = true;
-					else
-						$topic["subjects"][$row["subject_id"]]["full_subject"] = false;
-					//create the part
-					$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
-							"name" => $row["part_name"],
-							"max_score" => $row["part_max_score"],
-							"index" => $row["part_index"]
-					);
+				if($row["subject_id"] <> null){
+					if(isset($topic["subjects"][$row["subject_id"]])){
+						$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
+								"name" => $row["part_name"],
+								"max_score" => $row["part_max_score"],
+								"index" => $row["part_index"]
+						);
+					} else {
+						//create the subject array
+						$topic["subjects"][$row["subject_id"]] = array(
+								"name" => $row["subject_name"],
+								"max_score" => $row["subject_max_score"],
+								"parts" => array()
+						);
+						if(in_array($row["subject_id"],$full_exams))
+							$topic["subjects"][$row["subject_id"]]["full_subject"] = true;
+						else
+							$topic["subjects"][$row["subject_id"]]["full_subject"] = false;
+						//create the part
+						$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
+								"name" => $row["part_name"],
+								"max_score" => $row["part_max_score"],
+								"index" => $row["part_index"]
+						);
+					}
 				}
-				//a topic part cannot be empty because removed by #selection#updateExamTopicsForEligibilityRules
 			}
 			return $topic;
 		} else
