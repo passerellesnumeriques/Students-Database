@@ -60,15 +60,25 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		tr.appendChild(td_name);
 		tr.menu = []; // menu to display on mouse over
 		
+		see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/> See",all_topics[i].id);
+		see_button.onclick = function(){
+			location.assign("/dynamic/selection/page/eligibility_rules/manage_exam_topic?id="+this.id+"&read_only=true");
+		};
+		see_button.style.visibility = "hidden";
+		see_button.className = "button_verysoft";
+		var td_see = document.createElement("td");
+		td_see.appendChild(see_button);
+		tr.appendChild(td_see);
+		tr.menu.push(see_button);
+		
 		if(can_manage){
 			edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/> Edit",all_topics[i].id);
 			edit_button.onclick = function(){
-//				alert("/dynamic/selection/page/eligibility_rules/manage_exam_topic?id="+this.id);
 				location.assign("/dynamic/selection/page/eligibility_rules/manage_exam_topic?id="+this.id);
 			};
 			edit_button.style.visibility = "hidden";
 			edit_button.className = "button_verysoft";
-			td_edit = document.createElement("td");
+			var td_edit = document.createElement("td");
 			td_edit.appendChild(edit_button);
 			tr.appendChild(td_edit);
 			tr.menu.push(edit_button);
@@ -91,9 +101,11 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		if(validated != null){
 			div.innerHTML = validated;
 			div.style.color = "red";
+			div.style.paddingLeft = "2px";
 		} else {
 			div.innerHTML = "All the parts appear one and only one time in the topics, so eligibility rules can be applied";
 			div.style.color = "green";
+			div.style.paddingLeft = "0px";
 		}
 		td.appendChild(div);
 		tr.appendChild(td);
