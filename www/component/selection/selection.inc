@@ -560,7 +560,7 @@ class selection extends Component {
 	public function removeAllISPartners($IS_id){
 		$partners = SQLQuery::create()->select("InformationSessionPartner")
 				->field("organization")
-				->whereValue("InformationSessionPartner","InformationSession",$IS_id)
+				->whereValue("InformationSessionPartner","information_session",$IS_id)
 				->execute();
 		if(isset($partners[0]["organization"])){
 			foreach($partners as $p)
@@ -1144,133 +1144,268 @@ class selection extends Component {
 		// }
 	// }
 
-	public function checkAllPartsAppearOneTimeInATopicForEligibilityRules(){
-		//TODO
-		// check that each exam subject part appears at least one time in a topic for eligibility rules
-		// otherwize means that this part is useless!!!
-	}
-
-	/** @method#selection#getExamTopicForEligibilityRulesData
-	 * @param integer topic_id the id of the topic
-	 * @return array [id => ""
-	 * 					name => ""
-	 * 					subjects => [
-	 *							id => [
-	 *								name => ""
-	 *								max_score => ""
-	 *								{boolean} full_subject =>
-	 * 								parts => array(
-	 *									id =>[
-	 *										name => ""
-	 *										max_score => ""
-	 *										index => ""
-	 *									],...)
-	 * 							],...]
-	 *					]
-	 * subjects & parts arrays use the subject id (respectively part id) as key
+	/**
+	 * Save an exam topic and all the related data<br/>
+	 * The rights and steps are checked before performing the query
+	 * @param array $topic fields_values for ExamTopicForEligibilityRule table
+	 * @param array $parts all the parts ids within the topic
+	 * @param array $full_subjects all the full subject within the topic
+	 * @param number $db_lock lock id for the table ExamTopicForEligibilityRule
+	 * @return boolean|number false if an error occured, else the id of the topic saved
 	 */
-// 	public function getExamTopicForEligibilityRules($topic_id){
-// 		$data = SQLQuery::create()
-// 			->select("ExamTopicForEligibilityRule")
-// 			->field("ExamTopicForEligibilityRule","name","name")
-// 			->field("ExamTopicForEligibilityRule","max_score","max_score")
-// 			->field("ExamTopicForEligibilityRule","number_questions","number_questions")
-// 			->join("ExamTopicForEligibilityRule","ExamPartTopic",array("id" => "exam_topic_for_eligibility_rule"))
-// 			->join("ExamPartTopic","ExamSubjectPart",array("exam_subject_part" => "id"))
-// 			->join("ExamSubjectPart","ExamSubject",array("exam_subject" => "id"))
-// 			->field("ExamSubjectPart","id","part_id")
-// 			->field("ExamSubjectPart","exam_subject","exam_id")
-// 			->field("ExamSubjectPart","max_score","part_max_score")
-// 			->field("ExamSubjectPart","index","part_index")
-// 			->field("ExamSubjectPart","name","part_name")
-// 			->field("ExamSubject","name","exam_name")
-// 			->field("ExamSubject","max_score","exam_max_score")
-// 			->whereValue("ExamTopicForEligibilityRule","id",$topic_id)
-// 			->orderBy("ExamSubject","id")
-// 			->execute();
-// 		$full_subjects = SQLQuery::create()
-// 			->select("ExamTopicFullExam")
-// 			->field("exam_subject")
-// 			->whereValue("ExamTopicFullExam","ExamTopicForEligibilityRule",$topic_id)
-// 			->executeSingleField();
-// 		if(isset($data[0]["name"])){
-// 			$topic = array();
-// 			$topic["id"] = $topic_id;
-// 			$topic["name"] = $data[0]["name"];
-// 			$topic["max_score"] = $data[0]["max_score"];
-// 			$topic["number_questions"] = $data[0]["number_questions"];
-// 			$topic["subjects"] = array();
-// 			foreach($data as $d){
-// 				if(isset($topic["subjects"][$d["exam_id"]])){
-// 					$topic["subjects"][$d["exam_id"]]["parts"][$d["part_id"]] = array(
-// 						"name" => $d["part_name"],
-// 						"max_score" => $d["part_max_score"],
-// 						"index" => $d["part_index"]
-// 					);
-// 				} else {
-// 					//create the subject array
-// 					$topic["subjects"][$d["exam_id"]] = array(
-// 						"name" => $d["exam_name"],
-// 						"max_score" => $d["exam_max_score"],
-// 						"parts" => array()
-// 					);
-// 					if(in_array($d["exam_id"],$full_subjects))
-// 						$topic["subjects"][$d["exam_id"]]["full_subject"] = true;
-// 					else
-// 						$topic["subjects"][$d["exam_id"]]["full_subject"] = false;
-// 					//create the part
-// 					$topic["subjects"][$d["exam_id"]]["parts"][$d["part_id"]] = array(
-// 						"name" => $d["part_name"],
-// 						"max_score" => $d["part_max_score"],
-// 						"index" => $d["part_index"]
-// 					);					
-// 				}
-// 				//a topic part cannot be empty because removed by #selection#updateExamTopicsForEligibilityRules
-// 			}
-// 			return $topic;
-// 		} else
-// 			return;
-// 	}
+	public function saveTopic($topic, $parts, $full_subjects, $db_lock){
+		//Check the rights
+		$rights = $this->canUpdateFromRightAndStep("define_topic_for_eligibility_rules", "manage_exam_subject", "You are not allowed to manage the exam topics for eligibility rules");
+		$id = null;
+		if(!$rights[0]){
+			PNApplication::error_html($rights[1]);
+			return false;
+		} else {
+			$parts_fields_values = array();
+			$full_subject_field_values = array();
+			
+			SQLQuery::startTransaction();
+			if($topic["id"] == -1 || $topic["id"] == "-1"){
+				//This is an insert
+				unset($topic["id"]);
+				try {
+					$id = SQLQuery::create()->insert("ExamTopicForEligibilityRule", $topic, $db_lock);
+				} catch (Exception $e){
+					PNApplication::error($e);
+				}
+				
+			} else {
+				//This is an update
+				$id = $topic["id"];
+				unset($topic["id"]);
+				try {
+					SQLQuery::create()->updateByKey("ExamTopicForEligibilityRule", $id, $topic);
+					//Get and remove all the parts set into the database
+					$parts_to_remove = SQLQuery::create()
+						->bypassSecurity()
+						->select("ExamPartTopic")
+						->field("ExamPartTopic","exam_subject_part","part")
+						->whereValue("ExamPartTopic","exam_topic_for_eligibility_rule",$id)
+						->executeSingleField();
+					if($parts_to_remove <> null){
+// 						SQLQuery::create()->removeKeys("InformationSessionPartner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
+						foreach($parts_to_remove as $p)
+							SQLQuery::create()->removeKeys("ExamPartTopic", array(array("exam_topic_for_eligibility_rule" => $id, "exam_subject_part" => $p)));
+					}
+					//Get and remove all the full subjects set into the database
+					$full_subjects_to_remove = SQLQuery::create()
+					->bypassSecurity()
+					->select("ExamTopicFullExam")
+					->field("ExamTopicFullExam","exam_subject","subject")
+					->whereValue("ExamTopicFullExam","exam_topic_for_eligibility_rule",$id)
+					->executeSingleField();
+					if($full_subjects_to_remove <> null){
+						//SQLQuery::create()->removeKeys("InformationSessionPartner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
+						foreach($full_subjects_to_remove as $s)
+							SQLQuery::create()->removeKeys("ExamTopicFullExam", array(array("exam_topic_for_eligibility_rule" => $id, "exam_subject" => $s)));
+					}
+				} catch (Exception $e){
+					PNApplication::error($e);
+				}
+			}
+			//Insert all the new values
+			foreach($parts as $p)
+				array_push($parts_fields_values, array("exam_subject_part" => $p, "exam_topic_for_eligibility_rule" => $id));
+			foreach ($full_subjects as $subject)
+				array_push($full_subject_field_values, array("exam_subject" => $subject, "exam_topic_for_eligibility_rule" => $id));
+			try {
+				if(count($parts_fields_values) > 0)
+					SQLQuery::create()->insertMultiple("ExamPartTopic", $parts_fields_values, $db_lock);
+				if(count($full_subject_field_values) >0)
+					SQLQuery::create()->insertMultiple("ExamTopicFullExam", $full_subject_field_values, $db_lock);
+			} catch (Exception $e){
+				PNApplication::error($e);
+			}
+			if(PNApplication::has_errors()){
+				SQLQuery::rollbackTransaction();
+				return false;
+			} else {
+				SQLQuery::commitTransaction();
+				//update steps
+				$this->updateAllSteps();
+				return $id;
+			}
+		}
+	}
 	
-// 	public function getJsonExamTopicForEligibilityRules($id){
-// // 		$topic = $this->getExamTopicForEligibilityRules($id);
-// // 		$json = "";
-// // 		if(!isset($topic["id"]))
-// // 			$json = "{}";
-// // 		else {
-// // 			$json .= "{id:".json_encode($id).", name:".json_encode($topic["name"]);
-// // 			$json .= ", max_score:".json_encode($topic["max_score"]).", number_questions:".json_encode($topic["number_questions"]).", subjects:";
-// // 			if(count($topic["subjects"] > 0)){
-// // 				$json .= "[";
-// // 				$first_subject = true;
-// // 				foreach($topic["subjects"] as $subject_id => $s){
-// // 					if(!$first_subject)
-// // 						$json .= ", ";
-// // 					$first_subject = false;
-// // 					$json .= "{id: ".json_encode($subject_id).", name:".json_encode($s["name"]).", max_score:".json_encode($s["max_score"]);
-// // 					$json .= ", full_subject:".json_encode($s["full_subject"]);
-// // 					$json .= ", parts:[";
-// // 					if(count($s["parts"]) > 0){
-// // 						$first_part = true;
-// // 						foreach($s["parts"] as $part_id => $p){
-// // 							if(!$first_part)
-// // 								$json .= ", ";
-// // 							$first_part = false;
-// // 							$json .= "{id:".json_encode($part_id).", name:".json_encode($p["name"]);
-// // 							$json .= ", max_score:".json_encode($p["max_score"]).", index:".json_encode($p["index"])."}";
-// // 						}
-// // 					}
-// // 					$json .= "]}";
-// // 				}
-// // 				$json .= "]";
-// // 			} else
-// // 				$json .= "[]";
-// // 			$json .= "}";
-// // 		}
-// // 		return $json;
-// 	}
+	/**
+	 * Remove an exam topic and all the related data<br/>
+	 * The rights and steps are checked before performing the query
+	 * @param number $id
+	 * @return boolean true if performed
+	 */
+	public function removeTopic($id){
+		//Check the rights
+		$rights = $this->canUpdateFromRightAndStep("define_topic_for_eligibility_rules", "manage_exam_subject", "You are not allowed to manage the exam topics for eligibility rules");
+		if(!$rights[0]){
+			PNApplication::error_html($rights[1]);
+			return false;
+		} else {
+			try {
+				SQLQuery::create()
+					->removeKey("ExamTopicForEligibilityRule",$id);
+			} catch (Exception $e){
+				PNApplication:error($e);
+				return false;
+			}
+			//update steps
+			$this->updateAllSteps();
+			return true;
+		}
+	}
 	
-
+	/**
+	 * Method to call before applying the eligibility rules<br>
+	 * Check that all the exam subject parts appear one time and only one
+	 * in the exam topics. By this check we are sure that <br/><ul>
+	 * <li>No part has an implicite coefficient (case appears in several topics)</li>
+	 * <li>No part is useless (case never appear in any topic)</li>
+	 * <li>All the parts set in the topic are still in the ExamSubjectPart table. If no, the removePartsUnknownFromTopics method is called</li>
+	 * </ul>
+	 * @return null|string null if no error detected, else the error message to display
+	 */
+	public function validateAllTopicsForEligibilityRules(){
+		$res = true;
+		//get all the parts ids from ExamSubjectPart table
+		$parts_from_exam_subject_parts = SQLQuery::create()
+			->bypassSecurity()
+			->select("ExamSubjectPart")
+			->field("ExamSubjectPart","id","id")
+			->executeSingleField();
+		
+		//get all the parts ids from ExamPartTopic table
+		$parts_from_exam_part_topic = SQLQuery::create()
+			->bypassSecurity()
+			->select("ExamPartTopic")
+			->field("ExamPartTopic","exam_subject_part","part")
+			->executeSingleField();
+		
+		$parts_in_no_topic = array();
+		$parts_unknown = array();
+		
+		//check that all the parts set in the topic are still in the ExamSubjectPart table
+		foreach ($parts_from_exam_part_topic as $p){
+			if(!in_array($p, $parts_from_exam_subject_parts)){
+				array_push($parts_unknown, $p);
+			}
+		}
+		if($parts_unknown <> null){
+			$parts_unknown_removed = $this->removePartsUnknownFromTopics($parts_unknown);
+			if(!$parts_unknown_removed)
+				$res = false;		
+		}
+		
+		//check that each part is at least in one topic
+		foreach ($parts_from_exam_subject_parts as $p){
+			if(in_array($p, $parts_from_exam_part_topic)){
+				$key = array_search($p, $parts_from_exam_part_topic);
+				array_splice($parts_from_exam_part_topic, $key, 1);
+			} else {
+				array_push($parts_in_no_topic, $p);
+				$res = false;
+			}
+		}
+		
+		//check that no part appears more than one time in the topics
+		if(count($parts_from_exam_part_topic) > 0){
+			//all the remaining parts appear more than one time in the topics
+			$res = false;	
+		}
+		
+		if($res)
+			return;
+		else {
+			$error_message = "<ul>";
+			$error_multiple_entries = null;
+			$error_missing = null;
+			$error_unknown = null;
+			if(count($parts_in_no_topic) > 0){
+				$error_missing = "The following parts don't appear in any exam topic:<br/><ul>";
+				$missing_parts_data = SQLQuery::create()
+					->bypassSecurity()
+					->select("ExamSubjectPart")
+					->field("ExamSubjectPart","index","part_index")
+					->field("ExamSubjectPart","name","part_name")
+					->join("ExamSubjectPart", "ExamSubject", array("exam_subject" => "id"))
+					->field("ExamSubject","name","subject_name")
+					->whereIn("ExamSubjectPart", "id", $parts_in_no_topic)
+					->orderBy("ExamSubject","id")
+					->orderBy("ExamSubjectPart","index")
+					->execute();
+				
+				foreach ($missing_parts_data as $p){
+					$error_missing .= "<li>Part ".$p["part_index"]." - ".$p["part_name"]." - ".$p["subject_name"]." subject</li>";
+				}
+				$error_missing .= "</ul>";
+			}
+			
+			if(count($parts_from_exam_part_topic) > 0){
+				$error_multiple_entries = "The following parts appear in several topics: <br/><ul>";
+				$parts_multiple_data = SQLQuery::create()
+					->bypassSecurity()
+					->select("ExamSubjectPart")
+					->field("ExamSubjectPart","index","part_index")
+					->field("ExamSubjectPart","name","part_name")
+					->join("ExamSubjectPart", "ExamSubject", array("exam_subject" => "id"))
+					->field("ExamSubject","name","subject_name")
+					->whereIn("ExamSubjectPart", "id", $parts_in_no_topic)
+					->orderBy("ExamSubject","id")
+					->orderBy("ExamSubjectPart","index")
+					->join("ExamSubjectPart", "ExamPartTopic", array("id" => "exam_subject_part"))
+					->join("ExamPartTopic", "ExamTopicForEligibilityRule", array("exam_topic_for_eligibility_rule" =>"id"))
+					->field("ExamTopicForEligibilityRule","name","topic_name")
+					->execute();
+				foreach ($parts_multiple_data as $p){
+					$error_multiple_entries .= "<li>Part ".$p["part_index"]." - ".$p["part_name"]." - ".$p["subject_name"]." subject, in topic ".$p["topic_name"]."</li>";
+				}
+				$error_multiple_entries .= "</ul>";
+			}
+			if($parts_unknown <> null && !$parts_unknown_removed)
+				$error_message .= "<li>Some parts are set in the topics but don't exist anymore into the database</li>";
+			if($error_missing <> null)
+				$error_message .= "<li>".$error_missing."</li>";
+			if($error_multiple_entries <> null)
+				$error_message .= "<li>".$error_multiple_entries."</li>";
+			$error_message .= "</ul>";
+			return $error_message;
+		}
+	}
+	
+	/**
+	 * Remove all the parts set in some topics but don't exist in the ExamSubjectPart (removed whereas table ExamTopicForEligibilityRule was locked for instance)
+	 * @param array $parts containing the part ids
+	 * @param unknown $parts
+	 * @return boolean false if any error occured
+	 */
+	private function removePartsUnknownFromTopics($parts){
+		try {
+			foreach ($parts as $p){
+			//Get the topic ids in which the part appears
+				$topics = SQLQuery::create()
+					->bypassSecurity()
+					->select("ExamTopicForEligibilityRule")
+					->field("ExamTopicForEligibilityRule","id")
+					->where("ExamTopicForEligibilityRule","exam_subject_part",$p)
+					->executeSingleField();
+				if($topics <> null){
+					foreach ($topics as $t){
+						SQLQuery::create()
+							->bypassSecurity()
+							->removeKeys("ExamTopicForEligibilityRule", array(array("exam_subject_part" => $p, "exam_topic_for_eligibility_rule" => $t)));
+					}
+				}
+			}
+		} catch (Exception $e){
+			PNApplication::error($e);
+			return false;
+		}
+		return true;
+	} 
 	
 	/**
 	 * @param {array} ids

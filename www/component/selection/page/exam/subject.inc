@@ -18,6 +18,22 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 	$current_campaign = PNApplication::$instance->selection->getCampaignId();
 	
 	$fct_name = "exam_subject_".$page->generateID();
+	
+	$db_lock = null;
+	if(!$read_only && $id != -1 && $id != "-1"){
+		require_once("component/data_model/DataBaseLock.inc");
+		require_once("component/data_model/Model.inc");
+		$model = DataModel::get();
+		$table = $model->getTable("ExamTopicForEligibilityRule"); // here check is done is the user can access this table
+		$locked_by = null;
+		$db_lock = DataBaseLock::lockRow($table->getSQLNameFor(PNApplication::$instance->selection->getCampaignId()),$id ,$locked_by);
+		if ($db_lock == null) {
+			PNApplication::error("This row is already locked by ".$locked_by);
+			return;
+		} else
+			DataBaseLock::generateScript($db_lock);
+	}
+		
 // 	$page->onload($fct_name."();");
 ?>
 <script type = "text/javascript">
@@ -48,6 +64,7 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 		var exam_id = <?php echo json_encode($id); ?>;
 		var campaign_id = <?php echo json_encode($campaign_id); ?>;
 		var read_only = <?php echo json_encode($read_only);?>;
+		var db_lock = <?php echo json_encode($db_lock);?>;
 		if((exam_id == -1 || exam_id == "-1")){
 			subject = new ExamSubject(-1,"New Exam",0,[]);
 // 			subject.id = -1;
@@ -100,7 +117,8 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 										false,
 										current_campaign_id,
 										read_only,
-										<?php echo json_encode($header_id);?>
+										<?php echo json_encode($header_id);?>,
+										db_lock
 										);
 			});
 		}

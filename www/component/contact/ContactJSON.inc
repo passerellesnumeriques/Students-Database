@@ -25,11 +25,7 @@ class ContactJSON {
 	 */
 	public static function PostalAddressSQL(&$q) {
 		$alias = $q->getTableAlias("PostalAddress");
-		$area_alias = $q->getTableAlias("GeographicArea");
-		if ($area_alias == null) {
-			$area_alias = $q->generateTableAlias();
-			$q->join($alias, "GeographicArea", array("geographic_area"=>"id"), $area_alias);
-		}
+		PNApplication::$instance->geography->joinGeographicArea($q, $alias, "geographic_area", false);
 		require_once("component/geography/GeographyJSON.inc");
 		GeographyJSON::GeographicAreaTextSQL($q);
 		$q

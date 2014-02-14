@@ -462,7 +462,8 @@ class SelectionJSON{
 			->join("ExamPartTopic","ExamSubjectPart",array("exam_subject_part" => "id"))
 			->join("ExamSubjectPart","ExamSubject",array("exam_subject" => "id"))
 			->whereValue("ExamTopicForEligibilityRule","id",$id)
-			->orderBy("ExamSubject","id");
+			->orderBy("ExamSubject","id")
+			->orderBy("ExamSubjectPart","index");
 		self::ExamTopicSQL($q);
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectSQL($q);
@@ -524,31 +525,32 @@ class SelectionJSON{
 			$topic["number_questions"] = $rows[0]["topic_number_questions"];
 			$topic["subjects"] = array();
 			foreach($rows as $row){
-				if(isset($topic["subjects"][$row["subject_id"]])){
-					$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
-							"name" => $row["part_name"],
-							"max_score" => $row["part_max_score"],
-							"index" => $row["part_index"]
-					);
-				} else {
-					//create the subject array
-					$topic["subjects"][$row["subject_id"]] = array(
-							"name" => $row["subject_name"],
-							"max_score" => $row["subject_max_score"],
-							"parts" => array()
-					);
-					if(in_array($row["subject_id"],$full_exams))
-						$topic["subjects"][$row["subject_id"]]["full_subject"] = true;
-					else
-						$topic["subjects"][$row["subject_id"]]["full_subject"] = false;
-					//create the part
-					$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
-							"name" => $row["part_name"],
-							"max_score" => $row["part_max_score"],
-							"index" => $row["part_index"]
-					);
+				if($row["subject_id"] <> null){
+					if(isset($topic["subjects"][$row["subject_id"]])){
+						$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
+								"name" => $row["part_name"],
+								"max_score" => $row["part_max_score"],
+								"index" => $row["part_index"]
+						);
+					} else {
+						//create the subject array
+						$topic["subjects"][$row["subject_id"]] = array(
+								"name" => $row["subject_name"],
+								"max_score" => $row["subject_max_score"],
+								"parts" => array()
+						);
+						if(in_array($row["subject_id"],$full_exams))
+							$topic["subjects"][$row["subject_id"]]["full_subject"] = true;
+						else
+							$topic["subjects"][$row["subject_id"]]["full_subject"] = false;
+						//create the part
+						$topic["subjects"][$row["subject_id"]]["parts"][$row["part_id"]] = array(
+								"name" => $row["part_name"],
+								"max_score" => $row["part_max_score"],
+								"index" => $row["part_index"]
+						);
+					}
 				}
-				//a topic part cannot be empty because removed by #selection#updateExamTopicsForEligibilityRules
 			}
 			return $topic;
 		} else
@@ -606,7 +608,7 @@ class SelectionJSON{
 	 * @param number (optional) $excluded_id topic id not to retrieve when the query is executed
 	 * @return string JSON structure
 	 */
-	public static function getAllJsonTopics($excluded_id = null){
+	public static function getJsonAllTopics($excluded_id = null){
 		$all_ids = SQLQuery::create()
 		->select("ExamTopicForEligibilityRule")
 		->field("id")
@@ -629,5 +631,44 @@ class SelectionJSON{
 		}
 		$json .= "]";
 		return $json;
+	}
+	
+	public static function getJsonAllParts(){
+		$all_parts = SQLQuery::create()
+		->select("ExamSubjectPart")
+		->join("ExamSubjectPart","ExamSubject",array("exam_subject" => "id"))
+		->field("ExamSubjectPart","id","part_id")
+		->field("ExamSubjectPart","max_score","max_score")
+		->field("ExamSubjectPart","name","part_name")
+		->field("ExamSubjectPart","index","index")
+		->field("ExamSubject","id","id")
+		->field("ExamSubject","name","name")
+		->orderBy("ExamSubject","id")
+		->orderBy("ExamSubjectPart","index")
+		->execute();
+		if($all_parts <> null){
+			$json = "[{id:".json_encode($all_parts[0]["id"]);
+			$json .= ", name:".json_encode($all_parts[0]["name"]);
+			$json .= ", parts:[";
+			$first_part = true;
+			$current_subject = $all_parts[0]["id"];
+			foreach($all_parts as $p){
+				if($p["id"] != $current_subject){
+					$current_subject = $p["id"];
+					$json .= "]}, {id:".json_encode($p["id"]).", name:".json_encode($p["name"]).", parts:[";
+					$first_part = true;
+				}
+				if(!$first_part)
+					$json .= ", ";
+				$first_part = false;
+				$json .= "{id:".json_encode($p["part_id"]).", ";
+				$json .= "name:".json_encode($p["part_name"]).", ";
+				$json .= "max_score:".json_encode($p["max_score"]).", ";
+				$json .= "index:".json_encode($p["index"])."}";
+			}
+			$json .= "]}]";
+			return $json;
+		} else
+			return "[]";
 	}
 }

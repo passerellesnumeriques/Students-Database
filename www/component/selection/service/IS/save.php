@@ -202,8 +202,10 @@ class service_IS_save extends Service{
 				}
 				$data["date"] = $event_id;
 			} else if($update_event && $everything_ok){
-// 				echo "update";
-// 				var_dump($event);
+				if (!$insert_IS) {
+					$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
+					$event["app_link_name"] = "This event is an Information Session: click to see it";
+				}
 				try{
 					PNApplication::$instance->calendar->saveEvent($event);
 				} catch(Exception $e){
