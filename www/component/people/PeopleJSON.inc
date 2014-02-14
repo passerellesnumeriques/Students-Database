@@ -34,10 +34,8 @@ class PeopleJSON {
 			->field($alias,"first_name","first_name")
 			->field($alias,"last_name","last_name")
 			->field($alias,"middle_name","middle_name")
-			->field($alias,"khmer_first_name","khmer_first_name")
-			->field($alias,"khmer_last_name","khmer_last_name")
 			->field($alias,"sex","sex")
-			->field($alias,"birth","birth");
+			->field($alias,"birth","birthdate");
 	}
 	
 	/**
@@ -52,10 +50,8 @@ class PeopleJSON {
 		$data .= ", first_name:".json_encode($row['first_name']);
 		$data .= ", last_name:".json_encode($row["last_name"]);
 		$data .= ", middle_name:".json_encode($row["middle_name"]);
-		$data .= ", khmer_first_name:".json_encode($row["khmer_first_name"]);
-		$data .= ", khmer_last_name:".json_encode($row["khmer_last_name"]);
 		$data .= ", sex:".json_encode($row["sex"]);
-		$data .= ", birth:".json_encode($row["birth"])."}";
+		$data .= ", birthdate:".json_encode($row["birthdate"])."}";
 		return $data;
 	}
 	
@@ -69,10 +65,8 @@ class PeopleJSON {
 				"first_name" => @$json['first_name'],
 				"last_name" => @$json['last_name'],
 				"middle_name" => @$json['middle_name'],
-				"khmer_first_name" => @$json['khmer_first_name'],
-				"khmer_last_name" => @$json['khmer_last_name'],
 				"sex" => @$json['sex'],
-				"birth" => @$json['birth'],
+				"birthdate" => @$json['birthdate'],
 		);
 		if(isset($json["id"]))
 			$a["id"] = $json["id"]; //This is an update

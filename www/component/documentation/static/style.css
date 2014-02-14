@@ -28,6 +28,13 @@ h4 {
 	font-style: italic;
 }
 
+a.code {
+	font-family: Courier New;
+	font-size: 9pt;
+    color: #000080;
+    text-decoration: none;
+}
+
 .note {
 	margin: 10px 10px 10px 40px;
 	padding: 5px;

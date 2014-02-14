@@ -63,10 +63,10 @@ class Locks__Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		Locks__declare_model();
-		require_once("component/data_model/DataBaseModel.inc");
+		require_once("component/data_model/DataBaseUtilities.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,5) == "Test_")
-				DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
+				DataBaseUtilities::createTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
 		$scenario_data["noaccess_id1"] = SQLQuery::create()->bypassSecurity()->insert("Test_noaccess", array("value"=>1));
 		$scenario_data["noaccess_id2000"] = SQLQuery::create()->bypassSecurity()->insert("Test_noaccess", array("value"=>2000));
 		$scenario_data["can_read_all_id1"] = SQLQuery::create()->bypassSecurity()->insert("Test_can_read_all", array("value"=>1));

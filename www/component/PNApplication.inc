@@ -31,7 +31,6 @@ require_once("Component.inc");
  * @property students $students
  * @property test $test
  * @property theme $theme
- * @property training_education $training_education
  * @property transcripts $transcripts
  * @property user_management $user_management
  * @property user_people $user_people 
@@ -46,6 +45,7 @@ class PNApplication {
 	public static $instance;
 
 	public static $errors = array();
+	public static $warnings = array();
 	/** @var string */
 	public $current_domain;
 	/** @var string */
@@ -76,8 +76,6 @@ class PNApplication {
 		foreach ($e->getTrace() as $trace)
 			if (isset($trace["file"]) && isset($trace["line"]))
 				$message .= "<li>".$trace["file"]." line ".$trace["line"]."</li>";
-			else
-				$message .= "<li>".$trace."</li>";
 		$message .= "</ul>";
 		array_push(PNApplication::$errors, $message);
 	}
@@ -96,6 +94,10 @@ class PNApplication {
 			$message .= "</ul>";
 			array_push(PNApplication::$errors, $message);
 		}
+	}
+	
+	public static function warning($message) {
+		array_push(self::$warnings, $message);
 	}
 
 	/**
@@ -116,6 +118,8 @@ class PNApplication {
 		echo "if (typeof window.top.status_manager != 'undefined'){";
 		foreach (PNApplication::$errors as $e)
 			echo "window.top.status_manager.add_status(new window.top.StatusMessageError(null,".json_encode($e).",5000));";
+		foreach (PNApplication::$warnings as $e)
+			echo "window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,".json_encode($e).",null,5000));";
 		echo "};";
 		echo "window.page_errors=[";
 		$first = true;
@@ -136,6 +140,15 @@ class PNApplication {
 			echo "errors:[";
 			$first = true;
 			foreach (PNApplication::$errors as $e) {
+				if ($first) $first = false; else echo ",";
+				echo json_encode($e);
+			}
+			echo "],";
+		}
+		if (count(PNApplication::$warnings) > 0) {
+			echo "warnings:[";
+			$first = true;
+			foreach (PNApplication::$warnings as $e) {
 				if ($first) $first = false; else echo ",";
 				echo json_encode($e);
 			}

@@ -12,5 +12,5 @@
 		echo ",organizer:".json_encode($event["organizer"]);
 		echo ",participation:".json_encode($event["participation"]);
 		echo ",role:".json_encode($event["role"]);
-		echo "}";
+		echo ",app_link:".json_encode($event["app_link"]);		echo ",app_link_name:".json_encode($event["app_link_name"]);		echo "}";
 	}}

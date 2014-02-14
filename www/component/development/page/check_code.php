@@ -19,6 +19,7 @@ function build_tree(parent_item, files, path) {
 	for (var i = 0; i < files.length; ++i) {
 		if (files[i].type != 'dir') continue;
 		var item = new TreeItem("<img src='/static/development/folder.png' style='vertical-align:bottom'/> "+files[i].name, false);
+		item.file = files[i];
 		parent_item.addItem(item);
 		build_tree(item, files[i].content, path+files[i].name+"/");
 	}
@@ -29,22 +30,23 @@ function build_tree(parent_item, files, path) {
 		var ext = files[i].name.substring(j+1).toLowerCase();
 		switch (ext) {
 		case "php": case "inc":
-			build_tree_php(parent_item, path, files[i].name, files[i].sub_type);
+			build_tree_php(parent_item, path, files[i]);
 			break;
 		case "js":
-			build_tree_js(parent_item, path, files[i].name);
+			build_tree_js(parent_item, path, files[i]);
 			break;
 		}
 	}
 }
 var todo = [];
 var items_to_add = [];
-function build_tree_php(parent_item, path, filename, type) {
-	var item = new TreeItem("<img src='/static/development/php.gif' style='vertical-align:bottom'/> "+filename, true);
+function build_tree_php(parent_item, path, file) {
+	var item = new TreeItem("<img src='/static/development/php.gif' style='vertical-align:bottom'/> "+file.name, true);
+	item.file = file;
 	parent_item.addItem(item);
 	todo.push({
 		service: "check_php",
-		data: {path:path+filename,type:type},
+		data: {path:path+file.name,type:file.sub_type},
 		handler: function(res) {
 			for (var i = 0; i < res.length; ++i) {
 				var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res[i]);
@@ -55,13 +57,14 @@ function build_tree_php(parent_item, path, filename, type) {
 }
 var checking_js = 0;
 var js_todo = [];
-function build_tree_js(parent_item, path, filename) {
-	var item = new TreeItem("<img src='/static/development/javascript.png' style='vertical-align:bottom'/> "+filename, false);
+function build_tree_js(parent_item, path, file) {
+	var item = new TreeItem("<img src='/static/development/javascript.png' style='vertical-align:bottom'/> "+file.name, false);
+	item.file = file;
 	parent_item.addItem(item);
 	js_todo.push(function(){
 		checking_js++;
 		setTimeout(function() {
-			check_js_ns("", window.jsdoc, item, filename, path);
+			check_js_ns("", window.jsdoc, item, file.name, path);
 			checking_js--;
 			check_end();
 		},1);
@@ -120,6 +123,7 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 				var p = elem.parameters[j];
 				if (p.doc.length == 0) add_error(item, "Function "+ns_path+name+": no comment for parameter "+p.name, elem.location);
 				if (!p.type) add_error(item, "Function "+ns_path+name+": no type for parameter "+p.name, elem.location);
+				else check_js_type(p.type, "Function "+ns_path+name+", Parameter "+p.name, item, elem.location);
 				check_name_small_underscore(p.name, "Parameter "+p.name+" in function "+ns_path+name, item);
 			}
 		} else if (elem instanceof JSDoc_Value) {
@@ -130,8 +134,31 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 				check_name_small_underscore(name, "Public Variable "+ns_path+name, item);
 			// check doc
 			if (elem.doc.length == 0) add_error(item, "Variable "+ns_path+name+": no comment", elem.location);
+			if (!elem.type) add_error(item, "Variable "+ns_path+name+": no type", elem.location);
+			else check_js_type(elem.type, "Variable "+ns_path+name, item, elem.location);
 		}
 	}
+}
+function check_js_type(type, descr, item, location) {
+	var i = type.indexOf('|');
+	if (i > 0) {
+		check_js_type(type.substring(0,i).trim(), descr, item, location);
+		check_js_type(type.substring(i+1).trim(), descr, item, location);
+		return;
+	}
+	if (type == "String") return;
+	if (type == "Array") return;
+	if (type == "Date") return;
+	if (type == "Number") return;
+	if (type == "Boolean") return;
+	if (type == "window") return;
+	if (type == "DOMNode") return;
+	if (type == "Function") return;
+	if (type == "Object") return;
+	if (type == "null") return;
+	var cl = get_class(window.jsdoc, type);
+	if (cl == null)
+		add_error(item, descr+": unknown type <i>"+type+"</i>", location); 
 }
 function get_class(ns, name) {
 	var i = name.indexOf('.');
@@ -273,6 +300,30 @@ function next_todo() {
 	});
 }
 
+function findItemPath(parent, location) {
+	var filename, remaining;
+	var i = location.indexOf('/');
+	if (i > 0) {
+		filename = location.substring(0,i);
+		remaining = location.substring(i+1);
+	} else {
+		filename = location;
+		remaining = null;
+	}
+	var found = null;
+	var children = parent == tr ? parent.items : parent.children;
+	for (var i = 0; i < children.length; ++i) {
+		var item = children[i];
+		if (!item.file) continue;
+		if (item.file.name.toLowerCase() != filename.toLowerCase()) continue;
+		found = item;
+		break;
+	}
+	if (!found) return null;
+	if (!remaining) return found;
+	return findItemPath(found, remaining);
+}
+
 var locker;
 setTimeout(function() {
 	total_todo = todo.length;
@@ -290,13 +341,46 @@ setTimeout(function() {
 			return;
 		}
 		for (var i = 0; i < res.out.length; ++i) {
-			add_error(tr, "JavaScript parsing: "+res.out[i]);
+			var msg = res.out[i];
+			msg = msg.trim();
+			if (msg.endsWith(")")) {
+				var j = msg.lastIndexOf('(');
+				if (j > 0) {
+					var location = msg.substring(j+1);
+					j = location.indexOf(':');
+					if (j > 0) location = location.substring(0,j); else location = location.substring(0,location.length-1);
+					// add the static in the location
+					if (location.startsWith("component/")) {
+						j = location.indexOf('/',10);
+						if (j > 0) {
+							location = location.substring(0,j)+"/static"+location.substring(j);
+							var item = findItemPath(tr, location);
+							if (item) {
+								add_error(item, "JavaScript parsing: "+msg);
+								continue;
+							}
+						}
+					}
+				}
+			}
+			add_error(tr, "JavaScript parsing: "+msg);
 		}
 		var doc = new fct();
 		window.jsdoc = doc.jsdoc;
 		for (var i = 0; i < js_todo.length; ++i)
 			js_todo[i]();
 		checking_js--;
+	});
+	checking_js++;
+	service.json("development","check_datamodel",{},function(problems) {
+		if (problems && problems.length > 0) {
+			var datamodel = new TreeItem("Data Model", true);
+			tr.insertItem(datamodel, 0);
+			for (var i = 0; i < problems.length; ++i)
+				add_error(datamodel, problems[i]);
+		}
+		checking_js--;
+		check_end();
 	});
 	// call services
 	next_todo();

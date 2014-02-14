@@ -38,10 +38,10 @@ class ContactPeoplePlugin implements PeoplePlugin {
 			foreach ($input["contacts"] as $contact) {
 				$contact_id = SQLQuery::create()->bypassSecurity()->insert("Contact", array("type"=>$contact["type"],"contact"=>$contact["contact"],"sub_type"=>$contact["sub_type"]));
 				array_push($create_data["contacts"], $contact_id);
-				SQLQuery::create()->bypassSecurity()->insert("People_contact", array("people"=>$people_id,"contact"=>$contact_id));
+				SQLQuery::create()->bypassSecurity()->insert("PeopleContact", array("people"=>$people_id,"contact"=>$contact_id));
 			}
 			foreach ($input["addresses"] as $address) {
-				$address_id = SQLQuery::create()->bypassSecurity()->insert("Postal_address",
+				$address_id = SQLQuery::create()->bypassSecurity()->insert("PostalAddress",
 						array(
 								"country"=>$address["country"],
 								"geographic_area"=>$address["geographic_area"],
@@ -54,10 +54,10 @@ class ContactPeoplePlugin implements PeoplePlugin {
 						)
 				);
 				array_push($create_data["addresses"], $address_id);
-				SQLQuery::create()->bypassSecurity()->insert("People_address", array("people"=>$people_id,"address"=>$address_id));
+				SQLQuery::create()->bypassSecurity()->insert("PeopleAddress", array("people"=>$people_id,"address"=>$address_id));
 			}
 			if (in_array("organization_contact_point", $people_types))
-				SQLQuery::create()->insert("Contact_point", array("designation"=>$input["contact_point_designation"],"organization"=>$input["contact_point_organization"],"people"=>$people_id));
+				SQLQuery::create()->insert("ContactPoint", array("designation"=>$input["contact_point_designation"],"organization"=>$input["contact_point_organization"],"people"=>$people_id));
 			return true;
 		} catch (Exception $ex) {
 			// rollback
@@ -69,30 +69,32 @@ class ContactPeoplePlugin implements PeoplePlugin {
 		foreach ($create_data["contacts"] as $contact_id)
 			SQLQuery::create()->bypassSecurity()->removeKey("Contact", $contact_id);
 		foreach ($create_data["addresses"] as $address_id)
-			SQLQuery::create()->bypassSecurity()->removeKey("Postal_address", $address_id);
+			SQLQuery::create()->bypassSecurity()->removeKey("PostalAddress", $address_id);
 		if (in_array("organization_contact_point", $people_types))
-			SQLQuery::create()->bypassSecurity()->removeKey("Contact_point",array("organization"=>$input["contact_point_organization"],"people"=>$people_id));
+			SQLQuery::create()->bypassSecurity()->removeKey("ContactPoint",array("organization"=>$input["contact_point_organization"],"people"=>$people_id));
 	}
 	
 	public function getPeopleImportDataDisplay() {
 		return array_merge(
-				DataModel::get()->getTable("People_contact")->getDisplayHandler("people")->getDisplayableData(),
-				DataModel::get()->getTable("People_address")->getDisplayHandler("people")->getDisplayableData()
+				DataModel::get()->getTable("PeopleContact")->getDisplayHandler("people")->getDisplayableData(),
+				DataModel::get()->getTable("PeopleAddress")->getDisplayHandler("people")->getDisplayableData()
 		);
 	}
 	
 	public function importPeopleData($input, $people_id) {
 		$create_data = array("contacts"=>array(),"addresses"=>array());
-		$table = DataModel::get()->getTable("People_contact");
+		$table = DataModel::get()->getTable("PeopleContact");
 		$display = $table->getDisplayHandler("people");
 		foreach ($display->getDisplayableData() as $data) {
 			$value = getDataDisplayFromInput($display->category, $data->getDisplayName(), $input);
+			if ($value == null) continue;
 			$create_data["contacts"] = array_merge($create_data["contacts"], $value["contacts"]);
 		}
-		$table = DataModel::get()->getTable("People_address");
+		$table = DataModel::get()->getTable("PeopleAddress");
 		$display = $table->getDisplayHandler("people");
 		foreach ($display->getDisplayableData() as $data) {
 			$value = getDataDisplayFromInput($display->category, $data->getDisplayName(), $input);
+			if ($value == null) continue;
 			$create_data["addresses"] = array_merge($create_data["addresses"], $value["addresses"]);
 		}
 		$created_data = array();
@@ -100,10 +102,10 @@ class ContactPeoplePlugin implements PeoplePlugin {
 	}
 	
 	public function filterPeopleReadAccess(&$q, $people_table_alias) {
-		$cp_alias = $q->getTableAlias("Contact_point");
+		$cp_alias = $q->getTableAlias("ContactPoint");
 		if ($cp_alias == null) {
 			$cp_alias = $q->generateTableAlias();
-			$q->join($people_table_alias, "Contact_point", array("id"=>"people"), $cp_alias);
+			$q->join($people_table_alias, "ContactPoint", array("id"=>"people"), $cp_alias);
 		}
 		$org_alias = $q->generateTableAlias();
 		$q->join($cp_alias, "Organization", array("organization"=>"id"), $org_alias);
@@ -124,10 +126,10 @@ class ContactPeoplePlugin implements PeoplePlugin {
 		return $w;
 	}
 	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {
-		$cp_alias = $q->getTableAlias("Contact_point");
+		$cp_alias = $q->getTableAlias("ContactPoint");
 		if ($cp_alias == null) {
 			$cp_alias = $q->generateTableAlias();
-			$q->join($people_table_alias, "Contact_point", array("id"=>"people"), $cp_alias);
+			$q->join($people_table_alias, "ContactPoint", array("id"=>"people"), $cp_alias);
 		}
 		$org_alias = $q->generateTableAlias();
 		$q->join($cp_alias, "Organization", array("organization"=>"id"), $org_alias);
@@ -137,10 +139,10 @@ class ContactPeoplePlugin implements PeoplePlugin {
 		return DataModel::get()->getTable("Organization")->filterWriteAccess($people_rows);
 	}
 	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {
-		$cp_alias = $q->getTableAlias("Contact_point");
+		$cp_alias = $q->getTableAlias("ContactPoint");
 		if ($cp_alias == null) {
 			$cp_alias = $q->generateTableAlias();
-			$q->join($people_table_alias, "Contact_point", array("id"=>"people"), $cp_alias);
+			$q->join($people_table_alias, "ContactPoint", array("id"=>"people"), $cp_alias);
 		}
 		$org_alias = $q->generateTableAlias();
 		$q->join($cp_alias, "Organization", array("organization"=>"id"), $org_alias);

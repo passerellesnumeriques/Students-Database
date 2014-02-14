@@ -52,7 +52,7 @@ function address_text(address){
 		empty &= address.additional.trim().length == 0;
 	}
 
-	if (address.geographic_area != null) {
+	if (address.geographic_area != null && address.geographic_area.text != null) {
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode(address.geographic_area.text));

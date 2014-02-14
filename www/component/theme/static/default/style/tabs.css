@@ -1,0 +1,15 @@
+.tab_header {
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+	border-top: 1px solid black;
+	border-radius: 3px 3px 0px 0px;
+	padding: 2px;
+	margin: 1px 2px 0px 1px;
+	cursor: pointer;
+	background-color: #C0C0D0;
+	color: #505050;
+}
+.tab_header.selected {
+	background-color: white;
+	color: black;
+}

@@ -2,7 +2,7 @@ if (typeof require != 'undefined') {
 	require("vertical_layout.js",function(){
 		require("DataDisplay.js");
 		require("typed_field.js");
-		require("collapsable_section.js");
+		require("section.js");
 	});
 }
 /**
@@ -163,7 +163,7 @@ function data_import(container, root_table, preset_data, title) {
 				}
 				require(["typed_field.js",javascripts]);
 				// create sections for each category
-				require("collapsable_section.js",function() {
+				require("section.js",function() {
 					for (var i = 0; i < categories.length; ++i) {
 						var section = new collapsable_section();
 						section.header.appendChild(document.createTextNode(categories[i]));

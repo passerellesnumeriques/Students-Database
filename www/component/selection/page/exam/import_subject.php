@@ -1,8 +1,9 @@
 <?php
+require_once ("component/selection/SelectionJSON.inc");
 require_once("/../selection_page.inc");
 class page_exam_import_subject extends selection_page {
 	
-	public function get_required_rights() {}
+	public function get_required_rights() {return array("manage_exam_subject");}
 	
 	public function execute_selection_page(&$page) {
 		/* Check the rights */
@@ -10,7 +11,7 @@ class page_exam_import_subject extends selection_page {
 		if(!$can_update[0]){
 			echo "<div style ='font-color:red;'>".$can_update[1]."</div>";
 		} else {
-			$all_names = PNApplication::$instance->selection->getAllExamSubjectNames();
+			$all_names = SelectionJSON::getAllExamSubjectNames();
 			$correct_answer = PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer");
 			$choices = PNApplication::$instance->selection->getOneConfigAttributeValue("set_number_choices");
 			
@@ -20,7 +21,7 @@ class page_exam_import_subject extends selection_page {
 			// require_once("component/data_model/DataBaseLock.inc");
 			// $campaign_id = PNApplication::$instance->selection->getCampaignId();
 			// require_once("component/data_model/Model.inc");
-			// $table = DataModel::get()->getTable("Exam_subject");
+			// $table = DataModel::get()->getTable("ExamSubject");
 			// $locked_by = null;
 			// $lock_id = null;
 			// $lock_id = DataBaseLock::lockTable($table->getSQLNameFor($campaign_id), $locked_by);
@@ -33,7 +34,7 @@ class page_exam_import_subject extends selection_page {
 			//TODO: lock table?
 			require_once("component/data_import/page/import_data.inc");
 			$data_list = array();
-			$questions = DataModel::get()->getTable("Exam_subject_question");
+			$questions = DataModel::get()->getTable("ExamSubjectQuestion");
 			$display = $questions->getDisplayHandler(null);
 			$data_list = array_merge($data_list, $display->getDisplayableData());	
 			$fixed_data = array();
@@ -55,40 +56,65 @@ class page_exam_import_subject extends selection_page {
 			
 			function import_exam_subject(){
 				var t = this;
-				t.step_1 = null;
-				t.step_2 = null;
-				
+				t.step_1 = null; //contains the instance of the import_exam_subject_part_1 object
+				t.step_2 = null; //contains the instance of the import_exam_subject_part_2 object
+
+				/**
+				 * Get the user input from the first step
+				 * @returns {Object} infos with two attributes: <ul><li>{String} name</li><li>{Array} questions_by_part</li></ul>
+				 */
 				t.getExamInfos = function(){
 					var infos = {};
 					infos.name = t.step_1.res.name;
 					infos.questions_by_part = t.step_2.res;
 					return infos;
-				}
-				
+				};
+
+				/**
+				 * Method called when the user presses Ok button during the first step
+				 * Close the step 1 popup and create the step 2 instance
+				 */
 				t._onOkPressStep1 = function(){
 					t.step_1.pop.close();
 					t.step_2 = new import_exam_subject_part_2(t.step_1.res.name,t.step_1.res.parts);
-				}
-				
+				};
+
+				/**
+				 * Method called when the user wants to step back to first popup
+				 * Close and delete the step_2 popup and open the first one (with the same values)
+				 */
 				t._onBackToStep1 = function(){
 					t.step_2.pop.close();
 					delete t.step_2;
 					t.step_2 = null;
 					t.step_1.pop.show();
-				}
-				
+				};
+
+				/**
+				 * Method called at the end of the step 2 when user clicks on Ok button
+				 */
 				t._okPressStep2 = function(){
 					t.step_2.pop.close();
 					//TODO: add button "back"?
-				}
-				
+				};
+
+				/**
+				 * Create and manage the step 2 popup, based on the step 1 data
+				 * @param {String} exam_name
+				 * @param {array} parts_number
+				 * The parameters come from the import_exam_subject_part_1#res attributes
+				 */
 				function import_exam_subject_part_2(exam_name, parts_number){
 					var t2 = this;
 					t2.table = null;
 					t2.res = [];
 					t2.inputs = [];
 					t2.tr_error = null;
-						
+
+					/**
+					 * Initiate the process and create the popup_window object
+					 * If the step 1 instance still exists, it is deleted
+					 */
 					t2._init = function(){
 						if(t.step_1 != null){
 							delete step_1;
@@ -105,8 +131,14 @@ class page_exam_import_subject extends selection_page {
 						t2.pop.addButton("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Ok", 'ok', t._okPressStep2);
 						t2._setContent();
 						t2.pop.show();
-					}
+					};
 
+					/**
+					 * Method called on each user input
+					 * If any input error is detected, the last popup row is updated with a red error message
+					 * and the ok button is disabled
+					 * If no error, message is deleted and Ok button is enabled
+					 */
 					t2._updateErrorRow = function(){
 						if(!t2._hasError()){
 							if(t2.tr_error != null){
@@ -132,16 +164,24 @@ class page_exam_import_subject extends selection_page {
 							}
 							//else nothing to do
 						}
-					}
-					
+					};
+
+					/**
+					 * Check that there is no error into the inputs
+					 * @returns {Boolean} true if any error is detected
+					 */
 					t2._hasError = function(){
 						for(var i = 0; i < t2.inputs.length; i++){
 							if(t2.inputs[i].value == null || t2.inputs[i].value == 0)
 							return true;
 						}
 						return false;
-					}
-					
+					};
+
+					/**
+					 * Create the table displayed in the popup
+					 * One input is created for each part declared at first step
+					 */
 					t2._setContent = function(){
 						var th = document.createElement("th");
 						th.innerHTML = "Number of question for each part";
@@ -151,6 +191,7 @@ class page_exam_import_subject extends selection_page {
 							var td_title = document.createElement("td");
 							var td_input = document.createElement("td");
 							t2.inputs[i-1] = document.createElement("input");
+							t2.inputs[i-1].type = "text";
 							autoresize_input(t2.inputs[i-1],5);
 							t2.inputs[i-1].oninput = function(){								
 									if(this.value == null || this.value == "")
@@ -174,13 +215,19 @@ class page_exam_import_subject extends selection_page {
 							t2.table.appendChild(tr);
 						}
 						t2._updateErrorRow();
-					}										
+					};									
 					
 					t2._init();
 				}					
-			
+
+				/**
+				 * Create and manage the step 2 popup
+				 */
 				function import_exam_subject_part_1(){
 					var t1 = this;
+					/**
+					 * res attribute contains the user inputs
+					 */
 					t1.res = {};
 					t1.res.name = null;
 					t1.res.parts = null;
@@ -198,7 +245,10 @@ class page_exam_import_subject extends selection_page {
 						}
 						echo "]";
 					?>
-					
+
+					/**
+					 * Create the popup_window and add the buttons
+					 */
 					t1._init = function(){
 						t1.table = document.createElement("table");
 						t1._setContent();
@@ -209,10 +259,15 @@ class page_exam_import_subject extends selection_page {
 							true
 						);
 						t1.pop.addOkCancelButtons(t._onOkPressStep1,t1._onCancel);
-						t1._updateErrorStatus();
+						t1._updateErrorStatus(); //initiate the popup with an error message (empty inputs)
 						t1.pop.show();
-					}
-					
+					};
+
+					/**
+					 * Check if the given name is free or not
+					 * @param {String} text the new given name
+					 * @returns {Boolean} free true if the new name is free
+					 */
 					t1._freeName = function(text){
 						var free = true;
 						for(var i = 0; i < t1.all_names.length; i++){
@@ -222,13 +277,21 @@ class page_exam_import_subject extends selection_page {
 							}
 						}
 						return free;
-					}
-					
+					};
+
+					/**
+					 * Method called when the user clicks on cancel button
+					 * Set the location to the exam main page
+					 */
 					t1._onCancel = function(){
 						t1.pop.pressButton("ok");
-						location.assign("/dynamic/selection/page/selection_main_page");
-					}
-					
+						location.assign("/dynamic/selection/page/exam/main_page");
+					};
+
+					/**
+					 * Set the content of the popup window
+					 * Two inputs are generated and the error list is put at the bottom
+					 */
 					t1._setContent = function(){
 						var th_name = document.createElement("th");
 						th_name.innerHTML = "Enter the name of the new exam";
@@ -238,6 +301,7 @@ class page_exam_import_subject extends selection_page {
 						var td_name = document.createElement("td");
 						td_name.style.textAlign = "center";
 						var input_name = document.createElement("input");
+						input_name.type = "text";
 						new autoresize_input(input_name, 5);
 						input_name.oninput = function(){
 							t1.res.name = null;
@@ -269,6 +333,7 @@ class page_exam_import_subject extends selection_page {
 						var td_parts = document.createElement("td");
 						td_parts.style.textAlign = "center";
 						var input_parts = document.createElement("input");
+						input_parts.type = "text";
 						new autoresize_input(input_parts,5);
 						input_parts.oninput = function(){
 							t1.res.parts = null;
@@ -294,16 +359,24 @@ class page_exam_import_subject extends selection_page {
 						t1.table.appendChild(tr_parts_1);
 						t1.table.appendChild(tr_parts_2);
 						t1.tr_errors = null;
-					}
+					};
 
+					/**
+					 * Remove the tr errors from the table and delete it
+					 */
 					t1._resetTrErrors = function(){
 						if(t1.tr_errors != null){
 							t1.table.removeChild(t1.tr_errors);
 							delete t1.tr_errors;
 							t1.tr_errors = null;
 						}
-					}
-					
+					};
+
+					/**
+					 * Method called on each user input
+					 * If an error is detected, the error message displayed is updated and ok button is disabled
+					 * else it is removed and ok button is enabled
+					 */
 					t1._updateErrorStatus = function(){
 						if(t1.errors.name == null && t1.errors.parts == null){								
 							t1._resetTrErrors();								
@@ -328,7 +401,10 @@ class page_exam_import_subject extends selection_page {
 							t1.pop.disableButton("ok");
 						}
 					};
-					
+
+					/**
+					 * 
+					 */
 					t1._init();
 					
 					
@@ -338,20 +414,35 @@ class page_exam_import_subject extends selection_page {
 				});				
 			}
 			var start_import = new import_exam_subject();
-			
+
+			/**
+			 * Method when user clicks on import exam button on step 3
+			 * This method performs the last checks in the imported data
+			 * @param {Array} questions given by the import_data method
+			 * @param {String} locker the id of the lock_screen set by import_data method
+			 */
 			function finishImport(questions,locker){				
 				var t = this;
 				t.exam_infos = start_import.getExamInfos();
 				// alert(service.generateInput(t.exam_infos));
 				t.errors = {};
 				t.errors.number_question = null;
-				
+
+				/**
+				 * Retrieve the willing data from the questions array
+				 * @param {String} category
+				 * @param {String} data
+				 * @param {Object} question, a row of questions object
+				 */
 				t._getData = function(category, data, question) {
 					for (var i = 0; i < question.length; ++i)
 						if (question[i].data.category == category && question[i].data.name == data)
 							return question[i].value;
 				};
-				
+
+				/**
+				 * Start the process
+				 */
 				t._init = function(){
 					//check the number of question imported matches
 					var total_questions = 0;
@@ -382,8 +473,12 @@ class page_exam_import_subject extends selection_page {
 							error_dialog(t.errors.max_score);
 					} else
 						t._end();
-				}
-				
+				};
+
+				/**
+				 * Finish the import: create an exam_subject object and call the service exam/save_subject
+				 * If the save exam was properly performed, location is updated to exam/subject page
+				 */
 				t._end = function(){
 					//create an exam object
 					var new_parts = [];
@@ -439,8 +534,13 @@ class page_exam_import_subject extends selection_page {
 						else
 							location.assign("/dynamic/selection/page/exam/exam_subject?id="+res.id);
 					});
-				}
-				
+				};
+
+				/**
+				 * Check that the max_score inputs are valid
+				 * @param {String | Number} score
+				 * @returns {Boolean} true if the score format is valid 
+				 */
 				t._checkMaxScore = function(score){
 					if(score == null || score == "")
 						return false;
@@ -448,8 +548,9 @@ class page_exam_import_subject extends selection_page {
 						return false;
 					else
 						return true;
-				}
-
+				};
+				//TODO check the other parameters (correct answer, choices)?
+				
 				require("exam_objects.js",function(){
 					t._init();
 				});

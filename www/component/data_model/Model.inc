@@ -3,11 +3,12 @@ require_once("TableDefinition.inc");
 /** Defines the data model of the application. Each component is supposed to populate this model with its own part of the model */
 class DataModel {
 
-	/** @var $model DataModel */
+	/** @static 
+	 * @var DataModel singleton*/
 	private static $model = null;
-	/**
+	/** retrieve the singleton instance of the data model
 	 * @static 
-	 * @return DataModel */
+	 * @return DataModel the data model */
 	public static function &get() {
 		if (DataModel::$model == null) {
 			$model = new DataModel();
@@ -54,9 +55,27 @@ class DataModel {
 	 * @return \datamodel\Table
 	 */
 	public function &addTable($name) {
-		if (isset($thos->tables[$name])) throw new Exception("Table ".$name." already defined in the data model");
+		if (isset($this->tables[$name])) throw new Exception("Table ".$name." already defined in the data model");
 		$table = new \datamodel\Table($this, $name);
 		$this->tables[$name] = &$table;
+		if (PNApplication::$instance->current_domain == "Dev") {
+			$table->{"declaring_component"} = "unknown";
+			try { throw new Exception(); }
+			catch (Exception $e) {
+				$root = str_replace("\\","/",realpath("component"))."/";
+				foreach ($e->getTrace() as $trace) {
+					$file = str_replace("\\","/",realpath($trace["file"]));
+					if (substr($file,0,strlen($root)) <> $root) continue;
+					$component = substr($file,strlen($root));
+					$i = strpos($component, "/");
+					if ($i === FALSE) continue;
+					$component = substr($component,0,$i);
+					$table->{"declaring_component"} = $component;
+					//$table->{"file"} = $file;
+					break;
+				}
+			}
+		}
 		return $table;
 	}
 
@@ -223,23 +242,24 @@ class SubDataModel extends DataModel {
 	public function &getParentModel() { return $this->parent_model; }
 	public function getParentTable() { return $this->parent_table; }
 	
-	public function create_tables($key) {
+	public function createTables($key) {
 		if (SQLQuery::isTransactionStarted()) {
 			PNApplication::error("You cannot insert in a table which is the key for a SubDataModel, if you are in a transaction: ".$this->getParentTable());
 			return;
 		}
-		require_once("DataBaseModel.inc");
+		require_once("DataBaseUtilities.inc");
 		foreach ($this->tables as $t)
-			DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
+			DataBaseUtilities::createTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
 	}
 	
-	public function remove_tables($key) {
+	public function removeTables($key) {
 		if (SQLQuery::isTransactionStarted()) {
 			PNApplication::error("You cannot delete an entry from a table which is the key for a SubDataModel, if you are in a transaction: ".$this->getParentTable());
 			return;
 		}
+		require_once("DataBaseUtilities.inc");
 		foreach ($this->tables as $t)
-			SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DROP TABLE `".$t->getName()."_".$key."`");
+			DataBaseUtilities::dropTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
 	}
 	
 	public function getExistingInstances() {

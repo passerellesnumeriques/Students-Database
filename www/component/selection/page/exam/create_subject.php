@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * Create a menu coumponed of three parts:
+ * - create a subject from scratch
+ * - create a subject by importing an excel file
+ * - create a subject from previous campaigns
+ */
 require_once("/../selection_page.inc");
 class page_exam_create_subject extends selection_page {
 	
@@ -8,8 +13,9 @@ class page_exam_create_subject extends selection_page {
 	public function execute_selection_page(&$page) {
 		/* Check the rights */
 		if(!PNApplication::$instance->user_management->has_right("manage_exam_subject",true))
-			echo "<div style='font-color:red;>You are not allowed to add any exam subject</div>'";
+			echo "<div style='font-color:red;'>You are not allowed to add any exam subject</div>'";
 		else {
+			echo "<div id = 'create_subject'></div>";
 			$other_campaigns = false;
 			$all_campaigns = PNApplication::$instance->selection->getCampaigns();
 			/* remove the current campaign */
@@ -33,19 +39,25 @@ class page_exam_create_subject extends selection_page {
 			<script type = 'text/javascript'>
 				var create_exam = function(){
 					var t = this;
-					
+					/**
+					 * Start the process
+					 */
 					t._init = function(){
-						t.container = document.createElement("div");
+// 						t.container = document.createElement("div");
+						t.container = document.getElementById("create_subject");
 						t._setContainer();
-						t.pop = new popup_window(
-									"Create an Exam Subject",
-									theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
-									t.container,
-									true
-								);
-						t.pop.show();
-					}
-					
+// 						t.pop = new popup_window(
+// 									"Create an Exam Subject",
+// 									theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
+// 									t.container,
+// 									true
+// 								);
+// 						t.pop.show();
+					};
+
+					/**
+					 * Get all the other campaigns to set the list of the old exams
+					 */
 					t.other_campaigns = <?php echo json_encode($other_campaigns);?>;
 					t.old_exams = null;
 					<?php
@@ -74,7 +86,9 @@ class page_exam_create_subject extends selection_page {
 						echo "];";
 					} else echo "t.old_exams = []";
 					?>
-					
+					/**
+					 * Create the menu inside the container
+					 */
 					t._setContainer = function(){						
 						var ul = document.createElement("ul");
 						t.container.appendChild(ul);
@@ -83,7 +97,7 @@ class page_exam_create_subject extends selection_page {
 						li1.innerHTML = "Create a subject from scratch";
 						var b_from_zero = t._createButton("<b>Go!</b>");
 						b_from_zero.onclick = function(){
-							location.assign("/dynamic/selection/page/exam/subject");
+							window.parent.location.assign("/dynamic/selection/page/exam/subject");
 						};
 						li1.appendChild(b_from_zero);
 						ul.appendChild(li1);
@@ -93,7 +107,7 @@ class page_exam_create_subject extends selection_page {
 						li3.innerHTML = "Create by importing an Excel questions file";
 						var b_import = t._createButton("<b>Go!</b>");
 						b_import.onclick = function(){
-							location.assign("/dynamic/selection/page/exam/import_subject");
+							window.parent.location.assign("/dynamic/selection/page/exam/import_subject");
 						};
 						li3.appendChild(b_import);
 						ul.appendChild(li3);
@@ -126,7 +140,14 @@ class page_exam_create_subject extends selection_page {
 							ul.appendChild(li2);
 						}						
 					};
-					
+
+					/**
+					 * Create a button item, into a div element
+					 * @param {string | HRML} content to put into the div
+					 * @param {boolean} from previous true if it is a button linked to a subjet from a previous campaign
+					 * @param {number} campaign_id only used when from_previous == true. The id of the campaign that the button shall refer to
+					 * @param {number} campaign_id only used when from_previous == true. The id of the subject that the button shall refer to
+					 */
 					t._createButton = function(content, from_previous, campaign_id, exam_id){
 						var div = document.createElement("div");
 						div.className = "button";
@@ -135,15 +156,16 @@ class page_exam_create_subject extends selection_page {
 							div.campaign_id = campaign_id;
 							div.exam_id = exam_id;
 							div.onclick = function(){
-								location.assign("/dynamic/selection/page/exam/subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
+								window.parent.location.assign("/dynamic/selection/page/exam/subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
 							};
 						}
 						return div;
 					};
 					
-					require("popup_window.js",function(){
-						t._init();
-					});
+// 					require("popup_window.js",function(){
+// 						t._init();
+// 					});
+					t._init();
 				}
 				create_exam();
 			</script>
@@ -151,6 +173,16 @@ class page_exam_create_subject extends selection_page {
 		}
 	}
 	
+	/**
+	 * Get the old exam subjects (id and name) from previous campaigns
+	 * @param array $all_campaigns array of the campaigns ids
+	 * @param number $current_campaign id of the current campaign to exclude from the query performed
+	 * @return array 	array("campaign_name" => array(
+	 * 							[0]: campaign_id
+	 * 							["name"]:exam_name
+	 * 							["id"]:exam_id 
+	 * 						))
+	 */
 	public function getOldExamSubjects($all_campaigns,$current_campaign){
 		$old_exams = array();
 		foreach($all_campaigns as $c){
@@ -158,9 +190,9 @@ class page_exam_create_subject extends selection_page {
 			$first = true;
 			SQLQuery::set_submodel("SelectionCampaign", $c["id"]);
 			$exams = SQLQuery::create()
-						->select("Exam_subject")
-						->field("Exam_subject","id","id")
-						->field("Exam_subject","name","name")
+						->select("ExamSubject")
+						->field("ExamSubject","id","id")
+						->field("ExamSubject","name","name")
 						->execute();
 			if(isset($exams[0]["id"])){
 				// the first attribute is the campaign id

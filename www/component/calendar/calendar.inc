@@ -214,6 +214,8 @@ class calendar extends Component {
 			$data["organizer"] = $event["organizer"];
 			$data["participation"] = $event["participation"];
 			$data["role"] = $event["role"];
+			$data["app_link"] = @$event["app_link"];
+			$data["app_link_name"] = @$event["app_link_name"];
 			SQLQuery::create()->bypassSecurity()->updateByKey("CalendarEvent", $event["id"], $data);
 			if (PNApplication::has_errors())
 				return false;
@@ -231,6 +233,8 @@ class calendar extends Component {
 			$data["organizer"] = $event["organizer"];
 			$data["participation"] = $event["participation"];
 			$data["role"] = $event["role"];
+			$data["app_link"] = @$event["app_link"];
+			$data["app_link_name"] = @$event["app_link_name"];
 			$event["id"] = SQLQuery::create()->bypassSecurity()->insert("CalendarEvent", $data);
 			$event["uid"] = $data["uid"];
 			if (PNApplication::has_errors()) return false;

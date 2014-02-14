@@ -1,3 +1,6 @@
+if (typeof theme != 'undefined')
+	theme.css("small_calendar.css");
+
 function small_calendar(minimum, maximum) {
 	if (minimum) minimum.setHours(0,0,0,0);
 	if (maximum) maximum.setHours(0,0,0,0);

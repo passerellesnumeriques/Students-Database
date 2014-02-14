@@ -20,13 +20,16 @@ class page_curriculum extends Page {
 			$all_periods = SQLQuery::create()->select("AcademicPeriod")->where("batch",$periods[0]["batch"])->orderBy("AcademicPeriod","start_date")->execute();
 			$batch_id = $periods[0]["batch"];
 		}
+		$batch_info = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();
 		
 		$this->add_javascript("/static/widgets/tree/tree.js");
 		?>
+		<?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) { ?>
 		<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'>
 			<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/>
 			Right-click on an element below to access functionalities and edit the curriculum
 		</div>
+		<?php } ?>
 		<div id='curriculum_tree' style='cursor:default;background-color:white'></div>
 		<script type='text/javascript'>
 		var edit = <?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) echo "true"; else echo "false"; ?>;

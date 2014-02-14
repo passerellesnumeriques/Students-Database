@@ -2,7 +2,7 @@
 <head>
 	<link rel='stylesheet' type='text/css' href='/static/documentation/style.css'></link>
 </head>
-<body>
+<body style='background-color:white'>
 <h1>Coding Conventions</h1>
 
 <h2>Naming</h2>
@@ -28,13 +28,27 @@
 	<li>Files use only small letters, each word is separated by an underscore.<br/>
 		Example: context_menu.js
 	</li>
-	<li>Classes are following the same convention as the file names, as usually a file contains a single class</li>
+	<li> For classes, there are two possibilities:<ul>
+	   <li>When a file is just providing a class, to make it clearer the class can have the name of the file, meaning it uses only small letters and words are separated by an underscore.</li>
+	   <li>Any other class should follow same way as PHP classes: start with a capital letter, then small letters or digits. Each word starts with a capital letter.</li>
+	</ul></li>
 	<li>Properties or variables are using small letters, each word is separated by an underscore.<br/>
 		Example: user_id
 	</li>
 	<li>Methods or functions start with a small letter, then each word starts with a capital letter.<br/>
 		Example: getUserId
 	</li>
+</ul>
+
+<h3>Database</h3>
+
+<ul>
+    <li>Tables are following classes conventions: names start with a capital letter, then small letters or digits. Each word starts with a capital letter.<br/>
+        Example: UserRights<br/>
+    </li>
+    <li>Columns are following properties conventions: in small letters, each word is spearated by an underscore.<br/>
+        Example: first_name
+    </li>
 </ul>
 
 </body>

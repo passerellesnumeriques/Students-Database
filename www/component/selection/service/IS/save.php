@@ -48,21 +48,40 @@ function prepareDataAndSavePartnersAndContactsPoints($data){
 }
 
 class service_IS_save extends Service{
-	public function get_required_rights(){return array();}
+	public function get_required_rights(){return array("manage_information_session");}
 	public function input_documentation(){
-	
+		?>
+		<ul>
+			<li><code>data</code> {array} Information session data, coming from IS_profile.js</li>
+			<li><code>address</code> {array} Postal Address object</li>
+			<li><code>event</code> {array} Calendar eevnt object</li>
+		</ul>
+		<?php
 	}
 	public function output_documentation(){
-	
+		?>
+		<ul>
+			<li><code>false</code> {boolean} if an error occured</li>
+			<li><code>array</code> id, fake_orga, address, date
+				<ul>
+					<li><code>id</code> id of the information session</li>
+					<li><code>fake_organization</code> id of the fake_organization linked to this information session</li>
+					<li><code>address</code> id of the custom postal address if set</li>
+					<li><code>date</code> id of the calendar event linked to this information session, if set</li>
+				</ul>
+			</li>
+		</ul>
+		<?php
 	}
 	public function documentation(){
+		echo 'Save an information session object. All the query are performed into a transaction in the case of any error happen';
 	}
 	public function execute(&$component,$input){
 		if(!isset($input["event"]) || !isset($input["address"]) || !isset($input["data"]))
 			echo "false";
 		else {
 			$data = $input["data"];
-			$address = $input["address"]; // TODO here it must be a PostalAddress, then no need to convert it to database format...
+			$address = $input["address"];
 			$event = $input["event"];
 			$everything_ok = true;
 			$add_event = false;
@@ -92,7 +111,7 @@ class service_IS_save extends Service{
 					$update_address = false;
 					$remove_address = false;
 				}
-				if(isset($event["start"]) && $event["start"] <> null && $event["start"] != "null"){
+				if(isset($event["start"])&& $event["start"] != "null"){
 					$add_event = true;
 					$update_event = false;
 					$remove_event = false;
@@ -117,7 +136,7 @@ class service_IS_save extends Service{
 					$remove_address = false;
 				} else {
 					//it can be a remove or nothing
-					$q = SQLQuery::create()->select("Information_session")->field("postal_address")->whereValue("Information_session","id",$data["id"])
+					$q = SQLQuery::create()->select("InformationSession")->field("postal_address")->whereValue("InformationSession","id",$data["id"])
 							->executeSingleValue();
 					if($q <> null){
 						$address_to_remove = $q;
@@ -131,6 +150,7 @@ class service_IS_save extends Service{
 					if($event["id"] == -1 || $event["id"] == "-1"){
 						unset($event["id"]);
 						$add_event = true;
+// 						echo "here2";
 						$update_event = false;
 					} else {
 						$add_event = false;
@@ -139,7 +159,7 @@ class service_IS_save extends Service{
 					$remove_event = false;
 				} else {
 					//it can be a remove or nothing
-					$q = SQLQuery::create()->select("Information_session")->field("date")->whereValue("Information_session","id",$data["id"])
+					$q = SQLQuery::create()->select("InformationSession")->field("date")->whereValue("InformationSession","id",$data["id"])
 							->executeSingleValue();
 					if($q <> null){
 						$event_to_remove = $q;
@@ -170,7 +190,10 @@ class service_IS_save extends Service{
 						unset($event["id"]);
 					$event["calendar_id"] = PNApplication::$instance->selection->getCalendarId();
 					$event["organizer"] = "Selection";
-					// var_dump($event);
+					if (!$insert_IS) {
+						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
+						$event["app_link_name"] = "This event is an Information Session: click to see it";
+					}
 					PNApplication::$instance->calendar->saveEvent($event);
 					$event_id = $event["id"];
 				} catch(Exception $e){
@@ -179,6 +202,10 @@ class service_IS_save extends Service{
 				}
 				$data["date"] = $event_id;
 			} else if($update_event && $everything_ok){
+				if (!$insert_IS) {
+					$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
+					$event["app_link_name"] = "This event is an Information Session: click to see it";
+				}
 				try{
 					PNApplication::$instance->calendar->saveEvent($event);
 				} catch(Exception $e){
@@ -211,14 +238,14 @@ class service_IS_save extends Service{
 					/* Unset address id in case it exists (address coming from a partner and then customized*/
 					if(isset($address["id"]))
 						unset($address["id"]);
-					SQLQuery::create()->updateByKey("Postal_address",$data["address"],ContactJSON::PostalAddress2DB($address));
+					SQLQuery::create()->updateByKey("PostalAddress",$data["address"],ContactJSON::PostalAddress2DB($address));
 				} catch(Exception $e){
 					$everything_ok = false;
 					PNApplication::error($e);
 				}
 			} else if($remove_address && $everything_ok) {
 				try{
-					SQLQuery::create()->bypassSecurity()->removeKey("Postal_address",$address_to_remove);
+					SQLQuery::create()->bypassSecurity()->removeKey("PostalAddress",$address_to_remove);
 					$data["address"] = null;
 				} catch(Exception $e){
 					$everything_ok = false;
@@ -230,6 +257,11 @@ class service_IS_save extends Service{
 				try{
 					$new_IS_id = prepareDataAndSaveIS($data,true);
 					$data["id"] = $new_IS_id;
+					if ($add_event) {
+						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
+						$event["app_link_name"] = "This event is an Information Session: click to see it";
+						PNApplication::$instance->calendar->saveEvent($event);
+					}
 					//update the fake_organization_name with the good name
 					SQLQuery::create()->bypassSecurity()->updateByKey("Organization",$data["fake_organization"],array("name" => "fake_for_IS_".$data["id"]));
 				} catch (Exception $e){

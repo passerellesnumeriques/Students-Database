@@ -1,6 +1,6 @@
 /**
  * Launch the background loading of all static resources of the application.
- * @param {DOMNode|string} container the html element where to insert the progress bar, or its ID
+ * @param {DOMNode|String} container the html element where to insert the progress bar, or its ID
  */
 function load_static_resources(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -56,6 +56,11 @@ function load_static_resources(container) {
 		this._stopped = true;
 		this._checkEnd();
 	};
+
+	this._scripts_loading = 0;
+	this._max_scripts_loading = 5;
+	this._images_loading = 0;
+	this._max_images_loading = 10;
 	
 	/** Start to load another script */
 	this._nextScript = function() {
@@ -66,6 +71,11 @@ function load_static_resources(container) {
 		}
 		if (t._stopped) return;
 		if (!window.top.pn_application_static) return;
+		if (new Date().getTime() - window.top._last_service_call < 3000 && t._scripts_loading > 0) {
+			setTimeout(t._nextScript);
+			return;
+		}
+		t._scripts_loading++;
 		container.style.color = "#000000";
 		var script = null;
 		for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
@@ -77,6 +87,7 @@ function load_static_resources(container) {
 			}
 		if (script == null) { t._checkEnd(); return; }
 		add_javascript(script.url,function() {
+			t._scripts_loading--;
 			t.loaded(script.size);
 			for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
 				window.top.pn_application_static.scripts[i].dependencies.remove(script.url);
@@ -92,6 +103,11 @@ function load_static_resources(container) {
 			return;
 		}
 		if (t._stopped) return;
+		if (new Date().getTime() - window.top._last_service_call < 3000 && t._scripts_loading > 1) {
+			setTimeout(t._nextImage);
+			return;
+		}
+		t._images_loading++;
 		container.style.color = "#000000";
 		if (!window.top.pn_application_static) return;
 		if (window.top.pn_application_static.images.length == 0) { t._checkEnd(); return; }
@@ -100,8 +116,8 @@ function load_static_resources(container) {
 		window.top.pn_application_static.loading_images.push(image);
 		var i = document.createElement("IMG");
 		i.data = image;
-		i.onload = function() { window.top.pn_application_static.loading_images.remove(this.data); t.loaded(this.data.size); t._nextImage(); try { document.body.removeChild(this); } catch (e){} };
-		i.onerror = function() { t.loaded(this.data); t._nextImage(); document.body.removeChild(this); };
+		i.onload = function() { window.top.pn_application_static.loading_images.remove(this.data); t._images_loading--; t.loaded(this.data.size); t._nextImage(); try { document.body.removeChild(this); } catch (e){} };
+		i.onerror = function() { t._images_loading--; t.loaded(this.data); t._nextImage(); document.body.removeChild(this); };
 		i.src = image.url;
 		i.style.position = "fixed";
 		i.style.top = "-10000px";
@@ -127,9 +143,9 @@ function load_static_resources(container) {
 				for (var i = 0; i < res.scripts.length; ++i) window.top.pn_application_static.total_size += res.scripts[i].size;
 				for (var i = 0; i < res.images.length; ++i) window.top.pn_application_static.total_size += res.images[i].size;
 				t.loaded(start_size);
-				for (var i = 0; i < 20; ++i)
+				for (var i = 0; i < t._max_images_loading; ++i)
 					t._nextImage();
-				for (var i = 0; i < 10; ++i)
+				for (var i = 0; i < t._max_scripts_loading; ++i)
 					t._nextScript();
 			});
 		});
@@ -141,9 +157,9 @@ function load_static_resources(container) {
 		for (var i = 0; i < window.top.pn_application_static.loading_images.length; ++i)
 			window.top.pn_application_static.images.push(window.top.pn_application_static.loading_images[i]);
 		window.top.pn_application_static.loading_images = [];
-		for (var i = 0; i < 20; ++i)
+		for (var i = 0; i < t._max_images_loading; ++i)
 			t._nextImage();
-		for (var i = 0; i < 10; ++i)
+		for (var i = 0; i < t._max_scripts_loading; ++i)
 			t._nextScript();
 	}
 	

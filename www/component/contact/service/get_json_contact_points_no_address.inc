@@ -6,12 +6,12 @@ function get_json_contact_points_no_address($organization){
 	$contacts = null;
 	$q = SQLQuery::create()
 				->select("Organization")
-				->join("Organization","Contact_point",array("id"=>"organization"))
-				->join("Contact_point","People",array("people" => "id"))
-				->join("People","People_contact",array("id" => "people"))
-				->join("People_contact","Contact",array("contact" => "id"))
+				->join("Organization","ContactPoint",array("id"=>"organization"))
+				->join("ContactPoint","People",array("people" => "id"))
+				->join("People","PeopleContact",array("id" => "people"))
+				->join("PeopleContact","Contact",array("contact" => "id"))
 				->field("Organization","id","organization_id")
-				->field("Contact_point","designation","designation")
+				->field("ContactPoint","designation","designation")
 				->orderBy("Organization","id")
 				->orderBy("People","id");
 	PeopleJSON::PeopleSQL($q);

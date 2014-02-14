@@ -1,6 +1,7 @@
-if (typeof require != 'undefined') {
+if (typeof require != 'undefined')
 	require("animation.js");
-}
+if (typeof theme != 'undefined')
+	theme.css("context_menu.css");
 /**
  * Create a contextual menu.
  * If an element is given, each item inside this element will be identified by having the class 'context_menu_item'
@@ -23,6 +24,7 @@ function context_menu(menu) {
 		menu.className = 'context_menu';
 	}
 	menu.context_menu=this;
+	this.element = menu;
 	/** Called when the menu is closed
 	 * @member {function} context_menu#onclose
 	 */
@@ -74,7 +76,7 @@ function context_menu(menu) {
 	 * @param {function} onclick called when the user click on the item
 	 * @returns the html element corresponding to the item
 	 */
-	t.addIconItem = function(icon, text, onclick) {
+	t.addIconItem = function(icon, text, onclick, onclick_parameter) {
 		var div = document.createElement("DIV");
 		if (icon) {
 			var img = document.createElement("IMG");
@@ -85,7 +87,7 @@ function context_menu(menu) {
 			div.appendChild(img);
 		}
 		div.appendChild(document.createTextNode(text));
-		div.onclick = onclick;
+		div.onclick = function() { if (onclick) onclick(onclick_parameter); }
 		div.className = "context_menu_item";
 		t.addItem(div);
 		return div;
@@ -243,16 +245,18 @@ function context_menu(menu) {
 		t.show_at = [x,y];
 //		for (var i = 0; i < document.body.childNodes.length; ++i)
 //			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = -10;
-		document.body.appendChild(menu);
 		menu.style.zIndex = 100;
+		if (typeof animation != 'undefined') {
+			if (menu.anim) animation.stop(menu.anim);
+			setOpacity(menu,0);
+		}
+		document.body.appendChild(menu);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);
 			window.top.pnapplication.registerOnclick(window, t._listener);
 		},1);
-		if (typeof animation != 'undefined') {
-			if (menu.anim) animation.stop(menu.anim);
+		if (typeof animation != 'undefined')
 			menu.anim = animation.fadeIn(menu,300);
-		}
 	};
 	/** Hide the menu: call <code>onclose</code> if specified, then hide or remove the html element of the menu depending on <code>removeOnClose</code> 
 	 * @member context_menu#hide
@@ -322,4 +326,6 @@ function context_menu(menu) {
 		else
 			t.showAt(t.show_at[0], t.show_at[1]);
 	};
+	
+	t.close = function() { t.hide(); };
 }

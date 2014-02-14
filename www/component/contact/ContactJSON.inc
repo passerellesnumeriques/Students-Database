@@ -11,7 +11,7 @@ class ContactJSON {
 	 * @no_name_check
 	 */
 	public static function PostalAddressFromID($id) {
-		$q = SQLQuery::create()->select("Postal_address")->whereValue("Postal_address", "id", $id);
+		$q = SQLQuery::create()->select("PostalAddress")->whereValue("PostalAddress", "id", $id);
 		self::PostalAddressSQL($q);
 		$row = $q->executeSingleRow();
 		if ($row == null) return null;
@@ -24,12 +24,8 @@ class ContactJSON {
 	 * @no_name_check
 	 */
 	public static function PostalAddressSQL(&$q) {
-		$alias = $q->getTableAlias("Postal_address");
-		$area_alias = $q->getTableAlias("Geographic_area");
-		if ($area_alias == null) {
-			$area_alias = $q->generateTableAlias();
-			$q->join($alias, "Geographic_area", array("geographic_area"=>"id"), $area_alias);
-		}
+		$alias = $q->getTableAlias("PostalAddress");
+		PNApplication::$instance->geography->joinGeographicArea($q, $alias, "geographic_area", false);
 		require_once("component/geography/GeographyJSON.inc");
 		GeographyJSON::GeographicAreaTextSQL($q);
 		$q
@@ -56,7 +52,7 @@ class ContactJSON {
 		return
 			"{".
 				"id:".$row["address_id"].
-				",country_id:".$row["country_id"].
+				",country_id:".json_encode(@$row["country_id"]).
 				",geographic_area:".GeographyJSON::GeographicAreaText($q, $row).
 				",street:".json_encode(@$row["street"]).
 				",street_number:".json_encode(@$row["street_number"]).

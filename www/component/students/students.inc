@@ -4,8 +4,12 @@ class students extends Component {
 	
 	public function getPluginImplementations() {
 		require_once("StudentsPeoplePlugin.inc");
+		require_once("StudentsApplicationPlugin.inc");
+		require_once("StudentsNewsPlugin.inc");
 		return array(
-			new StudentsPeoplePlugin()
+			new StudentsPeoplePlugin(),
+			new StudentsApplicationPlugin(),
+			new StudentsNewsPlugin()
 		);
 	}
 	
@@ -65,7 +69,7 @@ class students extends Component {
 	public function assign_student_to_class($student_people_id, $class_id, $period_id) {
 		// check the class exists
 		if ($class_id <> null) {
-			$class = SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->executeSingleRow();
+			$class = PNApplication::$instance->curriculum->getAcademicClass($class_id);
 			if ($class == null) { PNApplication::error("Invalid class id"); return false; }
 			if ($class["period"] <> $period_id) { PNApplication::error("The class is not in the given academic period"); return false; }
 		}
@@ -77,16 +81,16 @@ class students extends Component {
 			if ($class["specialization"] <> $student["specialization"]) { PNApplication::error("Student's specialization does not match with class' specialization"); return false; }
 		}
 		// get the assignment of this student for this academic period
-		$assigned = SQLQuery::create()
+		$q = SQLQuery::create()
 			->select("StudentClass")
 			->whereValue("StudentClass", "people", $student_people_id)
-			->join("StudentClass", "AcademicClass", array("class"=>"id"))
-			->whereValue("AcademicClass", "period", $period_id)
 			->field("StudentClass", "class", "class")
-			->execute();
+			;
+		PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period_id);
+		$assigned = $q->execute();
 		// do it
 		foreach ($assigned as $a)
-			SQLQuery::create()->removeKey("StudentClass", array("people"=>$student_people_id,"class"=>$assigned["class"]));
+			SQLQuery::create()->removeKey("StudentClass", array("people"=>$student_people_id,"class"=>$a["class"]));
 		if ($class_id <> null) {
 			SQLQuery::create()->insert("StudentClass", array("people"=>$student_people_id,"class"=>$class_id));
 		}

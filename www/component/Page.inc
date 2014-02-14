@@ -91,6 +91,7 @@ abstract class Page {
 	}
 
 	private function start_page() {
+		theme::css($this, "global.css");
 		pageHeaderStart();
 		foreach ($this->javascripts as $js) {
 			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1]."'>";
@@ -115,7 +116,9 @@ function pageHeaderStart() {
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
 	<title>PN Students DataBase</title>
-	<link rel="stylesheet" href="<?php echo theme::$style;?>"/>
+	<script type="text/javascript">
+	if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search+location.hash);};
+	</script>
 	<script type="text/javascript" src="/static/javascript/utils.js"></script>
 	<script type="text/javascript" src="/static/javascript/browser.js"></script>
 	<script type="text/javascript" src="/static/application/application.js"></script>
@@ -143,7 +146,7 @@ function pageHeaderStart() {
 function pageHeaderEnd($onload = "") {
 ?>
 </head>
-<body onload="if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search);return;};<?php echo $onload;?>">
+<body onload="<?php echo $onload;?>">
 <?php
 }
 function pageFooter() {

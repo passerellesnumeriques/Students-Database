@@ -31,7 +31,7 @@ class service_update_address extends Service {
 			if($input["address"]["id"] == -1 || $input["address"]["id"] == "-1"){
 				// This is an insert
 				$id = SQLQuery::create()
-					->insert("Postal_address",$address);
+					->insert("PostalAddress",$address);
 				if(PNApplication::has_errors())
 					echo "false";
 				else
@@ -39,7 +39,7 @@ class service_update_address extends Service {
 			} else {
 				// This is an update
 				$q = SQLQuery::create()
-					->updateByKey("Postal_address",$input["address"]["id"],$address);
+					->updateByKey("PostalAddress",$input["address"]["id"],$address);
 				if(PNApplication::has_errors())
 					echo "false";
 				else

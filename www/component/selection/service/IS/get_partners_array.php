@@ -1,6 +1,6 @@
 <?php
 class service_IS_get_partners_array extends Service{
-	public function get_required_rights(){return array();}
+	public function get_required_rights(){return array("see_information_session_details");}
 	public function input_documentation(){
 		?>
 		<ul>
@@ -10,8 +10,21 @@ class service_IS_get_partners_array extends Service{
 		</ul>
 		<?php
 	}
-	public function output_documentation(){}//TODO
-	public function documentation(){}//TODO
+	public function output_documentation(){
+		?>
+		Array of partners objects. Each object contains:
+		<ul>
+			<li><code>organization</code> {number} the organization id</li>
+			<li><code>organization_name</code> {string} the orgnaization name</li>
+			<li><code>host</code> {boolean} true if this partner is the host</li>
+			<li><code>host_address</code> {number} not null in the case of host == true; in that case, the value is the id of the selected partner postal address</li>
+			<li><code>contact_points_selected</code> {array} ids of the contact points selected from this partner
+		</ul>
+		<?php
+	}
+	public function documentation(){
+		echo "Get the array used in select_address.js";
+	}
 	public function execute(&$component,$input){
 		if(count($input["partners_id"]) > 0){
 			$q = SQLQuery::create()->select("Organization")

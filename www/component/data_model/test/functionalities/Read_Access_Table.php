@@ -67,10 +67,10 @@ class Read_Access_Table__Prepare_DataModel extends TestFunctionalitiesStep {
 	public function getName() { return "Prepare Data Model"; }
 	public function run(&$scenario_data) {
 		Read_Access_Table__declare_model();
-		require_once("component/data_model/DataBaseModel.inc");
+		require_once("component/data_model/DataBaseUtilities.inc");
 		foreach (DataModel::get()->internalGetTables() as $table)
 			if (substr($table->getName(),0,15) == "TestReadAccess_")
-				DataBaseModel::create_table(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
+				DataBaseUtilities::createTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $table);
 		SQLQuery::create()->bypassSecurity()->insert("TestReadAccess_specific_column", array("column_ok"=>1,"column_nok"=>2));
 		SQLQuery::create()->bypassSecurity()->insert("TestReadAccess_filter", array("column_ok"=>1,"column_nok"=>2));
 		SQLQuery::create()->bypassSecurity()->insert("TestReadAccess_filter", array("column_ok"=>10,"column_nok"=>20));

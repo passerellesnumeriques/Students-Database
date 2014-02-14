@@ -203,7 +203,7 @@ class page_build_excel_import extends Page {
 				<?php
 				require_once("component/data_model/DataPath.inc");
 				$ctx = new DataPathBuilderContext();
-				$paths = DataPathBuilder::search_from($ctx, $_POST["root_table"]);
+				$paths = DataPathBuilder::searchFrom($ctx, $_POST["root_table"]);
 				switch ($_POST["import_type"]) {
 					case "by_row":
 						?>
@@ -216,7 +216,7 @@ class page_build_excel_import extends Page {
 						$this->add_javascript("/static/widgets/collapsable_section/collapsable_section.js");
 						$cats = array();
 						foreach ($paths as $path) {
-							if (!$path->is_unique()) continue;
+							if (!$path->isUnique()) continue;
 							$cat = $path->table->getDisplayableDataCategory($path->field_name);
 							if (isset($cats[$cat]))
 								array_push($cats[$cat], $path);
@@ -336,7 +336,7 @@ class page_build_excel_import extends Page {
 						$this->add_javascript("/static/widgets/typed_field/typed_field.js");
 						$cats = array();
 						foreach ($paths as $path) {
-							if (!$path->is_unique()) continue;
+							if (!$path->isUnique()) continue;
 							$cat = $path->table->getDisplayableDataCategory($path->field_name);
 							if (isset($cats[$cat]))
 								array_push($cats[$cat], $path);
@@ -432,7 +432,7 @@ class page_build_excel_import extends Page {
 						$first = true;
 						foreach ($paths_ids as $id) {
 							if ($first) $first = false; else echo ",";
-							echo "{id:".$id[0].",path:".json_encode($id[1]->get_string())."}";
+							echo "{id:".$id[0].",path:".json_encode($id[1]->getString())."}";
 						} 
 						?>];
 						function field_import_changed(select) {

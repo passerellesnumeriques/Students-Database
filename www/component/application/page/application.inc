@@ -1,65 +1,66 @@
 <?php 
+theme::css($this, "application.css");
 
-$sections = array(
-	array(
-		"name" => "Dashboard",
-		"icon" => theme::$icons_32["dashboard"],
-		"menu_provider" => null,
-		"default_page" => "/dynamic/application/page/home"
-	),
-	array(
-		"name" => "Selection",
-		"icon" => "/static/selection/selection_32.png",
-		"menu_provider" => "selection",
-		"default_page" => "/dynamic/selection/page/selection_main_page"
-	),
-	array(
-		"name" => "Education",
-		"icon" => "/static/students/student_32.png",
-		"menu_provider" => null,
-		"default_page" => "/dynamic/training_education/page/tree?section=education&page=list#all_students"
-	),
-	array(
-		"name" => "Training",
-		"icon" => "/static/curriculum/curriculum_32.png",
-		"menu_provider" => null,
-		//"default_page" => "/dynamic/training_education/page/batches_classes"
-		"default_page" => "/dynamic/training_education/page/tree?section=training&page=list#all_students"
-	),
-	array(
-		"name" => "Administration",
-		"icon" => "/static/administration/admin_32.png",
-		"menu_provider" => "administration",
-		"default_page" => "/dynamic/administration/page/dashboard"
-	),
-);
+// mandatory part
+$this->require_javascript("calendar.js");
+?>
+<script type='text/javascript'>
+window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
 
-$this->require_javascript("vertical_layout.js");
+window.top.calendar_manager = new CalendarManager();
+window.top.CalendarsProviders.get(function(provider) {
+	for (var i = 0; i < provider.calendars.length; ++i)
+		window.top.calendar_manager.addCalendar(provider.calendars[i]);
+	provider.on_calendar_added.add_listener(function(cal){
+		window.top.calendar_manager.addCalendar(cal);
+	});
+	provider.on_calendar_removed.add_listener(function(cal){
+		window.top.calendar_manager.removeCalendar(cal);
+	});
+	provider._refresh_interval = setInterval(function() {
+		provider.refreshCalendars();
+	},5*60*1000);
+	provider.refreshCalendars();
+});
+window.top.pnapplication.onlogout.add_listener(function() {
+	while (window.top.calendar_manager.calendars.length > 0) indow.top.calendar_manager.removeCalendar(indow.top.calendar_manager.calendars[0]);
+	window.top.CalendarsProviders.get(function(provider) {
+		clearInterval(provider._refresh_interval);
+	});
+	window.top.calendar_manager = null;
+});
+</script>
+<?php
+if (isset($_GET["page"])) {
+	// only the frame
+	echo "<iframe id='pn_application_content' name='pn_application_content' src='".$_GET["page"]."'></iframe>";
+	return;
+} 
+
 $this->require_javascript("horizontal_layout.js");
 $this->require_javascript("horizontal_menu.js");
-
-if (PNApplication::$instance->current_domain == "Dev") {
-	$this->add_javascript("/static/development/debug_status.js");
-	$this->onload("new debug_status('debug_status');");
-}
 ?>
-<div id='pn_application_container' style='width:100%;height:100%'>
-	<div id='pn_application_header' layout='35' style='border-bottom:1px solid #A0A0A0'>
-		<div id='pn_application_section_title'></div>
+<table id='pn_application_container'>
+	<tr><td>
+	<div id='pn_application_header'>
+		<div id='pn_application_section_title' onclick='sectionsMenu();'></div>
 		<div id='pn_application_left_controls' style='visibility:hidden;padding-right:3px'></div>
 		<div id='pn_application_menu' layout='fill'>
 			<div class='button'><img src='<?php echo theme::$icons_16["more_menu"];?>'/> More</div>
 		</div>
 		<div id='pn_application_right_controls' style='visibility:hidden'></div>
 		<div id='pn_application_right_menu' style='margin-right:3px'>
-			<div id='user_menu' style='display:inline-block;' onclick='user_menu();'>
-				<img id='user_menu_picture' src='/dynamic/people/service/picture?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' style='width:30px;height:30px'/>
+			<div id='user_picture' style='display:inline-block;' onclick='userMenu();'>
+				<img src='/dynamic/people/service/picture?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' style='width:30px;height:30px'/>
 			</div>
 		</div>
 	</div>
-	<iframe id='pn_application_content' name='pn_application_content' layout='fill'<?php if (isset($_GET["page"])) echo "src='".$_GET["page"]."'";?>>
-	</iframe>
-	<div id='pn_application_footer' layout='17' style='border-top:1px solid black;background-color:#C0C0C0'>
+	</td></tr>
+	<tr><td id='pn_application_content_area'>
+		<iframe id='pn_application_content' name='pn_application_content'></iframe>
+	</td></tr>
+	<tr><td>
+	<div id='pn_application_footer'>
 		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
 		<span style='position:fixed;bottom:0px;right:3px;'>
 			<span id='google_status'></span>
@@ -73,238 +74,161 @@ if (PNApplication::$instance->current_domain == "Dev") {
 		<span style='position:fixed;bottom:0px;left:3px;' id='background_loading_application'>
 		</span>
 	</div>
+	</td></tr>
+</table>
+<div id='user_menu' style='display:none'>
+	<table>
+	<tr>
+		<td>
+			<img src='/dynamic/people/service/picture?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' style='width:80px;height:80px'/>
+		</td>
+		<td>
+			<a class='button_verysoft' href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' target='pn_application_content'>
+				<img src='/static/people/profile_32.png'/>
+				Your Profile
+			</a><br/>
+			<a class='button_verysoft' href='/dynamic/calendar/page/calendars' target='pn_application_content'>
+				<img src='/static/calendar/calendar_32.png'/>
+				Your Calendars
+			</a><br/>
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2>
+			<a class='button_verysoft' href='/dynamic/application/page/logout'>
+				<img src='/static/application/logout.gif'/>
+				Log out and exit application
+			</a>
+		</td>
+	</tr>
+	</table>
 </div>
-<div id='user_menu_content' class='context_menu' style='font-size: 11pt; font-weight: bold;color:#000060;border:1px solid #808080;border-top:0px;background-color:#ffffff;'>
-	<div class='context_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>'">
-		<img src='/static/people/profile_32.png' style='vertical-align:middle' title='Your Profile'/>
-	</div>
-	<div class='context_menu_item' onclick="document.getElementById('pn_application_content').src='/dynamic/calendar/page/calendars'">
-		<img src='/static/calendar/calendar_32.png' style='vertical-align:middle' title='Your Calendars'/>
-	</div>
-	<div id='logout' class='context_menu_item' onclick="location.href='/dynamic/application/page/logout'">
-		<img src='/static/application/logout.png' style='vertical-align:middle' title='Exit'/>
-	</div>
-</div>
-<style type='text/css'>
-.pn_application_menu_item {
-	font-size: 11pt;
-	color: #000060;
-	border-radius: 5px;
-	-moz-border-radius: 5px;
-	-webkit-border-radius: 5px;
-	padding: 3px;
-	text-decoration: none;
-	cursor: pointer;
-	margin-top: 5px;
-}
-.pn_application_menu_item img {
-	vertical-align: bottom;
-	padding-right: 5px;
-}
-.pn_application_menu_item:hover {
-	color: #800080;
-	background-color: rgba(255,255,255,0.4);
-}
-.pn_application_menu_item:active {
-	position: relative;
-	top: 1px;
-	left: 1px;
-}
-#user_menu {
-	padding: 1px 1px 0px 1px;
-	border: 1px solid rgba(0,0,0,0);
-	cursor: pointer;
-}
-#user_menu:hover {
-	background-color: rgba(255,255,255,0.4);
-	border: 1px solid rgba(128,128,128,0.6);
-}
-</style>
 <script type='text/javascript'>
-setBorderRadius(document.getElementById('user_menu_content'), 0, 0, 0, 0, 5, 5, 5, 5);
-setBorderRadius(document.getElementById('logout'), 0, 0, 0, 0, 5, 5, 5, 5);
-function user_menu() {
-	require("context_menu.js",function() {
-		var menu = new context_menu('user_menu_content');
-		var user_picture = document.getElementById('user_menu');
-		menu.showBelowElement(user_picture);
-		if (typeof animation != 'undefined') {
-			var e = document.getElementById('user_menu_content');
-			e.style.zIndex = 1;
-			var end = e.offsetTop;
-			animation.create(e, 0, end, 200, function(value) {
-				e.style.top = Math.floor(value)+'px';
-			});
-		}
-	});
+sections = [<?php
+require_once("component/application/ApplicationPlugin.inc");
+$sections = array();
+foreach (PNApplication::$instance->components as $c) {
+	foreach ($c->getPluginImplementations() as $pi) {
+		if (!($pi instanceof ApplicationPlugin)) continue;
+		array_push($sections, $pi);
+	}
 }
-
-var sections = [<?php
+function sort_sections($s1,$s2) {
+	return $s1->getPriority() - $s2->getPriority();
+}
+usort($sections, "sort_sections");
 $first = true;
-foreach ($sections as $s) {
+foreach ($sections as $sec) {
 	if ($first) $first = false; else echo ",";
 	echo "{";
-	$f = true;
-	foreach ($s as $name=>$value) {
-		if ($f) $f = false; else echo ",";
-		echo $name.":".json_encode($value);
-	}
+	echo "name:".json_encode($sec->getName());
+	echo ",icon16:".json_encode($sec->getIcon16());
+	echo ",icon32:".json_encode($sec->getIcon32());
+	echo ",page:".json_encode($sec->getPageURL());
+	echo ",info_text:".json_encode($sec->getInfoText());
+	echo ",menu_provider:".json_encode($sec->getMenuProviderService());
 	echo "}";
 }
 ?>];
-var section_menu = null;
-var selected_section_index = 0;
-function initLayout() {
-	new vertical_layout('pn_application_container');
-	new horizontal_layout('pn_application_header');
-	section_menu = new horizontal_menu('pn_application_menu');
-	var header = document.getElementById('pn_application_header');
-	header.style.backgroundColor = '#e0e0e0';
-	setBackgroundGradient(header, "vertical", [{pos:50,color:'#e0e0e0'},{pos:80,color:'#d0d0d0'},{pos:100,color:'#b0b0b0'}]);
-	setBorderRadius(document.getElementById('user_menu_picture'), 5, 5, 5, 5, 5, 5, 5, 5);
-	setBorderRadius(document.getElementById('user_menu'), 5, 5, 5, 5, 5, 5, 5, 5);
-	var div = document.getElementById('pn_application_left_controls');
-	div.style.borderRight = "1px solid #C0C0C0";
-	setBorderRadius(div, 0, 0, 0, 0, 0, 0, 10, 10);
-	div = document.getElementById('pn_application_right_controls');
-	div.style.borderRight = "1px solid #C0C0C0";
-	setBorderRadius(div, 0, 0, 0, 0, 0, 0, 10, 10);
-	div = document.getElementById('pn_application_menu');
-	div.style.borderRight = "1px solid #C0C0C0";
-	setBorderRadius(div, 0, 0, 0, 0, 0, 0, 10, 10);
-}
-initLayout();
-var sections_bar = document.createElement("DIV");
-sections_bar.style.borderRight = "1px solid #FFFFFF";
-sections_bar.style.backgroundColor = "rgba(255,255,255,0.4)";
-setBorderRadius(sections_bar, 0, 0, 0, 0, 0, 0, 10, 10);
-sections_bar.padding = "3px 6px 2px 3px";
-sections_bar.style.whiteSpace = "nowrap";
-sections_bar.style.overflow = "hidden";
-sections_bar.style.position = "fixed";
-sections_bar.style.top = "0px";
-sections_bar.style.left = "0px";
-sections_bar.style.height = "35px";
-sections_bar.style.cursor = 'pointer';
-for (var i = 0; i < sections.length; ++i) {
-	var item = document.createElement("DIV");
-	item.style.display = "inline-block";
-	item.style.padding = "0px 3px 0px 2px";
+
+function sectionBox(sec) {
+	var link = document.createElement("A");
+	link.href = "/?section="+encodeURIComponent(sec.name);
+	var div = document.createElement("DIV");
+	div.style.display = "inline-block";
+	div.className = "pn_application_section_box";
 	var icon = document.createElement("IMG");
-	icon.src = sections[i].icon;
-	icon.style.verticalAlign = "middle";
-	icon.style.marginRight = "4px";
-	icon.onload = function() {
-		if (sections_bar.childNodes.length <= selected_section_index) return;
-		sections_bar.style.width = sections_bar.childNodes[selected_section_index].offsetWidth+'px';
-		document.getElementById('pn_application_section_title').style.width = sections_bar.childNodes[selected_section_index].offsetWidth+'px'; 
+	icon.src = sec.icon32;
+	div.appendChild(icon);
+	var div_name = document.createElement("DIV");
+	div_name.appendChild(document.createTextNode(sec.name));
+	div.appendChild(div_name);
+	var div_info = document.createElement("DIV");
+	if (typeof sec.info_text != 'undefined') div_info.appendChild(document.createTextNode(sec.info_text));
+	div.appendChild(div_info);
+	link.onclick = function() {
+		selectSection(sec);
+		return false;
 	};
-	var title = document.createElement("DIV");
-	title.style.display = "inline-block";
-	title.style.color = "#4040A0";
-	title.style.fontSize = "12pt";
-	title.style.fontWeight = "bold";
-	title.appendChild(document.createTextNode(sections[i].name));
-	item.appendChild(icon);
-	item.appendChild(title);
-	item.index = i;
-	sections_bar.appendChild(item);
+	link.appendChild(div);
+	return link;
 }
-document.body.appendChild(sections_bar);
 
-var bar_expanded = false;
-function expandBar() {
-	bar_expanded = true;
-	var e = document.getElementById('show_the_menu_to_the_user');
-	if (e && e.parentNode) e.parentNode.removeChild(e);
-	require("animation.js",function() {
-		animation.create(sections_bar, sections_bar.offsetLeft, 0, 500, function(value, element) {
-			element.style.left = Math.floor(value)+'px';
-		});
-		var w = 0;
-		for (var i = 0; i < sections_bar.childNodes.length; ++i) w += sections_bar.childNodes[i].offsetWidth;
-		animation.create(sections_bar, sections_bar.offsetWidth, w, 500, function(value, element) {
-			element.style.width = Math.floor(value)+'px';
-		});
-		for (var i = 0; i < sections_bar.childNodes.length; ++i) {
-			sections_bar.childNodes[i].onclick = function() {
-				selectSection(this.index);
-			};
-		}
-		sections_bar.onclick = null;
-		animation.fadeOut(document.getElementById('pn_application_left_controls'), 300);
-		animation.fadeOut(document.getElementById('pn_application_menu'), 300);
-		animation.fadeOut(document.getElementById('pn_application_right_controls'), 300);
-	});
-}
-function selectSection(index, onlyCollapseBar) {
-	selected_section_index = index;
-	bar_expanded = false;
-	if (!onlyCollapseBar) {
-		populateMenu();
-		document.getElementById('pn_application_content').src = sections[index].default_page;
+function sectionsMenu() {
+	var menu = document.createElement("DIV");
+	for (var i = 0; i < sections.length; ++i) {
+		if (i > 0 && (i%3)==0) menu.appendChild(document.createElement("BR"));
+		var box = sectionBox(sections[i]);
+		menu.appendChild(box);
 	}
-	if (typeof animation != 'undefined')
-		animation.create(sections_bar, 0, -sections_bar.childNodes[index].offsetLeft, 500, function(value, element) {
-			element.style.left = Math.floor(value)+'px';
-		});
-	else
-		sections_bar.style.left = (-sections_bar.childNodes[index].offsetLeft)+'px';
-	if (typeof animation != 'undefined')
-		animation.create(sections_bar, sections_bar.offsetWidth, sections_bar.childNodes[index].offsetLeft+sections_bar.childNodes[index].offsetWidth, 500, function(value,element) {
-			element.style.width = Math.floor(value)+'px';
-		});
-	else
-		sections_bar.style.width = (sections_bar.childNodes[index].offsetLeft+sections_bar.childNodes[index].offsetWidth)+'px';
-	for (var i = 0; i < sections_bar.childNodes.length; ++i)
-		sections_bar.childNodes[i].onclick = expandBar;
-	document.getElementById('pn_application_section_title').setAttribute("layout", sections_bar.childNodes[index].offsetWidth+10);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
-	if (typeof animation != 'undefined') {
-		var div = document.getElementById('pn_application_left_controls');
-		if (div.childNodes.length > 0) animation.fadeIn(div, 800);
-		animation.fadeIn(document.getElementById('pn_application_menu'), 800);
-		var div = document.getElementById('pn_application_right_controls');
-		if (div.childNodes.length > 0) animation.fadeIn(div, 800);
-	}
-}
-sections_bar.onclick = expandBar;
-
-// when clicking outside of expanded bar, collapse it
-listenEvent(window, 'click', function(ev) {
-	if (!bar_expanded) return;
-	var e = getCompatibleMouseEvent(ev);
-	if (e.x > sections_bar.offsetWidth) selectSection(selected_section_index, true);
-});
-
-function populateMenu() {
-	resetMenu();
-	resetLeftControls();
-	resetRightControls();
-	if (sections[selected_section_index].menu_provider == null) return;
-	service.customOutput(sections[selected_section_index].menu_provider, "application_menu_builder", {},function(code){
-		if (code == null) {
-			// TODO
-			return;
-		}
-		eval(code); // TODO catch exceptions
-	});
+	menu.id = "pn_application_sections_menu";
+	if (typeof animation != 'undefined') setOpacity(menu,0);
+	document.body.appendChild(menu);
+	if (typeof animation != 'undefined') animation.fadeIn(menu,300);
+	var listener = function() {
+		window.top.pnapplication.unregisterOnclick(listener);
+		if (typeof animation != 'undefined') animation.fadeOut(menu,300,function() { document.body.removeChild(menu); });
+		else document.body.removeChild(menu);		
+	};
+	setTimeout(function() { window.top.pnapplication.registerOnclick(window, listener); },1);
 }
 
-<?php if (!isset($_GET["page"])) { ?>
-selectSection(selected_section_index);
-<?php } ?>
+function userMenu() {
+	var menu = document.getElementById('user_menu');
+	if (typeof animation != 'undefined') animation.fadeIn(menu,300);
+	else setOpacity(menu, 1);
+	menu.style.display = "";
+	var listener = function() {
+		window.top.pnapplication.unregisterOnclick(listener);
+		if (typeof animation != 'undefined') animation.fadeOut(menu,300,function() { menu.style.display = "none"; });
+		else menu.style.display = "none";
+	};
+	setTimeout(function() { window.top.pnapplication.registerOnclick(window, listener); },1);
+}
 
-require("animation.js");
+new horizontal_layout('pn_application_header');
+var section_menu = new horizontal_menu('pn_application_menu');
 require("vertical_align.js",function() {
 	new vertical_align('pn_application_left_controls', 'middle');
 	new vertical_align('pn_application_right_controls', 'middle');
 });
+
+function selectSection(sec) {
+	var win = getIFrameWindow(document.getElementById('pn_application_content'));
+	win.location.href = sec.page;
+	document.getElementById('pn_application_section_title').innerHTML = "<img src='"+sec.icon32+"'/>"+sec.name;
+	populateMenu(sec.menu_provider);
+	fireLayoutEventFor(document.getElementById('pn_application_header'));
+}
+
+function populateMenu(service_url) {
+	resetAllMenus();
+	if (service_url)
+		ajax.call("GET", service_url, null, null, function(error){
+			// TODO
+		}, function(xhr) {
+			eval('window.populating_menu = true;'+xhr.responseText+';window.populating_menu = false;');
+		});
+}
+
 require("google_status.js",function() {
 	new google_status('google_status');
 });
+<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
+require("debug_status.js",function() {
+	new debug_status('debug_status');
+});
+<?php } ?>
 
+function resetAllMenus() {
+	resetLeftControls();
+	resetMenu();
+	resetRightControls();
+}
 function resetMenu() {
+	for (var i = 0; i < section_menu.items.length; ++i)
+		if (section_menu.items[i].element._tooltip)
+			document.body.removeChild(section_menu.items[i].element._tooltip);
 	section_menu.removeAll();
 }
 function resetLeftControls() {
@@ -317,7 +241,7 @@ function resetRightControls() {
 	div.style.visibility = 'hidden';
 	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
 }
-function addMenuItem(icon, text, url) {
+function addMenuItem(icon, text, info, url) {
 	var item = document.createElement("A");
 	item.className = "pn_application_menu_item";
 	var img = document.createElement("IMG");
@@ -329,34 +253,35 @@ function addMenuItem(icon, text, url) {
 	item.href = url;
 	item.target = "pn_application_content";
 	section_menu.addItem(item);
-	item.onclick = function(ev) {
-		if (!this.target) return true;
-		var frame = findFrame(this.target);
-		if (!frame) {
-			// missing, reload the default page first
-			frame = document.getElementById('pn_application_content');
-			var target = this.target;
-			frame.onload = function() {
-				frame.onload = null;
-				var f = findFrame(target);
-				if (!f) {
-					// cannot find it..
-					frame.src = url;
-					return;
-				}
-				f.src = url;
-			};
-			frame.src = sections[selected_section_index].default_page;
-			stopEventPropagation(ev);
-			return false;
-		}
-		return true;
+	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	item.onmouseover = function() {
+		if (this._tooltip) return;
+		for (var i = 0; i < section_menu.items.length; ++i)
+			if (section_menu.items[i].element._tooltip) {
+				document.body.removeChild(section_menu.items[i].element._tooltip);
+				section_menu.items[i].element._tooltip = null;
+			}
+		if (info == null || info.length == 0) return;
+		this._tooltip = document.createElement("DIV");
+		this._tooltip.className = "pn_application_menu_item_tooltip";
+		this._tooltip.style.position = "fixed";
+		this._tooltip.style.top = "32px";
+		this._tooltip.style.left = absoluteLeft(this)+"px";
+		this._tooltip.appendChild(document.createTextNode(info));
+		document.body.appendChild(this._tooltip);
 	};
+	item.onmouseout = function() {
+		if (!item._tooltip) return;
+		document.body.removeChild(item._tooltip);
+		item._tooltip = null;
+	};
+	window.onmouseout = item.onmouseout;
 	return item;
 }
 function addMenuControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
 	section_menu.addItem(control);
+	fireLayoutEventFor(document.getElementById('pn_application_header'));
 }
 function addRightControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -364,6 +289,7 @@ function addRightControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
+	fireLayoutEventFor(document.getElementById('pn_application_header'));
 }
 function addLeftControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -371,8 +297,22 @@ function addLeftControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
+	fireLayoutEventFor(document.getElementById('pn_application_header'));
 }
 
-// at the beginning, show all sections to user
-setTimeout(expandBar, 2000);
+selectSection(sections[<?php
+$sel_index = 0;
+if (isset($_GET["section"]))
+	for ($i = 0; $i < count($sections); $i++)
+		if (strtolower($sections[$i]->getName()) == strtolower($_GET["section"])) { $sel_index = $i; break; }
+echo $sel_index;  
+?>]);
+
+// background loading of the application
+require("load_static.js",function(){
+	new load_static_resources('background_loading_application');
+});
+require("animation.js");
+require("context_menu.js");
+
 </script>

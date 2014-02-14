@@ -7,6 +7,7 @@ $model->addTable("StudentBatch")
 	->addString("name", 100, 1, false, true)
 	->addDate("start_date", false, false, "2004-01-01", "end_date")
 	->addDate("end_date", false, false, "start_date", null)
+	->setRoot()
 	->addReadAccess("consult_students_list", true)
 	->addWriteAccess("manage_batches", true)
 	->addInsertAccess("manage_batches", true)
@@ -20,20 +21,21 @@ $model->addTable("StudentBatch")
 	))
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			PNApplication::$instance->news->post("education", "batch", null, "Batch ".$fields["name"]." created.");
+			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$fields["name"]." created.");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
  	;
 $model->addTable("Specialization")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false, true)
+	->setRoot()
 	->addReadAccess("consult_students_list", true)
 	->addWriteAccess("manage_batches", true)
 	->addInsertAccess("manage_batches", true)
 	->addRemoveAccess("manage_batches", true)
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			PNApplication::$instance->news->post("education", "curriculum", null, "Specialization ".$fields["name"]." created.");
+			PNApplication::$instance->news->post("students", "curriculum", null, "Specialization ".$fields["name"]." created.");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
 	;
@@ -58,7 +60,7 @@ $model->addTable("AcademicPeriod")
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
 			$batch = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$fields["batch"])->field("StudentBatch","name")->executeSingleValue();
-			PNApplication::$instance->news->post("education", "curriculum", array("batch".$fields["batch"]), "Academic period ".$fields["name"]." created for batch ".$batch.".");
+			PNApplication::$instance->news->post("students", "batch", array("batch".$fields["batch"]), "Academic period ".$fields["name"]." created for batch ".$batch.".");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
 	;
@@ -101,20 +103,21 @@ $model->addTable("AcademicClass")
 				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
 				$message .= " with specialization ".$spe;
 			}
-			PNApplication::$instance->news->post("education", "batch", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
+			PNApplication::$instance->news->post("students", "batch", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
 	;
 $model->addTable("CurriculumSubjectCategory")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false, false)
+	->setRoot()
 	->addReadAccess("consult_curriculum", true)
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			PNApplication::$instance->news->post("education", "curriculum", null, "Category of subject <i>".$fields["name"]."</i> created for the curricula.");
+			PNApplication::$instance->news->post("students", "curriculum", null, "Category of subject <i>".$fields["name"]."</i> created for the curricula.");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
 	;
@@ -148,7 +151,7 @@ $model->addTable("CurriculumSubject")
 				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
 				$message .= " in specialization ".$spe;
 			}
-			PNApplication::$instance->news->post("education", "curriculum", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
+			PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
 	;

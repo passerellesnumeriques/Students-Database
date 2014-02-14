@@ -3,6 +3,10 @@
  */
 String.prototype.startsWith=function(s){return this.length<s.length?false:this.substring(0,s.length)==s;};
 /** 
+ * return true if this string ends with the given string
+ */
+String.prototype.endsWith=function(s){return this.length<s.length?false:this.substring(this.length-s.length)==s;};
+/** 
  * remove leading and trailing spaces, and return the result
  */
 String.prototype.trim=function() {
@@ -156,7 +160,7 @@ function absoluteLeft(e,relative) {
 			var p = e;
 			do {
 				p = p.parentNode;
-				left -= p == p.scrollLeft;
+				left -= p.scrollLeft;
 			} while (p != e.offsetParent);
 			left += absoluteLeft(e.offsetParent,relative); 
 		}
@@ -373,9 +377,15 @@ function URL(s) {
 		} else
 			this.port = null;
 	} else {
-		this.protocol = window.location.protocol.substr(0,window.location.protocol.length-1);
-		this.host = window.location.hostname;
-		this.port = window.location.port;
+		if (window) {
+			this.protocol = window.location.protocol.substr(0,window.location.protocol.length-1);
+			this.host = window.location.hostname;
+			this.port = window.location.port;
+		} else {
+			this.protocol = "";
+			this.host = "";
+			this.port = "";
+		}
 	}
 	i = s.indexOf('#');
 	if (i > 0) {
@@ -462,7 +472,17 @@ function Custom_Event() {
 	this.fire = function(data) {
 		var list = [];
 		for (var i = 0; i < this.listeners.length; ++i) list.push(this.listeners[i]);
-		for (var i = 0; i < list.length; ++i) list[i](data);
+		for (var i = 0; i < list.length; ++i) 
+			try { list[i](data); } 
+			catch (e) {
+				var msg = e.message;
+				if (typeof e.fileName != 'undefined') {
+					msg += " ("+e.fileName;
+					if (typeof e.lineNumber != 'undefined') msg += ":"+e.lineNumber;
+					msg += ")";
+				}
+				console.log(msg);
+			}
 	};
 } 
 
@@ -682,4 +702,17 @@ function getGoodSpelling(word, figure){
 	if(figure > 1 && typeof(word) == "string")
 		word += "s";
 	return word;
+}
+
+/**
+ * Get the size of an object (number of attributes)
+ * @param {Object} object
+ * @returns {Number} size of the object
+ */
+function getObjectSize(object){
+	s = 0;
+	for(a in object){
+		s++;
+	}
+	return s;
 }

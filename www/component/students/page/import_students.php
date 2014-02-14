@@ -12,16 +12,6 @@ class page_import_students extends Page {
 		$fixed_data = array();
 		if (isset($input["batch"]))
 			array_push($fixed_data, array("category"=>"Student","name"=>"Batch","data"=>$input["batch"]));
-		import_people(
-			$this, 
-			"/static/application/icon.php?main=/static/students/student_32.png&small=".theme::$icons_16["add"]."&where=right_bottom",
-			"Import Students",
-			$data_list,
-			$fixed_data,
-			array(),
-			"<img src='".theme::make_icon("/static/students/student_16.png",theme::$icons_10["add"])."'/> Import Students",
-			"create_students"
-		);
 		?>
 		<script type='text/javascript'>
 		function create_students(students, lock) {
@@ -58,6 +48,16 @@ class page_import_students extends Page {
 		}
 		</script>
 		<?php 
+		import_people(
+			$this,
+			"/static/application/icon.php?main=/static/students/student_32.png&small=".theme::$icons_16["add"]."&where=right_bottom",
+			"Import Students",
+			$data_list,
+			$fixed_data,
+			array(),
+			"<img src='".theme::make_icon("/static/students/student_16.png",theme::$icons_10["add"])."'/> Import Students",
+			"create_students"
+		);
 	}
 	
 }

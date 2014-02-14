@@ -11,11 +11,15 @@ service = {
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 */
 	json: function(component, service_name, input, handler, foreground) {
+		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null)
 			data = service.generateInput(input);
 		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json;charset=UTF-8", data, 
 			function(result){
+				if (result && result.warnings)
+					for (var i = 0; i < result.warnings.length; ++i)
+						window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,result.warnings[i],[{action:"popup"},{action:"close"}],5000));
 				handler(result ? result.result : null);
 			},
 			foreground,
@@ -37,6 +41,7 @@ service = {
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 */
 	xml: function(component, service_name, input, handler, foreground) {
+		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null) {
 			if (typeof input == 'string') data = input;
@@ -69,6 +74,7 @@ service = {
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 */
 	customOutput: function(component, service_name, input, handler, foreground) {
+		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null)
 			data = service.generateInput(input);
@@ -116,6 +122,10 @@ service = {
 		return s;
 	}
 };
+
+if (typeof window.top._last_service_call == 'undefined')
+	window.top._last_service_call = 0;
+
 /**
  * Send the given object to the given URL using POST method.
  * @param {String} url the location where to send the data
@@ -139,11 +149,13 @@ if (typeof ajax != 'undefined')
 	ajax.http_response_handlers.push(function(xhr){
 		if (xhr.status == 403) {
 			try {
-				var loc = window.top.fraes['pn_application_frame'].location;
+				var loc = window.top.frames['pn_application_frame'].location;
 				var url = new URL(loc.href);
 				if (url.path.startsWith("/dynamic/development/") || url.path.startsWith("/dynamic/test/"))
 					return false;
 			} catch (e) { return false; }
+			if (window.top.pnapplication)
+				window.top.pnapplication.onlogout.fire();
 			window.top.location = "/";
 			return false;
 		}

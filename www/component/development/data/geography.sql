@@ -21,19 +21,19 @@ SET time_zone = "+00:00";
 --
 
 --
--- Dumping data for table `country_division`
+-- Dumping data for table `CountryDivision`
 --
 
-INSERT INTO `country_division` (`id`, `country`, `parent`, `name`) VALUES
+INSERT INTO `CountryDivision` (`id`, `country`, `parent`, `name`) VALUES
 (1, 1, NULL, 'Province'),
 (2, 1, 1, 'Municipality'),
 (3, 1, 2, 'Baranguay');
 
 --
--- Dumping data for table `geographic_area`
+-- Dumping data for table `GeographicArea`
 --
 
-INSERT INTO `geographic_area` (`id`, `country_division`, `name`, `parent`) VALUES
+INSERT INTO `GeographicArea` (`id`, `country_division`, `name`, `parent`) VALUES
 (1, 1, 'Cebu', NULL),
 (2, 1, 'Negros', NULL),
 (3, 2, 'Cebu City', 1),

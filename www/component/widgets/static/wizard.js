@@ -1,6 +1,7 @@
-if (typeof require != 'undefined') {
+if (typeof require != 'undefined')
 	require("popup_window.js");
-}
+if (typeof theme != 'undefined')
+	theme.css("wizard.css");
 
 function wizard(container) {
 	if (typeof container == 'string') container = document.getElementById(container);

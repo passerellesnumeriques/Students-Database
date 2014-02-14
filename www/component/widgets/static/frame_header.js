@@ -3,6 +3,8 @@ if (typeof require != 'undefined') {
 	require("horizontal_layout.js");
 	require("animation.js");
 }
+if (typeof theme != 'undefined')
+	theme.css("frame_header.css");
 function frame_header(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	container.style.width = "100%";

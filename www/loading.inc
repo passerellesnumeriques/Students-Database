@@ -3,8 +3,7 @@
 <head>
 	<title>PN Students Database</title>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
-	<style type='text/css'>body,html,table{width:100%;height:100%;margin:0px;padding:0px;font-family:Arial,Tahoma,Verdana;font-size:10pt;}
-}</style>
+	<style type='text/css'>body,html,table{width:100%;height:100%;margin:0px;padding:0px;font-family:Arial,Tahoma,Verdana;font-size:10pt;}</style>
 </head>
 <body>
 <table id='__loading_table' style='width:100%;height:100%;margin:0px;padding:0px;z-index:100;background-color:white;position:fixed;top:0px;left:0px;'>
@@ -68,7 +67,7 @@ function _add_javascript(url, callback) {
 	head.appendChild(s);
 	s.src = url;
 	s.onload = function() { this._loaded = true; if (callback) setTimeout(callback,1); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { this._loaded = true; if (callback) setTimeout(callback,1); this.onreadystatechange = null; } };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { this._loaded = true; if (callback) setTimeout(callback,1); this.onreadystatechange = null; } };
 
 }
 window.pn_loading = document.all ? document.all['__loading_table'] : document.getElementById('__loading_table');
@@ -76,7 +75,7 @@ var pn_loading_visible = true;
 function __load_enter_page() {
 	next_optional();
 
-	add_stylesheet('/static/theme/default/style.css');
+	add_stylesheet('/static/theme/default/style/global.css');
 	
 	var frame = document.createElement("IFRAME");
 	frame.frameBorder = "0";
@@ -122,7 +121,7 @@ function next_optional() {
 		loaded_size += _optional_scripts[optional_index][1];
 		update_size();
 		if (++optional_index == _optional_scripts.length) {
-			document.getElementById('loading_status').innerHTML = "Loading <?php echo PNApplication::$instance->user_management->username <> null ? "Application Home Page" : "Login Page";?>...";
+			document.getElementById('loading_status').innerHTML = "<?php echo PNApplication::$instance->user_management->username <> null ? "Starting Application" : "Loading Authentication Page";?>...";
 			window.status_manager = new StatusManager();
 			window.status_manager.status_ui = new StatusUI_Top(window.status_manager);
 			setTimeout(function(){

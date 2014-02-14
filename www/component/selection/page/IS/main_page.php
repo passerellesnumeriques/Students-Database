@@ -1,7 +1,7 @@
 <?php 
 require_once("/../selection_page.inc");
 class page_IS_main_page extends selection_page {
-	public function get_required_rights() { return array(); }
+	public function get_required_rights() { return array("see_information_session_details"); }
 	public function execute_selection_page(&$page){
 		$page->add_javascript("/static/widgets/grid/grid.js");
 		$page->add_javascript("/static/data_model/data_list.js");
@@ -17,7 +17,7 @@ class page_IS_main_page extends selection_page {
 			function init_organizations_list() {
 				new data_list(
 					'<?php echo $container_id;?>',
-					'Information_session',
+					'InformationSession',
 					['Information Session.Name','Information Session.Date'],
 					[],
 					function (list) {
@@ -30,7 +30,7 @@ class page_IS_main_page extends selection_page {
 						};
 						list.addHeader(new_IS);
 						list.makeRowsClickable(function(row){
-							var is_id = list.getTableKeyForRow('Information_session',row.row_id);
+							var is_id = list.getTableKeyForRow('InformationSession',row.row_id);
 							location.href = "/dynamic/selection/page/IS/profile?id="+is_id;
 						});
 					}

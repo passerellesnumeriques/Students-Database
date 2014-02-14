@@ -7,7 +7,26 @@ function upload_drop_supported() {
 	return false;
 }
 
-function upload(container, multiple, target, ondone, send_reset, popup) {
+// needs popup_window, and to be called in the context of a click event
+function upload_temp_file_now(onuploaded) {
+	var iframe = document.createElement("IFRAME");
+	iframe.style.position = "absolute";
+	iframe.style.width = "1px";
+	iframe.style.height = "1px";
+	iframe.style.top = "-1000px";
+	document.body.appendChild(iframe);
+	var popup = new popup_window("Upload","/static/storage/upload.png","");
+	var u = new upload(getIFrameDocument(iframe).body, false, "/dynamic/storage/service/store_temp", function(popup, received) {
+		popup.close();
+		if (received && received.length == 1 && received[0].id)
+			onuploaded(received[0].id);
+		else
+			onuploaded(null);
+	}, false, popup);
+	u.openSelectFileDialog();
+}
+
+function upload(container, multiple, target, ondone, send_reset, popup, button_text) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	container.appendChild(t.form = document.createElement("FORM"));
@@ -36,6 +55,7 @@ function upload(container, multiple, target, ondone, send_reset, popup) {
 			};
 			if (popup) {
 				t.popup = popup;
+				if (!popup.isShown()) popup.show();
 				doit(popup.content);
 			} else {
 				require("popup_window.js",function() {
@@ -50,17 +70,24 @@ function upload(container, multiple, target, ondone, send_reset, popup) {
 		var link_container = document.createElement("DIV");
 		var link = document.createElement("A"); link_container.appendChild(link);
 		link.href = "#";
-		link.onclick = function() { return false; };
-		link.appendChild(document.createTextNode("Select file"+(multiple?"s":"")));
+		link.onclick = function() { t.input.click(); return false; };
+		link.appendChild(document.createTextNode(button_text ? button_text : "Select file"+(multiple?"s":"")));
 		t.form.style.position = 'relative';
+		t.form.style.cursor = 'pointer';
+		container.style.cursor = 'pointer';
 		t.form.appendChild(link_container);
 		link_container.style.position = 'absolute';
 		link_container.style.top = '0px'; link_container.style.left = '0px';
 		link_container.style.width = getWidth(t.input)+"px";
 		link_container.style.height = getHeight(t.input)+"px";
 		link_container.style.zIndex = 1;
+		link_container.style.cursor = "pointer";
+		link.className = "button";
+		link.style.textAlign = "center";
+		setWidth(link, getWidth(container));
 		t.input.style.position = 'relative';
-		t.input.style.zIndex = 2;
+		t.input.style.cursor = "pointer";
+		t.input.style.zIndex = 0;
 		setOpacity(t.input, 0);
 		t.input.addEventListener("change", function(e){t.FileSelectHandler(e);}, false);
 	}
@@ -120,6 +147,13 @@ function upload(container, multiple, target, ondone, send_reset, popup) {
 		},false);
 	};
 	
+	t.openSelectFileDialog = function() {
+		if (t.input.click)
+			t.input.click();
+		else
+			triggerEvent(t.input, 'click', {});
+	};
+	
 	t.FileDragHover = function(e) {
 		e.stopPropagation();
 		e.preventDefault();
@@ -161,6 +195,7 @@ function upload(container, multiple, target, ondone, send_reset, popup) {
 			if (popup) {
 				t.popup = popup;
 				t.popup.setContent(t.progress_table);
+				if (!t.popup.isShown()) t.popup.show();
 			} else {
 				t.popup = new popup_window("Upload","/static/storage/upload.png",t.progress_table);
 				t.popup.show();

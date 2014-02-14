@@ -13,13 +13,13 @@ class page_organization_profile extends Page {
 		} else {
 			$creator = $_GET["creator"];
 		}
-		$all_types = SQLQuery::create()->select("Organization_type")->whereValue("Organization_type", "creator", $creator)->execute();
+		$all_types = SQLQuery::create()->select("OrganizationType")->whereValue("OrganizationType", "creator", $creator)->execute();
 		
 		$org_structure = "{";
 		if ($id <> -1) {
 			$org_structure .= "id:".$org["id"];
 			$org_structure .= ",name:".json_encode($org["name"]);
-			$org_types = SQLQuery::create()->select("Organization_types")->whereValue("Organization_types", "organization", $id)->execute();
+			$org_types = SQLQuery::create()->select("OrganizationTypes")->whereValue("OrganizationTypes", "organization", $id)->execute();
 			$org_structure .= ",types_ids:[";
 			$first = true;
 			foreach ($org_types as $t) {
@@ -30,10 +30,10 @@ class page_organization_profile extends Page {
 			$org_structure .= ",contacts:".contacts_structure("organization", $id);
 			$org_structure .= ",addresses:".addresses_structure("organization", $id);
 			$points = SQLQuery::create()
-				->select("Contact_point")
-				->whereValue("Contact_point", "organization", $id)
-				->field("Contact_point", "designation")
-				->join("Contact_point", "People", array("people"=>"id"))
+				->select("ContactPoint")
+				->whereValue("ContactPoint", "organization", $id)
+				->field("ContactPoint", "designation")
+				->join("ContactPoint", "People", array("people"=>"id"))
 				->field("People", "id", "people_id")
 				->field("People", "first_name")
 				->field("People", "last_name")

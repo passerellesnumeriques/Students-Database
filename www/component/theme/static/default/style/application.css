@@ -1,0 +1,197 @@
+#pn_application_container {
+	width: 100%;
+	height: 100%;
+	border-collapse: collapse;
+	border-spacing: 0px;
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+}
+#pn_application_container td {
+	padding: 0px;
+}
+#pn_application_header {
+	height: 35px;
+	width: 100%;
+	border-bottom:1px solid #A0A0A0;
+	background: linear-gradient(to bottom, #e0e0e0 50%, #d0d0d0 80%, #b0b0b0 100%);	
+}
+
+#pn_application_content_area {
+	width: 100%;
+	height: 100%;
+}
+#pn_application_content {
+	border: 0px;
+	margin: 0px;
+	padding: 0px;
+	width: 100%;
+	height: 100%;
+}
+
+#pn_application_footer {
+	height: 17px;
+	width: 100%;
+	background-color: #C0C0C0;
+	border-top: 1px solid black;
+	font-size: 8pt;
+	font-style: italic;
+	text-align: center;
+}
+
+
+#pn_application_section_title {
+	border-right: 1px solid #FFFFFF;
+	background-color: rgba(255,255,255,0.4);
+	border-bottom-right-radius: 10px;
+	padding: 3px 6px 2px 3px;
+	white-space: nowrap;
+	color: #4040A0;
+	font-size: 12pt;
+	font-weight: bold;
+	height: 100%;
+	cursor: pointer;
+}
+#pn_application_section_title>img {
+	vertical-align: middle;
+	padding: 0px 5px 0px 2px;
+}
+#pn_application_section_title:hover {
+	background-color: rgba(255,255,255,0.7);
+}
+#pn_application_left_controls, #pn_application_right_controls, #pn_application_menu {
+	border-right: 1px solid #C0C0C0;
+	border-bottom-right-radius: 10px;
+}
+.pn_application_menu_item {
+	font-size: 11pt;
+	color: #000060;
+	border-radius: 5px;
+	padding: 3px;
+	text-decoration: none;
+	cursor: pointer;
+	margin-top: 5px;
+}
+.pn_application_menu_item img {
+	vertical-align: bottom;
+	padding-right: 5px;
+}
+.pn_application_menu_item:hover {
+	color: #800080;
+	background-color: rgba(255,255,255,0.4);
+}
+.pn_application_menu_item:active {
+	position: relative;
+	top: 1px;
+	left: 1px;
+}
+.pn_application_menu_item_tooltip {
+	background-color: white;
+	border-radius: 5px;
+	padding: 5px;
+	box-shadow: 3px 3px 3px #D0D0D0;
+}
+.pn_application_menu_item_tooltip:before {
+    position: absolute;
+    display: inline-block;
+    border-left: 7px solid transparent;
+    border-bottom: 7px solid white;
+    border-right: 7px solid transparent;
+    border-bottom-color: white;
+    left: 30px;
+    top: -7px;
+    content: '';
+}
+
+#pn_application_sections_menu {
+	position: fixed;
+	top: 38px;
+	left: 2px;
+	background-color: white;
+	box-shadow: 3px 3px 3px #D0D0D0;
+	border: 1px solid rgba(0,0,0,0.2);
+}
+#pn_application_sections_menu:before {
+    position: absolute;
+    display: inline-block;
+    border-left: 7px solid transparent;
+    border-bottom: 7px solid white;
+    border-right: 7px solid transparent;
+    border-bottom-color: white;
+    left: 30px;
+    top: -7px;
+    content: '';
+}
+
+.pn_application_section_box {
+	text-align: center;
+	vertical-align: top;
+	width: 120px;
+	height: 120px;
+	padding: 3px;
+	margin: 3px;
+	border: 1px solid rgba(0,0,0,0);
+	border-radius: 5px; 
+	cursor: pointer;
+}
+.pn_application_section_box>div {
+	color: black;
+	font-size: 12pt;
+	margin: 5px;
+}
+.pn_application_section_box>div+div {
+	color: #808080;
+	font-size: 8pt;
+}
+.pn_application_section_box:hover {
+	border: 1px solid #808080; 
+}
+
+#user_menu {
+	position: fixed;
+	top: 38px;
+	right: 2px;
+	background-color: white;
+	box-shadow: -3px 3px 3px #D0D0D0;
+    border: 1px solid rgba(0,0,0,0.2);
+}
+#user_menu:before {
+    position: absolute;
+    display: inline-block;
+    border-left: 7px solid transparent;
+    border-bottom: 7px solid white;
+    border-right: 7px solid transparent;
+    border-bottom-color: white;
+    right: 15px;
+    top: -7px;
+    content: '';
+}
+#user_menu tr>td>img {
+	border-radius: 5px;
+}
+#user_menu tr>td+td .button_verysoft>img {
+	vertical-align: middle;
+}
+#user_menu tr>td+td .button_verysoft {
+	font-size: 11pt;
+}
+#user_menu tr+tr {
+	border-top: 1px solid #808080;
+	background-color: #D0D0FF;
+	text-align: center;
+}
+#user_menu tr+tr .button_verysoft>img {
+	vertical-align: bottom;
+}
+#user_picture {
+	padding: 1px 1px 0px 1px;
+	border: 1px solid rgba(0,0,0,0);
+	cursor: pointer;
+}
+#user_picture, #user_picture img {
+	border-radius: 5px;
+}
+#user_picture:hover {
+	background-color: rgba(255,255,255,0.4);
+	border: 1px solid rgba(128,128,128,0.6);
+}

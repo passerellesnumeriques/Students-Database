@@ -1,0 +1,27 @@
+.information_bar {
+	height: 40px;
+	box-shadow: 0px -3px 5px #E0E0E0 inset;
+	background-color: white;
+	color: #505080;
+	vertical-align: top;
+}
+.information_bar>div {
+	display: inline-block;
+	vertical-align: top;
+}
+.information_bar_separator {
+	width: 1px;
+	height: 35px;
+	background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 70%, #FFFFFF 100%);
+}
+.information_bar_title {
+	height: 40px;
+	display: inline-block;
+	padding: 1px 10px 1px 4px;
+	font-size: 11pt;
+	font-weight: bold;
+}
+.information_bar_title img {
+	margin-right: 3px;
+    vertical-align: top;
+}

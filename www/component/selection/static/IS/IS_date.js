@@ -37,19 +37,12 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 				t._init();
 			});
 		} else {
-			t.event = {};
-			t.event.id = -1;
-			t.event.calendar = calendar_id;
-			t.event.start = null;
-			t.event.end = null;
-			t.event.all_day = null;
-			t.event.title = null;
-			t.event.description = null;
-			t.event.participation = "UNKNOWN";
-			t.event.role = "OPTIONAL";
-			t._init();
+			require("calendar_objects.js",function() {
+				t.event = new CalendarEvent(-1, calendar_id, null, null, null, false, 0, null, null, null, "Selection", "UNKNOWN", "OPTIONAL");
+				t._init();
+			});
 		}
-	}
+	};
 	
 	t._init = function(){
 		if(t.event != null && typeof(t.event.id) != "undefined"){
@@ -58,7 +51,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			if(can_manage) t._setFooter();
 		}
 		t.container_of_section_content.appendChild(t.table);
-	}
+	};
 	
 	// t._setThead = function(){
 		// var thead  = document.createElement("thead");
@@ -97,15 +90,11 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		}
 		td2.style.paddingTop = "5px";
 		td2.style.paddingBottom = "5px";
-		tr.appendChild(td1)
-		tr.appendChild(td2)
+		tr.appendChild(td1);
+		tr.appendChild(td2);
 		tbody.appendChild(tr);
 		
 		if(default_duration != "All day"){
-				var start_m = null;
-				var start_h = null;
-				var end_h = null;
-				var end_m = null;
 				var conf = {};
 				conf.can_be_null = false;
 			if(t.event.start != null && t.event.end != null){
@@ -145,7 +134,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			}
 		}
 		t.table.appendChild(tbody);
-	}
+	};
 	
 	t._setFooter = function(){
 		var div_set_date = document.createElement("div");
@@ -177,7 +166,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		};
 		if(t.event.start != null)
 			t.section.addToolBottom(remove_button);
-	}
+	};
 	
 	t._popSelectAllDay = function(table,pop){
 		table.appendChild(t._setTrSelectDate());
@@ -198,13 +187,13 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 				pop.close();
 			}
 		});
-	}
+	};
 	
 	t._getStartTimestamp = function(start){
 		var start_date = parseSQLDate(start);
 		//we convert it into seconds (php time)
 		return start_date.getTime()/1000;
-	}
+	};
 	
 	t._setTrSelectDate = function(){
 		var tr = document.createElement("tr");
@@ -216,7 +205,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		tr.appendChild(td);
 		tr.appendChild(td2);
 		return tr;
-	}
+	};
 	
 	t._setTrSetCustomEventName = function(){
 		var tr_title = document.createElement("tr");
@@ -233,7 +222,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		tr_title.appendChild(td1_title);
 		tr_title.appendChild(td2_title);
 		return tr_title;
-	}
+	};
 	
 	t._popSelectHours = function(table, pop){
 		table.appendChild(t._setTrSelectDate());
@@ -261,7 +250,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 				pop.close();
 			}
 		});
-	}
+	};
 	
 	t._setTrSelectTime = function(){
 		var tr = document.createElement("tr");
@@ -304,12 +293,12 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		tr.appendChild(td_start);
 		tr.appendChild(td_duration);
 		return tr;
-	}
+	};
 	
 	t._getHoursDuration = function(duration_string){
 		var tab = duration_string.split(" ");
 		return(tab[0]);
-	}
+	};
 	
 	t.resetTable = function(locker){
 		t.container_of_section_content.removeChild(t.table);
@@ -319,7 +308,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		// container.appendChild(t.table);
 		t._init();
 		if(typeof(locker) != "undefined" && locker != null) unlock_screen(locker);
-	}
+	};
 	
 	t._resetTableAndEvent = function(locker){
 		t.container_of_section_content.removeChild(t.table);
@@ -328,9 +317,13 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		t.table = document.createElement("table");
 		t._setEventAttribute();
 		if(typeof(locker) != "undefined" && locker != null) unlock_screen(locker);
-	}
+	};
+	
+	t.setEventId = function(id){
+		t.event.id = id;
+	};
 	
 	t.getEvent = function(){
 		return t.event;
-	}
+	};
 }

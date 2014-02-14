@@ -1,0 +1,27 @@
+table.grid {
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+table.grid, table.grid input, table.grid select, table.grid table {
+	font-size: 11px;
+}
+table.grid>tbody>td, table.grid>tbody>th {
+	white-space: nowrap;
+}
+table.grid>thead>tr {
+	background-color: #FFFFFF;
+}
+table.grid>thead>tr>th {
+	border-bottom: 1px solid #D0D0D0;
+}
+table.grid>tbody>tr>td {
+	border-bottom: 1px solid #E0E0E0;
+	padding-left: 2px;
+	padding-right: 2px;
+}
+table.grid>tbody>tr {
+	background-color: #FFFFFF;
+}
+table.grid>tbody>tr.selected {
+	background-color: #FFFFC0;
+}

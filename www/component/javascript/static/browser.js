@@ -576,7 +576,7 @@ function add_javascript(url, onload) {
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
 	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); this.onreadystatechange = null; } };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
 	s.src = p;
 }
@@ -653,7 +653,7 @@ function get_script_path(script_filename) {
 		if (!e.src || e.src.length == 0) continue;
 		var u = new URL(e.src);
 		if (!u.path) continue;
-		if (u.path.length > script_filename.length && u.path.substring(u.path.length-script_filename.length) == script_filename) {
+		if (u.path.length > script_filename.length && u.path.substring(u.path.length-script_filename.length-1) == "/"+script_filename) {
 			u.path = u.path.substring(0, u.path.length-script_filename.length);
 			return u.toString();
 		}

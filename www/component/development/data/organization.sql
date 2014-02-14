@@ -22,10 +22,10 @@ SET time_zone = "+00:00";
 
 
 --
--- Dumping data for table `contact_point`
+-- Dumping data for table `ContactPoint`
 --
 
-INSERT INTO `contact_point` (`organization`, `people`, `designation`) VALUES
+INSERT INTO `ContactPoint` (`organization`, `people`, `designation`) VALUES
 (1, 91, 'chef'),
 (1, 92, 'boss'),
 (3, 93, 'CEO');
@@ -41,20 +41,20 @@ INSERT INTO `organization` (`id`, `name`, `creator`) VALUES
 (4, 'tata', 'Selection');
 
 --
--- Dumping data for table `organization_address`
+-- Dumping data for table `OrganizationAddress`
 --
 
-INSERT INTO `organization_address` (`organization`, `address`) VALUES
+INSERT INTO `OrganizationAddress` (`organization`, `address`) VALUES
 (1, 1),
 (1, 2),
 (2, 3);
 
 
 --
--- Dumping data for table `postal_address`
+-- Dumping data for table `PostalAddress`
 --
 
-INSERT INTO `postal_address` (`id`, `country`, `geographic_area`, `street`, `street_number`, `building`, `unit`, `additional`, `address_type`) VALUES
+INSERT INTO `PostalAddress` (`id`, `country`, `geographic_area`, `street`, `street_number`, `building`, `unit`, `additional`, `address_type`) VALUES
 (1, 1, 5, 'toto', '2', 'toto', 'toto', 'toto', 'Work'),
 (2, 1, 6, 'titi', '2', 'titi', 'titi', 'titi', 'Work'),
 (3, 1, 7, 'tata', '2', 'tata', 'tata', 'tata', 'Work');

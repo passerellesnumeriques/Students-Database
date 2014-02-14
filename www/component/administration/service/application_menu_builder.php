@@ -7,7 +7,7 @@ class service_application_menu_builder extends Service {
 	public function input_documentation() { echo "No"; }
 	public function output_documentation() { echo "The JavaScript that builds the menu"; }
 	
-	public function get_output_format() { return "text/javascript"; }
+	public function get_output_format($input) { return "text/javascript"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/administration/AdministrationPlugin.inc");
@@ -15,7 +15,7 @@ class service_application_menu_builder extends Service {
 			foreach ($c->getPluginImplementations() as $pi) {
 				if (!($pi instanceof AdministrationPlugin)) continue;
 				foreach ($pi->getAdministrationPages() as $page) {
-					echo "addMenuItem(".json_encode($page->getIcon16()).", ".json_encode($page->getTitle()).", ".json_encode($page->getPage()).");";
+					echo "addMenuItem(".json_encode($page->getIcon16()).", ".json_encode($page->getTitle()).", ".json_encode($page->getInfoText()).", ".json_encode($page->getPage()).");";
 				}
 			}
 		}

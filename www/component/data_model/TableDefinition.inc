@@ -2,35 +2,46 @@
 namespace datamodel {
 	require_once("Event.inc");
 	/**
-	 * 3 types of tables:
-	 *  - with a primary key which auto-increment
-	 *  - with a foreign key which is also a primary key (1 to 1 relation)
-	 *  - a table joining 2 other tables (1 to n relation), where only add and remove can be done
-	 *
-	 * Access rights: by default, nothing can be done, then access can be allowed:
-	 *  - read:
-	 *    - one specific right give read access: apply to all entries
-	 *    - only specific rows can be read: where clause will be automatically added to any select to apply the restrictions
-	 *    - some columns may have specific restrictions
-	 *  - write:
-	 *    - one specific right give modification access: apply to all entries
-	 *    - only specific rows can be modified: first a select will be done based on primary key to update, then filtered so only the rows allowed to be modified will remain in the update
-	 *  - add:
-	 *    - one specific right give add access: apply to all entries
-	 *    - filter: check inserted values
-	 *  - remove:
-	 *    - one specific right give remove access: apply to all entries
-	 *    - only specific rows with filters: same process as for write access
+	 * This class contains the definition of a table in the database.<br/>
+	 * 3 types of tables can be used:<ul>
+	 *  <li>with a primary key which auto-increment</li>
+	 *  <li>with a foreign key which is also a primary key (1 to 1 relation)</li>
+	 *  <li>a table joining 2 other tables (1 to n relation), where only add and remove can be done</li>
+	 * </ul>
+	 * <br/>
+	 * As a key feature of the data model is security, each table defines also its access rights: by default nothing can be done on the table, then access can be allowed:<ul>
+	 *  <li> read (select):<ul>
+	 *    <li> one specific right give read access: apply to all entries</li>
+	 *    <li> only specific rows can be read: where clause will be automatically added to any select to apply the restrictions</li>
+	 *    <li> some columns may have specific restrictions</li>
+	 *  </ul></li>
+	 *  <li> write (update):<ul>
+	 *    <li> one specific right give modification access: apply to all entries</li>
+	 *    <li> only specific rows can be modified: first a select will be done based on primary key to update, then filtered so only the rows allowed to be modified will remain in the update</li>
+	 *  </ul></li>
+	 *  <li> add (insert):<ul>
+	 *    <li> one specific right give add access: apply to all entries</li>
+	 *    <li> filter: check inserted values</li>
+	 *  </ul></li>
+	 *  <li> remove (delete):<ul>
+	 *    <li> one specific right give remove access: apply to all entries</li>
+	 *    <li> only specific rows with filters: same process as for write access</li>
+	 *  </ul></li>
+	 * </ul>
 	 */
 	class Table {
 
-		/** @var \DataModel */
+		/** @var \DataModel the model or sub model this table belongs to */
 		private $model;
+		/** @var string table name */
 		private $name;
-		/** @var Column[] */
+		/** @var Column[] list of columns */
 		private $columns = array();
+		/** @var array list of indexes to create for fast access to this table: each element of the array is an array with the first element being the index name in the database, and the following elements this list of columns to be indexed together */
 		private $indexes = array();
+		/** @var Column the primary key, or null of there is no*/
 		private $primary_key = null;
+		/** @var array if there is a primary key, this is null, else it defines the column(s) to be used as key */
 		private $key = null;
 
 		private $read_access_rights = array();
@@ -45,6 +56,9 @@ namespace datamodel {
 
 		private $is_customized = false;
 		private $customization = array();
+		
+		/** @var boolean indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed */
+		private $is_root = false;
 
 		/** @var DataDisplayHandler[] */
 		private $display_handler = array();
@@ -153,6 +167,19 @@ namespace datamodel {
 			}
 			return array_merge($this->columns, $this->customization[$this->name]);
 		}
+		
+		/** Indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed
+		 * @param string $is_root true to mark the table as root table
+		 * @return \datamodel\Table this 
+		 */
+		public function &setRoot($is_root = true) {
+			$this->is_root = $is_root;
+			return $this;
+		}
+		/** Indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed
+		 * @return boolean true if the table is marked as root table
+		 */
+		public function isRoot() { return $this->is_root; }
 
 		/** Add a primary key (integer ID)
 		 *  @return \datamodel\Table

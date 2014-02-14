@@ -50,6 +50,19 @@ if ($student["exclusion_date"] == null) {
 } else {
 	echo "<div class='button' onclick='unexclude();'><img src='".theme::make_icon("/static/students/student_16.png", theme::$icons_10["add"])."'/> Back after exclusion</div>";
 	?>
+	<script type='text/javascript'>
+	function unexclude() {
+		confirm_dialog("Are you sure you want this student back in PN ?",function(yes) {
+			if (!yes) return;
+			var lock = lock_screen(null, "Put <?php echo $student["first_name"]." ".$student["last_name"];?> back in PN !");
+			service.json("students","exclude_student",{student:<?php echo $people_id;?>,date:null,reason:null},function(res) {
+				if (!res) { unlock_screen(lock); return; }
+				location.reload();
+			});
+			
+		});
+	}
+	</script>
 	<?php 
 }
 ?>

@@ -7,7 +7,7 @@ if (typeof get_script_path != 'undefined') {
 /**
  * View of a single day
  * @param {CalendarView} view the view manager
- * @param {DomNode} container where to display
+ * @param {DOMNode} container where to display
  * @returns
  */
 function calendar_view_day(view, container) {
@@ -24,7 +24,7 @@ function calendar_view_day(view, container) {
 	
 	/** Returns a text to describe the zoom value for this view
 	 * @param {Number} zoom current zoom value
-	 * @return {String} the text
+	 * @returns {String} the text
 	 */
 	this.getZoomText = function(zoom) {
 		var d = new Date();
@@ -38,7 +38,7 @@ function calendar_view_day(view, container) {
 	};
 	/** Returns a text to describe the current position of the view
 	 * @param {Number} shorter indicates an index of how small we should try to make the text
-	 * @return {String} the text
+	 * @returns {String} the text
 	 */
 	this.getPositionText = function(shorter) {
 		switch (shorter) {
@@ -117,27 +117,33 @@ function calendar_view_day(view, container) {
 	
 	/** Create the display */
 	this._init = function() {
+		var has_fixed_height = getHeight(container) > 0;
 		this.header = document.createElement("DIV");
-		this.header.setAttribute("layout", "20");
 		this.header.style.borderBottom = "1px solid black";
 		this.day_row_container_ = document.createElement("DIV");
-		this.day_row_container_.setAttribute("layout", "10");
 		this.day_row_container = document.createElement("DIV");
 		this.day_row_container.style.position = "relative";
 		this.day_row_container.style.width = "100%";
 		this.day_row_container.style.height = "100%";
 		this.day_row_container_.appendChild(this.day_row_container);
 		this.content_ = document.createElement("DIV");
-		this.content_.setAttribute("layout", "fill");
 		this.content = document.createElement("DIV");
-		this.content.style.overflow = "auto";
 		this.content.style.width = "100%";
 		this.content.style.height = "100%";
 		this.content_.appendChild(this.content);
 		container.appendChild(this.header);
 		container.appendChild(this.day_row_container_);
 		container.appendChild(this.content_);
-		require("vertical_layout.js", function() { new vertical_layout(container); t._layout(); });
+		if (has_fixed_height) {
+			t.header.setAttribute("layout", "20");
+			t.day_row_container_.setAttribute("layout", "10");
+			t.content_.setAttribute("layout", "fill");
+			t.content.style.overflow = "auto";
+			require("vertical_layout.js", function() { new vertical_layout(container); t._layout(); });
+		} else {
+			t.header.style.height = "20px";
+			t.day_row_container.style.height = "10px";
+		}
 		require("day_row_layout.js", function() { t.row_layout = new day_row_layout(view.calendar_manager); t._layout(); });
 		
 		this.corner = document.createElement("DIV");
@@ -186,6 +192,7 @@ function calendar_view_day(view, container) {
 			t._layout();
 		});
 		this._showNow();
+		this._layout();
 	};
 	
 	/** Stores the rows representing the time lines */
@@ -223,6 +230,8 @@ function calendar_view_day(view, container) {
 		var y = Math.floor(24*60*20/view.zoom);
 		this.time_title.style.height = y+"px";
 		this.day_content.style.height = y+"px";
+		if (!t.content_.hasAttribute("layout"))
+			t.content_.style.height = y+"px";
 	};
 	/** {DOMNode} line which indicates the actual time */
 	this._now = null;
@@ -279,8 +288,11 @@ function calendar_view_day(view, container) {
 					for (var j = 0; j < t.events.length; ++j)
 						if (t.events[j].all_day) list.push(t.events[j]);
 					var h = t.row_layout.layout(list, [t.day_box], t.start_date);
-					t.day_row_container_.setAttribute("layout",h);
-					container.widget.layout();
+					if (t.day_row_container.hasAttribute("layout"))
+						t.day_row_container_.setAttribute("layout",h);
+					else
+						t.day_row_container_.style.height = h+"px";
+					if (container.widget) container.widget.layout();
 				}
 				t._timeout = null;
 			},10);

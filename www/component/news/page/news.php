@@ -15,11 +15,11 @@ class page_news extends Page {
 		<script>
 		var sections = <?php echo $_GET["sections"]?>;
 		var exclude = <?php echo isset($_GET["exclude"]) ? $_GET["exclude"] : "[]"?>;
-		var title = <?php echo json_encode($_GET["title"])?>;
+		var title = <?php echo isset($_GET["title"]) ? json_encode($_GET["title"]) : "'Updates'";?>;
 		new news('news_container',sections,exclude,function(n){
 		},function(starts){
 		});
-		new page_header('header',true).setTitle("<img src='/static/news/news.png'/> "+(title ? title : ""));
+		new page_header('header','small').setTitle("/static/news/news.png", title ? title : "");
 		new vertical_layout('page');
 		</script>
 		<?php 

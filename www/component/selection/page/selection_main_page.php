@@ -23,8 +23,8 @@ class page_selection_main_page extends selection_page {
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		$calendar_name = SQLQuery::create()->bypassSecurity()->select("Calendar")->field("name")->where("id",$calendar_id)->executeSingleValue();
 		
-		$page->add_javascript("/static/widgets/page_header.js");
-		$page->onload("new page_header('steps_header',true);");
+		$page->add_javascript("/static/widgets/header_bar.js");
+		$page->onload("new header_bar('steps_header','small');");
 
 		$page->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$page->onload("new splitter_vertical('selection_main_page_split',0.35);");
@@ -100,7 +100,7 @@ class page_selection_main_page extends selection_page {
 			<?php
 			if(isset($calendar_id)) echo "calendar_id = ".json_encode($calendar_id).";";
 			if(isset($calendar_name)) echo "calendar_name = ".json_encode($calendar_name).";";
-			if(isset($steps)) echo "steps = ".$steps.";";
+			if(isset($steps)) echo "steps = ".json_encode($steps).";";
 			
 			echo "var unvalid_steps_to_display = ";
 			echo getArrayStepsToDisplay($unvalid_steps_to_display);
@@ -114,28 +114,40 @@ class page_selection_main_page extends selection_page {
 			require(["calendar.js","popup_window.js"],function(){
 				if(calendar_id != null && calendar_name != null){
 					var cal_manager = new CalendarManager();
-					var PN_cal = new PNCalendar(window.top.pn_calendars_provider, calendar_id, calendar_name, "C0C0FF", true, true);
-					cal_manager.addCalendar(PN_cal);
-					require("calendar_view.js",function(){
-						new CalendarView(cal_manager, "week", 60, "calendar_container", function(){});
-					});
-					var extend = document.createElement("IMG");
-					extend.className = "button_verysoft";
-					extend.src = theme.icons_16.window_popup;
-					extend.onclick = function(){
-						var content = document.createElement("div");
-						content.id = 'content_calendar_extend';
-						var width = parseFloat(getWindowWidth())-30;
-						var height = parseFloat(getWindowHeight())-60;
-						content.style.width = width.toString()+"px";
-						content.style.height = height.toString()+"px";
+					var PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
+					var init_calendar = function() {
+						cal_manager.addCalendar(PN_cal);
 						require("calendar_view.js",function(){
-							new CalendarView(cal_manager, "week", 30, content, function(){});
+							new CalendarView(cal_manager, "week", 60, "calendar_container", function(){});
 						});
-						var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
-						pop.show();
-					};
-					window.calendar_section.addToolRight(extend);
+						var extend = document.createElement("IMG");
+						extend.className = "button_verysoft";
+						extend.src = theme.icons_16.window_popup;
+						extend.onclick = function(){
+							var content = document.createElement("div");
+							content.id = 'content_calendar_extend';
+							var width = parseFloat(getWindowWidth())-30;
+							var height = parseFloat(getWindowHeight())-60;
+							content.style.width = width.toString()+"px";
+							content.style.height = height.toString()+"px";
+							require("calendar_view.js",function(){
+								new CalendarView(cal_manager, "week", 30, content, function(){});
+							});
+							var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
+							pop.show();
+						};
+						window.calendar_section.addToolRight(extend);
+					}
+					if (PN_cal) init_calendar();
+					else {
+						var retry_calendar = function() {
+							PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
+							if (PN_cal) init_calendar();
+							else setTimeout(retry_calendar, 500);
+						};
+						window.top.pn_calendars_provider.refreshCalendars();
+						retry_calendar();
+					}
 				}
 			});
 
@@ -143,10 +155,18 @@ class page_selection_main_page extends selection_page {
 			new news('updates_container', [{name:"selection",tags:["campaign<?php echo PNApplication::$instance->selection->getCampaignId();?>"]}], [], function(){
 			}, function(){
 			});
-			
+
+			/**
+			 * Create the left part of the selection main_page
+			 * @param {array} unvalid_steps coming from getArrayStepsToDisplay function
+			 * @param {array} valid_steps coming from getArrayStepsToDisplay function
+			 */
 			function setStatusScreens (unvalid_steps, valid_steps){
 				var t = this;
-				
+
+				/**
+				 * start creating the page
+				 */
 				t._init = function(){
 					//set the unvalid steps
 					for(var i = 0; i < unvalid_steps.length; i++){
@@ -168,27 +188,40 @@ class page_selection_main_page extends selection_page {
 					}
 					//once everything is set, run the js
 					t._run();
-				}
-				
+				};
+
+				/**
+				 * Set the container style
+				 */
 				t._setContainerStyle = function(container){
 					container.style.width = "95%";
 					container.style.marginLeft = "10px";
 					container.style.marginTop = "15px";
-				}
-				
+				};
+
+				/**
+				 * The set the section content with the default message when the current step is not validated yet
+				 */
 				t._setUnvalidContent = function(content){
 					var back = document.createElement("div");
 					// back.style.backgroundColor = "rgba(128,128,128,0.5)";
 					back.innerHTML = "<center><i>This step is not started yet</i></center>";
 					content.appendChild(back);
-				}
-				
+				};
+
+				/**
+				 * Create the container for the valid content with a suitable id
+				 */
 				t._prepareContainerForValidContent = function(content, id){
 					var div = document.createElement("div");
 					div.id = "content_"+id;
 					content.appendChild(div);
-				}
-				
+				};
+
+				/**
+				 * Launch all the scripts defined for each selection sub component
+				 * that appear in the selection_main_page_status_screen array
+				 */
 				t._run = function(){
 					<?php
 					foreach($js_to_run as $js)

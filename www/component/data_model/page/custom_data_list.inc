@@ -376,6 +376,26 @@ var custom_data_list = {
 		var col = this._find_column(id);
 		// TODO
 	},
+	getDataIndex: function(table, key) {
+		// find a field in the table
+		var field_index = -1;
+		for (var i = 0; i < this.fields_from_request.length; ++i)
+			if (this.fields_from_request[i].table == table) { field_index = i; break; }
+		if (field_index < 0) return -1;
+		// find a row with that key
+		for (var i = 0; i < this.data_from_request.length; ++i)
+			if (this.data_from_request[i][field_index].k == key)
+				return i;
+		return -1;
+	},
+	getData: function(row_index, category, name) {
+		// find the field index
+		var field_index = -1;
+		for (var i = 0; i < this.fields_from_request.length; ++i)
+			if (this.fields_from_request[i].category == category && this.fields_from_request[i].name == name) { field_index = i; break; }
+		if (field_index < 0) return null;
+		return this.data_from_request[row_index][field_index].v;
+	}
 };
 </script>
 <?php 

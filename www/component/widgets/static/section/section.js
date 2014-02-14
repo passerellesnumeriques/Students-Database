@@ -1,16 +1,13 @@
-if (typeof require != 'undefined') {
-	require("color.js");
+if (typeof require != 'undefined')
 	require("animation.js");
-}
+if (typeof theme != 'undefined')
+	theme.css("section.css");
 
 function section_from_html(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var icon = null;
 	var title = "";
 	var collapsable = false;
-	var border_color = null;
-	var title_background_from = null;
-	var title_background_to = null;
 	if (container.hasAttribute("icon")) {
 		icon = container.getAttribute("icon");
 		container.removeAttribute("icon");
@@ -19,36 +16,21 @@ function section_from_html(container) {
 		title = container.getAttribute("title");
 		container.removeAttribute("title");
 	}
-	if (container.hasAttribute("border_color")) {
-		border_color = container.getAttribute("border_color");
-		container.removeAttribute("border_color");
-	}
-	if (container.hasAttribute("title_background_from")) {
-		title_background_from = container.getAttribute("title_background_from");
-		container.removeAttribute("title_background_from");
-	}
-	if (container.hasAttribute("title_background_to")) {
-		title_background_to = container.getAttribute("title_background_to");
-		container.removeAttribute("title_background_to");
-	}
 	if (container.hasAttribute("collapsable")) {
 		collapsable = container.getAttribute("collapsable") == "true" ? true : false;
 		container.removeAttribute("collapsable");
 	}
 	var content = document.createElement("DIV");
 	while (container.childNodes.length > 0) content.appendChild(container.childNodes[0]);
-	var s = new section(icon,title,content,collapsable,border_color,title_background_from,title_background_to);
+	var s = new section(icon,title,content,collapsable);
 	container.appendChild(s.element);
 	return s;
 }
 
-function section(icon, title, content, collapsable, border_color, title_background_from, title_background_to, title_style) {
-	if (!border_color) border_color = "#80A060";
-	if (!title_background_from) title_background_from = "#E0F0E0";
-	if (!title_background_to) title_background_to = "#C0E8B0";
-
+function section(icon, title, content, collapsable) {
 	var t=this;
 	this.element = document.createElement("DIV");
+	this.element.className = "section";
 	
 	this.addTool = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
@@ -77,12 +59,6 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		fireLayoutEventFor(this.element);
 	};
 	this.addToolBottom = function(element) {
-		if (this.footer.childNodes.length == 0) {
-			setBorderRadius(this.footer, 0, 0, 0, 0, 5, 5, 5, 5);
-			setBorderRadius(content, 0, 0, 0, 0, 0, 0, 0, 0);
-			this.footer.style.borderTop = "1px solid #808080";
-			this.footer.style.backgroundColor = "#D0D0D0";
-		}
 		if (typeof element == 'string') {
 			var div = document.createElement("DIV");
 			div.style.display = "inline-block";
@@ -90,53 +66,30 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 			element = div;
 		}
 		this.footer.appendChild(element);
+		this.footer.className = "section_footer";
 	};
 	this.resetToolBottom = function() {
-		setBorderRadius(content, 0, 0, 0, 0, 5, 5, 5, 5);
-		this.footer.style.borderTop = "";
-		this.footer.style.backgroundColor = "";
+		this.footer.className = "section_footer_empty";
 		while (this.footer.childNodes.length > 0) this.footer.removeChild(this.footer.childNodes[0]);
 	};
 	
 	this._init = function() {
-		this.element.style.border = "1px solid "+border_color;
-		setBorderRadius(this.element, 5, 5, 5, 5, 5, 5, 5, 5);
 		this.header = document.createElement("DIV");
+		this.header.className = "section_header";
 		this.element.appendChild(this.header);
-		this.header.style.whiteSpace = 'nowrap';
-		setBorderRadius(this.header, 5, 5, 5, 5, 0, 0, 0, 0);
-		this.header.style.borderBottom = "1px solid "+border_color;
-		require("color.js",function() {
-			var col_from = parse_color(title_background_from);
-			var col_to = parse_color(title_background_to);
-			var intermediate_color = color_string(color_between(col_from, col_to, 20));
-			var intermediate_color2 = color_string(color_between(col_from, col_to, 50));
-			//setBackgroundGradient(t.header, "vertical", [{pos:0,color:title_background_from},{pos:55,color:intermediate_color},{pos:56,color:title_background_to},{pos:100,color:intermediate_color2}]);
-			setBackgroundGradient(t.header, "vertical", [{pos:0,color:title_background_from},{pos:100,color:intermediate_color2}]);
-		});
-		this.header.style.height = "25px";
 
 		this.title_container = document.createElement("DIV");
 		this.title_container.setAttribute("layout", "fill");
-		this.title_container.style.marginLeft = "5px";
 		this.header.appendChild(this.title_container);
 		if (icon) {
 			this.icon = document.createElement("IMG");
 			this.icon.src = icon;
-			this.icon.style.verticalAlign = "bottom";
-			this.icon.style.marginRight = "3px";
 			this.icon.onload = function() { fireLayoutEventFor(t.element); };
 			this.title_container.appendChild(this.icon);
 		}
 		this.title = document.createElement("DIV");
 		this.title.innerHTML = title;
-		this.title.style.fontWeight = "bold";
-		this.title.style.fontSize = "11pt";
 		this.title.style.display = "inline-block";
-		this.title.style.color = "#505050";
-		//this.title.style.fontFamily = "Calibri";
-		if (title_style)
-			for (var att in title_style) this.title.style[att] = title_style[att];
 		this.title_container.appendChild(this.title);
 		this.toolbar_left = document.createElement("DIV");
 		this.header.appendChild(this.toolbar_left);
@@ -166,11 +119,10 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 		this.content_container = document.createElement("DIV");
 		this.content_container.style.backgroundColor = "#ffffff";
 		this.content_container.appendChild(content);
-		this.footer = document.createElement("DIV");
-		this.content_container.appendChild(this.footer);
-		setBorderRadius(this.content_container, 0, 0, 0, 0, 5, 5, 5, 5);
-		setBorderRadius(content, 0, 0, 0, 0, 5, 5, 5, 5);
 		this.element.appendChild(this.content_container);
+		this.footer = document.createElement("DIV");
+		this.footer.className = "section_footer_empty";
+		this.element.appendChild(this.footer);
 	};
 	
 	this.toggleCollapseExpand = function() {
@@ -188,16 +140,15 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 				t.content_container.anim2 = animation.fadeIn(t.content_container, 600, function() {
 					t.content_container.style.position = 'static';
 					t.content_container.style.visibility = 'visible';
-					t.header.style.borderBottom = "1px solid "+border_color;
-					setBorderRadius(t.header, 5, 5, 5, 5, 0, 0, 0, 0);
 					t.content_container.style.height = "";
 					t.content_container.style.overflow = "";
 				});
 			});
 			this.content_container.style.position = 'static';
 			this.content_container.style.visibility = 'visible';
-			this.header.style.borderBottom = "1px solid "+border_color;
-			setBorderRadius(this.header, 5, 5, 5, 5, 0, 0, 0, 0);
+			this.header.className = "section_header";
+			this.footer.style.position = 'static';
+			this.footer.style.visibility = 'visible';
 		} else {
 			this.collapse_button.src = get_script_path("section.js")+"expand.png";
 			this.collapsed = true;
@@ -216,10 +167,13 @@ function section(icon, title, content, collapsable, border_color, title_backgrou
 					t.content_container.style.visibility = 'hidden';
 					t.content_container.style.top = '-10000px';
 					t.content_container.style.left = '-10000px';
-					t.header.style.borderBottom = "none";
-					setBorderRadius(t.header, 5, 5, 5, 5, 5, 5, 5, 5);
 				});
 			});
+			t.footer.style.position = 'absolute';
+			t.footer.style.visibility = 'hidden';
+			t.footer.style.top = '-10000px';
+			t.footer.style.left = '-10000px';
+			this.header.className = "section_header collapsed";
 		}
 	};
 	

@@ -1,3 +1,6 @@
+if (typeof require != 'undefined')
+	require("calendar_objects.js");
+
 /**
  * Manage the display of calendars from the given calendar manager. It instantiates the correct view (day, week, month...) for the display, and manage the switch between views.
  * @param {CalendarManager} calendar_manager the manager containing the list of calendars to display
@@ -25,19 +28,15 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	this._init = function() {
 		while (container.childNodes.length > 0)
 			container.removeChild(container.childNodes[0]);
+		var has_fixed_height = getHeight(container) > 0;
 		this.header = document.createElement("DIV");
-		this.header.setAttribute("layout", "28");
 		this.header.style.fontSize = '9pt';
 		//this.header.style.backgroundColor = "#D8D8D8";
 		this.header.className = "header";
 		this.header.style.borderBottom = "1px solid #A0A0A0";
 		this.view_container_container = document.createElement("DIV");
-		this.view_container_container.setAttribute("layout", "fill");
 		this.view_container_container.style.backgroundColor = "white";
-		this.view_container_container.style.overflow = "auto";
 		this.view_container = document.createElement("DIV");
-		this.view_container.style.width = "100%";
-		this.view_container.style.height = "100%";
 		this.view_container.style.position = "relative";
 		this.view_container_container.appendChild(this.view_container);
 		container.appendChild(this.header);
@@ -47,11 +46,21 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			if (++ready_count == 2 && onready)
 				onready();
 		};
-		this.changeView(this.view_name, ready);
-		require("vertical_layout.js",function(){
-			new vertical_layout(container);
+		if (has_fixed_height)
+			require("vertical_layout.js",function(){
+				t.header.setAttribute("layout", "28");
+				t.view_container_container.setAttribute("layout", "fill");
+				t.view_container_container.style.overflow = "auto";
+				t.view_container.style.width = "100%";
+				t.view_container.style.height = "100%";
+				new vertical_layout(container);
+				t.changeView(t.view_name, ready);
+				ready();
+			});
+		else {
+			this.changeView(this.view_name, ready);
 			ready();
-		});
+		}
 		require("mac_tabs.js",function() {
 			t.view_tabs = new mac_tabs();
 			t.view_tabs.addItem("Day", "day");
@@ -727,13 +736,15 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		this.view.removeEvent(ev.uid);
 	};
 	
-	this.calendar_manager.on_event_added = function(ev) { t.addEvent(ev); };
-	this.calendar_manager.on_event_removed = function(ev) { t.removeEvent(ev); };
-	this.calendar_manager.on_event_updated = function(ev) {
-		t.view.removeEvent(ev);
-		t.view.addEvent(ev);
-	};
-	this._init();
+	require("calendar_objects.js",function() {
+		t.calendar_manager.on_event_added.add_listener(function(ev) { t.addEvent(ev); });
+		t.calendar_manager.on_event_removed.add_listener(function(ev) { t.removeEvent(ev); });
+		t.calendar_manager.on_event_updated.add_listener(function(ev) {
+			t.view.removeEvent(ev);
+			t.view.addEvent(ev);
+		});
+		t._init();
+	});
 }
 
 /**

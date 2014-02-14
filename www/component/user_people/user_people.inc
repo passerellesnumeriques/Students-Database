@@ -63,5 +63,11 @@ class user_people extends Component {
 		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->executeSingleValue();
 	}
 	
+	public function joinPeopleToUsers(&$q) {
+		$users_alias = $q->getTableAlias("Users");
+		$q->join($users_alias, "UserPeople", array("id"=>"user"));
+		PNApplication::$instance->people->joinPeople($q, "UserPeople","people");
+	}
+	
 }
 ?>

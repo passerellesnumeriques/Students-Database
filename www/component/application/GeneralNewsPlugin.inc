@@ -5,14 +5,14 @@ require_once("component/news/NewsPlugin.inc");
  */
 class GeneralNewsPlugin implements NewsPlugin {
 	
-	public function getSections() { return array(new ApplicationSection()); }
+	public function getSections() { return array(new ApplicationNewsSection()); }
 	
 }
 
 /**
  * General section of updates
  */
-class ApplicationSection implements NewsSection {
+class ApplicationNewsSection implements NewsSection {
 
 	public function getName() { return "application"; }
 	public function getDisplayName() { return "General"; }

@@ -1,16 +1,26 @@
 <?php
 require_once "component/selection/SelectionJSON.inc";
 class service_exam_export_subject extends Service{
-	public function get_required_rights(){return array();}
+	public function get_required_rights(){return array("see_exam_subject");}
 	public function input_documentation(){
+		?>
+		<ul>
+			<li><code>format</code> The format of the exported file:<ul><li>"excel2007"</li><li>"excel5"</li></ul></li>
+			<li><code>subject</code> The subject to export:<ul><li>The subject id</li><li>or the subject object</li></ul></li>
+			<li><code>clickers</code> Boolean. If true, the exported file format will match with SunVoteETS requirements</li>
+		</ul>
+		<?php
 	}
 	public function output_documentation(){
+		echo "No";
 	}
 	public function get_output_format($input){
 		return "application/vnd.ms-excel";
 	}
 	
-	public function documentation(){}//TODO
+	public function documentation(){
+		echo "Export an exam subject to the specified Excel format";
+	}
 	public function execute(&$component,$input){
 		$format = $input["format"];
 		$subject = null;

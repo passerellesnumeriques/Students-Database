@@ -11,7 +11,7 @@ class service_add_organization extends Service {
 
 		// validate the types
 		if (count($input["types_ids"]) > 0) {
-			$types = SQLQuery::create()->select("Organization_type")->whereIn("id", $input["types_ids"])->execute();
+			$types = SQLQuery::create()->select("OrganizationType")->whereIn("id", $input["types_ids"])->execute();
 			if (count($types) <> count($input["types_ids"])) {
 				PNApplication::error("Invalid organization types");
 				return;
@@ -34,7 +34,7 @@ class service_add_organization extends Service {
 		if (count($input["types_ids"]) > 0) {
 			foreach ($input["types_ids"] as $type) {
 				try {
-					SQLQuery::create()->insert("Organization_types", array("organization"=>$org_id,"type"=>$type));
+					SQLQuery::create()->insert("OrganizationTypes", array("organization"=>$org_id,"type"=>$type));
 				} catch (Exception $e) {
 					PNApplication::error($e);
 					// rollback

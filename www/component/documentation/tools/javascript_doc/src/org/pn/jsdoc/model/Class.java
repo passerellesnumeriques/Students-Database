@@ -59,8 +59,11 @@ public class Class extends Container {
 						String name = ((Name)vi.getTarget()).getIdentifier();
 						if (vi.getInitializer() == null)
 							variables.put(name, new ObjectClass(file, "undefined", vi, node));
-						else
-							variables.put(name, new ValueToEvaluate(file, vi.getInitializer(), node, vi, vi.getTarget(), vi.getInitializer()));
+						else {
+							ValueToEvaluate ve = new ValueToEvaluate(file, vi.getInitializer(), node, vi, vi.getTarget(), vi.getInitializer());
+							ve.addContext_FunctionParameters(constructor);
+							variables.put(name, ve);
+						}
 						LinkedList<String> names = getIdentifiers(vi.getInitializer());
 						if (names.isEmpty()) continue;
 						String s = names.get(0);

@@ -1,7 +1,7 @@
 <?php
 require_once("DataBaseSystem.inc");
 /** 
- * Single way to access to the database: create an SQL query, performs security checks, then execute the request 
+ * Single way to access to the database: creates an SQL query, performs security checks, then executes the request 
  */
 class SQLQuery {
 	
@@ -48,7 +48,7 @@ class SQLQuery {
  	 */
  	public static function &create() { $q = new SQLQuery(); return $q; }
 
- 	/** array Pre-selected sub models, automatically used with every new SQLQuery */
+ 	/** @var array Pre-selected sub models, automatically used with every new SQLQuery */
  	private static $preselected_submodels = array();
  	/** Pre-select sub models, which will be automatically selected in every new SQLQuery
  	 * @param string $key_table the table of the sub model
@@ -165,18 +165,57 @@ class SQLQuery {
 		$nb = func_num_args();
 		if ($nb > 1) {
 			for ($i = 0; i < $nb; $i++)
-				$this->tables[func_get_arg($i)] = null;
+				$this->selectTable(func_get_arg($i), null);
 		} else {
 			$o = func_get_arg(0);
 			if (is_string($o))
-				$this->tables[$o] = null;
+				$this->selectTable($o, null);
 			else foreach ($o as $table_name=>$alias)
 				if (is_string($table_name))
-					$this->tables[$table_name] = $alias;
+					$this->selectTable($table_name, $alias);
 				else
-					$this->tables[$alias] = null;
+					$this->selectTable($alias, null);
 		}
 		return $this;
+	}
+	
+	public function &selectTable($table_name, $table_alias = null) {
+		$this->tables[$table_name] = $table_alias;
+		if (PNApplication::$instance->current_domain == "Dev") $this->checkTableAccess($table_name);
+		return $this;
+	}
+	private function checkTableAccess($table_name) {
+		try { throw new Exception(); }
+		catch (Exception $e) {
+			$root = str_replace("\\","/",realpath("component"))."/";
+			foreach ($e->getTrace() as $trace) {
+				$file = str_replace("\\","/",realpath($trace["file"]));
+				if (substr($file,0,strlen($root)) <> $root) continue;
+				$component = substr($file,strlen($root));
+				$i = strpos($component, "/");
+				if ($i === FALSE) continue;
+				$component = substr($component,0,$i);
+				if ($component == "data_model" && (
+						substr($file,strlen($root),19) == "data_model/service/" ||
+						substr($file,strlen($root)) == "data_model/Model.inc" ||
+						substr($file,strlen($root)) == "data_model/DataDisplay.inc" ||
+						substr($file,strlen($root)) == "data_model/DataPath.inc" ||
+						substr($file,strlen($root)) == "data_model/DataBaseLock.inc"
+				)) break; // generic service of data model
+				require_once("component/data_model/Model.inc");
+				$decl = DataModel::get()->internalGetTable($table_name)->declaring_component;
+				if ($component <> $decl) {
+					$msg = "Select table ".$table_name." from component ".$component." (".substr($file,strlen($root)).":".$trace["line"]."), but this table is own by ".$decl;
+					$msg .="<br/>Full stack trace:<ul>";
+					foreach ($e->getTrace() as $t)
+						if (isset($t["file"]) && isset($t["line"]))
+							$msg .= "<li>".$t["file"]." line ".$t["line"]."</li>";
+					$msg .= "</ul>";
+					PNApplication::warning($msg);
+				}
+				break;
+			}
+		}
 	}
 
 	/**
@@ -420,6 +459,7 @@ class SQLQuery {
 		$join = array($table_from, $table_to, $fields_matching, $alias);
 		if ($join_on_values <> null) array_push($join, $join_on_values);
 		array_push($this->joins, $join);
+		if (PNApplication::$instance->current_domain == "Dev") $this->checkTableAccess($table_to);
 		return $this;
 	}
 	public function getJoinAlias($table_from, $table_to, $fields_matching) {
@@ -1138,11 +1178,11 @@ class SQLQuery {
 	 * Insert an entry into the given table.
 	 * @param string $table
 	 * @param array $fields_values associated array with column name => value
-	 * @param array|null $sub_models
+	 * @param number|null $lock_id
 	 * @return integer the ID of the inserted data of any
 	 * @throws Exception in case of error (security or database)
 	 */
-	public function insert($table, $fields_values) {
+	public function insert($table, $fields_values, $lock_id = null) {
 		require_once("component/data_model/Model.inc");
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
@@ -1158,9 +1198,16 @@ class SQLQuery {
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
 		$locker = null;
-		$lock = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, true);
-		if ($lock == null)
-			throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
+		if($lock_id <> null){
+			$column = null;
+			if (count($fields_values) == 1) { $column = array_keys($fields_values); $column = $column[0]; }
+			if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), null, $column))
+				throw new Exception("Access denied: invalid lock");
+		} else {
+			$lock = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, true);
+			if ($lock == null)
+				throw new Exception("Access denied: the table ".$t->getName()." is locked by ".$locker);
+		}
 		$columns = $t->internalGetColumns($this->sub_models);
 		// validate values
 		foreach ($fields_values as $field=>$value)
@@ -1212,9 +1259,10 @@ class SQLQuery {
 		$id = SQLQuery::db()->getInsertID();
 		// sub models
 		foreach ($t->_key_submodels as &$sm)
-			$sm->create_tables($id);
+			$sm->createTables($id);
 		// unlock the table
-		DataBaseLock::unlock($lock);
+		if($lock_id == null)
+			DataBaseLock::unlock($lock);
 		// events
 		$t->fireInsert($fields_values, $id, $t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null);
 		return $id;
@@ -1224,7 +1272,7 @@ class SQLQuery {
 	 * Insert multiple entries into the given table.
 	 * @param string $table
 	 * @param array $rows array of array of column name => value
-	 * @param array|null $sub_models
+	 * @param number|null $lock_id
 	 * @throws Exception in case of error (security or database)
 	 */
 	public function insertMultiple($table, $rows, $lock_id = null) {
@@ -1329,7 +1377,7 @@ class SQLQuery {
 		}
 		// sub models
 		foreach ($t->_key_submodels as &$sm)
-			$sm->create_tables($id);
+			$sm->createTables($id);
 		// unlock the table
 		DataBaseLock::unlock($lock);
 		// events
@@ -1450,7 +1498,7 @@ class SQLQuery {
 				
 			foreach ($sub_models_to_remove as $sm)
 				foreach ($sm[1] as $key)
-					$sm[0]->remove_tables($key);
+					$sm[0]->removeTables($key);
 			
 			// unlock
 			foreach ($locks as $lock) DataBaseLock::unlock($lock);
@@ -1634,7 +1682,7 @@ class SQLQuery {
 				$primary = $t->getPrimaryKey();
 				if ($primary <> null) {
 					// search keys for rows matching
-					$q = SQLQuery::create();
+					$q = SQLQuery::create()->bypassSecurity($this->bypass_security);
 					$table_alias = $q->generateTableAlias();
 					$q->select(array($t->getName()=>$table_alias));
 					if ($sm <> null)
@@ -1646,7 +1694,7 @@ class SQLQuery {
 				} else {
 					// no primary key, this must be done with a where
 					if (!$this->bypass_security && !$t->canRemoveAny()) {
-						$q = SQLQuery::create();
+						$q = SQLQuery::create()->bypassSecurity($this->bypass_security);
 						$table_alias = $q->generateTableAlias();
 						$q->select(array($t->getName()=>$table_alias));
 						if ($sm <> null)
@@ -1753,6 +1801,7 @@ class SQLQuery {
 		return SQLQuery::create()->selectSubModels($sub_models)->select($table)->where($t->getPrimaryKey()->name, $key)->executeSingleRow();
 	}
 
+	/** @var boolean indicates if we are currently in a transaction */
 	private static $transaction_started = false;
 	public static function startTransaction() {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->log("START TRANSACTION", 0, 0, 0);

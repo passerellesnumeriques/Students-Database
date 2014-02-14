@@ -12,7 +12,7 @@ datamodel = {
 	 * @param {DataDisplay} data_display the data
 	 * @param {Object} data_key key of the data
 	 * @param {Function} data_getter function allowing to get the current value of the data on the widget
-	 * @param {Functoin} data_setter function allowing to set the value of the data on the widget
+	 * @param {Function} data_setter function allowing to set the value of the data on the widget
 	 * @param {Function} register_listener function that needs to be called to register a listener to be called when the widget is changing the value of the data
 	 */
 	registerDataWidget: function(win, data_display, data_key, data_getter, data_setter, register_listener) {
@@ -31,7 +31,7 @@ datamodel = {
 	 * @param {String} column column name in the table
 	 * @param {Object} row_key key of the row in the table
 	 * @param {Function} data_getter function allowing to get the current value of the data on the widget
-	 * @param {Functoin} data_setter function allowing to set the value of the data on the widget
+	 * @param {Function} data_setter function allowing to set the value of the data on the widget
 	 * @param {Function} register_listener function that needs to be called to register a listener to be called when the widget is changing the value of the data
 	 */
 	registerCellWidget: function(win, table, column, row_key, data_getter, data_setter, register_listener) {

@@ -16,11 +16,10 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 		this.input = document.createElement('input');
 		this.input.type = 'text';
 		this.input.value = default_message;
-		this.input.style.fontStyle = "italic";
-		this.input.style.color = "#808080";
+		this.input.className = "informative_text";
 		this.input.default_message = true;
-		this.input.onfocus = function(){ if (t.input.default_message) { t.input.value = ""; t.input.style.fontStyle = ""; t.input.style.color = ""; t.input.default_message = false; } else t.input.select(); };
-		this.input.onblur = function(){ setTimeout(function(){if (t.input.value == "") { t.input.value = default_message; t.input.style.fontStyle = "italic"; t.input.style.color = "#808080"; t.input.default_message = true; }; t.menu.hide();},100); };
+		this.input.onfocus = function(){ if (t.input.default_message) { t.input.value = ""; t.input.className = ""; t.input.default_message = false; } else t.input.select(); };
+		this.input.onblur = function(){ setTimeout(function(){if (t.input.value == "") { t.input.value = default_message; t.input.className = "informative_text"; t.input.default_message = true; }; t.menu.hide();},100); };
 		container.appendChild(this.input);
 		
 		this.menu = new autocomplete_menu(this, onselectitem);

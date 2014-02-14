@@ -4,8 +4,8 @@ class page_staff extends Page {
 	public function get_required_rights() { return array("consult_staff_list"); }
 	
 	public function execute() {
-		$this->add_javascript("/static/widgets/page_header.js");
-		$this->onload("new page_header('staff_header');");
+		$this->add_javascript("/static/widgets/header_bar.js");
+		$this->onload("new header_bar('staff_header');");
 		$this->add_javascript("/static/widgets/vertical_layout.js");
 		$this->onload("new vertical_layout('staff_page');");
 		$this->add_javascript("/static/widgets/tree/tree.js");

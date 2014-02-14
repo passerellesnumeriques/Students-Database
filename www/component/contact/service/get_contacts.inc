@@ -1,4 +1,5 @@
 <?php
+//TODO doc
 require_once("component/contact/ContactJSON.inc");
 function get_contacts($table_contact, $join_contact_column, $table_address, $join_address_column, $join_value, $no_address = false, $no_contacts = false) {
 	if(!$no_contacts){	
@@ -12,7 +13,7 @@ function get_contacts($table_contact, $join_contact_column, $table_address, $joi
 	}
 	if(!$no_address){				
 		$q_addresses = SQLQuery::create()->select($table_address)
-						->join($table_address,"Postal_address",array("address"=>"id"))
+						->join($table_address,"PostalAddress",array("address"=>"id"))
 						->where($table_address.".".$join_address_column." = '".SQLQuery::escape($join_value)."'");
 		ContactJSON::PostalAddressSQL($q_addresses);							
 		$addresses = $q_addresses->execute();

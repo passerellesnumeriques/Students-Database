@@ -1,34 +1,37 @@
 <?php
-function getFigure ($db_array){
-	$total = 0;
-	if(isset($db_array[0])){
+if(!function_exists("getFigure")){
+	function getFigure ($db_array){
 		$total = 0;
-		foreach($db_array as $value){
-			$fig = intval($value);
-			$total = $total + $fig;
+		if(isset($db_array[0])){
+			$total = 0;
+			foreach($db_array as $value){
+				$fig = intval($value);
+				$total = $total + $fig;
+			}
 		}
+		return $total;
 	}
-	return $total;
 }
 class service_IS_status extends Service{
-	public function get_required_rights(){return array();}
+	public function get_required_rights(){return array("can_access_selection_data");}
 	public function input_documentation(){
+		echo "No";
 	}
 	public function output_documentation(){
-		"<ul><li>{boys_real:, ";
-		echo "boys_expected:, ";
-		echo "girls_real:, ";
-		echo "girls_expected:, ";
-		echo "partners:, ";
-		echo "number_IS:";
-		echo "separate_boys_girls:}</li></ul>";
-	}
-	public function documentation(){
-		?>
+		?>Returns a JSON object
 		<ul>
-			<li>This service returns statistics to be displayed on the selection main page <br/> so anyone who is allowed to access selection data must <br/> be allowed to get these data: to avoid any problem, each request is done using bypass_security</li>
+			<li><code>boys_real</code> {number} number of boys real</li>
+			<li><code>boys_expected</code> {number} number of boys expected</li>
+			<li><code>girls_real</code> {number} number of girls real</li>
+			<li><code>girls_expected</code> {number} number of girls expected</li>
+			<li><code>partners</code> {number} number of partners selected</li>
+			<li><code>number_IS</code> {number} number of boys real</li>
+			<li><code>separate_boys_girls</code> {boolean} true if the girls figures are separated from boys ones</li>
 		</ul>
 		<?php
+	}
+	public function documentation(){
+		echo "This service returns statistics to be displayed on the selection main page <br/> so anyone who is allowed to access selection data must <br/> be allowed to get these data: to avoid any problem, each request is done using bypass_security";
 	}
 	public function execute(&$component,$input){
 		$separate_boys_girls = PNApplication::$instance->selection->getOneConfigAttributeValue("separate_boys_girls_IS");
@@ -40,7 +43,7 @@ class service_IS_status extends Service{
 		
 		$all_boys_real = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->field("number_boys_real")
 					->executeSingleField();
 		
@@ -48,7 +51,7 @@ class service_IS_status extends Service{
 		
 		$all_boys_expected = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->field("number_boys_expected")
 					->executeSingleField();
 		
@@ -56,7 +59,7 @@ class service_IS_status extends Service{
 		
 		$all_girls_real = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->field("number_girls_real")
 					->executeSingleField();
 		
@@ -64,7 +67,7 @@ class service_IS_status extends Service{
 		
 		$all_girls_expected = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->field("number_girls_expected")
 					->executeSingleField();
 					
@@ -72,13 +75,13 @@ class service_IS_status extends Service{
 					
 		$partners = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session_partner")
+					->select("InformationSessionPartner")
 					->count()
 					->executeSingleValue();
 					
 		$number_IS = SQLQuery::create()
 					->bypassSecurity()
-					->select("Information_session")
+					->select("InformationSession")
 					->count()
 					->executeSingleValue();
 
