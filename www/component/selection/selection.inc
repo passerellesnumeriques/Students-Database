@@ -1265,12 +1265,13 @@ class selection extends Component {
 	 * in the exam topics. By this check we are sure that <br/><ul>
 	 * <li>No part has an implicite coefficient (case appears in several topics)</li>
 	 * <li>No part is useless (case never appear in any topic)</li>
+	 * <li>All the parts set in the topic are still in the ExamSubjectPart table. If no, the removePartsUnknownFromTopics method is called</li>
 	 * </ul>
 	 * @return null|string null if no error detected, else the error message to display
 	 */
 	public function validateAllTopicsForEligibilityRules(){
 		$res = true;
-		//get all the parts ids from ExamSubjectPartTable
+		//get all the parts ids from ExamSubjectPart table
 		$parts_from_exam_subject_parts = SQLQuery::create()
 			->bypassSecurity()
 			->select("ExamSubjectPart")
@@ -1285,6 +1286,19 @@ class selection extends Component {
 			->executeSingleField();
 		
 		$parts_in_no_topic = array();
+		$parts_unknown = array();
+		
+		//check that all the parts set in the topic are still in the ExamSubjectPart table
+		foreach ($parts_from_exam_part_topic as $p){
+			if(!in_array($p, $parts_from_exam_subject_parts)){
+				array_push($parts_unknown, $p);
+			}
+		}
+		if($parts_unknown <> null){
+			$parts_unknown_removed = $this->removePartsUnknownFromTopics($parts_unknown);
+			if(!$parts_unknown_removed)
+				$res = false;		
+		}
 		
 		//check that each part is at least in one topic
 		foreach ($parts_from_exam_subject_parts as $p){
@@ -1309,6 +1323,7 @@ class selection extends Component {
 			$error_message = "<ul>";
 			$error_multiple_entries = null;
 			$error_missing = null;
+			$error_unknown = null;
 			if(count($parts_in_no_topic) > 0){
 				$error_missing = "The following parts don't appear in any exam topic:<br/><ul>";
 				$missing_parts_data = SQLQuery::create()
@@ -1350,6 +1365,8 @@ class selection extends Component {
 				}
 				$error_multiple_entries .= "</ul>";
 			}
+			if($parts_unknown <> null && !$parts_unknown_removed)
+				$error_message .= "<li>Some parts are set in the topics but don't exist anymore into the database</li>";
 			if($error_missing <> null)
 				$error_message .= "<li>".$error_missing."</li>";
 			if($error_multiple_entries <> null)
@@ -1358,6 +1375,37 @@ class selection extends Component {
 			return $error_message;
 		}
 	}
+	
+	/**
+	 * Remove all the parts set in some topics but don't exist in the ExamSubjectPart (removed whereas table ExamTopicForEligibilityRule was locked for instance)
+	 * @param array $parts containing the part ids
+	 * @param unknown $parts
+	 * @return boolean false if any error occured
+	 */
+	private function removePartsUnknownFromTopics($parts){
+		try {
+			foreach ($parts as $p){
+			//Get the topic ids in which the part appears
+				$topics = SQLQuery::create()
+					->bypassSecurity()
+					->select("ExamTopicForEligibilityRule")
+					->field("ExamTopicForEligibilityRule","id")
+					->where("ExamTopicForEligibilityRule","exam_subject_part",$p)
+					->executeSingleField();
+				if($topics <> null){
+					foreach ($topics as $t){
+						SQLQuery::create()
+							->bypassSecurity()
+							->removeKeys("ExamTopicForEligibilityRule", array(array("exam_subject_part" => $p, "exam_topic_for_eligibility_rule" => $t)));
+					}
+				}
+			}
+		} catch (Exception $e){
+			PNApplication::error($e);
+			return false;
+		}
+		return true;
+	} 
 	
 	/**
 	 * @param {array} ids

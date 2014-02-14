@@ -1,3 +1,18 @@
+/**
+ * Create the page to manage any exam topic for eligibility rules
+ * @param {Object} topic JSON object
+ * @param {HTMLElement|String} container 
+ * @param {Boolean} can_add 
+ * @param {Boolean} can_edit
+ * @param {Boolean} can_remove
+ * @param {Object} other_topics from SelectionJSON#getJsonAllTopics method
+ * @param {Object} all_parts from SelectionJSON#getJsonAllParts method
+ * @param {Number|null} db_lock the databaselock id, if ever
+ * Otherwize this page handles the databaselock
+ * @param {Object} header a page_header object in which the buttons back, save, remove, edit / unedit will be managed 
+ * @param {Number} campaign_id the current campaign id because sum_model is required for the databaselock services
+ * @param {Boolean} read_only if true, the page is initialized in a read_only mode
+ */
 function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_edit, can_remove, other_topics, all_parts, db_lock, header, campaign_id, read_only){
 	var t = this;
 	if(typeof(container) == "string")
@@ -11,21 +26,15 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	t.global_can_remove = true;
 	t.db_lock = db_lock;
 	
-//	if(typeof save_button == "string")
-//		t.save_button = document.getElementById(save_button);
-//	else
-//		t.save_button = save_button;
-//	
-//	if(typeof remove_button == "string")
-//		t.remove_button = document.getElementById(remove_button);
-//	else
-//		t.remove_button = remove_button;
-	
 	if(typeof header == "string")
 		t.header = document.getElementById(header);
 	else
 		t.header = header;
 	
+	/**
+	 * Method called each time the user does anything on the page (input, clicking buttons...)
+	 * This way the displayed data is always up to date and matches with the data object content(topic, other_topics, all_parts)
+	 */
 	t.reset = function(){
 		container.removeChild(t.table);
 		delete t.table;
@@ -40,11 +49,20 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t._init();
 	};
 	
+	/**
+	 * Set the total score and parts to 0
+	 * Method called each time a part is added / deleted from the topic, since each time the page content is generated those attributes are increased
+	 */
 	t._resetTotalAttributes = function(){
 		t.total_score = 0;
 		t.total_parts = 0;
 	};
-		
+	
+	/**
+	 * Launch the page building<br/>
+	 * Get the last values of the global_rights and of the db_lock<br/>
+	 * The HTMLElements are added to the container by this method 
+	 */
 	t._init = function(){
 		//get the updated values of global rights and db_lock
 		t.global_can_edit = t.editable_manager.getCanEdit();
@@ -72,6 +90,14 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t._setCommonTableSize();
 	};
 	
+	/**
+	 * Set the back, save, and remove buttons:
+	 * <ul>
+	 * <li>The content of the buttons is set</li>
+	 * <li>The onclick function are set</li>
+	 * <li>The buttons are added to the menu according to the global rights</li>
+	 * </ul>
+	 */
 	t._setButtons = function(){
 		var back = document.createElement("div");
 		back.className = "button";
@@ -98,6 +124,10 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
+	/**
+	 * Update the text displayed in the header of the t.table object<br/>
+	 * This method is used to be sure that the score / number of parts displayed are ok
+	 */
 	t._updateTheadText = function(){
 		if(t.thead_text_node.parentNode == t.thead_text_container){
 			t.thead_text_container.removeChild(t.thead_text_node);
@@ -110,6 +140,13 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
+	/**
+	 * Method to called to set the layout of the t.table header
+	 * <ul>
+	 * <li>If t.global_can_edit, an input containing the topic name is created<br/> The properties of this input are set (oninput...)</li>
+	 * <li>Else a text node is created</li>
+	 * </ul>
+	 */
 	t._setTableHeader = function(){
 		var thead = document.createElement("thead");
 		var th = document.createElement("th");
@@ -123,7 +160,6 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			input.style.fontWeight = "bold";
 			input.style.fontSize = "large";
 			input.id = "topic_name_input";
-			new autoresize_input(input,7);
 			if(topic.name && topic.name.checkVisible())
 				input.value = topic.name.uniformFirstLetterCapitalized();
 			else {
@@ -149,7 +185,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 					this.style.fontStyle = "italic";
 				}
 			};
-//			t.thead_text_container.appendChild(input);
+			new autoresize_input(input,7);
 			var tr_input = document.createElement("tr");
 			var td_input = document.createElement("td");
 			td_input.colSpan = 2;
@@ -182,6 +218,21 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t.table.appendChild(thead);
 	};
 	
+	/**
+	 * Set the content of the t.table HTMLElement<br/>
+	 * For the Editable mode:<br/>
+	 * <ul>
+	 * <li>All the parts are grouped by exam subject</li>
+	 * <li>Beside each exam subject name is added a td element containing the full_subject attribute, represented by a check box<br/>
+	 * If the full_subject = true, all the parts of the subject are displayed on the following row, and they cannot be removed (otherwize not a full_subject topic...)<br/>
+	 * Else only the selected parts are displayed. In that case, when the user checks the full_subject check_box there are two cases:
+	 * 	<ul>
+	 * 		<li>no part of this exam subject is set in any other topic: all the missing parts are added</li>
+	 * 		<li>Else, an error is displayed and nothing is done (and check box is unchecked)</li>
+	 * 	</ul>
+	 * </li>
+	 * </ul>
+	 */
 	t._setTableBody = function(){
 		var tbody = document.createElement("tbody");
 		//display the selected parts
@@ -220,6 +271,10 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t.table.appendChild(tbody);
 	};
 	
+	/**
+	 * Set the content of the table displayed beside the main table<br/>
+	 * This table contains all the subject containing free parts and all the free parts, grouped by subject.<br/>
+	 */
 	t._setTableEdit = function(){
 		var tr_head = document.createElement("tr");
 		var th = document.createElement("th");
@@ -235,6 +290,13 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t._setAllPartsList(tbody);
 	};
 	
+	/**
+	 * Create a row for the given part, that can be removed
+	 * @param {Number} subject_index the subject index in topic object
+	 * @param {Number} part_index the part index in topic.subjects[subject_index].parts array
+	 * @param {HTMLElement} td where the manage_exam_subject_part_questions object shall be inserted
+	 * @param {HTMLElement} td2 where the remove button shall be inserted
+	 */
 	t._createPartRemovable = function(subject_index, part_index, td, td2){
 		new manage_exam_subject_part_questions(topic.subjects[subject_index].parts[part_index], td, false, false, false, false, false,false,0,true,null,true);
 		var remove_button = document.createElement("div");
@@ -248,11 +310,22 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		td2.appendChild(remove_button);
 	};
 	
+	/**
+	 * Create a row for the given part, that cannot be removed
+	 * @param {Number} subject_index the subject index in topic object
+	 * @param {Number} part_index the part index in topic.subjects[subject_index].parts array
+	 * @param {HTMLElement} td where the manage_exam_subject_part_questions object shall be inserted
+	 */
 	t._createPartNotRemovable = function(subject_index, part_index, td){
 		new manage_exam_subject_part_questions(topic.subjects[subject_index].parts[part_index], td, false, false, false, false, false,false,0,true,null,true);
 		td.colSpan = 2;
 	};
 	
+	/**
+	 * Create the row containing the exam subject name in the t.table element
+	 * @param {HTMLElement} tr the row to set
+	 * @param {Number} index the subject index in the topic object
+	 */
 	t._setSubjectHeader = function(tr, index){
 		var td = document.createElement("td");
 		var th = document.createElement("th");
@@ -300,7 +373,16 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	};
 	
 	/**
-	 * Set a list of all the exam subjects that can be set as full subject topic
+	 * Set a list of all the exam subjects that can be set as full subject topic<br/>
+	 * in the t.table_edit element<br/>
+	 * <ul>
+	 * <li>A row is added for each exam subject that is having free parts</li>
+	 * <li>Each row is ended by a td containing a check box<br/>
+	 * If checked, all the free parts (displayed under, cf _setAllPartsList method) are checked.<br/>
+	 * This exam subject is also added to the potentially_full_subject list. Since the user wanted to check all the parts from this subject, he maybe wants to<br/>
+	 * set the subject as a full subject topic. But we still have to check that all the parts of this subject are free
+	 * </li>
+	 * @param {HTMLElement} table where the list shall be inserted
 	 */
 	t._setAllFreeFullSubjectList = function(table){
 		var free_full_subjects_ids = [];
@@ -378,15 +460,18 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
-	t._updateAddFullSubjectVisibility = function(){
-		if(t.potential_full_subjects.length > 0)
-			t.add_full_subjects.style.visibility = "visible";
-		else
-			t.add_full_subjects.style.visibility = "hidden";
-	};
-	
+//	t._updateAddFullSubjectVisibility = function(){
+//		if(t.potential_full_subjects.length > 0)
+//			t.add_full_subjects.style.visibility = "visible";
+//		else
+//			t.add_full_subjects.style.visibility = "hidden";
+//	};
+//	
 	/**
-	 * Add all the free parts that the user can pick up
+	 * Add all the free parts that the user can pick up<br/>
+	 * The list as the same structure as the t.table one (parts grouped by subject) <br/>
+	 * The row is ended by a checkbox to enable the user to pick this part
+	 * @param {HTMLElement} table where the list shall be inserted
 	 */
 	t._setAllPartsList = function(table){
 		var free_parts = t._getAllFreeParts();
@@ -493,7 +578,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	};
 	
 	/**
-	 * Only keep the subjects ids that can really be set as full subjects
+	 * Only keep the subjects ids that can really be set as full subjects from pential_full_subjects list
 	 */
 	t._cleanPotentialFullSubjects = function(){
 		for(var i = 0; i < t.potential_full_subjects.length; i++){
@@ -502,6 +587,14 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
+	/**
+	 * Method called when the user wants to add the selected parts to the topic <br/>
+	 * All the selected parts are added<br/>
+	 * If add_potential_full_subjects, this method will also set the full_subject attribute at true for<br/>
+	 * all the potential_full_subject list<br/>
+	 * The reset method is called at the end of the process
+	 * @param {Boolean} add_potential_full_subjects
+	 */
 	t._addFreeParts = function(add_potential_full_subjects){
 		for(s in t.free_parts_to_add){
 			var subject_id = t._getSubjectIdFromName(s);
@@ -540,11 +633,20 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t.reset();
 	};
 	
+	/**
+	 * Reset the free_parts_to_add attribute
+	 */
 	t._resetFreePartsToAdd = function(){
 		delete t.free_parts_to_add;
 		t.free_parts_to_add = {};
 	};
 	
+	/**
+	 * Method called when the checkbox related to a free part is checked
+	 * The part id is added to the free_parts_to_add object
+	 * @param {String} subject_name the subject_name that contains this part
+	 * @param {String} part_id the id of the part to add
+	 */
 	t._oncheckFreePartsCheckBox = function(subject_name, part_id){
 		if(typeof(t.free_parts_to_add[subject_name]) == "undefined")
 			t.free_parts_to_add[subject_name] = [];
@@ -552,6 +654,12 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			t.free_parts_to_add[subject_name].push(part_id);
 	};
 	
+	/**
+	 * Method called when the checkbox related to a free part is unchecked
+	 * The part id is removed from the free_parts_to_add object
+	 * @param {String} subject_name the subject_name that contains this part
+	 * @param {String} part_id the id of the part to remove
+	 */
 	t._onuncheckFreePartsCheckBox = function(subject_name, part_id){
 		if(t.free_parts_to_add[subject_name].contains(part_id)){
 			t.free_parts_to_add[subject_name].remove(part_id);
@@ -561,6 +669,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			delete t.free_parts_to_add[subject_name];
 	};
 	
+	/**
+	 * Get the subject id from its name
+	 * @param {String} name the subject name
+	 * @returns {Number} id
+	 */
 	t._getSubjectIdFromName = function(name){
 		for(var i = 0; i < all_parts.length; i++){
 			if(all_parts[i].name.uniformFirstLetterCapitalized() == name.uniformFirstLetterCapitalized())
@@ -568,6 +681,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
+	/**
+	 * Get a subject name from its given id
+	 * @param {Number} id
+	 * @returns {String} name
+	 */
 	t._getSubjectNameFromId = function(id){
 		for(var i = 0; i < all_parts.length; i++){
 			if(all_parts[i].id == id)
@@ -575,6 +693,10 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
+	/**
+	 * Method called each time a free parts checkbox is checked into the t.table_edit table
+	 * It the add_free_parts object is not empty, the button add_free_parts is visible, else it is hidden
+	 */
 	t._updateAddPartsVisibility = function(){
 		if(getObjectSize(t.free_parts_to_add) == 0)
 			t.add_free_parts.style.visibility = "hidden";
@@ -600,6 +722,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return free_parts;
 	};
 	
+	/**
+	 * Get all the free parts and ids for the given subject id
+	 * @param {Number} subject_id
+	 * @returns {Array} free_parts containing objects {id: the part id, subject_name: the name of the realted exam subject} 
+	 */
 	t._getAllFreePartsIdsAndNamesForASubject = function(subject_id){
 		var index = t._findSubjectIndexInAllParts(subject_id);
 		var free_parts = [];
@@ -615,6 +742,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return free_parts;
 	};
 	
+	/**
+	 * Set the footer of the t.table element
+	 * A button is added. Clicking on this button will popup a window
+	 * that contains the list of all the parts already in the other topics
+	 */
 	t._setTableFooter = function(){
 		var text = "";
 		var first = true;
@@ -682,12 +814,12 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	};
 	
 	/**
+	 * Check that all the parts linked to the given subject are free (not in any topic)
 	 * @param {Integer} subject_id the exam subject id
-	 * @returns {String} null if no part of this exam appear in any other topic
+	 * @returns {Null|String} null if no part of this exam appear in any other topic
 	 * else error message to display
 	 */
 	t._cannotSetSubjectAsFullSubject = function(subject_id){
-//		var id = topic.subjects[subject_index].id;
 		var index_in_all_parts = t._findSubjectIndexInAllParts(subject_id);
 		var error = null;
 		var first = true;
@@ -705,6 +837,12 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return error;
 	};
 	
+	/**
+	 * Remove a part from the topic object<br/>
+	 * This method calls the table reseter at the end of the process
+	 * @param {Number} subject_index the exam subject index in the topic.subjects array
+	 * @param {Number} part_index the index of the part in the topic.subjects[subject_index].parts array
+	 */
 	t._removePart = function(subject_index, part_index){
 		// delete from topic object
 		topic.subjects[subject_index].parts.splice(part_index,1);
@@ -714,7 +852,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t.reset();
 	};
 		
-	/** @method _getPartsOrdered
+	/**
 	 * Return the parts ordered according to their index (can accept skipping indexes)
 	 * @param {Object} subject object
 	 * @returns {Array} parts indexes in order
@@ -746,6 +884,12 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return ordered_indexes;
 	};
 	
+	/**
+	 * Get the part index in a subject object from its index attribute
+	 * @param {Object} a JSON exam subject object
+	 * @param {Number} index_attribute
+	 * @returns {Null|Number} null if the index was not found, else the required index
+	 */
 	t._getPartIndexFromIndexAttribute = function(subject,index_attribute){
 		var index = null;
 		for(var i = 0; i < subject.parts.length; i++){
@@ -757,6 +901,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return index;
 	};
 	
+	/**
+	 * Check that the given part appears in any other topic
+	 * @param {Number} part_id
+	 * @return {Object} r with two attributes:<ul><li><code>res</code> {Boolean} true if the part is in any other topic</li><li><code>text</code> {String} the list of its occurences</li></ul>
+	 */
 	t._isPartInOtherTopics = function(part_id){
 		var res = false;
 		var text = null;
@@ -780,6 +929,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return r;
 	};
 	
+	/**
+	 * Check that the given part is already in the current topic
+	 * @param {Number} part_id
+	 * @returns {Boolean}
+	 */
 	t._isPartInCurrentTopic = function(part_id){
 		for(var i = 0; i < topic.subjects.length; i++){
 			for(var j = 0; j < topic.subjects[i].parts.length; j++){
@@ -791,6 +945,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return false;
 	};
 	
+	/**
+	 * Check that the given subject is already in the current topic
+	 * @param {Number} subject_id
+	 * @returns {Boolean}
+	 */
 	t._isSubjectInCurrentTopic = function(subject_id){
 		for(var i = 0; i < topic.subjects.length; i++){
 			if(topic.subjects[i].id == subject_id)
@@ -799,6 +958,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return false;
 	};
 	
+	/**
+	 * Get a subject index in the all_parts array
+	 * @param {Number} subject_id
+	 * @returns {Null|Number} null if the subject was not found, else the index
+	 */
 	t._findSubjectIndexInAllParts = function(subject_id){
 		var index = null;
 		for(var i = 0; i < all_parts.length; i++){
@@ -810,6 +974,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return index;
 	};
 	
+	/**
+	 * Get a subject index in the topic.subjects array
+	 * @param {Number} subject_id
+	 * @returns {Null|Number} null if the subject was not found, else the index
+	 */
 	t._findSubjectIndexInTopic = function(subject_id){
 		var index = null;
 		for(var i = 0; i < topic.subjects.length; i++){
@@ -821,6 +990,10 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		return index;
 	};
 	
+	/**
+	 * Method called when the save button is pressed<br/>
+	 * First this method checks the topic name. If the result is ok, save the topic data and update all the related data
+	 */
 	t._save = function(){
 		//check the name
 		var error_name = t._isNameOK();
@@ -859,6 +1032,10 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
+	/**
+	 * Check that the topic name has been set and is unique
+	 * @returns {Null|String} null if ok, else the error message to display
+	 */
 	t._isNameOK = function(){
 		if(topic.name == "New Topic" || topic.name == "" || topic.name == null)
 			return 'You must set a topic name';
@@ -871,6 +1048,10 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
+	/**
+	 * Popup a confirm dialog when remove topic button is pressed<br/>
+	 * If confirmed, the remove is performed and the user is redirected
+	 */
 	t._removeTopic = function(){
 		new confirm_dialog("Do you really want to remove this topic for eligibility rules?",function(res){
 			if(res){
@@ -886,18 +1067,10 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		});
 	};
 	
-//	t._manageButtons = function(){
-//		if(!can_edit)
-//			t.save_button.style.display = "none";
-//		else
-//			t.save_button.style.display = "";
-//		
-//		if(!can_remove || topic.id == -1 || topic.id == "-1"){
-//			t.remove_button.style.display = "none";
-//		} else
-//			t.remove_button.style.display = "";
-//	};
-	
+	/**
+	 * Set the style of the given table
+	 * @param {HTMLElement} table
+	 */
 	t._setStyle = function(table){
 		table.style.backgroundColor = "#FFFFFF";
 		table.style.marginLeft = "10px";
@@ -912,6 +1085,10 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		table.style.display = "inline-block";
 	};
 	
+	/**
+	 * Focus and select the text (if not empty) on the given input
+	 * @param {String} id the id of the input
+	 */
 	t._focusOnInput = function(id){
 		var input = document.getElementById(id);
 		if(input != null){
@@ -920,6 +1097,9 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		}
 	};
 	
+	/**
+	 * Set a common height to the t.table and t.table_input tables
+	 */
 	t._setCommonTableSize = function(){
 		var h1 = getHeight(t.table);
 		var h2 = getHeight(t.table_edit);
