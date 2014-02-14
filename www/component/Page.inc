@@ -133,7 +133,7 @@ abstract class Page {
 				$name = "column";
 			}
 		} else if ($row <> null){
-			$db_lock = DataBaseLock::lockRow($table->getSQLNameFor($sm), $row_key, $locked_by);
+			$db_lock = DataBaseLock::lockRow($table->getSQLNameFor($sm), $row, $locked_by);
 			$name = "row";
 		} else {
 			$db_lock = DataBaseLock::lockTable($table->getSQLNameFor($sm), $locked_by);
