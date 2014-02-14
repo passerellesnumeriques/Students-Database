@@ -46,10 +46,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	};
 		
 	t._init = function(){
-		//get the updated values of global rights
+		//get the updated values of global rights and db_lock
 		t.global_can_edit = t.editable_manager.getCanEdit();
 		t.global_can_add = t.editable_manager.getCanAdd();
 		t.global_can_remove = t.editable_manager.getCanRemove();
+		t.db_lock = t.editable_manager.getDBLock();
 		t._setButtons(); // manage the back, save and remove buttons
 		t.editable_manager.manageButtons(); // manage the edit and unedit buttons
 		t._setTableHeader();

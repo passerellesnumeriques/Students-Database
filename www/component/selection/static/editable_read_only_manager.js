@@ -22,6 +22,7 @@
  */
 function editable_read_only_manager(can_edit, can_add, can_remove, global_can_edit, global_can_remove, global_can_add, to_lock, table_lock, column_lock, row_key, sub_model, db_lock, lock_handler, reseter, data_reset_handler, can_go_uneditable_handler, page_header){
 	var t = this;
+	t.db_lock = db_lock;
 	
 	/**
 	 * Called after creating this object and saving
@@ -43,7 +44,7 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 				service.json("data_model","lock_"+lock,{table:table, column:column, row_key:row, sub_model:sm},function(res){
 					if(res){
 						databaselock.addLock(res.lock);
-						db_lock = res.lock;
+						t.db_lock = res.lock;
 						if(onlock)
 							onlock();
 					}
@@ -81,11 +82,11 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 				if(res){
 					databaselock.removeLock(t.db_lock);
 					t.db_lock = null;
+					data_reset_handler();
+					reseter();
 				}
+				unlock_screen(locker);
 			});
-		data_reset_handler();
-		reseter();
-		unlock_screen(locker);
 	};
 	
 	/**
@@ -94,9 +95,11 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 	 * Lock the row in database
 	 */
 	t._goEditableMode = function(){
+		var locker = lock_screen(); 
 		var onlock = function(){
 			t.setGlobalRights(false);
 			reseter();
+			unlock_screen(locker);
 		};
 		t.lockDatabase(lock_handler, to_lock, table_lock, sub_model, column_lock, row_key, onlock, onlock);
 	};
@@ -142,6 +145,10 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 	
 	t.getCanRemove = function(){
 		return global_can_remove;
+	};
+	
+	t.getDBLock = function(){
+		return t.db_lock;
 	};
 	
 	t.manageButtons = function(){
