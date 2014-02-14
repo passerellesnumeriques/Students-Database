@@ -87,12 +87,14 @@ class ContactPeoplePlugin implements PeoplePlugin {
 		$display = $table->getDisplayHandler("people");
 		foreach ($display->getDisplayableData() as $data) {
 			$value = getDataDisplayFromInput($display->category, $data->getDisplayName(), $input);
+			if ($value == null) continue;
 			$create_data["contacts"] = array_merge($create_data["contacts"], $value["contacts"]);
 		}
 		$table = DataModel::get()->getTable("PeopleAddress");
 		$display = $table->getDisplayHandler("people");
 		foreach ($display->getDisplayableData() as $data) {
 			$value = getDataDisplayFromInput($display->category, $data->getDisplayName(), $input);
+			if ($value == null) continue;
 			$create_data["addresses"] = array_merge($create_data["addresses"], $value["addresses"]);
 		}
 		$created_data = array();

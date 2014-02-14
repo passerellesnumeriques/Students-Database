@@ -196,39 +196,3 @@ button img {
 .validation_error {
 	border: 1px solid red;
 }
-
-
-.toolbar {
-    height: 30px;
-    background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
-    border-bottom: 1px solid #8080A0;
-}
-.toolbar .toolbar_title {
-	display: inline-block;
-	background-color: rgba(255,255,255,0.5);
-	border-right: 1px solid #d6e6ff;
-	padding: 5px 3px 2px 3px;
-	margin-right: 3px;
-	color: #4040A0;
-	font-weight: bold;
-	height: 23px;
-	vertical-align: top;
-}
-
-.toolbar_big {
-    height: 40px;
-    background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
-    border-bottom: 1px solid #8080A0;
-}
-.toolbar_big .toolbar_title {
-    display: inline-block;
-    background-color: rgba(255,255,255,0.5);
-    border-right: 1px solid #d6e6ff;
-    padding: 5px 3px 2px 3px;
-    margin-right: 3px;
-    color: #4040A0;
-    font-weight: bold;
-    font-size: 12pt;
-    height: 33px;
-    vertical-align: top;
-}

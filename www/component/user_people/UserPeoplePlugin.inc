@@ -32,7 +32,7 @@ class UserPeoplePlugin implements PeoplePlugin {
 		return PNApplication::$instance->user_management->has_right("manage_users", true);
 	}
 	public function getCreatePeoplePages($people_types) {}
-	public function createPeople($people_id, $people_types, $input, &$create_data) {}
+	public function createPeople($people_id, $people_types, $input, &$create_data) { return true; }
 	public function rollbackCreatePeople($people_id, $people_types, $input, &$create_data) {}
 	
 	public function getPeopleImportDataDisplay() { return array(); }

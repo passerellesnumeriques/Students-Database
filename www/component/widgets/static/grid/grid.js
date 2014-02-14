@@ -399,6 +399,13 @@ function grid(element) {
 		}
 		return selection;
 	};
+	t.isSelected = function(index) {
+		if (!t.selectable) return false;
+		var tr = t.table.childNodes[index];
+		var td = tr.childNodes[0];
+		var cb = td.childNodes[0];
+		return cb.checked;
+	};
 	t.selectByIndex = function(index, selected) {
 		if (!t.selectable) return;
 		var tr = t.table.childNodes[index];
@@ -444,7 +451,7 @@ function grid(element) {
 			cb.style.marginTop = "0px";
 			cb.style.marginBottom = "0px";
 			cb.style.verticalAlign = "middle";
-			cb.onchange = function() {
+			cb.onchange = function(ev) {
 				this.parentNode.parentNode.className = this.checked ? "selected" : "";
 				if (t.onrowselectionchange)
 					t.onrowselectionchange(tr.row_id, this.checked);

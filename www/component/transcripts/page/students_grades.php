@@ -92,8 +92,8 @@ class page_students_grades extends Page {
 		} else
 			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","people", $students_ids)->execute();
 		
-		$this->add_javascript("/static/widgets/page_header.js");
-		$this->onload("new page_header('grades_page_header', true);");
+		$this->add_javascript("/static/widgets/header_bar.js");
+		$this->onload("new header_bar('grades_page_header', 'small');");
 		$this->add_stylesheet("/static/transcripts/grades.css");
 		?>
 		<style type='text/css'>

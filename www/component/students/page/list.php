@@ -35,18 +35,100 @@ function build_filters() {
 	return filters;
 }
 
+var data_list_fields = [
+	'Personal Information.First Name',
+	'Personal Information.Last Name',
+	'Personal Information.Gender',
+	'Student.Batch',
+	'Student.Specialization',
+];
+if (url.params['period']) data_list_fields.push("Student.Class");
 var students_list = new data_list(
 	'list_container',
 	url.params['period'] || url.params['class'] ? 'StudentClass' : 'Student',
-	[
-		'Personal Information.First Name',
-		'Personal Information.Last Name',
-		'Personal Information.Gender',
-		'Student.Batch',
-		'Student.Specialization'
-	],
+	data_list_fields,
 	build_filters(),
 	function (list) {
+		var remove_button = document.createElement("DIV");
+		remove_button.className = "button";
+		remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove selected students";
+		remove_button.onclick = function() {
+			var sel = list.grid.getSelectionByRowId();
+			if (!sel || sel.length == 0) return;
+			confirm_dialog("Are you sure you want to remove those students ?<br/><br/><img src='"+theme.icons_16.warning+"' style='vertical-align:bottom;'/> All information related to those students will be removed from the database!<br/><br/>If a student is out of PN, please use the 'Exclude student' functionality on his/her profile page, instead of removing all its information from the database.", function(yes) {
+				if (yes) {
+					var lock_div = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Blocking students from being modified by another user...");
+					// get people ids
+					var ids = [];
+					for (var i = 0; i < sel.length; ++i)
+						ids.push(list.getTableKeyForRow("People", sel[i]));
+					// first lock all those students
+					service.json("data_model","lock_rows",{table:"People",row_keys:ids},function(locks_people) {
+						if (!locks_people) { unlock_screen(lock_div); return; }
+						for (var i = 0; i < locks_people.length; ++i)
+							databaselock.addLock(locks_people[i]);
+						service.json("data_model","lock_rows",{table:"Student",row_keys:ids},function(locks_student) {
+							if (!locks_student) { 
+								for (var i = 0; i < locks_people.length; ++i)
+									databaselock.removeLock(locks_people[i]);
+								unlock_screen(lock_div); 
+								return; 
+							}
+							// ask new confirmation
+							service.json("data_model","get_data",{table:"People",data:["First Name","Last Name"],keys:ids}, function(peoples) {
+								var msg = "The following students are going to be removed:<ul>";
+								for (var i = 0; i < peoples.length; ++i)
+									msg += "<li>"+peoples[i][0]+" "+peoples[i][1]+"</li>";
+								msg += "</ul>";
+								msg += "<br/>Please confirm it is correct.";
+								unlock_screen(lock_div);
+								confirm_dialog(msg, function(yes) {
+									if (!yes) {
+										service.json("data_model", "unlock", {locks:locks_people}, function(res){});
+										service.json("data_model", "unlock", {locks:locks_student}, function(res){});
+										for (var i = 0; i < locks_people.length; ++i)
+											databaselock.removeLock(locks_people[i]);
+										for (var i = 0; i < locks_student.length; ++i)
+											databaselock.removeLock(locks_student[i]);
+										return;
+									}
+									lock_div = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing students...");
+									// removing students
+									var next = function(pos) {
+										set_lock_screen_content(lock_div, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing students... ("+(pos+1)+"/"+ids.length+")");
+										service.json("data_model", "remove_row", {table:"People",row_key:ids[pos]}, function(res) {
+											if (pos < ids.length-1) {
+												next(pos+1);
+												return;
+											}
+											set_lock_screen_content(lock_div, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Finalizing the operation...");
+											service.json("data_model", "unlock", {locks:locks_people}, function(res){});
+											service.json("data_model", "unlock", {locks:locks_student}, function(res){});
+											for (var i = 0; i < locks_people.length; ++i)
+												databaselock.removeLock(locks_people[i]);
+											for (var i = 0; i < locks_student.length; ++i)
+												databaselock.removeLock(locks_student[i]);
+											unlock_screen(lock_div);
+											list.reloadData();
+										});
+									};
+									next(0);
+								});
+							});
+						});
+					});
+				}
+			});
+		};
+		list.grid.setSelectable(true);
+		list.grid.onselect = function(indexes, rows_ids) {
+			if (indexes.length == 0) {
+				if (remove_button.parentNode)
+					remove_button.parentNode.removeChild(remove_button);
+			} else {
+				list.addHeader(remove_button);
+			}
+		};
 		if (url.params['batches']) {
 			var batches = url.params['batches'].split(',');
 			if (batches.length == 1) {
@@ -56,7 +138,7 @@ var students_list = new data_list(
 				import_students.onclick = function() {
 					postData('/dynamic/students/page/import_students',{
 						batch:batches[0],
-						redirect: "/dynamic/training_education/page/batches_classes"
+						redirect: location.href
 					});
 				};
 				students_list.addHeader(import_students);
@@ -80,20 +162,7 @@ var students_list = new data_list(
 			assign.className = "button";
 			assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+(url.params['class'] ? "class" : "classes");
 			assign.onclick = function() {
-				require("popup_window.js",function() {
-					var p = new popup_window("Assign Students", "/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
-					var f = p.setContentFrame("/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period']));
-					p.addOkCancelButtons(function() {
-						p.freeze("Saving class assignment...");
-						getIFrameWindow(f).save(function(msg){
-							p.set_freeze_content(msg);
-						},function(){
-							p.close();
-							students_list.reloadData();
-						});
-					});
-					p.show();
-				});
+				location.href = "/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period']);
 			};
 			students_list.addHeader(assign);
 		}

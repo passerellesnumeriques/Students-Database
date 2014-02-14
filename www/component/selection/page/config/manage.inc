@@ -42,7 +42,7 @@ function manage_config(&$page,$container_id,$header_id){
 	<script type='text/javascript'>
 	function <?php echo $fct_name; ?>(){
 		var t = this;
-		require([["typed_field.js","field_date.js"],"popup_window.js","page_header.js"],function(){
+		require([["typed_field.js","field_date.js"],"popup_window.js","header_bar.js"],function(){
 			if(typeof(container) == "object"){
 				t._init();
 				t._setPageHeader();
@@ -178,38 +178,14 @@ function manage_config(&$page,$container_id,$header_id){
 		 * Set the page header buttons
 		 */
 		t._setPageHeader = function(){
-			t.header = new page_header(t.header_cont,true);
-			t.header.setTitle("<img src='"+theme.icons_16.config+"' /> Selection Campaign Configuration");
-			var back = document.createElement("div");
-			back.className = "button";
-			back.innerHTML = "<img src = '"+theme.icons_16.back+"'/> Back to selection";
-			back.onclick = function(){
+			t.header = new header_bar(t.header_cont,'small');
+			t.header.setTitle(theme.icons_16.config, "Selection Campaign Configuration");
+			t.header.addMenuButton(theme.icons_16.back, "Back to selection", function(){
 				location.assign("/dynamic/selection/page/selection_main_page");
-			};
-			t.header.addMenuItem(back);
-			
-			var remove = document.createElement("div");
-			var rename = document.createElement("div");
-			remove.innerHTML = "<img src='"+theme.icons_16.remove+"' /> Remove campaign";
-			remove.onmouseover = function(){this.innerHTML = "<img src='"+theme.icons_16.remove_black+"' /> Remove campaign"};
-			remove.onmouseout = function(){this.innerHTML = "<img src='"+theme.icons_16.remove+"' /> Remove campaign"};
-			remove.className = "button";
-			remove.onclick = t._dialogRemoveCampaign;
-			
-			rename.innerHTML = "Rename campaign";
-			rename.className = "button";
-			rename.onclick = t._dialogRename;
-			
-			var save = document.createElement("div");
-			save.innerHTML = "<img src='"+theme.icons_16.save+"' /> Save";
-			save.style.fontWeight = "bold";
-			save.className = "button";
-			save.onclick = t._save;
-			
-			t.header.addMenuItem(save);
-			t.header.addMenuItem(rename);
-			t.header.addMenuItem(remove);
-			
+			});
+			t.header.addMenuButton(theme.icons_16.save, "Save", t._save);
+			t.header.addMenuButton(theme.icons_16.edit, "Rename campaign", t._dialogRename);
+			t.header.addMenuButton(theme.icons_16.remove, "Remove campaign", t._dialogRemoveCampaign);
 		};
 	
 		/**

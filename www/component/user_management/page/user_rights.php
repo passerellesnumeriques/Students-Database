@@ -34,8 +34,8 @@ foreach ($roles as $role)
 		break;
 	}
 
-$this->add_javascript("/static/widgets/page_header.js");
-$this->onload("new page_header('user_rights_header');");
+$this->add_javascript("/static/widgets/header_bar.js");
+$this->onload("new header_bar('user_rights_header');");
 
 if ($can_edit)
 	DataBaseLock::generateScript($lock_id);

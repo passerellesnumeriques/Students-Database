@@ -9,6 +9,15 @@ class geography extends Component {
 		);
 	}
 	
+	public function joinGeographicArea(&$q, $table_from, $table_from_foreign_key, $force_join = true) {
+		if (!$force_join) {
+			$area_alias = $q->getTableAlias("GeographicArea");
+			if ($area_alias <> null) return;
+		}
+		$area_alias = $q->generateTableAlias();
+		$q->join($table_from, "GeographicArea", array($table_from_foreign_key=>"id"), $area_alias);
+	}
+	
 	/**
 	 * Get the text to display from an area id, based on the area name and its parents names<br/>
 	 * For instance, the area_text for Cebu City from Cebu province is "Cebu City, Cebu"

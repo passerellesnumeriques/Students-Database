@@ -76,8 +76,6 @@ class PNApplication {
 		foreach ($e->getTrace() as $trace)
 			if (isset($trace["file"]) && isset($trace["line"]))
 				$message .= "<li>".$trace["file"]." line ".$trace["line"]."</li>";
-			else
-				$message .= "<li>".$trace."</li>";
 		$message .= "</ul>";
 		array_push(PNApplication::$errors, $message);
 	}

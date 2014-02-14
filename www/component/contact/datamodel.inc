@@ -343,37 +343,15 @@ $model->addTable("PeopleContact")
 	->addForeignKey("contact","Contact",true,true,true,false)
 	->addForeignKey("people","People",true,false,true,false)
 	->addReadFilter(function(&$q, $table_alias) {
-		$table = Datamodel::get()->getTable("People");
-		$people_alias = $q->getTableAlias("People");
-		if ($people_alias == null) {
-			$people_alias = $q->generateTableAlias();
-			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
-		}
-		$table->filterReadAccess($q, $people_alias);
+		PNApplication::$instance->people->filterReadAccess($q, $table_alias, "people");
 	})
 	->addRemoveFilter(function(&$q,$table_alias,&$locks){
-		$table = Datamodel::get()->getTable("People");
-		$people_alias = $q->getTableAlias("People");
-		if ($people_alias == null) {
-			$people_alias = $q->generateTableAlias();
-			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
-		}
-		$table->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
+		PNApplication::$instance->people->prepareSelectToDetermineRemoveAccess($q, $table_alias, "people", $locks);
 	},function($rows){
-		$table = Datamodel::get()->getTable("People");
-		return $table->filterRemoveAccess($rows);
+		return PNApplication::$instance->people->filterRemoveAccess($rows);
 	})
 	->addInsertFilter(function($values){
-		$q = SQLQuery::create();
-		$table_alias = $q->generateTableAlias();
-		$q->select(array("People"=>$table_alias));
-		$q->whereValue($table_alias, "id", $values["people"]);
-		$table = DataModel::get()->getTable("People");
-		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
-		$rows = $q->execute();
-		$rows = $table->filterWriteAccess($rows);
-		if (count($rows) == 0) return false;
-		return true;
+		return PNApplication::$instance->people->canModify($values["people"]);
 	})
 	->setDisplayHandler("people", new ContactDisplayHandler("people"))
 	;
@@ -488,37 +466,15 @@ $model->addTable("PeopleAddress")
 	->addForeignKey("people","People",true,false,true,false)
 	->setDisplayHandler("people", new AddressDisplayHandler("people"))
 	->addReadFilter(function(&$q, $table_alias) {
-		$table = Datamodel::get()->getTable("People");
-		$people_alias = $q->getTableAlias("People");
-		if ($people_alias == null) {
-			$people_alias = $q->generateTableAlias();
-			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
-		}
-		$table->filterReadAccess($q, $people_alias);
+		PNApplication::$instance->people->filterReadAccess($q, $table_alias, "people");
 	})
-	->addRemoveFilter(function(&$q,$table_alias, &$locks){
-		$table = Datamodel::get()->getTable("People");
-		$people_alias = $q->getTableAlias("People");
-		if ($people_alias == null) {
-			$people_alias = $q->generateTableAlias();
-			$q->join($table_alias, "People", array("people"=>"id"), $people_alias);
-		}
-		$table->prepareSelectToDetermineRemoveAccess($q, $people_alias, $locks);
+	->addRemoveFilter(function(&$q,$table_alias,&$locks){
+		PNApplication::$instance->people->prepareSelectToDetermineRemoveAccess($q, $table_alias, "people", $locks);
 	},function($rows){
-		$table = Datamodel::get()->getTable("People");
-		return $table->filterRemoveAccess($rows);
+		return PNApplication::$instance->people->filterRemoveAccess($rows);
 	})
 	->addInsertFilter(function($values){
-		$q = SQLQuery::create();
-		$table_alias = $q->generateTableAlias();
-		$q->select(array("People"=>$table_alias));
-		$q->whereValue($table_alias, "id", $values["people"]);
-		$table = DataModel::get()->getTable("People");
-		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
-		$rows = $q->execute();
-		$rows = $table->filterWriteAccess($rows);
-		if (count($rows) == 0) return false;
-		return true;
+		return PNApplication::$instance->people->canModify($values["people"]);
 	})
 	;
 

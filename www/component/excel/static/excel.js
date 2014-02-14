@@ -183,6 +183,10 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 		if (!t.cursor) return null;
 		return {start_row:t.cursor.row_start, start_col:t.cursor.col_start, end_row:t.cursor.row_end, end_col:t.cursor.col_end};
 	};
+	this.setSelection = function(start_col, start_row, end_col, end_row) {
+		if (!t.cursor) t.cursor = new ExcelSheetCursor(this);
+		t.cursor.setRange(start_col, start_row, end_col, end_row);
+	};
 	this.make_visible = function(col, row) {
 		if (col >= this.cells.length || row >= this.cells[col].length) return;
 		var cell = this.cells[col][row];

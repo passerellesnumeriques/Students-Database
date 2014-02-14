@@ -19,7 +19,7 @@ class page_news extends Page {
 		new news('news_container',sections,exclude,function(n){
 		},function(starts){
 		});
-		new page_header('header',true).setTitle("<img src='/static/news/news.png'/> "+(title ? title : ""));
+		new page_header('header','small').setTitle("/static/news/news.png", title ? title : "");
 		new vertical_layout('page');
 		</script>
 		<?php 

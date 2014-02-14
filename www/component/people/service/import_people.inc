@@ -7,6 +7,7 @@ function getDataDisplayFromInput($category, $name, $input) {
 }
 
 function import_people($input) {
+	// TODO transaction
 	require_once("component/data_model/Model.inc");
 	try {
 		$table = DataModel::get()->getTable("People");

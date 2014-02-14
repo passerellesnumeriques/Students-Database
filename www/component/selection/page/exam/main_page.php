@@ -7,10 +7,10 @@ class page_exam_main_page extends selection_page {
 	public function get_required_rights() {return array("see_exam_subject");}
 	
 	public function execute_selection_page(&$page) {
-		$page->add_javascript("/static/widgets/page_header.js");
-		$page->add_javascript("/static/widgets/vertical_layout.js");
+		$page->require_javascript("header_bar.js");
+		$page->require_javascript("vertical_layout.js");
 		$page->onload("new vertical_layout('container');");
-		$page->onload("new page_header('page_header',true);");
+		$page->onload("new header_bar('page_header','small');");
 		
 		//Rights based on the steps
 		$can_see_subject = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
@@ -47,7 +47,7 @@ class page_exam_main_page extends selection_page {
 				var topics_valid = <?php echo json_encode(PNApplication::$instance->selection->validateAllTopicsForEligibilityRules());?>;
 				new exam_subject_main_page("exam_content",can_see_subject,can_manage_subject,all_exams);
 				new eligibility_rules_main_page("eligibility_rules_content",can_see_subject,can_manage_subject,all_topics,topics_valid);
-			});
+				});
 		</script>
 		<?php
 	}

@@ -11,6 +11,10 @@ class page_assign_classes extends Page {
 		} else {
 			$classes = SQLQuery::create()->select("AcademicClass")->where("period", $period_id)->execute();
 		}
+		if (count($classes) == 0) {
+			echo "Please create classes first, before to assign students";
+			return;
+		}
 		$period = SQLQuery::create()->select("AcademicPeriod")->where("id", $period_id)->executeSingleRow();
 		$specializations = array();
 		foreach ($classes as $cl) if ($cl["specialization"] <> null && !in_array($cl["specialization"], $specializations)) array_push($specializations, $cl["specialization"]);
@@ -37,7 +41,7 @@ class page_assign_classes extends Page {
 		$students_period = SQLQuery::create()
 			->select("Student")
 			->whereValue("Student", "batch", $period["batch"])
-			->where("Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start_date"]."'")
+			->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start_date"]."')")
 			->join("Student", "People", array("people"=>"id"))
 			->field("Student", "specialization", "specialization")
 			->field("Student", "people", "people")
@@ -45,8 +49,21 @@ class page_assign_classes extends Page {
 			->field("People", "last_name", "last_name")
 			->execute();
 		
+		$this->require_javascript("header_bar.js");
+		$this->onload("new header_bar('page_header','small');");
+		theme::css($this, "wizard.css");
+		$this->require_javascript("vertical_layout.js");
+		$this->onload("new vertical_layout('page_container');");
+		?>
+		<div id='page_container' style='width:100%;height:100%;'>
+			<div id='page_header' 
+				icon='<?php echo theme::make_icon("/static/students/student_16.png",theme::$icons_10["edit"]);?>' 
+				title="Assignment of students to <?php echo (isset($_GET["class"]) ? "class ".$classes[0]["name"] : "classes of period ".$period["name"]);?>"
+			>
+			</div>
+			<div layout='fill' style='overflow:auto'>
+		<?php 
 		echo "<table class='all_borders' style='white-space:nowrap'>";
-		echo "<tr><th colspan=3>Assignment of students to ".(isset($_GET["class"]) ? "class ".$classes[0]["name"] : "classes of period ".$period["name"])."</th></tr>";
 		foreach ($specializations as &$spe) {
 			if ($spe["id"] <> 0)
 				echo "<tr><th colspan=3>Specialization ".$spe["name"]."</th></tr>";
@@ -57,7 +74,7 @@ class page_assign_classes extends Page {
 			echo "</tr>";
 			echo "<tr>";
 			echo "<td id='non_assigned_".$spe["id"]."' rowspan=".((count($spe["classes"])*2)-1)." valign=top></td>";
-			echo "<td valign='middle'>";
+			echo "<td valign='top'>";
 				echo "<div class='button' onclick='assign(".$spe["id"].",".$spe["classes"][0]["id"].");' title='Assign'><img src='".theme::$icons_16["right"]."'/></div>";
 				echo "<br/>";
 				echo "<div class='button' onclick='unassign(".$spe["id"].",".$spe["classes"][0]["id"].");' title='Assign'><img src='".theme::$icons_16["left"]."'/></div>";
@@ -65,12 +82,12 @@ class page_assign_classes extends Page {
 			echo "<td id='assigned_".$spe["id"]."_".$spe["classes"][0]["id"]."' valign=top></td>";
 			echo "</tr>";
 			for ($i = 1; $i < count($spe["classes"]); $i++) {
-				echo "<tr>";
+				echo "<tr style='height:16px'>";
 				echo "<th></th>";
 				echo "<th>Class ".$spe["classes"][$i]["name"]."</th>";
 				echo "</tr>";
 				echo "<tr>";
-				echo "<td valign='middle'>";
+				echo "<td valign='top'>";
 					echo "<div class='button' onclick='assign(".$spe["id"].",".$spe["classes"][$i]["id"].");' title='Assign'><img src='".theme::$icons_16["right"]."'/></div>";
 					echo "<br/>";
 					echo "<div class='button' onclick='unassign(".$spe["id"].",".$spe["classes"][$i]["id"].");' title='Assign'><img src='".theme::$icons_16["left"]."'/></div>";
@@ -81,6 +98,16 @@ class page_assign_classes extends Page {
 		}
 		echo "</table>";
 		?>
+			</div>
+			<div class='wizard_buttons' onclick="save();">
+				<div class='button'>
+					<img src='<?php echo theme::$icons_16["save"];?>'/> Save
+				</div>
+				<div class='button' onclick="history.back();">
+					<img src='<?php echo theme::$icons_16["cancel"];?>'/> Cancel
+				</div>
+			</div>
+		</div>
 		<script type='text/javascript'>
 		var specializations = [<?php
 		$first_spe = true;
@@ -173,9 +200,10 @@ class page_assign_classes extends Page {
 				if (p) p.resize();
 			}
 		}
-		function save(onprogress,ondone) {
+		function save() {
+			var lock = lock_screen(null, "Saving class assignments...");
 			var next=function(i,j) {
-				if (i == specializations.length) { ondone(); return; }
+				if (i == specializations.length) { history.back(); return; }
 				if (j == specializations[i].students.length) { next(i+1,0); return; }
 				var s = specializations[i].students[j];
 				if (s.original_class == s.assigned_class) { next(i,j+1); return; }
@@ -183,12 +211,12 @@ class page_assign_classes extends Page {
 					var cl = null;
 					for (var k = 0; k < classes.length; ++k)
 						if (classes[k].id == s.original_class) { cl = classes[k]; break; }
-					onprogress("Unassign "+s.first_name+" "+s.last_name+" from class "+cl.name);
+					set_lock_screen_content(lock,"Unassign "+s.first_name+" "+s.last_name+" from class "+cl.name);
 				} else {
 					var cl = null;
 					for (var k = 0; k < classes.length; ++k)
 						if (classes[k].id == s.assigned_class) { cl = classes[k]; break; }
-					onprogress("Assign "+s.first_name+" "+s.last_name+" to class "+cl.name);
+					set_lock_screen_content(lock,"Assign "+s.first_name+" "+s.last_name+" to class "+cl.name);
 				}
 				service.json("students","assign_class",{student:s.people,clas:s.assigned_class,period:<?php echo $period_id;?>},function(res){
 					next(i,j+1);

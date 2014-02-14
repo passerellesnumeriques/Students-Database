@@ -18,7 +18,7 @@ function TreeItem(cells, expanded) {
 		}
 	};
 	this.insertItem = function(item, index) {
-		if (index >= this.items.length) {
+		if (index >= this.children.length) {
 			this.addItem(item);
 			return;
 		}
@@ -217,21 +217,26 @@ function tree(container) {
 	this._refresh_heads_ = function() {
 		for (var i = 0; i < this.items.length; ++i)
 			this._clean_heads(this.items[i]);
-		for (var i = 0; i < this.items.length; ++i)
-			this._compute_heights(this.items[i]);
-		for (var i = 0; i < this.items.length; ++i)
-			this._refresh_head(this.items[i], [], i > 0, i < this.items.length-1);
+		var t=this;
+		setTimeout(function() {
+			for (var i = 0; i < t.items.length; ++i)
+				t._compute_heights(t.items[i]);
+			for (var i = 0; i < t.items.length; ++i)
+				t._refresh_head(t.items[i], [], i > 0, i < t.items.length-1);
+		},1);
 	};
 	this._clean_heads = function(item) {
 		item.head.style.height = "";
 		while (item.head.childNodes.length > 0) item.head.removeChild(item.head.childNodes[0]);
-		for (var i = 0; i < item.children.length; ++i)
-			this._clean_heads(item.children[i]);
+		if (item.expanded)
+			for (var i = 0; i < item.children.length; ++i)
+				this._clean_heads(item.children[i]);
 	};
 	this._compute_heights = function(item) {
 		item.head.computed_height = item.head.parentNode.clientHeight;
-		for (var i = 0; i < item.children.length; ++i)
-			this._compute_heights(item.children[i]);
+		if (item.expanded)
+			for (var i = 0; i < item.children.length; ++i)
+				this._compute_heights(item.children[i]);
 	};
 	this._refresh_head = function(item, parents, has_before, has_after) {
 		var doit = true;

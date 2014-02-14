@@ -6,7 +6,7 @@ class page_tree extends Page {
 	public function execute() {
 		$this->require_javascript("vertical_layout.js");
 		$this->require_javascript("splitter_vertical.js");
-		$this->require_javascript("page_header.js");
+		$this->require_javascript("header_bar.js");
 		$this->require_javascript("tree.js");
 		$this->require_javascript("tree_functionalities.js");
 		theme::css($this, "information_bar.css");
@@ -120,12 +120,16 @@ TreeNode.prototype = {
 		// refresh frame
 		var frame = document.getElementById('students_page');
 		var url = new URL(getIFrameWindow(frame).location.href);
+		var found = false;
 		for (var i = 0; i < menu_items.length; ++i) {
 			if (menu_items[i].page == url.path) {
 				getIFrameWindow(frame).location.href = menu_items[i].page+"?"+menu_items[i].params;
+				found = true;
 				break;
 			}
 		}
+		if (!found) // go to first item (students list)
+			getIFrameWindow(frame).location.href = menu_items[0].page+"?"+menu_items[0].params;
 	},
 	_select: function(){},
 	findTag: function(tag) {
@@ -161,7 +165,7 @@ function AllStudents(root) {
 		var nb_batches = 0;
 		for (var i = 0; i < this.children.length; ++i)
 			nb_batches += this.children[i].children.length;
-		document.getElementById('page_header_content').innerHTML = nb_batches+" batch(s)";
+		document.getElementById('page_header_content').innerHTML = nb_batches+" batch(es)";
 		setMenuParams("list", "");
 		setMenuParams("pictures", "");
 		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students'}]")); 
@@ -182,7 +186,7 @@ function CurrentStudents(all) {
 	this.element.style.fontWeight = "bold";
 	this._select = function() {
 		document.getElementById('page_header_title').innerHTML = "<img src='/static/curriculum/batch_32.png'/> Current Students";
-		document.getElementById('page_header_content').innerHTML = this.children.length+" batch(s)";
+		document.getElementById('page_header_content').innerHTML = this.children.length+" batch(es)";
 		var batches = "";
 		var tags = "";
 		for (var i = 0; i < this.children.length; ++i) {
@@ -213,7 +217,7 @@ function Alumni(all) {
 	this.element.style.fontWeight = "bold";
 	this._select = function() {
 		document.getElementById('page_header_title').innerHTML = "<img src='/static/curriculum/batch_32.png'/> Alumni";
-		document.getElementById('page_header_content').innerHTML = this.children.length+" batch(s)";
+		document.getElementById('page_header_content').innerHTML = this.children.length+" batch(es)";
 		var batches = "";
 		var tags = [];
 		for (var i = 0; i < this.children.length; ++i) {

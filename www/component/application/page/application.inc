@@ -7,19 +7,28 @@ $this->require_javascript("calendar.js");
 <script type='text/javascript'>
 window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
 
-if (!window.top.calendar_manager) {
-	window.top.calendar_manager = new CalendarManager();
-	window.top.CalendarsProviders.get(function(provider) {
-		for (var i = 0; i < provider.calendars.length; ++i)
-			window.top.calendar_manager.addCalendar(provider.calendars[i]);
-		provider.on_calendar_added.add_listener(function(cal){
-			window.top.calendar_manager.addCalendar(cal);
-		});
-		provider.on_calendar_removed.add_listener(function(cal){
-			window.top.calendar_manager.removeCalendar(cal);
-		});
+window.top.calendar_manager = new CalendarManager();
+window.top.CalendarsProviders.get(function(provider) {
+	for (var i = 0; i < provider.calendars.length; ++i)
+		window.top.calendar_manager.addCalendar(provider.calendars[i]);
+	provider.on_calendar_added.add_listener(function(cal){
+		window.top.calendar_manager.addCalendar(cal);
 	});
-}
+	provider.on_calendar_removed.add_listener(function(cal){
+		window.top.calendar_manager.removeCalendar(cal);
+	});
+	provider._refresh_interval = setInterval(function() {
+		provider.refreshCalendars();
+	},5*60*1000);
+	provider.refreshCalendars();
+});
+window.top.pnapplication.onlogout.add_listener(function() {
+	while (window.top.calendar_manager.calendars.length > 0) indow.top.calendar_manager.removeCalendar(indow.top.calendar_manager.calendars[0]);
+	window.top.CalendarsProviders.get(function(provider) {
+		clearInterval(provider._refresh_interval);
+	});
+	window.top.calendar_manager = null;
+});
 </script>
 <?php
 if (isset($_GET["page"])) {
@@ -185,7 +194,8 @@ require("vertical_align.js",function() {
 });
 
 function selectSection(sec) {
-	document.getElementById('pn_application_content').src = sec.page;
+	var win = getIFrameWindow(document.getElementById('pn_application_content'));
+	win.location.href = sec.page;
 	document.getElementById('pn_application_section_title').innerHTML = "<img src='"+sec.icon32+"'/>"+sec.name;
 	populateMenu(sec.menu_provider);
 	fireLayoutEventFor(document.getElementById('pn_application_header'));
@@ -197,7 +207,7 @@ function populateMenu(service_url) {
 		ajax.call("GET", service_url, null, null, function(error){
 			// TODO
 		}, function(xhr) {
-			eval('populating_menu = true;'+xhr.responseText+'populating_menu = false;');
+			eval('window.populating_menu = true;'+xhr.responseText+';window.populating_menu = false;');
 		});
 }
 

@@ -8,7 +8,8 @@ class service_get_data_list extends Service {
 	public function documentation() { echo "Retrieve data from a list of DataPath"; }
 	public function input_documentation() { echo "
 <ul>
-	<li><code>table</code>: name of starting table</li><li><code>fields</code>:[paths]</li>
+	<li><code>table</code>: name of starting table</li>
+	<li><code>fields</code>:[paths]</li>
 	<li>optional: <code>actions</code>: if true, a list of possible links with icon are returned</li>
 </ul>";
 	}

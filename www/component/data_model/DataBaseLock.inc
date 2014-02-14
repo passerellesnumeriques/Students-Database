@@ -66,12 +66,30 @@ class DataBaseLock {
 		}
 		return null;
 	}
+	
+	/** lock rows in a table, based on primary keys
+	 * @param string $table the table in which to lock rows
+	 * @param array $row_keys the keys of the rows to lock
+	 * @param string $locked_by in case a row or the table is already locked by someone else, this will be filled by the user who locked it
+	 * @param boolean $bypass_security if true we will not check the current user has the right to lock the rows
+	 * @return array|null the ids or the locks, or null if a row is already locked
+	 */
+	public static function lockRows($table, $row_keys, &$locked_by, $bypass_security = false) {
+		for ($i = 0; $i < 10; $i++) {
+			$locked_by = null;
+			$ids = DataBaseLock::tryLockRows($table, $row_keys, $locked_by, $bypass_security);
+			if ($ids <> null) return $ids;
+			if ($i < 9) usleep(100000);
+		}
+		return null;
+	}
+	
 	/**
 	 * Lock the given table, row, column or cell
 	 * @param string $table table
 	 * @param integer|array|null $row_key key of the row
 	 * @param string|null $column column name
-	 * @param stirng $locked_by filled if this is already locked
+	 * @param string $locked_by filled if this is already locked
 	 * @param boolean $bypass_security do not check if the current user has the right to obtain this lock
 	 * @return integer|null lock id or null
 	 */
@@ -152,6 +170,152 @@ class DataBaseLock {
 		self::mutexUnlock();
 		return $id;
 	} 
+
+	/**
+	 * Lock the given rows
+	 * @param string $table table
+	 * @param array $row_keys keys of the rows
+	 * @param string $locked_by filled if this is already locked
+	 * @param boolean $bypass_security do not check if the current user has the right to obtain this lock
+	 * @return array|null locks ids or null
+	 */
+	private static function tryLockRows($table, $row_keys, &$locked_by, $bypass_security) {
+		if (!$bypass_security) {
+			require_once("component/data_model/Model.inc");
+			$t = DataModel::get()->getTableFromSQLName($table);
+			if (!($t->mayInsert() || $t->mayModify() || $t->mayRemove()))
+				throw new Exception("Access denied: you cannot lock table '".$t->getName()."'.");
+			if (!($t->canModifyAny() || $t->canRemoveAny())) {
+				$rows_ok = array();
+				if ($t->mayModify()) {
+					$q = SQLQuery::create();
+					$table_alias = $q->generateTableAlias();
+					$q->select(array($table=>$table_alias));
+					if ($t->getPrimaryKey() <> null) {
+						$q->whereIn($table_alias, $t->getPrimaryKey()->name, $row_keys);
+						$q->field($table_alias, $t->getPrimaryKey()->name, "LOCK_ROW_KEY");
+					} else {
+						$pk = $t->getKey();
+						foreach ($pk as $pk_name)
+							$q->field($table_alias, $pk_name, "LOCK_ROW_KEY_".$pk_name);
+						$where = "(";
+						$first_key = true;
+						foreach ($row_keys as $row_key) {
+							if ($first_key) $first_key = false; else $where .= " OR "; 
+							$where .= "(";
+							$first_pk = true;
+							foreach ($pk as $pk_name) {
+								if ($first_pk) $first_pk = false; else $where .= " AND ";
+								$where .= "`".$table_alias."`.`".$pk_name."`='".SQLQuery::escape($row_key[$pk_name])."'";
+							}
+							$where .= ")";
+						}
+						$where .= ")";
+						$q->where($where);
+					}
+					$t->prepareSelectToDetermineWriteAccess($q, $table_alias);
+					$rows = $q->execute();
+					$rows_ok = $t->filterWriteAccess($rows);
+				}
+				if (count($rows_ok) < count($row_keys) && $t->mayRemove()) {
+					$q = SQLQuery::create();
+					$table_alias = $q->generateTableAlias();
+					$q->select(array($table=>$table_alias));
+					if ($t->getPrimaryKey() <> null) {
+						$q->whereIn($table_alias, $t->getPrimaryKey()->name, $row_keys);
+						$q->field($table_alias, $t->getPrimaryKey()->name, "LOCK_ROW_KEY");
+					} else {
+						$pk = $t->getKey();
+						foreach ($pk as $pk_name)
+							$q->field($table_alias, $pk_name, "LOCK_ROW_KEY_".$pk_name);
+						$where = "(";
+						$first_key = true;
+						foreach ($row_keys as $row_key) {
+							if ($first_key) $first_key = false; else $where .= " OR "; 
+							$where .= "(";
+							$first_pk = true;
+							foreach ($pk as $pk_name) {
+								if ($first_pk) $first_pk = false; else $where .= " AND ";
+								$where .= "`".$table_alias."`.`".$pk_name."`='".SQLQuery::escape($row_key[$pk_name])."'";
+							}
+							$where .= ")";
+						}
+						$where .= ")";
+						$q->where($where);
+					}
+					$locks = array();
+					$t->prepareSelectToDetermineRemoveAccess($q, $table_alias, $locks);
+					$rows = $q->execute();
+					$rows = $t->filterRemoveAccess($rows);
+					foreach ($rows as $r) {
+						$found = false;
+						foreach ($rows_ok as $r2) {
+							if ($t->getPrimaryKey() <> null) {
+								if ($r["LOCK_ROW_KEY"] == $r2["LOCK_ROW_KEY"]) {
+									$found = true;
+									break;
+								} 
+							} else {
+								$pk = $t->getKey();
+								$ok = true;
+								foreach ($pk as $pk_name)
+									if ($r["LOCK_ROW_KEY_".$pk_name] <> $r2["LOCK_ROW_KEY_".$pk_name]) { $ok = false; break; }
+								if ($ok) {
+									$found = true;
+									break;
+								}
+							}
+						}
+						if (!$found) array_push($rows_ok, $r);
+					}
+					foreach ($locks as $lock_id) DataBaseLock::unlock($lock_id);
+				}
+				if (count($rows_ok) <> count($row_keys)) throw new Exception("Access denied: you cannot lock some rows in table ".$table);
+			}
+		}
+	
+		DataBaseLock::clean();
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+		self::mutexLock();
+		$lock_user = DataBaseLock::areRowsLocked($table, $row_keys);
+		if ($lock_user <> null) {
+			self::mutexUnlock();
+			$locked_by = $lock_user;
+			return null;
+		}
+		$sql = "INSERT INTO DataLocks".
+			" (`timestamp`,`locker_domain`,`locker_username`,`table`,`row_key`,`column`)".
+			" VALUES ";
+		$first = true;
+		foreach ($row_keys as $row_key) {
+			if (is_string($row_key) && ctype_digit($row_key))
+				$row_key = intval($row_key);
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "(".
+				time().
+				",'".$db->escapeString(PNApplication::$instance->user_management->domain)."'".
+				",'".$db->escapeString(PNApplication::$instance->user_management->username)."'".
+				",'".$db->escapeString($table)."'".
+				",'".$db->escapeString(json_encode($row_key))."'".
+				",NULL".
+				")";
+		}
+		$db->execute($sql);
+		$id = $db->getInsertID();
+		$ids = array();
+		if ($id <> 0) {
+			$nb_rows = $db->affectedRows();
+			if ($nb_rows == count($row_keys)) {
+				$res = $db->execute("SELECT LAST_INSERT_ID()");
+				$row = $db->nextRow($res);
+				$id = $row[0];
+				for ($i = 0; $i < $nb_rows; $i++)
+					array_push($ids, $id+$i);
+			}
+		}
+		self::mutexUnlock();
+		return $ids;
+	}
 	
 	/** Used to clean only once per request */
 	private static $cleant = false;
@@ -328,6 +492,29 @@ class DataBaseLock {
 			self::mutexUnlock();
 	}
 
+	public static function areRowsLocked($table, $row_keys) {
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escapeString($table)."'");
+		while (($row = $db->nextRow($res)) <> null) {
+			if ($row["locker_domain"] == PNApplication::$instance->user_management->domain ||
+				$row["locker_username"] == PNApplication::$instance->user_management->username)
+				continue; // same user
+			if ($row["column"] <> null) {
+				// there is a column locked
+				return $row["locker_username"];
+			}
+			if ($row["row_key"] <> null) {
+				foreach ($row_keys as $row_key) {
+					if ($row["row_key"] <> json_encode($row_key)) continue; // not the same row
+					return $row["locker_username"];
+				}
+			}
+			// the table is locked
+			return $row["locker_username"]; // full table lockes
+		}
+		return null;
+	}
+	
 	/** check if the table/row/column/cell is locked by the current user. If it is the case, return true, else return false.
 	 * @param string $table table name
 	 * @param integer|array|null $row_key key of the row or null
