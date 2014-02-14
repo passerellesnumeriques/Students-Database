@@ -38,7 +38,7 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 	 * @param {Function} (optional) onlock
 	 * @param {Function} (optional) onnothing
 	 */
-	t.lockDatabase = function(handler, lock, table, sm, column, row, onlock, onnothing){
+	t._lockDatabase = function(handler, lock, table, sm, column, row, onlock, onnothing){
 		if(t.db_lock == null){
 			if(handler()){
 				service.json("data_model","lock_"+lock,{table:table, column:column, row_key:row, sub_model:sm},function(res){
@@ -57,6 +57,10 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 			if(onnothing)
 				onnothing();
 		}
+	};
+	
+	t.lockDatabase = function(onlock, onnothing){
+		t._lockDatabase(lock_handler, to_lock, table_lock, sub_model, column_lock, row_key, onlock, onnothing);
 	};
 	
 	
@@ -87,6 +91,10 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 				}
 				unlock_screen(locker);
 			});
+		else {
+			error_dialog("An error occured");
+			unlock_screen(locker);
+		}
 	};
 	
 	/**
@@ -101,7 +109,7 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 			reseter();
 			unlock_screen(locker);
 		};
-		t.lockDatabase(lock_handler, to_lock, table_lock, sub_model, column_lock, row_key, onlock, onlock);
+		t._lockDatabase(lock_handler, to_lock, table_lock, sub_model, column_lock, row_key, onlock, onlock);
 	};
 	
 	/**
