@@ -21,20 +21,10 @@ function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_i
 	
 	$db_lock = null;
 	if(!$read_only && $id != -1 && $id != "-1"){
-		require_once("component/data_model/DataBaseLock.inc");
-		require_once("component/data_model/Model.inc");
-		$model = DataModel::get();
-		$table = $model->getTable("ExamTopicForEligibilityRule"); // here check is done is the user can access this table
-		$locked_by = null;
-		$db_lock = DataBaseLock::lockRow($table->getSQLNameFor(PNApplication::$instance->selection->getCampaignId()),$id ,$locked_by);
-		if ($db_lock == null) {
-			PNApplication::error("This row is already locked by ".$locked_by);
+		$db_lock = $page->performRequiredLocks("ExamSubject",$id,null,$current_campaign);
+		if($db_lock == null)
 			return;
-		} else
-			DataBaseLock::generateScript($db_lock);
 	}
-		
-// 	$page->onload($fct_name."();");
 ?>
 <script type = "text/javascript">
 	require("exam_objects.js",function(){
