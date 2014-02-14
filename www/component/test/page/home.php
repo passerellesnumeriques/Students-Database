@@ -6,7 +6,7 @@ class page_home extends Page {
 	public function execute() {
 		$exclude_components = array("development","test");
 		
-		$this->add_javascript("/static/widgets/page_header.js");
+		$this->add_javascript("/static/widgets/header_bar.js");
 		$this->add_javascript("/static/widgets/vertical_layout.js");
 		$this->add_javascript("/static/widgets/horizontal_layout.js");
 		$this->add_javascript("/static/widgets/vertical_align.js");
@@ -46,7 +46,7 @@ foreach (PNApplication::$instance->components as $name=>$c) {
 function top_status_widget() {
 	container = document.getElementById('top_status');
 	var t=this;
-	t.widget = new page_header(container);
+	t.widget = new header_bar(container);
 
 	t.refresh = document.createElement("IMG");
 	t.refresh.className = 'button';

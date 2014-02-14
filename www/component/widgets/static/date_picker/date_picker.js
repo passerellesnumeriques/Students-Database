@@ -57,14 +57,18 @@ function date_picker(date, minimum, maximum, onready) {
 			if (t.onchange) t.onchange(t, t.cal.getDate());
 		};
 		t.element.appendChild(t.footer = document.createElement("DIV"));
-		var today = document.createElement("DIV");
-		today.className = "button_verysoft";
+		t.footer.style.padding = "2px";
+		t.footer.appendChild(document.createTextNode("Today: "));
+		var today = document.createElement("A");
 		t.footer.appendChild(today);
-		today.appendChild(document.createTextNode("Today"));
+		var now = new Date();
+		today.appendChild(document.createTextNode(now.getDate()+" "+getMonthName(now.getMonth()+1)+" "+now.getFullYear()));
+		today.href ='#';
 		today.onclick = function () {
 			t.cal.setDate(new Date());
 			t.select.selectDate(new Date());
 			if (t.onchange) t.onchange(t, t.cal.getDate());
+			return false;
 		};
 		if (onready) onready(t);
 

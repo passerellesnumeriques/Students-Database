@@ -28,13 +28,6 @@ function CalendarManager() {
 	
 	/** Listeners this manager registered to its calendars, stored there to unregister when removing a calendar */
 	this._calendars_listeners = [];
-
-	var t=this;
-	var w=window;
-	window.top.pnapplication.onlogout.add_listener(function() {
-		while (t.calendars.length > 0) t.removeCalendar(t.calendars[0]);
-		if (w.top && w.top.calendar_manager) w.top.calendar_manager = null;
-	});
 	
 	/**
 	 * Add a calendar to manage.
@@ -250,10 +243,6 @@ if (!window.top.CalendarsProviders) {
 			this._providers.push(provider);
 			for (var i = 0; i < this._handlers.length; ++i)
 				this._handlers[i](provider);
-			provider._refresh_interval = setInterval(function() {
-				provider.refreshCalendars();
-			},5*60*1000);
-			provider.refreshCalendars();
 		},
 		/** List of providers */
 		_providers: [],

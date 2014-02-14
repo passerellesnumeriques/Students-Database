@@ -6,10 +6,10 @@ class page_exam_main_page extends selection_page {
 	public function get_required_rights() {return array("see_exam_subject");}
 	
 	public function execute_selection_page(&$page) {
-		$page->add_javascript("/static/widgets/page_header.js");
-		$page->add_javascript("/static/widgets/vertical_layout.js");
+		$page->require_javascript("header_bar.js");
+		$page->require_javascript("vertical_layout.js");
 		$page->onload("new vertical_layout('container');");
-		$page->onload("new page_header('page_header',true);");
+		$page->onload("new header_bar('page_header','small');");
 		$page->onload("new exam_subject_main_page('exam_content');");
 		
 		//Rights based on the steps

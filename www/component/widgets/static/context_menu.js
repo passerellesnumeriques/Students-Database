@@ -326,4 +326,6 @@ function context_menu(menu) {
 		else
 			t.showAt(t.show_at[0], t.show_at[1]);
 	};
+	
+	t.close = function() { t.hide(); };
 }

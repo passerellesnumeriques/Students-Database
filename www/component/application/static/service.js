@@ -11,6 +11,7 @@ service = {
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 */
 	json: function(component, service_name, input, handler, foreground) {
+		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null)
 			data = service.generateInput(input);
@@ -40,6 +41,7 @@ service = {
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 */
 	xml: function(component, service_name, input, handler, foreground) {
+		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null) {
 			if (typeof input == 'string') data = input;
@@ -72,6 +74,7 @@ service = {
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 */
 	customOutput: function(component, service_name, input, handler, foreground) {
+		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null)
 			data = service.generateInput(input);
@@ -119,6 +122,10 @@ service = {
 		return s;
 	}
 };
+
+if (typeof window.top._last_service_call == 'undefined')
+	window.top._last_service_call = 0;
+
 /**
  * Send the given object to the given URL using POST method.
  * @param {String} url the location where to send the data

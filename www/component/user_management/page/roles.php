@@ -4,10 +4,10 @@ class page_roles extends Page {
 	public function get_required_rights() { return array("manage_roles"); }
 	
 	protected function execute() {
-		$this->add_javascript("/static/widgets/page_header.js");
+		$this->add_javascript("/static/widgets/header_bar.js");
 		$this->add_javascript("/static/widgets/wizard.js");
 		$this->add_javascript("/static/javascript/validation.js");
-		$this->onload("new page_header('roles_header');");
+		$this->onload("new header_bar('roles_header');");
 
 		$roles = SQLQuery::create()->select("Role")->field('id')->field('name')->field("UserRole","user")->join("Role","UserRole",array("id"=>"role"))->count("nb_users")->groupBy("Role","id")->orderBy("Role","name",true)->execute();
 ?>

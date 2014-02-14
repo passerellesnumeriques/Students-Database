@@ -71,6 +71,7 @@ theme::$icons_10 = array(
 theme::$icons_32 = array(
 	"config" => 		"/static/theme/default/icons_32/config.png",
 	"dashboard" => 		"/static/theme/default/icons_32/dashboard.png",
+	"help" => 			"/static/theme/default/icons_32/help.png",
 	"home" => 			"/static/theme/default/icons_32/home.png",
 );
 

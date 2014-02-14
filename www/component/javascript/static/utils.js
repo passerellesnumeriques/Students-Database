@@ -472,7 +472,17 @@ function Custom_Event() {
 	this.fire = function(data) {
 		var list = [];
 		for (var i = 0; i < this.listeners.length; ++i) list.push(this.listeners[i]);
-		for (var i = 0; i < list.length; ++i) try { list[i](data); } catch (e) {}
+		for (var i = 0; i < list.length; ++i) 
+			try { list[i](data); } 
+			catch (e) {
+				var msg = e.message;
+				if (typeof e.fileName != 'undefined') {
+					msg += " ("+e.fileName;
+					if (typeof e.lineNumber != 'undefined') msg += ":"+e.lineNumber;
+					msg += ")";
+				}
+				console.log(msg);
+			}
 	};
 } 
 

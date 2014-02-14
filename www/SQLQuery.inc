@@ -204,8 +204,15 @@ class SQLQuery {
 				)) break; // generic service of data model
 				require_once("component/data_model/Model.inc");
 				$decl = DataModel::get()->internalGetTable($table_name)->declaring_component;
-				if ($component <> $decl)
-					PNApplication::warning("Select table ".$table_name." from component ".$component." (".substr($file,strlen($root)).":".$trace["line"]."), but this table is own by ".$decl);
+				if ($component <> $decl) {
+					$msg = "Select table ".$table_name." from component ".$component." (".substr($file,strlen($root)).":".$trace["line"]."), but this table is own by ".$decl;
+					$msg .="<br/>Full stack trace:<ul>";
+					foreach ($e->getTrace() as $t)
+						if (isset($t["file"]) && isset($t["line"]))
+							$msg .= "<li>".$t["file"]." line ".$t["line"]."</li>";
+					$msg .= "</ul>";
+					PNApplication::warning($msg);
+				}
 				break;
 			}
 		}

@@ -23,8 +23,8 @@ class page_selection_main_page extends selection_page {
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		$calendar_name = SQLQuery::create()->bypassSecurity()->select("Calendar")->field("name")->where("id",$calendar_id)->executeSingleValue();
 		
-		$page->add_javascript("/static/widgets/page_header.js");
-		$page->onload("new page_header('steps_header',true);");
+		$page->add_javascript("/static/widgets/header_bar.js");
+		$page->onload("new header_bar('steps_header','small');");
 
 		$page->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$page->onload("new splitter_vertical('selection_main_page_split',0.35);");

@@ -989,9 +989,10 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	 */
 	t._makeClickable = function(row) {
 		row.onmouseover = function() { this.className = "selected"; };
-		row.onmouseout = function() { this.className = ""; };
+		row.onmouseout = function() { this.className = t.grid.isSelected(row.row_id) ? "selected" : ""; };
 		row.style.cursor = 'pointer';
-		row.onclick = function() {
+		row.onclick = function(ev) {
+			if (ev.target.nodeType == 1 && (ev.target.nodeName == 'INPUT' || ev.target.nodeName == 'SELECT')) return;
 			t._rowOnclick(this);
 		};
 	};

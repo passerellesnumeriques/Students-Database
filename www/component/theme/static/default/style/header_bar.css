@@ -1,0 +1,74 @@
+.header_bar, .header_bar_small, .header_bar_style {
+    background: linear-gradient(to bottom,  #ebf1f6 0%,#c8e6ff 50%,#b4dcf0 51%,#d5ebfb 100%); /* W3C */
+    border-bottom: 1px solid #C0E0FF;
+}
+.header_bar {
+    height: 35px;
+}
+.header_bar_small {
+    height: 25px;
+}
+.header_bar_title {
+    /* header_title */
+    border-right: 1px solid #FFFFFF;
+    vertical-align: middle;
+    font-weight: bold;
+    color: #3030A0;
+    background-color: rgba(240,240,240,0.6);
+    border-bottom-right-radius: 10px 10px;
+    padding: 3px 6px 2px 3px;
+    margin-right: 5px;
+}
+.header_bar .header_bar_title img {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+.header_bar_small .header_bar_title img {
+    margin-right: 3px;
+    vertical-align: bottom;
+}
+.header_bar .header_bar_title {
+    font-size: 12pt;
+}
+.header_bar_small .header_bar_title {
+    font-size: 10pt;
+}
+
+.header_bar_toolbar, .header_bar_toolbar_style {
+    height: 30px;
+    background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
+    border-bottom: 1px solid #8080A0;
+}
+.header_bar_toolbar .header_bar_title, .header_bar_toolbar_style .header_bar_title {
+    display: inline-block;
+    background-color: rgba(255,255,255,0.5);
+    border-right: 1px solid #d6e6ff;
+    padding: 5px 3px 2px 3px;
+    margin-right: 3px;
+    color: #4040A0;
+    font-weight: bold;
+    height: 23px;
+    vertical-align: top;
+}
+
+.header_bar_toolbar_big, .header_bar_toolbar_big_style {
+    background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
+    border-bottom: 1px solid #8080A0;
+}
+.header_bar_toolbar_big {
+    height: 40px;
+    background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
+    border-bottom: 1px solid #8080A0;
+}
+.header_bar_toolbar_big .header_bar_title, .header_bar_toolbar_big_style .header_bar_title {
+    display: inline-block;
+    background-color: rgba(255,255,255,0.5);
+    border-right: 1px solid #d6e6ff;
+    padding: 5px 3px 2px 3px;
+    margin-right: 3px;
+    color: #4040A0;
+    font-weight: bold;
+    font-size: 12pt;
+    height: 33px;
+    vertical-align: top;
+}

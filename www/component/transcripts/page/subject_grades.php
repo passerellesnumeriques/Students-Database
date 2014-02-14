@@ -124,7 +124,7 @@ class page_subject_grades extends Page {
 		
 		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");
 		
-		$this->add_javascript("/static/widgets/page_header.js");
+		$this->add_javascript("/static/widgets/header_bar.js");
 		$this->add_javascript("/static/widgets/vertical_layout.js");
 		$this->add_stylesheet("/static/transcripts/grades.css");
 		?>
@@ -292,7 +292,7 @@ class page_subject_grades extends Page {
 		?>];
 		var field_subject_weight, field_subject_max_grade, field_subject_passing_grade;
 		function init_page() {
-			var header = new page_header('subject_grades_header', true);
+			var header = new header_bar('subject_grades_header', 'small');
 			var title = document.createElement("SPAN");
 			title.innerHTML = "<img src='/static/transcripts/grades.gif' style='vertical-align:bottom;padding-right:3px'/>";
 			title.style.fontWeight = 'normal';
