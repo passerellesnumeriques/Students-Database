@@ -19,6 +19,7 @@ function day_row_layout(calendar_manager) {
 		
 		for (var i = 0; i < events.length; ++i) {
 			var ev = events[i];
+			var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
 			var day1 = Math.floor((ev.start.getTime()-first_day.getTime())/(24*60*60*1000));
 			if (day1 >= day_boxes.length) continue; // after
 			var day_end = Math.floor((ev.end.getTime()-first_day.getTime())/(24*60*60*1000));
@@ -43,9 +44,9 @@ function day_row_layout(calendar_manager) {
 			var div = document.createElement("DIV");
 			div.style.position = "absolute";
 			div.style.zIndex = 2;
-			div.style.backgroundColor = "#"+calendar_manager.getCalendar(ev.calendar_id).color;
+			div.style.backgroundColor = "#"+cal.color;
 			require("color.js", function() {
-				div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(calendar_manager.getCalendar(ev.calendar_id).color), 0x60));
+				div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(cal.color), 0x60));
 			});
 			div.style.overflow = 'hidden';
 			div.style.left = (day_boxes[day1].offsetLeft+2)+"px";
@@ -58,13 +59,13 @@ function day_row_layout(calendar_manager) {
 			div.style.padding = "1px";
 			div.style.fontSize = '8pt';
 			div.innerHTML = ev.title;
-			div.title = calendar_manager.getCalendar(ev.calendar_id).name+"\r\n"+ev.title+"\r\n"+ev.description;
+			div.title = cal.name+"\r\n"+ev.title+"\r\n"+ev.description;
 			div.style.cursor = "pointer";
 			div.event = ev;
 			div.onclick = function() {
 				var ev = this.event;
 				require("event_screen.js",function() {
-					event_screen(ev.original_event, calendar_manager.getCalendar(ev.calendar_id));
+					event_screen(ev.original_event, cal);
 				});
 			};
 			day_boxes[0].parentNode.appendChild(div);

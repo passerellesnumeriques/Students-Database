@@ -38,7 +38,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			});
 		} else {
 			require("calendar_objects.js",function() {
-				t.event = new CalendarEvent(-1, calendar_id, null, null, null, false, 0, null, null, null, "Selection", "UNKNOWN", "OPTIONAL");
+				t.event = new CalendarEvent(-1, 'PN', calendar_id, null, null, null, false, 0, null, null, null, "Selection", "UNKNOWN", "OPTIONAL");
 				t._init();
 			});
 		}

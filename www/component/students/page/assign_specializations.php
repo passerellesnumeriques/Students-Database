@@ -6,15 +6,15 @@ class page_assign_specializations extends Page {
 	public function execute() {
 		$batch_id = $_GET["batch"];
 		$batch_name = SQLQuery::create()->select("StudentBatch")->field("name")->whereValue("StudentBatch", "id", $batch_id)->executeSingleValue();
-		$students = SQLQuery::create()
+		require_once("component/people/PeopleJSON.inc");
+		$q = SQLQuery::create()
 			->select("Student")
 			->whereValue("Student", "batch", $batch_id)
-			->join("Student", "People", array("people"=>"id"))
-			->field("People", "id", "people")
-			->field("People", "first_name", "first_name")
-			->field("People", "last_name", "last_name")
 			->field("Student", "specialization", "specialization")
-			->execute();
+			;
+		PNApplication::$instance->people->joinPeople($q, "Student", "people");
+		PeopleJSON::PeopleSQL($q);
+		$students = $q->execute();
 		$specializations = SQLQuery::create()
 			->select("AcademicPeriodSpecialization")
 			->join("AcademicPeriodSpecialization", "AcademicPeriod", array("period"=>"id"))
@@ -24,6 +24,54 @@ class page_assign_specializations extends Page {
 			->field("Specialization", "name", "BATCH_SPE_NAME")
 			->groupBy("Specialization", "id")
 			->execute();
+		
+		$this->require_javascript("assign_peoples.js");
+		$this->require_javascript("vertical_layout.js");
+		$this->require_javascript("header_bar.js");
+		?>
+		<div id='page_container' style='width:100%;height:100%'>
+			<div id='page_header' title="Assignment of specialization for students of batch <?php echo htmlentities($batch_name);?>">
+				<div class='button' onclick='save();'>
+					<img src='<?php echo theme::$icons_16["save"];?>'/>
+					Save
+				</div>
+			</div>
+			<div id='assign_container' layout='fill'>
+			</div>
+		</div>
+		<script type='text/javascript'>
+		new header_bar('page_header','small');
+		new vertical_layout('page_container');
+		var assign = new assign_peoples('assign_container');
+		<?php foreach ($specializations as $spe) echo "assign.addPossibleAssignment(".$spe["BATCH_SPE_ID"].",".json_encode($spe["BATCH_SPE_NAME"]).");\n";?>
+		<?php foreach ($students as $s) echo "assign.addPeople(".PeopleJSON::People($q, $s).",".json_encode($s["specialization"]).");\n";?>
+		function save() {
+			var lock = lock_screen(null,"");
+			var peoples = assign.getPeoples();
+			var next = function(index) {
+				if (index == peoples.length) {
+					unlock_screen(lock);
+					return;
+				}
+				var original = assign.getOriginalAssignment(peoples[index].id);
+				var current = assign.getNewAssignment(peoples[index].id);
+				if (original == current) {
+					next(index+1);
+					return;
+				}
+				if (current == null)
+					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Unassigning specialization from "+peoples[index].first_name+" "+peoples[index].last_name);
+				else
+					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Assigning specialization "+assign.getAssignmentName(current)+" to "+peoples[index].first_name+" "+peoples[index].last_name);
+				service.json("students", "assign_specialization", {student:peoples[index].id,specialization:current}, function(res) {
+					next(index+1);
+				});
+			};
+			next(0);
+		}
+		</script>
+		<?php 
+		/*
 		?>
 		<table class='all_borders' style='white-space:nowrap'>
 		<tr><th colspan=3>Assignment of specialization for students of batch <?php echo htmlentities($batch_name);?></th></tr>
@@ -162,7 +210,7 @@ class page_assign_specializations extends Page {
 			next(0);
 		}
 		</script>
-		<?php 
+		<?php */
 	}
 	
 }

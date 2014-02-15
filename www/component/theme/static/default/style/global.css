@@ -78,6 +78,7 @@ button img {
 	font-family: Arial;
 	font-weight: bold;
 	color: #200040;
+	white-space: nowrap;
 }
 .button:hover {
 	border: 1px solid rgba(0,0,0,0.6);

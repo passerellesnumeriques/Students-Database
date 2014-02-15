@@ -114,7 +114,7 @@ class page_selection_main_page extends selection_page {
 			require(["calendar.js","popup_window.js"],function(){
 				if(calendar_id != null && calendar_name != null){
 					var cal_manager = new CalendarManager();
-					var PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
+					var PN_cal = window.top.pn_calendars_provider.getCalendar(calendar_id);
 					var init_calendar = function() {
 						cal_manager.addCalendar(PN_cal);
 						require("calendar_view.js",function(){
@@ -141,7 +141,7 @@ class page_selection_main_page extends selection_page {
 					if (PN_cal) init_calendar();
 					else {
 						var retry_calendar = function() {
-							PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
+							PN_cal = window.top.pn_calendars_provider.getCalendar(calendar_id);
 							if (PN_cal) init_calendar();
 							else setTimeout(retry_calendar, 500);
 						};

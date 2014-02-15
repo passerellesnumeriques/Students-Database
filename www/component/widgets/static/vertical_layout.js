@@ -7,7 +7,7 @@
  * @constructor
  * @param container the container (either the HTMLElement or its id)
  */
-function vertical_layout(container) {
+function vertical_layout(container, keep_width) {
 	var t = this;
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
@@ -60,7 +60,7 @@ function vertical_layout(container) {
 				used += parseInt(layout);
 			else {
 				e.style.display = "block";
-				setWidth(e, w);
+				if (!keep_width) setWidth(e, w);
 				e.style.height = "";
 				used += getHeight(e);
 			}
@@ -72,7 +72,7 @@ function vertical_layout(container) {
 			var layout;
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
 			e.style.display = "block";
-			setWidth(e, w);
+			if (!keep_width) setWidth(e, w);
 			if (layout == 'fill') {
 				var hh = Math.floor((h-used)/nb_to_fill--);
 				setHeight(e, hh);
