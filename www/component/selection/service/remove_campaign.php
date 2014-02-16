@@ -12,7 +12,7 @@ class service_remove_campaign extends Service{
 		echo "<li>{boolean} else false</li>";
 		echo "</ul>";
 	}
-	public function documentation(){}//TODO
+	public function documentation(){echo "Remove a selection campaign from the database and all the submodel tables";}
 	public function execute(&$component,$input){
 		if(isset($input["id"])){
 			try{

@@ -1,13 +1,23 @@
 <?php 
 class service_eligibility_rules_save_topic extends Service {
 	
-	public function get_required_rights() { return array(); }//TODO
-	public function documentation() {}//TODO
+	public function get_required_rights() { return array("manage_exam_subject"); }
+	public function documentation() {echo "Save an existing or a new exam topic for eligibility rules into the database";}
 	public function input_documentation() {
-	//TODO
+		?>
+		<ul>
+		<li> <code>topic</code> JSON topic object to save</li>
+		<li><code>db_lock</code> the database lock id (when the topics are managed, all the ExamTopicForEligibilityRule table must be locked)</li>
+		</ul>
+		<?php
 	}
 	public function output_documentation() {
-		//TODO
+		?>
+		<ul>
+		<li><code>topic</code> a new topic JSON object if the saving was well performed</li>
+		<li><code>false</code> if any error occured</li>
+		</ul>
+		<?php
 	}
 	
 	/**
