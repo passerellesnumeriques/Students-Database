@@ -197,3 +197,12 @@ button img {
 .validation_error {
 	border: 1px solid red;
 }
+
+/* Links */
+a.black_link {
+	color: black;
+	text-decoration: none;
+}
+a.black_link:hover {
+	text-decoration: underline;
+}

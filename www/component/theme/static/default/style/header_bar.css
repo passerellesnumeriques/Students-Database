@@ -72,3 +72,12 @@
     height: 33px;
     vertical-align: top;
 }
+
+.header_bar_toolbar_big .header_bar_title img {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+.header_bar_toolbar .header_bar_title img {
+    margin-right: 3px;
+    vertical-align: bottom;
+}

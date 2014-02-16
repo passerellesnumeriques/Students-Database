@@ -15,6 +15,7 @@ class service_application_menu_builder extends Service {
 		$rights['manage'] = PNApplication::$instance->components["user_management"]->has_right("manage_selection_campaign",true);
 		$campaigns = PNApplication::$instance->selection->getCampaigns();
 		?>
+		resetAllMenus();
 		function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 			var t = this;
 			/**

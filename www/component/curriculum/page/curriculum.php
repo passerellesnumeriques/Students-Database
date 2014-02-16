@@ -11,6 +11,11 @@ class page_curriculum extends Page {
 				return;
 			}
 		}
+		if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
+			if (isset($_GET["edit"]) && $_GET["edit"] == 1) {
+				// TODO lock the curriculum
+			}
+		}
 		if (isset($_GET["batch"])) {
 			$periods = SQLQuery::create()->select("AcademicPeriod")->where("batch",$_GET["batch"])->orderBy("AcademicPeriod","start_date")->execute();
 			$all_periods = $periods;
@@ -23,16 +28,24 @@ class page_curriculum extends Page {
 		$batch_info = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();
 		
 		$this->add_javascript("/static/widgets/tree/tree.js");
+		$this->add_javascript("/static/widgets/header_bar.js");
+		theme::css($this, "header_bar.css");
+		$this->onload("new header_bar('page_header','toolbar_big');");
 		?>
-		<?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) { ?>
-		<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'>
-			<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/>
-			Right-click on an element below to access functionalities and edit the curriculum
+		<div id='page_header' 
+			icon='/static/curriculum/curriculum_32.png' 
+			title='Curriculum for Batch <?php echo htmlentities($batch_info["name"]); if (!isset($_GET["batch"])) echo ", Period ".$periods[0]["name"];?>'
+		>
+			<?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
+				if (isset($_GET['edit']) && $_GET['edit'] == 1)
+					echo "<div class='button' onclick=\"var u=new window.URL(location.href);u.params.edit = 0;location.href=u.toString();\"><img src='".theme::$icons_16["no_edit"]."'/> Stop editing</div>";
+				else
+					echo "<div class='button' onclick=\"var u=new window.URL(location.href);u.params.edit = 1;location.href=u.toString();\"><img src='".theme::$icons_16["edit"]."'/> Edit</div>";
+			} ?>
 		</div>
-		<?php } ?>
 		<div id='curriculum_tree' style='cursor:default;background-color:white'></div>
 		<script type='text/javascript'>
-		var edit = <?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) echo "true"; else echo "false"; ?>;
+		var edit = <?php echo PNApplication::$instance->user_management->has_right("edit_curriculum") && isset($_GET["edit"]) && $_GET["edit"] == 1 ? "true" : "false"; ?>;
 		var periods = [<?php 
 		$first = true;
 		foreach ($periods as $period) {
@@ -121,7 +134,7 @@ class page_curriculum extends Page {
 		t.addColumn(new TreeColumn("Hours"));
 		t.setShowColumn(true);
 		
-		function build_element(icon, text, oncontextmenu) {
+		function build_element(icon, text, onclick, oncontextmenu, actions) {
 			var div = document.createElement("DIV");
 			div.style.display = "inline-block";
 			if (icon) {
@@ -131,35 +144,60 @@ class page_curriculum extends Page {
 				img.style.verticalAlign = 'bottom';
 				div.appendChild(img);
 			}
-			div.appendChild(document.createTextNode(text));
-			if (oncontextmenu)
-				div.oncontextmenu = function(ev) {
-					var elem = this;
-					require("context_menu.js",function() {
-						var menu = new context_menu();
-						oncontextmenu(elem, menu);
-						if (menu.getItems().length > 0)
-							menu.showBelowElement(elem);
-					});
-					stopEventPropagation(ev);
-					return false;
-				};
-				return div;
+			if (onclick) {
+				var link = document.createElement("A");
+				link.href = '#';
+				link.className = "black_link";
+				link.onclick = function() { onclick(); return false; };
+				link.appendChild(document.createTextNode(text));
+				div.appendChild(link);
+			} else
+				div.appendChild(document.createTextNode(text));
+			if (edit) {
+				if (actions && actions.length > 0) {
+					for (var i = 0; i < actions.length; ++i) {
+						var img = document.createElement("IMG");
+						img.src = actions[i].icon;
+						img.className = 'button_verysoft';
+						img.style.verticalAlign = 'bottom';
+						if (actions[i].action == 'menu')
+							img.onclick = function(ev) { div.oncontextmenu(ev); };
+						else
+							img.onclick = actions[i].action;
+						if (actions[i].descr) img.title = actions[i].descr;
+						div.appendChild(img);
+					}
+				}
+				if (oncontextmenu)
+					div.oncontextmenu = function(ev) {
+						var elem = this;
+						require("context_menu.js",function() {
+							var menu = new context_menu();
+							oncontextmenu(elem, menu);
+							if (menu.getItems().length > 0)
+								menu.showBelowElement(elem);
+						});
+						stopEventPropagation(ev);
+						return false;
+					};
+			}
+			return div;
 		}
 		var root;
 		function build_root() {
-			var element = build_element(null, "Curriculum", function(elem, menu) {
-				if (edit) {
-					menu.addIconItem(theme.build_icon("/static/curriculum/academic_16.png",theme.icons_10.add,"right_bottom"), "New Academic Period", function() { window.parent.new_academic_period(window.parent.root.findTag("batch<?php echo $batch_id;?>")); });
-				}
-			});
+			var new_period = function() { window.parent.new_academic_period(window.parent.root.findTag("batch<?php echo $batch_id;?>")); }; 
+			var element = build_element("/static/curriculum/curriculum_16.png", "Curriculum", null, function(elem, menu) {
+				menu.addIconItem(theme.build_icon("/static/curriculum/academic_16.png",theme.icons_10.add,"right_bottom"), "New Academic Period", new_period);
+			},[
+				<?php if(isset($_GET["batch"])) echo "{icon:theme.icons_10.add,action:new_period,descr:'Add Academic Period'}"?>
+			]);
 			root = new TreeItem(element, true);
 			t.addItem(root);
 			for (var i = 0; i < periods.length; ++i)
 				build_period(root, periods[i]);
 		}
 		function build_period(root, period) {
-			var element = build_element(null, period.name, function(elem,menu) {
+			var element = build_element(theme.build_icon("/static/curriculum/hat.png", "/static/curriculum/calendar_10.gif", "right_bottom"), period.name, null, function(elem,menu) {
 				if (edit) {
 					menu.addIconItem(theme.build_icon("/static/curriculum/curriculum_16.png", theme.icons_10.add,"right_bottom"), "Add Specialization", function() { window.parent.new_specialization(window.parent.root.findTag("period"+period.id)); });
 					menu.addSeparator();
@@ -167,7 +205,9 @@ class page_curriculum extends Page {
 					menu.addSeparator();
 					menu.addIconItem(theme.build_icon("/static/curriculum/academic_16.png",theme.icons_10.remove,"right_bottom"), "Remove Academic Period", function() { window.parent.remove_period(window.parent.root.findTag("period"+period.id)); });
 				}
-			});
+			},[
+			   {icon:theme.icons_10.arrow_down_context_menu,action:'menu'}
+			]);
 			var item = new TreeItem(element, true);
 			item.period = period;
 			element.item = item;
@@ -182,11 +222,13 @@ class page_curriculum extends Page {
 			}
 		}
 		function build_specialization(spe, period) {
-			var element = build_element("/static/curriculum/curriculum_16.png", spe.name, function(elem,menu) {
+			var element = build_element("/static/curriculum/curriculum_16.png", spe.name, null, function(elem,menu) {
 				menu.addIconItem(theme.build_icon("/static/curriculum/subjects_16.png", theme.icons_10.add,"right_bottom"), "Add Subject Category", new_category);
 				menu.addSeparator();
 				menu.addIconItem(theme.build_icon("/static/curriculum/academic_16.png",theme.icons_10.remove,"right_bottom"), "Remove Specialization", function() { window.parent.remove_specialization(window.parent.root.findTag("period"+period.id+"_specialization"+spe.id)); });
-			});
+			},[
+			   {icon:theme.icons_10.arrow_down_context_menu,action:'menu'}
+			]);
 			var item = new TreeItem(element, true);
 			item.specialization = spe;
 			item.period = period;
@@ -197,13 +239,16 @@ class page_curriculum extends Page {
 				build_category(categories[i], period, spe);
 		}
 		function build_category(cat, period, spe) {
-			var element = build_element("/static/curriculum/subjects_16.png", cat.name, function(elem,menu) {
+			var add_subj = function() { new_subject(period, cat, spe); }; 
+			var element = build_element("/static/curriculum/subjects_16.png", cat.name, null, function(elem,menu) {
 				if (edit) {
-					menu.addIconItem(theme.build_icon("/static/curriculum/subject_16.png", theme.icons_10.add, "right_bottom"), "Add Subject", function() { new_subject(period, cat, spe); });
+					menu.addIconItem(theme.build_icon("/static/curriculum/subject_16.png", theme.icons_10.add, "right_bottom"), "Add Subject", add_subj);
 					//menu.addSeparator();
 					//menu.addIconItem(theme.build_icon("/static/curriculum/subjects_16.png", theme.icons_10.remove,"right_bottom"), "Remove Category "+cat.name, function() { remove_category(cat); });
 				}
-			});
+			},[
+			   {icon:theme.icons_10.add,action:add_subj,descr:'Add subject'}
+			]);
 			var item = new TreeItem(element, true);
 			item.category = cat;
 			item.period = period;
@@ -227,15 +272,20 @@ class page_curriculum extends Page {
 		}
 		function build_subject(subject, cat_item, index) {
 			var item;
-			var element = build_element("/static/curriculum/subject_16.png", subject.code+" - "+subject.name, function(elem,menu) {
+			var onedit = function() { 
+				edit_subject(subject, function() {
+					var index = cat_item.children.indexOf(item);
+					cat_item.removeItem(item);
+					build_subject(subject, cat_item, index);
+				}); 
+			};
+			var element = build_element("/static/curriculum/subject_16.png", subject.code+" - "+subject.name, onedit, function(elem,menu) {
 				if (edit) {
-					menu.addIconItem(theme.build_icon("/static/curriculum/subject_16.png", theme.icons_10.edit, "right_bottom"), "Edit Subject", function() { edit_subject(subject, function() {
-						var index = cat_item.children.indexOf(item);
-						cat_item.removeItem(item);
-						build_subject(subject, cat_item, index);
-					}); });
+					menu.addIconItem(theme.build_icon("/static/curriculum/subject_16.png", theme.icons_10.edit, "right_bottom"), "Edit Subject", onedit);
 				}
-			});
+			},[
+			   {icon:theme.icons_10.remove,action:function(){alert('Not yet implemented');}}
+			]);
 			var h = document.createElement("SPAN");
 			h.style.paddingLeft = "5px";
 			if (subject.hours && subject.hours_type)

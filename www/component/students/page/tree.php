@@ -174,6 +174,12 @@ function AllStudents(root) {
 		setMenuParams("discipline", "");
 		setMenuParams("health", "");
 	};
+	<?php if ($can_edit) {?>
+	this._build_context_menu = function(menu) {
+		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add),"New Batch",create_new_batch);
+		// TODO
+	};
+	<?php } ?>
 }
 extendsTreeNode(AllStudents);
 
@@ -654,6 +660,8 @@ function setMenuParams(id, params) {
 }
 
 //Initilization of the page and menu
+if (window.parent.addMenuItem)
+	window.parent.resetAllMenus();
 build_tree();
 var node = root.findTag(url.hash);
 if (node) node.select();

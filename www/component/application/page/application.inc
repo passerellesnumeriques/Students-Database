@@ -23,7 +23,7 @@ window.top.CalendarsProviders.get(function(provider) {
 	provider.refreshCalendars();
 });
 window.top.pnapplication.onlogout.add_listener(function() {
-	while (window.top.calendar_manager.calendars.length > 0) indow.top.calendar_manager.removeCalendar(indow.top.calendar_manager.calendars[0]);
+	while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(indow.top.calendar_manager.calendars[0]);
 	window.top.CalendarsProviders.get(function(provider) {
 		clearInterval(provider._refresh_interval);
 	});
@@ -202,7 +202,6 @@ function selectSection(sec) {
 }
 
 function populateMenu(service_url) {
-	resetAllMenus();
 	if (service_url)
 		ajax.call("GET", service_url, null, null, function(error){
 			// TODO

@@ -106,7 +106,7 @@ class page_students_grades extends Page {
 			padding: 1px;
 		}
 		</style>
-		<div id='grades_page_header' icon='' title="&lt;img src='/static/transcripts/grades.gif'/&gt;Grades for Period <?php echo $period["name"]; if ($spe <> null) echo ", Specialization ".$spe["name"]; if ($class<>null) echo ", Class ".$class["name"];?>">
+		<div id='grades_page_header' icon='/static/transcripts/grades.gif' title="Grades for Period <?php echo $period["name"]; if ($spe <> null) echo ", Specialization ".$spe["name"]; if ($class<>null) echo ", Class ".$class["name"];?>">
 			<div class='button' onclick='select_students_columns(this);'><img src='/static/data_model/table_column.png'/>Select students information to display</div>
 			<div class='button' onclick="alert('Not yet done');"><img src='<?php echo theme::$icons_16["config"];?>'/>Configure Transcripts</div>
 			<div class='button' onclick="alert('Not yet done');"><img src='/static/transcripts/grades.gif'/>See/Print Transcripts</div>
