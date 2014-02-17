@@ -40,7 +40,7 @@ class page_selection_main_page extends selection_page {
 		$steps = PNApplication::$instance->selection->getSteps();
 		$unvalid_steps_to_display = array();
 		$valid_steps_to_display = array();
-		
+
 	?>
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
 				<div id = 'left'>

@@ -31,9 +31,11 @@ return array(
 			array("import_applicant",true,"Exam results cannot be imported because no applicant is set in the database",array("add" => true,"remove" => false, "update" => true)), //can update the applicant info even if he already has results
 		)),
 	"define_topic_for_eligibility_rules" => array("Some topics for eligibility rules have been defined","ExamTopicForEligibilityRule", array(
-			// array("manage_exam", true, "Eligibility rules cannot be defined because no exam is set in the database"),
-			array(),
+			//array("manage_exam", true, "Topics for eligibility rules cannot be defined because no exam is set in the database",array("add" => true,"remove" => true, "update" => true)),//No restriction
 		)),
+	"define_eligibility_rules" => array("Some eligibility rules have been defined","EligibilityRule", array(
+			//array("define_topic_for_eligibility_rules", true, "Eligibility rules cannot be defined because no topic for eligibility rule is defined yet",array("add" => true,"remove" => true, "update" => true)),//No restriction
+	)),
 	//TODO define_eligibility_rules: dependencies => array("apply_eligibility_rules" => false)??
 	);
 ?>

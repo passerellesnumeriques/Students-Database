@@ -491,9 +491,11 @@ class SelectionJSON{
 	}
 	
 	/**
-	 * Exam Topic PHP
-	 * Get the exam topic for eligibility rules data
-	 * @param integer topic_id the id of the topic
+	 * Exam Topic PHP <br/>
+	 * Get the exam topic for eligibility rules data<br/>
+	 * @param SQLQuery $q
+	 * @param array $rows the data about the ExamTopic
+	 * @param integer id the id of the topic
 	 * @return array [id => ""
 	 * 					name => ""
 	 * 					subjects => [
@@ -670,5 +672,129 @@ class SelectionJSON{
 			return $json;
 		} else
 			return "[]";
+	}
+	
+/**
+ * Methods about the Eligibility Rules
+ */
+	/**
+	 * Get the EligibilityRule JSON structure from a given ID
+	 * @param number $id
+	 * @return string
+	 */
+	public static function EligibilityRuleFromID($id){
+		$q = SQLQuery::create()
+			->select("EligibilityRule")
+			->join("EligibilityRule", "EligibilityRuleExamTopic", array("id" => "eligibility_rule"))
+			->whereValue("EligibilityRule", "id", $id);
+		self::EligibilityRuleSQL($q);
+		$rows = $q->execute();
+		if($rows <> null)
+			return self::EligibilityRule($q, $rows, $id);
+		else
+			return "{}";
+	}
+	
+	/**
+	 * Retrieve all the data from the EligibilityRule tables
+	 * @param SQLQuery $q the query to used to get the data
+	 */
+	public static function EligibilityRuleSQL(&$q){
+		$alias = $q->getTableAlias("EligibilityRule");
+		if(!$alias)
+			$alias = "EligibilityRule";
+		
+		$alias_2 = $q->getTableAlias("EligibilityRuleExamTopic");
+		if(!$alias_2)
+			$alias_2 = "EligibilityRuleExamTopic";
+		
+		$q
+			->field($alias,"id","id")
+			->field($alias,"parent","parent")
+			->field($alias_2,"exam_topic_for_eligibility_rule","exam_topic_for_eligibility_rule")
+			->field($alias_2,"coefficient","coefficient");
+	}
+	
+	/**
+	 * Get the EligibilityRule JSON structure
+	 * @param SQLQuery $q query used to retrieve the EligibilityRule data
+	 * @param array $rows the rows containing the EligibilityRule data
+	 * @param number $id the id of the EligibilityRule
+	 * @return string the EligibilityRule JSON structure
+	 */
+	public static function EligibilityRule($q, $rows, $id){
+		$r = "{";
+		if($rows <> null){
+			$r .= "id:".json_encode($id).", parent:".json_encode($rows[0]["parent"]).", topics:[";
+			if(isset($rows[0]["exam_topic_for_eligibility_rule"])){//there is at least one topic
+				$first = true;
+				foreach ($rows as $row){
+					if(!$first)
+						$r .= ", ";
+					$r .= "{coefficient:".json_encode($row["coefficient"]);
+					$r .= ", topic:".self::ExamTopicForEligibilityRulesFromID($row["exam_topic_for_eligibility_rule"]);
+					$r .= "}";
+					$first = false;
+				}
+			}
+			$r .= "]}";
+			return $r;
+		} else 
+			return "{}";
+	}
+	
+	/**
+	 * Prepare the array field=>value for the table EligibilityRule, from a JSON ELigibilityRule structure
+	 * @param string $json
+	 * @return array
+	 */
+	public static function EligibilityRule2DB($json){
+		$a = array(
+			"parent" => @$json["parent"]
+		);
+		if(isset($json["id"]))
+			$a["id"] = $json["id"];
+		return $a;
+	}
+	
+	/**
+	 * Prepare the array field=>value for the table ElibilityRuleExamTopic
+	 * @param string $json
+	 * @param number|null $eligibility_rule_id if not given, the field exam_topic_for_eligibility_rule shall be manually added
+	 * @return array
+	 */
+	public static function EligibilityRuleTopic2DB($json, $eligibility_rule_id = null){
+		$a = array(
+			"coefficient" => @$json["coefficient"],
+			"exam_topic_for_eligibility_rule" => @$json["topic"]["id"],
+		);
+		if(isset($eligibility_rule_id))
+			$a["eligibility_rule"] = $eligibility_rule_id;
+		return $a;
+	}
+	
+	/**
+	 * Get a JSON array containing JSON EligibilityRules objects, from all the eligibility rules set into the database
+	 * @return string the JSON array
+	 */
+	public static function getJSONAllEligibilityRules(){
+		$q_all_rules = SQLQuery::create()
+		->select("EligibilityRule")
+		->field("EligibilityRule","id")
+		->executeSingleField();
+		$all_rules = "";
+		if($q_all_rules <> null){
+			$first = true;
+			$all_rules .= "[";
+			foreach($q_all_rules as $id){
+				if(!$first)
+					$all_rules .= ", ";
+				$first = false;
+				$all_rules .= SelectionJSON::EligibilityRuleFromID($id);
+			}
+			$all_rules .= "]";
+		} else
+			$all_rules .= "[]";
+		return $all_rules;
 	}
 }

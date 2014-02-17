@@ -904,7 +904,7 @@ class selection extends Component {
 			else
 				SQLQuery::commitTransaction(); //Commit
 		} else
-			PNApplication::error($can_update[1]);
+			PNApplication::error_html($can_update[1]);
 		if(PNApplication::has_errors())
 			return false;
 		else {
@@ -912,7 +912,6 @@ class selection extends Component {
 			$this->updateAllSteps();
 			// return a new subject object
 			return SelectionJSON::ExamSubjectFromID($exam_id);
-			//TODO return information message from topic
 		}
 	}
 	
@@ -950,9 +949,6 @@ class selection extends Component {
 	 * used to generate a message + in case the topic is a full subject one (added to the topic)
 	 */	
 	public function updateExamTopicsForEligibilityRules($parts_removed,$parts_inserted,$exam_id){
-	
-	//TODO finish(message)
-	
 		if($parts_removed <> null || $parts_inserted <> null){
 			// find out the related topics for eligibility rules
 			$topics_for_parts_removed = null;
@@ -1087,6 +1083,9 @@ class selection extends Component {
 				array_push($rows,array("exam_topic_for_eligibility_rule" => $id, "exam_subject_part" => $p));
 			SQLQuery::create()
 				->insertMultiple("ExamPartTopic",$rows);
+			//Check the values
+				$this->checkTopicMaxScoreField($id);
+				$this->checkTopicNumberQuestionsField($id);
 			return $id;
 		}
 	}
@@ -1113,7 +1112,7 @@ class selection extends Component {
 				->field("name")
 				->whereValue("ExamSubject","id",$exam_id)
 				->executeSingleValue();
-			if($name <> null){
+			if($name <> null){				
 				$id = $this->createTopic($name, $parts_to_insert);
 				//insert in the ExamTopicFullExam table
 				SQLQuery::create()
@@ -1122,38 +1121,18 @@ class selection extends Component {
 			}
 		}
 	}
-	// private function getPartByTopicConcerned($part_ids,&$topics){
-		// foreach($part_ids as $p){
-			// $topic = SQLQuery::create()
-				// ->bypassSecurity()
-				// ->select("ExamPartTopic")
-				// ->distinct()
-				// ->join("ExamPartTopic","ExamTopicForEligibilityRule",array("exam_topic_for_eligibility_rule" => "id"))
-				// ->field("ExamTopicForEligibilityRule","id","id")
-				// ->field("ExamTopicForEligibilityRule","name","name")
-				// ->whereValue("ExamPartTopic","exam_subject_part",$p)
-				// ->execute();
-			// if($topic <> null){
-				// if(!isset($topics[$topic["id"]]))
-					// $topics[$topic["id"]] = array(
-						// "name" => $topic["name"],
-						// "parts" => array()
-					// );
-				// array_push($topics[$topic["id"]]["parts"],$p);
-			// }
-		// }
-	// }
 
 	/**
 	 * Save an exam topic and all the related data<br/>
 	 * The rights and steps are checked before performing the query
 	 * @param array $topic fields_values for ExamTopicForEligibilityRule table
-	 * @param array $parts all the parts ids within the topic
+	 * @param array $parts_to_add all the parts ids to add into the database
+	 * @param array $parts_to_remove all the parts already set into the database that must be removed
 	 * @param array $full_subjects all the full subject within the topic
 	 * @param number $db_lock lock id for the table ExamTopicForEligibilityRule
 	 * @return boolean|number false if an error occured, else the id of the topic saved
 	 */
-	public function saveTopic($topic, $parts, $full_subjects, $db_lock){
+	public function saveTopic($topic, $parts_to_add, $parts_to_remove, $full_subjects, $db_lock){
 		//Check the rights
 		$rights = $this->canUpdateFromRightAndStep("define_topic_for_eligibility_rules", "manage_exam_subject", "You are not allowed to manage the exam topics for eligibility rules");
 		$id = null;
@@ -1181,14 +1160,7 @@ class selection extends Component {
 				try {
 					SQLQuery::create()->updateByKey("ExamTopicForEligibilityRule", $id, $topic);
 					//Get and remove all the parts set into the database
-					$parts_to_remove = SQLQuery::create()
-						->bypassSecurity()
-						->select("ExamPartTopic")
-						->field("ExamPartTopic","exam_subject_part","part")
-						->whereValue("ExamPartTopic","exam_topic_for_eligibility_rule",$id)
-						->executeSingleField();
 					if($parts_to_remove <> null){
-// 						SQLQuery::create()->removeKeys("InformationSessionPartner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
 						foreach($parts_to_remove as $p)
 							SQLQuery::create()->removeKeys("ExamPartTopic", array(array("exam_topic_for_eligibility_rule" => $id, "exam_subject_part" => $p)));
 					}
@@ -1200,7 +1172,6 @@ class selection extends Component {
 					->whereValue("ExamTopicFullExam","exam_topic_for_eligibility_rule",$id)
 					->executeSingleField();
 					if($full_subjects_to_remove <> null){
-						//SQLQuery::create()->removeKeys("InformationSessionPartner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
 						foreach($full_subjects_to_remove as $s)
 							SQLQuery::create()->removeKeys("ExamTopicFullExam", array(array("exam_topic_for_eligibility_rule" => $id, "exam_subject" => $s)));
 					}
@@ -1209,7 +1180,7 @@ class selection extends Component {
 				}
 			}
 			//Insert all the new values
-			foreach($parts as $p)
+			foreach($parts_to_add as $p)
 				array_push($parts_fields_values, array("exam_subject_part" => $p, "exam_topic_for_eligibility_rule" => $id));
 			foreach ($full_subjects as $subject)
 				array_push($full_subject_field_values, array("exam_subject" => $subject, "exam_topic_for_eligibility_rule" => $id));
@@ -1408,6 +1379,54 @@ class selection extends Component {
 	} 
 	
 	/**
+	 * Check that the max_score set in ExamTopicForEligibilityRule table complies with the reality
+	 * If no, the value is updated
+	 * @param number $id
+	 */
+	public function checkTopicMaxScoreField($id){
+		$data = SQLQuery::create()
+			->bypassSecurity()
+			->select("ExamTopicForEligibilityRule")
+			->join("ExamTopicForEligibilityRule","ExamPartTopic",array("id" => "exam_topic_for_eligibility_rule"))
+			->join("ExamPartTopic","ExamSubjectPart",array("exam_subject_part" => "id"))
+			->whereValue("ExamTopicForEligibilityRule","id",$id)
+			->field("ExamTopicForEligibilityRule","max_score","topic_max_score")
+			->field("ExamSubjectPart","max_score","part_max_score")
+			->execute();
+		$score_from_topic = floatval($data[0]["topic_max_score"]);
+		$score_from_parts = 0;
+		foreach($data as $d)
+			$score_from_parts += floatval($d["part_max_score"]);
+		if($score_from_parts <> $score_from_topic)//update the value
+			$q = SQLQuery::create()
+				->bypassSecurity()
+				->updateByKey("ExamTopicForEligibilityRule",$id,array('max_score' => $score_from_parts));
+	}
+	
+	/**
+	 * Check that the number_questions set in ExamTopicForEligibilityRule table complies with the reality
+	 * If no, the value is updated
+	 * @param number $id
+	 */
+	public function checkTopicNumberQuestionsField($id){
+		$data = SQLQuery::create()
+			->bypassSecurity()
+			->select("ExamTopicForEligibilityRule")
+			->join("ExamTopicForEligibilityRule","ExamPartTopic",array("id" => "exam_topic_for_eligibility_rule"))
+			->join("ExamPartTopic","ExamSubjectQuestion",array("exam_subject_part" => "exam_subject_part"))
+			->whereValue("ExamTopicForEligibilityRule","id",$id)
+			->field("ExamTopicForEligibilityRule","number_questions","topic_number_questions")
+			->count("nb_from_questions")
+			->execute();
+		$nb_from_topic = floatval($data[0]["topic_number_questions"]);
+		$nb_from_questions = floatval($data[0]["nb_from_questions"]);
+		if($nb_from_questions <> $nb_from_topic)//update the value
+			SQLQuery::create()
+				->bypassSecurity()
+				->updateByKey("ExamTopicForEligibilityRule",$id,array("number_questions" => $nb_from_questions));
+	}
+	
+	/**
 	 * @param {array} ids
 	 * @param {boolean} get_names. If true, in case of an unvalid applicant ID
 	 * will get the last name of the applicant who has the same ID
@@ -1431,15 +1450,6 @@ class selection extends Component {
 		// }
 		// return array($all_valids,$wrong_ids);
 	// }
-	
-// 	private function getNameFromApplicantId($applicant_id){
-// 		return SQLQuery::create()
-// 		->bypassSecurity()
-// 		->select("Applicant")
-// 		->field("last_name")
-// 		->whereValue("Applicant","applicant_id",$applicant_id)
-// 		->executeSingleValue();
-// 	}
 	
 }
 ?>

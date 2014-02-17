@@ -45,8 +45,37 @@ class service_eligibility_rules_save_topic extends Service {
 				}
 			}
 			
-// 			//Call the save method
-			$id = PNApplication::$instance->selection->saveTopic($db_topic, $db_parts, $db_full_subjects, $input["db_lock"]);
+			if($db_topic["id"] != -1 && $db_topic["id"] != "-1"){
+				$parts_from_db = SQLQuery::create()
+					->select("ExamPartTopic")
+					->field("ExamPartTopic","exam_subject_part","id")
+					->whereValue("ExamPartTopic", "exam_topic_for_eligibility_rule", $db_topic["id"])
+					->executeSingleField();
+				$parts_to_remove = array();
+				$parts_to_add = array();
+				
+				//Get the parts to remove
+				foreach($parts_from_db as $p){
+					if(!in_array($p, $db_parts))
+						array_push($parts_to_remove, $p);
+				}
+				//Get the parts to add
+				foreach ($db_parts as $p){
+					if(!in_array($p, $parts_from_db))
+						array_push($parts_to_add, $p);
+				}
+				//For the other parts, nothing to do
+					
+				//Call the save method
+				$id = PNApplication::$instance->selection->saveTopic($db_topic, $parts_to_add, $parts_to_remove, $db_full_subjects, $input["db_lock"]);
+			} else {
+				//all the parts must be added
+				
+				//Call the save method
+				$id = PNApplication::$instance->selection->saveTopic($db_topic, $db_parts, array(), $db_full_subjects, $input["db_lock"]);
+			}
+			
+			
 			if($id)
 				echo SelectionJSON::ExamTopicForEligibilityRulesFromID($id);
 			else

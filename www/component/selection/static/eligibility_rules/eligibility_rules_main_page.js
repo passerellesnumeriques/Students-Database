@@ -98,17 +98,19 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		var td = document.createElement("td");
 		//TODO set Colspan
 		var div = document.createElement("div");
-		if(validated != null){
-			div.innerHTML = validated;
-			div.style.color = "red";
-			div.style.paddingLeft = "2px";
-		} else {
-			div.innerHTML = "All the parts appear one and only one time in the topics, so eligibility rules can be applied";
-			div.style.color = "green";
-			div.style.paddingLeft = "0px";
+		if(all_topics.length > 0){
+			if(validated != null){
+				div.innerHTML = validated;
+				div.style.color = "red";
+				div.style.paddingLeft = "2px";
+			} else {
+				div.innerHTML = "All the parts appear one and only one time in the topics, so eligibility rules can be applied";
+				div.style.color = "green";
+				div.style.paddingLeft = "0px";
+			}
+			td.appendChild(div);
+			tr.appendChild(td);
 		}
-		td.appendChild(div);
-		tr.appendChild(td);
 	};
 	
 	/**

@@ -225,7 +225,24 @@
 		
 		//TODO Exam_part_result, exam_subject_result (reduce the calculation time for statistics...)
 		
-		
+	$sm->addTable("EligibilityRule")
+		->addPrimaryKey("id")
+		->addForeignKey("parent", "EligibilityRule", true, false, false)//Can only have one parent. If null, root level 
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
+	//optional: addString name?
+	
+	$sm->addTable("ElibilityRuleExamTopic")
+		->addForeignKey("eligibility_rule", "EligibilityRule", true, false, true)
+		->addForeignKey("exam_topic_for_eligibility_rule", "ExamTopicForEligibilityRule", true, false, true)
+		->addDecimal("coefficient") //optional. If empty, considered as 1
+		->setKey(array("eligibility_rule","exam_topic_for_eligibility_rule"))
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
 		
 		
 		
