@@ -105,6 +105,47 @@ abstract class Page {
 		PNApplication::print_errors();
 		pageFooter();
 	}
+	
+	/**
+	 * Performed the lock of the given data
+	 * If well performed, the managing script is generated
+	 * @param string $table
+	 * @param string|null (optional) $row
+	 * @param string|null (optional)$column
+	 * @param string|null (optional) $sm submodel
+	 * @return null|number null if the lock cannot be performed, else the lock id 
+	 */
+	public final function performRequiredLocks($table, $row = null, $column = null, $sm = null){
+		require_once("component/data_model/DataBaseLock.inc");
+		require_once("component/data_model/Model.inc");
+		$model = DataModel::get();
+		$table = $model->getTable($table); // here check is done is the user can access this table
+		$locked_by = null;
+		$name = null;
+		$db_lock = null;
+		//Call the matching method
+		if($column <> null){
+			if($row <> null){
+				$db_lock = DataBaseLock::lockCell($table->getSQLNameFor($sm), $row, $column, $locked_by);
+				$name = "cell";
+			} else {
+				$db_lock = DataBaseLock::lockColumn($table->getSQLNameFor($sm), $column, $locked_by);
+				$name = "column";
+			}
+		} else if ($row <> null){
+			$db_lock = DataBaseLock::lockRow($table->getSQLNameFor($sm), $row, $locked_by);
+			$name = "row";
+		} else {
+			$db_lock = DataBaseLock::lockTable($table->getSQLNameFor($sm), $locked_by);
+			$name = "table";
+		}
+		if ($db_lock == null) {
+			PNApplication::error("This ".$name." is already locked by ".$locked_by);
+			return;
+		} else
+			DataBaseLock::generateScript($db_lock);
+		return $db_lock;
+	}
 }
 
 function pageHeaderStart() {

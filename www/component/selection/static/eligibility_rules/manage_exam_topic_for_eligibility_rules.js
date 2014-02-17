@@ -1006,7 +1006,8 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			}
 		} else {
 			var locker = lock_screen();
-			service.json("selection","eligibility_rules/save_topic",{topic:topic, db_lock:db_lock},function(res){
+			//The lock id given is the one related to the ExamTopicForEligibilityRule table
+			service.json("selection","eligibility_rules/save_topic",{topic:topic, db_lock:db_lock[0]},function(res){
 				if(!res){
 					unlock_screen(locker);
 					error_dialog("An error occured, your informations were not saved");
@@ -1120,11 +1121,11 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 				t.global_can_edit,
 				t.global_can_add,
 				t.global_can_remove,
-				"table",
-				"ExamTopicForEligibilityRule",
-				null,
-				null,
-				campaign_id,
+				["table","table"],
+				["ExamTopicForEligibilityRule","ExamSubjectPart"],
+				[null,null],
+				[null,null],
+				[campaign_id,campaign_id],
 				t.db_lock,
 				function(){return true;},
 				t.reset,
