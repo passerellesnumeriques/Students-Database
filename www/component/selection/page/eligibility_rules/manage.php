@@ -41,15 +41,21 @@ class page_eligibility_rules_manage extends selection_page {
 			$all_topics = SelectionJSON::getJsonAllTopics();
 			?>
 			<script type = "text/javascript">
-			require("diagram_display_manager.js",function(){
-				var d = new diagram_display_manager("test");
-				d.createStartNode("title","coucou","title");
-				d.createEndNode("<img src = '"+theme.icons_16.left+"'/> fin","c est la ","end");
-				d.createChildNode('test','test number 1 avec très bcp ',"test1");
-				d.createChildNode('test','test number 222222222222222222',"test2");
-				d.createChildNode('test','test number 222222222222222222',"test3");
-				d.createChildNode('test','test number 222222222222222222',"test4");
-				d.show();
+// 			require("diagram_display_manager.js",function(){
+// 				var d = new diagram_display_manager("test");
+// 				d.createStartNode("title","coucou","title");
+// 				d.createEndNode("<img src = '"+theme.icons_16.left+"'/> fin","c est la ","end");
+// 				d.createChildNode('test','test number 1 avec très bcp ',"test1");
+// 				d.createChildNode('test','test number 222222222222222222',"test2");
+// 				d.createChildNode('test','test number 222222222222222222',"test3");
+// 				d.createChildNode('test','test number 222222222222222222',"test4");
+// 				d.show();
+// 			});
+
+			require("manage_rule.js",function(){
+				var rule = {topics:[{coefficient:null,topic:{id:1,name:"Toto",max_score:10}},{coefficient:2,topic:{id:2,name:"Titi",max_score:10}}]};
+				var all = [{id:1,name:"Toto",max_score:10},{id:2,name:"Toto",max_score:10},{id:3,name:"Toto",max_score:10}];
+				new manage_rule("test",rule,all,true);
 			});
 			</script>
 			<?php
