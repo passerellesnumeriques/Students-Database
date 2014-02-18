@@ -44,10 +44,11 @@ class page_eligibility_rules_manage extends selection_page {
 			require("diagram_display_manager.js",function(){
 				var d = new diagram_display_manager("test");
 				d.createStartNode("title","coucou","title");
-				d.createEndNode("<img src = '"+theme.icons_16.left+"'/> fin","c est la fin","end");
-				d.createChildNode('test','test number 1 avec très bcp de texte pour que ça soit grosrbzebgzgegefgerggergggggggggggggg',"test1");
+				d.createEndNode("<img src = '"+theme.icons_16.left+"'/> fin","c est la ","end");
+				d.createChildNode('test','test number 1 avec très bcp ',"test1");
 				d.createChildNode('test','test number 222222222222222222',"test2");
-				d.createChildNode('test','test number 222222222222222222',"test2");
+				d.createChildNode('test','test number 222222222222222222',"test3");
+				d.createChildNode('test','test number 222222222222222222',"test4");
 				d.show();
 			});
 			</script>
