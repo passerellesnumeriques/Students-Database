@@ -711,6 +711,7 @@ class SelectionJSON{
 		$q
 			->field($alias,"id","id")
 			->field($alias,"parent","parent")
+			->field($alias_2,"expected","expected")
 			->field($alias_2,"exam_topic_for_eligibility_rule","exam_topic_for_eligibility_rule")
 			->field($alias_2,"coefficient","coefficient");
 	}
@@ -732,6 +733,7 @@ class SelectionJSON{
 					if(!$first)
 						$r .= ", ";
 					$r .= "{coefficient:".json_encode($row["coefficient"]);
+					$r .= ", expected:".json_encode($row["expected"]);
 					$r .= ", topic:".self::ExamTopicForEligibilityRulesFromID($row["exam_topic_for_eligibility_rule"]);
 					$r .= "}";
 					$first = false;
@@ -767,6 +769,7 @@ class SelectionJSON{
 		$a = array(
 			"coefficient" => @$json["coefficient"],
 			"exam_topic_for_eligibility_rule" => @$json["topic"]["id"],
+			"expected" => @$json["expected"],
 		);
 		if(isset($eligibility_rule_id))
 			$a["eligibility_rule"] = $eligibility_rule_id;

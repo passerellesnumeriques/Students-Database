@@ -2,9 +2,12 @@
  * Create a diagram with blocs starting from A, with several blocks in the middle column, and ending to the point B<br/>
  * The blocks in the middle are all linked to the starting (A) and ending (B) blocs by a line
  * @param {String|HTMLElement}container
+ * @param {Null|number} start_width the width to set to the start node
+ * @param {Null|number} middle_width the width to set to all the middle nodes
+ * @param {Null|number} end_width the width to set to the end node
  * Note: all the layout calculations are done considering that the container has no margin neither border
  */
-function diagram_display_manager(container){
+function diagram_display_manager(container,start_width,middle_width,end_width){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -30,6 +33,7 @@ function diagram_display_manager(container){
 		for( var i = 0; i < nodes.length; i++){
 			t.nodes[i+1] = nodes[i];
 		} 
+		t._resetLayout();
 	};
 	
 	/**
@@ -41,7 +45,8 @@ function diagram_display_manager(container){
 	 */
 	t.createEndNode = function(title, content, id){
 		//Add at the end
-		t.createChildNode(title, content, id);
+		t.nodes.push({id:id,title:title,content:content});
+		t._resetLayout();
 	};
 	
 	/**
@@ -63,8 +68,7 @@ function diagram_display_manager(container){
 			t.nodes.push({id:id,title:title,content:content});
 			t.nodes.push(end);
 		}
-		
-		
+		t._resetLayout();
 	};
 	
 	/**
@@ -88,30 +92,35 @@ function diagram_display_manager(container){
 	};
 	
 	/**
-	 * Reset the diagram layout
+	 * Reset the diagram layout<br/>
+	 * Remove all the elements from the diagram<br/>
+	 * If the diagram was displayed before, call the t.show method
 	 */
 	t._resetLayout = function(){
 		while(container.firstChild)
-			container.removeChild(container.fisrtChild);
-		t.show();
+			container.removeChild(container.firstChild);
+		if (t._shown) t.show();
 	};
 
+	t._shown = false;
 	/**
 	 * Start the layout process, and fill up the container
 	 */
 	t.show = function(){
-		t._setLayout();
-		t._drawLines();
-	};
-
-	/**
-	 * Set the layout of the diagram<br/>
-	 * Each node is a table with an absolute position, manually fixed
-	 */
-	t._setLayout = function(){
+		t._shown = true;
 		//First insert all the nodes into the container
 		for(var i = 0; i < t.nodes.length; i++)
 			container.appendChild(t._createNode(t.nodes[i].title,t.nodes[i].id,t.nodes[i].content));
+		t.layout();
+		t._drawLines();
+	};
+	
+	/**
+	 * Set the layout of the diagram<br/>
+	 * Each node is a table with an absolute position, manually fixed<br/>
+	 * The t.managing_layout attribute is set as true at the begining of the process, and as false once it is done
+	 */
+	t.layout = function(){
 		//Then set the layout
 		if(t.nodes.length < 2){
 			if(t.nodes.length == 1){
@@ -161,6 +170,7 @@ function diagram_display_manager(container){
 			}
 		}
 	};
+	addLayoutEvent(container, function() { t.layout(); });
 	
 	/**
 	 * Create a node element
@@ -215,24 +225,35 @@ function diagram_display_manager(container){
 					if(t.nodes.length > 2)
 						drawing.horizontal_connector(document.getElementById(t._getComputedId(t.nodes[i].id)), end);
 				}
+				if(t.nodes.length == 2){
+					//link the first and the last node
+					drawing.horizontal_connector(first,end);
+				}
 			});
 		}
 	};
 
 	/**
 	 * Get the width to be computed for a given element<br/>
-	 * The values are manually chosen
+	 * The values are manually chosen / can be set by the user
 	 * @param {Number} index the index of the node into t.nodes array
 	 * @returns {Number} the width value 
 	 */
 	t._getWidth = function(index){
 		var w = getWidth(container);
-		if(index == 0)
-			return w*0.2;
-		else if(index == t.nodes.length -1)
-			return w*0.2;
-		else
-			return w*0.2;
+		if(index == 0){
+			if(start_width)
+				return start_width;
+			return w*0.25;
+		} else if(index == t.nodes.length -1) {
+			if(end_width)
+				return end_width;
+			return w*0.25;
+		} else {
+			if(middle_width)
+				return middle_width;
+			return w*0.25;
+		}
 		
 	};
 

@@ -156,8 +156,11 @@ function _layout_auto() {
 		e = e.parentNode;
 		while (e != null && e != document.body) {
 			if (!done.contains(e)) {
-				if (e.scrollHeight != e._layoutH || e.scrollWidth != e._layoutW)
+				if (e.scrollHeight != e._layoutH || e.scrollWidth != e._layoutW) {
 					fireLayoutEventFor(e);
+					e._layoutH = e.scrollHeight; 
+					e._layoutW = e.scrollWidth; 
+				}
 				done.push(e);
 			}
 			e = e.parentNode;

@@ -237,6 +237,7 @@
 	$sm->addTable("ElibilityRuleExamTopic")
 		->addForeignKey("eligibility_rule", "EligibilityRule", true, false, true)
 		->addForeignKey("exam_topic_for_eligibility_rule", "ExamTopicForEligibilityRule", true, false, true)
+		->addDecimal("expected",10,2,null,null,false,false) //the expected grade for this topic
 		->addDecimal("coefficient") //optional. If empty, considered as 1
 		->setKey(array("eligibility_rule","exam_topic_for_eligibility_rule"))
 		->addWriteAccess("manage_exam_subject",true)
