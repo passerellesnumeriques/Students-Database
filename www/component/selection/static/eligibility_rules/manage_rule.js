@@ -146,8 +146,10 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 			t.field_decimal_expected[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].expected,false,config_grade_expected);
 		}
 		//Add the custom event to the field_decimal onchange
-		t.field_decimal_coeff.onchange = t.onupdaterule.fire(index_in_all_rules);
-		t.field_decimal_expected.onchange = t.onupdaterule.fire(index_in_all_rules);
+//		t.field_decimal_coeff.ondatachanged = t.onupdaterule.fire(index_in_all_rules);
+//		t.field_decimal_expected.ondatachanged = t.onupdaterule.fire(index_in_all_rules);
+		t.field_decimal_coeff[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(index_in_all_rules);});
+		t.field_decimal_expected[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(index_in_all_rules);});
 		td2.appendChild(t.field_decimal_expected[rule.topics[index].topic.id].getHTMLElement());
 		var text_score = document.createTextNode("/"+rule.topics[index].topic.max_score);
 		td2.appendChild(text_score);
@@ -163,7 +165,7 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		div.className = "button_verysoft";
 		div.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
 		div.index = index;
-		div.title = "Remove the topic from the rule";
+		div.title = "Remove this topic from the rule";
 		div.onclick = function(){
 			//Remove from rule
 			rule.topics.splice(index,1);
@@ -214,11 +216,23 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		}
 	};
 	
-	t.updateRuleCoefficients = function(){
+	t._updateRuleCoefficientFields = function(){
 		for(id in t.field_decimal_coeff){
 			var index = t._getTopicIndexInRule(id);
-			rule.topics[index].coefficient = t.field_decimal_coeff[i].getCurrentData();
+			rule.topics[index].coefficient = t.field_decimal_coeff[id].getCurrentData();
 		}
+	};
+	
+	t._updateRuleExpectedFields = function(){
+		for(id in t.field_decimal_expected){
+			var index = t._getTopicIndexInRule(id);
+			rule.topics[index].expected = t.field_decimal_expected[id].getCurrentData();
+		}
+	};
+	
+	t.updateRuleFields = function(){
+		t._updateRuleCoefficientFields();
+		t._updateRuleExpectedFields();
 	};
 	
 	require([["typed_field.js","field_decimal.js"]],function(){

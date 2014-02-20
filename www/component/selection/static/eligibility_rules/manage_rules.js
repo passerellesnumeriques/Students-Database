@@ -1,15 +1,15 @@
-function manage_rules(container, all_rules, all_topics, can_edit, pop_containing, db_lock){
+function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	t.all_manage_rule = [];
 	
-	can_edit = false;
+//	can_edit = false;
 	
 	t._init = function(){
 		t._initDiagram();
-//		if(can_edit)
-//			t._addButtons();
+		if(can_edit)
+			t._addButtons();
 		t._setTableStyle();
 		t._fireLayoutEvent();
 		
@@ -63,7 +63,8 @@ function manage_rules(container, all_rules, all_topics, can_edit, pop_containing
 		if(can_edit){
 			var remove = document.createElement("div");
 			remove.className = "button_verysoft";
-			remove.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
+			remove.innerHTML = "<img src = '"+theme.icons_16.remove_black+"'/>";
+			remove.title = "Remove this rule";
 			remove.index = index;
 			remove.onclick = function(){
 				//remove from all_rules
@@ -73,13 +74,14 @@ function manage_rules(container, all_rules, all_topics, can_edit, pop_containing
 				//Remove from all_manage_rule
 				var i = t._getIndexInAllManageRule(this.index);
 				t.all_manage_rule.splice(i,1);
-				//reset buttons
-				t.resetButtons();
+				//reset error row
+				t._onManageRuleChange();
 			};
 		} else
 			var remove = null;
 		var div = document.createElement("div");
 		var node = new manage_rule(div,all_rules[index],all_topics,can_edit,remove,index,t._fireLayoutEvent);
+		node.onupdaterule.add_listener(t._onManageRuleChange);
 		t.all_manage_rule.push({index:index, manage_rule:node});
 		t.diagram.createChildNode(null,div,index);
 	};
@@ -95,9 +97,9 @@ function manage_rules(container, all_rules, all_topics, can_edit, pop_containing
 	 * Only called if can_edit
 	 */
 	t._addButtons = function(){
-		var footer = document.createElement("div");
-		container.appendChild(footer);
-		footer.style.borderTop = "1px solid #808080";
+		t._footer = document.createElement("div");
+		container.appendChild(t._footer);
+		t._footer.style.borderTop = "1px solid #808080";
 		
 		//Add intermediate rule button
 		var add_rule = document.createElement("div");
@@ -107,24 +109,55 @@ function manage_rules(container, all_rules, all_topics, can_edit, pop_containing
 			//Add the rule in all_rules
 			var rule = new EligibilityRule(-1,"root",[]); //parent attribute can only be null or root. Will be updated after saving
 			all_rules.push(rule);
-			t._createMiddleNode(all_rules.length);
+			t._createMiddleNode(all_rules.length-1);
+			t._onManageRuleChange();
 		};
-		footer.appendChild(add_rule);
+		t._footer.appendChild(add_rule);
 		
 		//Add save button
-		t.save = document.createElement("div");
-		t.save.className = "button";
-		t.save.innerHTML = "<img src = '"+theme.icons_16.save+"'/> Save";
-		t.save.onclick = function(){
-			//TODO
+		t._save = document.createElement("div");
+		t._save.className = "button";
+		t._save.innerHTML = "<img src = '"+theme.icons_16.save+"'/> Save";
+		t._save.onclick = function(){
+			//Last validity check
+			if(t._checkNoDoubleRule() == null && t._checkNoEmptyRule() == null){
+				var locker = lock_screen();
+				alert(db_lock);
+				service.json("selection","eligibility_rules/save_rules",{all_rules:all_rules,db_lock:db_lock},function(res){
+					if(!res){
+						error_dialog("An error occured your informations were not saved");
+						unlock_screen(locker);
+					} else {
+						all_rules = res;
+						t.reset(locker);
+						window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Your informations have been successfuly saved!", [{action:"close"}], 5000));
+					}
+						
+				});
+			}
 		};
-		footer.appendChild(t.save);
+		t._footer.appendChild(t._save);
 		
-		//An an error message displayer
-		t.error = document.createElement("div");
-		t.error.style.color = "red";
-		t.error.style.visibility = "hidden";
-		footer.appendChild(t.error);
+		//Add an error message displayer
+		t._error = document.createElement("div");
+		t._error.style.display = "inline-block";
+		var text = document.createTextNode("There are mistakes in your rules");
+		t._error_detail = null;
+		var show_detail = document.createElement("div");
+		show_detail.className = "button_verysoft";
+		show_detail.innerHTML = "<i>See detail</i>";
+		show_detail.style.fontWeight = "bold";
+		show_detail.onclick = function(){
+			require("popup_window.js",function(){
+				var pop = new popup_window("Error details",theme.icons_16.error,t._error_detail);
+				pop.show();
+			});
+		};
+		t._error.appendChild(text);
+		t._error.appendChild(show_detail);
+		t._error.style.color = "red";
+		t._error.style.visibility = "hidden";
+		t._footer.appendChild(t._error);
 	};
 	
 	/**
@@ -135,11 +168,11 @@ function manage_rules(container, all_rules, all_topics, can_edit, pop_containing
 		if(all_rules.length > 1){
 			var res = null;
 			for(var i = 0; i < all_rules.length -1; i++){
-				for(var j = i; j < all_rules.length; j++){
+				for(var j = i+1; j < all_rules.length; j++){
 					if(t._areRulesEquals(all_rules[i], all_rules[j])){
 						if(res == null)
 							res = "The following intermediate rules are identical:<ul>";
-						res += "<li>Rules "+i+" and "+j+"</li>";
+						res += "<li>Rules "+t._getRuleIndexInMiddleColumn(i)+" and "+t._getRuleIndexInMiddleColumn(j)+"</li>";
 					}
 				}
 			}
@@ -150,8 +183,19 @@ function manage_rules(container, all_rules, all_topics, can_edit, pop_containing
 			return;
 	};
 	
+	t._getRuleIndexInMiddleColumn = function(index){
+		var count = 1;
+		var i = 0;
+		while(i != index){
+			if(all_rules[i].parent != null) //root rule may be in the middle of the all_rules list
+				count++;
+			i++;
+		}
+		return i;
+	};
+	
 	t._areRulesEquals = function(r1,r2){
-		if(r1.parent == r2.parent){
+		if(r1.parent == r2.parent){ //As there is only one root rule, this condition obliges the two rules to be "middle" ones
 			if(r1.topics.length == r2.topics.length){
 				if(r1.topics.length == 1){
 					if(r1.topics[0].topic.id == r2.topics[0].topic.id){
@@ -180,16 +224,50 @@ function manage_rules(container, all_rules, all_topics, can_edit, pop_containing
 		return false;
 	};
 	
-	t._onManageRuleChange = function(index){
-//		alert("index: "+index);
-//		alert(service.generateInput(all_rules));
-		//update the all_rules object
-		
-		//update the error message / save button
+	t._checkNoEmptyRule = function(){
+		var res = null;
+		for(var i = 0; i < all_rules.length; i++){
+			if(all_rules[i].topics.length == 0){
+				if(res == null)
+					res = "<br/>Some rules are empty:<ul>";
+				if(all_rules[i].parent == null)
+					res += "<li>The first rule</li>";
+				else
+					res += "<li>Intermediate rule "+t._getRuleIndexInMiddleColumn(i)+" </li>";
+			}
+		}
+		if(res)
+			res += "</ul>";
+		return res;
 	};
 	
-	t.resetButtons = function(){
-		//TODO
+	t._onManageRuleChange = function(index){
+		//update the all_rules object
+		if(index != null){ //else called by the remove rule button, so the rule object has already been updated
+			var index_in_all_manage_rule = t._getIndexInAllManageRule(index);
+			t.all_manage_rule[index_in_all_manage_rule].manage_rule.updateRuleFields();
+		}
+		//update the error message / save button
+		var identical = t._checkNoDoubleRule();
+		var empty = t._checkNoEmptyRule();
+		if(identical != null || empty != null){
+			t._error.style.visibility = "";
+			t._save.style.visibility = "hidden";
+			if(identical)
+				t._error_detail = identical;
+			if(empty){
+				if(identical)
+					t._error_detail += empty;
+				else
+					t._error_detail = empty;
+			}
+		} else {
+			t._error_detail = null;
+			t._error.style.visibility = "hidden";
+			t._save.style.visibility = "";
+		}
+
+		t._fireLayoutEvent(); //The width of any node may have been updated
 	};
 	
 	t._getRootRuleIndex = function(){
@@ -200,7 +278,20 @@ function manage_rules(container, all_rules, all_topics, can_edit, pop_containing
 	};
 	
 	t._setTableStyle = function(){
-		t.diagram_container.style.backgroundColor = "#FFFFFF";
+//		t.diagram_container.style.backgroundColor = "#FFFFFF";
+	};
+	
+	t.reset = function(locker){
+		//Reset the diagram
+		t.diagram.close();
+		delete t.diagram;
+		container.removeChild(t.diagram_container);
+		delete t.diagram_container;
+		container.removeChild(t._footer);
+		delete t._footer;
+		t._init();
+		if(locker)
+			unlock_screen(locker);
 	};
 	
 	require(["diagram_display_manager.js","manage_rule.js","eligibility_rules_objects.js"],function(){

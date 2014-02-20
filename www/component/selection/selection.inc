@@ -411,14 +411,27 @@ class selection extends Component {
 	public function canUpdateFromRightAndStep($step_name, $right_name, $error_message_if_no_right){
 		$error_messages = "";
 		$can_update = true;
-		$first_error = false;
+		$first_error = true;
 		// check the steps
 		$validation_steps = $this->canUpdateStep($step_name);
-		if(!$validation_steps[0] || !$validation_steps[1]){
+		
+		if(!$validation_steps[0]){
 			$can_update = false;
 			$first_error = false;
 			$error_messages .= $validation_steps[2];
+		} else if(!$validation_steps[1]){
+			//Maybe the dependencies give no restriction. If any restriction is given, cannot update this step (all-or-nothing)
+			$add = true;
+			$edit = true;
+			$remove = true;
+			$this->updateRightsFromStepsDependenciesRestrictions($step_name,$add,$remove,$edit);
+			if(!$add || !$remove || !$edit){//The rights have been restricted
+				$can_update = false;
+				$first_error = false;
+				$error_messages .= $validation_steps[2];
+			}
 		}
+
 		// check the right
 		if(!PNApplication::$instance->user_management->has_right($right_name,true)){
 			if(!$first_error)
@@ -1426,6 +1439,118 @@ class selection extends Component {
 				->updateByKey("ExamTopicForEligibilityRule",$id,array("number_questions" => $nb_from_questions));
 	}
 	
+	public function saveRules ($rules_to_update, $rules_to_insert, $db_lock){
+		//Check the rights
+		$rights = $this->canUpdateFromRightAndStep("define_eligibility_rules", "manage_exam_subject", "You are not allowed to manage the eligibility rules");
+		if(!$rights[0]){
+			PNApplication::error_html($rights[1]);
+			return false;
+		} else {
+			//Start the transaction
+			SQLQuery::startTransaction();
+			try {
+				$root_rule_id = null;
+				$rules_not_to_remove = array();
+				//handle the rules to insert
+				if(count($rules_to_insert) > 0){
+					$catch_root_id = false;
+					foreach($rules_to_insert as $rule){
+						if($rule["rule_table"]["parent"] == null)
+							$catch_root_id = true;
+						//Insert in EligibilityRule table
+						$id = SQLQuery::create()->insert("EligibilityRule", $rule['rule_table'], $db_lock);
+						if($catch_root_id)
+							$root_rule_id = $id;
+						//Update the rule id in the fields_values for EligibilityRuleExamTopic
+						foreach ($rule["rule_topic_table_insert"] as &$r){
+							$r["eligibility_rule"] = $id;
+						}
+						SQLQuery::create()->insertMultiple("EligibilityRuleExamTopic", $rule["rule_topic_table_insert"],$db_lock);
+						array_push($rules_not_to_remove,$id);
+					}
+				}
+				//handle the rules to update
+				if(count($rules_to_update) > 0){
+					foreach($rules_to_update as $rule){
+						if($rule["rule_table"]["parent"] == null)
+							$root_rule_id = $rule["rule_table"]["parent"];
+						//Update the EligibilityRule table fields
+						SQLQuery::create()->updateByKey("EligibilityRule", $rule["rule_table"]["id"], $rule["rule_table"], $db_lock);
+						//Handle the data for EligibilityRuleExamTopic table
+						if(count($rule['rule_topic_table_insert']) > 0){
+							//perform the insert
+							SQLQuery::create()->insertMultiple("EligibilityRuleExamTopic", $rule["rule_topic_table_insert"], $db_lock);
+						}
+						if(count($rule["rule_topic_table_update"]) > 0){
+							//Perform the updates
+							foreach($rule["rule_topic_table_update"] as $topic){
+								$topic_id = $topic["exam_topic_for_eligibility_rule"];
+								unset($topic["exam_topic_for_eligibility_rule"]); //We will only update the coefficients and expected fields
+								SQLQuery::create()->updateByKeys("EligibilityRuleExamTopic", array(
+									array(
+										"eligibility_rule" => $rule["rule_table"]["id"],
+										"exam_topic_for_eligibility_rule"  => $topic_id
+									), $topic), $db_lock);
+							}
+						}
+						if(count($rule["rule_topic_table_remove"]) > 0){
+							//Perform the removes
+							foreach ($rule["rule_topic_table_remove"] as $topic_id){
+								SQLQuery::create()->removeKeys("EligibilityRuleExamTopic", array(
+									array(
+										"eligibility_rule" => $rule["rule_table"]["id"],
+										"exam_topic_for_eligibility_rule"  => $topic_id
+									)),$db_lock);
+							}
+						}
+						array_push($rules_not_to_remove, $rule["rule_table"]["id"]);
+					}
+				}
+				if($root_rule_id <> null){
+					//Once the inserts and the updates are done, update the parent fields
+					$not_root_rules_to_update = SQLQuery::create()
+						->select("EligibilityRule")
+						->field("EligibilityRule","id")
+						->whereNotIn("EligibilityRule", "id", array($root_rule_id));
+					foreach ($not_root_rules_to_update as $rule_id){
+						SQLQuery::create()->updateByKey("EligibilityRule", $rule_id, array("parent" => $root_rule_id), $db_lock);
+					}
+				}
+				//handle the rules to remove
+				$rules_to_remove = array();
+				$rules_in_db = SQLQuery::create()
+					->bypassSecurity()
+					->select("EligibilityRule")
+					->field("EligibilityRule","id")
+					->executeSingleField();
+				if($rules_in_db <> null){
+					foreach ($rules_in_db as $rule){
+						if(!in_array($rule, $rules_not_to_remove)){
+							array_push($rules_to_remove, $rule);
+						}
+					}
+				}
+				if(count($rules_to_remove) > 0){
+					//perform the remove
+					foreach ($rules_to_remove as $rule){
+						SQLQuery::create()
+							->removeKey("EligibilityRule", $rule);
+					}
+				}
+			} catch (Exception $e){
+				PNApplication::error($e);
+			}
+			if(PNApplication::has_errors()){
+				SQLQuery::rollbackTransaction();
+				return false;
+			} else {
+				SQLQuery::commitTransaction();
+				//update steps
+				$this->updateAllSteps();
+				return true;
+			}
+		}
+	}
 	/**
 	 * @param {array} ids
 	 * @param {boolean} get_names. If true, in case of an unvalid applicant ID

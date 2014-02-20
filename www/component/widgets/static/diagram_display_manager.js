@@ -97,9 +97,16 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	 * If the diagram was displayed before, call the t.show method
 	 */
 	t._resetLayout = function(){
+		t.close();
+		if (t._shown) t.show();
+	};
+	
+	/**
+	 * Remove all the elements from the diagram
+	 */
+	t.close = function(){
 		while(container.firstChild)
 			container.removeChild(container.firstChild);
-		if (t._shown) t.show();
 	};
 
 	t._shown = false;
@@ -118,7 +125,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	/**
 	 * Set the layout of the diagram<br/>
 	 * Each node is a table with an absolute position, manually fixed<br/>
-	 * The t.managing_layout attribute is set as true at the begining of the process, and as false once it is done
+	 * This method is added to the layout custom events
 	 */
 	t.layout = function(){
 		//Then set the layout
@@ -210,6 +217,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	t._setNodeStyle = function(table_node,tr_body,tr_title){
 		//TODO
 		table_node.style.border = "1px solid";
+		table_node.style.backgroundColor = "#FFFFFF";
 	};
 	
 	/**

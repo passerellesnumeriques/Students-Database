@@ -31,9 +31,13 @@ class page_eligibility_rules_manage extends selection_page {
 			}
 			if(!$can_edit) //Nothing can be done
 				return;
-			
+			$sm = PNApplication::$instance->selection->getCampaignId();
 			//Lock the DB
-			//TODO
+			$lock_eligibility_rules = $page->performRequiredLocks("EligibilityRule",null,null,$sm);
+// 			$lock_exam_topics = $page->performRequiredLocks("ExamTopicForEligibilityRule",null,null,$sm);//required by eligibilityrule
+// 			$lock_exam_subjects = $page->performRequiredLocks("ExamSubject",null,null,$sm);//required by examtopics
+			if(PNApplication::has_errors())//locks not performed well
+				return;
 			
 			//Get all the eligibility rules objects
 			$all_rules = SelectionJSON::getJSONAllEligibilityRules();
@@ -64,8 +68,9 @@ class page_eligibility_rules_manage extends selection_page {
 				             {id:3, parent:"root", topics:[{coefficient:2,expected:null,topic:{id:1,name:"Math and logic",max_score:10}},{coefficient:2,expected:3,topic:{id:2,name:"Speed and accuracy",max_score:10}}]},
 				             {id:4, parent:"root", topics:[{coefficient:2,expected:null,topic:{id:1,name:"Math and logic",max_score:10}},{coefficient:2,expected:3,topic:{id:2,name:"Speed and accuracy",max_score:10}}]}
 							];
+				rules = [];
  				var all_topics = [{id:1,name:"Math and logic",max_score:10},{id:2,name:"Speed and accuracy",max_score:10},{id:3,name:"English",max_score:10}];
- 				new manage_rules("test",rules,all_topics,true);
+ 				new manage_rules("test",rules,all_topics,true,<?php echo json_encode($lock_eligibility_rules);?>);
 			});
 			</script>
 			<?php

@@ -227,14 +227,14 @@
 		
 	$sm->addTable("EligibilityRule")
 		->addPrimaryKey("id")
-		->addForeignKey("parent", "EligibilityRule", true, false, false)//Can only have one parent. If null, root level 
+		->addForeignKey("parent", "EligibilityRule", true, false, false, true)//Can only have one parent. If null, root level 
 		->addWriteAccess("manage_exam_subject",true)
 		->addReadAccess("see_exam_subject",true)
 		->addInsertAccess("manage_exam_subject",true)
 		->addRemoveAccess("manage_exam_subject",true);
 	//optional: addString name?
 	
-	$sm->addTable("ElibilityRuleExamTopic")
+	$sm->addTable("EligibilityRuleExamTopic")
 		->addForeignKey("eligibility_rule", "EligibilityRule", true, false, true)
 		->addForeignKey("exam_topic_for_eligibility_rule", "ExamTopicForEligibilityRule", true, false, true)
 		->addDecimal("expected",10,2,null,null,false,false) //the expected grade for this topic

@@ -760,8 +760,8 @@ class SelectionJSON{
 	}
 	
 	/**
-	 * Prepare the array field=>value for the table ElibilityRuleExamTopic
-	 * @param string $json
+	 * Prepare the array field=>value for the table EligibilityRuleExamTopic
+	 * @param string $json from a ExamTopicForEligibilityRule object
 	 * @param number|null $eligibility_rule_id if not given, the field exam_topic_for_eligibility_rule shall be manually added
 	 * @return array
 	 */
