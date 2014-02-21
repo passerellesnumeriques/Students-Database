@@ -45,9 +45,11 @@ class page_exam_main_page extends selection_page {
 						echo "];";
 					?>
 				var all_topics = <?php echo SelectionJSON::getJsonAllTopics();?>;
+				//Get all the eligibility rules objects
+				var all_rules = <?php echo SelectionJSON::getJSONAllEligibilityRules();?>;
 				var topics_valid = <?php echo json_encode(PNApplication::$instance->selection->validateAllTopicsForEligibilityRules());?>;
 				new exam_subject_main_page("exam_content",can_see_subject,can_manage_subject,all_exams);
-				new eligibility_rules_main_page("eligibility_rules_content",can_see_subject,can_manage_subject,all_topics,topics_valid);
+				new eligibility_rules_main_page("eligibility_rules_content",can_see_subject,can_manage_subject,all_topics,topics_valid, all_rules);
 				});
 		</script>
 		<?php

@@ -97,19 +97,31 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	 * If the diagram was displayed before, call the t.show method
 	 */
 	t._resetLayout = function(){
-		t.close();
-		if (t._shown) t.show();
+		var to_show = t._shown;
+		t.close();//Will update the t._shown to false
+		if (to_show)
+			t.show();
 	};
 	
 	/**
 	 * Remove all the elements from the diagram
+	 * Also remove the layout event for the diagram
+	 * This method must be called
 	 */
 	t.close = function(){
-		while(container.firstChild)
-			container.removeChild(container.firstChild);
+		if(t._shown){
+			if(t._isLayoutEvent){
+				removeLayoutEvent(container, function() { t.layout(); });
+				t._isLayoutEvent = false;
+			}
+			while(container.firstChild)
+				container.removeChild(container.firstChild);
+			t._shown = false;
+		}
 	};
 
 	t._shown = false;
+	t._isLayoutEvent = false;
 	/**
 	 * Start the layout process, and fill up the container
 	 */
@@ -120,6 +132,10 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 			container.appendChild(t._createNode(t.nodes[i].title,t.nodes[i].id,t.nodes[i].content));
 		t.layout();
 		t._drawLines();
+		if(!t._isLayoutEvent){
+			addLayoutEvent(container, function() { t.layout(); });
+			t._isLayoutEvent = true;
+		}
 	};
 	
 	/**
@@ -177,7 +193,6 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 			}
 		}
 	};
-	addLayoutEvent(container, function() { t.layout(); });
 	
 	/**
 	 * Create a node element
@@ -203,6 +218,9 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 		} else {
 			td_body.appendChild(content);
 		}
+		require("horizontal_align.js",function(){
+			new horizontal_align(td_body,"middle");
+		});
 		tr_body.appendChild(td_body);
 		table.appendChild(tr_body);
 		t._setNodeStyle(table, tr_body, tr_title);

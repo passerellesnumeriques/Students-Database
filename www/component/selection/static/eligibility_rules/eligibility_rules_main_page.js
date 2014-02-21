@@ -1,15 +1,26 @@
-function eligibility_rules_main_page(container, can_see, can_manage, all_topics, validated){
+function eligibility_rules_main_page(container, can_see, can_manage, all_topics, validated, all_rules){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	t.table = document.createElement('table');
-	
+	t.internal_container = document.createElement("div");
+	t.internal_container.style.position = "relative"; 
+	t.table_container = document.createElement("div");
+	t.table_container.appendChild(t.table);
+	t.table_container.style.width = "30%";
+	t.table_container.style.position = "absolute";
+	t.table_container.style.left = "0px";
+	t.table_container.style.top = "0px";
+	t.internal_container.appendChild(t.table_container);
+	t.internal_container.style.heigth = "600px";
+
 	t._init = function(){
 		// Check the readable right
 		if(!can_see)
 			return;
-		t.section = new section("","Exam topics for eligibility rules",t.table, false);
+		t.section = new section("<img src = '"+theme.icons_16.info+"'id = 'eligibility_rules_tips'/>","Exam topics for eligibility rules ",t.internal_container , false);
 		t._setTableContent();
+		t._setRulesContent();
 		container.appendChild(t.section.element);
 		t._setStyle();
 	};
@@ -18,6 +29,7 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		container.style.paddingTop = "20px";
 		container.style.paddingLeft = "20px";
 		container.style.paddingRight = "20px";
+		t._setInternalContainerHeight();
 	};
 	
 	t._setTableContent = function(){
@@ -56,11 +68,11 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		var li = document.createElement("li");
 		li.innerHTML = all_topics[i].name;
 		td_name.appendChild(li);
-//		td_name.id = t.all_exams[i].id+"_td";
 		tr.appendChild(td_name);
 		tr.menu = []; // menu to display on mouse over
 		
-		see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/> See",all_topics[i].id);
+		see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/>",all_topics[i].id);
+		see_button.title = "See";
 		see_button.onclick = function(){
 			location.assign("/dynamic/selection/page/eligibility_rules/manage_exam_topic?id="+this.id+"&read_only=true");
 		};
@@ -72,7 +84,8 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		tr.menu.push(see_button);
 		
 		if(can_manage){
-			edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/> Edit",all_topics[i].id);
+			edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/>",all_topics[i].id);
+			edit_button.title = "Edit";
 			edit_button.onclick = function(){
 				location.assign("/dynamic/selection/page/eligibility_rules/manage_exam_topic?id="+this.id);
 			};
@@ -113,17 +126,103 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		}
 	};
 	
+	t._setInternalContainerHeight = function(){
+		//Once the table with the topic is set, get its height
+		var h = getHeight(t.table_container);
+		h = h + 10;
+		h = h > 250 ? h : 250; //Set a minimum height, otherwize problems for displaying the diagram
+		t.internal_container.style.height = h+"px";
+		//Then center the topics table
+		t.table_container.style.height = h+"px";
+		require("vertical_align.js",function(){
+			new vertical_align(t.table_container,"middle");
+		});
+	};
+	
+	t._setRulesContentHeight = function(){
+		var container_height = getHeight(t.rules_container);
+		var h = container_height - 25; //Add the space for a button
+		if(h > 0)
+			t.rules_content.style.height = h+"px";
+	};
+	
+	t._setRulesContent = function(){
+		//Done on a backend to avoid too long loading time
+		service.json("selection","eligibility_rules/status_from_steps",{},function(r){
+			if(r && r.topic_exist){
+				t.rules_container = document.createElement("div");
+				t.rules_container.style.position = "absolute";
+				t.rules_container.style.left = "30%";
+				t.rules_container.style.height = "100%";
+				t.rules_container.style.width = "70%";
+				t.rules_container.style.top = "0px";
+				t.rules_content = document.createElement("div");
+				t.rules_content.style.height = "90%";
+				if(r.rule_exist){
+					require("manage_rules.js",function(){
+						t._manage_rules = new manage_rules(t.rules_content, all_rules, all_topics, false);
+					});
+				} else {
+					//No rule yet so no need to display the diagram. But add the button to create rules
+					var text = document.createTextNode("There is no eligibility rule yet");
+					t.rules_container.appendChild(text);
+					t.rules_container.style.fontStyle = "italic";
+					t.rules_container.style.textAlign = "center";
+					t.rules_container.style.verticalAlign = "middle";
+				}
+				var rules_footer = document.createElement("div");
+				rules_footer.style.heigth = "24px";
+				rules_footer.id = "footer";
+				t._setRulesFooter(rules_footer);
+				t.rules_container.appendChild(t.rules_content);
+				t.rules_container.appendChild(rules_footer);
+				t.internal_container.appendChild(t.rules_container);
+				t._setRulesContentHeight();
+			}//else nothing to do
+		});
+	};
+	
+	t._setRulesFooter = function(e){
+		if(can_manage){
+			//Add the manage_rules button
+			var manage = t._createButton("<img src = '"+theme.icons_16.edit+"'/> Edit the rules", "manage_rules_button");
+			manage.onclick = function(){
+				require("popup_window.js",function(){
+					var pop = new popup_window("Manage Eligibility Rules","/static/selection/eligibility_rules/rules_16.png",null);
+					pop.setContentFrame("/dynamic/selection/page/eligibility_rules/manage");
+					pop.onclose = t._resetRulesContainer;
+					pop.show();
+				});
+			};
+			e.appendChild(manage);
+		}
+		//Add the tips buttons
+	};
+	
+	t._resetRulesContainer = function(){
+		t._manage_rules.closeDiagram();
+		while(t.rules_container.firstChild)
+			t.rules_container.removeChild(t.rules_container.firstChild);
+		t.internal_container.removeChild(t.rules_container);
+		delete t.rules_container;
+		t._setRulesContent();
+	};
+	
 	/**
 	 * Create a button div
-	 * @param {HTML | String} content to set into the button
-	 * @param {Number} id the id to set to the div
+	 * @param {HTMLElement | String} content to set into the button
+	 * @param {String|Null} id the id to set to the div
 	 * @returns {HTML} the created button
 	 */
 	t._createButton = function(content, id){
 		var div = document.createElement("div");
-		div.innerHTML = content;
+		if(typeof content == "string")
+			div.innerHTML = content;
+		else
+			div.appendChild(content);
 		div.className = "button";
-		div.id = id;
+		if(id)
+			div.id = id;
 		return div;
 	};			
 	

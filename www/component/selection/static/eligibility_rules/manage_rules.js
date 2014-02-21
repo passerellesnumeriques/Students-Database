@@ -1,10 +1,8 @@
-function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
+function manage_rules(container, all_rules, all_topics, can_edit, db_lock, footer){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	t.all_manage_rule = [];
-	
-//	can_edit = false;
 	
 	t._init = function(){
 		t._initDiagram();
@@ -42,11 +40,13 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
 		//Show
 		container.appendChild(t.diagram_container);
 		t.diagram.show();
+		alert(t.diagram._isLayoutEvent);
 	};
 	
 	t._createFirstNode = function(){
 		var index = t._getRootRuleIndex();
 		var div = document.createElement("div");
+		new horizontal_align(div,"middle");
 		var first = new manage_rule(div,all_rules[index],all_topics,can_edit,null,index,t._fireLayoutEvent);
 		first.onupdaterule.add_listener(t._onManageRuleChange);
 		t.all_manage_rule.push({index:index, manage_rule:first}); //store the manage_rule object and its index
@@ -55,6 +55,7 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
 	
 	t._createLastNode = function(){
 		var div = document.createElement("div");
+		new horizontal_align(div,"middle");
 		div.innerHTML = "<center><i>The applicant passed the exam step!</i></center>"
 		t.diagram.createEndNode("<center><img src = '"+theme.icons_16.winner+"'/> Succeed</center>",div,"last");		
 	};
@@ -80,6 +81,7 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
 		} else
 			var remove = null;
 		var div = document.createElement("div");
+		new horizontal_align(div,"middle");
 		var node = new manage_rule(div,all_rules[index],all_topics,can_edit,remove,index,t._fireLayoutEvent);
 		node.onupdaterule.add_listener(t._onManageRuleChange);
 		t.all_manage_rule.push({index:index, manage_rule:node});
@@ -97,8 +99,15 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
 	 * Only called if can_edit
 	 */
 	t._addButtons = function(){
-		t._footer = document.createElement("div");
-		container.appendChild(t._footer);
+		if(footer){
+			if(typeof footer == "string")
+				t._footer = document.getElementById(footer);
+			else
+				t._footer = footer;
+		} else
+			t._footer = document.createElement("div");
+		if(!footer)
+			container.appendChild(t._footer); //Else the footer is already set
 		t._footer.style.borderTop = "1px solid #808080";
 		
 		//Add intermediate rule button
@@ -122,7 +131,6 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
 			//Last validity check
 			if(t._checkNoDoubleRule() == null && t._checkNoEmptyRule() == null){
 				var locker = lock_screen();
-				alert(db_lock);
 				service.json("selection","eligibility_rules/save_rules",{all_rules:all_rules,db_lock:db_lock},function(res){
 					if(!res){
 						error_dialog("An error occured your informations were not saved");
@@ -134,7 +142,8 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
 					}
 						
 				});
-			}
+			} else
+				t._onManageRuleChange();
 		};
 		t._footer.appendChild(t._save);
 		
@@ -237,7 +246,7 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
 			}
 		}
 		if(res)
-			res += "</ul>";
+			res += "</ul><br/>";
 		return res;
 	};
 	
@@ -281,20 +290,29 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock){
 //		t.diagram_container.style.backgroundColor = "#FFFFFF";
 	};
 	
+	t.closeDiagram = function(){
+		t.diagram.close();
+	};
+	
 	t.reset = function(locker){
 		//Reset the diagram
-		t.diagram.close();
+		t.closeDiagram();
 		delete t.diagram;
 		container.removeChild(t.diagram_container);
 		delete t.diagram_container;
-		container.removeChild(t._footer);
-		delete t._footer;
+		if(!t._footer){
+			container.removeChild(t._footer);
+			delete t._footer;
+		} else {//The footer is a parameter, cannot know where the user expects is, not just remove all its children
+			while(t._footer.firstChild)
+				t._footer.removeChild(t._footer.firstChild);
+		}
 		t._init();
 		if(locker)
 			unlock_screen(locker);
 	};
 	
-	require(["diagram_display_manager.js","manage_rule.js","eligibility_rules_objects.js"],function(){
+	require(["diagram_display_manager.js","manage_rule.js","eligibility_rules_objects.js","horizontal_align.js"],function(){
 		t._init();
 	});
 }

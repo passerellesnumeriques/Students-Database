@@ -1465,7 +1465,7 @@ class selection extends Component {
 						foreach ($rule["rule_topic_table_insert"] as &$r){
 							$r["eligibility_rule"] = $id;
 						}
-						SQLQuery::create()->insertMultiple("EligibilityRuleExamTopic", $rule["rule_topic_table_insert"],$db_lock);
+						SQLQuery::create()->insertMultiple("EligibilityRuleExamTopic", $rule["rule_topic_table_insert"]);
 						array_push($rules_not_to_remove,$id);
 					}
 				}
@@ -1473,13 +1473,13 @@ class selection extends Component {
 				if(count($rules_to_update) > 0){
 					foreach($rules_to_update as $rule){
 						if($rule["rule_table"]["parent"] == null)
-							$root_rule_id = $rule["rule_table"]["parent"];
+							$root_rule_id = $rule["rule_table"]["id"];
 						//Update the EligibilityRule table fields
 						SQLQuery::create()->updateByKey("EligibilityRule", $rule["rule_table"]["id"], $rule["rule_table"], $db_lock);
 						//Handle the data for EligibilityRuleExamTopic table
 						if(count($rule['rule_topic_table_insert']) > 0){
 							//perform the insert
-							SQLQuery::create()->insertMultiple("EligibilityRuleExamTopic", $rule["rule_topic_table_insert"], $db_lock);
+							SQLQuery::create()->insertMultiple("EligibilityRuleExamTopic", $rule["rule_topic_table_insert"]);
 						}
 						if(count($rule["rule_topic_table_update"]) > 0){
 							//Perform the updates
@@ -1488,9 +1488,13 @@ class selection extends Component {
 								unset($topic["exam_topic_for_eligibility_rule"]); //We will only update the coefficients and expected fields
 								SQLQuery::create()->updateByKeys("EligibilityRuleExamTopic", array(
 									array(
-										"eligibility_rule" => $rule["rule_table"]["id"],
-										"exam_topic_for_eligibility_rule"  => $topic_id
-									), $topic), $db_lock);
+										array(
+											"eligibility_rule" => $rule["rule_table"]["id"],
+											"exam_topic_for_eligibility_rule"  => $topic_id
+										),
+										$topic
+									), 
+								));
 							}
 						}
 						if(count($rule["rule_topic_table_remove"]) > 0){
@@ -1500,7 +1504,7 @@ class selection extends Component {
 									array(
 										"eligibility_rule" => $rule["rule_table"]["id"],
 										"exam_topic_for_eligibility_rule"  => $topic_id
-									)),$db_lock);
+									)));
 							}
 						}
 						array_push($rules_not_to_remove, $rule["rule_table"]["id"]);
@@ -1511,7 +1515,8 @@ class selection extends Component {
 					$not_root_rules_to_update = SQLQuery::create()
 						->select("EligibilityRule")
 						->field("EligibilityRule","id")
-						->whereNotIn("EligibilityRule", "id", array($root_rule_id));
+						->whereNotIn("EligibilityRule", "id", array($root_rule_id))
+						->executeSingleField();
 					foreach ($not_root_rules_to_update as $rule_id){
 						SQLQuery::create()->updateByKey("EligibilityRule", $rule_id, array("parent" => $root_rule_id), $db_lock);
 					}

@@ -51,6 +51,7 @@ class service_eligibility_rules_save_rules extends Service {
 								array_push($topics_to_insert, SelectionJSON::EligibilityRuleTopic2DB($topic,$rule["id"]));
 							array_push($all_topics_to_set_in_db, $topic["topic"]["id"]);
 						}
+// 						var_dump($topics_to_update);
 						foreach ($topics_in_db as $t){
 							if(!in_array($t,$all_topics_to_set_in_db))
 								array_push($topics_to_remove, $t);
@@ -71,7 +72,10 @@ class service_eligibility_rules_save_rules extends Service {
 					}
 				}
 			}
+// 			var_dump($rules_to_insert);
+// 			var_dump($rules_to_update);
 			$saved = PNApplication::$instance->selection->saveRules($rules_to_update, $rules_to_insert, $input["db_lock"]);
+// 			var_dump($saved);
 			if($saved)
 				echo SelectionJSON::getJSONAllEligibilityRules();
 			else 
