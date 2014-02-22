@@ -657,40 +657,40 @@ class DataBaseLock {
 	 * @param string $table table name
 	 * @param integer|array|null $row_key key of the row or null
 	 * @param string|null $column column name or null
-	 * @return boolean true if this is already locked by the current user
+	 * @return strin|null null if this is already locked by the current user, or error message
 	 */
 	public static function checkLock($lock_id, $table, $row_key, $column) {
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$r = $db->execute("SELECT * FROM DataLocks WHERE id='".$db->escapeString($lock_id)."'");
-		if ($r == null) return false;
+		if ($r == null) return "Lock ".$lock_id." does not exist";
 		$r = $db->nextRow($r);
-		if ($r == null) return false;
+		if ($r == null) return "Lock ".$lock_id." does not exist";
 		if ($r["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 			$r["locker_username"] <> PNApplication::$instance->user_management->username)
-			return false;
+			return "This lock is own by someone else";
 		if ($r["table"] <> $table) return false;
 		if ($r["row_key"] == null) {
 			if ($r["column"] == null) {
 				// full table is locked
-				return true;
+				return null;
 			}
 			// only a column is locked
-			if ($column == null) return false;
-			if ($column == $r["column"]) return true;
-			return false;
+			if ($column == null) return "The lock only locks column ".$r["column"];
+			if ($column == $r["column"]) return null;
+			return "The lock locks the column ".$r["column"]." while you are asking for the column ".$column;
 		}
 		// a specific row is locked
 		if ($r["column"] <> null) {
 			// a specific cell
-			if ($row_key == null) return false;
-			if ($column == null) return false;
-			if (json_encode($row_key) <> $r["row_key"]) return false;
-			if ($column <> $r["column"]) return false;
-			return true;
+			if ($row_key == null) return "This lock locks a specific cell while you are asking for the full table or a column";
+			if ($column == null) return "This lock locks a specific cell while you are asking for the full table or a row";
+			if (json_encode($row_key) <> $r["row_key"]) return "This lock locks a cell in a different row";
+			if ($column <> $r["column"]) return "This lock locks a cell in a different column";
+			return null;
 		}
-		if ($row_key == null) return false;
-		if (json_encode($row_key) == $r["row_key"]) return true;
-		return false;
+		if ($row_key == null) return "This lock locks a row while you are asking for a full table or a column";
+		if (json_encode($row_key) == $r["row_key"]) return null;
+		return "This lock locks a different row";
 	}
 	
 	/** @var handle $mutex handle to the file locked to handle mutual exclusion */

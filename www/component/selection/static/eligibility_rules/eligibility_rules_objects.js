@@ -51,3 +51,29 @@ function ExamSubjectPartForTopic(id, index, name, max_score){
 		t = new ExamSubjectPart(id, index, name, max_score, []);
 	});
 }
+
+/**
+ * EligibilityRule object
+ * @param {Number} id
+ * @param {Number|null} parent the id of the parent rule, null if root level
+ * @param {Array} topics array of ExamTopicForEligibilityRule objects
+ */
+function EligibilityRule(id, parent, topics){
+	this.id = id;
+	this.parent = parent;
+	this.topics = topics;
+}
+
+/**
+ * ExamTopicForEligibilityRule<br/>
+ * Defined a topic object as used in an EligibilityRule object<br/>
+ * Componed of a topic object and a coefficient attribute
+ * @param {Number} coefficient
+ * @param {Number} expected the minimum grade expected for this topic
+ * @param {Object} topic ExamTopicForEligibilityRules object
+ */
+function ExamTopicForEligibilityRule(coefficient, expected, topic){
+	this.coefficient = coefficient;
+	this.expected = expected;
+	this.topic = topic;
+}

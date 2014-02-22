@@ -45,6 +45,7 @@ theme::$icons_16 = array(
 	"window_popup" =>	"/static/theme/default/icons_16/popupize.gif",
 	"window_maximize" =>"/static/theme/default/icons_16/popup_maximize.gif",
 	"window_minimize" =>"/static/theme/default/icons_16/popup_minimize.gif",
+	"winner" =>			"/static/theme/default/icons_16/winner.png",
 	"yes" => 			"/static/theme/default/icons_16/ok.png",
 	"zoom" => 			"/static/theme/default/icons_16/search.png",
 	"zoom_in" => 		"/static/theme/default/icons_16/zoom_in.png",

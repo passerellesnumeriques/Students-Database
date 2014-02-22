@@ -815,8 +815,9 @@ class SQLQuery {
 			if ($lock_id <> null) {
 				$column = null;
 				if (count($fields_values) == 1) { $column = array_keys($fields_values); $column = $column[0]; }
-				if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
-					throw new Exception("Access denied: invalid lock");
+				$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column);
+				if ($err <> null)
+					throw new Exception("Access denied: invalid lock (".$err.")");
 			} else {
 				$locker = null;
 				$lock_id = DataBaseLock::lockRow($t->getSQLName($this->sub_models), $key, $locker, $this->bypass_security);
@@ -943,8 +944,9 @@ class SQLQuery {
 					foreach ($fields_values as $field=>$value)
 						if (!in_array($field, $columns)) array_push($columns, $field);
 				if (count($columns) == 1) $column = $columns[0];
-				if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
-					throw new Exception("Access denied: invalid lock");
+				$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column);
+				if ($err <> null)
+					throw new Exception("Access denied: invalid lock (".$err.")");
 			} else {
 				$locker = null;
 				$keys = array();
@@ -1101,8 +1103,9 @@ class SQLQuery {
 				foreach ($fields_values as $field=>$value)
 					if (!in_array($field, $columns)) array_push($columns, $field);
 				if (count($columns) == 1) $column = $columns[0];
-				if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
-					throw new Exception("Access denied: invalid lock");
+				$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column);
+				if ($err <> null)
+					throw new Exception("Access denied: invalid lock (".$err.")");
 			} else {
 				$locker = null;
 				if (count($keys) == 1)
@@ -1201,8 +1204,9 @@ class SQLQuery {
 		if($lock_id <> null){
 			$column = null;
 			if (count($fields_values) == 1) { $column = array_keys($fields_values); $column = $column[0]; }
-			if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), null, $column))
-				throw new Exception("Access denied: invalid lock");
+			$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), null, $column);
+			if ($err <> null)
+				throw new Exception("Access denied: invalid lock (".$err.")");
 		} else {
 			$lock = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, true);
 			if ($lock == null)
