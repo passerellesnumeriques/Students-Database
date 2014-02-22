@@ -1,4 +1,4 @@
-function autoresize_input(input, min_size) {
+function inputAutoresize(input, min_size) {
 	input.mirror = document.createElement("SPAN");
 	if (input.style.fontSize) input.mirror.style.fontSize = input.style.fontSize;
 	if (input.style.fontWeight) input.mirror.style.fontWeight = input.style.fontWeight;
@@ -29,4 +29,31 @@ function autoresize_input(input, min_size) {
 	input.onchange = function(e) { if (prev_onchange) prev_onchange(e); update(); };
 	update();
 	input.autoresize = update;
+}
+
+function inputDefaultText(input, default_text) {
+	var is_default = false;
+	var original_class = input.className;
+	var prev_onfocus = input.onfocus; 
+	input.onfocus = function(ev) {
+		if (is_default) {
+			input.value = "";
+			input.className = original_class;
+		}
+		if (prev_onfocus) prev_onfocus(ev);
+	};
+	var prev_onblur = input.onblur;
+	input.onblur = function(ev) {
+		input.value = input.value.trim();
+		if (input.value.length == 0) {
+			input.className = original_class ? original_class+" informative_text" : "informative_text";
+			input.value = default_text;
+			is_default = true;
+		} else {
+			input.className = original_class;
+			is_default = false;
+		}
+		if (prev_onblur) prev_onblur(ev);
+	};
+	if (document.activeElement == input) input.onfocus(); else input.onblur();
 }

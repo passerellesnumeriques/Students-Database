@@ -57,6 +57,7 @@ case "static":
 	header('Date: '.$date, true);
 	$expires = time()+365*24*60*60;
 	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
+	header('Vary: Cookie');
 	switch ($ext) {
 	case "gif": header("Content-Type: image/gif"); break;
 	case "png": header("Content-Type: image/png"); break;
@@ -130,6 +131,7 @@ case "help":
 	header('Date: '.$date, true);
 	$expires = time()+365*24*60*60;
 	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
+	header('Vary: Cookie');
 	header("Content-Type: text/html");
 	require_once("component/Page.inc");
 	pageHeaderStart();

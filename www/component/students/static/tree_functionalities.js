@@ -1,4 +1,7 @@
 function create_new_batch() {
+	
+}
+/*function create_new_batch() {
 	var container = document.createElement("DIV");
 	var error_div = document.createElement("DIV");
 	error_div.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> ";
@@ -32,7 +35,7 @@ function create_new_batch() {
 		});
 		popup.show(); 
 	});
-}
+}*/
 function remove_batch(batch) {
 	confirm_dialog("Are you sure you want to remove the batch '"+batch.name+"', including all its content ?",function(yes){
 		if (!yes) return;

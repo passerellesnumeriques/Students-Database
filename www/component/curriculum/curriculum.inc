@@ -11,6 +11,10 @@ class curriculum extends Component {
 		);
 	}
 	
+	public function getSpecializations() {
+		return SQLQuery::create()->select("Specialization")->execute();
+	}
+	
 	public function getAcademicClass($class_id) {
 		return SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->executeSingleRow();
 	}

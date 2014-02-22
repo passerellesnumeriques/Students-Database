@@ -9,9 +9,13 @@ class page_tree extends Page {
 		$this->require_javascript("header_bar.js");
 		$this->require_javascript("tree.js");
 		$this->require_javascript("tree_functionalities.js");
+		$this->require_javascript("curriculum_objects.js");
 		theme::css($this, "information_bar.css");
 		$can_edit = PNApplication::$instance->user_management->has_right("manage_batches");
 		
+		require_once("component/curriculum/CurriculumJSON.inc");
+		
+		// TODO remove that
 		require_once("component/data_model/page/utils.inc");
 		require_once("component/data_model/page/table_datadisplay_edit.inc");
 		table_datadisplay_edit($this, "StudentBatch", null, null, "create_new_batch_table");
@@ -20,7 +24,15 @@ class page_tree extends Page {
 ?>
 <div style='width:100%;height:100%' id='container'>
 	<div id='left'>
-		<div id='tree' style='overflow-y:auto;overflow-x:auto;background-color:white;width:100%;height:100%'></div>
+		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Classes'>
+			<?php if ($can_edit) { ?>
+			<div class='button_verysoft'>
+				<img src='<?php echo theme::make_icon("/static/curriculum/batch_16.png", theme::$icons_10["add"]);?>'/>
+				New Batch
+			</div>
+			<?php } ?>
+		</div>
+		<div id='tree' style='overflow-y:auto;overflow-x:auto;background-color:white;width:100%;height:100%' layout='fill'></div>
 	</div>
 	<div id='right'>
 		<div id='page_header' class='information_bar'>
@@ -33,18 +45,15 @@ class page_tree extends Page {
 	</div>
 </div>
 <script type='text/javascript'>
+new vertical_layout('left');
 new vertical_layout('right');
 new splitter_vertical('container',0.25);
+new header_bar('tree_header','toolbar');
 
 // List of specializations
-var specializations = [<?php
-	$spe = SQLQuery::create()->select("Specialization")->execute();
-	$first = true;
-	foreach ($spe as $s) {
-		if ($first) $first = false; else echo ",";
-		echo "{id:".$s["id"].",name:".json_encode($s["name"])."}";
-	} 
-?>];
+var specializations = [<?php echo CurriculumJSON::SpecializationsJSON(); ?>];
+// Batches
+var batches = [<?php echo CurriculumJSON::CurriculumJSON(); ?>];
 
 // Tree nodes
 var selected_node = null;

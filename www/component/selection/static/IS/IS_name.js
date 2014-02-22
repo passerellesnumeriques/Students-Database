@@ -4,7 +4,7 @@ function IS_name(container, name, can_edit){
 	t.text = "";
 	t.name = name;
 	
-	require(["autoresize_input.js","section.js"],function(){
+	require(["input_utils.js","section.js"],function(){
 		t._setSection();
 		t._init();
 	});
@@ -47,7 +47,7 @@ function IS_name(container, name, can_edit){
 			var input = document.createElement("input");
 			input.type = 'text';
 			input.value = t.text;
-			autoresize_input(input,15);
+			inputAutoresize(input,15);
 			input.oninput = function(){
 				if(this.value.checkVisible() && this.value != ""){
 					t.name = this.value.uniformFirstLetterCapitalized();

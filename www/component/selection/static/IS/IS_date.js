@@ -10,7 +10,7 @@
 
 function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_read, can_manage, all_durations){
 	var t = this;
-	require(["popup_window.js",["typed_field.js","field_date.js","field_time.js"],"autoresize_input.js","section.js"],function(){
+	require(["popup_window.js",["typed_field.js","field_date.js","field_time.js"],"input_utils.js","section.js"],function(){
 		t.container_of_section_content = document.createElement("div");
 		t.section = new section(theme.icons_16.date_picker,"Date",t.container_of_section_content,false);
 		container.appendChild(t.section.element);
@@ -214,7 +214,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		td1_title.innerHTML = "<font color='#808080'><b>Event title: </b></font><br/><i>For the selection<br/> calendar</i>";
 		var input = document.createElement("input");
 		if(t.event.title != null) input.value = t.event.title;
-		autoresize_input(input);
+		inputAutoresize(input);
 		input.onchange = function(){
 			t.custom_event_name = input.value.uniformFirstLetterCapitalized();
 		};

@@ -83,7 +83,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 				contact.contact = input.value;
 				t.onchange.fire(t);
 			};
-			require("autoresize_input.js",function(){ autoresize_input(input,5); });
+			require("input_utils.js",function(){ inputAutoresize(input,5); });
 		} else if(can_edit){
 			/*Manage the category Field*/
 			this._createCategoryField(td_category, contact);

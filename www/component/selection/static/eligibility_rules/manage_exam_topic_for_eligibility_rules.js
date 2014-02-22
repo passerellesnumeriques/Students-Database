@@ -185,7 +185,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 					this.style.fontStyle = "italic";
 				}
 			};
-			new autoresize_input(input,7);
+			inputAutoresize(input,7);
 			var tr_input = document.createElement("tr");
 			var td_input = document.createElement("td");
 			td_input.colSpan = 2;
@@ -1113,7 +1113,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		setHeight(t.table_edit, h);
 	};
 	
-	require(["manage_exam_subject_part_questions.js","autoresize_input.js","popup_window.js","exam_objects.js","editable_read_only_manager.js"],function(){
+	require(["manage_exam_subject_part_questions.js","input_utils.js","popup_window.js","exam_objects.js","editable_read_only_manager.js"],function(){
 		t.editable_manager = new editable_read_only_manager(
 				can_edit,
 				can_add,

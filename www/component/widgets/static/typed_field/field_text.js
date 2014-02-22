@@ -1,5 +1,5 @@
 /* #depends[typed_field.js] */
-if (typeof require != 'undefined') require("autoresize_input.js");
+if (typeof require != 'undefined') require("input_utils.js");
 /** Text field: if editable, it will be an autoresize text input, else only a simple text node
  * @constructor
  * @param config can contain: <code>max_length</code> (maximum number of characters), <code>min_length</code> optional minimum length, <code>can_be_null</code> optionally if the field is empty it will means the data is null, <code>min_size</code> (minimum size for autoresize) or <code>fixed_size</code> (no autoresize), <code>style</code> additional style to give
@@ -51,7 +51,7 @@ field_text.prototype._create = function(data) {
 		if (this.config && this.config.fixed_size)
 			input.size = this.config.fixed_size;
 		else
-			require("autoresize_input.js",function(){autoresize_input(input,t.config && t.config.min_size ? t.config.min_size : 0);});
+			require("input_utils.js",function(){inputAutoresize(input,t.config && t.config.min_size ? t.config.min_size : 0);});
 		this.element.appendChild(input);
 		this.getCurrentData = function() {
 			var data = input.value;
