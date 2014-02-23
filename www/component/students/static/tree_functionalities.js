@@ -1,5 +1,16 @@
 function create_new_batch() {
-	
+	require("popup_window.js",function(){
+		var popup = new popup_window("Create New Batch", theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "");
+		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes");
+		popup.show();
+	});
+}
+function edit_batch(batch) {
+	require("popup_window.js",function(){
+		var popup = new popup_window("Edit Batch", theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.edit), "");
+		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&id="+batch.id);
+		popup.show();
+	});
 }
 /*function create_new_batch() {
 	var container = document.createElement("DIV");

@@ -48,11 +48,11 @@ field_text.prototype._create = function(data) {
 		input.onblur = f;
 		input.onchange = f;
 
+		this.element.appendChild(input);
 		if (this.config && this.config.fixed_size)
 			input.size = this.config.fixed_size;
 		else
 			require("input_utils.js",function(){inputAutoresize(input,t.config && t.config.min_size ? t.config.min_size : 0);});
-		this.element.appendChild(input);
 		this.getCurrentData = function() {
 			var data = input.value;
 			if (data.length == 0 && t.config && t.config.can_be_null) data = null;

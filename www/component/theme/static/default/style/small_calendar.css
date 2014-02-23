@@ -16,7 +16,9 @@
 	vertical-align: middle;
 	cursor: pointer;
 	width: 25px;
-	height: 25px;
+	height: 13px;
+	font-size: 9pt;
+	padding: 0px 1px 0px 1px;
 }
 .small_calendar td.disabled {
 	background-color: #C0C0C0;

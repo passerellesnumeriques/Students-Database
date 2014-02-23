@@ -43,7 +43,7 @@ $this->require_javascript("horizontal_menu.js");
 <table id='pn_application_container'>
 	<tr><td>
 	<div id='pn_application_header'>
-		<div id='pn_application_section_title' onclick='sectionsMenu();'></div>
+		<div id='pn_application_section_title' class='pn_application_section_title' onclick='sectionsMenu();'></div>
 		<div id='pn_application_left_controls' style='visibility:hidden;padding-right:3px'></div>
 		<div id='pn_application_menu' layout='fill'>
 			<div class='button'><img src='<?php echo theme::$icons_16["more_menu"];?>'/> More</div>
@@ -262,7 +262,7 @@ function addMenuItem(icon, text, info, url) {
 			}
 		if (info == null || info.length == 0) return;
 		this._tooltip = document.createElement("DIV");
-		this._tooltip.className = "pn_application_menu_item_tooltip";
+		this._tooltip.className = "tooltip";
 		this._tooltip.style.position = "fixed";
 		this._tooltip.style.top = "32px";
 		this._tooltip.style.left = absoluteLeft(this)+"px";

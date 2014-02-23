@@ -499,13 +499,7 @@ function unlistenEvent(elem, type, handler) {
 	else
 	     elem.detachEvent('on'+type,handler); 
 }
-/**
- * Trigger an event
- * @param {DOMNode} elem the HTML element
- * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
- * @param {Object} attributes attributes to set in the event
- */
-function triggerEvent(elem, type, attributes) {
+function createEvent(type, attributes) {
 	var evt;
 	if (document.createEvent) {
 		evt = document.createEvent("HTMLEvents");
@@ -517,6 +511,16 @@ function triggerEvent(elem, type, attributes) {
 	}
 	evt.eventName = type;
 	if (attributes) for (var attr in attributes) evt[attr] = attributes[attr];
+	return evt;
+}
+/**
+ * Trigger an event
+ * @param {DOMNode} elem the HTML element
+ * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
+ * @param {Object} attributes attributes to set in the event
+ */
+function triggerEvent(elem, type, attributes) {
+	var evt = createEvent(type, attributes);
 	if (document.createEvent) {
 		elem.dispatchEvent(evt);
 	} else {

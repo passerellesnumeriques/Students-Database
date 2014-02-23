@@ -81,6 +81,10 @@ function _fire_layout_events() {
 var check_images = false;
 function fireLayoutEventFor(element) {
 	if (window.top.pause_layout) return;
+	if (getWindowFromDocument(element.ownerDocument) != window) {
+		getWindowFromDocument(element.ownerDocument).fireLayoutEventFor(element);
+		return;
+	}
 	// handle possible new images
 	if (!check_images) {
 		check_images = true;
@@ -95,7 +99,10 @@ function fireLayoutEventFor(element) {
 		},10);
 	}
 
-	if (element == document.body) { _fire_layout_events(); return; }
+	if (element == document.body) {
+		triggerEvent(window, 'resize');
+		return; 
+	}
 	// order elements
 	var list = [];
 	for (var i = 0; i < _layout_events.length; ++i) {
@@ -125,7 +132,28 @@ function fireLayoutEventFor(element) {
 		}
 		if (!found) list.push(e);
 	}
-	var changed;
+	if (list.length == 0) {
+		// nothing inside, let's go to the parent
+		var parent = element.parentNode; 
+		while (parent && parent != document.body) {
+			var found = false;
+			for (var j = 0; j < _layout_events.length; ++j) {
+				if (_layout_events[j].element == parent) {
+					list.push(_layout_events[j]);
+					found = true;
+					break;
+				}
+			}
+			if (found) break;
+			parent = parent.parentNode;
+		}
+		if (list.length == 0) {
+			// still nothing => general layout
+			triggerEvent(window, 'resize');
+			return;
+		}
+	}
+	var changed, has_a_change = false;
 	do {
 		changed = false;
 		for (var i = 0; i < list.length; ++i) {
@@ -133,11 +161,50 @@ function fireLayoutEventFor(element) {
 			var h = list[i].element.offsetHeight;
 			list[i].handler(list[i].element);
 			changed |= w != list[i].element.offsetWidth || h != list[i].element.offsetHeight;
+			has_a_change |= changed;
+			if (list[i].element._layoutW && list[i].element.scrollWidth != list[i].element._layoutW)
+				has_a_change = true;
+			else if (list[i].element._layoutH && list[i].element.scrollHeight != list[i].element._layoutH)
+				has_a_change = true;
 			list[i].element._layoutW = list[i].element.scrollWidth;
 			list[i].element._layoutH = list[i].element.scrollHeight;
 		}
 		if (changed) _last_layout_activity = new Date().getTime();
 	} while (changed);
+	if (has_a_change) {
+		// fire for parents
+		var todo = [];
+		for (var i = 0; i < list.length; ++i) {
+			var parent = list[i].element; 
+			if (parent == document.body) { todo=[];break; }
+			parent = parent.parentNode;
+			while (parent && parent != document.body) {
+				var found = false;
+				for (var j = 0; j < _layout_events.length; ++j) {
+					if (_layout_events[j].element == parent) {
+						if (!todo.contains(parent)) {
+							found = false;
+							for (var k = 0; k < list.length; ++k) {
+								if (list[k].element == parent) {
+									found = true;
+									break;
+								}
+							}
+							if (!found)
+								todo.push(parent);
+						}
+						found = true;
+						break;
+					}
+				}
+				if (found) break;
+				parent = parent.parentNode;
+			}
+		}
+		for (var i = 0; i < todo.length; ++i) {
+			fireLayoutEventFor(todo[i]);
+		}
+	}
 }
 
 window.top.pause_layout = false;

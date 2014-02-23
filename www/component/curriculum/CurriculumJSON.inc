@@ -19,13 +19,13 @@ class CurriculumJSON {
 		return $s;
 	}
 	
-	public static function CurriculumJSON() {
+	public static function BatchesJSON() {
 		$batches = SQLQuery::create()->select("StudentBatch")->execute();
 		$periods = SQLQuery::create()->select("AcademicPeriod")->execute();
 		$periods_spe = SQLQuery::create()->select("AcademicPeriodSpecialization")->execute();
-		$classes = SQLQuery::create()->select("StudentClass")->execute();
+		$classes = SQLQuery::create()->select("AcademicClass")->execute();
 		$s = "[";
-		$first_bacth = true;
+		$first_batch = true;
 		foreach ($batches as $batch) {
 			if ($first_batch) $first_batch = false; else $s .= ",";
 			$s .= "{";
@@ -69,6 +69,7 @@ class CurriculumJSON {
 			$s .= "}";
 		}
 		$s .= "]";
+		return $s;
 	}
 	
 }

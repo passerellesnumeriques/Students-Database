@@ -1,12 +1,18 @@
+if (typeof theme != 'undefined') theme.css("tree.css");
+
 function TreeColumn(title) {
 	this.title = title;
 }
-function TreeItem(cells, expanded) {
+function TreeItem(cells, expanded, onselect) {
 	if (typeof cells == 'string') cells = [new TreeCell(cells)];
 	else if (typeof cells == 'object' && !(cells instanceof Array) && getObjectClassName(cells) != "Array")
 		cells = [new TreeCell(cells)];
 	if (!expanded) expanded = false;
 	this.cells = cells;
+	this.onselect = onselect;
+	this.cells[0].element.className = "tree_cell tree_cell_main";
+	if (onselect) this.cells[0].element.className += " tree_cell_selectable";
+	for (var i = 1; i < this.cells.length; ++i) this.cells[i].element.className = "tree_cell";
 	this.children = [];
 	this.expanded = expanded;
 	this.addItem = function(item) {
@@ -74,9 +80,43 @@ function TreeItem(cells, expanded) {
 		for (var i = 0; i < item.children.length; ++i)
 			this._hide(item.children[i]);
 	};
+	this.select = function() {
+		this.tree.selectItem(this);
+	};
 }
 function TreeCell(html) {
-	this.html = html;
+	if (typeof html == 'string') {
+		var div = document.createElement("DIV");
+		div.style.display = "inline-block";
+		div.innerHTML = html;
+		html = div;
+	}
+	this.element = html;
+	
+	this.addStyle = function(style) {
+		for (var name in style) this.element.style[name] = style[name];
+	};
+	var t=this;
+	this.addContextMenu = function(menu_builder) {
+		t.element.oncontextmenu = function(ev) {
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				menu_builder(menu);
+				if (menu.getItems().length > 0)
+					menu.showBelowElement(t.element);
+			});
+			stopEventPropagation(ev);
+			return false;
+		};
+		var img = document.createElement("IMG");
+		img.src = theme.icons_10.arrow_down_context_menu;
+		img.className = "button_verysoft";
+		img.style.padding = "0px";
+		img.style.verticalAlign = "bottom";
+		img.style.marginLeft = "2px";
+		img.onclick = function(ev) { t.element.oncontextmenu(ev); };
+		t.element.appendChild(img);
+	};
 }
 
 function tree(container) {
@@ -84,7 +124,10 @@ function tree(container) {
 	this.columns = [];
 	this.show_columns = false;
 	this.items = [];
+	this.children = this.items;
 	var url = get_script_path("tree.js");
+	container.className = "tree";
+	var t=this;
 	
 	this._build_from_html = function() {
 		// TODO
@@ -137,6 +180,11 @@ function tree(container) {
 		for (var i = 0; i < list.length; ++i)
 			this._removeItem(list[i]);
 	};
+	this._selected_item = null;
+	this.selectItem = function(item) {
+		item.cells[0].element.onclick(createEvent("click",{}));
+	};
+	this.getSelectedItem = function() { return this._selected_item; };
 	this._create_item = function(parent, item, index) {
 		item.tree = this;
 		item.parent = parent;
@@ -165,20 +213,14 @@ function tree(container) {
 		item.head.style.display = 'inline-block';
 		item.head.style.position = 'relative';
 		item.head.style.paddingLeft = "2px";
-		td.appendChild(item.cells[0].container = document.createElement("SPAN"));
-		if (typeof item.cells[0].html == 'string')
-			item.cells[0].container.innerHTML = item.cells[0].html;
-		else
-			item.cells[0].container.appendChild(item.cells[0].html);
+		td.appendChild(item.cells[0].element);
 		if (item.cells.length == 1 && this.columns.length > 1)
 			td.colSpan = this.columns.length;
 		for (var i = 1; i < item.cells.length; ++i) {
-			item.tr.appendChild(item.cells[i].container = document.createElement("TD"));
-			item.cells[i].container.style.padding = "0px";
-			if (typeof item.cells[i].html == 'string')
-				item.cells[i].container.innerHTML = item.cells[i].html;
-			else
-				item.cells[i].container.appendChild(item.cells[i].html);
+			td = document.createElement("TD");
+			item.tr.appendChild(td);
+			td.style.padding = "0px";
+			td.appendChild(item.cells[i].element);
 		}
 		if (!parent) {
 			if (typeof index == 'undefined')
@@ -201,6 +243,16 @@ function tree(container) {
 				}
 			}
 		}
+		if (item.onselect) {
+			item.cells[0].element.onclick = function() {
+				if (t._selected_item) {
+					t._selected_item.cells[0].element.className = "tree_cell tree_cell_main tree_cell_selectable";
+				}
+				t._selected_item = item;
+				item.cells[0].element.className = "tree_cell tree_cell_main tree_cell_selected";
+				item.onselect();
+			};
+		}
 		for (var i = 0; i < item.children.length; ++i)
 			this._create_item(item, item.children[i]);
 	};
@@ -208,7 +260,6 @@ function tree(container) {
 	this._refresh_heads = function() {
 		if (this._refresh_heads_activated) return;
 		this._refresh_heads_activated = true;
-		var t=this;
 		setTimeout(function() {
 			t._refresh_heads_activated = false;
 			t._refresh_heads_();
@@ -217,7 +268,6 @@ function tree(container) {
 	this._refresh_heads_ = function() {
 		for (var i = 0; i < this.items.length; ++i)
 			this._clean_heads(this.items[i]);
-		var t=this;
 		setTimeout(function() {
 			for (var i = 0; i < t.items.length; ++i)
 				t._compute_heights(t.items[i]);
@@ -335,4 +385,47 @@ function tree(container) {
 	
 	this._create();
 	this._build_from_html();
+}
+
+function createTreeItemSingleCell(icon, text, expanded, onselect, context_menu_builder, actions) {
+	var div = document.createElement("DIV");
+	div.style.display = "inline-block";
+	if (icon) {
+		var img = document.createElement("IMG");
+		img.src = icon;
+		img.style.marginRight = "2px";
+		img.style.verticalAlign = "bottom";
+		div.appendChild(img);
+	}
+	if (typeof text == 'string')
+		div.appendChild(document.createTextNode(text));
+	else
+		div.appendChild(text);
+	if (!actions) actions = [];
+	if (context_menu_builder) {
+		div.oncontextmenu = function(ev) {
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				context_menu_builder(menu);
+				if (menu.getItems().length > 0)
+					menu.showBelowElement(div);
+			});
+			stopEventPropagation(ev);
+			return false;
+		};
+		actions.push({icon:theme.icons_10.arrow_down_context_menu,tooltip:null,action:function(ev){div.oncontextmenu(ev);}});
+	}
+	for (var i = 0; i < actions.length; ++i) {
+		var img = document.createElement("IMG");
+		img.src = actions[i].icon;
+		img.className = "button_verysoft";
+		img.style.padding = "0px";
+		img.style.verticalAlign = "bottom";
+		img.style.marginLeft = "2px";
+		if (actions[i].tooltip) img.title = actions[i].tooltip;
+		img.action = actions[i].action;
+		img.onclick = function(ev) { this.action(ev); stopEventPropagation(ev); return false; };
+		div.appendChild(img);
+	}
+	return new TreeItem([new TreeCell(div)], expanded, onselect);
 }

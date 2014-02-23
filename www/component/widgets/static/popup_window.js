@@ -54,8 +54,18 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content.style.width = "100%";
 			t.content.style.height = "100%";
 			t.resize();
-			setTimeout(function() { t.resize(); }, 1);
-			setTimeout(function() { t.resize(); }, 100);
+			var last_w = 0, last_h = 0;
+			var b = getIFrameWindow(t.content).document.body;
+			var update_size = function() {
+				if (t.in_resize) return;
+				if (b.scrollWidth != last_w || b.scrollHeight != last_h) {
+					t.resize();
+					last_w = b.scrollWidth; 
+					last_h = b.scrollHeight; 
+				}
+			};
+			getIFrameWindow(t.content).listenEvent(getIFrameWindow(t.content),'resize',update_size);
+			for (var i = 0; i < b.childNodes.length; ++i) getIFrameWindow(t.content).addLayoutEvent(b.childNodes[i], update_size);
 			if (onload) onload(t.content);
 		};
 		if (t.content_container) {
@@ -326,8 +336,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		var x, y;
 		var win = getWindowFromDocument(t.table.ownerDocument);
 		if (t.content.nodeName == "IFRAME") {
-			t.content_container.style.width = (win.getWindowWidth()-30)+"px";
-			t.content_container.style.height = (win.getWindowHeight()-30)+"px";
+			t.content_container.style.width = (win.getWindowWidth()-20)+"px";
+			t.content_container.style.height = (win.getWindowHeight()-20)+"px";
 			t.content_container.style.overflow = "";
 			var frame = getIFrameDocument(t.content); 
 			x = t._computeFrameWidth(frame.body);
@@ -338,16 +348,16 @@ function popup_window(title,icon,content,hide_close_button) {
 			var h = 0;
 			if (t.header) h += getHeight(t.header);
 			if (t.buttons_tr) h += getHeight(t.buttons_tr);
-			if (x > win.getWindowWidth()-30) {
-				x = win.getWindowWidth()-30;
+			if (x > win.getWindowWidth()-20) {
+				x = win.getWindowWidth()-20;
 				// anticipate scroll bar
 				y += 20;
 			}
-			if (y > win.getWindowHeight()-30-h) {
-				y = win.getWindowHeight()-30-h;
+			if (y > win.getWindowHeight()-20-h) {
+				y = win.getWindowHeight()-20-h;
 				// anticipate scroll bar
-				if (x < win.getWindowWidth()-30) x += 20;
-				if (x > win.getWindowWidth()-30) x = win.getWindowWidth()-30;
+				if (x < win.getWindowWidth()-20) x += 20;
+				if (x > win.getWindowWidth()-20) x = win.getWindowWidth()-20;
 			}
 			getIFrameDocument(t.content).body.style.overflow = "hidden";
 			setWidth(t.content_container, x);
@@ -367,7 +377,7 @@ function popup_window(title,icon,content,hide_close_button) {
 				var h = 0;
 				if (t.header) h += getHeight(t.header);
 				if (t.buttons_tr) h += getHeight(t.buttons_tr);
-				t.content_container.style.height = (win.getWindowHeight()-30-h)+"px";
+				t.content_container.style.height = (win.getWindowHeight()-20-h)+"px";
 				if (t.content_container.offsetWidth > t.content_container.clientWidth) {
 					t.content_container.style.width = (t.content_container.offsetWidth+(t.content_container.offsetWidth-t.content_container.clientWidth))+"px"; 
 				}
@@ -376,7 +386,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (x < 5) {
 				x = 5;
 				t.content_container.style.overflow = "auto";
-				t.content_container.style.width = (win.getWindowWidth()-30)+"px";
+				t.content_container.style.width = (win.getWindowWidth()-20)+"px";
 			}
 		}
 		t.table.style.top = y+"px";

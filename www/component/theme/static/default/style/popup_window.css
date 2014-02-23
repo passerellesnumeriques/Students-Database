@@ -5,10 +5,23 @@
 	background-color: white;
 	border: 1px solid black;
 	border-spacing: 0px;
+	border-radius: 5px;
 }
 .popup_window_title {
 	background-color: #D0D0F0;
 	height: 30px;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+.popup_window_title>td:first-child {
+	border-top-left-radius: 5px;
+}
+.popup_window_title>td:last-child {
+	border-top-right-radius: 5px;
+}
+.popup_window>tbody>tr:last-child, .popup_window>tr:last-child, .popup_window>tbody>tr:last-child>td>div>iframe, .popup_window>tr:last-child>td>div>iframe {
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
 }
 .popup_window.blink {
 	box-shadow: 0 0 20px 3px #FFA000;

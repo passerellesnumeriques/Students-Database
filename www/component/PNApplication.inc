@@ -133,7 +133,7 @@ class PNApplication {
 			echo "<script type='text/javascript'>";
 			echo "if (typeof window.top.status_manager != 'undefined'){";
 			foreach (PNApplication::$warnings as $e)
-				echo "window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,".json_encode($e).",null,5000));";
+				echo "window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,".json_encode($e).",[{action:'popup'},{action:'close'}],5000));";
 			echo "};";
 			echo "</script>";
 		}
