@@ -43,6 +43,24 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 	 * One row is created by exam subject and functional buttons are added if allowed
 	 */
 	t._setTableContent = function(){
+		//Set the header
+		var tr_head = document.createElement("tr");
+		var th = document.createElement("th");
+		var text_header = document.createTextNode("Exam subjects ");
+		th.appendChild(text_header);
+		var info_subjects = document.createElement("img");
+		info_subjects.src = theme.icons_16.info;
+		info_subjects.style.cursor = "pointer";
+		info_subjects.style.verticalAlign = "bottom";
+		info_subjects.onmouseover = function(){
+			createToolTip(this,"An exam subject is made of parts and questions, and must represent the exam sheet given to the applicant. For instance, if you have three entrance examinations, \"Math & Logic\", \"English\", \"Speed and Accuracy\", you must create the three respective exam subjects.<br/> If you want to do any combination between the subjects parts (for instance separate the \"Math\" and the \"Logic\" parts), you will be able to do so at the <i>Exam Topics</i> step");
+		};
+		info_subjects.onmouseout = function(){
+			removeToolTip(this);
+		};
+		th.appendChild(info_subjects);
+		tr_head.appendChild(th);
+		t.table.appendChild(tr_head);
 		//set the body
 		if(t.all_exams.length > 0)
 			var ul = document.createElement("ul");
@@ -89,7 +107,8 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 		tr.appendChild(td_name);
 		tr.menu = []; // menu to display on mouse over
 		
-		export_button = t._createButton("<img src = '"+theme.icons_16._export+"'/> Export",t.all_exams[i].id);
+		export_button = t._createButton("<img src = '"+theme.icons_16._export+"'/>",t.all_exams[i].id);
+		export_button.title = "Export this subject";
 		export_button.onclick = function(){
 			var t2 = this;
 			var menu = new context_menu();
@@ -106,7 +125,8 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 		tr.appendChild(td_export);
 		tr.menu.push(export_button);
 
-		see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/> See",t.all_exams[i].id);
+		see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/>",t.all_exams[i].id);
+		see_button.title = "See this subject";
 		see_button.onclick = function(){
 			location.assign("/dynamic/selection/page/exam/subject?id="+this.id+"&readonly=true");
 		};
@@ -118,10 +138,11 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 		tr.menu.push(see_button);
 		
 		if(t.can_manage){
-			edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/> Edit",t.all_exams[i].id);
+			edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/>",t.all_exams[i].id);
 			edit_button.onclick = function(){
 				location.assign("/dynamic/selection/page/exam/subject?id="+this.id);
 			};
+			edit_button.title = "Edit this subject";
 			edit_button.style.visibility = "hidden";
 			edit_button.className = "button_verysoft";
 			td_edit = document.createElement("td");

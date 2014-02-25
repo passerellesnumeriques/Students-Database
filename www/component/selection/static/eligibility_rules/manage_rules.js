@@ -1,4 +1,5 @@
 function manage_rules(container, all_rules, all_topics, can_edit, db_lock, footer){
+//	alert(service.generateInput(all_rules));
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -40,7 +41,7 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 		//Show
 		container.appendChild(t.diagram_container);
 		t.diagram.show();
-		alert(t.diagram._isLayoutEvent);
+//		alert(t.diagram._isLayoutEvent);
 	};
 	
 	t._createFirstNode = function(){
@@ -204,7 +205,7 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 	};
 	
 	t._areRulesEquals = function(r1,r2){
-		if(r1.parent == r2.parent){ //As there is only one root rule, this condition obliges the two rules to be "middle" ones
+		if(r1.parent == r2.parent || t._bothMiddleRules(r1,r2)){ //As there is only one root rule, this condition obliges the two rules to be "middle" ones
 			if(r1.topics.length == r2.topics.length){
 				if(r1.topics.length == 1){
 					if(r1.topics[0].topic.id == r2.topics[0].topic.id){
@@ -232,6 +233,14 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 		}
 		return false;
 	};
+	
+	t._bothMiddleRules = function(r1,r2){
+		//As when created(before saving) the middle parent attribute is set as "root" and then (after saving) updated with the root id value, the parents comparison is biased
+		if(r1.parent != null && r2.parent != null)
+			return true;
+		else
+			return false;
+	}
 	
 	t._checkNoEmptyRule = function(){
 		var res = null;

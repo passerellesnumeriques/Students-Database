@@ -162,7 +162,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	/** Display the popup window
 	 * @method popup_window#show
 	 */
-	t.show = function() {
+	t.show = function(){
 		var win = t._buildTable();
 		var move_handler = function(ev) {
 			if (!ev) ev = window.event;

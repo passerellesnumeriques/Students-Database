@@ -196,3 +196,24 @@ button img {
 .validation_error {
 	border: 1px solid red;
 }
+
+
+/* Tool tip */
+.tooltip {
+	background-color: white;
+	border: 1px solid #A0A0A0;
+	border-radius: 5px;
+	padding: 5px;
+	box-shadow: 3px 3px 3px #D0D0D0;
+}
+.tooltip:before {
+    position: absolute;
+    display: inline-block;
+    border-left: 7px solid transparent;
+    border-bottom: 7px solid white;
+    border-right: 7px solid transparent;
+    border-bottom-color: white;
+    left: 30px;
+    top: -7px;
+    content: '';
+}

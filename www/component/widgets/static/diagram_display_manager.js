@@ -111,7 +111,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	t.close = function(){
 		if(t._shown){
 			if(t._isLayoutEvent){
-				removeLayoutEvent(container, function() { t.layout(); });
+				removeLayoutEvent(container, t.layout);
 				t._isLayoutEvent = false;
 			}
 			while(container.firstChild)
@@ -133,7 +133,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 		t.layout();
 		t._drawLines();
 		if(!t._isLayoutEvent){
-			addLayoutEvent(container, function() { t.layout(); });
+			addLayoutEvent(container,t.layout);
 			t._isLayoutEvent = true;
 		}
 	};
@@ -144,7 +144,11 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	 * This method is added to the layout custom events
 	 */
 	t.layout = function(){
+		if(!t._shown)
+			return;
 		//Then set the layout
+		if(t.nodes.length == 0)
+			return;
 		if(t.nodes.length < 2){
 			if(t.nodes.length == 1){
 				var node = document.getElementById(t._getComputedId(t.nodes[0].id));
@@ -175,20 +179,26 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 			}
 		} else {
 			//Set the width attributes
+//			var temp = [];
 			for(var i = 0; i < t.nodes.length; i++){
+//				temp.push(t._getComputedId(t.nodes[i].id));
 				var node = document.getElementById(t._getComputedId(t.nodes[i].id));
-				node.style.width = t._getWidth(i)+"px";
-				node.style.position = "absolute";
+				if(node){
+					node.style.width = t._getWidth(i)+"px";
+					node.style.position = "absolute";
+				}
 				//node.style.left = t._getLeft(i)+"px";
 			}
 			//Set the left and also top attributes after the width because the height may have been updated
 			for(var i = 0; i < t.nodes.length; i++){
 				var node = document.getElementById(t._getComputedId(t.nodes[i].id));
-				node.style.left = t._getLeft(i)+"px";
-				if(i != 0 && i != t.nodes.length -1){//only for the middle nodes
-					node.style.top = t._getTopForMiddleNode(i)+"px";
-				} else {
-					node.style.top = t._getTopForEndAndFirstNodes(node)+"px";
+				if(node){
+					node.style.left = t._getLeft(i)+"px";
+					if(i != 0 && i != t.nodes.length -1){//only for the middle nodes
+						node.style.top = t._getTopForMiddleNode(i)+"px";
+					} else {
+						node.style.top = t._getTopForEndAndFirstNodes(node)+"px";
+					}
 				}
 			}
 		}
