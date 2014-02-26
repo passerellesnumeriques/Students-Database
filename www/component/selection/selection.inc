@@ -1202,6 +1202,9 @@ class selection extends Component {
 					SQLQuery::create()->insertMultiple("ExamPartTopic", $parts_fields_values, $db_lock);
 				if(count($full_subject_field_values) >0)
 					SQLQuery::create()->insertMultiple("ExamTopicFullExam", $full_subject_field_values, $db_lock);
+				//Check the max score and questions fields
+				$this->checkTopicMaxScoreField($id);
+				$this->checkTopicNumberQuestionsField($id);
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}

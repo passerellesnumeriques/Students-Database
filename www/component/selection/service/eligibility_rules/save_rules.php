@@ -39,7 +39,9 @@ class service_eligibility_rules_save_rules extends Service {
 					$topics_to_insert = $this->getAllTopicsFieldsValues($rule);
 					array_push($rules_to_insert, array(
 					"rule_table" => SelectionJSON::EligibilityRule2DB($rule),
-					"rule_topic_table_insert" => $topics_to_insert
+					"rule_topic_table_insert" => $topics_to_insert,
+					"rule_topic_table_update" => array(),
+					"rule_topic_table_remove" => array(),
 					));
 				} else {
 					//This is an update

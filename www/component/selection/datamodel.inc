@@ -91,8 +91,7 @@
 		->addWriteAccess("edit_information_session",true)
 		->addReadAccess("see_information_session_details",true)
 		->addInsertAccess("manage_information_session",true)
-		->addRemoveAccess("manage_information_session",true)
-//TODO add a field "remark"		
+		->addRemoveAccess("manage_information_session",true)	
 		->setDisplayHandler("people", new datamodel\StopDataDisplayHandler("Selection", "Selection"))
 		;		
 		
@@ -183,45 +182,13 @@
 		->addInsertAccess("manage_exam_subject",true)
 		->addRemoveAccess("manage_exam_subject",true);
 		
-	$sm->addTable("Applicant")
-		->addPrimaryKey("id")
-		->addInteger("applicant_id",32,1,null,false,true)//applicant_id must be a number
-		->addString("first_name", 100, 1, false)
-		->addString("middle_name", 100, 1, true)
-		->addString("last_name", 100, 1, false)
-		->addString("khmer_first_name", 100, 1, true)
-		->addString("khmer_last_name", 100, 1, true)
-		->addEnum("sex", array("M","F"),false)
-		->addDate("birth", false)
-		->addBoolean("excluded",false)
-		->addString("exclusion_reason", 100, 1, true)
-		->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Applicant Information", "Applicant Information",
-			array(
-				"first_name"=>"First Name",
-				"middle_name"=>"Middle Name",
-				"last_name"=>"Last Name",
-				"khmer_first_name"=>"Khmer First Name",
-				"khmer_last_name"=>"Khmer Last Name",
-				"sex"=>"Gender",
-				"birth"=>"Birth Date",
-				"applicant_id"=>"Applicant ID",
-				// "excluded"=>"Excluded",
-				// "exclusion_reason"=>"Exclusion Reason",
-			)
-		))
-		->addWriteAccess("manage_applicant_info",true)
-		->addReadAccess("see_applicant_info",true)
-		->addInsertAccess("create_applicant",true)
-		->addRemoveAccess("manage_applicant_info",true);
-		//TODO finish + update steps.inc
-		
-	$sm->addTable("ExamQuestionResult")
-		->addForeignKey("applicant","Applicant",true,false,true,false)
-		->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true,false)
-		->addString("answer")//optional
-		->addDecimal("score",10,2,0,null,false,false)
-		->setKey(array("applicant","exam_subject_question"));
-		//TODO finish + update steps.inc
+// 	$sm->addTable("ExamQuestionResult")
+// 		->addForeignKey("applicant","Applicant",true,false,true,false)
+// 		->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true,false)
+// 		->addString("answer")//optional
+// 		->addDecimal("score",10,2,0,null,false,false)
+// 		->setKey(array("applicant","exam_subject_question"));
+// 		//TODO finish + update steps.inc
 		
 		//TODO Exam_part_result, exam_subject_result (reduce the calculation time for statistics...)
 		
@@ -246,8 +213,71 @@
 		->addRemoveAccess("manage_exam_subject",true);
 		
 		
+	$sm->addTable("ExamCenter")
+		->addPrimaryKey("id")
+		->addForeignKey("geographic_area", "GeographicArea", true, false, true, false, true)//An exam center must be linked to a geographic area, and this area is unique in this table
+		->addForeignKey("postal_address", "PostalAddress", false, false, false, true, true)//Optional
+		->addReadAccess("see_exam_center_detail", true)
+		->addWriteAccess("manage_exam_center", true)
+		->addRemoveAccess("manage_exam_center", true)
+		->addInsertAccess("manage_exam_center", true);
+	/**
+	 * No contact point / partner is added for the exam center, since we can keep the value
+	 */
+	
+	$sm->addTable("ExamCenterInformationSession")//An exam center can created from one or several information sessions
+		->addForeignKey("exam_center", "ExamCenter", true, false, true)
+		->addForeignKey("information_session", "InformationSession", true, false, false,false,true)//An information session can only be linked to one exam center
+		->setKey(array("exam_center","information_session"))
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
+	
+	$sm->addTable("ExamSession")
+		->addForeignKey("event", "CalendarEvent", true, true, false, false, true)
+		->addForeignKey("exam_center", "ExamCenter", true, false, true)//An exam center can have several session
+		->setPrimary("event")//The event is the primary key of a session
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
 		
+	$sm->addTable("ExamCenterRoom")
+		->addPrimaryKey("id")
+		->addForeignKey("exam_center", "ExamCenter", true, false, true)
+		->addInteger("capacity",32,0,null,false,false)//The capacity of the room cannot be null
+		->addString("name",255,0,false,false)//Can be custom or not, but must be set
+		->addWriteAccess("manage_exam_subject",true)
+		->addReadAccess("see_exam_subject",true)
+		->addInsertAccess("manage_exam_subject",true)
+		->addRemoveAccess("manage_exam_subject",true);
 		
-		
-		
+	$sm->addTable("Applicant")
+		->addForeignKey("people", "People", true, false, false, false, true)
+		->addInteger("applicant_id",32,1,null,false,true)//applicant_id must be a number
+		->addString("exclusion_reason", 100, 1, true)
+		->addEnum("automatic_exclusion_step", array("exam","eligibility_rule","interview","social_investigation"))
+		->addString("automatic_exclusion_reason",255,0,true,false)//This field must be filled up by functionalities ("missing",...) to explain the automatic exclusion step
+		->addString("custom_exclusion",255,0,true,false)//This field can be filled up by user
+		->addBoolean("excluded",false)
+		->addForeignKey("information_session", "InformationSession", false, false, true, true, false)//An applicant can be assigned to an information session
+		->addForeignKey("exam_center", "ExamCenter", false, false, true, true, false)//An applicant can be assigned to an exam center (maybe after importing applicant data
+		->addForeignKey("exam_room", "ExamCenterRoom", false, false, true, true, false) //An applicant can be assigned to an exam center room after(maybe after importing applicant data
+		->addForeignKey("exam_session", "ExamSession", false, false, true, true, false) //An applicant can be assigned to an exam session after being assigned to an exam center, or directly assigned to a session
+		->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Applicant Information", "Applicant Information",
+				array(
+						"applicant_id"=>"Applicant ID",
+						// "excluded"=>"Excluded",
+						// "exclusion_reason"=>"Exclusion Reason",
+				)
+		))
+		->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities
+		->setPrimary("people");//The primary key is the people_id
+		//TODO finish + update steps.inc
+	
+	$sm->addTable("ApplicantMoreInfo")//This table contains all the custom data (based on the application form content)
+		->addForeignKey("people", "People", true, false, false, false, true)
+		->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities
+		->setPrimary("people");//The primary key is the people_id
 		

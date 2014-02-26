@@ -322,5 +322,77 @@ class contact extends Component {
 		}
 		return $json_address;
 	}
+	
+	/**
+	 * Get all the organizations existings in a given geographic area, and the matching addresses
+	 * @param number $area_id
+	 * @return array containing two fields:<ul><li>Organizations found in the given area</li><li>Organizations found in the parent area (all the organizations set in this array are distinct from the ones found in the given area (no double return)</li></ul>
+	 * The structure of these arrays is: array("organization_id" => array("name" => organization_name, "addresses" => array(id1, id2,...)))
+	 */
+	public function getOrganizationsByGeographicArea($area_id){
+		//TODO: creator field?
+		//Get the parent id
+		$parent_id = SQLQuery::create()
+			->select("GeographicArea")
+			->field("GeographicArea","parent")
+			->whereValue("GeographicArea", "id", $area_id)
+			->executeSingleValue();
+		
+		$organizations_in_this_area = SQLQuery::create()
+			->select("PostalAddress")
+			->field("PostalAddress","id","address_id")
+			->join("PostalAddress","OrganizationAddress",array("id" => "address"))
+			->join("OrganizationAddress","Organization",array("organization" => "id"))
+			->field("Organization","id","organization_id")
+			->field("Organization","name","organization_name")
+			->whereValue("PostalAddress","geographic_area",$area_id)
+			->execute();
+		
+		$all_ids_in_this_area = array();
+		$to_return_from_this_area = array();
+		$to_return_from_parent_area = array();
+		if($organizations_in_this_area <> null){
+			foreach($organizations_in_this_area as $o){
+				if(isset($to_return_from_this_area[$o["organization_id"]])){
+					array_push($to_return_from_this_area[$o["organization_id"]]["addresses"],$o["address_id"]);
+				} else {
+					$to_return_from_this_area[$o["organization_id"]] = array(
+						"addresses" => array($o["address_id"]),
+						"name" => $o["organization_name"]
+					);
+				}
+				array_push($all_ids_in_this_area, $o["address_id"]);
+			}
+		}
+		
+		if($parent_id <> null){//This is not the root level
+			//Select all the organizations from the parent level but the one already retrieved
+			$q = SQLQuery::create()
+			->select("PostalAddress")
+			->field("PostalAddress","id","address_id")
+			->join("PostalAddress","OrganizationAddress",array("id" => "address"))
+			->join("OrganizationAddress","Organization",array("organization" => "id"))
+			->field("Organization","id","organization_id")
+			->field("Organization","name","organization_name")
+			->whereValue("PostalAddress","geographic_area",$parent_id);
+			if(count($all_ids_in_this_area) > 0){
+				$q->whereNotIn("PostalAddress","id",$all_ids_in_this_area);
+			}
+			$organizations_in_parent_area = $q->execute();
+			if($organizations_in_parent_area <> null){
+				foreach ($organizations_in_parent_area as $o){
+					if(isset($to_return_from_parent_area[$o["organization_id"]])){
+						array_push($o["organization_id"]["addresses"],$o["address_id"]);
+					} else {
+						$to_return_from_parent_area[$o["organization_id"]] = array(
+								"addresses" => array($o["address_id"]),
+								"name" => $o["organization_name"]
+						);
+					}
+				}
+			}
+		}
+		return array($to_return_from_this_area, $to_return_from_parent_area);
+	}
 }
 ?>

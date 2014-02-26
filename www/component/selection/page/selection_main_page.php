@@ -93,6 +93,7 @@ class page_selection_main_page extends selection_page {
 					</div>
 				</div>
 		</div>
+		<a href = "/dynamic/selection/page/test_functionalities">Tests</a>
 		<script type = 'text/javascript'>
 			var calendar_id = null;
 			var calendar_name = null;
