@@ -63,7 +63,7 @@
 #pn_application_section_title:hover {
 	background-color: rgba(255,255,255,0.7);
 }
-#pn_application_left_controls, #pn_application_right_controls, #pn_application_menu {
+#pn_application_left_controls, #pn_application_right_controls, #pn_application_menu, .pn_application_menu_separator {
 	border-right: 1px solid #A0A0C0;
 	border-bottom-right-radius: 10px;
 }

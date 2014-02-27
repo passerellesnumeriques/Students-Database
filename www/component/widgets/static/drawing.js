@@ -126,7 +126,7 @@ drawing = {
 		};
 		refresh();
 		var refresh_timeout = null;
-		addLayoutEvent(parent,function() {
+		layout.addHandler(parent,function() {
 			if (refresh_timeout) return;
 			refresh_timeout = setTimeout(function() {
 				refresh();
@@ -179,7 +179,7 @@ drawing = {
 //		};
 //		refresh();
 //		var refresh_timeout = null;
-//		addLayoutEvent(parent,function() {
+//		layout.addHandler(parent,function() {
 //			if (refresh_timeout) return;
 //			refresh_timeout = setTimeout(function() {
 //				refresh();

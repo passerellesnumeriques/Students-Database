@@ -475,16 +475,40 @@ function Custom_Event() {
 		for (var i = 0; i < list.length; ++i) 
 			try { list[i](data); } 
 			catch (e) {
-				var msg = e.message;
-				if (typeof e.fileName != 'undefined') {
-					msg += " ("+e.fileName;
-					if (typeof e.lineNumber != 'undefined') msg += ":"+e.lineNumber;
-					msg += ")";
-				}
-				console.log(msg);
+				log_exception(e, "occured in event listener: "+list[i]);
 			}
 	};
-} 
+}
+
+function log_exception(e, additional_message) {
+	var msg = e.message;
+	if (typeof e.fileName != 'undefined') {
+		msg += " ("+e.fileName;
+		if (typeof e.lineNumber != 'undefined') msg += ":"+e.lineNumber;
+		msg += ")";
+	}
+	if (additional_message)
+		msg += " "+additional_message;
+	console.log(msg);
+	var stack = null;
+	if (e.stack)
+		stack = e.stack;
+	else if(e.stacktrace)
+		stack = e.stacktrace;
+	else {
+		var s = "";
+	    var currentFunction = arguments.callee.caller;
+	    while (currentFunction) {
+	      var fn = currentFunction.toString();
+	      var fname = fn.substring(0, fn.indexOf('{'));;
+	      s += fname+"\r\n";
+	      currentFunction = currentFunction.caller;
+	    }
+	    stack = s;
+	}
+	if (stack)
+		console.log("Stack trace:"+stack);
+}
 
 /**
  * Default implementation of error_dialog is using alert

@@ -30,10 +30,10 @@ class page_curriculum extends Page {
 		$this->add_javascript("/static/widgets/tree/tree.js");
 		$this->add_javascript("/static/widgets/header_bar.js");
 		theme::css($this, "header_bar.css");
-		$this->onload("new header_bar('page_header','toolbar_big');");
+		$this->onload("new header_bar('page_header','toolbar');");
 		?>
 		<div id='page_header' 
-			icon='/static/curriculum/curriculum_32.png' 
+			icon='/static/curriculum/curriculum_16.png' 
 			title='Curriculum for Batch <?php echo htmlentities($batch_info["name"]); if (!isset($_GET["batch"])) echo ", Period ".$periods[0]["name"];?>'
 		>
 			<?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {

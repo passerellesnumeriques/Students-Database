@@ -16,7 +16,7 @@ function vertical_layout(container, keep_width) {
 	
 	t.removeLayout = function() {
 		t.container.widget = null;
-		removeLayoutEvent(t.container, t.layout);
+		layout.removeHandler(t.container, t.layout);
 	};
 	
 	t.layout = function() {
@@ -90,5 +90,5 @@ function vertical_layout(container, keep_width) {
 	};
 	
 	t.layout();
-	addLayoutEvent(t.container, t.layout);
+	layout.addHandler(t.container, t.layout);
 }

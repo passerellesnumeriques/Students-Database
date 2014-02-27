@@ -279,14 +279,14 @@ function data_import(container, root_table, preset_fields, import_type) {
 							field.range.onblur();
 						};
 						field.td.appendChild(button);
-						fireLayoutEventFor(t.right_div);
+						layout.invalidate(t.right_div);
 					} else if (field.select_type.value == 'set') {
 						require("typed_field.js",function(){
 							require(field.field_classname+".js",function(){
 								field.set_field = new window[field.field_classname](null,true,null,null,field.field_args);
 								field.td.appendChild(field.set_field.getHTMLElement());
 								if (onloaded) onloaded();
-								fireLayoutEventFor(t.right_div);
+								layout.invalidate(t.right_div);
 							});
 						});
 					}

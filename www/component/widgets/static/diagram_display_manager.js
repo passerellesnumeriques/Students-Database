@@ -111,7 +111,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	t.close = function(){
 		if(t._shown){
 			if(t._isLayoutEvent){
-				removeLayoutEvent(container, function() { t.layout(); });
+				layout.removeHandler(container, function() { t.layout(); });
 				t._isLayoutEvent = false;
 			}
 			while(container.firstChild)
@@ -133,7 +133,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 		t.layout();
 		t._drawLines();
 		if(!t._isLayoutEvent){
-			addLayoutEvent(container, function() { t.layout(); });
+			layout.addHandler(container, function() { t.layout(); });
 			t._isLayoutEvent = true;
 		}
 	};

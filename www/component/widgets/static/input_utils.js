@@ -22,7 +22,7 @@ function inputAutoresize(input, min_size) {
 		if (w < min) w = min;
 		input.style.width = w+"px";
 		if (last != w) {
-			fireLayoutEventFor(input);
+			layout.invalidate(input);
 			if (input.onresize) input.onresize();
 		}
 		last = w;

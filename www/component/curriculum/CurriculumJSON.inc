@@ -72,5 +72,48 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	public static function SubjectCategoryJSON($category) {
+		$s = "{";
+		$s .= "id:".$category["id"];
+		$s .= ",name:".json_encode($category["name"]);
+		$s .= "}";
+		return $s;
+	}
+	
+	public static function SubjectCategoriesJSON($categories) {
+		$s .= "[";
+		$first = true;
+		foreach ($categories as $category) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= self::SubjectCategoryJSON($category);
+		}
+		$s .= "]";
+		return $s;
+	}
+	
+	public static function SubjectJSON($subject) {
+		$s = "{";
+		$s .= "id:".$subject["id"];
+		$s .= ",code:".json_encode($subject["code"]);
+		$s .= ",name:".json_encode($subject["name"]);
+		$s .= ",category_id:".$subject["category"];
+		$s .= ",period_id:".$subject["period"];
+		$s .= ",specialization:".json_encode($subject["specialization"]);
+		$s .= ",hours:".json_encode($subject["hours"]);
+		$s .= ",hours_type:".json_encode($subject["hours_type"]);
+		$s .= "}";
+		return $s;
+	}
+	
+	public static function SubjectsJSON($subjects) {
+		$s .= "[";
+		$first = true;
+		foreach ($subjects as $subject) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= self::SubjectJSON($subject);
+		}
+		$s .= "]";
+		return $s;
+	}
 }
 ?>

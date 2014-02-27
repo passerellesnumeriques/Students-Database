@@ -52,7 +52,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.field.setData(t.field.getOriginalData());
 			t.field.setEditable(false);
 			config_field();
-			fireLayoutEventFor(container);
+			layout.invalidate(container);
 			if (onready) onready(t);
 		} else {
 			require("typed_field.js",function() { 
@@ -64,7 +64,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 						t._changed();
 					});
 					config_field();
-					fireLayoutEventFor(container);
+					layout.invalidate(container);
 					if (onready) onready(t);
 				}); 
 			});
@@ -82,7 +82,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);
-		fireLayoutEventFor(container);
+		layout.invalidate(container);
 		lock_data(data, function(locks, data){
 			container.removeChild(loading);
 			container.appendChild(t.field.getHTMLElement());
@@ -112,7 +112,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.unedit_button.style.cursor = 'pointer';
 			t.unedit_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.unedit(); stopEventPropagation(ev); return false; };
 			container.appendChild(t.unedit_button);
-			fireLayoutEventFor(container);
+			layout.invalidate(container);
 		});
 	};
 	/** Save current data */
@@ -124,7 +124,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);
-		fireLayoutEventFor(container);
+		layout.invalidate(container);
 		save_data(data, function(data) {
 			container.removeChild(loading);
 			container.appendChild(t.field.getHTMLElement());

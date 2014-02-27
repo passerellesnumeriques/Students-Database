@@ -42,8 +42,8 @@ class page_profile extends Page {
 		$page = $pages[$page][2];
 		
 		require_once("component/data_model/page/utils.inc");
-		datamodel_cell($this, "profile_title_first_name", false, "People", "first_name", $people_id, null, $people["first_name"], "function(){fireLayoutEventFor(window.profile_header.header);}");
-		datamodel_cell($this, "profile_title_last_name", false, "People", "last_name", $people_id, null, $people["last_name"], "function(){fireLayoutEventFor(window.profile_header.header);}");
+		datamodel_cell($this, "profile_title_first_name", false, "People", "first_name", $people_id, null, $people["first_name"], "function(){layout.invalidate(window.profile_header.header);}");
+		datamodel_cell($this, "profile_title_last_name", false, "People", "last_name", $people_id, null, $people["last_name"], "function(){layout.invalidate(window.profile_header.header);}");
 
 		$all_pages = array();
 		foreach (PNApplication::$instance->components as $cname=>$c) {

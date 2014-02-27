@@ -137,7 +137,7 @@ function assign_peoples(container) {
 		});
 		container.style.display = "inline-block";
 		this.global_div.appendChild(container);
-		fireLayoutEventFor(this.global_div);
+		layout.invalidate(this.global_div);
 		return {content:content,nb_node:nb,unassign_button:unassign_button};
 	};
 	

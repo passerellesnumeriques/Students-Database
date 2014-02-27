@@ -25,3 +25,19 @@ function StudentClass(id, name, spe_id) {
 	this.name = name;
 	this.spe_id = spe_id;
 }
+
+function CurriculumSubjectCategory(id, name) {
+	this.id = id;
+	this.name = name;
+}
+
+function CurriculumSubject(id, code, name, category_id, period_id, specialization_id, hours, hours_type) {
+	this.id = id;
+	this.code = code;
+	this.name = name;
+	this.category_id = category_id;
+	this.period_id = period_id;
+	this.specialization_id = specialization_id;
+	this.hours = hours;
+	this.hours_type = hours_type;
+}

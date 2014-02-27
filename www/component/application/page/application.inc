@@ -156,20 +156,25 @@ function sectionBox(sec) {
 
 function sectionsMenu() {
 	var menu = document.createElement("DIV");
+	var listener = function() {
+		window.top.pnapplication.unregisterOnclick(listener);
+		if (typeof animation != 'undefined') animation.fadeOut(menu,300,function() { document.body.removeChild(menu); });
+		else document.body.removeChild(menu);		
+	};
 	for (var i = 0; i < sections.length; ++i) {
 		if (i > 0 && (i%3)==0) menu.appendChild(document.createElement("BR"));
 		var box = sectionBox(sections[i]);
+		var click = box.onclick;
+		box.onclick = function() {
+			listener();
+			click();
+		};
 		menu.appendChild(box);
 	}
 	menu.id = "pn_application_sections_menu";
 	if (typeof animation != 'undefined') setOpacity(menu,0);
 	document.body.appendChild(menu);
 	if (typeof animation != 'undefined') animation.fadeIn(menu,300);
-	var listener = function() {
-		window.top.pnapplication.unregisterOnclick(listener);
-		if (typeof animation != 'undefined') animation.fadeOut(menu,300,function() { document.body.removeChild(menu); });
-		else document.body.removeChild(menu);		
-	};
 	setTimeout(function() { window.top.pnapplication.registerOnclick(window, listener); },1);
 }
 
@@ -198,7 +203,7 @@ function selectSection(sec) {
 	win.location.href = sec.page;
 	document.getElementById('pn_application_section_title').innerHTML = "<img src='"+sec.icon32+"'/>"+sec.name;
 	populateMenu(sec.menu_provider);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 
 function populateMenu(service_url) {
@@ -252,7 +257,7 @@ function addMenuItem(icon, text, info, url) {
 	item.href = url;
 	item.target = "pn_application_content";
 	section_menu.addItem(item);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 	item.onmouseover = function() {
 		if (this._tooltip) return;
 		for (var i = 0; i < section_menu.items.length; ++i)
@@ -280,7 +285,7 @@ function addMenuItem(icon, text, info, url) {
 function addMenuControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
 	section_menu.addItem(control);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 function addRightControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -288,7 +293,7 @@ function addRightControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 function addLeftControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -296,7 +301,7 @@ function addLeftControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 
 selectSection(sections[<?php

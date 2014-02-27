@@ -72,7 +72,7 @@ function top_status_widget() {
 	
 	t.waiting_components = 0;
 	
-	fireLayoutEventFor(container);
+	layout.invalidate(container);
 
 	t.getTotalScenarios = function() {
 		var nb = 0;

@@ -14,7 +14,7 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 	};
 	
 	t._fireLayoutEvent = function(){
-		fireLayoutEventFor(t.diagram_container);
+		layout.invalidate(t.diagram_container);
 	};
 	
 	t._initDiagram = function(){

@@ -36,27 +36,27 @@ function section(icon, title, content, collapsable) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar.appendChild(element);
 		element.style.display = "inline-block";
-		fireLayoutEventFor(this.element);
+		layout.invalidate(this.element);
 	};
 	this.addToolLeft = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar_left.appendChild(element);
 		element.style.display = "inline-block";
-		fireLayoutEventFor(this.element);
+		layout.invalidate(this.element);
 	};
 	this.resetToolLeft = function() {
 		while (this.toolbar_left.childNodes.length > 0) this.toolbar_left.removeChild(this.toolbar_left.childNodes[0]);
-		fireLayoutEventFor(this.element);
+		layout.invalidate(this.element);
 	};
 	this.addToolRight = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar_right.appendChild(element);
 		element.style.display = "inline-block";
-		fireLayoutEventFor(this.element);
+		layout.invalidate(this.element);
 	};
 	this.resetToolRight = function() {
 		while (this.toolbar_right.childNodes.length > 0) this.toolbar_right.removeChild(this.toolbar_right.childNodes[0]);
-		fireLayoutEventFor(this.element);
+		layout.invalidate(this.element);
 	};
 	this.addToolBottom = function(element) {
 		if (typeof element == 'string') {
@@ -84,7 +84,7 @@ function section(icon, title, content, collapsable) {
 		if (icon) {
 			this.icon = document.createElement("IMG");
 			this.icon.src = icon;
-			this.icon.onload = function() { fireLayoutEventFor(t.element); };
+			this.icon.onload = function() { layout.invalidate(t.element); };
 			this.title_container.appendChild(this.icon);
 		}
 		this.title = document.createElement("DIV");
@@ -102,7 +102,7 @@ function section(icon, title, content, collapsable) {
 			this.collapse_container.style.padding = "4px";
 			this.collapse_button = document.createElement("IMG");
 			this.collapse_button.src = get_script_path("section.js")+"collapse.png";
-			this.collapse_button.onload = function() { fireLayoutEventFor(t.element); };
+			this.collapse_button.onload = function() { layout.invalidate(t.element); };
 			this.collapse_button.style.cursor = 'pointer';
 			this.collapsed = false;
 			this.collapse_button.onclick = function() { t.toggleCollapseExpand(); }; 
@@ -135,7 +135,7 @@ function section(icon, title, content, collapsable) {
 				t.content_container.anim1 = animation.create(t.content_container, 0, t.content_container.originalHeight, 500, function(value, element) {
 					element.style.height = Math.floor(value)+'px';
 					element.style.overflow = "hidden";
-					if (value == t.content_container.originalHeight) fireLayoutEventFor(t.element.parentNode);
+					if (value == t.content_container.originalHeight) layout.invalidate(t.element.parentNode);
 				});
 				t.content_container.anim2 = animation.fadeIn(t.content_container, 600, function() {
 					t.content_container.style.position = 'static';
@@ -160,7 +160,7 @@ function section(icon, title, content, collapsable) {
 				t.content_container.anim1 = animation.create(t.content_container, start, 0, 600, function(value, element) {
 					element.style.height = Math.floor(value)+'px';
 					element.style.overflow = "hidden";
-					if (value == 0) fireLayoutEventFor(t.element.parentNode);
+					if (value == 0) layout.invalidate(t.element.parentNode);
 				});
 				t.content_container.anim2 = animation.fadeOut(t.content_container, 500, function() {
 					t.content_container.style.position = 'absolute';

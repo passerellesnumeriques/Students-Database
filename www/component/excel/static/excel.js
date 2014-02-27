@@ -43,7 +43,7 @@ function Excel(container, onready) {
 		if (onready) onready(t);
 	});
 	
-	addLayoutEvent(container, function() { t._layout(); });
+	layout.addHandler(container, function() { t._layout(); });
 }
 
 function ExcelSheet(name, icon, columns, rows, onready) {
@@ -206,7 +206,7 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	};
 	
 	this._init();
-	addLayoutEvent(this.container, function() { t.layout(); });
+	layout.addHandler(this.container, function() { t.layout(); });
 	
 	listenEvent(window,'keydown',function(ev){
 		var event = window.event ? window.event : ev;

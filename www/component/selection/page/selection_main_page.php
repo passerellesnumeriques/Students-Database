@@ -21,7 +21,6 @@ class page_selection_main_page extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
-		$calendar_name = SQLQuery::create()->bypassSecurity()->select("Calendar")->field("name")->where("id",$calendar_id)->executeSingleValue();
 		
 		$page->add_javascript("/static/widgets/header_bar.js");
 		$page->onload("new header_bar('steps_header','small');");
@@ -95,11 +94,9 @@ class page_selection_main_page extends selection_page {
 		</div>
 		<script type = 'text/javascript'>
 			var calendar_id = null;
-			var calendar_name = null;
 			var steps = null;
 			<?php
 			if(isset($calendar_id)) echo "calendar_id = ".json_encode($calendar_id).";";
-			if(isset($calendar_name)) echo "calendar_name = ".json_encode($calendar_name).";";
 			if(isset($steps)) echo "steps = ".json_encode($steps).";";
 			
 			echo "var unvalid_steps_to_display = ";
@@ -112,7 +109,7 @@ class page_selection_main_page extends selection_page {
 			?>
 			calendar_section = section_from_html('calendar_section');
 			require(["calendar.js","popup_window.js"],function(){
-				if(calendar_id != null && calendar_name != null){
+				if(calendar_id != null){
 					var cal_manager = new CalendarManager();
 					var PN_cal = window.top.pn_calendars_provider.getCalendar(calendar_id);
 					var init_calendar = function() {

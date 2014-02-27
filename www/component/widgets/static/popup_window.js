@@ -65,7 +65,7 @@ function popup_window(title,icon,content,hide_close_button) {
 				}
 			};
 			getIFrameWindow(t.content).listenEvent(getIFrameWindow(t.content),'resize',update_size);
-			for (var i = 0; i < b.childNodes.length; ++i) getIFrameWindow(t.content).addLayoutEvent(b.childNodes[i], update_size);
+			for (var i = 0; i < b.childNodes.length; ++i) getIFrameWindow(t.content).layout.addHandler(b.childNodes[i], update_size);
 			if (onload) onload(t.content);
 		};
 		if (t.content_container) {
@@ -208,7 +208,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			return false;
 		};
 		t.resize();
-		fireLayoutEventFor(t.content_container);
+		layout.invalidate(t.content_container);
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);
 			t.anim = animation.fadeIn(t.table, 200);

@@ -12,15 +12,20 @@ class page_students_grades extends Page {
 				echo "Please select a period or a class to display the grades of the students";
 				return;
 			}
-			$class = SQLQuery::create()->select("AcademicClass")->whereValue("AcademicClass", "id", $class_id)->executeSingleRow();
+			$class = PNApplication::$instance->curriculum->getAcademicClass($class_id);
 			$period_id = $class["period"];
 			$spe_id = $class["specialization"];
 		} else {
 			$class = null;
 			$spe_id = @$_GET["specialization"];
 		}
-		$period = SQLQuery::create()->select("AcademicPeriod")->where("id",$period_id)->executeSingleRow();
-		$spe = $spe_id <> null ? SQLQuery::create()->select("Specialization")->where("id",$spe_id)->executeSingleRow() : null;
+		$period = PNApplication::$instance->curriculum->getAcademicPeriod($period_id);
+		$batch_id = $period["batch"];
+		$spe = $spe_id <> null ? PNApplication::$instance->curriculum->getSpecialization($spe_id) : null;
+		
+		
+		
+		
 		$q = SQLQuery::create()
 			->select("CurriculumSubject")
 			->whereValue("CurriculumSubject", "period", $period_id)
@@ -92,8 +97,11 @@ class page_students_grades extends Page {
 		} else
 			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","people", $students_ids)->execute();
 		
+		$this->add_javascript("/static/curriculum/curriculum_objects.js");
+		require_once("component/curriculum/CurriculumJSON.inc");
+		
 		$this->add_javascript("/static/widgets/header_bar.js");
-		$this->onload("new header_bar('grades_page_header', 'small');");
+		$this->onload("new header_bar('grades_page_header', 'toolbar');");
 		$this->add_stylesheet("/static/transcripts/grades.css");
 		?>
 		<style type='text/css'>
@@ -116,6 +124,10 @@ class page_students_grades extends Page {
 			</div>
 		</div>
 		<script type='text/javascript'>
+		var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON(PNApplication::$instance->curriculum->getSubjectCategories());?>;
+		var subjects = <?php echo CurriculumJSON::SubjectsJSON(PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id, $spe_id));?>;
+		
+		
 		var categories = [<?php
 		$first_cat = true;
 		foreach ($categories as $cat) {

@@ -30,5 +30,5 @@ function vertical_align(container, align) {
 	};
 	
 	t.layout();
-	addLayoutEvent(container, function(){t.layout();});	
+	layout.addHandler(container, function(){t.layout();});	
 }

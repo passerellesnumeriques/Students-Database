@@ -161,7 +161,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 				t.header.appendChild(t.zoom_div);
 
 			t.updateHeader();
-			addLayoutEvent(t.header, function() { t.updateHeader(); });
+			layout.addHandler(t.header, function() { t.updateHeader(); });
 		});
 	};
 	/** Called when the zoom is changed, to update the text displaying zoom information */

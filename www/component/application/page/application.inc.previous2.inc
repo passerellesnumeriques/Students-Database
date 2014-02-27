@@ -224,7 +224,7 @@ function selectSection(index, onlyCollapseBar) {
 	for (var i = 0; i < sections_bar.childNodes.length; ++i)
 		sections_bar.childNodes[i].onclick = expandBar;
 	document.getElementById('pn_application_section_title').setAttribute("layout", sections_bar.childNodes[index].offsetWidth+10);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 	if (typeof animation != 'undefined') {
 		var div = document.getElementById('pn_application_left_controls');
 		if (div.childNodes.length > 0) animation.fadeIn(div, 800);
@@ -317,13 +317,13 @@ function addMenuItem(icon, text, url) {
 		}
 		return true;
 	};
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 	return item;
 }
 function addMenuControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
 	section_menu.addItem(control);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 function addRightControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -331,7 +331,7 @@ function addRightControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 function addLeftControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -339,7 +339,7 @@ function addLeftControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 
 // at the beginning, show all sections to user

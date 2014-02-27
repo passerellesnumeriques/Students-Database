@@ -102,5 +102,5 @@ function horizontal_menu(menu, valign) {
 	
 	menu.style.visibility = 'visible';
 	t.update();
-	addLayoutEvent(menu, function() { t.update(); });
+	layout.addHandler(menu, function() { t.update(); });
 }

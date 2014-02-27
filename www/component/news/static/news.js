@@ -298,7 +298,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		if (hours < 24) return Math.floor(hours)+" hours ago (at "+d.toLocaleTimeString()+")";
 		var days = hours/24;
 		if (days < 2) return "yesterday at "+d.toLocaleTimeString();
-		return d.toString();
+		return d.toLocaleString();
 	};
 	
 	this._refreshTimings = function() {
