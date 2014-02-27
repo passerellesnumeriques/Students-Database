@@ -258,7 +258,15 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	/** Add a new event and display it
 	 * @param {Object} ev the event to display
 	 */
-	this.addEvent = function(ev) {
+	this.addEvent = function(ev, try_counter) {
+		if (!this.view) {
+			if (!try_counter) try_counter = 0;
+			if (try_counter == 100) {
+				console.log("calendar_view.js:addEvent: no view...");
+				return;
+			}
+			setTimeout(function() { t.addEvent(ev, try_counter+1); }, 100); 
+		};
 		var e = copyCalendarEvent(ev);
 		e.original_event = ev;
 		if (ev.start.getTime() > this.view.end_date.getTime()) return; // after end

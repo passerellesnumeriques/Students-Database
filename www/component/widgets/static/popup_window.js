@@ -84,10 +84,36 @@ function popup_window(title,icon,content,hide_close_button) {
 	 */
 	t.addButton = function(html, id, onclick) {
 		var b = document.createElement("BUTTON");
-		b.innerHTML = html;
+		if (typeof html == 'string')
+			b.innerHTML = html;
+		else
+			b.appendChild(html);
 		b.id = id;
 		b.onclick = onclick;
 		t.buttons.push(b);
+		if (t.table) {
+			if (!t.buttons_tr) {
+				t.buttons_tr = t.table.ownerDocument.createElement("TR");
+				t.buttons_tr.className = 'popup_window_buttons';
+				t.table.appendChild(t.buttons_tr);
+				t.buttons_td = t.table.ownerDocument.createElement("TD"); t.buttons_tr.appendChild(t.buttons_td);
+				t.buttons_td.colSpan = 2;
+			}
+			t.buttons_td.appendChild(b);
+			t.resize();
+		}
+	};
+	t.addIconTextButton = function(icon, text, id, onclick) {
+		var span = document.createElement("SPAN");
+		if (icon) {
+			var img = document.createElement("IMG");
+			img.src = icon;
+			img.style.verticalAlign = "bottom";
+			img.style.marginRight = "3px";
+			span.appendChild(img);
+		}
+		span.appendChild(document.createTextNode(text));
+		t.addButton(span, id, onclick);
 	};
 	/** Disable the given button.
 	 * @method popup_window#disableButton
@@ -130,25 +156,28 @@ function popup_window(title,icon,content,hide_close_button) {
 				break;
 			}
 	};
+	t.addOkButton = function(onok) {
+		t.addIconTextButton(theme.icons_16.ok, "Ok", 'ok', onok);
+	};
+	t.addCancelButton = function(oncancel) {
+		t.addIconTextButton(theme.icons_16.cancel, "Cancel", 'cancel', function() { if (oncancel) oncancel(); t.close(); });
+	};
 	/** Add 2 buttons to the window: Ok and Cancel. When Cancel is pressed, the window is closed.
 	 * @method popup_window#addOkCancelButtons
 	 * @param {function} onok handler to be called when the Ok button is pressed. 
 	 * @param {function} (optional) oncancel handler to be called when the Cancel button is pressed. 
 	 */
 	t.addOkCancelButtons = function(onok, oncancel) {
-		t.addButton("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Ok", 'ok', onok);
-		if(oncancel)
-			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function(){oncancel(); t.close()});
-		else
-			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function() { t.close(); });
+		t.addOkButton(onok);
+		t.addCancelButton(oncancel);
 	};
 	/** Add 2 buttons to the window: Yes and No. When No is pressed, the window is closed.
 	 * @method popup_window#addYesNoButtons
 	 * @param {function} onyes handler to be called when the Yes button is pressed. 
 	 */
 	t.addYesNoButtons = function(onyes) {
-		t.addButton("<img src='"+theme.icons_16.yes+"' style='vertical-align:bottom'/> Yes", 'yes', onyes);
-		t.addButton("<img src='"+theme.icons_16.no+"' style='vertical-align:bottom'/> No", 'no', function() { t.close(); });
+		t.addIconTextButton(theme.icons_16.yes, "Yes", 'yes', onyes);
+		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { t.close(); });
 	};
 	
 	t.isShown = function() {
@@ -213,6 +242,10 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (t.anim) animation.stop(t.anim);
 			t.anim = animation.fadeIn(t.table, 200);
 		}
+		pnapplication.onclose.add_listener(function(){
+			if (!t.table) return;
+			t.close();
+		});
 	};
 	
 	t._buildTable = function() {
@@ -258,14 +291,13 @@ function popup_window(title,icon,content,hide_close_button) {
 		td.style.padding = "0px";
 		td.style.margin = "0px";
 		if (t.buttons.length > 0) {
-			var tr = doc.createElement("TR");
-			tr.className = 'popup_window_buttons';
-			t.table.appendChild(tr);
-			td = doc.createElement("TD"); tr.appendChild(td);
-			td.colSpan = 2;
+			t.buttons_tr = doc.createElement("TR");
+			t.buttons_tr.className = 'popup_window_buttons';
+			t.table.appendChild(t.buttons_tr);
+			t.buttons_td = doc.createElement("TD"); t.buttons_tr.appendChild(t.buttons_td);
+			t.buttons_td.colSpan = 2;
 			for (var i = 0; i < t.buttons.length; ++i)
-				td.appendChild(t.buttons[i]);
-			t.buttons_tr = tr;
+				t.buttons_td.appendChild(t.buttons[i]);
 		}
 		doc.body.appendChild(t.table);
 		if (typeof t.content == 'string') t.content_container.innerHTML = t.content;
@@ -327,7 +359,6 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 		
 	/** Resize the window according to its content: this is normally automatically called. 
-	 * @method popup_window#resize
 	 */
 	t.resize = function() {
 		if (!t.table) return;
@@ -365,7 +396,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content_container.overflow = "hidden";
 			getIFrameDocument(t.content).body.style.overflow = "";
 			x = win.getWindowWidth()/2 - x/2;
-			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight)/2;
+			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight+(t.buttons_tr ? t.buttons_tr.scrollHeight : 0))/2;
 		} else {
 			t.content_container.style.height = "";
 			t.content_container.style.width = "";
@@ -442,14 +473,15 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param keep_content_hidden
 	 */
 	t.close = function(keep_content_hidden) {
+		if (!t.table) return;
 		if (t.locker)
 			unlock_screen(t.locker);
 		else {
 			var parent_popup = get_popup_window_from_frame(window);
 			if(parent_popup) parent_popup.unfreeze();
 		}
-		if (t.onclose) t.onclose();
 		var table = t.table;
+		if (t.onclose) t.onclose();
 		t.table = null;
 		var do_close = function() {
 			if (keep_content_hidden || t.keep_content_on_close) {
@@ -459,7 +491,7 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content.style.top = '-10000px';
 				t.content.ownerDocument.body.appendChild(t.content);
 			}
-			table.ownerDocument.body.removeChild(table);
+			table.parentNode.removeChild(table);
 		};
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);
@@ -482,6 +514,7 @@ function get_popup_window_from_element(e) {
 	return null;
 }
 function get_popup_window_from_frame(win) {
+	if (!win) return null;
 	if (win.frameElement && win.parent.get_popup_window_from_element)
 		return win.parent.get_popup_window_from_element(win.frameElement);
 	return null;

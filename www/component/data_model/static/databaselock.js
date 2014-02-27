@@ -14,7 +14,8 @@ window.databaselock = {
 		}
 		window.top.databaselock._locks.push({
 			id: id,
-			time: new Date().getTime()
+			time: new Date().getTime(),
+			win: window
 		});
 	},
 	/** Unregister a lock
@@ -35,10 +36,26 @@ window.databaselock = {
 	_userInactive: function() {
 		if (this._locks.length == 0) return;
 		var locks = [];
-		for (var i = 0; i < this._locks.length; ++i)
+		var windows = [];
+		for (var i = 0; i < this._locks.length; ++i) {
 			locks.push(this._locks[i].id);
+			if (!windows.contains(this._locks[i].win))
+				windows.push(this._locks[i].win);
+		}
 		service.json("data_model","unlock",{locks:locks},function(result){
-			window.top.frames[0].location.href = "/dynamic/application/page/enter";
+			var only_popups = true;
+			for (var i = 0; i < windows.length; ++i)
+				if (!windows[i].frameElement || 
+					!windows[i].parent.get_popup_window_from_element || 
+					!windows[i].parent.get_popup_window_from_element(windows[i].frameElement)) {
+					only_popups = false;
+					break;
+				}
+			if (only_popups) {
+				for (var i = 0; i < windows.length; ++i)
+					windows[i].parent.get_popup_window_from_element(windows[i].frameElement).close();
+			} else
+				window.top.frames[0].location.href = "/dynamic/application/page/enter";
 		});
 	},
 	/** Release a lock

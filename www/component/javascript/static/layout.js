@@ -27,7 +27,7 @@ layout = {
 	_multiple_process_counter: 0,
 	invalidate: function(element) {
 		if (element == null) {
-			try { throw new Exception("null element given to layout.invalidate"); }
+			try { throw "null element given to layout.invalidate"; }
 			catch (e) { log_exception(e); return; }
 		}
 		if (getWindowFromDocument(element.ownerDocument) != window) {

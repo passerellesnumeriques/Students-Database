@@ -53,7 +53,9 @@ namespace datamodel {
 		private $add_access_filters = array();
 		private $remove_access_rights = array();
 		private $remove_access_filters = array();
-
+		
+		private $row_description_provider = null;
+		
 		private $is_customized = false;
 		private $customization = array();
 		
@@ -288,6 +290,7 @@ namespace datamodel {
 		
 		public function onInsert($fct) {
 			$this->oninsert->listenFunction($fct);
+			return $this;
 		}
 		public function fireInsert($fields_values, $id, $sub_model_instance) {
 			$this->oninsert->fire(array($fields_values,$id,$sub_model_instance));
@@ -479,7 +482,36 @@ namespace datamodel {
 			return $rows;
 		}
 			
-
+		
+		public function setRowDescriptionProvider($provider_callback) {
+			$this->row_description_provider = $provider_callback;
+			return $this;
+		}
+		
+		public function getRowDescriptionByKey($key, $sub_model = null) {
+			$q = \SQLQuery::create()->select($this->getName())->selectSubModelForTable($this, $sub_model);
+			if ($this->primary_key <> null)
+				$q->whereValue($this->getName(), $this->primary_key->name, $key);
+			else foreach ($key as $kname=>$kval)
+				$q->whereValue($this->getName(), $kname, $kval);
+			$row = $q->executeSingleRow();
+			return $this->getRowDescription($row);
+		}
+		public function getRowDescription($row) {
+			if ($this->row_description_provider <> null) {
+				return call_user_func($this->row_description_provider, $row);
+			}
+			$s = "Row on table ".$this->name.": ";
+			$first = true;
+			foreach ($this->columns as $col) {
+				if ($first) $first = false; else $s .= ", ";
+				$s .= $col->name."=";
+				if (isset($row[$col->name])) $s .= htmlentities($row[$col->name]);
+				else $s .= "NULL";
+			}
+			return $s;
+		}
+		
 
 		public function &setDisplayHandler($coming_from, $handler) {
 			$this->display_handler[$coming_from] = $handler;

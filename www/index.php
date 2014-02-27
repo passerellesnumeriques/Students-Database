@@ -96,7 +96,18 @@ case "dynamic":
 		PNApplication::$instance = new PNApplication();
 		PNApplication::$instance->init();
 		$_SESSION["app"] = &PNApplication::$instance;
+		$_SESSION["version"] = $version;
 	} else {
+		if (!isset($_SESSION["version"]) || $_SESSION["version"] <> $version) {
+			session_destroy();
+			if ($request_type == "page") {
+				echo "<script type='text/javascript'>window.top.location.href = '/';</script>";
+			} else {
+				header("Content-Type: text/json");
+				echo "{errors:['The application has been updated to a new version.'],result:null}";
+			}
+			die();
+		}
 		PNApplication::$instance = &$_SESSION["app"];
 		PNApplication::$instance->init_request();
 	}

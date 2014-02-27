@@ -5,6 +5,7 @@
 	<link rel="stylesheet" href="/static/theme/default/style/global.css"/>
 	<script type="text/javascript" src="/static/javascript/utils.js"></script>
 	<script type="text/javascript" src="/static/javascript/browser.js"></script>
+    <script type="text/javascript" src="/static/javascript/layout.js"></script>
 </head>
 <body style='background-color:white'>
 <div style="padding:5px;display:inline-block">
@@ -23,8 +24,8 @@ function db_lock_still_here() {
 	window.parent.get_popup_window_from_element(window.frameElement).close();
 }
 function db_lock_not_there() {
+    window.parent.get_popup_window_from_element(window.frameElement).close();
 	window.top.databaselock._userInactive();
-	window.parent.get_popup_window_from_element(window.frameElement).close();
 }
 var timing = 60;
 function update_timing() {

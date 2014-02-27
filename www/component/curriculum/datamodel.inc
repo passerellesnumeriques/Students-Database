@@ -24,6 +24,9 @@ $model->addTable("StudentBatch")
 			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$fields["name"]." created.");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
+ 	->setRowDescriptionProvider(function($row) {
+ 		return "Batch <i>".htmlentities($row["name"])."</i>";
+ 	})
  	;
 $model->addTable("Specialization")
 	->addPrimaryKey("id")
@@ -37,6 +40,9 @@ $model->addTable("Specialization")
 		try {
 			PNApplication::$instance->news->post("students", "curriculum", null, "Specialization ".$fields["name"]." created.");
 		} catch (Exception $e) { PNApplication::error($e); }
+ 	})
+ 	->setRowDescriptionProvider(function($row) {
+ 		return "Specialization <i>".htmlentities($row["name"])."</i>";
  	})
 	;
 
@@ -63,6 +69,10 @@ $model->addTable("AcademicPeriod")
 			PNApplication::$instance->news->post("students", "batch", array("batch".$fields["batch"]), "Academic period ".$fields["name"]." created for batch ".$batch.".");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
+ 	->setRowDescriptionProvider(function($row) {
+		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$row["batch"])->field("name")->executeSingleValue();
+		return "Academic Period <i>".htmlentities($row["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
+ 	})
 	;
 $model->addTable("AcademicPeriodSpecialization")
 	->addForeignKey("period", "AcademicPeriod", true, false, true, false, false)
@@ -76,6 +86,12 @@ $model->addTable("AcademicPeriodSpecialization")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) {
+		$spe_name = SQLQuery::create()->select("Specialization")->whereValue("Specialization","id",$row["specialization"])->field("name")->executeSingleValue();
+		$period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$row["period"])->executeSingleRow();
+		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
+		return "Specialization <i>".htmlentities($spe_name)."</i> on Period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
+	})
 	;
 $model->addTable("AcademicClass")
 	->addPrimaryKey("id")
@@ -105,6 +121,11 @@ $model->addTable("AcademicClass")
 			}
 			PNApplication::$instance->news->post("students", "batch", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
 		} catch (Exception $e) { PNApplication::error($e); }
+ 	})
+ 	->setRowDescriptionProvider(function($row) {
+ 		$period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$row["period"])->executeSingleRow();
+		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
+ 		return "Class <i>".htmlentities($row["name"])."</i> during period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
  	})
 	;
 $model->addTable("CurriculumSubjectCategory")

@@ -11,6 +11,10 @@ class curriculum extends Component {
 		);
 	}
 	
+	public function getBatch($batch_id) {
+		return SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();;
+	}
+	
 	public function getSpecializations() {
 		return SQLQuery::create()->select("Specialization")->execute();
 	}
@@ -22,8 +26,15 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("AcademicPeriod")->where("id",$period_id)->executeSingleRow();
 	}
 	public function getAcademicPeriods($batch_id) {
-		return SQLQuery::create()->select("AcademicPeriod")->whereValue("batch", $batch_id)->execute();
-	} 
+		return SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod", "batch", $batch_id)->orderBy("AcademicPeriod", "start_date", true)->execute();
+	}
+	
+	public function getPeriodSpecializations($period_id) {
+		return SQLQuery::create()->select("AcademicPeriodSpecialization")->whereValue("AcademicPeriodSpecialization","period",$period_id)->field("specialization")->executeSingleField();
+	}
+	public function getPeriodsSpecializations($periods_ids) {
+		return SQLQuery::create()->select("AcademicPeriodSpecialization")->whereIn("AcademicPeriodSpecialization","period",$periods_ids)->execute();
+	}
 	
 	public function getAcademicClass($class_id) {
 		return SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->executeSingleRow();

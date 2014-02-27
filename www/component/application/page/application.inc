@@ -23,7 +23,7 @@ window.top.CalendarsProviders.get(function(provider) {
 	provider.refreshCalendars();
 });
 window.top.pnapplication.onlogout.add_listener(function() {
-	while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(indow.top.calendar_manager.calendars[0]);
+	while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(window.top.calendar_manager.calendars[0]);
 	window.top.CalendarsProviders.get(function(provider) {
 		clearInterval(provider._refresh_interval);
 	});
@@ -164,10 +164,10 @@ function sectionsMenu() {
 	for (var i = 0; i < sections.length; ++i) {
 		if (i > 0 && (i%3)==0) menu.appendChild(document.createElement("BR"));
 		var box = sectionBox(sections[i]);
-		var click = box.onclick;
+		box.click = box.onclick;
 		box.onclick = function() {
 			listener();
-			click();
+			return this.click();
 		};
 		menu.appendChild(box);
 	}

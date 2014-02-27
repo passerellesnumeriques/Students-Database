@@ -164,6 +164,36 @@ datamodel = {
 				i--;
 			}
 		}
+	},
+	
+	confirm_remove: function(table,row_key,onremoved) {
+		var popup_ready = false;
+		var content_html = null;
+		var ready = function() {
+			if (!popup_ready) return;
+			if (content_html == null) return;
+			var content = document.createElement("DIV");
+			content.style.margin = "5px";
+			content.innerHTML = content_html;
+			var popup = new popup_window("Confirmation", theme.icons_16.question, content);
+			popup.addOkCancelButtons(function() {
+				popup.freeze();
+				service.json("data_model", "remove_row", {table:table,row_key:row_key}, function(res) {
+					if (res) {
+						if (onremoved) onremoved();
+						popup.close();
+						return;
+					}
+					popup.unfreeze();
+				});
+			});
+			popup.show();
+		};
+		service.customOutput("data_model","get_remove_confirmation_content",{table:table,row_key:row_key},function(html) {
+			content_html = html;
+			ready();
+		});
+		require("popup_window.js",function() { popup_ready = true; ready(); });
 	}
 };
 window.top.pnapplication.onwindowclosed.add_listener(function(w) { datamodel._windowClosed(w); });
