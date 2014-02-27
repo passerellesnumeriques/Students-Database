@@ -1,37 +1,44 @@
 /**
- * 
- * @param container
- * @param rule
- * @param all_topics
- * @param can_edit
- * @param title_ending
- * @param {Number|null} index_in_all_rules in the all_rules array, given when the t.onupdaterule custom event is fired 
+ * Create a table to manage an EligibilityRule object. One row is created for each topic set into the rule.
+ * @param {HTMLElement|String}container
+ * @param {Object} rule the EligibilityRule object to manage
+ * @param {Array} all_topics an array containing all the topics set into the database
+ * @param {Boolean} can_edit
+ * @param {HTMLElement|null}footer_ending (optional), element to add at the end of the footer
+ * @param {Number|null} index_in_all_rules array, given when the t.onupdaterule custom event is fired
+ * @param {Function|null} onreset(optional) called when the table is reseted
  */
 function manage_rule(container, rule, all_topics, can_edit, footer_ending, index_in_all_rules, onreset){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
-	t.table = document.createElement("table");
+	t._table = document.createElement("table");
 	
-	t.onupdaterule = new Custom_Event();
+	t.onupdaterule = new Custom_Event(); //Custom event fired each time any data about the rule is updated	
+	t._config = {}; //The config attribute used by the field_decimal objects
+	t._config.can_be_null = false;
+	t._config.integer_digits = 2;
+	t._config.decimal_digits = 2;
+	t._field_decimal_coeff = {}; //Object to store all the fields_decimal created to manage the coefficients data
+	t._field_decimal_expected = {}; //Object to store all the fields_decimal created to manage the expected data
 	
-	t.config = {};
-	t.config.can_be_null = false;
-	t.config.integer_digits = 2;
-	t.config.decimal_digits = 2;
-	t.field_decimal_coeff = {};
-	t.field_decimal_expected = {};
-	
+	/**
+	 * Init the process, setting the table and style
+	 * At the end of the process, onreset function is called
+	 */
 	t._init = function(){
 		t._setTitle();
 		t._setBody();
 		if(can_edit)
 			t._setFooter();
-		container.appendChild(t.table);
+		container.appendChild(t._table);
 		if(onreset) //Fire the function once the process is ended
 			onreset();
 	};
 	
+	/**
+	 * Set the headers of each column (topic, required, coeff)
+	 */
 	t._setTitle = function(){
 		var tr = document.createElement("tr");
 		var th1 = document.createElement("th");
@@ -45,12 +52,14 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		tr.appendChild(th2);
 		tr.appendChild(th3);
 		tr.appendChild(th4);
-		t.table.appendChild(tr);
+		t._table.appendChild(tr);
 	};
 	
+	/**
+	 * Set the body of the table
+	 * Each topic has a row in the table
+	 */
 	t._setBody = function(){
-//		var ul = document.createElement("ul");
-//		t.table.appendChild(ul);
 		if(rule.topics.length == 0){
 			var tr = document.createElement("tr");
 			var td = document.createElement("td");
@@ -62,14 +71,16 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		} else {
 			for(var i = 0; i < rule.topics.length; i++){
 				var tr = document.createElement("tr");
-//				ul.appendChild(tr);
-//				t.table.appendChild(ul);
-				t.table.appendChild(tr);
+				t._table.appendChild(tr);
 				t._createTopicRow(tr,i);
 			}
 		}
 	};
 	
+	/**
+	 * Set the footer of the table. A row is added with a select element containing all the topics available (meaning not set in this rule)
+	 * This method is only called if can_edit == true
+	 */
 	t._setFooter = function(){
 		var tr = document.createElement("tr");
 		var td1 = document.createElement("td");
@@ -97,7 +108,6 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 					t.onupdaterule.fire(index_in_all_rules);
 				}
 			};
-//			td2.appendChild(select);
 			var text = document.createTextNode("Add a topic ");
 			td1.appendChild(text);
 			td1.appendChild(select);
@@ -115,16 +125,21 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		td1.style.borderTop = "1px solid #808080";
 		td2.style.borderTop = "1px solid #808080";
 		tr.appendChild(td2);
-		t.table.appendChild(tr);
+		t._table.appendChild(tr);
 	};
 	
+	/**
+	 * Set the content of a row for a given topic
+	 * The row contains the topic name, and field_decimals for coefficient and expected data.
+	 * These fields decimals are stored into t._field_decimal_coeff (respectively t._field_decimal_expected) objects, referenced by their topic id
+	 * @param {HTMLElement} tr the row to fill up
+	 * @param {Number} index the index of the topic into the rule.topics array
+	 */
 	t._createTopicRow = function(tr, index){
 		var td1 = document.createElement("td");//contains the topic data
 		var td2 = document.createElement('td');//contains the grade expected for this topic
 		var td3 = document.createElement('td');//contains the coeff
 		var td4 = document.createElement('td');//contains the remove button
-//		var li = document.createElement('li');
-//		td1.appendChild(li);
 		td1.innerHTML = rule.topics[index].topic.name.uniformFirstLetterCapitalized();
 		td1.style.textAlign = "center";
 		td2.style.textAlign = "center";
@@ -134,32 +149,35 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 			rule.topics[index].coefficient = 1.00;
 		if(!rule.topics[index].expected)
 			rule.topics[index].expected = 1.00;
-//		td3.appendChild(document.createTextNode("coeff "));
-		var config_grade_expected = t.config;
+		var config_grade_expected = t._config;
 		config_grade_expected.max = rule.topics[index].topic.max_score; //The maximum value of the score expected is the max score of the topic
 		if(can_edit){
-			t.field_decimal_coeff[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].coefficient,true,t.config);
-			t.field_decimal_expected[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].expected,true,config_grade_expected);
+			t._field_decimal_coeff[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].coefficient,true,t._config);
+			t._field_decimal_expected[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].expected,true,config_grade_expected);
 			td4.appendChild(t._createRemoveTopicButton(index));
 		} else {
-			t.field_decimal_coeff[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].coefficient,false,t.config);
-			t.field_decimal_expected[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].expected,false,config_grade_expected);
+			t._field_decimal_coeff[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].coefficient,false,t._config);
+			t._field_decimal_expected[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].expected,false,config_grade_expected);
 		}
 		//Add the custom event to the field_decimal onchange
-//		t.field_decimal_coeff.ondatachanged = t.onupdaterule.fire(index_in_all_rules);
-//		t.field_decimal_expected.ondatachanged = t.onupdaterule.fire(index_in_all_rules);
-		t.field_decimal_coeff[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(index_in_all_rules);});
-		t.field_decimal_expected[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(index_in_all_rules);});
-		td2.appendChild(t.field_decimal_expected[rule.topics[index].topic.id].getHTMLElement());
+		t._field_decimal_coeff[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(index_in_all_rules);});
+		t._field_decimal_expected[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(index_in_all_rules);});
+		td2.appendChild(t._field_decimal_expected[rule.topics[index].topic.id].getHTMLElement());
 		var text_score = document.createTextNode("/"+rule.topics[index].topic.max_score);
 		td2.appendChild(text_score);
-		td3.appendChild(t.field_decimal_coeff[rule.topics[index].topic.id].getHTMLElement());
+		td3.appendChild(t._field_decimal_coeff[rule.topics[index].topic.id].getHTMLElement());
 		tr.appendChild(td1);
 		tr.appendChild(td2);
 		tr.appendChild(td3);
 		tr.appendChild(td4);
 	};
 	
+	/**
+	 * Create a remove topic button, to add at the end of a topic row
+	 * When clicked, this button removes the topic from rule object, reset the table, and then fires onupdaterule custom event
+	 * @param {Number} index the index of the topic into the rule.topics array
+	 * @return {HTMLElement} div the button to insert into the document
+	 */
 	t._createRemoveTopicButton = function(index){
 		var div = document.createElement("div");
 		div.className = "button_verysoft";
@@ -177,15 +195,24 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		return div;
 	};
 	
+	/**
+	 * Reset the table, restarts the process calling t._init method
+	 * The onreset function is called by the init method
+	 */
 	t.reset = function(){
-		container.removeChild(t.table);
-		delete t.table;
-		t.table = document.createElement("table");
+		container.removeChild(t._table);
+		delete t._table;
+		t._table = document.createElement("table");
 		t._init();
-		if(onreset)
-			onreset();
+//		if(onreset)
+//			onreset();
 	};
 	
+	/**
+	 * Check if the given topic is already set into the given rule
+	 * @param {Number} id the id of the topic seeked
+	 * @returns {Boolean} true if already set, else false
+	 */
 	t._isTopicInCurrentRule = function(id){
 		for(var i = 0; i < rule.topics.length; i++){
 			if(rule.topics[i].topic.id == id)
@@ -194,6 +221,10 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		return false;
 	};
 	
+	/**
+	 * Add a topic into the rule object and reset
+	 * @param  {Number} id the topic id to add
+	 */
 	t._addTopic = function(id){
 		var index = t._getTopicIndexInAllTopics(id);
 		//Add in rule with coeff = 1
@@ -202,6 +233,11 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		t.reset();
 	};
 	
+	/**
+	 * Get a topic index into all_topics array from its id
+	 * @param {Number} id the id of the topic seeked
+	 * @returns {Number} i the index found
+	 */
 	t._getTopicIndexInAllTopics = function(id){
 		for(var i = 0; i < all_topics.length; i++){
 			if(all_topics[i].id == id)
@@ -209,6 +245,11 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		}
 	};
 	
+	/**
+	 * Get a topic index into rule.topics array from its id
+	 * @param {Number} id the id of the topic seeked
+	 * @returns {Number} i the index found
+	 */
 	t._getTopicIndexInRule = function(id){
 		for(var i = 0; i < rule.topics.length; i++){
 			if(rule.topics[i].topic.id == id)
@@ -216,20 +257,31 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 		}
 	};
 	
+	/**
+	 * Update the coefficients fields into all the rule.topics topics, from the data set into the t._field_decimal_coeff fields
+	 */
 	t._updateRuleCoefficientFields = function(){
-		for(id in t.field_decimal_coeff){
+		for(id in t._field_decimal_coeff){
 			var index = t._getTopicIndexInRule(id);
-			rule.topics[index].coefficient = t.field_decimal_coeff[id].getCurrentData();
+			if(index != null)
+				rule.topics[index].coefficient = t._field_decimal_coeff[id].getCurrentData();
 		}
 	};
 	
+	/**
+	 * Update the expected fields into all the rule.topics topics, from the data set into the t._field_decimal_expected fields
+	 */
 	t._updateRuleExpectedFields = function(){
-		for(id in t.field_decimal_expected){
+		for(id in t._field_decimal_expected){
 			var index = t._getTopicIndexInRule(id);
-			rule.topics[index].expected = t.field_decimal_expected[id].getCurrentData();
+			if(index != null)
+				rule.topics[index].expected = t._field_decimal_expected[id].getCurrentData();
 		}
 	};
 	
+	/**
+	 * Update the expected and coefficient fields of all the rule.topics objects
+	 */
 	t.updateRuleFields = function(){
 		t._updateRuleCoefficientFields();
 		t._updateRuleExpectedFields();

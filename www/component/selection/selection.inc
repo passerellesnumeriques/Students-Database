@@ -1219,7 +1219,8 @@ class selection extends Component {
 	
 	/**
 	 * Remove an exam topic and all the related data<br/>
-	 * The rights and steps are checked before performing the query
+	 * The rights and steps are checked before performing the query</br>
+	 * If removing this topic creates any empty eligibility rules, these rules are removed
 	 * @param number $id
 	 * @return boolean true if performed
 	 */
@@ -1231,12 +1232,44 @@ class selection extends Component {
 			return false;
 		} else {
 			try {
+				SQLQuery::startTransaction();
+				//Check if the topics is set in any rule
+				$rules_ids_to_check = SQLQuery::create()
+					->bypassSecurity()
+					->select("EligibilityRuleExamTopic")
+					->field("EligibilityRuleExamTopic","eligibility_rule")
+					->whereValue("EligibilityRuleExamTopic","exam_topic_for_eligibility_rule",$id)
+					->executeSingleField();
+				//Remove the topic
 				SQLQuery::create()
 					->removeKey("ExamTopicForEligibilityRule",$id);
+				//Check there is no empty eligibility rule
+// 					return $rules_ids_to_check;
+				if($rules_ids_to_check <> null){
+					$rules_to_remove = array();
+					foreach ($rules_ids_to_check as $rule_id){
+						$other_topics_linked_to_this_rule = SQLQuery::create()
+							->bypassSecurity()
+							->select("EligibilityRuleExamTopic")
+							->field("EligibilityRuleExamTopic","exam_topic_for_eligibility_rule")
+							->whereValue("EligibilityRuleExamTopic","eligibility_rule",$rule_id)
+							->executeSingleField();
+						if($other_topics_linked_to_this_rule == null){ //There is no other topic linked to this rule, so we remove it
+							SQLQuery::create()
+								->bypassSecurity()
+								->removeKey("EligibilityRule",$rule_id);
+						}
+					}
+				}
+// 				
 			} catch (Exception $e){
 				PNApplication:error($e);
+			}
+			if(PNApplication::has_errors()){
+				SQLQuery::rollbackTransaction();
 				return false;
 			}
+			SQLQuery::commitTransaction();
 			//update steps
 			$this->updateAllSteps();
 			return true;
@@ -1271,6 +1304,7 @@ class selection extends Component {
 		
 		$parts_in_no_topic = array();
 		$parts_unknown = array();
+		$empty_topics = array();
 		
 		//check that all the parts set in the topic are still in the ExamSubjectPart table
 		foreach ($parts_from_exam_part_topic as $p){
@@ -1301,6 +1335,28 @@ class selection extends Component {
 			$res = false;	
 		}
 		
+		//Check that the topics are not empty
+		$all_topics = SQLQuery::create()
+			->bypassSecurity()
+			->select("ExamTopicForEligibilityRule")
+			->field("ExamTopicForEligibilityRule","id")
+			->field("ExamTopicForEligibilityRule","name")
+			->execute();
+		if(count($all_topics) > 0){
+			foreach ($all_topics as $topic){
+				$parts_for_this_topic = SQLQuery::create()
+					->bypassSecurity()
+					->select("ExamPartTopic")
+					->field("ExamPartTopic","exam_subject_part")
+					->whereValue("ExamPartTopic","exam_topic_for_eligibility_rule",$topic["id"])
+					->executeSingleField();
+				if($parts_for_this_topic == null){
+					array_push($empty_topics,$topic["name"]);
+					$res = false;
+				}
+			}
+		}
+		
 		if($res)
 			return;
 		else {
@@ -1308,6 +1364,7 @@ class selection extends Component {
 			$error_multiple_entries = null;
 			$error_missing = null;
 			$error_unknown = null;
+			$error_empty_topic = null;
 			if(count($parts_in_no_topic) > 0){
 				$error_missing = "The following parts don't appear in any exam topic:<br/><ul>";
 				$missing_parts_data = SQLQuery::create()
@@ -1349,12 +1406,21 @@ class selection extends Component {
 				}
 				$error_multiple_entries .= "</ul>";
 			}
+			if(count($empty_topics) > 0){
+				$error_empty_topic = "The following topics are empty (no part assigned): <br/><ul>";
+				foreach ($empty_topics as $topic_name){
+					$error_empty_topic .= "<li>".$topic_name."</li>";
+				}
+				$error_empty_topic .= "</ul>";
+			}
 			if($parts_unknown <> null && !$parts_unknown_removed)
 				$error_message .= "<li>Some parts are set in the topics but don't exist anymore into the database</li>";
 			if($error_missing <> null)
 				$error_message .= "<li>".$error_missing."</li>";
 			if($error_multiple_entries <> null)
 				$error_message .= "<li>".$error_multiple_entries."</li>";
+			if($error_empty_topic <> null)
+				$error_message .= "<li>".$error_empty_topic."</li>";
 			$error_message .= "</ul>";
 			return $error_message;
 		}
@@ -1439,6 +1505,16 @@ class selection extends Component {
 				->updateByKey("ExamTopicForEligibilityRule",$id,array("number_questions" => $nb_from_questions));
 	}
 	
+	/**
+	 * Save the eligibility rules<br/>
+	 * All the query are performed into a SQL transaction<br/>
+	 * Check the rights from user_management and steps, and save all the rules data
+	 * The elegibility rules can only be saved all together, not in an individual way, so this method will also performed the removed required
+	 * @param array $rules_to_update array(rule1, rule2,...) Each rule array contains:<ul><li><code>rule_table</code> array field_values for EligibilityRule table</li><li><code>rule_topic_table_insert</code> array containing all the fields_values arrays to insert into the EligibilityRuleExamTopic table</li><li><code>rule_topic_table_update</code> array containing all the fields_values arrays to update into the EligibilityRuleExamTopic table</li><li><code>rule_topic_table_remove</code> array containing all the topics ids to remove from the EligibilityRuleExamTopic table</li></ul>
+	 * @param array $rules_to_insert array(rule1, rule2,...) Each rule array contains:<ul><li><code>rule_table</code> array field_values for EligibilityRule table</li><li><code>rule_topic_table_insert</code> array containing all the fields_values arrays to insert into the EligibilityRuleExamTopic table</li></ul>
+	 * @param number $db_lock the database lock for the EligibilityRule table
+	 * @return boolean true if no error occured, else false
+	 */
 	public function saveRules ($rules_to_update, $rules_to_insert, $db_lock){
 		//Check the rights
 		$rights = $this->canUpdateFromRightAndStep("define_eligibility_rules", "manage_exam_subject", "You are not allowed to manage the eligibility rules");

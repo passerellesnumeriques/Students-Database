@@ -111,7 +111,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	t.close = function(){
 		if(t._shown){
 			if(t._isLayoutEvent){
-				layout.removeHandler(container, function() { t.layout(); });
+				layout.removeHandler(container, t.layout);
 				t._isLayoutEvent = false;
 			}
 			while(container.firstChild)
@@ -133,7 +133,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 		t.layout();
 		t._drawLines();
 		if(!t._isLayoutEvent){
-			layout.addHandler(container, function() { t.layout(); });
+			layout.addHandler(container, t.layout);
 			t._isLayoutEvent = true;
 		}
 	};
@@ -144,7 +144,11 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	 * This method is added to the layout custom events
 	 */
 	t.layout = function(){
+		if(!t._shown)
+			return;
 		//Then set the layout
+		if(t.nodes.length == 0)
+			return;
 		if(t.nodes.length < 2){
 			if(t.nodes.length == 1){
 				var node = document.getElementById(t._getComputedId(t.nodes[0].id));
@@ -175,15 +179,20 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 			}
 		} else {
 			//Set the width attributes
+//			var temp = [];
 			for(var i = 0; i < t.nodes.length; i++){
+//				temp.push(t._getComputedId(t.nodes[i].id));
 				var node = document.getElementById(t._getComputedId(t.nodes[i].id));
+				if(node){
 				node.style.width = t._getWidth(i)+"px";
 				node.style.position = "absolute";
+				}
 				//node.style.left = t._getLeft(i)+"px";
 			}
 			//Set the left and also top attributes after the width because the height may have been updated
 			for(var i = 0; i < t.nodes.length; i++){
 				var node = document.getElementById(t._getComputedId(t.nodes[i].id));
+				if(node){
 				node.style.left = t._getLeft(i)+"px";
 				if(i != 0 && i != t.nodes.length -1){//only for the middle nodes
 					node.style.top = t._getTopForMiddleNode(i)+"px";
@@ -191,6 +200,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 					node.style.top = t._getTopForEndAndFirstNodes(node)+"px";
 				}
 			}
+		}
 		}
 	};
 	

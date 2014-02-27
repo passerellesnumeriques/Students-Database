@@ -1,28 +1,83 @@
-function eligibility_rules_main_page(container, can_see, can_manage, all_topics, validated, all_rules){
+function eligibility_rules_main_page(container, can_see, can_manage, all_topics, validated){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
-	t.table = document.createElement('table');
-	t.internal_container = document.createElement("div");
+	t.internal_container = document.createElement("table");//The container inside the section
 	t.internal_container.style.position = "relative"; 
-	t.table_container = document.createElement("div");
-	t.table_container.appendChild(t.table);
-	t.table_container.style.width = "30%";
-	t.table_container.style.position = "absolute";
-	t.table_container.style.left = "0px";
-	t.table_container.style.top = "0px";
-	t.internal_container.appendChild(t.table_container);
-	t.internal_container.style.heigth = "600px";
+	t.internal_container.style.width = '100%';
+	t.internal_container.style.height = '100%';
+	t.table_topics_container = document.createElement("div");//Contains the table with the exam topics
+	t.table_topics = document.createElement('table');//Contains the exam topics data
+	t.table_topics_container.appendChild(t.table_topics);
+//	t.table_topics_container.style.width = "30%";
+//	t.table_topics_container.style.position = "absolute";
+//	t.table_topics_container.style.left = "0px";
+//	t.table_topics_container.style.top = "0px";
+	
 
 	t._init = function(){
 		// Check the readable right
 		if(!can_see)
 			return;
-		t.section = new section("<img src = '"+theme.icons_16.info+"'id = 'eligibility_rules_tips'/>","Exam topics for eligibility rules ",t.internal_container , false);
-		t._setTableContent();
-		t._setRulesContent();
+		t.section = new section("","Exam topics and eligibility rules",t.internal_container , false);
+//		t._setTableTopicsContent();
+//		t._setRulesContent();
 		container.appendChild(t.section.element);
+		t._setInternalContainerStructure();
 		t._setStyle();
+	};
+	
+	t._setInternalContainerStructure = function(){		
+		//Set the first row with the headers for the left and the right part
+		var tr_head = document.createElement("tr");
+		var th_topics = document.createElement("th");
+		var th_rules = document.createElement("th");
+		var text1 = document.createTextNode("Exam topics ");
+		var text2 = document.createTextNode("Eligibility rules ");
+		th_topics.appendChild(text1);
+		th_rules.appendChild(text2);
+		tr_head.appendChild(th_topics);
+		tr_head.appendChild(th_rules);
+		t.internal_container.appendChild(tr_head);
+		//Set the info buttons
+		var info_topics = document.createElement("img");
+		info_topics.src = theme.icons_16.info;
+		info_topics.style.cursor = "pointer";
+		info_topics.style.verticalAlign = "bottom";
+		info_topics.onmouseover = function(){
+			createToolTip(this,"An exam topic is the entity used for creating the eligibility rules<br/>For instance, if there is a math subject, and a logic object, you may want to group these two exams for the eligibility rules: you shall create a \"Math and Logic\" topic.<br/>A topic can be set as <b>full subject</b> for an exam subject, meaning that all the parts from this subject belong to the topic. Also, when a part is added to the subject, it is automatically added to the topic.<br/>By default, when an exam subject is created a topic is also created, and set as full subject for this subject.<br/>To avoid any adverse effect you must respect the following rules:<ul><li>All the parts of the exam subject must appear in the topics</li><li>A part can only appear one time in all the topics</li></ul>");
+		};
+		info_topics.onmouseout = function(){
+			removeToolTip(this);
+		};
+		th_topics.appendChild(info_topics);
+		
+		var info_rules = document.createElement("img");
+		info_rules.src = theme.icons_16.info;
+		info_rules.style.cursor = "pointer";
+		info_rules.style.verticalAlign = "bottom";
+		info_rules.onmouseover = function(){
+			createToolTip(this,"Eligibility rules are made of exam topics.<br/>Each rule node on the diagram is a minimum to be respected, to pass this rule.<br/>This diagram shall be read from the left side to the right one.<br/> To know if an applicant passes the exam, he must pass the first rule node (the one on the left of the diagram) and at least one middle rule (in the middle column), so that he can reach the last node, \"Succeed\". So the middle column represents the \"thresholds\" rules.<br/>In each rule node, you can add / remove any exam topic, and for each topic you can:<ul><li>Set the expected grade (minimum)</li><li>Set a coefficient</li></ul>");
+		};
+		info_rules.onmouseout = function(){
+			removeToolTip(this);
+		};
+		th_rules.appendChild(info_rules);
+		
+		//Create the row for the topics and the rules
+		var tr = document.createElement("tr");
+		var td_topics = document.createElement("td");
+		t._td_rules = document.createElement("td");
+		td_topics.style.width = "30%";
+		td_topics.style.borderRight = "1px solid #808080";
+		t._td_rules.style.width = "70%";
+		tr.appendChild(td_topics);
+		tr.appendChild(t._td_rules);
+		t.internal_container.appendChild(tr);
+		
+		//Fill up
+		t._setTableTopicsContent(td_topics);
+		t._setRulesContent();
 	};
 	
 	t._setStyle = function(){
@@ -32,7 +87,8 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		t._setInternalContainerHeight();
 	};
 	
-	t._setTableContent = function(){
+	t._setTableTopicsContent = function(cont){
+		cont.appendChild(t.table_topics_container);
 		//set the body
 		if(all_topics.length > 0)
 			var ul = document.createElement("ul");
@@ -42,25 +98,30 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 			ul.appendChild(tr);
 		}
 		if(all_topics.length > 0)
-			t.table.appendChild(ul);
+			t.table_topics.appendChild(ul);
 		
 		//Add the row about the validation of the topics
 		var tr_status = document.createElement("tr");
 		t._addValidStatusRow(tr_status);
-		t.table.appendChild(tr_status);
+		t.table_topics.appendChild(tr_status);
 		//set the footer
 		var tr_foot = document.createElement("tr");
 		var td_foot = document.createElement("td");
+		tr_foot.style.height = "100%";
+		td_foot.style.height = "100%";
 		var create_button = document.createElement("div");
 		create_button.className = "button";
 		create_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/eligibility_rules/rules_16.png",theme.icons_10.add,"right_bottom")+"'/> Create a topic";
 		create_button.onclick = function(){
  			location.assign("/dynamic/selection/page/eligibility_rules/manage_exam_topic");
 		};
-		if(can_manage && validated != null)
+		if(can_manage && validated != null){
 			td_foot.appendChild(create_button);
+//			new vertical_align(td_foot,"bottom");
+		}
 		tr_foot.appendChild(td_foot);
-		t.table.appendChild(tr_foot);
+		t.table_topics.appendChild(tr_foot);
+		
 	};
 	
 	t._addTopicRow = function(tr, i){
@@ -72,7 +133,7 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		tr.menu = []; // menu to display on mouse over
 		
 		see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/>",all_topics[i].id);
-		see_button.title = "See";
+		see_button.title = "See this topic";
 		see_button.onclick = function(){
 			location.assign("/dynamic/selection/page/eligibility_rules/manage_exam_topic?id="+this.id+"&read_only=true");
 		};
@@ -85,7 +146,7 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		
 		if(can_manage){
 			edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/>",all_topics[i].id);
-			edit_button.title = "Edit";
+			edit_button.title = "Edit this topic";
 			edit_button.onclick = function(){
 				location.assign("/dynamic/selection/page/eligibility_rules/manage_exam_topic?id="+this.id);
 			};
@@ -128,15 +189,14 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 	
 	t._setInternalContainerHeight = function(){
 		//Once the table with the topic is set, get its height
-		var h = getHeight(t.table_container);
+		var h = getHeight(t.table_topics_container);
 		h = h + 10;
 		h = h > 250 ? h : 250; //Set a minimum height, otherwize problems for displaying the diagram
 		t.internal_container.style.height = h+"px";
 		//Then center the topics table
-		t.table_container.style.height = h+"px";
-		require("vertical_align.js",function(){
-			new vertical_align(t.table_container,"middle");
-		});
+		t.table_topics_container.style.height = h+"px";
+		t.table_topics.style.height = "100%";
+		new vertical_align(t.table_topics_container,"middle");
 	};
 	
 	t._setRulesContentHeight = function(){
@@ -150,17 +210,20 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		//Done on a backend to avoid too long loading time
 		service.json("selection","eligibility_rules/status_from_steps",{},function(r){
 			if(r && r.topic_exist){
+				var all_rules = null;
 				t.rules_container = document.createElement("div");
-				t.rules_container.style.position = "absolute";
-				t.rules_container.style.left = "30%";
 				t.rules_container.style.height = "100%";
-				t.rules_container.style.width = "70%";
-				t.rules_container.style.top = "0px";
+				t.rules_container.style.width = "100%";
+				t._td_rules.appendChild(t.rules_container);
 				t.rules_content = document.createElement("div");
 				t.rules_content.style.height = "90%";
 				if(r.rule_exist){
-					require("manage_rules.js",function(){
-						t._manage_rules = new manage_rules(t.rules_content, all_rules, all_topics, false);
+					service.json("selection","eligibility_rules/get_json_all_rules",{},function(res){
+						if(!res) return;
+						else all_rules = res;
+						require("manage_rules.js",function(){
+							t._manage_rules = new manage_rules(t.rules_content, all_rules, all_topics, false);
+						});
 					});
 				} else {
 					//No rule yet so no need to display the diagram. But add the button to create rules
@@ -172,11 +235,13 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 				}
 				var rules_footer = document.createElement("div");
 				rules_footer.style.heigth = "24px";
-				rules_footer.id = "footer";
-				t._setRulesFooter(rules_footer);
+				rules_footer.style.paddingLeft = "30px";
+				rules_footer.id = "footer_eligibility_rules";
+				if(r.can_valid||r.can_unvalid)
+					t._setRulesFooter(rules_footer);//Contains the manage rules button
 				t.rules_container.appendChild(t.rules_content);
 				t.rules_container.appendChild(rules_footer);
-				t.internal_container.appendChild(t.rules_container);
+//				t.internal_container.appendChild(t.rules_container);
 				t._setRulesContentHeight();
 			}//else nothing to do
 		});
@@ -203,8 +268,9 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		t._manage_rules.closeDiagram();
 		while(t.rules_container.firstChild)
 			t.rules_container.removeChild(t.rules_container.firstChild);
-		t.internal_container.removeChild(t.rules_container);
+		t._td_rules.removeChild(t.rules_container);
 		delete t.rules_container;
+		delete t._manage_rules;
 		t._setRulesContent();
 	};
 	
@@ -226,7 +292,7 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		return div;
 	};			
 	
-	require(["section.js","popup_window.js"],function(){
+	require(["section.js","popup_window.js","vertical_align.js"],function(){
 		t._init();
 	});
 }

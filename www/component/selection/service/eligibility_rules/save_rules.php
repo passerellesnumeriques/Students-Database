@@ -1,13 +1,24 @@
 <?php 
 class service_eligibility_rules_save_rules extends Service {
 	
-	public function get_required_rights() {}//TODO
-	public function documentation() {}//TODO
+	public function get_required_rights() {return array("manage_exam_subject");}
+	public function documentation() {echo "Save all the rules data";}
 	public function input_documentation() {
-		//TODO
+		?>
+		<ul>
+			<li><code>all_rules</code> array from the JSON all_rules object, as the one made by SelectionJSON#getJSONAllEligibilityRules method</li>
+			<li><code>db_lock</code> the lock id used to lock EligibilityRule table</li>
+		</ul>
+		<?php
 	}
 	public function output_documentation() {
-		//TODO
+		?>
+		Depends on the result given by the selection#saveRules method
+		<ul>
+			<li>if well saved, returns the JSON structure given by SelectionJSON#getJSONAllEligibilityRules method</li>
+			<li>if not, returns false</li>
+		</ul>
+		<?php
 	}
 	
 	/**
@@ -51,7 +62,6 @@ class service_eligibility_rules_save_rules extends Service {
 								array_push($topics_to_insert, SelectionJSON::EligibilityRuleTopic2DB($topic,$rule["id"]));
 							array_push($all_topics_to_set_in_db, $topic["topic"]["id"]);
 						}
-// 						var_dump($topics_to_update);
 						foreach ($topics_in_db as $t){
 							if(!in_array($t,$all_topics_to_set_in_db))
 								array_push($topics_to_remove, $t);
@@ -72,10 +82,7 @@ class service_eligibility_rules_save_rules extends Service {
 					}
 				}
 			}
-// 			var_dump($rules_to_insert);
-// 			var_dump($rules_to_update);
 			$saved = PNApplication::$instance->selection->saveRules($rules_to_update, $rules_to_insert, $input["db_lock"]);
-// 			var_dump($saved);
 			if($saved)
 				echo SelectionJSON::getJSONAllEligibilityRules();
 			else 
@@ -84,6 +91,12 @@ class service_eligibility_rules_save_rules extends Service {
 			echo "false";
 	}
 	
+	/**
+	 * Get the fields_values array for all the topics from a given rule
+	 * @param array $rule
+	 * @param number|null $id of the rule
+	 * @return array fields_values
+	 */
 	private function getAllTopicsFieldsValues($rule,$id = null){
 		$topics = array();
 		foreach($rule["topics"] as $t){//Collect all the topics

@@ -22,6 +22,7 @@ class service_eligibility_rules_remove_topic extends Service {
 	public function execute(&$component, $input) {
 		if(isset($input["id"])){
 			$res = PNApplication::$instance->selection->removeTopic($input["id"]);
+// 			var_dump($res);
 			if($res)
 				echo "true";
 			else 
