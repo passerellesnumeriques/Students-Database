@@ -36,6 +36,7 @@ class page_edit_batch extends Page {
 		}
 		require_once("component/curriculum/CurriculumJSON.inc");
 		$this->add_javascript("/static/curriculum/curriculum_objects.js");
+		require_once("component/data_model/page/utils.inc");
 ?>
 <table style='background-color:white;border-spacing:0px;margin:0px;border-collapse:collapse;'>
 	<tr>
@@ -93,7 +94,8 @@ class page_edit_batch extends Page {
 <script type='text/javascript'>
 <?php if (isset($_GET["popup"])) {?>
 var popup = window.parent.get_popup_window_from_element(window.frameElement);
-popup.addIconTextButton(theme.build_icon("/static/calendar/calendar_16.png",theme.icons_10.add), "Add Period", "add_period", addPeriod);
+popup.addIconTextButton(theme.build_icon("/static/calendar/calendar_16.png",theme.icons_10.add), "Add Period", "add_period", function() { addPeriod(); });
+popup.addIconTextButton("/static/curriculum/curriculum_16.png", "Edit Specializations", "spe", editSpecializations);
 popup.addIconTextButton(theme.icons_16.save, "Save", save);
 popup.addCancelButton();
 <?php } ?>
@@ -113,6 +115,8 @@ graduation.select_year.style.width = "55px";
 
 var periods = [];
 var specializations = <?php echo CurriculumJSON::SpecializationsJSON();?>;
+var spe_period_start = null;
+var selected_specializations = [];
 
 var lock_spe = <?php echo $lock_spe <> null ? $lock_spe : "null"; ?>;
 var lock_batch = <?php echo $lock_batch <> null ? $lock_batch : "null"; ?>;
@@ -198,28 +202,36 @@ function addPeriod(id, name, start_date, end_date) {
 	period.end.select_month.style.width = "90px";
 	period.end.select_year.style.width = "55px";
 	period.end.onchange = function() { update(); };
-	// specializations
+
+	// remove
 	period.tr.appendChild(td = document.createElement("TD"));
-	var button = document.createElement("DIV");
-	button.className = "button_soft";
-	button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/curriculum_16.png",theme.icons_10.edit)+"'/> Specializations";
-	button.period = period;
-	button.onclick = function() {
-		editSpecializations(periods.indexOf(this.period));
+	period.remove = document.createElement("IMG");
+	period.remove.className = "button_verysoft";
+	period.remove.style.verticalAlign = "bottom";
+	period.remove.src = theme.icons_16.remove;
+	period.remove.onclick = function() {
+		if (this.style.visibility == 'hidden') return;
+		confirm_dialog("Are you sure you want to remove this period ?", function(yes) {
+			if (!yes) return;
+			periods.splice(periods.length-1,1);
+			if (periods.length > 0) periods[periods.length-1].remove.style.visibility = 'visible';
+			if (period.id == spe_period_start) {
+				spe_period_start = null;
+				selected_specializations = [];
+				period.tr_spe.parentNode.removeChild(period.tr_spe);
+			}
+			period.tr.parentNode.removeChild(period.tr);
+		});
 	};
-	td.appendChild(button);
+	td.appendChild(period.remove);
+	// hide previous remove
+	if (periods.length > 0) periods[periods.length-1].remove.style.visibility = 'hidden';
 	
 	var next = document.getElementById('after_periods');
 	next.parentNode.insertBefore(period.tr, next);
 	periods.push(period);
 	update();
 	layout.invalidate(document.body);
-}
-
-function addSpecialization(period_id, spe_id) {
-	for (var i = 0; i < periods.length; ++i)
-		if (periods[i].id == period_id)
-			periods[i].specializations.push(spe_id);
 }
 
 function refreshSpecializations() {
@@ -230,64 +242,52 @@ function refreshSpecializations() {
 			periods[i].tr_spe = null;
 		}
 	}
-	// add rows for specializations
-	var current = [];
-	for (var i = 0; i < periods.length; ++i) {
-		var same = periods[i].specializations.length == current.length;
-		if (same) {
-			for (var j = 0; j < periods[i].specializations.length; ++j) {
-				var found = false;
-				for (var k = 0; k < current.length; ++k)
-					if (current[k] == periods[i].specializations[j]) { found = true; break; }
-				if (!found) { same = false; break; }
-			}
-		}
-		periods[i].same_spe = same;
-		if (same) continue;
+	// add row for specializations
+	if (spe_period_start != null) {
+		var i = -1;
+		for (var j = 0; j < periods.length; ++j) if (periods[j].id == spe_period_start) { i = j; break; }
 		periods[i].tr_spe = document.createElement("TR");
 		var td = document.createElement("TD");
 		td.colSpan = 5;
 		td.style.textAlign = "center";
 		td.style.fontWeight = "bold";
 		td.style.fontStyle = "italic";
-		if (current.length == 0) td.innerHTML = "Split into specializations: ";
-		else if (periods[i].specializations.length == 0) td.innerHTML = "Merge back after specializations";
-		else td.innerHTML = "Change specializations to: ";
-		for (var j = 0; j < periods[i].specializations.length; ++j) {
+		td.innerHTML = "Split into specializations: ";
+		for (var j = 0; j < selected_specializations.length; ++j) {
 			if (j > 0) td.appendChild(document.createTextNode(", "));
 			var spe = null;
-			for (var k = 0; k < specializations.length; ++k) if (specializations[k].id == periods[i].specializations[j]) { spe = specializations[k]; break; }
+			for (var k = 0; k < specializations.length; ++k) if (specializations[k].id == selected_specializations[j]) { spe = specializations[k]; break; }
 			td.appendChild(document.createTextNode(spe.name));
 		}
 		periods[i].tr_spe.appendChild(td);
 		periods[i].tr.parentNode.insertBefore(periods[i].tr_spe, periods[i].tr);
-		current = [];
-		for (var j = 0; j < periods[i].specializations.length; ++j)
-			current.push(periods[i].specializations[j]);
 	}
 }
 
-function editSpecializations(period_index) {
+function editSpecializations() {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
 		content.style.padding = "5px";
-		content.appendChild(document.createTextNode("Change specializations from "));
+		content.appendChild(document.createTextNode("Split into specializations starting from "));
 		var from = document.createElement("SELECT");
 		content.appendChild(from);
-		content.appendChild(document.createTextNode(" to "));
-		var to = document.createElement("SELECT");
-		content.appendChild(to);
 		content.appendChild(document.createTextNode(" :"));
 		content.appendChild(document.createElement("BR"));
+		var checkboxes = [];
 		var add_spe = function(spe) {
 			var div = document.createElement("DIV"); content.appendChild(div);
 			var cb = document.createElement("INPUT");
+			checkboxes.push(cb);
 			cb.type = "checkbox";
-			for (var j = 0; j < periods[period_index].specializations.length; ++j)
-				if (periods[period_index].specializations[j] == spe.id)
+			cb.spe = spe;
+			for (var j = 0; j < selected_specializations.length; ++j)
+				if (selected_specializations[j] == spe.id)
 					cb.checked = 'checked';
 			div.appendChild(cb);
-			div.appendChild(document.createTextNode(spe.name));
+			var span = document.createElement("SPAN");
+			var cell;
+			<?php datamodel_cell_inline($this, "cell", "span", true, "Specialization", "name", "spe.id", null, "spe.name"); ?>			
+			div.appendChild(span);
 			var button = document.createElement("IMG");
 			button.className = "button_verysoft";
 			button.style.marginLeft = "5px";
@@ -305,6 +305,7 @@ function editSpecializations(period_index) {
 								break;
 							}
 						content.removeChild(div);
+						checkboxes.remove(cb);
 					});
 				});
 			};
@@ -318,17 +319,10 @@ function editSpecializations(period_index) {
 			o.value = i;
 			o.text = periods[i].name.value;
 			from.add(o);
-			o = document.createElement("OPTION");
-			o.value = i;
-			o.text = periods[i].name.value;
-			to.add(o);
 		}
-		var i = period_index;
-		while (i > 0 && periods[i].same_spe) i--;
-		from.selectedIndex = i;
-		i = period_index;
-		while (i < periods.length-1 && periods[i+1].same_spe) i++;
-		to.selectedIndex = i;
+		for (var i = 0; i < periods.length; ++i)
+			if (periods[i].id == spe_period_start) { from.selectedIndex = i; break; }
+		
 		var popup = new popup_window("Specializations", "/static/curriculum/curriculum_16.png", content);
 		popup.addIconTextButton(theme.build_icon("/static/curriculum/curriculum_16.png",theme.icons_10.add), "Create new specialization", 'create', function() {
 			input_dialog(
@@ -361,14 +355,55 @@ function editSpecializations(period_index) {
 			);
 		});
 		popup.addOkCancelButtons(function() {
-			// TODO
+			var list = [];
+			for (var i = 0; i < checkboxes.length; ++i)
+				if (checkboxes[i].checked) list.push(checkboxes[i].spe.id);
+			if (list.length == 0) {
+				spe_period_start = null;
+			} else {
+				spe_period_start = periods[from.selectedIndex].id;
+			}
+			selected_specializations = list;
+			refreshSpecializations();
+			popup.close();
 		});
 		popup.show();
 	});
 }
 
 function save() {
-	// TODO
+	var ls = lock_screen(null, "Saving Batch...");
+	var data = new Object();
+	<?php if ($batch <> null) echo "data.id = ".$batch["id"].";"; ?>
+	data.name = batch_name.value;
+	data.start_date = date2SQL(integration.getDate());
+	data.end_date = date2SQL(graduation.getDate());
+	data.periods = [];
+	for (var i = 0; i < periods.length; ++i) {
+		var p = new Object();
+		if (periods[i].id > 0) p.id = periods[i].id;
+		p.name = periods[i].name.value;
+		p.start_date = date2SQL(periods[i].start);
+		p.end_date = date2SQL(periods[i].end);
+		data.periods.push(p);
+	}
+	data.periods_specializations = [];
+	if (spe_period_start) {
+		var found = false;
+		for (var i = 0; i < periods.length; ++i) {
+			if (!found && periods[i].id == spe_period_start) found = true;
+			if (!found) continue;
+			for (var j = 0; j < selected_specializations.length; ++j)
+				data.periods_specializations.push({period_id:periods[i].id,specialization_id:selected_specializations[j]});
+		}
+	}
+	service.json("curriculum", "save_batch", data, function(res) {
+		unlock_screen(ls);
+		if (!res) return;
+		<?php if (isset($_GET["popup"])) {?>
+		get_popup_window_from_frame(window).close();
+		<?php } ?>
+	});
 }
 
 <?php
@@ -378,8 +413,26 @@ if ($batch <> null) {
 	echo "graduation.selectDate(parseSQLDate(".json_encode($batch["end_date"])."));\n";
 	foreach ($periods as $period)
 		echo "addPeriod(".$period["id"].",".json_encode($period["name"]).",parseSQLDate(".json_encode($period["start_date"])."),parseSQLDate(".json_encode($period["end_date"])."));\n";
-	foreach ($periods_specializations as $ps)
-		echo "addSpecialization(".$ps["period"].",".$ps["specialization"].");\n";
+	if (count($periods_specializations) > 0) {
+		for ($i = 0; $i < count($periods); $i++) {
+			$found = false;
+			foreach ($periods_specializations as $ps) 
+				if ($ps["period"] == $periods[$i]["id"]) {
+					echo "spe_period_start = ".$ps["period"].";\n";
+					echo "selected_specializations = [";
+					$first = true;
+					foreach ($periods_specializations as $p) {
+						if ($p["period"] <> $ps["period"]) continue;
+						if ($first) $first = false; else echo ",";
+						echo $p["specialization"];
+					}
+					echo "];\n";
+					$found = true;
+					break;
+				}
+			if ($found) break;
+		}
+	}
 	echo "refreshSpecializations();\n";
 } 
 ?>

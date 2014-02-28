@@ -190,9 +190,17 @@ function initPNApplication() {
 		};
 		listenEvent(window,'click',listener);
 		listenEvent(window,'mousemove',listener);
+		var closeRaised = false;
+		if (window.frameElement) {
+			window.frameElement.onunload = function() {
+				if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
+			};
+		}
+		window.onunload = function() {
+			if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
+		};
 		window.onbeforeunload = function() {
-			if (window.pnapplication)
-				window.pnapplication.closeWindow();
+			if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
 		};
 		if (window==window.top)
 			setInterval(window.pnapplication.checkInactivity, 2000);

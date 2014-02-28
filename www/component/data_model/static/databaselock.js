@@ -42,6 +42,7 @@ window.databaselock = {
 			if (!windows.contains(this._locks[i].win))
 				windows.push(this._locks[i].win);
 		}
+		this._locks = [];
 		service.json("data_model","unlock",{locks:locks},function(result){
 			var only_popups = true;
 			for (var i = 0; i < windows.length; ++i)

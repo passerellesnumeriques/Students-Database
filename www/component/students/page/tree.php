@@ -220,7 +220,7 @@ function BatchNode(current, alumni, batch) {
 		menu.addIconItem(theme.icons_16.edit, "Edit Batch Information", function() { edit_batch(batch); });
 		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.remove,"right_bottom"), "Remove Batch", function() { remove_batch(batch); });
 	};<?php	} else { echo "null;"; } ?>
-	this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, !is_alumni, function() {
+		this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, !is_alumni, function() {
 		window.parent.resetLeftControls();
 		var title = document.createElement("DIV");
 		title.appendChild(document.createTextNode("Batch "));

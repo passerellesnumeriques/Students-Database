@@ -233,7 +233,7 @@ a.black_link:hover {
 }
 .help_header {
     background-color: #D8D8FF;
-	border-bottom: #8080FF;
+	border-bottom: 1px solid #8080FF;
 }
 .warning {
 	background-color: #FFFFD8;
