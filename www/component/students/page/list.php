@@ -133,7 +133,7 @@ var students_list = new data_list(
 			var batches = url.params['batches'].split(',');
 			if (batches.length == 1) {
 				var import_students = document.createElement("DIV");
-				import_students.className = "button";
+				import_students.className = "button_verysoft";
 				import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
 				import_students.onclick = function() {
 					postData('/dynamic/students/page/import_students',{
@@ -143,7 +143,7 @@ var students_list = new data_list(
 				};
 				students_list.addHeader(import_students);
 				var create_student = document.createElement("DIV");
-				create_student.className = "button";
+				create_student.className = "button_verysoft";
 				create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
 				create_student.onclick = function() {
 					postData("/dynamic/people/page/create_people",{

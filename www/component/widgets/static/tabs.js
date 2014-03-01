@@ -47,7 +47,7 @@ function tabs(container, fill_tab_content) {
 	
 	t.select = function(index) {
 		if (t.selected != -1) {
-			t.tabs[t.selected].className = "tab_header";
+			t.tabs[t.selected].header.className = "tab_header";
 			t.content.removeChild(t.tabs[t.selected].content);
 		}
 		t.tabs[index].header.className = "tab_header selected";

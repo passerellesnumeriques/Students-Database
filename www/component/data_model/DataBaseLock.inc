@@ -652,6 +652,36 @@ class DataBaseLock {
 		return $result;
 	}
 	
+	public static function updateLocks($ids) {
+		if (count($ids) == 0) return;
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+		$ts = time();
+		self::mutexLock();
+		$sql = "SELECT locker_domain,locker_username FROM DataLocks WHERE id IN (";
+		$first = true;
+		foreach ($ids as $id) {
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "'".$db->escapeString($id)."'";
+		}
+		$sql .= ")";
+		$r = $db->execute($sql);
+		$sql = "UPDATE DataLocks SET timestamp=".$ts." WHERE id IN (";
+		$first = true;
+		if ($r) {
+			while (($row = $db->nextRow($r))<>null) {
+				if ($row["locker_domain"] == PNApplication::$instance->user_management->domain &&
+					$row["locker_username"] == PNApplication::$instance->user_management->username) {
+					if ($first) $first = false; else $sql .= ",";
+					$sql .= "'".$db->escapeString($id)."'";
+				}
+			}
+		}
+		if (!$first)
+			$db->execute($sql.")");
+		self::mutexUnlock();
+		DataBaseLock::clean();
+	}
+	
 	/** check the given lock is locking the given table by the current user
 	 * @param integer $lock_id lock id to check
 	 * @param string $table table name

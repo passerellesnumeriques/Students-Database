@@ -277,7 +277,7 @@ function check_end() {
 function has_error(p) {
 	if (p instanceof tree) return;
 	p.expand();
-	if (p.parent_item) has_error(p.parent_item);
+	if (p.parent) has_error(p.parent);
 }
 
 var in_progress = 0;

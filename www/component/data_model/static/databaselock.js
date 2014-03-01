@@ -14,7 +14,6 @@ window.databaselock = {
 		}
 		window.top.databaselock._locks.push({
 			id: id,
-			time: new Date().getTime(),
 			win: window
 		});
 	},
@@ -23,8 +22,10 @@ window.databaselock = {
 	 */
 	removeLock: function(id) {
 		for (var i = 0; i < window.top.databaselock._locks.length; ++i)
-			if (window.top.databaselock._locks[i].id == id)
+			if (window.top.databaselock._locks[i].id == id) {
 				window.top.databaselock._locks.splice(i,1);
+				break;
+			}
 		for (var i = 0; i < this._locks.length; ++i)
 			if (this._locks[i].id == id)
 				this._locks.splice(i,1);
@@ -59,19 +60,25 @@ window.databaselock = {
 				window.top.frames[0].location.href = "/dynamic/application/page/enter";
 		});
 	},
-	/** Release a lock
-	 * @param {Number} id lock id
-	 * @param {Boolean} foreground blocking mode or asynchronous mode
-	 */
-	_closeLock: function(id,foreground) {
-		service.json("data_model","unlock",{lock:id},function(result){
-		},foreground);
-		this.removeLock(id);
-	},
 	/** Called when the window is closed, so we can release all the locks */
 	_closeWindow: function() {
-		while (this._locks.length > 0)
-			this._closeLock(this._locks[0].id, true);
+		var ids = [];
+		for (var i = 0; i < this._locks.length; ++i) {
+			ids.push(this._locks[i].id);
+			for (var j = 0; j < window.top.databaselock._locks.length; ++j)
+				if (window.top.databaselock._locks[j].id == this._locks[i].id) {
+					window.top.databaselock._locks.splice(j,1);
+					break;
+				}
+		}
+		if (ids.length > 0)
+			service.json("data_model","unlock",{locks:ids},function(result){},true);
+	},
+	_update: function() {
+		var ids = [];
+		for (var i = 0; i < this._locks.length; ++i) ids.push(this._locks[i].id);
+		if (ids.length > 0)
+			service.json("data_model","update_locks",{locks:ids},function(res){});
 	}
 };
 
@@ -82,32 +89,23 @@ function initDatabaselock() {
 		return;
 	}
 	var w = window;
-	window.pnapplication.onactivity.add_listener(function() {
-		for (var i = 0; i < w.databaselock._locks.length; ++i)
-			w.databaselock._locks[i].time = new Date().getTime();
-	});
 	window.pnapplication.onclose.add_listener(function() {
 		w.databaselock._closeWindow();
 	});
 	window.pnapplication.addInactivityListener(2*60*1000, function() {
 		if (window.databaselock._has_popup) return;
-		var now = new Date().getTime();
 		var popup = false;
 		window.databaselock._has_popup = true;
-		for (var i = 0; i < window.databaselock._locks.length; ++i) {
-			if (now - window.databaselock._locks[i].time >= 2*60*1000) {
-				add_javascript("/static/widgets/popup_window.js",function() {
-					var p = new popup_window("You are inactive",theme.icons_16.warning,null,true);
-					p.setContentFrame("/static/data_model/databaselock_inactivity.html");
-					p.onclose = function() {
-						window.databaselock._has_popup = false;
-					};
-					p.show();
-				});
-				popup = true;
-				break;
-			} else
-				ajax.post_parse_result("/dynamic/data_model/service/update_db_lock","id="+window.databaselock._locks[i].id,function(result){});
+		if (window.databaselock._locks.length > 0) {
+			add_javascript("/static/widgets/popup_window.js",function() {
+				var p = new popup_window("You are inactive",theme.icons_16.warning,null,true);
+				p.setContentFrame("/static/data_model/databaselock_inactivity.html");
+				p.onclose = function() {
+					window.databaselock._has_popup = false;
+				};
+				p.show();
+			});
+			popup = true;
 		}
 		if (!popup)
 			window.databaselock._has_popup = false;
@@ -115,3 +113,5 @@ function initDatabaselock() {
 }
 if (window.top != window)
 	initDatabaselock();
+else
+	setInterval(function() { window.top.databaselock._update(); }, 30000);

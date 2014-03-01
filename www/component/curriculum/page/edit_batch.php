@@ -20,7 +20,8 @@ class page_edit_batch extends Page {
 				return;
 			}
 			DataBaseLock::generateScript($lock_batch);
-		}		
+		} else
+			$lock_batch = null;
 		
 		$this->require_javascript("input_utils.js");
 		$this->require_javascript("date_select.js");
@@ -96,7 +97,7 @@ class page_edit_batch extends Page {
 var popup = window.parent.get_popup_window_from_element(window.frameElement);
 popup.addIconTextButton(theme.build_icon("/static/calendar/calendar_16.png",theme.icons_10.add), "Add Period", "add_period", function() { addPeriod(); });
 popup.addIconTextButton("/static/curriculum/curriculum_16.png", "Edit Specializations", "spe", editSpecializations);
-popup.addIconTextButton(theme.icons_16.save, "Save", save);
+popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
 popup.addCancelButton();
 <?php } ?>
 
@@ -118,6 +119,7 @@ var specializations = <?php echo CurriculumJSON::SpecializationsJSON();?>;
 var spe_period_start = null;
 var selected_specializations = [];
 
+var batch_id = <?php if (isset($_GET["id"])) echo $_GET["id"]; else echo "null"; ?>;
 var lock_spe = <?php echo $lock_spe <> null ? $lock_spe : "null"; ?>;
 var lock_batch = <?php echo $lock_batch <> null ? $lock_batch : "null"; ?>;
 
@@ -184,6 +186,7 @@ function addPeriod(id, name, start_date, end_date) {
 	inputDefaultText(period.name, "Period Name");
 	inputAutoresize(period.name, 5);
 	period.name.onresize = update;
+	if (id) window.top.datamodel.inputCell(period.name, "AcademicPeriod", "name", id);
 	// from
 	period.tr.appendChild(td = document.createElement("TD"));
 	td.appendChild(document.createTextNode(" from "));
@@ -193,6 +196,7 @@ function addPeriod(id, name, start_date, end_date) {
 	period.start.select_day.style.width = "40px";
 	period.start.select_month.style.width = "90px";
 	period.start.select_year.style.width = "55px";
+	if (id) window.top.datamodel.dateSelectCell(period.start, "AcademicPeriod", "start_date", id);
 	// to
 	period.tr.appendChild(td = document.createElement("TD"));
 	td.appendChild(document.createTextNode(" to "));
@@ -202,7 +206,8 @@ function addPeriod(id, name, start_date, end_date) {
 	period.end.select_month.style.width = "90px";
 	period.end.select_year.style.width = "55px";
 	period.end.onchange = function() { update(); };
-
+	if (id) window.top.datamodel.dateSelectCell(period.end, "AcademicPeriod", "end_date", id);
+	
 	// remove
 	period.tr.appendChild(td = document.createElement("TD"));
 	period.remove = document.createElement("IMG");
@@ -297,16 +302,14 @@ function editSpecializations() {
 			button.spe = spe;
 			button.onclick = function() {
 				var id = this.spe.id;
-				require("datamodel.js",function() {
-					datamodel.confirm_remove("Specialization", id, function() {
-						for (var i = 0; i < specializations.length; ++i)
-							if (specializations[i].id == id) {
-								specializations.splice(i,1);
-								break;
-							}
-						content.removeChild(div);
-						checkboxes.remove(cb);
-					});
+				window.top.datamodel.confirm_remove("Specialization", id, function() {
+					for (var i = 0; i < specializations.length; ++i)
+						if (specializations[i].id == id) {
+							specializations.splice(i,1);
+							break;
+						}
+					content.removeChild(div);
+					checkboxes.remove(cb);
 				});
 			};
 			div.appendChild(button);
@@ -374,17 +377,18 @@ function editSpecializations() {
 function save() {
 	var ls = lock_screen(null, "Saving Batch...");
 	var data = new Object();
-	<?php if ($batch <> null) echo "data.id = ".$batch["id"].";"; ?>
-	data.name = batch_name.value;
-	data.start_date = date2SQL(integration.getDate());
-	data.end_date = date2SQL(graduation.getDate());
+	if (batch_id) data.id = batch_id;
+	data.name = batch_name.getValue();
+	data.start_date = dateToSQL(integration.getDate());
+	data.end_date = dateToSQL(graduation.getDate());
+	data.lock = lock_batch;
 	data.periods = [];
 	for (var i = 0; i < periods.length; ++i) {
 		var p = new Object();
-		if (periods[i].id > 0) p.id = periods[i].id;
-		p.name = periods[i].name.value;
-		p.start_date = date2SQL(periods[i].start);
-		p.end_date = date2SQL(periods[i].end);
+		p.id = periods[i].id;
+		p.name = periods[i].name.getValue();
+		p.start_date = dateToSQL(periods[i].start.getDate());
+		p.end_date = dateToSQL(periods[i].end.getDate());
 		data.periods.push(p);
 	}
 	data.periods_specializations = [];
@@ -400,9 +404,22 @@ function save() {
 	service.json("curriculum", "save_batch", data, function(res) {
 		unlock_screen(ls);
 		if (!res) return;
-		<?php if (isset($_GET["popup"])) {?>
-		get_popup_window_from_frame(window).close();
-		<?php } ?>
+		if (batch_name.cellSaved) batch_name.cellSaved();
+		if (integration.cellSaved) integration.cellSaved();
+		if (graduation.cellSaved) graduation.cellSaved();
+		for (var i = 0; i < periods.length; ++i) {
+			if (periods[i].name.cellSaved) periods[i].name.cellSaved();
+			if (periods[i].start.cellSaved) periods[i].start.cellSaved();
+			if (periods[i].end.cellSaved) periods[i].end.cellSaved();
+		}
+		batch_id = res.id;
+		for (var i = 0; i < res.periods_ids.length; ++i)
+			for (var j = 0; j < periods.length; ++j)
+				if (periods[j].id == res.periods_ids[i].given_id) {
+					periods[j].id = res.periods_ids[i].new_id;
+					break;
+				}
+		<?php if (isset($_GET["onsave"])) echo "window.parent.".$_GET["onsave"]."(res.id);";?>
 	});
 }
 
@@ -436,6 +453,13 @@ if ($batch <> null) {
 	echo "refreshSpecializations();\n";
 } 
 ?>
+
+if (batch_id) {
+	window.top.datamodel.inputCell(batch_name, "StudentBatch", "name", batch_id);
+	window.top.datamodel.dateSelectCell(integration, "StudentBatch", "start_date", batch_id);
+	window.top.datamodel.dateSelectCell(graduation, "StudentBatch", "end_date", batch_id);
+}
+
 </script>
 <?php 
 	}

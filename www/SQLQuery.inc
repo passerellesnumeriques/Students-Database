@@ -63,6 +63,7 @@ class SQLQuery {
  	 * @param SQLQuery $copy the query to copy
  	 */
  	public function __construct($copy = null) {
+ 		$this->warning = PNApplication::$instance->current_domain == "Dev";
  		if ($copy) {
  			$this->tables = $copy->tables;
  			$this->fields = $copy->fields;
@@ -103,6 +104,7 @@ class SQLQuery {
  	public $order_by = array();
  	/** @var boolean indicates if we have to skip security checks or not */
  	public $bypass_security = false;
+ 	public $warning; 
  	/** @var boolean indicates to use DISTINCT in the select */
 	public $distinct = false;
 
@@ -115,6 +117,8 @@ class SQLQuery {
 	public function generateFieldAlias() { return "f".($this->field_alias_counter++); }
 	/** Generates a unique table alias name (useful when building a big list) */
 	public function generateTableAlias() { return "t".($this->table_alias_counter++); }
+	
+	public function noWarning() { $this->warning = false; return $this; }
 
 	/** Use a sepcific database, instead of the default one which is the one of the current domain
 	 * @param string $db_name name of the database to use
@@ -181,10 +185,11 @@ class SQLQuery {
 	
 	public function &selectTable($table_name, $table_alias = null) {
 		$this->tables[$table_name] = $table_alias;
-		if (PNApplication::$instance->current_domain == "Dev") $this->checkTableAccess($table_name);
+		$this->checkTableAccess($table_name);
 		return $this;
 	}
 	private function checkTableAccess($table_name) {
+		if (!$this->warning) return;
 		try { throw new Exception(); }
 		catch (Exception $e) {
 			$root = str_replace("\\","/",realpath("component"))."/";
@@ -459,7 +464,7 @@ class SQLQuery {
 		$join = array($table_from, $table_to, $fields_matching, $alias);
 		if ($join_on_values <> null) array_push($join, $join_on_values);
 		array_push($this->joins, $join);
-		if (PNApplication::$instance->current_domain == "Dev") $this->checkTableAccess($table_to);
+		$this->checkTableAccess($table_to);
 		return $this;
 	}
 	public function getJoinAlias($table_from, $table_to, $fields_matching) {
@@ -791,7 +796,7 @@ class SQLQuery {
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
 				
-				$q = SQLQuery::create()->bypassSecurity();
+				$q = SQLQuery::create()->bypassSecurity()->noWarning();
 				$table_alias = $q->generateTableAlias();
 				$q->select(array($table=>$table_alias));
 				$q->selectSubModels($this->sub_models);
@@ -838,7 +843,21 @@ class SQLQuery {
 					throw new Exception($name.": ".$e->getMessage());
 				}
 				if ($col->unique) {
-					$r = SQLQuery::create()->bypassSecurity()->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field])->executeSingleRow();
+					$q = SQLQuery::create()->bypassSecurity()->noWarning()->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field]);
+					$where = "";
+					if ($t->getPrimaryKey() <> null) {
+						$where .= "`".$t->getPrimaryKey()->name."`!='".$key."'";
+					} else {
+						$keys = $t->getKey();
+						$first = true;
+						$where .= "(";
+						foreach ($keys as $key_name) {
+							if ($first) $first = false; else $where .= " OR ";
+							$where .= "`".$key_name."`!='".$key[$key_name]."'";
+						}
+						$where .= ")";
+					}
+					$r = $q->where($where)->executeSingleRow();
 					if ($r <> null) {
 						if ($locked)
 							DataBaseLock::unlock($lock_id);
@@ -902,7 +921,7 @@ class SQLQuery {
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
 					
-				$q = SQLQuery::create()->bypassSecurity();
+				$q = SQLQuery::create()->bypassSecurity()->noWarning();
 				$table_alias = $q->generateTableAlias();
 				$q->select(array($table=>$table_alias));
 				$q->selectSubModels($this->sub_models);
@@ -995,12 +1014,33 @@ class SQLQuery {
 							}
 						}
 					}
-					$r = SQLQuery::create()
-						->bypassSecurity()
+					$q = SQLQuery::create()
+						->bypassSecurity()->noWarning()
 						->select($t->getName())
 						->selectSubModels($this->sub_models)
 						->whereIn($col->name, $values)
-						->execute();
+						;
+						if ($t->getPrimaryKey() <> null) {
+							$keys = array();
+							foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
+							$q->whereNotIn($t->getName(), $t->getPrimaryKey()->name, $keys);
+						} else {
+							$keys = $t->getKey();
+							$w = "";
+							foreach ($keys_fields_values as $k) {
+								$key = $k[0];
+								$kw = "(";
+								foreach ($keys as $key_name) {
+									if (strlen($kw) > 0) $kw .= " OR ";
+									$kw .= "`".$table_alias."`.`".$key_name."`!='".SQLQuery::escape($key[$key_name])."'";
+								}
+								$kw .= ")";
+								if (strlen($w) > 0) $w .= " AND ";
+								$w .= "(".$kw.")";
+							}
+							$q->where($w);
+						}
+						$r = $q->execute();
 					if ($r <> null && count($r) > 0) {
 						if ($locked)
 							DataBaseLock::unlock($lock_id);
@@ -1407,9 +1447,18 @@ class SQLQuery {
 			$t = DataModel::get()->internalGetTable($table);
 		else
 			$t = DataModel::get()->getTable($table);
-		$pk = $t->getPrimaryKey()->name; // TODO if no primary key
-		foreach ($rows as $r) array_push($keys, $r[$pk]);
-		$this->removeKeys($keys);
+		$pk = $t->getPrimaryKey();
+		if ($pk <> null) {
+			foreach ($rows as $r) array_push($keys, $r[$pk->name]);
+		} else {
+			$k = $t->getKey();
+			foreach ($rows as $r) {
+				$key = array();
+				foreach ($k as $kname) $key[$kname] = $r[$kname];
+				array_push($keys, $key);
+			}
+		}
+		$this->removeKeys($table, $keys);
 	}
 
 	/** Remove data with given primary keys */
@@ -1799,12 +1848,46 @@ class SQLQuery {
 	public static function getTable($table, $sub_models = null) {
 		return SQLQuery::create()->selectSubModels($sub_models)->select($table)->execute();
 	}
-	public static function getRow($table, $key, $sub_models = null) {
-		require_once("component/data_model/Model.inc");
-		$t = DataModel::get()->getTable($table);
-		return SQLQuery::create()->selectSubModels($sub_models)->select($table)->where($t->getPrimaryKey()->name, $key)->executeSingleRow();
+	public static function getRow($table, $key, $sub_model = null) {
+		if (!($table instanceof \datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table = DataModel::get()->getTable($table);
+		}
+		$q = \SQLQuery::create()->select($table->getName())->selectSubModelForTable($table, $sub_model);
+		if ($table->getPrimaryKey() <> null)
+			$q->whereValue($table->getName(), $table->getPrimaryKey()->name, $key);
+		else foreach ($key as $kname=>$kval)
+			$q->whereValue($table->getName(), $kname, $kval);
+		return $q->executeSingleRow();
 	}
-
+	public static function getRows($table, $keys, $sub_model = null) {
+		if (count($keys) == 0) return array();
+		if (!($table instanceof \datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table = DataModel::get()->getTable($table);
+		}
+		$q = \SQLQuery::create()->select($table->getName())->selectSubModelForTable($table, $sub_model);
+		if ($table->getPrimaryKey() <> null)
+			$q->whereIn($table->getName(), $table->getPrimaryKey()->name, $keys);
+		else {
+			$w = "(";
+			$first = true;
+			foreach ($keys as $key) {
+				if ($first) $first = false; else $w .= " OR ";
+				$w .= "(";
+				$f = true;
+				foreach ($key as $kname=>$kval) {
+					if ($f) $f = false; else $w .= " AND "; 
+					$w .= "`".$table->getSQLNameFor($sub_model)."`.`".$kname."`='".SQLQuery::escape($kval)."'";
+				}
+				$w .= ")";
+			}
+			$w .= ")";
+			$q->where($w);
+		}
+		return $q->execute();
+	}
+	
 	/** @var boolean indicates if we are currently in a transaction */
 	private static $transaction_started = false;
 	public static function startTransaction() {

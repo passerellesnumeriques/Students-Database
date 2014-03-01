@@ -265,6 +265,8 @@ class SubDataModel extends DataModel {
 		require_once("DataBaseUtilities.inc");
 		foreach ($this->tables as $t)
 			DataBaseUtilities::createTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
+		if ($this->instances <> null)
+			array_push($this->instances, $key);
 	}
 	
 	public function removeTables($key) {
@@ -275,11 +277,21 @@ class SubDataModel extends DataModel {
 		require_once("DataBaseUtilities.inc");
 		foreach ($this->tables as $t)
 			DataBaseUtilities::dropTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
+		if ($this->instances <> null)
+			for ($i = 0; $i < count($this->instances); $i++)
+			if ($this->instances[$i] == $key) {
+				array_splice($this->instances, $i, 1);
+				break;
+			}
 	}
 	
+	private $instances = null;
 	public function getExistingInstances() {
-		$t = $this->parent_model->internalGetTable($this->parent_table);
-		return SQLQuery::create()->bypassSecurity()->select($this->parent_table)->field($this->parent_table, $t->getPrimaryKey()->name)->executeSingleField();
+		if ($this->instances == null) {
+			$t = $this->parent_model->internalGetTable($this->parent_table);
+			$this->instances = SQLQuery::create()->bypassSecurity()->select($this->parent_table)->field($this->parent_table, $t->getPrimaryKey()->name)->executeSingleField();
+		}
+		return $this->instances;
 	}
 	
 }

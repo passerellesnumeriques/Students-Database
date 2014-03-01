@@ -489,12 +489,7 @@ namespace datamodel {
 		}
 		
 		public function getRowDescriptionByKey($key, $sub_model = null) {
-			$q = \SQLQuery::create()->select($this->getName())->selectSubModelForTable($this, $sub_model);
-			if ($this->primary_key <> null)
-				$q->whereValue($this->getName(), $this->primary_key->name, $key);
-			else foreach ($key as $kname=>$kval)
-				$q->whereValue($this->getName(), $kname, $kval);
-			$row = $q->executeSingleRow();
+			$row = \SQLQuery::getRow($this, $key, $sub_model);
 			return $this->getRowDescription($row);
 		}
 		public function getRowDescription($row) {

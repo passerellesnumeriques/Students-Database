@@ -248,8 +248,9 @@ function context_menu(menu) {
 		menu.style.zIndex = 100;
 		if (typeof animation != 'undefined') {
 			if (menu.anim) animation.stop(menu.anim);
-			setOpacity(menu,0);
 		}
+		if (typeof animation != 'undefined')
+			menu.style.visibility = 'hidden';
 		document.body.appendChild(menu);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);

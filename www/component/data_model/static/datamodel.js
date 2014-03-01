@@ -52,6 +52,60 @@ datamodel = {
 			text_node.nodeValue = value;
 		});
 	},
+	inputCell: function(input, table, column, row_key) {
+		var original = input.value;
+		var win = getWindowFromDocument(input.ownerDocument);
+		input.cellSaved = function() {
+			original = input.value;
+		};
+		win.pnapplication.onclose.add_listener(function() {
+			if (input.value != original) {
+				input.value = original;
+				input.onchange();
+			}
+		});
+		datamodel.registerCellWidget(win, table, column, row_key, function() {
+			return input.value;
+		}, function(value) {
+			input.value = value;
+			input.onchange();
+		}, function(listener) {
+			var prev_change = input.onchange;
+			input.onchange = function(ev) {
+				listener();
+				if (prev_change) prev_change(ev);
+			};
+			var prev_keyup = input.onkeyup;
+			input.onkeyup = function(ev) {
+				listener();
+				if (prev_keyup) prev_keyup(ev);
+			};
+		});
+	},
+	dateSelectCell: function(date_select, table, column, row_key) {
+		var original = date_select.getDate();
+		var win = getWindowFromDocument(date_select.select_day.ownerDocument);
+		date_select.cellSaved = function() {
+			original = date_select.getDate();
+		};
+		win.pnapplication.onclose.add_listener(function() {
+			var d = date_select.getDate();
+			if ((d == null && original != null) || original == null || d.getTime() != original.getTime()) {
+				date_select.selectDate(original);
+			}
+		});
+		var prev = date_select.onchange;
+		datamodel.registerCellWidget(win, table, column, row_key, function() {
+			return dateToSQL(date_select.getDate());
+		}, function(value) {
+			date_select.selectDate(parseSQLDate(value));
+		}, function(listener) {
+			date_select.onchange = function() {
+				listener();
+				if (prev) prev();
+			};
+		});
+	},
 	
 	/** List of listeners to be called when a DataDisplay changes */
 	_data_change_listeners: [],
@@ -177,7 +231,7 @@ datamodel = {
 			content.innerHTML = content_html;
 			var popup = new popup_window("Confirmation", theme.icons_16.question, content);
 			popup.addOkCancelButtons(function() {
-				popup.freeze();
+				popup.freeze("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing...");
 				service.json("data_model", "remove_row", {table:table,row_key:row_key}, function(res) {
 					if (res) {
 						if (onremoved) onremoved();

@@ -70,5 +70,9 @@ function inputDefaultText(input, default_text) {
 		if (prev_onblur) prev_onblur(ev);
 		if (input.onchange) input.onchange();
 	};
+	input.getValue = function() {
+		if (is_default) return "";
+		return input.value;
+	};
 	if (document.activeElement == input) input.onfocus(); else input.onblur();
 }

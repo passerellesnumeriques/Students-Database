@@ -1,61 +1,33 @@
 function create_new_batch() {
 	require("popup_window.js",function(){
 		var popup = new popup_window("Create New Batch", theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "");
-		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes");
+		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&onsave=new_batch_created");
 		popup.show();
+	});
+}
+function new_batch_created(id) {
+	service.json("curriculum","get_batch",{id:id},function(batch){
+		tree_build_batch(batch);
 	});
 }
 function edit_batch(batch) {
 	require("popup_window.js",function(){
 		var popup = new popup_window("Edit Batch", theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.edit), "");
-		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&id="+batch.id);
+		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&id="+batch.id+"&onsave=batch_saved");
 		popup.show();
 	});
 }
-/*function create_new_batch() {
-	var container = document.createElement("DIV");
-	var error_div = document.createElement("DIV");
-	error_div.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> ";
-	var error_text = document.createElement("SPAN");
-	error_text.style.color = "red";
-	error_div.appendChild(error_text);
-	error_div.style.visibility = "hidden";
-	error_div.style.visibility = "absolute";
-	container.appendChild(error_div);
-
-	require("popup_window.js",function(){
-		var popup = new popup_window("Create New Batch", "/static/curriculum/batch_16.png", container);
-		var table = new create_new_batch_table(container, function(error) {
-			if (error) {
-				error_text.innerHTML = error;
-				error_div.style.visibility = 'visible';
-				error_div.style.position = 'static';
-				popup.disableButton('ok');
-			} else {
-				error_div.style.visibility = 'hidden';
-				error_div.style.position = 'absolute';
-				popup.enableButton('ok');
-			}
-		});
-		popup.addOkCancelButtons(function(){
-			popup.freeze();
-			table.save(function(id){
-				if (id) { popup.close(); location.reload(); return; }
-				popup.unfreeze();
-			});
-		});
-		popup.show(); 
+function batch_saved(id) {
+	var node = root.findTag("batch"+id);
+	node.item.parent.removeItem(node.item);
+	service.json("curriculum","get_batch",{id:id},function(batch){
+		tree_build_batch(batch);
 	});
-}*/
+}
 function remove_batch(batch) {
-	confirm_dialog("Are you sure you want to remove the batch '"+batch.name+"', including all its content ?",function(yes){
-		if (!yes) return;
-		var lock = lock_screen();
-		service.json("data_model","remove_row",{table:"StudentBatch",row_key:batch.id},function(res){
-			unlock_screen(lock);
-			if (!res) return;
-			location.reload();
-		});
+	window.top.datamodel.confirm_remove("StudentBatch", batch.id, function() {
+		var node = root.findTag("batch"+batch.id);
+		node.item.parent.removeItem(node.item);
 	});
 }
 function new_academic_period(batch) {

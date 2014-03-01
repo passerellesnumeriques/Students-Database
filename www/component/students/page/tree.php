@@ -217,7 +217,7 @@ function BatchNode(current, alumni, batch) {
 	var t=this;
 	var context_menu_builder = <?php if ($can_edit) {
 	?>function(menu) {
-		menu.addIconItem(theme.icons_16.edit, "Edit Batch Information", function() { edit_batch(batch); });
+		menu.addIconItem(theme.icons_16.edit, "Edit periods and specializations", function() { edit_batch(batch); });
 		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.remove,"right_bottom"), "Remove Batch", function() { remove_batch(batch); });
 	};<?php	} else { echo "null;"; } ?>
 		this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, !is_alumni, function() {
@@ -261,8 +261,8 @@ function BatchNode(current, alumni, batch) {
 		?>
 
 		var button = document.createElement("DIV");
-		button.className = "button";
-		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit Batch Periods and Specializations";
+		button.className = "button_integrated";
+		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit Batch";
 		button.onclick = function() { edit_batch(batch); };
 		window.parent.addMenuControl(button);
 		
@@ -276,7 +276,11 @@ function BatchNode(current, alumni, batch) {
 		t._onselect();
 	},context_menu_builder,null);
 	this.item.node = this;
-	this.parent.item.addItem(this.item);
+	var i = 0;
+	var start = parseSQLDate(batch.start_date).getTime();
+	for (; i < this.parent.item.children.length; ++i)
+		if (parseSQLDate(this.parent.item.children[i].node.batch.start_date).getTime() > start) break;
+	this.parent.item.insertItem(this.item, i);
 	this.batch = batch;
 }
 extendsTreeNode(BatchNode);
@@ -366,7 +370,11 @@ function AcademicPeriodNode(batch_node, period) {
 	},null,null);
 	this.item.node = this;
 	this.item.cells[0].addStyle({color: parseSQLDate(period.end_date).getTime() < now ? "#4040A0" : parseSQLDate(period.start_date).getTime() > now ? "#A04040" : "#40A040"});
-	this.parent.item.addItem(this.item);
+	var i = 0;
+	var start = parseSQLDate(period.start_date).getTime();
+	for (; i < this.parent.item.children.length; ++i)
+		if (parseSQLDate(this.parent.item.children[i].node.period.start_date).getTime() > start) break;
+	this.parent.item.insertItem(this.item, i);
 	this.period = period;
 	<?php if ($can_edit) {?>
 	this.item.cells[0].addContextMenu(function(menu) {
@@ -550,33 +558,36 @@ function ClassNode(parent, cl) {
 extendsTreeNode(ClassNode);
 
 var tr;
-var root;
+var root, all, current, alumni;
 function build_tree() {
 	tr = new tree('tree');
 	tr.addColumn(new TreeColumn(""));
-	var all = new AllStudentsNode(root = new RootNode(tr));
-	var current = new CurrentStudentsNode(all);
-	var alumni = new AlumniNode(all);
+	all = new AllStudentsNode(root = new RootNode(tr));
+	current = new CurrentStudentsNode(all);
+	alumni = new AlumniNode(all);
 	for (var batch_i = 0; batch_i < batches.length; ++batch_i) {
 		var batch = batches[batch_i];
-		var batch_node = new BatchNode(current, alumni, batch);
-		for (var period_i = 0; period_i < batch.periods.length; ++period_i) {
-			var period = batch.periods[period_i];
-			var period_node = new AcademicPeriodNode(batch_node,period);
-			for (var spe_i = 0; spe_i < period.available_specializations.length; ++spe_i) {
-				var spe_id = period.available_specializations[spe_i];
-				var spe_node = new SpecializationNode(period_node, spe_id);
-				for (var cl_i = 0; cl_i < period.classes.length; ++cl_i) {
-					var cl = period.classes[cl_i];
-					if (cl.spe_id != spe_id) continue;
-					new ClassNode(spe_node, cl);
-				}
-			}
+		tree_build_batch(batch);
+	}
+}
+function tree_build_batch(batch) {
+	var batch_node = new BatchNode(current, alumni, batch);
+	for (var period_i = 0; period_i < batch.periods.length; ++period_i) {
+		var period = batch.periods[period_i];
+		var period_node = new AcademicPeriodNode(batch_node,period);
+		for (var spe_i = 0; spe_i < period.available_specializations.length; ++spe_i) {
+			var spe_id = period.available_specializations[spe_i];
+			var spe_node = new SpecializationNode(period_node, spe_id);
 			for (var cl_i = 0; cl_i < period.classes.length; ++cl_i) {
 				var cl = period.classes[cl_i];
-				if (cl.spe_id) continue;
-				new ClassNode(period_node, cl);
+				if (cl.spe_id != spe_id) continue;
+				new ClassNode(spe_node, cl);
 			}
+		}
+		for (var cl_i = 0; cl_i < period.classes.length; ++cl_i) {
+			var cl = period.classes[cl_i];
+			if (cl.spe_id) continue;
+			new ClassNode(period_node, cl);
 		}
 	}
 }
@@ -648,8 +659,10 @@ var menu_items = [
 function selectPage(id) {
 	var item = menu_items[0];
 	for (var i = 0; i < menu_items.length; ++i)
-		if (menu_items[i].id == id) { item = menu_items[i]; break; }
+		if (menu_items[i].id == id) item = menu_items[i];
+		else menu_items[i].button.className = "button";
 	document.getElementById('students_page').src = item.page+"?"+item.params;
+	item.button.className = "button selected";
 }
 function updateMenu() {
 	var selected_node = tr.getSelectedItem();
@@ -666,6 +679,15 @@ function setMenuParams(id, params) {
 		break;
 	}
 }
+document.getElementById('students_page').onload = function() {
+	var f = document.getElementById('students_page');
+	f = getIFrameWindow(f);
+	f = new URL(f.location.href);
+	for (var i = 0; i < menu_items.length; ++i) {
+		if (f.path == menu_items[i].page) menu_items[i].button.className = "button selected";
+		else menu_items[i].button.className = "button";
+	}
+};
 
 //Initilization of the page and menu
 build_tree();

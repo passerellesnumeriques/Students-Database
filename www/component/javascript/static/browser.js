@@ -189,9 +189,10 @@ HTTP_Status_ConnectionLost = browser.IE > 0 ? 12029 : 0;
  * @param {Number} opacity from 0 to 1
  */
 function setOpacity(element, opacity) {
-	element.style.opacity = opacity;
-	element.style.MozOpacity = opacity;
-	element.style.KhtmlOpacity = opacity;
+	var o = new Number(opacity).toFixed(2);
+	element.style.opacity = o;
+	element.style.MozOpacity = o;
+	element.style.KhtmlOpacity = o;
 	opacity = Math.round(opacity*100);
 	element.style.filter = "alpha(opacity="+opacity+");";
 	element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";	

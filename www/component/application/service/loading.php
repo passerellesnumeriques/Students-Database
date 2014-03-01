@@ -18,7 +18,8 @@ $mandatory = array(
 		"/static/javascript/ajax.js",
 		"/static/data_model/databaselock.js",
 		"/static/data_model/datamodel.js",
-		"/static/application/config.js.php"
+		"/static/application/config.js.php",
+		"/static/javascript/layout.js"
 );
 $optional = array();
 $optional_delayed = array();

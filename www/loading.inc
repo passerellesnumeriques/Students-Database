@@ -3,7 +3,7 @@
 <head>
 	<title>PN Students Database</title>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
-	<style type='text/css'>body,html,table{width:100%;height:100%;margin:0px;padding:0px;font-family:Arial,Tahoma,Verdana;font-size:10pt;}</style>
+	<style type='text/css'>body,html{width:100%;height:100%;} body,html,table{margin:0px;padding:0px;font-family:Arial,Tahoma,Verdana;font-size:10pt;}</style>
 </head>
 <body>
 <table id='__loading_table' style='width:100%;height:100%;margin:0px;padding:0px;z-index:100;background-color:white;position:fixed;top:0px;left:0px;'>

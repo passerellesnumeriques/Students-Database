@@ -12,6 +12,7 @@
 	height: 30px;
 	border-top-left-radius: 5px;
 	border-top-right-radius: 5px;
+	white-space: nowrap;
 }
 .popup_window_title>td:first-child {
 	border-top-left-radius: 5px;

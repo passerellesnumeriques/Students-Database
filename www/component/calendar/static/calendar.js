@@ -257,8 +257,14 @@ if (!window.top.CalendarsProviders) {
 			for (var i = 0; i < this._providers.length; ++i)
 				if (this._providers[i].id == id) return this._providers[i];
 			return null;
+		},
+		_refresh: function() {
+			for (var i = 0; i < this._providers.length; ++i)
+				for (var j = 0; j < this._providers[i].calendars.length; ++j)
+					this._providers[i].calendars[j].refresh();
 		}
 	};
+	setTimeout(function() { window.top.CalendarsProviders._refresh(); }, 5*60*1000);
 }
 
 /**
@@ -329,13 +335,6 @@ function Calendar(provider, name, color, show, icon) {
 	this.saveColor = function(color) {}; // to be overriden if supported
 	/** {Function} function to rename the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.rename = null; // must be overriden if this is supported
-	if (name) { // check we are really on an instance, not the prototype
-		var t=this;
-		var ref = function(){
-			t.refresh(function(){setTimeout(ref,5*60*1000);});
-		};
-		setTimeout(ref,5*60*1000);
-	}
 }
 
 /**

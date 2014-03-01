@@ -338,6 +338,12 @@ function getComputedStyleSizes(e) {
 		};
 	}
 	var ss = getComputedStyle(e);
+	if (ss == null)
+		return {
+			borderLeftWidth: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomWidth: 0,
+			marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: 0,
+			paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0
+		};
 	var s = {};
 	if (ss.width.indexOf('%') > 0 || ss.width == "auto") s.width = e.scrollWidth+'px'; else s.width = ss.width;
 	if (ss.height.indexOf('%') > 0 || ss.height == "auto") s.height = e.scrollHeight+'px'; else s.height = ss.height;
@@ -371,4 +377,28 @@ function _stylePadding(s) {
 	if (s.length == 0) return "0px";
 	return s;
 };
-
+if (!window.top.browser_scroll_bar_size) {
+	window.top.browser_scroll_bar_size = 20;
+	var frame = window.top.document.createElement("IFRAME");
+	frame.style.border = "0px";
+	frame.style.margin = "0px";
+	frame.style.padding = "0px";
+	frame.style.position = "absolute";
+	frame.style.visibility = "hidden";
+	frame.style.top = "-10000px";
+	frame.style.width = "100px";
+	frame.style.height = "100px";
+	window.top.document.body.appendChild(frame);
+	var doc = getIFrameWindow(frame).document;
+	var div = doc.createElement("DIV");
+	doc.body.style.border = div.style.border = "0px"; 
+	doc.body.style.margin = div.style.margin = "0px"; 
+	doc.body.style.padding = div.style.padding = "0px"; 
+	doc.body.style.width = div.style.width = "100%"; 
+	div.style.height = "300px";
+	doc.body.appendChild(div);
+	window.top.setTimeout(function(){
+		window.top.browser_scroll_bar_size = frame.offsetWidth - div.offsetWidth;
+		window.top.document.body.removeChild(frame);
+	},1);
+}

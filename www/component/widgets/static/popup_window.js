@@ -46,10 +46,28 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param {string} url url to load in the frame
 	 */
 	t.setContentFrame = function(url, onload) {
-		t.content = document.createElement("IFRAME");
-		t.content.style.border = "0px";
-		t.content.src = url;
-		t.content.onload = function() {
+		if (!t.content_container)
+			t.content_container = document.createElement("DIV");
+		else
+			while (t.content_container.childNodes.length > 0) t.content_container.removeChild(t.content_container.childNodes[0]);
+		t.content = document.createElement("DIV");
+		t.content.style.textAlign = "center";
+		t.content.style.padding = "10px";
+		t.content.innerHTML = "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading...";
+		t.content_container.appendChild(t.content);
+		var frame = document.createElement("IFRAME");
+		frame.style.border = "0px";
+		frame.src = url;
+		frame.style.width = "0px";
+		frame.style.height = "0px";
+		frame.style.visibility = "hidden";
+		frame.style.position = "absolute";
+		t.content_container.appendChild(frame);
+		frame.onload = function() {
+			t.content_container.removeChild(t.content);
+			t.content = frame;
+			frame.style.visibility = "visible";
+			frame.style.position = "static";
 			//t.table.style.width = "80%";
 			t.content.style.width = "100%";
 			t.content.style.height = "100%";
@@ -68,12 +86,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			for (var i = 0; i < b.childNodes.length; ++i) getIFrameWindow(t.content).layout.addHandler(b.childNodes[i], update_size);
 			if (onload) onload(t.content);
 		};
-		if (t.content_container) {
-			while (t.content_container.childNodes.length > 0) t.content_container.removeChild(t.content_container.childNodes[0]);
-			t.content_container.appendChild(t.content);
-			t.resize();
-		}
-		return t.content;
+		t.resize();
+		return frame;
 	};
 	
 	/** Add a button at the bottom of the popup.
@@ -284,7 +298,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		var tr = doc.createElement("TR"); t.table.appendChild(tr);
 		var td = doc.createElement("TD"); tr.appendChild(td);
 		td.colSpan = 2;
-		t.content_container = doc.createElement("DIV");
+		if (!t.content_container)
+			t.content_container = doc.createElement("DIV");
 		t.content_container.style.width = "100%";
 		t.content_container.style.height = "100%";
 		td.appendChild(t.content_container);
@@ -306,6 +321,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content.style.position = 'static';
 			t.content.style.visibility = 'visible';
 		}
+		win.layout.addHandler(t.table, t.resize);
 		return win;
 	};
 	
@@ -382,12 +398,12 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (x > win.getWindowWidth()-20) {
 				x = win.getWindowWidth()-20;
 				// anticipate scroll bar
-				y += 20;
+				y += window.top.browser_scroll_bar_size;
 			}
 			if (y > win.getWindowHeight()-20-h) {
 				y = win.getWindowHeight()-20-h;
 				// anticipate scroll bar
-				if (x < win.getWindowWidth()-20) x += 20;
+				if (x < win.getWindowWidth()-20) x += window.top.browser_scroll_bar_size;
 				if (x > win.getWindowWidth()-20) x = win.getWindowWidth()-20;
 			}
 			getIFrameDocument(t.content).body.style.overflow = "hidden";
@@ -401,27 +417,33 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content_container.style.height = "";
 			t.content_container.style.width = "";
 			t.content_container.style.overflow = "";
-			y = win.getWindowHeight()/2 - t.table.scrollHeight/2;
+			var h = 0;
+			if (t.header) h += win.getHeight(t.header);
+			if (t.buttons_tr) h += win.getHeight(t.buttons_tr);
+			var content_h = win.getHeight(t.content_container);
+			y = win.getWindowHeight()/2 - (h+content_h)/2;
 			if (y < 5) {
 				y = 5;
 				t.content_container.style.overflowX = "auto";
-				var h = 0;
-				if (t.header) h += getHeight(t.header);
-				if (t.buttons_tr) h += getHeight(t.buttons_tr);
 				t.content_container.style.height = (win.getWindowHeight()-20-h)+"px";
 				if (t.content_container.offsetWidth > t.content_container.clientWidth) {
 					t.content_container.style.width = (t.content_container.offsetWidth+(t.content_container.offsetWidth-t.content_container.clientWidth))+"px"; 
 				}
 			}
-			x = win.getWindowWidth()/2 - t.table.scrollWidth/2;
+			var content_w = win.getWidth(t.content_container);
+			var header_w = win.getWidth(t.header);
+			if (header_w > content_w) content_w = header_w;
+			x = win.getWindowWidth()/2 - content_w/2;
 			if (x < 5) {
 				x = 5;
 				t.content_container.style.overflow = "auto";
 				t.content_container.style.width = (win.getWindowWidth()-20)+"px";
+				t.table.style.width = (win.getWindowWidth()-20)+"px";
 			}
+			t.content_container.style.position = "static";
 		}
-		t.table.style.top = y+"px";
-		t.table.style.left = x+"px";
+		t.table.style.top = Math.floor(y)+"px";
+		t.table.style.left = Math.floor(x)+"px";
 		t.in_resize = false;
 	};
 	
@@ -445,8 +467,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.freezer.style.backgroundColor = "rgba(128,128,128,0.5)";
 		if (freeze_content)
 			set_lock_screen_content(t.freezer, freeze_content);
-		t.content_container.style.position = "relative";
-		t.content_container.appendChild(t.freezer);
+		t.content_container.parentNode.style.position = "relative";
+		t.content_container.parentNode.appendChild(t.freezer);
 		t.freeze_button_status = [];
 		for (var i = 0; i < t.buttons.length; ++i) {
 			t.freeze_button_status[i] = t.buttons[i].disabled;
@@ -460,7 +482,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	t.unfreeze = function() {
 		if (!t.freezer) return;
-		t.content_container.removeChild(t.freezer);
+		t.content_container.parentNode.removeChild(t.freezer);
 		t.freezer = null;
 		for (var i = 0; i < t.buttons.length; ++i)
 			t.buttons[i].disabled = t.freeze_button_status[i];
@@ -480,6 +502,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			var parent_popup = get_popup_window_from_frame(window);
 			if(parent_popup) parent_popup.unfreeze();
 		}
+		getWindowFromDocument(t.table.ownerDocument).layout.removeHandler(t.table, t.resize);
 		var table = t.table;
 		if (t.onclose) t.onclose();
 		t.table = null;

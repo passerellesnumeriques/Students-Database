@@ -614,6 +614,7 @@ function _2digits(n) {
 	return s;
 };
 function dateToSQL(d) {
+	if (d == null) return null;
 	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
 };
 function _2Hex(val) {

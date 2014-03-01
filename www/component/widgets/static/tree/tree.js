@@ -16,26 +16,23 @@ function TreeItem(cells, expanded, onselect) {
 	this.children = [];
 	this.expanded = expanded;
 	this.addItem = function(item) {
-		item.parent_item = this;
+		item.parent = this;
+		if (this.tree) this.tree._create_item(item);
 		this.children.push(item);
-		if (this.tree) {
-			this.tree._create_item(this, item);
-			this.tree._refresh_heads();
-		}
+		if (this.tree) this.tree._refresh_heads();
 	};
 	this.insertItem = function(item, index) {
 		if (index >= this.children.length) {
 			this.addItem(item);
 			return;
 		}
+		item.parent = this;
+		if (this.tree) this.tree._create_item(item, index);
 		this.children.splice(index,0,item);
-		if (this.tree) {
-			this.tree._create_item(this, item, index);
-			this.tree._refresh_heads();
-		}
+		if (this.tree) this.tree._refresh_heads();
 	};
 	this.removeItem = function(item) {
-		item.parent_item = null;
+		item.parent = null;
 		this.children.remove(item);
 		if (this.tree) {
 			this.tree._removeItem(item);
@@ -147,8 +144,9 @@ function tree(container) {
 		col.th.innerHTML = col.title;
 	};
 	this.addItem = function(item) {
+		item.parent = null;
+		this._create_item(item);
 		this.items.push(item);
-		this._create_item(null, item);
 		this._refresh_heads();
 	};
 	this.insertItem = function(item, index) {
@@ -156,8 +154,9 @@ function tree(container) {
 			this.addItem(item);
 			return;
 		}
+		item.parent = null;
+		this._create_item(item, index);
 		this.items.splice(index,0,item);
-		this._create_item(null, item, index);
 		this._refresh_heads();
 	};
 	this.removeItem = function(item) {
@@ -185,15 +184,14 @@ function tree(container) {
 		item.cells[0].element.onclick(createEvent("click",{}));
 	};
 	this.getSelectedItem = function() { return this._selected_item; };
-	this._create_item = function(parent, item, index) {
+	this._create_item = function(item, index) {
 		item.tree = this;
-		item.parent = parent;
 		item.tr = document.createElement("TR");
 		item.tr.item = item;
 		var visible;
-		if (!parent) visible = true;
+		if (!item.parent) visible = true;
 		else {
-			var p = parent;
+			var p = item.parent;
 			visible = true;
 			while (p) {
 				if (!p.expanded) { visible = false; break; }
@@ -222,24 +220,28 @@ function tree(container) {
 			td.style.padding = "0px";
 			td.appendChild(item.cells[i].element);
 		}
-		if (!parent) {
+		if (!item.parent) {
 			if (typeof index == 'undefined')
 				this.tbody.appendChild(item.tr);
 			else
 				this.tbody.insertBefore(item.tr, this.tbody.childNodes[index+1]); // +1 to skip the tr_columns
 		} else {
-			if (parent.children.length == 1) {
-				if (typeof index == 'undefined')
-					this.tbody.insertBefore(item.tr, parent.tr.nextSibling);
-				else
-					this.tbody.insertBefore(item.tr, parent.tr.childNodes[index]);
+			if (item.parent.children.length == 0)
+				this.tbody.insertBefore(item.tr, item.parent.tr.nextSibling);
+			else if (item.parent.children.length == 1) {
+				if (typeof index == 'undefined') {
+					var next = item.parent.tr.nextSibling;
+					while (next && next.item.get_level() >= item.get_level()) next = next.nextSibling;
+					this.tbody.insertBefore(item.tr, next);
+				} else
+					this.tbody.insertBefore(item.tr, item.parent.children[index].tr);
 			} else {
 				if (typeof index == 'undefined') {
-					var next = parent.tr.nextSibling;
+					var next = item.parent.tr.nextSibling;
 					while (next && next.item.get_level() >= item.get_level()) next = next.nextSibling;
 					this.tbody.insertBefore(item.tr, next);
 				} else {
-					this.tbody.insertBefore(item.tr, parent.tr.childNodes[index]);
+					this.tbody.insertBefore(item.tr, item.parent.children[index].tr);
 				}
 			}
 		}
@@ -254,7 +256,7 @@ function tree(container) {
 			};
 		}
 		for (var i = 0; i < item.children.length; ++i)
-			this._create_item(item, item.children[i]);
+			this._create_item(item.children[i]);
 	};
 	this._refresh_heads_activated = false;
 	this._refresh_heads = function() {

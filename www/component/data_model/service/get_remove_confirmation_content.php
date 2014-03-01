@@ -32,8 +32,9 @@ class service_get_remove_confirmation_content extends Service {
 				$t = DataModel::get()->getTableFromSQLName($table_sql_name);
 				if (isset($info["keys"])) {
 					$keys = $info["keys"];
-					foreach ($keys as $key)
-						$str_remove .= "<li>".$t->getRowDescriptionByKey($key)."</li>";
+					$rows = SQLQuery::getRows($t, $keys);
+					foreach ($rows as $row)
+						$str_remove .= "<li>".$t->getRowDescription($row)."</li>";
 				} else {
 					$wheres = $info["where"];
 					foreach ($wheres as $where) {

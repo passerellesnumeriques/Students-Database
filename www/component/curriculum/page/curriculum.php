@@ -319,11 +319,11 @@ class page_curriculum extends Page {
 					s.subjects = period.subjects;
 					period.subjects = null;
 					for (var i = 0; i < s.subjects.length; ++i)
-						s.subjects[i].item.parent_item.removeItem(s.subjects[i].item);
+						s.subjects[i].item.parent.removeItem(s.subjects[i].item);
 				}
 				if (period.categories_items){
 					for (var i = 0; i < period.categories_items.length; ++i)
-						period.categories_items[i].item.parent_item.removeItem(period.categories_items[i].item);
+						period.categories_items[i].item.parent.removeItem(period.categories_items[i].item);
 					period.categories_items = null;
 				}
 				period.specializations.push(s);
@@ -352,7 +352,7 @@ class page_curriculum extends Page {
 		window.parent.academic_period_removed.add_listener(function(id){
 			for (var i = 0; i < periods.length; ++i) {
 				if (periods[i].id == id) {
-					periods[i].item.parent_item.removeItem(periods[i].item);
+					periods[i].item.parent.removeItem(periods[i].item);
 					periods.splice(i, 1);
 					i--;
 					continue;

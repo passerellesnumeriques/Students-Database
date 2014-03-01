@@ -82,7 +82,7 @@ animation = {
 	 * @param duration in milliseconds
 	 * @param end_handler called at the end of the animation
 	 * @param start starting opacity (from 0 to 100)
-	 * @param end ending opacity (from 0 to 100
+	 * @param end ending opacity (from 0 to 100)
 	 * @returns {Animation}
 	 */
 	fadeIn: function(element, duration, end_handler, start, end) {
@@ -93,8 +93,8 @@ animation = {
 			if (value == 0)
 				element.style.visibility = 'hidden';
 			else {
-				element.style.visibility = 'visible';
 				setOpacity(element,value/100);
+				element.style.visibility = 'visible';
 				if (value == end && end_handler != null) { end_handler(element); end_handler = null; }
 			}
 		});
@@ -104,7 +104,7 @@ animation = {
 	 * @param duration in milliseconds
 	 * @param end_handler called at the end of the animation
 	 * @param start starting opacity (from 0 to 100)
-	 * @param end ending opacity (from 0 to 100
+	 * @param end ending opacity (from 0 to 100)
 	 * @returns {Animation}
 	 */
 	fadeOut: function(element, duration, end_handler, start, end) {
@@ -116,8 +116,8 @@ animation = {
 				element.style.visibility = 'hidden';
 				if (end_handler != null) { end_handler(element); end_handler = null; }
 			} else {
-				element.style.visibility = 'visible';
 				setOpacity(element,value/100);
+				element.style.visibility = 'visible';
 			}
 		});
 	},

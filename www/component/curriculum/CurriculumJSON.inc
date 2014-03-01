@@ -19,6 +19,21 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	public static function BatchJSON($id) {
+		$batch = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$id)->executeSingleRow();
+		$periods = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","batch",$id)->execute();
+		if (count($periods) > 0) {
+			$periods_ids = array();
+			foreach ($periods as $p) array_push($periods_ids, $p["id"]);
+			$periods_spe = SQLQuery::create()->select("AcademicPeriodSpecialization")->whereIn("AcademicPeriodSpecialization","period",$periods_ids)->execute();
+			$classes = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass", "period", $periods_ids)->execute();
+		} else {
+			$periods_spe = array();
+			$classes = array();
+		}
+		return self::BatchStructure($batch, $periods, $periods_spe, $classes);
+	}
+	
 	public static function BatchesJSON() {
 		$batches = SQLQuery::create()->select("StudentBatch")->execute();
 		$periods = SQLQuery::create()->select("AcademicPeriod")->execute();
@@ -28,47 +43,52 @@ class CurriculumJSON {
 		$first_batch = true;
 		foreach ($batches as $batch) {
 			if ($first_batch) $first_batch = false; else $s .= ",";
+			$s .= self::BatchStructure($batch, $periods, $periods_spe, $classes);
+		}
+		$s .= "]";
+		return $s;
+	}
+	
+	private static function BatchStructure($batch, $periods, $periods_spe, $classes) {
+		$s = "{";
+		$s .= "id:".$batch["id"];
+		$s .= ",name:".json_encode($batch["name"]);
+		$s .= ",start_date:".json_encode($batch["start_date"]);
+		$s .= ",end_date:".json_encode($batch["end_date"]);
+		$s .= ",periods:[";
+		$first_period = true;
+		foreach ($periods as $period) {
+			if ($period["batch"] <> $batch["id"]) continue;
+			if ($first_period) $first_period = false; else $s .= ",";
 			$s .= "{";
-			$s .= "id:".$batch["id"];
-			$s .= ",name:".json_encode($batch["name"]);
-			$s .= ",start_date:".json_encode($batch["start_date"]);
-			$s .= ",end_date:".json_encode($batch["end_date"]);
-			$s .= ",periods:[";
-			$first_period = true;
-			foreach ($periods as $period) {
-				if ($period["batch"] <> $batch["id"]) continue;
-				if ($first_period) $first_period = false; else $s .= ",";
+			$s .= "id:".$period["id"];
+			$s .= ",name:".json_encode($period["name"]);
+			$s .= ",start_date:".json_encode($period["start_date"]);
+			$s .= ",end_date:".json_encode($period["end_date"]);
+			$s .= ",available_specializations:[";
+			$first_spe = true;
+			foreach ($periods_spe as $ps) {
+				if ($ps["period"] <> $period["id"]) continue;
+				if ($first_spe) $first_spe = false; else $s .= ",";
+				$s .= $ps["specialization"];
+			}
+			$s .= "]";
+			$s .= ",classes:[";
+			$first_class = true;
+			foreach ($classes as $c) {
+				if ($c["period"] <> $period["id"]) continue;
+				if ($first_class) $first_class = false; else $s .= ",";
 				$s .= "{";
-				$s .= "id:".$period["id"];
-				$s .= ",name:".json_encode($period["name"]);
-				$s .= ",start_date:".json_encode($period["start_date"]);
-				$s .= ",end_date:".json_encode($period["end_date"]);
-				$s .= ",available_specializations:[";
-				$first_spe = true;
-				foreach ($periods_spe as $ps) {
-					if ($ps["period"] <> $period["id"]) continue;
-					if ($first_spe) $first_spe = false; else $s .= ",";
-					$s .= $ps["specialization"];
-				}
-				$s .= "]";
-				$s .= ",classes:[";
-				$first_class = true;
-				foreach ($classes as $c) {
-					if ($c["period"] <> $period["id"]) continue;
-					if ($first_class) $first_class = false; else $s .= ",";
-					$s .= "{";
-					$s .= "id:".$c["id"];
-					$s .= ",name:".json_encode($c["name"]);
-					$s .= ",spe_id:".json_encode($c["specialization"]);
-					$s .= "}";
-				}
-				$s .= "]";
+				$s .= "id:".$c["id"];
+				$s .= ",name:".json_encode($c["name"]);
+				$s .= ",spe_id:".json_encode($c["specialization"]);
 				$s .= "}";
 			}
 			$s .= "]";
 			$s .= "}";
 		}
 		$s .= "]";
+		$s .= "}";
 		return $s;
 	}
 	
