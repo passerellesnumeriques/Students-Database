@@ -101,7 +101,7 @@ class CurriculumJSON {
 	}
 	
 	public static function SubjectCategoriesJSON($categories) {
-		$s .= "[";
+		$s = "[";
 		$first = true;
 		foreach ($categories as $category) {
 			if ($first) $first = false; else $s .= ",";
@@ -126,7 +126,7 @@ class CurriculumJSON {
 	}
 	
 	public static function SubjectsJSON($subjects) {
-		$s .= "[";
+		$s = "[";
 		$first = true;
 		foreach ($subjects as $subject) {
 			if ($first) $first = false; else $s .= ",";

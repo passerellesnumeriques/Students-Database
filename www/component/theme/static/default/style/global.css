@@ -264,8 +264,17 @@ a.black_link:hover {
 	background-color: #D8D8FF;
 }
 .help_header {
-    background-color: #D8D8FF;
+	padding: 2px;
+	background-color: #D8D8FF;
 	border-bottom: 1px solid #8080FF;
+}
+.info {
+	background-color: #FFFFD8;
+}
+.info_header {
+	padding: 2px;
+    background-color: #FFFFD8;
+	border-bottom: 1px solid #A0A060;
 }
 .warning {
 	background-color: #FFFFD8;

@@ -22,12 +22,12 @@ class service_save_batch extends Service {
 			"end_date"=>$input["end_date"]
 		);
 		if ($batch_id <> null)
-			SQLQuery::create()->updateByKey("StudentBatch", $batch_id, $fields, $input["lock"]);
+			SQLQuery::create()->bypassSecurity()->updateByKey("StudentBatch", $batch_id, $fields, $input["lock"]);
 		else
-			$batch_id = SQLQuery::create()->insert("StudentBatch", $fields, $input["lock"]);
+			$batch_id = SQLQuery::create()->bypassSecurity()->insert("StudentBatch", $fields, $input["lock"]);
 		// periods
 		if (!$new_batch)
-			$previous_periods = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","batch", $batch_id)->execute();
+			$previous_periods = SQLQuery::create()->bypassSecurity()->select("AcademicPeriod")->whereValue("AcademicPeriod","batch", $batch_id)->execute();
 		$new_periods_mapping = array();
 		$periods_ids = array();
 		foreach ($input["periods"] as $period) {
@@ -45,10 +45,10 @@ class service_save_batch extends Service {
 				"end_date"=>$period["end_date"]
 			);
 			if ($period_id > 0) {
-				SQLQuery::create()->updateByKey("AcademicPeriod", $period_id, $fields);
+				SQLQuery::create()->bypassSecurity()->updateByKey("AcademicPeriod", $period_id, $fields);
 				array_push($periods_ids, $period_id);
 			} else {
-				$id = SQLQuery::create()->insert("AcademicPeriod", $fields);
+				$id = SQLQuery::create()->bypassSecurity()->insert("AcademicPeriod", $fields);
 				$new_periods_mapping[$period_id] = $id;
 			}
 		}
@@ -56,23 +56,24 @@ class service_save_batch extends Service {
 			$ids = array();
 			foreach ($previous_periods as $p) array_push($ids, $p["id"]);
 			if (count($ids) > 0)
-				SQLQuery::create()->removeKeys("AcademicPeriod",$ids);
+				SQLQuery::create()->bypassSecurity()->removeKeys("AcademicPeriod",$ids);
 		}
 		// periods' specializations
-		if (!$new_batch) {
-			$rows = SQLQuery::create()->select("AcademicPeriodSpecialization")->whereIn("AcademicPeriodSpecialization","period",$periods_ids)->execute();
+		if (!$new_batch && count($periods_ids) > 0) {
+			$rows = SQLQuery::create()->bypassSecurity()->select("AcademicPeriodSpecialization")->whereIn("AcademicPeriodSpecialization","period",$periods_ids)->execute();
 			if (count($rows) > 0)
-				SQLQuery::create()->removeRows("AcademicPeriodSpecialization", $rows);
+				SQLQuery::create()->bypassSecurity()->removeRows("AcademicPeriodSpecialization", $rows);
 		}
 		$list = array();
 		foreach ($input["periods_specializations"] as $ps) {
+			if ($ps["period_id"] <= 0) $ps["period_id"] = $new_periods_mapping[$ps["period_id"]];
 			array_push($list, array(
 				"period"=>$ps["period_id"],
 				"specialization"=>$ps["specialization_id"]
 			));
 		}
 		if (count($list) > 0)
-			SQLQuery::create()->insertMultiple("AcademicPeriodSpecialization", $list);
+			SQLQuery::create()->bypassSecurity()->insertMultiple("AcademicPeriodSpecialization", $list);
 		
 		if (PNApplication::has_errors())
 			SQLQuery::rollbackTransaction();

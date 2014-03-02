@@ -103,7 +103,7 @@ class DataBaseLock {
 				// TODO can we accept that we lock a table or column if we don't have full access ?
 				//if (!($t->canModifyAny() || $t->canRemoveAny()))
 				//	throw new Exception("Access denied: you cannot lock table '".$t->getName()."' because you have only partial access to it.");
-			} else if (!($t->canModifyAny() || $t->canRemoveAny())) {
+			} else if (!($t->canModifyEverything() || $t->canRemoveAny())) {
 				$ok = false;
 				if ($t->mayModify()) {
 					$q = SQLQuery::create();
@@ -185,7 +185,7 @@ class DataBaseLock {
 			$t = DataModel::get()->getTableFromSQLName($table);
 			if (!($t->mayInsert() || $t->mayModify() || $t->mayRemove()))
 				throw new Exception("Access denied: you cannot lock table '".$t->getName()."'.");
-			if (!($t->canModifyAny() || $t->canRemoveAny())) {
+			if (!($t->canModifyEverything() || $t->canRemoveAny())) {
 				$rows_ok = array();
 				if ($t->mayModify()) {
 					$q = SQLQuery::create();

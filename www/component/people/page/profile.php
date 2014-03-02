@@ -63,7 +63,12 @@ class page_profile extends Page {
 <div id='profile_page' icon='/static/people/profile_32.png' title='' page='<?php echo $page;?>'>
 <?php 
 foreach ($all_pages as $cp) {
-	echo "<span class='page_menu_item'><a href=\"".$cp[2]."\" target='profile_page_content'><img src='".$cp[0]."'/>".$cp[1]."</a></span>";
+	echo "<span class='page_menu_item'";
+	if (isset($cp[4]) && $cp[4] <> null) {
+		echo " onmouseover='if (this.tooltip) return; this.tooltip = document.createElement(\"DIV\"); this.tooltip.className = \"tooltip\"; this.tooltip.innerHTML = ".json_encode($cp[4],JSON_HEX_APOS)."; this.tooltip.style.position=\"absolute\"; this.tooltip.style.top=(absoluteTop(this)+this.offsetHeight+5)+\"px\"; this.tooltip.style.left=(absoluteLeft(this))+\"px\"; document.body.appendChild(this.tooltip);'";
+		echo " onmouseout=\"if (!this.tooltip) return; document.body.removeChild(this.tooltip); this.tooltip = null;\"";
+	}
+	echo "><a href=\"".$cp[2]."\" target='profile_page_content'><img src='".$cp[0]."'/>".$cp[1]."</a></span>";
 }
 ?>
 </div>

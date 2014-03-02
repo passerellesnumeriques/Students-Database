@@ -22,7 +22,7 @@ class page_dashboard extends Page {
 
 <div style='position:absolute;top:0px;left:50%;width:50%;'>
 	<div id='calendars' icon='/static/calendar/event.png' title='Your Calendars' collapsable='true' style="margin:10px 10px 20px 10px;">
-		<div id='calendars_container'><img src='<?php echo theme::$icons_16["loading"];?>'/></div>
+		<div id='calendars_container' style='width:100%'><img src='<?php echo theme::$icons_16["loading"];?>'/></div>
 	</div>
 </div>
 <script type='text/javascript'>

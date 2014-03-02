@@ -58,12 +58,31 @@ function assign_peoples(container) {
 			}
 		};
 	};
-	this.addPeople = function(people, assignment) {
-		var p = {people:people,original:assignment,current:assignment};
+	this._non_movable_reason = null;
+	this.setNonMovableReason = function(reason) { this._non_movable_reason = reason; };
+	this._has_non_movable_people = false;
+	this.addPeople = function(people, assignment, can_be_moved) {
+		var p = {people:people,original:assignment,current:assignment,can_be_moved:can_be_moved};
 		p.div = document.createElement("DIV");
 		p.div.style.whiteSpace = 'nowrap';
 		p.cb = document.createElement("INPUT");
 		p.cb.type = 'checkbox';
+		if (!can_be_moved) {
+			p.cb.disabled = 'disabled';
+			p.div.style.color = "#808080";
+			if (!t._has_non_movable_people && t._non_movable_reason) {
+				t._has_non_movable_people = true;
+				var info_div = document.createElement("DIV");
+				info_div.setAttribute("layout", "fixed");
+				info_div.className = "info_header";
+				info_div.innerHTML = "<img src='"+theme.icons_16.info+"' style='vertical-align:bottom'/> "+t._non_movable_reason;
+				container.insertBefore(info_div, t.global_div);
+				t.global_div.setAttribute("layout", "fill");
+				require("vertical_layout.js", function() {
+					new vertical_layout(container);
+				});
+			}
+		}
 		p.div.appendChild(p.cb);
 		p.div.appendChild(document.createTextNode(" "+people.first_name+" "+people.last_name));
 		this._peoples.push(p);
@@ -79,6 +98,7 @@ function assign_peoples(container) {
 				nb++;
 				this._possibilities[i].section.nb_node.nodeValue = nb;
 			}
+		layout.invalidate(t.global_div);
 	};
 	
 	this.getPeoples = function() {
@@ -144,21 +164,29 @@ function assign_peoples(container) {
 	this._init = function() {
 		this.global_div = document.createElement("DIV");
 		this.global_div.style.height = "100%";
+		this.global_div.style.whiteSpace = "nowrap";
 		container.appendChild(this.global_div);
 		
 		this.non_assign_section = this._createSection("Non-assigned");
-		var table = document.createElement("TABLE");
-		table.style.height = "100%";
-		var tr = document.createElement("TR"); table.appendChild(tr);
-		this.non_assign_div = document.createElement("TD"); tr.appendChild(this.non_assign_div);
-		this.non_assign_div.style.overflowY = "auto";
-		this.assign_buttons = document.createElement("TD"); tr.appendChild(this.assign_buttons);
-		this.assign_buttons.style.verticalAlign = "middle";
+		var div_container = document.createElement("DIV"); this.non_assign_section.content.appendChild(div_container);
+		div_container.style.height = "100%";
+		div_container.style.display = "inline-block";
+		this.non_assign_div = document.createElement("DIV"); div_container.appendChild(this.non_assign_div);
+		this.non_assign_div.style.height = "100%";
+		this.non_assign_div.style.overflowY = "scroll";
+		this.non_assign_div.style.display = "inline-block";
+		var right_div = document.createElement("DIV"); div_container.appendChild(right_div);
+		right_div.style.height = "100%";
+		right_div.style.display = "inline-block";
+		right_div.style.borderLeft = "1px solid black";
+		this.assign_buttons = document.createElement("DIV"); right_div.appendChild(this.assign_buttons);
 		this.assign_buttons.style.textAlign = "right";
-		this.assign_buttons.style.borderLeft = "1px solid black";
-		this.non_assign_section.content.appendChild(table);
 		require("horizontal_layout.js",function() {
 			new horizontal_layout(t.global_div);
+			new horizontal_layout(div_container);
+		});
+		require("vertical_align.js",function() {
+			new vertical_align(right_div, "middle");
 		});
 	};
 	this._init();

@@ -262,7 +262,7 @@ function BatchNode(current, alumni, batch) {
 
 		var button = document.createElement("DIV");
 		button.className = "button_integrated";
-		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit Batch";
+		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit periods and specializations";
 		button.onclick = function() { edit_batch(batch); };
 		window.parent.addMenuControl(button);
 		
@@ -354,11 +354,11 @@ function AcademicPeriodNode(batch_node, period) {
 		?>
 		
 		var button = document.createElement("DIV");
-		button.className = "button";
-		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit Batch Periods and Specializations";
+		button.className = "button_integrated";
+		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit periods and specializations";
 		button.onclick = function() { edit_batch(batch_node.batch); };
 		window.parent.addMenuControl(button);
-		
+				
 		setMenuParams("list", "period="+period.id);
 		setMenuParams("pictures", "period="+period.id);
 		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['period"+period.id+"']}]")); 
@@ -378,9 +378,9 @@ function AcademicPeriodNode(batch_node, period) {
 	this.period = period;
 	<?php if ($can_edit) {?>
 	this.item.cells[0].addContextMenu(function(menu) {
-		menu.addIconItem(theme.icons_16.edit, "Edit Batch Information", function() { edit_batch(batch_node.batch); });
+		menu.addIconItem(theme.icons_16.edit, "Edit periods and specializations", function() { edit_batch(batch_node.batch); });
 		if (period.available_specializations.length == 0)
-			menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add,"right_bottom"), "New Class", function() { new_class(period,null); });
+			menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add,"right_bottom"), "New Class", function() { new_class(t,null); });
 	});
 	<?php } ?>
 }
@@ -444,6 +444,12 @@ function SpecializationNode(period_node, spe_id) {
 		
 		window.parent.resetMenu();
 
+		var button = document.createElement("DIV");
+		button.className = "button_integrated";
+		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit periods and specializations";
+		button.onclick = function() { edit_batch(period_node.parent.batch); };
+		window.parent.addMenuControl(button);
+		
 		setMenuParams("list", "period="+period_node.period.id+"&spe="+spe_id);
 		setMenuParams("pictures", "period="+period_node.period.id+"&spe="+spe_id);
 		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['period"+period_node.period.id+"']}]")); // TODO better 
@@ -458,7 +464,8 @@ function SpecializationNode(period_node, spe_id) {
 	this.spe = spe;
 	<?php if ($can_edit) {?>
 	this.item.cells[0].addContextMenu(function(menu) {
-		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add,"right_bottom"), "New Class", function() { new_class(period_node.period,spe); });
+		menu.addIconItem(theme.icons_16.edit, "Edit periods and specializations", function() { edit_batch(period_node.parent.batch); });
+		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add,"right_bottom"), "New Class", function() { new_class(period_node,spe); });
 	});
 	<?php } ?>
 }
@@ -550,7 +557,7 @@ function ClassNode(parent, cl) {
 		setMenuParams("discipline", "");
 		setMenuParams("health", "");
 		t._onselect();
-	},null,<?php if ($can_edit) {?>[{icon:theme.icons_10.remove,tooltip:"Remove Class",action:function() { remove_class(cl); }}]<?php } else { ?>null<?php } ?>);
+	},null,<?php if ($can_edit) {?>[{icon:theme.icons_10.remove,tooltip:"Remove Class",action:function() { remove_class(t); }}]<?php } else { ?>null<?php } ?>);
 	this.item.node = this;
 	this.parent.item.addItem(this.item);
 	this.cl = cl;

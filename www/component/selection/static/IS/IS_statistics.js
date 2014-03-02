@@ -224,7 +224,7 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 		return figures;
 	}
 	
-	require(["input_utils.js","section.js","field_integer.js"],function(){
+	require(["input_utils.js","section.js",["typed_field.js","field_integer.js"]],function(){
 		t._setSection();
 		t._init();
 	});

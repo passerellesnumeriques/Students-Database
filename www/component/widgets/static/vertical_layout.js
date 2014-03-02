@@ -12,7 +12,10 @@ function vertical_layout(container, keep_width) {
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
 	t.container.widget = this;
-	t.container.style.overflow = "hidden";
+	if (!keep_width)
+		t.container.style.overflow = "hidden";
+	else
+		t.container.style.overflowY = "hidden";
 	
 	t.removeLayout = function() {
 		t.container.widget = null;
@@ -37,7 +40,11 @@ function vertical_layout(container, keep_width) {
 				e.style.position = e.getAttribute("force_position");
 			else
 				e.style.position = 'static';
-		}		
+		}
+		if (keep_width) {
+			var h2 = t.container.clientHeight;
+			if (h2 < h) h = h2; // an horizontal scroll bar appears
+		}
 		// reset
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];
@@ -59,8 +66,10 @@ function vertical_layout(container, keep_width) {
 			else if (!isNaN(parseInt(layout)))
 				used += parseInt(layout);
 			else {
-				e.style.display = "block";
-				if (!keep_width) setWidth(e, w);
+				if (!keep_width) {
+					e.style.display = "block";
+					setWidth(e, w);
+				}
 				e.style.height = "";
 				used += getHeight(e);
 			}
@@ -71,8 +80,10 @@ function vertical_layout(container, keep_width) {
 			if (e.nodeType != 1) continue;
 			var layout;
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
-			e.style.display = "block";
-			if (!keep_width) setWidth(e, w);
+			if (!keep_width) {
+				e.style.display = "block";
+				setWidth(e, w);
+			}
 			if (layout == 'fill') {
 				var hh = Math.floor((h-used)/nb_to_fill--);
 				setHeight(e, hh);

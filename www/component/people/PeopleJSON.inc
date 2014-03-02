@@ -15,7 +15,7 @@ class PeopleJSON {
 		self::PeopleSQL($q);
 		$row = $q->executeSingleRow();
 		if($row <> null)
-			return People($q, $row);
+			return self::People($q, $row);
 		else 
 			return null;
 	}

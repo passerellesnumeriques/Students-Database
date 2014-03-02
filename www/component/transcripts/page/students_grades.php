@@ -4,6 +4,8 @@ class page_students_grades extends Page {
 	public function get_required_rights() { return array("consult_students_grades"); }
 	
 	public function execute() {
+		echo "This section is still under construction";
+		return;
 		$period_id = @$_GET["period"];
 		if ($period_id == null) {
 			$class_id = @$_GET["class"];
@@ -92,7 +94,7 @@ class page_students_grades extends Page {
 			array_push($students_ids, $row[$people_id_alias]);
 		
 		if (count($students_ids) == 0) {
-			echo "<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> There is no student for this period. Please <a href='/dynamic/training_education/page/list?period=".$period_id."'>add students</a> first.</div>";
+			echo "<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> There is no student for this period. Please <a href='/dynamic/students/page/list?period=".$period_id."'>add students</a> first.</div>";
 			$students_grades = array();
 		} else
 			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","people", $students_ids)->execute();

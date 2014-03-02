@@ -54,7 +54,10 @@ animation = {
 			if (now - anim.start_time >= anim.duration) {
 				this.animations.splice(i,1);
 				i--;
-				anim.handler(anim.to, anim.element);
+				try { anim.handler(anim.to, anim.element); }
+				catch (e) {
+					window.top.log_exception(e, "Animation handler");
+				}
 				continue;
 			}
 			var time = now-anim.start_time;
@@ -69,7 +72,10 @@ animation = {
 				var amount = anim.to-anim.from;
 				new_value = anim.from+(time*amount/anim.duration);
 			}
-			anim.handler(new_value, anim.element);
+			try { anim.handler(new_value, anim.element); }
+			catch (e) {
+				window.top.log_exception(e, "Animation handler");
+			}
 		}
 //		var now2 = new Date().getTime();
 //		var next = 50 - (now2-now);
@@ -90,12 +96,18 @@ animation = {
 		if (end == null) end = 100; else end = Math.floor(end);
 		return animation.create(element, start, end, duration, function(value, element) {
 			value = Math.floor(value);
-			if (value == 0)
-				element.style.visibility = 'hidden';
-			else {
-				setOpacity(element,value/100);
-				element.style.visibility = 'visible';
-				if (value == end && end_handler != null) { end_handler(element); end_handler = null; }
+			try {
+				if (value == 0)
+					element.style.visibility = 'hidden';
+				else {
+					setOpacity(element,value/100);
+					element.style.visibility = 'visible';
+				}
+			} catch (e) { window.top.log_exception(e); }
+			if (value == end && end_handler != null) { 
+				try { end_handler(element); }
+				catch (e) { window.top.log_exception(e); }
+				end_handler = null; 
 			}
 		});
 	},
@@ -112,12 +124,18 @@ animation = {
 		if (end == null) end = 0;
 		return animation.create(element, start, end, duration, function(value, element) {
 			value = Math.floor(value);
-			if (value == 0) {
-				element.style.visibility = 'hidden';
-				if (end_handler != null) { end_handler(element); end_handler = null; }
-			} else {
-				setOpacity(element,value/100);
-				element.style.visibility = 'visible';
+			try {
+				if (value == 0) {
+					element.style.visibility = 'hidden';
+				} else {
+					setOpacity(element,value/100);
+					element.style.visibility = 'visible';
+				}
+			} catch (e) { window.top.log_exception(e); }
+			if (value == 0 && end_handler != null) {
+				try { end_handler(element); }
+				catch (e) { window.top.log_exception(e); }
+				end_handler = null;
 			}
 		});
 	},

@@ -39,6 +39,9 @@ function TreeItem(cells, expanded, onselect) {
 			this.tree._refresh_heads();
 		}
 	};
+	this.remove = function() {
+		this.parent.removeItem(this);
+	};
 	this.get_level = function() {
 		var level = 0;
 		var p = this.parent;

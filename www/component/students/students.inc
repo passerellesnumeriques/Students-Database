@@ -16,7 +16,7 @@ class students extends Component {
 	public function assign_student_to_specialization($student_people_id, $specialization_id) {
 		if ($specialization_id <> null) {
 			// check this specialization is available for the batch of this student
-			$possible_specializations = SQLQuery::create()
+			$possible_specializations = SQLQuery::create()->noWarning()
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
 				->join("Student", "AcademicPeriod", array("batch"=>"batch"))
@@ -28,7 +28,7 @@ class students extends Component {
 				return false;
 			}
 			// check the student is not already assigned to a class with a different specialization
-			$different_classes = SQLQuery::create()
+			$different_classes = SQLQuery::create()->noWarning()
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
 				->join("Student", "StudentClass", array("people"=>"people"))
@@ -50,7 +50,7 @@ class students extends Component {
 				return false;
 			}
 			// check the student is not already assigned to a class with a specialization
-			$different_classes = SQLQuery::create()
+			$different_classes = SQLQuery::create()->noWarning()
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
 				->join("Student", "StudentClass", array("people"=>"people"))
@@ -78,7 +78,7 @@ class students extends Component {
 		if ($student == null) { PNApplication::error("Invalid student id"); return false; }
 		// check the class specialization is compatible to student specialization
 		if ($class_id <> null) {
-			if ($class["specialization"] <> $student["specialization"]) { PNApplication::error("Student's specialization does not match with class' specialization"); return false; }
+			if ($class["specialization"] <> null && $class["specialization"] <> $student["specialization"]) { PNApplication::error("Student's specialization does not match with class' specialization"); return false; }
 		}
 		// get the assignment of this student for this academic period
 		$q = SQLQuery::create()
@@ -95,6 +95,27 @@ class students extends Component {
 			SQLQuery::create()->insert("StudentClass", array("people"=>$student_people_id,"class"=>$class_id));
 		}
 		return true;
+	}
+	
+	public function getStudentsQueryForPeriod($period, $include_people_info = true, $include_excluded = false, $restrict_specialization = false) {
+		$q = SQLQuery::create()->select("Student");
+		$q->whereValue("Student", "batch", $period["batch"]);
+		$q->field("Student","people","people");
+		$q->field("Student","specialization","specialization");
+		if ($restrict_specialization !== false) {
+			if ($restrict_specialization === null)
+				$q->whereNull("Student", "specialization");
+			else
+				$q->whereValue("Student", "Specialization", $restrict_specialization);
+		}
+		if (!$include_excluded)
+			$q->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start_date"]."')");
+		if ($include_people_info) {
+			PNApplication::$instance->people->joinPeople($q, "Student", "people");
+			require_once("component/people/PeopleJSON.inc");
+			PeopleJSON::PeopleSQL($q);
+		}
+		return $q;
 	}
 	
 }

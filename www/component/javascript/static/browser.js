@@ -197,6 +197,13 @@ function setOpacity(element, opacity) {
 	element.style.filter = "alpha(opacity="+opacity+");";
 	element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";	
 }
+function getOpacity(element) {
+	if (typeof element.style == 'undefined') return 1;
+	if (typeof element.style.opacity != 'undefined') return parseFloat(element.style.opacity);
+	if (typeof element.style.MozOpacity != 'undefined') return parseFloat(element.style.MozOpacity);
+	if (typeof element.style.KhtmlOpacity != 'undefined') return parseFloat(element.style.KhtmlOpacity);
+	return 1;
+}
 /**
  * Set box-shadow if the browser has a way to support it 
  * @param {DOMNode} elem the HTML element

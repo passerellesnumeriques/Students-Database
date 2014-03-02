@@ -251,7 +251,7 @@ class service_get_remove_confirmation_content extends Service {
 				if (!$t->mayModify())
 					throw new Exception("Access denied: cannot modify table '".$t->getName()."': necessary to remove link to table '".$table->getName()."'");
 
-				if (!$t->canModifyAny()) {
+				if (!$t->canModifyEverything()) {
 					// select matching rows
 					$q = SQLQuery::create();
 					$table_alias = $q->generateTableAlias();

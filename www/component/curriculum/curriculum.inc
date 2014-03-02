@@ -22,6 +22,46 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("Specialization")->whereValue("Specialization", "id", $id)->executeSingleRow();
 	}
 	
+	public function getBatchSpecializations($batch_id) {
+		return SQLQuery::create()
+			->select("AcademicPeriod")
+			->whereValue("AcademicPeriod", "batch", $batch_id)
+			->join("AcademicPeriod", "AcademicPeriodSpecialization", array("id"=>"period"))
+			->whereNotNull("AcademicPeriodSpecialization", "specialization")
+			->groupBy("AcademicPeriodSpecialization", "specialization")
+			->field("AcademicPeriodSpecialization", "specialization", "specialization")
+			->executeSingleField();
+	}
+	public function getBatchSpecializationsWithName($batch_id) {
+		return SQLQuery::create()
+			->select("AcademicPeriod")
+			->whereValue("AcademicPeriod", "batch", $batch_id)
+			->join("AcademicPeriod", "AcademicPeriodSpecialization", array("id"=>"period"))
+			->whereNotNull("AcademicPeriodSpecialization", "specialization")
+			->groupBy("AcademicPeriodSpecialization", "specialization")
+			->field("AcademicPeriodSpecialization", "specialization", "id")
+			->join("AcademicPeriodSpecialization", "Specialization", array("specialization"=>"id"))
+			->field("Specialization", "name", "name")
+			->execute();
+	}
+	
+	public function getAcademicPeriodSpecializations($period_id) {
+		return SQLQuery::create()
+			->select("AcademicPeriodSpecialization")
+			->whereValue("AcademicPeriodSpecialization","period", $period_id)
+			->field("AcademicPeriodSpecialization", "specialization")
+			->executeSingleField();
+	}
+	public function getAcademicPeriodSpecializationsWithName($period_id) {
+		return SQLQuery::create()
+			->select("AcademicPeriodSpecialization")
+			->whereValue("AcademicPeriodSpecialization","period", $period_id)
+			->join("AcademicPeriodSpecialization", "Specialization", array("specialization"=>"id"))
+			->field("AcademicPeriodSpecialization", "specialization", "id")
+			->field("Specialization", "name", "name")
+			->execute();
+	}
+	
 	public function getAcademicPeriod($period_id) {
 		return SQLQuery::create()->select("AcademicPeriod")->where("id",$period_id)->executeSingleRow();
 	}
@@ -38,6 +78,13 @@ class curriculum extends Component {
 	
 	public function getAcademicClass($class_id) {
 		return SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->executeSingleRow();
+	}
+	public function getAcademicClassesForPeriod($period_id, $restrict_specialization = false) {
+		$q = SQLQuery::create()->select("AcademicClass")->where("period", $period_id);
+		if ($restrict_specialization !== false) {
+			$q->where("specialization", $restrict_specialization);
+		}
+		return $q->execute();
 	}
 	
 	public function joinAcademicClass(&$q, $from_table, $from_table_foreign_key, $filter_period_id = null) {

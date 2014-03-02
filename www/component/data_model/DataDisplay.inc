@@ -238,7 +238,7 @@ class SimpleDataDisplay extends DataDisplay {
 	}
 	
 	public function getEditLocks($sub_model) {
-		if ($this->handler->table->canModifyAny())
+		if ($this->handler->table->canModifyEverything() || $this->handler->table->canModifyColumn($this->column_name))
 			return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
 		return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name, "lock_each_row"=>true));
 	}

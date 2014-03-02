@@ -4,6 +4,8 @@ class page_student_grades extends Page {
 	public function get_required_rights() { return array("consult_students_grades"); }
 	
 	public function execute() {
+		echo "This section is still under construction";
+		return;
 		?>
 		<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'>
 			<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/>

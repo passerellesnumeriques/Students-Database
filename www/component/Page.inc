@@ -187,11 +187,12 @@ function pageHeaderStart() {
 function pageHeaderEnd($onload = "") {
 ?>
 </head>
-<body onload="<?php echo $onload;?>">
+<body onload="<?php echo $onload;?>;window._onload_done=true;">
 <?php
 }
 function pageFooter() {
 ?>
+<script type='text/javascript'>window._page_ready = true;</script>
 </body>
 </html>
 <?php

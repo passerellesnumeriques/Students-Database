@@ -27,7 +27,7 @@ function section_from_html(container) {
 	return s;
 }
 
-function section(icon, title, content, collapsable) {
+function section(icon, title, content, collapsable, fill_height) {
 	var t=this;
 	this.element = document.createElement("DIV");
 	this.element.className = "section";
@@ -123,6 +123,20 @@ function section(icon, title, content, collapsable) {
 		this.footer = document.createElement("DIV");
 		this.footer.className = "section_footer_empty";
 		this.element.appendChild(this.footer);
+		if (fill_height) {
+			this.content_container.setAttribute("layout", "fill");
+			require("vertical_layout.js", function() {
+				new vertical_layout(t.element, true);
+			});
+		}
+		layout.addHandler(this.element, function() {
+			t.header.style.display = "inline-block";
+			t.content_container.style.display = "inline-block";
+			t.footer.style.display = "inline-block";
+			t.header.style.display = "";
+			t.content_container.style.display = "";
+			t.footer.style.display = "";
+		});
 	};
 	
 	this.toggleCollapseExpand = function() {

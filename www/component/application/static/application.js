@@ -13,6 +13,29 @@ if (window == window.top) {
 		 * @param {window} w new window/frame 
 		 */
 		registerWindow: function(w) { 
+			if (w.frameElement && w.frameElement.loading_t) {
+				if (w.frameElement.unloading_anim) return;
+				var start = new Date().getTime();
+				var f = function() {
+					var now = new Date().getTime();
+					if (!w._onload_done || !w._page_ready || !w.layout || w.layout._invalidated.length > 0 || w.layout._last_layout_activity == 0 || now-w.layout._last_layout_activity < 30) {
+						if (now-start < 2500) {
+							setTimeout(f, 50);
+							return;
+						}
+					}
+					if (w.frameElement.loading_anim) {
+						animation.stop(w.frameElement.loading_anim);
+						w.frameElement.loading_anim = null;
+					}
+					w.frameElement.unloading_anim = animation.fadeOut(w.frameElement.loading_t, 300, function() {
+						w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
+						w.frameElement.loading_t = null;
+						w.frameElement.unloading_anim = null;
+					});
+				};
+				f();
+			}
 			window.top.pnapplication._windows.push(w);
 			listenEvent(w,'click',function(ev){
 				for (var i = 0; i < window.top.pnapplication._onclick_listeners.length; ++i)
@@ -40,6 +63,39 @@ if (window == window.top) {
 		 * @param {window} w window/frame which has been closed 
 		 */
 		unregisterWindow: function(w) {
+			if (w.frameElement && typeof animation != 'undefined') {
+				if (w.frameElement.loading_anim) return;
+				if (w.frameElement.unloading_anim) {
+					animation.stop(w.frameElement.unloading_anim);
+					w.frameElement.unloading_anim = null;
+				}
+				if (w.frameElement.loading_t) {
+					if (w.frameElement.loading_t.parentNode)
+						w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
+				}
+				var t = document.createElement("TABLE");
+				var tr = document.createElement("TR");
+				var td = document.createElement("TD");
+				td.innerHTML = "<img src='/static/application/loading_100.gif'/>";
+				td.style.verticalAlign = "middle";
+				td.style.textAlign = "center";
+				tr.appendChild(td);
+				t.appendChild(tr);
+				t.style.position = "absolute";
+				t.style.top = w.parent.absoluteTop(w.frameElement)+"px";
+				t.style.left = w.parent.absoluteLeft(w.frameElement)+"px";
+				t.style.width = w.frameElement.offsetWidth+"px";
+				t.style.height = w.frameElement.offsetHeight+"px";
+				t.style.visibility = 'hidden';
+				t.style.backgroundColor = "white";
+				t.loading_frame = w.frameElement;
+				w.parent.document.body.appendChild(t);
+				w.frameElement.loading_t = t;
+				w.frameElement.loading_anim = animation.fadeIn(w.frameElement.loading_t,500,function() {
+					if (w && w.frameElement)
+						w.frameElement.loading_anim = null;
+				});
+			}
 			window.top.pnapplication._windows.remove(w);
 			for (var i = 0; i < this._onclick_listeners.length; ++i)
 				if (this._onclick_listeners[i][0] == w) {
@@ -128,7 +184,7 @@ if (window == window.top) {
 		/** signals the user is active: fire onactivity event on each window */
 		userIsActive: function() {
 			for (var i = 0; i < window.top.pnapplication._windows.length; ++i)
-				window.top.pnapplication._windows[i].pnapplication.onactivity.fire();
+				if (window.top.pnapplication._windows[i].pnapplication) window.top.pnapplication._windows[i].pnapplication.onactivity.fire();
 			window.top.pnapplication.last_activity = new Date().getTime();
 		},
 		/** check if the user is not inactive since long time: if this is the case, automatically logout */
@@ -141,11 +197,12 @@ if (window == window.top) {
 					window.top.pnapplication.checkInactivity();
 					return;
 				}
-				for (var j = 0; j < window.top.pnapplication._windows[i].pnapplication._inactivity_listeners.length; ++j) {
-					var il = window.top.pnapplication._windows[i].pnapplication._inactivity_listeners[j];
-					if (il.time <= time)
-						il.listener();
-				}
+				if (window.top.pnapplication._windows[i].pnapplication)
+					for (var j = 0; j < window.top.pnapplication._windows[i].pnapplication._inactivity_listeners.length; ++j) {
+						var il = window.top.pnapplication._windows[i].pnapplication._inactivity_listeners[j];
+						if (il.time <= time)
+							il.listener();
+					}
 			}
 		}
 	};

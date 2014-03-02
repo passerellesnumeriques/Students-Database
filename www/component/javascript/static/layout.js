@@ -379,26 +379,13 @@ function _stylePadding(s) {
 };
 if (!window.top.browser_scroll_bar_size) {
 	window.top.browser_scroll_bar_size = 20;
-	var frame = window.top.document.createElement("IFRAME");
-	frame.style.border = "0px";
-	frame.style.margin = "0px";
-	frame.style.padding = "0px";
-	frame.style.position = "absolute";
-	frame.style.visibility = "hidden";
-	frame.style.top = "-10000px";
-	frame.style.width = "100px";
-	frame.style.height = "100px";
-	window.top.document.body.appendChild(frame);
-	var doc = getIFrameWindow(frame).document;
-	var div = doc.createElement("DIV");
-	doc.body.style.border = div.style.border = "0px"; 
-	doc.body.style.margin = div.style.margin = "0px"; 
-	doc.body.style.padding = div.style.padding = "0px"; 
-	doc.body.style.width = div.style.width = "100%"; 
-	div.style.height = "300px";
-	doc.body.appendChild(div);
-	window.top.setTimeout(function(){
-		window.top.browser_scroll_bar_size = frame.offsetWidth - div.offsetWidth;
-		window.top.document.body.removeChild(frame);
-	},1);
+	var container = window.top.document.createElement("DIV");
+	container.style.position = "fixed";
+	container.style.top = "-300px";
+	container.style.width = "100px";
+	container.style.height = "100px";
+	container.style.overflow = "scroll";
+	window.top.document.body.appendChild(container);
+	window.top.browser_scroll_bar_size = 100 - container.clientWidth;
+	window.top.document.body.removeChild(container);
 }
