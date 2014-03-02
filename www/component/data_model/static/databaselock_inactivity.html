@@ -24,8 +24,11 @@ function db_lock_still_here() {
 	window.parent.get_popup_window_from_element(window.frameElement).close();
 }
 function db_lock_not_there() {
-    window.parent.get_popup_window_from_element(window.frameElement).close();
 	window.top.databaselock._userInactive();
+	if (window && window.parent && window.parent.get_popup_window_from_element) {
+		var popup = window.parent.get_popup_window_from_element(window.frameElement);
+		if (popup) popup.close();
+	}
 }
 var timing = 60;
 function update_timing() {

@@ -47,14 +47,14 @@ window.databaselock = {
 		service.json("data_model","unlock",{locks:locks},function(result){
 			var need_redirection = false;
 			for (var i = 0; i < windows.length; ++i) {
-				// if there is a function handling it
-				if (windows[i].onuserinactive)
+				if (windows[i].onuserinactive) {
+					// if there is a function handling it
 					windows[i].onuserinactive();
-				// if in popup, close it
-				else if (windows[i].frameElement && windows[i].parent.get_popup_window_from_element && windows[i].parent.get_popup_window_from_element(windows[i].frameElement))
+				} else if (windows[i].frameElement && windows[i].parent.get_popup_window_from_element && windows[i].parent.get_popup_window_from_element(windows[i].frameElement)) {
+					// if in popup, close it
 					windows[i].parent.get_popup_window_from_element(windows[i].frameElement).close();
-				else {
-					need_rediraction = true;
+				} else {
+					need_redirection = true;
 					break;
 				}
 			}
