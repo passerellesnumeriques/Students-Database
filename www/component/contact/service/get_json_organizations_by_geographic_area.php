@@ -11,6 +11,7 @@ class service_get_json_organizations_by_geographic_area extends Service{
 			<li><code>from_parent_area</code> the array containing the organizations retrieved from the parent area (the area retrieved from the given area have been excluded from this selection) of the given one (if it exists)</li>
 		</ul>
 		Both attributes contain arrays with the following structure: [{id:organization_id,name:organization_name,addresses:[address_id1, address_id2,...]},...]
+		Each address element from addresses array is an object such as {address_id:, geographic_area_id:,geographic_area_text:}
 		<?php
 	}
 	public function documentation(){
@@ -42,7 +43,7 @@ class service_get_json_organizations_by_geographic_area extends Service{
 					if(!$first_address)
 						$r .= ", ";
 					$first_address = false;
-					$r .= json_encode($address);
+					$r .= "{address_id:".json_encode($address["address"]).",geographic_area_id:".json_encode($address["geographic_area_id"]).", geographic_area_text:".json_encode($address["geographic_area_text"])."}";
 				}
 				$r .= "]}";
 			}

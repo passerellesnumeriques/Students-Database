@@ -1,6 +1,6 @@
 <?php 
-require_once("/../selection_page.inc");
-class page_IS_select_organizations extends selection_page {
+require_once("selection_page.inc");
+class page_organizations_for_selection extends selection_page {
 	
 	public function get_required_rights() { return array(); }
 	
@@ -18,31 +18,39 @@ class page_IS_select_organizations extends selection_page {
 		foreach (PNApplication::$instance->components as $c) {
 			foreach ($c->getPluginImplementations() as $pi) {
 				if (!($pi instanceof OrganizationPlugin)) continue;
-				if ($pi->getOrganizationCreator() == $_GET["creator"]) {
+				if ($pi->getOrganizationCreator() == "Selection") {
 					$can_create =  $pi->canInsertOrganization();
 					break;
 				}
 			}
 			if ($can_create) break;
 		}
-		$id = $_GET["is"];
-		$partners = $_GET["partners"];
-		if(!is_array($partners)) $partners = array();
+		$mode = null; // Variable that contains the using mode of this page
+		if(isset($_GET["is"]) && isset($_GET["partners"])){
+			$mode = "IS_partners";
+			$id = $_GET["is"];
+			$partners = $_GET["partners"];
+			if(!is_array($partners)) $partners = array();
+		}
 		?>
 		<div style='width:100%;height:100%' id='<?php echo $container_id;?>'>
 		</div>
 		<script type='text/javascript'>
-		var selected_partners = <?php echo json_encode($partners).";";?>
+		var page_mode = <?php echo json_encode($mode);?>;
+		<?php if($mode == "IS_partners"){?>
+			var selected_partners = <?php echo json_encode($partners).";";?>
+		<?php }?>
 		var dl;
 		function init_organizations_list() {
 			dl = new data_list(
 				'<?php echo $container_id;?>',
 				'Organization',
 				['Contacts.Name'],
-				[{category:'Contacts',name:'Managed by',data:{type:'exact',value:<?php echo json_encode($_GET["creator"]); ?>}}],
+				[{category:'Contacts',name:'Managed by',data:{type:'exact',value:"Selection"}}],
 				function (list) {
-					list.grid.setSelectable(true);
-					list.addTitle(null, "Organizations of <?php echo $_GET["creator"];?>");
+					if(page_mode == "IS_partners")
+						list.grid.setSelectable(true);
+					list.addTitle(null, "Organizations of Selection");
 					<?php if ($can_create) {?>
 					var new_org = document.createElement("DIV");
 					new_org.className = 'button';
@@ -50,7 +58,7 @@ class page_IS_select_organizations extends selection_page {
 					new_org.onclick = function() {
 						require("popup_window.js",function(){
 							var p = new popup_window("New Organization", theme.icons_16.add, "");
-							var frame = p.setContentFrame("/dynamic/contact/page/organization_profile?creator=<?php echo $_GET["creator"];?>&organization=-1");
+							var frame = p.setContentFrame("/dynamic/contact/page/organization_profile?creator=Selection&organization=-1");
 							p.addOkCancelButtons(function(){
 								p.freeze();
 								var win = getIFrameWindow(frame);
@@ -65,8 +73,16 @@ class page_IS_select_organizations extends selection_page {
 						});
 					};
 					list.addHeader(new_org);
-					list.ondataloaded.add_listener(organizations_loaded);
-					list.grid.onrowselectionchange = organizations_selection_changed;
+					if(page_mode == "IS_partners"){
+						list.ondataloaded.add_listener(organizations_loaded);
+						list.grid.onrowselectionchange = organizations_selection_changed;
+					}
+					if(page_mode == null){
+						list.makeRowsClickable(function(row){
+							var orga_id = list.getTableKeyForRow('Organization',row.row_id);
+							location.href = "/dynamic/contact/page/organization_profile?organization="+orga_id;
+						});
+					}
 					<?php } ?>
 				}
 			);
