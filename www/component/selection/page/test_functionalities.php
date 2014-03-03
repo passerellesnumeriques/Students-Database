@@ -58,8 +58,12 @@ class page_test_functionalities extends selection_page {
 		require_once("component/contact/service/get_json_contact_points_no_address.inc");
 		echo "var cp = ".get_json_contact_points_no_address(array(1,2),false).";";
 		?>
-		require("select_address_2.js",function(){
-			new select_address_2("test",IS_data, cp, true);
+// 		require("select_address_2.js",function(){
+// 			new select_address_2("test",IS_data, cp, true);
+// 		});
+
+		require("select_other_partners.js",function(){
+			new select_other_partners("test",IS_data.partners,cp,true);
 		});
 		</script>
 		<?php

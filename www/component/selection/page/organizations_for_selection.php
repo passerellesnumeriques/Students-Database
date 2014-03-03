@@ -28,7 +28,7 @@ class page_organizations_for_selection extends selection_page {
 		$mode = null; // Variable that contains the using mode of this page
 		if(isset($_GET["is"]) && isset($_GET["partners"])){
 			$mode = "IS_partners";
-			$id = $_GET["is"];
+// 			$id = $_GET["is"];
 			$partners = $_GET["partners"];
 			if(!is_array($partners)) $partners = array();
 		}

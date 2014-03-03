@@ -213,6 +213,7 @@ layout = {
 	// Layout activity and regular layout done to handle scroll bars changes
 	_last_layout_activity: 0,
 	_layout_auto: function() {
+		return;
 		// go through all handled elements, and check if size of the element or one of its children changed
 		for (var i = 0; i < layout._layout_handlers.length; ++i) {
 			var e = layout._layout_handlers[i].element;

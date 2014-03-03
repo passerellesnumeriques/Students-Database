@@ -332,6 +332,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			var e = body.childNodes[i];
 			var w = null;
 			if (e.nodeType != 1) continue;
+			if (e.style && e.style.position && (e.style.position == "absolute" || e.style.position == "fixed")) continue;
 			if (e.nodeName == "DIV") {
 				e._display = e.style && e.style.display ? e.style.display : "";
 				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
@@ -356,6 +357,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			var e = body.childNodes[i];
 			var h = null;
 			if (e.nodeType != 1) continue;
+			if (e.style && e.style.position && (e.style.position == "absolute" || e.style.position == "fixed")) continue;
 			if (e.nodeName == "DIV") {
 				e._display = e.style && e.style.display ? e.style.display : "";
 				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
@@ -383,15 +385,17 @@ function popup_window(title,icon,content,hide_close_button) {
 		var x, y;
 		var win = getWindowFromDocument(t.table.ownerDocument);
 		if (t.content.nodeName == "IFRAME") {
+			if (!getIFrameWindow(t.content).layout) {
+				setTimeout(t.resize, 20);
+				t.in_resize = false;
+				return;
+			}
 			t.content_container.style.width = (win.getWindowWidth()-20)+"px";
 			t.content_container.style.height = (win.getWindowHeight()-20)+"px";
 			t.content_container.style.overflow = "";
 			var frame = getIFrameDocument(t.content); 
 			x = t._computeFrameWidth(frame.body);
 			y = t._computeFrameHeight(frame.body);
-			frame.body.style.margin = "0px";
-			frame.body.style.padding = "0px";
-			frame.body.style.border = "none";
 			var h = 0;
 			if (t.header) h += getHeight(t.header);
 			if (t.buttons_tr) h += getHeight(t.buttons_tr);
@@ -411,6 +415,14 @@ function popup_window(title,icon,content,hide_close_button) {
 			setHeight(t.content_container, y);
 			t.content_container.overflow = "hidden";
 			getIFrameDocument(t.content).body.style.overflow = "";
+			if (y < win.getWindowHeight()-20-h) {
+				// there should be no scroll bar, fix Chrome bug
+				if (frame.body.scrollHeight > frame.body.clientHeight) {
+					frame.body.style.position = "fixed";
+					frame.body.style.top = "0px";
+					frame.body.style.left = "0px";
+				}
+			}
 			x = win.getWindowWidth()/2 - x/2;
 			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight+(t.buttons_tr ? t.buttons_tr.scrollHeight : 0))/2;
 		} else {
@@ -500,7 +512,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			unlock_screen(t.locker);
 		else {
 			var parent_popup = get_popup_window_from_frame(window);
-			if(parent_popup) parent_popup.unfreeze();
+			if(parent_popup && parent_popup.table) parent_popup.unfreeze();
 		}
 		getWindowFromDocument(t.table.ownerDocument).layout.removeHandler(t.table, t.resize);
 		var table = t.table;

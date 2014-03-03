@@ -12,6 +12,7 @@ if (typeof require != 'undefined') {
  */
 function organization(container, org, existing_types, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
+	container.style.backgroundColor = "#FFFFFF";
 	var t=this;
 	
 	/** Return the Organization structure */
@@ -167,6 +168,7 @@ function organization(container, org, existing_types, can_edit) {
 			});
 		});
 			// contact points
+		t._contact_points_rows = [];
 		tr.appendChild(td_points = document.createElement("TD"));
 		td_points.style.verticalAlign = "top";
 		var table = document.createElement("TABLE");
@@ -217,6 +219,7 @@ function organization(container, org, existing_types, can_edit) {
 						org.contact_points.push(point);
 						t._addContactPointRow(point, tbody);
 						p.close();
+						layout.invalidate(tbody);
 					};
 					var data =
 					{
@@ -240,6 +243,8 @@ function organization(container, org, existing_types, can_edit) {
 		
 		for (var i = 0; i < org.contact_points.length; ++i)
 			t._addContactPointRow(org.contact_points[i], tbody);
+		
+		layout.invalidate(container);
 	};
 	/**
 	 * Add a contact point to the table
@@ -250,6 +255,8 @@ function organization(container, org, existing_types, can_edit) {
 		var tr, td_design, td;
 		tbody.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_design = document.createElement("TD"));
+		t._contact_points_rows.push(tr);
+		tr.people_id = point.people_id;
 		if (org.id != -1) {
 			require("editable_cell.js",function() {
 				new editable_cell(td_design, "ContactPoint", "designation", {organization:org.id,people:point.people_id}, "field_text", {min_length:1,max_length:100,can_be_null:false}, point.designation, function(new_data){
@@ -266,7 +273,65 @@ function organization(container, org, existing_types, can_edit) {
 			});
 		}
 		tr.appendChild(td = document.createElement("TD"));
-		td.appendChild(document.createTextNode(point.first_name+" "+point.last_name));
+		var link = document.createElement("img");
+		link.src = "/static/people/profile_16.png";
+		link.style.verticalAlign = "center";
+		link.title = "See profile";
+		link.style.cursor = "pointer";
+		link.people_id = point.people_id;
+		link.onclick = function(){
+			var people_id = this.people_id;
+			require("popup_window.js",function(){
+				var pop = new popup_window("People Profile","/static/people/people_16.png");
+				pop.setContentFrame("/dynamic/people/page/profile?plugin=people&people="+people_id);
+				pop.show();
+			});
+		};
+		td.appendChild(document.createTextNode(point.first_name+" "+point.last_name+" "));
+		td.appendChild(link);
+		if(can_edit){
+			var remove_button = document.createElement("div");
+			td.appendChild(remove_button);
+			remove_button.className = "button_verysoft";
+			remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"' style = 'vertical-align:center;'/>";
+			remove_button.people_id = point.people_id;
+			remove_button.onclick = function(){
+				var people_id = this.people_id;
+				if(org.id != -1){
+					//Remove from db
+					service.json("contact","unassign_contact_point",{organization:org.id, people:people_id},function(res){
+						if(res){
+							//Remove from table
+							var index = t._findRowIndexInContactPointsRows(people_id);
+							if(index != null){
+								//Remove from DOM
+								tbody.removeChild(t._contact_points_rows[index]);
+								//Remove from t._contact_points_rows
+								t._contact_points_rows.splice(index,1);
+							}
+						}
+					});
+				} else {
+					//Remove from table
+					var index = t._findRowIndexInContactPointsRows(people_id);
+					if(index != null){
+						//Remove from DOM
+						tbody.removeChild(t._contact_points_rows[index]);
+						//Remove from t._contact_points_rows
+						t._contact_points_rows.splice(index,1);
+					}
+				}
+				
+			};
+		}
+	};
+	
+	t._findRowIndexInContactPointsRows = function(people_id){
+		for(var i = 0; i < t._contact_points_rows.length; i++){
+			if(t._contact_points_rows[i].people_id == people_id)
+				return i;
+		}
+		return null;
 	};
 	
 	this._init();

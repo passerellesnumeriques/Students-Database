@@ -490,5 +490,39 @@ class contact extends Component {
 			->whereValue("Organization","id",$id)
 			->executeSingleValue();
 	}
+	
+	/**
+	 * Remove a contact point for a given organization
+	 * @param number $organization
+	 * @param number $people
+	 * @return boolean true if well performed
+	 */
+	public function removeContactPoint($organization, $people){
+		//TODO rights checked by people / orga plugin?
+		try {
+			SQLQuery::create()->removeKeys("ContactPoint", array(array("people" => $people, "organization" => $organization)));
+		} catch (Exception $e){
+			PNApplication::error($e);
+		}
+		if(PNApplication::has_errors())
+			return false;
+		else
+			return true;
+	}
+	
+	/**
+	 * Get the names of several organizations
+	 * @param array $ids all the ids to retrieve
+	 * @return array of array("id" =>organization id, "name" => organization name)
+	 */
+	public function getOrganizationsNames($ids){
+		if(count($ids) > 0){
+			return SQLQuery::create()
+			->field("id")
+			->field("name")
+			->whereIn("Organization","id",$ids)
+			->execute();
+		}
+	}
 }
 ?>

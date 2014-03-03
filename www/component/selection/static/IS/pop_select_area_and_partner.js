@@ -1,8 +1,9 @@
 function pop_select_area_and_partner(geographic_area, host, host_address, host_name, onclose){
 	var t = this;
-	t.host = host != null ? host : null;
-	t.host_address = host_address != null ? host_address : null;
-	t.host_name = host_name != null ? host_name : null;
+	t.host = host;
+	t.host_address = host_address;
+	t.host_name = host_name;
+	t.geographic_area = geographic_area;
 	t._table = document.createElement("table");
 	t._country_id = null;
 	t._init = function(){
@@ -20,7 +21,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 		window.top.require("geography.js", function() {
 			window.top.geography.getCountries(function(countries) {
 				t._country_id = countries[0].country_id;
-				var after_area_set = function(){t._refreshTDPartners(geographic_area);};
+				var after_area_set = function(){t._refreshTDPartners(t.geographic_area);};
 				t._initArea(after_area_set);
 				
 			});
@@ -48,15 +49,15 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 		tr.appendChild(t._td_partners);//Contains the select partner
 		t._table.appendChild(tr);
 		//TODO set pop style
-		t._partners_lists = new select_area_and_matching_organizations(t._td_partners, geographic_area, "Select this partner has host",t.host);
+		t._partners_lists = new select_area_and_matching_organizations(t._td_partners, t.geographic_area, "Select this partner has host",t.host);
 		//Set the partners footer: add a create partner button
 		t._create_partner_button = document.createElement("div");
 		t._create_partner_button.className = "button";
 		t._create_partner_button.innerHTML = "<img src = '"+theme.icons_16.add+"'/> Create partner";
 		t._create_partner_button.onclick = function(){
 			var p = new popup_window("New Organization", theme.icons_16.add, "");
-			//The partner is created with a prefilled address, which geographic_area is the current one
-			var frame = p.setContentFrame("/dynamic/contact/page/organization_profile?creator=Selection&organization=-1&address_country_id="+t._country_id+"&address_area_id="+geographic_area);
+			//The partner is created with a prefilled address, which t.geographic_area is the current one
+			var frame = p.setContentFrame("/dynamic/contact/page/organization_profile?creator=Selection&organization=-1&address_country_id="+t._country_id+"&address_area_id="+t.geographic_area);
 			p.addOkCancelButtons(function(){
 				p.freeze();
 				var win = getIFrameWindow(frame);
@@ -64,7 +65,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 				service.json("contact", "add_organization", org, function(res) {
 					if (!res) { p.unfreeze(); return; }
 					//t._updateHostAttribute(res.id); problem if the user has added several addresses
-					t._refreshTDPartners(geographic_area);					
+					t._refreshTDPartners(t.geographic_area);					
 					t._updatePopButtonsAndInfoRow();
 					p.close();
 				});
@@ -86,15 +87,15 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 		t._initializing_area = true;
 		require("geographic_area_selection.js", function() {
 			new geographic_area_selection(t._td_area, t._country_id, function(area) {
-				if (geographic_area) {
-					area.setToReturn(geographic_area);
-					area.startFilter(geographic_area);
+				if (t.geographic_area) {
+					area.setToReturn(t.geographic_area);
+					area.startFilter(t.geographic_area);
 				}
 				area.onchange = function() {
 					var a = area.getSelectedArea();
-					geographic_area = a != null ? a.id : null;
+					t.geographic_area = a != null ? a.id : null;
 					//data.geographic_area_text = a.text;
-					t._refreshTDPartners(geographic_area);
+					t._refreshTDPartners(t.geographic_area);
 					//Reset the host if the area is changed
 					t._updateHostAttribute(null);
 					//Update the buttons
@@ -143,7 +144,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 				//Reset the partners lists and the selected partner
 				t._updateHostAttribute(null);
 				t._updateHostAddressAttribute(null);
-				t._partners_lists.refresh(geographic_area);
+				t._partners_lists.refresh(t.geographic_area);
 			};
 			var head = document.createElement("div");
 			head.appendChild(document.createTextNode("This partner has several addresses in this area, please pick one:"));
@@ -156,6 +157,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 				if(!res){
 					error_dialog("An error occured");
 					//The selection couldn't finish correctly so reset
+					pop.close();
 					t._onPartnerRowUnselected();
 				} else {
 					require("address_text.js",function(){
@@ -181,6 +183,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 							button.style.marginRight = "10px";
 							content.appendChild(button);
 						}
+						layout.invalidate(content);
 					});
 				}
 			});
@@ -228,7 +231,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 						element.style.width = Math.floor(value)+'px';
 						element.style.overflow = "";
 						if(value == element.endWidth)
-							fireLayoutEventFor(element.parentNode);
+							layout.invalidate(element.parentNode);
 					});
 					t._td_partners.anim2 = animation.fadeIn(t._td_partners, 500, function(){
 						t._td_partners.style.position = 'static';
@@ -253,7 +256,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 					t._td_partners.anim1 = animation.create(t._td_partners, start, 0, 600, function(value, element){
 						element.style.width = Math.floor(value)+'px';
 						element.style.overflow = "hidden";
-						if (value == 0) fireLayoutEventFor(t._td_partners.parentNode);
+						if (value == 0) layout.invalidate(t._td_partners.parentNode);
 					});
 					//Fade out
 					t._td_partners.anim2 = animation.fadeOut(t._td_partners,500,function(){
@@ -270,7 +273,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 	
 	t._closePop = function(){
 		if(onclose)
-			onclose(t.host, t.host_address, t.host_name);
+			onclose(t.geographic_area, t.host, t.host_address, t.host_name);
 		t._pop.close();
 	};
 	

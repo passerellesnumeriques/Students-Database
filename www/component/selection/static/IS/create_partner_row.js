@@ -5,8 +5,10 @@
  * @param contact_points_selected
  * @param all_contact_points
  * @param can_manage
+ * @param {Object | null} add_data_to_give_when_event_fired (optional) data added to the contact_points_selected array when onupdatecontactpointsselection is fired
+ * The data is added this way: {contact_points_selected: ,additional:add_data_to_give_when_event_fired} 
  */
-function create_partner_row(container, partner_data, contact_points_selected, all_contact_points, can_manage){
+function create_partner_row(container, partner_data, contact_points_selected, all_contact_points, can_manage, add_data_to_give_when_event_fired){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -33,7 +35,22 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 	t._setTRBody = function(body){
 		var td1 = document.createElement("td");
 		var td2 = document.createElement("td");
-		td1.innerHTML = partner_data.name.uniformFirstLetterCapitalized();
+		var link_td1 = document.createElement("a");
+		td1.appendChild(link_td1);
+		link_td1.appendChild(document.createTextNode(partner_data.name));
+		link_td1.className = "black_link";
+		link_td1.style.cursor = "pointer";
+		link_td1.title = "See organization profile";
+		link_td1.organization_id = partner_data.id;
+		link_td1.onclick = function(){
+			var organization_id = this.organization_id;
+			require("popup_window.js",function(){
+				var pop = new popup_window("Organization Profile",null,null);
+				pop.setContentFrame("/dynamic/contact/page/organization_profile?organization="+organization_id);
+				pop.show();
+			});
+			return false;
+		};
 		td1.style.fontSize = "large";
 		if(t.contact_points_selected.length > 0){
 			for(var i = 0 ; i < t.contact_points_selected.length; i++){
@@ -103,7 +120,10 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 						t.contact_points_selected.push(table.contact_points_selected[i].people_id);
 				}
 				//Fire the custom event
-				t.onupdatecontactpointsselection.fire(t.contact_points_selected);
+				if(add_data_to_give_when_event_fired != null){
+					t.onupdatecontactpointsselection.fire({contact_points_selected:t.contact_points_selected, additional:add_data_to_give_when_event_fired});
+				} else
+					t.onupdatecontactpointsselection.fire(t.contact_points_selected);
 				pop.close();
 				//Reset the table
 				t.reset();

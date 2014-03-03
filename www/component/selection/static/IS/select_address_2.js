@@ -1,4 +1,4 @@
-function select_address_2(container, IS_data, partners_contacts_points, can_manage){
+function select_address_2(container, data, partners_contacts_points, can_manage){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -7,6 +7,7 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 		t._refreshTableHeader();
 		t._refreshTableBody();
 		t._refreshTableFooter();
+		layout.invalidate(container);
 	};
 	
 	t._init = function(){
@@ -35,7 +36,7 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 			window.top.require("geography.js", function() {
 				window.top.geography.getCountries(function(countries) {
 					var country_id = countries[0].country_id;
-					service.json("geography","get_area_parents_names",{country:country_id, area_id:IS_data.geographic_area},function(res){
+					service.json("geography","get_area_parents_names",{country:country_id, area_id:data.geographic_area},function(res){
 						if(!res)
 							td.innerHTML = "<i>This functionality is not available</i>";
 						else {
@@ -54,6 +55,7 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 							div_area.appendChild(document.createTextNode(text));
 							div_country.appendChild(document.createTextNode(res.country_name));
 						}
+						layout.invalidate(container);
 					});
 					
 				});
@@ -69,6 +71,7 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 					var text = new address_text(res);
 					td.appendChild(text.element);
 				}
+				layout.invalidate(container);
 			});
 
 		} else {
@@ -89,18 +92,18 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 		} else if (t._getInternStep() == "host"){
 			//The host and the address is set
 			var index = t._getHostIndexInPartners();
-			var index_in_contact_points = t._findPartnerIndexInPartners_contacts_points(IS_data.partners[index].organization);
+			var index_in_contact_points = t._findPartnerIndexInPartners_contacts_points(data.partners[index].organization);
 			var row = new create_partner_row(
 				td,
-				{id:IS_data.partners[index].organization , name:IS_data.partners[index].organization_name},
-				IS_data.partners[index].contact_points_selected,
+				{id:data.partners[index].organization , name:data.partners[index].organization_name},
+				data.partners[index].contact_points_selected,
 				partners_contacts_points[index_in_contact_points].contact_points,
 				can_manage
 			);
 			//Add the listener for the contact points selection
 			row.onupdatecontactpointsselection.add_listener(function(contact_points_selected){
-				//Update the IS_data object
-				IS_data.partners[t._getHostIndexInPartners()].contact_points_selected = contact_points_selected;
+				//Update the data object
+				data.partners[t._getHostIndexInPartners()].contact_points_selected = contact_points_selected;
 				//Reset the body
 				t._refreshTableBody();
 			});
@@ -124,31 +127,33 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 				continue_button.title = "Select a host partner";
 				continue_button.onclick = function(){
 					new pop_select_area_and_partner(
-						IS_data.geographic_area,
+						data.geographic_area,
 						null,
 						null,
 						null,
-						function(host_id, host_address, host_name){							
+						function(area, host_id, host_address, host_name){
+							//update geographic area
+							data.geographic_area = area;
 							if(host_id != null){
 								//Update the new host data
 								var index = t._findPartnerIndexInPartners(host_id);
 								if(index == null){
-									//The partner doesn't exist yet in IS_data.partners array
-									index = IS_data.partners.length;
-									IS_data.partners.push({
+									//The partner doesn't exist yet in data.partners array
+									index = data.partners.length;
+									data.partners.push({
 										organization:host_id,
 										organization_name:host_name,
 										contact_points_selected:[]
 									});
 								}
-								IS_data.partners[index].host = true;
-								IS_data.partners[index].host_address = host_address;
+								data.partners[index].host = true;
+								data.partners[index].host_address = host_address;
 								//update the contact points array, and reset once it is done
 								t._updateAllContactsPointsIfNeeded(host_id, t.reset, t.reset);
 							} else
 								t.reset();
 							//Else nothing to do because there were no host before
-							//No need to update the area because a reference of IS_data is given to the pop_select_area_and_partner object so will be automatically updated
+							//No need to update the area because a reference of data is given to the pop_select_area_and_partner object so will be automatically updated
 							//Reset (even if no host is set, geographic area may have been updated
 							
 						}
@@ -160,7 +165,7 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 				remove_button.title = "Reset the location and restart from scratch";
 				remove_button.onclick = function(){
 					//Reset the geographic area attribute
-					IS_data.geographic_area = null;
+					data.geographic_area = null;
 					//No need to reset the host because there were no before
 					//Reset
 					t.reset();
@@ -189,27 +194,29 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 				update_host.onclick = function(){
 					var index = t._getHostIndexInPartners();
 					new pop_select_area_and_partner(
-						IS_data.geographic_area,
-						IS_data.partners[index].organization,
-						IS_data.partners[index].host_address,
-						IS_data.partners[index].organization_name,
-						function(host_id,host_address, host_name){
+						data.geographic_area,
+						data.partners[index].organization,
+						data.partners[index].host_address,
+						data.partners[index].organization_name,
+						function(area, host_id,host_address, host_name){
+							//update geographic area
+							data.geographic_area = area;
 							if(host_id != null){
 								//Reset the host attribute
 								t._resetHost();
 								//Set the new one
 								var index = t._findPartnerIndexInPartners(host_id);
 								if(index == null){
-									//The partner doesn't exist yet in IS_data.partners array
-									index = IS_data.partners.length;
-									IS_data.partners.push({
+									//The partner doesn't exist yet in data.partners array
+									index = data.partners.length;
+									data.partners.push({
 										organization:host_id,
 										organization_name:host_name,
 										contact_points_selected:[]
 									});
 								}
-								IS_data.partners[index].host = true;
-								IS_data.partners[index].host_address = host_address;
+								data.partners[index].host = true;
+								data.partners[index].host_address = host_address;
 								//update the contact points array, and reset once it is done
 								t._updateAllContactsPointsIfNeeded(host_id, t.reset, t.reset);
 							} else {
@@ -231,24 +238,26 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 				set_button.title = "Set a location for this information session";
 				set_button.onclick = function(){
 					new pop_select_area_and_partner(
-						IS_data.geographic_area,
+						data.geographic_area,
 						null,
 						null,
 						null,
-						function(host_id, host_address, host_name){
+						function(area, host_id, host_address, host_name){
+							//update geographic area
+							data.geographic_area = area;
 							if(host_id != null){
 								var index = t._findPartnerIndexInPartners(host_id);
 								if(index == null){
-									//The partner doesn't exist yet in IS_data.partners array
-									index = IS_data.partners.length;
-									IS_data.partners.push({
+									//The partner doesn't exist yet in data.partners array
+									index = data.partners.length;
+									data.partners.push({
 										organization:host_id,
 										organization_name:host_name,
 										contact_points_selected:[]
 									});
 								}
-								IS_data.partners[index].host = true;
-								IS_data.partners[index].host_address = host_address;
+								data.partners[index].host = true;
+								data.partners[index].host_address = host_address;
 								//update the contact points array, and reset once it is done
 								t._updateAllContactsPointsIfNeeded(host_id, t.reset, t.reset);
 							} else
@@ -271,8 +280,8 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 		}
 		//Not found, so need to update the partners_contact_points array
 		var partners = [];
-		for(var i = 0; i < IS_data.partners.length; i++){
-			partners.push(IS_data.partners[i].organization);
+		for(var i = 0; i < data.partners.length; i++){
+			partners.push(data.partners[i].organization);
 		}
 		service.json("contact","get_json_contact_points_no_address",{organizations:partners, contacts_details:false},function(res){
 			if(!res)
@@ -289,9 +298,9 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 		if(index == null)
 			return;
 		//Remove the host from partners array
-		IS_data.partners.splice(index,1);
-//		IS_data.partners[index].host = false;
-//		IS_data.partners[index].host_address = null;
+		data.partners.splice(index,1);
+//		data.partners[index].host = false;
+//		data.partners[index].host_address = null;
 	};
 	
 	t._refreshElement = function(e){
@@ -311,26 +320,26 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 	};
 	
 	t._findPartnerIndexInPartners = function(id){
-		for(var i = 0; i < IS_data.partners.length; i++){
-			if(IS_data.partners[i].organization == id)
+		for(var i = 0; i < data.partners.length; i++){
+			if(data.partners[i].organization == id)
 				return i;
 		}
 		return null;
 	};
 	
 	/**
-	 * Get the host_address from IS_data.partners array
+	 * Get the host_address from data.partners array
 	 * @returns {Number | Null} null if the host is not set yet, else host_address (address ID selected)
 	 */
 	t._getHostAddressInPartners = function(){
 		var i = t._getHostIndexInPartners();
-		var to_return = i == null ? null : IS_data.partners[i].host_address;
+		var to_return = i == null ? null : data.partners[i].host_address;
 		return to_return;
 	};
 	
 	t._getHostIndexInPartners = function(){
-		for(var i = 0; i < IS_data.partners.length; i++){
-			if(IS_data.partners[i].host ==  true)
+		for(var i = 0; i < data.partners.length; i++){
+			if(data.partners[i].host ==  true)
 				return i;
 		}
 		return null;
@@ -339,7 +348,7 @@ function select_address_2(container, IS_data, partners_contacts_points, can_mana
 	t._getInternStep = function(){
 		if(t._getHostAddressInPartners() != null)
 			return "host";
-		else if(t._getHostAddressInPartners() == null && IS_data.geographic_area != null)
+		else if(t._getHostAddressInPartners() == null && data.geographic_area != null)
 			return "area";
 		else
 			return null;
