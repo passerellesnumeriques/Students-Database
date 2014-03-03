@@ -147,6 +147,7 @@ getIFrameDocument = function(frame) {
  */
 getIFrameWindow = function(frame) {
 	if (frame.contentWindow) return frame.contentWindow;
+	if (!frame.contentDocument) return null;
 	return frame.contentDocument.window;
 };
 

@@ -11,8 +11,11 @@ class curriculum extends Component {
 		);
 	}
 	
+	public function getBatches() {
+		return SQLQuery::create()->select("StudentBatch")->execute();
+	}
 	public function getBatch($batch_id) {
-		return SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();;
+		return SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();
 	}
 	
 	public function getSpecializations() {

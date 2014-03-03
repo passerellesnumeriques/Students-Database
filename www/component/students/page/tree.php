@@ -768,6 +768,69 @@ require("autocomplete.js",function() {
 	window.parent.addRightControl(container);
 });
 
+// To Do List
+<?php if ($can_edit) { ?>
+var todo_list_content = null;
+function refresh_todo_list() {
+	service.customOutput("students","todo_list",{},function(html) {
+		if (html.length == 0) {
+			if (todo_list_content != null) {
+				var left = document.getElementById('left');
+				left.removeChild(todo_list_content.container);
+				layout.invalidate(left);
+				todo_list_content = null;
+			}
+			return;
+		}
+		if (todo_list_content == null) {
+			var div = document.createElement("DIV");
+			var header = document.createElement("DIV");
+			header.className = "help_header";
+			header.style.fontWeight = "bold";
+			header.style.borderTop = "1px solid black";
+			header.innerHTML = "<img src='"+theme.icons_16.help+"' style='vertical-align:bottom'/> To Do List";
+			var img = document.createElement("IMG");
+			img.src = theme.icons_16.refresh;
+			img.className = "button_verysoft";
+			img.style.padding = "0px";
+			img.onclick = function() {
+				todo_list_content.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
+				refresh_todo_list();
+			};
+			img.style.marginLeft = "6px";
+			img.style.verticalAlign = "bottom";
+			header.appendChild(img);
+			img = document.createElement("IMG");
+			img.src = theme.icons_16.close;
+			img.className = "button_verysoft";
+			img.style.padding = "0px";
+			img.onclick = function() {
+				var left = document.getElementById('left');
+				left.removeChild(todo_list_content.container);
+				layout.invalidate(left);
+				todo_list_content = null;
+			};
+			img.style.marginLeft = "6px";
+			img.style.verticalAlign = "bottom";
+			header.appendChild(img);
+			div.appendChild(header);
+			todo_list_content = document.createElement("DIV");
+			todo_list_content.style.backgroundColor = "white";
+			todo_list_content.style.overflow = "auto";
+			todo_list_content.style.height = "100px";
+			todo_list_content.container = div;
+			div.appendChild(todo_list_content);
+			var left = document.getElementById('left');
+			left.appendChild(div);
+			layout.invalidate(left);
+			
+		}
+		todo_list_content.innerHTML = html;
+	});
+}
+refresh_todo_list();
+<?php } ?>
+
 </script>
 <?php
 	}

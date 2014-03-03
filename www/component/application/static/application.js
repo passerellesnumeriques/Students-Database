@@ -64,37 +64,47 @@ if (window == window.top) {
 		 */
 		unregisterWindow: function(w) {
 			if (w.frameElement && typeof animation != 'undefined') {
-				if (w.frameElement.loading_anim) return;
-				if (w.frameElement.unloading_anim) {
-					animation.stop(w.frameElement.unloading_anim);
-					w.frameElement.unloading_anim = null;
-				}
-				if (w.frameElement.loading_t) {
-					if (w.frameElement.loading_t.parentNode)
-						w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
-				}
-				var t = document.createElement("TABLE");
-				var tr = document.createElement("TR");
-				var td = document.createElement("TD");
-				td.innerHTML = "<img src='/static/application/loading_100.gif'/>";
-				td.style.verticalAlign = "middle";
-				td.style.textAlign = "center";
-				tr.appendChild(td);
-				t.appendChild(tr);
-				t.style.position = "absolute";
-				t.style.top = w.parent.absoluteTop(w.frameElement)+"px";
-				t.style.left = w.parent.absoluteLeft(w.frameElement)+"px";
-				t.style.width = w.frameElement.offsetWidth+"px";
-				t.style.height = w.frameElement.offsetHeight+"px";
-				t.style.visibility = 'hidden';
-				t.style.backgroundColor = "white";
-				t.loading_frame = w.frameElement;
-				w.parent.document.body.appendChild(t);
-				w.frameElement.loading_t = t;
-				w.frameElement.loading_anim = animation.fadeIn(w.frameElement.loading_t,500,function() {
-					if (w && w.frameElement)
-						w.frameElement.loading_anim = null;
-				});
+				setTimeout(function() {
+					if (!w || !w.frameElement) return;
+					if (w.frameElement.loading_anim) return;
+					if (getIFrameWindow(w.frameElement) == null) return; // not anymore in the page
+					if (w.frameElement.unloading_anim) {
+						animation.stop(w.frameElement.unloading_anim);
+						w.frameElement.unloading_anim = null;
+					}
+					if (w.frameElement.loading_t) {
+						if (w.frameElement.loading_t.parentNode)
+							w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
+					}
+					var t = document.createElement("TABLE");
+					var tr = document.createElement("TR");
+					var td = document.createElement("TD");
+					td.innerHTML = "<img src='/static/application/loading_100.gif'/>";
+					td.style.verticalAlign = "middle";
+					td.style.textAlign = "center";
+					tr.appendChild(td);
+					t.appendChild(tr);
+					t.style.position = "absolute";
+					t.style.top = w.parent.absoluteTop(w.frameElement)+"px";
+					t.style.left = w.parent.absoluteLeft(w.frameElement)+"px";
+					t.style.width = w.frameElement.offsetWidth+"px";
+					t.style.height = w.frameElement.offsetHeight+"px";
+					t.style.visibility = 'hidden';
+					t.style.backgroundColor = "white";
+					t.loading_frame = w.frameElement;
+					w.parent.document.body.appendChild(t);
+					w.frameElement.loading_t = t;
+					w.frameElement.loading_anim = animation.fadeIn(w.frameElement.loading_t,500,function() {
+						if (!w || !w.frameElement || getIFrameWindow(w.frameElement) == null) {
+							t.parentNode.removeChild(t);
+							if (w.frameElement) {
+								w.frameElement.loading_anim = null;
+								w.frameElement.loading_t = null;
+							}
+						} else
+							w.frameElement.loading_anim = null;
+					});
+				},1);
 			}
 			window.top.pnapplication._windows.remove(w);
 			for (var i = 0; i < this._onclick_listeners.length; ++i)
