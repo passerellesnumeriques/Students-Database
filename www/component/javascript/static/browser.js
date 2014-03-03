@@ -587,8 +587,8 @@ function add_javascript(url, onload) {
 	s.data = new Custom_Event();
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
-	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded') { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); this.onreadystatechange = null; } };
+	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
 	s.src = p;
 }

@@ -3,24 +3,43 @@ function component_auto_loader($classname) {
 	require_once("component/".$classname."/".$classname.".inc");
 }
 
-// check last time the user came, it was the same version, in order to refresh its cache if the version changed
-$version = include("version.inc");
-if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
-	setcookie("pnversion",$version,time()+365*24*60*60,"/");
-	header("Location: /");
-	session_set_cookie_params(24*60*60, "/dynamic/");
-	session_start();
-	session_destroy();
-	die();
-}
-
 if (!isset($_SERVER["PATH_INFO"]) || strlen($_SERVER["PATH_INFO"]) == 0) $_SERVER["PATH_INFO"] = "/";
 $path = substr($_SERVER["PATH_INFO"],1);
 
 // security: do not allow .. in the path, to avoid trying to access to files which are protected
 if (strpos($path, "..") !== FALSE) die("Access denied");
 
-if ($path == "favicon.ico") { header("Content-Type: image/ico"); readfile("favicon.ico"); die(); }
+// check last time the user came, it was the same version, in order to refresh its cache if the version changed
+$version = include("version.inc");
+if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
+	if (strpos($path, "/page/")) {
+		setcookie("pnversion",$version,time()+365*24*60*60,"/");
+		session_set_cookie_params(24*60*60, "/dynamic/");
+		session_start();
+		session_destroy();
+		echo "<script type='text/javascript'>window.top.location = '/reload';</script>";
+	} else
+		header("pn_version_changed: yes", true, 403);
+	die();
+}
+
+if ($path == "reload") {
+	header("Location: /");
+	die();
+}
+
+if ($path == "favicon.ico") { 
+	header("Content-Type: image/ico"); 
+	header('Cache-Control: public', true);
+	header('Pragma: public', true);
+	$date = date("D, d M Y H:i:s",time());
+	header('Date: '.$date, true);
+	$expires = time()+365*24*60*60;
+	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
+	header('Vary: Cookie');
+	readfile("favicon.ico");
+	die(); 
+}
 
 if ($path == "") {
 	include("loading.inc");
