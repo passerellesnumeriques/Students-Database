@@ -12,13 +12,16 @@ function debug_status(container) {
 		service.json("development","get_debug_info",{},function(result){
 			require(["popup_window.js","tabs.js"],function(){
 				var content = document.createElement("DIV");
-				content.style.width = "1000px";
-				content.style.height = "800px";
+				content.style.width = (getWindowWidth()-50)+"px";
+				content.style.height = (getWindowHeight()-50)+"px";
 				var tabs_control = new tabs(content, false);
 				var tab, table, tr, td;
 				
 				// requests
 				tab = document.createElement("DIV");
+				tab.style.width = "100%";
+				tab.style.height = "100%";
+				tab.style.overflow = "auto";
 				table = document.createElement("TABLE");
 				table.style.border = '1px solid black';
 				table.style.borderCollapse = 'collapse';
@@ -38,12 +41,15 @@ function debug_status(container) {
 					tr.appendChild(td = document.createElement("TD"));
 					td.style.border = '1px solid black';
 					td.style.verticalAlign = "top";
+					td.style.whiteSpace = "nowrap";
 					td.innerHTML = req.url;
 					tr.appendChild(td = document.createElement("TD"));
 					td.style.border = '1px solid black';
 					td.innerHTML = req.sql_queries.length+" database request(s)";
+					td.style.whiteSpace = "nowrap";
 					tr.appendChild(td = document.createElement("TD"));
 					td.style.border = '1px solid black';
+					td.style.whiteSpace = "nowrap";
 					if (req.end_time > 0) {
 						var time = req.end_time-req.start_time;
 						td.innerHTML = time+"s.";
@@ -58,6 +64,9 @@ function debug_status(container) {
 
 				// sql queries
 				tab = document.createElement("DIV");
+				tab.style.width = "100%";
+				tab.style.height = "100%";
+				tab.style.overflow = "auto";
 				table = document.createElement("TABLE");
 				table.style.border = '1px solid black';
 				table.style.borderCollapse = 'collapse';
@@ -76,16 +85,19 @@ function debug_status(container) {
 					table.appendChild(tr = document.createElement("TR"));
 					tr.appendChild(td = document.createElement("TD"));
 					td.style.border = '1px solid black';
+					td.style.whiteSpace = "nowrap";
 					var rowspan = req.sql_queries.length;
 					if (rowspan == 0) rowspan = 1;
 					td.rowSpan = rowspan;
 					td.style.verticalAlign = "top";
+					td.style.whiteSpace = "nowrap";
 					td.innerHTML = req.url;
 					for (var j = 0; j < req.sql_queries.length; ++j) {
 						if (j > 0)
 							table.appendChild(tr = document.createElement("TR"));
 						tr.appendChild(td = document.createElement("TD"));
 						td.style.border = '1px solid black';
+						td.style.whiteSpace = "nowrap";
 						td.innerHTML = (j+1)+". ";
 						var sql = req.sql_queries[j];
 						var img = document.createElement("IMG");
@@ -94,6 +106,25 @@ function debug_status(container) {
 						img.style.paddingRight = '5px';
 						td.appendChild(img);
 						td.appendChild(document.createTextNode(sql[0]));
+						img = document.createElement("IMG");
+						img.src = theme.icons_10.arrow_down_context_menu;
+						img.className = "button_verysoft";
+						img.style.verticalAlign = "middle";
+						img.style.padding = "0px";
+						img.trace = sql[4];
+						img.onclick = function() {
+							var t=this;
+							require("context_menu.js", function() {
+								var menu = new context_menu();
+								for (var i = 0; i < t.trace.length; ++i) {
+									var div = document.createElement("DIV");
+									div.appendChild(document.createTextNode(t.trace[i][0]+":"+t.trace[i][1]));
+									menu.addItem(div);
+								}
+								menu.showBelowElement(t);
+							});
+						};
+						td.appendChild(img);
 						if (sql[1] != 0) {
 							var div = document.createElement("DIV");
 							div.style.color = 'red';
@@ -102,6 +133,7 @@ function debug_status(container) {
 						}
 						tr.appendChild(td = document.createElement("TD"));
 						td.style.border = '1px solid black';
+						td.style.whiteSpace = "nowrap";
 						td.innerHTML = sql[3]+"s.";
 						if (sql[3] > 1) td.style.color = "#FF0000";
 						else if (sql[3] > 0.5) td.style.color = "#B00000";
@@ -113,6 +145,9 @@ function debug_status(container) {
 				
 				// locks
 				tab = document.createElement("DIV");
+				tab.style.width = "100%";
+				tab.style.height = "100%";
+				tab.style.overflow = "auto";
 				table = document.createElement("TABLE");
 				table.style.border = '1px solid black';
 				table.style.borderCollapse = 'collapse';

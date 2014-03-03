@@ -147,6 +147,21 @@ class DataModel {
 		if ($t->canAccess()) return $t;
 		throw new \Exception("Access denied: table ".$t->getName());
 	}
+	public function getSubModelInstanceFromSQLName($name) {
+		if ($this instanceof SubDataModel) return $this->parent_model->getSubModelInstanceFromSQLName($name);
+		if (isset($this->tables[$name])) return null;
+		foreach ($this->sub_models as $sm) {
+			foreach ($sm->tables as $tbl_name=>$tbl) {
+				if (substr($name,0,strlen($tbl_name)) <> $tbl_name) continue;
+				if (substr($name,strlen($tbl_name),1) <> "_") continue;
+				$instance = substr($name,strlen($tbl_name)+1);
+				$id = intval($instance);
+				if ($id == 0) continue;
+				return $id;
+			}
+		}
+		return null;
+	}
 	
 	/** should be used only in very specific places, while ensuring that this will not give privileges to the user
 	 * @return datamodel\Table[] 
@@ -250,6 +265,8 @@ class SubDataModel extends DataModel {
 		require_once("DataBaseUtilities.inc");
 		foreach ($this->tables as $t)
 			DataBaseUtilities::createTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
+		if ($this->instances <> null)
+			array_push($this->instances, $key);
 	}
 	
 	public function removeTables($key) {
@@ -260,11 +277,21 @@ class SubDataModel extends DataModel {
 		require_once("DataBaseUtilities.inc");
 		foreach ($this->tables as $t)
 			DataBaseUtilities::dropTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
+		if ($this->instances <> null)
+			for ($i = 0; $i < count($this->instances); $i++)
+			if ($this->instances[$i] == $key) {
+				array_splice($this->instances, $i, 1);
+				break;
+			}
 	}
 	
+	private $instances = null;
 	public function getExistingInstances() {
-		$t = $this->parent_model->internalGetTable($this->parent_table);
-		return SQLQuery::create()->bypassSecurity()->select($this->parent_table)->field($this->parent_table, $t->getPrimaryKey()->name)->executeSingleField();
+		if ($this->instances == null) {
+			$t = $this->parent_model->internalGetTable($this->parent_table);
+			$this->instances = SQLQuery::create()->bypassSecurity()->select($this->parent_table)->field($this->parent_table, $t->getPrimaryKey()->name)->executeSingleField();
+		}
+		return $this->instances;
 	}
 	
 }

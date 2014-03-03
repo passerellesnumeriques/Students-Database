@@ -50,7 +50,7 @@ function init_calendars() {
 						if (!name) return;
 						provider.createCalendar(name, null, null, function(cal) {
 							new CalendarControl(content, cal);
-							fireLayoutEventFor(left);
+							layout.invalidate(left);
 							window.top.calendar_manager.addCalendar(cal);
 						});
 					},function(){}
@@ -69,7 +69,7 @@ function init_calendars() {
 			if (providers[i].provider == cal.provider) {
 				providers[i].calendars.push(cal);
 				new CalendarControl(providers[i].div, cal);
-				fireLayoutEventFor(left);
+				layout.invalidate(left);
 				return;
 			}
 		}

@@ -98,7 +98,7 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 		input.onkeyup = input.onblur = validate;
 		p.onclose = function() {
 			var r=result; result=null;
-			ok_handler(r);
+			ok_handler(r,p);
 		};
 		p.show();
 		input.focus();

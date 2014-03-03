@@ -74,7 +74,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		}
 		div.setAttribute("layout", "fixed");
 		t.header.insertBefore(div, t.header_left);
-		fireLayoutEventFor(t.header);
+		layout.invalidate(t.header);
 	};
 	/** Set the title, with some html
 	 * @param {DOMNode} html the html element, or a string
@@ -89,7 +89,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		html.className = "data_list_title";
 		html.setAttribute("layout", "fixed");
 		t.header.insertBefore(html, t.header_left);
-		fireLayoutEventFor(t.header);
+		layout.invalidate(t.header);
 	};
 	/** Force to refresh the data from the server */
 	t.reloadData = function() {
@@ -246,7 +246,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		var div, img;
 		// + previous page
 		t.prev_page_div = div = document.createElement("DIV"); div.className = "button disabled";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Previous page";
 		img.src = "/static/data_model/left.png";
 		div.doit = function() {
@@ -261,7 +261,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_left.appendChild(div);
 		// + next page
 		t.next_page_div = div = document.createElement("DIV"); div.className = "button disabled";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Next page";
 		div.disabled = "disabled";
 		img.src = "/static/data_model/right.png";
@@ -291,7 +291,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		});
 		// + refresh
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Refresh";
 		img.src = theme.icons_16.refresh;
 		div.onclick = function() { t._loadData(); };
@@ -299,7 +299,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_left.appendChild(div);
 		// + select column
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Select columns to display";
 		img.src = get_script_path("data_list.js")+"/table_column.png";
 		div.onclick = function() { t._selectColumnsDialog(this); };
@@ -307,7 +307,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_right.appendChild(div);
 		// + filter
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Filters";
 		img.src = get_script_path("data_list.js")+"/filter.gif";
 		div.onclick = function() { t._filtersDialog(this); };
@@ -315,7 +315,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_right.appendChild(div);
 		// + export
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Export list";
 		img.src = theme.icons_16["_export"];
 		div.onclick = function() { t._exportMenu(this); };
@@ -323,7 +323,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_right.appendChild(div);
 		// + more button for horizontal menu
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header_center); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header_center); };
 		img.src = theme.icons_16.more_menu;
 		div.appendChild(img);
 		t.header_center.appendChild(div);
@@ -340,15 +340,15 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		// layout
 		require("vertical_layout.js",function(){
 			new vertical_layout(container);
-			fireLayoutEventFor(container);
+			layout.invalidate(container);
 		});
 		require("horizontal_layout.js",function(){
 			new horizontal_layout(t.header);
-			fireLayoutEventFor(container);
+			layout.invalidate(container);
 		});
 		require("horizontal_menu.js",function(){
 			new horizontal_menu(t.header_center, "middle");
-			fireLayoutEventFor(container);
+			layout.invalidate(container);
 		});
 		require("vertical_align.js",function(){
 			new vertical_align(t.header_left, "middle");
@@ -467,7 +467,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				var edit_col = function() {
 					action.icon = col.editable ? theme.icons_16.edit : theme.icons_16.no_edit;
 					col.toggleEditable();
-					fireLayoutEventFor(container);
+					layout.invalidate(container);
 				};
 				t.grid.startLoading();
 				if (col.editable) {
@@ -547,7 +547,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				t.next_page_div.className = "button disabled";
 				t.next_page_div.onclick = null;
 			}
-			t.header.widget.layout();
+			layout.invalidate(t.header);
 			t.data = result.data;
 			var has_actions = false;
 			var data = [];

@@ -13,7 +13,8 @@ class PeoplePeoplePlugin implements PeoplePlugin {
 						"/static/people/profile_16.png",
 						"General Information",
 						"/dynamic/people/page/profile_people?people=".$people_id,
-						1
+						1,
+						"Civil information, contacts (emails, phone...), and other general information"
 				)
 		);
 	}

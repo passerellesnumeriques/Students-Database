@@ -23,7 +23,7 @@ window.top.CalendarsProviders.get(function(provider) {
 	provider.refreshCalendars();
 });
 window.top.pnapplication.onlogout.add_listener(function() {
-	while (window.top.calendar_manager.calendars.length > 0) indow.top.calendar_manager.removeCalendar(indow.top.calendar_manager.calendars[0]);
+	while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(window.top.calendar_manager.calendars[0]);
 	window.top.CalendarsProviders.get(function(provider) {
 		clearInterval(provider._refresh_interval);
 	});
@@ -43,7 +43,7 @@ $this->require_javascript("horizontal_menu.js");
 <table id='pn_application_container'>
 	<tr><td>
 	<div id='pn_application_header'>
-		<div id='pn_application_section_title' onclick='sectionsMenu();'></div>
+		<div id='pn_application_section_title' class='pn_application_section_title' onclick='sectionsMenu();'></div>
 		<div id='pn_application_left_controls' style='visibility:hidden;padding-right:3px'></div>
 		<div id='pn_application_menu' layout='fill'>
 			<div class='button'><img src='<?php echo theme::$icons_16["more_menu"];?>'/> More</div>
@@ -156,20 +156,25 @@ function sectionBox(sec) {
 
 function sectionsMenu() {
 	var menu = document.createElement("DIV");
+	var listener = function() {
+		window.top.pnapplication.unregisterOnclick(listener);
+		if (typeof animation != 'undefined') animation.fadeOut(menu,300,function() { document.body.removeChild(menu); });
+		else document.body.removeChild(menu);		
+	};
 	for (var i = 0; i < sections.length; ++i) {
 		if (i > 0 && (i%3)==0) menu.appendChild(document.createElement("BR"));
 		var box = sectionBox(sections[i]);
+		box.click = box.onclick;
+		box.onclick = function() {
+			listener();
+			return this.click();
+		};
 		menu.appendChild(box);
 	}
 	menu.id = "pn_application_sections_menu";
 	if (typeof animation != 'undefined') setOpacity(menu,0);
 	document.body.appendChild(menu);
 	if (typeof animation != 'undefined') animation.fadeIn(menu,300);
-	var listener = function() {
-		window.top.pnapplication.unregisterOnclick(listener);
-		if (typeof animation != 'undefined') animation.fadeOut(menu,300,function() { document.body.removeChild(menu); });
-		else document.body.removeChild(menu);		
-	};
 	setTimeout(function() { window.top.pnapplication.registerOnclick(window, listener); },1);
 }
 
@@ -198,11 +203,10 @@ function selectSection(sec) {
 	win.location.href = sec.page;
 	document.getElementById('pn_application_section_title').innerHTML = "<img src='"+sec.icon32+"'/>"+sec.name;
 	populateMenu(sec.menu_provider);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 
 function populateMenu(service_url) {
-	resetAllMenus();
 	if (service_url)
 		ajax.call("GET", service_url, null, null, function(error){
 			// TODO
@@ -253,7 +257,7 @@ function addMenuItem(icon, text, info, url) {
 	item.href = url;
 	item.target = "pn_application_content";
 	section_menu.addItem(item);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 	item.onmouseover = function() {
 		if (this._tooltip) return;
 		for (var i = 0; i < section_menu.items.length; ++i)
@@ -263,7 +267,7 @@ function addMenuItem(icon, text, info, url) {
 			}
 		if (info == null || info.length == 0) return;
 		this._tooltip = document.createElement("DIV");
-		this._tooltip.className = "pn_application_menu_item_tooltip";
+		this._tooltip.className = "tooltip";
 		this._tooltip.style.position = "fixed";
 		this._tooltip.style.top = "32px";
 		this._tooltip.style.left = absoluteLeft(this)+"px";
@@ -281,7 +285,7 @@ function addMenuItem(icon, text, info, url) {
 function addMenuControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
 	section_menu.addItem(control);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 function addRightControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -289,7 +293,7 @@ function addRightControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 function addLeftControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -297,7 +301,7 @@ function addLeftControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	layout.invalidate(document.getElementById('pn_application_header'));
 }
 
 selectSection(sections[<?php

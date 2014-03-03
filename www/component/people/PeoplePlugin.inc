@@ -9,7 +9,7 @@ interface PeoplePlugin {
 	public function preparePeopleProfilePagesRequest(&$q, $people_id);
 	/** Return pages that will be displayed in a people's profile
 	 * @param array $people the people row from the database
-	 * @return array(page_id=>array(icon_16,title,url,priority))
+	 * @return array(page_id=>array(icon_16,title,url,priority,tooltip))
 	 */
 	public function getPeopleProfilePages($people_id, $people, $q);
 	/** returns an array of (section_icon,section_title,section_path,priority) */

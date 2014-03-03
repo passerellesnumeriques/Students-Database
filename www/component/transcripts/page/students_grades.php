@@ -4,6 +4,8 @@ class page_students_grades extends Page {
 	public function get_required_rights() { return array("consult_students_grades"); }
 	
 	public function execute() {
+		echo "This section is still under construction";
+		return;
 		$period_id = @$_GET["period"];
 		if ($period_id == null) {
 			$class_id = @$_GET["class"];
@@ -12,15 +14,20 @@ class page_students_grades extends Page {
 				echo "Please select a period or a class to display the grades of the students";
 				return;
 			}
-			$class = SQLQuery::create()->select("AcademicClass")->whereValue("AcademicClass", "id", $class_id)->executeSingleRow();
+			$class = PNApplication::$instance->curriculum->getAcademicClass($class_id);
 			$period_id = $class["period"];
 			$spe_id = $class["specialization"];
 		} else {
 			$class = null;
 			$spe_id = @$_GET["specialization"];
 		}
-		$period = SQLQuery::create()->select("AcademicPeriod")->where("id",$period_id)->executeSingleRow();
-		$spe = $spe_id <> null ? SQLQuery::create()->select("Specialization")->where("id",$spe_id)->executeSingleRow() : null;
+		$period = PNApplication::$instance->curriculum->getAcademicPeriod($period_id);
+		$batch_id = $period["batch"];
+		$spe = $spe_id <> null ? PNApplication::$instance->curriculum->getSpecialization($spe_id) : null;
+		
+		
+		
+		
 		$q = SQLQuery::create()
 			->select("CurriculumSubject")
 			->whereValue("CurriculumSubject", "period", $period_id)
@@ -87,13 +94,16 @@ class page_students_grades extends Page {
 			array_push($students_ids, $row[$people_id_alias]);
 		
 		if (count($students_ids) == 0) {
-			echo "<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> There is no student for this period. Please <a href='/dynamic/training_education/page/list?period=".$period_id."'>add students</a> first.</div>";
+			echo "<div style='background-color:#ffffa0;border-bottom:1px solid #e0e0ff;padding:5px;font-family:Verdana'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> There is no student for this period. Please <a href='/dynamic/students/page/list?period=".$period_id."'>add students</a> first.</div>";
 			$students_grades = array();
 		} else
 			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","people", $students_ids)->execute();
 		
+		$this->add_javascript("/static/curriculum/curriculum_objects.js");
+		require_once("component/curriculum/CurriculumJSON.inc");
+		
 		$this->add_javascript("/static/widgets/header_bar.js");
-		$this->onload("new header_bar('grades_page_header', 'small');");
+		$this->onload("new header_bar('grades_page_header', 'toolbar');");
 		$this->add_stylesheet("/static/transcripts/grades.css");
 		?>
 		<style type='text/css'>
@@ -106,7 +116,7 @@ class page_students_grades extends Page {
 			padding: 1px;
 		}
 		</style>
-		<div id='grades_page_header' icon='' title="&lt;img src='/static/transcripts/grades.gif'/&gt;Grades for Period <?php echo $period["name"]; if ($spe <> null) echo ", Specialization ".$spe["name"]; if ($class<>null) echo ", Class ".$class["name"];?>">
+		<div id='grades_page_header' icon='/static/transcripts/grades.gif' title="Grades for Period <?php echo $period["name"]; if ($spe <> null) echo ", Specialization ".$spe["name"]; if ($class<>null) echo ", Class ".$class["name"];?>">
 			<div class='button' onclick='select_students_columns(this);'><img src='/static/data_model/table_column.png'/>Select students information to display</div>
 			<div class='button' onclick="alert('Not yet done');"><img src='<?php echo theme::$icons_16["config"];?>'/>Configure Transcripts</div>
 			<div class='button' onclick="alert('Not yet done');"><img src='/static/transcripts/grades.gif'/>See/Print Transcripts</div>
@@ -116,6 +126,10 @@ class page_students_grades extends Page {
 			</div>
 		</div>
 		<script type='text/javascript'>
+		var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON(PNApplication::$instance->curriculum->getSubjectCategories());?>;
+		var subjects = <?php echo CurriculumJSON::SubjectsJSON(PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id, $spe_id));?>;
+		
+		
 		var categories = [<?php
 		$first_cat = true;
 		foreach ($categories as $cat) {

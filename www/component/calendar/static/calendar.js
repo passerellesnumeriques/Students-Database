@@ -35,6 +35,8 @@ function CalendarManager() {
 	 * @returns {Calendar} the given calendar
 	 */
 	this.addCalendar = function(cal) {
+		for (var i = 0; i < this.calendars.length; ++i)
+			if (this.calendars[i].provider.id == cal.provider.id && this.calendars[i].id == cal.id) return; // already there
 		this.calendars.push(cal);
 		var t=this;
 		var listeners = {calendar:cal,listeners:[
@@ -84,17 +86,6 @@ function CalendarManager() {
 				break;
 			};
 		this.on_calendar_removed.fire(cal);
-	};
-	
-	/**
-	 * Get the calendar having the given id
-	 * @param {Number} id calendar id
-	 * @returns {Calendar} the calendar 
-	 */
-	this.getCalendar = function(id) {
-		for (var i = 0; i < this.calendars.length; ++i)
-			if (this.calendars[i].id == id) return this.calendars[i];
-		return null;
 	};
 	
 	/**
@@ -150,7 +141,8 @@ function CalendarManager() {
 /**
  * Abstract class of a calendars provider
  */
-function CalendarsProvider() {
+function CalendarsProvider(id) {
+	this.id = id;
 }
 CalendarsProvider.prototype = {
 	calendars: [],
@@ -178,6 +170,11 @@ CalendarsProvider.prototype = {
 		});
 	},
 	_retrieveCalendars: function(handler) { },
+	getCalendar: function(id) {
+		for (var i = 0; i < this.calendars.length; ++i)
+			if (this.calendars[i].id == id) return this.calendars[i];
+		return null;
+	},
 	/**
 	 * Icon (16x16) of the provider
 	 * @returns {String} the url of the icon
@@ -255,8 +252,19 @@ if (!window.top.CalendarsProviders) {
 			for (var i = 0; i < this._providers.length; ++i)
 				handler_for_each_provider(this._providers[i]);
 			this._handlers.push(handler_for_each_provider);
+		},
+		getProvider: function(id) {
+			for (var i = 0; i < this._providers.length; ++i)
+				if (this._providers[i].id == id) return this._providers[i];
+			return null;
+		},
+		_refresh: function() {
+			for (var i = 0; i < this._providers.length; ++i)
+				for (var j = 0; j < this._providers[i].calendars.length; ++j)
+					this._providers[i].calendars[j].refresh();
 		}
 	};
+	setTimeout(function() { window.top.CalendarsProviders._refresh(); }, 5*60*1000);
 }
 
 /**
@@ -327,13 +335,6 @@ function Calendar(provider, name, color, show, icon) {
 	this.saveColor = function(color) {}; // to be overriden if supported
 	/** {Function} function to rename the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.rename = null; // must be overriden if this is supported
-	if (name) { // check we are really on an instance, not the prototype
-		var t=this;
-		var ref = function(){
-			t.refresh(function(){setTimeout(ref,5*60*1000);});
-		};
-		setTimeout(ref,5*60*1000);
-	}
 }
 
 /**
@@ -525,6 +526,7 @@ PNCalendar.prototype.constructor = PNCalendar;
 
 /** Implementation of CalendarsProvider for internal(PN) calendar (stored in the database) */
 function PNCalendarsProvider() {
+	CalendarsProvider.call(this,"PN");
 	var t=this;
 	this._retrieveCalendars = function(handler) {
 		this.connectionStatus("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");

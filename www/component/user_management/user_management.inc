@@ -80,6 +80,7 @@ class user_management extends Component {
 	public function logout() {
 		$this->logged_out->fire();
 		setcookie(session_name(), "", time()-10000, "/dynamic/");
+		setcookie(session_name(), "", time()-10000, "/");
 		@session_destroy();
 		$this->domain = null;
 		$this->username = null;

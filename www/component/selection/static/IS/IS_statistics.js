@@ -80,7 +80,7 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 //				var input22 = document.createElement("input");
 //				input22.type = 'text';
 				var input22 = t.field_int_22.getHTMLElement();
-				autoresize_input(input22);
+				inputAutoresize(input22);
 				input22.style.marginLeft = "15px";				
 //				var input23 = document.createElement("input");
 				var data23 = parseInt(t.text_boys_real) + parseInt(t.text_girls_real);
@@ -88,7 +88,7 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 				input23 = t.field_int_23.getHTMLElement();
 				input23.style.marginLeft = "15px";
 				input23.type = 'text';
-				autoresize_input(input23);
+				inputAutoresize(input23);
 //				input22.value = t.text_boys_expected + t.text_girls_expected;
 //				input23.value = t.text_boys_real + t.text_girls_real;
 //				input22.oninput = function(){
@@ -141,10 +141,10 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 				input23.style.marginLeft = "15px";
 				input32.style.marginLeft = "15px";
 				input33.style.marginLeft = "15px";
-				autoresize_input(input22);
-				autoresize_input(input23);
-				autoresize_input(input32);
-				autoresize_input(input33);
+				inputAutoresize(input22);
+				inputAutoresize(input23);
+				inputAutoresize(input32);
+				inputAutoresize(input33);
 //				input22.value = t.text_boys_expected;
 //				input22.oninput = function(){
 //					var new_figure = t._setNewFigure(this.value);
@@ -224,7 +224,7 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 		return figures;
 	}
 	
-	require(["autoresize_input.js","section.js","field_integer.js"],function(){
+	require(["input_utils.js","section.js",["typed_field.js","field_integer.js"]],function(){
 		t._setSection();
 		t._init();
 	});

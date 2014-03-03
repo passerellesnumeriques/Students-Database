@@ -36,8 +36,15 @@ abstract class DataBaseSystem {
 		if (PNApplication::$instance->current_domain <> "Dev") return;
 		if (count(PNApplication::$instance->development->current_request()->sql_queries) == 200)
 			array_push(PNApplication::$instance->development->current_request()->sql_queries, array("TOO MUCH SQL QUERIES",0,null,0));
-		else if (count(PNApplication::$instance->development->current_request()->sql_queries) < 200)
-			array_push(PNApplication::$instance->development->current_request()->sql_queries, array($query, $error_number, $error_message, $time));
+		else if (count(PNApplication::$instance->development->current_request()->sql_queries) < 200) {
+			try { throw new Exception(); } catch (Exception $e) {
+				$t = array(); 
+				foreach ($e->getTrace() as $trace)
+					if (isset($trace["file"]) && isset($trace["line"]))
+						array_push($t, array($trace["file"],$trace["line"]));
+			}
+			array_push(PNApplication::$instance->development->current_request()->sql_queries, array($query, $error_number, $error_message, $time, $t));
+		}
 	}
 
 	public abstract function selectDatabase($db_name);

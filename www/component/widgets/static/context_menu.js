@@ -87,7 +87,7 @@ function context_menu(menu) {
 			div.appendChild(img);
 		}
 		div.appendChild(document.createTextNode(text));
-		div.onclick = function() { if (onclick) onclick(onclick_parameter); }
+		div.onclick = function() { if (onclick) onclick(onclick_parameter); };
 		div.className = "context_menu_item";
 		t.addItem(div);
 		return div;
@@ -248,8 +248,9 @@ function context_menu(menu) {
 		menu.style.zIndex = 100;
 		if (typeof animation != 'undefined') {
 			if (menu.anim) animation.stop(menu.anim);
-			setOpacity(menu,0);
 		}
+		if (typeof animation != 'undefined')
+			menu.style.visibility = 'hidden';
 		document.body.appendChild(menu);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);

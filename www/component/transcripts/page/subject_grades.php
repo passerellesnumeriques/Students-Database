@@ -1029,7 +1029,7 @@ class page_subject_grades extends Page {
 							// TODO
 						}
 					}
-					fireLayoutEventFor(split);
+					layout.invalidate(split);
 				});
 			};
 			require(["match_people_in_excel.js","wizard_simple.js"], function() { javascript_ready = true; ready(); });

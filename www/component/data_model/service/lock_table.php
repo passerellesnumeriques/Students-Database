@@ -7,6 +7,7 @@ class service_lock_table extends Service {
 <ul>
 	<li><code>table</code>: table name of the entity</li>
 	<li><code>sub_model</code>: optionnaly, the sub model instance</li>
+	<li><code>get_locker</code>: optionnaly, if true, in case the table is already locked by someone, the locker is returned instead of generating an error</li>
 </ul>
 <?php
 	}
@@ -14,6 +15,7 @@ class service_lock_table extends Service {
 ?>
 <ul>
 	<li><code>lock</code>: id of the lock</li>
+	<li><code>locker</code>: if <code>get_locker</code> was specified, contains the locker, or null if the table has been successfully locked</li>
 </ul>
 <?php
 	}
@@ -31,7 +33,10 @@ class service_lock_table extends Service {
 		$locked_by = null;
 		$lock = DataBaseLock::lockTable($table->getSQLNameFor($sub_model), $locked_by);
 		if ($lock == null) {
-			PNApplication::error("This table is already locked by ".$locked_by);
+			if (isset($input["get_locker"]) && $input["get_locker"])
+				echo "{locker:".json_encode($locked_by)."}";
+			else
+				PNApplication::error("This table is already locked by ".$locked_by);
 			return;
 		}
 		echo "{lock:".json_encode($lock)."}";

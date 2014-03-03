@@ -67,7 +67,7 @@ function color_choice(container, current_color) {
 				t.frame = frame;
 				frame.src = "/static/widgets/color_choice/lib_colorpicker/default.html"+color_string(t.color);
 				frame.onload = function() { 
-					fireLayoutEventFor(container); 
+					layout.invalidate(container); 
 				};
 				frame.style.height = "280px";
 				frame.style.width = "450px";
@@ -78,7 +78,7 @@ function color_choice(container, current_color) {
 				simple_td.style.position = 'absolute';
 				simple_td.style.visibility = 'hidden';
 				simple_td.style.top = '-10000px';
-				fireLayoutEventFor(container);
+				layout.invalidate(container);
 			} else {
 				// hide
 				this.innerHTML = "Custom Color";
@@ -88,7 +88,7 @@ function color_choice(container, current_color) {
 				simple_td.style.visibility = 'visible';
 				t.custom_choice_container.style.position = 'absolute';
 				t.custom_choice_container.style.visibility = 'hidden';
-				fireLayoutEventFor(container);
+				layout.invalidate(container);
 				t.setColor('#'+col);
 			}
 		};

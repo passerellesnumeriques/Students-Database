@@ -90,7 +90,7 @@ function vscroll_bar() {
 	};
 	
 	this._init();
-	addLayoutEvent(this.element, function() { t._layout(); });
+	layout.addHandler(this.element, function() { t._layout(); });
 	
 	listenEvent(window, 'mousemove', function(ev) {
 		if (t._move_y == null) return;

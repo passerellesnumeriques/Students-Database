@@ -57,7 +57,7 @@ function horizontal_menu(menu, valign) {
 			t.items[i].element.style.display = 'inline-block';
 			t.items[i].element.style.whiteSpace = 'nowrap';
 			menu.appendChild(t.items[i].element);
-			var iw = t.items[i].element.offsetWidth;
+			var iw = getWidth(t.items[i].element);
 			total += iw;
 			t.items[i].element.style.marginTop = t.items[i].element.originalMargin;
 			if (t.valign) {
@@ -102,5 +102,5 @@ function horizontal_menu(menu, valign) {
 	
 	menu.style.visibility = 'visible';
 	t.update();
-	addLayoutEvent(menu, function() { t.update(); });
+	layout.addHandler(menu, function() { t.update(); });
 }

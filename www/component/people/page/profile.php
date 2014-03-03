@@ -42,8 +42,8 @@ class page_profile extends Page {
 		$page = $pages[$page][2];
 		
 		require_once("component/data_model/page/utils.inc");
-		datamodel_cell($this, "profile_title_first_name", false, "People", "first_name", $people_id, null, $people["first_name"], "function(){fireLayoutEventFor(window.profile_header.header);}");
-		datamodel_cell($this, "profile_title_last_name", false, "People", "last_name", $people_id, null, $people["last_name"], "function(){fireLayoutEventFor(window.profile_header.header);}");
+		datamodel_cell($this, "profile_title_first_name", false, "People", "first_name", $people_id, null, $people["first_name"], "function(){layout.invalidate(window.profile_header.header);}");
+		datamodel_cell($this, "profile_title_last_name", false, "People", "last_name", $people_id, null, $people["last_name"], "function(){layout.invalidate(window.profile_header.header);}");
 
 		$all_pages = array();
 		foreach (PNApplication::$instance->components as $cname=>$c) {
@@ -63,7 +63,12 @@ class page_profile extends Page {
 <div id='profile_page' icon='/static/people/profile_32.png' title='' page='<?php echo $page;?>'>
 <?php 
 foreach ($all_pages as $cp) {
-	echo "<span class='page_menu_item'><a href=\"".$cp[2]."\" target='profile_page_content'><img src='".$cp[0]."'/>".$cp[1]."</a></span>";
+	echo "<span class='page_menu_item'";
+	if (isset($cp[4]) && $cp[4] <> null) {
+		echo " onmouseover='if (this.tooltip) return; this.tooltip = document.createElement(\"DIV\"); this.tooltip.className = \"tooltip\"; this.tooltip.innerHTML = ".json_encode($cp[4],JSON_HEX_APOS)."; this.tooltip.style.position=\"absolute\"; this.tooltip.style.top=(absoluteTop(this)+this.offsetHeight+5)+\"px\"; this.tooltip.style.left=(absoluteLeft(this))+\"px\"; document.body.appendChild(this.tooltip);'";
+		echo " onmouseout=\"if (!this.tooltip) return; document.body.removeChild(this.tooltip); this.tooltip = null;\"";
+	}
+	echo "><a href=\"".$cp[2]."\" target='profile_page_content'><img src='".$cp[0]."'/>".$cp[1]."</a></span>";
 }
 ?>
 </div>

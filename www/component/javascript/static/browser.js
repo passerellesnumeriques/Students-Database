@@ -147,6 +147,7 @@ getIFrameDocument = function(frame) {
  */
 getIFrameWindow = function(frame) {
 	if (frame.contentWindow) return frame.contentWindow;
+	if (!frame.contentDocument) return null;
 	return frame.contentDocument.window;
 };
 
@@ -189,12 +190,20 @@ HTTP_Status_ConnectionLost = browser.IE > 0 ? 12029 : 0;
  * @param {Number} opacity from 0 to 1
  */
 function setOpacity(element, opacity) {
-	element.style.opacity = opacity;
-	element.style.MozOpacity = opacity;
-	element.style.KhtmlOpacity = opacity;
+	var o = new Number(opacity).toFixed(2);
+	element.style.opacity = o;
+	element.style.MozOpacity = o;
+	element.style.KhtmlOpacity = o;
 	opacity = Math.round(opacity*100);
 	element.style.filter = "alpha(opacity="+opacity+");";
 	element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";	
+}
+function getOpacity(element) {
+	if (typeof element.style == 'undefined') return 1;
+	if (typeof element.style.opacity != 'undefined') return parseFloat(element.style.opacity);
+	if (typeof element.style.MozOpacity != 'undefined') return parseFloat(element.style.MozOpacity);
+	if (typeof element.style.KhtmlOpacity != 'undefined') return parseFloat(element.style.KhtmlOpacity);
+	return 1;
 }
 /**
  * Set box-shadow if the browser has a way to support it 
@@ -499,13 +508,7 @@ function unlistenEvent(elem, type, handler) {
 	else
 	     elem.detachEvent('on'+type,handler); 
 }
-/**
- * Trigger an event
- * @param {DOMNode} elem the HTML element
- * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
- * @param {Object} attributes attributes to set in the event
- */
-function triggerEvent(elem, type, attributes) {
+function createEvent(type, attributes) {
 	var evt;
 	if (document.createEvent) {
 		evt = document.createEvent("HTMLEvents");
@@ -517,6 +520,16 @@ function triggerEvent(elem, type, attributes) {
 	}
 	evt.eventName = type;
 	if (attributes) for (var attr in attributes) evt[attr] = attributes[attr];
+	return evt;
+}
+/**
+ * Trigger an event
+ * @param {DOMNode} elem the HTML element
+ * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
+ * @param {Object} attributes attributes to set in the event
+ */
+function triggerEvent(elem, type, attributes) {
+	var evt = createEvent(type, attributes);
 	if (document.createEvent) {
 		elem.dispatchEvent(evt);
 	} else {
@@ -575,8 +588,8 @@ function add_javascript(url, onload) {
 	s.data = new Custom_Event();
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
-	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded') { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); this.onreadystatechange = null; } };
+	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
 	s.src = p;
 }

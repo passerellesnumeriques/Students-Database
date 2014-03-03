@@ -27,6 +27,9 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	};
 	/** Called each time a modification is done (edit, add, or remove) */
 	this.onchange = new Custom_Event();
+	this.onchange.add_listener(function() {
+		layout.invalidate(container);
+	});
 	
 	/** Create the table that contains the addresses */
 	this._createTable = function() {

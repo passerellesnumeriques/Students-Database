@@ -41,6 +41,14 @@ class people extends Component {
 		return $table->filterRemoveAccess($rows);
 	}
 	
+	public function getPeople($people_id) {
+		return SQLQuery::create()->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
+	}
+	
+	public function canRead($people_id) {
+		$p = $this->getPeople($people_id);
+		return $p <> null;
+	}
 	public function canModify($people_id) {
 		$q = SQLQuery::create();
 		$table_alias = $q->generateTableAlias();
@@ -52,6 +60,14 @@ class people extends Component {
 		$rows = $table->filterWriteAccess($rows);
 		if (count($rows) == 0) return false;
 		return true;
+	}
+	public function canRemove($people_id, &$locks) {
+		$q = SQLQuery::create()->select("People");
+		$q->whereValue("People","id",$people_id);
+		DataModel::get()->getTable("People")->prepareSelectToDetermineRemoveAccess($q, "People", $locks);
+		$rows = $q->execute();
+		$rows = DataModel::get()->getTable("People")->filterRemoveAccess($rows);
+		return count($rows) == 1;		
 	}
 }
 ?>

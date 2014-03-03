@@ -47,13 +47,13 @@ function tabs(container, fill_tab_content) {
 	
 	t.select = function(index) {
 		if (t.selected != -1) {
-			t.tabs[t.selected].className = "tab_header";
+			t.tabs[t.selected].header.className = "tab_header";
 			t.content.removeChild(t.tabs[t.selected].content);
 		}
 		t.tabs[index].header.className = "tab_header selected";
 		t.content.appendChild(t.tabs[index].content);
 		t.selected = index;
-		fireLayoutEventFor(t.tabs[index].content);
+		layout.invalidate(t.tabs[index].content);
 		if (t.onselect) t.onselect(t);
 	};
 
@@ -97,16 +97,16 @@ function tabs(container, fill_tab_content) {
 	t._layout = function() {
 		setWidth(t.content, container.clientWidth);
 		setHeight(t.content, container.clientHeight - t.header.offsetHeight);
-		fireLayoutEventFor(t.content);
+		layout.invalidate(t.content);
 		if (t.selected != -1) {
 			if (fill_tab_content) {
 				setWidth(t.tabs[t.selected].content, t.content.clientWidth);
 				setHeight(t.tabs[t.selected].content, t.content.clientHeight);
 			}
-			fireLayoutEventFor(t.tabs[t.selected].content);
+			layout.invalidate(t.tabs[t.selected].content);
 		}
 	};
 	t._init();
 	t._layout();
-	addLayoutEvent(container, function() { t._layout(); });
+	layout.addHandler(container, function() { t._layout(); });
 }

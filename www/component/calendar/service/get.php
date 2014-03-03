@@ -26,6 +26,7 @@ class service_get extends Service {
 			if ($first) $first = false; else echo ",";
 			echo "{";
 			echo "id:".$ev["id"];
+			echo ",calendar_provider_id:'PN'";
 			echo ",calendar_id:".$ev["calendar"];
 			echo ",uid:".json_encode($ev["uid"]);
 			echo ",start:".$ev["start"];

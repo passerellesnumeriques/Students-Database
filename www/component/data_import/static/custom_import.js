@@ -463,11 +463,11 @@ function custom_import(container, icon, title, import_button_text, import_button
 		var id = generateID();
 		t.assistant_container.innerHTML = "First step is to open a file using the button <div class='button' id='"+id+"'>Open File...</div><br/><i>Note: After opening a file, you will be able to open other files, and data already imported from previous files will remain.</i>";
 		document.getElementById(id).onclick = function() { t.openFile(); };
-		fireLayoutEventFor(container);
+		layout.invalidate(container);
 	};
 	this._assistant_opening_file = function () {
 		t.assistant_container.innerHTML = "Opening file... Please wait...";
-		fireLayoutEventFor(container);
+		layout.invalidate(container);
 	};
 	this._assistant_file_ready = function() {
 		var id_radio1 = generateID();
@@ -519,7 +519,7 @@ function custom_import(container, icon, title, import_button_text, import_button
 				}
 				t.deactivateManualImport();
 				t.activateColumnImport();
-				fireLayoutEventFor(container);
+				layout.invalidate(container);
 			} else {
 				info2.style.visibility = 'visible';
 				info2.style.position = 'static';
@@ -533,13 +533,13 @@ function custom_import(container, icon, title, import_button_text, import_button
 				}
 				t.activateManualImport();
 				t.deactivateColumnImport();
-				fireLayoutEventFor(container);
+				layout.invalidate(container);
 			}
 			t.assistant_container.style.border = "0px";
 		};
 		radio1.onchange = changed;
 		radio2.onchange = changed;
-		fireLayoutEventFor(container);
+		layout.invalidate(container);
 	};
 		
 	/** Initialize the display */

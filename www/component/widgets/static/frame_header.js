@@ -13,7 +13,7 @@ function frame_header(container) {
 	
 	t.setIcon = function(url) {
 		t.icon.src = url;
-		fireLayoutEventFor(t.header);
+		layout.invalidate(t.header);
 	};
 
 	t.setTitle = function(title) {
@@ -23,7 +23,7 @@ function frame_header(container) {
 			t.title.innerHTML = "";
 			t.title.appendChild(title);
 		}
-		fireLayoutEventFor(t.header);
+		layout.invalidate(t.header);
 	};
 	
 	t._init = function() {
@@ -37,7 +37,7 @@ function frame_header(container) {
 			t.icon.src = container.getAttribute("icon");
 			container.removeAttribute("icon");
 		}
-		t.icon.onload = function() { fireLayoutEventFor(t.header); };
+		t.icon.onload = function() { layout.invalidate(t.header); };
 		t.icon.style.verticalAlign = "middle";
 		t.header_title.appendChild(t.icon);
 		t.title = document.createElement("SPAN");

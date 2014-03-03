@@ -48,12 +48,15 @@ namespace datamodel {
 		private $read_access_filters = array();
 		private $read_column_access_rights = array();
 		private $write_access_rights = array();
+		private $write_column_access_rights = array();
 		private $write_access_filters = array();
 		private $add_access_rights = array();
 		private $add_access_filters = array();
 		private $remove_access_rights = array();
 		private $remove_access_filters = array();
-
+		
+		private $row_description_provider = null;
+		
 		private $is_customized = false;
 		private $customization = array();
 		
@@ -288,6 +291,7 @@ namespace datamodel {
 		
 		public function onInsert($fct) {
 			$this->oninsert->listenFunction($fct);
+			return $this;
 		}
 		public function fireInsert($fields_values, $id, $sub_model_instance) {
 			$this->oninsert->fire(array($fields_values,$id,$sub_model_instance));
@@ -386,17 +390,39 @@ namespace datamodel {
 			array_push($this->write_access_rights, array($right_name, $right_value));
 			return $this;
 		}
+		public function &addColumnWriteAccess($column_name, $right_name, $right_value) {
+			if (!isset($this->write_column_access_rights[$column_name]))
+				$this->write_column_access_rights[$column_name] = array();
+			array_push($this->write_column_access_rights[$column_name], array($right_name, $right_value));
+			return $this;
+		}
 		public function &addWriteFilter($prepare_select, $filter) {
 			array_push($this->write_access_filters, array($prepare_select, $filter));
 			return $this;
 		}
-		public function canModifyAny() {
+		public function canModifyEverything() {
 			foreach ($this->write_access_rights as $r)
 				if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return true;
 			return false;
 		}
+		public function canModifyColumn($column_name) {
+			if ($this->canModifyEverything()) return true;
+			if (isset($this->write_column_access_rights[$column_name])) {
+				foreach ($this->write_column_access_rights[$column_name] as $r)
+					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+			}
+			return false;
+		}
+		public function canModifyAColumn() {
+			foreach ($this->write_column_access_rights as $column_name=>$rights) {
+				foreach ($rights as $r)
+					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+			}
+			return false;
+		}
 		public function mayModify() {
-			if ($this->canModifyAny()) return true;
+			if ($this->canModifyEverything()) return true;
+			if ($this->canModifyAColumn()) return true;
 			if (count($this->write_access_filters) > 0) return true;
 			return false;
 		}
@@ -479,7 +505,31 @@ namespace datamodel {
 			return $rows;
 		}
 			
-
+		
+		public function setRowDescriptionProvider($provider_callback) {
+			$this->row_description_provider = $provider_callback;
+			return $this;
+		}
+		
+		public function getRowDescriptionByKey($key, $sub_model = null) {
+			$row = \SQLQuery::getRow($this, $key, $sub_model);
+			return $this->getRowDescription($row);
+		}
+		public function getRowDescription($row) {
+			if ($this->row_description_provider <> null) {
+				return call_user_func($this->row_description_provider, $row);
+			}
+			$s = "Row on table ".$this->name.": ";
+			$first = true;
+			foreach ($this->columns as $col) {
+				if ($first) $first = false; else $s .= ", ";
+				$s .= $col->name."=";
+				if (isset($row[$col->name])) $s .= htmlentities($row[$col->name]);
+				else $s .= "NULL";
+			}
+			return $s;
+		}
+		
 
 		public function &setDisplayHandler($coming_from, $handler) {
 			$this->display_handler[$coming_from] = $handler;

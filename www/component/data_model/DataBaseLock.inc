@@ -103,7 +103,7 @@ class DataBaseLock {
 				// TODO can we accept that we lock a table or column if we don't have full access ?
 				//if (!($t->canModifyAny() || $t->canRemoveAny()))
 				//	throw new Exception("Access denied: you cannot lock table '".$t->getName()."' because you have only partial access to it.");
-			} else if (!($t->canModifyAny() || $t->canRemoveAny())) {
+			} else if (!($t->canModifyEverything() || $t->canRemoveAny())) {
 				$ok = false;
 				if ($t->mayModify()) {
 					$q = SQLQuery::create();
@@ -185,7 +185,7 @@ class DataBaseLock {
 			$t = DataModel::get()->getTableFromSQLName($table);
 			if (!($t->mayInsert() || $t->mayModify() || $t->mayRemove()))
 				throw new Exception("Access denied: you cannot lock table '".$t->getName()."'.");
-			if (!($t->canModifyAny() || $t->canRemoveAny())) {
+			if (!($t->canModifyEverything() || $t->canRemoveAny())) {
 				$rows_ok = array();
 				if ($t->mayModify()) {
 					$q = SQLQuery::create();
@@ -650,6 +650,36 @@ class DataBaseLock {
 		self::mutexUnlock();
 		DataBaseLock::clean();
 		return $result;
+	}
+	
+	public static function updateLocks($ids) {
+		if (count($ids) == 0) return;
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+		$ts = time();
+		self::mutexLock();
+		$sql = "SELECT locker_domain,locker_username FROM DataLocks WHERE id IN (";
+		$first = true;
+		foreach ($ids as $id) {
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "'".$db->escapeString($id)."'";
+		}
+		$sql .= ")";
+		$r = $db->execute($sql);
+		$sql = "UPDATE DataLocks SET timestamp=".$ts." WHERE id IN (";
+		$first = true;
+		if ($r) {
+			while (($row = $db->nextRow($r))<>null) {
+				if ($row["locker_domain"] == PNApplication::$instance->user_management->domain &&
+					$row["locker_username"] == PNApplication::$instance->user_management->username) {
+					if ($first) $first = false; else $sql .= ",";
+					$sql .= "'".$db->escapeString($id)."'";
+				}
+			}
+		}
+		if (!$first)
+			$db->execute($sql.")");
+		self::mutexUnlock();
+		DataBaseLock::clean();
 	}
 	
 	/** check the given lock is locking the given table by the current user

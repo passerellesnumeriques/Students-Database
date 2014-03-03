@@ -318,5 +318,5 @@ function calendar_view_day(view, container) {
 	};
 	
 	this._init();
-	addLayoutEvent(container, function() { t._layout(); });
+	layout.addHandler(container, function() { t._layout(); });
 }

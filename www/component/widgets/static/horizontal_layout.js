@@ -16,7 +16,7 @@ function horizontal_layout(container) {
 	
 	t.removeLayout = function() {
 		t.container.widget = null;
-		removeLayoutEvent(t.container, t.layout);
+		layout.removeHandler(t.container, t.layout);
 	};
 	
 	t.layout = function() {
@@ -80,6 +80,6 @@ function horizontal_layout(container) {
 	};
 	
 	t.layout();
-	addLayoutEvent(t.container, t.layout);
-	fireLayoutEventFor(t.container.parentNode);
+	layout.addHandler(t.container, t.layout);
+	layout.invalidate(t.container.parentNode);
 }

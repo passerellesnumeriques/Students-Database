@@ -63,7 +63,7 @@ field_decimal.prototype._create = function(data) {
 			}
 			f();
 		};
-		require("autoresize_input.js",function(){autoresize_input(input);});
+		require("input_utils.js",function(){inputAutoresize(input);});
 		this.element.appendChild(input);
 		this.getCurrentData = function() {
 			if (input.value.length == 0) return this.config.can_be_null ? null : this.config.min;

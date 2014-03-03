@@ -26,7 +26,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	};
 	require([["typed_field.js",["field_date.js","field_time.js"]],"popup_window.js","calendar_view.js"],function() {
 		var o;
-		var calendar = ev ? window.top.calendar_manager.getCalendar(ev.calendar_id) : null;
+		var calendar = ev ? window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id) : null;
 		var ro = ev && !calendar.saveEvent;
 
 		t.content = document.createElement("DIV");
@@ -413,8 +413,9 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 				alert("Please enter a title for the event");
 				return;
 			}
+			e.calendar_provider_id = t.selected_calendar.provider.id;
 			e.calendar_id = t.selected_calendar.id;
-			if (ev && ev.calendar_id != t.selected_calendar.id) {
+			if (ev && (ev.calendar_id != t.selected_calendar.id || ev.calendar_provider_id != t.selected_calendar.provider.id)) {
 				if (!confirm("You are going to move the event to a different calendar. Are you sure you want to remove it from "+ev.calendar.name+" and create it into "+e.calendar.name+" ?"))
 					return;
 			} else if (ev) {

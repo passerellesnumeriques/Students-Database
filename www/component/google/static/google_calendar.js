@@ -83,7 +83,7 @@ function GoogleCalendar(id, name, color, show, writable) {
 				t.events = [];
 				for (var i = 0; i < google_events.length; ++i) {
 					var gev = google_events[i];
-					var ev = new CalendarEvent(-1, t.id, gev.iCalUID, null, null, false, gev.last_modified, gev.summary, gev.description ? gev.description : "", "", "", "", "");
+					var ev = new CalendarEvent(-1, 'Google', t.id, gev.iCalUID, null, null, false, gev.last_modified, gev.summary, gev.description ? gev.description : "", "", "", "", "");
 					if (gev.location) ev.location_freetext = gev.location;
 					if (gev.start && gev.start.date) {
 						ev.start = new Date();
@@ -218,6 +218,7 @@ function parseRRuleDate(s) {
 }
 
 function GoogleCalendarsProvider() {
+	CalendarsProvider.call(this,"Google");
 	var t=this;
 	this._retrieveCalendars = function(handler) {
 		load_google_calendars(function(calendars) {

@@ -95,7 +95,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			var text1 = document.createTextNode("PART "+part.index+" - ");
 			var input = document.createElement("input");
 			input.type = "text";
-			new autoresize_input(input,7);
+			inputAutoresize(input,7);
 			if(part.name == null || (part.name != null && !part.name.checkVisible())){
 				part.name = null;
 				input.value = "Part name";
@@ -197,7 +197,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				if(can_edit){
 					var input = document.createElement("input");
 					input.type = 'text';
-					new autoresize_input(input, 5);
+					inputAutoresize(input, 5);
 					//give a unique id to the input, to be able to get it at anytime
 					input.id = "question"+part.index+"."+part.questions[t.ordered[i]].index;
 					input.value = part.questions[t.ordered[i]].max_score;
@@ -367,7 +367,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		if(can_edit){
 			var input = document.createElement("input");
 			input.type = "text";
-			new autoresize_input(input, 5);
+			inputAutoresize(input, 5);
 			input.value = part.questions[t.ordered[i]][attribute];
 			input.index_in_ordered = i;
 			input.style.textAlign = "right";
@@ -615,7 +615,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	/**
 	 * Launch the process after including all the required javascripts files.
 	 */
-	require(["autoresize_input.js","exam_objects.js"],function(){
+	require(["input_utils.js","exam_objects.js"],function(){
 		t._init();
 	});
 }

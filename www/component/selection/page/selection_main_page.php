@@ -21,7 +21,6 @@ class page_selection_main_page extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
-		$calendar_name = SQLQuery::create()->bypassSecurity()->select("Calendar")->field("name")->where("id",$calendar_id)->executeSingleValue();
 		
 		$page->add_javascript("/static/widgets/header_bar.js");
 		$page->onload("new header_bar('steps_header','small');");
@@ -96,11 +95,9 @@ class page_selection_main_page extends selection_page {
 		<a href = "/dynamic/selection/page/test_functionalities">Tests</a>
 		<script type = 'text/javascript'>
 			var calendar_id = null;
-			var calendar_name = null;
 			var steps = null;
 			<?php
 			if(isset($calendar_id)) echo "calendar_id = ".json_encode($calendar_id).";";
-			if(isset($calendar_name)) echo "calendar_name = ".json_encode($calendar_name).";";
 			if(isset($steps)) echo "steps = ".json_encode($steps).";";
 			
 			echo "var unvalid_steps_to_display = ";
@@ -113,9 +110,9 @@ class page_selection_main_page extends selection_page {
 			?>
 			calendar_section = section_from_html('calendar_section');
 			require(["calendar.js","popup_window.js"],function(){
-				if(calendar_id != null && calendar_name != null){
+				if(calendar_id != null){
 					var cal_manager = new CalendarManager();
-					var PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
+					var PN_cal = window.top.pn_calendars_provider.getCalendar(calendar_id);
 					var init_calendar = function() {
 						cal_manager.addCalendar(PN_cal);
 						require("calendar_view.js",function(){
@@ -142,7 +139,7 @@ class page_selection_main_page extends selection_page {
 					if (PN_cal) init_calendar();
 					else {
 						var retry_calendar = function() {
-							PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
+							PN_cal = window.top.pn_calendars_provider.getCalendar(calendar_id);
 							if (PN_cal) init_calendar();
 							else setTimeout(retry_calendar, 500);
 						};

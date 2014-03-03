@@ -21,22 +21,24 @@ function load_static_resources(container) {
 	this._pc_container.style.display = "inline-block";
 	this._pc_container.style.height = "8px";
 	this._pc_container.style.width = "250px";
-	this._pc_container.style.border = "1px solid #808080";
+	this._pc_container.style.border = "1px solid #8080A0";
+	setBorderRadius(this._pc_container,3,3,3,3,3,3,3,3);
 	this._pc_container.style.marginLeft = "5px";
 	container.appendChild(this._pc_container);
 	/** HTML Element, inside <code>_pc_container</code> representing the progress in the progress bar */
 	this._pc = document.createElement("DIV");
 	this._pc.style.width = "0px";
 	this._pc.style.height = "8px";
-	this._pc.style.backgroundColor = "#D0D0FF";
+	this._pc.style.backgroundColor = "#22bbea";
 	this._pc_container.appendChild(this._pc);
+	setBorderRadius(this._pc,3,3,3,3,3,3,3,3);
 
 	/** Called when a resources has been loaded.
 	 * @param {Number} size size of the resources loaded, in bytes 
 	 **/
 	this.loaded = function(size) {
 		if (t._stopped) return;
-		window.top.pn_application_static.loaded_size += size;
+		window.top.pn_application_static.loaded_size += size+512;
 		var pc = Math.floor(window.top.pn_application_static.loaded_size*250/window.top.pn_application_static.total_size);
 		t._pc.style.width = pc+"px";
 	};
@@ -66,6 +68,7 @@ function load_static_resources(container) {
 	this._nextScript = function() {
 		if (window.top.pnapplication && window.top.pnapplication.last_activity > new Date().getTime()-3000) {
 			container.style.color = "#808080";
+			setOpacity(t._pc, 0.25);
 			setTimeout(t._nextScript);
 			return;
 		}
@@ -77,6 +80,7 @@ function load_static_resources(container) {
 		}
 		t._scripts_loading++;
 		container.style.color = "#000000";
+		setOpacity(t._pc, 1);
 		var script = null;
 		for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
 			if (window.top.pn_application_static.scripts[i].dependencies.length == 0) {
@@ -99,6 +103,7 @@ function load_static_resources(container) {
 	this._nextImage = function() {
 		if (window.top.pnapplication && window.top.pnapplication.last_activity > new Date().getTime()-3000) {
 			container.style.color = "#808080";
+			setOpacity(t._pc, 0.25);
 			setTimeout(t._nextImage);
 			return;
 		}
@@ -109,6 +114,7 @@ function load_static_resources(container) {
 		}
 		t._images_loading++;
 		container.style.color = "#000000";
+		setOpacity(t._pc, 1);
 		if (!window.top.pn_application_static) return;
 		if (window.top.pn_application_static.images.length == 0) { t._checkEnd(); return; }
 		var image = window.top.pn_application_static.images[0];
@@ -140,8 +146,8 @@ function load_static_resources(container) {
 				window.top.pn_application_static.scripts = res.scripts;
 				window.top.pn_application_static.images = res.images;
 				var start_size = window.top.pn_application_static.total_size;
-				for (var i = 0; i < res.scripts.length; ++i) window.top.pn_application_static.total_size += res.scripts[i].size;
-				for (var i = 0; i < res.images.length; ++i) window.top.pn_application_static.total_size += res.images[i].size;
+				for (var i = 0; i < res.scripts.length; ++i) window.top.pn_application_static.total_size += res.scripts[i].size+512;
+				for (var i = 0; i < res.images.length; ++i) window.top.pn_application_static.total_size += res.images[i].size+512;
 				t.loaded(start_size);
 				for (var i = 0; i < t._max_images_loading; ++i)
 					t._nextImage();

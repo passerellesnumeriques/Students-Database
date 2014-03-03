@@ -1,5 +1,5 @@
 /* #depends[typed_field.js] */
-if (typeof require != 'undefined') require("autoresize_input.js");
+if (typeof require != 'undefined') require("input_utils.js");
 
 function field_timestamp(data,editable,config) {
 	typed_field.call(this, data, editable, config);

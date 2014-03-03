@@ -96,7 +96,7 @@ function match_people_in_excel(peoples, excel_frame, excel_container, wiz, ondon
 			div_column_full_name.style.visibility = 'visible';
 			div_column_full_name.style.position = 'static';
 		}
-		fireLayoutEventFor(wiz.container);
+		layout.invalidate(wiz.container);
 	};
 	radio_separate.onchange = select_changed;
 	radio_merge.onchange = select_changed;

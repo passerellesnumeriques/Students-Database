@@ -7,6 +7,7 @@ theme = {
 	name: <?php global $theme; echo json_encode($theme);?>,
 	css: function (name) { add_stylesheet("/static/theme/"+this.name+"/style/"+name); },
 	build_icon: function(main,small,where) {
+		if (!where) where = "right_bottom";
 		return "/static/application/icon.php?main="+encodeURIComponent(main)+"&small="+encodeURIComponent(small)+"&where="+where;
 	},
 	icons_16: {

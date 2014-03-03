@@ -1,4 +1,4 @@
-function date_select(container, date, minimum, maximum) {
+function date_select(container, date, minimum, maximum, not_null, date_picker_icon) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	container.style.whiteSpace = 'nowrap';
 	
@@ -37,13 +37,13 @@ function date_select(container, date, minimum, maximum) {
 			if (t.maximum && year == t.maximum.getFullYear()) end = t.maximum.getMonth();
 		}
 		clear_options(t.select_month);
-		add_option(0,"",t.select_month);
+		if (!not_null) add_option(0,"",t.select_month);
 		for (var i = start; i <= end; ++i) add_option(i+1, months[i], t.select_month);
 		if (month-1 < start) month = start+1;
 		if (month-1 > end) month = end+1;
 		select_option(t.select_month, year == 0 ? 0 : month);
 		// update days
-		if (year == 0)
+		if (!not_null && year == 0)
 			select_option(t.select_day, 0);
 		t.select_month.onchange();
 	};
@@ -59,12 +59,12 @@ function date_select(container, date, minimum, maximum) {
 			if (t.maximum && year == t.maximum.getFullYear() && month == t.maximum.getMonth()+1) end = t.maximum.getDate();
 		}
 		clear_options(t.select_day);
-		add_option(0,"",t.select_day);
+		if (!not_null) add_option(0,"",t.select_day);
 		for (var i = start; i <= end; ++i) add_option(i, i, t.select_day);
 		if (day < start) day = start;
 		if (day > end) day = end;
 		select_option(t.select_day, month == 0 ? 0 : day);
-		if (month == 0)
+		if (!not_null && month == 0)
 			select_option(t.select_year, 0);
 		t.select_day.onchange();
 	};
@@ -80,13 +80,16 @@ function date_select(container, date, minimum, maximum) {
 		t.minimum = min;
 		t.maximum = max;
 		var prev_sel = t.select_year.value;
+		if (prev_sel != 0 && prev_sel < min.getFullYear()) prev_sel = min.getFullYear(); 
+		if (prev_sel != 0 && prev_sel > max.getFullYear()) prev_sel = max.getFullYear(); 
 		clear_options(t.select_year);
-		add_option(0,"",t.select_year);
+		if (!not_null) add_option(0,"",t.select_year);
 		for (var i = min.getFullYear(); i <= max.getFullYear(); ++i) add_option(i,i,t.select_year);
 		select_option(t.select_year, prev_sel);
 		t.select_year.onchange();
 	};
 	t.selectDate = function(date) {
+		if (date == null && not_null) date = new Date();
 		var cur_date = t.getDate();
 		if (cur_date == null) {
 			if (date == null) return;
@@ -120,4 +123,26 @@ function date_select(container, date, minimum, maximum) {
 	container.appendChild(t.select_day);
 	container.appendChild(t.select_month);
 	container.appendChild(t.select_year);
+	if (date_picker_icon) {
+		t.icon = document.createElement("IMG");
+		t.icon.src = theme.icons_16.date_picker;
+		t.icon.style.verticalAlign = "top";
+		t.icon.style.cursor = "pointer";
+		t.icon.onclick = function() {
+			require(["date_picker.js","context_menu.js"],function(){
+				var menu = new context_menu();
+				new date_picker(t.getDate(),t.minimum,t.maximum,function(picker){
+					picker.onchange = function(picker, date) {
+						t.selectDate(date);
+					};
+					picker.getElement().style.border = 'none';
+					menu.addItem(picker.getElement());
+					picker.getElement().onclick = null;
+					menu.element.className = menu.element.className+" popup_date_picker";
+					menu.showBelowElement(t.select_day);
+				});
+			});
+		};
+		container.appendChild(t.icon);
+	}
 }
