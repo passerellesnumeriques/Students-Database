@@ -12,7 +12,6 @@ if (typeof require != 'undefined') {
  */
 function organization(container, org, existing_types, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
-	container.style.backgroundColor = "#FFFFFF";
 	var t=this;
 	
 	/** Return the Organization structure */
@@ -24,6 +23,7 @@ function organization(container, org, existing_types, can_edit) {
 	this._init = function() {
 		// title: name of organization
 		container.appendChild(t.title_container = document.createElement("DIV"));
+		t.title_container.style.backgroundColor = "white";
 		if (org.id != -1) {
 			require("editable_cell.js", function() {
 				t.title = new editable_cell(t.title_container, "Organization", "name", org.id, "field_text", {min_length:1,max_length:100,can_be_null:false,style:{fontSize:"x-large"}}, org.name, null, function(field){
@@ -44,6 +44,7 @@ function organization(container, org, existing_types, can_edit) {
 		
 		// list of organization types
 		container.appendChild(t.types_container = document.createElement("DIV"));
+		t.types_container.style.backgroundColor = "white";
 		var span = document.createElement("SPAN");
 		span.style.fontStyle = "italic";
 		span.innerHTML = "Types: ";
@@ -172,6 +173,7 @@ function organization(container, org, existing_types, can_edit) {
 		tr.appendChild(td_points = document.createElement("TD"));
 		td_points.style.verticalAlign = "top";
 		var table = document.createElement("TABLE");
+		table.style.backgroundColor = "white";
 		td_points.appendChild(table);
 		var thead = document.createElement("THEAD");
 		table.appendChild(thead);

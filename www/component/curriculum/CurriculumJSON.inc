@@ -1,6 +1,15 @@
-<?php 
+<?php
+/**
+ * Functions to build JSON structure of the curriculum
+ */ 
 class CurriculumJSON {
 	
+	/**
+	 * Build a JSON structure Specialization
+	 * @param array $spe the row of the specialization from the database
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
 	public static function SpecializationJSON($spe) {
 		$s = "{";
 		$s .= "id:".$spe["id"];
@@ -8,6 +17,11 @@ class CurriculumJSON {
 		$s .= "}";
 		return $s;
 	}
+	/**
+	 * Build a JavaScript array of Specialization
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
 	public static function SpecializationsJSON() {
 		$s = "[";
 		$first = true;
@@ -19,6 +33,12 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/**
+	 * Build a Batch structure
+	 * @param integer $id batch id to retrieve
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
 	public static function BatchJSON($id) {
 		$batch = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$id)->executeSingleRow();
 		$periods = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","batch",$id)->execute();
@@ -34,6 +54,10 @@ class CurriculumJSON {
 		return self::BatchStructure($batch, $periods, $periods_spe, $classes);
 	}
 	
+	/** Build a JavaScript array of Batch
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
 	public static function BatchesJSON() {
 		$batches = SQLQuery::create()->select("StudentBatch")->execute();
 		$periods = SQLQuery::create()->select("AcademicPeriod")->execute();
@@ -49,6 +73,14 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/** Build a Batch structure
+	 * @param array $batch batch
+	 * @param array $periods periods
+	 * @param array $periods_spe specializations per period
+	 * @param array $classes classes
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
 	private static function BatchStructure($batch, $periods, $periods_spe, $classes) {
 		$s = "{";
 		$s .= "id:".$batch["id"];
@@ -92,6 +124,11 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/** Build a JSON structure SubjectCategory
+	 * @param array $category the category from the database
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
 	public static function SubjectCategoryJSON($category) {
 		$s = "{";
 		$s .= "id:".$category["id"];
@@ -100,6 +137,11 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/** Build a JavaScript array of SubjectCategory
+	 * @param array $categories the categories from the database
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
 	public static function SubjectCategoriesJSON($categories) {
 		$s = "[";
 		$first = true;
@@ -111,6 +153,11 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/** Build a JSON structure Subject
+	 * @param array $subject the subject from the database
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
 	public static function SubjectJSON($subject) {
 		$s = "{";
 		$s .= "id:".$subject["id"];
@@ -125,6 +172,11 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/** Build a JavaScript array of Subject
+	 * @param array $subjects the subjects from the database
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
 	public static function SubjectsJSON($subjects) {
 		$s = "[";
 		$first = true;

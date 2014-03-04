@@ -38,6 +38,12 @@ layout = {
 			layout._invalidated.push(element);
 		layout._layout_needed();
 	},
+	
+	_noresize_event: false,
+	cancelResizeEvent: function() {
+		this._noresize_event = true;
+	},
+	
 	_layout_needed: function() {
 		if (layout._process_timeout != null) return;
 		var f = function() {
@@ -96,38 +102,42 @@ layout = {
 				} while (e && e.nodeName != 'BODY' && e.nodeName != 'HTML');
 				if (handled == null) {
 					// no container
-					handled = e;
-				}
-				if (!new_list.contains(handled)) new_list.push(handled);
+					top_elements = [document.body];
+					break;
+					//handled = e;
+				} else
+					if (!new_list.contains(handled)) new_list.push(handled);
 			}
-			top_elements.push(layout._invalidated[0]);
-			for (var i = 1; i < layout._invalidated.length; ++i) {
-				var e = layout._invalidated[i];
-				// check if e is already contained in a top_elements
-				var p = e.parentNode;
-				var found = false;
-				while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
-					if (top_elements.contains(p)) { found = true; break; }
-					p = p.parentNode;
-				}
-				if (found) continue; // it is contained, skip it
-				// if e is a parent of some top_elements, remove those top_elements
-				for (var j = 0; j < top_elements.length; ++j) {
-					var te = top_elements[j];
-					p = te.parentNode;
-					found = false;
+			if (top_elements[0] != document.body) {
+				top_elements.push(new_list[0]);
+				for (var i = 1; i < new_list; ++i) {
+					var e = new_list[i];
+					// check if e is already contained in a top_elements
+					var p = e.parentNode;
+					var found = false;
 					while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
-						if (p == e) { found = true; break; }
+						if (top_elements.contains(p)) { found = true; break; }
 						p = p.parentNode;
 					}
-					if (found) {
-						// it is contained, remove it
-						top_elements.splice(j,1);
-						j--;
+					if (found) continue; // it is contained, skip it
+					// if e is a parent of some top_elements, remove those top_elements
+					for (var j = 0; j < top_elements.length; ++j) {
+						var te = top_elements[j];
+						p = te.parentNode;
+						found = false;
+						while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
+							if (p == e) { found = true; break; }
+							p = p.parentNode;
+						}
+						if (found) {
+							// it is contained, remove it
+							top_elements.splice(j,1);
+							j--;
+						}
 					}
+					// add this new top element
+					top_elements.push(e);
 				}
-				// add this new top element
-				top_elements.push(e);
 			}
 		}
 		layout._invalidated = [];
@@ -146,6 +156,22 @@ layout = {
 					if (h.length > 0) { layout.invalidate(p); break; }
 					p = p.parentNode;
 				}
+				// or siblings
+				p = top_elements[i].previousSibling;
+				while (p != null) {
+					var h = layout._getHandlers(p);
+					if (h.length > 0) { layout.invalidate(p); break; }
+					p = p.previousSibling;
+				}
+				p = top_elements[i].nextSibling;
+				while (p != null) {
+					var h = layout._getHandlers(p);
+					if (h.length > 0) { layout.invalidate(p); break; }
+					p = p.nextSibling;
+				}
+				// if we are in a frame, let's layout the frame
+				var win = getWindowFromDocument(top_elements[i].ownerDocument); 
+				if (win.frameElement) getWindowFromDocument(win.frameElement.ownerDocument).layout.invalidate(win.frameElement);
 			}
 		}
 		// process the children of the top elements
@@ -166,6 +192,9 @@ layout = {
 					if (h.length > 0) { layout.invalidate(p); break; }
 					p = p.parentNode;
 				}
+				// if we are in a frame, let's layout the frame
+				var win = getWindowFromDocument(top_elements[i].ownerDocument); 
+				if (win.frameElement) getWindowFromDocument(win.frameElement.ownerDocument).layout.invalidate(win.frameElement);
 			}
 		}
 		// mark activity, to adjust automatic layout timing
@@ -177,10 +206,10 @@ layout = {
 			for (var i = 0; i < handlers.length; ++i)
 				handlers[i]();
 			if (element.scrollHeight != element._layout_scroll_height || element.scrollWidth != element._layout_scroll_width) {
-				// size changed, let's do it again later
+				// size changed, let's do it again later, from its parent
 				element._layout_scroll_height = element.scrollHeight;
 				element._layout_scroll_width = element.scrollWidth;
-				layout.invalidate(element);
+				layout.invalidate(element.parentNode);
 				return;
 			}
 		}
@@ -200,10 +229,10 @@ layout = {
 			layout.invalidate(element);
 		} else if (handlers.length > 0 && call_handlers) {
 			if (element.scrollHeight != element._layout_scroll_height || element.scrollWidth != element._layout_scroll_width) {
-				// size changed, let's do it again later
+				// size changed, let's do it again later, from its parent
 				element._layout_scroll_height = element.scrollHeight;
 				element._layout_scroll_width = element.scrollWidth;
-				layout.invalidate(element);
+				layout.invalidate(element.parentNode);
 				return;
 			}
 		}
@@ -213,7 +242,7 @@ layout = {
 	// Layout activity and regular layout done to handle scroll bars changes
 	_last_layout_activity: 0,
 	_layout_auto: function() {
-		return;
+		/*
 		// go through all handled elements, and check if size of the element or one of its children changed
 		for (var i = 0; i < layout._layout_handlers.length; ++i) {
 			var e = layout._layout_handlers[i].element;
@@ -232,6 +261,7 @@ layout = {
 				}
 			}
 		}
+		*/
 		// try to find new images that may invalidate the layouts
 		var images = document.getElementsByTagName("IMG");
 		for (var i = 0; i < images.length; ++i) {
@@ -247,7 +277,7 @@ layout = {
 					this._layout_done = false;
 			});
 		}
-	},
+	}
 };
 
 // call onresize of window when all images are loaded, to trigger re-layout if needed
@@ -294,7 +324,14 @@ var _layout_interval = setInterval(_layout_auto,1000);
 if (typeof listenEvent != 'undefined') {
 	listenEvent(window, 'load', _all_images_loaded);
 	_init_images();
-	listenEvent(window, 'resize', function() { layout.invalidate(document.body); });
+	var listener = function(ev) {
+		if (layout._noresize_event) {
+			unlistenEvent(window,'resize',listener);
+			return;
+		}
+		layout.invalidate(document.body); 
+	};
+	listenEvent(window, 'resize', listener);
 }
 
 // useful functions to set height and width, taking into account borders, margins, and paddings

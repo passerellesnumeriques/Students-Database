@@ -70,7 +70,7 @@ class page_organization_profile extends Page {
 		$this->add_javascript("/static/contact/organization.js");
 		$container_id = $this->generateID();
 		$this->onload("window.organization = new organization('$container_id',$org_structure,$existing_types,true);");
-		echo "<div id='$container_id' style='margin:5px'></div>";
+		echo "<center><div id='$container_id' style='margin:5px;display:inline-block;border:1px solid #808080'></div></center>";
 		?>
 <!-- 		<table>
 			<th style = "height:100px">

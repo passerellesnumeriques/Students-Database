@@ -190,7 +190,6 @@ namespace datamodel {
 		public function &addPrimaryKey($name, $size=32) {
 			$c = new PrimaryKey($this, $name, $size);
 			array_push($this->columns, $c);
-			array_push($this->indexes, array("primary",$name));
 			$this->primary_key = $c;
 			return $this;
 		}

@@ -73,6 +73,7 @@ function address_text(address){
 	
 	if (empty) {
 		var div = document.createElement("DIV");
+		div.style.whiteSpace = 'nowrap';
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode("No information"));
 		div.style.fontStyle = "italic";

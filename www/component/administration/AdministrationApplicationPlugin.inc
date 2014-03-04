@@ -1,5 +1,8 @@
 <?php
-require_once("component/application/ApplicationPlugin.inc"); 
+require_once("component/application/ApplicationPlugin.inc");
+/**
+ * Add an administration section to the application
+ */ 
 class AdministrationApplicationPlugin implements ApplicationPlugin {
 	public function getPriority() { return 10000; }
 	

@@ -43,8 +43,10 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		container.appendChild(this.view_container_container);
 		var ready_count = 0;
 		var ready = function() {
-			if (++ready_count == 2 && onready)
-				onready();
+			if (++ready_count == 2) {
+				if (onready) onready();
+				layout.invalidate(container);
+			}
 		};
 		if (has_fixed_height)
 			require("vertical_layout.js",function(){
@@ -162,6 +164,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 
 			t.updateHeader();
 			layout.addHandler(t.header, function() { t.updateHeader(); });
+			layout.invalidate(container);
 		});
 	};
 	/** Called when the zoom is changed, to update the text displaying zoom information */
@@ -257,12 +260,13 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	};
 	/** Add a new event and display it
 	 * @param {Object} ev the event to display
+	 * @param {Number} try_counter internal use only, in case the view does not exist, we retry several time until the view is created, or we cancel the operation
 	 */
 	this.addEvent = function(ev, try_counter) {
 		if (!this.view) {
 			if (!try_counter) try_counter = 0;
 			if (try_counter == 100) {
-				console.log("calendar_view.js:addEvent: no view...");
+				console.error("calendar_view.js:addEvent: no view...");
 				return;
 			}
 			setTimeout(function() { t.addEvent(ev, try_counter+1); }, 100); 

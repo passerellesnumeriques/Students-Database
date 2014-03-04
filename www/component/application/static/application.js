@@ -17,6 +17,7 @@ if (window == window.top) {
 				if (w.frameElement.unloading_anim) return;
 				var start = new Date().getTime();
 				var f = function() {
+					if (!w.frameElement || !w.frameElement.loading_t) return;
 					var now = new Date().getTime();
 					if (!w._onload_done || !w._page_ready || !w.layout || w.layout._invalidated.length > 0 || w.layout._last_layout_activity == 0 || now-w.layout._last_layout_activity < 30) {
 						if (now-start < 2500) {
@@ -29,8 +30,10 @@ if (window == window.top) {
 						w.frameElement.loading_anim = null;
 					}
 					w.frameElement.unloading_anim = animation.fadeOut(w.frameElement.loading_t, 300, function() {
-						w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
-						w.frameElement.loading_t = null;
+						if (w.frameElement.loading_t) {
+							w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
+							w.frameElement.loading_t = null;
+						}
 						w.frameElement.unloading_anim = null;
 					});
 				};

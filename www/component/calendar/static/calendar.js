@@ -140,14 +140,19 @@ function CalendarManager() {
 
 /**
  * Abstract class of a calendars provider
+ * @param {String} id the unique identifier for the provider 
  */
 function CalendarsProvider(id) {
 	this.id = id;
 }
 CalendarsProvider.prototype = {
+	/** {Array} list of Calendar owned by this provider */
 	calendars: [],
+	/** {Custom_Event} event raised when a new calendar appears on this provider */
 	on_calendar_added: new Custom_Event(),
+	/** {Custom_Event} event raised when a calendar disappears on this provider */
 	on_calendar_removed: new Custom_Event(),
+	/** Reload the list of calendars from this provider */
 	refreshCalendars: function() {
 		var t=this;
 		this._retrieveCalendars(function (list) {
@@ -169,7 +174,14 @@ CalendarsProvider.prototype = {
 				t.on_calendar_removed.fire(removed[i]);
 		});
 	},
+	/** Function to be overriden by the implementation, to load the list of calendars on this provider
+	 * @param {Function} handler called when the list is ready, the list of calendars is given as parameter
+	 */
 	_retrieveCalendars: function(handler) { },
+	/** Retrieve a calendar by id on this provider
+	 * @param {String} id the identifier of the calendar to retrieve
+	 * @returns {Calendar} the calendar, or null if it does not exist
+	 */
 	getCalendar: function(id) {
 		for (var i = 0; i < this.calendars.length; ++i)
 			if (this.calendars[i].id == id) return this.calendars[i];
@@ -253,11 +265,16 @@ if (!window.top.CalendarsProviders) {
 				handler_for_each_provider(this._providers[i]);
 			this._handlers.push(handler_for_each_provider);
 		},
+		/** Retrieve a calendar provider by id
+		 * @param {String} id identifier of the provider
+		 * @returns {CalendarsProvider} the provider, or null if it does not exist
+		 */
 		getProvider: function(id) {
 			for (var i = 0; i < this._providers.length; ++i)
 				if (this._providers[i].id == id) return this._providers[i];
 			return null;
 		},
+		/** Internal function to refresh the list of calendars on all providers */
 		_refresh: function() {
 			for (var i = 0; i < this._providers.length; ++i)
 				for (var j = 0; j < this._providers[i].calendars.length; ++j)
@@ -449,6 +466,7 @@ function CalendarControl(container, cal) {
  * @param {String} color the color
  * @param {Boolean} show indicates if the events should be displayed
  * @param {Boolean} writable indicates if the calendar can be modified
+ * @param {String} icon icon of the calendar
  */
 function PNCalendar(provider, id, name, color, show, writable, icon) {
 	Calendar.call(this, provider, name, color, show, icon);

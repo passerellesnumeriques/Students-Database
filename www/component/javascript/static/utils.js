@@ -489,7 +489,7 @@ function log_exception(e, additional_message) {
 	}
 	if (additional_message)
 		msg += " "+additional_message;
-	console.log(msg);
+	window.top.console.error(msg);
 	var stack = null;
 	if (e.stack)
 		stack = e.stack;
@@ -507,7 +507,7 @@ function log_exception(e, additional_message) {
 	    stack = s;
 	}
 	if (stack)
-		console.log("Stack trace:"+stack);
+		window.top.console.error("Stack trace:"+stack);
 }
 
 /**
@@ -526,8 +526,12 @@ function error_dialog(message) {
  */
 function lock_screen(onclick, content) {
 	var div = document.getElementById('lock_screen');
-	if (div) return;
+	if (div) {
+		div.usage_counter++;
+		return;
+	}
 	div = document.createElement('DIV');
+	div.usage_counter = 1;
 	div.id = "lock_screen";
 	div.style.backgroundColor = "rgba(128,128,128,0.5)";
 	div.style.position = "fixed";
@@ -573,6 +577,10 @@ function set_lock_screen_content(div, content) {
 function unlock_screen(div) {
 	if (!div) div = document.getElementById('lock_screen');
 	if (!div) return;
+	if (typeof div.usage_counter != 'undefined') {
+		div.usage_counter--;
+		if (div.usage_counter > 0) return;
+	}
 	unlistenEvent(window, 'resize', div.listener);
 	if (typeof animation != 'undefined') {
 		div.id = '';

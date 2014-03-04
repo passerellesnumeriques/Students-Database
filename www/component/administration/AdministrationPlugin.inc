@@ -32,6 +32,8 @@ class AdministrationPage {
 	 * @param string $title Title of the page
 	 * @param string $page URL of the page
 	 * @param string $icon16 Icon (16x16 pixels) of the page
+	 * @param string $icon32 Icon (32x32 pixels) of the page
+	 * @param string $info_text text describing the page that will be displayed in a tooltip
 	 */
 	public function __construct($title, $page, $icon16, $icon32, $info_text) {
 		$this->title = $title;
