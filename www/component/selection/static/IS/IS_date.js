@@ -2,13 +2,12 @@
  * @param container
  * @param data the object given by the #SelectionJSON#InformationSessionFromID method
  * @param default_duration the duration that must be pre_selected when the event is created (coming from config)
- * @param can_read
  * @param can_manage: if true, the user can modify/remove the date
  * @param all_durations all the possibilities set in #config#["default_duration_IS"][2]
  */
 
 
-function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_read, can_manage, all_durations){
+function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_manage, all_durations){
 	var t = this;
 	require(["popup_window.js",["typed_field.js","field_date.js","field_time.js"],"input_utils.js","section.js"],function(){
 		t.container_of_section_content = document.createElement("div");
@@ -46,24 +45,11 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	
 	t._init = function(){
 		if(t.event != null && typeof(t.event.id) != "undefined"){
-			// t._setThead();
 			t._setTable();
 			if(can_manage) t._setFooter();
 		}
 		t.container_of_section_content.appendChild(t.table);
 	};
-	
-	// t._setThead = function(){
-		// var thead  = document.createElement("thead");
-		// var tr_head = document.createElement("tr");
-		// var th_head = document.createElement("th");
-		// th_head.colSpan = 2;
-		// th_head.innerHTML = "<img src = '"+theme.icons_16.date_picker+"' /> Date";
-		// tr_head.appendChild(th_head);
-		// thead.appendChild(tr_head);
-		// setCommonStyleTable(t.table, th_head, "#DADADA");
-		// t.table.appendChild(thead);
-	// }
 	
 	t._setTable = function(){
 		var tbody = document.createElement("tbody");
@@ -71,7 +57,6 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		var td1 = document.createElement("td");
 		var td2 = document.createElement("td");
 		td1.innerHTML = "<font color='#808080'><b>Date selected: </b></font>";
-		// td1.style.fontColor = "#959595";
 		if(t.event.id != -1 || t.event.start != null){
 			var start = null;
 			if(typeof(t.event.start) == "string"){
@@ -158,12 +143,6 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			t._resetTableAndEvent();
 		};
 		remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"' /> Unset date";
-		remove_button.onmouseover = function(){
-			this.innerHTML = "<img src = '"+theme.icons_16.remove_black+"' /> Unset date";
-		};
-		remove_button.onmouseout = function(){
-			this.innerHTML = "<img src = '"+theme.icons_16.remove+"' /> Unset date";
-		};
 		if(t.event.start != null)
 			t.section.addToolBottom(remove_button);
 	};

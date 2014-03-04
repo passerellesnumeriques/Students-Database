@@ -174,15 +174,15 @@ class SelectionJSON{
 	public static function ISPartnersSQL(&$q){
 		$alias = $q->getTableAlias("InformationSessionPartner");
 		if(!$alias)
-			$alias = "InformationSession";
+			$alias = "InformationSessionPartner";
 		$alias_contact_point = $q->getTableAlias("InformationSessionContactPoint");
 		if(!$alias_contact_point)
 			$alias_contact_point = "InformationSessionContactPoint";
 		$q
-		->field("InformationSessionPartner","organization","organization")
-		->field("InformationSessionPartner","host","host")
-		->field("InformationSessionPartner","host_address","host_address")
-		->field("InformationSessionContactPoint","people","contact_point");
+		->field($alias,"organization","organization")
+		->field($alias,"host","host")
+		->field($alias,"host_address","host_address")
+		->field($alias_contact_point,"people","contact_point");
 	}
 	
 	/**
@@ -293,6 +293,49 @@ class SelectionJSON{
 		} else $data.="{}";
 		return $data;
 	
+	}
+	
+	public static function InformationSessionTableData2DB($json){
+		$a = array(
+				"date" => @$json["date"],
+				"geographic_area" => @$json["geographic_area"],
+				"number_boys_expected" => @$json["number_boys_expected"],
+				"number_boys_real" => @$json["number_boys_real"],
+				"number_girls_expected" => @$json["number_girls_expected"],
+				"number_girls_real" => @$json["number_girls_real"],
+		);
+		if(isset($json["name"]))
+			$a["name"] = $json["name"];
+		else if(!isset($json["name"]) && isset($json["geographic_area"])){
+			//Make sure that all the informations sessions have at least a name, to be displayed into the datalist
+			$a["name"] = PNApplication::$instance->geography->get_geographic_area_text($json["geographic_area"]);
+		}
+		if(isset($json["id"]))
+			$a["id"] = $json["id"];
+		return $a;
+	}
+	
+	public static function InformationSessionPartnersAndContactPoints2DB($json){
+		$rows_IS_partner = array();
+		$rows_IS_contact_point = array();
+		foreach($json["partners"] as $p){
+			array_push($rows_IS_partner,array(
+			"information_session" => $json["id"],
+			"organization" => $p["organization"],
+			"host" => $p["host"],
+			"host_address" => $p["host_address"]
+			));
+			if(isset($p["contact_points_selected"]) && count($p["contact_points_selected"]) > 0){
+				foreach($p["contact_points_selected"] as $people){
+					array_push($rows_IS_contact_point,array(
+					"information_session" => $json["id"],
+					"organization" => $p["organization"],
+					"people" => $people
+					));
+				}
+			}
+		}
+		return array($rows_IS_partner, $rows_IS_contact_point);
 	}
 	
 /**

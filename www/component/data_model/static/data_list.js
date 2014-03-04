@@ -161,7 +161,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	 * @returns {String} root table name
 	 */
 	t.getRootTable = function() { return t._root_table; };
-	/** Select a row, if available, correspondig to the given key in the given table
+	/** Select a row, if available, corresponding to the given key in the given table
 	 * @param {String} table table name
 	 * @param {Number} key the key in the table identifying the row to search
 	 */
@@ -171,6 +171,19 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				for (var row = 0; row < t.data.length; ++row) {
 					if (t.data[row].values[col].k == key) {
 						t.grid.selectByIndex(row, true);
+						break;
+					}
+				}
+			}
+		}
+	};
+	
+	t.disableSelectByTableKey = function(table, key){
+		for (var col = 0; col < t.show_fields.length; ++col) {
+			if (t.show_fields[col].table == table) {
+				for (var row = 0; row < t.data.length; ++row) {
+					if (t.data[row].values[col].k == key) {
+						t.grid.disableByIndex(row, true);
 						break;
 					}
 				}
