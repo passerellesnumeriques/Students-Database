@@ -1,6 +1,5 @@
 <?php 
 require_once("/../selection_page.inc");
-require_once("profile.inc");
 class page_IS_profile extends selection_page {
 	public function get_required_rights() { return array("see_information_session_details"); }
 	public function execute_selection_page(&$page){
