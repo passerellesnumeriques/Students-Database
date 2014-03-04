@@ -134,7 +134,7 @@ function select_address(container, data, organization_contacts, can_manage){
 			t.address = new PostalAddress(null, null, null, null, null, null, null, null);
 		/* Reset the table */
 		t.resetTableAddress(div_locker);
-	}
+	};
 	
 	t._setOrSelectPartnerAddressDialog = function(host){
 		var cont = document.createElement("div");

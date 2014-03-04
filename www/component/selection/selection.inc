@@ -663,6 +663,45 @@ class selection extends Component {
 	}
 	
 	/**
+	 * Check if a given IS has a host set
+	 * @param number $IS_id
+	 * @return boolean
+	 */
+	public function isHostSetToIS($IS_id){
+		$has_host = SQLQuery::create()
+				->select("InformationSessionPartner")
+				->field("host")
+				->whereValue("InformationSessionPartner", "host", true)
+				->whereValue("InformationSessionPartner", "information_session", $IS_id)
+				->executeSingleValue();
+		$has_host = $has_host == null ? false : $has_host;
+		return $has_host;
+	}
+	
+	/**
+	 * Get all the IS with no host set
+	 * @return array | null if any IS has no host, an array is returned containing arrays: array(id, name)
+	 */
+	public function getAllISWithNoHost(){
+		$all_IS = SQLQuery::create()
+			->select('InformationSession')
+			->field("InformationSession","id")
+			->field("InformationSession","name")
+			->execute();
+		$IS_with_no_host = array();
+		if($all_IS <> null){
+			foreach ($all_IS as $is){
+				if(!$this->isHostSetToIS($is["id"]))
+					array_push($IS_with_no_host, $is);
+			}
+			$IS_with_no_host = count($IS_with_no_host) > 0 ? $IS_with_no_host : null;
+			return $IS_with_no_host;
+		} else 
+			return null;
+		
+	}
+	
+	/**
 	 * Get all the existing exam subjects from the database
 	 * @return array [["id" => , "name" =>],...]
 	 */
@@ -1202,6 +1241,9 @@ class selection extends Component {
 					SQLQuery::create()->insertMultiple("ExamPartTopic", $parts_fields_values, $db_lock);
 				if(count($full_subject_field_values) >0)
 					SQLQuery::create()->insertMultiple("ExamTopicFullExam", $full_subject_field_values, $db_lock);
+				//Check the max score and questions fields
+				$this->checkTopicMaxScoreField($id);
+				$this->checkTopicNumberQuestionsField($id);
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}
