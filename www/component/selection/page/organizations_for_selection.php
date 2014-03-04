@@ -80,7 +80,11 @@ class page_organizations_for_selection extends selection_page {
 					if(page_mode == null){
 						list.makeRowsClickable(function(row){
 							var orga_id = list.getTableKeyForRow('Organization',row.row_id);
-							location.href = "/dynamic/contact/page/organization_profile?organization="+orga_id;
+							require("popup_window.js",function() {
+								var popup = new popup_window("Organization", "/static/contact/organization.png", "");
+								popup.setContentFrame("/dynamic/contact/page/organization_profile?organization="+orga_id);
+								popup.show();
+							});
 						});
 					}
 					<?php } ?>

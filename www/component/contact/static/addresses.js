@@ -34,6 +34,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	/** Create the table that contains the addresses */
 	this._createTable = function() {
 		container.appendChild(this.table = document.createElement("table"));
+		this.table.style.backgroundColor = "white";
 		this.table.appendChild(this.thead = document.createElement("thead"));
 		this.table.appendChild(this.tbody = document.createElement("tbody"));
 		this.table.appendChild(this.tfoot = document.createElement("tfoot"));
@@ -168,6 +169,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 					};
 					if (is_new) { is_new = false; div_data.onclick(); }
 				}
+				layout.invalidate(div_data);
 			};
 			create(address);
 		});

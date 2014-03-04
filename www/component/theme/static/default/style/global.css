@@ -30,22 +30,6 @@ table.all_borders>tbody>tr>th, table.all_borders>tr>th {
 	border: 1px solid black;
 }
 
-.section_with_title {
-	border: 1px solid #A0A0F0;
-	border-radius: 5px;
-}
-.section_with_title>div:first-child {
-	padding: 5px;
-	background-color: #E0E0FF;
-	border-top-left-radius: 5px;
-	border-top-right-radius: 5px;
-}
-.section_with_title>div+div {
-	padding: 5px;
-	border-bottom-left-radius: 5px;
-	border-bottom-right-radius: 5px;
-}
-
 .lock_screen_content {
 	display: inline-block;
 	padding: 5px;

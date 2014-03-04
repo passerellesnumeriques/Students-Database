@@ -35,6 +35,9 @@ class page_create_people extends Page {
 		$types = $input["types"];
 		
 		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->require_javascript("section.js");
+		theme::css($this, "wizard.css");
+		theme::css($this, "section.css");
 		?>
 		<script type='text/javascript'>
 		window.create_people = {
@@ -66,12 +69,18 @@ class page_create_people extends Page {
 				}
 				usort($pages, "cmp_create_people_pages");
 				foreach ($pages as $p) {
+					$div_id = $this->generateID();
 					?>
-					<div class='section_with_title' style='float:left;margin:5px'>
-						<div><img src='<?php echo $p[0];?>' style='vertical-align:bottom;padding-right:3px'/><?php echo $p[1];?></div>
-						<div><?php include $p[2];?></div>
+					<div id='<?php echo $div_id;?>' style='float:left;margin:5px'
+						icon = '<?php echo $p[0];?>'
+						title = <?php echo json_encode($p[1]);?>
+						collapsable = 'false'
+						css = 'soft'
+					>
+						<?php include $p[2];?>
 					</div>
 					<?php
+					$this->onload("section_from_html(".json_encode($div_id).");");
 				}
 				?>
 				<br style='clear: both;'/>

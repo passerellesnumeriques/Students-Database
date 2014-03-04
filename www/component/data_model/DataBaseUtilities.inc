@@ -17,6 +17,9 @@ class DataBaseUtilities {
 		$p = $ref->getProperty("columns");
 		$p->setAccessible(true);
 		$columns = $p->getValue($table);
+		$p = $ref->getProperty("indexes");
+		$p->setAccessible(true);
+		$indexes = $p->getValue($table);
 		
 		$first = true;
 		foreach ($columns as $col) {
@@ -26,6 +29,24 @@ class DataBaseUtilities {
 		$pk = $table->getPrimaryKey();
 		if ($pk <> null)
 			$sql .= ", PRIMARY KEY(`".$pk->name."`)";
+		else {
+			$key = $table->getKey();
+			$sql .= ", UNIQUE KEY `table_key` (";
+			$first = true;
+			foreach ($key as $colname) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= "`".$colname."`";
+			}
+			$sql .= ")";
+		}
+		foreach ($indexes as $index) {
+			$sql .= ", KEY `".$index[0]."` (";
+			for ($i = 1; $i < count($i); $i++) {
+				if ($i > 1) $sql .= ",";
+				$sql .= "`".$index[$i]."`";
+			}
+			$sql .= ")";
+		}
 		$sql .= ")";
 		$db_system->execute($sql);
 	}

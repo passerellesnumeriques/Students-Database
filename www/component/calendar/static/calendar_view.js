@@ -263,7 +263,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		if (!this.view) {
 			if (!try_counter) try_counter = 0;
 			if (try_counter == 100) {
-				console.log("calendar_view.js:addEvent: no view...");
+				console.error("calendar_view.js:addEvent: no view...");
 				return;
 			}
 			setTimeout(function() { t.addEvent(ev, try_counter+1); }, 100); 

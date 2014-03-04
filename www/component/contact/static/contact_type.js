@@ -18,6 +18,7 @@ if (typeof require != 'undefined') {
 function contact_type(contact_type, contact_type_name, owner_type, owner_id, contacts, can_edit, can_add, can_remove, ontypechanged, onready) {
 	/** table containing all contacts */
 	this.table = document.createElement("TABLE");
+	this.table.style.backgroundColor = "white";
 	this.table.appendChild(this.colgroup = document.createElement("COLGROUP"));
 	/** colgroup epement of the table, allowing to specify fixed column width */ 
 	this.colgroup.appendChild(this.col1 = document.createElement("COL"));

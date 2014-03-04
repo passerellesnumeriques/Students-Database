@@ -239,11 +239,13 @@ function resetLeftControls() {
 	var div = document.getElementById('pn_application_left_controls');
 	div.style.visibility = 'hidden';
 	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
+	layout.invalidate(div);
 }
 function resetRightControls() {
 	var div = document.getElementById('pn_application_right_controls');
 	div.style.visibility = 'hidden';
 	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
+	layout.invalidate(div);
 }
 function addMenuItem(icon, text, info, url) {
 	var item = document.createElement("A");
@@ -285,7 +287,6 @@ function addMenuItem(icon, text, info, url) {
 function addMenuControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
 	section_menu.addItem(control);
-	layout.invalidate(document.getElementById('pn_application_header'));
 }
 function addRightControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -293,7 +294,7 @@ function addRightControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
-	layout.invalidate(document.getElementById('pn_application_header'));
+	layout.invalidate(div);
 }
 function addLeftControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
@@ -301,7 +302,7 @@ function addLeftControl(control) {
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
-	layout.invalidate(document.getElementById('pn_application_header'));
+	layout.invalidate(div);
 }
 
 selectSection(sections[<?php

@@ -22,11 +22,11 @@ function horizontal_menu(menu, valign) {
 	
 	t.addItem = function(element) {
 		t.items.push(new HorizontalMenuItem(element));
-		t.update();
+		layout.invalidate(menu);
 	};
 	t.removeAll = function() {
 		t.items = [];
-		t.update();
+		layout.invalidate(menu);
 	};
 	
 	while (menu.childNodes.length > 0) {

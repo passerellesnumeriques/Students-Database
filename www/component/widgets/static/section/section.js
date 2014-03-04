@@ -8,6 +8,8 @@ function section_from_html(container) {
 	var icon = null;
 	var title = "";
 	var collapsable = false;
+	var fill_height = false;
+	var css = null;
 	if (container.hasAttribute("icon")) {
 		icon = container.getAttribute("icon");
 		container.removeAttribute("icon");
@@ -20,17 +22,25 @@ function section_from_html(container) {
 		collapsable = container.getAttribute("collapsable") == "true" ? true : false;
 		container.removeAttribute("collapsable");
 	}
+	if (container.hasAttribute("fill_height")) {
+		fill_height = container.getAttribute("fill_height") == "true" ? true : false;
+		container.removeAttribute("fill_height");
+	}
+	if (container.hasAttribute("css")) {
+		css = container.getAttribute("css");
+		container.removeAttribute("css");
+	}
 	var content = document.createElement("DIV");
 	while (container.childNodes.length > 0) content.appendChild(container.childNodes[0]);
-	var s = new section(icon,title,content,collapsable);
+	var s = new section(icon,title,content,collapsable,fill_height,css);
 	container.appendChild(s.element);
 	return s;
 }
 
-function section(icon, title, content, collapsable, fill_height) {
+function section(icon, title, content, collapsable, fill_height, css) {
 	var t=this;
 	this.element = document.createElement("DIV");
-	this.element.className = "section";
+	this.element.className = "section"+(css ? " "+css : "");
 	
 	this.addTool = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }

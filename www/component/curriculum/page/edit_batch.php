@@ -33,7 +33,7 @@ class page_edit_batch extends Page {
 			$periods_ids = array();
 			foreach ($periods as $period) array_push($periods_ids, $period["id"]);
 			$periods_specializations = array();
-			if (count($periods_ids) > 0) $periods_specializations = PNApplication::$instance->curriculum->getPeriodsSpecializations($periods_ids);
+			if (count($periods_ids) > 0) $periods_specializations = PNApplication::$instance->curriculum->getAcademicPeriodsSpecializations($periods_ids);
 		}
 		require_once("component/curriculum/CurriculumJSON.inc");
 		$this->add_javascript("/static/curriculum/curriculum_objects.js");

@@ -99,6 +99,14 @@ class curriculum extends Component {
 			->execute();
 	}
 	
+	/** Retrieve the specializations for the given periods
+	 * @param array $periods_ids list of requested periods
+	 * @return array rows from database associating a period id to a specialization id
+	 */
+	public function getAcademicPeriodsSpecializations($periods_ids) {
+		return SQLQuery::create()->select("AcademicPeriodSpecialization")->whereIn("AcademicPeriodSpecialization","period",$periods_ids)->execute();
+	}
+	
 	/** Retrieve the given period
 	 * @param integer $period_id the requested period
 	 * @return array the row from the database

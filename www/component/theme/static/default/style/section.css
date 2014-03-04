@@ -2,12 +2,20 @@
 	border: 1px solid #80A060;
 	border-radius: 5px;
 }
+.section.soft {
+	border: 1px solid #A0A0F0;
+}
 .section_header {
 	border-radius: 5px 5px 0px 0px;
 	border-bottom: 1px solid #80A060; 
 	white-space: nowrap;
 	height: 25px;
 	background: linear-gradient(to bottom, #E0F0E0 0%, #C0E8B0 100%);
+}
+.section.soft .section_header {
+	border-bottom: none;
+	background: none;
+	background-color: #E0E0FF;
 }
 .section_header.collapsed {
 	border-radius: 5px;
@@ -30,5 +38,6 @@
 }
 .section_footer_empty {
 	border-radius: 0px 0px 5px 5px;
+	background-color: white;
 	height: 3px;
 }
