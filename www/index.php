@@ -88,7 +88,9 @@ case "static":
 		if (!file_exists("component/".$component_name."/static/".$path)) invalid("Static resource not found");
 		include "component/".$component_name."/static/".$path;
 		die();
-	default: invalid("Invalid static resource type");
+	default:
+		if (substr($component_name,0,4) <> "lib_")
+			invalid("Invalid static resource type");
 	}
 	if (!file_exists("component/".$component_name."/static/".$path)) invalid("Static resource not found");
 	if ($ext == "css") {

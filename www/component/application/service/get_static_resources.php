@@ -12,11 +12,11 @@ class service_get_static_resources extends Service {
 		$components = $this->orderComponents($components);
 		$scripts = array();
 		$images = array();
-		// start with theme
+		// start with theme, remove libraries
 		for ($i = 0; $i < count($components); $i++)
-			if ($components[$i] == "theme") {
+			if ($components[$i] == "theme" || substr($components[$i],0,4) == "lib_") {
 				array_splice($components, $i, 1);
-				break;			
+				$i--;
 			}
 		global $theme;
 		$this->browse("component/theme/static/".$theme."/", "/static/theme/".$theme."/", $scripts, $images);

@@ -63,6 +63,7 @@ theme::$icons_10 = array(
 	"online" => 		"/static/theme/default/icons_10/online.gif",
 	"offline" => 		"/static/theme/default/icons_10/offline.gif",
 	"popup" =>	 		"/static/theme/default/icons_10/popup.png",
+	"refresh" => 		"/static/theme/default/icons_10/refresh.png",
 	"remove" => 		"/static/theme/default/icons_10/remove.png",
 	"save" => 			"/static/theme/default/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/default/icons_10/semi_online.gif",
