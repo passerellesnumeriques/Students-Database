@@ -104,6 +104,7 @@ class SQLQuery {
  	public $order_by = array();
  	/** @var boolean indicates if we have to skip security checks or not */
  	public $bypass_security = false;
+ 	/** @var boolean indicates if we generate warning when a table is accessed from a component which does not own the table (only in Dev domain) */
  	public $warning; 
  	/** @var boolean indicates to use DISTINCT in the select */
 	public $distinct = false;
@@ -118,6 +119,7 @@ class SQLQuery {
 	/** Generates a unique table alias name (useful when building a big list) */
 	public function generateTableAlias() { return "t".($this->table_alias_counter++); }
 	
+	/** Do not generate warnings */
 	public function noWarning() { $this->warning = false; return $this; }
 
 	/** Use a sepcific database, instead of the default one which is the one of the current domain
@@ -183,11 +185,18 @@ class SQLQuery {
 		return $this;
 	}
 	
+	/** Select a table (the table in SELECT .. FROM table ..)
+	 * @param string $table_name name of the table (not SQL name, but data model name)
+	 * @param string|null $table_alias optionally specify an alias for the table
+	 */
 	public function &selectTable($table_name, $table_alias = null) {
 		$this->tables[$table_name] = $table_alias;
 		$this->checkTableAccess($table_name);
 		return $this;
 	}
+	/** Check which component is called, and generate a warning if the given table is not owned by this component
+	 * @param string $table_name name of the table which is accessed
+	 */
 	private function checkTableAccess($table_name) {
 		if (!$this->warning) return;
 		try { throw new Exception(); }

@@ -257,6 +257,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	};
 	/** Add a new event and display it
 	 * @param {Object} ev the event to display
+	 * @param {Number} try_counter internal use only, in case the view does not exist, we retry several time until the view is created, or we cancel the operation
 	 */
 	this.addEvent = function(ev, try_counter) {
 		if (!this.view) {

@@ -59,9 +59,13 @@ function load_static_resources(container) {
 		this._checkEnd();
 	};
 
+	/** {Number} number of scripts currently loading */
 	this._scripts_loading = 0;
+	/** {Number} maximum number of scripts that can be loaded at the same time */
 	this._max_scripts_loading = 5;
+	/** {Number} number of images currently loading */
 	this._images_loading = 0;
+	/** {Number} maximum number of images that can be loaded at the same time */
 	this._max_images_loading = 10;
 	
 	/** Start to load another script */
