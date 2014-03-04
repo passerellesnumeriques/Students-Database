@@ -355,6 +355,7 @@ function grid(element) {
 			if (tr.style.visibility == "hidden") continue; // do not select filtered/hidden
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
+			if (cb.disabled) continue; //do not select if the checkbox is disabled
 			cb.checked = 'checked';
 			cb.onchange();
 		}
@@ -366,6 +367,7 @@ function grid(element) {
 			var tr = t.table.childNodes[i];
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
+			if (cb.disabled) continue; //do not unselect if the checkbox is disabled
 			cb.checked = '';
 			cb.onchange();
 		}
@@ -412,6 +414,14 @@ function grid(element) {
 		var td = tr.childNodes[0];
 		var cb = td.childNodes[0];
 		cb.checked = selected ? 'checked' : '';
+		tr.className = selected ? "selected" : "";
+	};
+	t.disableByIndex = function(index, disabled){
+		if(!t.selectable) return;
+		var tr = t.table.childNodes[index];
+		var td = tr.childNodes[0];
+		var cb = td.childNodes[0];
+		cb.disabled = disabled;
 	};
 	t.selectByRowId = function(row_id, selected) {
 		if (!t.selectable) return;
@@ -421,6 +431,7 @@ function grid(element) {
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
 			cb.checked = selected ? 'checked' : '';
+			tr.className = selected ? "selected" : "";
 			break;
 		}
 	};

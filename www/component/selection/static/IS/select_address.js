@@ -1,364 +1,378 @@
-function select_address(container, data, organization_contacts, can_manage){
+function select_address(container, data, partners_contacts_points, can_manage){
 	var t = this;
-	t.data = data;
+	if(typeof container == "string")
+		container = document.getElementById(container);
 	
-	require(["popup_window.js","address_text.js","edit_address.js","section.js","contact_objects.js"],function(){
-		t.address = new PostalAddress(null, null, null, null, null, null, null, null);
-		t.container_of_section_content = document.createElement("div");
-		t.section = new section("/static/contact/address_16.png","Location",t.container_of_section_content,false);
-		container.appendChild(t.section.element);
-		t._setTableAddress();
-	});
+	t.onupdatehost = new Custom_Event();
 	
-	t.getData = function(){
-		return t.data;
-	}
+	t.reset = function(){
+		//Refresh content
+		t._refreshTableHeader();
+		t._refreshTableBody();
+		t._refreshTableFooter();
+		//Refresh layout
+		layout.invalidate(container);
+		//Fire onupdatehost
+		var index = t._getHostIndexInPartners();
+		var host_id = index == null ? null : data.partners[index].organization;
+		t.onupdatehost.fire(host_id);
+	};
 	
-	t._setTableAddress = function(){
-		t.table_address = document.createElement("table");
-		t.table_address.style.width = "100%";
-		
-		// var theader = document.createElement("thead");
-		var tbody = document.createElement("tbody");
+	t._init = function(){
+		t._table = document.createElement("table");//The table is splitted into three parts, independants, to be able to seperate the styles
+		t._tbody = document.createElement("tbody");//Contains the host detail
+		t._thead = document.createElement("thead");//Contains the address / geographic area
+//		t._tfoot = document.createElement("tfoot");//Contains the buttons
+		t._table.appendChild(t._thead);
+		t._table.appendChild(t._tbody);
+//		t._table.appendChild(t._tfoot);
+		t.container_of_section_content.appendChild(t._table);
+		t._refreshTableHeader();
+		t._refreshTableBody();
+		t._refreshTableFooter();
+	};
+	
+	t._refreshTableHeader = function(){
+		t._refreshElement(t._thead);
 		var tr = document.createElement("tr");
-		var th_header = document.createElement("th");
-		var tr_body = document.createElement("tr");
-		var td_body = document.createElement("td");
-		var host = t.getHostInData();
-		
-		/* One address is set in the data object (and exists into the database)*/
-		if(host != null && host.index == null){
-			// get the address object
-			if(t.address.id == null && host.id != -1 && host.id != "-1"){
-				service.json("contact","get_address",{id:host.id},function(address){
-					if(!address){		
-						t.address.id = -1;
-					} else {
-						t.address = address;
-					}
-					var text = new address_text(t.address);
-					td_body.appendChild(text.element);
-					if(can_manage) t._addSetAddressButton(host);
-				});
-			} else {
-				var text = new address_text(t.address);
-				td_body.appendChild(text.element);
-				if(can_manage) t._addSetAddressButton(host);
-			}
-		}
-		/* No address is set in the data object but one host is set */
-		if(host != null && host.index != null){
-			t.address = t._getAddressFromPartnerAndAddressIdInOrganization_contacts(data.partners[host.index].organization, host.id);
-			if(t.address != null && t.address != {}){
-				var text = new address_text(t.address);
-				td_body.appendChild(text.element);
-				if(can_manage) t._addSetAddressButton(host);
-			}
-		}		
-		/* No address nor host is set */
-		if(host == null){
-			td_body.innerHTML = "No location is set for this Information Session";
-			td_body.style.fontStyle = "italic";
-			if(can_manage) t._addSetAddressButton(host);
-		}
-		
-		/* Add remove address button */
-		if(can_manage && host != null) t._addRemoveAddressButton();
-		
-		
-		// th_header.innerHTML = "<img src = '/static/contact/address_16.png' style = 'vertical-align:bottom'/> Location";
-		// tr.appendChild(th_header);
-		// theader.appendChild(tr);
-		tr_body.appendChild(td_body);
-		tbody.appendChild(tr_body);
-		// t.table_address.appendChild(theader);
-		t.table_address.appendChild(tbody);
-		// setCommonStyleTable(t.table_address,th_header,"#DADADA");
-	
-		t.container_of_section_content.appendChild(t.table_address);
-	}
-	
-	t.resetTableAddress = function(div_locker){
-		t.container_of_section_content.removeChild(t.table_address);
-		t.section.resetToolBottom();
-		delete t.table_address;
-		t._setTableAddress();
-		if(typeof(div_locker) != "undefined" && div_locker != null) unlock_screen(div_locker);
-	}
-	
-	t._addSetAddressButton = function(host){
-		var div = document.createElement("div");
-		// var host = t.getHostInData();
-		if(host == null){
-			div.innerHTML = "<img src = '"+theme.icons_16.search+"' style ='vertical-align:bottom'/> Set a location";
-			div.className = "button";
-		}
-		if(host != null){
-			div.innerHTML = "<img src = '"+theme.icons_16.search+"'/> Change the location";
-			div.className = "button";
-		}
-		div.onclick = function(){
-			if(data.partners.length > 0 && t._noAllAddressesEmptyInOrganization_contacts()) t._setOrSelectPartnerAddressDialog(host);
-			else t._setAddressNoPartnerDialog(host);
-		};
-		t.section.addToolBottom(div);
-	};
-	
-	t._addRemoveAddressButton = function(){
-		var div = document.createElement("div");
-		div.innerHTML = "<img src = '"+theme.icons_16.remove+"'/> Unset location";
-		div.onmouseover = function(){div.innerHTML = "<img src = '"+theme.icons_16.remove_black+"'/> Unset location";};
-		div.onmouseout = function(){div.innerHTML = "<img src = '"+theme.icons_16.remove+"'/> Unset location";};
-		div.className = "button";
-		div.onclick = function(){
-			confirm_dialog("<center>Do you really want to unset <br/>the location of this Information Session?</center>",function(res){
-				if(res){
-					var div_locker = lock_screen();
-					t._removeAddress(div_locker);
-				}
-			});
-		};
-		t.section.addToolBottom(div);
-	};
-	
-	t._removeAddress = function(div_locker){
-		/* Reset data object */
-		data.address = null;
-		var host = t.getHostInData();
-		if(host != null && host.index != null){
-			data.partners[host.index].host = null;
-			data.partners[host.index].host_address = null;
-		}
-		/* Reset t.address */
-			delete t.address;
-			t.address = new PostalAddress(null, null, null, null, null, null, null, null);
-		/* Reset the table */
-		t.resetTableAddress(div_locker);
-	};
-	
-	t._setOrSelectPartnerAddressDialog = function(host){
-		var cont = document.createElement("div");
-		var cont_manually_set = document.createElement("div");
-		var pop = new popup_window("Set the location - 1/2",theme.icons_16.question,cont);
-		
-		var set_address = "<img src = '"+theme.icons_16.search+"'/> Manually choose";
-		var select_address = "<img src = '"+theme.icons_16.edit+"'/> Select from partners";
-		cont.innerHTML = "<center>You can set a pre-selected address using the partners' ones <br/> <i>or</i> manually choose an other address</center> <br/><i>Note: if no address is set to one partner, this partner wont be displayed in the list</i>";
-		pop.addButton(set_address,"set_address_button",function(){
-			pop.close();
-			t._manuallySetStepTwo(cont_manually_set,host);
-		});
-		pop.addButton(select_address,"select_address_button",function(){
-			pop.close();
-			t._popSelectAddressFromPartner(host);
-		});
-		// if (host != null){
-			// cont.innerHTML = "<center>You can set a pre-selected address using the partners ones <br/> <i>or</i> manually choose an other address<br/><i>Note: If you go on next step, the current host will be unselected</i></center>";
-		// }
-		
-		pop.show();
-	}
-	
-	t._manuallySetStepTwo = function(cont_manually_set,host){
-		var pop_manually_set = new popup_window("Set the location - 2/2 - <i>Manually set the address</i>","/static/contact/address_16.png",cont_manually_set);	
-		pop_manually_set.addOkCancelButtons(function(){
-			pop_manually_set.close();
-			var div_locker = lock_screen();
-			t._addAddressManually(host, div_locker);
-		});
-		new edit_address(cont_manually_set,t.address);
-		pop_manually_set.show();
-	}
-	
-	t._addAddressManually = function(host, div_locker){
-		if(host != null && host.index != null){
-			//set the host attribute of the corresponding partner to null
-			data.partners[host.index].host = null;
-			data.partners[host.index].host_address = null;
-		}
-		//update data.address, only in the case of the address does not exist
-		if(data.address == null) data.address = -1;
-		/* Reset the table */
-		t.resetTableAddress(div_locker);
-	}
-	
-	t._setAddressNoPartnerDialog = function(host){
-		var cont = document.createElement("div");
-		var pop = new popup_window("Set the location - 1/2",theme.icons_16.info,cont);
-		cont.innerHTML = "<center> This information session as no partner yet <br/> or no address is set to any partner, <br/> so you can only manually set the location</center>";
-		pop.addOkCancelButtons(function(){
-			var cont_manually_set = document.createElement("div");
-			pop.close();
-			t._manuallySetStepTwo(cont_manually_set,host);
-		});
-		pop.show();
-	}
-	
-	t._popSelectAddressFromPartner = function(host){
-		var cont = document.createElement("div");
-		//var pop = new popup_window("Set the location - 2/2 - <i>Select from partners addresses</i>","/static/contact/address_16.png",cont);
-		var pop = new popup_window("Set the location - 2/2","/static/contact/address_16.png",cont);
-		var table_partners = document.createElement("table");
-		t._setTablePartnersAddresses(table_partners, pop);
-		cont.appendChild(table_partners);
-		pop.show();
-	}
-	
-	t._setTablePartnersAddresses = function(table_partners, pop){
-		for(var i = 0; i < organization_contacts.length; i++){
-			if(typeof(organization_contacts[i].addresses[0]) != "undefined" && organization_contacts[i].addresses[0].id != null && organization_contacts[i].addresses[0].id != "null"){
-				var tr_header_table_partners = document.createElement("tr");
-				var th_table_partners = document.createElement("th");
-				var name = data.partners[t._findPartnerIndexInData(organization_contacts[i].id)].organization_name;
-				th_table_partners.innerHTML = name;
-				tr_header_table_partners.appendChild(th_table_partners);
-				table_partners.appendChild(tr_header_table_partners);
-				var table = document.createElement("table");
-				table.style.border = "1px solid";
-				table.style.width = "100%";
-				setBorderRadius(table,5,5,5,5,5,5,5,5);
-				table.style.borderColor = "#0F6CA2";
-				table.style.marginBottom = "15px";
-				var tr_partner = document.createElement("tr");
-				var td_partner = document.createElement("td");
-				td_partner.appendChild(table);
-				tr_partner.appendChild(td_partner);
-				for(var j = 0; j < organization_contacts[i].addresses.length; j++){
-					var tr = document.createElement("tr");
-					var td = document.createElement("td");
-					var text = new address_text(organization_contacts[i].addresses[j]);
-					td.onclick = function(){
-						var temp_this = this;
-						pop.close();
-						var div_locker = lock_screen();
-						/* Unset data.address */
-						data.address = null;
-						/* Change the host */
-						var host = t.getHostInData();
-						if(host != null && host.index != null){
-							data.partners[host.index].host = null;
-							data.partners[host.index].host_address = null;
+		var td = document.createElement("td");
+		tr.appendChild(td);
+		t._thead.appendChild(tr);
+		if(t._getInternStep() == "area"){
+			//Only an area is set, so no host
+			/*Get the current domain country id */
+			window.top.require("geography.js", function() {
+				window.top.geography.getCountries(function(countries) {
+					var country_id = countries[0].country_id;
+					service.json("geography","get_area_parents_names",{country:country_id, area_id:data.geographic_area},function(res){
+						if(!res)
+							td.innerHTML = "<i>This functionality is not available</i>";
+						else {
+							var div_area = document.createElement("div");
+							var div_country = document.createElement("div");
+							td.appendChild(div_area);
+							td.appendChild(div_country);
+							var first = true;
+							var text = "";
+							for(var i = 0; i < res.area_parents_names.length; i++){
+								if(!first)
+									text += ", ";
+								first = false;
+								text += res.area_parents_names[i].uniformFirstLetterCapitalized();
+							}
+							div_area.appendChild(document.createTextNode(text));
+							div_country.appendChild(document.createTextNode(res.country_name));
 						}
-						var index = t._findPartnerIndexInData(temp_this.organization_id);
-						data.partners[index].host = true;
-						data.partners[index].host_address = temp_this.address_id;
-						/* Reset the table */
-						t.resetTableAddress(div_locker);
-					};
-					td.address_id = organization_contacts[i].addresses[j].id;
-					td.organization_id = organization_contacts[i].id;
+						layout.invalidate(container);
+					});
+					
+				});
+			});		
+			
+		} else if (t._getInternStep() == "host"){
+			//The host and the address is set
+			/* get the address object */
+			service.json("contact","get_address",{id:t._getHostAddressInPartners()},function(res){
+				if(!res)
+					td.innerHTML = "<i>This functionality is not available</i>";
+				else {
+					var text = new address_text(res);
 					td.appendChild(text.element);
-					td.className = "button";
-					tr.appendChild(td);
-					table.appendChild(tr);
 				}
-				table_partners.appendChild(tr_partner);
+				layout.invalidate(container);
+			});
+
+		} else {
+			//Nothing is set
+			td.innerHTML = "<i><center>No location is set for this Information Session</i></center>";
+		}
+	};
+	
+	t._refreshTableBody = function(){
+		t._refreshElement(t._tbody);
+		var tr = document.createElement("tr");
+		var td = document.createElement("td");
+		tr.appendChild(td);
+		t._tbody.appendChild(tr);
+		if(t._getInternStep() == "area"){
+			//Only an area is set, so no host
+			td.innerHTML = '<center><i>No host selected</i></center>';
+		} else if (t._getInternStep() == "host"){
+			//The host and the address is set
+			var index = t._getHostIndexInPartners();
+			var index_in_contact_points = t._findPartnerIndexInPartners_contacts_points(data.partners[index].organization);
+			var row = new create_partner_row(
+				td,
+				{id:data.partners[index].organization , name:data.partners[index].organization_name},
+				data.partners[index].contact_points_selected,
+				partners_contacts_points[index_in_contact_points].contact_points,
+				can_manage
+			);
+			//Add the listener for the contact points selection
+			row.onupdatecontactpointsselection.add_listener(function(contact_points_selected){
+				//Update the data object
+				data.partners[t._getHostIndexInPartners()].contact_points_selected = contact_points_selected;
+				//Reset the body
+				t._refreshTableBody();
+			});
+		}//Else nothing is set
+	};
+	
+	t._refreshTableFooter = function(){
+		t.section.resetToolBottom();
+		if(can_manage){
+//			t._refreshElement(t._tfoot);
+//			var tr = document.createElement("tr");
+//			var td = document.createElement("td");
+//			td.style.textAlign = "right";
+//			tr.appendChild(td);
+//			t._tfoot.appendChild(tr);
+			if(t._getInternStep() == "area"){
+				//Only an area is set, so no host
+				//Create two buttons, one to remove the location, an other one to continue (select a host)
+				var continue_button = document.createElement("div");
+				continue_button.className = "button";
+				continue_button.appendChild(document.createTextNode("Continue"));
+				continue_button.title = "Select a host partner";
+				continue_button.onclick = function(){
+					new pop_select_area_and_partner(
+						data.geographic_area,
+						null,
+						null,
+						null,
+						function(area, host_id, host_address, host_name){
+							//update geographic area
+							data.geographic_area = area;
+							if(host_id != null){
+								//Update the new host data
+								var index = t._findPartnerIndexInPartners(host_id);
+								if(index == null){
+									//The partner doesn't exist yet in data.partners array
+									index = data.partners.length;
+									data.partners.push({
+										organization:host_id,
+										organization_name:host_name,
+										contact_points_selected:[]
+									});
+								}
+								data.partners[index].host = true;
+								data.partners[index].host_address = host_address;
+								//update the contact points array, and reset once it is done
+								t._updateAllContactsPointsIfNeeded(host_id, t.reset, t.reset);
+							} else
+								t.reset();
+							//Else nothing to do because there were no host before
+							//No need to update the area because a reference of data is given to the pop_select_area_and_partner object so will be automatically updated
+							//Reset (even if no host is set, geographic area may have been updated
+							
+						}
+					);
+				};
+				var remove_button = document.createElement("div");
+				remove_button.className = "button";
+				remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"'/> Reset location";
+				remove_button.title = "Reset the location and restart from scratch";
+				remove_button.onclick = function(){
+					//Reset the geographic area attribute
+					data.geographic_area = null;
+					//No need to reset the host because there were no before
+					//Reset
+					t.reset();
+				};
+				t.section.addToolBottom(continue_button);
+				t.section.addToolBottom(remove_button);
+//				td.appendChild(continue_button);
+//				td.appendChild(remove_button);
+			} else if (t._getInternStep() == "host"){
+				//The host and the address is set
+				//Add a remove host button and an update host button
+				var remove_host = document.createElement("div");
+				remove_host.className = "button";
+				remove_host.innerHTML = "<img src = '"+theme.icons_16.remove+"'/> Remove this host";
+				remove_host.title = "Remove the host, but keep the geographic area";
+				remove_host.onclick = function(){
+					//Reset the host
+					t._resetHost();
+					//The geographic_area attribute is not reseted, this way the user doesn t restart from scratch
+					//Reset
+					t.reset();
+				};
+				
+				var update_host = document.createElement("div");
+				update_host.className = 'button';
+				update_host.appendChild(document.createTextNode("Update host"));
+				update_host.title = "Update the host partner";
+				update_host.onclick = function(){
+					var index = t._getHostIndexInPartners();
+					new pop_select_area_and_partner(
+						data.geographic_area,
+						data.partners[index].organization,
+						data.partners[index].host_address,
+						data.partners[index].organization_name,
+						function(area, host_id,host_address, host_name){
+							//update geographic area
+							data.geographic_area = area;
+							if(host_id != null){
+								//Reset the host attribute
+								t._resetHost();
+								//Set the new one
+								var index = t._findPartnerIndexInPartners(host_id);
+								if(index == null){
+									//The partner doesn't exist yet in data.partners array
+									index = data.partners.length;
+									data.partners.push({
+										organization:host_id,
+										organization_name:host_name,
+										contact_points_selected:[]
+									});
+								}
+								data.partners[index].host = true;
+								data.partners[index].host_address = host_address;
+								//update the contact points array, and reset once it is done
+								t._updateAllContactsPointsIfNeeded(host_id, t.reset, t.reset);
+							} else {
+								//Reset the host attribute because it was already set
+								t._resetHost();
+								//Reset
+								t.reset();
+							}
+						}
+					);
+				};
+				t.section.addToolBottom(remove_host);
+				t.section.addToolBottom(update_host);
+//				td.appendChild(remove_host);
+//				td.appendChild(update_host);
+			} else {
+				//Nothing is set, so just add a set location button
+				var set_button = document.createElement("div");
+				set_button.className = "button";
+				set_button.appendChild(document.createTextNode("Set a location"));
+				set_button.title = "Set a location for this information session";
+				set_button.onclick = function(){
+					new pop_select_area_and_partner(
+						data.geographic_area,
+						null,
+						null,
+						null,
+						function(area, host_id, host_address, host_name){
+							//update geographic area
+							data.geographic_area = area;
+							if(host_id != null){
+								var index = t._findPartnerIndexInPartners(host_id);
+								if(index == null){
+									//The partner doesn't exist yet in data.partners array
+									index = data.partners.length;
+									data.partners.push({
+										organization:host_id,
+										organization_name:host_name,
+										contact_points_selected:[]
+									});
+								}
+								data.partners[index].host = true;
+								data.partners[index].host_address = host_address;
+								//update the contact points array, and reset once it is done
+								t._updateAllContactsPointsIfNeeded(host_id, t.reset, t.reset);
+							} else
+							//Reset
+							t.reset();
+						}
+					);
+				};
+				t.section.addToolBottom(set_button);
+//				td.appendChild(set_button);
 			}
 		}
-	}
+	};
 	
-	t._findPartnerIndexInData = function(organization_id){
-		var index = null;
+	t._updateAllContactsPointsIfNeeded = function(new_host, onupdate, onnoupdate){
+		//The host set may not be in the AllContactsPoints Array
+		if(t._findPartnerIndexInPartners_contacts_points(new_host) != null){
+			if(onnoupdate)
+				onnoupdate();
+			return;
+		}
+		//Not found, so need to update the partners_contact_points array
+		var partners = [];
 		for(var i = 0; i < data.partners.length; i++){
-			if(data.partners[i].organization == organization_id){
+			partners.push(data.partners[i].organization);
+		}
+		service.json("contact","get_json_contact_points_no_address",{organizations:partners, contacts_details:false},function(res){
+			if(!res)
+				error_dialog("An error occured");
+			else
+				partners_contacts_points = res;
+			if(onupdate)
+				onupdate();
+		});
+	};
+	
+	t._resetHost = function(){
+		var index = t._getHostIndexInPartners();
+		if(index == null)
+			return;
+		//Remove the host from partners array
+		data.partners.splice(index,1);
+//		data.partners[index].host = false;
+//		data.partners[index].host_address = null;
+	};
+	
+	t._refreshElement = function(e){
+		while(e.firstChild)
+			e.removeChild(e.firstChild);
+	};
+	
+	t._findPartnerIndexInPartners_contacts_points = function(partner_id){
+		var index = null;
+		for(var i = 0; i <  partners_contacts_points.length; i++){
+			if(partner_id ==  partners_contacts_points[i].organization){
 				index = i;
 				break;
 			}
 		}
 		return index;
-	}
+	};
+	
+	t._findPartnerIndexInPartners = function(id){
+		for(var i = 0; i < data.partners.length; i++){
+			if(data.partners[i].organization == id)
+				return i;
+		}
+		return null;
+	};
 	
 	/**
-	 * @method #IS_profile#getHost
-	 * @return {host} if no host nor postal_address is set, host = null
-	 * Else if address == null but one host is set as true, host.id = the id of the host address, host.index = the index in the data.partners array
-	 * Else if address != null, host.id = the id of the postal_address, host.index = null
+	 * Get the host_address from data.partners array
+	 * @returns {Number | Null} null if the host is not set yet, else host_address (address ID selected)
 	 */
-	t.getHostInData = function(){
-		var host = {};
-		if(data.address != null && data.address != {}){
-			host.id = data.address;
-			host.index = null;
-		} else if (data.address == null){
-			var found = false;
-			for(var i = 0; i < data.partners.length; i++){
-				if(data.partners[i].host == true && data.partners[i].host_address != null){
-					host.index = i;
-					host.id = data.partners[i].host_address;
-					found = true;
-					break;
-				}
-			}
-			if(!found) host = null;
+	t._getHostAddressInPartners = function(){
+		var i = t._getHostIndexInPartners();
+		var to_return = i == null ? null : data.partners[i].host_address;
+		return to_return;
+	};
+	
+	t._getHostIndexInPartners = function(){
+		for(var i = 0; i < data.partners.length; i++){
+			if(data.partners[i].host ==  true)
+				return i;
 		}
-		return host;
+		return null;
 	}
 	
-	t._noAllAddressesEmptyInOrganization_contacts = function(){
-		var not_empty = false;
-		for(var i = 0; i < organization_contacts.length; i++){
-			if(organization_contacts[i].addresses.length > 0){
-				for(var j = 0; j < organization_contacts[i].addresses.length; j++){
-					if(typeof(organization_contacts[i].addresses[j]) != "undefined" && organization_contacts[i].addresses[j].id != null && organization_contacts[i].addresses[j].id != "" && organization_contacts[i].addresses[j].id != "null"){
-						not_empty = true;
-						break;
-					}
-				}
-				if(not_empty) break;
-			}
-		}
-		return not_empty;
-	}
+	t._getInternStep = function(){
+		if(t._getHostAddressInPartners() != null)
+			return "host";
+		else if(t._getHostAddressInPartners() == null && data.geographic_area != null)
+			return "area";
+		else
+			return null;
+	};
 	
-	t._getAddressFromPartnerAndAddressIdInOrganization_contacts= function(partner_id, address_id){
-		var address = null;
-		var index = null;
-		for(var i = 0; i < organization_contacts.length; i++){
-			if(organization_contacts[i].id == partner_id){
-				index = i;
-				break;
-			}
-		}
-		if(index != null){
-			for(var j = 0; j < organization_contacts[i].addresses.length; j++){
-				if(organization_contacts[i].addresses[j].id == address_id){
-					address = organization_contacts[i].addresses[j];
-					break;
-				}
-			}
-		}
-		return address;
-	}
-	
-	/**
-	 * function called in the case of a partner is removed from the table_partners
-	 * to check if it was the host, to transfer its address to the custom address attribute
-	 */
-	t.transferPartnerAddressToHostAddress = function(new_partners){
-		//Try to get the host (old_partners is the same instance as data.partners)
-		var host = t.getHostInData();
-		if(host!= null && host.index != null){
-			var partner_id = data.partners[host.index].organization;
-			//host is found: check it was removed from the new_partners array
-			var removed = true;
-			for(var i = 0; i < new_partners.length; i++){
-				if(new_partners[i].organization == partner_id){
-					removed = false;
-					break;
-				}
-			}
-			if(removed){
-				//perform the transfer
-				data.address = host.id;
-			}
-		}
-	}
-	
-	t.setCustomAddress = function(address_id){
-		data.address = address_id;
-	}
-	
-	t.getAddressObject = function(){
-		return t.address;
-	}
+	require(["popup_window.js","address_text.js","edit_address.js","section.js","contact_objects.js","create_partner_row.js","pop_select_area_and_partner.js"],function(){
+		t.address = new PostalAddress(null, null, null, null, null, null, null, null);
+		t.container_of_section_content = document.createElement("div");
+		t.section = new section("/static/contact/address_16.png","Location",t.container_of_section_content,false);
+		container.appendChild(t.section.element);
+		t._init();
+	});
 }

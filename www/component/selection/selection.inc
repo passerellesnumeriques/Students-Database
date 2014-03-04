@@ -451,7 +451,7 @@ class selection extends Component {
 	 * @param string remove_right_name the right name for user_management component
 	 * @param string edit_right_name the right name for user_management component
 	 * @param string remove_right_name the right name for user_management component
-	 * @return array 	[0]: array rights values
+	 * @return array 	[0]: array rights values (add =>, remove=>, edit =>)
 	 *					[1]: boolean true if the rights were restricted
 	 *					[2]: string restriction message
 	 */
@@ -547,22 +547,20 @@ class selection extends Component {
 	 */
 	public function saveIS($id, $fields_values){
 		try {
-			if(isset($id) && $id <> null){
+			if(isset($id)){
 				// This is an update
 				SQLQuery::create()->updateByKey("InformationSession",$id,$fields_values);
-				//update the steps
-				$this->updateAllSteps();
-				return;
+				
 			} else {
 				// This is an insert
 				$id = SQLQuery::create()->insert("InformationSession",$fields_values);
-				//update the steps
-				$this->updateAllSteps();
-				return $id;
 			}
 		} catch (Exception $e) {
 			PNApplication::error($e);
 		}
+		//update the steps
+		$this->updateAllSteps();
+		return $id;
 	}
 	
 	/**

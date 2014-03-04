@@ -49,7 +49,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 		tr.appendChild(t._td_partners);//Contains the select partner
 		t._table.appendChild(tr);
 		//TODO set pop style
-		t._partners_lists = new select_area_and_matching_organizations(t._td_partners, t.geographic_area, "Select this partner has host",t.host);
+		t._partners_lists = new select_area_and_matching_organizations(t._td_partners, t.geographic_area, "Select this partner as host",t.host);
 		//Set the partners footer: add a create partner button
 		t._create_partner_button = document.createElement("div");
 		t._create_partner_button.className = "button";

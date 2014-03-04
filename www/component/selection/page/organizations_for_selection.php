@@ -30,6 +30,7 @@ class page_organizations_for_selection extends selection_page {
 			$mode = "IS_partners";
 // 			$id = $_GET["is"];
 			$partners = $_GET["partners"];
+			$host_id = @$_GET["host"];
 			if(!is_array($partners)) $partners = array();
 		}
 		?>
@@ -39,6 +40,7 @@ class page_organizations_for_selection extends selection_page {
 		var page_mode = <?php echo json_encode($mode);?>;
 		<?php if($mode == "IS_partners"){?>
 			var selected_partners = <?php echo json_encode($partners).";";?>
+			var host_id = <?php echo json_encode($host_id).";";?>
 		<?php }?>
 		var dl;
 		function init_organizations_list() {
@@ -90,6 +92,10 @@ class page_organizations_for_selection extends selection_page {
 		function organizations_loaded(list) {
 			for (var i = 0; i < selected_partners.length; ++i) {
 				list.selectByTableKey("Organization", selected_partners[i]);
+			}
+			if(host_id != null){
+				list.selectByTableKey("Organization",host_id);
+				list.disableSelectByTableKey("Organization",host_id);
 			}
 		}
 		function organizations_selection_changed(row_id, selected) {

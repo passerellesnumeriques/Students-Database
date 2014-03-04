@@ -1,14 +1,19 @@
-function select_other_partners(container, all_partners, partners_contacts_points, can_manage){
+function select_other_partners(container, all_partners, partners_contacts_points, can_manage, host_id, update_host_custom_event){
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	var t = this;
 	t.partners = [];
-	
+	t.host = host_id;
 	t.reset = function(locker){
 		//Launch process
 		t._init();
 		if(locker)
 			unlock_screen(locker);
+		layout.invalidate(t.section.element);
+	};
+	
+	t.getOtherPartners = function(){
+		return t.partners;
 	};
 	
 	t._init = function(){
@@ -67,7 +72,7 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		//Add the select partners button
 		var div = document.createElement("div");
 		var data_grid = document.createElement("div");
-		div.innerHTML = "<img src='"+theme.icons_16.add+"'/> Manage partners";
+		div.appendChild(document.createTextNode("Manage partners"));
 		div.className = "button";
 		
 		//TODO if host selected, set it has not selectable
@@ -83,6 +88,8 @@ function select_other_partners(container, all_partners, partners_contacts_points
 					j++;
 				}
 			}
+			if(t.host != null)
+				url_partners += "&host="+t.host;
 			var frame = pop.setContentFrame("/dynamic/selection/page/organizations_for_selection?is=true"+url_partners);
 			pop.addOkCancelButtons(function(){
 				pop.close();
@@ -96,9 +103,9 @@ function select_other_partners(container, all_partners, partners_contacts_points
 						return;
 					} else {
 						//match the two partners arrays (in case some contact points were already selected but not saved into the database)
-						t.partners = t._matchPartnersArrays(new_partners);
+						t.partners = t._matchPartnersArraysAndRemoveHost(new_partners);
 						//refresh the partners_contacts_points
-						service.json("contact","get_json_contact_points_no_address",{partners_id:win.selected_partners},function(r){
+						service.json("contact","get_json_contact_points_no_address",{organizations:win.selected_partners},function(r){
 							if(!r){
 								error_dialog("An error occured");
 								unlock_screen(locker);
@@ -138,11 +145,20 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		}
 	};
 	
-	t._matchPartnersArrays = function(new_array){
+	t._matchPartnersArraysAndRemoveHost = function(new_array){
+		//Match the contact points
 		for(var i = 0; i < new_array.length; i++){
 			var index = t._findPartnerIndex(new_array[i].organization);
 			if(index != null){
 				new_array[i].contact_points_selected = t.partners[index].contact_points_selected;
+			}
+		}
+		if(t.host != null){
+			//Remove the host if it exists in new_array
+			for(var i = 0; i < new_array.length; i++){
+				if(new_array[i].organization == t.host){
+					new_array.splice(i,1);
+				}
 			}
 		}
 		return new_array;
@@ -154,7 +170,7 @@ function select_other_partners(container, all_partners, partners_contacts_points
 				return i;
 		}
 		return null;
-	}
+	};
 	
 	t._findPartnerIndexInPartners_contacts_points = function(partner_id){
 		var index = null;
@@ -167,6 +183,18 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		return index;
 	};
 	
+	t._updateHostAttribute = function(new_host_id){
+		t.host = new_host_id;
+		//If the host was in t.partners array, remove it
+		var index = t._findPartnerIndex(t.host);
+		if(index != null){
+			//Remove from t.partners
+			t.partners.splice(index,1);
+			//Reset
+			t.reset();
+		}
+	};
+	
 	require(["create_partner_row.js","popup_window.js","section.js","IS_objects.js"],function(){
 		//Set the section
 		t.container_of_section_content = document.createElement("div");
@@ -174,6 +202,9 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		container.appendChild(t.section.element);
 		//Set partners array
 		t._setPartnersArray();
+		//Set the listener for the host updates
+		if(update_host_custom_event)
+			update_host_custom_event.add_listener(t._updateHostAttribute);
 		//Launch process
 		t._init();
 	});

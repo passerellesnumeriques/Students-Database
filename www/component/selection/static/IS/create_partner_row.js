@@ -16,6 +16,7 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 	t.onupdatecontactpointsselection = new Custom_Event(); //Fired when the contact points selected list is updated
 	t._init = function(){
 		t._table = document.createElement("table");
+		t._table.style.width = "100%";
 		var tr_header = document.createElement('tr');
 		var th = document.createElement('th');
 		var th_empty = document.createElement("th");

@@ -15,8 +15,11 @@ class service_get_json_contact_points_no_address extends Service{
 	public function documentation(){}//TODO
 	public function execute(&$component,$input){
 		require_once("get_json_contact_points_no_address.inc");
-		$contacts_details = @$input["contacts_details"];
-		echo get_json_contact_points_no_address($input["organizations"], $contacts_details);
+		if(isset($input["organizations"])){
+			$contacts_details = @$input["contacts_details"];
+			echo get_json_contact_points_no_address($input["organizations"], $contacts_details);
+		} else 
+			echo "false";
 	}
 }
 ?>

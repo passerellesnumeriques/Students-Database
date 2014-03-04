@@ -518,6 +518,7 @@ class contact extends Component {
 	public function getOrganizationsNames($ids){
 		if(count($ids) > 0){
 			return SQLQuery::create()
+			->select("Organization")
 			->field("id")
 			->field("name")
 			->whereIn("Organization","id",$ids)
