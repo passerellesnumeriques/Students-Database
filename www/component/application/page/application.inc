@@ -278,30 +278,66 @@ function addMenuItem(icon, text, info, url) {
 	};
 	item.onmouseout = function() {
 		if (!item._tooltip) return;
-		document.body.removeChild(item._tooltip);
+		document.body.removeChild(item._tooltip); // TODO can be already removed
 		item._tooltip = null;
 	};
-	window.onmouseout = item.onmouseout;
+	window.pnapplication.onmouseout.add_listener(item.onmouseout);
 	return item;
 }
 function addMenuControl(control) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
 	section_menu.addItem(control);
 }
-function addRightControl(control) {
+function addRightControl(control, tooltip_text) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
 	var div = document.getElementById('pn_application_right_controls');
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
+	if (tooltip_text) {
+		div.onmouseover = function() {
+			if (this._tooltip) return;
+			this._tooltip = document.createElement("DIV");
+			this._tooltip.style.position = "fixed";
+			this._tooltip.appendChild(document.createTextNode(tooltip_text));
+			document.body.appendChild(this._tooltip);
+			this._tooltip.className = "tooltip_right";
+			this._tooltip.style.top = "32px";
+			this._tooltip.style.right = (getWindowWidth()-(absoluteLeft(this)+this.offsetWidth))+"px";
+		};
+		div.onmouseout = function() {
+			if (!this._tooltip) return;
+			document.body.removeChild(this._tooltip);
+			this._tooltip = null;
+		};
+		window.pnapplication.onmouseout.add_listener(div.onmouseout);
+	}
 	layout.invalidate(div);
 }
-function addLeftControl(control) {
+function addLeftControl(control, tooltip_text) {
 	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
 	var div = document.getElementById('pn_application_left_controls');
 	div.appendChild(control);
 	div.style.visibility = 'visible';
 	setOpacity(div, 100);
+	if (tooltip_text) {
+		div.onmouseover = function() {
+			if (this._tooltip) return;
+			this._tooltip = document.createElement("DIV");
+			this._tooltip.className = "tooltip";
+			this._tooltip.style.position = "fixed";
+			this._tooltip.style.top = "32px";
+			this._tooltip.style.left = absoluteLeft(this)+"px";
+			this._tooltip.appendChild(document.createTextNode(tooltip_text));
+			document.body.appendChild(this._tooltip);
+		};
+		div.onmouseout = function() {
+			if (!this._tooltip) return;
+			document.body.removeChild(this._tooltip);
+			this._tooltip = null;
+		};
+		window.pnapplication.onmouseout.add_listener(div.onmouseout);
+	}
 	layout.invalidate(div);
 }
 

@@ -547,7 +547,7 @@ function PNCalendarsProvider() {
 	CalendarsProvider.call(this,"PN");
 	var t=this;
 	this._retrieveCalendars = function(handler) {
-		this.connectionStatus("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");
+		t.connectionStatus("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");
 		service.json("calendar", "get_my_calendars", {}, function(calendars) {
 			t.connectionStatus("");
 			if (!calendars) return;

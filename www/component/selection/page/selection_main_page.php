@@ -40,13 +40,22 @@ class page_selection_main_page extends selection_page {
 		$unvalid_steps_to_display = array();
 		$valid_steps_to_display = array();
 
+		$page->onload("section_from_html('section_preparation');");
 	?>
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
 				<div id = 'left'>
 					<div id = 'steps_header' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
 					<div style = "overflow:auto" layout = "fill">
+						<div style='width:100%'>
+							<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
+								<div style='text-align:center'>
+									<a class='button_soft' href='config/manage'>
+										<img src='<?php echo theme::$icons_16["config"];?>'/>
+										Configure how this selection process will work
+									</a>
+								</div>
+							</div>
 						<?php
-						echo "<div style = 'width:100%'>";
 						$js_to_run = array();
 						foreach($status_to_display as $s){
 							$id = $page->generateID();
@@ -69,8 +78,8 @@ class page_selection_main_page extends selection_page {
 								array_push($js_to_run,"new ".$js_name."('content_".$id."');");
 							}
 						}
-						echo "</div>";
 						?>
+						</div>
 					</div>
 				</div>
 				<div id = 'right' style='overflow-y:auto;'>
@@ -92,7 +101,7 @@ class page_selection_main_page extends selection_page {
 					</div>
 				</div>
 		</div>
-		<a href = "/dynamic/selection/page/test_functionalities">Tests</a>
+		<!--  <a href = "/dynamic/selection/page/test_functionalities">Tests</a>  -->
 		<script type = 'text/javascript'>
 			var calendar_id = null;
 			var steps = null;

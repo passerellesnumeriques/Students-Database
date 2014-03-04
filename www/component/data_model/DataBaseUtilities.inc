@@ -31,17 +31,19 @@ class DataBaseUtilities {
 			$sql .= ", PRIMARY KEY(`".$pk->name."`)";
 		else {
 			$key = $table->getKey();
-			$sql .= ", UNIQUE KEY `table_key` (";
-			$first = true;
-			foreach ($key as $colname) {
-				if ($first) $first = false; else $sql .= ",";
-				$sql .= "`".$colname."`";
+			if ($key <> null) {
+				$sql .= ", UNIQUE KEY `table_key` (";
+				$first = true;
+				foreach ($key as $colname) {
+					if ($first) $first = false; else $sql .= ",";
+					$sql .= "`".$colname."`";
+				}
+				$sql .= ")";
 			}
-			$sql .= ")";
 		}
 		foreach ($indexes as $index) {
 			$sql .= ", KEY `".$index[0]."` (";
-			for ($i = 1; $i < count($i); $i++) {
+			for ($i = 1; $i < count($index); $i++) {
 				if ($i > 1) $sql .= ",";
 				$sql .= "`".$index[$i]."`";
 			}

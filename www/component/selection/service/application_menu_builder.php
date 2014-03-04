@@ -159,7 +159,7 @@ class service_application_menu_builder extends Service {
 			$campaign_id = PNApplication::$instance->selection->getCampaignId();
 			if($campaign_id <> null){
 				echo "addMenuItem('".theme::$icons_16["dashboard"]."','Dashboard',null,'/dynamic/selection/page/selection_main_page');";
-				echo "addMenuItem('/static/contact/directory_16.png','Partners','See organizations partners for the selection process','/dynamic/selection/page/organizations_for_selection');";
+				echo "addRightControl(\"<a class='button_verysoft' href='/dynamic/selection/page/organizations_for_selection' target='pn_application_content'><img src='/static/contact/directory_32.png'/></a>\",'See organizations partners for the selection process');";
 				if($rights["manage"]){
 					echo "addMenuItem('".theme::$icons_16["config"]."','Configuration','Configure how your selection process works and how the application will behave','/dynamic/selection/page/config/manage');";
 				}

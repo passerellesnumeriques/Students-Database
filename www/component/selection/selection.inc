@@ -185,7 +185,7 @@ class selection extends Component {
 		/* Set the calendar_id to null */
 		$this->calendar_id = null;
 		SQLQuery::create()->removeKey("SelectionCampaign",$id);
-		
+		// TODO PNApplication::$instance->calendar->removeCalendar
 		// TODO remove all news having the tag campaignX
 	}
 	

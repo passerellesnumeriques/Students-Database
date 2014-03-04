@@ -243,7 +243,9 @@ if (window == window.top) {
 		addInactivityListener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
+		onmouseout: new Custom_Event()
 	};
+	window.onmouseout = function(ev) { window.pnapplication.onmouseout.fire(ev); };
 	window.top.pnapplication.registerWindow(window);
 }
 

@@ -45,10 +45,11 @@ function header_bar(container, style) {
 	};
 	this.addMenuButton = function(icon, text, onclick) {
 		var button = document.createElement("DIV");
-		button.className = "button";
+		button.className = "button_verysoft";
 		if (icon) {
 			var img = document.createElement("IMG");
 			img.src = icon;
+			img.style.marginRight = "3px";
 			button.appendChild(img);
 		}
 		button.appendChild(document.createTextNode(text));

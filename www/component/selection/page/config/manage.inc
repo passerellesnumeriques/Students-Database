@@ -168,6 +168,7 @@ function manage_config(&$page,$container_id,$header_id){
 		t._createTable = function(){
 			t.table = document.createElement("table");
 			t.table.style.backgroundColor = "#FFFFFF";
+			setBoxShadow(t.table, 2, 2, 2, 0, '#E0E0E0');
 			// t._setHeader(theader);
 			t._setBody();
 			// t._setFoot(tfoot);
@@ -178,7 +179,7 @@ function manage_config(&$page,$container_id,$header_id){
 		 * Set the page header buttons
 		 */
 		t._setPageHeader = function(){
-			t.header = new header_bar(t.header_cont,'small');
+			t.header = new header_bar(t.header_cont,'toolbar');
 			t.header.setTitle(theme.icons_16.config, "Selection Campaign Configuration");
 			t.header.addMenuButton(theme.icons_16.back, "Back to selection", function(){
 				location.assign("/dynamic/selection/page/selection_main_page");
@@ -433,7 +434,7 @@ function manage_config(&$page,$container_id,$header_id){
 					return;
 				}
 				unlock_screen(div_locker);
-				window.parent.location.reload();
+				window.top.location.href = "/?section=Selection";
 			});
 		};
 		

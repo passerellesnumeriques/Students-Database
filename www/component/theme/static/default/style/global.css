@@ -166,6 +166,9 @@ button img {
 	text-decoration: none;
 	color: black;
 }
+.button_verysoft img {
+    vertical-align: bottom;
+}
 
 .button_integrated {
 	cursor: pointer;
@@ -224,7 +227,7 @@ a.black_link:hover {
 }
 
 /* Tooltip */
-.tooltip {
+.tooltip, .tooltip_right {
 	background-color: white;
 	border: 1px solid #A0A0A0;
 	border-radius: 5px;
@@ -238,7 +241,18 @@ a.black_link:hover {
     border-bottom: 7px solid white;
     border-right: 7px solid transparent;
     border-bottom-color: white;
-    left: 30px;
+    left: 15px;
+    top: -7px;
+    content: '';
+}
+.tooltip_right:before {
+    position: absolute;
+    display: inline-block;
+    border-left: 7px solid transparent;
+    border-bottom: 7px solid white;
+    border-right: 7px solid transparent;
+    border-bottom-color: white;
+    right: 15px;
     top: -7px;
     content: '';
 }

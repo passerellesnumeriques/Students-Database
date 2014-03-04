@@ -303,7 +303,7 @@ namespace datamodel {
 		public function &addIndex() {
 			$nb = func_num_args();
 			if ($nb == 1)
-				array_push($this->indexes, array(func_get_arg(0),func_get_arg(0)));
+				array_push($this->indexes, array("index".count($this->indexes),func_get_arg(0)));
 			else {
 				$a = array("index".count($this->indexes));
 				for ($i = 0; $i < $nb; $i++)
