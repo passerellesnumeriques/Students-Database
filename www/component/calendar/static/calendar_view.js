@@ -43,8 +43,10 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		container.appendChild(this.view_container_container);
 		var ready_count = 0;
 		var ready = function() {
-			if (++ready_count == 2 && onready)
-				onready();
+			if (++ready_count == 2) {
+				if (onready) onready();
+				layout.invalidate(container);
+			}
 		};
 		if (has_fixed_height)
 			require("vertical_layout.js",function(){
@@ -162,6 +164,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 
 			t.updateHeader();
 			layout.addHandler(t.header, function() { t.updateHeader(); });
+			layout.invalidate(container);
 		});
 	};
 	/** Called when the zoom is changed, to update the text displaying zoom information */

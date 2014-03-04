@@ -124,18 +124,16 @@ class page_selection_main_page extends selection_page {
 						extend.onclick = function(){
 							var content = document.createElement("div");
 							content.id = 'content_calendar_extend';
-							var width = parseFloat(getWindowWidth())-30;
-							var height = parseFloat(getWindowHeight())-60;
-							content.style.width = width.toString()+"px";
-							content.style.height = height.toString()+"px";
+							content.style.width = "100%";
+							content.style.height = "100%";
+							var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
+							pop.showPercent(95,95);
 							require("calendar_view.js",function(){
 								new CalendarView(cal_manager, "week", 30, content, function(){});
 							});
-							var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
-							pop.show();
 						};
 						window.calendar_section.addToolRight(extend);
-					}
+					};
 					if (PN_cal) init_calendar();
 					else {
 						var retry_calendar = function() {

@@ -270,6 +270,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		}
 
 		if (typeof animation != 'undefined') animation.fadeIn(div, 1500);
+		layout.invalidate(container);
 		return div;
 	};
 	

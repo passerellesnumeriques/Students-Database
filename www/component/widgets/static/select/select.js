@@ -67,10 +67,10 @@ function select(container) {
 	this._init = function() {
 		this._div = document.createElement("DIV");
 		this._div.style.display = 'inline-block';
-		var table = document.createElement("TABLE"); this._div.appendChild(table);
-		table.style.borderCollapse = "collapse";
-		table.style.borderSpacing = "0px";
-		var tr = document.createElement("TR"); table.appendChild(tr);
+		this.table = document.createElement("TABLE"); this._div.appendChild(this.table);
+		this.table.style.borderCollapse = "collapse";
+		this.table.style.borderSpacing = "0px";
+		var tr = document.createElement("TR"); this.table.appendChild(tr);
 		this._htmlContainer = document.createElement("TD"); tr.appendChild(this._htmlContainer);
 		this._htmlContainer.style.padding = "0px";
 		this._htmlContainer.style.border = "1px solid #808080";

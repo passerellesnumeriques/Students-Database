@@ -34,6 +34,7 @@ function section_from_html(container) {
 	while (container.childNodes.length > 0) content.appendChild(container.childNodes[0]);
 	var s = new section(icon,title,content,collapsable,fill_height,css);
 	container.appendChild(s.element);
+	layout.invalidate(container);
 	return s;
 }
 

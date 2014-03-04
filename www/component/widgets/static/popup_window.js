@@ -205,13 +205,18 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	
 	t.showPercent = function(width, height) {
-		var win = t._buildTable();
 		t.resize = function() {
-			t.table.style.left = (win.getWindowWidth()*(100-width)/200)+"px";
-			t.table.style.top = (win.getWindowHeight()*(100-height)/200)+"px";
-			t.table.style.width = (win.getWindowWidth()*width/100)+"px";
-			t.table.style.height = (win.getWindowHeight()*height/100)+"px";
+			var win = getWindowFromDocument(t.table.ownerDocument);
+			t.table.style.left = Math.floor(win.getWindowWidth()*(100-width)/200)+"px";
+			t.table.style.top = Math.floor(win.getWindowHeight()*(100-height)/200)+"px";
+			t.table.style.width = Math.floor(win.getWindowWidth()*width/100)+"px";
+			t.table.style.height = Math.floor(win.getWindowHeight()*height/100)+"px";
+			var h = 0;
+			if (t.header) h += win.getHeight(t.header);
+			if (t.buttons_tr) h += win.getHeight(t.buttons_tr);
+			t.content_container.style.height = Math.floor(win.getWindowHeight()*height/100-h)+"px";
 		};
+		var win = t._buildTable();
 		t.resize();
 		win.listenEvent(win, "resize", function() {
 			t.resize();

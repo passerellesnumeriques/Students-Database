@@ -156,6 +156,19 @@ layout = {
 					if (h.length > 0) { layout.invalidate(p); break; }
 					p = p.parentNode;
 				}
+				// or siblings
+				p = top_elements[i].previousSibling;
+				while (p != null) {
+					var h = layout._getHandlers(p);
+					if (h.length > 0) { layout.invalidate(p); break; }
+					p = p.previousSibling;
+				}
+				p = top_elements[i].nextSibling;
+				while (p != null) {
+					var h = layout._getHandlers(p);
+					if (h.length > 0) { layout.invalidate(p); break; }
+					p = p.nextSibling;
+				}
 				// if we are in a frame, let's layout the frame
 				var win = getWindowFromDocument(top_elements[i].ownerDocument); 
 				if (win.frameElement) getWindowFromDocument(win.frameElement.ownerDocument).layout.invalidate(win.frameElement);
@@ -193,10 +206,10 @@ layout = {
 			for (var i = 0; i < handlers.length; ++i)
 				handlers[i]();
 			if (element.scrollHeight != element._layout_scroll_height || element.scrollWidth != element._layout_scroll_width) {
-				// size changed, let's do it again later
+				// size changed, let's do it again later, from its parent
 				element._layout_scroll_height = element.scrollHeight;
 				element._layout_scroll_width = element.scrollWidth;
-				layout.invalidate(element);
+				layout.invalidate(element.parentNode);
 				return;
 			}
 		}
@@ -216,10 +229,10 @@ layout = {
 			layout.invalidate(element);
 		} else if (handlers.length > 0 && call_handlers) {
 			if (element.scrollHeight != element._layout_scroll_height || element.scrollWidth != element._layout_scroll_width) {
-				// size changed, let's do it again later
+				// size changed, let's do it again later, from its parent
 				element._layout_scroll_height = element.scrollHeight;
 				element._layout_scroll_width = element.scrollWidth;
-				layout.invalidate(element);
+				layout.invalidate(element.parentNode);
 				return;
 			}
 		}
