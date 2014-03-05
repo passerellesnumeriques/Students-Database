@@ -3,7 +3,7 @@
 	$model->addTable("SelectionCampaign")
 		->addPrimaryKey("id")
 		->addString("name")
-		->addForeignKey("calendar","Calendar",false,false,false,false)
+		->addForeignKey("calendar","Calendar",false,false,false,false)//Not automatically removed, must use the calendar functionalities
 		->addReadAccess("can_access_selection_data",true)
 		->addWriteAccess("manage_selection_campaign",true)
 		->addInsertAccess("manage_selection_campaign",true)

@@ -220,6 +220,7 @@ button img {
 /* Links */
 a.black_link {
 	color: black;
+	cursor: pointer;
 	text-decoration: none;
 }
 a.black_link:hover {

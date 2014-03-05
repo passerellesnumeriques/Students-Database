@@ -8,7 +8,7 @@
  * @param {Object | null} add_data_to_give_when_event_fired (optional) data added to the contact_points_selected array when onupdatecontactpointsselection is fired
  * The data is added this way: {contact_points_selected: ,additional:add_data_to_give_when_event_fired} 
  */
-function create_partner_row(container, partner_data, contact_points_selected, all_contact_points, can_manage, add_data_to_give_when_event_fired){
+function create_partner_row(container, partner_data, contact_points_selected, all_contact_points, can_manage, add_data_to_give_when_event_fired, display_row_header){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -17,14 +17,16 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 	t._init = function(){
 		t._table = document.createElement("table");
 		t._table.style.width = "100%";
-		var tr_header = document.createElement('tr');
-		var th = document.createElement('th');
-		var th_empty = document.createElement("th");
-		th.innerHTML = "Contact points selected";
-//		th.style.textAlign = "right";
-		tr_header.appendChild(th_empty);
-		tr_header.appendChild(th);
-		t._table.appendChild(tr_header);
+		if(display_row_header){
+			var tr_header = document.createElement('tr');
+			var th = document.createElement('th');
+			var th_empty = document.createElement("th");
+			th.innerHTML = "Contact points selected";
+	//		th.style.textAlign = "right";
+			tr_header.appendChild(th_empty);
+			tr_header.appendChild(th);
+			t._table.appendChild(tr_header);
+		}
 		var tr_body = document.createElement("tr");
 		t._table.appendChild(tr_body);
 		t._setTRBody(tr_body);
@@ -57,12 +59,15 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 			for(var i = 0 ; i < t.contact_points_selected.length; i++){
 				var cont = document.createElement("div");
 				var index = t._findIndexInAllContactPoints(t.contact_points_selected[i]);
-				var text = document.createTextNode(all_contact_points[index].people_last_name.uniformFirstLetterCapitalized()+", "+all_contact_points[index].people_first_name.uniformFirstLetterCapitalized()+", "+all_contact_points[index].people_designation+" ");
-				var link = document.createElement("img");
-				link.src = "/static/people/profile_16.png";
-				link.style.verticalAlign = "bottom";
+				var text = all_contact_points[index].people_last_name.uniformFirstLetterCapitalized()+", "+all_contact_points[index].people_first_name.uniformFirstLetterCapitalized();
+				if(all_contact_points[index].people_designation != null)
+					text += ", "+all_contact_points[index].people_designation;
+				var link = document.createElement("a");
+//				link.src = "/static/people/profile_16.png";
+//				link.style.verticalAlign = "bottom";
 				link.title = "See profile";
-				link.style.cursor = "pointer";
+//				link.style.cursor = "pointer";
+				link.className = "black_link";
 				link.people_id = all_contact_points[index].people_id;
 				link.onclick = function(){
 					var people_id = this.people_id;
@@ -71,13 +76,15 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 						pop.setContentFrame("/dynamic/people/page/profile?plugin=people&people="+people_id);
 						pop.show();
 					});
+					return false;
 				};
-				cont.appendChild(text);
+				link.innerHTML = text;
 				cont.appendChild(link);
 				td2.appendChild(cont);
-				td2.style.paddingTop = "25px";
-				td2.style.paddingLeft = "25px";
-				td2.style.paddingRight = "25px";
+				if(i > 0)
+					td2.style.paddingTop = "15px";
+				td2.style.paddingLeft = "15px";
+				td2.style.paddingRight = "15px";
 				cont.style.paddingTop = "5px";
 				cont.style.paddingBottom = "5px";
 			}

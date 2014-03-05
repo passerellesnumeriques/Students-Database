@@ -58,9 +58,11 @@ class page_IS_profile extends selection_page {
 		if($id != -1){
 			$db_lock = $page->performRequiredLocks("InformationSession",$id,null,PNApplication::$instance->selection->getCampaignId());
 			//if db_lock = null => read only
-			$can_add = false;
-			$can_edit = false;
-			$can_remove = false;
+			if($db_lock == null){
+				$can_add = false;
+				$can_edit = false;
+				$can_remove = false;
+			}
 		}
 		?>
 		

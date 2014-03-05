@@ -20,6 +20,7 @@ class service_config_save extends Service{
 	
 	public function execute(&$component,$input){
 		$fields = @$input["fields"];
+		$db_lock = $input["db_lock"];
 		$final_fields = array();
 		foreach($fields as $f){
 			$name = null;
@@ -30,7 +31,7 @@ class service_config_save extends Service{
 			}
 			$final_fields[$name] = $val;
 		}
-		$error = PNApplication::$instance->selection->saveConfig($final_fields);
+		$error = PNApplication::$instance->selection->saveConfig($final_fields, $db_lock);
 		if($error <> null) PNApplication::error($configs);
 		echo PNApplication::has_errors() ? "false" : "true";
 	}
