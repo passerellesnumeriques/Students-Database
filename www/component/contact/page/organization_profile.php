@@ -30,15 +30,18 @@ class page_organization_profile extends Page {
 			$org_structure .= "]";
 			$org_structure .= ",contacts:".contacts_structure("organization", $id);
 			$org_structure .= ",addresses:".addresses_structure("organization", $id);
-			$points = SQLQuery::create()
+			$q = SQLQuery::create()
 				->select("ContactPoint")
 				->whereValue("ContactPoint", "organization", $id)
 				->field("ContactPoint", "designation")
-				->join("ContactPoint", "People", array("people"=>"id"))
+				;
+			PNApplication::$instance->people->joinPeople($q, "ContactPoint", "people");
+			$points = $q 
 				->field("People", "id", "people_id")
 				->field("People", "first_name")
 				->field("People", "last_name")
 				->execute();
+			
 			$org_structure .= ",contact_points:[";
 			$first = true;
 			foreach ($points as $p) {

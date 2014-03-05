@@ -13,16 +13,18 @@ function get_json_contact_points_no_address($organization, $contacts_details = t
 	$json_result = "";
 	$contacts = null;
 	$q = SQLQuery::create()
-				->select("Organization")
-				->join("Organization","ContactPoint",array("id"=>"organization"))
-				->join("ContactPoint","People",array("people" => "id"))
-				->join("People","PeopleContact",array("id" => "people"))
-				->join("PeopleContact","Contact",array("contact" => "id"))
-				->field("Organization","id","organization_id")
-				->field("Organization","name","organization_name")
-				->field("ContactPoint","designation","designation")
-				->orderBy("Organization","id")
-				->orderBy("People","id");
+		->select("Organization")
+		->join("Organization","ContactPoint",array("id"=>"organization"))
+		;
+	PNApplication::$instance->people->joinPeople($q, "ContactPoint", "people");
+	$q		
+		->join("People","PeopleContact",array("id" => "people"))
+		->join("PeopleContact","Contact",array("contact" => "id"))
+		->field("Organization","id","organization_id")
+		->field("Organization","name","organization_name")
+		->field("ContactPoint","designation","designation")
+		->orderBy("Organization","id")
+		->orderBy("People","id");
 	PeopleJSON::PeopleSQL($q);
 	ContactJSON::ContactSQL($q);
 				

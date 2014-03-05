@@ -246,12 +246,15 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header = document.createElement("DIV");
 		t.header.className = "data_list_header";
 		t.header_left = document.createElement("DIV");
+		t.header_left.className = "data_list_header_left";
 		t.header_left.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_left);
 		t.header_center = document.createElement("DIV");
+		t.header_center.className = "data_list_header_center";
 		t.header_center.setAttribute("layout","fill");
 		t.header.appendChild(t.header_center);
 		t.header_right = document.createElement("DIV");
+		t.header_right.className = "data_list_header_right";
 		t.header_right.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_right);
 		container.appendChild(t.header);
@@ -443,7 +446,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	 * @returns {GridColumn} the column created
 	 */
 	t._createColumn = function(f) {
-		var col = new GridColumn(f.category+'.'+f.name, f.name, null, f.field_classname, false, null, null, f.field_config, f);
+		var col = new GridColumn(f.category+'.'+f.name, f.name, null, null, f.field_classname, false, null, null, f.field_config, f);
 		if (f.sortable)
 			col.addExternalSorting(function(_sort_order){
 				t._sort_column = col;
@@ -586,7 +589,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			}
 			if (has_actions) {
 				if (!t._col_actions) {
-					t._col_actions = new GridColumn('actions', "", null, "field_html", false, null, null, {}, null);
+					t._col_actions = new GridColumn('actions', "", null, "right", "field_html", false, null, null, {}, null);
 					t.grid.addColumn(t._col_actions);
 				}
 				for (var i = 0; i < t.data.length; ++i) {

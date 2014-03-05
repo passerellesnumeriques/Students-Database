@@ -166,7 +166,7 @@ function custom_import(container, icon, title, import_button_text, import_button
 		t.data_display.push(data_display);
 		t.fixed_values.push(fixed_value);
 		t.prefilled_values.push(prefilled_value);
-		t.grid.addColumn(new GridColumn(data_display.category+'@'+data_display.name,data_display.name,null,data_display.field_classname,true,null,null,data_display.field_config, data_display), t.grid.getNbColumns()-1);
+		t.grid.addColumn(new GridColumn(data_display.category+'@'+data_display.name,data_display.name,null,null,data_display.field_classname,true,null,null,data_display.field_config, data_display), t.grid.getNbColumns()-1);
 	};
 	
 	/**
@@ -638,8 +638,8 @@ function custom_import(container, icon, title, import_button_text, import_button
 		
 		require("grid.js",function() {
 			t.grid = new grid(t.grid_container);
-			t.grid.addColumn(new GridColumn('#','#',null,'field_text',false,null,null,{},'#'));
-			t.grid.addColumn(new GridColumn('##','',null,'field_html',false,null,null,{},'##'));
+			t.grid.addColumn(new GridColumn('#','#',null,null,'field_text',false,null,null,{},'#'));
+			t.grid.addColumn(new GridColumn('##','',null,null,'field_html',false,null,null,{},'##'));
 			onready(t);
 		});
 		

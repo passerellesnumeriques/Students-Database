@@ -625,44 +625,20 @@ class selection extends Component {
 	/**
 	 * Remove an information session from the database
 	 * @param integer id the one of the IS to remove
-	 * @param integer fake_organization the id of the fake organization linked to this IS
 	 */
-	public function removeIS($id, $fake_organization){
+	public function removeIS($id){
 		// check the rights
 		if(!PNApplication::$instance->user_management->has_right("manage_information_session",true)){
 			PNApplication::error("You are not allowed to remove any information session");
 			return;
 		}
+		SQLQuery::create()->removeKey("InformationSession",$id);
 		//update the steps
 		$this->updateAllSteps();
-		$this->removeFakeOrganization($id, $fake_organization);
-		SQLQuery::create()->removeKey("InformationSession",$id);
 		if(PNApplication::has_errors())
 			return;
 		else
 			return true;
-	}
-	
-	/**
-	 * Remove the fake organization linked to an information session
-	 * after checking it is really the one linked to the given IS
-	 * The rights must be checked before calling this method
-	 * @param integer IS_id
-	 * @param integer fake_organization id
-	 */
-	private function removeFakeOrganization($IS_id, $fake_organization){
-		//check the fake_organization matches with the one set in the IS
-		$db_fake = SQLQuery::create()->select("InformationSession")
-			->field("fake_organization")
-			->whereValue("InformationSession","id",$IS_id)
-			->executeSingleValue();
-		if(isset($db_fake)){
-			if($db_fake == $fake_organization)
-				SQLQuery::create()->bypassSecurity()->removeKey("Organization",$fake_organization);
-			else
-				PNApplication::error("The given fake_organization(".$fake_organization.") does not match with the one set into the database(".$db_fake.")");
-		} else
-			PNApplication::error("This fake_organization does not exist into the database");
 	}
 	
 	/**

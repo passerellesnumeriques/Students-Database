@@ -19,6 +19,9 @@ table.grid>tbody>tr>td {
 	padding-left: 2px;
 	padding-right: 2px;
 }
+table.grid>tbody>tr:last-child>td {
+    border-bottom: none;
+}
 table.grid>tbody>tr {
 	background-color: #FFFFFF;
 }

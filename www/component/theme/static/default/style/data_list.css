@@ -22,11 +22,11 @@
 	background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
 	border-bottom: 1px solid #808080;
 }
-.data_list_header>div {
+.data_list_header_left {
 }
-.data_list_header>div+div {
+.data_list_header_center {
 	border-left: 1px solid #808080;
 }
-.data_list_header>div+div+div {
+.data_list_header_right {
 	border-left: 1px solid #808080;
 }

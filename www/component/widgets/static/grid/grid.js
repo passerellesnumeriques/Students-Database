@@ -11,7 +11,7 @@ function GridColumnAction(icon,onclick) {
 	this.onclick = onclick;
 }
 
-function GridColumn(id, title, width, field_type, editable, onchanged, onunchanged, field_args, attached_data) {
+function GridColumn(id, title, width, align, field_type, editable, onchanged, onunchanged, field_args, attached_data) {
 	// check parameters
 	if (!id) id = generateID();
 	if (!field_type) field_type = "field_text";
@@ -21,6 +21,7 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 	this.id = id;
 	this.title = title;
 	this.width = width;
+	this.align = align ? align : "left";
 	this.field_type = field_type;
 	this.editable = editable;
 	this.onchanged = onchanged;
@@ -320,6 +321,7 @@ function grid(element) {
 			var data = td.field.getCurrentData();
 			td.innerHTML = "";
 			td.field = t._create_cell(column, data, td);
+			td.style.textAlign = column.align;
 			if (data == grid_deactivated_cell)
 				td.style.backgroundColor = "rgba(192,192,192,0.5)";
 		}
@@ -480,6 +482,7 @@ function grid(element) {
 				data = {data_id:null,data:"No data found for this colum"};
 			td.col_id = t.columns[j].id;
 			td.data_id = data.data_id;
+			td.style.textAlign = t.columns[j].align;
 			td.field = t._create_cell(t.columns[j], data.data, td);
 //			if (data[i][j] == grid_deactivated_cell)
 //				td.style.backgroundColor = "rgba(192,192,192,0.5)";

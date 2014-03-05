@@ -79,6 +79,10 @@ class DataModel {
 		return $table;
 	}
 
+	/**
+	 * @param string $key_table
+	 * @return SubDataModel
+	 */
 	public function &addSubModel($key_table) {
 		$sm = new SubDataModel($this, $key_table);
 		$this->tables[$key_table]->_key_for_submodel($sm);
