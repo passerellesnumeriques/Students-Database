@@ -434,7 +434,11 @@ function manage_config(&$page,$container_id,$header_id){
 					return;
 				}
 				unlock_screen(div_locker);
-				window.top.location.href = "/?section=Selection";
+				if (window.parent.populateMenu) {
+					window.parent.populateMenu("/dynamic/selection/service/application_menu_builder");
+					location.reload();
+				} else
+					window.top.location.href = "/?section=Selection";
 			});
 		};
 		
@@ -449,7 +453,11 @@ function manage_config(&$page,$container_id,$header_id){
 					return;
 				}
 				unlock_screen(div_locker);
-				window.parent.location.reload();
+				if (window.parent.populateMenu) {
+					window.parent.populateMenu("/dynamic/selection/service/application_menu_builder");
+					location.assign("/dynamic/selection/page/selection_main_page");
+				} else
+					window.top.location.reload();
 			});
 		};
 		

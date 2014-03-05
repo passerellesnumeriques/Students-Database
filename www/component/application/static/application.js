@@ -104,8 +104,16 @@ if (window == window.top) {
 								w.frameElement.loading_anim = null;
 								w.frameElement.loading_t = null;
 							}
-						} else
+						} else {
 							w.frameElement.loading_anim = null;
+							// maximum time to show it: 5s.
+							setTimeout(function() {
+								if (!w || !w.frameElement || !w.loading_t) return;
+								if (w.unloading_anim) return;
+								t.parentName.removeChild(t);
+								w.frameElement.loading_t = null;
+							}, 5000);
+						}
 					});
 				},1);
 			}
