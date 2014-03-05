@@ -805,6 +805,14 @@ namespace datamodel {
 		public function get_sql_type() {
 			return "DATE";
 		}
+		
+		public static function toTimestamp($sql_date) {
+			$s = explode("-", $sql_date);
+			$y = intval($s[0]);
+			$m = intval($s[1]);
+			$d = intval($s[2]);
+			return mktime(0,0,0,$m,$d,$y);
+		}
 
 		public function validate($value) {
 			if ($value === "") $value = null;

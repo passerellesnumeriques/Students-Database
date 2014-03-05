@@ -279,7 +279,8 @@ function addMenuItem(icon, text, info, url) {
 	};
 	item.onmouseout = function() {
 		if (!item._tooltip) return;
-		document.body.removeChild(item._tooltip); // TODO can be already removed
+		if (!item._tooltip.parentNode) { item._tooltip = null; return; }
+		document.body.removeChild(item._tooltip);
 		item._tooltip = null;
 	};
 	window.pnapplication.onmouseout.add_listener(item.onmouseout);

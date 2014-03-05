@@ -9,15 +9,17 @@ class service_todo_list extends Service {
 	public function get_output_format($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
-		$html = "";
-		$batches = PNApplication::$instance->curriculum->getBatches();
-		foreach ($batches as $batch) {
+		if (isset($input["batch_id"])) {
+			$batch = PNApplication::$instance->curriculum->getBatch($input["batch_id"]);
 			$h = "";
 			$this->checkBatch($batch, $h);
-			if ($h <> "") $html .= "<li>Batch ".htmlentities($batch["name"])."<ul>".$h."</ul></li>";
+			echo $h;
+		} else if (isset($input["period_id"])) {
+			$period = PNApplication::$instance->curriculum->getAcademicPeriod($input["period_id"]);
+			$h = "";
+			$this->checkPeriod($period, $h);
+			echo $h;
 		}
-		if (strlen($html) > 0) $html = "<ul>".$html."</ul>";
-		echo $html;
 	}
 	
 	private function checkBatch($batch, &$html) {
@@ -31,11 +33,6 @@ class service_todo_list extends Service {
 		if (count($students) == 0) {
 			$html .= "<li>No student yet: <a href='list?batches=".$batch["id"]."' target='students_page'>Go to the list</a></li>";
 		}
-		foreach ($periods as $period) {
-			$h = "";
-			$this->checkPeriod($period, $h);
-			if ($h <> "") $html .= "<li>Period ".htmlentities($period["name"]).":<ul>".$h."</ul></li>";
-		}
 	}
 	
 	private function checkPeriod($period, &$html) {
@@ -43,6 +40,45 @@ class service_todo_list extends Service {
 		$subjects = PNApplication::$instance->curriculum->getSubjects($period["batch"], $period["id"]);
 		if (count($subjects) == 0) {
 			$html .= "<li>No subject in the curriculum: <a href='/dynamic/curriculum/page/curriculum?period=".$period["id"]."' target='students_page'>Edit</a></li>";
+		}
+		// if there are specializations, and the period already started, all students must be assigned to a specialization
+		$now = time();
+		$start = \datamodel\ColumnDate::toTimestamp($period["start_date"]);
+		if ($start < $now) {
+			// already started
+			$periods = PNApplication::$instance->curriculum->getAcademicPeriods($period["batch"]);
+			$periods_ids = array();
+			foreach ($periods as $p) array_push($periods_ids, $p["id"]);
+			$spes = PNApplication::$instance->curriculum->getAcademicPeriodsSpecializations($periods_ids);
+			if (count($spes) > 0) {
+				// there are specializations
+				foreach ($periods as $p) {
+					$period_spes = array();
+					foreach ($spes as $s) if ($s["period"] == $p["id"]) array_push($period_spes, $s["specialization"]);
+					if (count($period_spes) == 0) {
+						// not in this period
+						if ($p["id"] == $period["id"])
+							break; // no specialization on our period
+					} else {
+						if ($p["id"] <> $period["id"])
+							break; // the split into specializations is done before
+						// we are there: our period has a split into specialization
+						// check if all students are assigned
+						$nb = SQLQuery::create()
+							->select("Student")
+							->whereValue("Student","batch",$period["batch"])
+							->where("(`exclusion_date` IS NULL OR `exclusion_date` > '".$period["start_date"]."'")
+							->whereNull("Student","specialization")
+							->count()
+							->executeSingleValue()
+							;
+						if ($nb > 0) {
+							$html .= "<li>".$nb." student".($nb > 1 ? "s" : "")." are not yet assigned to a specialization: <a href='#' onclick=".json_encode("var p = new popup_window('Assign Specializations', theme.build_icon('/static/curriculum/curriculum_16.png',theme.icons_10.edit), '');p.setContentFrame('/dynamic/students/page/assign_specializations?batch=".$period["batch"]."&onsave=reload_list');p.show();").">Assign specializations</a></li>";
+						}
+						break;
+					}
+				}
+			}
 		}
 	}
 	

@@ -80,6 +80,11 @@ function TreeItem(cells, expanded, onselect) {
 		for (var i = 0; i < item.children.length; ++i)
 			this._hide(item.children[i]);
 	};
+	this.makeVisible = function() {
+		if (!this.parent) return;
+		this.parent.makeVisible();
+		this.parent.expand();
+	};
 	this.select = function() {
 		this.tree.selectItem(this);
 	};
@@ -115,6 +120,17 @@ function TreeCell(html) {
 		img.style.verticalAlign = "bottom";
 		img.style.marginLeft = "2px";
 		img.onclick = function(ev) { t.element.oncontextmenu(ev); };
+		t.element.appendChild(img);
+	};
+	this.addActionIcon = function(icon, tooltip, onclick) {
+		var img = document.createElement("IMG");
+		img.src = icon;
+		img.className = "button_verysoft";
+		img.style.padding = "0px";
+		img.style.verticalAlign = "bottom";
+		img.style.marginLeft = "2px";
+		img.onclick = onclick;
+		if (tooltip) img.title = tooltip;
 		t.element.appendChild(img);
 	};
 }

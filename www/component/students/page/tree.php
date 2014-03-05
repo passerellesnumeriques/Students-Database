@@ -220,7 +220,7 @@ function BatchNode(current, alumni, batch) {
 		menu.addIconItem(theme.icons_16.edit, "Edit periods and specializations", function() { edit_batch(batch); });
 		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.remove,"right_bottom"), "Remove Batch", function() { remove_batch(batch); });
 	};<?php	} else { echo "null;"; } ?>
-		this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, !is_alumni, function() {
+	this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, !is_alumni, function() {
 		window.parent.resetLeftControls();
 		var title = document.createElement("DIV");
 		title.appendChild(document.createTextNode("Batch "));
@@ -275,6 +275,25 @@ function BatchNode(current, alumni, batch) {
 		setMenuParams("health", "");
 		t._onselect();
 	},context_menu_builder,null);
+	<?php if ($can_edit) { ?>
+	service.customOutput("students","todo_list",{batch_id:batch.id},function(html) {
+		if (html.length == 0) return;
+		t.item.cells[0].addActionIcon(theme.icons_10.warning, "Some actions need to be done on this batch", function(ev) {
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				var list = document.createElement("UL");
+				list.className = "warning";
+				list.innerHTML = html;
+				list.onclick = function() { menu.close(); }
+				menu.addItem(list, true);
+				menu.showBelowElement(t.item.cells[0].element);
+			});
+			stopEventPropagation(ev);
+			return false;
+		});
+		t.item.makeVisible();
+	});
+	<?php } ?>
 	this.item.node = this;
 	var i = 0;
 	var start = parseSQLDate(batch.start_date).getTime();
@@ -368,6 +387,25 @@ function AcademicPeriodNode(batch_node, period) {
 		setMenuParams("health", "");
 		t._onselect();
 	},null,null);
+	<?php if ($can_edit) { ?>
+	service.customOutput("students","todo_list",{period_id:period.id},function(html) {
+		if (html.length == 0) return;
+		t.item.cells[0].addActionIcon(theme.icons_10.warning, "Some actions need to be done on this period", function(ev) {
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				var list = document.createElement("UL");
+				list.className = "warning";
+				list.innerHTML = html;
+				list.onclick = function() { menu.close(); }
+				menu.addItem(list, true);
+				menu.showBelowElement(t.item.cells[0].element);
+			});
+			stopEventPropagation(ev);
+			return false;
+		});
+		t.item.makeVisible();
+	});
+	<?php } ?>
 	this.item.node = this;
 	this.item.cells[0].addStyle({color: parseSQLDate(period.end_date).getTime() < now ? "#4040A0" : parseSQLDate(period.start_date).getTime() > now ? "#A04040" : "#40A040"});
 	var i = 0;
@@ -768,72 +806,6 @@ require("autocomplete.js",function() {
 	ac.input.style.margin = "2px";
 	window.parent.addRightControl(container);
 });
-
-// To Do List
-<?php if ($can_edit) { ?>
-var todo_list_content = null;
-function refresh_todo_list() {
-	service.customOutput("students","todo_list",{},function(html) {
-		if (html.length == 0) {
-			if (todo_list_content != null) {
-				var left = document.getElementById('left');
-				left.removeChild(todo_list_content.container);
-				layout.invalidate(left);
-				todo_list_content = null;
-			}
-			return;
-		}
-		if (todo_list_content == null) {
-			var div = document.createElement("DIV");
-			var header = document.createElement("DIV");
-			header.className = "help_header";
-			header.style.fontWeight = "bold";
-			header.style.borderTop = "1px solid black";
-			header.innerHTML = "<img src='"+theme.icons_16.help+"' style='vertical-align:bottom'/> To Do List";
-			setBorderRadius(header, 3,3,3,3, 0,0,0,0);
-			var img = document.createElement("IMG");
-			img.src = theme.icons_10.refresh;
-			img.className = "button_verysoft";
-			img.style.padding = "0px";
-			img.onclick = function() {
-				todo_list_content.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
-				refresh_todo_list();
-			};
-			img.title = 'Refresh To Do List';
-			img.style.marginLeft = "6px";
-			img.style.verticalAlign = "bottom";
-			header.appendChild(img);
-			img = document.createElement("IMG");
-			img.src = theme.icons_10.close;
-			img.className = "button_verysoft";
-			img.style.padding = "0px";
-			img.onclick = function() {
-				var left = document.getElementById('left');
-				left.removeChild(todo_list_content.container);
-				layout.invalidate(left);
-				todo_list_content = null;
-			};
-			img.title = 'Close To Do List';
-			img.style.marginLeft = "6px";
-			img.style.verticalAlign = "bottom";
-			header.appendChild(img);
-			div.appendChild(header);
-			todo_list_content = document.createElement("DIV");
-			todo_list_content.style.backgroundColor = "white";
-			todo_list_content.style.overflow = "auto";
-			todo_list_content.style.height = "100px";
-			todo_list_content.container = div;
-			div.appendChild(todo_list_content);
-			var left = document.getElementById('left');
-			left.appendChild(div);
-			layout.invalidate(left);
-			
-		}
-		todo_list_content.innerHTML = html;
-	});
-}
-refresh_todo_list();
-<?php } ?>
 
 </script>
 <?php
