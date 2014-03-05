@@ -697,6 +697,7 @@ document.getElementById('students_page').onload = function() {
 };
 
 //Initilization of the page and menu
+if (window.parent.resetAllMenus) window.parent.resetAllMenus(); 
 build_tree();
 var node = root.findTag(url.hash);
 if (node) node.item.select();
