@@ -38,6 +38,7 @@ function select_other_partners(container, all_partners, partners_contacts_points
 			for(var i = 0; i < t.partners.length; i++){
 				var tr = document.createElement("tr");
 				var td = document.createElement("td");
+				var display_header = i == 0 ? true: false; // The header "contact point selected" is only displayed on the first row
 				//Set a partner row within the td
 				var index_in_contact_points = t._findPartnerIndexInPartners_contacts_points(t.partners[i].organization);
 				var row = new create_partner_row(
@@ -47,7 +48,8 @@ function select_other_partners(container, all_partners, partners_contacts_points
 					partners_contacts_points[index_in_contact_points].contact_points,
 					can_manage,
 					//Give the index in t.partners array to get it when the event listener is called
-					i
+					i,
+					display_header
 				);
 				//add the events listeners
 				row.onupdatecontactpointsselection.add_listener(t._onContactPointSelected);

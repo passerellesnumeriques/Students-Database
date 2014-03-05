@@ -260,11 +260,11 @@ class selection extends Component {
 	 * This way when a component requires the config attribute, the getConfig method will be forced to get the last version in the database
 	 * @return in the case of an error is launched by the database, the exception is catched and returned. Otherwise, null is returned
 	 */
-	public function saveConfig($configs){
+	public function saveConfig($configs, $db_lock){
 		$to_return = null;
 		try{
 			foreach($configs as $name=>$value){
-				SQLQuery::create()->updateByKey("SelectionCampaignConfig", $name, array("value"=>$value));
+				SQLQuery::create()->updateByKey("SelectionCampaignConfig", $name, array("value"=>$value),$db_lock);
 			}
 			
 		} catch(Exception $e) {
