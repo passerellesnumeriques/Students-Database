@@ -20,6 +20,7 @@ function select_address(container, data, partners_contacts_points, can_manage){
 	
 	t._init = function(){
 		t._table = document.createElement("table");//The table is splitted into three parts, independants, to be able to seperate the styles
+		t._table.style.width = "100%";
 		t._tbody = document.createElement("tbody");//Contains the host detail
 		t._thead = document.createElement("thead");//Contains the address / geographic area
 //		t._tfoot = document.createElement("tfoot");//Contains the buttons

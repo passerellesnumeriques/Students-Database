@@ -393,7 +393,7 @@ class contact extends Component {
 	 * Get all the organizations existings in a given geographic area (and all its children areas), and the matching addresses
 	 * @param number $area_id
 	 * @return array containing two fields:<ul><li>Organizations found in the given area</li><li>Organizations found in the parent area (all the organizations set in this array are distinct from the ones found in the given area (no double return)</li></ul>
-	 * The structure of these arrays is: array("organization_id" => array("name" => organization_name, "addresses" => array(id1, id2,...)))
+	 * The structure of these arrays is: array("organization_id" => array("name" => organization_name, "addresses" => array(array(address =>, geographic_area_id =>, geographic_area_text=>))))
 	 */
 	public function getOrganizationsByGeographicArea($area_id){
 		//Get the parent id

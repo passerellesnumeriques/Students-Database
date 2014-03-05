@@ -9,16 +9,27 @@ class page_IS_main_page extends selection_page {
 		$list_container_id = $page->generateID();
 		$can_create = PNApplication::$instance->user_management->has_right("manage_information_session",true);
 		$status_container_id = $page->generateID();
-		$page->require_javascript("IS_status.js");
 		$page->require_javascript("section.js");
 		$page->onload("section_from_html('status_section');");
-		$page->onload("new IS_status('$status_container_id');");
+		$steps = PNApplication::$instance->selection->getSteps();
+		if($steps["information_session"]){
+			$page->onload("new IS_status('$status_container_id');");
+			$page->require_javascript("IS_status.js");
+		}
 		$page->require_javascript("horizontal_layout.js");
 		$page->onload("new horizontal_layout('horizontal_split',true);");
+		
 		?>
 		<div id='horizontal_split'>
-			<div id='status_section' title='Information Sessions Status' collapsable='true' css='soft' style='display:inline-block;margin:10px'>
+			<div id='status_section' title='Information Sessions Status' collapsable='false' css='soft' style='display:inline-block;margin:10px'>
 				<div id = '<?php echo $status_container_id; ?>'>
+				<?php 
+				if(!$steps["information_session"]){
+				?>
+				<div><i>There is no information session yet</i><a class = "button"href = "/dynamic/selection/page/IS/profile" style = "margin-left:3px; margin-top:3px;">Create First</a></div>
+				<?php
+				}
+				?>
 				</div>
 			</div>
 			<div style="padding: 10px;display:inline-block" layout='fill'>

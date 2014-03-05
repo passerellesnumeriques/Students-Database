@@ -44,6 +44,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 	t._isRefreshing = false;
 	t._restartRefreshing = false;
 	t._idForReRefreshing = null;
+	t._geographic_area_selected = null;//Store the selected area id
 	/**
 	 * Refresh the content of the lists, calling the contact#get_json_organizations_by_geographic_area service
 	 * @param {Number} id the id of the geographic area used for the new selection
@@ -55,6 +56,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 			return;
 		}
 		t._isRefreshing = true;
+		t._geographic_area_selected = id;
 		//reset the array containing the lists rows
 		delete t._rowsSelectable;
 		t._rowsSelectable = [];
@@ -72,7 +74,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 			var td2 = document.createElement("td");
 			if(r){
 				t._createListFromData(r.from_area,td1,id);
-				t._createListFromData(r.from_parent_area,td2,id);
+				t._createListFromData(r.from_parent_area,td2,id); 
 			} else {
 				td1.innerHTML = "<i>This functionality is not available</i>";
 				td2.innerHTML = "<i>This functionality is not available</i>";
@@ -137,16 +139,14 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 				tr.style.cursor = "pointer";
 				if(row_title)
 					tr.title = row_title;
-				if(t.preselected_partner_id == data[i].id){
+				if(t.preselected_partner_id == data[i].id && t._rowContainsAtLeastOneAddressInSelectedArea(data[i]))
 					tr.className = "selected";
-				}
 				tr.onclick = function(){
 					var new_classname = this.className == "selected" ? "" : "selected";
 					//If an other part was selected before, reset
 					t._resetSelectedRow();//Will reset all the rows classname
 					this.className = new_classname;
 					if(this.className == "selected"){
-						
 						t.onpartnerselected.fire(this.data);
 					} else
 						t.onpartnerunselected.fire();
@@ -184,6 +184,20 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 			if(t._rowsSelectable[i].className == "selected")
 				t._rowsSelectable[i].className = "";
 		}
+	};
+	
+	/**
+	 * Check that a row contains at least one address in the selected area
+	 * @param {Array} row_data the data linked to the row
+	 * @returns {boolean} true if the row contains at least one address in the selected area
+	 */
+	t._rowContainsAtLeastOneAddressInSelectedArea = function(row_data){
+		for(var i = 0; i < row_data.addresses.length; i++){
+			alert(row_data.addresses[i].geographic_area_id+", "+ t._geographic_area_selected);
+			if(row_data.addresses[i].geographic_area_id == t._geographic_area_selected)
+				return true;
+		}
+		return false;
 	};
 	
 	t._init();

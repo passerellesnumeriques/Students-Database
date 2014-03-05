@@ -75,10 +75,7 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		var div = document.createElement("div");
 		var data_grid = document.createElement("div");
 		div.appendChild(document.createTextNode("Manage partners"));
-		div.className = "button";
-		
-		//TODO if host selected, set it has not selectable
-		
+		div.className = "button";		
 		div.onclick = function(){
 			var pop = new popup_window("Select the partners",theme.icons_16.question,data_grid);
 			var url_partners = "";
