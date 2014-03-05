@@ -659,7 +659,7 @@ class selection extends Component {
 	
 	/**
 	 * Get all the IS with no host set
-	 * @return array | null if any IS has no host, an array is returned containing arrays: array(id, name)
+	 * @return array | null if any IS has no host, an array is returned containing arrays: array(id=>, name=>)
 	 */
 	public function getAllISWithNoHost(){
 		$all_IS = SQLQuery::create()

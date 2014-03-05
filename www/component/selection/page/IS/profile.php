@@ -16,9 +16,9 @@ class page_IS_profile extends selection_page {
 	?>
 		<div id = "IS_profile_container" style = "width:100%; height:100%">
 			<div id = "page_header">
-				<div class = "button" onclick = "location.assign('/dynamic/selection/page/IS/main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
-				<div class = "button" id = "save_IS_button"><img src = '<?php echo theme::$icons_16["save"];?>' /> <b>Save</b></div>
-				<div class = "button" id = "remove_IS_button"><img src = '<?php echo theme::$icons_16["remove"];?>' /> Remove Information Session</div>
+				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/IS/main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
+				<div class = "button_verysoft" id = "save_IS_button"><img src = '<?php echo theme::$icons_16["save"];?>' /> <b>Save</b></div>
+				<div class = "button_verysoft" id = "remove_IS_button"><img src = '<?php echo theme::$icons_16["remove"];?>' /> Remove Information Session</div>
 			</div>
 			<div id='IS_profile_<?php echo $name; ?>' style = "overflow:auto" layout = "fill"></div>
 		</div>
@@ -36,7 +36,7 @@ class page_IS_profile extends selection_page {
 	 */
 	public function IS_profile(&$page,$container_id,$id,$save_IS_button, $remove_IS_button){
 		$page->add_javascript("/static/widgets/header_bar.js");
-		$page->onload("var header = new header_bar('page_header','small'); header.setTitle('/static/selection/IS/IS_16.png', 'Information Session Profile');");
+		$page->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('/static/selection/IS/IS_16.png', 'Information Session Profile');");
 		require_once("component/selection/SelectionJSON.inc");
 		$can_read = PNApplication::$instance->user_management->has_right("see_information_session_details",true);
 		if(!$can_read)

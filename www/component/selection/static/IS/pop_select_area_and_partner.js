@@ -94,10 +94,9 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 				area.onchange = function() {
 					var a = area.getSelectedArea();
 					t.geographic_area = a != null ? a.id : null;
-					//data.geographic_area_text = a.text;
 					t._refreshTDPartners(t.geographic_area);
 					//Reset the host if the area is changed
-					t._updateHostAttribute(null);
+					t.host = null;
 					//Update the buttons
 					t._updatePopButtonsAndInfoRow();
 				};
@@ -142,8 +141,8 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 			//The onclose method will unselect the partners if no address is selected
 			pop.onclose = function(){
 				//Reset the partners lists and the selected partner
-				t._updateHostAttribute(null);
-				t._updateHostAddressAttribute(null);
+				t.host = null;
+				t.host_address = null;
 				t._partners_lists.refresh(t.geographic_area);
 			};
 			var head = document.createElement("div");
@@ -172,8 +171,9 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 							button.address = res[i];
 							button.onclick = function(){
 								this.pop.onclose = null;
-								t._updateHostAddressAttribute(this.address.id);
-								t._updateHostAttribute(this.partner_id);
+								t.host_address = this.address.id;
+								t.host = this.partner_id;
+								t.geographic_area = this.address.geographic_area.id;
 								this.pop.close();
 								t._closePop();
 							};
@@ -190,8 +190,9 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 			pop.show();
 		} else {
 			//Update the attributes
-			t._updateHostAttribute(row_data.id);
-			t._updateHostAddressAttribute(row_data.addresses[0].address_id);
+			t.host = row_data.id;
+			t.host_address = row_data.addresses[0].address_id;
+			t.geographic_area = row_data.addresses[0].geographic_area_id;
 		}
 		//update the organization name attribute
 		t.host_name = row_data.name;
@@ -201,21 +202,12 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 	
 	t._onPartnerRowUnselected = function(){		
 		//Reset the host attributes
-		t._updateHostAttribute(null);
-		t._updateHostAddressAttribute(null);
+		t.host = null;
+		t.host_address = null;
 		//update the organization name attribute
 		t.host_name = null;
 		//Update the buttons
 		t._updatePopButtonsAndInfoRow();
-	};
-	
-	t._updateHostAttribute = function(new_host){
-		t.host = new_host != t.host ? new_host : t.host;
-		t._partners_lists.preselected_partner_id = t.host;
-	};
-	
-	t._updateHostAddressAttribute = function(new_address){
-		t.host_address = new_address != t.host_address ? new_address : t.host_address;
 	};
 	
 	t._shown = false;
