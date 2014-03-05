@@ -84,6 +84,15 @@ class calendar extends Component {
 		}
 	}
 	
+	public function removeSharedCalendar($id) {
+		if (!$this->canWriteCalendar($id)) {
+			PNApplication::error("You cannot remove this calendar");
+			return false;
+		}
+		SQLQuery::create()->bypassSecurity()->removeKey("Calendar", $id);
+		return true;
+	}
+	
 	/**
 	 * Called when an event is raised to signal that a new local user has just been created
 	 * @param number $user_id user id

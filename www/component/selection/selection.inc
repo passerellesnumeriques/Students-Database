@@ -184,8 +184,13 @@ class selection extends Component {
 		$this->campaign_id = null;
 		/* Set the calendar_id to null */
 		$this->calendar_id = null;
+		$campaign = SQLQuery::create()->select("SelectionCampaign")->whereValue("SelectionCampaign", "id", $id)->executeSingleRow();
+		if ($campaign == null) {
+			PNApplication::error("Invalid selection campaign");
+			return;
+		}
 		SQLQuery::create()->removeKey("SelectionCampaign",$id);
-		// TODO PNApplication::$instance->calendar->removeCalendar
+		PNApplication::$instance->calendar->removeSharedCalendar($campaign["calendar"]);
 		// TODO remove all news having the tag campaignX
 	}
 	
