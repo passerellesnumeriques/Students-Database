@@ -50,7 +50,7 @@ var students_list = new data_list(
 	build_filters(),
 	function (list) {
 		var remove_button = document.createElement("DIV");
-		remove_button.className = "button";
+		remove_button.className = "button_verysoft";
 		remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove selected students";
 		remove_button.onclick = function() {
 			var sel = list.grid.getSelectionByRowId();

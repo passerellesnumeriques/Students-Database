@@ -3,7 +3,7 @@
 	<select id='student_batch'>
 	<option value=''></option>
 	<?php
-	$batches = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch","start_date",false)->execute();
+	$batches = PNApplication::$instance->curriculum->getBatches(); 
 	foreach ($batches as $b)
 		echo "<option value='".$b["id"]."'>".htmlentities($b["name"])."</option>"; 
 	?>

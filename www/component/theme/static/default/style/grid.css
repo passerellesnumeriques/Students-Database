@@ -23,5 +23,6 @@ table.grid>tbody>tr {
 	background-color: #FFFFFF;
 }
 table.grid>tbody>tr.selected {
-	background-color: #FFFFC0;
+	background-color: #FFF0D0;
+    background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
 }

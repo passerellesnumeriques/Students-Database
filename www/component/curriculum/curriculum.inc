@@ -15,7 +15,7 @@ class curriculum extends Component {
 	 * @return array the result from the database
 	 */
 	public function getBatches() {
-		return SQLQuery::create()->select("StudentBatch")->execute();
+		return SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true)->execute();
 	}
 	/** Retrieve the given batch
 	 * @param integer $batch_id the requested batch

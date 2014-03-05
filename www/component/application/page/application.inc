@@ -23,6 +23,7 @@ window.top.CalendarsProviders.get(function(provider) {
 	provider.refreshCalendars();
 });
 window.top.pnapplication.onlogout.add_listener(function() {
+	if (!window.top.calendar_manager) return;
 	while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(window.top.calendar_manager.calendars[0]);
 	window.top.CalendarsProviders.get(function(provider) {
 		clearInterval(provider._refresh_interval);
