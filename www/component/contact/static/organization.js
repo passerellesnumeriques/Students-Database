@@ -20,6 +20,8 @@ function organization(container, org, existing_types, can_edit) {
 	};
 	
 	this.onchange = new Custom_Event();
+	this.onaddresschange = new Custom_Event();
+	this.oncontactpointchange = new Custom_Event();
 	
 	/** Create the display */
 	this._init = function() {
@@ -177,6 +179,7 @@ function organization(container, org, existing_types, can_edit) {
 			a.onchange.add_listener(function(a){
 				org.addresses = a.getAddresses();
 				t.onchange.fire();
+				t.onaddresschange.fire();
 			});
 		});
 			// contact points
@@ -229,6 +232,7 @@ function organization(container, org, existing_types, can_edit) {
 						org.contact_points.push(point);
 						t._addContactPointRow(point, tbody);
 						t.onchange.fire();
+						t.oncontactpointchange.fire();
 						p.close();
 						layout.invalidate(tbody);
 					};
@@ -305,7 +309,13 @@ function organization(container, org, existing_types, can_edit) {
 				pop.show();
 			});
 		};
-		td.appendChild(document.createTextNode(point.first_name+" "+point.last_name+" "));
+		var first_name = document.createTextNode(point.first_name);
+		var last_name = document.createTextNode(point.last_name);
+		window.top.datamodel.registerCellText(window, "People", "first_name", point.people_id, first_name);
+		window.top.datamodel.registerCellText(window, "People", "last_name", point.people_id, last_name);
+		td.appendChild(first_name);
+		td.appendChild(document.createTextNode(" "));
+		td.appendChild(last_name);
 		td.appendChild(link);
 		if(can_edit){
 			var remove_button = document.createElement("div");
@@ -327,6 +337,7 @@ function organization(container, org, existing_types, can_edit) {
 								//Remove from t._contact_points_rows
 								t._contact_points_rows.splice(index,1);
 								t.onchange.fire();
+								t.oncontactpointchange.fire();
 							}
 						}
 					});
@@ -339,6 +350,7 @@ function organization(container, org, existing_types, can_edit) {
 						//Remove from t._contact_points_rows
 						t._contact_points_rows.splice(index,1);
 						t.onchange.fire();
+						t.oncontactpointchange.fire();
 					}
 				}
 				

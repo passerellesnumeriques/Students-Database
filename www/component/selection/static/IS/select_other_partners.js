@@ -1,4 +1,4 @@
-function select_other_partners(container, all_partners, partners_contacts_points, can_manage, host_id, update_host_custom_event){
+function select_other_partners(container, all_partners, partners_contacts_points, can_manage, host_id, update_host_custom_event,oncontactpointchange_listener){
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	var t = this;
@@ -49,7 +49,9 @@ function select_other_partners(container, all_partners, partners_contacts_points
 					can_manage,
 					//Give the index in t.partners array to get it when the event listener is called
 					i,
-					display_header
+					display_header,
+					null,
+					oncontactpointchange_listener
 				);
 				//add the events listeners
 				row.onupdatecontactpointsselection.add_listener(t._onContactPointSelected);

@@ -1,6 +1,5 @@
 /**
  * 
- * @param container
  * @param partner_data {Object} partner_data with two attributes: <code>id</code> and <code>name</code>
  * @param contact_points_selected
  * @param all_contact_points
@@ -8,12 +7,13 @@
  * @param {Object | null} add_data_to_give_when_event_fired (optional) data added to the contact_points_selected array when onupdatecontactpointsselection is fired
  * The data is added this way: {contact_points_selected: ,additional:add_data_to_give_when_event_fired} 
  */
-function create_partner_row(container, partner_data, contact_points_selected, all_contact_points, can_manage, add_data_to_give_when_event_fired, display_row_header){
+function create_partner_row(container, partner_data, contact_points_selected, all_contact_points, can_manage, add_data_to_give_when_event_fired, display_row_header, onaddresschange_listener,oncontactpointchange_listener){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	t.contact_points_selected = contact_points_selected;
 	t.onupdatecontactpointsselection = new Custom_Event(); //Fired when the contact points selected list is updated
+	t.onneedtorefresh = new Custom_Event();
 	t._init = function(){
 		t._table = document.createElement("table");
 		t._table.style.width = "100%";
@@ -40,7 +40,9 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 		var td2 = document.createElement("td");
 		var link_td1 = document.createElement("a");
 		td1.appendChild(link_td1);
-		link_td1.appendChild(document.createTextNode(partner_data.name));
+		var text = document.createTextNode(partner_data.name);
+		window.top.datamodel.registerCellText(window, "Organization", "name", partner_data.id, text);
+		link_td1.appendChild(text);
 		link_td1.className = "black_link";
 		link_td1.style.cursor = "pointer";
 		link_td1.title = "See organization profile";
@@ -52,8 +54,19 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 				var frame = pop.setContentFrame("/dynamic/contact/page/organization_profile?organization="+organization_id);
 				pop.show();
 				waitFrameReady(getIFrameWindow(frame), function(win){ return typeof win.organization != 'undefined'; }, function(win) {
-					win.organization.onchange.add_listener(function() {
-						// TODO refresh
+					win.organization.onaddresschange.add_listener(function() {
+						//Add the listeners fired when the pop is closed
+						pop.onclose = function(){
+							if(onaddresschange_listener)
+								onaddresschange_listener();							
+						};
+					});
+					win.organization.oncontactpointchange.add_listener(function() {
+						//Add the listeners fired when the pop is closed
+						pop.onclose = function(){
+							if(oncontactpointchange_listener)
+								oncontactpointchange_listener();							
+						};
 					});
 				},10000);
 			});
@@ -89,10 +102,11 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 				window.top.datamodel.registerCellText(window, "People", "first_name", all_contact_points[index].people_id, text);
 				link.appendChild(text);
 				if(all_contact_points[index].people_designation != null) {
-					link.appendChild(document.createTextNode(", "));
+					link.appendChild(document.createTextNode(" ("));
 					text = document.createTextNode(all_contact_points[index].people_designation);
 					window.top.datamodel.registerCellText(window, "ContactPoint", "designation", {organization:partner_data.id,people:all_contact_points[index].people_id}, text);
 					link.appendChild(text);
+					link.appendChild(document.createTextNode(")"));
 				}
 				
 				cont.appendChild(link);

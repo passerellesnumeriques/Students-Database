@@ -192,8 +192,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 	 * @returns {boolean} true if the row contains at least one address in the selected area
 	 */
 	t._rowContainsAtLeastOneAddressInSelectedArea = function(row_data){
-		for(var i = 0; i < row_data.addresses.length; i++){
-			alert(row_data.addresses[i].geographic_area_id+", "+ t._geographic_area_selected);
+		for(var i = 0; i < row_data.addresses.length; i++){			
 			if(row_data.addresses[i].geographic_area_id == t._geographic_area_selected)
 				return true;
 		}
