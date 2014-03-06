@@ -60,15 +60,7 @@ class SelectionJSON{
 	 * Build a JSON information structure for the given id
 	 * @param number $id
 	 * @return string json InformationSession structure
-	 */
-// 	public static function InformationSessionFromID($id){
-// 		if($id == -1 || $id == "-1")
-// 			return "{id:-1, address:null, fake_organization:null, date:null, number_boys_expected:null, number_boys_real:null, number_girls_expected:null, number_girls_real:null, name:null, partners:[]}";
-// 		$IS_row = self::InformationSessionTableDataFromID($id);
-// 		$IS_partners_row = self::PartnersDataFromID($id);
-// 		return self::InformationSession($IS_row, $IS_partners_row);
-// 	}
-	
+	 */	
 	public static function InformationSessionFromID($id){
 		if($id == -1 || $id == "-1")
 			return "{id:-1, geographic_area:null, date:null, number_boys_expected:null, number_boys_real:null, number_girls_expected:null, number_girls_real:null, name:null, partners:[]}";
@@ -95,22 +87,6 @@ class SelectionJSON{
 	 * Prepares a SQLQuery to retrieve an information session, to be used with method InformationSession 
 	 * @param SQLQuery $q
 	 */
-// 	public static function InformationSessionSQL(&$q){
-// 		$alias = $q->getTableAlias("InformationSession");
-// 		if(!$alias)
-// 			$alias = "InformationSession";
-// 		$q
-// 			->field($alias,"id")
-// 			->field($alias,"date")
-// 			->field($alias,"postal_address")
-// 			->field($alias,"fake_organization")
-// 			->field($alias,"number_boys_expected")
-// 			->field($alias,"number_girls_expected")
-// 			->field($alias,"number_boys_real")
-// 			->field($alias,"number_girls_real")
-// 			->field($alias,"name");
-// 	}
-	
 	public static function InformationSessionSQL(&$q){
 		$alias = $q->getTableAlias("InformationSession");
 		if(!$alias)
@@ -131,17 +107,6 @@ class SelectionJSON{
 	 * @param unknown $id of the information session
 	 * @return array the rows coming from the database
 	 */
-// 	public static function PartnersDataFromID($id){
-// 		$q = SQLQuery::create()
-// 			->select("InformationSessionPartner")
-// 			->join("InformationSessionPartner","InformationSessionContactPoint",array("information_session"=>"information_session","organization"=>"organization"))
-// 			->whereValue("InformationSessionPartner","information_session",$id)
-// 			->orderBy("InformationSessionPartner","organization");
-// 		self::ISPartnersSQL($q);
-// 		$rows = $q->execute();
-// 		return $rows;
-// 	}
-	
 	public static function PartnersDataFromID($id){
 		$q = SQLQuery::create()
 		->select("InformationSessionPartner")
@@ -157,20 +122,6 @@ class SelectionJSON{
 	 * Prepares the given SQLQuery to retrieve all the information session partners data
 	 * @param SQLQuery $q
 	 */
-// 	public static function ISPartnersSQL(&$q){
-// 		$alias = $q->getTableAlias("InformationSessionPartner");
-// 		if(!$alias)
-// 			$alias = "InformationSession";
-// 		$alias_contact_point = $q->getTableAlias("InformationSessionContactPoint");
-// 		if(!$alias_contact_point)
-// 			$alias_contact_point = "InformationSessionContactPoint";
-// 		$q
-// 			->field("InformationSessionPartner","organization","organization")
-// 			->field("InformationSessionPartner","host","host")
-// 			->field("host_address")
-// 			->field("InformationSessionContactPoint","people","contact_point");
-// 	}
-
 	public static function ISPartnersSQL(&$q){
 		$alias = $q->getTableAlias("InformationSessionPartner");
 		if(!$alias)
@@ -190,59 +141,7 @@ class SelectionJSON{
 	 * @param array $row_IS coming from InformationSessionTableDataFromID
 	 * @param array $rows_partners coming from PartnersDataFromID method
 	 * @return string JSON information session structure
-	 */
-// 	public static function InformationSession($row_IS,$rows_partners){
-// 		$data = "";
-// 		if(isset($row_IS) && $row_IS <> null){
-// 			$data.= "{id:".json_encode($row_IS["id"]).", ";
-// 			$data.= "address:".json_encode($row_IS["postal_address"]);
-// 			$data.= ", fake_organization:".json_encode($row_IS["fake_organization"]);
-// 			$data.= ", date:".json_encode($row_IS["date"]);
-// 			$data.= ", number_boys_expected:".json_encode($row_IS["number_boys_expected"]);
-// 			$data.= ", number_girls_expected:".json_encode($row_IS["number_girls_expected"]);
-// 			$data.= ", number_boys_real:".json_encode($row_IS["number_boys_real"]);
-// 			$data.= ", number_girls_real:".json_encode($row_IS["number_girls_real"]);
-// 			$data.= ", name:".json_encode($row_IS["name"]);
-// 			$data.= ", partners:";
-// 			if(isset($rows_partners[0]["organization"]) && $rows_partners[0]["organization"] <> null){
-// 				$first = true;
-// 				$current_partner = null;
-// 				$data.= "[";
-// 				foreach($rows_partners as $p){
-// 					if($p["organization"] != $current_partner){
-// 						$name = SQLQuery::create()->select("Organization")->field("name")->whereValue("Organization","id",$p["organization"])->executeSingleValue();
-// 						if(!$first){
-// 							$data.= "]}";
-// 							$data.= ", ";
-// 						}
-// 						$first = false;
-// 						$data.= "{";
-// // 						array_push($partners_array,$p["organization"]);
-// 						$data.= "organization:".json_encode($p["organization"]).", ";
-// 						$data.= "organization_name:".json_encode($name).", ";
-// 						$data.= "host:".json_encode($p["host"]).", ";
-// 						$data.= "host_address:".json_encode($p["host_address"]).", ";
-// 						$data.= "contact_points_selected:";
-// 						if(isset($p["contact_point"]) && $p["contact_point"] <> null){
-// 							$data.= "[";
-// 							$data.= json_encode($p["contact_point"]);
-// 						} else $data.= "[";
-// 						$current_partner = $p["organization"];
-// 					} else {
-// 						$data.= ", ";
-// 						$data.= json_encode($p["contact_point"]);
-// 					}
-// 				}
-// 				$data.= "]}";
-// 				$data.= "]";
-// 			} else $data.= "[]";
-	
-// 			$data.= "}";
-// 		} else $data.="{}";
-// 		return $data;
-		
-// 	}
-	
+	 */	
 	public static function InformationSession($row_IS,$rows_partners){
 		$data = "";
 		if(isset($row_IS) && $row_IS <> null){
@@ -295,6 +194,12 @@ class SelectionJSON{
 	
 	}
 	
+	/**
+	 * Prepare a JSON information session structure to be sent to the database<br/>
+	 * This method checks that the IS has a name set. Otherwize, the name by default is the geographic_area_text, from the IS geographic_area attribute
+	 * @param string $json the IS structure
+	 * @return array fields => values to save
+	 */
 	public static function InformationSessionTableData2DB($json){
 		$a = array(
 				"date" => @$json["date"],
@@ -315,6 +220,11 @@ class SelectionJSON{
 		return $a;
 	}
 	
+	/**
+	 * Prepare a JSON structure of informations session partners array to be saved into the database
+	 * @param string $json the JSON structure
+	 * @return array containing two fields => values arrays:<ul><li>[0]: fields => values for InformationSessionPartner table</li><li>[1]: fields => values for InformationSessionContactPoint table</li></ul>
+	 */
 	public static function InformationSessionPartnersAndContactPoints2DB($json){
 		$rows_IS_partner = array();
 		$rows_IS_contact_point = array();

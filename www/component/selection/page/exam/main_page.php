@@ -10,7 +10,7 @@ class page_exam_main_page extends selection_page {
 		$page->require_javascript("header_bar.js");
 		$page->require_javascript("vertical_layout.js");
 		$page->onload("new vertical_layout('container');");
-		$page->onload("new header_bar('page_header','small');");
+		$page->onload("new header_bar('page_header','toolbar');");
 		
 		//Rights based on the steps
 		$can_see_subject = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
@@ -18,9 +18,9 @@ class page_exam_main_page extends selection_page {
 		?>
 		<div id = "container" style = "width:100%; height:100%">
 			<div id = "page_header" icon = "/static/selection/exam/exam_16.png" title = "Entrance Examinations">
-				<div class = "button" onclick = "location.assign('/dynamic/selection/page/selection_main_page');"><img src = "<?php echo theme::$icons_16['back'];?>"/> Back to selection</div>
-				<div class = "button" onclick = "location.assign('/dynamic/selection/page/exam/sessions');">Exam Sessions</div>
-				<div class = "button" onclick = "location.assign('/dynamic/selection/page/exam/results');">Exam Results</div>
+				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/selection_main_page');"><img src = "<?php echo theme::$icons_16['back'];?>"/> Back to selection</div>
+				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/exam/sessions');">Exam Sessions</div>
+				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/exam/results');">Exam Results</div>
 			</div>
 			<div id = "page_content" style = "overflow:auto" layout = "fill">
 				<div id = "exam_content"></div>

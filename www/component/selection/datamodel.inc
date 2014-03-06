@@ -223,7 +223,7 @@
 		 * if a topic is set in this table, it will be considered as
 		 * "full subject" for all the matching exams subjects
 		 */
-		->addForeignKey("exam_subject","ExamSubject",true,false,true,false)
+		->addForeignKey("exam_subject","ExamSubject",true,false,false,false,true)//An exam subject can be set as full subject for only one topic, because otherwize it means the subject parts would appear in several topics
 		->addForeignKey("exam_topic_for_eligibility_rule","ExamTopicForEligibilityRule",true,false,true,false)
 		->setKey(array("exam_subject","exam_topic_for_eligibility_rule"))
 		->addWriteAccess("manage_exam_subject",true)
@@ -235,8 +235,6 @@
 		->addForeignKey("exam_topic_for_eligibility_rule","ExamTopicForEligibilityRule",true,false,true,false)
 		->addForeignKey("exam_subject_part","ExamSubjectPart",true,false,false,false,true)
 		/** cannot be multiple because cannot appear in several topics (otherwize the rules are biased...)
-		 * Before removing a part, the method
-		 * #selection#updateExamTopicsForEligibilityRules is called
 		 */
 		->setKey(array("exam_topic_for_eligibility_rule","exam_subject_part"))
 		->addWriteAccess("manage_exam_subject",true)

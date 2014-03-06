@@ -94,20 +94,20 @@ function IS_status(container){
 		t._table.appendChild(tr_head);
 		td_head.colSpan = 4;
 		td_head.style.textAlign = "left";
-		td_head.innerHTML = "<i>Following informations sessions are not fully completed (<b>no host partner</b>):</i>";
+		td_head.innerHTML = "<i>Sessions below are not fully completed (<b>no host partner</b>):</i>";
 		for(var i = 0; i < t._no_host.length; i++){
 			var tr = document.createElement("tr");
-			var td_name = document.createElement("td");//Contains the name of the IS to finish
-			td_name.appendChild(document.createTextNode(" - "+t._no_host[i].name));
-			td_name.colSpan = 3;
-			var td_button = document.createElement('td'); // contains the link for the IS profile
-			var see_button = document.createElement("a");
-			see_button.innerHTML = "<img src = '"+theme.icons_16.edit+"'/> Finish";
-			see_button.className = "button";
-			see_button.href = "/dynamic/selection/page/IS/profile?id="+t._no_host[i].id;
-			td_button.appendChild(see_button);
-			tr.appendChild(td_name);
-			tr.appendChild(td_button);
+			var td = document.createElement("td");//Contains the name (clickable) of the IS to finish
+			td.appendChild(document.createTextNode(" - "));
+			var link = document.createElement('a');
+			link.title = "Finish";
+			link.appendChild(document.createTextNode(t._no_host[i].name));
+			link.className = "black_link";
+			link.href = "/dynamic/selection/page/IS/profile?id="+t._no_host[i].id;
+			td.appendChild(link);
+			td.colSpan = 4;
+			td.style.textAlign = 'left';
+			tr.appendChild(td);
 			t._table.appendChild(tr);
 		}
 	};

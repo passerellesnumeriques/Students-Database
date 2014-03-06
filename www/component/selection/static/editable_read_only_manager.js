@@ -22,8 +22,9 @@
  * @param {Function} can_go_uneditable_handler called before starting the process to go to the read only mode<br/>
  * Must return true if ok
  * @param {Object} page_header the page_header where the buttons edit / unedit should be added
+ * @param {String | null} class_name_buttons the classname to set to the edit / unedit buttons. By default, className = "button"
  */
-function editable_read_only_manager(can_edit, can_add, can_remove, global_can_edit, global_can_remove, global_can_add, to_lock, table_lock, column_lock, row_key, sub_model, db_lock, lock_handler, reseter, data_reset_handler, can_go_uneditable_handler, page_header){
+function editable_read_only_manager(can_edit, can_add, can_remove, global_can_edit, global_can_remove, global_can_add, to_lock, table_lock, column_lock, row_key, sub_model, db_lock, lock_handler, reseter, data_reset_handler, can_go_uneditable_handler, page_header, class_name_buttons){
 	var t = this;
 	if(typeof to_lock != "object" || to_lock == null)
 		t.to_lock = [to_lock];
@@ -255,7 +256,7 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 		 */
 		if(can_edit && !global_can_edit){
 			var go_editable = document.createElement("div");
-			go_editable.className = "button";
+			go_editable.className = class_name_buttons != null ? class_name_buttons : "button";
 			go_editable.innerHTML = "<img src ='"+theme.icons_16.edit+"'/> Edit";
 			go_editable.onclick = t._goEditableMode;
 			page_header.addMenuItem(go_editable);
@@ -265,7 +266,7 @@ function editable_read_only_manager(can_edit, can_add, can_remove, global_can_ed
 		 */
 		if(global_can_edit){
 			var go_read_only = document.createElement("div");
-			go_read_only.className = "button";
+			go_read_only.className = class_name_buttons != null ? class_name_buttons : "button";
 			go_read_only.innerHTML = "<img src ='"+theme.icons_16.no_edit+"'/> Unedit";
 			go_read_only.onclick = t._confirmGoUneditableMode;
 			page_header.addMenuItem(go_read_only);
