@@ -19,6 +19,8 @@ function organization(container, org, existing_types, can_edit) {
 		return org;
 	};
 	
+	this.onchange = new Custom_Event();
+	
 	/** Create the display */
 	this._init = function() {
 		// title: name of organization
@@ -28,6 +30,7 @@ function organization(container, org, existing_types, can_edit) {
 			require("editable_cell.js", function() {
 				t.title = new editable_cell(t.title_container, "Organization", "name", org.id, "field_text", {min_length:1,max_length:100,can_be_null:false,style:{fontSize:"x-large"}}, org.name, null, function(field){
 					org.name = field.getCurrentData();
+					t.onchange.fire();
 				}, function(edit){
 					if (!can_edit) edit.cancelEditable();
 				});
@@ -38,6 +41,7 @@ function organization(container, org, existing_types, can_edit) {
 				t.title_container.appendChild(t.title.getHTMLElement());
 				t.title.onchange.add_listener(function() {
 					org.name = t.title.getCurrentData();
+					t.onchange.fire();
 				});
 			});
 		}
@@ -65,6 +69,7 @@ function organization(container, org, existing_types, can_edit) {
 					for (var i = 0; i < org.types.length; ++i)
 						if (org.types[i] == id) {
 							org.types.splice(i,1);
+							t.onchange.fire();
 							handler();
 							break;
 						}
@@ -94,11 +99,13 @@ function organization(container, org, existing_types, can_edit) {
 									if (res) {
 										org.types_ids.push(tt.org_type.id);
 										t.types.addItem(tt.org_type.id, tt.org_type.name);
+										t.onchange.fire();
 									}
 								});
 							} else {
 								org.types_ids.push(this.org_type.id);
 								t.types.addItem(this.org_type.id, this.org_type.name);
+								t.onchange.fire();
 							}
 						};
 						items.push(item);
@@ -125,12 +132,14 @@ function organization(container, org, existing_types, can_edit) {
 										org.types_ids.push(res.id);
 										existing_types.push({id:res.id,name:name});
 										t.types.addItem(res.id, name);
+										t.onchange.fire();
 									}
 								});
 							} else {
 								org.types_ids.push(res.id);
 								existing_types.push({id:res.id,name:name});
 								t.types.addItem(res.id, name);
+								t.onchange.fire();
 							}
 						});
 					});
@@ -157,6 +166,7 @@ function organization(container, org, existing_types, can_edit) {
 			var c = new contacts(td_contacts, "organization", org.id, org.contacts, can_edit, can_edit, can_edit);
 			c.onchange.add_listener(function(c){
 				org.contacts = c.getContacts();
+				t.onchange.fire();
 			});
 		});
 			// addresses
@@ -166,6 +176,7 @@ function organization(container, org, existing_types, can_edit) {
 			var a = new addresses(td_addresses, true, "organization", org.id, org.addresses, can_edit, can_edit, can_edit);
 			a.onchange.add_listener(function(a){
 				org.addresses = a.getAddresses();
+				t.onchange.fire();
 			});
 		});
 			// contact points
@@ -211,17 +222,24 @@ function organization(container, org, existing_types, can_edit) {
 					frame.style.height = "100%";
 					var p = new popup_window("New Contact Point", '/static/application/icon.php?main=/static/contact/contact_point.png&small='+theme.icons_10.add+'&where=right_bottom',frame);
 					p.show();
-					frame.onload = function() {
-						p.resize();
-					};
-					window.create_contact_point_success = function(people) {
+					var create_contact_point_success = function(people) {
 						var point = new ContactPoint(people.people_id, people.people.first_name,people.people.last_name, people.contact_point_designation);
 						if (org.id == -1)
 							point.create_people = people;
 						org.contact_points.push(point);
 						t._addContactPointRow(point, tbody);
+						t.onchange.fire();
 						p.close();
 						layout.invalidate(tbody);
+					};
+					frame.onload = function() {
+						waitFrameReady(getIFrameWindow(frame), function(win) { return typeof win.create_people != 'undefined'; }, function(win) {
+							if (org.id != -1)
+								win.onsuccess=create_contact_point_success;
+							else
+								win.donotcreate=create_contact_point_success;
+						},30000);
+						p.resize();
 					};
 					var data =
 					{
@@ -230,10 +248,6 @@ function organization(container, org, existing_types, can_edit) {
 							title:'New Contact Point For '+org.name,
 							contact_point_organization: org.id
 					};
-					if (org.id != -1)
-						data.onsuccess='window.parent.create_contact_point_success';
-					else
-						data.donotcreate='window.parent.create_contact_point_success';
 					postData(
 						'/dynamic/people/page/create_people',
 						data,
@@ -263,6 +277,7 @@ function organization(container, org, existing_types, can_edit) {
 			require("editable_cell.js",function() {
 				new editable_cell(td_design, "ContactPoint", "designation", {organization:org.id,people:point.people_id}, "field_text", {min_length:1,max_length:100,can_be_null:false}, point.designation, function(new_data){
 					point.designation = new_data;
+					t.onchange.fire();
 					return new_data;
 				}, null, null);
 			});
@@ -271,6 +286,7 @@ function organization(container, org, existing_types, can_edit) {
 				var f = new field_text(point.designation, true, {min_length:1,max_length:100,can_be_null:false});
 				f.onchange.add_listener(function() {
 					point.designation = f.getCurrentData();
+					t.onchange.fire();
 				});
 			});
 		}
@@ -310,6 +326,7 @@ function organization(container, org, existing_types, can_edit) {
 								tbody.removeChild(t._contact_points_rows[index]);
 								//Remove from t._contact_points_rows
 								t._contact_points_rows.splice(index,1);
+								t.onchange.fire();
 							}
 						}
 					});
@@ -321,6 +338,7 @@ function organization(container, org, existing_types, can_edit) {
 						tbody.removeChild(t._contact_points_rows[index]);
 						//Remove from t._contact_points_rows
 						t._contact_points_rows.splice(index,1);
+						t.onchange.fire();
 					}
 				}
 				

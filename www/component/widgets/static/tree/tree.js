@@ -80,6 +80,11 @@ function TreeItem(cells, expanded, onselect) {
 		for (var i = 0; i < item.children.length; ++i)
 			this._hide(item.children[i]);
 	};
+	this.makeVisible = function() {
+		if (!this.parent) return;
+		this.parent.makeVisible();
+		this.parent.expand();
+	};
 	this.select = function() {
 		this.tree.selectItem(this);
 	};
@@ -115,6 +120,17 @@ function TreeCell(html) {
 		img.style.verticalAlign = "bottom";
 		img.style.marginLeft = "2px";
 		img.onclick = function(ev) { t.element.oncontextmenu(ev); };
+		t.element.appendChild(img);
+	};
+	this.addActionIcon = function(icon, tooltip, onclick) {
+		var img = document.createElement("IMG");
+		img.src = icon;
+		img.className = "button_verysoft";
+		img.style.padding = "0px";
+		img.style.verticalAlign = "bottom";
+		img.style.marginLeft = "2px";
+		img.onclick = onclick;
+		if (tooltip) img.title = tooltip;
 		t.element.appendChild(img);
 	};
 }
@@ -273,12 +289,10 @@ function tree(container) {
 	this._refresh_heads_ = function() {
 		for (var i = 0; i < this.items.length; ++i)
 			this._clean_heads(this.items[i]);
-		setTimeout(function() {
-			for (var i = 0; i < t.items.length; ++i)
-				t._compute_heights(t.items[i]);
-			for (var i = 0; i < t.items.length; ++i)
-				t._refresh_head(t.items[i], [], i > 0, i < t.items.length-1);
-		},1);
+		for (var i = 0; i < t.items.length; ++i)
+			t._compute_heights(t.items[i]);
+		for (var i = 0; i < t.items.length; ++i)
+			t._refresh_head(t.items[i], [], i > 0, i < t.items.length-1);
 	};
 	this._clean_heads = function(item) {
 		item.head.style.height = "";
@@ -390,6 +404,9 @@ function tree(container) {
 	
 	this._create();
 	this._build_from_html();
+	layout.addHandler(container, function() {
+		t._refresh_heads();
+	});
 }
 
 function createTreeItemSingleCell(icon, text, expanded, onselect, context_menu_builder, actions) {

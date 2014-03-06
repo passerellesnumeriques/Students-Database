@@ -134,12 +134,6 @@ function section(icon, title, content, collapsable, fill_height, css) {
 		this.footer = document.createElement("DIV");
 		this.footer.className = "section_footer_empty";
 		this.element.appendChild(this.footer);
-		if (fill_height) {
-			this.content_container.setAttribute("layout", "fill");
-			require("vertical_layout.js", function() {
-				new vertical_layout(t.element, true);
-			});
-		}
 		layout.addHandler(this.element, function() {
 			t.header.style.display = "inline-block";
 			t.content_container.style.display = "inline-block";
@@ -147,6 +141,8 @@ function section(icon, title, content, collapsable, fill_height, css) {
 			t.header.style.display = "";
 			t.content_container.style.display = "";
 			t.footer.style.display = "";
+			if (fill_height)
+				t.content_container.style.height = (getHeight(t.element)-getHeight(t.header)-getHeight(t.footer))+"px";
 		});
 	};
 	

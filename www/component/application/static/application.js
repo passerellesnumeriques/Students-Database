@@ -108,9 +108,9 @@ if (window == window.top) {
 							w.frameElement.loading_anim = null;
 							// maximum time to show it: 5s.
 							setTimeout(function() {
-								if (!w || !w.frameElement || !w.loading_t) return;
+								if (!w || !w.frameElement || w.frameElement.loading_t != t) return;
 								if (w.unloading_anim) return;
-								t.parentName.removeChild(t);
+								t.parentNode.removeChild(t);
 								w.frameElement.loading_t = null;
 							}, 5000);
 						}
@@ -272,8 +272,10 @@ function initPNApplication() {
 		listenEvent(window,'mousemove',listener);
 		var closeRaised = false;
 		if (window.frameElement) {
-			window.frameElement.onunload = function() {
+			var prev = window.frameElement.onunload; 
+			window.frameElement.onunload = function(ev) {
 				if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
+				if (prev) prev(ev);
 			};
 		}
 		window.onunload = function() {

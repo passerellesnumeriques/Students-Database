@@ -7,9 +7,12 @@ class page_tree extends Page {
 		$this->require_javascript("vertical_layout.js");
 		$this->require_javascript("splitter_vertical.js");
 		$this->require_javascript("header_bar.js");
+		$this->require_javascript("frame_header.js");
 		$this->require_javascript("tree.js");
 		$this->require_javascript("tree_functionalities.js");
 		$this->require_javascript("curriculum_objects.js");
+		theme::css($this, "header_bar.css");
+		theme::css($this, "frame_header.css");
 		theme::css($this, "tree.css");
 		$can_edit = PNApplication::$instance->user_management->has_right("manage_batches");
 		
@@ -35,10 +38,6 @@ class page_tree extends Page {
 		<div id='tree' style='overflow-y:auto;overflow-x:auto;background-color:white;width:100%;height:100%' layout='fill'></div>
 	</div>
 	<div id='right'>
-		<div id='page_header' class='header_bar_menubar_style'>
-		</div>
-		<iframe id='students_page' name='students_page' layout='fill' style='border:0px' frameBorder=0>
-		</iframe>
 	</div>
 </div>
 <script type='text/javascript'>
@@ -46,6 +45,7 @@ new vertical_layout('left');
 new vertical_layout('right');
 new splitter_vertical('container',0.25);
 new header_bar('tree_header','toolbar');
+var page_header = new frame_header('right', 'students_page', 28, 'white', 'bottom');
 
 // List of specializations
 var specializations = <?php echo CurriculumJSON::SpecializationsJSON(); ?>;
@@ -64,15 +64,17 @@ TreeNode.prototype = {
 		var frame = document.getElementById('students_page');
 		var url = new URL(getIFrameWindow(frame).location.href);
 		var found = false;
+		var menu_items = page_header.getMenuItems();
 		for (var i = 0; i < menu_items.length; ++i) {
-			if (menu_items[i].page == url.path) {
-				getIFrameWindow(frame).location.href = menu_items[i].page+"?"+menu_items[i].params;
+			var u = new URL(menu_items[i].link.real_link);
+			if (u.path == url.path) {
+				getIFrameWindow(frame).location.href = menu_items[i].link.real_link;
 				found = true;
 				break;
 			}
 		}
 		if (!found) // go to first item (students list)
-			getIFrameWindow(frame).location.href = menu_items[0].page+"?"+menu_items[0].params;
+			getIFrameWindow(frame).location.href = menu_items[0].link.real_link;
 	},
 	findTag: function(tag) {
 		if (this.tag == tag) return this;
@@ -112,13 +114,13 @@ function AllStudentsNode(root) {
 		info.className = "pn_application_menu_simple_text";
 		window.parent.addMenuControl(info);
 		
-		setMenuParams("list", "");
-		setMenuParams("pictures", "");
-		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students'}]")); 
-		setMenuParams("curriculum", "");
-		setMenuParams("grades", "");
-		setMenuParams("discipline", "");
-		setMenuParams("health", "");
+		setMenuParams("list", {});
+		setMenuParams("pictures", {});
+		setMenuParams("updates", {sections:"[{name:'students'}]"}); 
+		setMenuParams("curriculum", {});
+		setMenuParams("grades", {});
+		setMenuParams("discipline", {});
+		setMenuParams("health", {});
 		t._onselect();
 	},null,null);
 	this.item.node = this;
@@ -149,13 +151,13 @@ function CurrentStudentsNode(all) {
 			batches += t.item.children[i].node.batch.id;
 			tags += "'batch"+t.item.children[i].node.batch.id+"'";
 		}
-		setMenuParams("list", "batches="+encodeURIComponent(batches));
-		setMenuParams("pictures", "batches="+encodeURIComponent(batches));
-		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:["+tags+"]}]")); 
-		setMenuParams("curriculum", "");
-		setMenuParams("grades", "");
-		setMenuParams("discipline", "");
-		setMenuParams("health", "");
+		setMenuParams("list", {batches:batches});
+		setMenuParams("pictures", {batches:batches});
+		setMenuParams("updates", {sections:"[{name:'students',tags:["+tags+"]}]"}); 
+		setMenuParams("curriculum", {});
+		setMenuParams("grades", {});
+		setMenuParams("discipline", {});
+		setMenuParams("health", {});
 		t._onselect();
 	},null,null);
 	this.item.node = this;
@@ -187,13 +189,13 @@ function AlumniNode(all) {
 			batches += t.item.children[i].node.batch.id;
 			tags += "'batch"+t.item.children[i].node.batch.id+"'";
 		}
-		setMenuParams("list", "batches="+encodeURIComponent(batches));
-		setMenuParams("pictures", "batches="+encodeURIComponent(batches));
-		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:["+tags+"]}]")); 
-		setMenuParams("curriculum", "");
-		setMenuParams("grades", "");
-		setMenuParams("discipline", "");
-		setMenuParams("health", "");
+		setMenuParams("list", {batches:batches});
+		setMenuParams("pictures", {batches:batches});
+		setMenuParams("updates", {sections:"[{name:'students',tags:["+tags+"]}]"}); 
+		setMenuParams("curriculum", {});
+		setMenuParams("grades", {});
+		setMenuParams("discipline", {});
+		setMenuParams("health", {});
 		t._onselect();
 	},null,null);
 	this.item.node = this;
@@ -220,7 +222,7 @@ function BatchNode(current, alumni, batch) {
 		menu.addIconItem(theme.icons_16.edit, "Edit periods and specializations", function() { edit_batch(batch); });
 		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.remove,"right_bottom"), "Remove Batch", function() { remove_batch(batch); });
 	};<?php	} else { echo "null;"; } ?>
-		this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, !is_alumni, function() {
+	this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, !is_alumni, function() {
 		window.parent.resetLeftControls();
 		var title = document.createElement("DIV");
 		title.appendChild(document.createTextNode("Batch "));
@@ -266,15 +268,34 @@ function BatchNode(current, alumni, batch) {
 		button.onclick = function() { edit_batch(batch); };
 		window.parent.addMenuControl(button);
 		
-		setMenuParams("list", "batches="+batch.id);
-		setMenuParams("pictures", "batches="+batch.id);
-		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['batch"+batch.id+"']}]")); 
-		setMenuParams("curriculum", "batch="+batch.id);
-		setMenuParams("grades", "");
-		setMenuParams("discipline", "");
-		setMenuParams("health", "");
+		setMenuParams("list", {batches:batch.id});
+		setMenuParams("pictures", {batches:batch.id});
+		setMenuParams("updates", {sections:"[{name:'students',tags:['batch"+batch.id+"']}]"}); 
+		setMenuParams("curriculum", {batch:batch.id});
+		setMenuParams("grades", {});
+		setMenuParams("discipline", {});
+		setMenuParams("health", {});
 		t._onselect();
 	},context_menu_builder,null);
+	<?php if ($can_edit) { ?>
+	service.customOutput("students","todo_list",{batch_id:batch.id},function(html) {
+		if (html.length == 0) return;
+		t.item.cells[0].addActionIcon(theme.icons_10.warning, "Some actions need to be done on this batch", function(ev) {
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				var list = document.createElement("UL");
+				list.className = "warning";
+				list.innerHTML = html;
+				list.onclick = function() { menu.close(); }
+				menu.addItem(list, true);
+				menu.showBelowElement(t.item.cells[0].element);
+			});
+			stopEventPropagation(ev);
+			return false;
+		});
+		t.item.makeVisible();
+	});
+	<?php } ?>
 	this.item.node = this;
 	var i = 0;
 	var start = parseSQLDate(batch.start_date).getTime();
@@ -359,15 +380,34 @@ function AcademicPeriodNode(batch_node, period) {
 		button.onclick = function() { edit_batch(batch_node.batch); };
 		window.parent.addMenuControl(button);
 				
-		setMenuParams("list", "period="+period.id);
-		setMenuParams("pictures", "period="+period.id);
-		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['period"+period.id+"']}]")); 
-		setMenuParams("curriculum", "period="+period.id);
-		setMenuParams("grades", "period="+period.id);
-		setMenuParams("discipline", "");
-		setMenuParams("health", "");
+		setMenuParams("list", {period:period.id});
+		setMenuParams("pictures", {period:period.id});
+		setMenuParams("updates", {sections:"[{name:'students',tags:['period"+period.id+"']}]"}); 
+		setMenuParams("curriculum", {period:period.id});
+		setMenuParams("grades", {period:period.id});
+		setMenuParams("discipline", {});
+		setMenuParams("health", {});
 		t._onselect();
 	},null,null);
+	<?php if ($can_edit) { ?>
+	service.customOutput("students","todo_list",{period_id:period.id},function(html) {
+		if (html.length == 0) return;
+		t.item.cells[0].addActionIcon(theme.icons_10.warning, "Some actions need to be done on this period", function(ev) {
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				var list = document.createElement("UL");
+				list.className = "warning";
+				list.innerHTML = html;
+				list.onclick = function() { menu.close(); }
+				menu.addItem(list, true);
+				menu.showBelowElement(t.item.cells[0].element);
+			});
+			stopEventPropagation(ev);
+			return false;
+		});
+		t.item.makeVisible();
+	});
+	<?php } ?>
 	this.item.node = this;
 	this.item.cells[0].addStyle({color: parseSQLDate(period.end_date).getTime() < now ? "#4040A0" : parseSQLDate(period.start_date).getTime() > now ? "#A04040" : "#40A040"});
 	var i = 0;
@@ -450,13 +490,13 @@ function SpecializationNode(period_node, spe_id) {
 		button.onclick = function() { edit_batch(period_node.parent.batch); };
 		window.parent.addMenuControl(button);
 		
-		setMenuParams("list", "period="+period_node.period.id+"&spe="+spe_id);
-		setMenuParams("pictures", "period="+period_node.period.id+"&spe="+spe_id);
-		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['period"+period_node.period.id+"']}]")); // TODO better 
-		setMenuParams("curriculum", "period="+period_node.period.id);
-		setMenuParams("grades", "period="+period_node.period.id+"&specialization="+spe_id);
-		setMenuParams("discipline", "");
-		setMenuParams("health", "");
+		setMenuParams("list", {period:period_node.period.id,spe:spe_id});
+		setMenuParams("pictures", {period:period_node.period.id,spe:spe_id});
+		setMenuParams("updates", {sections:"[{name:'students',tags:['period"+period_node.period.id+"']}]"}); // TODO better 
+		setMenuParams("curriculum", {period:period_node.period.id});
+		setMenuParams("grades", {period:period_node.period.id,specialization:spe_id});
+		setMenuParams("discipline", {});
+		setMenuParams("health", {});
 		t._onselect();
 	},null,null);
 	this.item.node = this;
@@ -549,13 +589,14 @@ function ClassNode(parent, cl) {
 		
 		window.parent.resetMenu();
 
-		setMenuParams("list", "class="+cl.id);
-		setMenuParams("pictures", "class="+cl.id);
-		setMenuParams("updates", "sections="+encodeURIComponent("[{name:'students',tags:['class"+cl.id+"']}]")); // TODO better 
-		setMenuParams("curriculum", "period="+period.period.id);
-		setMenuParams("grades", "class="+cl.id);
-		setMenuParams("discipline", "");
-		setMenuParams("health", "");
+		var o = {}; o["class"] = cl.id;
+		setMenuParams("list", o);
+		setMenuParams("pictures", o);
+		setMenuParams("updates", {sections:"[{name:'students',tags:['class"+cl.id+"']}]"}); // TODO better 
+		setMenuParams("curriculum", {period:period.period.id});
+		setMenuParams("grades", o);
+		setMenuParams("discipline", {});
+		setMenuParams("health", {});
 		t._onselect();
 	},null,<?php if ($can_edit) {?>[{icon:theme.icons_10.remove,tooltip:"Remove Class",action:function() { remove_class(t); }}]<?php } else { ?>null<?php } ?>);
 	this.item.node = this;
@@ -605,142 +646,59 @@ var url = new URL(location.href);
 var page = typeof url.params.page != 'undefined' ? url.params.page : "list";
 
 // Menu
-var menu_items = [
-	{
-		id: "list",
-		icon: "/static/curriculum/batch_16.png",
-		name: "List",
-		info_text: "List of students",
-		page: "/dynamic/students/page/list",
-		params: ""
-	},
-	{
-		id: "pictures",
-		icon: "/static/students/pictures_16.png",
-		name: "Pictures",
-		info_text: "Pictures of students",
-		page: "/dynamic/students/page/pictures",
-		params: ""
-	},
-	{
-		id: "updates",
-		icon: "/static/news/news.png",
-		name: "Updates",
-		info_text: "What's happening ? What other users did recently ?",
-		page: "/dynamic/news/page/news",
-		params: ""
-	},
-	{
-		id: "curriculum",
-		icon: "/static/curriculum/curriculum_16.png",
-		name: "Curriculum",
-		info_text: "List of subjects for each academic period",
-		page: "/dynamic/curriculum/page/curriculum",
-		params: ""
-	},
-	{
-		id: "grades",
-		icon: "/static/transcripts/grades.gif",
-		name: "Grades",
-		info_text: "Grades of students for an academic period",
-		page: "/dynamic/transcripts/page/students_grades",
-		params: ""
-	},
-	{
-		id: "discipline",
-		icon: "/static/discipline/discipline.png",
-		name: "Discipline",
-		info_text: "Follow-up violations, abscences, lateness...",
-		page: "/dynamic/discipline/page/home",
-		params: ""
-	},
-	{
-		id: "health",
-		icon: "/static/health/health.png",
-		name: "Health",
-		info_text: "Follow-up health situation and medical information",
-		page: "/dynamic/health/page/home",
-		params: ""
+page_header.addMenu("list", "/static/curriculum/batch_16.png", "List", "/dynamic/students/page/list", "List of students");
+page_header.addMenu("pictures", "/static/students/pictures_16.png", "Pictures", "/dynamic/students/page/pictures", "Pictures of students");
+page_header.addMenu("updates", "/static/news/news.png", "Updates", "/dynamic/news/page/news", "What's happening ? What other users did recently ?");
+page_header.addMenu("curriculum", "/static/curriculum/curriculum_16.png", "Curriculum", "/dynamic/curriculum/page/curriculum", "List of subjects for each academic period");
+page_header.addMenu("grades", "/static/transcripts/grades.gif", "Grades", "/dynamic/transcripts/page/students_grades", "Grades of students for an academic period");
+page_header.addMenu("discipline", "/static/discipline/discipline.png", "Discipline", "/dynamic/discipline/page/home", "Follow-up violations, abscences, lateness...");
+page_header.addMenu("health", "/static/health/health.png", "Health", "/dynamic/health/page/home", "Follow-up health situation and medical information");
+
+// put fake links in the menu, to allow open in a new window
+{
+	var menu_items = page_header.getMenuItems();
+	for (var i = 0; i < menu_items.length; ++i) {
+		menu_items[i].link.real_link = menu_items[i].link.href;
+		menu_items[i].start_url = menu_items[i].link.href;
+		menu_items[i].link.href = "/dynamic/students/page/tree?page="+menu_items[i].id;
+		menu_items[i].link.onclick = function(ev) {
+			page_header.frame.src = this.real_link;
+			stopEventPropagation(ev);
+			return false;
+		};
 	}
-];
-function selectPage(id) {
-	var item = menu_items[0];
-	for (var i = 0; i < menu_items.length; ++i)
-		if (menu_items[i].id == id) item = menu_items[i];
-		else menu_items[i].button.className = "button";
-	document.getElementById('students_page').src = item.page+"?"+item.params;
-	item.button.className = "button selected";
 }
+
 function updateMenu() {
 	var selected_node = tr.getSelectedItem();
 	if (selected_node) selected_node = selected_node.node;
-	for (var i = 0; i < menu_items.length; ++i) {
-		if (menu_items[i].menu_link)
-			menu_items[i].menu_link.href = "/dynamic/students/page/tree?page="+menu_items[i].id+(selected_node ? "#"+selected_node.tag : "");
-	}
+	var menu_items = page_header.getMenuItems();
+	for (var i = 0; i < menu_items.length; ++i)
+		menu_items[i].link.href = "/dynamic/students/page/tree?page="+menu_items[i].id+(selected_node ? "#"+selected_node.tag : "");
 }
 function setMenuParams(id, params) {
+	var menu_items = page_header.getMenuItems();
 	for (var i = 0; i < menu_items.length; ++i) {
 		if (menu_items[i].id != id) continue;
-		menu_items[i].params = params;
+		var u = new URL(menu_items[i].link.real_link);
+		u.params = params;
+		menu_items[i].link.real_link = u.toString();
 		break;
 	}
 }
-document.getElementById('students_page').onload = function() {
-	var f = document.getElementById('students_page');
-	f = getIFrameWindow(f);
-	f = new URL(f.location.href);
-	for (var i = 0; i < menu_items.length; ++i) {
-		if (f.path == menu_items[i].page) menu_items[i].button.className = "button selected";
-		else menu_items[i].button.className = "button";
-	}
-};
+function selectPage(id) {
+	var menu_items = page_header.getMenuItems();
+	var item = menu_items[0];
+	for (var i = 0; i < menu_items.length; ++i)
+		if (menu_items[i].id == id) item = menu_items[i];
+	item.link.onclick(createEvent('click'));
+}
 
 //Initilization of the page and menu
 if (window.parent.resetAllMenus) window.parent.resetAllMenus(); 
 build_tree();
 var node = root.findTag(url.hash);
 if (node) node.item.select();
-
-{
-	var selected_node = tr.getSelectedItem();
-	if (selected_node) selected_node = selected_node.node;
-	for (var i = 0; i < menu_items.length; ++i) {
-		var item = menu_items[i];
-		var button = document.createElement("A");
-		item.button = button;
-		button.item = item;
-		button.className = "button";
-		button.innerHTML = "<img src='"+item.icon+"'/> "+item.name;
-		button.onmouseover = function() {
-			if (this._tooltip) return;
-			for (var i = 0; i < menu_items.length; ++i)
-				if (menu_items[i].button._tooltip) {
-					document.body.removeChild(menu_items[i].button._tooltip);
-					menu_items[i].button._tooltip = null;
-				}
-			this._tooltip = document.createElement("DIV");
-			this._tooltip.className = "tooltip";
-			this._tooltip.style.position = "absolute";
-			this._tooltip.style.top = (absoluteTop(this)+this.scrollHeight+7)+"px";
-			this._tooltip.style.left = absoluteLeft(this)+"px";
-			this._tooltip.appendChild(document.createTextNode(this.item.info_text));
-			document.body.appendChild(this._tooltip);
-		};
-		button.onmouseout = function() {
-			if (!this._tooltip) return;
-			document.body.removeChild(this._tooltip);
-			this._tooltip = null;
-		};
-		button.href = "/dynamic/students/page/tree?page="+item.id+(selected_node ? "#"+selected_node.tag : "");
-		button.onclick = function(ev) {
-			selectPage(this.item.id);
-			stopEventPropagation(ev);
-			return false;
-		};
-		document.getElementById('page_header').appendChild(button);
-	}
-}
 selectPage(page);
 
 // Put the search student control
@@ -768,72 +726,6 @@ require("autocomplete.js",function() {
 	ac.input.style.margin = "2px";
 	window.parent.addRightControl(container);
 });
-
-// To Do List
-<?php if ($can_edit) { ?>
-var todo_list_content = null;
-function refresh_todo_list() {
-	service.customOutput("students","todo_list",{},function(html) {
-		if (html.length == 0) {
-			if (todo_list_content != null) {
-				var left = document.getElementById('left');
-				left.removeChild(todo_list_content.container);
-				layout.invalidate(left);
-				todo_list_content = null;
-			}
-			return;
-		}
-		if (todo_list_content == null) {
-			var div = document.createElement("DIV");
-			var header = document.createElement("DIV");
-			header.className = "help_header";
-			header.style.fontWeight = "bold";
-			header.style.borderTop = "1px solid black";
-			header.innerHTML = "<img src='"+theme.icons_16.help+"' style='vertical-align:bottom'/> To Do List";
-			setBorderRadius(header, 3,3,3,3, 0,0,0,0);
-			var img = document.createElement("IMG");
-			img.src = theme.icons_10.refresh;
-			img.className = "button_verysoft";
-			img.style.padding = "0px";
-			img.onclick = function() {
-				todo_list_content.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
-				refresh_todo_list();
-			};
-			img.title = 'Refresh To Do List';
-			img.style.marginLeft = "6px";
-			img.style.verticalAlign = "bottom";
-			header.appendChild(img);
-			img = document.createElement("IMG");
-			img.src = theme.icons_10.close;
-			img.className = "button_verysoft";
-			img.style.padding = "0px";
-			img.onclick = function() {
-				var left = document.getElementById('left');
-				left.removeChild(todo_list_content.container);
-				layout.invalidate(left);
-				todo_list_content = null;
-			};
-			img.title = 'Close To Do List';
-			img.style.marginLeft = "6px";
-			img.style.verticalAlign = "bottom";
-			header.appendChild(img);
-			div.appendChild(header);
-			todo_list_content = document.createElement("DIV");
-			todo_list_content.style.backgroundColor = "white";
-			todo_list_content.style.overflow = "auto";
-			todo_list_content.style.height = "100px";
-			todo_list_content.container = div;
-			div.appendChild(todo_list_content);
-			var left = document.getElementById('left');
-			left.appendChild(div);
-			layout.invalidate(left);
-			
-		}
-		todo_list_content.innerHTML = html;
-	});
-}
-refresh_todo_list();
-<?php } ?>
 
 </script>
 <?php

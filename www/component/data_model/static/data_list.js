@@ -23,6 +23,7 @@ if (typeof require != 'undefined') {
 function data_list(container, root_table, initial_data_shown, filters, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
+	t.container = container;
 
 	/* Public properties */
 	
@@ -46,6 +47,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.header_center.widget.addItem(item);
 		else
 			t.header_center.appendChild(item);
+		layout.invalidate(t.header);
 	};
 	/** Remove everything in the header, previously added through addHeader */
 	t.resetHeader = function() {
@@ -53,6 +55,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.header_center.widget.removeAll();
 		else
 			while (t.header_center.childNodes.length > 0) t.header_center.removeChild(t.header_center.childNodes[0]);
+		layout.invalidate(t.header);
 	};
 	/** Set a title, with optionally an icon
 	 * @param {String} icon URL of the icon 16x16, or null if no icon
@@ -369,6 +372,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		require("vertical_align.js",function(){
 			new vertical_align(t.header_left, "middle");
 			new vertical_align(t.header_right, "middle");
+			layout.invalidate(container);
 		});
 	};
 	/** Load the available fields for the root table */

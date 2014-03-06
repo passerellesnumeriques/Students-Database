@@ -363,7 +363,8 @@ function popup_window(title,icon,content,hide_close_button) {
 				e._width = e.style && e.style.width ? e.style.width : "";
 				e.style.display = 'inline-block';
 				e.style.whiteSpace = 'nowrap';
-				e.style.width = "";
+				if (e._width.indexOf('%') == -1)
+					e.style.width = "";
 			}
 			if (w == null) w = win.absoluteLeft(e)+(win.getWidth ? win.getWidth(e) : getWidth(e));
 			if (w > max) max = w;
@@ -392,7 +393,8 @@ function popup_window(title,icon,content,hide_close_button) {
 				e._height = e.style && e.style.height ? e.style.height : "";
 				e.style.display = 'inline-block';
 				e.style.whiteSpace = 'nowrap';
-				e.style.height = "";
+				if (e._height.indexOf('%') == -1)
+					e.style.height = "";
 			}
 			if (h == null) h = win.absoluteTop(e)+(win.getHeight ? win.getHeight(e) : getHeight(e));
 			if (h > max) max = h;
@@ -421,14 +423,18 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.in_resize = false;
 				return;
 			}
-			t.content_container.style.width = (win.getWindowWidth()-20)+"px";
-			t.content_container.style.height = (win.getWindowHeight()-20)+"px";
-			t.content_container.style.overflow = "";
-			x = t._computeFrameWidth(frame.body);
-			y = t._computeFrameHeight(frame.body);
+			var prev_h = t.content_container.clientHeight;
+			var prev_w = t.content_container.clientWidth;
 			var h = 0;
 			if (t.header) h += getHeight(t.header);
 			if (t.buttons_tr) h += getHeight(t.buttons_tr);
+			t.content_container.style.width = (win.getWindowWidth()-20)+"px";
+			t.content_container.style.height = (win.getWindowHeight()-20-h)+"px";
+			t.content_container.style.overflow = "";
+			t.content.style.width = (win.getWindowWidth()-20)+"px";
+			t.content.style.height = (win.getWindowHeight()-20-h)+"px";
+			x = t._computeFrameWidth(frame.body);
+			y = t._computeFrameHeight(frame.body);
 			if (x > win.getWindowWidth()-20) {
 				x = win.getWindowWidth()-20;
 				// anticipate scroll bar
@@ -443,6 +449,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			getIFrameDocument(t.content).body.style.overflow = "hidden";
 			setWidth(t.content_container, x);
 			setHeight(t.content_container, y);
+			setWidth(t.content, x);
+			setHeight(t.content, y);
 			t.content_container.overflow = "hidden";
 			getIFrameDocument(t.content).body.style.overflow = "";
 			if (y < win.getWindowHeight()-20-h) {
@@ -453,6 +461,8 @@ function popup_window(title,icon,content,hide_close_button) {
 					frame.body.style.left = "0px";
 				}
 			}
+			if (prev_w != t.content_container.clientWidth || prev_h != t.content_container.clientHeight)
+				frame_win.layout.invalidate(frame_win.document.body);
 			x = win.getWindowWidth()/2 - x/2;
 			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight+(t.buttons_tr ? t.buttons_tr.scrollHeight : 0))/2;
 		} else {

@@ -106,9 +106,8 @@ class page_create_people extends Page {
 					return;
 				}
 			}
-			if (window.create_people.donotcreate) {
-				var fct = eval('('+window.create_people.donotcreate+')');
-				fct(window.create_people);
+			if (window.donotcreate) {
+				window.donotcreate(window.create_people);
 			} else
 				service.json("people","create_people",window.create_people,function(res) {
 					if (!res) {
@@ -121,9 +120,8 @@ class page_create_people extends Page {
 						var u = new URL(window.create_people.redirect);
 						u.params["people_id"] = res.id;
 						window.location.href = u.toString();
-					} else if (window.create_people.onsuccess) {
-						var fct = eval('('+window.create_people.onsuccess+')');
-						fct(window.create_people);
+					} else if (window.onsuccess) {
+						window.onsuccess(window.create_people);
 					}
 				});
 		}
@@ -151,8 +149,7 @@ class page_create_people extends Page {
 			document.getElementById('wizard_freezer').innerHTML = msg;
 		}
 		enable_wizard_page_finish(true);
-		if (!window.parent.get_popup_window_from_frame || window.parent.get_popup_window_from_frame(window) == null)
-			new vertical_layout('wizard_page');
+		new vertical_layout('wizard_page');
 		</script>
 		<?php
 	}
