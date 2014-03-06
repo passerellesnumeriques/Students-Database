@@ -4,7 +4,6 @@ if (typeof require != 'undefined') {
 
 function HorizontalMenuItem(element) {
 	this.element = element;
-	this.visible_class = element.className;
 	if (element.className == 'context_menu_item')
 		this.always_in_menu = true;
 	else
@@ -53,7 +52,6 @@ function horizontal_menu(menu, valign) {
 		var total = 0;
 		for (var i = 0; i < t.items.length; ++i) {
 			if (t.items[i].always_in_menu) continue; // skip if this item is only for context menu
-			t.items[i].element.className = t.items[i].visible_class;
 			t.items[i].element.style.display = 'inline-block';
 			t.items[i].element.style.whiteSpace = 'nowrap';
 			menu.appendChild(t.items[i].element);
@@ -64,8 +62,9 @@ function horizontal_menu(menu, valign) {
 				if (t.valign == "middle") {
 					if (t.items[i].element.offsetHeight > 0)
 						t.items[i].element.style.marginTop = Math.floor((h-t.items[i].element.offsetHeight)/2)+'px';
-				} else {
-					// TODO
+				} else if (t.valign = "bottom") {
+					if (t.items[i].element.offsetHeight > 0)
+						t.items[i].element.style.marginTop = (h-t.items[i].element.offsetHeight)+'px';
 				}
 			}
 		}
@@ -92,11 +91,18 @@ function horizontal_menu(menu, valign) {
 			var m = new context_menu();
 			for (var i = 0; i < t.items.length; ++i) {
 				if (t.items[i].element.parentNode == menu) continue;
+				t.items[i].element.previousClassName = t.items[i].element.className; 
 				t.items[i].element.className = 'context_menu_item';
 				t.items[i].element.style.display = 'block';
 				m.addItem(t.items[i].element);
 			}
 			m.showBelowElement(t.more_item);
+			m.onclose = function() {
+				for (var i = 0; i < t.items.length; ++i) {
+					if (t.items[i].element.parentNode == menu) continue;
+					t.items[i].element.className = t.items[i].element.previousClassName; 
+				}
+			};
 		});
 	};
 	

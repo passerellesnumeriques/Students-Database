@@ -151,7 +151,7 @@ var students_list = new data_list(
 						title: "Create New Student",
 						types: ["student"],
 						student_batch: batches[0],
-						redirect:"/dynamic/training_education/page/batches_classes"
+						redirect:location.href
 					});
 				};
 				students_list.addHeader(create_student);
@@ -209,6 +209,7 @@ var students_list = new data_list(
 		list.makeRowsClickable(function(row){
 			location.href = "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id);
 		});
+		layout.invalidate(list.container);
 	}
 );
 

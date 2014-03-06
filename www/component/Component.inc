@@ -135,7 +135,14 @@ abstract class Component {
 			$err = json_last_error();
 			if ($input === null && $err <> JSON_ERROR_NONE) {
 				PNApplication::error("Invalid input: JSON error ".$err);
-				PNApplication::print_json_result(null);
+				// get output format
+				$output_format = $service->get_output_format(array());
+				if ($output_format == "text/json") {
+					header("Content-Type: text/json;charset=UTF-8");
+					PNApplication::print_json_result(null);
+				} else {
+					PNApplication::print_errors();
+				}
 				return;
 			}			
 		} else {

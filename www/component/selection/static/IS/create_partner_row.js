@@ -49,8 +49,13 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 			var organization_id = this.organization_id;
 			require("popup_window.js",function(){
 				var pop = new popup_window("Organization Profile",null,null);
-				pop.setContentFrame("/dynamic/contact/page/organization_profile?organization="+organization_id);
+				var frame = pop.setContentFrame("/dynamic/contact/page/organization_profile?organization="+organization_id);
 				pop.show();
+				waitFrameReady(getIFrameWindow(frame), function(win){ return typeof win.organization != 'undefined'; }, function(win) {
+					win.organization.onchange.add_listener(function() {
+						// TODO refresh
+					});
+				},10000);
 			});
 			return false;
 		};
@@ -59,9 +64,6 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 			for(var i = 0 ; i < t.contact_points_selected.length; i++){
 				var cont = document.createElement("div");
 				var index = t._findIndexInAllContactPoints(t.contact_points_selected[i]);
-				var text = all_contact_points[index].people_last_name.uniformFirstLetterCapitalized()+", "+all_contact_points[index].people_first_name.uniformFirstLetterCapitalized();
-				if(all_contact_points[index].people_designation != null)
-					text += ", "+all_contact_points[index].people_designation;
 				var link = document.createElement("a");
 //				link.src = "/static/people/profile_16.png";
 //				link.style.verticalAlign = "bottom";
@@ -78,7 +80,21 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 					});
 					return false;
 				};
-				link.innerHTML = text;
+				var text;
+				text = document.createTextNode(all_contact_points[index].people_last_name);
+				window.top.datamodel.registerCellText(window, "People", "last_name", all_contact_points[index].people_id, text);
+				link.appendChild(text);
+				link.appendChild(document.createTextNode(", "));
+				text = document.createTextNode(all_contact_points[index].people_first_name);
+				window.top.datamodel.registerCellText(window, "People", "first_name", all_contact_points[index].people_id, text);
+				link.appendChild(text);
+				if(all_contact_points[index].people_designation != null) {
+					link.appendChild(document.createTextNode(", "));
+					text = document.createTextNode(all_contact_points[index].people_designation);
+					window.top.datamodel.registerCellText(window, "ContactPoint", "designation", {organization:partner_data.id,people:all_contact_points[index].people_id}, text);
+					link.appendChild(text);
+				}
+				
 				cont.appendChild(link);
 				td2.appendChild(cont);
 				if(i > 0)

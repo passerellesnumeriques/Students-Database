@@ -289,12 +289,10 @@ function tree(container) {
 	this._refresh_heads_ = function() {
 		for (var i = 0; i < this.items.length; ++i)
 			this._clean_heads(this.items[i]);
-		setTimeout(function() {
-			for (var i = 0; i < t.items.length; ++i)
-				t._compute_heights(t.items[i]);
-			for (var i = 0; i < t.items.length; ++i)
-				t._refresh_head(t.items[i], [], i > 0, i < t.items.length-1);
-		},1);
+		for (var i = 0; i < t.items.length; ++i)
+			t._compute_heights(t.items[i]);
+		for (var i = 0; i < t.items.length; ++i)
+			t._refresh_head(t.items[i], [], i > 0, i < t.items.length-1);
 	};
 	this._clean_heads = function(item) {
 		item.head.style.height = "";
@@ -406,6 +404,9 @@ function tree(container) {
 	
 	this._create();
 	this._build_from_html();
+	layout.addHandler(container, function() {
+		t._refresh_heads();
+	});
 }
 
 function createTreeItemSingleCell(icon, text, expanded, onselect, context_menu_builder, actions) {

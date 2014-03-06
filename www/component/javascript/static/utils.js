@@ -528,7 +528,7 @@ function lock_screen(onclick, content) {
 	var div = document.getElementById('lock_screen');
 	if (div) {
 		div.usage_counter++;
-		return;
+		return div;
 	}
 	div = document.createElement('DIV');
 	div.usage_counter = 1;
@@ -748,4 +748,11 @@ function getObjectSize(object){
 		s++;
 	}
 	return s;
+}
+
+function waitFrameReady(win, test, onready, timeout) {
+	if (typeof timeout == 'undefined') timeout = 30000;
+	if (timeout < 50) return;
+	if (!test(win)) { setTimeout(function() { waitFrameReady(win, test, onready, timeout-50); }, 50); return; }
+	onready(win);
 }

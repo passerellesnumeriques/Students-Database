@@ -4,7 +4,7 @@ class page_profile extends Page {
 	
 	public function execute() {
 		$this->add_javascript("/static/widgets/frame_header.js");
-		$this->onload("window.profile_header = new frame_header('profile_page'); window.profile_header.setTitle(\"<span id='profile_title_first_name'></span> <span id='profile_title_last_name'></span>\");");
+		theme::css($this, "frame_header.css");
 		
 		$plugin = @$_GET["plugin"];
 		$page = @$_GET["page"];
@@ -41,10 +41,6 @@ class page_profile extends Page {
 		}
 		$page = $pages[$page][2];
 		
-		require_once("component/data_model/page/utils.inc");
-		datamodel_cell($this, "profile_title_first_name", false, "People", "first_name", $people_id, null, $people["first_name"], "function(){layout.invalidate(window.profile_header.header);}");
-		datamodel_cell($this, "profile_title_last_name", false, "People", "last_name", $people_id, null, $people["last_name"], "function(){layout.invalidate(window.profile_header.header);}");
-
 		$all_pages = array();
 		foreach (PNApplication::$instance->components as $cname=>$c) {
 			foreach ($c->getPluginImplementations() as $pi) {
@@ -60,18 +56,36 @@ class page_profile extends Page {
 		}
 		usort($all_pages, "pages_sort");
 ?>
-<div id='profile_page' icon='/static/people/profile_32.png' title='' page='<?php echo $page;?>'>
+<div id='profile_page' page='<?php echo $page;?>'>
 <?php 
 foreach ($all_pages as $cp) {
-	echo "<span class='page_menu_item'";
-	if (isset($cp[4]) && $cp[4] <> null) {
-		echo " onmouseover='if (this.tooltip) return; this.tooltip = document.createElement(\"DIV\"); this.tooltip.className = \"tooltip\"; this.tooltip.innerHTML = ".json_encode($cp[4],JSON_HEX_APOS)."; this.tooltip.style.position=\"absolute\"; this.tooltip.style.top=(absoluteTop(this)+this.offsetHeight+5)+\"px\"; this.tooltip.style.left=(absoluteLeft(this))+\"px\"; document.body.appendChild(this.tooltip);'";
-		echo " onmouseout=\"if (!this.tooltip) return; document.body.removeChild(this.tooltip); this.tooltip = null;\"";
-	}
-	echo "><a href=\"".$cp[2]."\" target='profile_page_content'><img src='".$cp[0]."'/>".$cp[1]."</a></span>";
+	echo "<div";
+	echo " icon=\"".htmlentities($cp[0])."\"";
+	echo " text=\"".htmlentities($cp[1])."\"";
+	echo " link=\"".htmlentities($cp[2])."\"";
+	if (isset($cp[4]) && $cp[4] <> null)
+		echo " tooltip=\"".htmlentities($cp[4])."\"";
+	echo "></div>";
 }
 ?>
 </div>
+<script type='text/javascript'>
+var profile_header = new frame_header('profile_page');
+var title = document.createElement("DIV");
+var span_first_name = document.createElement("SPAN"); title.appendChild(span_first_name);
+title.appendChild(document.createTextNode(" "));
+var span_last_name = document.createElement("SPAN"); title.appendChild(span_last_name);
+profile_header.setTitle('/static/people/profile_32.png', title);
+var people_id = <?php echo $people_id;?>;
+var first_name = <?php echo json_encode($people["first_name"]);?>;
+var last_name = <?php echo json_encode($people["last_name"]);?>;
+var cell;
+<?php 
+require_once("component/data_model/page/utils.inc");
+datamodel_cell_inline($this, "cell", "span_first_name", false, "People", "first_name", "people_id", null, "first_name", "function(){layout.invalidate(profile_header.header);}");
+datamodel_cell_inline($this, "cell", "span_last_name", false, "People", "last_name", "people_id", null, "last_name", "function(){layout.invalidate(profile_header.header);}");
+?>
+</script>
 <?php 
 	}
 }

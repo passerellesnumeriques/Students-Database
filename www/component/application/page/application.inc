@@ -9,6 +9,7 @@ window.top.default_country_code = <?php $d = PNApplication::$instance->get_domai
 
 window.top.calendar_manager = new CalendarManager();
 window.top.CalendarsProviders.get(function(provider) {
+	if (!window.top.calendar_manager) return;
 	for (var i = 0; i < provider.calendars.length; ++i)
 		window.top.calendar_manager.addCalendar(provider.calendars[i]);
 	provider.on_calendar_added.add_listener(function(cal){

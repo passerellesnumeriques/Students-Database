@@ -27,7 +27,7 @@ layout = {
 	_multiple_process_counter: 0,
 	invalidate: function(element) {
 		if (element == null) {
-			try { throw "null element given to layout.invalidate"; }
+			try { throw new Error("null element given to layout.invalidate"); }
 			catch (e) { log_exception(e); return; }
 		}
 		if (getWindowFromDocument(element.ownerDocument) != window) {
@@ -329,7 +329,8 @@ if (typeof listenEvent != 'undefined') {
 			unlistenEvent(window,'resize',listener);
 			return;
 		}
-		layout.invalidate(document.body); 
+		if (document.body)
+			layout.invalidate(document.body); 
 	};
 	listenEvent(window, 'resize', listener);
 }
