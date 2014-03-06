@@ -21,7 +21,7 @@ class page_IS_main_page extends selection_page {
 		
 		?>
 		<div id='horizontal_split'>
-			<div id='status_section' title='Information Sessions Status' collapsable='false' css='soft' style='display:inline-block;margin:10px'>
+			<div id='status_section' title='Information Sessions Status' collapsable='false' css='soft' style='display:inline-block;margin:10px; width:340px;'>
 				<div id = '<?php echo $status_container_id; ?>'>
 				<?php 
 				if(!$steps["information_session"]){

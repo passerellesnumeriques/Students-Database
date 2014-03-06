@@ -107,7 +107,9 @@ function select_address(container, data, partners_contacts_points, can_manage){
 				{id:data.partners[index].organization , name:data.partners[index].organization_name},
 				data.partners[index].contact_points_selected,
 				partners_contacts_points[index_in_contact_points].contact_points,
-				can_manage
+				can_manage,
+				null,
+				true
 			);
 			//Add the listener for the contact points selection
 			row.onupdatecontactpointsselection.add_listener(function(contact_points_selected){
