@@ -218,7 +218,7 @@
 		->addInsertAccess("manage_exam_subject",true)
 		->addRemoveAccess("manage_exam_subject",true);
 	
-	$sm->addTable("ExamTopicFullExam")
+	$sm->addTable("ExamTopicFullSubject")
 		/** Table to match an exam topic with exam(s) subject(s)
 		 * if a topic is set in this table, it will be considered as
 		 * "full subject" for all the matching exams subjects

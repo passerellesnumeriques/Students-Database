@@ -127,23 +127,23 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 	t._addTopicRow = function(tr, i){
 		var td_name = document.createElement("td");
 		var li = document.createElement("li");
-		li.innerHTML = all_topics[i].name;
+		var full_subject_for = t._isTopicDeclaredAsFullSubjectForAnySubject(i);
+		if(full_subject_for){
+			var tip = document.createElement("img");
+			tip.src = "/static/selection/exam/exam_10.png";
+			tip.title = "This topic is declared as full subject for "+full_subject_for+" subject(s)";
+			tip.style.marginRight = "3px";
+			li.appendChild(tip);
+		}
+		var link = document.createElement("a");
+		link.appendChild(document.createTextNode(all_topics[i].name.uniformFirstLetterCapitalized()));
+		link.href = "/dynamic/selection/page/eligibility_rules/manage_exam_topic?id="+all_topics[i].id+"&read_only=true";
+		link.className = "black_link";
+		link.title = "See this topic";
+		li.appendChild(link);
 		td_name.appendChild(li);
 		tr.appendChild(td_name);
-		tr.menu = []; // menu to display on mouse over
-		
-		see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/>",all_topics[i].id);
-		see_button.title = "See this topic";
-		see_button.onclick = function(){
-			location.assign("/dynamic/selection/page/eligibility_rules/manage_exam_topic?id="+this.id+"&read_only=true");
-		};
-		see_button.style.visibility = "hidden";
-		see_button.className = "button_verysoft";
-		var td_see = document.createElement("td");
-		td_see.appendChild(see_button);
-		tr.appendChild(td_see);
-		tr.menu.push(see_button);
-		
+		tr.menu = []; // menu to display on mouse over		
 		if(can_manage){
 			edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/>",all_topics[i].id);
 			edit_button.title = "Edit this topic";
@@ -156,6 +156,28 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 			td_edit.appendChild(edit_button);
 			tr.appendChild(td_edit);
 			tr.menu.push(edit_button);
+			
+			remove_button = t._createButton("<img src = '"+theme.icons_16.remove+"'/>", all_topics[i].id);
+			remove_button.title = "Remove this topic";
+			remove_button.onclick = function(){
+				var topic_id = this.id;
+				confirm_dialog("Do you really want to remove this topic and all the linked data?<br/><i>This topic will also be removed from all the eligibility rules</i>",function(r){
+					if(r){
+						service.json("selection","eligibility_rules/remove_topic",{id:topic_id},function(res){
+							if(!r)
+								error_dialog("An error occured, the topic was not removed");
+							else
+								location.reload();
+						});
+					}
+				});
+			};
+			remove_button.className = 'button_verysoft';
+			remove_button.style.visibility = "hidden";
+			var td_remove = document.createElement("td");
+			td_remove.appendChild(remove_button);
+			tr.appendChild(td_remove);
+			tr.menu.push(remove_button);
 		}
 
 		tr.onmouseover = function(){
@@ -166,6 +188,23 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 			for(var i = 0; i < this.menu.length; i++)
 				this.menu[i].style.visibility = "hidden";
 		};
+	};
+	
+	t._isTopicDeclaredAsFullSubjectForAnySubject = function(index){
+		var subjects_concerned = "";
+		var first = true;
+		for(var i = 0; i < all_topics[index].subjects.length; i++){
+			if(all_topics[index].subjects[i].full_subject){
+				if(!first)
+					subjects_concerned += ", "
+						first = false;
+				subjects_concerned += all_topics[index].subjects[i].name.uniformFirstLetterCapitalized();
+			}
+		}
+		if(first)
+			return false;
+		else
+			return subjects_concerned;
 	};
 	
 	t._addValidStatusRow = function(tr){

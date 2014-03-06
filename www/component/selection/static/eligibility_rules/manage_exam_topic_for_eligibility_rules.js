@@ -100,7 +100,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	 */
 	t._setButtons = function(){
 		var back = document.createElement("div");
-		back.className = "button";
+		back.className = "button_verysoft";
 		back.innerHTML = "<img src = '"+theme.icons_16.back+"'/> Back";
 		back.onclick = function(){
 			location.assign('/dynamic/selection/page/exam/main_page');
@@ -109,7 +109,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		
 		if(t.global_can_edit && (t.global_can_add || (topic.id != -1 && topic.id != "-1"))){
 			var save = document.createElement("div");
-			save.className = "button";
+			save.className = "button_verysoft";
 			save.innerHTML = "<img src = '"+theme.icons_16.save+"'/> Save";
 			save.onclick = t._save;
 			t.header.addMenuItem(save);
@@ -117,7 +117,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		
 		if(t.global_can_remove){
 			var remove = document.createElement("div");
-			remove.className = "button";
+			remove.className = "button_verysoft";
 			remove.innerHTML = "<img src = '"+theme.icons_16.remove+"'/> Remove";
 			remove.onclick = t._removeTopic;
 			t.header.addMenuItem(remove);
@@ -276,6 +276,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	 * This table contains all the subject containing free parts and all the free parts, grouped by subject.<br/>
 	 */
 	t._setTableEdit = function(){
+		var thead = document.createElement("thead");
 		var tr_head = document.createElement("tr");
 		var th = document.createElement("th");
 		th.innerHTML = "Free parts data";
@@ -283,7 +284,8 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		th.style.paddingBottom = "20px";
 		th.style.fontSize = "large";
 		tr_head.appendChild(th);
-		t.table_edit.appendChild(tr_head);
+		thead.appendChild(tr_head);
+		t.table_edit.appendChild(thead);
 		var tbody = document.createElement("tbody");
 		t.table_edit.appendChild(tbody);
 		t._setAllFreeFullSubjectList(tbody);
@@ -748,6 +750,8 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	 * that contains the list of all the parts already in the other topics
 	 */
 	t._setTableFooter = function(){
+		var tfoot = document.createElement("tfoot");
+		t.table.appendChild(tfoot);
 		var text = "";
 		var first = true;
 		for(var i = 0; i < all_parts.length; i++){
@@ -777,7 +781,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			td.style.paddingTop = "20px";
 			td.appendChild(div);
 			tr.appendChild(td);
-			t.table.appendChild(tr);
+			tfoot.appendChild(tr);
 		} else {
 			var text_no_part = document.createElement("div");
 			text_no_part.innerHTML = "There is no part in any other topic";
@@ -787,7 +791,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			var td = document.createElement("td");
 			td.appendChild(text_no_part);
 			tr.appendChild(td);
-			t.table.appendChild(tr);
+			tfoot.appendChild(tr);
 		}
 	};
 	
@@ -1131,8 +1135,8 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 				t.reset,
 				function(){service.json("selection","eligibility_rules/get_topic",{id:topic.id},function(r){if(r) topic = r},true);}, //must wait for the service before reseting
 				function(){if(topic.id == -1) error_dialog("You cannot go to uneditable mode because the topic has never been saved yet"); else return true;},
-				t.header
-				
+				t.header,
+				'button_verysoft'				
 		);
 		t.editable_manager.setGlobalRights(read_only);
 		t._init();
