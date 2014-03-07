@@ -304,12 +304,14 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 	};
 	
 	t._resetRulesContainer = function(){
-		t._manage_rules.closeDiagram();
+		if(t._manage_rules){
+			t._manage_rules.closeDiagram();
+			delete t._manage_rules;
+		}			
 		while(t.rules_container.firstChild)
 			t.rules_container.removeChild(t.rules_container.firstChild);
 		t._td_rules.removeChild(t.rules_container);
-		delete t.rules_container;
-		delete t._manage_rules;
+		delete t.rules_container;		
 		t._setRulesContent();
 	};
 	

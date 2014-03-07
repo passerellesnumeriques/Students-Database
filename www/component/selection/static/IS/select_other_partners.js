@@ -1,10 +1,22 @@
+/**
+ * Create a table containing partners list. A row is created for each partner, contaning the name of the organization, and the selected contact points (if any)
+ * @param {String | HTMLElement} container
+ * @param {ISPartner} all_partners the partners that shall be displayed in the table
+ * @param {Array} partners_contacts_points same as returned by contact#service#get_json_contact_points_no_address method
+ * @param {boolean} can_manage
+ * @param {null | number} host_id null if no host selected when instanciated, else, value of the host ID
+ * @param {Function} update_host_custom_event custom event fired when an external function updates the host_id
+ * @param {Function} oncontactpointchange_listener listener fired in the case of the contacts points of a partner are updated from the organization profile
+ */
 function select_other_partners(container, all_partners, partners_contacts_points, can_manage, host_id, update_host_custom_event,oncontactpointchange_listener){
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	var t = this;
 	t.partners = [];
 	t.host = host_id;
-	t.reset = function(locker){
+	t.reset = function(locker,new_partners_contact_points){
+		if(new_partners_contact_points)
+			partners_contacts_points = new_partners_contact_points;
 		//Launch process
 		t._init();
 		if(locker)

@@ -24,7 +24,7 @@ class service_get_address extends Service{
 				if(!$first)
 					echo ", ";
 				$first = false;
-				$res = ContactJSON::PostalAddressFromID($input["id"]);
+				$res = ContactJSON::PostalAddressFromID($id);
 				$res = $res != null ? $res : "null";
 				echo $res;
 			}
