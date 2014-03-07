@@ -5,10 +5,9 @@
  * @param {Array} all_topics an array containing all the topics set into the database
  * @param {Boolean} can_edit
  * @param {HTMLElement|null}footer_ending (optional), element to add at the end of the footer
- * @param {Number|null} index_in_all_rules array, given when the t.onupdaterule custom event is fired
  * @param {Function|null} onreset(optional) called when the table is reseted
  */
-function manage_rule(container, rule, all_topics, can_edit, footer_ending, index_in_all_rules, onreset){
+function manage_rule(container, rule, all_topics, can_edit, footer_ending, onreset){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -105,7 +104,7 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 				if(this.options[this.selectedIndex].value != 0){
 					t._addTopic(this.options[this.selectedIndex].value);
 					//Fire the custom event
-					t.onupdaterule.fire(index_in_all_rules);
+					t.onupdaterule.fire(rule.id);
 				}
 			};
 			var text = document.createTextNode("Add a topic ");
@@ -160,8 +159,8 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 			t._field_decimal_expected[rule.topics[index].topic.id] = new field_decimal(rule.topics[index].expected,false,config_grade_expected);
 		}
 		//Add the custom event to the field_decimal onchange
-		t._field_decimal_coeff[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(index_in_all_rules);});
-		t._field_decimal_expected[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(index_in_all_rules);});
+		t._field_decimal_coeff[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(rule.id);});
+		t._field_decimal_expected[rule.topics[index].topic.id].ondatachanged.add_listener( function(){t.onupdaterule.fire(rule.id);});
 		td2.appendChild(t._field_decimal_expected[rule.topics[index].topic.id].getHTMLElement());
 		var text_score = document.createTextNode("/"+rule.topics[index].topic.max_score);
 		td2.appendChild(text_score);
@@ -190,7 +189,7 @@ function manage_rule(container, rule, all_topics, can_edit, footer_ending, index
 			//Reset
 			t.reset();
 			//Fire the custom event
-			t.onupdaterule.fire(index_in_all_rules);
+			t.onupdaterule.fire(rule.id);
 		};
 		return div;
 	};

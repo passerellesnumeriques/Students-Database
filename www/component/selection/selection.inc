@@ -1287,7 +1287,6 @@ class selection extends Component {
 				SQLQuery::create()
 					->removeKey("ExamTopicForEligibilityRule",$id);
 				//Check there is no empty eligibility rule
-// 					return $rules_ids_to_check;
 				if($rules_ids_to_check <> null){
 					$rules_to_remove = array();
 					foreach ($rules_ids_to_check as $rule_id){
@@ -1304,7 +1303,6 @@ class selection extends Component {
 						}
 					}
 				}
-// 				
 			} catch (Exception $e){
 				PNApplication:error($e);
 			}
@@ -1571,9 +1569,9 @@ class selection extends Component {
 				$root_rule_id = null;
 				$rules_not_to_remove = array();
 				//handle the rules to insert
-				if(count($rules_to_insert) > 0){
-					$catch_root_id = false;
+				if(count($rules_to_insert) > 0){					
 					foreach($rules_to_insert as $rule){
+						$catch_root_id = false;
 						if($rule["rule_table"]["parent"] == null)
 							$catch_root_id = true;
 						//Insert in EligibilityRule table

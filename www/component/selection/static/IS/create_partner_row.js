@@ -20,18 +20,22 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 		if(display_row_header){
 			var tr_header = document.createElement('tr');
 			var th = document.createElement('th');
-			var th_empty = document.createElement("th");
 			th.innerHTML = "Contact points selected";
-	//		th.style.textAlign = "right";
-			tr_header.appendChild(th_empty);
+//			th.style.paddingRight = "30px";
+			th.style.textAlign = "right";
+			th.colSpan = 2;
 			tr_header.appendChild(th);
+			if(can_manage){
+				var th_empty = document.createElement("th");
+				tr_header.appendChild(th_empty);
+			}
 			t._table.appendChild(tr_header);
 		}
 		var tr_body = document.createElement("tr");
 		t._table.appendChild(tr_body);
 		t._setTRBody(tr_body);
 		if(can_manage)
-			t._setFooter();
+			t._setFooter(tr_body);
 		container.appendChild(t._table);
 	};
 	
@@ -114,12 +118,14 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 				if(i > 0)
 					td2.style.paddingTop = "15px";
 				td2.style.paddingLeft = "15px";
-				td2.style.paddingRight = "15px";
+				td2.style.paddingRight = "30px";
+				td2.style.textAlign = "right";
 				cont.style.paddingTop = "5px";
 				cont.style.paddingBottom = "5px";
 			}
 		} else {
 			td2.innerHTML = "<center><i>No one selected</i></center>";
+			td2.style.width = "150px";
 		}
 		body.appendChild(td1);
 		body.appendChild(td2);
@@ -133,16 +139,20 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 		return null;
 	};
 	
-	t._setFooter = function(){
-		var tr = document.createElement("tr");
+	t._setFooter = function(tr){
+//		var tr = document.createElement("tr");
 		var td = document.createElement("td");
-		td.colSpan = 2;
+//		td.colSpan = 2;
 		td.style.textAlign = "right";
+		td.style.width = "30px";
+		if(t.contact_points_selected.length > 1)
+			td.style.paddingTop = "15px";
 		tr.appendChild(td);
-		t._table.appendChild(tr);
-		var button = document.createElement("button");
-		button.style.cursor = "pointer";
-		button.innerHTML = "Manage";
+//		t._table.appendChild(tr);
+		var button = document.createElement("div");
+		button.className = "button_verysoft";
+		button.innerHTML = "<img src = '/static/people/people_list_16.png'/>";
+		button.title = "Pick any contact point from this organization";
 		button.onclick = function(){
 			var pop_cont = document.createElement("div");
 			var pop = new popup_window("Select the contacts points",theme.icons_16.question,pop_cont);

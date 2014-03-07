@@ -48,16 +48,16 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 		var index = t._getRootRuleIndex();
 		var div = document.createElement("div");
 		new horizontal_align(div,"middle");
-		var first = new manage_rule(div,all_rules[index],all_topics,can_edit,null,index,t._fireLayoutEvent);
+		var first = new manage_rule(div,all_rules[index],all_topics,can_edit,null,t._fireLayoutEvent);
 		first.onupdaterule.add_listener(t._onManageRuleChange);
-		t.all_manage_rule.push({index:index, manage_rule:first}); //store the manage_rule object and its index
+		t.all_manage_rule.push({id:all_rules[index].id, manage_rule:first}); //store the manage_rule object and its index
 		t.diagram.createStartNode(null,div,"root");
 	};
 	
 	t._createLastNode = function(){
 		var div = document.createElement("div");
 		new horizontal_align(div,"middle");
-		div.innerHTML = "<center><i>The applicant passed the exam step!</i></center>"
+		div.innerHTML = "<center><i>The applicant passed the exam step!</i></center>";
 		t.diagram.createEndNode("<center><img src = '"+theme.icons_16.winner+"'/> Succeed</center>",div,"last");		
 	};
 	
@@ -67,14 +67,15 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 			remove.className = "button_verysoft";
 			remove.innerHTML = "<img src = '"+theme.icons_16.remove_black+"'/>";
 			remove.title = "Remove this rule";
-			remove.index = index;
+			remove.rule_id = all_rules[index].id;
 			remove.onclick = function(){
 				//remove from all_rules
-				all_rules.splice(this.index,1);
+				var index_in_all_rules = t._getRuleIndex(this.rule_id);
+				all_rules.splice(index_in_all_rules,1);
 				//Remove from diagram
-				t.diagram.removeNode(this.index);
+				t.diagram.removeNode(this.rule_id);
 				//Remove from all_manage_rule
-				var i = t._getIndexInAllManageRule(this.index);
+				var i = t._getIndexInAllManageRule(this.rule_id);
 				t.all_manage_rule.splice(i,1);
 				//reset error row
 				t._onManageRuleChange();
@@ -83,17 +84,18 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 			var remove = null;
 		var div = document.createElement("div");
 		new horizontal_align(div,"middle");
-		var node = new manage_rule(div,all_rules[index],all_topics,can_edit,remove,index,t._fireLayoutEvent);
+		var node = new manage_rule(div,all_rules[index],all_topics,can_edit,remove,t._fireLayoutEvent);
 		node.onupdaterule.add_listener(t._onManageRuleChange);
-		t.all_manage_rule.push({index:index, manage_rule:node});
-		t.diagram.createChildNode(null,div,index);
+		t.all_manage_rule.push({id:all_rules[index].id, manage_rule:node});
+		t.diagram.createChildNode(null,div,all_rules[index].id);
 	};
 	
-	t._getIndexInAllManageRule = function(index){
+	t._getIndexInAllManageRule = function(id){
 		for(var i = 0; i < t.all_manage_rule.length; i++){
-			if(t.all_manage_rule[i].index == index)
+			if(t.all_manage_rule[i].id == id)
 				return i;
 		}
+		return null;
 	};
 	
 	/**
@@ -116,8 +118,8 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 		add_rule.className = "button";
 		add_rule.innerHTML = "<img src = '"+theme.icons_16.add+"'/> Add intermediate rule";
 		add_rule.onclick = function(){
-			//Add the rule in all_rules
-			var rule = new EligibilityRule(-1,"root",[]); //parent attribute can only be null or root. Will be updated after saving
+			//Add the rule in all_rules, with a unique negative id, to be able to find it in all rules object
+			var rule = new EligibilityRule(t._generateNewRuleId(),"root",[]); //parent attribute can only be null or root. Will be updated after saving
 			all_rules.push(rule);
 			t._createMiddleNode(all_rules.length-1);
 			t._onManageRuleChange();
@@ -131,6 +133,11 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 		t._save.onclick = function(){
 			//Last validity check
 			if(t._checkNoDoubleRule() == null && t._checkNoEmptyRule() == null){
+				//Reset the negative id attributes to -1
+				for(var i = 0; i < all_rules.length; i++){
+					if(all_rules[i].id < 0)
+						all_rules[i].id = -1;
+				}
 				var locker = lock_screen();
 				service.json("selection","eligibility_rules/save_rules",{all_rules:all_rules,db_lock:db_lock},function(res){
 					if(!res){
@@ -240,7 +247,7 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 			return true;
 		else
 			return false;
-	}
+	};
 	
 	t._checkNoEmptyRule = function(){
 		var res = null;
@@ -259,10 +266,10 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 		return res;
 	};
 	
-	t._onManageRuleChange = function(index){
+	t._onManageRuleChange = function(id){
 		//update the all_rules object
-		if(index != null){ //else called by the remove rule button, so the rule object has already been updated
-			var index_in_all_manage_rule = t._getIndexInAllManageRule(index);
+		if(id != null){ //else called by the remove rule button, so the rule object has already been updated
+			var index_in_all_manage_rule = t._getIndexInAllManageRule(id);
 			t.all_manage_rule[index_in_all_manage_rule].manage_rule.updateRuleFields();
 		}
 		//update the error message / save button
@@ -293,6 +300,21 @@ function manage_rules(container, all_rules, all_topics, can_edit, db_lock, foote
 			if(all_rules[i].parent == null)
 				return i;
 		}
+	};
+	
+	t._getRuleIndex = function(id){
+		for(var i = 0; i < all_rules.length; i++){
+			if(all_rules[i].id == id)
+				return i;
+		}
+		return null;
+	};
+	
+	//Add a counting attribute
+	t._id = -1; //Starts at -1 because the root rule can be initialized with -1 as id
+	//Generate a unique negative id
+	t._generateNewRuleId = function(){
+		return --t._id;
 	};
 	
 	t._setTableStyle = function(){
