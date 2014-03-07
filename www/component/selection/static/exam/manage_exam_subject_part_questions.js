@@ -284,14 +284,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 					/**
 					 * Display the remove, and inserts buttons only when the mouse is over the tr
 					 */
-					tr.onmouseover = function(){
-						for(var m = 0; m < tr.menu.length; m++)
-							this.menu[m].style.visibility = "visible";
-					};
-					tr.onmouseout = function(){
-						for(var m = 0; m < tr.menu.length; m++)
-							this.menu[m].style.visibility = "hidden";
-					};
+					animation.appearsOnOver(tr, tr.menu);
 				}
 				if(i == 0)
 					tbody.appendChild(tr_head);

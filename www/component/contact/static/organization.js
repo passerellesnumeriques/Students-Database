@@ -14,7 +14,9 @@ function organization(container, org, existing_types, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
-	/** Return the Organization structure */
+	/** Return the Organization structure
+	 * @returns Organization the structure updated with actual values on the screen 
+	 */
 	this.getStructure = function() {
 		return org;
 	};
@@ -63,12 +65,15 @@ function organization(container, org, existing_types, can_edit) {
 					}
 			}
 			t.types = new labels("#90D090", types, function(id) {
-				// TODO onedit
+				// onedit
+				alert('Edit not yet implemented');
+				// TODO
 			}, function(id, handler) {
+				// onremove
 				var ok = function() {
-					for (var i = 0; i < org.types.length; ++i)
-						if (org.types[i] == id) {
-							org.types.splice(i,1);
+					for (var i = 0; i < org.types_ids.length; ++i)
+						if (org.types_ids[i] == id) {
+							org.types_ids.splice(i,1);
 							t.onchange.fire();
 							handler();
 							break;
@@ -81,6 +86,7 @@ function organization(container, org, existing_types, can_edit) {
 				} else
 					ok();
 			}, function() {
+				// add_list_provider
 				var items = [];
 				for (var i = 0; i < existing_types.length; ++i) {
 					var found = false;
@@ -127,8 +133,8 @@ function organization(container, org, existing_types, can_edit) {
 						service.json("contact","new_organization_type",{creator:org.creator,name:name},function(res){
 							if (!res) return;
 							if (org.id != -1) {
-								service.json("contact", "assign_organization_type", {organization:org.id,type:res.id}, function(res) {
-									if (res) {
+								service.json("contact", "assign_organization_type", {organization:org.id,type:res.id}, function(res2) {
+									if (res2) {
 										org.types_ids.push(res.id);
 										existing_types.push({id:res.id,name:name});
 										t.types.addItem(res.id, name);

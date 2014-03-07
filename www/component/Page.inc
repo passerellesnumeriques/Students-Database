@@ -97,7 +97,7 @@ abstract class Page {
 			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1]."'>";
 			echo "</script>";
 		}
-		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."'/>";
+		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.invalidate(window.document.body);'/>";
 		pageHeaderEnd($this->onload);
 	}
 
@@ -192,7 +192,7 @@ function pageHeaderEnd($onload = "") {
 }
 function pageFooter() {
 ?>
-<script type='text/javascript'>window._page_ready = true;</script>
+<script type='text/javascript'>window._page_ready = true;layout.invalidate(document.body);</script>
 </body>
 </html>
 <?php

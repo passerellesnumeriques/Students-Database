@@ -15,6 +15,10 @@
     padding-right: 5px;
 }
 
+.frame_header .left_controls, .frame_header .right_controls {
+	white-space: nowrap;
+}
+
 /* White style */
 .frame_header.white {
     background-color: white;

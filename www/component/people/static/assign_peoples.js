@@ -38,6 +38,7 @@ function assign_peoples(container) {
 					t.non_assign_section.nb_node.nodeValue = nb;
 				}
 			}
+			layout.invalidate(t.global_div);
 		};
 		this.assign_buttons.appendChild(button);
 		this.assign_buttons.appendChild(document.createElement("BR"));
@@ -56,7 +57,9 @@ function assign_peoples(container) {
 					poss.section.nb_node.nodeValue = nb;
 				}
 			}
+			layout.invalidate(t.global_div);
 		};
+		layout.invalidate(t.global_div);
 	};
 	this._non_movable_reason = null;
 	this.setNonMovableReason = function(reason) { this._non_movable_reason = reason; };
@@ -80,6 +83,7 @@ function assign_peoples(container) {
 				t.global_div.setAttribute("layout", "fill");
 				require("vertical_layout.js", function() {
 					new vertical_layout(container);
+					layout.invalidate(t.global_div);
 				});
 			}
 		}

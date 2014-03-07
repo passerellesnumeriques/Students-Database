@@ -48,7 +48,7 @@ function horizontal_menu(menu, valign) {
 	t.update = function() {
 		while (menu.childNodes.length > 0) menu.removeChild(menu.childNodes[0]);
 		var w = menu.clientWidth;
-		var h = menu.offsetHeight;
+		var h = menu.clientHeight;
 		var total = 0;
 		for (var i = 0; i < t.items.length; ++i) {
 			if (t.items[i].always_in_menu) continue; // skip if this item is only for context menu
@@ -63,8 +63,10 @@ function horizontal_menu(menu, valign) {
 					if (t.items[i].element.offsetHeight > 0)
 						t.items[i].element.style.marginTop = Math.floor((h-t.items[i].element.offsetHeight)/2)+'px';
 				} else if (t.valign = "bottom") {
-					if (t.items[i].element.offsetHeight > 0)
-						t.items[i].element.style.marginTop = (h-t.items[i].element.offsetHeight)+'px';
+					if (t.items[i].element.offsetHeight > 0) {
+						var s = getComputedStyleSizes(t.items[i].element);
+						t.items[i].element.style.marginTop = (h-t.items[i].element.offsetHeight-parseInt(s.marginBottom))+'px';
+					}
 				}
 			}
 		}

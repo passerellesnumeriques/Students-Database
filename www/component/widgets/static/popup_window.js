@@ -423,8 +423,6 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.in_resize = false;
 				return;
 			}
-			var prev_h = t.content_container.clientHeight;
-			var prev_w = t.content_container.clientWidth;
 			var h = 0;
 			if (t.header) h += getHeight(t.header);
 			if (t.buttons_tr) h += getHeight(t.buttons_tr);
@@ -461,8 +459,11 @@ function popup_window(title,icon,content,hide_close_button) {
 					frame.body.style.left = "0px";
 				}
 			}
-			if (prev_w != t.content_container.clientWidth || prev_h != t.content_container.clientHeight)
+			if (t.content._last_popup_resize_w != t.content.offsetWidth || t.content._last_popup_resize_h != t.content.offsetHeight) {
 				frame_win.layout.invalidate(frame_win.document.body);
+				t.content._last_popup_resize_w = t.content.offsetWidth;
+				t.content._last_popup_resize_h = t.content.offsetHeight
+			}
 			x = win.getWindowWidth()/2 - x/2;
 			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight+(t.buttons_tr ? t.buttons_tr.scrollHeight : 0))/2;
 		} else {
