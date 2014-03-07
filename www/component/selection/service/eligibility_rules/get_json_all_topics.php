@@ -9,7 +9,7 @@ class service_eligibility_rules_get_json_all_topics extends Service {
 		echo "<code>exclude_id</code> (number|null) the topic id to exclude when the data is retrieved";
 	}
 	public function output_documentation() {
-		//TODO
+		echo "{array} containing all the retrieved JSON topic objects";
 	}
 	
 	/**

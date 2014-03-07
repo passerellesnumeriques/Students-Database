@@ -18,14 +18,10 @@ class service_exam_subject_status extends Service{
 		echo "No";
 	}
 	public function output_documentation(){
-//TODO
+//TODO update
 	}
 	public function documentation(){
-		?>
-		<ul>
-			<li>This service returns statistics to be displayed on the selection main page <br/> so anyone who is allowed to access selection data must <br/> be allowed to get these data: to avoid any problem, each request is done using bypass_security</li>
-		</ul>
-		<?php
+		echo "This service returns statistics to be displayed on the selection main page <br/> so anyone who is allowed to access selection data must <br/> be allowed to get these data: to avoid any problem, each request is done using bypass_security";
 	}
 	public function execute(&$component,$input){
 		$number_exams = SQLQuery::create()

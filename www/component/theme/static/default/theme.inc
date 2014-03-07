@@ -45,6 +45,7 @@ theme::$icons_16 = array(
 	"window_popup" =>	"/static/theme/default/icons_16/popupize.gif",
 	"window_maximize" =>"/static/theme/default/icons_16/popup_maximize.gif",
 	"window_minimize" =>"/static/theme/default/icons_16/popup_minimize.gif",
+	"winner" =>			"/static/theme/default/icons_16/winner.png",
 	"yes" => 			"/static/theme/default/icons_16/ok.png",
 	"zoom" => 			"/static/theme/default/icons_16/search.png",
 	"zoom_in" => 		"/static/theme/default/icons_16/zoom_in.png",
@@ -58,14 +59,16 @@ theme::$icons_10 = array(
 	"edit" => 			"/static/theme/default/icons_10/edit.gif",
 	"forbidden" =>		"/static/theme/default/icons_10/forbidden_10.png",
 	"loading" =>		"/static/theme/default/icons_10/loading.gif",
+	"no_connection" => 	"/static/theme/default/icons_10/no_connection.gif",
 	"no_edit" => 		"/static/theme/default/icons_10/no_edit.png",
 	"online" => 		"/static/theme/default/icons_10/online.gif",
 	"offline" => 		"/static/theme/default/icons_10/offline.gif",
 	"popup" =>	 		"/static/theme/default/icons_10/popup.png",
+	"refresh" => 		"/static/theme/default/icons_10/refresh.png",
 	"remove" => 		"/static/theme/default/icons_10/remove.png",
 	"save" => 			"/static/theme/default/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/default/icons_10/semi_online.gif",
-	"no_connection" => 	"/static/theme/default/icons_10/no_connection.gif",
+	"warning" => 		"/static/theme/default/icons_10/warning.png",
 );
 
 theme::$icons_32 = array(

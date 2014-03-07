@@ -16,11 +16,11 @@ function header_bar(container, style) {
 		if (icon) {
 			var img = document.createElement("IMG");
 			img.src = icon;
-			img.onload = function() { fireLayoutEventFor(container); };
+			img.onload = function() { layout.invalidate(container); };
 			this.title.appendChild(img);
 		}
 		this.title.appendChild(document.createTextNode(text));
-		fireLayoutEventFor(container);
+		layout.invalidate(container);
 	};
 	
 	this.setTitleHTML = function(html) {
@@ -30,7 +30,7 @@ function header_bar(container, style) {
 			this.title.innerHTML = "";
 			this.title.appendChild(html);
 		}
-		fireLayoutEventFor(container);
+		layout.invalidate(container);
 	};
 	
 	this.addMenuItem = function(html) {
@@ -45,10 +45,11 @@ function header_bar(container, style) {
 	};
 	this.addMenuButton = function(icon, text, onclick) {
 		var button = document.createElement("DIV");
-		button.className = "button";
+		button.className = "button_verysoft";
 		if (icon) {
 			var img = document.createElement("IMG");
 			img.src = icon;
+			img.style.marginRight = "3px";
 			button.appendChild(img);
 		}
 		button.appendChild(document.createTextNode(text));

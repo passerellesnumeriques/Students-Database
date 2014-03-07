@@ -35,6 +35,9 @@ class page_create_people extends Page {
 		$types = $input["types"];
 		
 		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->require_javascript("section.js");
+		theme::css($this, "wizard.css");
+		theme::css($this, "section.css");
 		?>
 		<script type='text/javascript'>
 		window.create_people = {
@@ -66,12 +69,18 @@ class page_create_people extends Page {
 				}
 				usort($pages, "cmp_create_people_pages");
 				foreach ($pages as $p) {
+					$div_id = $this->generateID();
 					?>
-					<div class='section_with_title' style='float:left;margin:5px'>
-						<div><img src='<?php echo $p[0];?>' style='vertical-align:bottom;padding-right:3px'/><?php echo $p[1];?></div>
-						<div><?php include $p[2];?></div>
+					<div id='<?php echo $div_id;?>' style='float:left;margin:5px'
+						icon = '<?php echo $p[0];?>'
+						title = <?php echo json_encode($p[1]);?>
+						collapsable = 'false'
+						css = 'soft'
+					>
+						<?php include $p[2];?>
 					</div>
 					<?php
+					$this->onload("section_from_html(".json_encode($div_id).");");
 				}
 				?>
 				<br style='clear: both;'/>
@@ -97,9 +106,8 @@ class page_create_people extends Page {
 					return;
 				}
 			}
-			if (window.create_people.donotcreate) {
-				var fct = eval('('+window.create_people.donotcreate+')');
-				fct(window.create_people);
+			if (window.donotcreate) {
+				window.donotcreate(window.create_people);
 			} else
 				service.json("people","create_people",window.create_people,function(res) {
 					if (!res) {
@@ -112,9 +120,8 @@ class page_create_people extends Page {
 						var u = new URL(window.create_people.redirect);
 						u.params["people_id"] = res.id;
 						window.location.href = u.toString();
-					} else if (window.create_people.onsuccess) {
-						var fct = eval('('+window.create_people.onsuccess+')');
-						fct(window.create_people);
+					} else if (window.onsuccess) {
+						window.onsuccess(window.create_people);
 					}
 				});
 		}
@@ -142,8 +149,7 @@ class page_create_people extends Page {
 			document.getElementById('wizard_freezer').innerHTML = msg;
 		}
 		enable_wizard_page_finish(true);
-		if (!window.parent.get_popup_window_from_frame || window.parent.get_popup_window_from_frame(window) == null)
-			new vertical_layout('wizard_page');
+		new vertical_layout('wizard_page');
 		</script>
 		<?php
 	}

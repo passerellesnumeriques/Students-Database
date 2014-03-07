@@ -1,5 +1,5 @@
 <?php class service_get_event extends Service {		public function get_required_rights() {		return array();	}		public function documentation() { echo "Return event details of the given event id"; } 	public function input_documentation() {		echo "<ul>";			echo "<li><code>id</code>: the id of the event</li>";			echo "<li><code>calendar_id</code>: the id of the calendar</li>";		echo "</ul>"; 	}	public function output_documentation() { echo "Returns a CalendarEvent object"; }			public function execute(&$component, $input) {		$calendar_id = $input["calendar_id"];		$id = $input["id"];		if (!$component->canReadCalendar($calendar_id)) {			PNApplication::error("Access denied");			return;		}		$event = SQLQuery::create()					->bypassSecurity()					->select("CalendarEvent")					->where("id = '".$id."'")					->executeSingleRow();		if(PNApplication::has_errors()){			echo "false";			return;		}		echo "{";
-		echo "id:".$event["id"];
+		echo "id:".$event["id"];		echo ",calendar_provider_id:'PN'";
 		echo ",calendar_id:".$event["calendar"];
 		echo ",uid:".json_encode($event["uid"]);
 		echo ",start:".$event["start"];

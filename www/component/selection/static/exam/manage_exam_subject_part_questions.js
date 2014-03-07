@@ -1,3 +1,20 @@
+/**
+ * Create a table to manage an exam subject part
+ * @param {Object} part
+ * @param {HTMLElement} container the container to fill up
+ * @param {Boolean} can_edit
+ * @param {Boolean} can_remove
+ * @param {Boolean} can_add
+ * @param {Boolean} display_questions_detail a row is added for each question of this part
+ * @param {Boolean} display_correct_answer if true a column is added for the question correct answer
+ * @param {Boolean} display_choices if true a column is added for the number of choices
+ * @param {Number} question_index_before the number of questions already present before this part within the exam subject<br/>
+ * This figure is used to set the index of the question row (the index attribute of a question is the one into its belonging part)
+ * @param {Boolean} no_question if yes, no question is taken into account (so no need to give the part.questions array) when the table is generated, so only the header is displayed.<br/>
+ * Note: in this mode, the part cannot be editable
+ * @param {HTMLElement} element_ending_title an element to add at the end of the header row (usually the change part index button, see manage_exam_subject.js)
+ * @param {Boolean} td_head_instead_of_th if true, the header row contains td elements instead of tr elements, so no bold letters
+ */
 function manage_exam_subject_part_questions(part, container, can_edit, can_remove, can_add, display_questions_detail, display_correct_answer,display_choices, question_index_before, no_question, element_ending_title, td_head_instead_of_th){	
 	var t = this;
 	t.table = document.createElement("table");
@@ -9,6 +26,10 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	// that way it can be updated from outside via reset method
 	t.question_index_before = question_index_before;
 	
+	/**
+	 * Launch the process. <br/>
+	 * Set the table header and the table body, if display_questions_detail == true
+	 */
 	t._init = function(){
 		t._setTableHeader();
 		if(display_questions_detail)
@@ -16,6 +37,11 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		container.appendChild(t.table);
 	};
 	
+	/**
+	 * Set the table header<br/>
+	 * Create a thead element containing the main data about the part (name, index, number of questions, score)<br/>
+	 * This method only add the thead to the table and calls the _setHeaderContent method to set its content
+	 */
 	t._setTableHeader = function(){
 		thead = document.createElement("thead");
 		t.tr_head = document.createElement("tr");
@@ -29,6 +55,10 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t.table.appendChild(thead);
 	};
 	
+	/**
+	 * Set the content of the header<br/>
+	 * If the display_questions_detail is set as false, the number of questions within the part is added at the end of the title
+	 */
 	t._setHeaderContent = function(){
 		if(t.th_head.parentNode == t.tr_head){
 			t.tr_head.removeChild(t.th_head);
@@ -65,7 +95,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			var text1 = document.createTextNode("PART "+part.index+" - ");
 			var input = document.createElement("input");
 			input.type = "text";
-			new autoresize_input(input,7);
+			inputAutoresize(input,7);
 			if(part.name == null || (part.name != null && !part.name.checkVisible())){
 				part.name = null;
 				input.value = "Part name";
@@ -134,6 +164,15 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			t.th_head.appendChild(element_ending_title);
 	};
 	
+	/**
+	 * Set the body of the table<br/>
+	 * A row is added for each question<br/>
+	 * The index displayed in the first row cell is the one of the question into the whole subject<br/>
+	 * If editable, the data are displayed into inputs<br/>
+	 * Remove, insert before / after buttons are added at the end of the row, based on the user rights<br/>
+	 * The colspan of the data displayed are adapted to the config mode<br/>
+	 * A first row containing the caption is also added ("Score"...)
+	 */
 	t._setTableBody = function(){
 		var tbody = document.createElement("tbody");		
 		t.ordered = t._getOrderedQuestionsIndexInQuestions();
@@ -158,7 +197,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 				if(can_edit){
 					var input = document.createElement("input");
 					input.type = 'text';
-					new autoresize_input(input, 5);
+					inputAutoresize(input, 5);
 					//give a unique id to the input, to be able to get it at anytime
 					input.id = "question"+part.index+"."+part.questions[t.ordered[i]].index;
 					input.value = part.questions[t.ordered[i]].max_score;
@@ -245,14 +284,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 					/**
 					 * Display the remove, and inserts buttons only when the mouse is over the tr
 					 */
-					tr.onmouseover = function(){
-						for(var m = 0; m < tr.menu.length; m++)
-							this.menu[m].style.visibility = "visible";
-					};
-					tr.onmouseout = function(){
-						for(var m = 0; m < tr.menu.length; m++)
-							this.menu[m].style.visibility = "hidden";
-					};
+					animation.appearsOnOver(tr, tr.menu);
 				}
 				if(i == 0)
 					tbody.appendChild(tr_head);
@@ -307,6 +339,14 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t.table.appendChild(tbody);
 	};
 	
+	/**
+	 * Add the optional data on a question row (number of choices| correct answer fields)<br/>
+	 * The caption row is alos updated
+	 * @param {String} attribute the name of the attribute (correct_answer|choices)
+	 * @param {Number} i the index of the question into the t.ordered array
+	 * @param {HTMLElement} tr_head the tr element of the caption row
+	 * @param {HTMLElement} tr the row element
+	 */
 	t._addOptionalData = function(attribute, i, tr_head, tr){
 		if(i == 0){
 			var th2 = document.createElement("th");
@@ -320,7 +360,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		if(can_edit){
 			var input = document.createElement("input");
 			input.type = "text";
-			new autoresize_input(input, 5);
+			inputAutoresize(input, 5);
 			input.value = part.questions[t.ordered[i]][attribute];
 			input.index_in_ordered = i;
 			input.style.textAlign = "right";
@@ -351,6 +391,10 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		tr.appendChild(td2);
 	};
 	
+	/**
+	 * Method called by the insert question button, when the part is empty.<br/>
+	 * A first question is inserted and the table is reseted
+	 */
 	t._onFirstInsert = function(){
 		//create the question
 		t._createQuestion(1);
@@ -358,6 +402,14 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t.reset();
 	};
 	
+	/**
+	 * Method called by the remove question button<br/>
+	 * The question is removed from part.questions<br/>
+	 * The index of all the other questions are updated<br/>
+	 * The table is reseted
+	 * @param {Number} index_in_ordered the index of the question to remove into the t.ordered array
+	 * @param {Number} index_in_questions the index of the question to remove into the part.questions array
+	 */
 	t._onRemove = function(index_in_ordered,index_in_questions){
 		//update the index attribute of the following questions
 		t._decreaseIndexAttribute(index_in_ordered);
@@ -367,6 +419,13 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t.reset();
 	};
 	
+	/**
+	 * Method called by the inser question before button<br/>
+	 * A question is inserted before the given one<br/>
+	 * The index of all the other questions are updated<br/>
+	 * The table is reseted
+	 * @param {Number} index_in_ordered the index of the question before which a question will be added, into the t.ordered array
+	 */
 	t._onInsertBefore = function(index_in_ordered){
 		//update the index attribute of the following questions
 		if(typeof(index_in_ordered != "number"))
@@ -378,6 +437,13 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t.reset();
 	};
 	
+	/**
+	 * Method called by the inser question after button<br/>
+	 * A question is inserted after the given one<br/>
+	 * The index of all the other questions are updated<br/>
+	 * The table is reseted
+	 * @param {Number} index_in_ordered the index of the question after which a question will be added, into the t.ordered array
+	 */
 	t._onInsertAfter = function(index_in_ordered){
 		if(typeof(index_in_ordered) != "number")
 			index_in_ordered = parseInt(index_in_ordered);
@@ -389,12 +455,20 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t.reset();
 	};
 	
+	/**
+	 * Create a question into the part.questions array
+	 * @param {Number} index_attribute_value the index attribute of the question to create 
+	 */
 	t._createQuestion = function(index_attribute_value){
 		var index = part.questions.length;
 		//the question is created with 1 as default score
 		part.questions[index] = new ExamSubjectQuestion(-1,index_attribute_value,1,null,null);
 	};
 	
+	/**
+	 * Decrease the questions index attributes of 1 starting from a given question
+	 * @param {Number} index_in_ordered the index in the t.ordered array of the question from which the process is started (this question is included)
+	 */
 	t._decreaseIndexAttribute = function(index_in_ordered){
 		if(typeof(index_in_ordered != "number"))
 			index_in_ordered = parseInt(index_in_ordered);
@@ -411,6 +485,10 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		}
 	};
 	
+	/**
+	 * Increase the questions index attributes of 1 starting from a given question
+	 * @param {Number} index_in_ordered the index in the t.ordered array of the question from which the process is started (this question is NOT included)
+	 */
 	t._increaseIndexAttribute = function(index_in_ordered){
 		index_in_ordered = parseInt(index_in_ordered);
 		//if last question, nothing to do
@@ -425,6 +503,11 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		}
 	};
 	
+	/**
+	 * Reset the table by restarting the process
+	 * @param {Number|null} new_questions_before the value of the questions_before attribute<br/>
+	 * This value may have been updated, for instance on the manage_exam_subject page when an other part object (before this one) has been updated
+	 */
 	t.reset = function(new_questions_before){
 		if(typeof(new_questions_before) != "undefined")
 			t.question_index_before = new_questions_before;
@@ -437,10 +520,18 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t._init();
 	};
 	
+	/**
+	 * Get the display_questions_detail value
+	 * @returns {Boolean} display_questions_detail
+	 */
 	t.getDisplayQuestionDetail = function(){
 		return display_questions_detail;
 	};
 	
+	/**
+	 * Update the total score attribute and the header row<br/>
+	 * Method called when the user updates a question score
+	 */
 	t._updateTotalScore = function(){
 		var total = 0;
 		for(var i = 0; i < part.questions.length; i++){
@@ -456,6 +547,11 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		t._setHeaderContent();
 	};
 	
+	/**
+	 * Create a div with the className button
+	 * @param {String} the innerHTML of the button
+	 * @returns {HTMLElement} button_verysoft
+	 */
 	t._createButton = function(content){
 		var button = document.createElement("div");
 		button.className = "button_verysoft";
@@ -480,6 +576,10 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		return button;
 	};
 	
+	/**
+	 * Get an array containing the questions index within the part.questions array, ordered according to their index attributes
+	 * @returns {Array} ordered
+	 */
 	t._getOrderedQuestionsIndexInQuestions = function(){
 		var ordered = [];
 		for(var i = 0; i < part.questions.length; i++){
@@ -488,7 +588,12 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		}
 		return ordered;
 	};
-
+	
+	/**
+	 * Get the question index in the part.questions array, from its index attribute
+	 * @param {Number} question_index_attribute, the question index attribute
+	 * @returns {Number|Null} null if not found, else the seeked index
+	 */
 	t._getQuestionIndexInQuestions = function(question_index_attribute){
 		var index = null;
 		for(var i = 0; i < part.questions.length; i++){
@@ -500,7 +605,10 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		return index;
 	};
 	
-	require(["autoresize_input.js","exam_objects.js"],function(){
+	/**
+	 * Launch the process after including all the required javascripts files.
+	 */
+	require(["input_utils.js","exam_objects.js"],function(){
 		t._init();
 	});
 }

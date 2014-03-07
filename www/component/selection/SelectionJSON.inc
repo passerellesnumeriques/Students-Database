@@ -60,10 +60,10 @@ class SelectionJSON{
 	 * Build a JSON information structure for the given id
 	 * @param number $id
 	 * @return string json InformationSession structure
-	 */
+	 */	
 	public static function InformationSessionFromID($id){
 		if($id == -1 || $id == "-1")
-			return "{id:-1, address:null, fake_organization:null, date:null, number_boys_expected:null, number_boys_real:null, number_girls_expected:null, number_girls_real:null, name:null, partners:[]}";
+			return "{id:-1, geographic_area:null, date:null, number_boys_expected:null, number_boys_real:null, number_girls_expected:null, number_girls_real:null, name:null, partners:[]}";
 		$IS_row = self::InformationSessionTableDataFromID($id);
 		$IS_partners_row = self::PartnersDataFromID($id);
 		return self::InformationSession($IS_row, $IS_partners_row);
@@ -92,15 +92,14 @@ class SelectionJSON{
 		if(!$alias)
 			$alias = "InformationSession";
 		$q
-			->field($alias,"id")
-			->field($alias,"date")
-			->field($alias,"postal_address")
-			->field($alias,"fake_organization")
-			->field($alias,"number_boys_expected")
-			->field($alias,"number_girls_expected")
-			->field($alias,"number_boys_real")
-			->field($alias,"number_girls_real")
-			->field($alias,"name");
+		->field($alias,"id")
+		->field($alias,"date")
+		->field($alias,"geographic_area")
+		->field($alias,"number_boys_expected")
+		->field($alias,"number_girls_expected")
+		->field($alias,"number_boys_real")
+		->field($alias,"number_girls_real")
+		->field($alias,"name");
 	}
 	
 	/**
@@ -110,10 +109,10 @@ class SelectionJSON{
 	 */
 	public static function PartnersDataFromID($id){
 		$q = SQLQuery::create()
-			->select("InformationSessionPartner")
-			->join("InformationSessionPartner","InformationSessionContactPoint",array("information_session"=>"information_session","organization"=>"organization"))
-			->whereValue("InformationSessionPartner","information_session",$id)
-			->orderBy("InformationSessionPartner","organization");
+		->select("InformationSessionPartner")
+		->join("InformationSessionPartner","InformationSessionContactPoint",array("information_session"=>"information_session","organization"=>"organization"))
+		->whereValue("InformationSessionPartner","information_session",$id)
+		->orderBy("InformationSessionPartner","organization");
 		self::ISPartnersSQL($q);
 		$rows = $q->execute();
 		return $rows;
@@ -126,15 +125,15 @@ class SelectionJSON{
 	public static function ISPartnersSQL(&$q){
 		$alias = $q->getTableAlias("InformationSessionPartner");
 		if(!$alias)
-			$alias = "InformationSession";
+			$alias = "InformationSessionPartner";
 		$alias_contact_point = $q->getTableAlias("InformationSessionContactPoint");
 		if(!$alias_contact_point)
 			$alias_contact_point = "InformationSessionContactPoint";
 		$q
-			->field("InformationSessionPartner","organization","organization")
-			->field("InformationSessionPartner","host","host")
-			->field("host_address")
-			->field("InformationSessionContactPoint","people","contact_point");
+		->field($alias,"organization","organization")
+		->field($alias,"host","host")
+		->field($alias,"host_address","host_address")
+		->field($alias_contact_point,"people","contact_point");
 	}
 	
 	/**
@@ -142,13 +141,12 @@ class SelectionJSON{
 	 * @param array $row_IS coming from InformationSessionTableDataFromID
 	 * @param array $rows_partners coming from PartnersDataFromID method
 	 * @return string JSON information session structure
-	 */
+	 */	
 	public static function InformationSession($row_IS,$rows_partners){
 		$data = "";
 		if(isset($row_IS) && $row_IS <> null){
 			$data.= "{id:".json_encode($row_IS["id"]).", ";
-			$data.= "address:".json_encode($row_IS["postal_address"]);
-			$data.= ", fake_organization:".json_encode($row_IS["fake_organization"]);
+			$data.= "geographic_area:".json_encode($row_IS["geographic_area"]);
 			$data.= ", date:".json_encode($row_IS["date"]);
 			$data.= ", number_boys_expected:".json_encode($row_IS["number_boys_expected"]);
 			$data.= ", number_girls_expected:".json_encode($row_IS["number_girls_expected"]);
@@ -156,26 +154,27 @@ class SelectionJSON{
 			$data.= ", number_girls_real:".json_encode($row_IS["number_girls_real"]);
 			$data.= ", name:".json_encode($row_IS["name"]);
 			$data.= ", partners:";
-			if(isset($rows_partners[0]["organization"]) && $rows_partners[0]["organization"] <> null){
+			if(isset($rows_partners[0]["organization"])){
 				$first = true;
 				$current_partner = null;
 				$data.= "[";
 				foreach($rows_partners as $p){
 					if($p["organization"] != $current_partner){
-						$name = SQLQuery::create()->select("Organization")->field("name")->whereValue("Organization","id",$p["organization"])->executeSingleValue();
+						$name = PNApplication::$instance->contact->getOrganizationName($p["organization"]);
 						if(!$first){
 							$data.= "]}";
 							$data.= ", ";
 						}
 						$first = false;
+						$p["host"] = $p['host'] == 0 ? false : $p["host"];
+						$p["host"] = $p['host'] == 1 ? true : $p["host"];
 						$data.= "{";
-// 						array_push($partners_array,$p["organization"]);
 						$data.= "organization:".json_encode($p["organization"]).", ";
 						$data.= "organization_name:".json_encode($name).", ";
 						$data.= "host:".json_encode($p["host"]).", ";
 						$data.= "host_address:".json_encode($p["host_address"]).", ";
 						$data.= "contact_points_selected:";
-						if(isset($p["contact_point"]) && $p["contact_point"] <> null){
+						if(isset($p["contact_point"])){
 							$data.= "[";
 							$data.= json_encode($p["contact_point"]);
 						} else $data.= "[";
@@ -192,7 +191,61 @@ class SelectionJSON{
 			$data.= "}";
 		} else $data.="{}";
 		return $data;
-		
+	
+	}
+	
+	/**
+	 * Prepare a JSON information session structure to be sent to the database<br/>
+	 * This method checks that the IS has a name set. Otherwize, the name by default is the geographic_area_text, from the IS geographic_area attribute
+	 * @param string $json the IS structure
+	 * @return array fields => values to save
+	 */
+	public static function InformationSessionTableData2DB($json){
+		$a = array(
+				"date" => @$json["date"],
+				"geographic_area" => @$json["geographic_area"],
+				"number_boys_expected" => @$json["number_boys_expected"],
+				"number_boys_real" => @$json["number_boys_real"],
+				"number_girls_expected" => @$json["number_girls_expected"],
+				"number_girls_real" => @$json["number_girls_real"],
+		);
+		if(isset($json["name"]))
+			$a["name"] = $json["name"];
+		else if(!isset($json["name"]) && isset($json["geographic_area"])){
+			//Make sure that all the informations sessions have at least a name, to be displayed into the datalist
+			$a["name"] = PNApplication::$instance->geography->get_geographic_area_text($json["geographic_area"]);
+		}
+		if(isset($json["id"]))
+			$a["id"] = $json["id"];
+		return $a;
+	}
+	
+	/**
+	 * Prepare a JSON structure of informations session partners array to be saved into the database
+	 * @param string $json the JSON structure
+	 * @return array containing two fields => values arrays:<ul><li>[0]: fields => values for InformationSessionPartner table</li><li>[1]: fields => values for InformationSessionContactPoint table</li></ul>
+	 */
+	public static function InformationSessionPartnersAndContactPoints2DB($json){
+		$rows_IS_partner = array();
+		$rows_IS_contact_point = array();
+		foreach($json["partners"] as $p){
+			array_push($rows_IS_partner,array(
+			"information_session" => $json["id"],
+			"organization" => $p["organization"],
+			"host" => $p["host"],
+			"host_address" => $p["host_address"]
+			));
+			if(isset($p["contact_points_selected"]) && count($p["contact_points_selected"]) > 0){
+				foreach($p["contact_points_selected"] as $people){
+					array_push($rows_IS_contact_point,array(
+					"information_session" => $json["id"],
+					"organization" => $p["organization"],
+					"people" => $people
+					));
+				}
+			}
+		}
+		return array($rows_IS_partner, $rows_IS_contact_point);
 	}
 	
 /**
@@ -491,31 +544,20 @@ class SelectionJSON{
 	}
 	
 	/**
-	 * Exam Topic PHP
-	 * Get the exam topic for eligibility rules data
-	 * @param integer topic_id the id of the topic
-	 * @return array [id => ""
-	 * 					name => ""
-	 * 					subjects => [
-	 *							id => [
-	 *								name => ""
-	 *								max_score => ""
-	 *								full_subject => boolean
-	 * 								parts => array(
-	 *									id =>[
-	 *										name => ""
-	 *										max_score => ""
-	 *										index => ""
-	 *									],...)
-	 * 							],...]
-	 *					]
-	 * subjects & parts arrays use the subject id (respectively part id) as key
+	 * Exam Topic PHP <br/>
+	 * Get the exam topic for eligibility rules data<br/>
+	 * @param SQLQuery $q
+	 * @param array $rows the data about the ExamTopic
+	 * @param integer id the id of the topic
+	 * @return array with parameters <ul><li><code>id</code></li><li><code>name</code></li><li><code>subjects</code></li></ul>
+	 * Each subjects array contains all the exam subject ids, keys for arrays containing: <ul><li><code>name</code></li><li><code>max_score</code></li><li><code>full_subject</code></li><li><code>parts</code></li></ul>
+	 * Each parts array contains all the exam subject parts ids, keys for arrays containing: <ul><li><code>name</code></li><li><code>max_score</code></li><li><code>index</code></li></ul>
 	 */
 	public static function ExamTopicPHP($q, $rows, $id){
 		$full_exams = SQLQuery::create()
-			->select("ExamTopicFullExam")
+			->select("ExamTopicFullSubject")
 			->field("exam_subject")
-			->whereValue("ExamTopicFullExam","exam_topic_for_eligibility_rule",$id)
+			->whereValue("ExamTopicFullSubject","exam_topic_for_eligibility_rule",$id)
 			->executeSingleField();
 		if($rows <> null){
 			$topic = array();
@@ -606,7 +648,7 @@ class SelectionJSON{
 	 * Get a JSON structure containing all the exam topics for eligibility rules set
 	 * into the database
 	 * @param number (optional) $excluded_id topic id not to retrieve when the query is executed
-	 * @return string JSON structure
+	 * @return string JSON array [{topic1},{topic2},...]
 	 */
 	public static function getJsonAllTopics($excluded_id = null){
 		$all_ids = SQLQuery::create()
@@ -670,5 +712,132 @@ class SelectionJSON{
 			return $json;
 		} else
 			return "[]";
+	}
+	
+/**
+ * Methods about the Eligibility Rules
+ */
+	/**
+	 * Get the EligibilityRule JSON structure from a given ID
+	 * @param number $id
+	 * @return string
+	 */
+	public static function EligibilityRuleFromID($id){
+		$q = SQLQuery::create()
+			->select("EligibilityRule")
+			->join("EligibilityRule", "EligibilityRuleExamTopic", array("id" => "eligibility_rule"))
+			->whereValue("EligibilityRule", "id", $id);
+		self::EligibilityRuleSQL($q);
+		$rows = $q->execute();
+		if($rows <> null)
+			return self::EligibilityRule($q, $rows, $id);
+		else
+			return "{}";
+	}
+	
+	/**
+	 * Retrieve all the data from the EligibilityRule tables
+	 * @param SQLQuery $q the query to used to get the data
+	 */
+	public static function EligibilityRuleSQL(&$q){
+		$alias = $q->getTableAlias("EligibilityRule");
+		if(!$alias)
+			$alias = "EligibilityRule";
+		
+		$alias_2 = $q->getTableAlias("EligibilityRuleExamTopic");
+		if(!$alias_2)
+			$alias_2 = "EligibilityRuleExamTopic";
+		
+		$q
+			->field($alias,"id","id")
+			->field($alias,"parent","parent")
+			->field($alias_2,"expected","expected")
+			->field($alias_2,"exam_topic_for_eligibility_rule","exam_topic_for_eligibility_rule")
+			->field($alias_2,"coefficient","coefficient");
+	}
+	
+	/**
+	 * Get the EligibilityRule JSON structure
+	 * @param SQLQuery $q query used to retrieve the EligibilityRule data
+	 * @param array $rows the rows containing the EligibilityRule data
+	 * @param number $id the id of the EligibilityRule
+	 * @return string the EligibilityRule JSON structure
+	 */
+	public static function EligibilityRule($q, $rows, $id){
+		$r = "{";
+		if($rows <> null){
+			$r .= "id:".json_encode($id).", parent:".json_encode($rows[0]["parent"]).", topics:[";
+			if(isset($rows[0]["exam_topic_for_eligibility_rule"])){//there is at least one topic
+				$first = true;
+				foreach ($rows as $row){
+					if(!$first)
+						$r .= ", ";
+					$r .= "{coefficient:".json_encode($row["coefficient"]);
+					$r .= ", expected:".json_encode($row["expected"]);
+					$r .= ", topic:".self::ExamTopicForEligibilityRulesFromID($row["exam_topic_for_eligibility_rule"]);
+					$r .= "}";
+					$first = false;
+				}
+			}
+			$r .= "]}";
+			return $r;
+		} else 
+			return "{}";
+	}
+	
+	/**
+	 * Prepare the array field=>value for the table EligibilityRule, from a JSON ELigibilityRule structure
+	 * @param string $json
+	 * @return array
+	 */
+	public static function EligibilityRule2DB($json){
+		$a = array(
+			"parent" => @$json["parent"]
+		);
+		if(isset($json["id"]))
+			$a["id"] = $json["id"];
+		return $a;
+	}
+	
+	/**
+	 * Prepare the array field=>value for the table EligibilityRuleExamTopic
+	 * @param string $json from a ExamTopicForEligibilityRule object
+	 * @param number|null $eligibility_rule_id if not given, the field exam_topic_for_eligibility_rule shall be manually added
+	 * @return array
+	 */
+	public static function EligibilityRuleTopic2DB($json, $eligibility_rule_id = null){
+		$a = array(
+			"coefficient" => @$json["coefficient"],
+			"exam_topic_for_eligibility_rule" => @$json["topic"]["id"],
+			"expected" => @$json["expected"],
+		);
+		if(isset($eligibility_rule_id))
+			$a["eligibility_rule"] = $eligibility_rule_id;
+		return $a;
+	}
+	
+	/**
+	 * Get a JSON array containing JSON EligibilityRules objects, from all the eligibility rules set into the database
+	 * @return string the JSON array
+	 */
+	public static function getJSONAllEligibilityRules(){
+		$q_all_rules = SQLQuery::create()
+		->select("EligibilityRule")
+		->field("EligibilityRule","id")
+		->executeSingleField();
+		$all_rules = "";
+		if($q_all_rules <> null){
+			$first = true;
+			$all_rules .= "[";
+			foreach($q_all_rules as $id){
+				if(!$first)
+					$all_rules .= ", ";
+				$first = false;
+				$all_rules .= SelectionJSON::EligibilityRuleFromID($id);
+			}
+			$all_rules .= "]";
+		} else
+			$all_rules .= "[]";
+		return $all_rules;
 	}
 }

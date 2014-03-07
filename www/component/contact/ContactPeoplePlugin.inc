@@ -43,9 +43,9 @@ class ContactPeoplePlugin implements PeoplePlugin {
 			foreach ($input["addresses"] as $address) {
 				$address_id = SQLQuery::create()->bypassSecurity()->insert("PostalAddress",
 						array(
-								"country"=>$address["country"],
+								"country"=>$address["country_id"],
 								"geographic_area"=>$address["geographic_area"],
-								"street"=>$address["street_name"],
+								"street"=>$address["street"],
 								"street_number"=>$address["street_number"],
 								"building"=>$address["building"],
 								"unit"=>$address["unit"],

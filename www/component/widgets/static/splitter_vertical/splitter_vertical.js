@@ -36,21 +36,19 @@ function splitter_vertical(element, position) {
 		t.part2.style.left = (t._fireLayoutSizes.x+t._fireLayoutSizes.sw)+"px";
 		setWidth(t.part2, t._fireLayoutSizes.w-t._fireLayoutSizes.x-t._fireLayoutSizes.sw-1);
 		setHeight(t.part2, t._fireLayoutSizes.h);
-		var layout = function() {
-			window.top.pause_layout = false;
-			fireLayoutEventFor(t.part1);
-			fireLayoutEventFor(t.part2);
+		var layout_function = function() {
+			layout.invalidate(t.part1);
+			layout.invalidate(t.part2);
 			if (t.element.offsetHeight != t._fireLayoutSizes.h) {
 				if (!prev_h || (t.element.offsetHeight != prev_h && call < 3)) t._position(t.element.offsetHeight, call ? 1 : call+1);
 			}
 		};
-		if (call && call > 0) layout();
+		if (call && call > 0) layout_function();
 		else if (!t._fireLayout) {
 			t._fireLayout = true;
-			window.top.pause_layout = true;
 			setTimeout(function(){
 				t._fireLayout = false;
-				layout();
+				layout_function();
 			},100);
 		}
 	};
@@ -71,13 +69,13 @@ function splitter_vertical(element, position) {
 	
 	t.positionChanged = new Custom_Event();
 	
-	addLayoutEvent(t.element, t._position);
+	layout.addHandler(t.element, t._position);
 	
 	t._stop_move = function(ev, origin_w, this_w) {
 		unlistenEvent(this_w, 'blur', t._stop_move);
 		window.top.pnapplication.unregisterOnMouseMove(t._moving);
 		window.top.pnapplication.unregisterOnMouseUp(t._stop_move);
-		setTimeout(function(){fireLayoutEventFor(t.element);},1);
+		setTimeout(function(){layout.invalidate(t.element);},1);
 	};
 	t._moving = function(mouse_x, mouse_y) {
 		var diff = mouse_x - t.mouse_pos;
@@ -132,7 +130,7 @@ function splitter_vertical(element, position) {
 	};
 	
 	t.remove = function() {
-		removeLayoutEvent(t.element, t._position);
+		layout.removeHandler(t.element, t._position);
 		t.element.removeChild(t.separator);
 		t.part1.style.position = 'static';
 		t.part2.style.position = 'static';

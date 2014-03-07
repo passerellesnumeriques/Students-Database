@@ -104,6 +104,7 @@ class PNApplication {
 	 * @return boolean true if there are errors
 	 */
 	public static function has_errors() { return count(PNApplication::$errors) > 0; }
+	public static function has_warnings() { return count(PNApplication::$warnings) > 0; }
 	
 	public static function clear_errors() { PNApplication::$errors = array(); }
 
@@ -111,24 +112,31 @@ class PNApplication {
 	 * Generate error messages to the output in html format
 	 */
 	public static function print_errors() {
-		if (!PNApplication::has_errors()) return;
-		foreach (PNApplication::$errors as $e)
-			echo "<div style='color:#C00000;font-familiy:Tahoma;font-size:10pt'><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> ".$e."</div>";
-		echo "<script type='text/javascript'>";
-		echo "if (typeof window.top.status_manager != 'undefined'){";
-		foreach (PNApplication::$errors as $e)
-			echo "window.top.status_manager.add_status(new window.top.StatusMessageError(null,".json_encode($e).",5000));";
-		foreach (PNApplication::$warnings as $e)
-			echo "window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,".json_encode($e).",null,5000));";
-		echo "};";
-		echo "window.page_errors=[";
-		$first = true;
-		foreach (PNApplication::$errors as $e) {
-			if ($first) $first = false; else echo ",";
-			echo json_encode($e);
+		if (PNApplication::has_errors()) {
+			foreach (PNApplication::$errors as $e)
+				echo "<div style='color:#C00000;font-familiy:Tahoma;font-size:10pt'><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> ".$e."</div>";
+			echo "<script type='text/javascript'>";
+			echo "if (typeof window.top.status_manager != 'undefined'){";
+			foreach (PNApplication::$errors as $e)
+				echo "window.top.status_manager.add_status(new window.top.StatusMessageError(null,".json_encode($e).",5000));";
+			echo "};";
+			echo "window.page_errors=[";
+			$first = true;
+			foreach (PNApplication::$errors as $e) {
+				if ($first) $first = false; else echo ",";
+				echo json_encode($e);
+			}
+			echo "];";
+			echo "</script>";
 		}
-		echo "];";
-		echo "</script>";
+		if (PNApplication::has_warnings()) {
+			echo "<script type='text/javascript'>";
+			echo "if (typeof window.top.status_manager != 'undefined'){";
+			foreach (PNApplication::$warnings as $e)
+				echo "window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,".json_encode($e).",[{action:'popup'},{action:'close'}],5000));";
+			echo "};";
+			echo "</script>";
+		}
 	}
 	/**
 	 * Generate the output of a JSON service: put the list of errors if any, then the given result 

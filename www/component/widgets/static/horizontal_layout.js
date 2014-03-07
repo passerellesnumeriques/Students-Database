@@ -7,7 +7,7 @@
  * @constructor
  * @param container the container (either the HTMLElement or its id)
  */
-function horizontal_layout(container) {
+function horizontal_layout(container, keep_height) {
 	var t = this;
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
@@ -16,7 +16,7 @@ function horizontal_layout(container) {
 	
 	t.removeLayout = function() {
 		t.container.widget = null;
-		removeLayoutEvent(t.container, t.layout);
+		layout.removeHandler(t.container, t.layout);
 	};
 	
 	t.layout = function() {
@@ -51,7 +51,7 @@ function horizontal_layout(container) {
 			else {
 				e.style.display = 'inline-block';
 				e.style.width = "";
-				setHeight(e, h);
+				if (!keep_height) setHeight(e, h);
 				used += getWidth(e);
 			}
 		}
@@ -63,7 +63,7 @@ function horizontal_layout(container) {
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
 			e.style.display = 'inline-block';
 			e.style.verticalAlign = "top";
-			setHeight(e, h);
+			if (!keep_height) setHeight(e, h);
 			if (layout == 'fill') {
 				var ww = Math.floor((w-used)/nb_to_fill--);
 				setWidth(e, ww);
@@ -80,6 +80,6 @@ function horizontal_layout(container) {
 	};
 	
 	t.layout();
-	addLayoutEvent(t.container, t.layout);
-	fireLayoutEventFor(t.container.parentNode);
+	layout.addHandler(t.container, t.layout);
+	layout.invalidate(t.container.parentNode);
 }

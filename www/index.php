@@ -3,44 +3,45 @@ function component_auto_loader($classname) {
 	require_once("component/".$classname."/".$classname.".inc");
 }
 
-// check last time the user came, it was the same version, in order to refresh its cache if the version changed
-$version = include("version.inc");
-if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
-	setcookie("pnversion",$version,time()+365*24*60*60,"/");
-	header("Location: ?");
-	session_start();
-	session_destroy();
-	die();
-}
-
 if (!isset($_SERVER["PATH_INFO"]) || strlen($_SERVER["PATH_INFO"]) == 0) $_SERVER["PATH_INFO"] = "/";
 $path = substr($_SERVER["PATH_INFO"],1);
 
 // security: do not allow .. in the path, to avoid trying to access to files which are protected
 if (strpos($path, "..") !== FALSE) die("Access denied");
 
-if ($path == "favicon.ico") { header("Content-Type: image/ico"); readfile("favicon.ico"); die(); }
+// check last time the user came, it was the same version, in order to refresh its cache if the version changed
+$version = include("version.inc");
+if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
+	if (strpos($path, "/page/") || $path == "") {
+		setcookie("pnversion",$version,time()+365*24*60*60,"/");
+		session_set_cookie_params(24*60*60, "/dynamic/");
+		session_start();
+		session_destroy();
+		echo "<script type='text/javascript'>window.top.location = '/reload';</script>";
+	} else
+		header("pn_version_changed: yes", true, 403);
+	die();
+}
+
+if ($path == "reload") {
+	header("Location: /");
+	die();
+}
+
+if ($path == "favicon.ico") { 
+	header("Content-Type: image/ico"); 
+	header('Cache-Control: public', true);
+	header('Pragma: public', true);
+	$date = date("D, d M Y H:i:s",time());
+	header('Date: '.$date, true);
+	$expires = time()+365*24*60*60;
+	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
+	header('Vary: Cookie');
+	readfile("favicon.ico");
+	die(); 
+}
 
 if ($path == "") {
-	spl_autoload_register('component_auto_loader');
-	require_once("component/PNApplication.inc");
-	session_start();
-	require_once("SQLQuery.inc");
-	spl_autoload_unregister('component_auto_loader');
-
-	if (!isset($_SESSION["app"])) {
-		PNApplication::$instance = new PNApplication();
-		PNApplication::$instance->init();
-		$_SESSION["app"] = &PNApplication::$instance;
-	} else {
-		PNApplication::$instance = &$_SESSION["app"];
-		PNApplication::$instance->init_request();
-	}
-	if (PNApplication::$instance->current_domain == "Dev") {
-		$dev = new DevRequest();
-		$dev->url = $_SERVER["PATH_INFO"];
-		array_push(PNApplication::$instance->development->requests, $dev);
-	}
 	include("loading.inc");
 	die();
 }
@@ -75,6 +76,7 @@ case "static":
 	header('Date: '.$date, true);
 	$expires = time()+365*24*60*60;
 	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
+	header('Vary: Cookie');
 	switch ($ext) {
 	case "gif": header("Content-Type: image/gif"); break;
 	case "png": header("Content-Type: image/png"); break;
@@ -86,7 +88,9 @@ case "static":
 		if (!file_exists("component/".$component_name."/static/".$path)) invalid("Static resource not found");
 		include "component/".$component_name."/static/".$path;
 		die();
-	default: invalid("Invalid static resource type");
+	default:
+		if (substr($component_name,0,4) <> "lib_")
+			invalid("Invalid static resource type");
 	}
 	if (!file_exists("component/".$component_name."/static/".$path)) invalid("Static resource not found");
 	if ($ext == "css") {
@@ -113,7 +117,18 @@ case "dynamic":
 		PNApplication::$instance = new PNApplication();
 		PNApplication::$instance->init();
 		$_SESSION["app"] = &PNApplication::$instance;
+		$_SESSION["version"] = $version;
 	} else {
+		if (!isset($_SESSION["version"]) || $_SESSION["version"] <> $version) {
+			session_destroy();
+			if ($request_type == "page") {
+				echo "<script type='text/javascript'>window.top.location.href = '/';</script>";
+			} else {
+				header("Content-Type: text/json");
+				echo "{errors:['The application has been updated to a new version.'],result:null}";
+			}
+			die();
+		}
 		PNApplication::$instance = &$_SESSION["app"];
 		PNApplication::$instance->init_request();
 	}
@@ -148,6 +163,7 @@ case "help":
 	header('Date: '.$date, true);
 	$expires = time()+365*24*60*60;
 	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
+	header('Vary: Cookie');
 	header("Content-Type: text/html");
 	require_once("component/Page.inc");
 	pageHeaderStart();

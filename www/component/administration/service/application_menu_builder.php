@@ -10,6 +10,7 @@ class service_application_menu_builder extends Service {
 	public function get_output_format($input) { return "text/javascript"; }
 	
 	public function execute(&$component, $input) {
+		echo "resetAllMenus();";
 		require_once("component/administration/AdministrationPlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {
 			foreach ($c->getPluginImplementations() as $pi) {

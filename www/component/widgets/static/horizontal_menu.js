@@ -4,7 +4,6 @@ if (typeof require != 'undefined') {
 
 function HorizontalMenuItem(element) {
 	this.element = element;
-	this.visible_class = element.className;
 	if (element.className == 'context_menu_item')
 		this.always_in_menu = true;
 	else
@@ -22,11 +21,11 @@ function horizontal_menu(menu, valign) {
 	
 	t.addItem = function(element) {
 		t.items.push(new HorizontalMenuItem(element));
-		t.update();
+		layout.invalidate(menu);
 	};
 	t.removeAll = function() {
 		t.items = [];
-		t.update();
+		layout.invalidate(menu);
 	};
 	
 	while (menu.childNodes.length > 0) {
@@ -49,23 +48,25 @@ function horizontal_menu(menu, valign) {
 	t.update = function() {
 		while (menu.childNodes.length > 0) menu.removeChild(menu.childNodes[0]);
 		var w = menu.clientWidth;
-		var h = menu.offsetHeight;
+		var h = menu.clientHeight;
 		var total = 0;
 		for (var i = 0; i < t.items.length; ++i) {
 			if (t.items[i].always_in_menu) continue; // skip if this item is only for context menu
-			t.items[i].element.className = t.items[i].visible_class;
 			t.items[i].element.style.display = 'inline-block';
 			t.items[i].element.style.whiteSpace = 'nowrap';
 			menu.appendChild(t.items[i].element);
-			var iw = t.items[i].element.offsetWidth;
+			var iw = getWidth(t.items[i].element);
 			total += iw;
 			t.items[i].element.style.marginTop = t.items[i].element.originalMargin;
 			if (t.valign) {
 				if (t.valign == "middle") {
 					if (t.items[i].element.offsetHeight > 0)
 						t.items[i].element.style.marginTop = Math.floor((h-t.items[i].element.offsetHeight)/2)+'px';
-				} else {
-					// TODO
+				} else if (t.valign = "bottom") {
+					if (t.items[i].element.offsetHeight > 0) {
+						var s = getComputedStyleSizes(t.items[i].element);
+						t.items[i].element.style.marginTop = (h-t.items[i].element.offsetHeight-parseInt(s.marginBottom))+'px';
+					}
 				}
 			}
 		}
@@ -92,15 +93,22 @@ function horizontal_menu(menu, valign) {
 			var m = new context_menu();
 			for (var i = 0; i < t.items.length; ++i) {
 				if (t.items[i].element.parentNode == menu) continue;
+				t.items[i].element.previousClassName = t.items[i].element.className; 
 				t.items[i].element.className = 'context_menu_item';
 				t.items[i].element.style.display = 'block';
 				m.addItem(t.items[i].element);
 			}
 			m.showBelowElement(t.more_item);
+			m.onclose = function() {
+				for (var i = 0; i < t.items.length; ++i) {
+					if (t.items[i].element.parentNode == menu) continue;
+					t.items[i].element.className = t.items[i].element.previousClassName; 
+				}
+			};
 		});
 	};
 	
 	menu.style.visibility = 'visible';
 	t.update();
-	addLayoutEvent(menu, function() { t.update(); });
+	layout.addHandler(menu, function() { t.update(); });
 }

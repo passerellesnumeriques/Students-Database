@@ -19,6 +19,7 @@ class page_calendars extends Page {
 function init_calendars() {
 	new CalendarView(window.top.calendar_manager, 'week', 30, 'calendars_view', function(){ });
 	var providers = [];
+	var left = document.getElementById('left');
 	window.top.CalendarsProviders.get(function(provider) {
 		var p = {provider:provider,calendars:[]};
 		providers.push(p);
@@ -26,7 +27,6 @@ function init_calendars() {
 		p.div = content;
 		content.style.padding = "5px";
 		var sec = new section(provider.getProviderIcon(), provider.getProviderName(), content, true);
-		var left = document.getElementById('left');
 		sec.element.style.margin = "5px";
 		left.appendChild(sec.element);
 		if (provider.canCreateCalendar()) {
@@ -50,7 +50,7 @@ function init_calendars() {
 						if (!name) return;
 						provider.createCalendar(name, null, null, function(cal) {
 							new CalendarControl(content, cal);
-							fireLayoutEventFor(left);
+							layout.invalidate(left);
 							window.top.calendar_manager.addCalendar(cal);
 						});
 					},function(){}
@@ -69,7 +69,7 @@ function init_calendars() {
 			if (providers[i].provider == cal.provider) {
 				providers[i].calendars.push(cal);
 				new CalendarControl(providers[i].div, cal);
-				fireLayoutEventFor(left);
+				layout.invalidate(left);
 				return;
 			}
 		}
@@ -77,7 +77,9 @@ function init_calendars() {
 	for (var i = 0; i < window.top.calendar_manager.calendars.length; ++i)
 		new_calendar(window.top.calendar_manager.calendars[i]);
 	window.top.calendar_manager.on_calendar_added.add_listener(new_calendar);
-	
+	pnapplication.onclose.add_listener(function() {
+		window.top.calendar_manager.on_calendar_added.remove_listener(new_calendar);
+	});
 }
 </script>
 <?php

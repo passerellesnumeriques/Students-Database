@@ -83,5 +83,56 @@ class geography extends Component {
 		return $countries;
 	}
 	
+	/**
+	 * Get the geographic area parent id, from a given area id
+	 * @param number $child_id the id of the geographic area
+	 * @return number|null, the request result
+	 */
+	public function getAreaParent($child_id){
+		return SQLQuery::create()
+			->select("GeographicArea")
+			->field("GeographicArea","parent")
+			->whereValue("GeographicArea", "id", $child_id)
+			->executeSingleValue();
+	}
+	
+	/**
+	 * Get all the children ids that belong to the level below the one of the given area
+	 * @param number | null $area_id null if root level
+	 * @return array containing the children ids, empty array if no children
+	 */
+	public function getAreaChildrenLevelBelow ($area_id){
+		$children = array();
+		$q = SQLQuery::create()
+			->select("GeographicArea")
+			->field("GeographicArea","id")
+			->whereValue("GeographicArea", "parent", $area_id)
+			->executeSingleField();
+		if($q <> null)
+			$children = $q;
+		return $children;
+	}
+	
+	/**
+	 * Get all the children (until highest level) of a geographic area in a flat array (no hierarchy between the ids)
+	 * @param number | null $area_id null if root level
+	 * @return array the ids list, empty array if no children
+	 */
+	public function getAreaAllChildrenFlat($area_id){
+		$children = array();
+		$to_browse = $this->getAreaChildrenLevelBelow($area_id);
+		while(count($to_browse) > 0){
+			//Get all the children of the first to_browse id
+			$new_children = $this->getAreaChildrenLevelBelow($to_browse[0]);
+			//Add this first id to the children array
+			array_push($children, $to_browse[0]);
+			//Remove this first id from to_browse array
+			array_splice($to_browse, 0,1);
+			//Push all the new children into to_browse array
+			foreach ($new_children as $child)
+				array_push($to_browse, $child);
+		}
+		return $children;
+	}
 }
 ?>

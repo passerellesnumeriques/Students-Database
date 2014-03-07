@@ -9,6 +9,7 @@ window.top.default_country_code = <?php $d = PNApplication::$instance->get_domai
 
 window.top.calendar_manager = new CalendarManager();
 window.top.CalendarsProviders.get(function(provider) {
+	if (!window.top.calendar_manager) return;
 	for (var i = 0; i < provider.calendars.length; ++i)
 		window.top.calendar_manager.addCalendar(provider.calendars[i]);
 	provider.on_calendar_added.add_listener(function(cal){
@@ -23,7 +24,8 @@ window.top.CalendarsProviders.get(function(provider) {
 	provider.refreshCalendars();
 });
 window.top.pnapplication.onlogout.add_listener(function() {
-	while (window.top.calendar_manager.calendars.length > 0) indow.top.calendar_manager.removeCalendar(indow.top.calendar_manager.calendars[0]);
+	if (!window.top.calendar_manager) return;
+	while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(window.top.calendar_manager.calendars[0]);
 	window.top.CalendarsProviders.get(function(provider) {
 		clearInterval(provider._refresh_interval);
 	});
@@ -33,49 +35,15 @@ window.top.pnapplication.onlogout.add_listener(function() {
 <?php
 if (isset($_GET["page"])) {
 	// only the frame
-	echo "<iframe id='pn_application_content' name='pn_application_content' src='".$_GET["page"]."'></iframe>";
+	echo "<iframe id='pn_application_content' name='pn_application_content' src='".$_GET["page"]."' style='width:100%;height:100%;border:none;'></iframe>";
 	return;
 } 
 
-$this->require_javascript("horizontal_layout.js");
-$this->require_javascript("horizontal_menu.js");
+$this->require_javascript("frame_header.js");
+theme::css($this, "frame_header.css");
 ?>
-<table id='pn_application_container'>
-	<tr><td>
-	<div id='pn_application_header'>
-		<div id='pn_application_section_title' onclick='sectionsMenu();'></div>
-		<div id='pn_application_left_controls' style='visibility:hidden;padding-right:3px'></div>
-		<div id='pn_application_menu' layout='fill'>
-			<div class='button'><img src='<?php echo theme::$icons_16["more_menu"];?>'/> More</div>
-		</div>
-		<div id='pn_application_right_controls' style='visibility:hidden'></div>
-		<div id='pn_application_right_menu' style='margin-right:3px'>
-			<div id='user_picture' style='display:inline-block;' onclick='userMenu();'>
-				<img src='/dynamic/people/service/picture?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' style='width:30px;height:30px'/>
-			</div>
-		</div>
-	</div>
-	</td></tr>
-	<tr><td id='pn_application_content_area'>
-		<iframe id='pn_application_content' name='pn_application_content'></iframe>
-	</td></tr>
-	<tr><td>
-	<div id='pn_application_footer'>
-		Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
-		<span style='position:fixed;bottom:0px;right:3px;'>
-			<span id='google_status'></span>
-		</span>
-		<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
-		<span style='position:fixed;bottom:0px;right:23px;'>
-			<span id='debug_status'></span>
-		</span>
-		<?php } ?>
-
-		<span style='position:fixed;bottom:0px;left:3px;' id='background_loading_application'>
-		</span>
-	</div>
-	</td></tr>
-</table>
+<div id='pn_application_container'>
+</div>
 <div id='user_menu' style='display:none'>
 	<table>
 	<tr>
@@ -103,7 +71,38 @@ $this->require_javascript("horizontal_menu.js");
 	</tr>
 	</table>
 </div>
+
 <script type='text/javascript'>
+header = new frame_header('pn_application_container','pn_application_content',35,'application','bottom');
+var footer = header.addFooter();
+footer.style.position = "relative";
+footer.innerHTML = "Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques";
+var span_google_status = document.createElement("SPAN");
+span_google_status.style.position = "absolute";
+span_google_status.style.bottom = "0px";
+span_google_status.style.right = "3px";
+footer.appendChild(span_google_status);
+<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
+var span_debug_status = document.createElement("SPAN");
+span_debug_status.style.position = "absolute";
+span_debug_status.style.bottom = "0px";
+span_debug_status.style.right = "23px";
+footer.appendChild(span_debug_status);
+<?php } ?>
+var span_background_loading = document.createElement("SPAN"); 
+span_background_loading.style.position = "absolute";
+span_background_loading.style.bottom = "0px";
+span_background_loading.style.left = "3px";
+footer.appendChild(span_background_loading);
+
+
+user_picture = document.createElement("IMG");
+user_picture.src = "/dynamic/people/service/picture?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>";
+user_picture.id = 'user_picture';
+user_picture.onclick = function() { userMenu(); };
+tooltip(user_picture, "Your menu: profile, calendars...");
+header.addRightControl(user_picture);
+
 sections = [<?php
 require_once("component/application/ApplicationPlugin.inc");
 $sections = array();
@@ -156,20 +155,25 @@ function sectionBox(sec) {
 
 function sectionsMenu() {
 	var menu = document.createElement("DIV");
+	var listener = function() {
+		window.top.pnapplication.unregisterOnclick(listener);
+		if (typeof animation != 'undefined') animation.fadeOut(menu,300,function() { document.body.removeChild(menu); });
+		else document.body.removeChild(menu);		
+	};
 	for (var i = 0; i < sections.length; ++i) {
 		if (i > 0 && (i%3)==0) menu.appendChild(document.createElement("BR"));
 		var box = sectionBox(sections[i]);
+		box.click = box.onclick;
+		box.onclick = function() {
+			listener();
+			return this.click();
+		};
 		menu.appendChild(box);
 	}
 	menu.id = "pn_application_sections_menu";
 	if (typeof animation != 'undefined') setOpacity(menu,0);
 	document.body.appendChild(menu);
 	if (typeof animation != 'undefined') animation.fadeIn(menu,300);
-	var listener = function() {
-		window.top.pnapplication.unregisterOnclick(listener);
-		if (typeof animation != 'undefined') animation.fadeOut(menu,300,function() { document.body.removeChild(menu); });
-		else document.body.removeChild(menu);		
-	};
 	setTimeout(function() { window.top.pnapplication.registerOnclick(window, listener); },1);
 }
 
@@ -186,23 +190,18 @@ function userMenu() {
 	setTimeout(function() { window.top.pnapplication.registerOnclick(window, listener); },1);
 }
 
-new horizontal_layout('pn_application_header');
-var section_menu = new horizontal_menu('pn_application_menu');
-require("vertical_align.js",function() {
-	new vertical_align('pn_application_left_controls', 'middle');
-	new vertical_align('pn_application_right_controls', 'middle');
-});
-
 function selectSection(sec) {
-	var win = getIFrameWindow(document.getElementById('pn_application_content'));
-	win.location.href = sec.page;
-	document.getElementById('pn_application_section_title').innerHTML = "<img src='"+sec.icon32+"'/>"+sec.name;
+	header.frame.src = sec.page;
+	header.setTitle(sec.icon32, sec.name);
 	populateMenu(sec.menu_provider);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	header.header_title.onclick = function() {
+		sectionsMenu();
+	};
+	tooltip(header.header_title, "Application Menu");
+	layout.invalidate(header.container);
 }
 
 function populateMenu(service_url) {
-	resetAllMenus();
 	if (service_url)
 		ajax.call("GET", service_url, null, null, function(error){
 			// TODO
@@ -212,11 +211,11 @@ function populateMenu(service_url) {
 }
 
 require("google_status.js",function() {
-	new google_status('google_status');
+	new google_status(span_google_status);
 });
 <?php if (PNApplication::$instance->current_domain == "Dev") { ?>
 require("debug_status.js",function() {
-	new debug_status('debug_status');
+	new debug_status(span_debug_status);
 });
 <?php } ?>
 
@@ -226,78 +225,26 @@ function resetAllMenus() {
 	resetRightControls();
 }
 function resetMenu() {
-	for (var i = 0; i < section_menu.items.length; ++i)
-		if (section_menu.items[i].element._tooltip)
-			document.body.removeChild(section_menu.items[i].element._tooltip);
-	section_menu.removeAll();
+	header.resetMenu();
 }
 function resetLeftControls() {
-	var div = document.getElementById('pn_application_left_controls');
-	div.style.visibility = 'hidden';
-	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
+	header.resetLeftControls();
 }
 function resetRightControls() {
-	var div = document.getElementById('pn_application_right_controls');
-	div.style.visibility = 'hidden';
-	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
+	header.resetRightControls();
+	header.addRightControl(user_picture);
 }
-function addMenuItem(icon, text, info, url) {
-	var item = document.createElement("A");
-	item.className = "pn_application_menu_item";
-	var img = document.createElement("IMG");
-	img.src = icon;
-	item.appendChild(img);
-	var span = document.createElement("SPAN");
-	span.appendChild(document.createTextNode(text));
-	item.appendChild(span);
-	item.href = url;
-	item.target = "pn_application_content";
-	section_menu.addItem(item);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
-	item.onmouseover = function() {
-		if (this._tooltip) return;
-		for (var i = 0; i < section_menu.items.length; ++i)
-			if (section_menu.items[i].element._tooltip) {
-				document.body.removeChild(section_menu.items[i].element._tooltip);
-				section_menu.items[i].element._tooltip = null;
-			}
-		if (info == null || info.length == 0) return;
-		this._tooltip = document.createElement("DIV");
-		this._tooltip.className = "pn_application_menu_item_tooltip";
-		this._tooltip.style.position = "fixed";
-		this._tooltip.style.top = "32px";
-		this._tooltip.style.left = absoluteLeft(this)+"px";
-		this._tooltip.appendChild(document.createTextNode(info));
-		document.body.appendChild(this._tooltip);
-	};
-	item.onmouseout = function() {
-		if (!item._tooltip) return;
-		document.body.removeChild(item._tooltip);
-		item._tooltip = null;
-	};
-	window.onmouseout = item.onmouseout;
-	return item;
+function addMenuItem(icon, text, info, url, start_url, button_type) {
+	return header.addMenu(generateID(), icon, text, url, info, start_url, button_type);
 }
 function addMenuControl(control) {
-	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
-	section_menu.addItem(control);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+	header.addMenuControl(control);
 }
-function addRightControl(control) {
-	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
-	var div = document.getElementById('pn_application_right_controls');
-	div.appendChild(control);
-	div.style.visibility = 'visible';
-	setOpacity(div, 100);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+function addRightControl(control, tooltip_text) {
+	header.addRightControl(control, tooltip_text);
 }
-function addLeftControl(control) {
-	if (typeof control == 'string') { var e = document.createElement("DIV"); e.style.display = "inline-block"; e.innerHTML = control; control = e; }
-	var div = document.getElementById('pn_application_left_controls');
-	div.appendChild(control);
-	div.style.visibility = 'visible';
-	setOpacity(div, 100);
-	fireLayoutEventFor(document.getElementById('pn_application_header'));
+function addLeftControl(control, tooltip_text) {
+	header.addLeftControl(control, tooltip_text);
 }
 
 selectSection(sections[<?php
@@ -310,7 +257,7 @@ echo $sel_index;
 
 // background loading of the application
 require("load_static.js",function(){
-	new load_static_resources('background_loading_application');
+	new load_static_resources(span_background_loading);
 });
 require("animation.js");
 require("context_menu.js");

@@ -11,7 +11,7 @@ function GridColumnAction(icon,onclick) {
 	this.onclick = onclick;
 }
 
-function GridColumn(id, title, width, field_type, editable, onchanged, onunchanged, field_args, attached_data) {
+function GridColumn(id, title, width, align, field_type, editable, onchanged, onunchanged, field_args, attached_data) {
 	// check parameters
 	if (!id) id = generateID();
 	if (!field_type) field_type = "field_text";
@@ -21,6 +21,7 @@ function GridColumn(id, title, width, field_type, editable, onchanged, onunchang
 	this.id = id;
 	this.title = title;
 	this.width = width;
+	this.align = align ? align : "left";
 	this.field_type = field_type;
 	this.editable = editable;
 	this.onchanged = onchanged;
@@ -320,6 +321,7 @@ function grid(element) {
 			var data = td.field.getCurrentData();
 			td.innerHTML = "";
 			td.field = t._create_cell(column, data, td);
+			td.style.textAlign = column.align;
 			if (data == grid_deactivated_cell)
 				td.style.backgroundColor = "rgba(192,192,192,0.5)";
 		}
@@ -355,6 +357,7 @@ function grid(element) {
 			if (tr.style.visibility == "hidden") continue; // do not select filtered/hidden
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
+			if (cb.disabled) continue; //do not select if the checkbox is disabled
 			cb.checked = 'checked';
 			cb.onchange();
 		}
@@ -366,6 +369,7 @@ function grid(element) {
 			var tr = t.table.childNodes[i];
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
+			if (cb.disabled) continue; //do not unselect if the checkbox is disabled
 			cb.checked = '';
 			cb.onchange();
 		}
@@ -412,6 +416,14 @@ function grid(element) {
 		var td = tr.childNodes[0];
 		var cb = td.childNodes[0];
 		cb.checked = selected ? 'checked' : '';
+		tr.className = selected ? "selected" : "";
+	};
+	t.disableByIndex = function(index, disabled){
+		if(!t.selectable) return;
+		var tr = t.table.childNodes[index];
+		var td = tr.childNodes[0];
+		var cb = td.childNodes[0];
+		cb.disabled = disabled;
 	};
 	t.selectByRowId = function(row_id, selected) {
 		if (!t.selectable) return;
@@ -421,6 +433,7 @@ function grid(element) {
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
 			cb.checked = selected ? 'checked' : '';
+			tr.className = selected ? "selected" : "";
 			break;
 		}
 	};
@@ -469,6 +482,7 @@ function grid(element) {
 				data = {data_id:null,data:"No data found for this colum"};
 			td.col_id = t.columns[j].id;
 			td.data_id = data.data_id;
+			td.style.textAlign = t.columns[j].align;
 			td.field = t._create_cell(t.columns[j], data.data, td);
 //			if (data[i][j] == grid_deactivated_cell)
 //				td.style.backgroundColor = "rgba(192,192,192,0.5)";

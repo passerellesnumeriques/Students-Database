@@ -238,7 +238,7 @@ class SimpleDataDisplay extends DataDisplay {
 	}
 	
 	public function getEditLocks($sub_model) {
-		if ($this->handler->table->canModifyAny())
+		if ($this->handler->table->canModifyEverything() || $this->handler->table->canModifyColumn($this->column_name))
 			return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name));
 		return array(array("table"=>$this->handler->table->getSQLNameFor($sub_model), "column"=>$this->column_name, "lock_each_row"=>true));
 	}
@@ -328,17 +328,25 @@ class ChoiceDataDisplay extends DataDisplay {
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array($this->foreign_key_name); }
 	
+	private $possible_values = array();
+	private function get_possible_values($sub_model) {
+		$foreign_key = $this->handler->table->getColumnFor($this->foreign_key_name, $sub_model);
+		if (!isset($this->possible_values[$sub_model])) {
+			$t = \DataModel::get()->getTable($foreign_key->foreign_table);
+			$q = \SQLQuery::create()->select($t->getName());
+			if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
+				$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
+			$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
+			$q->field($t->getName(), $this->foreign_column_name, "VALUE");
+			$this->possible_values[$sub_model] = $q->execute();
+		}
+		return $this->possible_values[$sub_model];
+	}
 	public function getTypedField($sub_model) {
 		$foreign_key = $this->handler->table->getColumnFor($this->foreign_key_name, $sub_model);
 		$cfg = "{";
 		$cfg .= "possible_values:[";
-		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
-		$q = \SQLQuery::create()->select($t->getName());
-		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
-			$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
-		$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
-		$q->field($t->getName(), $this->foreign_column_name, "VALUE");
-		$res = $q->execute();
+		$res = $this->get_possible_values($sub_model);
 		$first = true;
 		foreach ($res as $row) {
 			if ($first) $first = false; else $cfg .= ",";
@@ -357,13 +365,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		$foreign_key = $this->handler->table->getColumnFor($this->foreign_key_name, $sub_model);
 		$cfg = "{";
 		$cfg .= "possible_values:[";
-		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
-		$q = \SQLQuery::create()->select($t->getName());
-		if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->table->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->table->getModel()->getParentTable())
-			$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
-		$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
-		$q->field($t->getName(), $this->foreign_column_name, "VALUE");
-		$res = $q->execute();
+		$res = $this->get_possible_values($sub_model);
 		$first = true;
 		foreach ($res as $row) {
 			if ($first) $first = false; else $cfg .= ",";

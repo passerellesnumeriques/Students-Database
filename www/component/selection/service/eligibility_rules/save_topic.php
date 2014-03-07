@@ -1,13 +1,23 @@
 <?php 
 class service_eligibility_rules_save_topic extends Service {
 	
-	public function get_required_rights() { return array(); }//TODO
-	public function documentation() {}//TODO
+	public function get_required_rights() { return array("manage_exam_subject"); }
+	public function documentation() {echo "Save an existing or a new exam topic for eligibility rules into the database";}
 	public function input_documentation() {
-	//TODO
+		?>
+		<ul>
+		<li> <code>topic</code> JSON topic object to save</li>
+		<li><code>db_lock</code> the database lock id (when the topics are managed, all the ExamTopicForEligibilityRule table must be locked)</li>
+		</ul>
+		<?php
 	}
 	public function output_documentation() {
-		//TODO
+		?>
+		<ul>
+		<li><code>topic</code> a new topic JSON object if the saving was well performed</li>
+		<li><code>false</code> if any error occured</li>
+		</ul>
+		<?php
 	}
 	
 	/**
@@ -35,8 +45,37 @@ class service_eligibility_rules_save_topic extends Service {
 				}
 			}
 			
-// 			//Call the save method
-			$id = PNApplication::$instance->selection->saveTopic($db_topic, $db_parts, $db_full_subjects, $input["db_lock"]);
+			if($db_topic["id"] != -1 && $db_topic["id"] != "-1"){
+				$parts_from_db = SQLQuery::create()
+					->select("ExamPartTopic")
+					->field("ExamPartTopic","exam_subject_part","id")
+					->whereValue("ExamPartTopic", "exam_topic_for_eligibility_rule", $db_topic["id"])
+					->executeSingleField();
+				$parts_to_remove = array();
+				$parts_to_add = array();
+				
+				//Get the parts to remove
+				foreach($parts_from_db as $p){
+					if(!in_array($p, $db_parts))
+						array_push($parts_to_remove, $p);
+				}
+				//Get the parts to add
+				foreach ($db_parts as $p){
+					if(!in_array($p, $parts_from_db))
+						array_push($parts_to_add, $p);
+				}
+				//For the other parts, nothing to do
+					
+				//Call the save method
+				$id = PNApplication::$instance->selection->saveTopic($db_topic, $parts_to_add, $parts_to_remove, $db_full_subjects, $input["db_lock"]);
+			} else {
+				//all the parts must be added
+				
+				//Call the save method
+				$id = PNApplication::$instance->selection->saveTopic($db_topic, $db_parts, array(), $db_full_subjects, $input["db_lock"]);
+			}
+			
+			
 			if($id)
 				echo SelectionJSON::ExamTopicForEligibilityRulesFromID($id);
 			else

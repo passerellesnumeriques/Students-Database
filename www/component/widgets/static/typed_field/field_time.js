@@ -45,7 +45,7 @@ field_time.prototype._create = function(data) {
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
-		require("autoresize_input.js",function(){autoresize_input(input);});
+		require("input_utils.js",function(){inputAutoresize(input);});
 		var f = function() { setTimeout(function() { t._datachange(); },1); };
 		input.onblur = function(ev) {
 			if (input.value.length == 0 && (!t.config || !t.config.can_be_null)) input.value = "00:00";

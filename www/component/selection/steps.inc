@@ -26,14 +26,16 @@ return array(
 	"information_session" => array("Some informations sessions have been planed","InformationSession",array()),
 	"import_applicant" => array("Some applicants have been imported","Applicant",array()),
 	"manage_exam" => array("Some exam subjects have been created","ExamSubject",array()),
-	"import_exam_results" => array("Some exam results have been imported","ExamQuestionResult",array(
-			array("manage_exam", true, "Exam results cannot be imported because no exam is set into the database",array("add" => false,"remove" => false, "update" => false)), //exam must be the same for each applicant
-			array("import_applicant",true,"Exam results cannot be imported because no applicant is set in the database",array("add" => true,"remove" => false, "update" => true)), //can update the applicant info even if he already has results
-		)),
+// 	"import_exam_results" => array("Some exam results have been imported","ExamQuestionResult",array(
+// 			array("manage_exam", true, "Exam results cannot be imported because no exam is set into the database",array("add" => false,"remove" => false, "update" => false)), //exam must be the same for each applicant
+// 			array("import_applicant",true,"Exam results cannot be imported because no applicant is set in the database",array("add" => true,"remove" => false, "update" => true)), //can update the applicant info even if he already has results
+// 		)),
 	"define_topic_for_eligibility_rules" => array("Some topics for eligibility rules have been defined","ExamTopicForEligibilityRule", array(
-			// array("manage_exam", true, "Eligibility rules cannot be defined because no exam is set in the database"),
-			array(),
+			array("manage_exam", true, "Topics for eligibility rules cannot be defined because no exam is set in the database",array("add" => true,"remove" => true, "update" => true)),//No restriction
 		)),
+	"define_eligibility_rules" => array("Some eligibility rules have been defined","EligibilityRule", array(
+			array("define_topic_for_eligibility_rules", true, "Eligibility rules cannot be defined because no topic for eligibility rule is defined yet",array("add" => true,"remove" => true, "update" => true)),//No restriction
+	)),
 	//TODO define_eligibility_rules: dependencies => array("apply_eligibility_rules" => false)??
 	);
 ?>

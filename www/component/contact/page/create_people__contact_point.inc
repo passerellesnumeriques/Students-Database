@@ -4,7 +4,7 @@ $this->add_javascript("/static/widgets/typed_field/typed_field.js");
 $this->add_javascript("/static/widgets/typed_field/field_text.js");
 ?>
 Designation of the contact point (job title...):<br/>
-<span id='<?php echo $span_id;?>'></span>
+<span id='<?php echo $span_id;?>' style='padding:5px'></span>
 <script type='text/javascript'>
 function create_people_contact_point_section() {
 	this.field = new field_text(null,true,{min_length:1,max_length:100,can_be_null:false});

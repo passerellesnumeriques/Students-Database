@@ -1,4 +1,5 @@
 <?php 
+require_once '/component/contact/ContactJSON.inc';
 class page_organization_profile extends Page {
 	public function get_required_rights() { return array(); }
 	public function execute(){
@@ -29,15 +30,18 @@ class page_organization_profile extends Page {
 			$org_structure .= "]";
 			$org_structure .= ",contacts:".contacts_structure("organization", $id);
 			$org_structure .= ",addresses:".addresses_structure("organization", $id);
-			$points = SQLQuery::create()
+			$q = SQLQuery::create()
 				->select("ContactPoint")
 				->whereValue("ContactPoint", "organization", $id)
 				->field("ContactPoint", "designation")
-				->join("ContactPoint", "People", array("people"=>"id"))
+				;
+			PNApplication::$instance->people->joinPeople($q, "ContactPoint", "people");
+			$points = $q 
 				->field("People", "id", "people_id")
 				->field("People", "first_name")
 				->field("People", "last_name")
 				->execute();
+			
 			$org_structure .= ",contact_points:[";
 			$first = true;
 			foreach ($points as $p) {
@@ -50,7 +54,11 @@ class page_organization_profile extends Page {
 			$org_structure .= ",name:''";
 			$org_structure .= ",types_ids:[]";
 			$org_structure .= ",contacts:[]";
-			$org_structure .= ",addresses:[]";
+			if(isset($_GET["address_country_id"]) && isset($_GET["address_area_id"])){
+				$new_address = array("address_id" => -1, "country_id" => $_GET["address_country_id"],"geographic_area_id" =>$_GET["address_area_id"]);
+				$org_structure .= ",addresses:[".ContactJSON::PostalAddress(null, $new_address)."]";
+			} else 
+				$org_structure .= ",addresses:[]";
 			$org_structure .= ",contact_points:[]";
 		}
 		$org_structure .= ",creator:".json_encode($creator);
@@ -65,7 +73,7 @@ class page_organization_profile extends Page {
 		$this->add_javascript("/static/contact/organization.js");
 		$container_id = $this->generateID();
 		$this->onload("window.organization = new organization('$container_id',$org_structure,$existing_types,true);");
-		echo "<div id='$container_id' style='margin:5px'></div>";
+		echo "<center><div id='$container_id' style='margin:5px;display:inline-block;border:1px solid #808080'></div></center>";
 		?>
 <!-- 		<table>
 			<th style = "height:100px">

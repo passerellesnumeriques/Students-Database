@@ -30,16 +30,18 @@ class user_people extends Component {
 	}
 	
 	public function logged_in() {
-		$people = SQLQuery::create()
-		->database("students_".PNApplication::$instance->user_management->domain)
-		->select("UserPeople")
-		->where("user",PNApplication::$instance->user_management->user_id)
-		->join("UserPeople", "People", array("people"=>"id"))
-		->field("People", "id")
-		->field("People", "first_name")
-		->field("People", "last_name")
-		->bypassSecurity() // here we just get name of the user, no need to check if he can see it
-		->executeSingleRow();
+		$q = SQLQuery::create()
+			->bypassSecurity() // here we just get name of the user, no need to check if he can see it
+			->database("students_".PNApplication::$instance->user_management->domain)
+			->select("UserPeople")
+			->where("user",PNApplication::$instance->user_management->user_id)
+			;
+		PNApplication::$instance->people->joinPeople($q, "UserPeople", "people");
+		$q->field("People", "id")
+			->field("People", "first_name")
+			->field("People", "last_name")
+			;
+		$people = $q->executeSingleRow();
 		if ($people <> null) {
 			if (PNApplication::$instance->user_management->domain == PNApplication::$instance->current_domain)
 				$this->user_people_id = $people["id"];

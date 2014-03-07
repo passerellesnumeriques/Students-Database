@@ -8,35 +8,37 @@ $model->addTable("StudentBatch")
 	->addDate("start_date", false, false, "2004-01-01", "end_date")
 	->addDate("end_date", false, false, "start_date", null)
 	->setRoot()
-	->addReadAccess("consult_students_list", true)
-	->addWriteAccess("manage_batches", true)
-	->addInsertAccess("manage_batches", true)
-	->addRemoveAccess("manage_batches", true)
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Batch",
-		array(
-			"name"=>"Batch Name",
-			"start_date"=>"Integration Date",
-			"end_date"=>"Graduation Date",
-		)
-	))
+	->addReadAccess("consult_curriculum", true)
+	->addColumnWriteAccess("name","edit_curriculum", true)
+	->setDisplayHandler(null, new datamodel\MultipleDisplayHandler("Student", "Batch", array(
+		new datamodel\SimpleDataDisplay(null, "name", "Batch Name"),
+		new datamodel\ReadOnlyDataDisplay(null, "Integration Date", "start_date"),
+		new datamodel\ReadOnlyDataDisplay(null, "Graduation Date", "end_date")
+	)))
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
 			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$fields["name"]." created.");
 		} catch (Exception $e) { PNApplication::error($e); }
+ 	})
+ 	->setRowDescriptionProvider(function($row) {
+ 		return "Batch <i>".htmlentities($row["name"])."</i>";
  	})
  	;
 $model->addTable("Specialization")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false, true)
 	->setRoot()
-	->addReadAccess("consult_students_list", true)
-	->addWriteAccess("manage_batches", true)
-	->addInsertAccess("manage_batches", true)
-	->addRemoveAccess("manage_batches", true)
+	->addReadAccess("consult_curriculum", true)
+	->addWriteAccess("edit_curriculum", true)
+	->addInsertAccess("edit_curriculum", true)
+	->addRemoveAccess("edit_curriculum", true)
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
 			PNApplication::$instance->news->post("students", "curriculum", null, "Specialization ".$fields["name"]." created.");
 		} catch (Exception $e) { PNApplication::error($e); }
+ 	})
+ 	->setRowDescriptionProvider(function($row) {
+ 		return "Specialization <i>".htmlentities($row["name"])."</i>";
  	})
 	;
 
@@ -46,15 +48,11 @@ $model->addTable("AcademicPeriod")
 	->addString("name", 100, 1, false, false)
 	->addDate("start_date", false, false, "2004-01-01", "end_date")
 	->addDate("end_date", false, false, "start_date", null)
-	->addReadAccess("consult_students_list", true)
-	->addWriteAccess("manage_batches", true)
-	->addInsertAccess("manage_batches", true)
-	->addRemoveAccess("manage_batches", true)
+	->addReadAccess("consult_curriculum", true)
+	->addColumnWriteAccess("name","edit_curriculum", true)
 	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Academic Period",
 		array(
 			"name"=>"Period Name",
-			"start_date"=>"Period Start",
-			"end_date"=>"Period End",
 		)
 	))
  	->onInsert(function($fields,$id,$sub_model_instance) {
@@ -63,29 +61,32 @@ $model->addTable("AcademicPeriod")
 			PNApplication::$instance->news->post("students", "batch", array("batch".$fields["batch"]), "Academic period ".$fields["name"]." created for batch ".$batch.".");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
+ 	->setRowDescriptionProvider(function($row) {
+		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$row["batch"])->field("name")->executeSingleValue();
+		return "Academic Period <i>".htmlentities($row["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
+ 	})
 	;
 $model->addTable("AcademicPeriodSpecialization")
 	->addForeignKey("period", "AcademicPeriod", true, false, true, false, false)
 	->addForeignKey("specialization", "Specialization", true, false, true, false, false)
 	->setKey(array("period","specialization"))
-	->addReadAccess("consult_students_list", true)
 	->addReadAccess("consult_curriculum", true)
-	->addWriteAccess("manage_batches", true)
-	->addInsertAccess("manage_batches", true)
-	->addRemoveAccess("manage_batches", true)
-	->addWriteAccess("edit_curriculum", true)
-	->addInsertAccess("edit_curriculum", true)
-	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) {
+		$spe_name = SQLQuery::create()->select("Specialization")->whereValue("Specialization","id",$row["specialization"])->field("name")->executeSingleValue();
+		$period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$row["period"])->executeSingleRow();
+		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
+		return "Specialization <i>".htmlentities($spe_name)."</i> on Period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
+	})
 	;
 $model->addTable("AcademicClass")
 	->addPrimaryKey("id")
 	->addForeignKey("period", "AcademicPeriod", true, false, true)
 	->addForeignKey("specialization", "Specialization", false, false, true)
 	->addString("name", 100, 1, false, false)
-	->addReadAccess("consult_students_list", true)
-	->addWriteAccess("manage_batches", true)
-	->addInsertAccess("manage_batches", true)
-	->addRemoveAccess("manage_batches", true)
+	->addReadAccess("consult_curriculum", true)
+	->addWriteAccess("edit_curriculum", true)
+	->addInsertAccess("edit_curriculum", true)
+	->addRemoveAccess("edit_curriculum", true)
 	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Class Name", array("name"=>"Class Name")))
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
@@ -105,6 +106,11 @@ $model->addTable("AcademicClass")
 			}
 			PNApplication::$instance->news->post("students", "batch", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
 		} catch (Exception $e) { PNApplication::error($e); }
+ 	})
+ 	->setRowDescriptionProvider(function($row) {
+ 		$period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$row["period"])->executeSingleRow();
+		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
+ 		return "Class <i>".htmlentities($row["name"])."</i> during period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
  	})
 	;
 $model->addTable("CurriculumSubjectCategory")

@@ -124,6 +124,7 @@ service = {
 };
 
 if (typeof window.top._last_service_call == 'undefined')
+	/** {Number} timestamp of the last call to a service */
 	window.top._last_service_call = 0;
 
 /**

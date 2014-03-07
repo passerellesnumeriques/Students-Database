@@ -50,6 +50,61 @@ datamodel = {
 	registerCellText: function(win, table, column, row_key, text_node) {
 		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
 			text_node.nodeValue = value;
+			if (text_node.parentNode) layout.invalidate(text_node.parentNode);
+		});
+	},
+	inputCell: function(input, table, column, row_key) {
+		var original = input.value;
+		var win = getWindowFromDocument(input.ownerDocument);
+		input.cellSaved = function() {
+			original = input.value;
+		};
+		win.pnapplication.onclose.add_listener(function() {
+			if (input.value != original) {
+				input.value = original;
+				input.onchange();
+			}
+		});
+		datamodel.registerCellWidget(win, table, column, row_key, function() {
+			return input.value;
+		}, function(value) {
+			input.value = value;
+			input.onchange();
+		}, function(listener) {
+			var prev_change = input.onchange;
+			input.onchange = function(ev) {
+				listener();
+				if (prev_change) prev_change(ev);
+			};
+			var prev_keyup = input.onkeyup;
+			input.onkeyup = function(ev) {
+				listener();
+				if (prev_keyup) prev_keyup(ev);
+			};
+		});
+	},
+	dateSelectCell: function(date_select, table, column, row_key) {
+		var original = date_select.getDate();
+		var win = getWindowFromDocument(date_select.select_day.ownerDocument);
+		date_select.cellSaved = function() {
+			original = date_select.getDate();
+		};
+		win.pnapplication.onclose.add_listener(function() {
+			var d = date_select.getDate();
+			if ((d == null && original != null) || original == null || d.getTime() != original.getTime()) {
+				date_select.selectDate(original);
+			}
+		});
+		var prev = date_select.onchange;
+		datamodel.registerCellWidget(win, table, column, row_key, function() {
+			return dateToSQL(date_select.getDate());
+		}, function(value) {
+			date_select.selectDate(parseSQLDate(value));
+		}, function(listener) {
+			date_select.onchange = function() {
+				listener();
+				if (prev) prev();
+			};
 		});
 	},
 	
@@ -164,6 +219,36 @@ datamodel = {
 				i--;
 			}
 		}
+	},
+	
+	confirm_remove: function(table,row_key,onremoved) {
+		var popup_ready = false;
+		var content_html = null;
+		var ready = function() {
+			if (!popup_ready) return;
+			if (content_html == null) return;
+			var content = document.createElement("DIV");
+			content.style.margin = "5px";
+			content.innerHTML = content_html;
+			var popup = new popup_window("Confirmation", theme.icons_16.question, content);
+			popup.addOkCancelButtons(function() {
+				popup.freeze("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing...");
+				service.json("data_model", "remove_row", {table:table,row_key:row_key}, function(res) {
+					if (res) {
+						if (onremoved) onremoved();
+						popup.close();
+						return;
+					}
+					popup.unfreeze();
+				});
+			});
+			popup.show();
+		};
+		service.customOutput("data_model","get_remove_confirmation_content",{table:table,row_key:row_key},function(html) {
+			content_html = html;
+			ready();
+		});
+		require("popup_window.js",function() { popup_ready = true; ready(); });
 	}
 };
 window.top.pnapplication.onwindowclosed.add_listener(function(w) { datamodel._windowClosed(w); });

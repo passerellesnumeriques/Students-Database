@@ -46,6 +46,7 @@ function DayColumnLayout(calendar_manager) {
 	 * @param {Number} scale_height number of pixels to display <code>scalTime</code> minutes
 	 */
 	this.addEvent = function(event, container, x, w, y, scale_time, scale_height) {
+		var cal = window.top.CalendarsProviders.getProvider(event.calendar_provider_id).getCalendar(event.calendar_id);
 		var min = event.start.getHours()*60+event.start.getMinutes();
 		var y1 = Math.floor(min*scale_height/scale_time)+y;
 		min = event.end.getHours()*60+event.end.getMinutes();
@@ -53,9 +54,9 @@ function DayColumnLayout(calendar_manager) {
 		var div = document.createElement("DIV");
 		div.style.position = "absolute";
 		require("color.js", function() {
-			div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(calendar_manager.getCalendar(event.calendar_id).color), 0x60));
+			div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(cal.color), 0x60));
 		});
-		div.style.backgroundColor = "#"+calendar_manager.getCalendar(event.calendar_id).color;
+		div.style.backgroundColor = "#"+cal.color;
 		div.style.top = y1+"px";
 		div.style.height = (y2-y1-3)+"px";
 		div.style.left = x+"px";
@@ -74,11 +75,11 @@ function DayColumnLayout(calendar_manager) {
 		title.style.fontSize = '9pt';
 		div.appendChild(title);
 		div.style.overflow = "hidden";
-		div.title = calendar_manager.getCalendar(event.calendar_id).name+"\r\n"+time_str+"\r\n"+event.title+"\r\n"+event.description;
+		div.title = cal.name+"\r\n"+time_str+"\r\n"+event.title+"\r\n"+event.description;
 		div.style.cursor = "pointer";
 		div.onclick = function(e) {
 			require("event_screen.js",function() {
-				event_screen(event.original_event, calendar_manager.getCalendar(event.calendar_id));
+				event_screen(event.original_event, cal);
 			});
 			stopEventPropagation(e);
 			return false;

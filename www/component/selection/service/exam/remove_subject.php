@@ -23,7 +23,7 @@ class service_exam_remove_subject extends Service {
 	 */
 	public function execute(&$component, $input) {
 		if(isset($input["id"])){
-			$res = $component->removeExam($input["id"]);
+			$res = $component->removeSubject($input["id"]);
 			if($res)
 				echo "true";
 			else

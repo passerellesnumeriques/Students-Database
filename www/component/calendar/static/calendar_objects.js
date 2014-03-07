@@ -19,6 +19,7 @@ calendar_event_role_for_info = "FOR_INFO";
 /**
  * Object representing a calendar event, used between front-end and back-end
  * @param {Number} id internal id of the event (unique in the calendar, but not with other calendars)
+ * @param {String} calendar_provider_id id of the calendar provider
  * @param {Number} calendar_id id of the calendar this event belongs to
  * @param {String} uid id of the event which is unique among all calendars
  * @param {Date} start timestamp in seconds of the start of the event
@@ -35,8 +36,9 @@ calendar_event_role_for_info = "FOR_INFO";
  * @param {String} app_link url
  * @param {String} app_link_name name to display
  */
-function CalendarEvent(id, calendar_id, uid, start, end, all_day, last_modified, title, description, location_freetext, organizer, participation, role, frequency, app_link, app_link_name) {
+function CalendarEvent(id, calendar_provider_id, calendar_id, uid, start, end, all_day, last_modified, title, description, location_freetext, organizer, participation, role, frequency, app_link, app_link_name) {
 	this.id = id;
+	this.calendar_provider_id = calendar_provider_id;
 	this.calendar_id = calendar_id;
 	this.uid = uid;
 	/** {Date} start timestamp in seconds of the start of the event */
@@ -64,6 +66,7 @@ function copyCalendarEvent(ev) {
 	if (ev == null) return null;
 	return new CalendarEvent(
 		ev.id,
+		ev.calendar_provider_id,
 		ev.calendar_id,
 		ev.uid,
 		new Date(ev.start.getTime()),

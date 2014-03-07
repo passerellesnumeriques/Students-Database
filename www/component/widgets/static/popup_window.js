@@ -42,28 +42,58 @@ function popup_window(title,icon,content,hide_close_button) {
 		}
 	};
 	/** Set (change) the content of the popup window to be an IFRAME.
-	 * @method popup_window#setContentFrame
-	 * @param {string} url url to load in the frame
+	 * @param {String} url url to load in the frame
+	 * @param {Function} onload if specified, it is called when the frame is loaded
+	 * @returns {DOMNode} the IFRAME element
 	 */
 	t.setContentFrame = function(url, onload) {
-		t.content = document.createElement("IFRAME");
-		t.content.style.border = "0px";
-		t.content.src = url;
-		t.content.onload = function() {
-			//t.table.style.width = "80%";
-			t.content.style.width = "100%";
-			t.content.style.height = "100%";
-			t.resize();
-			setTimeout(function() { t.resize(); }, 1);
-			setTimeout(function() { t.resize(); }, 100);
-			if (onload) onload(t.content);
-		};
-		if (t.content_container) {
+		if (!t.content_container)
+			t.content_container = document.createElement("DIV");
+		else
 			while (t.content_container.childNodes.length > 0) t.content_container.removeChild(t.content_container.childNodes[0]);
-			t.content_container.appendChild(t.content);
-			t.resize();
-		}
-		return t.content;
+		t.content = document.createElement("DIV");
+		t.content.style.textAlign = "center";
+		t.content.style.padding = "10px";
+		t.content.innerHTML = "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading...";
+		t.content_container.appendChild(t.content);
+		var frame = document.createElement("IFRAME");
+		frame.style.border = "0px";
+		frame.src = url;
+		frame.style.width = "0px";
+		frame.style.height = "0px";
+		frame.style.visibility = "hidden";
+		frame.style.position = "absolute";
+		t.content_container.appendChild(frame);
+		frame.onload = function() {
+			if (t.content == frame) {
+				// this is a new onload, probably to follow a link inside the frame
+			} else {
+				t.content_container.removeChild(t.content);
+				t.content = frame;
+				frame.style.visibility = "visible";
+				frame.style.position = "static";
+				//t.table.style.width = "80%";
+				t.content.style.width = "100%";
+				t.content.style.height = "100%";
+				t.resize();
+			}
+			var check_ready = function() {
+				if (!t.table) return; // popup has been already closed
+				var win = getIFrameWindow(t.content);
+				if (!win || !win.layout || !win._page_ready) {
+					setTimeout(check_ready, 10);
+					return;
+				}
+				var b = win.document.body;
+				win.layout.cancelResizeEvent();
+				win.layout.addHandler(b, t.resize);
+				for (var i = 0; i < b.childNodes.length; ++i) getIFrameWindow(t.content).layout.addHandler(b.childNodes[i], t.resize);
+				if (onload) onload(t.content);
+			};
+			check_ready();
+		};
+		t.resize();
+		return frame;
 	};
 	
 	/** Add a button at the bottom of the popup.
@@ -74,10 +104,36 @@ function popup_window(title,icon,content,hide_close_button) {
 	 */
 	t.addButton = function(html, id, onclick) {
 		var b = document.createElement("BUTTON");
-		b.innerHTML = html;
+		if (typeof html == 'string')
+			b.innerHTML = html;
+		else
+			b.appendChild(html);
 		b.id = id;
 		b.onclick = onclick;
 		t.buttons.push(b);
+		if (t.table) {
+			if (!t.buttons_tr) {
+				t.buttons_tr = t.table.ownerDocument.createElement("TR");
+				t.buttons_tr.className = 'popup_window_buttons';
+				t.table.appendChild(t.buttons_tr);
+				t.buttons_td = t.table.ownerDocument.createElement("TD"); t.buttons_tr.appendChild(t.buttons_td);
+				t.buttons_td.colSpan = 2;
+			}
+			t.buttons_td.appendChild(b);
+			t.resize();
+		}
+	};
+	t.addIconTextButton = function(icon, text, id, onclick) {
+		var span = document.createElement("SPAN");
+		if (icon) {
+			var img = document.createElement("IMG");
+			img.src = icon;
+			img.style.verticalAlign = "bottom";
+			img.style.marginRight = "3px";
+			span.appendChild(img);
+		}
+		span.appendChild(document.createTextNode(text));
+		t.addButton(span, id, onclick);
 	};
 	/** Disable the given button.
 	 * @method popup_window#disableButton
@@ -120,25 +176,28 @@ function popup_window(title,icon,content,hide_close_button) {
 				break;
 			}
 	};
+	t.addOkButton = function(onok) {
+		t.addIconTextButton(theme.icons_16.ok, "Ok", 'ok', onok);
+	};
+	t.addCancelButton = function(oncancel) {
+		t.addIconTextButton(theme.icons_16.cancel, "Cancel", 'cancel', function() { if (oncancel) oncancel(); t.close(); });
+	};
 	/** Add 2 buttons to the window: Ok and Cancel. When Cancel is pressed, the window is closed.
 	 * @method popup_window#addOkCancelButtons
 	 * @param {function} onok handler to be called when the Ok button is pressed. 
 	 * @param {function} (optional) oncancel handler to be called when the Cancel button is pressed. 
 	 */
 	t.addOkCancelButtons = function(onok, oncancel) {
-		t.addButton("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Ok", 'ok', onok);
-		if(oncancel)
-			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function(){oncancel(); t.close()});
-		else
-			t.addButton("<img src='"+theme.icons_16.cancel+"' style='vertical-align:bottom'/> Cancel", 'cancel', function() { t.close(); });
+		t.addOkButton(onok);
+		t.addCancelButton(oncancel);
 	};
 	/** Add 2 buttons to the window: Yes and No. When No is pressed, the window is closed.
 	 * @method popup_window#addYesNoButtons
 	 * @param {function} onyes handler to be called when the Yes button is pressed. 
 	 */
 	t.addYesNoButtons = function(onyes) {
-		t.addButton("<img src='"+theme.icons_16.yes+"' style='vertical-align:bottom'/> Yes", 'yes', onyes);
-		t.addButton("<img src='"+theme.icons_16.no+"' style='vertical-align:bottom'/> No", 'no', function() { t.close(); });
+		t.addIconTextButton(theme.icons_16.yes, "Yes", 'yes', onyes);
+		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { t.close(); });
 	};
 	
 	t.isShown = function() {
@@ -146,13 +205,18 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	
 	t.showPercent = function(width, height) {
-		var win = t._buildTable();
 		t.resize = function() {
-			t.table.style.left = (win.getWindowWidth()*(100-width)/200)+"px";
-			t.table.style.top = (win.getWindowHeight()*(100-height)/200)+"px";
-			t.table.style.width = (win.getWindowWidth()*width/100)+"px";
-			t.table.style.height = (win.getWindowHeight()*height/100)+"px";
+			var win = getWindowFromDocument(t.table.ownerDocument);
+			t.table.style.left = Math.floor(win.getWindowWidth()*(100-width)/200)+"px";
+			t.table.style.top = Math.floor(win.getWindowHeight()*(100-height)/200)+"px";
+			t.table.style.width = Math.floor(win.getWindowWidth()*width/100)+"px";
+			t.table.style.height = Math.floor(win.getWindowHeight()*height/100)+"px";
+			var h = 0;
+			if (t.header) h += win.getHeight(t.header);
+			if (t.buttons_tr) h += win.getHeight(t.buttons_tr);
+			t.content_container.style.height = Math.floor(win.getWindowHeight()*height/100-h)+"px";
 		};
+		var win = t._buildTable();
 		t.resize();
 		win.listenEvent(win, "resize", function() {
 			t.resize();
@@ -162,20 +226,28 @@ function popup_window(title,icon,content,hide_close_button) {
 	/** Display the popup window
 	 * @method popup_window#show
 	 */
-	t.show = function() {
-		var win = t._buildTable();
+	t.show = function(){
+		t._buildTable();
 		var move_handler = function(ev) {
-			if (!ev) ev = window.event;
+			var win = getWindowFromDocument(t.table.ownerDocument);
+			if (!t.table) {
+				// popup closed!
+				unlistenEvent(win,'mousemove',move_handler);
+				unlistenEvent(win,'mouseup',up_handler);
+				unlistenEvent(win,'mouseout',up_handler);
+				return;
+			}
+			if (!ev) ev = win.event;
 			var diff_x = ev.clientX - t._move_x;
 			var diff_y = ev.clientY - t._move_y;
 			if (diff_x == 0 && diff_y == 0) return;
 			t._move_x = ev.clientX;
 			t._move_y = ev.clientY;
-			var x = absoluteLeft(t.table);
+			var x = win.absoluteLeft(t.table);
 			x += diff_x;
 			if (x < 5) x = 5;
 			if (x + t.table.offsetWidth > win.getWindowWidth()-10) x = win.getWindowWidth()-5-t.table.offsetWidth;
-			var y = absoluteTop(t.table);
+			var y = win.absoluteTop(t.table);
 			y += diff_y;
 			if (y < 5) y = 5;
 			if (y + t.table.offsetHeight > win.getWindowHeight()-10) y = win.getWindowHeight()-5-t.table.offsetHeight;
@@ -184,25 +256,31 @@ function popup_window(title,icon,content,hide_close_button) {
 		};
 		var up_handler = null; // only to remove the warning
 		up_handler = function(ev) {
-			unlistenEvent(window,'mousemove',move_handler);
-			unlistenEvent(window,'mouseup',up_handler);
-			unlistenEvent(window,'mouseout',up_handler);
+			var win = getWindowFromDocument(t.table.ownerDocument);
+			unlistenEvent(win,'mousemove',move_handler);
+			unlistenEvent(win,'mouseup',up_handler);
+			unlistenEvent(win,'mouseout',up_handler);
 		};
 		t.header.onmousedown = function(ev) {
-			if (!ev) ev = window.event;
+			var win = getWindowFromDocument(t.table.ownerDocument);
+			if (!ev) ev = win.event;
 			t._move_x = ev.clientX;
 			t._move_y = ev.clientY;
-			listenEvent(window,'mousemove',move_handler);
-			listenEvent(window,'mouseup',up_handler);
-			listenEvent(window,'mouseout',up_handler);
+			listenEvent(win,'mousemove',move_handler);
+			listenEvent(win,'mouseup',up_handler);
+			listenEvent(win,'mouseout',up_handler);
 			return false;
 		};
 		t.resize();
-		fireLayoutEventFor(t.content_container);
+		layout.invalidate(t.content_container);
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);
 			t.anim = animation.fadeIn(t.table, 200);
 		}
+		pnapplication.onclose.add_listener(function(){
+			if (!t.table) return;
+			t.close();
+		});
 	};
 	
 	t._buildTable = function() {
@@ -241,21 +319,21 @@ function popup_window(title,icon,content,hide_close_button) {
 		var tr = doc.createElement("TR"); t.table.appendChild(tr);
 		var td = doc.createElement("TD"); tr.appendChild(td);
 		td.colSpan = 2;
-		t.content_container = doc.createElement("DIV");
+		if (!t.content_container)
+			t.content_container = doc.createElement("DIV");
 		t.content_container.style.width = "100%";
 		t.content_container.style.height = "100%";
 		td.appendChild(t.content_container);
 		td.style.padding = "0px";
 		td.style.margin = "0px";
 		if (t.buttons.length > 0) {
-			var tr = doc.createElement("TR");
-			tr.className = 'popup_window_buttons';
-			t.table.appendChild(tr);
-			td = doc.createElement("TD"); tr.appendChild(td);
-			td.colSpan = 2;
+			t.buttons_tr = doc.createElement("TR");
+			t.buttons_tr.className = 'popup_window_buttons';
+			t.table.appendChild(t.buttons_tr);
+			t.buttons_td = doc.createElement("TD"); t.buttons_tr.appendChild(t.buttons_td);
+			t.buttons_td.colSpan = 2;
 			for (var i = 0; i < t.buttons.length; ++i)
-				td.appendChild(t.buttons[i]);
-			t.buttons_tr = tr;
+				t.buttons_td.appendChild(t.buttons[i]);
 		}
 		doc.body.appendChild(t.table);
 		if (typeof t.content == 'string') t.content_container.innerHTML = t.content;
@@ -264,6 +342,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content.style.position = 'static';
 			t.content.style.visibility = 'visible';
 		}
+		win.layout.addHandler(t.table, t.resize);
 		return win;
 	};
 	
@@ -274,19 +353,25 @@ function popup_window(title,icon,content,hide_close_button) {
 			var e = body.childNodes[i];
 			var w = null;
 			if (e.nodeType != 1) continue;
-			if (e.nodeName == "DIV") {
-				e._display = e.style && e.style.display ? e.style.display : "";
-				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
-				e.style.display = 'inline-block';
-				e.style.whiteSpace = 'nowrap';
-			}
+			if (e.nodeName == "SCRIPT") continue;
+			if (e.style && e.style.position && (e.style.position == "absolute" || e.style.position == "fixed")) continue;
 			if (e.nodeName == "FORM")
 				w = win.absoluteLeft(e) + t._computeFrameWidth(e);
+			else {
+				e._display = e.style && e.style.display ? e.style.display : "";
+				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
+				e._width = e.style && e.style.width ? e.style.width : "";
+				e.style.display = 'inline-block';
+				e.style.whiteSpace = 'nowrap';
+				if (e._width.indexOf('%') == -1)
+					e.style.width = "";
+			}
 			if (w == null) w = win.absoluteLeft(e)+(win.getWidth ? win.getWidth(e) : getWidth(e));
 			if (w > max) max = w;
-			if (e.nodeName == "DIV") {
+			if (e.nodeName != "FORM") {
 				e.style.display = e._display;
 				e.style.whiteSpace = e._whiteSpace;
+				e.style.width = e._width;
 			}
 		}
 		return max;
@@ -298,26 +383,31 @@ function popup_window(title,icon,content,hide_close_button) {
 			var e = body.childNodes[i];
 			var h = null;
 			if (e.nodeType != 1) continue;
-			if (e.nodeName == "DIV") {
-				e._display = e.style && e.style.display ? e.style.display : "";
-				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
-				e.style.display = 'inline-block';
-				e.style.whiteSpace = 'nowrap';
-			}
+			if (e.nodeName == "SCRIPT") continue;
+			if (e.style && e.style.position && (e.style.position == "absolute" || e.style.position == "fixed")) continue;
 			if (e.nodeName == "FORM")
 				h = win.absoluteTop(e) + t._computeFrameHeight(e);
+			else {
+				e._display = e.style && e.style.display ? e.style.display : "";
+				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
+				e._height = e.style && e.style.height ? e.style.height : "";
+				e.style.display = 'inline-block';
+				e.style.whiteSpace = 'nowrap';
+				if (e._height.indexOf('%') == -1)
+					e.style.height = "";
+			}
 			if (h == null) h = win.absoluteTop(e)+(win.getHeight ? win.getHeight(e) : getHeight(e));
 			if (h > max) max = h;
-			if (e.nodeName == "DIV") {
+			if (e.nodeName != "FORM") {
 				e.style.display = e._display;
 				e.style.whiteSpace = e._whiteSpace;
+				e.style.height = e._height;
 			}
 		}
 		return max;
 	};
 		
 	/** Resize the window according to its content: this is normally automatically called. 
-	 * @method popup_window#resize
 	 */
 	t.resize = function() {
 		if (!t.table) return;
@@ -326,61 +416,87 @@ function popup_window(title,icon,content,hide_close_button) {
 		var x, y;
 		var win = getWindowFromDocument(t.table.ownerDocument);
 		if (t.content.nodeName == "IFRAME") {
-			t.content_container.style.width = (win.getWindowWidth()-30)+"px";
-			t.content_container.style.height = (win.getWindowHeight()-30)+"px";
-			t.content_container.style.overflow = "";
-			var frame = getIFrameDocument(t.content); 
-			x = t._computeFrameWidth(frame.body);
-			y = t._computeFrameHeight(frame.body);
-			frame.body.style.margin = "0px";
-			frame.body.style.padding = "0px";
-			frame.body.style.border = "none";
+			var frame_win = getIFrameWindow(t.content);
+			var frame = frame_win.document;
+			if (!frame_win || !frame_win.layout || !frame || !frame.body) {
+				setTimeout(t.resize, 10);
+				t.in_resize = false;
+				return;
+			}
 			var h = 0;
 			if (t.header) h += getHeight(t.header);
 			if (t.buttons_tr) h += getHeight(t.buttons_tr);
-			if (x > win.getWindowWidth()-30) {
-				x = win.getWindowWidth()-30;
+			t.content_container.style.width = (win.getWindowWidth()-20)+"px";
+			t.content_container.style.height = (win.getWindowHeight()-20-h)+"px";
+			t.content_container.style.overflow = "";
+			t.content.style.width = (win.getWindowWidth()-20)+"px";
+			t.content.style.height = (win.getWindowHeight()-20-h)+"px";
+			x = t._computeFrameWidth(frame.body);
+			y = t._computeFrameHeight(frame.body);
+			if (x > win.getWindowWidth()-20) {
+				x = win.getWindowWidth()-20;
 				// anticipate scroll bar
-				y += 20;
+				y += window.top.browser_scroll_bar_size;
 			}
-			if (y > win.getWindowHeight()-30-h) {
-				y = win.getWindowHeight()-30-h;
+			if (y > win.getWindowHeight()-20-h) {
+				y = win.getWindowHeight()-20-h;
 				// anticipate scroll bar
-				if (x < win.getWindowWidth()-30) x += 20;
-				if (x > win.getWindowWidth()-30) x = win.getWindowWidth()-30;
+				if (x < win.getWindowWidth()-20) x += window.top.browser_scroll_bar_size;
+				if (x > win.getWindowWidth()-20) x = win.getWindowWidth()-20;
 			}
 			getIFrameDocument(t.content).body.style.overflow = "hidden";
 			setWidth(t.content_container, x);
 			setHeight(t.content_container, y);
+			setWidth(t.content, x);
+			setHeight(t.content, y);
 			t.content_container.overflow = "hidden";
 			getIFrameDocument(t.content).body.style.overflow = "";
+			if (y < win.getWindowHeight()-20-h) {
+				// there should be no scroll bar, fix Chrome bug
+				if (frame.body.scrollHeight > frame.body.clientHeight) {
+					frame.body.style.position = "fixed";
+					frame.body.style.top = "0px";
+					frame.body.style.left = "0px";
+				}
+			}
+			if (t.content._last_popup_resize_w != t.content.offsetWidth || t.content._last_popup_resize_h != t.content.offsetHeight) {
+				frame_win.layout.invalidate(frame_win.document.body);
+				t.content._last_popup_resize_w = t.content.offsetWidth;
+				t.content._last_popup_resize_h = t.content.offsetHeight
+			}
 			x = win.getWindowWidth()/2 - x/2;
-			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight)/2;
+			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight+(t.buttons_tr ? t.buttons_tr.scrollHeight : 0))/2;
 		} else {
 			t.content_container.style.height = "";
 			t.content_container.style.width = "";
 			t.content_container.style.overflow = "";
-			y = win.getWindowHeight()/2 - t.table.scrollHeight/2;
+			var h = 0;
+			if (t.header) h += win.getHeight(t.header);
+			if (t.buttons_tr) h += win.getHeight(t.buttons_tr);
+			var content_h = win.getHeight(t.content_container);
+			y = win.getWindowHeight()/2 - (h+content_h)/2;
 			if (y < 5) {
 				y = 5;
 				t.content_container.style.overflowX = "auto";
-				var h = 0;
-				if (t.header) h += getHeight(t.header);
-				if (t.buttons_tr) h += getHeight(t.buttons_tr);
-				t.content_container.style.height = (win.getWindowHeight()-30-h)+"px";
+				t.content_container.style.height = (win.getWindowHeight()-20-h)+"px";
 				if (t.content_container.offsetWidth > t.content_container.clientWidth) {
 					t.content_container.style.width = (t.content_container.offsetWidth+(t.content_container.offsetWidth-t.content_container.clientWidth))+"px"; 
 				}
 			}
-			x = win.getWindowWidth()/2 - t.table.scrollWidth/2;
+			var content_w = win.getWidth(t.content_container);
+			var header_w = win.getWidth(t.header);
+			if (header_w > content_w) content_w = header_w;
+			x = win.getWindowWidth()/2 - content_w/2;
 			if (x < 5) {
 				x = 5;
 				t.content_container.style.overflow = "auto";
-				t.content_container.style.width = (win.getWindowWidth()-30)+"px";
+				t.content_container.style.width = (win.getWindowWidth()-20)+"px";
+				t.table.style.width = (win.getWindowWidth()-20)+"px";
 			}
+			t.content_container.style.position = "static";
 		}
-		t.table.style.top = y+"px";
-		t.table.style.left = x+"px";
+		t.table.style.top = Math.floor(y)+"px";
+		t.table.style.left = Math.floor(x)+"px";
 		t.in_resize = false;
 	};
 	
@@ -394,8 +510,12 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	
 	t.freeze = function(freeze_content) {
-		if (t.freezer) return;
+		if (t.freezer) {
+			t.freezer.usage_counter++;
+			return;
+		}
 		t.freezer = t.table.ownerDocument.createElement("DIV");
+		t.freezer.usage_counter = 1;
 		t.freezer.style.position = "absolute";
 		t.freezer.style.top = "0px";
 		t.freezer.style.left = "0px";
@@ -404,8 +524,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.freezer.style.backgroundColor = "rgba(128,128,128,0.5)";
 		if (freeze_content)
 			set_lock_screen_content(t.freezer, freeze_content);
-		t.content_container.style.position = "relative";
-		t.content_container.appendChild(t.freezer);
+		t.content_container.parentNode.style.position = "relative";
+		t.content_container.parentNode.appendChild(t.freezer);
 		t.freeze_button_status = [];
 		for (var i = 0; i < t.buttons.length; ++i) {
 			t.freeze_button_status[i] = t.buttons[i].disabled;
@@ -419,7 +539,8 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	t.unfreeze = function() {
 		if (!t.freezer) return;
-		t.content_container.removeChild(t.freezer);
+		if (--t.freezer.usage_counter > 0) return;
+		t.content_container.parentNode.removeChild(t.freezer);
 		t.freezer = null;
 		for (var i = 0; i < t.buttons.length; ++i)
 			t.buttons[i].disabled = t.freeze_button_status[i];
@@ -432,14 +553,16 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param keep_content_hidden
 	 */
 	t.close = function(keep_content_hidden) {
+		if (!t.table) return;
 		if (t.locker)
 			unlock_screen(t.locker);
 		else {
 			var parent_popup = get_popup_window_from_frame(window);
-			if(parent_popup) parent_popup.unfreeze();
+			if(parent_popup && parent_popup.table) parent_popup.unfreeze();
 		}
-		if (t.onclose) t.onclose();
+		getWindowFromDocument(t.table.ownerDocument).layout.removeHandler(t.table, t.resize);
 		var table = t.table;
+		if (t.onclose) t.onclose();
 		t.table = null;
 		var do_close = function() {
 			if (keep_content_hidden || t.keep_content_on_close) {
@@ -449,7 +572,7 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content.style.top = '-10000px';
 				t.content.ownerDocument.body.appendChild(t.content);
 			}
-			table.ownerDocument.body.removeChild(table);
+			table.parentNode.removeChild(table);
 		};
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);
@@ -472,6 +595,7 @@ function get_popup_window_from_element(e) {
 	return null;
 }
 function get_popup_window_from_frame(win) {
+	if (!win) return null;
 	if (win.frameElement && win.parent.get_popup_window_from_element)
 		return win.parent.get_popup_window_from_element(win.frameElement);
 	return null;

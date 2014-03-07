@@ -27,6 +27,7 @@ class service_IS_status extends Service{
 			<li><code>partners</code> {number} number of partners selected</li>
 			<li><code>number_IS</code> {number} number of boys real</li>
 			<li><code>separate_boys_girls</code> {boolean} true if the girls figures are separated from boys ones</li>
+			<li><code>IS_no_host</code> {null | array} null if all the IS have an host set, else array contaning objects about all the IS with no host: [{id:, name:},...]</li> 
 		</ul>
 		<?php
 	}
@@ -84,6 +85,8 @@ class service_IS_status extends Service{
 					->select("InformationSession")
 					->count()
 					->executeSingleValue();
+		
+		$IS_with_no_host = PNApplication::$instance->selection->getAllISWithNoHost();
 
 		echo "{boys_real:".json_encode($boys_real).", ";
 		echo "boys_expected:".json_encode($boys_expected).", ";
@@ -91,7 +94,19 @@ class service_IS_status extends Service{
 		echo "girls_expected:".json_encode($girls_expected).", ";
 		echo "partners:".json_encode($partners).", ";
 		echo "number_IS:".json_encode($number_IS).", ";
-		echo "separate_boys_girls:".json_encode($separate_boys_girls)."}";
+		echo "separate_boys_girls:".json_encode($separate_boys_girls).", ";
+		if($IS_with_no_host <> null){
+			echo "IS_no_host:[";
+			$first = true;
+			foreach ($IS_with_no_host as $is){
+				if(!$first)
+					echo ", ";
+				$first = false;
+				echo "{id:".json_encode($is["id"]).", name:".json_encode($is["name"])."}";
+			}
+			echo "]}";
+		} else 
+		echo "IS_no_host:null}";
 	}
 }	
 ?>

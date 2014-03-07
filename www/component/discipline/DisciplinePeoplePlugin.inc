@@ -3,19 +3,20 @@ require_once("component/people/PeoplePlugin.inc");
 class DisciplinePeoplePlugin implements PeoplePlugin {
 	
 	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
-		$alias = $q->getTableAlias("Student");
-		if ($alias == null) {
-			$alias = $q->generateTableAlias();
-			$people_alias = $q->getTableAlias("People");
-			$q->join($people_alias, "Student", array("id"=>"people"), $alias);
-		}
-		if ($q->getFieldAlias("Student", "batch") <> "student_batch")
-			$q->field($alias, "batch", "student_batch");
+		require_once("component/students/StudentsPeoplePlugin.inc");
+		$p = new StudentsPeoplePlugin();
+		$p->preparePeopleProfilePagesRequest($q, $people_id);
 	}
 	public function getPeopleProfilePages($people_id, $people, $q) {
 		if ($people["student_batch"] == null) return array(); // not a student
 		return array(
-			"discipline"=>array("/static/discipline/discipline.png", "Discipline", "/dynamic/discipline/page/home?people=".$people_id, 50), // TODO page
+			"discipline"=>array(
+				"/static/discipline/discipline.png",
+				"Discipline",
+				"/dynamic/discipline/page/home?people=".$people_id,
+				50,
+				"History of volations, absences, lateness..."
+			),
 		);
 	}
 	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) { return array(); }

@@ -475,16 +475,40 @@ function Custom_Event() {
 		for (var i = 0; i < list.length; ++i) 
 			try { list[i](data); } 
 			catch (e) {
-				var msg = e.message;
-				if (typeof e.fileName != 'undefined') {
-					msg += " ("+e.fileName;
-					if (typeof e.lineNumber != 'undefined') msg += ":"+e.lineNumber;
-					msg += ")";
-				}
-				console.log(msg);
+				log_exception(e, "occured in event listener: "+list[i]);
 			}
 	};
-} 
+}
+
+function log_exception(e, additional_message) {
+	var msg = e.message;
+	if (typeof e.fileName != 'undefined') {
+		msg += " ("+e.fileName;
+		if (typeof e.lineNumber != 'undefined') msg += ":"+e.lineNumber;
+		msg += ")";
+	}
+	if (additional_message)
+		msg += " "+additional_message;
+	window.top.console.error(msg);
+	var stack = null;
+	if (e.stack)
+		stack = e.stack;
+	else if(e.stacktrace)
+		stack = e.stacktrace;
+	else {
+		var s = "";
+	    var currentFunction = arguments.callee.caller;
+	    while (currentFunction) {
+	      var fn = currentFunction.toString();
+	      var fname = fn.substring(0, fn.indexOf('{'));;
+	      s += fname+"\r\n";
+	      currentFunction = currentFunction.caller;
+	    }
+	    stack = s;
+	}
+	if (stack)
+		window.top.console.error("Stack trace:"+stack);
+}
 
 /**
  * Default implementation of error_dialog is using alert
@@ -502,8 +526,12 @@ function error_dialog(message) {
  */
 function lock_screen(onclick, content) {
 	var div = document.getElementById('lock_screen');
-	if (div) return;
+	if (div) {
+		div.usage_counter++;
+		return div;
+	}
 	div = document.createElement('DIV');
+	div.usage_counter = 1;
 	div.id = "lock_screen";
 	div.style.backgroundColor = "rgba(128,128,128,0.5)";
 	div.style.position = "fixed";
@@ -549,6 +577,10 @@ function set_lock_screen_content(div, content) {
 function unlock_screen(div) {
 	if (!div) div = document.getElementById('lock_screen');
 	if (!div) return;
+	if (typeof div.usage_counter != 'undefined') {
+		div.usage_counter--;
+		if (div.usage_counter > 0) return;
+	}
 	unlistenEvent(window, 'resize', div.listener);
 	if (typeof animation != 'undefined') {
 		div.id = '';
@@ -590,6 +622,7 @@ function _2digits(n) {
 	return s;
 };
 function dateToSQL(d) {
+	if (d == null) return null;
 	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
 };
 function _2Hex(val) {
@@ -715,4 +748,69 @@ function getObjectSize(object){
 		s++;
 	}
 	return s;
+}
+
+function waitFrameReady(win, test, onready, timeout) {
+	if (typeof timeout == 'undefined') timeout = 30000;
+	if (timeout < 50) return;
+	if (!test(win)) { setTimeout(function() { waitFrameReady(win, test, onready, timeout-50); }, 50); return; }
+	onready(win);
+}
+
+if (typeof window.top._current_tooltip == 'undefined')
+	window.top._current_tooltip = null;
+function createTooltip(element, content) {
+	if (!content) return;
+	if (typeof content == 'string') {
+		var div = document.createElement("DIV");
+		div.innerHTML = content;
+		content = div;
+	}
+	content.style.position = "absolute";
+	var x = absoluteLeft(element);
+	var w = element.offsetWidth;
+	var ww = getWindowWidth();
+	if (x <= ww/2) {
+		content.className = "tooltip";
+		content.style.left = x+"px";
+	} else {
+		content.className = "tooltip_right";
+		content.style.right = (ww-(x+w))+"px";
+	}
+	content.style.top = (absoluteTop(element)+element.offsetHeight)+"px";
+	removeTooltip();
+	content.style.visibility = 'hidden';
+	setOpacity(content, 0);
+	animation.fadeIn(content, 200);
+	document.body.appendChild(content);
+	element._tooltip = window.top._current_tooltip = content;
+	content._element = element;
+	element._tooltip_timeout = setTimeout(function (){
+		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
+			removeTooltip();
+	},10000);
+	element._listener = function() {
+		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
+			removeTooltip();
+	};
+	listenEvent(window,'mouseout',element._listener);
+}
+function removeTooltip() {
+	if (!window.top._current_tooltip) return;
+	if (window.top._current_tooltip.parentNode) {
+		window.top._current_tooltip.parentNode.removeChild(window.top._current_tooltip);
+	}
+	unlistenEvent(getWindowFromDocument(window.top._current_tooltip._element.ownerDocument),'mouseout',window.top._current_tooltip._element._listener);
+	window.top._current_tooltip._element._tooltip = null;
+	window.top._current_tooltip = null;
+}
+function tooltip(element, content) {
+	element.onmouseover = function() {
+		createTooltip(element, content);
+	};
+	element.onmouseout = function() {
+		if (this._tooltip && this._tooltip == window.top._current_tooltip)
+			removeTooltip();
+		this._tooltip = null;
+	};
 }

@@ -192,7 +192,7 @@ class page_exam_import_subject extends selection_page {
 							var td_input = document.createElement("td");
 							t2.inputs[i-1] = document.createElement("input");
 							t2.inputs[i-1].type = "text";
-							autoresize_input(t2.inputs[i-1],5);
+							inputAutoresize(t2.inputs[i-1],5);
 							t2.inputs[i-1].oninput = function(){								
 									if(this.value == null || this.value == "")
 										this.value = null;
@@ -302,7 +302,7 @@ class page_exam_import_subject extends selection_page {
 						td_name.style.textAlign = "center";
 						var input_name = document.createElement("input");
 						input_name.type = "text";
-						new autoresize_input(input_name, 5);
+						inputAutoresize(input_name, 5);
 						input_name.oninput = function(){
 							t1.res.name = null;
 							if(!this.value.checkVisible())
@@ -334,7 +334,7 @@ class page_exam_import_subject extends selection_page {
 						td_parts.style.textAlign = "center";
 						var input_parts = document.createElement("input");
 						input_parts.type = "text";
-						new autoresize_input(input_parts,5);
+						inputAutoresize(input_parts,5);
 						input_parts.oninput = function(){
 							t1.res.parts = null;
 							if(!this.value.checkVisible())
@@ -409,7 +409,7 @@ class page_exam_import_subject extends selection_page {
 					
 					
 				}
-				require(["autoresize_input.js","popup_window.js"],function(){
+				require(["input_utils.js","popup_window.js"],function(){
 						t.step_1 = new import_exam_subject_part_1();
 				});				
 			}

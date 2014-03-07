@@ -12,7 +12,7 @@ class service_set_campaign_id extends Service{
 		echo "<li>{boolean} else false</li>";
 		echo "</ul>";
 	}
-	public function documentation(){}//TODO
+	public function documentation(){echo "Set the campaign id attribute";}
 	public function execute(&$component,$input){
 		if(isset($input['campaign_id'])){
 			$component->setCampaignId($input["campaign_id"]);

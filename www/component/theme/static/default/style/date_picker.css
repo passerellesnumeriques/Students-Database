@@ -1,15 +1,23 @@
 .date_picker {
-	background-color: white;
+	background-color: transparent;
+	background: transparent;
 }
 .date_picker>div:first-child {
 	background-color: #D0D0FF;
-	border-radius: 5px;
-	margin: 2px;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+	border: 1px solid #8080FF;
+	border-bottom: 0px;
+	margin: 0px;
 }
 .date_picker>div:last-child {
     background-color: #D0D0FF;
-    border-radius: 5px;
-    margin: 2px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+	border: 1px solid #8080FF;
+	border-top: 0px;
+	margin: 0px;
+	font-size: 11px;
 }
 .date_picker>div img {
 	vertical-align: top;
@@ -19,11 +27,13 @@
 	font-size: 11px;
 	border: none;
 	background-color: #D0D0FF;
+	vertical-align: middle;
 }
 .date_picker .small_calendar {
 	border: 0px;
 }
 .context_menu.popup_date_picker {
-	border: 1px solid rgba(0,0,0,0.2);
-	border-radius: 5px;
+	border: none;
+	background-color: transparent;
+	background: transparent;
 }

@@ -59,7 +59,7 @@ class page_staff extends Page {
 		$positions = SQLQuery::create()->select("StaffPosition")->execute();
 		foreach ($positions as $p) {
 			if (!isset($staff[$p["people"]])) {
-				$people = SQLQuery::create()->select("People")->whereValue("People","id",$p["people"])->executeSingleRow();
+				$people = PNApplication::$instance->people->getPeople($p["people"]);
 				$people["positions"] = array();
 				$staff[$p["people"]] = $people;
 			}
@@ -77,7 +77,7 @@ class page_staff extends Page {
 			foreach ($s["positions"] as $p) {
 				if ($first_pos) $first_pos = false; else echo ",";
 				echo "{";
-				echo "department:".$p["department"];
+				echo "department:".json_encode($p["department"]);
 				echo ",position:".json_encode($p["position"]);
 				echo ",start:".json_encode($p["start"]);
 				echo ",end:".json_encode($p["end"]);

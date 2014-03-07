@@ -15,6 +15,7 @@ class service_application_menu_builder extends Service {
 		$rights['manage'] = PNApplication::$instance->components["user_management"]->has_right("manage_selection_campaign",true);
 		$campaigns = PNApplication::$instance->selection->getCampaigns();
 		?>
+		resetAllMenus();
 		function selectCampaignHeader (first, can_add, campaigns, init_id, container){
 			var t = this;
 			/**
@@ -158,6 +159,7 @@ class service_application_menu_builder extends Service {
 			$campaign_id = PNApplication::$instance->selection->getCampaignId();
 			if($campaign_id <> null){
 				echo "addMenuItem('".theme::$icons_16["dashboard"]."','Dashboard',null,'/dynamic/selection/page/selection_main_page');";
+				echo "addRightControl(\"<a class='button_verysoft' href='/dynamic/selection/page/organizations_for_selection' target='pn_application_content'><img src='/static/contact/directory_32.png'/></a>\",'See organizations partners for the selection process');";
 				if($rights["manage"]){
 					echo "addMenuItem('".theme::$icons_16["config"]."','Configuration','Configure how your selection process works and how the application will behave','/dynamic/selection/page/config/manage');";
 				}

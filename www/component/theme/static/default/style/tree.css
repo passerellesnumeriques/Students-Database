@@ -1,0 +1,27 @@
+.tree {
+	background-color: white;
+}
+
+.tree_cell {
+	
+}
+.tree_cell_main {
+	
+}
+.tree_cell_selectable {
+	border: 1px solid rgba(0,0,0,0);
+	cursor: pointer;
+	padding: 1px 2px 1px 1px;
+	border-radius: 3px;
+}
+.tree_cell_selectable:hover {
+	border: 1px solid #F0D080;
+}
+.tree_cell_selected {
+	border: 1px solid #F0D080;
+	cursor: pointer;
+	padding: 1px 2px 1px 1px;
+	border-radius: 3px;
+	background-color: #FFF0D0;
+	background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
+}

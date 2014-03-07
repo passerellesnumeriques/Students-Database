@@ -50,7 +50,7 @@ var students_list = new data_list(
 	build_filters(),
 	function (list) {
 		var remove_button = document.createElement("DIV");
-		remove_button.className = "button";
+		remove_button.className = "button_verysoft";
 		remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove selected students";
 		remove_button.onclick = function() {
 			var sel = list.grid.getSelectionByRowId();
@@ -133,7 +133,7 @@ var students_list = new data_list(
 			var batches = url.params['batches'].split(',');
 			if (batches.length == 1) {
 				var import_students = document.createElement("DIV");
-				import_students.className = "button";
+				import_students.className = "button_verysoft";
 				import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
 				import_students.onclick = function() {
 					postData('/dynamic/students/page/import_students',{
@@ -143,7 +143,7 @@ var students_list = new data_list(
 				};
 				students_list.addHeader(import_students);
 				var create_student = document.createElement("DIV");
-				create_student.className = "button";
+				create_student.className = "button_verysoft";
 				create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
 				create_student.onclick = function() {
 					postData("/dynamic/people/page/create_people",{
@@ -151,31 +151,71 @@ var students_list = new data_list(
 						title: "Create New Student",
 						types: ["student"],
 						student_batch: batches[0],
-						redirect:"/dynamic/training_education/page/batches_classes"
+						redirect:location.href
 					});
 				};
 				students_list.addHeader(create_student);
 			}
 		}
+		<?php 
+		$batch_id = null;
+		$period = null;
+		$class = null;
+		if (isset($_GET["batches"])) {
+			$batches_ids = explode(",", $_GET["batches"]);
+			if (count($batches_ids) == 1)
+				$batch_id = $batches_ids[0];
+		} else if (isset($_GET["period"])) {
+			$period = PNApplication::$instance->curriculum->getAcademicPeriod($_GET["period"]);
+			$batch_id = $period["batch"];
+		} else if (isset($_GET["class"])) {
+			$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
+			$period = PNApplication::$instance->curriculum->getAcademicPeriod($class["period"]);
+			$batch_id = $period["batch"];
+		}
+		if ($batch_id <> null) {
+			$specializations = PNApplication::$instance->curriculum->getBatchSpecializations($batch_id);
+			if (count($specializations) > 0) {
+				?>
+				var assign_spe = document.createElement("DIV");
+				assign_spe.className = "button_verysoft";
+				assign_spe.innerHTML = "<img src='/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign specializations";
+				assign_spe.onclick = function() {
+					require("popup_window.js",function() {
+						var p = new popup_window("Assign Specializations", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
+						p.setContentFrame("/dynamic/students/page/assign_specializations?batch=<?php echo $batch_id;?>&onsave=reload_list");
+						p.show();
+					});
+				};
+				students_list.addHeader(assign_spe);
+				<?php 
+			}
+		}
+		?>
 		if (url.params['period'] || url.params['class']) {
 			var assign = document.createElement("DIV");
-			assign.className = "button";
+			assign.className = "button_verysoft";
 			assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+(url.params['class'] ? "class" : "classes");
 			assign.onclick = function() {
-				location.href = "/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period']);
+				require("popup_window.js",function() {
+					var p = new popup_window("Assign Students to Class<?php if ($class <> null) echo " ".htmlentities($class["name"]); else echo "es";?>", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
+					p.setContentFrame("/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period'])+"&onsave=reload_list");
+					p.show();
+				});
 			};
 			students_list.addHeader(assign);
 		}
-		// buttons that need additional info: dynamic
-		service.customOutput("students","list_buttons",url.params,function(js){
-			eval(js);
-		});
 
 		list.makeRowsClickable(function(row){
 			location.href = "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id);
 		});
+		layout.invalidate(list.container);
 	}
 );
+
+function reload_list() {
+	students_list.reloadData();
+}
 
 </script>
 <?php 

@@ -7,7 +7,13 @@ class service_exam_save_subject extends Service {
 		echo "Save / insert an exam subject object into the database";
 	}
 	public function input_documentation() {
-		echo "<code>exam</code> the exam subject object";
+		echo "<code>exam</code> the exam subject JSON structure. <br/>Notes:";
+		?>
+		<ul>
+			<li>all the ids set to -1 (subject, part, question) are considered as new by this service, so are inserted into the DB instead of updated</li>
+			<li>The questions are always removed first from DB then the input questions are inserted (no update)</li>
+		</ul>
+		<?php
 	}
 	public function output_documentation() {
 		?>
@@ -40,19 +46,11 @@ class service_exam_save_subject extends Service {
 				foreach($input["exam"]["parts"] as $part){
 					$part["exam_subject"] = $id;
 					$array_part = SelectionJSON::ExamSubjectPart2DB($part);
-					array_push($rows_parts_table,$array_part); 
-// 					array_push($rows_parts_table, array(
-// 						"id" => $part["id"],
-// 						"exam_subject" => $id,
-// 						"index" => $part["index"],
-// 						"max_score" => $part["max_score"],
-// 						"name" => $part["name"]
-// 					));
-					
+					array_push($rows_parts_table,$array_part); 					
 					if(isset($part["questions"]) && count($part["questions"]) > 0){
 						foreach($part["questions"] as $q){
 							if(isset($q["id"]))
-								unset($q["id"]);//The method saveExam need questions without ids
+								unset($q["id"]);//The method saveSubject need questions without ids
 							$q["exam_subject_part"] = $part["id"];
 							$array_question = SelectionJSON::ExamSubjectQuestion2DB($q);
 							if($part["id"] == -1 || $part["id"] == "-1"){
@@ -61,31 +59,16 @@ class service_exam_save_subject extends Service {
 									array_push($parts_to_insert_indexes,$part["index"]); // must store the index because the parts can be set not in order in the exam object
 								}
 								array_push($questions_by_new_part[$part["index"]],$array_question);
-// 								array_push($questions_by_new_part[$part["index"]],array(
-// 									"exam_subject_part" => $part["id"],
-// 									"index" => $q["index"],
-// 									"max_score" => $q["max_score"],
-// 									"correct_answer" => $q["correct_answer"],
-// 									"choices" => $q["choices"],
-// 								));
-								
 							} else {
 								if(!isset($questions_by_old_part[$part["id"]][0]))
 									$questions_by_old_part[$part["id"]] = array();
 								array_push($questions_by_old_part[$part["id"]], $array_question);
-// 								array_push($questions_by_old_part[$part["id"]],array(
-// 									"exam_subject_part" => $part["id"],
-// 									"index" => $q["index"],
-// 									"max_score" => $q["max_score"],
-// 									"correct_answer" => $q["correct_answer"],
-// 									"choices" => $q["choices"],
-// 								));
 							}
 						}
 					}
 				}
 			}
-			$subject = PNApplication::$instance->selection->saveExam($id, $rows_exam_table, $rows_parts_table, $questions_by_old_part, $questions_by_new_part, $parts_to_insert_indexes);
+			$subject = PNApplication::$instance->selection->saveSubject($id, $rows_exam_table, $rows_parts_table, $questions_by_old_part, $questions_by_new_part, $parts_to_insert_indexes);
 			if(PNApplication::has_errors())
 				echo "false";
 			else if($subject <> null)

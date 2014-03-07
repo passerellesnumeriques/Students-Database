@@ -26,7 +26,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	};
 	require([["typed_field.js",["field_date.js","field_time.js"]],"popup_window.js","calendar_view.js"],function() {
 		var o;
-		var calendar = ev ? window.top.calendar_manager.getCalendar(ev.calendar_id) : null;
+		var calendar = ev ? window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id) : null;
 		var ro = ev && !calendar.saveEvent;
 
 		t.content = document.createElement("DIV");
@@ -78,8 +78,13 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		t.calendar_icon = document.createElement("IMG");
 		t.calendar_icon.width = 16;
 		t.calendar_icon.style.width = '16px';
-		t.calendar_icon.src = t.selected_calendar.icon;
 		t.calendar_icon.style.marginRight = '3px';
+		if (t.selected_calendar.icon)
+			t.calendar_icon.src = t.selected_calendar.icon;
+		else {
+			t.calendar_icon.style.visibility = 'hidden';
+			t.calendar_icon.style.position = 'absolute';
+		}
 		td.appendChild(t.calendar_icon);
 		td.appendChild(t.calendar_name_node = document.createTextNode(ev ? calendar.name : default_calendar.name));
 		td.style.cursor = 'pointer';
@@ -314,19 +319,28 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 					box.style.backgroundColor = "#"+manager.calendars[i].color;
 					box.style.marginRight = "3px";
 					item.appendChild(box);
-					var icon = document.createElement("IMG");
-					icon.src = manager.calendars[i].icon;
-					icon.width = 16;
-					icon.style.width = '16px';
-					icon.style.paddingRight = '3px';
-					item.appendChild(icon);
+					if (manager.calendars[i].icon) {
+						var icon = document.createElement("IMG");
+						icon.src = manager.calendars[i].icon;
+						icon.width = 16;
+						icon.style.width = '16px';
+						icon.style.paddingRight = '3px';
+						item.appendChild(icon);
+					}
 					item.appendChild(document.createTextNode(manager.calendars[i].name));
 					item.onclick = function() {
 						t.selected_calendar = this.calendar;
 						t.calendar_provider_icon.src = this.calendar.provider.getProviderIcon();
 						t.calendar_box.style.border = "1px solid #"+this.calendar.color;
 						t.calendar_box.style.backgroundColor = "#"+this.calendar.color;
-						t.calendar_icon.src = this.calendar.icon;
+						if (this.calendar.icon) {
+							t.calendar_icon.src = this.calendar.icon;
+							t.calendar_icon.style.visibility = 'visible';
+							t.calendar_icon.style.position = 'static';
+						} else {
+							t.calendar_icon.style.visibility = 'hidden';
+							t.calendar_icon.style.position = 'absolute';
+						}
 						t.calendar_name_node.nodeValue = this.calendar.name;
 					};
 					menu.addItem(item);
@@ -413,8 +427,9 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 				alert("Please enter a title for the event");
 				return;
 			}
+			e.calendar_provider_id = t.selected_calendar.provider.id;
 			e.calendar_id = t.selected_calendar.id;
-			if (ev && ev.calendar_id != t.selected_calendar.id) {
+			if (ev && (ev.calendar_id != t.selected_calendar.id || ev.calendar_provider_id != t.selected_calendar.provider.id)) {
 				if (!confirm("You are going to move the event to a different calendar. Are you sure you want to remove it from "+ev.calendar.name+" and create it into "+e.calendar.name+" ?"))
 					return;
 			} else if (ev) {

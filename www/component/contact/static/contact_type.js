@@ -18,6 +18,7 @@ if (typeof require != 'undefined') {
 function contact_type(contact_type, contact_type_name, owner_type, owner_id, contacts, can_edit, can_add, can_remove, ontypechanged, onready) {
 	/** table containing all contacts */
 	this.table = document.createElement("TABLE");
+	this.table.style.backgroundColor = "white";
 	this.table.appendChild(this.colgroup = document.createElement("COLGROUP"));
 	/** colgroup epement of the table, allowing to specify fixed column width */ 
 	this.colgroup.appendChild(this.col1 = document.createElement("COL"));
@@ -83,7 +84,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 				contact.contact = input.value;
 				t.onchange.fire(t);
 			};
-			require("autoresize_input.js",function(){ autoresize_input(input,5); });
+			require("input_utils.js",function(){ inputAutoresize(input,5); });
 		} else if(can_edit){
 			/*Manage the category Field*/
 			this._createCategoryField(td_category, contact);

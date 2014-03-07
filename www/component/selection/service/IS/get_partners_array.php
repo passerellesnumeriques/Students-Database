@@ -27,23 +27,18 @@ class service_IS_get_partners_array extends Service{
 	}
 	public function execute(&$component,$input){
 		if(count($input["partners_id"]) > 0){
-			$q = SQLQuery::create()->select("Organization")
-						->field("id")
-						->field("name")
-						->whereIn("Organization","id",$input["partners_id"])
-						->execute();
-						
-			if(PNApplication::has_errors() || !isset($q[0]["id"])) echo "false";
+			$names = PNApplication::$instance->contact->getOrganizationsNames($input["partners_id"]);	
+			if(PNApplication::has_errors() || !isset($names[0]["id"])) echo "false";
 			else {
 				echo "[";
 				$first = true;
-				foreach($q as $partner){
+				foreach($names as $partner){
 					if(!$first) echo ", ";
 					$first = false;
 					echo "{organization:".json_encode($partner["id"]).", ";
 					echo "organization_name:".json_encode($partner["name"]).", ";
-					echo "host:".json_encode(null).", ";
-					echo "host_address:".json_encode(null).", ";
+					echo "host:null, ";
+					echo "host_address:null, ";
 					echo "contact_points_selected:[]}";
 				}
 				echo "]";

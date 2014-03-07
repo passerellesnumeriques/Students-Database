@@ -10,6 +10,7 @@ class page_home extends Page {
 		$this->add_javascript("/static/widgets/vertical_layout.js");
 		$this->add_javascript("/static/widgets/horizontal_layout.js");
 		$this->add_javascript("/static/widgets/vertical_align.js");
+		$this->add_javascript("/static/widgets/section/section.js");
 		$this->add_javascript("/static/development/debug_status.js");
 		$this->add_javascript("/static/test/browser_control.js");
 		
@@ -46,7 +47,7 @@ foreach (PNApplication::$instance->components as $name=>$c) {
 function top_status_widget() {
 	container = document.getElementById('top_status');
 	var t=this;
-	t.widget = new header_bar(container);
+	t.widget = new header_bar(container, "toolbar_big");
 
 	t.refresh = document.createElement("IMG");
 	t.refresh.className = 'button';
@@ -72,7 +73,7 @@ function top_status_widget() {
 	
 	t.waiting_components = 0;
 	
-	fireLayoutEventFor(container);
+	layout.invalidate(container);
 
 	t.getTotalScenarios = function() {
 		var nb = 0;
@@ -336,51 +337,29 @@ function component_widget(component) {
 	var t=this;
 	component.widget = this;
 
-	t.collapsable = new collapsable_section();
-	t.collapsable.toggle();
-	t.collapsable.element.style.display = "block";
-	t.collapsable.element.style.marginBottom = "2px";
-	t.collapsable.content.style.padding = "5px";
-	t.collapsable.content.style.overflowX = "auto";
+	t.content = document.createElement("DIV");
+	t.collapsable = new section(null, component.name, t.content, true, false, "soft");
+	t.collapsable.toggleCollapseExpand();
 	document.getElementById('components').appendChild(t.collapsable.element);
-	t.collapsable_header = document.createElement("DIV");
-	t.collapsable.header.appendChild(t.collapsable_header);
-	t.title = document.createElement("DIV");
-	t.title.style.backgroundColor = "rgba(255,255,255,0.2)";
-	t.title.style.borderRight = "1px solid #FFFFFF";
-	setBorderRadius(t.title,0,0,0,0,0,0,5,5);
-	t.title.style.padding = "2px 5px 2px 5px";
-	t.title.style.fontSize = "12pt";
-	t.title.style.fontWeight = "bold";
-	t.title.innerHTML = component.name;
-	t.collapsable_header.appendChild(t.title);
-	t.header = document.createElement("DIV");
-	t.collapsable_header.appendChild(t.header);
-	t.fake_for_collapse = document.createElement("DIV");
-	t.collapsable_header.appendChild(t.fake_for_collapse);
-	t.title.setAttribute("layout","fixed");
-	t.header.setAttribute("layout","fill");
-	t.fake_for_collapse.setAttribute("layout","15");
-	t.fake_for_collapse.style.position = "absolute";
-	t.fake_for_collapse.style.top = "-10000px";
-	new horizontal_layout(t.collapsable_header);
-	new vertical_align(t.header, "middle");
+	t.collapsable.element.style.marginBottom = "2px";
+	t.content.style.padding = "5px";
+	t.content.style.overflowX = "auto";
 
 	t.load = document.createElement("IMG");
 	t.load.style.verticalAlign = "bottom";
 	t.load.src = theme.icons_16.loading;
 	t.load.className = "button disabled";
-	t.header.appendChild(t.load);
+	t.collapsable.addToolLeft(t.load);
 
 	t.play_all = document.createElement("DIV");
 	t.play_all.innerHTML = "<img src='/static/test/play.png' style='vertical-align:bottom'/> Launch all tests";
 	t.play_all.className = "button disabled";
-	t.header.appendChild(t.play_all);
+	t.collapsable.addToolLeft(t.play_all);
 
-	t.header.appendChild(t.span_nb_scenarios = document.createElement("SPAN"));
-	t.header.appendChild(t.span_scenarios_waiting = document.createElement("SPAN"));
-	t.header.appendChild(t.span_scenarios_succeed = document.createElement("SPAN"));
-	t.header.appendChild(t.span_scenarios_failed = document.createElement("SPAN"));
+	t.collapsable.addToolLeft(t.span_nb_scenarios = document.createElement("SPAN"));
+	t.collapsable.addToolLeft(t.span_scenarios_waiting = document.createElement("SPAN"));
+	t.collapsable.addToolLeft(t.span_scenarios_succeed = document.createElement("SPAN"));
+	t.collapsable.addToolLeft(t.span_scenarios_failed = document.createElement("SPAN"));
 
 	t.getTotalScenarios = function() {
 		if (component.tests == null) return 0;

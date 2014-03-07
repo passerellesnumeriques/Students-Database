@@ -10,6 +10,7 @@ function NewsObject(id, section, category, html, people, user, timestamp, update
 }
 
 if (typeof require != 'undefined') require("animation.js");
+if (typeof theme != 'undefined') theme.css("news.css");
 
 function news(container, sections, exclude_sections, onready, onrefreshing) {
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -20,6 +21,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 	this._olders = [];
 	this._olders_timestamp = 0;
 	this._refreshing = 0;
+	this._replies_to_load = [];
 	this.more = function(ondone) {
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
 		service.json("news", "get_more", {olders:t._olders,olders_timestamp:t._olders_timestamp,sections:t._selected_sections,nb:10}, function(res) {
@@ -70,6 +72,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 					t._createNews(res[i]);
 				}
 			}
+			t._launchRepliesLoading();
 			if (ondone) ondone(res.length == 10);
 		});
 	};
@@ -77,6 +80,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		if (t._latests.length == 0) { t.more(); return; }
 		if (t.refresh_timeout) clearTimeout(t.refresh_timeout);
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
+		++t._refreshing;
 		service.json("news", "get_latests", {latests:t._latests,latests_timestamp:t._latests_timestamp,sections:t._selected_sections}, function(res) {
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			t.refresh_timout = setTimeout(t.refresh, 30000);
@@ -104,17 +108,38 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 					t._olders.push(res[i].id);
 				t._createNews(res[i]);
 			}
+			t._launchRepliesLoading();
 		});
+		t._refreshReplies();
 	};
-	this._loadReplies = function(n) {
+	this._launchRepliesLoading = function() {
+		if (t._replies_to_load.length == 0) return;
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
-		service.json("news", "get_replies", {id:n.id}, function(res) {
+		var list = t._replies_to_load;
+		t._replies_to_load = [];
+		var ids = [];
+		for (var i = 0; i < list.length; ++i) ids.push(list[i].id);
+		service.json("news", "get_replies", {ids:ids}, function(res) {
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			if (!res) return;
 			if (res.length == 0) return;
 			for (var i = 0; i < res.length; ++i)
-				t._createReply(res[i], n.id);
+				t._createReply(res[i]);
 		});		
+	};
+	this._refreshReplies = function() {
+		var to_refresh = [];
+		for (var i = 0; i < t._main_news.length; ++i) {
+			var div = t._main_news[i];
+			to_refresh.push({id:div.news.id,latest:div.latest_reply});
+		}
+		service.json("news", "get_latests_replies", {to_refresh:to_refresh}, function(res) {
+			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
+			if (!res) return;
+			if (res.length == 0) return;
+			for (var i = 0; i < res.length; ++i)
+				t._createReply(res[i]);
+		});
 	};
 	this.more_news = function(initial_internal_call) {
 		while (t._more_container.childNodes.length > 0) t._more_container.removeChild(t._more_container.childNodes[0]);
@@ -161,69 +186,106 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 				break;
 			}
 		}
-		this._loadReplies(n);
+		this._replies_to_load.push(n);
 	};
-	this._createReply = function(n, root_id) {
+	this._createReply = function(n) {
 		var main = null;
 		for (var i = 0; i < this._main_news.length; ++i)
-			if (this._main_news[i].news.id == root_id) { main = this._main_news[i]; break; }
+			if (this._main_news[i].news.id == n.reply_to) { main = this._main_news[i]; break; }
 		if (main == null) return;
+		main.latest_reply = n.timestamp;
 		var div = this._createDiv(n, false);
 		main.reply_div.appendChild(div);
 	};
 	this._createDiv = function(n, main) {
 		var div = document.createElement("DIV");
 		div.news = n;
-		div.style.backgroundColor = "#D0D0E0";
-		div.style.marginBottom = "1px";
-		if (main) setBorderRadius(div, 3, 3, 3, 3, 3, 3, 3, 3);
+		div.latest_reply = 0;
+		div.className = "news"+(main ? " main": " reply");
 		var table = document.createElement("TABLE"); div.appendChild(table);
 		table.style.width = "100%";
 		table.style.borderCollapse = 'collapse';
 		table.style.borderSpacing = '0px';
 		var tr = document.createElement("TR"); table.appendChild(tr);
 		var td = document.createElement("TD"); tr.appendChild(td);
-		if (!main) {
-			div.style.borderTop = "1px solid #B0B0D0";
-			div.style.borderLeft = "1px solid #C0C0D0";
-			div.style.backgroundColor = "#E0E0F0";
-			setBorderRadius(div, 5, 5, 0, 0, 0, 0, 0, 0);
-		}
-		td.style.width = "38px";
-		td.style.verticalAlign = "top";
-		td.style.padding = '2px 2px 2px 2px';
+		td.className = "picture_container";
 		var picture = document.createElement("IMG");
-		picture.style.width = "35px";
-		picture.style.height = "35px";
-		picture.style.verticalAlign = "top";
 		picture.src = "/dynamic/user_people/service/user_picture?domain="+n.user.domain+"&username="+n.user.username;
-		setBorderRadius(picture, 5,5,5,5,5,5,5,5);
 		td.appendChild(picture);
 		var content = document.createElement("TD");
+		content.className = "content";
 		tr.appendChild(content);
-		content.style.verticalAlign = "top";
-		content.style.padding = "0px";
 
 		var header = document.createElement("DIV"); content.appendChild(header);
 		var people_name = document.createElement("SPAN"); header.appendChild(people_name);
-		people_name.style.fontWeight = "bold";
-		people_name.style.fontSize = "10pt";
-		people_name.style.color = "#000060";
+		people_name.className = "author";
 		people_name.appendChild(document.createTextNode(n.people.first_name+" "+n.people.last_name));
 		people_name.style.cursor = "pointer";
-		people_name.onmouseover = function() { this.style.color = "#600060"; };
-		people_name.onmouseout = function() { this.style.color = "#000060"; };
 		people_name.onclick = function() { location.href = "/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain; };
 		var timing = document.createElement("SPAN"); header.appendChild(timing);
-		timing.style.color = "#808080";
-		timing.style.fontSize = "8pt";
-		timing.style.marginLeft = "10px";
+		timing.className = "time";
 		timing.appendChild(div.timing_text = document.createTextNode(t._getTimingString(n.timestamp)));
+		if (main) {
+			var can_reply = null;
+			for (var i = 0; i < t.sections.length; ++i) {
+				if (t.sections[i].name == n.section) {
+					can_reply = t.sections[i].can_write;
+					break;
+				}
+			}
+			if (can_reply) {
+				var img = document.createElement("IMG");
+				img.src = "/static/news/reply.png";
+				img.className = "button_verysoft";
+				img.style.marginLeft = "5px";
+				img.style.verticalAlign = "bottom";
+				header.appendChild(img);
+				img.title = "Reply to this message";
+				img.onclick = function() {
+					require("tinymce.min.js", function() {
+						var editor = document.createElement("DIV");
+						editor.id = generateID();
+						div.appendChild(editor);
+						tinymce.init({
+							selector: "#"+editor.id,
+							theme: "modern",
+							height: 60,
+							content_css: "/static/theme/"+theme.name+"/style/global.css,/static/theme/"+theme.name+"/style/news.css",
+							body_class: "news_editor",
+							plugins: ["spellchecker paste textcolor"],
+							menubar: false,
+							statusbar: false,
+							toolbar1: "bold italic underline strikethrough | bullist numlist outdent indent | forecolor backcolor",
+							toolbar2: "fontselect fontsizeselect | cut copy paste | undo redo",
+							toolbar_items_size: 'small',
+						    auto_focus: editor.id,
+						    fontsize_formats: "8pt 9pt 10pt 12pt 14pt 18pt 24pt"
+						});
+						var button = document.createElement("DIV");
+						button.className = "button";
+						button.innerHTML = "Post Reply";
+						div.appendChild(button);
+						button.onclick = function() {
+							var ed = tinymce.get(editor.id);
+							var message = ed.getContent();
+							ed.remove();
+							div.removeChild(editor);
+							div.removeChild(button);
+							var sending = document.createElement("IMG");
+							sending.src = "/static/news/loading.gif";
+							div.appendChild(sending);
+							service.json("news", "post_reply", {id:n.id,message:message}, function(res) {
+								div.removeChild(sending);
+								t._refreshReplies();
+							});
+						};
+					});
+				};
+			}
+		}
 		
 		var msg = document.createElement("DIV"); content.appendChild(msg);
-		msg.style.marginTop = "3px";
-		msg.style.fontFamily = "Arial";
-		msg.style.fontSize = "9pt";
+		msg.className = "message";
 		msg.innerHTML = n.html;
 
 		if (main) {
@@ -270,6 +332,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		}
 
 		if (typeof animation != 'undefined') animation.fadeIn(div, 1500);
+		layout.invalidate(container);
 		return div;
 	};
 	
@@ -298,7 +361,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		if (hours < 24) return Math.floor(hours)+" hours ago (at "+d.toLocaleTimeString()+")";
 		var days = hours/24;
 		if (days < 2) return "yesterday at "+d.toLocaleTimeString();
-		return d.toString();
+		return d.toLocaleString();
 	};
 	
 	this._refreshTimings = function() {

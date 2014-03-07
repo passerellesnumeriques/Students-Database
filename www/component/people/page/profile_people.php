@@ -33,18 +33,10 @@ class page_profile_people extends Page {
 		$this->add_javascript("/static/widgets/section/section.js");
 		foreach ($sections as $section) {
 			$section_id = $this->generateID();
-			echo "<div id='$section_id' icon='".$section[0]."' title=".json_encode($section[1])." style='display:inline-block;float:left;margin:5px'>";
+			echo "<div id='$section_id' icon='".$section[0]."' title=".json_encode($section[1])." style='display:inline-block;float:left;margin:5px' css='soft'>";
 			include $section[2];
 			echo "</div>";
 			$this->onload("section_from_html('$section_id');");
-			/*
-			?>
-			<div class='section_with_title' style='float:left;margin:5px'>
-				<div><img src='<?php echo $section[0];?>' style='vertical-align:bottom;padding-right:3px'/><?php echo $section[1];?></div>
-				<div><?php include $section[2];?></div>
-			</div>
-			<?php
-			*/
 		}
 	}
 }

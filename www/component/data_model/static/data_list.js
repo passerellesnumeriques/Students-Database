@@ -23,6 +23,7 @@ if (typeof require != 'undefined') {
 function data_list(container, root_table, initial_data_shown, filters, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
+	t.container = container;
 
 	/* Public properties */
 	
@@ -46,6 +47,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.header_center.widget.addItem(item);
 		else
 			t.header_center.appendChild(item);
+		layout.invalidate(t.header);
 	};
 	/** Remove everything in the header, previously added through addHeader */
 	t.resetHeader = function() {
@@ -53,6 +55,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t.header_center.widget.removeAll();
 		else
 			while (t.header_center.childNodes.length > 0) t.header_center.removeChild(t.header_center.childNodes[0]);
+		layout.invalidate(t.header);
 	};
 	/** Set a title, with optionally an icon
 	 * @param {String} icon URL of the icon 16x16, or null if no icon
@@ -74,7 +77,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		}
 		div.setAttribute("layout", "fixed");
 		t.header.insertBefore(div, t.header_left);
-		fireLayoutEventFor(t.header);
+		layout.invalidate(t.header);
 	};
 	/** Set the title, with some html
 	 * @param {DOMNode} html the html element, or a string
@@ -89,7 +92,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		html.className = "data_list_title";
 		html.setAttribute("layout", "fixed");
 		t.header.insertBefore(html, t.header_left);
-		fireLayoutEventFor(t.header);
+		layout.invalidate(t.header);
 	};
 	/** Force to refresh the data from the server */
 	t.reloadData = function() {
@@ -161,7 +164,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	 * @returns {String} root table name
 	 */
 	t.getRootTable = function() { return t._root_table; };
-	/** Select a row, if available, correspondig to the given key in the given table
+	/** Select a row, if available, corresponding to the given key in the given table
 	 * @param {String} table table name
 	 * @param {Number} key the key in the table identifying the row to search
 	 */
@@ -171,6 +174,19 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				for (var row = 0; row < t.data.length; ++row) {
 					if (t.data[row].values[col].k == key) {
 						t.grid.selectByIndex(row, true);
+						break;
+					}
+				}
+			}
+		}
+	};
+	
+	t.disableSelectByTableKey = function(table, key){
+		for (var col = 0; col < t.show_fields.length; ++col) {
+			if (t.show_fields[col].table == table) {
+				for (var row = 0; row < t.data.length; ++row) {
+					if (t.data[row].values[col].k == key) {
+						t.grid.disableByIndex(row, true);
 						break;
 					}
 				}
@@ -233,12 +249,15 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header = document.createElement("DIV");
 		t.header.className = "data_list_header";
 		t.header_left = document.createElement("DIV");
+		t.header_left.className = "data_list_header_left";
 		t.header_left.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_left);
 		t.header_center = document.createElement("DIV");
+		t.header_center.className = "data_list_header_center";
 		t.header_center.setAttribute("layout","fill");
 		t.header.appendChild(t.header_center);
 		t.header_right = document.createElement("DIV");
+		t.header_right.className = "data_list_header_right";
 		t.header_right.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_right);
 		container.appendChild(t.header);
@@ -246,7 +265,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		var div, img;
 		// + previous page
 		t.prev_page_div = div = document.createElement("DIV"); div.className = "button disabled";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Previous page";
 		img.src = "/static/data_model/left.png";
 		div.doit = function() {
@@ -261,7 +280,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_left.appendChild(div);
 		// + next page
 		t.next_page_div = div = document.createElement("DIV"); div.className = "button disabled";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Next page";
 		div.disabled = "disabled";
 		img.src = "/static/data_model/right.png";
@@ -291,7 +310,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		});
 		// + refresh
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Refresh";
 		img.src = theme.icons_16.refresh;
 		div.onclick = function() { t._loadData(); };
@@ -299,7 +318,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_left.appendChild(div);
 		// + select column
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Select columns to display";
 		img.src = get_script_path("data_list.js")+"/table_column.png";
 		div.onclick = function() { t._selectColumnsDialog(this); };
@@ -307,7 +326,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_right.appendChild(div);
 		// + filter
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Filters";
 		img.src = get_script_path("data_list.js")+"/filter.gif";
 		div.onclick = function() { t._filtersDialog(this); };
@@ -315,7 +334,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_right.appendChild(div);
 		// + export
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Export list";
 		img.src = theme.icons_16["_export"];
 		div.onclick = function() { t._exportMenu(this); };
@@ -323,7 +342,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		t.header_right.appendChild(div);
 		// + more button for horizontal menu
 		div = document.createElement("DIV"); div.className = "button";
-		img = document.createElement("IMG"); img.onload = function() { fireLayoutEventFor(t.header_center); };
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header_center); };
 		img.src = theme.icons_16.more_menu;
 		div.appendChild(img);
 		t.header_center.appendChild(div);
@@ -340,19 +359,20 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		// layout
 		require("vertical_layout.js",function(){
 			new vertical_layout(container);
-			fireLayoutEventFor(container);
+			layout.invalidate(container);
 		});
 		require("horizontal_layout.js",function(){
 			new horizontal_layout(t.header);
-			fireLayoutEventFor(container);
+			layout.invalidate(container);
 		});
 		require("horizontal_menu.js",function(){
 			new horizontal_menu(t.header_center, "middle");
-			fireLayoutEventFor(container);
+			layout.invalidate(container);
 		});
 		require("vertical_align.js",function(){
 			new vertical_align(t.header_left, "middle");
 			new vertical_align(t.header_right, "middle");
+			layout.invalidate(container);
 		});
 	};
 	/** Load the available fields for the root table */
@@ -430,7 +450,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	 * @returns {GridColumn} the column created
 	 */
 	t._createColumn = function(f) {
-		var col = new GridColumn(f.category+'.'+f.name, f.name, null, f.field_classname, false, null, null, f.field_config, f);
+		var col = new GridColumn(f.category+'.'+f.name, f.name, null, null, f.field_classname, false, null, null, f.field_config, f);
 		if (f.sortable)
 			col.addExternalSorting(function(_sort_order){
 				t._sort_column = col;
@@ -467,7 +487,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				var edit_col = function() {
 					action.icon = col.editable ? theme.icons_16.edit : theme.icons_16.no_edit;
 					col.toggleEditable();
-					fireLayoutEventFor(container);
+					layout.invalidate(container);
 				};
 				t.grid.startLoading();
 				if (col.editable) {
@@ -547,7 +567,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				t.next_page_div.className = "button disabled";
 				t.next_page_div.onclick = null;
 			}
-			t.header.widget.layout();
+			layout.invalidate(t.header);
 			t.data = result.data;
 			var has_actions = false;
 			var data = [];
@@ -573,7 +593,7 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			}
 			if (has_actions) {
 				if (!t._col_actions) {
-					t._col_actions = new GridColumn('actions', "", null, "field_html", false, null, null, {}, null);
+					t._col_actions = new GridColumn('actions', "", null, "right", "field_html", false, null, null, {}, null);
 					t.grid.addColumn(t._col_actions);
 				}
 				for (var i = 0; i < t.data.length; ++i) {

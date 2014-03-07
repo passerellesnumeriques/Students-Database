@@ -22,6 +22,8 @@ function date_picker(date, minimum, maximum, onready) {
 		var back = document.createElement("IMG");
 		back.src = get_script_path("date_picker.js")+'back.png';
 		back.className = "button_verysoft";
+		back.style.margin = "0px 2px 0px 2px";
+		back.style.padding = "0px 1px 0px 1px";
 		t.header.appendChild(back);
 		back.onclick = function() {
 			var d = t.select.getDate();
@@ -35,6 +37,8 @@ function date_picker(date, minimum, maximum, onready) {
 		var forward = document.createElement("IMG");
 		forward.src = get_script_path("date_picker.js")+'forward.png';
 		forward.className = "button_verysoft";
+		forward.style.margin = "0px 2px 0px 2px";
+		forward.style.padding = "0px 1px 0px 1px";
 		t.header.appendChild(forward);
 		forward.onclick = function() {
 			var d = t.select.getDate();

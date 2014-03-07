@@ -417,5 +417,5 @@ function calendar_view_week(view, container) {
 	};
 	
 	this._init();
-	addLayoutEvent(container, function() { t._layout(); });
+	layout.addHandler(container, function() { t._layout(); });
 }

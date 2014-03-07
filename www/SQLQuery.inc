@@ -63,6 +63,7 @@ class SQLQuery {
  	 * @param SQLQuery $copy the query to copy
  	 */
  	public function __construct($copy = null) {
+ 		$this->warning = PNApplication::$instance->current_domain == "Dev";
  		if ($copy) {
  			$this->tables = $copy->tables;
  			$this->fields = $copy->fields;
@@ -103,6 +104,8 @@ class SQLQuery {
  	public $order_by = array();
  	/** @var boolean indicates if we have to skip security checks or not */
  	public $bypass_security = false;
+ 	/** @var boolean indicates if we generate warning when a table is accessed from a component which does not own the table (only in Dev domain) */
+ 	public $warning; 
  	/** @var boolean indicates to use DISTINCT in the select */
 	public $distinct = false;
 
@@ -115,6 +118,9 @@ class SQLQuery {
 	public function generateFieldAlias() { return "f".($this->field_alias_counter++); }
 	/** Generates a unique table alias name (useful when building a big list) */
 	public function generateTableAlias() { return "t".($this->table_alias_counter++); }
+	
+	/** Do not generate warnings */
+	public function noWarning() { $this->warning = false; return $this; }
 
 	/** Use a sepcific database, instead of the default one which is the one of the current domain
 	 * @param string $db_name name of the database to use
@@ -179,12 +185,20 @@ class SQLQuery {
 		return $this;
 	}
 	
+	/** Select a table (the table in SELECT .. FROM table ..)
+	 * @param string $table_name name of the table (not SQL name, but data model name)
+	 * @param string|null $table_alias optionally specify an alias for the table
+	 */
 	public function &selectTable($table_name, $table_alias = null) {
 		$this->tables[$table_name] = $table_alias;
-		if (PNApplication::$instance->current_domain == "Dev") $this->checkTableAccess($table_name);
+		$this->checkTableAccess($table_name);
 		return $this;
 	}
+	/** Check which component is called, and generate a warning if the given table is not owned by this component
+	 * @param string $table_name name of the table which is accessed
+	 */
 	private function checkTableAccess($table_name) {
+		if (!$this->warning) return;
 		try { throw new Exception(); }
 		catch (Exception $e) {
 			$root = str_replace("\\","/",realpath("component"))."/";
@@ -202,6 +216,9 @@ class SQLQuery {
 						substr($file,strlen($root)) == "data_model/DataPath.inc" ||
 						substr($file,strlen($root)) == "data_model/DataBaseLock.inc"
 				)) break; // generic service of data model
+				if ($component == "data_model" && (
+					substr($file,strlen($root)) == "data_model/page/table_datadisplay.inc"	
+				)) continue; // generic display, let's see who call it
 				require_once("component/data_model/Model.inc");
 				$decl = DataModel::get()->internalGetTable($table_name)->declaring_component;
 				if ($component <> $decl) {
@@ -374,7 +391,10 @@ class SQLQuery {
 		// not an alias: get sql name
 		try {
 			require_once("component/data_model/Model.inc");
-			$t = DataModel::get()->getTable($table);
+			if ($this->bypass_security)
+				$t = DataModel::get()->internalGetTable($table);
+			else
+				$t = DataModel::get()->getTable($table);
 			return $t->getSQLName($this->sub_models);
 		} catch (Exception $e) {
 			// not a table name
@@ -459,7 +479,7 @@ class SQLQuery {
 		$join = array($table_from, $table_to, $fields_matching, $alias);
 		if ($join_on_values <> null) array_push($join, $join_on_values);
 		array_push($this->joins, $join);
-		if (PNApplication::$instance->current_domain == "Dev") $this->checkTableAccess($table_to);
+		$this->checkTableAccess($table_to);
 		return $this;
 	}
 	public function getJoinAlias($table_from, $table_to, $fields_matching) {
@@ -670,12 +690,21 @@ class SQLQuery {
 				$source_table = DataModel::get()->internalGetTable($join[0])->getSQLName($this->sub_models);
 			$first = true;
 			foreach ($join[2] as $field_from=>$field_to) {
-				if ($first) $first = false; else $sql .= " AND ";
-				$sql .= "`".$source_table."`.`".$field_from."`=";
-				if (is_string($field_to))
-					$sql .= "`".($join[3] <> null ? $join[3] : $table->getSQLName($this->sub_models))."`.`".$field_to."`";
-				else
-					$sql .= "'".SQLQuery::escape($field_to[0])."'";
+				if ($field_from <> null) {
+					if ($first) $first = false; else $sql .= " AND ";
+					$sql .= "`".$source_table."`.`".$field_from."`=";
+					if (is_string($field_to))
+						$sql .= "`".($join[3] <> null ? $join[3] : $table->getSQLName($this->sub_models))."`.`".$field_to."`";
+					else
+						$sql .= "'".SQLQuery::escape($field_to[0])."'";
+				} else {
+					foreach ($field_to as $fi=>$val) {
+						if ($first) $first = false; else $sql .= " AND ";
+						$sql .= "`".($join[3] <> null ? $join[3] : $table->getSQLName($this->sub_models))."`.`".$fi."`";
+						if ($val === null) $sql .= " IS NULL";
+						$sql .= "='".SQLQuery::escape($val)."'";
+					}
+				}
 			}
 			if (isset($join[4])) {
 				foreach ($join[4] as $field_to=>$value_to) {
@@ -791,21 +820,28 @@ class SQLQuery {
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
 				
-				$q = SQLQuery::create()->bypassSecurity();
-				$table_alias = $q->generateTableAlias();
-				$q->select(array($table=>$table_alias));
-				$q->selectSubModels($this->sub_models);
-				if ($t->getPrimaryKey() <> null)
-					$q->where($t->getPrimaryKey()->name, $key);
-				else {
-					$keys = $t->getKey();
-					foreach ($keys as $key_name)
-						$q->whereValue($table_alias, $key_name, $key[$key_name]);
-				}
-				if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
-					$rows = $q->execute();
-					$rows = $t->filterWriteAccess($rows);
-					if (count($rows) == 0) throw new Exception("Access denied to modify this row in table ".$t->getName());
+				$ok = true;
+				if (!$t->canModifyEverything())
+					foreach ($fields_values as $colname=>$colvalue)
+						if (!$t->canModifyColumn($colname)) { $ok = false; break; }
+				
+				if (!$ok) {
+					$q = SQLQuery::create()->bypassSecurity()->noWarning();
+					$table_alias = $q->generateTableAlias();
+					$q->select(array($table=>$table_alias));
+					$q->selectSubModels($this->sub_models);
+					if ($t->getPrimaryKey() <> null)
+						$q->where($t->getPrimaryKey()->name, $key);
+					else {
+						$keys = $t->getKey();
+						foreach ($keys as $key_name)
+							$q->whereValue($table_alias, $key_name, $key[$key_name]);
+					}
+					if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
+						$rows = $q->execute();
+						$rows = $t->filterWriteAccess($rows);
+						if (count($rows) == 0) throw new Exception("Access denied to modify this row in table ".$t->getName());
+					}
 				}
 			}
 	
@@ -815,8 +851,9 @@ class SQLQuery {
 			if ($lock_id <> null) {
 				$column = null;
 				if (count($fields_values) == 1) { $column = array_keys($fields_values); $column = $column[0]; }
-				if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
-					throw new Exception("Access denied: invalid lock");
+				$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column);
+				if ($err <> null)
+					throw new Exception("Access denied: invalid lock (".$err.")");
 			} else {
 				$locker = null;
 				$lock_id = DataBaseLock::lockRow($t->getSQLName($this->sub_models), $key, $locker, $this->bypass_security);
@@ -837,7 +874,21 @@ class SQLQuery {
 					throw new Exception($name.": ".$e->getMessage());
 				}
 				if ($col->unique) {
-					$r = SQLQuery::create()->bypassSecurity()->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field])->executeSingleRow();
+					$q = SQLQuery::create()->bypassSecurity()->noWarning()->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field]);
+					$where = "";
+					if ($t->getPrimaryKey() <> null) {
+						$where .= "`".$t->getPrimaryKey()->name."`!='".$key."'";
+					} else {
+						$keys = $t->getKey();
+						$first = true;
+						$where .= "(";
+						foreach ($keys as $key_name) {
+							if ($first) $first = false; else $where .= " OR ";
+							$where .= "`".$key_name."`!='".$key[$key_name]."'";
+						}
+						$where .= ")";
+					}
+					$r = $q->where($where)->executeSingleRow();
 					if ($r <> null) {
 						if ($locked)
 							DataBaseLock::unlock($lock_id);
@@ -900,34 +951,46 @@ class SQLQuery {
 			// check we are allowed to modify this row
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
-					
-				$q = SQLQuery::create()->bypassSecurity();
-				$table_alias = $q->generateTableAlias();
-				$q->select(array($table=>$table_alias));
-				$q->selectSubModels($this->sub_models);
-				if ($t->getPrimaryKey() <> null) {
-					$keys = array();
-					foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
-					$q->whereIn($t->getName(), $t->getPrimaryKey()->name, $keys);
-				} else {
-					$keys = $t->getKey();
-					$w = "";
+				
+				$ok = true;
+				if (!$t->canModifyEverything())
 					foreach ($keys_fields_values as $k) {
 						$key = $k[0];
-						$kw = "";
-						foreach ($keys as $key_name) {
-							if (strlen($kw) > 0) $kw .= " AND ";
-							$kw .= "`".$table_alias."`.`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
-						}
-						if (strlen($w) > 0) $w .= " OR ";
-						$w .= "(".$kw.")";
+						$fields_values = $k[1];
+						foreach ($fields_values as $colname=>$colvalue)
+							if (!$t->canModifyColumn($colname)) { $ok = false; break; }
+						if (!$ok) break;
 					}
-					$q->where($w);
-				}
-				if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
-					$rows = $q->execute();
-					$rows = $t->filterWriteAccess($rows);
-					if (count($rows) == 0) throw new Exception("Access denied to modify this row in table ".$t->getName());
+				
+				if (!$ok) {
+					$q = SQLQuery::create()->bypassSecurity()->noWarning();
+					$table_alias = $q->generateTableAlias();
+					$q->select(array($table=>$table_alias));
+					$q->selectSubModels($this->sub_models);
+					if ($t->getPrimaryKey() <> null) {
+						$keys = array();
+						foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
+						$q->whereIn($t->getName(), $t->getPrimaryKey()->name, $keys);
+					} else {
+						$keys = $t->getKey();
+						$w = "";
+						foreach ($keys_fields_values as $k) {
+							$key = $k[0];
+							$kw = "";
+							foreach ($keys as $key_name) {
+								if (strlen($kw) > 0) $kw .= " AND ";
+								$kw .= "`".$table_alias."`.`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+							}
+							if (strlen($w) > 0) $w .= " OR ";
+							$w .= "(".$kw.")";
+						}
+						$q->where($w);
+					}
+					if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
+						$rows = $q->execute();
+						$rows = $t->filterWriteAccess($rows);
+						if (count($rows) == 0) throw new Exception("Access denied to modify this row in table ".$t->getName());
+					}
 				}
 			}
 		
@@ -943,8 +1006,9 @@ class SQLQuery {
 					foreach ($fields_values as $field=>$value)
 						if (!in_array($field, $columns)) array_push($columns, $field);
 				if (count($columns) == 1) $column = $columns[0];
-				if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
-					throw new Exception("Access denied: invalid lock");
+				$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column);
+				if ($err <> null)
+					throw new Exception("Access denied: invalid lock (".$err.")");
 			} else {
 				$locker = null;
 				$keys = array();
@@ -993,12 +1057,33 @@ class SQLQuery {
 							}
 						}
 					}
-					$r = SQLQuery::create()
-						->bypassSecurity()
+					$q = SQLQuery::create()
+						->bypassSecurity()->noWarning()
 						->select($t->getName())
 						->selectSubModels($this->sub_models)
 						->whereIn($col->name, $values)
-						->execute();
+						;
+						if ($t->getPrimaryKey() <> null) {
+							$keys = array();
+							foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
+							$q->whereNotIn($t->getName(), $t->getPrimaryKey()->name, $keys);
+						} else {
+							$keys = $t->getKey();
+							$w = "";
+							foreach ($keys_fields_values as $k) {
+								$key = $k[0];
+								$kw = "(";
+								foreach ($keys as $key_name) {
+									if (strlen($kw) > 0) $kw .= " OR ";
+									$kw .= "`".$table_alias."`.`".$key_name."`!='".SQLQuery::escape($key[$key_name])."'";
+								}
+								$kw .= ")";
+								if (strlen($w) > 0) $w .= " AND ";
+								$w .= "(".$kw.")";
+							}
+							$q->where($w);
+						}
+						$r = $q->execute();
 					if ($r <> null && count($r) > 0) {
 						if ($locked)
 							DataBaseLock::unlock($lock_id);
@@ -1065,30 +1150,37 @@ class SQLQuery {
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
 		
-				$q = SQLQuery::create()->bypassSecurity();
-				$table_alias = $q->generateTableAlias();
-				$q->select(array($table=>$table_alias));
-				$q->selectSubModels($this->sub_models);
-				if ($t->getPrimaryKey() <> null) {
-					$q->whereIn($t->getName(), $t->getPrimaryKey()->name, $keys);
-				} else {
-					$tkeys = $t->getKey();
-					$w = "";
-					foreach ($keys as $key) {
-						$kw = "";
-						foreach ($tkeys as $key_name) {
-							if (strlen($kw) > 0) $kw .= " AND ";
-							$kw .= "`".$table_alias."`.`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+				$ok = true;
+				if (!$t->canModifyEverything())
+					foreach ($fields_values as $colname=>$colvalue)
+					if (!$t->canModifyColumn($colname)) { $ok = false; break; }
+				
+				if (!$ok) {
+					$q = SQLQuery::create()->bypassSecurity();
+					$table_alias = $q->generateTableAlias();
+					$q->select(array($table=>$table_alias));
+					$q->selectSubModels($this->sub_models);
+					if ($t->getPrimaryKey() <> null) {
+						$q->whereIn($t->getName(), $t->getPrimaryKey()->name, $keys);
+					} else {
+						$tkeys = $t->getKey();
+						$w = "";
+						foreach ($keys as $key) {
+							$kw = "";
+							foreach ($tkeys as $key_name) {
+								if (strlen($kw) > 0) $kw .= " AND ";
+								$kw .= "`".$table_alias."`.`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+							}
+							if (strlen($w) > 0) $w .= " OR ";
+							$w .= "(".$kw.")";
 						}
-						if (strlen($w) > 0) $w .= " OR ";
-						$w .= "(".$kw.")";
+						$q->where($w);
 					}
-					$q->where($w);
-				}
-				if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
-					$rows = $q->execute();
-					$rows = $t->filterWriteAccess($rows);
-					if (count($rows) == 0) throw new Exception("Access denied to modify this row in table ".$t->getName());
+					if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
+						$rows = $q->execute();
+						$rows = $t->filterWriteAccess($rows);
+						if (count($rows) == 0) throw new Exception("Access denied to modify this row in table ".$t->getName());
+					}
 				}
 			}
 		
@@ -1101,8 +1193,9 @@ class SQLQuery {
 				foreach ($fields_values as $field=>$value)
 					if (!in_array($field, $columns)) array_push($columns, $field);
 				if (count($columns) == 1) $column = $columns[0];
-				if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column))
-					throw new Exception("Access denied: invalid lock");
+				$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column);
+				if ($err <> null)
+					throw new Exception("Access denied: invalid lock (".$err.")");
 			} else {
 				$locker = null;
 				if (count($keys) == 1)
@@ -1201,8 +1294,9 @@ class SQLQuery {
 		if($lock_id <> null){
 			$column = null;
 			if (count($fields_values) == 1) { $column = array_keys($fields_values); $column = $column[0]; }
-			if (!DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), null, $column))
-				throw new Exception("Access denied: invalid lock");
+			$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), null, $column);
+			if ($err <> null)
+				throw new Exception("Access denied: invalid lock (".$err.")");
 		} else {
 			$lock = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, true);
 			if ($lock == null)
@@ -1403,9 +1497,18 @@ class SQLQuery {
 			$t = DataModel::get()->internalGetTable($table);
 		else
 			$t = DataModel::get()->getTable($table);
-		$pk = $t->getPrimaryKey()->name; // TODO if no primary key
-		foreach ($rows as $r) array_push($keys, $r[$pk]);
-		$this->removeKeys($keys);
+		$pk = $t->getPrimaryKey();
+		if ($pk <> null) {
+			foreach ($rows as $r) array_push($keys, $r[$pk->name]);
+		} else {
+			$k = $t->getKey();
+			foreach ($rows as $r) {
+				$key = array();
+				foreach ($k as $kname) $key[$kname] = $r[$kname];
+				array_push($keys, $key);
+			}
+		}
+		$this->removeKeys($table, $keys);
 	}
 
 	/** Remove data with given primary keys */
@@ -1716,7 +1819,7 @@ class SQLQuery {
 					if (!$t->mayModify())
 						throw new Exception("Access denied: cannot modify table '".$t->getName()."': necessary to remove link to table '".$table->getName()."'");
 		
-					if (!$t->canModifyAny()) {
+					if (!$t->canModifyEverything()) {
 						// select matching rows
 						$q = SQLQuery::create();
 						$table_alias = $q->generateTableAlias();
@@ -1795,12 +1898,46 @@ class SQLQuery {
 	public static function getTable($table, $sub_models = null) {
 		return SQLQuery::create()->selectSubModels($sub_models)->select($table)->execute();
 	}
-	public static function getRow($table, $key, $sub_models = null) {
-		require_once("component/data_model/Model.inc");
-		$t = DataModel::get()->getTable($table);
-		return SQLQuery::create()->selectSubModels($sub_models)->select($table)->where($t->getPrimaryKey()->name, $key)->executeSingleRow();
+	public static function getRow($table, $key, $sub_model = null) {
+		if (!($table instanceof \datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table = DataModel::get()->getTable($table);
+		}
+		$q = \SQLQuery::create()->select($table->getName())->selectSubModelForTable($table, $sub_model);
+		if ($table->getPrimaryKey() <> null)
+			$q->whereValue($table->getName(), $table->getPrimaryKey()->name, $key);
+		else foreach ($key as $kname=>$kval)
+			$q->whereValue($table->getName(), $kname, $kval);
+		return $q->executeSingleRow();
 	}
-
+	public static function getRows($table, $keys, $sub_model = null) {
+		if (count($keys) == 0) return array();
+		if (!($table instanceof \datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table = DataModel::get()->getTable($table);
+		}
+		$q = \SQLQuery::create()->select($table->getName())->selectSubModelForTable($table, $sub_model);
+		if ($table->getPrimaryKey() <> null)
+			$q->whereIn($table->getName(), $table->getPrimaryKey()->name, $keys);
+		else {
+			$w = "(";
+			$first = true;
+			foreach ($keys as $key) {
+				if ($first) $first = false; else $w .= " OR ";
+				$w .= "(";
+				$f = true;
+				foreach ($key as $kname=>$kval) {
+					if ($f) $f = false; else $w .= " AND "; 
+					$w .= "`".$table->getSQLNameFor($sub_model)."`.`".$kname."`='".SQLQuery::escape($kval)."'";
+				}
+				$w .= ")";
+			}
+			$w .= ")";
+			$q->where($w);
+		}
+		return $q->execute();
+	}
+	
 	/** @var boolean indicates if we are currently in a transaction */
 	private static $transaction_started = false;
 	public static function startTransaction() {

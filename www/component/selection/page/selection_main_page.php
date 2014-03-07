@@ -21,7 +21,6 @@ class page_selection_main_page extends selection_page {
 	public function get_required_rights() { return array(); }
 	public function execute_selection_page(&$page){
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
-		$calendar_name = SQLQuery::create()->bypassSecurity()->select("Calendar")->field("name")->where("id",$calendar_id)->executeSingleValue();
 		
 		$page->add_javascript("/static/widgets/header_bar.js");
 		$page->onload("new header_bar('steps_header','small');");
@@ -40,14 +39,23 @@ class page_selection_main_page extends selection_page {
 		$steps = PNApplication::$instance->selection->getSteps();
 		$unvalid_steps_to_display = array();
 		$valid_steps_to_display = array();
-		
+
+		$page->onload("section_from_html('section_preparation');");
 	?>
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
 				<div id = 'left'>
 					<div id = 'steps_header' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
 					<div style = "overflow:auto" layout = "fill">
+						<div style='width:100%'>
+							<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
+								<div style='text-align:center'>
+									<a class='button_soft' href='config/manage'>
+										<img src='<?php echo theme::$icons_16["config"];?>'/>
+										Configure how this selection process will work
+									</a>
+								</div>
+							</div>
 						<?php
-						echo "<div style = 'width:100%'>";
 						$js_to_run = array();
 						foreach($status_to_display as $s){
 							$id = $page->generateID();
@@ -70,8 +78,8 @@ class page_selection_main_page extends selection_page {
 								array_push($js_to_run,"new ".$js_name."('content_".$id."');");
 							}
 						}
-						echo "</div>";
 						?>
+						</div>
 					</div>
 				</div>
 				<div id = 'right' style='overflow-y:auto;'>
@@ -93,13 +101,12 @@ class page_selection_main_page extends selection_page {
 					</div>
 				</div>
 		</div>
+		<!--  <a href = "/dynamic/selection/page/test_functionalities">Tests</a>  -->
 		<script type = 'text/javascript'>
 			var calendar_id = null;
-			var calendar_name = null;
 			var steps = null;
 			<?php
 			if(isset($calendar_id)) echo "calendar_id = ".json_encode($calendar_id).";";
-			if(isset($calendar_name)) echo "calendar_name = ".json_encode($calendar_name).";";
 			if(isset($steps)) echo "steps = ".json_encode($steps).";";
 			
 			echo "var unvalid_steps_to_display = ";
@@ -112,9 +119,9 @@ class page_selection_main_page extends selection_page {
 			?>
 			calendar_section = section_from_html('calendar_section');
 			require(["calendar.js","popup_window.js"],function(){
-				if(calendar_id != null && calendar_name != null){
+				if(calendar_id != null){
 					var cal_manager = new CalendarManager();
-					var PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
+					var PN_cal = window.top.pn_calendars_provider.getCalendar(calendar_id);
 					var init_calendar = function() {
 						cal_manager.addCalendar(PN_cal);
 						require("calendar_view.js",function(){
@@ -126,22 +133,20 @@ class page_selection_main_page extends selection_page {
 						extend.onclick = function(){
 							var content = document.createElement("div");
 							content.id = 'content_calendar_extend';
-							var width = parseFloat(getWindowWidth())-30;
-							var height = parseFloat(getWindowHeight())-60;
-							content.style.width = width.toString()+"px";
-							content.style.height = height.toString()+"px";
+							content.style.width = "100%";
+							content.style.height = "100%";
+							var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
+							pop.showPercent(95,95);
 							require("calendar_view.js",function(){
 								new CalendarView(cal_manager, "week", 30, content, function(){});
 							});
-							var pop = new popup_window("Selection Calendar","/static/calendar/event.png",content);
-							pop.show();
 						};
 						window.calendar_section.addToolRight(extend);
-					}
+					};
 					if (PN_cal) init_calendar();
 					else {
 						var retry_calendar = function() {
-							PN_cal = window.top.calendar_manager.getCalendar(calendar_id);
+							PN_cal = window.top.pn_calendars_provider.getCalendar(calendar_id);
 							if (PN_cal) init_calendar();
 							else setTimeout(retry_calendar, 500);
 						};

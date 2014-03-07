@@ -4,46 +4,54 @@ class service_get_replies extends Service {
 	public function get_required_rights() { return array(); }
 	
 	public function documentation() { echo "Retrieve replies to a root news"; }
-	public function input_documentation() { echo "<code>id</code>: the root news"; }
-	public function output_documentation() { echo "List of NewsObject"; }
+	public function input_documentation() { echo "<code>ids</code>: the root news' ids"; }
+	public function output_documentation() { echo "List of NewsObject, containing reply_to as well"; }
 	
 	public function execute(&$component, $input) {
-		$news = SQLQuery::create()->bypassSecurity()->select("News")->whereValue("News", "id", $input["id"])->field("News", "section")->field("News", "category")->executeSingleRow();
-		if ($news == null) {
-			PNApplication::error("Invalid news id");
-			return;
-		}
+		$news = SQLQuery::create()->bypassSecurity()
+			->select("News")
+			->whereIn("News", "id", $input["ids"])
+			->field("News", "id")
+			->field("News", "section")
+			->field("News", "category")
+			->execute();
 		require_once("component/news/NewsPlugin.inc");
-		$found = false;
-		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof NewsPlugin)) continue;
-				foreach ($pi->getSections() as $section) {
-					if ($section->getName() <> $news["section"]) continue;
-					if ($section->getAccessRight() == 0) continue;
-					if ($news["category"] == null) {
-						$found = true;
-						break;
-					}
-					foreach ($section->getCategories() as $cat) {
-						if ($cat->getName() <> $news["category"]) continue;
-						if ($cat->getAccessRight() == 0) continue;
-						$found = true;
-						break;
+		for ($i = 0; $i < count($news); $i++) {
+			$found = false;
+			foreach (PNApplication::$instance->components as $c) {
+				foreach ($c->getPluginImplementations() as $pi) {
+					if (!($pi instanceof NewsPlugin)) continue;
+					foreach ($pi->getSections() as $section) {
+						if ($section->getName() <> $news[$i]["section"]) continue;
+						if ($section->getAccessRight() == 0) continue;
+						if ($news[$i]["category"] == null) {
+							$found = true;
+							break;
+						}
+						foreach ($section->getCategories() as $cat) {
+							if ($cat->getName() <> $news[$i]["category"]) continue;
+							if ($cat->getAccessRight() == 0) continue;
+							$found = true;
+							break;
+						}
+						if ($found) break;
 					}
 					if ($found) break;
 				}
 				if ($found) break;
 			}
-			if ($found) break;
+			if (!$found) {
+				array_splice($news, $i, 1);
+				$i--;
+			}
 		}
-		if (!$found) {
-			PNApplication::error("Invalid section/category");
-			return;
-		}
+		if (count($news) == 0) { echo "[]"; return; }
+		
+		$ids = array();
+		foreach ($news as $n) array_push($ids, $n["id"]);
 		$news = SQLQuery::create()->bypassSecurity()
 			->select("News")
-			->whereValue("News", "reply_to", $input["id"])
+			->whereIn("News", "reply_to", $ids)
 			->orderBy("News", "timestamp", true)
 			->orderBy("News", "id", true)
 			->execute();
@@ -86,6 +94,7 @@ class service_get_replies extends Service {
 			$r = $people_names[$n["domain"]][$n["username"]];
 			echo ",people:".PeopleJSON::People($r[0], $r[1]);
 			echo ",timestamp:".$n["timestamp"];
+			echo ",reply_to:".$n["reply_to"];
 			echo "}";
 		}
 		echo "]";
