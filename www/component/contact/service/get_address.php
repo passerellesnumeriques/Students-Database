@@ -14,7 +14,9 @@ class service_get_address extends Service{
 	public function execute(&$component,$input){
 		require_once("component/contact/ContactJSON.inc");
 		if(isset($input["id"])){
-			echo ContactJSON::PostalAddressFromID($input["id"]);
+			$res = ContactJSON::PostalAddressFromID($input["id"]);
+			$res = $res != null ? $res : "null";
+			echo $res;
 		} else if(isset($input["addresses"])){
 			$first = true;
 			echo "[";
@@ -22,7 +24,9 @@ class service_get_address extends Service{
 				if(!$first)
 					echo ", ";
 				$first = false;
-				echo ContactJSON::PostalAddressFromID($id);
+				$res = ContactJSON::PostalAddressFromID($input["id"]);
+				$res = $res != null ? $res : "null";
+				echo $res;
 			}
 			echo ']';
 		} else echo "false";

@@ -96,7 +96,7 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 	t._addExamRow = function(tr,i){
 		var td_name = document.createElement("td");
 		var li = document.createElement("li");
-		li.innerHTML = t.all_exams[i].name;
+		li.innerHTML = "<a title = 'See subject' class = 'black_link' href = '/dynamic/selection/page/exam/subject?id="+t.all_exams[i].id+"&readonly=true'/>"+t.all_exams[i].name+"</a>";
 		td_name.appendChild(li);
 		td_name.id = t.all_exams[i].id+"_td";
 		tr.appendChild(td_name);
@@ -120,17 +120,17 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 		tr.appendChild(td_export);
 		tr.menu.push(export_button);
 
-		see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/>",t.all_exams[i].id);
-		see_button.title = "See this subject";
-		see_button.onclick = function(){
-			location.assign("/dynamic/selection/page/exam/subject?id="+this.id+"&readonly=true");
-		};
-		see_button.style.visibility = "hidden";
-		see_button.className = "button_verysoft";
-		td_see = document.createElement("td");
-		td_see.appendChild(see_button);
-		tr.appendChild(td_see);
-		tr.menu.push(see_button);
+//		see_button = t._createButton("<img src = '"+theme.icons_16.search+"'/>",t.all_exams[i].id);
+//		see_button.title = "See this subject";
+//		see_button.onclick = function(){
+//			location.assign("/dynamic/selection/page/exam/subject?id="+this.id+"&readonly=true");
+//		};
+//		see_button.style.visibility = "hidden";
+//		see_button.className = "button_verysoft";
+//		td_see = document.createElement("td");
+//		td_see.appendChild(see_button);
+//		tr.appendChild(td_see);
+//		tr.menu.push(see_button);
 		
 		if(t.can_manage){
 			edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/>",t.all_exams[i].id);
@@ -144,6 +144,30 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 			td_edit.appendChild(edit_button);
 			tr.appendChild(td_edit);
 			tr.menu.push(edit_button);
+			
+			remove_button = t._createButton("<img src = '"+theme.icons_16.remove+"'/>", t.all_exams[i].id);
+			remove_button.title = "Remove this subject";
+			remove_button.style.visibility = "hidden";
+			remove_button.className = "button_verysoft";
+			remove_button.onclick = function(){
+				var subject_id = this.id;
+				confirm_dialog("Do you really want to remove this exam subject and all the linked data?<br/><i>Parts, questions, topics...</i>",function(r){
+					if(r){
+						service.json("selection","exam/remove_subject",{id:subject_id},function(res){
+							if(!res)
+								error_dialog("An error occured, the subject was not removed");
+							else {
+								location.reload();
+							}						
+						});
+					} else
+						return;
+				});
+			};
+			td_remove = document.createElement("td");
+			td_remove.appendChild(remove_button);
+			tr.appendChild(td_remove);
+			tr.menu.push(remove_button);
 		}
 
 		animation.appearsOnOver(tr, tr.menu);

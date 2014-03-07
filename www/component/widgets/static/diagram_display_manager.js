@@ -14,6 +14,7 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 	container.style.position = "relative";
 	container.style.height = "100%";
 	container.style.width = "100%";
+	container.style.overflow = "auto";
 	
 	t.nodes = [];//If first node, means start node
 		//if last node, means ending node
@@ -179,15 +180,12 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 			}
 		} else {
 			//Set the width attributes
-//			var temp = [];
 			for(var i = 0; i < t.nodes.length; i++){
-//				temp.push(t._getComputedId(t.nodes[i].id));
 				var node = document.getElementById(t._getComputedId(t.nodes[i].id));
 				if(node){
 				node.style.width = t._getWidth(i)+"px";
 				node.style.position = "absolute";
 				}
-				//node.style.left = t._getLeft(i)+"px";
 			}
 			//Set the left and also top attributes after the width because the height may have been updated
 			for(var i = 0; i < t.nodes.length; i++){
@@ -336,9 +334,10 @@ function diagram_display_manager(container,start_width,middle_width,end_width){
 		}
 		//Get the remaining space
 		var remaining = t._getContainerHeight() - h;
-		if(remaining < 0)
-			return 0;
-		else
+		if(remaining < 0){
+		// There is no place enough, so set a minimum white space and a scroll bar will be added
+			return 5;
+		} else
 			return (remaining / (2 * (t.nodes.length -2)));
 	};
 

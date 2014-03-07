@@ -82,6 +82,16 @@ function IS_status(container){
 		}
 		if(t._no_host != null){
 			t._setISNoHostList();
+		} else {
+			var tr = document.createElement("tr");
+			var td = document.createElement("td");
+			td.appendChild(document.createTextNode("All the informations sessions have an host set"));
+			td.colSpan = 4;
+			td.style.color = "green";
+			td.style.fontStyle = "italic";
+			td.style.textAlign = "center";
+			tr.appendChild(td);
+			t._table.appendChild(tr);
 		}
 		t._table.style.width = "100%";
 		container.appendChild(t._table);

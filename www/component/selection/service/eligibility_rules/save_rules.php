@@ -30,7 +30,7 @@ class service_eligibility_rules_save_rules extends Service {
 		if(isset($input["all_rules"]) && isset($input["db_lock"])){
 			$rules_to_insert = array();
 			$rules_to_update = array();
-			$root_rule_id = null;
+			$root_rule_id = null;			
 			foreach($input["all_rules"] as $rule){
 				//Get the root rule (can only have one)
 				if($rule["id"] == -1 || $rule["id"] == "-1"){
@@ -42,7 +42,7 @@ class service_eligibility_rules_save_rules extends Service {
 					"rule_topic_table_insert" => $topics_to_insert,
 					"rule_topic_table_update" => array(),
 					"rule_topic_table_remove" => array(),
-					));
+					));					
 				} else {
 					//This is an update
 					//Get the topics already set to this rule

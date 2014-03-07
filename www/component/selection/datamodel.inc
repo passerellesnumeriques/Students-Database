@@ -28,75 +28,7 @@
 		->addWriteAccess("can_update_step",true)
 		->addRemoveAccess("manage_selection_campaign",true)
 		->addInsertAccess("manage_selection_campaign",true);
-	
-// 	$sm->addTable("InformationSession")
-// 		->addPrimaryKey("id")
-// 		->addForeignKey("date","CalendarEvent",false,true,true,true)
-// 		->addForeignKey("postal_address","PostalAddress",false,true,true,true)
-// 		//This field exists in case the user wants to set an address but no host partner
-// 		// In case a host partner is choosen, this field must be set to null
-// 		->addForeignKey("fake_organization","Organization",false,false,false,false)
-// 		//This field is set to link the custom postal address to an organization
-// 		//Otherwize, the filter of the "contact" component datamodel wont let the user see/manage the address
-// 		//Because of the reading filter of organization (if fake, cannot be read!),
-// 		//the fake organization must be removed manually (must use bypassSecurity method)
-// 		//so the the remove_primary_when_foreign_removed is set to false
-		
-// 		->addInteger("number_boys_expected",10)
-// 		->addInteger("number_girls_expected",10)
-// 		->addInteger("number_boys_real",10)
-// 		->addInteger("number_girls_real",10)
-// 		->addString("name")
-// 		->addWriteAccess("edit_information_session",true)
-// 		->addReadAccess("see_information_session_details",true)
-// 		->addInsertAccess("manage_information_session",true)
-// 		->addRemoveAccess("manage_information_session",true)
-// 		->setDisplayHandler(null,
-// 			new datamodel\MultipleDisplayHandler("Information Session","Information Session", array(
-// 				new datamodel\FieldsDisplayHandler("Information Session","Information Session",
-// 					array(
-// 						"name" => "Name",
-// 					),
-// 					array(
-// 						"name",
-// 					),"selection"
-// 				),
-// 				new CalendarEventDateDataDisplay(null, "Date", "date")
-// 			),array("date","postal_address","fake_organization")) 
-// 		)
-// 	 	->onInsert(function($fields,$id,$sub_model_instance) {
-// 			try {
-// 				PNApplication::$instance->news->post("selection", null, array("campaign".$sub_model_instance), "New Information Session: <i>".$fields["name"]."</i>");
-// 			} catch (Exception $e) { PNApplication::error($e); }
-// 	 	})
-// 		;
-		
-// 	$sm->addTable("InformationSessionPartner")
-// 		->addForeignKey("information_session","InformationSession",true,false,true,false)
-// 		->addForeignKey("organization","Organization",true,false,true,false)
-// 		->addBoolean("host") //this attributes means that this partner is the one where the IS takes place
-// 		->addForeignKey("host_address","PostalAddress",false,false,true,true) //this attributes is set only when host attribute == true: can select a praticular address in case the organization has several ones
-// 		->setKey(array("information_session","organization"))
-// 		->addWriteAccess("edit_information_session",true)
-// 		->addReadAccess("see_information_session_details",true)
-// 		->addInsertAccess("manage_information_session",true)
-// 		->addRemoveAccess("manage_information_session",true);
-		
-// 	$sm->addTable("InformationSessionContactPoint")
-// 		->addForeignKey("information_session","InformationSession",true,false,true,false)
-// 		->addForeignKey("organization","Organization",true,false,true,false)
-// 		//This two attributes are a foreignKey for IS partner table
-// 		->addForeignKey("people","People",true,false,true,false)
-// 		//People + orga = foreignKey for ContactPoint table
-// 		->setKey(array("information_session","organization","people"))
-// 		->addWriteAccess("edit_information_session",true)
-// 		->addReadAccess("see_information_session_details",true)
-// 		->addInsertAccess("manage_information_session",true)
-// 		->addRemoveAccess("manage_information_session",true)	
-// 		->setDisplayHandler("people", new datamodel\StopDataDisplayHandler("Selection", "Selection"))
-// 		;
 
-	/**New version of IS */
 	$sm->addTable("InformationSession")
 		->addPrimaryKey("id")
 		->addForeignKey("date","CalendarEvent",false,true,true,true)
@@ -154,7 +86,6 @@
 		->addRemoveAccess("manage_information_session",true)
 		->setDisplayHandler("people", new datamodel\StopDataDisplayHandler("Selection", "Selection"))
 		;
-	/** --- */	
 		
 	$sm->addTable("SelectionCampaignConfig")
 		->addString("name",255,1,false,true)//the name must be unique (key...)
@@ -218,7 +149,7 @@
 		->addInsertAccess("manage_exam_subject",true)
 		->addRemoveAccess("manage_exam_subject",true);
 	
-	$sm->addTable("ExamTopicFullExam")
+	$sm->addTable("ExamTopicFullSubject")
 		/** Table to match an exam topic with exam(s) subject(s)
 		 * if a topic is set in this table, it will be considered as
 		 * "full subject" for all the matching exams subjects

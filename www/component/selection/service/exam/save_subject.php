@@ -50,7 +50,7 @@ class service_exam_save_subject extends Service {
 					if(isset($part["questions"]) && count($part["questions"]) > 0){
 						foreach($part["questions"] as $q){
 							if(isset($q["id"]))
-								unset($q["id"]);//The method saveExam need questions without ids
+								unset($q["id"]);//The method saveSubject need questions without ids
 							$q["exam_subject_part"] = $part["id"];
 							$array_question = SelectionJSON::ExamSubjectQuestion2DB($q);
 							if($part["id"] == -1 || $part["id"] == "-1"){
@@ -68,7 +68,7 @@ class service_exam_save_subject extends Service {
 					}
 				}
 			}
-			$subject = PNApplication::$instance->selection->saveExam($id, $rows_exam_table, $rows_parts_table, $questions_by_old_part, $questions_by_new_part, $parts_to_insert_indexes);
+			$subject = PNApplication::$instance->selection->saveSubject($id, $rows_exam_table, $rows_parts_table, $questions_by_old_part, $questions_by_new_part, $parts_to_insert_indexes);
 			if(PNApplication::has_errors())
 				echo "false";
 			else if($subject <> null)

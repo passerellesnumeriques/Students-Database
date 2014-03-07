@@ -549,28 +549,15 @@ class SelectionJSON{
 	 * @param SQLQuery $q
 	 * @param array $rows the data about the ExamTopic
 	 * @param integer id the id of the topic
-	 * @return array [id => ""
-	 * 					name => ""
-	 * 					subjects => [
-	 *							id => [
-	 *								name => ""
-	 *								max_score => ""
-	 *								full_subject => boolean
-	 * 								parts => array(
-	 *									id =>[
-	 *										name => ""
-	 *										max_score => ""
-	 *										index => ""
-	 *									],...)
-	 * 							],...]
-	 *					]
-	 * subjects & parts arrays use the subject id (respectively part id) as key
+	 * @return array with parameters <ul><li><code>id</code></li><li><code>name</code></li><li><code>subjects</code></li></ul>
+	 * Each subjects array contains all the exam subject ids, keys for arrays containing: <ul><li><code>name</code></li><li><code>max_score</code></li><li><code>full_subject</code></li><li><code>parts</code></li></ul>
+	 * Each parts array contains all the exam subject parts ids, keys for arrays containing: <ul><li><code>name</code></li><li><code>max_score</code></li><li><code>index</code></li></ul>
 	 */
 	public static function ExamTopicPHP($q, $rows, $id){
 		$full_exams = SQLQuery::create()
-			->select("ExamTopicFullExam")
+			->select("ExamTopicFullSubject")
 			->field("exam_subject")
-			->whereValue("ExamTopicFullExam","exam_topic_for_eligibility_rule",$id)
+			->whereValue("ExamTopicFullSubject","exam_topic_for_eligibility_rule",$id)
 			->executeSingleField();
 		if($rows <> null){
 			$topic = array();
@@ -661,7 +648,7 @@ class SelectionJSON{
 	 * Get a JSON structure containing all the exam topics for eligibility rules set
 	 * into the database
 	 * @param number (optional) $excluded_id topic id not to retrieve when the query is executed
-	 * @return string JSON structure
+	 * @return string JSON array [{topic1},{topic2},...]
 	 */
 	public static function getJsonAllTopics($excluded_id = null){
 		$all_ids = SQLQuery::create()

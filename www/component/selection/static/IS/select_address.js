@@ -1,11 +1,13 @@
-function select_address(container, data, partners_contacts_points, can_manage){
+function select_address(container, data, partners_contacts_points, can_manage, oncontactpointchange_listener, onaddresschange_listener){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	
 	t.onupdatehost = new Custom_Event();
 	
-	t.reset = function(){
+	t.reset = function(new_partners_contact_points){
+		if(new_partners_contact_points)
+			partners_contacts_points = new_partners_contact_points;
 		//Refresh content
 		t._refreshTableHeader();
 		t._refreshTableBody();
@@ -109,7 +111,9 @@ function select_address(container, data, partners_contacts_points, can_manage){
 				partners_contacts_points[index_in_contact_points].contact_points,
 				can_manage,
 				null,
-				true
+				true,
+				onaddresschange_listener,
+				oncontactpointchange_listener
 			);
 			//Add the listener for the contact points selection
 			row.onupdatecontactpointsselection.add_listener(function(contact_points_selected){
@@ -360,7 +364,7 @@ function select_address(container, data, partners_contacts_points, can_manage){
 				return i;
 		}
 		return null;
-	}
+	};
 	
 	t._getInternStep = function(){
 		if(t._getHostAddressInPartners() != null)
