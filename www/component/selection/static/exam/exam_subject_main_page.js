@@ -170,7 +170,9 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 			tr.menu.push(remove_button);
 		}
 
-		animation.appearsOnOver(tr, tr.menu);
+		require("animation.js",function() {
+			animation.appearsOnOver(tr, tr.menu);
+		});
 	};
 
 	/**

@@ -165,7 +165,7 @@ class CurriculumJSON {
 		$s .= ",name:".json_encode($subject["name"]);
 		$s .= ",category_id:".$subject["category"];
 		$s .= ",period_id:".$subject["period"];
-		$s .= ",specialization:".json_encode($subject["specialization"]);
+		$s .= ",specialization_id:".json_encode($subject["specialization"]);
 		$s .= ",hours:".json_encode($subject["hours"]);
 		$s .= ",hours_type:".json_encode($subject["hours_type"]);
 		$s .= "}";

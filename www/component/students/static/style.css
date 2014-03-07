@@ -12,6 +12,7 @@
 .students_header_info .path_item {
 	display: inline-block;
 	color: #000040;
+	font-weight: bold;
 }
 .students_header_info .separator {
 	display:inline-block;

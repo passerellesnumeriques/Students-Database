@@ -181,8 +181,8 @@ var students_list = new data_list(
 				assign_spe.className = "button_verysoft";
 				assign_spe.innerHTML = "<img src='/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign specializations";
 				assign_spe.onclick = function() {
-					require("popup_window.js",function() {
-						var p = new popup_window("Assign Specializations", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
+					window.parent.require("popup_window.js",function() {
+						var p = new window.parent.popup_window("Assign Specializations", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
 						p.setContentFrame("/dynamic/students/page/assign_specializations?batch=<?php echo $batch_id;?>&onsave=reload_list");
 						p.show();
 					});
@@ -197,8 +197,8 @@ var students_list = new data_list(
 			assign.className = "button_verysoft";
 			assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+(url.params['class'] ? "class" : "classes");
 			assign.onclick = function() {
-				require("popup_window.js",function() {
-					var p = new popup_window("Assign Students to Class<?php if ($class <> null) echo " ".htmlentities($class["name"]); else echo "es";?>", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
+				window.parent.require("popup_window.js",function() {
+					var p = new window.parent.popup_window("Assign Students to Class<?php if ($class <> null) echo " ".htmlentities($class["name"]); else echo "es";?>", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
 					p.setContentFrame("/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period'])+"&onsave=reload_list");
 					p.show();
 				});

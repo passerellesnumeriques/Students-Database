@@ -599,7 +599,7 @@ if (window.parent.resetAllMenus) {
 				handler(items);
 			});
 		}, function(item) {
-			document.getElementById('training_education_page').src = "/dynamic/people/page/profile?people="+item.value;
+			document.getElementById('students_page').src = "/dynamic/people/page/profile?people="+item.value;
 		}, 250);
 		setBorderRadius(ac.input,8,8,8,8,8,8,8,8);
 		setBoxShadow(ac.input,-1,2,2,0,'#D8D8F0',true);
