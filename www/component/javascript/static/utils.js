@@ -756,3 +756,61 @@ function waitFrameReady(win, test, onready, timeout) {
 	if (!test(win)) { setTimeout(function() { waitFrameReady(win, test, onready, timeout-50); }, 50); return; }
 	onready(win);
 }
+
+if (typeof window.top._current_tooltip == 'undefined')
+	window.top._current_tooltip = null;
+function createTooltip(element, content) {
+	if (!content) return;
+	if (typeof content == 'string') {
+		var div = document.createElement("DIV");
+		div.innerHTML = content;
+		content = div;
+	}
+	content.style.position = "absolute";
+	var x = absoluteLeft(element);
+	var w = element.offsetWidth;
+	var ww = getWindowWidth();
+	if (x <= ww/2) {
+		content.className = "tooltip";
+		content.style.left = x+"px";
+	} else {
+		content.className = "tooltip_right";
+		content.style.right = (ww-(x+w))+"px";
+	}
+	content.style.top = (absoluteTop(element)+element.offsetHeight)+"px";
+	removeTooltip();
+	content.style.visibility = 'hidden';
+	setOpacity(content, 0);
+	animation.fadeIn(content, 200);
+	document.body.appendChild(content);
+	element._tooltip = window.top._current_tooltip = content;
+	content._element = element;
+	element._tooltip_timeout = setTimeout(function (){
+		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
+			removeTooltip();
+	},10000);
+	element._listener = function() {
+		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
+			removeTooltip();
+	};
+	listenEvent(window,'mouseout',element._listener);
+}
+function removeTooltip() {
+	if (!window.top._current_tooltip) return;
+	if (window.top._current_tooltip.parentNode) {
+		window.top._current_tooltip.parentNode.removeChild(window.top._current_tooltip);
+	}
+	unlistenEvent(getWindowFromDocument(window.top._current_tooltip._element.ownerDocument),'mouseout',window.top._current_tooltip._element._listener);
+	window.top._current_tooltip._element._tooltip = null;
+	window.top._current_tooltip = null;
+}
+function tooltip(element, content) {
+	element.onmouseover = function() {
+		createTooltip(element, content);
+	};
+	element.onmouseout = function() {
+		if (this._tooltip && this._tooltip == window.top._current_tooltip)
+			removeTooltip();
+		this._tooltip = null;
+	};
+}

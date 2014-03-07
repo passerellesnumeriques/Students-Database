@@ -90,7 +90,7 @@ field_date.prototype._create = function(data) {
 			t.icon.src = theme.icons_16.date_picker;
 			t.icon.style.verticalAlign = "top";
 			t.icon.style.cursor = "pointer";
-			t.icon.onclick = function() {
+			t.icon.onclick = function(ev) {
 				require(["date_picker.js","context_menu.js"],function(){
 					var menu = new context_menu();
 					new date_picker(t.select.getDate(),t.select.minimum,t.select.maximum,function(picker){
@@ -104,6 +104,7 @@ field_date.prototype._create = function(data) {
 						menu.showBelowElement(t.element);
 					});
 				});
+				stopEventPropagation(ev);
 			};
 			t.element.appendChild(t.icon);
 			t.validate = function() {

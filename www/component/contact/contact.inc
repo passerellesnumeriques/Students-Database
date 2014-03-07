@@ -150,7 +150,7 @@ class contact extends Component {
 				if (!($pi instanceof OrganizationPlugin)) continue;
 				if ($pi->getOrganizationCreator() == $creator) {
 					if (!($pi->canInsertOrganization())) {
-						PNApplication::error("You are not allowed to create orgnization in ".$input["creator"]);
+						PNApplication::error("You are not allowed to create orgnization in ".$creator);
 						return false;
 					}
 					break;
@@ -159,7 +159,7 @@ class contact extends Component {
 		}
 		
 		try {
-			return SQLQuery::create()->insert("OrganizationType", array("creator"=>$input["creator"], "name"=>$input["name"]));
+			return SQLQuery::create()->insert("OrganizationType", array("creator"=>$creator, "name"=>$name));
 		} catch (Exception $e) {
 			PNApplication::error($e);
 			return false;

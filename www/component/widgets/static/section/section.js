@@ -78,10 +78,12 @@ function section(icon, title, content, collapsable, fill_height, css) {
 		}
 		this.footer.appendChild(element);
 		this.footer.className = "section_footer";
+		layout.invalidate(this.element);
 	};
 	this.resetToolBottom = function() {
 		this.footer.className = "section_footer_empty";
 		while (this.footer.childNodes.length > 0) this.footer.removeChild(this.footer.childNodes[0]);
+		layout.invalidate(this.element);
 	};
 	
 	this._init = function() {

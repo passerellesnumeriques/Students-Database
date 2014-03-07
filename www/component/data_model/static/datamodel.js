@@ -50,9 +50,7 @@ datamodel = {
 	registerCellText: function(win, table, column, row_key, text_node) {
 		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
 			text_node.nodeValue = value;
-			var parent = text_node.parentNode;
-			if(parent)
-				layout.invalidate(parent);
+			if (text_node.parentNode) layout.invalidate(text_node.parentNode);
 		});
 	},
 	inputCell: function(input, table, column, row_key) {

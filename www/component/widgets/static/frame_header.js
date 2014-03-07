@@ -6,10 +6,10 @@ if (typeof require != 'undefined') {
 if (typeof theme != 'undefined')
 	theme.css("frame_header.css");
 
-function frame_header_menu_item(id, icon, text, link, tooltip, start_url) {
+function frame_header_menu_item(id, icon, text, link, tooltip_content, start_url, button_type) {
 	this.id = id;
 	this.link = document.createElement("A");
-	this.link.className = "menu_item";
+	this.link.className = "menu_item"+(button_type ? " menu_button" : "");
 	if (icon) {
 		this.icon = document.createElement("IMG");
 		this.icon.src = icon;
@@ -18,34 +18,9 @@ function frame_header_menu_item(id, icon, text, link, tooltip, start_url) {
 	this.text = document.createTextNode(text);
 	this.link.appendChild(this.text);
 	this.link.href = link;
-	this.link.onmouseover = function() {
-		if (!tooltip) return;
-		this.tooltip = document.createElement("DIV");
-		this.tooltip.className = "tooltip";
-		this.tooltip.appendChild(document.createTextNode(tooltip));
-		this.tooltip.style.position = 'absolute';
-		this.tooltip.style.top = (absoluteTop(this)+this.offsetHeight+3)+'px';
-		var x = absoluteLeft(this);
-		if (x <= getWindowWidth()) {
-			this.tooltip.style.left = x+"px";
-			this.tooltip.className = "tooltip";
-		} else {
-			this.tooltip.style.right = (getWindowWidth()-(x+this.offsetWidth))+"px";
-			this.tooltip.className = "tooltip_right";
-		}
-		document.body.appendChild(this.tooltip);
-	};
-	this.link.onmouseout = function() {
-		if (!tooltip) return;
-		if (!this.tooltip) return;
-		if (!this.tooltip.parentNode) { this.tooltip = null; return; }
-		document.body.removeChild(this.tooltip);
-		this.tooltip = null;
-	};
-	var t=this;
-	listenEvent(window,'mouseout',function() {
-		t.link.onmouseout();
-	});
+	this.start_url = start_url;
+	this.button_type = button_type;
+	tooltip(this.link, tooltip_content);
 }
 
 function frame_header(container, frame_name, header_height, css, menu_valign) {
@@ -55,6 +30,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 	container.style.width = "100%";
 	container.style.height = "100%";
 	var t=this;
+	t.container = container;
 	
 	t.setTitle = function(icon, title) {
 		if (!icon && !title) {
@@ -76,17 +52,28 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 				img.onload = function() { layout.invalidate(t.header_title); };
 				t.header_title.appendChild(img);
 			}
-			if (typeof title == 'string')
-				t.header_title.appendChild(document.createTextNode(title));
-			else
-				t.header_title.appendChild(title);
+			if (typeof title == 'string') {
+				var div = document.createElement("DIV");
+				div.style.display = "inline-block";
+				div.innerHTML = title;
+				title = div;
+			}
+			t.header_title.appendChild(title);
 			layout.invalidate(t.header);
 		}
 	};
+	t.addFooter = function() {
+		if (t.footer) return t.footer;
+		t.footer = document.createElement("DIV");
+		t.footer.className = "frame_footer "+css;
+		container.appendChild(t.footer);
+		layout.invalidate(container);
+		return t.footer;
+	};
 
 	t._menu_items = [];
-	t.addMenu = function(id, icon, text, link, tooltip, start_url) {
-		var item = new frame_header_menu_item(id, icon, text, link, tooltip, start_url);
+	t.addMenu = function(id, icon, text, link, tooltip, start_url, button_type) {
+		var item = new frame_header_menu_item(id, icon, text, link, tooltip, start_url, button_type);
 		item.link.target = t.frame.name;
 		t._menu_items.push(item);
 		if (t.header_menu.widget)
@@ -98,27 +85,50 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		return item;
 	};
 	t.getMenuItems = function() { return t._menu_items; };
-	
-	t.addLeftControl = function(control) {
+	t.addMenuControl = function(control, tooltip_content) {
 		if (typeof control == 'string') {
 			var div = document.createElement("DIV");
 			div.innerHTML = control;
 			control = div;
 		}
+		control.style.display = "inline-block";
+		if (tooltip_content) tooltip(control, tooltip_content);
+		if (t.header_menu.widget)
+			t.header_menu.widget.addItem(control);
+		else {
+			// horizontal_menu not yet loaded
+			t.header_menu.appendChild(control);
+		}
+	};
+	
+	t.addLeftControl = function(control, tooltip_content) {
+		if (typeof control == 'string') {
+			var div = document.createElement("DIV");
+			div.innerHTML = control;
+			control = div;
+		}
+		control.style.display = "inline-block";
+		if (tooltip_content) tooltip(control, tooltip_content);
 		if (!t.header_left) {
 			t.header_left = document.createElement("DIV");
 			t.header_left.className = "left_controls";
 			t.header.insertBefore(t.header_left, t.header_menu);
+			require("vertical_align.js",function() {
+				if (t.header_left.parentNode)
+					t.header_left._valign = new vertical_align(t.header_left, menu_valign);
+			});
 		}
 		t.header_left.appendChild(control);
 		layout.invalidate(t.header);
 	};
-	t.addRightControl = function(control) {
+	t.addRightControl = function(control, tooltip_content) {
 		if (typeof control == 'string') {
 			var div = document.createElement("DIV");
 			div.innerHTML = control;
 			control = div;
 		}
+		control.style.display = "inline-block";
+		if (tooltip_content) tooltip(control, tooltip_content);
 		if (!t.header_right) {
 			t.header_right = document.createElement("DIV");
 			t.header_right.className = "right_controls";
@@ -139,6 +149,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 	};
 	t.resetLeftControls = function() {
 		if (!t.header_left) return;
+		if (t.header_left._valign) t.header_left._valign.remove();
 		t.header.removeChild(t.header_left);
 		t.header_left = null;
 		layout.invalidate(t.header);
@@ -232,13 +243,13 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			var item = t._menu_items[i];
 			var start = item.start_url ? new URL(item.start_url) : null;
 			if (start && url.path.startsWith(start.path))
-				item.link.className = "menu_item selected";
+				item.link.className = "menu_item"+(item.button_type ? " menu_button" : "")+" selected";
 			else {
 				var u = new URL(item.link.href);
 				if (u.path == url.path)
-					item.link.className = "menu_item selected";
+					item.link.className = "menu_item"+(item.button_type ? " menu_button" : "")+" selected";
 				else
-					item.link.className = "menu_item";
+					item.link.className = "menu_item"+(item.button_type ? " menu_button" : "");
 			}
 		}
 	};	

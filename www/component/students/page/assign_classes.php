@@ -21,12 +21,15 @@ class page_assign_classes extends Page {
 			$students_ids = array();
 			foreach ($students as $s) array_push($students_ids, $s["people"]);
 			// get class assignment
-			$q = SQLQuery::create()->select("StudentClass");
-			PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period_id);
-			$q->whereIn("StudentClass", "people", $students_ids);
-			$q->field("StudentClass", "people", "people");
-			$q->field("AcademicClass", "id", "class");
-			$students_classes = $q->execute();
+			if (count($students) > 0) {
+				$q = SQLQuery::create()->select("StudentClass");
+				PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period_id);
+				$q->whereIn("StudentClass", "people", $students_ids);
+				$q->field("StudentClass", "people", "people");
+				$q->field("AcademicClass", "id", "class");
+				$students_classes = $q->execute();
+			} else
+				$students_classes = array();
 			foreach ($students as &$s) {
 				foreach ($students_classes as $sc) {
 					if ($sc["people"] == $s["people"]) {
@@ -72,12 +75,15 @@ class page_assign_classes extends Page {
 			$students_ids = array();
 			foreach ($students as $s) array_push($students_ids, $s["people"]);
 			// get class assignment
-			$q = SQLQuery::create()->select("StudentClass");
-			PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period["id"]);
-			$q->whereIn("StudentClass", "people", $students_ids);
-			$q->field("StudentClass", "people", "people");
-			$q->field("AcademicClass", "id", "class");
-			$students_classes = $q->execute();
+			if (count($students) > 0) {
+				$q = SQLQuery::create()->select("StudentClass");
+				PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period["id"]);
+				$q->whereIn("StudentClass", "people", $students_ids);
+				$q->field("StudentClass", "people", "people");
+				$q->field("AcademicClass", "id", "class");
+				$students_classes = $q->execute();
+			} else
+				$students_classes = array();
 			foreach ($students as &$s) {
 				foreach ($students_classes as $sc) {
 					if ($sc["people"] == $s["people"]) {

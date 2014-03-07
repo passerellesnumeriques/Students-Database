@@ -30,6 +30,12 @@ layout = {
 			try { throw new Error("null element given to layout.invalidate"); }
 			catch (e) { log_exception(e); return; }
 		}
+		if (window.frameElement && window.frameElement.style && window.frameElement.style.visibility == 'hidden') return;
+		var p = element;
+		while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
+			if (p.style && p.style.visibility == "hidden") return;
+			p = p.parentNode;
+		}
 		if (getWindowFromDocument(element.ownerDocument) != window) {
 			getWindowFromDocument(element.ownerDocument).layout.invalidate(element);
 			return;
@@ -210,15 +216,17 @@ layout = {
 				element._layout_scroll_height = element.scrollHeight;
 				element._layout_scroll_width = element.scrollWidth;
 				layout.invalidate(element.parentNode);
-				return;
+				//return;
 			}
 		}
 		var children_changed = false;
 		for (var i = 0; i < element.childNodes.length; ++i) {
 			var c = element.childNodes[i];
 			if (c.nodeType != 1) continue; // skip non-element nodes
+			var prev_w = c.scrollWidth;
+			var prev_h = c.scrollHeight;
 			layout._processElement(c, true);
-			if (handlers.length > 0 && (c.scrollHeight != c._layout_scroll_height || c.scrollWidth != c._layout_scroll_width)) {
+			if (handlers.length > 0 && (c.scrollHeight != prev_h || c.scrollWidth != prev_w)) {
 				c._layout_scroll_height = c.scrollHeight;
 				c._layout_scroll_width = c.scrollWidth;
 				children_changed = true;

@@ -29,6 +29,12 @@ function vertical_align(container, align) {
 		}
 	};
 	
+	var listener = function(){t.layout();};
+	
+	t.remove = function() {
+		layout.removeHandler(container, listener);
+	};
+	
 	t.layout();
-	layout.addHandler(container, function(){t.layout();});	
+	layout.addHandler(container, listener);	
 }

@@ -18,8 +18,22 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 		this.input.value = default_message;
 		this.input.className = "informative_text";
 		this.input.default_message = true;
-		this.input.onfocus = function(){ if (t.input.default_message) { t.input.value = ""; t.input.className = ""; t.input.default_message = false; } else t.input.select(); };
-		this.input.onblur = function(){ setTimeout(function(){if (t.input.value == "") { t.input.value = default_message; t.input.className = "informative_text"; t.input.default_message = true; }; t.menu.hide();},100); };
+		this.input.onfocus = function(){ 
+			if (t.input.default_message) { 
+				t.input.value = ""; t.input.className = ""; t.input.default_message = false; 
+				layout.invalidate(container);
+			} else 
+				t.input.select();
+		};
+		this.input.onblur = function(){ 
+			setTimeout(function(){
+				if (t.input.value == "") { 
+					t.input.value = default_message; t.input.className = "informative_text"; t.input.default_message = true; 
+					layout.invalidate(container);
+				}; 
+				t.menu.hide();
+			},100); 
+		};
 		container.appendChild(this.input);
 		
 		this.menu = new autocomplete_menu(this, onselectitem);

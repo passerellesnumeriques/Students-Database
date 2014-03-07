@@ -75,6 +75,7 @@ TreeNode.prototype = {
 		}
 		if (!found) // go to first item (students list)
 			getIFrameWindow(frame).location.href = menu_items[0].link.real_link;
+		setHeaderInfo(this.getPathControls(), this.getInfoControls());
 	},
 	findTag: function(tag) {
 		if (this.tag == tag) return this;
@@ -86,6 +87,12 @@ TreeNode.prototype = {
 	},
 	remove: function() {
 		this.parent.item.removeItem(this.item);
+	},
+	getPathControls: function() {
+		return [];
+	},
+	getInfoControls: function() {
+		return [];
 	}
 };
 function extendsTreeNode(cl) { cl.prototype = new TreeNode; cl.prototype.constructor = cl; }
@@ -99,21 +106,20 @@ function AllStudentsNode(root) {
 	this.parent = root;
 	this.tag = "all_students";
 	var t=this;
-	this.item = createTreeItemSingleCell(null, "All Students", true, function() {
-		window.parent.resetLeftControls();
-		var title = document.createElement("DIV");
-		title.innerHTML = "<img src='/static/curriculum/batch_32.png'/> All Students";
-		title.className = "pn_application_section_title";
-		window.parent.addLeftControl(title);
-		window.parent.resetMenu();
-		var info = document.createElement("DIV");
+	this.getPathControls = function() {
+		var div = document.createElement("DIV");
+		div.innerHTML = "All Students";
+		return [div];
+	};
+	this.getInfoControls = function() {
+		var div = document.createElement("DIV");
 		var nb_batches = 0;
 		for (var i = 0; i < t.item.children.length; ++i)
 			nb_batches += t.item.children[i].children.length;
-		info.innerHTML = nb_batches+" batch(es)";
-		info.className = "pn_application_menu_simple_text";
-		window.parent.addMenuControl(info);
-		
+		div.innerHTML = nb_batches+" batch(es)";
+		return [div];
+	};
+	this.item = createTreeItemSingleCell(null, "All Students", true, function() {
 		setMenuParams("list", {});
 		setMenuParams("pictures", {});
 		setMenuParams("updates", {sections:"[{name:'students'}]"}); 
@@ -133,17 +139,17 @@ function CurrentStudentsNode(all) {
 	this.parent = all;
 	this.tag = "current_students";
 	var t=this;
+	this.getPathControls = function() {
+		var div = document.createElement("DIV");
+		div.innerHTML = "Current Students";
+		return [div];
+	};
+	this.getInfoControls = function() {
+		var div = document.createElement("DIV");
+		div.innerHTML = t.item.children.length+" batch(es)";
+		return [div];
+	};
 	this.item = createTreeItemSingleCell(null, "Current Students", true, function() {
-		window.parent.resetLeftControls();
-		var title = document.createElement("DIV");
-		title.innerHTML = "<img src='/static/curriculum/batch_32.png'/> Current Students";
-		title.className = "pn_application_section_title";
-		window.parent.addLeftControl(title);
-		window.parent.resetMenu();
-		var info = document.createElement("DIV");
-		info.innerHTML = t.item.children.length+" batch(es)";
-		info.className = "pn_application_menu_simple_text";
-		window.parent.addMenuControl(info);
 		var batches = "";
 		var tags = "";
 		for (var i = 0; i < t.item.children.length; ++i) {
@@ -170,18 +176,17 @@ function AlumniNode(all) {
 	this.parent = all;
 	this.tag = "alumni";
 	var t=this;
+	this.getPathControls = function() {
+		var div = document.createElement("DIV");
+		div.innerHTML = "Alumni";
+		return [div];
+	};
+	this.getInfoControls = function() {
+		var div = document.createElement("DIV");
+		div.innerHTML = t.item.children.length+" batch(es)";
+		return [div];
+	};
 	this.item = createTreeItemSingleCell(null, "Alumni", true, function() {
-		window.parent.resetLeftControls();
-		var title = document.createElement("DIV");
-		title.innerHTML = "<img src='/static/curriculum/batch_32.png'/> Alumni";
-		title.className = "pn_application_section_title";
-		window.parent.addLeftControl(title);
-		window.parent.resetMenu();
-		var info = document.createElement("DIV");
-		info.innerHTML = t.item.children.length+" batch(es)";
-		info.className = "pn_application_menu_simple_text";
-		window.parent.addMenuControl(info);
-
 		var batches = "";
 		var tags = [];
 		for (var i = 0; i < t.item.children.length; ++i) {
@@ -216,6 +221,29 @@ function BatchNode(current, alumni, batch) {
 		batch.name = value;
 	});
 	span.appendChild(batch_name);
+	this.getPathControls = function() {
+		var c = this.parent.getPathControls();
+		var div = document.createElement("DIV");
+		div.appendChild(document.createTextNode("Batch "));
+		<?php datamodel_cell_inline($this, "this.cell_name", "div", $can_edit, "StudentBatch", "name", "batch.id", null, "batch.name"); ?>
+		c.push(div);
+		return c;
+	};
+	this.getInfoControls = function () {
+		var span_integration = document.createElement("SPAN");
+		var b = document.createElement("B"); b.appendChild(document.createTextNode("Integration")); span_integration.appendChild(b); span_integration.appendChild(document.createTextNode(": "));
+		var span_graduation = document.createElement("SPAN");
+		var b = document.createElement("B"); b.appendChild(document.createTextNode("Graduation")); span_graduation.appendChild(b); span_graduation.appendChild(document.createTextNode(": "));
+		<?php 
+		datamodel_cell_inline($this, "this.cell_start", "span_integration", false, "StudentBatch", "start_date", "batch.id", null, "batch.start_date");
+		datamodel_cell_inline($this, "this.cell_end", "span_graduation", false, "StudentBatch", "end_date", "batch.id", null, "batch.end_date");
+		?>
+		var div = document.createElement("DIV");
+		div.appendChild(span_integration);
+		div.appendChild(document.createTextNode(" "));
+		div.appendChild(span_graduation);
+		return [div];
+	};
 	var t=this;
 	var context_menu_builder = <?php if ($can_edit) {
 	?>function(menu) {
@@ -223,51 +251,6 @@ function BatchNode(current, alumni, batch) {
 		menu.addIconItem(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.remove,"right_bottom"), "Remove Batch", function() { remove_batch(batch); });
 	};<?php	} else { echo "null;"; } ?>
 	this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, !is_alumni, function() {
-		window.parent.resetLeftControls();
-		var title = document.createElement("DIV");
-		title.appendChild(document.createTextNode("Batch "));
-		<?php datamodel_cell_inline($this, "this.cell_name", "title", $can_edit, "StudentBatch", "name", "batch.id", null, "batch.name"); ?>
-		var title_container = document.createElement("DIV");
-		title_container.innerHTML = "<img src='/static/curriculum/batch_32.png'/> ";
-		title.style.display = "inline-block";
-		title_container.appendChild(title);
-		title_container.className = "pn_application_section_title";
-		window.parent.addLeftControl(title_container);
-
-		window.parent.resetMenu();
-		var span = document.createElement("SPAN");
-		title = document.createElement("SPAN");
-		title.style.fontWeight = "bold";
-		title.appendChild(document.createTextNode("Integration"));
-		span.appendChild(title);
-		span.appendChild(document.createTextNode(": "));
-		var span_integration = document.createElement("SPAN");
-		span.appendChild(span_integration);
-		span.className = "pn_application_menu_simple_text";
-		window.parent.addMenuControl(span);
-
-		span = document.createElement("SPAN");
-		title = document.createElement("SPAN");
-		title.style.fontWeight = "bold";
-		title.appendChild(document.createTextNode("Graduation"));
-		span.appendChild(title);
-		span.appendChild(document.createTextNode(": "));
-		var span_graduation = document.createElement("SPAN");
-		span.appendChild(span_graduation);
-		span.className = "pn_application_menu_simple_text";
-		window.parent.addMenuControl(span);
-				
-		<?php 
-		datamodel_cell_inline($this, "this.cell_start", "span_integration", false, "StudentBatch", "start_date", "batch.id", null, "batch.start_date");
-		datamodel_cell_inline($this, "this.cell_end", "span_graduation", false, "StudentBatch", "end_date", "batch.id", null, "batch.end_date");
-		?>
-
-		var button = document.createElement("DIV");
-		button.className = "button_integrated";
-		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit periods and specializations";
-		button.onclick = function() { edit_batch(batch); };
-		window.parent.addMenuControl(button);
-		
 		setMenuParams("list", {batches:batch.id});
 		setMenuParams("pictures", {batches:batch.id});
 		setMenuParams("updates", {sections:"[{name:'students',tags:['batch"+batch.id+"']}]"}); 
@@ -318,68 +301,31 @@ function AcademicPeriodNode(batch_node, period) {
 		period.name = value;
 	});
 	span.appendChild(period_name);
-	var t=this;
-	this.item = createTreeItemSingleCell(theme.build_icon("/static/curriculum/hat.png", "/static/curriculum/calendar_10.gif", "right_bottom"), span, parseSQLDate(period.end_date).getTime() > now && parseSQLDate(period.start_date).getTime() < now, function() {
-		window.parent.resetLeftControls();
-		
-		var title_container = document.createElement("DIV");
-		title_container.innerHTML = "<img src='/static/curriculum/batch_32.png'/> ";
-		var title = document.createElement("DIV");
-		title.appendChild(document.createTextNode("Batch "));
-		var cell = document.createElement("SPAN"); title.appendChild(cell);
-		<?php datamodel_cell_inline($this, "t.cell_batch", "cell", $can_edit, "StudentBatch", "name", "batch_node.batch.id", null, "batch_node.batch.name"); ?>
-		title.style.display = "inline-block";
-		title_container.appendChild(title);
-		title_container.className = "pn_application_section_title pn_application_menu_separator";
-		title_container.style.display = "inline-block";
-		window.parent.addLeftControl(title_container);
-
-		title_container = document.createElement("DIV");
-		title_container.innerHTML = "<img src='"+theme.build_icon("/static/calendar/calendar_32.png", "/static/curriculum/hat.png", "right_bottom")+"'/> ";
-		title = document.createElement("DIV");
-		title.appendChild(document.createTextNode("Period "));
-		cell = document.createElement("SPAN"); title.appendChild(cell);
-		<?php datamodel_cell_inline($this, "t.cell_name", "cell", $can_edit, "AcademicPeriod", "name", "period.id", null, "period.name"); ?>
-		title.style.display = "inline-block";
-		title_container.appendChild(title);
-		title_container.className = "pn_application_section_title";
-		title_container.style.display = "inline-block";
-		window.parent.addLeftControl(title_container);
-				
-		window.parent.resetMenu();
-		var span = document.createElement("SPAN");
-		title = document.createElement("SPAN");
-		title.style.fontWeight = "bold";
-		title.appendChild(document.createTextNode("Start"));
-		span.appendChild(title);
-		span.appendChild(document.createTextNode(": "));
+	this.getPathControls = function() {
+		var c = this.parent.getPathControls();
+		var div = document.createElement("DIV");
+		div.appendChild(document.createTextNode("Period "));
+		<?php datamodel_cell_inline($this, "t.cell_name", "div", $can_edit, "AcademicPeriod", "name", "period.id", null, "period.name"); ?>
+		c.push(div);
+		return c;
+	};
+	this.getInfoControls = function () {
 		var span_start = document.createElement("SPAN");
-		span.appendChild(span_start);
-		span.className = "pn_application_menu_simple_text";
-		window.parent.addMenuControl(span);
-		
-		span = document.createElement("SPAN");
-		title = document.createElement("SPAN");
-		title.style.fontWeight = "bold";
-		title.appendChild(document.createTextNode("End"));
-		span.appendChild(title);
-		span.appendChild(document.createTextNode(": "));
+		var b = document.createElement("B"); b.appendChild(document.createTextNode("Start")); span_start.appendChild(b); span_start.appendChild(document.createTextNode(": "));
 		var span_end = document.createElement("SPAN");
-		span.appendChild(span_end);
-		span.className = "pn_application_menu_simple_text";
-		window.parent.addMenuControl(span);
-						
+		var b = document.createElement("B"); b.appendChild(document.createTextNode("End")); span_end.appendChild(b); span_end.appendChild(document.createTextNode(": "));
 		<?php
 		datamodel_cell_inline($this, "t.cell_start", "span_start", false, "AcademicPeriod", "start_date", "period.id", null, "period.start_date");
 		datamodel_cell_inline($this, "t.cell_end", "span_end", false, "AcademicPeriod", "end_date", "period.id", null, "period.end_date");
 		?>
-		
-		var button = document.createElement("DIV");
-		button.className = "button_integrated";
-		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit periods and specializations";
-		button.onclick = function() { edit_batch(batch_node.batch); };
-		window.parent.addMenuControl(button);
-				
+		var div = document.createElement("DIV");
+		div.appendChild(span_start);
+		div.appendChild(document.createTextNode(" "));
+		div.appendChild(span_end);
+		return [div];
+	};
+	var t=this;
+	this.item = createTreeItemSingleCell(theme.build_icon("/static/curriculum/hat.png", "/static/curriculum/calendar_10.gif", "right_bottom"), span, parseSQLDate(period.end_date).getTime() > now && parseSQLDate(period.start_date).getTime() < now, function() {
 		setMenuParams("list", {period:period.id});
 		setMenuParams("pictures", {period:period.id});
 		setMenuParams("updates", {sections:"[{name:'students',tags:['period"+period.id+"']}]"}); 
@@ -435,61 +381,21 @@ function SpecializationNode(period_node, spe_id) {
 	for (var i = 0; i < specializations.length; ++i)
 		if (specializations[i].id == spe_id) { spe = specializations[i]; break; }
 	var spe_name = document.createTextNode(spe.name);
-	var t=this;
 	window.top.datamodel.addCellChangeListener(window, 'Specialization', 'name', spe_id, function(value){
 		spe_name.nodeValue = value;
 		spe.name = value;
 	});
 	span.appendChild(spe_name);
+	this.getPathControls = function() {
+		var c = this.parent.getPathControls();
+		var div = document.createElement("DIV");
+		div.appendChild(document.createTextNode("Specialization "));
+		<?php datamodel_cell_inline($this, "cell", "div", $can_edit, "Specialization", "name", "spe_id", null, "spe.name"); ?>
+		c.push(div);
+		return c;
+	};
 	var t=this;
 	this.item = createTreeItemSingleCell("/static/curriculum/curriculum_16.png", span, true, function() {
-		window.parent.resetLeftControls();
-
-		var title_container = document.createElement("DIV");
-		title_container.innerHTML = "<img src='/static/curriculum/batch_32.png'/> ";
-		var title = document.createElement("DIV");
-		title.appendChild(document.createTextNode("Batch "));
-		var cell;
-		var cell_container = document.createElement("SPAN"); title.appendChild(cell_container);
-		<?php datamodel_cell_inline($this, "cell", "cell_container", $can_edit, "StudentBatch", "name", "period_node.parent.batch.id", null, "period_node.parent.batch.name"); ?>
-		title.style.display = "inline-block";
-		title_container.appendChild(title);
-		title_container.className = "pn_application_section_title pn_application_menu_separator";
-		title_container.style.display = "inline-block";
-		window.parent.addLeftControl(title_container);
-
-		title_container = document.createElement("DIV");
-		title_container.innerHTML = "<img src='"+theme.build_icon("/static/calendar/calendar_32.png", "/static/curriculum/hat.png", "right_bottom")+"'/> ";
-		title = document.createElement("DIV");
-		title.appendChild(document.createTextNode("Period "));
-		cell_container = document.createElement("SPAN"); title.appendChild(cell_container);
-		<?php datamodel_cell_inline($this, "cell", "cell_container", $can_edit, "AcademicPeriod", "name", "period_node.period.id", null, "period_node.period.name"); ?>
-		title.style.display = "inline-block";
-		title_container.appendChild(title);
-		title_container.className = "pn_application_section_title pn_application_menu_separator";
-		title_container.style.display = "inline-block";
-		window.parent.addLeftControl(title_container);
-		
-		title_container = document.createElement("DIV");
-		title_container.innerHTML = "<img src='/static/curriculum/curriculum_32.png'/> ";
-		title = document.createElement("DIV");
-		title.appendChild(document.createTextNode("Specialization "));
-		cell_container = document.createElement("SPAN"); title.appendChild(cell_container);
-		<?php datamodel_cell_inline($this, "cell", "cell_container", $can_edit, "Specialization", "name", "spe_id", null, "spe.name"); ?>
-		title.style.display = "inline-block";
-		title_container.appendChild(title);
-		title_container.className = "pn_application_section_title";
-		title_container.style.display = "inline-block";
-		window.parent.addLeftControl(title_container);
-		
-		window.parent.resetMenu();
-
-		var button = document.createElement("DIV");
-		button.className = "button_integrated";
-		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit periods and specializations";
-		button.onclick = function() { edit_batch(period_node.parent.batch); };
-		window.parent.addMenuControl(button);
-		
 		setMenuParams("list", {period:period_node.period.id,spe:spe_id});
 		setMenuParams("pictures", {period:period_node.period.id,spe:spe_id});
 		setMenuParams("updates", {sections:"[{name:'students',tags:['period"+period_node.period.id+"']}]"}); // TODO better 
@@ -522,73 +428,24 @@ function ClassNode(parent, cl) {
 		cl.name = value;
 	});
 	span.appendChild(cl_name);
+	this.getPathControls = function() {
+		var c = this.parent.getPathControls();
+		var div = document.createElement("DIV");
+		div.appendChild(document.createTextNode("Class "));
+		<?php datamodel_cell_inline($this, "cell", "div", $can_edit, "AcademicClass", "name", "cl.id", null, "cl.name"); ?>
+		c.push(div);
+		return c;
+	};
 	var t=this;
 	this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, true, function() {
-		var batch, period, spe;
+		var period, spe;
 		if (cl.spe_id) {
 			spe = parent;
 			period = spe.parent;
-			batch = period.parent;
 		} else {
 			period = parent;
-			batch = period.parent;
 			spe = null;
 		}
-		window.parent.resetLeftControls();
-
-		var title_container = document.createElement("DIV");
-		title_container.innerHTML = "<img src='/static/curriculum/batch_32.png'/> ";
-		var title = document.createElement("DIV");
-		title.appendChild(document.createTextNode("Batch "));
-		var cell;
-		var cell_container = document.createElement("SPAN"); title.appendChild(cell_container);
-		<?php datamodel_cell_inline($this, "cell", "cell_container", $can_edit, "StudentBatch", "name", "batch.batch.id", null, "batch.batch.name"); ?>
-		title.style.display = "inline-block";
-		title_container.appendChild(title);
-		title_container.className = "pn_application_section_title pn_application_menu_separator";
-		title_container.style.display = "inline-block";
-		window.parent.addLeftControl(title_container);
-
-		title_container = document.createElement("DIV");
-		title_container.innerHTML = "<img src='"+theme.build_icon("/static/calendar/calendar_32.png", "/static/curriculum/hat.png", "right_bottom")+"'/> ";
-		title = document.createElement("DIV");
-		title.appendChild(document.createTextNode("Period "));
-		cell_container = document.createElement("SPAN"); title.appendChild(cell_container);
-		<?php datamodel_cell_inline($this, "cell", "cell_container", $can_edit, "AcademicPeriod", "name", "period.period.id", null, "period.period.name"); ?>
-		title.style.display = "inline-block";
-		title_container.appendChild(title);
-		title_container.className = "pn_application_section_title pn_application_menu_separator";
-		title_container.style.display = "inline-block";
-		window.parent.addLeftControl(title_container);
-
-		if (spe) {
-			title_container = document.createElement("DIV");
-			title_container.innerHTML = "<img src='/static/curriculum/curriculum_32.png'/> ";
-			title = document.createElement("DIV");
-			title.appendChild(document.createTextNode("Specialization "));
-			cell_container = document.createElement("SPAN"); title.appendChild(cell_container);
-			<?php datamodel_cell_inline($this, "cell", "cell_container", $can_edit, "Specialization", "name", "spe.spe.id", null, "spe.spe.name"); ?>
-			title.style.display = "inline-block";
-			title_container.appendChild(title);
-			title_container.className = "pn_application_section_title pn_application_menu_separator";
-			title_container.style.display = "inline-block";
-			window.parent.addLeftControl(title_container);
-		}		
-		
-		title_container = document.createElement("DIV");
-		title_container.innerHTML = "<img src='/static/curriculum/batch_32.png'/> ";
-		title = document.createElement("DIV");
-		title.appendChild(document.createTextNode("Class "));
-		cell_container = document.createElement("SPAN"); title.appendChild(cell_container);
-		<?php datamodel_cell_inline($this, "cell", "cell_container", $can_edit, "AcademicClass", "name", "cl.id", null, "cl.name"); ?>
-		title.style.display = "inline-block";
-		title_container.appendChild(title);
-		title_container.className = "pn_application_section_title";
-		title_container.style.display = "inline-block";
-		window.parent.addLeftControl(title_container);
-		
-		window.parent.resetMenu();
-
 		var o = {}; o["class"] = cl.id;
 		setMenuParams("list", o);
 		setMenuParams("pictures", o);
@@ -694,38 +551,68 @@ function selectPage(id) {
 	item.link.onclick(createEvent('click'));
 }
 
+function setHeaderInfo(paths, controls) {
+	window.header_info.innerHTML = "";
+	var container;
+	container = document.createElement("DIV");
+	container.className = "path_container";
+	for (var i = 0; i < paths.length; ++i) {
+		if (i > 0) container.appendChild(document.createTextNode(" > "));
+		paths[i].className = "path_item";
+		container.appendChild(paths[i]);
+	}
+	window.header_info.appendChild(container);
+	var sep = document.createElement("DIV");
+	sep.className = "separator";
+	window.header_info.appendChild(sep);
+	container = document.createElement("DIV");
+	container.className = "info_container";
+	for (var i = 0; i < controls.length; ++i) {
+		controls[i].className = "info_item";
+		container.appendChild(controls[i]);
+	}
+	window.header_info.appendChild(container);
+	layout.invalidate(window.header_info);
+}
+
 //Initilization of the page and menu
-if (window.parent.resetAllMenus) window.parent.resetAllMenus(); 
+if (window.parent.resetAllMenus) {
+	window.parent.add_stylesheet("/static/students/style.css");
+	window.parent.resetAllMenus();
+	window.parent.addMenuItem("/static/curriculum/batch_16.png", "Batches & Classes", null, "/dynamic/students/page/tree");
+	window.header_info = document.createElement("DIV");
+	window.header_info.className = "students_header_info";
+	window.parent.addMenuControl(window.header_info);
+	require("autocomplete.js",function() {
+		var container = document.createElement("DIV");
+		container.style.display = "inline-block";
+		container.style.marginBottom = "5px";
+		container.style.verticalAlign = "bottom";
+		var ac = new autocomplete(container, 3, 'Search a student', function(name, handler) {
+			service.json("students","search_student_by_name", {name:name}, function(res) {
+				if (!res) { handler([]); return; }
+				var items = [];
+				for (var i = 0; i < res.length; ++i) {
+					var item = new autocomplete_item(res[i].people_id, res[i].first_name+' '+res[i].last_name, res[i].first_name+' '+res[i].last_name+" (Batch "+res[i].batch_name+")");
+					items.push(item); 
+				}
+				handler(items);
+			});
+		}, function(item) {
+			document.getElementById('students_page').src = "/dynamic/people/page/profile?people="+item.value;
+		}, 250);
+		setBorderRadius(ac.input,8,8,8,8,8,8,8,8);
+		setBoxShadow(ac.input,-1,2,2,0,'#D8D8F0',true);
+		ac.input.style.background = "#ffffff url('"+theme.icons_16.search+"') no-repeat 3px 1px";
+		ac.input.style.padding = "2px 4px 2px 23px";
+		ac.input.style.margin = "2px";
+		window.parent.addRightControl(container);
+	});
+} 
 build_tree();
 var node = root.findTag(url.hash);
 if (node) node.item.select();
 selectPage(page);
-
-// Put the search student control
-if (window.parent.addMenuItem)
-require("autocomplete.js",function() {
-	var container = document.createElement("DIV");
-	container.style.display = "inline-block";
-	var ac = new autocomplete(container, 3, 'Search a student', function(name, handler) {
-		service.json("students","search_student_by_name", {name:name}, function(res) {
-			if (!res) { handler([]); return; }
-			var items = [];
-			for (var i = 0; i < res.length; ++i) {
-				var item = new autocomplete_item(res[i].people_id, res[i].first_name+' '+res[i].last_name, res[i].first_name+' '+res[i].last_name+" (Batch "+res[i].batch_name+")");
-				items.push(item); 
-			}
-			handler(items);
-		});
-	}, function(item) {
-		document.getElementById('training_education_page').src = "/dynamic/people/page/profile?people="+item.value;
-	}, 250);
-	setBorderRadius(ac.input,8,8,8,8,8,8,8,8);
-	setBoxShadow(ac.input,-1,2,2,0,'#D8D8F0',true);
-	ac.input.style.background = "#ffffff url('"+theme.icons_16.search+"') no-repeat 3px 1px";
-	ac.input.style.padding = "2px 4px 2px 23px";
-	ac.input.style.margin = "2px";
-	window.parent.addRightControl(container);
-});
 
 </script>
 <?php

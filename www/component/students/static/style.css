@@ -1,0 +1,32 @@
+.students_header_info {
+	margin-left: 10px;
+	height: 35px;
+	color: #000080;
+	vertical-align: top;
+}
+.students_header_info .path_container {
+    display: inline-block;
+	vertical-align: bottom;
+    padding-bottom: 4px;
+}
+.students_header_info .path_item {
+	display: inline-block;
+	color: #000040;
+	font-weight: bold;
+}
+.students_header_info .separator {
+	display:inline-block;
+	height: 35px;
+	margin: 0px 5px 0px 0px;
+	width: 10px;
+	border-right: 1px solid #808080;
+	border-bottom-right-radius: 10px;
+}
+.students_header_info .info_container {
+    display: inline-block;
+	vertical-align: bottom;
+    padding-bottom: 4px;
+}
+.students_header_info .info_item {
+    display: inline-block;
+}

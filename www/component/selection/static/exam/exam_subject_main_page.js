@@ -52,12 +52,7 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 		info_subjects.src = theme.icons_16.info;
 		info_subjects.style.cursor = "pointer";
 		info_subjects.style.verticalAlign = "bottom";
-		info_subjects.onmouseover = function(){
-			createToolTip(this,"An exam subject is made of parts and questions, and must represent the exam sheet given to the applicant. For instance, if you have three entrance examinations, \"Math & Logic\", \"English\", \"Speed and Accuracy\", you must create the three respective exam subjects.<br/> If you want to do any combination between the subjects parts (for instance separate the \"Math\" and the \"Logic\" parts), you will be able to do so at the <i>Exam Topics</i> step");
-		};
-		info_subjects.onmouseout = function(){
-			removeToolTip(this);
-		};
+		tooltip(info_subjects,"An exam subject is made of parts and questions, and must represent the exam sheet given to the applicant. For instance, if you have three entrance examinations, \"Math & Logic\", \"English\", \"Speed and Accuracy\", you must create the three respective exam subjects.<br/> If you want to do any combination between the subjects parts (for instance separate the \"Math\" and the \"Logic\" parts), you will be able to do so at the <i>Exam Topics</i> step");
 		th.appendChild(info_subjects);
 		tr_head.appendChild(th);
 		t.table.appendChild(tr_head);
@@ -175,14 +170,9 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 			tr.menu.push(remove_button);
 		}
 
-		tr.onmouseover = function(){
-			for(var i = 0; i < this.menu.length; i++)
-				this.menu[i].style.visibility = "visible";
-		};
-		tr.onmouseout = function(){
-			for(var i = 0; i < this.menu.length; i++)
-				this.menu[i].style.visibility = "hidden";
-		};
+		require("animation.js",function() {
+			animation.appearsOnOver(tr, tr.menu);
+		});
 	};
 
 	/**
