@@ -36,14 +36,14 @@ class service_search_student_by_name extends Service {
 			return;
 		}
 		
-		$q = SQLQuery::create()
-			->select("Student")
-			->join("Student", "People", array("people"=>"id"))
+		$q = SQLQuery::create()->select("Student")
 			->field("Student", "people", "people")
+			->field("Student", "batch", "batch_id")
+			;
+		PNApplication::$instance->people->joinPeople($q, "Student", "people");
+		$q
 			->field("People", "first_name", "first_name")
-			->field("People", "last_name", "last_name")
-			->join("Student", "StudentBatch", array("batch"=>"id"))
-			->field("StudentBatch", "name", "batch_name")
+			->field("People", "last_name", "last_name");
 			;
 		$where = "";
 		foreach ($words as $word) {
@@ -53,6 +53,12 @@ class service_search_student_by_name extends Service {
 		$q->where($where);
 		
 		$students = $q->execute();
+		$batches = array();
+		foreach ($students as $s) if (!in_array($s["batch_id"], $batches)) array_push($batches, $s["batch_id"]);
+		$batches = PNApplication::$instance->curriculum->getBatches($batches);
+		foreach ($students as &$s) {
+			foreach ($batches as $b) if ($b["id"] == $s["batch_id"]) { $s["batch_name"] = $b["name"]; break; }
+		}
 		$evaluate = function($s) use ($words) {
 			$fn = strtolower($s["first_name"]);
 			$ln = strtolower($s["last_name"]);
@@ -115,7 +121,7 @@ class service_search_student_by_name extends Service {
 		});
 		echo "[";
 		$first = true;
-		foreach ($students as $s) {
+		foreach ($students as &$s) {
 			if ($first) $first = false; else echo ",";
 			echo "{";
 			echo "people_id:".$s["people"];

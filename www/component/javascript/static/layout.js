@@ -216,7 +216,7 @@ layout = {
 				element._layout_scroll_height = element.scrollHeight;
 				element._layout_scroll_width = element.scrollWidth;
 				layout.invalidate(element.parentNode);
-				return;
+				//return;
 			}
 		}
 		var children_changed = false;

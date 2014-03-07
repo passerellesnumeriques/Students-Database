@@ -9,6 +9,7 @@ class service_todo_list extends Service {
 	public function get_output_format($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
+		return;
 		if (isset($input["batch_id"])) {
 			$batch = PNApplication::$instance->curriculum->getBatch($input["batch_id"]);
 			$h = "";

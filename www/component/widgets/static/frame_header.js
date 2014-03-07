@@ -52,10 +52,13 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 				img.onload = function() { layout.invalidate(t.header_title); };
 				t.header_title.appendChild(img);
 			}
-			if (typeof title == 'string')
-				t.header_title.appendChild(document.createTextNode(title));
-			else
-				t.header_title.appendChild(title);
+			if (typeof title == 'string') {
+				var div = document.createElement("DIV");
+				div.style.display = "inline-block";
+				div.innerHTML = title;
+				title = div;
+			}
+			t.header_title.appendChild(title);
 			layout.invalidate(t.header);
 		}
 	};

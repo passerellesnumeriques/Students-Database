@@ -368,6 +368,7 @@ function editSpecializations() {
 			}
 			selected_specializations = list;
 			refreshSpecializations();
+			layout.invalidate(document.body);
 			popup.close();
 		});
 		popup.show();

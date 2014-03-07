@@ -14,8 +14,10 @@ class curriculum extends Component {
 	/** Retrieve the list of existing batches of students
 	 * @return array the result from the database
 	 */
-	public function getBatches() {
-		return SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true)->execute();
+	public function getBatches($ids = null) {
+		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+		if ($ids <> null) $q->whereIn("StudentBatch", "id", $ids);
+		return $q->execute();
 	}
 	/** Retrieve the given batch
 	 * @param integer $batch_id the requested batch

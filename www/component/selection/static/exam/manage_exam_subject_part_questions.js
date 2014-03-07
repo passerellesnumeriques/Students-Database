@@ -284,7 +284,9 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 					/**
 					 * Display the remove, and inserts buttons only when the mouse is over the tr
 					 */
-					animation.appearsOnOver(tr, tr.menu);
+					require("animation.js",function() {
+						animation.appearsOnOver(tr, tr.menu);
+					});
 				}
 				if(i == 0)
 					tbody.appendChild(tr_head);

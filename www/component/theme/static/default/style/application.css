@@ -21,6 +21,7 @@
     cursor: pointer;
     padding-right: 5px;
     margin-right: 5px;
+    vertical-align: middle;
 }
 
 .frame_header.application .menu_item {
