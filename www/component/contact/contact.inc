@@ -6,8 +6,10 @@ class contact extends Component {
 	
 	public function getPluginImplementations() {
 		require_once("ContactPeoplePlugin.inc");
+		require_once("ContactPeopleProfileGeneralInfoPlugin.inc");
 		return array(
-			new ContactPeoplePlugin()
+			new ContactPeoplePlugin(),
+			new ContactPeopleProfileGeneralInfoPlugin()
 		);
 	}
 	/**

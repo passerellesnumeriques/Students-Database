@@ -23,34 +23,23 @@ function splitter_vertical(element, position) {
 	
 	t._fireLayout = false;
 	t._fireLayoutSizes = null;
-	t._position = function(prev_h,call) {
+	t._position = function() {
 		t._fireLayoutSizes = {};
 		t._fireLayoutSizes.w = t.element.offsetWidth,
 		t._fireLayoutSizes.h = t.element.offsetHeight,
 		t._fireLayoutSizes.sw = 7,
 		t._fireLayoutSizes.x = Math.floor(t._fireLayoutSizes.w*t.position - t._fireLayoutSizes.sw/2);
-		setWidth(t.part1, t._fireLayoutSizes.x);
-		setHeight(t.part1, t._fireLayoutSizes.h);
-		t.separator.style.left = t._fireLayoutSizes.x+"px";
-		t.separator.style.height = t._fireLayoutSizes.h+"px";
-		t.part2.style.left = (t._fireLayoutSizes.x+t._fireLayoutSizes.sw)+"px";
-		setWidth(t.part2, t._fireLayoutSizes.w-t._fireLayoutSizes.x-t._fireLayoutSizes.sw-1);
-		setHeight(t.part2, t._fireLayoutSizes.h);
-		var layout_function = function() {
-			layout.invalidate(t.part1);
-			layout.invalidate(t.part2);
-			if (t.element.offsetHeight != t._fireLayoutSizes.h) {
-				if (!prev_h || (t.element.offsetHeight != prev_h && call < 3)) t._position(t.element.offsetHeight, call ? 1 : call+1);
-			}
-		};
-		if (call && call > 0) layout_function();
-		else if (!t._fireLayout) {
-			t._fireLayout = true;
-			setTimeout(function(){
-				t._fireLayout = false;
-				layout_function();
-			},100);
-		}
+		var w = t.element.offsetWidth;
+		var h = t.element.offsetHeight;
+		var sw = 7;
+		var x = Math.floor(w*t.position - sw/2);
+		setWidth(t.part1, x);
+		setHeight(t.part1, h);
+		t.separator.style.left = x+"px";
+		t.separator.style.height = h+"px";
+		t.part2.style.left = (x+sw)+"px";
+		setWidth(t.part2, w-x-sw-1);
+		setHeight(t.part2, h);
 	};
 	
 	t.element.style.position = "relative";
@@ -65,7 +54,7 @@ function splitter_vertical(element, position) {
 	t.part2.style.position = "absolute";
 	t.part2.style.top = "0px";
 	element.insertBefore(t.separator, t.part2);
-	t._position();
+	layout.invalidate(t.element);
 	
 	t.positionChanged = new Custom_Event();
 	
@@ -75,7 +64,6 @@ function splitter_vertical(element, position) {
 		unlistenEvent(this_w, 'blur', t._stop_move);
 		window.top.pnapplication.unregisterOnMouseMove(t._moving);
 		window.top.pnapplication.unregisterOnMouseUp(t._stop_move);
-		setTimeout(function(){layout.invalidate(t.element);},1);
 	};
 	t._moving = function(mouse_x, mouse_y) {
 		var diff = mouse_x - t.mouse_pos;
@@ -85,7 +73,7 @@ function splitter_vertical(element, position) {
 		x += diff;
 		t.position = x/w;
 		t.mouse_pos = mouse_x;
-		t._position();
+		layout.invalidate(t.element);
 		t.positionChanged.fire(t);
 	};
 	t.mouse_pos = 0;
@@ -107,11 +95,12 @@ function splitter_vertical(element, position) {
 		t.part2.style.top = '0px';
 		t.part2.style.width = w+'px';
 		t.part2.style.height = h+'px';
+		layout.invalidate(t.element);
 	};
 	t.show_left = function() {
 		t.part1.style.visibility = 'visible';
 		t.separator.style.visibility = 'visible';
-		t._position();
+		layout.invalidate(t.element);
 	};
 	t.hide_right = function() {
 		var w = t.element.offsetWidth;
@@ -122,11 +111,12 @@ function splitter_vertical(element, position) {
 		t.part1.style.top = '0px';
 		t.part1.style.width = w+'px';
 		t.part1.style.height = h+'px';
+		layout.invalidate(t.element);
 	};
 	t.show_right = function() {
 		t.part2.style.visibility = 'visible';
 		t.separator.style.visibility = 'visible';
-		t._position();
+		layout.invalidate(t.element);
 	};
 	
 	t.remove = function() {
@@ -134,5 +124,6 @@ function splitter_vertical(element, position) {
 		t.element.removeChild(t.separator);
 		t.part1.style.position = 'static';
 		t.part2.style.position = 'static';
+		layout.invalidate(t.element);
 	};
 }
