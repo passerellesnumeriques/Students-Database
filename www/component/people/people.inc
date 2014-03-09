@@ -6,8 +6,10 @@ class people extends Component {
 
 	public function getPluginImplementations() {
 		require_once("PeoplePeoplePlugin.inc");
+		require_once("PeoplePluginsImplementations.inc");
 		return array(
-			new PeoplePeoplePlugin()
+			new PeoplePeoplePlugin(),
+			new PeopleGeneralInfo()
 		);
 	}
 

@@ -1,21 +1,6 @@
 <?php 
 interface PeoplePlugin {
 
-	/**
-	 * Prepare the SQL request that will retrieve the people information, to determine which pages/sections to display in the people's profile
-	 * @param SQLQuery $q
-	 * @param integer $people_id
-	 */
-	public function preparePeopleProfilePagesRequest(&$q, $people_id);
-	/** Return pages that will be displayed in a people's profile
-	 * @param array $people the people row from the database
-	 * @return array(page_id=>array(icon_16,title,url,priority,tooltip))
-	 */
-	public function getPeopleProfilePages($people_id, $people, $q);
-	/** returns an array of (section_icon,section_title,section_path,priority) */
-	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q);
-
-	
 	/** returns an array of (icon,title,page_path,priority) */
 	public function getCreatePeopleSupportedTypes();
 	public function isCreatePeopleAllowed($people_type);
