@@ -144,7 +144,7 @@ class SelectionJSON{
 	 */	
 	public static function InformationSession($row_IS,$rows_partners){
 		$data = "";
-		if(isset($row_IS) && $row_IS <> null){
+		if(isset($row_IS)){
 			$data.= "{id:".json_encode($row_IS["id"]).", ";
 			$data.= "geographic_area:".json_encode($row_IS["geographic_area"]);
 			$data.= ", date:".json_encode($row_IS["date"]);
@@ -839,5 +839,224 @@ class SelectionJSON{
 		} else
 			$all_rules .= "[]";
 		return $all_rules;
+	}
+	
+	
+/**Methods about exam centers (EC)*/
+	
+	/**
+	 * Get an exam center data from its ID
+	 * @param number $id
+	 * @return string ExamCenterData JSON structure
+	 */
+	public static function ExamCenterFromID($id){
+		if($id == -1 || $id == "-1")
+			return "{id:-1, geographic_area:null, name:null, partners:[], information_sessions:[]}";
+		$EC_row = self::ExamCenterTableDataFromID($id);
+		$EC_partners_row = self::ExamCenterPartnersDataFromID($id);
+		$EC_IS_row = self::InformationSessionExamCenterFromID($id);
+		return self::ExamCenter($EC_row, $EC_partners_row, $EC_IS_row);
+	}
+	
+	/**
+	 * Retrieve the data from the ExamCenter table for the given ID 
+	 * @param number $id
+	 * @return array containing the SQLQuery result
+	 */
+	public static function ExamCenterTableDataFromID($id){
+		$q = SQLQuery::create()
+		->select("ExamCenter")
+		->whereValue("ExamCenter","id",$id);
+		self::ExamCenterSQL($q);
+		$row = $q->executeSingleRow();
+		return $row;
+	}
+	
+	/**
+	 * Prepare a query to retrieve the data from ExamCenter table
+	 * @param SQLQuery $q
+	 */
+	public static function ExamCenterSQL(&$q){
+		$alias = $q->getTableAlias("ExamCenter");
+		if(!$alias)
+			$alias = "ExamCenter";
+		$q
+		->field($alias,"id")
+		->field($alias,"geographic_area")
+		->field($alias,"name");
+	}
+	
+	/**
+	 * Retrieve the data related to the tables ExamCenterPartner and ExamCenterContactPoint for a given ExamCenter
+	 * @param number $id
+	 * @return array the result from the query
+	 */
+	public static function ExamCenterPartnersDataFromID($id){
+		$q = SQLQuery::create()
+		->select("ExamCenterPartner")
+		->join("ExamCenterPartner","ExamCenterContactPoint",array("exam_center"=>"exam_center","organization"=>"organization"))
+		->whereValue("ExamCenterPartner","exam_center",$id)
+		->orderBy("ExamCenterPartner","organization");
+		self::ExamCenterPartnersSQL($q);
+		$rows = $q->execute();
+		return $rows;
+	}
+	
+	/**
+	 * Prepare a SQLQuery to rerieve the data from ExamCenterPartner and ExamCenterContactPoint tables
+	 * @param SQLQuery $q
+	 */
+	public static function ExamCenterPartnersSQL(&$q){
+		$alias = $q->getTableAlias("ExamCenterPartner");
+		if(!$alias)
+			$alias = "ExamCenterPartner";
+		$alias_contact_point = $q->getTableAlias("ExamCenterContactPoint");
+		if(!$alias_contact_point)
+			$alias_contact_point = "ExamCenterContactPoint";
+		$q
+			->field($alias,"organization","organization")
+			->field($alias,"host","host")
+			->field($alias,"host_address","host_address")
+			->field($alias_contact_point,"people","contact_point");
+	}
+	
+	/**
+	 * Retrieve the information sessions linked to a given exam center from ExamCenterInformationSession table 
+	 * @param number $id
+	 * @return array the result from the query performed
+	 */
+	public static function InformationSessionExamCenterFromID($id){
+		$q = SQLQuery::create()
+			->select("ExamCenterInformationSession")
+			->whereValue("ExamCenterInformationSession", "exam_center", $id);
+		self::ExamCenterInformationSessionSQL($q);
+		$rows = $q->execute();
+		return $rows;
+	}
+	
+	/**
+	 * Prepare a SQLQuery to retrieve the data from table ExamCenterInformationSession
+	 * @param SQLQuery $q
+	 */
+	public  static function ExamCenterInformationSessionSQL(&$q){
+		$alias = $q->getTableAlias("ExamCenterInformationSession");
+			if(!$alias)
+				$alias = "ExamCenterInformationSession";
+		$q
+			->field($alias, "information_session", "information_session")
+			->field($alias, "exam_center", "exam_center");
+	}
+	
+	/**
+	 * Get a JSON ExamCenterData from the data retrieved from the database
+	 * @param array $row_EC result of the query built by ExamCenterSQL method
+	 * @param array $rows_partners result of the query built by ExamCenterPartnersSQL method
+	 * @param array $rows_IS result of the query built by ExamCenterInformationSessionSQL method
+	 * @return string JSON ExamCenterData structure
+	 */
+	public static function ExamCenter($row_EC,$rows_partners, $rows_IS){
+		$data = "";
+		if(isset($row_EC)){
+			$data.= "{id:".json_encode($row_EC["id"]).", ";
+			$data.= "geographic_area:".json_encode($row_EC["geographic_area"]);
+			$data.= ", name:".json_encode($row_EC["name"]);
+			$data.= ", partners:";
+			if(isset($rows_partners[0]["organization"])){
+				$first = true;
+				$current_partner = null;
+				$data.= "[";
+				foreach($rows_partners as $p){
+					if($p["organization"] != $current_partner){
+						$name = PNApplication::$instance->contact->getOrganizationName($p["organization"]);
+						if(!$first){
+							$data.= "]}";
+							$data.= ", ";
+						}
+						$first = false;
+						$p["host"] = $p['host'] == 0 ? false : $p["host"];
+						$p["host"] = $p['host'] == 1 ? true : $p["host"];
+						$data.= "{";
+						$data.= "organization:".json_encode($p["organization"]).", ";
+						$data.= "organization_name:".json_encode($name).", ";
+						$data.= "host:".json_encode($p["host"]).", ";
+						$data.= "host_address:".json_encode($p["host_address"]).", ";
+						$data.= "contact_points_selected:";
+						if(isset($p["contact_point"])){
+							$data.= "[";
+							$data.= json_encode($p["contact_point"]);
+						} else $data.= "[";
+						$current_partner = $p["organization"];
+					} else {
+						$data.= ", ";
+						$data.= json_encode($p["contact_point"]);
+					}
+				}
+				$data.= "]}";
+				$data.= "]";
+			} else $data.= "[]";
+			$data .= "information_sessions:[";
+			$first_IS = true;
+			foreach ($rows_IS as $d){
+				if(!$first_IS)
+					$data .= ", ";
+				$first_IS = false;
+				if($d["exam_center"] == $row_EC["id"])
+					$data .= $d["information_session"];
+			}
+			$data .= "]";
+			$data.= "}";
+		} else $data.="{}";
+		return $data;
+	}
+	
+	/**
+	 * Get a JSON array containing all the exam centers data
+	 * @return string JSON array containing all the existing Exam centers data, as ExamCenterData objects
+	 */
+	public static function getJSONAllExamCenters(){
+		$r = "[";
+		$centers = SQLQuery::create()
+			->select("ExamCenter")
+			->field("ExamCenter","id")
+			->executeSingleField();
+		if($centers <> null){
+			$first = true;
+			foreach ($centers as $id){
+				if(!$first)
+					$r .= ", ";
+				$first = false;
+				$r .= self::ExamCenterFromID($id);
+			}
+		}
+		$r .= "]";
+		return $r;
+	}
+	
+	/**
+	 * Get all the IS with a host set but not linked to any ExamCenter
+	 * @return string JSON array containing ISData objects (but without partners attribute)
+	 */
+	public static function getJSONAllISWithHostAssignedNotLinkedToEC(){
+		$all_free_IS = PNApplication::$instance->selection->getAllISNotLinkedToEC();
+		$r = "[";
+		if($all_free_IS <> null){
+			$first = true;
+			foreach ($all_free_IS as $data){
+				if(!$first)
+					$r .= ", ";
+				$first = false;
+				$r .= "{";
+				$r.= "{id:".json_encode($data["id"]).", ";
+				$r.= "geographic_area:".json_encode($data["geographic_area"]);
+				$r.= ", date:".json_encode($data["date"]);
+				$r.= ", number_boys_expected:".json_encode($data["number_boys_expected"]);
+				$r.= ", number_girls_expected:".json_encode($data["number_girls_expected"]);
+				$r.= ", number_boys_real:".json_encode($data["number_boys_real"]);
+				$r.= ", number_girls_real:".json_encode($data["number_girls_real"]);
+				$r.= ", name:".json_encode($data["name"])."}";
+			}
+		}
+		$r .= "]";
+		return $r;
 	}
 }

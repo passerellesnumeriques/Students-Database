@@ -210,7 +210,7 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 							
 						},
 						"<img src = '"+theme.icons_16.info+"'/><i> To be fully completed, an information session<br/>must be attached to a host partner</i>",
-						"<img src = '"+theme.icons_16.add+"'/> Create partner"
+						"<img src = '"+theme.icons_16.info+"'/> <i><center>Location field is fully completed!</center></i>"
 					);
 				};
 				var remove_button = document.createElement("div");
@@ -283,7 +283,7 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 							}
 						},
 						"<img src = '"+theme.icons_16.info+"'/><i> To be fully completed, an information session<br/>must be attached to a host partner</i>",
-						"<img src = '"+theme.icons_16.add+"'/> Create partner"
+						"<img src = '"+theme.icons_16.info+"'/> <i><center>Location field is fully completed!</center></i>"
 					);
 				};
 				t.section.addToolBottom(remove_host);
@@ -325,7 +325,7 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 							t.reset();
 						},
 						"<img src = '"+theme.icons_16.info+"'/><i> To be fully completed, an information session<br/>must be attached to a host partner</i>",
-						"<img src = '"+theme.icons_16.add+"'/> Create partner"
+						"<img src = '"+theme.icons_16.info+"'/> <i><center>Location field is fully completed!</center></i>"
 					);
 				};
 				t.section.addToolBottom(set_button);

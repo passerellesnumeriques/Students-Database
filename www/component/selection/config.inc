@@ -25,7 +25,7 @@ return array(
 	"forbid_too_old_applicants" => array("Set a maximum age for the applicants",false,array(true,false),"boolean","Applicant",array()),
 	//the param above is set as false by default because no default date is set, so the user will be obliged to fulfill the date field if he validates that param
 	"limit_date_of_birth" => array("Pick the date of birth representing the oldest allowed applicant","",array(),"date","Applicant",array("forbid_too_old_applicants" => true)),
-	
+	"give_name_to_exam_center" => array("Be able to set a custom name to the exam centers.<br/><i>Note: otherwize, the exam center name is the geographic area were it is located</i>",true,array(true,false),"boolean","Entrance Examination",array()),
 	);
 	
 	//TODO when adding a new category, update #selection#static#selection_utils#getConfigCategoryIndex

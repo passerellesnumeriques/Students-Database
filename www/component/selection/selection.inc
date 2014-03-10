@@ -1698,5 +1698,29 @@ class selection extends Component {
 		// return array($all_valids,$wrong_ids);
 	// }
 	
+	/**
+	 * Get all the information sessions not linked to any exam center, and having a host partner set
+	 * @return array|null array containing the data retrieved from the database (ISData of the information sessions not linked), else null if no free IS
+	 */
+	public function getAllISWithHostAssignedNotLinkedToEC(){
+		$linked_IS = SQLQuery::create()
+			->select("ExamCenterInformationSession")
+			->field("ExamCenterInformationSession","information_session")
+			->executeSingleField();
+		
+		$q = SQLQuery::create()
+			->select("InformationSession")
+			->join("InformationSession", "InformationSessionPartner", array("id" => "information_session"))
+			->whereValue("InformationSessionPartner", "host", true);
+		
+		SelectionJSON::InformationSessionSQL($q);
+		if($linked_IS <> null){
+			$q
+				->join("ExamCenterInformationSession", "InformationSession", array("information_session" => "id"))
+				->whereNotIn("InformationSession","id",$linked_IS);
+		}
+		return $q->execute();
+	}
+	
 }
 ?>

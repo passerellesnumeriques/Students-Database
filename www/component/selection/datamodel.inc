@@ -206,43 +206,69 @@
 		
 	$sm->addTable("ExamCenter")
 		->addPrimaryKey("id")
+		->addString("name",255,0,false)//optional
 		->addForeignKey("geographic_area", "GeographicArea", true, false, true, false, true)//An exam center must be linked to a geographic area, and this area is unique in this table
-		->addForeignKey("postal_address", "PostalAddress", false, false, false, true, true)//Optional
 		->addReadAccess("see_exam_center_detail", true)
 		->addWriteAccess("manage_exam_center", true)
 		->addRemoveAccess("manage_exam_center", true)
 		->addInsertAccess("manage_exam_center", true);
-	/**
-	 * No contact point / partner is added for the exam center, since we can keep the value
-	 */
 	
-	$sm->addTable("ExamCenterInformationSession")//An exam center can created from one or several information sessions
+	$sm->addTable("ExamCenterPartner")
+		->addForeignKey("exam_center","ExamCenter",true,false,true,false)
+		->addForeignKey("organization","Organization",true,false,true,false)
+		->addBoolean("host")
+		->addForeignKey("host_address","PostalAddress",false,false,true,true) //this attributes is set only when host attribute == true: can select a praticular address in case the organization has several ones
+		->setKey(array("exam_center","organization"))
+		->addWriteAccess("manage_exam_center",true)
+		->addReadAccess("see_exam_center_detail",true)
+		->addInsertAccess("manage_exam_center",true)
+		->addRemoveAccess("manage_exam_center",true);
+	
+	$sm->addTable("ExamCenterContactPoint")
+		->addForeignKey("exam_center","ExamCenter",true,false,true,false)
+		->addForeignKey("organization","Organization",true,false,true,false)
+		//This two attributes are a foreignKey for ExamCenter partner table
+		->addForeignKey("people","People",true,false,true,false)
+		//People + orga = foreignKey for ContactPoint table
+		->setKey(array("exam_center","organization","people"))
+		->addWriteAccess("manage_exam_center",true)
+		->addReadAccess("see_exam_center_detail",true)
+		->addInsertAccess("manage_exam_center",true)
+		->addRemoveAccess("manage_exam_center",true)
+		->setDisplayHandler("people", new datamodel\StopDataDisplayHandler("Selection", "Selection"))
+		;
+	
+	/**
+	 * An exam center can be created from one or several information sessions
+	 * Since applicants can be linked to any information session, use the data from this table to assign those students to the exam center
+	 */
+	$sm->addTable("ExamCenterInformationSession")
 		->addForeignKey("exam_center", "ExamCenter", true, false, true)
 		->addForeignKey("information_session", "InformationSession", true, false, false,false,true)//An information session can only be linked to one exam center
 		->setKey(array("exam_center","information_session"))
-		->addWriteAccess("manage_exam_subject",true)
-		->addReadAccess("see_exam_subject",true)
-		->addInsertAccess("manage_exam_subject",true)
-		->addRemoveAccess("manage_exam_subject",true);
+		->addWriteAccess("manage_exam_center",true)
+		->addReadAccess("see_exam_center_detail",true)
+		->addInsertAccess("manage_exam_center",true)
+		->addRemoveAccess("manage_exam_center",true);
 	
 	$sm->addTable("ExamSession")
 		->addForeignKey("event", "CalendarEvent", true, true, false, false, true)
 		->addForeignKey("exam_center", "ExamCenter", true, false, true)//An exam center can have several session
 		->setPrimary("event")//The event is the primary key of a session
-		->addWriteAccess("manage_exam_subject",true)
-		->addReadAccess("see_exam_subject",true)
-		->addInsertAccess("manage_exam_subject",true)
-		->addRemoveAccess("manage_exam_subject",true);
+		->addWriteAccess("manage_exam_center",true)
+		->addReadAccess("see_exam_center_detail",true)
+		->addInsertAccess("manage_exam_center",true)
+		->addRemoveAccess("manage_exam_center",true);
 		
 	$sm->addTable("ExamCenterRoom")
 		->addPrimaryKey("id")
 		->addForeignKey("exam_center", "ExamCenter", true, false, true)
 		->addInteger("capacity",32,0,null,false,false)//The capacity of the room cannot be null
 		->addString("name",255,0,false,false)//Can be custom or not, but must be set
-		->addWriteAccess("manage_exam_subject",true)
-		->addReadAccess("see_exam_subject",true)
-		->addInsertAccess("manage_exam_subject",true)
-		->addRemoveAccess("manage_exam_subject",true);
+		->addWriteAccess("manage_exam_center",true)
+		->addReadAccess("see_exam_center_detail",true)
+		->addInsertAccess("manage_exam_center",true)
+		->addRemoveAccess("manage_exam_center",true);
 		
 	$sm->addTable("Applicant")
 		->addForeignKey("people", "People", true, false, false, false, true)
