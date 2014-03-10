@@ -7,11 +7,15 @@ class students extends Component {
 		require_once("StudentsApplicationPlugin.inc");
 		require_once("StudentsNewsPlugin.inc");
 		require_once("StudentsPeopleProfileGeneralInfoPlugin.inc");
+		require_once("StudentPeopleTypePlugin.inc");
+		require_once("StudentCreatePlugin.inc");
 		return array(
 			new StudentsPeoplePlugin(),
 			new StudentsApplicationPlugin(),
 			new StudentsNewsPlugin(),
-			new StudentsPeopleProfileGeneralInfoPlugin()
+			new StudentsPeopleProfileGeneralInfoPlugin(),
+			new StudentPeopleTypePlugin(),
+			new StudentCreatePlugin()
 		);
 	}
 	

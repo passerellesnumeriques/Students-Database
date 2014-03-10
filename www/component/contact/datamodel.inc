@@ -103,6 +103,7 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:-1,contacts:[]}"));
 	}
 	
+	public function getFieldsToSave($value, &$fields) { return false; }
 	public function saveData($key, $value, $sub_model) {
 		
 	}
@@ -201,6 +202,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return json_decode(json_normalize("{type:".json_encode($this->handler->type).",type_id:-1,addresses:[]}"));
 	}
 	
+	public function getFieldsToSave($value, &$fields) { return false; }
 	public function saveData($key, $value, $sub_model) {
 
 	}

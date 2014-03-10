@@ -7,10 +7,20 @@ class contact extends Component {
 	public function getPluginImplementations() {
 		require_once("ContactPeoplePlugin.inc");
 		require_once("ContactPeopleProfileGeneralInfoPlugin.inc");
-		return array(
+		$list = array(
 			new ContactPeoplePlugin(),
 			new ContactPeopleProfileGeneralInfoPlugin()
 		);
+		require_once("ContactPointPeopleTypePlugin.inc");
+		require_once("OrganizationPlugin.inc");
+		foreach (PNApplication::$instance->components as $c) {
+			if ($c == $this) continue;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof OrganizationPlugin)) continue;
+				array_push($list, new ContactPointPeopleTypePlugin($pi));
+			}
+		}
+		return $list;
 	}
 	/**
 	 * Add a new postal address to an organization

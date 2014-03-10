@@ -200,6 +200,22 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { t.close(); });
 	};
 	
+	t.addNextButton = function(onnext) {
+		var span = document.createElement("SPAN");
+		span.appendChild(document.createTextNode("Next"));
+		var img = document.createElement("IMG");
+		img.src = theme.icons_16.forward;
+		img.style.verticalAlign = "bottom";
+		img.style.marginLeft = "3px";
+		span.appendChild(img);
+		t.addButton(span, "next", onnext);
+	};
+	
+	t.removeAllButtons = function() {
+		if (t.buttons_td) while (t.buttons_td.childNodes.length > 0) t.buttons_td.removeChild(t.buttons_td.childNodes[0]);
+		t.buttons = [];
+	};
+	
 	t.isShown = function() {
 		return t.table != null;
 	};
@@ -507,6 +523,13 @@ function popup_window(title,icon,content,hide_close_button) {
 		setTimeout(function() { t.table.className = "popup_window"; },300);
 		setTimeout(function() { t.table.className = "popup_window blink"; },400);
 		setTimeout(function() { t.table.className = "popup_window"; },500);
+	};
+	
+	t.disableClose = function() {
+		t.close_button_td.onclick = null;
+	};
+	t.enableClose = function() {
+		t.close_button_td.onclick = function() { t.close(); };
 	};
 	
 	t.freeze = function(freeze_content) {

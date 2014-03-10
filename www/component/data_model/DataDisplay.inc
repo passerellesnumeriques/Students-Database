@@ -1,6 +1,8 @@
 <?php
 namespace datamodel {
 
+// TODO review the methods: getData, saveData...
+	
 /**
  * Abstract class defining how to display/edit/create a data. A data can be:<ul>
  * <li>As simple as a column in the table</li>
@@ -66,10 +68,6 @@ abstract class DataDisplay {
 	 * @return array|null null if not a single cell, else an associative array containing 'table' and 'column'
 	 */
 	public function getSingleCell() { return null; }
-	/** Structure to use when creating a new data. This structure will be used in the typed_field, to edit the new data
-	 * @return array|null the associative array will then be converted into JSON, to give it to the typed_field 
-	 */
-	public function getNewData() { return null; }
 	
 	/** Add any necessary select/join/field to the SQLQuery to retrieve this data
 	 * @param SQLQuery $q the sql
@@ -87,15 +85,27 @@ abstract class DataDisplay {
 	 */
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {}
 	
-	/** Retrieve this data
-	 * @param number|array $key row key
-	 * @param number|null $sub_model sub model instance
-	 * @param array|null $row if we already retrieve data from the row, we can give it here, to avoid doing a new select in the database
-	 * @param string|null $key_alias if $row is given, this gives the alias of the key column
-	 * @param string|null $value_alias if $row is given, this gives the alias of the value column
+	/** Structure to use when creating a new data. This structure will be used in the typed_field, to edit the new data
+	 * @return array|null the associative array will then be converted into JSON, to give it to the typed_field 
 	 */
-	public abstract function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null);
-	/** Save a new value for this data
+	public function getNewData() { return null; }
+	
+	/** Retrieve the value of this data
+	 * @param array|null $row the row from the database
+	 * @param array $resultFromBuildSQL the result returned by the previous call to buildSQL
+	 */
+	public abstract function getData($row, $resultFromBuildSQL);
+
+
+	/**
+	 * Fill the given fields array with columns to set. 
+	 * @param unknown $value
+	 * @param unknown $fields
+	 * @return true if the saveData method is needed, false if everything can be handled with fields on the table
+	 */
+	public abstract function getFieldsToSave($value, &$fields);
+
+	/** Save a new value for this data, in case getFieldsToSave returned true
 	 * @param number|array $key row key
 	 * @param unknown $value the new value, its type and content depends on the type of this data and its typed_field
 	 * @param number|null $sub_model sub model instance
@@ -285,6 +295,10 @@ class SimpleDataDisplay extends DataDisplay {
 		return $value;
 	}
 	
+	public function getFieldsToSave($value, &$fields) {
+		$fields[$this->column_name] = $value; 
+		return false; 
+	}
 	public function saveData($key, $value, $sub_model) {
 		\SQLQuery::create()
 			->selectSubModelForTable($this->handler->table, $sub_model)
@@ -456,6 +470,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		return $q->executeSingleValue();
 	}
 	
+	public function getFieldsToSave($value, &$fields) { return false; }
 	public function saveData($key, $value, $sub_model) {
 		// TODO
 	}
@@ -582,6 +597,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		// TODO
 	}
 	
+	public function getFieldsToSave($value, &$fields) { return true; }
 	public function saveData($key, $value, $sub_model) {
 		require_once("component/data_model/DataBaseLock.inc");
 		\SQLQuery::create()->remove($this->handler->table->getSQLNameFor($sub_model), array($this->joining_key_name=>$key));
@@ -732,6 +748,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		// TODO
 	}
 	
+	public function getFieldsToSave($value, &$fields) { return false; }
 	public function saveData($key, $value, $sub_model) {
 	}
 	

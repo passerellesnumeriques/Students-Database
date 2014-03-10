@@ -130,6 +130,7 @@ class CalendarEventDateDataDisplay extends datamodel\DataDisplay {
 	public function getData($key, $sub_model, $row = null, $key_alias = null, $value_alias = null) {
 		return null; // TODO
 	}
+	public function getFieldsToSave($value, &$fields) { return false; }
 	public function saveData($key, $value, $sub_model) {
 		// TODO 
 	}

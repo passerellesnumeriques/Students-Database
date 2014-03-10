@@ -33,19 +33,5 @@ class StudentsPeoplePlugin implements PeoplePlugin {
 	public function getPeopleImportDataDisplay() { return array(); }
 	public function importPeopleData($input, $people_id) { return true; }
 	
-	public function filterPeopleReadAccess(&$q, $people_table_alias) {
-		if (!PNApplication::$instance->user_management->has_right("consult_students_list")) return null;
-		$student_alias = $q->getTableAlias("Student");
-		if ($student_alias == null) {
-			$student_alias = $q->generateTableAlias();
-			$q->join($people_table_alias, "Student", array("id"=>"people"), $student_alias);
-		}
-		return "`".$student_alias."`.`batch` IS NOT NULL";
-	}
-	public function prepareSelectPeopleWriteAccess(&$q, $people_table_alias) {}
-	public function filterPeopleWriteAccess($people_rows) { return $people_rows; }
-	public function prepareSelectPeopleRemoveAccess(&$q, $people_table_alias, &$locks) {}
-	public function filterPeopleRemoveAccess($people_rows) { return $people_rows; }
-	
 }
 ?>

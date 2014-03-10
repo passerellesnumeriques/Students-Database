@@ -6,10 +6,10 @@ interface PeopleTypePlugin {
 	public function getId();
 	public function getName();
 	
-	public function generateGeneralInfoSection($people_id);
+	public function canRead();
+	public function canWrite();
+	public function canRemove();
 	
-	public function generateCreateSection();
-	public function create($people_id);
-	
+	public function getPeopleRowDescription($people);
 }
 ?>

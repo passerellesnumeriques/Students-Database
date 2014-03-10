@@ -17,13 +17,7 @@ class page_tree extends Page {
 		$can_edit = PNApplication::$instance->user_management->has_right("manage_batches");
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
-		
-		// TODO remove that
 		require_once("component/data_model/page/utils.inc");
-		require_once("component/data_model/page/table_datadisplay_edit.inc");
-		table_datadisplay_edit($this, "StudentBatch", null, null, "create_new_batch_table");
-		table_datadisplay_edit($this, "AcademicPeriod", null, null, "create_academic_period_table");
-		
 ?>
 <div style='width:100%;height:100%' id='container'>
 	<div id='left'>

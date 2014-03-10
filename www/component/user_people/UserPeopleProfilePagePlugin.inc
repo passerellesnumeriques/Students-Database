@@ -11,7 +11,7 @@ class UserPeopleProfilePagePlugin implements PeopleProfilePagePlugin {
 	public function getTooltip() { return "What this person can access on the application"; }
 	public function getURL($people_id) {
 		$user = PNApplication::$instance->user_people->get_user_from_people($people_id); 
-		return "/dynamic/user_management/page/user_rights?user=".$user["user"]; 
+		return "/dynamic/user_management/page/user_rights?user=".$user; 
 	}
 	
 }

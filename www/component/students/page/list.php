@@ -146,6 +146,13 @@ var students_list = new data_list(
 				create_student.className = "button_verysoft";
 				create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
 				create_student.onclick = function() {
+					window.top.require("popup_window.js",function() {
+						var p = new window.top.popup_window('New Student', theme.build_icon("/static/students/student_16.png",theme.icons_10.add), "");
+						p.setContentFrame("/dynamic/people/page/popup_create_people?types=student");
+						p.show();
+					});
+					
+					/*
 					postData("/dynamic/people/page/create_people",{
 						icon: "/static/application/icon.php?main=/static/students/student_32.png&small="+theme.icons_16.add+"&where=right_bottom",
 						title: "Create New Student",
@@ -153,6 +160,7 @@ var students_list = new data_list(
 						student_batch: batches[0],
 						redirect:location.href
 					});
+					*/
 				};
 				students_list.addHeader(create_student);
 			}

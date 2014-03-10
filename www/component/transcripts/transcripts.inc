@@ -3,9 +3,9 @@
 class transcripts extends Component {
 
 	public function getPluginImplementations() {
-		require_once("TranscriptsPeoplePlugin.inc");
+		require_once("GradesPeopleProfilePagePlugin.inc");
 		return array(
-			new TranscriptsPeoplePlugin()
+			new GradesPeopleProfilePagePlugin()
 		);
 	}
 	

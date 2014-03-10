@@ -103,4 +103,64 @@ build_fields();
 <?php 
 	}
 }
+
+require_once("PeopleCreatePlugin.inc");
+class PersonalInfoPeopleCreatePlugin implements PeopleCreatePlugin {
+
+	public function isValidForTypes($types) { return true; }
+
+	public function getPriority() { return 0; }
+	public function getIcon() { return "/static/people/people_info.png"; }
+	public function getName() { return "Personal Information"; }
+	public function generateSection(&$page) {
+?>
+<table>
+<?php 
+require_once("component/data_model/page/utils.inc");
+require_once("component/data_model/Model.inc");
+$table = DataModel::get()->internalGetTable("People");
+$display = $table->getDisplayHandler(null);
+$fields = array();
+foreach ($display->getDisplayableData() as $data) {
+	echo "<tr>";
+	echo "<td>";
+	echo htmlentities($data->getDisplayName(),ENT_QUOTES,"UTF-8");
+	echo "</td>";
+	$id = $page->generateID();
+	echo "<td id='$id'></td>";
+	array_push($fields, array($data, $id));
+	echo "</td>";
+	echo "</tr>";
+}  
+?>
+</table>
+<script type='text/javascript'>
+var people_data = [];
+window.create_people.tables["People"] = people_data;
+var field;
+var fake_key = -1;
+<?php 
+foreach ($fields as $f) {
+	$data = $f[0];
+	$id = $f[1];
+	datamodel_datadisplay_new($page, $data, null, "field", "fake_key");
+	?>
+document.getElementById('<?php echo $id;?>').appendChild(field.getHTMLElement());
+field._data_display = {name:<?php echo json_encode($data->getDisplayName());?>,value:field.getCurrentData()};
+people_data.push(field._data_display);
+window.create_people_validations.push({param:field,fct:function(field){
+	return field.error;
+}});
+field.onchange.add_listener(function(f){
+	f._data_display.value = f.getCurrentData();
+});
+	<?php 
+}
+?>
+</script>
+<?php 
+	}
+
+	public function create($tables_input, $people_id) {}
+}
 ?>

@@ -11,25 +11,32 @@ class people extends Component {
 			new PeoplePeoplePlugin(),
 			new PeopleProfilePage(),
 			new PeopleGeneralInfo(),
+			new PersonalInfoPeopleCreatePlugin(),
 		);
 	}
 	
 	public function parseTypes($types) {
 		$list = array();
-		if ($types == null) return $list;
-		do {
-			$i = strpos($types, ",");
-			if ($i === false) {
-				$type = trim($types);
-				$types = null;
-			} else {
-				$type = trim(substr($types, 0, $i));
-				$types = substr($types, $i+1);
-			}
-			if (strlen($type) == 0) continue;
+		while (substr($types,0,1) == "/") {
+			$i = strpos($types, "/", 1);
+			if ($i === false) break;
+			$type = substr($types, 1, $i-1);
+			$types = substr($types,$i+1);
 			array_push($list, $type);
-		} while ($types <> null);
+		}
 		return $list;
+	}
+	
+	public function getPeopleTypePlugin($type) {
+		require_once("PeopleTypePlugin.inc");
+		foreach (PNApplication::$instance->components as $c) {
+			if ($c == $this) continue;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeopleTypePlugin)) continue;
+				if ($pi->getId() == $type) return $pi;
+			}
+		}
+		return null;
 	}
 
 	public function joinPeople(&$q, $from_table, $from_key) {

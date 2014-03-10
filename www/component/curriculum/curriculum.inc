@@ -27,6 +27,16 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();
 	}
 	
+	/**
+	 * Join the batch table to an SQLQuery
+	 * @param SQLQuery $q the query where to add the join
+	 * @param string $from_table name of the table to use for the join
+	 * @param string $from_table_foreign_key name of the foreign key to use for the join
+	 */
+	public function joinBatch(&$q, $from_table, $from_table_foreign_key) {
+		$q->join($from_table, "StudentBatch", array($from_table_foreign_key=>"id"));
+	}
+	
 	/** Retrieve the list of existing specializations
 	 * @return array the result from the database
 	 */

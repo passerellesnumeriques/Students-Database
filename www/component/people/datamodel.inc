@@ -11,7 +11,7 @@ $model->addTable("People")
 	->addString("khmer_last_name", 100, 1, true)
 	->addEnum("sex", array("M","F"))
 	->addDate("birth", true)
-	->addString("types", 1024, 0, true, false)
+	->addString("types", 1024, 0, false, false)
 	->addForeignKey("picture", "Storage", false, false, false)
 	->addInteger("picture_version")
 	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Personal Information", "Personal Information",
@@ -25,70 +25,97 @@ $model->addTable("People")
 			"birth"=>"Birth Date",
 		)
 	))
+	->setRowDescriptionProvider(function($row) {
+		$s = $row["first_name"];
+		if ($row["middle_name"] <> null && $row["middle_name"] <> "") $s .= " ".$row["middle_name"];
+		$s .= " ".$row["last_name"];
+		$types = PNApplication::$instance->people->parseTypes($row["types"]);
+		require_once("component/people/PeopleTypePlugin.inc");
+		$first = true;
+		foreach ($types as $type) {
+			foreach (PNApplication::$instance->components as $c) {
+				foreach ($c->getPluginImplementations() as $pi) {
+					if (!($pi instanceof PeopleTypePlugin)) continue;
+					if ($pi->getId() <> $type) continue;
+					$descr = $pi->getPeopleRowDescription($row);
+					if ($descr <> null && $descr <> "") {
+						if ($first) {
+							$first = false;
+							$s .= " (";
+						} else {
+							$s .= ", ";
+						}
+						$s .= $descr;
+					}
+				}
+			}
+		}
+		if (!$first) $s .= ")";
+		return $s;
+	})
 	->addReadFilter(function(&$q, $table_alias) {
+		if (PNApplication::$instance->user_management->has_right("see_anybody")) return;
 		// allow to read user own info
 		$w = "(`".$table_alias."`.`id`='".PNApplication::$instance->user_people->user_people_id."')";
 		// restrict by type of people
-		require_once("PeoplePlugin.inc");
+		$types = array();
+		require_once("PeopleTypePlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {
 			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeoplePlugin)) continue;
-				$wc = $pi->filterPeopleReadAccess($q, $table_alias);
-				if ($wc <> null && $wc <> "")
-					$w .= " OR (".$wc.")";
+				if (!($pi instanceof PeopleTypePlugin)) continue;
+				array_push($types, $pi);
 			}
+		}
+		usort($types, function ($type1, $type2) {
+			return $type1->getSecurityPriority() - $type2->getSecurityPriority();
+		});
+		foreach ($types as $type) {
+			if (!($type->canRead())) break;
+			$w .= " OR (`".$table_alias."`.'types' LIKE '%/".$type->getId()."/%')";
 		}
 		$q->where("(".$w.")");
 	})
 	->addWriteFilter(function(&$q, $table_alias) {
-		require_once("PeoplePlugin.inc");
+		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return;
+		// restrict by type of people
+		$types = array();
+		require_once("PeopleTypePlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {
 			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeoplePlugin)) continue;
-				$pi->prepareSelectPeopleWriteAccess($q, $table_alias);
+				if (!($pi instanceof PeopleTypePlugin)) continue;
+				array_push($types, $pi);
 			}
 		}
+		usort($types, function ($type1, $type2) {
+			return $type1->getSecurityPriority() - $type2->getSecurityPriority();
+		});
+		foreach ($types as $type) {
+			if (!($type->canWrite())) break;
+			$w .= " OR (`".$table_alias."`.'types' LIKE '%/".$type->getId()."/%')";
+		}
+		$q->where("(".$w.")");
 	},function($rows) {
-		require_once("PeoplePlugin.inc");
-		$final = array();
-		foreach (PNApplication::$instance->components as $name=>$c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeoplePlugin)) continue;
-				foreach ($pi->filterPeopleWriteAccess($rows) as $row) {
-					array_push($final, $row);
-					for ($i = 0; $i < count($rows); $i++)
-						if ($rows[$i] == $row) {
-							array_splice($rows, $i, 1);
-							break;
-						}
-				}
-			}
-		}
-		return $final;
+		return $rows;
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks) {
-		require_once("PeoplePlugin.inc");
-		foreach (PNApplication::$instance->components as $name=>$c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeoplePlugin)) continue;
-				$pi->prepareSelectPeopleRemoveAccess($q, $table_alias, $locks);
-			}
-		}
+		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return;
+		$q->field($table_alias, "types", "people_types");
 	},function($rows) {
-		require_once("PeoplePlugin.inc");
+		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return $rows;
 		$final = array();
-		foreach (PNApplication::$instance->components as $name=>$c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeoplePlugin)) continue;
-				foreach ($pi->filterPeopleRemoveAccess($rows) as $row) {
-					array_push($final, $row);
-					for ($i = 0; $i < count($rows); $i++)
-						if ($rows[$i] == $row) {
-							array_splice($rows, $i, 1);
-							break;
-						}
+		require_once("PeopleTypePlugin.inc");
+		foreach ($rows as $row) {
+			$types = PNApplication::$instance->people->parseTypes($row["people_types"]);
+			$ok = true;
+			foreach (PNApplication::$instance->components as $name=>$c) {
+				foreach ($c->getPluginImplementations() as $pi) {
+					if (!($pi instanceof PeopleTypePlugin)) continue;
+					if (!in_array($pi->getId(), $types)) continue;
+					if (!($pi->canRemove())) { $ok = false; break; }	
 				}
+				if (!$ok) break;
 			}
+			if ($ok) array_push($final, $row);
 		}
 		return $final;
 	})

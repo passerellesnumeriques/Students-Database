@@ -216,9 +216,10 @@ class SQLQuery {
 						substr($file,strlen($root)) == "data_model/DataPath.inc" ||
 						substr($file,strlen($root)) == "data_model/DataBaseLock.inc"
 				)) break; // generic service of data model
-				if ($component == "data_model" && (
+				/*if ($component == "data_model" && (
 					substr($file,strlen($root)) == "data_model/page/table_datadisplay.inc"	
 				)) continue; // generic display, let's see who call it
+				*/
 				require_once("component/data_model/Model.inc");
 				$decl = DataModel::get()->internalGetTable($table_name)->declaring_component;
 				if ($component <> $decl) {
@@ -418,6 +419,23 @@ class SQLQuery {
 	public function &whereNotNull($table_name, $field_name) {
 		$w = "`".$this->resolveWhereTable($table_name)."`.`".$field_name."` IS NOT NULL";
 		array_push($this->where, $w);
+		return $this;
+	}
+	
+	public function &whereKey($table, $key) {
+		if (!($table instanceof \datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table = DataModel::get()->getTable($table);
+		}
+		$table_alias = $this->getTableAlias($table->getName());
+		$k = $table->getPrimaryKey();
+		if ($k <> null) $this->whereValue($table_alias, $k->name, $key);
+		else {
+			$k = $table->getKey();
+			foreach ($k as $kname) {
+				$this->whereValue($table_alias, $kname, $key[$kname]);
+			}
+		}
 		return $this;
 	}
 	

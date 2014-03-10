@@ -60,8 +60,13 @@ class service_lock_datadisplay extends Service {
 					}
 					array_push($ids, $id);
 				}
+				$q = SQLQuery::create()->select($table);
+				if ($sub_model <> null) $q->selectSubModel($table, $sub_model);
+				$q->whereKey($t, $input["key"]);
+				$res = $data->buildSQL($q, new DataPath_Table($t), null);
+				$row = $q->executeSingleRow(); 
 				echo "{locks:".json_encode($ids);
-				echo ",data:".json_encode($data->getData($input["key"], $sub_model));
+				echo ",data:".json_encode($data->getData($row, $res));
 				echo "}";
 				return;
 			}
