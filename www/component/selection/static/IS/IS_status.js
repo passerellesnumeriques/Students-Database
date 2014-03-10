@@ -1,9 +1,20 @@
+/**
+ * Create the status screen about information sessions
+ * This object calls the selection#IS#status service to populate its content
+ * @param {String|HTMLElement} container
+ */
 function IS_status(container){
 	if(typeof(container) == "string")
 		container = document.getElementById(container);	
 	var t = this;
+	
+	/**Private methods and attributes*/
 	t._table = document.createElement("table");
-
+	
+	/**
+	 * Launch the process, create a table containing the statistics about the Information Sessions (same structure as IS_statistics object)
+	 * A row is added at the bottom of the table, about the information sessions that have no host yet
+	 */
 	t._init = function(){
 		var tr1 = document.createElement("tr");
 		var tr2 = document.createElement("tr");
@@ -97,6 +108,10 @@ function IS_status(container){
 		container.appendChild(t._table);
 	};
 	
+	/**
+	 * Create a list of all the Information Sessions that have no partner yet
+	 * The user can directly access the IS profile from the list items
+	 */
 	t._setISNoHostList = function(){
 		var tr_head = document.createElement("tr");
 		var td_head = document.createElement("td");
@@ -122,6 +137,9 @@ function IS_status(container){
 		}
 	};
 	
+	/**
+	 * Retrieve the IS data
+	 */
 	service.json("selection","IS/status",{},function(res){
 		if(res){
 			t._boys_real = res.boys_real;

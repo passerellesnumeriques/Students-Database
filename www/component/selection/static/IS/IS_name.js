@@ -1,71 +1,82 @@
+/**
+ * Create a section object containing the custom name of the given Information Session
+ * @param {String|HTMLElement}container
+ * @param {String|NULL} name if any
+ * @param {Boolean} can_edit
+ */
 function IS_name(container, name, can_edit){
+	if(typeof(container) == "string") container = document.getElementById(container);
 	var t = this;
 	t.table = document.createElement("table");
-	t.text = "";
-	t.name = name;
 	
-	require(["input_utils.js","section.js"],function(){
-		t._setSection();
-		t._init();
-	});
+	/**
+	 * Get the name attribute
+	 * @returns {String} the name of the IS
+	 */
+	t.getName = function(){
+		return t._name;
+	};
 	
+	/**Private attributes and functionalities*/
+	
+	t._text = "";
+	t._name = name;
+	
+	/**
+	 * Create a section object
+	 */
 	t._setSection = function(){
-		t.container_of_section_content = document.createElement("div");
-		t.section = new section("/static/selection/IS/label.png","Information Session name",t.container_of_section_content,false);
-	}
+		t._container_of_section_content = document.createElement("div");
+		t.section = new section("/static/selection/IS/label.png","Information Session name",t._container_of_section_content,false);
+	};
 	
+	/**
+	 * Launch the process, populate the section
+	 */
 	t._init = function(){
 		t.table.style.width = "100%";
-		// t._setTableHeader();
 		t._setTableBody();
-		t.container_of_section_content.appendChild(t.table);
+		t._container_of_section_content.appendChild(t.table);
 		container.appendChild(t.section.element);
-	}
+	};
 	
-	// t._setTableHeader = function(){
-		// var thead = document.createElement("thead");
-		// var th = document.createElement("th");
-		// var tr = document.createElement("tr");
-		// th.colSpan = 2;
-		// th.innerHTML = "<img src = '/static/selection/IS/label.png' style='vertical-align:bottom'/> Information Session name";
-		// setCommonStyleTable(t.table, th, "#DADADA");
-		// tr.appendChild(th);
-		// thead.appendChild(th);
-		// t.table.appendChild(thead);
-	// }
-	
+	/**
+	 * Set the content of the table
+	 * A row is created containing an input for the custom name
+	 */
 	t._setTableBody = function(){
 		var tbody = document.createElement("tbody");
 		var tr = document.createElement("tr");
 		var td1 = document.createElement("td");
 		// var td2 = document.createElement("td");
 		td1.innerHTML = "<font color='#808080'><b>Custom name: </b></font>"
-		if(t.name == null){
-			t.text = "";
-		} else t.text = t.name.uniformFirstLetterCapitalized();
+		if(t._name == null){
+			t._text = "";
+		} else t._text = t._name.uniformFirstLetterCapitalized();
 		if(can_edit){
 			var input = document.createElement("input");
 			input.type = 'text';
-			input.value = t.text;
+			input.value = t._text;
 			inputAutoresize(input,15);
 			input.oninput = function(){
 				if(this.value.checkVisible() && this.value != ""){
-					t.name = this.value.uniformFirstLetterCapitalized();
-				} else t.name = null;
+					t._name = this.value.uniformFirstLetterCapitalized();
+				} else t._name = null;
 			};
 			td1.appendChild(input);
 		} else {
-			// if(t.name == null) t.text = "<i>Unnamed</i>";
-			td1.innerHTML = "<font color='#808080'><b>Custom name: </b></font>"+t.text;
+			// if(t._name == null) t._text = "<i>Unnamed</i>";
+			td1.innerHTML = "<font color='#808080'><b>Custom name: </b></font>"+t._text;
 		}
 		
 		tr.appendChild(td1);
 		// tr.appendChild(td2);
 		tbody.appendChild(tr);
 		t.table.appendChild(tbody);
-	}
+	};
 	
-	t.getName = function(){
-		return t.name;
-	}
+	require(["input_utils.js","section.js"],function(){
+		t._setSection();
+		t._init();
+	});
 }

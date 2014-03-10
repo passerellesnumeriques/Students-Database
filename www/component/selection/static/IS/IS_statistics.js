@@ -1,40 +1,83 @@
+/**
+ * Create a section containing statistics about an information session
+ * @param {String|HTMLElement}container
+ * @param {Boolean} separate_boys_girls true if the boys and girls figures shall be separated, according to the selection campaign config
+ * @param {Boolean} can_edit
+ * @param {Number|NULL} boys_expected if any
+ * @param {Number|NULL} boys_real if any
+ * @param {Number|NULL} girls_expected if any
+ * @param {Number|NULL} girls_real if any
+ */
 function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, boys_real, girls_expected, girls_real){
 	var t = this;
+	if(typeof(container) == "string") container = document.getElementById(container);
 	t.table = document.createElement("table");
-	t.text_boys_expected = "";
-	t.text_boys_real = "";
-	t.text_girls_expected = "";
-	t.text_girls_real = "";
-	t.boys_expected = boys_expected;
-	t.boys_real = boys_real;
-	t.girls_expected = girls_expected;
-	t.girls_real = girls_real;
 	
+	/**
+	 * Get the figures attributes
+	 * @returns {Object} containing 4 attributes: <ul><li><code>girls_expected</code> {Number} if the separate_boys_girls param is set as false, this attribute is set as 0</li><li><code>girls_real</code> {Number} if the separate_boys_girls param is set as false, this attribute is set as 0</li><li><code>boys_expected</code> {Number}</li><li><code>boys_real</code> {Number}</li></ul>
+	 */
+	t.getFigures = function(){
+		var figures = {};
+		if(!separate_boys_girls){
+			figures.girls_expected = 0;
+			figures.girls_real = 0;
+		} else {
+			figures.girls_expected = t.field_int_32.getCurrentData();
+			figures.girls_real = t.field_int_33.getCurrentData();
+		}
+		figures.boys_expected = t.field_int_22.getCurrentData();
+		figures.boys_real = t.field_int_23.getCurrentData();
+		return figures;
+	};
+	
+	/**Private attributes and functionalities*/
+	t._text_boys_expected = "";
+	t._text_boys_real = "";
+	t._text_girls_expected = "";
+	t._text_girls_real = "";
+	t._boys_expected = boys_expected;
+	t._boys_real = boys_real;
+	t._girls_expected = girls_expected;
+	t._girls_real = girls_real;
+	
+	/**
+	 * Set the section element
+	 */
 	t._setSection = function(){
 		t.container_of_section_content = document.createElement("div");
 		t.section = new section("/static/selection/IS/statistics.png","Statistics",t.container_of_section_content,false);
-	}
+	};
 	
+	/**
+	 * Launch the process, populate the table
+	 */
 	t._init = function(){
 		t.table.style.width = "100%";
 		t._setTextFields();
-		// t._setTableHeader();
 		t._setTableBody();
 		t.container_of_section_content.appendChild(t.table);
 		container.appendChild(t.section.element);
-	}
+	};
 	
+	/**
+	 * Initiate the text fields (this fields contains the data to display: for instance 0 instead of null into the database)
+	 */
 	t._setTextFields = function(){
-		if(t.boys_expected != null)
-			t.text_boys_expected = t.boys_expected;
-		if(t.boys_real != null)
-			t.text_boys_real = t.boys_real;
-		if(t.girls_expected != null)
-			t.text_girls_expected = t.girls_expected;
-		if(t.girls_real != null)
-			t.text_girls_real = t.girls_real;
-	}
+		if(t._boys_expected != null)
+			t._text_boys_expected = t._boys_expected;
+		if(t._boys_real != null)
+			t._text_boys_real = t._boys_real;
+		if(t._girls_expected != null)
+			t._text_girls_expected = t._girls_expected;
+		if(t._girls_real != null)
+			t._text_girls_real = t._girls_real;
+	};
 	
+	/**
+	 * Populate the table body, with one row per sex and one column per category (real / expected)
+	 * All the figures are handled by field_int
+	 */
 	t._setTableBody = function(){
 		var tbody = document.createElement("tbody");
 		var tr1 = document.createElement("tr");
@@ -55,10 +98,10 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 		div13.style.paddingRight = "10px";
 		td12.appendChild(div12);
 		td13.appendChild(div13);
-		if(t.boys_expected == null) t.text_boys_expected = 0;
-		if(t.boys_real == null) t.text_boys_real = 0;
-		if(t.girls_expected == null) t.text_girls_expected = 0;
-		if(t.girls_real == null) t.text_girls_real = 0;
+		if(t._boys_expected == null) t._text_boys_expected = 0;
+		if(t._boys_real == null) t._text_boys_real = 0;
+		if(t._girls_expected == null) t._text_girls_expected = 0;
+		if(t._girls_real == null) t._text_girls_real = 0;
 		
 		tr1.appendChild(td11);
 		tr1.appendChild(td12);
@@ -75,42 +118,23 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 		if(!separate_boys_girls){
 			td21.innerHTML = "<font color='#808080'><b>Attendees </b></font>";
 			if(can_edit){
-				var data22 = parseInt(t.text_boys_expected) + parseInt(t.text_girls_expected);
+				var data22 = parseInt(t._text_boys_expected) + parseInt(t._text_girls_expected);
 				t.field_int_22 = new field_integer(data22,true,field_int_config); 
-//				var input22 = document.createElement("input");
-//				input22.type = 'text';
 				var input22 = t.field_int_22.getHTMLElement();
 				inputAutoresize(input22);
 				input22.style.marginLeft = "15px";				
-//				var input23 = document.createElement("input");
-				var data23 = parseInt(t.text_boys_real) + parseInt(t.text_girls_real);
+				var data23 = parseInt(t._text_boys_real) + parseInt(t._text_girls_real);
 				t.field_int_23 = new field_integer(data23,true,field_int_config);
 				input23 = t.field_int_23.getHTMLElement();
 				input23.style.marginLeft = "15px";
 				input23.type = 'text';
 				inputAutoresize(input23);
-//				input22.value = t.text_boys_expected + t.text_girls_expected;
-//				input23.value = t.text_boys_real + t.text_girls_real;
-//				input22.oninput = function(){
-//					var new_figure = t._setNewFigure(this.value);
-//					if(new_figure == 0) t.boys_expected = null;
-//					else t.boys_expected = new_figure;
-//					t.text_boys_expected = new_figure;
-//					t._reset_girls_figures();
-//				};
-//				input23.oninput = function(){
-//					var new_figure = t._setNewFigure(this.value);
-//					if(new_figure == 0) t.boys_real = null;
-//					else t.boys_real = new_figure;
-//					t.text_boys_real = new_figure;
-//					t._reset_girls_figures();
-//				};
 				td22.appendChild(input22);
 				td23.appendChild(input23);
 			} else {
-				td22.innerHTML = parseInt(t.text_boys_expected) + parseInt(t.text_girls_expected);
+				td22.innerHTML = parseInt(t._text_boys_expected) + parseInt(t._text_girls_expected);
 				td22.style.textAlign = "center";
-				td23.innerHTML = parseInt(t.text_boys_real) + parseInt(t.text_girls_real);
+				td23.innerHTML = parseInt(t._text_boys_real) + parseInt(t._text_girls_real);
 				td23.style.textAlign = "center";
 			}
 		} else {
@@ -121,21 +145,13 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 			td21.innerHTML = "<font color='#808080'><b>Boys </b></font>";
 			td31.innerHTML = "<font color='#808080'><b>Girls </b></font>";
 			if(can_edit){
-//				var input22 = document.createElement("input");
-//				var input23 = document.createElement("input");
-//				var input32 = document.createElement("input");
-//				var input33 = document.createElement("input");
-//				input22.type = 'text';
-//				input23.type = 'text';
-//				input32.type = 'text';
-//				input33.type = 'text';
-				t.field_int_22 = new field_integer(t.text_boys_expected,true,field_int_config);
+				t.field_int_22 = new field_integer(t._text_boys_expected,true,field_int_config);
 				input22 = t.field_int_22.getHTMLElement();
-				t.field_int_23 = new field_integer(t.text_boys_real,true,field_int_config);
+				t.field_int_23 = new field_integer(t._text_boys_real,true,field_int_config);
 				input23 = t.field_int_23.getHTMLElement();
-				t.field_int_32 = new field_integer(t.text_girls_expected,true,field_int_config);
+				t.field_int_32 = new field_integer(t._text_girls_expected,true,field_int_config);
 				input32 = t.field_int_32.getHTMLElement();
-				t.field_int_33 = new field_integer(t.text_girls_real,true,field_int_config);
+				t.field_int_33 = new field_integer(t._text_girls_real,true,field_int_config);
 				input33 = t.field_int_33.getHTMLElement();
 				input22.style.marginLeft = "15px";
 				input23.style.marginLeft = "15px";
@@ -145,43 +161,15 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 				inputAutoresize(input23);
 				inputAutoresize(input32);
 				inputAutoresize(input33);
-//				input22.value = t.text_boys_expected;
-//				input22.oninput = function(){
-//					var new_figure = t._setNewFigure(this.value);
-//					if(new_figure == 0) t.boys_expected = null;
-//					else t.boys_expected = new_figure;
-//					t.text_boys_expected = new_figure;
-//				};
-//				input23.value = t.text_boys_real;
-//				input23.oninput = function(){
-//					var new_figure = t._setNewFigure(this.value);
-//					if(new_figure == 0) t.boys_real = null;
-//					else t.boys_real = new_figure;
-//					t.text_boys_real = new_figure;
-//				};
-//				input32.value = t.text_girls_expected;
-//				input32.oninput = function(){
-//					var new_figure = t._setNewFigure(this.value);
-//					if(new_figure == 0) t.girls_expected = null;
-//					else t.girls_expected = new_figure;
-//					t.text_girls_expected = new_figure;
-//				};
-//				input33.value = t.text_girls_real;
-//				input33.oninput = function(){
-//					var new_figure = t._setNewFigure(this.value);
-//					if(new_figure == 0) t.girls_real = null;
-//					else t.girls_real = new_figure;
-//					t.text_girls_real = new_figure;
-//				};
 				td22.appendChild(input22);
 				td23.appendChild(input23);
 				td32.appendChild(input32);
 				td33.appendChild(input33);
 			} else {
-				td22.innerHTML = t.text_boys_expected;
-				td23.innerHTML = t.text_boys_real;
-				td32.innerHTML = t.text_girls_expected;
-				td33.innerHTML = t.text_girls_real;
+				td22.innerHTML = t._text_boys_expected;
+				td23.innerHTML = t._text_boys_real;
+				td32.innerHTML = t._text_girls_expected;
+				td33.innerHTML = t._text_girls_real;
 				td22.style.textAlign = "center";
 				td23.style.textAlign = "center";
 				td32.style.textAlign = "center";
@@ -193,36 +181,29 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 			tr3.appendChild(td33);
 			tbody.appendChild(tr3);
 		}
-	}
+	};
 	
+	/**
+	 * Convert a text which is not a number into 0
+	 * @param {String} text
+	 * @returns {Stirng} the text, updated to 0 if it was not a number
+	 */
 	t._setNewFigure = function(text){
 		if(isNaN(text)){
 			text = 0;
 		}
 		return text;
-	}
+	};
 	
+	/**
+	 * Reset the girls data
+	 */
 	t._reset_girls_figures = function(){
-		t.girls_expected = null;
-		t.text_girls_expected = 0;
-		t.girls_real = null;
-		t.text_girls_real = 0;
-	}
-	
-	t.getFigures = function(){
-		var figures = {};
-		if(!separate_boys_girls){
-			figures.girls_expected = 0;
-			figures.girls_real = 0;
-		} else {
-			figures.girls_expected = t.field_int_32.getCurrentData();
-			figures.girls_real = t.field_int_33.getCurrentData();
-		}
-//		figures.boys_expected = t.boys_expected;
-		figures.boys_expected = t.field_int_22.getCurrentData();
-		figures.boys_real = t.field_int_23.getCurrentData();
-		return figures;
-	}
+		t._girls_expected = null;
+		t._text_girls_expected = 0;
+		t._girls_real = null;
+		t._text_girls_real = 0;
+	};
 	
 	require(["input_utils.js","section.js",["typed_field.js","field_integer.js"]],function(){
 		t._setSection();

@@ -40,7 +40,7 @@ function ISPartner(organization, organization_name, host, host_address, contact_
 /**
  * ISPartnersContactPoints
  * @param {array} contact_points coming from contact/service/get_json_contact_points_no_address
- * for each ISpartner
+ * for each ISpartner (host or not)
  */
 function ISPartnersContactPoints(contact_points){
 	this.contact_points = contact_points;

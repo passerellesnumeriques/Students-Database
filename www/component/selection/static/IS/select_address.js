@@ -1,10 +1,27 @@
+/**
+ * Create a select address section
+ * The container is populated with a section element. This object is made of an address part, contaning the address text if any address is selected
+ * This object forces the user to pick an address from a partner (organization for selection), called the host
+ * Below the address field is displayed the host data, in a create_partner_row object.
+ * @param {HTMLElement|String}container
+ * @param {ISData} data
+ * @param {Array | NULL} partners_contacts_points same as returned by contact#service#get_json_contact_points_no_address method, null if the host is not selected
+ * @param {Boolean} can_manage
+ * @param {Function} oncontactpointchange_listener listener fired in the case of the contacts points of the host organization are updated from the organization profile
+ * @param {Function} onaddresschange_listener listener fired in the case of the addresses of the host organization are updated from the organization profile
+ */
 function select_address(container, data, partners_contacts_points, can_manage, oncontactpointchange_listener, onaddresschange_listener){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	
-	t.onupdatehost = new Custom_Event();
+	t.onupdatehost = new Custom_Event();//Custom event fired when the host is updated
 	
+	/**
+	 * Reset the content, invalidate the layout of the container
+	 * @param {Array | NULL} new_partners_contact_points, if partners_contacts_points must be updated before reseting
+	 * The onupdatehost is fired by this method
+	 */
 	t.reset = function(new_partners_contact_points){
 		if(new_partners_contact_points)
 			partners_contacts_points = new_partners_contact_points;
@@ -20,6 +37,11 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 		t.onupdatehost.fire(host_id);
 	};
 	
+	/** Private methods */
+	
+	/**
+	 * Launch the process, create a table into the section element and populate it
+	 */
 	t._init = function(){
 		t._table = document.createElement("table");//The table is splitted into three parts, independants, to be able to seperate the styles
 		t._table.style.width = "100%";
@@ -35,6 +57,12 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 		t._refreshTableFooter();
 	};
 	
+	/**
+	 * Refresh the area / address part of the table, set into the thead
+	 * This part of the table is populated calling services:
+	 * Calls the service goegraphy#get_area_parents_names in the case of only one area is set (no address)
+	 * Calls the service contact#get_address in the case of an address is set
+	 */
 	t._refreshTableHeader = function(){
 		t._refreshElement(t._thead);
 		var tr = document.createElement("tr");
@@ -91,6 +119,10 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 		}
 	};
 	
+	/**
+	 * Refresh the host detail part, displayed into the tbody element
+	 * The tbody is filled up in the case of an host is selected. In that case, a create_partner_row object is created
+	 */
 	t._refreshTableBody = function(){
 		t._refreshElement(t._tbody);
 		var tr = document.createElement("tr");
@@ -125,6 +157,10 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 		}//Else nothing is set
 	};
 	
+	/**
+	 * Set the footer of the selection, only done if the user can manage this page
+	 * the footer contains buttons, depending on the intern step(host selected, area selected)
+	 */
 	t._refreshTableFooter = function(){
 		t.section.resetToolBottom();
 		if(can_manage){
@@ -172,7 +208,9 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 							//No need to update the area because a reference of data is given to the pop_select_area_and_partner object so will be automatically updated
 							//Reset (even if no host is set, geographic area may have been updated
 							
-						}
+						},
+						"<img src = '"+theme.icons_16.info+"'/><i> To be fully completed, an information session<br/>must be attached to a host partner</i>",
+						"<img src = '"+theme.icons_16.add+"'/> Create partner"
 					);
 				};
 				var remove_button = document.createElement("div");
@@ -243,7 +281,9 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 								//Reset
 								t.reset();
 							}
-						}
+						},
+						"<img src = '"+theme.icons_16.info+"'/><i> To be fully completed, an information session<br/>must be attached to a host partner</i>",
+						"<img src = '"+theme.icons_16.add+"'/> Create partner"
 					);
 				};
 				t.section.addToolBottom(remove_host);
@@ -283,7 +323,9 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 							} else
 							//Reset
 							t.reset();
-						}
+						},
+						"<img src = '"+theme.icons_16.info+"'/><i> To be fully completed, an information session<br/>must be attached to a host partner</i>",
+						"<img src = '"+theme.icons_16.add+"'/> Create partner"
 					);
 				};
 				t.section.addToolBottom(set_button);
@@ -292,6 +334,14 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 		}
 	};
 	
+	/**
+	 * If an host has been selected, need to populate the partners_contacts_points array with the host data
+	 * This method tries to find out the host index in the Partners_contacts_points array. If found, nothing shall be done and onnoupdate is fired.
+	 * Else, the service contact#get_json_contact_points_no_address is called to retrieve the host data, and then onupdate is fired
+	 * @param {Number} new_host the new host ID
+	 * @param {Function} onupdate function fired when the partners_contacts_points is updated
+	 * @param {Function} onnoupdate function fired when the partners_contacts_points is not updated
+	 */
 	t._updateAllContactsPointsIfNeeded = function(new_host, onupdate, onnoupdate){
 		//The host set may not be in the AllContactsPoints Array
 		if(t._findPartnerIndexInPartners_contacts_points(new_host) != null){
@@ -314,21 +364,31 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 		});
 	};
 	
+	/**
+	 * Reset the host. The partner selected as host is removed from the data.partners array
+	 */
 	t._resetHost = function(){
 		var index = t._getHostIndexInPartners();
 		if(index == null)
 			return;
 		//Remove the host from partners array
 		data.partners.splice(index,1);
-//		data.partners[index].host = false;
-//		data.partners[index].host_address = null;
 	};
 	
+	/**
+	 * Remove all the children of a given element
+	 * @param {HTMLElement} e 
+	 */
 	t._refreshElement = function(e){
 		while(e.firstChild)
 			e.removeChild(e.firstChild);
 	};
 	
+	/**
+	 * Find a partner index into the partners_contacts_points array from its ID
+	 * @param {Number} partner_id
+	 * @returns {Number | NULL} the partner index if found, else NULL
+	 */
 	t._findPartnerIndexInPartners_contacts_points = function(partner_id){
 		var index = null;
 		for(var i = 0; i <  partners_contacts_points.length; i++){
@@ -340,6 +400,11 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 		return index;
 	};
 	
+	/**
+	 * Find a partner index into data.partners array, from its ID
+	 * @param {Number} id the ID of the seeked partner
+	 * @returns {Number | NULL} the partner index if found, else NULL
+	 */
 	t._findPartnerIndexInPartners = function(id){
 		for(var i = 0; i < data.partners.length; i++){
 			if(data.partners[i].organization == id)
@@ -358,6 +423,10 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 		return to_return;
 	};
 	
+	/**
+	 * Get host partner index into data.partners array
+	 * @returns {Number | NULL} host partner index if an host is set, else NULL
+	 */
 	t._getHostIndexInPartners = function(){
 		for(var i = 0; i < data.partners.length; i++){
 			if(data.partners[i].host ==  true)
@@ -366,6 +435,10 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 		return null;
 	};
 	
+	/**
+	 * Get the internal step. Based on the data object, there are three different steps, used to populate the table object
+	 * @returns {String} <ul><li>"host" if an host is set</li><li>"area" if no host is set but a geographic_area is selected</li><li>NULL if no host nor geographic area is selected</li></ul>
+	 */
 	t._getInternStep = function(){
 		if(t._getHostAddressInPartners() != null)
 			return "host";
