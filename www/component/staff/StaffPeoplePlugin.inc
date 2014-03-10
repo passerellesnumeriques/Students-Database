@@ -5,24 +5,6 @@ require_once("component/people/PeoplePlugin.inc");
  */ 
 class StaffPeoplePlugin implements PeoplePlugin {
 	
-	public function preparePeopleProfilePagesRequest(&$q, $people_id) {}
-	public function getPeopleProfilePages($people_id, $people, $q) {}
-	
-	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {
-		try {
-			$staff = SQLQuery::create()->select("StaffPosition")->where("people",$people_id)->executeSingleRow();
-			if ($staff == null) return array();
-			return array(
-					array(
-							"/static/staff/staff_16.png",
-							"PN Staff",
-							"component/staff/page/profile_people_staff.inc",
-							5
-					)
-			);
-		} catch (Exception $ex) { return array(); }
-	}
-	
 	public function getCreatePeopleSupportedTypes() { return array("staff"); }
 	public function isCreatePeopleAllowed($people_type) {
 		if ($people_type <> "staff") return false;

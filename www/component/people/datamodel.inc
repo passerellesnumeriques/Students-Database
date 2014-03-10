@@ -11,6 +11,7 @@ $model->addTable("People")
 	->addString("khmer_last_name", 100, 1, true)
 	->addEnum("sex", array("M","F"))
 	->addDate("birth", true)
+	->addString("types", 1024, 0, true, false)
 	->addForeignKey("picture", "Storage", false, false, false)
 	->addInteger("picture_version")
 	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Personal Information", "Personal Information",

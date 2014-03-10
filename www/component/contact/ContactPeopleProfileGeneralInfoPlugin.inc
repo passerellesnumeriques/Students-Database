@@ -6,7 +6,7 @@ class ContactPeopleProfileGeneralInfoPlugin implements PeopleProfileGeneralInfoP
 	public function getIcon() { return "/static/contact/contact_16.png"; }
 	public function getName() { return "Contacts"; }
 	
-	public function isValidForTypes($types) { return true; }
+	public function isValidFor($people_id, $types) { return true; }
 	
 	public function prepareRequestForSection(&$q, $people_id) {}
 	public function generateSection(&$page, $people_id, $row, $prepareRequest, $q) {

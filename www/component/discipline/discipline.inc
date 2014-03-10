@@ -2,9 +2,9 @@
 class discipline extends Component {
 	
 	public function getPluginImplementations() {
-		require_once("DisciplinePeoplePlugin.inc");
+		require_once("DisciplinePeopleProfilePagePlugin.inc");
 		return array(
-			new DisciplinePeoplePlugin()
+			new DisciplinePeopleProfilePagePlugin()
 		);
 	}
 	

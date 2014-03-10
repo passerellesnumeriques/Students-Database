@@ -5,20 +5,6 @@ require_once("component/people/PeoplePlugin.inc");
  */
 class ContactPeoplePlugin implements PeoplePlugin {
 	
-	public function preparePeopleProfilePagesRequest(&$q, $people_id) {}
-	public function getPeopleProfilePages($people_id, $people, $q) {}
-	
-	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {
-		return array(
-				array(
-						"/static/contact/contact_16.png",
-						"Contacts",
-						"component/contact/page/people_contacts.inc",
-						2
-				)
-		);
-	}
-	
 	public function getCreatePeopleSupportedTypes() { return array("organization_contact_point"); }
 	public function isCreatePeopleAllowed($people_type) {
 		if ($people_type == "organization_contact_point")

@@ -5,27 +5,6 @@ require_once("component/people/PeoplePlugin.inc");
  */
 class UserPeoplePlugin implements PeoplePlugin {
 	
-	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
-		$people_alias = $q->getTableAlias("People");
-		$alias = $q->generateTableAlias();
-		$q->join($people_alias, "UserPeople", array("id"=>"people"), $alias);
-		$q->field($alias, "user");
-	}
-	public function getPeopleProfilePages($people_id, $people, $q) {
-		if ($people["user"] == null) return array(); // not a user
-		$user_id = $people["user"];
-		return array(
-				"user_rights"=>array(
-						"/static/user_management/access_list.png",
-						"User Rights",
-						"/dynamic/user_management/page/user_rights?user=".$user_id,
-						1000
-				)
-		);
-	}
-	
-	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {}
-	
 	public function getCreatePeopleSupportedTypes() { return array("user"); }
 	public function isCreatePeopleAllowed($people_type) {
 		if ($people_type <> "user") return false;

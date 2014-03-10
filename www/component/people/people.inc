@@ -9,8 +9,27 @@ class people extends Component {
 		require_once("PeoplePluginsImplementations.inc");
 		return array(
 			new PeoplePeoplePlugin(),
-			new PeopleGeneralInfo()
+			new PeopleProfilePage(),
+			new PeopleGeneralInfo(),
 		);
+	}
+	
+	public function parseTypes($types) {
+		$list = array();
+		if ($types == null) return $list;
+		do {
+			$i = strpos($types, ",");
+			if ($i === false) {
+				$type = trim($types);
+				$types = null;
+			} else {
+				$type = trim(substr($types, 0, $i));
+				$types = substr($types, $i+1);
+			}
+			if (strlen($type) == 0) continue;
+			array_push($list, $type);
+		} while ($types <> null);
+		return $list;
 	}
 
 	public function joinPeople(&$q, $from_table, $from_key) {

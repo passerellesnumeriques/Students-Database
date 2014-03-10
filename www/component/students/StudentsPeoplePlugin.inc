@@ -5,28 +5,6 @@ require_once("component/people/PeoplePlugin.inc");
  */ 
 class StudentsPeoplePlugin implements PeoplePlugin {
 	
-	public function preparePeopleProfilePagesRequest(&$q, $people_id) {
-		$alias = $q->getTableAlias("Student");
-		if ($alias == null) {
-			$alias = $q->generateTableAlias();
-			$people_alias = $q->getTableAlias("People");
-			$q->join($people_alias, "Student", array("id"=>"people"), $alias);
-		}
-		if ($q->getFieldAlias("Student", "batch") <> "student_batch")
-			$q->field($alias, "batch", "student_batch");
-	}
-	public function getPeopleProfilePages($people_id, $people, $q) {
-		if ($people["student_batch"] == null) return array(); // not a student
-		return array(); // TODO
-	}
-	
-	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {
-		if ($people["student_batch"] == null) return array(); // not a student
-		return array(
-			array("/static/students/student_16.png","Student","component/students/page/people_profile__student.inc",10)
-		);
-	}
-	
 	public function getCreatePeopleSupportedTypes() { return array("student"); }
 	public function isCreatePeopleAllowed($people_type) {
 		if ($people_type <> "student") return false;

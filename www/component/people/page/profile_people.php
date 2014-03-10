@@ -8,6 +8,7 @@ class page_profile_people extends Page {
 		$q = SQLQuery::create()
 			->select("People")
 			->whereValue("People", "id", $people_id)
+			->field("People", "types", "people_types")
 			;
 		foreach (PNApplication::$instance->components as $cname=>$c) {
 			foreach ($c->getPluginImplementations() as $pi) {
@@ -18,6 +19,7 @@ class page_profile_people extends Page {
 		}
 		
 		$people = $q->executeSingleRow();
+		$types = PNApplication::$instance->people->parseTypes($people["people_types"]);
 		
 		usort($plugins, "compare_people_profile_general_info_plugins");
 		
@@ -25,6 +27,7 @@ class page_profile_people extends Page {
 		foreach ($plugins as $a) {
 			$pi = $a[0];
 			$res = $a[1];
+			if (!$pi->isValidFor($people_id, $types)) continue;
 			$section_id = $this->generateID();
 			echo "<div id='$section_id' icon='".$pi->getIcon()."' title=".json_encode($pi->getName())." style='display:inline-block;float:left;margin:5px' css='soft'>";
 			$pi->generateSection($this, $people_id, $people, $res, $q);

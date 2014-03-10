@@ -5,7 +5,7 @@ interface PeopleProfileGeneralInfoPlugin {
 	public function getIcon();
 	public function getName();
 	
-	public function isValidForTypes($types);
+	public function isValidFor($people_id, $types);
 	/**
 	 * Prepare the SQL request that will retrieve the people information to generate the section
 	 * @param SQLQuery $q

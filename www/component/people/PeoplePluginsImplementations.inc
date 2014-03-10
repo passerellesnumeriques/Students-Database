@@ -1,4 +1,16 @@
 <?php
+require_once("PeopleProfilePagePlugin.inc");
+class PeopleProfilePage implements PeopleProfilePagePlugin {
+	
+	public function isValidFor($people_id, $types) { return true; }
+	public function getPriority() { return 0; }
+	public function getIcon() { return "/static/people/profile_16.png"; }
+	public function getName() { return "General Information"; }
+	public function getTooltip() { return "Civil information, contacts (emails, phone...), and other general information"; }
+	public function getURL($people_id) { return "/dynamic/people/page/profile_people?people=".$people_id; }
+	
+}
+
 require_once("PeopleProfileGeneralInfoPlugin.inc"); 
 class PeopleGeneralInfo implements PeopleProfileGeneralInfoPlugin {
 	
@@ -6,7 +18,7 @@ class PeopleGeneralInfo implements PeopleProfileGeneralInfoPlugin {
 	public function getIcon() { return "/static/people/people_info.png"; }
 	public function getName() { return "Personal Information"; }
 	
-	public function isValidForTypes($types) { return true; }
+	public function isValidFor($people_id, $types) { return true; }
 	
 	public function prepareRequestForSection(&$q, $people_id) {
 		require_once("component/data_model/Model.inc");
@@ -31,6 +43,8 @@ class PeopleGeneralInfo implements PeopleProfileGeneralInfoPlugin {
 		$display = $table->getDisplayHandler(null);
 		$rows = $table->filterWriteAccess(array($row));
 		$can_edit = count($rows) > 0;
+		$page->add_javascript("/static/storage/upload.js");
+		$page->add_javascript("/static/storage/picture.js");
 ?>
 <table>
 <tr>
@@ -88,6 +102,5 @@ build_fields();
 </script>
 <?php 
 	}
-	
 }
 ?>

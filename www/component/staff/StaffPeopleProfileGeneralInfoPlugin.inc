@@ -6,7 +6,7 @@ class StaffPeopleProfileGeneralInfoPlugin implements PeopleProfileGeneralInfoPlu
 	public function getIcon() { return "/static/staff/staff_16.png"; }
 	public function getName() { return "PN Staff"; }
 	
-	public function isValidForTypes($types) { return in_array("staff", $types); }
+	public function isValidFor($people_id, $types) { return in_array("staff", $types); }
 	
 	public function prepareRequestForSection(&$q, $people_id) {
 	}

@@ -5,31 +5,6 @@ require_once("PeoplePlugin.inc");
  */
 class PeoplePeoplePlugin implements PeoplePlugin {
 	
-	public function preparePeopleProfilePagesRequest(&$q, $people_id) {}
-	
-	public function getPeopleProfilePages($people_id, $people, $q) {
-		return array(
-				"profile_people"=>array(
-						"/static/people/profile_16.png",
-						"General Information",
-						"/dynamic/people/page/profile_people?people=".$people_id,
-						1,
-						"Civil information, contacts (emails, phone...), and other general information"
-				)
-		);
-	}
-	
-	public function getPeopleProfileGeneralInfoSections($people_id, $people, $q) {
-		return array(
-				array(
-						"/static/people/people_info.png",
-						"Personal Information",
-						"component/people/page/profile_people_general.inc",
-						1
-				)
-		);
-	}
-	
 	public function getCreatePeopleSupportedTypes() { return array(); }
 	public function isCreatePeopleAllowed($people_type) { return false; }
 	public function getCreatePeoplePages($people_types) {

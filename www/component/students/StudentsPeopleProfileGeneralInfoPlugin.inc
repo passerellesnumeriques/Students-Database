@@ -6,7 +6,7 @@ class StudentsPeopleProfileGeneralInfoPlugin implements PeopleProfileGeneralInfo
 	public function getIcon() { return "/static/students/student_16.png"; }
 	public function getName() { return "Student"; }
 	
-	public function isValidForTypes($types) { return in_array("student", $types); }
+	public function isValidFor($people_id, $types) { return in_array("student", $types); }
 
 	public function prepareRequestForSection(&$q, $people_id) {
 		$alias = $q->getTableAlias("Student");
