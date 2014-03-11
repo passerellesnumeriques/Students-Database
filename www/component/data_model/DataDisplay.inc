@@ -13,26 +13,19 @@ abstract class DataDisplay {
 	/**
 	 * @var \datamodel\DataDisplayHandler the handler this data belongs to
 	 */
-	private $handler;
+	private $table_data_display;
 	
-	/**
-	 * @param \datamodel\DataDisplayHandler $handler the handler this data belongs to
-	 */
-	public function __construct($handler) {
-		$this->handler = $handler;
-	}
-	
-	public function getHandler() { return $this->handler; }
-	public function setHandler($handler) { $this->handler = $handler; }
+	public function getTableDataDisplay() { return $this->table_data_display; }
+	public function setTableDataDisplay($table_data_display) { $this->table_data_display = $table_data_display; }
+	public function getTableName() { return $this->table_data_display->getTableName(); }
+	public function getTable() { return $this->table_data_display->getTable(); }
+	public function getCategoryName() { return $this->table_data_display->getCategory()->getName(); }
+	public function getCategory() { return $this->table_data_display->getCategory(); }
 	
 	/** Get the string to display for this data
 	 * @return string the display name
 	 */
 	public abstract function getDisplayName();
-	/** Get the string of the category this data belongs to
-	 * @return string the category of the DataDisplayHandler
-	 */
-	public final function getCategory() { return $this->handler->getCategory(); }
 	/** Returns the list of columns' name this data represents (either a single column, or a group of columns displayed together
 	 * @return array of string
 	 */
@@ -120,9 +113,9 @@ abstract class DataDisplay {
 	 */
 	public final function javascriptDataDisplay($sub_model) {
 		$s = "new DataDisplay(";
-		$s .= json_encode($this->handler->getCategory());
+		$s .= json_encode($this->getCategoryName());
 		$s .= ",".json_encode($this->getDisplayName());
-		$s .= ",".json_encode($this->handler->getTable()->getName());
+		$s .= ",".json_encode($this->getTableName());
 		$tf = $this->getTypedFieldInList($sub_model);
 		$s .= ",".json_encode($tf[0]);
 		$s .= ",".$tf[1];
@@ -209,8 +202,7 @@ class SimpleDataDisplay extends DataDisplay {
 	 * @param string $display_name name to display
 	 * @param boolean $readonly indicates if we can edit this column
 	 */
-	public function __construct($handler, $column_name, $display_name, $readonly = false) {
-		parent::__construct($handler);
+	public function __construct($column_name, $display_name, $readonly = false) {
 		$this->column_name = $column_name;
 		$this->display_name = $display_name;
 		$this->readonly = $readonly;
@@ -224,35 +216,35 @@ class SimpleDataDisplay extends DataDisplay {
 		return array($this->column_name);
 	}
 	public function getSingleCell() {
-		return array("table"=>$this->getHandler()->getTable()->getName(), "column"=>$this->column_name);
+		return array("table"=>$this->getTableName(), "column"=>$this->column_name);
 	}
 	
 	public function getTypedFieldInList($sub_model) {
-		$col = $this->getHandler()->getTable()->getColumnFor($this->column_name, $sub_model);
+		$col = $this->getTable()->getColumnFor($this->column_name, $sub_model);
 		return \PNApplication::$instance->widgets->get_typed_field($col);
 	}
 	
 	public function getTypedFilter($sub_model) {
-		$col = $this->getHandler()->getTable()->getColumnFor($this->column_name, $sub_model);
+		$col = $this->getTable()->getColumnFor($this->column_name, $sub_model);
 		return \PNApplication::$instance->widgets->get_typed_filter($col);
 	}
 	
 	public function isEditable() {
 		if ($this->readonly) return false;
-		return $this->getHandler()->getTable()->mayModify();
+		return $this->getTable()->mayModify();
 	}
 	public function isSortable() {
 		return true;
 	}
 	public function isMandatory($sub_model) {
-		$col = $this->getHandler()->getTable()->getColumnFor($this->column_name, $sub_model);
+		$col = $this->getTable()->getColumnFor($this->column_name, $sub_model);
 		return !$col->can_be_null;
 	}
 	
 	public function getEditLocks($sub_model) {
-		if ($this->getHandler()->getTable()->canModifyEverything() || $this->getHandler()->getTable()->canModifyColumn($this->column_name))
-			return array(array("table"=>$this->getHandler()->getTable()->getSQLNameFor($sub_model), "column"=>$this->column_name));
-		return array(array("table"=>$this->getHandler()->getTable()->getSQLNameFor($sub_model), "column"=>$this->column_name, "lock_each_row"=>true));
+		if ($this->getTable()->canModifyEverything() || $this->getTable()->canModifyColumn($this->column_name))
+			return array(array("table"=>$this->getTable()->getSQLNameFor($sub_model), "column"=>$this->column_name));
+		return array(array("table"=>$this->getTable()->getSQLNameFor($sub_model), "column"=>$this->column_name, "lock_each_row"=>true));
 	}
 	
 	public function buildSQL(&$q, $path, $filters) {
@@ -263,9 +255,9 @@ class SimpleDataDisplay extends DataDisplay {
 			$q->field($table_alias, $this->column_name, $alias);
 		}
 		$result = array("data"=>$alias);
-		$key = $this->getHandler()->getTable()->getPrimaryKey();
+		$key = $this->getTable()->getPrimaryKey();
 		if ($key == null) {
-			PNApplication::error("No key for data '".$this->display_name."' in table '".$this->getHandler()->getTable()->getName()."'");
+			PNApplication::error("No key for data '".$this->display_name."' in table '".$this->getTableName()."'");
 			$result["key"] = null;
 			return $result;
 		}
@@ -276,13 +268,13 @@ class SimpleDataDisplay extends DataDisplay {
 			$q->field($table_alias, $key, $alias);
 		}
 		$result["key"] = $alias;
-		$col = $this->getHandler()->getTable()->getColumnFor($this->column_name, $path->sub_model);
+		$col = $this->getTable()->getColumnFor($this->column_name, $path->sub_model);
 		$this->applyColumnFilter($table_alias, $col, $filters, $q);
 		return $result;
 	}
 	
 	public function saveData($key, $value, $sub_model, &$table_fields) {
-		$table_fields->addValue($this->getHandler()->getTable()->getName(), $sub_model, $key, $this->column_name, $value);
+		$table_fields->addValue($this->getTableName(), $sub_model, $key, $this->column_name, $value);
 	}
 	
 }
@@ -311,8 +303,7 @@ class ChoiceDataDisplay extends DataDisplay {
 	 * @param string $display_name name of this data
 	 * @param boolean $editable indicates if this can be edited or not
 	 */
-	public function __construct($handler, $foreign_key_name, $foreign_column_name, $display_name, $editable = true) {
-		parent::__construct($handler);
+	public function __construct($foreign_key_name, $foreign_column_name, $display_name, $editable = true) {
 		$this->display_name = $display_name;
 		$this->foreign_key_name = $foreign_key_name;
 		$this->foreign_column_name = $foreign_column_name;
@@ -460,8 +451,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 	 * @param string $foreign_key_name name of the column containing the foreign key to go to the table containing the n elements
 	 * @param string $foreign_table_column_name name of the column in the foreign table that will be used to display instead of the foreign key ID
 	 */
-	public function __construct($handler, $display_name, $joining_key_name, $foreign_key_name, $foreign_table_column_name) {
-		parent::__construct($handler);
+	public function __construct($display_name, $joining_key_name, $foreign_key_name, $foreign_table_column_name) {
 		$this->display_name = $display_name;
 		$this->joining_key_name = $joining_key_name;
 		$this->foreign_key_name = $foreign_key_name;
@@ -472,9 +462,9 @@ class JoiningTableDataDisplay extends DataDisplay {
 	public function getHandledColumns() { return array($this->foreign_key_name); }
 	
 	public function getTypedFieldInList($sub_model) {
-		$foreign_table = $this->getHandler()->getTable()->getColumnFor($this->foreign_key_name, $sub_model)->foreign_table;
+		$foreign_table = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model)->foreign_table;
 		$foreign_table = \DataModel::get()->getTable($foreign_table);
-		$sub_models = $sub_model == null ? null : array($this->getHandler()->getTable()->getModel()->getParentTable()=>$sub_model);
+		$sub_models = $sub_model == null ? null : array($this->getTable()->getModel()->getParentTable()=>$sub_model);
 		$table_name = $foreign_table->getSQLName($sub_models);
 		$list = \SQLQuery::create()
 			->select($table_name)
@@ -496,7 +486,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	public function getEditLocks($sub_model) {
 		return array(
-			array("table"=>$this->getHandler()->getTable()->getSQLNameFor($sub_model))
+			array("table"=>$this->getTable()->getSQLNameFor($sub_model))
 		);
 	}
 	public function isSortable() {
@@ -560,9 +550,9 @@ class JoiningTableDataDisplay extends DataDisplay {
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields) {
 		require_once("component/data_model/DataBaseLock.inc");
-		\SQLQuery::create()->remove($this->getHandler()->getTable()->getSQLNameFor($sub_model), array($this->joining_key_name=>$key));
+		\SQLQuery::create()->remove($this->getTable()->getSQLNameFor($sub_model), array($this->joining_key_name=>$key));
 		foreach ($value as $v)
-			\SQLQuery::create()->selectSubModelForTable($this->getHandler()->getTable(), $sub_model)->insert($this->getHandler()->getTable()->getName(), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
+			\SQLQuery::create()->selectSubModelForTable($this->getTable(), $sub_model)->insert($this->getTableName(), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
 	}
 		
 }
@@ -582,8 +572,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 * @param string $display_name name of this data
 	 * @param string $data_path path to reach the column to display: format is columns' names separated by a dot (.). Example: country.name means use the column 'country' as a foreign key, then in the foreign table get the column 'name'
 	 */
-	public function __construct($handler, $display_name, $data_path) {
-		parent::__construct($handler);
+	public function __construct($display_name, $data_path) {
 		$this->display_name = $display_name;
 		$this->data_path = $data_path;
 	}

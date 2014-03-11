@@ -51,9 +51,11 @@ class service_get_data_list extends Service {
 			}
 		}
 
+		$model = DataModel::get();
+		
 		// init query with root table
 		$q = SQLQuery::create();
-		$t = DataModel::get()->getTable($table);
+		$t = $model->getTable($table);
 		$alias = $q->generateTableAlias();
 		$table_name = $t->getSQLName(null);
 		$q->select(array($table_name=>$alias));
@@ -69,13 +71,13 @@ class service_get_data_list extends Service {
 			$from = null;
 			if ($path instanceof DataPath_Join && $path->isReverse())
 				$from = $path->foreign_key->name;
-			$handler = $path->table->getDisplayHandler($from);
-			if ($handler == null) {
-				PNApplication::error("No display handler on table ".$path->table->getName()." for path ".$fields[$i]["path"]);
+			$display = $model->getTableDataDisplay($path->table->getName());
+			if ($display == null) {
+				PNApplication::error("No display specified on table ".$path->table->getName()." for path ".$fields[$i]["path"]);
 				return;
 			}
 			$data = null;
-			foreach ($handler->getDisplayableData() as $d)
+			foreach ($display->getDataDisplay($from) as $d)
 				if ($d->getDisplayName() == $name) { $data = $d; break; }
 			if ($data == null) {
 				PNApplication::error("No displayable data ".$name." on table ".$path->table->getName());
@@ -85,7 +87,7 @@ class service_get_data_list extends Service {
 			$f = array();
 			for ($j = 0; $j < count($remaining_filters); $j++) {
 				$filter = $remaining_filters[$j];
-				if ($filter["category"] <> $handler->getCategory()) continue;
+				if ($filter["category"] <> $data->getCategoryName()) continue;
 				if ($filter["name"] <> $data->getDisplayName()) continue;
 				array_splice($remaining_filters, $j, 1);
 				$j--;
@@ -131,47 +133,47 @@ class service_get_data_list extends Service {
 		
 		// check if we have actions, then add necessary fields in the SQL request
 		$actions = null;
-		if (isset($input["actions"]) && $input["actions"] && !isset($input["export"])) {
-			$actions = array();
-			$categories = array();
-			foreach ($display_data as $data) {
-				$cat_name = $data->getCategory();
-				if (!in_array($cat_name, $categories))
-					array_push($categories, $cat_name);
-			}
-			$model = DataModel::get();
-			foreach ($categories as $cat) {
-				$links = $model->getDataCategoryLinks($cat);
-				if ($links <> null)
-					foreach ($links as $link)
-					array_push($actions, array($link->link,$link->icon));
-			}
-			foreach ($actions as &$action) {
-				$k = 0;
-				$link = $action[0];
-				while (($k = strpos($link, "%", $k)) !== false) {
-					$kk = strpos($link, "%", $k+1);
-					if ($kk === false) break;
-					$s = substr($link, $k+1, $kk-$k-1);
-					$l = strpos($s, ".");
-					$table = substr($s, 0, $l);
-					$col = substr($s, $l+1);
-					$alias = $q->getFieldAlias($q->getTableAlias($table), $col);
-					if ($alias == null) {
-						$alias = $q->generateFieldAlias();
-						$q->field($q->getTableAlias($table), $col, $alias);
-					}
-					$k = $kk+1;
-					continue;
-				}
-			}
-		}
+// 		if (isset($input["actions"]) && $input["actions"] && !isset($input["export"])) {
+// 			$actions = array();
+// 			$categories = array();
+// 			foreach ($display_data as $data) {
+// 				$cat_name = $data->getCategoryName();
+// 				if (!in_array($cat_name, $categories))
+// 					array_push($categories, $cat_name);
+// 			}
+// 			$model = DataModel::get();
+// 			foreach ($categories as $cat) {
+// 				$links = $model->getDataCategoryLinks($cat);
+// 				if ($links <> null)
+// 					foreach ($links as $link)
+// 					array_push($actions, array($link->link,$link->icon));
+// 			}
+// 			foreach ($actions as &$action) {
+// 				$k = 0;
+// 				$link = $action[0];
+// 				while (($k = strpos($link, "%", $k)) !== false) {
+// 					$kk = strpos($link, "%", $k+1);
+// 					if ($kk === false) break;
+// 					$s = substr($link, $k+1, $kk-$k-1);
+// 					$l = strpos($s, ".");
+// 					$table = substr($s, 0, $l);
+// 					$col = substr($s, $l+1);
+// 					$alias = $q->getFieldAlias($q->getTableAlias($table), $col);
+// 					if ($alias == null) {
+// 						$alias = $q->generateFieldAlias();
+// 						$q->field($q->getTableAlias($table), $col, $alias);
+// 					}
+// 					$k = $kk+1;
+// 					continue;
+// 				}
+// 			}
+// 		}
 		
 		// handle sort
 		if (isset($input["sort_field"]) && isset($input["sort_order"])) {
 			for ($i = 0; $i < count($display_data); $i++) {
 				$data = $display_data[$i];
-				if ($data->handler->category.".".$data->getDisplayName() == $input["sort_field"]) {
+				if ($data->getCategoryName().".".$data->getDisplayName() == $input["sort_field"]) {
 					if ($input["sort_order"] == "ASC") $asc = true;
 					else if ($input["sort_order"] == "DESC") $asc = false;
 					else break;

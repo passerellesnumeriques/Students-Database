@@ -2,13 +2,10 @@
 /* @var $model DataModel */
 /* @var $sm SubDataModel */
 
-$sm->internalGetTable("Applicant")
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Applicant Information",
-		array(
-			"applicant_id"=>"Applicant ID",
-			// "excluded"=>"Excluded",
-			// "exclusion_reason"=>"Exclusion Reason",
-		)
-	));
+$category = new datamodel\DataDisplayCategory("Selection");
+$model->addDataCategory($category);
 
+$display = new datamodel\TableDataDisplay("Application", $category);
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("application_id", "Applicant ID", true));
+$model->addTableDataDisplay($display);
 ?>

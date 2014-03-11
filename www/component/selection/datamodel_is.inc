@@ -44,7 +44,6 @@ $sm->addTable("InformationSessionContactPoint")
 	->addReadAccess("see_information_session_details",true)
 	->addInsertAccess("manage_information_session",true)
 	->addRemoveAccess("manage_information_session",true)
-	->setDisplayHandler("people", new datamodel\StopDataDisplayHandler("Selection", "Selection"))
 	;
 
 include "datamodel_is_display.inc";

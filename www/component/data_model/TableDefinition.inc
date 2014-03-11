@@ -63,9 +63,6 @@ namespace datamodel {
 		/** @var boolean indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed */
 		private $is_root = false;
 
-		/** @var DataDisplayHandler[] */
-		private $display_handler = array();
-
 		public $_key_submodels = array();
 		
 		// events
@@ -530,37 +527,6 @@ namespace datamodel {
 		}
 		
 
-		public function &setDisplayHandler($coming_from, $handler) {
-			$this->display_handler[$coming_from] = $handler;
-			$handler->setTable($this);
-			return $this;
-		}
-		/**
-		 * @param string|null $coming_from the name of the foreign key or null
-		 * @return DataDisplayHandler|null
-		 */
-		public function getDisplayHandler($coming_from) {
-			if ($coming_from <> null && isset($this->display_handler[$coming_from]))
-				return $this->display_handler[$coming_from];
-			if (!isset($this->display_handler[null]))
-				return null;
-			return $this->display_handler[null];
-		}
-
-		/** Try to find the given DataDisplay
-		 * @return DataDisplay|null
-		 */
-		public function getDataDisplay($category, $name) {
-			foreach ($this->display_handler as $from=>$display) {
-				if ($display->category <> $category) continue;
-				foreach ($display->getDisplayableData() as $data)
-					if ($data->getDisplayName() == $name)
-					return $data;
-			}
-			return null;
-		}
-
-
 		public function hide($field) {
 			for ($i = 0; $i < count($this->columns); $i++)
 				if ($this->columns[$i]->name == $field) {
@@ -953,9 +919,6 @@ namespace datamodel {
 			return parent::validate($value);
 		}
 	}
-
-	require_once("DataDisplay.inc");
-	require_once("DataDisplayHandler.inc");
 
 } // namespace datamodel
 ?>

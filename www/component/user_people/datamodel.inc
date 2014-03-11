@@ -1,10 +1,11 @@
 <?php
 /* @var $model DataModel */
 $model->addTable("UserPeople")
-	->addForeignKey("user", "Users", true, false, false)
-	->addForeignKey("people", "People", true, false, false)
-	->addIndex("user")
+	->addForeignKey("user", "Users", true, false, false, false, true)
+	->addForeignKey("people", "People", true, false, false, false, true)
+	->setPrimary("user")
+	->addIndex("people")
 	->allowReadAccess();
 
-$model->addDataCategoryLink("User","/dynamic/people/page/profile?plugin=user_people&page=user_rights&people=%People.id%", "/static/user_management/access_list.png");
+include "datamodel_display.inc";
 ?>

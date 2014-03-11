@@ -1,17 +1,11 @@
-<?php 
-$model->internalGetTable("StudentBatch")
-	->setDisplayHandler(null, new datamodel\MultipleDisplayHandler("Student", array(
-		new datamodel\SimpleDataDisplay(null, "name", "Batch Name"),
-		new datamodel\ReadOnlyDataDisplay(null, "Integration Date", "start_date"),
-		new datamodel\ReadOnlyDataDisplay(null, "Graduation Date", "end_date")
-	)));
-$model->internalGetTable("AcademicPeriod")
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student",
-		array(
-			"name"=>"Period Name",
-		)
-	));
-$model->internalGetTable("AcademicClass")
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", array("name"=>"Class Name")));
+<?php
+$category = new datamodel\DataDisplayCategory("Student", "/static/students/student_16.png");
+$model->addDataCategory($category);
+
+$display = new datamodel\TableDataDisplay("StudentBatch", $category);
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("name", "Batch Name"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("start_date", "Integration Date", true));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("end_date", "Graduation Date", true));
+$model->addTableDataDisplay($display);
 
 ?>

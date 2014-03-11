@@ -1,41 +1,15 @@
-<?php 
-class ContactDisplayHandler extends datamodel\DataDisplayHandler {
-
-	public $type;
-
-	public function __construct($type) {
-		parent::__construct($type == "people" ? "Personal Information" : "Organization");
-		$this->type = $type;
-	}
-
-	public function getDisplayableData() {
-		return array(
-			new ContactDataDisplay($this, "email"),
-			new ContactDataDisplay($this, "phone"),
-			new ContactDataDisplay($this, "IM"),
-		);
-	}
-
-	public function canFollow($foreign_key_name) { return false; }
-	public function canJoin() { return false; }
-}
-
+<?php
 class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 
 	private $type;
 
-	public function __construct($handler, $type) {
+	public function __construct($type, $joining_key_name) {
 		switch ($type) {
 			case "email": $display_name = "EMail"; break;
 			case "phone": $display_name = "Phone"; break;
 			case "IM": $display_name = "Instant Messaging"; break;
 		}
-		switch ($handler->type) {
-			case "people": $joining_key_name = "people"; break;
-			case "organization": $joining_key_name = "organization"; break;
-		}
-		$foreign_key_name = "contact";
-		parent::__construct($handler, $display_name, $joining_key_name, $foreign_key_name, null);
+		parent::__construct($display_name, $joining_key_name, "contact", null);
 		$this->type = $type;
 	}
 
@@ -46,7 +20,7 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return true;
 	}
 	public function getEditLocks($sub_model) {
-		if ($this->getHandler()->type == "people")
+		if ($this->joining_key_name == "people")
 			return array(array("table"=>"PeopleContact"));
 		return array(array("table"=>"OrganizationContact"));
 	}
@@ -55,7 +29,7 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 	}
 
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
-		$table_name = $this->getHandler()->type == "people" ? "PeopleContact" : "OrganizationContact";
+		$table_name = $this->joining_key_name == "people" ? "PeopleContact" : "OrganizationContact";
 
 		$keys = array();
 		foreach ($rows as $row)
@@ -90,13 +64,13 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 			}
 			$values .= "]";
 			require_once("component/Service.inc");
-			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->getHandler()->type).",type_id:".$row[$sql_aliases["key"]].",contacts:".$values."}"));
+			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".$row[$sql_aliases["key"]].",contacts:".$values."}"));
 		}
 	}
 
 	public function getNewData() {
 		require_once("component/Service.inc");
-		return json_decode(json_normalize("{type:".json_encode($this->getHandler()->type).",type_id:-1,contacts:[]}"));
+		return json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:-1,contacts:[]}"));
 	}
 
 	public function saveData($key, $value, $sub_model, &$tables_fields) {
@@ -105,32 +79,10 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 
 }
 
-class AddressDisplayHandler extends datamodel\DataDisplayHandler {
-
-	public $type;
-
-	public function __construct($type) {
-		parent::__construct($type == "people" ? "Personal Information" : "Organization");
-		$this->type = $type;
-	}
-
-	public function getDisplayableData() {
-		return array(
-			new AddressDataDisplay($this),
-		);
-	}
-
-	public function canFollow($foreign_key_name) { return false; }
-	public function canJoin() { return false; }
-}
 class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 
-	public function __construct($handler) {
-		switch ($handler->type) {
-			case "people": $joining_key_name = "people"; break;
-			case "organization": $joining_key_name = "organization"; break;
-		}
-		parent::__construct($handler, "Address", $joining_key_name, "address", null);
+	public function __construct($joining_key_name) {
+		parent::__construct("Address", $joining_key_name, "address", null);
 	}
 
 	public function getTypedFieldInList($sub_model) {
@@ -140,7 +92,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return true;
 	}
 	public function getEditLocks($sub_model) {
-		if ($this->getHandler()->type == "people")
+		if ($this->joining_key_name == "people")
 			return array(array("table"=>"PeopleAddress"));
 		return array(array("table"=>"OrganizationAddress"));
 	}
@@ -149,7 +101,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 	}
 
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
-		$table_name = $this->getHandler()->type == "people" ? "PeopleAddress" : "OrganizationAddress";
+		$table_name = $this->joining_key_name == "people" ? "PeopleAddress" : "OrganizationAddress";
 
 		$keys = array();
 		foreach ($rows as $row)
@@ -183,14 +135,14 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 			}
 			$values .= "]";
 			require_once("component/Service.inc");
-			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->getHandler()->type).",type_id:".json_encode($row[$sql_aliases["key"]]).",addresses:".$values."}"));
+			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".json_encode($row[$sql_aliases["key"]]).",addresses:".$values."}"));
 		}
 	}
 
 	public function getNewData() {
 		require_once("component/Service.inc");
-		$table_name = $this->getHandler()->type == "people" ? "PeopleAddress" : "OrganizationAddress";
-		return json_decode(json_normalize("{type:".json_encode($this->getHandler()->type).",type_id:-1,addresses:[]}"));
+		$table_name = $this->joining_key_name == "people" ? "PeopleAddress" : "OrganizationAddress";
+		return json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:-1,addresses:[]}"));
 	}
 
 	public function saveData($key, $value, $sub_model, &$tables_fields) {
@@ -199,26 +151,29 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 
 }
 
-$model->addDataCategoryLink("Contacts", "/dynamic/contact/page/organization_profile?organization=%Organization.id%", "/static/contact/organization.png");
+$people_category = $model->getDataCategory("Personal Information");
+$display = new datamodel\TableDataDisplay("PeopleContact", $people_category);
+$display->addDataDisplay(new ContactDataDisplay("email", "people"), "people");
+$display->addDataDisplay(new ContactDataDisplay("phone", "people"), "people");
+$display->addDataDisplay(new ContactDataDisplay("IM", "people"), "people");
+$model->addTableDataDisplay($display);
+$display = new datamodel\TableDataDisplay("PeopleAddress", $people_category);
+$display->addDataDisplay(new AddressDataDisplay("people"), "people");
+$model->addTableDataDisplay($display);
 
-$model->internalGetTable("PeopleContact")
-	->setDisplayHandler("people", new ContactDisplayHandler("people"));
-$model->internalGetTable("OrganizationContact")
-	->setDisplayHandler("organization", new ContactDisplayHandler("organization"));
+$org_category = new datamodel\DataDisplayCategory("Organization", "/static/contact/organization.png", "/dynamic/contact/page/organization_profile?organization=%Organization.id%");
+$model->addDataCategory($org_category);
+$display = new datamodel\TableDataDisplay("OrganizationContact", $org_category);
+$display->addDataDisplay(new ContactDataDisplay("email", "organization"), "organization");
+$display->addDataDisplay(new ContactDataDisplay("phone", "organization"), "organization");
+$display->addDataDisplay(new ContactDataDisplay("IM", "organization"), "organization");
+$model->addTableDataDisplay($display);
+$display = new datamodel\TableDataDisplay("OrganizationAddress", $org_category);
+$display->addDataDisplay(new AddressDataDisplay("organization"), "organization");
+$model->addTableDataDisplay($display);
 
-$model->internalGetTable("PeopleAddress")
-	->setDisplayHandler("people", new AddressDisplayHandler("people"));
-$model->internalGetTable("OrganizationAddress")
-	->setDisplayHandler("organization", new AddressDisplayHandler("organization"));
-
-$model->internalGetTable("Organization")
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Contacts", array(
-		"name" => "Name",
-		"creator" => "Managed by",
-	), array(
-		"creator"
-	)));
-
-$model->internalGetTable("ContactPoint")
-	->setDisplayHandler(null, new datamodel\StopDataDisplayHandler("Organization")); // TODO
+$display = new datamodel\TableDataDisplay("Organization", $org_category);
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("name", "Name"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("creator", "Managed by", true));
+$model->addTableDataDisplay($display);
 ?>

@@ -1,19 +1,18 @@
 <?php 
 /* @var $model DataModel */
 
-$model->addDataCategoryLink("Personal Information", "/dynamic/people/page/profile?plugin=people&people=%People.id%", "/static/people/profile_16.png");
+$category = new datamodel\DataDisplayCategory("Personal Information", "/static/people/profile_16.png", "/dynamic/people/page/profile?plugin=people&people=%People.id%");
+$model->addDataCategory($category);
 
-$model->internalGetTable("People")
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Personal Information",
-		array(
-			"first_name"=>"First Name",
-			"middle_name"=>"Middle Name",
-			"last_name"=>"Last Name",
-			"khmer_first_name"=>"Khmer First Name",
-			"khmer_last_name"=>"Khmer Last Name",
-			"sex"=>"Gender",
-			"birth"=>"Birth Date",
-		)
-	));
+$display = new datamodel\TableDataDisplay("People", $category);
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("first_name", "First Name"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("middle_name", "Middle Name"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("last_name", "Last Name"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_first_name", "Khmer First Name"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_last_name", "Khmer Last Name"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("sex", "Gender"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("birth", "Birth Date"));
+$display->addJoinToPrimary();
+$model->addTableDataDisplay($display);
 
 ?>

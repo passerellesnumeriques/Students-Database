@@ -1,29 +1,17 @@
-<?php 
-use datamodel\JoiningTableDataDisplay;
-use datamodel\DataDisplayHandler;
+<?php
 
-class RolesDisplayHandler extends DataDisplayHandler {
+$category = new datamodel\DataDisplayCategory("User");
+$model->addDataCategory($category);
 
-	public function __construct() {
-		parent::__construct("User", "User's roles");
-	}
+$display = new datamodel\TableDataDisplay("Users", $category);
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("domain", "Domain", true));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("username", "Username", true));
+$display->addJoinToPrimary();
+$model->addTableDataDisplay($display);
 
-	public function getDisplayableData() {
-		return array(new JoiningTableDataDisplay($this, "Roles", "user", "role", "name"));
-	}
+$display = new datamodel\TableDataDisplay("UserRole", $category);
+$display->addDataDisplay(new datamodel\JoiningTableDataDisplay("Roles", "user", "role", "name"));
+$display->addJoinFromAll();
+$model->addTableDataDisplay($display);
 
-}
-
-$model->internalGetTable("Users")
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("User",
-		array(
-			"domain"=>"Domain",
-			"username"=>"Username",
-		), array(
-			"domain"
-		)
-	));
-
-$model->internalGetTable("UserRole")
-	->setDisplayHandler("user", new RolesDisplayHandler());
 ?>

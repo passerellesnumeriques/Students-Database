@@ -1,5 +1,8 @@
 <?php
 require_once("TableDefinition.inc");
+require_once("DataDisplayCategory.inc");
+require_once("TableDataDisplay.inc");
+require_once("DataDisplay.inc");
 /** Defines the data model of the application. Each component is supposed to populate this model with its own part of the model */
 class DataModel {
 
@@ -46,9 +49,10 @@ class DataModel {
 	}
 
 	protected $tables = array();
-	private $data_category_link = array();
 	private $sub_models = array();
-
+	private $data_categories = array();
+	private $table_display = array();
+	
 	/** Add a table to the model, and returns it
 	 *
 	 * @param string $name name of the table to ad
@@ -199,19 +203,28 @@ class DataModel {
 		return $this->sub_models;
 	}
 
-	/** indicates which page to go in order to display information about the given category */
-	public function addDataCategoryLink($category, $link, $icon = null) {
-		if (!isset($this->data_category_link[$category]))
-			$this->data_category_link[$category] = array();
-		array_push($this->data_category_link[$category], new DataCategoryLink($link, $icon));
+	public function addDataCategory($category) {
+		array_push($this->data_categories, $category);
 	}
-	public function getDataCategoryLinks($category) {
-		if (isset($this->data_category_link[$category]))
-			return $this->data_category_link[$category];
-		return array();
+	public function getDataCategory($name) {
+		foreach ($this->data_categories as $c)
+			if ($c->getName() == $name) 
+				return $c;
+		return null;
 	}
-	public function getAllDataCategoryLinks() {
-		return $this->data_category_link;
+	
+	public function addTableDataDisplay($display) {
+		array_push($this->table_display, $display);
+	}
+	/**
+	 * @param string $table_name
+	 * @return \datamodel\TableDataDisplay
+	 */
+	public function getTableDataDisplay($table_name) {
+		foreach ($this->table_display as $d)
+			if ($d->getTableName() == $table_name)
+				return $d;
+		return null;
 	}
 	
 	private function hide($table, $field) {
@@ -260,6 +273,13 @@ class SubDataModel extends DataModel {
 	
 	public function &getParentModel() { return $this->parent_model; }
 	public function getParentTable() { return $this->parent_table; }
+	
+	public function addDataDisplayHandler($handler) {
+		$this->parent_model->addDataDisplayHandler($handler);
+	}
+	public function getDataDisplayHandler($table) {
+		return $this->parent_model->getDataDisplayHandler($table);
+	}
 	
 	public function createTables($key) {
 		if (SQLQuery::isTransactionStarted()) {

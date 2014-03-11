@@ -1,8 +1,7 @@
 <?php 
 class CalendarEventDateDataDisplay extends datamodel\DataDisplay {
 
-	public function __construct($handler, $display_name, $event_foreign_key) {
-		parent::__construct($handler);
+	public function __construct($display_name, $event_foreign_key) {
 		$this->display_name = $display_name;
 		$this->event_foreign_key = $event_foreign_key;
 	}
