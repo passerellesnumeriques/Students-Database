@@ -29,3 +29,4 @@ $model->addTable("GeographicArea")
 	->addWriteAccess("edit_geography",true)
 	->addInsertAccess("edit_geography",true)
 	->addRemoveAccess("manage_geography",true);
+?>

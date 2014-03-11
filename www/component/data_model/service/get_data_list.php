@@ -85,7 +85,7 @@ class service_get_data_list extends Service {
 			$f = array();
 			for ($j = 0; $j < count($remaining_filters); $j++) {
 				$filter = $remaining_filters[$j];
-				if ($filter["category"] <> $handler->category) continue;
+				if ($filter["category"] <> $handler->getCategory()) continue;
 				if ($filter["name"] <> $data->getDisplayName()) continue;
 				array_splice($remaining_filters, $j, 1);
 				$j--;
@@ -110,7 +110,7 @@ class service_get_data_list extends Service {
 					$from = $path->foreign_key->name;
 				$display = $path->table->getDisplayHandler($from);
 				if ($display == null) continue;
-				if ($display->category <> $filter["category"]) continue;
+				if ($display->getCategory() <> $filter["category"]) continue;
 				foreach ($display->getDisplayableData() as $data) {
 					if ($data->getDisplayName() <> $filter["name"]) continue;
 					$found = true;
@@ -135,7 +135,7 @@ class service_get_data_list extends Service {
 			$actions = array();
 			$categories = array();
 			foreach ($display_data as $data) {
-				$cat_name = $data->handler->category;
+				$cat_name = $data->getCategory();
 				if (!in_array($cat_name, $categories))
 					array_push($categories, $cat_name);
 			}
@@ -158,7 +158,7 @@ class service_get_data_list extends Service {
 					$col = substr($s, $l+1);
 					$alias = $q->getFieldAlias($q->getTableAlias($table), $col);
 					if ($alias == null) {
-						$alias = $builder->new_alias();
+						$alias = $q->generateFieldAlias();
 						$q->field($q->getTableAlias($table), $col, $alias);
 					}
 					$k = $kk+1;

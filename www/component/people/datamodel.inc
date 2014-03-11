@@ -1,7 +1,7 @@
 <?php
 require_once("utilities.inc");
 /* @var $model DataModel */
-$model->addDataCategoryLink("Personal Information", "/dynamic/people/page/profile?plugin=people&people=%People.id%", "/static/people/profile_16.png");
+
 $model->addTable("People")
 	->addPrimaryKey("id")
 	->addString("first_name", 100, 1, false, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter($s); })
@@ -14,17 +14,6 @@ $model->addTable("People")
 	->addString("types", 1024, 0, false, false)
 	->addForeignKey("picture", "Storage", false, false, false)
 	->addInteger("picture_version")
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Personal Information", "Personal Information",
-		array(
-			"first_name"=>"First Name",
-			"middle_name"=>"Middle Name",
-			"last_name"=>"Last Name",
-			"khmer_first_name"=>"Khmer First Name",
-			"khmer_last_name"=>"Khmer Last Name",
-			"sex"=>"Gender",
-			"birth"=>"Birth Date",
-		)
-	))
 	->setRowDescriptionProvider(function($row) {
 		$s = $row["first_name"];
 		if ($row["middle_name"] <> null && $row["middle_name"] <> "") $s .= " ".$row["middle_name"];
@@ -120,4 +109,6 @@ $model->addTable("People")
 		return $final;
 	})
 	;
+	
+include "datamodel_display.inc";
 ?>

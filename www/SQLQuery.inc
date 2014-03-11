@@ -1978,4 +1978,20 @@ class SQLQuery {
 	}
 	
 }
+
+class TablesToUpdate {
+
+	private $list = array();
+	
+	public function addValue($table, $sub_model, $row_key, $column, $value) {
+		if (!isset($this->list[$table]))
+			$this->list[$table] = array();
+		if (!isset($this->list[$table][$sub_model]))
+			$this->list[$table][$sub_model] = array();
+		if (!isset($this->list[$table][$sub_model][$row_key]))
+			$this->list[$table][$sub_model][$row_key] = array();
+		$this->list[$table][$sub_model][$row_key][$column] = $value;
+	}
+	
+}
 ?>

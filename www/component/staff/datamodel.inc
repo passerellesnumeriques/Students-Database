@@ -31,13 +31,7 @@ $model->addTable("StaffPosition")
 	->addWriteAccess("manage_staff", true)
 	->addInsertAccess("manage_staff", true)
 	->addRemoveAccess("manage_staff", true)
-	->setDisplayHandler(null, new datamodel\MultipleDisplayHandler("Staff", "Positions", array(
-		new datamodel\FieldsDisplayHandler("Staff", "Position", array(
-			"position" => "Position",
-			"start" => "Position Start",
-			"end" => "Position End"
-		)),
-		new datamodel\ChoiceFieldDisplayHandler("Staff", "Department", "department", "name")
-	)))
 	;
+
+include "datamodel_display.inc";
 ?>

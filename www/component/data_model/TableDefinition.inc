@@ -542,7 +542,9 @@ namespace datamodel {
 		public function getDisplayHandler($coming_from) {
 			if ($coming_from <> null && isset($this->display_handler[$coming_from]))
 				return $this->display_handler[$coming_from];
-			return @$this->display_handler[null];
+			if (!isset($this->display_handler[null]))
+				return null;
+			return $this->display_handler[null];
 		}
 
 		/** Try to find the given DataDisplay
