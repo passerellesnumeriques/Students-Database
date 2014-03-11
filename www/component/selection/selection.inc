@@ -1722,5 +1722,59 @@ class selection extends Component {
 		return $q->execute();
 	}
 	
+	/**
+	 * Unlink an information session from an exam center
+	 * @param number $EC_id exam center id
+	 * @param number $IS_id information session id
+	 * @param number $lock_ECIS lock of the table ExamCenterInformationSession
+	 * @return boolean true if well performed, else false
+	 */
+	public function unlinkISfromEC($EC_id, $IS_id, $lock_ECIS){
+		SQLQuery::startTransaction();
+		try {
+			SQLQuery::create()
+				->removeKeys("ExamCenterInformationSession", array(array("information_session" => $IS_id, "exam_center" => $EC_id)));
+		} catch (Exception $e){
+			PNApplication::error($e);
+		}
+		if(PNApplication::has_errors()){
+			SQLQuery::rollbackTransaction();
+			return false;
+		} else {
+			SQLQuery::commitTransaction();
+			return true;
+		}
+	}
+	
+	/**
+	 * Link one or several information sessions to any exam center
+	 * @param number $EC_id exam center id
+	 * @param number | array $IS_ids information session id, or array of ids
+	 * @param number $lock_ECIS lock of the table ExamCenterInformationSession
+	 * @return boolean true if well performed, else false
+	 */
+	public function linkIStoEC($EC_id, $IS_ids,$lock_ECIS){
+		SQLQuery::startTransaction();
+		try{
+			if(is_array($IS_ids)){
+				$rows = array();
+				foreach ($IS_ids as $id)
+					array_push($rows, array("exam_center" => $EC_id, "information_session" => $id));
+				SQLQuery::create()->insertMultiple("ExamCenterInformationSession", $rows,$lock_ECIS);
+			} else {
+				SQLQuery::create()->insert("ExamCenterInformationSession", array("exam_center" => $EC_id, "information_session" =>$IS_ids),$lock_ECIS);
+			}
+			
+		} catch (Exception $e){
+			PNApplication::error($e);
+		}
+		if(PNApplication::has_errors()){
+			SQLQuery::rollbackTransaction();
+			return false;
+		} else {
+			SQLQuery::commitTransaction();
+			return true;
+		}
+	}
 }
 ?>

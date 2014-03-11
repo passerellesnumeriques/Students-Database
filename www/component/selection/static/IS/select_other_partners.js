@@ -4,12 +4,14 @@
  * @param {String | HTMLElement} container
  * @param {ISPartner} all_partners the partners that shall be displayed in the table
  * @param {Array} partners_contacts_points same as returned by contact#service#get_json_contact_points_no_address method
- * @param {boolean} can_manage
- * @param {null | number} host_id null if no host selected when instanciated, else, value of the host ID
+ * @param {Boolean} can_manage
+ * @param {NULL | Number} host_id null if no host selected when instanciated, else, value of the host ID
  * @param {Function} update_host_custom_event custom event fired when an external function updates the host_id
  * @param {Function} oncontactpointchange_listener listener fired in the case of the contacts points of a partner are updated from the organization profile
+ * @param {String} mode, the way this page is used. Can be "information_session","exam_center". this is used to use the appropriated services/partners objects
  */
-function select_other_partners(container, all_partners, partners_contacts_points, can_manage, host_id, update_host_custom_event,oncontactpointchange_listener){
+function select_other_partners(container, all_partners, partners_contacts_points, can_manage, host_id, update_host_custom_event,oncontactpointchange_listener,mode){
+	if(!mode) return;
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	var t = this;
@@ -132,13 +134,23 @@ function select_other_partners(container, all_partners, partners_contacts_points
 			}
 			if(t.host != null)
 				url_partners += "&host="+t.host;
-			var frame = pop.setContentFrame("/dynamic/selection/page/organizations_for_selection?is=true"+url_partners);
+			var type_partner_selection;
+			if(mode == "information_session")
+				type_partner_selection = "is";
+			else if (mode == "exam_center")
+				type_partner_selection = "ec";
+			var frame = pop.setContentFrame("/dynamic/selection/page/organizations_for_selection?"+type_partner_selection+"=true"+url_partners);
 			pop.addOkCancelButtons(function(){
 				pop.close();
 				var locker = lock_screen();
 				var win = getIFrameWindow(frame);
+				var service_get_partners_array_url;
+				if(mode == "information_session")
+					service_get_partners_array_url = "IS/get_partners_array";
+				else if (mode == "exam_center")
+					service_get_partners_array_url = "exam/get_center_partners_array";
 				//update the data object
-				service.json("selection","IS/get_partners_array",{partners_id:win.selected_partners},function(new_partners){
+				service.json("selection",service_get_partners_array_url,{partners_id:win.selected_partners},function(new_partners){
 					if(!new_partners){
 						error_dialog("An error occured");
 						unlock_screen(locker);
@@ -177,20 +189,35 @@ function select_other_partners(container, all_partners, partners_contacts_points
 	
 	/**
 	 * Set the partners attribute, starting from the all_partners array.
-	 * Create an array containing all the ISPartners elements (orgnaizations linked to this IS) but the host
+	 * Create an array containing all the partners elements (organizations linked) but the host
 	 */
 	t._setPartnersArray = function(){
 		//Get only the partners that are not host
 		for(var i = 0; i < all_partners.length; i++){
 			if(all_partners[i].host == false){
-				var partner = new ISPartner(
-						all_partners[i].organization,
-						all_partners[i].organization_name,
-						false,
-						null,
-						all_partners[i].contact_points_selected
-				);
-				t.partners.push(partner);
+				if(mode == "information_session"){
+					require("IS_objects.js",function(){
+						var partner = new ISPartner(
+								all_partners[i].organization,
+								all_partners[i].organization_name,
+								false,
+								null,
+								all_partners[i].contact_points_selected
+						);
+						t.partners.push(partner);
+					});
+				} else if (mode == "exam_center"){
+					require("exam_objects.js",function(){
+						var partner = new ExamCenterPartner(
+								all_partners[i].organization,
+								all_partners[i].organization_name,
+								false,
+								null,
+								all_partners[i].contact_points_selected
+						);
+						t.partners.push(partner);
+					});
+				}
 			}
 		}
 	};
@@ -199,7 +226,7 @@ function select_other_partners(container, all_partners, partners_contacts_points
 	 * Method called to update the partners array attribute after selecting the partners
 	 * The selection returns an array of organizations IDs, so need to update the partners attribute, keeping the contacts points selected previously for the organizations that were kept by the selection
 	 * @param {Array} containing the selected organizations IDs
-	 * @returns {ISPartners} updated partners attribute
+	 * @returns {ISPartners|ExamCenterPartners} updated partners attribute
 	 */
 	t._matchPartnersArraysAndRemoveHost = function(new_array){
 		//Match the contact points
@@ -266,7 +293,7 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		}
 	};
 	
-	require(["create_partner_row.js","popup_window.js","section.js","IS_objects.js"],function(){
+	require(["create_partner_row.js","popup_window.js","section.js"],function(){
 		//Set the section
 		t.container_of_section_content = document.createElement("div");
 		t.section = new section("/static/contact/directory_16.png","Other partners",t.container_of_section_content,true);

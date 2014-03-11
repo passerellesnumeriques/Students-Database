@@ -3,8 +3,9 @@
  * @param {String|HTMLElement}container
  * @param {String|NULL} name if any
  * @param {Boolean} can_edit
+ * @param {String} title, title of the section element
  */
-function IS_name(container, name, can_edit){
+function IS_ExamCenter_name(container, name, can_edit,title){
 	if(typeof(container) == "string") container = document.getElementById(container);
 	var t = this;
 	t.table = document.createElement("table");
@@ -27,7 +28,7 @@ function IS_name(container, name, can_edit){
 	 */
 	t._setSection = function(){
 		t._container_of_section_content = document.createElement("div");
-		t.section = new section("/static/selection/IS/label.png","Information Session name",t._container_of_section_content,false);
+		t.section = new section("/static/selection/IS/label.png",title,t._container_of_section_content,false);
 	};
 	
 	/**

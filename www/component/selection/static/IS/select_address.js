@@ -9,8 +9,9 @@
  * @param {Boolean} can_manage
  * @param {Function} oncontactpointchange_listener listener fired in the case of the contacts points of the host organization are updated from the organization profile
  * @param {Function} onaddresschange_listener listener fired in the case of the addresses of the host organization are updated from the organization profile
+ * @param {String} type_of_address string to be displayed in the fields giving information about the selected address (can be "information session", "exam center"...)
  */
-function select_address(container, data, partners_contacts_points, can_manage, oncontactpointchange_listener, onaddresschange_listener){
+function select_address(container, data, partners_contacts_points, can_manage, oncontactpointchange_listener, onaddresschange_listener, type_of_address){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -209,8 +210,8 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 							//Reset (even if no host is set, geographic area may have been updated
 							
 						},
-						"<img src = '"+theme.icons_16.info+"'/><i> To be fully completed, an information session<br/>must be attached to a host partner</i>",
-						"<img src = '"+theme.icons_16.info+"'/> <i><center>Location field is fully completed!</center></i>"
+						"<img style = 'vertical-align:bottom;'src = '"+theme.icons_16.info+"'/><i> To be fully completed, an "+type_of_address+"<br/>must be attached to a host partner</i>",
+						"<img style = 'vertical-align:bottom;'src = '"+theme.icons_16.info+"'/> <i>Location field is fully completed!</i>"
 					);
 				};
 				var remove_button = document.createElement("div");
@@ -282,8 +283,8 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 								t.reset();
 							}
 						},
-						"<img src = '"+theme.icons_16.info+"'/><i> To be fully completed, an information session<br/>must be attached to a host partner</i>",
-						"<img src = '"+theme.icons_16.info+"'/> <i><center>Location field is fully completed!</center></i>"
+						"<img style = 'vertical-align:bottom;'src = '"+theme.icons_16.info+"'/><i> To be fully completed, an "+type_of_address+"<br/>must be attached to a host partner</i>",
+						"<img style = 'vertical-align:bottom;'src = '"+theme.icons_16.info+"'/> <i>Location field is fully completed!</i>"
 					);
 				};
 				t.section.addToolBottom(remove_host);
@@ -295,7 +296,7 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 				var set_button = document.createElement("div");
 				set_button.className = "button";
 				set_button.appendChild(document.createTextNode("Set a location"));
-				set_button.title = "Set a location for this information session";
+				set_button.title = "Set a location for this "+type_of_address;
 				set_button.onclick = function(){
 					new pop_select_area_and_partner(
 						data.geographic_area,
@@ -324,8 +325,8 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 							//Reset
 							t.reset();
 						},
-						"<img src = '"+theme.icons_16.info+"'/><i> To be fully completed, an information session<br/>must be attached to a host partner</i>",
-						"<img src = '"+theme.icons_16.info+"'/> <i><center>Location field is fully completed!</center></i>"
+						"<img style = 'vertical-align:bottom;'src = '"+theme.icons_16.info+"'/><i> To be fully completed, an "+type_of_address+"<br/>must be attached to a host partner</i>",
+						"<img style = 'vertical-align:bottom;'src = '"+theme.icons_16.info+"'/> <i>Location field is fully completed!</i>"
 					);
 				};
 				t.section.addToolBottom(set_button);

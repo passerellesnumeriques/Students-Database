@@ -1,5 +1,4 @@
 <?php
-
 require_once("/../selection_page.inc");
 require_once("component/selection/SelectionJSON.inc");
 class page_exam_main_page extends selection_page {
@@ -25,6 +24,7 @@ class page_exam_main_page extends selection_page {
 			<div id = "page_content" style = "overflow:auto" layout = "fill">
 				<div id = "exam_content"></div>
 				<div id = "eligibility_rules_content"></div>
+				<a href = "/dynamic/selection/page/exam/center_profile">test ec profile</a>
 			</div>
 		</div>
 		<script type = "text/javascript">

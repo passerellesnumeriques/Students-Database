@@ -61,6 +61,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 		var tr_info = document.createElement("tr");
 		t._td_info = document.createElement("td");
 		t._td_info.colSpan = 2;
+		t._td_info.style.textAlign = "center";
 		t._td_info.innerHTML = warning_html;
 		tr_info.appendChild(t._td_info);
 		t._table.appendChild(tr_info);
