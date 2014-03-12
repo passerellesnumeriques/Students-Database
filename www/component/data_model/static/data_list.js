@@ -582,8 +582,8 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			for (var i = 0; i < t.data.length; ++i) {
 				var row = {row_id:i,row_data:[]};
 				for (var j = 0; j < t.data[i].values.length; ++j) {
-					if (t.data[i].values[j].invalid)
-						row.row_data.push({col_id:col_id[j],data_id:null,data:grid_deactivated_cell});
+					if (t.data[i].values[j].k == null)
+						row.row_data.push({col_id:col_id[j],data_id:null,css:"disabled"});
 					else
 						row.row_data.push({col_id:col_id[j],data_id:t.data[i].values[j].k,data:t.data[i].values[j].v});
 					if (t.data[i].actions)
@@ -916,8 +916,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		var index = t.grid.getColumnIndex(col);
 		var rows = t.grid.getNbRows();
 		for (var i = 0; i < rows; ++i) {
-			var f = t.grid.getCellContent(i, index);
-			f.typed_field.setData(f.typed_field.getOriginalData());
+			var f = t.grid.getCellField(i, index);
+			if (f)
+				f.setData(f.getOriginalData());
 		}
 	};
 	/** Called when a cell changed

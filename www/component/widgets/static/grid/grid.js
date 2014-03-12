@@ -41,7 +41,8 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
 			var row = this.grid.table.childNodes[i];
 			var td = row.childNodes[index];
-			td.field.setEditable(this.editable);
+			if (td.field)
+				td.field.setEditable(this.editable);
 		}
 		this._refresh_title();
 	};
@@ -318,12 +319,12 @@ function grid(element) {
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var row = t.table.childNodes[i];
 			var td = row.childNodes[index];
-			var data = td.field.getCurrentData();
-			td.innerHTML = "";
-			td.field = t._create_cell(column, data, td);
-			td.style.textAlign = column.align;
-			if (data == grid_deactivated_cell)
-				td.style.backgroundColor = "rgba(192,192,192,0.5)";
+			if (td.field) {
+				var data = td.field.getCurrentData();
+				td.innerHTML = "";
+				td.field = t._create_cell(column, data, td);
+				td.style.textAlign = column.align;
+			}
 		}
 	};
 	
@@ -483,9 +484,10 @@ function grid(element) {
 			td.col_id = t.columns[j].id;
 			td.data_id = data.data_id;
 			td.style.textAlign = t.columns[j].align;
-			td.field = t._create_cell(t.columns[j], data.data, td);
-//			if (data[i][j] == grid_deactivated_cell)
-//				td.style.backgroundColor = "rgba(192,192,192,0.5)";
+			if (typeof data.data != 'undefined')
+				td.field = t._create_cell(t.columns[j], data.data, td);
+			if (typeof data.css != 'undefined')
+				td.className = data.css;
 		}
 		t.table.appendChild(tr);
 	};
@@ -515,7 +517,7 @@ function grid(element) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
 		var td = tr.childNodes[col];
-		return td.field;
+		return td.field ? td.field : null;
 	};
 	t.getCellDataId = function(row,col) {
 		if (t.selectable) col++;

@@ -32,7 +32,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 			remove.style.paddingRight = "2px";
 			remove.style.cursor = "pointer";
 			remove.data_index = t.data.length-1;
-			remove.onclick = function() {
+			remove.onclick = function(ev) {
 				if (this.data_index > 0)
 					t.element.removeChild(t.data_elements[this.data_index].comma);
 				t.element.removeChild(t.data_elements[this.data_index].text);
@@ -42,6 +42,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 				for (var i = this.data_index; i < t.data_elements.length; ++i)
 					t.data_elements[i].remove.data_index = i;
 				t._datachange();
+				stopEventPropagation(ev);
 			};
 			var comma = null;
 			if (t.data.length > 1) comma = document.createTextNode(", ");
@@ -55,7 +56,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 		this.add_button.src = theme.icons_10.add;
 		this.add_button.className = "button";
 		this.add_button.style.verticalAlign = "bottom";
-		this.add_button.onclick = function() {
+		this.add_button.onclick = function(ev) {
 			require("context_menu.js",function(){
 				var menu = new context_menu();
 				for (var i = 0; i < t.config.possible_values.length; ++i) {
@@ -77,6 +78,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 				if (menu.getItems().length > 0)
 					menu.showBelowElement(t.add_button);
 			});
+			stopEventPropagation(ev);
 		};
 		this.element.appendChild(this.add_button);
 		for (var i = 0; i < data.length; ++i)

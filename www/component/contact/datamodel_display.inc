@@ -13,7 +13,7 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		$this->type = $type;
 	}
 
-	public function getTypedFieldInList($sub_model) {
+	public function getTypedField($sub_model) {
 		return array("field_contact_type","{type:'".$this->type."'}");
 	}
 	public function isEditable() {
@@ -85,7 +85,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		parent::__construct("Address", $joining_key_name, "address", null);
 	}
 
-	public function getTypedFieldInList($sub_model) {
+	public function getTypedField($sub_model) {
 		return array("field_addresses","{}");
 	}
 	public function isEditable() {
@@ -156,9 +156,11 @@ $display = new datamodel\TableDataDisplay("PeopleContact", $people_category);
 $display->addDataDisplay(new ContactDataDisplay("email", "people"), "people");
 $display->addDataDisplay(new ContactDataDisplay("phone", "people"), "people");
 $display->addDataDisplay(new ContactDataDisplay("IM", "people"), "people");
+$display->addJoinFrom("people");
 $model->addTableDataDisplay($display);
 $display = new datamodel\TableDataDisplay("PeopleAddress", $people_category);
 $display->addDataDisplay(new AddressDataDisplay("people"), "people");
+$display->addJoinFrom("people");
 $model->addTableDataDisplay($display);
 
 $org_category = new datamodel\DataDisplayCategory("Organization", "/static/contact/organization.png", "/dynamic/contact/page/organization_profile?organization=%Organization.id%");
@@ -167,9 +169,11 @@ $display = new datamodel\TableDataDisplay("OrganizationContact", $org_category);
 $display->addDataDisplay(new ContactDataDisplay("email", "organization"), "organization");
 $display->addDataDisplay(new ContactDataDisplay("phone", "organization"), "organization");
 $display->addDataDisplay(new ContactDataDisplay("IM", "organization"), "organization");
+$display->addJoinFrom("organization");
 $model->addTableDataDisplay($display);
 $display = new datamodel\TableDataDisplay("OrganizationAddress", $org_category);
 $display->addDataDisplay(new AddressDataDisplay("organization"), "organization");
+$display->addJoinFrom("organization");
 $model->addTableDataDisplay($display);
 
 $display = new datamodel\TableDataDisplay("Organization", $org_category);

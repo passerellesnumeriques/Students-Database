@@ -548,6 +548,51 @@ class SQLQuery {
 		array_push($this->order_by, array($table, $field, $asc));
 		return $this;
 	}
+	
+	public function removeUnusefulJoinsForCounting() {
+		$used_tables = array();
+		foreach ($this->where as $expr) {
+			$s = $expr;
+			while (strlen($s) > 0) {
+				$i = strpos($s, "`.`");
+				if ($i === FALSE) break;
+				$start = strrpos($s, "`", $i-1);
+				$table_name = substr($s, $start+1, $i-$start-1);
+				if (!in_array($table_name, $used_tables))
+					array_push($used_tables, $table_name);
+				$s = substr($s, $i+3);
+			}
+		}
+		// get needed join to reach used tables
+		do {
+			$added = false;
+			foreach ($used_tables as $name) {
+				// check if it is in select from
+				$ok = false;
+				foreach ($this->tables as $tname=>$talias)
+					if ($name == $tname || $name == $talias) { $ok = true; break; }
+				if ($ok) continue;
+				// if it comes from a join, the table used for the join is needed as well
+				foreach ($this->joins as $j) {
+					if ($name == $j[1] || $name == $j[3]) {
+						if (!in_array($j[0], $used_tables)) {
+							array_push($used_tables, $j[0]);
+							$added = true;
+							break;
+						}
+					}
+				}
+			}
+		} while ($added);
+		// remove joins on non-used tables
+		for ($i = 0; $i < count($this->joins); $i++) {
+			$j = $this->joins[$i];
+			if (!in_array($j[1], $used_tables) && !in_array($j[3], $used_tables)) {
+				array_splice($this->joins, $i, 1);
+				$i--;
+			}
+		}
+	}
 
 	public function generate() {
 		require_once("component/data_model/Model.inc");

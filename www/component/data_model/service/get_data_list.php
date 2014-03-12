@@ -69,9 +69,12 @@ class service_get_data_list extends Service {
 			$name = $fields[$i]["name"];
 			$path = $paths[$i];
 			$from = null;
-			if ($path instanceof DataPath_Join && $path->isReverse())
-				$from = $path->foreign_key->name;
 			$display = $model->getTableDataDisplay($path->table->getName());
+			if ($path instanceof DataPath_Join && $path->isReverse()) {
+				$from = $path->foreign_key->name;
+				// TODO $needed_columns = $display->getNeededColumnsToJoinFrom($from);
+								
+			}
 			if ($display == null) {
 				PNApplication::error("No display specified on table ".$path->table->getName()." for path ".$fields[$i]["path"]);
 				return;
@@ -189,6 +192,8 @@ class service_get_data_list extends Service {
 		if (!isset($input["export"])) {
 			// calculate the total number of entries
 			$count = new SQLQuery($q);
+			$count->resetFields();
+			$count->removeUnusefulJoinsForCounting();
 			$count = $count->count("NB_DATA")->executeSingleRow();
 			$count = $count["NB_DATA"];
 			

@@ -134,6 +134,8 @@ $model->addTable("Contact")
 $model->addTable("PeopleContact")
 	->addForeignKey("contact","Contact",true,true,true,false)
 	->addForeignKey("people","People",true,false,true,false)
+	->setKey(array("contact","people"))
+	->addIndex("people")
 	->addReadFilter(function(&$q, $table_alias) {
 		PNApplication::$instance->people->filterReadAccess($q, $table_alias, "people");
 	})
@@ -255,6 +257,8 @@ $model->addTable("PostalAddress")
 $model->addTable("PeopleAddress")
 	->addForeignKey("address","PostalAddress",true,true,true,false)
 	->addForeignKey("people","People",true,false,true,false)
+	->setKey(array("address","people"))
+	->addIndex("people")
 	->addReadFilter(function(&$q, $table_alias) {
 		PNApplication::$instance->people->filterReadAccess($q, $table_alias, "people");
 	})
@@ -274,6 +278,7 @@ $model->addTable("Organization")
 	->addString("creator",100,1,false,false)
 	->addBoolean("fake",true) //if true, not displayable, internal usage only
 	->setRoot()
+	->addIndex("creator")
 	->addReadFilter(function(&$q, $table_alias){
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();
@@ -348,6 +353,7 @@ $model->addTable("OrganizationType")
 	->addPrimaryKey("id")
 	->addString("name",100,1,false,false)
 	->addString("creator",100,1,false,false)
+	->addIndex("creator")
 	->addReadFilter(function(&$q, $table_alias){
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();
@@ -420,6 +426,7 @@ $model->addTable("OrganizationTypes")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("type","OrganizationType",true,false,true,false)
 	->setKey(array("organization","type"))
+	->addIndex("organization")
 	->addReadFilter(function(&$q, $table_alias){
 		$org_alias = $q->getTableAlias("Organization");
 		if ($org_alias == null) {
@@ -511,6 +518,8 @@ $model->addTable("OrganizationTypes")
 $model->addTable("OrganizationContact")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("contact","Contact",true,false,true,false)
+	->setKey(array("organization","contact"))
+	->addIndex("organization")
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");
 		$org_alias = $q->getTableAlias("Organization");
@@ -549,6 +558,8 @@ $model->addTable("OrganizationContact")
 $model->addTable("OrganizationAddress")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("address","PostalAddress",true,false,true,false)
+	->setKey(array("organization","address"))
+	->addIndex("organization")
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");
 		$org_alias = $q->getTableAlias("Organization");
@@ -588,6 +599,7 @@ $model->addTable("ContactPoint")
 	->addForeignKey("organization","Organization",true,false,true,false)
 	->addForeignKey("people","People",true,false,true,false)
 	->setKey(array("organization","people"))
+	->addIndex("organization")
 	->addString("designation",100,1,false,false)
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");

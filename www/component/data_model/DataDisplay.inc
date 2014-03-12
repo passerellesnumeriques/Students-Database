@@ -11,7 +11,7 @@ namespace datamodel {
 abstract class DataDisplay {
 	
 	/**
-	 * @var \datamodel\DataDisplayHandler the handler this data belongs to
+	 * @var \datamodel\TableDataDisplay $table_data_display the TableDataDisplay this data belongs to
 	 */
 	private $table_data_display;
 	
@@ -30,18 +30,11 @@ abstract class DataDisplay {
 	 * @return array of string
 	 */
 	public abstract function getHandledColumns();
-	/** How to display this data in a list, using a JavaScript widget implementing typed_field
-	 * @param number|null $sub_model sub model instance
-	 * @return array (classname, config) classname: string containing the name of the JavaScript class implementing typed_field, config: string containing a JSON representation of the configuration of the typed_field
-	 */
-	public abstract function getTypedFieldInList($sub_model);
 	/** How to display this data, using a JavaScript widget implementing typed_field
 	 * @param number|null $sub_model sub model instance
 	 * @return array (classname, config) classname: string containing the name of the JavaScript class implementing typed_field, config: string containing a JSON representation of the configuration of the typed_field
 	 */
-	public function getTypedFieldSingle($sub_model) {
-		return $this->getTypedFieldInList($sub_model);
-	}
+	public abstract function getTypedField($sub_model);
 	/** Indicates if this data can be modified by the user
 	 * @return boolean true if this data is editable
 	 */
@@ -116,7 +109,7 @@ abstract class DataDisplay {
 		$s .= json_encode($this->getCategoryName());
 		$s .= ",".json_encode($this->getDisplayName());
 		$s .= ",".json_encode($this->getTableName());
-		$tf = $this->getTypedFieldInList($sub_model);
+		$tf = $this->getTypedField($sub_model);
 		$s .= ",".json_encode($tf[0]);
 		$s .= ",".$tf[1];
 		$s .= ",".($this->isEditable() ? "true" : "false");
@@ -197,7 +190,6 @@ class SimpleDataDisplay extends DataDisplay {
 	protected $readonly;
 	
 	/**
-	 * @param DataDisplayHandler $handler the handler this data belongs to
 	 * @param string $column_name name of the column
 	 * @param string $display_name name to display
 	 * @param boolean $readonly indicates if we can edit this column
@@ -219,7 +211,7 @@ class SimpleDataDisplay extends DataDisplay {
 		return array("table"=>$this->getTableName(), "column"=>$this->column_name);
 	}
 	
-	public function getTypedFieldInList($sub_model) {
+	public function getTypedField($sub_model) {
 		$col = $this->getTable()->getColumnFor($this->column_name, $sub_model);
 		return \PNApplication::$instance->widgets->get_typed_field($col);
 	}
@@ -297,7 +289,6 @@ class ChoiceDataDisplay extends DataDisplay {
 	protected $editable;
 	
 	/**
-	 * @param DataDisplayHandler $handler
 	 * @param string $foreign_key_name column's name containing the foreign key
 	 * @param string $foreign_column_name name of the column in the foreign table to display
 	 * @param string $display_name name of this data
@@ -314,11 +305,11 @@ class ChoiceDataDisplay extends DataDisplay {
 	
 	private $possible_values = array();
 	private function get_possible_values($sub_model) {
-		$foreign_key = $this->handler->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
 		if (!isset($this->possible_values[$sub_model])) {
 			$t = \DataModel::get()->getTable($foreign_key->foreign_table);
 			$q = \SQLQuery::create()->select($t->getName());
-			if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->handler->getTable()->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->handler->getTable()->getModel()->getParentTable())
+			if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->getTable()->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->getTable()->getModel()->getParentTable())
 				$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
 			$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
 			$q->field($t->getName(), $this->foreign_column_name, "VALUE");
@@ -326,8 +317,8 @@ class ChoiceDataDisplay extends DataDisplay {
 		}
 		return $this->possible_values[$sub_model];
 	}
-	public function getTypedFieldInList($sub_model) {
-		$foreign_key = $this->handler->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+	public function getTypedField($sub_model) {
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
 		$cfg = "{";
 		$cfg .= "possible_values:[";
 		$res = $this->get_possible_values($sub_model);
@@ -346,7 +337,7 @@ class ChoiceDataDisplay extends DataDisplay {
 	}
 	
 	public function getTypedFilter($sub_model) {
-		$foreign_key = $this->handler->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
 		$cfg = "{";
 		$cfg .= "possible_values:[";
 		$res = $this->get_possible_values($sub_model);
@@ -368,18 +359,18 @@ class ChoiceDataDisplay extends DataDisplay {
 	public function getEditLocks($sub_model) {
 		if (!$this->editable) return array();
 		return array(
-			array("table"=>$this->handler->getTable()->getSQLNameFor($sub_model))
+			array("table"=>$this->getTable()->getSQLNameFor($sub_model))
 		);
 	}
 	public function isSortable() { return true; }
 	public function isMandatory($sub_model) {
-		$foreign_key = $this->handler->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
 		return !$foreign_key->can_be_null;
 	}
 	
 	public function buildSQL(&$q, $path, $filters) {
 		// we need to get the key, and the value to display
-		$foreign_key = $this->handler->getTable()->getColumnFor($this->foreign_key_name, $path->sub_model);
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $path->sub_model);
 		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
 		
 		// go to the table
@@ -391,7 +382,7 @@ class ChoiceDataDisplay extends DataDisplay {
 			$q->join($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name), $alias);
 		}
 		// get the key and data
-		$col_name = $this->handler->getTable()->getPrimaryKey()->name;
+		$col_name = $this->getTable()->getPrimaryKey()->name;
 		$key_alias = $q->getFieldAlias($table_alias, $col_name);
 		if ($key_alias == null) {
 			$key_alias = $q->generateFieldAlias();
@@ -424,7 +415,7 @@ class ChoiceDataDisplay extends DataDisplay {
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields) {
-		$tables_fields->addValue($this->handler->getTable()->getName, $sub_model, $key, $this->foreign_key_name, $value);
+		$tables_fields->addValue($this->getTableName(), $sub_model, $key, $this->foreign_key_name, $value);
 	}
 		
 }
@@ -445,7 +436,6 @@ class JoiningTableDataDisplay extends DataDisplay {
 	protected $foreign_table_column_name;
 	
 	/**
-	 * @param DataDisplayHandler $handler
 	 * @param string $display_name name of this data
 	 * @param string $joining_key_name name of the column making the join to the single element in the 1 to n relation
 	 * @param string $foreign_key_name name of the column containing the foreign key to go to the table containing the n elements
@@ -461,7 +451,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array($this->foreign_key_name); }
 	
-	public function getTypedFieldInList($sub_model) {
+	public function getTypedField($sub_model) {
 		$foreign_table = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model)->foreign_table;
 		$foreign_table = \DataModel::get()->getTable($foreign_table);
 		$sub_models = $sub_model == null ? null : array($this->getTable()->getModel()->getParentTable()=>$sub_model);
@@ -568,7 +558,6 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	protected $data_path;
 	
 	/**
-	 * @param DataDisplayHandler $handler
 	 * @param string $display_name name of this data
 	 * @param string $data_path path to reach the column to display: format is columns' names separated by a dot (.). Example: country.name means use the column 'country' as a foreign key, then in the foreign table get the column 'name'
 	 */
@@ -587,7 +576,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 */
 	private function getColumn($sub_model) {
 		$columns = explode(".", $this->data_path);
-		$t = $this->handler->getTable();
+		$t = $this->getTable();
 		for ($i = 0; $i < count($columns); $i++) {
 			$col = $t->getColumnFor($columns[$i], $sub_model);
 			if ($i < count($columns)-1)
@@ -596,7 +585,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return $col;
 	}
 	
-	public function getTypedFieldInList($sub_model) {
+	public function getTypedField($sub_model) {
 		return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($sub_model));
 	}
 	
@@ -615,7 +604,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 
 	public function getTypedFilter($sub_model) {
 		$columns = explode(".", $this->data_path);
-		$t = $this->handler->getTable();
+		$t = $this->getTable();
 		$last_key = null;
 		for ($i = 0; $i < count($columns); $i++) {
 			$col = $t->getColumnFor($columns[$i], $sub_model);
@@ -650,7 +639,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	
 	public function buildSQL(&$q, $path, $filters) {
 		$columns = explode(".", $this->data_path);
-		$t = $this->handler->getTable();
+		$t = $this->getTable();
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		$last_key = null;

@@ -1,5 +1,6 @@
 if (typeof require != 'undefined') {
 	require("address_text.js");
+	require("contact_objects.js");
 }
 
 /**
@@ -185,30 +186,32 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	
 	/** Called when the user clicks on "Add address". */
 	this.createAddress = function(){
-		var address = new PostalAddress(-1,null,null,null,null,null,null,null,"Work");
-		if (type_id != -1) {
-			service.json("contact","add_address",{
-				type:type,
-				type_id:type_id,
-				address:address
-			},function(res){
-				if(!res) return;
+		require("contact_objects.js", function() {
+			var address = new PostalAddress(-1,null,null,null,null,null,null,null,"Work");
+			if (type_id != -1) {
+				service.json("contact","add_address",{
+					type:type,
+					type_id:type_id,
+					address:address
+				},function(res){
+					if(!res) return;
+					/* Update the result object */
+					address.id = res.id;
+					var l = t.addresses.length;
+					t.addresses[l] = address;
+					/* Update the table */
+					t.addAddress(address, true);
+					t.onchange.fire(t);
+				});
+			} else {
 				/* Update the result object */
-				address.id = res.id;
 				var l = t.addresses.length;
 				t.addresses[l] = address;
 				/* Update the table */
 				t.addAddress(address, true);
 				t.onchange.fire(t);
-			});
-		} else {
-			/* Update the result object */
-			var l = t.addresses.length;
-			t.addresses[l] = address;
-			/* Update the table */
-			t.addAddress(address, true);
-			t.onchange.fire(t);
-		}
+			}
+		});
 	};
 	
 	/** Add the remove button to the address row
