@@ -8,8 +8,8 @@ class page_popup_create_people_step_creation extends Page {
 		$peoples = $peoples["peoples"];
 		echo "<script type='text/javascript'>window.popup = window.parent.get_popup_window_from_frame(window);</script>";
 		if (count($peoples) == 0) {
-			echo "<div>Nobody to create.</div>";
-			echo "<script tyupe='text/javascript'>popup.unfreeze();popup.addCancelButton();</script>";
+			echo "<div style='background-color:white'>Nobody to create.</div>";
+			echo "<script type='text/javascript'>popup.unfreeze();popup.addCancelButton();</script>";
 		}
 ?>
 <div id='info' style='background-color:white'></div>

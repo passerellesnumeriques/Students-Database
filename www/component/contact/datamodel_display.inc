@@ -180,4 +180,44 @@ $display = new datamodel\TableDataDisplay("Organization", $org_category);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("name", "Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("creator", "Managed by", true));
 $model->addTableDataDisplay($display);
+
+class ContactsScreen extends datamodel\DataScreen {
+
+	private $type;
+	
+	public function __construct($type) {
+		$this->type = $type;
+	}
+	
+	public function getTables() {
+		if ($this->type == "people")
+			return array("PeopleContact", "PeopleAddress");
+		return array("OrganizationContact","OrganizationAddress");
+	}
+	
+	public function getIcon() { return "/static/contact/contact_16.png"; }
+	public function getName() { return "Contacts"; }
+
+	public function generate(&$page, $paths, $values, $prefilled_values, $structure_name) {
+		if ($this->type == "people")
+			$owner_id = $values->getColumnValue("People", "id");
+		else
+			$owner_id = $values->getColumnValue("Organization", "id");
+		$contact_div_id = $page->generateID();
+		$address_div_id = $page->generateID();
+		echo "<table><tr><td valign=top id='$contact_div_id'></td><td valign=top id='$address_div_id'></td></tr></table>";
+		require_once("page/contact.inc");
+		$var = contact($page, $this->type, $contact_div_id, $owner_id);
+		if ($structure_name <> null)
+			echo "<script type='text/javascript'>$structure_name.push({path:".json_encode($paths[0]->getString()).",contacts:$var,getValue:function(){return this.contacts.getContacts();}});</script>";
+		require_once("page/address.inc");
+		$var = address($page, $this->type, $address_div_id, $owner_id);
+		if ($structure_name <> null)
+			echo "<script type='text/javascript'>$structure_name.push({path:".json_encode($paths[1]->getString()).",addresses:$var,getValue:function(){return this.addresses.getAddresses();}});</script>";
+	}
+	
+}
+$model->addDataScreen(new ContactsScreen("people"));
+$model->addDataScreen(new ContactsScreen("organization"));
+
 ?>

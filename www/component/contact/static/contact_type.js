@@ -72,7 +72,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		tr.appendChild(td_data);
 		this.tbody.appendChild(tr);
 		var edit = null;
-		if (owner_id == -1) {
+		if (owner_id == null || owner_id < 0) {
 			// new
 			this._createCategoryField(td_category, contact);
 			var input = document.createElement("INPUT");
@@ -110,7 +110,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 			div_data.innerHTML = contact.contact;
 			this._createCategoryField(td_category, contact);
 		}
-		if (owner_id == -1 || can_remove){
+		if (owner_id == null || owner_id < 0 || can_remove){
 			var div_remove = document.createElement('div');
 			div_remove.style.display = 'inline-block';
 			this.addRemoveButton(contact,div_remove,edit);
@@ -142,11 +142,11 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	};
 	
 	/**
-	 * Add the contact in the database (if owner_id is not -1), and update the display
+	 * Add the contact in the database (if owner_id > 0), and update the display
 	 * @param {Contact} contact the new contact
 	 */
 	this.createContact = function (contact){
-		if (owner_id != -1) {
+		if (owner_id != null && owner_id > 0) {
 			/*Update the database*/
 			service.json("contact","add_contact",{owner_type:owner_type,owner_id:owner_id,contact:contact},function(res){
 				if (!res) return;
@@ -195,7 +195,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 * @param {Contact} contact the contact to remove
 	 */
 	this.removeContact = function (contact){
-		if (owner_id != -1) {
+		if (owner_id != null || owner_id > 0) {
 			service.json("data_model","remove_row",{table:"Contact", row_key:contact.id}, function(res){
 				if (!res) return;
 				for (var i = 0; i < t.tbody.childNodes.length; ++i)

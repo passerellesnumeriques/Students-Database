@@ -19,6 +19,5 @@ class ContactPeopleProfileGeneralInfoPlugin implements PeopleProfileGeneralInfoP
 		address($page, "people", $address_div_id, $people_id);
 	}
 	
-	
 }
 ?>

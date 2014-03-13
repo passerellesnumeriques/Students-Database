@@ -74,10 +74,13 @@ class people extends Component {
 	}
 	
 	public function canRead($people_id) {
+		if (PNApplication::$instance->user_management->has_right("see_anybody")) return true;
+		if ($people_id == PNApplication::$instance->user_people->user_people_id) return true;
 		$p = $this->getPeople($people_id);
 		return $p <> null;
 	}
 	public function canModify($people_id) {
+		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return true;
 		$q = SQLQuery::create();
 		$table_alias = $q->generateTableAlias();
 		$q->select(array("People"=>$table_alias));

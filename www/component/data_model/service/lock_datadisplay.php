@@ -23,16 +23,17 @@ class service_lock_datadisplay extends Service {
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");
 		require_once("component/data_model/DataBaseLock.inc");
+		require_once("component/data_model/DataPath.inc");
 		$table = $input["table"];
 		$sub_model = @$input["sub_model"];
 		$t = DataModel::get()->getTable($table);
 		$come_from = @$input["come_from"];
-		$display = $t->getDisplayHandler($come_from);
+		$display = DataModel::get()->getTableDataDisplay($table);;
 		if ($display == null) {
-			PNApplication::error("No DataDisplayHandler on table ".$table);
+			PNApplication::error("No TableDataDisplay on table ".$table);
 			return;
 		}
-		foreach ($display->getDisplayableData() as $data) {
+		foreach ($display->getDataDisplay($come_from) as $data) {
 			if ($data->getDisplayName() == $input["name"]) {
 				$locks = $data->getEditLocks($sub_model);
 				$ids = array();
@@ -63,7 +64,7 @@ class service_lock_datadisplay extends Service {
 				$q = SQLQuery::create()->select($table);
 				if ($sub_model <> null) $q->selectSubModel($table, $sub_model);
 				$q->whereKey($t, $input["key"]);
-				$res = $data->buildSQL($q, new DataPath_Table($t), null);
+				$res = $data->buildSQL($q, new DataPath_Table($t, $sub_model), null);
 				$row = $q->executeSingleRow(); 
 				echo "{locks:".json_encode($ids);
 				echo ",data:".json_encode($data->getData($row, $res));

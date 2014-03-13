@@ -154,6 +154,10 @@ class SQLQuery {
 	 */
 	public function &selectSubModelForTable($table_obj, $sub_model) {
 		if ($sub_model == null) return $this;
+		if (!($table_obj instanceof datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table_obj = DataModel::get()->getTable($table_obj);
+		}
 		if (!($table_obj->getModel() instanceof SubDataModel)) return $this;
 		$this->sub_models[$table_obj->getModel()->getParentTable()] = $sub_model;
 		return $this;
@@ -214,12 +218,12 @@ class SQLQuery {
 						substr($file,strlen($root)) == "data_model/Model.inc" ||
 						substr($file,strlen($root)) == "data_model/DataDisplay.inc" ||
 						substr($file,strlen($root)) == "data_model/DataPath.inc" ||
-						substr($file,strlen($root)) == "data_model/DataBaseLock.inc"
+						substr($file,strlen($root)) == "data_model/DataBaseLock.inc" ||
+						substr($file,strlen($root)) == "data_model/page/data_screen.inc"
 				)) break; // generic service of data model
-				/*if ($component == "data_model" && (
-					substr($file,strlen($root)) == "data_model/page/table_datadisplay.inc"	
-				)) continue; // generic display, let's see who call it
-				*/
+				//if ($component == "data_model" && (
+				//	substr($file,strlen($root)) == "data_model/page/data_screen.inc"	
+				//)) continue; // generic display, let's see who call it
 				require_once("component/data_model/Model.inc");
 				$decl = DataModel::get()->internalGetTable($table_name)->declaring_component;
 				if ($component <> $decl) {
@@ -859,9 +863,9 @@ class SQLQuery {
 	}
 	
 	private function getColumnName($table, $column) {
-		$display = $table->getDisplayHandler(null);
+		$display = DataModel::get()->getTableDataDisplay($table->getName());
 		if ($display == null) return $column;
-		foreach ($display->getDisplayableData() as $data) {
+		foreach ($display->getDataDisplay(null) as $data) {
 			foreach ($data->getHandledColumns() as $col)
 				if ($col == $column) return $data->getDisplayName();
 		}
@@ -2036,6 +2040,37 @@ class TablesToUpdate {
 		if (!isset($this->list[$table][$sub_model][$row_key]))
 			$this->list[$table][$sub_model][$row_key] = array();
 		$this->list[$table][$sub_model][$row_key][$column] = $value;
+	}
+	
+	public function execute() {
+		$tables_keys = array();
+		foreach ($this->list as $table_name=>$table_content) {
+			foreach ($table_content as $sub_model=>$sub_model_content) {
+				$inserts = array();
+				foreach ($sub_model_content as $row_key=>$row_content) {
+					if ($row_key == null || intval($row_key) < 0) {
+						if (!isset($inserts[$row_key]))
+							$inserts[$row_key] = array();
+						foreach ($row_content as $col_name=>$value)
+							$insert[$row_key][$col_name] = $value;
+					} else {
+						SQLQuery::create()->updateByKey($table_name, $row_key, $row_content);
+					}
+				}
+				if (count($inserts) > 0) {
+					$rows = array();
+					foreach ($inserts as $row_key => $row) array_push($rows, $row);
+					$ids = SQLQuery::create()->insertMultiple($table_name, $rows);
+					if (!isset($tables_keys[$table_name]))
+						$tables_keys[$table_name] = array();
+					$tables_keys[$table_name][$sub_model] = array();
+					$i = 0;
+					foreach ($inserts as $row_key => $row)
+						$tables_keys[$table_name][$sub_model][$row_key] = $ids[$i++];
+				}
+			}
+		}
+		return $tables_keys;
 	}
 	
 }

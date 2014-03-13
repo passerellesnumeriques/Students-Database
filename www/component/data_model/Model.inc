@@ -3,6 +3,7 @@ require_once("TableDefinition.inc");
 require_once("DataDisplayCategory.inc");
 require_once("TableDataDisplay.inc");
 require_once("DataDisplay.inc");
+require_once("DataScreen.inc");
 /** Defines the data model of the application. Each component is supposed to populate this model with its own part of the model */
 class DataModel {
 
@@ -52,6 +53,7 @@ class DataModel {
 	private $sub_models = array();
 	private $data_categories = array();
 	private $table_display = array();
+	private $data_screens = array();
 	
 	/** Add a table to the model, and returns it
 	 *
@@ -225,6 +227,13 @@ class DataModel {
 			if ($d->getTableName() == $table_name)
 				return $d;
 		return null;
+	}
+	
+	public function addDataScreen($screen) {
+		array_push($this->data_screens, $screen);
+	}
+	public function getDataScreens() {
+		return $this->data_screens;
 	}
 	
 	private function hide($table, $field) {

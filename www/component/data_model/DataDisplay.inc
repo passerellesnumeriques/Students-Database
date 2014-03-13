@@ -132,6 +132,7 @@ abstract class DataDisplay {
 	 * @param SQLQuery $q the sql on which the filters should be applied
 	 */
 	protected function applyColumnFilter($table_alias, $col, $filters, &$q) {
+		if ($filters == null) return;
 		$tf = \PNApplication::$instance->widgets->get_typed_filter($col);
 		switch ($tf[0]) {
 			case "filter_text":
@@ -488,7 +489,9 @@ class JoiningTableDataDisplay extends DataDisplay {
 	
 	public function buildSQL(&$q, $path, $filters) {
 		// we need to go to the parent, and get the joining key
-		$parent_alias = \DataPathSQLBuilder::build($path->parent, $q);
+		$parent_alias = $q->getTableAlias($path->parent->table->getName());
+		if ($parent_alias == null)
+			$parent_alias = \DataPathSQLBuilder::build($path->parent, $q);
 		$key_name = $path->isReverse() ? $path->parent->table->getPrimaryKey()->name : $path->foreign_key->name;
 		$alias = $q->getFieldAlias($parent_alias, $key_name);
 		if ($alias == null) {

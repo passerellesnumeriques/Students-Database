@@ -9,23 +9,27 @@ class page_popup_create_people_step_check extends Page {
 		$ok = array();
 		$to_check = array();
 		foreach ($peoples as $people) {
-			$data = $people["tables"]["People"];
-			$first_name = null;
-			$last_name = null;
-			foreach ($data as $d)
-				if ($d["name"] == "First Name") 
-					$first_name = $d["value"];
-				else if ($d["name"] == "Last Name") 
-					$last_name = $d["value"];
-			$similar = SQLQuery::create()->bypassSecurity()
-				->select("People")
-				->where("LOWER(`first_name`) = '".SQLQuery::escape(strtolower($first_name))."'")
-				->where("LOWER(`last_name`) = '".SQLQuery::escape(strtolower($last_name))."'")
-				->execute();
-			if (count($similar) == 0)
-				array_push($ok, $people);
-			else
-				array_push($to_check, array($people,$similar));
+			foreach ($people as $path) {
+				if ($path["path"] == "People") {
+					$first_name = null;
+					$last_name = null;
+					foreach ($path["data"] as $d)
+						if ($d["name"] == "First Name") 
+							$first_name = $d["value"];
+						else if ($d["name"] == "Last Name") 
+							$last_name = $d["value"];
+					$similar = SQLQuery::create()->bypassSecurity()
+						->select("People")
+						->where("LOWER(`first_name`) = '".SQLQuery::escape(strtolower($first_name))."'")
+						->where("LOWER(`last_name`) = '".SQLQuery::escape(strtolower($last_name))."'")
+						->execute();
+					if (count($similar) == 0)
+						array_push($ok, $people);
+					else
+						array_push($to_check, array($people,$similar));
+					break;
+				}
+			}
 		}
 		echo "<script type='text/javascript'>";
 		echo "peoples = [";
@@ -55,47 +59,50 @@ class page_popup_create_people_step_check extends Page {
 			foreach ($to_check as $tc) {
 				$people = $tc[0];
 				$similar = $tc[1];
-				$data = $people["tables"]["People"];
-				$first_name = null;
-				$last_name = null;
-				foreach ($data as $d)
-					if ($d["name"] == "First Name")
-					$first_name = $d["value"];
-				else if ($d["name"] == "Last Name")
-					$last_name = $d["value"];
-				echo "<li>".$first_name." ".$last_name." seems to be the same as:<ul>";
-				$id = $this->generateID();
-				foreach ($similar as $s) {
-					echo "<li>";
-					echo $table->getRowDescription($s);
-					$stypes = PNApplication::$instance->people->parseTypes($s["types"]);
-					$missing_types = array_merge($people["types"]);
-					foreach ($stypes as $t) {
-						for ($i = 0; $i < count($missing_types); $i++)
-							if ($missing_types[$i] == $t) {
-								array_splice($missing_types, $i, 1);
-								break;
+				foreach ($people as $path) {
+					if ($path["path"] == "People") {
+						$first_name = null;
+						$last_name = null;
+						foreach ($path["data"] as $d)
+							if ($d["name"] == "First Name")
+							$first_name = $d["value"];
+						else if ($d["name"] == "Last Name")
+							$last_name = $d["value"];
+						echo "<li>".$first_name." ".$last_name." seems to be the same as:<ul>";
+						$id = $this->generateID();
+						foreach ($similar as $s) {
+							echo "<li>";
+							echo $table->getRowDescription($s);
+							$stypes = PNApplication::$instance->people->parseTypes($s["types"]);
+							$missing_types = PNApplication::$instance->people->parseTypes($path["columns"]["types"]);
+							foreach ($stypes as $t) {
+								for ($i = 0; $i < count($missing_types); $i++)
+									if ($missing_types[$i] == $t) {
+										array_splice($missing_types, $i, 1);
+										break;
+									}
 							}
-					}
-					if (count($missing_types) > 0) {
-						echo "<br/>";
-						echo "<input type='radio' name='$id' value='".$s["id"]."'/> Reuse this person, and make it as ";
-						$first = true;
-						foreach ($missing_types as $t) {
-							$pi = PNApplication::$instance->people->getPeopleTypePlugin($t);
-							if ($first) $first = false; else echo ", ";
-							echo $pi->getName();
+							if (count($missing_types) > 0) {
+								echo "<br/>";
+								echo "<input type='radio' name='$id' value='".$s["id"]."'/> Reuse this person, and make it as ";
+								$first = true;
+								foreach ($missing_types as $t) {
+									$pi = PNApplication::$instance->people->getPeopleTypePlugin($t);
+									if ($first) $first = false; else echo ", ";
+									echo $pi->getName();
+								}
+							}
+							echo "</li>";
 						}
+						array_push($ids, $id);
+						array_push($peoples_to_include, $people);
+						echo "</ul>";
+						echo "<input type='radio' name='$id' value='cancel' checked='checked'/> Cancel creation";
+						echo "<br/>";
+						echo "<input type='radio' name='$id' value='create'/> Create new people anyway";
+						echo "</li>";
 					}
-					echo "</li>";
 				}
-				array_push($ids, $id);
-				array_push($peoples_to_include, $people);
-				echo "</ul>";
-				echo "<input type='radio' name='$id' value='cancel' checked='checked'/> Cancel creation";
-				echo "<br/>";
-				echo "<input type='radio' name='$id' value='create'/> Create new people anyway";
-				echo "</li>";
 			}
 			echo "</ul>";
 			echo "</form>";
@@ -118,7 +125,7 @@ class page_popup_create_people_step_check extends Page {
 				} 
 			?>];
 			window.popup.addIconTextButton(theme.icons_16.ok, "Create", "create", function() {
-				window.popup.freeze();
+				window.popup.freeze("Submitting information...");
 				var form = document.forms['to_check'];
 				for (var i = 0; i < radios.length; ++i) {
 					var list = form.elements[radios[i]];

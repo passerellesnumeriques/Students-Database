@@ -38,8 +38,8 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 				window.databaselock.removeLock(locks[i]);
 			}
 		}
-		if (t.save_button) { container.removeChild(t.save_button); t.save_button = null; }
-		if (t.unedit_button) { container.removeChild(t.unedit_button); t.unedit_button = null; }
+		if (t.save_button) { t.field.getHTMLElement().removeChild(t.save_button); t.save_button = null; }
+		if (t.unedit_button) { t.field.getHTMLElement().removeChild(t.unedit_button); t.unedit_button = null; }
 		var config_field = function() {
 			if (t.editable) {
 				t.field.getHTMLElement().title = "Click to edit";
@@ -105,13 +105,13 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.save_button.style.verticalAlign = 'top';
 			t.save_button.style.cursor = 'pointer';
 			t.save_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.save(); stopEventPropagation(ev); return false; };
-			container.appendChild(t.save_button);
+			t.field.getHTMLElement().appendChild(t.save_button);
 			t.unedit_button = document.createElement("IMG");
 			t.unedit_button.src = theme.icons_16.no_edit;
 			t.unedit_button.style.verticalAlign = 'top';
 			t.unedit_button.style.cursor = 'pointer';
 			t.unedit_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.unedit(); stopEventPropagation(ev); return false; };
-			container.appendChild(t.unedit_button);
+			t.field.getHTMLElement().appendChild(t.unedit_button);
 			layout.invalidate(container);
 		});
 	};
@@ -119,8 +119,8 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	t.save = function() {
 		var data = t.field.getCurrentData();
 		container.removeChild(t.field.getHTMLElement());
-		container.removeChild(t.save_button); t.save_button = null;
-		container.removeChild(t.unedit_button); t.unedit_button = null;
+		t.field.getHTMLElement().removeChild(t.save_button); t.save_button = null;
+		t.field.getHTMLElement().removeChild(t.unedit_button); t.unedit_button = null;
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);
