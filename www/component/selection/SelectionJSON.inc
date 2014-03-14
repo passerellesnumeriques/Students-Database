@@ -195,6 +195,34 @@ class SelectionJSON{
 	}
 	
 	/**
+	 * Get a JSON array containing all the informations sessions names
+	 * @return string JSON array containing all the existing IS [{id:, name:},...]
+	 */
+	public static function getJSONAllInformationsSessionsNames(){
+		$r = "[";
+		$sessions = SQLQuery::create()
+		->select("InformationSession")
+		->field("InformationSession","id")
+		->executeSingleField();
+		if($sessions <> null){
+			$first = true;
+			foreach ($sessions as $id){
+				if(!$first)
+					$r .= ", ";
+				$first = false;
+				$name = SQLQuery::create()
+					->select("InformationSession")
+					->field("InformationSession","name")
+					->whereValue("InformationSession", "id", $id)
+					->executeSingleValue();
+				$r .= "{id:".json_encode($id).", name:".json_encode($name)."}";
+			}
+		}
+		$r .= "]";
+		return $r;
+	}
+	
+	/**
 	 * Prepare a JSON information session structure to be sent to the database<br/>
 	 * This method checks that the IS has a name set. Otherwize, the name by default is the geographic_area_text, from the IS geographic_area attribute
 	 * @param string $json the IS structure
@@ -213,7 +241,7 @@ class SelectionJSON{
 			$a["name"] = $json["name"];
 		else if(!isset($json["name"]) && isset($json["geographic_area"])){
 			//Make sure that all the informations sessions have at least a name, to be displayed into the datalist
-			$a["name"] = PNApplication::$instance->geography->get_geographic_area_text($json["geographic_area"]);
+			$a["name"] = PNApplication::$instance->geography->getGeographicAreaText($json["geographic_area"]);
 		}
 		if(isset($json["id"]))
 			$a["id"] = $json["id"];
@@ -851,11 +879,10 @@ class SelectionJSON{
 	 */
 	public static function ExamCenterFromID($id){
 		if($id == -1 || $id == "-1")
-			return "{id:-1, geographic_area:null, name:null, partners:[], information_sessions:[]}";
+			return "{id:-1, geographic_area:null, name:null, partners:[], information_sessions:[],rooms:[]}";
 		$EC_row = self::ExamCenterTableDataFromID($id);
 		$EC_partners_row = self::ExamCenterPartnersDataFromID($id);
-		$EC_IS_row = self::InformationSessionExamCenterFromID($id);
-		return self::ExamCenter($EC_row, $EC_partners_row, $EC_IS_row);
+		return self::ExamCenter($EC_row, $EC_partners_row);
 	}
 	
 	/**
@@ -921,24 +948,24 @@ class SelectionJSON{
 	}
 	
 	/**
-	 * Retrieve the information sessions linked to a given exam center from ExamCenterInformationSession table 
+	 * Retrieve the information sessions linked to a given exam center from ExamCenterInformationSessions table 
 	 * @param number $id
-	 * @return array the result from the query performed
+	 * @return string ExamCenterISLinked object
 	 */
-	public static function InformationSessionExamCenterFromID($id){
+	public static function ExamCenterInformationSessionsFromCenterID($id){
 		$q = SQLQuery::create()
 			->select("ExamCenterInformationSession")
 			->whereValue("ExamCenterInformationSession", "exam_center", $id);
 		self::ExamCenterInformationSessionSQL($q);
 		$rows = $q->execute();
-		return $rows;
+		return self::ExamCenterInformationSessions($q,$rows);
 	}
 	
 	/**
 	 * Prepare a SQLQuery to retrieve the data from table ExamCenterInformationSession
 	 * @param SQLQuery $q
 	 */
-	public  static function ExamCenterInformationSessionSQL(&$q){
+	public static function ExamCenterInformationSessionSQL(&$q){
 		$alias = $q->getTableAlias("ExamCenterInformationSession");
 			if(!$alias)
 				$alias = "ExamCenterInformationSession";
@@ -948,15 +975,84 @@ class SelectionJSON{
 	}
 	
 	/**
+	 * Get a JSON array containing all the informations sessions IDs from the rows retrieved from the database
+	 * @param SQLQuery $q the query used to retrieve the informations sessions IDs
+	 * @param Array $rows results from the database
+	 * @return string JSON array containing the information sessions IDs
+	 */
+	public static function ExamCenterInformationSessions($q, $rows){
+		$data = "[";
+		$first = true;
+		foreach ($rows as $d){
+			if(!$first)
+				$data .= ", ";
+			$first = false;
+			$data .= json_encode($d["information_session"]);
+		}
+		$data .= "]";
+		return $data;
+	}
+	
+	/**
+	 * Get the rooms data for a given exam center
+	 * @param number $id ID of the exam center
+	 * @returns string ExamCenterRooms JSON object
+	 */
+	public static function ExamCenterRoomsFromCenterID($id){
+		$q = SQLQuery::create()
+			->select("ExamCenterRoom")
+			->whereValue("ExamCenterRoom", "exam_center", $id);
+		self::ExamCenterRoomSQL($q);
+		$rows = $q->execute();
+		return self::ExamCenterRoom($q, $rows);
+	}
+	
+	/**
+	 * Retrieve the exam center room data from database
+	 * @param SQLQuery $q
+	 */
+	public static function ExamCenterRoomSQL(&$q){
+		$alias = $q->getTableAlias("ExamCenterRoom");
+		if(!$alias)
+			$alias = "ExamCenterRoom";
+		$q
+			->field("ExamCenterRoom","id")
+			->field("ExamCenterRoom","name")
+			->field("ExamCenterRoom","capacity");
+	}
+	
+	/**
+	 * Get a ExamCenterRooms object from the data retrieved from database
+	 * @param SQLQuery $q the query used to retrieve the data
+	 * @param array $rows result from database
+	 * @return string JSON ExamCenterRooms object
+	 */
+	public static function ExamCenterRooms($q, $rows){
+		$data = "[";
+		$first = true;
+		foreach ($rows as $r){
+			if(!$first)
+				$data.= ", ";
+			$first = false;
+			$data.= "{id:".json_encode($r["id"]).", ";
+			$data.= "name:".json_encode($r["name"]).", ";
+			$data.= "capacity:".json_encode($r["capacity"])."}";
+		}
+		$data.=']';
+		return $data;
+	}
+	
+	/**
 	 * Get a JSON ExamCenterData from the data retrieved from the database
 	 * @param array $row_EC result of the query built by ExamCenterSQL method
 	 * @param array $rows_partners result of the query built by ExamCenterPartnersSQL method
-	 * @param array $rows_IS result of the query built by ExamCenterInformationSessionSQL method
 	 * @return string JSON ExamCenterData structure
 	 */
-	public static function ExamCenter($row_EC,$rows_partners, $rows_IS){
+	public static function ExamCenter($row_EC,$rows_partners){
 		$data = "";
 		if(isset($row_EC)){
+			$IS_linked = self::ExamCenterInformationSessionsFromCenterID($row_EC["id"]);
+			$rooms = self::ExamCenterRoomsFromCenterID($row_EC["id"]);
 			$data.= "{id:".json_encode($row_EC["id"]).", ";
 			$data.= "geographic_area:".json_encode($row_EC["geographic_area"]);
 			$data.= ", name:".json_encode($row_EC["name"]);
@@ -994,16 +1090,9 @@ class SelectionJSON{
 				$data.= "]}";
 				$data.= "]";
 			} else $data.= "[]";
-			$data .= "information_sessions:[";
-			$first_IS = true;
-			foreach ($rows_IS as $d){
-				if(!$first_IS)
-					$data .= ", ";
-				$first_IS = false;
-				if($d["exam_center"] == $row_EC["id"])
-					$data .= $d["information_session"];
-			}
-			$data .= "]";
+			$data .= ",information_sessions:";
+			$data .= $IS_linked;
+			$data .= ", rooms:".$rooms; 
 			$data.= "}";
 		} else $data.="{}";
 		return $data;
@@ -1037,7 +1126,7 @@ class SelectionJSON{
 	 * @return string JSON array containing ISData objects (but without partners attribute)
 	 */
 	public static function getJSONAllISWithHostAssignedNotLinkedToEC(){
-		$all_free_IS = PNApplication::$instance->selection->getAllISNotLinkedToEC();
+		$all_free_IS = PNApplication::$instance->selection->getAllISWithHostAssignedNotLinkedToEC();
 		$r = "[";
 		if($all_free_IS <> null){
 			$first = true;
@@ -1045,7 +1134,6 @@ class SelectionJSON{
 				if(!$first)
 					$r .= ", ";
 				$first = false;
-				$r .= "{";
 				$r.= "{id:".json_encode($data["id"]).", ";
 				$r.= "geographic_area:".json_encode($data["geographic_area"]);
 				$r.= ", date:".json_encode($data["date"]);

@@ -18,7 +18,7 @@ class page_IS_profile extends selection_page {
 	?>
 		<div id = "IS_profile_container" style = "width:100%; height:100%">			
 			<div id = "page_header">
-				<?php if($hide_back == true){?>
+				<?php if($hide_back != "true"){?>
 				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/IS/main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
 				<?php }?>
 				<div class = "button_verysoft" id = "save_IS_button"><img src = '<?php echo theme::$icons_16["save"];?>' /> <b>Save</b></div>
@@ -28,7 +28,7 @@ class page_IS_profile extends selection_page {
 		</div>
 		
 	<?php
-		$this->IS_profile($page,"IS_profile_".$name,$id,"save_IS_button","remove_IS_button");
+		$this->IS_profile($page,"IS_profile_".$name,$id,"save_IS_button","remove_IS_button",$read_only);
 	}
 	
 	/**
@@ -46,7 +46,7 @@ class page_IS_profile extends selection_page {
 		$can_read = PNApplication::$instance->user_management->has_right("see_information_session_details",true);
 		if(!$can_read)
 			return;
-		if($read_only == true){
+		if($read_only == "true"){
 			$can_add = false;
 			$can_edit = false;
 			$can_remove = false;

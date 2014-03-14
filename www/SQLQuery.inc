@@ -1297,6 +1297,8 @@ class SQLQuery {
 			$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), null, $column);
 			if ($err <> null)
 				throw new Exception("Access denied: invalid lock (".$err.")");
+			else 
+				$lock = $lock_id;
 		} else {
 			$lock = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, true);
 			if ($lock == null)
@@ -1473,7 +1475,8 @@ class SQLQuery {
 		foreach ($t->_key_submodels as &$sm)
 			$sm->createTables($id);
 		// unlock the table
-		DataBaseLock::unlock($lock);
+		if($lock_id == null)
+			DataBaseLock::unlock($lock);
 		// events
 		if ($id <> 0) {
 			$i = 0;
@@ -1530,7 +1533,7 @@ class SQLQuery {
 				if ($sub_model_instance == null)
 					throw new Exception("Try to remove data from a table in a sub data model: no sub data model specified");
 			}
-			require_once("component/data_model/DataBaseLock.inc");
+			require_once("component/data_model/DataBaseLock.inc");			
 			$locks = array();
 			$to_remove = array();
 			$to_update = array();

@@ -772,10 +772,19 @@ function createTooltip(element, content) {
 	var ww = getWindowWidth();
 	if (x <= ww/2) {
 		content.className = "tooltip";
+		if (w < 44) {
+			x = x-22+Math.floor(w/2);
+			if (x < 0) x = 0;
+		}
 		content.style.left = x+"px";
 	} else {
 		content.className = "tooltip_right";
-		content.style.right = (ww-(x+w))+"px";
+		x = (ww-(x+w));
+		if (w < 44) {
+			x = x-22+Math.floor(w/2);
+			if (x >= ww) x = ww-1;
+		}
+		content.style.right = x+"px";
 	}
 	content.style.top = (absoluteTop(element)+element.offsetHeight)+"px";
 	removeTooltip();

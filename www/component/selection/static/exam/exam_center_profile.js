@@ -1,4 +1,4 @@
-function exam_center_profile(id, config_name, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_button_id,remove_button_id,db_lock){
+function exam_center_profile(id, config_name, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_button_id,remove_button_id,db_lock,config_name_room){
 	if(typeof(container) == "string") container = document.getElementById(container);
 	var t = this;
 	if(db_lock)
@@ -6,10 +6,11 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 	else
 		t.db_lock = null;
 	t.table = document.createElement("table");
-	t.div_header = document.createElement("div");
 	t.div_address = document.createElement("div");
 	t.div_partners = document.createElement("div");
 	t.div_name = document.createElement("div");
+	t.div_IS_linked = document.createElement("div");
+	t.div_room = document.createElement("div");
 	
 	t.resetAll = function(locker, update_partners_contact_points){
 		container.removeChild(t.table);
@@ -23,7 +24,7 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 			t.select_address.reset();
 			t.select_other_partners.reset();
 		}
-		
+		t.manage_rooms.reset();
 		if(locker) unlock_screen(locker);
 		t._lockDatabase();
 	};
@@ -37,6 +38,8 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 		t._setAddressField();
 		t._setOtherPartnersField();
 		if(config_name) t._setCustomNameField();
+		t._setISLinkedField();
+		t._setRooms();
 		t._setLayout();
 		t._lockDatabase();
 	};
@@ -67,51 +70,39 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 		t.center_name = new IS_ExamCenter_name(t.div_name,data.name,can_edit,"Exam center name");
 	};
 	
+	t._setRooms = function(){
+		t.manage_rooms = new manage_exam_center_room(t.div_room,data.rooms,can_edit,config_name_room);
+	};
+	
+	t._setISLinkedField = function(){
+		t.IS_linked = new center_IS_link(t.div_IS_linked,data.information_sessions);
+	};
+	
 	t._setLayout = function(){
-//		var tr1 = document.createElement("tr");
-		var tr2 = document.createElement("tr");
-		var tr3 = document.createElement("tr");
-//		var tr4 = document.createElement("tr");
-//		var tr5 = document.createElement("tr");
-//		var tr6 = document.createElement("tr");
-//		var td1 = document.createElement("td");
-		
-//		td1.appendChild(t.div_header);
-//		td1.colSpan = 2;
-//		tr1.appendChild(td1);
-		
+		var tr1 = document.createElement("tr");
+		var tr2 = document.createElement("tr");		
+		var td11 = document.createElement("td");
+		var td12 = document.createElement("td");
+		var td13 = document.createElement("td");
 		var td21 = document.createElement("td");
 		var td22 = document.createElement("td");
-		td21.appendChild(t.div_address);
-		td22.appendChild(t.div_partners);
-//		td22.rowSpan = 5;
-		td22.style.verticalAlign = "top";
+		tr1.appendChild(td11);
+		tr1.appendChild(td12);
+		tr1.appendChild(td13);
 		tr2.appendChild(td21);
 		tr2.appendChild(td22);
-		
-		var td31 = document.createElement("td");
-		var td32 = document.createElement("td");
-		td31.appendChild(t.div_name);
-		// td31.style.textAlign = "center";
-		tr3.appendChild(td31);
-		tr3.appendChild(td32);
-		
-//		var td41 = document.createElement("td");
-//		var td42 = document.createElement("td");
-//		td41.appendChild(t.div_date);
-//		tr4.appendChild(td41);
-//		tr4.appendChild(td42);
-//		
-//		var td51 = document.createElement("td");
-//		var td52 = document.createElement("td");
-//		td51.appendChild(t.div_statistics);
-//		td51.style.verticalAlign = "top";
-//		tr5.appendChild(td51);
-//		tr5.appendChild(td52);
-		
-//		var td61 = document.createElement("td");
-		// var td62 = document.createElement("td");
-		
+		t.table.appendChild(tr1);
+		t.table.appendChild(tr2);
+		td13.rowSpan = 2;
+		td13.style.verticalAlign = "top";
+		t.table.style.marginLeft = "15px";
+		container.appendChild(t.table);
+		td11.appendChild(t.div_address);
+		td12.appendChild(t.div_IS_linked);
+		td13.appendChild(t.div_partners);
+		td21.appendChild(t.div_name);
+		td22.appendChild(t.div_room);
+
 		var button_remove = document.getElementById(remove_button_id);
 		if(can_remove && data.id != -1 && data.id != "-1"){
 			// td61.appendChild(button_remove);
@@ -137,19 +128,6 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 			button_save.style.position = 'absolute';
 			button_save.style.top = '-10000px';
 		}
-//		tr6.appendChild(td61);
-		// tr6.appendChild(td62);
-		
-//		t.table.appendChild(tr1);
-		t.table.appendChild(tr2);
-		t.table.appendChild(tr3);
-//		t.table.appendChild(tr4);
-//		t.table.appendChild(tr5);
-//		t.table.appendChild(tr6);
-//		
-		t.table.style.marginLeft = "15px";
-		
-		container.appendChild(t.table);
 	};
 	
 	/**
@@ -317,7 +295,9 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 	require(["popup_window.js",
 	         "select_address.js",
 	         "select_other_partners.js",
-	         "IS_ExamCenter_name.js"
+	         "IS_ExamCenter_name.js",
+	         "center_IS_link.js",
+	         "manage_exam_center_room.js"
 	         ],function(){
 		t._init();
 	});

@@ -3,7 +3,7 @@ require_once("/../selection_page.inc");
 require_once("component/selection/SelectionJSON.inc");
 class page_exam_convert_IS_into_center extends selection_page {
 	
-	public function get_required_rights() {return array("see_exam_subject");}
+	public function get_required_rights() {return array("see_exam_center_detail","see_information_session_details");}
 	
 	public function execute_selection_page(&$page) {
 		//Get the locks if already exist
@@ -12,23 +12,27 @@ class page_exam_convert_IS_into_center extends selection_page {
 		$lock_ECIS = @$_GET["lockecis"];
 		//Perform the required actions
 		$EC_id = @$_GET["ec"];
-		$IS_ids = @$_GET["isids"];//this is an array
-		$host_to_add = @$_GET["host"];
+		$IS_ids = @$_GET["is"];//this is an array
+		$host_to_add = @$_GET["ishost"];//ID of the information session from which the host data would be copied
 		$remove_IS_from_center = @$_GET["remove"];
-		$add_IS_to_center = @$_GET["add"];
-		if(isset($EC_id) && isset($IS_id)){
+		if(isset($remove_IS_from_center) || isset($IS_ids) || isset($host_to_add)){
 			if($remove_IS_from_center){
 				//remove the IS from the ExamCenterInformationSession table
-				PNApplication::$instance->selection->unlinkISfromEC($EC_id,$IS_ids[0],$lock_ECIS);
-			} else if($add_IS_to_center){
-				//add the IS to the ExamCenterInformationSession table
-				PNApplication::$instance->selection->linkIStoEC($EC_id, $IS_ids,$lock_ECIS);
-				//set the host if needed
-				if($host_to_add <> null){
-					//TODO set the center name with host data
+				PNApplication::$instance->selection->unlinkISfromEC($EC_id,$IS_ids[0]);
+			} else {
+				if($EC_id == null && isset($host_to_add)){
+					//Exam center must be created from the host
+					$EC_id = PNApplication::$instance->selection->createExamCenterFromISWithHost($host_to_add,null,$lock_exam_center);
+					//Link the IS_host to the exam center
+					if($EC_id != false)
+						PNApplication::$instance->selection->linkIStoEC($EC_id, $host_to_add,$lock_ECIS);
 				}
+				//Once the exam center is created, we can add the other IS
+				if(isset($IS_ids))
+					//add the IS to the ExamCenterInformationSession table
+					PNApplication::$instance->selection->linkIStoEC($EC_id, $IS_ids,$lock_ECIS);
 			}
-		}//else nothing can be done
+		}
 		
 		
 		
@@ -45,8 +49,8 @@ class page_exam_convert_IS_into_center extends selection_page {
 		<?php
 		/** Check the rights from user management and steps*/
 		$from_step_exam_center = PNApplication::$instance->selection->getRestrictedRightsFromStepsAndUserManagement("exam_center", "manage_exam_center", "manage_exam_center", "manage_exam_center");
-		if($from_steps[1])
-			PNApplication::warning($from_steps[2]);
+		if($from_step_exam_center[1])
+			PNApplication::warning($from_step_exam_center[2]);
 		$can_add_exam_center = $from_step_exam_center[0]["add"];
 		$can_remove_exam_center = $from_step_exam_center[0]["remove"];//No use on this page
 		$can_edit_exam_center = $from_step_exam_center[0]["edit"];
@@ -54,6 +58,7 @@ class page_exam_convert_IS_into_center extends selection_page {
 		if(!$can_add_exam_center && !$can_edit_exam_center)//Nothing can be done
 			return;
 		//Lock the IS and the EC tables, if not already the case
+		require_once("component/data_model/DataBaseLock.inc");
 		$sm = PNApplication::$instance->selection->getCampaignId();
 		if(!isset($lock_exam_center))
 			$lock_exam_center = $page->performRequiredLocks("ExamCenter",null,null,$sm);//Make sure the EC list is up to date
@@ -77,14 +82,21 @@ class page_exam_convert_IS_into_center extends selection_page {
 			return;
 		}
 		//Get the data
-		$all_IS = SelectionJSON::getJSONAllISWithHostAssignedNotLinkedToEC();
+		$all_free_IS = SelectionJSON::getJSONAllISWithHostAssignedNotLinkedToEC();
 		$all_EC = SelectionJSON::getJSONAllExamCenters();
+		$all_IS_names = SelectionJSON::getJSONAllInformationsSessionsNames();
 		?>
 		<script type='text/javascript'>
 			require("convert_IS_into_center.js",function(){
-				var all_IS = <?php echo $all_IS;?>;
-				var all_EC = <?php  echo $all_EC;?>;
-				var db_locks = {EC:<?php echo json_encode($lock_exam_center);?>,IS:<?php echo json_encode($lock_information_session)?>,ECIS:<?php echo json_encode($lock_ECIS);?>};
+				new convert_IS_into_center(
+						"sections_container",
+						<?php echo json_encode($can_add_exam_center);?>,
+						<?php echo json_encode($can_edit_exam_center);?>,
+						<?php echo $all_free_IS;?>,
+						<?php echo $all_IS_names;?>,
+						<?php  echo $all_EC;?>,
+						{EC:<?php echo json_encode($lock_exam_center);?>,IS:<?php echo json_encode($lock_information_session)?>,ECIS:<?php echo json_encode($lock_ECIS);?>}
+						);
 			});
 		
 		</script>

@@ -87,3 +87,21 @@ function ExamCenterISLinked(information_sessions){
 function ExamCenterPartnersContactPoints(contact_points){
 	this.contact_points = contact_points;
 }
+
+/**
+ * @param {Array} rooms array of ExamCenterRoom objects
+ */
+function ExamCenterRooms(rooms){
+	this.rooms = rooms;
+}
+
+/**
+ * @param {Number} id the room id
+ * @param {String} name the room name
+ * @param {Number} capacity the number of applicants that can be assigned to this room per session
+ */
+function ExamCenterRoom(id, name, capacity){
+	this.id = id;
+	this.name = name;
+	this.capacity = capacity;
+}

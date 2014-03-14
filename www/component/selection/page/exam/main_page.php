@@ -17,14 +17,16 @@ class page_exam_main_page extends selection_page {
 		?>
 		<div id = "container" style = "width:100%; height:100%">
 			<div id = "page_header" icon = "/static/selection/exam/exam_16.png" title = "Entrance Examinations">
-				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/selection_main_page');"><img src = "<?php echo theme::$icons_16['back'];?>"/> Back to selection</div>
-				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/exam/sessions');">Exam Sessions</div>
-				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/exam/results');">Exam Results</div>
+				<a class = "button_verysoft" href = "/dynamic/selection/page/selection_main_page"><img src = "<?php echo theme::$icons_16['back'];?>"/> Back to selection</a>
+				<a class = "button_verysoft" href = "/dynamic/selection/page/exam/center_main_page"><img src = "/static/selection/exam/exam_center_16.png" style = "vertical-align:bottom;"/> Exam centers</a>
+				<a class = "button_verysoft" href = "/dynamic/selection/page/exam/sessions">Exam Sessions</a>
+				<a class = "button_verysoft" href = "/dynamic/selection/page/exam/results">Exam Results</a>
 			</div>
 			<div id = "page_content" style = "overflow:auto" layout = "fill">
 				<div id = "exam_content"></div>
 				<div id = "eligibility_rules_content"></div>
 				<a href = "/dynamic/selection/page/exam/center_profile">test ec profile</a>
+				<a href = "/dynamic/selection/page/exam/convert_IS_into_center">test convert</a>
 			</div>
 		</div>
 		<script type = "text/javascript">

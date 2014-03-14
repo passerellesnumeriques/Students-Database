@@ -643,11 +643,13 @@ class selection extends Component {
 	
 	/**
 	 * Check if a given IS has a host set
+	 * This method is used by the IS status service so must use bypassSecurity
 	 * @param number $IS_id
 	 * @return boolean
 	 */
 	public function isHostSetToIS($IS_id){
 		$has_host = SQLQuery::create()
+				->bypassSecurity()
 				->select("InformationSessionPartner")
 				->field("host")
 				->whereValue("InformationSessionPartner", "host", true)
@@ -659,10 +661,12 @@ class selection extends Component {
 	
 	/**
 	 * Get all the IS with no host set
+	 * This method is used by the IS status service so must use bypassSecurity
 	 * @return array | null if any IS has no host, an array is returned containing arrays: array(id=>, name=>)
 	 */
 	public function getAllISWithNoHost(){
 		$all_IS = SQLQuery::create()
+			->bypassSecurity()
 			->select('InformationSession')
 			->field("InformationSession","id")
 			->field("InformationSession","name")
@@ -1706,6 +1710,7 @@ class selection extends Component {
 		$linked_IS = SQLQuery::create()
 			->select("ExamCenterInformationSession")
 			->field("ExamCenterInformationSession","information_session")
+			->distinct()
 			->executeSingleField();
 		
 		$q = SQLQuery::create()
@@ -1716,7 +1721,7 @@ class selection extends Component {
 		SelectionJSON::InformationSessionSQL($q);
 		if($linked_IS <> null){
 			$q
-				->join("ExamCenterInformationSession", "InformationSession", array("information_session" => "id"))
+				->join("InformationSession","ExamCenterInformationSession", array("id" => "information_session"))
 				->whereNotIn("InformationSession","id",$linked_IS);
 		}
 		return $q->execute();
@@ -1726,10 +1731,9 @@ class selection extends Component {
 	 * Unlink an information session from an exam center
 	 * @param number $EC_id exam center id
 	 * @param number $IS_id information session id
-	 * @param number $lock_ECIS lock of the table ExamCenterInformationSession
 	 * @return boolean true if well performed, else false
 	 */
-	public function unlinkISfromEC($EC_id, $IS_id, $lock_ECIS){
+	public function unlinkISfromEC($EC_id, $IS_id){
 		SQLQuery::startTransaction();
 		try {
 			SQLQuery::create()
@@ -1775,6 +1779,197 @@ class selection extends Component {
 			SQLQuery::commitTransaction();
 			return true;
 		}
+	}
+	
+	/**
+	 * Set an organization as host for an exam center, from an information session host partner
+	 * The host is added to the table InformationSessionPartner as host with the same host_address, and all the contact points linked to this partner are also copied
+	 * @param number $EC_id exam center id
+	 * @param number $IS_host information session id
+	 * @param boolean $update_name true if the name of the exam center must be updated with the new geographic area text (the one from host address)
+	 * @param number | null $lock_exam_center lock id for the ExamCenter table. Only used in the case of update_name == true
+	 * @return boolean true if well performed, else false
+	 */
+	public function setECHostFromIS($EC_id,$IS_host,$update_name = false, $lock_exam_center = null){
+		SQLQuery::startTransaction();
+		try {
+			//Select all the data related to the host into the database
+			$q_partner_data = SQLQuery::create()
+				->select("InformationSessionPartner")
+				->join("InformationSessionPartner","InformationSessionContactPoint",array("information_session"=>"information_session","organization"=>"organization"))
+				->whereValue("InformationSessionPartner","information_session",$IS_host)
+				->whereValue("InformationSessionPartner", "host", true);
+			SelectionJSON::ISPartnersSQL($q_partner_data);
+			$partner_data = $q_partner_data->execute();
+			if($partner_data <> null){
+				//Prepare the insert into the DB
+				$area_id = PNApplication::$instance->contact->getAddressGeographicAreaAttribute($partner_data[0]["host_address"]);
+				SQLQuery::create()->updateByKey('ExamCenter', $EC_id, array("geographic_area" => $area_id));
+				$row_partner_table = array(
+						"organization" => $partner_data[0]["organization"],
+						"host" => true,
+						"host_address" => $partner_data[0]["host_address"],
+						"exam_center" => $EC_id
+				);
+				SQLQuery::create()->insert("ExamCenterPartner", $row_partner_table);
+				if($partner_data[0]["contact_point"] <> null){
+					//rows contacts points
+					$rows_cp = array();
+					foreach ($partner_data as $p){
+						array_push($rows_cp, array(
+							"exam_center" => $EC_id,
+							"organization" => $p["organization"],
+							"people" => $p["contact_point"]
+						));
+					}
+					SQLQuery::create()->insertMultiple("ExamCenterContactPoint", $rows_cp);
+				}
+				
+				if($partner_data[0]["host_address"] <> null && $update_name){
+					//set the center name with the host address data
+					$name = PNApplication::$instance->geography->getGeographicAreaText($area_id);
+					if($name <> null)
+						SQLQuery::create()
+						->updateByKey("ExamCenter",$EC_id,array("name" => $name),$lock_exam_center);
+				}				
+			}
+		} catch (Exception $e){
+			PNApplication::error($e);
+		}
+		if(PNApplication::has_errors()){
+			SQLQuery::rollbackTransaction();
+			return false;
+		} else {
+			SQLQuery::commitTransaction();
+			return true;
+		}
+	}
+	
+	/**
+	 * Create an exam center from an information session with a host set, and set this host has the exam center host also
+	 * @param number $IS_id
+	 * @param string | null $name if the name shall be customized
+	 * @param string | null $lock_id the lock id of the ExamCenter table 
+	 * @return boolean|number false if not well performed, else the new exam center id
+	 */
+	public function createExamCenterFromISWithHost($IS_id, $name = null, $lock_id = null){
+		try {
+			$continue = true;
+			//The name will be updated by setECHostFromIS method
+			$host_address = SQLQuery::create()
+				->bypassSecurity()
+				->select("InformationSessionPartner")
+				->field('InformationSessionPartner',"host_address")
+				->whereValue("InformationSessionPartner", 'host', true)
+				->whereValue("InformationSessionPartner", "information_session", $IS_id)
+				->executeSingleValue();
+			$area_id = PNApplication::$instance->contact->getAddressGeographicAreaAttribute($host_address);
+			SQLQuery::startTransaction();
+			$id = SQLQuery::create()
+				->insert("ExamCenter", array(
+					"name" => "temp",
+					"geographic_area" => $area_id
+				),$lock_id);
+			
+			
+		} catch (Exception $e){
+			PNApplication::error($e);
+			$continue = false;
+		}
+		if($continue){
+			//Add the host
+			$this->setECHostFromIS($id, $IS_id, true, $lock_id);
+		}
+		if(PNApplication::has_errors()){
+			SQLQuery::rollbackTransaction();
+			$this->updateAllSteps();
+			return false;
+		} else {
+			SQLQuery::commitTransaction();
+			$this->updateAllSteps();
+			return $id;
+		}
+	}
+	
+	/**
+	 * Get all the EC with no host set
+	 * This method is used by EC status service so must use bypassSecurity
+	 * @return array | null if any EC has no host, an array is returned containing arrays: array(id=>, name=>)
+	 */
+	public function getAllECWithNoHost(){
+		$all_EC = SQLQuery::create()
+		->bypassSecurity()
+		->select('ExamCenter')
+		->field("ExamCenter","id")
+		->field("ExamCenter","name")
+		->execute();
+		$EC_with_no_host = array();
+		if($all_EC <> null){
+			foreach ($all_EC as $ec){
+				if(!$this->isHostSetToEC($ec["id"]))
+					array_push($IS_with_no_host, $ec);
+			}
+			$EC_with_no_host = count($EC_with_no_host) > 0 ? $EC_with_no_host : null;
+			return $EC_with_no_host;
+		} else
+			return null;
+	
+	}
+	
+	
+	/**
+	 * Check if a given EC has a host set
+	 * This method is used by EC status service so must use bypassSecurity
+	 * @param number $EC_id
+	 * @return boolean
+	 */
+	public function isHostSetToEC($EC_id){
+		$has_host = SQLQuery::create()
+		->bypassSecurity()
+		->select("ExamCenterPartner")
+		->field("host")
+		->whereValue("ExamCenterPartner", "host", true)
+		->whereValue("ExamCenterPartner", "exam_center", $EC_id)
+		->executeSingleValue();
+		$has_host = $has_host == null ? false : $has_host;
+		return $has_host;
+	}
+	
+	/**
+	 * Get the applicants assigned to a given exam center room
+	 * This method uses bypassSecurity method, because the user may be allowed to see exam center data but not applicant data
+	 * @param number $id the room center ID
+	 * @return Array | NULL array of applicant_ids if any, else NULL
+	 */
+	public function getApplicantsAssignedToRoom($id){
+		$applicants = SQLQuery::create()
+			->bypassSecurity()
+			->select("Applicant")
+			->field("Applicant","applicant_id")
+			->whereValue("Applicant", "exam_room", $id)
+			->executeSingleField();
+		return $applicants;
+	}
+	
+	/**
+	 * Get the applicants assigned to the given exam center rooms
+	 * @param array $ids all the campaign ids
+	 * @return array associative array(room_id => array of applicant_ids if any, else NULL)
+	 */
+	public function getApplicantsAssignedToRooms($ids){
+		$applicants = array();
+		foreach($ids as $id){
+			$applicants[$id] = $this->getApplicantsAssignedToRoom($id);
+		}
+		return $applicants;
+	}
+	
+	public function saveExamCenter(){
+		//TODO before removing any room, check that no applicant was assigned!
+	}
+	
+	public function removeExamCenter($id){
+		//TODO check that no room has any applicant assigned
 	}
 }
 ?>

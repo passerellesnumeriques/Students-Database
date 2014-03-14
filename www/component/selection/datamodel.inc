@@ -211,7 +211,21 @@
 		->addReadAccess("see_exam_center_detail", true)
 		->addWriteAccess("manage_exam_center", true)
 		->addRemoveAccess("manage_exam_center", true)
-		->addInsertAccess("manage_exam_center", true);
+		->addInsertAccess("manage_exam_center", true)
+		->setDisplayHandler(null,new datamodel\FieldsDisplayHandler("Exam Center","Exam Center",
+								array(
+										"name" => "Name",
+								),
+								array(
+										"name",
+								),"selection"
+						))
+		->onInsert(function($fields,$id,$sub_model_instance) {
+			try {
+				PNApplication::$instance->news->post("selection", null, array("campaign".$sub_model_instance), "New Exam Center: <i>".$fields["name"]."</i>");
+			} catch (Exception $e) { PNApplication::error($e); }
+		})
+		;
 	
 	$sm->addTable("ExamCenterPartner")
 		->addForeignKey("exam_center","ExamCenter",true,false,true,false)

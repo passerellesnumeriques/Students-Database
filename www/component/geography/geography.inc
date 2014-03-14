@@ -24,7 +24,7 @@ class geography extends Component {
 	 * @param number $area_id
 	 * @return string
 	 */
-	public function get_geographic_area_text($area_id) {
+	public function getGeographicAreaText($area_id) {
 		$text = "";
 		do {
 			$area = SQLQuery::create()->select("GeographicArea")->where("id",$area_id)->executeSingleRow();

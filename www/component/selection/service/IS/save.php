@@ -112,7 +112,7 @@ class service_IS_save extends Service{
 						unset($event["id"]);
 					$event["calendar_id"] = PNApplication::$instance->selection->getCalendarId();
 					$event["organizer"] = "Selection";
-					$event["title"] = PNApplication::$instance->geography->get_geographic_area_text($data["geographic_area"]);
+					$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 					if (!$insert_IS) {
 						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
 						$event["app_link_name"] = "This event is an Information Session: click to see it";
@@ -125,7 +125,7 @@ class service_IS_save extends Service{
 				}
 				$data["date"] = $event_id;
 			} else if($update_event && $everything_ok){
-				$event["title"] = PNApplication::$instance->geography->get_geographic_area_text($data["geographic_area"]);
+				$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 				if (!$insert_IS) {
 					$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
 					$event["app_link_name"] = "This event is an Information Session: click to see it";
