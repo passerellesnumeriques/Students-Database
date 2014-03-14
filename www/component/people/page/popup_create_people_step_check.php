@@ -82,6 +82,8 @@ class page_popup_create_people_step_check extends Page {
 										break;
 									}
 							}
+							// TODO
+							/*
 							if (count($missing_types) > 0) {
 								echo "<br/>";
 								echo "<input type='radio' name='$id' value='".$s["id"]."'/> Reuse this person, and make it as ";
@@ -92,6 +94,7 @@ class page_popup_create_people_step_check extends Page {
 									echo $pi->getName();
 								}
 							}
+							*/
 							echo "</li>";
 						}
 						array_push($ids, $id);
@@ -135,8 +138,9 @@ class page_popup_create_people_step_check extends Page {
 					if (value == 'create') {
 						peoples.push(to_include[i]);
 					} else {
-						to_include[j].reuse_id = value;
-						peoples.push(to_invalud[j]);
+						// TODO
+						//to_include[i].reuse_id = value;
+						//peoples.push(to_include[i]);
 					}
 				}
 				send();
