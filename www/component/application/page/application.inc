@@ -3,8 +3,7 @@ theme::css($this, "application.css");
 
 // mandatory part
 $this->require_javascript("calendar.js");
-?>
-<script type='text/javascript'>
+?><script type='text/javascript'>
 window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
 
 window.top.calendar_manager = new CalendarManager();
@@ -31,8 +30,8 @@ window.top.pnapplication.onlogout.add_listener(function() {
 	});
 	window.top.calendar_manager = null;
 });
-</script>
-<?php
+document.body.style.overflow = "hidden";
+</script><?php
 if (isset($_GET["page"])) {
 	// only the frame
 	echo "<iframe id='pn_application_content' name='pn_application_content' src='".$_GET["page"]."' style='width:100%;height:100%;border:none;'></iframe>";

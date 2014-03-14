@@ -14,15 +14,32 @@ class service_picture extends Service {
 			}
 		}
 		$people = SQLQuery::create()->select("People")->where("id",$people_id)->executeSingleRow();
+
+		$max_height = isset($_GET["max_height"]) ? intval($_GET["max_height"]) : -1;
+		$max_width = isset($_GET["max_width"]) ? intval($_GET["max_width"]) : -1;
+		header('Cache-Control: public', true);
+		header('Pragma: public', true);
+		$date = date("D, d M Y H:i:s",time());
+		header('Date: '.$date, true);
+		$expires = time()+24*60*60;
+		header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
 		
 		if ($people["picture"] <> null) {
 			$data = PNApplication::$instance->storage->get_data($people["picture"]);
+			if ($max_width == -1 && $max_height == -1) {
+				header("Content-Type: image/jpeg"); // TODO
+				echo $data;
+				return;
+			}
 			$img = imagecreatefromstring($data);
 		} else {
+			if ($max_width == -1 && $max_height == -1) {
+				header("Content-Type: image/jpeg");
+				readfile(dirname(__FILE__)."/../static/default_".($people["sex"] == "F" ? "female" : "male").".jpg");
+				return;
+			}
 			$img = imagecreatefromjpeg(dirname(__FILE__)."/../static/default_".($people["sex"] == "F" ? "female" : "male").".jpg");
 		}
-		$max_height = isset($_GET["max_height"]) ? intval($_GET["max_height"]) : -1;
-		$max_width = isset($_GET["max_width"]) ? intval($_GET["max_width"]) : -1;
 		if ($max_height <> -1 || $max_width <> -1) {
 			$h = imagesy($img);
 			$w = imagesx($img);
@@ -45,12 +62,6 @@ class service_picture extends Service {
 		}
 		
 		//header("Content-Type: image/jpeg");
-		header('Cache-Control: public', true);
-		header('Pragma: public', true);
-		$date = date("D, d M Y H:i:s",time());
-		header('Date: '.$date, true);
-		$expires = time()+24*60*60;
-		header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
 		imagejpeg($img);
 	}
 }

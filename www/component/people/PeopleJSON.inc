@@ -35,7 +35,8 @@ class PeopleJSON {
 			->field($alias,"last_name","last_name")
 			->field($alias,"middle_name","middle_name")
 			->field($alias,"sex","sex")
-			->field($alias,"birth","birthdate");
+			->field($alias,"birth","birthdate")
+			->field($alias,"picture_version","picture_version");
 	}
 	
 	/**
@@ -51,7 +52,25 @@ class PeopleJSON {
 		$data .= ", last_name:".json_encode($row["last_name"]);
 		$data .= ", middle_name:".json_encode($row["middle_name"]);
 		$data .= ", sex:".json_encode($row["sex"]);
-		$data .= ", birthdate:".json_encode($row["birthdate"])."}";
+		$data .= ", birthdate:".json_encode($row["birthdate"]);
+		$data .= ", picture_version:".json_encode($row["picture_version"]);
+		$data .= "}";
+		return $data;
+	}
+	/**
+	 * Return a list of People JSON Object, compatible with the People2DB method
+	 * @param SQLQuery $q
+	 * @param Array $rows result of execute from $q
+	 * @return string
+	 */
+	public static function Peoples($q, $rows){
+		$data = "[";
+		$first = true;
+		foreach ($rows as $row) {
+			if ($first) $first = false; else $data .= ",";
+			$data .= self::People($q, $row);
+		}
+		$data .= "]";
 		return $data;
 	}
 	
