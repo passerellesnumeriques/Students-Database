@@ -940,7 +940,7 @@ class SQLQuery {
 					$name = $this->getColumnName($t, $field);
 					throw new Exception($name.": ".$e->getMessage());
 				}
-				if ($col->unique) {
+				if ($col->unique && !($col instanceof PrimaryKey) && !($col instanceof ForeignKey)) {
 					$q = SQLQuery::create()->bypassSecurity()->noWarning()->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field]);
 					$where = "";
 					if ($t->getPrimaryKey() <> null) {
@@ -1353,7 +1353,12 @@ class SQLQuery {
 		// check we are allowed
 		if (!$this->bypass_security) {
 			if (!$t->mayInsert()) throw new Exception("Access denied: add data to table ".$t->getName());
-			if (!$t->acceptInsert($fields_values)) throw new Exception("Access denied: add data to table ".$t->getName()." denied for those values");
+			if (!$t->acceptInsert($fields_values)) {
+				$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
+				foreach ($fields_values as $field=>$value)
+					$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+				throw new Exception($msg);
+			}
 		}
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
@@ -1447,8 +1452,14 @@ class SQLQuery {
 		// check we are allowed
 		if (!$this->bypass_security) {
 			if (!$t->mayInsert()) throw new Exception("Access denied: add data to table ".$t->getName());
-			foreach ($rows as $fields_values)
-				if (!$t->acceptInsert($fields_values)) throw new Exception("Access denied: add data to table ".$t->getName()." denied for those values");
+			foreach ($rows as $fields_values) {
+				if (!$t->acceptInsert($fields_values)) {
+					$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
+					foreach ($fields_values as $field=>$value)
+						$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+					throw new Exception($msg);
+				}
+			}
 		}
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
@@ -2042,17 +2053,17 @@ class TablesToUpdate {
 		$this->list[$table][$sub_model][$row_key][$column] = $value;
 	}
 	
-	public function execute() {
+	public function execute($only_insert = false) {
 		$tables_keys = array();
 		foreach ($this->list as $table_name=>$table_content) {
 			foreach ($table_content as $sub_model=>$sub_model_content) {
 				$inserts = array();
 				foreach ($sub_model_content as $row_key=>$row_content) {
-					if ($row_key == null || intval($row_key) < 0) {
+					if ($row_key == null || intval($row_key) < 0 || $only_insert) {
 						if (!isset($inserts[$row_key]))
 							$inserts[$row_key] = array();
 						foreach ($row_content as $col_name=>$value)
-							$insert[$row_key][$col_name] = $value;
+							$inserts[$row_key][$col_name] = $value;
 					} else {
 						SQLQuery::create()->updateByKey($table_name, $row_key, $row_content);
 					}
@@ -2063,10 +2074,12 @@ class TablesToUpdate {
 					$ids = SQLQuery::create()->insertMultiple($table_name, $rows);
 					if (!isset($tables_keys[$table_name]))
 						$tables_keys[$table_name] = array();
-					$tables_keys[$table_name][$sub_model] = array();
-					$i = 0;
-					foreach ($inserts as $row_key => $row)
-						$tables_keys[$table_name][$sub_model][$row_key] = $ids[$i++];
+					if (count($ids) > 0) {
+						$tables_keys[$table_name][$sub_model] = array();
+						$i = 0;
+						foreach ($inserts as $row_key => $row)
+							$tables_keys[$table_name][$sub_model][$row_key] = $ids[$i++];
+					}
 				}
 			}
 		}

@@ -108,6 +108,22 @@ $model->addTable("People")
 		}
 		return $final;
 	})
+	->addInsertFilter(function($values) {
+		if (!isset($values["types"])) return false;
+		$types = PNApplication::$instance->people->parseTypes($values["types"]);
+		require_once("PeopleTypePlugin.inc");
+		$types_ok = array();
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeopleTypePlugin)) continue;
+				if (!in_array($pi->getId(), $types)) continue;
+				if (!$pi->canRemove()) continue;
+				if (in_array($pi->getId(), $types_ok)) continue;
+				array_push($types_ok, $pi->getId());
+			}
+		if (count($types_ok) <> count($types)) return false;
+		return true;
+	})
 	;
 	
 include "datamodel_display.inc";

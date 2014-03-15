@@ -4,8 +4,8 @@ class page_popup_create_people_step_check extends Page {
 	public function get_required_rights() { return array(); }
 	
 	public function execute() {
-		$peoples = json_decode($_POST["input"], true);
-		$peoples = $peoples["peoples"];
+		$input = json_decode($_POST["input"], true);
+		$peoples = $input["peoples"];
 		$ok = array();
 		$to_check = array();
 		foreach ($peoples as $people) {
@@ -44,7 +44,9 @@ class page_popup_create_people_step_check extends Page {
 		function send() {
 			if (!popup.freezer) popup.freeze();
 			window.popup.removeAllButtons();
-			postData("popup_create_people_step_creation",{peoples:peoples},window);
+			var data = {peoples:peoples};
+			<?php if (isset($input["ondone"])) echo "data.ondone = ".json_encode($input["ondone"]).";"?>
+			postData("popup_create_people_step_creation",data,window);
 		}
 		<?php 
 		echo "</script>";

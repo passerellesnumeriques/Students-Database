@@ -10,6 +10,8 @@ namespace datamodel {
 		
 		public abstract function generate(&$page, $paths, $values, $prefilled_values, $structure_name);
 		
+		public abstract function createData($paths);
+		
 	}
 	
 }

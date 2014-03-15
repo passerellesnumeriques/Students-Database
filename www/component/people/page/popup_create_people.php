@@ -82,7 +82,9 @@ class page_popup_create_people extends Page {
 				return;
 			}
 			popup.removeAllButtons();
-			postData("popup_create_people_step_check", {peoples:[people]}, window);
+			var data = {peoples:[people]};
+			<?php if (isset($_GET["ondone"])) echo "data.ondone = ".json_encode($_GET["ondone"]).";";?>
+			postData("popup_create_people_step_check", data, window);
 		});
 		popup.addCancelButton();
 		</script>

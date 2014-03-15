@@ -110,8 +110,6 @@ function newDataScreen(&$page, $root_table_name, $sub_model, $fixed_values, $pre
 function dataScreen(&$page, $root_table_name, $sub_model, $values, $prefilled_values, $structure_name) {
 	require_once("component/data_model/DataPath.inc");
 	$paths = DataPathBuilder::searchFrom($root_table_name, $sub_model);
-	//foreach ($paths as $p)
-	//	echo htmlentities($p->getString())."<br/>";
 	$root = DataPathBuilder::buildPathsTree($paths);
 	
 	$sections = array();

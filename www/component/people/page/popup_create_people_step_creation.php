@@ -4,13 +4,14 @@ class page_popup_create_people_step_creation extends Page {
 	public function get_required_rights() { return array(); }
 	
 	public function execute() {
-		$peoples = json_decode($_POST["input"], true);
-		$peoples = $peoples["peoples"];
+		$input = json_decode($_POST["input"], true);
+		$peoples = $input["peoples"];
 		echo "<script type='text/javascript'>window.popup = window.parent.get_popup_window_from_frame(window);</script>";
 		if (count($peoples) == 0) {
 			echo "<div style='background-color:white'>Nobody to create.</div>";
 			echo "<script type='text/javascript'>popup.unfreeze();popup.addCancelButton();</script>";
 		}
+		$this->add_javascript("/static/data_model/DataDisplay.js");
 ?>
 <div id='info' style='background-color:white'></div>
 <script type='text/javascript'>
@@ -26,22 +27,28 @@ foreach ($peoples as $people) {
 ?>];
 function next(index) {
 	if (index == peoples.length) {
-		window.popup.enableClose();
-		// TODO
+		<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."();"?>
+		window.popup.close();
 		return;
 	}
 	var p = peoples[index];
 	if (!p.reuse_id) {
 		var first_name = "";
 		var last_name = "";
-		for (var i = 0; i < p.tables.People.length; ++i)
-			if (p.tables.People[i].name == "First Name") first_name = p.tables.People[i].value;
-			else if (p.tables.People[i].name == "Last Name") last_name = p.tables.People[i].value;
+		for (var i = 0; i < p.length; ++i) {
+			var path = new DataPath(p[i].path);
+			if (path.table != "People") continue;
+			if (typeof p[i].data == 'undefined') continue;
+			for (var j = 0; j < p[i].data.length; ++j) {
+				if (p[i].data[j].name == "First Name") first_name = p[i].data[j].value;
+				else if (p[i].data[j].name == "Last Name") last_name = p[i].data[j].value;
+			}
+		}
 		info.innerHTML = "Creation of "+first_name+" "+last_name;
 		if (peoples.length > 1)
 			info.innerHTML += " ("+(index+1)+"/"+peoples.length+")";
 		layout.invalidate(document.body);
-		service.json("people","create",p,function(res) {
+		service.json("data_model","create_data",{root:"People",paths:p},function(res) {
 			next(index+1);
 		});
 	} else {

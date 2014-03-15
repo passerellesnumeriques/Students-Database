@@ -216,6 +216,37 @@ class ContactsScreen extends datamodel\DataScreen {
 			echo "<script type='text/javascript'>$structure_name.push({path:".json_encode($paths[1]->getString()).",addresses:$var,getValue:function(){return this.addresses.getAddresses();}});</script>";
 	}
 	
+	public function createData($paths) {
+		$contacts = $paths[0]->value;
+		$addresses = $paths[1]->value;
+		for ($i = 0; $i < count($contacts); $i++) if (isset($contacts[$i]["id"])) unset($contacts[$i]["id"]);
+		for ($i = 0; $i < count($addresses); $i++) if (isset($addresses[$i]["id"])) unset($addresses[$i]["id"]);
+		if ($this->type == "people") {
+			$join_table = "People";
+			$join_key = "people";
+		} else {
+			$join_table = "Organization";
+			$join_key = "organization";
+		}
+		require_once("ContactJSON.inc");
+		if (count($contacts) > 0) {
+			$ids = SQLQuery::create()->bypassSecurity()->insertMultiple("Contact", $contacts);
+			$join = array();
+			foreach ($ids as $id)
+				array_push($join, array($join_key=>$paths[0]->columns[$join_key],"contact"=>$id));
+			SQLQuery::create()->bypassSecurity()->insertMultiple($join_table."Contact", $join);
+		}
+		if (count($contacts) > 0) {
+			$list = array();
+			foreach ($addresses as $a) array_push($list, ContactJSON::PostalAddress2DB($a));
+			$ids = SQLQuery::create()->bypassSecurity()->insertMultiple("PostalAddress", $list);
+			$join = array();
+			foreach ($ids as $id)
+				array_push($join, array($join_key=>$paths[0]->columns[$join_key],"address"=>$id));
+			SQLQuery::create()->bypassSecurity()->insertMultiple($join_table."Address", $join);
+		}
+	}
+	
 }
 $model->addDataScreen(new ContactsScreen("people"));
 $model->addDataScreen(new ContactsScreen("organization"));
