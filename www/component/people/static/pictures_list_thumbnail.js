@@ -1,7 +1,7 @@
-function pictures_list_thumbnail(container, people) {
+function pictures_list_thumbnail(container, people, width, height) {
 	var t=this;
-	this.width = 200;
-	this.height = 250;
+	this.width = width;
+	this.height = height;
 	
 	this.div = document.createElement("DIV"); container.appendChild(this.div);
 	this.div.style.display = "inline-block";
@@ -15,6 +15,7 @@ function pictures_list_thumbnail(container, people) {
 	this.picture.style.position = "absolute";
 	this.picture.style.bottom = "0px";
 	this.picture.onload = function() {
+		this._loaded = true;
 		var resize_ratio = 1;
 		var h = this.naturalHeight;
 		var w = this.naturalWidth;
@@ -38,4 +39,29 @@ function pictures_list_thumbnail(container, people) {
 	this.name_container.appendChild(document.createTextNode(people.first_name));
 	this.name_container.appendChild(document.createElement("BR"));
 	this.name_container.appendChild(document.createTextNode(people.last_name));
+	
+	this.setSize = function(width, height) {
+		this.width = width;
+		this.height = height;
+		this.picture_container.style.width = (this.width)+'px';
+		this.picture_container.style.height = (this.height)+'px';
+		if (this.picture._loaded) {
+			var resize_ratio = 1;
+			var h = this.picture.naturalHeight;
+			var w = this.picture.naturalWidth;
+			if (h > t.height) {
+				resize_ratio = t.height/h;
+			}
+			if (w > t.width) {
+				var r = t.width/w;
+				if (r < resize_ratio) resize_ratio = r;
+			}
+			if (resize_ratio != 1) {
+				nw = Math.floor(w*resize_ratio);
+				nh = Math.floor(h*resize_ratio);
+				this.picture.style.width = nw+'px';
+				this.picture.style.height = nh+'px';
+			}
+		}
+	};
 }

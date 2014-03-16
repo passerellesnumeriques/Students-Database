@@ -530,6 +530,10 @@ function createEvent(type, attributes) {
  */
 function triggerEvent(elem, type, attributes) {
 	var evt = createEvent(type, attributes);
+	fireEvent(elem, type, evt);
+}
+
+function fireEvent(elem, type, evt) {
 	if (document.createEvent) {
 		elem.dispatchEvent(evt);
 	} else {

@@ -19,12 +19,13 @@ class service_get_user extends Service {
 		$res = json_decode($data, true);
 		if ($res <> null && isset($res["id"])) {
 			$google_id = $res["id"];
-			$res = SQLQuery::create()
+			$q = SQLQuery::create()
 				->bypassSecurity()
 				->select("GoogleUser")
 				->whereValue("GoogleUser","google_id",$google_id)
-				->join("GoogleUser","Users",array("user"=>"id"))
-				->execute();
+				;
+			PNApplication::$instance->user_management->joinUser($q, "GoogleUser", "user");
+			$res = $q->execute();
 			if (count($res) <> 1) { echo "false"; return; }
 			echo "{profile:".$data.",user:{id:".json_encode($res[0]["user"]).",domain:".json_encode($res[0]["domain"]).",username:".json_encode($res[0]["username"])."}}";
 		}

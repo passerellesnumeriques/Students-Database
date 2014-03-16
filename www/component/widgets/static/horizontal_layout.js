@@ -7,7 +7,7 @@
  * @constructor
  * @param container the container (either the HTMLElement or its id)
  */
-function horizontal_layout(container, keep_height) {
+function horizontal_layout(container, keep_height, valign) {
 	var t = this;
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
@@ -32,6 +32,7 @@ function horizontal_layout(container, keep_height) {
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
 			e.style.height = "";
 			e.style.display = "inline-block";
+			e.style.marginTop = "";
 			if (layout == 'fill')
 				e.style.width = "";
 		}
@@ -51,7 +52,13 @@ function horizontal_layout(container, keep_height) {
 			else {
 				e.style.display = 'inline-block';
 				e.style.width = "";
-				if (!keep_height) setHeight(e, h);
+				if (!keep_height) 
+					setHeight(e, h);
+				else if (valign)
+					switch (valign) {
+					case "middle": e.style.marginTop = Math.floor(h/2-getHeight(e)/2)+'px'; break;
+					case "bottom": e.style.marginTop = (h-getHeight(e))+'px'; break;
+					}
 				used += getWidth(e);
 			}
 		}

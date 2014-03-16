@@ -1,10 +1,10 @@
 if (typeof theme != 'undefined')
 	theme.css("mac_tabs.css");
 
-function mac_tabs() {
+function mac_tabs(css) {
 	var t=this;
 	t.element = document.createElement("DIV");
-	t.element.className = "mac_tabs";
+	t.element.className = "mac_tabs"+(css ? " "+css : "");
 	setBorderRadius(t.element, 5, 5, 5, 5, 5, 5, 5, 5);
 	t.addItem = function(content,id) {
 		var div = document.createElement("DIV");

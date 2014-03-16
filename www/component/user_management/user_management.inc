@@ -365,6 +365,10 @@ class user_management extends Component {
 	public function getSelectedUsername($row) {
 		return $row["username"];
 	}
+	
+	public function joinUser(&$q, $from_table, $from_key) {
+		$q->join($from_table, "Users", array($from_key=>"id"));
+	}
 }
 
 /**

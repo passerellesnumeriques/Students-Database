@@ -40,11 +40,13 @@ ajax = {
 		var xhr;
 		try { xhr = new XMLHttpRequest(); }
 		catch (e) {
+			log_exception(e);
 			return;
 		}
 		var aborted = false;
 		var timeouted = false;
-		xhr.open(method, url.toString(), !foreground);
+		try { xhr.open(method, url.toString(), !foreground); }
+		catch (e) { log_exception(e); return; }
 		xhr.onabort = function() { aborted = true; };
 		xhr.ontimeout = function() { timeouted = true; };
 		if (content_type != null)
