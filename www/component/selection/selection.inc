@@ -569,59 +569,95 @@ class selection extends Component {
 	}
 	
 	/**
-	 * Remove all the partners of the given information session
-	 * The rights must be checked before calling this method
-	 * @param integer IS_id the IS id from which the partners must be removed
+	 * Save partners and contact points for a partnership datamodel defined as information sessions one:
+	 * Must have a table $table_name."Partner" (InformationSessionPartner) and a table $table_name."ContactPoint" (InformationSessionContactPoint)
+	 * To perform the saving, this method will remove all the rows in both tables and insert new ones
+	 * @param number $id the $id value of the $field_name entity to which the partners and contact points are updated (information session ID)
+	 * @param array $rows_partner array containing the rows to be saved into the $table_name."Partner" table 
+	 * @param array $rows_contact_point array containing the rows to be saved into the $table_name."ContactPoint" table
+	 * @param string $table_name the prefix to add to "Partner" and "ContactPoint" to get the complete table name (InformationSession)
+	 * @param string $field_name the field name of the foreignkey in $table_name."Partner" and $table_name."ContactPoint" tables, representing the entity (information_session)
 	 */
-	public function removeAllISPartners($IS_id){
-		$partners = SQLQuery::create()->select("InformationSessionPartner")
-				->field("organization")
-				->whereValue("InformationSessionPartner","information_session",$IS_id)
-				->execute();
-		if(isset($partners[0]["organization"])){
-			foreach($partners as $p)
-				SQLQuery::create()->removeKeys("InformationSessionPartner",array(array("information_session" => $IS_id, "organization" => $p["organization"])));
+	public function savePartnersAndContactsPoints($id, $rows_partner, $rows_contact_point,$table_name, $field_name){	
+		$transation_started_before = SQLQuery::isTransactionStarted();//This method may be called during a transaction
+		if(!$transation_started_before)
+			SQLQuery::startTransaction();
+		try {		
+			//Remove all the partners and contacts points already set
+			$this->removeAllPartners($id,$table_name,$field_name);
+			$this->removeAllContactPoints($id,$table_name,$field_name);
+			//Insert the new ones
+			if(count($rows_partner) > 0)
+				$this->insertPartners($rows_partner,$table_name);
+			if(count($rows_contact_point) > 0)
+				$this->insertContactPoints($rows_contact_point,$table_name);
+		} catch (Exception $e){
+			PNApplication::error($e);
 		}
-	}	
+		if(!$transation_started_before && PNApplication::has_errors())
+			SQLQuery::rollbackTransaction();
+		else if(!$transation_started_before && !PNApplication::has_errors())
+			SQLQuery::commitTransaction();
+		//Else the method that had started the transaction must know how to handle the errors, or commit, so nothing is done
+	}
 	
 	/**
-	 * Remove all the contact points of the given information session
-	 * The rights must be checked before calling this method
-	 * @param integer IS_id
+	 * Remove all the partners of a given entity
+	 * @param number $id entity ID
+	 * @param string $table_name prefix to add to "Partner" to get the right partner table name
+	 * @param string $field_name the field name of the foreignkey in $table_name."Partner" table, representing the entity (information_session)
 	 */
-	public function removeAllISContactPoints($IS_id){
-		$contact_point = SQLQuery::create()->select("InformationSessionContactPoint")
-				->field("organization")
-				->field("people")
-				->whereValue("InformationSessionContactPoint","information_session",$IS_id)
-				->execute();
+	private function removeAllPartners($id, $table_name, $field_name){
+		$partners = SQLQuery::create()->select($table_name."Partner")
+		->field("organization")
+		->whereValue($table_name."Partner",$field_name,$id)
+		->execute();
+		if(isset($partners[0]["organization"])){
+			foreach($partners as $p)
+				SQLQuery::create()->removeKeys($table_name."Partner",array(array($field_name => $id, "organization" => $p["organization"])));
+		}
+	}
+	
+	/**
+	 * Remove all the selected partners contact points of a given entity
+	 * @param number $id entity ID
+	 * @param string $table_name prefix to add to "ContactPoint" to get the right ContactPoint table name
+	 * @param string $field_name the field name of the foreignkey in $table_name."ContactPoint" table, representing the entity (information_session)
+	 */
+	private function removeAllContactPoints($id, $table_name, $field_name){
+		$contact_point = SQLQuery::create()->select($table_name."ContactPoint")
+		->field("organization")
+		->field("people")
+		->whereValue($table_name."ContactPoint",$field_name,$id)
+		->execute();
 		if(isset($contact_point[0]["organization"])){
 			foreach($contact_point as $c)
 				SQLQuery::create()
-				->removeKeys("InformationSessionContactPoint",
-				array(
-					array("information_session" => $IS_id, "organization" => $c["organization"], "people" => $c["people"])
-				));
+				->removeKeys($table_name."ContactPoint",
+						array(
+								array($field_name => $id, "organization" => $c["organization"], "people" => $c["people"])
+						));
 		}
 	}
 	
 	/**
-	 * Insert the partners of an information session into the database
-	 * The rights must be checked before calling this method
-	 * @param array rows to insert in InformationSession_partner table
+	 * Insert rows into a partner table
+	 * @param array $rows rows to be inserted
+	 * @param string $table_name string $table_name prefix to add to "Partner" to get the right partner table name
 	 */
-	public function insertISPartners($rows){
-		SQLQuery::create()->insertMultiple("InformationSessionPartner",$rows);
+	private function insertPartners($rows,$table_name){
+		SQLQuery::create()->insertMultiple($table_name."Partner",$rows);
 	}
 	
 	/**
-	 * Insert the contact points of an information session into the database
-	 * The rights must be checked before calling this method
-	 * @param array rows to insert in InformationSessionContactPoint table
+	 * Insert rows into a contactpoint table
+	 * @param array $rows rows to be inserted
+	 * @param string $table_name string $table_name prefix to add to "ContactPoint" to get the right contactpoint table name
 	 */
-	public function insertISContactPoints($rows){
-		SQLQuery::create()->insertMultiple("InformationSessionContactPoint",$rows);
+	private function insertContactPoints($rows,$table_name){
+		SQLQuery::create()->insertMultiple($table_name."ContactPoint",$rows);
 	}
+
 	/**
 	 * Remove an information session from the database
 	 * @param integer id the one of the IS to remove
@@ -1966,10 +2002,63 @@ class selection extends Component {
 	
 	public function saveExamCenter(){
 		//TODO before removing any room, check that no applicant was assigned!
+		$this->updateAllSteps();
 	}
 	
+	/**
+	 * Remove an exam center from its ID
+	 * First the user rights are checked, according to user_management and steps restrictions
+	 * Then this method checks that no room of this center has any applicant assigned: in that case nothing is done
+	 * The remove query is performed within a transaction
+	 * @param number $id Exam Center ID
+	 * @return boolean true if well performed, else false
+	 */
 	public function removeExamCenter($id){
-		//TODO check that no room has any applicant assigned
+		//Check the right from steps and user management
+		$rights_and_steps = $this->getRestrictedRightsFromStepsAndUserManagement("exam_center", "manage_exam_center", "manage_exam_center", "manage_exam_center");
+		if(!$rights_and_steps[0]["remove"]){
+			if($rights_and_steps[1])
+				PNApplication::warning($rights_and_steps[2]);
+			PNApplication::error("You are not allowed to remove this Exam Center");
+			return false;
+		}
+		//Check that no room has any applicant assigned
+		$rooms = SQLQuery::create()
+			->bypassSecurity()
+			->select("ExamCenterRoom")
+			->field("ExamCenterRoom","id")
+			->whereValue("ExamCenterRoom", "exam_center", $id)
+			->executeSingleField();
+		if($rooms <> null){
+			$may_be_assigned = $this->getApplicantsAssignedToRooms($rooms);
+			$assigned = false;
+			foreach ($may_be_assigned as $applicant_assigned){
+				if($applicant_assigned <> null){
+					$assigned = true;
+					break;
+				}
+			}
+			if($assigned){
+				PNApplication::error("Exam Center cannot be removed because some applicants are assigned to some of its rooms");
+				return false;
+			}
+		}
+		//Perform the remove
+		SQLQuery::startTransaction();
+		try {
+			SQLQuery::create()
+				->removeKey("ExamCenter", $id);
+		} catch (Exception $e){
+			PNApplication::error($e);
+		}
+		if(PNApplication::has_errors()){
+			SQLQuery::rollbackTransaction();
+			return false;
+		} else {
+			SQLQuery::commitTransaction();
+			$this->updateAllSteps();
+			return true;
+		}
 	}
 }
 ?>

@@ -14,81 +14,32 @@ function prepareDataAndSaveIS($data,$create){
 }
 
 class service_IS_save extends Service{
-	public function get_required_rights(){return array("manage_information_session");}
+	public function get_required_rights(){return array("manage_exam_center");}
 	public function input_documentation(){
 		?>
-		<ul>
-			<li><code>data</code> {array} Information session data, coming from IS_profile.js</li>
-			<li><code>event</code> {array} Calendar eevnt object</li>
-		</ul>
+
 		<?php
 	}
 	public function output_documentation(){
 		?>
-		<ul>
-			<li><code>false</code> {boolean} if an error occured</li>
-			<li><code>array</code> id, date
-				<ul>
-					<li><code>id</code> id of the information session</li>
-					<li><code>date</code> id of the calendar event linked to this information session, if set</li>
-				</ul>
-			</li>
-		</ul>
+
 		<?php
 	}
 	public function documentation(){
-		echo 'Save an information session object. All the query are performed into a transaction in the case of any error happen';
+		
 	}
 	public function execute(&$component,$input){
-		if(!isset($input["event"]) || !isset($input["data"]))
+		if(!isset($input["data"]))
 			echo "false";
 		else {
 			$data = $input["data"];
-			$event = $input["event"];
 			$everything_ok = true;
-			$add_event = false;
-			$update_event = false;
-			$remove_event = false;
-			$insert_IS = false;
-			$event_to_remove = null;
-			$new_IS_id = null;
+			$insert_EC = false;
+			$new_EC_id = null;
 				
 			if($data["id"] == -1 || $data["id"] == "-1"){
 				//This is an insert
-				$insert_IS = true;
-				//In that case if data.date <> null, event must be added (not updated)
-				if(isset($event["start"])&& $event["start"] != "null"){
-					$add_event = true;
-					$update_event = false;
-					$remove_event = false;
-				} else {
-					$add_event = false;
-					$update_event = false;
-					$remove_event = false;
-				}
-			} else {
-				if($event["start"] <> null && $event["start"] != "null"){
-					//it can be an update or an add
-					if($event["id"] == -1 || $event["id"] == "-1"){
-						unset($event["id"]);
-						$add_event = true;
-						$update_event = false;
-					} else {
-						$add_event = false;
-						$update_event = true;
-					}
-					$remove_event = false;
-				} else {
-					//it can be a remove or nothing
-					$q = SQLQuery::create()->select("InformationSession")->field("date")->whereValue("InformationSession","id",$data["id"])
-					->executeSingleValue();
-					if($q <> null){
-						$event_to_remove = $q;
-						$remove_event = true;
-					}
-					$add_event = false;
-					$update_event = false;
-				}
+				$insert_EC = true;
 			}
 			//start the transaction
 			SQLQuery::startTransaction();
@@ -155,12 +106,12 @@ class service_IS_save extends Service{
 			}
 			if($everything_ok){
 				/*save the partners and contact_points*/
-				$rows = SelectionJSON::InformationSessionPartnersAndContactPoints2DB($data);
-				$rows_IS_partner = $rows[0];
-				$rows_IS_contact_point = $rows[1];
-				//No need to try catch, the method called handles this
-				PNApplication::$instance->selection
-					->savePartnersAndContactsPoints($data["id"],$rows_IS_partner,$rows_IS_contact_point,"InformationSession","information_session");
+				try{
+					prepareDataAndSavePartnersAndContactsPoints($data);
+				} catch (Exception $e){
+					$everything_ok = false;
+					PNApplication::error($e);
+				}
 			}
 				
 			if(!$everything_ok || PNApplication::has_errors()){

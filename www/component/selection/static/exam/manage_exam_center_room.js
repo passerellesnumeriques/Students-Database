@@ -6,8 +6,8 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 	t.reset = function(){
 		while(t._section_content.firstChild)
 			t._section_content.removeChild(t._section_content.firstChild);
-		t._getApplicantsAssigned();
 		t.section.resetToolBottom();
+		t._getApplicantsAssigned();		
 	};
 	
 	t.getNewRoomsArray = function(){
@@ -23,16 +23,8 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		return new_rooms;
 	};
 	
-	t._applicants_assigned = null;
-	t._init = function(){
-		if(t._applicants_assigned != null)
-			t._section_content.appendChild(t._addInfoRow());
-		t._setRoomsTable();
-		t._setFooter();
-		container.appendChild(t.section.element);
-	};
-	
-	t._addInfoRow = function(){
+	t.getInfoRow = function(external_applicants_assigned){
+		var applicants_assigned = (typeof external_applicants_assigned != "undefined" && external_applicants_assigned != null) ? external_applicants_assigned : t._applicants_assigned;
 		var div = document.createElement("div");
 		var text = document.createElement("div");
 		text.innerHTML = "Some rooms have applicant assigned <br/>so you cannot update them";
@@ -41,20 +33,20 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		detail.appendChild(document.createTextNode("Detail"));
 		detail.onclick = function(){
 			var list = document.createElement("table");
-			for(var i = 0 ; i < t._applicants_assigned.length; i++){
+			for(var i = 0 ; i < applicants_assigned.length; i++){
 				var tr1 = document.createElement("tr");
 				var tr2 = document.createElement("tr");
 				var th = document.createElement("th");
-				th.appendChild(document.createTextNode(t._getRoomName(t._applicants_assigned[i].room)));
+				th.appendChild(document.createTextNode(t._getRoomName(applicants_assigned[i].room)));
 				tr1.appendChild(th);
 				var td = document.createElement("td");
 				tr2.appendChild(td);
 				list.appendChild(tr1);
 				list.appendChild(tr2);
 				var ul = document.createElement("ul");
-				for(var j = 0; j < t._applicants_assigned.assigned.length; j++){
+				for(var j = 0; j < applicants_assigned.assigned.length; j++){
 					var li = document.createElement("li");
-					li.appendChild(document.createTextNode(t._applicants_assigned[i].assigned[j]));
+					li.appendChild(document.createTextNode(applicants_assigned[i].assigned[j]));
 					ul.appendChild(li);
 				}
 				td.appendChild(ul);
@@ -69,45 +61,65 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		return div;
 	};
 	
+	t._applicants_assigned = null;
+	t._init = function(){
+		if(t._applicants_assigned != null)
+			t._section_content.appendChild(t.getInfoRow());
+		t._setRoomsTable();
+		t._setFooter();
+		container.appendChild(t.section.element);
+	};	
+	
 	t._setRoomsTable = function(){
 		t._fields_room = [];
 		var table = document.createElement("table");
 		t._section_content.appendChild(table);
-		//Set the title row
-		var tr_head = document.createElement("tr");
-		var th_head_1 = document.createElement("th");
-		var th_head_2 = document.createElement("th");
-		var th_head_3 = document.createElement("th");
-		tr_head.appendChild(th_head_1);//First column contains the room name
-		tr_head.appendChild(th_head_2);//Second contains the room capacity
-		tr_head.appendChild(th_head_3);//Third contains the remove buttons
-		table.appendChild(tr_head);
-		th_head_1.appendChild(document.createTextNode("Name"));
-		th_head_2.appendChild(document.createTextNode("Capacity"));
-		//Set the body
-		for(var i = 0; i < rooms.length; i++){
+		if(rooms.length == 0){
 			var tr = document.createElement("tr");
-			var td1 = document.createElement("td");
-			var td2 = document.createElement("td");
-			var td3 = document.createElement("td");
-			var name = new field_text(rooms[i].name,false,{can_be_null:true});//Can_be_null config = true so that all the empty strings are replaced by null
-			var capacity = new field_integer(rooms[i].capacity,false,{can_be_null:false,min:1});
-			if(t._canBeUpdated(rooms[i].id)){
-				//This room can be updated, create editable fields and remove button
-				name.editable = generate_name == true ? false : true;
-				capacity.editable = true;
-				td1.appendChild(name.getHTMLElement());
-				td2.appendChild(capacity.getHTMLElement());
-				td3.appendChild(t._createRemoveButton(rooms[i].id));
-			} else {
-				td1.appendChild(name.getHTMLElement());
-				td2.appendChild(capacity.getHTMLElement());
-			}
-			tr.appendChild(td1);
-			tr.appendChild(td2);
-			tr.appendChild(td3);
+			var td = document.createElement("td");
+			td.innerHTML = "<i><center>No Room yet</i></center>";
+			td.colSpan = 3;
+			tr.appendChild(td);
 			table.appendChild(tr);
-			t._fields_room.push({id:rooms[i].id, name_field:name,capacity_field:capacity});
+		} else {
+			//Set the title row
+			var tr_head = document.createElement("tr");
+			var th_head_1 = document.createElement("th");
+			var th_head_2 = document.createElement("th");
+			var th_head_3 = document.createElement("th");
+			tr_head.appendChild(th_head_1);//First column contains the room name
+			tr_head.appendChild(th_head_2);//Second contains the room capacity
+			tr_head.appendChild(th_head_3);//Third contains the remove buttons
+			table.appendChild(tr_head);
+			th_head_1.appendChild(document.createTextNode("Name"));
+			th_head_2.appendChild(document.createTextNode("Capacity"));
+			//Set the body
+			for(var i = 0; i < rooms.length; i++){
+				var tr = document.createElement("tr");
+				var td1 = document.createElement("td");
+				var td2 = document.createElement("td");
+				var td3 = document.createElement("td");
+				var name, capacity;
+				if(t._canBeUpdated(rooms[i].id)){
+					//This room can be updated, create editable fields and remove button
+					var name_editable = generate_name == true ? false : true;
+					name = new field_text(rooms[i].name,name_editable,{can_be_null:true});//Can_be_null config = true so that all the empty strings are replaced by null
+					capacity = new field_integer(rooms[i].capacity,true,{can_be_null:false,min:1});					
+					td1.appendChild(name.getHTMLElement());
+					td2.appendChild(capacity.getHTMLElement());
+					td3.appendChild(t._createRemoveButton(rooms[i].id));
+				} else {
+					name = new field_text(rooms[i].name,false,{can_be_null:true});
+					capacity = new field_integer(rooms[i].capacity,false,{can_be_null:false,min:1});
+					td1.appendChild(name.getHTMLElement());
+					td2.appendChild(capacity.getHTMLElement());
+				}
+				tr.appendChild(td1);
+				tr.appendChild(td2);
+				tr.appendChild(td3);
+				table.appendChild(tr);
+				t._fields_room.push({id:rooms[i].id, name_field:name,capacity_field:capacity});
+			}
 		}
 	};
 	
@@ -168,7 +180,7 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		if(t._applicants_assigned == null)
 			return can_manage;
 		for(var i = 0; i < t._applicants_assigned.length;i++){
-			if(t._applicants_assigned[i].room == id)
+			if(t._applicants_assigned[i].room == id && t._applicants_assigned[i].assigned != null)
 				return false;
 		}
 		return true;

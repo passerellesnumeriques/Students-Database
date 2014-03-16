@@ -1,4 +1,4 @@
-function exam_center_profile(id, config_name, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_button_id,remove_button_id,db_lock,config_name_room){
+function exam_center_profile(id, config_name_center, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_button_id,remove_button_id,db_lock,config_name_room){
 	if(typeof(container) == "string") container = document.getElementById(container);
 	var t = this;
 	if(db_lock)
@@ -37,7 +37,7 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 	t._init = function(){
 		t._setAddressField();
 		t._setOtherPartnersField();
-		if(config_name) t._setCustomNameField();
+		if(config_name_center) t._setCustomNameField();
 		t._setISLinkedField();
 		t._setRooms();
 		t._setLayout();
@@ -98,10 +98,10 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 		t.table.style.marginLeft = "15px";
 		container.appendChild(t.table);
 		td11.appendChild(t.div_address);
-		td12.appendChild(t.div_IS_linked);
+		td12.appendChild(t.div_room);
 		td13.appendChild(t.div_partners);
 		td21.appendChild(t.div_name);
-		td22.appendChild(t.div_room);
+		td22.appendChild(t.div_IS_linked);
 
 		var button_remove = document.getElementById(remove_button_id);
 		if(can_remove && data.id != -1 && data.id != "-1"){
@@ -109,7 +109,29 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 			button_remove.style.visibility = 'visible';
 			button_remove.style.position = 'static';
 			button_remove.onclick = function(){
-				//TODO
+				//Check that no applicant is linked to any room
+				var rooms = t.manage_rooms.getNewRoomsArray();
+				var ids = [];
+				var applicants_assigned = null;
+				for(var i = 0; i < rooms.length; i++)
+					ids.push(rooms[i].id);
+				service.json("selection","exam/get_applicants_assigned_to_rooms",{ids:ids},function(res){
+					if(!res) {
+						error_dialog("This functionality is not available");
+						return;
+					}
+					for(var i = 0; i < res.length; i++){
+						if(res[i].assigned != null){
+							applicants_assigned = applicants_assigned == null ? [] : applicants_assigned;
+							applicants_assigned.push(res[i]);
+						}
+					}
+					if(applicants_assigned == null)
+						t._performRemoveCenter();
+					else {
+						error_dialog_html(t.manage_rooms.getInfoRow(applicants_assigned));
+					}
+				});
 			};
 		} else {
 			button_remove.style.visibility = 'hidden';
@@ -127,6 +149,69 @@ function exam_center_profile(id, config_name, can_add, can_edit, can_remove, con
 			button_save.style.visibility = 'hidden';
 			button_save.style.position = 'absolute';
 			button_save.style.top = '-10000px';
+		}
+	};
+	
+	t._performRemoveCenter = function(){
+		service.json("selection","exam/remove_center",{id:data.id},function(r){
+			if(!r){
+				error_dialog("An error occured, this center was not removed properly");
+				return;
+			}
+			location.assign("/dynamic/selection/page/exam/center_main_page");
+		});
+	};
+	
+	t._launchSaving = function(){
+		var locker = lock_screen();
+		if(data.geographic_area == null){
+			unlock_screen(locker);
+			error_dialog("You must at least pick a geographic area before saving");
+		} else {				
+			/** 
+			 * Get the data from each screen:
+			 * select_address works with the reference of data
+			 * so there is no need to update
+			 */		
+			//get from other_partners
+			//remove all the old other partners
+			var length = data.partners.length;
+			var i = 0;
+			var offset = 0;
+			while(i < length){
+				if(data.partners[offset].host == null || data.partners[offset].host == false){
+					data.partners.splice(offset,1);
+				} else
+					offset++;
+				i++;
+			}
+			//Update, keeping the host
+			data.partners = data.partners.concat(t.select_other_partners.getOtherPartners());
+			//get from rooms
+			var rooms = t.manage_rooms.getNewRoomsArray();
+			// get from name
+			var name = null;
+			if(config_name_center)
+				name = t.center_name.getName();
+			if(name != null && typeof name == "string" && name.checkVisible())
+				data.name = name;
+			else 
+				data.name = null;
+			
+//			service.json("selection","IS/save",{event:event, data:data},function(res){
+//				unlock_screen(locker);
+//				if(!res)
+//					error_dialog("An error occured, your informations were not saved");
+//				else {
+//					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Your informations have been successfuly saved!", [{action:"close"}], 5000));
+//					// Update the data on the page (some ids have been generated)
+//					data.id = res.id;
+//					if(res.date != null)
+//						data.date = res.date;
+//					//reset the table (in case remove button must be added, and update the objects)
+//					t.resetAll();
+//				}
+//			});
 		}
 	};
 	

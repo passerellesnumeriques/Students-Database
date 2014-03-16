@@ -116,7 +116,7 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 
 		} else {
 			//Nothing is set
-			td.innerHTML = "<i><center>No location is set for this Information Session</i></center>";
+			td.innerHTML = "<i><center>No location is set for this "+type_of_address.uniformFirstLetterCapitalized()+"</i></center>";
 		}
 	};
 	
