@@ -1,8 +1,8 @@
-function createUploadTempFile(multiple) {
-	return new upload("/dynamic/storage/service/store_temp", multiple);
+function createUploadTempFile(multiple, async) {
+	return new upload("/dynamic/storage/service/store_temp", multiple, async);
 }
 
-function upload(target, multiple) {
+function upload(target, multiple, async) {
 	var t=this;
 	t.onstart = null;
 	t.onstartfile = null;
@@ -206,7 +206,7 @@ function upload(target, multiple) {
 			t.sendFiles(files);
 	};
 	
-	t.sendFiles = function(files, async) {
+	t.sendFiles = function(files) {
 		var received = [];
 		var send = function(f,ondone) {
 			if (t.onstartfile) t.onstartfile(f);

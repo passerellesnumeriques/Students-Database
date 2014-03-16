@@ -222,6 +222,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	
 	t.showPercent = function(width, height) {
 		t.resize = function() {
+			if (!t.table) return;
 			var win = getWindowFromDocument(t.table.ownerDocument);
 			t.table.style.left = Math.floor(win.getWindowWidth()*(100-width)/200)+"px";
 			t.table.style.top = Math.floor(win.getWindowHeight()*(100-height)/200)+"px";
