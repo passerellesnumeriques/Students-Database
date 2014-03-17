@@ -83,19 +83,31 @@ function pictures_list(container, peoples, default_view) {
 		};
 		var button;
 		button = document.createElement("DIV");
-		button.className = "button_verysoft";
+		button.className = "button_verysoft disabled";
 		button.innerHTML = "<img src='/static/images_tool/people_picture.png'/> Import Pictures";
 		button.style.marginLeft = "5px";
-		var tool = null;
-		require("images_tool.js", function() {
-			tool = new images_tool();
-			tool.usePopup();
-			tool.useUpload(true);
+		require("images_tool.js",function() {
+			var tool = new images_tool();
+			tool.usePopup(true);
+			tool.useUpload();
 			tool.useFaceDetection();
+			tool.addTool("crop",function() {
+				tool.setToolValue("crop", null, {aspect_ratio:0.75}, false);
+			});
+			tool.addTool("scale", function() {
+				tool.setToolValue("scale", null, {max_width:300,max_height:300}, false);
+			});
+			tool.addTool("people", function() {
+				tool.setToolValue("people", null, peoples, false);
+			});
+			tool.init(function() {
+				button.className = "button_verysoft";
+				button.onclick = function(ev) {
+					tool.reset();
+					tool.launchUpload(ev, true);
+				};
+			});
 		});
-		button.onclick = function(ev) {
-			tool.launchUpload(ev);
-		};
 		this.header.appendChild(button);
 	};
 	this._init();

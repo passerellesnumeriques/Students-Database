@@ -233,26 +233,26 @@ function upload(target, multiple, async) {
 				ondone();
 			});
 		};
-		if (async) {
-			var nb = files.length;
-			for (var i = 0; i < files.length; ++i) {
-				send(files[i], function() {
-					if (--nb == 0) {
-						if (t.ondone) t.ondone(received);
-					}
-				});
-			}
-		} else {
-			var next = function(i) {
-				if (i == files.length) {
+		var parallel = async ? 5 : 1;
+		var uploading = 0;
+		var todo = [];
+		var next = function() {
+			if (todo.length == 0) return;
+			var f = todo[0];
+			todo.splice(0,1);
+			uploading++;
+			send(f,function() {
+				uploading--;
+				if (todo.length == 0 && uploading == 0) {
 					if (t.ondone) t.ondone(received);
 					return;
 				}
-				var f = files[i];
-				send(f,function() { next(i+1); });
-			};
-			next(0);
-		}
+				setTimeout(next, 10);
+			});
+		};
+		for (var i = 0; i < files.length; ++i) todo.push(files[i]);
+		for (var i = 0; i < parallel && i < files.length; i++)
+			setTimeout(next, 1+i*15);
 	};
 	
 	t.uploadFile = function(file,ondone) {

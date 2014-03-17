@@ -135,6 +135,10 @@ class storage extends Component {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute($q);
 	}
 	
+	function update_mime($id, $mime_type) {
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `mime`='".SQLQuery::escape($mime_type)."' WHERE `id`=".$id);
+	}
+	
 	function remove_data($id) {
 		$path = $this->get_data_path($id);
 		unlink($path);
@@ -148,7 +152,7 @@ class storage extends Component {
 		if ($fn) {
 			// AJAX call
 			$data = file_get_contents('php://input');
-			$id = $this->store_data($data, null, time()+$expire_seconds);
+			$id = $this->store_data($data, isset($headers['X_FILETYPE']) ? $headers['X_FILETYPE'] : null, time()+$expire_seconds);
 			if ($id == null) return true;
 			array_push($ids, $id);
 			array_push($names, $fn);

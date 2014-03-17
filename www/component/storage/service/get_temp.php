@@ -4,7 +4,10 @@ class service_get_temp extends Service {
 	public function documentation() { echo "Retrieve a temporary file"; }
 	public function input_documentation() { echo "<code>id</code>: identifier of the temporary file to retrieve"; }
 	public function output_documentation() { echo "The temporary file"; }
-	public function get_output_format($input) { return "application/octet-stream"; }
+	public function get_output_format($input) {
+		$mime = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $_GET["id"])->field("Storage","mime")->executeSingleValue();
+		return $mime <> null ? $mime : "application/octet-stream"; 
+	}
 	public function execute(&$component, $input) {
 		$id = $_GET["id"];
 		
@@ -16,9 +19,6 @@ class service_get_temp extends Service {
 		$path = $component->get_data_path($id);
 		if (!file_exists($path)) return;
 		readfile($path);
-		//$data = file_get_contents($path);
-		//if ($data === false) return;
-		//echo $data;
 	}
 } 
 ?>

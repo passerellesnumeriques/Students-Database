@@ -546,6 +546,7 @@ function selectPage(id) {
 }
 
 function setHeaderInfo(paths, controls) {
+	if (!window.header_info) return;
 	window.header_info.innerHTML = "";
 	var container;
 	container = document.createElement("DIV");
