@@ -1941,25 +1941,82 @@ class SQLQuery {
 		return $q->execute();
 	}
 	
-	/** @var boolean indicates if we are currently in a transaction */
-	private static $transaction_started = false;
+	/** @var number indicates the number of transaction started (not only boolean, in the event of several transactions are started in parallel */
+	private static $transaction_started = 0;
+	/** @var boolean indicates if one of the transaction started asked for a rollback */
+	private static $rollback = false;
+	
+	/**
+	 * Increments the $transaction_started attribute
+	 * In the case of the $transaction_started was equal to 0 before calling this method, the performStartTransaction method is called
+	 */
 	public static function startTransaction() {
-		SQLQuery::getDataBaseAccessWithoutSecurity()->log("START TRANSACTION", 0, 0, 0);
-		SQLQuery::getDataBaseAccessWithoutSecurity()->startTransaction();
-		SQLQuery::$transaction_started = true;
+		if(SQLQuery::$transaction_started == 0)
+			self::performStartTransaction();		
+		SQLQuery::$transaction_started++;
 	}
+	
+	/**
+	 * Decrements the $transaction_started attribute
+	 * In the case of the $transaction_started is now equal to 0, the performEndTransaction method is called
+	 */
 	public static function commitTransaction() {
-		SQLQuery::getDataBaseAccessWithoutSecurity()->log("COMMIT", 0, 0, 0);
-		SQLQuery::getDataBaseAccessWithoutSecurity()->commit();
-		SQLQuery::$transaction_started = false;
+		SQLQuery::$transaction_started --;
+		if(SQLQuery::$transaction_started == 0)
+			self::performEndTransaction();
 	}
+	
+	/**
+	 * Decrements the $transaction_started attribute
+	 * The $rollback attribute is set as true
+	 * In the case of the $transaction_started is now equal to 0, the performEndTransaction method is called
+	 */
 	public static function rollbackTransaction() {
-		SQLQuery::getDataBaseAccessWithoutSecurity()->log("ROLLBACK", 0, 0, 0);
-		SQLQuery::getDataBaseAccessWithoutSecurity()->rollback();
-		SQLQuery::$transaction_started = false;
+		self::$rollback = true;
+		self::$transaction_started --;
+		if(self::$transaction_started == 0)
+			self::performEndTransaction();
 	}
+	
+	/**
+	 * Get if the current query are made into a transaction
+	 * @return boolean
+	 */
 	public static function isTransactionStarted() {
-		return SQLQuery::$transaction_started;
+		return self::$transaction_started == 0 ? false : true;
+	}
+	
+	/**
+	 * Get if the current transaction is flagged as Rollback, meaning that when the performEndTransaction method is called a rollback is performed
+	 * @return boolean
+	 */
+	public static function transactionFlaggedAsRollback(){
+		return self::$rollback;
+	}
+	
+	/**
+	 * Perform the start of the transaction
+	 */
+	private static function performStartTransaction(){
+		self::getDataBaseAccessWithoutSecurity()->log("START TRANSACTION", 0, 0, 0);
+		self::getDataBaseAccessWithoutSecurity()->startTransaction();
+	}
+	
+	/**
+	 * Perform the end of the transaction
+	 * If $rollback attribute is true, a roolback is performed
+	 * Else a commit is performed
+	 * $rollback attribute is reseted as false at the end of this method
+	 */
+	private static function performEndTransaction(){
+		if(self::$rollback){
+			self::getDataBaseAccessWithoutSecurity()->log("ROLLBACK", 0, 0, 0);
+			self::getDataBaseAccessWithoutSecurity()->rollback();
+		} else {
+			self::getDataBaseAccessWithoutSecurity()->log("COMMIT", 0, 0, 0);
+			self::getDataBaseAccessWithoutSecurity()->commit();
+		}
+		self::$rollback = false;
 	}
 	
 }

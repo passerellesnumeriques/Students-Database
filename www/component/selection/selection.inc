@@ -1900,6 +1900,7 @@ class selection extends Component {
 				->whereValue("InformationSessionPartner", "information_session", $IS_id)
 				->executeSingleValue();
 			$area_id = PNApplication::$instance->contact->getAddressGeographicAreaAttribute($host_address);
+			//Start the transaction
 			SQLQuery::startTransaction();
 			$id = SQLQuery::create()
 				->insert("ExamCenter", array(
@@ -1943,7 +1944,7 @@ class selection extends Component {
 		if($all_EC <> null){
 			foreach ($all_EC as $ec){
 				if(!$this->isHostSetToEC($ec["id"]))
-					array_push($IS_with_no_host, $ec);
+					array_push($EC_with_no_host, $ec);
 			}
 			$EC_with_no_host = count($EC_with_no_host) > 0 ? $EC_with_no_host : null;
 			return $EC_with_no_host;
@@ -1988,6 +1989,22 @@ class selection extends Component {
 	}
 	
 	/**
+	 * Check if any applicant is assigned to the given exam center room
+	 * @param number $id the exam center room ID
+	 * @return boolean
+	 */
+	public function isAnyApplicantAssignedToRoom($id){
+		$assigned = SQLQuery::create()
+			->bypassSecurity()
+			->select("Applicant")
+			->field("Applicant","applicant_id")
+			->whereValue("Applicant", "exam_room", $id)
+			->executeSingleField();
+		$assigned = $assigned == null ? false : true;
+		return $assigned;
+	}
+	
+	/**
 	 * Get the applicants assigned to the given exam center rooms
 	 * @param array $ids all the campaign ids
 	 * @return array associative array(room_id => array of applicant_ids if any, else NULL)
@@ -2000,9 +2017,82 @@ class selection extends Component {
 		return $applicants;
 	}
 	
-	public function saveExamCenter(){
-		//TODO before removing any room, check that no applicant was assigned!
-		$this->updateAllSteps();
+	public function saveExamCenter($id, $row_center, $rows_partners, $rows_contacts_points, $rooms_ids_to_remove, $rooms_to_update, $rooms_to_insert){
+		//Check the rights
+		$rights = $this->canUpdateFromRightAndStep("exam_center", "manage_exam_center", "You are not allowed to manage the exam centers");
+		if(!$rights[0]){
+			PNApplication::error_html($rights[1]);
+			return false;
+		} else {
+			//Start the transaction
+			SQLQuery::startTransaction();
+			$warning_not_all_rooms_removed = false;
+			try{
+				if($id == null){
+					//This is an insert
+					$id = SQLQuery::create()
+						->insert("ExamCenter", $row_center);
+					//Update all the linked data
+					foreach ($rows_partners as &$row){
+						$row["exam_center"] = $id;
+					}
+					foreach($rows_contacts_points as &$row){
+						$row["exam_center"] = $id;
+					}
+					foreach ($rooms_to_insert as &$room){
+						$room["exam_center"] = $id;
+					}
+					foreach ($rooms_to_update as &$room){
+						$room["exam_center"] = $id;
+					}
+				} else {
+					//This is an update
+					SQLQuery::create()
+						->updateByKey("ExamCenter", $id, $row_center);
+					//Update the rooms to update
+					if(count($rooms_to_update) > 0){
+						foreach($rooms_to_update as $room){
+							$room_id = $room["id"];
+							unset($room["id"]);
+							SQLQuery::create()
+								->updateByKey("ExamCenterRoom",$room_id, $room);
+						}
+					}
+					//Remove the rooms to remove, after checking that no applicant is assigned
+					if(count($rooms_ids_to_remove) > 0){
+						$can_really_be_removed = array();
+						foreach ($rooms_ids_to_remove as $room_id){
+							if(!$this->isAnyApplicantAssignedToRoom($room_id))
+								array_push($can_really_be_removed, $room_id);
+							else
+								$warning_not_all_rooms_removed = true;
+						}
+						if(count($can_really_be_removed) > 0){
+							SQLQuery::create()
+								->removeKeys("ExamCenterRoom", $can_really_be_removed);
+						}
+					}
+				}
+				//Still have to insert the rooms to insert
+				if(count($rooms_to_insert) > 0){
+					SQLQuery::create()->insertMultiple("ExamCenterRoom", $rooms_to_insert);
+				}
+				//Save the partnership data
+				$this->savePartnersAndContactsPoints($id, $rows_partners, $rows_contacts_points, "ExamCenter", "exam_center");
+			}  catch (Exception $e){
+				PNApplication::error($e);
+			}
+			if(PNApplication::has_errors()){
+				SQLQuery::rollbackTransaction();
+				return false;
+			} else {
+				SQLQuery::commitTransaction();
+				if($warning_not_all_rooms_removed)
+					PNApplication::warning("Some rooms have not been removed because they have applicants assigned");
+				$this->updateAllSteps();
+				return $id;
+			}
+		}
 	}
 	
 	/**

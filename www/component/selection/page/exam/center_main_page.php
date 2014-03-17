@@ -43,7 +43,7 @@ class page_exam_center_main_page extends selection_page {
 							from_IS.appendChild(document.createTextNode("Create from an Information Session"));
 							from_IS.onclick = function(){
 								require("popup_window.js",function(){
-									var pop = new popup_window("Create Exam Center from Information Session","");
+									var pop = new popup_window("Link Exam Centers and Information Sessions","");
 									pop.setContentFrame("/dynamic/selection/page/exam/convert_IS_into_center");
 									pop.onclose = function(){ //Refresh in the case of any centers have been created
 										location.reload();

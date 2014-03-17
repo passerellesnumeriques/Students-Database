@@ -155,7 +155,7 @@ class service_IS_save extends Service{
 			}
 			if($everything_ok){
 				/*save the partners and contact_points*/
-				$rows = SelectionJSON::InformationSessionPartnersAndContactPoints2DB($data);
+				$rows = ContactJSON::PartnersAndContactPoints2DB($data,"information_session");
 				$rows_IS_partner = $rows[0];
 				$rows_IS_contact_point = $rows[1];
 				//No need to try catch, the method called handles this

@@ -248,34 +248,6 @@ class SelectionJSON{
 		return $a;
 	}
 	
-	/**
-	 * Prepare a JSON structure of informations session partners array to be saved into the database
-	 * @param string $json the JSON structure
-	 * @return array containing two fields => values arrays:<ul><li>[0]: fields => values for InformationSessionPartner table</li><li>[1]: fields => values for InformationSessionContactPoint table</li></ul>
-	 */
-	public static function InformationSessionPartnersAndContactPoints2DB($json){
-		$rows_IS_partner = array();
-		$rows_IS_contact_point = array();
-		foreach($json["partners"] as $p){
-			array_push($rows_IS_partner,array(
-			"information_session" => $json["id"],
-			"organization" => $p["organization"],
-			"host" => $p["host"],
-			"host_address" => $p["host_address"]
-			));
-			if(isset($p["contact_points_selected"]) && count($p["contact_points_selected"]) > 0){
-				foreach($p["contact_points_selected"] as $people){
-					array_push($rows_IS_contact_point,array(
-					"information_session" => $json["id"],
-					"organization" => $p["organization"],
-					"people" => $people
-					));
-				}
-			}
-		}
-		return array($rows_IS_partner, $rows_IS_contact_point);
-	}
-	
 /**
  * Methods about Exam Subjects
  */
@@ -1004,7 +976,7 @@ class SelectionJSON{
 			->whereValue("ExamCenterRoom", "exam_center", $id);
 		self::ExamCenterRoomSQL($q);
 		$rows = $q->execute();
-		return self::ExamCenterRoom($q, $rows);
+		return self::ExamCenterRooms($q, $rows);
 	}
 	
 	/**
@@ -1119,6 +1091,42 @@ class SelectionJSON{
 		}
 		$r .= "]";
 		return $r;
+	}
+	
+	/**
+	 * Prepare the ExamCenter table data to be saved into the database
+	 * @param array $json ExamCenter object
+	 * @param numbe| NULL $id ExamCenter ID, if any
+	 * @return array
+	 */
+	public static function ExamCenter2DB($json, $id){
+		$a = array(
+			"name" => @$json["name"],
+			"geographic_area" => @$json["geographic_area"]
+		);
+		if(isset($id)){
+			$a["id"] = $id;
+		}
+		return $a;
+	}
+	
+	/**
+	 * Prepare the ExamCenterRoom table data to be saved into the database
+	 * @param array $json ExamCenterRoom object
+	 * @param number | NULL $id ExamCenterRoom ID, if any
+	 * @param number | NULL $exam_center the exam center ID, if any
+	 * @return array
+	 */
+	public static function ExamCenterRoom2DB($json, $id, $exam_center){
+		$a = array(
+			"name" => @$json["name"],
+			"capacity" => @$json["capacity"],
+			"exam_center" => @$exam_center
+		);
+		if(isset($id)){
+			$a["id"] = $id;
+		}
+		return $a;
 	}
 	
 	/**

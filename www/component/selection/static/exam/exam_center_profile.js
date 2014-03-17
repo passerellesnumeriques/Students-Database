@@ -12,7 +12,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	t.div_IS_linked = document.createElement("div");
 	t.div_room = document.createElement("div");
 	
-	t.resetAll = function(locker, update_partners_contact_points){
+	t.resetAll = function(locker, update_partners_contact_points,new_rooms){
 		container.removeChild(t.table);
 		delete(t.table);
 		t.table = document.createElement("table");
@@ -24,7 +24,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 			t.select_address.reset();
 			t.select_other_partners.reset();
 		}
-		t.manage_rooms.reset();
+		t.manage_rooms.reset(new_rooms);
 		if(locker) unlock_screen(locker);
 		t._lockDatabase();
 	};
@@ -42,6 +42,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 		t._setRooms();
 		t._setLayout();
 		t._lockDatabase();
+		
 	};
 	
 	/**
@@ -142,9 +143,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 		if(can_edit){
 			button_save.style.visibility = 'visible';
 			button_save.style.position = 'static';
-			button_save.onclick = function(){
-				//TODO
-			};
+			button_save.onclick = t._launchSaving;
 		} else {
 			button_save.style.visibility = 'hidden';
 			button_save.style.position = 'absolute';
@@ -158,6 +157,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 				error_dialog("An error occured, this center was not removed properly");
 				return;
 			}
+			window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Exam center succesfully removed!", [{action:"close"}], 5000));
 			location.assign("/dynamic/selection/page/exam/center_main_page");
 		});
 	};
@@ -188,7 +188,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 			//Update, keeping the host
 			data.partners = data.partners.concat(t.select_other_partners.getOtherPartners());
 			//get from rooms
-			var rooms = t.manage_rooms.getNewRoomsArray();
+			data.rooms = t.manage_rooms.getNewRoomsArray();
 			// get from name
 			var name = null;
 			if(config_name_center)
@@ -196,22 +196,19 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 			if(name != null && typeof name == "string" && name.checkVisible())
 				data.name = name;
 			else 
-				data.name = null;
-			
-//			service.json("selection","IS/save",{event:event, data:data},function(res){
-//				unlock_screen(locker);
-//				if(!res)
-//					error_dialog("An error occured, your informations were not saved");
-//				else {
-//					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Your informations have been successfuly saved!", [{action:"close"}], 5000));
-//					// Update the data on the page (some ids have been generated)
-//					data.id = res.id;
-//					if(res.date != null)
-//						data.date = res.date;
-//					//reset the table (in case remove button must be added, and update the objects)
-//					t.resetAll();
-//				}
-//			});
+				data.name = null;			
+			service.json("selection","exam/save_center",{data:data},function(res){
+				unlock_screen(locker);
+				if(!res)
+					error_dialog("An error occured, your informations were not saved");
+				else {
+					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Your informations have been successfuly saved!", [{action:"close"}], 5000));
+					// Update the data on the page (some ids have been generated)
+					data = res;
+					//reset the table (in case remove button must be added, and update the objects)
+					t.resetAll(null,null,res.rooms);
+				}
+			});
 		}
 	};
 	

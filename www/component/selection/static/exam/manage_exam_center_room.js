@@ -1,28 +1,53 @@
+/**
+ * Manage the rooms of an exam center
+ * A section object is created into the container
+ * @param {HTMLElement | String} container or its ID
+ * @param {ExamCenterRooms} rooms
+ * @param {Boolean}can_manage
+ * @param {Boolean} generate_name true if the room name must be generated and cannot be manually setted
+ */
 function manage_exam_center_room(container, rooms, can_manage, generate_name){
 	var t = this;
 	t.rooms = rooms;
 	container = typeof container == "string" ? document.getElementById(container) : container;
 	
-	t.reset = function(){
+	/**
+	 * Reset the section content
+	 * @param {ExamCenterRooms | NULL} new_rooms not null if romms attribute must be updated
+	 */
+	t.reset = function(new_rooms){
 		while(t._section_content.firstChild)
 			t._section_content.removeChild(t._section_content.firstChild);
 		t.section.resetToolBottom();
+		if(new_rooms)
+			rooms = new_rooms;
 		t._getApplicantsAssigned();		
 	};
 	
+	/**
+	 * Get the updated ExamCenterRooms object
+	 * @returns {ExamCenterRooms}
+	 */
 	t.getNewRoomsArray = function(){
 		var new_rooms = [];
 		for(var i = 0; i < t._fields_room.length;i++){
 			var r = new ExamCenterRoom(
 					t._fields_room[i].id,
-					t._fields_room[i].field_name.getCurrentData(),
-					t._fields_room[i].field_capacity.getCurrentData()
+					t._fields_room[i].name_field.getCurrentData(),
+					t._fields_room[i].capacity_field.getCurrentData()
 			);
 			new_rooms.push(r);
 		}
 		return new_rooms;
 	};
 	
+	/**
+	 * Get the information HTMLElement explaining that some rooms cannot be updated because applicants are assigned to them.
+	 * The row contains a button to get the applicants list into a popup.
+	 * @param {Array | NULL} external_applicants_assigned array of objects with two attributes <ul><li><code>room</code> room id</li><li><code>assigned</code> NULL if no one assigned, else array of applicants IDs</li></ul>
+	 * If this parameter is NULL the t._applicants_assigned attribute is used instead
+	 * @returns {HTMLElement} 
+	 */
 	t.getInfoRow = function(external_applicants_assigned){
 		var applicants_assigned = (typeof external_applicants_assigned != "undefined" && external_applicants_assigned != null) ? external_applicants_assigned : t._applicants_assigned;
 		var div = document.createElement("div");
@@ -61,15 +86,27 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		return div;
 	};
 	
-	t._applicants_assigned = null;
+	/**Private methods and attributes*/
+	
+	t._applicants_assigned = null;//array of objects (one per room) with two attributes <ul><li><code>room</code> room id</li><li><code>assigned</code> NULL if no one assigned, else array of applicants IDs</li></ul>
+	
+	/**
+	 * Launch the process, add the rights restrictions info row if needed,
+	 * add the rooms list, and set the footer (button create room)
+	 */
 	t._init = function(){
 		if(t._applicants_assigned != null)
 			t._section_content.appendChild(t.getInfoRow());
 		t._setRoomsTable();
 		t._setFooter();
-		container.appendChild(t.section.element);
+		if(can_manage)
+			container.appendChild(t.section.element);
 	};	
 	
+	/**
+	 * One row is created per room
+	 * Each row contains the name, the capacity, and a remove button
+	 */
 	t._setRoomsTable = function(){
 		t._fields_room = [];
 		var table = document.createElement("table");
@@ -123,6 +160,10 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		}
 	};
 	
+	/**
+	 * Set the section footer
+	 * Add a create room button
+	 */
 	t._setFooter = function(){
 		var create = document.createElement("div");
 		create.className = "button";
@@ -143,6 +184,10 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		t.section.addToolBottom(create);
 	};
 	
+	/**
+	 * Get a unique name for the room created
+	 * @returns {String} name
+	 */
 	t._getUniqueName = function(){
 		var max = 0;
 		for(var i = 0; i < rooms.length; i++){
@@ -152,6 +197,11 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		return ++max;
 	};
 	
+	/**
+	 * Create a remove room button
+	 * @param {Number} id the room to remove ID
+	 * @returns {HTMLELement} button created
+	 */
 	t._createRemoveButton = function(id){
 		var div = document.createElement("div");
 		div.className = "button_verysoft";
@@ -174,6 +224,12 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		return div;
 	};
 	
+	/**
+	 * Check if a room can be updated (capacity, removed) by looking at the applicants assigned
+	 * This method can only restrict the can_manage right
+	 * @param {Number} id the room ID
+	 * @returns {Boolean}
+	 */
 	t._canBeUpdated = function(id){
 		if(!can_manage)
 			return false;
@@ -186,6 +242,11 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		return true;
 	};
 	
+	/**
+	 * Get a room name from its ID
+	 * @param {Number} id
+	 * @returns {String | NULL} room name if found, else NULL
+	 */
 	t._getRoomName = function(id){
 		for(var i = 0; i < rooms.length; i++){
 			if(rooms[i].id == id)
@@ -194,6 +255,10 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 		return null;
 	};
 	
+	/**
+	 * Get the applicants assigned to the already existing rooms, calling the exam/get_applicants_assigned_to_rooms service
+	 * Once the result is gotten the t._applicants_assigned attribute is updated and the t_init method is called
+	 */
 	t._getApplicantsAssigned = function(){
 		if(!can_manage|| rooms.length == 0) //Nothing to check
 			t._init();

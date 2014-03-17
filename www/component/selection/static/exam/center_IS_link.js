@@ -1,23 +1,41 @@
+/**
+ * Create a list of the information sessions linked to an exam center
+ * This list contains linked to the IS profile with the readonly attribute
+ * @param {HTMLElement | String} container
+ * @param {ExamCenterISLinked} IS_ids
+ */
 function center_IS_link(container,IS_ids){
 	var t = this;
 	container = typeof container == "string" ? document.getElementById(container) : container;
 	t.section = null;
+	
+	/**Private attributes and methods*/
+	
+	/**
+	 * Launch the process, create a section object and set its content
+	 */
 	t._init = function(){
 		t._section_content = document.createElement("div");
 		t._setSectionContent();
-		require("section.js",function(){			
+		require(["section.js","vertical_align.js"],function(){			
 			t.section = new section("","Information Sessions linked",t._section_content);
 			container.appendChild(t.section.element);
 			//Set the tooltip
+			var info_container = document.createElement("div");
 			var info = document.createElement("img");			
 			info.src = theme.icons_16.info;
-			t.section.addToolRight(info);
+			info_container.appendChild(info);
+			t.section.addToolRight(info_container);
 			var tip = document.createElement("div");
 			tip.innerHTML ="<i>All the applicants assigned to the information sessions below will be automatically assigned to this exam center<br/>Note: to link / unlink informations sessions from an exam center, please go on the exam centers main page</i>";
 			tooltip(info,tip);
+			new vertical_align(info_container,"middle");
 		});		
 	};
 	
+	/**
+	 * Set the content of the section, create the list
+	 */
 	t._setSectionContent = function(){		
 		if(IS_ids.length == 0){
 			var no = document.createElement('div');
@@ -49,6 +67,11 @@ function center_IS_link(container,IS_ids){
 		}		
 	};
 	
+	/**
+	 * Get an information session name
+	 * @param {Number} id the information session ID
+	 * @returns {String | NULL} the information session name if found, else NULL
+	 */
 	t._getISName = function(id){
 		for(var i = 0; i < t._all_names.length; i++){
 			if(t._all_names[i].id == id)

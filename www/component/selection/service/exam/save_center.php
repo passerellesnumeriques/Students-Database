@@ -1,127 +1,92 @@
 <?php
 require_once("component/contact/ContactJSON.inc");
 require_once("component/selection/SelectionJSON.inc");
-function prepareDataAndSaveIS($data,$create){
-	if($create && isset($data["id"]))
-		unset($data["id"]);
-	$fields_values_IS = SelectionJSON::InformationSessionTableData2DB($data);
-	if(!$create){
-		PNApplication::$instance->selection->saveIS($data["id"],$fields_values_IS);
-	} else {
-		$id = PNApplication::$instance->selection->saveIS(null,$fields_values_IS);
-		return $id;
-	}
-}
 
-class service_IS_save extends Service{
+class service_exam_save_center extends Service{
 	public function get_required_rights(){return array("manage_exam_center");}
 	public function input_documentation(){
 		?>
-
+		<code>data</code> ExamCenterData JSON object
 		<?php
 	}
 	public function output_documentation(){
 		?>
-
+		<ul>
+		<li>ExamCenterData JSON object if well saved</li>
+		<li>false if any error occured</li>
+		</ul>
 		<?php
 	}
 	public function documentation(){
-		
+		echo "Save the main data linked to an ExamCenter (location, partners, name, rooms);";
 	}
 	public function execute(&$component,$input){
 		if(!isset($input["data"]))
 			echo "false";
 		else {
 			$data = $input["data"];
-			$everything_ok = true;
-			$insert_EC = false;
-			$new_EC_id = null;
-				
-			if($data["id"] == -1 || $data["id"] == "-1"){
-				//This is an insert
-				$insert_EC = true;
-			}
-			//start the transaction
-			SQLQuery::startTransaction();
-			if($add_event && $everything_ok){
-				try{
-					if(isset($event["id"]))
-						unset($event["id"]);
-					$event["calendar_id"] = PNApplication::$instance->selection->getCalendarId();
-					$event["organizer"] = "Selection";
-					$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
-					if (!$insert_IS) {
-						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
-						$event["app_link_name"] = "This event is an Information Session: click to see it";
+			$id = ($data["id"] == -1 || $data["id"] == "-1") ? null : $data["id"];
+			//Check that the geographic area field is unique
+			$unique = SQLQuery::create()
+				->select("ExamCenter")
+				->field("ExamCenter","geographic_area")
+				->whereValue("ExamCenter", "geographic_area", $data["geographic_area"]);
+			if($id <> null)
+				$unique->whereNotIn("ExamCenter", "id", array($id));
+			$unique = $unique->executeSingleField();
+			if($unique <> null){
+				PNApplication::error("An exam center already exists in this geographic area");
+				return;
+			}				
+			//Prepare the data
+			if($data["name"] == null || !PNApplication::$instance->selection->getOneConfigAttributeValue("give_name_to_exam_center"))
+				$data["name"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
+			$rows_center = SelectionJSON::ExamCenter2DB($data, $id);
+			$rows_partnership = ContactJSON::PartnersAndContactPoints2DB($data, "exam_center");
+			$rows_partners = $rows_partnership[0];
+			$rows_contacts_points = $rows_partnership[1];
+			$rooms_ids_to_remove = array();
+			$rooms_to_update = array();
+			$rooms_to_insert = array();
+			if($id != null){
+				$rooms_existing = SQLQuery::create()
+					->bypassSecurity()
+					->select("ExamCenterRoom")
+					->field("ExamCenterRoom","id")
+					->whereValue("ExamCenterRoom", "exam_center", $id)
+					->executeSingleField();
+				if($rooms_existing <> null){
+					$rooms_to_update_ids = array();
+					$rooms_to_update_by_id = array();
+					foreach ($data["rooms"] as $room){
+						if($room["id"] != -1 && $room["id"] != "-1"){
+							array_push($rooms_to_update_ids, $room["id"]);
+							array_push($rooms_to_update, SelectionJSON::ExamCenterRoom2DB($room, $room["id"], $id));
+						}
 					}
-					PNApplication::$instance->calendar->saveEvent($event);
-					$event_id = $event["id"];
-				} catch(Exception $e){
-					$everything_ok = false;
-					PNApplication::error($e);
-				}
-				$data["date"] = $event_id;
-			} else if($update_event && $everything_ok){
-				$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
-				if (!$insert_IS) {
-					$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
-					$event["app_link_name"] = "This event is an Information Session: click to see it";
-				}
-				try{
-					PNApplication::$instance->calendar->saveEvent($event);
-				} catch(Exception $e){
-					$everything_ok = false;
-					PNApplication::error($e);
-				}
-			} else if($remove_event && $everything_ok) {
-				try{
-					PNApplication::$instance->calendar->removeEvent($event_to_remove,PNApplication::$instance->selection->getCalendarId());
-					$data["date"] = null;
-				} catch(Exception $e){
-					$everything_ok = false;
-					PNApplication::error($e);
-				}
-			}
-			if($insert_IS && $everything_ok){
-				/*create the IS to get the id*/
-				try{
-					$new_IS_id = prepareDataAndSaveIS($data,true);
-					$data["id"] = $new_IS_id;
-					if ($add_event) {
-						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
-						$event["app_link_name"] = "This event is an Information Session: click to see it";
-						PNApplication::$instance->calendar->saveEvent($event);
+					foreach ($rooms_existing as $room_id){
+						if(!in_array($room_id, $rooms_to_update_ids))
+							array_push($rooms_ids_to_remove, $room_id);
 					}
-				} catch (Exception $e){
-					$everything_ok = false;
-					PNApplication::error($e);
-				}
-			} else if($everything_ok){
-				try{
-					prepareDataAndSaveIS($data,false);
-				} catch (Exception $e){
-					$everything_ok = false;
-					PNApplication::error($e);
 				}
 			}
-			if($everything_ok){
-				/*save the partners and contact_points*/
-				try{
-					prepareDataAndSavePartnersAndContactsPoints($data);
-				} catch (Exception $e){
-					$everything_ok = false;
-					PNApplication::error($e);
-				}
+			foreach ($data["rooms"] as $room){
+				if($room["id"] == -1 || $room["id"] == "-1")
+					array_push($rooms_to_insert, SelectionJSON::ExamCenterRoom2DB($room, null, $id));
 			}
-				
-			if(!$everything_ok || PNApplication::has_errors()){
-				SQLQuery::rollbackTransaction();
+			$r = PNApplication::$instance->selection->saveExamCenter(
+						$id,
+						$rows_center,
+						$rows_partners,
+						$rows_contacts_points,
+						$rooms_ids_to_remove,
+						$rooms_to_update,
+						$rooms_to_insert
+					 );
+			if($r == false)
 				echo "false";
-			} else {
-				SQLQuery::commitTransaction();
-				echo "{id:".json_encode($data["id"]);
-				echo ",date:".json_encode($data["date"]);
-				echo "}";
+			else {
+				echo SelectionJSON::ExamCenterFromID($r);
 			}
 		}
 	}

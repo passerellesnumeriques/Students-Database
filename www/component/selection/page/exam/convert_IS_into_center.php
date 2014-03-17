@@ -1,6 +1,11 @@
 <?php
 require_once("/../selection_page.inc");
 require_once("component/selection/SelectionJSON.inc");
+/**
+ * This page locks ExamCenter, InformationSessionExamCenter, and InformationSession tables
+ * This page needs convert_IS_into_center script to handle the content / action required
+ * Each time a save is required the page is refreshed and the data to save is given as a GET variable
+ */
 class page_exam_convert_IS_into_center extends selection_page {
 	
 	public function get_required_rights() {return array("see_exam_center_detail","see_information_session_details");}
@@ -33,16 +38,14 @@ class page_exam_convert_IS_into_center extends selection_page {
 					PNApplication::$instance->selection->linkIStoEC($EC_id, $IS_ids,$lock_ECIS);
 			}
 		}
-		
-		
-		
+	
 		//generate the page
 		$page->require_javascript("vertical_layout.js");
 		$page->onload("new vertical_layout('assign_container');");
 		?>
 		<div id = "assign_container" style = "width:100%; height:100%; overflow:hidden;">
 			<div id = "info_header"layout = "fixed" class = "info_header">
-				<img style = "vertical-align:bottom;" src = "<?php echo theme::$icons_16["info"];?>"/> Convert informations sessions into exam centers. You can create an exam center from any informations sessions, or create a new center and then link any information session.<br/><i>Note: only the informations sessions with a host partner are displayed in the list</i>
+				<img style = "vertical-align:bottom;" src = "<?php echo theme::$icons_16["info"];?>"/> You can create an exam center from any informations sessions, or create a new center and then link any information session, or just link any information session to an exam center.<br/><i>Notes: <ul><li>Only the informations sessions with a host partner are displayed in the list</li><li>When an information is linked to an exam center, all the applicants linked to this information session will also be attached to the exam center</li></ul></i>
 			</div>
 			<div id = "sections_container" layout = "fill"></div>
 		</div>

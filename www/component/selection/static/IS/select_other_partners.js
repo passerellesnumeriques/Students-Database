@@ -196,27 +196,23 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		for(var i = 0; i < all_partners.length; i++){
 			if(all_partners[i].host == false){
 				if(mode == "information_session"){
-					require("IS_objects.js",function(){
-						var partner = new ISPartner(
-								all_partners[i].organization,
-								all_partners[i].organization_name,
-								false,
-								null,
-								all_partners[i].contact_points_selected
-						);
-						t.partners.push(partner);
-					});
+					var partner = new ISPartner(
+							all_partners[i].organization,
+							all_partners[i].organization_name,
+							false,
+							null,
+							all_partners[i].contact_points_selected
+					);
+					t.partners.push(partner);
 				} else if (mode == "exam_center"){
-					require("exam_objects.js",function(){
-						var partner = new ExamCenterPartner(
-								all_partners[i].organization,
-								all_partners[i].organization_name,
-								false,
-								null,
-								all_partners[i].contact_points_selected
-						);
-						t.partners.push(partner);
-					});
+					var partner = new ExamCenterPartner(
+							all_partners[i].organization,
+							all_partners[i].organization_name,
+							false,
+							null,
+							all_partners[i].contact_points_selected
+					);
+					t.partners.push(partner);
 				}
 			}
 		}
@@ -293,7 +289,7 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		}
 	};
 	
-	require(["create_partner_row.js","popup_window.js","section.js"],function(){
+	require(["create_partner_row.js","popup_window.js","section.js","IS_objects.js","exam_objects.js"],function(){
 		//Set the section
 		t.container_of_section_content = document.createElement("div");
 		t.section = new section("/static/contact/directory_16.png","Other partners",t.container_of_section_content,true);
