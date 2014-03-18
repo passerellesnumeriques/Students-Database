@@ -147,59 +147,10 @@ function images_tool_crop() {
 		}
 		
 		// draw the crop
-		var w = pic.original_canvas.width;
-		var h = pic.original_canvas.height;
-		if (pic.crop_divs) {
-			pic.td_original.removeChild(pic.crop_divs[0]);
-			pic.td_original.removeChild(pic.crop_divs[1]);
-			pic.td_original.removeChild(pic.crop_divs[2]);
-			pic.td_original.removeChild(pic.crop_divs[3]);
-			pic.crop_divs = null;
-		}
-		if (pic.crop_rect) {
-			var x = Math.floor(pic.crop_rect.x/(pic.original.naturalWidth/w));
-			var width = Math.floor(pic.crop_rect.width/(pic.original.naturalWidth/w));
-			var y = Math.floor(pic.crop_rect.y/(pic.original.naturalHeight/h));
-			var height = Math.floor(pic.crop_rect.height/(pic.original.naturalHeight/h));
-
-			var div_top = document.createElement("DIV");
-			div_top.style.position = "absolute";
-			div_top.style.top = y+"px";
-			div_top.style.left = x+"px";
-			div_top.style.height = "2px";
-			div_top.style.width = width+"px";
-			div_top.style.backgroundColor = "#C04000";
-			pic.td_original.appendChild(div_top);
-
-			var div_bottom = document.createElement("DIV");
-			div_bottom.style.position = "absolute";
-			div_bottom.style.top = (y+height-2)+"px";
-			div_bottom.style.left = x+"px";
-			div_bottom.style.height = "2px";
-			div_bottom.style.width = width+"px";
-			div_bottom.style.backgroundColor = "#C04000";
-			pic.td_original.appendChild(div_bottom);
-			
-			var div_left = document.createElement("DIV");
-			div_left.style.position = "absolute";
-			div_left.style.top = y+"px";
-			div_left.style.left = x+"px";
-			div_left.style.height = height+"px";
-			div_left.style.width = "2px";
-			div_left.style.backgroundColor = "#C04000";
-			pic.td_original.appendChild(div_left);
-			
-			var div_right = document.createElement("DIV");
-			div_right.style.position = "absolute";
-			div_right.style.top = y+"px";
-			div_right.style.left = (x+width-2)+"px";
-			div_right.style.height = height+"px";
-			div_right.style.width = "2px";
-			div_right.style.backgroundColor = "#C04000";
-			pic.td_original.appendChild(div_right);
-			
-			pic.crop_divs = [div_top,div_bottom,div_left,div_right];
-		};
+		if (!pic._crop_rectangle)
+			pic._crop_rectangle = new crop_rectangle(pic);
+		else
+			pic._crop_rectangle.update();
 	};
 	var createInput = function() {
 		var input = document.createElement("INPUT");
@@ -413,3 +364,206 @@ function images_tool_crop() {
 };
 images_tool_crop.prototype = new ImageTool;
 images_tool_crop.prototype.constructor = images_tool_crop;
+
+function crop_rectangle(pic) {
+	this.div_top = null;
+	this.div_bottom = null;
+	this.div_left = null;
+	this.div_top = null;
+	this.div_top_left = null;
+	this.div_top_right = null;
+	this.div_bottom_left = null;
+	this.div_bottom_right = null;
+	
+	this.remove = function() {
+		if (this.div_top) {
+			pic.td_original.removeChild(this.div_top);
+			pic.td_original.removeChild(this.div_bottom);
+			pic.td_original.removeChild(this.div_left);
+			pic.td_original.removeChild(this.div_right);
+			pic.td_original.removeChild(this.div_top_left);
+			pic.td_original.removeChild(this.div_top_right);
+			pic.td_original.removeChild(this.div_bottom_left);
+			pic.td_original.removeChild(this.div_bottom_right);
+			this.div_top = null;
+			this.div_bottom = null;
+			this.div_left = null;
+			this.div_top = null;
+			this.div_top_left = null;
+			this.div_top_right = null;
+			this.div_bottom_left = null;
+			this.div_bottom_right = null;
+		}
+	};
+	this.createDiv = function(color) {
+		var div = document.createElement("DIV");
+		div.style.position = "absolute";
+		div.style.backgroundColor = color;
+		pic.td_original.appendChild(div);
+		return div;
+	};
+	this.create = function() {
+		this.div_top = this.createDiv("#C04000");
+		this.div_bottom = this.createDiv("#C04000");
+		this.div_left = this.createDiv("#C04000");
+		this.div_right = this.createDiv("#C04000");
+		this.div_top_left = this.createDiv("#0000FF");
+		this.div_top_right = this.createDiv("#0000FF");
+		this.div_bottom_left = this.createDiv("#0000FF");
+		this.div_bottom_right = this.createDiv("#0000FF");
+	};
+	this.position = function(div, x, y, width, height) {
+		div.style.top = y+"px";
+		div.style.left = x+"px";
+		div.style.width = width+"px";
+		div.style.height = height+"px";
+	};
+	
+	var move = null;
+	
+	var t=this;
+
+	this.update = function() {
+		if (!pic.crop_rect) { this.remove(); return; }
+		if (!this.div_top) this.create();
+		var w = pic.original_canvas.width;
+		var h = pic.original_canvas.height;
+
+		var x = Math.floor(pic.crop_rect.x/(pic.original.naturalWidth/w));
+		var width = Math.floor(pic.crop_rect.width/(pic.original.naturalWidth/w));
+		var y = Math.floor(pic.crop_rect.y/(pic.original.naturalHeight/h));
+		var height = Math.floor(pic.crop_rect.height/(pic.original.naturalHeight/h));
+
+		this.position(this.div_top, x, y, width, 2);
+		this.position(this.div_bottom, x, y+height-2, width, 2);
+		this.position(this.div_left, x, y, 2, height);
+		this.position(this.div_right, x+width-2, y, 2, height);
+		
+		this.position(this.div_top_left, x-2, y-2, 5, 5);
+		this.position(this.div_top_right, x+width-3, y-2, 5, 5);
+		this.position(this.div_bottom_left, x-2, y+height-3, 5, 5);
+		this.position(this.div_bottom_right, x+width-3, y+height-3, 5, 5);
+		
+		this.div_top_left.onmousedown = function(ev) {
+			move = function(x,y) {
+				x -= absoluteLeft(pic.original_canvas);
+				if (x < 0) x = 0;
+				y -= absoluteTop(pic.original_canvas);
+				if (y < 0) y = 0;
+				x = Math.floor(x*pic.original.naturalWidth/pic.original_canvas.width);
+				y = Math.floor(y*pic.original.naturalHeight/pic.original_canvas.height);
+				pic.crop_rect.width += pic.crop_rect.x-x;
+				pic.crop_rect.x = x;
+				if (pic.crop_rect.width <= 0) {
+					pic.crop_rect.x += pic.crop_rect.width-1;
+					pic.crop_rect.width = 1;
+				}
+				pic.crop_rect.height += pic.crop_rect.y-y;
+				pic.crop_rect.y = y;
+				if (pic.crop_rect.height <= 0) {
+					pic.crop_rect.y += pic.crop_rect.height-1;
+					pic.crop_rect.height = 1;
+				}
+				t.update();
+			};
+			stopEventPropagation(ev);
+		};
+		this.div_top_right.onmousedown = function(ev) {
+			move = function(x,y) {
+				x -= absoluteLeft(pic.original_canvas);
+				if (x < 0) x = 0;
+				y -= absoluteTop(pic.original_canvas);
+				if (y < 0) y = 0;
+				x = Math.floor(x*pic.original.naturalWidth/pic.original_canvas.width);
+				y = Math.floor(y*pic.original.naturalHeight/pic.original_canvas.height);
+				pic.crop_rect.width = x-pic.crop_rect.x;
+				if (pic.crop_rect.width <= 0) pic.crop_rect.width = 1;
+				pic.crop_rect.height += pic.crop_rect.y-y;
+				pic.crop_rect.y = y;
+				if (pic.crop_rect.height <= 0) {
+					pic.crop_rect.y += pic.crop_rect.height-1;
+					pic.crop_rect.height = 1;
+				}
+				t.update();
+			};
+			stopEventPropagation(ev);
+		};
+		this.div_bottom_left.onmousedown = function(ev) {
+			move = function(x,y) {
+				x -= absoluteLeft(pic.original_canvas);
+				if (x < 0) x = 0;
+				y -= absoluteTop(pic.original_canvas);
+				if (y < 0) y = 0;
+				x = Math.floor(x*pic.original.naturalWidth/pic.original_canvas.width);
+				y = Math.floor(y*pic.original.naturalHeight/pic.original_canvas.height);
+				pic.crop_rect.width += pic.crop_rect.x-x;
+				pic.crop_rect.x = x;
+				if (pic.crop_rect.width <= 0) {
+					pic.crop_rect.x += pic.crop_rect.width-1;
+					pic.crop_rect.width = 1;
+				}
+				pic.crop_rect.height = y-pic.crop_rect.y;
+				if (pic.crop_rect.height <= 0) pic.crop_rect.height = 1;
+				t.update();
+			};
+			stopEventPropagation(ev);
+		};
+		this.div_bottom_right.onmousedown = function(ev) {
+			move = function(x,y) {
+				x -= absoluteLeft(pic.original_canvas);
+				if (x < 0) x = 0;
+				y -= absoluteTop(pic.original_canvas);
+				if (y < 0) y = 0;
+				x = Math.floor(x*pic.original.naturalWidth/pic.original_canvas.width);
+				y = Math.floor(y*pic.original.naturalHeight/pic.original_canvas.height);
+				pic.crop_rect.width = x-pic.crop_rect.x;
+				if (pic.crop_rect.width <= 0) pic.crop_rect.width = 1;
+				pic.crop_rect.height = y-pic.crop_rect.y;
+				if (pic.crop_rect.height <= 0) pic.crop_rect.height = 1;
+				t.update();
+			};
+			stopEventPropagation(ev);
+		};
+	};
+	
+	this.update();
+	
+	pic.original_canvas.onmousedown = function(ev) {
+		if (!t.div_top) return;
+		var e = getCompatibleMouseEvent(ev);
+		if (e.x >= absoluteLeft(t.div_top) && e.x < absoluteLeft(t.div_top)+t.div_top.offsetWidth &&
+			e.y >= absoluteTop(t.div_top) && e.y <= absoluteTop(t.div_bottom)) {
+			var px = e.x;
+			var py = e.y;
+			move = function(x,y) {
+				var dx = x-px;
+				var dy = y-py;
+				dx = Math.floor(dx*pic.original.naturalWidth/pic.original_canvas.width);
+				dy = Math.floor(dy*pic.original.naturalHeight/pic.original_canvas.height);
+				pic.crop_rect.x += dx;
+				pic.crop_rect.y += dy;
+				if (pic.crop_rect.x < 0) pic.crop_rect.x = 0;
+				if (pic.crop_rect.y < 0) pic.crop_rect.y = 0;
+				if (pic.crop_rect.x+pic.crop_rect.width > pic.original.naturalWidth)
+					pic.crop_rect.x = pic.original.naturalWidth-pic.crop_rect.width;
+				if (pic.crop_rect.y+pic.crop_rect.height > pic.original.naturalHeight)
+					pic.crop_rect.y = pic.original.naturalHeight-pic.crop_rect.height;
+				t.update();
+				px = x;
+				py = y;
+			};
+		}
+		stopEventPropagation(ev);
+	};
+	window.top.pnapplication.registerOnMouseMove(getWindowFromElement(pic.original_canvas), function(x,y) {
+		if (!move) return;
+		move(x,y);
+	});
+	window.top.pnapplication.registerOnMouseUp(getWindowFromElement(pic.original_canvas), function() {
+		if (move) {
+			move = null;
+			pic.update();
+		}
+	});
+
+}

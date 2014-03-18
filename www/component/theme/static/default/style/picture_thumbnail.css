@@ -1,0 +1,15 @@
+.picture_thumbnail {
+	border: 1px solid #000080;
+}
+.picture_thumbnail_picture_container {
+	background-color: white;
+}
+.picture_thumbnail_picture {
+}
+.picture_thumbnail_name {
+	text-align: center;
+	background-color: #22bbea;
+	color: white;
+	font-weight: bold;
+	font-family: Verdana;
+}

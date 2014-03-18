@@ -25,9 +25,12 @@ foreach ($peoples as $people) {
 	echo json_encode($people);
 }
 ?>];
+<?php if (isset($input["donotcreate"])) {
+	echo "window.frameElement.".$input["donotcreate"]."(peoples);";
+} else { ?>
 function next(index) {
 	if (index == peoples.length) {
-		<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."();"?>
+		<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
 		window.popup.close();
 		return;
 	}
@@ -38,10 +41,9 @@ function next(index) {
 		for (var i = 0; i < p.length; ++i) {
 			var path = new DataPath(p[i].path);
 			if (path.table != "People") continue;
-			if (typeof p[i].data == 'undefined') continue;
-			for (var j = 0; j < p[i].data.length; ++j) {
-				if (p[i].data[j].name == "First Name") first_name = p[i].data[j].value;
-				else if (p[i].data[j].name == "Last Name") last_name = p[i].data[j].value;
+			for (var j = 0; j < p[i].value.length; ++j) {
+				if (p[i].value[j].name == "First Name") first_name = p[i].value[j].value;
+				else if (p[i].value[j].name == "Last Name") last_name = p[i].value[j].value;
 			}
 		}
 		info.innerHTML = "Creation of "+first_name+" "+last_name;
@@ -49,6 +51,10 @@ function next(index) {
 			info.innerHTML += " ("+(index+1)+"/"+peoples.length+")";
 		layout.invalidate(document.body);
 		service.json("data_model","create_data",{root:"People",paths:p},function(res) {
+			if (res && res.key) {
+				for (var i = 0; i < p.length; ++i)
+					if (p[i].path == "People") { p[i].key = res.key; break; }
+			}
 			next(index+1);
 		});
 	} else {
@@ -56,6 +62,7 @@ function next(index) {
 	}
 }
 next(0);
+<?php } ?>
 </script>
 <?php 
 	}

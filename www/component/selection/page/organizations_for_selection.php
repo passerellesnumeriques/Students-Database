@@ -47,8 +47,8 @@ class page_organizations_for_selection extends selection_page {
 			dl = new data_list(
 				'<?php echo $container_id;?>',
 				'Organization',
-				['Contacts.Name'],
-				[{category:'Contacts',name:'Managed by',data:{type:'exact',value:"Selection"}}],
+				['Organization.Name','Organization.Address','Organization.EMail','Organization.Phone'],
+				[{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"}}],
 				function (list) {
 					if(page_mode == "IS_partners")
 						list.grid.setSelectable(true);

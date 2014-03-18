@@ -179,6 +179,7 @@ $model->addTableDataDisplay($display);
 $display = new datamodel\TableDataDisplay("Organization", $org_category);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("name", "Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("creator", "Managed by", true));
+$display->addJoinToPrimary();
 $model->addTableDataDisplay($display);
 
 class ContactsScreen extends datamodel\DataScreen {
@@ -209,11 +210,11 @@ class ContactsScreen extends datamodel\DataScreen {
 		require_once("page/contact.inc");
 		$var = contact($page, $this->type, $contact_div_id, $owner_id);
 		if ($structure_name <> null)
-			echo "<script type='text/javascript'>$structure_name.push({path:".json_encode($paths[0]->getString()).",contacts:$var,getValue:function(){return this.contacts.getContacts();}});</script>";
+			echo "<script type='text/javascript'>$structure_name.push({path:".json_encode($paths[0]->getString()).",contacts:$var,getValue:function(){return this.contacts.getContacts();},validate:function(){return null;}});</script>";
 		require_once("page/address.inc");
 		$var = address($page, $this->type, $address_div_id, $owner_id);
 		if ($structure_name <> null)
-			echo "<script type='text/javascript'>$structure_name.push({path:".json_encode($paths[1]->getString()).",addresses:$var,getValue:function(){return this.addresses.getAddresses();}});</script>";
+			echo "<script type='text/javascript'>$structure_name.push({path:".json_encode($paths[1]->getString()).",addresses:$var,getValue:function(){return this.addresses.getAddresses();},validate:function(){return null;}});</script>";
 	}
 	
 	public function createData($paths) {
@@ -236,7 +237,7 @@ class ContactsScreen extends datamodel\DataScreen {
 				array_push($join, array($join_key=>$paths[0]->columns[$join_key],"contact"=>$id));
 			SQLQuery::create()->bypassSecurity()->insertMultiple($join_table."Contact", $join);
 		}
-		if (count($contacts) > 0) {
+		if (count($addresses) > 0) {
 			$list = array();
 			foreach ($addresses as $a) array_push($list, ContactJSON::PostalAddress2DB($a));
 			$ids = SQLQuery::create()->bypassSecurity()->insertMultiple("PostalAddress", $list);
@@ -251,4 +252,88 @@ class ContactsScreen extends datamodel\DataScreen {
 $model->addDataScreen(new ContactsScreen("people"));
 $model->addDataScreen(new ContactsScreen("organization"));
 
+class ContactPointDataScreen extends datamodel\DataScreen {
+	
+	public function getTables() { return array("ContactPoint"); }
+	
+	public function getIcon() { return "/static/contact/contact_point.png"; }
+	public function getName() { return "Organization Contact Point"; }
+	
+	public function generate(&$page, $paths, $values, $prefilled_values, $structure_name) {
+		$path = $paths[0];
+		if (!$values->hasColumnValue("ContactPoint", "people"))
+			$people_id = null;
+		else
+			$people_id = $values->getColumnValue("ContactPoint", "people");
+		if (!$values->hasColumnValue("ContactPoint", "organization"))
+			$org_id = null;
+		else
+			$org_id = $values->getColumnValue("ContactPoint", "organization");
+
+		$tf = PNApplication::$instance->widgets->get_typed_field(DataModel::get()->getTable("ContactPoint")->getColumn("designation"));
+		$page->require_javascript("typed_field.js");
+		$page->require_javascript($tf[0].".js");
+		
+		if ($people_id == null) {
+			// new people
+			$id = $page->generateID();
+			echo "Designation ";
+			echo "<span id='$id'></span>";
+			echo "<script type='text/javascript'>";
+			echo "var field = new ".$tf[0]."(null,true,".$tf[1].");";
+			echo "document.getElementById('$id').appendChild(field.getHTMLElement());";
+			echo "var path = {path:".json_encode($path->getString()).",data:[],columns:{";
+			$first = true;
+			foreach ($values->getColumns($path->table->getName()) as $cname=>$val) {
+				if ($first) $first = false; else echo ",";
+				echo $cname.":".json_encode($val);
+			}
+			echo "}";
+			echo ",field:field";
+			echo ",getValue:function(){ return this.field.getCurrentData(); }";
+			echo ",validate:function(){ return this.field.error; }";
+			echo "};\n";
+			echo "$structure_name.push(path);\n";
+			echo "</script>";
+		} else if ($org_id == null) {
+			// show all organisations for this people
+			$can_edit = PNApplication::$instance->people->canModify($people_id);
+			$rows = SQLQuery::create()
+				->select("ContactPoint")
+				->whereValue("ContactPoint", "people", $people_id)
+				->join("ContactPoint", "Organization", array("organization"=>"id"))
+				->execute();
+			foreach ($rows as $row) {
+				$id = $page->generateID();
+				echo "Designation for ".htmlentities($row["name"]).": ";
+				echo "<span id='$id'></span>";
+				if ($can_edit) {
+					$page->require_javascript("editable_cell.js");
+					echo "<script type='text/javascript'>";
+					echo "new editable_cell('$id','ContactPoint','designation',{people:".json_encode($people_id).",organization:".json_encode($row["organization"])."},".json_encode($tf[0]).",".$tf[1].",".json_encode($row["designation"]).");";
+					echo "</script>";
+				} else {
+					echo "<script type='text/javascript'>";
+					echo "document.getElementById('$id').appendChild(new ".$tf[0]."(".json_encode($row["designation"]).",false,".$tf[1].").getHTMLElement());";
+					echo "</script>";
+				}
+			}
+		} else {
+			// only one organisation and one people
+			echo "TODO: designation of this people for this organization";
+		}
+	}
+	
+	public function createData($paths) {
+		$path = $paths[0];
+		SQLQuery::create()->insert("ContactPoint", array(
+			"people"=>$path->columns["people"],
+			"organization"=>$path->columns["organization"],
+			"designation"=>$path->value
+		));
+	}
+	
+}
+
+$model->addDataScreen(new ContactPointDataScreen());
 ?>

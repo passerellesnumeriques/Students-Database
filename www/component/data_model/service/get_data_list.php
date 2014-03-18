@@ -113,10 +113,10 @@ class service_get_data_list extends Service {
 				$from = null;
 				if ($path instanceof DataPath_Join && $path->isReverse())
 					$from = $path->foreign_key->name;
-				$display = $path->table->getDisplayHandler($from);
+				$display = DataModel::get()->getTableDataDisplay($path->table->getName());
 				if ($display == null) continue;
-				if ($display->getCategory() <> $filter["category"]) continue;
-				foreach ($display->getDisplayableData() as $data) {
+				if ($display->getCategory()->getName() <> $filter["category"]) continue;
+				foreach ($display->getDataDisplay($from) as $data) {
 					if ($data->getDisplayName() <> $filter["name"]) continue;
 					$found = true;
 					$fil = array();

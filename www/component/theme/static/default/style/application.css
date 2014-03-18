@@ -58,6 +58,8 @@
 
 .frame_header.application .menu_item.menu_button {
     margin-bottom: 3px;
+    border: 1px solid rgba(255,255,255,0);
+    box-shadow: 2px 2px 2px rgba(128,128,128,0);
 }
 .frame_header.application .menu_item.menu_button:hover {
     border: 1px solid rgba(255,255,255,0);

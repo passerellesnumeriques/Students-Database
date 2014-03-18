@@ -161,6 +161,12 @@ getWindowFromDocument = function(doc) {
 	return doc.defaultView;
 };
 
+getWindowFromElement = function(e) {
+	while (e.offsetParent) e = e.offsetParent;
+	while (e.parentNode && e.parentNode.nodeName != 'BODY' && e.parentNode.nodeName != 'HTML') e = e.parentNode;
+	return getWindowFromDocument(e.ownerDocument);
+};
+
 /** Defined it if this function is not available in the current browser
  */
 if (typeof getComputedStyle == "undefined") {

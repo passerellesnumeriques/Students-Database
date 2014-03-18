@@ -7,11 +7,13 @@ class people extends Component {
 	public function getPluginImplementations() {
 		require_once("PeoplePeoplePlugin.inc");
 		require_once("PeoplePluginsImplementations.inc");
+		require_once("PeoplePictureStoragePlugin.inc");
 		return array(
 			new PeoplePeoplePlugin(),
 			new PeopleProfilePage(),
 			new PeopleGeneralInfo(),
 			new PersonalInfoPeopleCreatePlugin(),
+			new PeoplePictureStoragePlugin()
 		);
 	}
 	
@@ -71,6 +73,35 @@ class people extends Component {
 	
 	public function getPeople($people_id) {
 		return SQLQuery::create()->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
+	}
+	
+	public function canReadTypes($types) {
+		require_once("PeopleTypePlugin.inc");
+		$plugin = null;
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeopleTypePlugin)) continue;
+				if (in_array($pi->getId(), $types)) {
+					if ($plugin == null || $plugin->getSecurityPriority() > $pi->getSecurityPriority())
+						$plugin = $pi;
+				}
+			}
+		 if ($plugin == null) return false;
+		 return $plugin->canRead();
+	}
+	public function canModifyTypes($types) {
+		require_once("PeopleTypePlugin.inc");
+		$plugin = null;
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi) {
+			if (!($pi instanceof PeopleTypePlugin)) continue;
+			if (in_array($pi->getId(), $types)) {
+				if ($plugin == null || $plugin->getSecurityPriority() > $pi->getSecurityPriority())
+					$plugin = $pi;
+			}
+		}
+		if ($plugin == null) return false;
+		return $plugin->canModify();
 	}
 	
 	public function canRead($people_id) {

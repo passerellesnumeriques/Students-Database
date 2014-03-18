@@ -34,6 +34,7 @@ if (window == window.top) {
 						w.frameElement.loading_anim = null;
 					}
 					w.frameElement.unloading_anim = animation.fadeOut(w.frameElement.loading_t, 300, function() {
+						if (!w.frameElement) return;
 						if (w.frameElement.loading_t) {
 							w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
 							w.frameElement.loading_t = null;
@@ -204,6 +205,8 @@ if (window == window.top) {
 		closeWindow: function() {
 			window.top.pnapplication.onclose.fire();
 		},
+		/** event fired when user activity is detected */
+		onactivity: new Custom_Event(),
 		/** time of the last activity of the user */
 		last_activity: new Date().getTime(),
 		/** signals the user is active: fire onactivity event on each window */
@@ -217,6 +220,7 @@ if (window == window.top) {
 			var time = new Date().getTime();
 			time -= window.top.pnapplication.last_activity;
 			for (var i = 0; i < window.top.pnapplication._windows.length; ++i) {
+				if (window.top.pnapplication._windows[i] == window.top) continue;
 				if (window.top.pnapplication._windows[i].closed) {
 					window.top.pnapplication.unregisterWindow(window.top.pnapplication._windows[i]);
 					window.top.pnapplication.checkInactivity();
@@ -231,6 +235,7 @@ if (window == window.top) {
 			}
 		}
 	};
+	window.top.pnapplication.registerWindow(window.top);
 } else if (typeof Custom_Event != 'undefined'){
 	/**
 	 * Handle events on the current window, transfered to the top window

@@ -13,7 +13,7 @@ class page_popup_create_people_step_check extends Page {
 				if ($path["path"] == "People") {
 					$first_name = null;
 					$last_name = null;
-					foreach ($path["data"] as $d)
+					foreach ($path["value"] as $d)
 						if ($d["name"] == "First Name") 
 							$first_name = $d["value"];
 						else if ($d["name"] == "Last Name") 
@@ -45,7 +45,10 @@ class page_popup_create_people_step_check extends Page {
 			if (!popup.freezer) popup.freeze();
 			window.popup.removeAllButtons();
 			var data = {peoples:peoples};
-			<?php if (isset($input["ondone"])) echo "data.ondone = ".json_encode($input["ondone"]).";"?>
+			<?php 
+			if (isset($input["ondone"])) echo "data.ondone = ".json_encode($input["ondone"]).";";
+			else if (isset($input["donotcreate"])) echo "data.donotcreate = ".json_encode($input["donotcreate"]).";";
+			?>
 			postData("popup_create_people_step_creation",data,window);
 		}
 		<?php 
@@ -65,7 +68,7 @@ class page_popup_create_people_step_check extends Page {
 					if ($path["path"] == "People") {
 						$first_name = null;
 						$last_name = null;
-						foreach ($path["data"] as $d)
+						foreach ($path["value"] as $d)
 							if ($d["name"] == "First Name")
 							$first_name = $d["value"];
 						else if ($d["name"] == "Last Name")

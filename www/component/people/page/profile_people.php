@@ -3,6 +3,9 @@ class page_profile_people extends Page {
 	public function get_required_rights() { return array(); }
 	public function execute() {
 		$people_id = $_GET["people"];
+		require_once("component/data_model/page/data_screen.inc");
+		echo existingDataScreenFromKey($this, "People", null, $people_id);
+		return;
 		require_once("component/people/PeopleProfileGeneralInfoPlugin.inc");
 		$plugins = array();
 		$q = SQLQuery::create()

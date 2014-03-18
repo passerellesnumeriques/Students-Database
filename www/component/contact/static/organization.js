@@ -224,17 +224,33 @@ function organization(container, org, existing_types, can_edit) {
 			td.style.color = "#808080";
 			td.colSpan = 2;
 			td.onclick = function() {
-				require("popup_window.js",function() {
-					var frame = document.createElement("IFRAME");
-					frame.style.border = "0px";
-					frame.style.width = "100%";
-					frame.style.height = "100%";
-					var p = new popup_window("New Contact Point", '/static/application/icon.php?main=/static/contact/contact_point.png&small='+theme.icons_10.add+'&where=right_bottom',frame);
-					p.show();
-					var create_contact_point_success = function(people) {
-						var point = new ContactPoint(people.people_id, people.people.first_name,people.people.last_name, people.contact_point_designation);
+				window.top.require("popup_window.js",function() {
+					var p = new window.top.popup_window('New Contact Point', theme.build_icon("/static/contact/contact_point.png",theme.icons_10.add), "");
+					var url = "/dynamic/contact/page/popup_create_contact_point?org="+org.id;
+					if (org.id == -1) {
+						url += "&creator="+org.creator;
+						url += "&donotcreate=contact_point_created";
+					} else {
+						url += "&ondone=contact_point_created";
+					}
+					var frame = p.setContentFrame(url);
+					frame.contact_point_created = function(peoples) {
+						var paths = peoples[0];
+						var people_path = null;
+						var contact_path = null;
+						for (var i = 0; i < paths.length; ++i)
+							if (paths[i].path == "People") people_path = paths[i];
+							else if (paths[i].path == "People<<ContactPoint(people)") contact_path = paths[i];
+						
+						var people_id = people_path.key;
+						var first_name = "", last_name = "";
+						for (var i = 0; i < people_path.value.length; ++i)
+							if (people_path.value[i].name == "First Name") first_name = people_path.value[i].value;
+							else if (people_path.value[i].name == "Last Name") last_name = people_path.value[i].value;
+						var designation = contact_path.value;
+						var point = new ContactPoint(people_id, first_name, last_name, designation);
 						if (org.id == -1)
-							point.create_people = people;
+							point.create_people = paths;
 						org.contact_points.push(point);
 						t._addContactPointRow(point, tbody);
 						t.onchange.fire();
@@ -242,27 +258,7 @@ function organization(container, org, existing_types, can_edit) {
 						p.close();
 						layout.invalidate(tbody);
 					};
-					frame.onload = function() {
-						waitFrameReady(getIFrameWindow(frame), function(win) { return typeof win.create_people != 'undefined'; }, function(win) {
-							if (org.id != -1)
-								win.onsuccess=create_contact_point_success;
-							else
-								win.donotcreate=create_contact_point_success;
-						},30000);
-						p.resize();
-					};
-					var data =
-					{
-							types:['organization_contact_point'],
-							icon:'/static/application/icon.php?main=/static/contact/contact_point_32.png&small='+theme.icons_16.add+'&where=right_bottom',
-							title:'New Contact Point For '+org.name,
-							contact_point_organization: org.id
-					};
-					postData(
-						'/dynamic/people/page/create_people',
-						data,
-						getIFrameWindow(frame)
-					);
+					p.show();
 				});
 			};
 		}

@@ -29,14 +29,22 @@ class service_save_picture extends Service {
 			}
 		
 		SQLQuery::startTransaction();
-		$id = PNApplication::$instance->storage->store_data("", "image/jpeg");
-		if ($id == null) return;
-		if (!imagejpeg($img, PNApplication::$instance->storage->get_data_path($id))) return;
-		SQLQuery::create()->updateByKey("People", $people_id, array("picture"=>$id));
-		if (!PNApplication::has_errors()) {
-			SQLQuery::commitTransaction();
-			echo "true";
+		$people = PNApplication::$instance->people->getPeople($people_id);
+		$id = $people["picture"];
+		if ($id == null) {
+			$id = PNApplication::$instance->storage->store_data("people_picture", "", "image/jpeg");
+			if ($id == null) return;
+		} else {
+			PNApplication::$instance->storage->new_revision($id);
 		}
+		if (!imagejpeg($img, PNApplication::$instance->storage->get_data_path($id))) {
+			PNApplication::$instance->storage->remove_data($id);
+			return;
+		}
+		if ($people["picture"] == null)
+			SQLQuery::create()->updateByKey("People", $people_id, array("picture"=>$id));
+		SQLQuery::commitTransaction();
+		echo "true";
 	}
 	
 }

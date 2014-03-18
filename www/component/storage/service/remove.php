@@ -14,8 +14,8 @@ class service_remove extends Service {
 			PNApplication::error("Invalid storage id");
 			return;
 		}
-		if ($file["username"] <> PNApplication::$instance->user_management->username || $file["domain"] <> PNApplication::$instance->user_management->domain) {
-			PNApplication::error("Access denied.");
+		if (!$component->canWriteFile($file)) {
+			PNApplication::error("Access Denied.");
 			return;
 		}
 		$component->remove_data($id);

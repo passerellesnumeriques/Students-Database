@@ -249,18 +249,27 @@ class SimpleDataDisplay extends DataDisplay {
 		}
 		$result = array("data"=>$alias);
 		$key = $this->getTable()->getPrimaryKey();
-		if ($key == null) {
-			PNApplication::error("No key for data '".$this->display_name."' in table '".$this->getTableName()."'");
-			$result["key"] = null;
-			return $result;
+		if ($key <> null) {
+			$key = $key->name;
+			$alias = $q->getFieldAlias($table_alias, $key);
+			if ($alias == null) {
+				$alias = $q->generateFieldAlias();
+				$q->field($table_alias, $key, $alias);
+			}
+			$result["key"] = $alias;
+		} else {
+			$key = $this->getTable()->getKey();
+			$aliases = array();
+			foreach ($key as $colname) {
+				$alias = $q->getFieldAlias($table_alias, $colname);
+				if ($alias == null) {
+					$alias = $q->generateFieldAlias();
+					$q->field($table_alias, $colname, $alias);
+				}
+				array_push($aliases, $alias);
+			}
+			$result["key"] = $aliases;
 		}
-		$key = $key->name;
-		$alias = $q->getFieldAlias($table_alias, $key);
-		if ($alias == null) {
-			$alias = $q->generateFieldAlias();
-			$q->field($table_alias, $key, $alias);
-		}
-		$result["key"] = $alias;
 		$col = $this->getTable()->getColumnFor($this->column_name, $path->sub_model);
 		$this->applyColumnFilter($table_alias, $col, $filters, $q);
 		return $result;

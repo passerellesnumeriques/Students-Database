@@ -53,27 +53,10 @@ class page_popup_create_people extends Page {
 			var error = null;
 			for (var i = 0; i < structure.length; ++i) {
 				var p = {path:structure[i].path};
-				if (typeof structure[i].getValue == 'function') {
-					if (typeof structure[i].validate == 'function') {
-						error = structure[i].validate();
-						if (error != null) break;
-					}
-					p.value = structure[i].getValue();
-				} else {
-					p.columns = structure[i].columns;
-					p.data = [];
-					for (var j = 0; j < structure[i].data.length; ++j) {
-						if (typeof structure[i].data[j].validate == 'function') {
-							error = structure[i].data[j].validate();
-							if (error != null) {
-								error = structure[i].data[j].name+": "+error;
-								break;
-							}
-						}
-						p.data.push({name:structure[i].data[j].name,value:structure[i].data[j].getValue()});
-					}
-					if (error != null) break;
-				}
+				error = structure[i].validate();
+				if (error != null) break;
+				p.value = structure[i].getValue();
+				p.columns = typeof structure[i].columns != 'undefined' ? structure[i].columns : [];
 				people.push(p);
 			}
 			if (error != null) {
@@ -83,7 +66,10 @@ class page_popup_create_people extends Page {
 			}
 			popup.removeAllButtons();
 			var data = {peoples:[people]};
-			<?php if (isset($_GET["ondone"])) echo "data.ondone = ".json_encode($_GET["ondone"]).";";?>
+			<?php 
+			if (isset($_GET["ondone"])) echo "data.ondone = ".json_encode($_GET["ondone"]).";";
+			else if (isset($_GET["donotcreate"])) echo "data.donotcreate = ".json_encode($_GET["donotcreate"]).";";
+			?>
 			postData("popup_create_people_step_check", data, window);
 		});
 		popup.addCancelButton();

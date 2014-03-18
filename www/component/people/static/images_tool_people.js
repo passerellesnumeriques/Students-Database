@@ -27,6 +27,18 @@ function images_tool_people() {
 		if (word.length > 0) words.push(word.toLowerCase());
 		return words;
 	};
+	this._almostSameWord = function(s1,s2) {
+		for (var i = 0; i < s1.length; ++i) {
+			var ss1 = (i > 0 ? s1.substring(0,i) : "")+(i < s1.length-1 ? s1.substring(i+1) : "");
+			if (ss1 == s2) return true;
+			for (var j = 0; j < s2.length; ++j) {
+				var ss2 = (j > 0 ? s2.substring(0,j) : "")+(j < s2.length-1 ? s2.substring(j+1) : "");
+				if (ss2 == s1) return true;
+				if (ss1 == ss2) return true;
+			}
+		}
+		return false;
+	};
 	this.update = function(pic, canvas) {
 		if (pic.select_people.selectedIndex <= 0 && pic.name) {
 			var name = pic.name;
@@ -38,10 +50,24 @@ function images_tool_people() {
 				var o = pic.select_people.options[i];
 				var words = this._words(o.text);
 				var complete = 0;
-				for (var j = 0; j < words.length; ++j)
+				var almost = 0;
+				for (var j = 0; j < words.length; ++j) {
 					if (name.contains(words[j])) complete++;
+					else {
+						for (var k = 0; k < name.length; ++k)
+							if (this._almostSameWord(name[k], words[j])) {
+								almost++;
+								break;
+							}
+					}
+				}
 				if (complete == words.length) {
 					// perfect match
+					pic.select_people.selectedIndex = i;
+					return;
+				}
+				if (complete + almost == words.length) {
+					// almost perfect match => it's ok
 					pic.select_people.selectedIndex = i;
 					return;
 				}
