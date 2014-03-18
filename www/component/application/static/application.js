@@ -5,6 +5,10 @@ if (window == window.top) {
 	window.top.pnapplication = {
 		/** Event raised when the user logout, so we can clean some objects that may be on the top window */
 		onlogout: new Custom_Event(),
+		/** Event raised when the user login */
+		onlogin: new Custom_Event(),
+		/** Indicates if the user is currently logged or not */
+		logged_in: false,
 		/** list of windows (private: registerWindow and unregisterWindow must be used) */
 		_windows: [],
 		/** event when a window/frame is closed. The window is given as parameter to the listeners. */ 
@@ -76,8 +80,8 @@ if (window == window.top) {
 						w.frameElement.unloading_anim = null;
 					}
 					if (w.frameElement.loading_t) {
-						if (w.frameElement.loading_t.parentNode)
-							w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
+						if (w.frameElement.loading_t.parentNode) return; // already there
+							//w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
 					}
 					var t = document.createElement("TABLE");
 					var tr = document.createElement("TR");

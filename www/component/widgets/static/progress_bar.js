@@ -32,11 +32,15 @@ function progress_bar(width, height, css) {
 		this.setPosition(this.position + amount);
 	};
 	this.done = function() {
-		this.element.innerHTML = "Done.";
+		this.element.className += " progress_done";
+		this.element.style.color = "#00A000";
+		this.element.innerHTML = "<img src='"+(height >= 16 ? theme.icons_16.ok : theme.icons_10.ok)+"' style='vertical-align:bottom'/> Done.";
 	};
 	
 	this.error = function() {
-		this.element.innerHTML = "Error";
+		this.element.className += " progress_done";
+		this.element.style.color = "#A00000";
+		this.element.innerHTML = "<img src='"+(height >= 16 ? theme.icons_16.error : theme.icons_10.error)+"' style='vertical-align:bottom'/> Error.";
 	};
 	
 }

@@ -13,7 +13,6 @@ $model->addTable("People")
 	->addDate("birth", true)
 	->addString("types", 1024, 0, false, false)
 	->addForeignKey("picture", "Storage", false, false, false)
-	->addInteger("picture_version")
 	->setRowDescriptionProvider(function($row) {
 		$s = $row["first_name"];
 		if ($row["middle_name"] <> null && $row["middle_name"] <> "") $s .= " ".$row["middle_name"];

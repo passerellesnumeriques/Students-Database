@@ -41,12 +41,15 @@ class storage extends Component {
 	
 	private function allocate_id($mime = null, $expire = null) {
 		$this->remove_old();
-		$q = "INSERT INTO `Storage` (`mime`,`expire`,`username`) VALUE (";
+		$q = "INSERT INTO `Storage` (`mime`,`expire`,`username`,`domain`,`revision`) VALUE (";
 		$q .= ($mime <> null ? "'".SQLQuery::escape($mime)."'" : "NULL").",";
 		if ($expire <> null)
-			$q .= $expire.",'".SQLQuery::escape(PNApplication::$instance->user_management->username)."'";
+			$q .= $expire;
 		else
-			$q .= "NULL,NULL";
+			$q .= "NULL";
+		$q .= ",'".SQLQuery::escape(PNApplication::$instance->user_management->username)."'";
+		$q .= ",'".SQLQuery::escape(PNApplication::$instance->user_management->domain)."'";
+		$q .= ",1";
 		$q .= ")";
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute($q);
 		$id = SQLQuery::getDataBaseAccessWithoutSecurity()->getInsertID();
@@ -111,16 +114,6 @@ class storage extends Component {
 		return $path;
 	}
 	
-	function get_data($id, $new_expire = null) {
-		$path = $this->get_data_path($id);
-		if (!file_exists($path)) return null;
-		$data = file_get_contents($path);
-		if ($data === false) return null;
-		if ($new_expire <> null)
-			SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `expire`=".$new_expire." WHERE `id`=".$id);
-		return $data;
-	}
-
 	function set_expire($id, $new_expire) {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `expire`=".($new_expire == null ? "NULL" : $new_expire)." WHERE `id`=".$id);
 	}
@@ -135,7 +128,7 @@ class storage extends Component {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute($q);
 	}
 	
-	function update_mime($id, $mime_type) {
+	function set_mime($id, $mime_type) {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `mime`='".SQLQuery::escape($mime_type)."' WHERE `id`=".$id);
 	}
 	

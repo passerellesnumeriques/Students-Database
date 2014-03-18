@@ -2,6 +2,7 @@ function pictures_list_thumbnail(container, people, width, height) {
 	var t=this;
 	this.width = width;
 	this.height = height;
+	this.people = people;
 	
 	this.div = document.createElement("DIV"); container.appendChild(this.div);
 	this.div.style.display = "inline-block";
@@ -63,5 +64,9 @@ function pictures_list_thumbnail(container, people, width, height) {
 				this.picture.style.height = nh+'px';
 			}
 		}
+	};
+	
+	this.reload = function() {
+		this.picture.src = "/dynamic/people/service/picture?people="+people.id+"&ts="+new Date().getTime();
 	};
 }

@@ -12,9 +12,11 @@ window.top.CalendarsProviders.get(function(provider) {
 	for (var i = 0; i < provider.calendars.length; ++i)
 		window.top.calendar_manager.addCalendar(provider.calendars[i]);
 	provider.on_calendar_added.add_listener(function(cal){
+		if (!window.top.calendar_manager) return;
 		window.top.calendar_manager.addCalendar(cal);
 	});
 	provider.on_calendar_removed.add_listener(function(cal){
+		if (!window.top.calendar_manager) return;
 		window.top.calendar_manager.removeCalendar(cal);
 	});
 	provider._refresh_interval = setInterval(function() {

@@ -47,7 +47,7 @@ class service_store_temp_image extends Service {
 				$img = $img2;
 			}
 			imagejpeg($img, $path);
-			$component->update_mime($ids[0], "image/jpeg");
+			$component->set_mime($ids[0], "image/jpeg");
 			echo "{id:".$ids[0]."}";
 		}
 	}

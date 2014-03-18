@@ -1,3 +1,5 @@
+// #depends[/static/images_tool/images_tool.js]
+
 function images_tool_crop() {
 	this.getTitle = function() { return "Crop"; };
 	this.getIcon = function() { return "/static/images_tool/crop.png"; };
@@ -17,7 +19,6 @@ function images_tool_crop() {
 				pic.crop_ratio = value.aspect_ratio;
 				pic.crop_ratio_editable = editable;
 			}
-			pic.update();
 		} else {
 			if (value.rect) {
 				this.general_crop = value.rect;
@@ -25,7 +26,11 @@ function images_tool_crop() {
 			}
 			if (value.aspect_ratio) {
 				this.general_ratio = value.aspect_ratio;
-				this.general_reatio_editable = editable;
+				this.general_ratio_editable = editable;
+				if (this.general_ratio_input) {
+					this.general_ratio_input.value = this.general_ratio ? this.general_ratio : "";
+					this.general_ratio_input.disable = this.general_ratio_editable ? "" : "disabled";
+				}
 			}
 		}
 	};
@@ -196,21 +201,21 @@ function images_tool_crop() {
 			pic.crop_divs = [div_top,div_bottom,div_left,div_right];
 		};
 	};
+	var createInput = function() {
+		var input = document.createElement("INPUT");
+		input.size = 4;
+		input.style.fontSize = "8pt";
+		input.style.textAlign = "center";
+		return input;
+	};
+	var createTD = function() {
+		var td = document.createElement("TD");
+		td.style.fontSize = "8pt";
+		td.style.textAlign = "center";
+		return td;
+	};
 	this.createContent = function(pic) {
-		var createInput = function() {
-			var input = document.createElement("INPUT");
-			input.size = 4;
-			input.style.fontSize = "8pt";
-			input.style.textAlign = "center";
-			return input;
-		};
-		var createTD = function() {
-			var td = document.createElement("TD");
-			td.style.fontSize = "8pt";
-			td.style.textAlign = "center";
-			return td;
-		};
-		
+		var t=this;
 		var table = document.createElement("TABLE");
 		var tr,td;
 		table.appendChild(tr = document.createElement("TR"));
@@ -221,11 +226,32 @@ function images_tool_crop() {
 		pic.crop_top_input = createInput();
 		if (this.general_crop) {
 			pic.crop_top_input.value = this.general_crop.y;
-			pic.crop_top_input.disabled = this.general_crop_editable ? "" : "disabled";
+			pic.crop_top_input.disabled = "disabled";
 		} else if (pic.crop_rect) {
 			pic.crop_top_input.value = pic.crop_rect.y;
 			pic.crop_top_input.disabled = pic.crop_rect_editable ? "" : "disabled";
 		}
+		pic.crop_top_input.onchange = function() {
+			var value = parseInt(this.value);
+			if (isNaN(value) || value <= 0) return;
+			if (value >= pic.original.naturalHeight) {
+				this.value = value = pic.original.naturalHeight-1;
+			}
+			var rect = pic.crop_rect;
+			if (!rect) rect = {x:0,y:0,width:pic.original.naturalWidth,height:pic.original.naturalHeight};
+			rect.height -= value-rect.y;
+			if (rect.height <= 0) rect.height = 1;
+			rect.y = value;
+			if (rect.y+rect.height > pic.original.naturalHeight)
+				rect.height = pic.original.naturalHeight-rect.y;
+			t.setValue(pic, {rect:rect}, true);
+			pic.update();
+			if (value+rect.height <= pic.original.naturalHeight) {
+				rect.y = value;
+				t.setValue(pic, {rect:rect}, true);
+				pic.update();
+			}
+		};
 		td.appendChild(pic.crop_top_input);
 		tr.appendChild(td = createTD());
 
@@ -235,11 +261,32 @@ function images_tool_crop() {
 		pic.crop_left_input = createInput();
 		if (this.general_crop) {
 			pic.crop_left_input.value = this.general_crop.x;
-			pic.crop_left_input.disabled = this.general_crop_editable ? "" : "disabled";
+			pic.crop_left_input.disabled = "disabled";
 		} else if (pic.crop_rect) {
 			pic.crop_left_input.value = pic.crop_rect.x;
 			pic.crop_left_input.disabled = pic.crop_rect_editable ? "" : "disabled";
 		}
+		pic.crop_left_input.onchange = function() {
+			var value = parseInt(this.value);
+			if (isNaN(value) || value <= 0) return;
+			if (value >= pic.original.naturalWidth) {
+				this.value = value = pic.original.naturalWidth-1;
+			}
+			var rect = pic.crop_rect;
+			if (!rect) rect = {x:0,y:0,width:pic.original.naturalWidth,height:pic.original.naturalHeight};
+			rect.width -= value-rect.x;
+			if (rect.width <= 0) rect.width = 1;
+			rect.x = value;
+			if (rect.x+rect.width > pic.original.naturalWidth)
+				rect.width = pic.original.naturalWidth-rect.x;
+			t.setValue(pic, {rect:rect}, true);
+			pic.update();
+			if (value+rect.width <= pic.original.naturalWidth) {
+				rect.x = value;
+				t.setValue(pic, {rect:rect}, true);
+				pic.update();
+			}
+		};
 		td.appendChild(pic.crop_left_input);
 		tr.appendChild(td = createTD());
 		pic.crop_size_container = td;
@@ -249,11 +296,30 @@ function images_tool_crop() {
 		pic.crop_right_input = createInput();
 		if (this.general_crop) {
 			pic.crop_right_input.value = this.general_crop.x+this.general_crop.width-1;
-			pic.crop_right_input.disabled = this.general_crop_editable ? "" : "disabled";
+			pic.crop_right_input.disabled = "disabled";
 		} else if (pic.crop_rect) {
 			pic.crop_right_input.value = pic.crop_rect.x+pic.crop_rect.width-1;
 			pic.crop_right_input.disabled = pic.crop_rect_editable ? "" : "disabled";
 		}
+		pic.crop_right_input.onchange = function() {
+			var value = parseInt(this.value);
+			if (isNaN(value) || value <= 0) return;
+			if (value >= pic.original.naturalWidth) {
+				this.value = value = pic.original.naturalWidth;
+			}
+			var rect = pic.crop_rect;
+			if (!rect) rect = {x:0,y:0,width:pic.original.naturalWidth,height:pic.original.naturalHeight};
+			rect.width = value-rect.x;
+			if (rect.x+rect.width > pic.original.naturalWidth)
+				rect.x = pic.original.naturalWidth-rect.width;
+			t.setValue(pic, {rect:rect}, true);
+			pic.update();
+			if (value-rect.width >= 0) {
+				rect.x = value-rect.width;
+				t.setValue(pic, {rect:rect}, true);
+				pic.update();
+			}
+		};
 		td.appendChild(pic.crop_right_input);
 		td.appendChild(document.createTextNode("Right"));
 		
@@ -263,11 +329,30 @@ function images_tool_crop() {
 		pic.crop_bottom_input = createInput();
 		if (this.general_crop) {
 			pic.crop_bottom_input.value = this.general_crop.y+this.general_crop.height-1;
-			pic.crop_bottom_input.disabled = this.general_crop_editable ? "" : "disabled";
+			pic.crop_bottom_input.disabled = "disabled";
 		} else if (pic.crop_rect) {
 			pic.crop_bottom_input.value = pic.crop_rect.y+pic.crop_rect.height-1;
 			pic.crop_bottom_input.disabled = pic.crop_rect_editable ? "" : "disabled";
 		}
+		pic.crop_bottom_input.onchange = function() {
+			var value = parseInt(this.value);
+			if (isNaN(value) || value <= 0) return;
+			if (value >= pic.original.naturalHeight) {
+				this.value = value = pic.original.naturalHeight;
+			}
+			var rect = pic.crop_rect;
+			if (!rect) rect = {x:0,y:0,width:pic.original.naturalWidth,height:pic.original.naturalHeight};
+			rect.height = value-rect.y;
+			if (rect.y+rect.height > pic.original.naturalHeight)
+				rect.y = pic.original.naturalHeight-rect.height;
+			t.setValue(pic, {rect:rect}, true);
+			pic.update();
+			if (value-rect.height >= 0) {
+				rect.y = value-rect.height;
+				t.setValue(pic, {rect:rect}, true);
+				pic.update();
+			}
+		};
 		td.appendChild(pic.crop_bottom_input);
 		td.appendChild(document.createElement("BR"));
 		td.appendChild(document.createTextNode("Bottom"));
@@ -280,14 +365,50 @@ function images_tool_crop() {
 		pic.crop_ratio_input = createInput();
 		if (this.general_ratio) {
 			pic.crop_ratio_input.value = this.general_ratio;
-			pic.crop_ratio_input.disabled = this.general_ratiop_editable ? "" : "disabled";
+			pic.crop_ratio_input.disabled = "disabled";
 		} else if (pic.crop_ratio) {
 			pic.crop_ratio_input.value = pic.crop_ratio;
 			pic.crop_ratio_input.disabled = pic.crop_ratio_editable ? "" : "disabled";
 		}
+		pic.crop_ratio_input.onchange = function() {
+			if (this.value == "")
+				t.setValue(pic, {aspect_ratio:null}, true);
+			else {
+				var value = parseFloat(this.value);
+				if (isNaN(value) || value <= 0)
+					this.value = pic.crop_ratio ? pic.crop_ratio : "";
+				else
+					t.setValue(pic, {aspect_ratio:value}, true);
+			}
+			pic.update();
+		};
 		td.appendChild(pic.crop_ratio_input);
 		
 		return table;
+	};
+	this.createGeneralContent = function() {
+		var div = document.createElement("DIV");
+		div.style.fontSize = "8pt";
+		div.appendChild(document.createTextNode("Aspect ratio "));
+		this.general_ratio_input = createInput();
+		if (this.general_ratio) this.general_ratio_input.value = this.general_ratio;
+		if (!this.general_ratio_editable) this.general_ratio_input.disabled = "disabled";
+		div.appendChild(this.general_ratio_input);
+		var t=this;
+		this.general_ratio.onchange = function() {
+			if (this.value == "")
+				t.setValue(null, {aspect_ratio:null}, true);
+			else {
+				var value = parseFloat(this.value);
+				if (isNaN(value) || value <= 0)
+					this.value = t.general_ratio ? t.general_ratio : "";
+				else
+					t.setValue(null, {aspect_ratio:value}, true);
+			}
+			var pictures = t.images_tool.getPictures();
+			for (var i = 0; i < pictures.length; ++i) pictures[i].update();
+		};
+		return div;
 	};
 };
 images_tool_crop.prototype = new ImageTool;

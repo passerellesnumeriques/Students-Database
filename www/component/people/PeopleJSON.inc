@@ -35,8 +35,7 @@ class PeopleJSON {
 			->field($alias,"last_name","last_name")
 			->field($alias,"middle_name","middle_name")
 			->field($alias,"sex","sex")
-			->field($alias,"birth","birthdate")
-			->field($alias,"picture_version","picture_version");
+			->field($alias,"birth","birthdate");
 	}
 	
 	/**
@@ -53,7 +52,6 @@ class PeopleJSON {
 		$data .= ", middle_name:".json_encode($row["middle_name"]);
 		$data .= ", sex:".json_encode($row["sex"]);
 		$data .= ", birthdate:".json_encode($row["birthdate"]);
-		$data .= ", picture_version:".json_encode($row["picture_version"]);
 		$data .= "}";
 		return $data;
 	}

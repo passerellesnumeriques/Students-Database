@@ -6,3 +6,6 @@
 	background-color: #C0C0FF;
     border-radius: 3px;
 }
+.progress_bar.progress_done {
+	border: none;
+}

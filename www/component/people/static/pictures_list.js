@@ -67,8 +67,7 @@ function pictures_list(container, peoples, default_view) {
 		o = document.createElement("OPTION"); o.text = "100x120"; this.select_size.add(o);
 		o = document.createElement("OPTION"); o.text = "150x180"; this.select_size.add(o);
 		o = document.createElement("OPTION"); o.text = "200x240"; this.select_size.add(o);
-		o = document.createElement("OPTION"); o.text = "300x360"; this.select_size.add(o);
-		o = document.createElement("OPTION"); o.text = "400x480"; this.select_size.add(o);
+		o = document.createElement("OPTION"); o.text = "300x300"; this.select_size.add(o);
 		this.select_size.selectedIndex = 4;
 		this.select_size.onchange = function() {
 			switch (t.select_size.selectedIndex) {
@@ -77,8 +76,7 @@ function pictures_list(container, peoples, default_view) {
 			case 2: t.setSize(100,120); break;
 			case 3: t.setSize(150,180); break;
 			case 4: t.setSize(200,240); break;
-			case 5: t.setSize(300,360); break;
-			case 6: t.setSize(400,480); break;
+			case 5: t.setSize(300,300); break;
 			};
 		};
 		var button;
@@ -88,7 +86,48 @@ function pictures_list(container, peoples, default_view) {
 		button.style.marginLeft = "5px";
 		require("images_tool.js",function() {
 			var tool = new images_tool();
-			tool.usePopup(true);
+			tool.usePopup(true, function() {
+				var pictures = [];
+				for (var i = 0; i < tool.getPictures().length; ++i) pictures.push(tool.getPictures()[i]);
+				var nb = 0;
+				for (var i = 0; i < pictures.length; ++i)
+					if (tool.getTool("people").getPeople(pictures[i]))
+						nb++;
+				if (nb == 0) return;
+				tool.popup.freeze_progress("Saving pictures...", nb, function(span_message, progress_bar) {
+					var next = function(index) {
+						if (index == pictures.length) {
+							if (tool.getPictures().length > 0) {
+								tool.popup.unfreeze();
+								return;
+							}
+							tool.popup.close();
+							return;
+						}
+						var people = tool.getTool("people").getPeople(pictures[index]);
+						if (!people) {
+							next(index+1);
+							return;
+						}
+						span_message.innerHTML = "";
+						span_message.appendChild(document.createTextNode("Saving picture for "+people.first_name+" "+people.last_name));
+						var data = pictures[index].getResultData();
+						service.json("people", "save_picture", {id:people.id,picture:data}, function(res) {
+							if (res) {
+								tool.removePicture(pictures[index]);
+								for (var i = 0; i < t.pictures.length; ++i)
+									if (t.pictures[i].people.id == people.id) {
+										t.pictures[i].reload();
+										break;
+									}
+							}
+							progress_bar.addAmount(1);
+							next(index+1);
+						});
+					};
+					next(0);
+				});
+			});
 			tool.useUpload();
 			tool.useFaceDetection();
 			tool.addTool("crop",function() {

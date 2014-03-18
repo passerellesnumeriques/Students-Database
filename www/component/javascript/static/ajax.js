@@ -40,7 +40,7 @@ ajax = {
 		var xhr;
 		try { xhr = new XMLHttpRequest(); }
 		catch (e) {
-			log_exception(e);
+			// everything is already unloaded. avoid remaining calls.
 			return;
 		}
 		var aborted = false;

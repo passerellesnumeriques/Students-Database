@@ -191,6 +191,10 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addOkButton(onok);
 		t.addCancelButton(oncancel);
 	};
+	t.addFinishCancelButtons = function(onfinish, oncancel) {
+		t.addFinishButton(onfinish);
+		t.addCancelButton(oncancel);
+	};
 	/** Add 2 buttons to the window: Yes and No. When No is pressed, the window is closed.
 	 * @method popup_window#addYesNoButtons
 	 * @param {function} onyes handler to be called when the Yes button is pressed. 
@@ -209,6 +213,10 @@ function popup_window(title,icon,content,hide_close_button) {
 		img.style.marginLeft = "3px";
 		span.appendChild(img);
 		t.addButton(span, "next", onnext);
+	};
+
+	t.addFinishButton = function(onfinish) {
+		t.addIconTextButton(theme.icons_16.ok, "Finish", 'finish', onfinish);
 	};
 	
 	t.removeAllButtons = function() {
@@ -556,6 +564,22 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.buttons[i].disabled = 'disabled';
 		}
 		t.close_button_td.onclick = null;
+	};
+	t.freeze_progress = function(message, total, onready) {
+		require("progress_bar.js", function() {
+			var div = document.createElement("DIV");
+			div.style.textAlign = "center";
+			var span = document.createElement("SPAN");
+			span.innerHTML = message;
+			div.appendChild(span);
+			div.appendChild(document.createElement("BR"));
+			var pb = new progress_bar(200, 17);
+			pb.element.style.display = "inline-block";
+			div.appendChild(pb.element);
+			pb.setTotal(total);
+			t.freeze(div);
+			onready(span, pb);
+		});
 	};
 	t.set_freeze_content = function(content) {
 		if (!t.freezer) return;

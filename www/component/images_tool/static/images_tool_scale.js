@@ -1,3 +1,5 @@
+// #depends[/static/images_tool/images_tool.js]
+
 function images_tool_scale() {
 	this.getTitle = function() { return "Scale"; };
 	this.getIcon = function() { return "/static/images_tool/scale.png"; };
@@ -7,7 +9,6 @@ function images_tool_scale() {
 		if (pic) {
 			pic.scale = value;
 			pic.scale_editable = editable;
-			pic.update();
 		} else {
 			this.general_scale = value;
 			this.general_editable = editable;
@@ -42,7 +43,7 @@ function images_tool_scale() {
 			new_canvas.width = w;
 			new_canvas.height = h;
 			var ctx = new_canvas.getContext("2d");
-			ctx.drawImage(canvas, 0, 0, w, h);
+			try { ctx.drawImage(canvas, 0, 0, w, h); } catch (e) {}
 			canvas.width = w;
 			canvas.height = h;
 			ctx = canvas.getContext("2d");

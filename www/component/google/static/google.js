@@ -32,7 +32,14 @@ if (!window.top.google) {
 					if (auth_result && !auth_result.error) {
 						window.top.google.connection_status = 1;
 						window.top.google.connection_event.fire();
-						service.json("google","set_google_id",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){});
+						var listener = function() {
+							service.json("google","set_google_id",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){});
+							window.top.pnapplication.onlogin.remove_listener(listener);
+						};
+						if (window.top.pnapplication.logged_in)
+							listener();
+						else
+							window.top.pnapplication.onlogin.add_listener(listener);
 						setTimeout(window.top.google._connect, (parseInt(auth_result.expires_in)-30)*1000);
 						return;
 					}

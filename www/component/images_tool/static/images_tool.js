@@ -3,18 +3,20 @@ function images_tool() {
 
 	this._use_popup = false;
 	this._use_popup_on_top = false;
+	this._onfinish = null;
 	this._use_upload = false;
 	this._face_detection = false;
 	this._tools = [];
 	this._pictures = [];
 	
-	this.usePopup = function(on_top) {
+	this.usePopup = function(on_top, onfinish) {
 		this.container = document.createElement("DIV");
 		this.container.style.overflow = "auto";
 		this.container.style.width = "100%";
 		this.container.style.height = "100%";
 		this._use_popup = true;
 		this._use_popup_on_top = on_top;
+		this._onfinish = onfinish;
 		if (on_top) window.top.require("popup_window.js"); else require("popup_window.js");
 	};
 	this.useContainer = function(container) {
@@ -46,6 +48,7 @@ function images_tool() {
 		this._tools.push(tool);
 		require("images_tool_"+id+".js", function() {
 			tool.tool = new window["images_tool_"+id]();
+			tool.tool.images_tool = t;
 			tool.onready.fire();
 		});
 		require("section.js");
@@ -55,10 +58,19 @@ function images_tool() {
 		for (var i = 0; i < this._tools.length; ++i)
 			if (this._tools[i].id == tool_id) {
 				this._tools[i].tool.setValue(pic, value, editable);
+				if (pic) pic.update();
+				else for (var j = 0; j < this._pictures.length; ++j)
+					this._pictures[j].update();
 				return;
 			}
 	};
 	
+	this.getTool = function(id) {
+		for (var i = 0; i < this._tools.length; ++i)
+			if (this._tools[i].id == id)
+				return this._tools[i].tool;
+		return null;
+	};
 	
 	this.init = function(onready) {
 		var ready_count = 0;
@@ -84,11 +96,15 @@ function images_tool() {
 			if (this._use_popup_on_top)
 				window.top.require("popup_window.js", function() {
 					t.popup = new window.top.popup_window("Pictures", "/static/images_tool/people_picture.png", t.container);
+					if (t._onfinish)
+						t.popup.addFinishCancelButtons(t._onfinish);
 					ready();
 				});
 			else
 				top.require("popup_window.js", function() {
 					t.popup = new popup_window("Pictures", "/static/images_tool/people_picture.png", t.container);
+					if (t._onfinish)
+						t.popup.addFinishCancelButtons(t._onfinish);
 					ready();
 				});
 		}
@@ -110,6 +126,17 @@ function images_tool() {
 		this._pictures = [];
 		this.container.innerHTML = "";
 		this.table = null;
+		if (this._use_popup) {
+			if (this._use_popup_on_top) {
+				t.popup = new window.top.popup_window("Pictures", "/static/images_tool/people_picture.png", t.container);
+				if (t._onfinish)
+					t.popup.addFinishCancelButtons(t._onfinish);
+			} else {
+				t.popup = new popup_window("Pictures", "/static/images_tool/people_picture.png", t.container);
+				if (t._onfinish)
+					t.popup.addFinishCancelButtons(t._onfinish);
+			}
+		}
 	};
 	
 	this.launchUpload = function(click_event, multiple) {
@@ -123,7 +150,7 @@ function images_tool() {
 		td.innerHTML = "Upload file";
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Loading image";
-		if (t._faceDetection) {
+		if (t._face_detection) {
 			tr.appendChild(td = document.createElement("TH"));
 			td.innerHTML = "Analyzing image";
 		}
@@ -259,8 +286,21 @@ function images_tool() {
 				}
 				if (t._face_detection)
 					face_detection(o);
+				service.json("storage", "remove", {id:output.id}, function(res) {});
 			};
-			o.image.src = "/dynamic/storage/service/get_temp?id="+output.id;
+			o.image.onerror = function() {
+				o.error = true;
+				global_loading_progress.addAmount(1);
+				o.td_loading.innerHTML = "Error";
+				if (global_loading_progress.position == global_loading_progress.total) {
+					global_loading_progress.done();
+					if (!t._face_detection)
+						ready();
+				}
+				if (t._face_detection)
+					face_detection(o);
+			};
+			o.image.src = "/dynamic/storage/service/get?id="+output.id+"&revision=1";
 		};
 		t.upl.ondone = function() {
 			global_upload_progress.done();
@@ -268,29 +308,65 @@ function images_tool() {
 		t.upl.openDialog(click_event, "image/*");
 	};
 	
+	this._init_table = function() {
+		t.container.appendChild(t.table = document.createElement("TABLE"));
+		t.table.className = "all_borders";
+		var tr, td;
+		
+		if (this._tools.length > 1) {
+			tr = document.createElement("TR");
+			tr.appendChild(td = document.createElement("TH"));
+			td.colSpan = 2;
+			td.style.textAlign = "right";
+			td.innerHTML = "General Modifications";
+			tr.appendChild(td = document.createElement("TD"));
+			td.style.verticalAlign = "top";
+			var has_content = false;
+			for (var i = 0; i < this._tools.length; ++i) {
+				var content = this._tools[i].tool.createGeneralContent();
+				if (!content) continue;
+				has_content = true;
+				var sec = new section(this._tools[i].tool.getIcon(), this._tools[i].tool.getTitle(), content, false, false, 'soft');
+				sec.element.style.display = "inline-block";
+				sec.element.style.margin = "5px";
+				sec.element.style.verticalAlign = "top";
+				td.appendChild(sec.element);
+			}
+			tr.appendChild(td = document.createElement("TH"));
+			if (has_content)
+				t.table.appendChild(tr);
+		}
+
+		t.table.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "File";
+		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Original Image";
+		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Modifications";
+		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Result Image";
+		
+	};
 	
 	this.addPicture = function() {
 		var picture = new images_tool_picture();
 		for (var i = 0; i < this._tools.length; ++i)
 			picture.registerTool(this._tools[i].tool);
-		if (!t.table) {
-			t.container.appendChild(t.table = document.createElement("TABLE"));
-			t.table.className = "all_borders";
-			var tr, td;
-			t.table.appendChild(tr = document.createElement("TR"));
-			tr.appendChild(td = document.createElement("TH"));
-			td.innerHTML = "File";
-			tr.appendChild(td = document.createElement("TH"));
-			td.innerHTML = "Original Image";
-			tr.appendChild(td = document.createElement("TH"));
-			td.innerHTML = "Modifications";
-			tr.appendChild(td = document.createElement("TH"));
-			td.innerHTML = "Result Image";
-		}
+		if (!t.table) this._init_table();
 		t.table.appendChild(picture.tr);
 		t._pictures.push(picture);
 		layout.invalidate(t.container);
 		return picture;
+	};
+	
+	this.removePicture = function(picture) {
+		t._pictures.remove(picture);
+		t.table.removeChild(picture.tr);
+	};
+	
+	this.getPictures = function() {
+		return this._pictures;
 	};
 }
 
@@ -301,7 +377,8 @@ ImageTool.prototype = {
 	getTitle: function() { return ""; },
 	setValue: function(pic, value, editable) {},
 	update: function(pic, canvas) {},
-	createContent: function(pic) {}
+	createContent: function(pic) {},
+	createGeneralContent: function() { return null; }
 };
 
 function images_tool_picture() {
@@ -312,6 +389,7 @@ function images_tool_picture() {
 	this.tr.appendChild(this.td_tools = document.createElement("TD"));
 	this.tr.appendChild(this.td_result = document.createElement("TD"));
 	
+	this.td_tools.style.verticalAlign = "top";
 	this.td_original.style.position = "relative";
 	
 	this.setName = function(name) {
@@ -332,6 +410,7 @@ function images_tool_picture() {
 		var sec = new section(tool.getIcon(), tool.getTitle(), content, false, false, 'soft');
 		sec.element.style.display = "inline-block";
 		sec.element.style.margin = "5px";
+		sec.element.style.verticalAlign = "top";
 		t.td_tools.appendChild(sec.element);
 	};
 	
@@ -371,7 +450,7 @@ function images_tool_picture() {
 		this.td_result.appendChild(this.result_canvas);
 
 		ctx = this.result_canvas.getContext("2d");
-		ctx.drawImage(this.original, Math.floor((200-w))/2, 0, w, h);
+		ctx.drawImage(this.original, Math.floor((200-w)/2), 0, w, h);
 		
 		this.update();
 	};
@@ -399,7 +478,21 @@ function images_tool_picture() {
 			}
 			ctx = this.result_canvas.getContext("2d");
 			ctx.clearRect(0,0,200,200);
-			ctx.drawImage(canvas, Math.floor((200-w))/2, 0, w, h);
+			ctx.drawImage(canvas, Math.floor((200-w)/2), 0, w, h);
 		}
+	};
+	
+	this.getResultData = function() {
+		var canvas = document.createElement("CANVAS");
+		canvas.width = this.original.naturalWidth;
+		canvas.height = this.original.naturalHeight;
+		var ctx = canvas.getContext("2d");
+		ctx.drawImage(this.original, 0, 0, canvas.width, canvas.height);
+		for (var i = 0; i < this.tools.length; ++i)
+			this.tools[i].update(this, canvas);
+		var data = ctx.getImageData(0,0,canvas.width,canvas.height);
+		var result = {width:data.width,height:data.height,data:[]};
+		for (var i = 0; i < data.width*data.height*4; ++i) result.data[i] = data.data[i];
+		return result;
 	};
 }
