@@ -52,6 +52,10 @@ class service_IS_save extends Service{
 			$insert_IS = false;
 			$event_to_remove = null;
 			$new_IS_id = null;
+			
+			//Update the name (geographic area may have changed)
+			if($data["name"] == null || !PNApplication::$instance->selection->getOneConfigAttributeValue("give_name_to_IS"))
+				$data["name"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 				
 			if($data["id"] == -1 || $data["id"] == "-1"){
 				//This is an insert

@@ -57,9 +57,11 @@ class page_exam_convert_IS_into_center extends selection_page {
 		$can_add_exam_center = $from_step_exam_center[0]["add"];
 		$can_remove_exam_center = $from_step_exam_center[0]["remove"];//No use on this page
 		$can_edit_exam_center = $from_step_exam_center[0]["edit"];
+		
 		//Maybe the user can still add / edit an exam center, but cannot remove it anymore
 		if(!$can_add_exam_center && !$can_edit_exam_center)//Nothing can be done
 			return;
+		//Check that no applicant is assigned to any
 		//Lock the IS and the EC tables, if not already the case
 		require_once("component/data_model/DataBaseLock.inc");
 		$sm = PNApplication::$instance->selection->getCampaignId();
@@ -93,7 +95,6 @@ class page_exam_convert_IS_into_center extends selection_page {
 			require("convert_IS_into_center.js",function(){
 				new convert_IS_into_center(
 						"sections_container",
-						<?php echo json_encode($can_add_exam_center);?>,
 						<?php echo json_encode($can_edit_exam_center);?>,
 						<?php echo $all_free_IS;?>,
 						<?php echo $all_IS_names;?>,

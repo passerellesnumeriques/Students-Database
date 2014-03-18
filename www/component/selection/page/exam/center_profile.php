@@ -6,6 +6,11 @@ class page_exam_center_profile extends selection_page {
 		
 	$name = $page->generateID();
 	$page->add_javascript("/static/widgets/vertical_layout.js");
+	$page->add_javascript("/static/widgets/section/section.js");
+	$page->onload("var s_detail = section_from_html('center_detail_section');");
+	$page->onload("s_detail.addToolBottom('<div class = \"button_verysoft\" id = \"save_center_button\"><img src =\"'+theme.icons_16.save+'\"/> <b>Save</b></div>');");
+	$page->onload("s_detail.addToolBottom('<div class = \"button_verysoft\" id = \"remove_center_button\"><img src =\"'+theme.icons_16.remove+'\"/> <b>Remove Exam Center</b></div>');");
+	$page->onload("section_from_html('center_applicants');");
 	$page->onload("new vertical_layout('exam_center_profile_container');");
 	if(!isset($_GET["id"]))
 		$id = -1;
@@ -21,18 +26,25 @@ class page_exam_center_profile extends selection_page {
 			<?php if($hide_back != "true"){?>
 				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/exam/center_main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
 			<?php }?>
-				<div class = "button_verysoft" id = "save_center_button"><img src = '<?php echo theme::$icons_16["save"];?>' /> <b>Save</b></div>
-				<div class = "button_verysoft" id = "remove_center_button"><img src = '<?php echo theme::$icons_16["remove"];?>' /> Remove Exam Center</div>
 			</div>
-			<div id='exam_center_<?php echo $name; ?>' style = "overflow:auto" layout = "fill"></div>
+			<div style = "overflow:auto" layout = "fill">
+				<div id = "center_detail_section" title='Exam Centers Caracteristics' collapsable='true' css='soft' style='margin:10px;'>
+					<div id='exam_center_<?php echo $name; ?>' ></div>
+				</div>
+				<div id = "center_applicants" title='Exam Centers Applicants' collapsable='true' css='soft' style='margin:10px;'>
+					<div id = "exam_center_applicants_container"></div>				
+				</div>
+			</div>
 		</div>
 		
 	<?php
-		$this->exam_center_profile($page,"exam_center_".$name,$id,"save_center_button","remove_center_button",$read_only);
+		$this->exam_center_caracteristics($page,"exam_center_".$name,$id,"save_center_button","remove_center_button",$read_only);
+		if($id != -1)
+			$this->exam_applicants($page, "exam_center_applicants_container", $id);
 	}
 	
 	
-	public function exam_center_profile(&$page,$container_id,$id,$save_exam_center_button, $remove_exam_center_button,$read_only){
+	public function exam_center_caracteristics(&$page,$container_id,$id,$save_exam_center_button, $remove_exam_center_button,$read_only){
 		$page->add_javascript("/static/widgets/header_bar.js");
 		$page->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('', 'Exam Center Profile');");
 		require_once("component/selection/SelectionJSON.inc");
@@ -54,7 +66,6 @@ class page_exam_center_profile extends selection_page {
 		}	
 		$config_name = PNApplication::$instance->selection->getOneConfigAttributeValue("give_name_to_exam_center");
 		$config_name_room = PNApplication::$instance->selection->getOneConfigAttributeValue("give_name_to_exam_center_room");
-// 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		$campaign_id = PNApplication::$instance->selection->getCampaignId();
 	
 		//lock the row if id != -1
@@ -111,5 +122,12 @@ class page_exam_center_profile extends selection_page {
 		</script>
 		<?php
 	
+	}
+	
+	public function exam_applicants(&$page, $container_id, $center_id){
+		//TODO set rights, readonly? Always shown?
+		$page->add_javascript("/static/selection/exam/center_applicants_section.js");
+		$page->onload("new center_applicants_section('".$container_id."',".json_encode($center_id).");");
+		
 	}
 }

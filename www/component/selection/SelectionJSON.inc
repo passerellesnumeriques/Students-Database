@@ -1155,4 +1155,57 @@ class SelectionJSON{
 		$r .= "]";
 		return $r;
 	}
+	
+/**
+ * Methods about the applicants
+ */
+	
+	public static function ApplicantFromID($id){
+		$q = SQLQuery::create()
+			->select("Applicant")
+			->whereValue("Applicant", "people", $id);		
+		self::ApplicantSQL($q);
+		$row = $q->executeSingleRow();
+		return self::Applicant($q, $row);
+	}
+	
+	public static function ApplicantSQL(&$q){
+		$alias = $q->getTableAlias("Applicant");
+		if(!$alias)
+			$alias = "Applicant";
+		PNApplication::$instance->people->joinPeople($q,"Applicant","people");
+		$q
+			->field($alias,"applicant_id")
+			->field($alias,"exclusion_reason")
+			->field($alias,"automatic_exclusion_step")
+			->field($alias,"automatic_exclusion_reason")
+			->field($alias,"custom_exclusion")
+			->field($alias,"excluded")
+			->field($alias,"information_session")
+			->field($alias,"exam_center")
+			->field($alias,"exam_center_room")
+			->field($alias,"exam_session");
+	}
+	
+	public static function Applicant($q, $row){
+		$data = "";
+		$data .= "{people_id:".json_encode($row["people_id"]);
+		$data .= ", first_name:".json_encode($row['first_name']);
+		$data .= ", last_name:".json_encode($row["last_name"]);
+		$data .= ", middle_name:".json_encode($row["middle_name"]);
+		$data .= ", sex:".json_encode($row["sex"]);
+		$data .= ", birthdate:".json_encode($row["birthdate"]);
+		$data .= ", applicant_id:".json_encode($row["applicant_id"]);
+		$data .= ", exclusion_reason:".json_encode($row["exclusion_reason"]);
+		$data .= ", automatic_exclusion_step:".json_encode($row["automatic_exclusion_step"]);
+		$data .= ", automatic_exclusion_reason:".json_encode($row["automatic_exclusion_reason"]);
+		$data .= ", custom_exclusion:".json_encode($row["custom_exclusion"]);
+		$data .= ", excluded:".json_encode($row["excluded"]);
+		$data .= ", information_session:".json_encode($row["information_session"]);
+		$data .= ", exam_center:".json_encode($row["exam_center"]);
+		$data .= ", exam_center_room:".json_encode($row["exam_center_room"]);
+		$data .= ", exam_session:".json_encode($row["exam_session"]);		
+		$data .= "}";
+		return $data;
+	}
 }

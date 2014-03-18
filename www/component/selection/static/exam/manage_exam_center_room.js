@@ -273,7 +273,7 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 				for(var i = 0; i < res.length; i++){
 					if(res[i].assigned != null){
 						t._applicants_assigned = t._applicants_assigned == null ? [] : t._applicants_assigned;
-						t._applicants_assigned.push(res[i]);
+						t._applicants_assigned.push(res[i].applicant_id);
 					}
 				}
 				t._init();

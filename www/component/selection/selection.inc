@@ -1804,7 +1804,13 @@ class selection extends Component {
 			} else {
 				SQLQuery::create()->insert("ExamCenterInformationSession", array("exam_center" => $EC_id, "information_session" =>$IS_ids),$lock_ECIS);
 			}
-			
+			//Assign the students to this center
+			if(is_array($IS_ids)){
+				foreach ($IS_ids as $id)
+					$this->internalAssignApplicantsFromISToEC($id, $EC_id);
+			} else {
+				$this->internalAssignApplicantsFromISToEC($IS_ids, $EC_id);
+			}
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
@@ -1900,11 +1906,12 @@ class selection extends Component {
 				->whereValue("InformationSessionPartner", "information_session", $IS_id)
 				->executeSingleValue();
 			$area_id = PNApplication::$instance->contact->getAddressGeographicAreaAttribute($host_address);
+			$name = PNApplication::$instance->geography->getGeographicAreaText($area_id);
 			//Start the transaction
 			SQLQuery::startTransaction();
 			$id = SQLQuery::create()
 				->insert("ExamCenter", array(
-					"name" => "temp",
+					"name" => $name,
 					"geographic_area" => $area_id
 				),$lock_id);
 			
@@ -1915,7 +1922,7 @@ class selection extends Component {
 		}
 		if($continue){
 			//Add the host
-			$this->setECHostFromIS($id, $IS_id, true, $lock_id);
+			$this->setECHostFromIS($id, $IS_id, false, $lock_id);
 		}
 		if(PNApplication::has_errors()){
 			SQLQuery::rollbackTransaction();
@@ -1973,22 +1980,6 @@ class selection extends Component {
 	}
 	
 	/**
-	 * Get the applicants assigned to a given exam center room
-	 * This method uses bypassSecurity method, because the user may be allowed to see exam center data but not applicant data
-	 * @param number $id the room center ID
-	 * @return Array | NULL array of applicant_ids if any, else NULL
-	 */
-	public function getApplicantsAssignedToRoom($id){
-		$applicants = SQLQuery::create()
-			->bypassSecurity()
-			->select("Applicant")
-			->field("Applicant","applicant_id")
-			->whereValue("Applicant", "exam_room", $id)
-			->executeSingleField();
-		return $applicants;
-	}
-	
-	/**
 	 * Check if any applicant is assigned to the given exam center room
 	 * @param number $id the exam center room ID
 	 * @return boolean
@@ -2007,7 +1998,7 @@ class selection extends Component {
 	/**
 	 * Get the applicants assigned to the given exam center rooms
 	 * @param array $ids all the campaign ids
-	 * @return array associative array(room_id => array of applicant_ids if any, else NULL)
+	 * @return array associative array(room_id => array of Applicants data if any, else NULL)
 	 */
 	public function getApplicantsAssignedToRooms($ids){
 		$applicants = array();
@@ -2149,6 +2140,175 @@ class selection extends Component {
 			$this->updateAllSteps();
 			return true;
 		}
+	}
+	
+/**
+ * Methods about applicants
+ */
+	
+	public function canAssignApplicantToCenter(){
+		//Check the right
+		return PNApplication::$instance->user_management->has_right("manage_applicant");
+	}
+	
+	/**
+	 * Get the applicants assigned to a given information session but not assigned to any exam center
+	 * @param number $IS_id information session ID
+	 * @return NULL | array <ul><li>NULL if no applicant found</li><li>array containing the applicants rows for the applicants assigned</li></ul>
+	 */
+	public function getApplicantsAssignedToISNotAssignedToAnyEC($IS_id){
+		$q = SQLQuery::create()
+			->select("Applicant")
+			->whereNull("Applicant", "exam_center")			
+			->whereValue("Applicant", "information_session", $IS_id);
+		SelectionJSON::ApplicantSQL($q);
+		return $q->execute();
+	}
+	
+	/**
+	 * Get the applicants assigned to an exam center
+	 * @param number $EC_id exam center ID
+	 * @param String $order_by (optional) can be "name" or "applicant_id" the order by condition to set
+	 * @return NULL | array <ul><li>NULL if no applicant found</li><li>array containing the applicants rows for the applicants assigned</li></ul>
+	 */
+	public function getApplicantsAssignedToEC($EC_id, $order_by = "name"){
+		$q = SQLQuery::create()
+			->select("Applicant")
+			->whereValue("Applicant", "exam_center", $EC_id);
+		SelectionJSON::ApplicantSQL($q);
+		if($order_by == "name")
+			$q->orderBy("People","last_name");
+		else if($order_by == "applicant_id")
+			$q->orderBy("Applicant","applicant_id");
+		return $q->execute();	
+	}
+	
+	/**
+	 * Get all the applicants not assigned to any exam center
+	 * @return NULL | array <ul><li>NULL if no applicant found</li><li>array containing the applicants rows for the applicants not assigned to any center</li></ul>
+	 */
+	public function getApplicantsNotAssignedToAnyEC(){
+		$q = SQLQuery::create()
+			->select("Applicant")
+			->whereNull("Applicant", "exam_center");
+		SelectionJSON::ApplicantSQL($q);
+		return $q->execute();
+	}
+	
+	/**
+	 * Get the applicants assigned to an exam center room
+	 * @param number $room_id exam center room ID
+	 * @return NULL | array <ul><li>NULL if no applicant found</li><li>array containing the applicants rows for the applicants assigned</li></ul>
+	 */
+	public function getApplicantsAssignedToRoom($room_id){
+		$q = SQLQuery::create()
+			->select('Applicant')
+			->whereValue("Applicant", "exam_center_room", $room_id);
+		SelectionJSON::ApplicantSQL($q);
+		return $q->execute();		
+	}
+	
+	/**
+	 * Get the applicants assigned by room for a giiven exam center
+	 * @param number $EC_id exam center ID
+	 * @return NULL|array <ul><li>NULL if the ExamCenter has no room</li><li>else array with three attributes<ul><li><code>name</code> exam center room name</li><li><code>capacity</code> exam center room capacity</li><li><code>assigned</code> result of getApplicantsAssignedToRoom method for this room</li></ul></li></ul>
+	 */
+	public function getApplicantsAssignedByRoom($EC_id){
+		$rooms = SQLQuery::create()
+			->select("ExamCenterRoom")
+			->whereValue("ExamCenterRoom", "exam_center", $EC_id);		
+		SelectionJSON::ExamCenterRoomSQL($rooms);
+			$rooms = $rooms->execute();
+		if($rooms == null) return null;
+		$res = array();
+		foreach ($rooms as $room){
+			$res[$room["id"]] = array(
+				"name" => $room["name"],
+				"capacity" => $room["capacity"],
+				"applicants" => $this->getApplicantsAssignedToRoom($room["id"])
+			);
+		}
+		return $res;
+	}
+	
+	/**
+	 * Get all the applicants assigned to an Exam Center But with no Room
+	 * @param number $EC_id exam center ID
+	 * @return NULL | array NULL if no applicant found, else applicants rows
+	 */
+	public function getApplicantsAssignedToECButWithNoRoom($EC_id){
+		$q = SQLQuery::create()
+			->select("Applicant")
+			->whereNull("Applicant", "exam_center_room")
+			->whereValue("Applicant", "exam_center", $EC_id);
+		SelectionJSON::ApplicantSQL($q);
+		return $q->execute();
+	}
+	
+	/**
+	 * Assign applicants to an exam center from the information sessions linked to this exam center
+	 * Only the free applicants are assigned
+	 * @param number $EC_id the exam center ID
+	 * @return NULL|array <ul><li>NULL if the exam center has no IS linked, or if no applicant to assign</li><li>applicants rows, the rows retrieved from DB of the applicants assigned</li></ul>
+	 */
+	public function assignApplicantsFromISToEC($EC_id){
+		//Check the right
+		$can = $this->canAssignApplicantToCenter();
+		if(!$can){
+			PNApplication::error('You are not allowed to assign any applicant to an exam center');
+			return false;
+		}
+		//Get the IS linked
+		$IS = SQLQuery::create()
+			->select("ExamCenterInformationSession")
+			->field("ExamCenterInformationSession","information_session")
+			->whereValue('ExamCenterInformationSession', "exam_center", $EC_id)
+			->executeSingleField();
+		if($IS == null)
+			return null;
+		$applicants_to_assign = array();
+		$applicants_to_assign_ids = array();
+		foreach ($IS as $id){
+			array_push($applicants_to_assign, $this->getApplicantsAssignedToISNotAssignedToAnyEC($id));			
+		}
+		foreach ($applicants_to_assign as $applicant)
+			array_push($applicants_to_assign_ids, $applicant["people_id"]);
+		if(count($applicants_to_assign_ids) == 0)
+			return null;
+		//Perform the assignment
+		SQLQuery::create()
+			->bypassSecurity()
+			->updateAllKeys("Applicant", $applicants_to_assign_ids, array("exam_center" => $EC_id));
+		return $applicants_to_assign;
+	}
+	
+	/**
+	 * Assign the applicants from information sessions to a given exam center
+	 * @param number | array $IS_ids IDs of the informations sessions 
+	 * @param number $EC_id exam center ID
+	 */
+	private function internalAssignApplicantsFromISToEC($IS_ids,$EC_id){
+		$applicants_to_assign = array();
+		$applicants_to_assign_ids = array();
+		if(!is_array($IS_ids))
+			$IS_ids = array($IS_ids);
+		foreach ($IS_ids as $id){
+			$r = $this->getApplicantsAssignedToISNotAssignedToAnyEC($id);
+			if($r <> null)
+				array_push($applicants_to_assign, $r);
+		}
+		foreach ($applicants_to_assign as $applicant_per_IS){
+			foreach ($applicant_per_IS as $applicant){
+				array_push($applicants_to_assign_ids, $applicant["people_id"]);
+			}
+		}
+			
+		if(count($applicants_to_assign_ids) == 0)
+			return null;
+		//Perform the assignment
+		SQLQuery::create()
+		->bypassSecurity()
+		->updateAllKeys("Applicant", $applicants_to_assign_ids, array("exam_center" => $EC_id));
 	}
 }
 ?>

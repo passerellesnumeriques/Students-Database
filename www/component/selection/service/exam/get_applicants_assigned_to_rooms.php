@@ -10,7 +10,7 @@ class service_exam_get_applicants_assigned_to_rooms extends Service{
 		?>Array containing objects as:
 		<ul>
 			<li><code>room</code> the exam center room ID</li>
-			<li><code>assigned</code> array containing the applicants_ids of the applicants assigned if any, else NULL</li>
+			<li><code>assigned</code> array containing the Applicants objects of the applicants assigned if any, else NULL</li>
 		</ul>
 		<?php
 	}
@@ -18,6 +18,7 @@ class service_exam_get_applicants_assigned_to_rooms extends Service{
 		echo "Get the applicants assigned to given exam center rooms";
 	}
 	public function execute(&$component,$input){
+		require_once 'component/selection/SelectionJSON.inc';
 		if(!isset($input["ids"])) return false;
 		$applicants = PNApplication::$instance->selection->getApplicantsAssignedToRooms($input["ids"]);
 		$r = "[";
@@ -32,11 +33,11 @@ class service_exam_get_applicants_assigned_to_rooms extends Service{
 			else {
 				$r .= "[";
 				$first = true;
-				foreach ($result as $applicant_id){
+				foreach ($result as $applicant){
 					if(!$first)
 						$r .= ", ";
 					$first = false;
-					$r .= json_encode($applicant_id);
+					$r .= SelectionJSON::Applicant(null, $applicant);
 				}
 				$r .= "]";
 			}

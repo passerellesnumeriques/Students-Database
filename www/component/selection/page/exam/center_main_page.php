@@ -7,6 +7,66 @@ class page_exam_center_main_page extends selection_page {
 	
 	public function execute_selection_page(&$page) {
 		
+// 		SQLQuery::create()
+// 			->bypassSecurity()
+// 			->insertMultiple("Applicant", array(
+// 				array(
+// 					"people" => 20,
+// 					"applicant_id" => 1,
+// 					"information_session" => 1
+// 				),
+// 				array(
+// 						"people" => 21,
+// 						"applicant_id" => 2,
+// 						"information_session" => 1
+// 				),
+// 				array(
+// 						"people" => 22,
+// 						"applicant_id" => 3,
+// 						"information_session" => 1
+// 				),
+// 				array(
+// 						"people" => 23,
+// 						"applicant_id" => 4,
+// 						"information_session" => 1
+// 				),
+// 				array(
+// 						"people" => 24,
+// 						"applicant_id" => 5,
+// 						"information_session" => 2
+// 				),
+// 				array(
+// 						"people" => 25,
+// 						"applicant_id" => 6,
+// 						"information_session" => 2
+// 				),
+// 				array(
+// 						"people" => 26,
+// 						"applicant_id" => 7,
+// 						"information_session" => 3
+// 				),
+// 				array(
+// 						"people" => 27,
+// 						"applicant_id" => 8,
+// 						"information_session" => 3
+// 				),
+// 				array(
+// 						"people" => 28,
+// 						"applicant_id" => 9,
+// 						"information_session" => 3
+// 				),
+// 				array(
+// 						"people" => 29,
+// 						"applicant_id" => 10,
+// 						"information_session" => 2
+// 				),
+// 				array(
+// 						"people" => 30,
+// 						"applicant_id" => 11,
+// 						"information_session" => 3
+// 				),
+// 			));
+		
 		$page->add_javascript("/static/widgets/grid/grid.js");
 		$page->add_javascript("/static/data_model/data_list.js");
 		$page->onload("init_organizations_list();");
@@ -14,6 +74,7 @@ class page_exam_center_main_page extends selection_page {
 		$can_create = PNApplication::$instance->user_management->has_right("manage_exam_center",true);
 		$status_container_id = $page->generateID();
 		$ECIS_status_container_id = $page->generateID();
+		$applicants_assignement_container_id = $page->generateID();
 		$page->require_javascript("section.js");
 		$page->onload("section_from_html('status_section');");
 		$page->onload("section_from_html('status_ECIS_section');");
@@ -71,6 +132,9 @@ class page_exam_center_main_page extends selection_page {
 						</div>
 						<div id='status_ECIS_section' title='Exam Centers and Information Sessions' collapsable='false' css='soft' style='margin:10px; width:360px;'>
 							<div id = '<?php echo $ECIS_status_container_id;?>'></div>						
+						</div>
+						<div id='status_applicants_assignment' title='Applicants Assignment' collapsable='false' css='soft' style='margin:10px; width:360px;'>
+							<div id = '<?php echo $applicants_assignement_container_id;?>'></div>						
 						</div>
 					</div>
 					

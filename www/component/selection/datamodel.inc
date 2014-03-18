@@ -294,7 +294,7 @@
 		->addBoolean("excluded",false)
 		->addForeignKey("information_session", "InformationSession", false, false, true, true, false)//An applicant can be assigned to an information session
 		->addForeignKey("exam_center", "ExamCenter", false, false, true, true, false)//An applicant can be assigned to an exam center (maybe after importing applicant data
-		->addForeignKey("exam_room", "ExamCenterRoom", false, false, true, true, false) //An applicant can be assigned to an exam center room after(maybe after importing applicant data
+		->addForeignKey("exam_center_room", "ExamCenterRoom", false, false, true, true, false) //An applicant can be assigned to an exam center room after(maybe after importing applicant data
 		->addForeignKey("exam_session", "ExamSession", false, false, true, true, false) //An applicant can be assigned to an exam session after being assigned to an exam center, or directly assigned to a session
 		->addColumnWriteAccess("information_session", "manage_information_session", true)
 		->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Applicant Information", "Applicant Information",
