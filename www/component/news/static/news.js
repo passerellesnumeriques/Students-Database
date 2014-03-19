@@ -209,9 +209,10 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		var tr = document.createElement("TR"); table.appendChild(tr);
 		var td = document.createElement("TD"); tr.appendChild(td);
 		td.className = "picture_container";
-		var picture = document.createElement("IMG");
-		picture.src = "/dynamic/user_people/service/user_picture?domain="+n.user.domain+"&username="+n.user.username;
-		td.appendChild(picture);
+		var td_pc = td;
+		require("profile_picture.js", function() {
+			new profile_picture(td_pc, null, n.user.domain, n.user.username, 30, 40, "center", "top");
+		});
 		var content = document.createElement("TD");
 		content.className = "content";
 		tr.appendChild(content);

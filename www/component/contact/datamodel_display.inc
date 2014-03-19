@@ -260,6 +260,22 @@ class ContactPointDataScreen extends datamodel\DataScreen {
 	public function getName() { return "Organization Contact Point"; }
 	
 	public function generate(&$page, $paths, $values, $prefilled_values, $structure_name) {
+		$people_types = $values->getColumnValue("People", "types");
+		$people_types = PNApplication::$instance->people->parseTypes($people_types);
+		$ok = false;
+		require_once("ContactPointPeopleTypePlugin.inc");
+		foreach (PNApplication::$instance->components as $c) {
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof ContactPointPeopleTypePlugin)) continue;
+				if (in_array($pi->getId(), $people_types) && $pi->canRead()) {
+					$ok = true;
+					break;
+				}
+			}
+			if ($ok) break;
+		}
+		if (!$ok) return;
+		
 		$path = $paths[0];
 		if (!$values->hasColumnValue("ContactPoint", "people"))
 			$people_id = null;

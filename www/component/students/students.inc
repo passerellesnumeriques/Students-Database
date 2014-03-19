@@ -3,19 +3,13 @@
 class students extends Component {
 	
 	public function getPluginImplementations() {
-		require_once("StudentsPeoplePlugin.inc");
 		require_once("StudentsApplicationPlugin.inc");
 		require_once("StudentsNewsPlugin.inc");
-		require_once("StudentsPeopleProfileGeneralInfoPlugin.inc");
 		require_once("StudentPeopleTypePlugin.inc");
-		require_once("StudentCreatePlugin.inc");
 		return array(
-			new StudentsPeoplePlugin(),
+			new StudentPeopleTypePlugin(),
 			new StudentsApplicationPlugin(),
 			new StudentsNewsPlugin(),
-			new StudentsPeopleProfileGeneralInfoPlugin(),
-			new StudentPeopleTypePlugin(),
-			new StudentCreatePlugin()
 		);
 	}
 	

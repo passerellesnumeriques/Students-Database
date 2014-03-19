@@ -12,10 +12,10 @@ class user_people extends Component {
 	}
 	
 	public function getPluginImplementations() {
-		require_once("UserPeoplePlugin.inc");
+		require_once("UserPeopleTypePlugin.inc");
 		require_once("UserPeopleProfilePagePlugin.inc");
 		return array(
-			new UserPeoplePlugin(),
+			new UserPeopleTypePlugin(),
 			new UserPeopleProfilePagePlugin()
 		);
 	}

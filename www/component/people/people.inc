@@ -5,14 +5,10 @@
 class people extends Component {
 
 	public function getPluginImplementations() {
-		require_once("PeoplePeoplePlugin.inc");
 		require_once("PeoplePluginsImplementations.inc");
 		require_once("PeoplePictureStoragePlugin.inc");
 		return array(
-			new PeoplePeoplePlugin(),
 			new PeopleProfilePage(),
-			new PeopleGeneralInfo(),
-			new PersonalInfoPeopleCreatePlugin(),
 			new PeoplePictureStoragePlugin()
 		);
 	}
@@ -76,6 +72,7 @@ class people extends Component {
 	}
 	
 	public function canReadTypes($types) {
+		if (is_string($types)) $types = $this->parseTypes($types);
 		require_once("PeopleTypePlugin.inc");
 		$plugin = null;
 		foreach (PNApplication::$instance->components as $c)
@@ -90,6 +87,7 @@ class people extends Component {
 		 return $plugin->canRead();
 	}
 	public function canModifyTypes($types) {
+		if (is_string($types)) $types = $this->parseTypes($types);
 		require_once("PeopleTypePlugin.inc");
 		$plugin = null;
 		foreach (PNApplication::$instance->components as $c)
@@ -101,7 +99,7 @@ class people extends Component {
 			}
 		}
 		if ($plugin == null) return false;
-		return $plugin->canModify();
+		return $plugin->canWrite();
 	}
 	
 	public function canRead($people_id) {

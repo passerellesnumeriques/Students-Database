@@ -17,7 +17,7 @@ namespace datamodel {
 	class GenericDataScreen extends DataScreen {
 	
 		/** @var \datamodel\TableDataDisplay $display */
-		private $display;
+		protected $display;
 		
 		/**
 		 * @param \datamodel\TableDataDisplay $display
@@ -34,6 +34,7 @@ namespace datamodel {
 		public function generate(&$page, $paths, $values, $prefilled_values, $structure_name) {
 			$path = $paths[0];
 			$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
+			//var_dump($values);
 			$key_value = getKeyValue($path->table, $values);
 			$is_new = $key_value == null || intval($key_value) < 0;
 			$script = "";

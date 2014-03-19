@@ -275,32 +275,76 @@ function images_tool() {
 			}
 			o.upload_progress.done();
 			o.image = new Image();
-			o.td_loading.innerHTML = "Loading...";
-			o.image.onload = function() {
-				o.td_loading.innerHTML = "Loaded.";
-				global_loading_progress.addAmount(1);
-				if (global_loading_progress.position == global_loading_progress.total) {
-					global_loading_progress.done();
-					if (!t._face_detection)
-						ready();
-				}
-				if (t._face_detection)
-					face_detection(o);
-				service.json("storage", "remove", {id:output.id}, function(res) {});
-			};
-			o.image.onerror = function() {
-				o.error = true;
-				global_loading_progress.addAmount(1);
-				o.td_loading.innerHTML = "Error";
-				if (global_loading_progress.position == global_loading_progress.total) {
-					global_loading_progress.done();
-					if (!t._face_detection)
-						ready();
-				}
-				if (t._face_detection)
-					face_detection(o);
-			};
-			o.image.src = "/dynamic/storage/service/get?id="+output.id+"&revision=1";
+			if (typeof window.btoa == 'undefined') {
+				o.td_loading.innerHTML = "Loading...";
+				o.image.onload = function() {
+					o.td_loading.innerHTML = "Loaded.";
+					global_loading_progress.addAmount(1);
+					if (global_loading_progress.position == global_loading_progress.total) {
+						global_loading_progress.done();
+						if (!t._face_detection)
+							ready();
+					}
+					if (t._face_detection)
+						face_detection(o);
+					service.json("storage", "remove", {id:output.id}, function(res) {});
+				};
+				o.image.onerror = function() {
+					o.error = true;
+					global_loading_progress.addAmount(1);
+					o.td_loading.innerHTML = "Error";
+					if (global_loading_progress.position == global_loading_progress.total) {
+						global_loading_progress.done();
+						if (!t._face_detection)
+							ready();
+					}
+					if (t._face_detection)
+						face_detection(o);
+				};
+				o.image.src = "/dynamic/storage/service/get?id="+output.id+"&revision=1";
+			} else {
+				o.image_loading_progress = new progress_bar(200, 14);
+				o.td_loading.appendChild(o.image_loading_progress.element);
+				service.customOutput("storage", "get?id="+output.id+"&revision=1", null, 
+				function(bin) {
+					if (!bin) return;
+					o.image_loading_progress.done();
+					global_loading_progress.addAmount(1);
+					if (global_loading_progress.position == global_loading_progress.total) {
+						global_loading_progress.done();
+						if (!t._face_detection)
+							ready();
+					}
+					if (t._face_detection)
+						face_detection(o);
+					service.json("storage", "remove", {id:output.id}, function(res) {});
+					var len = bin.length;
+					var binary = '';
+					for (var i = 0; i < len; i+=1)
+						binary += String.fromCharCode(bin.charCodeAt(i) & 0xff);
+					o.image.src = 'data:image/jpeg;base64,' + btoa(binary);
+				}, 
+				false, 
+				function(error) {
+					o.error = true;
+					o.image_loading_progress.error();
+					global_loading_progress.addAmount(1);
+					if (global_loading_progress.position == global_loading_progress.total) {
+						global_loading_progress.done();
+						if (!t._face_detection)
+							ready();
+					}
+					if (t._face_detection)
+						face_detection(o);
+					service.json("storage", "remove", {id:output.id}, function(res) {});
+				}, function(loaded, total) {
+					if (o.image_loading_progress.total == 0)
+						o.image_loading_progress.setTotal(total);
+					o.image_loading_progress.setPosition(loaded);
+				},
+				"text/plain; charset=x-user-defined"
+				);
+			}
 		};
 		t.upl.ondone = function() {
 			global_upload_progress.done();

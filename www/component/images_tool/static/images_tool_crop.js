@@ -9,22 +9,22 @@ function images_tool_crop() {
 	this.general_ratio_editable = true;
 	this.setValue = function(pic, value, editable) {
 		if (pic) {
-			if (!this.general_crop && value.rect) {
+			if (!this.general_crop && typeof value.rect != 'undefined') {
 				this.general_crop = null;
 				pic.crop_rect = value.rect;
 				pic.crop_rect_editable = editable;
 			}
-			if (!this.general_ratio && value.aspect_ratio) {
+			if (!this.general_ratio && typeof value.aspect_ratio != 'undefined') {
 				this.general_ratio = null;
 				pic.crop_ratio = value.aspect_ratio;
 				pic.crop_ratio_editable = editable;
 			}
 		} else {
-			if (value.rect) {
+			if (typeof value.rect != 'undefined') {
 				this.general_crop = value.rect;
 				this.general_crop_editable = editable;
 			}
-			if (value.aspect_ratio) {
+			if (typeof value.aspect_ratio != 'undefined') {
 				this.general_ratio = value.aspect_ratio;
 				this.general_ratio_editable = editable;
 				if (this.general_ratio_input) {
@@ -144,6 +144,7 @@ function images_tool_crop() {
 			pic.crop_right_input.value = pic.crop_rect.x+pic.crop_rect.width-1;
 			pic.crop_size_container.innerHTML = pic.crop_rect.width+"x"+pic.crop_rect.height;
 			pic.crop_ratio_input.value = pic.crop_rect.width/pic.crop_rect.height;
+			pic.crop_ratio_input.disabled = this.general_ratio || !this.general_ratio_editable ? "disabled" : "";
 		}
 		
 		// draw the crop
@@ -346,7 +347,7 @@ function images_tool_crop() {
 		if (!this.general_ratio_editable) this.general_ratio_input.disabled = "disabled";
 		div.appendChild(this.general_ratio_input);
 		var t=this;
-		this.general_ratio.onchange = function() {
+		this.general_ratio_input.onchange = function() {
 			if (this.value == "")
 				t.setValue(null, {aspect_ratio:null}, true);
 			else {

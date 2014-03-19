@@ -23,8 +23,6 @@ layout = {
 	
 	// layout process
 	_invalidated: [],
-	_process_timeout: null,
-	_multiple_process_counter: 0,
 	invalidate: function(element) {
 		if (element == null) {
 			try { throw new Error("null element given to layout.invalidate"); }
@@ -36,13 +34,15 @@ layout = {
 			if (p.style && p.style.visibility == "hidden") return;
 			p = p.parentNode;
 		}
-		if (getWindowFromDocument(element.ownerDocument) != window) {
-			getWindowFromDocument(element.ownerDocument).layout.invalidate(element);
+		var w = getWindowFromElement(element);
+		if (w != window) {
+			w.layout.invalidate(element);
 			return;
 		}
-		if (!layout._invalidated.contains(element))
+		if (!layout._invalidated.contains(element)) {
 			layout._invalidated.push(element);
-		layout._layout_needed();
+			layout._layout_needed();
+		}
 	},
 	
 	_noresize_event: false,
@@ -50,33 +50,29 @@ layout = {
 		this._noresize_event = true;
 	},
 	
+	_process_timeout: null,
+	_layouts_short_time: 0,
 	_layout_needed: function() {
 		if (layout._process_timeout != null) return;
 		var f = function() {
+			if (layout._last_layout_activity < new Date().getTime() - 1000)
+				layout._layouts_short_time = 0;
 			layout._process_timeout = null;
-			layout._process(); 
-			if (layout._process_timeout != null) {
-				// the processing raised the need of new layout
-				layout._multiple_process_counter++;
-				if (layout._multiple_process_counter < 3) {
-					// ok, we continue fast: 1ms
-				} else if (layout._multiple_process_counter <= 5) {
-					// delay a little bit more to avoid too heavy processing: 10ms
-					clearTimeout(layout._process_timeout);
-					layout._process_timeout = setTimeout(f, 10);
-				} else if (layout._multiple_process_counter < 10) {
-					// delay even more: 50ms
-					clearTimeout(layout._process_timeout);
-					layout._process_timeout = setTimeout(f, 10);
-				} else {
-					// delay even more: 200ms
-					clearTimeout(layout._process_timeout);
-					layout._process_timeout = setTimeout(f, 10);
-				}
-			} else
-				layout._multiple_process_counter = 0;
+			layout._process();
 		};
-		layout._process_timeout = setTimeout(f,1);
+		var timing = 1; // by default 1ms
+		if (layout._last_layout_activity > new Date().getTime() - 1000) {
+			layout._layouts_short_time++;
+			if (layout._layouts_short_time < 2)
+				timing = 10; // first time, delay a little: 10ms
+			else if (layout._layouts_short_time < 4)
+				timing = 50; // start to have a lot, delay of 50ms
+			else
+				timing = 300; // a lot: delay of 300ms
+		} else {
+			layout._layouts_short_time = 0;
+		}
+		layout._process_timeout = setTimeout(f,timing);
 	},
 	_process: function() {
 		if (layout._invalidated.length == 0) return; // nothing to do

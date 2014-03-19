@@ -258,7 +258,9 @@ echo $sel_index;
 
 // background loading of the application
 require("load_static.js",function(){
-	new load_static_resources(span_background_loading);
+	var loading = new load_static_resources(span_background_loading);
+	loading._slow_when_user_active = true;
+	loading._slow_when_services_active = true;
 });
 require("animation.js");
 require("context_menu.js");

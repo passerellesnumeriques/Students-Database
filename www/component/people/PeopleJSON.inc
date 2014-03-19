@@ -35,7 +35,8 @@ class PeopleJSON {
 			->field($alias,"last_name","last_name")
 			->field($alias,"middle_name","middle_name")
 			->field($alias,"sex","sex")
-			->field($alias,"birth","birthdate");
+			->field($alias,"birth","birthdate")
+			->field($alias,"types","people_types");
 	}
 	
 	/**
@@ -47,11 +48,12 @@ class PeopleJSON {
 	public static function People($q, $row){
 		$data = "";
 		$data .= "{id:".json_encode($row["people_id"]);
-		$data .= ", first_name:".json_encode($row['first_name']);
-		$data .= ", last_name:".json_encode($row["last_name"]);
-		$data .= ", middle_name:".json_encode($row["middle_name"]);
-		$data .= ", sex:".json_encode($row["sex"]);
-		$data .= ", birthdate:".json_encode($row["birthdate"]);
+		$data .= ",first_name:".json_encode($row['first_name']);
+		$data .= ",last_name:".json_encode($row["last_name"]);
+		$data .= ",middle_name:".json_encode($row["middle_name"]);
+		$data .= ",sex:".json_encode($row["sex"]);
+		$data .= ",birthdate:".json_encode($row["birthdate"]);
+		$data .= ",can_edit:".(PNApplication::$instance->people->canModifyTypes($row["people_types"]) ? "true" : "false");
 		$data .= "}";
 		return $data;
 	}
@@ -79,11 +81,11 @@ class PeopleJSON {
 	 */
 	public static function People2DB($json){
 		$a = array(
-				"first_name" => @$json['first_name'],
-				"last_name" => @$json['last_name'],
-				"middle_name" => @$json['middle_name'],
-				"sex" => @$json['sex'],
-				"birthdate" => @$json['birthdate'],
+			"first_name" => @$json['first_name'],
+			"last_name" => @$json['last_name'],
+			"middle_name" => @$json['middle_name'],
+			"sex" => @$json['sex'],
+			"birthdate" => @$json['birthdate'],
 		);
 		if(isset($json["id"]))
 			$a["id"] = $json["id"]; //This is an update

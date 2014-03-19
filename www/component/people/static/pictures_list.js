@@ -12,9 +12,27 @@ function pictures_list(container, peoples, default_view) {
 		this.view = type;
 		while (this.content.childNodes.length > 0) this.content.removeChild(this.content.childNodes[0]);
 		this.pictures = [];
+		var ready_count = peoples.length;
+		var ready = function() {
+			if (--ready_count == 0)
+				t.adjustSizes();
+		};
 		add_javascript("/static/people/pictures_list_"+type+".js", function() {
-			for (var i = 0; i < peoples.length; ++i)
-				t.pictures.push(new window["pictures_list_"+type](t.content, peoples[i], t.width, t.height));
+			for (var i = 0; i < peoples.length; ++i) {
+				var pic = new window["pictures_list_"+type](t.content, peoples[i], t.width, t.height, ready);
+				pic.element.title = "Click to see profile of "+peoples[i].first_name+" "+peoples[i].last_name;
+				pic.element.style.cursor = "pointer";
+				pic.element._people_id = peoples[i].id;
+				pic.element.onclick = function() {
+					var id = this._people_id;
+					window.top.require("popup_window.js", function() {
+						var p = new window.top.popup_window("Profile", null, "");
+						p.setContentFrame("/dynamic/people/page/profile?people="+id);
+						p.showPercent(95,95);
+					});
+				};
+				t.pictures.push(pic);
+			}
 		});
 	};
 	this.setSize = function(width, height) {
@@ -22,6 +40,29 @@ function pictures_list(container, peoples, default_view) {
 		this.height = height;
 		for (var i = 0; i < this.pictures.length; ++i)
 			this.pictures[i].setSize(width, height);
+		this.adjustSizes();
+	};
+	
+	this.adjustSizes = function() {
+		for (var i = 0; i < this.pictures.length; ++i) {
+			this.pictures[i].element.style.width = "";
+			this.pictures[i].element.style.height = "";
+		}
+		var max_width = 0;
+		var max_height = 0;
+		for (var i = 0; i < this.pictures.length; ++i) {
+			var w = getWidth(this.pictures[i].element);
+			if (w > max_width)
+				max_width = w;
+			var h = getHeight(this.pictures[i].element);
+			if (h > max_height)
+				max_height = h;
+		}
+		for (var i = 0; i < this.pictures.length; ++i) {
+			setWidth(this.pictures[i].element, max_width);
+			setHeight(this.pictures[i].element, max_height);
+			this.pictures[i].adjustPicture();
+		}
 	};
 	
 	this._init = function() {
@@ -63,20 +104,22 @@ function pictures_list(container, peoples, default_view) {
 		this.select_size = document.createElement("SELECT"); this.header.appendChild(this.select_size);
 		var o;
 		o = document.createElement("OPTION"); o.text = "35x35"; this.select_size.add(o);
-		o = document.createElement("OPTION"); o.text = "50x60"; this.select_size.add(o);
-		o = document.createElement("OPTION"); o.text = "100x120"; this.select_size.add(o);
-		o = document.createElement("OPTION"); o.text = "150x180"; this.select_size.add(o);
-		o = document.createElement("OPTION"); o.text = "200x240"; this.select_size.add(o);
+		o = document.createElement("OPTION"); o.text = "38x50"; this.select_size.add(o);
+		o = document.createElement("OPTION"); o.text = "75x100"; this.select_size.add(o);
+		o = document.createElement("OPTION"); o.text = "150x150"; this.select_size.add(o);
+		o = document.createElement("OPTION"); o.text = "150x200"; this.select_size.add(o);
+		o = document.createElement("OPTION"); o.text = "225x300"; this.select_size.add(o);
 		o = document.createElement("OPTION"); o.text = "300x300"; this.select_size.add(o);
-		this.select_size.selectedIndex = 4;
+		this.select_size.selectedIndex = 5;
 		this.select_size.onchange = function() {
 			switch (t.select_size.selectedIndex) {
 			case 0: t.setSize(35,35); break;
-			case 1: t.setSize(50,60); break;
-			case 2: t.setSize(100,120); break;
-			case 3: t.setSize(150,180); break;
-			case 4: t.setSize(200,240); break;
-			case 5: t.setSize(300,300); break;
+			case 1: t.setSize(38,50); break;
+			case 2: t.setSize(75,100); break;
+			case 3: t.setSize(150,150); break;
+			case 4: t.setSize(150,200); break;
+			case 5: t.setSize(225,300); break;
+			case 6: t.setSize(300,300); break;
 			};
 		};
 		var button;
@@ -131,7 +174,7 @@ function pictures_list(container, peoples, default_view) {
 			tool.useUpload();
 			tool.useFaceDetection();
 			tool.addTool("crop",function() {
-				tool.setToolValue("crop", null, {aspect_ratio:0.75}, false);
+				tool.setToolValue("crop", null, {aspect_ratio:0.75}, true);
 			});
 			tool.addTool("scale", function() {
 				tool.setToolValue("scale", null, {max_width:300,max_height:300}, false);

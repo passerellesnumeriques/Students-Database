@@ -33,6 +33,7 @@ if (window == window.top) {
 						animation.stop(w.frameElement.loading_anim);
 						w.frameElement.loading_anim = null;
 					}
+					w.layout.invalidate(w.document.body);
 					w.frameElement.unloading_anim = animation.fadeOut(w.frameElement.loading_t, 300, function() {
 						if (!w.frameElement) return;
 						if (w.frameElement.loading_t) {
@@ -260,9 +261,29 @@ if (window == window.top) {
 		addInactivityListener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
-		onmouseout: new Custom_Event()
+		addOverAndOut: function(element, handler) {
+			var w = getWindowFromElement(element);
+			window.top.pnapplication.registerOnMouseMove(w, function(x,y) {
+				var x1 = w.absoluteLeft(element);
+				var y1 = w.absoluteTop(element);
+				var x2 = x1+element.offsetWidth;
+				var y2 = y1+element.offsetHeight;
+				if (element._isover) {
+					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
+					} else {
+						element._isover = false;
+						handler(false);
+					}
+				} else {
+					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
+						element._isover = true;
+						handler(true);
+					}
+				}
+				
+			});
+		}
 	};
-	window.onmouseout = function(ev) { window.pnapplication.onmouseout.fire(ev); };
 	window.top.pnapplication.registerWindow(window);
 }
 

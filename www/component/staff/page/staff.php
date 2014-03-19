@@ -184,12 +184,14 @@ class page_staff extends Page {
 			});
 		}
 
-		function create_new_staff(department_id) {
-			postData("/dynamic/people/page/create_people",{
-				icon: "/static/application/icon.php?main=/static/staff/staff_32.png&small="+theme.icons_16.add+"&where=right_bottom",
-				title: "New Staff",
-				types: ["staff"],
-				redirect: "/dynamic/staff/page/staff"
+		function create_new_staff() {
+			window.top.require("popup_window.js",function() {
+				var p = new window.top.popup_window('New Staff', theme.build_icon("/static/staff/staff_16.png",theme.icons_10.add), "");
+				var frame = p.setContentFrame("/dynamic/people/page/popup_create_people?types=staff&ondone=reload_staff");
+				frame.reload_staff = function() {
+					location.reload();
+				};
+				p.show();
 			});
 		}
 		</script>

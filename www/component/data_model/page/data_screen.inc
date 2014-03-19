@@ -145,8 +145,7 @@ function dataScreen(&$page, $root_table_name, $sub_model, $values, $prefilled_va
 				$h
 		));
 	
-	if ($screen instanceof GenericDataScreen)
-		buildDataScreenChildren($page, $root, $values, $prefilled_values, $sections, $structure_name);
+	buildDataScreenChildren($page, $root, $values, $prefilled_values, $sections, $structure_name);
 	
 	$page->require_javascript("section.js");
 	$html = "";
@@ -164,6 +163,8 @@ function dataScreen(&$page, $root_table_name, $sub_model, $values, $prefilled_va
 }
 
 function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$sections, $structure_name) {
+	$parent_display = DataModel::get()->getTableDataDisplay($path->table->getName());
+	if ($parent_display == null) return;
 	$screens = DataModel::get()->getDataScreens();
 	$avail_screens = array();
 	foreach ($screens as $s) {
@@ -184,47 +185,10 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 			if (!$found) { $ok = false; break; }
 		}
 		if (!$ok) foreach ($children as $child) array_push($path->children, $child);
-		else {
-			foreach ($children as $child) {
-				// get data from database if not new
-				$key_value = getKeyValue($path->table, $values);
-				if ($key_value <> null) {
-					if ($child->unique) {
-						$q = SQLQuery::create()->noWarning();
-						$q->selectSubModelForTable($path->table, $path->sub_model);
-						$q->selectSubModelForTable($child->table, $child->sub_model);
-						$q->select($path->table->getName());
-						$q->whereKey($path->table, $key_value);
-						$fields_matching = array();
-						if ($child->isReverse()) {
-							$fields_matching[$path->table->getPrimaryKey()->name] = $child->foreign_key->name;
-						} else {
-							$fields_matching[$child->foreign_key->name] = $child->table->getPrimaryKey()->name;
-						}
-						$q->join($path->table->getName(), $child->table->getName(), $fields_matching);
-							
-						$row = $q->executeSingleRow();
-						foreach ($child->table->internalGetColumns($child->sub_model) as $col)
-							if (isset($row[$col->name]))
-							$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);
-						foreach ($display->getDataDisplay($from) as $data) {
-							$values->addTableDataValue($child->table->getName(), $data->getDisplayName(), $data->getData($row, $data_aliases[$data->getDisplayName()]));
-						}
-					} else {
-						// not unique, just put the key
-						if ($child->isReverse())
-							$values->addTableColumnValue($child->table->getName(), $child->foreign_key->name, $values->getColumnValue($path->table->getName(), $path->table->getPrimaryKey()->name));
-						else
-							$values->addTableColumnValue($child->table->getName(), $child->table->getPrimaryKey()->name, $child->foreign_key->name);
-					}
-				}
-			}
-			array_push($avail_screens, array($s, $children));
-		}
+		else array_push($avail_screens, array($s, $children));
 	}
 	
 	// create generic screens for remaining paths
-	$parent_display = DataModel::get()->getTableDataDisplay($path->table->getName());
 	foreach ($path->children as $child) {
 		$display = DataModel::get()->getTableDataDisplay($child->table->getName());
 		if ($display == null) continue;
@@ -257,56 +221,63 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 				if (!$parent_display->checkJoinFrom($child->foreign_key->name, $cv)) continue;
 			}
 		}
-		if ($child->isReverse())
-			$from = $child->foreign_key->name;
-		else
-			$from = null;
-	
-		// get data from database if not new
-		$key_value = getKeyValue($path->table, $values);
-		if ($key_value <> null) {
-			if ($child->unique) {
-				$q = SQLQuery::create()->noWarning();
-				$q->selectSubModelForTable($path->table, $path->sub_model);
-				$q->selectSubModelForTable($child->table, $child->sub_model);
-				$q->select($path->table->getName());
-				$q->whereKey($path->table, $key_value);
-				$fields_matching = array();
-				if ($child->isReverse()) {
-					$fields_matching[$path->table->getPrimaryKey()->name] = $child->foreign_key->name;
-				} else {
-					$fields_matching[$child->foreign_key->name] = $child->table->getPrimaryKey()->name;
-				}
-				$q->join($path->table->getName(), $child->table->getName(), $fields_matching);
-					
-				$data_aliases = array();
-				foreach ($display->getDataDisplay($from) as $data) {
-					$child->parent = new DataPath_Table($path->table, $path->sub_model);
-					$data_aliases[$data->getDisplayName()] = $data->buildSQL($q, $child, array());
-					$child->parent = $path;
-				}
-				$row = $q->executeSingleRow();
-				foreach ($child->table->internalGetColumns($child->sub_model) as $col)
-					if (isset($row[$col->name]))
-						$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);
-				foreach ($display->getDataDisplay($from) as $data) {
-					$values->addTableDataValue($child->table->getName(), $data->getDisplayName(), $data->getData($row, $data_aliases[$data->getDisplayName()]));
-				}
-			} else {
-				// not unique, just put the key
-				if ($child->isReverse())
-					$values->addTableColumnValue($child->table->getName(), $child->foreign_key->name, $values->getColumnValue($path->table->getName(), $path->table->getPrimaryKey->name));
-				else
-					$values->addTableColumnValue($child->table->getName(), $child->table->getPrimaryKey()->name, $child->foreign_key->name);
-			}
-		}
-	
 		$screen = new datamodel\GenericDataScreen($display);
 		array_push($avail_screens, array($screen, array($child)));
 	}
 	
 	// generate screens
 	foreach ($avail_screens as $s) {
+		// get data from database if not new
+		foreach ($s[1] as $child) {
+			$key_value = getKeyValue($path->table, $values);
+			if ($key_value <> null) {
+				if ($child->unique) {
+					if ($child->isReverse()) {
+						$values->addTableColumnValue($child->table->getName(), $child->foreign_key->name, $key_value);
+					}
+					$q = SQLQuery::create()->noWarning();
+					$q->selectSubModelForTable($path->table, $path->sub_model);
+					$q->selectSubModelForTable($child->table, $child->sub_model);
+					$q->select($path->table->getName());
+					$q->whereKey($path->table, $key_value);
+					$fields_matching = array();
+					if ($child->isReverse()) {
+						$fields_matching[$path->table->getPrimaryKey()->name] = $child->foreign_key->name;
+					} else {
+						$fields_matching[$child->foreign_key->name] = $child->table->getPrimaryKey()->name;
+					}
+					$q->join($path->table->getName(), $child->table->getName(), $fields_matching);
+						
+					$display = DataModel::get()->getTableDataDisplay($child->table->getName());
+					if ($display <> null) {
+						if ($child->isReverse())
+							$from = $child->foreign_key->name;
+						else
+							$from = null;
+						$data_aliases = array();
+						foreach ($display->getDataDisplay($from) as $data) {
+							$child->parent = new DataPath_Table($path->table, $path->sub_model);
+							$data_aliases[$data->getDisplayName()] = $data->buildSQL($q, $child, array());
+							$child->parent = $path;
+						}
+					}
+					$row = $q->executeSingleRow();
+					foreach ($child->table->internalGetColumns($child->sub_model) as $col)
+						if (isset($row[$col->name]))
+							$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);
+					if ($display)
+						foreach ($display->getDataDisplay($from) as $data) {
+							$values->addTableDataValue($child->table->getName(), $data->getDisplayName(), $data->getData($row, $data_aliases[$data->getDisplayName()]));
+					}
+				} else {
+					// not unique, just put the key
+					if ($child->isReverse())
+						$values->addTableColumnValue($child->table->getName(), $child->foreign_key->name, $values->getColumnValue($path->table->getName(), $path->table->getPrimaryKey()->name));
+					else
+						$values->addTableColumnValue($child->table->getName(), $child->table->getPrimaryKey()->name, $child->foreign_key->name);
+				}
+			}
+		}
 		$ob = ob_get_contents();
 		ob_clean();
 		$s[0]->generate($page, $s[1], $values, $prefilled_values, $structure_name);
@@ -322,8 +293,8 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 	}
 
 	foreach ($avail_screens as $s)
-		if ($s[0] instanceof GenericDataScreen)
-			buildDataScreenChildren($page, $s[1][0], $values, $prefilled_values, $sections, $structure_name);
+		foreach ($s[1] as $child)
+			buildDataScreenChildren($page, $child, $values, $prefilled_values, $sections, $structure_name);
 }
 
 function getKeyValue($table, $values) {

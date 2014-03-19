@@ -23,7 +23,10 @@ class page_popup_create_people extends Page {
 				return;
 			}
 		}
-		$input = json_decode($_POST["input"], true);
+		if (isset($_POST["input"]))
+			$input = json_decode($_POST["input"], true);
+		else
+			$input = $_GET;
 		
 		require_once("component/data_model/page/create_data.inc");
 		$values = new DataValues();

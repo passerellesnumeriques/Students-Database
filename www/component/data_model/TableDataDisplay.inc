@@ -59,6 +59,12 @@ class TableDataDisplay {
 		return $this->data_display[null];
 	}
 	
+	public function getDataDisplayByName($name, $come_from) {
+		foreach ($this->data_display[$come_from] as $data)
+			if ($data->getDisplayName() == $name) return $data;
+		return null;
+	}
+	
 	public function canJoinFrom($foreign_key) {
 		if ($this->join_from === null) return true;
 		return isset($this->join_from[$foreign_key]);

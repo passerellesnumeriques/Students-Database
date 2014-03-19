@@ -35,7 +35,9 @@ class service_get extends Service {
 		$expires = time()+60*24*60*60;
 		header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
 		header('Vary: Cookie');
-		readfile($component->get_data_path($id));
+		$path = $component->get_data_path($id);
+		header("Content-Length: ".filesize($path));
+		readfile($path);
 	}
 	
 }
