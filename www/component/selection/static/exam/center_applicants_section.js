@@ -1,4 +1,4 @@
-function center_applicants_section(container,EC_id){
+function center_applicants_section(container,EC_id,can_edit){
 	var t = this;
 	container = typeof container == "string" ? document.getElementById(container) : container;
 	t._init = function(){
@@ -10,7 +10,7 @@ function center_applicants_section(container,EC_id){
 		container.appendChild(div_list);
 		div_list.style.display = "inline-block";
 		div_list.margin = "10px";
-		new center_applicants_list(div_list,EC_id);
+		new center_applicants_list(div_list,EC_id,can_edit);
 	};
 	
 	require("center_applicants_list.js",function(){

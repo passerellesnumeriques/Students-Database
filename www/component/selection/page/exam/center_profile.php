@@ -28,10 +28,10 @@ class page_exam_center_profile extends selection_page {
 			<?php }?>
 			</div>
 			<div style = "overflow:auto" layout = "fill">
-				<div id = "center_detail_section" title='Exam Centers Caracteristics' collapsable='true' css='soft' style='margin:10px;'>
+				<div id = "center_detail_section" title='Exam Centers Caracteristics' collapsable='true'style='margin:10px;'>
 					<div id='exam_center_<?php echo $name; ?>' ></div>
 				</div>
-				<div id = "center_applicants" title='Exam Centers Applicants' collapsable='true' css='soft' style='margin:10px;'>
+				<div id = "center_applicants" title='Exam Centers Applicants' collapsable='true' style='margin:10px;'>
 					<div id = "exam_center_applicants_container"></div>				
 				</div>
 			</div>
@@ -40,11 +40,11 @@ class page_exam_center_profile extends selection_page {
 	<?php
 		$this->exam_center_caracteristics($page,"exam_center_".$name,$id,"save_center_button","remove_center_button",$read_only);
 		if($id != -1)
-			$this->exam_applicants($page, "exam_center_applicants_container", $id);
+			$this->exam_applicants($page, "exam_center_applicants_container", $id,$read_only);
 	}
 	
 	
-	public function exam_center_caracteristics(&$page,$container_id,$id,$save_exam_center_button, $remove_exam_center_button,$read_only){
+	private function exam_center_caracteristics(&$page,$container_id,$id,$save_exam_center_button, $remove_exam_center_button,$read_only){
 		$page->add_javascript("/static/widgets/header_bar.js");
 		$page->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('', 'Exam Center Profile');");
 		require_once("component/selection/SelectionJSON.inc");
@@ -124,10 +124,13 @@ class page_exam_center_profile extends selection_page {
 	
 	}
 	
-	public function exam_applicants(&$page, $container_id, $center_id){
+	private function exam_applicants(&$page, $container_id, $center_id, $read_only){
 		//TODO set rights, readonly? Always shown?
+		$can_manage_applicants = PNApplication::$instance->user_management->has_right("manage_applicant");
+		if($read_only)
+			$can_manage_applicants = false;
 		$page->add_javascript("/static/selection/exam/center_applicants_section.js");
-		$page->onload("new center_applicants_section('".$container_id."',".json_encode($center_id).");");
+		$page->onload("new center_applicants_section('".$container_id."',".json_encode($center_id).",".json_encode($can_manage_applicants).");");
 		
 	}
 }

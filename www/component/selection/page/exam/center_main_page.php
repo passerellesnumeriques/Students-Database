@@ -7,66 +7,37 @@ class page_exam_center_main_page extends selection_page {
 	
 	public function execute_selection_page(&$page) {
 		
-// 		SQLQuery::create()
-// 			->bypassSecurity()
-// 			->insertMultiple("Applicant", array(
-// 				array(
-// 					"people" => 20,
-// 					"applicant_id" => 1,
+// 		for($i = 1; $i < 31; $i++){
+// 			SQLQuery::create()
+// 				->bypassSecurity()
+// 				->insert("Applicant", array(
+// 					"people" => 20+$i,
+// 					"applicant_id" => 20+$i,
 // 					"information_session" => 1
-// 				),
-// 				array(
-// 						"people" => 21,
-// 						"applicant_id" => 2,
-// 						"information_session" => 1
-// 				),
-// 				array(
-// 						"people" => 22,
-// 						"applicant_id" => 3,
-// 						"information_session" => 1
-// 				),
-// 				array(
-// 						"people" => 23,
-// 						"applicant_id" => 4,
-// 						"information_session" => 1
-// 				),
-// 				array(
-// 						"people" => 24,
-// 						"applicant_id" => 5,
-// 						"information_session" => 2
-// 				),
-// 				array(
-// 						"people" => 25,
-// 						"applicant_id" => 6,
-// 						"information_session" => 2
-// 				),
-// 				array(
-// 						"people" => 26,
-// 						"applicant_id" => 7,
-// 						"information_session" => 3
-// 				),
-// 				array(
-// 						"people" => 27,
-// 						"applicant_id" => 8,
-// 						"information_session" => 3
-// 				),
-// 				array(
-// 						"people" => 28,
-// 						"applicant_id" => 9,
-// 						"information_session" => 3
-// 				),
-// 				array(
-// 						"people" => 29,
-// 						"applicant_id" => 10,
-// 						"information_session" => 2
-// 				),
-// 				array(
-// 						"people" => 30,
-// 						"applicant_id" => 11,
-// 						"information_session" => 3
-// 				),
+// 				));
+// 		}
+// 		$j=1;
+// 		for($i = 31; $i < 61; $i++){
+// 			SQLQuery::create()
+// 			->bypassSecurity()
+// 			->insert("Applicant", array(
+// 				"people" => 50+$j,
+// 				"applicant_id" => 50+$j,
+// 				"information_session" => 2
 // 			));
-		
+// 			$j++;
+// 		}
+// 		$j=2;
+// 		for($i = 61; $i < 81; $i++){
+// 			SQLQuery::create()
+// 			->bypassSecurity()
+// 			->insert("Applicant", array(
+// 			"people" => 80+$j,
+// 			"applicant_id" => 80+$j,
+// 			"information_session" => 3
+// 			));
+// 			$j++;
+// 		}
 		$page->add_javascript("/static/widgets/grid/grid.js");
 		$page->add_javascript("/static/data_model/data_list.js");
 		$page->onload("init_organizations_list();");
@@ -171,6 +142,7 @@ class page_exam_center_main_page extends selection_page {
 					
 					
 				</script>
+				<a href = "/dynamic/selection/page/applicant/manually_assign_to_exam_entity?mode=center">Test assignment</a>
 		<?php 
 	}
 }

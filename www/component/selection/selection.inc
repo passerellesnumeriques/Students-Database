@@ -1767,22 +1767,47 @@ class selection extends Component {
 	 * Unlink an information session from an exam center
 	 * @param number $EC_id exam center id
 	 * @param number $IS_id information session id
-	 * @return boolean true if well performed, else false
+	 * @return array <ul><li>true if well performed, else false</li><li>NULL | rows of the applicants that cannot be removed because assigned to exam session</li><li>NULL | rows of the applicants that cannot be removed because assigned to exam center room</li></ul>
 	 */
 	public function unlinkISfromEC($EC_id, $IS_id){
 		SQLQuery::startTransaction();
 		try {
 			SQLQuery::create()
 				->removeKeys("ExamCenterInformationSession", array(array("information_session" => $IS_id, "exam_center" => $EC_id)));
+			//Unassign the applicants
+			$applicants_to_unassign = SQLQuery::create()
+				->select("Applicant")
+				->field("Applicant","people")
+				->whereValue("Applicant","information_session",$IS_id)
+				->whereNull("Applicant","exam_session")
+				->whereNull("Applicant","exam_center_room")
+				->executeSingleField();
+			$cannot_be_removed_session = SQLQuery::create()
+				->select("Applicant")
+				->whereValue("Applicant", "information_session", $IS_id)
+				->whereNotNull("Applicant", "exam_session");
+			SelectionJSON::ApplicantSQL($cannot_be_removed_session);
+			$cannot_be_removed_session = $cannot_be_removed_session ->execute();
+			$cannot_be_removed_room = SQLQuery::create()
+				->select("Applicant")
+				->whereValue("Applicant", "information_session", $IS_id)
+				->whereNotNull("Applicant", "exam_session");
+			SelectionJSON::ApplicantSQL($cannot_be_removed_room);
+			$cannot_be_removed_room = $cannot_be_removed_room ->execute();
+			if($applicants_to_unassign <> NULL){
+				SQLQuery::create()
+					->bypassSecurity()
+					->updateAllKeys("Applicant", $applicants_to_unassign, array("exam_center" => NULL));
+			}
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
 		if(PNApplication::has_errors()){
 			SQLQuery::rollbackTransaction();
-			return false;
+			return array(false,null,null);
 		} else {
 			SQLQuery::commitTransaction();
-			return true;
+			return array(true,$cannot_be_removed_session,$cannot_be_removed_room);
 		}
 	}
 	
@@ -2152,6 +2177,78 @@ class selection extends Component {
 	}
 	
 	/**
+	 * Check if an applicant can be unassigned from an exam center
+	 * @param number $EC_id exam center ID
+	 * @param number $people_id people ID (applicant one)
+	 * @return array <ul><li>0: boolean, true if the applicant can be unassigned</li><li>1: string error message if the applicant is assigned to a session</li><li>2: string error message if the applicant is assigned to a room</li></ul>
+	 */
+	public function canUnassignApplicantFromCenter($EC_id, $people_id){
+		//Check the right
+		$right = PNApplication::$instance->user_management->has_right("manage_applicant");
+		if(!$right){
+			PNApplication::error("You are not allowed to manage the applicants");
+			return array(false,null,null);
+		}
+		$can = true;
+		$session_error = null;
+		$room_error = null;
+		//Check that the applicant is not assigned to a session / room already
+		$assigned = SQLQuery::create()
+			->bypassSecurity()
+			->select("Applicant")
+			->field("Applicant","exam_session")
+			->field('Applicant',"exam_center_room")
+			->whereValue('Applicant', "people", $people_id)
+			->executeSingleRow();
+		if($assigned["exam_session"] <> null){
+			$can = false;
+			//Get the event name
+			$ev_name = SQLQuery::create()
+				->bypassSecurity()
+				->select("CalendarEvent")
+				->field("CalendarEvent","title")
+				->whereValue("CalendarEvent", "title", $assigned["exam_session"])
+				->executeSingleRow();
+			$session_error = "This applicant is already assigned to a session in this center (".$ev_name.")";			
+		}
+		if($assigned["exam_center_room"] <> null){
+			$can = false;
+			//Get the room name
+			$room_name = SQLQuery::create()
+				->bypassSecurity()
+				->select("ExamCenterRoom")
+				->field("ExamCenterRoom","name")
+				->whereValue("ExamCenterRoom", "name", $assigned["exam_center_room"])
+				->executeSingleValue();
+			$room_error = "This applicant is already assigned to a room in this center (".$room_name.")";
+		}
+		return array($can,$session_error,$room_error);
+	}
+	
+	/**
+	 * Unassign an applicant from an exam center
+	 * @param number $EC_id exam center ID
+	 * @param number $people_id people ID (applicant one)
+	 * @return array | boolean true if well performed, false if an error occured, array from canUnassignApplicantFromCenter method if not allowed to unassign
+	 */
+	public function unassignApplicantFromCenter($EC_id, $people_id){		
+		//Check if can be removed
+		$can = $this->canUnassignApplicantFromCenter($EC_id,$people_id);
+		if(!$can[0])
+			return $can;
+		//Perform the unassignment
+		try{
+			SQLQuery::create()
+				->bypassSecurity()
+				->updateByKey("Applicant", $people_id, array("exam_center" => null));
+		}catch (Exception $e){
+			PNApplication::error($e);
+			return false;
+		}
+		return true;
+	}
+	
+	/**
 	 * Get the applicants assigned to a given information session but not assigned to any exam center
 	 * @param number $IS_id information session ID
 	 * @return NULL | array <ul><li>NULL if no applicant found</li><li>array containing the applicants rows for the applicants assigned</li></ul>
@@ -2280,6 +2377,32 @@ class selection extends Component {
 			->bypassSecurity()
 			->updateAllKeys("Applicant", $applicants_to_assign_ids, array("exam_center" => $EC_id));
 		return $applicants_to_assign;
+	}
+	
+	public function assignApplicantsToEC($applicants,$EC_id){
+		if(!is_array($applicants))
+			$applicants = array($applicants);
+		//Check the right
+		$can = $this->canAssignApplicantToCenter();
+		if(!$can){
+			PNApplication::error('You are not allowed to assign any applicant to an exam center');
+			return false;
+		}
+		SQLQuery::startTransaction();
+		try {
+			SQLQuery::create()
+				->bypassSecurity()
+				->updateAllKeys("Applicant", $applicants, array("exam_center" => $EC_id));
+		} catch (Exception $e){
+			PNApplication::error($e);
+		}
+		if(PNApplication::has_errors()){
+			SQLQuery::rollbackTransaction();
+			return false;
+		} else {
+			SQLQuery::commitTransaction();
+			return true;
+		}
 	}
 	
 	/**

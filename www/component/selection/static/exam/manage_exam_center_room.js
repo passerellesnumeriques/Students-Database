@@ -284,7 +284,7 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 	
 	require(["section.js","exam_objects.js",["typed_field.js",["field_text.js","field_integer.js"]]],function(){		
 		t._section_content = document.createElement("div");
-		t.section = new section("","Exam Rooms",t._section_content,false);
+		t.section = new section("","Exam Rooms",t._section_content,false,false,"soft");
 		t._getApplicantsAssigned();
 	});
 }

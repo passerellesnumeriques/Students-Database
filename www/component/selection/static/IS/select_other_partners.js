@@ -292,7 +292,7 @@ function select_other_partners(container, all_partners, partners_contacts_points
 	require(["create_partner_row.js","popup_window.js","section.js","IS_objects.js","exam_objects.js"],function(){
 		//Set the section
 		t.container_of_section_content = document.createElement("div");
-		t.section = new section("/static/contact/directory_16.png","Other partners",t.container_of_section_content,true);
+		t.section = new section("/static/contact/directory_16.png","Other partners",t.container_of_section_content,true,false,"soft");
 		container.appendChild(t.section.element);
 		//Set partners array
 		t._setPartnersArray();

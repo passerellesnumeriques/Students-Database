@@ -23,7 +23,60 @@ class page_exam_convert_IS_into_center extends selection_page {
 		if(isset($remove_IS_from_center) || isset($IS_ids) || isset($host_to_add)){
 			if($remove_IS_from_center){
 				//remove the IS from the ExamCenterInformationSession table
-				PNApplication::$instance->selection->unlinkISfromEC($EC_id,$IS_ids[0]);
+				$res = PNApplication::$instance->selection->unlinkISfromEC($EC_id,$IS_ids[0]);
+				if($res[1] <> null){
+					?>
+					<script type="text/javascript">
+						var applicants_assigned_to_session = <?php 
+						echo "[";
+						$first = true;
+						foreach($res[1] as $applicant){
+							if(!$first) echo ', ';
+							$first = false;
+							echo SelectionJSON::Applicant(null, $applicant);
+						}
+						echo "];";
+						//TODO: for the applicants assigned to room / session, let the user unassign them at the same time as the other if he wants: must check that the applicants have no grades yet
+						?>
+						var div = document.createElement("div");
+						div.appendChild(document.createTextNode("Following applicants have not been unassigned from this center because already assigned to an exam session:"));
+						var ul = document.createElement("ul");
+						div.appendChild(ul);
+						for(var i = 0; i < applicants_assigned_to_session.length; i++){
+							var li = document.createElement("li");
+							li.appendChild(document.createTextNode(applicants_assigned_to_session[i].applicant_id+', '+applicants_assigned_to_session[i].last_name+', '+applicants_assigned_to_session[i].middle_name+', '+applicants_assigned_to_session[i].first_name+', '+applicants_assigned_to_session[i].birthdate));
+							ul.appendChild(li);
+						}
+						error_dialog_html(div);
+					</script>
+					<?php 
+				}
+				if($res[2] <> NULL){
+					?>
+					<script type="text/javascript">
+						var applicants_assigned_to_room = <?php 
+						echo "[";
+						$first = true;
+						foreach($res[2] as $applicant){
+							if(!$first) echo ', ';
+							$first = false;
+							echo SelectionJSON::Applicant(null, $applicant);
+						}
+						echo "];";					
+						?>
+						var div = document.createElement("div");
+						div.appendChild(document.createTextNode("Following applicants have not been unassigned from this center because already assigned to a room:"));
+						var ul = document.createElement("ul");
+						div.appendChild(ul);
+						for(var i = 0; i < applicants_assigned_to_room.length; i++){
+							var li = document.createElement("li");
+							li.appendChild(document.createTextNode(applicants_assigned_to_room[i].applicant_id+', '+applicants_assigned_to_room[i].last_name+', '+applicants_assigned_to_room[i].middle_name+', '+applicants_assigned_to_room[i].first_name+', '+applicants_assigned_to_room[i].birthdate));
+							ul.appendChild(li);
+						}
+						error_dialog_html(div);
+					</script>
+					<?php 
+				}
 			} else {
 				if($EC_id == null && isset($host_to_add)){
 					//Exam center must be created from the host

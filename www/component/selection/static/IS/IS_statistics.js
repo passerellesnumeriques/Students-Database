@@ -46,7 +46,7 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 	 */
 	t._setSection = function(){
 		t.container_of_section_content = document.createElement("div");
-		t.section = new section("/static/selection/IS/statistics.png","Statistics",t.container_of_section_content,false);
+		t.section = new section("/static/selection/IS/statistics.png","Statistics",t.container_of_section_content,false,false,"soft");
 	};
 	
 	/**

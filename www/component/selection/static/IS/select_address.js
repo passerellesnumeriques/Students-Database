@@ -452,7 +452,7 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 	require(["popup_window.js","address_text.js","edit_address.js","section.js","contact_objects.js","create_partner_row.js","pop_select_area_and_partner.js"],function(){
 		t.address = new PostalAddress(null, null, null, null, null, null, null, null);
 		t.container_of_section_content = document.createElement("div");
-		t.section = new section("/static/contact/address_16.png","Location",t.container_of_section_content,false);
+		t.section = new section("/static/contact/address_16.png","Location",t.container_of_section_content,false,false,"soft");
 		container.appendChild(t.section.element);
 		t._init();
 	});

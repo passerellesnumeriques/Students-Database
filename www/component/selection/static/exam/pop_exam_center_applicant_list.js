@@ -1,15 +1,20 @@
-function pop_exam_center_applicant_list(center_id){
+function pop_exam_center_applicant_list(center_id, can_edit){
 	var t = this;
 	
 	t._init = function(){
+		var container = document.createElement("div");
 		t._table = document.createElement('table');
-		t.pop = new popup_window("Applicants list","",t._table);
+		container.appendChild(t._table);
+		t.pop = new popup_window("Applicants list","",container);
 		t._setTableHeader();
+		t._refreshList("name");
+		t.pop.show();
 	};
+	t._order_by = "name";
 	
 	t._setTableHeader = function(){
 		//Create the select order by row
-		var thead = document.createElement("tr");
+		var thead = document.createElement("thead");
 		var tr = document.createElement("tr");
 		var td = document.createElement("td");
 		td.colSpan = 2;
@@ -18,25 +23,53 @@ function pop_exam_center_applicant_list(center_id){
 		by_name.value = "name";
 		by_name.appendChild(document.createTextNode("Last name"));
 		var by_id = document.createElement("option");
-		by_id.value = "id";
+		by_id.value = "applicant_id";
 		by_id.appendChild(document.createTextNode("Applicant ID"));
 		by_id.selected = "selected";//Pre selected value
 		select.appendChild(by_name);
 		select.appendChild(by_id);
 		select.onchange = function(){
-			var selected = this.options[this.selectedIndex].value;
-			t._refreshList(selected);
+			t._order_by = this.options[this.selectedIndex].value;
+			t._refreshList();
 		};
 		td.appendChild(document.createTextNode("Sort by: "));
 		td.appendChild(select);
 		tr.appendChild(td);
+		//Create the export list button
+		var b = document.createElement("div");
+		b.style.marginLeft = "10px";
+		b.className = "button";
+		b.innerHTML = "<img src = '"+theme.icons_16._export+"'/> Export List";
+		b.onclick = function(){
+			var button = this;
+			require("context_menu.js",function(){
+				var menu = new context_menu();
+				menu.addTitleItem(null,"Export Format");
+				var old = document.createElement("div");
+				old.className = "context_menu_item";
+				old.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 5 (.xls)";
+				old.onclick = function(){
+					export_applicant_list("excel5",null,null,center_id,null,null,t._order_by);
+				};
+				menu.addItem(old);
+				var new_excel = document.createElement("div");
+				new_excel.className = "context_menu_item";
+				new_excel.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 2007 (.xlsx)";
+				new_excel.onclick = function(){
+					export_applicant_list("excel2007",null,null,center_id,null,null,t._order_by);
+				};
+				menu.addItem(new_excel);				
+				menu.showBelowElement(button);
+			});
+		};
+		td.appendChild(b);
 		thead.appendChild(tr);
 		t._table.appendChild(thead);
 	};
 	
-	t._refreshList = function(order_by){
+	t._refreshList = function(){
 		if(!t._tbody){
-			t._tboby = document.createElement("tbody");
+			t._tbody = document.createElement("tbody");
 			t._table.appendChild(t._tbody);
 		}
 		if(!t._loading){
@@ -51,7 +84,7 @@ function pop_exam_center_applicant_list(center_id){
 		while(t._tbody.firstChild)
 			t._tbody.removeChild(t._tbody.firstChild);
 		t._tbody.appendChild(t._loading);
-		service.json("selection","exam/get_applicants_assigned_to_center",{EC_id:center_id,order_by:order_by},function(res){
+		service.json("selection","exam/get_applicants_assigned_to_center",{EC_id:center_id,order_by:t._order_by},function(res){
 			if(!res)
 				error_dialog("An error occured");
 			else{
@@ -75,17 +108,68 @@ function pop_exam_center_applicant_list(center_id){
 					//Set the name td
 					td1.appendChild(document.createTextNode(" - "));
 					var link = document.createElement("a");
-					link.appendChild(document.createTextNode(res.applicants[i].applicant_id+", "+res.applicants[i].first_name+", "+res.applicants[i].last_name));
+					link.appendChild(document.createTextNode(res.applicants[i].applicant_id+", "+res.applicants[i].last_name.uniformFirstLetterCapitalized()));
+					if(typeof res.applicants[i].middle_name == "string" && res.applicants[i].middle_name.checkVisible())
+						link.appendChild(document.createTextNode(", "+res.applicants[i].middle_name.uniformFirstLetterCapitalized()));
+					link.appendChild(document.createTextNode(", "+res.applicants[i].first_name.uniformFirstLetterCapitalized()));
+					if(typeof res.applicants[i].sex == "string" && res.applicants[i].sex.checkVisible())
+						link.appendChild(document.createTextNode(", "+res.applicants[i].sex));
+					if(typeof res.applicants[i].birthdate == "string" && res.applicants[i].birthdate.checkVisible())
+						link.appendChild(document.createTextNode(", "+res.applicants[i].birthdate));
 					link.className = "black_link";
 					link.people_id = res.applicants[i].people_id;
+					link.title = "See profile";
 					link.onclick = function(){
-						//TODO set popup profile
+						var pop = new popup_window("Applicant Profile");
+						pop.setContentFrame("/dynamic/people/page/profile?people="+this.people_id);
+						pop.show();
 						return false;
 					};
 					td1.appendChild(link);
-					//TODO set td2 (unassign button)
+					if(can_edit){
+						//Add an unassign button
+						var b = document.createElement("div");
+						td2.appendChild(b);
+						b.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
+						b.className = "button_verysoft";
+						b.center_id = center_id;
+						b.people_id = res.applicants[i].people_id;
+						b.title = "Unassign this applicant from the exam center";
+						b.onclick = function(){
+							var EC_id = this.center_id;
+							var people_id = this.people_id;
+							var lock = lock_screen();
+							service.json("selection","applicant/unassign_from_center",{EC_id:EC_id,people_id:people_id},function(res){
+								unlock_screen(lock);
+								if(!res || (res && res.error)){
+									error_dialog('An error occured, the applicant was not unassigned from this center');									
+									return;
+								}
+								//Else cannot because of an assignment to a session or a room
+								if(res.session != null && res.room != null){
+									var ul = document.createElement("ul");
+									var li1 = document.createElement("li");
+									var li2 = document.createElement("li");
+									li1.appendChild(document.createTextNode(res.session));
+									li2.appendChild(document.createTextNode(res.room));
+									ul.appendChild(li1);
+									ul.appendChild(li2);
+									error_dialog_html(ul);
+								} else if (res.session != null)
+									error_dialog(res.session);
+								else if (res.room != null)
+									error_dialog(res.room);
+								else if (res.done){
+									window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "The applicant has been succesfully unassigned!", [{action:"close"}], 5000));
+									t._refreshList(t._order_by);
+								}
+								
+							});
+						};
+					}
 				}
 			}
+			t.pop.resize();
 		});
 			 
 	};
