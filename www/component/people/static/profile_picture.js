@@ -1,7 +1,7 @@
 if (typeof require != 'undefined')
 	require("progress_bar.js");
 
-function profile_picture(container, people_id, domain, username, width, height, halign, valign, can_edit, onloaded) {
+function profile_picture(container, people_id, domain, username, width, height, halign, valign, onloaded) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	if (!width) width = 0.75*height;
@@ -47,33 +47,6 @@ function profile_picture(container, people_id, domain, username, width, height, 
 		t.picture.style.position = "absolute";
 		if (!t.picture.parentNode) {
 			t.picture_container.appendChild(t.picture);
-			if (can_edit) {
-				t._change = document.createElement("DIV");
-				t._change.style.position = "absolute";
-				t._change.style.padding= "3px";
-				t._change.style.backgroundColor = "rgba(255,255,255,0.7)";
-				t._change.style.border = "1px solid rgba(0,0,0,0.5)";
-				t._change.style.bottom = "5px";
-				setBorderRadius(t._change, 5,5,5,5, 5,5,5,5);
-				t._change.innerHTML = "Change Picture";
-				t.picture_container.appendChild(t._change);
-				t._change.style.left = Math.floor(t.picture_container.offsetWidth/2-t._change.offsetWidth/2)+"px";
-				t._change.style.visibility = "hidden";
-				t._change.style.cursor = "pointer";
-				t._change.onclick = function(ev) {
-					// TODO
-				};
-				
-				window.pnapplication.addOverAndOut(t.picture, function(over) {
-					if (over) {
-						if (t._change.anim) window.top.animation.stop(t._change.anim);
-						t._change.anim = window.top.animation.fadeIn(t._change, 200);
-					} else {
-						if (t._change.anim) window.top.animation.stop(t._change.anim);
-						t._change.anim = window.top.animation.fadeOut(t._change, 200);
-					}
-				});
-			}
 		}
 	};
 	
