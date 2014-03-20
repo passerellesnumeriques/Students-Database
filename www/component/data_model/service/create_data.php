@@ -21,6 +21,7 @@ class service_create_data extends Service {
 					$paths[$i]->found = true;
 					$paths[$i]->{"columns"} = isset($tc["columns"]) ? $tc["columns"] : array();
 					$paths[$i]->{"value"} = $tc["value"];
+					$paths[$i]->{"multiple"} = isset($tc["multiple"]);
 					break;
 				}
 		for ($i = 0; $i < count($paths); $i++)
@@ -41,21 +42,18 @@ class service_create_data extends Service {
 	
 	private function createData($path) {
 		$come_from = null;
-		if ($path instanceof DataPath_Join) {
-			if ($path->isReverse()) {
-				$come_from = $path->foreign_key->name;
-			} else {
-			}
-		}
+		if ($path instanceof DataPath_Join && $path->isReverse())
+			$come_from = $path->foreign_key->name;
 		$found = false;
-		foreach (DataModel::get()->getDataScreens() as $screen) {
-			$tables = $screen->getTables();
-			if (count($tables) == 1 && $tables[0] == $path->table->getName()) {
-				$key = $screen->createData(array($path));
-				$found = true;
-				break;
-			}				
-		}
+		if (!$path->multiple)
+			foreach (DataModel::get()->getDataScreens() as $screen) {
+				$tables = $screen->getTables();
+				if (count($tables) == 1 && $tables[0] == $path->table->getName()) {
+					$key = $screen->createData(array($path));
+					$found = true;
+					break;
+				}				
+			}
 		if (!$found) {
 			$display = DataModel::get()->getTableDataDisplay($path->table->getName());
 			$screen = new datamodel\GenericDataScreen($display);

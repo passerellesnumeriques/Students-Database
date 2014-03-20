@@ -105,7 +105,7 @@ namespace datamodel {
 	
 		public function createData($paths) {
 			$path = $paths[0];
-			$come_from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
+			$come_from = ($path instanceof \DataPath_Join) && $path->isReverse() ? $path->foreign_key->name : null;
 			// list of DataDisplay
 			$to_update = new \TablesToUpdate();
 			if ($path->table->getPrimaryKey() <> null)
@@ -120,8 +120,9 @@ namespace datamodel {
 				if ($k == null) $key = null;
 				else $key = json_encode($k);
 			}
-			foreach ($path->columns as $cname=>$val)
-				$to_update->addValue($path->table->getName(), $path->sub_model, $key, $cname, $val);
+			if ($path->unique)
+				foreach ($path->columns as $cname=>$val)
+					$to_update->addValue($path->table->getName(), $path->sub_model, $key, $cname, $val);
 			foreach ($this->display->getDataDisplay($come_from) as $data) {
 				$found = false;
 				$val = null;
@@ -132,7 +133,14 @@ namespace datamodel {
 					break;
 				}
 				if (!$found) continue;
-				$data->saveData($key, $val, $path->sub_model, $to_update);
+				$join = null;
+				if ($come_from <> null) {
+					if (isset($path->columns[$come_from]))
+						$join = $path->columns[$come_from];
+					else if (isset($path->parent->columns[$path->parent->table->getPrimaryKey()->name]))
+						$join = $path->parent->columns[$path->parent->table->getPrimaryKey()->name];
+				}
+				$data->saveData($key, $val, $path->sub_model, $to_update, $come_from, $join);
 			}
 			$keys = $to_update->execute(true);
 			if (isset($keys[$path->table->getName()][$path->sub_model][$key]))
@@ -142,6 +150,7 @@ namespace datamodel {
 					$child->columns[$child->foreign_key->name] = $key;
 			
 			// check DataScreen for children
+			if (!$path->multiple)
 			foreach (\DataModel::get()->getDataScreens() as $screen) {
 				$tables = $screen->getTables();
 				$paths = array();
@@ -174,6 +183,7 @@ namespace datamodel {
 					}
 				}
 				$found = false;
+				if (!$path->multiple)
 				foreach (\DataModel::get()->getDataScreens() as $screen) {
 					$tables = $screen->getTables();
 					if (count($tables) == 1 && $tables[0] == $child->table->getName()) {

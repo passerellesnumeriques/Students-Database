@@ -61,7 +61,7 @@ class CalendarEventDateDataDisplay extends datamodel\DataDisplay {
 	public function getData($row, $resultFromBuildSQL) {
 		return null; // TODO
 	}
-	public function saveData($key, $value, $sub_model, &$tables_fields) {
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
 		// TODO
 	}
 

@@ -129,43 +129,6 @@ var students_list = new data_list(
 				list.addHeader(remove_button);
 			}
 		};
-		if (url.params['batches']) {
-			var batches = url.params['batches'].split(',');
-			if (batches.length == 1) {
-				var import_students = document.createElement("DIV");
-				import_students.className = "button_verysoft";
-				import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
-				import_students.onclick = function() {
-					postData('/dynamic/students/page/import_students',{
-						batch:batches[0],
-						redirect: location.href
-					});
-				};
-				students_list.addHeader(import_students);
-				var create_student = document.createElement("DIV");
-				create_student.className = "button_verysoft";
-				create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
-				create_student.onclick = function() {
-					window.top.require("popup_window.js",function() {
-						var p = new window.top.popup_window('New Student', theme.build_icon("/static/students/student_16.png",theme.icons_10.add), "");
-						var frame = p.setContentFrame("/dynamic/students/page/popup_create_student?batch="+batches[0]+"&ondone=reload_list");
-						frame.reload_list = reload_list;
-						p.show();
-					});
-					
-					/*
-					postData("/dynamic/people/page/create_people",{
-						icon: "/static/application/icon.php?main=/static/students/student_32.png&small="+theme.icons_16.add+"&where=right_bottom",
-						title: "Create New Student",
-						types: ["student"],
-						student_batch: batches[0],
-						redirect:location.href
-					});
-					*/
-				};
-				students_list.addHeader(create_student);
-			}
-		}
 		<?php 
 		$batch_id = null;
 		$period = null;
@@ -213,6 +176,59 @@ var students_list = new data_list(
 				});
 			};
 			students_list.addHeader(assign);
+		}
+
+		if (url.params['batches']) {
+			var batches = url.params['batches'].split(',');
+			if (batches.length == 1) {
+				var import_students = document.createElement("DIV");
+				import_students.className = "button_verysoft";
+				import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
+				import_students.onclick = function() {
+					postData('/dynamic/students/page/import_students',{
+						batch:batches[0],
+						redirect: location.href
+					});
+				};
+				students_list.addHeader(import_students);
+				var create_student = document.createElement("DIV");
+				create_student.className = "button_verysoft";
+				create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
+				create_student.onclick = function() {
+					window.top.require("popup_window.js",function() {
+						var p = new window.top.popup_window('New Student', theme.build_icon("/static/students/student_16.png",theme.icons_10.add), "");
+						var frame = p.setContentFrame(
+							"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list",
+							null,
+							{
+								prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
+							}
+						);
+						frame.reload_list = reload_list;
+						p.show();
+					});
+				};
+				students_list.addHeader(create_student);
+
+				var create_students = document.createElement("DIV");
+				create_students.className = "button_verysoft";
+				create_students.innerHTML = "<img src='/static/application/icon.php?main=/static/curriculum/batch_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Students";
+				create_students.onclick = function() {
+					window.top.require("popup_window.js",function() {
+						var p = new window.top.popup_window('New Students', theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "");
+						var frame = p.setContentFrame(
+							"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list&multiple=true",
+							null,
+							{
+								prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
+							}
+						);
+						frame.reload_list = reload_list;
+						p.showPercent(95,95);
+					});
+				};
+				students_list.addHeader(create_students);
+	}
 		}
 
 		list.makeRowsClickable(function(row){

@@ -73,8 +73,17 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:-1,contacts:[]}"));
 	}
 
-	public function saveData($key, $value, $sub_model, &$tables_fields) {
-		// TODO
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+		if ($value["type_id"] == -1) {
+			// new people or organization
+			$type_id = $joining_key_value_for_new_data;
+			$contacts = $value["contacts"];
+			foreach ($contacts as $contact)
+				if ($joining_key_for_new_data == "people")
+					PNApplication::$instance->contact->addContactToPeople($type_id, $contact);
+				else 
+					PNApplication::$instance->contact->addContactToOrganization($type_id, $contact);
+		}
 	}
 
 }
@@ -145,8 +154,17 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:-1,addresses:[]}"));
 	}
 
-	public function saveData($key, $value, $sub_model, &$tables_fields) {
-		// TODO
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+		if ($value["type_id"] == -1) {
+			// new people or organization
+			$type_id = $joining_key_value_for_new_data;
+			$addresses = $value["addresses"];
+			foreach ($addresses as $addr)
+				if ($joining_key_for_new_data == "people")
+					PNApplication::$instance->contact->addAddressToPeople($type_id, $addr);
+				else 
+					PNApplication::$instance->contact->addAddressToOrganization($type_id, $addr);
+		}
 	}
 
 }

@@ -1510,7 +1510,7 @@ class SQLQuery {
 				foreach ($rows as &$fields_values) {
 					if (!isset($fields_values[$col->name])) {
 						DataBaseLock::unlock($lock);
-						throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
+						throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName().". Given columns are: ".var_export($fields_values, true));
 					}
 				}
 			}

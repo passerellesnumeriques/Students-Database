@@ -76,4 +76,10 @@ function DataPath(s) {
 		}
 		return true;
 	};
+	
+	this.lastElement = function() {
+		var p = this;
+		while (p.next) p = p.next;
+		return p;
+	};
 }

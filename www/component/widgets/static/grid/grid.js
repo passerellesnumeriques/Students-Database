@@ -269,6 +269,12 @@ function grid(element) {
 	};
 	t.getNbColumns = function() { return t.columns.length; };
 	t.getColumn = function(index) { return t.columns[index]; };
+	t.getColumnById = function(id) {
+		for (var i = 0; i < t.columns.length; ++i)
+			if (t.columns[i].id == id)
+				return t.columns[i];
+		return null;
+	};
 	t.getColumnIndex = function(col) { return t.columns.indexOf(col); };
 	t.removeColumn = function(index) {
 		var col = t.columns[index];
@@ -490,6 +496,7 @@ function grid(element) {
 				td.className = data.css;
 		}
 		t.table.appendChild(tr);
+		return tr;
 	};
 	
 	t.getNbRows = function() {
@@ -499,8 +506,11 @@ function grid(element) {
 		return t.table.childNodes[index];
 	};
 	
+	t.removeRowIndex = function(index) {
+		t.table.removeChild(t.table.childNodes[index]);
+	};
 	t.removeRow = function(row) {
-		t.table.removeChild(t.table.childNodes[row]);
+		t.table.removeChild(row);
 	};
 	t.removeAllRows = function() {
 		while (t.table.childNodes.length > 0)
@@ -532,7 +542,7 @@ function grid(element) {
 		td.data_id = data_id;
 	};
 	
-	t.getContainingRow = function(element) {
+	t.getContainingRowIndex = function(element) {
 		while (element && element != document.body) {
 			if (element.nodeName == "TD" && element.col_id) {
 				var tr = element.parentNode;
@@ -542,6 +552,17 @@ function grid(element) {
 			element = element.parentNode;
 		}
 		return -1;
+	};
+	t.getContainingRow = function(element) {
+		while (element && element != document.body) {
+			if (element.nodeName == "TD" && element.col_id) {
+				var tr = element.parentNode;
+				for (var i = 0; i < t.table.childNodes.length; ++i)
+					if (t.table.childNodes[i] == tr) return tr;
+			}
+			element = element.parentNode;
+		}
+		return null;
 	};
 	
 	t.reset = function() {

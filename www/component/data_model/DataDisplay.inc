@@ -98,7 +98,7 @@ abstract class DataDisplay {
 	 * @param number|null $sub_model sub model instance
 	 * @param TablesToUpdate $tables_fields list of values which should be updated/inserted
 	 */
-	public abstract function saveData($key, $value, $sub_model, &$tables_fields);
+	public abstract function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data);
 	
 	/** Create a string creating a new instance of the DataDisplay object in JavaScript
 	 * @param number|null $sub_model sub model instance
@@ -275,7 +275,7 @@ class SimpleDataDisplay extends DataDisplay {
 		return $result;
 	}
 	
-	public function saveData($key, $value, $sub_model, &$table_fields) {
+	public function saveData($key, $value, $sub_model, &$table_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
 		$table_fields->addValue($this->getTableName(), $sub_model, $key, $this->column_name, $value);
 	}
 	
@@ -424,7 +424,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		return array("key"=>$key_alias,"data"=>$data_alias);
 	}
 	
-	public function saveData($key, $value, $sub_model, &$tables_fields) {
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
 		$tables_fields->addValue($this->getTableName(), $sub_model, $key, $this->foreign_key_name, $value);
 	}
 		
@@ -550,7 +550,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		// TODO
 	}
 	
-	public function saveData($key, $value, $sub_model, &$tables_fields) {
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
 		require_once("component/data_model/DataBaseLock.inc");
 		\SQLQuery::create()->remove($this->getTable()->getSQLNameFor($sub_model), array($this->joining_key_name=>$key));
 		foreach ($value as $v)
@@ -694,7 +694,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return array("key"=>$key_alias,"data"=>$data_alias);
 	}
 	
-	public function saveData($key, $value, $sub_model, &$tables_fields) {
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
 		// TODO
 	}
 	

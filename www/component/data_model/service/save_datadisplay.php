@@ -39,7 +39,7 @@ class service_save_datadisplay extends Service {
 			$found = false;
 			foreach ($display->getDataDisplay($come_from) as $data) {
 				if ($data->getDisplayName() == $data_to_save["name"]) {
-					$data->saveData($key, $data_to_save["data"], $sub_model, $tables_fields);
+					$data->saveData($key, $data_to_save["data"], $sub_model, $tables_fields, null, null);
 					$found = true;
 					break;
 				}

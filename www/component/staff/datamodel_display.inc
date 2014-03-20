@@ -16,6 +16,10 @@ class StaffDataScreen extends datamodel\DataScreen {
 	public function getName() { return "PN Staff Positions"; }
 	
 	public function generate(&$page, $paths, $values, $prefilled_values, $structure_name) {
+		$people_types = $values->getColumnValue("People", "types");
+		$people_types = PNApplication::$instance->people->parseTypes($people_types);
+		if (!in_array("staff", $people_types)) return;
+		
 		require_once("page/staff_info.inc");
 		$id = $page->generateID();
 		echo "<div id='$id'></div>";

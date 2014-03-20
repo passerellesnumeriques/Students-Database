@@ -226,14 +226,20 @@ function organization(container, org, existing_types, can_edit) {
 			td.onclick = function() {
 				window.top.require("popup_window.js",function() {
 					var p = new window.top.popup_window('New Contact Point', theme.build_icon("/static/contact/contact_point.png",theme.icons_10.add), "");
-					var url = "/dynamic/contact/page/popup_create_contact_point?org="+org.id;
+					var frame;
 					if (org.id == -1) {
-						url += "&creator="+org.creator;
-						url += "&donotcreate=contact_point_created";
+						frame = p.setContentFrame("/dynamic/people/page/popup_create_people?types=contact_"+org.creator+"&donotcreate=contact_point_created");
 					} else {
-						url += "&ondone=contact_point_created";
+						frame = p.setContentFrame(
+							"/dynamic/people/page/popup_create_people?types=contact_"+org.creator+"&ondone=contact_point_created",
+							null,
+							{
+								fixed_columns: [
+								  {table:"ContactPoint",column:"organization",value:org.id}
+								]
+							}
+						);
 					}
-					var frame = p.setContentFrame(url);
 					frame.contact_point_created = function(peoples) {
 						var paths = peoples[0];
 						var people_path = null;

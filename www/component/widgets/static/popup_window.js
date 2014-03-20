@@ -46,7 +46,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param {Function} onload if specified, it is called when the frame is loaded
 	 * @returns {DOMNode} the IFRAME element
 	 */
-	t.setContentFrame = function(url, onload) {
+	t.setContentFrame = function(url, onload, post_data) {
 		if (!t.content_container)
 			t.content_container = document.createElement("DIV");
 		else
@@ -58,7 +58,6 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.content_container.appendChild(t.content);
 		var frame = document.createElement("IFRAME");
 		frame.style.border = "0px";
-		frame.src = url;
 		frame.style.width = "0px";
 		frame.style.height = "0px";
 		frame.style.visibility = "hidden";
@@ -92,6 +91,12 @@ function popup_window(title,icon,content,hide_close_button) {
 			};
 			check_ready();
 		};
+		if (!post_data) {
+			frame.src = url;
+		} else {
+			frame._post_url = url;
+			frame._post_data = post_data;
+		}
 		t.resize();
 		return frame;
 	};
@@ -367,6 +372,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content.style.position = 'static';
 			t.content.style.visibility = 'visible';
 		}
+		if (t.content.nodeName == "IFRAME" && t.content._post_data)
+			postData(t.content._post_url, t.content._post_data, getIFrameWindow(t.content));
 		win.layout.addHandler(t.table, t.resize);
 		return win;
 	};
@@ -441,6 +448,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		var x, y;
 		var win = getWindowFromDocument(t.table.ownerDocument);
 		if (t.content.nodeName == "IFRAME") {
+			if (t.freezer) return; // avoid resizing when we are loading a new page
 			var frame_win = getIFrameWindow(t.content);
 			var frame = frame_win.document;
 			if (!frame_win || !frame_win.layout || !frame || !frame.body) {
@@ -594,6 +602,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.buttons[i].disabled = t.freeze_button_status[i];
 		t.freeze_button_status = null;
 		t.close_button_td.onclick = function() { t.close(); };
+		if (t.content.nodeName == "IFRAME")
+			t.resize(); // we interrupt resize during freeze
 	};
 	
 	/** Close this popup window
