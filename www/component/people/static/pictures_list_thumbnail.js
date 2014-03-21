@@ -18,7 +18,8 @@ function pictures_list_thumbnail(container, people, width, height, onloaded) {
 		if (--ready_count == 0) onloaded();
 	};
 	require("profile_picture.js", function() {
-		t.picture = new profile_picture(t.picture_container, people.id, null, null, t.width, t.height, "center", "bottom", ready);
+		t.picture = new profile_picture(t.picture_container, t.width, t.height, "center", "bottom");
+		t.picture.loadPeopleObject(people, ready);
 	});
 	this.name_container = document.createElement("DIV"); this.element.appendChild(this.name_container);
 	this.name_container.className = "picture_thumbnail_name";

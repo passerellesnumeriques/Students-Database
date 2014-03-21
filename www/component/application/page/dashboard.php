@@ -63,11 +63,12 @@ function init_calendars() {
 		}
 		var provider = {provider:cal.provider,calendars:[cal]};
 		var div = document.createElement("DIV");
-		div.innerHTML = "<img src='"+cal.provider.getProviderIcon()+"' width=16px height=16px style='vertical-align:bottom'/> "+cal.provider.getProviderName()+" (";
+		div.innerHTML = "<img src='"+cal.provider.getProviderIcon()+"' width=16px height=16px style='vertical-align:bottom'/> (";
 		provider.span_nb = document.createElement("SPAN");
 		provider.span_nb.innerHTML = "1";
 		div.appendChild(provider.span_nb);
 		div.appendChild(document.createTextNode(")"));
+		div.title = cal.provider.getProviderName();
 		div.className = "button";
 		div.style.margin = "2px";
 		div.style.paddingRight = "5px";

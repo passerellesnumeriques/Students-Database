@@ -164,6 +164,11 @@ class storage extends Component {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 	}
 	
+	function joinRevision(&$q, $join_from, $join_key, $revision_alias) {
+		$q->join($join_from, "Storage", array($join_key=>"id"));
+		$q->field("Storage", "revision", $revision_alias);
+	}
+	
 	/** return true if this is the final call (either form sent, or no file uploaded), or false if this is an asynchronous upload */
 	function receive_upload(&$ids, &$names, &$types, &$sizes, $expire_seconds) {
 		$headers = getallheaders();
@@ -208,5 +213,6 @@ class storage extends Component {
 		}
 		return true;
 	}
+	
 }
 ?>

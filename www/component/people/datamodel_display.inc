@@ -27,7 +27,8 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 			echo "</td></tr></table>";
 			$page->require_javascript("profile_picture.js");
 			echo "<script type='text/javascript'>";
-			echo "var picture = new profile_picture('$picture_container_id',$people_id,null,null,150,150,'center','middle');";
+			echo "var picture = new profile_picture('$picture_container_id',150,150,'center','middle');";
+			echo "picture.loadPeopleID($people_id);";
 			echo "</script>";
 			if (PNApplication::$instance->people->canModify($people_id)) {
 				$page->require_javascript("images_tool.js");

@@ -211,7 +211,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		td.className = "picture_container";
 		var td_pc = td;
 		require("profile_picture.js", function() {
-			new profile_picture(td_pc, null, n.user.domain, n.user.username, 30, 40, "center", "top");
+			new profile_picture(td_pc, 30, 40, "center", "top").loadPeopleObject(n.people);
 		});
 		var content = document.createElement("TD");
 		content.className = "content";

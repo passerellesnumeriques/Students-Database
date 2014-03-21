@@ -12,6 +12,7 @@ class PeopleJSON {
 		$q = SQLQuery::create()
 			->select("People")
 			->whereValue("People", "id", $id);
+		PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
 		self::PeopleSQL($q);
 		$row = $q->executeSingleRow();
 		if($row <> null)
@@ -36,7 +37,12 @@ class PeopleJSON {
 			->field($alias,"middle_name","middle_name")
 			->field($alias,"sex","sex")
 			->field($alias,"birth","birthdate")
+			->field($alias,"picture","picture_id")
 			->field($alias,"types","people_types");
+		$alias = $q->getTableAlias("Storage");
+		if($alias == null) {
+			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
+		}
 	}
 	
 	/**
@@ -53,6 +59,8 @@ class PeopleJSON {
 		$data .= ",middle_name:".json_encode($row["middle_name"]);
 		$data .= ",sex:".json_encode($row["sex"]);
 		$data .= ",birthdate:".json_encode($row["birthdate"]);
+		$data .= ",picture_id:".json_encode($row["picture_id"]);
+		$data .= ",picture_revision:".json_encode(@$row["picture_revision"]);
 		$data .= ",can_edit:".(PNApplication::$instance->people->canModifyTypes($row["people_types"]) ? "true" : "false");
 		$data .= "}";
 		return $data;

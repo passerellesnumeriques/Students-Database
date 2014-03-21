@@ -5,12 +5,14 @@ class page_staff extends Page {
 	
 	public function execute() {
 		$this->add_javascript("/static/widgets/header_bar.js");
-		$this->onload("new header_bar('staff_header');");
+		$this->onload("new header_bar('staff_header','toolbar_big');");
 		$this->add_javascript("/static/widgets/vertical_layout.js");
 		$this->onload("new vertical_layout('staff_page');");
 		$this->add_javascript("/static/widgets/tree/tree.js");
 		$this->onload("init_staff_tree();");
 		$this->add_javascript("/static/data_model/editable_cell.js");
+
+		$departments = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();
 		
 		$can_edit = PNApplication::$instance->user_management->has_right("manage_staff", true);
 		
@@ -18,8 +20,8 @@ class page_staff extends Page {
 		<div id='staff_page' style='width:100%;height:100%;'>
 			<div id='staff_header' icon='/static/staff/staff_32.png' title="PN Staff" layout="fixed">
 				<?php if ($can_edit) {?>
-				<div class='button' onclick="create_new_department();"><img src='/static/application/icon.php?main=/static/staff/department.png&small=<?php echo theme::$icons_10["add"];?>&where=right_bottom'/> Create New Department</div>
-				<div class='button' onclick="create_new_staff();"><img src='/static/application/icon.php?main=/static/staff/staff_16.png&small=<?php echo theme::$icons_10["add"];?>&where=right_bottom'/> Create New Staff</div>
+				<button class='button_verysoft' onclick="create_new_department();"><img src='/static/application/icon.php?main=/static/staff/department.png&small=<?php echo theme::$icons_10["add"];?>&where=right_bottom'/> Create New Department</button>
+				<button class='button_verysoft' onclick="create_new_staff();" <?php if (count($departments) == 0) echo " disabled='disabled'";?>><img src='/static/application/icon.php?main=/static/staff/staff_16.png&small=<?php echo theme::$icons_10["add"];?>&where=right_bottom'/> Create New Staff</button>
 				<?php }?>
 			</div>
 			<div style='width:100%;overflow:auto' layout="fill">
@@ -29,9 +31,8 @@ class page_staff extends Page {
 		</div>
 		<script type='text/javascript'>
 		var staff_dept = [<?php 
-		$list = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();
 		$first = true;
-		foreach ($list as $d) {
+		foreach ($departments as $d) {
 			if ($first) $first = false; else echo ",";
 			echo "{id:".$d["id"].",name:".json_encode($d["name"])."}";
 		}

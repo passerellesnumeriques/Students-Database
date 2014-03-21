@@ -6,5 +6,6 @@ $model->addTable("Storage")
 	->addInteger("expire")
 	->addInteger("revision", 32, 1, null, false, false)
 	->addString("type", 100, 1, false, false)
+	->allowReadAccess()
 	;
 ?>
