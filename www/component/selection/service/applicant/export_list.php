@@ -10,10 +10,10 @@ class service_applicant_export_list extends Service{
 			Optional fields:
 			<ul>
 				<li><code>title</code> The title to set to the List</li>
-				<li><code>center_id</code> The exam center ID if the aim is to export an exam center applicants list</li>
+				<li><code>center_id</code> The exam center ID if the aim is to export an exam center applicants list or exam session applicants list</li>
 				<li><code>room_id</code> The exam center room ID if the aim is to export an exam center room applicants list</li>
 				<li><code>session_id</code> The exam session ID if the aim is to export an exam session applicants list</li>
-				<li><code>order_by</code> Can be "name" or "applicant_id". By default, the data is ordered by name</li>
+				<li><code>order_by</code> Can be "name" or "applicant_id". By default, the data is ordered by applicant ID</li>
 				<li><code>file_name</code> The name to set to the exported file</li>
 			</ul>
 		<?php
@@ -36,20 +36,50 @@ class service_applicant_export_list extends Service{
 		$format = $input["format"];
 		$file_name = @$input["file_name"];
 		$title = @$input["title"];
-		$data = null;
-		if(isset($input["center_id"])){
+		$order_by = @$input["order_by"];
+		$EC_id = @$input["center_id"];
+		$session_id = @$input["session_id"];
+		$room_id = @$input["room_id"];
+		//Normalize data
+		$EC_id = (is_string($EC_id) && strlen($EC_id) == 0) ? null : $EC_id;
+		$session_id = (is_string($session_id) && strlen($session_id) == 0) ? null : $session_id;
+		$room_id = (is_string($room_id) && strlen($room_id) == 0) ? null : $room_id;
+		$order_by = (is_string($order_by) && strlen($order_by) == 0) ? null : $order_by;
+		$data = $component->getApplicantsAssignedToCenterEntity($EC_id,$session_id,$room_id,$order_by);
+		if($EC_id <> null && $session_id == null && $room_id == null){
 			//Export an exam center list
-			if(isset($input["order_by"]))
-				$order_by = $input["order_by"];
-			else
-				$order_by = "name";
-			//Get the center name
-			$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->executeSingleValue();
-			if($title == null)
-				$title = $center_name." Exam Center Applicants";
-			if($file_name == null)
-				$file_name = $center_name." applicants";
-			$data = $component->getApplicantsAssignedToEC($input["center_id"],$order_by);
+			if($title == null || $file_name == null){			
+				//Get the center name
+				$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->executeSingleValue();
+				if($title == null)
+					$title = $center_name." Exam Center";
+				if($file_name == null)
+					$file_name = $center_name." applicants";
+			}
+		} else if($EC_id <> null && $session_id <> null && $room_id == null){
+			//Export an exam session list
+			if($title == null || $file_name == null){
+				//Get the center name
+				$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->executeSingleValue();
+				//Get the event start and end
+				$ev = SQLQuery::create()
+					->bypassSecurity()
+					->select("CalendarEvent")
+					->field("CalendarEvent","start")
+					->field("CalendarEvent","end")
+					->whereValue("CalendarEvent", "id", $input["session_id"])
+					->executeSingleRow();
+				$start = $ev["start"];
+				$end = $ev["end"];				
+				if($title == null){
+					$session_title = date("m",$start)."/".date("d",$start)."/".date("y",$start)." (".$date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$title = "Session ".$session_title." in ".$center_name." Exam center";
+				}
+				if($file_name == null){
+					$session_title = date("m",$start)."_".date("d",$start)."_".date("y",$start)." (".$date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$file_name = "Session ".$session_title." in ".$center_name." applicants";
+				}			
+			}
 		} else {
 			echo "false";
 			return;

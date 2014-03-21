@@ -131,12 +131,14 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 			th_head_1.appendChild(document.createTextNode("Name"));
 			th_head_2.appendChild(document.createTextNode("Capacity"));
 			//Set the body
+			var total_capacity = 0;
 			for(var i = 0; i < rooms.length; i++){
 				var tr = document.createElement("tr");
 				var td1 = document.createElement("td");
 				var td2 = document.createElement("td");
 				var td3 = document.createElement("td");
 				var name, capacity;
+				total_capacity += rooms[i].capacity == null ? 0 : parseInt(rooms[i].capacity);
 				if(t._canBeUpdated(rooms[i].id)){
 					//This room can be updated, create editable fields and remove button
 					var name_editable = generate_name == true ? false : true;
@@ -145,6 +147,7 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 					td1.appendChild(name.getHTMLElement());
 					td2.appendChild(capacity.getHTMLElement());
 					td3.appendChild(t._createRemoveButton(rooms[i].id));
+					capacity.onchange.add_listener(t._updateTotalCapicityField);
 				} else {
 					name = new field_text(rooms[i].name,false,{can_be_null:true});
 					capacity = new field_integer(rooms[i].capacity,false,{can_be_null:false,min:1});
@@ -157,7 +160,30 @@ function manage_exam_center_room(container, rooms, can_manage, generate_name){
 				table.appendChild(tr);
 				t._fields_room.push({id:rooms[i].id, name_field:name,capacity_field:capacity});
 			}
+			//Add a row with the max capacity
+			var tr_total = document.createElement("tr");
+			var td1 = document.createElement("td");
+			td1.appendChild(document.createTextNode("Max: "));
+			t._td_total = document.createElement("td");
+			t._td_total.appendChild(document.createTextNode(total_capacity));
+			tr_total.appendChild(td1);
+			tr_total.appendChild(t._td_total);
+			table.appendChild(tr_total);
 		}
+	};
+	
+	/**
+	 * Listener added on the capacity fields
+	 * When one of this field is updated, the max capacity element is updated
+	 */
+	t._updateTotalCapicityField = function(){
+		if(t._td_total.firstChild)
+			t._td_total.removeChild(t._td_total.firstChild);
+		var total = 0;
+		for(var i = 0; i < t._fields_room.length; i++){
+			total += t._fields_room[i].capacity_field.getCurrentData() == null ? 0 : parseInt(t._fields_room[i].capacity_field.getCurrentData());
+		}
+		t._td_total.appendChild(document.createTextNode(total));
 	};
 	
 	/**

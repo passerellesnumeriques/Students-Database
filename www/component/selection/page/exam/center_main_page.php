@@ -46,9 +46,12 @@ class page_exam_center_main_page extends selection_page {
 		$status_container_id = $page->generateID();
 		$ECIS_status_container_id = $page->generateID();
 		$applicants_assignement_container_id = $page->generateID();
+		$page->require_javascript("horizontal_layout.js");
+		$page->onload("new horizontal_layout('horizontal_split',true);");
 		$page->require_javascript("section.js");
 		$page->onload("section_from_html('status_section');");
 		$page->onload("section_from_html('status_ECIS_section');");
+		$page->onload("section_from_html('status_applicants_assignment');");
 		$steps = PNApplication::$instance->selection->getSteps();
 		if($steps["exam_center"]){			
 			$page->require_javascript("exam_center_status.js");
@@ -56,8 +59,8 @@ class page_exam_center_main_page extends selection_page {
 		}
 		$page->require_javascript("exam_center_and_informations_sessions_status.js");
 		$page->onload("new exam_center_and_informations_sessions_status('".$ECIS_status_container_id."');");
-		$page->require_javascript("horizontal_layout.js");
-		$page->onload("new horizontal_layout('horizontal_split',true);");
+		$page->require_javascript("applicants_assignment_to_EC_status.js");
+		$page->onload("new applicants_assignment_to_EC_status('".$applicants_assignement_container_id."');");
 		
 		?>		<script type='text/javascript'>
 					function onCreateNewCenter(button){
@@ -104,7 +107,7 @@ class page_exam_center_main_page extends selection_page {
 						<div id='status_ECIS_section' title='Exam Centers and Information Sessions' collapsable='false' css='soft' style='margin:10px; width:360px;'>
 							<div id = '<?php echo $ECIS_status_container_id;?>'></div>						
 						</div>
-						<div id='status_applicants_assignment' title='Applicants Assignment' collapsable='false' css='soft' style='margin:10px; width:360px;'>
+						<div id='status_applicants_assignment' title='Applicants Assignment to Exam Centers' collapsable='false' css='soft' style='margin:10px; width:360px;'>
 							<div id = '<?php echo $applicants_assignement_container_id;?>'></div>						
 						</div>
 					</div>
@@ -141,8 +144,7 @@ class page_exam_center_main_page extends selection_page {
 					
 					
 					
-				</script>
-				<a href = "/dynamic/selection/page/applicant/manually_assign_to_exam_entity?mode=center">Test assignment</a>
+				</script>				
 		<?php 
 	}
 }

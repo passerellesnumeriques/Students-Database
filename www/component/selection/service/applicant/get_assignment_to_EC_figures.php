@@ -1,6 +1,6 @@
 
 <?php 
-class service_applicant_get_assignment_figures extends Service {
+class service_applicant_get_assignment_to_EC_figures extends Service {
 	
 	public function get_required_rights() {return array("can_access_selection_data");}
 	
@@ -18,13 +18,13 @@ class service_applicant_get_assignment_figures extends Service {
 			->executeSingleValue();
 		$applicants_total == null ? 0 : $applicants_total;
 		
-		$applicants_assigned = SQLQuery::create()
+		$applicants_not_assigned = SQLQuery::create()
 			->bypassSecurity()
 			->select("Applicant")
 			->count()
 			->whereNull('Applicant', "exam_center")
 			->executeSingleValue();
-		$applicants_not_assigned == null ? 0 : $applicants_assigned;
+		$applicants_not_assigned == null ? 0 : $applicants_not_assigned;
 		
 		echo '{not_assigned:'.json_encode($applicants_not_assigned).",total:".json_encode($applicants_total)."}";
 	}

@@ -273,6 +273,15 @@
 		->addReadAccess("see_exam_center_detail",true)
 		->addInsertAccess("manage_exam_center",true)
 		->addRemoveAccess("manage_exam_center",true);
+	
+	$sm->addTable("ExamSessionSupervisor")
+		->addForeignKey("session", "ExamSession", true, false, true, false)
+		->addForeignKey("people", "People", true, false, true, false)
+		->setKey(array("session","people"))
+		->addWriteAccess("manage_exam_center",true)
+		->addReadAccess("see_exam_center_detail",true)
+		->addInsertAccess("manage_exam_center",true)
+		->addRemoveAccess("manage_exam_center",true);
 		
 	$sm->addTable("ExamCenterRoom")
 		->addPrimaryKey("id")

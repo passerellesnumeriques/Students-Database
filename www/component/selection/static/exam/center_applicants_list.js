@@ -3,6 +3,13 @@ function center_applicants_list(container,EC_id,can_edit){
 	container = typeof container == "string" ? document.getElementById(container) : container;
 	container.style.margin = "10px";
 	container.style.marginLeft = "15px";
+	
+	t.reset = function(){
+		while(t._section_content_container.firstChild)
+			t._section_content_container.removeChild(t._section_content_container.firstChild);
+		t._init();
+	};
+	
 	t._init = function(){
 		t._total_row = document.createElement('div');
 		t._section_content_container.appendChild(t._total_row);
@@ -16,7 +23,7 @@ function center_applicants_list(container,EC_id,can_edit){
 		t._loading = document.createElement("img");
 		t._loading.src = theme.icons_16.loading;
 		t._total_row.appendChild(t._loading);
-		service.json("selection","exam/get_applicants_assigned_to_center",{EC_id:EC_id,count:true},function(res){
+		service.json("selection","exam/get_applicants_assigned_to_center_entity",{EC_id:EC_id,count:true},function(res){
 			if(!res)
 				return;
 			t._total_row.removeChild(t._loading);
@@ -32,7 +39,8 @@ function center_applicants_list(container,EC_id,can_edit){
 		b.className = "button";
 		b.appendChild(document.createTextNode("See / Edit List"));
 		b.onclick = function(){
-			new pop_exam_center_applicant_list(EC_id,can_edit);
+			var pop = new pop_applicants_list_in_center_entity(EC_id,null,null,can_edit);
+			pop.pop.onclose = t.reset;
 		};
 		var b_export = document.createElement("div");
 		b_export.className = "button";
@@ -63,7 +71,7 @@ function center_applicants_list(container,EC_id,can_edit){
 		div.appendChild(b_export);
 	};
 	
-	require(["section.js","pop_exam_center_applicant_list.js"],function(){
+	require(["section.js","pop_applicants_list_in_center_entity.js"],function(){
 		t._section_content_container = document.createElement("div");
 		t.section = new section(null,"Applicants assigned",t._section_content_container,false,false,"soft");
 		container.appendChild(t.section.element);

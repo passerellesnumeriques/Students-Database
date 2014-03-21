@@ -1159,7 +1159,11 @@ class SelectionJSON{
 /**
  * Methods about the applicants
  */
-	
+	/**
+	 * Get an Applicant objet from its ID
+	 * @param number $id the people id of the applicant
+	 * @return string Applicant JSON object
+	 */
 	public static function ApplicantFromID($id){
 		$q = SQLQuery::create()
 			->select("Applicant")
@@ -1169,6 +1173,10 @@ class SelectionJSON{
 		return self::Applicant($q, $row);
 	}
 	
+	/**
+	 * Retrieve the applicant data from the database
+	 * @param SQLQuery $q
+	 */
 	public static function ApplicantSQL(&$q){
 		$alias = $q->getTableAlias("Applicant");
 		if(!$alias)
@@ -1187,6 +1195,12 @@ class SelectionJSON{
 			->field($alias,"exam_session");
 	}
 	
+	/**
+	 * Get an Applicant object from the database row 
+	 * @param SQLQuery $q
+	 * @param array $row retrieved from database containing the applicant data
+	 * @return string Applicant JSON object
+	 */
 	public static function Applicant($q, $row){
 		$data = "";
 		$data .= "{people_id:".json_encode($row["people_id"]);
@@ -1206,6 +1220,102 @@ class SelectionJSON{
 		$data .= ", exam_center_room:".json_encode($row["exam_center_room"]);
 		$data .= ", exam_session:".json_encode($row["exam_session"]);		
 		$data .= "}";
+		return $data;
+	}
+	
+/**
+ * Exam Sessions methods
+ */
+	
+	public static function ExamSessionFromID($id){
+		$q = SQLQuery::create()
+			->select("ExamSession")
+			->whereValue("ExamSession", "id", $id);
+		self::ExamSessionSQL($q);
+		$row = $q->executeSingleRow();
+		return self::ExamSession($q, $row);
+	}
+	
+	public static function ExamSessionSQL(&$q){
+		$alias = $q->getTableAlias("ExamSession");
+		if($alias == null)
+			$alis = "ExamSession";
+		$q
+			->field($alias,"event")
+			->field($alias,"exam_center");
+	}
+	
+	public static function ExamSession($q, $row){
+		require_once 'component/calendar/CalendarJSON.inc';
+		$data = "{exam_center:".$row["exam_center"];
+		$data .= ", event:";
+		$data .= CalendarJSON::CalendarEventFromID($row["event"],PNApplication::$instance->selection->getCalendarId());
+		$data .= ", supervisors:";
+		$data .= self::ExamSessionSupervisorsFromSessionID($row["event"]);
+		$data .= "}";
+		return $data;
+	}
+	
+	public static function ExamSessionSupervisorsFromSessionID($id){
+		$supervisors = SQLQuery::create()
+			->select("ExamSessionSupervisor")
+			->field("ExamSessionSupervisor","people")
+			->whereValue("ExamSessionSupervisor", "session", $id)
+			->executeSingleField();
+		$data = "[";
+		if($supervisors <> null){
+			$first = true;
+			foreach ($supervisors as $people_id){
+				if(!$first) $data.= ", ";
+				$first = false;
+				$data.= self::ExamSessionSupervisorFromPeopleID($people_id);
+			}
+		}
+		$data .= "]";
+		return $data;
+	}
+	
+	public static function ExamSessionSupervisorFromPeopleID($id){
+		$q = SQLQuery::create()
+			->select("ExamSessionSupervisor")
+			->whereValue("ExamSessionSupervisor", "people", $id);
+		self::ExamSessionSupervisorSQL($q);
+		$row = $q->executeSingleRow();
+		return self::ExamSessionSupervisor($q, $row);
+	}
+	
+	public static function ExamSessionSupervisorSQL(&$q){
+		$alias = $q->getTableAlias("ExamSessionSupervisor");
+		if($alias == null)
+			$alias = "ExamSessionSupervisor";
+		$q
+		->field("ExamSessionSupervisor","people");
+		//Add the people fields
+		PNApplication::$instance->people->joinPeople($q, "ExamSessionSupervisor", "people");
+	}
+	
+	public static function ExamSessionSupervisor($q, $row){
+		require_once 'component/people/PeopleJSON.inc';
+		$r = PeopleJSON::People($q, $row);
+		return $r;
+	}
+	
+	public static function ExamSessionsFromExamCenterID($id){
+		$sessions = SQLQuery::create()
+			->select("ExamSession")
+			->field("ExamSession","event")
+			->whereValue("ExamSession", "exam_center", $id)
+			->executeSingleField();
+		$data = "[";
+		if($sessions <> null){
+			$first = true;
+			foreach ($sessions as $ev){
+				if(!$first) $data .= ', ';
+				$first = false;
+				$data .= self::ExamSessionFromID($ev);
+			}
+		}
+		$data .= "]";
 		return $data;
 	}
 }

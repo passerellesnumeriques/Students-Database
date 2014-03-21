@@ -2028,7 +2028,7 @@ class selection extends Component {
 	public function getApplicantsAssignedToRooms($ids){
 		$applicants = array();
 		foreach($ids as $id){
-			$applicants[$id] = $this->getApplicantsAssignedToRoom($id);
+			$applicants[$id] = $this->getApplicantsAssignedToCenterEntity(null,null,$id);
 		}
 		return $applicants;
 	}
@@ -2203,12 +2203,7 @@ class selection extends Component {
 		if($assigned["exam_session"] <> null){
 			$can = false;
 			//Get the event name
-			$ev_name = SQLQuery::create()
-				->bypassSecurity()
-				->select("CalendarEvent")
-				->field("CalendarEvent","title")
-				->whereValue("CalendarEvent", "title", $assigned["exam_session"])
-				->executeSingleRow();
+			$ev_name = PNApplication::$instance->calendar->getEventName($this->getCalendarId(), $assigned["exam_session"]);
 			$session_error = "This applicant is already assigned to a session in this center (".$ev_name.")";			
 		}
 		if($assigned["exam_center_room"] <> null){
@@ -2226,26 +2221,73 @@ class selection extends Component {
 	}
 	
 	/**
-	 * Unassign an applicant from an exam center
-	 * @param number $EC_id exam center ID
-	 * @param number $people_id people ID (applicant one)
-	 * @return array | boolean true if well performed, false if an error occured, array from canUnassignApplicantFromCenter method if not allowed to unassign
+	 * Check that an applicant can be unassigned by the user from an exam session or an exam center room
+	 * @param number $people_id of the applicant
+	 * @param number | NULL $session_id exam session ID if unassign from session
+	 * @param number | NULL $room_id exam center room ID if unassign from room
+	 * @return array <ul><li>0: boolean can be unassigned or not</li><li>1: NULL | string error message from grade</li></ul>
 	 */
-	public function unassignApplicantFromCenter($EC_id, $people_id){		
-		//Check if can be removed
-		$can = $this->canUnassignApplicantFromCenter($EC_id,$people_id);
-		if(!$can[0])
-			return $can;
-		//Perform the unassignment
+	public function canUnassignApplicantFromSessionOrRoom($people_id, $session_id, $room_id){
+		$can = true;
+		//Check the right
+		$right = PNApplication::$instance->user_management->has_right("manage_applicant");
+		if(!$right){
+			PNApplication::error("You are not allowed to manage the applicants");
+			return array(false,null);
+		}
+		//Check that the applicant has no grade yet
+		//TODO
+		return array(true,null);
+	}
+	
+	/**
+	 * Remove an applicant from an exam center entity, after checking that its allowed
+	 * @param number $people_id people ID (applicant one)
+	 * @param NULL | number $EC_id exam center ID if the applicant shall be removed from this center
+	 * @param NULL | number $session_id exam session ID if the applicant shall be removed from this session
+	 * @param NULL | number $room_id exam center room ID if the applicant shall be removed from this exam center room
+	 * @return false if an error occured, else associative array: <ul><li><code>done</code> boolean true if the applicant was well unassigned</li><li><code>error_assigned_to_session</code> NULL | string error message because the applicant was assigned to a session</li><li><code>error_assigned_to_room</code> NULL | string error message because the applicant was assigned to a room</li><li><code>error_has_grade</code> NULL | string error message because the applicant already has grade (exam result)</li></ul>
+	 */
+	public function unassignApplicantFromCenterEntity($people_id, $EC_id, $session_id = null, $room_id = null){
+		$mode = null;
+		$can = null;
+		$res = array(
+			"done"=>null,
+			"error_assigned_to_session" => null,
+			"error_assigned_to_room" => null,
+			"error_has_grade" => null
+		);
+		//Check if can be removed and set the mode
+		if($EC_id <> null){
+			$mode = "exam_center";
+			$can_remove_from_center = $this->canUnassignApplicantFromCenter($EC_id,$people_id);
+			$can = $can_remove_from_center[0];
+			$res["error_assigned_to_session"] = $can_remove_from_center[1];
+			$res["error_assigned_to_room"] = $can_remove_from_center[2];
+		} else {
+			if ($session_id <> null) {
+				$mode = "exam_session";
+			}else if ($room_id <> null){
+				$mode = "exam_center_room";
+			}
+			$can_remove_from_session_or_room = $this->canUnassignApplicantFromSessionOrRoom($people_id, $session_id, $room_id);
+			$can = $can_remove_from_session_or_room[0];
+			$res["error_has_grade"] = $can_remove_from_session_or_room[1];
+		}
+		if(!$can){
+			$res["done"] = false;
+			return $res;
+		}
 		try{
 			SQLQuery::create()
 				->bypassSecurity()
-				->updateByKey("Applicant", $people_id, array("exam_center" => null));
-		}catch (Exception $e){
+				->updateByKey("Applicant", $people_id, array($mode => null));
+		} catch (Exception $e){
 			PNApplication::error($e);
 			return false;
 		}
-		return true;
+		$res["done"] = true;
+		return $res;
 	}
 	
 	/**
@@ -2263,21 +2305,29 @@ class selection extends Component {
 	}
 	
 	/**
-	 * Get the applicants assigned to an exam center
-	 * @param number $EC_id exam center ID
-	 * @param String $order_by (optional) can be "name" or "applicant_id" the order by condition to set
-	 * @return NULL | array <ul><li>NULL if no applicant found</li><li>array containing the applicants rows for the applicants assigned</li></ul>
+	 * Get the applicants assigned to a center entity (exam center | exam session | exam center room)
+	 * If no parameter given, get all the applicants
+	 * @param number | NULL $EC_id exam center ID to get applicants assigned to this exam center, else NULL
+	 * @param number | NULL $session_id exam session event ID to get applicants assigned to this exam session, else NULL
+	 * @param number | NULL $room_id exam center room session ID to get applicants assigned to this room, else NULL
+	 * @param string $order_by  (optional) can be "name" or "applicant_id" the order by condition to set
+	 * @return NULL | array NULL if no applicant found, else the applicants rows
 	 */
-	public function getApplicantsAssignedToEC($EC_id, $order_by = "name"){
+	public function getApplicantsAssignedToCenterEntity($EC_id, $session_id = null, $room_id = null, $order_by = "applicant_id"){
 		$q = SQLQuery::create()
-			->select("Applicant")
-			->whereValue("Applicant", "exam_center", $EC_id);
+			->select("Applicant");
 		SelectionJSON::ApplicantSQL($q);
+		if(isset($EC_id) && !isset($session_id) && !isset($room_id))
+			$q->whereValue("Applicant", "exam_center",$EC_id);
+		else if(!isset($EC_id) && isset($session_id) && !isset($room_id))
+			$q->whereValue("Applicant", "exam_session",$session_id);
+		else if(!isset($EC_id) && !isset($session_id) && isset($room_id))
+			$q->whereValue("Applicant", "exam_center_room",$room_id);
 		if($order_by == "name")
 			$q->orderBy("People","last_name");
 		else if($order_by == "applicant_id")
 			$q->orderBy("Applicant","applicant_id");
-		return $q->execute();	
+		return $q->execute();
 	}
 	
 	/**
@@ -2293,22 +2343,9 @@ class selection extends Component {
 	}
 	
 	/**
-	 * Get the applicants assigned to an exam center room
-	 * @param number $room_id exam center room ID
-	 * @return NULL | array <ul><li>NULL if no applicant found</li><li>array containing the applicants rows for the applicants assigned</li></ul>
-	 */
-	public function getApplicantsAssignedToRoom($room_id){
-		$q = SQLQuery::create()
-			->select('Applicant')
-			->whereValue("Applicant", "exam_center_room", $room_id);
-		SelectionJSON::ApplicantSQL($q);
-		return $q->execute();		
-	}
-	
-	/**
 	 * Get the applicants assigned by room for a giiven exam center
 	 * @param number $EC_id exam center ID
-	 * @return NULL|array <ul><li>NULL if the ExamCenter has no room</li><li>else array with three attributes<ul><li><code>name</code> exam center room name</li><li><code>capacity</code> exam center room capacity</li><li><code>assigned</code> result of getApplicantsAssignedToRoom method for this room</li></ul></li></ul>
+	 * @return NULL|array <ul><li>NULL if the ExamCenter has no room</li><li>else array with three attributes<ul><li><code>name</code> exam center room name</li><li><code>capacity</code> exam center room capacity</li><li><code>assigned</code> result of getApplicantsAssignedToCenterEntity (room mode) method for this room</li></ul></li></ul>
 	 */
 	public function getApplicantsAssignedByRoom($EC_id){
 		$rooms = SQLQuery::create()
@@ -2322,26 +2359,12 @@ class selection extends Component {
 			$res[$room["id"]] = array(
 				"name" => $room["name"],
 				"capacity" => $room["capacity"],
-				"applicants" => $this->getApplicantsAssignedToRoom($room["id"])
+				"applicants" => $this->getApplicantsAssignedToCenterEntity(null,null,$room["id"])
 			);
 		}
 		return $res;
 	}
-	
-	/**
-	 * Get all the applicants assigned to an Exam Center But with no Room
-	 * @param number $EC_id exam center ID
-	 * @return NULL | array NULL if no applicant found, else applicants rows
-	 */
-	public function getApplicantsAssignedToECButWithNoRoom($EC_id){
-		$q = SQLQuery::create()
-			->select("Applicant")
-			->whereNull("Applicant", "exam_center_room")
-			->whereValue("Applicant", "exam_center", $EC_id);
-		SelectionJSON::ApplicantSQL($q);
-		return $q->execute();
-	}
-	
+
 	/**
 	 * Assign applicants to an exam center from the information sessions linked to this exam center
 	 * Only the free applicants are assigned
@@ -2432,6 +2455,60 @@ class selection extends Component {
 		SQLQuery::create()
 		->bypassSecurity()
 		->updateAllKeys("Applicant", $applicants_to_assign_ids, array("exam_center" => $EC_id));
+	}
+	
+	/**
+	 * Get the applicants assigned per exam session for a given exam center
+	 * @param number $EC_id exam center ID
+	 * @param boolean $count if true, only get the number of applicants assigned per exam session, else get the applicants rows per session
+	 * @return NULL|array NULL if no session for this exam center, else associative array with session event id as key (so session key), and each session key contains<ul><li>Number of applicants assigned if count = true</li><li>Else applicants assigned rows</li></ul>
+	 */
+	public function getApplicantsAssignedToSessionsInEC($EC_id, $count = false){
+		$sessions = SQLQuery::create()
+			->field("ExamSession","event")
+			->whereValue("ExamSession", "exam_center", $EC_id)
+			->executeSingleField();
+		if($sessions == null){
+			return null;
+		}
+		$applicants = array();
+		foreach ($sessions as $session){
+			$r = SQLQuery::create()
+			->select("Applicant")
+			->field("Applicant","people")
+			->whereValue("Applicant", "exam_session", $session);
+			if($count){
+				$r = $r
+					->count()
+					->executeSingleValue();
+				$applicants[$session]= $r == null ? 0 : $r;
+			} else {
+				SelectionJSON::ApplicantSQL($r);
+				$rows =  $r->execute();
+				$applicants[$session] = $rows;
+			}
+		}
+		
+	}
+	
+	/**
+	 * Get an exam center capacity, based on its rooms capacity
+	 * @param number $EC_id exam center ID
+	 * @return number the EC capacity
+	 */
+	public function getExamCenterCapacity($EC_id){
+		$rooms = SQLQuery::create()
+			->select("ExamCenterRoom")
+			->field("ExamCenterRoom","capacity")
+			->whereValue("ExamCenterRoom", "exam_center", $EC_id)
+			->executeSingleField();
+		$capacity = 0;
+		if($rooms == null)
+			return $capacity;
+		foreach ($rooms as $cap){
+			$capacity += $cap;
+		}
+		return $capacity;
 	}
 }
 ?>
