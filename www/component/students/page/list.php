@@ -203,13 +203,8 @@ var students_list = new data_list(
 										prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
 									}
 								);
+								imp.frame_import.reload_list = reload_list;
 								imp.uploadFile(ev);
-								/*
-								postData('/dynamic/students/page/import_students',{
-									batch:batches[0],
-									redirect: location.href
-								});
-								*/
 							};
 						});
 					});
