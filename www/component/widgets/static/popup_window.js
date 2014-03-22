@@ -61,7 +61,6 @@ function popup_window(title,icon,content,hide_close_button) {
 		frame.style.width = "0px";
 		frame.style.height = "0px";
 		frame.style.visibility = "hidden";
-		frame.style.position = "absolute";
 		t.content_container.appendChild(frame);
 		frame.onload = function() {
 			if (t.content == frame) {
@@ -70,7 +69,6 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content_container.removeChild(t.content);
 				t.content = frame;
 				frame.style.visibility = "visible";
-				frame.style.position = "static";
 				//t.table.style.width = "80%";
 				t.content.style.width = "100%";
 				t.content.style.height = "100%";
@@ -236,15 +234,22 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.showPercent = function(width, height) {
 		t.resize = function() {
 			if (!t.table) return;
-			var win = getWindowFromDocument(t.table.ownerDocument);
-			t.table.style.left = Math.floor(win.getWindowWidth()*(100-width)/200)+"px";
-			t.table.style.top = Math.floor(win.getWindowHeight()*(100-height)/200)+"px";
-			t.table.style.width = Math.floor(win.getWindowWidth()*width/100)+"px";
-			t.table.style.height = Math.floor(win.getWindowHeight()*height/100)+"px";
+			var win = getWindowFromElement(t.table);
+			var ww = win.getWindowWidth();
+			var wh = win.getWindowHeight();
+			t.table.style.left = Math.floor(ww*(100-width)/200)+"px";
+			t.table.style.top = Math.floor(wh*(100-height)/200)+"px";
+			t.table.style.width = Math.floor(ww*width/100)+"px";
+			t.table.style.height = Math.floor(wh*height/100)+"px";
 			var h = 0;
 			if (t.header) h += win.getHeight(t.header);
 			if (t.buttons_tr) h += win.getHeight(t.buttons_tr);
-			t.content_container.style.height = Math.floor(win.getWindowHeight()*height/100-h)+"px";
+			t.content_container.style.height = Math.floor(wh*height/100-h)+"px";
+			if (t.table._ww != ww || t.table._wh != wh) {
+				t.table._ww = ww;
+				t.table._wh = wh;
+				layout.invalidate(t.content);
+			}
 		};
 		var win = t._buildTable();
 		t.resize();
@@ -369,7 +374,6 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (typeof t.content == 'string') t.content_container.innerHTML = t.content;
 		else {
 			t.content_container.appendChild(t.content);
-			t.content.style.position = 'static';
 			t.content.style.visibility = 'visible';
 		}
 		if (t.content.nodeName == "IFRAME" && t.content._post_data)

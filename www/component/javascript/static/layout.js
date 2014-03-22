@@ -1,11 +1,22 @@
 layout = {
 	// Layout handlers attached to elements
 	_layout_handlers: [],
+	_w: window,
 	addHandler: function(element, handler) {
+		var w = getWindowFromElement(element);
+		if (w != layout._w) {
+			w.layout.addHandler(element, handler);
+			return;
+		}
 		layout._layout_handlers.push({element:element,handler:handler});
 		layout._last_layout_activity = new Date().getTime();
 	},
 	removeHandler: function(element, handler) {
+		var w = getWindowFromElement(element);
+		if (w != window) {
+			w.layout.removeHandler(element, handler);
+			return;
+		}
 		for (var i = 0; i < layout._layout_handlers.length; ++i) {
 			if (layout._layout_handlers[i].element == element && layout._layout_handlers[i].handler == handler) {
 				layout._layout_handlers.splice(i,1);
@@ -211,7 +222,10 @@ layout = {
 				// size changed, let's do it again later, from its parent
 				element._layout_scroll_height = element.scrollHeight;
 				element._layout_scroll_width = element.scrollWidth;
-				layout.invalidate(element.parentNode);
+				if (element.nodeName != "BODY")
+					layout.invalidate(element.parentNode);
+				else
+					layout.invalidate(element);
 				//return;
 			}
 		}
@@ -341,6 +355,8 @@ if (typeof listenEvent != 'undefined') {
 
 // useful functions to set height and width, taking into account borders, margins, and paddings
 function setWidth(element, width) {
+	var win = getWindowFromElement(element);
+	if (win != window) { win.setWidth(element, width); return; }
 	var s = getComputedStyleSizes(element);
 	width -= parseInt(s.borderLeftWidth);
 	width -= parseInt(s.borderRightWidth);
@@ -351,6 +367,8 @@ function setWidth(element, width) {
 	element.style.width = width+"px";
 }
 function setHeight(element, height) {
+	var win = getWindowFromElement(element);
+	if (win != window) { win.setHeight(element, height); return; }
 	var s = getComputedStyleSizes(element);
 	height -= parseInt(s.borderTopWidth);
 	height -= parseInt(s.borderBottomWidth);
@@ -361,12 +379,16 @@ function setHeight(element, height) {
 	element.style.height = height+"px";
 }
 function getWidth(element) {
+	var win = getWindowFromElement(element);
+	if (win != window) return win.getWidth(element);
 	var s = getComputedStyleSizes(element);
 	var w = element.offsetWidth;
 	w += parseInt(s.marginLeft) + parseInt(s.marginRight);
 	return w;
 }
 function getHeight(element) {
+	var win = getWindowFromElement(element);
+	if (win != window) return win.getHeight(element);
 	var s = getComputedStyleSizes(element);
 	var h = element.offsetHeight;
 	h += parseInt(s.marginTop) + parseInt(s.marginBottom);

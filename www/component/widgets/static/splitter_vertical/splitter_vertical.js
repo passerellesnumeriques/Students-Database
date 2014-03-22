@@ -21,16 +21,9 @@ function splitter_vertical(element, position) {
 	t.part1 = element.childNodes[0];
 	t.part2 = element.childNodes[1];
 	
-	t._fireLayout = false;
-	t._fireLayoutSizes = null;
 	t._position = function() {
-		t._fireLayoutSizes = {};
-		t._fireLayoutSizes.w = t.element.offsetWidth,
-		t._fireLayoutSizes.h = t.element.offsetHeight,
-		t._fireLayoutSizes.sw = 7,
-		t._fireLayoutSizes.x = Math.floor(t._fireLayoutSizes.w*t.position - t._fireLayoutSizes.sw/2);
-		var w = t.element.offsetWidth;
-		var h = t.element.offsetHeight;
+		var w = t.element.clientWidth;
+		var h = t.element.clientHeight;
 		var sw = 7;
 		var x = Math.floor(w*t.position - sw/2);
 		setWidth(t.part1, x);

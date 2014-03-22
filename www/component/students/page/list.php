@@ -181,15 +181,39 @@ var students_list = new data_list(
 		if (url.params['batches']) {
 			var batches = url.params['batches'].split(',');
 			if (batches.length == 1) {
-				var import_students = document.createElement("DIV");
+				var import_students = document.createElement("BUTTON");
 				import_students.className = "button_verysoft";
 				import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
-				import_students.onclick = function() {
-					postData('/dynamic/students/page/import_students',{
-						batch:batches[0],
-						redirect: location.href
+				import_students.disabled = "disabled";
+				window.top.require("popup_window.js", function() {
+					var container = document.createElement("DIV");
+					container.style.width = "100%";
+					container.style.height = "100%";
+					var popup = new window.top.popup_window("Import Students", theme.icons_16._import, container);
+					window.top.require("excel_import.js", function() {
+						new window.top.excel_import(popup, container, function(imp) {
+							import_students.disabled = "";
+							import_students.onclick = function(ev) {
+								popup.removeAllButtons();
+								popup.showPercent(95,95);
+								imp.init();
+								imp.loadImportDataURL(
+									"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list&multiple=true",
+									{
+										prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
+									}
+								);
+								imp.uploadFile(ev);
+								/*
+								postData('/dynamic/students/page/import_students',{
+									batch:batches[0],
+									redirect: location.href
+								});
+								*/
+							};
+						});
 					});
-				};
+				});
 				students_list.addHeader(import_students);
 				var create_student = document.createElement("DIV");
 				create_student.className = "button_verysoft";
