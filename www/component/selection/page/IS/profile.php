@@ -13,18 +13,22 @@ class page_IS_profile extends selection_page {
 		$id = -1;
 	else
 		$id = $_GET["id"];
+	$read_only = @$_GET["readonly"];
+	$hide_back = @$_GET["hideback"];
 	?>
-		<div id = "IS_profile_container" style = "width:100%; height:100%">
+		<div id = "IS_profile_container" style = "width:100%; height:100%">			
 			<div id = "page_header">
+				<?php if($hide_back != "true"){?>
 				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/IS/main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
+				<?php }?>
 				<div class = "button_verysoft" id = "save_IS_button"><img src = '<?php echo theme::$icons_16["save"];?>' /> <b>Save</b></div>
 				<div class = "button_verysoft" id = "remove_IS_button"><img src = '<?php echo theme::$icons_16["remove"];?>' /> Remove Information Session</div>
-			</div>
+			</div>			
 			<div id='IS_profile_<?php echo $name; ?>' style = "overflow:auto" layout = "fill"></div>
 		</div>
 		
 	<?php
-		$this->IS_profile($page,"IS_profile_".$name,$id,"save_IS_button","remove_IS_button");
+		$this->IS_profile($page,"IS_profile_".$name,$id,"save_IS_button","remove_IS_button",$read_only);
 	}
 	
 	/**
@@ -33,22 +37,28 @@ class page_IS_profile extends selection_page {
 	 * @param number $id the id of the information session
 	 * @param string $save_IS_button the id of the save button (must have been added to the page header before calling this function)
 	 * @param string $remove_IS_button the id of the remove button (must have been added to the page header before calling this function)
+	 * @param boolean $read_only true if the page must be set in uneditable mode
 	 */
-	public function IS_profile(&$page,$container_id,$id,$save_IS_button, $remove_IS_button){
+	public function IS_profile(&$page,$container_id,$id,$save_IS_button, $remove_IS_button, $read_only){
 		$page->add_javascript("/static/widgets/header_bar.js");
 		$page->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('/static/selection/IS/IS_16.png', 'Information Session Profile');");
 		require_once("component/selection/SelectionJSON.inc");
 		$can_read = PNApplication::$instance->user_management->has_right("see_information_session_details",true);
 		if(!$can_read)
 			return;
-		//Get rights from steps
-		$from_steps = PNApplication::$instance->selection->getRestrictedRightsFromStepsAndUserManagement("information_session", "manage_information_session", "manage_information_session", "edit_information_session");
-		if($from_steps[1])
-			PNApplication::warning($from_steps[2]);
-		$can_add = $from_steps[0]["add"];
-		$can_remove = $from_steps[0]["remove"];
-		$can_edit = $from_steps[0]["edit"];
-	
+		if($read_only == "true"){
+			$can_add = false;
+			$can_edit = false;
+			$can_remove = false;
+		} else {
+			//Get rights from steps
+			$from_steps = PNApplication::$instance->selection->getRestrictedRightsFromStepsAndUserManagement("information_session", "manage_information_session", "manage_information_session", "edit_information_session");
+			if($from_steps[1])
+				PNApplication::warning($from_steps[2]);
+			$can_add = $from_steps[0]["add"];
+			$can_remove = $from_steps[0]["remove"];
+			$can_edit = $from_steps[0]["edit"];
+		}	
 		$config = PNApplication::$instance->selection->getConfig();
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		$campaign_id = PNApplication::$instance->selection->getCampaignId();
@@ -56,7 +66,7 @@ class page_IS_profile extends selection_page {
 		//lock the row if id != -1
 		$db_lock = null;
 		if($id != -1){
-			$db_lock = $page->performRequiredLocks("InformationSession",$id,null,PNApplication::$instance->selection->getCampaignId());
+			$db_lock = $page->performRequiredLocks("InformationSession",$id,null,$campaign_id);
 			//if db_lock = null => read only
 			if($db_lock == null){
 				$can_add = false;
@@ -100,10 +110,9 @@ class page_IS_profile extends selection_page {
 				?>
 				var save_IS_button = <?php echo json_encode($save_IS_button);?>;
 				var remove_IS_button = <?php echo json_encode($remove_IS_button);?>;
-				if(id == -1 || id == "-1"){
+				if((id == -1 || id == "-1") && !can_add){
 					// This is a creation so check that the current user is allowed to add an IS
-					if(can_add) new IS_profile(id, config, calendar_id, can_add, can_edit, can_remove, container, data,partners_contacts_points,all_duration,campaign_id,save_IS_button,remove_IS_button,<?php echo json_encode($db_lock);?>);
-					else error_dialog("You are not allowed to create an Information Session");
+					error_dialog("You are not allowed to create an Information Session");
 				} else new IS_profile(id, config, calendar_id, can_add, can_edit, can_remove, container, data, partners_contacts_points,all_duration,campaign_id,save_IS_button,remove_IS_button,<?php echo json_encode($db_lock);?>);
 			});
 		</script>

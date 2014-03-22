@@ -101,15 +101,41 @@ $sm->addTable("EligibilityRuleExamTopic")
 
 $sm->addTable("ExamCenter")
 	->addPrimaryKey("id")
+	->addString("name",255,0,false)//optional
 	->addForeignKey("geographic_area", "GeographicArea", true, false, true, false, true)//An exam center must be linked to a geographic area, and this area is unique in this table
-	->addForeignKey("postal_address", "PostalAddress", false, false, false, true, true)//Optional
 	->addReadAccess("see_exam_center_detail", true)
 	->addWriteAccess("manage_exam_center", true)
 	->addRemoveAccess("manage_exam_center", true)
-	->addInsertAccess("manage_exam_center", true);
-	/**
-	 * No contact point / partner is added for the exam center, since we can keep the value
-	*/
+	->addInsertAccess("manage_exam_center", true)
+	->onInsert(function($fields,$id,$sub_model_instance) {
+		try {
+			PNApplication::$instance->news->post("selection", null, array("campaign".$sub_model_instance), "New Exam Center: <i>".$fields["name"]."</i>");
+		} catch (Exception $e) { PNApplication::error($e); }
+	});
+
+$sm->addTable("ExamCenterPartner")
+	->addForeignKey("exam_center","ExamCenter",true,false,true,false)
+	->addForeignKey("organization","Organization",true,false,true,false)
+	->addBoolean("host")
+	->addForeignKey("host_address","PostalAddress",false,false,true,true) //this attributes is set only when host attribute == true: can select a praticular address in case the organization has several ones
+	->setKey(array("exam_center","organization"))
+	->addWriteAccess("manage_exam_center",true)
+	->addReadAccess("see_exam_center_detail",true)
+	->addInsertAccess("manage_exam_center",true)
+	->addRemoveAccess("manage_exam_center",true);
+		
+$sm->addTable("ExamCenterContactPoint")
+	->addForeignKey("exam_center","ExamCenter",true,false,true,false)
+	->addForeignKey("organization","Organization",true,false,true,false)
+	//This two attributes are a foreignKey for ExamCenter partner table
+	->addForeignKey("people","People",true,false,true,false)
+	//People + orga = foreignKey for ContactPoint table
+	->setKey(array("exam_center","organization","people"))
+	->addWriteAccess("manage_exam_center",true)
+	->addReadAccess("see_exam_center_detail",true)
+	->addInsertAccess("manage_exam_center",true)
+	->addRemoveAccess("manage_exam_center",true)
+	;
 
 $sm->addTable("ExamCenterInformationSession")//An exam center can created from one or several information sessions
 	->addForeignKey("exam_center", "ExamCenter", true, false, true)
@@ -118,7 +144,8 @@ $sm->addTable("ExamCenterInformationSession")//An exam center can created from o
 	->addWriteAccess("manage_exam_subject",true)
 	->addReadAccess("see_exam_subject",true)
 	->addInsertAccess("manage_exam_subject",true)
-	->addRemoveAccess("manage_exam_subject",true);
+	->addRemoveAccess("manage_exam_subject",true)
+	;
 
 $sm->addTable("ExamSession")
 	->addForeignKey("event", "CalendarEvent", true, true, false, false, true)

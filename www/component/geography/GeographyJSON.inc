@@ -10,7 +10,7 @@ class GeographyJSON {
 		if ($row["geographic_area_id"] == null) return "null";
 		return "{".
 			"id:".$row["geographic_area_id"].
-			",text:".json_encode(PNApplication::$instance->geography->get_geographic_area_text($row["geographic_area_id"]))
+			",text:".json_encode(PNApplication::$instance->geography->getGeographicAreaText($row["geographic_area_id"]))
 		."}";
 	}
 	

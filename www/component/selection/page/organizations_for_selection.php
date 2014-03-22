@@ -28,7 +28,11 @@ class page_organizations_for_selection extends selection_page {
 		$mode = null; // Variable that contains the using mode of this page
 		if(isset($_GET["is"]) && isset($_GET["partners"])){
 			$mode = "IS_partners";
-// 			$id = $_GET["is"];
+			$partners = $_GET["partners"];
+			$host_id = @$_GET["host"];
+			if(!is_array($partners)) $partners = array();
+		} else if (isset($_GET["ec"]) && isset($_GET["partners"])){
+			$mode = "EC_partners";
 			$partners = $_GET["partners"];
 			$host_id = @$_GET["host"];
 			if(!is_array($partners)) $partners = array();
@@ -38,7 +42,7 @@ class page_organizations_for_selection extends selection_page {
 		</div>
 		<script type='text/javascript'>
 		var page_mode = <?php echo json_encode($mode);?>;
-		<?php if($mode == "IS_partners"){?>
+		<?php if($mode == "IS_partners" || $mode == "EC_partners"){?>
 			var selected_partners = <?php echo json_encode($partners).";";?>
 			var host_id = <?php echo json_encode($host_id).";";?>
 		<?php }?>
@@ -50,7 +54,7 @@ class page_organizations_for_selection extends selection_page {
 				['Organization.Name','Organization.Address','Organization.EMail','Organization.Phone'],
 				[{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"}}],
 				function (list) {
-					if(page_mode == "IS_partners")
+					if(page_mode == "IS_partners" || page_mode == "EC_partners")
 						list.grid.setSelectable(true);
 					list.addTitle(null, "Organizations of Selection");
 					<?php if ($can_create) {?>
@@ -75,7 +79,7 @@ class page_organizations_for_selection extends selection_page {
 						});
 					};
 					list.addHeader(new_org);
-					if(page_mode == "IS_partners"){
+					if(page_mode == "IS_partners" || page_mode == "EC_partners"){
 						list.ondataloaded.add_listener(organizations_loaded);
 						list.grid.onrowselectionchange = organizations_selection_changed;
 					}

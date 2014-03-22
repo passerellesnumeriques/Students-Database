@@ -37,5 +37,6 @@ return array(
 			array("define_topic_for_eligibility_rules", true, "Eligibility rules cannot be defined because no topic for eligibility rule is defined yet",array("add" => true,"remove" => true, "update" => true)),//No restriction
 	)),
 	//TODO define_eligibility_rules: dependencies => array("apply_eligibility_rules" => false)??
+	"exam_center" => array("Some exam centers have been planed","ExamCenter",array()),
 	);
 ?>

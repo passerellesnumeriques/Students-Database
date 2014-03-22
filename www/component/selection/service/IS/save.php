@@ -13,20 +13,6 @@ function prepareDataAndSaveIS($data,$create){
 	}
 }
 
-function prepareDataAndSavePartnersAndContactsPoints($data){	
-	$rows = SelectionJSON::InformationSessionPartnersAndContactPoints2DB($data);
-	$rows_IS_partner = $rows[0];
-	$rows_IS_contact_point = $rows[1];
-	//Remove all the partners and contacts points already set
-	PNApplication::$instance->selection->removeAllISPartners($data["id"]);
-	PNApplication::$instance->selection->removeAllISContactPoints($data["id"]);
-	//Insert the new ones
-	if(count($rows_IS_partner) > 0)
-		PNApplication::$instance->selection->insertISPartners($rows_IS_partner);
-	if(count($rows_IS_contact_point) > 0)
-		PNApplication::$instance->selection->insertISContactPoints($rows_IS_contact_point);
-}
-
 class service_IS_save extends Service{
 	public function get_required_rights(){return array("manage_information_session");}
 	public function input_documentation(){
@@ -112,7 +98,7 @@ class service_IS_save extends Service{
 						unset($event["id"]);
 					$event["calendar_id"] = PNApplication::$instance->selection->getCalendarId();
 					$event["organizer"] = "Selection";
-					$event["title"] = PNApplication::$instance->geography->get_geographic_area_text($data["geographic_area"]);
+					$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 					if (!$insert_IS) {
 						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
 						$event["app_link_name"] = "This event is an Information Session: click to see it";
@@ -125,7 +111,7 @@ class service_IS_save extends Service{
 				}
 				$data["date"] = $event_id;
 			} else if($update_event && $everything_ok){
-				$event["title"] = PNApplication::$instance->geography->get_geographic_area_text($data["geographic_area"]);
+				$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 				if (!$insert_IS) {
 					$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
 					$event["app_link_name"] = "This event is an Information Session: click to see it";
@@ -169,12 +155,12 @@ class service_IS_save extends Service{
 			}
 			if($everything_ok){
 				/*save the partners and contact_points*/
-				try{
-					prepareDataAndSavePartnersAndContactsPoints($data);
-				} catch (Exception $e){
-					$everything_ok = false;
-					PNApplication::error($e);
-				}
+				$rows = ContactJSON::PartnersAndContactPoints2DB($data,"information_session");
+				$rows_IS_partner = $rows[0];
+				$rows_IS_contact_point = $rows[1];
+				//No need to try catch, the method called handles this
+				PNApplication::$instance->selection
+					->savePartnersAndContactsPoints($data["id"],$rows_IS_partner,$rows_IS_contact_point,"InformationSession","information_session");
 			}
 				
 			if(!$everything_ok || PNApplication::has_errors()){

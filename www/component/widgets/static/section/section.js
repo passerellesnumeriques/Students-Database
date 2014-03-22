@@ -144,7 +144,7 @@ function section(icon, title, content, collapsable, fill_height, css) {
 			t.content_container.style.display = "";
 			t.footer.style.display = "";
 			if (fill_height)
-				t.content_container.style.height = (getHeight(t.element)-getHeight(t.header)-getHeight(t.footer))+"px";
+				t.content_container.style.height = (t.element.clientHeight-getHeight(t.header)-getHeight(t.footer))+"px";
 		});
 	};
 	

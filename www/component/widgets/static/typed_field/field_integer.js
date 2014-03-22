@@ -49,7 +49,7 @@ field_integer.prototype._create = function(data) {
 		input.onblur = function(ev) {
 			if (input.value.length == 0 && t.config && t.config.can_be_null) {}
 			else {
-				if (input.value.length == 0 && (!t.config || !t.config.can_be_null)) input.value = t.config && t.config.min ? this.config.min : 0;
+				if (input.value.length == 0 && (!t.config || !t.config.can_be_null)) input.value = t.config && t.config.min ? t.config.min : 0;
 				var i = parseInt(input.value);
 				if (t.config && t.config.min && i < t.config.min) input.value = t.config.min;
 				if (t.config && t.config.max && i > t.config.max) input.value = t.config.max;

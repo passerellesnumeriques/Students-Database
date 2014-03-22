@@ -8,6 +8,20 @@ function error_dialog(message) {
 		p.show();
 	});
 }
+
+/**
+ * Display a popup with the given error message
+ * @param {HTMLElement} content error message
+ */
+function error_dialog_html(content){
+	require("popup_window.js",function() {
+		var div = document.createElement("div");
+		div.style.padding = "5px";
+		div.appendChild(content);
+		var p = new popup_window("Error", theme.icons_16.error, div);
+		p.show();
+	});
+}
 /**
  * Display a popup asking for confirmation (Yes and No buttons)
  * @param {string} message the message to display, asking confirmation
