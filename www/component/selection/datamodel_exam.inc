@@ -166,4 +166,5 @@ $sm->addTable("ExamCenterRoom")
 	->addInsertAccess("manage_exam_subject",true)
 	->addRemoveAccess("manage_exam_subject",true);
 
+include "datamodel_exam_display.inc";
 ?>
