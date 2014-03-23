@@ -1,3 +1,4 @@
+/* #depends[/static/widgets/typed_field/typed_field.js] */
 /**
  * Configuration for a field_contact_type
  * @param {String} contact_type one of: "email", "phone", or "IM"

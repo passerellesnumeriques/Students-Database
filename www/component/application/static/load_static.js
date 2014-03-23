@@ -110,6 +110,7 @@ function load_static_resources(container) {
 			t.loaded(script.size);
 			for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
 				window.top.pn_application_static.scripts[i].dependencies.remove(script.url);
+			window.top.pn_application_static._loaded_scripts.push(script.url);
 			window.top.pn_application_static.loading_scripts.remove(script);
 			t._nextScript();
 		});
@@ -157,7 +158,8 @@ function load_static_resources(container) {
 			loaded_size: 0,
 			loading_scripts: [],
 			loading_images: [],
-			service_done: false
+			service_done: false,
+			_loaded_scripts: []
 		};
 		require("service.js",function(){
 			service.json("application","get_static_resources",{},function(res){
@@ -184,6 +186,8 @@ function load_static_resources(container) {
 		for (var i = 0; i < window.top.pn_application_static.loading_images.length; ++i)
 			window.top.pn_application_static.images.push(window.top.pn_application_static.loading_images[i]);
 		window.top.pn_application_static.loading_images = [];
+		for (var i = 0; i < window.top.pn_application_static._loaded_scripts.length; ++i)
+			add_javascript(window.top.pn_application_static._loaded_scripts[i]);
 		for (var i = 0; i < t._max_images_loading; ++i)
 			t._nextImage();
 		for (var i = 0; i < t._max_scripts_loading; ++i)

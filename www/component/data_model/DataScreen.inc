@@ -37,11 +37,15 @@ namespace datamodel {
 			//var_dump($values);
 			$key_value = getKeyValue($path->table, $values);
 			$is_new = $key_value == null || intval($key_value) < 0;
+			$fixed_columns = array_merge($values->getColumns($path->table->getName()));
+			echo $this->generateDataTable($page, $path, $this->display->getDataDisplay($from), $fixed_columns, $values, $prefilled_values, $structure_name, $is_new);
+		}
+		
+		protected function generateDataTable(&$page, $path, $list, $fixed_columns, $values, $prefilled_values, $structure_name, $is_new) {
 			$script = "";
 			$html = "<table>";
 			$has_something = false;
-			$fixed_columns = array_merge($values->getColumns($path->table->getName()));
-			foreach ($this->display->getDataDisplay($from) as $data) {
+			foreach ($list as $data) {
 				$can_edit = $data->isEditable();
 				if ($is_new && !$can_edit) continue;
 				foreach ($data->getHandledColumns() as $c) {
@@ -69,11 +73,13 @@ namespace datamodel {
 					if ($structure_name <> null)
 						$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",field:field,getValue:function(){return this.field.getCurrentData();},validate:function(){ return this.field.error; }});\n";
 				} else if ($can_edit) {
+					$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
+					$key_value = getKeyValue($path->table, $values);
 					$page->add_javascript("/static/data_model/DataDisplay.js");
 					$page->add_javascript("/static/data_model/editable_field.js");
 					$page->add_javascript("/static/data_model/editable_datadisplay.js");
 					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($key_value).", ".json_encode($value).");\n";
-					$script .= "field.editable_field.field.getHTMLElement().style.width = '100%';\n";
+					$script .= "field.editable_field.fillContainer();\n";
 				} else {
 					$script .= "field = new ".$tf[0]."(".json_encode($value).",false,".$tf[1].");\n";
 					$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
@@ -81,7 +87,7 @@ namespace datamodel {
 				$html .= "</td>";
 				$html .= "</tr>";
 			}
-			if (!$has_something) return;
+			if (!$has_something) return "";
 			$html .= "</table>";
 			$html .= "<script type='text/javascript'>\n";
 			$html .= "var field;\n";
@@ -100,7 +106,7 @@ namespace datamodel {
 			}
 			$html .= $script;
 			$html .= "</script>\n";
-			echo $html;
+			return $html;
 		}
 	
 		public function createData($paths) {

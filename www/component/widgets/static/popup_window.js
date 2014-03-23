@@ -72,6 +72,10 @@ function popup_window(title,icon,content,hide_close_button) {
 				//t.table.style.width = "80%";
 				t.content.style.width = "100%";
 				t.content.style.height = "100%";
+				if (t.content._post_data) {
+					postData(t.content._post_url, t.content._post_data, getIFrameWindow(t.content));
+					t.content._post_data;
+				}
 				t.resize();
 			}
 			var check_ready = function() {
@@ -376,8 +380,10 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content_container.appendChild(t.content);
 			t.content.style.visibility = 'visible';
 		}
-		if (t.content.nodeName == "IFRAME" && t.content._post_data)
+		if (t.content.nodeName == "IFRAME" && t.content._post_data) {
 			postData(t.content._post_url, t.content._post_data, getIFrameWindow(t.content));
+			t.content._post_data = null;
+		}
 		win.layout.addHandler(t.table, t.resize);
 		return win;
 	};
@@ -452,7 +458,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		var x, y;
 		var win = getWindowFromDocument(t.table.ownerDocument);
 		if (t.content.nodeName == "IFRAME") {
-			if (t.freezer) return; // avoid resizing when we are loading a new page
+			if (t.freezer) { t.in_resize = false; return; } // avoid resizing when we are loading a new page
 			var frame_win = getIFrameWindow(t.content);
 			var frame = frame_win.document;
 			if (!frame_win || !frame_win.layout || !frame || !frame.body) {
@@ -499,7 +505,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (t.content._last_popup_resize_w != t.content.offsetWidth || t.content._last_popup_resize_h != t.content.offsetHeight) {
 				frame_win.layout.invalidate(frame_win.document.body);
 				t.content._last_popup_resize_w = t.content.offsetWidth;
-				t.content._last_popup_resize_h = t.content.offsetHeight
+				t.content._last_popup_resize_h = t.content.offsetHeight;
 			}
 			x = win.getWindowWidth()/2 - x/2;
 			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight+(t.buttons_tr ? t.buttons_tr.scrollHeight : 0))/2;
@@ -634,7 +640,8 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content.style.top = '-10000px';
 				t.content.ownerDocument.body.appendChild(t.content);
 			}
-			table.parentNode.removeChild(table);
+			if (table.parentNode)
+				table.parentNode.removeChild(table);
 		};
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);

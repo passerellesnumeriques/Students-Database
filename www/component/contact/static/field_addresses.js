@@ -1,3 +1,4 @@
+/* #depends[/static/widgets/typed_field/typed_field.js] */
 /**
  * Display a list of addresses
  * @param {PostalAddressesData} data coming from a AddressDataDisplay, it specifies the list of addresses together with the owner (people or organization)

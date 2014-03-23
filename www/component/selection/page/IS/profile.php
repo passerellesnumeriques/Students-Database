@@ -23,6 +23,9 @@ class page_IS_profile extends selection_page {
 				<?php }?>
 				<div class = "button_verysoft" id = "save_IS_button"><img src = '<?php echo theme::$icons_16["save"];?>' /> <b>Save</b></div>
 				<div class = "button_verysoft" id = "remove_IS_button"><img src = '<?php echo theme::$icons_16["remove"];?>' /> Remove Information Session</div>
+				<?php if($id <> -1){?>
+				<div class = "button_verysoft" onclick = "popup_frame('/static/people/people_list_16.png','Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{value:<?php echo $id;?>}}]},95,95);"><img src = '/static/people/people_list_16.png'/> Applicants List</div>
+				<?php }?>
 			</div>			
 			<div id='IS_profile_<?php echo $name; ?>' style = "overflow:auto" layout = "fill"></div>
 		</div>

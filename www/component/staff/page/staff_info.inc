@@ -81,7 +81,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				this.positions.push(p);
 				this.addPosition(p);
 			} else {
-				service.json("data_model","save_entity",{table:"StaffPosition",field_position:"Enter Job Position"},function(res){
+				service.json("data_model","save_entity",{table:"StaffPosition",field_position:"Enter Job Position",field_people:<?php echo $people_id;?>},function(res){
 					if (!res) return;
 					var p = {id:res.id,position:"Enter Job Position",department:null,start:null,end:null};
 					t.positions.push(p);
@@ -105,7 +105,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				});
 			} else {
 				require("editable_cell.js",function(){
-					new editable_cell(td_position, "StaffPosition", "position", position.id, 'field_text', {max_length:100}, position.position);
+					new editable_cell(td_position, "StaffPosition", "position", position.id, 'field_text', {max_length:100}, position.position).fillContainer();
 				});
 			}
 			var td_department = document.createElement("TD");
@@ -123,7 +123,7 @@ function staff_info(&$page, $people_id, $container_id) {
 					var values = [];
 					for (var i = 0; i < t.departments.length; ++i)
 						values.push([t.departments[i].id,t.departments[i].name]);
-					new editable_cell(td_department, "StaffPosition", "department", position.id, 'field_enum', {possible_values:values,can_be_empty:true}, position.department);
+					new editable_cell(td_department, "StaffPosition", "department", position.id, 'field_enum', {possible_values:values,can_be_empty:true}, position.department).fillContainer();
 				});
 			}
 			var td_start = document.createElement("TD");
@@ -151,7 +151,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				});
 			} else {
 				require("editable_cell.js",function(){
-					new editable_cell(td_end, "StaffPosition", "position", position.id, 'field_date', {}, position.end);
+					new editable_cell(td_end, "StaffPosition", "end", position.id, 'field_date', {}, position.end);
 				});
 			}
 		};

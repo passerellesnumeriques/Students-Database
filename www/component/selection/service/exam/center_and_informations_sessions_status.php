@@ -49,8 +49,11 @@ class service_exam_center_and_informations_sessions_status extends Service {
 			->bypassSecurity()
 			->select("InformationSession")
 			->count();
-		if($IS_with_no_host <> null)
-			$total_IS->whereNotIn("InformationSession", "id", $IS_with_no_host);
+		if($IS_with_no_host <> null) {
+			$IS_with_no_host_ids = array();
+			foreach ($IS_with_no_host as $is) array_push($IS_with_no_host_ids, $is["id"]);
+			$total_IS->whereNotIn("InformationSession", "id", $IS_with_no_host_ids);
+		}
 		
 		$total_IS = $total_IS->executeSingleValue();
 		$not_linked_IS = SQLQuery::create()

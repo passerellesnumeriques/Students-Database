@@ -91,6 +91,7 @@ class SQLQuery {
  	/** @var array array(table_name,column_name,alias) for COUNT(`table_name`.`column_name`) AS `alias` where alias is optional */
  	public $count_one_field = null;
  	/** @var array list of WHERE string expression, which will be joined by AND */
+ 	public $expressions = array();
  	public $where = array();
  	/** @var array list of LEFT JOIN with format (table_from,table_to,fields_matching,alias) */
  	public $joins = array();
@@ -286,7 +287,7 @@ class SQLQuery {
 	 * @param string $table table name
 	 * @param string $name field name
 	 * @param string $alias alias or null
-	 * @return this
+	 * @return SQLQuery
 	 */
 	public function &countOneField($table, $name, $alias=null){
 		$this->count_one_field = array($table,$name,$alias);
@@ -298,6 +299,11 @@ class SQLQuery {
 	 */
 	public function &distinct(){
 		$this->distinct = true;
+		return $this;
+	}
+	
+	public function &expression($expr, $alias) {
+		array_push($this->expressions, array($expr, $alias));
 		return $this;
 	}
 	
@@ -627,7 +633,7 @@ class SQLQuery {
 			else
 				$table = DataModel::get()->getTable($t);
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-			if (count($this->fields) == 0 && $this->count === null) {
+			if (count($this->fields) == 0 && $this->count === null && count($this->expressions) == 0) {
 				if ($this->bypass_security)
 					$columns = $table->internalGetColumns();
 				else
@@ -665,7 +671,7 @@ class SQLQuery {
 				$table = DataModel::get()->getTable($join[1]);
 			$alias = $join[3];
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-			if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null) {
+			if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0) {
 				if ($this->bypass_security)
 					$columns = $table->internalGetColumns();
 				else
@@ -698,12 +704,12 @@ class SQLQuery {
 		$this->fields = $final_fields;
 		
 		$sql = "SELECT ";
-		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && !$this->bypass_security)
+		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0 && !$this->bypass_security)
 			throw new Exception("Access denied: you don't have access to any column in this request");
-		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && $this->bypass_security){
+		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0 && $this->bypass_security){
 			if($this->distinct)
 				$sql .= "DISTINCT ";
-			$sql .= "*";		
+			$sql .= "*";
 		}
 		else {
 			$first = true;
@@ -730,6 +736,10 @@ class SQLQuery {
 				$sql .= "`".$this->resolveWhereTable($this->count_one_field[0])."`.`".$this->count_one_field[1]."`)";
 				if ($this->count_one_field[2] <> null)
 					$sql .= " AS `".$this->count_one_field[2]."`";
+			}
+			foreach ($this->expressions as $e) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= $e[0]." AS `".$e[1]."`";
 			}
 		}
 		$sql .= " FROM ";

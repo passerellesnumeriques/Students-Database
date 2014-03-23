@@ -89,7 +89,7 @@ abstract class DataDisplay {
 	 * @param array $resultFromBuildSQL the result returned by the previous call to buildSQL
 	 */
 	public function getData($row, $resultFromBuildSQL) {
-		return $row[$resultFromBuildSQL["data"]];
+		return @$row[$resultFromBuildSQL["data"]];
 	}
 
 	/** Save a new value for this data. If it can be done together with other updates/insert, the array tables_fields is filled, else the operations are done directly.
@@ -236,8 +236,8 @@ class SimpleDataDisplay extends DataDisplay {
 	
 	public function getEditLocks($sub_model) {
 		if ($this->getTable()->canModifyEverything() || $this->getTable()->canModifyColumn($this->column_name))
-			return array(array("table"=>$this->getTable()->getSQLNameFor($sub_model), "column"=>$this->column_name));
-		return array(array("table"=>$this->getTable()->getSQLNameFor($sub_model), "column"=>$this->column_name, "lock_each_row"=>true));
+			return array(array("table"=>$this->getTable()->getName(), "column"=>$this->column_name, "sub_model"=>$sub_model));
+		return array(array("table"=>$this->getTable()->getName(), "column"=>$this->column_name, "sub_model"=>$sub_model, "lock_each_row"=>true));
 	}
 	
 	public function buildSQL(&$q, $path, $filters) {
@@ -695,7 +695,151 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
-		// TODO
+	}
+	
+}
+
+class CalculationDataDisplay extends DataDisplay {
+	
+	private $display_name;
+	private $expression;
+	
+	public function __construct($display_name, $expression) {
+		$this->display_name = $display_name;
+		$this->expression = $expression;
+	}
+	
+	public function getDisplayName() { return $this->display_name; }
+	public function getHandledColumns() { return array(); }
+	
+	public function getTypedField($sub_model) { return array("field_text","{}"); }
+	public function isEditable() { return false; }
+	public function getEditLocks($sub_model) { return array(); }
+	public function isSortable() { return false; }
+	public function isMandatory($sub_model) { return false; }
+	public function getTypedFilter($sub_model) { return null; }
+	public function getSingleCell() { return null; }
+	
+	/**
+	 * Internal method to get the final column in the data model
+	 * @param number|null $sub_model sub model instance
+	 * @return \datamodel\Column the final column
+	 */
+	private function getColumn($path, $sub_model) {
+		$columns = explode(".", $path);
+		$t = $this->getTable();
+		for ($i = 0; $i < count($columns); $i++) {
+			$col = $t->getColumnFor($columns[$i], $sub_model);
+			if ($i < count($columns)-1)
+				$t = \DataModel::get()->getTable($col->foreign_table);
+		}
+		return $col;
+	}
+	
+	public function buildSQL(&$q, $path, $filters) {
+		// go to the table
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
+		
+		$expr = "";
+		$s = $this->expression;
+		do {
+			$i = strpos($s, "`");
+			if ($i === false) { $expr .= $s; break; }
+			if ($i > 0) $expr .= substr($s, 0, $i);
+			$j = strpos($s, "`", $i+1);
+			$p = substr($s, $i+1, $j-$i-1);
+			$s = substr($s, $j+1);
+			
+			$columns = explode(".", $p);
+			$t = $this->getTable();
+			$talias = $table_alias;
+			$sm = $path->sub_model;
+			$last_key = null;
+			for ($i = 0; $i < count($columns); $i++) {
+				$col = $t->getColumnFor($columns[$i], $sm);
+				if ($i < count($columns)-1) {
+					$ft = \DataModel::get()->getTable($col->foreign_table);
+					$last_key = $ft->getPrimaryKey();
+					$fta = $q->generateTableAlias();
+					$q->join($talias, $col->foreign_table, array($columns[$i]=>$ft->getPrimaryKey()->name), $fta);
+					$t = $ft;
+					$talias = $fta;
+					if (!($ft->getModel() instanceof SubDataModel)) $sm = null; else $sm = $path->sub_model;
+				}
+			}
+			$expr .= "`".$talias."`.`".$col->name."`";
+		} while ($s <> "");
+
+		$alias = $q->generateFieldAlias();
+		$q->expression($expr, $alias);
+	
+		return array("key"=>null,"data"=>$alias);
+	}
+	
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+	}
+	
+}
+
+class CountLinksDataDisplay extends DataDisplay {
+	
+	/** @var string name of this data */
+	protected $display_name;
+	protected $table;
+	protected $foreign_key;
+	
+	/**
+	 * @param string $display_name name of this data
+	 */
+	public function __construct($display_name, $table, $foreign_key) {
+		$this->display_name = $display_name;
+		$this->table = $table;
+		$this->foreign_key = $foreign_key;
+	}
+
+	public function getDisplayName() { return $this->display_name; }
+	public function getHandledColumns() { return array(); }
+	
+	public function getTypedField($sub_model) {
+		return array("field_text","{}");
+	}
+	
+	public function isEditable() {
+		return false;
+	}
+	public function getEditLocks($sub_model) {
+		return array();
+	}
+	public function isSortable() {
+		return false; // TODO
+	}
+	public function isMandatory($sub_model) {
+		return false; // TODO
+	}
+
+	public function buildSQL(&$q, $path, $filters) {
+		$t = $this->getTable();
+		// go to the table
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
+		$key_alias = $q->generateFieldAlias();
+		$q->field($table_alias, $t->getPrimaryKey()->name, $key_alias);
+		return array("key"=>$key_alias,"data"=>null);
+	}
+	
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
+		$keys = array();
+		foreach ($rows as $row) if (!in_array($row[$sql_aliases["key"]], $keys)) array_push($keys, $row[$sql_aliases["key"]]);
+		$counts = \SQLQuery::create()->select($this->table)->countOneField($this->table, $this->foreign_key, "VALUE")->field($this->table, $this->foreign_key, "KEY")->groupBy($this->table, $this->foreign_key)->execute();
+		$alias = $original_query->generateFieldAlias();
+		$sql_aliases["data"] = $alias;
+		for ($i = 0; $i < count($rows); ++$i) {
+			$key = $rows[$i][$sql_aliases["key"]];
+			foreach ($counts as $c)
+				if ($c["KEY"] == $key) { $rows[$i][$alias] = $c["VALUE"]; break; }
+		}
+	}
+	
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
 	}
 	
 }

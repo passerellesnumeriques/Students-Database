@@ -21,7 +21,7 @@ $mandatory = array(
 		"/static/application/config.js.php",
 		"/static/javascript/layout.js"
 );
-$optional = array();
+$optional = array("/static/widgets/common_dialogs.js");
 $optional_delayed = array();
 if (PNApplication::$instance->user_management->username == null) {
 	// if we are not yet logged, to allow google or facebook login, we include them as soon as possible

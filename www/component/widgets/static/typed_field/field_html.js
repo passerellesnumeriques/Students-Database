@@ -7,14 +7,14 @@ field_html.prototype.constructor = field_html;
 field_html.prototype._create = function(data) {
 	if (typeof data == 'string')
 		this.element.innerHTML = data;
-	else
+	else if (data != null)
 		this.element.appendChild(data);
 	this.getCurrentData = function() { return this.element.innerHTML; };
 	this.setData = function(data) {
 		while (this.element.childNodes.length > 0) this.element.removeChild(this.element.childNodes[0]);
 		if (typeof data == 'string')
 			this.element.innerHTML = data;
-		else
+		else if (data != null)
 			this.element.appendChild(data);
 	};
 };

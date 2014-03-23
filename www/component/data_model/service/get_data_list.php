@@ -190,15 +190,15 @@ class service_get_data_list extends Service {
 		//echo $q->generate();
 
 		if (!isset($input["export"])) {
-			// calculate the total number of entries
-			$count = new SQLQuery($q);
-			$count->resetFields();
-			$count->removeUnusefulJoinsForCounting();
-			$count = $count->count("NB_DATA")->executeSingleRow();
-			$count = $count["NB_DATA"];
-			
 			// handle pages
 			if (isset($input["page_size"])) {
+				// calculate the total number of entries
+				$count = new SQLQuery($q);
+				$count->resetFields();
+				$count->removeUnusefulJoinsForCounting();
+				$count = $count->count("NB_DATA")->executeSingleRow();
+				$count = $count["NB_DATA"];
+				
 				$nb = intval($input["page_size"]);
 				if ($nb == 0) $nb = 1000;
 				$page = isset($input["page"]) ? intval($input["page"]) : 0;
@@ -218,8 +218,9 @@ class service_get_data_list extends Service {
 		
 		if (!isset($input["export"])) {
 			echo "{";
-			echo "count:".$count;
-			echo ",data:[";
+			if (isset($input["page_size"]))
+				echo "count:".$count.",";
+			echo "data:[";
 			$first = true;
 			foreach ($res as $row) {
 				if ($first) $first = false; else echo ",";

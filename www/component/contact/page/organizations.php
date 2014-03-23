@@ -30,6 +30,7 @@ class page_organizations extends Page {
 				'Organization',
 				['Contacts.Name'],
 				[{category:'Contacts',name:'Managed by',data:{type:'exact',value:<?php echo json_encode($_GET["creator"]); ?>}}],
+				250
 				function (list) {
 					list.grid.setSelectable(true);
 					list.addTitle(null, "Organizations of <?php echo $_GET["creator"];?>");

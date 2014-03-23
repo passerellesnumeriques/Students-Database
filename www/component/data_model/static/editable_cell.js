@@ -39,6 +39,10 @@ function editable_cell(container, table, column, row_key, field_classname, field
 		});
 	});
 	
+	t.fillContainer = function() {
+		t.editable_field.fillContainer();
+	};
+	
 	/** Cancel any change, and goes to non-editable mode */
 	t.cancelEditable = function() {
 		t.editable_field.cancelEditable();

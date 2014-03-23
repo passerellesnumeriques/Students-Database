@@ -266,6 +266,16 @@ function grid(element) {
 				t.moveColumn(j,i);
 			});
 		});
+		// add cells
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var tr = t.table.childNodes[i];
+			var td = document.createElement("TD");
+			if (index == null || typeof index == 'undefined' || index == t.columns.length-1)
+				tr.appendChild(td);
+			else
+				tr.insertBefore(td, tr.childNodes[index+t.selectable ? 1 : 0]);
+			td.field = t._create_cell(column, null, td);
+		}
 	};
 	t.getNbColumns = function() { return t.columns.length; };
 	t.getColumn = function(index) { return t.columns[index]; };

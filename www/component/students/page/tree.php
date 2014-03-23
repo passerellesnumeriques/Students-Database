@@ -115,7 +115,6 @@ function AllStudentsNode(root) {
 	};
 	this.item = createTreeItemSingleCell(null, "All Students", true, function() {
 		setMenuParams("list", {});
-		setMenuParams("pictures", {});
 		setMenuParams("updates", {sections:"[{name:'students'}]"}); 
 		setMenuParams("curriculum", {});
 		setMenuParams("grades", {});
@@ -152,7 +151,6 @@ function CurrentStudentsNode(all) {
 			tags += "'batch"+t.item.children[i].node.batch.id+"'";
 		}
 		setMenuParams("list", {batches:batches});
-		setMenuParams("pictures", {batches:batches});
 		setMenuParams("updates", {sections:"[{name:'students',tags:["+tags+"]}]"}); 
 		setMenuParams("curriculum", {});
 		setMenuParams("grades", {});
@@ -189,7 +187,6 @@ function AlumniNode(all) {
 			tags += "'batch"+t.item.children[i].node.batch.id+"'";
 		}
 		setMenuParams("list", {batches:batches});
-		setMenuParams("pictures", {batches:batches});
 		setMenuParams("updates", {sections:"[{name:'students',tags:["+tags+"]}]"}); 
 		setMenuParams("curriculum", {});
 		setMenuParams("grades", {});
@@ -246,7 +243,6 @@ function BatchNode(current, alumni, batch) {
 	};<?php	} else { echo "null;"; } ?>
 	this.item = createTreeItemSingleCell("/static/curriculum/batch_16.png", span, !is_alumni, function() {
 		setMenuParams("list", {batches:batch.id});
-		setMenuParams("pictures", {batches:batch.id});
 		setMenuParams("updates", {sections:"[{name:'students',tags:['batch"+batch.id+"']}]"}); 
 		setMenuParams("curriculum", {batch:batch.id});
 		setMenuParams("grades", {});
@@ -321,7 +317,6 @@ function AcademicPeriodNode(batch_node, period) {
 	var t=this;
 	this.item = createTreeItemSingleCell(theme.build_icon("/static/curriculum/hat.png", "/static/curriculum/calendar_10.gif", "right_bottom"), span, parseSQLDate(period.end_date).getTime() > now && parseSQLDate(period.start_date).getTime() < now, function() {
 		setMenuParams("list", {period:period.id});
-		setMenuParams("pictures", {period:period.id});
 		setMenuParams("updates", {sections:"[{name:'students',tags:['period"+period.id+"']}]"}); 
 		setMenuParams("curriculum", {period:period.id});
 		setMenuParams("grades", {period:period.id});
@@ -391,7 +386,6 @@ function SpecializationNode(period_node, spe_id) {
 	var t=this;
 	this.item = createTreeItemSingleCell("/static/curriculum/curriculum_16.png", span, true, function() {
 		setMenuParams("list", {period:period_node.period.id,spe:spe_id});
-		setMenuParams("pictures", {period:period_node.period.id,spe:spe_id});
 		setMenuParams("updates", {sections:"[{name:'students',tags:['period"+period_node.period.id+"']}]"}); // TODO better 
 		setMenuParams("curriculum", {period:period_node.period.id});
 		setMenuParams("grades", {period:period_node.period.id,specialization:spe_id});
@@ -442,7 +436,6 @@ function ClassNode(parent, cl) {
 		}
 		var o = {}; o["class"] = cl.id;
 		setMenuParams("list", o);
-		setMenuParams("pictures", o);
 		setMenuParams("updates", {sections:"[{name:'students',tags:['class"+cl.id+"']}]"}); // TODO better 
 		setMenuParams("curriculum", {period:period.period.id});
 		setMenuParams("grades", o);
@@ -498,7 +491,6 @@ var page = typeof url.params.page != 'undefined' ? url.params.page : "list";
 
 // Menu
 page_header.addMenu("list", "/static/curriculum/batch_16.png", "List", "/dynamic/students/page/list", "List of students");
-page_header.addMenu("pictures", "/static/students/pictures_16.png", "Pictures", "/dynamic/students/page/pictures", "Pictures of students");
 page_header.addMenu("updates", "/static/news/news.png", "Updates", "/dynamic/news/page/news", "What's happening ? What other users did recently ?");
 page_header.addMenu("curriculum", "/static/curriculum/curriculum_16.png", "Curriculum", "/dynamic/curriculum/page/curriculum", "List of subjects for each academic period");
 page_header.addMenu("grades", "/static/transcripts/grades.gif", "Grades", "/dynamic/transcripts/page/students_grades", "Grades of students for an academic period");

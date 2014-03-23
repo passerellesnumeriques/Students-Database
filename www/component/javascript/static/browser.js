@@ -162,8 +162,8 @@ getWindowFromDocument = function(doc) {
 };
 
 getWindowFromElement = function(e) {
-	while (e.offsetParent) e = e.offsetParent;
-	while (e.parentNode && e.parentNode.nodeName != 'BODY' && e.parentNode.nodeName != 'HTML') e = e.parentNode;
+	//while (e.offsetParent) e = e.offsetParent;
+	//while (e.parentNode && e.parentNode.nodeName != 'BODY' && e.parentNode.nodeName != 'HTML') e = e.parentNode;
 	return getWindowFromDocument(e.ownerDocument);
 };
 
@@ -637,7 +637,7 @@ function remove_javascript(url) {
  * Dynamically load a stylesheet in the page.
  * @param {String} url the URL of the CSS file to load
  */
-function add_stylesheet(url) {
+function add_stylesheet(url,onload) {
 	if (typeof url == 'string') url = new URL(url);
 	if (document.readyState != "complete") {
 		// delay the load, as we may not have yet all the css in the head
@@ -652,6 +652,7 @@ function add_stylesheet(url) {
 		var u = new URL(e.href);
 		if (u.toString() == url.toString()) {
 			// we found it
+			if (onload) onload();
 			return;
 		}
 	}
@@ -659,7 +660,7 @@ function add_stylesheet(url) {
 	s.rel = "stylesheet";
 	s.type = "text/css";
 	s.href = url.toString();
-	s.onload = function() { triggerEvent(window,'resize'); };
+	s.onload = onload;
 	document.getElementsByTagName("HEAD")[0].appendChild(s);
 }
 

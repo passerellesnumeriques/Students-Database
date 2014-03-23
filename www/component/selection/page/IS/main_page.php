@@ -43,7 +43,13 @@ class page_IS_main_page extends selection_page {
 				new data_list(
 					'<?php echo $list_container_id;?>',
 					'InformationSession',
-					['Information Session.Name','Information Session.Date'],
+					[
+						'Information Session.Name',
+						'Information Session.Date',
+						'Information Session.Expected',
+						'Information Session.Attendees',
+						'Information Session.Applicants'
+					],
 					[],
 					function (list) {
 						list.addTitle("/static/selection/IS/IS_16.png", "Information Sessions");
@@ -54,6 +60,25 @@ class page_IS_main_page extends selection_page {
 							location.assign("/dynamic/selection/page/IS/profile");
 						};
 						list.addHeader(new_IS);
+
+						var create_applicant = document.createElement("BUTTON");
+						create_applicant.className = "button_verysoft";
+						create_applicant.innerHTML = "<img src='"+theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add)+"' style='vertical-align:bottom'/> Create Applicant";
+						create_applicant.onclick = function() {
+							window.top.require("popup_window.js",function() {
+								var p = new window.top.popup_window('New Applicant', theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add), "");
+								var frame = p.setContentFrame(
+									"/dynamic/people/page/popup_create_people?types=applicant&ondone=reload_list",
+									null,
+									{
+									}
+								);
+								frame.reload_list = function() { list.reloadData(); };
+								p.show();
+							});
+						};
+						list.addHeader(create_applicant);
+						
 						list.makeRowsClickable(function(row){
 							var is_id = list.getTableKeyForRow('InformationSession',row.row_id);
 							location.href = "/dynamic/selection/page/IS/profile?id="+is_id;

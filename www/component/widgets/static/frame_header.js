@@ -105,6 +105,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		if (typeof control == 'string') {
 			var div = document.createElement("DIV");
 			div.innerHTML = control;
+			div.style.verticalAlign = "top";
 			control = div;
 		}
 		control.style.display = "inline-block";
@@ -125,6 +126,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		if (typeof control == 'string') {
 			var div = document.createElement("DIV");
 			div.innerHTML = control;
+			div.style.verticalAlign = "top";
 			control = div;
 		}
 		control.style.display = "inline-block";

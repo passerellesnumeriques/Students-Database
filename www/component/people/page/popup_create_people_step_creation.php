@@ -36,7 +36,7 @@ function next(index) {
 		var last_name = "";
 		for (var i = 0; i < p.length; ++i) {
 			var path = new DataPath(p[i].path);
-			if (path.table != "People") continue;
+			if (path.lastElement().table != "People") continue;
 			for (var j = 0; j < p[i].value.length; ++j) {
 				if (p[i].value[j].name == "First Name") first_name = p[i].value[j].value;
 				else if (p[i].value[j].name == "Last Name") last_name = p[i].value[j].value;

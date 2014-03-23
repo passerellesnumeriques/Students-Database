@@ -25,6 +25,13 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	t.locks = null;
 	/** indicates if we are currently in editabled mode */
 	t.editable = true;
+	t._fill_container = false;
+	
+	t.fillContainer = function() {
+		t._fill_container = true;
+		t.field.getHTMLElement().style.width = "100%";
+		//t.field.getHTMLElement().style.height = "100%";
+	};
 
 	/** Goes to non-editable mode
 	 * @param {Function} onready called when non-editable mode is ready
@@ -46,6 +53,10 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 				t.field.getHTMLElement().onmouseover = function(ev) { this.style.outline = '1px solid #C0C0F0'; stopEventPropagation(ev); return false; };
 				t.field.getHTMLElement().onmouseout = function(ev) { this.style.outline = 'none'; stopEventPropagation(ev); return false; };
 				t.field.getHTMLElement().onclick = function(ev) { t.edit(); stopEventPropagation(ev); return false; };
+			}
+			if (t._fill_container) {
+				t.field.getHTMLElement().style.width = "100%";
+				//t.field.getHTMLElement().style.height = "100%";
 			}
 		};
 		if (t.field) {

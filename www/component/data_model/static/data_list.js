@@ -20,8 +20,9 @@ if (typeof require != 'undefined') {
  * @param {Array} filters list of {category:a,name:b,force:c,data:d,or:e}: category = from DataDisplayHandler; name = display name of the DataDisplay; force = true if the user cannot remove it; data = data of the filter, format depends on filter type; or=another filter data to do a 'or' condition
  * @param {Function} onready called when everything is ready, and we can start to use this object
  */
-function data_list(container, root_table, initial_data_shown, filters, onready) {
+function data_list(container, root_table, initial_data_shown, filters, page_size, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
+	if (!page_size) page_size = -1;
 	var t=this;
 	t.container = container;
 
@@ -141,18 +142,54 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	t.addFilter = function(filter) {
 		t._filters.push(filter);
 	};
+	
+	t.getField = function(category, name) {
+		for (var i = 0; i < t._available_fields.length; ++i)
+			if (t._available_fields[i].category == category && t._available_fields[i].name == name)
+				return t._available_fields[i];
+		return null;
+	};
+	t.showField = function(field, onready) {
+		t.showFields([field],onready);
+	};
+	t.showFields = function(fields, onready) {
+		var changed = false;
+		for (var i = 0; i < fields.length; ++i) {
+			if (t.show_fields.contains(fields[i])) continue;
+			t.show_fields.push(fields[i]);
+			var col = t._createColumn(fields[i]);
+			t.grid.addColumn(col, t._col_actions != null ? t.grid.getColumnIndex(t._col_actions) : t.grid.getNbColumns());
+			changed = true;
+		}
+		if (!changed) {
+			if (onready) onready();
+			return;
+		}
+		t._loadData(onready);
+	};
+	t.hideField = function(field) {
+		for (var i = 0; i < t.show_fields.length; ++i) {
+			if (t.show_fields[i].path.path == this.data.path.path &&
+				t.show_fields[i].name == this.data.name) {
+				t.show_fields.splice(i,1);
+				t.grid.removeColumn(i);
+				break;
+			}
+		}
+	};
+	
 	/** Reset everything in the data list
 	 * @param {String} root_table the new starting point
 	 * @param {Array} filters the new filters
 	 * @param {Function} onready called when everything is ready with the new parameters
 	 */
-	t.setRootTable = function(root_table, filters, onready) {
+	t.setRootTable = function(root_table, filters, page_size, onready) {
 		t._root_table = root_table;
 		t._onready = onready;
 		t.grid = null;
 		t._available_fields = null;
 		t._page_num = 1;
-		t._page_size = 1000;
+		t._page_size = page_size;
 		t._sort_column = null;
 		t._sort_order = 3;
 		t._filters = filters ? filters : [];
@@ -216,6 +253,118 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 			t._makeClickable(t.grid.getRow(i));
 	};
 	
+	t.addPictureSupport = function(table, picture_provider, thumbnail_provider) {
+		t._picture_table = table;
+		t._picture_provider = picture_provider;
+		require(["mac_tabs.js","field_html.js","pictures_list.js"], function() {
+			var header = document.createElement("DIV");
+			header.className = "data_list_header_right";
+			header.style.display = "inline-block";
+			header.style.height = "100%";
+			header.style.verticalAlign = "top";
+			var tabs = new mac_tabs('compressed');
+			tabs.addItem("<img src='/static/data_model/list_text_16.png'/>","text");
+			if (picture_provider)
+				tabs.addItem("<img src='/static/data_model/list_detail_16.png'/>","detail");
+			if (thumbnail_provider) {
+				tabs.addItem("<img src='/static/data_model/list_thumb_16.png'/>","thumb");
+				theme.css("picture_thumbnail.css");
+			}
+			tabs.select("text");
+			header.appendChild(tabs.element);
+			t.header_left.appendChild(header);
+			layout.invalidate(t.header);
+			
+			var col_picture = new GridColumn('data_list_picture', "Picture", null, "center", "field_html", false, null, null, {}, null);
+			var thumb_container = document.createElement("DIV");
+			thumb_container.setAttribute("layout","fill");
+			thumb_container.style.overflow = "auto";
+
+			var div_picture_size = document.createElement("DIV");
+			div_picture_size.appendChild(document.createTextNode("Picture size"));
+			div_picture_size.style.marginRight = "3px";
+			div_picture_size.style.display = "inline-block";
+			var select_size = document.createElement("SELECT");
+			div_picture_size.appendChild(select_size);
+			var pic_list = new pictures_list(thumb_container);
+			var o;
+			o = document.createElement("OPTION"); o.text = "35x35"; select_size.add(o);
+			o = document.createElement("OPTION"); o.text = "38x50"; select_size.add(o);
+			o = document.createElement("OPTION"); o.text = "75x100"; select_size.add(o);
+			o = document.createElement("OPTION"); o.text = "150x150"; select_size.add(o);
+			o = document.createElement("OPTION"); o.text = "150x200"; select_size.add(o);
+			o = document.createElement("OPTION"); o.text = "225x300"; select_size.add(o);
+			o = document.createElement("OPTION"); o.text = "300x300"; select_size.add(o);
+			select_size.selectedIndex = 2;
+			t._pic_width = 75;
+			t._pic_height = 100;
+			pic_list.setSize(t._pic_width, t._pic_height);
+			select_size.onchange = function() {
+				switch (select_size.selectedIndex) {
+				case 0: t._pic_width = 35; t._pic_height = 35; break;
+				case 1: t._pic_width = 38; t._pic_height = 50; break;
+				case 2: t._pic_width = 75; t._pic_height = 100; break;
+				case 3: t._pic_width = 150; t._pic_height = 150; break;
+				case 4: t._pic_width = 150; t._pic_height = 200; break;
+				case 5: t._pic_width = 225; t._pic_height = 300; break;
+				case 6: t._pic_width = 300; t._pic_height = 300; break;
+				};
+				pic_list.setSize(t._pic_width, t._pic_height);
+				t._loadData();
+			};
+
+			var original_load = t._loadData;
+			tabs.onselect = function(id) {
+				switch (id) {
+				case "text":
+					t._loadData = original_load;
+					if (thumb_container.parentNode) container.removeChild(thumb_container);
+					if (div_picture_size.parentNode) header.removeChild(div_picture_size);
+					if (!t.header_right.parentNode) t.header.appendChild(t.header_right);
+					if (!t.grid_container.parentNode) container.appendChild(t.grid_container);
+					if (t.grid.getColumnById("data_list_picture") != null)
+						t.grid.removeColumn(t.grid.getColumnIndex(col_picture));
+					break;
+				case "detail":
+					t._loadData = original_load;
+					if (thumb_container.parentNode) container.removeChild(thumb_container);
+					if (!div_picture_size.parentNode) header.appendChild(div_picture_size);
+					if (!t.header_right.parentNode) t.header.appendChild(t.header_right);
+					if (!t.grid_container.parentNode) container.appendChild(t.grid_container);
+					if (t.grid.getColumnById("data_list_picture") == null) {
+						t.grid.addColumn(col_picture, 0);
+						for (var i = 0; i < t.grid.getNbRows(); ++i) {
+							var field = t.grid.getCellField(i, 0);
+							picture_provider(field.getHTMLElement(), t.getTableKeyForRow(table, i), t._pic_width, t._pic_height);
+						}
+					} else
+						t._loadData();
+					break;
+				case "thumb":
+					if (t.grid_container.parentNode) container.removeChild(t.grid_container);
+					if (t.header_right.parentNode) t.header.removeChild(t.header_right);
+					if (!div_picture_size.parentNode) header.appendChild(div_picture_size);
+					if (!thumb_container.parentNode) {
+						t._loadData = function(onready) {
+							original_load(function() {
+								thumbnail_provider(function(pics) {
+									pic_list.setPictures(pics);
+									if (onready) onready();
+								});								
+							});
+						};
+						thumbnail_provider(function(pics) {
+							pic_list.setPictures(pics);
+						});
+						container.appendChild(thumb_container);
+					}
+					break;
+				};
+				layout.invalidate(container);
+			};
+		});
+	};
+	
 	/* Private properties */
 	t._root_table = root_table;
 	t._onready = onready;
@@ -223,8 +372,8 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 	t._available_fields = null;
 	/** Page number */
 	t._page_num = 1;
-	/** Maximum rows per page */
-	t._page_size = 1000;
+	/** Maximum rows per page or -1 if no paging */
+	t._page_size = page_size;
 	/** {GridColumn} column on which a sort is applied, or null if no sort */
 	t._sort_column = null;
 	/** 1 for ASC, 2 for DESC, 3 for no sort */
@@ -263,51 +412,55 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		container.appendChild(t.header);
 		// init header buttons
 		var div, img;
-		// + previous page
-		t.prev_page_div = div = document.createElement("DIV"); div.className = "button disabled";
-		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
-		div.title = "Previous page";
-		img.src = "/static/data_model/left.png";
-		div.doit = function() {
-			t._page_num--;
-			t._loadData();
-		};
-		div.appendChild(img);
-		t.header_left.appendChild(div);
+		if (t._page_size > 0) {
+			// + previous page
+			t.prev_page_div = div = document.createElement("DIV"); div.className = "button disabled";
+			img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+			div.title = "Previous page";
+			img.src = "/static/data_model/left.png";
+			div.doit = function() {
+				t._page_num--;
+				t._loadData();
+			};
+			div.appendChild(img);
+			t.header_left.appendChild(div);
+		}
 		// + page number
 		t._page_num_div = div = document.createElement("DIV");
 		div.style.display = "inline-block";
 		t.header_left.appendChild(div);
-		// + next page
-		t.next_page_div = div = document.createElement("DIV"); div.className = "button disabled";
-		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
-		div.title = "Next page";
-		div.disabled = "disabled";
-		img.src = "/static/data_model/right.png";
-		div.doit = function() { 
-			t._page_num++;
-			t._loadData();
-		};
-		div.appendChild(img);
-		t.header_left.appendChild(div);
-		// + page size
-		div = document.createElement("DIV");
-		div.style.display = "inline-block";
-		div.innerHTML = "Per page:";
-		t.header_left.appendChild(div);
-		var _page_size_div = div;
-		require("typed_field.js",function(){
-			require("field_integer.js",function(){
-				t._page_size_field = new field_integer(t._page_size, true, {can_be_null:false,min:1,max:100000});
-				t._page_size_field.onchange.add_listener(function() {
-					t._page_size = t._page_size_field.getCurrentData();
-					t._loadData();
+		if (t._page_size > 0) {
+			// + next page
+			t.next_page_div = div = document.createElement("DIV"); div.className = "button disabled";
+			img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+			div.title = "Next page";
+			div.disabled = "disabled";
+			img.src = "/static/data_model/right.png";
+			div.doit = function() { 
+				t._page_num++;
+				t._loadData();
+			};
+			div.appendChild(img);
+			t.header_left.appendChild(div);
+			// + page size
+			div = document.createElement("DIV");
+			div.style.display = "inline-block";
+			div.innerHTML = "Per page:";
+			t.header_left.appendChild(div);
+			var _page_size_div = div;
+			require("typed_field.js",function(){
+				require("field_integer.js",function(){
+					t._page_size_field = new field_integer(t._page_size, true, {can_be_null:false,min:1,max:2000});
+					t._page_size_field.onchange.add_listener(function() {
+						t._page_size = t._page_size_field.getCurrentData();
+						t._loadData();
+					});
+					_page_size_div.appendChild(t._page_size_field.getHTMLElement());
+					if (t.header && t.header.widget && t.header.widget.layout)
+						t.header.widget.layout();
 				});
-				_page_size_div.appendChild(t._page_size_field.getHTMLElement());
-				if (t.header && t.header.widget && t.header.widget.layout)
-					t.header.widget.layout();
 			});
-		});
+		}
 		// + refresh
 		div = document.createElement("DIV"); div.className = "button";
 		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
@@ -530,13 +683,36 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		}
 		return col;
 	};
+	t.startLoading = function() {
+		if (t._loading_back) return;
+		container.style.position = "relative";
+		t._loading_back = document.createElement("DIV");
+		t._loading_back.style.backgroundColor = "rgba(192,192,192,0.35)";
+		t._loading_back.style.position = "absolute";
+		t._loading_back.style.top = "0px";
+		t._loading_back.style.left = "0px";
+		t._loading_back.style.width = container.clientWidth+"px";
+		t._loading_back.style.height = container.clientHeight+"px";
+		container.appendChild(t._loading_back);
+		set_lock_screen_content(t._loading_back, "<img src='"+theme.icons_16.loading+"'/> Loading data...");
+	};
+	t.endLoading = function() {
+		if (!t._loading_back) return;
+		container.removeChild(t._loading_back);
+		t._loading_back = null;
+	};
+
 	/** (Re)load the data from the server */
-	t._loadData = function() {
-		t.grid.startLoading();
+	t._loadData = function(onready) {
+		t.startLoading();
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
 			fields.push({path:t.show_fields[i].path.path,name:t.show_fields[i].name});
-		var params = {table:t._root_table,fields:fields,actions:true,page:t._page_num,page_size:t._page_size};
+		var params = {table:t._root_table,fields:fields,actions:true};
+		if (t._page_size > 0) {
+			params.page = t._page_num;
+			params.page_size = t._page_size;
+		}
 		if (t._sort_column && t._sort_order != 3) {
 			params.sort_field = t._sort_column.id;
 			params.sort_order = t._sort_order == 1 ? "ASC" : "DESC";
@@ -544,48 +720,55 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 		params.filters = t._filters;
 		service.json("data_model","get_data_list",params,function(result){
 			if (!result) {
+				if (onready) onready();
 				t.grid.endLoading();
 				return;
 			}
-			var start = (t._page_num-1)*t._page_size+1;
-			var end = (t._page_num-1)*t._page_size+result.data.length;
-			if (end == 0)
-				t._page_num_div.innerHTML = "0";
-			else
-				t._page_num_div.innerHTML = start+"-"+end+"/"+result.count;
-			if (start > 1) {
-				t.prev_page_div.className = "button";
-				t.prev_page_div.onclick = t.prev_page_div.doit;
-			} else {
-				t.prev_page_div.className = "button disabled";
-				t.prev_page_div.onclick = null;
-			}
-			if (end < result.count) {
-				t.next_page_div.className = "button";
-				t.next_page_div.onclick = t.next_page_div.doit;
-			} else {
-				t.next_page_div.className = "button disabled";
-				t.next_page_div.onclick = null;
-			}
+			if (t._page_size > 0) {
+				var start = (t._page_num-1)*t._page_size+1;
+				var end = (t._page_num-1)*t._page_size+result.data.length;
+				if (end == 0)
+					t._page_num_div.innerHTML = "0";
+				else
+					t._page_num_div.innerHTML = start+"-"+end+"/"+result.count;
+				if (start > 1) {
+					t.prev_page_div.className = "button";
+					t.prev_page_div.onclick = t.prev_page_div.doit;
+				} else {
+					t.prev_page_div.className = "button disabled";
+					t.prev_page_div.onclick = null;
+				}
+				if (end < result.count) {
+					t.next_page_div.className = "button";
+					t.next_page_div.onclick = t.next_page_div.doit;
+				} else {
+					t.next_page_div.className = "button disabled";
+					t.next_page_div.onclick = null;
+				}
+			} else
+				t._page_num_div.innerHTML = result.data.length;
 			layout.invalidate(t.header);
 			t.data = result.data;
 			var has_actions = false;
 			var data = [];
-			var col_id = [];
+			var cols = [];
 			for (var i = 0; i < t.show_fields.length; ++i)
 				for (var j = 0; j < t.grid.columns.length; ++j)
 					if (t.grid.columns[j].attached_data && t.grid.columns[j].attached_data.path.path == t.show_fields[i].path.path &&
 						t.grid.columns[j].attached_data.name == t.show_fields[i].name) {
-						col_id.push(t.grid.columns[j].id);
+						cols.push(t.grid.columns[j]);
 						break;
 					}
+			var col_pic = t.grid.getColumnById("data_list_picture"); 
 			for (var i = 0; i < t.data.length; ++i) {
 				var row = {row_id:i,row_data:[]};
+				if (col_pic != null)
+					row.row_data.push({col_id:"data_list_picture",data_id:null,data:null});
 				for (var j = 0; j < t.data[i].values.length; ++j) {
-					if (t.data[i].values[j].k == null)
-						row.row_data.push({col_id:col_id[j],data_id:null,css:"disabled"});
+					if (t.data[i].values[j].k == null && (cols[j].editable || t.data[i].values[j].v == null))
+						row.row_data.push({col_id:cols[j].id,data_id:null,css:"disabled"});
 					else
-						row.row_data.push({col_id:col_id[j],data_id:t.data[i].values[j].k,data:t.data[i].values[j].v});
+						row.row_data.push({col_id:cols[j].id,data_id:t.data[i].values[j].k,data:t.data[i].values[j].v});
 					if (t.data[i].actions)
 						has_actions = true;
 				}
@@ -613,6 +796,12 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				}
 			}
 			t.grid.setData(data);
+			if (col_pic != null) {
+				for (var i = 0; i < t.grid.getNbRows(); ++i) {
+					var field = t.grid.getCellField(i, 0);
+					t._picture_provider(field.getHTMLElement(), t.getTableKeyForRow(t._picture_table, i), t._pic_width, t._pic_height);
+				}
+			}
 			// register data events
 			for (var i = 0; i < t.grid.table.childNodes.length; ++i) {
 				var row = t.grid.table.childNodes[i];
@@ -641,7 +830,8 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				}
 			}
 			t.ondataloaded.fire(t);
-			t.grid.endLoading();
+			t.endLoading();
+			if (onready) onready();
 		});
 	};
 	/** Show the menu to select the columns/fields to display
@@ -687,20 +877,9 @@ function data_list(container, root_table, initial_data_shown, filters, onready) 
 				if (found) cb.checked = 'checked';
 				cb.onclick = function() {
 					if (this.checked) {
-						t.show_fields.push(this.data);
-						var col = t._createColumn(this.data);
-						t.grid.addColumn(col, t._col_actions != null ? t.grid.getColumnIndex(t._col_actions) : t.grid.getNbColumns());
-						// TODO handle case if not yet loaded...
-						t._loadData();
+						t.showField(this.data);
 					} else {
-						for (var i = 0; i < t.show_fields.length; ++i) {
-							if (t.show_fields[i].path.path == this.data.path.path &&
-								t.show_fields[i].name == this.data.name) {
-								t.show_fields.splice(i,1);
-								t.grid.removeColumn(i);
-								break;
-							}
-						}
+						t.hideField(this.data);
 					}
 				};
 				td.appendChild(cb);

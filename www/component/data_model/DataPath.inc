@@ -317,7 +317,8 @@ class DataPathSQLBuilder {
 			$alias = $q->getJoinAlias($parent_alias, $path->table->getSQLNameFor($path->sub_model), $match);
 			if ($alias == null) {
 				$alias = $q->generateTableAlias();
-				$q->join($parent_alias, $path->table->getSQLNameFor($path->sub_model), $match, $alias);
+				if ($path->sub_model) $q->selectSubModelForTable($path->table, $path->sub_model);
+				$q->join($parent_alias, $path->table->getName(), $match, $alias);
 			}
 			return $alias;
 		}
