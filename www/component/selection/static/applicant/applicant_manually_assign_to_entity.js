@@ -1,8 +1,7 @@
 
-function applicant_manually_assign_to_entity(container, applicants,targets, mode,db_lock) {
+function applicant_manually_assign_to_entity(container, applicants,targets, mode,db_lock,EC_id,session_id, targets_additional) {
 	var t = this;
 	container = typeof container == "string" ? document.getElementById(container) : container;
-
 	/** Private methods and attributes */
 	
 	t._applicants_checked = [];//Contains the ids of the applicants selected by the user
@@ -107,6 +106,8 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 			var name = null;
 			if(mode == "center")
 				name = "Exam Centers";
+			else if (mode == "session")
+				name = "Exam Session";
 			t._right_section = new section("", name,t._targets_list_container, false, true);
 			t._right_section.element.style.margin = "10px";
 			t._right_section.element.style.display = "inline-block";
@@ -119,8 +120,10 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 		// Create the list of the targets elements	
 		if (targets.length == 0) {
 			var div = document.createElement("div");
-			if(mode == center)
+			if(mode == "center")
 				div.appendChild(document.createTextNode("No exam center yet"));
+			else if(mode == "session")
+				div.appendChild(document.createTextNode("No exam session yet"));
 			div.style.fontStyle = "italic";
 			div.style.textAlign = "center";
 			t._targets_list_container.appendChild(div);
@@ -142,7 +145,10 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 				};
 				td1.appendChild(cb);
 				td1.style.verticalAlign = "top";
-				td2.appendChild(t._createLinkProfile(null,i));
+				if(targets_additional && t._findTargetAdditionalDataIndex(targets[i].id) != null)
+					t._createRowAdditionalInfoTargetElement(td2,t._createLinkProfile(null,i),t._findTargetAdditionalDataIndex(targets[i].id));
+				else
+					td2.appendChild(t._createLinkProfile(null,i));
 				tr.appendChild(td1);
 				tr.appendChild(td2);
 				table.appendChild(tr);
@@ -159,10 +165,13 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 			link.title = "See applicant profile";
 			name = applicants[index_in_applicants].applicant_id+', '+applicants[index_in_applicants].last_name+", "+applicants[index_in_applicants].middle_name+", "+applicants[index_in_applicants].first_name+", "+applicants[index_in_applicants].sex+", "+applicants[index_in_applicants].birthdate;
 		}else if (index_in_targets != null) {
+			name = targets[index_in_targets].name;
 			if(mode == "center"){
 				link.EC_id = targets[index_in_targets].id;
-				link.title = "See Exam Center profile";
-				name = targets[index_in_targets].name;
+				link.title = "See Exam Center profile";				
+			} else if (mode == "session"){
+				link.session_id = targets[index_in_targets].id;
+				link.title = "See Exam Session profile";		
 			}			
 		}
 		link.className = "black_link";		
@@ -172,6 +181,8 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 				var people_id = this.people_id;
 			else if (this.EC_id)
 				var EC_id = this.EC_id;
+			else if(this.session_id)
+				var session_id = this.session_id;
 			require(
 					"popup_window.js",
 					function() {
@@ -183,12 +194,38 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 							var pop = new popup_window("Exam Center Profile");
 							pop.setContentFrame("/dynamic/selection/page/exam/center_profile?id="+ EC_id+ "&readonly=true&hideback=true");
 							pop.show();
+						} else if (session_id){
+							//TODO
 						}
 
 					});
 			return false;
 		};
 		return link;
+	};
+	
+	t._findTargetAdditionalDataIndex = function(target_id){
+		for(var i = 0; i < targets_additional.length; i++){
+			if(targets_additional[i].id == target_id)
+				return i;
+		}
+		return null;
+	};
+	
+	t._createRowAdditionalInfoTargetElement = function(td, link, index_in_additional){
+		var div_link = document.createElement("div");
+		var div_additional = document.createElement("div");
+		div_link.style.display = "inline-block";
+		div_additional.style.display = "inline-block";
+		td.appendChild(div_link);
+		div_link.appendChild(link);
+		td.appendChild(div_additional);		
+		div_additional.style.textAlign = "right";
+		div_additional.style.fontStyle = "italic";
+		div_additional.style.marginLeft = "3px";
+		if(mode == "session"){
+			div_additional.appendChild(document.createTextNode("("+targets_additional[index_in_additional].additional+" "+getGoodSpelling("slot",targets_additional[index_in_additional].additional)+" remaining)"));
+		}
 	};
 	
 	t._performAction = function() {
@@ -199,6 +236,10 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 		// Generate the url calling for the action
 		// Add the locks and the mode
 		var url = "/dynamic/selection/page/applicant/manually_assign_to_exam_entity?lock="+ db_lock+"&mode="+mode;
+		if(session_id)
+			url += "&session="+session_id;
+		if(EC_id)
+			url += "&center="+EC_id;
 		//Add the applicants ids
 		for(var i = 0; i < t._applicants_checked.length; i++)
 			url += "&a["+i+"]="+t._applicants_checked[i];

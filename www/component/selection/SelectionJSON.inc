@@ -1230,7 +1230,7 @@ class SelectionJSON{
 	public static function ExamSessionFromID($id){
 		$q = SQLQuery::create()
 			->select("ExamSession")
-			->whereValue("ExamSession", "id", $id);
+			->whereValue("ExamSession", "event", $id);
 		self::ExamSessionSQL($q);
 		$row = $q->executeSingleRow();
 		return self::ExamSession($q, $row);
@@ -1238,8 +1238,8 @@ class SelectionJSON{
 	
 	public static function ExamSessionSQL(&$q){
 		$alias = $q->getTableAlias("ExamSession");
-		if($alias == null)
-			$alis = "ExamSession";
+		if(!$alias)
+			$alias = "ExamSession";
 		$q
 			->field($alias,"event")
 			->field($alias,"exam_center");

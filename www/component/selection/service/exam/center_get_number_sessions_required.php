@@ -12,7 +12,7 @@ class service_exam_center_get_number_sessions_required extends Service {
 		?>
 		Objects with two attributes:
 		<ul>
-		  <li><code>required</code> number the number of sessions required</li>
+		  <li><code>required</code> number | string the number of sessions required, or "No room yet" if no room is set in this exam center yet</li>
 		  <li><code>total_assigned</code> number the number of applicants assigned to the exam center</li>
 		</ul>
 
@@ -26,13 +26,17 @@ class service_exam_center_get_number_sessions_required extends Service {
 	public function execute(&$component, $input) {
 		if(isset($input["EC_id"])){
 			//Get the number of applicants assigned to the exam center
-			$assigned = $component->getApplicantsAssignedToCenterEntity($input["EC_id"]);
+			$assigned = $component->getApplicantsAssignedToCenterEntity($input["EC_id"]);		
 			$assigned = $assigned == null ? 0 : count($assigned); 
 			//Get the max capacity from the rooms
-			$max = $component->getExamCenterCapacity($input["EC_id"]);
+			$max = $component->getExamCenterCapacity($input["EC_id"]);			
 			$nb_sessions = 0;
-			while (($assigned - $nb_sessions * $max) > 0){
-				$nb_sessions++;
+			if($max == 0)
+				$nb_sessions = "No room yet";
+			if($assigned > 0 && $max > 0){
+				while (($assigned - ($nb_sessions * $max)) > 0){
+					$nb_sessions++;
+				}
 			}
 			echo "{required:".json_encode($nb_sessions).', total_assigned:'.json_encode($assigned).'}';
 		} else 

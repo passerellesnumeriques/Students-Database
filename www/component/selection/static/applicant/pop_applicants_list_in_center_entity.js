@@ -55,14 +55,14 @@ function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit
 				old.className = "context_menu_item";
 				old.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 5 (.xls)";
 				old.onclick = function(){
-					export_applicant_list("excel5",null,null,EC_id,null,null,t._order_by);
+					export_applicant_list("excel5",null,null,EC_id,session_id,room_id,t._order_by);
 				};
 				menu.addItem(old);
 				var new_excel = document.createElement("div");
 				new_excel.className = "context_menu_item";
 				new_excel.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 2007 (.xlsx)";
 				new_excel.onclick = function(){
-					export_applicant_list("excel2007",null,null,EC_id,null,null,t._order_by);
+					export_applicant_list("excel2007",null,null,EC_id,session_id,room_id,t._order_by);
 				};
 				menu.addItem(new_excel);				
 				menu.showBelowElement(button);
@@ -109,77 +109,78 @@ function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit
 			td.colSpan = 2;
 			tr.appendChild(td);
 			t._tbody.appendChild(tr);
-		}
-		for(var i = 0; i < applicants.length;i++){
-			var tr = document.createElement("tr");
-			var td1 = document.createElement("td");
-			var td2 = document.createElement("td");					
-			tr.appendChild(td1);
-			tr.appendChild(td2);
-			t._tbody.appendChild(tr);
-			//Set the name td
-			td1.appendChild(document.createTextNode(" - "));
-			var link = document.createElement("a");
-			link.appendChild(document.createTextNode(applicants[i].applicant_id+", "+applicants[i].last_name.uniformFirstLetterCapitalized()));
-			if(typeof applicants[i].middle_name == "string" && applicants[i].middle_name.checkVisible())
-				link.appendChild(document.createTextNode(", "+applicants[i].middle_name.uniformFirstLetterCapitalized()));
-			link.appendChild(document.createTextNode(", "+applicants[i].first_name.uniformFirstLetterCapitalized()));
-			if(typeof applicants[i].sex == "string" && applicants[i].sex.checkVisible())
-				link.appendChild(document.createTextNode(", "+applicants[i].sex));
-			if(typeof applicants[i].birthdate == "string" && applicants[i].birthdate.checkVisible())
-				link.appendChild(document.createTextNode(", "+applicants[i].birthdate));
-			link.className = "black_link";
-			link.people_id = applicants[i].people_id;
-			link.title = "See profile";
-			link.onclick = function(){
-				var pop = new popup_window("Applicant Profile");
-				pop.setContentFrame("/dynamic/people/page/profile?people="+this.people_id);
-				pop.show();
-				return false;
-			};
-			td1.appendChild(link);
-			if(can_edit){
-				//Add an unassign button
-				var b = document.createElement("div");
-				td2.appendChild(b);
-				b.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
-				b.className = "button_verysoft";
-				b.center_id = EC_id;
-				b.people_id = applicants[i].people_id;
-				b.title = "Unassign this applicant from the "+t._mode;
-				b.onclick = function(){
-					var EC_id = this.center_id;
-					var people_id = this.people_id;
-					var lock = lock_screen();
-					service.json("selection","applicant/unassign_from_center_entity",{EC_id:EC_id,session_id:session_id,room_id:room_id,people_id:people_id},function(res){
-						unlock_screen(lock);
-						if(!res || (res && res.error_performing)){
-							error_dialog('An error occured, the applicant was not unassigned from this '+t._mode);									
-							return;
-						}
-						//Else cannot because of an assignment to a session or a room
-						if(res.error_assigned_to_session != null && res.error_assigned_to_room != null){
-							var ul = document.createElement("ul");
-							var li1 = document.createElement("li");
-							var li2 = document.createElement("li");
-							li1.appendChild(document.createTextNode(res.session));
-							li2.appendChild(document.createTextNode(res.room));
-							ul.appendChild(li1);
-							ul.appendChild(li2);
-							error_dialog_html(ul);
-						} else if (res.error_assigned_to_session != null)
-							error_dialog(res.session);
-						else if (res.room != null)
-							error_dialog(res.error_assigned_to_room);
-						else if (res.error_has_grade != null)
-							error_dialog(res.error_has_grade);
-						else if (res.done){
-							window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "The applicant has been succesfully unassigned!", [{action:"close"}], 5000));
-							t._refreshList(t._order_by);
-						}
-						
-					});
+		} else {
+			for(var i = 0; i < applicants.length;i++){
+				var tr = document.createElement("tr");
+				var td1 = document.createElement("td");
+				var td2 = document.createElement("td");					
+				tr.appendChild(td1);
+				tr.appendChild(td2);
+				t._tbody.appendChild(tr);
+				//Set the name td
+				td1.appendChild(document.createTextNode(" - "));
+				var link = document.createElement("a");
+				link.appendChild(document.createTextNode(applicants[i].applicant_id+", "+applicants[i].last_name.uniformFirstLetterCapitalized()));
+				if(typeof applicants[i].middle_name == "string" && applicants[i].middle_name.checkVisible())
+					link.appendChild(document.createTextNode(", "+applicants[i].middle_name.uniformFirstLetterCapitalized()));
+				link.appendChild(document.createTextNode(", "+applicants[i].first_name.uniformFirstLetterCapitalized()));
+				if(typeof applicants[i].sex == "string" && applicants[i].sex.checkVisible())
+					link.appendChild(document.createTextNode(", "+applicants[i].sex));
+				if(typeof applicants[i].birthdate == "string" && applicants[i].birthdate.checkVisible())
+					link.appendChild(document.createTextNode(", "+applicants[i].birthdate));
+				link.className = "black_link";
+				link.people_id = applicants[i].people_id;
+				link.title = "See profile";
+				link.onclick = function(){
+					var pop = new popup_window("Applicant Profile");
+					pop.setContentFrame("/dynamic/people/page/profile?people="+this.people_id);
+					pop.show();
+					return false;
 				};
+				td1.appendChild(link);
+				if(can_edit){
+					//Add an unassign button
+					var b = document.createElement("div");
+					td2.appendChild(b);
+					b.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
+					b.className = "button_verysoft";
+					b.center_id = EC_id;
+					b.people_id = applicants[i].people_id;
+					b.title = "Unassign this applicant from the "+t._mode;
+					b.onclick = function(){
+						var EC_id = this.center_id;
+						var people_id = this.people_id;
+						var lock = lock_screen();
+						service.json("selection","applicant/unassign_from_center_entity",{EC_id:EC_id,session_id:session_id,room_id:room_id,people_id:people_id},function(res){
+							unlock_screen(lock);
+							if(!res || (res && res.error_performing)){
+								error_dialog('An error occured, the applicant was not unassigned from this '+t._mode);									
+								return;
+							}
+							//Else cannot because of an assignment to a session or a room
+							if(res.error_assigned_to_session != null && res.error_assigned_to_room != null){
+								var ul = document.createElement("ul");
+								var li1 = document.createElement("li");
+								var li2 = document.createElement("li");
+								li1.appendChild(document.createTextNode(res.session));
+								li2.appendChild(document.createTextNode(res.room));
+								ul.appendChild(li1);
+								ul.appendChild(li2);
+								error_dialog_html(ul);
+							} else if (res.error_assigned_to_session != null)
+								error_dialog(res.session);
+							else if (res.room != null)
+								error_dialog(res.error_assigned_to_room);
+							else if (res.error_has_grade != null)
+								error_dialog(res.error_has_grade);
+							else if (res.done){
+								window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "The applicant has been succesfully unassigned!", [{action:"close"}], 5000));
+								t._refreshList(t._order_by);
+							}
+							
+						});
+					};
+				}
 			}
 		}
 		t.pop.resize();

@@ -38,6 +38,7 @@ class page_exam_center_main_page extends selection_page {
 // 			));
 // 			$j++;
 // 		}
+
 		$page->add_javascript("/static/widgets/grid/grid.js");
 		$page->add_javascript("/static/data_model/data_list.js");
 		$page->onload("init_organizations_list();");

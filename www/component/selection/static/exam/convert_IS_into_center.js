@@ -69,7 +69,7 @@ function convert_IS_into_center(container,can_remove_IS_from_EC, all_IS,all_IS_n
 		//Add a bottom menu
 		t._create_center_button = document.createElement("div");
 		t._create_center_button.className = "button";
-		t._create_center_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/exam_center_16.png",theme.icons_10.add)+"'/> Convert into center";
+		t._create_center_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/exam_center_16.png",theme.icons_10.add)+"'/> Convert into one center";
 		t._create_center_button.style.visibility = "hidden";
 		t._create_center_button.onclick = function(){
 			t._IS_host = null;

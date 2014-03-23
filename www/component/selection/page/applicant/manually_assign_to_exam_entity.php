@@ -10,15 +10,24 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 		$mode = $_GET["mode"];
 		$applicants = @$_GET["a"];//people id of the selected applicants
 		$target = @$_GET["target"];//id of the selected target
+		$session_id = @$_GET["session"];
+		$EC_id = @$_GET["center"];
 		//Perform the required actions
 		if(isset($applicants) && isset($target)){
 			if($mode == "center"){
 				PNApplication::$instance->selection->assignApplicantsToEC($applicants, $target);
 			}
+			else if ($mode == "session")
+				PNApplication::$instance->selection->assignApplicantsToSession($applicants, $target);
 		}
 	
 		//generate the page
 		$page->require_javascript("vertical_layout.js");
+		if($mode == "session"){
+			//Add the field time for the selection names
+			$page->require_javascript("typed_field.js");
+			$page->require_javascript("field_time.js");
+		}
 		$page->onload("new vertical_layout('assign_container');");
 		?>
 		<div id = "assign_container" style = "width:100%; height:100%; overflow:hidden;">
@@ -44,16 +53,32 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 		//Get the data from the matching provider
 		if($mode == "center"){
 			$data = $this->getJSONDataForAssigningApplicantToCenter();
-		}
+		} else if($mode == "session")
+			$data = $this->getJSONDataForAssigningApplicantToSession($EC_id);
 		?>
 		<script type='text/javascript'>
 			require("applicant_manually_assign_to_entity.js",function(){
+				var targets = <?php echo $data[1];?>;
+				var mode = <?php echo json_encode($mode);?>;
+				if(mode == "session"){
+					//Process the targets to comply with applicant_manually_assign_to_entity.js requirements (target objects must have name & id attributes)
+					for(var i = 0; i < targets.length; i++){
+						targets[i].name = get_exam_session_name_from_event(targets[i].event);
+						targets[i].id = targets[i].event.id;
+					}
+				}
 				new applicant_manually_assign_to_entity(
 						"sections_container",
 						<?php echo $data[0];?>,
-						<?php echo $data[1];?>,
-						<?php echo json_encode($mode);?>,
-						<?php  echo $lock;?>
+						targets,
+						mode,
+						<?php echo $lock;?>,
+						<?php echo json_encode($EC_id);?>,
+						<?php echo json_encode($session_id);
+							if(isset($data[2])){
+								echo ", ".$data[2];
+							}
+						?>
 						);
 			});
 		
@@ -67,18 +92,53 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 	 */
 	private function getJSONDataForAssigningApplicantToCenter(){
 		$all_free_applicants = PNApplication::$instance->selection->getApplicantsNotAssignedToAnyEC();
-		$json_all_free_applicants = "[";
-		if($all_free_applicants <> null){
-			$first = true;
-			foreach ($all_free_applicants as $applicant){
-				if(!$first) $json_all_free_applicants .= ", ";
-				$first = false;
-				$json_all_free_applicants .= SelectionJSON::Applicant(null, $applicant);
-			}
-		}
-		$json_all_free_applicants .= "]";
+		$json_all_free_applicants = $this->getJSONArrayApplicantsFromRows($all_free_applicants);
 		$centers = SelectionJSON::getJSONAllExamCenters();
 		return array($json_all_free_applicants, $centers);
+	}
+	
+	private function getJSONDataForAssigningApplicantToSession($EC_id){
+		$applicants = PNApplication::$instance->selection->getApplicantsAssignedToECButNotToAnySession($EC_id);
+		$json_applicants = $this->getJSONArrayApplicantsFromRows($applicants);
+		$sessions = SelectionJSON::ExamSessionsFromExamCenterID($EC_id);
+		//Get the remaining slots for the sessions set in this center
+		$sessions_ids = SQLQuery::create()
+			->bypassSecurity()
+			->select("ExamSession")
+			->field("ExamSession","event")
+			->whereValue("ExamSession", "exam_center", $EC_id)
+			->executeSingleField();
+		if($sessions_ids <> NULL){
+			$remaining_per_session = "[";
+			$first = true;			
+			foreach ($sessions_ids as $session_id){
+				if(!$first) $remaining_per_session .= ", ";
+				$first = false;
+				$remaining_per_session .= "{id:".json_encode($session_id).", additional:".json_encode(PNApplication::$instance->selection->getRemainingSlotsForExamSession($session_id))."}";
+			}
+			$remaining_per_session .= "]";
+			return array($json_applicants,$sessions,$remaining_per_session);
+		} else 		
+			return array($json_applicants,$sessions);	
+	}
+	
+	/**
+	 * Convert applicants rows into JSON array
+	 * @param NULL|array $rows
+	 * @return string JSON array of applicants objects
+	 */
+	private function getJSONArrayApplicantsFromRows($rows){
+		$json = "[";
+		if($rows <> null){
+			$first = true;
+			foreach ($rows as $applicant){
+				if(!$first) $json .= ", ";
+				$first = false;
+				$json .= SelectionJSON::Applicant(null, $applicant);
+			}
+		}
+		$json .= "]";
+		return $json;
 	}
 	
 }

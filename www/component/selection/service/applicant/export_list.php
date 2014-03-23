@@ -72,11 +72,11 @@ class service_applicant_export_list extends Service{
 				$start = $ev["start"];
 				$end = $ev["end"];				
 				if($title == null){
-					$session_title = date("m",$start)."/".date("d",$start)."/".date("y",$start)." (".$date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$session_title = date("m",$start)."/".date("d",$start)."/".date("y",$start)." (".date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
 					$title = "Session ".$session_title." in ".$center_name." Exam center";
 				}
 				if($file_name == null){
-					$session_title = date("m",$start)."_".date("d",$start)."_".date("y",$start)." (".$date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$session_title = date("m",$start)."_".date("d",$start)."_".date("y",$start)." (".date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
 					$file_name = "Session ".$session_title." in ".$center_name." applicants";
 				}			
 			}
