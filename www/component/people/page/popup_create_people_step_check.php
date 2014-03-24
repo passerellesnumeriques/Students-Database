@@ -10,7 +10,12 @@ class page_popup_create_people_step_check extends Page {
 		$to_check = array();
 		foreach ($peoples as $people) {
 			foreach ($people as $path) {
-				if ($path["path"] == "People") {
+				$i = strrpos($path["path"], "<");
+				$j = strrpos($path["path"], ">");
+				$p = $i === false && $j === false ? $path["path"] : ($i === false ? substr($path["path"], $j+1) : ($j === false ? substr($path["path"], $i+1) : ($i > $j ? substr($path["path"], $i+1) : substr($path["path"], $j+1))));
+				$i = strpos($p, "(");
+				if ($i !== false) $p = substr($p, 0, $i);
+				if ($p == "People") {
 					$first_name = null;
 					$last_name = null;
 					foreach ($path["value"] as $d)
@@ -65,7 +70,12 @@ class page_popup_create_people_step_check extends Page {
 				$people = $tc[0];
 				$similar = $tc[1];
 				foreach ($people as $path) {
-					if ($path["path"] == "People") {
+					$i = strrpos($path["path"], "<");
+					$j = strrpos($path["path"], ">");
+					$p = $i === false && $j === false ? $path["path"] : ($i === false ? substr($path["path"], $j+1) : ($j === false ? substr($path["path"], $i+1) : ($i > $j ? substr($path["path"], $i+1) : substr($path["path"], $j+1))));
+					$i = strpos($p, "(");
+					if ($i !== false) $p = substr($p, 0, $i);
+					if ($p == "People") {
 						$first_name = null;
 						$last_name = null;
 						foreach ($path["value"] as $d)

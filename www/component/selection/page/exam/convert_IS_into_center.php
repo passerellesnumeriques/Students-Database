@@ -10,7 +10,7 @@ class page_exam_convert_IS_into_center extends selection_page {
 	
 	public function get_required_rights() {return array("see_exam_center_detail","see_information_session_details");}
 	
-	public function execute_selection_page(&$page) {
+	public function execute_selection_page() {
 		//Get the locks if already exist
 		$lock_exam_center = @$_GET["lockec"];
 		$lock_information_session = @$_GET["lockis"];
@@ -40,8 +40,8 @@ class page_exam_convert_IS_into_center extends selection_page {
 		}
 	
 		//generate the page
-		$page->require_javascript("vertical_layout.js");
-		$page->onload("new vertical_layout('assign_container');");
+		$this->require_javascript("vertical_layout.js");
+		$this->onload("new vertical_layout('assign_container');");
 		?>
 		<div id = "assign_container" style = "width:100%; height:100%; overflow:hidden;">
 			<div id = "info_header"layout = "fixed" class = "info_header">
@@ -64,15 +64,15 @@ class page_exam_convert_IS_into_center extends selection_page {
 		require_once("component/data_model/DataBaseLock.inc");
 		$sm = PNApplication::$instance->selection->getCampaignId();
 		if(!isset($lock_exam_center))
-			$lock_exam_center = $page->performRequiredLocks("ExamCenter",null,null,$sm);//Make sure the EC list is up to date
+			$lock_exam_center = $this->performRequiredLocks("ExamCenter",null,null,$sm);//Make sure the EC list is up to date
 		else //script is handled by the page#performRequiredLocks method
 			DataBaseLock::generateScript($lock_exam_center);
 		if(!isset($lock_information_session))
-			$lock_information_session = $page->performRequiredLocks("InformationSession",null,null,$sm);//Make sure the IS list is up to date
+			$lock_information_session = $this->performRequiredLocks("InformationSession",null,null,$sm);//Make sure the IS list is up to date
 		else
 			DataBaseLock::generateScript($lock_information_session);
 		if(!isset($lock_ECIS))
-			$lock_ECIS = $page->performRequiredLocks("ExamCenterInformationSession",null,null,$sm);//This lock is the one used to save the data
+			$lock_ECIS = $this->performRequiredLocks("ExamCenterInformationSession",null,null,$sm);//This lock is the one used to save the data
 		else
 			DataBaseLock::generateScript($lock_ECIS);
 		

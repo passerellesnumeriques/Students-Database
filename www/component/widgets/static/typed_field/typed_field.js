@@ -16,7 +16,7 @@ function typed_field(data,editable,config){
 	this.ondataunchanged = new Custom_Event();
 	this._datachange = function() {
 		this.onchange.fire(this);
-		if (this.hasChanged())
+		if (!this.hasChanged())
 			this.ondataunchanged.fire(this);
 		else
 			this.ondatachanged.fire(this);

@@ -13,11 +13,11 @@ abstract class selection_page extends Page{
 		/* Check the user is allowed to read the selection data */
 		if(!$can_access_selection_data) echo "<div>You are not allowed to access to the selection data</div>";
 		else{
-			if($id <> null) $this->execute_selection_page($this);
+			if($id <> null) $this->execute_selection_page();
 			else echo "<div>You must select a selection campaign</div>";
 		}
 	}
 	
-	abstract public function execute_selection_page(&$page);
+	abstract public function execute_selection_page();
 }
 ?>

@@ -2,10 +2,10 @@
 require_once("/../selection_page.inc");
 class page_exam_subject extends selection_page {
 	public function get_required_rights() { return array("see_exam_subject"); }
-	public function execute_selection_page(&$page){
-		$container_id = $page->generateID();
-		$page->add_javascript("/static/widgets/vertical_layout.js");
-		$page->onload("new vertical_layout('exam_page_container');");
+	public function execute_selection_page(){
+		$container_id = $this->generateID();
+		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->onload("new vertical_layout('exam_page_container');");
 		$id = null;
 		if(!isset($_GET["id"]))
 			$id = -1;
@@ -25,10 +25,10 @@ class page_exam_subject extends selection_page {
 			<div id = '<?php echo $container_id; ?>' style = "overflow:auto" layout = "fill"></div>
 		</div>
 	<?php
-		$this->exam_subject($page,$container_id,$id,$campaign_id,$read_only,"exam_subject_header");
+		$this->exam_subject($this,$container_id,$id,$campaign_id,$read_only,"exam_subject_header");
 	}
 	
-	public function exam_subject(&$page,$container_id,$id,$campaign_id,$read_only,$header_id){
+	public function exam_subject(&$this,$container_id,$id,$campaign_id,$read_only,$header_id){
 		require_once("component/data_model/Model.inc");
 		require_once("component/selection/SelectionJSON.inc");
 		if(!PNApplication::$instance->user_management->has_right("see_exam_subject",true))
@@ -45,11 +45,11 @@ class page_exam_subject extends selection_page {
 	
 		$current_campaign = PNApplication::$instance->selection->getCampaignId();
 	
-		$fct_name = "exam_subject_".$page->generateID();
+		$fct_name = "exam_subject_".$this->generateID();
 	
 		$db_lock = null;
 		if(!$read_only && $id != -1 && $id != "-1"){
-			$db_lock = $page->performRequiredLocks("ExamSubject",$id,null,$current_campaign);
+			$db_lock = $this->performRequiredLocks("ExamSubject",$id,null,$current_campaign);
 			if($db_lock == null)
 				return;
 		}

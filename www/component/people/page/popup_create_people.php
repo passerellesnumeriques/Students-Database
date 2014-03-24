@@ -23,10 +23,14 @@ class page_popup_create_people extends Page {
 				return;
 			}
 		}
-		if (isset($_POST["input"]))
+		if (isset($_POST["input"])) {
 			$input = json_decode($_POST["input"], true);
-		else
+			foreach ($_GET as $n=>$v) if (!isset($input[$n])) $input[$n] = $v;
+		} else
 			$input = $_GET;
+		
+		$root = isset($input["root"]) ? $input["root"] : "People";
+		$sub_model = isset($input["sub_model"]) ? $input["sub_model"] : null;
 
 		$types_str = "";
 		foreach ($types as $t) $types_str .= "/".$t."/";
@@ -51,7 +55,7 @@ class page_popup_create_people extends Page {
 			else
 				$prefilled_data = array();
 				
-			createMultipleDataPage($this, "People", null, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data);
+			createMultipleDataPage($this, $root, $sub_model, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data);
 			?>
 			<script type='text/javascript'>
 			var popup = window.parent.get_popup_window_from_frame(window);
@@ -130,7 +134,7 @@ class page_popup_create_people extends Page {
 			
 			$values->addTableColumnValue("People", "types", $types_str);
 			
-			$structure_name = createDataPage($this, "People", null, $values, $prefilled_values);
+			$structure_name = createDataPage($this, $root, $sub_model, $values, $prefilled_values);
 			?>
 			<script type='text/javascript'>
 			var structure = <?php echo $structure_name;?>;

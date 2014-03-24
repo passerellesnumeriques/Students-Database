@@ -401,11 +401,6 @@ function excel_import(popup, container, onready) {
 					f.setData(value);
 			}
 	};
-
-	/* prepare */
-	require(["upload.js","splitter_vertical.js","header_bar.js","vertical_layout.js",["typed_field.js","field_integer.js"]], function() {
-		onready(t);
-	});
 	
 	this.init = function() {
 		if (!t.frame_excel) {
@@ -452,4 +447,9 @@ function excel_import(popup, container, onready) {
 			t.frame_import.src = "about:blank";
 		}
 	};
+
+	/* prepare */
+	require(["upload.js","splitter_vertical.js","header_bar.js","vertical_layout.js",["typed_field.js","field_integer.js"]], function() {
+		onready(t);
+	});
 }

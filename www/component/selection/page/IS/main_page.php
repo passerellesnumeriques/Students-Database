@@ -2,22 +2,22 @@
 require_once("/../selection_page.inc");
 class page_IS_main_page extends selection_page {
 	public function get_required_rights() { return array("see_information_session_details"); }
-	public function execute_selection_page(&$page){
-		$page->add_javascript("/static/widgets/grid/grid.js");
-		$page->add_javascript("/static/data_model/data_list.js");
-		$page->onload("init_organizations_list();");
-		$list_container_id = $page->generateID();
+	public function execute_selection_page(){
+		$this->add_javascript("/static/widgets/grid/grid.js");
+		$this->add_javascript("/static/data_model/data_list.js");
+		$this->onload("init_organizations_list();");
+		$list_container_id = $this->generateID();
 		$can_create = PNApplication::$instance->user_management->has_right("manage_information_session",true);
-		$status_container_id = $page->generateID();
-		$page->require_javascript("section.js");
-		$page->onload("section_from_html('status_section');");
+		$status_container_id = $this->generateID();
+		$this->require_javascript("section.js");
+		$this->onload("section_from_html('status_section');");
 		$steps = PNApplication::$instance->selection->getSteps();
 		if($steps["information_session"]){
-			$page->onload("new IS_status('$status_container_id');");
-			$page->require_javascript("IS_status.js");
+			$this->onload("new IS_status('$status_container_id');");
+			$this->require_javascript("IS_status.js");
 		}
-		$page->require_javascript("horizontal_layout.js");
-		$page->onload("new horizontal_layout('horizontal_split',true);");
+		$this->require_javascript("horizontal_layout.js");
+		$this->onload("new horizontal_layout('horizontal_split',true);");
 		
 		?>
 		<div id='horizontal_split'>
@@ -69,7 +69,7 @@ class page_IS_main_page extends selection_page {
 							window.top.require("popup_window.js",function() {
 								var p = new window.top.popup_window('New Applicant', theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add), "");
 								var frame = p.setContentFrame(
-									"/dynamic/people/page/popup_create_people?types=applicant&ondone=reload_list",
+									"/dynamic/people/page/popup_create_people?root=Applicant&sub_model=<?php echo PNApplication::$instance->selection->getCampaignId();?>&types=applicant&ondone=reload_list",
 									null,
 									{
 									}
@@ -80,6 +80,24 @@ class page_IS_main_page extends selection_page {
 						};
 						list.addHeader(create_applicant);
 						
+						var import_applicants = document.createElement("BUTTON");
+						import_applicants.className = "button_verysoft";
+						import_applicants.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Applicants";
+						import_applicants.onclick = function() {
+							window.top.require("popup_window.js",function() {
+								var p = new window.top.popup_window('Import Applicants', theme.icons_16._import, "");
+								var frame = p.setContentFrame(
+									"/dynamic/selection/page/applicant/popup_import?ondone=reload_list",
+									null,
+									{
+									}
+								);
+								frame.reload_list = function() { list.reloadData(); };
+								p.show();
+							});
+						};
+						list.addHeader(import_applicants);
+							
 						list.makeRowsClickable(function(row){
 							var is_id = list.getTableKeyForRow('InformationSession',row.row_id);
 							location.href = "/dynamic/selection/page/IS/profile?id="+is_id;

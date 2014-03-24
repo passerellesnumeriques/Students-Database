@@ -134,6 +134,7 @@ class service_application_menu_builder extends Service {
 			require("select.js",function(){
 				t.select = new select(container);
 				t._init();
+				layout.invalidate(container);
 			});
 		}
 		<?php

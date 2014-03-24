@@ -255,7 +255,11 @@ function popup_window(title,icon,content,hide_close_button) {
 				layout.invalidate(t.content);
 			}
 		};
-		var win = t._buildTable();
+		var win;
+		if (t.table == null)
+			win = t._buildTable();
+		else
+			win = getWindowFromElement(t.table);
 		t.resize();
 		win.listenEvent(win, "resize", function() {
 			t.resize();

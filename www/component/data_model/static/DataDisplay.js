@@ -42,11 +42,11 @@ function DataPath(s) {
 		var j = s.indexOf('<');
 		if (i == -1) i = j;
 		if (i == -1) {
-			this.table = s;
+			this._parseTable(s);
 			this.next = false;
 			return;
 		}
-		this.table = s.substring(0,i);
+		this._parseTable(s.substring(0,i));
 		s = s.substring(i);
 		this.direction = s.charAt(0);
 		s = s.substring(1);
@@ -61,6 +61,21 @@ function DataPath(s) {
 			s = s.substring(1);
 		}
 		this.next = new DataPath(s);
+	};
+	this._parseTable = function(s) {
+		var i = s.indexOf('(');
+		if (i > 0) {
+			this.join_key = s.substring(i+1, s.length-1);
+			s = s.substring(0,i);
+		} else
+			this.join_key = null;
+		i = s.indexOf('[');
+		if (i > 0) {
+			this.sub_model = s.substring(i+1, s.length-1);
+			s = s.substring(0,i);
+		} else
+			this.sub_model = null;
+		this.table = s;
 	};
 	this._parseElement(s);
 	

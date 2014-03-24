@@ -5,27 +5,27 @@ class page_exam_center_main_page extends selection_page {
 	
 	public function get_required_rights() {return array("see_exam_center_detail");}
 	
-	public function execute_selection_page(&$page) {
+	public function execute_selection_page() {
 		
-		$page->add_javascript("/static/widgets/grid/grid.js");
-		$page->add_javascript("/static/data_model/data_list.js");
-		$page->onload("init_organizations_list();");
-		$list_container_id = $page->generateID();
+		$this->add_javascript("/static/widgets/grid/grid.js");
+		$this->add_javascript("/static/data_model/data_list.js");
+		$this->onload("init_organizations_list();");
+		$list_container_id = $this->generateID();
 		$can_create = PNApplication::$instance->user_management->has_right("manage_exam_center",true);
-		$status_container_id = $page->generateID();
-		$ECIS_status_container_id = $page->generateID();
-		$page->require_javascript("section.js");
-		$page->onload("section_from_html('status_section');");
-		$page->onload("section_from_html('status_ECIS_section');");
+		$status_container_id = $this->generateID();
+		$ECIS_status_container_id = $this->generateID();
+		$this->require_javascript("section.js");
+		$this->onload("section_from_html('status_section');");
+		$this->onload("section_from_html('status_ECIS_section');");
 		$steps = PNApplication::$instance->selection->getSteps();
 		if($steps["exam_center"]){			
-			$page->require_javascript("exam_center_status.js");
-			$page->onload("new exam_center_status('$status_container_id');");
+			$this->require_javascript("exam_center_status.js");
+			$this->onload("new exam_center_status('$status_container_id');");
 		}
-		$page->require_javascript("exam_center_and_informations_sessions_status.js");
-		$page->onload("new exam_center_and_informations_sessions_status('".$ECIS_status_container_id."');");
-		$page->require_javascript("horizontal_layout.js");
-		$page->onload("new horizontal_layout('horizontal_split',true);");
+		$this->require_javascript("exam_center_and_informations_sessions_status.js");
+		$this->onload("new exam_center_and_informations_sessions_status('".$ECIS_status_container_id."');");
+		$this->require_javascript("horizontal_layout.js");
+		$this->onload("new horizontal_layout('horizontal_split',true);");
 		
 		?>		<script type='text/javascript'>
 					function onCreateNewCenter(button){

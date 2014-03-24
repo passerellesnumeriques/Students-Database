@@ -2,16 +2,16 @@
 require_once("component/selection/page/selection_page.inc");
 class page_applicant_list extends selection_page {
 	
-	public function get_required_rights() { return array(); }
+	public function get_required_rights() { return array("see_applicant_info"); }
 	
 	/**
 	 * Create a data_list of applicants
 	 */
-	public function execute_selection_page(&$page) {
-		$page->add_javascript("/static/widgets/grid/grid.js");
-		$page->add_javascript("/static/data_model/data_list.js");
-		$page->onload("init_list();");
-		$container_id = $page->generateID();
+	public function execute_selection_page() {
+		$this->add_javascript("/static/widgets/grid/grid.js");
+		$this->add_javascript("/static/data_model/data_list.js");
+		$this->onload("init_list();");
+		$container_id = $this->generateID();
 		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : array();
 		?>
 		<div style='width:100%;height:100%' id='<?php echo $container_id;?>'>
@@ -40,7 +40,7 @@ class page_applicant_list extends selection_page {
 						window.top.require("popup_window.js",function() {
 							var p = new window.top.popup_window('New Applicant', theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add), "");
 							var frame = p.setContentFrame(
-								"/dynamic/people/page/popup_create_people?types=applicant&ondone=reload_list",
+								"/dynamic/people/page/popup_create_people?root=Applicant&sub_model=<?php echo PNApplication::$instance->selection->getCampaignId();?>&types=applicant&ondone=reload_list",
 								null,
 								{
 								}
@@ -50,7 +50,24 @@ class page_applicant_list extends selection_page {
 						});
 					};
 					list.addHeader(create_applicant);
-
+					var import_applicants = document.createElement("BUTTON");
+					import_applicants.className = "button_verysoft";
+					import_applicants.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Applicants";
+					import_applicants.onclick = function() {
+						window.top.require("popup_window.js",function() {
+							var p = new window.top.popup_window('Import Applicants', theme.icons_16._import, "");
+							var frame = p.setContentFrame(
+								"/dynamic/selection/page/applicant/popup_import?ondone=reload_list",
+								null,
+								{
+								}
+							);
+							frame.reload_list = reload_list;
+							p.show();
+						});
+					};
+					list.addHeader(import_applicants);
+					
 					list.makeRowsClickable(function(row){
 						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id), null, 95, 95); 
 					});
