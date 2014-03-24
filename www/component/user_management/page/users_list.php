@@ -14,7 +14,7 @@ class page_users_list extends Page {
 function init_users_list() {
 	new data_list(
 		'users_list',
-		'Users',
+		'Users', null,
 		['User.Domain','User.Username','Personal Information.First Name','Personal Information.Last Name','User.Roles'],
 		null,
 		100,

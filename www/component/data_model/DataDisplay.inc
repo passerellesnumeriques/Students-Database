@@ -821,8 +821,11 @@ class CountLinksDataDisplay extends DataDisplay {
 		$t = $this->getTable();
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
-		$key_alias = $q->generateFieldAlias();
-		$q->field($table_alias, $t->getPrimaryKey()->name, $key_alias);
+		$key_alias = $q->getFieldAlias($t->getName(), $t->getPrimaryKey()->name);
+		if ($key_alias == null) {
+			$key_alias = $q->generateFieldAlias();
+			$q->field($table_alias, $t->getPrimaryKey()->name, $key_alias);
+		}
 		return array("key"=>$key_alias,"data"=>null);
 	}
 	
@@ -834,8 +837,10 @@ class CountLinksDataDisplay extends DataDisplay {
 		$sql_aliases["data"] = $alias;
 		for ($i = 0; $i < count($rows); ++$i) {
 			$key = $rows[$i][$sql_aliases["key"]];
+			$found = false;
 			foreach ($counts as $c)
-				if ($c["KEY"] == $key) { $rows[$i][$alias] = $c["VALUE"]; break; }
+				if ($c["KEY"] == $key) { $rows[$i][$alias] = $c["VALUE"]; $found = true; break; }
+			if (!$found) $rows[$i][$alias] = 0;
 		}
 	}
 	

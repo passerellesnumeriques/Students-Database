@@ -42,7 +42,7 @@ class page_IS_main_page extends selection_page {
 			function init_organizations_list() {
 				new data_list(
 					'<?php echo $list_container_id;?>',
-					'InformationSession',
+					'InformationSession', <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 					[
 						'Information Session.Name',
 						'Information Session.Date',
@@ -51,6 +51,7 @@ class page_IS_main_page extends selection_page {
 						'Information Session.Applicants'
 					],
 					[],
+					-1,
 					function (list) {
 						list.addTitle("/static/selection/IS/IS_16.png", "Information Sessions");
 						var new_IS = document.createElement("DIV");

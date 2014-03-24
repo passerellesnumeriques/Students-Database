@@ -15,7 +15,7 @@ class page_list extends Page {
 <script type='text/javascript'>
 var list = new data_list(
 	'list_container',
-	'Staff',
+	'Staff', null,
 	[
 		'Personal Information.First Name',
 		'Personal Information.Last Name',

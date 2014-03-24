@@ -45,7 +45,7 @@ var data_list_fields = [
 if (url.params['period']) data_list_fields.push("Student.Class");
 var students_list = new data_list(
 	'list_container',
-	url.params['period'] || url.params['class'] ? 'StudentClass' : 'Student',
+	url.params['period'] || url.params['class'] ? 'StudentClass' : 'Student', null,
 	data_list_fields,
 	build_filters(),
 	batches != null && batches.length > 5 ? 200 : -1,

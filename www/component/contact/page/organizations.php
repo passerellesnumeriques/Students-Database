@@ -27,7 +27,7 @@ class page_organizations extends Page {
 		function init_organizations_list() {
 			new data_list(
 				'<?php echo $container_id;?>',
-				'Organization',
+				'Organization', null,
 				['Contacts.Name'],
 				[{category:'Contacts',name:'Managed by',data:{type:'exact',value:<?php echo json_encode($_GET["creator"]); ?>}}],
 				250

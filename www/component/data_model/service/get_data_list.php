@@ -9,6 +9,7 @@ class service_get_data_list extends Service {
 	public function input_documentation() { echo "
 <ul>
 	<li><code>table</code>: name of starting table</li>
+	<li><code>sub_model</code>: sub model of starting table</li>
 	<li><code>fields</code>:[paths]</li>
 	<li>optional: <code>actions</code>: if true, a list of possible links with icon are returned</li>
 </ul>";
@@ -35,7 +36,7 @@ class service_get_data_list extends Service {
 		$fields = $input["fields"];
 		// retrieve data paths
 		require_once("component/data_model/DataPath.inc");
-		$possible = DataPathBuilder::searchFrom($table);
+		$possible = DataPathBuilder::searchFrom($table, @$input["sub_model"]);
 		$paths = array();
 		foreach ($fields as $f) {
 			$found = false;
@@ -233,7 +234,7 @@ class service_get_data_list extends Service {
 					if ($f) $f = false; else echo ",";
 					echo "{v:";
 					echo json_encode($row[$a["data"]]);
-					if (isset($row[$a["key"]]))
+					if ($a["key"] !== null && isset($row[$a["key"]]))
 						echo ",k:".json_encode($row[$a["key"]]);
 					else {
 						echo ",k:null";

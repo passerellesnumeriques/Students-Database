@@ -20,7 +20,7 @@ if (typeof require != 'undefined') {
  * @param {Array} filters list of {category:a,name:b,force:c,data:d,or:e}: category = from DataDisplayHandler; name = display name of the DataDisplay; force = true if the user cannot remove it; data = data of the filter, format depends on filter type; or=another filter data to do a 'or' condition
  * @param {Function} onready called when everything is ready, and we can start to use this object
  */
-function data_list(container, root_table, initial_data_shown, filters, page_size, onready) {
+function data_list(container, root_table, sub_model, initial_data_shown, filters, page_size, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (!page_size) page_size = -1;
 	var t=this;
@@ -183,8 +183,9 @@ function data_list(container, root_table, initial_data_shown, filters, page_size
 	 * @param {Array} filters the new filters
 	 * @param {Function} onready called when everything is ready with the new parameters
 	 */
-	t.setRootTable = function(root_table, filters, page_size, onready) {
+	t.setRootTable = function(root_table, sub_model, filters, page_size, onready) {
 		t._root_table = root_table;
+		t._sub_model = sub_model;
 		t._onready = onready;
 		t.grid = null;
 		t._available_fields = null;
@@ -367,6 +368,7 @@ function data_list(container, root_table, initial_data_shown, filters, page_size
 	
 	/* Private properties */
 	t._root_table = root_table;
+	t._sub_model = sub_model;
 	t._onready = onready;
 	/** {Array} List of available fields retrieved through the service get_available_fields */
 	t._available_fields = null;
@@ -531,7 +533,7 @@ function data_list(container, root_table, initial_data_shown, filters, page_size
 	/** Load the available fields for the root table */
 	t._loadFields = function() {
 		require("DataDisplay.js",function() {
-			service.json("data_model","get_available_fields",{table:t._root_table},function(result){
+			service.json("data_model","get_available_fields",{table:t._root_table,sub_model:t._sub_model},function(result){
 				if (result) {
 					t._available_fields = [];
 					for (var i = 0; i < result.length; ++i) {
@@ -708,7 +710,7 @@ function data_list(container, root_table, initial_data_shown, filters, page_size
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
 			fields.push({path:t.show_fields[i].path.path,name:t.show_fields[i].name});
-		var params = {table:t._root_table,fields:fields,actions:true};
+		var params = {table:t._root_table,sub_model:t._sub_model,fields:fields,actions:true};
 		if (t._page_size > 0) {
 			params.page = t._page_num;
 			params.page_size = t._page_size;
@@ -1060,6 +1062,12 @@ function data_list(container, root_table, initial_data_shown, filters, page_size
 		input.type = 'hidden';
 		input.name = 'table';
 		input.value = t._root_table;
+		if (t._sub_model) {
+			form.appendChild(input = document.createElement("INPUT"));
+			input.type = 'hidden';
+			input.name = 'sub_model';
+			input.value = t._sub_model;
+		}
 		form.appendChild(input = document.createElement("INPUT"));
 		input.type = 'hidden';
 		input.name = 'fields';
@@ -1168,7 +1176,7 @@ function data_list(container, root_table, initial_data_shown, filters, page_size
 			});
 			t._changed_cells[i].setOriginalData(value);
 		}
-		service.json("data_model","save_data",{root_table:t._root_table,to_save:to_save},function(result){
+		service.json("data_model","save_data",{root_table:t._root_table,sub_model:t._sub_model,to_save:to_save},function(result){
 			if (result) {
 				for (var i = 0; i < t._changed_cells.length; ++i) {
 					var value = t._changed_cells[i].getCurrentData();

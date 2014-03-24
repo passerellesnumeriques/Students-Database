@@ -21,7 +21,7 @@ class page_applicant_list extends selection_page {
 		function init_list() {
 			dl = new data_list(
 				'<?php echo $container_id;?>',
-				'Applicant',
+				'Applicant', <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 				[
 					'Selection.Applicant ID',
 					'Personal Information.First Name',

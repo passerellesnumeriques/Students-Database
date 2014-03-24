@@ -50,7 +50,7 @@ class page_organizations_for_selection extends selection_page {
 		function init_organizations_list() {
 			dl = new data_list(
 				'<?php echo $container_id;?>',
-				'Organization',
+				'Organization', null,
 				['Organization.Name','Organization.Address','Organization.EMail','Organization.Phone'],
 				[{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"}}],
 				250,

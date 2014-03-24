@@ -84,9 +84,10 @@ class page_exam_center_main_page extends selection_page {
 					function init_organizations_list() {
 						new data_list(
 							'<?php echo $list_container_id;?>',
-							'ExamCenter',
+							'ExamCenter', <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 							['Exam Center.Name'],
 							[],
+							-1,
 							function (list) {
 								list.addTitle("/static/selection/exam/exam_center_16.png", "Exam Centers");
 								var new_EC = document.createElement("DIV");
