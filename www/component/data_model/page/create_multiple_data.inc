@@ -1,10 +1,5 @@
 <?php 
 function createMultipleDataPage(&$page, $root_table_name, $sub_model, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data) {
-$sub_models = array();
-if ($sub_model <> null) {
-	$table = DataModel::get()->getTable($root_table_name);
-	$sub_models[$table->getModel()->getParentTable()] = $sub_model;
-}
 $known_columns = array();
 foreach ($fixed_columns as $fc) {
 	if (!isset($known_columns[$fc["table"]])) $known_columns[$fc["table"]] = array();
@@ -20,7 +15,7 @@ foreach ($fixed_data as $fd) {
 	if (!isset($known_columns[$cell["table"]])) $known_columns[$cell["table"]] = array();
 	$known_columns[$cell["table"]][$cell["column"]] = $fd["value"];
 }
-$fields = PNApplication::$instance->data_model->getAvailableFields($root_table_name, $sub_models, $known_columns);
+$fields = PNApplication::$instance->data_model->getAvailableFields($root_table_name, $sub_model, false, null, $known_columns);
 
 // remove non editable
 for ($i = 0; $i < count($fields); $i++) {

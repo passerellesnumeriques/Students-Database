@@ -16,9 +16,9 @@ class data_model extends Component {
 	 * @param string $root_table the table to start from
 	 * @return array of array(DataDisplay, DataPath)
 	 */
-	public function getAvailableFields($root_table, $sub_models = null, $known_columns = null) {
+	public function getAvailableFields($root_table, $sub_model, $go_to_submodels = false, $sub_models = null, $known_columns = null) {
 		require_once("component/data_model/DataPath.inc");
-		$paths = DataPathBuilder::searchFrom($root_table, $sub_models);
+		$paths = DataPathBuilder::searchFrom($root_table, $sub_model, $go_to_submodels, $sub_models);
 		$root = DataPathBuilder::buildPathsTree($paths);
 		$list = array();
 		if ($root <> null)

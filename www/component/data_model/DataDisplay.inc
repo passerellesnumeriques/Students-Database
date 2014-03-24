@@ -319,7 +319,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		if (!isset($this->possible_values[$sub_model])) {
 			$t = \DataModel::get()->getTable($foreign_key->foreign_table);
 			$q = \SQLQuery::create()->select($t->getName());
-			if ($sub_model <> null && $t->getModel() instanceof SubDataModel && $this->getTable()->getModel() instanceof SubDataModel && $t->getModel()->getParentTable() == $this->getTable()->getModel()->getParentTable())
+			if ($sub_model <> null && ($t->getModel() instanceof \SubDataModel) && ($this->getTable()->getModel() instanceof \SubDataModel) && $t->getModel()->getParentTable() == $this->getTable()->getModel()->getParentTable())
 				$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
 			$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
 			$q->field($t->getName(), $this->foreign_column_name, "VALUE");
@@ -764,7 +764,7 @@ class CalculationDataDisplay extends DataDisplay {
 					$q->join($talias, $col->foreign_table, array($columns[$i]=>$ft->getPrimaryKey()->name), $fta);
 					$t = $ft;
 					$talias = $fta;
-					if (!($ft->getModel() instanceof SubDataModel)) $sm = null; else $sm = $path->sub_model;
+					if (!($ft->getModel() instanceof \SubDataModel)) $sm = null; else $sm = $path->sub_model;
 				}
 			}
 			$expr .= "`".$talias."`.`".$col->name."`";
