@@ -153,7 +153,10 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 						link.session_id = t._sessions[i].event.id;
 						link.title = "See session profile";
 						link.onclick = function(){
-							//TODO
+							var pop = new popup_window("Session Profile");
+							pop.setContentFrame("/dynamic/selection/page/exam/session_profile?id="+this.session_id);
+							pop.onclose = t.reset;
+							pop.show();
 						};
 						td1.appendChild(link);
 						//Set td2
@@ -273,7 +276,9 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 				t._div_still_to_assign.removeChild(t._div_still_to_assign.firstChild);
 			if(!isNaN(t._total_assigned_to_center) && !isNaN(t._total_assigned_to_sessions)){
 				var text = parseInt(t._total_assigned_to_center) - parseInt(t._total_assigned_to_sessions);
-				t._div_still_to_assign.appendChild(document.createTextNode(text));
+				var link = t._createFigureElement(text,null,true);
+				link.style.color = text > 0 ? "red" : "green";
+				t._div_still_to_assign.appendChild(link);
 			}
 		}
 	};
@@ -334,7 +339,16 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 		b_auto_assign_to_session_and_room.title = "Automatically assign applicants to the sessions planned in this center, and also in the rooms";
 		b_auto_assign_to_session_and_room.appendChild(document.createTextNode("Assign to sessions and rooms"));
 		b_auto_assign_to_session_and_room.onclick = function(){
-			//TODO
+			var locker = lock_screen();
+			service.json("selection","applicant/automaticallyAssignToSessionsAndRooms",{EC_id:EC_id},function(res){
+				unlock_screen(locker);
+				if(!res){
+					error_dialog("An error occured, the applicants were not assigned");
+					return;
+				}
+				window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, res.assigned+" applicants have been succesfully assigned to the sessions and rooms!", [{action:"close"}], 5000));
+				t.reset();
+			});
 		};
 		td21.appendChild(b_auto_assign_to_session_and_room);
 		var b_manually_assign_to_session = document.createElement("div");
@@ -351,7 +365,50 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 	};
 	
 	t._createSession = function(){
-		//TODO
+		require("pop_select_date_and_time.js",function(){
+			service.json("selection","config/get_all_values_and_default",{name:"default_duration_exam_session"},function(res){
+				if(!res){
+					error_dialog('An error occured, functionality not available');
+					return;
+				}
+				var all_values = [];
+				for(var i = 0; i < res.all_values.length; i++){
+					var duration_in_seconds = res.all_values[i].split(" ");
+					duration_in_seconds = parseInt(duration_in_seconds[0]) * 60 * 60;
+					all_values.push({name:res.all_values[i], value:duration_in_seconds});
+				}
+				var default_duration_seconds = res.default_value.split(" ");
+				default_duration_seconds = parseInt(default_duration_seconds[0]) * 60 * 60;
+				new pop_select_date_and_time(
+					"Create an exam session",
+					null,
+					all_values,
+					default_duration_seconds,
+					t._performCreateSession
+				);
+			});
+		});
+	};
+	
+	t._performCreateSession = function(event){
+		//Process the event		
+		event.description = "Exam session";
+		event.organizer = "Selection";
+		event.participation = calendar_event_participation_unknown;
+		event.role = calendar_event_role_for_info;
+		//title, app_link will be updated by create session service
+		var locker = lock_screen();
+		service.json("selection","exam/create_session",{event:event,EC_id:EC_id},function(res){
+			unlock_screen(locker);
+			if(!res){
+				error_dialog("An error occured, your session was not created");
+				return;
+			}
+			var pop = new popup_window("Exam Session");
+			pop.setContentFrame("/dynamic/selection/page/exam/session_profile?id="+res.event_id);
+			pop.show();
+			pop.onclose = t.reset;
+		});
 	};
 	
 	t._getLoading = function(){
@@ -360,25 +417,32 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 		return e;
 	};
 	
-	t._createFigureElement = function(figure,session_id){
+	t._createFigureElement = function(figure,session_id, not_in_session){
 		var link = document.createElement("a");
 		figure = (figure == null || isNaN(figure)) ? 0 : parseInt(figure);
 		link.appendChild(document.createTextNode(figure));
 		if(figure > 0){
 			link.className= "black_link";
 			link.style.fontStyle = "italic";
-			link.title = "See / Edit / Export the list";
+			link.title = (can_manage == false || not_in_session == true) ? "See / Export the list": "See / Edit / Export the list";
 			link.onclick = function(){
 				var menu = new context_menu();
 				var see = document.createElement("div");
 				see.className = "context_menu_item";
-				see.appendChild(document.createTextNode("See / Edit List"));
+				if(can_manage == false || not_in_session == true)
+					see.appendChild(document.createTextNode("See List"));
+				else
+					see.appendChild(document.createTextNode("See / Edit List"));
 				see.onclick = function(){
-					if(!session_id)
+					if(!session_id && !not_in_session)
 						var pop = new pop_applicants_list_in_center_entity(EC_id,null,null,can_manage);
+					else if(!session_id && not_in_session)
+						var pop = new pop_applicants_list_in_center_entity(EC_id,null,null,false,"exam_session");
 					else
 						var pop = new pop_applicants_list_in_center_entity(null,session_id,null,can_manage);
 					pop.pop.onclose = t.reset;
+					if(not_in_session)
+						pop.pop.onclose = null;
 				};				
 				var b_export = document.createElement("div");
 				b_export.className = "context_menu_item";
@@ -390,14 +454,20 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 					old.className = "context_menu_item";
 					old.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 5 (.xls)";
 					old.onclick = function(){
-						export_applicant_list("excel5",null,null,EC_id,session_id,null,'name');
+						if(not_in_session)
+							export_applicant_list("excel5",null,null,EC_id,null,null,'applicant_id',"exam_session");
+						else
+							export_applicant_list("excel5",null,null,EC_id,session_id,null,'applicant_id');
 					};
 					m.addItem(old);
 					var new_excel = document.createElement("div");
 					new_excel.className = "context_menu_item";
 					new_excel.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 2007 (.xlsx)";
 					new_excel.onclick = function(){
-						export_applicant_list("excel2007",null,null,EC_id,session_id,null,'name');
+						if(not_in_session)
+							export_applicant_list("excel2007",null,null,EC_id,null,null,'applicant_id',"exam_session");
+						else
+							export_applicant_list("excel2007",null,null,EC_id,session_id,null,'applicant_id');
 					};
 					m.addItem(new_excel);				
 					m.showBelowElement(this);
@@ -410,7 +480,7 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 		return link;
 	};
 	
-	require([["typed_field.js","popup_window.js","context_menu.js","pop_applicants_list_in_center_entity.js"],["field_time.js"]],function(){
+	require([["typed_field.js","popup_window.js","context_menu.js","pop_applicants_list_in_center_entity.js","calendar_objects.js"],["field_time.js"]],function(){
 		t._init();		
 	});
 }

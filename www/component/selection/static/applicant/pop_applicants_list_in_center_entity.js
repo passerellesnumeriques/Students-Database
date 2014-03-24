@@ -1,4 +1,4 @@
-function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit){
+function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit, field_null){
 	var t = this;
 	if(EC_id != null)
 		this._mode = "exam center";
@@ -55,14 +55,14 @@ function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit
 				old.className = "context_menu_item";
 				old.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 5 (.xls)";
 				old.onclick = function(){
-					export_applicant_list("excel5",null,null,EC_id,session_id,room_id,t._order_by);
+					export_applicant_list("excel5",null,null,EC_id,session_id,room_id,t._order_by,field_null);
 				};
 				menu.addItem(old);
 				var new_excel = document.createElement("div");
 				new_excel.className = "context_menu_item";
 				new_excel.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 2007 (.xlsx)";
 				new_excel.onclick = function(){
-					export_applicant_list("excel2007",null,null,EC_id,session_id,room_id,t._order_by);
+					export_applicant_list("excel2007",null,null,EC_id,session_id,room_id,t._order_by,field_null);
 				};
 				menu.addItem(new_excel);				
 				menu.showBelowElement(button);
@@ -90,7 +90,7 @@ function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit
 		while(t._tbody.firstChild)
 			t._tbody.removeChild(t._tbody.firstChild);
 		t._tbody.appendChild(t._loading);
-		service.json("selection","exam/get_applicants_assigned_to_center_entity",{EC_id:EC_id, session_id:session_id, room_id:room_id, order_by:t._order_by},function(res){
+		service.json("selection","exam/get_applicants_assigned_to_center_entity",{EC_id:EC_id, session_id:session_id, room_id:room_id, order_by:t._order_by, field_null:field_null},function(res){
 			if(!res)
 				error_dialog("An error occured");
 			else{

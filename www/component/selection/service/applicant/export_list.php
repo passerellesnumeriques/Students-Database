@@ -40,21 +40,30 @@ class service_applicant_export_list extends Service{
 		$EC_id = @$input["center_id"];
 		$session_id = @$input["session_id"];
 		$room_id = @$input["room_id"];
+		$field_null = @$input["field_null"];
 		//Normalize data
 		$EC_id = (is_string($EC_id) && strlen($EC_id) == 0) ? null : $EC_id;
 		$session_id = (is_string($session_id) && strlen($session_id) == 0) ? null : $session_id;
 		$room_id = (is_string($room_id) && strlen($room_id) == 0) ? null : $room_id;
 		$order_by = (is_string($order_by) && strlen($order_by) == 0) ? null : $order_by;
-		$data = $component->getApplicantsAssignedToCenterEntity($EC_id,$session_id,$room_id,$order_by);
+		$data = $component->getApplicantsAssignedToCenterEntity($EC_id,$session_id,$room_id,$order_by,$field_null);
 		if($EC_id <> null && $session_id == null && $room_id == null){
 			//Export an exam center list
 			if($title == null || $file_name == null){			
 				//Get the center name
 				$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->executeSingleValue();
-				if($title == null)
-					$title = $center_name." Exam Center";
-				if($file_name == null)
-					$file_name = $center_name." applicants";
+				if($title == null){
+					if($field_null <> null)//Export the list of the applicants not assigned to any session
+						$title = $center_name." Exam Center not assigned to any session";
+					else 
+						$title = $center_name." Exam Center";
+				}
+				if($file_name == null){
+					if($field_null <> null)//Export the list of the applicants not assigned to any session
+						$file_name = $center_name." applicants not assigned to any session";
+					else
+						$file_name = $center_name." applicants";
+				}
 			}
 		} else if($EC_id <> null && $session_id <> null && $room_id == null){
 			//Export an exam session list

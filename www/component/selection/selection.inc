@@ -211,7 +211,7 @@ class selection extends Component {
 	
 	/**
 	 * @method getConfig
-	 * @return the config attribute
+	 * @return array of arrays("name"=>, "value"=>)
 	 * If the config attribute is set to null, will get its values in the database and set the config attribute
 	 */
 	public function getConfig(){
@@ -2181,6 +2181,11 @@ class selection extends Component {
 		return PNApplication::$instance->user_management->has_right("manage_applicant");
 	}
 	
+	public function canAssignApplicantToRoom(){
+		//Check the right
+		return PNApplication::$instance->user_management->has_right("manage_applicant");
+	}
+	
 	/**
 	 * Check if an applicant can be unassigned from an exam center
 	 * @param number $EC_id exam center ID
@@ -2316,9 +2321,10 @@ class selection extends Component {
 	 * @param number | NULL $session_id exam session event ID to get applicants assigned to this exam session, else NULL
 	 * @param number | NULL $room_id exam center room session ID to get applicants assigned to this room, else NULL
 	 * @param string $order_by  (optional) can be "name" or "applicant_id" the order by condition to set
+	 * @param string | NULL $field_null (optional) name of a field that shall be NULL
 	 * @return NULL | array NULL if no applicant found, else the applicants rows
 	 */
-	public function getApplicantsAssignedToCenterEntity($EC_id, $session_id = null, $room_id = null, $order_by = "applicant_id"){
+	public function getApplicantsAssignedToCenterEntity($EC_id, $session_id = null, $room_id = null, $order_by = "applicant_id", $field_null = null){
 		$q = SQLQuery::create()
 			->select("Applicant");
 		SelectionJSON::ApplicantSQL($q);
@@ -2332,6 +2338,8 @@ class selection extends Component {
 			$q->orderBy("People","last_name");
 		else if($order_by == "applicant_id")
 			$q->orderBy("Applicant","applicant_id");
+		if($field_null <> null)
+			$q->whereNull("Applicant", $field_null);
 		return $q->execute();
 	}
 	
@@ -2626,7 +2634,7 @@ class selection extends Component {
 					}
 				} else {
 					//No applicant to assign
-					return "There is no applicant to assign";
+					return "There is no applicant to assign to the sessions";
 				}
 			}
 		} else {
@@ -2698,6 +2706,171 @@ class selection extends Component {
 			SQLQuery::commitTransaction();
 			return true;
 		}
+	}
+	
+	/**
+	 * Assign applicants to exam center rooms for a given exam session automatically
+	 * @param number $EC_id exam center ID
+	 * @param NULL | number | array $priority_applicants (optional) applicants ids to be assigned with priority: the method will start with assigning these applicants to the rooms (if they are really supposed to be assigned)
+	 * @return boolean|string|array  <ul><li>false if any error occured (not allowed, not well performed)</li><li>string if nothing could be done explaining why (no slot remaining, no room, no applicant to assign)</li><li>else asssociative array (room_id => array(applicants_ids)) of applicants assigned</li></ul>
+	 */
+	public function assignApplicantsToRoomsForASessionAutomatically($EC_id, $session_id, $priority_applicants = null){
+		//Check the rights
+		if(!$this->canAssignApplicantToRoom()){
+			PNApplication::error("You are not allowed to assign any applicant to an exam room");
+			return false;
+		}
+		//Get all the rooms in this center
+		$rooms = SQLQuery::create()
+			->select("ExamCenterRoom")
+			->whereValue("ExamCenterRoom", "exam_center", $EC_id);
+		SelectionJSON::ExamCenterRoomSQL($rooms);
+		$rooms = $rooms->execute();
+		if($rooms == NULL)
+			return "The capacity of this exam center is 0 (no room yet)";
+		//Get the remaining places
+		$remaining_per_room = array();
+		$free_slot_remaining = 0;
+		foreach ($rooms as $room){
+			$assigned = SQLQuery::create()
+				->select('Applicant')
+				->count()
+				->whereValue("Applicant", "exam_center_room", $room["id"])
+				->whereValue("Applicant", "exam_session", $session_id)
+				->executeSingleValue();
+			$assigned = $assigned == null ? 0 : $assigned;
+			$remaining_per_room[$room["id"]] = $room["capacity"] - $assigned;
+			$free_slot_remaining += $remaining_per_room[$room["id"]];
+		}
+		if($free_slot_remaining == 0){
+			//No applicant can be assigned
+			return "There is no remaining slot to assign any applicant";
+		} else {
+			//Get the applicants to assign
+			$applicants_to_assign = SQLQuery::create()
+				->select("Applicant")
+				->field("Applicant","people")
+				->whereValue("Applicant", "exam_center", $EC_id)
+				->whereValue("Applicant", "exam_session", $session_id)//Only get the applicants assigned to the rooms for this session
+				->whereNull("Applicant", "exam_center_room")
+				->executeSingleField();
+			if($applicants_to_assign == null)
+				return "There is no applicant to assign to the rooms";
+			$ordered_applicants_to_assign = array();
+			if($priority_applicants <> null){
+				//Put the priority applicants at the beginning of the $applicants_to_assign_array, after checking that they really have to be assigned
+				if(!is_array($priority_applicants))
+					$priority_applicants = array($priority_applicants);				
+				foreach ($priority_applicants as $applicant_id){
+					$index = array_search($applicant_id, $applicants_to_assign);
+					if($index <> null){//else the applicant is not supposed to be assigned
+						//Put in the ordered array
+						array_push($ordered_applicants_to_assign,$applicant_id);
+						//Remove from the applicants_to_assign array
+						array_splice($applicants_to_assign,$index,1);
+					}
+				}				
+			}
+			//add the remaining applicants to assign, if any
+			if(count($applicants_to_assign) > 0){
+				foreach ($applicants_to_assign as $applicant_id)
+					array_push($ordered_applicants_to_assign,$applicant_id);
+			}
+			$to_perform = array();//Contains all the applicants to assign by room
+			foreach ($remaining_per_room as $room_id => $remaining_slots){
+				if($remaining_slots > 0){
+					//Can assign applicants
+					//Calculate the number of applicants that can be assigned to this room
+					if(count($ordered_applicants_to_assign) >= $remaining_slots){
+						$to_assign = array();
+						//Fill up the room
+						for($i = 0; $i < $remaining_slots; $i++)
+							array_push($to_assign, $ordered_applicants_to_assign[$i]);
+						$applicants_to_assign = array_slice($ordered_applicants_to_assign,$remaining_slots);
+						$to_perform[$room_id] = $to_assign;
+					} else {
+					//More remaining slots than applicants to assign
+					$to_perform[$room_id] = $ordered_applicants_to_assign;
+					$ordered_applicants_to_assign = array();
+					}
+					if(count($ordered_applicants_to_assign) == 0)
+						break;
+				}
+			}
+			//Perform
+			SQLQuery::startTransaction();
+			try {
+				foreach ($to_perform as $room_id => $applicants_ids){
+				SQLQuery::create()
+					->bypassSecurity()
+					->updateAllKeys("Applicant", $applicants_ids, array("exam_center_room" => $room_id));
+				}
+			} catch (Exception $e){
+				PNApplication::error($e);
+			}
+			if(PNApplication::has_errors()){
+				SQLQuery::rollbackTransaction();
+				return false;
+			} else {
+				SQLQuery::commitTransaction();
+				return $to_perform;
+			}
+		}
+	}
+	
+	public function assignApplicantsToRoomForSession($applicants,$session_id){
+		//Check the right
+		
+		//Check that there are remaining slots
+		
+		//Check that the applicants are assigned to a session
+		
+		//TODO
+	}
+	
+	/**
+	 * Create an exam session
+	 * @param array $event CalendarEvent
+	 * @param number $EC_id exam center ID
+	 * @return boolean|string false if any error occured, else the event ID of the event created
+	 */
+	public function createExamSession($event, $EC_id){
+		//Check the right
+		$can = PNApplication::$instance->user_management->has_right("manage_exam_center");
+		if(!$can){
+			PNApplication::error("You are not allowed to create an exam session");
+			return false;
+		}
+		//Update the event title
+		$center_name = SQLQuery::create()->select("ExamCenter")->field('ExamCenter',"name")->whereValue("ExamCenter", "id", $EC_id)->executeSingleValue();
+		$event["title"] = "Exam session, ".$center_name;
+		//Update the calendar_id
+		$event["calendar_id"] = $this->getCalendarId();
+		SQLQuery::startTransaction();
+		$continue = PNApplication::$instance->calendar->saveEvent($event);
+		if(!$continue){
+			SQLQuery::rollbackTransaction();
+			return false;
+		}
+		//Update the app link attributes
+		$event["app_link"] = "/dynamic/selection/page/exam/session_profile?id=".$event["id"];
+		$event["app_link_name"] = "This event is an Exam Session: click to see it";
+		$continue = PNApplication::$instance->calendar->saveEvent($event);
+		if(!$continue){
+			SQLQuery::rollbackTransaction();
+			return false;
+		}
+		//Insert in ExamSession table
+		try {
+			SQLQuery::create()
+				->insert("ExamSession", array("event" => $event["id"], "exam_center" => $EC_id));
+		} catch (Exception $e){
+			PNApplication::error($e);
+			SQLQuery::rollbackTransaction();
+			return false;
+		}
+		SQLQuery::commitTransaction();
+		return $event["id"];
 	}
 }
 ?>
