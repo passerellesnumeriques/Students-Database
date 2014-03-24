@@ -195,7 +195,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 * @param {Contact} contact the contact to remove
 	 */
 	this.removeContact = function (contact){
-		if (owner_id != null || owner_id > 0) {
+		if (owner_id != null && owner_id > 0) {
 			service.json("data_model","remove_row",{table:"Contact", row_key:contact.id}, function(res){
 				if (!res) return;
 				for (var i = 0; i < t.tbody.childNodes.length; ++i)

@@ -16,10 +16,15 @@ function typed_field(data,editable,config){
 	this.ondataunchanged = new Custom_Event();
 	this._datachange = function() {
 		this.onchange.fire(this);
-		if (this.getCurrentData() == this.getOriginalData())
+		if (this.hasChanged())
 			this.ondataunchanged.fire(this);
 		else
 			this.ondatachanged.fire(this);
+	};
+	this.hasChanged = function() {
+		var cur = this.getCurrentData();
+		if (cur != this.originalData) return true;
+		return !objectEquals(cur, this.originalData);
 	};
 	this.error = null;
 	this.config = config;
@@ -115,3 +120,5 @@ typed_field_multiple.prototype = new typed_field();
 typed_field_multiple.prototype.constructor = typed_field_multiple;		
 typed_field_multiple.prototype.isMultiple = function() { return true; };
 typed_field_multiple.prototype.addData = function(new_data) { alert("Function addData not implemented in typed_field_multiple: "+getObjectClassName(this)); };
+typed_field_multiple.prototype.getNbData = function() { alert("Function getNbData not implemented in typed_field_multiple: "+getObjectClassName(this)); };
+typed_field_multiple.prototype.resetData = function() { alert("Function resetData not implemented in typed_field_multiple: "+getObjectClassName(this)); };

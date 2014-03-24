@@ -88,6 +88,15 @@ field_list_of_fixed_values.prototype._create = function(data) {
 		this.addData = function(new_data) {
 			this._addElement(new_data);
 		};
+		this.getNbData = function() {
+			return this.data.length;
+		};
+		this.resetData = function() {
+			var removes = [];
+			for (var i = 0; i < this.data_elements.length; ++i) removes.push(this.data_elements[i].remove);
+			for (var i = 0; i < removes.length; ++i)
+				removes[i].onclick();
+		};
 	} else {
 		var s = "";
 		this.data = [];

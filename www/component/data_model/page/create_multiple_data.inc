@@ -151,13 +151,13 @@ function addRow() {
 	row_data.push({
 		col_id: "remove",
 		data_id: null,
-		data: "<img src='"+theme.icons_16.remove+"' style='vertical-align:middle' class='button_verysoft' onclick='removeRowButton(this);'/>"
+		data: "<span style='white-space:nowrap'><img src='"+theme.icons_16.remove+"' style='vertical-align:middle' class='button_verysoft' onclick='removeRowButton(this);'/> "+(grid.getNbRows()+1)+"-</span>"
 	});
 	for (var i = 0; i < fields.length; ++i) {
 		var data = {};
 		data.col_id = paths[i].path+"#"+fields[i].name;
 		data.data_id = null;
-		data.data = values[i];
+		data.data = objectCopy(values[i],20);
 		row_data.push(data);
 	}
 	var row = grid.addRow(row_id, row_data);
@@ -166,7 +166,12 @@ function addRow() {
 function removeRowButton(button) {
 	var row = grid.getContainingRow(button);
 	if (row._is_new) return;
+	var index = grid.getRowIndex(row);
 	grid.removeRow(row);
+	while (index < grid.getNbRows()) {
+		grid.getCellField(index,0).setData("<span style='white-space:nowrap'><img src='"+theme.icons_16.remove+"' style='vertical-align:middle' class='button_verysoft' onclick='removeRowButton(this);'/> "+(index+1)+"-</span>");
+		index++;
+	}
 }
 addRow();
 </script>

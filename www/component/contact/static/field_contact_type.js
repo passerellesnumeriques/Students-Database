@@ -29,6 +29,7 @@ field_contact_type.prototype._create = function(data) {
 			case "IM": contact_type_name = "Instant Messaging"; break;
 			}
 			t.control = new contact_type(t.config.type, contact_type_name, data.type, data.type_id, data.contacts, true, true, true, null, null);
+			t.control.onchange.add_listener(function() { t._datachange(); });
 			t.element.appendChild(t.control.table);
 		});
 		this.addData = function(new_data) {
@@ -44,6 +45,15 @@ field_contact_type.prototype._create = function(data) {
 					setTimeout(finalize,10);
 			};
 			finalize();
+		};
+		this.getNbData = function() {
+			if (!t.control) return 0;
+			return t.control.getContacts().length;
+		};
+		this.resetData = function() {
+			var nb = t.control.getContacts().length;
+			for (var i = nb-1; i >= 0; --i)
+				t.control.removeContact(t.control.getContacts()[i]);
 		};
 	} else {
 		for (var i = 0; i < data.contacts.length; ++i) {

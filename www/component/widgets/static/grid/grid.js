@@ -285,6 +285,12 @@ function grid(element) {
 				return t.columns[i];
 		return null;
 	};
+	t.getColumnByAttachedData = function(data) {
+		for (var i = 0; i < t.columns.length; ++i)
+			if (t.columns[i].attached_data == data)
+				return t.columns[i];
+		return null;
+	};
 	t.getColumnIndex = function(col) { return t.columns.indexOf(col); };
 	t.removeColumn = function(index) {
 		var col = t.columns[index];
@@ -514,6 +520,11 @@ function grid(element) {
 	};
 	t.getRow = function(index) {
 		return t.table.childNodes[index];
+	};
+	t.getRowIndex = function(row) {
+		for (var i = 0; i < t.table.childNodes.length; ++i)
+			if (t.table.childNodes[i] == row) return i;
+		return -1;
 	};
 	
 	t.removeRowIndex = function(index) {
