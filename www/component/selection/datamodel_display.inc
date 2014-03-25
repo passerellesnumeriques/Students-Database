@@ -5,6 +5,47 @@
 $category = new datamodel\DataDisplayCategory("Selection", "/static/selection/selection_16.png");
 $model->addDataCategory($category);
 
+class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
+	
+	public function __construct($category) {
+		parent::__construct("Applicant", $category);
+	}
+	
+	public function finalizeCreateData($key, $sub_model, &$table_fields, $come_from) {
+		if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id")) {
+			$applicant_id = SQLQuery::create()->select("Applicant")->expression("MAX(`applicant_id`)+1", "new_id")->executeSingleValue();
+			if ($applicant_id == null) $applicant_id = 1; // first one
+			$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "applicant_id", $applicant_id);
+		}
+	}
+	
+}
+
+class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
+	
+	public function __construct() {
+		if (PNApplication::$instance->selection->getCampaignId() == null)
+			$editable = false;
+		else
+			$editable = !PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id");
+		parent::__construct("applicant_id", "Applicant ID", !$editable);
+	}
+	
+}
+
+$display = new ApplicantTableDataDisplay($category);
+$display->addDataDisplay(new ApplicantID_DataDisplay());
+$display->addDataDisplay(new datamodel\ChoiceDataDisplay("information_session", "name", "Information Session", false, true));
+$display->addFollow("people");
+$display->addJoinFrom("people", array("types"), function($columns) {
+	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
+	return in_array("applicant", $types);
+});
+$display->addJoinToPrimary();
+$model->addTableDataDisplay($display);
+
+
+/*
 $display = new datamodel\TableDataDisplay("Applicant", $category);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("applicant_id", "Applicant ID", true));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("information_session", "name", "Information Session", false));
@@ -42,7 +83,7 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 		}
 	}
 	
-	public function createData($paths) {
+	public function createData($paths, $multiple) {
 		$path = $paths[0];
 		$people_id = $path->columns["people"];
 		if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id")) {
@@ -67,4 +108,5 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 }
 
 $model->addDataScreen(new ApplicantDataScreen($display));
+*/
 ?>

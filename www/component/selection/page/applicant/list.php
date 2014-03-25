@@ -32,6 +32,22 @@ class page_applicant_list extends selection_page {
 				<?php if (isset($input["filters"])) echo json_encode($input["filters"]); else echo "[]"; ?>,
 				500,
 				function (list) {
+					var get_creation_data = function() {
+						var data = {
+							sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>},
+							prefilled_data:[]
+						};
+						var filters = list.getFilters();
+						for (var i = 0; i < filters.length; ++i) {
+							if (filters[i].category == "Selection") {
+								if (filters[i].name == "Information Session") {
+									if (!filters[i].or)
+										data.prefilled_data.push({table:"Applicant",data:"Information Session",value:filters[i].data.value});
+								}
+							}
+						}
+						return data;
+					};
 					list.addTitle("/static/selection/applicant/applicants_16.png", "Applicants");
 					var create_applicant = document.createElement("BUTTON");
 					create_applicant.className = "button_verysoft";
@@ -39,12 +55,7 @@ class page_applicant_list extends selection_page {
 					create_applicant.onclick = function() {
 						window.top.require("popup_window.js",function() {
 							var p = new window.top.popup_window('New Applicant', theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add), "");
-							var frame = p.setContentFrame(
-								"/dynamic/people/page/popup_create_people?root=Applicant&sub_model=<?php echo PNApplication::$instance->selection->getCampaignId();?>&types=applicant&ondone=reload_list",
-								null,
-								{
-								}
-							);
+							var frame = p.setContentFrame("/dynamic/people/page/popup_create_people?types=applicant&ondone=reload_list", null, get_creation_data());
 							frame.reload_list = reload_list;
 							p.show();
 						});
@@ -56,12 +67,7 @@ class page_applicant_list extends selection_page {
 					import_applicants.onclick = function() {
 						window.top.require("popup_window.js",function() {
 							var p = new window.top.popup_window('Import Applicants', theme.icons_16._import, "");
-							var frame = p.setContentFrame(
-								"/dynamic/selection/page/applicant/popup_import?ondone=reload_list",
-								null,
-								{
-								}
-							);
+							var frame = p.setContentFrame("/dynamic/selection/page/applicant/popup_import?ondone=reload_list", null, get_creation_data());
 							frame.reload_list = reload_list;
 							p.show();
 						});
@@ -69,7 +75,7 @@ class page_applicant_list extends selection_page {
 					list.addHeader(import_applicants);
 					
 					list.makeRowsClickable(function(row){
-						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id), null, 95, 95); 
+						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id), {sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}}, 95, 95); 
 					});
 					
 				}

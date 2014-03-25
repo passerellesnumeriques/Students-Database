@@ -32,6 +32,9 @@ function Excel(container, onready) {
 	this.getActiveSheetIndex = function() {
 		return container.widget.selected;
 	};
+	this.activateSheet = function(index) {
+		container.widget.select(index);
+	};
 	
 	this._layout = function() {
 		if (t.tabs && t.tabs.selected != -1 && t.tabs.tabs[t.tabs.selected].sheet)
@@ -397,6 +400,7 @@ function ExcelSheetColumn(sheet, index) {
 		this.header.style.textAlign = "center";
 		this.header.style.verticalAlign = "middle";
 		this.header.style.fontWeight = "bold";
+		this.header.style.whiteSpace = "nowrap";
 		this.header.style.zIndex = 3;
 		this.header.style.height = "16px";
 		this.header.style.width = this.width+"px";

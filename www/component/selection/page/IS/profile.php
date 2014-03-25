@@ -31,7 +31,7 @@ class page_IS_profile extends selection_page {
 		</div>
 		
 	<?php
-		$this->IS_profile($this,"IS_profile_".$name,$id,"save_IS_button","remove_IS_button",$read_only);
+		$this->IS_profile("IS_profile_".$name,$id,"save_IS_button","remove_IS_button",$read_only);
 	}
 	
 	/**
@@ -42,7 +42,7 @@ class page_IS_profile extends selection_page {
 	 * @param string $remove_IS_button the id of the remove button (must have been added to the page header before calling this function)
 	 * @param boolean $read_only true if the page must be set in uneditable mode
 	 */
-	public function IS_profile(&$this,$container_id,$id,$save_IS_button, $remove_IS_button, $read_only){
+	public function IS_profile($container_id,$id,$save_IS_button, $remove_IS_button, $read_only){
 		$this->add_javascript("/static/widgets/header_bar.js");
 		$this->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('/static/selection/IS/IS_16.png', 'Information Session Profile');");
 		require_once("component/selection/SelectionJSON.inc");

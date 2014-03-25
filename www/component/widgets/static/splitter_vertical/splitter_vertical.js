@@ -24,15 +24,28 @@ function splitter_vertical(element, position) {
 	t._position = function() {
 		var w = t.element.clientWidth;
 		var h = t.element.clientHeight;
-		var sw = 7;
-		var x = Math.floor(w*t.position - sw/2);
-		setWidth(t.part1, x);
-		setHeight(t.part1, h);
-		t.separator.style.left = x+"px";
-		t.separator.style.height = h+"px";
-		t.part2.style.left = (x+sw)+"px";
-		setWidth(t.part2, w-x-sw-1);
-		setHeight(t.part2, h);
+		if (t.part1.style.visibility == "visible") {
+			if (t.part2.style.visibility == "visible") {
+				// all visible
+				var sw = 7;
+				var x = Math.floor(w*t.position - sw/2);
+				setWidth(t.part1, x);
+				setHeight(t.part1, h);
+				t.separator.style.left = x+"px";
+				t.separator.style.height = h+"px";
+				t.part2.style.left = (x+sw)+"px";
+				setWidth(t.part2, w-x-sw-1);
+				setHeight(t.part2, h);
+			} else {
+				// only left part
+				setWidth(t.part1, w);
+				setHeight(t.part1, h);
+			}
+		} else {
+			// only right part
+			setWidth(t.part2, w);
+			setHeight(t.part2, h);
+		}
 	};
 	
 	t.element.style.position = "relative";
@@ -44,8 +57,10 @@ function splitter_vertical(element, position) {
 	t.part1.style.position = "absolute";
 	t.part1.style.top = "0px";
 	t.part1.style.left = "0px";
+	t.part1.style.visibility = "visible";
 	t.part2.style.position = "absolute";
 	t.part2.style.top = "0px";
+	t.part2.style.visibility = "visible";
 	element.insertBefore(t.separator, t.part2);
 	layout.invalidate(t.element);
 	
@@ -80,10 +95,12 @@ function splitter_vertical(element, position) {
 	};
 	
 	t.hide_left = function() {
-		var w = t.element.offsetWidth;
-		var h = t.element.offsetHeight;
+		var w = t.element.clientWidth;
+		var h = t.element.clientHeight;
 		t.part1.style.visibility = 'hidden';
+		t.part1.style.top = "-10000px";
 		t.separator.style.visibility = 'hidden';
+		t.separator.style.left = '-1000px';
 		t.part2.style.left = '0px';
 		t.part2.style.top = '0px';
 		t.part2.style.width = w+'px';
@@ -92,13 +109,15 @@ function splitter_vertical(element, position) {
 	};
 	t.show_left = function() {
 		t.part1.style.visibility = 'visible';
+		t.part1.style.top = "0px";
 		t.separator.style.visibility = 'visible';
 		layout.invalidate(t.element);
 	};
 	t.hide_right = function() {
-		var w = t.element.offsetWidth;
-		var h = t.element.offsetHeight;
+		var w = t.element.clientWidth;
+		var h = t.element.clientHeight;
 		t.part2.style.visibility = 'hidden';
+		t.part2.style.top = "-10000px";
 		t.separator.style.visibility = 'hidden';
 		t.part1.style.left = '0px';
 		t.part1.style.top = '0px';
@@ -108,6 +127,7 @@ function splitter_vertical(element, position) {
 	};
 	t.show_right = function() {
 		t.part2.style.visibility = 'visible';
+		t.part2.style.top = "0px";
 		t.separator.style.visibility = 'visible';
 		layout.invalidate(t.element);
 	};

@@ -142,6 +142,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	t.addFilter = function(filter) {
 		t._filters.push(filter);
 	};
+	t.getFilters = function() { return t._filters; };
 	
 	t.getField = function(category, name) {
 		for (var i = 0; i < t._available_fields.length; ++i)

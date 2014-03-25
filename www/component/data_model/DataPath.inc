@@ -107,8 +107,9 @@ class DataPathBuilder {
 					}
 				}
 				$p = new DataPath_Join($path, $col, $t, $sm);
-				$new_sub_models = $sub_models;
+				$new_sub_models = array();
 				if ($sm <> null) $new_sub_models[$t->getModel()->getParentTable()] = $sm;
+				if ($sub_models <> null) $new_sub_models = array_merge($new_sub_models, $sub_models);
 				DataPathBuilder::searchFromPath($p, $done, $final_paths, $new_sub_models, $go_to_submodels);
 				unset($t);
 			} catch (Exception $e) {
@@ -135,6 +136,8 @@ class DataPathBuilder {
 					if ($path->table->getModel()->getParentTable() <> $t->getModel()->getParentTable())
 						continue; // different sub model
 					$sm = $path->sub_model;
+				} else if ($sub_models <> null && isset($sub_models[$t->getModel()->getParentTable()])) {
+					$sm = $sub_models[$t->getModel()->getParentTable()];
 				} else {
 					// did we already go through this sub model
 					$p = $path->parent;
@@ -163,9 +166,9 @@ class DataPathBuilder {
 					}
 				} else {
 					$p = new DataPath_Join($path, $col, $col->table, $sm);
-					$new_sub_models = $sub_models;
-					if ($sm <> null)
-						$new_sub_models[$t->getModel()->getParentTable()] = $sm;
+					$new_sub_models = array();
+					if ($sm <> null) $new_sub_models[$t->getModel()->getParentTable()] = $sm;
+					if ($sub_models <> null) $new_sub_models = array_merge($new_sub_models, $sub_models);
 					DataPathBuilder::searchFromPath($p, $done, $final_paths, $new_sub_models, $go_to_submodels);
 				}
 			}

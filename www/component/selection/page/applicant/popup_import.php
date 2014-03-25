@@ -23,11 +23,7 @@ function manual_import(ev) {
 			new window.top.excel_import(p, container, function(imp) {
 				p.showPercent(95,95);
 				imp.init();
-				imp.loadImportDataURL(
-					"/dynamic/people/page/popup_create_people?root=Applicant&sub_model=<?php echo PNApplication::$instance->selection->getCampaignId();?>&types=applicant&ondone=import_done&multiple=true",
-					{
-					}
-				);
+				imp.loadImportDataURL("/dynamic/people/page/popup_create_people?types=applicant&ondone=import_done&multiple=true", <?php echo $_POST["input"];?>);
 				imp.frame_import.import_done = window.frameElement.<?php echo $_GET["ondone"];?>;
 				imp.uploadFile(ev);
 				popup.close();

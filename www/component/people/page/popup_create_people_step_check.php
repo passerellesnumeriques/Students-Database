@@ -6,6 +6,8 @@ class page_popup_create_people_step_check extends Page {
 	public function execute() {
 		$input = json_decode($_POST["input"], true);
 		$peoples = $input["peoples"];
+		$sub_models = @$input["sub_models"];
+		$multiple = isset($input["multiple"]);
 		$ok = array();
 		$to_check = array();
 		foreach ($peoples as $people) {
@@ -50,6 +52,8 @@ class page_popup_create_people_step_check extends Page {
 			if (!popup.freezer) popup.freeze();
 			window.popup.removeAllButtons();
 			var data = {peoples:peoples};
+			data.sub_models = <?php echo json_encode($sub_models);?>;
+			<?php if ($multiple) echo "data.multiple = true;";?>
 			<?php 
 			if (isset($input["ondone"])) echo "data.ondone = ".json_encode($input["ondone"]).";";
 			else if (isset($input["donotcreate"])) echo "data.donotcreate = ".json_encode($input["donotcreate"]).";";

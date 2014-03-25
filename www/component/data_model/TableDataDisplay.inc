@@ -86,6 +86,11 @@ class TableDataDisplay {
 	public function canJoinToPrimary() {
 		return $this->join;
 	}
+
+	/**
+	 * @param \TablesToUpdate $table_fields
+	 */
+	public function finalizeCreateData($key, $sub_model, &$table_fields, $come_from) {}
 	
 }
 

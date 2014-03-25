@@ -1,5 +1,5 @@
 <?php 
-function createMultipleDataPage(&$page, $root_table_name, $sub_model, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data) {
+function createMultipleDataPage(&$page, $root_table_name, $sub_model, $sub_models, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data) {
 $known_columns = array();
 foreach ($fixed_columns as $fc) {
 	if (!isset($known_columns[$fc["table"]])) $known_columns[$fc["table"]] = array();
@@ -15,12 +15,12 @@ foreach ($fixed_data as $fd) {
 	if (!isset($known_columns[$cell["table"]])) $known_columns[$cell["table"]] = array();
 	$known_columns[$cell["table"]][$cell["column"]] = $fd["value"];
 }
-$fields = PNApplication::$instance->data_model->getAvailableFields($root_table_name, $sub_model, false, null, $known_columns);
+$fields = PNApplication::$instance->data_model->getAvailableFields($root_table_name, $sub_model, false, $sub_models, $known_columns);
 
 // remove non editable
 for ($i = 0; $i < count($fields); $i++) {
 	$data = $fields[$i][0];
-	if (!$data->isEditable()) {
+	if (!$data->isEditableForNewData()) {
 		array_splice($fields, $i, 1);
 		$i--;
 	}

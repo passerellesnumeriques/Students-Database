@@ -186,8 +186,24 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.addOkButton = function(onok) {
 		t.addIconTextButton(theme.icons_16.ok, "Ok", 'ok', onok);
 	};
+	t.addFinishButton = function(onfinish) {
+		t.addIconTextButton(theme.icons_16.ok, "Finish", 'finish', onfinish);
+	};
 	t.addCancelButton = function(oncancel) {
 		t.addIconTextButton(theme.icons_16.cancel, "Cancel", 'cancel', function() { if (oncancel) oncancel(); t.close(); });
+	};
+	t.addCloseButton = function(onclose) {
+		t.addIconTextButton(theme.icons_16.cancel, "Close", 'close', function() { if (onclose) onclose(); t.close(); });
+	};
+	t.addNextButton = function(onnext) {
+		var span = document.createElement("SPAN");
+		span.appendChild(document.createTextNode("Next"));
+		var img = document.createElement("IMG");
+		img.src = theme.icons_16.forward;
+		img.style.verticalAlign = "bottom";
+		img.style.marginLeft = "3px";
+		span.appendChild(img);
+		t.addButton(span, "next", onnext);
 	};
 	/** Add 2 buttons to the window: Ok and Cancel. When Cancel is pressed, the window is closed.
 	 * @method popup_window#addOkCancelButtons
@@ -209,21 +225,6 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.addYesNoButtons = function(onyes) {
 		t.addIconTextButton(theme.icons_16.yes, "Yes", 'yes', onyes);
 		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { t.close(); });
-	};
-	
-	t.addNextButton = function(onnext) {
-		var span = document.createElement("SPAN");
-		span.appendChild(document.createTextNode("Next"));
-		var img = document.createElement("IMG");
-		img.src = theme.icons_16.forward;
-		img.style.verticalAlign = "bottom";
-		img.style.marginLeft = "3px";
-		span.appendChild(img);
-		t.addButton(span, "next", onnext);
-	};
-
-	t.addFinishButton = function(onfinish) {
-		t.addIconTextButton(theme.icons_16.ok, "Finish", 'finish', onfinish);
 	};
 	
 	t.removeAllButtons = function() {
@@ -566,6 +567,8 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.freeze = function(freeze_content) {
 		if (t.freezer) {
 			t.freezer.usage_counter++;
+			if (freeze_content)
+				t.set_freeze_content(freeze_content);
 			return;
 		}
 		t.freezer = t.table.ownerDocument.createElement("DIV");

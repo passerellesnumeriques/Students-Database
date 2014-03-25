@@ -87,32 +87,32 @@ class TableDataValues {
 	public function getColumns() { return $this->columns_values; }
 }
 
-function existingDataScreenFromKey(&$page, $root_table_name, $sub_model, $row_key) {
+function existingDataScreenFromKey(&$page, $root_table_name, $sub_model, $row_key, $sub_models = null) {
 	$row = SQLQuery::create()->select($root_table_name)->selectSubModelForTable($root_table_name, $sub_model)->whereKey($root_table_name, $row_key)->executeSingleRow();
-	return existingDataScreenFromRow($page, $root_table_name, $sub_model, $row, null);
+	return existingDataScreenFromRow($page, $root_table_name, $sub_model, $row, $sub_models);
 }
-function existingDataScreenFromRow(&$page, $root_table_name, $sub_model, $row) {
+function existingDataScreenFromRow(&$page, $root_table_name, $sub_model, $row, $sub_models = null) {
 	$values = new DataValues();
 	foreach ($row as $col=>$val)
 		$values->addTableColumnValue($root_table_name, $col, $val);
 	$prefilled_values = new DataValues();
-	return dataScreen($page, $root_table_name, $sub_model, $values, $prefilled_values, null);
+	return dataScreen($page, $root_table_name, $sub_model, $sub_models, $values, $prefilled_values, null);
 }
 
-function newDataScreen(&$page, $root_table_name, $sub_model, $fixed_values, $prefilled_values, &$structure_name) {
+function newDataScreen(&$page, $root_table_name, $sub_model, $sub_models, $fixed_values, $prefilled_values, &$structure_name) {
 	$structure_name = $page->generateID();
 	$html = "";
 	$html .= "<script type='text/javascript'>\n";
 	$html .= "$structure_name = [];\n";
 	$html .= "</script>\n";
-	$html .= dataScreen($page, $root_table_name, $sub_model, $fixed_values, $prefilled_values, $structure_name);
+	$html .= dataScreen($page, $root_table_name, $sub_model, $sub_models, $fixed_values, $prefilled_values, $structure_name);
 	return $html;
 }
 
 
-function dataScreen(&$page, $root_table_name, $sub_model, $values, $prefilled_values, $structure_name) {
+function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, $prefilled_values, $structure_name) {
 	require_once("component/data_model/DataPath.inc");
-	$paths = DataPathBuilder::searchFrom($root_table_name, $sub_model);
+	$paths = DataPathBuilder::searchFrom($root_table_name, $sub_model, false, $sub_models);
 	$root = DataPathBuilder::buildPathsTree($paths);
 	
 	$sections = array();

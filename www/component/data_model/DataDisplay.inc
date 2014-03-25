@@ -39,6 +39,10 @@ abstract class DataDisplay {
 	 * @return boolean true if this data is editable
 	 */
 	public abstract function isEditable();
+	/** Indicates if this data can be entered by the user when creating a new data
+	 * @return boolean true if this data is editable
+	 */
+	public function isEditableForNewData() { return $this->isEditable(); }
 	/** Return a list of elements to lock when the user wants to edit this data
 	 * @param number|null $sub_model sub model instance
 	 * @return array list of elements to lock, each element being an associative array with at least 'table', and optionally 'column'. Optionally also, 'lock_each_row' (boolean) indicates if the entire column should be locked when editing multiple entries, or each row should be locked individually.
@@ -189,16 +193,18 @@ class SimpleDataDisplay extends DataDisplay {
 	protected $display_name;
 	/** @var boolean indicates if we can edit this column */
 	protected $readonly;
+	protected $editable_for_new;
 	
 	/**
 	 * @param string $column_name name of the column
 	 * @param string $display_name name to display
 	 * @param boolean $readonly indicates if we can edit this column
 	 */
-	public function __construct($column_name, $display_name, $readonly = false) {
+	public function __construct($column_name, $display_name, $readonly = false, $editable_for_new = null) {
 		$this->column_name = $column_name;
 		$this->display_name = $display_name;
 		$this->readonly = $readonly;
+		$this->editable_for_new = $editable_for_new === null ? !$readonly : $editable_for_new; 
 	}
 	
 	public function getDisplayName() {
@@ -224,6 +230,10 @@ class SimpleDataDisplay extends DataDisplay {
 	
 	public function isEditable() {
 		if ($this->readonly) return false;
+		return $this->getTable()->mayModify();
+	}
+	public function isEditableForNewData() {
+		if (!$this->editable_for_new) return false;
 		return $this->getTable()->mayModify();
 	}
 	public function isSortable() {
@@ -297,6 +307,7 @@ class ChoiceDataDisplay extends DataDisplay {
 	protected $foreign_column_name;
 	/** @var boolean indicates if this can be edited or not */
 	protected $editable;
+	protected $editable_for_new;
 	
 	/**
 	 * @param string $foreign_key_name column's name containing the foreign key
@@ -304,11 +315,12 @@ class ChoiceDataDisplay extends DataDisplay {
 	 * @param string $display_name name of this data
 	 * @param boolean $editable indicates if this can be edited or not
 	 */
-	public function __construct($foreign_key_name, $foreign_column_name, $display_name, $editable = true) {
+	public function __construct($foreign_key_name, $foreign_column_name, $display_name, $editable = true, $editable_for_new = null) {
 		$this->display_name = $display_name;
 		$this->foreign_key_name = $foreign_key_name;
 		$this->foreign_column_name = $foreign_column_name;
 		$this->editable = $editable;
+		$this->editable_for_new = $editable_for_new === null ? $editable : $editable_for_new; 
 	}
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array($this->foreign_key_name); }
@@ -366,6 +378,7 @@ class ChoiceDataDisplay extends DataDisplay {
 	}
 	
 	public function isEditable() { return $this->editable; }
+	public function isEditableForNewData() { return $this->editable_for_new; }
 	public function getEditLocks($sub_model) {
 		if (!$this->editable) return array();
 		return array(

@@ -6,6 +6,13 @@ class page_profile extends Page {
 		$this->add_javascript("/static/widgets/frame_header.js");
 		theme::css($this, "frame_header.css");
 		
+		$sub_models = null;
+		if (isset($_POST) && isset($_POST["input"])) {
+			$input = json_decode($_POST["input"], true);
+			if (isset($input["sub_models"]))
+				$sub_models = $input["sub_models"];
+		}
+		
 		$page = @$_GET["page"];
 		$people_id = $_GET["people"];
 		
@@ -35,13 +42,16 @@ class page_profile extends Page {
 		usort($pages, "pages_sort");
 		if ($page == null) $page = $pages[0]->getURL($people_id);
 ?>
-<div id='profile_page' page='<?php echo $page;?>'>
+<div id='profile_page' page='<?php echo $page; if ($sub_models <> null) echo "&sub_models=".json_encode($sub_models);?>'>
 <?php 
 foreach ($pages as $p) {
 	echo "<div";
 	echo " icon=\"".htmlentities($p->getIcon())."\"";
 	echo " text=\"".htmlentities($p->getName())."\"";
-	echo " link=\"".htmlentities($p->getURL($people_id))."\"";
+	echo " link=\"".htmlentities($p->getURL($people_id));
+	if ($sub_models <> null)
+		echo "&sub_models=".json_encode($sub_models);
+	echo "\"";
 	echo " tooltip=\"".htmlentities($p->getTooltip())."\"";
 	echo "></div>";
 }

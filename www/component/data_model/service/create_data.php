@@ -10,8 +10,10 @@ class service_create_data extends Service {
 	public function execute(&$component, $input) {
 		$root_table_name = $input["root"];
 		$sub_model = @$input["sub_model"];
+		$sub_models = @$input["sub_models"];
+		$multiple = isset($input["multiple"]);
 		require_once("component/data_model/DataPath.inc");
-		$paths = DataPathBuilder::searchFrom($root_table_name, $sub_model);
+		$paths = DataPathBuilder::searchFrom($root_table_name, $sub_model, false, $sub_models);
 		$to_create = $input["paths"];
 		for ($i = 0; $i < count($paths); $i++)
 			$paths[$i]->{"found"} = false;
@@ -21,7 +23,6 @@ class service_create_data extends Service {
 					$paths[$i]->found = true;
 					$paths[$i]->{"columns"} = isset($tc["columns"]) ? $tc["columns"] : array();
 					$paths[$i]->{"value"} = $tc["value"];
-					$paths[$i]->{"multiple"} = isset($tc["multiple"]);
 					break;
 				}
 		for ($i = 0; $i < count($paths); $i++)
@@ -31,7 +32,7 @@ class service_create_data extends Service {
 			}
 		$root = DataPathBuilder::buildPathsTree($paths);
 		SQLQuery::startTransaction();
-		$key = $this->createData($root);
+		$key = $this->createData($root, $multiple);
 		if (PNApplication::has_errors())
 			SQLQuery::rollbackTransaction();
 		else {
@@ -40,16 +41,16 @@ class service_create_data extends Service {
 		}
 	}
 	
-	private function createData($path) {
+	private function createData($path, $multiple) {
 		$come_from = null;
 		if ($path instanceof DataPath_Join && $path->isReverse())
 			$come_from = $path->foreign_key->name;
 		$found = false;
-		if (!$path->multiple)
+		if (!$multiple)
 			foreach (DataModel::get()->getDataScreens() as $screen) {
 				$tables = $screen->getTables();
 				if (count($tables) == 1 && $tables[0] == $path->table->getName()) {
-					$key = $screen->createData(array($path));
+					$key = $screen->createData(array($path), $multiple);
 					$found = true;
 					break;
 				}				
@@ -57,7 +58,7 @@ class service_create_data extends Service {
 		if (!$found) {
 			$display = DataModel::get()->getTableDataDisplay($path->table->getName());
 			$screen = new datamodel\GenericDataScreen($display);
-			$key = $screen->createData(array($path));
+			$key = $screen->createData(array($path), $multiple);
 		}
 		return $key;
 	}

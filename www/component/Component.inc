@@ -88,8 +88,9 @@ abstract class Component {
 		}
 		
 		set_error_handler(function($severity, $message, $filename, $lineno) {
-			if (error_reporting() == 0) return;
+			if (error_reporting() == 0) return true;
 			PNApplication::error("PHP Error: ".$message." in ".$filename.":".$lineno);
+			return true;
 		});
 		// generate the page
 		$page->generate($this, $path);
@@ -194,8 +195,9 @@ abstract class Component {
 			$done = new ServiceDone();
 			register_shutdown_function("service_shutdown_catch", $done);
 			set_error_handler(function($severity, $message, $filename, $lineno) {
-				if (error_reporting() == 0) return;
+				if (error_reporting() == 0) return true;
 				PNApplication::error("PHP Error: ".$message." in ".$filename.":".$lineno);
+				return true;
 			});
 			ob_start();
 			try {
@@ -259,10 +261,11 @@ function service_shutdown_catch($done) {
 	$error = error_get_last();
 	if ($error <> null)
 		$msg.= " Last error was in ".$error["file"]." line ".$error["line"].": ".$error["message"];
-	PNApplication::error($msg);
-	PNApplication::print_json_result(null);
 	$content = ob_get_clean();
-	echo $content;
+	if ($content <> "")
+		$msg .= "<br/>Output generated at failing time:<br/>".htmlentities($content);
+	PNApplication::error_html($msg);
+	PNApplication::print_json_result(null);
 }
 
 ?>

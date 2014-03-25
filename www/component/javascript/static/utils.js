@@ -142,6 +142,7 @@ function valueCopy(value, obj_depth) {
 function objectEquals(o1, o2, done) {
 	if (typeof o1 != typeof o2) return false;
 	if (typeof o1 != 'object') return o1 == o2;
+	if (o1 == null) return o2 == null;
 	var c1 = getObjectClassName(o1);
 	var c2 = getObjectClassName(o2);
 	if (c1 != c2) return false;
@@ -467,10 +468,10 @@ function URL(s) {
 	this.host = this.host.toLowerCase();
 	this.path = this.path.toLowerCase();
 	
-	/** create a string representing the URL
-	 * @method URL#toString
-	 */
-	this.toString = function() {
+}
+URL.prototype = {
+	/** create a string representing the URL */
+	toString: function() {
 		var s;
 		if (this.protocol) {
 			s = this.protocol+"://"+this.host;
@@ -486,8 +487,8 @@ function URL(s) {
 		if (this.hash)
 			s += "#"+this.hash;
 		return s;
-	};
-}
+	}	
+};
 
 /** Event
  * @constructor

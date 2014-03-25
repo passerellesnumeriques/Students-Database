@@ -235,7 +235,7 @@ class ContactsScreen extends datamodel\DataScreen {
 			echo "<script type='text/javascript'>$structure_name.push({path:".json_encode($paths[1]->getString()).",addresses:$var,getValue:function(){return this.addresses.getAddresses();},validate:function(){return null;}});</script>";
 	}
 	
-	public function createData($paths) {
+	public function createData($paths, $multiple) {
 		$contacts = $paths[0]->value;
 		$addresses = $paths[1]->value;
 		for ($i = 0; $i < count($contacts); $i++) if (isset($contacts[$i]["id"])) unset($contacts[$i]["id"]);
@@ -358,7 +358,7 @@ class ContactPointDataScreen extends datamodel\DataScreen {
 		}
 	}
 	
-	public function createData($paths) {
+	public function createData($paths, $multiple) {
 		$path = $paths[0];
 		SQLQuery::create()->insert("ContactPoint", array(
 			"people"=>$path->columns["people"],

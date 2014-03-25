@@ -266,25 +266,6 @@ var students_list = new data_list(
 					});
 				};
 				students_list.addHeader(create_student);
-
-				var create_students = document.createElement("DIV");
-				create_students.className = "button_verysoft";
-				create_students.innerHTML = "<img src='/static/application/icon.php?main=/static/curriculum/batch_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Students";
-				create_students.onclick = function() {
-					window.top.require("popup_window.js",function() {
-						var p = new window.top.popup_window('New Students', theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "");
-						var frame = p.setContentFrame(
-							"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list&multiple=true",
-							null,
-							{
-								prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
-							}
-						);
-						frame.reload_list = reload_list;
-						p.showPercent(95,95);
-					});
-				};
-				students_list.addHeader(create_students);
 			}
 		}
 

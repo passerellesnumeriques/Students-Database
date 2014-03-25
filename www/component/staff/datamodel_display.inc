@@ -120,7 +120,7 @@ class StaffDataScreen extends datamodel\DataScreen {
 		echo "</script>";
 	}
 	
-	public function createData($paths) {
+	public function createData($paths, $multiple) {
 		$path = $paths[0];
 		$people_id = $path->columns["people"];
 		SQLQuery::create()->insert("Staff", array("people"=>$people_id));

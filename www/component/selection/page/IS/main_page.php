@@ -72,6 +72,7 @@ class page_IS_main_page extends selection_page {
 									"/dynamic/people/page/popup_create_people?root=Applicant&sub_model=<?php echo PNApplication::$instance->selection->getCampaignId();?>&types=applicant&ondone=reload_list",
 									null,
 									{
+										sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}
 									}
 								);
 								frame.reload_list = function() { list.reloadData(); };

@@ -10,7 +10,7 @@ namespace datamodel {
 		
 		public abstract function generate(&$page, $paths, $values, $prefilled_values, $structure_name);
 		
-		public abstract function createData($paths);
+		public abstract function createData($paths, $multiple);
 		
 	}
 	
@@ -46,7 +46,7 @@ namespace datamodel {
 			$html = "<table>";
 			$has_something = false;
 			foreach ($list as $data) {
-				$can_edit = $data->isEditable();
+				$can_edit = $is_new ? $data->isEditableForNewData() : $data->isEditable();
 				if ($is_new && !$can_edit) continue;
 				foreach ($data->getHandledColumns() as $c) {
 					if (isset($fixed_columns[$c]))
@@ -109,7 +109,7 @@ namespace datamodel {
 			return $html;
 		}
 	
-		public function createData($paths) {
+		public function createData($paths, $multiple) {
 			$path = $paths[0];
 			$come_from = ($path instanceof \DataPath_Join) && $path->isReverse() ? $path->foreign_key->name : null;
 			// list of DataDisplay
@@ -148,6 +148,7 @@ namespace datamodel {
 				}
 				$data->saveData($key, $val, $path->sub_model, $to_update, $come_from, $join);
 			}
+			$this->display->finalizeCreateData($key, $path->sub_model, $to_update, $come_from);
 			$keys = $to_update->execute(true);
 			if (isset($keys[$path->table->getName()][$path->sub_model][$key]))
 				$key = $keys[$path->table->getName()][$path->sub_model][$key];
@@ -156,7 +157,7 @@ namespace datamodel {
 					$child->columns[$child->foreign_key->name] = $key;
 			
 			// check DataScreen for children
-			if (!$path->multiple)
+			if (!$multiple)
 			foreach (\DataModel::get()->getDataScreens() as $screen) {
 				$tables = $screen->getTables();
 				$paths = array();
@@ -168,7 +169,7 @@ namespace datamodel {
 					}
 				}
 				if (count($paths) == count($tables)) {
-					$screen->createData($paths);
+					$screen->createData($paths, $multiple);
 					// remove children handled by the screen
 					foreach ($paths as $p) {
 						for ($i = 0; $i < count($path->children); $i++)
@@ -189,11 +190,11 @@ namespace datamodel {
 					}
 				}
 				$found = false;
-				if (!$path->multiple)
+				if (!$multiple)
 				foreach (\DataModel::get()->getDataScreens() as $screen) {
 					$tables = $screen->getTables();
 					if (count($tables) == 1 && $tables[0] == $child->table->getName()) {
-						$screen->createData(array($child));
+						$screen->createData(array($child), $multiple);
 						$found = true;
 						break;
 					}				
@@ -201,7 +202,7 @@ namespace datamodel {
 				if (!$found) {
 					$display = \DataModel::get()->getTableDataDisplay($child->table->getName());
 					$screen = new GenericDataScreen($display);
-					$screen->createData(array($child));
+					$screen->createData(array($child), $multiple);
 				}
 			}
 			return $key;

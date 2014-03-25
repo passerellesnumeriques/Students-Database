@@ -28,11 +28,11 @@ class page_exam_center_profile extends selection_page {
 		</div>
 		
 	<?php
-		$this->exam_center_profile($this,"exam_center_".$name,$id,"save_center_button","remove_center_button",$read_only);
+		$this->exam_center_profile("exam_center_".$name,$id,"save_center_button","remove_center_button",$read_only);
 	}
 	
 	
-	public function exam_center_profile(&$this,$container_id,$id,$save_exam_center_button, $remove_exam_center_button,$read_only){
+	public function exam_center_profile($container_id,$id,$save_exam_center_button, $remove_exam_center_button,$read_only){
 		$this->add_javascript("/static/widgets/header_bar.js");
 		$this->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('', 'Exam Center Profile');");
 		require_once("component/selection/SelectionJSON.inc");
