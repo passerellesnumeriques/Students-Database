@@ -25,10 +25,10 @@ class page_exam_subject extends selection_page {
 			<div id = '<?php echo $container_id; ?>' style = "overflow:auto" layout = "fill"></div>
 		</div>
 	<?php
-		$this->exam_subject($this,$container_id,$id,$campaign_id,$read_only,"exam_subject_header");
+		$this->exam_subject($container_id,$id,$campaign_id,$read_only,"exam_subject_header");
 	}
 	
-	public function exam_subject(&$this,$container_id,$id,$campaign_id,$read_only,$header_id){
+	public function exam_subject($container_id,$id,$campaign_id,$read_only,$header_id){
 		require_once("component/data_model/Model.inc");
 		require_once("component/selection/SelectionJSON.inc");
 		if(!PNApplication::$instance->user_management->has_right("see_exam_subject",true))
