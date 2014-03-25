@@ -2033,6 +2033,59 @@ class selection extends Component {
 		return $applicants;
 	}
 	
+	/**
+	 * Check that a room can be removed without any consequence on the applicants assignment
+	 * First check that no applicant is assigned to this room in any exam session
+	 * Then check that without this room, the center capacity still complies with the number of applicants assigned to the exam sessions in this center
+	 * @param number $room_id exam center room ID
+	 * @return array with three attributes:<ul><li>[0]: boolean, true if the room can be removed</li><li>[1]: NULL | array with the rows of the applicants assigned to the room</li><li>[2]: NULL | associative array: sessions IDs are the keys (and set only when removing the room would create a problem on the center capacity), the value is the number of applicants assigned to this session</ul></li></ul>
+	 */
+	public function canRoomBeRemovedWithoutConsequencesOnApplicantsAssignment($room_id){
+		$can = true;
+		$error_applicants = null;
+		$error_capacity = null;
+		//Check that there is no applicant assigned
+		$assigned_to_room = SQLQuery::create()
+			->bypassSecurity()
+			->select("Applicant")
+			->whereValue("Applicant","exam_center_room",$room_id);
+		SelectionJSON::ApplicantSQL($assigned_to_room);
+		$assigned_to_room = $assigned_to_room->execute();
+		if($assigned_to_room <> null)
+			$can = false;
+		$error_applicants = $assigned_to_room;
+		
+		//Check that the room capacity wont affect the applicants assigned per session
+		$room_data = SQLQuery::create()->bypassSecurity()->select("ExamCenterRoom")->whereValue("ExamCenterRoom", "id", $room_id)->executeSingleRow();
+		$EC_id = $room_data["exam_center"];
+		$room_capacity = $room_data["capacity"];
+		$center_capacity = $this->getExamCenterCapacity($EC_id);
+		$sessions_in_center = SQLQuery::create()->select("ExamSession")
+			->whereValue("ExamSession", "exam_center", $EC_id);
+		SelectionJSON::ExamSessionSQL($sessions_in_center);
+		$sessions_in_center = $sessions_in_center ->execute();
+		if($sessions_in_center <> null){
+			$number_applicants_assigned_per_session = array();
+			foreach ($sessions_in_center as $session){
+				$count = SQLQuery::create()
+					->bypassSecurity()
+					->select("Applicant")
+					->count()
+					->whereValue("Applicant", "exam_session", $session["event"])
+					->executeSingleValue();
+				$count = $count == null ? 0 : $count;
+				$number_applicants_assigned_per_session[$session["event"]] = $count;
+			}
+			foreach ($number_applicants_assigned_per_session as $session_id => $count_assigned){
+				if($center_capacity - $room_capacity < $count_assigned){
+					$can = false;
+					if($error_capacity == null) $error_capacity = array();
+					$error_capacity[$session_id] = $count_assigned;
+				}
+			}
+		}
+		return array($can, $error_applicants, $error_capacity);
+	}
 	public function saveExamCenter($id, $row_center, $rows_partners, $rows_contacts_points, $rooms_ids_to_remove, $rooms_to_update, $rooms_to_insert){
 		//Check the rights
 		$rights = $this->canUpdateFromRightAndStep("exam_center", "manage_exam_center", "You are not allowed to manage the exam centers");
@@ -2318,7 +2371,7 @@ class selection extends Component {
 	 * Get the applicants assigned to a center entity (exam center | exam session | exam center room)
 	 * If no parameter given, get all the applicants
 	 * @param number | NULL $EC_id exam center ID to get applicants assigned to this exam center, else NULL
-	 * @param number | NULL $session_id exam session event ID to get applicants assigned to this exam session, else NULL
+	 * @param number | NULL $session_id exam session event ID to get applicants assigned to this exam session, or assigned to a room for a session, else NULL
 	 * @param number | NULL $room_id exam center room session ID to get applicants assigned to this room, else NULL
 	 * @param string $order_by  (optional) can be "name" or "applicant_id" the order by condition to set
 	 * @param string | NULL $field_null (optional) name of a field that shall be NULL
@@ -2332,7 +2385,10 @@ class selection extends Component {
 			$q->whereValue("Applicant", "exam_center",$EC_id);
 		else if(!isset($EC_id) && isset($session_id) && !isset($room_id))
 			$q->whereValue("Applicant", "exam_session",$session_id);
-		else if(!isset($EC_id) && !isset($session_id) && isset($room_id))
+		else if(!isset($EC_id) && isset($session_id) && isset($room_id)){
+			$q->whereValue("Applicant", "exam_center_room",$room_id);
+			$q->whereValue("Applicant", "exam_session",$session_id);
+		} else if (!isset($EC_id) && !isset($session_id) && isset($room_id))
 			$q->whereValue("Applicant", "exam_center_room",$room_id);
 		if($order_by == "name")
 			$q->orderBy("People","last_name");
@@ -2356,7 +2412,7 @@ class selection extends Component {
 	}
 	
 	/**
-	 * Get the applicants assigned by room for a giiven exam center
+	 * Get the applicants assigned by room for a given exam center
 	 * @param number $EC_id exam center ID
 	 * @return NULL|array <ul><li>NULL if the ExamCenter has no room</li><li>else array with three attributes<ul><li><code>name</code> exam center room name</li><li><code>capacity</code> exam center room capacity</li><li><code>assigned</code> result of getApplicantsAssignedToCenterEntity (room mode) method for this room</li></ul></li></ul>
 	 */
@@ -2373,6 +2429,30 @@ class selection extends Component {
 				"name" => $room["name"],
 				"capacity" => $room["capacity"],
 				"applicants" => $this->getApplicantsAssignedToCenterEntity(null,null,$room["id"])
+			);
+		}
+		return $res;
+	}
+	
+	/**
+	 * Get the applicants assigned by room for a given exam session
+	 * @param number $session_id
+	 * @return NULL|array NULL if no room in this exam center, else associative array (rooms ids are the keys) with for each room:<ul><li><code>name</code> room name</li><li><code>capacity</code> room capacity</li><li><code>applicants</code> array |NULL NULL if no applicant assigned, else rows for applicants assigned</li></ul>
+	 */
+	public function getApplicantsAssignedByRoomForSession($session_id){
+		$EC_id = SQLQuery::create()->select("ExamSession")->field("ExamSession","exam_center")->whereValue('ExamSession', "event", $session_id)->executeSingleValue();
+		$rooms = SQLQuery::create()
+			->select("ExamCenterRoom")
+			->whereValue("ExamCenterRoom", "exam_center", $EC_id);
+		SelectionJSON::ExamCenterRoomSQL($rooms);
+		$rooms = $rooms->execute();
+		if($rooms == null) return null;
+		$res = array();
+		foreach ($rooms as $room){
+			$res[$room["id"]] = array(
+					"name" => $room["name"],
+					"capacity" => $room["capacity"],
+					"applicants" => $this->getApplicantsAssignedToCenterEntity(null,$session_id,$room["id"])
 			);
 		}
 		return $res;
@@ -2758,12 +2838,12 @@ class selection extends Component {
 				return "There is no applicant to assign to the rooms";
 			$ordered_applicants_to_assign = array();
 			if($priority_applicants <> null){
-				//Put the priority applicants at the beginning of the $applicants_to_assign_array, after checking that they really have to be assigned
+				//Put the priority applicants at the beginning of the $ordered_applicants_to_assign, after checking that they really have to be assigned
 				if(!is_array($priority_applicants))
 					$priority_applicants = array($priority_applicants);				
 				foreach ($priority_applicants as $applicant_id){
 					$index = array_search($applicant_id, $applicants_to_assign);
-					if($index <> null){//else the applicant is not supposed to be assigned
+					if($index != false){//else the applicant is not supposed to be assigned
 						//Put in the ordered array
 						array_push($ordered_applicants_to_assign,$applicant_id);
 						//Remove from the applicants_to_assign array
@@ -2775,7 +2855,7 @@ class selection extends Component {
 			if(count($applicants_to_assign) > 0){
 				foreach ($applicants_to_assign as $applicant_id)
 					array_push($ordered_applicants_to_assign,$applicant_id);
-			}
+			}			
 			$to_perform = array();//Contains all the applicants to assign by room
 			foreach ($remaining_per_room as $room_id => $remaining_slots){
 				if($remaining_slots > 0){
@@ -2786,7 +2866,7 @@ class selection extends Component {
 						//Fill up the room
 						for($i = 0; $i < $remaining_slots; $i++)
 							array_push($to_assign, $ordered_applicants_to_assign[$i]);
-						$applicants_to_assign = array_slice($ordered_applicants_to_assign,$remaining_slots);
+						$ordered_applicants_to_assign = array_slice($ordered_applicants_to_assign,$remaining_slots);
 						$to_perform[$room_id] = $to_assign;
 					} else {
 					//More remaining slots than applicants to assign

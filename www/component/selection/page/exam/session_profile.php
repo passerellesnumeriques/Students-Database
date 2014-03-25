@@ -4,8 +4,11 @@ class page_exam_session_profile extends selection_page {
 	public function get_required_rights() { return array("see_exam_center_detail"); }
 	public function execute_selection_page(&$page){
 		$id = $_GET["id"];
+		$EC_id = SQLQuery::create()->select("ExamSession")->field("ExamSession","exam_center")->whereValue("ExamSession", "event", $id)->executeSingleValue();
+		$center_name = SQLQuery::create()->select("ExamCenter")->field("ExamCenter","name")->whereValue("ExamCenter", "id", $EC_id)->executeSingleValue();
 	?>
 		<div id = exam_session_profile_container style = "width:100%; height:100%">
+			<div style = "text-align:center; font-size:large;"><?php echo $center_name." Exam Center - ";?>Exam Session</div>
 			<div>
 				<div id = "date_container" style = "display:inline-block;"></div>
 				<div id = "supervisors_container" style = "display:inline-block;"></div>
@@ -31,7 +34,7 @@ class page_exam_session_profile extends selection_page {
 			$can_remove = false;
 		}
 		require_once 'component/selection/SelectionJSON.inc';
-		$session = SelectionJSON::ExamSessionFromID($id);
+		$session = SelectionJSON::ExamSessionFromID($id);		
 		?>
 		<script type = "text/javascript">
 		require("exam_session_profile.js",function(){

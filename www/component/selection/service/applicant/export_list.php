@@ -12,7 +12,7 @@ class service_applicant_export_list extends Service{
 				<li><code>title</code> The title to set to the List</li>
 				<li><code>center_id</code> The exam center ID if the aim is to export an exam center applicants list or exam session applicants list</li>
 				<li><code>room_id</code> The exam center room ID if the aim is to export an exam center room applicants list</li>
-				<li><code>session_id</code> The exam session ID if the aim is to export an exam session applicants list</li>
+				<li><code>session_id</code> The exam session ID if the aim is to export an exam session applicants list, or to export a room list for a given exam session</li>
 				<li><code>order_by</code> Can be "name" or "applicant_id". By default, the data is ordered by applicant ID</li>
 				<li><code>file_name</code> The name to set to the exported file</li>
 			</ul>
@@ -51,7 +51,7 @@ class service_applicant_export_list extends Service{
 			//Export an exam center list
 			if($title == null || $file_name == null){			
 				//Get the center name
-				$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->executeSingleValue();
+				$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->field("ExamCenter","name")->whereValue("ExamCenter", "id", $EC_id)->executeSingleValue();
 				if($title == null){
 					if($field_null <> null)//Export the list of the applicants not assigned to any session
 						$title = $center_name." Exam Center not assigned to any session";
@@ -69,7 +69,7 @@ class service_applicant_export_list extends Service{
 			//Export an exam session list
 			if($title == null || $file_name == null){
 				//Get the center name
-				$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->executeSingleValue();
+				$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->whereValue("ExamCenter", "id", $EC_id)->executeSingleValue();
 				//Get the event start and end
 				$ev = SQLQuery::create()
 					->bypassSecurity()
@@ -88,6 +88,33 @@ class service_applicant_export_list extends Service{
 					$session_title = date("m",$start)."_".date("d",$start)."_".date("y",$start)." (".date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
 					$file_name = "Session ".$session_title." in ".$center_name." applicants";
 				}			
+			}
+		}else if($EC_id == null && $session_id <> null & $room_id <> null){
+			//Export an exam room list, for a given session
+			if($title == null || $file_name == null){
+				//Get the room name
+				$room_name = SQLQuery::create()->bypassSecurity()->select("ExamCenterRoom")->field("ExamCenterRoom","name")->executeSingleValue();
+				//Get the center name
+				$temp_EC_id = SQLQuery::create()->select("ExamSession")->field("ExamSession",'exam_center')->whereValue("ExamSession", "event", $session_id)->executeSingleValue();
+				$center = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->field("ExamCenter","name")->whereValue("ExamCenter", "id", $temp_EC_id)->executeSingleValue();
+				//Get the event start and end
+				$ev = SQLQuery::create()
+					->bypassSecurity()
+					->select("CalendarEvent")
+					->field("CalendarEvent","start")
+					->field("CalendarEvent","end")
+					->whereValue("CalendarEvent", "id", $input["session_id"])
+					->executeSingleRow();
+				$start = $ev["start"];
+				$end = $ev["end"];
+				if($title == null){
+					$session_title = date("m",$start)."/".date("d",$start)."/".date("y",$start)." (".date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$title = "Room ".$room_name." - Session ".$session_title." in ".$center_name." Exam center";
+				}
+				if($file_name == null){
+					$session_title = date("m",$start)."_".date("d",$start)."_".date("y",$start)." (".date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$file_name = "Room ".$room_name." Session ".$session_title." in ".$center_name." applicants";
+				}
 			}
 		} else {
 			echo "false";

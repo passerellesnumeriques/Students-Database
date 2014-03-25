@@ -72,7 +72,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	};
 	
 	t._setRooms = function(){
-		t.manage_rooms = new manage_exam_center_room(t.div_room,data.rooms,can_edit,config_name_room);
+		t.manage_rooms = new manage_exam_center_room(t.div_room,data.rooms,id,can_edit,config_name_room);
 	};
 	
 	t._setISLinkedField = function(){
@@ -116,7 +116,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 				var applicants_assigned = null;
 				for(var i = 0; i < rooms.length; i++)
 					ids.push(rooms[i].id);
-				service.json("selection","exam/get_applicants_assigned_to_rooms",{ids:ids},function(res){
+				service.json("selection","exam/get_assigned_to_sessions_for_center",{ids:ids},function(res){
 					if(!res) {
 						error_dialog("This functionality is not available");
 						return;

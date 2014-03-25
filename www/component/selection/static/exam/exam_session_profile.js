@@ -12,6 +12,7 @@ function exam_session_profile(container,date_container, supervisor_container, li
 	t._init = function(){
 		t._refreshDateContent();
 		date_container.style.margin = "15px";
+		t._refreshListContent();
 	};
 	
 	t._refreshDateContent = function(){
@@ -48,8 +49,12 @@ function exam_session_profile(container,date_container, supervisor_container, li
 								default_duration_seconds,
 								function(event){
 									session.event = event;
-									//TODO save!
-									t._refreshDateContent();
+									service.json("calendar","save_event",{event:session.event},function(r){
+										if(!r)
+											error_dialog("An error occured, the session date was not updated");
+										else
+											t._refreshDateContent();
+									});									
 								},
 								null,
 								session.event
@@ -89,7 +94,136 @@ function exam_session_profile(container,date_container, supervisor_container, li
 		t._date_content.appendChild(row2);
 	};
 	
-	require([["typed_field.js"],["pop_select_date_and_time.js","section.js","field_time.js"]],function(){
+	t._refreshListContent = function(){
+		while(list_container.firstChild)
+			list_container.removeChild(list_container.firstChild);
+		list_container.appendChild(t._getLoading());
+		service.json("selection","applicant/get_assigned_to_rooms_for_session",{session_id:session.event.id,count:true},function(res){
+			if(!res){
+				error_dialog("An error occured");
+				return;
+			}
+			if(list_container.firstChild)
+				list_container.removeChild(list_container.firstChild);
+			if(res.rooms == null){
+				var div = document.createElement("div");
+				div.appendChild(document.createTextNode("No exam room"));
+				div.style.fontStyle = "italic";
+			} else {
+				t._populateList(res.rooms);
+			}
+		});
+	};
+	
+	t._populateList = function(rooms){
+		t._total_assigned = 0;
+		var table = document.createElement("table");
+		//Set the header
+		var tr_head = document.createElement("tr");
+		var th_rooms = document.createElement("th");
+		var th_applicants = document.createElement("th");
+		th_rooms.appendChild(document.createTextNode('Rooms'));
+		th_applicants.appendChild(document.createTextNode("Applicants Assigned"));
+		tr_head.appendChild(th_rooms);
+		tr_head.appendChild(th_applicants);
+		table.appendChild(tr_head);
+		//Set the body
+		for(var i = 0; i < rooms.length; i++){
+			var tr = document.createElement("tr");
+			var td1 = document.createElement("td");
+			var td2 = document.createElement("td");
+			tr.appendChild(td1);
+			tr.appendChild(td2);
+			table.appendChild(tr);
+			//Set the room name in td1
+			td1.appendChild(document.createTextNode(rooms[i].name));
+			//Set the number of applicants in the td2
+			td2.appendChild(t._createFigureElement(rooms[i].applicants, rooms[i].id, false));
+			t._total_assigned += parseInt(rooms[i].applicants);
+		}
+		//Set the total row
+		var tr_total = document.createElement("tr");
+		var td1 = document.createElement("td");
+		var td2 = document.createElement("td");
+		tr_total.appendChild(td1);
+		tr_total.appendChild(td2);
+		table.appendChild(tr_total);
+		td1.appendChild(document.createTextNode("Total:"));
+		td1.style.textAlign = "right";
+		td2.appendChild(document.createTextNode(t._createFigureElement(t._total_assigned, null, false)));
+		list_container.appendChild(table);
+	};
+	
+	t._createFigureElement = function(figure,room_id, not_in_room){
+		var link = document.createElement("a");
+		figure = (figure == null || isNaN(figure)) ? 0 : parseInt(figure);
+		link.appendChild(document.createTextNode(figure));
+		if(figure > 0){
+			link.className= "black_link";
+			link.style.fontStyle = "italic";
+			link.title = (can_manage == false || not_in_room == true) ? "See / Export the list": "See / Edit / Export the list";
+			link.onclick = function(){
+				var menu = new context_menu();
+				var see = document.createElement("div");
+				see.className = "context_menu_item";
+				if(can_manage == false || not_in_room == true)
+					see.appendChild(document.createTextNode("See List"));
+				else
+					see.appendChild(document.createTextNode("See / Edit List"));
+				see.onclick = function(){
+					if(!room_id && !not_in_room)
+						var pop = new pop_applicants_list_in_center_entity(null,session.event.id,null,can_manage);
+					else if(!room_id && not_in_room)
+						var pop = new pop_applicants_list_in_center_entity(null,session.event.id,null,false,"exam_center_room");
+					else
+						var pop = new pop_applicants_list_in_center_entity(null,session.event.id,room_id,can_manage);
+					pop.pop.onclose = t.reset;
+					if(not_in_room)
+						pop.pop.onclose = null;
+				};				
+				var b_export = document.createElement("div");
+				b_export.className = "context_menu_item";
+				b_export.innerHTML = "<img src = '"+theme.icons_16._export+"'/> Export List";
+				b_export.onclick = function(){
+					var m = new context_menu();
+//					m.addTitleItem(null,"Export Format");
+					var old = document.createElement("div");
+					old.className = "context_menu_item";
+					old.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 5 (.xls)";
+					old.onclick = function(){
+						if(not_in_room)
+							export_applicant_list("excel5",null,null,null,session.event.id,null,'applicant_id',"exam_center_room");
+						else
+							export_applicant_list("excel5",null,null,null,session.event.id,room_id,'applicant_id');
+					};
+					m.addItem(old);
+					var new_excel = document.createElement("div");
+					new_excel.className = "context_menu_item";
+					new_excel.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 2007 (.xlsx)";
+					new_excel.onclick = function(){
+						if(not_in_session)
+							export_applicant_list("excel2007",null,null,null,session.event.id,null,'applicant_id',"exam_center_room");
+						else
+							export_applicant_list("excel2007",null,null,null,session.event.id,room_id,'applicant_id');
+					};
+					m.addItem(new_excel);				
+					m.showBelowElement(this);
+				};
+				menu.addItem(see);
+				menu.addItem(b_export,true);
+				menu.showBelowElement(this);
+			};
+		}
+		return link;
+	};
+	
+	t._getLoading = function(){
+		var e = document.createElement("div");
+		e.innerHTML = "<img src = '"+theme.icons_16.loading+"'/>";
+		return e;
+	};
+	
+	require([["typed_field.js"],["pop_select_date_and_time.js","section.js","field_time.js","context_menu.js"]],function(){
 		t._init();
 	});
 }

@@ -2,9 +2,9 @@ function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit
 	var t = this;
 	if(EC_id != null)
 		this._mode = "exam center";
-	else if(session_id != null)
+	else if(session_id != null && room_id == null)
 		this._mode = "exam session";
-	else if (room_id != null)
+	else if (room_id != null && session_id != null)
 		this._mode = "exam center room";
 	
 	t._init = function(){
@@ -120,14 +120,7 @@ function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit
 				//Set the name td
 				td1.appendChild(document.createTextNode(" - "));
 				var link = document.createElement("a");
-				link.appendChild(document.createTextNode(applicants[i].applicant_id+", "+applicants[i].last_name.uniformFirstLetterCapitalized()));
-				if(typeof applicants[i].middle_name == "string" && applicants[i].middle_name.checkVisible())
-					link.appendChild(document.createTextNode(", "+applicants[i].middle_name.uniformFirstLetterCapitalized()));
-				link.appendChild(document.createTextNode(", "+applicants[i].first_name.uniformFirstLetterCapitalized()));
-				if(typeof applicants[i].sex == "string" && applicants[i].sex.checkVisible())
-					link.appendChild(document.createTextNode(", "+applicants[i].sex));
-				if(typeof applicants[i].birthdate == "string" && applicants[i].birthdate.checkVisible())
-					link.appendChild(document.createTextNode(", "+applicants[i].birthdate));
+				link.appendChild(document.createTextNode(getApplicantMainDataDisplay(applicants[i])));
 				link.className = "black_link";
 				link.people_id = applicants[i].people_id;
 				link.title = "See profile";
