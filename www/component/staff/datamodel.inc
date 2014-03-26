@@ -33,6 +33,4 @@ $model->addTable("StaffPosition")
 	->addInsertAccess("manage_staff", true)
 	->addRemoveAccess("manage_staff", true)
 	;
-
-include "datamodel_display.inc";
 ?>

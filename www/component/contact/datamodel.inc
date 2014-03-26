@@ -656,6 +656,4 @@ $model->addTable("ContactPoint")
 		return $final;
 	})
 	;
-	
-include("datamodel_display.inc");
 ?>

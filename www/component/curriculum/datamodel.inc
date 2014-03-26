@@ -148,6 +148,4 @@ $model->addTable("CurriculumSubject")
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
 	;
- 	
- include "datamodel_display.inc";
 ?>

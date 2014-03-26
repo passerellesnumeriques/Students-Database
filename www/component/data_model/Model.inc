@@ -15,12 +15,15 @@ class DataModel {
 	 * @return DataModel the data model */
 	public static function &get() {
 		if (DataModel::$model == null) {
-			$model = new DataModel();
+			DataModel::$model = new DataModel();
 			$done = array();
 			foreach (PNApplication::$instance->components as $c) {
-				DataModel::_get_component($c, $done, $model);
+				DataModel::_get_component($c, $done, DataModel::$model);
 			}
-			DataModel::$model = &$model;
+			$done = array();
+			foreach (PNApplication::$instance->components as $c) {
+				DataModel::_get_component_display($c, $done, DataModel::$model);
+			}
 		}
 		return DataModel::$model;
 	}
@@ -48,7 +51,16 @@ class DataModel {
 			}
 		}
 	}
-
+	private static function _get_component_display($c, &$done, &$model) {
+		if (in_array($c->name, $done)) return;
+		array_push($done, $c->name);
+		foreach ($c->dependencies() as $dep)
+			DataModel::_get_component_display(PNApplication::$instance->components[$dep], $done, $model);
+		$file = "component/".$c->name."/datamodel_display.inc";
+		if (file_exists($file))
+			include $file;
+	}
+	
 	protected $tables = array();
 	private $sub_models = array();
 	private $data_categories = array();
@@ -94,6 +106,16 @@ class DataModel {
 		$this->tables[$key_table]->_key_for_submodel($sm);
 		array_push($this->sub_models, $sm);
 		return $sm;
+	}
+	
+	/**
+	 * @param string $key_table
+	 * @return SubDataModel
+	 */
+	public function &getSubModel($key_table) {
+		for ($i = 0; $i < count($this->sub_models); $i++)
+			if ($this->sub_models[$i]->getParentTable() == $key_table)
+			return $this->sub_models[$i];
 	}
 	
 	/** Returns the table if access is allowed.

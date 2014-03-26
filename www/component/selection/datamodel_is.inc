@@ -45,6 +45,4 @@ $sm->addTable("InformationSessionContactPoint")
 	->addInsertAccess("manage_information_session",true)
 	->addRemoveAccess("manage_information_session",true)
 	;
-
-include "datamodel_is_display.inc";
 ?>

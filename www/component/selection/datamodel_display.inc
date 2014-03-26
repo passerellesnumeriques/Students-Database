@@ -1,6 +1,7 @@
 <?php 
 /* @var $model DataModel */
 /* @var $sm SubDataModel */
+$sm = $model->getSubModel("SelectionCampaign");
 
 $category = new datamodel\DataDisplayCategory("Selection", "/static/selection/selection_16.png");
 $model->addDataCategory($category);
@@ -109,4 +110,7 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 
 $model->addDataScreen(new ApplicantDataScreen($display));
 */
+
+include "datamodel_is_display.inc";
+include "datamodel_exam_display.inc";
 ?>

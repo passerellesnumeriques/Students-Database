@@ -26,6 +26,4 @@ $model->addTable("StudentClass")
 	->addInsertAccess("manage_batches", true)
 	->addRemoveAccess("manage_batches", true)
 	;
-	
-include "datamodel_display.inc";
 ?>

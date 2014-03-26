@@ -66,6 +66,4 @@ $model->addTable("CalendarEventFrequency")
 	->addString("by_setpos", 0, 100, true, false)
 	->addString("week_start", 0, 2, true, false)
 	;
-
-include("datamodel_display.inc");
 ?>

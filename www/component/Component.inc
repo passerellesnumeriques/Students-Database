@@ -263,7 +263,7 @@ function service_shutdown_catch($done) {
 		$msg.= " Last error was in ".$error["file"]." line ".$error["line"].": ".$error["message"];
 	$content = ob_get_clean();
 	if ($content <> "")
-		$msg .= "<br/>Output generated at failing time:<br/>".htmlentities($content);
+		$msg .= "<br/>Output generated at failing time:<br/>".str_replace("\n", "<br/>", htmlentities($content));
 	PNApplication::error_html($msg);
 	PNApplication::print_json_result(null);
 }

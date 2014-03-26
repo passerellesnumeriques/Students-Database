@@ -91,7 +91,8 @@ class PNApplication {
 			$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';if (typeof layout != 'undefined') layout.invalidate(e); return false;\">details</a>";
 			$message .= "<ul style='margin:0px;visibility:hidden;position:absolute;top:-10000px' id='ex_".count(PNApplication::$errors)."'>";
 			foreach ($e->getTrace() as $trace)
-				$message .= "<li>".htmlentities($trace["file"]." line ".$trace["line"])."</li>";
+				if (isset($trace["file"]))
+					$message .= "<li>".htmlentities($trace["file"]." line ".$trace["line"])."</li>";
 			$message .= "</ul>";
 			array_push(PNApplication::$errors, $message);
 		}

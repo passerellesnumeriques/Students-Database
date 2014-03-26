@@ -124,6 +124,4 @@ $model->addTable("People")
 		return true;
 	})
 	;
-	
-include "datamodel_display.inc";
 ?>

@@ -38,7 +38,6 @@ $sm->addTable("SelectionCampaignConfig")
 	->addWriteAccess("manage_selection_campaign",true)
 	->setPrimary("name");
 
-include "datamodel_display.inc";
 include "datamodel_is.inc";
 include "datamodel_exam.inc";
 	

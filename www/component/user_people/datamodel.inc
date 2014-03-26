@@ -6,6 +6,4 @@ $model->addTable("UserPeople")
 	->setPrimary("user")
 	->addIndex("people")
 	->allowReadAccess();
-
-include "datamodel_display.inc";
 ?>

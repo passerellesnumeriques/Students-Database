@@ -47,6 +47,4 @@ $model->addTable("RoleRights")
 	->addInsertAccess("manage_roles",true)
 	->addRemoveAccess("manage_roles",true)
 	;
-
-include "datamodel_display.inc";
 ?>
