@@ -18,7 +18,7 @@ class page_exam_main_page extends selection_page {
 		<div id = "container" style = "width:100%; height:100%">
 			<div id = "page_header" icon = "/static/selection/exam/exam_16.png" title = "Entrance Examinations">
 				<a class = "button_verysoft" href = "/dynamic/selection/page/selection_main_page"><img src = "<?php echo theme::$icons_16['back'];?>"/> Back to selection</a>
-				<a class = "button_verysoft" href = "/dynamic/selection/page/exam/center_main_page"><img src = "/static/selection/exam/exam_center_16.png" style = "vertical-align:bottom;"/> Exam centers</a>
+				<a class = "button_verysoft" href = "/dynamic/selection/page/exam/center_main_page"><img src = "/static/selection/exam/exam_center_16.png" style = "vertical-align:bottom;"/> Exam centers</a>				
 				<a class = "button_verysoft" href = "/dynamic/selection/page/exam/sessions">Exam Sessions</a>
 				<a class = "button_verysoft" href = "/dynamic/selection/page/exam/results">Exam Results</a>
 			</div>

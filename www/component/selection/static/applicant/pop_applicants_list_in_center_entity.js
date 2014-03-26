@@ -1,4 +1,4 @@
-function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit, field_null){
+function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit, field_null, onready){
 	var t = this;
 	if(EC_id != null)
 		this._mode = "exam center";
@@ -15,6 +15,8 @@ function pop_applicants_list_in_center_entity(EC_id,session_id,room_id, can_edit
 		t._setTableHeader();
 		t._refreshList("name");
 		t.pop.show();
+		if(onready)
+			onready(this);
 	};
 	t._order_by = "name";
 	

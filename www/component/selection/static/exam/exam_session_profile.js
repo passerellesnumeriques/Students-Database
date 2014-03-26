@@ -1,4 +1,4 @@
-function exam_session_profile(container,date_container, supervisor_container, list_container, session, can_manage){
+function exam_session_profile(container,date_container, supervisor_container, list_container,actions_container, session, can_manage){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -8,11 +8,14 @@ function exam_session_profile(container,date_container, supervisor_container, li
 		supervisor_container = document.getElementById(supervisor_container);
 	if(typeof list_container == "string")
 		list_container = document.getElementById(list_container);
+	if(typeof actions_container == "string")
+		actions_container = document.getElementById(actions_container);
 	
 	t._init = function(){
 		t._refreshDateContent();
 		date_container.style.margin = "15px";
 		t._refreshListContent();
+		t._refreshFooter();
 	};
 	
 	t._refreshDateContent = function(){
@@ -110,15 +113,22 @@ function exam_session_profile(container,date_container, supervisor_container, li
 				div.appendChild(document.createTextNode("No exam room"));
 				div.style.fontStyle = "italic";
 			} else {
-				t._populateList(res.rooms);
+				t._populateList(res.rooms, res.count_session);
 			}
 		});
 	};
 	
-	t._populateList = function(rooms){
+	t._populateList = function(rooms, total_applicants_in_session){
 		t._total_assigned = 0;
-		var table = document.createElement("table");
 		//Set the header
+		var header = document.createElement("div");
+		header.appendChild(document.createTextNode("Applicants assigned to this session:"));
+		var all = t._createFigureElement(total_applicants_in_session, null, false);
+		all.style.marginLeft = "3px";
+		header.appendChild(all);
+		list_container.appendChild(header);
+		var table = document.createElement("table");
+		//Set the column headers
 		var tr_head = document.createElement("tr");
 		var th_rooms = document.createElement("th");
 		var th_applicants = document.createElement("th");
@@ -132,6 +142,8 @@ function exam_session_profile(container,date_container, supervisor_container, li
 			var tr = document.createElement("tr");
 			var td1 = document.createElement("td");
 			var td2 = document.createElement("td");
+			td1.style.textAlign = "center";
+			td2.style.textAlign = "center";
 			tr.appendChild(td1);
 			tr.appendChild(td2);
 			table.appendChild(tr);
@@ -150,8 +162,70 @@ function exam_session_profile(container,date_container, supervisor_container, li
 		table.appendChild(tr_total);
 		td1.appendChild(document.createTextNode("Total:"));
 		td1.style.textAlign = "right";
-		td2.appendChild(document.createTextNode(t._createFigureElement(t._total_assigned, null, false)));
+		td2.style.textAlign = "center";
+		td2.appendChild(document.createTextNode(t._total_assigned));
 		list_container.appendChild(table);
+		//Set the non-assigned row
+		total_applicants_in_session = parseInt(total_applicants_in_session);
+		var not_assigned = total_applicants_in_session - t._total_assigned;
+		var footer = document.createElement("div");		
+		footer.appendChild(document.createTextNode("Applicants assigned to this session but not to any room:"));
+		var link = t._createFigureElement(not_assigned,null,true);
+		link.style.marginLeft = "3px";
+		link.style.color = not_assigned > 0 ? "red" : "green";
+		footer.appendChild(link);
+		list_container.appendChild(footer);
+	};
+	
+	t._refreshFooter = function(){
+		while(actions_container.firstChild)
+			actions_container.removeChild(actions_container.firstChild);
+		var table = document.createElement("table");
+		var tr_head = document.createElement("tr");
+		var tr_buttons = document.createElement("tr");
+		var th = document.createElement("th");
+		var td_auto = document.createElement("td");
+		var td_manual = document.createElement("td");
+		tr_head.appendChild(th);
+		th.colSpan = 2;
+		tr_buttons.appendChild(td_auto);
+		tr_buttons.appendChild(td_manual);
+		table.appendChild(tr_head);
+		table.appendChild(tr_buttons);
+		actions_container.appendChild(table);
+		th.appendChild(document.createTextNode("Assign to rooms"));
+		var b_assign_auto = document.createElement("div");
+		b_assign_auto.className = "button";
+		b_assign_auto.appendChild(document.createTextNode("Automatic"));
+		b_assign_auto.onclick = function(){
+			service.json("selection","applicant/automaticallyAssignToExamRooms",{session_id:session.event.id},function(res){
+				if(!res){
+					error_dialog("An error occured, the applicants were not assigned");
+					return;
+				}
+				if(res.error != null){
+					error_dialog(res.error);
+					return;
+				}
+				window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, res.assigned+" applicants have been succesfully assigned to the rooms!", [{action:"close"}], 5000));
+				t._refreshListContent();
+			});
+		};
+		td_auto.appendChild(b_assign_auto);
+		var b_assign_manually = document.createElement("div");
+		b_assign_manually.className = 'button';
+		b_assign_manually.appendChild(document.createTextNode("Manual"));
+		b_assign_manually.session_id = session.event.id;
+		b_assign_manually.onclick = function(){
+			var session_id = this.session_id;
+			require("popup_window.js",function(){
+				var pop = new popup_window("Manually assign applicants to rooms");
+				pop.onclose = t._refreshListContent;
+				pop.setContentFrame("/dynamic/selection/page/applicant/manually_assign_to_exam_entity?mode=room&session="+session_id);
+				pop.show();
+			});
+		};
+		td_manual.appendChild(b_assign_manually);
 	};
 	
 	t._createFigureElement = function(figure,room_id, not_in_room){
@@ -171,15 +245,16 @@ function exam_session_profile(container,date_container, supervisor_container, li
 				else
 					see.appendChild(document.createTextNode("See / Edit List"));
 				see.onclick = function(){
+					var onPopReady = function(p){
+						if(!not_in_room)
+							p.pop.onclose = t._refreshListContent;
+					};	
 					if(!room_id && !not_in_room)
-						var pop = new pop_applicants_list_in_center_entity(null,session.event.id,null,can_manage);
+						var pop = new pop_applicants_list_in_center_entity(null,session.event.id,null,can_manage,null,onPopReady);
 					else if(!room_id && not_in_room)
-						var pop = new pop_applicants_list_in_center_entity(null,session.event.id,null,false,"exam_center_room");
+						var pop = new pop_applicants_list_in_center_entity(null,session.event.id,null,false,"exam_center_room",onPopReady);
 					else
-						var pop = new pop_applicants_list_in_center_entity(null,session.event.id,room_id,can_manage);
-					pop.pop.onclose = t.reset;
-					if(not_in_room)
-						pop.pop.onclose = null;
+						var pop = new pop_applicants_list_in_center_entity(null,session.event.id,room_id,can_manage,null,onPopReady);								
 				};				
 				var b_export = document.createElement("div");
 				b_export.className = "context_menu_item";
@@ -191,17 +266,20 @@ function exam_session_profile(container,date_container, supervisor_container, li
 					old.className = "context_menu_item";
 					old.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 5 (.xls)";
 					old.onclick = function(){
+						menu.hide();
 						if(not_in_room)
 							export_applicant_list("excel5",null,null,null,session.event.id,null,'applicant_id',"exam_center_room");
-						else
+						else{
 							export_applicant_list("excel5",null,null,null,session.event.id,room_id,'applicant_id');
+						}
 					};
 					m.addItem(old);
 					var new_excel = document.createElement("div");
 					new_excel.className = "context_menu_item";
 					new_excel.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 2007 (.xlsx)";
 					new_excel.onclick = function(){
-						if(not_in_session)
+						menu.hide();
+						if(not_in_room)
 							export_applicant_list("excel2007",null,null,null,session.event.id,null,'applicant_id',"exam_center_room");
 						else
 							export_applicant_list("excel2007",null,null,null,session.event.id,room_id,'applicant_id');
@@ -223,7 +301,7 @@ function exam_session_profile(container,date_container, supervisor_container, li
 		return e;
 	};
 	
-	require([["typed_field.js"],["pop_select_date_and_time.js","section.js","field_time.js","context_menu.js"]],function(){
+	require([["typed_field.js"],["pop_select_date_and_time.js","pop_applicants_list_in_center_entity.js","section.js","field_time.js","context_menu.js"]],function(){
 		t._init();
 	});
 }

@@ -4,6 +4,7 @@ class page_exam_session_profile extends selection_page {
 	public function get_required_rights() { return array("see_exam_center_detail"); }
 	public function execute_selection_page(&$page){
 		$id = $_GET["id"];
+		$read_only = @$_GET["readonly"];
 		$EC_id = SQLQuery::create()->select("ExamSession")->field("ExamSession","exam_center")->whereValue("ExamSession", "event", $id)->executeSingleValue();
 		$center_name = SQLQuery::create()->select("ExamCenter")->field("ExamCenter","name")->whereValue("ExamCenter", "id", $EC_id)->executeSingleValue();
 	?>
@@ -14,6 +15,7 @@ class page_exam_session_profile extends selection_page {
 				<div id = "supervisors_container" style = "display:inline-block;"></div>
 			</div>
 			<div id = "applicants_list_container"></div>
+			<div id = "actions_container"></div>
 		</div>
 		
 	<?php
@@ -24,6 +26,11 @@ class page_exam_session_profile extends selection_page {
 		$can_add = $from_steps[0]["add"];
 		$can_remove = $from_steps[0]["remove"];
 		$can_edit = $from_steps[0]["edit"];
+		if($read_only == "true"){
+			$can_add = false;
+			$can_remove = false;
+			$can_edit = false;
+		}
 		$campaign_id = PNApplication::$instance->selection->getCampaignId();
 		//Lock
 		$db_lock = $page->performRequiredLocks("ExamSession",$id,null,$campaign_id);
@@ -43,6 +50,7 @@ class page_exam_session_profile extends selection_page {
 					"date_container",
 					"supervisors_container",
 					"applicants_list_container",
+					"actions_container",
 					<?php echo $session;?>,
 					<?php echo json_encode($can_edit);?>
 				);

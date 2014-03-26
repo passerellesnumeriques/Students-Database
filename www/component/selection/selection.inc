@@ -2305,6 +2305,7 @@ class selection extends Component {
 	
 	/**
 	 * Remove an applicant from an exam center entity, after checking that its allowed
+	 * If the request is to remove an applicant from an exam session, the applicant would also be removed from the exam center room where he was assigned (if any)
 	 * @param number $people_id people ID (applicant one)
 	 * @param NULL | number $EC_id exam center ID if the applicant shall be removed from this center
 	 * @param NULL | number $session_id exam session ID if the applicant shall be removed from this session
@@ -2328,9 +2329,9 @@ class selection extends Component {
 			$res["error_assigned_to_session"] = $can_remove_from_center[1];
 			$res["error_assigned_to_room"] = $can_remove_from_center[2];
 		} else {
-			if ($session_id <> null) {
+			if ($session_id <> null && $room_id == null) {
 				$mode = "exam_session";
-			}else if ($room_id <> null){
+			}else if ($session_id <> null && $room_id <> null){
 				$mode = "exam_center_room";
 			}
 			$can_remove_from_session_or_room = $this->canUnassignApplicantFromSessionOrRoom($people_id, $session_id, $room_id);
@@ -2341,14 +2342,33 @@ class selection extends Component {
 			$res["done"] = false;
 			return $res;
 		}
+		SQLQuery::startTransaction();
 		try{
 			SQLQuery::create()
 				->bypassSecurity()
 				->updateByKey("Applicant", $people_id, array($mode => null));
+			if($mode == "exam_session"){
+				//Remove the student from the room, if any
+				$room = SQLQuery::create()
+					->bypassSecurity()
+					->select("Applicant")
+					->field("Applicant","exam_center_room")
+					->whereValue("Applicant", "people", $people_id)
+					->executeSingleValue();
+				if($room <> null){
+					SQLQuery::create()
+						->bypassSecurity()
+						->updateByKey("Applicant", $people_id, array("exam_center_room" => null));
+				}
+			}
 		} catch (Exception $e){
 			PNApplication::error($e);
+		}
+		if(PNApplication::has_errors()){
+			SQLQuery::rollbackTransaction();
 			return false;
 		}
+		SQLQuery::commitTransaction();
 		$res["done"] = true;
 		return $res;
 	}
@@ -2409,29 +2429,6 @@ class selection extends Component {
 			->whereNull("Applicant", "exam_center");
 		SelectionJSON::ApplicantSQL($q);
 		return $q->execute();
-	}
-	
-	/**
-	 * Get the applicants assigned by room for a given exam center
-	 * @param number $EC_id exam center ID
-	 * @return NULL|array <ul><li>NULL if the ExamCenter has no room</li><li>else array with three attributes<ul><li><code>name</code> exam center room name</li><li><code>capacity</code> exam center room capacity</li><li><code>assigned</code> result of getApplicantsAssignedToCenterEntity (room mode) method for this room</li></ul></li></ul>
-	 */
-	public function getApplicantsAssignedByRoom($EC_id){
-		$rooms = SQLQuery::create()
-			->select("ExamCenterRoom")
-			->whereValue("ExamCenterRoom", "exam_center", $EC_id);		
-		SelectionJSON::ExamCenterRoomSQL($rooms);
-			$rooms = $rooms->execute();
-		if($rooms == null) return null;
-		$res = array();
-		foreach ($rooms as $room){
-			$res[$room["id"]] = array(
-				"name" => $room["name"],
-				"capacity" => $room["capacity"],
-				"applicants" => $this->getApplicantsAssignedToCenterEntity(null,null,$room["id"])
-			);
-		}
-		return $res;
 	}
 	
 	/**
@@ -2612,21 +2609,6 @@ class selection extends Component {
 	}
 	
 	/**
-	 * Get the applicants assigned to an exam center but not assigned to any session
-	 * @param number $EC_id
-	 * @return NULL | array NULL if no applicant found, else applicants rows
-	 */
-	public function getApplicantsAssignedToECButNotToAnySession($EC_id){
-		$q = SQLQuery::create()
-			->select("Applicant")
-			->whereValue("Applicant", "exam_center", $EC_id)
-			->whereNull("Applicant", "exam_session");
-		SelectionJSON::ApplicantSQL($q);
-		$applicants = $q->execute();
-		return $applicants;
-	}
-	
-	/**
 	 * Automatically assign applicants to exam sessions for a given center
 	 * The assignment depends on the remaining slots and on the number of applicants to assign
 	 * @param number $EC_id Exam center ID
@@ -2747,6 +2729,31 @@ class selection extends Component {
 	}
 	
 	/**
+	 * Get the number of remaining slots in an exam center room for a given exam session
+	 * @param number $room_id exam center room ID
+	 * @param number $session_id exam session ID
+	 * @param NULL | number $room_capacity (optional) number the exam center room capacity
+	 * @return number
+	 */
+	public function getRemainingSlotsForExamRoomDuringSession($room_id, $session_id, $room_capacity = null){
+		if($room_capacity == null){
+			$room_capacity = SQLQuery::create()
+				->select("ExamCenterRoom")
+				->field("ExamCenterRoom","capacity")
+				->whereValue("ExamCenterRoom", "id", $room_id)
+				->executeSingleValue();
+		}
+		$assigned = SQLQuery::create()
+			->select("Applicant")
+			->count()
+			->whereValue("Applicant", "exam_session", $session_id)
+			->whereValue("Applicant", "exam_center_room", $room_id)
+			->executeSingleValue();
+		$assigned = $assigned == null ? 0 : $assigned;
+		return ($room_capacity - $assigned);
+	}
+	
+	/**
 	 * Assign any applicants to a given exam session, after checking the user is allowed, and that there are remaining slots
 	 * @param number | array $applicants applicants people ID
 	 * @param number $session_id exam session event ID
@@ -2790,16 +2797,18 @@ class selection extends Component {
 	
 	/**
 	 * Assign applicants to exam center rooms for a given exam session automatically
-	 * @param number $EC_id exam center ID
+	 * @param number $session_id
 	 * @param NULL | number | array $priority_applicants (optional) applicants ids to be assigned with priority: the method will start with assigning these applicants to the rooms (if they are really supposed to be assigned)
 	 * @return boolean|string|array  <ul><li>false if any error occured (not allowed, not well performed)</li><li>string if nothing could be done explaining why (no slot remaining, no room, no applicant to assign)</li><li>else asssociative array (room_id => array(applicants_ids)) of applicants assigned</li></ul>
 	 */
-	public function assignApplicantsToRoomsForASessionAutomatically($EC_id, $session_id, $priority_applicants = null){
+	public function assignApplicantsToRoomsForASessionAutomatically($session_id, $priority_applicants = null){
 		//Check the rights
 		if(!$this->canAssignApplicantToRoom()){
 			PNApplication::error("You are not allowed to assign any applicant to an exam room");
 			return false;
 		}
+		//Get the EC_id
+		$EC_id = SQLQuery::create()->select("ExamSession")->field("ExamSession","exam_center")->whereValue('ExamSession', "event", $session_id)->executeSingleValue();
 		//Get all the rooms in this center
 		$rooms = SQLQuery::create()
 			->select("ExamCenterRoom")
@@ -2898,14 +2907,62 @@ class selection extends Component {
 		}
 	}
 	
-	public function assignApplicantsToRoomForSession($applicants,$session_id){
+	/**
+	 * Assign an applicant to an exam center room, for a given exam session
+	 * Before performing the asssignment, few checks are done: user rights, remaining slots in the room for the session,applicants assigned to the session
+	 * @param number | array $applicants applicants IDs
+	 * @param number $session_id exam session ID
+	 * @param number $room_id exam center room ID
+	 * @return void|boolean
+	 */
+	public function assignApplicantsToRoomForSession($applicants,$session_id, $room_id){
+		if(!is_array($applicants))
+			$applicants = array($applicants);
 		//Check the right
-		
+		$can = $this->canAssignApplicantToRoom();
+		if(!$can){
+			PNApplication::error("You are not allowed to assign any applicant to exam center rooms");
+			return false;
+		}
 		//Check that there are remaining slots
-		
-		//Check that the applicants are assigned to a session
-		
-		//TODO
+		$remaining = $this->getRemainingSlotsForExamRoomDuringSession($room_id, $session_id);
+		if($remaining == 0){
+			PNApplication::error("The room to which you are trying to assign applicants is full for this session");
+			return false;
+		}
+		if(count($applicants) > $remaining){
+			PNApplication::error("You are trying to assign ".count($applicants)." applicants to this room but there are only ".$remaining." slots remaining for this exam session");
+			return false;
+		}
+		//Check that the applicants are assigned to the session
+		$assigned_to_this_session = SQLQuery::create()
+			->bypassSecurity()
+			->select("Applicant")
+			->count()
+			->whereValue("Applicant", "exam_session", $session_id)
+			->whereIn("Applicant", "people",$applicants)
+			->executeSingleValue();
+		if($assigned_to_this_session == null)
+			$assigned_to_this_session = 0;
+		if($assigned_to_this_session != count($applicants)){
+			PNApplication::error("Some applicants are not assigned to this exam session");
+			return false;
+		}
+		//Can perform the assignment
+		SQLQuery::startTransaction();
+		try {
+			SQLQuery::create()
+				->bypassSecurity()
+				->updateAllKeys("Applicant", $applicants, array("exam_center_room" => $room_id));
+		} catch (Exception $e){
+			PNApplication::error($e);
+		}
+		if(PNApplication::has_errors()){
+			SQLQuery::rollbackTransaction();
+			return false;
+		}
+		SQLQuery::commitTransaction();
+		return true;
 	}
 	
 	/**

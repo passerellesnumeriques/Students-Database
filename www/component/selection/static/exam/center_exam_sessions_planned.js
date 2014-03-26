@@ -238,7 +238,7 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 					t._setContentDivStillToAssign();
 					//TODO td3,4 see, export list? the same as exam center list
 					//Set the footer, depending on the number of sessions in t._sessions array
-					t.refreshFooter();
+					t._refreshFooter();
 				});
 			}
 		});
@@ -283,7 +283,7 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 		}
 	};
 	
-	t.refreshFooter = function(){
+	t._refreshFooter = function(){
 		while(t._div_footer.firstChild)
 			t._div_footer.removeChild(t._div_footer.firstChild);
 		var div1 = document.createElement("div");
@@ -434,15 +434,16 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 				else
 					see.appendChild(document.createTextNode("See / Edit List"));
 				see.onclick = function(){
+					var onPopReady = function(p){
+						if(!not_in_session)
+							p.pop.onclose = t.reset;
+					};
 					if(!session_id && !not_in_session)
-						var pop = new pop_applicants_list_in_center_entity(EC_id,null,null,can_manage);
+						var pop = new pop_applicants_list_in_center_entity(EC_id,null,null,can_manage,null,onPopReady);
 					else if(!session_id && not_in_session)
-						var pop = new pop_applicants_list_in_center_entity(EC_id,null,null,false,"exam_session");
+						var pop = new pop_applicants_list_in_center_entity(EC_id,null,null,false,"exam_session",onPopReady);
 					else
-						var pop = new pop_applicants_list_in_center_entity(null,session_id,null,can_manage);
-					pop.pop.onclose = t.reset;
-					if(not_in_session)
-						pop.pop.onclose = null;
+						var pop = new pop_applicants_list_in_center_entity(null,session_id,null,can_manage,null,onPopReady);					
 				};				
 				var b_export = document.createElement("div");
 				b_export.className = "context_menu_item";
@@ -454,6 +455,7 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 					old.className = "context_menu_item";
 					old.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 5 (.xls)";
 					old.onclick = function(){
+						menu.hide();
 						if(not_in_session)
 							export_applicant_list("excel5",null,null,EC_id,null,null,'applicant_id',"exam_session");
 						else
@@ -464,6 +466,7 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 					new_excel.className = "context_menu_item";
 					new_excel.innerHTML = "<img src = '/static/excel/excel_16.png'/> Excel 2007 (.xlsx)";
 					new_excel.onclick = function(){
+						menu.hide();
 						if(not_in_session)
 							export_applicant_list("excel2007",null,null,EC_id,null,null,'applicant_id',"exam_session");
 						else

@@ -110,27 +110,55 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 			button_remove.style.visibility = 'visible';
 			button_remove.style.position = 'static';
 			button_remove.onclick = function(){
-				//Check that no applicant is linked to any room
-				var rooms = t.manage_rooms.getNewRoomsArray();
-				var ids = [];
-				var applicants_assigned = null;
-				for(var i = 0; i < rooms.length; i++)
-					ids.push(rooms[i].id);
-				service.json("selection","exam/get_assigned_to_sessions_for_center",{ids:ids},function(res){
-					if(!res) {
-						error_dialog("This functionality is not available");
+				//Check that rooms can be removed
+//				var rooms = t.manage_rooms.getNewRoomsArray();
+//				var ids = [];
+//				var applicants_assigned = null;
+//				for(var i = 0; i < rooms.length; i++)
+//					ids.push(rooms[i].id);
+//				service.json("selection","exam/get_assigned_to_sessions_for_center",{ids:ids},function(res){
+//					if(!res) {
+//						error_dialog("This functionality is not available");
+//						return;
+//					}
+//					for(var i = 0; i < res.length; i++){
+//						if(res[i].assigned != null){
+//							applicants_assigned = applicants_assigned == null ? [] : applicants_assigned;
+//							applicants_assigned.push(res[i]);
+//						}
+//					}
+//					if(applicants_assigned == null)
+//						t._performRemoveCenter();
+//					else {
+//						error_dialog_html(t.manage_rooms.getInfoRow(applicants_assigned));
+//					}
+//				});
+				service.json("selection","exam/can_rooms_be_removed_for_center",{EC_id:id},function(res){
+					if(!res){
+						error_dialog("An error occured, functionality not available");
 						return;
 					}
-					for(var i = 0; i < res.length; i++){
-						if(res[i].assigned != null){
-							applicants_assigned = applicants_assigned == null ? [] : applicants_assigned;
-							applicants_assigned.push(res[i]);
+					var error_assigned = null;
+					var error_capacity = null;
+					if(res.rooms != null){
+						res = res.rooms;
+						for(var i = 0; i < res.length; i++){
+							if(res[i].error_applicants != null){
+								if(error_assigned == null)
+									error_assigned = [];
+								error_assigned.push({id:res[i].id, name:res[i].name, applicants:res[i].error_applicants});
+							}
+							if(res[i].error_capacity != null){
+								if(error_capacity == null)
+									error_capacity = [];
+								error_capacity.push({id: res[i].id, name:res[i].name, sessions:res[i].error_capacity});
+							}
 						}
 					}
-					if(applicants_assigned == null)
+					if(error_capacity == null && error_assigned == null)
 						t._performRemoveCenter();
 					else {
-						error_dialog_html(t.manage_rooms.getInfoRow(applicants_assigned));
+						error_dialog_html(t.manage_rooms.getInfoRow(error_assigned, error_capacity));
 					}
 				});
 			};

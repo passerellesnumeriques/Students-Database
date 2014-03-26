@@ -17,11 +17,16 @@ class service_applicant_get_assigned_to_rooms_for_session extends Service {
 	}
 	public function output_documentation() {
 		?>
-		Object with one attribute:<code>rooms</code>, containing:
+		Object with two attributes:
 		<ul>
-			<li>NULL if no room in this center</li>
-			<li>else array, with for each room of the center:<ul><li><code>id</code> room ID</li><li><code>name</code></li><li><code>capacity</code> room capacity</li><li><code>applicants</code> depends on the <code>count</code> input. If true, <code>applicants</code> contains the number of applicants assigned by room, else contains array of the applicants assigned (Applicants objects)</li></ul>
+			<li><code>rooms</code> can be:
+				<ul>
+					<li>NULL if no room in this center</li>
+					<li>else array, with for each room of the center:<ul><li><code>id</code> room ID</li><li><code>name</code></li><li><code>capacity</code> room capacity</li><li><code>applicants</code> depends on the <code>count</code> input. If true, <code>applicants</code> contains the number of applicants assigned by room, else contains array of the applicants assigned (Applicants objects)</li></ul>
+					</li>
+				</ul>
 			</li>
+			<li><code>count_session</code> number of applicants assigned to this session</li>
 		</ul>
 
 		<?php
@@ -62,6 +67,12 @@ class service_applicant_get_assigned_to_rooms_for_session extends Service {
 				}
 				echo "]";				
 			}
+			$total_applicants_in_session = $component->getApplicantsAssignedToCenterEntity(null, $input["session_id"]);
+			if ($total_applicants_in_session == null)
+				$total_applicants_in_session = 0;
+			else 
+				$total_applicants_in_session = count($total_applicants_in_session);
+			echo ", count_session:".json_encode($total_applicants_in_session);
 			echo "}";				
 		} else {
 			echo "false";

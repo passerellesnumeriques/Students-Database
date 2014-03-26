@@ -48,8 +48,7 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 			external_error_assigned = null;
 		if(typeof external_error_capacity == "undefined")
 			external_error_capacity = null;
-		var cont = document.createElement("div");
-		cont.className = "info_header";
+		var cont = document.createElement("div");		
 		cont.appendChild(document.createTextNode("Some rooms cannot be updated / removed because of applicants assignment"));
 		var detail = document.createElement("div");
 		detail.style.marginLeft = '3px';
@@ -83,8 +82,11 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 	 * add the rooms list, and set the footer (button create room)
 	 */
 	t._init = function(){
-		if(t._error_assigned != null || t._error_assigned != null)
-			t._section_content.appendChild(t.getInfoRow());
+		if(t._error_assigned != null || t._error_assigned != null){
+			var info_row = t.getInfoRow();
+			info_row.className = "info_header";
+			t._section_content.appendChild(info_row);
+		}
 		t._setRoomsTable();
 		t._setFooter();
 		if(can_manage)
@@ -254,26 +256,6 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 		return t._remove_rooms_rights[id];
 	};
 	
-//	t._findIndexInErrorAssigned = function(id){
-//		if(!t._error_assigned)
-//			return null;
-//		for(var i = 0;  i < t._error_assigned.length; i++){
-//			if(t._error_assigned[i].id == id)
-//				return i;
-//		}
-//		return null;
-//	};
-//	
-//	t._findIndexInErrorCapacity = function(id){
-//		if(!t._error_capacity)
-//			return null;
-//		for(var i = 0;  i < t._error_capacity.length; i++){
-//			if(t._error_capacity[i].room == id)
-//				return i;
-//		}
-//		return null;
-//	};
-	
 	t._createErrorCapacityElement = function(external_error_capacity){
 		var error_data = (external_error_capacity != null) ? external_error_capacity : t._error_capacity;
 		if(error_data != null){
@@ -336,6 +318,7 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 					link.appendChild(document.createTextNode(getApplicantMainDataDisplay(error_data[i].applicants[j])));
 					link.className = "black_link";
 					link.people_id = error_data[i].applicants[j].people_id;
+					link.title = "See people profile";
 					link.onclick = function(){
 						require("popup_window.js",function(){
 							var p = new popup_window("People profile");
@@ -365,33 +348,6 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 		}
 		return null;
 	};
-	
-	/**
-	 * Get the applicants assigned to the already existing rooms, calling the exam/get_applicants_assigned_to_rooms service
-	 * Once the result is gotten the t._applicants_assigned attribute is updated and the t_init method is called
-	 */
-//	t._getApplicantsAssigned = function(){
-//		if(!can_manage|| rooms.length == 0) //Nothing to check
-//			t._init();
-//		else{			
-//			service.json("selection","exam/get_assigned_to_sessions_for_center",{EC_id:EC_id,session_detail:true},function(res){
-//				if(!res) return;
-//				//Reset the attribute
-//				t._applicants_assigned = null;
-//				res = res.data;
-//				if(res == null)//No session planned
-//					return;
-//				for(var i = 0; i < res.length; i++){
-//					if(res[i].applicants != null){
-//						t._applicants_assigned = t._applicants_assigned == null ? [] : t._applicants_assigned;					
-//						t._applicants_assigned.push({session:res[i].session, assigned:res[i].applicants});
-//					}
-//				}
-//				t._init();
-//			});
-//		}
-//		
-//	};
 	
 	t._remove_rooms_rights = null;
 	t._error_assigned = null;

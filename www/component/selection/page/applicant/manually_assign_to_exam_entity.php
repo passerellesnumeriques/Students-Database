@@ -19,12 +19,14 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 			}
 			else if ($mode == "session")
 				PNApplication::$instance->selection->assignApplicantsToSession($applicants, $target);
+			else if ($mode == "room")
+				PNApplication::$instance->selection->assignApplicantsToRoomForSession($applicants, $session_id, $target);
 		}
 	
 		//generate the page
 		$page->require_javascript("vertical_layout.js");
 		if($mode == "session"){
-			//Add the field time for the selection names
+			//Add the field time for the sessions names
 			$page->require_javascript("typed_field.js");
 			$page->require_javascript("field_time.js");
 		}
@@ -55,6 +57,8 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 			$data = $this->getJSONDataForAssigningApplicantToCenter();
 		} else if($mode == "session")
 			$data = $this->getJSONDataForAssigningApplicantToSession($EC_id);
+		else if ($mode == "room")
+			$data = $this->getJSONDataForAssigningApplicantToRoom($session_id);
 		?>
 		<script type='text/javascript'>
 			require("applicant_manually_assign_to_entity.js",function(){
@@ -98,7 +102,7 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 	}
 	
 	private function getJSONDataForAssigningApplicantToSession($EC_id){
-		$applicants = PNApplication::$instance->selection->getApplicantsAssignedToECButNotToAnySession($EC_id);
+		$applicants = PNApplication::$instance->selection->getApplicantsAssignedToCenterEntity($EC_id,null,null,null,"exam_session");
 		$json_applicants = $this->getJSONArrayApplicantsFromRows($applicants);
 		$sessions = SelectionJSON::ExamSessionsFromExamCenterID($EC_id);
 		//Get the remaining slots for the sessions set in this center
@@ -120,6 +124,32 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 			return array($json_applicants,$sessions,$remaining_per_session);
 		} else 		
 			return array($json_applicants,$sessions);	
+	}
+	
+	private function getJSONDataForAssigningApplicantToRoom($session_id){
+		$applicants = PNApplication::$instance->selection->getApplicantsAssignedToCenterEntity(null,$session_id,null,null,"exam_center_room");
+		$json_applicants = $this->getJSONArrayApplicantsFromRows($applicants);
+		//Get the rooms
+		$EC_id = SQLQuery::create()->select("ExamSession")->field("ExamSession","exam_center")->whereValue("ExamSession", "event", $session_id)->executeSingleValue();
+		$json_rooms = SelectionJSON::ExamCenterRoomsFromCenterID($EC_id);
+		//Get the remaining slots for the rooms during this session
+		$rooms = SQLQuery::create()
+			->select("ExamCenterRoom")
+			->whereValue("ExamCenterRoom", "exam_center", $EC_id);
+		SelectionJSON::ExamCenterRoomSQL($rooms);
+		$rooms = $rooms->execute();
+		if($rooms <> null){
+			$remaining_per_room = "[";
+			$first = true;
+			foreach ($rooms as $room){
+				if(!$first) $remaining_per_room .= ", ";
+				$first = false;
+				$remaining_per_room .= "{id:".json_encode($room["id"]).", additional:".json_encode(PNApplication::$instance->selection->getRemainingSlotsForExamRoomDuringSession($room["id"],$session_id,$room["capacity"]))."}";
+			}
+			$remaining_per_room .= "]";
+			return array($json_applicants, $json_rooms, $remaining_per_room);
+		} else
+			return array($json_applicants, $json_rooms);	
 	}
 	
 	/**

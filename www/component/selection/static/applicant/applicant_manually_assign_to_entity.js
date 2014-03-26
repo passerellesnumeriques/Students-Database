@@ -108,6 +108,8 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 				name = "Exam Centers";
 			else if (mode == "session")
 				name = "Exam Session";
+			else if (mode == "room")
+				name = "Exam Center Rooms";
 			t._right_section = new section("", name,t._targets_list_container, false, true);
 			t._right_section.element.style.margin = "10px";
 			t._right_section.element.style.display = "inline-block";
@@ -124,6 +126,8 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 				div.appendChild(document.createTextNode("No exam center yet"));
 			else if(mode == "session")
 				div.appendChild(document.createTextNode("No exam session yet"));
+			else if (mode == "room")
+				div.appendChild(document.createTextNode("No exam center room yet"));
 			div.style.fontStyle = "italic";
 			div.style.textAlign = "center";
 			t._targets_list_container.appendChild(div);
@@ -172,7 +176,11 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 			} else if (mode == "session"){
 				link.session_id = targets[index_in_targets].id;
 				link.title = "See Exam Session profile";		
-			}			
+			} else if (mode == "room"){
+				link.appendChild(document.createTextNode(targets[index_in_targets].name));
+				link.onclick = function(){return false;};
+				return link;
+			}	
 		}
 		link.className = "black_link";		
 		link.appendChild(document.createTextNode(name));
@@ -195,7 +203,9 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 							pop.setContentFrame("/dynamic/selection/page/exam/center_profile?id="+ EC_id+ "&readonly=true&hideback=true");
 							pop.show();
 						} else if (session_id){
-							//TODO
+							var pop = new popup_window("Exam Session Profile");
+							pop.setContentFrame("/dynamic/selection/page/exam/session_profile?id="+session_id+ "&readonly=true");
+							pop.show();
 						}
 
 					});
@@ -223,7 +233,7 @@ function applicant_manually_assign_to_entity(container, applicants,targets, mode
 		div_additional.style.textAlign = "right";
 		div_additional.style.fontStyle = "italic";
 		div_additional.style.marginLeft = "3px";
-		if(mode == "session"){
+		if(mode == "session" || mode == "room"){
 			div_additional.appendChild(document.createTextNode("("+targets_additional[index_in_additional].additional+" "+getGoodSpelling("slot",targets_additional[index_in_additional].additional)+" remaining)"));
 		}
 	};

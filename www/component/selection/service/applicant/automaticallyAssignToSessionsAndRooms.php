@@ -28,7 +28,7 @@ class service_applicant_automaticallyAssignToSessionsAndRooms extends Service {
 				} else {					
 					$total_assigned = 0; //As the assignment by room is based on the remaining places, the number of applicants assigned in the sessions is the same as the number of applicants assigned in the rooms
 					foreach ($applicants_assigned_by_sessions as $session_id => $applicants_ids){
-						$res = $component->assignApplicantsToRoomsForASessionAutomatically($input["EC_id"], $session_id, $applicants_ids);
+						$res = $component->assignApplicantsToRoomsForASessionAutomatically($session_id, $applicants_ids);
 						if(!is_array($res)){
 							if(is_string($res))
 								PNApplication::error($res);

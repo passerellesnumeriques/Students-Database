@@ -34,6 +34,7 @@ class service_applicant_export_list extends Service{
 	 */
 	public function execute(&$component,$input){
 		$format = $input["format"];
+		$time_offset = $input["time_offset"];
 		$file_name = @$input["file_name"];
 		$title = @$input["title"];
 		$order_by = @$input["order_by"];
@@ -65,9 +66,11 @@ class service_applicant_export_list extends Service{
 						$file_name = $center_name." applicants";
 				}
 			}
-		} else if($EC_id <> null && $session_id <> null && $room_id == null){
+		} else if(($EC_id <> null && $session_id <> null && $room_id == null) || ($EC_id == null && $session_id <> null && $room_id == null)){
 			//Export an exam session list
 			if($title == null || $file_name == null){
+				if($EC_id == null)
+					$EC_id = SQLQuery::create()->bypassSecurity()->select("ExamSession")->field("ExamSession","exam_center")->whereValue("ExamSession", "event", $session_id)->executeSingleValue();
 				//Get the center name
 				$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->whereValue("ExamCenter", "id", $EC_id)->executeSingleValue();
 				//Get the event start and end
@@ -78,14 +81,14 @@ class service_applicant_export_list extends Service{
 					->field("CalendarEvent","end")
 					->whereValue("CalendarEvent", "id", $input["session_id"])
 					->executeSingleRow();
-				$start = $ev["start"];
-				$end = $ev["end"];				
+				$start = $ev["start"] - $time_offset * 60;
+				$end = $ev["end"] - $time_offset * 60;				
 				if($title == null){
-					$session_title = date("m",$start)."/".date("d",$start)."/".date("y",$start)." (".date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$session_title = gmdate("m",$start)."/".gmdate("d",$start)."/".gmdate("y",$start)." (".gmdate("H",$start).":".gmdate("i",$start)." to ".gmdate("H",$end).":".gmdate("i",$end).")";
 					$title = "Session ".$session_title." in ".$center_name." Exam center";
 				}
 				if($file_name == null){
-					$session_title = date("m",$start)."_".date("d",$start)."_".date("y",$start)." (".date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$session_title = gmdate("m",$start)."_".gmdate("d",$start)."_".gmdate("y",$start)." (".gmdate("H",$start).":".gmdate("i",$start)." to ".gmdate("H",$end).":".gmdate("i",$end).")";
 					$file_name = "Session ".$session_title." in ".$center_name." applicants";
 				}			
 			}
@@ -96,7 +99,7 @@ class service_applicant_export_list extends Service{
 				$room_name = SQLQuery::create()->bypassSecurity()->select("ExamCenterRoom")->field("ExamCenterRoom","name")->executeSingleValue();
 				//Get the center name
 				$temp_EC_id = SQLQuery::create()->select("ExamSession")->field("ExamSession",'exam_center')->whereValue("ExamSession", "event", $session_id)->executeSingleValue();
-				$center = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->field("ExamCenter","name")->whereValue("ExamCenter", "id", $temp_EC_id)->executeSingleValue();
+				$center_name = SQLQuery::create()->bypassSecurity()->select("ExamCenter")->field("ExamCenter","name")->field("ExamCenter","name")->whereValue("ExamCenter", "id", $temp_EC_id)->executeSingleValue();
 				//Get the event start and end
 				$ev = SQLQuery::create()
 					->bypassSecurity()
@@ -105,14 +108,14 @@ class service_applicant_export_list extends Service{
 					->field("CalendarEvent","end")
 					->whereValue("CalendarEvent", "id", $input["session_id"])
 					->executeSingleRow();
-				$start = $ev["start"];
-				$end = $ev["end"];
+				$start = $ev["start"] - $time_offset * 60;
+				$end = $ev["end"] - $time_offset * 60;
 				if($title == null){
-					$session_title = date("m",$start)."/".date("d",$start)."/".date("y",$start)." (".date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$session_title = gmdate("m",$start)."/".gmdate("d",$start)."/".gmdate("y",$start)." (".gmdate("H",$start).":".gmdate("i",$start)." to ".gmdate("H",$end).":".gmdate("i",$end).")";
 					$title = "Room ".$room_name." - Session ".$session_title." in ".$center_name." Exam center";
 				}
 				if($file_name == null){
-					$session_title = date("m",$start)."_".date("d",$start)."_".date("y",$start)." (".date("H",$start).":".date("i",$start)." to ".date("H",$end).":".date("i",$end).")";
+					$session_title = gmdate("m",$start)."_".gmdate("d",$start)."_".gmdate("y",$start)." (".gmdate("H",$start).":".gmdate("i",$start)." to ".gmdate("H",$end).":".gmdate("i",$end).")";
 					$file_name = "Room ".$room_name." Session ".$session_title." in ".$center_name." applicants";
 				}
 			}
