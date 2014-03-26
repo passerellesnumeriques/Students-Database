@@ -12,7 +12,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	var t = this;
 	require(["popup_window.js",["typed_field.js","field_date.js","field_time.js"],"input_utils.js","section.js"],function(){
 		t.container_of_section_content = document.createElement("div");
-		t.section = new section(theme.icons_16.date_picker,"Date",t.container_of_section_content,false);
+		t.section = new section(theme.icons_16.date_picker,"Date",t.container_of_section_content,false,false,"soft");
 		container.appendChild(t.section.element);
 		t._setEventAttribute();
 	});

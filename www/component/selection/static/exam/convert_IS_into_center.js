@@ -1,14 +1,13 @@
 /**
  * Create the screen to convert / link informations sessions into / and exam centers
  * @param {HTMLElement | string}container
- * @param {Boolean} can_add_EC true if an exam center can be added by the user
- * @param {Boolean} can_edit_EC true if the user can edit an exam center (link, unlink IS)
+ * @param {Boolean} can_remove_IS_from_EC true if the user can edit an exam center (link, unlink IS)
  * @param {Array} all_IS array containing all the ISData objects (partner attribute can be null) that can be assigned to any center (so not already assigned)
  * @param {Array} all_IS_names array containing all the information sessions names in objects {id:, name:}
  * @param {Array} all_EC array containing all the ExamCenterData objects (partner attribute can be null)
  * @param {Object} db_locks containing the three locks required for this page:<ul><li><code>EC</code> ExamCenter table lock</li><li><code>IS</code> InformationSession table lock</li><li><code>ECIS</code> InformationSessionExamCenter table lock</li></ul>
  */
-function convert_IS_into_center(container, can_add_EC, can_edit_EC, all_IS,all_IS_names, all_EC, db_locks) {
+function convert_IS_into_center(container,can_remove_IS_from_EC, all_IS,all_IS_names, all_EC, db_locks) {
 	var t = this;
 	container = typeof container == "string" ? document.getElementById(container) : container;
 
@@ -70,7 +69,7 @@ function convert_IS_into_center(container, can_add_EC, can_edit_EC, all_IS,all_I
 		//Add a bottom menu
 		t._create_center_button = document.createElement("div");
 		t._create_center_button.className = "button";
-		t._create_center_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/exam_center_16.png",theme.icons_10.add)+"'/> Convert into center";
+		t._create_center_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/exam_center_16.png",theme.icons_10.add)+"'/> Convert into one center";
 		t._create_center_button.style.visibility = "hidden";
 		t._create_center_button.onclick = function(){
 			t._IS_host = null;
@@ -275,7 +274,7 @@ function convert_IS_into_center(container, can_add_EC, can_edit_EC, all_IS,all_I
 			div.appendChild(t._createLinkProfile(all_EC[index].information_sessions[i],null,t._getISName(all_EC[index].information_sessions[i])));
 			div.style.fontStyle = "italic";
 			div.style.fontSize = "small";
-			if (can_edit_EC) {
+			if (can_remove_IS_from_EC) {
 				var remove = document.createElement("img");
 				remove.className = "button_verysoft";
 				remove.style.verticalAlign = "bottom";

@@ -18,7 +18,7 @@ function center_IS_link(container,IS_ids){
 		t._section_content = document.createElement("div");
 		t._setSectionContent();
 		require(["section.js","vertical_align.js"],function(){			
-			t.section = new section("","Information Sessions linked",t._section_content);
+			t.section = new section("","Information Sessions linked",t._section_content,false,false,"soft");
 			container.appendChild(t.section.element);
 			//Set the tooltip
 			var info_container = document.createElement("div");

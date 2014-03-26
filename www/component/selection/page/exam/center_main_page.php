@@ -7,6 +7,38 @@ class page_exam_center_main_page extends selection_page {
 	
 	public function execute_selection_page() {
 		
+// 		for($i = 1; $i < 31; $i++){
+// 			SQLQuery::create()
+// 				->bypassSecurity()
+// 				->insert("Applicant", array(
+// 					"people" => 20+$i,
+// 					"applicant_id" => 20+$i,
+// 					"information_session" => 1
+// 				));
+// 		}
+// 		$j=1;
+// 		for($i = 31; $i < 61; $i++){
+// 			SQLQuery::create()
+// 			->bypassSecurity()
+// 			->insert("Applicant", array(
+// 				"people" => 50+$j,
+// 				"applicant_id" => 50+$j,
+// 				"information_session" => 2
+// 			));
+// 			$j++;
+// 		}
+// 		$j=2;
+// 		for($i = 61; $i < 81; $i++){
+// 			SQLQuery::create()
+// 			->bypassSecurity()
+// 			->insert("Applicant", array(
+// 			"people" => 80+$j,
+// 			"applicant_id" => 80+$j,
+// 			"information_session" => 3
+// 			));
+// 			$j++;
+// 		}
+
 		$this->add_javascript("/static/widgets/grid/grid.js");
 		$this->add_javascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
@@ -14,9 +46,13 @@ class page_exam_center_main_page extends selection_page {
 		$can_create = PNApplication::$instance->user_management->has_right("manage_exam_center",true);
 		$status_container_id = $this->generateID();
 		$ECIS_status_container_id = $this->generateID();
+		$applicants_assignement_container_id = $this->generateID();
+		$this->require_javascript("horizontal_layout.js");
+		$this->onload("new horizontal_layout('horizontal_split',true);");
 		$this->require_javascript("section.js");
 		$this->onload("section_from_html('status_section');");
 		$this->onload("section_from_html('status_ECIS_section');");
+		$this->onload("section_from_html('status_applicants_assignment');");
 		$steps = PNApplication::$instance->selection->getSteps();
 		if($steps["exam_center"]){			
 			$this->require_javascript("exam_center_status.js");
@@ -24,8 +60,8 @@ class page_exam_center_main_page extends selection_page {
 		}
 		$this->require_javascript("exam_center_and_informations_sessions_status.js");
 		$this->onload("new exam_center_and_informations_sessions_status('".$ECIS_status_container_id."');");
-		$this->require_javascript("horizontal_layout.js");
-		$this->onload("new horizontal_layout('horizontal_split',true);");
+		$this->require_javascript("applicants_assignment_to_EC_status.js");
+		$this->onload("new applicants_assignment_to_EC_status('".$applicants_assignement_container_id."');");
 		
 		?>		<script type='text/javascript'>
 					function onCreateNewCenter(button){
@@ -72,6 +108,9 @@ class page_exam_center_main_page extends selection_page {
 						<div id='status_ECIS_section' title='Exam Centers and Information Sessions' collapsable='false' css='soft' style='margin:10px; width:360px;'>
 							<div id = '<?php echo $ECIS_status_container_id;?>'></div>						
 						</div>
+						<div id='status_applicants_assignment' title='Applicants Assignment to Exam Centers' collapsable='false' css='soft' style='margin:10px; width:360px;'>
+							<div id = '<?php echo $applicants_assignement_container_id;?>'></div>						
+						</div>
 					</div>
 					
 					<div style="padding: 10px;display:inline-block" layout='fill'>
@@ -84,10 +123,9 @@ class page_exam_center_main_page extends selection_page {
 					function init_organizations_list() {
 						new data_list(
 							'<?php echo $list_container_id;?>',
-							'ExamCenter', <?php echo PNApplication::$instance->selection->getCampaignId();?>,
+							'ExamCenter',
 							['Exam Center.Name'],
 							[],
-							-1,
 							function (list) {
 								list.addTitle("/static/selection/exam/exam_center_16.png", "Exam Centers");
 								var new_EC = document.createElement("DIV");
@@ -107,7 +145,7 @@ class page_exam_center_main_page extends selection_page {
 					
 					
 					
-				</script>
+				</script>				
 		<?php 
 	}
 }

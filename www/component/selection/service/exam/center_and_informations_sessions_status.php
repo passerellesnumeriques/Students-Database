@@ -45,15 +45,17 @@ class service_exam_center_and_informations_sessions_status extends Service {
 			->count()
 			->executeSingleValue();
 		$IS_with_no_host = PNApplication::$instance->selection->getAllISWithNoHost();
+		$IS_with_no_host_ids = array();
+		if($IS_with_no_host <> NULL){
+			foreach ($IS_with_no_host as $IS_data)
+				array_push($IS_with_no_host_ids, $IS_data["id"]);
+		}
 		$total_IS = SQLQuery::create()
 			->bypassSecurity()
 			->select("InformationSession")
 			->count();
-		if($IS_with_no_host <> null) {
-			$IS_with_no_host_ids = array();
-			foreach ($IS_with_no_host as $is) array_push($IS_with_no_host_ids, $is["id"]);
+		if(count($IS_with_no_host_ids) > 0)
 			$total_IS->whereNotIn("InformationSession", "id", $IS_with_no_host_ids);
-		}
 		
 		$total_IS = $total_IS->executeSingleValue();
 		$not_linked_IS = SQLQuery::create()

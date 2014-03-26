@@ -49,10 +49,14 @@ function next(index, span, pb) {
 			window.popup.addCloseButton();
 			window.popup.unfreeze();
 			window.popup.onclose = function() {
-				<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
+				try {
+					<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
+				} catch (e) { log_exception(e); }
 			};
 		} else {
-			<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
+			try {
+				<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
+			} catch (e) { log_exception(e); }
 			window.popup.close();
 		}
 		return;

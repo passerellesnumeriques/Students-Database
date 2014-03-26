@@ -27,6 +27,7 @@ return array(
 	"limit_date_of_birth" => array("Pick the date of birth representing the oldest allowed applicant","",array(),"date","Applicant",array("forbid_too_old_applicants" => true)),
 	"give_name_to_exam_center" => array("Be able to set a custom name to the exam centers.<br/><i>Note: otherwize, the exam center name is the geographic area were it is located</i>",true,array(true,false),"boolean","Entrance Examination",array()),
 	"give_name_to_exam_center_room" => array("Be able to set a custom name to the exam centers rooms.<br/><i>Note: otherwize, the rooms will be named 1, 2, 3...</i>",true,array(true,false),"boolean","Entrance Examination",array()),
+	"default_duration_exam_session" => array("Pre-selected duration of an Exam Session","4 hours",array("1 hour","2 hours","3 hours","4 hours","6 hours","8 hours"),"enum","Entrance Examination",array()),
 	);
 	
 	//Note: when adding a new category, update #selection#static#selection_utils#getConfigCategoryIndex

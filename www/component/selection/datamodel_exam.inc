@@ -146,7 +146,7 @@ $sm->addTable("ExamCenterInformationSession")//An exam center can created from o
 	->addInsertAccess("manage_exam_subject",true)
 	->addRemoveAccess("manage_exam_subject",true)
 	;
-
+		
 $sm->addTable("ExamSession")
 	->addForeignKey("event", "CalendarEvent", true, true, false, false, true)
 	->addForeignKey("exam_center", "ExamCenter", true, false, true)//An exam center can have several session
@@ -165,4 +165,13 @@ $sm->addTable("ExamCenterRoom")
 	->addReadAccess("see_exam_subject",true)
 	->addInsertAccess("manage_exam_subject",true)
 	->addRemoveAccess("manage_exam_subject",true);
+
+$sm->addTable("ExamSessionSupervisor")
+	->addForeignKey("session", "ExamSession", true, false, true, false)
+	->addForeignKey("people", "People", true, false, true, false)
+	->setKey(array("session","people"))
+	->addWriteAccess("manage_exam_center",true)
+	->addReadAccess("see_exam_center_detail",true)
+	->addInsertAccess("manage_exam_center",true)
+	->addRemoveAccess("manage_exam_center",true);
 ?>
