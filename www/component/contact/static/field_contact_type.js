@@ -56,6 +56,7 @@ field_contact_type.prototype._create = function(data) {
 				t.control.removeContact(t.control.getContacts()[i]);
 		};
 	} else {
+		if (!data) return;
 		for (var i = 0; i < data.contacts.length; ++i) {
 			if (i > 0) this.element.appendChild(document.createTextNode(", "));
 			var e = document.createElement("SPAN");

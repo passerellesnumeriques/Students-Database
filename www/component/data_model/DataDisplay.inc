@@ -67,6 +67,11 @@ abstract class DataDisplay {
 	 */
 	public function getSingleCell() { return null; }
 	
+	/**
+	 * @return SubDataDisplay
+	 */
+	public function getSubDataDisplay() { return null; }
+	
 	/** Add any necessary select/join/field to the SQLQuery to retrieve this data
 	 * @param SQLQuery $q the sql
 	 * @param DataPath $path how we reached this data
@@ -124,6 +129,20 @@ abstract class DataDisplay {
 		$s .= ",".($tf <> null ? $tf[1] : "null");
 		$s .= ",".json_encode($this->getSingleCell());
 		$s .= ",".json_encode($this->getNewData());
+		$sub = $this->getSubDataDisplay();
+		if ($sub == null)
+			$s .= ",null";
+		else {
+			$s .= ",new SubDataDisplay([";
+			$names = $sub->getDisplayNames();
+			$first = true;
+			for ($i = 0; $i < count($names); $i++) {
+				if ($first) $first = false; else $s .= ",";
+				$s .= json_encode($names[$i]);
+			}
+			$s .= "]";
+			$s .= ")";
+		}
 		$s .= ")";
 		return $s;
 	}
@@ -179,6 +198,18 @@ abstract class DataDisplay {
 				break;
 		}
 	}
+	
+}
+
+abstract class SubDataDisplay {
+	
+	protected $parent;
+	
+	public function __construct($parent) {
+		$this->parent = $parent;
+	}
+	
+	public abstract function getDisplayNames();
 	
 }
 

@@ -164,9 +164,31 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 					PNApplication::$instance->contact->addAddressToPeople($type_id, $addr);
 				else 
 					PNApplication::$instance->contact->addAddressToOrganization($type_id, $addr);
+		} else {
+			$type_id = $value["type_id"];
+			$addresses = $value["addresses"];
+			require_once("ContactJSON.inc");
+			foreach ($addresses as $addr) {
+				$a = ContactJSON::PostalAddress2DB($addr);
+				if ($a["id"] <> -1)
+					SQLQuery::create()->updateByKey("PostalAddress", $a["id"], $a);
+			}
 		}
 	}
+	
+	public function getSubDataDisplay() { return new AddressSubDataDisplay($this); }
 
+}
+
+class AddressSubDataDisplay extends datamodel\SubDataDisplay {
+	
+	public function getDisplayNames() {
+		$names = array();
+		foreach (PNApplication::$instance->geography->getLocalDivisions() as $div)
+			array_push($names, $div["name"]);
+		return $names;
+	}
+	
 }
 
 $people_category = $model->getDataCategory("Personal Information");

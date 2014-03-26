@@ -14,7 +14,7 @@
  * @param {Object} new_data structure to use for a new data
  * @returns
  */
-function DataDisplay(category, name, table, field_classname, field_config, editable, edit_locks, sortable, filter_classname, filter_config, cell, new_data) {
+function DataDisplay(category, name, table, field_classname, field_config, editable, edit_locks, sortable, filter_classname, filter_config, cell, new_data, sub_data) {
 	this.category = category;
 	this.name = name;
 	this.table = table;
@@ -27,6 +27,11 @@ function DataDisplay(category, name, table, field_classname, field_config, edita
 	this.filter_config = filter_config;
 	this.cell = cell;
 	this.new_data = new_data;
+	this.sub_data = sub_data;
+}
+
+function SubDataDisplay(names) {
+	this.names = names;
 }
 
 /** Parse a DataPath to get information about it on JavaScript side

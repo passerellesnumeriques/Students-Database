@@ -61,6 +61,24 @@ if (window == window.top && !window.top.geography) {
 					}
 				}
 			});
+		},
+		isAreaIncludedIn: function(country_data, area, area_division_index, included_in_id) {
+			if (included_in_id == null) return true;
+			if (area.area_parent_id == included_in_id) return true;
+			if (area_division_index == 0) return false;
+			var parent = null;
+			for (var i = 0; i < country_data[area_division_index-1].areas.length; ++i) {
+				var ar = country_data[area_division_index-1].areas[i];
+				if (ar.area_id == area.area_parent_id) { parent = ar; break; }
+			}
+			if (parent == null) return false;
+			return window.top.geography.isAreaIncludedIn(country_data, parent, area_division_index-1, included_in_id);
+		},
+		getAreaFromDivision: function(country_data, area_id, division_index) {
+			for (var i = 0; i < country_data[division_index].areas.length; ++i)
+				if (country_data[division_index].areas[i].area_id == area_id)
+					return country_data[division_index].areas[i];
+			return null;
 		}
 	};
 }

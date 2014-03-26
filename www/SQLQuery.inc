@@ -1981,6 +1981,12 @@ class SQLQuery {
 		foreach ($this->fields as $f)
 			$s .= "<li>".$f[0].".".$f[1]." AS ".$f[2]."</li>";
 		$s .= "</ul></li>";
+
+		// where
+		$s .= "<li>WHERE:<ul>";
+		foreach ($this->where as $w)
+			$s .= "<li>".htmlentities($w)."</li>";
+		$s .= "</ul></li>";
 		
 		$s .= "</ul>";
 		return $s;

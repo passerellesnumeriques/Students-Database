@@ -5,6 +5,14 @@ theme::css($this, "application.css");
 $this->require_javascript("calendar.js");
 ?><script type='text/javascript'>
 window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
+window.top.default_country_id = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo $c["id"]; ?>;
+window.top.default_country_name = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo json_encode($c["name"]); ?>;
+
+setTimeout(function() {
+	window.top.require("geography.js", function() {
+		window.top.geography.getCountryData(window.top.default_country_id,function(){});
+	});
+}, 1000);
 
 window.top.calendar_manager = new CalendarManager();
 window.top.CalendarsProviders.get(function(provider) {

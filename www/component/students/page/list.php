@@ -349,7 +349,7 @@ var students_list = new data_list(
 		list.addHeader(import_pictures);
 
 		list.makeRowsClickable(function(row){
-			location.href = "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id);
+			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
 		});
 		layout.invalidate(list.container);
 	}

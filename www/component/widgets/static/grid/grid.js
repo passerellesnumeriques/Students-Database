@@ -270,6 +270,7 @@ function grid(element) {
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
 			var td = document.createElement("TD");
+			td.col_id = column.id;
 			if (index == null || typeof index == 'undefined' || index == t.columns.length-1)
 				tr.appendChild(td);
 			else
@@ -508,7 +509,7 @@ function grid(element) {
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
 				td.field = t._create_cell(t.columns[j], data.data, td);
-			if (typeof data.css != 'undefined')
+			if (typeof data.css != 'undefined' && data.css)
 				td.className = data.css;
 		}
 		t.table.appendChild(tr);
