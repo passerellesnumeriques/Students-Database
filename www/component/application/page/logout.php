@@ -5,8 +5,10 @@ class page_logout extends Page {
 		PNApplication::$instance->user_management->logout();
 ?>
 <script type='text/javascript'>
-if (window.top.pnapplication)
+if (window.top.pnapplication) {
+	window.top.pnapplication.logged_in = false;
 	window.top.pnapplication.onlogout.fire();
+}
 if (window.top.pn_loading_start) {
 	window.top.pn_loading_start();
 	window.top.set_loading_message('Loading authentication page...');

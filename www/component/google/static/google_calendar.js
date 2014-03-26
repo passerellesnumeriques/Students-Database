@@ -1,4 +1,4 @@
-// #depends[/static/calendar/calendar.js]
+/* #depends[/static/calendar/calendar.js] */
 
 function load_google_calendars(ondone, feedback_handler) {
 	var calendarApiReady = function() {

@@ -2,6 +2,18 @@
 
 class geography extends Component {
 	
+	private $local_country;
+	private $local_country_divisions;
+	
+	public function init() {
+		$d = PNApplication::$instance->get_domain_descriptor();
+		$this->local_country = SQLQuery::create()->bypassSecurity()->select("Country")->whereValue("Country", "code", strtoupper($d["country_code"]))->executeSingleRow();
+		$this->local_country_divisions = $this->getCountryDivisions($this->local_country["id"]);
+	}
+	
+	public function getLocalCountry() { return $this->local_country; }
+	public function getLocalDivisions() { return $this->local_country_divisions; }
+	
 	public function getPluginImplementations() {
 		require_once("GeographyAdministrationPlugin.inc");
 		return array(
@@ -133,6 +145,23 @@ class geography extends Component {
 				array_push($to_browse, $child);
 		}
 		return $children;
+	}
+	
+	public function getCountryDivisions($country_id) {
+		$rows = SQLQuery::create()->bypassSecurity()->select("CountryDivision")->whereValue("CountryDivision", "country", $country_id)->execute();
+		$divisions = array();
+		$parent = null;
+		while (count($rows) > 0) {
+			for ($i = 0; $i < count($rows); $i++) {
+				if ($rows[$i]["parent"] == $parent) {
+					array_push($divisions, $rows[$i]);
+					$parent = $rows[$i]["id"];
+					array_splice($rows, $i, 1);
+					break;
+				}
+			}
+		}
+		return $divisions;
 	}
 }
 ?>

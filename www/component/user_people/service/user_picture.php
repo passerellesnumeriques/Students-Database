@@ -21,8 +21,7 @@ class service_user_picture extends Service {
 				->join("Users", "UserPeople", array("id"=>"user"))
 				->field("UserPeople", "people", "people_id")
 				->executeSingleValue();
-			$_GET["people"] = $people_id;
-			$service->execute(PNApplication::$instance->people, array());
+			header("Location: /dynamic/people/service/picture?people=".$people_id);
 		} else {
 			header('Cache-Control: public', true);
 			header('Pragma: public', true);

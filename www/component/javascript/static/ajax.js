@@ -33,18 +33,22 @@ ajax = {
 	 * @param {function} success_handler on success, this function is called with the XMLHttpRequest object as parameter
 	 * @param {Boolean} foreground if true this function will block until the AJAX call is done, else this function return immediately and let the AJAX call be done in background
 	 */
-	call: function(method, url, content_type, content_data, error_handler, success_handler, foreground) {
+	call: function(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, overrideResponseMimeType) {
 		if (typeof url == 'string')
 			url = new URL(url);
 		url = ajax.process_url(url);
 		var xhr;
 		try { xhr = new XMLHttpRequest(); }
 		catch (e) {
+			// everything is already unloaded. avoid remaining calls.
 			return;
 		}
+		if (overrideResponseMimeType && typeof xhr.overrideMimeType != 'undefined')
+			xhr.overrideMimeType(overrideResponseMimeType);
 		var aborted = false;
 		var timeouted = false;
-		xhr.open(method, url.toString(), !foreground);
+		try { xhr.open(method, url.toString(), !foreground); }
+		catch (e) { log_exception(e); return; }
 		xhr.onabort = function() { aborted = true; };
 		xhr.ontimeout = function() { timeouted = true; };
 		if (content_type != null)
@@ -67,6 +71,11 @@ ajax = {
 	        if (this.readyState != 4) return;
 	        sent();
 	    };
+	    if (progress_handler) {
+	    	xhr.onprogress = function(ev) {
+	    		progress_handler(ev.loaded, ev.total);
+	    	};
+	    }
 	    try {
 	    	xhr.send(content_data);
 	    } catch (e) {
@@ -81,7 +90,7 @@ ajax = {
 	 * @param {function} success_handler called on success, with the XMLHttpRequest as parameter
 	 * @param {Boolean} foreground same as for the function call
 	 */
-	post: function(url, data, error_handler, success_handler, foreground) {
+	post: function(url, data, error_handler, success_handler, foreground, progress_handler) {
 	    if (typeof data == 'object') {
 	    	var s = "";
 	    	for (var name in data) {
@@ -92,7 +101,7 @@ ajax = {
 	    	}
 	    	data = s;
 	    }
-		ajax.call("POST", url, "application/x-www-form-urlencoded", data, error_handler, success_handler, foreground);
+		ajax.call("POST", url, "application/x-www-form-urlencoded", data, error_handler, success_handler, foreground, progress_handler);
 	},
 	/**
 	 * Perform a POST call, then on success it will analyze the result
@@ -102,7 +111,7 @@ ajax = {
 	 * @param foreground
 	 * @param error_handler
 	 */
-	post_parse_result: function(url, data, handler, foreground, error_handler) {
+	post_parse_result: function(url, data, handler, foreground, error_handler, progress_handler) {
 		var eh = function(error) {
 			if (error_handler)
 				error_handler(error);
@@ -159,7 +168,7 @@ ajax = {
 				// considered as free text...
 				handler(xhr.responseText);
 			}
-		}, foreground);
+		}, foreground, progress_handler);
 	},
 	
 	/**
@@ -171,7 +180,7 @@ ajax = {
 	 * @param foreground
 	 * @param error_handler
 	 */
-	custom_post_parse_result: function(url, data_type, data, handler, foreground, error_handler) {
+	custom_post_parse_result: function(url, data_type, data, handler, foreground, error_handler, progress_handler) {
 		var eh = function(error) {
 			if (error_handler)
 				error_handler(error);
@@ -228,6 +237,6 @@ ajax = {
 				// considered as free text...
 				handler(xhr.responseText);
 			}
-		}, foreground);
+		}, foreground, progress_handler);
 	}
 };

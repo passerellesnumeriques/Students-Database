@@ -5,11 +5,11 @@ class page_exam_main_page extends selection_page {
 	
 	public function get_required_rights() {return array("see_exam_subject");}
 	
-	public function execute_selection_page(&$page) {
-		$page->require_javascript("header_bar.js");
-		$page->require_javascript("vertical_layout.js");
-		$page->onload("new vertical_layout('container');");
-		$page->onload("new header_bar('page_header','toolbar');");
+	public function execute_selection_page() {
+		$this->require_javascript("header_bar.js");
+		$this->require_javascript("vertical_layout.js");
+		$this->onload("new vertical_layout('container');");
+		$this->onload("new header_bar('page_header','toolbar');");
 		
 		//Rights based on the steps
 		$can_see_subject = PNApplication::$instance->user_management->has_right("see_exam_subject",true);

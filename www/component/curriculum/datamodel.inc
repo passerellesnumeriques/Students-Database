@@ -1,6 +1,4 @@
 <?php
-use datamodel\FieldsDisplayHandler;
-
 /* @var $model DataModel */
 $model->addTable("StudentBatch")
 	->addPrimaryKey("id")
@@ -10,11 +8,6 @@ $model->addTable("StudentBatch")
 	->setRoot()
 	->addReadAccess("consult_curriculum", true)
 	->addColumnWriteAccess("name","edit_curriculum", true)
-	->setDisplayHandler(null, new datamodel\MultipleDisplayHandler("Student", "Batch", array(
-		new datamodel\SimpleDataDisplay(null, "name", "Batch Name"),
-		new datamodel\ReadOnlyDataDisplay(null, "Integration Date", "start_date"),
-		new datamodel\ReadOnlyDataDisplay(null, "Graduation Date", "end_date")
-	)))
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
 			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$fields["name"]." created.");
@@ -50,11 +43,6 @@ $model->addTable("AcademicPeriod")
 	->addDate("end_date", false, false, "start_date", null)
 	->addReadAccess("consult_curriculum", true)
 	->addColumnWriteAccess("name","edit_curriculum", true)
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Academic Period",
-		array(
-			"name"=>"Period Name",
-		)
-	))
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
 			$batch = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$fields["batch"])->field("StudentBatch","name")->executeSingleValue();
@@ -87,7 +75,6 @@ $model->addTable("AcademicClass")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
-	->setDisplayHandler(null, new datamodel\FieldsDisplayHandler("Student", "Class Name", array("name"=>"Class Name")))
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
 			$period = SQLQuery::create()->bypassSecurity()

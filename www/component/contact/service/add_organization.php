@@ -69,8 +69,18 @@ class service_add_organization extends Service {
 		// create contact points
 		if (isset($input["contact_points"]) && is_array($input["contact_points"]))
 		foreach ($input["contact_points"] as $cp) {
-			$cp["create_people"]["contact_point_organization"] = $org_id;
-			Service::internal_execution("people", "create_people", $cp["create_people"]);
+			for ($i = 0; $i < count($cp["create_people"]); $i++)
+				if ($cp["create_people"][$i]["path"] == "People<<ContactPoint(people)") {
+					if (!isset($cp["create_people"][$i]["columns"]))
+						$cp["create_people"][$i]["columns"] = array();
+					$cp["create_people"][$i]["columns"]["organization"] = $org_id;
+					break;
+				}
+			$create_input = array(
+				"root"=>"People",
+				"paths"=>$cp["create_people"]
+			);
+			Service::internal_execution("data_model", "create_data", $create_input);
 		}
 		
 		echo "{id:".$org_id."}";

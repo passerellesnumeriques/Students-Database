@@ -6,65 +6,53 @@ class page_profile extends Page {
 		$this->add_javascript("/static/widgets/frame_header.js");
 		theme::css($this, "frame_header.css");
 		
-		$plugin = @$_GET["plugin"];
+		$sub_models = null;
+		if (isset($_POST) && isset($_POST["input"])) {
+			$input = json_decode($_POST["input"], true);
+			if (isset($input["sub_models"]))
+				$sub_models = $input["sub_models"];
+		}
+		
 		$page = @$_GET["page"];
 		$people_id = $_GET["people"];
 		
-		require_once("component/people/PeoplePlugin.inc");
-		$q = SQLQuery::create();
-		$people_alias = $q->generateTableAlias();
-		$q->select(array("People"=>$people_alias));
-		$q->whereValue($people_alias, "id", $people_id);
-		$q->field($people_alias, "first_name");
-		$q->field($people_alias, "last_name");
-		foreach (PNApplication::$instance->components as $cname=>$c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeoplePlugin)) continue;
-				$pi->preparePeopleProfilePagesRequest($q, $people_id);
-			}
-		}
+		require_once("component/people/PeopleProfilePagePlugin.inc");
+		$q = SQLQuery::create()
+			->select("People")
+			->whereValue("People", "id", $people_id)
+			->field("People", "first_name")
+			->field("People", "last_name")
+			->field("People", "types", "people_types")
+			;
 		$people = $q->executeSingleRow();
-		
-		if ($plugin == null) $plugin = "people";
-		if ($page == null) $page = "profile_".$plugin;
-		$pages = null;
-		if (isset(PNApplication::$instance->components[$plugin])) {
-			foreach (PNApplication::$instance->components[$plugin]->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeoplePlugin)) continue;
-				$pages = $pi->getPeopleProfilePages($people_id, $people, $q);
-				break;
-			}
-		}
-		if ($pages == null || !isset($pages[$page])) {
-			PNApplication::error("Unknow profile page '".$page."' in '".$plugin."'");
-			return;
-		}
-		$page = $pages[$page][2];
-		
-		$all_pages = array();
+		$types = PNApplication::$instance->people->parseTypes($people["people_types"]);
+
+		$pages = array();
 		foreach (PNApplication::$instance->components as $cname=>$c) {
 			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeoplePlugin)) continue;
-				$pages = @$pi->getPeopleProfilePages($people_id, $people, $q);
-				if ($pages <> null)
-					foreach ($pages as $page_id=>$cp)
-						array_push($all_pages, $cp);
+				if (!($pi instanceof PeopleProfilePagePlugin)) continue;
+				if (!($pi->isValidFor($people_id, $types))) continue;
+				array_push($pages, $pi);
 			}
 		}
+
 		function pages_sort($p1, $p2) {
-			return $p1[3]-$p2[3];
+			return $p1->getPriority()-$p2->getPriority();
 		}
-		usort($all_pages, "pages_sort");
+		usort($pages, "pages_sort");
+		if ($page == null) $page = $pages[0]->getURL($people_id);
 ?>
-<div id='profile_page' page='<?php echo $page;?>'>
+<div id='profile_page' page='<?php echo $page; if ($sub_models <> null) echo "&sub_models=".json_encode($sub_models);?>'>
 <?php 
-foreach ($all_pages as $cp) {
+foreach ($pages as $p) {
 	echo "<div";
-	echo " icon=\"".htmlentities($cp[0])."\"";
-	echo " text=\"".htmlentities($cp[1])."\"";
-	echo " link=\"".htmlentities($cp[2])."\"";
-	if (isset($cp[4]) && $cp[4] <> null)
-		echo " tooltip=\"".htmlentities($cp[4])."\"";
+	echo " icon=\"".htmlentities($p->getIcon())."\"";
+	echo " text=\"".htmlentities($p->getName())."\"";
+	echo " link=\"".htmlentities($p->getURL($people_id));
+	if ($sub_models <> null)
+		echo "&sub_models=".json_encode($sub_models);
+	echo "\"";
+	echo " tooltip=\"".htmlentities($p->getTooltip())."\"";
 	echo "></div>";
 }
 ?>

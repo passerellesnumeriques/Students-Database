@@ -41,7 +41,8 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
 			var row = this.grid.table.childNodes[i];
 			var td = row.childNodes[index];
-			td.field.setEditable(this.editable);
+			if (td.field)
+				td.field.setEditable(this.editable);
 		}
 		this._refresh_title();
 	};
@@ -265,9 +266,32 @@ function grid(element) {
 				t.moveColumn(j,i);
 			});
 		});
+		// add cells
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var tr = t.table.childNodes[i];
+			var td = document.createElement("TD");
+			td.col_id = column.id;
+			if (index == null || typeof index == 'undefined' || index == t.columns.length-1)
+				tr.appendChild(td);
+			else
+				tr.insertBefore(td, tr.childNodes[index+t.selectable ? 1 : 0]);
+			td.field = t._create_cell(column, null, td);
+		}
 	};
 	t.getNbColumns = function() { return t.columns.length; };
 	t.getColumn = function(index) { return t.columns[index]; };
+	t.getColumnById = function(id) {
+		for (var i = 0; i < t.columns.length; ++i)
+			if (t.columns[i].id == id)
+				return t.columns[i];
+		return null;
+	};
+	t.getColumnByAttachedData = function(data) {
+		for (var i = 0; i < t.columns.length; ++i)
+			if (t.columns[i].attached_data == data)
+				return t.columns[i];
+		return null;
+	};
 	t.getColumnIndex = function(col) { return t.columns.indexOf(col); };
 	t.removeColumn = function(index) {
 		var col = t.columns[index];
@@ -318,12 +342,12 @@ function grid(element) {
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var row = t.table.childNodes[i];
 			var td = row.childNodes[index];
-			var data = td.field.getCurrentData();
-			td.innerHTML = "";
-			td.field = t._create_cell(column, data, td);
-			td.style.textAlign = column.align;
-			if (data == grid_deactivated_cell)
-				td.style.backgroundColor = "rgba(192,192,192,0.5)";
+			if (td.field) {
+				var data = td.field.getCurrentData();
+				td.innerHTML = "";
+				td.field = t._create_cell(column, data, td);
+				td.style.textAlign = column.align;
+			}
 		}
 	};
 	
@@ -483,11 +507,13 @@ function grid(element) {
 			td.col_id = t.columns[j].id;
 			td.data_id = data.data_id;
 			td.style.textAlign = t.columns[j].align;
-			td.field = t._create_cell(t.columns[j], data.data, td);
-//			if (data[i][j] == grid_deactivated_cell)
-//				td.style.backgroundColor = "rgba(192,192,192,0.5)";
+			if (typeof data.data != 'undefined')
+				td.field = t._create_cell(t.columns[j], data.data, td);
+			if (typeof data.css != 'undefined' && data.css)
+				td.className = data.css;
 		}
 		t.table.appendChild(tr);
+		return tr;
 	};
 	
 	t.getNbRows = function() {
@@ -496,9 +522,17 @@ function grid(element) {
 	t.getRow = function(index) {
 		return t.table.childNodes[index];
 	};
+	t.getRowIndex = function(row) {
+		for (var i = 0; i < t.table.childNodes.length; ++i)
+			if (t.table.childNodes[i] == row) return i;
+		return -1;
+	};
 	
+	t.removeRowIndex = function(index) {
+		t.table.removeChild(t.table.childNodes[index]);
+	};
 	t.removeRow = function(row) {
-		t.table.removeChild(t.table.childNodes[row]);
+		t.table.removeChild(row);
 	};
 	t.removeAllRows = function() {
 		while (t.table.childNodes.length > 0)
@@ -515,7 +549,7 @@ function grid(element) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
 		var td = tr.childNodes[col];
-		return td.field;
+		return td.field ? td.field : null;
 	};
 	t.getCellDataId = function(row,col) {
 		if (t.selectable) col++;
@@ -530,7 +564,7 @@ function grid(element) {
 		td.data_id = data_id;
 	};
 	
-	t.getContainingRow = function(element) {
+	t.getContainingRowIndex = function(element) {
 		while (element && element != document.body) {
 			if (element.nodeName == "TD" && element.col_id) {
 				var tr = element.parentNode;
@@ -540,6 +574,17 @@ function grid(element) {
 			element = element.parentNode;
 		}
 		return -1;
+	};
+	t.getContainingRow = function(element) {
+		while (element && element != document.body) {
+			if (element.nodeName == "TD" && element.col_id) {
+				var tr = element.parentNode;
+				for (var i = 0; i < t.table.childNodes.length; ++i)
+					if (t.table.childNodes[i] == tr) return tr;
+			}
+			element = element.parentNode;
+		}
+		return null;
 	};
 	
 	t.reset = function() {

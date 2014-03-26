@@ -54,6 +54,7 @@ class service_test_data extends Service {
 					foreach ($rows as $row)
 						$t->fireInsert($row, @$row[$t->getPrimaryKey()->name], null);
 				}
+				
 				PNApplication::$instance->user_management->logout();
 			}
 		}		

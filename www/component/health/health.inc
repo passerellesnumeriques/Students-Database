@@ -2,9 +2,9 @@
 class health extends Component {
 	
 	public function getPluginImplementations() {
-		require_once("HealthPeoplePlugin.inc");
+		require_once("HealthPeopleProfilePagePlugin.inc");
 		return array(
-				new HealthPeoplePlugin()
+			new HealthPeopleProfilePagePlugin()
 		);
 	}
 	

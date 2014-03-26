@@ -16,27 +16,28 @@ class data_model extends Component {
 	 * @param string $root_table the table to start from
 	 * @return array of array(DataDisplay, DataPath)
 	 */
-	public function getAvailableFields($root_table) {
+	public function getAvailableFields($root_table, $sub_model, $go_to_submodels = false, $sub_models = null, $known_columns = null) {
 		require_once("component/data_model/DataPath.inc");
-		$paths = DataPathBuilder::searchFrom($root_table);
+		$paths = DataPathBuilder::searchFrom($root_table, $sub_model, $go_to_submodels, $sub_models);
 		$root = DataPathBuilder::buildPathsTree($paths);
 		$list = array();
 		if ($root <> null)
-			$this->browse($root, null, $list);
+			$this->browse($root, null, $list, $known_columns);
 		return $list;
 	}
 	
 	/**
-	 * Browse using the DisplayHandler of the table pointed by the path 
+	 * Browse using the TableDataDisplay of the table pointed by the path 
 	 * @param DataPath $path the path to browse
 	 * @param string|null $from the column by which we come from 
 	 * @param array $list the list to be filled
 	 */
-	private function browse($path, $from, &$list) {
-		$display = $path->table->getDisplayHandler($from);
+	private function browse($path, $from, &$list, $known_columns) {
+		$display = DataModel::get()->getTableDataDisplay($path->table->getName());
+		if ($display == null) return; // nothing accessible
 		$handled = array();
 		if ($display <> null) {
-			$data = $display->getDisplayableData();
+			$data = $display->getDataDisplay($from);
 			foreach ($data as $d) {
 				array_push($list, array($d, $path));
 				foreach ($d->getHandledColumns() as $col)
@@ -45,11 +46,31 @@ class data_model extends Component {
 		}
 		foreach ($path->children as $c) {
 			if ($c->isReverse()) {
-				if ($display <> null && !$display->canJoin()) continue;
-				$this->browse($c, $c->foreign_key->name, $list);
+				if (!$display->canJoinToPrimary()) continue;
+				$fd = DataModel::get()->getTableDataDisplay($c->table->getName());
+				if ($fd == null) continue;
+				if (!$fd->canJoinFrom($c->foreign_key->name)) continue;
+				$cols = $fd->getNeededColumnsToJoinFrom($c->foreign_key->name);
+				if ($cols <> null && count($cols) > 0 && $known_columns <> null) {
+					$values = array();
+					foreach ($cols as $colname) {
+						foreach ($known_columns as $table=>$tcols) {
+							if ($table <> $path->table->getName()) continue;
+							foreach ($tcols as $tc=>$tv)
+								if ($tc == $colname) {
+									$values[$tc] = $tv;
+									break;								
+								}
+						}
+					}
+					if (count($values) == count($cols)) {
+						if (!$fd->checkJoinFrom($c->foreign_key->name, $values)) continue;
+					}
+				}
+				$this->browse($c, $c->foreign_key->name, $list, $known_columns);
 			} else if (!in_array($c->foreign_key->name, $handled)) {
-				if ($display <> null && !$display->canFollow($c->foreign_key->name)) continue;
-				$this->browse($c, null, $list);
+				if (!$display->canFollow($c->foreign_key->name)) continue;
+				$this->browse($c, null, $list, $known_columns);
 			}
 		}
 	}

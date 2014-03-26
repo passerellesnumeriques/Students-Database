@@ -9,6 +9,7 @@ class service_get_data_list extends Service {
 	public function input_documentation() { echo "
 <ul>
 	<li><code>table</code>: name of starting table</li>
+	<li><code>sub_model</code>: sub model of starting table</li>
 	<li><code>fields</code>:[paths]</li>
 	<li>optional: <code>actions</code>: if true, a list of possible links with icon are returned</li>
 </ul>";
@@ -35,7 +36,7 @@ class service_get_data_list extends Service {
 		$fields = $input["fields"];
 		// retrieve data paths
 		require_once("component/data_model/DataPath.inc");
-		$possible = DataPathBuilder::searchFrom($table);
+		$possible = DataPathBuilder::searchFrom($table, @$input["sub_model"]);
 		$paths = array();
 		foreach ($fields as $f) {
 			$found = false;
@@ -51,9 +52,11 @@ class service_get_data_list extends Service {
 			}
 		}
 
+		$model = DataModel::get();
+		
 		// init query with root table
 		$q = SQLQuery::create();
-		$t = DataModel::get()->getTable($table);
+		$t = $model->getTable($table);
 		$alias = $q->generateTableAlias();
 		$table_name = $t->getSQLName(null);
 		$q->select(array($table_name=>$alias));
@@ -67,15 +70,18 @@ class service_get_data_list extends Service {
 			$name = $fields[$i]["name"];
 			$path = $paths[$i];
 			$from = null;
-			if ($path instanceof DataPath_Join && $path->isReverse())
+			$display = $model->getTableDataDisplay($path->table->getName());
+			if ($path instanceof DataPath_Join && $path->isReverse()) {
 				$from = $path->foreign_key->name;
-			$handler = $path->table->getDisplayHandler($from);
-			if ($handler == null) {
-				PNApplication::error("No display handler on table ".$path->table->getName()." for path ".$fields[$i]["path"]);
+				// TODO $needed_columns = $display->getNeededColumnsToJoinFrom($from);
+								
+			}
+			if ($display == null) {
+				PNApplication::error("No display specified on table ".$path->table->getName()." for path ".$fields[$i]["path"]);
 				return;
 			}
 			$data = null;
-			foreach ($handler->getDisplayableData() as $d)
+			foreach ($display->getDataDisplay($from) as $d)
 				if ($d->getDisplayName() == $name) { $data = $d; break; }
 			if ($data == null) {
 				PNApplication::error("No displayable data ".$name." on table ".$path->table->getName());
@@ -85,7 +91,7 @@ class service_get_data_list extends Service {
 			$f = array();
 			for ($j = 0; $j < count($remaining_filters); $j++) {
 				$filter = $remaining_filters[$j];
-				if ($filter["category"] <> $handler->category) continue;
+				if ($filter["category"] <> $data->getCategoryName()) continue;
 				if ($filter["name"] <> $data->getDisplayName()) continue;
 				array_splice($remaining_filters, $j, 1);
 				$j--;
@@ -108,10 +114,10 @@ class service_get_data_list extends Service {
 				$from = null;
 				if ($path instanceof DataPath_Join && $path->isReverse())
 					$from = $path->foreign_key->name;
-				$display = $path->table->getDisplayHandler($from);
+				$display = DataModel::get()->getTableDataDisplay($path->table->getName());
 				if ($display == null) continue;
-				if ($display->category <> $filter["category"]) continue;
-				foreach ($display->getDisplayableData() as $data) {
+				if ($display->getCategory()->getName() <> $filter["category"]) continue;
+				foreach ($display->getDataDisplay($from) as $data) {
 					if ($data->getDisplayName() <> $filter["name"]) continue;
 					$found = true;
 					$fil = array();
@@ -131,47 +137,47 @@ class service_get_data_list extends Service {
 		
 		// check if we have actions, then add necessary fields in the SQL request
 		$actions = null;
-		if (isset($input["actions"]) && $input["actions"] && !isset($input["export"])) {
-			$actions = array();
-			$categories = array();
-			foreach ($display_data as $data) {
-				$cat_name = $data->handler->category;
-				if (!in_array($cat_name, $categories))
-					array_push($categories, $cat_name);
-			}
-			$model = DataModel::get();
-			foreach ($categories as $cat) {
-				$links = $model->getDataCategoryLinks($cat);
-				if ($links <> null)
-					foreach ($links as $link)
-					array_push($actions, array($link->link,$link->icon));
-			}
-			foreach ($actions as &$action) {
-				$k = 0;
-				$link = $action[0];
-				while (($k = strpos($link, "%", $k)) !== false) {
-					$kk = strpos($link, "%", $k+1);
-					if ($kk === false) break;
-					$s = substr($link, $k+1, $kk-$k-1);
-					$l = strpos($s, ".");
-					$table = substr($s, 0, $l);
-					$col = substr($s, $l+1);
-					$alias = $q->getFieldAlias($q->getTableAlias($table), $col);
-					if ($alias == null) {
-						$alias = $builder->new_alias();
-						$q->field($q->getTableAlias($table), $col, $alias);
-					}
-					$k = $kk+1;
-					continue;
-				}
-			}
-		}
+// 		if (isset($input["actions"]) && $input["actions"] && !isset($input["export"])) {
+// 			$actions = array();
+// 			$categories = array();
+// 			foreach ($display_data as $data) {
+// 				$cat_name = $data->getCategoryName();
+// 				if (!in_array($cat_name, $categories))
+// 					array_push($categories, $cat_name);
+// 			}
+// 			$model = DataModel::get();
+// 			foreach ($categories as $cat) {
+// 				$links = $model->getDataCategoryLinks($cat);
+// 				if ($links <> null)
+// 					foreach ($links as $link)
+// 					array_push($actions, array($link->link,$link->icon));
+// 			}
+// 			foreach ($actions as &$action) {
+// 				$k = 0;
+// 				$link = $action[0];
+// 				while (($k = strpos($link, "%", $k)) !== false) {
+// 					$kk = strpos($link, "%", $k+1);
+// 					if ($kk === false) break;
+// 					$s = substr($link, $k+1, $kk-$k-1);
+// 					$l = strpos($s, ".");
+// 					$table = substr($s, 0, $l);
+// 					$col = substr($s, $l+1);
+// 					$alias = $q->getFieldAlias($q->getTableAlias($table), $col);
+// 					if ($alias == null) {
+// 						$alias = $q->generateFieldAlias();
+// 						$q->field($q->getTableAlias($table), $col, $alias);
+// 					}
+// 					$k = $kk+1;
+// 					continue;
+// 				}
+// 			}
+// 		}
 		
 		// handle sort
 		if (isset($input["sort_field"]) && isset($input["sort_order"])) {
 			for ($i = 0; $i < count($display_data); $i++) {
 				$data = $display_data[$i];
-				if ($data->handler->category.".".$data->getDisplayName() == $input["sort_field"]) {
+				if ($data->getCategoryName().".".$data->getDisplayName() == $input["sort_field"]) {
 					if ($input["sort_order"] == "ASC") $asc = true;
 					else if ($input["sort_order"] == "DESC") $asc = false;
 					else break;
@@ -185,13 +191,15 @@ class service_get_data_list extends Service {
 		//echo $q->generate();
 
 		if (!isset($input["export"])) {
-			// calculate the total number of entries
-			$count = new SQLQuery($q);
-			$count = $count->count("NB_DATA")->executeSingleRow();
-			$count = $count["NB_DATA"];
-			
 			// handle pages
 			if (isset($input["page_size"])) {
+				// calculate the total number of entries
+				$count = new SQLQuery($q);
+				$count->resetFields();
+				$count->removeUnusefulJoinsForCounting();
+				$count = $count->count("NB_DATA")->executeSingleRow();
+				$count = $count["NB_DATA"];
+				
 				$nb = intval($input["page_size"]);
 				if ($nb == 0) $nb = 1000;
 				$page = isset($input["page"]) ? intval($input["page"]) : 0;
@@ -211,8 +219,9 @@ class service_get_data_list extends Service {
 		
 		if (!isset($input["export"])) {
 			echo "{";
-			echo "count:".$count;
-			echo ",data:[";
+			if (isset($input["page_size"]))
+				echo "count:".$count.",";
+			echo "data:[";
 			$first = true;
 			foreach ($res as $row) {
 				if ($first) $first = false; else echo ",";
@@ -225,7 +234,7 @@ class service_get_data_list extends Service {
 					if ($f) $f = false; else echo ",";
 					echo "{v:";
 					echo json_encode($row[$a["data"]]);
-					if (isset($row[$a["key"]]))
+					if ($a["key"] !== null && isset($row[$a["key"]]))
 						echo ",k:".json_encode($row[$a["key"]]);
 					else {
 						echo ",k:null";

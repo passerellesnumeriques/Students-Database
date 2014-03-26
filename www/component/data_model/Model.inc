@@ -1,5 +1,9 @@
 <?php
 require_once("TableDefinition.inc");
+require_once("DataDisplayCategory.inc");
+require_once("TableDataDisplay.inc");
+require_once("DataDisplay.inc");
+require_once("DataScreen.inc");
 /** Defines the data model of the application. Each component is supposed to populate this model with its own part of the model */
 class DataModel {
 
@@ -11,12 +15,15 @@ class DataModel {
 	 * @return DataModel the data model */
 	public static function &get() {
 		if (DataModel::$model == null) {
-			$model = new DataModel();
+			DataModel::$model = new DataModel();
 			$done = array();
 			foreach (PNApplication::$instance->components as $c) {
-				DataModel::_get_component($c, $done, $model);
+				DataModel::_get_component($c, $done, DataModel::$model);
 			}
-			DataModel::$model = &$model;
+			$done = array();
+			foreach (PNApplication::$instance->components as $c) {
+				DataModel::_get_component_display($c, $done, DataModel::$model);
+			}
 		}
 		return DataModel::$model;
 	}
@@ -44,11 +51,22 @@ class DataModel {
 			}
 		}
 	}
-
+	private static function _get_component_display($c, &$done, &$model) {
+		if (in_array($c->name, $done)) return;
+		array_push($done, $c->name);
+		foreach ($c->dependencies() as $dep)
+			DataModel::_get_component_display(PNApplication::$instance->components[$dep], $done, $model);
+		$file = "component/".$c->name."/datamodel_display.inc";
+		if (file_exists($file))
+			include $file;
+	}
+	
 	protected $tables = array();
-	private $data_category_link = array();
 	private $sub_models = array();
-
+	private $data_categories = array();
+	private $table_display = array();
+	private $data_screens = array();
+	
 	/** Add a table to the model, and returns it
 	 *
 	 * @param string $name name of the table to ad
@@ -88,6 +106,16 @@ class DataModel {
 		$this->tables[$key_table]->_key_for_submodel($sm);
 		array_push($this->sub_models, $sm);
 		return $sm;
+	}
+	
+	/**
+	 * @param string $key_table
+	 * @return SubDataModel
+	 */
+	public function &getSubModel($key_table) {
+		for ($i = 0; $i < count($this->sub_models); $i++)
+			if ($this->sub_models[$i]->getParentTable() == $key_table)
+			return $this->sub_models[$i];
 	}
 	
 	/** Returns the table if access is allowed.
@@ -199,19 +227,35 @@ class DataModel {
 		return $this->sub_models;
 	}
 
-	/** indicates which page to go in order to display information about the given category */
-	public function addDataCategoryLink($category, $link, $icon = null) {
-		if (!isset($this->data_category_link[$category]))
-			$this->data_category_link[$category] = array();
-		array_push($this->data_category_link[$category], new DataCategoryLink($link, $icon));
+	public function addDataCategory($category) {
+		array_push($this->data_categories, $category);
 	}
-	public function getDataCategoryLinks($category) {
-		if (isset($this->data_category_link[$category]))
-			return $this->data_category_link[$category];
-		return array();
+	public function getDataCategory($name) {
+		foreach ($this->data_categories as $c)
+			if ($c->getName() == $name) 
+				return $c;
+		return null;
 	}
-	public function getAllDataCategoryLinks() {
-		return $this->data_category_link;
+	
+	public function addTableDataDisplay($display) {
+		array_push($this->table_display, $display);
+	}
+	/**
+	 * @param string $table_name
+	 * @return \datamodel\TableDataDisplay
+	 */
+	public function getTableDataDisplay($table_name) {
+		foreach ($this->table_display as $d)
+			if ($d->getTableName() == $table_name)
+				return $d;
+		return null;
+	}
+	
+	public function addDataScreen($screen) {
+		array_push($this->data_screens, $screen);
+	}
+	public function getDataScreens() {
+		return $this->data_screens;
 	}
 	
 	private function hide($table, $field) {
@@ -260,6 +304,13 @@ class SubDataModel extends DataModel {
 	
 	public function &getParentModel() { return $this->parent_model; }
 	public function getParentTable() { return $this->parent_table; }
+	
+	public function addDataDisplayHandler($handler) {
+		$this->parent_model->addDataDisplayHandler($handler);
+	}
+	public function getDataDisplayHandler($table) {
+		return $this->parent_model->getDataDisplayHandler($table);
+	}
 	
 	public function createTables($key) {
 		if (SQLQuery::isTransactionStarted()) {

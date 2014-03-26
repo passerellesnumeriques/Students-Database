@@ -5,7 +5,7 @@ class page_exam_import_subject extends selection_page {
 	
 	public function get_required_rights() {return array("manage_exam_subject");}
 	
-	public function execute_selection_page(&$page) {
+	public function execute_selection_page() {
 		/* Check the rights */
 		$can_update = PNApplication::$instance->selection->canManageExamSubjectQuestions();
 		if(!$can_update[0]){
@@ -40,9 +40,9 @@ class page_exam_import_subject extends selection_page {
 			$fixed_data = array();
 			$prefilled_data = array();
 
-			// import_data($page, $icon, $title, $data_list, $fixed_data, $prefilled_data, $create_button, $create_function);
+			// import_data($this, $icon, $title, $data_list, $fixed_data, $prefilled_data, $create_button, $create_function);
 			import_data(
-				$page,
+				$this,
 				"/static/application/icon.php?main=/static/selection/exam/exam_32.png&small=".theme::$icons_16["add"]."&where=right_bottom",
 				"Import Exam Subject",
 				$data_list,

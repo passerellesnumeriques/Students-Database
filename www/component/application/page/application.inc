@@ -3,9 +3,16 @@ theme::css($this, "application.css");
 
 // mandatory part
 $this->require_javascript("calendar.js");
-?>
-<script type='text/javascript'>
+?><script type='text/javascript'>
 window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
+window.top.default_country_id = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo $c["id"]; ?>;
+window.top.default_country_name = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo json_encode($c["name"]); ?>;
+
+setTimeout(function() {
+	window.top.require("geography.js", function() {
+		window.top.geography.getCountryData(window.top.default_country_id,function(){});
+	});
+}, 1000);
 
 window.top.calendar_manager = new CalendarManager();
 window.top.CalendarsProviders.get(function(provider) {
@@ -13,9 +20,11 @@ window.top.CalendarsProviders.get(function(provider) {
 	for (var i = 0; i < provider.calendars.length; ++i)
 		window.top.calendar_manager.addCalendar(provider.calendars[i]);
 	provider.on_calendar_added.add_listener(function(cal){
+		if (!window.top.calendar_manager) return;
 		window.top.calendar_manager.addCalendar(cal);
 	});
 	provider.on_calendar_removed.add_listener(function(cal){
+		if (!window.top.calendar_manager) return;
 		window.top.calendar_manager.removeCalendar(cal);
 	});
 	provider._refresh_interval = setInterval(function() {
@@ -31,8 +40,8 @@ window.top.pnapplication.onlogout.add_listener(function() {
 	});
 	window.top.calendar_manager = null;
 });
-</script>
-<?php
+document.body.style.overflow = "hidden";
+</script><?php
 if (isset($_GET["page"])) {
 	// only the frame
 	echo "<iframe id='pn_application_content' name='pn_application_content' src='".$_GET["page"]."' style='width:100%;height:100%;border:none;'></iframe>";
@@ -257,7 +266,9 @@ echo $sel_index;
 
 // background loading of the application
 require("load_static.js",function(){
-	new load_static_resources(span_background_loading);
+	var loading = new load_static_resources(span_background_loading);
+	loading._slow_when_user_active = true;
+	loading._slow_when_services_active = true;
 });
 require("animation.js");
 require("context_menu.js");

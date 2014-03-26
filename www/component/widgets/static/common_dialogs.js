@@ -192,3 +192,14 @@ function multiple_input_dialog(icon,title,inputs,ok_handler) {
 			inputs[i].validate();
 	});
 }
+
+function popup_frame(icon, title, url, post_data, percent_w, percent_h) {
+	require("popup_window.js", function() {
+		var p = new popup_window(title, icon, "");
+		p.setContentFrame(url, null, post_data);
+		if (percent_w)
+			p.showPercent(percent_w, percent_h);
+		else
+			p.show();
+	});
+}

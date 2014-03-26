@@ -19,28 +19,28 @@ function getArrayStepsToDisplay ($steps_to_display){
 require_once("selection_page.inc");
 class page_selection_main_page extends selection_page {
 	public function get_required_rights() { return array(); }
-	public function execute_selection_page(&$page){
+	public function execute_selection_page(){
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		
-		$page->add_javascript("/static/widgets/header_bar.js");
-		$page->onload("new header_bar('steps_header','small');");
+		$this->add_javascript("/static/widgets/header_bar.js");
+		$this->onload("new header_bar('steps_header','small');");
 
-		$page->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
-		$page->onload("new splitter_vertical('selection_main_page_split',0.35);");
+		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
+		$this->onload("new splitter_vertical('selection_main_page_split',0.35);");
 		
-		$page->add_javascript("/static/widgets/vertical_layout.js");
+		$this->add_javascript("/static/widgets/vertical_layout.js");
 		$this->onload("new vertical_layout('left');");
 		//TODO set rights to calendar table? bypass_security required above...
 		
-		$page->add_javascript("/static/widgets/section/section.js");
-		$page->add_javascript("/static/news/news.js");
+		$this->add_javascript("/static/widgets/section/section.js");
+		$this->add_javascript("/static/news/news.js");
 		
 		$status_to_display = include("selection_main_page_status_screens.inc");
 		$steps = PNApplication::$instance->selection->getSteps();
 		$unvalid_steps_to_display = array();
 		$valid_steps_to_display = array();
 
-		$page->onload("section_from_html('section_preparation');");
+		$this->onload("section_from_html('section_preparation');");
 	?>
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
 				<div id = 'left'>
@@ -58,7 +58,7 @@ class page_selection_main_page extends selection_page {
 						<?php
 						$js_to_run = array();
 						foreach($status_to_display as $s){
-							$id = $page->generateID();
+							$id = $this->generateID();
 							echo "<div id = '".$id."' style = 'width:100%'></div>";
 							if(!$steps[$s[0]])
 								array_push($unvalid_steps_to_display,array(
@@ -73,7 +73,7 @@ class page_selection_main_page extends selection_page {
 								$url = $s[3];
 								$url .= "/";
 								$url .= $s[1];
-								$page->add_javascript("/static/selection/".$url);
+								$this->add_javascript("/static/selection/".$url);
 								$js_name = str_replace(".js","",$s[1]);
 								array_push($js_to_run,"new ".$js_name."('content_".$id."');");
 							}

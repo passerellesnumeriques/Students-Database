@@ -229,7 +229,7 @@ function calendar_view_week(view, container) {
 		}
 		
 		this._createTimeScale();
-		if (!has_fixed_height)
+		if (has_fixed_height)
 		for (var i = 0; i < this.time_title.childNodes.length; ++i)
 			if (this.time_title.childNodes[i].time.getHours() > 6) {
 				scrollTo(this.time_title.childNodes[i]);

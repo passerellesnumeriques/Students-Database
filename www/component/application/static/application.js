@@ -5,6 +5,10 @@ if (window == window.top) {
 	window.top.pnapplication = {
 		/** Event raised when the user logout, so we can clean some objects that may be on the top window */
 		onlogout: new Custom_Event(),
+		/** Event raised when the user login */
+		onlogin: new Custom_Event(),
+		/** Indicates if the user is currently logged or not */
+		logged_in: false,
 		/** list of windows (private: registerWindow and unregisterWindow must be used) */
 		_windows: [],
 		/** event when a window/frame is closed. The window is given as parameter to the listeners. */ 
@@ -29,7 +33,9 @@ if (window == window.top) {
 						animation.stop(w.frameElement.loading_anim);
 						w.frameElement.loading_anim = null;
 					}
+					w.layout.invalidate(w.document.body);
 					w.frameElement.unloading_anim = animation.fadeOut(w.frameElement.loading_t, 300, function() {
+						if (!w.frameElement) return;
 						if (w.frameElement.loading_t) {
 							w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
 							w.frameElement.loading_t = null;
@@ -76,8 +82,8 @@ if (window == window.top) {
 						w.frameElement.unloading_anim = null;
 					}
 					if (w.frameElement.loading_t) {
-						if (w.frameElement.loading_t.parentNode)
-							w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
+						if (w.frameElement.loading_t.parentNode) return; // already there
+							//w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
 					}
 					var t = document.createElement("TABLE");
 					var tr = document.createElement("TR");
@@ -200,6 +206,8 @@ if (window == window.top) {
 		closeWindow: function() {
 			window.top.pnapplication.onclose.fire();
 		},
+		/** event fired when user activity is detected */
+		onactivity: new Custom_Event(),
 		/** time of the last activity of the user */
 		last_activity: new Date().getTime(),
 		/** signals the user is active: fire onactivity event on each window */
@@ -213,6 +221,7 @@ if (window == window.top) {
 			var time = new Date().getTime();
 			time -= window.top.pnapplication.last_activity;
 			for (var i = 0; i < window.top.pnapplication._windows.length; ++i) {
+				if (window.top.pnapplication._windows[i] == window.top) continue;
 				if (window.top.pnapplication._windows[i].closed) {
 					window.top.pnapplication.unregisterWindow(window.top.pnapplication._windows[i]);
 					window.top.pnapplication.checkInactivity();
@@ -227,6 +236,7 @@ if (window == window.top) {
 			}
 		}
 	};
+	window.top.pnapplication.registerWindow(window.top);
 } else if (typeof Custom_Event != 'undefined'){
 	/**
 	 * Handle events on the current window, transfered to the top window
@@ -251,9 +261,29 @@ if (window == window.top) {
 		addInactivityListener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
-		onmouseout: new Custom_Event()
+		addOverAndOut: function(element, handler) {
+			var w = getWindowFromElement(element);
+			window.top.pnapplication.registerOnMouseMove(w, function(x,y) {
+				var x1 = w.absoluteLeft(element);
+				var y1 = w.absoluteTop(element);
+				var x2 = x1+element.offsetWidth;
+				var y2 = y1+element.offsetHeight;
+				if (element._isover) {
+					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
+					} else {
+						element._isover = false;
+						handler(false);
+					}
+				} else {
+					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
+						element._isover = true;
+						handler(true);
+					}
+				}
+				
+			});
+		}
 	};
-	window.onmouseout = function(ev) { window.pnapplication.onmouseout.fire(ev); };
 	window.top.pnapplication.registerWindow(window);
 }
 

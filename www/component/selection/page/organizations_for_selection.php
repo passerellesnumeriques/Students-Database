@@ -8,11 +8,11 @@ class page_organizations_for_selection extends selection_page {
 	 * Create a data_list with all the selection organizations
 	 * with the possibility to pick any
 	 */
-	public function execute_selection_page(&$page) {
-		$page->add_javascript("/static/widgets/grid/grid.js");
-		$page->add_javascript("/static/data_model/data_list.js");
-		$page->onload("init_organizations_list();");
-		$container_id = $page->generateID();
+	public function execute_selection_page() {
+		$this->add_javascript("/static/widgets/grid/grid.js");
+		$this->add_javascript("/static/data_model/data_list.js");
+		$this->onload("init_organizations_list();");
+		$container_id = $this->generateID();
 		
 		$can_create = false;
 		foreach (PNApplication::$instance->components as $c) {
@@ -50,9 +50,10 @@ class page_organizations_for_selection extends selection_page {
 		function init_organizations_list() {
 			dl = new data_list(
 				'<?php echo $container_id;?>',
-				'Organization',
-				['Contacts.Name'],
-				[{category:'Contacts',name:'Managed by',data:{type:'exact',value:"Selection"}}],
+				'Organization', null,
+				['Organization.Name','Organization.Address','Organization.EMail','Organization.Phone'],
+				[{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"}}],
+				250,
 				function (list) {
 					if(page_mode == "IS_partners" || page_mode == "EC_partners")
 						list.grid.setSelectable(true);

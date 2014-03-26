@@ -5,7 +5,7 @@ if (typeof require != 'undefined') require("input_utils.js");
  * @param config can contain: <code>max_length</code> (maximum number of characters), <code>min_length</code> optional minimum length, <code>can_be_null</code> optionally if the field is empty it will means the data is null, <code>min_size</code> (minimum size for autoresize) or <code>fixed_size</code> (no autoresize), <code>style</code> additional style to give
  */
 function field_text(data,editable,config) {
-	if (data == null) data = "";
+	if (data == null && config && !config.can_be_null) data = "";
 	typed_field.call(this, data, editable, config);
 }
 field_text.prototype = new typed_field();
@@ -40,11 +40,11 @@ field_text.prototype._create = function(data) {
 			}
 			t.signal_error(err);
 		};
-		var f = function() { setTimeout(function() {
+		var f = function() {
 			t.validate();
 			t._datachange();
-		},1); };
-		input.onkeyup = f;
+		};
+		input.onkeyup = function() { setTimeout(f,1); };
 		input.onblur = f;
 		input.onchange = f;
 

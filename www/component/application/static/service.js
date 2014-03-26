@@ -10,7 +10,7 @@ service = {
 	 * @param {Function} handler callback that will receive the result, or null if an error occured
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 */
-	json: function(component, service_name, input, handler, foreground) {
+	json: function(component, service_name, input, handler, foreground, progress_handler) {
 		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null)
@@ -28,7 +28,8 @@ service = {
 					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
 				else for (var i = 0; i < error.length; ++i)
 					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error[i],10000));
-			}
+			},
+			progress_handler
 		);
 	},
 	
@@ -40,7 +41,7 @@ service = {
 	 * @param {Function} handler callback that will receive the result, or null if an error occured
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 */
-	xml: function(component, service_name, input, handler, foreground) {
+	xml: function(component, service_name, input, handler, foreground, progress_handler) {
 		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null) {
@@ -61,7 +62,8 @@ service = {
 			foreground,
 			function(error){
 				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
-			}
+			},
+			progress_handler
 		);
 	},
 	
@@ -73,20 +75,25 @@ service = {
 	 * @param {Function} handler callback that will receive the raw result, or null if a network error occured
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 */
-	customOutput: function(component, service_name, input, handler, foreground) {
+	customOutput: function(component, service_name, input, handler, foreground, error_handler, progress_handler, overrideResponseMimeType) {
 		window.top._last_service_call = new Date().getTime();
-		var data = "";
+		var data = null;
 		if (input != null)
 			data = service.generateInput(input);
-		ajax.call("POST", "/dynamic/"+component+"/service/"+service_name, "text/json", data, 
+		ajax.call(data ? "POST" : "GET", "/dynamic/"+component+"/service/"+service_name, data ? "text/json" : null, data, 
 			function(error){
-				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+				if (error_handler)
+					error_handler(error);
+				else
+					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
 				handler(null);
 			},
 			function(xhr){
 				handler(xhr.responseText);
 			},
-			foreground
+			foreground,
+			progress_handler,
+			overrideResponseMimeType
 		);
 	},
 

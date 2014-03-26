@@ -2,7 +2,7 @@
 require_once("selection_page.inc");
 class page_test_functionalities extends selection_page {
 	public function get_required_rights() { return array(); }
-	public function execute_selection_page(&$page){
+	public function execute_selection_page(){
 // 		$id = SQLQuery::create()
 // 			->insert("InformationSession",array(
 // 			"date" => null,

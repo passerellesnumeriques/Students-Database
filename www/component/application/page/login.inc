@@ -11,6 +11,8 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 		if ($error === null) {
 			echo "<script type='text/javascript'>";
 			echo "window.top.set_loading_message('Starting application...');";
+			echo "window.top.pnapplication.logged_in = true;";
+			echo "window.top.pnapplication.onlogin.fire();";
 			echo "location.href = 'enter';";
 			echo "</script>";
 			return;

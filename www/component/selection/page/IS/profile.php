@@ -2,11 +2,11 @@
 require_once("/../selection_page.inc");
 class page_IS_profile extends selection_page {
 	public function get_required_rights() { return array("see_information_session_details"); }
-	public function execute_selection_page(&$page){
+	public function execute_selection_page(){
 		
-	$name = $page->generateID();
-	$page->add_javascript("/static/widgets/vertical_layout.js");
-	$page->onload("new vertical_layout('IS_profile_container');");
+	$name = $this->generateID();
+	$this->add_javascript("/static/widgets/vertical_layout.js");
+	$this->onload("new vertical_layout('IS_profile_container');");
 	if(!isset($_GET["id"]))
 		$id = -1;
 	else if($_GET["id"] == "-1")
@@ -23,25 +23,28 @@ class page_IS_profile extends selection_page {
 				<?php }?>
 				<div class = "button_verysoft" id = "save_IS_button"><img src = '<?php echo theme::$icons_16["save"];?>' /> <b>Save</b></div>
 				<div class = "button_verysoft" id = "remove_IS_button"><img src = '<?php echo theme::$icons_16["remove"];?>' /> Remove Information Session</div>
+				<?php if($id <> -1){?>
+				<div class = "button_verysoft" onclick = "popup_frame('/static/people/people_list_16.png','Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{value:<?php echo $id;?>}}]},95,95);"><img src = '/static/people/people_list_16.png'/> Applicants List</div>
+				<?php }?>
 			</div>			
 			<div id='IS_profile_<?php echo $name; ?>' style = "overflow:auto" layout = "fill"></div>
 		</div>
 		
 	<?php
-		$this->IS_profile($page,"IS_profile_".$name,$id,"save_IS_button","remove_IS_button",$read_only);
+		$this->IS_profile("IS_profile_".$name,$id,"save_IS_button","remove_IS_button",$read_only);
 	}
 	
 	/**
 	 * The rights of the user is taken into account to set this page, and updated by the steps
-	 * @param object $page the page object where the content will be generated
+	 * @param object $this the page object where the content will be generated
 	 * @param number $id the id of the information session
 	 * @param string $save_IS_button the id of the save button (must have been added to the page header before calling this function)
 	 * @param string $remove_IS_button the id of the remove button (must have been added to the page header before calling this function)
 	 * @param boolean $read_only true if the page must be set in uneditable mode
 	 */
-	public function IS_profile(&$page,$container_id,$id,$save_IS_button, $remove_IS_button, $read_only){
-		$page->add_javascript("/static/widgets/header_bar.js");
-		$page->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('/static/selection/IS/IS_16.png', 'Information Session Profile');");
+	public function IS_profile($container_id,$id,$save_IS_button, $remove_IS_button, $read_only){
+		$this->add_javascript("/static/widgets/header_bar.js");
+		$this->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('/static/selection/IS/IS_16.png', 'Information Session Profile');");
 		require_once("component/selection/SelectionJSON.inc");
 		$can_read = PNApplication::$instance->user_management->has_right("see_information_session_details",true);
 		if(!$can_read)
@@ -66,7 +69,7 @@ class page_IS_profile extends selection_page {
 		//lock the row if id != -1
 		$db_lock = null;
 		if($id != -1){
-			$db_lock = $page->performRequiredLocks("InformationSession",$id,null,$campaign_id);
+			$db_lock = $this->performRequiredLocks("InformationSession",$id,null,$campaign_id);
 			//if db_lock = null => read only
 			if($db_lock == null){
 				$can_add = false;

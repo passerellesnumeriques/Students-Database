@@ -139,6 +139,42 @@ function valueCopy(value, obj_depth) {
 	return value;
 }
 
+function objectEquals(o1, o2, done) {
+	if (typeof o1 != typeof o2) return false;
+	if (typeof o1 != 'object') return o1 == o2;
+	if (o1 == null) return o2 == null;
+	var c1 = getObjectClassName(o1);
+	var c2 = getObjectClassName(o2);
+	if (c1 != c2) return false;
+	if (!done) done = [];
+	if (done.contains(o1) || done.contains(o2)) return o1 == o2;
+	done.push(o1); done.push(o2);
+	if (c1 == "Array") return arrayEquals(o1, o2, done);
+	if (c1 == "Date") return o1.getTime() == o2.getTime();
+	for (var name in o1) {
+		var found = false;
+		for (var name2 in o2) if (name2 == name) { found = true; break; }
+		if (!found) return false;
+	}
+	for (var name in o2) {
+		var found = false;
+		for (var name2 in o1) if (name2 == name) { found = true; break; }
+		if (!found) return false;
+	}
+	for (var name in o1) {
+		var v1 = o1[name];
+		var v2 = o2[name];
+		if (!objectEquals(v1, v2, done)) return false;
+	}
+	return true;
+}
+function arrayEquals(a1, a2, done) {
+	if (a1.length != a2.length) return false;
+	for (var i = 0; i < a1.length; ++i)
+		if (!objectEquals(a1[i], a2[i], done)) return false;
+	return true;
+}
+
 var _generate_id_counter = 0;
 /**
  * Generates an unique id. 
@@ -432,10 +468,10 @@ function URL(s) {
 	this.host = this.host.toLowerCase();
 	this.path = this.path.toLowerCase();
 	
-	/** create a string representing the URL
-	 * @method URL#toString
-	 */
-	this.toString = function() {
+}
+URL.prototype = {
+	/** create a string representing the URL */
+	toString: function() {
 		var s;
 		if (this.protocol) {
 			s = this.protocol+"://"+this.host;
@@ -451,8 +487,8 @@ function URL(s) {
 		if (this.hash)
 			s += "#"+this.hash;
 		return s;
-	};
-}
+	}	
+};
 
 /** Event
  * @constructor

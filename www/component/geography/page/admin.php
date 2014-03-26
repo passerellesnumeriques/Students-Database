@@ -10,7 +10,7 @@ class page_admin extends Page {
 		?>
 		<div id='geography_page' icon='/static/geography/geography_32.png' title='Geography' page='/dynamic/geography/page/set_geography_area'>
 			<div>
-				Country to edit: <span id='select_country'></span>
+				<span id='select_country'></span>
 			</div>
 		</div>
 		<script type='text/javascript'>

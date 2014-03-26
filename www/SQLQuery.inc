@@ -91,6 +91,7 @@ class SQLQuery {
  	/** @var array array(table_name,column_name,alias) for COUNT(`table_name`.`column_name`) AS `alias` where alias is optional */
  	public $count_one_field = null;
  	/** @var array list of WHERE string expression, which will be joined by AND */
+ 	public $expressions = array();
  	public $where = array();
  	/** @var array list of LEFT JOIN with format (table_from,table_to,fields_matching,alias) */
  	public $joins = array();
@@ -154,6 +155,10 @@ class SQLQuery {
 	 */
 	public function &selectSubModelForTable($table_obj, $sub_model) {
 		if ($sub_model == null) return $this;
+		if (!($table_obj instanceof datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table_obj = DataModel::get()->getTable($table_obj);
+		}
 		if (!($table_obj->getModel() instanceof SubDataModel)) return $this;
 		$this->sub_models[$table_obj->getModel()->getParentTable()] = $sub_model;
 		return $this;
@@ -214,11 +219,13 @@ class SQLQuery {
 						substr($file,strlen($root)) == "data_model/Model.inc" ||
 						substr($file,strlen($root)) == "data_model/DataDisplay.inc" ||
 						substr($file,strlen($root)) == "data_model/DataPath.inc" ||
-						substr($file,strlen($root)) == "data_model/DataBaseLock.inc"
+						substr($file,strlen($root)) == "data_model/DataBaseLock.inc" ||
+						substr($file,strlen($root)) == "data_model/DataScreen.inc" ||
+						substr($file,strlen($root)) == "data_model/page/data_screen.inc"
 				)) break; // generic service of data model
-				if ($component == "data_model" && (
-					substr($file,strlen($root)) == "data_model/page/table_datadisplay.inc"	
-				)) continue; // generic display, let's see who call it
+				//if ($component == "data_model" && (
+				//	substr($file,strlen($root)) == "data_model/page/data_screen.inc"	
+				//)) continue; // generic display, let's see who call it
 				require_once("component/data_model/Model.inc");
 				$decl = DataModel::get()->internalGetTable($table_name)->declaring_component;
 				if ($component <> $decl) {
@@ -280,7 +287,7 @@ class SQLQuery {
 	 * @param string $table table name
 	 * @param string $name field name
 	 * @param string $alias alias or null
-	 * @return this
+	 * @return SQLQuery
 	 */
 	public function &countOneField($table, $name, $alias=null){
 		$this->count_one_field = array($table,$name,$alias);
@@ -292,6 +299,11 @@ class SQLQuery {
 	 */
 	public function &distinct(){
 		$this->distinct = true;
+		return $this;
+	}
+	
+	public function &expression($expr, $alias) {
+		array_push($this->expressions, array($expr, $alias));
 		return $this;
 	}
 	
@@ -421,6 +433,23 @@ class SQLQuery {
 		return $this;
 	}
 	
+	public function &whereKey($table, $key) {
+		if (!($table instanceof \datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table = DataModel::get()->getTable($table);
+		}
+		$table_alias = $this->getTableAlias($table->getName());
+		$k = $table->getPrimaryKey();
+		if ($k <> null) $this->whereValue($table_alias, $k->name, $key);
+		else {
+			$k = $table->getKey();
+			foreach ($k as $kname) {
+				$this->whereValue($table_alias, $kname, $key[$kname]);
+			}
+		}
+		return $this;
+	}
+	
 	/**
 	 * Returns a string containing the current WHERE clause, and reset it in this SQLQuery (remove it)
 	 */
@@ -530,6 +559,51 @@ class SQLQuery {
 		array_push($this->order_by, array($table, $field, $asc));
 		return $this;
 	}
+	
+	public function removeUnusefulJoinsForCounting() {
+		$used_tables = array();
+		foreach ($this->where as $expr) {
+			$s = $expr;
+			while (strlen($s) > 0) {
+				$i = strpos($s, "`.`");
+				if ($i === FALSE) break;
+				$start = strrpos($s, "`", $i-1);
+				$table_name = substr($s, $start+1, $i-$start-1);
+				if (!in_array($table_name, $used_tables))
+					array_push($used_tables, $table_name);
+				$s = substr($s, $i+3);
+			}
+		}
+		// get needed join to reach used tables
+		do {
+			$added = false;
+			foreach ($used_tables as $name) {
+				// check if it is in select from
+				$ok = false;
+				foreach ($this->tables as $tname=>$talias)
+					if ($name == $tname || $name == $talias) { $ok = true; break; }
+				if ($ok) continue;
+				// if it comes from a join, the table used for the join is needed as well
+				foreach ($this->joins as $j) {
+					if ($name == $j[1] || $name == $j[3]) {
+						if (!in_array($j[0], $used_tables)) {
+							array_push($used_tables, $j[0]);
+							$added = true;
+							break;
+						}
+					}
+				}
+			}
+		} while ($added);
+		// remove joins on non-used tables
+		for ($i = 0; $i < count($this->joins); $i++) {
+			$j = $this->joins[$i];
+			if (!in_array($j[1], $used_tables) && !in_array($j[3], $used_tables)) {
+				array_splice($this->joins, $i, 1);
+				$i--;
+			}
+		}
+	}
 
 	public function generate() {
 		require_once("component/data_model/Model.inc");
@@ -559,7 +633,7 @@ class SQLQuery {
 			else
 				$table = DataModel::get()->getTable($t);
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-			if (count($this->fields) == 0 && $this->count === null) {
+			if (count($this->fields) == 0 && $this->count === null && count($this->expressions) == 0) {
 				if ($this->bypass_security)
 					$columns = $table->internalGetColumns();
 				else
@@ -597,7 +671,7 @@ class SQLQuery {
 				$table = DataModel::get()->getTable($join[1]);
 			$alias = $join[3];
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-			if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null) {
+			if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0) {
 				if ($this->bypass_security)
 					$columns = $table->internalGetColumns();
 				else
@@ -630,12 +704,12 @@ class SQLQuery {
 		$this->fields = $final_fields;
 		
 		$sql = "SELECT ";
-		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && !$this->bypass_security)
+		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0 && !$this->bypass_security)
 			throw new Exception("Access denied: you don't have access to any column in this request");
-		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && $this->bypass_security){
+		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0 && $this->bypass_security){
 			if($this->distinct)
 				$sql .= "DISTINCT ";
-			$sql .= "*";		
+			$sql .= "*";
 		}
 		else {
 			$first = true;
@@ -662,6 +736,10 @@ class SQLQuery {
 				$sql .= "`".$this->resolveWhereTable($this->count_one_field[0])."`.`".$this->count_one_field[1]."`)";
 				if ($this->count_one_field[2] <> null)
 					$sql .= " AS `".$this->count_one_field[2]."`";
+			}
+			foreach ($this->expressions as $e) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= $e[0]." AS `".$e[1]."`";
 			}
 		}
 		$sql .= " FROM ";
@@ -796,9 +874,9 @@ class SQLQuery {
 	}
 	
 	private function getColumnName($table, $column) {
-		$display = $table->getDisplayHandler(null);
+		$display = DataModel::get()->getTableDataDisplay($table->getName());
 		if ($display == null) return $column;
-		foreach ($display->getDisplayableData() as $data) {
+		foreach ($display->getDataDisplay(null) as $data) {
 			foreach ($data->getHandledColumns() as $col)
 				if ($col == $column) return $data->getDisplayName();
 		}
@@ -873,7 +951,7 @@ class SQLQuery {
 					$name = $this->getColumnName($t, $field);
 					throw new Exception($name.": ".$e->getMessage());
 				}
-				if ($col->unique) {
+				if ($col->unique && !($col instanceof PrimaryKey) && !($col instanceof ForeignKey)) {
 					$q = SQLQuery::create()->bypassSecurity()->noWarning()->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field]);
 					$where = "";
 					if ($t->getPrimaryKey() <> null) {
@@ -1286,7 +1364,12 @@ class SQLQuery {
 		// check we are allowed
 		if (!$this->bypass_security) {
 			if (!$t->mayInsert()) throw new Exception("Access denied: add data to table ".$t->getName());
-			if (!$t->acceptInsert($fields_values)) throw new Exception("Access denied: add data to table ".$t->getName()." denied for those values");
+			if (!$t->acceptInsert($fields_values)) {
+				$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
+				foreach ($fields_values as $field=>$value)
+					$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+				throw new Exception($msg);
+			}
 		}
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
@@ -1382,8 +1465,14 @@ class SQLQuery {
 		// check we are allowed
 		if (!$this->bypass_security) {
 			if (!$t->mayInsert()) throw new Exception("Access denied: add data to table ".$t->getName());
-			foreach ($rows as $fields_values)
-				if (!$t->acceptInsert($fields_values)) throw new Exception("Access denied: add data to table ".$t->getName()." denied for those values");
+			foreach ($rows as $fields_values) {
+				if (!$t->acceptInsert($fields_values)) {
+					$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
+					foreach ($fields_values as $field=>$value)
+						$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+					throw new Exception($msg);
+				}
+			}
 		}
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
@@ -1433,7 +1522,7 @@ class SQLQuery {
 				foreach ($rows as &$fields_values) {
 					if (!isset($fields_values[$col->name])) {
 						DataBaseLock::unlock($lock);
-						throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
+						throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName().". Given columns are: ".var_export($fields_values, true));
 					}
 				}
 			}
@@ -1892,6 +1981,12 @@ class SQLQuery {
 		foreach ($this->fields as $f)
 			$s .= "<li>".$f[0].".".$f[1]." AS ".$f[2]."</li>";
 		$s .= "</ul></li>";
+
+		// where
+		$s .= "<li>WHERE:<ul>";
+		foreach ($this->where as $w)
+			$s .= "<li>".htmlentities($w)."</li>";
+		$s .= "</ul></li>";
 		
 		$s .= "</ul>";
 		return $s;
@@ -2017,6 +2112,55 @@ class SQLQuery {
 			self::getDataBaseAccessWithoutSecurity()->commit();
 		}
 		self::$rollback = false;
+	}
+	
+}
+
+class TablesToUpdate {
+
+	private $list = array();
+	
+	public function addValue($table, $sub_model, $row_key, $column, $value) {
+		if (!isset($this->list[$table]))
+			$this->list[$table] = array();
+		if (!isset($this->list[$table][$sub_model]))
+			$this->list[$table][$sub_model] = array();
+		if (!isset($this->list[$table][$sub_model][$row_key]))
+			$this->list[$table][$sub_model][$row_key] = array();
+		$this->list[$table][$sub_model][$row_key][$column] = $value;
+	}
+	
+	public function execute($only_insert = false) {
+		$tables_keys = array();
+		foreach ($this->list as $table_name=>$table_content) {
+			foreach ($table_content as $sub_model=>$sub_model_content) {
+				$inserts = array();
+				foreach ($sub_model_content as $row_key=>$row_content) {
+					if ($row_key == null || intval($row_key) < 0 || $only_insert) {
+						if (!isset($inserts[$row_key]))
+							$inserts[$row_key] = array();
+						foreach ($row_content as $col_name=>$value)
+							$inserts[$row_key][$col_name] = $value;
+					} else {
+						SQLQuery::create()->updateByKey($table_name, $row_key, $row_content);
+					}
+				}
+				if (count($inserts) > 0) {
+					$rows = array();
+					foreach ($inserts as $row_key => $row) array_push($rows, $row);
+					$ids = SQLQuery::create()->insertMultiple($table_name, $rows);
+					if (!isset($tables_keys[$table_name]))
+						$tables_keys[$table_name] = array();
+					if (count($ids) > 0) {
+						$tables_keys[$table_name][$sub_model] = array();
+						$i = 0;
+						foreach ($inserts as $row_key => $row)
+							$tables_keys[$table_name][$sub_model][$row_key] = $ids[$i++];
+					}
+				}
+			}
+		}
+		return $tables_keys;
 	}
 	
 }

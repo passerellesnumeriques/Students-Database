@@ -44,7 +44,7 @@ function header_bar(container, style) {
 		t.menu.addItem(html);
 	};
 	this.addMenuButton = function(icon, text, onclick) {
-		var button = document.createElement("DIV");
+		var button = document.createElement("BUTTON");
 		button.className = "button_verysoft";
 		if (icon) {
 			var img = document.createElement("IMG");

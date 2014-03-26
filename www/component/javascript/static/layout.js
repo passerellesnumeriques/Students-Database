@@ -1,11 +1,22 @@
 layout = {
 	// Layout handlers attached to elements
 	_layout_handlers: [],
+	_w: window,
 	addHandler: function(element, handler) {
+		var w = getWindowFromElement(element);
+		if (w != layout._w) {
+			w.layout.addHandler(element, handler);
+			return;
+		}
 		layout._layout_handlers.push({element:element,handler:handler});
 		layout._last_layout_activity = new Date().getTime();
 	},
 	removeHandler: function(element, handler) {
+		var w = getWindowFromElement(element);
+		if (w != window) {
+			w.layout.removeHandler(element, handler);
+			return;
+		}
 		for (var i = 0; i < layout._layout_handlers.length; ++i) {
 			if (layout._layout_handlers[i].element == element && layout._layout_handlers[i].handler == handler) {
 				layout._layout_handlers.splice(i,1);
@@ -23,8 +34,6 @@ layout = {
 	
 	// layout process
 	_invalidated: [],
-	_process_timeout: null,
-	_multiple_process_counter: 0,
 	invalidate: function(element) {
 		if (element == null) {
 			try { throw new Error("null element given to layout.invalidate"); }
@@ -36,13 +45,15 @@ layout = {
 			if (p.style && p.style.visibility == "hidden") return;
 			p = p.parentNode;
 		}
-		if (getWindowFromDocument(element.ownerDocument) != window) {
-			getWindowFromDocument(element.ownerDocument).layout.invalidate(element);
+		var w = getWindowFromElement(element);
+		if (w != window) {
+			w.layout.invalidate(element);
 			return;
 		}
-		if (!layout._invalidated.contains(element))
+		if (!layout._invalidated.contains(element)) {
 			layout._invalidated.push(element);
-		layout._layout_needed();
+			layout._layout_needed();
+		}
 	},
 	
 	_noresize_event: false,
@@ -50,33 +61,29 @@ layout = {
 		this._noresize_event = true;
 	},
 	
+	_process_timeout: null,
+	_layouts_short_time: 0,
 	_layout_needed: function() {
 		if (layout._process_timeout != null) return;
 		var f = function() {
+			if (layout._last_layout_activity < new Date().getTime() - 1000)
+				layout._layouts_short_time = 0;
 			layout._process_timeout = null;
-			layout._process(); 
-			if (layout._process_timeout != null) {
-				// the processing raised the need of new layout
-				layout._multiple_process_counter++;
-				if (layout._multiple_process_counter < 3) {
-					// ok, we continue fast: 1ms
-				} else if (layout._multiple_process_counter <= 5) {
-					// delay a little bit more to avoid too heavy processing: 10ms
-					clearTimeout(layout._process_timeout);
-					layout._process_timeout = setTimeout(f, 10);
-				} else if (layout._multiple_process_counter < 10) {
-					// delay even more: 50ms
-					clearTimeout(layout._process_timeout);
-					layout._process_timeout = setTimeout(f, 10);
-				} else {
-					// delay even more: 200ms
-					clearTimeout(layout._process_timeout);
-					layout._process_timeout = setTimeout(f, 10);
-				}
-			} else
-				layout._multiple_process_counter = 0;
+			layout._process();
 		};
-		layout._process_timeout = setTimeout(f,1);
+		var timing = 1; // by default 1ms
+		if (layout._last_layout_activity > new Date().getTime() - 1000) {
+			layout._layouts_short_time++;
+			if (layout._layouts_short_time < 2)
+				timing = 10; // first time, delay a little: 10ms
+			else if (layout._layouts_short_time < 4)
+				timing = 50; // start to have a lot, delay of 50ms
+			else
+				timing = 300; // a lot: delay of 300ms
+		} else {
+			layout._layouts_short_time = 0;
+		}
+		layout._process_timeout = setTimeout(f,timing);
 	},
 	_process: function() {
 		if (layout._invalidated.length == 0) return; // nothing to do
@@ -215,7 +222,10 @@ layout = {
 				// size changed, let's do it again later, from its parent
 				element._layout_scroll_height = element.scrollHeight;
 				element._layout_scroll_width = element.scrollWidth;
-				layout.invalidate(element.parentNode);
+				if (element.nodeName != "BODY")
+					layout.invalidate(element.parentNode);
+				else
+					layout.invalidate(element);
 				//return;
 			}
 		}
@@ -345,6 +355,8 @@ if (typeof listenEvent != 'undefined') {
 
 // useful functions to set height and width, taking into account borders, margins, and paddings
 function setWidth(element, width) {
+	var win = getWindowFromElement(element);
+	if (win != window) { win.setWidth(element, width); return; }
 	var s = getComputedStyleSizes(element);
 	width -= parseInt(s.borderLeftWidth);
 	width -= parseInt(s.borderRightWidth);
@@ -355,6 +367,8 @@ function setWidth(element, width) {
 	element.style.width = width+"px";
 }
 function setHeight(element, height) {
+	var win = getWindowFromElement(element);
+	if (win != window) { win.setHeight(element, height); return; }
 	var s = getComputedStyleSizes(element);
 	height -= parseInt(s.borderTopWidth);
 	height -= parseInt(s.borderBottomWidth);
@@ -365,12 +379,16 @@ function setHeight(element, height) {
 	element.style.height = height+"px";
 }
 function getWidth(element) {
+	var win = getWindowFromElement(element);
+	if (win != window) return win.getWidth(element);
 	var s = getComputedStyleSizes(element);
 	var w = element.offsetWidth;
 	w += parseInt(s.marginLeft) + parseInt(s.marginRight);
 	return w;
 }
 function getHeight(element) {
+	var win = getWindowFromElement(element);
+	if (win != window) return win.getHeight(element);
 	var s = getComputedStyleSizes(element);
 	var h = element.offsetHeight;
 	h += parseInt(s.marginTop) + parseInt(s.marginBottom);
@@ -423,6 +441,13 @@ function _styleMargin(s) {
 function _stylePadding(s) {
 	if (s.length == 0) return "0px";
 	return s;
+};
+var _layout_add_css = window.add_stylesheet;
+window.add_stylesheet = function(url, onload) {
+	_layout_add_css(url, function() {
+		layout.invalidate(document.body);
+		if (onload) onload();
+	});
 };
 if (!window.top.browser_scroll_bar_size) {
 	window.top.browser_scroll_bar_size = 20;
