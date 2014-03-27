@@ -341,8 +341,8 @@ var students_list = new data_list(
 					}
 					service.json("people","get_peoples",{ids:people_ids},function(peoples) {
 						tool.setToolValue("people", null, peoples, false);
-						tool.launchUpload(ev, true);
 					});
+					tool.launchUpload(ev, true);
 				};
 			});
 		});
