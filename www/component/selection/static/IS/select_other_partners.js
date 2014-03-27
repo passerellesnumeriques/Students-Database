@@ -18,6 +18,8 @@ function select_other_partners(container, all_partners, partners_contacts_points
 	t.partners = [];
 	t.host = host_id;
 	
+	t.onupdate = new Custom_Event();//Event fired when any data is updated
+	
 	/**
 	 * Reset the table, and fire the layout event
 	 * @param {HTMLElement | NULL} (optional) locker any screen locker to remove
@@ -31,6 +33,7 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		if(locker)
 			unlock_screen(locker);
 		layout.invalidate(t.section.element);
+		t.onupdate.fire();
 	};
 	
 	/**

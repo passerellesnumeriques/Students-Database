@@ -11,6 +11,7 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 	var t = this;
 	t.rooms = rooms;
 	container = typeof container == "string" ? document.getElementById(container) : container;
+	t.onupdate = new Custom_Event();
 	
 	/**
 	 * Reset the section content
@@ -22,7 +23,8 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 		t.section.resetToolBottom();
 		if(new_rooms)
 			rooms = new_rooms;
-		t._getRoomsRemoveRight();		
+		t._getRoomsRemoveRight();	
+		t.onupdate.fire();
 	};
 	
 	/**

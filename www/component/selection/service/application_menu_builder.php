@@ -168,8 +168,7 @@ class service_application_menu_builder extends Service {
 				if(PNApplication::$instance->user_management->has_right("see_information_session_details",true))
 					echo "addMenuItem('/static/selection/IS/IS_16.png','Information Sessions','List information sessions already planned, create new ones','/dynamic/selection/page/IS/main_page');";
 				if(PNApplication::$instance->user_management->has_right("see_exam_subject",true))
-					echo "addMenuItem('/static/selection/exam/exam_16.png','Exams','Written exam subjects, eligibility rules, exam sessions planned, import results','/dynamic/selection/page/exam/main_page');";
-				echo "addMenuItem('/static/curriculum/batch_16.png','Applicants','Applicants lists, import applicants, create applicants','/dynamic/selection/page/applicant/main_page');";
+					echo "addMenuItem('/static/selection/exam/exam_16.png','Exams','Written exam subjects, eligibility rules, exam sessions planned, import results','/dynamic/selection/page/exam/main_page');";				
 			}
 		}
 	}
