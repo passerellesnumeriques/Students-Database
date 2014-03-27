@@ -15,6 +15,13 @@ class GeographyJSON {
 	
 	public static function GeographicAreaText($q, $row) {
 		if ($row["geographic_area_id"] == null) return "null";
+		if(!isset($row["country_division_id"])){
+			$row["country_division_id"] = SQLQuery::create()
+				->select("GeographicArea")
+				->field("GeographicArea","country_division",'id')
+				->whereValue("GeographicArea", "id", $row["geographic_area_id"])
+				->executeSingleValue();
+		}
 		return "{".
 			"id:".$row["geographic_area_id"].
 			",division_id:".$row["country_division_id"].

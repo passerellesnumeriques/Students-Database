@@ -5,7 +5,7 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 	
 	public function get_required_rights() {return array("manage_applicant");}
 	
-	public function execute_selection_page(&$page) {		
+	public function execute_selection_page() {		
 		$lock = @$_GET["lock"];//Get the lock if already exist
 		$mode = $_GET["mode"];
 		$applicants = @$_GET["a"];//people id of the selected applicants
@@ -24,13 +24,13 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 		}
 	
 		//generate the page
-		$page->require_javascript("vertical_layout.js");
+		$this->require_javascript("vertical_layout.js");
 		if($mode == "session"){
 			//Add the field time for the sessions names
-			$page->require_javascript("typed_field.js");
-			$page->require_javascript("field_time.js");
+			$this->require_javascript("typed_field.js");
+			$this->require_javascript("field_time.js");
 		}
-		$page->onload("new vertical_layout('assign_container');");
+		$this->onload("new vertical_layout('assign_container');");
 		?>
 		<div id = "assign_container" style = "width:100%; height:100%; overflow:hidden;">
 			<div id = "sections_container" layout = "fill"></div>
@@ -40,7 +40,7 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 		require_once("component/data_model/DataBaseLock.inc");
 		$sm = PNApplication::$instance->selection->getCampaignId();
 		if(!isset($lock))
-			$lock = $page->performRequiredLocks("Applicant",null,null,$sm);
+			$lock = $this->performRequiredLocks("Applicant",null,null,$sm);
 		else //script is handled by the page#performRequiredLocks method
 			DataBaseLock::generateScript($lock);
 		

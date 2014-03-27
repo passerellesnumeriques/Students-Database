@@ -6,39 +6,6 @@ class page_exam_center_main_page extends selection_page {
 	public function get_required_rights() {return array("see_exam_center_detail");}
 	
 	public function execute_selection_page() {
-		
-// 		for($i = 1; $i < 31; $i++){
-// 			SQLQuery::create()
-// 				->bypassSecurity()
-// 				->insert("Applicant", array(
-// 					"people" => 20+$i,
-// 					"applicant_id" => 20+$i,
-// 					"information_session" => 1
-// 				));
-// 		}
-// 		$j=1;
-// 		for($i = 31; $i < 61; $i++){
-// 			SQLQuery::create()
-// 			->bypassSecurity()
-// 			->insert("Applicant", array(
-// 				"people" => 50+$j,
-// 				"applicant_id" => 50+$j,
-// 				"information_session" => 2
-// 			));
-// 			$j++;
-// 		}
-// 		$j=2;
-// 		for($i = 61; $i < 81; $i++){
-// 			SQLQuery::create()
-// 			->bypassSecurity()
-// 			->insert("Applicant", array(
-// 			"people" => 80+$j,
-// 			"applicant_id" => 80+$j,
-// 			"information_session" => 3
-// 			));
-// 			$j++;
-// 		}
-
 		$this->add_javascript("/static/widgets/grid/grid.js");
 		$this->add_javascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
@@ -118,14 +85,17 @@ class page_exam_center_main_page extends selection_page {
 						</div>
 					</div>
 				</div>
-				
 				<script type='text/javascript'>
 					function init_organizations_list() {
 						new data_list(
 							'<?php echo $list_container_id;?>',
-							'ExamCenter',
-							['Exam Center.Name'],
+							'ExamCenter', <?php echo PNApplication::$instance->selection->getCampaignId();?>,
+							[
+								'Exam Center.Name',
+								'Exam Center.Applicants'
+							],
 							[],
+							-1,
 							function (list) {
 								list.addTitle("/static/selection/exam/exam_center_16.png", "Exam Centers");
 								var new_EC = document.createElement("DIV");

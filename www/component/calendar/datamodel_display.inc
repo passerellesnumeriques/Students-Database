@@ -1,18 +1,20 @@
 <?php 
 class CalendarEventDateDataDisplay extends datamodel\DataDisplay {
 
-	public function __construct($display_name, $event_foreign_key) {
+	public function __construct($display_name, $event_foreign_key, $show_time = false) {
 		$this->display_name = $display_name;
 		$this->event_foreign_key = $event_foreign_key;
+		$this->show_time = $show_time;
 	}
 
 	private $display_name;
 	private $event_foreign_key;
+	private $show_time;
 
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) {
-		return array("field_timestamp","{show_time:false,data_is_seconds:true}");
+		return array("field_timestamp","{show_time:".$this->show_time.",data_is_seconds:true}");
 	}
 	public function isEditable() { return false; }
 	public function getEditLocks($sub_model) { return array(); }

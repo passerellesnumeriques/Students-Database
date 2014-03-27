@@ -29,7 +29,25 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 		t._lockDatabase();
 	};
 	
+	t.dataMustBeSaved = function(){
+		return t._updated;
+	};
+	
 	/**Private methods and attributes*/
+	
+	t._updated = false;
+	
+	t._onDataUpdatedListener = function(){
+		t._updated = true;
+	};
+	
+	t._onDataSavedListener = function(){
+		t._updated = false;
+	};
+	
+	t._bypassCheckDataSaved = function(){
+		t._updated = false;
+	};
 	
 	/**
 	 * Launch the process
@@ -50,6 +68,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	 */
 	t._setAddressField = function(){
 		t.select_address = new select_address(t.div_address, data, partners_contacts_points, can_edit,t._onContactsPointsUpdatedFromProfile,t._onAddressesUpdatedFromProfile,"exam center");
+		t.select_address.onupdatehost.add_listener(t._onDataUpdatedListener);
 	};
 	
 	/**
@@ -65,14 +84,17 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 			}
 		}
 		t.select_other_partners = new select_other_partners(t.div_partners, data.partners, partners_contacts_points, can_edit, host_id,t.select_address.onupdatehost, t._onContactsPointsUpdatedFromProfile,"exam_center");
+		t.select_other_partners.onupdate.add_listener(t._onDataUpdatedListener);
 	};
 	
 	t._setCustomNameField = function(){
 		t.center_name = new IS_ExamCenter_name(t.div_name,data.name,can_edit,"Exam center name");
+		t.center_name.onupdate.add_listener(t._onDataUpdatedListener);
 	};
 	
 	t._setRooms = function(){
 		t.manage_rooms = new manage_exam_center_room(t.div_room,data.rooms,id,can_edit,config_name_room);
+		t.manage_rooms.onupdate.add_listener(t._onDataUpdatedListener);
 	};
 	
 	t._setISLinkedField = function(){
@@ -111,28 +133,6 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 			button_remove.style.position = 'static';
 			button_remove.onclick = function(){
 				//Check that rooms can be removed
-//				var rooms = t.manage_rooms.getNewRoomsArray();
-//				var ids = [];
-//				var applicants_assigned = null;
-//				for(var i = 0; i < rooms.length; i++)
-//					ids.push(rooms[i].id);
-//				service.json("selection","exam/get_assigned_to_sessions_for_center",{ids:ids},function(res){
-//					if(!res) {
-//						error_dialog("This functionality is not available");
-//						return;
-//					}
-//					for(var i = 0; i < res.length; i++){
-//						if(res[i].assigned != null){
-//							applicants_assigned = applicants_assigned == null ? [] : applicants_assigned;
-//							applicants_assigned.push(res[i]);
-//						}
-//					}
-//					if(applicants_assigned == null)
-//						t._performRemoveCenter();
-//					else {
-//						error_dialog_html(t.manage_rooms.getInfoRow(applicants_assigned));
-//					}
-//				});
 				service.json("selection","exam/can_rooms_be_removed_for_center",{EC_id:id},function(res){
 					if(!res){
 						error_dialog("An error occured, functionality not available");
@@ -180,6 +180,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	};
 	
 	t._performRemoveCenter = function(){
+		t._bypassCheckDataSaved();
 		service.json("selection","exam/remove_center",{id:data.id},function(r){
 			if(!r){
 				error_dialog("An error occured, this center was not removed properly");
@@ -235,6 +236,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 					data = res;
 					//reset the table (in case remove button must be added, and update the objects)
 					t.resetAll(null,null,res.rooms);
+					t._onDataSavedListener();
 				}
 			});
 		}

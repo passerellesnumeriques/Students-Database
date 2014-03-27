@@ -2258,29 +2258,27 @@ class selection extends Component {
 		$session_error = null;
 		$room_error = null;
 		//Check that the applicant is not assigned to a session / room already
-		$assigned = SQLQuery::create()
-			->bypassSecurity()
-			->select("Applicant")
-			->field("Applicant","exam_session")
-			->field('Applicant',"exam_center_room")
-			->whereValue('Applicant', "people", $people_id)
-			->executeSingleRow();
-		if($assigned["exam_session"] <> null){
+		$applicant = SQLQuery::create()
+			->bypassSecurity()			
+			->whereValue('Applicant', "people", $people_id);
+		SelectionJSON::ApplicantSQL($applicant);
+			$applicant = $applicant->executeSingleRow();
+		if($applicant["exam_session"] <> null){
 			$can = false;
 			//Get the event name
-			$ev_name = PNApplication::$instance->calendar->getEventName($this->getCalendarId(), $assigned["exam_session"]);
-			$session_error = "This applicant is already assigned to a session in this center (".$ev_name.")";			
+			$ev_name = PNApplication::$instance->calendar->getEventName($this->getCalendarId(), $applicant["exam_session"]);
+			$session_error = "Applicant ".$applicant["applicant_id"].", ".$applicant["last_name"].", ".$applicant["first_name"]." is already assigned to a session in this center (".$ev_name.")";			
 		}
-		if($assigned["exam_center_room"] <> null){
+		if($applicant["exam_center_room"] <> null){
 			$can = false;
 			//Get the room name
 			$room_name = SQLQuery::create()
 				->bypassSecurity()
 				->select("ExamCenterRoom")
 				->field("ExamCenterRoom","name")
-				->whereValue("ExamCenterRoom", "name", $assigned["exam_center_room"])
+				->whereValue("ExamCenterRoom", "name", $applicant["exam_center_room"])
 				->executeSingleValue();
-			$room_error = "This applicant is already assigned to a room in this center (".$room_name.")";
+			$room_error = "Applicant ".$applicant["applicant_id"].", ".$applicant["last_name"].", ".$applicant["first_name"]." is already assigned to a room in this center (".$room_name.")";
 		}
 		return array($can,$session_error,$room_error);
 	}
@@ -2403,14 +2401,11 @@ class selection extends Component {
 		$q = SQLQuery::create()
 			->select("Applicant");
 		SelectionJSON::ApplicantSQL($q);
-		if(isset($EC_id) && !isset($session_id) && !isset($room_id))
+		if(isset($EC_id))
 			$q->whereValue("Applicant", "exam_center",$EC_id);
-		else if(!isset($EC_id) && isset($session_id) && !isset($room_id))
+		if(isset($session_id))
 			$q->whereValue("Applicant", "exam_session",$session_id);
-		else if(!isset($EC_id) && isset($session_id) && isset($room_id)){
-			$q->whereValue("Applicant", "exam_center_room",$room_id);
-			$q->whereValue("Applicant", "exam_session",$session_id);
-		} else if (!isset($EC_id) && !isset($session_id) && isset($room_id))
+		if(isset($room_id))
 			$q->whereValue("Applicant", "exam_center_room",$room_id);
 		if($order_by == "name")
 			$q->orderBy("People","last_name");

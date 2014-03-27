@@ -2,7 +2,7 @@
 require_once("/../selection_page.inc");
 class page_exam_session_profile extends selection_page {
 	public function get_required_rights() { return array("see_exam_center_detail"); }
-	public function execute_selection_page(&$page){
+	public function execute_selection_page(){
 		$id = $_GET["id"];
 		$read_only = @$_GET["readonly"];
 		$EC_id = SQLQuery::create()->select("ExamSession")->field("ExamSession","exam_center")->whereValue("ExamSession", "event", $id)->executeSingleValue();
@@ -33,7 +33,7 @@ class page_exam_session_profile extends selection_page {
 		}
 		$campaign_id = PNApplication::$instance->selection->getCampaignId();
 		//Lock
-		$db_lock = $page->performRequiredLocks("ExamSession",$id,null,$campaign_id);
+		$db_lock = $this->performRequiredLocks("ExamSession",$id,null,$campaign_id);
 		//if db_lock = null => read only
 		if($db_lock == null){
 			$can_add = false;
