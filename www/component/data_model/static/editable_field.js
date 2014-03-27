@@ -70,7 +70,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 				require(field_classname+".js",function(){
 					t.field = new window[field_classname](data,false,field_arguments);
 					container.appendChild(t.field.getHTMLElement());
-					t.field.getHTMLElement().style.verticalAlign = "top";
+					//t.field.getHTMLElement().style.verticalAlign = "top";
 					t.field.onchange.add_listener(function() {
 						t._changed();
 					});

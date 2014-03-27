@@ -16,16 +16,16 @@ class widgets extends Component {
 		if ($col instanceof \datamodel\ColumnInteger) {
 			$cfg = "{";
 			$cfg .= "can_be_null:".json_encode($col->can_be_null);
-			if ($col->min !== null) $cfg .= ",min:".$col->min;
-			if ($col->max !== null) $cfg .= ",max:".$col->max;
+			if ($col->min !== null) $cfg .= ",min:".json_encode($col->min);
+			if ($col->max !== null) $cfg .= ",max:".json_encode($col->max);
 			$cfg .= "}";
 			return array("field_integer",$cfg);
 		}
 		if ($col instanceof \datamodel\ColumnDecimal) {
 			$cfg = "{";
 			$cfg .= "can_be_null:".json_encode($col->can_be_null);
-			if ($col->min !== null) $cfg .= ",min:".$col->min;
-			if ($col->max !== null) $cfg .= ",max:".$col->max;
+			if ($col->min !== null) $cfg .= ",min:".json_encode($col->min);
+			if ($col->max !== null) $cfg .= ",max:".json_encode($col->max);
 			$cfg .= ",integer_digits:".$col->integer_digits;
 			$cfg .= ",decimal_digits:".$col->decimal_digits;
 			$cfg .= "}";

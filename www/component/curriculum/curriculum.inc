@@ -27,6 +27,17 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();
 	}
 	
+	public function getCurrentBatches() {
+		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+		$q->where("end_date >= CURRENT_DATE()");
+		return $q->execute();
+	}
+	public function getAlumniBatches() {
+		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+		$q->where("end_date < CURRENT_DATE()");
+		return $q->execute();
+	}
+	
 	/**
 	 * Join the batch table to an SQLQuery
 	 * @param SQLQuery $q the query where to add the join

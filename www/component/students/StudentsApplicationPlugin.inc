@@ -8,7 +8,7 @@ class StudentsApplicationPlugin implements ApplicationPlugin {
 	public function getName() { return "Students"; }
 	public function getInfoText() { return "Students information: education, training, finance"; }
 	
-	public function getPageURL() { return "/dynamic/students/page/tree?page=list#current_students"; }
-	public function getMenuProviderService() { return null; }
+	public function getPageURL() { return "/dynamic/students/page/tree#current_students"; }
+	public function getMenuProviderService() { return "/static/students/application_menu_provider.js"; }
 }
 ?>

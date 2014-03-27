@@ -139,6 +139,10 @@ function valueCopy(value, obj_depth) {
 	return value;
 }
 
+function objectMerge(o, add) {
+	for (var name in add) o[name] = add[name];
+}
+
 function objectEquals(o1, o2, done) {
 	if (typeof o1 != typeof o2) return false;
 	if (typeof o1 != 'object') return o1 == o2;

@@ -18,6 +18,7 @@ function frame_header_menu_item(id, icon, text, link, tooltip_content, start_url
 	this.text = document.createTextNode(text);
 	this.link.appendChild(this.text);
 	this.link.href = link;
+	this.original_url = link;
 	this.start_url = start_url;
 	this.button_type = button_type;
 	tooltip(this.link, tooltip_content);

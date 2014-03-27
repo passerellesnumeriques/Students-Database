@@ -15,6 +15,10 @@ function TreeItem(cells, expanded, onselect) {
 	for (var i = 1; i < this.cells.length; ++i) this.cells[i].element.className = "tree_cell";
 	this.children = [];
 	this.expanded = expanded;
+	this.setOnSelect = function(onselect) {
+		this.onselect = onselect;
+		this.cells[0].element.className = "tree_cell tree_cell_main tree_cell_selectable";
+	};
 	this.addItem = function(item) {
 		item.parent = this;
 		if (this.tree) this.tree._create_item(item);

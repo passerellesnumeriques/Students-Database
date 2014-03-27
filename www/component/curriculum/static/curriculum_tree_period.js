@@ -1,35 +1,69 @@
-function create_new_batch() {
-	require("popup_window.js",function(){
-		var popup = new popup_window("Create New Batch", theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "");
-		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&onsave=new_batch_created");
-		popup.show();
-	});
+// #depends[curriculum_tree.js]
+
+function CurriculumTreeNode_AcademicPeriod(parent, period) {
+	this.period = period;
+	var now = new Date().getTime();
+	CurriculumTreeNode.call(this, parent, "period"+period.id, parseSQLDate(period.end_date).getTime() > now && parseSQLDate(period.start_date).getTime() < now);
+	this.item.cells[0].addStyle({color: parseSQLDate(period.end_date).getTime() < now ? "#4040A0" : parseSQLDate(period.start_date).getTime() > now ? "#A04040" : "#40A040"});
+	if (period.available_specializations.length > 0) {
+		for (var i = 0; i < period.available_specializations.length; ++i) {
+			var spe_id = period.available_specializations[i];
+			var spe = null;
+			for (var j = 0; j < specializations.length; ++j)
+				if (specializations[j].id == spe_id) { spe = specializations[j]; break; }
+			new CurriculumTreeNode_Specialization(this, spe);
+		}
+	} else {
+		for (var i = 0; i < period.classes.length; ++i)
+			new CurriculumTreeNode_Class(this, period.classes[i]);
+	}
 }
-function new_batch_created(id) {
-	service.json("curriculum","get_batch",{id:id},function(batch){
-		tree_build_batch(batch);
-	});
-}
-function edit_batch(batch) {
-	require("popup_window.js",function(){
-		var popup = new popup_window("Edit Batch", theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.edit), "");
-		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&id="+batch.id+"&onsave=batch_saved");
-		popup.show();
-	});
-}
-function batch_saved(id) {
-	var node = root.findTag("batch"+id);
-	node.item.parent.removeItem(node.item);
-	service.json("curriculum","get_batch",{id:id},function(batch){
-		tree_build_batch(batch);
-	});
-}
-function remove_batch(batch) {
-	window.top.datamodel.confirm_remove("StudentBatch", batch.id, function() {
-		var node = root.findTag("batch"+batch.id);
-		node.item.parent.removeItem(node.item);
-	});
-}
+CurriculumTreeNode_AcademicPeriod.prototype = new CurriculumTreeNode;
+CurriculumTreeNode_AcademicPeriod.prototype.constructor = CurriculumTreeNode_AcademicPeriod;
+CurriculumTreeNode_AcademicPeriod.prototype.getIcon = function() { return theme.build_icon("/static/curriculum/hat.png", "/static/curriculum/calendar_10.gif"); };
+CurriculumTreeNode_AcademicPeriod.prototype.createTitle = function(editable) {
+	var span = document.createElement("SPAN");
+	span.appendChild(document.createTextNode("Period "));
+	var period = this.period;
+	window.top.datamodel.create_cell("AcademicPeriod", null, "name", period.id, period.name, editable && can_edit_batches, span, function(value) { period.name = value; });
+	return span;
+};
+CurriculumTreeNode_AcademicPeriod.prototype.createInfo = function() {
+	var period = this.period;
+	var div = document.createElement("DIV");
+	var span = document.createElement("DIV");
+	var b = document.createElement("B"); b.appendChild(document.createTextNode("Start")); span.appendChild(b); span.appendChild(document.createTextNode(": "));
+	window.top.datamodel.create_cell("AcademicPeriod", null, "start_date", period.id, period.start_date, false, span, function(value) { period.start_date = value; });
+	div.appendChild(span);
+	span = document.createElement("DIV");
+	var b = document.createElement("B"); b.appendChild(document.createTextNode("End")); span.appendChild(b); span.appendChild(document.createTextNode(": "));
+	window.top.datamodel.create_cell("AcademicPeriod", null, "end_date", period.id, period.end_date, false, span, function(value) { period.end_date = value; });
+	div.appendChild(span);
+	var button = document.createElement("BUTTON");
+	button.className = "button_verysoft";
+	button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
+	button.title = "Edit batch, periods and specializations";
+	button.node = this;
+	button.onclick = function() {
+		edit_batch(this.node.parent.batch);
+	};
+	div.appendChild(button);
+	if (period.available_specializations.length == 0) {
+		button = document.createElement("BUTTON");
+		button.className = "button_verysoft";
+		button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
+		button.title = "Create a new class in period "+period.name;
+		button.node = this;
+		button.onclick = function() {
+			new_class(this.node, null);
+		};
+		div.appendChild(button);
+	}
+	return div;
+};
+CurriculumTreeNode_AcademicPeriod.prototype.getURLParameters = function() {
+	return {batch:this.parent.batch.id,period:this.period.id};
+};
 
 function new_class(period_node, spe) {
 	require("popup_window.js",function() {
@@ -116,9 +150,9 @@ function new_class(period_node, spe) {
 								spe_node = pnode.item.children[i].node;
 								break;
 							}
-						new ClassNode(spe_node, cl);
+						new CurriculumTreeNode_Class(spe_node, cl);
 					} else
-						new ClassNode(pnode, cl);
+						new CurriculumTreeNode_ClassNode(pnode, cl);
 					
 					p.unfreeze();
 					if (period_index == periods.length-1)
