@@ -25,6 +25,7 @@ class StaffPositionDataDisplay extends datamodel\DataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
 		$ids = array();
 		foreach ($rows as $row) array_push($ids, $row[$sql_aliases["key"]]);
+		if (count($ids) == 0) return;
 		$positions = SQLQuery::create()->select("StaffPosition")->whereIn("StaffPosition","people",$ids)->orderBy("StaffPosition", "start", false)->execute();
 		$alias = $original_query->generateFieldAlias();
 		$sql_aliases["data"] = $alias;
@@ -62,6 +63,7 @@ class StaffDepartmentDataDisplay extends datamodel\DataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
 		$ids = array();
 		foreach ($rows as $row) array_push($ids, $row[$sql_aliases["key"]]);
+		if (count($ids) == 0) return;
 		$positions = SQLQuery::create()->select("StaffPosition")->whereIn("StaffPosition","people",$ids)->orderBy("StaffPosition", "start", false)->join("StaffPosition","PNDepartment",array("department"=>"id"))->execute();
 		$alias = $original_query->generateFieldAlias();
 		$sql_aliases["data"] = $alias;

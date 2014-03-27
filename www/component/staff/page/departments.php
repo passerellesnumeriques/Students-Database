@@ -5,6 +5,7 @@ class page_departments extends Page {
 	
 	public function execute() {
 		$departments = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();
+		echo "<div style='background-color:white'>";
 		echo "<div id='container'>";
 		foreach ($departments as $d) {
 			echo "<div id='dept_".$d["id"]."'>";
@@ -14,6 +15,7 @@ class page_departments extends Page {
 		}
 		echo "</div>";
 		echo "<div style='text-align:center'><button onclick='new_dept();'><img src='".theme::$icons_16["add"]."'/> New Department</button></div>";
+		echo "</div>";
 		?>
 <script type='text/javascript'>
 var depts = [<?php
