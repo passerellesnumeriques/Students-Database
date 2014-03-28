@@ -168,6 +168,7 @@ class CurriculumJSON {
 		$s .= ",specialization_id:".json_encode($subject["specialization"]);
 		$s .= ",hours:".json_encode($subject["hours"]);
 		$s .= ",hours_type:".json_encode($subject["hours_type"]);
+		$s .= ",coefficient:".json_encode($subject["coefficient"]);
 		$s .= "}";
 		return $s;
 	}

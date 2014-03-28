@@ -29,7 +29,7 @@ var batches = <?php echo json_encode($batches); ?>;
 
 function build_filters() {
 	var filters = [];
-	if (batches.length > 0) {
+	if (batches && batches.length > 0) {
 		var filter = {category:'Student',name:'Batch',data:{value:batches[0]},force:true};
 		var f = filter;
 		for (var i = 1; i < batches.length; ++i) {
@@ -217,7 +217,7 @@ var students_list = new data_list(
 			students_list.addHeader(assign);
 		}
 
-		if (batches.length == 1) {
+		if (batches && batches.length == 1) {
 			var import_students = document.createElement("BUTTON");
 			import_students.className = "button_verysoft";
 			import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";

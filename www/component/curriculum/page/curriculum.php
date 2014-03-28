@@ -5,26 +5,31 @@ class page_curriculum extends Page {
 	
 	public function execute() {
 		if (!isset($_GET["batch"])) {
-			if (!isset($_GET["period"])) {
-				echo "<img src='".theme::$icons_16["info"]."'/> ";
-				echo "Please select a batch, an academic period, or a class, to display its curriculum";
-				return;
-			}
+			echo "<img src='".theme::$icons_16["info"]."'/> ";
+			echo "Please select a batch, an academic period, or a class, to display its curriculum";
+			return;
 		}
-		if (isset($_GET["batch"])) {
-			$batch_id = $_GET["batch"];
-			$period_id = null;
-		} else {
+		if (isset($_GET["period"])) {
 			$period_id = $_GET["period"];
 			$period = PNApplication::$instance->curriculum->getAcademicPeriod($period_id);
 			$batch_id = $period["batch"];
+			$start_date = $period["start_date"];
+			$end_date = $period["end_date"];
+			$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
+		} else {
+			$batch_id = $_GET["batch"];
+			$period_id = null;
+			$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
+			$start_date = $batch_info["start_date"];
+			$end_date = $batch_info["end_date"];
 		}
-		$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
 		
 		$categories = PNApplication::$instance->curriculum->getSubjectCategories();
 		$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id);
 
-		if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
+		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum"); 
+		
+		if ($can_edit) {
 			if (isset($_GET["edit"]) && $_GET["edit"] == 1) {
 				require_once("component/data_model/DataBaseLock.inc");
 				$locked_by = null;
@@ -42,18 +47,37 @@ class page_curriculum extends Page {
 			}
 		}
 		
+		$teachers_dates = SQLQuery::create()
+			->select("TeacherDates")
+			->where("start <= '".$end_date."' AND (end IS NULL OR end > '".$start_date."'")
+			->execute();
+		$teachers_ids = array();
+		foreach ($teachers_dates as $t)
+			if (!in_array($t["people"], $teachers_ids))
+				array_push($teachers_ids, $t["people"]);
+		if (count($teachers_ids) > 0) {
+			$teachers = PNApplication::$instance->people->getPeoples($teachers_ids);
+		} else
+			$teachers = array();
+		// TODO continue for teachers
+		
 		require_once("component/curriculum/CurriculumJSON.inc");
 		
 		$this->add_javascript("/static/widgets/tree/tree.js");
 		$this->add_javascript("/static/widgets/header_bar.js");
 		theme::css($this, "header_bar.css");
 		$this->onload("new header_bar('page_header','toolbar');");
+		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->onload("new vertical_layout('page_container');");
+		$this->require_javascript("section.js");
+		$this->onload("section_from_html('teachers_container');");
 		?>
+		<div id="page_container" style="width:100%;height:100%">
 		<div id='page_header' 
 			icon='/static/curriculum/curriculum_16.png' 
-			title='Curriculum for Batch <?php echo htmlentities($batch_info["name"]); if (!isset($_GET["batch"])) echo ", Period ".$period["name"];?>'
+			title='Curriculum for Batch <?php echo htmlentities($batch_info["name"]); if (isset($period)) echo ", Period ".$period["name"];?>'
 		>
-			<?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
+			<?php if ($can_edit) {
 				if (isset($_GET['edit']) && $_GET['edit'] == 1)
 					echo "<div class='button_verysoft' onclick=\"window.onuserinactive();\"><img src='".theme::$icons_16["no_edit"]."'/> Stop editing</div>";
 				else {
@@ -77,7 +101,17 @@ class page_curriculum extends Page {
 			</div>
 			<?php } ?>
 		</div>
-		<div id='curriculum_tree' style='cursor:default;background-color:white'></div>
+		<div id="page_content" layout="fill" style="background-color:white;overflow:auto">
+			<div id='curriculum_tree' style='display:inline-block;vertical-align:top'></div>
+			<div id="teachers_container" style="display:inline-block;vertical-align:top;margin:5px"
+				icon="/static/curriculum/teacher_16.png"
+				title="Teachers List"
+				collapsable="false"
+			>
+				TODO: list of teachers
+			</div>
+		</div>
+		</div>
 		<script type='text/javascript'>
 		function edit_batch() {
 			require("popup_window.js",function(){
@@ -90,7 +124,7 @@ class page_curriculum extends Page {
 			if (window.parent.batch_saved) window.parent.batch_saved(id);
 			location.reload();
 		}
-		var edit = <?php echo PNApplication::$instance->user_management->has_right("edit_curriculum") && isset($_GET["edit"]) && $_GET["edit"] == 1 ? "true" : "false"; ?>;
+		var edit = <?php echo $can_edit && isset($_GET["edit"]) && $_GET["edit"] == 1 ? "true" : "false"; ?>;
 		if (edit)
 			window.onuserinactive = function() {
 				var u=new window.URL(location.href);
@@ -105,19 +139,19 @@ class page_curriculum extends Page {
 		var t = new tree('curriculum_tree');
 		t.addColumn(new TreeColumn("Subject Code - Name"));
 		t.addColumn(new TreeColumn("Hours"));
+		t.addColumn(new TreeColumn("Coef."));
 		t.setShowColumn(true);
 
 		function build_tree() {
-			var root = createTreeItemSingleCell(null, "Curriculum", true);
-			t.addItem(root);
 			for (var i = 0; i < batch.periods.length; ++i) {
 				<?php if ($period_id <> null) echo "if (batch.periods[i].id != ".$period_id.") continue;"?>
-				build_period(root, batch.periods[i]);
+				build_period(batch.periods[i]);
 			}
 		}
-		function build_period(parent, period) {
-			var item = createTreeItemSingleCell(theme.build_icon("/static/curriculum/hat.png", "/static/curriculum/calendar_10.gif"), "Period "+period.name, true);
-			parent.addItem(item);
+		function build_period(period) {
+			var item = createTreeItemSingleCell("/static/calendar/calendar_24.png", "Period "+period.name, true);
+			item.cells[0].addStyle({fontSize:"12pt",fontWeight:"bold",color:"#404080"});
+			t.addItem(item);
 			if (period.available_specializations.length > 0) {
 				for (var i = 0; i < period.available_specializations.length; ++i) {
 					var spe = null;
@@ -137,6 +171,7 @@ class page_curriculum extends Page {
 		function build_categories(parent, period, spe) {
 			for (var i = 0; i < categories.length; ++i) {
 				var item = createTreeItemSingleCell("/static/curriculum/subjects_16.png", categories[i].name, true);
+				item.cells[0].addStyle({fontWeight:"bold",color:"#602000"});
 				if (edit) {
 					img = document.createElement("IMG");
 					img.src = theme.icons_10.add;
@@ -145,6 +180,7 @@ class page_curriculum extends Page {
 					img.style.verticalAlign = "middle";
 					item.cells[0].element.appendChild(img);
 					img.cat = categories[i];
+					img.title = "Add a subject to category "+categories[i].name;
 					img.onclick = function() {
 						new_subject(this.cat, period, spe);
 					};
@@ -203,8 +239,14 @@ class page_curriculum extends Page {
 			var h = document.createElement("SPAN");
 			h.style.paddingLeft = "5px";
 			if (subject.hours && subject.hours_type)
-				h.appendChild(document.createTextNode(subject.hours+" hours "+subject.hours_type));
+				h.appendChild(document.createTextNode(subject.hours+" "+subject.hours_type));
 			cells.push(new TreeCell(h));
+
+			var coef = document.createElement("DIV");
+			coef.style.textAlign = "center";
+			if (subject.coefficient)
+				coef.appendChild(document.createTextNode(subject.coefficient));
+			cells.push(new TreeCell(coef));
 			
 			item = new TreeItem(cells);
 			if (typeof index != 'undefined')
@@ -223,6 +265,7 @@ class page_curriculum extends Page {
 					var name = control.input_name.value;
 					var hours = control.input_hours.value;
 					var hours_type = control.select_hours_type.value;
+					var coef = control.input_coef.value;
 					if (code.length == 0) { alert('Please enter a code'); return; }
 					if (name.length == 0) { alert('Please enter a name'); return; }
 					if (hours.length == 0) { hours = null; hours_type = null; }
@@ -230,6 +273,11 @@ class page_curriculum extends Page {
 						hours = parseInt(hours);
 						if (isNaN(hours)) { alert('Invalid number of hours'); return; }
 						if (hours_type == "") hours_type = null;
+					}
+					if (coef.length == 0) coef = null;
+					else {
+						coef = parseInt(coef);
+						if (isNaN(coef) || coef < 0 || coef > 50) { alert("Invalid coefficient: must be an integer between 0 and 50"); return; }
 					}
 					p.freeze("Saving subject");
 					service.json("data_model","save_entity",{
@@ -239,7 +287,8 @@ class page_curriculum extends Page {
 						field_code: code,
 						field_name: name,
 						field_hours: hours,
-						field_hours_type: hours_type
+						field_hours_type: hours_type,
+						field_coefficient: coef
 					},function(res){
 						if (!res) {
 							p.unfreeze();
@@ -249,6 +298,7 @@ class page_curriculum extends Page {
 						subject.name = name;
 						subject.hours = hours;
 						subject.hours_type = hours_type;
+						subject.coefficient = coef;
 						onchanged();  
 						p.close();
 					});
@@ -309,6 +359,18 @@ class page_curriculum extends Page {
 			default: this.select_hours_type.selectedIndex = 0; break;
 			}
 			td.appendChild(this.select_hours_type);
+			
+			this.element.appendChild(tr = document.createElement("TR"));
+			tr.appendChild(td = document.createElement("TD"));
+			td.innerHTML = "Coefficient";
+			tr.appendChild(td = document.createElement("TD"));
+			this.input_coef = document.createElement("INPUT");
+			this.input_coef.type = "text";
+			this.input_coef.size = "2";
+			this.input_coef.maxLength = 2;
+			if (subject.coefficient)
+				this.input_coef.value = subject.coefficient;
+			td.appendChild(this.input_coef);
 		}
 
 		function new_subject(category, period, spe) {

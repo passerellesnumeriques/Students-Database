@@ -123,6 +123,7 @@ $model->addTable("CurriculumSubject")
 	->addString("name", 100, 1, false, false)
 	->addInteger("hours", 16, 0, 2000, true, false)
 	->addEnum("hours_type", array("Per week","Per period"), true)
+	->addInteger("coefficient", 8, 0, 50, true, false)
 	->addReadAccess("consult_curriculum", true)
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
@@ -148,4 +149,14 @@ $model->addTable("CurriculumSubject")
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
 	;
+ 	
+$model->addTable("TeacherDates")
+ 	->addForeignKey("people", "People", true, false, true)
+ 	->addDate("start", false, false)
+ 	->addDate("end", true)
+ 	->addReadAccess("consult_curriculum", true)
+ 	->addWriteAccess("edit_curriculum", true)
+ 	->addInsertAccess("edit_curriculum", true)
+ 	->addRemoveAccess("edit_curriculum", true)
+ 	;
 ?>

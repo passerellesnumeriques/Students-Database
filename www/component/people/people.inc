@@ -71,6 +71,10 @@ class people extends Component {
 		return SQLQuery::create()->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
 	}
 	
+	public function getPeoples($peoples_ids) {
+		return SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids)->execute();
+	}
+	
 	public function canReadTypes($types) {
 		if (is_string($types)) $types = $this->parseTypes($types);
 		require_once("PeopleTypePlugin.inc");

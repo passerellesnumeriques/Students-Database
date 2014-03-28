@@ -75,7 +75,7 @@ function CurriculumSubjectCategory(id, name) {
  * @param {Number} hours number of hours of this subject
  * @param {String} hours_type either "Per week" or "Per period"
  */
-function CurriculumSubject(id, code, name, category_id, period_id, specialization_id, hours, hours_type) {
+function CurriculumSubject(id, code, name, category_id, period_id, specialization_id, hours, hours_type, coefficient) {
 	this.id = id;
 	this.code = code;
 	this.name = name;
@@ -84,4 +84,5 @@ function CurriculumSubject(id, code, name, category_id, period_id, specializatio
 	this.specialization_id = specialization_id;
 	this.hours = hours;
 	this.hours_type = hours_type;
+	this.coefficient = coefficient;
 }

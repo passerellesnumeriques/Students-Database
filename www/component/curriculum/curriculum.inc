@@ -5,8 +5,10 @@
 class curriculum extends Component {
 	
 	public function getPluginImplementations() {
+		require_once("TeacherPeopleTypePlugin.inc");
 		require_once("CurriculumStudentsPlugin.inc");
 		return array(
+			new TeacherPeopleTypePlugin(),
 			new CurriculumStudentsPlugin()
 		);
 	}
