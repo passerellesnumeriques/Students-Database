@@ -20,6 +20,16 @@ class PeopleJSON {
 		else 
 			return null;
 	}
+
+	public static function PeoplesFromID($ids){
+		$q = SQLQuery::create()
+			->select("People")
+			->whereIn("People", "id", $ids);
+		PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
+		self::PeopleSQL($q);
+		$rows = $q->execute();
+		return self::Peoples($q, $rows);
+	}
 	
 	/**
 	 * Prepares the given given SQLQuery to retrieve a People

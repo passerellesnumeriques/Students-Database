@@ -622,6 +622,9 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (t.content.nodeName == "IFRAME")
 			t.resize(); // we interrupt resize during freeze
 	};
+	t.isFrozen = function() {
+		return t.freezer != null;
+	};
 	
 	/** Close this popup window
 	 * @method popup_window#close

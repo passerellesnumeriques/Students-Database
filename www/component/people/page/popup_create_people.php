@@ -68,6 +68,7 @@ class page_popup_create_people extends Page {
 		echo "}";
 		if (isset($_GET["multiple"])) {
 			if ($_GET["multiple"] == "true") echo "data.multiple = true; go();";
+			else echo "data.multiple = false; go();";
 		}
 		echo "</script>";
 		echo "<div style='padding:10px'>";

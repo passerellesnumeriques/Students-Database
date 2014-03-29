@@ -260,7 +260,13 @@ datamodel = {
 			var t = model.getTable(table);
 			var c = t.getColumn(column);
 			require([["typed_field.js",c.typed_field_classname+".js"],"editable_cell.js"], function() {
-				new editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, c.typed_field_classname, c.typed_field_args, value,null,onchange);
+				if (row_key > 0)
+					new editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, c.typed_field_classname, c.typed_field_args, value,null,onchange);
+				else {
+					var field = new window[c.typed_field_classname](value,true,c.typed_field_args);
+					container.appendChild(field.getHTMLElement());
+					if (onchange) field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
+				}
 			});
 		});
 	},

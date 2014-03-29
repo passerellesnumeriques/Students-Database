@@ -33,6 +33,7 @@ class service_get_subjects extends Service {
 			echo ",name:".json_encode($subject["name"]);
 			echo ",hours:".json_encode($subject["hours"]);
 			echo ",hours_type:".json_encode($subject["hours_type"]);
+			echo ",coefficient:".json_encode($subject["coefficient"]);
 			echo "}";
 		}
 		echo "]";

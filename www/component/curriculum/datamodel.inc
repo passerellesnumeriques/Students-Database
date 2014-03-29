@@ -151,9 +151,10 @@ $model->addTable("CurriculumSubject")
 	;
  	
 $model->addTable("TeacherDates")
+	->addPrimaryKey("id")
  	->addForeignKey("people", "People", true, false, true)
- 	->addDate("start", false, false)
- 	->addDate("end", true)
+ 	->addDate("start", false, false, null,"end")
+ 	->addDate("end", true, false, "start", null)
  	->addReadAccess("consult_curriculum", true)
  	->addWriteAccess("edit_curriculum", true)
  	->addInsertAccess("edit_curriculum", true)

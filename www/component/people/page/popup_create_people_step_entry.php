@@ -76,6 +76,7 @@ class page_popup_create_people_step_entry extends Page {
 				postData("popup_create_people_step_check", data, window);
 			});
 			popup.addCancelButton();
+			if (popup.isFrozen()) popup.unfreeze();
 			</script>
 			<?php
 		} else {
@@ -121,6 +122,7 @@ class page_popup_create_people_step_entry extends Page {
 				postData("popup_create_people_step_check", data, window);
 			});
 			popup.addCancelButton();
+			if (popup.isFrozen()) popup.unfreeze();
 			</script>
 			<?php
 		} 

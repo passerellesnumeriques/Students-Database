@@ -49,17 +49,17 @@ class page_curriculum extends Page {
 		
 		$teachers_dates = SQLQuery::create()
 			->select("TeacherDates")
-			->where("start <= '".$end_date."' AND (end IS NULL OR end > '".$start_date."'")
+			->where("`TeacherDates`.`start` <= '".$end_date."' AND (`TeacherDates`.`end` IS NULL OR `TeacherDates`.`end` > '".$start_date."')")
 			->execute();
 		$teachers_ids = array();
 		foreach ($teachers_dates as $t)
 			if (!in_array($t["people"], $teachers_ids))
 				array_push($teachers_ids, $t["people"]);
 		if (count($teachers_ids) > 0) {
-			$teachers = PNApplication::$instance->people->getPeoples($teachers_ids);
+			require_once("component/people/PeopleJSON.inc");
+			$teachers = PeopleJSON::PeoplesFromID($teachers_ids);
 		} else
-			$teachers = array();
-		// TODO continue for teachers
+			$teachers = "[]";
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
 		
@@ -70,7 +70,7 @@ class page_curriculum extends Page {
 		$this->add_javascript("/static/widgets/vertical_layout.js");
 		$this->onload("new vertical_layout('page_container');");
 		$this->require_javascript("section.js");
-		$this->onload("section_from_html('teachers_container');");
+		$this->onload("section_from_html('teachers_section');");
 		?>
 		<div id="page_container" style="width:100%;height:100%">
 		<div id='page_header' 
@@ -103,12 +103,15 @@ class page_curriculum extends Page {
 		</div>
 		<div id="page_content" layout="fill" style="background-color:white;overflow:auto">
 			<div id='curriculum_tree' style='display:inline-block;vertical-align:top'></div>
-			<div id="teachers_container" style="display:inline-block;vertical-align:top;margin:5px"
+			<div id="teachers_section" style="display:inline-block;vertical-align:top;margin:5px"
 				icon="/static/curriculum/teacher_16.png"
 				title="Teachers List"
 				collapsable="false"
 			>
-				TODO: list of teachers
+				<div style='padding:5px'>
+					<div id='teachers_container'></div>
+					<?php if ($can_edit) {?><button onclick='new_teacher();return false;'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png", theme::$icons_10["add"]);?>'/> New Teacher</button><?php } ?>
+				</div>
 			</div>
 		</div>
 		</div>
@@ -135,20 +138,22 @@ class page_curriculum extends Page {
 		var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON($categories); ?>;
 		var subjects = <?php echo CurriculumJSON::SubjectsJSON($subjects); ?>;
 		var specializations = <?php echo CurriculumJSON::SpecializationsJSON();?>;
+		var teachers = <?php echo $teachers;?>;
 
 		var t = new tree('curriculum_tree');
 		t.addColumn(new TreeColumn("Subject Code - Name"));
 		t.addColumn(new TreeColumn("Hours"));
 		t.addColumn(new TreeColumn("Coef."));
+		t.addColumn(new TreeColumn("Assigned Teachers"));
 		t.setShowColumn(true);
 
 		function build_tree() {
 			for (var i = 0; i < batch.periods.length; ++i) {
 				<?php if ($period_id <> null) echo "if (batch.periods[i].id != ".$period_id.") continue;"?>
-				build_period(batch.periods[i]);
+				build_period(batch.periods[i], batch);
 			}
 		}
-		function build_period(period) {
+		function build_period(period, batch) {
 			var item = createTreeItemSingleCell("/static/calendar/calendar_24.png", "Period "+period.name, true);
 			item.cells[0].addStyle({fontSize:"12pt",fontWeight:"bold",color:"#404080"});
 			t.addItem(item);
@@ -157,18 +162,18 @@ class page_curriculum extends Page {
 					var spe = null;
 					for (var j = 0; j < specializations.length; ++j)
 						if (specializations[j].id == period.available_specializations[i]) { spe = specializations[j]; break; }
-					build_specialization(item, spe, period);
+					build_specialization(item, spe, period, batch);
 				}
 			} else {
-				build_categories(item, period, null);
+				build_categories(item, period, null, batch);
 			}
 		}
-		function build_specialization(parent, spe, period) {
+		function build_specialization(parent, spe, period, batch) {
 			var item = createTreeItemSingleCell("/static/curriculum/curriculum_16.png", "Specialization "+spe.name, true);
 			parent.addItem(item);
-			build_categories(item, period, spe);
+			build_categories(item, period, spe, batch);
 		}
-		function build_categories(parent, period, spe) {
+		function build_categories(parent, period, spe, batch) {
 			for (var i = 0; i < categories.length; ++i) {
 				var item = createTreeItemSingleCell("/static/curriculum/subjects_16.png", categories[i].name, true);
 				item.cells[0].addStyle({fontWeight:"bold",color:"#602000"});
@@ -182,7 +187,7 @@ class page_curriculum extends Page {
 					img.cat = categories[i];
 					img.title = "Add a subject to category "+categories[i].name;
 					img.onclick = function() {
-						new_subject(this.cat, period, spe);
+						new_subject(this.cat, batch, period, spe);
 					};
 				}
 				parent.addItem(item);
@@ -247,6 +252,31 @@ class page_curriculum extends Page {
 			if (subject.coefficient)
 				coef.appendChild(document.createTextNode(subject.coefficient));
 			cells.push(new TreeCell(coef));
+
+			var assigned = document.createElement("DIV");
+			if (edit) {
+				assigned.ondragover = function(event) {
+					if (event.dataTransfer.types.contains("teacher")) {
+						event.dataTransfer.dropEffect = "copy";
+						event.preventDefault();
+						return false;
+					}
+				};
+				assigned.ondragenter = function(event) {
+					if (event.dataTransfer.types.contains("teacher")) {
+						event.dataTransfer.dropEffect = "copy";
+						event.preventDefault();
+						return true;
+					}
+				};
+				assigned.ondrop = function(event) {
+					// TODO
+					event.stopPropagation();
+					return false;
+				};
+				assigned.style.height = "15px"; // TODO
+			}
+			cells.push(new TreeCell(assigned));
 			
 			item = new TreeItem(cells);
 			if (typeof index != 'undefined')
@@ -255,6 +285,35 @@ class page_curriculum extends Page {
 				parent.addItem(item);
 		}
 		build_tree();
+
+		function build_teachers_list() {
+			var container = document.getElementById('teachers_container');
+			for (var i = 0; i < teachers.length; ++i) {
+				var div = document.createElement("DIV");
+				var link = document.createElement("A"); div.appendChild(link);
+				link.href = "#";
+				link.className = "black_link";
+				link.people = teachers[i];
+				link.onclick = function() {
+					var people = this.people;
+					window.top.require("popup_window.js",function(){
+						var p = new window.top.popup_window("Teacher Profile","/static/curriculum/teacher_16.png","");
+						p.setContentFrame("/dynamic/people/page/profile?people="+people.id);
+						p.showPercent(95,95);
+					});
+					return false;
+				};
+				link.draggable = true;
+				link.ondragstart = function(event) {
+					event.dataTransfer.setData("teacher",this.people);
+					event.dataTransfer.effectAllowed = "copy";
+					return true;
+				};
+				link.appendChild(document.createTextNode(teachers[i].first_name+" "+teachers[i].last_name));
+				container.appendChild(div);
+			}
+		}
+		build_teachers_list();
 
 		function edit_subject(subject, onchanged) {
 			require("popup_window.js",function() {
@@ -373,9 +432,27 @@ class page_curriculum extends Page {
 			td.appendChild(this.input_coef);
 		}
 
-		function new_subject(category, period, spe) {
+		function new_subject(category, batch, period, spe) {
 			require("popup_window.js");
 			service.json("curriculum", "get_subjects", {category:category.id,specialization:spe ? spe.id : null,period_to_exclude:period.id}, function(list) {
+				// remove the ones which are already in the curriculum
+				for (var i = 0; i < list.length; ++i) {
+					var found = false;
+					for (var j = 0; j < batch.periods.length && !found; ++j) {
+						for (var k = 0; k < subjects.length; ++k) {
+							if (subjects[k].code != list[i].code) continue;
+							if (subjects[k].name != list[i].name) continue;
+							if (subjects[k].period_id != batch.periods[j].id) continue;
+							found = true;
+							break;
+						}
+					}
+					if (found) {
+						list.splice(i,1);
+						i--;
+					}
+				}
+				
 				var table = document.createElement("TABLE");
 				table.className = 'all_borders';
 				require("popup_window.js",function() {
@@ -404,7 +481,9 @@ class page_curriculum extends Page {
 					td.innerHTML = "Name";
 					td = document.createElement("TH"); tr.appendChild(td);
 					td.innerHTML = "Hours";
-	
+					td = document.createElement("TH"); tr.appendChild(td);
+					td.innerHTML = "Coef.";
+					
 					for (var i = 0; i < list.length; ++i) {
 						tr = document.createElement("TR"); table2.appendChild(tr);
 						td = document.createElement("TD"); tr.appendChild(td);
@@ -422,9 +501,12 @@ class page_curriculum extends Page {
 							if (list[i].hours_type)
 								td.appendChild(document.createTextNode(" "+list[i].hours_type));
 						}
+						td = document.createElement("TD"); tr.appendChild(td);
+						td.style.textAlign = "center";
+						if (list[i].coefficient) td.appendChild(document.createTextNode(list[i].coefficient));
 					}
 
-					var create = function(code,name,hours,hours_type) {
+					var create = function(code,name,hours,hours_type,coef) {
 						p.close();
 						var lock = lock_screen(null, "Creation of the subject "+name);
 						service.json("data_model","save_entity",{
@@ -435,7 +517,8 @@ class page_curriculum extends Page {
 							field_code: code,
 							field_name: name,
 							field_hours: hours,
-							field_hours_type: hours_type
+							field_hours_type: hours_type,
+							field_coefficient: coef
 						},function(res){
 							unlock_screen(lock);
 							if (res && res.key)
@@ -455,6 +538,7 @@ class page_curriculum extends Page {
 						var name = new_subject_control.input_name.value;
 						var hours = new_subject_control.input_hours.value;
 						var hours_type = new_subject_control.select_hours_type.value;
+						var coef = control.input_coef.value;
 						if (code.length == 0) { alert('Please enter a code'); return; }
 						if (name.length == 0) { alert('Please enter a name'); return; }
 						if (hours.length == 0) { hours = null; hours_type = null; }
@@ -463,7 +547,12 @@ class page_curriculum extends Page {
 							if (isNaN(hours)) { alert('Invalid number of hours'); return; }
 							if (hours_type == "") hours_type = null;
 						}
-						create(code,name,hours,hours_type);
+						if (coef.length == 0) coef = null;
+						else {
+							coef = parseInt(coef);
+							if (isNaN(coef) || coef < 0 || coef > 50) { alert("Invalid coefficient: must be an integer between 0 and 50"); return; }
+						}
+						create(code,name,hours,hours_type,coef);
 					};
 					td.appendChild(button);
 					td = document.createElement("TD"); tr.appendChild(td);
@@ -474,7 +563,7 @@ class page_curriculum extends Page {
 					button.onclick = function() {
 						for (var i = 0; i < list.length; ++i) {
 							if (list[i].button.checked) {
-								create(list[i].code, list[i].name, list[i].hours, list[i].hours_type);
+								create(list[i].code, list[i].name, list[i].hours, list[i].hours_type, list[i].coefficient);
 								return;
 							}
 						}
@@ -483,6 +572,18 @@ class page_curriculum extends Page {
 					td.appendChild(button);
 					p.show();
 				});
+			});
+		}
+
+		function new_teacher() {
+			var w=window;
+			window.top.require("popup_window.js", function() {
+				var p = new window.top.popup_window("New Teacher", theme.build_icon("/static/curriculum/teacher_16.png",theme.icons_10.add), "");
+				var frame = p.setContentFrame("/dynamic/curriculum/page/popup_create_teacher?start=<?php echo urlencode($start_date);?>&end=<?php echo urlencode($end_date);?>&ondone=reload");
+				frame.reload = function() {
+					w.location.reload();
+				};
+				p.show();
 			});
 		}
 		

@@ -79,7 +79,7 @@ function edit_batch(batch) {
 	});
 }
 function batch_saved(id) {
-	var node = root.findTag("batch"+id);
+	var node = window.curriculum_root.findTag("batch"+id);
 	node.item.parent.removeItem(node.item);
 	service.json("curriculum","get_batch",{id:id},function(batch){
 		add_batch(batch);
@@ -87,7 +87,7 @@ function batch_saved(id) {
 }
 function remove_batch(batch) {
 	window.top.datamodel.confirm_remove("StudentBatch", batch.id, function() {
-		var node = root.findTag("batch"+batch.id);
+		var node = window.curriculum_root.findTag("batch"+batch.id);
 		node.item.parent.removeItem(node.item);
 	});
 }
