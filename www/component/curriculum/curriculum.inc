@@ -169,6 +169,19 @@ class curriculum extends Component {
 		return $q->execute();
 	}
 	
+	public function getAcademicClasses($batch_id, $period_id = null, $restrict_specialization = false) {
+		if ($period_id <> null) return $this->getAcademicClassesForPeriod($period_id, $restrict_specialization);
+		$periods = $this->getAcademicPeriods($batch_id);
+		if (count($periods) == 0) return array();
+		$ids = array();
+		foreach ($periods as $period) array_push($ids, $period["id"]);
+		$q = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass", "period", $ids);
+		if ($restrict_specialization !== false) {
+			$q->where("specialization", $restrict_specialization);
+		}
+		return $q->execute();
+	}
+	
 	/**
 	 * Join the academic class table to an SQLQuery
 	 * @param SQLQuery $q the query where to add the join
@@ -208,6 +221,12 @@ class curriculum extends Component {
 		}
 		if ($spe_id <> null) $q->whereValue("CurriculumSubject", "specialization", $spe_id);
 		if ($category_id <> null) $q->whereValue("CurriculumSubject", "category", $category_id);
+		return $q->execute();
+	}
+	
+	public function getTeachersAssigned($subjects_ids) {
+		if (count($subjects_ids) == 0) return array();
+		$q = SQLQuery::create()->select("TeacherAssignment")->whereIn("TeacherAssignment", "subject", $subjects_ids);
 		return $q->execute();
 	}
 	

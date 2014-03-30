@@ -195,6 +195,30 @@ function tree(container) {
 			this.tbody.removeChild(this.tbody.childNodes[0]);
 		this.items = [];
 	};
+	this.addHeader = function(icon, text, css) {
+		theme.css("header_bar.css");
+		var container = document.createElement("DIV");
+		var div = document.createElement("DIV"); container.appendChild(div);
+		div.className = "header_bar"+(css ? "_"+css : "");
+		var title = document.createElement("DIV");
+		title.className = "header_bar_title";
+		var collapse_icon = document.createElement("IMG");
+		collapse_icon.src = "/static/widgets/section/collapse.png";
+		title.appendChild(collapse_icon);
+		if (icon) {
+			var img = document.createElement("IMG");
+			img.src = icon;
+			title.appendChild(img);
+		}
+		title.appendChild(document.createTextNode(text));
+		div.appendChild(title);
+		var cell = new TreeCell(container);
+		var item = new TreeItem([cell],true);
+		item.is_header = true;
+		item.collapse_icon = collapse_icon;
+		this.addItem(item);
+		return item;
+	};
 	this._removeItem = function(item) {
 		try { this.tbody.removeChild(item.tr); } catch (e) {}
 		var list = item.children;
@@ -328,62 +352,76 @@ function tree(container) {
 			item.head_has_before = has_before;
 			item.head_has_after = has_after;
 			
-			item.head.style.width = ((parents.length+1)*16)+'px';
-			item.head.style.verticalAlign = "bottom";
-			item.head.style.height = item.head.computed_height+'px';
-			// lines of parents
-			for (var i = 0; i < parents.length; ++i) {
-				if (!parents[i]) continue;
-				var line = document.createElement("DIV");
-				line.style.position = 'absolute';
-				line.style.width = "1px";
-				line.style.left = (i*16+9)+'px';
-				line.style.top = '0px';
-				line.style.height = '100%';
-				line.style.borderLeft = "1px solid #A0A0A0";
-				item.head.appendChild(line);
-			}
-			// vertical line
-			if (has_before || has_after) {
-				var line = document.createElement("DIV");
-				line.style.position = 'absolute';
-				line.style.width = "1px";
-				line.style.right = '7px';
-				if (has_after && has_before) {
-					line.style.top = "0px";
-					line.style.height = "100%";
-				} else if (has_after) {
-					line.style.bottom = "0px";
-					line.style.height = "6px";
-				} else {
-					line.style.bottom = "5px";
-					line.style.height = (getHeight(item.tr)-5)+"px";
+			if (item.is_header) {
+				item.head.style.width = "0px";
+				item.head.style.visibility = "hidden";
+				item.head.style.position = "absolute";
+			} else {
+				var root = item;
+				while (root.parent != null) root = root.parent;
+				var p;
+				if (root != item && root.is_header) {
+					p = [];
+					for (var i = 1; i < parents.length; ++i) p.push(parents[i]);
+				} else
+					p = parents;
+				item.head.style.width = ((p.length+1)*16)+'px';
+				item.head.style.verticalAlign = "bottom";
+				item.head.style.height = item.head.computed_height+'px';
+				// lines of parents
+				for (var i = 0; i < p.length; ++i) {
+					if (!p[i]) continue;
+					var line = document.createElement("DIV");
+					line.style.position = 'absolute';
+					line.style.width = "1px";
+					line.style.left = (i*16+9)+'px';
+					line.style.top = '0px';
+					line.style.height = '100%';
+					line.style.borderLeft = "1px solid #A0A0A0";
+					item.head.appendChild(line);
 				}
-				line.style.borderLeft = "1px solid #A0A0A0";
-				item.head.appendChild(line);
-			}
-			// horizontal line
-			{
-				var line = document.createElement("DIV");
-				line.style.position = 'absolute';
-				line.style.width = "7px";
-				line.style.right = '1px';
-				line.style.bottom = "4px"; 
-				line.style.height = "1px";
-				line.style.borderTop = "1px solid #A0A0A0";
-				item.head.appendChild(line);
-			}
-			// box
-			if (item.children.length > 0) {
-				var img = document.createElement("IMG");
-				img.src = url+(item.expanded ? "minus" : "plus")+".png";
-				img.style.position = 'absolute';
-				img.style.right = '4px';
-				img.style.bottom = '1px';
-				item.head.appendChild(img);
-				img.style.cursor = 'pointer';
-				img.item = item;
-				img.onclick = function() { this.item.toggle_expand(); };
+				// vertical line
+				if (has_before || has_after) {
+					var line = document.createElement("DIV");
+					line.style.position = 'absolute';
+					line.style.width = "1px";
+					line.style.right = '7px';
+					if (has_after && has_before) {
+						line.style.top = "0px";
+						line.style.height = "100%";
+					} else if (has_after) {
+						line.style.bottom = "0px";
+						line.style.height = "6px";
+					} else {
+						line.style.bottom = "5px";
+						line.style.height = (getHeight(item.tr)-5)+"px";
+					}
+					line.style.borderLeft = "1px solid #A0A0A0";
+					item.head.appendChild(line);
+				}
+				// horizontal line
+				{
+					var line = document.createElement("DIV");
+					line.style.position = 'absolute';
+					line.style.width = "7px";
+					line.style.right = '1px';
+					line.style.bottom = "4px"; 
+					line.style.height = "1px";
+					line.style.borderTop = "1px solid #A0A0A0";
+					item.head.appendChild(line);
+				}
+				// box
+				if (item.children.length > 0) {
+					var img = document.createElement("IMG");
+					img.src = url+(item.expanded ? "minus" : "plus")+".png";
+					img.style.position = 'absolute';
+					img.style.right = '4px';
+					img.style.bottom = '1px';
+					item.head.appendChild(img);
+					img.style.cursor = 'pointer';
+					img.item = item;
+					img.onclick = function() { this.item.toggle_expand(); };
+				}
 			}
 		}
 		// children

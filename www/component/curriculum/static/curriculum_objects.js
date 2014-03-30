@@ -86,3 +86,9 @@ function CurriculumSubject(id, code, name, category_id, period_id, specializatio
 	this.hours_type = hours_type;
 	this.coefficient = coefficient;
 }
+
+function TeacherAssigned(people_id, subject_id, class_id) {
+	this.people_id = people_id;
+	this.subject_id = subject_id;
+	this.class_id = class_id;
+}

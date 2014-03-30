@@ -160,4 +160,15 @@ $model->addTable("TeacherDates")
  	->addInsertAccess("edit_curriculum", true)
  	->addRemoveAccess("edit_curriculum", true)
  	;
+
+$model->addTable("TeacherAssignment")
+	->addForeignKey("class", "AcademicClass", true, false, true)
+	->addForeignKey("subject", "CurriculumSubject", true, false, true)
+	->addForeignKey("people", "People", true, false, true)
+	->setKey(array("class","subject","people"))
+ 	->addReadAccess("consult_curriculum", true)
+ 	->addWriteAccess("edit_curriculum", true)
+ 	->addInsertAccess("edit_curriculum", true)
+ 	->addRemoveAccess("edit_curriculum", true)
+	;
 ?>

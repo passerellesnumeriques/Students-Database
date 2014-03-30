@@ -188,5 +188,25 @@ class CurriculumJSON {
 		$s .= "]";
 		return $s;
 	}
+	
+	public static function TeacherAssignedJSON($assignment) {
+		$s = "{";
+		$s .= "people_id:".$assignment["people"];
+		$s .= ",subject_id:".$assignment["subject"];
+		$s .= ",class_id:".$assignment["class"];
+		$s .= "}";
+		return $s;
+	}
+	public static function TeachersAssignedJSON($assignments) {
+		$s = "[";
+		$first = true;
+		foreach ($assignments as $a) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= self::TeacherAssignedJSON($a);
+		}
+		$s .= "]";
+		return $s;
+	}
+	
 }
 ?>
