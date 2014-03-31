@@ -147,7 +147,7 @@ function center_exam_sessions_planned(container,EC_id,can_manage){
 						table.appendChild(tr);
 						//Set td1
 						var link = document.createElement("a");												
-						var name = get_exam_session_name_from_event(t._sessions[i].event);
+						var name = getExamSessionNameFromEvent(t._sessions[i].event);
 						link.className = "black_link";
 						link.appendChild(document.createTextNode(" - "+name));
 						link.session_id = t._sessions[i].event.id;

@@ -45,6 +45,7 @@ namespace datamodel {
 		private $key = null;
 
 		private $read_access_rights = array();
+		private $read_access_from_foreign_table = array();
 		private $read_access_filters = array();
 		private $read_column_access_rights = array();
 		private $write_access_rights = array();
@@ -110,9 +111,9 @@ namespace datamodel {
 		public function getColumn($name, $sub_models = null) {
 			$columns = $this->_getColumns($sub_models);
 			foreach ($columns as $c)
-				if ($c->name == $name) {
-				if (!$this->canAccessColumn($c->name)) throw new \Exception("Access denied");
-				return $c;
+				if ($c->name == $name) {				
+					if (!$this->canAccessColumn($c->name)) throw new \Exception("Access denied");
+					return $c;
 			}
 			return null;
 		}
@@ -315,6 +316,17 @@ namespace datamodel {
 			array_push($this->read_access_rights, array($right_name, $right_value));
 			return $this;
 		}
+		
+		/**
+		 * Allow the access to this table when coming from a foreign table (in a join request)
+		 * If the user was allowed to access to the previous table, no need to check again for this table 
+		 * @param string $foreign_table_name
+		 * @return \datamodel\Table
+		 */
+		public function &addReadAccessFromForeignTable($foreign_table_name){
+			array_push($this->read_access_from_foreign_table, $foreign_table_name);
+			return $this;
+		}
 		/**
 		 * Add a filter which will add where conditions in every select
 		 * @param function $filter function taking 2 parameters: the SQLQuery to modify, and the table alias
@@ -336,15 +348,33 @@ namespace datamodel {
 		public function canAccess() {
 			if ($this->read_access_rights === null) return true;
 			if (count($this->read_access_filters) > 0) return true;
+			if (count($this->read_access_from_foreign_table) > 0) return true;
 			foreach ($this->read_access_rights as $r)
 				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
 			foreach ($this->read_column_access_rights as $colname=>$list)
 				foreach ($list as $r)
+					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;			
+			return false;
+		}
+		
+		public function getReadAccessFromForeignTable(){
+			return $this->read_access_from_foreign_table;
+		}
+		public function hasReadFilter(){
+			return count($this->read_access_filters) > 0;
+		}
+		public function hasReadRights(){
+			if ($this->read_access_rights === null) return true;
+			foreach ($this->read_access_rights as $r)
 				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+			foreach ($this->read_column_access_rights as $colname=>$list)
+				foreach ($list as $r)
+					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
 			return false;
 		}
 		public function canAccessColumn($column_name) {
 			if ($this->read_access_rights === null) return true;
+			if (count($this->read_access_from_foreign_table) > 0) return true;
 			foreach ($this->read_access_rights as $r)
 				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
 			if (count($this->read_column_access_rights) > 0) {

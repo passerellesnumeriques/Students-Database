@@ -55,8 +55,8 @@ $sm->addTable("Applicant")
 		->addForeignKey("exam_session", "ExamSession", false, false, true, true, false) //An applicant can be assigned to an exam session after being assigned to an exam center, or directly assigned to a session
 		->addColumnWriteAccess("information_session", "manage_information_session", true)
 		->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities
-	->addInsertAccess("edit_applicants",true)
-	->addRemoveAccess("edit_applicants",true)
+		->addInsertAccess("edit_applicants",true)
+		->addRemoveAccess("edit_applicants",true)		
 		->setPrimary("people");//The primary key is the people_id
 		//TODO finish + update steps.inc
 

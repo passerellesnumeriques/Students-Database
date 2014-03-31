@@ -67,7 +67,7 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 				if(mode == "session"){
 					//Process the targets to comply with applicant_manually_assign_to_entity.js requirements (target objects must have name & id attributes)
 					for(var i = 0; i < targets.length; i++){
-						targets[i].name = get_exam_session_name_from_event(targets[i].event);
+						targets[i].name = getExamSessionNameFromEvent(targets[i].event);
 						targets[i].id = targets[i].event.id;
 					}
 				}

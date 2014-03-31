@@ -14,7 +14,7 @@ class CalendarEventDateDataDisplay extends datamodel\DataDisplay {
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) {
-		return array("field_timestamp","{show_time:".$this->show_time.",data_is_seconds:true}");
+		return array("field_timestamp","{show_time:".json_encode($this->show_time).",data_is_seconds:true}");
 	}
 	public function isEditable() { return false; }
 	public function getEditLocks($sub_model) { return array(); }

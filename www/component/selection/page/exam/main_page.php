@@ -9,7 +9,7 @@ class page_exam_main_page extends selection_page {
 		$this->require_javascript("header_bar.js");
 		$this->require_javascript("vertical_layout.js");
 		$this->onload("new vertical_layout('container');");
-		$this->onload("new header_bar('page_header','toolbar');");
+		$this->onload("new header_bar('page_header','toolbar');");	
 		
 		//Rights based on the steps
 		$can_see_subject = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
@@ -27,6 +27,7 @@ class page_exam_main_page extends selection_page {
 				<div id = "eligibility_rules_content"></div>
 			</div>
 		</div>
+		<a href = "/dynamic/selection/page/test_functionalities">test</a>
 		<script type = "text/javascript">
 			require(["exam_subject_main_page.js","eligibility_rules_main_page.js"],function(){
 				var can_see_subject = <?php echo json_encode($can_see_subject);?>;

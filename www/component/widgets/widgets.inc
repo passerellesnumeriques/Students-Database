@@ -58,6 +58,10 @@ class widgets extends Component {
 			$cfg .= "}";
 			return array("field_date",$cfg);
 		}
+		if ($col instanceof \datamodel\ColumnTime) {
+			$cfg = "{show_time:true,data_is_seconds:true}";
+			return array("field_timestamp",$cfg);
+		}
 		return array("field_blank", "{}");
 	}
 	/**

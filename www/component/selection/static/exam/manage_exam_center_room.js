@@ -277,7 +277,7 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 					var li = document.createElement("li");
 					var link = document.createElement("a");
 					link.className = "black_link";
-					link.appendChild(document.createTextNode(get_exam_session_name_from_event(error_data[i].sessions[j].session_event)));					
+					link.appendChild(document.createTextNode(getExamSessionNameFromEvent(error_data[i].sessions[j].session_event)));					
 					link.style.paddingRight = "3px";
 					link.session_id = error_data[i].sessions[j].session_event.id;
 					link.title = "See session profile";

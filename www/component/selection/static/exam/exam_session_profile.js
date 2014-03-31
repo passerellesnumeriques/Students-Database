@@ -150,7 +150,7 @@ function exam_session_profile(container,date_container, supervisor_container, li
 			//Set the room name in td1
 			td1.appendChild(document.createTextNode(rooms[i].name));
 			//Set the number of applicants in the td2
-			td2.appendChild(t._createFigureElement(rooms[i].applicants, rooms[i].id, false));
+			td2.appendChild(t._createFigureElement(rooms[i].applicants, rooms[i].id, false, rooms[i].name));
 			t._total_assigned += parseInt(rooms[i].applicants);
 		}
 		//Set the total row
@@ -228,7 +228,7 @@ function exam_session_profile(container,date_container, supervisor_container, li
 		td_manual.appendChild(b_assign_manually);
 	};
 	
-	t._createFigureElement = function(figure,room_id, not_in_room){
+	t._createFigureElement = function(figure,room_id, not_in_room, room_name){
 		var link = document.createElement("a");
 		figure = (figure == null || isNaN(figure)) ? 0 : parseInt(figure);
 		link.appendChild(document.createTextNode(figure));
@@ -252,27 +252,39 @@ function exam_session_profile(container,date_container, supervisor_container, li
 					var for_list = new prepare_applicant_list();
 					for_list.forbidApplicantCreation();
 					for_list.forbidApplicantImport();
-					
+					var popup_name;
+					var button_name = null;
 					if(!room_id && !not_in_room){
 						//Session list
 						if(can_manage)
 							for_list.makeApplicantsSelectable();
 						for_list.addFilter("Exam Session",session.event.id,true);
+						popup_name = "Session "+getExamSessionNameFromEvent(session.event)+" applicants";
+						button_name = "Unassign from session";
 					} else if(!room_id && not_in_room){
 						//Not in room list						
 						for_list.addFilter("Exam Session",session.event.id,true);
 						for_list.addFilter("Exam Center Room",null,true);
+						popup_name = "Applicants with no room in session "+getExamSessionNameFromEvent(session.event);
 					} else {
 						//Room list
 						if(can_manage)
 							for_list.makeApplicantsSelectable();
 						for_list.addFilter("Exam Session",session.event.id, true);
 						for_list.addFilter("Exam Center Room",room_id,true);
+						popup_name = "Session "+getExamSessionNameFromEvent(session.event);
+						button_name = "Unassign from room";
+						if(room_name){
+							popup_name += " in room "+room_name;
+							button_name += " "+room_name;
+						}
+						
 					}
-					var p = new popup_window("Applicants List");
+					var p = new popup_window(popup_name);
+					alert(service.generateInput(for_list.getDataToPost()));
 					var frame = p.setContentFrame("/dynamic/selection/page/applicant/list",null,for_list.getDataToPost());
-					if(can_manage){
-						p.addIconTextButton(null,"Unassign","unassign",function(){
+					if(can_manage && button_name != null){
+						p.addIconTextButton(null,button_name,"unassign",function(){
 							//Get the applicants to remove
 							var win = getIFrameWindow(frame);
 							var to_unassign = win.applicants_selected;							
@@ -318,7 +330,7 @@ function exam_session_profile(container,date_container, supervisor_container, li
 			t._errors.push(error);
 		}
 		if(res.done)
-			window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, getApplicantMainDataDisplay(res.applicant)+" has been unassigned", [{action:"close"}], 5000));
+			window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Applicant "+getApplicantMainDataDisplay(res.applicant)+" has been unassigned", [{action:"close"}], 5000));
 		if(t._answers_received == t._answers_to_wait){
 			//Pop the errors if any
 			if(t._errors.length > 0){

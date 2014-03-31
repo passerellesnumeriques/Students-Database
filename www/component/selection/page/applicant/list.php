@@ -22,10 +22,9 @@ class page_applicant_list extends selection_page {
 		var can_import = <?php echo (isset($input["can_import"]) ? json_encode($input["can_import"]) : "true");?>;
 		var clickable = <?php echo (isset($input["clickable"]) ? json_encode($input["clickable"]) : "true");?>;
 		var filters = <?php if (isset($input["filters"])) echo json_encode($input["filters"]); else echo "[]"; ?>;
-		var selectable = <?php if (isset($input["selectable"])) echo json_encode($input["selectable"]); else echo "true"; ?>;
+		var selectable = <?php if (isset($input["selectable"])) echo json_encode($input["selectable"]); else echo "false"; ?>;
 		var applicants_locked = <?php if (isset($input["applicants_locked"])) echo json_encode($input["applicants_locked"]); else echo "[]"; ?>;
 		var applicants_selected = <?php if (isset($input["applicants_preselected"])) echo json_encode($input["applicants_preselected"]); else echo "[]"; ?>;
-		alert(service.generateInput(filters));
 		function init_list() {
 			dl = new data_list(
 				'<?php echo $container_id;?>',
