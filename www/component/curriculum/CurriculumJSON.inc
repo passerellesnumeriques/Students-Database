@@ -97,6 +97,8 @@ class CurriculumJSON {
 			$s .= ",name:".json_encode($period["name"]);
 			$s .= ",start_date:".json_encode($period["start_date"]);
 			$s .= ",end_date:".json_encode($period["end_date"]);
+			$s .= ",weeks:".$period["weeks"];
+			$s .= ",weeks_break:".$period["weeks_break"];
 			$s .= ",available_specializations:[";
 			$first_spe = true;
 			foreach ($periods_spe as $ps) {

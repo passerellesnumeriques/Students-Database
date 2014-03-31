@@ -1,9 +1,36 @@
 <?php
-return array(
-	"PNP" => array("country_code"=>"ph"),
-	"PNC" => array("country_code"=>"kh"),
-	"PNV" => array("country_code"=>"vn"),
-	"Test" => array("country_code"=>"ph"),
-	"Dev" => array("country_code"=>"ph"),
+$conf = array(
+	"PNP" => array(
+	   "geography"=>array(
+	       "country_code"=>"ph"
+	   ),
+	   "curriculum"=>array(
+	       "period_name"=>"Semester",
+	       "period_weeks"=>18,
+	       "period_number"=>6
+	   )
+	),
+    "PNC" => array(
+       "geography"=>array(
+           "country_code"=>"kh"
+       ),
+       "curriculum"=>array(
+           "period_name"=>"Quarter",
+           "period_weeks"=>13,
+           "period_number"=>8
+       )
+    ),
+    "PNV" => array(
+       "geography"=>array(
+           "country_code"=>"vn"
+       ),
+       "curriculum"=>array(
+           "period_name"=>"Semester",
+           "period_weeks"=>18,
+           "period_number"=>4
+       )
+    ),
 );
+$conf["Test"] = $conf["PNP"];
+$conf["Dev"] = $conf["PNP"];
 ?>

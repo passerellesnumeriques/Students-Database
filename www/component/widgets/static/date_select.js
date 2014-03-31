@@ -108,6 +108,7 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 			t.select_day.onchange();
 		}
 	};
+	t.setDate = function(date) { this.selectDate(date); };
 	
 	t.getDate = function() {
 		var year = t.select_year.value;

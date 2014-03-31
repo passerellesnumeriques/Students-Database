@@ -33,11 +33,13 @@ function Batch(id, name, start_date, end_date, periods) {
  * @param {Array} available_specializations list of specializations' id
  * @param {Array} classes list of {@link StudentClass}
  */
-function AcademicPeriod(id, name, start_date, end_date, available_specializations, classes) {
+function AcademicPeriod(id, name, start_date, end_date, weeks, weeks_break, available_specializations, classes) {
 	this.id = id;
 	this.name = name;
 	this.start_date = start_date;
 	this.end_date = end_date;
+	this.weeks = weeks;
+	this.weeks_break = weeks_break;
 	this.available_specializations = available_specializations;
 	this.classes = classes;
 }

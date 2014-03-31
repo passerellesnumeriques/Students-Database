@@ -649,6 +649,7 @@ function debug_object_to_string(o, indent) {
 }
 
 function parseSQLDate(s) {
+	if (s == null || s.length == 0) return null;
 	var d = new Date();
 	d.setHours(0,0,0,0);
 	var a = s.split("-");

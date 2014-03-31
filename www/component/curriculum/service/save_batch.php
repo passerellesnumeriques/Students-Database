@@ -13,15 +13,17 @@ class service_save_batch extends Service {
 	<li><code>end_date</code>: graduation date, in SQL format</li>
 	<li><code>lock</code>: Database lock ID, locking the StudentBatch</li>
 	<li><code>periods</code>: array of periods:<ul>
-			<li><code>id</code>: id of the period (if this is a new period, it must be a negative value, unique)</li>
-			<li><code>name</code>: period name</li>
-			<li><code>start_date</code>: start date, in SQL format</li>
-			<li><code>end_date</code>: end date, in SQL format</li>
-		</ul></li>
+		<li><code>id</code>: id of the period (if this is a new period, it must be a negative value, unique)</li>
+		<li><code>name</code>: period name</li>
+		<li><code>start_date</code>: start date, in SQL format</li>
+		<li><code>end_date</code>: end date, in SQL format</li>
+		<li><code>weeks</code>: number of weeks of the period</li>
+		<li><code>weeks_break</code>: number of weeks without classes</li>
+	</ul></li>
 	<li><code>periods_specializations</code>: array of associations between a period and a specialization:<ul>
-			<li><code>period_id</code>: id of the period (it can be a negative value in case the period is new, matching the id in the list of periods)</li>
-			<li><code>specialization_id</code>: id of the specialization to associate with the period</li>
-		</ul></li>
+		<li><code>period_id</code>: id of the period (it can be a negative value in case the period is new, matching the id in the list of periods)</li>
+		<li><code>specialization_id</code>: id of the specialization to associate with the period</li>
+	</ul></li>
 </ul>
 <?php 
 	}
@@ -60,7 +62,9 @@ class service_save_batch extends Service {
 				"batch"=>$batch_id,
 				"name"=>$period["name"],
 				"start_date"=>$period["start_date"],
-				"end_date"=>$period["end_date"]
+				"end_date"=>$period["end_date"],
+				"weeks"=>$period["weeks"],
+				"weeks_break"=>$period["weeks_break"]
 			);
 			if ($period_id > 0) {
 				SQLQuery::create()->bypassSecurity()->updateByKey("AcademicPeriod", $period_id, $fields);

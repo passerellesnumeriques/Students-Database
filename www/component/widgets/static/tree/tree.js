@@ -15,6 +15,18 @@ function TreeItem(cells, expanded, onselect) {
 	for (var i = 1; i < this.cells.length; ++i) this.cells[i].element.className = "tree_cell";
 	this.children = [];
 	this.expanded = expanded;
+	this.setRightFillControl = function(control) {
+		if (this.right_td) {
+			this.right_td.innerHTML = "";
+			this.right_td.appendChild(control);
+			return this.right_td;
+		}
+		this.right_td = document.createElement("TD");
+		this.right_td.appendChild(control);
+		this.tr.appendChild(this.right_td);
+		this.tree._refresh_heads();
+		return this.right_td;
+	};
 	this.setOnSelect = function(onselect) {
 		this.onselect = onselect;
 		this.cells[0].element.className = "tree_cell tree_cell_main tree_cell_selectable";
@@ -92,6 +104,9 @@ function TreeItem(cells, expanded, onselect) {
 	this.select = function() {
 		this.tree.selectItem(this);
 	};
+	this.addRowStyle = function(style) {
+		for (var name in style) this.tr.style[name] = style[name];
+	};
 }
 function TreeCell(html) {
 	if (typeof html == 'string') {
@@ -101,6 +116,7 @@ function TreeCell(html) {
 		html = div;
 	}
 	this.element = html;
+	this.is_header = false;
 	
 	this.addStyle = function(style) {
 		for (var name in style) this.element.style[name] = style[name];
@@ -149,6 +165,8 @@ function tree(container) {
 	container.className = "tree";
 	var t=this;
 	
+	this.inner_cells_vertical_border = null;
+	
 	this._build_from_html = function() {
 		// TODO
 	};
@@ -173,7 +191,7 @@ function tree(container) {
 		this._refresh_heads();
 	};
 	this.insertItem = function(item, index) {
-		if (index >= this.items.length) {
+		if (typeof index == 'undefined' || index >= this.items.length) {
 			this.addItem(item);
 			return;
 		}
@@ -195,28 +213,34 @@ function tree(container) {
 			this.tbody.removeChild(this.tbody.childNodes[0]);
 		this.items = [];
 	};
-	this.addHeader = function(icon, text, css) {
-		theme.css("header_bar.css");
+	this.addHeader = function(content, collapsable, index) {
 		var container = document.createElement("DIV");
-		var div = document.createElement("DIV"); container.appendChild(div);
-		div.className = "header_bar"+(css ? "_"+css : "");
-		var title = document.createElement("DIV");
-		title.className = "header_bar_title";
-		var collapse_icon = document.createElement("IMG");
-		collapse_icon.src = "/static/widgets/section/collapse.png";
-		title.appendChild(collapse_icon);
-		if (icon) {
-			var img = document.createElement("IMG");
-			img.src = icon;
-			title.appendChild(img);
-		}
-		title.appendChild(document.createTextNode(text));
-		div.appendChild(title);
+		container.style.display = "inline-block";
+		container.appendChild(content);
 		var cell = new TreeCell(container);
 		var item = new TreeItem([cell],true);
 		item.is_header = true;
-		item.collapse_icon = collapse_icon;
-		this.addItem(item);
+		item.is_collapsable = collapsable;
+		this.insertItem(item, index);
+		return item;
+	};
+	this.addColumnsHeadersRow = function(parent) {
+		var cells = [];
+		for (var i = 0; i < this.columns.length; ++i) {
+			var html = document.createElement("SPAN");
+			html.appendChild(document.createTextNode(this.columns[i].title));
+			html.style.paddingLeft = "2px";
+			html.style.paddingRight = "2px";
+			var cell = new TreeCell(html);
+			cell.is_header = true;
+			cells.push(cell);
+		}
+		var item = new TreeItem(cells);
+		item.is_header = true;
+		item.add_root_line = true;
+		item.is_collapsable = false;
+		if (!parent) parent = this;
+		parent.addItem(item);
 		return item;
 	};
 	this._removeItem = function(item) {
@@ -251,9 +275,11 @@ function tree(container) {
 			item.tr.style.top = "-10000px";
 			item.tr.style.left = "-10000px";
 		}
-		var td = document.createElement("TD"); item.tr.appendChild(td);
+		var td = document.createElement(item.cells[0].is_header ? "TH" : "TD"); item.tr.appendChild(td);
+		item.cells[0].td = td;
 		td.style.padding = "0px";
 		td.style.whiteSpace = "nowrap";
+		if (item.cells.length > 1 && this.inner_cells_vertical_border) td.style.borderRight = this.inner_cells_vertical_border; 
 		td.appendChild(item.head = document.createElement("DIV"));
 		item.head.style.display = 'inline-block';
 		item.head.style.position = 'relative';
@@ -262,9 +288,11 @@ function tree(container) {
 		if (item.cells.length == 1 && this.columns.length > 1)
 			td.colSpan = this.columns.length;
 		for (var i = 1; i < item.cells.length; ++i) {
-			td = document.createElement("TD");
+			td = document.createElement(item.cells[i].is_header ? "TH" : "TD");
+			item.cells[i].td = td;
 			item.tr.appendChild(td);
 			td.style.padding = "0px";
+			if (item.cells.length > i+1 && this.inner_cells_vertical_border) td.style.borderRight = this.inner_cells_vertical_border; 
 			td.appendChild(item.cells[i].element);
 		}
 		if (!item.parent) {
@@ -352,10 +380,43 @@ function tree(container) {
 			item.head_has_before = has_before;
 			item.head_has_after = has_after;
 			
+			if (item.right_td) {
+				var level = item.get_level();
+				var next = item.tr.nextSibling;
+				var count = 1;
+				while (next != null && next.item.get_level() > level) { next = next.nextSibling; count++; }
+				item.right_td.rowSpan = count;
+			}
+			
 			if (item.is_header) {
-				item.head.style.width = "0px";
-				item.head.style.visibility = "hidden";
-				item.head.style.position = "absolute";
+				if (item.is_collapsable) {
+					item.head.style.width = "18px";
+					var collapse_icon = document.createElement("IMG");
+					collapse_icon.src = "/static/widgets/section/"+(item.expanded ? "collapse" : "expand")+".png";
+					collapse_icon.style.cursor = "pointer";
+					collapse_icon.onclick = function() {
+						item.toggle_expand();
+					};
+					item.head.appendChild(collapse_icon);
+				} else if (item.add_root_line) {
+					item.head.parentNode.style.position = "relative";
+					item.head.style.position = "absolute";
+					item.head.style.left = "0px";
+					item.head.style.width = "16px";
+					item.head.style.height = item.head.computed_height+'px';
+					var line = document.createElement("DIV");
+					line.style.position = 'absolute';
+					line.style.width = "1px";
+					line.style.right = '7px';
+					line.style.top = "0px";
+					line.style.height = "100%";
+					line.style.borderLeft = "1px solid #A0A0A0";
+					item.head.appendChild(line);
+				} else {
+					item.head.style.width = "0px";
+					item.head.style.visibility = "hidden";
+					item.head.style.position = "absolute";
+				}
 			} else {
 				var root = item;
 				while (root.parent != null) root = root.parent;

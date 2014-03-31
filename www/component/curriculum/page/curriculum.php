@@ -74,8 +74,6 @@ class page_curriculum extends Page {
 		$this->onload("new header_bar('page_header','toolbar');");
 		$this->add_javascript("/static/widgets/vertical_layout.js");
 		$this->onload("new vertical_layout('page_container');");
-		$this->require_javascript("section.js");
-		$this->onload("section_from_html('teachers_section');");
 		?>
 		<div id="page_container" style="width:100%;height:100%">
 		<div id='page_header' 
@@ -104,20 +102,14 @@ class page_curriculum extends Page {
 				<img src='<?php echo theme::make_icon("/static/curriculum/subjects_16.png", theme::$icons_10["edit"]);?>'/>
 				Edit subject categories
 			</div>
+			<div class='button_verysoft' onclick="new_teacher();">
+				<img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png", theme::$icons_10["add"]);?>'/>
+				New Teacher
+			</div>
 			<?php } ?>
 		</div>
 		<div id="page_content" layout="fill" style="background-color:white;overflow:auto">
 			<div id='curriculum_tree' style='display:inline-block;vertical-align:top'></div>
-			<div id="teachers_section" style="display:inline-block;vertical-align:top;margin:5px"
-				icon="/static/curriculum/teacher_16.png"
-				title="Teachers List"
-				collapsable="false"
-			>
-				<div style='padding:5px'>
-					<div id='teachers_container'></div>
-					<?php if ($can_edit) {?><button onclick='new_teacher();return false;'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png", theme::$icons_10["add"]);?>'/> New Teacher</button><?php } ?>
-				</div>
-			</div>
 		</div>
 		</div>
 		<script type='text/javascript'>
@@ -143,15 +135,75 @@ class page_curriculum extends Page {
 		var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON($categories); ?>;
 		var subjects = <?php echo CurriculumJSON::SubjectsJSON($subjects); ?>;
 		var specializations = <?php echo CurriculumJSON::SpecializationsJSON();?>;
-		var teachers = <?php echo $teachers;?>;
 		var teachers_assigned = <?php echo CurriculumJSON::TeachersAssignedJSON($teachers_assigned); ?>;
+		var teachers = [];
+		function Teacher(people, dates) {
+			var t=this;
+			this.people = people;
+			this.dates = dates;
+
+			this.isPresent = function(start, end) {
+				for (var i = 0; i < this.dates.length; ++i) {
+					if (this.dates[i].start.getTime() > end.getTime()) continue;
+					if (this.dates[i].end == null) return true;
+					if (this.dates[i].end.getTime() <= start.getTime()) continue;
+					return true;
+				}
+				return false;
+			};
+			
+			this.createDiv = function(start, end) {
+				if (!this.isPresent(start, end)) return null;
+				var div = document.createElement("DIV");
+				var span = document.createElement("SPAN"); div.appendChild(span);
+				span.style.cursor = "pointer";
+				span.title = "Click to see teacher profile";
+				span.onmouseover = function() { this.style.textDecoration = "underline"; };
+				span.onmouseout = function() { this.style.textDecoration = ""; };
+				span.onclick = function() {
+					window.top.require("popup_window.js",function(){
+						var p = new window.top.popup_window("Teacher Profile","/static/curriculum/teacher_16.png","");
+						p.setContentFrame("/dynamic/people/page/profile?people="+t.people.id);
+						p.showPercent(95,95);
+					});
+					return false;
+				};
+				span.draggable = true;
+				span.ondragstart = function(event) {
+					event.dataTransfer.setData("teacher",t.people.id);
+					event.dataTransfer.effectAllowed = "copy";
+					return true;
+				};
+				span.appendChild(document.createTextNode(t.people.first_name+" "+t.people.last_name));
+				return div;
+			};
+		}
+		function build_teachers() {
+			var peoples = <?php echo $teachers;?>;
+			var dates = [<?php 
+			$first = true;
+			foreach ($teachers_dates as $td) {
+				if ($first) $first = false; else echo ",";
+				echo "{people:".$td["people"].",start:".json_encode($td["start"]).",end:".json_encode($td["end"])."}";
+			} 
+			?>];
+			for (var i = 0; i < peoples.length; ++i) {
+				var people = peoples[i];
+				var d = [];
+				for (var j = 0; j < dates.length; ++j) {
+					if (dates[j].people != people.id) continue;
+					d.push({start:parseSQLDate(dates[j].start),end:parseSQLDate(dates[j].end)});
+				}
+				teachers.push(new Teacher(people, d));
+			} 
+		}
+		build_teachers();
 
 		var t = new tree('curriculum_tree');
 		t.addColumn(new TreeColumn("Subject Code - Name"));
 		t.addColumn(new TreeColumn("Hours"));
 		t.addColumn(new TreeColumn("Coef."));
 		t.addColumn(new TreeColumn("Assigned Teachers"));
-		t.setShowColumn(true);
 
 		function build_tree() {
 			for (var i = 0; i < batch.periods.length; ++i) {
@@ -159,8 +211,27 @@ class page_curriculum extends Page {
 				build_period(batch.periods[i], batch);
 			}
 		}
-		function build_period(period, batch) {
-			var item = t.addHeader("/static/calendar/calendar_32.png", "Period "+period.name, "toolbar_big");
+		function build_period(period, batch, index) {
+			var div = document.createElement("DIV");
+			div.innerHTML = "<img src='/static/calendar/calendar_24.png' style='vertical-align:bottom'/> "+period.name;
+			div.style.fontWeight = "bold";
+			div.style.color = "#202080";
+			div.style.fontSize = "12pt";
+			div.style.marginTop = "10px";
+			var item = t.addHeader(div, true, index);
+			item.period_id = period.id;
+			item.cells[0].td.style.borderBottom = "1px solid #8080FF";
+			var teachers_container = document.createElement("DIV");
+			var teachers_header = document.createElement("DIV");
+			teachers_container.appendChild(teachers_header);
+			teachers_header.innerHTML = "Teachers";
+			for (var i = 0; i < teachers.length; ++i) {
+				var teacher_div = teachers[i].createDiv(parseSQLDate(period.start_date), parseSQLDate(period.end_date));
+				if (teacher_div)
+					teachers_container.appendChild(teacher_div);
+			}
+			item.setRightFillControl(teachers_container).style.verticalAlign = "top";
+			t.addColumnsHeadersRow(item);
 			if (period.available_specializations.length > 0) {
 				for (var i = 0; i < period.available_specializations.length; ++i) {
 					var spe = null;
@@ -170,6 +241,15 @@ class page_curriculum extends Page {
 				}
 			} else {
 				build_categories(item, period, null, batch);
+			}
+		}
+		function refresh_period(period, batch) {
+			for (var i = 0; i < t.items.length; ++i) {
+				if (t.items[i].period_id == period.id) {
+					t.removeItem(t.items[i]);
+					build_period(period,batch,i);
+					break;
+				}
 			}
 		}
 		function build_specialization(parent, spe, period, batch) {
@@ -196,18 +276,18 @@ class page_curriculum extends Page {
 					};
 				}
 				parent.addItem(item);
-				build_subjects(item, categories[i].id, period.id, spe ? spe.id : null);
+				build_subjects(item, categories[i], period, spe, batch);
 			}
 		}
-		function build_subjects(parent, category_id, period_id, spe_id) {
+		function build_subjects(parent, category, period, spe, batch) {
 			for (var i = 0; i < subjects.length; ++i) {
-				if (subjects[i].period_id != period_id) continue;
-				if (subjects[i].specialization_id != spe_id) continue;
-				if (subjects[i].category_id != category_id) continue;
-				build_subject(parent, subjects[i]);
+				if (subjects[i].period_id != period.id) continue;
+				if (subjects[i].specialization_id != (spe ? spe.id : null)) continue;
+				if (subjects[i].category_id != category.id) continue;
+				build_subject(parent, subjects[i], category, period, spe, batch);
 			}
 		}
-		function build_subject(parent, subject, index) {
+		function build_subject(parent, subject, category, period, spe, batch) {
 			var cells = [];
 			var item;
 			
@@ -223,11 +303,7 @@ class page_curriculum extends Page {
 				link.href = '#';
 				link.className = "black_link";
 				link.onclick = function() {
-					edit_subject(subject, function() {
-						var index = parent.children.indexOf(item);
-						parent.removeItem(item);
-						build_subject(parent, subject, index);
-					}); 
+					edit_subject(subject, function() { refresh_period(period, batch); });
 					return false; 
 				};
 				link.appendChild(document.createTextNode(subject.code + " - " + subject.name));
@@ -248,8 +324,13 @@ class page_curriculum extends Page {
 
 			var h = document.createElement("SPAN");
 			h.style.paddingLeft = "5px";
-			if (subject.hours && subject.hours_type)
-				h.appendChild(document.createTextNode(subject.hours+" "+subject.hours_type));
+			if (subject.hours && subject.hours_type) {
+				if (subject.hours_type == "Per period") {
+					h.appendChild(document.createTextNode(subject.hours+"h"));
+				} else if (subject.hours_type == "Per week") {
+					h.appendChild(document.createTextNode(subject.hours+"h/week x "+(period.weeks-period.weeks_break)+" = "+(subject.hours*(period.weeks-period.weeks_break))+"h"));
+				}
+			}
 			cells.push(new TreeCell(h));
 
 			var coef = document.createElement("DIV");
@@ -288,7 +369,7 @@ class page_curriculum extends Page {
 					img.className = "button_verysoft";
 					img.style.padding = "1px";
 					img.style.verticalAlign = "bottom";
-					img.title = "Remove all assignments of "+list[i].teacher.first_name+" "+list[i].teacher.last_name;
+					img.title = "Remove all classes assigned to "+list[i].teacher.first_name+" "+list[i].teacher.last_name;
 					span_teacher.appendChild(img);
 					img.teacher_id = list[i].teacher.id;
 					img.subject_id = subject.id;
@@ -303,9 +384,7 @@ class page_curriculum extends Page {
 										teachers_assigned.splice(i,1);
 										i--;
 									}
-								var index = parent.children.indexOf(item);
-								parent.removeItem(item);
-								build_subject(parent, subject, index);
+								refresh_period(period, batch);
 							}
 						});
 					};
@@ -338,9 +417,7 @@ class page_curriculum extends Page {
 											teachers_assigned.splice(i,1);
 											break;
 										}
-									var index = parent.children.indexOf(item);
-									parent.removeItem(item);
-									build_subject(parent, subject, index);
+									refresh_period(period, batch);
 								}
 							});
 						};
@@ -430,9 +507,7 @@ class page_curriculum extends Page {
 									var ta = {people_id:selected_teacher,class_id:selected_classes[i],subject_id:subject.id};
 									teachers_assigned.push(ta);
 								}
-								var index = parent.children.indexOf(item);
-								parent.removeItem(item);
-								build_subject(parent, subject, index);
+								refresh_period(period, batch);
 							}
 						});
 					};
@@ -456,10 +531,16 @@ class page_curriculum extends Page {
 				};
 				assigned.ondragenter = function(event) {
 					if (event.dataTransfer.types.contains("teacher")) {
+						assigned.style.backgroundColor = "#D0D0D0";
+						assigned.style.border = "1px dotted #808080";
 						event.dataTransfer.dropEffect = "copy";
 						event.preventDefault();
 						return true;
 					}
+				};
+				assigned.ondragleave = function(event) {
+					assigned.style.backgroundColor = "";
+					assigned.style.border = "";
 				};
 				assigned.ondrop = function(event) {
 					var teacher = event.dataTransfer.getData("teacher");
@@ -477,38 +558,6 @@ class page_curriculum extends Page {
 				parent.addItem(item);
 		}
 		build_tree();
-
-		function build_teacher_item(teacher) {
-			var container = document.getElementById('teachers_container');
-			var div = document.createElement("DIV");
-			var link = document.createElement("A"); div.appendChild(link);
-			link.href = "#";
-			link.className = "black_link";
-			link.people = teacher;
-			link.onclick = function() {
-				var people = this.people;
-				window.top.require("popup_window.js",function(){
-					var p = new window.top.popup_window("Teacher Profile","/static/curriculum/teacher_16.png","");
-					p.setContentFrame("/dynamic/people/page/profile?people="+people.id);
-					p.showPercent(95,95);
-				});
-				return false;
-			};
-			link.draggable = true;
-			link.ondragstart = function(event) {
-				event.dataTransfer.setData("teacher",this.people.id);
-				event.dataTransfer.effectAllowed = "copy";
-				return true;
-			};
-			link.appendChild(document.createTextNode(teacher.first_name+" "+teacher.last_name));
-			container.appendChild(div);
-		}
-		function build_teachers_list() {
-			for (var i = 0; i < teachers.length; ++i) {
-				build_teacher_item(teachers[i]);
-			}
-		}
-		build_teachers_list();
 
 		function edit_subject(subject, onchanged) {
 			require("popup_window.js",function() {
@@ -719,7 +768,7 @@ class page_curriculum extends Page {
 							if (res && res.key) {
 								var s = new CurriculumSubject(res.key, code, name, category.id, period.id, spe ? spe.id : null, hours, hours_type, coef);
 								subjects.push(s);
-								build_subject(parent_item, s);
+								build_subject(parent_item, s, category, period, spe, batch);
 							}
 						});
 					};

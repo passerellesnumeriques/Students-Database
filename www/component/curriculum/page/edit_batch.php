@@ -25,6 +25,8 @@ class page_edit_batch extends Page {
 		
 		$this->require_javascript("input_utils.js");
 		$this->require_javascript("date_select.js");
+		$this->require_javascript("typed_field.js");
+		$this->require_javascript("field_integer.js");
 		theme::css($this, "wizard.css");
 		$batch = null;
 		if (isset($_GET["id"])) {
@@ -138,6 +140,44 @@ function update() {
 	var max_length = 5;
 	for (var i = 0; i < periods.length; ++i) if (periods[i].name.value.length > max_length) max_length = periods[i].name.value.length;
 	for (var i = 0; i < periods.length; ++i) periods[i].name.setMinimumSize(max_length);
+	// process end date
+	for (var i = 0; i < periods.length; ++i) {
+		var start = periods[i].start.getDate(); 
+		if (start == null) continue; // no start, we cannot compute
+		var weeks = periods[i].weeks.getCurrentData();
+		var weeks_break = periods[i].weeks_break.getCurrentData();
+		var end = periods[i].end.getDate();
+		if (end == null && weeks == null) continue; // no info yet
+		if (weeks_break == null) {
+			weeks_break = 0;
+			periods[i].weeks_break.setData(0);
+		}
+		if (end == null) {
+			// process end date from weeks
+			if (!weeks) {
+				weeks = 1;
+				periods[i].weeks.setData(1);
+			}
+			end = new Date();
+			end.setTime(start.getTime()+(weeks+weeks_break)*7*24*60*60*1000-24*60*60*1000);
+			periods[i].end.setDate(end);
+		} else {
+			// process weeks from end date
+			var nb_days = (end.getTime()-start.getTime())/(24*60*60*1000);
+			var nb_weeks = nb_days/7;
+			var nb = Math.floor(nb_weeks);
+			if (nb_weeks-nb>0.1) nb++;
+			nb -= weeks_break;
+			if (nb > 0)
+				periods[i].weeks.setData(nb);
+			else {
+				periods[i].weeks.setData(1);
+				end = new Date();
+				end.setTime(start.getTime()+(1+weeks_break)*7*24*60*60*1000-24*60*60*1000);
+				periods[i].end.setDate(end);
+			}
+		}
+	}
 	// dates
 	for (var i = 0; i < periods.length; ++i) {
 		var min = null, max = null;
@@ -171,7 +211,7 @@ function update() {
 	in_update = false;
 }
 var period_counter = -1;
-function addPeriod(id, name, start_date, end_date) {
+function addPeriod(id, name, start_date, end_date, weeks, weeks_break) {
 	var period = new Object();
 	period.id = id ? id : period_counter--;
 	period.specializations = [];
@@ -197,15 +237,56 @@ function addPeriod(id, name, start_date, end_date) {
 	period.start.select_month.style.width = "90px";
 	period.start.select_year.style.width = "55px";
 	if (id) window.top.datamodel.dateSelectCell(period.start, "AcademicPeriod", "start_date", id);
+	// weeks
+	period.tr.appendChild(td = document.createElement("TD"));
+	td.appendChild(document.createTextNode(" + "));
+	period.tr.appendChild(td = document.createElement("TD"));
+	period.weeks = new field_integer(weeks, true, {min:1,max:200,can_be_null:true});
+	period.weeks.onchange.add_listener(function() { 
+		if (in_update) return; 
+		if (period.weeks.getCurrentData() != null) {
+			in_update = true;
+			period.end.setDate(null);
+			in_update = false;
+			update();
+		}
+	});
+	td.appendChild(period.weeks.getHTMLElement());
+	if (id) window.top.datamodel.inputCell(period.weeks.input, "AcademicPeriod", "weeks", id);
+	period.tr.appendChild(td = document.createElement("TD"));
+	td.appendChild(document.createTextNode(" weeks + "));
+	period.tr.appendChild(td = document.createElement("TD"));
+	period.weeks_break = new field_integer(weeks, true, {min:0,max:200,can_be_null:true});
+	period.weeks_break.onchange.add_listener(function() { 
+		if (in_update) return;
+		if (period.weeks_break.getCurrentData() != null) {
+			in_update = true;
+			period.end.setDate(null);
+			in_update = false;
+			update();
+		}
+	});
+	td.appendChild(period.weeks_break.getHTMLElement());
+	if (id) window.top.datamodel.inputCell(period.weeks_break.input, "AcademicPeriod", "weeks_break", id);
+	period.tr.appendChild(td = document.createElement("TD"));
+	td.appendChild(document.createTextNode(" weeks of break = "));
 	// to
 	period.tr.appendChild(td = document.createElement("TD"));
-	td.appendChild(document.createTextNode(" to "));
+	td.appendChild(document.createTextNode(" ends on "));
 	period.tr.appendChild(td = document.createElement("TD"));
 	period.end = new date_select(td, id ? end_date : null, new Date(2004,0,1), new Date(new Date().getFullYear()+100,11,31),false,true);
 	period.end.select_day.style.width = "40px";
 	period.end.select_month.style.width = "90px";
 	period.end.select_year.style.width = "55px";
-	period.end.onchange = function() { update(); };
+	period.end.onchange = function() { 
+		if (in_update) return;
+		if (period.end.getDate() != null) {
+			in_update = true;
+			period.weeks.setData(null);
+			in_update = false;
+			update();
+		}
+	};
 	if (id) window.top.datamodel.dateSelectCell(period.end, "AcademicPeriod", "end_date", id);
 	
 	// remove
@@ -390,6 +471,12 @@ function save() {
 		p.name = periods[i].name.getValue();
 		p.start_date = dateToSQL(periods[i].start.getDate());
 		p.end_date = dateToSQL(periods[i].end.getDate());
+		p.weeks = periods[i].weeks.getCurrentData();
+		p.weeks_break = periods[i].weeks_break.getCurrentData();
+		if (p.name.length == 0) { unlock_screen(ls); alert("Please specify a name for the period number "+(i+1)); return; }
+		if (p.start_date == null) { unlock_screen(ls); alert("Please specify a starting date for period "+p.name); return; }
+		if (p.end_date == null || p.weeks == null) { unlock_screen(ls); alert("Please specify an ending date for period "+p.name); return; }
+		if (p.weeks_break == null) p.weeks_break = 0;
 		data.periods.push(p);
 	}
 	data.periods_specializations = [];
@@ -412,6 +499,8 @@ function save() {
 			if (periods[i].name.cellSaved) periods[i].name.cellSaved();
 			if (periods[i].start.cellSaved) periods[i].start.cellSaved();
 			if (periods[i].end.cellSaved) periods[i].end.cellSaved();
+			if (periods[i].weeks.cellSaved) periods[i].weeks.cellSaved();
+			if (periods[i].weeks_break.cellSaved) periods[i].weeks_break.cellSaved();
 		}
 		batch_id = res.id;
 		for (var i = 0; i < res.periods_ids.length; ++i)
@@ -430,7 +519,7 @@ if ($batch <> null) {
 	echo "integration.selectDate(parseSQLDate(".json_encode($batch["start_date"])."));\n";
 	echo "graduation.selectDate(parseSQLDate(".json_encode($batch["end_date"])."));\n";
 	foreach ($periods as $period)
-		echo "addPeriod(".$period["id"].",".json_encode($period["name"]).",parseSQLDate(".json_encode($period["start_date"])."),parseSQLDate(".json_encode($period["end_date"])."));\n";
+		echo "addPeriod(".$period["id"].",".json_encode($period["name"]).",parseSQLDate(".json_encode($period["start_date"])."),parseSQLDate(".json_encode($period["end_date"])."),".$period["weeks"].",".$period["weeks_break"].");\n";
 	if (count($periods_specializations) > 0) {
 		for ($i = 0; $i < count($periods); $i++) {
 			$found = false;
