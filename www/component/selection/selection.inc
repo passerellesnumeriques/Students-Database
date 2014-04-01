@@ -2259,6 +2259,7 @@ class selection extends Component {
 		$room_error = null;
 		//Check that the applicant is not assigned to a session / room already
 		$applicant = SQLQuery::create()
+			->select("Applicant")
 			->bypassSecurity()			
 			->whereValue('Applicant', "people", $people_id);
 		SelectionJSON::ApplicantSQL($applicant);

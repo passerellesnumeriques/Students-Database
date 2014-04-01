@@ -129,8 +129,12 @@ class page_exam_center_profile extends selection_page {
 		$can_manage_applicants = PNApplication::$instance->user_management->has_right("manage_applicant");
 		if($read_only)
 			$can_manage_applicants = false;
+		$EC_name = SQLQuery::create()
+			->select("ExamCenter")
+			->field("ExamCenter","name")
+			->whereValue("ExamCenter", "id", $center_id)
+			->executeSingleValue();
 		$this->add_javascript("/static/selection/exam/center_applicants_section.js");
-		$this->onload("new center_applicants_section('".$container_id."',".json_encode($center_id).",".json_encode($can_manage_applicants).");");
-		
+		$this->onload("new center_applicants_section('".$container_id."',".json_encode($center_id).",".json_encode($EC_name).",".json_encode($can_manage_applicants).");");
 	}
 }

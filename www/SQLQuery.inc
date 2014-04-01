@@ -1966,7 +1966,7 @@ class SQLQuery {
 						$prepared_rows = $q->execute();
 						if (count($prepared_rows) == 0) continue; // nothing to do there
 						$allowed_rows = $t->filterWriteAccess($prepared_rows);
-						if (count($allowed) <> count($prepared_rows))
+						if (count($allowed_rows) <> count($prepared_rows))
 							throw new Exception("Access denied: some rows cannot be modified in table '".$t->getName()."' but are linked to rows which need to be removed in table '".$table->getName()."'");
 					}
 				}

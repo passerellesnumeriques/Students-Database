@@ -244,6 +244,12 @@ namespace datamodel {
 			array_push($this->columns, $c);
 			return $this;
 		}
+		
+		public function &addTimestamp($name, $size=32, $min = null, $max = null, $can_be_null = true, $unique = false){
+			$c = new ColumnTimestamp($this, $name, $size, $min, $max, $can_be_null, $unique);
+			array_push($this->columns, $c);
+			return $this;
+		}
 
 		public function &addDecimal($name, $integer_digits=10, $decimal_digits = 2, $min = null, $max = null, $can_be_null = true, $unique = false) {
 			$c = new ColumnDecimal($this, $name, $integer_digits, $decimal_digits, $min, $max, $can_be_null, $unique);
@@ -892,6 +898,16 @@ namespace datamodel {
 
 		public function get_sql_type() {
 			return "INT(".$this->size.") NOT NULL AUTO_INCREMENT";
+		}
+	}
+	
+	class ColumnTimestamp extends ColumnInteger {
+		public function __construct(&$table, $name, $size, $min = null, $max = null, $can_be_null = true, $unique = false){
+			parent::__construct($table, $name, $size, $min, $max, $can_be_null, $unique);
+		}
+		
+		public function get_sql_type(){
+			return "INT(".$this->size.")";
 		}
 	}
 

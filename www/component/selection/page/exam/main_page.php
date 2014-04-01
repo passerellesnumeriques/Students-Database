@@ -26,8 +26,7 @@ class page_exam_main_page extends selection_page {
 				<div id = "exam_content"></div>
 				<div id = "eligibility_rules_content"></div>
 			</div>
-		</div>
-		<a href = "/dynamic/selection/page/test_functionalities">test</a>
+		</div>		
 		<script type = "text/javascript">
 			require(["exam_subject_main_page.js","eligibility_rules_main_page.js"],function(){
 				var can_see_subject = <?php echo json_encode($can_see_subject);?>;

@@ -6,20 +6,24 @@ class widgets extends Component {
 	 * @return array [classname,arguments_to_append]
 	 */
 	public function get_typed_field($col) {
+		$typed_field = "field_blank";
+		$cfg = "{}";
 		if ($col instanceof \datamodel\ColumnString) {
 			$cfg = "{max_length:".$col->max_length;
 			if ($col->min_length > 0) $cfg .= ",min_length:".$col->min_length;
 			$cfg .= ",can_be_null:".json_encode($col->can_be_null);
 			$cfg .= "}";
-			return array("field_text", $cfg);
-		}
+// 			return array("field_text", $cfg);
+			$typed_field = "field_text";
+		}		
 		if ($col instanceof \datamodel\ColumnInteger) {
 			$cfg = "{";
 			$cfg .= "can_be_null:".json_encode($col->can_be_null);
 			if ($col->min !== null) $cfg .= ",min:".$col->min;
 			if ($col->max !== null) $cfg .= ",max:".$col->max;
 			$cfg .= "}";
-			return array("field_integer",$cfg);
+// 			return array("field_integer",$cfg);
+			$typed_field = "field_integer";
 		}
 		if ($col instanceof \datamodel\ColumnDecimal) {
 			$cfg = "{";
@@ -29,7 +33,8 @@ class widgets extends Component {
 			$cfg .= ",integer_digits:".$col->integer_digits;
 			$cfg .= ",decimal_digits:".$col->decimal_digits;
 			$cfg .= "}";
-			return array("field_decimal",$cfg);
+// 			return array("field_decimal",$cfg);
+			$typed_field = "field_decimal";
 		}
 		if ($col instanceof \datamodel\ColumnEnum) {
 			$args = "{possible_values:[";
@@ -39,7 +44,8 @@ class widgets extends Component {
 				$args .= json_encode($v);
 			}
 			$args .= "],can_be_empty:".($col->can_be_null ? "true" : "false")."}";
-			return array("field_enum",$args);
+// 			return array("field_enum",$args);
+			$typed_field = "field_enum";
 		}
 		if ($col instanceof \datamodel\ColumnDate) {
 			$cfg = "{can_be_empty:".($col->can_be_null ? "true" : "false");
@@ -56,13 +62,15 @@ class widgets extends Component {
 					$cfg .= ",maximum_cell:".json_encode($col->maximum_date);
 			}
 			$cfg .= "}";
-			return array("field_date",$cfg);
+// 			return array("field_date",$cfg);
+			$typed_field = "field_date";
 		}
-		if ($col instanceof \datamodel\ColumnTime) {
+		if ($col instanceof \datamodel\ColumnTimestamp) {
 			$cfg = "{show_time:true,data_is_seconds:true}";
-			return array("field_timestamp",$cfg);
+// 			return array("field_timestamp",$cfg);
+			$typed_field = "field_timestamp";
 		}
-		return array("field_blank", "{}");
+		return array($typed_field, $cfg);
 	}
 	/**
 	 * @param \datamodel\Column $col

@@ -276,19 +276,19 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 				for(var j = 0; j < error_data[i].sessions.length; j++){
 					var li = document.createElement("li");
 					var link = document.createElement("a");
-					link.className = "black_link";
+//					link.className = "black_link";
 					link.appendChild(document.createTextNode(getExamSessionNameFromEvent(error_data[i].sessions[j].session_event)));					
 					link.style.paddingRight = "3px";
 					link.session_id = error_data[i].sessions[j].session_event.id;
-					link.title = "See session profile";
+//					link.title = "See session profile";
 					link.onclick = function(){
-						var session_id = this.session_id;
-						require("popup_window.js",function(){
-							var pop = new popup_window("Exam Session Profile");
-							pop.setContentFrame("/dynamic/selection/page/exam/session_profile?id="+session_id);
-							pop.show();
-						});
-						return false;
+//						var session_id = this.session_id;
+//						require("popup_window.js",function(){
+//							var pop = new popup_window("Exam Session Profile");
+//							pop.setContentFrame("/dynamic/selection/page/exam/session_profile?id="+session_id);
+//							pop.show();
+//						});
+//						return false;
 					};
 					li.appendChild(document.createTextNode(error_data[i].sessions[j].assigned+" applicants assigned in session on "));
 					li.appendChild(link);
