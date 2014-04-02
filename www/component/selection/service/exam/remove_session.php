@@ -25,6 +25,12 @@ class service_exam_remove_session extends Service {
 	 */
 	public function execute(&$component, $input) {
 		if(isset($input["id"])){
+			//Check the right
+			if(!PNApplication::$instance->user_management->has_right("manage_exam_center")){
+				PNApplication::error("You are not allowed to remove any exam session");
+				echo "false";
+				return;
+			}
 			//Get all the applicants assigned
 			$applicants = $component->getApplicantsAssignedToCenterEntity(null,$input["id"]);
 			echo "{applicants:";
@@ -54,6 +60,7 @@ class service_exam_remove_session extends Service {
 			if(!$rollback){
 				try{
 					SQLQuery::create()
+						->bypassSecurity()//to be allowed to remove the event
 						->removeKey("ExamSession", $input["id"]);
 				} catch (Exception $e){
 					PNApplication::error($e);

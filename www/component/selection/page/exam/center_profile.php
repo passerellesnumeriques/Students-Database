@@ -12,6 +12,8 @@ class page_exam_center_profile extends selection_page {
 	$this->onload("s_detail.addToolBottom('<div class = \"button_verysoft\" id = \"remove_center_button\"><img src =\"'+theme.icons_16.remove+'\"/> <b>Remove Exam Center</b></div>');");
 	$this->onload("section_from_html('center_applicants');");
 	$this->onload("new vertical_layout('exam_center_profile_container');");
+	$this->onload('onupdateroom = new Custom_Event();');
+	$this->onload('onupdateapplicants = new Custom_Event();');
 	if(!isset($_GET["id"]))
 		$id = -1;
 	else if($_GET["id"] == "-1")
@@ -117,7 +119,7 @@ class page_exam_center_profile extends selection_page {
 				if((id == -1 || id == "-1") && !can_add){
 					// This is a creation so check that the current user is allowed to add an exam center
 						error_dialog("You are not allowed to create an Exam Center");
-				} else new exam_center_profile(id, config_name, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_exam_center_button,remove_exam_center_button,<?php echo json_encode($db_lock);?>,config_name_room);
+				} else new exam_center_profile(id, config_name, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_exam_center_button,remove_exam_center_button,<?php echo json_encode($db_lock);?>,config_name_room,onupdateroom,onupdateapplicants);
 			});
 		</script>
 		<?php
@@ -135,6 +137,6 @@ class page_exam_center_profile extends selection_page {
 			->whereValue("ExamCenter", "id", $center_id)
 			->executeSingleValue();
 		$this->add_javascript("/static/selection/exam/center_applicants_section.js");
-		$this->onload("new center_applicants_section('".$container_id."',".json_encode($center_id).",".json_encode($EC_name).",".json_encode($can_manage_applicants).");");
+		$this->onload("new center_applicants_section('".$container_id."',".json_encode($center_id).",".json_encode($EC_name).",".json_encode($can_manage_applicants).",onupdateroom,onupdateapplicants);");
 	}
 }

@@ -1318,4 +1318,34 @@ class SelectionJSON{
 		$data .= "]";
 		return $data;
 	}
+	
+	public static function ExamCenterRoomsWithRemainingSlotsForSession($session_id){
+		//Get the center ID
+		$EC_id = SQLQuery::create()
+			->select("ExamSession")
+			->field("ExamSession","exam_center")
+			->whereValue("ExamSession", "event", $session_id)
+			->executeSingleValue();
+		$data = "{session:".SelectionJSON::ExamSessionFromID($session_id).", ";
+		//Get the rooms of the center
+		$rooms = SQLQuery::create()
+			->select("ExamCenterRoom")
+			->whereValue("ExamCenterRoom", "exam_center", $EC_id);
+		SelectionJSON::ExamCenterRoomSQL($rooms);
+		$rooms = $rooms->execute();
+		$data .= "rooms:[";
+		$first = true;	
+		if ($rooms <> null){
+			foreach ($rooms as $room){
+				if(!$first) $data.= ", ";
+				$first = false;
+				$data .= "{id:".$room["id"].", name:".$room["name"];
+				$data .= ", remaining:".json_encode(PNApplication::$instance->selection->getRemainingSlotsForExamRoomDuringSession($room["id"], $session_id));
+				$data .= "}";
+			}
+		}
+		$data .= "]";
+		$data .= "}";
+		return $data;
+	}
 }

@@ -35,6 +35,7 @@ function exam_session_profile(container, supervisor_container, list_container, s
 				var div = document.createElement("div");
 				div.appendChild(document.createTextNode("No exam room"));
 				div.style.fontStyle = "italic";
+				list_container.appendChild(div);
 			} else {
 				t._populateList(res.rooms, res.count_session);
 			}
@@ -44,23 +45,6 @@ function exam_session_profile(container, supervisor_container, list_container, s
 	
 	t._populateList = function(rooms, total_applicants_in_session){
 		t._total_assigned = 0;
-		//Set the header
-		var header = document.createElement("div");
-		header.appendChild(document.createTextNode("Session:"));
-		var all = t._createFigureElement(total_applicants_in_session, null, false);
-		all.style.marginLeft = "3px";
-		header.appendChild(all);
-		if(can_manage && total_applicants_in_session > 0){
-			var b_empty_session = document.createElement("img");
-			b_empty_session.src = theme.icons_10.remove;
-			b_empty_session.className = "button_verysoft";
-			b_empty_session.title = "Unassign all the applicants from this session and the rooms";
-			b_empty_session.onclick = t._emptyEntity;
-			b_empty_session.style.marginLeft = "7px";
-			b_empty_session.style.verticalAlign = "bottom";
-			header.appendChild(b_empty_session);
-		}
-		list_container.appendChild(header);
 		var table = document.createElement("table");
 		//Set the column headers
 		var tr_head = document.createElement("tr");
@@ -111,20 +95,26 @@ function exam_session_profile(container, supervisor_container, list_container, s
 		tr_total.appendChild(td1);
 		tr_total.appendChild(td2);
 		table.appendChild(tr_total);
-		td1.appendChild(document.createTextNode("Total:"));
+		td1.appendChild(document.createTextNode("Total rooms:"));
 		td1.style.textAlign = "right";
 		td2.style.textAlign = "left";
 		td2.appendChild(document.createTextNode(t._total_assigned));
-		list_container.appendChild(table);
+		
 		//Set the non-assigned row
 		total_applicants_in_session = parseInt(total_applicants_in_session);
 		var not_assigned = total_applicants_in_session - t._total_assigned;
-		var footer = document.createElement("div");		
-		footer.appendChild(document.createTextNode("No room:"));
+		var tr_no_room = document.createElement("tr");
+		var td1_no = document.createElement("td");
+		var td2_no = document.createElement("td");
+		td1_no.style.textAlign = "right";
+		td2_no.style.textAlign = "left";
+		tr_no_room.appendChild(td1_no);
+		tr_no_room.appendChild(td2_no);
+		table.appendChild(tr_no_room);
+		td1_no.appendChild(document.createTextNode("No room:"));
 		var link = t._createFigureElement(not_assigned,null,true);
-		link.style.marginLeft = "3px";
 		link.style.color = not_assigned > 0 ? "red" : "green";
-		footer.appendChild(link);
+		td2_no.appendChild(link);
 		if(not_assigned > 0 && can_manage){
 			//Add the automatic assign button
 			var b_assign_auto = document.createElement("div");
@@ -146,9 +136,31 @@ function exam_session_profile(container, supervisor_container, list_container, s
 				});
 			};
 			b_assign_auto.style.marginLeft = "7px";
-			footer.appendChild(b_assign_auto);
+			td2_no.appendChild(b_assign_auto);
 		}
-		list_container.appendChild(footer);
+		//Set the total session row
+		var tr_all = document.createElement("tr");
+		var td1_all = document.createElement("td");
+		var td2_all = document.createElement("td");
+		td1_all.style.textAlign = "right";
+		td2_all.style.textAlign = "left";
+		tr_all.appendChild(td1_all);
+		tr_all.appendChild(td2_all);
+		table.appendChild(tr_all);
+		td1_all.appendChild(document.createTextNode("Total session:"));
+		var all = t._createFigureElement(total_applicants_in_session, null, false);
+		td2_all.appendChild(all);
+		if(can_manage && total_applicants_in_session > 0){
+			var b_empty_session = document.createElement("img");
+			b_empty_session.src = theme.icons_10.remove;
+			b_empty_session.className = "button_verysoft";
+			b_empty_session.title = "Unassign all the applicants from this session and the rooms";
+			b_empty_session.onclick = function(){t._emptyEntity(null);};
+			b_empty_session.style.marginLeft = "7px";
+			b_empty_session.style.verticalAlign = "bottom";
+			td2_all.appendChild(b_empty_session);
+		}
+		list_container.appendChild(table);
 	};
 	
 	t._emptyEntity = function(room_id){

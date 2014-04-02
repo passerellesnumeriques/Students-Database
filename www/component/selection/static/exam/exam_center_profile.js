@@ -1,4 +1,4 @@
-function exam_center_profile(id, config_name_center, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_button_id,remove_button_id,db_lock,config_name_room){
+function exam_center_profile(id, config_name_center, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_button_id,remove_button_id,db_lock,config_name_room,onupdateroom,onupdateapplicants){
 	if(typeof(container) == "string") container = document.getElementById(container);
 	var t = this;
 	if(db_lock)
@@ -36,6 +36,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	/**Private methods and attributes*/
 	
 	t._updated = false;
+	t._rooms_updated = false;
 	
 	t._onDataUpdatedListener = function(){
 		t._updated = true;
@@ -95,6 +96,9 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	t._setRooms = function(){
 		t.manage_rooms = new manage_exam_center_room(t.div_room,data.rooms,id,can_edit,config_name_room);
 		t.manage_rooms.onupdate.add_listener(t._onDataUpdatedListener);
+		t.manage_rooms.onupdate.add_listener(function(){t._rooms_updated = true;});
+		if(onupdateapplicants)
+			onupdateapplicants.add_listener(function(){t.manage_rooms.reset();});
 	};
 	
 	t._setISLinkedField = function(){
@@ -234,6 +238,9 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Your informations have been successfuly saved!", [{action:"close"}], 5000));
 					// Update the data on the page (some ids have been generated)
 					data = res;
+					if(t._rooms_updated && onupdateroom)
+						onupdateroom.fire();
+					t._rooms_updated = false;
 					//reset the table (in case remove button must be added, and update the objects)
 					t.resetAll(null,null,res.rooms);
 					t._onDataSavedListener();

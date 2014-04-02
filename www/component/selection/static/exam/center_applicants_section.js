@@ -1,4 +1,4 @@
-function center_applicants_section(container,EC_id,EC_name,can_edit){
+function center_applicants_section(container,EC_id,EC_name,can_edit,onupdateroom,onupdateapplicants){
 	var t = this;
 	container = typeof container == "string" ? document.getElementById(container) : container;
 	t._init = function(){
@@ -29,7 +29,7 @@ function center_applicants_section(container,EC_id,EC_name,can_edit){
 	
 	t._setSessionsContent = function(){
 //		new center_exam_sessions_planned(t._td_sessions,EC_id,can_edit);
-		new center_exam_sessions_planned(t._sessions_cont,EC_id,EC_name,can_edit);
+		new center_exam_sessions_planned(t._sessions_cont,EC_id,EC_name,can_edit,onupdateroom,onupdateapplicants);
 	};
 	
 	require(["center_exam_sessions_planned.js"],function(){

@@ -1,4 +1,4 @@
-function center_exam_sessions_planned(container,EC_id, EC_name,can_manage){
+function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupdateroom,onupdateapplicants){
 	var t = this;
 	if( typeof container == "string") container = document.getElementById(container);
 	container.style.padding = "10px";
@@ -22,6 +22,8 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage){
 		t._refreshSessionsRequiredContent();
 		t._refreshSessionsList();
 		t._refreshNotAssignedRow();		
+		if(onupdateroom)
+			onupdateroom.add_listener(t.reset);
 	};
 	
 	t._refreshSessionsRequiredContent = function(){
@@ -92,7 +94,6 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage){
 					tr_head.appendChild(th1);
 					tr_head.appendChild(th2);
 					table.appendChild(tr_head);
-					t._reseters = [];
 					for(var i = 0; i < t._sessions.length;i++){
 						var tr = document.createElement("tr");
 						var td1 = document.createElement("td");//Contains the session date & link
@@ -180,6 +181,8 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage){
 													window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "The exam session has been succesfully removed!", [{action:"close"}], 5000));
 											}
 											t.reset();
+											if(onupdateapplicants)
+												onupdateapplicants.fire();
 										});
 									}
 								});							
@@ -197,7 +200,15 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage){
 						td2.appendChild(div_supervisor);
 						td2.style.borderBottom = "1px solid #808080";
 						td2.style.padding = "15px";
-						var profile = new exam_session_profile(td2, div_list, div_supervisor, t._sessions[i], can_manage, t.reset);
+						var onreset;
+						if(onupdateapplicants){
+							onreset = function(){
+								t.reset();
+								onupdateapplicants.fire();
+							};
+						} else 
+							onreset = t.reset;
+						new exam_session_profile(td2, div_list, div_supervisor, t._sessions[i], can_manage, onreset);
 					}
 					//Set the last row with total figures
 					var tr_foot = document.createElement("tr");
@@ -218,8 +229,6 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage){
 					td2.appendChild(document.createTextNode(t._total_assigned_to_sessions));
 					td2.style.textAlign = "center";
 					t._setContentDivStillToAssign();
-//					//Set the footer, depending on the number of sessions in t._sessions array
-//					t._refreshFooter();
 				});
 			}
 		});
@@ -342,12 +351,12 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage){
 					b_manually.className = "button";
 					b_manually.title = "Manually assign applicants to the sessions planned in this center";
 					b_manually.appendChild(document.createTextNode("Manually"));
+					b_manually.EC_id = EC_id;
 					b_manually.onclick = function(){
-//						var pop = new popup_window("Assign applicants to exam sessions");
-//						pop.setContentFrame("/dynamic/selection/page/applicant/manually_assign_to_exam_entity?mode=session&center="+EC_id);
-//						pop.onclose = t.reset;
-//						pop.show();
-						//TODO
+						var pop = new popup_window("Assign applicants to exam sessions");
+						pop.setContentFrame("/dynamic/selection/page/applicant/manually_assign_to_exam_entity?mode=session&center="+EC_id);
+						pop.onclose = t.reset;
+						pop.show();
 					};
 					b_manually.style.display = "inline-block";
 					b_manually.style.marginLeft = "3px";

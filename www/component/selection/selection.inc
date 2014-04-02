@@ -2016,7 +2016,7 @@ class selection extends Component {
 			->bypassSecurity()
 			->select("Applicant")
 			->field("Applicant","applicant_id")
-			->whereValue("Applicant", "exam_room", $id)
+			->whereValue("Applicant", "exam_center_room", $id)
 			->executeSingleField();
 		$assigned = $assigned == null ? false : true;
 		return $assigned;
@@ -2906,14 +2906,14 @@ class selection extends Component {
 	}
 	
 	/**
-	 * Assign an applicant to an exam center room, for a given exam session
-	 * Before performing the asssignment, few checks are done: user rights, remaining slots in the room for the session,applicants assigned to the session
+	 * Assign an applicant to an exam center room, for a given exam session, and to this session
+	 * Before performing the asssignment, few checks are done: user rights, remaining slots in the room for the session
 	 * @param number | array $applicants applicants IDs
 	 * @param number $session_id exam session ID
 	 * @param number $room_id exam center room ID
-	 * @return void|boolean
+	 * @return boolean true if well performed
 	 */
-	public function assignApplicantsToRoomForSession($applicants,$session_id, $room_id){
+	public function assignApplicantsToRoomAndSession($applicants,$session_id, $room_id){
 		if(!is_array($applicants))
 			$applicants = array($applicants);
 		//Check the right
@@ -2932,23 +2932,12 @@ class selection extends Component {
 			PNApplication::error("You are trying to assign ".count($applicants)." applicants to this room but there are only ".$remaining." slots remaining for this exam session");
 			return false;
 		}
-		//Check that the applicants are assigned to the session
-		$assigned_to_this_session = SQLQuery::create()
-			->bypassSecurity()
-			->select("Applicant")
-			->count()
-			->whereValue("Applicant", "exam_session", $session_id)
-			->whereIn("Applicant", "people",$applicants)
-			->executeSingleValue();
-		if($assigned_to_this_session == null)
-			$assigned_to_this_session = 0;
-		if($assigned_to_this_session != count($applicants)){
-			PNApplication::error("Some applicants are not assigned to this exam session");
-			return false;
-		}
 		//Can perform the assignment
 		SQLQuery::startTransaction();
 		try {
+			SQLQuery::create()
+				->bypassSecurity()
+				->updateAllKeys("Applicant", $applicants, array("exam_session" => $session_id));
 			SQLQuery::create()
 				->bypassSecurity()
 				->updateAllKeys("Applicant", $applicants, array("exam_center_room" => $room_id));
@@ -2988,7 +2977,7 @@ class selection extends Component {
 			return false;
 		}
 		//Update the app link attributes
-		$event["app_link"] = "/dynamic/selection/page/exam/session_profile?id=".$event["id"];
+		$event["app_link"] = "/dynamic/selection/page/exam/center_profile?id=".$EC_id;
 		$event["app_link_name"] = "This event is an Exam Session: click to see it";
 		$continue = PNApplication::$instance->calendar->saveEvent($event);
 		if(!$continue){
