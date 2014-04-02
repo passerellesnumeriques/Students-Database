@@ -7,7 +7,11 @@ $conf = array(
 	   "curriculum"=>array(
 	       "period_name"=>"Semester",
 	       "period_weeks"=>18,
-	       "period_number"=>6
+	       "periods_number"=>6,
+	       "default_year_periods"=>array(
+	           array("month"=>6,"week"=>1,"weeks_break"=>0),
+	           array("month"=>11,"week"=>1,"weeks_break"=>2)
+	       )
 	   )
 	),
     "PNC" => array(
@@ -17,7 +21,8 @@ $conf = array(
        "curriculum"=>array(
            "period_name"=>"Quarter",
            "period_weeks"=>13,
-           "period_number"=>8
+           "periods_number"=>8,
+           "periods_per_year"=>4
        )
     ),
     "PNV" => array(
@@ -27,10 +32,12 @@ $conf = array(
        "curriculum"=>array(
            "period_name"=>"Semester",
            "period_weeks"=>18,
-           "period_number"=>4
+           "periods_number"=>4,
+           "periods_per_year"=>2
        )
     ),
 );
 $conf["Test"] = $conf["PNP"];
 $conf["Dev"] = $conf["PNP"];
+return $conf;
 ?>

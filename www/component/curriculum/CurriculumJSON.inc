@@ -4,6 +4,44 @@
  */ 
 class CurriculumJSON {
 	
+	public static function AcademicCalendarJSON() {
+		$years = PNApplication::$instance->curriculum->getAcademicYears();
+		$periods = PNApplication::$instance->curriculum->getAcademicPeriods();
+		$s = "[";
+		$first_year = true;
+		foreach ($years as $y) {
+			if ($first_year) $first_year = false; else $s .= ",";
+			$s .= "{";
+			$s .= "id:".$y["id"];
+			$s .= ",year:".$y["year"];
+			$s .= ",name:".json_encode($y["name"]);
+			$s .= ",periods:[";
+			$first_period = true;
+			foreach ($periods as $p) {
+				if ($p["year"] <> $y["id"]) continue;
+				if ($first_period) $first_period = false; else $s .= ",";
+				$s .= self::AcademicPeriodJSONFromDB($p);
+			}
+			$s .= "]";
+			$s .= "}";
+		}
+		$s .= "]";
+		return $s;
+	}
+	
+	public static function AcademicPeriodJSONFromDB($p) {
+		$s = "{";
+		$s .= "year_id:".$p["year"];
+		$s .= ",id:".$p["id"];
+		$s .= ",name:".json_encode($p["name"]);
+		$s .= ",start:".json_encode($p["start"]);
+		$s .= ",end:".json_encode($p["end"]);
+		$s .= ",weeks:".json_encode($p["weeks"]);
+		$s .= ",weeks_break:".json_encode($p["weeks_break"]);
+		$s .= "}";
+		return $s;
+	}
+	
 	/**
 	 * Build a JSON structure Specialization
 	 * @param array $spe the row of the specialization from the database

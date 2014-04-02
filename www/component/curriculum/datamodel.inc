@@ -1,5 +1,27 @@
 <?php
 /* @var $model DataModel */
+
+/* Academic Calendar */
+
+$model->addTable("AcademicYear")
+	->addPrimaryKey("id")
+	->addInteger("year", 16, 2000)
+	->addString("name", 50, 1, false, true)
+	->addReadAccess("consult_curriculum", true)
+	;
+$model->addTable("AcademicPeriod")
+	->addPrimaryKey("id")
+	->addForeignKey("year", "AcademicYear", true, false, true)
+	->addString("name", 50, 1, false, false)
+	->addDate("start", false, false, "2004-01-01")
+	->addDate("end", false, false, "start")
+	->addInteger("weeks",8,1,200, false, false)
+	->addInteger("weeks_break",8,0,200,false,false)
+	->addReadAccess("consult_curriculum", true)
+	;
+
+/* Batches */
+
 $model->addTable("StudentBatch")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false, true)
@@ -17,6 +39,15 @@ $model->addTable("StudentBatch")
  		return "Batch <i>".htmlentities($row["name"])."</i>";
  	})
  	;
+ 	
+$model->addTable("BatchPeriod")
+	->addPrimaryKey("id")
+	->addForeignKey("batch", "StudentBatch", true, false, true)
+	->addForeignKey("academic_period", "AcademicPeriod", true, false, true)
+	->addString("name", 50, 1, false, false)
+	->addReadAccess("consult_curriculum", true)
+	;
+ 	
 $model->addTable("Specialization")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false, true)
@@ -35,29 +66,8 @@ $model->addTable("Specialization")
  	})
 	;
 
-$model->addTable("AcademicPeriod")
-	->addPrimaryKey("id")
-	->addForeignKey("batch", "StudentBatch", true, false, true)
-	->addString("name", 100, 1, false, false)
-	->addDate("start_date", false, false, "2004-01-01", "end_date")
-	->addDate("end_date", false, false, "start_date", null)
-	->addInteger("weeks",8,1,200, false, false)
-	->addInteger("weeks_break",8,0,200,false,false)
-	->addReadAccess("consult_curriculum", true)
-	->addColumnWriteAccess("name","edit_curriculum", true)
- 	->onInsert(function($fields,$id,$sub_model_instance) {
-		try {
-			$batch = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$fields["batch"])->field("StudentBatch","name")->executeSingleValue();
-			PNApplication::$instance->news->post("students", "batch", array("batch".$fields["batch"]), "Academic period ".$fields["name"]." created for batch ".$batch.".");
-		} catch (Exception $e) { PNApplication::error($e); }
- 	})
- 	->setRowDescriptionProvider(function($row) {
-		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$row["batch"])->field("name")->executeSingleValue();
-		return "Academic Period <i>".htmlentities($row["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
- 	})
-	;
-$model->addTable("AcademicPeriodSpecialization")
-	->addForeignKey("period", "AcademicPeriod", true, false, true, false, false)
+$model->addTable("BatchPeriodSpecialization")
+	->addForeignKey("period", "BatchPeriod", true, false, true, false, false)
 	->addForeignKey("specialization", "Specialization", true, false, true, false, false)
 	->setKey(array("period","specialization"))
 	->addReadAccess("consult_curriculum", true)
@@ -70,7 +80,7 @@ $model->addTable("AcademicPeriodSpecialization")
 	;
 $model->addTable("AcademicClass")
 	->addPrimaryKey("id")
-	->addForeignKey("period", "AcademicPeriod", true, false, true)
+	->addForeignKey("period", "BatchPeriod", true, false, true)
 	->addForeignKey("specialization", "Specialization", false, false, true)
 	->addString("name", 100, 1, false, false)
 	->addReadAccess("consult_curriculum", true)
@@ -102,6 +112,9 @@ $model->addTable("AcademicClass")
  		return "Class <i>".htmlentities($row["name"])."</i> during period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
  	})
 	;
+ 	
+/* Subjects */
+ 	
 $model->addTable("CurriculumSubjectCategory")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false, false)
@@ -151,6 +164,8 @@ $model->addTable("CurriculumSubject")
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
 	;
+ 	
+/* Teachers */
  	
 $model->addTable("TeacherDates")
 	->addPrimaryKey("id")
