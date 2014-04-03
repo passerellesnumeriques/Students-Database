@@ -8,6 +8,9 @@ $model->addTable("AcademicYear")
 	->addInteger("year", 16, 2000)
 	->addString("name", 50, 1, false, true)
 	->addReadAccess("consult_curriculum", true)
+	->addWriteAccess("edit_curriculum", true)
+	->addInsertAccess("edit_curriculum", true)
+	->addRemoveAccess("edit_curriculum", true)
 	;
 $model->addTable("AcademicPeriod")
 	->addPrimaryKey("id")
@@ -18,6 +21,9 @@ $model->addTable("AcademicPeriod")
 	->addInteger("weeks",8,1,200, false, false)
 	->addInteger("weeks_break",8,0,200,false,false)
 	->addReadAccess("consult_curriculum", true)
+	->addWriteAccess("edit_curriculum", true)
+	->addInsertAccess("edit_curriculum", true)
+	->addRemoveAccess("edit_curriculum", true)
 	;
 
 /* Batches */

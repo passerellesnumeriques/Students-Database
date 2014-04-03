@@ -143,10 +143,26 @@ function context_menu(menu) {
 		menu.style.width = "";
 		menu.style.height = "";
 		document.body.appendChild(menu);
-		var x = absoluteLeft(from);
-		var y = absoluteTop(from);
-		var w = menu.offsetWidth;
-		var h = menu.offsetHeight;
+		var win = getWindowFromElement(from);
+		var x,y,w,h;
+		if (win != window) {
+			x = win.absoluteLeft(from);
+			y = win.absoluteTop(from);
+			var pw;
+			do {
+				pw = win.parent;
+				x += pw.absoluteLeft(win.frameElement);
+				y += pw.absoluteTop(win.frameElement);
+				x -= win.document.body.scrollLeft;
+				y -= win.document.body.scrollTop;
+				win = pw;
+			} while (pw != window);
+		} else {
+			x = absoluteLeft(from);
+			y = absoluteTop(from);
+		}
+		w = menu.offsetWidth;
+		h = menu.offsetHeight;
 		if (min_width_is_from && w < from.offsetWidth) {
 			setWidth(menu, w = from.offsetWidth);
 		}
@@ -189,10 +205,26 @@ function context_menu(menu) {
 		menu.style.width = "";
 		menu.style.height = "";
 		document.body.appendChild(menu);
-		var x = absoluteLeft(from);
-		var y = absoluteTop(from);
-		var w = menu.offsetWidth;
-		var h = menu.offsetHeight;
+		var win = getWindowFromElement(from);
+		var x,y,w,h;
+		if (win != window) {
+			x = win.absoluteLeft(from);
+			y = win.absoluteTop(from);
+			var pw;
+			do {
+				pw = win.parent;
+				x += pw.absoluteLeft(win.frameElement);
+				y += pw.absoluteTop(win.frameElement);
+				x -= win.document.body.scrollLeft;
+				y -= win.document.body.scrollTop;
+				win = pw;
+			} while (pw != window);
+		} else {
+			x = absoluteLeft(from);
+			y = absoluteTop(from);
+		}
+		w = menu.offsetWidth;
+		h = menu.offsetHeight;
 		if (min_width_is_from && w < from.offsetWidth) {
 			setWidth(menu, w = from.offsetWidth);
 		}
@@ -251,7 +283,7 @@ function context_menu(menu) {
 		}
 		if (typeof animation != 'undefined')
 			menu.style.visibility = 'hidden';
-		from.ownerDocument.body.appendChild(menu);
+		document.body.appendChild(menu);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);
 			window.top.pnapplication.registerOnclick(window, t._listener);

@@ -195,6 +195,12 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.addCloseButton = function(onclose) {
 		t.addIconTextButton(theme.icons_16.cancel, "Close", 'close', function() { if (onclose) onclose(); t.close(); });
 	};
+	t.addSaveButton = function(onsave) {
+		t.addIconTextButton(theme.icons_16.save, "Save", 'save', function() { if (onsave) onsave(); });
+	};
+	t.addCreateButton = function(onclick) {
+		t.addIconTextButton(theme.icons_16.ok, "Create", 'create', function() { if (onclick) onclick(); });
+	};
 	t.addNextButton = function(onnext) {
 		var span = document.createElement("SPAN");
 		span.appendChild(document.createTextNode("Next"));
