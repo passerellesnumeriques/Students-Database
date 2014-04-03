@@ -6,6 +6,7 @@ class page_applicant_list extends selection_page {
 	
 	/**
 	 * Create a data_list of applicants
+	 * The property of datalist can be given by a post "input" variable. This variable can be set using prepare_applicants_list.js script
 	 */
 	public function execute_selection_page() {
 		$this->add_javascript("/static/widgets/grid/grid.js");

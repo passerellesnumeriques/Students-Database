@@ -1226,7 +1226,11 @@ class SelectionJSON{
 /**
  * Exam Sessions methods
  */
-	
+	/**
+	 * Get an ExamSession JSON object from the session ID (event id)
+	 * @param number $id exam session ID
+	 * @return string JSON ExamSession object
+	 */
 	public static function ExamSessionFromID($id){
 		$q = SQLQuery::create()
 			->select("ExamSession")
@@ -1236,6 +1240,10 @@ class SelectionJSON{
 		return self::ExamSession($q, $row);
 	}
 	
+	/**
+	 * Prepare a query to retrieve the exam session fields
+	 * @param SQLQuery $q
+	 */
 	public static function ExamSessionSQL(&$q){
 		$alias = $q->getTableAlias("ExamSession");
 		if(!$alias)
@@ -1245,6 +1253,12 @@ class SelectionJSON{
 			->field($alias,"exam_center");
 	}
 	
+	/**
+	 * Create an ExamSession object from the row retrieved from database
+	 * @param SQLQuery $q query used to retrieve
+	 * @param array $row row coming from database structured by ExamSessionSQL method
+	 * @return string ExamSession JSON object
+	 */
 	public static function ExamSession($q, $row){
 		require_once 'component/calendar/CalendarJSON.inc';
 		$data = "{exam_center:".$row["exam_center"];
@@ -1256,6 +1270,11 @@ class SelectionJSON{
 		return $data;
 	}
 	
+	/**
+	 * Get the supervisors of an exam session
+	 * @param number $id exam session ID
+	 * @return string ExamSessionSupervisors JSON object
+	 */
 	public static function ExamSessionSupervisorsFromSessionID($id){
 		$supervisors = SQLQuery::create()
 			->select("ExamSessionSupervisor")
@@ -1275,6 +1294,11 @@ class SelectionJSON{
 		return $data;
 	}
 	
+	/**
+	 * Get an ExamSessionSupervisor object from a people ID
+	 * @param number $id people ID
+	 * @return string ExamSessionSupervisor JSON object
+	 */
 	public static function ExamSessionSupervisorFromPeopleID($id){
 		$q = SQLQuery::create()
 			->select("ExamSessionSupervisor")
@@ -1284,6 +1308,10 @@ class SelectionJSON{
 		return self::ExamSessionSupervisor($q, $row);
 	}
 	
+	/**
+	 * Prepare a query to retrieve the data related to an ExamSessionSupervisor object, adding the people data
+	 * @param SQLQuery $q query used to retrieve the data
+	 */
 	public static function ExamSessionSupervisorSQL(&$q){
 		$alias = $q->getTableAlias("ExamSessionSupervisor");
 		if($alias == null)
@@ -1294,12 +1322,23 @@ class SelectionJSON{
 		PNApplication::$instance->people->joinPeople($q, "ExamSessionSupervisor", "people");
 	}
 	
+	/**
+	 * Create an ExamSessionSupervisor from the row retrieved into the database
+	 * @param SQLQuery $q query used to retrieve the data from the database
+	 * @param array $row data retrieved from the database
+	 * @return string ExamSessionSupervisor JSON object
+	 */
 	public static function ExamSessionSupervisor($q, $row){
 		require_once 'component/people/PeopleJSON.inc';
 		$r = PeopleJSON::People($q, $row);
 		return $r;
 	}
 	
+	/**
+	 * Get an array containing all the ExamSession objects for a center
+	 * @param number $id exam center ID
+	 * @return string JSON array of ExamSession objects
+	 */
 	public static function ExamSessionsFromExamCenterID($id){
 		$sessions = SQLQuery::create()
 			->select("ExamSession")
@@ -1319,6 +1358,11 @@ class SelectionJSON{
 		return $data;
 	}
 	
+	/**
+	 * Get a JSON object with two attributes:<ul><li><code>session</code> ExamSession object</li><li><code>rooms</code> array containing objects (one per room) with three attributes:<ul><li><code>id</code> exam center room ID</li><li><code>name</code> exam center room name</li><li><code>remaining</code> number of remaining slots in this room for the matching session</li></ul></li></ul>
+	 * @param number $session_id exam session ID
+	 * @return string
+	 */
 	public static function ExamCenterRoomsWithRemainingSlotsForSession($session_id){
 		//Get the center ID
 		$EC_id = SQLQuery::create()

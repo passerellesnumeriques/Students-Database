@@ -105,3 +105,25 @@ function ExamCenterRoom(id, name, capacity){
 	this.name = name;
 	this.capacity = capacity;
 }
+
+/** Exam sessions objects */
+
+/**
+ * @param {Number} exam_center ID of the exam center where the session takes place
+ * @param {CalendarEvent} event related to this session
+ * @param {Array} supervisors array of ExamSessionSupervisor objects
+ */
+function ExamSession(exam_center,event,supervisors){
+	this.exam_center = exam_center;
+	this.event = event;
+	this.supervisors = supervisors;
+}
+
+/**
+ * @param {People} people object
+ */
+function ExamSessionSupervisor(people){
+	for(a in people){
+		this[a] = people[a];
+	}
+}

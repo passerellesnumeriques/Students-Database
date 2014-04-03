@@ -1,15 +1,34 @@
+/**
+ * Create the content of the applicant assignment section for a given exam center
+ * This screen contains all the figures related to the applicant assignment (to center, to sessions, to rooms...) and the buttons implementing all the actions to manage the applicants assignment
+ * @param {HTMLElement | String} container
+ * @param {Number} EC_id exam center ID
+ * @param {String} EC_name exam center name
+ * @param {Boolean} can_manage
+ * @param {Custom_Event} onupdateroom custom_event to be listened to by this object. When the exam center rooms of this center are updated (in exam center caracteristics section), this event is fired, so the reset method is called to update all the displayed data
+ * @param {Custom_Event} onupdateapplicants custom_event to be fired when the applicants assignment to sessions / rooms is updated. This way the manage_exam_center_room object is reseted, and the user rights may be updated (rooms cannot be removed after applicants assignment)
+ */
 function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupdateroom,onupdateapplicants){
 	var t = this;
 	if( typeof container == "string") container = document.getElementById(container);
 	container.style.padding = "10px";
 	
+	/**
+	 * Reset the content of the section
+	 */
 	t.reset = function(){
 		t._refreshSessionsRequiredContent();
 		t._refreshSessionsList();
 		t._refreshNotAssignedRow();
 	};
 	
+	/** Private methods and attributes */
+	
 	t._sessions = null;
+	
+	/**
+	 * Launch the process, add the listener to onupdateroom custom event
+	 */
 	t._init = function(){
 		t._div_sessions_required = document.createElement("div");
 		t._div_list = document.createElement("div");
@@ -26,6 +45,9 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 			onupdateroom.add_listener(t.reset);
 	};
 	
+	/**
+	 * Create a row containing the number of sessions required in this center (based on the center capacity and on the number of applicants assigned)
+	 */
 	t._refreshSessionsRequiredContent = function(){
 		while(t._div_sessions_required.firstChild)
 			t._div_sessions_required.removeChild(t._div_sessions_required.firstChild);
@@ -52,6 +74,12 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 		});
 	};
 	
+	/**
+	 * Set a table containing all the sessions set in this exam center
+	 * One row is created per session, and populated with an exam_session_profile object
+	 * The user can update the session date by clicking on it
+	 * Two buttons are added: empty session (unassign all the applicants from a session) and create new session
+	 */
 	t._refreshSessionsList = function(){
 		while(t._div_list.firstChild)
 			t._div_list.removeChild(t._div_list.firstChild);
@@ -234,6 +262,10 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 		});
 	};
 	
+	/**
+	 * Create the create session button
+	 * @returns {HTMLElement}
+	 */
 	t._getCreateSessionButton = function(){
 		var create = document.createElement("div");
 		create.className = "button";
@@ -244,6 +276,10 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 		return create;
 	};
 	
+	/**
+	 * Pop up the select session date (calling pop_select_date_and_time.js script), prepare the method called when ok button is pressed
+	 * @param {Number | NULL} index if NULL means the popup shall create a new exam session, else must be the index of the session within t._sessions event
+	 */
 	t._popSelectSessionDate = function(index){
 		var title = index == null ? "Create a exam session" : "Set the exam session date";
 		var _event = index == null ? null : t._sessions[index].event;
@@ -289,6 +325,9 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 		});
 	};
 	
+	/**
+	 * Create a row containing the number of applicants assigned to this center but not assigned to any session
+	 */
 	t._refreshNotAssignedRow = function(){
 		while(t._div_not_assigned.firstChild)
 			t._div_not_assigned.removeChild(t._div_not_assigned.firstChild);
@@ -315,6 +354,10 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 		});
 	};
 	
+	/**
+	 * Update the number of applicants still to assign within the container displaying it
+	 * Must be updated separetely because this figures depends on the result of several sevices
+	 */
 	t._setContentDivStillToAssign = function(){
 		if(t._div_still_to_assign){
 			while(t._div_still_to_assign.firstChild)
@@ -341,6 +384,8 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 							}
 							window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, res.assigned+" applicants have been succesfully assigned to the sessions and rooms!", [{action:"close"}], 5000));
 							t.reset();
+							if(onupdateapplicants)
+								onupdateapplicants.fire();
 						});
 					};
 					b_auto.style.display = "inline-block";
@@ -355,7 +400,7 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 					b_manually.onclick = function(){
 						var pop = new popup_window("Assign applicants to exam sessions");
 						pop.setContentFrame("/dynamic/selection/page/applicant/manually_assign_to_exam_entity?mode=session&center="+EC_id);
-						pop.onclose = t.reset;
+						pop.onclose = function(){t.reset(); if(onupdateapplicants) onupdateapplicants.fire();};
 						pop.show();
 					};
 					b_manually.style.display = "inline-block";
@@ -370,6 +415,11 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 		}
 	};
 	
+	/**
+	 * Create an exam session
+	 * Prepares the event object and call the exam/create_session service
+	 * @param {CalendarEvent} event the session event to process
+	 */
 	t._performCreateSession = function(event){
 		//Process the event		
 		event.description = "Exam session";
@@ -388,12 +438,23 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 		});
 	};
 	
+	/**
+	 * Create an image containing a loading gif
+	 * @returns {HTMLElement}
+	 */
 	t._getLoading = function(){
-		var e = document.createElement("div");
-		e.innerHTML = "<img src = '"+theme.icons_16.loading+"'/>";
-		return e;
+		var i = document.createElement("img");
+		i.src = theme.icons_16.loading;
+		return i;
 	};
 	
+	/**
+	 * Create a link to the datalist related (list of applicants assigned to a session, not assigned to a session, assigned to the center), with the possibility to unassign the applicants from the matching entity
+	 * @param {Number} figure the content of the link. If this figure is greater than 0, the link is clickable, and fontStyle is italic to show to the user that he can click on it
+	 * @param {Number | NULL} session_index if not NULL must be the index of the session (from which applicants list is populated) within t._sessions array
+	 * @param {Boolean} not_in_session if true means that the link must refer to the list of the applicants assigned to the center but no assigned to any session
+	 * @returns {HTMLElement}
+	 */
 	t._createFigureElement = function(figure, session_index, not_in_session){
 		var link = document.createElement("a");
 		figure = (figure == null || isNaN(figure)) ? 0 : parseInt(figure);
@@ -462,6 +523,11 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 		return link;
 	};
 	
+	/**
+	 * Method called when applicants are unassigned from an entity from the applicants datalist
+	 * When the unassign button is clicked, the service applicant/unassign_from_center_entity is called for each applicant (only unassign the applicants that can really be unassigned)
+	 * This method gets all the results from the service calls, and once all are gotten (no more pending answer), an error message is displayed to explain why any applicants couldn't be unassigned, and the popup window is closed
+	 */
 	t._onApplicantUnassigned = function(res){
 		t._answers_received++;
 		if(res && (res.error_performing || res.error_assigned_to_session || res.error_assigned_to_room || res.error_has_grade)){
@@ -526,7 +592,7 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 		}
 	};
 	
-	require([["typed_field.js","popup_window.js","context_menu.js","pop_applicants_list_in_center_entity.js","calendar_objects.js","exam_session_profile.js"],["field_time.js"]],function(){
+	require([["typed_field.js","popup_window.js","context_menu.js","calendar_objects.js","exam_session_profile.js"],["field_time.js"]],function(){
 		t._init();		
 	});
 }

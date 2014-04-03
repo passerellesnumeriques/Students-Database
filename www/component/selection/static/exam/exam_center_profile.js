@@ -1,3 +1,23 @@
+/**
+ * Populate the exam center caracteristics section on the center_profile page
+ * The section is populated by location section, name section(depends on the campaign config), rooms section, informations sessions linked section, and other partners section
+ * All the data is updated into the database only when the user clicks on save button 
+ * @param {Number} id exam center ID
+ * @param {Boolean} config_name_center true if the campaign config is set in order to set custom name to an exam center
+ * @param {Boolean} can_add
+ * @param {Boolean} can_edit
+ * @param {Boolean} can_remove
+ * @param {String | HTMLElement}container
+ * @param {ExamCenterData} data related to this center
+ * @param {ExamCenterPartnersContactPoints} partners_contacts_points
+ * @param {Number} campaign_id selection campaign ID
+ * @param {String} save_button_id ID of the save button element to override
+ * @param {String} remove_button_id ID of the remove button element to override
+ * @param {Number} db_lock DataBaseLock for the applicant table
+ * @param {Boolean} config_name_room true if the campaign config is set in order to set custom name to an exam center room
+ * @param {Custom_Event} onupdateroom event to be fired when the rooms data is updated
+ * @param {Custom_Event} onupdateapplicants event to be listened by the rooms section: when the applicants assignment to this center is updated, the room section must be refreshed to update the rights
+ */
 function exam_center_profile(id, config_name_center, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_button_id,remove_button_id,db_lock,config_name_room,onupdateroom,onupdateapplicants){
 	if(typeof(container) == "string") container = document.getElementById(container);
 	var t = this;
@@ -12,6 +32,13 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	t.div_IS_linked = document.createElement("div");
 	t.div_room = document.createElement("div");
 	
+	/**
+	 * Reset all the subsections content
+	 * The t._lockDatabase method is called at the end, in the case of this is an exam center creation and that the database was not locked yet
+	 * @param {HTMLElement|NULL} locker screen locker to remove, if any
+	 * @param {Boolean} update_partners_contact_points true if the partners_contacts_points array must be refreshed into the select_address and select_other_partners objects
+	 * @param {ExamCenterRooms | NULL} new_rooms not null if rooms attribute must be updated
+	 */
 	t.resetAll = function(locker, update_partners_contact_points,new_rooms){
 		container.removeChild(t.table);
 		delete(t.table);
@@ -29,23 +56,38 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 		t._lockDatabase();
 	};
 	
+	/**
+	 * Get if the data has been updated since the previous saving performed
+	 * @returns {Boolean}
+	 */
 	t.dataMustBeSaved = function(){
 		return t._updated;
 	};
 	
 	/**Private methods and attributes*/
 	
-	t._updated = false;
+	t._updated = false; //Flag updated as true each time any data is updated by the user, and reseted as false when the data is saved
 	t._rooms_updated = false;
 	
+	/**
+	 * Listener fired when the data is updated
+	 * Set the t._updated flag as true
+	 */
 	t._onDataUpdatedListener = function(){
 		t._updated = true;
 	};
 	
+	/**
+	 * Listener fired when the data is saved
+	 * Set the t._updated flag as false
+	 */
 	t._onDataSavedListener = function(){
 		t._updated = false;
 	};
 	
+	/**
+	 * Update the t._updated flag as false even if the data was not saved
+	 */
 	t._bypassCheckDataSaved = function(){
 		t._updated = false;
 	};
@@ -88,11 +130,19 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 		t.select_other_partners.onupdate.add_listener(t._onDataUpdatedListener);
 	};
 	
+	/**
+	 * Create the custom name field object
+	 */
 	t._setCustomNameField = function(){
 		t.center_name = new IS_ExamCenter_name(t.div_name,data.name,can_edit,"Exam center name");
 		t.center_name.onupdate.add_listener(t._onDataUpdatedListener);
 	};
 	
+	/**
+	 * Create the manage_exam_center_room object
+	 * Add listeners on the rooms updated events
+	 * A listener is also added on the onupdateapplicants custom_event to synchronize with the exam center applicants assignment section
+	 */
 	t._setRooms = function(){
 		t.manage_rooms = new manage_exam_center_room(t.div_room,data.rooms,id,can_edit,config_name_room);
 		t.manage_rooms.onupdate.add_listener(t._onDataUpdatedListener);
@@ -101,38 +151,43 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 			onupdateapplicants.add_listener(function(){t.manage_rooms.reset();});
 	};
 	
+	/**
+	 * Create the IS_linked field
+	 */
 	t._setISLinkedField = function(){
 		t.IS_linked = new center_IS_link(t.div_IS_linked,data.information_sessions);
 	};
 	
+	/**
+	 * Set the layout of the section content
+	 * Override the save and remove center buttons
+	 */
 	t._setLayout = function(){
-		var tr1 = document.createElement("tr");
-		var tr2 = document.createElement("tr");		
-		var td11 = document.createElement("td");
-		var td12 = document.createElement("td");
-		var td13 = document.createElement("td");
-		var td21 = document.createElement("td");
-		var td22 = document.createElement("td");
-		tr1.appendChild(td11);
-		tr1.appendChild(td12);
-		tr1.appendChild(td13);
-		tr2.appendChild(td21);
-		tr2.appendChild(td22);
-		t.table.appendChild(tr1);
-		t.table.appendChild(tr2);
-		td13.rowSpan = 2;
-		td13.style.verticalAlign = "top";
 		t.table.style.marginLeft = "15px";
 		container.appendChild(t.table);
-		td11.appendChild(t.div_address);
-		td12.appendChild(t.div_room);
-		td13.appendChild(t.div_partners);
-		td21.appendChild(t.div_name);
-		td22.appendChild(t.div_IS_linked);
-
+		var tr = document.createElement("tr");
+		var td1 = document.createElement("td");
+		var td2 = document.createElement("td");
+		var td3 = document.createElement("td");
+		tr.appendChild(td1);
+		tr.appendChild(td2);
+		tr.appendChild(td3);
+		t.table.appendChild(tr);
+		td1.appendChild(t.div_address);
+		td1.appendChild(t.div_name);
+		td1.appendChild(t.div_IS_linked);
+		td2.appendChild(t.div_room);
+		td3.appendChild(t.div_partners);
+		td1.style.verticalAlign = "top";
+		td2.style.verticalAlign = "top";
+		td3.style.verticalAlign = "top";
+		t.div_address.style.paddingBottom = "5px";
+		t.div_name.style.paddingTop = "5px";
+		t.div_name.style.paddingBottom = "5px";
+		t.div_IS_linked.style.paddingTop = "5px";
+		t.div_IS_linked.style.paddingBottom = "5px";
 		var button_remove = document.getElementById(remove_button_id);
 		if(can_remove && data.id != -1 && data.id != "-1"){
-			// td61.appendChild(button_remove);
 			button_remove.style.visibility = 'visible';
 			button_remove.style.position = 'static';
 			button_remove.onclick = function(){
@@ -183,6 +238,10 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 		}
 	};
 	
+	/**
+	 * Calls the remove center service
+	 * If well performed, the user is redirected to the center_main_page
+	 */
 	t._performRemoveCenter = function(){
 		t._bypassCheckDataSaved();
 		service.json("selection","exam/remove_center",{id:data.id},function(r){
@@ -195,6 +254,11 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 		});
 	};
 	
+	/**
+	 * Launch the saving of the exam center caracteristics
+	 * Check that an area is set for the center, and then update all the attributes before saving
+	 * The on data saved listener is fired after performing the saving
+	 */
 	t._launchSaving = function(){
 		var locker = lock_screen();
 		if(data.geographic_area == null){

@@ -1,65 +1,70 @@
+/**
+ * Create a page to manually assign applicants to an exam entity. Can be to a room, to a room and a session, or to a center
+ * A datalist is created with the matching filters, and also a section containing the list of the targets (selectable with radio button).This section is populated calling a service
+ * @param {HTMLElement|String} container
+ * @param {Number} campaign_id the current campaign ID (for the datalist)
+ * @param {String} mode the mode of this page. Can be "center", "session" (in that case the user must assign the applicants to rooms at the same time), or 'room'
+ * @param {Number|NULL} EC_id exam center ID if mode == session | mode == room  
+ */
 function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) {
 	var t = this;
 	container = typeof container == "string" ? document.getElementById(container) : container;
 	
+	/**
+	 * Reset the content
+	 * Refresh the datalist and the section, and update the assign button visibility
+	 */
 	t.reset = function(){
 		t._refreshLeftSection();
 		t._refreshRightSection();
 		//Update convert button visibility
 		t._assign_b.style.visibility = (t._applicants_selected.length == 0 || t._target_checked == null)? "hidden": "visible";
 	};
+	
 	/** Private methods and attributes */
 	
-	t._applicants_checked = [];//Contains the ids of the applicants selected by the user
-	
-
+	/**
+	 * Launch the process
+	 * Create the containers of the datalist and the right section (targets), and also an assign button displayed between them
+	 * This button is displayed only when at least one applicant and one target are selected
+	 */
 	t._init = function() {
-		var table = document.createElement("table");
-		var tr = document.createElement("tr");
-		var arrow_container = document.createElement("td");
-		arrow_container.style.verticalAlign = "middle";
-		tr.appendChild(arrow_container);
+		var b_assign_container = document.createElement("div");
+		b_assign_container.style.display = "inline-block";
+		b_assign_container.style.height = "100%";
 		t._assign_b = document.createElement("div");
 		t._assign_b.innerHTML = "<img src = '"+theme.icons_16.right+"'/> Assign";
 		t._assign_b.className = "button";
 		t._assign_b.title = "Assign the selected applicants";
 		t._assign_b.style.visibility = "hidden";
 		t._assign_b.onclick = t._performAction;
-		arrow_container.appendChild(t._assign_b);
-		table.appendChild(tr);
-		table.style.display = "inline-block";
-		table.style.height = "100%";
+		b_assign_container.appendChild(t._assign_b);
 		t._refreshLeftSection();
 		t._refreshRightSection();
-//		container.appendChild(t._left_section.element);
-//		t._left_section.element.style.display = "inline-block";
-		container.appendChild(table);
-		container.appendChild(t._right_section.element);
+		container.appendChild(b_assign_container);
+		new vertical_align(b_assign_container,"middle");
+		container.appendChild(t._right_section_container);
 		t._right_section.element.style.display = "inline-block";
-//		new fill_height_layout(t._left_section.element);
-//		new fill_height_layout(t._right_section.element);
-//		new fill_height_layout(tr);
 	};
-
+	
+	/**
+	 * Refresh the datalist, with the matching filters
+	 * If the datalist already exists, the data is reloaded
+	 */
 	t._refreshLeftSection = function() {
 		t._applicants_selected = [];
 		if (!t._applicants_list_container) {
 			t._applicants_list_container = document.createElement("div");
 			t._applicants_list_container.style.height = "100%";
 			t._applicants_list_container.style.display = "inline-block";
-			t._applicants_list_container.style.margin = "10px";
+			t._applicants_list_container.style.padding = "10px";
+			t._applicants_list_container.style.verticalAlign = "top";
 			t._applicants_list_container.style.width = "60%";
-			t._applicants_list_container.className = "section";
+			t._dl_container = document.createElement("div");
+			t._applicants_list_container.appendChild(t._dl_container);
+			t._dl_container.className = "section";
 			container.appendChild(t._applicants_list_container);
 		}
-//		if (!t._left_section) {
-//			t._left_section = new section("","Applicants", t._applicants_list_container,false, true);
-//			t._left_section.element.style.display = "inline-block";
-//			t._left_section.element.style.margin = "10px";
-//			t._left_section.element.style.width = "60%";			
-//			t._left_section.element.style.overflowY = "hidden";
-//			t._left_section.element.style.height = "100%";
-//		}
 		//Set the filters
 		var filters = [];
 		if(mode == "center"){
@@ -74,7 +79,7 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 		}
 		if(!t._dl){
 			t._dl = new data_list(
-				t._applicants_list_container,
+				t._dl_container,
 				'Applicant', campaign_id,
 				[
 					'Selection.Applicant ID',
@@ -103,6 +108,12 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 		}
 	};
 	
+	/**
+	 * Listener of the applicants selection
+	 * Updates the t._applicants_selected attribute according to the user selection
+	 * @param {Number} row_id the row id of the row selected / unselected within the datalist
+	 * @param {Boolean} selected true if the applicant has been selected by the user
+	 */
 	t._applicants_selection_changed = function (row_id, selected){
 		var people_id = t._dl.getTableKeyForRow("Applicant", row_id);
 		if (selected)
@@ -113,8 +124,20 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 		t._assign_b.style.visibility = (t._applicants_selected.length == 0 || t._target_checked == null)? "hidden": "visible";
 	};
 	
+	/**
+	 * Refresh the right section, remove all the content and call the
+	 * applicant/manually_assign_to_exam_entity_provider service
+	 * If mode == "session" the t._populateRightSectionForSessionMode method is called, else the t._populateRightSection one
+	 */
 	t._refreshRightSection = function() {
 		t._target_checked = null; //Contains the selected targets elements
+		if(!t._right_section_container){
+			t._right_section_container = document.createElement("div");
+			t._right_section_container.style.verticalAlign = "top";
+			t._right_section_container.style.height = "100%";
+			t._right_section_container.style.padding = "10px";
+			t._right_section_container.style.display = "inline-block";
+		}
 		if (!t._targets_list_container) {
 			t._targets_list_container = document.createElement("div");
 			t._targets_list_container.style.overflowY = "scroll";// Anticipate scrollbar
@@ -127,10 +150,9 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 			else if (mode == "session")
 				name = "Exam Sessions and Rooms";
 			t._right_section = new section("", name,t._targets_list_container, false, true);
-			t._right_section.element.style.margin = "10px";
-			t._right_section.element.style.display = "inline-block";
-			t._right_section.element.style.overflowY = "hidden";
-			t._right_section.element.style.height = "100%";
+			t._right_section.element.style.verticalAlign = "top";
+			t._right_section.element.style.height = "90%";
+			t._right_section_container.appendChild(t._right_section.element);
 		}
 		while (t._targets_list_container.firstChild)
 			// Empty the section content
@@ -154,6 +176,10 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 		
 	};
 	
+	/**
+	 * Populate the right section, creating a list with one row per target element
+	 * On each row, a radio button is added
+	 */
 	t._populateRightSection = function(){
 		if (t._targets.length == 0) {
 			var div = document.createElement("div");
@@ -192,6 +218,12 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 		}
 	};
 	
+	/**
+	 * Populate the right section for the session mode
+	 * A list is created, containing sections for each exam session in the center
+	 * Each session section is populated by rows for the rooms in the center, with the number of remainig slots per room
+	 * The radio buttons are added only on the rooms rows (and enabled only if the number of remaining slots is greater than 0), thus user can only assign applicants to a session and a room at the same time
+	 */
 	t._populateRightSectionForSessionMode = function(){
 		if (t._targets.length == 0) {
 			var div = document.createElement("div");
@@ -219,10 +251,10 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 					for(var j = 0; j < t._targets[i].rooms.length; j++){
 						var row = document.createElement('div');
 						body.appendChild(row);
+						var cb = document.createElement("input");
+						cb.type = "radio";
+						cb.name = "target_element";
 						if(t._targets[i].rooms[j].remaining > 0){
-							var cb = document.createElement("input");
-							cb.type = "radio";
-							cb.name = "target_element";
 							cb.session_id = t._targets[i].session.event.id;
 							cb.room_id = t._targets[i].rooms[j].id;
 							cb.onclick = function(){
@@ -232,15 +264,22 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 							};
 							cb.style.display = "inline-block";
 							cb.style.marginRight = "3px";
-							row.appendChild(cb);
+						} else {
+							cb.disabled = true;
 						}
-						row.appendChild(document.createTextNode(t._targets[i].rooms[j].name+" ("+t._targets[i].rooms[j].remaining+" remaining "+getGoodSpelling("slot",t._targets[i].rooms[j].remaining)+")"));
+						row.appendChild(cb);
+						row.appendChild(document.createTextNode("Room "+t._targets[i].rooms[j].name+" ("+t._targets[i].rooms[j].remaining+" remaining "+getGoodSpelling("slot",t._targets[i].rooms[j].remaining)+")"));
 					}
 				}
 			}
 		}
 	};
 	
+	/**
+	 * Create a link to an exam center profile
+	 * Method only called into the "center" mode
+	 * @param {Number} index_in_targets the index of the exam center within t._targets array
+	 */
 	t._createLinkToCenterProfile = function(index_in_targets) {
 		var link = document.createElement("a");
 		var name = t._targets[index_in_targets].name;
@@ -262,6 +301,9 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 		return link;
 	};
 	
+	/**
+	 * Call the service applicant/manually_assign_to_exam_entity to assign the selected applicants to the matching target
+	 */
 	t._performAction = function() {
 		//Lock the screen
 		var locker = lock_screen();
@@ -276,7 +318,7 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 		});
 	};
 
-	require([ "section.js", "context_menu.js","fill_height_layout.js"], function() {
+	require([ "section.js", "context_menu.js","vertical_align.js"], function() {
 		t._init();
 	});
 }

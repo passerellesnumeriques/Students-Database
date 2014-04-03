@@ -19,7 +19,7 @@ class page_applicant_manually_assign_to_exam_entity extends selection_page {
 		$this->add_javascript("/static/data_model/data_list.js");
 		?>
 		<div id = "assign_container" style = "width:100%; height:100%; overflow:hidden;">
-			<div id = "sections_container"></div>
+			<div id = "sections_container" style = "height:100%;"></div>
 		</div>
 		<?php
 		//Lock the Applicant table

@@ -56,7 +56,7 @@ $sm->addTable("Applicant")
 		->addColumnWriteAccess("information_session", "manage_information_session", true)
 		->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities
 		->addInsertAccess("edit_applicants",true)
-		->addRemoveAccess("edit_applicants",true)		
+		->addRemoveAccess("edit_applicants",true)
 		->setPrimary("people");//The primary key is the people_id
 		//TODO finish + update steps.inc
 

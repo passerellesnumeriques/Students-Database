@@ -3,7 +3,9 @@ require_once("/../selection_page.inc");
 class page_exam_center_profile extends selection_page {
 	public function get_required_rights() { return array("see_exam_center_detail"); }
 	public function execute_selection_page(){
-		
+	/**
+	 * Create a page with two sections: one for the exam center caracteristics, and one for the applicants assignment into this exam center
+	 */
 	$name = $this->generateID();
 	$this->add_javascript("/static/widgets/vertical_layout.js");
 	$this->add_javascript("/static/widgets/section/section.js");
@@ -45,7 +47,14 @@ class page_exam_center_profile extends selection_page {
 			$this->exam_applicants("exam_center_applicants_container", $id,$read_only);
 	}
 	
-	
+	/**
+	 * Create the section containing the exam center caracteristics (location, partners, name, rooms)
+	 * @param string $container_id
+	 * @param number $id exam center ID
+	 * @param string $save_exam_center_button save exam center button ID (onclick implemented by the exam_center_profile script)
+	 * @param string $remove_exam_center_button remove exam center button ID (onclick implemented by the exam_center_profile script)
+	 * @param boolean $read_only indicates if the page shall be in read only mode (user rights restricted)
+	 */
 	private function exam_center_caracteristics($container_id,$id,$save_exam_center_button, $remove_exam_center_button,$read_only){
 		$this->add_javascript("/static/widgets/header_bar.js");
 		$this->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('', 'Exam Center Profile');");
@@ -126,8 +135,13 @@ class page_exam_center_profile extends selection_page {
 	
 	}
 	
+	/**
+	 * Create the exam applicants section: contains all the data related to the applicant assignment for the center (assigned to center, session, room...)
+	 * @param string $container_id
+	 * @param number $center_id exam center ID
+	 * @param boolean $read_only indicates if the page shall be in read only mode (user rights restricted)
+	 */
 	private function exam_applicants($container_id, $center_id, $read_only){
-		//TODO set rights, readonly? Always shown?
 		$can_manage_applicants = PNApplication::$instance->user_management->has_right("manage_applicant");
 		if($read_only)
 			$can_manage_applicants = false;
@@ -136,7 +150,7 @@ class page_exam_center_profile extends selection_page {
 			->field("ExamCenter","name")
 			->whereValue("ExamCenter", "id", $center_id)
 			->executeSingleValue();
-		$this->add_javascript("/static/selection/exam/center_applicants_section.js");
-		$this->onload("new center_applicants_section('".$container_id."',".json_encode($center_id).",".json_encode($EC_name).",".json_encode($can_manage_applicants).",onupdateroom,onupdateapplicants);");
+		$this->add_javascript("/static/selection/exam/center_exam_sessions_planned.js");
+		$this->onload("new center_exam_sessions_planned('".$container_id."',".json_encode($center_id).",".json_encode($EC_name).",".json_encode($can_manage_applicants).",onupdateroom,onupdateapplicants);");
 	}
 }

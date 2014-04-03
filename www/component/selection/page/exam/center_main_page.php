@@ -5,6 +5,10 @@ class page_exam_center_main_page extends selection_page {
 	
 	public function get_required_rights() {return array("see_exam_center_detail");}
 	
+	/**
+	 * Create two sections: one containing the exam center caracteristics and the other one the data related to applicant assignment
+	 * @see selection_page::execute_selection_page()
+	 */
 	public function execute_selection_page() {
 		$this->add_javascript("/static/widgets/grid/grid.js");
 		$this->add_javascript("/static/data_model/data_list.js");

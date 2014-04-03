@@ -15,7 +15,7 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 	
 	/**
 	 * Reset the section content
-	 * @param {ExamCenterRooms | NULL} new_rooms not null if romms attribute must be updated
+	 * @param {ExamCenterRooms | NULL} new_rooms not null if rooms attribute must be updated
 	 */
 	t.reset = function(new_rooms){
 		while(t._section_content.firstChild)

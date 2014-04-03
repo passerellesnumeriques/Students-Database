@@ -1839,7 +1839,6 @@ class SQLQuery {
 			//array_push($to_remove[$table->getSQLName($this->sub_models)]["keys"], $key);
 		
 		// search for foreign keys in this table, which may imply other remove
-		$new_remove = array();
 		foreach ($table->internalGetColumnsFor($sub_model_instance) as $col) {
 			if (!($col instanceof datamodel\ForeignKey)) continue;
 			if (!$col->remove_primary_when_foreign_removed) continue;
@@ -1874,12 +1873,11 @@ class SQLQuery {
 			}
 			$q->field($table_alias, $col->name);
 			$rows = $q->executeSingleField();
-			
-			if (!isset($new_remove[$col->foreign_table]))
-				$new_remove[$col->foreign_table] = array();
-			if (!isset($new_remove[$col->foreign_table][$sub_model]))
-				$new_remove[$col->foreign_table][$sub_model] = array();
-			array_push($new_remove[$col->foreign_table][$sub_model], $rows);
+			if ($this->bypass_security)
+				$ft = DataModel::get()->internalGetTable($col->foreign_table);
+			else
+				$ft = DataModel::get()->getTable($col->foreign_table);
+			$this->browseTablesForRemove($ft, $sub_model, $rows, $locks, $to_remove, $to_update, $sub_models_to_remove);
 		}
 		
 		// search for foreign keys in other tables which are linked to the keys we want to remove
