@@ -261,6 +261,14 @@ if (window == window.top) {
 		addInactivityListener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
+		_data_unsaved: [],
+		dataUnsaved: function(id) {
+			if (!this._data_unsaved.contains(id))
+				this._data_unsaved.push(id);
+		},
+		dataSaved: function(id) {
+			this._data_unsaved.remove(id);
+		},
 		addOverAndOut: function(element, handler) {
 			var w = getWindowFromElement(element);
 			window.top.pnapplication.registerOnMouseMove(w, function(x,y) {
@@ -303,17 +311,21 @@ function initPNApplication() {
 		var closeRaised = false;
 		if (window.frameElement) {
 			var prev = window.frameElement.onunload; 
-			window.frameElement.onunload = function(ev) {
+			listenEvent(window.frameElement, 'unload', function(ev) {
 				if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
 				if (prev) prev(ev);
-			};
+			});
 		}
-		window.onunload = function() {
+		listenEvent(window, 'unload', function() {
 			if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
-		};
-		window.onbeforeunload = function() {
+		});
+		listenEvent(window, 'beforeunload', function(ev) {
+			if (window.pnapplication && window.pnapplication._data_unsaved && window.pnapplication._data_unsaved.length > 0) {
+				ev.returnValue = "The page contains unsaved data";
+				return "The page contains unsaved data";
+			}
 			if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
-		};
+		});
 		if (window==window.top)
 			setInterval(window.pnapplication.checkInactivity, 2000);
 	}

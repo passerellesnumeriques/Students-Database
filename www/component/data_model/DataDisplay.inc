@@ -745,6 +745,10 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	
 }
 
+/**
+ * Implementation of DataDisplay, when we have a foreign key representing a choice where the data is not directly reached by the foreign_key, but with a harder business that makes it not editable.<br/>
+ * The data displayed is given by the data_path, but the key handled is the foreignkey in the foreign table (pointed by the foreign key in the root table)
+ */
 class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	
 	/** @var string name of this data */
@@ -754,7 +758,11 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	/** @var string column's name containing the foreign key */
 	protected $foreign_key_name;
 	
-	
+	/**
+	 * @param string $display_name name of the datadisplay
+	 * @param string $foreign_key_name name of the foreign key in the root table
+	 * @param string $data_path first must be the foreign key and then all the columns name that we will browse through until the column to display. The names must be separated by a dot
+	 */
 	public function __construct($display_name, $foreign_key_name, $data_path) {
 		$this->display_name = $display_name;
 		$this->data_path = $data_path;
@@ -797,6 +805,12 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 		return false; // TODO
 	}
 	
+	/**
+	 * Internal method to get the possible values to display in the enum for filtering
+	 * The possibilities are enumerated by all the existing keys in the table pointed by the foreign_key (choice datadisplay aspect) and the displayed names are found into the last table of the datapath (aspect readonly datadisplay)
+	 * @param number|null $sub_model
+	 * @returns array | null null if no value, else array containing array("KEY" =>, "VALUE") for each possible values
+	 */
 	private function getPossibleValues($sub_model) {
 		$columns = explode(".", $this->data_path);
 		$t = $this->getTable();		

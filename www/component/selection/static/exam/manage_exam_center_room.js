@@ -4,17 +4,17 @@
  * @param {HTMLElement | String} container or its ID
  * @param {ExamCenterRooms} rooms
  * @param {Number} EC_id exam center ID
- * @param {Boolean}can_manage
+ * @param {Boolean} can_manage
  * @param {Boolean} generate_name true if the room name must be generated and cannot be manually setted
  */
 function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_name){
 	var t = this;
 	t.rooms = rooms;
 	container = typeof container == "string" ? document.getElementById(container) : container;
-	t.onupdate = new Custom_Event();
+	t.onupdate = new Custom_Event(); //Custom event fired when the rooms caracteristics are updated
 	
 	/**
-	 * Reset the section content
+	 * Reset the section content, remove all the elements and calls the _getRoomsRemoveRight method to have the last value of the manage rights per room
 	 * @param {ExamCenterRooms | NULL} new_rooms not null if rooms attribute must be updated
 	 */
 	t.reset = function(new_rooms){
@@ -44,7 +44,15 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 		return new_rooms;
 	};
 	
-	
+	/**
+	 * Get the header row of the section, explaining that some rooms cannot be updated / removed because of the
+	 * applicants assignment into them
+	 * A room can be set as not editable / removable for two reasons:<ul><li>If any applicant is assigned into it for any exam session</li><li>If, without this room, the exam center capacity becomes lesser than the number of applicants assigned to any session in this center</li></ul>
+	 * @param {Array | NULL} external_error_assigned NULL if the t._error_assigned must be used to generate the error message, else use the parameter instead
+	 * The parameter must be an array of objects (one per room that cannot be updated / removed) with 3 attributes: <ul><li><code>id</code> room ID</li><li><code>name</code> room name</li><li><code>applicants</code> array of Applicant objects, the one assigned to the room</li></ul>
+	 * @param {Array | NULL}  external_error_capacity NULL if the t._error_capacity must be used to generate the error message, else use the parameter instead
+	 * The parameter must be an array of objects (one per room that cannot be updated / removed) with 3 attributes: <ul><li><code>id</code> room ID</li><li><code>name</code> room name</li><li><code>sessions</code> array of objects with two attributes:<ul><li><code>session_event</code> the CalendarEvent object associated to the exam session</li><li><code>assigned</code> number af applicants assigned to this session</li></ul></li></ul>
+	 */
 	t.getInfoRow = function(external_error_assigned, external_error_capacity){
 		if(typeof external_error_assigned == "undefined")
 			external_error_assigned = null;
@@ -258,6 +266,12 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 		return t._remove_rooms_rights[id];
 	};
 	
+	/**
+	 * Create a list detailing the error capacity, explaining why any room cannot be updated / removed
+	 * @param {Array | NULL} external_error_capacity NULL if the t._error_capacity must be used to generate the error message, else use the parameter instead
+	 * The parameter must be an array of objects (one per room that cannot be updated / removed) with 3 attributes: <ul><li><code>id</code> room ID</li><li><code>name</code> room name</li><li><code>sessions</code> array of objects with two attributes:<ul><li><code>session_event</code> the CalendarEvent object associated to the exam session</li><li><code>assigned</code> number af applicants assigned to this session</li></ul></li></ul>
+	 * @returns {HTMLElement} containing the list generated
+	 */
 	t._createErrorCapacityElement = function(external_error_capacity){
 		var error_data = (external_error_capacity != null) ? external_error_capacity : t._error_capacity;
 		if(error_data != null){
@@ -275,23 +289,11 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 				li_room.appendChild(ul);
 				for(var j = 0; j < error_data[i].sessions.length; j++){
 					var li = document.createElement("li");
-					var link = document.createElement("a");
-//					link.className = "black_link";
-					link.appendChild(document.createTextNode(getExamSessionNameFromEvent(error_data[i].sessions[j].session_event)));					
-					link.style.paddingRight = "3px";
-					link.session_id = error_data[i].sessions[j].session_event.id;
-//					link.title = "See session profile";
-					link.onclick = function(){
-//						var session_id = this.session_id;
-//						require("popup_window.js",function(){
-//							var pop = new popup_window("Exam Session Profile");
-//							pop.setContentFrame("/dynamic/selection/page/exam/session_profile?id="+session_id);
-//							pop.show();
-//						});
-//						return false;
-					};
+					var name = document.createElement("div");
+					name.appendChild(document.createTextNode(getExamSessionNameFromEvent(error_data[i].sessions[j].session_event)));					
+					name.style.paddingRight = "3px";
 					li.appendChild(document.createTextNode(error_data[i].sessions[j].assigned+" applicants assigned in session on "));
-					li.appendChild(link);
+					li.appendChild(name);
 					ul.appendChild(li);
 				}
 			}
@@ -299,6 +301,11 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 		}
 	};
 	
+	/**
+	 * @param {Array | NULL} external_error_assigned NULL if the t._error_assigned must be used to generate the error message, else use the parameter instead
+	 * The parameter must be an array of objects (one per room that cannot be updated / removed) with 3 attributes: <ul><li><code>id</code> room ID</li><li><code>name</code> room name</li><li><code>applicants</code> array of Applicant objects, the one assigned to the room</li></ul>
+	 * @returns {HTMLElement} containing the list generated
+	 */
 	t._createErrorAssignedElement = function(external_error_assigned){
 		var error_data = (external_error_assigned != null) ? external_error_assigned : t._error_assigned;
 		if(error_data != null){
@@ -351,10 +358,14 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 		return null;
 	};
 	
-	t._remove_rooms_rights = null;
+	t._remove_rooms_rights = null;//object indexing by room ID if this room can be updated
 	t._error_assigned = null;
 	t._error_capacity = null;
 	
+	/**
+	 * Call the service exam/can_rooms_be_removed_for_center to get the restricted rights for each room of this exam center
+	 * Once it is done, launch the process
+	 */
 	t._getRoomsRemoveRight = function(){
 		if(!can_manage|| rooms.length == 0) //Nothing to check
 			t._init();

@@ -57,6 +57,14 @@ function excel_import(popup, container, onready) {
 				};
 				var check_loaded = function() {
 					var win = getIFrameWindow(t.frame_excel);
+					if (!win) {
+						setTimeout(check_loaded, 100);
+						return;
+					}
+					if (win.page_errors) {
+						popup.unfreeze();
+						return;
+					}
 					if (!win.excel_uploaded) {
 						setTimeout(check_loaded, 100);
 						return;

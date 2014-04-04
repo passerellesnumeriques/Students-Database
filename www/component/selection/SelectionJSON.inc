@@ -1383,7 +1383,7 @@ class SelectionJSON{
 			foreach ($rooms as $room){
 				if(!$first) $data.= ", ";
 				$first = false;
-				$data .= "{id:".$room["id"].", name:".$room["name"];
+				$data .= "{id:".json_encode($room["id"]).", name:".json_encode($room["name"]);
 				$data .= ", remaining:".json_encode(PNApplication::$instance->selection->getRemainingSlotsForExamRoomDuringSession($room["id"], $session_id));
 				$data .= "}";
 			}

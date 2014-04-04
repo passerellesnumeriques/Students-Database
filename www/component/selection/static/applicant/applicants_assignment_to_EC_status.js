@@ -46,7 +46,7 @@ function applicants_assignment_to_EC_status(container){
 			});
 		}
 		//Set the remaining applicants per center (not assigned to session / room) rows
-		if(t._total != 0 && t._remaining_per_center != null){
+		if(t._total != 0 && t._remaining_per_center != null && t._not_assigned != t._total){
 			if(!t._isThereAnyApplicantRemaining()){
 				var div = document.createElement("div");
 				div.appendChild(document.createTextNode("All the applicants assigned to centers are assigned to sessions and rooms!"));
@@ -73,17 +73,7 @@ function applicants_assignment_to_EC_status(container){
 						link.appendChild(document.createTextNode(t._remaining_per_center[i].EC_name));
 						link.className = "black_link";
 						link.title = "See center profile";
-						link.EC_id = t._remaining_per_center[i].EC_id;
-						link.onclick = function(){
-							var EC_id = this.EC_id;
-							require("popup_window.js",function(){
-								var p = new popup_window("Exam Center Profile");
-								p.setContentFrame("/dynamic/selection/page/exam/center_profile?id="+EC_id+"&hideback=true");
-								p.onclose = function(){location.reload();};
-								p.show();
-							});
-							return false;
-						};
+						link.href = "/dynamic/selection/page/exam/center_profile?id="+t._remaining_per_center[i].EC_id;
 						body.appendChild(link);
 						var ul = document.createElement("ul");
 						body.appendChild(ul);

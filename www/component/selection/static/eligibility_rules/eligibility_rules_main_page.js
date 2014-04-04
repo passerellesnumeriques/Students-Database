@@ -42,14 +42,12 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		//Set the info buttons
 		var info_topics = document.createElement("img");
 		info_topics.src = theme.icons_16.info;
-		info_topics.style.cursor = "pointer";
 		info_topics.style.verticalAlign = "bottom";
 		tooltip(info_topics,"An exam topic is the entity used for creating the eligibility rules<br/>For instance, if there is a math subject, and a logic object, you may want to group these two exams for the eligibility rules: you shall create a \"Math and Logic\" topic.<br/>A topic can be set as <b>full subject</b> for an exam subject, meaning that all the parts from this subject belong to the topic. Also, when a part is added to the subject, it is automatically added to the topic.<br/>By default, when an exam subject is created a topic is also created, and set as full subject for this subject.<br/>To avoid any adverse effect you must respect the following rules:<ul><li>All the parts of the exam subject must appear in the topics</li><li>A part can only appear one time in all the topics</li></ul>");
 		th_topics.appendChild(info_topics);
 		
 		var info_rules = document.createElement("img");
 		info_rules.src = theme.icons_16.info;
-		info_rules.style.cursor = "pointer";
 		info_rules.style.verticalAlign = "bottom";
 		tooltip(info_rules,"Eligibility rules are made of exam topics.<br/>Each rule node on the diagram is a minimum to be respected, to pass this rule.<br/>This diagram shall be read from the left side to the right one.<br/> To know if an applicant passes the exam, he must pass the first rule node (the one on the left of the diagram) and at least one middle rule (in the middle column), so that he can reach the last node, \"Succeed\". So the middle column represents the \"thresholds\" rules.<br/>In each rule node, you can add / remove any exam topic, and for each topic you can:<ul><li>Set the expected grade (minimum)</li><li>Set a coefficient</li></ul>");
 		th_rules.appendChild(info_rules);

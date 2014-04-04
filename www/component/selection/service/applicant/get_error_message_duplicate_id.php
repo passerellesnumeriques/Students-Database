@@ -1,1 +1,0 @@
-<?php class service_applicant_get_error_message_duplicate_id extends Service {		public function get_required_rights() {}		public function documentation() {}	public function input_documentation() {}	public function output_documentation() {}		public function execute(&$component, $input) {		//TODO		//use the lock id in insertMultiple	}	}?>

@@ -66,7 +66,6 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	
 	/**Private methods and attributes*/
 	
-	t._updated = false; //Flag updated as true each time any data is updated by the user, and reseted as false when the data is saved
 	t._rooms_updated = false;
 	
 	/**
@@ -74,7 +73,7 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	 * Set the t._updated flag as true
 	 */
 	t._onDataUpdatedListener = function(){
-		t._updated = true;
+		window.pnapplication.dataUnsaved("exam_center_profile_"+id);
 	};
 	
 	/**
@@ -82,14 +81,14 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 	 * Set the t._updated flag as false
 	 */
 	t._onDataSavedListener = function(){
-		t._updated = false;
+		window.pnapplication.dataSaved("exam_center_profile_"+id);
 	};
 	
 	/**
 	 * Update the t._updated flag as false even if the data was not saved
 	 */
 	t._bypassCheckDataSaved = function(){
-		t._updated = false;
+		window.pnapplication.dataSaved("exam_center_profile_"+id);
 	};
 	
 	/**

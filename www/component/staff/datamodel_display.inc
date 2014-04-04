@@ -25,6 +25,7 @@ class StaffPositionDataDisplay extends datamodel\DataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
 		$ids = array();
 		foreach ($rows as $row) array_push($ids, $row[$sql_aliases["key"]]);
+		if (count($ids) == 0) return;
 		$positions = SQLQuery::create()->select("StaffPosition")->whereIn("StaffPosition","people",$ids)->orderBy("StaffPosition", "start", false)->execute();
 		$alias = $original_query->generateFieldAlias();
 		$sql_aliases["data"] = $alias;
@@ -62,6 +63,7 @@ class StaffDepartmentDataDisplay extends datamodel\DataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
 		$ids = array();
 		foreach ($rows as $row) array_push($ids, $row[$sql_aliases["key"]]);
+		if (count($ids) == 0) return;
 		$positions = SQLQuery::create()->select("StaffPosition")->whereIn("StaffPosition","people",$ids)->orderBy("StaffPosition", "start", false)->join("StaffPosition","PNDepartment",array("department"=>"id"))->execute();
 		$alias = $original_query->generateFieldAlias();
 		$sql_aliases["data"] = $alias;
@@ -111,7 +113,9 @@ class StaffDataScreen extends datamodel\DataScreen {
 		echo "<script type='text/javascript'>";
 		echo "var positions = new $fct();";
 		if ($structure_name <> null) {
-			echo "var path = {path:".json_encode($paths[0]->getString()).",positions:positions,columns:{}";
+			echo "var path = {path:".json_encode($paths[0]->getString()).",columns:{},getValue:function(){return null;},validate:function(){return null}};";
+			echo "$structure_name.push(path);";
+			echo "path = {path:".json_encode($paths[1]->getString()).",positions:positions,columns:{}";
 			echo ",getValue:function(){ return this.positions.positions; }";
 			echo ",validate:function(){ if (this.positions.positions.length == 0) return 'Please enter at least one position as a PN staff'; return null; }";
 			echo "};";
@@ -124,6 +128,7 @@ class StaffDataScreen extends datamodel\DataScreen {
 		$path = $paths[0];
 		$people_id = $path->columns["people"];
 		SQLQuery::create()->insert("Staff", array("people"=>$people_id));
+		$path = $paths[1];
 		$rows = array();
 		foreach ($path->value as $pos) {
 			$pos["people"] = $people_id;

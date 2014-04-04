@@ -3,13 +3,22 @@ class service_exam_can_rooms_be_removed_for_center extends Service {
 	
 	public function get_required_rights() { return array("can_access_selection_data"); }
 	public function documentation() {
-		
+		echo "Check for all the rooms of an exam center if they can be updated / removed or not. A room can be set as not editable / removable for two reasons:<ul><li>If any applicant is assigned into it for any exam session</li><li>If, without this room, the exam center capacity becomes lesser than the number of applicants assigned to any session in this center</li></ul>";
 	}
 	public function input_documentation() {
+		echo "<code>EC_id</code> the exam center ID";
 	}
 	public function output_documentation() {
 		?>
-		
+		Object with one attribute: <code>rooms</code> NULL if this exam center has no room yet, else array of objects (one per room) containing the following attributes:
+		<ul>
+		  <li><code>id</code> {Number} room ID</li>
+		  <li><code>name</code> {String} room name</li>
+		  <li><code>can_be_removed</code> {Boolean} true if the room can be updated / removed</li>
+		  <li><code>error_applicants</code> {NULL | Array} NULL if there is no applicant assigned to this room in any session, else array of Applicants objects</li>
+		  <li><code>error_capacity</code> {NULL | Array} NULL if there is no conflict on the center capacity, else array of objects (one per session involved in a conflict) with two attributes: <ul><li><code>session_event</code> the CalendarEvent object associated to the exam session</li><li><code>assigned</code> number af applicants assigned to this session</li></ul>
+		</ul>
+
 		<?php
 	}
 	

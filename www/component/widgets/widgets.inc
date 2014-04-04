@@ -37,13 +37,13 @@ class widgets extends Component {
 			$typed_field = "field_decimal";
 		}
 		if ($col instanceof \datamodel\ColumnEnum) {
-			$args = "{possible_values:[";
+			$cfg = "{possible_values:[";
 			$first = true;
 			foreach ($col->values as $v) {
-				if ($first) $first = false; else $args .= ",";
-				$args .= json_encode($v);
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= json_encode($v);
 			}
-			$args .= "],can_be_empty:".($col->can_be_null ? "true" : "false")."}";
+			$cfg .= "],can_be_empty:".($col->can_be_null ? "true" : "false")."}";
 // 			return array("field_enum",$args);
 			$typed_field = "field_enum";
 		}
