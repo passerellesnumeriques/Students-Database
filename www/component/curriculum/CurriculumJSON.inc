@@ -36,8 +36,8 @@ class CurriculumJSON {
 		$s .= ",name:".json_encode($p["name"]);
 		$s .= ",start:".json_encode($p["start"]);
 		$s .= ",end:".json_encode($p["end"]);
-		$s .= ",weeks:".json_encode($p["weeks"]);
-		$s .= ",weeks_break:".json_encode($p["weeks_break"]);
+		$s .= ",weeks:".$p["weeks"];
+		$s .= ",weeks_break:".$p["weeks_break"];
 		$s .= "}";
 		return $s;
 	}

@@ -11,6 +11,7 @@ class page_edit_academic_year extends Page {
 			$year = SQLQuery::create()->select("AcademicYear")->whereValue("AcademicYear","id",$id)->executeSingleRow();
 			$periods = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","year",$id)->execute();
 		} else {
+			$defined_years = SQLQuery::create()->select("AcademicYear")->field("year")->executeSingleField();
 			$year = array(
 				"id"=>-1,
 				"year"=>$_GET["year"],
@@ -256,6 +257,12 @@ foreach ($periods as $p) {
 
 if ($id <> null) {
 ?>
+popup.addIconTextButton(theme.icons_16.remove, "Remove Academic Year", "remove", function() {
+	window.top.datamodel.confirm_remove("AcademicYear",year_object.id,function() {
+		<?php if (isset($_GET["onsave"])) echo "window.frameElement.".$_GET["onsave"]."();"?>
+		popup.close();
+	});
+});
 popup.addSaveButton(function() {
 	popup.freeze("Saving...");
 	save();
@@ -264,6 +271,21 @@ popup.addCancelButton();
 <?php 
 } else {
 ?>
+popup.addIconTextButton("/static/calendar/calendar_16.png", "Change starting year...", "change_year", function() {
+	var avail_years = [];
+	<?php 
+	$now = getdate();
+	for ($i = 2000; $i < $now["year"]+100; $i++) {
+		if (in_array($i, $defined_years)) continue;
+		echo "avail_years.push([".$i.",".$i."]);";
+	} 
+	?>
+	select_dialog("/static/calendar/calendar_16.png", "Change starting year", "Starting year", year_object.year, avail_years, function(value) {
+		if (value == null) return;
+		popup.removeAllButtons();
+		location.href = "/dynamic/curriculum/page/edit_academic_year?year="+value+"&onsave=<?php echo $_GET["onsave"];?>";
+	});
+});
 popup.addCreateButton(function() {
 	popup.freeze("Creation of the new academic year...");
 	save();

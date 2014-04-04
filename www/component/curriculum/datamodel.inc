@@ -11,6 +11,9 @@ $model->addTable("AcademicYear")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) {
+		return "Academic Year ".$row["name"];
+	})
 	;
 $model->addTable("AcademicPeriod")
 	->addPrimaryKey("id")
@@ -24,6 +27,10 @@ $model->addTable("AcademicPeriod")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) {
+		$year = SQLQuery::create()->select("AcademicYear")->whereValue("AcademicYear", "id", $row["year"])->executeSingleRow();
+		return "Academic Period ".$row["name"]." in Academic Year ".$year["name"];
+	})
 	;
 
 /* Batches */

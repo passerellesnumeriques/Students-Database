@@ -45,6 +45,21 @@ function build_year(year) {
 	var parent = year.year < now.getFullYear() ? past : current_and_future;
 	var item = createTreeItemSingleCell(null, span, true);
 	parent.addItem(item);
+	span.style.cursor = "pointer";
+	span.onmouseover = function() { this.style.textDecoration = "underline"; };
+	span.onmouseout = function() { this.style.textDecoration = "none"; };
+	span.title = "Edit or Remove Academic Year "+year.name;
+	span.onclick = function() {
+		window.top.require("popup_window.js",function() {
+			var popup = new window.top.popup_window("New Academic Year",null,"");
+			var frame = popup.setContentFrame("/dynamic/curriculum/page/edit_academic_year?id="+year.id+"&onsave=saved");
+			frame.saved = function() {
+				popup.close();
+				location.reload();
+			};
+			popup.show();
+		});
+	};
 	item.academic_year = year;
 	for (var i = 0; i < year.periods.length; ++i)
 		build_period(item, year.periods[i]);
@@ -60,24 +75,21 @@ function build_period(parent, period) {
 	cells.push(new TreeCell(span));
 
 	span = document.createElement("SPAN");
-	span.style.paddingLeft = "6px";
-	span.appendChild(document.createTextNode("from "));
+	span.innerHTML = "&nbsp;from ";
 	text = document.createTextNode(period.start);
 	span.appendChild(text);
 	window.top.datamodel.registerCellText(window, "AcademicPeriod", "start", period.id, text);
 	cells.push(new TreeCell(span));
 	
 	span = document.createElement("SPAN");
-	span.style.paddingLeft = "6px";
-	span.appendChild(document.createTextNode("to "));
+	span.innerHTML = "&nbsp;to ";
 	text = document.createTextNode(period.end);
 	span.appendChild(text);
 	window.top.datamodel.registerCellText(window, "AcademicPeriod", "end", period.id, text);
 	cells.push(new TreeCell(span));
 	
 	span = document.createElement("SPAN");
-	span.style.paddingLeft = "6px";
-	span.appendChild(document.createTextNode("("));
+	span.innerHTML = "&nbsp;(";
 	text = document.createTextNode(period.weeks);
 	span.appendChild(text);
 	window.top.datamodel.registerCellText(window, "AcademicPeriod", "weeks", period.id, text);
@@ -85,8 +97,7 @@ function build_period(parent, period) {
 	cells.push(new TreeCell(span));
 	
 	span = document.createElement("SPAN");
-	span.style.paddingLeft = "6px";
-	span.appendChild(document.createTextNode("+ "));
+	span.innerHTML = "&nbsp;+ ";
 	text = document.createTextNode(period.weeks_break);
 	span.appendChild(text);
 	window.top.datamodel.registerCellText(window, "AcademicPeriod", "weeks_break", period.id, text);
@@ -95,6 +106,21 @@ function build_period(parent, period) {
 	
 	var item = new TreeItem(cells);
 	parent.addItem(item);
+	item.tr.style.cursor = "pointer";
+	item.tr.onmouseover = function() { this.style.textDecoration = "underline"; };
+	item.tr.onmouseout = function() { this.style.textDecoration = "none"; };
+	item.tr.title = "Edit or Remove Academic Year "+parent.academic_year.name;
+	item.tr.onclick = function() {
+		window.top.require("popup_window.js",function() {
+			var popup = new window.top.popup_window("New Academic Year",null,"");
+			var frame = popup.setContentFrame("/dynamic/curriculum/page/edit_academic_year?id="+period.year_id+"&onsave=saved");
+			frame.saved = function() {
+				popup.close();
+				location.reload();
+			};
+			popup.show();
+		});
+	};
 }
 build_years(<?php echo CurriculumJSON::AcademicCalendarJSON();?>);
 
