@@ -43,11 +43,11 @@ $model->addTable("StudentBatch")
 	->setRoot()
 	->addReadAccess("consult_curriculum", true)
 	->addColumnWriteAccess("name","edit_curriculum", true)
- 	->onInsert(function($fields,$id,$sub_model_instance) {
-		try {
-			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$fields["name"]." created.");
-		} catch (Exception $e) { PNApplication::error($e); }
- 	})
+//  	->onInsert(function($fields,$id,$sub_model_instance) {
+// 		try {
+// 			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$fields["name"]." created.");
+// 		} catch (Exception $e) { PNApplication::error($e); }
+//  	})
  	->setRowDescriptionProvider(function($row) {
  		return "Batch <i>".htmlentities($row["name"])."</i>";
  	})
@@ -91,6 +91,7 @@ $model->addTable("BatchPeriodSpecialization")
 		return "Specialization <i>".htmlentities($spe_name)."</i> on Period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
 	})
 	;
+	
 $model->addTable("AcademicClass")
 	->addPrimaryKey("id")
 	->addForeignKey("period", "BatchPeriod", true, false, true)

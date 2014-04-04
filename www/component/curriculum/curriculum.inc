@@ -21,32 +21,32 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod", "start")->execute();
 	}
 	
-// 	/** Retrieve the list of existing batches of students
-// 	 * @return array the result from the database
-// 	 */
-// 	public function getBatches($ids = null) {
-// 		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
-// 		if ($ids <> null) $q->whereIn("StudentBatch", "id", $ids);
-// 		return $q->execute();
-// 	}
-// 	/** Retrieve the given batch
-// 	 * @param integer $batch_id the requested batch
-// 	 * @return array the row from the database
-// 	 */
-// 	public function getBatch($batch_id) {
-// 		return SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();
-// 	}
+	/** Retrieve the list of existing batches of students
+	 * @return array the result from the database
+	 */
+	public function getBatches($ids = null) {
+		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+		if ($ids <> null) $q->whereIn("StudentBatch", "id", $ids);
+		return $q->execute();
+	}
+	/** Retrieve the given batch
+	 * @param integer $batch_id the requested batch
+	 * @return array the row from the database
+	 */
+	public function getBatch($batch_id) {
+		return SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();
+	}
 	
-// 	public function getCurrentBatches() {
-// 		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
-// 		$q->where("end_date >= CURRENT_DATE()");
-// 		return $q->execute();
-// 	}
-// 	public function getAlumniBatches() {
-// 		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
-// 		$q->where("end_date < CURRENT_DATE()");
-// 		return $q->execute();
-// 	}
+	public function getCurrentBatches() {
+		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+		$q->where("end_date >= CURRENT_DATE()");
+		return $q->execute();
+	}
+	public function getAlumniBatches() {
+		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+		$q->where("end_date < CURRENT_DATE()");
+		return $q->execute();
+	}
 	
 // 	/**
 // 	 * Join the batch table to an SQLQuery
@@ -58,19 +58,19 @@ class curriculum extends Component {
 // 		$q->join($from_table, "StudentBatch", array($from_table_foreign_key=>"id"));
 // 	}
 	
-// 	/** Retrieve the list of existing specializations
-// 	 * @return array the result from the database
-// 	 */
-// 	public function getSpecializations() {
-// 		return SQLQuery::create()->select("Specialization")->execute();
-// 	}
-// 	/** Retrieve the given specialization
-// 	 * @param integer $id the requested specialization
-// 	 * @return array the row from the database
-// 	 */
-// 	public function getSpecialization($id) {
-// 		return SQLQuery::create()->select("Specialization")->whereValue("Specialization", "id", $id)->executeSingleRow();
-// 	}
+	/** Retrieve the list of existing specializations
+	 * @return array the result from the database
+	 */
+	public function getSpecializations() {
+		return SQLQuery::create()->select("Specialization")->execute();
+	}
+	/** Retrieve the given specialization
+	 * @param integer $id the requested specialization
+	 * @return array the row from the database
+	 */
+	public function getSpecialization($id) {
+		return SQLQuery::create()->select("Specialization")->whereValue("Specialization", "id", $id)->executeSingleRow();
+	}
 	
 // 	/**
 // 	 * Retrieve the list of specializations available for the given batch (which is present in at least one period)
@@ -132,13 +132,13 @@ class curriculum extends Component {
 // 			->execute();
 // 	}
 	
-// 	/** Retrieve the specializations for the given periods
-// 	 * @param array $periods_ids list of requested periods
-// 	 * @return array rows from database associating a period id to a specialization id
-// 	 */
-// 	public function getAcademicPeriodsSpecializations($periods_ids) {
-// 		return SQLQuery::create()->select("AcademicPeriodSpecialization")->whereIn("AcademicPeriodSpecialization","period",$periods_ids)->execute();
-// 	}
+	/** Retrieve the specializations for the given periods
+	 * @param array $periods_ids list of requested periods
+	 * @return array rows from database associating a period id to a specialization id
+	 */
+	public function getBatchPeriodsSpecializations($periods_ids) {
+		return SQLQuery::create()->select("BatchPeriodSpecialization")->whereIn("BatchPeriodSpecialization","period",$periods_ids)->execute();
+	}
 	
 // 	/** Retrieve the given period
 // 	 * @param integer $period_id the requested period
@@ -147,13 +147,13 @@ class curriculum extends Component {
 // 	public function getAcademicPeriod($period_id) {
 // 		return SQLQuery::create()->select("AcademicPeriod")->where("id",$period_id)->executeSingleRow();
 // 	}
-// 	/** Retrieve academic periods for a batch
-// 	 * @param integer $batch_id the requested batch
-// 	 * @return array the list of periods from the database
-// 	 */
-// 	public function getAcademicPeriods($batch_id) {
-// 		return SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod", "batch", $batch_id)->orderBy("AcademicPeriod", "start_date", true)->execute();
-// 	}
+	/** Retrieve periods for a batch
+	 * @param integer $batch_id the requested batch
+	 * @return array the list of periods from the database
+	 */
+	public function getBatchPeriods($batch_id) {
+		return SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod", "batch", $batch_id)->execute();
+	}
 
 // 	/**
 // 	 * Retrieve the class information from database

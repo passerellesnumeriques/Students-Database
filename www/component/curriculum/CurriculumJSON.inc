@@ -79,11 +79,11 @@ class CurriculumJSON {
 	 */
 	public static function BatchJSON($id) {
 		$batch = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$id)->executeSingleRow();
-		$periods = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","batch",$id)->execute();
+		$periods = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","batch",$id)->execute();
 		if (count($periods) > 0) {
 			$periods_ids = array();
 			foreach ($periods as $p) array_push($periods_ids, $p["id"]);
-			$periods_spe = SQLQuery::create()->select("AcademicPeriodSpecialization")->whereIn("AcademicPeriodSpecialization","period",$periods_ids)->execute();
+			$periods_spe = SQLQuery::create()->select("BatchPeriodSpecialization")->whereIn("BatchPeriodSpecialization","period",$periods_ids)->execute();
 			$classes = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass", "period", $periods_ids)->execute();
 		} else {
 			$periods_spe = array();
@@ -98,8 +98,8 @@ class CurriculumJSON {
 	 */
 	public static function BatchesJSON() {
 		$batches = SQLQuery::create()->select("StudentBatch")->execute();
-		$periods = SQLQuery::create()->select("AcademicPeriod")->execute();
-		$periods_spe = SQLQuery::create()->select("AcademicPeriodSpecialization")->execute();
+		$periods = SQLQuery::create()->select("BatchPeriod")->execute();
+		$periods_spe = SQLQuery::create()->select("BatchPeriodSpecialization")->execute();
 		$classes = SQLQuery::create()->select("AcademicClass")->execute();
 		$s = "[";
 		$first_batch = true;
@@ -133,10 +133,7 @@ class CurriculumJSON {
 			$s .= "{";
 			$s .= "id:".$period["id"];
 			$s .= ",name:".json_encode($period["name"]);
-			$s .= ",start_date:".json_encode($period["start_date"]);
-			$s .= ",end_date:".json_encode($period["end_date"]);
-			$s .= ",weeks:".$period["weeks"];
-			$s .= ",weeks_break:".$period["weeks_break"];
+			$s .= ",academic_period:".$period["academic_period"];
 			$s .= ",available_specializations:[";
 			$first_spe = true;
 			foreach ($periods_spe as $ps) {
