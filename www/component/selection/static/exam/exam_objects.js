@@ -111,7 +111,7 @@ function ExamCenterRoom(id, name, capacity){
 /**
  * @param {Number} exam_center ID of the exam center where the session takes place
  * @param {CalendarEvent} event related to this session
- * @param {Array} supervisors array of ExamSessionSupervisor objects
+ * @param {Array} supervisors array of ExamSessionSupervisors objects
  */
 function ExamSession(exam_center,event,supervisors){
 	this.exam_center = exam_center;
@@ -120,10 +120,19 @@ function ExamSession(exam_center,event,supervisors){
 }
 
 /**
- * @param {People} people object
+ * @param {Array} staffs array of staff objects
+ * @param {Array} customs array of ExamSessionSupervisorCustom objects
  */
-function ExamSessionSupervisor(people){
-	for(a in people){
-		this[a] = people[a];
-	}
+function ExamSessionSupervisors(staffs, customs){
+	this.staffs = staffs;
+	this.customs = customs;
+}
+
+/**
+ * @param {Number} id ID of the custom supervisor
+ * @param {String} name of the custom supervisor
+ */
+function ExamSessionSupervisorCustom(id,name){
+	this.id = id;
+	this.name = name;
 }

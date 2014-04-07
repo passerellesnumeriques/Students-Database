@@ -23,8 +23,7 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 		t.section.resetToolBottom();
 		if(new_rooms)
 			rooms = new_rooms;
-		t._getRoomsRemoveRight();	
-		t.onupdate.fire();
+		t._getRoomsRemoveRight();
 	};
 	
 	/**
@@ -143,7 +142,9 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 					//This room can be updated, create editable fields and remove button
 					var name_editable = generate_name == true ? false : true;
 					name = new field_text(rooms[i].name,name_editable,{can_be_null:true});//Can_be_null config = true so that all the empty strings are replaced by null
-					capacity = new field_integer(rooms[i].capacity,true,{can_be_null:false,min:1});					
+					capacity = new field_integer(rooms[i].capacity,true,{can_be_null:false,min:1});	
+					name.onchange.add_listener(function(){t.onupdate.fire();});
+					capacity.onchange.add_listener(function(){t.onupdate.fire();});
 					td1.appendChild(name.getHTMLElement());
 					td2.appendChild(capacity.getHTMLElement());
 					td3.appendChild(t._createRemoveButton(rooms[i].id));
@@ -200,6 +201,7 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 				var room = new ExamCenterRoom(-1,"New",1);
 				rooms.push(room);
 				t.reset();
+				t.onupdate.fire();
 			};
 		} else {
 			create.onclick = function(){
@@ -207,6 +209,7 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 				var room = new ExamCenterRoom(-1,t._getUniqueName(),1);
 				rooms.push(room);
 				t.reset();
+				t.onupdate.fire();
 			};
 		}
 		t.section.addToolBottom(create);
@@ -248,6 +251,7 @@ function manage_exam_center_room(container, rooms, EC_id, can_manage, generate_n
 			rooms.splice([index],1);
 			//Reset
 			t.reset();
+			t.onupdate.fire();
 		};
 		return div;
 	};

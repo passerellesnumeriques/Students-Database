@@ -1,3 +1,12 @@
+/**
+ * Create the section containing the data related to an exam session
+ * @param {String|HTMLElement} container
+ * @param {String|HTMLElement} supervisor_container container of the supervisors sub section
+ * @param {String|HTMLElement} list_container container of the rooms list sub section
+ * @param {ExamSession} session
+ * @param {Boolean} can_manage
+ * @param {Function|NULL} onreset called when reset method is called
+ */
 function exam_session_profile(container, supervisor_container, list_container, session, can_manage, onreset){
 	var t = this;
 	if(typeof container == "string")
@@ -7,6 +16,9 @@ function exam_session_profile(container, supervisor_container, list_container, s
 	if(typeof list_container == "string")
 		list_container = document.getElementById(list_container);
 	
+	/**
+	 * Reset the content
+	 */
 	t.reset = function(){
 		t._refreshListContent();
 		if(onreset)
@@ -17,9 +29,13 @@ function exam_session_profile(container, supervisor_container, list_container, s
 	
 	t._init = function(){
 		t._refreshListContent();
-		//TODO add supervisor section
+		t._refreshSupervisorsContent();
 	};
-
+	
+	/**
+	 * Refresh the list of rooms assignment content
+	 * Calls the service applicant/get_assigned_to_rooms_for_session to populate the list
+	 */
 	t._refreshListContent = function(){
 		while(list_container.firstChild)
 			list_container.removeChild(list_container.firstChild);
@@ -43,6 +59,11 @@ function exam_session_profile(container, supervisor_container, list_container, s
 		layout.invalidate(list_container);
 	};
 	
+	/**
+	 * Populate the rooms assignment list
+	 * @param {Array} rooms array of rooms objects with an additional attribute: <code>applicants</code> number of applicants assigned to this room during this exam session
+	 * @param {Number} total_applicants_in_session number of applicants assigned to this exam session (assigned to a room or not)
+	 */
 	t._populateList = function(rooms, total_applicants_in_session){
 		t._total_assigned = 0;
 		var table = document.createElement("table");
@@ -163,6 +184,10 @@ function exam_session_profile(container, supervisor_container, list_container, s
 		list_container.appendChild(table);
 	};
 	
+	/**
+	 * Unassign all the applicants from an exam entity
+	 * @param room_id {Number|NULL} exam room ID if the aim is to unassign all from a given room, else NULL means to unassign all the applicants from the session (and so all the rooms at the same time)
+	 */
 	t._emptyEntity = function(room_id){
 		var locker = lock_screen();
 		service.json("selection","applicant/unassign_all_from_center_entity",{session_id:session.event.id,room_id:room_id},function(res){
@@ -224,6 +249,13 @@ function exam_session_profile(container, supervisor_container, list_container, s
 		});
 	};
 	
+	/**
+	 * Create a number element which is a link to a given applicants list
+	 * @param {Number} figure figure to be overrided into a link
+	 * @param {Number|NULL} room_id exam center room ID if the link is supposed to point on the list of applicants assigned to this room
+	 * @param {Boolean} not_in_room true if the link is supposed to point on the list of applicants not assigned to any room
+	 * @param {String|NULL} room_name (not null in the case of room_id is not null) name of the exam center room
+	 */
 	t._createFigureElement = function(figure,room_id, not_in_room, room_name){
 		var link = document.createElement("a");
 		figure = (figure == null || isNaN(figure)) ? 0 : parseInt(figure);
@@ -299,6 +331,12 @@ function exam_session_profile(container, supervisor_container, list_container, s
 		return link;
 	};
 	
+	/**
+	 * Method called when an applicant is unassigned
+	 * This method will wait for all the applicants to be handled by the service (called for each applicant to unassign) before poping error message (if any)
+	 * If the applicant was well unassigned, the success status message is created gradually
+	 * @param {Object} res result from applicant/unassign_from_center_entity service
+	 */
 	t._onApplicantUnassigned = function(res){
 		t._answers_received++;
 		if(res && (res.error_performing || res.error_assigned_to_session || res.error_assigned_to_room || res.error_has_grade)){
@@ -362,13 +400,26 @@ function exam_session_profile(container, supervisor_container, list_container, s
 		}
 	};
 	
+	/**
+	 * Refresh and populate the exam supervisors sub section
+	 */
+	t._refreshSupervisorsContent = function(){
+		while(supervisor_container.firstChild)
+			supervisor_container.removeChild(supervisor_container.firstChild);
+		new session_supervisor_section(supervisor_container, session.event.id, session.supervisors, can_manage, t.reset);
+	};
+	
+	/**
+	 * Create a loading.gif element
+	 * @returns {HTMLElement} div containing the GIF
+	 */
 	t._getLoading = function(){
 		var e = document.createElement("div");
 		e.innerHTML = "<img src = '"+theme.icons_16.loading+"'/>";
 		return e;
 	};
 	
-	require([["typed_field.js"],["pop_select_date_and_time.js","section.js","field_time.js"]],function(){
+	require([["typed_field.js"],["session_supervisor_section.js","pop_select_date_and_time.js","section.js","field_time.js"]],function(){
 		t._init();
 	});
 }

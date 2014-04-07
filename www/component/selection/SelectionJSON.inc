@@ -10,6 +10,7 @@ class SelectionJSON{
 	 * Campaigns
 	 * Get all the existing campaigns
 	 * @return string [{id:'',name:''},{id:'',name:''}...]
+	 * @no_name_check
 	 */
 	public static function Campaigns(){
 		$js = "[]";
@@ -36,6 +37,7 @@ class SelectionJSON{
 	/**
 	 * Steps
 	 * @return string [{name:'',value:'', text:''},{name:'',value:'', text:''}...]
+	 * @no_name_check
 	 */
 	public static function Steps(){
 		$all_steps = include("steps.inc");
@@ -60,6 +62,7 @@ class SelectionJSON{
 	 * Build a JSON information structure for the given id
 	 * @param number $id
 	 * @return string json InformationSession structure
+	 * @no_name_check
 	 */	
 	public static function InformationSessionFromID($id){
 		if($id == -1 || $id == "-1")
@@ -73,6 +76,7 @@ class SelectionJSON{
 	 * Get all the data from InformationSession table for the given id
 	 * @param number $id
 	 * @return array the row coming from the database
+	 * @no_name_check
 	 */
 	public static function InformationSessionTableDataFromID($id){
 		$q = SQLQuery::create()
@@ -86,6 +90,7 @@ class SelectionJSON{
 	/**
 	 * Prepares a SQLQuery to retrieve an information session, to be used with method InformationSession 
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function InformationSessionSQL(&$q){
 		$alias = $q->getTableAlias("InformationSession");
@@ -106,6 +111,7 @@ class SelectionJSON{
 	 * Get all the data from InformationSessionPartner for the given information session
 	 * @param unknown $id of the information session
 	 * @return array the rows coming from the database
+	 * @no_name_check
 	 */
 	public static function PartnersDataFromID($id){
 		$q = SQLQuery::create()
@@ -121,6 +127,7 @@ class SelectionJSON{
 	/**
 	 * Prepares the given SQLQuery to retrieve all the information session partners data
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ISPartnersSQL(&$q){
 		$alias = $q->getTableAlias("InformationSessionPartner");
@@ -141,6 +148,7 @@ class SelectionJSON{
 	 * @param array $row_IS coming from InformationSessionTableDataFromID
 	 * @param array $rows_partners coming from PartnersDataFromID method
 	 * @return string JSON information session structure
+	 * @no_name_check
 	 */	
 	public static function InformationSession($row_IS,$rows_partners){
 		$data = "";
@@ -197,6 +205,7 @@ class SelectionJSON{
 	/**
 	 * Get a JSON array containing all the informations sessions names
 	 * @return string JSON array containing all the existing IS [{id:, name:},...]
+	 * @no_name_check
 	 */
 	public static function getJSONAllInformationsSessionsNames(){
 		$r = "[";
@@ -227,6 +236,7 @@ class SelectionJSON{
 	 * This method checks that the IS has a name set. Otherwize, the name by default is the geographic_area_text, from the IS geographic_area attribute
 	 * @param string $json the IS structure
 	 * @return array fields => values to save
+	 * @no_name_check
 	 */
 	public static function InformationSessionTableData2DB($json){
 		$a = array(
@@ -256,6 +266,7 @@ class SelectionJSON{
 	 * Exam Subject From Id
 	 * @param number $id
 	 * @return string Exam subject to JSON format
+	 * @no_name_check
 	 */
 	public static function ExamSubjectFromID($id){
 		$q = SQLQuery::create()
@@ -277,6 +288,7 @@ class SelectionJSON{
 	/**
 	 * Prepares a query to retrieve the exam subject data from table ExamSubject
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ExamSubjectSQL(&$q){
 		$alias = $q->getTableAlias("ExamSubject");
@@ -291,6 +303,7 @@ class SelectionJSON{
 	/**
 	 * Prepares a query to retrieve the exam subject parts data from table ExamSubjectPart
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ExamSubjectPartSQL(&$q){
 		$alias = $q->getTableAlias("ExamSubjectPart");
@@ -306,6 +319,7 @@ class SelectionJSON{
 	/**
 	 * Prepares a query to retrieve the exam subject questions data from table ExamSubjectQuestion
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ExamSubjectQuestionSQL(&$q){
 		$alias = $q->getTableAlias("ExamSubjectQuestion");
@@ -325,6 +339,7 @@ class SelectionJSON{
 	 * @param array $rows the rows corresponding to the exam subject
 	 * @param number $exam_id the id of the exam
 	 * @return string JSON exam subject structure
+	 * @no_name_check
 	 */
 	public static function ExamSubject($q, $rows, $exam_id){
 		$json = "";
@@ -437,6 +452,7 @@ class SelectionJSON{
 	 * Only takes into account the ExamSubject table fields
 	 * @param array $json object coming from the conversion from a json object to an associative array
 	 * @return array array to be inserted into the database
+	 * @no_name_check
 	 */
 	public static function ExamSubject2DB($json){
 		$a = array(
@@ -453,6 +469,7 @@ class SelectionJSON{
 	 * Only takes into account the ExamSubjectPart table fields
 	 * @param string $json object coming from the conversion from a json object to an associative array
 	 * @return array array to be inserted into the database
+	 * @no_name_check
 	 */
 	public static function ExamSubjectPart2DB($json){
 		$a = array(
@@ -471,6 +488,7 @@ class SelectionJSON{
 	 * Only takes into account the ExamSubjectQuestion table fields
 	 * @param string $json object coming from the conversion from a json object to an associative array
 	 * @return array array to be inserted into the database
+	 * @no_name_check
 	 */
 	public static function ExamSubjectQuestion2DB($json){
 		$a = array(
@@ -489,6 +507,7 @@ class SelectionJSON{
 	 * Get all the exam subject names from the database
 	 * @param number (optional) $exclude_id id to exclude from the query
 	 * @return array array containing all the exam subject names
+	 * @no_name_check
 	 */
 	public static function getAllExamSubjectNames($exclude_id = null){
 		$q = SQLQuery::create()
@@ -507,6 +526,7 @@ class SelectionJSON{
 	 * Get the exam topic for eligibility rules JSON structure
 	 * @param number $id the id of the topic to retrieve
 	 * @return string exam topic for eligibility rules JSON structure
+	 * @no_name_check
 	 */
 	public static function ExamTopicForEligibilityRulesFromID ($id){
 		$q = SQLQuery::create()
@@ -531,6 +551,7 @@ class SelectionJSON{
 	 * Set the query to retrieve all the data from ExamTopicForEligibilityRule table
 	 * To be used with ExamTopicPHP | ExamTopic method
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ExamTopicSQL(&$q){
 		$alias = $q->getTableAlias("ExamTopicForEligibilityRule");
@@ -552,6 +573,7 @@ class SelectionJSON{
 	 * @return array with parameters <ul><li><code>id</code></li><li><code>name</code></li><li><code>subjects</code></li></ul>
 	 * Each subjects array contains all the exam subject ids, keys for arrays containing: <ul><li><code>name</code></li><li><code>max_score</code></li><li><code>full_subject</code></li><li><code>parts</code></li></ul>
 	 * Each parts array contains all the exam subject parts ids, keys for arrays containing: <ul><li><code>name</code></li><li><code>max_score</code></li><li><code>index</code></li></ul>
+	 * @no_name_check
 	 */
 	public static function ExamTopicPHP($q, $rows, $id){
 		$full_exams = SQLQuery::create()
@@ -605,6 +627,7 @@ class SelectionJSON{
 	 * @param array $rows the rows corresponding to the exam subject
 	 * @param number $id
 	 * @return string the exam topic JSON structure
+	 * @no_name_check
 	 */
 	public static function ExamTopic($q, $rows, $id){
 		$topic = self::ExamTopicPHP($q, $rows, $id);
@@ -649,6 +672,7 @@ class SelectionJSON{
 	 * into the database
 	 * @param number (optional) $excluded_id topic id not to retrieve when the query is executed
 	 * @return string JSON array [{topic1},{topic2},...]
+	 * @no_name_check
 	 */
 	public static function getJsonAllTopics($excluded_id = null){
 		$all_ids = SQLQuery::create()
@@ -675,6 +699,11 @@ class SelectionJSON{
 		return $json;
 	}
 	
+	/**
+	 * Get all the exam subject parts set into the database (whatever the subject)
+	 * @return string array of ExamSubjectPart objects
+	 * @no_name_check
+	 */
 	public static function getJsonAllParts(){
 		$all_parts = SQLQuery::create()
 		->select("ExamSubjectPart")
@@ -721,6 +750,7 @@ class SelectionJSON{
 	 * Get the EligibilityRule JSON structure from a given ID
 	 * @param number $id
 	 * @return string
+	 * @no_name_check
 	 */
 	public static function EligibilityRuleFromID($id){
 		$q = SQLQuery::create()
@@ -738,6 +768,7 @@ class SelectionJSON{
 	/**
 	 * Retrieve all the data from the EligibilityRule tables
 	 * @param SQLQuery $q the query to used to get the data
+	 * @no_name_check
 	 */
 	public static function EligibilityRuleSQL(&$q){
 		$alias = $q->getTableAlias("EligibilityRule");
@@ -762,6 +793,7 @@ class SelectionJSON{
 	 * @param array $rows the rows containing the EligibilityRule data
 	 * @param number $id the id of the EligibilityRule
 	 * @return string the EligibilityRule JSON structure
+	 * @no_name_check
 	 */
 	public static function EligibilityRule($q, $rows, $id){
 		$r = "{";
@@ -789,6 +821,7 @@ class SelectionJSON{
 	 * Prepare the array field=>value for the table EligibilityRule, from a JSON ELigibilityRule structure
 	 * @param string $json
 	 * @return array
+	 * @no_name_check
 	 */
 	public static function EligibilityRule2DB($json){
 		$a = array(
@@ -804,6 +837,7 @@ class SelectionJSON{
 	 * @param string $json from a ExamTopicForEligibilityRule object
 	 * @param number|null $eligibility_rule_id if not given, the field exam_topic_for_eligibility_rule shall be manually added
 	 * @return array
+	 * @no_name_check
 	 */
 	public static function EligibilityRuleTopic2DB($json, $eligibility_rule_id = null){
 		$a = array(
@@ -819,6 +853,7 @@ class SelectionJSON{
 	/**
 	 * Get a JSON array containing JSON EligibilityRules objects, from all the eligibility rules set into the database
 	 * @return string the JSON array
+	 * @no_name_check
 	 */
 	public static function getJSONAllEligibilityRules(){
 		$q_all_rules = SQLQuery::create()
@@ -848,6 +883,7 @@ class SelectionJSON{
 	 * Get an exam center data from its ID
 	 * @param number $id
 	 * @return string ExamCenterData JSON structure
+	 * @no_name_check
 	 */
 	public static function ExamCenterFromID($id){
 		if($id == -1 || $id == "-1")
@@ -861,6 +897,7 @@ class SelectionJSON{
 	 * Retrieve the data from the ExamCenter table for the given ID 
 	 * @param number $id
 	 * @return array containing the SQLQuery result
+	 * @no_name_check
 	 */
 	public static function ExamCenterTableDataFromID($id){
 		$q = SQLQuery::create()
@@ -874,6 +911,7 @@ class SelectionJSON{
 	/**
 	 * Prepare a query to retrieve the data from ExamCenter table
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ExamCenterSQL(&$q){
 		$alias = $q->getTableAlias("ExamCenter");
@@ -889,6 +927,7 @@ class SelectionJSON{
 	 * Retrieve the data related to the tables ExamCenterPartner and ExamCenterContactPoint for a given ExamCenter
 	 * @param number $id
 	 * @return array the result from the query
+	 * @no_name_check
 	 */
 	public static function ExamCenterPartnersDataFromID($id){
 		$q = SQLQuery::create()
@@ -904,6 +943,7 @@ class SelectionJSON{
 	/**
 	 * Prepare a SQLQuery to rerieve the data from ExamCenterPartner and ExamCenterContactPoint tables
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ExamCenterPartnersSQL(&$q){
 		$alias = $q->getTableAlias("ExamCenterPartner");
@@ -923,6 +963,7 @@ class SelectionJSON{
 	 * Retrieve the information sessions linked to a given exam center from ExamCenterInformationSessions table 
 	 * @param number $id
 	 * @return string ExamCenterISLinked object
+	 * @no_name_check
 	 */
 	public static function ExamCenterInformationSessionsFromCenterID($id){
 		$q = SQLQuery::create()
@@ -936,6 +977,7 @@ class SelectionJSON{
 	/**
 	 * Prepare a SQLQuery to retrieve the data from table ExamCenterInformationSession
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ExamCenterInformationSessionSQL(&$q){
 		$alias = $q->getTableAlias("ExamCenterInformationSession");
@@ -951,6 +993,7 @@ class SelectionJSON{
 	 * @param SQLQuery $q the query used to retrieve the informations sessions IDs
 	 * @param Array $rows results from the database
 	 * @return string JSON array containing the information sessions IDs
+	 * @no_name_check
 	 */
 	public static function ExamCenterInformationSessions($q, $rows){
 		$data = "[";
@@ -969,6 +1012,7 @@ class SelectionJSON{
 	 * Get the rooms data for a given exam center
 	 * @param number $id ID of the exam center
 	 * @returns string ExamCenterRooms JSON object
+	 * @no_name_check
 	 */
 	public static function ExamCenterRoomsFromCenterID($id){
 		$q = SQLQuery::create()
@@ -982,6 +1026,7 @@ class SelectionJSON{
 	/**
 	 * Retrieve the exam center room data from database
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ExamCenterRoomSQL(&$q){
 		$alias = $q->getTableAlias("ExamCenterRoom");
@@ -998,6 +1043,7 @@ class SelectionJSON{
 	 * @param SQLQuery $q the query used to retrieve the data
 	 * @param array $rows result from database
 	 * @return string JSON ExamCenterRooms object
+	 * @no_name_check
 	 */
 	public static function ExamCenterRooms($q, $rows){
 		$data = "[";
@@ -1019,6 +1065,7 @@ class SelectionJSON{
 	 * @param array $row_EC result of the query built by ExamCenterSQL method
 	 * @param array $rows_partners result of the query built by ExamCenterPartnersSQL method
 	 * @return string JSON ExamCenterData structure
+	 * @no_name_check
 	 */
 	public static function ExamCenter($row_EC,$rows_partners){
 		$data = "";
@@ -1073,6 +1120,7 @@ class SelectionJSON{
 	/**
 	 * Get a JSON array containing all the exam centers data
 	 * @return string JSON array containing all the existing Exam centers data, as ExamCenterData objects
+	 * @no_name_check
 	 */
 	public static function getJSONAllExamCenters(){
 		$r = "[";
@@ -1098,6 +1146,7 @@ class SelectionJSON{
 	 * @param array $json ExamCenter object
 	 * @param numbe| NULL $id ExamCenter ID, if any
 	 * @return array
+	 * @no_name_check
 	 */
 	public static function ExamCenter2DB($json, $id){
 		$a = array(
@@ -1116,6 +1165,7 @@ class SelectionJSON{
 	 * @param number | NULL $id ExamCenterRoom ID, if any
 	 * @param number | NULL $exam_center the exam center ID, if any
 	 * @return array
+	 * @no_name_check
 	 */
 	public static function ExamCenterRoom2DB($json, $id, $exam_center){
 		$a = array(
@@ -1132,6 +1182,7 @@ class SelectionJSON{
 	/**
 	 * Get all the IS with a host set but not linked to any ExamCenter
 	 * @return string JSON array containing ISData objects (but without partners attribute)
+	 * @no_name_check
 	 */
 	public static function getJSONAllISWithHostAssignedNotLinkedToEC(){
 		$all_free_IS = PNApplication::$instance->selection->getAllISWithHostAssignedNotLinkedToEC();
@@ -1163,6 +1214,7 @@ class SelectionJSON{
 	 * Get an Applicant objet from its ID
 	 * @param number $id the people id of the applicant
 	 * @return string Applicant JSON object
+	 * @no_name_check
 	 */
 	public static function ApplicantFromID($id){
 		$q = SQLQuery::create()
@@ -1176,6 +1228,7 @@ class SelectionJSON{
 	/**
 	 * Retrieve the applicant data from the database
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ApplicantSQL(&$q){
 		$alias = $q->getTableAlias("Applicant");
@@ -1200,6 +1253,7 @@ class SelectionJSON{
 	 * @param SQLQuery $q
 	 * @param array $row retrieved from database containing the applicant data
 	 * @return string Applicant JSON object
+	 * @no_name_check
 	 */
 	public static function Applicant($q, $row){
 		$data = "";
@@ -1230,6 +1284,7 @@ class SelectionJSON{
 	 * Get an ExamSession JSON object from the session ID (event id)
 	 * @param number $id exam session ID
 	 * @return string JSON ExamSession object
+	 * @no_name_check
 	 */
 	public static function ExamSessionFromID($id){
 		$q = SQLQuery::create()
@@ -1243,6 +1298,7 @@ class SelectionJSON{
 	/**
 	 * Prepare a query to retrieve the exam session fields
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function ExamSessionSQL(&$q){
 		$alias = $q->getTableAlias("ExamSession");
@@ -1258,6 +1314,7 @@ class SelectionJSON{
 	 * @param SQLQuery $q query used to retrieve
 	 * @param array $row row coming from database structured by ExamSessionSQL method
 	 * @return string ExamSession JSON object
+	 * @no_name_check
 	 */
 	public static function ExamSession($q, $row){
 		require_once 'component/calendar/CalendarJSON.inc';
@@ -1271,73 +1328,103 @@ class SelectionJSON{
 	}
 	
 	/**
-	 * Get the supervisors of an exam session
+	 * Get the supervisors (staff and customs) of an exam session
 	 * @param number $id exam session ID
 	 * @return string ExamSessionSupervisors JSON object
+	 * @no_name_check
 	 */
 	public static function ExamSessionSupervisorsFromSessionID($id){
-		$supervisors = SQLQuery::create()
+		require_once 'component/staff/StaffJSON.inc';
+		$staff = SQLQuery::create()
 			->select("ExamSessionSupervisor")
-			->field("ExamSessionSupervisor","people")
+			->field("ExamSessionSupervisor","staff")
 			->whereValue("ExamSessionSupervisor", "session", $id)
 			->executeSingleField();
-		$data = "[";
-		if($supervisors <> null){
+		$data = "{staffs:[";
+		if($staff <> null){
 			$first = true;
-			foreach ($supervisors as $people_id){
+			foreach ($staff as $people_id){
 				if(!$first) $data.= ", ";
 				$first = false;
-				$data.= self::ExamSessionSupervisorFromPeopleID($people_id);
+				$data.= StaffJSON::StaffFromID($people_id);
 			}
 		}
-		$data .= "]";
+		$data .= "], customs:";
+		$data .= self::ExamSessionSupervisorCustomFromSessionID($id);
+		$data .= "}";
 		return $data;
 	}
 	
 	/**
-	 * Get an ExamSessionSupervisor object from a people ID
-	 * @param number $id people ID
-	 * @return string ExamSessionSupervisor JSON object
+	 * Get the custom supervisors of an exam session from its ID
+	 * @param number $id exam session ID
+	 * @return array of ExamSessionSupervisorCustom objects
+	 * @no_name_check
 	 */
-	public static function ExamSessionSupervisorFromPeopleID($id){
+	public static function ExamSessionSupervisorCustomFromSessionID($id){
 		$q = SQLQuery::create()
-			->select("ExamSessionSupervisor")
-			->whereValue("ExamSessionSupervisor", "people", $id);
-		self::ExamSessionSupervisorSQL($q);
-		$row = $q->executeSingleRow();
-		return self::ExamSessionSupervisor($q, $row);
+			->select("ExamSessionSupervisorCustom")
+			->whereValue("ExamSessionSupervisorCustom","session",$id);
+		self::ExamSessionSupervisorCustomSQL($q);
+		$rows = $q->execute();
+		return self::ExamSessionSupervisorsCustom($q,$rows);
 	}
 	
 	/**
-	 * Prepare a query to retrieve the data related to an ExamSessionSupervisor object, adding the people data
-	 * @param SQLQuery $q query used to retrieve the data
+	 * Prepare an SQLQuery to retrieve the exam session supervisor custom fields
+	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
-	public static function ExamSessionSupervisorSQL(&$q){
-		$alias = $q->getTableAlias("ExamSessionSupervisor");
+	public static function ExamSessionSupervisorCustomSQL(&$q){
+		$alias = $q->getTableAlias("ExamSessionSupervisorCustom");
 		if($alias == null)
-			$alias = "ExamSessionSupervisor";
+			$alias = 'ExamSessionSupervisorCustom';
 		$q
-		->field("ExamSessionSupervisor","people");
-		//Add the people fields
-		PNApplication::$instance->people->joinPeople($q, "ExamSessionSupervisor", "people");
+			->field($alias,"id")
+			->field($alias,"name");
 	}
 	
 	/**
-	 * Create an ExamSessionSupervisor from the row retrieved into the database
-	 * @param SQLQuery $q query used to retrieve the data from the database
-	 * @param array $row data retrieved from the database
-	 * @return string ExamSessionSupervisor JSON object
+	 * Get a JSON array of ExamSessionSupervisorCustom objects
+	 * @param SQLQuery $q query used to retrieve the data
+	 * @param array $rows rows retrieved from the database
+	 * @return string
+	 * @no_name_check
 	 */
-	public static function ExamSessionSupervisor($q, $row){
-		require_once 'component/people/PeopleJSON.inc';
-		$r = PeopleJSON::People($q, $row);
-		return $r;
+	public static function ExamSessionSupervisorsCustom($q,$rows){
+		$json = "[";
+		if($rows <> null){
+			$first = true;
+			foreach ($rows as $row){
+				if(!$first) $json .= ", ";
+				$first = false;
+				$json .= self::ExamSessionSupervisorCustom($q, $row);
+			}
+		}
+		$json .= "]";
+		return $json;
 	}
+	
+	/**
+	 * Get a ExamSessionSupervisorCustom object from the row retrieved into the database
+	 * @param SQLQuery $q query used to retrieve the data
+	 * @param array $row containing the fields
+	 * @return string
+	 * @no_name_check
+	 */
+	public static function ExamSessionSupervisorCustom($q,$row){
+		$json = "{id:".json_encode($row["id"]);
+		$json .= ", name:".json_encode($row["name"]);
+		$json .= "}";
+		return $json;
+	}
+	
 	
 	/**
 	 * Get an array containing all the ExamSession objects for a center
 	 * @param number $id exam center ID
 	 * @return string JSON array of ExamSession objects
+	 * @no_name_check
 	 */
 	public static function ExamSessionsFromExamCenterID($id){
 		$sessions = SQLQuery::create()
@@ -1362,6 +1449,7 @@ class SelectionJSON{
 	 * Get a JSON object with two attributes:<ul><li><code>session</code> ExamSession object</li><li><code>rooms</code> array containing objects (one per room) with three attributes:<ul><li><code>id</code> exam center room ID</li><li><code>name</code> exam center room name</li><li><code>remaining</code> number of remaining slots in this room for the matching session</li></ul></li></ul>
 	 * @param number $session_id exam session ID
 	 * @return string
+	 * @no_name_check
 	 */
 	public static function ExamCenterRoomsWithRemainingSlotsForSession($session_id){
 		//Get the center ID

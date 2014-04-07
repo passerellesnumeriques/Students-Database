@@ -118,7 +118,6 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 					var th1 = document.createElement("th");
 					th1.appendChild(document.createTextNode("Sessions"));
 					var th2 = document.createElement("th");
-//					th2.appendChild(document.createTextNode("Applicants Assigned"));
 					tr_head.appendChild(th1);
 					tr_head.appendChild(th2);
 					table.appendChild(tr_head);
@@ -224,8 +223,8 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 						div_list.style.display = "inline-block";
 						var div_supervisor = document.createElement("div");
 						div_supervisor.style.display = "inline-block";
-						td2.appendChild(div_list);
 						td2.appendChild(div_supervisor);
+						td2.appendChild(div_list);
 						td2.style.borderBottom = "1px solid #808080";
 						td2.style.padding = "15px";
 						var onreset;
@@ -246,16 +245,14 @@ function center_exam_sessions_planned(container,EC_id, EC_name,can_manage,onupda
 					tr_foot.appendChild(td2);
 					table.appendChild(tr_foot);
 					//Set td1
-					if(can_manage){
+					if(can_manage)
 						td1.appendChild(t._getCreateSessionButton());
-					}
-					td1.appendChild(document.createTextNode("Total:"));
-					td1.style.textAlign = "right";
 					//Set td2					
 					for(var j = 0; j < t._nb_applicants_per_session.length;j++)
 						t._total_assigned_to_sessions += parseInt(t._nb_applicants_per_session[j].count);
+					td2.appendChild(document.createTextNode("Total: "));
 					td2.appendChild(document.createTextNode(t._total_assigned_to_sessions));
-					td2.style.textAlign = "center";
+					td2.style.textAlign = "left";
 					t._setContentDivStillToAssign();
 				});
 			}

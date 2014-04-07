@@ -9,6 +9,7 @@ class CalendarJSON {
 	 * @param number $id CalendarEvent ID
 	 * @param number $calendar_id Calendar ID
 	 * @returns String CalendarEvent JSON
+	 * @no_name_check
 	 */
 	public static function CalendarEventFromID($id, $calendar_id){
 		//Check the right
@@ -28,6 +29,7 @@ class CalendarJSON {
 	/**
 	 * Prepare a query to retrieve the data from CalendarEvent table
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function CalendarEventSQL(&$q){
 		$alias = $q->getTableAlias("CalendarEvent");
@@ -56,6 +58,7 @@ class CalendarJSON {
 	 * @param SQLQuery $q
 	 * @param Array $row the row retrieved from CalendarEvent table
 	 * @return string CalendarEvent JSON object
+	 * @no_name_check
 	 */
 	public static function CalendarEvent($q, $row){
 		$data = "{";

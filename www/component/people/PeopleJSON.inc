@@ -7,6 +7,7 @@ class PeopleJSON {
 	 * Build a People JSON structure from the given people id
 	 * @param integer $id
 	 * @return NULL
+	 * @no_name_check
 	 */
 	public static function PeopleFromID($id){
 		$q = SQLQuery::create()
@@ -25,6 +26,7 @@ class PeopleJSON {
 	 * Prepares the given given SQLQuery to retrieve a People
 	 * To be used with People method
 	 * @param SQLQuery $q
+	 * @no_name_check
 	 */
 	public static function PeopleSQL(&$q){
 		$alias = $q->getTableAlias("People");
@@ -50,6 +52,7 @@ class PeopleJSON {
 	 * @param SQLQuery $q
 	 * @param Array $row result of executeSingleRow from $q
 	 * @return string
+	 * @no_name_check
 	 */
 	public static function People($q, $row){
 		$data = "";
@@ -70,6 +73,7 @@ class PeopleJSON {
 	 * @param SQLQuery $q
 	 * @param Array $rows result of execute from $q
 	 * @return string
+	 * @no_name_check
 	 */
 	public static function Peoples($q, $rows){
 		$data = "[";
@@ -86,6 +90,7 @@ class PeopleJSON {
 	 * Convert an array coming from a JSON structure, into an array ready to use with database (insert or update)
 	 * @param People JSON $json
 	 * @return array the associative array with column name from the database
+	 * @no_name_check
 	 */
 	public static function People2DB($json){
 		$a = array(

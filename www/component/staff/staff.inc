@@ -24,5 +24,12 @@ class staff extends Component {
 		return $q;
 	}
 	
+	/**
+	 * Select the Staff table in an SQLQuery
+	 * @param SQLQuery $q query to override
+	 */
+	public function selectStaffTable(&$q){
+		$q->select("Staff");
+	}
 }
 ?>

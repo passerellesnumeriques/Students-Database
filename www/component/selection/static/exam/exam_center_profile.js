@@ -56,14 +56,6 @@ function exam_center_profile(id, config_name_center, can_add, can_edit, can_remo
 		t._lockDatabase();
 	};
 	
-	/**
-	 * Get if the data has been updated since the previous saving performed
-	 * @returns {Boolean}
-	 */
-	t.dataMustBeSaved = function(){
-		return t._updated;
-	};
-	
 	/**Private methods and attributes*/
 	
 	t._rooms_updated = false;
