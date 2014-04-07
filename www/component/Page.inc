@@ -16,6 +16,7 @@ abstract class Page {
 	public abstract function get_required_rights();
 	protected abstract function execute();
 	
+	private $init_scripts = array();
 	private $javascripts = array();
 	private $stylesheets = array();
 	private $onload = "";
@@ -24,6 +25,8 @@ abstract class Page {
 	public $done = false;
 	private $generate_id = 0;
 
+	public final function add_init_script($script) { array_push($this->init_scripts, $script); }
+	
 	public final function add_javascript($path, $onload = "") {
 		$found = false;
 		foreach ($this->javascripts as $js)
@@ -93,6 +96,7 @@ abstract class Page {
 	private function start_page() {
 		theme::css($this, "global.css");
 		pageHeaderStart();
+		foreach ($this->init_scripts as $s) echo "<script type='text/javascript'>".$s."</script>";
 		foreach ($this->javascripts as $js) {
 			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1]."'>";
 			echo "</script>";

@@ -268,7 +268,10 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 					if ($display)
 						foreach ($display->getDataDisplay($from) as $data) {
 							$values->addTableDataValue($child->table->getName(), $data->getDisplayName(), $data->getData($row, $data_aliases[$data->getDisplayName()]));
-					}
+							$cell = $data->getSingleCell();
+							if ($cell <> null)
+								$values->addTableColumnValue($cell["table"], $cell["column"], $data->getData($row, $data_aliases[$data->getDisplayName()]));
+						}
 				} else {
 					// not unique, just put the key
 					if ($child->isReverse())

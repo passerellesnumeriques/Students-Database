@@ -5,16 +5,31 @@ class page_list extends Page {
 	
 	public function execute() {
 		$this->require_javascript("data_list.js");
+		$batches = null;
+		if (isset($_GET["batches"])) {
+			if ($_GET["batches"] == "current") {
+				$list = PNApplication::$instance->curriculum->getCurrentBatches();
+				$batches = array();
+				foreach ($list as $b) array_push($batches, $b["id"]);
+			} else if ($_GET["batches"] == "alumni") {
+				$list = PNApplication::$instance->curriculum->getAlumniBatches();
+				$batches = array();
+				foreach ($list as $b) array_push($batches, $b["id"]);
+			}
+		}
+		if (isset($_GET["batch"])) {
+			$batches = array($_GET["batch"]);
+		}
 ?>
 <div id='list_container' style='width:100%;height:100%'>
 </div>
 <script type='text/javascript'>
 var url = new URL(location.href);
-var batches = url.params['batches'] ? url.params['batches'].split(',') : null;
+var batches = <?php echo json_encode($batches); ?>;
 
 function build_filters() {
 	var filters = [];
-	if (url.params['batches']) {
+	if (batches.length > 0) {
 		var filter = {category:'Student',name:'Batch',data:{value:batches[0]},force:true};
 		var f = filter;
 		for (var i = 1; i < batches.length; ++i) {
@@ -26,8 +41,8 @@ function build_filters() {
 	if (url.params['period']) {
 		filters.push({category:'Student',name:'Period',data:{value:url.params['period']},force:true});
 	}
-	if (url.params['spe'] != null) {
-		filters.push({category:'Student',name:'Specialization',data:{value:url.params['spe']},force:true});
+	if (url.params['specialization'] != null) {
+		filters.push({category:'Student',name:'Specialization',data:{value:url.params['specialization']},force:true});
 	}
 	if (url.params['class'] != null) {
 		filters.push({category:'Student',name:'Class',data:{value:url.params['class']},force:true});
@@ -169,23 +184,8 @@ var students_list = new data_list(
 			}
 		};
 		<?php 
-		$batch_id = null;
-		$period = null;
-		$class = null;
-		if (isset($_GET["batches"])) {
-			$batches_ids = explode(",", $_GET["batches"]);
-			if (count($batches_ids) == 1)
-				$batch_id = $batches_ids[0];
-		} else if (isset($_GET["period"])) {
-			$period = PNApplication::$instance->curriculum->getAcademicPeriod($_GET["period"]);
-			$batch_id = $period["batch"];
-		} else if (isset($_GET["class"])) {
-			$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
-			$period = PNApplication::$instance->curriculum->getAcademicPeriod($class["period"]);
-			$batch_id = $period["batch"];
-		}
-		if ($batch_id <> null) {
-			$specializations = PNApplication::$instance->curriculum->getBatchSpecializations($batch_id);
+		if ($batches <> null && count($batches) == 1) {
+			$specializations = PNApplication::$instance->curriculum->getBatchSpecializations($batches[0]);
 			if (count($specializations) > 0) {
 				?>
 				var assign_spe = document.createElement("DIV");
@@ -194,7 +194,7 @@ var students_list = new data_list(
 				assign_spe.onclick = function() {
 					window.parent.require("popup_window.js",function() {
 						var p = new window.parent.popup_window("Assign Specializations", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
-						p.setContentFrame("/dynamic/students/page/assign_specializations?batch=<?php echo $batch_id;?>&onsave=reload_list");
+						p.setContentFrame("/dynamic/students/page/assign_specializations?batch=<?php echo $batches[0];?>&onsave=reload_list");
 						p.show();
 					});
 				};
@@ -209,7 +209,7 @@ var students_list = new data_list(
 			assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+(url.params['class'] ? "class" : "classes");
 			assign.onclick = function() {
 				window.parent.require("popup_window.js",function() {
-					var p = new window.parent.popup_window("Assign Students to Class<?php if ($class <> null) echo " ".htmlentities($class["name"]); else echo "es";?>", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
+					var p = new window.parent.popup_window("Assign Students to Classes", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
 					p.setContentFrame("/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period'])+"&onsave=reload_list");
 					p.show();
 				});
@@ -217,56 +217,54 @@ var students_list = new data_list(
 			students_list.addHeader(assign);
 		}
 
-		if (url.params['batches']) {
-			if (batches.length == 1) {
-				var import_students = document.createElement("BUTTON");
-				import_students.className = "button_verysoft";
-				import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
-				import_students.disabled = "disabled";
-				window.top.require("popup_window.js", function() {
-					var container = document.createElement("DIV");
-					container.style.width = "100%";
-					container.style.height = "100%";
-					var popup = new window.top.popup_window("Import Students", theme.icons_16._import, container);
-					window.top.require("excel_import.js", function() {
-						new window.top.excel_import(popup, container, function(imp) {
-							import_students.disabled = "";
-							import_students.onclick = function(ev) {
-								popup.removeAllButtons();
-								popup.showPercent(95,95);
-								imp.init();
-								imp.loadImportDataURL(
-									"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list&multiple=true",
-									{
-										prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
-									}
-								);
-								imp.frame_import.reload_list = reload_list;
-								imp.uploadFile(ev);
-							};
-						});
+		if (batches.length == 1) {
+			var import_students = document.createElement("BUTTON");
+			import_students.className = "button_verysoft";
+			import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
+			import_students.disabled = "disabled";
+			window.top.require("popup_window.js", function() {
+				var container = document.createElement("DIV");
+				container.style.width = "100%";
+				container.style.height = "100%";
+				var popup = new window.top.popup_window("Import Students", theme.icons_16._import, container);
+				window.top.require("excel_import.js", function() {
+					new window.top.excel_import(popup, container, function(imp) {
+						import_students.disabled = "";
+						import_students.onclick = function(ev) {
+							popup.removeAllButtons();
+							popup.showPercent(95,95);
+							imp.init();
+							imp.loadImportDataURL(
+								"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list&multiple=true",
+								{
+									prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
+								}
+							);
+							imp.frame_import.reload_list = reload_list;
+							imp.uploadFile(ev);
+						};
 					});
 				});
-				students_list.addHeader(import_students);
-				var create_student = document.createElement("DIV");
-				create_student.className = "button_verysoft";
-				create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
-				create_student.onclick = function() {
-					window.top.require("popup_window.js",function() {
-						var p = new window.top.popup_window('New Student', theme.build_icon("/static/students/student_16.png",theme.icons_10.add), "");
-						var frame = p.setContentFrame(
-							"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list",
-							null,
-							{
-								prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
-							}
-						);
-						frame.reload_list = reload_list;
-						p.show();
-					});
-				};
-				students_list.addHeader(create_student);
-			}
+			});
+			students_list.addHeader(import_students);
+			var create_student = document.createElement("DIV");
+			create_student.className = "button_verysoft";
+			create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
+			create_student.onclick = function() {
+				window.top.require("popup_window.js",function() {
+					var p = new window.top.popup_window('New Student', theme.build_icon("/static/students/student_16.png",theme.icons_10.add), "");
+					var frame = p.setContentFrame(
+						"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list",
+						null,
+						{
+							prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
+						}
+					);
+					frame.reload_list = reload_list;
+					p.show();
+				});
+			};
+			students_list.addHeader(create_student);
 		}
 
 		var import_pictures;
