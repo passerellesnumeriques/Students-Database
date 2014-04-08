@@ -18,7 +18,7 @@ class service_exam_subject_status extends Service{
 		echo "No";
 	}
 	public function output_documentation(){
-//TODO update
+		echo "<code>number_exams</code> number of exam subjects already existing";
 	}
 	public function documentation(){
 		echo "This service returns statistics to be displayed on the selection main page <br/> so anyone who is allowed to access selection data must <br/> be allowed to get these data: to avoid any problem, each request is done using bypass_security";

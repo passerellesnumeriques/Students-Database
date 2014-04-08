@@ -4,11 +4,11 @@
 
 /**
  * ExamTopicForEligibilityRules object
- * @param {integer} id
- * @param {string} name
- * @param {number} max_score
- * @param {integer} number_questions
- * @param {array} subjects of ExamSubjectForTopic objects
+ * @param {Number} id exam topic ID
+ * @param {String} name exam topic name
+ * @param {Number} max_score max score of the topic (based on subjects parts ones)
+ * @param {Number} number_questions number of questions within the topic
+ * @param {Array} subjects of ExamSubjectForTopic objects
  */
 function ExamTopicForEligibilityRules(id, name, max_score, number_questions, subjects){
 	this.id = id;
@@ -22,11 +22,11 @@ function ExamTopicForEligibilityRules(id, name, max_score, number_questions, sub
  * ExamSubjectForTopic
  * Define a subject object as used in an ExamTopicForEligibilityRules object
  * In that context, a full_subject attribute is added
- * @param {integer} id
- * @param {string} name
- * @param {number} max_score
- * @param {array} parts of ExamSubjectPartForTopic objects 
- * @param {boolean} full_subject
+ * @param {Number} id exam subject ID
+ * @param {String} name exam subject name
+ * @param {Number} max_score max score of the subject
+ * @param {Array} parts of ExamSubjectPartForTopic objects 
+ * @param {Boolean} full_subject true this subject is declared as full subject for the topic
  */
 function ExamSubjectForTopic(id, name, max_score, parts, full_subject){
 	var t = this;
@@ -40,10 +40,10 @@ function ExamSubjectForTopic(id, name, max_score, parts, full_subject){
  * ExamSubjectPartForTopic
  * Define a part object as used in an ExamTopicForEligibilityRules object
  * In that case, the questions attribute is set to []
- * @param {integer} id
- * @param {integer} index
- * @param {string} name
- * @param {number} max_score
+ * @param {Number} id exam subject part ID
+ * @param {Number} index index of the part into the subject
+ * @param {String} name exam subject part name
+ * @param {Number} max_score exam subject part max score 
  */
 function ExamSubjectPartForTopic(id, index, name, max_score){
 	var t = this;
@@ -54,8 +54,8 @@ function ExamSubjectPartForTopic(id, index, name, max_score){
 
 /**
  * EligibilityRule object
- * @param {Number} id
- * @param {Number|null} parent the id of the parent rule, null if root level
+ * @param {Number} id eligibility rule ID
+ * @param {Number|NULL} parent the id of the parent rule, null if root level
  * @param {Array} topics array of ExamTopicForEligibilityRule objects
  */
 function EligibilityRule(id, parent, topics){

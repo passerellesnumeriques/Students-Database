@@ -105,7 +105,7 @@ function applicants_assignment_to_EC_status(container){
 	
 	/**
 	 * Check into the t._remaining_per_center objects if there is at least one center in which an applicant is not assigned to a session or assigned to a session but not to any room
-	 * @returns {Boolean}
+	 * @returns {Boolean} true if any applicant remains
 	 */
 	t._isThereAnyApplicantRemaining = function(){
 		var res = false;

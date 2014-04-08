@@ -12,10 +12,10 @@ function prepare_applicant_list(){
 		return {
 			filters:t._filters,
 			selectable:t._selectable,
-			applicants_locked:t._lockedApplicants,
-			applicants_preselected:t._preselectedApplicants,
-			can_create:t._canCreate,
-			can_import:t._canImport,
+			applicants_locked:t._locked_applicants,
+			applicants_preselected:t._preselected_applicants,
+			can_create:t._can_create,
+			can_import:t._can_import,
 			clickable:t._clickable
 		};
 	};
@@ -55,7 +55,7 @@ function prepare_applicant_list(){
 	 * @param {Number} id applicant people ID
 	 */
 	t.lockSelectionForApplicant = function(id){
-		t._lockedApplicants.push(id);
+		t._locked_applicants.push(id);
 	};
 	
 	/**
@@ -81,7 +81,7 @@ function prepare_applicant_list(){
 	 * @param {Number} id applicant people ID
 	 */
 	t.preselectApplicant = function(id){
-		t._preselectedApplicants.push(id);
+		t._preselected_applicants.push(id);
 	};
 	
 	/**
@@ -89,7 +89,7 @@ function prepare_applicant_list(){
 	 * By default, the user is allowed
 	 */
 	t.forbidApplicantCreation = function(){
-		t._canCreate = false;
+		t._can_create = false;
 	};
 	
 	/**
@@ -97,17 +97,17 @@ function prepare_applicant_list(){
 	 * By default, the user is allowed
 	 */
 	t.forbidApplicantImport = function(){
-		t._canImport = false;
+		t._can_import = false;
 	};
 	
 	/** Private attributes and methods */
 	
 	t._filters = [];
 	t._selectable = false;
-	t._lockedApplicants = [];
-	t._preselectedApplicants = [];
-	t._canCreate = true;
-	t._canImport = true;
+	t._locked_applicants = [];
+	t._preselected_applicants = [];
+	t._can_create = true;
+	t._can_import = true;
 	t._clickable = true;
 
 }

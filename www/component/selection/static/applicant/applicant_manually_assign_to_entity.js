@@ -96,11 +96,11 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id), {sub_models:{SelectionCampaign:campaign_id}}, 95, 95); 
 					});
 					list.grid.setSelectable(true);
-					list.grid.onrowselectionchange = t._applicants_selection_changed;
+					list.grid.onrowselectionchange = t._applicantsSelectionChanged;
 				}
 			);
 			t._dl.ondataloaded.add_listener(function(){
-				t._dl.grid.onrowselectionchange = t._applicants_selection_changed;
+				t._dl.grid.onrowselectionchange = t._applicantsSelectionChanged;
 			});
 		} else {
 			t._dl.grid.onrowselectionchange = null;
@@ -114,7 +114,7 @@ function applicant_manually_assign_to_entity(container, campaign_id,mode,EC_id) 
 	 * @param {Number} row_id the row id of the row selected / unselected within the datalist
 	 * @param {Boolean} selected true if the applicant has been selected by the user
 	 */
-	t._applicants_selection_changed = function (row_id, selected){
+	t._applicantsSelectionChanged = function (row_id, selected){
 		var people_id = t._dl.getTableKeyForRow("Applicant", row_id);
 		if (selected)
 			t._applicants_selected.push(people_id);

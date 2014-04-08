@@ -1,22 +1,20 @@
 /**
- * 
- * @param people_id
- * @param first_name
- * @param last_name
- * @param middle_name
- * @param sex
- * @param birthdate
- * @param applicant_id
- * @param exclusion_reason
- * @param automatic_exclusion_step
- * @param automatic_exclusion_reason
- * @param custom_exclusion
- * @param excluded
- * @param information_session
- * @param exam_center
- * @param exam_center_room
- * @param exam_session
- * @returns {Applicant}
+ * @param {Number} people_id applicant people ID
+ * @param {String} first_name applicant first name
+ * @param {String} last_name applicant last name
+ * @param {String} middle_name applicant middle name
+ * @param {String} sex applicant sex
+ * @param {String} birthdate applicant birth date
+ * @param {Number} applicant_id applicant ID (selection process one)
+ * @param {String} exclusion_reason not null if the applicant was exclued only 
+ * @param {Boolean} automatic_exclusion_step true if the applicant has been excluded automatically (cheat, failing grade, missing...)
+ * @param {String} automatic_exclusion_reason value of the automatic exclusion reason
+ * @param {String} custom_exclusion if the applicant was excluded but not for an automatic reason
+ * @param {Boolean} excluded true if the applicant is excluded (automatic or custom)
+ * @param {Number} information_session ID of the information session to which the applicant is assigned
+ * @param {Number} exam_center ID of the exam center to which the applicant is assigned
+ * @param {Number} exam_center_room ID of the exam center room to which the applicant is assigned
+ * @param {Number} exam_session ID of the exam session to which the applicant is assigned
  */
 function Applicant(people_id, first_name, last_name, middle_name, sex, birthdate, applicant_id, exclusion_reason, automatic_exclusion_step, automatic_exclusion_reason,custom_exclusion, excluded, information_session, exam_center, exam_center_room,exam_session){
 	this.people_id = people_id ;
