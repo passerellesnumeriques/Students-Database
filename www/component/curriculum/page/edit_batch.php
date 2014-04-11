@@ -71,12 +71,12 @@ class page_edit_batch extends Page {
 		<td align=center>
 			<table style='border-spacing:3px;margin-bottom:10px'>
 				<tr>
-					<td colspan=2 align=right>Integration</td>
-					<td colspan=4 id='integration'></td>
+					<td align=right style="font-weight:bold">Integration</td>
+					<td id='integration'></td>
 				</tr>
 				<tr id='after_periods'>
-					<td colspan=2 align=right>Graduation</td>
-					<td colspan=4 id='graduation'></td>
+					<td align=right style="font-weight:bold">Graduation</td>
+					<td id='graduation'></td>
 				</tr>
 			</table>
 		</td>
@@ -107,7 +107,7 @@ var academic_periods = [<?php
 $first = true;
 foreach ($academic_periods as $period) {
 	if ($first) $first = false; else echo ",";
-	echo "{id:".$period["id"].",year:".$period["year"].",name:".json_encode($period["name"]).",start:".json_encode($period["start"]).",end:".json_encode($period["end"])."}";
+	echo "{id:".$period["id"].",year_id:".$period["year"].",name:".json_encode($period["name"]).",start:".json_encode($period["start"]).",end:".json_encode($period["end"])."}";
 } 
 ?>];
 academic_periods.sort(function(p1,p2){
@@ -170,6 +170,19 @@ td_integration.onclick = function() {
 	// TODO
 };
 
+function refreshAcademicCalendar() {
+	popup.freeze();
+	service.json("curriculum","get_academic_calendar",{},function(years){
+		academic_years = years;
+		academic_periods = [];
+		for (var i = 0; i < years.length; ++i)
+			for (var j = 0; j < years[i].periods.length; ++j)
+				academic_periods.push(years[i].periods[j]);
+		updatePeriodRow(periods[0]);
+		popup.unfreeze();
+	});
+}
+
 function updatePeriodRow(period) {
 	period.td_period.innerHTML = "";
 	var index = periods.indexOf(period);
@@ -189,7 +202,22 @@ function updatePeriodRow(period) {
 			list.push(academic_periods[i]);
 		}
 		if (list.length == 0) {
-			// TODO create
+			var link = document.createElement("A");
+			link.href = "#";
+			link.appendChild(document.createTextNode("Create Academic Year "+min.getFullYear()));
+			link.style.color = "#808080";
+			link.style.fontStyle = "italic";
+			link.style.marginLeft = "5px";
+			link.onclick = function() {
+				var p = new window.top.popup_window("New Academic Year",null,"");
+				var frame = p.setContentFrame("/dynamic/curriculum/page/edit_academic_year?year="+min.getFullYear()+"&onsave=saved");
+				frame.saved = function() {
+					refreshAcademicCalendar();
+				};
+				p.show();
+				return false;
+			};
+			period.td_period.appendChild(link);
 		} else {
 			var select = document.createElement("SELECT");
 			for (var i = 0; i < list.length; ++i) {
@@ -215,7 +243,7 @@ function updatePeriodRow(period) {
 					var p = new window.top.popup_window("New Academic Year",null,"");
 					var frame = p.setContentFrame("/dynamic/curriculum/page/edit_academic_year?year="+min.getFullYear()+"&onsave=saved");
 					frame.saved = function() {
-						// TODO load years and periods, and refresh
+						refreshAcademicCalendar();
 					};
 					p.show();
 					return false;
