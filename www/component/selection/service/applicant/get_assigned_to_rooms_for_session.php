@@ -26,7 +26,7 @@ class service_applicant_get_assigned_to_rooms_for_session extends Service {
 					</li>
 				</ul>
 			</li>
-			<li><code>count_session</code> number of applicants assigned to this session</li>
+			<li><code>count_session</code> number of applicants assigned to this session</li>						
 		</ul>
 
 		<?php

@@ -613,6 +613,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	/** @var string path to reach the column to display */
 	protected $data_path;
 	
+	
 	/**
 	 * @param string $display_name name of this data
 	 * @param string $data_path path to reach the column to display: format is columns' names separated by a dot (.). Example: country.name means use the column 'country' as a foreign key, then in the foreign table get the column 'name'
@@ -739,8 +740,180 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+		
 	}
 	
+}
+
+/**
+ * Implementation of DataDisplay, when we have a foreign key representing a choice where the data is not directly reached by the foreign_key, but with a harder business that makes it not editable.<br/>
+ * The data displayed is given by the data_path, but the key handled is the foreignkey in the foreign table (pointed by the foreign key in the root table)
+ */
+class ReadOnlyChoiceDataDisplay extends DataDisplay {
+	
+	/** @var string name of this data */
+	protected $display_name;
+	/** @var string path to reach the column to display */
+	protected $data_path;
+	/** @var string column's name containing the foreign key */
+	protected $foreign_key_name;
+	
+	/**
+	 * @param string $display_name name of the datadisplay
+	 * @param string $foreign_key_name name of the foreign key in the root table
+	 * @param string $data_path first must be the foreign key and then all the columns name that we will browse through until the column to display. The names must be separated by a dot
+	 */
+	public function __construct($display_name, $foreign_key_name, $data_path) {
+		$this->display_name = $display_name;
+		$this->data_path = $data_path;
+		$this->foreign_key_name = $foreign_key_name;
+	}
+	
+	public function getDisplayName() { return $this->display_name; }
+	public function getHandledColumns() { return array(); }
+	
+	/**
+	 * Internal method to get the final column in the data model
+	 * @param number|null $sub_model sub model instance
+	 * @return \datamodel\Column the final column
+	 */
+	private function getColumn($sub_model) {
+		$columns = explode(".", $this->data_path);
+		$t = $this->getTable();
+		for ($i = 0; $i < count($columns); $i++) {
+			$col = $t->getColumnFor($columns[$i], $sub_model);
+			if ($i < count($columns)-1)
+				$t = \DataModel::get()->getTable($col->foreign_table);
+		}
+		return $col;
+	}
+	
+	public function getTypedField($sub_model) {
+		return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($sub_model));
+	}
+	
+	public function isEditable() {
+		return false;
+	}
+	public function getEditLocks($sub_model) {
+		return array();
+	}
+	public function isSortable() {
+		return true;
+	}
+	public function isMandatory($sub_model) {
+		return false; // TODO
+	}
+	
+	/**
+	 * Internal method to get the possible values to display in the enum for filtering
+	 * The possibilities are enumerated by all the existing keys in the table pointed by the foreign_key (choice datadisplay aspect) and the displayed names are found into the last table of the datapath (aspect readonly datadisplay)
+	 * @param number|null $sub_model
+	 * @returns array | null null if no value, else array containing array("KEY" =>, "VALUE") for each possible values
+	 */
+	private function getPossibleValues($sub_model) {
+		$columns = explode(".", $this->data_path);
+		$t = $this->getTable();		
+		$col = $t->getColumnFor($columns[0], $sub_model);
+		$last_table = \DataModel::get()->getTable($col->foreign_table);
+		$first_table = $last_table;
+		$q = \SQLQuery::create()->select($col->foreign_table);
+		// go to the table
+		for ($i = 1; $i < count($columns)-1; $i++) {
+			$col = $last_table->getColumnFor($columns[$i], $sub_model);
+			$ft = \DataModel::get()->getTable($col->foreign_table);	
+			$q->join($last_table->getName(), $ft->getName(), array($columns[$i]=>$ft->getPrimaryKey()->name));
+			$last_table = $ft;					
+		}
+		
+		if (!isset($this->possible_values[$sub_model])) {			
+			if ($sub_model <> null && ($t->getModel() instanceof \SubDataModel) && ($this->getTable()->getModel() instanceof \SubDataModel) && $t->getModel()->getParentTable() == $this->getTable()->getModel()->getParentTable())
+				$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
+			$q->field($first_table->getName(), $first_table->getPrimaryKey()->name, "KEY");
+			$q->field($last_table->getName(), $columns[count($columns)-1], "VALUE");
+			$this->possible_values[$sub_model] = $q->execute();
+		}
+		return $this->possible_values[$sub_model];
+	}
+	
+	public function getTypedFilter($sub_model) {
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+		$cfg = "{";
+		$cfg .= "possible_values:[";
+		$res = $this->getPossibleValues($sub_model);
+		$first = true;
+		foreach ($res as $row) {
+			if ($first) $first = false; else $cfg .= ",";
+			$cfg .= "[";
+			$cfg .= json_encode($row["KEY"]);
+			$cfg .= ",".json_encode($row["VALUE"]);
+			$cfg .= "]";
+		}
+		$cfg .= "]";
+		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= "}";
+		return array("filter_enum", $cfg);
+	}
+	
+	public function getSingleCell() {
+		$col = $this->getColumn(null);
+		return array("table"=>$col->table->getName(), "column"=>$col->name);
+	}
+	
+	public function buildSQL(&$q, $path, $filters) {			
+		$columns = explode(".", $this->data_path);
+		$last_table = $this->getTable();
+		// go to the table
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
+		$last_key = null;
+		for ($i = 0; $i < count($columns); $i++) {
+			$col = $last_table->getColumnFor($columns[$i], $path->sub_model);
+			if ($i < count($columns)-1) {
+				$ft = \DataModel::get()->getTable($col->foreign_table);
+				$last_key = $ft->getPrimaryKey();
+				$fta = $q->generateTableAlias();
+				$q->join($table_alias, $col->foreign_table, array($columns[$i]=>$ft->getPrimaryKey()->name), $fta);
+				$last_table = $ft;
+				$table_alias = $fta;
+			}
+		}
+		
+		//Get the key
+		$key_alias = $q->getFieldAlias($this->getTable()->getName(), $this->foreign_key_name);
+		if($key_alias == null)
+			$key_alias = $q->generateFieldAlias();
+		$root_alias = $q->getTableAlias($this->getTable()->getName());
+		if($root_alias == null)
+			$root_alias = $this->getTable()->getName();
+		$q->field($root_alias, $this->foreign_key_name, $key_alias);
+		$data_alias = $q->getFieldAlias($table_alias, $col->name);
+		if ($data_alias == null)
+			$data_alias = $q->generateFieldAlias();
+		$q->field($table_alias, $col->name, $data_alias);
+		//Filter
+		foreach ($filters as $filter_list) {
+			$w = "";
+			foreach ($filter_list as $filter) {
+				if ($filter["value"] == "") continue;
+				if (strlen($w) > 0) $w .= " OR ";
+				$w .= "`".$root_alias."`.`".$this->foreign_key_name."`";
+				if ($filter["value"] == "NULL")
+					$w .= " IS NULL";
+				else if ($filter["value"] == "NOT_NULL")
+					$w .= " IS NOT NULL";
+				else
+					$w .= "='".\SQLQuery::escape($filter["value"])."'";
+			}
+			if (strlen($w) > 0)
+				$q->where($w);
+		}
+	
+		return array("key"=>$key_alias,"data"=>$data_alias);
+	}
+	
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+	
+	}
 }
 
 class CalculationDataDisplay extends DataDisplay {

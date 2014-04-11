@@ -1,3 +1,12 @@
+/**
+ * Create the eligibility rules main page section
+ * The topics list is set on the left part, and the diagram (not editable) of the eligibility rules is set on the right
+ * @param {String | HTMLElement} container ID or element
+ * @param {Boolean} can_see true if the user can see this part
+ * @param {Boolean} can_manage true if the user can manage topics and rules
+ * @param {Array} all_topics array of ExamTopicForEligibilityRules objects
+ * @param {String} validated error message to display at the bottom of the topics list, if there is any problem
+ */
 function eligibility_rules_main_page(container, can_see, can_manage, all_topics, validated){
 	var t = this;
 	if(typeof container == "string")
@@ -9,24 +18,26 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 	t.table_topics_container = document.createElement("div");//Contains the table with the exam topics
 	t.table_topics = document.createElement('table');//Contains the exam topics data
 	t.table_topics_container.appendChild(t.table_topics);
-//	t.table_topics_container.style.width = "30%";
-//	t.table_topics_container.style.position = "absolute";
-//	t.table_topics_container.style.left = "0px";
-//	t.table_topics_container.style.top = "0px";
 	
-
+	/** Private properties and attributes */
+	
+	/**
+	 * Launch the process, create the section
+	 */
 	t._init = function(){
 		// Check the readable right
 		if(!can_see)
 			return;
 		t.section = new section("","Exam topics and eligibility rules",t.internal_container , false);
-//		t._setTableTopicsContent();
-//		t._setRulesContent();
 		container.appendChild(t.section.element);
 		t._setInternalContainerStructure();
 		t._setStyle();
 	};
 	
+	/**
+	 * Set the layout of the section content
+	 * Create a table with two rows (one for title and one for content), and two columns (left one for topic, right one for rules)
+	 */
 	t._setInternalContainerStructure = function(){		
 		//Set the first row with the headers for the left and the right part
 		var tr_head = document.createElement("tr");
@@ -42,14 +53,12 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		//Set the info buttons
 		var info_topics = document.createElement("img");
 		info_topics.src = theme.icons_16.info;
-		info_topics.style.cursor = "pointer";
 		info_topics.style.verticalAlign = "bottom";
 		tooltip(info_topics,"An exam topic is the entity used for creating the eligibility rules<br/>For instance, if there is a math subject, and a logic object, you may want to group these two exams for the eligibility rules: you shall create a \"Math and Logic\" topic.<br/>A topic can be set as <b>full subject</b> for an exam subject, meaning that all the parts from this subject belong to the topic. Also, when a part is added to the subject, it is automatically added to the topic.<br/>By default, when an exam subject is created a topic is also created, and set as full subject for this subject.<br/>To avoid any adverse effect you must respect the following rules:<ul><li>All the parts of the exam subject must appear in the topics</li><li>A part can only appear one time in all the topics</li></ul>");
 		th_topics.appendChild(info_topics);
 		
 		var info_rules = document.createElement("img");
 		info_rules.src = theme.icons_16.info;
-		info_rules.style.cursor = "pointer";
 		info_rules.style.verticalAlign = "bottom";
 		tooltip(info_rules,"Eligibility rules are made of exam topics.<br/>Each rule node on the diagram is a minimum to be respected, to pass this rule.<br/>This diagram shall be read from the left side to the right one.<br/> To know if an applicant passes the exam, he must pass the first rule node (the one on the left of the diagram) and at least one middle rule (in the middle column), so that he can reach the last node, \"Succeed\". So the middle column represents the \"thresholds\" rules.<br/>In each rule node, you can add / remove any exam topic, and for each topic you can:<ul><li>Set the expected grade (minimum)</li><li>Set a coefficient</li></ul>");
 		th_rules.appendChild(info_rules);
@@ -70,6 +79,9 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		t._setRulesContent();
 	};
 	
+	/**
+	 * Set the style of the container (add padding, set height)
+	 */
 	t._setStyle = function(){
 		container.style.paddingTop = "20px";
 		container.style.paddingLeft = "20px";
@@ -77,6 +89,11 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		t._setInternalContainerHeight();
 	};
 	
+	/**
+	 * Set the content of the topics list
+	 * Create a list with one row per topic, and add the 'status' (error if any, or validation message) row at the bottom
+	 * @param {HTMLElement} cont the container to populate with the list
+	 */
 	t._setTableTopicsContent = function(cont){
 		cont.appendChild(t.table_topics_container);
 		//set the body
@@ -107,13 +124,19 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		};
 		if(can_manage && validated != null){
 			td_foot.appendChild(create_button);
-//			new vertical_align(td_foot,"bottom");
 		}
 		tr_foot.appendChild(td_foot);
 		t.table_topics.appendChild(tr_foot);
 		
 	};
 	
+	/**
+	 * Create a topic row
+	 * If the topic is a full subject one, an icon is added at the beginning of the row
+	 * Based on the user rights, the topic name is a link to the topic displaying page, and a remove topic button is added
+	 * @param {HTMLElement} tr element to populate
+	 * @param {Number} i index of the topic to display within all_topics array
+	 */
 	t._addTopicRow = function(tr, i){
 		var td_name = document.createElement("td");
 		var li = document.createElement("li");
@@ -180,6 +203,11 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		};
 	};
 	
+	/**
+	 * Check if a topic is declared as full subject for any subject
+	 * @param {Number} index the topic index within all_topics array
+	 * @return {Boolean|String} false if the topic is not declared as full subject anytime, else string containing the subjects names
+	 */
 	t._isTopicDeclaredAsFullSubjectForAnySubject = function(index){
 		var subjects_concerned = "";
 		var first = true;
@@ -197,9 +225,12 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 			return subjects_concerned;
 	};
 	
+	/**
+	 * Create the valid status row explaining to the user that the topics can be used to create the eligibility rules
+	 * @param {HTMLElement} tr container to populate
+	 */
 	t._addValidStatusRow = function(tr){
 		var td = document.createElement("td");
-		//TODO set Colspan
 		var div = document.createElement("div");
 		if(all_topics.length > 0){
 			if(validated != null){
@@ -216,6 +247,10 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		}
 	};
 	
+	/**
+	 * Set the section content height, depending in its content.
+	 * The height is set to be greater than 250 px
+	 */
 	t._setInternalContainerHeight = function(){
 		//Once the table with the topic is set, get its height
 		var h = getHeight(t.table_topics_container);
@@ -228,6 +263,9 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 		new vertical_align(t.table_topics_container,"middle");
 	};
 	
+	/**
+	 * Set the height of the rules content, making sure that a button can be added at the bottom
+	 */
 	t._setRulesContentHeight = function(){
 		var container_height = getHeight(t.rules_container);
 		var h = container_height - 25; //Add the space for a button
@@ -235,6 +273,9 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 			t.rules_content.style.height = h+"px";
 	};
 	
+	/**
+	 * Create the rules diagram into the rules container, depending on the rules step
+	 */
 	t._setRulesContent = function(){
 		//Done on a backend to avoid too long loading time
 		service.json("selection","eligibility_rules/status_from_steps",{},function(r){
@@ -270,12 +311,15 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 					t._setRulesFooter(rules_footer);//Contains the manage rules button
 				t.rules_container.appendChild(t.rules_content);
 				t.rules_container.appendChild(rules_footer);
-//				t.internal_container.appendChild(t.rules_container);
 				t._setRulesContentHeight();
 			}//else nothing to do
 		});
 	};
 	
+	/**
+	 * Add a button manage rules to the given element
+	 * @param {HTMLElement} e container to populate
+	 */
 	t._setRulesFooter = function(e){
 		if(can_manage){
 			//Add the manage_rules button
@@ -290,9 +334,11 @@ function eligibility_rules_main_page(container, can_see, can_manage, all_topics,
 			};
 			e.appendChild(manage);
 		}
-		//Add the tips buttons
 	};
 	
+	/**
+	 * Reset the rules container
+	 */
 	t._resetRulesContainer = function(){
 		if(t._manage_rules){
 			t._manage_rules.closeDiagram();

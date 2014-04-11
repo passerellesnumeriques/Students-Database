@@ -1,10 +1,10 @@
 /**
  * Create the page to manage any exam topic for eligibility rules
  * @param {Object} topic JSON object
- * @param {HTMLElement|String} container 
- * @param {Boolean} can_add 
- * @param {Boolean} can_edit
- * @param {Boolean} can_remove
+ * @param {HTMLElement|String} container to populate
+ * @param {Boolean} can_add true if the user can add a rule
+ * @param {Boolean} can_edit true if the user can edit (manage topics within the rules)
+ * @param {Boolean} can_remove true if the user can remove a rule
  * @param {Object} other_topics from SelectionJSON#getJsonAllTopics method
  * @param {Object} all_parts from SelectionJSON#getJsonAllParts method
  * @param {Number|null} db_lock the databaselock id, if ever
@@ -48,6 +48,8 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		t.header.resetMenu();
 		t._init();
 	};
+	
+	/** Private methods and attributes */
 	
 	/**
 	 * Set the total score and parts to 0
@@ -461,14 +463,7 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 			}
 		}
 	};
-	
-//	t._updateAddFullSubjectVisibility = function(){
-//		if(t.potential_full_subjects.length > 0)
-//			t.add_full_subjects.style.visibility = "visible";
-//		else
-//			t.add_full_subjects.style.visibility = "hidden";
-//	};
-//	
+
 	/**
 	 * Add all the free parts that the user can pick up<br/>
 	 * The list as the same structure as the t.table one (parts grouped by subject) <br/>
@@ -489,10 +484,6 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 		th_head.style.fontStyle = "italic";
 		th_head.style.textAlign = "center";
 		tr_head.appendChild(th_head);
-//		var td2 = document.createElement("td");
-//		
-//		td2.appendChild(t.add_free_parts);
-//		tr_head.appendChild(td2);
 		table.appendChild(tr_head);
 		if(getObjectSize(free_parts) == 0){
 			var tr = document.createElement("tr");
@@ -600,7 +591,6 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 	t._addFreeParts = function(add_potential_full_subjects){
 		for(s in t.free_parts_to_add){
 			var subject_id = t._getSubjectIdFromName(s);
-//			var subject_index = t._findSubjectIndexInTopic(subject_id);
 			var index = t._findSubjectIndexInTopic(subject_id);
 			if(index == null){
 				//insert the subject
@@ -1133,14 +1123,12 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 				t.db_lock,
 				function(){return true;},
 				t.reset,
-				function(){service.json("selection","eligibility_rules/get_topic",{id:topic.id},function(r){if(r) topic = r},true);}, //must wait for the service before reseting
+				function(){service.json("selection","eligibility_rules/get_topic",{id:topic.id},function(r){if(r) topic = r;},true);}, //must wait for the service before reseting
 				function(){if(topic.id == -1) error_dialog("You cannot go to uneditable mode because the topic has never been saved yet"); else return true;},
 				t.header,
 				'button_verysoft'				
 		);
 		t.editable_manager.setGlobalRights(read_only);
 		t._init();
-//		t.save_button.onclick = t._save;
-//		t.remove_button.onclick = t._removeTopic;
 	});
 }

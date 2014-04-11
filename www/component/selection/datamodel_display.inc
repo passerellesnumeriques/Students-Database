@@ -37,6 +37,11 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 $display = new ApplicantTableDataDisplay($category);
 $display->addDataDisplay(new ApplicantID_DataDisplay());
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("information_session", "name", "Information Session", false, true));
+$display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", "Exam Center", false, false));
+// $display->addDataDisplay(new CalendarEventDateDataDisplay("Exam Session", "exam_session", true));
+$display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center_room", "name", "Exam Center Room", false, false));
+$display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Exam Session", "exam_session", "exam_session.event.start"));
+// $display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Exam Session","exam_session.event.start"));
 $display->addFollow("people");
 $display->addJoinFrom("people", array("types"), function($columns) {
 	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
@@ -44,7 +49,6 @@ $display->addJoinFrom("people", array("types"), function($columns) {
 });
 $display->addJoinToPrimary();
 $model->addTableDataDisplay($display);
-
 
 /*
 $display = new datamodel\TableDataDisplay("Applicant", $category);

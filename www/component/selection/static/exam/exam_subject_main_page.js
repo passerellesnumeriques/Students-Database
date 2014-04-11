@@ -50,7 +50,6 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 		th.appendChild(text_header);
 		var info_subjects = document.createElement("img");
 		info_subjects.src = theme.icons_16.info;
-		info_subjects.style.cursor = "pointer";
 		info_subjects.style.verticalAlign = "bottom";
 		tooltip(info_subjects,"An exam subject is made of parts and questions, and must represent the exam sheet given to the applicant. For instance, if you have three entrance examinations, \"Math & Logic\", \"English\", \"Speed and Accuracy\", you must create the three respective exam subjects.<br/> If you want to do any combination between the subjects parts (for instance separate the \"Math\" and the \"Logic\" parts), you will be able to do so at the <i>Exam Topics</i> step");
 		th.appendChild(info_subjects);

@@ -1,8 +1,8 @@
 /**
- * @param {integer}id
- * @param {string}name
- * @param {float}max_score
- * @param {array}parts array of Exam Subject Part
+ * @param {Number} id exam subject ID
+ * @param {String} name exam subject name
+ * @param {Number} max_score exam subject score
+ * @param {Array} parts array of Exam Subject Part
  */
 function ExamSubject (id, name, max_score, parts){
 	this.id = id;
@@ -12,11 +12,11 @@ function ExamSubject (id, name, max_score, parts){
 }
 
 /**
- * @param {integer}id
- * @param {integer}index
- * @param {string}name
- * @param {float}max_score
- * @param {array}questions array of Exam Subject Question
+ * @param {Number} id exam subject part ID
+ * @param {Number} index exam subject part index within subject
+ * @param {String} name exam subject part name
+ * @param {Number} max_score part max score
+ * @param {Array} questions array of Exam Subject Question
  */
 function ExamSubjectPart(id, index, name, max_score, questions){
 	this.id = id;
@@ -27,11 +27,11 @@ function ExamSubjectPart(id, index, name, max_score, questions){
 }
 
 /**
- * @param {integer}id
- * @param {integer}index
- * @param {float}max_score
- * @param {string}correct_answer
- * @param {integer}choices
+ * @param {Number} id question ID
+ * @param {Number} index question index within the part
+ * @param {Number} max_score question score
+ * @param {String} correct_answer correct answer
+ * @param {Number} choices number of possible answers
  */
 function ExamSubjectQuestion(id, index, max_score, correct_answer, choices){
 	this.id = id;
@@ -44,9 +44,9 @@ function ExamSubjectQuestion(id, index, max_score, correct_answer, choices){
 /* Exam center objects */
 
 /**
- * @param {number} id
- * @param {number | null} geographic_area the id of the geographic area where the Exam Center is located. Once host is set, must be the area of the host_address 
- * @param {string} name the name of the ExamCenter (the one displayed in the datalist). By default, this name is the geographic area text
+ * @param {Number} id exal center ID
+ * @param {Number | Null} geographic_area the id of the geographic area where the Exam Center is located. Once host is set, must be the area of the host_address 
+ * @param {String} name the name of the ExamCenter (the one displayed in the datalist). By default, this name is the geographic area text
  * @param {Array} partners containing the ExamCenterPartner objects
  * @param {ExamCenterISLinked} IS_linked the informations sessions linked to this exam center
  */
@@ -59,10 +59,10 @@ function ExamCenterData(id, geographic_area, name, partners, IS_linked){
 }
 
 /**
- * @param {number} organization the id of the partner organization 
- * @param {string} organization_name
- * @param {boolean} host. If true, the center address is picked from this partner
- * @param {number} host_address the id of the host address selected (an organization can have several addresses)
+ * @param {Number} organization the id of the partner organization 
+ * @param {String} organization_name name of the partner
+ * @param {Boolean} host. If true, the center address is picked from this partner
+ * @param {Number} host_address the id of the host address selected (an organization can have several addresses)
  * @param {ExamCenterPartnersContactPoints} contact_points_selected the ids of the contacts points selected for the ExamCenter
  * */
 function ExamCenterPartner(organization, organization_name, host, host_address, contact_points_selected){
@@ -104,4 +104,35 @@ function ExamCenterRoom(id, name, capacity){
 	this.id = id;
 	this.name = name;
 	this.capacity = capacity;
+}
+
+/** Exam sessions objects */
+
+/**
+ * @param {Number} exam_center ID of the exam center where the session takes place
+ * @param {CalendarEvent} event related to this session
+ * @param {Array} supervisors array of ExamSessionSupervisors objects
+ */
+function ExamSession(exam_center,event,supervisors){
+	this.exam_center = exam_center;
+	this.event = event;
+	this.supervisors = supervisors;
+}
+
+/**
+ * @param {Array} staffs array of staff objects
+ * @param {Array} customs array of ExamSessionSupervisorCustom objects
+ */
+function ExamSessionSupervisors(staffs, customs){
+	this.staffs = staffs;
+	this.customs = customs;
+}
+
+/**
+ * @param {Number} id ID of the custom supervisor
+ * @param {String} name of the custom supervisor
+ */
+function ExamSessionSupervisorCustom(id,name){
+	this.id = id;
+	this.name = name;
 }

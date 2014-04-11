@@ -413,6 +413,22 @@ class SQLQuery {
 			return $table;
 		}
 	}
+	private function resolveTableName($name){
+		// check if really table name
+		require_once("component/data_model/Model.inc");
+		try {
+			DataModel::get()->internalGetTable($name);
+			return $name;				
+		} catch (Exception $e) {
+			// not a table name
+			// search if this is an alias
+			foreach ($this->tables as $tname=>$talias)
+				if ($name == $talias) return $tname;
+			foreach ($this->joins as $j)
+				if ($name == $j[3]) return $j[1];
+		}
+		return null;
+	}
 	
 	public function &whereValue($table_name, $field_name, $value) {
 		$w = "`".$this->resolveWhereTable($table_name)."`.`".$field_name."`";
@@ -567,7 +583,7 @@ class SQLQuery {
 			while (strlen($s) > 0) {
 				$i = strpos($s, "`.`");
 				if ($i === FALSE) break;
-				$start = strrpos($s, "`", $i-1);
+				$start = strrpos($s, "`", -(strlen($s)-$i+1));
 				$table_name = substr($s, $start+1, $i-$start-1);
 				if (!in_array($table_name, $used_tables))
 					array_push($used_tables, $table_name);
@@ -619,8 +635,21 @@ class SQLQuery {
 				$join = $this->joins[$i];
 				$alias = $join[3];
 				$table = DataModel::get()->getTable($join[1]);
-				if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-				$table->filterReadAccess($this, $alias);
+				$join_allowed = false;
+				$read_access_from_previous_table = $table->getReadAccessFromForeignTable();
+				if (count($read_access_from_previous_table) > 0){
+					$join_table_resolved = $this->resolveTableName($join[0]);
+					foreach ($read_access_from_previous_table as $previous_table_name){
+						if($previous_table_name == $join_table_resolved){
+							$join_allowed = true; // access is allowed by the previous table
+							break;
+						}
+					}
+				}
+				if (!$join_allowed) {
+					if ($alias == null) $alias = $table->getSQLName($this->sub_models);
+					$table->filterReadAccess($this, $alias);
+				}
 			}
 		}
 		
@@ -665,14 +694,29 @@ class SQLQuery {
 			unset($table);
 		}
 		foreach ($this->joins as $join) {
-			if ($this->bypass_security)
-				$table = DataModel::get()->internalGetTable($join[1]);
-			else
-				$table = DataModel::get()->getTable($join[1]);
+			$table = DataModel::get()->internalGetTable($join[1]);
+			if (!$this->bypass_security) {
+				$join_allowed = false;
+				$read_access_from_previous_table = $table->getReadAccessFromForeignTable();
+				if (count($read_access_from_previous_table) > 0){
+					$join_table_resolved = $this->resolveTableName($join[0]);
+					foreach ($read_access_from_previous_table as $previous_table_name){
+						if($previous_table_name == $join_table_resolved){
+							$join_allowed = true; // access is allowed by the previous table
+							break;
+						}
+					}
+				}
+				if (!$join_allowed && !$table->hasReadFilter() && !$table->hasReadRights()) {
+					throw new Exception("Access denied to table ".$table->getName()." in request:".$this->dump());
+				}
+			}
+			
+			
 			$alias = $join[3];
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
 			if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0) {
-				if ($this->bypass_security)
+				if ($this->bypass_security || $join_allowed)
 					$columns = $table->internalGetColumns();
 				else
 					$columns = $table->getColumns();
@@ -684,7 +728,7 @@ class SQLQuery {
 					$f = $fields[$i];
 					if ($f[0] == $join[1] || $f[0] == $alias) {
 						// check the field is accessible
-						if ($this->bypass_security)
+						if ($this->bypass_security || $join_allowed)
 							$col = $table->internalGetColumn($f[1]);
 						else
 							$col = $table->getColumn($f[1]);
@@ -1795,7 +1839,6 @@ class SQLQuery {
 			//array_push($to_remove[$table->getSQLName($this->sub_models)]["keys"], $key);
 		
 		// search for foreign keys in this table, which may imply other remove
-		$new_remove = array();
 		foreach ($table->internalGetColumnsFor($sub_model_instance) as $col) {
 			if (!($col instanceof datamodel\ForeignKey)) continue;
 			if (!$col->remove_primary_when_foreign_removed) continue;
@@ -1830,12 +1873,11 @@ class SQLQuery {
 			}
 			$q->field($table_alias, $col->name);
 			$rows = $q->executeSingleField();
-			
-			if (!isset($new_remove[$col->foreign_table]))
-				$new_remove[$col->foreign_table] = array();
-			if (!isset($new_remove[$col->foreign_table][$sub_model]))
-				$new_remove[$col->foreign_table][$sub_model] = array();
-			array_push($new_remove[$col->foreign_table][$sub_model], $rows);
+			if ($this->bypass_security)
+				$ft = DataModel::get()->internalGetTable($col->foreign_table);
+			else
+				$ft = DataModel::get()->getTable($col->foreign_table);
+			$this->browseTablesForRemove($ft, $sub_model, $rows, $locks, $to_remove, $to_update, $sub_models_to_remove);
 		}
 		
 		// search for foreign keys in other tables which are linked to the keys we want to remove
@@ -1922,7 +1964,7 @@ class SQLQuery {
 						$prepared_rows = $q->execute();
 						if (count($prepared_rows) == 0) continue; // nothing to do there
 						$allowed_rows = $t->filterWriteAccess($prepared_rows);
-						if (count($allowed) <> count($prepared_rows))
+						if (count($allowed_rows) <> count($prepared_rows))
 							throw new Exception("Access denied: some rows cannot be modified in table '".$t->getName()."' but are linked to rows which need to be removed in table '".$table->getName()."'");
 					}
 				}

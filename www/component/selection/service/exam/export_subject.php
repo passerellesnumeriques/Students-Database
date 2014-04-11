@@ -78,6 +78,12 @@ class service_exam_export_subject extends Service{
 		$objWriter->save('php://output');
 	}
 	
+	/**
+	 * Get the index of a part within the parts array of a subject
+	 * @param array $subject ExamSubject
+	 * @param number $part_index part index attribute
+	 * @return number index seeked
+	 */
 	public function getPartIndexInSubject($subject,$part_index){
 		$index = null;
 		for($i = 0; $i < count($subject["parts"]); $i++){
@@ -89,6 +95,13 @@ class service_exam_export_subject extends Service{
 		return $index;
 	}
 	
+	/**
+	 * Get the index of a question within the questions array of a part
+	 * @param array $subject ExamSubject
+	 * @param number $part_index_in_subject index of the part within parts array of the subject
+	 * @param number $question_index question index attribute
+	 * @return number index of the question
+	 */
 	public function getQuestionIndexInSubject($subject, $part_index_in_subject, $question_index ){
 		$index = null;
 		for($i = 0; $i < count($subject["parts"][$part_index_in_subject]["questions"]); $i++){

@@ -14,13 +14,14 @@ class service_applicant_unassign_from_center_entity extends Service{
 	}
 	public function output_documentation(){
 		?>
-		Object with 4 attributes:
+		Object with 6 attributes:
 		<ul>
 		<li><code>done</code> {Boolean} true if the applicant was unassigned</li>
 		<li><code>error_performing</code> {Boolean} true if an error occured</li>
 		<li><code>error_assigned_to_session</code> {String|NULL} NULL if not assigned to any session, else error message containing the name of the session</li>
 		<li><code>error_assigned_to_room</code>{String|NULL} NULL if not assigned to any room, else error message containing the name of the room</li>
 		<li><code>error_has_grade</code>{String|NULL} NULL if has no exam grade yet, else error message about the grades</li>
+		<li><code>applicant</code> {Applicant} JSON applicant object</li>
 		</ul>
 		<?php
 	}
@@ -38,10 +39,11 @@ class service_applicant_unassign_from_center_entity extends Service{
 		$session_id = @$input["session_id"];
 		$room_id = @$input["room_id"];
 		$res = $component->unassignApplicantFromCenterEntity($people_id, $EC_id, $session_id, $room_id);
+		$applicant = SelectionJSON::ApplicantFromID($people_id);
 		if($res == false)
-			echo "{done:false,error_performing:true,error_assigned_to_session:null,error_assigned_to_room:null,error_has_grade:null}";
+			echo "{done:false,error_performing:true,error_assigned_to_session:null,error_assigned_to_room:null,error_has_grade:null,applicant:".$applicant."}";
 		else
-			echo "{done:".json_encode($res["done"]).",error_performing:false,error_assigned_to_session:".json_encode($res["error_assigned_to_session"]).",error_assigned_to_room:".json_encode($res["error_assigned_to_room"]).",error_has_grade:".json_encode($res["error_has_grade"])."}";		
+			echo "{done:".json_encode($res["done"]).",error_performing:false,error_assigned_to_session:".json_encode($res["error_assigned_to_session"]).",error_assigned_to_room:".json_encode($res["error_assigned_to_room"]).",error_has_grade:".json_encode($res["error_has_grade"]).",applicant:".$applicant."}";		
 	}
 
 }	

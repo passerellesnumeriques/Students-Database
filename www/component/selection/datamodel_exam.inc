@@ -141,35 +141,44 @@ $sm->addTable("ExamCenterInformationSession")//An exam center can created from o
 	->addForeignKey("exam_center", "ExamCenter", true, false, true)
 	->addForeignKey("information_session", "InformationSession", true, false, false,false,true)//An information session can only be linked to one exam center
 	->setKey(array("exam_center","information_session"))
-	->addWriteAccess("manage_exam_subject",true)
+	->addWriteAccess("manage_exam_center",true)
 	->addReadAccess("see_exam_subject",true)
-	->addInsertAccess("manage_exam_subject",true)
-	->addRemoveAccess("manage_exam_subject",true)
+	->addInsertAccess("manage_exam_center",true)
+	->addRemoveAccess("manage_exam_center",true)
 	;
 		
 $sm->addTable("ExamSession")
 	->addForeignKey("event", "CalendarEvent", true, true, false, false, true)
 	->addForeignKey("exam_center", "ExamCenter", true, false, true)//An exam center can have several session
 	->setPrimary("event")//The event is the primary key of a session
-	->addWriteAccess("manage_exam_subject",true)
+	->addWriteAccess("manage_exam_center",true)
 	->addReadAccess("see_exam_subject",true)
-	->addInsertAccess("manage_exam_subject",true)
-	->addRemoveAccess("manage_exam_subject",true);
+	->addInsertAccess("manage_exam_center",true)
+	->addRemoveAccess("manage_exam_center",true);
 
 $sm->addTable("ExamCenterRoom")
 	->addPrimaryKey("id")
 	->addForeignKey("exam_center", "ExamCenter", true, false, true)
 	->addInteger("capacity",32,0,null,false,false)//The capacity of the room cannot be null
 	->addString("name",255,0,false,false)//Can be custom or not, but must be set
-	->addWriteAccess("manage_exam_subject",true)
+	->addWriteAccess("manage_exam_center",true)
 	->addReadAccess("see_exam_subject",true)
-	->addInsertAccess("manage_exam_subject",true)
-	->addRemoveAccess("manage_exam_subject",true);
+	->addInsertAccess("manage_exam_center",true)
+	->addRemoveAccess("manage_exam_center",true);
 
 $sm->addTable("ExamSessionSupervisor")
 	->addForeignKey("session", "ExamSession", true, false, true, false)
-	->addForeignKey("people", "People", true, false, true, false)
-	->setKey(array("session","people"))
+	->addForeignKey("staff", "Staff", true, false, true, false)
+	->setKey(array("session","staff"))
+	->addWriteAccess("manage_exam_center",true)
+	->addReadAccess("see_exam_center_detail",true)
+	->addInsertAccess("manage_exam_center",true)
+	->addRemoveAccess("manage_exam_center",true);
+
+$sm->addTable("ExamSessionSupervisorCustom")
+	->addPrimaryKey("id")
+	->addForeignKey("session", "ExamSession", true, false, true, false)
+	->addString("name",100,1,false,true)
 	->addWriteAccess("manage_exam_center",true)
 	->addReadAccess("see_exam_center_detail",true)
 	->addInsertAccess("manage_exam_center",true)

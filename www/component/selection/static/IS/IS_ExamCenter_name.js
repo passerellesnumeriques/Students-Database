@@ -9,6 +9,7 @@ function IS_ExamCenter_name(container, name, can_edit,title){
 	if(typeof(container) == "string") container = document.getElementById(container);
 	var t = this;
 	t.table = document.createElement("table");
+	t.onupdate = new Custom_Event();
 	
 	/**
 	 * Get the name attribute
@@ -60,9 +61,10 @@ function IS_ExamCenter_name(container, name, can_edit,title){
 			input.value = t._text;
 			inputAutoresize(input,15);
 			input.oninput = function(){
-				if(this.value.checkVisible() && this.value != ""){
+				if(this.value.checkVisible()){
 					t._name = this.value.uniformFirstLetterCapitalized();
 				} else t._name = null;
+				t.onupdate.fire();
 			};
 			td1.appendChild(input);
 		} else {

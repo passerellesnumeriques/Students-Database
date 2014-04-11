@@ -24,6 +24,7 @@ class page_excel_upload extends Page {
 		if (isset($_GET["id"])) {
 			$path = PNApplication::$instance->storage->get_data_path($_GET["id"]);
 		} else if (!isset($_FILES["excel"]) || $_FILES["excel"]['error'] <> UPLOAD_ERR_OK) {
+			echo "<script type='text/javascript'>window.page_errors=true;</script>";
 			PNApplication::error("Error uploading file (".(isset($_FILES["excel"]) ? PNApplication::$instance->storage->get_upload_error($_FILES["excel"]) : "no file received").").");
 			return;
 		} else
@@ -38,6 +39,7 @@ class page_excel_upload extends Page {
 				PNApplication::$instance->storage->remove_data($_GET["id"]);
 			}
 		} catch (Exception $e) {
+			echo "<script type='text/javascript'>window.page_errors=true;</script>";
 			PNApplication::error("Invalid file format: ".$e->getMessage());
 			return;
 		}

@@ -95,7 +95,7 @@ class service_eligibility_rules_save_rules extends Service {
 	
 	/**
 	 * Get the fields_values array for all the topics from a given rule
-	 * @param array $rule
+	 * @param array $rule EligibilityRule
 	 * @param number|null $id of the rule
 	 * @return array fields_values
 	 */

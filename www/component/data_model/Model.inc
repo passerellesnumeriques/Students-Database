@@ -120,7 +120,7 @@ class DataModel {
 	
 	/** Returns the table if access is allowed.
 	 *
-	 * @param string $name name of the table to ad
+	 * @param string $name name of the table to add	
 	 * @return \datamodel\Table
 	 * @throws \Exception if the table does not exist or access is not allowed
 	 */
