@@ -153,7 +153,7 @@ class service_application_menu_builder extends Service {
 			}
 			$json_all_campaign .= "]";
 			echo "var select_element = document.createElement('div');";
-			echo "var select_campaign = new selectCampaignHeader(".$first.", ".json_encode($rights["manage"]).", ".$json_all_campaign.", ".json_encode($current).", select_element);";
+			echo "select_campaign = new selectCampaignHeader(".$first.", ".json_encode($rights["manage"]).", ".$json_all_campaign.", ".json_encode($current).", select_element);";
 			echo "addLeftControl(select_element);";
 		
 			/* All the other buttons need the campaign id to be set */

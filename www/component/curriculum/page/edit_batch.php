@@ -87,6 +87,7 @@ var popup = window.parent.get_popup_window_from_element(window.frameElement);
 popup.addCancelButton();
 
 function getDateStringFromSQL(sql_date) {
+	if (sql_date == null) return "no date";
 	var date = parseSQLDate(sql_date);
 	return getDateString(date);
 }
@@ -167,8 +168,49 @@ td_integration.onmouseover = function() { this.style.textDecoration = "underline
 td_integration.onmouseout = function() { this.style.textDecoration = "none"; };
 td_integration.style.cursor = "pointer";
 td_integration.onclick = function() {
-	// TODO
+	window.top.require(["context_menu.js","date_picker.js"],function() {
+		var menu = new window.top.context_menu();
+		var min = new Date(2000, 0, 1);
+		var max = graduation_date ? parseSQLDate(graduation_date) : null;
+		var picker = new window.top.date_picker(parseSQLDate(integration_date), min, max);
+		picker.onchange = function(picker, date) {
+			integration_date = dateToSQL(date);
+			td_integration.innerHTML = "";
+			td_integration.appendChild(document.createTextNode(getDateStringFromSQL(integration_date)));
+			updatePeriodRow(periods[0]);
+		};
+		menu.addItem(picker.element, true);
+		menu.element.style.border = "none";
+		menu.showBelowElement(td_integration);
+	});
 };
+
+var td_graduation = document.getElementById('graduation');
+td_graduation.appendChild(document.createTextNode(getDateStringFromSQL(graduation_date)));
+td_graduation.onmouseover = function() { this.style.textDecoration = "underline"; };
+td_graduation.onmouseout = function() { this.style.textDecoration = "none"; };
+td_graduation.style.cursor = "pointer";
+td_graduation.onclick = function() {
+	window.top.require(["context_menu.js","date_picker.js"],function() {
+		var menu = new window.top.context_menu();
+		var min = parseSQLDate(integration_date);
+		var max = null;
+		var picker = new window.top.date_picker(parseSQLDate(graduation_date), min, max);
+		picker.onchange = function(picker, date) {
+			setGraduationDate(date);
+		};
+		menu.addItem(picker.element, true);
+		menu.element.style.border = "none";
+		menu.showBelowElement(td_graduation);
+	});
+};
+
+function setGraduationDate(date) {
+	graduation_date = dateToSQL(date);
+	td_graduation.innerHTML = "";
+	td_graduation.appendChild(document.createTextNode(getDateStringFromSQL(graduation_date)));
+	updatePeriodRow(periods[0]);
+}
 
 function refreshAcademicCalendar() {
 	popup.freeze();
@@ -193,46 +235,21 @@ function updatePeriodRow(period) {
 		var p = getAcademicPeriod(periods[index-1].academic_period);
 		min = parseSQLDate(p.end);
 	}
+	var max = graduation_date ? parseSQLDate(graduation_date) : null;
 	if (min) {
 		var list = [];
 		var selected = -1;
+		var has_after = false;
 		for (var i = 0; i < academic_periods.length; ++i) {
 			if (parseSQLDate(academic_periods[i].start).getTime() < min.getTime()) continue;
+			if (max && parseSQLDate(academic_periods[i].end).getTime() > max.getTime()) { has_after = true; continue; }
 			if (period.academic_period == academic_periods[i].id) selected = list.length;
 			list.push(academic_periods[i]);
 		}
 		if (list.length == 0) {
-			var link = document.createElement("A");
-			link.href = "#";
-			link.appendChild(document.createTextNode("Create Academic Year "+min.getFullYear()));
-			link.style.color = "#808080";
-			link.style.fontStyle = "italic";
-			link.style.marginLeft = "5px";
-			link.onclick = function() {
-				var p = new window.top.popup_window("New Academic Year",null,"");
-				var frame = p.setContentFrame("/dynamic/curriculum/page/edit_academic_year?year="+min.getFullYear()+"&onsave=saved");
-				frame.saved = function() {
-					refreshAcademicCalendar();
-				};
-				p.show();
-				return false;
-			};
-			period.td_period.appendChild(link);
-		} else {
-			var select = document.createElement("SELECT");
-			for (var i = 0; i < list.length; ++i) {
-				var o = document.createElement("OPTION");
-				o.value = list[i].id;
-				var year = null;
-				for (var j = 0; j < academic_years.length; ++j)
-					if (academic_years[j].id == list[i].year) { year = academic_years[j]; break; }
-				o.text = "Academic Year "+year.name+", Period "+list[i].name;
-				select.add(o);
-			}
-			if (selected >= 0) select.selectedIndex = selected;
-			else period.academic_period = list[0].id;
-			period.td_period.appendChild(select);
-			if (getAcademicYear(list[0].year).year != min.getFullYear()) {
+			if (has_after) {
+				period.td_period.appendChild(document.createTextNode("No more time before graduation"));
+			} else {
 				var link = document.createElement("A");
 				link.href = "#";
 				link.appendChild(document.createTextNode("Create Academic Year "+min.getFullYear()));
@@ -244,6 +261,46 @@ function updatePeriodRow(period) {
 					var frame = p.setContentFrame("/dynamic/curriculum/page/edit_academic_year?year="+min.getFullYear()+"&onsave=saved");
 					frame.saved = function() {
 						refreshAcademicCalendar();
+						p.close();
+					};
+					p.show();
+					return false;
+				};
+				period.td_period.appendChild(link);
+			}
+			period.academic_period = 0;
+		} else {
+			var select = document.createElement("SELECT");
+			for (var i = 0; i < list.length; ++i) {
+				var o = document.createElement("OPTION");
+				o.value = list[i].id;
+				var year = null;
+				for (var j = 0; j < academic_years.length; ++j)
+					if (academic_years[j].id == list[i].year_id) { year = academic_years[j]; break; }
+				o.text = "Academic Year "+year.name+", Period "+list[i].name;
+				select.add(o);
+			}
+			if (selected >= 0) select.selectedIndex = selected;
+			else period.academic_period = list[0].id;
+			period.td_period.appendChild(select);
+			select.onchange = function() {
+				period.academic_period = select.options[select.selectedIndex].value;
+				if (index < periods.length-1)
+					updatePeriodRow(periods[index+1]);
+			};
+			if (getAcademicYear(list[0].year_id).year != min.getFullYear()) {
+				var link = document.createElement("A");
+				link.href = "#";
+				link.appendChild(document.createTextNode("Create Academic Year "+min.getFullYear()));
+				link.style.color = "#808080";
+				link.style.fontStyle = "italic";
+				link.style.marginLeft = "5px";
+				link.onclick = function() {
+					var p = new window.top.popup_window("New Academic Year",null,"");
+					var frame = p.setContentFrame("/dynamic/curriculum/page/edit_academic_year?year="+min.getFullYear()+"&onsave=saved");
+					frame.saved = function() {
+						refreshAcademicCalendar();
+						p.close();
 					};
 					p.show();
 					return false;
@@ -251,9 +308,16 @@ function updatePeriodRow(period) {
 				period.td_period.appendChild(link);
 			}
 		}
-	}
+	} else
+		period.academic_period = 0;
 	if (index < periods.length-1)
 		updatePeriodRow(periods[index+1]);
+	else {
+		if (graduation_date == null && period.academic_period > 0) {
+			var p = getAcademicPeriod(period.academic_period);
+			setGraduationDate(parseSQLDate(p.end));
+		}
+	}
 }
 
 function createPeriodRow(period) {
@@ -261,7 +325,7 @@ function createPeriodRow(period) {
 	input_name.type = "text";
 	input_name.value = period.name;
 	inputDefaultText(input_name, "Period Name");
-	inputAutoresize(input_name, 15);
+	inputAutoresize(input_name, 10);
 	listenEvent(input_name, 'change', function() {
 		period.name = input_name.value;
 	});

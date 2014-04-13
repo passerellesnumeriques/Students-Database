@@ -139,4 +139,6 @@ function splitter_vertical(element, position) {
 		t.part2.style.position = 'static';
 		layout.invalidate(t.element);
 	};
+
+	t._position();
 }

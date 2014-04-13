@@ -32,8 +32,12 @@ if (!window.top.google) {
 					if (auth_result && !auth_result.error) {
 						window.top.google.connection_status = 1;
 						window.top.google.connection_event.fire();
+						var google_id_set = false;
 						var listener = function() {
-							service.json("google","set_google_id",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){});
+							if (!google_id_set)
+								service.json("google","set_google_id",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){
+									if (res) google_id_set = true;
+								});
 							window.top.pnapplication.onlogin.remove_listener(listener);
 						};
 						if (window.top.pnapplication.logged_in)

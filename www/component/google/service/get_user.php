@@ -26,7 +26,7 @@ class service_get_user extends Service {
 				;
 			PNApplication::$instance->user_management->joinUser($q, "GoogleUser", "user");
 			$res = $q->execute();
-			if (count($res) <> 1) { echo "false"; return; }
+			if (count($res) <> 1) { echo "{status:'no_user'}"; return; }
 			echo "{profile:".$data.",user:{id:".json_encode($res[0]["user"]).",domain:".json_encode($res[0]["domain"]).",username:".json_encode($res[0]["username"])."}}";
 		}
 	}

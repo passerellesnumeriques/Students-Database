@@ -13,7 +13,7 @@ class page_calendars extends Page {
 ?>
 <div style='height:100%;width:100%' id='calendars'>
 	<div style='overflow:auto' id='left'></div>
-	<div id='calendars_view'></div>
+	<div id='calendars_view' style='height:10px'></div>
 </div>
 <script type='text/javascript'>
 function init_calendars() {
@@ -59,7 +59,8 @@ function init_calendars() {
 		}
 		content.innerHTML = provider.connection_status;
 		provider.on_connection_status.add_listener(function(status) {
-			content.innerHTML = status;
+			if (p.calendars.length == 0)
+				content.innerHTML = status;
 		});
 	});
 

@@ -172,7 +172,7 @@ function facebook_login() {
 window.top.require("google.js",function(){
 	window.top.google.need_connection(function(){
 		service.json("google","get_user",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){
-			if (!res) return;
+			if (!res || !res.user) return;
 			document.getElementById('user_from_google').innerHTML = res.user.username;
 			var tr = document.getElementById('google_tr');
 			tr.style.visibility = 'visible';

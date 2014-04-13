@@ -48,7 +48,7 @@ ajax = {
 		var aborted = false;
 		var timeouted = false;
 		try { xhr.open(method, url.toString(), !foreground); }
-		catch (e) { log_exception(e); return; }
+		catch (e) { log_exception(e, "while creating AJAX request to "+url.toString()); return; }
 		xhr.onabort = function() { aborted = true; };
 		xhr.ontimeout = function() { timeouted = true; };
 		if (content_type != null)
