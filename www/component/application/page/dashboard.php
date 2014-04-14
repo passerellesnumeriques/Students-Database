@@ -8,6 +8,7 @@ class page_dashboard extends Page {
 		theme::css($this, "application.css");
 ?>
 <div style='position:absolute;top:0px;left:0px;width:50%;'>
+	<a href='test_design' target='_parent'>Test New Design</a>
 	<div id='general_news' icon='/static/news/news.png' title='General Updates' collapsable='true' style="margin:10px 10px 20px 10px;">
 		<div style='padding:2px 3px 0px 3px;' id='general_news_container'>
 			<img id='general_news_loading' src='/static/news/loading.gif'/>
