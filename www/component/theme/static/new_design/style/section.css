@@ -1,0 +1,49 @@
+.section {
+	border: none; /* TODO remove */
+	box-shadow: 2px 2px 2px #D0D0D0;
+	margin-right: 5px;
+	margin-bottom: 5px;
+}
+.section>.header {
+	border-radius: 5px 5px 0px 0px;
+	border-bottom: none; /* TODO remove */
+	white-space: nowrap;
+	height: 25px;
+	/* background: linear-gradient(to bottom, #c0c0c0 0%, #f0f0f0 100%); */
+	/* background: linear-gradient(to bottom, #d8c0a0 0%, #fff8e8 100%); */
+	background: linear-gradient(to bottom, #404040 0%, #000000 100%);
+	color: #F0F0F0;
+}
+.section>.header.collapsed {
+	border-radius: 5px;
+	border-bottom: none;
+}
+.section.soft>.header {
+    border-bottom: none;
+    background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
+    color: #000000;
+}
+.section>.header>div:first-child {
+	margin-left: 5px;
+	font-weight: bold;
+	font-size: 11pt;
+	/* color: #505050; */
+	color: #F0F0F0; /* TODO remove */
+}
+.section.soft>.header>div:first-child {
+    color: #000000; /* TODO remove */
+}
+.section>.header>div:first-child img {
+	vertical-align: bottom;
+	margin-right: 3px;
+}
+.section>.footer {
+	border-radius: 0px 0px 5px 5px;
+	background-color: #D0D0D0;
+	border-top: 1px solid #808080;
+}
+.section>.footer_empty {
+	border-radius: 0px 0px 5px 5px;
+	background-color: white;
+	height: 3px;
+}

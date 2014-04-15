@@ -30,7 +30,7 @@ function vertical_layout(container, keep_width) {
 			e._save_scrollTop = e.scrollTop;
 			e._save_scrollLeft = e.scrollLeft;
 			e.style.position = 'fixed';
-		}		
+		}
 		var w = t.container.clientWidth;
 		var h = t.container.clientHeight;
 		for (var i = 0; i < t.container.childNodes.length; ++i) {

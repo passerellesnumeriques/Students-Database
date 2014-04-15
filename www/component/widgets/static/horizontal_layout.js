@@ -12,7 +12,6 @@ function horizontal_layout(container, keep_height, valign) {
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
 	t.container.widget = this;
-	//t.container.style.overflow = "hidden"; // if we do this, it does not resize correctly 
 	
 	t.removeLayout = function() {
 		t.container.widget = null;
@@ -36,8 +35,9 @@ function horizontal_layout(container, keep_height, valign) {
 			if (layout == 'fill')
 				e.style.width = "";
 		}
-		var w = t.container.clientWidth;
-		var h = t.container.clientHeight;
+		var size = getComputedStyleSizes(t.container);
+		var w = t.container.clientWidth - parseInt(size.paddingRight) - parseInt(size.paddingLeft);
+		var h = t.container.clientHeight - parseInt(size.paddingTop) - parseInt(size.paddingBottom);
 		var nb_to_fill = 0;
 		var used = 0;
 		for (var i = 0; i < t.container.childNodes.length; ++i) {

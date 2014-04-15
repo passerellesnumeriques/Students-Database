@@ -824,14 +824,21 @@ function createTooltip(element, content) {
 		if (w < 44) {
 			x = x-22+Math.floor(w/2);
 			if (x >= ww) x = ww-1;
+			if (x < 0) {
+				x = 0;
+				content.className = "tooltip_right tooltip_veryright";
+			}
 		}
 		content.style.right = x+"px";
 	}
-	content.style.top = (absoluteTop(element)+element.offsetHeight)+"px";
+	content.style.top = (absoluteTop(element)+element.offsetHeight+5)+"px";
 	removeTooltip();
-	content.style.visibility = 'hidden';
-	setOpacity(content, 0);
-	animation.fadeIn(content, 200);
+	if (typeof animation != 'undefined') {
+		content.style.visibility = 'hidden';
+		setOpacity(content, 0);
+		animation.fadeIn(content, 200);
+	} else {
+	}
 	document.body.appendChild(content);
 	element._tooltip = window.top._current_tooltip = content;
 	content._element = element;
@@ -855,6 +862,7 @@ function removeTooltip() {
 	window.top._current_tooltip = null;
 }
 function tooltip(element, content) {
+	require("animation.js");
 	element.onmouseover = function() {
 		createTooltip(element, content);
 	};

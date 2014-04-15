@@ -8,6 +8,9 @@
 	padding: 3px 5px 3px 5px;
 	display: inline-block;
 	background-color: #D0D0D0;
+	color: black;
+	font-size: 10pt;
+	font-weight: normal;
 	cursor: pointer;
 	background: linear-gradient(to bottom, #F0F0F0 50%, #D0D0D0 100%);
 }

@@ -77,18 +77,18 @@ function section(icon, title, content, collapsable, fill_height, css) {
 			element = div;
 		}
 		this.footer.appendChild(element);
-		this.footer.className = "section_footer";
+		this.footer.className = "footer";
 		layout.invalidate(this.element);
 	};
 	this.resetToolBottom = function() {
-		this.footer.className = "section_footer_empty";
+		this.footer.className = "footer_empty";
 		while (this.footer.childNodes.length > 0) this.footer.removeChild(this.footer.childNodes[0]);
 		layout.invalidate(this.element);
 	};
 	
 	this._init = function() {
 		this.header = document.createElement("DIV");
-		this.header.className = "section_header";
+		this.header.className = "header";
 		this.element.appendChild(this.header);
 
 		this.title_container = document.createElement("DIV");
@@ -134,7 +134,7 @@ function section(icon, title, content, collapsable, fill_height, css) {
 		this.content_container.appendChild(content);
 		this.element.appendChild(this.content_container);
 		this.footer = document.createElement("DIV");
-		this.footer.className = "section_footer_empty";
+		this.footer.className = "footer_empty";
 		this.element.appendChild(this.footer);
 		layout.addHandler(this.element, function() {
 			t.header.style.display = "inline-block";
@@ -169,7 +169,7 @@ function section(icon, title, content, collapsable, fill_height, css) {
 			});
 			this.content_container.style.position = 'static';
 			this.content_container.style.visibility = 'visible';
-			this.header.className = "section_header";
+			this.header.className = "header";
 			this.footer.style.position = 'static';
 			this.footer.style.visibility = 'visible';
 		} else {
@@ -196,7 +196,7 @@ function section(icon, title, content, collapsable, fill_height, css) {
 			t.footer.style.visibility = 'hidden';
 			t.footer.style.top = '-10000px';
 			t.footer.style.left = '-10000px';
-			this.header.className = "section_header collapsed";
+			this.header.className = "header collapsed";
 		}
 	};
 	
