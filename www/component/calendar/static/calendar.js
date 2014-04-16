@@ -442,6 +442,7 @@ function CalendarControl(container, cal) {
 		};
 		this.div.appendChild(this.menu_button);
 		var start_refresh = function() {
+			if (!document || !getWindowFromDocument(document)) return;
 			t.loading = document.createElement("IMG");
 			t.loading.src = theme.icons_10.loading;
 			t.div.appendChild(t.loading);

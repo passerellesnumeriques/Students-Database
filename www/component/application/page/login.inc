@@ -71,20 +71,20 @@ if ($message <> null) {
 	<tr align=left>
 		<td></td>
 		<td>
-			<div class="button" onclick="login();">
+			<button onclick="login();">
 				Login
 				<img src='/static/application/login.gif' style='vertical-align:bottom'/>
-			</div>
+			</button>
 			<input type='submit' style='position:absolute;top:-10000px'/>
 		</td>
 	</tr>
 	<tr>
 		<td></td>
 		<td id='google_tr' style='visibility:hidden;position:absolute;top:-10000px'>
-			<div class="button" onclick="google_login();">
+			<button onclick="google_login();">
 				<img src='/static/google/google.png'/>
 				Login with Google (<span id='user_from_google'></span>)
-			</div>
+			</button>
 		</td>
 	</tr>
 	<tr>

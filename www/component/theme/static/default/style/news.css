@@ -15,6 +15,7 @@
 .news .picture_container {
 	vertical-align: top;
 	padding: 2px;
+	width: 30px;
 }
 .news .picture_container img {
 	vertical-align:top;

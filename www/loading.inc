@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>PN Students Database</title>
+	<title>PN Students Management</title>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
 	<style type='text/css'>body,html{width:100%;height:100%;} body,html,table{margin:0px;padding:0px;font-family:Arial,Tahoma,Verdana;font-size:10pt;}</style>
 </head>

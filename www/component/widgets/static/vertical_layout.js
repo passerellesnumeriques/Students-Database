@@ -12,10 +12,12 @@ function vertical_layout(container, keep_width) {
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
 	t.container.widget = this;
-	if (!keep_width)
-		t.container.style.overflow = "hidden";
-	else
-		t.container.style.overflowY = "hidden";
+	if (typeof t.container.style.overflow == 'undefined' && typeof t.container.style.overflowX == 'undefined' && typeof t.container.style.overflowY == 'undefined') {
+		if (!keep_width)
+			t.container.style.overflow = "hidden";
+		else
+			t.container.style.overflowY = "hidden";
+	}
 	
 	t.removeLayout = function() {
 		t.container.widget = null;

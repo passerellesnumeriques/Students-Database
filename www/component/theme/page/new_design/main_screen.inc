@@ -15,29 +15,34 @@ $this->require_javascript("fill_height_layout.js");
 	width: 100%;
 	height: 100%;
 	background-color:#009DE1;
+	z-index: 3;
 }
 
 /* Left Side */
 #application_left_side {
 	height: 100%;
+	overflow-x: visible;
 }
 #application_title {
 	white-space: nowrap;
 	height: 49px;
-	border-bottom: 1px solid #22bbea;
+	border-bottom: 1px solid #50d0f0;
 	border-bottom-right-radius: 10px;
 	padding-right: 5px;
+	position: relative;
 }
 #application_title>img {
 	height: 45px;
 	margin:1px 1px 1px 2px;
 	vertical-align:top;
 }
-#application_title>div {
+#application_title_text {
 	display:inline-block;
 	font-size:12pt;
 	font-family:Verdana;
+	font-style: oblique;
 	color:black;
+	text-shadow: #50d0f0 0.1em 0.1em 0.1em;
 	font-weight:bold;
 	padding-top: 5px;
 }
@@ -64,6 +69,7 @@ $this->require_javascript("fill_height_layout.js");
 }
 #application_frame {
 	border-radius: 5px;
+	z-index: 1;
 }
 #application_footer {
 	height: 15px;
@@ -160,61 +166,30 @@ $this->require_javascript("fill_height_layout.js");
 	background-color: #ff9933;
 	border-left: 5px solid #CC6600;
 }
-.application_left_menu_item_arrow {
+.application_left_menu_item.selected:after {
+    position: absolute;
     display: inline-block;
     border-top: 10px solid transparent;
     border-left: 5px solid #ff9933;
     border-bottom: 10px solid transparent;
     border-left-color: #ff9933;
-}
-
-button.flat {
-	cursor: pointer;
-	border: 1px solid rgba(0,0,0,0);
-	padding: 2px;
-	border-radius: 3px;
-	box-shadow: 1px 1px 1px rgba(170,170,170,0);
-	display: inline-block;
-	margin: 1px 2px 1px 2px;
-	background: transparent;
-    background-color: transparent;
-}
-button.flat:hover {
-	border: 1px solid rgba(128,128,128,0.4);
-	box-shadow: 1px 1px 1px rgba(170,170,170,0.6);
-	background-color: rgba(255,255,255,0.2);
-}
-button.flat:hover:disabled {
-    border: 1px solid rgba(128,128,128,0.2);
-    box-shadow: 0px 0px 0px rgba(170,170,170,0);
-    background-color: rgba(255,255,255,0.1);
-}
-button.flat:active {
-	box-shadow: 0px 0px 0px;
-	position: relative;
-	top: 1px;
-	left: 1px;
-}
-button.flat:disabled:active {
+    right: -5px;
     top: 0px;
-    left: 0px;
+    content: '';
 }
-button.flat a {
-	text-decoration: none;
-	color: black;
+.application_left_menu_separator {
+	height: 1px;
+	width: 90%;
+	background-color: white;
+	margin: 5px 0px 5px 5%;
 }
-button>img {
-    vertical-align: bottom;
-}
-
-
 </style>
 <div id="application_container">
 	<div id="application_horizontal" layout="fill">
 		<div id='application_left_side'>
 			<div id='application_title'>
 				<img src='/static/application/logo.png'/>
-				<div>Students<br/>Management</div>
+				<div id="application_title_text">Students<br/>Management</div>
 			</div>
 			<div id="application_left_menu" layout="fill">
 			</div>
@@ -237,21 +212,23 @@ button>img {
 						menu="/dynamic/selection/service/menu"
 						page="/dynamic/selection/page/selection_main_page"
 					>
-						<img src='/static/application/menu/selection.png'/>
+						<img src='/static/selection/selection_white.png'/>
 						Selection
 					</div>
 					<div class="application_menu_item" 
 						section="training"
 						components="training,transcripts,curriculum"
+						menu="/dynamic/training/service/menu"
+						page="/dynamic/curriculum/page/tree_frame"
 					>
-						<img src='/static/application/menu/training.png'/>
+						<img src='/static/training/training_white.png'/>
 						Training
 					</div>
 					<div class="application_menu_item" 
 						section="education"
 						components="education,health,discipline"
 					>
-						<img src='/static/application/menu/education.png'/>
+						<img src='/static/education/education_white.png'/>
 						Education
 					</div>
 					<div class="application_menu_item" 
@@ -268,9 +245,11 @@ button>img {
 					</div>
 					<div class="application_menu_item" 
 						section="administration"
-						components="administration"
+						components="administration,geography,user_management"
+						menu="/dynamic/administration/service/menu"
+						page="/dynamic/administration/page/dashboard"
 					>
-						<img src='/static/application/menu/administration.png'/>
+						<img src='/static/administration/administration_white.png'/>
 						Admin
 					</div>
 				</div>
@@ -310,37 +289,7 @@ function initPage() {
 	var frame = document.getElementById('application_frame');
 	listenEvent(frame,'load',function() {
 		pageLoaded(getIFrameWindow(this).location.href);
-		// TODO remove this
-		var win = getIFrameWindow(this);
-		var head = win.document.getElementsByTagName("HEAD")[0];
-		for (var i = 0; i < head.childNodes.length; ++i) {
-			var e = head.childNodes[i];
-			if (e.nodeName != "LINK") continue;
-			if (!e.href || e.href.length == 0) continue;
-			var u = new URL(e.href);
-			if (u.path == "/static/theme/default/style/section.css" ||
-				u.path == "/static/theme/default/style/global.css"
-				) {
-				head.removeChild(e);
-				i--;
-			}
-		}
-		win.add_stylesheet("/static/theme/default/style/section.css");
-		win.add_stylesheet("/static/theme/new_design/style/section.css");
-		win.add_stylesheet("/static/theme/new_design/style/global.css");
 	});
-	var head = document.getElementsByTagName("HEAD")[0];
-	for (var i = 0; i < head.childNodes.length; ++i) {
-		var e = head.childNodes[i];
-		if (e.nodeName != "LINK") continue;
-		if (!e.href || e.href.length == 0) continue;
-		var u = new URL(e.href);
-		if (u.path == "/static/theme/default/style/global.css") {
-			head.removeChild(e);
-			i--;
-		}
-	}
-	add_stylesheet("/static/theme/new_design/style/global.css");
 }
 
 function getSection(section_name) {
@@ -368,6 +317,7 @@ function selectSection(section) {
 }
 
 function sectionClicked(section) {
+	document.getElementById('application_frame')._loading_application_page = true;
 	highlightSection(section);
 	if (section.hasAttribute("menu"))
 		loadMenu(section.getAttribute("menu"));
@@ -377,7 +327,7 @@ function sectionClicked(section) {
 
 function loadMenu(url) {
 	var menu_container = document.getElementById('application_left_menu');
-	menu_container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
+	menu_container.innerHTML = "<div style='text-align:center'><img src='"+theme.icons_16.loading_white+"'/></div>";
 	var head = document.getElementsByTagName("HEAD")[0];
 	for (var i = 0; i < head.childNodes.length; ++i) {
 		if (head.childNodes[i].nodeType != 1) continue;
@@ -411,52 +361,72 @@ function loadMenu(url) {
 					item.onclick = function() {
 						for (var j = 0; j < items.length; ++j) items[j].className = "application_left_menu_item";
 						this.className = "application_left_menu_item selected";
-						createLeftMenuArrow(this);
 					};
+				} else if (!item.hasAttribute("href")) {
+					// check if we have a sub-menu
+					if (i < items.length-1 && items[i+1].hasAttribute("href")) {
+						var this_size = getComputedStyleSizes(item);
+						var next_size = getComputedStyleSizes(items[i+1]);
+						if (parseInt(next_size.paddingLeft) > parseInt(this_size.paddingLeft)) {
+							item._click_item = items[i+1];
+							item.onclick = function() {
+								triggerEvent(this._click_item,'click');
+							};
+						}
+					}
 				}
 			}
 			layout.invalidate(menu_container);
 			var frame = document.getElementById('application_frame');
 			var win = getIFrameWindow(frame);
-			if (win && win.location)
+			if (win && win.location && !frame._loading_application_page)
 				pageLoaded(win.location.href);
 		}
 	);
 }
 
 function loadPage(url) {
+	document.getElementById('application_frame')._loading_application_page = true;
 	document.getElementById('application_frame').src = url;
 }
 
 function pageLoaded(url) {
-	removeLeftMenuArrow();
 	var u = new URL(url);
+	var component = u.path;
+	var i = component.indexOf('/',1);
+	if (i > 0) {
+		component = component.substring(i+1);
+		i = component.indexOf('/');
+		if (i > 0) component = component.substring(0,i);
+		var menu = document.getElementById('application_menu');
+		for (var i = 0; i < menu.childNodes.length; ++i) {
+			var s = menu.childNodes[i];
+			if (s.nodeType != 1) continue;
+			if (!s.hasAttribute("components")) continue;
+			var components = s.getAttribute("components").split(",");
+			var found = false;
+			for (var j = 0; j < components.length; ++j)
+				if (component == components[j]) {
+					if (s.className.indexOf("selected") < 0) {
+						highlightSection(s);
+						if (s.hasAttribute("menu"))
+							loadMenu(s.getAttribute("menu"));
+					}
+					found = true;
+				}
+			if (found) break;
+		}
+	} else
+		component = null;
 	var items = document.getElementsByClassName('application_left_menu_item');
 	for (var i = 0; i < items.length; ++i) {
 		var item = items[i];
 		if (item.hasAttribute("href")) {
 			var iu = new URL(item.getAttribute("href"));
 			item.className = "application_left_menu_item"+(u.path == iu.path ? " selected" : "");
-			if (u.path == iu.path)
-				createLeftMenuArrow(item);
 		}
 	}
-}
-
-var left_menu_arrow = null;
-function removeLeftMenuArrow() {
-	if (!left_menu_arrow) return;
-	document.body.removeChild(left_menu_arrow);
-	left_menu_arrow = null;
-}
-function createLeftMenuArrow(item) {
-	removeLeftMenuArrow();
-	left_menu_arrow = document.createElement("DIV");
-	left_menu_arrow.className = "application_left_menu_item_arrow";
-	left_menu_arrow.style.position = "absolute";
-	left_menu_arrow.style.top = absoluteTop(item)+"px";
-	left_menu_arrow.style.left = (absoluteLeft(item)+item.offsetWidth)+"px";
-	document.body.appendChild(left_menu_arrow);
+	document.getElementById('application_frame')._loading_application_page = false;
 }
 
 initPage();

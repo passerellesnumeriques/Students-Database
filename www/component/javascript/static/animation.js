@@ -91,7 +91,7 @@ animation = {
 	 * @param end ending opacity (from 0 to 100)
 	 * @returns {Animation}
 	 */
-	fadeIn: function(element, duration, end_handler, start, end) {
+	fadeIn: function(element, duration, end_handler, start, end, callback) {
 		if (start == null) start = 0;
 		if (end == null) end = 100; else end = Math.floor(end);
 		return animation.create(element, start, end, duration, function(value, element) {
@@ -103,6 +103,7 @@ animation = {
 					setOpacity(element,value/100);
 					element.style.visibility = 'visible';
 				}
+				if (callback) callback(value);
 			} catch (e) { window.top.log_exception(e); }
 			if (value == end && end_handler != null) { 
 				try { end_handler(element); }

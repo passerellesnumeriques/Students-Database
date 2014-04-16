@@ -38,7 +38,8 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		this.view_container = document.createElement("DIV");
 		this.view_container.style.position = "relative";
 		this.view_container_container.appendChild(this.view_container);
-		container.appendChild(this.header);
+		if (view_name != "upcoming")
+			container.appendChild(this.header);
 		container.appendChild(this.view_container_container);
 		var ready_count = 0;
 		var ready = function() {

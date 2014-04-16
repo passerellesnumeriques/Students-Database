@@ -6,16 +6,18 @@ class page_academic_calendar extends Page {
 	public function execute() {
 		$this->require_javascript("vertical_layout.js");
 		$this->onload("new vertical_layout('top_container');");
-		$this->require_javascript("header_bar.js");
-		$this->onload("new header_bar('header','toolbar');");
 		$this->require_javascript("tree.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
 ?>
-<div id='top_container'>
-	<div id='header'>
-		<button class='button_verysoft' onclick='new_year();'>New Academic Year</button>
+<div id='top_container' class="page_container" style="width:100%;height:100%">
+	<div class="page_title">
+		<img src='/static/calendar/calendar_32.png' style="vertical-align:top"/>
+		Academic Calendar: Years and Periods
 	</div>
 	<div id='tree_container' style='background-color:white;' layout='fill'></div>
+	<div class="page_footer">
+		<button class='action' onclick='new_year();'>New Academic Year</button>
+	</div>
 </div>
 
 <script type='text/javascript'>

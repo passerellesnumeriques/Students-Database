@@ -467,7 +467,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		var div, img;
 		if (t._page_size > 0) {
 			// + previous page
-			t.prev_page_div = div = document.createElement("DIV"); div.className = "button disabled";
+			t.prev_page_button = div = document.createElement("BUTTON");
+			div.disabled = "disabled";
 			img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 			div.title = "Previous page";
 			img.src = "/static/data_model/left.png";
@@ -484,7 +485,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.header_left.appendChild(div);
 		if (t._page_size > 0) {
 			// + next page
-			t.next_page_div = div = document.createElement("DIV"); div.className = "button disabled";
+			t.next_page_button = div = document.createElement("BUTTON");
+			div.disabled = "disabled";
 			img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 			div.title = "Next page";
 			div.disabled = "disabled";
@@ -515,7 +517,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			});
 		}
 		// + refresh
-		div = document.createElement("DIV"); div.className = "button";
+		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Refresh";
 		img.src = theme.icons_16.refresh;
@@ -524,7 +526,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.header_left.appendChild(div);
 		t.refresh_button = div;
 		// + select column
-		div = document.createElement("DIV"); div.className = "button";
+		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Select columns to display";
 		img.src = get_script_path("data_list.js")+"/table_column.png";
@@ -532,7 +534,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		div.appendChild(img);
 		t.header_right.appendChild(div);
 		// + filter
-		div = document.createElement("DIV"); div.className = "button";
+		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Filters";
 		img.src = get_script_path("data_list.js")+"/filter.gif";
@@ -540,7 +542,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		div.appendChild(img);
 		t.header_right.appendChild(div);
 		// + export
-		div = document.createElement("DIV"); div.className = "button";
+		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
 		div.title = "Export list";
 		img.src = theme.icons_16["_export"];
@@ -548,7 +550,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		div.appendChild(img);
 		t.header_right.appendChild(div);
 		// + more button for horizontal menu
-		div = document.createElement("DIV"); div.className = "button";
+		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header_center); };
 		img.src = theme.icons_16.more_menu;
 		div.appendChild(img);
@@ -601,6 +603,12 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	t._ready = function() {
 		if (t.grid == null) return;
 		if (t._available_fields == null) return;
+		// add border radius if needed
+		var radius = getBorderRadius(t.container);
+		setBorderRadius(t.header, radius[0],radius[0], radius[1], radius[1], 0,0, 0,0);
+		setBorderRadius(t.header.childNodes[0], radius[0],radius[0], 0,0, 0,0, 0,0);
+		setBorderRadius(t.header.childNodes[t.header.childNodes.length-1], 0,0, radius[1], radius[1], 0,0, 0,0);
+		setBorderRadius(t.grid.element, 0,0, 0,0, radius[2],radius[2], radius[3], radius[3]);
 		// compute visible fields
 		t.show_fields = [];
 		for (var i = 0; i < initial_data_shown.length; ++i) {
@@ -805,18 +813,18 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				else
 					t._page_num_div.innerHTML = start+"-"+end+"/"+result.count;
 				if (start > 1) {
-					t.prev_page_div.className = "button";
-					t.prev_page_div.onclick = t.prev_page_div.doit;
+					t.prev_page_button.disabled = "";
+					t.prev_page_button.onclick = t.prev_page_button.doit;
 				} else {
-					t.prev_page_div.className = "button disabled";
-					t.prev_page_div.onclick = null;
+					t.prev_page_button.disabled = "disabled";
+					t.prev_page_button.onclick = null;
 				}
 				if (end < result.count) {
-					t.next_page_div.className = "button";
-					t.next_page_div.onclick = t.next_page_div.doit;
+					t.next_page_button.disabled = "";
+					t.next_page_button.onclick = t.next_page_button.doit;
 				} else {
-					t.next_page_div.className = "button disabled";
-					t.next_page_div.onclick = null;
+					t.next_page_button.disabled = "disabled";
+					t.next_page_button.onclick = null;
 				}
 			} else
 				t._page_num_div.innerHTML = result.data.length;

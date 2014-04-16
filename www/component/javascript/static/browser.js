@@ -257,6 +257,27 @@ function setBorderRadius(elem,
 	elem.style.WebkitBorderBottomLeftRadius = bottomleft_width+"px "+bottomleft_height+"px"; 
 	elem.style.WebkitBorderBottomRightRadius = bottomright_width+"px "+bottomright_height+"px"; 
 }
+function getBorderRadius(elem) {
+	var style = getComputedStyle(elem);
+	var getValue = function(name) {
+		if (typeof style[name] == 'undefined') return 0;
+		if (style[name] == "") return 0;
+		return parseInt(style[name]);
+	};
+	var getFinalValue = function(names) {
+		for (var i = 0; i < names.length; ++i) {
+			var value = getValue(names[i]);
+			if (value != 0) return value;
+		}
+		return 0;
+	};
+	return [
+		getFinalValue(["border-top-left-radius", "-moz-border-radius-topleft", "-webkit-border-top-left-radius"]),
+		getFinalValue(["border-top-right-radius", "-moz-border-radius-topright", "-webkit-border-top-right-radius"]),
+		getFinalValue(["border-bottom-left-radius", "-moz-border-radius-bottomleft", "-webkit-border-bottom-right-radius"]),
+		getFinalValue(["border-bottom-right-radius", "-moz-border-radius-bottomright", "-webkit-border-bottom-right-radius"])
+	];
+}
 /**
  * Set a background gradient if the browser has a way to support it
  * @param {DOMNode} element the HTML element
@@ -660,7 +681,7 @@ function add_stylesheet(url,onload) {
 	s.rel = "stylesheet";
 	s.type = "text/css";
 	s.href = url.toString();
-	s.onload = onload;
+	s.onload = function() { if (onload) onload(); this._loaded = true; };
 	document.getElementsByTagName("HEAD")[0].appendChild(s);
 }
 

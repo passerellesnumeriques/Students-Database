@@ -3,6 +3,7 @@
 	box-shadow: 2px 2px 2px #D0D0D0;
 	margin-right: 5px;
 	margin-bottom: 5px;
+	border-radius: 5px 5px 5px 5px;
 }
 .section>.header {
 	border-radius: 5px 5px 0px 0px;
@@ -25,6 +26,7 @@
 }
 .section>.header>div:first-child {
 	margin-left: 5px;
+	margin-right: 5px;
 	font-weight: bold;
 	font-size: 11pt;
 	/* color: #505050; */

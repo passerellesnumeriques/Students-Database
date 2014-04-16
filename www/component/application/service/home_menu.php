@@ -8,9 +8,11 @@ class service_home_menu extends Service {
     public function execute(&$component, $input) {
 ?>
 <a class='application_left_menu_item' href='/dynamic/application/page/overview'>
+	<img src='/static/application/overview_white.png'/>
     Overview
 </a>
 <a class='application_left_menu_item'>
+	<img src='/static/news/news_white.png'/>
     Updates
 </a>
 <a class='application_left_menu_item'>

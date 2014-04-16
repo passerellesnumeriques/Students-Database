@@ -98,10 +98,10 @@ abstract class Page {
 		pageHeaderStart();
 		foreach ($this->init_scripts as $s) echo "<script type='text/javascript'>".$s."</script>";
 		foreach ($this->javascripts as $js) {
-			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1]."'>";
+			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1].";this._loaded=true;'>";
 			echo "</script>";
 		}
-		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.invalidate(window.document.body);'/>";
+		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.invalidate(window.document.body); this._loaded = true;'/>";
 		pageHeaderEnd($this->onload);
 	}
 
@@ -160,20 +160,20 @@ function pageHeaderStart() {
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
-	<title>PN Students DataBase</title>
+	<title>PN Students Management</title>
 	<script type="text/javascript">
 	if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search+location.hash);};
 	</script>
-	<script type="text/javascript" src="/static/javascript/utils.js"></script>
-	<script type="text/javascript" src="/static/javascript/browser.js"></script>
-	<script type="text/javascript" src="/static/application/application.js"></script>
-	<script type="text/javascript" src="/static/javascript/layout.js"></script>
-	<script type="text/javascript" src="/static/theme/theme.js.php"></script>
-	<script type="text/javascript" src="/static/javascript/ajax.js"></script>
-	<script type="text/javascript" src="/static/application/service.js"></script>
-	<script type="text/javascript" src="/static/application/config.js.php"></script>
-	<script type="text/javascript" src="/static/widgets/common_dialogs.js"></script>
-	<script type="text/javascript" src="/static/data_model/databaselock.js"></script>
+	<script type="text/javascript" src="/static/javascript/utils.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/javascript/browser.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/application/application.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/javascript/layout.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/theme/theme.js.php" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/javascript/ajax.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/application/service.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/application/config.js.php" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/widgets/common_dialogs.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/data_model/databaselock.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript">
 	javascript_loaded("/static/javascript/utils.js");
 	javascript_loaded("/static/javascript/browser.js");

@@ -2,11 +2,43 @@
 header("Content-Type: text/javascript");
 require_once("component/Component.inc");
 require_once("component/theme/theme.inc");
+
+global $theme;
+
+$css_list = array();
+function browse_css($directory, $path, $css_path, &$css_list) {
+	$dir = opendir($directory);
+	while (($filename = readdir($dir)) <> null) {
+		if ($filename == ".") continue;
+		if ($filename == "..") continue;
+		if (is_dir($directory."/".$filename))
+			browse_css($directory."/".$filename, $path.$filename."/", $css_path.$filename."/", $css_list);
+		else {
+			if (substr($filename, strlen($filename)-4) == ".css")
+				$css_list[$path.$filename] = $css_path.$filename;
+		}
+	}
+	closedir($dir);
+}
+browse_css("component/theme/static/default/style", "", "default/style/", $css_list);
+if ($theme <> "default")
+	browse_css("component/theme/static/".$theme."/style", "", $theme."/style/", $css_list);
 ?>
 theme = {
-	name: <?php global $theme; echo json_encode($theme);?>,
-	css: function (name) { 
-		add_stylesheet("/static/theme/"+this.name+"/style/"+name);
+	name: <?php echo json_encode($theme);?>,
+	css_list: [<?php
+	$first = true;
+	foreach ($css_list as $css_name=>$css_path) {
+		if ($first) $first = false; else echo ",";
+		echo "{name:".json_encode($css_name).",path:".json_encode($css_path)."}";
+	} 
+	?>],
+	css: function (name) {
+		for (var i = 0; i < this.css_list.length; ++i)
+			if (this.css_list[i].name == name) {
+				add_stylesheet("/static/theme/"+this.css_list[i].path);
+				break;
+			}
 		if (window.parent && window.parent != window && window.parent.theme)
 			window.parent.theme.css(name); 
 	},

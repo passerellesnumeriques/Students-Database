@@ -13,6 +13,7 @@ layout = {
 	},
 	removeHandler: function(element, handler) {
 		var w = getWindowFromElement(element);
+		if (!w || !w.layout) return;
 		if (w != window) {
 			w.layout.removeHandler(element, handler);
 			return;
@@ -295,6 +296,24 @@ layout = {
 					this._layout_done = false;
 			});
 		}
+	},
+	
+	everythingOnPageLoaded: function() {
+		var head = document.getElementsByTagName("HEAD")[0];
+		for (var i = 0; i < head.childNodes.length; ++i) {
+			var e = head.childNodes[i];
+			if (e.nodeType != 1) continue;
+			if (e.nodeName == "SCRIPT" && e.src && e.src != "" && !e._loaded) return false;
+			if (e.nodeName == "LINK" && !e._loaded) return false;
+		}
+		var images = document.getElementsByTagName("IMG");
+		for (var i = 0; i < images.length; ++i) {
+			var img = images[i];
+			if (img._layout_done) continue; // already processed
+			if (img.complete || img.height != 0) continue; // already loaded
+			return false;
+		}
+		return true;
 	}
 };
 

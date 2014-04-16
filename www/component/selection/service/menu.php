@@ -23,16 +23,74 @@ foreach ($campaigns as $c) {
 }
 ?></select>
 <?php if ($can_manage) { ?>
-<button class='flat' onclick='createCampaign();' title='Create a new Selection Campaign'><img src='<?php echo theme::$icons_16["add"];?>'/></button>
+	<?php if ($id <> null && $id > 0) {?>
+	<button class='flat' onclick='renameCampaign();' title='Rename this campaign'><img src='<?php echo theme::$icons_16["edit_white"];?>'/></button>
+	<button class='flat' onclick='removeCampaign();' title='Remove this campaign'><img src='<?php echo theme::$icons_16["remove_white"];?>'/></button>
+	<?php } ?>
+<button class='flat' onclick='createCampaign();' title='Create a new Selection Campaign'><img src='<?php echo theme::$icons_16["add_white"];?>'/></button>
 <?php } ?>
 </div>
+
+<div class="application_left_menu_separator"></div>
+
 <a class='application_left_menu_item' href='/dynamic/selection/page/selection_main_page'>
-	<img src='/static/selection/dashboard_steps.png'/>
+	<img src='/static/selection/dashboard_white.png'/>
 	Dashboard
 </a>
+<a class='application_left_menu_item' href='/dynamic/selection/page/config/manage'>
+	<img src='<?php echo theme::$icons_16["config_white"];?>'/>
+	Configure Process
+</a>
 <a class='application_left_menu_item' href='/dynamic/selection/page/is/main_page'>
-	<img src='/static/selection/is/is_16.png'/>
+	<img src='/static/selection/is/is_white.png'/>
 	Information Sessions
+</a>
+<a class='application_left_menu_item'>
+	<img src='/static/selection/exam/exam_white.png'/>
+	Written Exams
+</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/main_page'>
+		<img src='/static/selection/exam/subject_white.png'/>
+		Subjects and rules
+	</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/center_main_page'>
+		<img src='/static/selection/exam/center_white.png'/>
+		Centers
+	</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/results'>
+		<img src='/static/selection/results_white.png'/>
+		Results
+	</a>
+<a class='application_left_menu_item'>
+	<img src='/static/selection/interview_white.png'/>
+	Interviews
+</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/main_page'>
+		<img src='/static/selection/exam/subject_white.png'/>
+		Questions and rules
+	</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/center_main_page'>
+		<img src='/static/selection/exam/center_white.png'/>
+		Centers
+	</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/results'>
+		<img src='/static/selection/results_white.png'/>
+		Results
+	</a>
+<a class='application_left_menu_item'>
+	<img src='/static/selection/si/si_white.png'/>
+	Social Investigations
+</a>
+	
+<div class="application_left_menu_separator"></div>
+
+<a class='application_left_menu_item' href='/dynamic/selection/page/applicant/list'>
+	<img src='/static/selection/applicant/applicants_white.png'/>
+	Applicants List
+</a>
+<a class='application_left_menu_item' href='/dynamic/selection/page/organizations_for_selection'>
+	<img src='/static/selection/organizations_white.png'/>
+	Partners List
 </a>
 <script type='text/javascript'>
 var campaign_names = [<?php 

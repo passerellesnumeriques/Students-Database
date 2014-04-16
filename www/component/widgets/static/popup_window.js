@@ -61,8 +61,10 @@ function popup_window(title,icon,content,hide_close_button) {
 		frame.style.width = "0px";
 		frame.style.height = "0px";
 		frame.style.visibility = "hidden";
+		frame._no_loading = true;
 		t.content_container.appendChild(frame);
 		frame.onload = function() {
+			frame._no_loading = false;
 			if (t.content == frame) {
 				// this is a new onload, probably to follow a link inside the frame
 			} else {
@@ -659,6 +661,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (table.parentNode)
 				table.parentNode.removeChild(table);
 		};
+		if (t.content.nodeName == "IFRAME") t.content._no_loading = true;
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);
 			animation.fadeOut(table, 200, do_close);

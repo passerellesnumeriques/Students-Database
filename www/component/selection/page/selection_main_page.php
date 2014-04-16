@@ -49,10 +49,12 @@ class page_selection_main_page extends selection_page {
 						<div style='width:100%'>
 							<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
 								<div style='text-align:center'>
-									<a class='button_soft' href='config/manage'>
-										<img src='<?php echo theme::$icons_16["config"];?>'/>
-										Configure how this selection process will work
-									</a>
+									<button>
+										<a href='config/manage'>
+											<img src='<?php echo theme::$icons_16["config"];?>'/>
+											Configure how this selection process will work
+										</a>
+									</button>
 								</div>
 							</div>
 						<?php

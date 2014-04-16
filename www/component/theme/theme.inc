@@ -15,7 +15,10 @@ class theme extends Component {
 	
 	public static function css(&$page, $name) {
 		global $theme;
-		$page->add_stylesheet("/static/theme/".$theme."/style/".$name);
+		if (file_exists("component/theme/static/".$theme."/style/".$name))
+			$page->add_stylesheet("/static/theme/".$theme."/style/".$name);
+		else
+			$page->add_stylesheet("/static/theme/default/style/".$name);
 	}
 	
 	public static function make_icon($main, $small, $where = "right_bottom") {
@@ -24,5 +27,7 @@ class theme extends Component {
 	
 }
 
-include("component/theme/static/".$theme."/theme.inc");
+include("component/theme/static/default/theme.inc");
+if ($theme <> "default")
+	include("component/theme/static/".$theme."/theme.inc");
 ?>
