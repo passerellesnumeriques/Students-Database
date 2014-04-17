@@ -15,7 +15,7 @@
 	background: linear-gradient(to bottom, #F0F0F0 50%, #D0D0D0 100%);
 }
 .mac_tabs.compressed .mac_tab {
-	padding: 3px 2px 0px 2px;
+	padding: 1px 2px 0px 2px;
 }
 .mac_tab.selected {
 	background-color: #A0A0A0;

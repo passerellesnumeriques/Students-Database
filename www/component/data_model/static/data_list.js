@@ -26,6 +26,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	var t=this;
 	t.container = container;
 	t.container.className = "data_list";
+	if (!t.container.id) t.container.id = generateID();
 
 	/* Public properties */
 	
@@ -356,10 +357,12 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			thumb_container.style.overflow = "auto";
 
 			var div_picture_size = document.createElement("DIV");
-			div_picture_size.appendChild(document.createTextNode("Picture size"));
+			div_picture_size.appendChild(document.createTextNode("Pic.size"));
 			div_picture_size.style.marginRight = "3px";
+			div_picture_size.style.fontSize = "11px";
 			div_picture_size.style.display = "inline-block";
 			var select_size = document.createElement("SELECT");
+			select_size.style.fontSize = "11px";
 			div_picture_size.appendChild(select_size);
 			var pic_list = new pictures_list(thumb_container);
 			var o;
@@ -725,7 +728,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					t._createFilter(filter, table);
 					menu.showBelowElement(a.element);
 				});
-			});
+			}, "Filter data on this column");
 			col.addAction(a);
 		}
 		col.onchanged = function(field, data) {
@@ -738,6 +741,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			col.addAction(new GridColumnAction(theme.icons_16.edit,function(ev,action,col){
 				var edit_col = function() {
 					action.icon = col.editable ? theme.icons_16.edit : theme.icons_16.no_edit;
+					action.tooltip = col.editable ? "Edit data on this column" : "Cancel modifications and stop editing this column";
 					col.toggleEditable();
 					layout.invalidate(container);
 				};
@@ -778,7 +782,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						});
 					}
 				}
-			}));
+			}, "Edit data on this column"));
 		}
 		return col;
 	};
@@ -819,6 +823,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		if (t._sort_column && t._sort_order != 3) {
 			params.sort_field = t._sort_column.id;
+			var i = params.sort_field.lastIndexOf('.');
+			params.sort_field = params.sort_field.substring(0,i);
 			params.sort_order = t._sort_order == 1 ? "ASC" : "DESC";
 		}
 		params.filters = t._filters;
@@ -1284,15 +1290,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				if (t.save_button) {
 					t.header_left.removeChild(t.save_button);
 					t.save_button = null;
-					t.header.widget.layout();
+					layout.invalidate(t.header_left);
 				}
 			} else {
 				// display save button
 				if (t.save_button == null) {
-					t.save_button = document.createElement("DIV");
-					t.save_button.className = "button";
+					t.save_button = document.createElement("BUTTON");
 					var img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
-					t.save_button.title = "Refresh";
+					t.save_button.title = "Save Changes";
 					img.src = theme.icons_16.save;
 					t.save_button.onclick = function() { t._save(); };
 					t.save_button.appendChild(img);
@@ -1300,7 +1305,18 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						t.header_left.insertBefore(t.save_button, t.refresh_button.nextSibling);
 					else
 						t.header_left.appendChild(t.save_button);
-					t.header.widget.layout();
+					window.pnapplication.dataUnsaved(container.id);
+					layout.invalidate(t.header_left);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = "red"; t.save_button.style.backgroundColor = "red"; },100);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = ""; t.save_button.style.backgroundColor = ""; },400);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = "red"; t.save_button.style.backgroundColor = "red"; },600);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = ""; t.save_button.style.backgroundColor = ""; },900);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = "red"; t.save_button.style.backgroundColor = "red"; },1100);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = ""; t.save_button.style.backgroundColor = ""; },1400);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = "red"; t.save_button.style.backgroundColor = "red"; },1600);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = ""; t.save_button.style.backgroundColor = ""; },1900);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = "red"; t.save_button.style.backgroundColor = "red"; },2100);
+					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = ""; t.save_button.style.backgroundColor = ""; },2400);
 				}
 			}
 		}
@@ -1314,7 +1330,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			// no more change: remove save button
 			t.header_left.removeChild(t.save_button);
 			t.save_button = null;
-			t.header.widget.layout();
+			window.pnapplication.dataSaved(container.id);
+			layout.invalidate(t.header_left);
 		}
 	};
 	/** Save all edited data */
@@ -1354,7 +1371,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				if (t.save_button) {
 					t.header_left.removeChild(t.save_button);
 					t.save_button = null;
-					t.header.widget.layout();
+					layout.invalidate(t.header_left);
+					window.pnapplication.dataSaved(container.id);
 				}
 			}
 			t.grid.endLoading();

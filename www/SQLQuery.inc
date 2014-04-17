@@ -267,6 +267,13 @@ class SQLQuery {
 		}
 		return $this;
 	}
+	
+	public function &fieldsOfTable($table) {
+		$t = DataModel::get()->getTable($table);
+		foreach ($t->getColumns($this->sub_models) as $col)
+			$this->field($table, $col->name);
+		return $this;
+	}
 
 	/** Remove all selected fields
 	 * @return SQLQuery this

@@ -6,9 +6,10 @@ if (typeof require != 'undefined') {
 	theme.css("grid.css");
 }
 
-function GridColumnAction(icon,onclick) {
+function GridColumnAction(icon,onclick,tooltip) {
 	this.icon = icon;
 	this.onclick = onclick;
+	this.tooltip = tooltip;
 }
 
 function GridColumn(id, title, width, align, field_type, editable, onchanged, onunchanged, field_args, attached_data) {
@@ -149,6 +150,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				img.src = url+"/arrow_up_10.gif";
 				img.style.verticalAlign = "middle";
 				img.style.cursor = "pointer";
+				tooltip(img, "Sort by descending order (currently ascending)");
 				img.onclick = function() { t._onsort(2); };
 				this.th.appendChild(img);
 				break;
@@ -157,6 +159,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				img.src = url+"/arrow_down_10.gif";
 				img.style.verticalAlign = "middle";
 				img.style.cursor = "pointer";
+				tooltip(img, "Sort by ascending order (currently descending)");
 				img.onclick = function() { t._onsort(1); };
 				this.th.appendChild(img);
 				break;
@@ -166,12 +169,14 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				img.src = url+"/arrow_up_10.gif";
 				img.style.verticalAlign = "middle";
 				img.style.cursor = "pointer";
+				tooltip(img, "Sort by descending order");
 				img.onclick = h;
 				this.th.appendChild(img);
 				img = document.createElement("IMG");
 				img.src = url+"/arrow_down_10.gif";
 				img.style.verticalAlign = "middle";
 				img.style.cursor = "pointer";
+				tooltip(img, "Sort by ascending order");
 				img.onclick = h;
 				this.th.appendChild(img);
 				break;
@@ -183,6 +188,8 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			img.style.verticalAlign = "middle";
 			img.style.cursor = "pointer";
 			img.data = this.actions[i];
+			if (this.actions[i].tooltip)
+				tooltip(img, this.actions[i].tooltip);
 			img.onclick = function(ev) { this.data.onclick(ev, this.data, t); };
 			this.actions[i].element = img;
 			this.th.appendChild(img);

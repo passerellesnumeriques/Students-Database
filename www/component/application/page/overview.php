@@ -40,7 +40,6 @@ class page_overview extends Page {
 		<img src='/static/application/logo.png' height="50px" style="vertical-align:bottom"/>
 		Welcome in PN Students Management Software !
 	</div>
-	<a href='#' onclick="service.json('theme','set_theme',{theme:'default'},function(res){if(res)window.parent.location.reload();});">Back to first design</a>
 	<div class="page_section_title">
 		Navigate into the different sections of the application
 	</div>

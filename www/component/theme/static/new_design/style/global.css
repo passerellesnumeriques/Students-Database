@@ -50,7 +50,7 @@ table.all_borders>tbody>tr>th, table.all_borders>tr>th {
     font-weight: 100;
     padding: 10px 15px 10px 15px;
     border-bottom: 1px solid #DDDDDD;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 .page_footer {
     margin-top: 10px;
@@ -62,7 +62,7 @@ table.all_borders>tbody>tr>th, table.all_borders>tr>th {
     font-size: 20px;
     color: #404040;
     font-weight: 100;
-    padding: 10px 10px 5px 10px;
+    padding: 5px 10px 5px 10px;
     margin-bottom: 5px;
     box-shadow: 0px -3px 5px -2px #DDDDDD inset;
 }

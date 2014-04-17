@@ -17,7 +17,7 @@ CurriculumTreeNode_Class.prototype.createTitle = function(editable) {
 CurriculumTreeNode_Class.prototype.createInfo = function() {
 	var div = document.createElement("DIV");
 	var button = document.createElement("BUTTON");
-	button.className = "button_verysoft";
+	button.className = "action important";
 	button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
 	button.node = this;
 	button.onclick = function() {

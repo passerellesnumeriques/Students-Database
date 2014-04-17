@@ -30,6 +30,9 @@ class service_home_menu extends Service {
     <img src='/static/application/logout_white.png'/>
     Logout and Exit
 </a>
+<div style="margin-top:30px">
+	<a href='#' onclick="service.json('theme','set_theme',{theme:'default'},function(res){if(res)window.parent.location.reload();});">Back to first design</a>
+</div>
 <?php
     }
 }

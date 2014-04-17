@@ -97,7 +97,9 @@ class students extends Component {
 		return true;
 	}
 	
-	public function getStudentsQueryForPeriod($period, $include_people_info = true, $include_excluded = false, $restrict_specialization = false) {
+	public function getStudentsQueryForBatchPeriod($period_id, $include_people_info = true, $include_excluded = false, $restrict_specialization = false) {
+		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
+		
 		$q = SQLQuery::create()->select("Student");
 		$q->whereValue("Student", "batch", $period["batch"]);
 		$q->field("Student","people","people");
@@ -109,7 +111,7 @@ class students extends Component {
 				$q->whereValue("Student", "Specialization", $restrict_specialization);
 		}
 		if (!$include_excluded)
-			$q->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start_date"]."')");
+			$q->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start"]."')");
 		if ($include_people_info) {
 			PNApplication::$instance->people->joinPeople($q, "Student", "people");
 			require_once("component/people/PeopleJSON.inc");

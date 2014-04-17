@@ -145,7 +145,7 @@ function new_class(period_node, spe) {
 							pnode = period_node.item.parent.children[i].node;
 							break;
 						}
-					var cl = new StudentClass(res.id, input.value.trim(), spe ? spe.id : null);
+					var cl = new AcademicClass(res.id, input.value.trim(), spe ? spe.id : null);
 					if (spe) {
 						var spe_node = null;
 						for (var i = 0; i < pnode.item.children.length; ++i)
@@ -155,7 +155,7 @@ function new_class(period_node, spe) {
 							}
 						new CurriculumTreeNode_Class(spe_node, cl);
 					} else
-						new CurriculumTreeNode_ClassNode(pnode, cl);
+						new CurriculumTreeNode_Class(pnode, cl);
 					
 					p.unfreeze();
 					if (period_index == periods.length-1)
@@ -167,6 +167,7 @@ function new_class(period_node, spe) {
 			add_to_period(0);
 		});
 		p.show();
+		input.focus();
 	});
 }
 function remove_class(class_node) {

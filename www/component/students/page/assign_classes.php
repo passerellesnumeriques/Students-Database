@@ -14,9 +14,8 @@ class page_assign_classes extends Page {
 		$sections = array();
 		if ($period_id <> null) {
 			// we are on a period
-			$period = PNApplication::$instance->curriculum->getAcademicPeriod($period_id);
 			// get all students for this period
-			$q_students = PNApplication::$instance->students->getStudentsQueryForPeriod($period, true, false);
+			$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false);
 			$students = $q_students->execute();
 			$students_ids = array();
 			foreach ($students as $s) array_push($students_ids, $s["people"]);
@@ -40,7 +39,7 @@ class page_assign_classes extends Page {
 				if (!isset($s["class"])) $s["class"] = null;
 			}
 			// check if this period is specialized
-			$specializations = PNApplication::$instance->curriculum->getAcademicPeriodSpecializationsWithName($period_id);
+			$specializations = PNApplication::$instance->curriculum->getBatchPeriodSpecializationsWithName($period_id);
 			$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id);
 			if (count($specializations) > 0) {
 				// specialized period
@@ -58,18 +57,18 @@ class page_assign_classes extends Page {
 		} else {
 			// we are on a class
 			$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
-			$period = PNApplication::$instance->curriculum->getAcademicPeriod($class["period"]);
+			$period_id = $class["period"];
 			if ($class["specialization"] <> null) {
 				// specialized class
 				// get classes in this specialization
-				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"], $class["specialization"]);
+				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id, $class["specialization"]);
 				// get students from the specialization
-				$q_students = PNApplication::$instance->students->getStudentsQueryForPeriod($period, true, false, $class["specialization"]);
+				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $class["specialization"]);
 				$students = $q_students->execute();
 			} else {
 				// not specialized class
-				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"]);
-				$q_students = PNApplication::$instance->students->getStudentsQueryForPeriod($period, true, false);
+				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id);
+				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false);
 				$students = $q_students->execute();
 			}
 			$students_ids = array();
@@ -77,7 +76,7 @@ class page_assign_classes extends Page {
 			// get class assignment
 			if (count($students) > 0) {
 				$q = SQLQuery::create()->select("StudentClass");
-				PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period["id"]);
+				PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period_id);
 				$q->whereIn("StudentClass", "people", $students_ids);
 				$q->field("StudentClass", "people", "people");
 				$q->field("AcademicClass", "id", "class");
@@ -164,7 +163,7 @@ class page_assign_classes extends Page {
 					set_lock_screen_content(lock,"Unassign "+peoples[index_people].first_name+" "+peoples[index_people].last_name+" from class "+assigns[index_assign].getAssignmentName(original));
 				else
 					set_lock_screen_content(lock,"Assign "+peoples[index_people].first_name+" "+peoples[index_people].last_name+" to class "+assigns[index_assign].getAssignmentName(current));
-				service.json("students","assign_class",{student:peoples[index_people].id,clas:current,period:<?php echo $period["id"];?>},function(res){
+				service.json("students","assign_class",{student:peoples[index_people].id,clas:current,period:<?php echo $period_id;?>},function(res){
 					next(index_assign,index_people+1);
 				});
 			};
