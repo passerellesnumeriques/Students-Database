@@ -65,6 +65,7 @@ var students_list = new data_list(
 	build_filters(),
 	batches != null && batches.length > 5 ? 200 : -1,
 	function (list) {
+		list.addTitle("/static/curriculum/batch_16.png", "Students");
 		list.addPictureSupport("People",function(container,people_id,width,height) {
 			while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
 			require("profile_picture.js",function() {
@@ -103,8 +104,9 @@ var students_list = new data_list(
 			});
 		});
 	
-		var remove_button = document.createElement("DIV");
-		remove_button.className = "button_verysoft";
+		var remove_button = document.createElement("BUTTON");
+		remove_button.className = "action important";
+		remove_button.disabled = "disabled";
 		remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove selected students";
 		remove_button.onclick = function() {
 			var sel = list.grid.getSelectionByRowId();
@@ -174,13 +176,13 @@ var students_list = new data_list(
 				}
 			});
 		};
+		list.addFooter(remove_button);
 		list.grid.setSelectable(true);
 		list.grid.onselect = function(indexes, rows_ids) {
 			if (indexes.length == 0) {
-				if (remove_button.parentNode)
-					remove_button.parentNode.removeChild(remove_button);
+				remove_button.disabled = "disabled";
 			} else {
-				list.addHeader(remove_button);
+				remove_button.disabled = "";
 			}
 		};
 		<?php 
@@ -188,8 +190,8 @@ var students_list = new data_list(
 			$specializations = PNApplication::$instance->curriculum->getBatchSpecializations($batches[0]);
 			if (count($specializations) > 0) {
 				?>
-				var assign_spe = document.createElement("DIV");
-				assign_spe.className = "button_verysoft";
+				var assign_spe = document.createElement("BUTTON");
+				assign_spe.className = "action";
 				assign_spe.innerHTML = "<img src='/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign specializations";
 				assign_spe.onclick = function() {
 					window.parent.require("popup_window.js",function() {
@@ -198,14 +200,14 @@ var students_list = new data_list(
 						p.show();
 					});
 				};
-				students_list.addHeader(assign_spe);
+				students_list.addFooter(assign_spe);
 				<?php 
 			}
 		}
 		?>
 		if (url.params['period'] || url.params['class']) {
-			var assign = document.createElement("DIV");
-			assign.className = "button_verysoft";
+			var assign = document.createElement("BUTTON");
+			assign.className = "action";
 			assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+(url.params['class'] ? "class" : "classes");
 			assign.onclick = function() {
 				window.parent.require("popup_window.js",function() {
@@ -214,12 +216,12 @@ var students_list = new data_list(
 					p.show();
 				});
 			};
-			students_list.addHeader(assign);
+			students_list.addFooter(assign);
 		}
 
 		if (batches && batches.length == 1) {
 			var import_students = document.createElement("BUTTON");
-			import_students.className = "button_verysoft";
+			import_students.className = "flat";
 			import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
 			import_students.disabled = "disabled";
 			window.top.require("popup_window.js", function() {
@@ -247,8 +249,8 @@ var students_list = new data_list(
 				});
 			});
 			students_list.addHeader(import_students);
-			var create_student = document.createElement("DIV");
-			create_student.className = "button_verysoft";
+			var create_student = document.createElement("BUTTON");
+			create_student.className = "flat";
 			create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
 			create_student.onclick = function() {
 				window.top.require("popup_window.js",function() {
@@ -269,7 +271,7 @@ var students_list = new data_list(
 
 		var import_pictures;
 		import_pictures = document.createElement("BUTTON");
-		import_pictures.className = "button_verysoft";
+		import_pictures.className = "flat";
 		import_pictures.disabled = "disabled";
 		import_pictures.innerHTML = "<img src='/static/images_tool/people_picture.png'/> Import Pictures";
 		import_pictures.style.marginLeft = "5px";
@@ -291,6 +293,7 @@ var students_list = new data_list(
 								return;
 							}
 							tool.popup.close();
+							list.reloadData();
 							return;
 						}
 						var people = tool.getTool("people").getPeople(pictures[index]);
@@ -302,14 +305,8 @@ var students_list = new data_list(
 						span_message.appendChild(document.createTextNode("Saving picture for "+people.first_name+" "+people.last_name));
 						var data = pictures[index].getResultData();
 						service.json("people", "save_picture", {id:people.id,picture:data}, function(res) {
-							if (res) {
+							if (res)
 								tool.removePicture(pictures[index]);
-								for (var i = 0; i < t.pictures.length; ++i)
-									if (t.pictures[i].people.id == people.id) {
-										t.pictures[i].reload();
-										break;
-									}
-							}
 							progress_bar.addAmount(1);
 							next(index+1);
 						});

@@ -4,9 +4,13 @@ function CurriculumTreeNode_Batch(parent, batch) {
 	this.batch = batch;
 	this.is_alumni = parseSQLDate(batch.end_date).getTime() < new Date().getTime();
 	CurriculumTreeNode.call(this, parent, "batch"+batch.id, !this.is_alumni);
-	batch.periods.sort(function(p1,p2) { return parseSQLDate(p1.start_date).getTime() - parseSQLDate(p2.start_date).getTime();});
+	batch.periods.sort(function(p1,p2) {
+		var ap1 = getAcademicPeriod(p1.academic_period);
+		var ap2 = getAcademicPeriod(p2.academic_period);
+		return parseSQLDate(ap1.start).getTime() - parseSQLDate(ap2.start).getTime();
+	});
 	for (var i = 0; i < batch.periods.length; ++i)
-		new CurriculumTreeNode_AcademicPeriod(this, batch.periods[i]);
+		new CurriculumTreeNode_BatchPeriod(this, batch.periods[i]);
 }
 CurriculumTreeNode_Batch.prototype = new CurriculumTreeNode;
 CurriculumTreeNode_Batch.prototype.constructor = CurriculumTreeNode_Batch;
@@ -30,7 +34,7 @@ CurriculumTreeNode_Batch.prototype.createInfo = function() {
 	window.top.datamodel.create_cell("StudentBatch", null, "end_date", this.batch.id, batch.end_date, false, span_graduation, function(value) { batch.end_date = value; });
 	div.appendChild(span_graduation);
 	var button = document.createElement("BUTTON");
-	button.className = "button_verysoft";
+	button.className = "action";
 	button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
 	button.title = "Edit batch, periods and specializations";
 	button.batch = batch;
@@ -39,7 +43,7 @@ CurriculumTreeNode_Batch.prototype.createInfo = function() {
 	};
 	div.appendChild(button);
 	button = document.createElement("BUTTON");
-	button.className = "button_verysoft";
+	button.className = "action important";
 	button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
 	button.batch = batch;
 	button.onclick = function() {
@@ -60,8 +64,17 @@ function create_new_batch() {
 	});
 }
 function new_batch_created(id) {
-	service.json("curriculum","get_batch",{id:id},function(batch){
-		add_batch(batch);
+	var node = window.curriculum_root.findTag("batch"+id);
+	if (node) {
+		// batch already created, and saved again
+		batch_saved(id);
+		return;
+	}
+	service.json("curriculum","get_academic_calendar",{},function(cal) {
+		academic_years = cal;
+		service.json("curriculum","get_batch",{id:id},function(batch){
+			add_batch(batch);
+		});
 	});
 }
 function add_batch(batch) {
@@ -79,10 +92,13 @@ function edit_batch(batch) {
 	});
 }
 function batch_saved(id) {
-	var node = window.curriculum_root.findTag("batch"+id);
-	node.item.parent.removeItem(node.item);
-	service.json("curriculum","get_batch",{id:id},function(batch){
-		add_batch(batch);
+	service.json("curriculum","get_academic_calendar",{},function(cal) {
+		academic_years = cal;
+		var node = window.curriculum_root.findTag("batch"+id);
+		node.item.parent.removeItem(node.item);
+		service.json("curriculum","get_batch",{id:id},function(batch){
+			add_batch(batch);
+		});
 	});
 }
 function remove_batch(batch) {

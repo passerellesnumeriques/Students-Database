@@ -50,6 +50,9 @@ class page_tree_frame extends Page {
 	margin-right: 3px;
 	vertical-align: bottom;
 }
+#tree_footer_content {
+	font-size: 11px;
+}
 </style>
 <div id="curriculum_tree_frame_container" style="width:100%;height:100%;overflow:hidden">
 	<iframe name="curriculum_tree_frame" id="curriculum_tree_frame" style="border:none;" layout="fill"></iframe>
@@ -64,10 +67,8 @@ class page_tree_frame extends Page {
 		</div>
 		<div id='tree' style='overflow-y:auto;overflow-x:auto;background-color:white;width:100%;height:100%' layout='fill'></div>
 		<div id='tree_footer'>
-			<table><tr>
-				<td id='tree_footer_title' valign=top></td>
-				<td id='tree_footer_content' valign=top></td>
-			</tr></table>
+			<div id='tree_footer_title'></div>
+			<div id='tree_footer_content'></div>
 		</div>
 	</div>
 </div>
@@ -77,27 +78,63 @@ tr.addColumn(new TreeColumn(""));
 
 //List of specializations
 var specializations = <?php echo CurriculumJSON::SpecializationsJSON(); ?>;
+
+// Academic Calendar
+var academic_years = <?php echo CurriculumJSON::AcademicCalendarJSON();?>;
+function getAcademicPeriod(period_id) {
+	for (var i = 0; i < academic_years.length; ++i)
+		for (var j = 0; j < academic_years[i].periods.length; ++j)
+			if (academic_years[i].periods[j].id == period_id)
+				return academic_years[i].periods[j];
+	return null;
+}
+
 // Batches
 var batches = <?php echo CurriculumJSON::BatchesJSON(); ?>;
 var can_edit_batches = <?php echo $can_edit ? "true" : "false";?>;
 batches.sort(function(b1,b2) { return parseSQLDate(b1.start_date).getTime() - parseSQLDate(b2.start_date).getTime();});
 
+var frame = document.getElementById('curriculum_tree_frame');
+var frame_parameters = "";
+
+function selectPage(url) {
+	frame.src = url+"?"+frame_parameters;
+}
+function nodeSelected(node) {
+	setCookie("curriculum_tree_node", node.tag, 30*24*60, new URL(location.href).path);
+	var params = node.getURLParameters();
+	frame_parameters = "";
+	var first = true;
+	for (var name in params) {
+		if (first) first = false; else frame_parameters += "&";
+		frame_parameters += name+"="+encodeURIComponent(params[name]);
+	}
+	window.onhashchange();
+}
+
+listenEvent(frame,'load',function() {
+	var win = getIFrameWindow(frame);
+	if (!win || !win.location) return;
+	var url = new URL(win.location.href);
+	location.hash = "#"+url.path;
+});
+
+
+window.onhashchange = function() {
+	var hash = location.hash;
+	if (hash.length < 2) hash = "/dynamic/students/page/list"; else hash = hash.substring(1);
+	selectPage(hash);
+};
+
 window.top.require("datamodel.js", function() {
 	window.curriculum_root = new CurriculumTreeNode_Root(tr);
 	//Initilization of the page
-	/*
-	var url = new URL(location.href);
-	var page = typeof url.params.page != 'undefined' ? url.params.page : "list";
-	var node = window.curriculum_root.findTag(url.hash);
-	if (node) node.item.select();
-	for (var i = 0; i < page_header.getMenuItems().length; ++i) {
-		var item = page_header.getMenuItems()[i];
-		if (item.id == page) {
-			var frame = document.getElementById('students_page');
-			frame.src = item.link.href;
-		}
-	}
-	*/
+	var selected_node = getCookie("curriculum_tree_node");
+	if (selected_node.length == 0) selected_node = "current_students";
+	var node = window.curriculum_root.findTag(selected_node);
+	if (!node) node = window.curriculum_root.findTag("current_students");
+	node.item.select();
+	window.onhashchange();
 });
 </script>
 <?php 

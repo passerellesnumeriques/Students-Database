@@ -20,7 +20,7 @@ CurriculumTreeNode_Specialization.prototype.createTitle = function(editable) {
 CurriculumTreeNode_Specialization.prototype.createInfo = function() {
 	var div = document.createElement("DIV");
 	var button = document.createElement("BUTTON");
-	button.className = "button_verysoft";
+	button.className = "action";
 	button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
 	button.title = "Edit batch, periods and specializations";
 	button.node = this;
@@ -29,7 +29,7 @@ CurriculumTreeNode_Specialization.prototype.createInfo = function() {
 	};
 	div.appendChild(button);
 	button = document.createElement("BUTTON");
-	button.className = "button_verysoft";
+	button.className = "action important";
 	button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
 	button.title = "Create a new class";
 	button.node = this;

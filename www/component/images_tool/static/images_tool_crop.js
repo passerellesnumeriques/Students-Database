@@ -92,7 +92,7 @@ function images_tool_crop() {
 				// we need to reduce height
 				rect.y = 0;
 				rect.height = max_height;
-				var w = ratio/max_height;
+				var w = ratio*max_height;
 				if (w > max_width) {
 					rect.x = 0;
 					rect.width = max_width;
@@ -107,7 +107,7 @@ function images_tool_crop() {
 		if (rect.width > max_width) {
 			rect.y = 0;
 			rect.height = max_height;
-			var w = ratio/max_height;
+			var w = ratio*max_height;
 			if (w > max_width) {
 				rect.x = 0;
 				rect.width = max_width;

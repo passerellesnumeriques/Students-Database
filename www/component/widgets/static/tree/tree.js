@@ -48,12 +48,12 @@ function TreeItem(cells, expanded, onselect) {
 		if (this.tree) this.tree._refresh_heads();
 	};
 	this.removeItem = function(item) {
-		item.parent = null;
 		this.children.remove(item);
 		if (this.tree) {
 			this.tree._removeItem(item);
 			this.tree._refresh_heads();
 		}
+		item.parent = null;
 	};
 	this.remove = function() {
 		this.parent.removeItem(this);
@@ -249,10 +249,16 @@ function tree(container) {
 		item.children = [];
 		for (var i = 0; i < list.length; ++i)
 			this._removeItem(list[i]);
+		if (item == this._selected_item) {
+			var p = item.parent;
+			while (p && !p.onselect) p = p.parent;
+			if (p) this.selectItem(p);
+		}
 	};
 	this._selected_item = null;
 	this.selectItem = function(item) {
 		item.cells[0].element.onclick(createEvent("click",{}));
+		item.makeVisible();
 	};
 	this.getSelectedItem = function() { return this._selected_item; };
 	this._create_item = function(item, index) {

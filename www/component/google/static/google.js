@@ -102,6 +102,15 @@ if (!window.top.google) {
 			window.top.google.connection_event.fire();
 			window.top.load_google_api();
 		},30000);
+		
+		/*window.top.add_javascript("https://ajax.googleapis.com/jsapi", function() {
+			google.load("identitytoolkit", "2", {packages: ["ac"], callback: function() {
+				var i = 0;
+				i++;
+			}});
+			var i = 0;
+			i++;
+		});*/
 	};
 	window.top.load_google_api();
 }

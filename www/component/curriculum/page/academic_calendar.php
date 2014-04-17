@@ -53,7 +53,7 @@ function build_year(year) {
 	span.title = "Edit or Remove Academic Year "+year.name;
 	span.onclick = function() {
 		window.top.require("popup_window.js",function() {
-			var popup = new window.top.popup_window("New Academic Year",null,"");
+			var popup = new window.top.popup_window("Academic Year",null,"");
 			var frame = popup.setContentFrame("/dynamic/curriculum/page/edit_academic_year?id="+year.id+"&onsave=saved");
 			frame.saved = function() {
 				popup.close();

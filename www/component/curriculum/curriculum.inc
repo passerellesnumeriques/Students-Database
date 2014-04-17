@@ -72,21 +72,21 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("Specialization")->whereValue("Specialization", "id", $id)->executeSingleRow();
 	}
 	
-// 	/**
-// 	 * Retrieve the list of specializations available for the given batch (which is present in at least one period)
-// 	 * @param integer $batch_id the requested batch
-// 	 * @return array the list of specialization id
-// 	 */
-// 	public function getBatchSpecializations($batch_id) {
-// 		return SQLQuery::create()
-// 			->select("AcademicPeriod")
-// 			->whereValue("AcademicPeriod", "batch", $batch_id)
-// 			->join("AcademicPeriod", "AcademicPeriodSpecialization", array("id"=>"period"))
-// 			->whereNotNull("AcademicPeriodSpecialization", "specialization")
-// 			->groupBy("AcademicPeriodSpecialization", "specialization")
-// 			->field("AcademicPeriodSpecialization", "specialization", "specialization")
-// 			->executeSingleField();
-// 	}
+	/**
+	 * Retrieve the list of specializations available for the given batch (which is present in at least one period)
+	 * @param integer $batch_id the requested batch
+	 * @return array the list of specialization id
+	 */
+	public function getBatchSpecializations($batch_id) {
+		return SQLQuery::create()
+			->select("BatchPeriod")
+			->whereValue("BatchPeriod", "batch", $batch_id)
+			->join("BatchPeriod", "BatchPeriodSpecialization", array("id"=>"period"))
+			->whereNotNull("BatchPeriodSpecialization", "specialization")
+			->groupBy("BatchPeriodSpecialization", "specialization")
+			->field("BatchPeriodSpecialization", "specialization", "specialization")
+			->executeSingleField();
+	}
 // 	/**
 // 	 * Retrieve the list of specializations available for the given batch (which is present in at least one period)
 // 	 * @param integer $batch_id the requested batch

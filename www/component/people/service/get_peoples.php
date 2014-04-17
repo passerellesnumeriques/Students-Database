@@ -11,7 +11,10 @@ class service_get_peoples extends Service {
 		require_once("component/people/PeopleJSON.inc");
 		$q = SQLQuery::create()->select("People")->whereIn("People", "id", $input["ids"]);
 		PeopleJSON::PeopleSQL($q);
-		$rows = $q->execute();
+		if (count($input["ids"]) > 0)
+			$rows = $q->execute();
+		else
+			$rows = array();
 		echo PeopleJSON::Peoples($q, $rows);
 	}
 	

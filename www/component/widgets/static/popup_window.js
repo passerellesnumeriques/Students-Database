@@ -493,13 +493,15 @@ function popup_window(title,icon,content,hide_close_button) {
 				x = win.getWindowWidth()-20;
 				// anticipate scroll bar
 				y += window.top.browser_scroll_bar_size;
-			}
+			} else if (frame.body.scrollLeft > 0)
+					frame.body.scrollLeft = 0;
 			if (y > win.getWindowHeight()-20-h) {
 				y = win.getWindowHeight()-20-h;
 				// anticipate scroll bar
 				if (x < win.getWindowWidth()-20) x += window.top.browser_scroll_bar_size;
 				if (x > win.getWindowWidth()-20) x = win.getWindowWidth()-20;
-			}
+			} else if (frame.body.scrollTop > 0)
+				frame.body.scrollTop = 0;
 			getIFrameDocument(t.content).body.style.overflow = "hidden";
 			setWidth(t.content_container, x);
 			setHeight(t.content_container, y);

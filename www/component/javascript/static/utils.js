@@ -791,6 +791,22 @@ function getObjectSize(object){
 	return s;
 }
 
+function getCookie(cname) {
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		var c = ca[i].trim();
+		if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+	}
+	return "";
+}
+function setCookie(cname,cvalue,expires_minutes,url) {
+	var d = new Date();
+	d.setTime(d.getTime()+(expires_minutes*60*1000));
+	var expires = "expires="+d.toGMTString();
+	document.cookie = cname + "=" + cvalue + "; " + expires + "; Path="+url;
+}
+
 function waitFrameReady(win, test, onready, timeout) {
 	if (typeof timeout == 'undefined') timeout = 30000;
 	if (timeout < 50) return;

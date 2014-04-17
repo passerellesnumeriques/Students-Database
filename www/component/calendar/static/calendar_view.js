@@ -264,10 +264,9 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	 */
 	this.addEvent = function(ev, try_counter) {
 		if (!container.parentNode || !container.ownerDocument || !getWindowFromDocument(container.ownerDocument)) return;
-		if (!this.view) {
+		if (this.view == null || typeof this.view == 'undefined') {
 			if (!try_counter) try_counter = 0;
 			if (try_counter == 100) {
-				console.error("calendar_view.js:addEvent: no view...");
 				return;
 			}
 			setTimeout(function() { t.addEvent(ev, try_counter+1); }, 100); 

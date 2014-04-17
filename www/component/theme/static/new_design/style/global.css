@@ -85,6 +85,8 @@ button {
     font-weight: normal;
     white-space: nowrap;
     cursor: pointer;
+    margin-bottom: 1px;
+    margin-right: 1px;
 }
 button:hover {
     border: 1px solid rgba(0,0,0,0.6);
@@ -96,6 +98,7 @@ button:active {
     position: relative;
     top: 1px;
     left: 1px;
+    margin-bottom: 0px;
 }
 button:focus {
 	outline: none;
@@ -129,6 +132,8 @@ button.flat {
     margin: 1px 1px 1px 1px;
     background: transparent;
     background-color: transparent;
+    margin-bottom: 1px;
+    margin-right: 1px;
 }
 button.flat:hover {
     border: 1px solid rgba(128,128,128,0.4);
@@ -145,6 +150,7 @@ button.flat:active {
     position: relative;
     top: 1px;
     left: 1px;
+    margin-bottom: 0px;
 }
 button.flat:disabled:active {
     top: 0px;
@@ -157,7 +163,7 @@ button.flat a {
 
 button.action {
     display: inline-block;
-    padding: 3px 5px 3px 5px;
+    padding: 2px 4px 2px 4px;
     border-radius: 7px;
     background: linear-gradient(to bottom, #3498db, #2980b9);
     color: white;
@@ -166,6 +172,8 @@ button.action {
     text-transform: uppercase;
     border: 1px solid rgba(0,0,0,0);
     cursor: pointer;
+    margin-bottom: 1px;
+    margin-right: 1px;
 }
 button.action:hover {
     border: 1px solid rgba(255,255,255,0.4);
@@ -177,12 +185,28 @@ button.action:active {
     position: relative;
     top: 1px;
     left: 1px;
+    margin-bottom: 0px;
+}
+button.action:disabled {
+	background: #C0C0C0;
+	color: #808080;
+}
+button.action:disabled:hover {
+    border: 1px solid rgba(255,255,255,0);
+    box-shadow: 1px 1px 1px rgba(170,170,170,0);
+}
+button.action:disabled:active {
+    top: 0px;
+    left: 0px;
 }
 button.action.important {
     background: linear-gradient(to bottom, #34db98, #099960);
 }
 button.action.important:hover {
 	background: linear-gradient(to bottom, #44eba8, #19a970);
+}
+button.action.important:disabled {
+    background: #C0C0C0;
 }
 
 /* Validation */

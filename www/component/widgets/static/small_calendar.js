@@ -15,6 +15,7 @@ function small_calendar(minimum, maximum) {
 	t.getElement = function() { return t.table; };
 	t.getDate = function() { return t.date; };
 	t.setDate = function(date) {
+		date.setHours(0,0,0,0);
 		if (t.date && t.date.getFullYear() == date.getFullYear() && t.date.getMonth() == date.getMonth() && t.date.getDate() == date.getDate()) return;
 		t.date = date;
 		while (t.tbody.childNodes.length > 0) t.tbody.removeChild(t.tbody.childNodes[0]);

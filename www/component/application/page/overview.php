@@ -50,7 +50,7 @@ class page_overview extends Page {
 			<div>Selection</div>
 			<div>Access to the different steps of the selection process</div>
 		</a>
-		<a class="section_box" href='/dynamic/curriculum/page/tree_frame'>
+		<a class="section_box" href='/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list'>
 			<div><img src='/static/curriculum/curriculum_32.png'/></div>
 			<div>Training</div>
 			<div>Consult the curriculum, students list by batch and class, grades...</div>

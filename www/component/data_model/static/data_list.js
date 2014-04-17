@@ -25,6 +25,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	if (!page_size) page_size = -1;
 	var t=this;
 	t.container = container;
+	t.container.className = "data_list";
 
 	/* Public properties */
 	
@@ -57,6 +58,28 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		else
 			while (t.header_center.childNodes.length > 0) t.header_center.removeChild(t.header_center.childNodes[0]);
 		layout.invalidate(t.header);
+	};
+	t.addFooter = function(html) {
+		var item = document.createElement("DIV");
+		if (typeof html == 'string')
+			item.innerHTML = html;
+		else
+			item.appendChild(html);
+		if (!t.footer) {
+			t.footer = document.createElement("DIV");
+			t.footer.className = "footer";
+			container.appendChild(t.footer);
+			new horizontal_layout(t.footer);
+			layout.invalidate(container);
+		}
+		t.footer.appendChild(item);
+		layout.invalidate(t.footer);
+	};
+	t.resetFooter = function() {
+		if (!t.footer) return;
+		container.removeChild(t.footer);
+		t.footer = null;
+		layout.invalidate(container);
 	};
 	/** Set a title, with optionally an icon
 	 * @param {String} icon URL of the icon 16x16, or null if no icon
@@ -449,17 +472,17 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		// init header
 		t.header = document.createElement("DIV");
-		t.header.className = "data_list_header";
+		t.header.className = "header";
 		t.header_left = document.createElement("DIV");
-		t.header_left.className = "data_list_header_left";
+		t.header_left.className = "header_left";
 		t.header_left.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_left);
 		t.header_center = document.createElement("DIV");
-		t.header_center.className = "data_list_header_center";
+		t.header_center.className = "header_center";
 		t.header_center.setAttribute("layout","fill");
 		t.header.appendChild(t.header_center);
 		t.header_right = document.createElement("DIV");
-		t.header_right.className = "data_list_header_right";
+		t.header_right.className = "header_right";
 		t.header_right.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_right);
 		container.appendChild(t.header);

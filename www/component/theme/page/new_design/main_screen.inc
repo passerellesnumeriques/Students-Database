@@ -72,7 +72,7 @@ $this->require_javascript("fill_height_layout.js");
 	z-index: 1;
 }
 #application_footer {
-	height: 15px;
+	height: 16px;
 	text-align: center;
 	font-size: 9pt;
 	font-family: Verdana;
@@ -219,7 +219,7 @@ $this->require_javascript("fill_height_layout.js");
 						section="training"
 						components="training,transcripts,curriculum"
 						menu="/dynamic/training/service/menu"
-						page="/dynamic/curriculum/page/tree_frame"
+						page="/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list"
 					>
 						<img src='/static/training/training_white.png'/>
 						Training
@@ -423,7 +423,9 @@ function pageLoaded(url) {
 		var item = items[i];
 		if (item.hasAttribute("href")) {
 			var iu = new URL(item.getAttribute("href"));
-			item.className = "application_left_menu_item"+(u.path == iu.path ? " selected" : "");
+			var is_ok = u.path == iu.path;
+			if (is_ok && iu.hash) is_ok = iu.hash == u.hash;
+			item.className = "application_left_menu_item"+(is_ok ? " selected" : "");
 		}
 	}
 	document.getElementById('application_frame')._loading_application_page = false;
@@ -440,4 +442,29 @@ if (isset($_GET["page"])) {
 	echo "sectionClicked(getSection('home'));";
 }
 ?>
+
+/* Status in footer */
+function initFooter() {
+	var footer = document.getElementById('application_footer');
+	// Google
+	var span_google_status = document.createElement("SPAN");
+	span_google_status.style.position = "absolute";
+	span_google_status.style.bottom = "0px";
+	span_google_status.style.right = "3px";
+	footer.appendChild(span_google_status);
+	require("google_status.js",function() {
+		new google_status(span_google_status);
+	});
+	<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
+	var span_debug_status = document.createElement("SPAN");
+	span_debug_status.style.position = "absolute";
+	span_debug_status.style.bottom = "0px";
+	span_debug_status.style.right = "23px";
+	footer.appendChild(span_debug_status);
+	require("debug_status.js",function() {
+		new debug_status(span_debug_status);
+	});
+	<?php } ?>
+}
+initFooter();
 </script>

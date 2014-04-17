@@ -43,11 +43,12 @@ $model->addTable("StudentBatch")
 	->setRoot()
 	->addReadAccess("consult_curriculum", true)
 	->addColumnWriteAccess("name","edit_curriculum", true)
-//  	->onInsert(function($fields,$id,$sub_model_instance) {
-// 		try {
-// 			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$fields["name"]." created.");
-// 		} catch (Exception $e) { PNApplication::error($e); }
-//  	})
+	->addRemoveAccess("edit_curriculum", true)
+   	->onInsert(function($fields,$id,$sub_model_instance) {
+  		try {
+  			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$fields["name"]." created.");
+  		} catch (Exception $e) { PNApplication::error($e); }
+   	})
  	->setRowDescriptionProvider(function($row) {
  		return "Batch <i>".htmlentities($row["name"])."</i>";
  	})
@@ -59,6 +60,12 @@ $model->addTable("BatchPeriod")
 	->addForeignKey("academic_period", "AcademicPeriod", true, false, true)
 	->addString("name", 50, 1, false, false)
 	->addReadAccess("consult_curriculum", true)
+	->addColumnWriteAccess("name","edit_curriculum", true)
+	->addRemoveAccess("edit_curriculum", true)
+ 	->setRowDescriptionProvider(function($row) {
+ 		$batch_name = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$row["batch"])->field("name")->executeSingleValue();
+ 		return "Period <i>".htmlentities($row["name"])."</i> of Batch <i>$batch_name</i>";
+ 	})
 	;
  	
 $model->addTable("Specialization")
@@ -86,7 +93,7 @@ $model->addTable("BatchPeriodSpecialization")
 	->addReadAccess("consult_curriculum", true)
 	->setRowDescriptionProvider(function($row) {
 		$spe_name = SQLQuery::create()->select("Specialization")->whereValue("Specialization","id",$row["specialization"])->field("name")->executeSingleValue();
-		$period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$row["period"])->executeSingleRow();
+		$period = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","id",$row["period"])->executeSingleRow();
 		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
 		return "Specialization <i>".htmlentities($spe_name)."</i> on Period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
 	})
@@ -104,10 +111,10 @@ $model->addTable("AcademicClass")
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
 			$period = SQLQuery::create()->bypassSecurity()
-				->select("AcademicPeriod")
-				->whereValue("AcademicPeriod","id",$fields["period"])
-				->field("AcademicPeriod","name","period_name")
-				->join("AcademicPeriod", "StudentBatch", array("batch"=>"id"))
+				->select("BatchPeriod")
+				->whereValue("BatchPeriod","id",$fields["period"])
+				->field("BatchPeriod","name","period_name")
+				->join("BatchPeriod", "StudentBatch", array("batch"=>"id"))
 				->field("StudentBatch", "name", "batch_name")
 				->field("StudentBatch", "id", "batch_id")
 				->executeSingleRow()
@@ -121,7 +128,7 @@ $model->addTable("AcademicClass")
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
  	->setRowDescriptionProvider(function($row) {
- 		$period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$row["period"])->executeSingleRow();
+ 		$period = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","id",$row["period"])->executeSingleRow();
 		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
  		return "Class <i>".htmlentities($row["name"])."</i> during period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
  	})

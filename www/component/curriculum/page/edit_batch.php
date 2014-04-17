@@ -42,6 +42,7 @@ class page_edit_batch extends Page {
 		require_once("component/curriculum/CurriculumJSON.inc");
 		$this->add_javascript("/static/curriculum/curriculum_objects.js");
 		$this->require_javascript("input_utils.js");
+		require_once("component/data_model/page/utils.inc");
 ?>
 <table style='background-color:white;border-spacing:0px;margin:0px;border-collapse:collapse;'>
 	<tr>
@@ -52,8 +53,8 @@ class page_edit_batch extends Page {
 				<ul>
 					<li>Enter a name for this batch</li>
 					<li>Specify integration and graduation dates for the batch</li>
-					<li>Add academic periods (quarters or semesters) and specify their starting and ending dates</li>
-					<li>Split the batch into specializations for some periods (if necessary)</li>
+					<li>Add/Remove academic periods (quarters or semesters)</li>
+					<li>Split the batch into specializations from a period if necessary</li>
 				</ul>
 				</td>
 			</tr></table>
@@ -84,6 +85,9 @@ class page_edit_batch extends Page {
 </table>
 <script type='text/javascript'>
 var popup = window.parent.get_popup_window_from_element(window.frameElement);
+popup.addIconTextButton(theme.build_icon("/static/calendar/calendar_16.png",theme.icons_10.add), "Add Period", "add_period", function() { addPeriod(); });
+popup.addIconTextButton("/static/curriculum/curriculum_16.png", "Edit Specializations", "spe", editSpecializations);
+popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
 popup.addCancelButton();
 
 function getDateStringFromSQL(sql_date) {
@@ -132,9 +136,15 @@ function getAcademicPeriod(id) {
 	return null;
 }
 
+var lock_batch = <?php echo $lock_batch <> null ? $lock_batch : "null"; ?>;
+
 var batch_id, batch_name;
 var integration_date, graduation_date;
 var periods = [];
+var specializations = <?php echo CurriculumJSON::SpecializationsJSON();?>;
+var spe_period_start = null;
+var selected_specializations = [];
+var new_period_id_counter = -1;
 <?php
 if ($batch <> null) {
 	echo "batch_id=".$batch["id"].";";
@@ -143,12 +153,32 @@ if ($batch <> null) {
 	foreach ($batch_periods as $bp)
 		echo "periods.push({id:".$bp["id"].",name:".json_encode($bp["name"]).",academic_period:".$bp["academic_period"]."});";
 	echo "graduation_date=".json_encode($batch["end_date"]).";";
+	if (count($periods_specializations) > 0) {
+		for ($i = 0; $i < count($batch_periods); $i++) {
+			$found = false;
+			foreach ($periods_specializations as $ps) 
+				if ($ps["period"] == $batch_periods[$i]["id"]) {
+					echo "spe_period_start = ".$ps["period"].";\n";
+					echo "selected_specializations = [";
+					$first = true;
+					foreach ($periods_specializations as $p) {
+						if ($p["period"] <> $ps["period"]) continue;
+						if ($first) $first = false; else echo ",";
+						echo $p["specialization"];
+					}
+					echo "];\n";
+					$found = true;
+					break;
+				}
+			if ($found) break;
+		}
+	}
 } else {
 	echo "batch_id=-1;";
 	echo "batch_name='';";
 	echo "integration_date=dateToSQL(new Date());";
 	for ($i = 0; $i < $conf["periods_number"]; $i++) {
-		echo "periods.push({id:-1,name:".json_encode($conf["period_name"]." ".($i+1)).",academic_period:0});";
+		echo "periods.push({id:new_period_id_counter--,name:".json_encode($conf["period_name"]." ".($i+1)).",academic_period:0});";
 	}
 	echo "graduation_date = null;";
 }
@@ -159,7 +189,7 @@ input_batch_name.value = batch_name;
 inputDefaultText(input_batch_name, "Batch Name");
 inputAutoresize(input_batch_name, 10);
 if (batch_id > 0)
-	window.top.datamodel.inputCell(batch_name, "StudentBatch", "name", batch_id);
+	window.top.datamodel.inputCell(input_batch_name, "StudentBatch", "name", batch_id);
 listenEvent(input_batch_name, 'change', function() { batch_name = input_batch_name.value; });
 
 var td_integration = document.getElementById('integration');
@@ -255,6 +285,7 @@ function updatePeriodRow(period) {
 				link.appendChild(document.createTextNode("Create Academic Year "+min.getFullYear()));
 				link.style.color = "#808080";
 				link.style.fontStyle = "italic";
+				link.style.whiteSpace = "nowrap";
 				link.style.marginLeft = "5px";
 				link.onclick = function() {
 					var p = new window.top.popup_window("New Academic Year",null,"");
@@ -294,6 +325,7 @@ function updatePeriodRow(period) {
 				link.appendChild(document.createTextNode("Create Academic Year "+min.getFullYear()));
 				link.style.color = "#808080";
 				link.style.fontStyle = "italic";
+				link.style.whiteSpace = "nowrap";
 				link.style.marginLeft = "5px";
 				link.onclick = function() {
 					var p = new window.top.popup_window("New Academic Year",null,"");
@@ -321,28 +353,249 @@ function updatePeriodRow(period) {
 }
 
 function createPeriodRow(period) {
-	var input_name = document.createElement("INPUT");
-	input_name.type = "text";
-	input_name.value = period.name;
-	inputDefaultText(input_name, "Period Name");
-	inputAutoresize(input_name, 10);
-	listenEvent(input_name, 'change', function() {
-		period.name = input_name.value;
+	period.input_name = document.createElement("INPUT");
+	period.input_name.type = "text";
+	period.input_name.value = period.name;
+	inputDefaultText(period.input_name, "Period Name");
+	inputAutoresize(period.input_name, 10);
+	listenEvent(period.input_name, 'change', function() {
+		period.name = period.input_name.value;
 	});
-	if (period.id > 0) window.top.datamodel.inputCell(input_name, "BatchPeriod", "name", period.id);
+	if (period.id > 0) window.top.datamodel.inputCell(period.input_name, "BatchPeriod", "name", period.id);
 
 	var tr, td;
 	var last_row = document.getElementById('after_periods');
 	last_row.parentNode.insertBefore(tr = document.createElement("TR"), last_row);
+	period.tr = tr;
 	tr.appendChild(td = document.createElement("TD"));
-	td.appendChild(input_name);
+	td.appendChild(period.input_name);
 	tr.appendChild(td = document.createElement("TD"));
 	period.td_period = td;
+	td.style.whiteSpace = "nowrap";
+	tr.appendChild(td = document.createElement("TD"));
+	period.remove_button = document.createElement("BUTTON");
+	period.remove_button.className = "flat";
+	period.remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+	period.remove_button.title = "Remove this period";
+	td.appendChild(period.remove_button);
+	period.remove_button.onclick = function() {
+		periods.remove(period);
+		period.tr.parentNode.removeChild(period.tr);
+		if (periods.length > 0) {
+			periods[periods.length-1].remove_button.disabled = "";
+			periods[periods.length-1].remove_button.style.visibility = "visible";
+			updatePeriodRow(periods[periods.length-1]);
+		}
+		if (period.id == spe_period_start) {
+			spe_period_start = null;
+			selected_specializations = [];
+			refreshSpecializations();
+		}
+		layout.invalidate(last_row.parentNode);
+	};
+	// disable remove of previous periods
+	for (var i = 0; i < periods.length; ++i) {
+		if (periods[i] == period) break;
+		periods[i].remove_button.disabled = "disabled";
+		periods[i].remove_button.style.visibility = "hidden";
+	}
 }
+
+var spe_row = null;
+function refreshSpecializations() {
+	if (spe_row) {
+		spe_row.parentNode.removeChild(spe_row);
+		spe_row = null;
+	}
+	if (!spe_period_start) return;
+	var period = null;
+	for (var i = 0; i < periods.length; ++i) if (periods[i].id == spe_period_start) { period = periods[i]; break; }
+	spe_row = document.createElement("TR");
+	var td = document.createElement("TH");
+	td.colSpan = 3;
+	var s = "Split into specializations: ";
+	for (var i = 0; i < selected_specializations.length; ++i) {
+		if (i>0) s += ", ";
+		for (var j = 0; j < specializations.length; ++j)
+			if (specializations[j].id == selected_specializations[i]) {
+				s += specializations[j].name;
+				break;
+			}
+	}
+	td.innerHTML = s;
+	spe_row.appendChild(td);
+	period.tr.parentNode.insertBefore(spe_row, period.tr);
+}
+
 for (var i = 0; i < periods.length; ++i)
 	createPeriodRow(periods[i]);
 updatePeriodRow(periods[0]);
+refreshSpecializations();
 
+function addPeriod() {
+	var period = {id:new_period_id_counter--,name:<?php echo json_encode($conf["period_name"]);?>+" "+(periods.length+1),academic_period:0};
+	periods.push(period);
+	createPeriodRow(period);
+	updatePeriodRow(period);
+}
+
+function editSpecializations() {
+	require("popup_window.js",function() {
+		var content = document.createElement("DIV");
+		content.style.padding = "5px";
+		content.appendChild(document.createTextNode("Split into specializations starting from "));
+		var from = document.createElement("SELECT");
+		content.appendChild(from);
+		content.appendChild(document.createTextNode(" :"));
+		content.appendChild(document.createElement("BR"));
+		var checkboxes = [];
+		var add_spe = function(spe) {
+			var div = document.createElement("DIV"); content.appendChild(div);
+			var cb = document.createElement("INPUT");
+			checkboxes.push(cb);
+			cb.type = "checkbox";
+			cb.spe = spe;
+			for (var j = 0; j < selected_specializations.length; ++j)
+				if (selected_specializations[j] == spe.id)
+					cb.checked = 'checked';
+			div.appendChild(cb);
+			var span = document.createElement("SPAN");
+			var cell;
+			<?php datamodel_cell_inline($this, "cell", "span", true, "Specialization", "name", "spe.id", null, "spe.name"); ?>			
+			div.appendChild(span);
+			var button = document.createElement("BUTTON");
+			button.className = "flat";
+			button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+			button.style.marginLeft = "5px";
+			button.style.padding = "0px";
+			button.spe = spe;
+			button.onclick = function() {
+				var id = this.spe.id;
+				window.top.datamodel.confirm_remove("Specialization", id, function() {
+					for (var i = 0; i < specializations.length; ++i)
+						if (specializations[i].id == id) {
+							specializations.splice(i,1);
+							break;
+						}
+					content.removeChild(div);
+					checkboxes.remove(cb);
+				});
+			};
+			div.appendChild(button);
+		};
+		for (var i = 0; i < specializations.length; ++i) {
+			add_spe(specializations[i]);
+		}
+		for (var i = 0; i < periods.length; ++i) {
+			var o = document.createElement("OPTION");
+			o.value = i;
+			o.text = periods[i].name;
+			from.add(o);
+		}
+		for (var i = 0; i < periods.length; ++i)
+			if (periods[i].id == spe_period_start) { from.selectedIndex = i; break; }
+		
+		var popup = new popup_window("Specializations", "/static/curriculum/curriculum_16.png", content);
+		popup.addIconTextButton(theme.build_icon("/static/curriculum/curriculum_16.png",theme.icons_10.add), "Create new specialization", 'create', function() {
+			input_dialog(
+				theme.build_icon("/static/curriculum/curriculum_16.png",theme.icons_10.add),
+				"Create new specialization",
+				"Name of the new specialization:",
+				"",
+				100,
+				function(name) {
+					name = name.trim();
+					if (name.length == 0) return "Please enter a name";
+					name = name.toLowerCase();
+					for (var i = 0; i < specializations.length; ++i)
+						if (specializations[i].name.toLowerCase() == name)
+							return "A specialization already exists with this name";
+					return null;
+				},function(name,p) {
+					if (!name) return;
+					var ls = lock_screen(null, "Creation of the new specialization...");
+					name = name.trim();
+					service.json("data_model","save_entity",{table:"Specialization",field_name:name},function(res) {
+						unlock_screen(ls);
+						if (res && res.key) {
+							var new_spe = new Specialization(res.key, name);
+							specializations.push(new_spe);
+							add_spe(new_spe);
+						}
+					});
+				}
+			);
+		});
+		popup.addOkCancelButtons(function() {
+			var list = [];
+			for (var i = 0; i < checkboxes.length; ++i)
+				if (checkboxes[i].checked) list.push(checkboxes[i].spe.id);
+			if (list.length == 0) {
+				spe_period_start = null;
+			} else {
+				spe_period_start = periods[from.selectedIndex].id;
+			}
+			selected_specializations = list;
+			refreshSpecializations();
+			layout.invalidate(document.body);
+			popup.close();
+		});
+		popup.show();
+	});
+}
+
+function save() {
+	if (batch_name.trim().length == 0) {
+		alert("Please enter a name for this batch");
+		return;
+	}
+	var ls = lock_screen(null, "Saving Batch...");
+	var data = new Object();
+	if (batch_id) data.id = batch_id;
+	data.name = batch_name.trim();
+	data.start_date = integration_date;
+	data.end_date = graduation_date;
+	data.lock = lock_batch;
+	data.periods = [];
+	for (var i = 0; i < periods.length; ++i) {
+		var p = new Object();
+		p.id = periods[i].id;
+		p.name = periods[i].name;
+		p.academic_period = periods[i].academic_period;
+		if (p.name.length == 0) { unlock_screen(ls); alert("Please specify a name for the period number "+(i+1)); return; }
+		if (p.academic_period == 0) { unlock_screen(ls); alert("Please specify an academic year and period for period "+p.name); return; }
+		data.periods.push(p);
+	}
+	data.periods_specializations = [];
+	if (spe_period_start) {
+		var found = false;
+		for (var i = 0; i < periods.length; ++i) {
+			if (!found && periods[i].id == spe_period_start) found = true;
+			if (!found) continue;
+			for (var j = 0; j < selected_specializations.length; ++j)
+				data.periods_specializations.push({period_id:periods[i].id,specialization_id:selected_specializations[j]});
+		}
+	}
+	service.json("curriculum", "save_batch", data, function(res) {
+		unlock_screen(ls);
+		if (!res) return;
+		if (input_batch_name.cellSaved) input_batch_name.cellSaved();
+		for (var i = 0; i < periods.length; ++i) {
+			if (periods[i].input_name.cellSaved) periods[i].input_name.cellSaved();
+		}
+		batch_id = res.id;
+		for (var i = 0; i < res.periods_ids.length; ++i) {
+			if (spe_period_start == res.periods_ids[i].given_id)
+				spe_period_start = res.periods_ids[i].new_id;
+			for (var j = 0; j < periods.length; ++j)
+				if (periods[j].id == res.periods_ids[i].given_id) {
+					periods[j].id = res.periods_ids[i].new_id;
+					break;
+				}
+		}
+		<?php if (isset($_GET["onsave"])) echo "window.parent.".$_GET["onsave"]."(res.id);";?>
+	});
+}
 </script>
 <?php 
 	}

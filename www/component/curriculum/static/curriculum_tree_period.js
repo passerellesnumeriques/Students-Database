@@ -1,10 +1,11 @@
 // #depends[curriculum_tree.js]
 
-function CurriculumTreeNode_AcademicPeriod(parent, period) {
+function CurriculumTreeNode_BatchPeriod(parent, period) {
 	this.period = period;
+	this.academic = getAcademicPeriod(period.academic_period);
 	var now = new Date().getTime();
-	CurriculumTreeNode.call(this, parent, "period"+period.id, parseSQLDate(period.end_date).getTime() > now && parseSQLDate(period.start_date).getTime() < now);
-	this.item.cells[0].addStyle({color: parseSQLDate(period.end_date).getTime() < now ? "#4040A0" : parseSQLDate(period.start_date).getTime() > now ? "#A04040" : "#40A040"});
+	CurriculumTreeNode.call(this, parent, "period"+period.id, parseSQLDate(this.academic.end).getTime() > now && parseSQLDate(this.academic.start).getTime() < now);
+	this.item.cells[0].addStyle({color: parseSQLDate(this.academic.end).getTime() < now ? "#4040A0" : parseSQLDate(this.academic.start).getTime() > now ? "#A04040" : "#40A040"});
 	if (period.available_specializations.length > 0) {
 		for (var i = 0; i < period.available_specializations.length; ++i) {
 			var spe_id = period.available_specializations[i];
@@ -18,50 +19,52 @@ function CurriculumTreeNode_AcademicPeriod(parent, period) {
 			new CurriculumTreeNode_Class(this, period.classes[i]);
 	}
 }
-CurriculumTreeNode_AcademicPeriod.prototype = new CurriculumTreeNode;
-CurriculumTreeNode_AcademicPeriod.prototype.constructor = CurriculumTreeNode_AcademicPeriod;
-CurriculumTreeNode_AcademicPeriod.prototype.getIcon = function() { return theme.build_icon("/static/curriculum/hat.png", "/static/curriculum/calendar_10.gif"); };
-CurriculumTreeNode_AcademicPeriod.prototype.createTitle = function(editable) {
+CurriculumTreeNode_BatchPeriod.prototype = new CurriculumTreeNode;
+CurriculumTreeNode_BatchPeriod.prototype.constructor = CurriculumTreeNode_BatchPeriod;
+CurriculumTreeNode_BatchPeriod.prototype.getIcon = function() { return theme.build_icon("/static/curriculum/hat.png", "/static/curriculum/calendar_10.gif"); };
+CurriculumTreeNode_BatchPeriod.prototype.createTitle = function(editable) {
 	var span = document.createElement("SPAN");
 	span.appendChild(document.createTextNode("Period "));
 	var period = this.period;
-	window.top.datamodel.create_cell("AcademicPeriod", null, "name", period.id, period.name, editable && can_edit_batches, span, function(value) { period.name = value; });
+	window.top.datamodel.create_cell("BatchPeriod", null, "name", period.id, period.name, editable && can_edit_batches, span, function(value) { period.name = value; });
 	return span;
 };
-CurriculumTreeNode_AcademicPeriod.prototype.createInfo = function() {
-	var period = this.period;
+CurriculumTreeNode_BatchPeriod.prototype.createInfo = function() {
+	var aperiod = this.academic;
 	var div = document.createElement("DIV");
-	var span = document.createElement("DIV");
+	var span = document.createElement("SPAN");
 	var b = document.createElement("B"); b.appendChild(document.createTextNode("Start")); span.appendChild(b); span.appendChild(document.createTextNode(": "));
-	window.top.datamodel.create_cell("AcademicPeriod", null, "start_date", period.id, period.start_date, false, span, function(value) { period.start_date = value; });
+	window.top.datamodel.create_cell("BatchPeriod", null, "start", aperiod.id, aperiod.start, false, span, function(value) { aperiod.start = value; });
 	div.appendChild(span);
-	span = document.createElement("DIV");
+	span = document.createElement("SPAN");
+	span.style.marginLeft = "5px";
 	var b = document.createElement("B"); b.appendChild(document.createTextNode("End")); span.appendChild(b); span.appendChild(document.createTextNode(": "));
-	window.top.datamodel.create_cell("AcademicPeriod", null, "end_date", period.id, period.end_date, false, span, function(value) { period.end_date = value; });
+	window.top.datamodel.create_cell("BatchPeriod", null, "end", aperiod.id, aperiod.end, false, span, function(value) { aperiod.end = value; });
 	div.appendChild(span);
+	var buttons = document.createElement("DIV"); div.appendChild(buttons);
 	var button = document.createElement("BUTTON");
-	button.className = "button_verysoft";
+	button.className = "action";
 	button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
-	button.title = "Edit batch, periods and specializations";
+	button.title = "Edit batch";
 	button.node = this;
 	button.onclick = function() {
 		edit_batch(this.node.parent.batch);
 	};
-	div.appendChild(button);
-	if (period.available_specializations.length == 0) {
+	buttons.appendChild(button);
+	if (this.period.available_specializations.length == 0) {
 		button = document.createElement("BUTTON");
-		button.className = "button_verysoft";
+		button.className = "action important";
 		button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
-		button.title = "Create a new class in period "+period.name;
+		button.title = "Create a new class in period "+this.period.name;
 		button.node = this;
 		button.onclick = function() {
 			new_class(this.node, null);
 		};
-		div.appendChild(button);
+		buttons.appendChild(button);
 	}
 	return div;
 };
-CurriculumTreeNode_AcademicPeriod.prototype.getURLParameters = function() {
+CurriculumTreeNode_BatchPeriod.prototype.getURLParameters = function() {
 	return {batch:this.parent.batch.id,period:this.period.id};
 };
 

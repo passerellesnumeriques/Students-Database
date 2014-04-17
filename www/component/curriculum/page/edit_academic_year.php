@@ -62,6 +62,7 @@ class page_edit_academic_year extends Page {
 		<th>Duration</th>
 		<th>Break/Holidays</th>
 		<th>Ends on</th>
+		<th></th>
 	</tr>
 	<tr id='last_period_row'>
 		<td colspan=5 align=center>
@@ -99,7 +100,7 @@ function addPeriod(period) {
 			name: <?php echo json_encode($conf["period_name"]);?>+" "+(periods.length+1),
 			weeks: <?php echo $conf["period_weeks"]; ?>,
 			weeks_break: 0,
-			start: dateToSQL(new Date(parseSQLDate(periods[periods.length-1].end).getTime()+24*60*60*1000)),
+			start: periods.length > 0 ? dateToSQL(new Date(parseSQLDate(periods[periods.length-1].end).getTime()+24*60*60*1000)) : year_object.year+"-01-01",
 		};
 		period.end = dateToSQL(new Date(parseSQLDate(period.start).getTime()+period.weeks*7*24*60*60*1000-24*60*60*1000));
 	}
@@ -142,7 +143,26 @@ function addPeriod(period) {
 	td.style.whiteSpace = "nowrap";
 	td.appendChild(document.createTextNode(" = "));
 	td.appendChild(span_end);
-
+	tr.appendChild(td = document.createElement("TD"));
+	period.remove_button = document.createElement("BUTTON");
+	period.remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+	period.remove_button.title = "Remove this period";
+	period.remove_button.className = "flat";
+	td.appendChild(period.remove_button);
+	period.remove_button.onclick = function() {
+		periods.remove(period);
+		tr.parentNode.removeChild(tr);
+		if (periods.length > 0) {
+			periods[periods.length-1].remove_button.disabled = "";
+			periods[periods.length-1].remove_button.style.visibility = "visible";
+		}
+		layout.invalidate(table);
+	};
+	for (var i = 0; i < periods.length; ++i) {
+		periods[i].remove_button.disabled = "disabled";
+		periods[i].remove_button.style.visibility = "hidden";
+	}
+	
 	period.span_start = span_start;
 	period.update_end = function() {
 		var current_end = parseSQLDate(period.end);
@@ -179,7 +199,7 @@ function addPeriod(period) {
 			var index = periods.indexOf(period);
 			if (index > 0) min = parseSQLDate(periods[index-1].end);
 			if (index < periods.length-1) max = parseSQLDate(periods[index+1].start);
-			if (index == 0 && max.getFullYear() > <?php echo $year["year"];?>)
+			if (index == 0 && (max == null || max.getFullYear() > <?php echo $year["year"];?>))
 				max = new Date(<?php echo $year["year"];?>, 11, 31);
 			var picker = new window.top.date_picker(parseSQLDate(period.start), min, max);
 			picker.onchange = function(picker, date) {
@@ -235,6 +255,11 @@ function addPeriod(period) {
 }
 
 function save() {
+	if (periods.length == 0) {
+		popup.unfreeze();
+		alert("Please enter at least one period for this Academic Year");
+		return;
+	}
 	require("curriculum_objects.js",function() {
 		var data = new AcademicYear(year_object.id,year_object.year,year_name.value,[]);
 		for (var i = 0; i < periods.length; ++i) {
