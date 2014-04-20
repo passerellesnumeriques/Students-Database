@@ -233,10 +233,13 @@ class page_curriculum extends Page {
 						echo "<td colspan=".(4+(count($period_classes) > 0 ? count($period_classes) : 1)+1)." class='page_section_title'>";
 						echo "<img src='/static/calendar/calendar_24.png'/> ";
 						$id = $this->generateID();
-						echo "<span id='$id'>";
+						echo "<span id='$id' style='margin-right:10px'>";
 						echo htmlentities($period["name"]);
 						echo "</span>";
 						$this->onload("window.top.datamodel.registerCellSpan(window,'BatchPeriod','name',".$period["id"].",document.getElementById('$id'));");
+						if ($editing) {
+							echo "<button class='action' onclick='import_subjects(".$period['id'].")'><img src='".theme::$icons_16["_import"]."'/> Import subjects from other batches</button>";
+						}
 						echo "</td>";
 						echo "</tr>";
 					}
@@ -365,6 +368,9 @@ class page_curriculum extends Page {
 					<img src='/static/curriculum/subjects_16.png'/>
 					Edit subject categories
 				</button>
+				<?php if ($period_id <> null) {
+					echo "<button class='action' onclick='import_subjects(".$period_id.")'><img src='".theme::$icons_16["_import"]."'/> Import subjects from other batches</button>";
+				}?>
 				<?php } ?>
 			<?php } ?>
 			</div>
@@ -935,6 +941,11 @@ class page_curriculum extends Page {
 		}
 		
 		build_avail_teachers();
+
+		function import_subjects(target_period) {
+			// TODO
+			alert("Not yet implemented");
+		}
 
 		<?php } ?>// if editing
 		</script>
