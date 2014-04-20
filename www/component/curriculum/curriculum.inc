@@ -215,6 +215,13 @@ class curriculum extends Component {
 			->execute();
 	}
 	
+	public function getBatchPeriodsForAcademicPeriods($academic_periods_ids) {
+		return SQLQuery::create()
+			->select("BatchPeriod")
+			->whereIn("BatchPeriod","academic_period",$academic_periods_ids)
+			->execute();
+	}
+	
 	/**
 	 * Retrieve the class information from database
 	 * @param integer $class_id the requested class
@@ -296,6 +303,28 @@ class curriculum extends Component {
 	public function getTeachersAssigned($subjects_ids) {
 		if (count($subjects_ids) == 0) return array();
 		$q = SQLQuery::create()->select("TeacherAssignment")->whereIn("TeacherAssignment", "subject", $subjects_ids);
+		return $q->execute();
+	}
+	public function getTeachersAssignedForClasses($classes_ids) {
+		if (count($subjects_ids) == 0) return array();
+		$q = SQLQuery::create()->select("TeacherAssignment")->whereIn("TeacherAssignment", "class", $classes_ids);
+		return $q->execute();
+	}
+	public function getTeacherAssignedForBatchPeriods($periods_ids, $join_subject=false) {
+		$q = SQLQuery::create()
+			->select("BatchPeriod")
+			->whereIn("BatchPeriod","id",$periods_ids)
+			->join("BatchPeriod","AcademicClass",array("id"=>"period"))
+			->join("AcademicClass","TeacherAssignment",array("id"=>"class"))
+			->fieldsOfTable("TeacherAssignment")
+			->field("BatchPeriod","id","batch_period_id")
+			->field("AcademicClass","specialization","specialization")
+			;
+		if ($join_subject) {
+			$q->join("TeacherAssignment","CurriculumSubject",array("subject"=>"id"));
+			$q->field("CurriculumSubject", "hours", "hours");
+			$q->field("CurriculumSubject", "hours_type", "hours_type");
+		}
 		return $q->execute();
 	}
 	

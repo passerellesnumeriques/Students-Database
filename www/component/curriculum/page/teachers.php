@@ -189,14 +189,12 @@ foreach ($teachers_ids as $people_id) {
 		echo "</td>";
 		$total += $total_period;
 	}
-	if (count($batch_periods) > 0) {
-		echo "<td>";
-		echo number_format($total_period/($academic["weeks"]-$academic["weeks_break"]),2)."h";
-		echo "</td>";
-		echo "<td>";
-		echo $total_period."h";
-		echo "</td>";
-	}
+	echo "<td>";
+	echo number_format($total/($academic["weeks"]-$academic["weeks_break"]),2)."h";
+	echo "</td>";
+	echo "<td>";
+	echo $total."h";
+	echo "</td>";
 	echo "</tr>";
 }
 ?>

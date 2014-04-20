@@ -86,6 +86,20 @@ class page_curriculum extends Page {
 				->where("`TeacherDates`.`start` <= '".$end_date."' AND (`TeacherDates`.`end` IS NULL OR `TeacherDates`.`end` > '".$start_date."')")
 				->execute();
 			foreach ($teachers_dates as $td) if (!in_array($td["people"], $teachers_ids)) array_push($teachers_ids, $td["people"]);
+			
+			$academic_periods_ids = array();
+			foreach ($periods as $period) if (!in_array($period["academic_period"], $academic_periods_ids)) array_push($academic_periods_ids, $period["academic_period"]);
+			$all_parallel_periods = PNApplication::$instance->curriculum->getBatchPeriodsForAcademicPeriods($academic_periods_ids);
+			$all_periods_ids = array();
+			foreach ($all_parallel_periods as $p) array_push($all_periods_ids, $p["id"]);
+			$full_teachers_assign = PNApplication::$instance->curriculum->getTeacherAssignedForBatchPeriods($all_periods_ids, true);
+			foreach ($full_teachers_assign as &$a) {
+				foreach ($all_parallel_periods as $p)
+					if ($p["id"] == $a["batch_period_id"]) {
+						$a["academic_period_id"] = $p["academic_period"];
+						break;
+					}
+			}
 		}
 
 		if (count($teachers_ids) > 0) {
@@ -196,6 +210,7 @@ class page_curriculum extends Page {
 					}
 				}
 				foreach ($periods as &$period) {
+					$period_classes = $period["classes"];
 					// find available teachers for this period
 					if ($editing) {
 						$period_start = datamodel\ColumnDate::toTimestamp($period["start"]);
@@ -379,6 +394,7 @@ class page_curriculum extends Page {
 			if ($first) $first = false; else echo ",";
 			echo "{";
 			echo "id:".$period["id"];
+			echo ",academic_period:".$period["academic_period"];
 			echo ",weeks:".$period["weeks"];
 			echo ",weeks_break:".$period["weeks_break"];
 			echo ",classes:[";
@@ -410,8 +426,8 @@ class page_curriculum extends Page {
 
 		function hoursFloat(s) {
 			s = s.toFixed(2);
-			if (s.substr(2) == "00") return s.substr(0,1);
-			if (s.substr(3) == "0") return s.substr(0,3);
+			if (s.substr(s.length-3) == ".00") return s.substr(0,s.length-3);
+			if (s.substr(s.length-1) == "0") return s.substr(0,s.length-1);
 			return s;
 		}
 		function addSubjectRow(cat_row, subject) {
@@ -481,9 +497,39 @@ class page_curriculum extends Page {
 					nb--;
 					total_cols -= cols;
 					td.colSpan = cols;
+					var unassign = function(t,ondone) {
+						service.json("curriculum","unassign_teacher",{people_id:t.teacher.id,subject_id:subject.id,class_id:t.cl.id},function(res) {
+							if (!res) { if (ondone) ondone(false); return; }
+							for (var i = 0; i < teachers_assigned.length; ++i)
+								if (teachers_assigned[i].subject_id == subject.id && teachers_assigned[i].class_id == t.cl.id) {
+									teachers_assigned.splice(i,1);
+									break;
+								}
+							t.innerHTML = "<i>No teacher</i>";
+							updateTeacherLoad(t.teacher.id,t.period.academic_period);
+							t.teacher = null;
+							if (ondone) ondone(true);
+						});
+					};
+					var add_unassign_button = function(td) {
+						var button = document.createElement("BUTTON");
+						button.className = "flat small_icon";
+						button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+						button.title = "Unassign this teacher from this subject";
+						button.onclick = function() {
+							var lock = lock_screen();
+							unassign(td, function() {
+								unlock_screen(lock);
+							});
+						};
+						animation.appearsOnOver(td,button);
+						td.appendChild(button);
+					};
+			
 					if (edit) {
 						td.subject = subject;
 						td.cl = cl;
+						td.period = period;
 						td.ondragenter = function(event) {
 							if (event.dataTransfer.types.contains("teacher_"+this.subject.period_id)) {
 								this.style.backgroundColor = "#D0D0D0";
@@ -512,37 +558,25 @@ class page_curriculum extends Page {
 							var teacher_id = event.dataTransfer.getData("teacher_"+this.subject.period_id);
 							if (this.teacher && this.teacher.id == teacher_id) return; // same teacher
 							var lock = lock_screen();
-							var prev_content = this.innerHTML;
-							this.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
-							this.style.textAlign = "center";
 							var t=this;
 							var assign = function() {
 								service.json("curriculum","assign_teacher",{people_id:teacher_id,subject_id:subject.id,classes_ids:[t.cl.id]},function(res) {
-									if (!res) {
-										t.teacher = null;
-										t.innerHTML = "<i>No teacher</i>";
-										t.style.textAlign = "";
-									} else {
+									if (res) {
 										for (var i = 0; i < teachers_people.length; ++i) if (teachers_people[i].id == teacher_id) { t.teacher = teachers_people[i]; break; }
 										t.innerHTML = "";
 										t.appendChild(document.createTextNode(t.teacher.first_name+" "+t.teacher.last_name));
-										t.style.textAlign = "";
+										add_unassign_button(t);
+										teachers_assigned.push(new TeacherAssigned(teacher_id,subject.id,t.cl.id));
+										updateTeacherLoad(teacher_id, t.period.academic_period);
 									}
 									unlock_screen(lock);
 								});
 							};
-							var unassign = function() {
-								service.json("curriculum","unassign_teacher",{people_id:t.teacher.id,subject_id:subject.id,class_id:t.cl.id},function(res) {
-									if (!res) {
-										t.innerHTML = prev_content;
-										t.style.textAlign = "";
-										unlock_screen(lock);
-										return;
-									}
-									assign();
-								});
-							};
-							if (this.teacher) unassign(); else assign();
+							if (this.teacher) unassign(this,function(ok) {
+								if (!ok) { unlock_screen(lock); return; }
+								assign();
+							}); else 
+								assign();
 						};
 					}
 					var people = null;
@@ -563,6 +597,9 @@ class page_curriculum extends Page {
 						td.appendChild(it);
 					} else {
 						td.appendChild(document.createTextNode(people.first_name+" "+people.last_name));
+						if (edit) {
+							add_unassign_button(td);
+						}
 					}
 				}
 			}
@@ -759,21 +796,45 @@ class page_curriculum extends Page {
 			});
 		}
 
+		var teachers_periods = [];
 
 		// available teachers
 		function build_avail_teachers() {
 			for (var i = 0; i < periods.length; ++i) {
+				var teachers_period = {period:periods[i],teachers:[]};
+				teachers_periods.push(teachers_period);
 				var period = periods[i];
 				var container = document.getElementById('avail_teachers_'+period.id);
 				var content = document.createElement("TABLE");
 				var sec = new section('/static/curriculum/teacher_16.png', 'Available Teachers', content, true);
 				container.appendChild(sec.element);
 				var tr,td;
+				content.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TH"));
+				td.rowSpan = 2;
+				td.innerHTML = "Teacher";
+				tr.appendChild(td = document.createElement("TH"));
+				td.colSpan = 2;
+				td.innerHTML = "This period";
+				tr.appendChild(td = document.createElement("TH"));
+				td.colSpan = 2;
+				td.innerHTML = "Other periods";
+				tr.appendChild(td = document.createElement("TH"));
+				td.colSpan = 2;
+				td.innerHTML = "Total";
+				content.appendChild(tr = document.createElement("TR"));
+				for (var j = 0; j < 3; ++j) {
+					tr.appendChild(td = document.createElement("TH"));
+					td.innerHTML = "Week";
+					tr.appendChild(td = document.createElement("TH"));
+					td.innerHTML = "Total";
+				}
 				for (var j = 0; j < period.teachers.length; ++j) {
 					var people_id = period.teachers[j];
 					var teacher;
 					for (var k = 0; k < teachers_people.length; ++k) if (teachers_people[k].id == people_id) { teacher = teachers_people[k]; break; }
 					content.appendChild(tr = document.createElement("TR"));
+					teachers_period.teachers.push({teacher:teacher,row:tr});
 					tr.appendChild(td = document.createElement("TD"));
 					var span = document.createElement("SPAN");
 					span.style.cursor = "default";
@@ -794,11 +855,87 @@ class page_curriculum extends Page {
 					};
 					span.appendChild(document.createTextNode(teacher.first_name+" "+teacher.last_name));
 					td.appendChild(span);
+					tr.appendChild(td = document.createElement("TD"));
+					tr.appendChild(td = document.createElement("TD"));
+					tr.appendChild(td = document.createElement("TD"));
+					tr.appendChild(td = document.createElement("TD"));
+					tr.appendChild(td = document.createElement("TD"));
+					tr.appendChild(td = document.createElement("TD"));
+					updateTeacherLoad(people_id, period.academic_period);
 				}
 			}
 		}
-		build_avail_teachers();
+
+		var other_loads = [<?php
+		$first = true;
+		foreach ($full_teachers_assign as &$a) {
+			if (in_array($a["subject"], $subjects_ids)) continue; // already in this batch
+			if ($a["class"] == null) continue;
+			if ($a["hours"] == null) continue;
+			if ($first) $first = false; else echo ",";
+			echo "{";
+			echo "people_id:".$a["people"];
+			echo ",academic_period:".$a["academic_period_id"];
+			echo ",hours:".$a["hours"];
+			echo ",hours_type:".json_encode($a["hours_type"]);
+			echo "}";
+		} 
+		?>];
+
+		function updateTeacherLoad(teacher_id, academic_period_id) {
+			var period = null;
+			for (var i = 0; i < periods.length; ++i)
+				if (periods[i].academic_period == academic_period_id) { period = periods[i]; break; }
+			
+			// for this batch
+			var this_batch_total = 0;
+			for (var j = 0; j < teachers_assigned.length; ++j) {
+				if (teachers_assigned[j].people_id != teacher_id) continue;
+				var found = false;
+				for (var k = 0; k < period.classes.length; ++k)
+					if (period.classes[k].id == teachers_assigned[j].class_id) { found = true; break; }
+				if (!found) continue;
+				var subject = null;
+				for (var k = 0; k < subjects.length; ++k)
+					if (subjects[k].id == teachers_assigned[j].subject_id) { subject = subjects[k]; break; }
+				if (!subject) continue;
+				switch (subject.hours_type) {
+				case "Per week": this_batch_total += parseInt(subject.hours)*(parseInt(period.weeks)-parseInt(period.weeks_break)); break;
+				case "Per period": this_batch_total += parseInt(subject.hours); break;
+				}
+			}
+			// for other batches
+			var other_batches_total = 0;
+			for (var i = 0; i < other_loads.length; ++i) {
+				if (other_loads[i].people_id != teacher_id) continue;
+				if (other_loads[i].academic_period != academic_period_id) continue;
+				switch (other_loads[i].hours_type) {
+				case "Per week": other_batches_total += parseInt(other_loads[i].hours)*(parseInt(period.weeks)-parseInt(period.weeks_break)); break;
+				case "Per period": other_batches_total += parseInt(other_loads[i].hours); break;
+				}
+			}
+			// update teacher info
+			var teacher = null, row = null;
+			for (var i = 0; i < teachers_periods.length; ++i) {
+				if (teachers_periods[i].period.id != period.id) continue;
+				for (var j = 0; j < teachers_periods[i].teachers.length; ++j) {
+					if (teachers_periods[i].teachers[j].teacher.id != teacher_id) continue;
+					teacher = teachers_periods[i].teachers[j].teacher;
+					row = teachers_periods[i].teachers[j].row;
+					break;
+				}
+				break;
+			}
+			row.childNodes[1].innerHTML = hoursFloat(this_batch_total/(period.weeks-period.weeks_break))+"h";
+			row.childNodes[2].innerHTML = this_batch_total+"h";
+			row.childNodes[3].innerHTML = hoursFloat(other_batches_total/(period.weeks-period.weeks_break))+"h";
+			row.childNodes[4].innerHTML = other_batches_total+"h";
+			row.childNodes[5].innerHTML = hoursFloat((other_batches_total+this_batch_total)/(period.weeks-period.weeks_break))+"h";
+			row.childNodes[6].innerHTML = (other_batches_total+this_batch_total)+"h";
+		}
 		
+		build_avail_teachers();
+
 		<?php } ?>// if editing
 		</script>
 		<?php 
