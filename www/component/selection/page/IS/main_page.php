@@ -56,8 +56,8 @@ class page_IS_main_page extends selection_page {
 					-1,
 					function (list) {
 						list.addTitle("/static/selection/IS/IS_16.png", "Information Sessions");
-						var new_IS = document.createElement("DIV");
-						new_IS.className = 'button_verysoft';
+						var new_IS = document.createElement("BUTTON");
+						new_IS.className = 'flat';
 						new_IS.innerHTML = "<img src='"+theme.build_icon("/static/selection/IS/IS_16.png",theme.icons_10.add)+"'/> New Information Session";
 						new_IS.onclick = function() {
 							location.assign("/dynamic/selection/page/IS/profile");
@@ -65,7 +65,7 @@ class page_IS_main_page extends selection_page {
 						list.addHeader(new_IS);
 
 						var create_applicant = document.createElement("BUTTON");
-						create_applicant.className = "button_verysoft";
+						create_applicant.className = "flat";
 						create_applicant.innerHTML = "<img src='"+theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add)+"' style='vertical-align:bottom'/> Create Applicant";
 						create_applicant.onclick = function() {
 							window.top.require("popup_window.js",function() {
@@ -84,7 +84,7 @@ class page_IS_main_page extends selection_page {
 						list.addHeader(create_applicant);
 						
 						var import_applicants = document.createElement("BUTTON");
-						import_applicants.className = "button_verysoft";
+						import_applicants.className = "flat";
 						import_applicants.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Applicants";
 						import_applicants.onclick = function() {
 							window.top.require("popup_window.js",function() {

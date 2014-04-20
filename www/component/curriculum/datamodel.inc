@@ -11,6 +11,7 @@ $model->addTable("AcademicYear")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRoot()
 	->setRowDescriptionProvider(function($row) {
 		return "Academic Year ".$row["name"];
 	})

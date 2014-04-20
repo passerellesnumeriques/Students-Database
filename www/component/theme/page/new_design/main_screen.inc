@@ -257,8 +257,8 @@ $this->require_javascript("fill_height_layout.js");
 					<input type='text' id='application_search'/>
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' target='application_frame'><img id='user_picture'/></a>
 					<button class="flat"><img id='notifications' src='/static/application/menu/notifications.png'/></button>
-					<button class="flat"><a href='/dynamic/calendar/page/calendars' target='application_frame'><img id='calendars' src='/static/calendar/calendar_white.png'/></a></button>
-					<button class="flat"><a href='/dynamic/application/page/logout' target='pn_application_frame'><img id='logout' src='/static/application/logout_white.png'/></a></button>
+					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat"><img id='calendars' src='/static/calendar/calendar_white.png'/></button></a>
+					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat"><img id='logout' src='/static/application/logout_white.png'/></button></a>
 				</div>
 			</div>
 			<div id="application_frame_container" style="overflow:hidden" layout="fill">

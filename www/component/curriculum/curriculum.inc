@@ -44,6 +44,12 @@ class curriculum extends Component {
 			->select("BatchPeriod")
 			->whereValue("BatchPeriod","id",$batch_period_id)
 			->join("BatchPeriod", "AcademicPeriod", array("academic_period"=>"id"))
+			->fieldsOfTable("BatchPeriod")
+			->field("AcademicPeriod", "name", "academic_period_name")
+			->field("AcademicPeriod", "start", "start")
+			->field("AcademicPeriod", "end", "end")
+			->field("AcademicPeriod", "weeks", "weeks")
+			->field("AcademicPeriod", "weeks_break", "weeks_break")
 			->executeSingleRow();
 	}
 	
