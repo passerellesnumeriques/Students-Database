@@ -123,6 +123,9 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.unedit_button.style.cursor = 'pointer';
 			t.unedit_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.unedit(); stopEventPropagation(ev); return false; };
 			t.field.getHTMLElement().appendChild(t.unedit_button);
+			t.unedit_button.ondomremoved = function() {
+				if (t.save_button) t.unedit();
+			};
 			layout.invalidate(container);
 		});
 	};
@@ -162,6 +165,10 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		t.editable = false;
 		t.unedit();
 	};
+	
+	window.pnapplication.onclose.add_listener(function() {
+		if (t.save_button) t.unedit();
+	});
 	
 	t.unedit(onready);
 }

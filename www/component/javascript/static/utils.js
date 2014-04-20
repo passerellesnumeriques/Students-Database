@@ -18,6 +18,14 @@ String.prototype.trim=function() {
 		if (!isSpace(this.charAt(end-1))) break;
 	return this.substring(start, end);
 };
+String.prototype.toHTML=function() {
+    return this
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+};
 
 /** check if the given character is a space (space, tab, or line return)
  * @param {String} c the character
@@ -187,6 +195,18 @@ var _generate_id_counter = 0;
 function generateID() {
 	return "id"+(_generate_id_counter++);
 }
+
+function _domRemoved(e) {
+	if (e.ondomremoved) e.ondomremoved();
+	if (e.nodeType != 1) return;
+	for (var i = 0; i < e.childNodes.length; ++i)
+		_domRemoved(e.childNodes[i]);
+}
+Element.prototype._removeChild = Element.prototype.removeChild;
+Element.prototype.removeChild = function(e) {
+	_domRemoved(e);
+	return this._removeChild(e);
+};
 
 /**
  * Return the absolute position of the left edge, relative to the given element or to the document

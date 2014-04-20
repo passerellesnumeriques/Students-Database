@@ -8,9 +8,9 @@ class page_excel_upload extends Page {
 			?>
 			<table style='width:100%;height:100%'>
 			<tr><td valign=middle align=center>
-			<div class='button' onclick="window.frameElement.<?php echo $_GET["button"];?>();">
+			<button class='action' onclick="window.frameElement.<?php echo $_GET["button"];?>();">
 				Open File...
-			</div>
+			</button>
 			<div><img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/> Supported Formats: Microsoft Excel, Open Office Calc, Gnome Gnumeric, and CSV.</div>
 			</td></tr>
 			</table>

@@ -10,14 +10,15 @@
 	border-bottom: none; /* TODO remove */
 	white-space: nowrap;
 	height: 25px;
-	/* background: linear-gradient(to bottom, #c0c0c0 0%, #f0f0f0 100%); */
-	/* background: linear-gradient(to bottom, #d8c0a0 0%, #fff8e8 100%); */
 	background: linear-gradient(to bottom, #404040 0%, #000000 100%);
 	color: #F0F0F0;
 }
 .section>.header.collapsed {
 	border-radius: 5px;
 	border-bottom: none;
+}
+.section.sub>.header {
+    background: linear-gradient(to bottom, #c0c0c0 0%, #a0a0a0 100%);
 }
 .section.soft>.header {
     border-bottom: none;
@@ -41,8 +42,9 @@
 }
 .section>.footer {
 	border-radius: 0px 0px 5px 5px;
-	background-color: #D0D0D0;
-	border-top: 1px solid #808080;
+	padding: 2px;
+	background-color: #E0E0E0;
+	border-top: 1px solid #C0C0C0;
 }
 .section>.footer_empty {
 	border-radius: 0px 0px 5px 5px;

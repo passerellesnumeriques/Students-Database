@@ -149,6 +149,9 @@ $model->addTable("CurriculumSubjectCategory")
 			PNApplication::$instance->news->post("students", "curriculum", null, "Category of subject <i>".$fields["name"]."</i> created for the curricula.");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
+ 	->setRowDescriptionProvider(function($row) {
+ 		return "Subjects' category ".htmlentities($row["name"]);
+ 	})
 	;
 $model->addTable("CurriculumSubject")
 	->addPrimaryKey("id")
@@ -184,7 +187,17 @@ $model->addTable("CurriculumSubject")
 			PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
-	;
+ 	->setRowDescriptionProvider(function($row) {
+ 		$r = SQLQuery::create()
+ 			->select("BatchPeriod")
+ 			->whereValue("BatchPeriod", "id", $row["period"])
+ 			->join("BatchPeriod","StudentBatch",array("batch"=>"id"))
+ 			->field("BatchPeriod","name","period_name")
+ 			->field("StudentBatch","name","batch_name")
+ 			->executeSingleRow();
+ 		return "Subject ".htmlentities($row["name"])." in period ".htmlentities($r["period_name"])." of batch ".htmlentities($r["batch_name"]);
+ 	})
+ 	;
  	
 /* Teachers */
  	

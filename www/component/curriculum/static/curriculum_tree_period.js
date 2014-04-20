@@ -24,7 +24,6 @@ CurriculumTreeNode_BatchPeriod.prototype.constructor = CurriculumTreeNode_BatchP
 CurriculumTreeNode_BatchPeriod.prototype.getIcon = function() { return theme.build_icon("/static/curriculum/hat.png", "/static/curriculum/calendar_10.gif"); };
 CurriculumTreeNode_BatchPeriod.prototype.createTitle = function(editable) {
 	var span = document.createElement("SPAN");
-	span.appendChild(document.createTextNode("Period "));
 	var period = this.period;
 	window.top.datamodel.create_cell("BatchPeriod", null, "name", period.id, period.name, editable && can_edit_batches, span, function(value) { period.name = value; });
 	return span;

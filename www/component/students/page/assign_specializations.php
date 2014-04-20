@@ -29,38 +29,59 @@ class page_assign_specializations extends Page {
 		$q->field("Student","people");
 		$students_class_spe = $q->executeSingleField();
 		
-		$this->require_javascript("assign_peoples.js");
+		$this->require_javascript("assign_elements.js");
+		require_once("component/curriculum/CurriculumJSON.inc");
 		?>
 		<div id='assign_container' style='width:100%;height:100%'>
 		</div>
 		<script type='text/javascript'>
-		var assign = new assign_peoples('assign_container');
 		var popup = window.parent.get_popup_window_from_frame(window);
 		popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
 		popup.addCancelButton();
-		assign.setNonMovableReason("Students who cannot be moved (in gray) are already assigned to a class in a specialization. To change specialization for those students, you must first unassign them from the classes.");
-		<?php foreach ($specializations as $spe) echo "assign.addPossibleAssignment(".$spe["id"].",".json_encode($spe["name"]).");\n";?>
-		<?php foreach ($students as $s) echo "assign.addPeople(".PeopleJSON::People($q, $s).",".json_encode($s["specialization"]).",".(in_array($s["student_people"],$students_class_spe) ? "false" : "true").");\n";?>
+		popup.disableButton('save');
+
+		function display_people(people, container) {
+			container.appendChild(document.createTextNode(people.first_name+" "+people.last_name));
+		}
+
+		var specializations = <?php echo CurriculumJSON::SpecializationsJSONFromDB($specializations);?>;
+		function getSpecializationName(id) {
+			for (var i = 0; i < specializations.length; ++i)
+				if (specializations[i].id == id)
+					return specializations[i].name;
+			return "";
+		}
+		
+		var assign = new assign_elements('assign_container',null,null,display_people,function(assign) {
+			assign.onchange.add_listener(function(){
+				var changes = assign.getChanges();
+				if (changes.length > 0)
+					popup.enableButton('save');
+				else
+					popup.disableButton('save');
+			});
+			assign.setNonMovableReason("Students who cannot be moved (in gray) are already assigned to a class in a specialization. To change specialization for those students, you must first unassign them from the classes.");
+			<?php foreach ($specializations as $spe) echo "assign.addPossibleAssignment(".$spe["id"].",null,".json_encode($spe["name"]).");\n";?>
+			<?php foreach ($students as $s) echo "assign.addElement(".PeopleJSON::People($q, $s).",".json_encode($s["specialization"]).",".(in_array($s["student_people"],$students_class_spe) ? "false" : "true").");\n";?>
+		});
 		function save() {
 			var lock = lock_screen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving specializations...");
-			var peoples = assign.getPeoples();
+			var peoples = assign.getChanges();
 			var next = function(index) {
 				if (index == peoples.length) {
-					<?php if (isset($_GET["onsave"])) echo "window.parent.".$_GET["onsave"]."();"?>
+					assign.changesSaved();
+					<?php if (isset($_GET["onsave"])) echo "window.frameElement.".$_GET["onsave"]."();"?>
 					unlock_screen(lock);
 					return;
 				}
-				var original = assign.getOriginalAssignment(peoples[index].id);
-				var current = assign.getNewAssignment(peoples[index].id);
-				if (original == current) {
-					next(index+1);
-					return;
-				}
+				var original = peoples[index].original;
+				var current = peoples[index].current;
+				var people = peoples[index].element;
 				if (current == null)
-					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Unassigning specialization from "+peoples[index].first_name+" "+peoples[index].last_name);
+					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Unassigning specialization from "+people.first_name.toHTML()+" "+people.last_name.toHTML());
 				else
-					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Assigning specialization "+assign.getAssignmentName(current)+" to "+peoples[index].first_name+" "+peoples[index].last_name);
-				service.json("students", "assign_specialization", {student:peoples[index].id,specialization:current}, function(res) {
+					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Assigning specialization "+getSpecializationName(current).toHTML()+" to "+people.first_name.toHTML()+" "+people.last_name.toHTML());
+				service.json("students", "assign_specialization", {student:people.id,specialization:current}, function(res) {
 					next(index+1);
 				});
 			};

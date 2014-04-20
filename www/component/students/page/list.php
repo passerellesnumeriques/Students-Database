@@ -20,12 +20,14 @@ class page_list extends Page {
 		if (isset($_GET["batch"])) {
 			$batches = array($_GET["batch"]);
 		}
+		$can_manage = PNApplication::$instance->user_management->has_right("manage_batches");
 ?>
 <div id='list_container' style='width:100%;height:100%'>
 </div>
 <script type='text/javascript'>
 var url = new URL(location.href);
 var batches = <?php echo json_encode($batches); ?>;
+var can_manage = <?php echo json_encode($can_manage);?>;
 
 function build_filters() {
 	var filters = [];
@@ -176,7 +178,8 @@ var students_list = new data_list(
 				}
 			});
 		};
-		list.addFooter(remove_button);
+		if (can_manage)
+			list.addFooterTool(remove_button);
 		list.grid.setSelectable(true);
 		list.grid.onselect = function(indexes, rows_ids) {
 			if (indexes.length == 0) {
@@ -186,7 +189,7 @@ var students_list = new data_list(
 			}
 		};
 		<?php 
-		if ($batches <> null && count($batches) == 1) {
+		if ($batches <> null && count($batches) == 1 && $can_manage) {
 			$specializations = PNApplication::$instance->curriculum->getBatchSpecializations($batches[0]);
 			if (count($specializations) > 0) {
 				?>
@@ -196,30 +199,32 @@ var students_list = new data_list(
 				assign_spe.onclick = function() {
 					window.parent.require("popup_window.js",function() {
 						var p = new window.parent.popup_window("Assign Specializations", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
-						p.setContentFrame("/dynamic/students/page/assign_specializations?batch=<?php echo $batches[0];?>&onsave=reload_list");
+						var frame = p.setContentFrame("/dynamic/students/page/assign_specializations?batch=<?php echo $batches[0];?>&onsave=reload_list");
+						frame.reload_list = reload_list;
 						p.show();
 					});
 				};
-				students_list.addFooter(assign_spe);
+				students_list.addFooterTool(assign_spe);
 				<?php 
 			}
 		}
 		?>
-		if (url.params['period'] || url.params['class']) {
+		if (can_manage && (url.params['period'] || url.params['class'])) {
 			var assign = document.createElement("BUTTON");
 			assign.className = "action";
 			assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+(url.params['class'] ? "class" : "classes");
 			assign.onclick = function() {
 				window.parent.require("popup_window.js",function() {
 					var p = new window.parent.popup_window("Assign Students to Classes", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
-					p.setContentFrame("/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period'])+"&onsave=reload_list");
+					var frame = p.setContentFrame("/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period'])+"&onsave=reload_list");
+					frame.reload_list = reload_list;
 					p.show();
 				});
 			};
-			students_list.addFooter(assign);
+			students_list.addFooterTool(assign);
 		}
 
-		if (batches && batches.length == 1) {
+		if (batches && batches.length == 1 && can_manage) {
 			var import_students = document.createElement("BUTTON");
 			import_students.className = "flat";
 			import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
@@ -274,7 +279,6 @@ var students_list = new data_list(
 		import_pictures.className = "flat";
 		import_pictures.disabled = "disabled";
 		import_pictures.innerHTML = "<img src='/static/images_tool/people_picture.png'/> Import Pictures";
-		import_pictures.style.marginLeft = "5px";
 		require("images_tool.js",function() {
 			var tool = new images_tool();
 			tool.usePopup(true, function() {
@@ -341,12 +345,23 @@ var students_list = new data_list(
 				};
 			});
 		});
-		list.addHeader(import_pictures);
+		if (can_manage)
+			list.addHeader(import_pictures);
 
 		list.makeRowsClickable(function(row){
 			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
 		});
 		layout.invalidate(list.container);
+
+		if (batches && batches.length == 1 && can_manage)
+			service.customOutput("students","what_to_do_for_batch",{batch:batches[0]},function(res){
+				if (res && res.length > 0) {
+					var div = document.createElement("DIV");
+					div.className = "warning_footer";
+					div.innerHTML = res;
+					list.addFooter(div);
+				}
+			});
 	}
 );
 

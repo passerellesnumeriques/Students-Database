@@ -185,18 +185,27 @@ function pageHeaderStart() {
 	javascript_loaded("/static/application/config.js.php");
 	javascript_loaded("/static/widgets/common_dialogs.js");
 	javascript_loaded("/static/data_model/databaselock.js");
+	window._page_ready = false;
+	window._page_ready_step = 0;
+	function _pageReadyStep() {
+		if (++window._page_ready_step == 2) {
+			layout.invalidate(document.body);
+			layout.forceLayout();
+			window._page_ready = true;
+		}
+	}
 	</script>
 <?php 
 }
 function pageHeaderEnd($onload = "") {
 ?>
 </head>
-<body onload="<?php echo $onload;?>;window._onload_done=true;">
+<body onload="<?php echo $onload;?>;window._pageReadyStep();">
 <?php
 }
 function pageFooter() {
 ?>
-<script type='text/javascript'>window._page_ready = true;layout.invalidate(document.body);</script>
+<script type='text/javascript'>window._pageReadyStep();</script>
 </body>
 </html>
 <?php

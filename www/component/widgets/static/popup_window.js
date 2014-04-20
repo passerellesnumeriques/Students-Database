@@ -57,6 +57,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.content.innerHTML = "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading...";
 		t.content_container.appendChild(t.content);
 		var frame = document.createElement("IFRAME");
+		t.content._frame_loading = frame;
 		frame.style.border = "0px";
 		frame.style.width = "0px";
 		frame.style.height = "0px";
@@ -187,21 +188,25 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	t.addOkButton = function(onok) {
 		t.addIconTextButton(theme.icons_16.ok, "Ok", 'ok', onok);
+		t.onEnter(onok);
 	};
 	t.addFinishButton = function(onfinish) {
 		t.addIconTextButton(theme.icons_16.ok, "Finish", 'finish', onfinish);
 	};
 	t.addCancelButton = function(oncancel) {
 		t.addIconTextButton(theme.icons_16.cancel, "Cancel", 'cancel', function() { if (oncancel) oncancel(); t.close(); });
+		t.onEscape(function() { if (oncancel) oncancel(); t.close(); });
 	};
 	t.addCloseButton = function(onclose) {
 		t.addIconTextButton(theme.icons_16.cancel, "Close", 'close', function() { if (onclose) onclose(); t.close(); });
+		t.onEscape(function() { if (onclose) onclose(); t.close(); });
 	};
 	t.addSaveButton = function(onsave) {
 		t.addIconTextButton(theme.icons_16.save, "Save", 'save', function() { if (onsave) onsave(); });
 	};
 	t.addCreateButton = function(onclick) {
-		t.addIconTextButton(theme.icons_16.ok, "Create", 'create', function() { if (onclick) onclick(); });
+		t.addIconTextButton(theme.icons_16.ok, "Create", 'create', function() { onclick(); });
+		t.onEnter(onclick);
 	};
 	t.addNextButton = function(onnext) {
 		var span = document.createElement("SPAN");
@@ -233,11 +238,47 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.addYesNoButtons = function(onyes) {
 		t.addIconTextButton(theme.icons_16.yes, "Yes", 'yes', onyes);
 		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { t.close(); });
+		t.onEscape(function() { t.close(); });
 	};
 	
 	t.removeAllButtons = function() {
 		if (t.buttons_td) while (t.buttons_td.childNodes.length > 0) t.buttons_td.removeChild(t.buttons_td.childNodes[0]);
 		t.buttons = [];
+	};
+	
+	t.onEnter = function(onenter) {
+		var listener = function(ev) {
+			if (!t.table) return;
+			var e = getCompatibleKeyEvent(ev);
+			if (e.isEnter) onenter();
+		};
+		listenEvent(window,'keyup',listener);
+		var frame = t.content.nodeName == "IFRAME" ? t.content : typeof t.content._frame_loading != 'undefined' ? t.content._frame_loading : null;
+		if (frame) {
+			var win = getIFrameWindow(frame);
+			if (win) listenEvent(win,'keyup',listener);
+			listenEvent(frame,'load',function(){
+				var win = getIFrameWindow(frame);
+				if (win) listenEvent(win,'keyup',listener);
+			});
+		};
+	};
+	t.onEscape = function(onescape) {
+		var listener = function(ev) {
+			if (!t.table) return;
+			var e = getCompatibleKeyEvent(ev);
+			if (e.isEscape) onescape();
+		};
+		listenEvent(window,'keyup',listener);
+		var frame = t.content.nodeName == "IFRAME" ? t.content : typeof t.content._frame_loading != 'undefined' ? t.content._frame_loading : null;
+		if (frame) {
+			var win = getIFrameWindow(frame);
+			if (win) listenEvent(win,'keyup',listener);
+			listenEvent(frame,'load',function(){
+				var win = getIFrameWindow(frame);
+				if (win) listenEvent(win,'keyup',listener);
+			});
+		};
 	};
 	
 	t.isShown = function() {

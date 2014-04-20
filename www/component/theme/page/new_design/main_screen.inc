@@ -325,7 +325,13 @@ function sectionClicked(section) {
 		loadPage(section.getAttribute("page"));
 }
 
+var menu_url = null;
+function reloadMenu() {
+	loadMenu(menu_url);
+}
+
 function loadMenu(url) {
+	menu_url = url;
 	var menu_container = document.getElementById('application_left_menu');
 	menu_container.innerHTML = "<div style='text-align:center'><img src='"+theme.icons_16.loading_white+"'/></div>";
 	var head = document.getElementsByTagName("HEAD")[0];
@@ -370,7 +376,7 @@ function loadMenu(url) {
 						if (parseInt(next_size.paddingLeft) > parseInt(this_size.paddingLeft)) {
 							item._click_item = items[i+1];
 							item.onclick = function() {
-								triggerEvent(this._click_item,'click');
+								window.frames[this._click_item.getAttribute("target")].frameElement.src = this._click_item.getAttribute("href");
 							};
 						}
 					}
@@ -386,8 +392,13 @@ function loadMenu(url) {
 }
 
 function loadPage(url) {
-	document.getElementById('application_frame')._loading_application_page = true;
-	document.getElementById('application_frame').src = url;
+	var frame = document.getElementById('application_frame'); 
+	frame._loading_application_page = true;
+	var win = getIFrameWindow(frame);
+	if (new URL(frame.src).toString() != new URL(url).toString() || !win || !win.location || new URL(win.location.href).toString() != new URL(url).toString())
+		frame.src = url;
+	else
+		win.location.reload();
 }
 
 function pageLoaded(url) {
@@ -419,15 +430,40 @@ function pageLoaded(url) {
 	} else
 		component = null;
 	var items = document.getElementsByClassName('application_left_menu_item');
+	var oks = [];
 	for (var i = 0; i < items.length; ++i) {
 		var item = items[i];
 		if (item.hasAttribute("href")) {
 			var iu = new URL(item.getAttribute("href"));
+			if (u.path == iu.path) oks.push(item);
+			item.className = "application_left_menu_item";
 			var is_ok = u.path == iu.path;
 			if (is_ok && iu.hash) is_ok = iu.hash == u.hash;
-			item.className = "application_left_menu_item"+(is_ok ? " selected" : "");
 		}
 	}
+	if (oks.length > 1 && u.hash) {
+		var oks2 = [];
+		for (var i = 0; i < oks.length; ++i) {
+			var item = oks[i];
+			var iu = new URL(item.getAttribute("href"));
+			if (iu.hash == u.hash) oks2.push(item);
+		}
+		if (oks2.length > 0) oks = oks2;
+	}
+	if (oks.length > 1 && u.params.length > 0) {
+		var oks2 = [];
+		for (var i = 0; i < oks.length; ++i) {
+			var item = oks[i];
+			var iu = new URL(item.getAttribute("href"));
+			var ok = true;
+			for (var name in u.params)
+				if (typeof iu.params[name] == 'undefined' || iu.params["name"] != u.params["name"]) { ok = false; break; }
+			if (ok) oks2.push(item);
+		}
+		if (oks2.length > 0) oks = oks2;
+	}
+	if (oks.length > 0)
+		oks[0].className = "application_left_menu_item selected";
 	document.getElementById('application_frame')._loading_application_page = false;
 }
 

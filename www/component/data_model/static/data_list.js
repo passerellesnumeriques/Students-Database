@@ -60,6 +60,23 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			while (t.header_center.childNodes.length > 0) t.header_center.removeChild(t.header_center.childNodes[0]);
 		layout.invalidate(t.header);
 	};
+	t.addFooterTool = function(html) {
+		var item = document.createElement("DIV");
+		if (typeof html == 'string')
+			item.innerHTML = html;
+		else
+			item.appendChild(html);
+		if (!t.footer_tools) {
+			t.footer_tools = document.createElement("DIV");
+			t.footer_tools.className = "footer_tools";
+			t.addFooter(t.footer_tools);
+			t.footer.appendChild(t.footer_tools);
+			new horizontal_layout(t.footer_tools);
+			layout.invalidate(container);
+		}
+		t.footer_tools.appendChild(item);
+		layout.invalidate(t.footer_tools);
+	};
 	t.addFooter = function(html) {
 		var item = document.createElement("DIV");
 		if (typeof html == 'string')
@@ -70,7 +87,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.footer = document.createElement("DIV");
 			t.footer.className = "footer";
 			container.appendChild(t.footer);
-			new horizontal_layout(t.footer);
 			layout.invalidate(container);
 		}
 		t.footer.appendChild(item);
@@ -159,12 +175,17 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					t._filters.splice(i,1);
 					i--;
 				}
+		if (t._filterNumber) t._filterNumber.style.visibility = "hidden";
 	};
 	/** Add a new filter
 	 * @param {Object} filter {category,name,force,data,or}
 	 */
 	t.addFilter = function(filter) {
 		t._filters.push(filter);
+		if (t._filterNumber) {
+			t._filterNumber.style.visibility = "visible";
+			t._filterNumber.innerHTML = t._filters.length;
+		}
 	};
 	t.getFilters = function() { return t._filters; };
 	
@@ -334,10 +355,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t._picture_provider = picture_provider;
 		require(["mac_tabs.js","field_html.js","pictures_list.js"], function() {
 			var header = document.createElement("DIV");
-			header.className = "data_list_header_right";
+			header.className = "header_right";
 			header.style.display = "inline-block";
 			header.style.height = "100%";
-			header.style.verticalAlign = "top";
+			header.style.verticalAlign = "middle";
 			var tabs = new mac_tabs('compressed');
 			tabs.addItem("<img src='/static/data_model/list_text_16.png'/>","text");
 			if (picture_provider)
@@ -567,6 +588,22 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		div.onclick = function() { t._filtersDialog(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
+		t._filterNumber = document.createElement("DIV");
+		t._filterNumber.style.display = "inline-block";
+		t._filterNumber.style.position = "absolute";
+		div.style.position = "relative";
+		t._filterNumber.style.bottom = "1px";
+		t._filterNumber.style.right = "1px";
+		t._filterNumber.style.backgroundColor = "#00A000";
+		t._filterNumber.style.color = "#FFFFFF";
+		t._filterNumber.style.fontSize = "8px";
+		t._filterNumber.style.padding = "0px 2px 0px 2px";
+		setBorderRadius(t._filterNumber,2,2,2,2,2,2,2,2);
+		if (t._filters.length > 0)
+			t._filterNumber.innerHTML = t._filters.length;
+		else
+			t._filterNumber.style.visibility = "hidden";
+		div.appendChild(t._filterNumber);
 		// + export
 		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
@@ -714,14 +751,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			});
 		if (f.field.filter_classname) {
 			var a = new GridColumnAction("/static/widgets/grid/filter.gif",function(ev,a,col){
-				require(["context_menu.js","typed_filter.js",f.field.filter_classname+'.js'], function() {
+				require(["context_menu.js",["typed_filter.js",f.field.filter_classname+'.js']], function() {
 					var menu = new context_menu();
 					var filter = null;
 					for (var i = 0; i < t._filters.length; ++i)
 						if (t._filters[i].category == f.field.category && t._filters[i].name == f.field.name) { filter = t._filters[i]; break; }
 					if (filter == null) {
 						filter = {category: f.field.category, name: f.field.name, data:null};
-						t._filters.push(filter);
+						t.addFilter(filter);
 					}
 					var table = document.createElement("TABLE");
 					menu.addItem(table, true);
@@ -1187,7 +1224,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				for (var i = 0; i < t._available_fields.length; ++i)
 					if (field == t._available_fields[i].category+"."+t._available_fields[i].name) {
 						var filter = {category: t._available_fields[i].category, name: t._available_fields[i].name, data:null};
-						t._filters.push(filter);
+						t.addFilter(filter);
 						require([["typed_filter.js",t._available_fields[i].filter_classname+".js"]], function() {
 							t._createFilter(filter, table);
 							menu.resize();

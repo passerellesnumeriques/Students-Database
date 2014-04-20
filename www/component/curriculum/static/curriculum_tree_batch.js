@@ -75,6 +75,7 @@ function new_batch_created(id) {
 		service.json("curriculum","get_batch",{id:id},function(batch){
 			add_batch(batch);
 		});
+		if (window.parent.reloadMenu) window.parent.reloadMenu();
 	});
 }
 function add_batch(batch) {
@@ -99,6 +100,7 @@ function batch_saved(id) {
 		service.json("curriculum","get_batch",{id:id},function(batch){
 			add_batch(batch);
 		});
+		if (window.parent.reloadMenu) window.parent.reloadMenu();
 	});
 }
 function remove_batch(batch) {

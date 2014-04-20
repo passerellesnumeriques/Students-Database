@@ -50,12 +50,12 @@ table.all_borders>tbody>tr>th, table.all_borders>tr>th {
     font-weight: 100;
     padding: 10px 15px 10px 15px;
     border-bottom: 1px solid #DDDDDD;
-    margin-bottom: 5px;
+    background-color: white;
 }
 .page_footer {
-    margin-top: 10px;
 	border-top: 1px solid #DDDDDD;
 	padding: 5px 15px 5px 15px;
+	background-color: white;
 }
 .page_section_title {
     font-family: Arial;
@@ -85,8 +85,7 @@ button {
     font-weight: normal;
     white-space: nowrap;
     cursor: pointer;
-    margin-bottom: 1px;
-    margin-right: 1px;
+    margin: 1px;
 }
 button:hover {
     border: 1px solid rgba(0,0,0,0.6);
@@ -94,11 +93,10 @@ button:hover {
     background-color: rgba(255,255,255,0.6);
 }
 button:active {
-    box-shadow: 0px 0px 0px;
+    box-shadow: 0px 0px 0px rgba(170,170,170,0);
     position: relative;
     top: 1px;
     left: 1px;
-    margin-bottom: 0px;
 }
 button:focus {
 	outline: none;
@@ -108,6 +106,17 @@ button:disabled {
 	color: graytext;
     border: 1px solid rgba(0,0,0,0.2);
     box-shadow: 1px 1px 1px rgba(170,170,170,0);
+    cursor: default;
+}
+button:disabled:hover {
+    border: 1px solid rgba(0,0,0,0.2);
+    box-shadow: 1px 1px 1px rgba(170,170,170,0);
+    background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* W3C */
+}
+button:disabled:active {
+	margin: 1px;
+	top: 0px;
+	left: 0px;
 }
 button:disabled img {
     -webkit-filter: grayscale(100%) contrast(30%);  /* safari/chrome */
@@ -123,38 +132,32 @@ button a {
 }
 
 button.flat {
-    cursor: pointer;
     border: 1px solid rgba(0,0,0,0);
     padding: 2px;
     border-radius: 3px;
-    box-shadow: 1px 1px 1px rgba(170,170,170,0);
-    display: inline-block;
-    margin: 1px 1px 1px 1px;
     background: transparent;
     background-color: transparent;
-    margin-bottom: 1px;
-    margin-right: 1px;
+}
+button.flat.small {
+	padding: 0px;
+}
+button.flat.small_icon {
+	padding: 0px;
+	font-size: 1px;
 }
 button.flat:hover {
     border: 1px solid rgba(128,128,128,0.4);
-    box-shadow: 1px 1px 1px rgba(170,170,170,0.6);
     background-color: rgba(255,255,255,0.2);
+    box-shadow: 1px 1px 1px rgba(170,170,170,0.6);
+}
+button.flat:active {
+    box-shadow: 0px 0px 0px rgba(170,170,170,0);
 }
 button.flat:hover:disabled {
     border: 1px solid rgba(128,128,128,0.2);
     box-shadow: 0px 0px 0px rgba(170,170,170,0);
-    background-color: rgba(255,255,255,0.1);
-}
-button.flat:active {
-    box-shadow: 0px 0px 0px;
-    position: relative;
-    top: 1px;
-    left: 1px;
-    margin-bottom: 0px;
-}
-button.flat:disabled:active {
-    top: 0px;
-    left: 0px;
+    background: transparent;
+    background-color: transparent;
 }
 button.flat a {
     text-decoration: none;
@@ -162,8 +165,7 @@ button.flat a {
 }
 
 button.action {
-    display: inline-block;
-    padding: 2px 4px 2px 4px;
+    padding: 1px 3px 1px 3px;
     border-radius: 7px;
     background: linear-gradient(to bottom, #3498db, #2980b9);
     color: white;
@@ -171,21 +173,11 @@ button.action {
     font-weight: bold;
     text-transform: uppercase;
     border: 1px solid rgba(0,0,0,0);
-    cursor: pointer;
-    margin-bottom: 1px;
-    margin-right: 1px;
 }
 button.action:hover {
     border: 1px solid rgba(255,255,255,0.4);
     box-shadow: 1px 1px 1px rgba(170,170,170,0.6);
     background: linear-gradient(to bottom, #44a8eb, #3990c9);
-}
-button.action:active {
-    box-shadow: 0px 0px 0px;
-    position: relative;
-    top: 1px;
-    left: 1px;
-    margin-bottom: 0px;
 }
 button.action:disabled {
 	background: #C0C0C0;
@@ -194,10 +186,6 @@ button.action:disabled {
 button.action:disabled:hover {
     border: 1px solid rgba(255,255,255,0);
     box-shadow: 1px 1px 1px rgba(170,170,170,0);
-}
-button.action:disabled:active {
-    top: 0px;
-    left: 0px;
 }
 button.action.important {
     background: linear-gradient(to bottom, #34db98, #099960);
@@ -287,8 +275,18 @@ a.black_link:hover {
     background-color: #FFFFD8;
 	border-bottom: 1px solid #A0A060;
 }
+.info_footer {
+	padding: 2px;
+    background-color: #FFFFD8;
+	border-top: 1px solid #A0A060;
+}
 .warning {
 	background-color: #FFFFD8;
+}
+.warning_footer {
+	background-color: #FFFFD8;
+	border-top: 1px solid #A0A060;
+	padding: 2px;
 }
 .error {
 	background-color: #FFD8D8;

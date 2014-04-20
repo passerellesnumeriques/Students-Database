@@ -61,9 +61,17 @@ class CurriculumJSON {
 	 * @no_name_check
 	 */
 	public static function SpecializationsJSON() {
+		return self::SpecializationsJSONFromDB(PNApplication::$instance->curriculum->getSpecializations());
+	}
+	/**
+	 * Build a JavaScript array of Specialization
+	 * @return string the JSON structure
+	 * @no_name_check
+	 */
+	public static function SpecializationsJSONFromDB($specializations) {
 		$s = "[";
 		$first = true;
-		foreach (PNApplication::$instance->curriculum->getSpecializations() as $spe) {
+		foreach ($specializations as $spe) {
 			if ($first) $first = false; else $s .= ",";
 			$s .= self::SpecializationJSON($spe);
 		}

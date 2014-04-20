@@ -53,6 +53,13 @@ datamodel = {
 			if (text_node.parentNode) layout.invalidate(text_node.parentNode);
 		});
 	},
+	registerCellSpan: function(win, table, column, row_key, span) {
+		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
+			span.innerHTML = "";
+			span.appendChild(document.createTextNode(value));
+			if (span.parentNode) layout.invalidate(span.parentNode);
+		});
+	},
 	inputCell: function(input, table, column, row_key) {
 		var original = input.value;
 		var win = getWindowFromDocument(input.ownerDocument);

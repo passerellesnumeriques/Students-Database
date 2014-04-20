@@ -8,23 +8,25 @@ class page_popup_create_teacher extends Page {
 <div style='background-color:white;padding:10px'>
 <ul>
 <?php 
-$q = SQLQuery::create()
-	->select("TeacherDates")
-	->where("TeacherDates.end < '".SQLQuery::escape($_GET["start"])."'")
-	->groupBy("TeacherDates", "people");
-PNApplication::$instance->people->joinPeople($q, "TeacherDates", "people");
-$teachers = $q->execute();
-if (count($teachers) > 0) {
-	echo "<li>The teacher already teached before:<ul>";
-	foreach ($teachers as $t) {
-		echo "<li>";
-		echo htmlentities($t["first_name"]." ".$t["last_name"]); // TODO
-		echo "</li>";
+if (isset($_GET["start"])) {
+	$q = SQLQuery::create()
+		->select("TeacherDates")
+		->where("TeacherDates.end < '".SQLQuery::escape($_GET["start"])."'")
+		->groupBy("TeacherDates", "people");
+	PNApplication::$instance->people->joinPeople($q, "TeacherDates", "people");
+	$teachers = $q->execute();
+	if (count($teachers) > 0) {
+		echo "<li>The teacher already teached before:<ul>";
+		foreach ($teachers as $t) {
+			echo "<li>";
+			echo htmlentities($t["first_name"]." ".$t["last_name"]); // TODO
+			echo "</li>";
+		}
+		echo "</ul></li>";
 	}
-	echo "</ul></li>";
 }
 
-$q = PNApplication::$instance->staff->requestStaffsForDates($_GET["start"], $_GET["end"]);
+$q = PNApplication::$instance->staff->requestStaffsForDates(isset($_GET["start"]) ? $_GET["start"] : date("Y-m-d",time()), @$_GET["end"]);
 PNApplication::$instance->people->joinPeople($q, "StaffPosition", "people");
 $q->where("People.types NOT LIKE '%/teacher/%'");
 $staff = $q->execute();

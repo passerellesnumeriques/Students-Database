@@ -49,6 +49,8 @@ class service_search_student_by_name extends Service {
 		foreach ($words as $word) {
 			if (strlen($where) > 0) $where .= " OR ";
 			$where .= "LOWER(`People`.`first_name`) LIKE '%".SQLQuery::escape($word)."%'";
+			$where .= " OR ";
+			$where .= "LOWER(`People`.`last_name`) LIKE '%".SQLQuery::escape($word)."%'";
 		}
 		$q->where($where);
 		

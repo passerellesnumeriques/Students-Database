@@ -167,6 +167,8 @@ animation = {
 	
 	appearsOnOver: function(onover_element, appears_elements) {
 		if (getObjectClassName(appears_elements) != "Array") appears_elements = [appears_elements];
+		for (var i = 0; i < appears_elements.length; ++i)
+			setOpacity(appears_elements[i], 0);
 		var anim_in = [];
 		var anim_out = [];
 		listenEvent(window,'mousemove',function(ev) {

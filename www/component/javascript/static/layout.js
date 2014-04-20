@@ -62,6 +62,22 @@ layout = {
 		this._noresize_event = true;
 	},
 	
+	forceLayout: function() {
+		if (layout._process_timeout) clearTimeout(layout._process_timeout);
+		layout._process_timeout = null;
+		layout._process();
+		if (layout._invalidated.length > 0) {
+			if (layout._process_timeout) clearTimeout(layout._process_timeout);
+			layout._process_timeout = null;
+			layout._process();
+		}
+		if (layout._invalidated.length > 0) {
+			if (layout._process_timeout) clearTimeout(layout._process_timeout);
+			layout._process_timeout = null;
+			layout._process();
+		}
+	},
+	
 	_process_timeout: null,
 	_layouts_short_time: 0,
 	_layout_needed: function() {

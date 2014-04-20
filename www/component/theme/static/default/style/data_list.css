@@ -34,3 +34,6 @@
 	border-top: 1px solid #808080;
 	background-color: #FFFFFF;
 }
+.data_list>.footer>.footer_tools {
+	padding: 1px 5px 1px 5px;
+}

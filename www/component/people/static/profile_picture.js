@@ -19,11 +19,18 @@ function profile_picture(container, width, height, halign, valign) {
 	}
 	if (container) container.appendChild(this.picture_container);
 	
-	this.adjustPicture = function() {
+	this.adjustPicture = function(recall) {
 		if (!t.picture) return;
 		var resize_ratio = 1;
 		var h = t.picture.naturalHeight;
 		var w = t.picture.naturalWidth;
+		if (w == 0 || h == 0) {
+			if (!recall) recall = 0;
+			if (recall >= 10) return;
+			setTimeout(function() {
+				t.adjustPicture(recall+1);
+			},1+recall*10);
+		}
 		if (h > t.height) {
 			resize_ratio = t.height/h;
 		}
@@ -72,7 +79,16 @@ function profile_picture(container, width, height, halign, valign) {
 		if (!people.picture_id)
 			this.loadPeopleID(people.id, onloaded);
 		else
-			this._load("storage", "get?id="+people.picture_id+"&revision="+people.picture_revision, onloaded);
+			this.loadStorage(people.picture_id,people.picture_revision,onloaded);
+	};
+	this.loadStorage = function(storage_id,revision,onloaded) {
+		this._load("storage", "get?id="+storage_id+(revision?"&revision="+revision:""), onloaded);
+	};
+	this.loadPeopleStorage = function(people_id,picture_id,revision,onloaded) {
+		if (!picture_id)
+			this.loadPeopleID(people_id, onloaded);
+		else
+			this.loadStorage(picture_id,revision,onloaded);
 	};
 	
 	this.component = null;
@@ -124,7 +140,7 @@ function profile_picture(container, width, height, halign, valign) {
 						t.progress = null;
 					}
 					if (img.parentNode)
-						t.picture_container.appendChild(img);
+						t.picture_container.removeChild(img);
 					t.adjustPicture();
 					if (onloaded) onloaded();
 				}, 
@@ -137,7 +153,7 @@ function profile_picture(container, width, height, halign, valign) {
 						t.progress = null;
 					}
 					img.src = theme.icons_16.error;
-					if (img.parentNode)
+					if (!img.parentNode)
 						t.picture_container.appendChild(img);
 					if (onloaded) onloaded();
 				}, function(loaded, tot) {
@@ -156,7 +172,7 @@ function profile_picture(container, width, height, halign, valign) {
 				"text/plain; charset=x-user-defined"
 			);
 		}
-	}
+	};
 	
 	this.setSize = function(width, height) {
 		if (width || height) {

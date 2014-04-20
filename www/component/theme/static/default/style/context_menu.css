@@ -13,7 +13,7 @@
 	padding: 1px;
 	border: 1px solid #F0F0F0;
 }
-.context_menu_item:hover, .context_menu_item_selected {
+.context_menu_item:hover, .context_menu_item.selected {
 	background-color: #FFF0D0;
 	border: 1px solid #F0E0C0;
 }

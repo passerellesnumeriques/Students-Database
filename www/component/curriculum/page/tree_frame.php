@@ -4,6 +4,11 @@ class page_tree_frame extends Page {
 	public function get_required_rights() { return array("consult_curriculum"); }
 	
 	public function execute() {
+		if (isset($_GET["node"])) {
+			setcookie("curriculum_tree_node",$_GET["node"],time()+60*60*24*30, "/dynamic/curriculum/page/tree_frame");
+			echo "<script type='text/javascript'>var u = new URL(location.href);delete u.params['node'];location.href=u.toString();</script>";
+			return;
+		}
 		$this->add_init_script("window.top.require('datamodel.js');");
 		$this->require_javascript("horizontal_layout.js");
 		$this->onload("new horizontal_layout('curriculum_tree_frame_container');");

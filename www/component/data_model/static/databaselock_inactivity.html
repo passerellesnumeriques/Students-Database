@@ -9,12 +9,14 @@
 </head>
 <body style='background-color:white'>
 <div style="padding:5px;display:inline-block">
-You are currently on a page where you can edit some data.<br/>
+You are currently editing some data.<br/>
 <br/>
-Those data are locked, meaning nobody else can edit them, in order to ensure someone else will not modify it at the same time as you.<br/>
+In order to ensure that someone else will not make modifications at the same time as you, those data are locked, meaning nobody else can edit them.<br/>
 <br/>
-You seem to be inactive since several minutes. Please click on the button below to continue working,<br/>
-else the data will be automatically unlocked, your data not saved, and you will be redirected to another page in <span style='font-weight:bold'><span id='seconds'></span> second(s).</span><br/>
+To avoid locking data for long time, it is automatically unlocked if you are inactive.<br/>
+And it seems you are inactive since several minutes. Please click on the button below to continue working,<br/>
+else the data will be automatically unlocked in <span style='font-weight:bold'><span id='seconds'></span> second(s).</span>
+, and any modification which has not been saved will be lost.<br/>
 <br/>
 <button onclick='db_lock_still_here();'>I am still there !</button>
 </div>

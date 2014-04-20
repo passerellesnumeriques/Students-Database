@@ -9,11 +9,22 @@ class service_menu extends Service {
 	public function get_output_format($input) { return "text/html"; }
 		
 	public function execute(&$component, $input) {
+		//$current_batches = PNApplication::$instance->curriculum->getCurrentBatches();
 ?>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list'>
 	<img src='/static/students/students_white.png'/>
 	Students List
 </a>
+<?php
+/*
+foreach ($current_batches as $b) {
+	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?node=batch".$b["id"]."#/dynamic/students/page/list'>";
+	echo "<img src='/static/curriculum/arrow_right_white.png'/> ";
+	echo "Batch ".htmlentities($b["name"]);
+	echo "</a>";
+} 
+*/
+?>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/academic_calendar'>
 	<img src='/static/calendar/calendar_white.png'/>
 	Years and Periods
@@ -22,10 +33,34 @@ class service_menu extends Service {
 	<img src='/static/curriculum/curriculum_white.png'/>
 	Curriculum
 </a>
+<?php
+/*
+foreach ($current_batches as $b) {
+	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?node=batch".$b["id"]."#/dynamic/curriculum/page/curriculum'>";
+	echo "<img src='/static/curriculum/arrow_right_white.png'/> ";
+	echo "Batch ".htmlentities($b["name"]);
+	echo "</a>";
+} 
+*/
+?>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/teachers'>
+	<img src='/static/curriculum/teacher_white.png'/>
+	Teachers
+</a>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/students_grades'>
 	<img src='/static/transcripts/grades_white.png'/>
 	Grades
 </a>
+<?php
+/*
+foreach ($current_batches as $b) {
+	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?node=batch".$b["id"]."#/dynamic/transcripts/page/students_grades'>";
+	echo "<img src='/static/curriculum/arrow_right_white.png'/> ";
+	echo "Batch ".htmlentities($b["name"]);
+	echo "</a>";
+} 
+*/
+?>
 <div class="application_left_menu_separator"></div>
 <div id="search_student_container" style="width:100%;padding:2px 5px 2px 5px;"></div>
 <script type='text/javascript'>
@@ -42,7 +77,8 @@ require("autocomplete.js",function() {
 			handler(items);
 		});
 	}, function(item) {
-		document.getElementById('students_page').src = "/dynamic/people/page/profile?people="+item.value;
+		ac.reset();
+		window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+item.value,null,95,95);
 	}, 250);
 	setBorderRadius(ac.input,8,8,8,8,8,8,8,8);
 	setBoxShadow(ac.input,-1,2,2,0,'#D8D8F0',true);

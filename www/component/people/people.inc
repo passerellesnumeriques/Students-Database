@@ -71,8 +71,23 @@ class people extends Component {
 		return SQLQuery::create()->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
 	}
 	
-	public function getPeoples($peoples_ids) {
-		return SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids)->execute();
+	public function getPeoples($peoples_ids,$include_picture_revision=false) {
+		if (count($peoples_ids) == 0) return array();
+		$q = SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids);
+		if ($include_picture_revision) {
+			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
+			$q->fieldsOfTable("People");
+		}
+		return $q->execute();
+	}
+	public function getPeoplesSQLQuery($peoples_ids,$include_picture_revision=false) {
+		if (count($peoples_ids) == 0) return array();
+		$q = SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids);
+		if ($include_picture_revision) {
+			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
+			$q->fieldsOfTable("People");
+		}
+		return $q;
 	}
 	
 	public function canReadTypes($types) {

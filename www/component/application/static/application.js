@@ -356,12 +356,12 @@ function LoadingFrame(frame_element) {
 			return;
 		}
 		var now = new Date().getTime();
-		if (now-this._start > 5000) {
+		if (now-this._start > 10000) {
 			this.remove();
 			return;
 		}
 		this._position();
-		setTimeout(updater, 50);
+		setTimeout(updater, now-this._start < 2000 ? 50 : 100);
 	};
 	
 	this._position();

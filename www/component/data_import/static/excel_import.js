@@ -482,7 +482,8 @@ function excel_import(popup, container, onready) {
 			t.excel_bar.addMenuButton("/static/data_import/import_excel_16.png", "Open another file", function(ev) {
 				t.uploadFile(ev);
 			});
-		} else {		
+		} else {
+			t.splitter.show_left();
 			t.frame_excel.src = "about:blank";
 			t.frame_import.src = "about:blank";
 		}

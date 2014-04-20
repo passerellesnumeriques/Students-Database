@@ -21,6 +21,16 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod", "start")->execute();
 	}
 	
+	public function getAcademicPeriodsWithYearName() {
+		return SQLQuery::create()
+			->select("AcademicPeriod")
+			->join("AcademicPeriod","AcademicYear",array("year"=>"id"))
+			->fieldsOfTable("AcademicPeriod")
+			->field("AcademicYear","name","year_name")
+			->orderBy("AcademicPeriod", "start")
+			->execute();
+	}
+	
 	public function getAcademicPeriodFromBatchPeriod($batch_period_id) {
 		return SQLQuery::create()
 			->select("BatchPeriod")
@@ -112,7 +122,7 @@ class curriculum extends Component {
 		return SQLQuery::create()
 			->select("BatchPeriod")
 			->whereValue("BatchPeriod", "batch", $batch_id)
-			->join("BatchPeriod", "AcademicPeriodSpecialization", array("id"=>"period"))
+			->join("BatchPeriod", "BatchPeriodSpecialization", array("id"=>"period"))
 			->whereNotNull("BatchPeriodSpecialization", "specialization")
 			->groupBy("BatchPeriodSpecialization", "specialization")
 			->field("BatchPeriodSpecialization", "specialization", "id")
@@ -153,7 +163,23 @@ class curriculum extends Component {
 	 * @return array rows from database associating a period id to a specialization id
 	 */
 	public function getBatchPeriodsSpecializations($periods_ids) {
+		if (count($periods_ids) == 0) return array();
 		return SQLQuery::create()->select("BatchPeriodSpecialization")->whereIn("BatchPeriodSpecialization","period",$periods_ids)->execute();
+	}
+	/** Retrieve the specializations for the given periods
+	 * @param array $periods_ids list of requested periods
+	 * @return array rows from database associating a period id to a specialization id
+	 */
+	public function getBatchPeriodsSpecializationsWithName($periods_ids) {
+		if (count($periods_ids) == 0) return array();
+		return SQLQuery::create()
+			->select("BatchPeriodSpecialization")
+			->whereIn("BatchPeriodSpecialization","period",$periods_ids)
+			->join("BatchPeriodSpecialization", "Specialization", array("specialization"=>"id"))
+			->field("BatchPeriodSpecialization", "period", "period")
+			->field("BatchPeriodSpecialization", "specialization", "id")
+			->field("Specialization", "name", "name")
+			->execute();
 	}
 	
 	/** Retrieve the given period
@@ -170,7 +196,25 @@ class curriculum extends Component {
 	public function getBatchPeriods($batch_id) {
 		return SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod", "batch", $batch_id)->execute();
 	}
-
+	/** Retrieve periods for a batch
+	 * @param integer $batch_id the requested batch
+	 * @return array the list of periods from the database
+	 */
+	public function getBatchPeriodsWithAcademicPeriods($batch_id) {
+		return SQLQuery::create()
+			->select("BatchPeriod")
+			->whereValue("BatchPeriod", "batch", $batch_id)
+			->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"))
+			->fieldsOfTable("BatchPeriod")
+			->field("AcademicPeriod", "id", "academic_period_id")
+			->field("AcademicPeriod", "name", "academic_period_name")
+			->field("AcademicPeriod", "start", "start")
+			->field("AcademicPeriod", "end", "end")
+			->field("AcademicPeriod", "weeks", "weeks")
+			->field("AcademicPeriod", "weeks_break", "weeks_break")
+			->execute();
+	}
+	
 	/**
 	 * Retrieve the class information from database
 	 * @param integer $class_id the requested class
@@ -245,6 +289,7 @@ class curriculum extends Component {
 		}
 		if ($spe_id <> null) $q->whereValue("CurriculumSubject", "specialization", $spe_id);
 		if ($category_id <> null) $q->whereValue("CurriculumSubject", "category", $category_id);
+		$q->orderBy("CurriculumSubject","code");
 		return $q->execute();
 	}
 	

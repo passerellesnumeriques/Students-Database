@@ -22,6 +22,32 @@ CurriculumTreeNode_Class.prototype.createInfo = function() {
 	button.node = this;
 	button.onclick = function() {
 		remove_class(this.node);
+	};	
+	div.appendChild(button);
+	button = document.createElement("BUTTON");
+	button.className = "action";
+	button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
+	button.title = "Rename Class";
+	button.cl = this.cl;
+	button.onclick = function() {
+		var cl = this.cl;
+		input_dialog(theme.icons_16.edit,"Edit Class Name","Name of the class",this.cl.name,100,
+			function(name){
+				if (!name.checkVisible()) return "Please enter a name";
+				return null;
+			},function(name){
+				if (!name) return;
+				name = name.trim();
+				service.json("data_model","save_entity",{
+					table: "AcademicClass",
+					key: cl.id,
+					lock: -1,
+					field_name: name
+				},function(res){
+					if (res) window.top.datamodel.cellChanged("AcademicClass","name",cl.id,name);
+				});
+			}
+		);
 	};
 	div.appendChild(button);
 	return div;

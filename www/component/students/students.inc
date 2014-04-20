@@ -19,9 +19,9 @@ class students extends Component {
 			$possible_specializations = SQLQuery::create()->noWarning()
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
-				->join("Student", "AcademicPeriod", array("batch"=>"batch"))
-				->join("AcademicPeriod", "AcademicPeriodSpecialization", array("id"=>"period"))
-				->field("AcademicPeriodSpecialization", "specialization", "specialization")
+				->join("Student", "BatchPeriod", array("batch"=>"batch"))
+				->join("BatchPeriod", "BatchPeriodSpecialization", array("id"=>"period"))
+				->field("BatchPeriodSpecialization", "specialization", "specialization")
 				->executeSingleField();
 			if (!in_array($specialization_id, $possible_specializations)) {
 				PNApplication::error("The student does not exist or the specialization is not available for this batch of students");
