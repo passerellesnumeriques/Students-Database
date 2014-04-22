@@ -53,6 +53,13 @@ datamodel = {
 			if (text_node.parentNode) layout.invalidate(text_node.parentNode);
 		});
 	},
+	registerCellSpan: function(win, table, column, row_key, span) {
+		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
+			span.innerHTML = "";
+			span.appendChild(document.createTextNode(value));
+			if (span.parentNode) layout.invalidate(span.parentNode);
+		});
+	},
 	inputCell: function(input, table, column, row_key) {
 		var original = input.value;
 		var win = getWindowFromDocument(input.ownerDocument);
@@ -221,6 +228,56 @@ datamodel = {
 		}
 	},
 	
+	model: null,
+	_model_listeners: [],
+	getModel: function(callback) {
+		if (window.top.datamodel.model != null)
+			callback(window.top.datamodel.model);
+		else {
+			window.top.datamodel._model_listeners.push(callback);
+			if (window.top.datamodel._model_listeners.length == 1)
+				service.json("data_model", "get_model", {}, function(model) {
+					window.top.datamodel.model = model;
+					objectMerge(window.top.datamodel.model, window.top.datamodel_prototype);
+					for (var i = 0; i < model.tables.length; ++i) {
+						objectMerge(model.tables[i], window.top.datamodel_table_prototype);
+						for (var j = 0; j < model.tables[i].columns.length; ++j)
+							objectMerge(model.tables[i].columns[j], window.top.datamodel_column_prototype);
+					}
+					for (var i = 0; i < window.top.datamodel._model_listeners.length; ++i)
+						window.top.datamodel._model_listeners[i](window.top.datamodel.model);
+					window.top.datamodel._model_listeners = null;
+				});
+		}
+	},
+	
+	create_cell: function(table, sub_model, column, row_key, value, editable, container, onchange) {
+		if (!editable) {
+			var node = document.createTextNode(value);
+			window.top.datamodel.addCellChangeListener(getWindowFromElement(container), table+(sub_model ? "_"+sub_model : ""), column, row_key, function(value){
+				node.nodeValue = value;
+				if (onchange) onchange(value);
+			});
+			container.appendChild(node);
+			return;
+		}
+		require("typed_field.js");
+		require("editable_cell.js");
+		this.getModel(function(model) {
+			var t = model.getTable(table);
+			var c = t.getColumn(column);
+			require([["typed_field.js",c.typed_field_classname+".js"],"editable_cell.js"], function() {
+				if (row_key > 0)
+					new editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, c.typed_field_classname, c.typed_field_args, value,null,onchange);
+				else {
+					var field = new window[c.typed_field_classname](value,true,c.typed_field_args);
+					container.appendChild(field.getHTMLElement());
+					if (onchange) field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
+				}
+			});
+		});
+	},
+	
 	confirm_remove: function(table,row_key,onremoved) {
 		var popup_ready = false;
 		var content_html = null;
@@ -252,3 +309,23 @@ datamodel = {
 	}
 };
 window.top.pnapplication.onwindowclosed.add_listener(function(w) { datamodel._windowClosed(w); });
+if (!window.top.datamodel_prototype) {
+window.top.datamodel_prototype = {
+	getTable: function(name) {
+		for (var i = 0; i < this.tables.length; ++i)
+			if (this.tables[i].name == name)
+				return this.tables[i];
+		return null;
+	}
+};
+window.top.datamodel_table_prototype = {
+	getColumn: function(name) {
+		for (var i = 0; i < this.columns.length; ++i)
+			if (this.columns[i].name == name)
+				return this.columns[i];
+		return null;
+	}
+};
+window.top.datamodel_column_prototype = {
+};
+}

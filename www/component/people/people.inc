@@ -5,10 +5,36 @@
 class people extends Component {
 
 	public function getPluginImplementations() {
-		require_once("PeoplePeoplePlugin.inc");
+		require_once("PeoplePluginsImplementations.inc");
+		require_once("PeoplePictureStoragePlugin.inc");
 		return array(
-			new PeoplePeoplePlugin()
+			new PeopleProfilePage(),
+			new PeoplePictureStoragePlugin()
 		);
+	}
+	
+	public function parseTypes($types) {
+		$list = array();
+		while (substr($types,0,1) == "/") {
+			$i = strpos($types, "/", 1);
+			if ($i === false) break;
+			$type = substr($types, 1, $i-1);
+			$types = substr($types,$i+1);
+			array_push($list, $type);
+		}
+		return $list;
+	}
+	
+	public function getPeopleTypePlugin($type) {
+		require_once("PeopleTypePlugin.inc");
+		foreach (PNApplication::$instance->components as $c) {
+			if ($c == $this) continue;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeopleTypePlugin)) continue;
+				if ($pi->getId() == $type) return $pi;
+			}
+		}
+		return null;
 	}
 
 	public function joinPeople(&$q, $from_table, $from_key) {
@@ -45,11 +71,64 @@ class people extends Component {
 		return SQLQuery::create()->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
 	}
 	
+	public function getPeoples($peoples_ids,$include_picture_revision=false) {
+		if (count($peoples_ids) == 0) return array();
+		$q = SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids);
+		if ($include_picture_revision) {
+			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
+			$q->fieldsOfTable("People");
+		}
+		return $q->execute();
+	}
+	public function getPeoplesSQLQuery($peoples_ids,$include_picture_revision=false) {
+		if (count($peoples_ids) == 0) return array();
+		$q = SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids);
+		if ($include_picture_revision) {
+			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
+			$q->fieldsOfTable("People");
+		}
+		return $q;
+	}
+	
+	public function canReadTypes($types) {
+		if (is_string($types)) $types = $this->parseTypes($types);
+		require_once("PeopleTypePlugin.inc");
+		$plugin = null;
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeopleTypePlugin)) continue;
+				if (in_array($pi->getId(), $types)) {
+					if ($plugin == null || $plugin->getSecurityPriority() > $pi->getSecurityPriority())
+						$plugin = $pi;
+				}
+			}
+		 if ($plugin == null) return false;
+		 return $plugin->canRead();
+	}
+	public function canModifyTypes($types) {
+		if (is_string($types)) $types = $this->parseTypes($types);
+		require_once("PeopleTypePlugin.inc");
+		$plugin = null;
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi) {
+			if (!($pi instanceof PeopleTypePlugin)) continue;
+			if (in_array($pi->getId(), $types)) {
+				if ($plugin == null || $plugin->getSecurityPriority() > $pi->getSecurityPriority())
+					$plugin = $pi;
+			}
+		}
+		if ($plugin == null) return false;
+		return $plugin->canWrite();
+	}
+	
 	public function canRead($people_id) {
+		if (PNApplication::$instance->user_management->has_right("see_anybody")) return true;
+		if ($people_id == PNApplication::$instance->user_people->user_people_id) return true;
 		$p = $this->getPeople($people_id);
 		return $p <> null;
 	}
 	public function canModify($people_id) {
+		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return true;
 		$q = SQLQuery::create();
 		$table_alias = $q->generateTableAlias();
 		$q->select(array("People"=>$table_alias));

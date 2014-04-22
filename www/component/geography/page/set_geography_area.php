@@ -6,7 +6,7 @@ class page_set_geography_area extends Page {
 	}
 	public function execute(){
 		if (!isset($_GET['country']) || $_GET['country'] == "") {
-			echo "Please select a country to edit";
+			echo "<div style='margin:10px'>Please select a country to edit</div>";
 			return;
 		}
 		$country = SQLQuery::create()->select("Country")->where("id",$_GET["country"])->executeSingleRow();
@@ -15,6 +15,9 @@ class page_set_geography_area extends Page {
 		$this->add_javascript("/static/widgets/section/section.js");
 		$this->onload("section_from_html('manage_divisions_section');");
 		$this->onload("section_from_html('tree_section');");
+		
+		// example for province:
+		// https://maps.googleapis.com/maps/api/geocode/json?address=Agusan%20del%20Norte&components=country:PH&sensor=false&key=AIzaSyBhG4Hn5zmbXcALGQtAPJDkUj2hDSZdVSU
 ?>
 <div id='page_split' style='width:100%;height:100%'>
 	<div style='overflow:auto;'>

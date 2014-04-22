@@ -17,16 +17,23 @@
 	font-size: 12pt;
 }
 
-.data_list_header {
+.data_list>.header {
 	height: 30px;
 	background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
 	border-bottom: 1px solid #808080;
 }
-.data_list_header_left {
+.data_list>.header>.header_left {
 }
-.data_list_header_center {
+.data_list>.header>.header_center {
 	border-left: 1px solid #808080;
 }
-.data_list_header_right {
+.data_list>.header>.header_right {
 	border-left: 1px solid #808080;
+}
+.data_list>.footer {
+	border-top: 1px solid #808080;
+	background-color: #FFFFFF;
+}
+.data_list>.footer>.footer_tools {
+	padding: 1px 5px 1px 5px;
 }

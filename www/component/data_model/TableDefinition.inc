@@ -45,6 +45,7 @@ namespace datamodel {
 		private $key = null;
 
 		private $read_access_rights = array();
+		private $read_access_from_foreign_table = array();
 		private $read_access_filters = array();
 		private $read_column_access_rights = array();
 		private $write_access_rights = array();
@@ -62,9 +63,6 @@ namespace datamodel {
 		
 		/** @var boolean indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed */
 		private $is_root = false;
-
-		/** @var DataDisplayHandler[] */
-		private $display_handler = array();
 
 		public $_key_submodels = array();
 		
@@ -113,9 +111,9 @@ namespace datamodel {
 		public function getColumn($name, $sub_models = null) {
 			$columns = $this->_getColumns($sub_models);
 			foreach ($columns as $c)
-				if ($c->name == $name) {
-				if (!$this->canAccessColumn($c->name)) throw new \Exception("Access denied");
-				return $c;
+				if ($c->name == $name) {				
+					if (!$this->canAccessColumn($c->name)) throw new \Exception("Access denied");
+					return $c;
 			}
 			return null;
 		}
@@ -246,6 +244,12 @@ namespace datamodel {
 			array_push($this->columns, $c);
 			return $this;
 		}
+		
+		public function &addTimestamp($name, $size=32, $min = null, $max = null, $can_be_null = true, $unique = false){
+			$c = new ColumnTimestamp($this, $name, $size, $min, $max, $can_be_null, $unique);
+			array_push($this->columns, $c);
+			return $this;
+		}
 
 		public function &addDecimal($name, $integer_digits=10, $decimal_digits = 2, $min = null, $max = null, $can_be_null = true, $unique = false) {
 			$c = new ColumnDecimal($this, $name, $integer_digits, $decimal_digits, $min, $max, $can_be_null, $unique);
@@ -318,6 +322,17 @@ namespace datamodel {
 			array_push($this->read_access_rights, array($right_name, $right_value));
 			return $this;
 		}
+		
+		/**
+		 * Allow the access to this table when coming from a foreign table (in a join request)
+		 * If the user was allowed to access to the previous table, no need to check again for this table 
+		 * @param string $foreign_table_name
+		 * @return \datamodel\Table
+		 */
+		public function &addReadAccessFromForeignTable($foreign_table_name){
+			array_push($this->read_access_from_foreign_table, $foreign_table_name);
+			return $this;
+		}
 		/**
 		 * Add a filter which will add where conditions in every select
 		 * @param function $filter function taking 2 parameters: the SQLQuery to modify, and the table alias
@@ -339,15 +354,33 @@ namespace datamodel {
 		public function canAccess() {
 			if ($this->read_access_rights === null) return true;
 			if (count($this->read_access_filters) > 0) return true;
+			if (count($this->read_access_from_foreign_table) > 0) return true;
 			foreach ($this->read_access_rights as $r)
 				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
 			foreach ($this->read_column_access_rights as $colname=>$list)
 				foreach ($list as $r)
+					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;			
+			return false;
+		}
+		
+		public function getReadAccessFromForeignTable(){
+			return $this->read_access_from_foreign_table;
+		}
+		public function hasReadFilter(){
+			return count($this->read_access_filters) > 0;
+		}
+		public function hasReadRights(){
+			if ($this->read_access_rights === null) return true;
+			foreach ($this->read_access_rights as $r)
 				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+			foreach ($this->read_column_access_rights as $colname=>$list)
+				foreach ($list as $r)
+					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
 			return false;
 		}
 		public function canAccessColumn($column_name) {
 			if ($this->read_access_rights === null) return true;
+			if (count($this->read_access_from_foreign_table) > 0) return true;
 			foreach ($this->read_access_rights as $r)
 				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
 			if (count($this->read_column_access_rights) > 0) {
@@ -529,35 +562,6 @@ namespace datamodel {
 			return $s;
 		}
 		
-
-		public function &setDisplayHandler($coming_from, $handler) {
-			$this->display_handler[$coming_from] = $handler;
-			$handler->setTable($this);
-			return $this;
-		}
-		/**
-		 * @param string|null $coming_from the name of the foreign key or null
-		 * @return DataDisplayHandler|null
-		 */
-		public function getDisplayHandler($coming_from) {
-			if ($coming_from <> null && isset($this->display_handler[$coming_from]))
-				return $this->display_handler[$coming_from];
-			return @$this->display_handler[null];
-		}
-
-		/** Try to find the given DataDisplay
-		 * @return DataDisplay|null
-		 */
-		public function getDataDisplay($category, $name) {
-			foreach ($this->display_handler as $from=>$display) {
-				if ($display->category <> $category) continue;
-				foreach ($display->getDisplayableData() as $data)
-					if ($data->getDisplayName() == $name)
-					return $data;
-			}
-			return null;
-		}
-
 
 		public function hide($field) {
 			for ($i = 0; $i < count($this->columns); $i++)
@@ -896,6 +900,16 @@ namespace datamodel {
 			return "INT(".$this->size.") NOT NULL AUTO_INCREMENT";
 		}
 	}
+	
+	class ColumnTimestamp extends ColumnInteger {
+		public function __construct(&$table, $name, $size, $min = null, $max = null, $can_be_null = true, $unique = false){
+			parent::__construct($table, $name, $size, $min, $max, $can_be_null, $unique);
+		}
+		
+		public function get_sql_type(){
+			return "INT(".$this->size.")";
+		}
+	}
 
 	class ForeignKey extends ColumnInteger {
 
@@ -951,9 +965,6 @@ namespace datamodel {
 			return parent::validate($value);
 		}
 	}
-
-	require_once("DataDisplay.inc");
-	require_once("DataDisplayHandler.inc");
 
 } // namespace datamodel
 ?>

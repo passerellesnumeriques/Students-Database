@@ -161,6 +161,12 @@ getWindowFromDocument = function(doc) {
 	return doc.defaultView;
 };
 
+getWindowFromElement = function(e) {
+	//while (e.offsetParent) e = e.offsetParent;
+	//while (e.parentNode && e.parentNode.nodeName != 'BODY' && e.parentNode.nodeName != 'HTML') e = e.parentNode;
+	return getWindowFromDocument(e.ownerDocument);
+};
+
 /** Defined it if this function is not available in the current browser
  */
 if (typeof getComputedStyle == "undefined") {
@@ -250,6 +256,27 @@ function setBorderRadius(elem,
 	elem.style.WebkitBorderTopRightRadius = topright_width+"px "+topright_height+"px"; 
 	elem.style.WebkitBorderBottomLeftRadius = bottomleft_width+"px "+bottomleft_height+"px"; 
 	elem.style.WebkitBorderBottomRightRadius = bottomright_width+"px "+bottomright_height+"px"; 
+}
+function getBorderRadius(elem) {
+	var style = getComputedStyle(elem);
+	var getValue = function(name) {
+		if (typeof style[name] == 'undefined') return 0;
+		if (style[name] == "") return 0;
+		return parseInt(style[name]);
+	};
+	var getFinalValue = function(names) {
+		for (var i = 0; i < names.length; ++i) {
+			var value = getValue(names[i]);
+			if (value != 0) return value;
+		}
+		return 0;
+	};
+	return [
+		getFinalValue(["border-top-left-radius", "-moz-border-radius-topleft", "-webkit-border-top-left-radius"]),
+		getFinalValue(["border-top-right-radius", "-moz-border-radius-topright", "-webkit-border-top-right-radius"]),
+		getFinalValue(["border-bottom-left-radius", "-moz-border-radius-bottomleft", "-webkit-border-bottom-right-radius"]),
+		getFinalValue(["border-bottom-right-radius", "-moz-border-radius-bottomright", "-webkit-border-bottom-right-radius"])
+	];
 }
 /**
  * Set a background gradient if the browser has a way to support it
@@ -530,6 +557,10 @@ function createEvent(type, attributes) {
  */
 function triggerEvent(elem, type, attributes) {
 	var evt = createEvent(type, attributes);
+	fireEvent(elem, type, evt);
+}
+
+function fireEvent(elem, type, evt) {
 	if (document.createEvent) {
 		elem.dispatchEvent(evt);
 	} else {
@@ -627,7 +658,7 @@ function remove_javascript(url) {
  * Dynamically load a stylesheet in the page.
  * @param {String} url the URL of the CSS file to load
  */
-function add_stylesheet(url) {
+function add_stylesheet(url,onload) {
 	if (typeof url == 'string') url = new URL(url);
 	if (document.readyState != "complete") {
 		// delay the load, as we may not have yet all the css in the head
@@ -642,6 +673,7 @@ function add_stylesheet(url) {
 		var u = new URL(e.href);
 		if (u.toString() == url.toString()) {
 			// we found it
+			if (onload) onload();
 			return;
 		}
 	}
@@ -649,7 +681,7 @@ function add_stylesheet(url) {
 	s.rel = "stylesheet";
 	s.type = "text/css";
 	s.href = url.toString();
-	s.onload = function() { triggerEvent(window,'resize'); };
+	s.onload = function() { if (onload) onload(); this._loaded = true; };
 	document.getElementsByTagName("HEAD")[0].appendChild(s);
 }
 

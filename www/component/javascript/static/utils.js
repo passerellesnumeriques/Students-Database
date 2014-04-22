@@ -18,6 +18,14 @@ String.prototype.trim=function() {
 		if (!isSpace(this.charAt(end-1))) break;
 	return this.substring(start, end);
 };
+String.prototype.toHTML=function() {
+    return this
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+};
 
 /** check if the given character is a space (space, tab, or line return)
  * @param {String} c the character
@@ -139,6 +147,46 @@ function valueCopy(value, obj_depth) {
 	return value;
 }
 
+function objectMerge(o, add) {
+	for (var name in add) o[name] = add[name];
+}
+
+function objectEquals(o1, o2, done) {
+	if (typeof o1 != typeof o2) return false;
+	if (typeof o1 != 'object') return o1 == o2;
+	if (o1 == null) return o2 == null;
+	var c1 = getObjectClassName(o1);
+	var c2 = getObjectClassName(o2);
+	if (c1 != c2) return false;
+	if (!done) done = [];
+	if (done.contains(o1) || done.contains(o2)) return o1 == o2;
+	done.push(o1); done.push(o2);
+	if (c1 == "Array") return arrayEquals(o1, o2, done);
+	if (c1 == "Date") return o1.getTime() == o2.getTime();
+	for (var name in o1) {
+		var found = false;
+		for (var name2 in o2) if (name2 == name) { found = true; break; }
+		if (!found) return false;
+	}
+	for (var name in o2) {
+		var found = false;
+		for (var name2 in o1) if (name2 == name) { found = true; break; }
+		if (!found) return false;
+	}
+	for (var name in o1) {
+		var v1 = o1[name];
+		var v2 = o2[name];
+		if (!objectEquals(v1, v2, done)) return false;
+	}
+	return true;
+}
+function arrayEquals(a1, a2, done) {
+	if (a1.length != a2.length) return false;
+	for (var i = 0; i < a1.length; ++i)
+		if (!objectEquals(a1[i], a2[i], done)) return false;
+	return true;
+}
+
 var _generate_id_counter = 0;
 /**
  * Generates an unique id. 
@@ -147,6 +195,18 @@ var _generate_id_counter = 0;
 function generateID() {
 	return "id"+(_generate_id_counter++);
 }
+
+function _domRemoved(e) {
+	if (e.ondomremoved) e.ondomremoved();
+	if (e.nodeType != 1) return;
+	for (var i = 0; i < e.childNodes.length; ++i)
+		_domRemoved(e.childNodes[i]);
+}
+Element.prototype._removeChild = Element.prototype.removeChild;
+Element.prototype.removeChild = function(e) {
+	_domRemoved(e);
+	return this._removeChild(e);
+};
 
 /**
  * Return the absolute position of the left edge, relative to the given element or to the document
@@ -432,10 +492,10 @@ function URL(s) {
 	this.host = this.host.toLowerCase();
 	this.path = this.path.toLowerCase();
 	
-	/** create a string representing the URL
-	 * @method URL#toString
-	 */
-	this.toString = function() {
+}
+URL.prototype = {
+	/** create a string representing the URL */
+	toString: function() {
 		var s;
 		if (this.protocol) {
 			s = this.protocol+"://"+this.host;
@@ -451,8 +511,8 @@ function URL(s) {
 		if (this.hash)
 			s += "#"+this.hash;
 		return s;
-	};
-}
+	}	
+};
 
 /** Event
  * @constructor
@@ -609,6 +669,7 @@ function debug_object_to_string(o, indent) {
 }
 
 function parseSQLDate(s) {
+	if (s == null || s.length == 0) return null;
 	var d = new Date();
 	d.setHours(0,0,0,0);
 	var a = s.split("-");
@@ -750,6 +811,22 @@ function getObjectSize(object){
 	return s;
 }
 
+function getCookie(cname) {
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		var c = ca[i].trim();
+		if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+	}
+	return "";
+}
+function setCookie(cname,cvalue,expires_minutes,url) {
+	var d = new Date();
+	d.setTime(d.getTime()+(expires_minutes*60*1000));
+	var expires = "expires="+d.toGMTString();
+	document.cookie = cname + "=" + cvalue + "; " + expires + "; Path="+url;
+}
+
 function waitFrameReady(win, test, onready, timeout) {
 	if (typeof timeout == 'undefined') timeout = 30000;
 	if (timeout < 50) return;
@@ -772,16 +849,32 @@ function createTooltip(element, content) {
 	var ww = getWindowWidth();
 	if (x <= ww/2) {
 		content.className = "tooltip";
+		if (w < 44) {
+			x = x-22+Math.floor(w/2);
+			if (x < 0) x = 0;
+		}
 		content.style.left = x+"px";
 	} else {
 		content.className = "tooltip_right";
-		content.style.right = (ww-(x+w))+"px";
+		x = (ww-(x+w));
+		if (w < 44) {
+			x = x-22+Math.floor(w/2);
+			if (x >= ww) x = ww-1;
+			if (x < 0) {
+				x = 0;
+				content.className = "tooltip_right tooltip_veryright";
+			}
+		}
+		content.style.right = x+"px";
 	}
-	content.style.top = (absoluteTop(element)+element.offsetHeight)+"px";
+	content.style.top = (absoluteTop(element)+element.offsetHeight+5)+"px";
 	removeTooltip();
-	content.style.visibility = 'hidden';
-	setOpacity(content, 0);
-	animation.fadeIn(content, 200);
+	if (typeof animation != 'undefined') {
+		content.style.visibility = 'hidden';
+		setOpacity(content, 0);
+		animation.fadeIn(content, 200);
+	} else {
+	}
 	document.body.appendChild(content);
 	element._tooltip = window.top._current_tooltip = content;
 	content._element = element;
@@ -805,6 +898,7 @@ function removeTooltip() {
 	window.top._current_tooltip = null;
 }
 function tooltip(element, content) {
+	require("animation.js");
 	element.onmouseover = function() {
 		createTooltip(element, content);
 	};

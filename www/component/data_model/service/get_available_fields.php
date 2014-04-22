@@ -6,14 +6,20 @@ class service_get_available_fields extends Service {
 	}
 	
 	public function documentation() { echo "Start from the given table, and search for all reachable fields, and return the list of displayable fields"; }
-	public function input_documentation() { echo "<code>table</code>: name of starting table"; }
+	public function input_documentation() { 
+		echo "<code>table</code>: name of starting table<br/>";
+		echo "<code>sub_model</code>: optional, sub model instance of the starting table<br/>";
+		echo "<code>go_to_submodels</code>: optional, if the starting table is not in a sub model, it indicates if we can go or not to sub model instances. By default it is false."; 
+	}
 	public function output_documentation() {
 		echo "List of {data:the JavaScript DataDisplay, path: the data path}"; 
 	}
 	
 	public function execute(&$component, $input) {
 		$table = $input["table"];
-		$list = $component->getAvailableFields($table);
+		$sub_model = @$input["sub_model"];
+		$go_to_submodels = isset($input["go_to_submodels"]) ? $input["go_to_submodels"] : false;
+		$list = $component->getAvailableFields($table, $sub_model, $go_to_submodels);
 		echo "[";
 		$first = true;
 		foreach ($list as $d) {

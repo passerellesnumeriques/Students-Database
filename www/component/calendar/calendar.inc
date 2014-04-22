@@ -253,5 +253,25 @@ class calendar extends Component {
 		}
 		return true;
 	}
+	
+	/**
+	 * Get an event name
+	 * @param number $calendar_id ID of the calendar to which the event belongs to
+	 * @param number $event_id ID of the event seeked
+	 * @return boolean|string false if not allowed, else the event name
+	 */
+	public function getEventName($calendar_id, $event_id){
+		if(!$this->canReadCalendar($calendar_id)){
+			PNApplication::error("Access denied to this calendar");
+			return false;
+		}
+		$ev_name = SQLQuery::create()
+			->bypassSecurity()
+			->select("CalendarEvent")
+			->field("CalendarEvent","title")
+			->whereValue("CalendarEvent", "id", $event_id)
+			->executeSingleValue();
+		return $ev_name;
+	}
 }
 ?>

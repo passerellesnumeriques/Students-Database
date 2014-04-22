@@ -11,6 +11,8 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 		if ($error === null) {
 			echo "<script type='text/javascript'>";
 			echo "window.top.set_loading_message('Starting application...');";
+			echo "window.top.pnapplication.logged_in = true;";
+			echo "window.top.pnapplication.onlogin.fire();";
 			echo "location.href = 'enter';";
 			echo "</script>";
 			return;
@@ -51,7 +53,7 @@ if ($message <> null) {
 			<select name="domain">
 				<?php
 				$def_domain = PNApplication::$instance->local_domain;
-				if (isset($_COKKIE["domain"])) $def_domain = $_COKKIE["domain"];
+				if (isset($_COOKIE["domain"])) $def_domain = $_COOKIE["domain"];
 				foreach (PNApplication::$instance->get_domains() as $domain=>$descr)
 					echo "<option value=\"".$domain."\"".($def_domain==$domain ? " selected" : "").">".$domain."</option>";
 				?>
@@ -69,20 +71,20 @@ if ($message <> null) {
 	<tr align=left>
 		<td></td>
 		<td>
-			<div class="button" onclick="login();">
+			<button onclick="login();">
 				Login
 				<img src='/static/application/login.gif' style='vertical-align:bottom'/>
-			</div>
+			</button>
 			<input type='submit' style='position:absolute;top:-10000px'/>
 		</td>
 	</tr>
 	<tr>
 		<td></td>
 		<td id='google_tr' style='visibility:hidden;position:absolute;top:-10000px'>
-			<div class="button" onclick="google_login();">
+			<button onclick="google_login();">
 				<img src='/static/google/google.png'/>
 				Login with Google (<span id='user_from_google'></span>)
-			</div>
+			</button>
 		</td>
 	</tr>
 	<tr>
@@ -170,7 +172,7 @@ function facebook_login() {
 window.top.require("google.js",function(){
 	window.top.google.need_connection(function(){
 		service.json("google","get_user",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){
-			if (!res) return;
+			if (!res || !res.user) return;
 			document.getElementById('user_from_google').innerHTML = res.user.username;
 			var tr = document.getElementById('google_tr');
 			tr.style.visibility = 'visible';

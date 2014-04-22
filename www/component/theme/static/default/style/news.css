@@ -13,13 +13,11 @@
 	border-top-left-radius: 5px;
 }
 .news .picture_container {
-	width: 38px;
 	vertical-align: top;
 	padding: 2px;
+	width: 30px;
 }
 .news .picture_container img {
-	width: 35px;
-	height: 35px;
 	vertical-align:top;
 	border-radius: 5px;
 }

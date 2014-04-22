@@ -5,37 +5,37 @@
 .section.soft {
 	border: 1px solid #A0A0F0;
 }
-.section_header {
+.section>.header {
 	border-radius: 5px 5px 0px 0px;
 	border-bottom: 1px solid #80A060; 
 	white-space: nowrap;
 	height: 25px;
 	background: linear-gradient(to bottom, #E0F0E0 0%, #C0E8B0 100%);
 }
-.section.soft .section_header {
+.section.soft>.header {
 	border-bottom: none;
     background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
 }
-.section_header.collapsed {
+.section>.header.collapsed {
 	border-radius: 5px;
 	border-bottom: none;
 }
-.section_header>div:first-child {
+.section>.header>div:first-child {
 	margin-left: 5px;
 	font-weight: bold;
 	font-size: 11pt;
 	color: #505050;
 }
-.section_header>div:first-child img {
+.section>.header>div:first-child img {
 	vertical-align: bottom;
 	margin-right: 3px;
 }
-.section_footer {
+.section>.footer {
 	border-radius: 0px 0px 5px 5px;
 	background-color: #D0D0D0;
 	border-top: 1px solid #808080;
 }
-.section_footer_empty {
+.section>.footer_empty {
 	border-radius: 0px 0px 5px 5px;
 	background-color: white;
 	height: 3px;

@@ -1,6 +1,4 @@
 <?php 
-use datamodel\MultipleDisplayHandler;
-
 /* @var $model DataModel */
 $model->addTable("PNDepartment")
 	->addPrimaryKey("id")
@@ -10,6 +8,9 @@ $model->addTable("PNDepartment")
 	->addWriteAccess("manage_staff", true)
 	->addInsertAccess("manage_staff", true)
 	->addRemoveAccess("manage_staff", true)
+	->setRowDescriptionProvider(function($row) {
+		return "Department ".htmlentities($row["name"]);
+	})
 	;
 $model->addTable("Staff")
 	->addForeignKey("people", "People", true, false, false, false, true)
@@ -31,13 +32,5 @@ $model->addTable("StaffPosition")
 	->addWriteAccess("manage_staff", true)
 	->addInsertAccess("manage_staff", true)
 	->addRemoveAccess("manage_staff", true)
-	->setDisplayHandler(null, new datamodel\MultipleDisplayHandler("Staff", "Positions", array(
-		new datamodel\FieldsDisplayHandler("Staff", "Position", array(
-			"position" => "Position",
-			"start" => "Position Start",
-			"end" => "Position End"
-		)),
-		new datamodel\ChoiceFieldDisplayHandler("Staff", "Department", "department", "name")
-	)))
 	;
 ?>

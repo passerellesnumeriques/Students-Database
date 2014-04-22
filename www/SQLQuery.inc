@@ -91,6 +91,7 @@ class SQLQuery {
  	/** @var array array(table_name,column_name,alias) for COUNT(`table_name`.`column_name`) AS `alias` where alias is optional */
  	public $count_one_field = null;
  	/** @var array list of WHERE string expression, which will be joined by AND */
+ 	public $expressions = array();
  	public $where = array();
  	/** @var array list of LEFT JOIN with format (table_from,table_to,fields_matching,alias) */
  	public $joins = array();
@@ -154,6 +155,10 @@ class SQLQuery {
 	 */
 	public function &selectSubModelForTable($table_obj, $sub_model) {
 		if ($sub_model == null) return $this;
+		if (!($table_obj instanceof datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table_obj = DataModel::get()->getTable($table_obj);
+		}
 		if (!($table_obj->getModel() instanceof SubDataModel)) return $this;
 		$this->sub_models[$table_obj->getModel()->getParentTable()] = $sub_model;
 		return $this;
@@ -214,11 +219,13 @@ class SQLQuery {
 						substr($file,strlen($root)) == "data_model/Model.inc" ||
 						substr($file,strlen($root)) == "data_model/DataDisplay.inc" ||
 						substr($file,strlen($root)) == "data_model/DataPath.inc" ||
-						substr($file,strlen($root)) == "data_model/DataBaseLock.inc"
+						substr($file,strlen($root)) == "data_model/DataBaseLock.inc" ||
+						substr($file,strlen($root)) == "data_model/DataScreen.inc" ||
+						substr($file,strlen($root)) == "data_model/page/data_screen.inc"
 				)) break; // generic service of data model
-				if ($component == "data_model" && (
-					substr($file,strlen($root)) == "data_model/page/table_datadisplay.inc"	
-				)) continue; // generic display, let's see who call it
+				//if ($component == "data_model" && (
+				//	substr($file,strlen($root)) == "data_model/page/data_screen.inc"	
+				//)) continue; // generic display, let's see who call it
 				require_once("component/data_model/Model.inc");
 				$decl = DataModel::get()->internalGetTable($table_name)->declaring_component;
 				if ($component <> $decl) {
@@ -260,6 +267,13 @@ class SQLQuery {
 		}
 		return $this;
 	}
+	
+	public function &fieldsOfTable($table) {
+		$t = DataModel::get()->getTable($table);
+		foreach ($t->getColumns($this->sub_models) as $col)
+			$this->field($table, $col->name);
+		return $this;
+	}
 
 	/** Remove all selected fields
 	 * @return SQLQuery this
@@ -280,7 +294,7 @@ class SQLQuery {
 	 * @param string $table table name
 	 * @param string $name field name
 	 * @param string $alias alias or null
-	 * @return this
+	 * @return SQLQuery
 	 */
 	public function &countOneField($table, $name, $alias=null){
 		$this->count_one_field = array($table,$name,$alias);
@@ -292,6 +306,11 @@ class SQLQuery {
 	 */
 	public function &distinct(){
 		$this->distinct = true;
+		return $this;
+	}
+	
+	public function &expression($expr, $alias) {
+		array_push($this->expressions, array($expr, $alias));
 		return $this;
 	}
 	
@@ -401,6 +420,22 @@ class SQLQuery {
 			return $table;
 		}
 	}
+	private function resolveTableName($name){
+		// check if really table name
+		require_once("component/data_model/Model.inc");
+		try {
+			DataModel::get()->internalGetTable($name);
+			return $name;				
+		} catch (Exception $e) {
+			// not a table name
+			// search if this is an alias
+			foreach ($this->tables as $tname=>$talias)
+				if ($name == $talias) return $tname;
+			foreach ($this->joins as $j)
+				if ($name == $j[3]) return $j[1];
+		}
+		return null;
+	}
 	
 	public function &whereValue($table_name, $field_name, $value) {
 		$w = "`".$this->resolveWhereTable($table_name)."`.`".$field_name."`";
@@ -418,6 +453,23 @@ class SQLQuery {
 	public function &whereNotNull($table_name, $field_name) {
 		$w = "`".$this->resolveWhereTable($table_name)."`.`".$field_name."` IS NOT NULL";
 		array_push($this->where, $w);
+		return $this;
+	}
+	
+	public function &whereKey($table, $key) {
+		if (!($table instanceof \datamodel\Table)) {
+			require_once("component/data_model/Model.inc");
+			$table = DataModel::get()->getTable($table);
+		}
+		$table_alias = $this->getTableAlias($table->getName());
+		$k = $table->getPrimaryKey();
+		if ($k <> null) $this->whereValue($table_alias, $k->name, $key);
+		else {
+			$k = $table->getKey();
+			foreach ($k as $kname) {
+				$this->whereValue($table_alias, $kname, $key[$kname]);
+			}
+		}
 		return $this;
 	}
 	
@@ -530,6 +582,51 @@ class SQLQuery {
 		array_push($this->order_by, array($table, $field, $asc));
 		return $this;
 	}
+	
+	public function removeUnusefulJoinsForCounting() {
+		$used_tables = array();
+		foreach ($this->where as $expr) {
+			$s = $expr;
+			while (strlen($s) > 0) {
+				$i = strpos($s, "`.`");
+				if ($i === FALSE) break;
+				$start = strrpos($s, "`", -(strlen($s)-$i+1));
+				$table_name = substr($s, $start+1, $i-$start-1);
+				if (!in_array($table_name, $used_tables))
+					array_push($used_tables, $table_name);
+				$s = substr($s, $i+3);
+			}
+		}
+		// get needed join to reach used tables
+		do {
+			$added = false;
+			foreach ($used_tables as $name) {
+				// check if it is in select from
+				$ok = false;
+				foreach ($this->tables as $tname=>$talias)
+					if ($name == $tname || $name == $talias) { $ok = true; break; }
+				if ($ok) continue;
+				// if it comes from a join, the table used for the join is needed as well
+				foreach ($this->joins as $j) {
+					if ($name == $j[1] || $name == $j[3]) {
+						if (!in_array($j[0], $used_tables)) {
+							array_push($used_tables, $j[0]);
+							$added = true;
+							break;
+						}
+					}
+				}
+			}
+		} while ($added);
+		// remove joins on non-used tables
+		for ($i = 0; $i < count($this->joins); $i++) {
+			$j = $this->joins[$i];
+			if (!in_array($j[1], $used_tables) && !in_array($j[3], $used_tables)) {
+				array_splice($this->joins, $i, 1);
+				$i--;
+			}
+		}
+	}
 
 	public function generate() {
 		require_once("component/data_model/Model.inc");
@@ -545,8 +642,21 @@ class SQLQuery {
 				$join = $this->joins[$i];
 				$alias = $join[3];
 				$table = DataModel::get()->getTable($join[1]);
-				if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-				$table->filterReadAccess($this, $alias);
+				$join_allowed = false;
+				$read_access_from_previous_table = $table->getReadAccessFromForeignTable();
+				if (count($read_access_from_previous_table) > 0){
+					$join_table_resolved = $this->resolveTableName($join[0]);
+					foreach ($read_access_from_previous_table as $previous_table_name){
+						if($previous_table_name == $join_table_resolved){
+							$join_allowed = true; // access is allowed by the previous table
+							break;
+						}
+					}
+				}
+				if (!$join_allowed) {
+					if ($alias == null) $alias = $table->getSQLName($this->sub_models);
+					$table->filterReadAccess($this, $alias);
+				}
 			}
 		}
 		
@@ -559,7 +669,7 @@ class SQLQuery {
 			else
 				$table = DataModel::get()->getTable($t);
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-			if (count($this->fields) == 0 && $this->count === null) {
+			if (count($this->fields) == 0 && $this->count === null && count($this->expressions) == 0) {
 				if ($this->bypass_security)
 					$columns = $table->internalGetColumns();
 				else
@@ -591,14 +701,29 @@ class SQLQuery {
 			unset($table);
 		}
 		foreach ($this->joins as $join) {
-			if ($this->bypass_security)
-				$table = DataModel::get()->internalGetTable($join[1]);
-			else
-				$table = DataModel::get()->getTable($join[1]);
+			$table = DataModel::get()->internalGetTable($join[1]);
+			if (!$this->bypass_security) {
+				$join_allowed = false;
+				$read_access_from_previous_table = $table->getReadAccessFromForeignTable();
+				if (count($read_access_from_previous_table) > 0){
+					$join_table_resolved = $this->resolveTableName($join[0]);
+					foreach ($read_access_from_previous_table as $previous_table_name){
+						if($previous_table_name == $join_table_resolved){
+							$join_allowed = true; // access is allowed by the previous table
+							break;
+						}
+					}
+				}
+				if (!$join_allowed && !$table->hasReadFilter() && !$table->hasReadRights()) {
+					throw new Exception("Access denied to table ".$table->getName()." in request:".$this->dump());
+				}
+			}
+			
+			
 			$alias = $join[3];
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-			if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null) {
-				if ($this->bypass_security)
+			if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0) {
+				if ($this->bypass_security || $join_allowed)
 					$columns = $table->internalGetColumns();
 				else
 					$columns = $table->getColumns();
@@ -610,7 +735,7 @@ class SQLQuery {
 					$f = $fields[$i];
 					if ($f[0] == $join[1] || $f[0] == $alias) {
 						// check the field is accessible
-						if ($this->bypass_security)
+						if ($this->bypass_security || $join_allowed)
 							$col = $table->internalGetColumn($f[1]);
 						else
 							$col = $table->getColumn($f[1]);
@@ -630,12 +755,12 @@ class SQLQuery {
 		$this->fields = $final_fields;
 		
 		$sql = "SELECT ";
-		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && !$this->bypass_security)
+		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0 && !$this->bypass_security)
 			throw new Exception("Access denied: you don't have access to any column in this request");
-		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && $this->bypass_security){
+		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0 && $this->bypass_security){
 			if($this->distinct)
 				$sql .= "DISTINCT ";
-			$sql .= "*";		
+			$sql .= "*";
 		}
 		else {
 			$first = true;
@@ -662,6 +787,10 @@ class SQLQuery {
 				$sql .= "`".$this->resolveWhereTable($this->count_one_field[0])."`.`".$this->count_one_field[1]."`)";
 				if ($this->count_one_field[2] <> null)
 					$sql .= " AS `".$this->count_one_field[2]."`";
+			}
+			foreach ($this->expressions as $e) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= $e[0]." AS `".$e[1]."`";
 			}
 		}
 		$sql .= " FROM ";
@@ -796,9 +925,9 @@ class SQLQuery {
 	}
 	
 	private function getColumnName($table, $column) {
-		$display = $table->getDisplayHandler(null);
+		$display = DataModel::get()->getTableDataDisplay($table->getName());
 		if ($display == null) return $column;
-		foreach ($display->getDisplayableData() as $data) {
+		foreach ($display->getDataDisplay(null) as $data) {
 			foreach ($data->getHandledColumns() as $col)
 				if ($col == $column) return $data->getDisplayName();
 		}
@@ -873,7 +1002,7 @@ class SQLQuery {
 					$name = $this->getColumnName($t, $field);
 					throw new Exception($name.": ".$e->getMessage());
 				}
-				if ($col->unique) {
+				if ($col->unique && !($col instanceof PrimaryKey) && !($col instanceof ForeignKey)) {
 					$q = SQLQuery::create()->bypassSecurity()->noWarning()->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field]);
 					$where = "";
 					if ($t->getPrimaryKey() <> null) {
@@ -1286,7 +1415,12 @@ class SQLQuery {
 		// check we are allowed
 		if (!$this->bypass_security) {
 			if (!$t->mayInsert()) throw new Exception("Access denied: add data to table ".$t->getName());
-			if (!$t->acceptInsert($fields_values)) throw new Exception("Access denied: add data to table ".$t->getName()." denied for those values");
+			if (!$t->acceptInsert($fields_values)) {
+				$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
+				foreach ($fields_values as $field=>$value)
+					$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+				throw new Exception($msg);
+			}
 		}
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
@@ -1297,6 +1431,8 @@ class SQLQuery {
 			$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), null, $column);
 			if ($err <> null)
 				throw new Exception("Access denied: invalid lock (".$err.")");
+			else 
+				$lock = $lock_id;
 		} else {
 			$lock = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, true);
 			if ($lock == null)
@@ -1380,8 +1516,14 @@ class SQLQuery {
 		// check we are allowed
 		if (!$this->bypass_security) {
 			if (!$t->mayInsert()) throw new Exception("Access denied: add data to table ".$t->getName());
-			foreach ($rows as $fields_values)
-				if (!$t->acceptInsert($fields_values)) throw new Exception("Access denied: add data to table ".$t->getName()." denied for those values");
+			foreach ($rows as $fields_values) {
+				if (!$t->acceptInsert($fields_values)) {
+					$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
+					foreach ($fields_values as $field=>$value)
+						$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+					throw new Exception($msg);
+				}
+			}
 		}
 		// lock the table to check it is not locked by anyone else
 		require_once("component/data_model/DataBaseLock.inc");
@@ -1431,7 +1573,7 @@ class SQLQuery {
 				foreach ($rows as &$fields_values) {
 					if (!isset($fields_values[$col->name])) {
 						DataBaseLock::unlock($lock);
-						throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
+						throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName().". Given columns are: ".var_export($fields_values, true));
 					}
 				}
 			}
@@ -1473,7 +1615,8 @@ class SQLQuery {
 		foreach ($t->_key_submodels as &$sm)
 			$sm->createTables($id);
 		// unlock the table
-		DataBaseLock::unlock($lock);
+		if($lock_id == null)
+			DataBaseLock::unlock($lock);
 		// events
 		if ($id <> 0) {
 			$i = 0;
@@ -1530,7 +1673,7 @@ class SQLQuery {
 				if ($sub_model_instance == null)
 					throw new Exception("Try to remove data from a table in a sub data model: no sub data model specified");
 			}
-			require_once("component/data_model/DataBaseLock.inc");
+			require_once("component/data_model/DataBaseLock.inc");			
 			$locks = array();
 			$to_remove = array();
 			$to_update = array();
@@ -1703,7 +1846,6 @@ class SQLQuery {
 			//array_push($to_remove[$table->getSQLName($this->sub_models)]["keys"], $key);
 		
 		// search for foreign keys in this table, which may imply other remove
-		$new_remove = array();
 		foreach ($table->internalGetColumnsFor($sub_model_instance) as $col) {
 			if (!($col instanceof datamodel\ForeignKey)) continue;
 			if (!$col->remove_primary_when_foreign_removed) continue;
@@ -1738,12 +1880,11 @@ class SQLQuery {
 			}
 			$q->field($table_alias, $col->name);
 			$rows = $q->executeSingleField();
-			
-			if (!isset($new_remove[$col->foreign_table]))
-				$new_remove[$col->foreign_table] = array();
-			if (!isset($new_remove[$col->foreign_table][$sub_model]))
-				$new_remove[$col->foreign_table][$sub_model] = array();
-			array_push($new_remove[$col->foreign_table][$sub_model], $rows);
+			if ($this->bypass_security)
+				$ft = DataModel::get()->internalGetTable($col->foreign_table);
+			else
+				$ft = DataModel::get()->getTable($col->foreign_table);
+			$this->browseTablesForRemove($ft, $sub_model, $rows, $locks, $to_remove, $to_update, $sub_models_to_remove);
 		}
 		
 		// search for foreign keys in other tables which are linked to the keys we want to remove
@@ -1830,7 +1971,7 @@ class SQLQuery {
 						$prepared_rows = $q->execute();
 						if (count($prepared_rows) == 0) continue; // nothing to do there
 						$allowed_rows = $t->filterWriteAccess($prepared_rows);
-						if (count($allowed) <> count($prepared_rows))
+						if (count($allowed_rows) <> count($prepared_rows))
 							throw new Exception("Access denied: some rows cannot be modified in table '".$t->getName()."' but are linked to rows which need to be removed in table '".$table->getName()."'");
 					}
 				}
@@ -1889,6 +2030,12 @@ class SQLQuery {
 		foreach ($this->fields as $f)
 			$s .= "<li>".$f[0].".".$f[1]." AS ".$f[2]."</li>";
 		$s .= "</ul></li>";
+
+		// where
+		$s .= "<li>WHERE:<ul>";
+		foreach ($this->where as $w)
+			$s .= "<li>".htmlentities($w)."</li>";
+		$s .= "</ul></li>";
 		
 		$s .= "</ul>";
 		return $s;
@@ -1938,25 +2085,131 @@ class SQLQuery {
 		return $q->execute();
 	}
 	
-	/** @var boolean indicates if we are currently in a transaction */
-	private static $transaction_started = false;
+	/** @var number indicates the number of transaction started (not only boolean, in the event of several transactions are started in parallel */
+	private static $transaction_started = 0;
+	/** @var boolean indicates if one of the transaction started asked for a rollback */
+	private static $rollback = false;
+	
+	/**
+	 * Increments the $transaction_started attribute
+	 * In the case of the $transaction_started was equal to 0 before calling this method, the performStartTransaction method is called
+	 */
 	public static function startTransaction() {
-		SQLQuery::getDataBaseAccessWithoutSecurity()->log("START TRANSACTION", 0, 0, 0);
-		SQLQuery::getDataBaseAccessWithoutSecurity()->startTransaction();
-		SQLQuery::$transaction_started = true;
+		if(SQLQuery::$transaction_started == 0)
+			self::performStartTransaction();		
+		SQLQuery::$transaction_started++;
 	}
+	
+	/**
+	 * Decrements the $transaction_started attribute
+	 * In the case of the $transaction_started is now equal to 0, the performEndTransaction method is called
+	 */
 	public static function commitTransaction() {
-		SQLQuery::getDataBaseAccessWithoutSecurity()->log("COMMIT", 0, 0, 0);
-		SQLQuery::getDataBaseAccessWithoutSecurity()->commit();
-		SQLQuery::$transaction_started = false;
+		SQLQuery::$transaction_started --;
+		if(SQLQuery::$transaction_started == 0)
+			self::performEndTransaction();
 	}
+	
+	/**
+	 * Decrements the $transaction_started attribute
+	 * The $rollback attribute is set as true
+	 * In the case of the $transaction_started is now equal to 0, the performEndTransaction method is called
+	 */
 	public static function rollbackTransaction() {
-		SQLQuery::getDataBaseAccessWithoutSecurity()->log("ROLLBACK", 0, 0, 0);
-		SQLQuery::getDataBaseAccessWithoutSecurity()->rollback();
-		SQLQuery::$transaction_started = false;
+		self::$rollback = true;
+		self::$transaction_started --;
+		if(self::$transaction_started == 0)
+			self::performEndTransaction();
 	}
+	
+	/**
+	 * Get if the current query are made into a transaction
+	 * @return boolean
+	 */
 	public static function isTransactionStarted() {
-		return SQLQuery::$transaction_started;
+		return self::$transaction_started == 0 ? false : true;
+	}
+	
+	/**
+	 * Get if the current transaction is flagged as Rollback, meaning that when the performEndTransaction method is called a rollback is performed
+	 * @return boolean
+	 */
+	public static function transactionFlaggedAsRollback(){
+		return self::$rollback;
+	}
+	
+	/**
+	 * Perform the start of the transaction
+	 */
+	private static function performStartTransaction(){
+		self::getDataBaseAccessWithoutSecurity()->log("START TRANSACTION", 0, 0, 0);
+		self::getDataBaseAccessWithoutSecurity()->startTransaction();
+	}
+	
+	/**
+	 * Perform the end of the transaction
+	 * If $rollback attribute is true, a roolback is performed
+	 * Else a commit is performed
+	 * $rollback attribute is reseted as false at the end of this method
+	 */
+	private static function performEndTransaction(){
+		if(self::$rollback){
+			self::getDataBaseAccessWithoutSecurity()->log("ROLLBACK", 0, 0, 0);
+			self::getDataBaseAccessWithoutSecurity()->rollback();
+		} else {
+			self::getDataBaseAccessWithoutSecurity()->log("COMMIT", 0, 0, 0);
+			self::getDataBaseAccessWithoutSecurity()->commit();
+		}
+		self::$rollback = false;
+	}
+	
+}
+
+class TablesToUpdate {
+
+	private $list = array();
+	
+	public function addValue($table, $sub_model, $row_key, $column, $value) {
+		if (!isset($this->list[$table]))
+			$this->list[$table] = array();
+		if (!isset($this->list[$table][$sub_model]))
+			$this->list[$table][$sub_model] = array();
+		if (!isset($this->list[$table][$sub_model][$row_key]))
+			$this->list[$table][$sub_model][$row_key] = array();
+		$this->list[$table][$sub_model][$row_key][$column] = $value;
+	}
+	
+	public function execute($only_insert = false) {
+		$tables_keys = array();
+		foreach ($this->list as $table_name=>$table_content) {
+			foreach ($table_content as $sub_model=>$sub_model_content) {
+				$inserts = array();
+				foreach ($sub_model_content as $row_key=>$row_content) {
+					if ($row_key == null || intval($row_key) < 0 || $only_insert) {
+						if (!isset($inserts[$row_key]))
+							$inserts[$row_key] = array();
+						foreach ($row_content as $col_name=>$value)
+							$inserts[$row_key][$col_name] = $value;
+					} else {
+						SQLQuery::create()->updateByKey($table_name, $row_key, $row_content);
+					}
+				}
+				if (count($inserts) > 0) {
+					$rows = array();
+					foreach ($inserts as $row_key => $row) array_push($rows, $row);
+					$ids = SQLQuery::create()->insertMultiple($table_name, $rows);
+					if (!isset($tables_keys[$table_name]))
+						$tables_keys[$table_name] = array();
+					if (count($ids) > 0) {
+						$tables_keys[$table_name][$sub_model] = array();
+						$i = 0;
+						foreach ($inserts as $row_key => $row)
+							$tables_keys[$table_name][$sub_model][$row_key] = $ids[$i++];
+					}
+				}
+			}
+		}
+		return $tables_keys;
 	}
 	
 }

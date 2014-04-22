@@ -1,0 +1,211 @@
+if (typeof require != 'undefined')
+	require("progress_bar.js");
+
+function profile_picture(container, width, height, halign, valign) {
+	if (typeof container == 'string') container = document.getElementById(container);
+	var t=this;
+	if (width || height) {
+		if (!width) width = 0.75*height;
+		if (!height) height = width/0.75;
+	}
+	t.width = width;
+	t.height = height;
+
+	this.picture_container = document.createElement("DIV");
+	this.picture_container.style.position = "relative";
+	if (width) {
+		this.picture_container.style.width = width+"px";
+		this.picture_container.style.height = height + "px";
+	}
+	if (container) container.appendChild(this.picture_container);
+	
+	this.adjustPicture = function(recall) {
+		if (!t.picture) return;
+		var resize_ratio = 1;
+		var h = t.picture.naturalHeight;
+		var w = t.picture.naturalWidth;
+		if (w == 0 || h == 0) {
+			if (!recall) recall = 0;
+			if (recall >= 10) return;
+			setTimeout(function() {
+				t.adjustPicture(recall+1);
+			},1+recall*10);
+		}
+		if (h > t.height) {
+			resize_ratio = t.height/h;
+		}
+		if (w > t.width) {
+			var r = t.width/w;
+			if (r < resize_ratio) resize_ratio = r;
+		}
+		w = Math.floor(w*resize_ratio);
+		h = Math.floor(h*resize_ratio);
+		t.picture.style.width = w+'px';
+		t.picture.style.height = h+'px';
+		if (t.width) {
+			switch (halign) {
+			case "left": t.picture.style.left = "0px"; break;
+			case "right": t.picture.style.right = "0px"; break;
+			default: t.picture.style.left = Math.floor(t.picture_container.clientWidth/2-w/2)+'px';
+			}
+			switch (valign) {
+			case "top": t.picture.style.top = "0px"; break;
+			case "bottom": t.picture.style.bottom = "0px"; break;
+			default: t.picture.style.top = Math.floor(t.picture_container.clientHeight/2-h/2)+'px';
+			}
+			t.picture.style.position = "absolute";
+		}
+		if (!t.picture.parentNode) {
+			t.picture_container.appendChild(t.picture);
+		}
+	};
+	
+	var img = document.createElement("IMG");
+	img.src = theme.icons_16.loading;
+	if (width) {
+		img.style.position = "absolute";
+		img.style.top = Math.floor(height/2-8)+'px';
+		img.style.left = Math.floor(width/2-8)+'px';
+	}
+	t.picture_container.appendChild(img);
+	
+	this.loadPeopleID = function(people_id, onloaded) {
+		this._load("people", "picture?people="+people_id, onloaded);
+	};
+	this.loadUser = function(domain, username, onloaded) {
+		this._load("user_people", "user_picture?domain="+domain+"&username="+username, onloaded);
+	};
+	this.loadPeopleObject = function(people, onloaded) {
+		if (!people.picture_id)
+			this.loadPeopleID(people.id, onloaded);
+		else
+			this.loadStorage(people.picture_id,people.picture_revision,onloaded);
+	};
+	this.loadStorage = function(storage_id,revision,onloaded) {
+		this._load("storage", "get?id="+storage_id+(revision?"&revision="+revision:""), onloaded);
+	};
+	this.loadPeopleStorage = function(people_id,picture_id,revision,onloaded) {
+		if (!picture_id)
+			this.loadPeopleID(people_id, onloaded);
+		else
+			this.loadStorage(picture_id,revision,onloaded);
+	};
+	
+	this.component = null;
+	this.service_name = null;
+	this._load = function(component, service_name, onloaded) {
+		this.component = component;
+		this.service_name = service_name;
+		if (typeof window.btoa == 'undefined') {
+			t.picture = document.createElement("IMG");
+			t.picture.onload = function() {
+				t.adjustPicture();
+				if (onloaded) onloaded();
+			};
+			t.picture.onerror = function() {
+				img.src = theme.icons_16.error;
+				t.picture = null;
+				if (onloaded) onloaded();
+			};
+			t.picture.src = "/dynamic/"+component+"/service/"+service_name;
+		} else {
+			var progress = 0;
+			var total = 0;
+			require("progress_bar.js", function() {
+				if (progress == -1) return;
+				var w = Math.floor(t.width*0.8);
+				var h = w > 50 ? 12 : 5;
+				t.progress = new progress_bar(w, h);
+				if (t.width) {
+					t.progress.element.style.position = "absolute";
+					t.progress.element.style.top = Math.floor(t.height/2-h/2)+'px';
+					t.progress.element.style.left = Math.floor(t.width/2-w/2)+'px';
+				}
+				if (total != 0) t.progress.setTotal(total);
+				t.progress.setPosition(progress);
+			});
+			service.customOutput(component, service_name, null, 
+				function(bin) {
+					if (!bin) return;
+					progress = -1;
+					var len = bin.length;
+					var binary = '';
+					for (var i = 0; i < len; i+=1)
+						binary += String.fromCharCode(bin.charCodeAt(i) & 0xff);
+					t.picture = new Image();
+					t.picture.src = 'data:image/jpeg;base64,' + btoa(binary);
+					if (t.progress) {
+						if (t.progress.element.parentNode)
+							t.picture_container.removeChild(t.progress.element);
+						t.progress = null;
+					}
+					if (img.parentNode)
+						t.picture_container.removeChild(img);
+					t.adjustPicture();
+					if (onloaded) onloaded();
+				}, 
+				false, 
+				function(error) {
+					progress = -1;
+					if (t.progress) {
+						if (t.progress.element.parentNode)
+							t.picture_container.removeChild(t.progress.element);
+						t.progress = null;
+					}
+					img.src = theme.icons_16.error;
+					if (!img.parentNode)
+						t.picture_container.appendChild(img);
+					if (onloaded) onloaded();
+				}, function(loaded, tot) {
+					if (t.progress) {
+						if (!t.progress.element.parentNode) {
+							t.picture_container.removeChild(img);
+							t.picture_container.appendChild(t.progress.element);
+						}
+						if (t.progress.total == 0) t.progress.setTotal(tot);
+						t.progress.setPosition(loaded);
+					} else {
+						progress = loaded;
+						total = tot;
+					}
+				},
+				"text/plain; charset=x-user-defined"
+			);
+		}
+	};
+	
+	this.setSize = function(width, height) {
+		if (width || height) {
+			if (!width) width = 0.75*height;
+			if (!height) height = width/0.75;
+		}
+		this.width = width;
+		this.height = height;
+		if (width) {
+			this.picture_container.style.width = (this.width)+'px';
+			this.picture_container.style.height = (this.height)+'px';
+			if (t.progress) {
+				var w = Math.floor(t.width*0.8);
+				var h = w > 50 ? 12 : 5;
+				t.progress.setSize(w,h);
+				t.progress.element.style.top = Math.floor(t.height/2-h/2)+'px';
+				t.progress.element.style.left = Math.floor(t.width/2-w/2)+'px';
+			}
+			img.style.top = Math.floor(height/2-8)+'px';
+			img.style.left = Math.floor(width/2-8)+'px';
+		}
+		this.adjustPicture();
+	};
+
+	this.reload = function() {
+		if (!t.picture) return;
+		if (!t.component) return;
+		var p = new Image();
+		p.onload = function() {
+			if (t.picture.parentNode) t.picture_container.removeChild(t.picture);
+			t.picture = p;
+			t.adjustPicture();
+		};
+		p.src = "/dynamic/"+t.component+"/service/"+t.service_name+"&ts="+new Date().getTime();
+	};
+}

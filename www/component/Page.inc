@@ -16,6 +16,7 @@ abstract class Page {
 	public abstract function get_required_rights();
 	protected abstract function execute();
 	
+	private $init_scripts = array();
 	private $javascripts = array();
 	private $stylesheets = array();
 	private $onload = "";
@@ -24,6 +25,8 @@ abstract class Page {
 	public $done = false;
 	private $generate_id = 0;
 
+	public final function add_init_script($script) { array_push($this->init_scripts, $script); }
+	
 	public final function add_javascript($path, $onload = "") {
 		$found = false;
 		foreach ($this->javascripts as $js)
@@ -93,11 +96,12 @@ abstract class Page {
 	private function start_page() {
 		theme::css($this, "global.css");
 		pageHeaderStart();
+		foreach ($this->init_scripts as $s) echo "<script type='text/javascript'>".$s."</script>";
 		foreach ($this->javascripts as $js) {
-			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1]."'>";
+			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1].";this._loaded=true;'>";
 			echo "</script>";
 		}
-		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.invalidate(window.document.body);'/>";
+		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.invalidate(window.document.body); this._loaded = true;'/>";
 		pageHeaderEnd($this->onload);
 	}
 
@@ -156,20 +160,20 @@ function pageHeaderStart() {
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
-	<title>PN Students DataBase</title>
+	<title>PN Students Management</title>
 	<script type="text/javascript">
 	if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search+location.hash);};
 	</script>
-	<script type="text/javascript" src="/static/javascript/utils.js"></script>
-	<script type="text/javascript" src="/static/javascript/browser.js"></script>
-	<script type="text/javascript" src="/static/application/application.js"></script>
-	<script type="text/javascript" src="/static/javascript/layout.js"></script>
-	<script type="text/javascript" src="/static/theme/theme.js.php"></script>
-	<script type="text/javascript" src="/static/javascript/ajax.js"></script>
-	<script type="text/javascript" src="/static/application/service.js"></script>
-	<script type="text/javascript" src="/static/application/config.js.php"></script>
-	<script type="text/javascript" src="/static/widgets/common_dialogs.js"></script>
-	<script type="text/javascript" src="/static/data_model/databaselock.js"></script>
+	<script type="text/javascript" src="/static/javascript/utils.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/javascript/browser.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/application/application.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/javascript/layout.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/theme/theme.js.php" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/javascript/ajax.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/application/service.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/application/config.js.php" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/widgets/common_dialogs.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/data_model/databaselock.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript">
 	javascript_loaded("/static/javascript/utils.js");
 	javascript_loaded("/static/javascript/browser.js");
@@ -181,18 +185,27 @@ function pageHeaderStart() {
 	javascript_loaded("/static/application/config.js.php");
 	javascript_loaded("/static/widgets/common_dialogs.js");
 	javascript_loaded("/static/data_model/databaselock.js");
+	window._page_ready = false;
+	window._page_ready_step = 0;
+	function _pageReadyStep() {
+		if (++window._page_ready_step == 2) {
+			layout.invalidate(document.body);
+			layout.forceLayout();
+			window._page_ready = true;
+		}
+	}
 	</script>
 <?php 
 }
 function pageHeaderEnd($onload = "") {
 ?>
 </head>
-<body onload="<?php echo $onload;?>;window._onload_done=true;">
+<body onload="<?php echo $onload;?>;window._pageReadyStep();">
 <?php
 }
 function pageFooter() {
 ?>
-<script type='text/javascript'>window._page_ready = true;layout.invalidate(document.body);</script>
+<script type='text/javascript'>window._pageReadyStep();</script>
 </body>
 </html>
 <?php

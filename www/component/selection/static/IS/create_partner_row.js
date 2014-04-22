@@ -194,7 +194,7 @@ function create_partner_row(container, partner_data, contact_points_selected, al
 			text +=  all_contact_points[j].people_last_name.uniformFirstLetterCapitalized();
 			text += ", "+  all_contact_points[j].people_first_name.uniformFirstLetterCapitalized();
 			if( all_contact_points[j].people_designation != null &&  all_contact_points[j].people_designation != "")
-				text += ", "+  all_contact_points[j].people_designation;
+				text += " ("+  all_contact_points[j].people_designation+")";
 			td.innerHTML = text;
 			td.style.fontStyle = "italic";
 			td.className = "button";

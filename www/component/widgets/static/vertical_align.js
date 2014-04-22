@@ -24,7 +24,7 @@ function vertical_align(container, align) {
 			if (align == "bottom") {
 				e.style.marginTop = (h-getHeight(e))+"px";
 			} else if (align == "middle") {
-				e.style.marginTop = ((h-getHeight(e))/2)+"px";
+				e.style.marginTop = Math.floor((h-getHeight(e))/2)+"px";
 			}
 		}
 	};

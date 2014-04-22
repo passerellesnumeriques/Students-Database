@@ -2,6 +2,19 @@
 
 class geography extends Component {
 	
+	private $local_country;
+	private $local_country_divisions;
+	
+	public function init() {
+		$d = PNApplication::$instance->get_domain_descriptor();
+		$d = $d["geography"];
+		$this->local_country = SQLQuery::create()->bypassSecurity()->select("Country")->whereValue("Country", "code", strtoupper($d["country_code"]))->executeSingleRow();
+		$this->local_country_divisions = $this->getCountryDivisions($this->local_country["id"]);
+	}
+	
+	public function getLocalCountry() { return $this->local_country; }
+	public function getLocalDivisions() { return $this->local_country_divisions; }
+	
 	public function getPluginImplementations() {
 		require_once("GeographyAdministrationPlugin.inc");
 		return array(
@@ -24,7 +37,7 @@ class geography extends Component {
 	 * @param number $area_id
 	 * @return string
 	 */
-	public function get_geographic_area_text($area_id) {
+	public function getGeographicAreaText($area_id) {
 		$text = "";
 		do {
 			$area = SQLQuery::create()->select("GeographicArea")->where("id",$area_id)->executeSingleRow();
@@ -54,7 +67,7 @@ class geography extends Component {
 		// put the countries of PN domains first
 		$PN_countries = array();
 		foreach (PNApplication::$instance->get_domains() as $domain=>$descr) {
-			$code = $descr["country_code"];
+			$code = $descr["geography"]["country_code"];
 			$code = strtolower($code);
 			if (!in_array($code, $PN_countries)) array_push($PN_countries, $code);
 		}
@@ -70,7 +83,7 @@ class geography extends Component {
 		
 		// put the domain country first
 		$local_code = PNApplication::$instance->get_domain_descriptor();
-		$local_code = strtolower($local_code["country_code"]);
+		$local_code = strtolower($local_code["geography"]["country_code"]);
 		for ($i = 0; $i < count($countries); $i++) {
 			if (strtolower($countries[$i]["country_code"]) == $local_code) {
 				// found
@@ -133,6 +146,23 @@ class geography extends Component {
 				array_push($to_browse, $child);
 		}
 		return $children;
+	}
+	
+	public function getCountryDivisions($country_id) {
+		$rows = SQLQuery::create()->bypassSecurity()->select("CountryDivision")->whereValue("CountryDivision", "country", $country_id)->execute();
+		$divisions = array();
+		$parent = null;
+		while (count($rows) > 0) {
+			for ($i = 0; $i < count($rows); $i++) {
+				if ($rows[$i]["parent"] == $parent) {
+					array_push($divisions, $rows[$i]);
+					$parent = $rows[$i]["id"];
+					array_splice($rows, $i, 1);
+					break;
+				}
+			}
+		}
+		return $divisions;
 	}
 }
 ?>

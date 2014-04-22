@@ -12,9 +12,11 @@ class user_people extends Component {
 	}
 	
 	public function getPluginImplementations() {
-		require_once("UserPeoplePlugin.inc");
+		require_once("UserPeopleTypePlugin.inc");
+		require_once("UserPeopleProfilePagePlugin.inc");
 		return array(
-			new UserPeoplePlugin()
+			new UserPeopleTypePlugin(),
+			new UserPeopleProfilePagePlugin()
 		);
 	}
 	
@@ -64,6 +66,8 @@ class user_people extends Component {
 	public function get_people_from_user($user_id) {
 		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->executeSingleValue();
 	}
+	
+	public function isPeopleUser($people_id) { return $this->get_user_from_people($people_id) <> null; }
 	
 	public function joinPeopleToUsers(&$q) {
 		$users_alias = $q->getTableAlias("Users");

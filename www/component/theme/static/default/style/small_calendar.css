@@ -23,6 +23,7 @@
 .small_calendar td.disabled {
 	background-color: #C0C0C0;
 	cursor: default;
+	color: #808080;
 }
 .small_calendar td.selected {
 	background-color: #C0C0FF;

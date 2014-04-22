@@ -12,6 +12,7 @@
 	return array(
 		array("information_session","IS_status.js","Information Sessions","IS"),
 		array("manage_exam","exam_status.js","Entrance Examination","exam"),
+		array("exam_center","exam_center_status.js","Exam Centers","exam"),
 	);
 
 ?>

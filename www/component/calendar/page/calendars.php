@@ -4,16 +4,16 @@ class page_calendars extends Page {
 	public function get_required_rights() { return array(); }
 	
 	public function execute() {
-		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
-		$this->onload("new splitter_vertical('calendars',0.3);");
+		$this->require_javascript("horizontal_layout.js");
+		$this->onload("new horizontal_layout('calendars',true,'top');");
 		$this->add_javascript("/static/calendar/calendar.js");
 		$this->add_javascript("/static/calendar/calendar_view.js");
 		$this->add_javascript("/static/widgets/section/section.js");
 		$this->onload("init_calendars();");
 ?>
-<div style='height:100%;width:100%' id='calendars'>
-	<div style='overflow:auto' id='left'></div>
-	<div id='calendars_view'></div>
+<div style='height:100%;width:100%;padding-top:5px' id='calendars'>
+	<div id='left' style='padding-left:5px;'></div>
+	<div id='calendars_view' style='height:10px;margin:5px;' layout="fill" class='section'></div>
 </div>
 <script type='text/javascript'>
 function init_calendars() {
@@ -27,7 +27,6 @@ function init_calendars() {
 		p.div = content;
 		content.style.padding = "5px";
 		var sec = new section(provider.getProviderIcon(), provider.getProviderName(), content, true);
-		sec.element.style.margin = "5px";
 		left.appendChild(sec.element);
 		if (provider.canCreateCalendar()) {
 			var create_button = document.createElement("IMG");
@@ -59,7 +58,8 @@ function init_calendars() {
 		}
 		content.innerHTML = provider.connection_status;
 		provider.on_connection_status.add_listener(function(status) {
-			content.innerHTML = status;
+			if (p.calendars.length == 0)
+				content.innerHTML = status;
 		});
 	});
 

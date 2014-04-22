@@ -1,5 +1,6 @@
 if (typeof require != 'undefined') {
 	require("address_text.js");
+	require("contact_objects.js");
 }
 
 /**
@@ -100,7 +101,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			var create = function(address) {
 				var text = new address_text(address);
 				div_data.appendChild(text.element);
-				if (type_id == -1 || can_edit) {
+				if (type_id == null || type_id < 0 || can_edit) {
 					div_data.onmouseover = function() {
 						text.element.style.textDecoration = 'underline';
 						text.element.cursor = 'pointer';
@@ -132,7 +133,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 										div_data.removeChild(text.element);
 										create(edit.address);
 									};
-									if (type_id != -1) {
+									if (type_id != null && type_id > 0) {
 										service.json("data_model","save_entity",{
 											table: "PostalAddress",
 											key: edit.address.id,
@@ -154,7 +155,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 								});
 								p.show();
 							};
-							if (type_id != -1) {
+							if (type_id != null && type_id > 0) {
 								service.json("data_model", "lock_row", {
 									table: "PostalAddress",
 									row_key: div_data.address.id
@@ -174,7 +175,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			create(address);
 		});
 		t._createCategoryField(td_category,address);
-		if(type_id == -1 || can_remove){
+		if(type_id == null || type_id < 0 || can_remove){
 			var div_remove = document.createElement('div');
 			div_remove.style.display = 'inline-block';
 			this._addRemoveButton(address,div_remove);
@@ -185,30 +186,32 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	
 	/** Called when the user clicks on "Add address". */
 	this.createAddress = function(){
-		var address = new PostalAddress(-1,null,null,null,null,null,null,null,"Work");
-		if (type_id != -1) {
-			service.json("contact","add_address",{
-				type:type,
-				type_id:type_id,
-				address:address
-			},function(res){
-				if(!res) return;
+		require("contact_objects.js", function() {
+			var address = new PostalAddress(-1,null,null,null,null,null,null,null,"Work");
+			if (type_id != null && type_id > 0) {
+				service.json("contact","add_address",{
+					type:type,
+					type_id:type_id,
+					address:address
+				},function(res){
+					if(!res) return;
+					/* Update the result object */
+					address.id = res.id;
+					var l = t.addresses.length;
+					t.addresses[l] = address;
+					/* Update the table */
+					t.addAddress(address, true);
+					t.onchange.fire(t);
+				});
+			} else {
 				/* Update the result object */
-				address.id = res.id;
 				var l = t.addresses.length;
 				t.addresses[l] = address;
 				/* Update the table */
 				t.addAddress(address, true);
 				t.onchange.fire(t);
-			});
-		} else {
-			/* Update the result object */
-			var l = t.addresses.length;
-			t.addresses[l] = address;
-			/* Update the table */
-			t.addAddress(address, true);
-			t.onchange.fire(t);
-		}
+			}
+		});
 	};
 	
 	/** Add the remove button to the address row
@@ -232,7 +235,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 * @param {PostalAddress} address the address to remove
 	 */
 	this.removeAddress = function (address){
-		if (type_id != -1) {
+		if (type_id != null && type_id > 0) {
 			/* Remove from database */
 			service.json("data_model","remove_row",{table:"PostalAddress", row_key:address.id}, function(res){
 				if(!res) return;
@@ -326,7 +329,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 * @param {DOMNode} container the one which contains the category field
 	 */
 	this._saveSubType = function(address, address_type, container){
-		if (type_id != -1) {
+		if (type_id != null && type_id > 0) {
 			service.json("data_model","save_entity",{table:"PostalAddress",key:address.id, field_address_type:address_type, lock:-1},function(res){
 				if(!res) return;
 				container.innerHTML = address_type;

@@ -60,7 +60,7 @@ function datamodel_datadisplay_new(&$page, $data, $sub_model, $variable_name, $f
 	$page->add_javascript("/static/widgets/typed_field/typed_field.js");
 	$page->add_javascript("/static/widgets/typed_field/".$typed_field[0].".js");
 	$page->add_javascript("/static/data_model/DataDisplay.js");
-	$table = $data->handler->table;
+	$table = $data->getTable();
 	echo "$variable_name=new ".$typed_field[0]."(".json_encode($data->getNewData()).",true,".$typed_field[1].");";
 	echo "$variable_name.register_datamodel_datadisplay(".$data->javascriptDataDisplay($sub_model).",$fake_key_variable);";
 }

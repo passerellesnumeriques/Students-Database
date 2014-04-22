@@ -42,7 +42,10 @@ function date_picker(date, minimum, maximum, onready) {
 		t.header.appendChild(forward);
 		forward.onclick = function() {
 			var d = t.select.getDate();
-			d.setMonth(d.getMonth()+1);
+			var new_month = d.getMonth()+1;
+			d.setMonth(new_month);
+			if (new_month > 11) new_month = 0;
+			while (d.getMonth() != new_month) d.setDate(d.getDate()-1);
 			t.select.selectDate(d);
 			t.cal.setDate(d);
 			if (t.onchange) t.onchange(t, t.cal.getDate());

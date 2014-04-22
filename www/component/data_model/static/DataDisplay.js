@@ -14,7 +14,7 @@
  * @param {Object} new_data structure to use for a new data
  * @returns
  */
-function DataDisplay(category, name, table, field_classname, field_config, editable, edit_locks, sortable, filter_classname, filter_config, cell, new_data) {
+function DataDisplay(category, name, table, field_classname, field_config, editable, edit_locks, sortable, filter_classname, filter_config, cell, new_data, sub_data) {
 	this.category = category;
 	this.name = name;
 	this.table = table;
@@ -27,6 +27,11 @@ function DataDisplay(category, name, table, field_classname, field_config, edita
 	this.filter_config = filter_config;
 	this.cell = cell;
 	this.new_data = new_data;
+	this.sub_data = sub_data;
+}
+
+function SubDataDisplay(names) {
+	this.names = names;
 }
 
 /** Parse a DataPath to get information about it on JavaScript side
@@ -42,11 +47,11 @@ function DataPath(s) {
 		var j = s.indexOf('<');
 		if (i == -1) i = j;
 		if (i == -1) {
-			this.table = s;
+			this._parseTable(s);
 			this.next = false;
 			return;
 		}
-		this.table = s.substring(0,i);
+		this._parseTable(s.substring(0,i));
 		s = s.substring(i);
 		this.direction = s.charAt(0);
 		s = s.substring(1);
@@ -62,6 +67,21 @@ function DataPath(s) {
 		}
 		this.next = new DataPath(s);
 	};
+	this._parseTable = function(s) {
+		var i = s.indexOf('(');
+		if (i > 0) {
+			this.join_key = s.substring(i+1, s.length-1);
+			s = s.substring(0,i);
+		} else
+			this.join_key = null;
+		i = s.indexOf('[');
+		if (i > 0) {
+			this.sub_model = s.substring(i+1, s.length-1);
+			s = s.substring(0,i);
+		} else
+			this.sub_model = null;
+		this.table = s;
+	};
 	this._parseElement(s);
 	
 	/** Indicates if the data is mandatory or not (if it cannot be null in the data model)
@@ -75,5 +95,11 @@ function DataPath(s) {
 			p = p.next;
 		}
 		return true;
+	};
+	
+	this.lastElement = function() {
+		var p = this;
+		while (p.next) p = p.next;
+		return p;
 	};
 }

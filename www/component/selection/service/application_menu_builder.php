@@ -134,6 +134,7 @@ class service_application_menu_builder extends Service {
 			require("select.js",function(){
 				t.select = new select(container);
 				t._init();
+				layout.invalidate(container);
 			});
 		}
 		<?php
@@ -152,21 +153,22 @@ class service_application_menu_builder extends Service {
 			}
 			$json_all_campaign .= "]";
 			echo "var select_element = document.createElement('div');";
-			echo "var select_campaign = new selectCampaignHeader(".$first.", ".json_encode($rights["manage"]).", ".$json_all_campaign.", ".json_encode($current).", select_element);";
+			echo "select_campaign = new selectCampaignHeader(".$first.", ".json_encode($rights["manage"]).", ".$json_all_campaign.", ".json_encode($current).", select_element);";
 			echo "addLeftControl(select_element);";
 		
 			/* All the other buttons need the campaign id to be set */
 			$campaign_id = PNApplication::$instance->selection->getCampaignId();
 			if($campaign_id <> null){
 				echo "addMenuItem('".theme::$icons_16["dashboard"]."','Dashboard',null,'/dynamic/selection/page/selection_main_page');";
-				echo "addRightControl(\"<a class='button_verysoft' href='/dynamic/selection/page/organizations_for_selection' target='pn_application_content'><img src='/static/contact/directory_32.png'/></a>\",'See organizations partners for the selection process');";
+				echo "addRightControl(\"<a class='button_verysoft' style='margin-top:0px;margin-bottom:0px;padding-top:1px;padding-bottom:1px' href='/dynamic/selection/page/organizations_for_selection' target='pn_application_content'><img src='/static/contact/directory_32.png'/></a>\",'See organizations partners for the selection process');";
+				echo "addRightControl(\"<a class='button_verysoft' style='margin-top:0px;margin-bottom:0px;padding-top:1px;padding-bottom:1px' href='/dynamic/selection/page/applicant/list' target='pn_application_content'><img src='/static/selection/applicant/applicants_32.png'/></a>\",'List of applicants');";
 				if($rights["manage"]){
 					echo "addMenuItem('".theme::$icons_16["config"]."','Configuration','Configure how your selection process works and how the application will behave','/dynamic/selection/page/config/manage');";
 				}
 				if(PNApplication::$instance->user_management->has_right("see_information_session_details",true))
 					echo "addMenuItem('/static/selection/IS/IS_16.png','Information Sessions','List information sessions already planned, create new ones','/dynamic/selection/page/IS/main_page');";
 				if(PNApplication::$instance->user_management->has_right("see_exam_subject",true))
-					echo "addMenuItem('/static/selection/exam/exam_16.png','Exams','Written exam subjects, eligibility rules, exam sessions planned, import results','/dynamic/selection/page/exam/main_page');";
+					echo "addMenuItem('/static/selection/exam/exam_16.png','Exams','Written exam subjects, eligibility rules, exam sessions planned, import results','/dynamic/selection/page/exam/main_page');";				
 			}
 		}
 	}

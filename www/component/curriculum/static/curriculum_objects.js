@@ -1,3 +1,20 @@
+function AcademicYear(id,year,name,periods) {
+	this.id = id;
+	this.year = year ? parseInt(year) : 0;
+	this.name = name;
+	this.periods = periods;
+}
+
+function AcademicPeriod(year_id, id, name, start, end, weeks, weeks_break) {
+	this.year_id = year_id;
+	this.id = id;
+	this.name = name;
+	this.start = start;
+	this.end = end;
+	this.weeks = weeks ? parseInt(weeks) : 0;
+	this.weeks_break = weeks_break ? parseInt(weeks_break) : 0;
+}
+
 /**
  * Specialization in the curriculum
  * @param {Number} id id
@@ -14,7 +31,7 @@ function Specialization(id, name) {
  * @param {String} name name
  * @param {String} start_date integration date, in SQL format
  * @param {String} end_date graduation date, in SQL format
- * @param {Array} periods list of {@link AcademicPeriod}
+ * @param {Array} periods list of {@link BatchPeriod}
  */
 function Batch(id, name, start_date, end_date, periods) {
 	this.id = id;
@@ -28,16 +45,14 @@ function Batch(id, name, start_date, end_date, periods) {
  * Academic Period (quarter, or semester...)
  * @param {Number} id id
  * @param {String} name name
- * @param {String} start_date date in SQL format
- * @param {String} end_date date in SQL format
+ * @param {Number} academic_period AcademicPeriod id
  * @param {Array} available_specializations list of specializations' id
- * @param {Array} classes list of {@link StudentClass}
+ * @param {Array} classes list of {@link AcademicClass}
  */
-function AcademicPeriod(id, name, start_date, end_date, available_specializations, classes) {
+function BatchPeriod(id, name, academic_period, available_specializations, classes) {
 	this.id = id;
 	this.name = name;
-	this.start_date = start_date;
-	this.end_date = end_date;
+	this.academic_period = academic_period;
 	this.available_specializations = available_specializations;
 	this.classes = classes;
 }
@@ -48,7 +63,7 @@ function AcademicPeriod(id, name, start_date, end_date, available_specialization
  * @param {String} name name
  * @param {Number} spe_id id of the specialization if this class is associated to a specialization, or null
  */
-function StudentClass(id, name, spe_id) {
+function AcademicClass(id, name, spe_id) {
 	this.id = id;
 	this.name = name;
 	this.spe_id = spe_id;
@@ -75,7 +90,7 @@ function CurriculumSubjectCategory(id, name) {
  * @param {Number} hours number of hours of this subject
  * @param {String} hours_type either "Per week" or "Per period"
  */
-function CurriculumSubject(id, code, name, category_id, period_id, specialization_id, hours, hours_type) {
+function CurriculumSubject(id, code, name, category_id, period_id, specialization_id, hours, hours_type, coefficient) {
 	this.id = id;
 	this.code = code;
 	this.name = name;
@@ -84,4 +99,11 @@ function CurriculumSubject(id, code, name, category_id, period_id, specializatio
 	this.specialization_id = specialization_id;
 	this.hours = hours;
 	this.hours_type = hours_type;
+	this.coefficient = coefficient;
+}
+
+function TeacherAssigned(people_id, subject_id, class_id) {
+	this.people_id = people_id;
+	this.subject_id = subject_id;
+	this.class_id = class_id;
 }

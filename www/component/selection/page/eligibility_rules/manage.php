@@ -4,9 +4,9 @@ require_once("component/selection/SelectionJSON.inc");
 
 class page_eligibility_rules_manage extends selection_page {
 	public function get_required_rights() { return array("see_exam_subject"); }
-	public function execute_selection_page(&$page){
-		$page->require_javascript("vertical_layout.js");
-		$page->onload("new vertical_layout('to_vertical_layout');");
+	public function execute_selection_page(){
+		$this->require_javascript("vertical_layout.js");
+		$this->onload("new vertical_layout('to_vertical_layout');");
 		?>
 		<div id = "to_vertical_layout" style = "width:100%; height:100%">
 			<div id = "manage_rules_container" layout = "fill"></div>
@@ -38,9 +38,9 @@ class page_eligibility_rules_manage extends selection_page {
 				return;
 			$sm = PNApplication::$instance->selection->getCampaignId();
 			//Lock the DB
-			$lock_eligibility_rules = $page->performRequiredLocks("EligibilityRule",null,null,$sm);
-			$lock_exam_topics = $page->performRequiredLocks("ExamTopicForEligibilityRule",null,null,$sm);//required by eligibilityrule
-			$lock_exam_subjects = $page->performRequiredLocks("ExamSubject",null,null,$sm);//required by examtopics
+			$lock_eligibility_rules = $this->performRequiredLocks("EligibilityRule",null,null,$sm);
+			$lock_exam_topics = $this->performRequiredLocks("ExamTopicForEligibilityRule",null,null,$sm);//required by eligibilityrule
+			$lock_exam_subjects = $this->performRequiredLocks("ExamSubject",null,null,$sm);//required by examtopics
 			if(PNApplication::has_errors())//locks not performed well
 				return;
 			

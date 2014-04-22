@@ -62,29 +62,40 @@ function load_static_resources(container) {
 	/** {Number} number of scripts currently loading */
 	this._scripts_loading = 0;
 	/** {Number} maximum number of scripts that can be loaded at the same time */
-	this._max_scripts_loading = 5;
+	this._max_scripts_loading = 10;
+	this._max_scripts_loading_slow = 2;
 	/** {Number} number of images currently loading */
 	this._images_loading = 0;
 	/** {Number} maximum number of images that can be loaded at the same time */
-	this._max_images_loading = 10;
+	this._max_images_loading = 20;
+	this._max_images_loading_slow = 2;
+	
+	this._slow_when_user_active = false;
+	this._slow_when_services_active = false;
 	
 	/** Start to load another script */
 	this._nextScript = function() {
-		if (window.top.pnapplication && window.top.pnapplication.last_activity > new Date().getTime()-3000) {
+		var slow = false;
+		if (t._slow_when_user_active && window.top.pnapplication && window.top.pnapplication.last_activity > new Date().getTime()-3000) {
+			slow = true;
+		}
+		if (!slow && t._slow_when_services_active && window.top._last_service_call && window.top._last_service_call > new Date().getTime()-3000) {
+			slow = true;
+		}
+		if (slow) {
 			container.style.color = "#808080";
 			setOpacity(t._pc, 0.25);
-			setTimeout(t._nextScript);
-			return;
+			if (t._scripts_loading >= t._max_scripts_loading_slow) {
+				setTimeout(t._nextScript, 250);
+				return;
+			}
+		} else {
+			container.style.color = "#000000";
+			setOpacity(t._pc, 1);
 		}
 		if (t._stopped) return;
 		if (!window.top.pn_application_static) return;
-		if (new Date().getTime() - window.top._last_service_call < 3000 && t._scripts_loading > 0) {
-			setTimeout(t._nextScript);
-			return;
-		}
 		t._scripts_loading++;
-		container.style.color = "#000000";
-		setOpacity(t._pc, 1);
 		var script = null;
 		for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
 			if (window.top.pn_application_static.scripts[i].dependencies.length == 0) {
@@ -99,26 +110,33 @@ function load_static_resources(container) {
 			t.loaded(script.size);
 			for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
 				window.top.pn_application_static.scripts[i].dependencies.remove(script.url);
+			window.top.pn_application_static._loaded_scripts.push(script.url);
 			window.top.pn_application_static.loading_scripts.remove(script);
 			t._nextScript();
 		});
 	};
 	/** Start to load another image */
 	this._nextImage = function() {
-		if (window.top.pnapplication && window.top.pnapplication.last_activity > new Date().getTime()-3000) {
+		var slow = false;
+		if (t._slow_when_user_active && window.top.pnapplication && window.top.pnapplication.last_activity > new Date().getTime()-3000) {
+			slow = true;
+		}
+		if (!slow && t._slow_when_services_active && window.top._last_service_call && window.top._last_service_call > new Date().getTime()-3000) {
+			slow = true;
+		}
+		if (slow) {
 			container.style.color = "#808080";
 			setOpacity(t._pc, 0.25);
-			setTimeout(t._nextImage);
-			return;
+			if (t._images_loading >= t._max_images_loading_slow) {
+				setTimeout(t._nextImage, 250);
+				return;
+			}
+		} else {
+			container.style.color = "#000000";
+			setOpacity(t._pc, 1);
 		}
 		if (t._stopped) return;
-		if (new Date().getTime() - window.top._last_service_call < 3000 && t._scripts_loading > 1) {
-			setTimeout(t._nextImage);
-			return;
-		}
 		t._images_loading++;
-		container.style.color = "#000000";
-		setOpacity(t._pc, 1);
 		if (!window.top.pn_application_static) return;
 		if (window.top.pn_application_static.images.length == 0) { t._checkEnd(); return; }
 		var image = window.top.pn_application_static.images[0];
@@ -140,7 +158,8 @@ function load_static_resources(container) {
 			loaded_size: 0,
 			loading_scripts: [],
 			loading_images: [],
-			service_done: false
+			service_done: false,
+			_loaded_scripts: []
 		};
 		require("service.js",function(){
 			service.json("application","get_static_resources",{},function(res){
@@ -167,6 +186,8 @@ function load_static_resources(container) {
 		for (var i = 0; i < window.top.pn_application_static.loading_images.length; ++i)
 			window.top.pn_application_static.images.push(window.top.pn_application_static.loading_images[i]);
 		window.top.pn_application_static.loading_images = [];
+		for (var i = 0; i < window.top.pn_application_static._loaded_scripts.length; ++i)
+			add_javascript(window.top.pn_application_static._loaded_scripts[i]);
 		for (var i = 0; i < t._max_images_loading; ++i)
 			t._nextImage();
 		for (var i = 0; i < t._max_scripts_loading; ++i)

@@ -13,20 +13,32 @@ field_integer.prototype.canBeNull = function() { return this.config && this.conf
 field_integer.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;
-		var input = document.createElement("INPUT");
-		input.type = "text";
-		input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
+		t.input = document.createElement("INPUT");
+		t.input.type = "text";
+		t.input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
 		if (this.config && this.config.min && this.config.max) {
 			var m = Math.max((""+this.config.min).length,(""+this.config.max).length);
-			input.maxLength = m;
+			t.input.maxLength = m;
 		}
-		if (data) input.value = data;
-		input.style.margin = "0px";
-		input.style.padding = "0px";
+		if (t.config) {
+			if (typeof data == 'string') {
+				data = parseInt(data);
+				if (isNaN(data)) data = null;
+			}
+			if (!t.config.can_be_null) {
+				if (data == null) data = t.config.min;
+			}
+			if (data != null && data < t.config.min) data = t.config.min;
+			if (data != null && data > t.config.max) data = t.config.max;
+		}
+		if (data) t.input.value = data;
+		t.input.style.margin = "0px";
+		t.input.style.padding = "0px";
 		var onkeyup = new Custom_Event();
-		input.onkeyup = function(e) { onkeyup.fire(e); };
-		var f = function() { setTimeout(function() { t._datachange(); },1); };
-		input.onkeydown = function(e) {
+		t.input.onkeyup = function(e) { onkeyup.fire(e); };
+		var last_data = data;
+		var f = function() { if (t.getCurrentData() == last_data) return; last_data = t.getCurrentData(); setTimeout(function() { t._datachange(); },1); };
+		t.input.onkeydown = function(e) {
 			var ev = getCompatibleKeyEvent(e);
 			if (ev.isPrintable) {
 				if (!isNaN(parseInt(ev.printableChar)) || ev.ctrlKey) {
@@ -35,7 +47,7 @@ field_integer.prototype._create = function(data) {
 					return true;
 				}
 				// not a digit
-				if (ev.printableChar == "-" && input.value.length == 0) {
+				if (ev.printableChar == "-" && t.input.value.length == 0) {
 					// - at the beginning: ok
 					f();
 					return true;
@@ -46,30 +58,30 @@ field_integer.prototype._create = function(data) {
 			f();
 			return true;
 		};
-		input.onblur = function(ev) {
-			if (input.value.length == 0 && t.config && t.config.can_be_null) {}
+		t.input.onblur = function(ev) {
+			if (t.input.value.length == 0 && t.config && t.config.can_be_null) {}
 			else {
-				if (input.value.length == 0 && (!t.config || !t.config.can_be_null)) input.value = t.config && t.config.min ? this.config.min : 0;
-				var i = parseInt(input.value);
-				if (t.config && t.config.min && i < t.config.min) input.value = t.config.min;
-				if (t.config && t.config.max && i > t.config.max) input.value = t.config.max;
+				if (t.input.value.length == 0 && (!t.config || !t.config.can_be_null)) t.input.value = t.config && t.config.min ? t.config.min : 0;
+				var i = parseInt(t.input.value);
+				if (t.config && t.config.min && i < t.config.min) t.input.value = t.config.min;
+				if (t.config && t.config.max && i > t.config.max) t.input.value = t.config.max;
 			}
 			f();
 		};
-		require("input_utils.js",function(){inputAutoresize(input);});
-		this.element.appendChild(input);
+		require("input_utils.js",function(){inputAutoresize(t.input);});
+		this.element.appendChild(t.input);
 		this.getCurrentData = function() {
-			if (input.value.length == 0) return this.config && this.config.can_be_null ? null : this.config.min;
-			return parseInt(input.value);
+			if (t.input.value.length == 0) return this.config && this.config.can_be_null ? null : this.config.min;
+			return parseInt(t.input.value);
 		};
 		this.setData = function(data) {
-			if (data == null) input.value = "";
-			else input.value = data;
+			if (data == null) t.input.value = "";
+			else t.input.value = data;
 			f();
 		};
 		this.signal_error = function(error) {
 			this.error = error;
-			input.style.border = error ? "1px solid red" : "";
+			t.input.style.border = error ? "1px solid red" : "";
 		};
 		this.onenter = function(listener) {
 			onkeyup.add_listener(function(e) {

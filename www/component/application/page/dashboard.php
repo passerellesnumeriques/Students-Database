@@ -8,6 +8,7 @@ class page_dashboard extends Page {
 		theme::css($this, "application.css");
 ?>
 <div style='position:absolute;top:0px;left:0px;width:50%;'>
+	<a href='#' onclick="service.json('theme','set_theme',{theme:'new_design'},function(res){if(res)window.parent.location.reload();});">Test New Design</a>
 	<div id='general_news' icon='/static/news/news.png' title='General Updates' collapsable='true' style="margin:10px 10px 20px 10px;">
 		<div style='padding:2px 3px 0px 3px;' id='general_news_container'>
 			<img id='general_news_loading' src='/static/news/loading.gif'/>
@@ -36,7 +37,19 @@ function init_calendars() {
 	icon_loading.style.visibility = 'hidden';
 	icon_loading.counter = 0;
 	calendars_section.addToolRight(icon_loading);
-	calendars_section.addToolRight("<a class='button_verysoft' href='/dynamic/calendar/page/calendars'><img src='"+theme.icons_16.window_maximize+"'/></a>");
+	var maximize = document.createElement("A");
+	maximize.className = "button_verysoft";
+	maximize.innerHTML = "<img src='"+theme.icons_16.window_maximize+"'/>";
+	maximize.href = '#';
+	maximize.onclick = function() {
+		window.top.require("popup_window.js",function() {
+			var p = new window.top.popup_window("Your Calendars", "/static/calendar/calendar_16.png", "");
+			p.setContentFrame('/dynamic/calendar/page/calendars');
+			p.showPercent(95,95);
+		});
+		return false;
+	};
+	calendars_section.addToolRight(maximize);
 	window.top.calendar_manager.on_refresh.add_listener(function() {
 		icon_loading.counter++;
 		icon_loading.style.visibility = 'visible';
@@ -63,11 +76,12 @@ function init_calendars() {
 		}
 		var provider = {provider:cal.provider,calendars:[cal]};
 		var div = document.createElement("DIV");
-		div.innerHTML = "<img src='"+cal.provider.getProviderIcon()+"' width=16px height=16px style='vertical-align:bottom'/> "+cal.provider.getProviderName()+" (";
+		div.innerHTML = "<img src='"+cal.provider.getProviderIcon()+"' width=16px height=16px style='vertical-align:bottom'/> (";
 		provider.span_nb = document.createElement("SPAN");
 		provider.span_nb.innerHTML = "1";
 		div.appendChild(provider.span_nb);
 		div.appendChild(document.createTextNode(")"));
+		div.title = cal.provider.getProviderName();
 		div.className = "button";
 		div.style.margin = "2px";
 		div.style.paddingRight = "5px";
@@ -121,7 +135,7 @@ require("news.js",function() {
 			general_news_loading.style.visibility = "visible";
 			layout.invalidate(general_news_section.element);
 		} else {
-			general_news_loading.style.position = "absolute";
+			//general_news_loading.style.position = "absolute";
 			general_news_loading.style.visibility = "hidden";
 			layout.invalidate(general_news_section.element);
 		}
@@ -135,7 +149,7 @@ require("news.js",function() {
 			other_news_loading.style.visibility = "visible";
 			layout.invalidate(other_news_section.element);
 		} else {
-			other_news_loading.style.position = "absolute";
+			//other_news_loading.style.position = "absolute";
 			other_news_loading.style.visibility = "hidden";
 			layout.invalidate(other_news_section.element);
 		}

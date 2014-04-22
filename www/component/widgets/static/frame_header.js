@@ -18,6 +18,7 @@ function frame_header_menu_item(id, icon, text, link, tooltip_content, start_url
 	this.text = document.createTextNode(text);
 	this.link.appendChild(this.text);
 	this.link.href = link;
+	this.original_url = link;
 	this.start_url = start_url;
 	this.button_type = button_type;
 	tooltip(this.link, tooltip_content);
@@ -105,6 +106,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		if (typeof control == 'string') {
 			var div = document.createElement("DIV");
 			div.innerHTML = control;
+			div.style.verticalAlign = "top";
 			control = div;
 		}
 		control.style.display = "inline-block";
@@ -125,6 +127,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		if (typeof control == 'string') {
 			var div = document.createElement("DIV");
 			div.innerHTML = control;
+			div.style.verticalAlign = "top";
 			control = div;
 		}
 		control.style.display = "inline-block";

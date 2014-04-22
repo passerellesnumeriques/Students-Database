@@ -60,7 +60,7 @@ button img {
 	background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* W3C */
 	/*font-family: Verdana;*/
 	font-family: Arial;
-	font-weight: bold;
+	font-weight: normal;
 	color: #200040;
 	white-space: nowrap;
 }
@@ -97,6 +97,39 @@ button img {
 .button a, a.button {
 	text-decoration: none;
 	color: black;
+}
+button {
+    padding: 1px 2px 1px 2px;
+    text-align: center;
+    color: black;
+    border: 1px solid rgba(128,128,128,0.8);
+    border-radius: 3px;
+    box-shadow: 1px 1px 1px rgba(170,170,170,0);
+    display: inline-block;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%,rgba(192,192,192,0.6) 100%); /* W3C */
+    font-family: Arial;
+    font-weight: normal;
+    white-space: nowrap;
+    cursor: pointer;
+}
+button:hover {
+    border: 1px solid rgba(0,0,0,0.6);
+    box-shadow: 1px 1px 1px rgba(170,170,170,1);
+    background-color: rgba(255,255,255,0.6);
+}
+button:active {
+    box-shadow: 0px 0px 0px;
+    position: relative;
+    top: 1px;
+    left: 1px;
+}
+button:focus {
+    outline: none;
+    border: 1px solid #4040F0;
+}
+button a {
+    text-decoration: none;
+    color: inherit;
 }
 
 .button_soft {
@@ -142,7 +175,7 @@ button img {
 	color: black;
 }
 
-.button_verysoft {
+.button_verysoft, button.flat {
 	cursor: pointer;
 	border: 1px solid rgba(0,0,0,0);
 	padding: 2px;
@@ -150,17 +183,28 @@ button img {
 	box-shadow: 1px 1px 1px rgba(170,170,170,0);
 	display: inline-block;
 	margin: 1px 2px 1px 2px;
+	background: transparent;
+    background-color: transparent;
 }
-.button_verysoft:hover {
+.button_verysoft:hover, button.flat:hover {
 	border: 1px solid rgba(128,128,128,0.4);
 	box-shadow: 1px 1px 1px rgba(170,170,170,0.6);
 	background-color: rgba(255,255,255,0.2);
 }
-.button_verysoft:active {
+.button_verysoft:hover:disabled, button.flat:hover:disabled {
+    border: 1px solid rgba(128,128,128,0.2);
+    box-shadow: 0px 0px 0px rgba(170,170,170,0);
+    background-color: rgba(255,255,255,0.1);
+}
+.button_verysoft:active, button.flat:active {
 	box-shadow: 0px 0px 0px;
 	position: relative;
 	top: 1px;
 	left: 1px;
+}
+.button_verysoft:disabled:active, button.flat:disabled:active {
+    top: 0px;
+    left: 0px;
 }
 .button_verysoft a,a.button_verysoft {
 	text-decoration: none;

@@ -8,9 +8,9 @@ class page_excel_upload extends Page {
 			?>
 			<table style='width:100%;height:100%'>
 			<tr><td valign=middle align=center>
-			<div class='button' onclick="window.frameElement.<?php echo $_GET["button"];?>();">
+			<button class='action' onclick="window.frameElement.<?php echo $_GET["button"];?>();">
 				Open File...
-			</div>
+			</button>
 			<div><img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/> Supported Formats: Microsoft Excel, Open Office Calc, Gnome Gnumeric, and CSV.</div>
 			</td></tr>
 			</table>
@@ -24,6 +24,7 @@ class page_excel_upload extends Page {
 		if (isset($_GET["id"])) {
 			$path = PNApplication::$instance->storage->get_data_path($_GET["id"]);
 		} else if (!isset($_FILES["excel"]) || $_FILES["excel"]['error'] <> UPLOAD_ERR_OK) {
+			echo "<script type='text/javascript'>window.page_errors=true;</script>";
 			PNApplication::error("Error uploading file (".(isset($_FILES["excel"]) ? PNApplication::$instance->storage->get_upload_error($_FILES["excel"]) : "no file received").").");
 			return;
 		} else
@@ -38,6 +39,7 @@ class page_excel_upload extends Page {
 				PNApplication::$instance->storage->remove_data($_GET["id"]);
 			}
 		} catch (Exception $e) {
+			echo "<script type='text/javascript'>window.page_errors=true;</script>";
 			PNApplication::error("Invalid file format: ".$e->getMessage());
 			return;
 		}

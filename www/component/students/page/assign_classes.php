@@ -14,9 +14,8 @@ class page_assign_classes extends Page {
 		$sections = array();
 		if ($period_id <> null) {
 			// we are on a period
-			$period = PNApplication::$instance->curriculum->getAcademicPeriod($period_id);
 			// get all students for this period
-			$q_students = PNApplication::$instance->students->getStudentsQueryForPeriod($period, true, false);
+			$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false);
 			$students = $q_students->execute();
 			$students_ids = array();
 			foreach ($students as $s) array_push($students_ids, $s["people"]);
@@ -40,7 +39,7 @@ class page_assign_classes extends Page {
 				if (!isset($s["class"])) $s["class"] = null;
 			}
 			// check if this period is specialized
-			$specializations = PNApplication::$instance->curriculum->getAcademicPeriodSpecializationsWithName($period_id);
+			$specializations = PNApplication::$instance->curriculum->getBatchPeriodSpecializationsWithName($period_id);
 			$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id);
 			if (count($specializations) > 0) {
 				// specialized period
@@ -58,18 +57,18 @@ class page_assign_classes extends Page {
 		} else {
 			// we are on a class
 			$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
-			$period = PNApplication::$instance->curriculum->getAcademicPeriod($class["period"]);
+			$period_id = $class["period"];
 			if ($class["specialization"] <> null) {
 				// specialized class
 				// get classes in this specialization
-				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"], $class["specialization"]);
+				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id, $class["specialization"]);
 				// get students from the specialization
-				$q_students = PNApplication::$instance->students->getStudentsQueryForPeriod($period, true, false, $class["specialization"]);
+				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $class["specialization"]);
 				$students = $q_students->execute();
 			} else {
 				// not specialized class
-				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"]);
-				$q_students = PNApplication::$instance->students->getStudentsQueryForPeriod($period, true, false);
+				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id);
+				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false);
 				$students = $q_students->execute();
 			}
 			$students_ids = array();
@@ -77,7 +76,7 @@ class page_assign_classes extends Page {
 			// get class assignment
 			if (count($students) > 0) {
 				$q = SQLQuery::create()->select("StudentClass");
-				PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period["id"]);
+				PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period_id);
 				$q->whereIn("StudentClass", "people", $students_ids);
 				$q->field("StudentClass", "people", "people");
 				$q->field("AcademicClass", "id", "class");
@@ -96,22 +95,44 @@ class page_assign_classes extends Page {
 			array_push($sections, array(null, $classes, $students));
 		}
 		
-		$this->require_javascript("assign_peoples.js");
+		$this->require_javascript("assign_elements.js");
+		$this->require_javascript("fill_height_layout.js");
 		$this->require_javascript("section.js");
-		$this->require_javascript("horizontal_layout.js");
-		$this->require_javascript("vertical_layout.js");
 		?>
-		<div id='top_container' style='width:100%;height:100%;overflow-x: auto;overflow-y:hidden;background-color:white'>
-			<div layout='fill' id='container' style='margin:5px;display:inline-block'>
-				<?php if (count($sections) > 0) echo "<div id='sections_container' layout='fill' style='padding-bottom:2px;white-space: nowrap;'></div>";?>
-			</div>
+		<div id='top_container' style='width:100%;height:100%;overflow-x:auto'>
 		</div>
 		<script type='text/javascript'>
 		var popup = window.parent.get_popup_window_from_frame(window);
 		popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
+		popup.disableButton('save');
 		popup.addCancelButton();
+
+		function display_people(people, container) {
+			container.appendChild(document.createTextNode(people.first_name+" "+people.last_name));
+		}
+		
 		var assign, container, sec;
 		var assigns = [];
+
+		var classes = [];
+		function getClassName(id) {
+			for (var i = 0; i < classes.length; ++i)
+				if (classes[i].id == id) return classes[i].name;
+			return "";
+		}
+
+		function changed() {
+			var has_change = false;
+			for (var i = 0; i < assigns.length && !has_change; ++i) {
+				var changes = assigns[i].getChanges();
+				if (changes.length > 0) has_change = true;
+			}
+			if (has_change)
+				popup.enableButton('save');
+			else
+				popup.disableButton('save');
+		}
+		
 		<?php
 		foreach ($sections as $section) {
 			$section_name = $section[0];
@@ -120,58 +141,59 @@ class page_assign_classes extends Page {
 			if ($section_name <> null) {
 				echo "container = document.createElement('DIV');\n";
 				echo "container.style.height = '100%';\n";
+				echo "container.style.backgroundColor = '#f0f0f0';\n";
 				echo "sec = new section(null,".json_encode($section_name).",container,false,true);\n";
-				echo "sec.element.style.height = '100%';\n";
-				echo "sec.element.style.marginRight = '5px';\n";
 				echo "sec.element.style.display = 'inline-block';\n";
-				echo "document.getElementById('sections_container').appendChild(sec.element);\n";
+				echo "sec.element.style.margin = '5px';\n";
+				echo "document.getElementById('top_container').appendChild(sec.element);\n";
+				echo "new fill_height_layout(sec.element);\n";
 			} else
-				echo "container = document.getElementById('container');\n";
-			echo "assign = new assign_peoples(container);\n";
-			echo "assigns.push(assign);";
+				echo "container = document.getElementById('top_container');\n";
+			echo "assign = new assign_elements(container,".($section_name<>null?"'sub'":"null").",null,display_people,function(assign){\n";
 			foreach ($classes as $cl) {
-				echo "assign.addPossibleAssignment(".$cl["id"].",".json_encode($cl["name"]).");\n";
+				echo "\tassign.addPossibleAssignment(".$cl["id"].",null,".json_encode($cl["name"]).");\n";
+				echo "\tclasses.push({id:".$cl["id"].",name:".json_encode($cl["name"])."});\n";
 			}
 			foreach ($students as &$s) {
-				echo "assign.addPeople(".PeopleJSON::People($q_students, $s).",".json_encode($s["class"]).",true);\n";
+				echo "\tassign.addElement(".PeopleJSON::People($q_students, $s).",".json_encode($s["class"]).",true);\n";
 			}
+			echo "\tassign.onchange.add_listener(changed);\n";
+			echo "\tlayout.invalidate(assign.container);\n";
+			echo "});\n";
+			echo "assigns.push(assign);\n";
 		}
-		if (count($sections) > 1) echo "new vertical_layout('container',true);\n";
 		?>
-		new vertical_layout('top_container',true);
 		function save() {
 			var lock = lock_screen(null, "Saving class assignments...");
-			var peoples_list = [];
-			for (var i = 0; i < assigns.length; ++i) peoples_list.push(assigns[i].getPeoples());
+			var changes = [];
+			for (var i = 0; i < assigns.length; ++i) changes.push(assigns[i].getChanges());
 			var next = function(index_assign, index_people) {
-				var peoples = peoples_list[index_assign];
+				var peoples = changes[index_assign];
 				if (index_people == peoples.length) {
+					assigns[index_assign].changesSaved();
 					if (index_assign == assigns.length-1) {
-						<?php if (isset($_GET["onsave"])) echo "window.parent.".$_GET["onsave"]."();"?>
+						<?php if (isset($_GET["onsave"])) echo "window.frameElement.".$_GET["onsave"]."();"?>
 						unlock_screen(lock);
 						return;
 					}
 					next(index_assign+1,0);
 					return;
 				}
-				var original = assigns[index_assign].getOriginalAssignment(peoples[index_people].id);
-				var current = assigns[index_assign].getNewAssignment(peoples[index_people].id);
-				if (original == current) {
-					next(index_assign, index_people+1);
-					return;
-				}
+				var original = peoples[index_people].original;
+				var current = peoples[index_people].current;
+				var people = peoples[index_people].element;
 				if (current == null)
-					set_lock_screen_content(lock,"Unassign "+peoples[index_people].first_name+" "+peoples[index_people].last_name+" from class "+assigns[index_assign].getAssignmentName(original));
+					set_lock_screen_content(lock,"Unassign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" from class "+getClassName(original).toHTML());
 				else
-					set_lock_screen_content(lock,"Assign "+peoples[index_people].first_name+" "+peoples[index_people].last_name+" to class "+assigns[index_assign].getAssignmentName(current));
-				service.json("students","assign_class",{student:peoples[index_people].id,clas:current,period:<?php echo $period["id"];?>},function(res){
+					set_lock_screen_content(lock,"Assign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" to class "+getClassName(current).toHTML());
+				service.json("students","assign_class",{student:people.id,clas:current,period:<?php echo $period_id;?>},function(res){
 					next(index_assign,index_people+1);
 				});
 			};
 			next(0,0);
 		}
 		</script>
-		<?php
+		<?php 
 	}
 	
 }

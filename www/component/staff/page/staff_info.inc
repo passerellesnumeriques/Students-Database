@@ -11,6 +11,7 @@ function staff_info(&$page, $people_id, $container_id) {
 	require_once("component/data_model/page/utils.inc");
 	
 	$fct_name = $page->generateID();
+	$display = DataModel::get()->getTableDataDisplay("StaffPosition");
 	?>
 	<script type='text/javascript'>
 	function <?php echo $fct_name;?>() {
@@ -33,7 +34,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				echo "{";
 				echo "id:".$p["id"];
 				echo ",position:".json_encode($p["position"]);
-				echo ",department:".$p["department"];
+				echo ",department:".json_encode($p["department"]);
 				echo ",start:".($p["start"] <> null ? json_encode($p["start"]) : "null");
 				echo ",end:".($p["end"] <> null ? json_encode($p["end"]) : "null");
 				echo "}";
@@ -80,7 +81,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				this.positions.push(p);
 				this.addPosition(p);
 			} else {
-				service.json("data_model","save_entity",{table:"StaffPosition",field_position:"Enter Job Position"},function(res){
+				service.json("data_model","save_entity",{table:"StaffPosition",field_position:"Enter Job Position",field_people:<?php echo $people_id;?>},function(res){
 					if (!res) return;
 					var p = {id:res.id,position:"Enter Job Position",department:null,start:null,end:null};
 					t.positions.push(p);
@@ -97,21 +98,21 @@ function staff_info(&$page, $people_id, $container_id) {
 			var fake_key = generateID();
 			if (position.id == -1) {
 				var field;
-				<?php datamodel_datadisplay_new($page, $table->getDataDisplay("Staff", "Position"), null, "field", "fake_key");?>
+				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Position", null), null, "field", "fake_key");?>
 				td_position.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					position.position = field.getCurrentData();
 				});
 			} else {
 				require("editable_cell.js",function(){
-					new editable_cell(td_position, "StaffPosition", "position", position.id, 'field_text', {max_length:100}, position.position);
+					new editable_cell(td_position, "StaffPosition", "position", position.id, 'field_text', {max_length:100}, position.position).fillContainer();
 				});
 			}
 			var td_department = document.createElement("TD");
 			tr.appendChild(td_department);
 			if (position.id == -1) {
 				var field;
-				<?php datamodel_datadisplay_new($page, $table->getDataDisplay("Staff", "Department"), null, "field", "fake_key");?>
+				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Department", null), null, "field", "fake_key");?>
 				td_department.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					var s = field.getCurrentData();
@@ -122,14 +123,14 @@ function staff_info(&$page, $people_id, $container_id) {
 					var values = [];
 					for (var i = 0; i < t.departments.length; ++i)
 						values.push([t.departments[i].id,t.departments[i].name]);
-					new editable_cell(td_department, "StaffPosition", "department", position.id, 'field_enum', {possible_values:values,can_be_empty:true}, position.department);
+					new editable_cell(td_department, "StaffPosition", "department", position.id, 'field_enum', {possible_values:values,can_be_empty:true}, position.department).fillContainer();
 				});
 			}
 			var td_start = document.createElement("TD");
 			tr.appendChild(td_start);
 			if (position.id == -1) {
 				var field;
-				<?php datamodel_datadisplay_new($page, $table->getDataDisplay("Staff", "Position Start"), null, "field", "fake_key");?>
+				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Start", null), null, "field", "fake_key");?>
 				td_start.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					position.start = field.getCurrentData();
@@ -143,14 +144,14 @@ function staff_info(&$page, $people_id, $container_id) {
 			tr.appendChild(td_end);
 			if (position.id == -1) {
 				var field;
-				<?php datamodel_datadisplay_new($page, $table->getDataDisplay("Staff", "Position End"), null, "field", "fake_key");?>
+				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("End", null), null, "field", "fake_key");?>
 				td_end.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					position.end = field.getCurrentData();
 				});
 			} else {
 				require("editable_cell.js",function(){
-					new editable_cell(td_end, "StaffPosition", "position", position.id, 'field_date', {}, position.end);
+					new editable_cell(td_end, "StaffPosition", "end", position.id, 'field_date', {}, position.end);
 				});
 			}
 		};

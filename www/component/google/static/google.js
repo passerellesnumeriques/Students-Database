@@ -32,6 +32,18 @@ if (!window.top.google) {
 					if (auth_result && !auth_result.error) {
 						window.top.google.connection_status = 1;
 						window.top.google.connection_event.fire();
+						var google_id_set = false;
+						var listener = function() {
+							if (!google_id_set)
+								service.json("google","set_google_id",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){
+									if (res) google_id_set = true;
+								});
+							window.top.pnapplication.onlogin.remove_listener(listener);
+						};
+						if (window.top.pnapplication.logged_in)
+							listener();
+						else
+							window.top.pnapplication.onlogin.add_listener(listener);
 						setTimeout(window.top.google._connect, (parseInt(auth_result.expires_in)-30)*1000);
 						return;
 					}
@@ -73,6 +85,7 @@ if (!window.top.google) {
 			// try again
 			window.top.google._connect();
 		},10000);
+		window.top.google.connection_status = -1;
 		window.top.google._connect();
 		require("userprofile.js",function() {
 			google_userprofile();
@@ -89,6 +102,15 @@ if (!window.top.google) {
 			window.top.google.connection_event.fire();
 			window.top.load_google_api();
 		},30000);
+		
+		/*window.top.add_javascript("https://ajax.googleapis.com/jsapi", function() {
+			google.load("identitytoolkit", "2", {packages: ["ac"], callback: function() {
+				var i = 0;
+				i++;
+			}});
+			var i = 0;
+			i++;
+		});*/
 	};
 	window.top.load_google_api();
 }

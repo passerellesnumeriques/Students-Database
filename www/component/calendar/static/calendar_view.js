@@ -33,13 +33,13 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		this.header.style.fontSize = '9pt';
 		//this.header.style.backgroundColor = "#D8D8D8";
 		this.header.className = "header";
-		this.header.style.borderBottom = "1px solid #A0A0A0";
 		this.view_container_container = document.createElement("DIV");
 		this.view_container_container.style.backgroundColor = "white";
 		this.view_container = document.createElement("DIV");
 		this.view_container.style.position = "relative";
 		this.view_container_container.appendChild(this.view_container);
-		container.appendChild(this.header);
+		if (view_name != "upcoming")
+			container.appendChild(this.header);
 		container.appendChild(this.view_container_container);
 		var ready_count = 0;
 		var ready = function() {
@@ -263,16 +263,17 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	 * @param {Number} try_counter internal use only, in case the view does not exist, we retry several time until the view is created, or we cancel the operation
 	 */
 	this.addEvent = function(ev, try_counter) {
-		if (!this.view) {
+		if (!container.parentNode || !container.ownerDocument || !getWindowFromDocument(container.ownerDocument)) return;
+		if (this.view == null || typeof this.view == 'undefined') {
 			if (!try_counter) try_counter = 0;
 			if (try_counter == 100) {
-				console.error("calendar_view.js:addEvent: no view...");
 				return;
 			}
 			setTimeout(function() { t.addEvent(ev, try_counter+1); }, 100); 
 		};
 		var e = copyCalendarEvent(ev);
 		e.original_event = ev;
+		if (!this.view) return;
 		if (ev.start.getTime() > this.view.end_date.getTime()) return; // after end
 		if (ev.frequency == null) {
 			// single instance
@@ -745,6 +746,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	 * @param {Object} ev the event to remove
 	 */
 	this.removeEvent = function(ev) {
+		if (!container.parentNode || !container.ownerDocument || !getWindowFromDocument(container.ownerDocument) || !this.view) return;
 		this.view.removeEvent(ev.uid);
 	};
 	

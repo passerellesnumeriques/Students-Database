@@ -15,6 +15,22 @@ function TreeItem(cells, expanded, onselect) {
 	for (var i = 1; i < this.cells.length; ++i) this.cells[i].element.className = "tree_cell";
 	this.children = [];
 	this.expanded = expanded;
+	this.setRightFillControl = function(control) {
+		if (this.right_td) {
+			this.right_td.innerHTML = "";
+			this.right_td.appendChild(control);
+			return this.right_td;
+		}
+		this.right_td = document.createElement("TD");
+		this.right_td.appendChild(control);
+		this.tr.appendChild(this.right_td);
+		this.tree._refresh_heads();
+		return this.right_td;
+	};
+	this.setOnSelect = function(onselect) {
+		this.onselect = onselect;
+		this.cells[0].element.className = "tree_cell tree_cell_main tree_cell_selectable";
+	};
 	this.addItem = function(item) {
 		item.parent = this;
 		if (this.tree) this.tree._create_item(item);
@@ -32,12 +48,12 @@ function TreeItem(cells, expanded, onselect) {
 		if (this.tree) this.tree._refresh_heads();
 	};
 	this.removeItem = function(item) {
-		item.parent = null;
 		this.children.remove(item);
 		if (this.tree) {
 			this.tree._removeItem(item);
 			this.tree._refresh_heads();
 		}
+		item.parent = null;
 	};
 	this.remove = function() {
 		this.parent.removeItem(this);
@@ -88,6 +104,9 @@ function TreeItem(cells, expanded, onselect) {
 	this.select = function() {
 		this.tree.selectItem(this);
 	};
+	this.addRowStyle = function(style) {
+		for (var name in style) this.tr.style[name] = style[name];
+	};
 }
 function TreeCell(html) {
 	if (typeof html == 'string') {
@@ -97,6 +116,7 @@ function TreeCell(html) {
 		html = div;
 	}
 	this.element = html;
+	this.is_header = false;
 	
 	this.addStyle = function(style) {
 		for (var name in style) this.element.style[name] = style[name];
@@ -145,6 +165,8 @@ function tree(container) {
 	container.className = "tree";
 	var t=this;
 	
+	this.inner_cells_vertical_border = null;
+	
 	this._build_from_html = function() {
 		// TODO
 	};
@@ -169,7 +191,7 @@ function tree(container) {
 		this._refresh_heads();
 	};
 	this.insertItem = function(item, index) {
-		if (index >= this.items.length) {
+		if (typeof index == 'undefined' || index >= this.items.length) {
 			this.addItem(item);
 			return;
 		}
@@ -191,16 +213,52 @@ function tree(container) {
 			this.tbody.removeChild(this.tbody.childNodes[0]);
 		this.items = [];
 	};
+	this.addHeader = function(content, collapsable, index) {
+		var container = document.createElement("DIV");
+		container.style.display = "inline-block";
+		container.appendChild(content);
+		var cell = new TreeCell(container);
+		var item = new TreeItem([cell],true);
+		item.is_header = true;
+		item.is_collapsable = collapsable;
+		this.insertItem(item, index);
+		return item;
+	};
+	this.addColumnsHeadersRow = function(parent) {
+		var cells = [];
+		for (var i = 0; i < this.columns.length; ++i) {
+			var html = document.createElement("SPAN");
+			html.appendChild(document.createTextNode(this.columns[i].title));
+			html.style.paddingLeft = "2px";
+			html.style.paddingRight = "2px";
+			var cell = new TreeCell(html);
+			cell.is_header = true;
+			cells.push(cell);
+		}
+		var item = new TreeItem(cells);
+		item.is_header = true;
+		item.add_root_line = true;
+		item.is_collapsable = false;
+		if (!parent) parent = this;
+		parent.addItem(item);
+		return item;
+	};
 	this._removeItem = function(item) {
 		try { this.tbody.removeChild(item.tr); } catch (e) {}
 		var list = item.children;
 		item.children = [];
 		for (var i = 0; i < list.length; ++i)
 			this._removeItem(list[i]);
+		if (item == this._selected_item) {
+			var p = item.parent;
+			while (p && !p.onselect) p = p.parent;
+			if (p) this.selectItem(p);
+		}
 	};
 	this._selected_item = null;
 	this.selectItem = function(item) {
 		item.cells[0].element.onclick(createEvent("click",{}));
+		item.makeVisible();
 	};
 	this.getSelectedItem = function() { return this._selected_item; };
 	this._create_item = function(item, index) {
@@ -223,9 +281,11 @@ function tree(container) {
 			item.tr.style.top = "-10000px";
 			item.tr.style.left = "-10000px";
 		}
-		var td = document.createElement("TD"); item.tr.appendChild(td);
+		var td = document.createElement(item.cells[0].is_header ? "TH" : "TD"); item.tr.appendChild(td);
+		item.cells[0].td = td;
 		td.style.padding = "0px";
 		td.style.whiteSpace = "nowrap";
+		if (item.cells.length > 1 && this.inner_cells_vertical_border) td.style.borderRight = this.inner_cells_vertical_border; 
 		td.appendChild(item.head = document.createElement("DIV"));
 		item.head.style.display = 'inline-block';
 		item.head.style.position = 'relative';
@@ -234,9 +294,11 @@ function tree(container) {
 		if (item.cells.length == 1 && this.columns.length > 1)
 			td.colSpan = this.columns.length;
 		for (var i = 1; i < item.cells.length; ++i) {
-			td = document.createElement("TD");
+			td = document.createElement(item.cells[i].is_header ? "TH" : "TD");
+			item.cells[i].td = td;
 			item.tr.appendChild(td);
 			td.style.padding = "0px";
+			if (item.cells.length > i+1 && this.inner_cells_vertical_border) td.style.borderRight = this.inner_cells_vertical_border; 
 			td.appendChild(item.cells[i].element);
 		}
 		if (!item.parent) {
@@ -324,62 +386,109 @@ function tree(container) {
 			item.head_has_before = has_before;
 			item.head_has_after = has_after;
 			
-			item.head.style.width = ((parents.length+1)*16)+'px';
-			item.head.style.verticalAlign = "bottom";
-			item.head.style.height = item.head.computed_height+'px';
-			// lines of parents
-			for (var i = 0; i < parents.length; ++i) {
-				if (!parents[i]) continue;
-				var line = document.createElement("DIV");
-				line.style.position = 'absolute';
-				line.style.width = "1px";
-				line.style.left = (i*16+9)+'px';
-				line.style.top = '0px';
-				line.style.height = '100%';
-				line.style.borderLeft = "1px solid #A0A0A0";
-				item.head.appendChild(line);
+			if (item.right_td) {
+				var level = item.get_level();
+				var next = item.tr.nextSibling;
+				var count = 1;
+				while (next != null && next.item.get_level() > level) { next = next.nextSibling; count++; }
+				item.right_td.rowSpan = count;
 			}
-			// vertical line
-			if (has_before || has_after) {
-				var line = document.createElement("DIV");
-				line.style.position = 'absolute';
-				line.style.width = "1px";
-				line.style.right = '7px';
-				if (has_after && has_before) {
+			
+			if (item.is_header) {
+				if (item.is_collapsable) {
+					item.head.style.width = "18px";
+					var collapse_icon = document.createElement("IMG");
+					collapse_icon.src = "/static/widgets/section/"+(item.expanded ? "collapse" : "expand")+".png";
+					collapse_icon.style.cursor = "pointer";
+					collapse_icon.onclick = function() {
+						item.toggle_expand();
+					};
+					item.head.appendChild(collapse_icon);
+				} else if (item.add_root_line) {
+					item.head.parentNode.style.position = "relative";
+					item.head.style.position = "absolute";
+					item.head.style.left = "0px";
+					item.head.style.width = "16px";
+					item.head.style.height = item.head.computed_height+'px';
+					var line = document.createElement("DIV");
+					line.style.position = 'absolute';
+					line.style.width = "1px";
+					line.style.right = '7px';
 					line.style.top = "0px";
 					line.style.height = "100%";
-				} else if (has_after) {
-					line.style.bottom = "0px";
-					line.style.height = "6px";
+					line.style.borderLeft = "1px solid #A0A0A0";
+					item.head.appendChild(line);
 				} else {
-					line.style.bottom = "5px";
-					line.style.height = (getHeight(item.tr)-5)+"px";
+					item.head.style.width = "0px";
+					item.head.style.visibility = "hidden";
+					item.head.style.position = "absolute";
 				}
-				line.style.borderLeft = "1px solid #A0A0A0";
-				item.head.appendChild(line);
-			}
-			// horizontal line
-			{
-				var line = document.createElement("DIV");
-				line.style.position = 'absolute';
-				line.style.width = "7px";
-				line.style.right = '1px';
-				line.style.bottom = "4px"; 
-				line.style.height = "1px";
-				line.style.borderTop = "1px solid #A0A0A0";
-				item.head.appendChild(line);
-			}
-			// box
-			if (item.children.length > 0) {
-				var img = document.createElement("IMG");
-				img.src = url+(item.expanded ? "minus" : "plus")+".png";
-				img.style.position = 'absolute';
-				img.style.right = '4px';
-				img.style.bottom = '1px';
-				item.head.appendChild(img);
-				img.style.cursor = 'pointer';
-				img.item = item;
-				img.onclick = function() { this.item.toggle_expand(); };
+			} else {
+				var root = item;
+				while (root.parent != null) root = root.parent;
+				var p;
+				if (root != item && root.is_header) {
+					p = [];
+					for (var i = 1; i < parents.length; ++i) p.push(parents[i]);
+				} else
+					p = parents;
+				item.head.style.width = ((p.length+1)*16)+'px';
+				item.head.style.verticalAlign = "bottom";
+				item.head.style.height = item.head.computed_height+'px';
+				// lines of parents
+				for (var i = 0; i < p.length; ++i) {
+					if (!p[i]) continue;
+					var line = document.createElement("DIV");
+					line.style.position = 'absolute';
+					line.style.width = "1px";
+					line.style.left = (i*16+9)+'px';
+					line.style.top = '0px';
+					line.style.height = '100%';
+					line.style.borderLeft = "1px solid #A0A0A0";
+					item.head.appendChild(line);
+				}
+				// vertical line
+				if (has_before || has_after) {
+					var line = document.createElement("DIV");
+					line.style.position = 'absolute';
+					line.style.width = "1px";
+					line.style.right = '7px';
+					if (has_after && has_before) {
+						line.style.top = "0px";
+						line.style.height = "100%";
+					} else if (has_after) {
+						line.style.bottom = "0px";
+						line.style.height = "6px";
+					} else {
+						line.style.bottom = "5px";
+						line.style.height = (getHeight(item.tr)-5)+"px";
+					}
+					line.style.borderLeft = "1px solid #A0A0A0";
+					item.head.appendChild(line);
+				}
+				// horizontal line
+				{
+					var line = document.createElement("DIV");
+					line.style.position = 'absolute';
+					line.style.width = "7px";
+					line.style.right = '1px';
+					line.style.bottom = "4px"; 
+					line.style.height = "1px";
+					line.style.borderTop = "1px solid #A0A0A0";
+					item.head.appendChild(line);
+				}
+				// box
+				if (item.children.length > 0) {
+					var img = document.createElement("IMG");
+					img.src = url+(item.expanded ? "minus" : "plus")+".png";
+					img.style.position = 'absolute';
+					img.style.right = '4px';
+					img.style.bottom = '1px';
+					item.head.appendChild(img);
+					img.style.cursor = 'pointer';
+					img.item = item;
+					img.onclick = function() { this.item.toggle_expand(); };
+				}
 			}
 		}
 		// children

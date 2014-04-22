@@ -14,9 +14,10 @@ class page_users_list extends Page {
 function init_users_list() {
 	new data_list(
 		'users_list',
-		'Users',
+		'Users', null,
 		['User.Domain','User.Username','Personal Information.First Name','Personal Information.Last Name','User.Roles'],
 		null,
+		100,
 		function (list) {
 			<?php if (PNApplication::$instance->user_management->has_right("assign_role")) {?>
 			var roles = [<?php
@@ -28,8 +29,9 @@ function init_users_list() {
 			}
 			?>];
 			list.grid.setSelectable(true);
-			var assign_roles = document.createElement("DIV");
-			assign_roles.className = "button disabled";
+			var assign_roles = document.createElement("BUTTON");
+			assign_roles.disabled = "disabled";
+			assign_roles.className = "flat";
 			assign_roles.innerHTML = "<img src='/static/user_management/role.png'/> Assign roles";
 			assign_roles.func = function() {
 				require("popup_window.js",function(){
@@ -70,8 +72,9 @@ function init_users_list() {
 				});
 			};
 			list.addHeader(assign_roles);
-			var unassign_roles = document.createElement("DIV");
-			unassign_roles.className = "button disabled";
+			var unassign_roles = document.createElement("BUTTON");
+			unassign_roles.disabled = "disabled";
+			unassign_roles.className = "flat";
 			unassign_roles.innerHTML = "<img src='/static/user_management/role.png'/> Unassign roles";
 			unassign_roles.func = function() {
 				require("popup_window.js",function(){
@@ -114,14 +117,14 @@ function init_users_list() {
 			list.addHeader(unassign_roles);
 			list.grid.onselect = function(selection) {
 				if (!selection || selection.length == 0) {
-					assign_roles.className = "button disabled";
+					assign_roles.disabled = "disabled";
 					assign_roles.onclick = null;
-					unassign_roles.className = "button disabled";
+					unassign_roles.disabled = "disabled";
 					unassign_roles.onclick = null;
 				} else {
-					assign_roles.className = "button";
+					assign_roles.disabled = "";
 					assign_roles.onclick = assign_roles.func;
-					unassign_roles.className = "button";
+					unassign_roles.disabled = "";
 					unassign_roles.onclick = unassign_roles.func;
 				}
 			};

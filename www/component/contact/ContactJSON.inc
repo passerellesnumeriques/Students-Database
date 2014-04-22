@@ -118,6 +118,40 @@ class ContactJSON {
 			"}"
 			;
 	}
-
+	
+	/**
+	 * Methods about partners
+	 */
+	
+	/**
+	 * Prepare a JSON structure of entity partners array to be saved into the database (for instance, information session partners)
+	 * @param array $json the JSON structure
+	 * @param string $field_name the name of the foreignkey linked to the entity (for instance "information_session")
+	 * @return array containing two fields => values arrays:<ul><li>[0]: fields => values for Partner table</li><li>[1]: fields => values for ContactPoint table</li></ul>
+	 */
+	public static function PartnersAndContactPoints2DB($json, $field_name){
+		$rows_partner = array();
+		$rows_contact_point = array();
+		foreach($json["partners"] as $p){
+			array_push($rows_partner,array(
+			$field_name => $json["id"],
+			"organization" => $p["organization"],
+			"host" => $p["host"],
+			"host_address" => $p["host_address"]
+			));
+			if(isset($p["contact_points_selected"]) && count($p["contact_points_selected"]) > 0){
+				foreach($p["contact_points_selected"] as $people){
+					array_push($rows_contact_point,array(
+					$field_name => $json["id"],
+					"organization" => $p["organization"],
+					"people" => $people
+					));
+				}
+			}
+		}
+		return array($rows_partner, $rows_contact_point);
+	}
+	
+	
 }
 ?>

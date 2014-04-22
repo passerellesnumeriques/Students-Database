@@ -25,7 +25,7 @@ class service_IS_status extends Service{
 			<li><code>girls_real</code> {number} number of girls real</li>
 			<li><code>girls_expected</code> {number} number of girls expected</li>
 			<li><code>partners</code> {number} number of partners selected</li>
-			<li><code>number_IS</code> {number} number of boys real</li>
+			<li><code>number_IS</code> {number} number of IS existing</li>
 			<li><code>separate_boys_girls</code> {boolean} true if the girls figures are separated from boys ones</li>
 			<li><code>IS_no_host</code> {null | array} null if all the IS have an host set, else array contaning objects about all the IS with no host: [{id:, name:},...]</li> 
 		</ul>

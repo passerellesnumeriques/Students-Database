@@ -25,10 +25,10 @@ closedir($dir);
 ];
 
 function require(javascript,handler) {
-	if (javascript instanceof Array) {
+	if (javascript instanceof Array || getObjectClassName(javascript) == "Array") {
 		var nb = javascript.length;
 		for (var i = 0; i < javascript.length; ++i) {
-			if (javascript[i] instanceof Array)
+			if (javascript[i] instanceof Array || getObjectClassName(javascript[i]) == "Array")
 				require_sequential(javascript[i],function(){
 					if (--nb == 0 && handler) handler();
 				});

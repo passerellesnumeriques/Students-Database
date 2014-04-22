@@ -39,14 +39,39 @@ class storage extends Component {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `expire` IS NOT NULL AND `expire` < ".time());
 	}
 	
-	private function allocate_id($mime = null, $expire = null) {
+	public function canReadFile($file) {
+		if ($file["type"] == "temp") return true;
+		require_once("StoragePlugin.inc");
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof StoragePlugin)) continue;
+				if ($pi->getType() <> $file["type"]) continue;
+				return $pi->canRead($file["id"]);
+			}
+		return false;
+	}
+	public function canWriteFile($file) {
+		if ($file["type"] == "temp") return true;
+		require_once("StoragePlugin.inc");
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi) {
+			if (!($pi instanceof StoragePlugin)) continue;
+			if ($pi->getType() <> $file["type"]) continue;
+			return $pi->canWrite($file["id"]);
+		}
+		return false;
+	}
+	
+	private function allocate_id($type, $mime = null, $expire = null) {
 		$this->remove_old();
-		$q = "INSERT INTO `Storage` (`mime`,`expire`,`username`) VALUE (";
+		$q = "INSERT INTO `Storage` (`type`,`mime`,`expire`,`revision`) VALUE (";
+		$q .= "'".SQLQuery::escape($type)."',";
 		$q .= ($mime <> null ? "'".SQLQuery::escape($mime)."'" : "NULL").",";
 		if ($expire <> null)
-			$q .= $expire.",'".SQLQuery::escape(PNApplication::$instance->user_management->username)."'";
+			$q .= $expire;
 		else
-			$q .= "NULL,NULL";
+			$q .= "NULL";
+		$q .= ",1";
 		$q .= ")";
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute($q);
 		$id = SQLQuery::getDataBaseAccessWithoutSecurity()->getInsertID();
@@ -88,8 +113,8 @@ class storage extends Component {
 		}
 		return $id;
 	}
-	public function store_data($data, $mime = null, $expire = null) {
-		$id = $this->allocate_id($mime, $expire);
+	public function store_data($type, $data, $mime = null, $expire = null) {
+		$id = $this->allocate_id($type, $mime, $expire);
 		$path = $this->get_data_path($id);
 		$f = @fopen($path, "w");
 		if ($f == null) {
@@ -111,16 +136,10 @@ class storage extends Component {
 		return $path;
 	}
 	
-	function get_data($id, $new_expire = null) {
-		$path = $this->get_data_path($id);
-		if (!file_exists($path)) return null;
-		$data = file_get_contents($path);
-		if ($data === false) return null;
-		if ($new_expire <> null)
-			SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `expire`=".$new_expire." WHERE `id`=".$id);
-		return $data;
+	function new_revision($id) {
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `revision`=`revision`+1 WHERE `id`=".$id);
 	}
-
+	
 	function set_expire($id, $new_expire) {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `expire`=".($new_expire == null ? "NULL" : $new_expire)." WHERE `id`=".$id);
 	}
@@ -135,10 +154,19 @@ class storage extends Component {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute($q);
 	}
 	
+	function set_mime($id, $mime_type) {
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `mime`='".SQLQuery::escape($mime_type)."' WHERE `id`=".$id);
+	}
+	
 	function remove_data($id) {
 		$path = $this->get_data_path($id);
 		unlink($path);
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
+	}
+	
+	function joinRevision(&$q, $join_from, $join_key, $revision_alias) {
+		$q->join($join_from, "Storage", array($join_key=>"id"));
+		$q->field("Storage", "revision", $revision_alias);
 	}
 	
 	/** return true if this is the final call (either form sent, or no file uploaded), or false if this is an asynchronous upload */
@@ -148,7 +176,7 @@ class storage extends Component {
 		if ($fn) {
 			// AJAX call
 			$data = file_get_contents('php://input');
-			$id = $this->store_data($data, null, time()+$expire_seconds);
+			$id = $this->store_data("temp",$data, isset($headers['X_FILETYPE']) ? $headers['X_FILETYPE'] : null, time()+$expire_seconds);
 			if ($id == null) return true;
 			array_push($ids, $id);
 			array_push($names, $fn);
@@ -167,7 +195,7 @@ class storage extends Component {
 				foreach ($files['error'] as $file_id => $err) {
 					if ($err == UPLOAD_ERR_OK) {
 						$fn = $files['name'][$file_id];
-						$id = $this->allocate_id(null, time()+$expire_seconds);
+						$id = $this->allocate_id("temp", $files['type'][$file_id], time()+$expire_seconds);
 						$path = $this->get_data_path($id);
 						if (!move_uploaded_file($files['tmp_name'][$file_id], $path)) {
 							PNApplication::error("Unable to create file ".$path);
@@ -185,5 +213,6 @@ class storage extends Component {
 		}
 		return true;
 	}
+	
 }
 ?>

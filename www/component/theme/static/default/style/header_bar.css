@@ -18,6 +18,7 @@
     border-bottom-right-radius: 10px 10px;
     padding: 3px 6px 2px 3px;
     margin-right: 5px;
+    display: inline-block;
 }
 .header_bar .header_bar_title img {
     margin-right: 5px;
@@ -29,9 +30,11 @@
 }
 .header_bar .header_bar_title {
     font-size: 12pt;
+    height: 35px;
 }
 .header_bar_small .header_bar_title {
     font-size: 10pt;
+    height: 25px;
 }
 
 .header_bar_toolbar, .header_bar_toolbar_style {
@@ -70,7 +73,6 @@
     font-weight: bold;
     font-size: 12pt;
     height: 33px;
-    vertical-align: top;
 }
 
 .header_bar_toolbar_big .header_bar_title img {

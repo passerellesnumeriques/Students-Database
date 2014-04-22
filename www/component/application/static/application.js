@@ -5,6 +5,10 @@ if (window == window.top) {
 	window.top.pnapplication = {
 		/** Event raised when the user logout, so we can clean some objects that may be on the top window */
 		onlogout: new Custom_Event(),
+		/** Event raised when the user login */
+		onlogin: new Custom_Event(),
+		/** Indicates if the user is currently logged or not */
+		logged_in: false,
 		/** list of windows (private: registerWindow and unregisterWindow must be used) */
 		_windows: [],
 		/** event when a window/frame is closed. The window is given as parameter to the listeners. */ 
@@ -13,32 +17,10 @@ if (window == window.top) {
 		 * @param {window} w new window/frame 
 		 */
 		registerWindow: function(w) { 
-			if (w.frameElement && w.frameElement.loading_t) {
-				if (w.frameElement.unloading_anim) return;
-				var start = new Date().getTime();
-				var f = function() {
-					if (!w.frameElement || !w.frameElement.loading_t) return;
-					var now = new Date().getTime();
-					if (!w._onload_done || !w._page_ready || !w.layout || w.layout._invalidated.length > 0 || w.layout._last_layout_activity == 0 || now-w.layout._last_layout_activity < 30) {
-						if (now-start < 2500) {
-							setTimeout(f, 50);
-							return;
-						}
-					}
-					if (w.frameElement.loading_anim) {
-						animation.stop(w.frameElement.loading_anim);
-						w.frameElement.loading_anim = null;
-					}
-					w.frameElement.unloading_anim = animation.fadeOut(w.frameElement.loading_t, 300, function() {
-						if (w.frameElement.loading_t) {
-							w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
-							w.frameElement.loading_t = null;
-						}
-						w.frameElement.unloading_anim = null;
-					});
-				};
-				f();
-			}
+			if (w.frameElement && !w.frameElement._loading_frame)
+				new LoadingFrame(w.frameElement);
+			if (w.frameElement && w.frameElement._loading_frame)
+				w.frameElement._loading_frame.startLoading();
 			window.top.pnapplication._windows.push(w);
 			listenEvent(w,'click',function(ev){
 				for (var i = 0; i < window.top.pnapplication._onclick_listeners.length; ++i)
@@ -66,57 +48,10 @@ if (window == window.top) {
 		 * @param {window} w window/frame which has been closed 
 		 */
 		unregisterWindow: function(w) {
-			if (w.frameElement && typeof animation != 'undefined') {
-				setTimeout(function() {
-					if (!w || !w.frameElement) return;
-					if (w.frameElement.loading_anim) return;
-					if (getIFrameWindow(w.frameElement) == null) return; // not anymore in the page
-					if (w.frameElement.unloading_anim) {
-						animation.stop(w.frameElement.unloading_anim);
-						w.frameElement.unloading_anim = null;
-					}
-					if (w.frameElement.loading_t) {
-						if (w.frameElement.loading_t.parentNode)
-							w.frameElement.loading_t.parentNode.removeChild(w.frameElement.loading_t);
-					}
-					var t = document.createElement("TABLE");
-					var tr = document.createElement("TR");
-					var td = document.createElement("TD");
-					td.innerHTML = "<img src='/static/application/loading_100.gif'/>";
-					td.style.verticalAlign = "middle";
-					td.style.textAlign = "center";
-					tr.appendChild(td);
-					t.appendChild(tr);
-					t.style.position = "absolute";
-					t.style.top = w.parent.absoluteTop(w.frameElement)+"px";
-					t.style.left = w.parent.absoluteLeft(w.frameElement)+"px";
-					t.style.width = w.frameElement.offsetWidth+"px";
-					t.style.height = w.frameElement.offsetHeight+"px";
-					t.style.visibility = 'hidden';
-					t.style.backgroundColor = "white";
-					t.loading_frame = w.frameElement;
-					w.parent.document.body.appendChild(t);
-					w.frameElement.loading_t = t;
-					w.frameElement.loading_anim = animation.fadeIn(w.frameElement.loading_t,500,function() {
-						if (!w || !w.frameElement || getIFrameWindow(w.frameElement) == null) {
-							t.parentNode.removeChild(t);
-							if (w.frameElement) {
-								w.frameElement.loading_anim = null;
-								w.frameElement.loading_t = null;
-							}
-						} else {
-							w.frameElement.loading_anim = null;
-							// maximum time to show it: 5s.
-							setTimeout(function() {
-								if (!w || !w.frameElement || w.frameElement.loading_t != t) return;
-								if (w.unloading_anim) return;
-								t.parentNode.removeChild(t);
-								w.frameElement.loading_t = null;
-							}, 5000);
-						}
-					});
-				},1);
-			}
+			if (w.frameElement && !w.frameElement._loading_frame)
+				new LoadingFrame(w.frameElement);
+			if (w.frameElement && w.frameElement._loading_frame)
+				w.frameElement._loading_frame.startUnloading();
 			window.top.pnapplication._windows.remove(w);
 			for (var i = 0; i < this._onclick_listeners.length; ++i)
 				if (this._onclick_listeners[i][0] == w) {
@@ -200,6 +135,8 @@ if (window == window.top) {
 		closeWindow: function() {
 			window.top.pnapplication.onclose.fire();
 		},
+		/** event fired when user activity is detected */
+		onactivity: new Custom_Event(),
 		/** time of the last activity of the user */
 		last_activity: new Date().getTime(),
 		/** signals the user is active: fire onactivity event on each window */
@@ -213,6 +150,7 @@ if (window == window.top) {
 			var time = new Date().getTime();
 			time -= window.top.pnapplication.last_activity;
 			for (var i = 0; i < window.top.pnapplication._windows.length; ++i) {
+				if (window.top.pnapplication._windows[i] == window.top) continue;
 				if (window.top.pnapplication._windows[i].closed) {
 					window.top.pnapplication.unregisterWindow(window.top.pnapplication._windows[i]);
 					window.top.pnapplication.checkInactivity();
@@ -227,6 +165,7 @@ if (window == window.top) {
 			}
 		}
 	};
+	window.top.pnapplication.registerWindow(window.top);
 } else if (typeof Custom_Event != 'undefined'){
 	/**
 	 * Handle events on the current window, transfered to the top window
@@ -251,9 +190,37 @@ if (window == window.top) {
 		addInactivityListener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
-		onmouseout: new Custom_Event()
+		_data_unsaved: [],
+		dataUnsaved: function(id) {
+			if (!this._data_unsaved.contains(id))
+				this._data_unsaved.push(id);
+		},
+		dataSaved: function(id) {
+			this._data_unsaved.remove(id);
+		},
+		addOverAndOut: function(element, handler) {
+			var w = getWindowFromElement(element);
+			window.top.pnapplication.registerOnMouseMove(w, function(x,y) {
+				var x1 = w.absoluteLeft(element);
+				var y1 = w.absoluteTop(element);
+				var x2 = x1+element.offsetWidth;
+				var y2 = y1+element.offsetHeight;
+				if (element._isover) {
+					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
+					} else {
+						element._isover = false;
+						handler(false);
+					}
+				} else {
+					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
+						element._isover = true;
+						handler(true);
+					}
+				}
+				
+			});
+		}
 	};
-	window.onmouseout = function(ev) { window.pnapplication.onmouseout.fire(ev); };
 	window.top.pnapplication.registerWindow(window);
 }
 
@@ -273,23 +240,135 @@ function initPNApplication() {
 		var closeRaised = false;
 		if (window.frameElement) {
 			var prev = window.frameElement.onunload; 
-			window.frameElement.onunload = function(ev) {
+			listenEvent(window.frameElement, 'unload', function(ev) {
 				if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
 				if (prev) prev(ev);
-			};
+			});
 		}
-		window.onunload = function() {
+		listenEvent(window, 'unload', function() {
 			if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
-		};
-		window.onbeforeunload = function() {
+		});
+		listenEvent(window, 'beforeunload', function(ev) {
+			if (window.pnapplication && window.pnapplication._data_unsaved && window.pnapplication._data_unsaved.length > 0) {
+				ev.returnValue = "The page contains unsaved data";
+				return "The page contains unsaved data";
+			}
 			if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
-		};
+		});
 		if (window==window.top)
 			setInterval(window.pnapplication.checkInactivity, 2000);
 	}
 };
 initPNApplication();
 
+function LoadingFrame(frame_element) {
+	if (!frame_element.ownerDocument) return;
+	if (frame_element._no_loading) return;
+	frame_element._loading_frame = this;
+	var t=this;
+	this.step = 0; // pending
+	this.table = document.createElement("TABLE");
+	this.table.innerHTML = "<tr><td valign=middle align=center><img src='/static/application/loading_page.gif'/></td></tr>";
+	this.table.style.position = "absolute";
+	var z = 1;
+	var p = frame_element;
+	do {
+		var style = getComputedStyle(p);
+		if (style["z-index"] != "auto") { z = style["z-index"]; break; }
+		p = p.parentNode;
+	} while (p && p.nodeName != "BODY" && p.nodeName != "HTML");
+	this.table.style.zIndex = z;
+	this.table.style.backgroundColor = "#d0d0d0";
+
+	this._isReady = function() {
+		var win = getIFrameWindow(frame_element);
+		return win && this.step == 1 && win.document && win._page_ready && win.layout && win.layout._invalidated.length == 0 && win.layout.everythingOnPageLoaded();
+	};
+	this._isClosed = function() {
+		var win = getIFrameWindow(frame_element);
+		return this.step == -1 && !win;
+	};
+
+	this.anim = null;
+	if (typeof animation != 'undefined') {
+		setOpacity(this.table, 0);
+		frame_element.ownerDocument.body.appendChild(this.table);
+		this.anim = animation.fadeIn(this.table, 250, null, 0, 90, function() {
+			if (t._isClosed() || t._isReady()) animation.stop(t.anim);
+		});
+	} else {
+		setOpacity(this.table, 90);
+		frame_element.ownerDocument.body.appendChild(this.table);
+	}
+	this._start = new Date().getTime();
+	
+	this.startLoading = function() {
+		this.step = 1;
+		this._start = new Date().getTime();
+	};
+	this.startUnloading = function() {
+		this.step = -1;
+		this._start = new Date().getTime();
+	};
+	
+	this._position = function() {
+		this.table.style.top = absoluteTop(frame_element)+"px";
+		this.table.style.left = absoluteLeft(frame_element)+"px";
+		this.table.style.width = frame_element.offsetWidth+"px";
+		this.table.style.height = frame_element.offsetHeight+"px";
+	};
+
+	var updater = function() { t._update(); };
+
+	this.remove = function() {
+		if (frame_element._loading_frame != this) return;
+		layout.removeHandler(frame_element, updater);
+		if (this.anim) {
+			animation.stop(this.anim);
+			this.anim = null;
+		}
+		if (this.table.parentNode) {
+			if (typeof animation != 'undefined') {
+				animation.fadeOut(this.table, 200, function() {
+					t.table.parentNode.removeChild(t.table);
+				});
+			} else
+				this.table.parentNode.removeChild(this.table);
+		}
+		frame_element._loading_frame = null;
+	};
+	
+	this._update = function() {
+		if (!frame_element.parentNode ||
+			!frame_element.ownerDocument ||
+			!getWindowFromDocument(frame_element.ownerDocument)
+		) {
+			// frame disappeared
+			this.remove();
+			return;
+		}
+		if (this._isReady()) {
+			this.remove();
+			return;
+		}
+		if (this._isClosed()) {
+			this.remove();
+			return;
+		}
+		var now = new Date().getTime();
+		if (now-this._start > 10000) {
+			this.remove();
+			return;
+		}
+		this._position();
+		setTimeout(updater, now-this._start < 2000 ? 50 : 100);
+	};
+	
+	this._position();
+	this._update();
+	setTimeout(updater, 10);
+	layout.addHandler(frame_element, updater);
+}
 
 // override add_javascript and add_stylesheet
 //window._add_javascript_original = window.add_javascript;

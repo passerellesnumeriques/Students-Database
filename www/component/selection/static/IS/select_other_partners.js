@@ -1,19 +1,30 @@
 /**
  * Create a table containing partners list. A row is created for each partner, contaning the name of the organization, and the selected contact points (if any)
+ * This table is created into a section object
  * @param {String | HTMLElement} container
  * @param {ISPartner} all_partners the partners that shall be displayed in the table
  * @param {Array} partners_contacts_points same as returned by contact#service#get_json_contact_points_no_address method
- * @param {boolean} can_manage
- * @param {null | number} host_id null if no host selected when instanciated, else, value of the host ID
+ * @param {Boolean} can_manage
+ * @param {NULL | Number} host_id null if no host selected when instanciated, else, value of the host ID
  * @param {Function} update_host_custom_event custom event fired when an external function updates the host_id
  * @param {Function} oncontactpointchange_listener listener fired in the case of the contacts points of a partner are updated from the organization profile
+ * @param {String} mode, the way this page is used. Can be "information_session","exam_center". this is used to use the appropriated services/partners objects
  */
-function select_other_partners(container, all_partners, partners_contacts_points, can_manage, host_id, update_host_custom_event,oncontactpointchange_listener){
+function select_other_partners(container, all_partners, partners_contacts_points, can_manage, host_id, update_host_custom_event,oncontactpointchange_listener,mode){
+	if(!mode) return;
 	if(typeof container == "string")
 		container = document.getElementById(container);
 	var t = this;
 	t.partners = [];
 	t.host = host_id;
+	
+	t.onupdate = new Custom_Event();//Event fired when any data is updated
+	
+	/**
+	 * Reset the table, and fire the layout event
+	 * @param {HTMLElement | NULL} (optional) locker any screen locker to remove
+	 * @param {Array}(optional) partners_contacts_points same as returned by contact#service#get_json_contact_points_no_address method
+	 */
 	t.reset = function(locker,new_partners_contact_points){
 		if(new_partners_contact_points)
 			partners_contacts_points = new_partners_contact_points;
@@ -22,18 +33,32 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		if(locker)
 			unlock_screen(locker);
 		layout.invalidate(t.section.element);
+		t.onupdate.fire();
 	};
 	
+	/**
+	 * Get the other partners attribute
+	 * @returns {array} other_partners, the updated all_partners array, contaning all the partners but the host
+	 */
 	t.getOtherPartners = function(){
 		return t.partners;
 	};
 	
+	/** Private methods */
+	
+	/**
+	 * Launch the process. The footer is set only if the user can manage this page
+	 */
 	t._init = function(){
 		t._refreshBody();
 		if(can_manage)
 			t._refreshFooter();
 	};
 	
+	/**
+	 * Reset and populate the body of the table
+	 * Each other partner row is made of create_partner_row objects
+	 */
 	t._refreshBody = function(){
 		t._refreshElement(t.container_of_section_content);
 		var body = document.createElement("table");
@@ -74,6 +99,11 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		t.container_of_section_content.appendChild(body);
 	};
 	
+	/**
+	 * Listener fired when the contact points of an organization are updated
+	 * The partners attribute is updated and the table is reseted
+	 * @param {object} containing two attributes: <ul><li><code>contact_points_selected</code> array containing the ids of the contacts points selected</li><li><code>index</code> the partner index in the other partners array</li></ul>
+	 */
 	t._onContactPointSelected = function(param){
 		var new_contact_points_selected = param.contact_points_selected;
 		var index = param.additional;
@@ -83,6 +113,10 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		t.reset();
 	};
 	
+	/**
+	 * Reset and populate the footer of the table
+	 * This method creates a button in the section footer, button pushed to pick the partners into the selection partners list
+	 */
 	t._refreshFooter = function(){
 		t.section.resetToolBottom();
 		//Add the select partners button
@@ -103,13 +137,23 @@ function select_other_partners(container, all_partners, partners_contacts_points
 			}
 			if(t.host != null)
 				url_partners += "&host="+t.host;
-			var frame = pop.setContentFrame("/dynamic/selection/page/organizations_for_selection?is=true"+url_partners);
+			var type_partner_selection;
+			if(mode == "information_session")
+				type_partner_selection = "is";
+			else if (mode == "exam_center")
+				type_partner_selection = "ec";
+			var frame = pop.setContentFrame("/dynamic/selection/page/organizations_for_selection?"+type_partner_selection+"=true"+url_partners);
 			pop.addOkCancelButtons(function(){
 				pop.close();
 				var locker = lock_screen();
 				var win = getIFrameWindow(frame);
+				var service_get_partners_array_url;
+				if(mode == "information_session")
+					service_get_partners_array_url = "IS/get_partners_array";
+				else if (mode == "exam_center")
+					service_get_partners_array_url = "exam/get_center_partners_array";
 				//update the data object
-				service.json("selection","IS/get_partners_array",{partners_id:win.selected_partners},function(new_partners){
+				service.json("selection",service_get_partners_array_url,{partners_id:win.selected_partners},function(new_partners){
 					if(!new_partners){
 						error_dialog("An error occured");
 						unlock_screen(locker);
@@ -137,27 +181,52 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		t.section.addToolBottom(div);
 	};
 	
+	/**
+	 * Remove all the children of a given element
+	 * @param {HTMLElement} e teh element to refresh
+	 */
 	t._refreshElement = function(e){
 		while(e.firstChild)
 			e.removeChild(e.firstChild);
 	};
 	
+	/**
+	 * Set the partners attribute, starting from the all_partners array.
+	 * Create an array containing all the partners elements (organizations linked) but the host
+	 */
 	t._setPartnersArray = function(){
 		//Get only the partners that are not host
 		for(var i = 0; i < all_partners.length; i++){
 			if(all_partners[i].host == false){
-				var partner = new ISPartner(
-						all_partners[i].organization,
-						all_partners[i].organization_name,
-						false,
-						null,
-						all_partners[i].contact_points_selected
-				);
-				t.partners.push(partner);
+				if(mode == "information_session"){
+					var partner = new ISPartner(
+							all_partners[i].organization,
+							all_partners[i].organization_name,
+							false,
+							null,
+							all_partners[i].contact_points_selected
+					);
+					t.partners.push(partner);
+				} else if (mode == "exam_center"){
+					var partner = new ExamCenterPartner(
+							all_partners[i].organization,
+							all_partners[i].organization_name,
+							false,
+							null,
+							all_partners[i].contact_points_selected
+					);
+					t.partners.push(partner);
+				}
 			}
 		}
 	};
 	
+	/**
+	 * Method called to update the partners array attribute after selecting the partners
+	 * The selection returns an array of organizations IDs, so need to update the partners attribute, keeping the contacts points selected previously for the organizations that were kept by the selection
+	 * @param {Array} containing the selected organizations IDs
+	 * @returns {ISPartners|ExamCenterPartners} updated partners attribute
+	 */
 	t._matchPartnersArraysAndRemoveHost = function(new_array){
 		//Match the contact points
 		for(var i = 0; i < new_array.length; i++){
@@ -177,6 +246,11 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		return new_array;
 	};
 	
+	/**
+	 * Find a partner index within the partners attribute, from its ID
+	 * @param {Number} id the id of the seeked partner
+	 * @returns {Number | NULL} null if not found, else the index of the partner
+	 */
 	t._findPartnerIndex = function(id){
 		for(var i = 0; i < t.partners.length; i++){
 			if(t.partners[i].organization == id)
@@ -185,6 +259,11 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		return null;
 	};
 	
+	/**
+	 * find a partner index within the partners_contacts_points array, from its ID
+	 * @param {Number} id the id of the seeked partner
+	 * @returns {Number | NULL} null if not found, else the index of the partner
+	 */
 	t._findPartnerIndexInPartners_contacts_points = function(partner_id){
 		var index = null;
 		for(var i = 0; i <  partners_contacts_points.length; i++){
@@ -196,6 +275,11 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		return index;
 	};
 	
+	/**
+	 * Update the host attribute from its ID
+	 * If the new host was in the partners attribute, the matching partner is removed from the partners array and the table is reseted
+	 * @param {Number} new_host_id
+	 */
 	t._updateHostAttribute = function(new_host_id){
 		t.host = new_host_id;
 		//If the host was in t.partners array, remove it
@@ -208,10 +292,10 @@ function select_other_partners(container, all_partners, partners_contacts_points
 		}
 	};
 	
-	require(["create_partner_row.js","popup_window.js","section.js","IS_objects.js"],function(){
+	require(["create_partner_row.js","popup_window.js","section.js","IS_objects.js","exam_objects.js"],function(){
 		//Set the section
 		t.container_of_section_content = document.createElement("div");
-		t.section = new section("/static/contact/directory_16.png","Other partners",t.container_of_section_content,true);
+		t.section = new section("/static/contact/directory_16.png","Other partners",t.container_of_section_content,true,false,"soft");
 		container.appendChild(t.section.element);
 		//Set partners array
 		t._setPartnersArray();

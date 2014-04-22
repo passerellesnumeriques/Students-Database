@@ -27,7 +27,7 @@ function ISData (id, geographic_area, date, name, number_boys_expected, number_b
  * @param {string} organization_name
  * @param {boolean} host. If true, the IS address is picked from this partner
  * @param {number} host_address the id of the host address selected (an organization can have several addresses)
- * @param {array} contact_points_selected the ids of the contacts points selected for the information sessions
+ * @param {ISPartnersContactPoints} contact_points_selected the ids of the contacts points selected for the information sessions
  */
 function ISPartner(organization, organization_name, host, host_address, contact_points_selected){
 	this.organization = organization;
@@ -40,7 +40,7 @@ function ISPartner(organization, organization_name, host, host_address, contact_
 /**
  * ISPartnersContactPoints
  * @param {array} contact_points coming from contact/service/get_json_contact_points_no_address
- * for each ISpartner
+ * for each ISpartner (host or not)
  */
 function ISPartnersContactPoints(contact_points){
 	this.contact_points = contact_points;

@@ -33,11 +33,15 @@ function editable_cell(container, table, column, row_key, field_classname, field
 				handler(new_data);
 			});
 		},function(ef) {
-			if (onchange) ef.field.onchange.add_listener(onchange);
+			if (onchange) ef.field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
 			ef.field.register_datamodel_cell(table,column,row_key);
 			if (onready) onready(t);
 		});
 	});
+	
+	t.fillContainer = function() {
+		t.editable_field.fillContainer();
+	};
 	
 	/** Cancel any change, and goes to non-editable mode */
 	t.cancelEditable = function() {

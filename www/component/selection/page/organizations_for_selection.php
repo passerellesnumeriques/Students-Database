@@ -8,11 +8,11 @@ class page_organizations_for_selection extends selection_page {
 	 * Create a data_list with all the selection organizations
 	 * with the possibility to pick any
 	 */
-	public function execute_selection_page(&$page) {
-		$page->add_javascript("/static/widgets/grid/grid.js");
-		$page->add_javascript("/static/data_model/data_list.js");
-		$page->onload("init_organizations_list();");
-		$container_id = $page->generateID();
+	public function execute_selection_page() {
+		$this->add_javascript("/static/widgets/grid/grid.js");
+		$this->add_javascript("/static/data_model/data_list.js");
+		$this->onload("init_organizations_list();");
+		$container_id = $this->generateID();
 		
 		$can_create = false;
 		foreach (PNApplication::$instance->components as $c) {
@@ -28,7 +28,11 @@ class page_organizations_for_selection extends selection_page {
 		$mode = null; // Variable that contains the using mode of this page
 		if(isset($_GET["is"]) && isset($_GET["partners"])){
 			$mode = "IS_partners";
-// 			$id = $_GET["is"];
+			$partners = $_GET["partners"];
+			$host_id = @$_GET["host"];
+			if(!is_array($partners)) $partners = array();
+		} else if (isset($_GET["ec"]) && isset($_GET["partners"])){
+			$mode = "EC_partners";
 			$partners = $_GET["partners"];
 			$host_id = @$_GET["host"];
 			if(!is_array($partners)) $partners = array();
@@ -38,7 +42,7 @@ class page_organizations_for_selection extends selection_page {
 		</div>
 		<script type='text/javascript'>
 		var page_mode = <?php echo json_encode($mode);?>;
-		<?php if($mode == "IS_partners"){?>
+		<?php if($mode == "IS_partners" || $mode == "EC_partners"){?>
 			var selected_partners = <?php echo json_encode($partners).";";?>
 			var host_id = <?php echo json_encode($host_id).";";?>
 		<?php }?>
@@ -46,11 +50,12 @@ class page_organizations_for_selection extends selection_page {
 		function init_organizations_list() {
 			dl = new data_list(
 				'<?php echo $container_id;?>',
-				'Organization',
-				['Contacts.Name'],
-				[{category:'Contacts',name:'Managed by',data:{type:'exact',value:"Selection"}}],
+				'Organization', null,
+				['Organization.Name','Organization.Address','Organization.EMail','Organization.Phone'],
+				[{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"}}],
+				250,
 				function (list) {
-					if(page_mode == "IS_partners")
+					if(page_mode == "IS_partners" || page_mode == "EC_partners")
 						list.grid.setSelectable(true);
 					list.addTitle(null, "Organizations of Selection");
 					<?php if ($can_create) {?>
@@ -75,7 +80,7 @@ class page_organizations_for_selection extends selection_page {
 						});
 					};
 					list.addHeader(new_org);
-					if(page_mode == "IS_partners"){
+					if(page_mode == "IS_partners" || page_mode == "EC_partners"){
 						list.ondataloaded.add_listener(organizations_loaded);
 						list.grid.onrowselectionchange = organizations_selection_changed;
 					}

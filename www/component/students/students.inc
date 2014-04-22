@@ -3,13 +3,13 @@
 class students extends Component {
 	
 	public function getPluginImplementations() {
-		require_once("StudentsPeoplePlugin.inc");
 		require_once("StudentsApplicationPlugin.inc");
 		require_once("StudentsNewsPlugin.inc");
+		require_once("StudentPeopleTypePlugin.inc");
 		return array(
-			new StudentsPeoplePlugin(),
+			new StudentPeopleTypePlugin(),
 			new StudentsApplicationPlugin(),
-			new StudentsNewsPlugin()
+			new StudentsNewsPlugin(),
 		);
 	}
 	
@@ -19,9 +19,9 @@ class students extends Component {
 			$possible_specializations = SQLQuery::create()->noWarning()
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
-				->join("Student", "AcademicPeriod", array("batch"=>"batch"))
-				->join("AcademicPeriod", "AcademicPeriodSpecialization", array("id"=>"period"))
-				->field("AcademicPeriodSpecialization", "specialization", "specialization")
+				->join("Student", "BatchPeriod", array("batch"=>"batch"))
+				->join("BatchPeriod", "BatchPeriodSpecialization", array("id"=>"period"))
+				->field("BatchPeriodSpecialization", "specialization", "specialization")
 				->executeSingleField();
 			if (!in_array($specialization_id, $possible_specializations)) {
 				PNApplication::error("The student does not exist or the specialization is not available for this batch of students");
@@ -97,7 +97,9 @@ class students extends Component {
 		return true;
 	}
 	
-	public function getStudentsQueryForPeriod($period, $include_people_info = true, $include_excluded = false, $restrict_specialization = false) {
+	public function getStudentsQueryForBatchPeriod($period_id, $include_people_info = true, $include_excluded = false, $restrict_specialization = false) {
+		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
+		
 		$q = SQLQuery::create()->select("Student");
 		$q->whereValue("Student", "batch", $period["batch"]);
 		$q->field("Student","people","people");
@@ -109,7 +111,7 @@ class students extends Component {
 				$q->whereValue("Student", "Specialization", $restrict_specialization);
 		}
 		if (!$include_excluded)
-			$q->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start_date"]."')");
+			$q->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start"]."')");
 		if ($include_people_info) {
 			PNApplication::$instance->people->joinPeople($q, "Student", "people");
 			require_once("component/people/PeopleJSON.inc");

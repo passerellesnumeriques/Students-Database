@@ -8,6 +8,20 @@ function error_dialog(message) {
 		p.show();
 	});
 }
+
+/**
+ * Display a popup with the given error message
+ * @param {HTMLElement} content error message
+ */
+function error_dialog_html(content){
+	require("popup_window.js",function() {
+		var div = document.createElement("div");
+		div.style.padding = "5px";
+		div.appendChild(content);
+		var p = new popup_window("Error", theme.icons_16.error, div);
+		p.show();
+	});
+}
 /**
  * Display a popup asking for confirmation (Yes and No buttons)
  * @param {string} message the message to display, asking confirmation
@@ -176,5 +190,54 @@ function multiple_input_dialog(icon,title,inputs,ok_handler) {
 		p.show();
 		for (var i = 0; i < inputs.length; ++i)
 			inputs[i].validate();
+	});
+}
+
+function select_dialog(icon,title,message,default_value,possibilities, ok_handler, oncancel) {
+	require("popup_window.js",function() {
+		var content = document.createElement("DIV");
+		content.innerHTML = message;
+		content.style.padding = "3px";
+		var select = document.createElement("SELECT");
+		var selected = -1;
+		for (var i = 0; i < possibilities.length; ++i) {
+			var p = possibilities[i];
+			var o = document.createElement("OPTION");
+			o.value = p[0];
+			o.text = p[1];
+			select.add(o);
+			if (p[0] == default_value) selected = select.options.length-1;
+		}
+		if (selected != -1) select.selectedIndex = selected;
+		content.appendChild(select);
+		var p = new popup_window(title, icon, content);
+		var result = null;
+		if(oncancel)
+			p.addOkCancelButtons(function() {
+				result = select.options[select.selectedIndex].value;
+				p.close();
+			},oncancel);
+		else
+			p.addOkCancelButtons(function() {
+				result = select.options[select.selectedIndex].value;
+				p.close();
+			});
+		p.onclose = function() {
+			var r=result; result=null;
+			ok_handler(r,p);
+		};
+		p.show();
+	});
+}
+
+
+function popup_frame(icon, title, url, post_data, percent_w, percent_h) {
+	require("popup_window.js", function() {
+		var p = new popup_window(title, icon, "");
+		p.setContentFrame(url, null, post_data);
+		if (percent_w)
+			p.showPercent(percent_w, percent_h);
+		else
+			p.show();
 	});
 }

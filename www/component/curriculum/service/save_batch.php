@@ -13,15 +13,14 @@ class service_save_batch extends Service {
 	<li><code>end_date</code>: graduation date, in SQL format</li>
 	<li><code>lock</code>: Database lock ID, locking the StudentBatch</li>
 	<li><code>periods</code>: array of periods:<ul>
-			<li><code>id</code>: id of the period (if this is a new period, it must be a negative value, unique)</li>
-			<li><code>name</code>: period name</li>
-			<li><code>start_date</code>: start date, in SQL format</li>
-			<li><code>end_date</code>: end date, in SQL format</li>
-		</ul></li>
+		<li><code>id</code>: id of the period (if this is a new period, it must be a negative value, unique)</li>
+		<li><code>name</code>: period name</li>
+		<li><code>academic_period</code>: id of the AcademicPeriod corresponding to the batch period</li>
+	</ul></li>
 	<li><code>periods_specializations</code>: array of associations between a period and a specialization:<ul>
-			<li><code>period_id</code>: id of the period (it can be a negative value in case the period is new, matching the id in the list of periods)</li>
-			<li><code>specialization_id</code>: id of the specialization to associate with the period</li>
-		</ul></li>
+		<li><code>period_id</code>: id of the period (it can be a negative value in case the period is new, matching the id in the list of periods)</li>
+		<li><code>specialization_id</code>: id of the specialization to associate with the period</li>
+	</ul></li>
 </ul>
 <?php 
 	}
@@ -33,6 +32,7 @@ class service_save_batch extends Service {
 		SQLQuery::startTransaction();
 		// StudentBatch
 		$batch_id = @$input["id"];
+		if ($batch_id <> null && $batch_id <= 0) $batch_id = null;
 		$new_batch = $batch_id == null;
 		$fields = array(
 			"name"=>$input["name"],
@@ -45,7 +45,7 @@ class service_save_batch extends Service {
 			$batch_id = SQLQuery::create()->bypassSecurity()->insert("StudentBatch", $fields, $input["lock"]);
 		// periods
 		if (!$new_batch)
-			$previous_periods = SQLQuery::create()->bypassSecurity()->select("AcademicPeriod")->whereValue("AcademicPeriod","batch", $batch_id)->execute();
+			$previous_periods = SQLQuery::create()->bypassSecurity()->select("BatchPeriod")->whereValue("BatchPeriod","batch", $batch_id)->execute();
 		$new_periods_mapping = array();
 		$periods_ids = array();
 		foreach ($input["periods"] as $period) {
@@ -59,14 +59,13 @@ class service_save_batch extends Service {
 			$fields = array(
 				"batch"=>$batch_id,
 				"name"=>$period["name"],
-				"start_date"=>$period["start_date"],
-				"end_date"=>$period["end_date"]
+				"academic_period"=>$period["academic_period"],
 			);
 			if ($period_id > 0) {
-				SQLQuery::create()->bypassSecurity()->updateByKey("AcademicPeriod", $period_id, $fields);
+				SQLQuery::create()->bypassSecurity()->updateByKey("BatchPeriod", $period_id, $fields);
 				array_push($periods_ids, $period_id);
 			} else {
-				$id = SQLQuery::create()->bypassSecurity()->insert("AcademicPeriod", $fields);
+				$id = SQLQuery::create()->bypassSecurity()->insert("BatchPeriod", $fields);
 				$new_periods_mapping[$period_id] = $id;
 			}
 		}
@@ -74,13 +73,13 @@ class service_save_batch extends Service {
 			$ids = array();
 			foreach ($previous_periods as $p) array_push($ids, $p["id"]);
 			if (count($ids) > 0)
-				SQLQuery::create()->bypassSecurity()->removeKeys("AcademicPeriod",$ids);
+				SQLQuery::create()->bypassSecurity()->removeKeys("BatchPeriod",$ids);
 		}
 		// periods' specializations
 		if (!$new_batch && count($periods_ids) > 0) {
-			$rows = SQLQuery::create()->bypassSecurity()->select("AcademicPeriodSpecialization")->whereIn("AcademicPeriodSpecialization","period",$periods_ids)->execute();
+			$rows = SQLQuery::create()->bypassSecurity()->select("BatchPeriodSpecialization")->whereIn("BatchPeriodSpecialization","period",$periods_ids)->execute();
 			if (count($rows) > 0)
-				SQLQuery::create()->bypassSecurity()->removeRows("AcademicPeriodSpecialization", $rows);
+				SQLQuery::create()->bypassSecurity()->removeRows("BatchPeriodSpecialization", $rows);
 		}
 		$list = array();
 		foreach ($input["periods_specializations"] as $ps) {
@@ -91,7 +90,7 @@ class service_save_batch extends Service {
 			));
 		}
 		if (count($list) > 0)
-			SQLQuery::create()->bypassSecurity()->insertMultiple("AcademicPeriodSpecialization", $list);
+			SQLQuery::create()->bypassSecurity()->insertMultiple("BatchPeriodSpecialization", $list);
 		
 		if (PNApplication::has_errors())
 			SQLQuery::rollbackTransaction();

@@ -143,10 +143,26 @@ function context_menu(menu) {
 		menu.style.width = "";
 		menu.style.height = "";
 		document.body.appendChild(menu);
-		var x = absoluteLeft(from);
-		var y = absoluteTop(from);
-		var w = menu.offsetWidth;
-		var h = menu.offsetHeight;
+		var win = getWindowFromElement(from);
+		var x,y,w,h;
+		if (win != window) {
+			x = win.absoluteLeft(from);
+			y = win.absoluteTop(from);
+			var pw;
+			do {
+				pw = win.parent;
+				x += pw.absoluteLeft(win.frameElement);
+				y += pw.absoluteTop(win.frameElement);
+				x -= win.document.body.scrollLeft;
+				y -= win.document.body.scrollTop;
+				win = pw;
+			} while (pw != window);
+		} else {
+			x = absoluteLeft(from);
+			y = absoluteTop(from);
+		}
+		w = menu.offsetWidth;
+		h = menu.offsetHeight;
 		if (min_width_is_from && w < from.offsetWidth) {
 			setWidth(menu, w = from.offsetWidth);
 		}
@@ -189,10 +205,26 @@ function context_menu(menu) {
 		menu.style.width = "";
 		menu.style.height = "";
 		document.body.appendChild(menu);
-		var x = absoluteLeft(from);
-		var y = absoluteTop(from);
-		var w = menu.offsetWidth;
-		var h = menu.offsetHeight;
+		var win = getWindowFromElement(from);
+		var x,y,w,h;
+		if (win != window) {
+			x = win.absoluteLeft(from);
+			y = win.absoluteTop(from);
+			var pw;
+			do {
+				pw = win.parent;
+				x += pw.absoluteLeft(win.frameElement);
+				y += pw.absoluteTop(win.frameElement);
+				x -= win.document.body.scrollLeft;
+				y -= win.document.body.scrollTop;
+				win = pw;
+			} while (pw != window);
+		} else {
+			x = absoluteLeft(from);
+			y = absoluteTop(from);
+		}
+		w = menu.offsetWidth;
+		h = menu.offsetHeight;
 		if (min_width_is_from && w < from.offsetWidth) {
 			setWidth(menu, w = from.offsetWidth);
 		}
@@ -230,14 +262,14 @@ function context_menu(menu) {
 	t.showAt = function(x,y,from) {
 		var e = from;
 		var from_inside_menu = false;
-		while (e && e != document.body) { if (e.className == 'context_menu') { from_inside_menu = true; break; } e = e.parentNode; }
+		while (e && e != from.ownerDocument.body) { if (e.className == 'context_menu') { from_inside_menu = true; break; } e = e.parentNode; }
 		if (from_inside_menu) {
 			t.parent_menu = e.context_menu;
 			t.parent_menu_listener = t.parent_menu.hide_if_outside_menu;
 			t.parent_menu.hide_if_outside_menu = function(){};
 		}
-		y += document.body.scrollTop;
-		x += document.body.scrollLeft;
+		y += from.ownerDocument.body.scrollTop;
+		x += from.ownerDocument.body.scrollLeft;
 		menu.style.visibility = "visible";
 		menu.style.position = "absolute";
 		menu.style.top = y+"px";
@@ -273,11 +305,11 @@ function context_menu(menu) {
 			if (menu.anim) animation.stop(menu.anim);
 			menu.anim = animation.fadeOut(menu,300,function() {
 				if (t.removeOnClose)
-					try { document.body.removeChild(menu); } catch (e) {}
+					try { menu.parentNode.removeChild(menu); } catch (e) {}
 			});
 		} else {
 			if (t.removeOnClose)
-				try { document.body.removeChild(menu); } catch (e) {}
+				try { menu.parentNode.removeChild(menu); } catch (e) {}
 			else {
 				menu.style.visibility = "hidden";
 				menu.style.top = "-10000px";

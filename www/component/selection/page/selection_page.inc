@@ -13,11 +13,46 @@ abstract class selection_page extends Page{
 		/* Check the user is allowed to read the selection data */
 		if(!$can_access_selection_data) echo "<div>You are not allowed to access to the selection data</div>";
 		else{
-			if($id <> null) $this->execute_selection_page($this);
-			else echo "<div>You must select a selection campaign</div>";
+			if($id <> null) $this->execute_selection_page();
+			else {
+				$campaigns = SQLQuery::create()->select("SelectionCampaign")->execute();
+				if (count($campaigns) == 0) {
+					?>
+					<div style="margin:10px">
+					<a href='#' onclick='create_campaign();return false;'>Create a first selection campaign</a>
+					</div>
+					<?php 
+				} else {
+					?>
+					<div style="margin:10px">
+					Please select a selection campaign:<ul>
+					<?php foreach($campaigns as $c) {
+						echo "<li><a href='#' onclick='select_campaign(".$c["id"].");return false;'>".$c["name"]."</a></li>";
+					}?>
+					</ul>
+					Or <a href='#' onclick='create_campaign();return false;'>Create a new campaign</a>
+					</div>
+					<?php 
+				}
+				?>
+				<script type='text/javascript'>
+				function create_campaign() {
+					window.parent.select_campaign._dialogAddCampaign();
+				}
+				function select_campaign(id) {
+					service.json("selection","set_campaign_id",{campaign_id:id},function(res){
+						if(!res) return;
+						/* Reload the page */
+						window.parent.populateMenu("/dynamic/selection/service/application_menu_builder");
+						location.reload();
+					});
+				}
+				</script>
+				<?php 
+			}
 		}
 	}
 	
-	abstract public function execute_selection_page(&$page);
+	abstract public function execute_selection_page();
 }
 ?>

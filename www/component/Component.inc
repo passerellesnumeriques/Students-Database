@@ -87,8 +87,14 @@ abstract class Component {
 			return;
 		}
 		
+		set_error_handler(function($severity, $message, $filename, $lineno) {
+			if (error_reporting() == 0) return true;
+			PNApplication::error("PHP Error: ".$message." in ".$filename.":".$lineno);
+			return true;
+		});
 		// generate the page
 		$page->generate($this, $path);
+		restore_error_handler();
 	}
 
 	private static $allowed_services_without_login = array();
@@ -188,6 +194,11 @@ abstract class Component {
 		if ($output_format == "text/json") {
 			$done = new ServiceDone();
 			register_shutdown_function("service_shutdown_catch", $done);
+			set_error_handler(function($severity, $message, $filename, $lineno) {
+				if (error_reporting() == 0) return true;
+				PNApplication::error("PHP Error: ".$message." in ".$filename.":".$lineno);
+				return true;
+			});
 			ob_start();
 			try {
 				$service->execute($this, $input);
@@ -197,6 +208,7 @@ abstract class Component {
 			$result = ob_get_contents();
 			ob_end_clean();
 			if ($result === "" || $result === false) $result = null;
+			restore_error_handler();
 			PNApplication::print_json_result($result);
 			$done->done = true;
 		} else
@@ -249,10 +261,11 @@ function service_shutdown_catch($done) {
 	$error = error_get_last();
 	if ($error <> null)
 		$msg.= " Last error was in ".$error["file"]." line ".$error["line"].": ".$error["message"];
-	PNApplication::error($msg);
-	PNApplication::print_json_result(null);
 	$content = ob_get_clean();
-	echo $content;
+	if ($content <> "")
+		$msg .= "<br/>Output generated at failing time:<br/>".str_replace("\n", "<br/>", htmlentities($content));
+	PNApplication::error_html($msg);
+	PNApplication::print_json_result(null);
 }
 
 ?>

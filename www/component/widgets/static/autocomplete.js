@@ -12,6 +12,12 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 		return t.input.default_message ? "" : t.input.value;
 	};
 	
+	this.reset = function() {
+		this.input.default_message = true;
+		this.input.value = default_message;
+		this.input.className = "informative_text";
+	};
+	
 	this._init = function() {
 		this.input = document.createElement('input');
 		this.input.type = 'text';
@@ -59,6 +65,7 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 		setTimeout(function() {
 			if (t.input.value.length < min_chars) {
 				t.menu.hide();
+				t._provider_last_string = "";
 				t._provider_call = false;
 				t._provider_recall = false;
 				return;
@@ -66,22 +73,16 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 				if (t.input.value != t._provider_last_string) {
 					t.menu.loading();
 					t._provider_last_string = t.input.value;
+					t._provider_recall = false;
 					provider(t.input.value, function(items) {
 						t.menu.reset(items);
-						if (t._provider_recall) {
-							t._provider_recall = false;
+						t._provider_call = false;
+						if (t._provider_recall)
 							t._call_provider();
-						} else {
-							t._provider_call = false;
-						}
 					});
 				} else {
-					if (t._provider_recall) {
-						t._provider_recall = false;
-						t._call_provider();
-					} else {
-						t._provider_call = false;
-					}
+					t._provider_recall = false;
+					t._provider_call = false;
 				}
 			}
 		},10);
@@ -145,7 +146,7 @@ function autocomplete_menu(ac, onselectitem) {
 		if (this.highlighted != -1)
 			this.div.childNodes[this.highlighted].className = "context_menu_item";
 		if (index != -1)
-			this.div.childNodes[index].className = "context_menu_item_selected";
+			this.div.childNodes[index].className = "context_menu_item selected";
 		this.highlighted = index;
 	};
 	this.down = function() {
