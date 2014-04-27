@@ -60,7 +60,14 @@ class page_IS_main_page extends selection_page {
 						new_IS.className = 'flat';
 						new_IS.innerHTML = "<img src='"+theme.build_icon("/static/selection/IS/IS_16.png",theme.icons_10.add)+"'/> New Information Session";
 						new_IS.onclick = function() {
-							location.assign("/dynamic/selection/page/IS/profile");
+							require("popup_window.js",function() {
+								var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
+								popup.setContentFrame("/dynamic/selection/page/IS/profile");
+								popup.onclose = function() {
+									location.reload();
+								};
+								popup.showPercent(95,95);
+							});
 						};
 						list.addHeader(new_IS);
 
@@ -103,7 +110,14 @@ class page_IS_main_page extends selection_page {
 							
 						list.makeRowsClickable(function(row){
 							var is_id = list.getTableKeyForRow('InformationSession',row.row_id);
-							location.href = "/dynamic/selection/page/IS/profile?id="+is_id;
+							require("popup_window.js",function() {
+								var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
+								popup.setContentFrame("/dynamic/selection/page/IS/profile?id="+is_id);
+								popup.onclose = function() {
+									location.reload();
+								};
+								popup.showPercent(95,95);
+							});
 						});
 					}
 				);

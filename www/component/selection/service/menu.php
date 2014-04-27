@@ -13,7 +13,7 @@ class service_menu extends Service {
 		$id = $component->getCampaignId();
 		$can_manage = PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
 ?>
-<div style="padding-left:5px;text-align:center;margin-bottom:5px">
+<div style="padding-left:5px;text-align:center;margin-bottom:5px;">
 Selection Campaign:<br/>
 <select onchange="changeCampaign(this.value);"><?php 
 foreach ($campaigns as $c) {
@@ -22,12 +22,13 @@ foreach ($campaigns as $c) {
 	echo ">".htmlentities($c["name"])."</option>";
 }
 ?></select>
+<br/>
 <?php if ($can_manage) { ?>
 	<?php if ($id <> null && $id > 0) {?>
-	<button class='flat' onclick='renameCampaign();' title='Rename this campaign'><img src='<?php echo theme::$icons_16["edit_white"];?>'/></button>
-	<button class='flat' onclick='removeCampaign();' title='Remove this campaign'><img src='<?php echo theme::$icons_16["remove_white"];?>'/></button>
+	<button class='flat' style='margin:0px' onclick='renameCampaign();' title='Rename this campaign'><img src='<?php echo theme::$icons_16["edit_white"];?>'/></button>
+	<button class='flat' style='margin:0px' onclick='removeCampaign();' title='Remove this campaign'><img src='<?php echo theme::$icons_16["remove_white"];?>'/></button>
 	<?php } ?>
-<button class='flat' onclick='createCampaign();' title='Create a new Selection Campaign'><img src='<?php echo theme::$icons_16["add_white"];?>'/></button>
+<button class='flat' style='margin:0px' onclick='createCampaign();' title='Create a new Selection Campaign'><img src='<?php echo theme::$icons_16["add_white"];?>'/></button>
 <?php } ?>
 </div>
 
@@ -128,6 +129,12 @@ function changeCampaign(id) {
 		if(!res) return;
 		location.href = "?section=selection";
 	});
+}
+function renameCampaign() {
+	alert("TODO");
+}
+function removeCampaign() {
+	alert("TODO");
 }
 </script>
 <?php 

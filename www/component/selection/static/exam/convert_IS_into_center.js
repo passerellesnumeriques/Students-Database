@@ -323,7 +323,7 @@ function convert_IS_into_center(container,can_remove_IS_from_EC, all_IS,all_IS_n
 					function() {
 						if (IS_id) {
 							var pop = new popup_window("Information Session Profile");
-							pop.setContentFrame("/dynamic/selection/page/IS/profile?id="+ IS_id+ "&readonly=true&hideback=true");
+							pop.setContentFrame("/dynamic/selection/page/IS/profile?id="+ IS_id+ "&readonly=true");
 							pop.show();
 						} else if (EC_id) {
 							var pop = new popup_window("Exam Center Profile");

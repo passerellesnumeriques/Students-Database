@@ -56,7 +56,7 @@ function center_IS_link(container,IS_ids){
 					var id = this.IS_id;
 					require("popup_window.js",function(){
 						var pop = new popup_window("Information Session Profile","");
-						pop.setContentFrame("/dynamic/selection/page/IS/profile?id="+id+"&readonly=true&hideback=true");
+						pop.setContentFrame("/dynamic/selection/page/IS/profile?id="+id+"&readonly=true");
 						pop.show();
 					});
 					return false;

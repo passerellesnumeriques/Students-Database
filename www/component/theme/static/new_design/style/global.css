@@ -138,13 +138,6 @@ button.flat {
     background: transparent;
     background-color: transparent;
 }
-button.flat.small {
-	padding: 0px;
-}
-button.flat.small_icon {
-	padding: 0px;
-	font-size: 1px;
-}
 button.flat:hover {
     border: 1px solid rgba(128,128,128,0.4);
     background-color: rgba(255,255,255,0.2);
@@ -195,6 +188,15 @@ button.action.important:hover {
 }
 button.action.important:disabled {
     background: #C0C0C0;
+}
+
+
+button.small {
+    padding: 0px;
+}
+button.small_icon {
+    padding: 0px;
+    font-size: 1px;
 }
 
 /* Validation */
