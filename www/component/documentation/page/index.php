@@ -7,7 +7,7 @@ class page_index extends Page {
 		echo "<div style='width:100%;height:100%' id='doc_top_container'>";
 			echo "<div style='background-color:#C0C0C0' layout='25'>";
 			echo "PN Students Database - Technical Documentation";
-			echo " <div class='button' onclick='location.reload();'><img src='".theme::$icons_16["refresh"]."'/></div>";
+			echo " <button onclick='location.reload();'><img src='".theme::$icons_16["refresh"]."'/></button>";
 			echo "</div>";
 			echo "<div layout='fill'>";
 				echo "<div style='width:100%;height:100%' id='doc_container'>";
