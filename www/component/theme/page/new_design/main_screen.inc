@@ -316,12 +316,14 @@ function selectSection(section) {
 	highlightSection(section_name);
 }
 
-function sectionClicked(section) {
+function sectionClicked(section, page) {
 	document.getElementById('application_frame')._loading_application_page = true;
 	highlightSection(section);
 	if (section.hasAttribute("menu"))
 		loadMenu(section.getAttribute("menu"));
-	if (section.hasAttribute("page"))
+	if (page)
+		loadPage(page);
+	else if (section.hasAttribute("page"))
 		loadPage(section.getAttribute("page"));
 }
 
@@ -470,10 +472,8 @@ function pageLoaded(url) {
 initPage();
 
 <?php 
-if (isset($_GET["page"])) {
-	// TODO
-} else if (isset($_GET["section"])) {
-	echo "sectionClicked(getSection(".json_encode($_GET["section"])."));";
+if (isset($_GET["section"])) {
+	echo "sectionClicked(getSection(".json_encode($_GET["section"])."),".(isset($_GET["page"]) ? json_encode($_GET["page"]) : "null").");";
 } else {
 	echo "sectionClicked(getSection('home'));";
 }

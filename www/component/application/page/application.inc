@@ -42,7 +42,7 @@ window.top.pnapplication.onlogout.add_listener(function() {
 });
 document.body.style.overflow = "hidden";
 </script><?php
-if (isset($_GET["page"])) {
+if (isset($_GET["page"]) && !isset($_GET["section"])) {
 	// only the frame
 	echo "<iframe id='application_frame' name='application_frame' src='".$_GET["page"]."' style='width:100%;height:100%;border:none;'></iframe>";
 	return;

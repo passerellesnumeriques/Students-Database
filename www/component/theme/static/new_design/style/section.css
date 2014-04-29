@@ -20,6 +20,9 @@
 .section.sub>.header {
     background: linear-gradient(to bottom, #c0c0c0 0%, #a0a0a0 100%);
 }
+.section.soft {
+	border: 1px solid #b0b0ff;
+}
 .section.soft>.header {
     border-bottom: none;
     background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);

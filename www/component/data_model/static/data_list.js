@@ -25,7 +25,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	if (!page_size) page_size = -1;
 	var t=this;
 	t.container = container;
-	t.container.className = "data_list";
+	if (!t.container.className || t.container.className.length == 0)
+		t.container.className = "data_list";
+	else
+		t.container.className += " data_list"
 	if (!t.container.id) t.container.id = generateID();
 
 	/* Public properties */

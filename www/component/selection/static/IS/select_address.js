@@ -174,8 +174,8 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 			if(t._getInternStep() == "area"){
 				//Only an area is set, so no host
 				//Create two buttons, one to remove the location, an other one to continue (select a host)
-				var continue_button = document.createElement("div");
-				continue_button.className = "button";
+				var continue_button = document.createElement("BUTTON");
+				continue_button.className = "action";
 				continue_button.appendChild(document.createTextNode("Continue"));
 				continue_button.title = "Select a host partner";
 				continue_button.onclick = function(){
@@ -214,8 +214,8 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 						"<img style = 'vertical-align:bottom;'src = '"+theme.icons_16.info+"'/> <i>Location field is fully completed!</i>"
 					);
 				};
-				var remove_button = document.createElement("div");
-				remove_button.className = "button";
+				var remove_button = document.createElement("BUTTON");
+				remove_button.className = "action important";
 				remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"'/> Reset location";
 				remove_button.title = "Reset the location and restart from scratch";
 				remove_button.onclick = function(){
@@ -232,8 +232,8 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 			} else if (t._getInternStep() == "host"){
 				//The host and the address is set
 				//Add a remove host button and an update host button
-				var remove_host = document.createElement("div");
-				remove_host.className = "button";
+				var remove_host = document.createElement("BUTTON");
+				remove_host.className = "action important";
 				remove_host.innerHTML = "<img src = '"+theme.icons_16.remove+"'/> Remove this host";
 				remove_host.title = "Remove the host, but keep the geographic area";
 				remove_host.onclick = function(){
@@ -244,8 +244,8 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 					t.reset();
 				};
 				
-				var update_host = document.createElement("div");
-				update_host.className = 'button';
+				var update_host = document.createElement("BUTTON");
+				update_host.className = 'action';
 				update_host.appendChild(document.createTextNode("Update host"));
 				update_host.title = "Update the host partner";
 				update_host.onclick = function(){
