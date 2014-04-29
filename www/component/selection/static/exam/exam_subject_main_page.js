@@ -67,11 +67,9 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 			t.table.appendChild(ul);
 		
 		//set the footer
-		var tr_foot = document.createElement("tr");
-		var td_foot = document.createElement("td");
-		var create_button = document.createElement("div");
-		create_button.className = "button";
-		create_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom")+"'/> Create a subject";
+		var create_button = document.createElement("button");
+		create_button.className = "action";
+		create_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/subject_white.png",theme.icons_10.add,"right_bottom")+"'/> Create a subject";
 		create_button.onclick = function(){
 // 						location.assign("/dynamic/selection/page/exam/create_subject");
 			var pop = new popup_window("Create an Exam Subject",
@@ -80,11 +78,12 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 										false
 									);
 			pop.setContentFrame("/dynamic/selection/page/exam/create_subject");
+			pop.onclose = function() {
+				location.reload();
+			};
 			pop.show();
 		};
-		td_foot.appendChild(create_button);
-		tr_foot.appendChild(td_foot);
-		t.table.appendChild(tr_foot);
+		t.section.addToolBottom(create_button);
 	};
 
 	/**

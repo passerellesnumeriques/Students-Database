@@ -138,11 +138,13 @@ function context_menu(menu) {
 	 */
 	t.showBelowElement = function(from, min_width_is_from) {
 		menu.style.visibility = "visible";
-		menu.style.position = "absolute";
+		menu.style.position = "fixed";
 		t.show_from = from;
+		menu.style.top = "0px";
+		menu.style.left = "0px";
 		menu.style.width = "";
 		menu.style.height = "";
-		document.body.appendChild(menu);
+		window.top.document.body.appendChild(menu);
 		var win = getWindowFromElement(from);
 		var x,y,w,h;
 		var pos = win.getFixedPosition(from);
@@ -178,8 +180,7 @@ function context_menu(menu) {
 		if (x+w > window.top.getWindowWidth()) {
 			x = window.top.getWindowWidth()-w;
 		}
-		if (menu.parentNode)
-			menu.parentNode.removeChild(menu);
+		window.top.document.body.removeChild(menu);
 		t.showAt(x,y,from);
 	};
 	/** Display the menu above the given element
@@ -188,11 +189,13 @@ function context_menu(menu) {
 	 */
 	t.showAboveElement = function(from, min_width_is_from) {
 		menu.style.visibility = "visible";
-		menu.style.position = "absolute";
+		menu.style.position = "fixed";
 		t.show_from = from;
+		menu.style.top = "0px";
+		menu.style.width = "0px";
 		menu.style.width = "";
 		menu.style.height = "";
-		document.body.appendChild(menu);
+		window.top.document.body.appendChild(menu);
 		var win = getWindowFromElement(from);
 		var x,y,w,h;
 		var pos = win.getFixedPosition(from);
@@ -228,8 +231,7 @@ function context_menu(menu) {
 		if (x+w > window.top.getWindowWidth()) {
 			x = window.top.getWindowWidth()-w;
 		}
-		if (menu.parentNode)
-			menu.parentNode.removeChild(menu);
+		window.top.document.body.removeChild(menu);
 		t.showAt(x,y,from);
 	};
 	/** Display the menu at the given position (using absolute positioning)

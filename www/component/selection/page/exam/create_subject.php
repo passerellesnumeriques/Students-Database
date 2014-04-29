@@ -15,7 +15,7 @@ class page_exam_create_subject extends selection_page {
 		if(!PNApplication::$instance->user_management->has_right("manage_exam_subject",true))
 			echo "<div style='font-color:red;'>You are not allowed to add any exam subject</div>'";
 		else {
-			echo "<div id = 'create_subject'></div>";
+			echo "<div id = 'create_subject' style='background-color:white'></div>";
 			$other_campaigns = false;
 			$all_campaigns = PNApplication::$instance->selection->getCampaigns();
 			/* remove the current campaign */
@@ -97,7 +97,7 @@ class page_exam_create_subject extends selection_page {
 						li1.innerHTML = "Create a subject from scratch";
 						var b_from_zero = t._createButton("<b>Go!</b>");
 						b_from_zero.onclick = function(){
-							window.parent.location.assign("/dynamic/selection/page/exam/subject");
+							location.assign("/dynamic/selection/page/exam/subject");
 						};
 						li1.appendChild(b_from_zero);
 						ul.appendChild(li1);
@@ -107,7 +107,7 @@ class page_exam_create_subject extends selection_page {
 						li3.innerHTML = "Create by importing an Excel questions file";
 						var b_import = t._createButton("<b>Go!</b>");
 						b_import.onclick = function(){
-							window.parent.location.assign("/dynamic/selection/page/exam/import_subject");
+							location.assign("/dynamic/selection/page/exam/import_subject");
 						};
 						li3.appendChild(b_import);
 						ul.appendChild(li3);
@@ -149,14 +149,14 @@ class page_exam_create_subject extends selection_page {
 					 * @param {number} campaign_id only used when from_previous == true. The id of the subject that the button shall refer to
 					 */
 					t._createButton = function(content, from_previous, campaign_id, exam_id){
-						var div = document.createElement("div");
-						div.className = "button";
+						var div = document.createElement("BUTTON");
+						//div.className = "button";
 						div.innerHTML = content;
 						if(from_previous){
 							div.campaign_id = campaign_id;
 							div.exam_id = exam_id;
 							div.onclick = function(){
-								window.parent.location.assign("/dynamic/selection/page/exam/subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
+								location.assign("/dynamic/selection/page/exam/subject?id="+this.exam_id+"&campaign_id="+this.campaign_id);
 							};
 						}
 						return div;
