@@ -282,7 +282,9 @@ function LoadingFrame(frame_element) {
 
 	this._isReady = function() {
 		var win = getIFrameWindow(frame_element);
-		return win && this.step == 1 && win.document && win._page_ready && win.layout && win.layout._invalidated.length == 0 && win.layout.everythingOnPageLoaded();
+		if (!win) return false;
+		if (win._static_page) return true;
+		return this.step == 1 && win.document && win._page_ready && win.layout && win.layout._invalidated.length == 0 && win.layout.everythingOnPageLoaded();
 	};
 	this._isClosed = function() {
 		var win = getIFrameWindow(frame_element);
@@ -357,6 +359,15 @@ function LoadingFrame(frame_element) {
 		}
 		var now = new Date().getTime();
 		if (now-this._start > 10000) {
+			var win = getIFrameWindow(frame_element);
+			if (!win) console.error("Frame loading timeout: window is null");
+			else if (this.step == 1) {
+				if (!win.document) console.error("Frame loading timeout: window.document is null");
+				else if (!win._page_ready) console.error("Frame loading timeout: _page_ready is false");
+				else if (!win.layout)  console.error("Frame loading timeout: no layout");
+				else if (win.layout._invalidated.length > 0) console.error("Frame loading timeout: still something to layout");
+				else if (!win.layout.everythingOnPageLoaded()) console.error("Frame loading timeout: script or css not yet loaded");
+			} else console.error("Frame loading timeout: step = "+this.step);
 			this.remove();
 			return;
 		}
