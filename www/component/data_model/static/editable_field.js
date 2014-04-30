@@ -133,8 +133,12 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	t.save = function() {
 		var data = t.field.getCurrentData();
 		container.removeChild(t.field.getHTMLElement());
-		t.field.getHTMLElement().removeChild(t.save_button); t.save_button = null;
-		t.field.getHTMLElement().removeChild(t.unedit_button); t.unedit_button = null;
+		if (t.save_button)
+			t.field.getHTMLElement().removeChild(t.save_button);
+		t.save_button = null;
+		if (t.unedit_button)
+			t.field.getHTMLElement().removeChild(t.unedit_button);
+		t.unedit_button = null;
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);

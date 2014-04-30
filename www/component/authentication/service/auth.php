@@ -18,6 +18,7 @@ class service_auth extends Service {
 	public function output_documentation() {
 ?>On success, the service returns a <i>token</i> that may be used for subsequent requests.<?php 
 	}
+	
 	public function execute(&$component, $input) {
 		$domain = $input["domain"];
 		$username = $input["username"];
@@ -25,13 +26,13 @@ class service_auth extends Service {
 		
 		$auth = $component->getAuthenticationSystem($domain);
 		if ($auth == null) {
-			PNApplication::error(get_locale("Invalid domain"));
+			PNApplication::error("Invalid domain");
 			return true;
 		}
 		$error = "";
 		$token = $auth->authenticate($username, $password,$error);
 		if ($token == null) {
-			PNApplication::error(get_locale("Authentication failed").": ".$error);
+			PNApplication::error("Authentication failed: ".$error);
 			return true;
 		}
 		echo "{token:".json_encode($token)."}";

@@ -64,7 +64,7 @@ var list = new data_list(
 		});
 		<?php if ($can_edit) {?>
 		var edit_depts = document.createElement("BUTTON");
-		edit_depts.className = "button_verysoft";
+		edit_depts.className = "flat";
 		edit_depts.innerHTML = "<img src='"+theme.build_icon("/static/staff/department.png",theme.icons_10.edit)+"'/> Edit Departments List";
 		edit_depts.onclick = function() {
 			require("popup_window.js", function() {
@@ -78,7 +78,7 @@ var list = new data_list(
 
 		<?php if (count($departments) > 0) { ?>
 			var create_staff = document.createElement("BUTTON");
-			create_staff.className = "button_verysoft";
+			create_staff.className = "flat";
 			create_staff.innerHTML = "<img src='"+theme.build_icon("/static/staff/staff_16.png",theme.icons_10.add)+"'/> Create Staff";
 			create_staff.onclick = function() {
 				window.top.require("popup_window.js",function() {
@@ -93,7 +93,7 @@ var list = new data_list(
 		<?php } ?>
 		
 		list.makeRowsClickable(function(row){
-			location.href = "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id);
+			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
 		});
 		layout.invalidate(list.container);
 	}

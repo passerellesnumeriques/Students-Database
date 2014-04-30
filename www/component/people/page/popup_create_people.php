@@ -71,7 +71,7 @@ class page_popup_create_people extends Page {
 			else echo "data.multiple = false; go();";
 		}
 		echo "</script>";
-		echo "<div style='padding:10px'>";
+		echo "<div style='padding:10px;background-color:white'>";
 		echo "Create ".$types_descr.":<br/>";
 		echo " &nbsp; <a href='#' onclick='go();return false;'>Create only one</a><br/>";
 		echo " &nbsp; <a href='#' onclick='data.multiple = true; go();return false;'>Create several together</a><br/>";

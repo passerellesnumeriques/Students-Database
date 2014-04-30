@@ -123,7 +123,7 @@ service = {
 			}
 			s += "}";
 		} else if (typeof input == 'string')
-			s += "\""+input.replace(/"/g, "\\\"")+"\"";
+			s += "\""+input.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")+"\"";
 		else
 			s += input;
 		return s;

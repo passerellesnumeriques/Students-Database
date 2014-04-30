@@ -5,16 +5,16 @@ class page_departments extends Page {
 	
 	public function execute() {
 		$departments = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();
-		echo "<div style='background-color:white'>";
+		echo "<div style='background-color:white;padding:10px'>";
 		echo "<div id='container'>";
 		foreach ($departments as $d) {
 			echo "<div id='dept_".$d["id"]."'>";
 			echo htmlentities($d["name"]);
-			echo " <img class='button_verysoft' src='".theme::$icons_10["remove"]."' style='vertical-align:middle' onclick='remove_dept(".$d["id"].")'/>";
+			echo " <button class='flat small_icon' onclick='remove_dept(".$d["id"].")' style='vertical-align:middle'><img src='".theme::$icons_10["remove"]."'/></button>";
 			echo "</div>";
 		}
 		echo "</div>";
-		echo "<div style='text-align:center'><button onclick='new_dept();'><img src='".theme::$icons_16["add"]."'/> New Department</button></div>";
+		echo "<div style='text-align:center;padding-top:5px'><button onclick='new_dept();'><img src='".theme::$icons_16["add"]."'/> New Department</button></div>";
 		echo "</div>";
 		?>
 <script type='text/javascript'>
@@ -42,13 +42,13 @@ function new_dept() {
 				var div = document.createElement("DIV");
 				div.id = "dept_"+dept.id;
 				div.appendChild(document.createTextNode(dept.name+" "));
-				var img = document.createElement("IMG");
-				img.className = "button_verysoft";
-				img.style.verticalAlign = "middle";
-				img.src = theme.icons_10.remove;
-				img.dept_id = dept.id;
-				img.onclick = function() { remove_dept(this.dept_id); };
-				div.appendChild(img);
+				var button = document.createElement("BUTTON");
+				button.className = "flat small_icon";
+				button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+				button.style.verticalAlign = "middle";
+				button.dept_id = dept.id;
+				button.onclick = function() { remove_dept(this.dept_id); };
+				div.appendChild(button);
 				document.getElementById('container').appendChild(div);
 				layout.invalidate(document.body);
 			}

@@ -129,6 +129,19 @@ function init_users_list() {
 				}
 			};
 			<?php }?>
+			<?php if (PNApplication::$instance->user_management->has_right("manage_users")) {?>
+			var synch = document.createElement("BUTTON");
+			synch.className = "flat";
+			synch.innerHTML = "<img src='"+theme.icons_16._import+"'/> Synchronize users";
+			synch.onclick = function() {
+				require("popup_window.js",function(){
+					var p = new popup_window("Synchronize Users",theme.icons_16._import,"");
+					p.setContentFrame("/dynamic/user_management/page/synch_users__auth");
+					p.show();
+				});
+			};
+			list.addHeader(synch);
+			<?php }?>
 		}
 	);
 }

@@ -18,8 +18,8 @@ class authentication extends Component {
 					require_once("FakeAuthenticationSystem.inc");
 					return new FakeAuthenticationSystem();
 				}
-				require_once("PNP_Remote_AuthenticationSystem.inc");
-				return new PNP_Remote_AuthenticationSystem();
+				require_once("WebAuthenticationSystem.inc");
+				return new WebAuthenticationSystem("http://authentication/");
 			default:
 				require_once("FakeAuthenticationSystem.inc");
 				return new FakeAuthenticationSystem();

@@ -91,9 +91,10 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		
 		var max_score = typeof part.max_score == "number" ? part.max_score : parseFloat(part.max_score);
 		max_score = max_score.toFixed(2);
+		var text1, text2, input;
 		if(can_edit){
-			var text1 = document.createTextNode("PART "+part.index+" - ");
-			var input = document.createElement("input");
+			text1 = document.createTextNode("PART "+part.index+" - ");
+			input = document.createElement("input");
 			input.type = "text";
 			inputAutoresize(input,7);
 			if(part.name == null || (part.name != null && !part.name.checkVisible())){
@@ -135,21 +136,20 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			if(!can_edit)
 				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
 			else{
-				var text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score));
+				text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score));
 			}
 		} else {
 			
 			if(!no_question){
 				if(can_edit){
-					var text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length));
+					text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length));
 				} else
 					t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length);
 			} else {
 				if(can_edit){
-					var text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score));
-					
+					text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score));
 				} else
-				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
+					t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
 			}
 		}
 		if(can_edit){
@@ -555,8 +555,8 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	 * @returns {HTMLElement} button_verysoft
 	 */
 	t._createButton = function(content){
-		var button = document.createElement("div");
-		button.className = "button_verysoft";
+		var button = document.createElement("BUTTON");
+		button.className = "flat";
 		if(content == "before"){
 			button.innerHTML = "<img src = '/static/selection/exam/arrow_up_16.png'/><img src = '"+theme.icons_10.add+"'/>";
 			button.title = "Insert a question before";
