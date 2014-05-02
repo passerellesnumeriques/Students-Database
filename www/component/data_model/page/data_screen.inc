@@ -228,10 +228,12 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 	// generate screens
 	foreach ($avail_screens as $s) {
 		// get data from database if not new
+		//echo "<br/>Values: ".htmlentities(var_export($values,true))."<br/>";
 		foreach ($s[1] as $child) {
 			$key_value = getKeyValue($path->table, $values);
+			//echo "<br/>Key for ".$child->table->getName()." (".$path->table->getName()."): ".var_export($key_value,true)."<br/>";
 			if ($key_value <> null) {
-				if ($child->unique) {
+				//if ($child->unique) {
 					if ($child->isReverse()) {
 						$values->addTableColumnValue($child->table->getName(), $child->foreign_key->name, $key_value);
 					}
@@ -247,6 +249,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 						$fields_matching[$child->foreign_key->name] = $child->table->getPrimaryKey()->name;
 					}
 					$q->join($path->table->getName(), $child->table->getName(), $fields_matching);
+					$q->fieldsOfTable($child->table->getName());
 						
 					$display = DataModel::get()->getTableDataDisplay($child->table->getName());
 					if ($display <> null) {
@@ -262,37 +265,47 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 						}
 					}
 					$row = $q->executeSingleRow();
-					foreach ($child->table->internalGetColumns($child->sub_model) as $col)
+					foreach ($child->table->internalGetColumns($child->sub_model) as $col) {
 						if (isset($row[$col->name]))
 							$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);
-					if ($display)
+					}
+					if ($display <> null)
 						foreach ($display->getDataDisplay($from) as $data) {
 							$values->addTableDataValue($child->table->getName(), $data->getDisplayName(), $data->getData($row, $data_aliases[$data->getDisplayName()]));
 							$cell = $data->getSingleCell();
 							if ($cell <> null)
 								$values->addTableColumnValue($cell["table"], $cell["column"], $data->getData($row, $data_aliases[$data->getDisplayName()]));
 						}
-				} else {
-					// not unique, just put the key
-					if ($child->isReverse())
-						$values->addTableColumnValue($child->table->getName(), $child->foreign_key->name, $values->getColumnValue($path->table->getName(), $path->table->getPrimaryKey()->name));
-					else
-						$values->addTableColumnValue($child->table->getName(), $child->table->getPrimaryKey()->name, $child->foreign_key->name);
-				}
+				//} else {
+				//	// not unique, just put the key
+				//	if ($child->isReverse())
+				//		$values->addTableColumnValue($child->table->getName(), $child->foreign_key->name, $values->getColumnValue($path->table->getName(), $path->table->getPrimaryKey()->name));
+				//	else
+				//		$values->addTableColumnValue($child->table->getName(), $child->table->getPrimaryKey()->name, $child->foreign_key->name);
+				//}
 			}
 		}
+		//echo "<br/>Values: ".htmlentities(var_export($values,true))."<br/>";
 		$ob = ob_get_contents();
 		ob_clean();
 		$s[0]->generate($page, $s[1], $values, $prefilled_values, $structure_name);
 		$h = ob_get_contents();
 		ob_clean();
 		echo $ob;
-		if ($h <> "")
-			array_push($sections, array(
-				$s[0]->getIcon(),
-				$s[0]->getName(),
-				$h
-			));
+		if ($h <> "") {
+			$sec = null;
+			for ($i = 0; $i < count($sections); $i++)
+				if ($sections[$i][0] == $s[0]->getIcon() && $sections[$i][1] == $s[0]->getName()) { $sec = $i; break; }
+			if ($sec === null) {
+				array_push($sections, array(
+					$s[0]->getIcon(),
+					$s[0]->getName(),
+					$h
+				));
+			} else
+				$sections[$sec][2] .= $h;
+		}
+			
 	}
 
 	foreach ($avail_screens as $s)

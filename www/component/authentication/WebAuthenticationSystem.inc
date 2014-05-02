@@ -5,14 +5,16 @@ require_once("AuthenticationSystem.inc");
  */
 class WebAuthenticationSystem extends AuthenticationSystem {
 
-	public function __construct($system_url) {
+	public function __construct($system_url, $populate_info = null) {
 		$this->system_url = $system_url;
+		$this->populate_info = $populate_info;
 	}
 
 	/**
 	 * @var string URL to access to the authentication system using HTTP protocol.
 	 */
 	private $system_url;
+	private $populate_info;
 
 	public function authenticate($username, $password, &$error) {
 		$c = curl_init($this->system_url);
@@ -72,13 +74,30 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 		foreach ($xml->children() as $node) {
 			if ($node->getName() <> "user") continue;
 			$username = null;
+			$info = array("People"=>array());
 			foreach ($node->attributes() as $name=>$value) {
 				switch ($name) {
 					case "username": $username = "".$value; break;
+					default:
+						if ($this->populate_info <> null)
+							call_user_func_array($this->populate_info, array(&$info, $name, "".$value));
+						break;
 				}
 			}
 			if ($username == null) continue;
-			array_push($users, array("username"=>$username));
+			$groups = array();
+			foreach ($node->children() as $n) {
+				if ($n->getName() <> "group") continue;
+				$group_name = null;
+				foreach ($n->attributes() as $name=>$value) {
+					switch ($name) {
+						case "name": $group_name = "".$value; break;
+					}
+				}
+				if ($group_name <> null)
+					array_push($groups, $group_name);
+			}
+			array_push($users, array("username"=>$username,"groups"=>$groups,"info"=>$info));
 		}
 		return $users;
 	}

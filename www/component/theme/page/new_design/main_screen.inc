@@ -176,6 +176,7 @@ $this->require_javascript("fill_height_layout.js");
     right: -5px;
     top: 0px;
     content: '';
+    z-index: 80;
 }
 .application_left_menu_separator {
 	height: 1px;

@@ -90,6 +90,16 @@ class people extends Component {
 		return $q;
 	}
 	
+	public function &searchPeopleByFirstAndLastName($first_name, $last_name) {
+		$q = SQLQuery::create()
+			->select("People")
+			->where("LOWER(`People`.`first_name`) LIKE '%".strtolower($first_name)."%'")
+			->where("LOWER(`People`.`last_name`) LIKE '%".strtolower($last_name)."%'")
+			;
+		$q->fieldsOfTable("People");
+		return $q;
+	}
+	
 	public function canReadTypes($types) {
 		if (is_string($types)) $types = $this->parseTypes($types);
 		require_once("PeopleTypePlugin.inc");

@@ -63,7 +63,7 @@ if ($f <> null) {
 		foreach ($users as &$user) {
 			$found = false;
 			foreach ($users_list as $username)
-				if ($username == $user["username"]) { $found = true; break; }
+				if (trim($username) == $user["username"]) { $found = true; break; }
 			if ($found)
 				array_push($user["groups"], array("name"=>$name, "id"=>$id));
 		}

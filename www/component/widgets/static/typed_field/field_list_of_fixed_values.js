@@ -52,10 +52,10 @@ field_list_of_fixed_values.prototype._create = function(data) {
 			this.element.insertBefore(remove, this.add_button);
 			this.data_elements.push({comma:comma,text:text,remove:remove});
 		};
-		this.add_button = document.createElement("IMG");
-		this.add_button.src = theme.icons_10.add;
-		this.add_button.className = "button";
-		this.add_button.style.verticalAlign = "bottom";
+		this.add_button = document.createElement("BUTTON");
+		this.add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+		this.add_button.className = "flat small_icon";
+		this.add_button.style.verticalAlign = "middle";
 		this.add_button.onclick = function(ev) {
 			require("context_menu.js",function(){
 				var menu = new context_menu();

@@ -34,28 +34,21 @@ foreach ($roles as $role)
 		break;
 	}
 
-$this->add_javascript("/static/widgets/header_bar.js");
-$this->onload("new header_bar('user_rights_header');");
-
 if ($can_edit)
 	DataBaseLock::generateScript($lock_id);
 ?>
-<div id='user_rights_header' icon='/static/user_management/access_list_32.png' title="User Access Rights: &lt;span style='font-family:Courrier New;font-weight:bold;font-style:italic'&gt;<?php echo $user["domain"]."\\".$user["username"];?>&lt;/span&gt;">
-<?php 
-	if ($can_edit) {
-		?><div class='button' onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</div><?php
-	}
-	if ($locked <> null) {
-		?><img src='<?php echo theme::$icons_16["lock"];?>'/> This page is already locked by <?php echo $locked;?><?php
-	}
-?>
+<div class='page_title'>
+	<img src='/static/user_management/access_list_32.png'/>
+	User Access Rights: <span style='font-family:Courrier New;font-weight:bold;font-style:italic'><?php echo $user["domain"]."\\".$user["username"];?></span>
 </div>
-<?php
+<div style='background-color:white'>
+<?php 
+if ($locked <> null)
+	echo "<img src='".theme::$icons_16["lock"]."'/> This page is already locked by ".$locked."<br/>";
 
 if ($is_admin) {
-	echo "This user is an administrator, it has the right to do everything";
-	return;
-}
+	echo "<div style='padding:10px'>This user is an administrator, it has the right to do everything</div>";
+} else {
 
 // retrieve all existing rights, and categories
 $all_rights = array();
@@ -254,6 +247,15 @@ function um_rights_save() {
 </script>
 <?php }?>
 <?php
+} // not an admin
+?>
+</div>
+<?php if ($can_edit && !$is_admin) {?>
+<div class='page_footer'>
+	<button onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
+</div>
+<?php }
+
 	}
 	
 }

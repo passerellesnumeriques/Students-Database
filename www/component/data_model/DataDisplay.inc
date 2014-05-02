@@ -591,7 +591,15 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	
 	public function getData($row, $resultFromBuildSQL) {
-		// TODO
+		$fk = $this->getTable()->getColumn($this->foreign_key_name);
+		$ft = \DataModel::get()->getTable($fk->foreign_table);
+		$ftk = $ft->getPrimaryKey();
+		$list = \SQLQuery::create()
+			->select($this->getTableName())
+			->whereValue($this->getTableName(), $this->joining_key_name, $row[$resultFromBuildSQL["key"]])
+			->field($this->foreign_key_name)
+			->executeSingleField();
+		return $list;
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {

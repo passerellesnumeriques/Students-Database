@@ -329,8 +329,8 @@ function LoadingFrame(frame_element) {
 	};
 	
 	this._position = function() {
-		this.table.style.top = absoluteTop(frame_element)+"px";
-		this.table.style.left = absoluteLeft(frame_element)+"px";
+		this.table.style.top = (absoluteTop(frame_element))+"px";
+		this.table.style.left = (absoluteLeft(frame_element))+"px";
 		this.table.style.width = frame_element.offsetWidth+"px";
 		this.table.style.height = frame_element.offsetHeight+"px";
 	};

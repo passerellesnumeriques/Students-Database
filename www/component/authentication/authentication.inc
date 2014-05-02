@@ -19,7 +19,21 @@ class authentication extends Component {
 					return new FakeAuthenticationSystem();
 				}
 				require_once("WebAuthenticationSystem.inc");
-				return new WebAuthenticationSystem("http://authentication/");
+				return new WebAuthenticationSystem("http://authentication/",function(&$info,$name,$value) {
+					switch ($name) {
+						case "fullname":
+							$i = strpos($value, "/");
+							if ($i !== false) {
+								$j = strpos($value, "/", $i+1);
+								if ($j !== false) {
+									$info["People"]["first_name"] = substr($value,0,$i);
+									$info["People"]["middle_name"] = substr($value,$i+1,$j-$i-1);
+									$info["People"]["last_name"] = substr($value,$j+1);
+								}
+							}
+							break;
+					}
+				});
 			default:
 				require_once("FakeAuthenticationSystem.inc");
 				return new FakeAuthenticationSystem();

@@ -39,7 +39,41 @@ class page_synch_users__list extends Page {
 				echo "The following users exist in ".$domain." but not yet in the software:<ul>";
 				foreach ($list as $user) {
 					echo "<li>";
-					echo $user["username"];
+					echo htmlentities($user["username"]);
+					if (isset($user["info"])) {
+						if (isset($user["info"]["People"])) {
+							if (isset($user["info"]["People"]["first_name"]) && isset($user["info"]["People"]["last_name"])) {
+								$fullname = $user["info"]["People"]["first_name"];
+								if (isset($user["info"]["People"]["middle_name"]))
+									$fullname .= " ".$user["info"]["People"]["middle_name"];
+								$fullname .= $user["info"]["People"]["last_name"];
+								echo " (".$fullname.")";
+							}
+						}
+					}
+					if (isset($user["groups"]) && count($user["groups"]) > 0) {
+						echo " member of ";
+						for ($i = 0; $i < count($user["groups"]); $i++) {
+							if ($i > 0) echo ",";
+							echo htmlentities($user["groups"][$i]);
+						}
+					}
+					echo "<br/>";
+					echo "<input type='radio' name='".$user["username"]."'/> Create the user without any information<br/>";
+					if (isset($user["info"])) {
+						if (isset($user["info"]["People"])) {
+							if (isset($user["info"]["People"]["first_name"]) && isset($user["info"]["People"]["last_name"])) {
+								$q = PNApplication::$instance->people->searchPeopleByFirstAndLastName($user["info"]["People"]["first_name"], $user["info"]["People"]["last_name"]);
+								PNApplication::$instance->user_people->joinUserToPeople($q);
+								$q->whereNull("Users", "username");
+								$match = $q->execute();
+								foreach ($match as $row) {
+									echo "<input type='radio' name='".$user["username"]."'/> Create user and link with existing people: ".$row["first_name"]." ".$row["last_name"]."<br/>";
+								}
+								echo "<input type='radio' name='".$user["username"]."'/> Create user with name: ".$user["info"]["People"]["first_name"]." ".$user["info"]["People"]["last_name"]."<br/>";
+							}
+						}
+					}
 					echo "</li>";
 				}
 				echo "</ul>";
