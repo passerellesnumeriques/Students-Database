@@ -71,22 +71,23 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		}
 		if(display_correct_answer && (can_edit || can_remove || can_add)){
 			if(!display_choices)
+				t.th_head.colSpan = 5;
+			else
+				t.th_head.colSpan = 4;
+		}
+		else if(!display_correct_answer && !can_edit && !can_remove && !can_add){
+			if(!display_choices)
+				t.th_head.colSpan = 3;
+			else
+				t.th_head.colSpan = 2;
+		}
+		else{
+			if(!display_choices)
 				t.th_head.colSpan = 4;
 			else
 				t.th_head.colSpan = 3;
 		}
-		else if(!display_correct_answer && !can_edit && !can_remove && !can_add){
-			if(!display_choices)
-				t.th_head.colSpan = 2;
-			else
-				t.th_head.colSpan = 1;
-		}
-		else{
-			if(!display_choices)
-				t.th_head.colSpan = 3;
-			else
-				t.th_head.colSpan = 2;
-		}
+		t.th_head.style.whiteSpace = "nowrap";
 		t.th_head.style.textAlign = "left";
 		
 		var max_score = typeof part.max_score == "number" ? part.max_score : parseFloat(part.max_score);
@@ -180,24 +181,21 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 			for(var i = 0; i < t.ordered.length; i++){
 				if(i == 0){
 					var tr_head = document.createElement("tr");
-					th1 = document.createElement("td");
-					var cont = document.createElement("div");
-					cont.innerHTML = "<b>Score</b>";
-					cont.style.paddingLeft = "25px";
-					th1.appendChild(cont);
-					th1.style.textAlign = "left";
-//					if(!can_edit)
-//						th1.style.textAlign = "left";
+					tr_head.appendChild(document.createElement("TH"));
+					var th1 = document.createElement("th");
+					th1.innerHTML = "Score";
 					tr_head.appendChild(th1);
 				}
 				var tr = document.createElement("tr");
+				var td0 = document.createElement("td");
+				td0.innerHTML = "Question " + (parseInt(t.question_index_before) + i + 1) +" - ";
+				td0.style.textAlign = "right";
+				tr.appendChild(td0);
 				var td1 = document.createElement("td");
-				var div = document.createElement("div");
-				div.innerHTML = parseInt(t.question_index_before) + i + 1 +" - ";
 				if(can_edit){
 					var input = document.createElement("input");
 					input.type = 'text';
-					inputAutoresize(input, 5);
+					input.size = 5;
 					//give a unique id to the input, to be able to get it at anytime
 					input.id = "question"+part.index+"."+part.questions[t.ordered[i]].index;
 					input.value = part.questions[t.ordered[i]].max_score;
@@ -224,15 +222,11 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 							t.focusonagiveninput.fire(new_input_id);
 						}
 					};
-					div.appendChild(input);
+					td1.appendChild(input);
+					td1.appendChild(document.createTextNode("pt(s)"));
 				} else {
-					div.innerHTML += part.questions[t.ordered[i]].max_score;
+					td1.innerHTML += part.questions[t.ordered[i]].max_score + "pt(s)";
 				}
-				if(can_edit)
-					div.style.height = "29px";
-				td1.appendChild(div);
-//				if(can_edit)
-//					td1.style.textAlign = "center";
 				tr.appendChild(td1);
 				if(display_correct_answer)
 					t._addOptionalData("correct_answer", i, tr_head, tr);
@@ -273,7 +267,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 							var new_input_id = "question"+part.index+"."+new_index;
 							t.focusonagiveninput.fire(new_input_id);
 						};
-						td3.appendChild(before);
+						td0.insertBefore(before, td0.childNodes[0]);
 						td3.appendChild(after);
 						before.style.visibility = "hidden";
 						after.style.visibility = "hidden";
@@ -556,14 +550,16 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 	 */
 	t._createButton = function(content){
 		var button = document.createElement("BUTTON");
-		button.className = "flat";
 		if(content == "before"){
-			button.innerHTML = "<img src = '/static/selection/exam/arrow_up_16.png'/><img src = '"+theme.icons_10.add+"'/>";
+			button.className = "flat small_icon";
+			button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
 			button.title = "Insert a question before";
 		} else if(content == "after"){
-			button.innerHTML = "<img src = '/static/selection/exam/arrow_down_16.png'/><img src = '"+theme.icons_10.add+"'/>";
+			button.className = "flat small_icon";
+			button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
 			button.title = "Insert a question after";
 		} else if(content == "remove"){
+			button.className = "flat";
 			button.innerHTML = "<img src = '"+theme.icons_16.remove+"'/>";
 			button.title = "Remove question";
 			// button.onmouseover = function(){

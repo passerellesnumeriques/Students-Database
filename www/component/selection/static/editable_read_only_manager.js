@@ -21,7 +21,7 @@
  * For instance, can be updating the data before reseting into read_only mode
  * @param {Function} can_go_uneditable_handler called before starting the process to go to the read only mode<br/>
  * Must return true if ok
- * @param {Function} add_button function to add edit/unedit buttons
+ * @param {Function} add_button function to add edit/unedit buttons. Takes the button as parameter.
  * @param {String | null} class_name_buttons the classname to set to the edit / unedit buttons. By default, className = "button"
  */
 function editable_read_only_manager(can_edit, can_add, can_remove, global_can_edit, global_can_remove, global_can_add, to_lock, table_lock, column_lock, row_key, sub_model, db_lock, lock_handler, reseter, data_reset_handler, can_go_uneditable_handler, add_button, class_name_buttons){

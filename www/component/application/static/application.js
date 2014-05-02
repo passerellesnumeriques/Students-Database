@@ -290,17 +290,32 @@ function LoadingFrame(frame_element) {
 		var win = getIFrameWindow(frame_element);
 		return this.step == -1 && !win;
 	};
+	this._inFrozenPopup = function() {
+		var e = frame_element;
+		while (e.parentNode != null && e.parentNode != e && e.parentNode != document.body && e.parentNode.className != 'popup_window') e = e.parentNode;
+		if (e.parentNode != null && e.parentNode.className == 'popup_window') {
+			var popup = e.parentNode.data;
+			if (popup.isFrozen()) return true;
+		}
+		return false;
+	};
 
 	this.anim = null;
-	if (typeof animation != 'undefined') {
+	this._hidden = false;
+	if (this._inFrozenPopup()) {
 		setOpacity(this.table, 0);
-		frame_element.ownerDocument.body.appendChild(this.table);
-		this.anim = animation.fadeIn(this.table, 250, null, 0, 90, function() {
-			if (t._isClosed() || t._isReady()) animation.stop(t.anim);
-		});
+		this._hidden = true;
 	} else {
-		setOpacity(this.table, 90);
-		frame_element.ownerDocument.body.appendChild(this.table);
+		if (typeof animation != 'undefined') {
+			setOpacity(this.table, 0);
+			frame_element.ownerDocument.body.appendChild(this.table);
+			this.anim = animation.fadeIn(this.table, 250, null, 0, 90, function() {
+				if (t._isClosed() || t._isReady()) animation.stop(t.anim);
+			});
+		} else {
+			setOpacity(this.table, 90);
+			frame_element.ownerDocument.body.appendChild(this.table);
+		}
 	}
 	this._start = new Date().getTime();
 	
@@ -356,6 +371,10 @@ function LoadingFrame(frame_element) {
 		if (this._isClosed()) {
 			this.remove();
 			return;
+		}
+		if (this._hidden && !this._inFrozenPopup()) {
+			// popup not anymore frozen: show the loading
+			setOpacity(this.table, 1);
 		}
 		var now = new Date().getTime();
 		if (now-this._start > 10000) {
