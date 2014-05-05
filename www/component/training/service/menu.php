@@ -47,6 +47,10 @@ foreach ($current_batches as $b) {
 	<img src='/static/curriculum/teacher_white.png'/>
 	Teachers
 </a>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/teachers_assignments' style='padding-left:20px'>
+	<img src='/static/curriculum/teacher_assign_white.png'/>
+	Assignments
+</a>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/students_grades'>
 	<img src='/static/transcripts/grades_white.png'/>
 	Grades
