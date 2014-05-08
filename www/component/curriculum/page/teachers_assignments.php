@@ -63,16 +63,18 @@ class page_teachers_assignments extends Page {
 			</select>
 		</div>
 		<table style='width:100%'><tr>
-		<td valign=top><div style='display:inline-block;background-color:white' class='section'>
+		<td valign=top>
 		<?php 
 		foreach ($ap->batch_periods as $bp) {
+			echo "<div style='display:inline-block;background-color:white' class='section'>";
 			echo "<div class='page_section_title'>";
 			echo "Batch ".htmlentities($bp["batch_name"]).", ".htmlentities($bp["name"]);
 			echo "</div>";
-			if (count($ap->subjects) == 0)
+			$bp_subjects = $ap->getSubjectsForBatch($bp["id"]);
+			if (count($bp_subjects) == 0)
 				echo "<i>No subject defined for this period</i>";
 			$spes = array();
-			foreach ($ap->subjects as $s) {
+			foreach ($bp_subjects as $s) {
 				if ($s["period"] <> $bp["id"]) continue;
 				if (!in_array($s["specialization"], $spes))
 					array_push($spes, $s["specialization"]);
@@ -111,9 +113,10 @@ class page_teachers_assignments extends Page {
 					$this->onload("new PeriodSubjects('$id',".$json.");");
 				}
 			}
+			echo "</div>";
 		}
 		?>
-		</div></td>
+		</td>
 		<td valign=top align=right>
 		<div id='teachers_section' style='display:inline-block;text-align:left' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
 		<div style='background-color:white'>
@@ -435,6 +438,7 @@ class page_teachers_assignments extends Page {
 				window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+this.teacher.id,null,95,95);
 			};
 			var td_hours = document.createElement("TD"); tr.appendChild(td_hours);
+			td_hours.style.whiteSpace = "nowrap";
 			this.update = function() {
 				var total = 0;
 				for (var i = 0; i < teachers_assignments.length; ++i) {

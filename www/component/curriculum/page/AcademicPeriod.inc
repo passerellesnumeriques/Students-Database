@@ -112,6 +112,13 @@ class AcademicPeriod {
 				array_push($list, $c);
 		return $list;
 	}
+	public function getSubjectsForBatch($batch_period_id) {
+		$list = array();
+		foreach ($this->subjects as $s)
+			if ($s["period"] == $batch_period_id)
+				array_push($list, $s);
+		return $list;
+	}
 	public function getSubjectsFor($batch_period_id, $spe_id) {
 		$list = array();
 		foreach ($this->subjects as $s)
