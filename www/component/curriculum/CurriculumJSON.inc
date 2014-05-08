@@ -169,6 +169,21 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	public static function AcademicClassesJSON($classes) {
+		$s = "[";
+		$first = true;
+		foreach ($classes as $c) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= "{";
+			$s .= "id:".$c["id"];
+			$s .= ",name:".json_encode($c["name"]);
+			$s .= ",spe_id:".json_encode($c["specialization"]);
+			$s .= "}";
+		}
+		$s .= "]";
+		return $s;
+	}
+	
 	/** Build a JSON structure SubjectCategory
 	 * @param array $category the category from the database
 	 * @return string the JSON structure
