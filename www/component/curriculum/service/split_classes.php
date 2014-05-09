@@ -3,9 +3,14 @@ class service_split_classes extends Service {
 	
 	public function get_required_rights() { return array("edit_curriculum"); }
 	
-	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function documentation() { echo "Split classes previously merged"; }
+	public function input_documentation() {
+		echo "<ul>";
+		echo "<li><code>subject</code> ID of the CurriculumSubject</li>";
+		echo "<li><code>classes</code> IDs of the AcademicClass which were merged and need to be split</li>";
+		echo "</ul>";
+	}
+	public function output_documentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		$subject_id = $input["subject"];

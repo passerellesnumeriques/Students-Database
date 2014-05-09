@@ -190,35 +190,20 @@ if (window == window.top) {
 		addInactivityListener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
+		/** {Array} list of identifiers of data which need to be saved on the page */
 		_data_unsaved: [],
+		/** Indicates the the given data needs to be saved
+		 * @param {String} id identifier of the data which must be unique
+		 */
 		dataUnsaved: function(id) {
 			if (!this._data_unsaved.contains(id))
 				this._data_unsaved.push(id);
 		},
+		/** Indicates the the given data has been saved
+		 * @param {String} id identifier of the data which must be unique
+		 */
 		dataSaved: function(id) {
 			this._data_unsaved.remove(id);
-		},
-		addOverAndOut: function(element, handler) {
-			var w = getWindowFromElement(element);
-			window.top.pnapplication.registerOnMouseMove(w, function(x,y) {
-				var x1 = w.absoluteLeft(element);
-				var y1 = w.absoluteTop(element);
-				var x2 = x1+element.offsetWidth;
-				var y2 = y1+element.offsetHeight;
-				if (element._isover) {
-					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
-					} else {
-						element._isover = false;
-						handler(false);
-					}
-				} else {
-					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
-						element._isover = true;
-						handler(true);
-					}
-				}
-				
-			});
 		}
 	};
 	window.top.pnapplication.registerWindow(window);
@@ -261,12 +246,18 @@ function initPNApplication() {
 };
 initPNApplication();
 
+/**
+ * Hide a frame which is loading, and display a loading image
+ * @param {DOMNode} frame_element the frame which is loading
+ */
 function LoadingFrame(frame_element) {
 	if (!frame_element.ownerDocument) return;
 	if (frame_element._no_loading) return;
 	frame_element._loading_frame = this;
 	var t=this;
+	/** {Number} Indicates what is the status of the frame: 0 for pending, 1 for loading, -1 for unloading */
 	this.step = 0; // pending
+	/** {DOMNode} table containing the loading image in front of the frame */
 	this.table = document.createElement("TABLE");
 	this.table.innerHTML = "<tr><td valign=middle align=center><img src='/static/application/loading_page.gif'/></td></tr>";
 	this.table.style.position = "absolute";
@@ -280,16 +271,19 @@ function LoadingFrame(frame_element) {
 	this.table.style.zIndex = z;
 	this.table.style.backgroundColor = "#d0d0d0";
 
+	/** Check if the page inside the frame is ready (completely loaded) */
 	this._isReady = function() {
 		var win = getIFrameWindow(frame_element);
 		if (!win) return false;
 		if (win._static_page) return true;
 		return this.step == 1 && win.document && win._page_ready && win.layout && win.layout._invalidated.length == 0 && win.layout.everythingOnPageLoaded();
 	};
+	/** Check if the page inside the frame has been closed */
 	this._isClosed = function() {
 		var win = getIFrameWindow(frame_element);
 		return this.step == -1 && !win;
 	};
+	/** Check if the frame is inside a frozen popup window */
 	this._inFrozenPopup = function() {
 		var e = frame_element;
 		while (e.parentNode != null && e.parentNode != e && e.parentNode != document.body && e.parentNode.className != 'popup_window') e = e.parentNode;
@@ -300,7 +294,9 @@ function LoadingFrame(frame_element) {
 		return false;
 	};
 
+	/** {Animation} fadeIn */
 	this.anim = null;
+	/** {Boolean} indicates if the loading is hidden or not (because inside a frozen popup) */
 	this._hidden = false;
 	if (this._inFrozenPopup()) {
 		setOpacity(this.table, 0);
@@ -317,17 +313,21 @@ function LoadingFrame(frame_element) {
 			frame_element.ownerDocument.body.appendChild(this.table);
 		}
 	}
+	/** {Number} timestamp when the frame started to load */
 	this._start = new Date().getTime();
 	
+	/** Indicates the frame starts to load */
 	this.startLoading = function() {
 		this.step = 1;
 		this._start = new Date().getTime();
 	};
+	/** Indicates the frame starts to unload/change page */
 	this.startUnloading = function() {
 		this.step = -1;
 		this._start = new Date().getTime();
 	};
 	
+	/** Refresh the size and position of the loading, according to the size and position of the frame */
 	this._position = function() {
 		this.table.style.top = (absoluteTop(frame_element))+"px";
 		this.table.style.left = (absoluteLeft(frame_element))+"px";
@@ -335,8 +335,10 @@ function LoadingFrame(frame_element) {
 		this.table.style.height = frame_element.offsetHeight+"px";
 	};
 
+	/** Call the _update function */
 	var updater = function() { t._update(); };
 
+	/** Remove the loading */
 	this.remove = function() {
 		if (frame_element._loading_frame != this) return;
 		layout.removeHandler(frame_element, updater);
@@ -355,6 +357,7 @@ function LoadingFrame(frame_element) {
 		frame_element._loading_frame = null;
 	};
 	
+	/** Check what is the current status, and remove the loading if needed */
 	this._update = function() {
 		if (!frame_element.parentNode ||
 			!frame_element.ownerDocument ||

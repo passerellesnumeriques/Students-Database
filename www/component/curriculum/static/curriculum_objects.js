@@ -1,3 +1,10 @@
+/**
+ * Academic year
+ * @param {Number} id ID of the year
+ * @param {Number} year starting year
+ * @param {String} name name of the academic year
+ * @param {Array} periods list of AcademicPeriod
+ */
 function AcademicYear(id,year,name,periods) {
 	this.id = id;
 	this.year = year ? parseInt(year) : 0;
@@ -5,6 +12,16 @@ function AcademicYear(id,year,name,periods) {
 	this.periods = periods;
 }
 
+/**
+ * AcademicPeriod
+ * @param {Number} year_id ID of the AcademicYear
+ * @param {Number} id ID of the period
+ * @param {String} name name of the period
+ * @param {String} start start of the period (SQL date format)
+ * @param {String} end end of the period (SQL date format)
+ * @param {Number} weeks number of weeks in the period
+ * @param {Number} weeks_break number of non-worked weeks during the period
+ */
 function AcademicPeriod(year_id, id, name, start, end, weeks, weeks_break) {
 	this.year_id = year_id;
 	this.id = id;
@@ -89,6 +106,7 @@ function CurriculumSubjectCategory(id, name) {
  * @param {Number} specialization_id id of the specialization, or null
  * @param {Number} hours number of hours of this subject
  * @param {String} hours_type either "Per week" or "Per period"
+ * @param {Number} coefficient the weight of the subject
  */
 function CurriculumSubject(id, code, name, category_id, period_id, specialization_id, hours, hours_type, coefficient) {
 	this.id = id;
@@ -102,6 +120,12 @@ function CurriculumSubject(id, code, name, category_id, period_id, specializatio
 	this.coefficient = coefficient;
 }
 
+/**
+ * Teacher assigned to a subject/class
+ * @param {Number} people_id ID of the People for the teacher
+ * @param {Number} subject_id ID of the CurriculumSubject
+ * @param {Number} class_id ID of the AcademicClass
+ */
 function TeacherAssigned(people_id, subject_id, class_id) {
 	this.people_id = people_id;
 	this.subject_id = subject_id;

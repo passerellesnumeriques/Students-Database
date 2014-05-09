@@ -168,9 +168,9 @@ function calendar_view_week(view, container) {
 		this.corner.innerHTML = "GMT";
 		if (tz != 0) {
 			if (tz > 0) this.corner.innerHTML += "+"; else { this.corner.innerHTML += "-"; tz=-tz; }
-			this.corner.innerHTML += this._2digits(Math.floor(tz/60));
+			this.corner.innerHTML += _2digits(Math.floor(tz/60));
 			tz -= Math.floor(tz/60)*60;
-			if (tz > 0) this.corner.innerHTML += ":"+this._2digits(tz);
+			if (tz > 0) this.corner.innerHTML += ":"+_2digits(tz);
 		}
 		this.header.appendChild(this.corner);
 		this.day_title = [];
@@ -269,7 +269,7 @@ function calendar_view_week(view, container) {
 			var d = document.createElement("DIV");
 			var date = new Date();
 			date.setHours(0, time, 0, 0);
-			d.innerHTML = this._2digits(date.getHours())+":"+this._2digits(date.getMinutes());
+			d.innerHTML = _2digits(date.getHours())+":"+_2digits(date.getMinutes());
 			d.time = date;
 			d.style.top = (y-8)+"px";
 			d.style.position = "absolute";
@@ -312,14 +312,6 @@ function calendar_view_week(view, container) {
 			break;
 		}
 		t._showNowTimeout = setTimeout(t._showNow,10000);
-	};
-	/** Add a 0 if the number is only 1 digit
-	 * @param {Number} n the number
-	 */
-	this._2digits = function(n) {
-		var s = ""+n;
-		while (s.length < 2) s = "0"+s;
-		return s;
 	};
 	/** Layout and display the events */
 	this._layout = function() {

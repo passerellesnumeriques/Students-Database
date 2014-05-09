@@ -9,7 +9,7 @@ class page_check_code extends Page {
 ?>
 <div id='page_header'>
 	Code Checking
-	<div class='button' onclick='location.reload();'><img src='<?php echo theme::$icons_16["refresh"];?>'/></div>
+	<button class='flat' onclick='location.reload();'><img src='<?php echo theme::$icons_16["refresh"];?>'/></button>
 </div>
 <div id='tree_container'></div>
 <script type='text/javascript'>
@@ -417,7 +417,7 @@ setTimeout(function() {
 				$this->build_tree_dir($path."/".$filename, $type <> "" ? $type : ($filename == "page" ? "page" : ($filename == "service" ? "service" : "")));
 				echo "}";
 			} else {
-				if ($filename == "datamodel.inc") continue;
+				if (substr($filename, 0, 9) == "datamodel") continue;
 				if ($filename == "init_data.inc") continue;
 				$i = strrpos($filename, ".");
 				if ($i === FALSE) continue;

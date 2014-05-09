@@ -29,11 +29,13 @@ ajax = {
 	 * @param {string|URL} url
 	 * @param {string|null} content_type MIME type of the data to send to the server
 	 * @param {string|null} content_data the body of the request
-	 * @param {function} error_handler in case of error, this function is called with the error message as parameter
-	 * @param {function} success_handler on success, this function is called with the XMLHttpRequest object as parameter
+	 * @param {Function} error_handler in case of error, this function is called with the error message as parameter
+	 * @param {Function} success_handler on success, this function is called with the XMLHttpRequest object as parameter
 	 * @param {Boolean} foreground if true this function will block until the AJAX call is done, else this function return immediately and let the AJAX call be done in background
+	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
+	 * @param {String} override_response_mime_type if specified, the response will be interpreted as the given mime type
 	 */
-	call: function(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, overrideResponseMimeType) {
+	call: function(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, override_response_mime_type) {
 		if (typeof url == 'string')
 			url = new URL(url);
 		url = ajax.process_url(url);
@@ -45,12 +47,12 @@ ajax = {
 				window.top.console.error("AJAX call cancelled because everything is unloaded: "+url);
 			} else {
 				// try on top
-				window.top.ajax.call(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, overrideResponseMimeType);
+				window.top.ajax.call(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, override_response_mime_type);
 			}
 			return;
 		}
-		if (overrideResponseMimeType && typeof xhr.overrideMimeType != 'undefined')
-			xhr.overrideMimeType(overrideResponseMimeType);
+		if (override_response_mime_type && typeof xhr.overrideMimeType != 'undefined')
+			xhr.overrideMimeType(override_response_mime_type);
 		var aborted = false;
 		var timeouted = false;
 		try { xhr.open(method, url.toString(), !foreground); }
@@ -91,11 +93,12 @@ ajax = {
 	},
 	/**
 	 * Perform a POST call to the server
-	 * @param {string|URL} url
-	 * @param {string|object} data if an object is given, every attribute will be sent as string to the server 
-	 * @param {function} error_handler called in case of error, with the error message as parameter
-	 * @param {function} success_handler called on success, with the XMLHttpRequest as parameter
+	 * @param {String|URL} url
+	 * @param {String|object} data if an object is given, every attribute will be sent as string to the server 
+	 * @param {Function} error_handler called in case of error, with the error message as parameter
+	 * @param {Function} success_handler called on success, with the XMLHttpRequest as parameter
 	 * @param {Boolean} foreground same as for the function call
+	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
 	 */
 	post: function(url, data, error_handler, success_handler, foreground, progress_handler) {
 	    if (typeof data == 'object') {
@@ -112,11 +115,12 @@ ajax = {
 	},
 	/**
 	 * Perform a POST call, then on success it will analyze the result
-	 * @param url
-	 * @param data
-	 * @param handler
-	 * @param foreground
-	 * @param error_handler
+	 * @param {String|URL} url
+	 * @param {String|Object} data if an object is given, every attribute will be sent as string to the server 
+	 * @param {Function} handler callback to call when the AJAX is done (null is given in case of error, else the parsed output)
+	 * @param {Boolean} foreground same as for the function call
+	 * @param {Function} error_handler callback to be called in case of error (error message given as parameter)
+	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
 	 */
 	post_parse_result: function(url, data, handler, foreground, error_handler, progress_handler) {
 		var eh = function(error) {
@@ -180,12 +184,13 @@ ajax = {
 	
 	/**
 	 * Perform a POST call, with custom data type, then on success it will analyze the result
-	 * @param url
-	 * @param data_type
-	 * @param data
-	 * @param handler
-	 * @param foreground
-	 * @param error_handler
+	 * @param {String|URL} url
+	 * @param {String} data_type mime type of the input
+	 * @param {String|Object} data if an object is given, every attribute will be sent as string to the server 
+	 * @param {Function} handler callback to call when the AJAX is done (null is given in case of error, else the parsed output)
+	 * @param {Boolean} foreground same as for the function call
+	 * @param {Function} error_handler callback to be called in case of error (error message given as parameter)
+	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
 	 */
 	custom_post_parse_result: function(url, data_type, data, handler, foreground, error_handler, progress_handler) {
 		var eh = function(error) {

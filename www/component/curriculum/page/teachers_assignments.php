@@ -464,6 +464,11 @@ class page_teachers_assignments extends Page {
 		<?php 
 	}
 	
+	/** Look for the given academic year
+	 * @param integer $id academic year to find
+	 * @param array $years list of known academic years
+	 * @return array the academic year found 
+	 */
 	private function getAcademicYear($id, $years) {
 		foreach ($years as $y) if ($y["id"] == $id) return $y;
 	}

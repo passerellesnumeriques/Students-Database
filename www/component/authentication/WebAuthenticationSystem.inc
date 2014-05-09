@@ -5,15 +5,19 @@ require_once("AuthenticationSystem.inc");
  */
 class WebAuthenticationSystem extends AuthenticationSystem {
 
+	/**
+	 * Initialize the authentication system
+	 * @param string $system_url URL to access to the authentication system using HTTP protocol
+	 * @param function $populate_info callback to populate user information from server response
+	 */
 	public function __construct($system_url, $populate_info = null) {
 		$this->system_url = $system_url;
 		$this->populate_info = $populate_info;
 	}
 
-	/**
-	 * @var string URL to access to the authentication system using HTTP protocol.
-	 */
+	/** @var string URL to access to the authentication system using HTTP protocol */
 	private $system_url;
+	/** @var function callback to populate user information from server response */
 	private $populate_info;
 
 	public function authenticate($username, $password, &$error) {
@@ -52,6 +56,13 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 		return $token;
 	}
 	
+	/**
+	 * Call a service on the authentication server
+	 * @param string $service name of the service
+	 * @param string $token authentication token for subsequent services
+	 * @param array $params parameters to send
+	 * @return NULL|SimpleXMLElement the XML returned by the server, or null in case of failure
+	 */
 	private function callService($service, $token, $params) {
 		$c = curl_init($this->system_url);
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);

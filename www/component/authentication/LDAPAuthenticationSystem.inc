@@ -5,12 +5,21 @@ require_once("AuthenticationSystem.inc");
  */ 
 class LDAPAuthenticationSystem extends AuthenticationSystem {
 
+	/**
+	 * Initialize the LDAP authentication system
+	 * @param string $server hostname of the LDAP server
+	 * @param array $dcs list of DC
+	 */
 	public function __construct($server, $dcs) {
 		$this->server = $server;
 		$this->dcs = $dcs;
 	}
 	
-	private $server, $dcs;
+	/** @var string hostname of the LDAP server */
+	private $server;
+	/** @var array list of DC */
+	private $dcs;
+	/** @var array keep track of tokens, with username and password to reconnect to LDAP server */
 	private $tokens = array();
 	
 	public function authenticate($username, $password, &$error) {

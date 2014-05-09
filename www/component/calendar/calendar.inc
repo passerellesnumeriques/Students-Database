@@ -84,6 +84,11 @@ class calendar extends Component {
 		}
 	}
 	
+	/**
+	 * Remove the given shared calendar
+	 * @param integer $id identifier of the calendar to remove
+	 * @return boolean true on success
+	 */
 	public function removeSharedCalendar($id) {
 		if (!$this->canWriteCalendar($id)) {
 			PNApplication::error("You cannot remove this calendar");

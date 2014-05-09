@@ -76,6 +76,12 @@ function new_teacher() {
 <?php 
 	}
 	
+	/**
+	 * Create the table of teachers
+	 * @param array $teachers_ids list of teachers
+	 * @param array $teachers_dates dates of etachers
+	 * @param array $peoples teachers information
+	 */
 	private function buildTeachersList($teachers_ids, $teachers_dates, $peoples) {
 ?>
 <table style='margin:10px'><tbody>

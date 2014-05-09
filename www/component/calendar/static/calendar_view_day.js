@@ -8,13 +8,12 @@ if (typeof get_script_path != 'undefined') {
  * View of a single day
  * @param {CalendarView} view the view manager
  * @param {DOMNode} container where to display
- * @returns
  */
 function calendar_view_day(view, container) {
 
-	/** The day to display */
+	/** {Date} The day to display */
 	this.start_date = view.cursor_date;
-	/** The day to display */
+	/** {Date} The day to display */
 	this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
 	/** Indicates zoom is supported by this view */
 	this.zoom_supported = true;
@@ -152,9 +151,9 @@ function calendar_view_day(view, container) {
 		this.corner.innerHTML = "GMT";
 		if (tz != 0) {
 			if (tz > 0) this.corner.innerHTML += "+"; else { this.corner.innerHTML += "-"; tz=-tz; }
-			this.corner.innerHTML += this._2digits(Math.floor(tz/60));
+			this.corner.innerHTML += _2digits(Math.floor(tz/60));
 			tz -= Math.floor(tz/60)*60;
-			if (tz > 0) this.corner.innerHTML += ":"+this._2digits(tz);
+			if (tz > 0) this.corner.innerHTML += ":"+_2digits(tz);
 		}
 		this.day_title = document.createElement("DIV");
 		this.day_title.setAttribute("layout", "fill");
@@ -218,7 +217,7 @@ function calendar_view_day(view, container) {
 			var d = document.createElement("DIV");
 			var date = new Date();
 			date.setHours(0, time, 0, 0);
-			d.innerHTML = this._2digits(date.getHours())+":"+this._2digits(date.getMinutes());
+			d.innerHTML = _2digits(date.getHours())+":"+_2digits(date.getMinutes());
 			d.style.top = (y-8)+"px";
 			d.style.position = "absolute";
 			d.style.width = "50px";
@@ -256,14 +255,6 @@ function calendar_view_day(view, container) {
 		t._now.style.width = getWidth(t.day_content)+"px";
 		t._now.style.zIndex = 3;
 		t.day_content.appendChild(t._now);
-	};
-	/** Add a 0 if the number is only 1 digit
-	 * @param {Number} n the number
-	 */
-	this._2digits = function(n) {
-		var s = ""+n;
-		while (s.length < 2) s = "0"+s;
-		return s;
 	};
 	/** Layout and display the events */
 	this._layout = function() {

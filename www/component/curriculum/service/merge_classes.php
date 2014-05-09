@@ -3,9 +3,15 @@ class service_merge_classes extends Service {
 	
 	public function get_required_rights() { return array("edit_curriculum"); }
 	
-	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function documentation() { echo "Merge classes for a given subject: the classes will be handled in the same room with same teacher"; }
+	public function input_documentation() {
+		echo "<ul>";
+		echo "<li><code>subject</code> ID of the CurriculumSubject</li>";
+		echo "<li><code>to</code> ID of the AcademicClass with which it will be merged</li>";
+		echo "<li><code>classes</code> IDs of the classes to merge</li>";
+		echo "</ul>";
+	}
+	public function output_documentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		$subject_id = $input["subject"];

@@ -63,14 +63,18 @@ function load_static_resources(container) {
 	this._scripts_loading = 0;
 	/** {Number} maximum number of scripts that can be loaded at the same time */
 	this._max_scripts_loading = 10;
+	/** {Number} maximum number of scripts to be loaded at the same time when we load resources slowly */
 	this._max_scripts_loading_slow = 2;
 	/** {Number} number of images currently loading */
 	this._images_loading = 0;
 	/** {Number} maximum number of images that can be loaded at the same time */
 	this._max_images_loading = 20;
+	/** {Number} maximum number of images to be loaded at the same time when we load resources slowly */
 	this._max_images_loading_slow = 2;
 	
+	/** {Boolean} indicates we should load slowly due to user activity */
 	this._slow_when_user_active = false;
+	/** {Boolean} indicates we should load slowly due to application activity (calls to services) */
 	this._slow_when_services_active = false;
 	
 	/** Start to load another script */

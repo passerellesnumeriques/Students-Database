@@ -66,8 +66,8 @@ function DayColumnLayout(calendar_manager) {
 		var head = document.createElement("DIV");
 		head.style.fontSize = "8pt";
 		head.style.color = "#404040";
-		var time_str = event.start.getHours()+":"+this._2digits(event.start.getMinutes());
-		time_str += "-"+event.end.getHours()+":"+this._2digits(event.end.getMinutes());
+		var time_str = event.start.getHours()+":"+_2digits(event.start.getMinutes());
+		time_str += "-"+event.end.getHours()+":"+_2digits(event.end.getMinutes());
 		head.appendChild(document.createTextNode(time_str));
 		div.appendChild(head);
 		var title = document.createElement("SPAN");
@@ -93,15 +93,6 @@ function DayColumnLayout(calendar_manager) {
 		for (var i = 0; i < this.events.length; ++i)
 			this.events[i].parentNode.removeChild(this.events[i]);
 		this.events = [];
-	};
-	
-	/** Add a 0 if the number is only 1 digit
-	 * @param {Number} n the number
-	 */
-	this._2digits = function(n) {
-		var s = ""+n;
-		while (s.length < 2) s = "0"+s;
-		return s;
 	};
 	
 	/** Layout event's boxes so they do not overlap
@@ -344,6 +335,7 @@ function WidthAvailableSpace(x,w) {
 	/**
 	 * Return a possible available range, taking into account the given boxes which are in conflict
 	 * @param {Array} conflicts list of boxes in conflict
+	 * @returns {Array} a range {x,w}
 	 */
 	this.get = function(conflicts) {
 		if (this.ranges.length == 0) return null;
