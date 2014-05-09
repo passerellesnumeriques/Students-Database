@@ -19,7 +19,7 @@ abstract class selection_page extends Page{
 				if (count($campaigns) == 0) {
 					?>
 					<div style="margin:10px">
-					<a href='#' onclick='create_campaign();return false;'>Create a first selection campaign</a>
+					<a href='#' onclick="getIFrameWindow(findFrame('pn_application_frame')).createCampaign();return false;">Create a first selection campaign</a>
 					</div>
 					<?php 
 				} else {
@@ -27,28 +27,13 @@ abstract class selection_page extends Page{
 					<div style="margin:10px">
 					Please select a selection campaign:<ul>
 					<?php foreach($campaigns as $c) {
-						echo "<li><a href='#' onclick='select_campaign(".$c["id"].");return false;'>".$c["name"]."</a></li>";
+						echo "<li><a href='#' onclick=\"getIFrameWindow(findFrame('pn_application_frame')).changeCampaign(".$c["id"].");return false;\">".$c["name"]."</a></li>";
 					}?>
 					</ul>
-					Or <a href='#' onclick='create_campaign();return false;'>Create a new campaign</a>
+					Or <a href='#' onclick="getIFrameWindow(findFrame('pn_application_frame')).createCampaign();return false;">Create a new campaign</a>
 					</div>
 					<?php 
 				}
-				?>
-				<script type='text/javascript'>
-				function create_campaign() {
-					window.parent.select_campaign._dialogAddCampaign();
-				}
-				function select_campaign(id) {
-					service.json("selection","set_campaign_id",{campaign_id:id},function(res){
-						if(!res) return;
-						/* Reload the page */
-						window.parent.populateMenu("/dynamic/selection/service/application_menu_builder");
-						location.reload();
-					});
-				}
-				</script>
-				<?php 
 			}
 		}
 	}

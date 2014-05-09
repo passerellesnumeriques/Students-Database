@@ -40,7 +40,13 @@ ajax = {
 		var xhr;
 		try { xhr = new XMLHttpRequest(); }
 		catch (e) {
-			// everything is already unloaded. avoid remaining calls.
+			// everything seems to be unloaded as we cannot create new AJAX request
+			if (window == window.top) {
+				window.top.console.error("AJAX call cancelled because everything is unloaded: "+url);
+			} else {
+				// try on top
+				window.top.ajax.call(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, overrideResponseMimeType);
+			}
 			return;
 		}
 		if (overrideResponseMimeType && typeof xhr.overrideMimeType != 'undefined')
@@ -79,6 +85,7 @@ ajax = {
 	    try {
 	    	xhr.send(content_data);
 	    } catch (e) {
+	    	log_exception(e, "Sending AJAX request to "+url);
 	    	error_handler(e);
 	    }
 	},

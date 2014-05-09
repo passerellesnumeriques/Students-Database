@@ -100,10 +100,11 @@ class selection extends Component {
 	 * update the calendar_id attribute, and select the matching submodel
 	 */
 	public function setCampaignId($id){
+		if ($id <> null && $id <= 0) $id = null;
 		$this->campaign_id = $id;
 		/* Reset the config */
 		$this->config = null;
-		setcookie("selection_campaign",$id,time()+365*24*60*60,"/dynamic/selection/");
+		setcookie("selection_campaign",$id == null ? "-1" : $id,time()+365*24*60*60,"/dynamic/selection/");
 		SQLQuery::set_submodel("SelectionCampaign", $this->campaign_id);
 		/* Set the calendar id attribute */
 		$this->calendar_id = SQLQuery::create()->select("SelectionCampaign")->field("calendar")->where("id",$id)->executeSingleValue();

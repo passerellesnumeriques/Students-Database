@@ -15,7 +15,9 @@ class service_menu extends Service {
 ?>
 <div style="padding-left:5px;text-align:center;margin-bottom:5px;">
 Selection Campaign:<br/>
-<select onchange="changeCampaign(this.value);"><?php 
+<select onchange="changeCampaign(this.value);">
+<option value='0'></option>
+<?php 
 foreach ($campaigns as $c) {
 	echo "<option value='".$c["id"]."'";
 	if ($c["id"] == $id) echo " selected='selected'";
@@ -101,6 +103,11 @@ foreach ($campaigns as $c) {
 	echo json_encode($c["name"]);
 }
 ?>];
+var current_campaign_name = <?php 
+$found = false;
+foreach ($campaigns as $c) if ($c["id"] == $id) { $found = true; echo json_encode($c["name"]); break;}
+if (!$found) echo "''";
+?>;
 function createCampaign() {
 	input_dialog(theme.icons_16.question,
 		"Create a selection campaign",
@@ -116,7 +123,7 @@ function createCampaign() {
 		function(text){
 			if(!text) return;
 			var div_locker = window.top.lock_screen(null,"Creation of the new selection campaign...");
-			service.json("selection","create_campaign",{name:text.trim()},function(res){
+			service.json("selection","create_campaign",{name:text.trim().uniformFirstLetterCapitalized()},function(res){
 				unlock_screen(div_locker);
 				if(!res) return;
 				location.href = "?section=selection";
@@ -130,12 +137,46 @@ function changeCampaign(id) {
 		location.href = "?section=selection";
 	});
 }
+<?php if ($id <> null && $id > 0) {?>
 function renameCampaign() {
-	alert("TODO");
+	input_dialog(theme.icons_16.question,
+		"Rename the current selection campaign",
+		"Enter the new name of the selection campaign",
+		current_campaign_name,
+		50,
+		function(text){
+			if(!text.checkVisible()) return "You must enter at least one visible caracter";
+			text = text.trim().toLowerCase();
+			if (text == current_campaign_name.trim().toLowerCase()) return null;
+			for (var i = 0; i < campaign_names.length; ++i) {
+				if (text == campaign_names[i].trim().toLowerCase()) return "A campaign already exists with this name";
+			}
+			return null;
+		},
+		function(text){
+			if (!text) return;
+			if (text.trim().toLowerCase() == current_campaign_name.trim().toLowerCase()) return;
+			var div_locker = lock_screen();
+			service.json("selection","set_campaign_name",{id:<?php echo $id;?>, name:text.trim().uniformFirstLetterCapitalized()},function(res){
+				unlock_screen(div_locker);
+				if(!res) return;
+				location.href = "?section=selection";
+			});
+		}
+	);
 }
 function removeCampaign() {
-	alert("TODO");
+	confirm_dialog("Are you sure you want to remove this campaign?<br/><i><b>All the related data will be removed</i></b>",function(res){
+		if(!res) return;
+		var div_locker = lock_screen();
+		service.json("selection","remove_campaign",{id:<?php echo $id;?>},function(res){
+			unlock_screen(div_locker);
+			if(!res) return;
+			location.href = "?section=selection";
+		});
+	});
 }
+<?php } ?>
 </script>
 <?php 
 	}

@@ -55,7 +55,10 @@ class SQLQuery {
  	 * @param number $key the key value identifying the instance of the sub model
  	 */
  	public static function set_submodel($key_table, $key) {
- 		SQLQuery::$preselected_submodels[$key_table] = $key;
+ 		if ($key <> null)
+ 			SQLQuery::$preselected_submodels[$key_table] = $key;
+ 		else
+ 			unset(SQLQuery::$preselected_submodels[$key_table]);
  	}
  	
  	/**
