@@ -27,7 +27,7 @@ class page_IS_main_page extends selection_page {
 					<?php 
 					if(!$steps["information_session"]){
 					?>
-					<div><i>There is no information session yet</i><a class = "button" href = "/dynamic/selection/page/IS/profile" style = "margin-left:3px; margin-top:3px;">Create First</a></div>
+					<div><i>There is no information session yet</i><button onclick="newIS();" style = "margin-left:3px; margin-top:3px;">Create First</button></div>
 					<?php
 					}
 					?>
@@ -41,6 +41,16 @@ class page_IS_main_page extends selection_page {
 		</div>
 		
 		<script type='text/javascript'>
+			function newIS() {
+				require("popup_window.js",function() {
+					var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
+					popup.setContentFrame("/dynamic/selection/page/IS/profile");
+					popup.onclose = function() {
+						location.reload();
+					};
+					popup.showPercent(95,95);
+				});
+			}
 			function init_organizations_list() {
 				new data_list(
 					'<?php echo $list_container_id;?>',
@@ -59,16 +69,7 @@ class page_IS_main_page extends selection_page {
 						var new_IS = document.createElement("BUTTON");
 						new_IS.className = 'flat';
 						new_IS.innerHTML = "<img src='"+theme.build_icon("/static/selection/IS/IS_16.png",theme.icons_10.add)+"'/> New Information Session";
-						new_IS.onclick = function() {
-							require("popup_window.js",function() {
-								var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
-								popup.setContentFrame("/dynamic/selection/page/IS/profile");
-								popup.onclose = function() {
-									location.reload();
-								};
-								popup.showPercent(95,95);
-							});
-						};
+						new_IS.onclick = newIS;
 						list.addHeader(new_IS);
 
 						var create_applicant = document.createElement("BUTTON");

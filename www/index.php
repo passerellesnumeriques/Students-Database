@@ -156,22 +156,6 @@ case "dynamic":
 		$dev->end_time = microtime(true);
 	}
 	die();
-case "help":
-	header('Cache-Control: public', true);
-	header('Pragma: public', true);
-	$date = date("D, d M Y H:i:s",time());
-	header('Date: '.$date, true);
-	$expires = time()+365*24*60*60;
-	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
-	header('Vary: Cookie');
-	header("Content-Type: text/html");
-	require_once("component/Page.inc");
-	pageHeaderStart();
-	pageHeaderEnd();
-	if (!file_exists("component/".$component_name."/page/".$path.".help.html")) invalid("Help not found for page '$path' on component '$component_name'");
-	readfile("component/".$component_name."/page/".$path.".help.html");
-	pageFooter();
-	die();
 default: invalid("Invalid request: unknown resource type ".$type);
 }
 ?>

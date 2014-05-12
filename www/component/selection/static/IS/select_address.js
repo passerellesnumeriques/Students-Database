@@ -293,8 +293,8 @@ function select_address(container, data, partners_contacts_points, can_manage, o
 //				td.appendChild(update_host);
 			} else {
 				//Nothing is set, so just add a set location button
-				var set_button = document.createElement("div");
-				set_button.className = "button";
+				var set_button = document.createElement("BUTTON");
+				set_button.className = "action";
 				set_button.appendChild(document.createTextNode("Set a location"));
 				set_button.title = "Set a location for this "+type_of_address;
 				set_button.onclick = function(){
