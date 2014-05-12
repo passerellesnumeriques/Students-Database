@@ -248,7 +248,7 @@ initPNApplication();
 
 /**
  * Hide a frame which is loading, and display a loading image
- * @param {DOMNode} frame_element the frame which is loading
+ * @param {Element} frame_element the frame which is loading
  */
 function LoadingFrame(frame_element) {
 	if (!frame_element.ownerDocument) return;
@@ -257,7 +257,7 @@ function LoadingFrame(frame_element) {
 	var t=this;
 	/** {Number} Indicates what is the status of the frame: 0 for pending, 1 for loading, -1 for unloading */
 	this.step = 0; // pending
-	/** {DOMNode} table containing the loading image in front of the frame */
+	/** {Element} table containing the loading image in front of the frame */
 	this.table = document.createElement("TABLE");
 	this.table.innerHTML = "<tr><td valign=middle align=center><img src='/static/application/loading_page.gif'/></td></tr>";
 	this.table.style.position = "absolute";

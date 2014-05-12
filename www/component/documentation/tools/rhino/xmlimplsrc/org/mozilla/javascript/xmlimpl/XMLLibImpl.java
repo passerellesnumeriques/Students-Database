@@ -22,11 +22,11 @@ public final class XMLLibImpl extends XMLLib implements Serializable {
     /**
         This experimental interface is undocumented.
      */
-    public static org.w3c.dom.Node toDomNode(Object xmlObject) {
+    public static org.w3c.dom.Node toElement(Object xmlObject) {
         //    Could return DocumentFragment for XMLList
         //    Probably a single node for XMLList with one element
         if (xmlObject instanceof XML) {
-            return ((XML)xmlObject).toDomNode();
+            return ((XML)xmlObject).toElement();
         } else {
             throw new IllegalArgumentException(
                     "xmlObject is not an XML object in JavaScript.");

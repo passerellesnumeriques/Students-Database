@@ -1,14 +1,14 @@
 <?php 
 class service_exam_can_rooms_be_removed_for_center extends Service {
 	
-	public function get_required_rights() { return array("can_access_selection_data"); }
+	public function getRequiredRights() { return array("can_access_selection_data"); }
 	public function documentation() {
 		echo "Check for all the rooms of an exam center if they can be updated / removed or not. A room can be set as not editable / removable for two reasons:<ul><li>If any applicant is assigned into it for any exam session</li><li>If, without this room, the exam center capacity becomes lesser than the number of applicants assigned to any session in this center</li></ul>";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>EC_id</code> the exam center ID";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		Object with one attribute: <code>rooms</code> NULL if this exam center has no room yet, else array of objects (one per room) containing the following attributes:
 		<ul>

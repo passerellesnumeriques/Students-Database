@@ -11,7 +11,7 @@ function DayColumnLayout(calendar_manager) {
 
 	/** Layout and display the given events
 	 * @param {Array} events the list of events
-	 * @param {DOMNode} container where to display
+	 * @param {Element} container where to display
 	 * @param {Number} x the x position of the day column in the container
 	 * @param {Number} w the width of the day column in the container
 	 * @param {Number} y the y position of the day column in the container
@@ -38,7 +38,7 @@ function DayColumnLayout(calendar_manager) {
 	/**
 	 * Add a new event to be displayed
 	 * @param {Object} event the event to display
-	 * @param {DOMNode} container where to display
+	 * @param {Element} container where to display
 	 * @param {Number} x the x position of the day column in the container
 	 * @param {Number} w the width of the day column in the container
 	 * @param {Number} y the y position of the day column in the container

@@ -1,7 +1,7 @@
 <?php 
 require_once("/../selection_page.inc");
 class page_exam_center_profile extends selection_page {
-	public function get_required_rights() { return array("see_exam_center_detail"); }
+	public function getRequiredRights() { return array("see_exam_center_detail"); }
 	public function execute_selection_page(){
 	/**
 	 * Create a page with two sections: one for the exam center caracteristics, and one for the applicants assignment into this exam center

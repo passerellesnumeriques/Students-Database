@@ -3,7 +3,7 @@ require_once("/../selection_page.inc");
 require_once("component/selection/SelectionJSON.inc");
 class page_exam_main_page extends selection_page {
 	
-	public function get_required_rights() {return array("see_exam_subject");}
+	public function getRequiredRights() {return array("see_exam_subject");}
 	
 	public function execute_selection_page() {
 		//Rights based on the steps

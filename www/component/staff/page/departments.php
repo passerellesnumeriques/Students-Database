@@ -1,7 +1,7 @@
 <?php 
 class page_departments extends Page {
 	
-	public function get_required_rights() { return array("manage_staff"); }
+	public function getRequiredRights() { return array("manage_staff"); }
 	
 	public function execute() {
 		$departments = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();

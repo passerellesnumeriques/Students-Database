@@ -1,11 +1,11 @@
 <?php 
 class service_post_reply extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Post a reply to a message"; }
-	public function input_documentation() { echo "id (the id of the root message) and message"; }
-	public function output_documentation() { echo "true on success"; }
+	public function inputDocumentation() { echo "id (the id of the root message) and message"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		// get the root

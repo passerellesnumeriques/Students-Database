@@ -1,7 +1,7 @@
 <?php 
 class page_search extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$q = $_GET["q"];

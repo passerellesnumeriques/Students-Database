@@ -1,11 +1,11 @@
 <?php 
 class service_applicant_assign_from_IS_to_EC extends Service {
 	
-	public function get_required_rights() {return array("can_access_selection_data");}
+	public function getRequiredRights() {return array("can_access_selection_data");}
 	
 	public function documentation() {echo 'Assign applicants to an exam center from the informations sessions linked to this center';}
-	public function input_documentation() {echo "<code>EC_id</code> number the exam center ID";}
-	public function output_documentation() {
+	public function inputDocumentation() {echo "<code>EC_id</code> number the exam center ID";}
+	public function outputDocumentation() {
 		?>
 		Object containing two attributes:
 			<ul>

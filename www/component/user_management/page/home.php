@@ -1,7 +1,7 @@
 <?php 
 class page_home extends Page {
 	
-	public function get_required_rights() { return array("consult_user_list"); }
+	public function getRequiredRights() { return array("consult_user_list"); }
 	
 	public function execute() {
 		$this->add_javascript("/static/widgets/frame_header.js");

@@ -1,7 +1,7 @@
 <?php 
 class page_popup_create_people extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$types = explode(",",$_GET["types"]);

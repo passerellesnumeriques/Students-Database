@@ -236,7 +236,7 @@ class PHPExcel_Reader_HTML implements PHPExcel_Reader_IReader
 		$cellContent = (string) '';
 	}
 
-	private function _processDomElement(DOMNode $element, $sheet, &$row, &$column, &$cellContent){
+	private function _processDomElement(Element $element, $sheet, &$row, &$column, &$cellContent){
 		foreach($element->childNodes as $child){
 			if ($child instanceOf DOMText) {
 				$domText = preg_replace('/\s+/',' ',trim($child->nodeValue));

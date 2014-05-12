@@ -1,8 +1,8 @@
 <?php
 require_once "component/selection/SelectionJSON.inc";
 class service_applicant_export_list extends Service{
-	public function get_required_rights(){return array("can_access_selection_data");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("can_access_selection_data");}
+	public function inputDocumentation(){
 		?>Mandatory fields:
 			<ul>
 				<li><code>format</code> The format of the exported file:<ul><li>"excel2007"</li><li>"excel5"</li></ul></li>				
@@ -18,10 +18,10 @@ class service_applicant_export_list extends Service{
 			</ul>
 		<?php
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		echo "No";
 	}
-	public function get_output_format($input){
+	public function getOutputFormat($input){
 		return "application/vnd.ms-excel";
 	}
 	

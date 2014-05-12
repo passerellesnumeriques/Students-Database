@@ -1,7 +1,7 @@
 <?php 
 class page_subject_grades extends Page {
 	
-	public function get_required_rights() { return array("consult_students_grades"); }
+	public function getRequiredRights() { return array("consult_students_grades"); }
 	
 	public function execute() {
 		$subject_id = $_GET["subject"];

@@ -3,13 +3,13 @@ require_once("component/contact/ContactJSON.inc");
 require_once("component/selection/SelectionJSON.inc");
 
 class service_exam_save_center extends Service{
-	public function get_required_rights(){return array("manage_exam_center");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("manage_exam_center");}
+	public function inputDocumentation(){
 		?>
 		<code>data</code> ExamCenterData JSON object
 		<?php
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		?>
 		<ul>
 		<li>ExamCenterData JSON object if well saved</li>

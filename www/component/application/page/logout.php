@@ -1,6 +1,6 @@
 <?php
 class page_logout extends Page {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function execute() {
 		PNApplication::$instance->user_management->logout();
 ?>

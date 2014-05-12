@@ -3,7 +3,7 @@ if (typeof require != 'undefined')
 
 /**
  * UI Control to display all contacts of a people or organization
- * @param {DOMNode} container where to display
+ * @param {Element} container where to display
  * @param {String} owner_type "people" or "organization"
  * @param {Number} owner_id people ID or organization ID
  * @param {Array} contacts list of Contact

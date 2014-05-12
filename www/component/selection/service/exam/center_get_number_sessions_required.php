@@ -1,14 +1,14 @@
 <?php 
 class service_exam_center_get_number_sessions_required extends Service {
 	
-	public function get_required_rights() { return array("can_access_selection_data","see_exam_center_detail"); }
+	public function getRequiredRights() { return array("can_access_selection_data","see_exam_center_detail"); }
 	public function documentation() {
 		echo "Get the number of sessions required for an exam center (based on the number of applicants assigned and the rooms capacity)";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>EC_id</code> number the exam center ID";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		Objects with two attributes:
 		<ul>

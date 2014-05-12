@@ -26,7 +26,7 @@ abstract class Component {
 	/** Perform operations at the beginning of every request.
 	 * By default it does nothing, but a component may override this function. 
 	 */
-	public function init_request() {}
+	public function initRequest() {}
 	
 	private static $allowed_pages_without_login = array();
 	protected static function allow_page_without_login($component_name, $page_path) {
@@ -52,7 +52,7 @@ abstract class Component {
 		if (!file_exists($file)) {
 			header("Content-Type: text/html;charset=UTF-8");
 			PNApplication::error("Page '$path' does not exist in component '".$this->name."'");
-			PNApplication::print_errors();
+			PNApplication::printErrors();
 			return;
 		}
 		
@@ -64,7 +64,7 @@ abstract class Component {
 		$page = new $classname();
 		
 		// check the page is allowed for the current user
-		$required_rights = $page->get_required_rights();
+		$required_rights = $page->getRequiredRights();
 		if (count($required_rights) == 0) 
 			$final_allowed = true; // no restriction
 		else {
@@ -83,7 +83,7 @@ abstract class Component {
 		}
 		if (!$final_allowed) {
 			PNApplication::error("Access denied to this page");
-			PNApplication::print_errors();
+			PNApplication::printErrors();
 			return;
 		}
 		
@@ -114,7 +114,7 @@ abstract class Component {
 			if (!isset(Component::$allowed_services_without_login[$this->name]) || !in_array($path, Component::$allowed_services_without_login[$this->name])) {
 				header("Content-Type: text/json;charset=UTF-8", true, 403);
 				PNApplication::error("Access denied: you must login before to use services");
-				PNApplication::print_json_result(null);
+				PNApplication::printJSONResult(null);
 				return;
 			}
 		}
@@ -124,7 +124,7 @@ abstract class Component {
 		if (!file_exists($file)) {
 			header("Content-Type: text/json;charset=UTF-8");
 			PNApplication::error("Service '$path' does not exist in component '".$this->name."'");
-			PNApplication::print_json_result(null);
+			PNApplication::printJSONResult(null);
 			return;
 		}
 	
@@ -143,12 +143,12 @@ abstract class Component {
 			if ($input === null && $err <> JSON_ERROR_NONE) {
 				PNApplication::error("Invalid input: JSON error ".$err."\nReceived input (length ".strlen($in)."):\n".$in);
 				// get output format
-				$output_format = $service->get_output_format(array());
+				$output_format = $service->getOutputFormat(array());
 				if ($output_format == "text/json") {
 					header("Content-Type: text/json;charset=UTF-8");
-					PNApplication::print_json_result(null);
+					PNApplication::printJSONResult(null);
 				} else {
-					PNApplication::print_errors();
+					PNApplication::printErrors();
 				}
 				return;
 			}			
@@ -161,14 +161,14 @@ abstract class Component {
 		}
 		
 		// get output format
-		$output_format = $service->get_output_format($input);
+		$output_format = $service->getOutputFormat($input);
 		if ($output_format == "text/json")
 			header("Content-Type: text/json;charset=UTF-8");
 		else
 			header("Content-Type: ".$output_format);
 		
 		// check the service is allowed for the current user
-		$required_rights = $service->get_required_rights();
+		$required_rights = $service->getRequiredRights();
 		if (count($required_rights) == 0)
 			$final_allowed = true; // no restriction
 		else {
@@ -187,7 +187,7 @@ abstract class Component {
 		}
 		if (!$final_allowed) {
 			PNApplication::error("Access denied to this service");
-			PNApplication::print_json_result(null);
+			PNApplication::printJSONResult(null);
 			return;
 		}
 	
@@ -210,7 +210,7 @@ abstract class Component {
 			ob_end_clean();
 			if ($result === "" || $result === false) $result = null;
 			restore_error_handler();
-			PNApplication::print_json_result($result);
+			PNApplication::printJSONResult($result);
 			$done->done = true;
 		} else
 			$service->execute($this, $input);
@@ -265,8 +265,8 @@ function service_shutdown_catch($done) {
 	$content = ob_get_clean();
 	if ($content <> "")
 		$msg .= "<br/>Output generated at failing time:<br/>".str_replace("\n", "<br/>", htmlentities($content));
-	PNApplication::error_html($msg);
-	PNApplication::print_json_result(null);
+	PNApplication::errorHTML($msg);
+	PNApplication::printJSONResult(null);
 }
 
 ?>

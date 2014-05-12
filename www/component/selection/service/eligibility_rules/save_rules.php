@@ -1,9 +1,9 @@
 <?php 
 class service_eligibility_rules_save_rules extends Service {
 	
-	public function get_required_rights() {return array("manage_exam_subject");}
+	public function getRequiredRights() {return array("manage_exam_subject");}
 	public function documentation() {echo "Save all the rules data";}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<ul>
 			<li><code>all_rules</code> array from the JSON all_rules object, as the one made by SelectionJSON#getJSONAllEligibilityRules method</li>
@@ -11,7 +11,7 @@ class service_eligibility_rules_save_rules extends Service {
 		</ul>
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		Depends on the result given by the selection#saveRules method
 		<ul>

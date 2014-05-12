@@ -1,7 +1,7 @@
 <?php 
 require_once '/component/contact/ContactJSON.inc';
 class page_organization_profile extends Page {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function execute(){
 		$id = $_GET["organization"];
 		

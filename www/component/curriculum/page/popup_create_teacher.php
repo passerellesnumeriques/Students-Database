@@ -1,7 +1,7 @@
 <?php 
 class page_popup_create_teacher extends Page {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function execute() {
 ?>

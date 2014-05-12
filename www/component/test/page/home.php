@@ -1,7 +1,7 @@
 <?php 
 class page_home extends Page {
 
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$exclude_components = array("development","test");
@@ -14,7 +14,7 @@ class page_home extends Page {
 		$this->add_javascript("/static/development/debug_status.js");
 		$this->add_javascript("/static/test/browser_control.js");
 		
-		$components = PNApplication::sort_components_by_dependencies();
+		$components = PNApplication::sortComponentsByDependencies();
 		
 		echo "<div id='page' style='height:100%;width:100%'>";
 			echo "<div id='top_status' layout='fixed' icon='/static/test/test_32.png' title='Automatic Tests'></div>";

@@ -1,12 +1,12 @@
 <?php 
 class service_get extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
-	public function get_output_format($input) {
+	public function inputDocumentation() {}
+	public function outputDocumentation() {}
+	public function getOutputFormat($input) {
 		$id = $_GET["id"];
 		$file = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id)->executeSingleRow();
 		if ($file <> null && $file["mime"] <> null) return $file["mime"];

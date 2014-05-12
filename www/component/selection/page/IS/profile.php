@@ -1,7 +1,7 @@
 <?php 
 require_once("/../selection_page.inc");
 class page_IS_profile extends selection_page {
-	public function get_required_rights() { return array("see_information_session_details"); }
+	public function getRequiredRights() { return array("see_information_session_details"); }
 	public function execute_selection_page(){
 		require_once("component/selection/SelectionJSON.inc");
 		$config = PNApplication::$instance->selection->getConfig();

@@ -124,6 +124,10 @@ public class Function extends FinalElement {
 	public String getType() {
 		return return_type;
 	}
+	@Override
+	public void setType(String type) {
+		return_type = type;
+	}
 	
 	public String generate(String indent) {
 		StringBuilder s = new StringBuilder();

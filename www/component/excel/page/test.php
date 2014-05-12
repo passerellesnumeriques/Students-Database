@@ -1,7 +1,7 @@
 <?php 
 class page_test extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$this->add_javascript("/static/excel/excel.js");

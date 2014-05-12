@@ -1,6 +1,6 @@
 <?php
 class page_set_geography_area extends Page {
-	public function get_required_rights(){
+	public function getRequiredRights(){
 	// TODO
 	return array();
 	}

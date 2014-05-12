@@ -502,6 +502,16 @@ function initFooter() {
 		new debug_status(span_debug_status);
 	});
 	<?php } ?>
+	var span_background_loading = document.createElement("SPAN"); 
+	span_background_loading.style.position = "absolute";
+	span_background_loading.style.bottom = "0px";
+	span_background_loading.style.left = "3px";
+	footer.appendChild(span_background_loading);
+	require("load_static.js",function(){
+		var loading = new load_static_resources(span_background_loading, '#ffffff', '#ffffff', '#ffffff', '#A0A0A0');
+		loading._slow_when_user_active = true;
+		loading._slow_when_services_active = true;
+	});
 }
 initFooter();
 </script>

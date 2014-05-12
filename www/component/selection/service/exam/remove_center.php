@@ -1,14 +1,14 @@
 <?php 
 class service_exam_remove_center extends Service {
 	
-	public function get_required_rights() { return array("manage_exam_center"); }
+	public function getRequiredRights() { return array("manage_exam_center"); }
 	public function documentation() {
 		echo "Remove an exam center from its ID";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>id</code> exam center ID";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<ul>
 			<li><code>true</code> if well performed</li>

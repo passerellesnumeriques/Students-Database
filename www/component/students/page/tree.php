@@ -1,7 +1,7 @@
 <?php 
 class page_tree extends Page {
 	
-	public function get_required_rights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); } // TODO
 	
 	public function execute() {
 		require_once("component/curriculum/page/curriculum_tree.inc");

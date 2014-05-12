@@ -1,11 +1,11 @@
 <?php 
 class service_add_period_specialization extends Service {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function documentation() { echo "Add a specialization to an academic period"; }
-	public function input_documentation() { echo "<code>period</code>: period id, <code>specialization</code>: specialization id"; }
-	public function output_documentation() { echo "true on success"; }
+	public function inputDocumentation() { echo "<code>period</code>: period id, <code>specialization</code>: specialization id"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		// check it does not exist already

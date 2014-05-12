@@ -1,7 +1,7 @@
 <?php 
 class page_assign_classes extends Page {
 	
-	public function get_required_rights() { return array("manage_batches"); }
+	public function getRequiredRights() { return array("manage_batches"); }
 	
 	public function execute() {
 		/* different cases:

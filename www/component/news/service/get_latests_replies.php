@@ -1,13 +1,13 @@
 <?php 
 class service_get_latests_replies extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve latests replies"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "to_refresh: array of {id,latest} where id is the id of a root news, while latest is the timestamp of the latest reply known (or 0 if no reply is known)";
 	}
-	public function output_documentation() { echo "List of NewsObject, containing reply_to"; }
+	public function outputDocumentation() { echo "List of NewsObject, containing reply_to"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/news/NewsPlugin.inc");

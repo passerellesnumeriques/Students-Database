@@ -1,7 +1,7 @@
 <?php 
 class documentation extends Component {
 	
-	public function init_request() {
+	public function initRequest() {
 		Component::allow_page_without_login("documentation", "index");
 		Component::allow_page_without_login("documentation", "navigation");
 		Component::allow_page_without_login("documentation", "home");

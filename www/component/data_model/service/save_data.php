@@ -1,8 +1,8 @@
 <?php
 class service_save_data extends Service {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function documentation() { echo "Save data into database"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 <code>to_save</code>: an array of data to save, with for each element:
 <ul>
@@ -17,7 +17,7 @@ class service_save_data extends Service {
 <p>All the elements contained in to_save must be locked before calling this service; otherwise, the data update would fail.</p>
 <?php		
 	}
-	public function output_documentation() { echo "return true on success"; }
+	public function outputDocumentation() { echo "return true on success"; }
 	public function execute(&$component, $input) {
 		$to_save = $input["to_save"];
 		if (count($to_save) == 0) {
@@ -49,7 +49,7 @@ class service_save_data extends Service {
 			}
 			if (!$path_found) PNApplication::error("DataPath not found: ".$t["path"]);
 		}
-		if (!PNApplication::has_errors()) {
+		if (!PNApplication::hasErrors()) {
 			$tables_fields->execute();
 			echo "true";
 		}

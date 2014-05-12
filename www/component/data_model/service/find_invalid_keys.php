@@ -1,11 +1,11 @@
 <?php 
 class service_find_invalid_keys extends Service {
 	
-	public function get_required_rights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); } // TODO
 	
 	public function documentation() { echo "Find foreign keys without corresponding primary key"; }
-	public function input_documentation() { echo "None"; }
-	public function output_documentation() { /* TODO */ }
+	public function inputDocumentation() { echo "None"; }
+	public function outputDocumentation() { /* TODO */ }
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");

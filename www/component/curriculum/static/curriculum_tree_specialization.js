@@ -1,5 +1,10 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * Specialization in a batch period
+ * @param {CurriculumTreeNode_Period} parent batch period
+ * @param {Specialization} spe specialization information
+ */
 function CurriculumTreeNode_Specialization(parent, spe) {
 	this.spe = spe;
 	CurriculumTreeNode.call(this, parent, "period"+parent.period.id+"_specialization"+spe.id, true);
@@ -25,7 +30,7 @@ CurriculumTreeNode_Specialization.prototype.createInfo = function() {
 	button.title = "Edit batch, periods and specializations";
 	button.node = this;
 	button.onclick = function() {
-		edit_batch(this.node.parent.parent.batch);
+		editBatch(this.node.parent.parent.batch);
 	};
 	div.appendChild(button);
 	button = document.createElement("BUTTON");
@@ -34,7 +39,7 @@ CurriculumTreeNode_Specialization.prototype.createInfo = function() {
 	button.title = "Create a new class";
 	button.node = this;
 	button.onclick = function() {
-		new_class(this.node.parent, this.node.spe);
+		newClass(this.node.parent, this.node.spe);
 	};
 	div.appendChild(button);
 	return div;

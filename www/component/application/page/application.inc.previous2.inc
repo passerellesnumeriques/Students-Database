@@ -88,7 +88,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 	</div>
 </div>
 <script type='text/javascript'>
-window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
+window.top.default_country_code = <?php $d = PNApplication::$instance->getDomainDescriptor(); echo json_encode($d["country_code"]).";"; ?>
 
 if (!window.top.calendar_manager) {
 	window.top.calendar_manager = new CalendarManager();

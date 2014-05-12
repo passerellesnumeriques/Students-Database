@@ -60,7 +60,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 				</td><td nowrap="nowrap" class='pn_application_header_section' title="Database">
 					<select id='app_domain' style="padding:0px 0px 0px 16px;margin:0px;background:rgba(255,255,255,0) url('/static/application/database.png') no-repeat 0px 1px;border:none;" onchange="service.json('application','set_domain',{domain:this.value},function(result){if(result)location.reload();});">
 					<?php
-					foreach (PNApplication::$instance->get_domains() as $domain=>$descr)
+					foreach (PNApplication::$instance->getDomains() as $domain=>$descr)
 						echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>";
 					?>
 					</select>
@@ -107,7 +107,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 };
 </style>
 <script type='text/javascript'>
-window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
+window.top.default_country_code = <?php $d = PNApplication::$instance->getDomainDescriptor(); echo json_encode($d["country_code"]).";"; ?>
 
 /*setInterval(function(){
 	if (window.theme) // check the window is still there

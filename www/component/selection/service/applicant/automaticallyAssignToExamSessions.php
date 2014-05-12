@@ -1,11 +1,11 @@
 <?php 
 class service_applicant_automaticallyAssignToExamSessions extends Service {
 	
-	public function get_required_rights() {return array("can_access_selection_data","manage_applicant");}
+	public function getRequiredRights() {return array("can_access_selection_data","manage_applicant");}
 	
 	public function documentation() {echo 'Automatically assign applicants to exam sessions for a given center';}
-	public function input_documentation() {echo "<code>EC_id</code> number the exam center ID";}
-	public function output_documentation() {
+	public function inputDocumentation() {echo "<code>EC_id</code> number the exam center ID";}
+	public function outputDocumentation() {
 		?>
 		<ul>
 		  <li>false if an error occured </li>

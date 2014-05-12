@@ -6,14 +6,14 @@ function page_shutdown_catch($page) {
 	if ($error <> null)
 		$msg.= " Last error was in ".$error["file"]." line ".$error["line"].": ".$error["message"];
 	PNApplication::error($msg);
-	PNApplication::print_errors();
+	PNApplication::printErrors();
 	$content = ob_get_clean();
 	echo $content;
 }
 
 abstract class Page {
 
-	public abstract function get_required_rights();
+	public abstract function getRequiredRights();
 	protected abstract function execute();
 	
 	private $init_scripts = array();
@@ -106,7 +106,7 @@ abstract class Page {
 	}
 
 	private function end_page() {
-		PNApplication::print_errors();
+		PNApplication::printErrors();
 		pageFooter();
 	}
 	

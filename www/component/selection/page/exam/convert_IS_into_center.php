@@ -8,7 +8,7 @@ require_once("component/selection/SelectionJSON.inc");
  */
 class page_exam_convert_IS_into_center extends selection_page {
 	
-	public function get_required_rights() {return array("see_exam_center_detail","see_information_session_details");}
+	public function getRequiredRights() {return array("see_exam_center_detail","see_information_session_details");}
 	
 	public function execute_selection_page() {
 		//Get the locks if already exist

@@ -60,7 +60,7 @@ function curriculum_tree(&$page, $menu_items) {
 	<div id='left'>
 		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Classes'>
 			<?php if ($can_edit) { ?>
-			<div class='button_verysoft' onclick='create_new_batch();'>
+			<div class='button_verysoft' onclick='createNewBatch();'>
 				<img src='<?php echo theme::make_icon("/static/curriculum/batch_16.png", theme::$icons_10["add"]);?>'/>
 				New Batch
 			</div>

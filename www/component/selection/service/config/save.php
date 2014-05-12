@@ -1,14 +1,14 @@
 <?php
 class service_config_save extends Service{
-	public function get_required_rights(){return array("manage_selection_campaign");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("manage_selection_campaign");}
+	public function inputDocumentation(){
 ?>
 <ul>
 	<li><code>fields</code>: config object of the page manage_config.inc</li>
 </ul>
 <?php	
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		echo "<ul>";
 		echo "<li>{boolean} true if done</li>";
 		echo "<li>{boolean} else false</li>";
@@ -33,7 +33,7 @@ class service_config_save extends Service{
 		}
 		$error = PNApplication::$instance->selection->saveConfig($final_fields, $db_lock);
 		if($error <> null) PNApplication::error($configs);
-		echo PNApplication::has_errors() ? "false" : "true";
+		echo PNApplication::hasErrors() ? "false" : "true";
 	}
 }	
 ?>

@@ -1,11 +1,11 @@
 <?php 
 class service_new_organization_type extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Create a new organization type"; }
-	public function input_documentation() { echo "<code>creator</code>, <code>name</code>"; }
-	public function output_documentation() { echo "On success, returns the id of the newly created organization type"; }
+	public function inputDocumentation() { echo "<code>creator</code>, <code>name</code>"; }
+	public function outputDocumentation() { echo "On success, returns the id of the newly created organization type"; }
 	
 	public function execute(&$component, $input) {
 		$id = $component->createOrganizationType($input["creator"], $input["name"]);

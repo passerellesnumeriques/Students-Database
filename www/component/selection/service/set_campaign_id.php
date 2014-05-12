@@ -1,12 +1,12 @@
 <?php
 class service_set_campaign_id extends Service{
-	public function get_required_rights(){return array("can_access_selection_data");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("can_access_selection_data");}
+	public function inputDocumentation(){
 		echo "<ul>";
 		echo "<li>campaign_id = the campaign_id to set</li>";
 		echo "</ul>";
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		echo "<ul>";
 		echo "<li>{boolean} true if done</li>";
 		echo "<li>{boolean} else false</li>";

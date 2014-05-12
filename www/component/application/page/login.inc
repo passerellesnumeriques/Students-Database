@@ -54,7 +54,7 @@ if ($message <> null) {
 				<?php
 				$def_domain = PNApplication::$instance->local_domain;
 				if (isset($_COOKIE["domain"])) $def_domain = $_COOKIE["domain"];
-				foreach (PNApplication::$instance->get_domains() as $domain=>$descr)
+				foreach (PNApplication::$instance->getDomains() as $domain=>$descr)
 					echo "<option value=\"".$domain."\"".($def_domain==$domain ? " selected" : "").">".$domain."</option>";
 				?>
 			</select>

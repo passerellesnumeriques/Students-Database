@@ -1,11 +1,11 @@
 <?php 
 class service_exam_get_applicants_assigned_to_center_entity extends Service {
 	
-	public function get_required_rights() { return array("can_access_selection_data","see_exam_center_detail"); }
+	public function getRequiredRights() { return array("can_access_selection_data","see_exam_center_detail"); }
 	public function documentation() {
 		echo "Get the applicants assigned to a center entity (center, session, room), or the number of applicants assigned to this entity";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<ul>
 		  <li><code>EC_id</code> number | NULL exam center ID to get applicants assigned to this exam center, else NULL</li>
@@ -18,7 +18,7 @@ class service_exam_get_applicants_assigned_to_center_entity extends Service {
 		If nor EC_id, nor session_id, nor room_id are set, get all the applicants of the campaign
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<ul>
 		<li>If count == true:

@@ -5,7 +5,7 @@ theme::css($this, "application.css");
 $this->require_javascript("calendar.js");
 ?>
 <script type='text/javascript'>
-window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
+window.top.default_country_code = <?php $d = PNApplication::$instance->getDomainDescriptor(); echo json_encode($d["country_code"]).";"; ?>
 
 window.top.calendar_manager = new CalendarManager();
 window.top.CalendarsProviders.get(function(provider) {

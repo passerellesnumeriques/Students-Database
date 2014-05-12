@@ -1,16 +1,16 @@
 <?php 
 class service_exam_center_get_all_sessions extends Service {
 	
-	public function get_required_rights() { return array("can_access_selection_data"); }
+	public function getRequiredRights() { return array("can_access_selection_data"); }
 	public function documentation() {
 		echo "Get all the exam sessions planned into an exam center";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<code>EC_id</code> exam center ID
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		Array of <code>ExamSession</code> objects
 		<?php

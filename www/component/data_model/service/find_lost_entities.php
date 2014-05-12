@@ -1,11 +1,11 @@
 <?php 
 class service_find_lost_entities extends Service {
 	
-	public function get_required_rights() { return array(); } // TODO manage database
+	public function getRequiredRights() { return array(); } // TODO manage database
 	
 	public function documentation() { echo "Look for lost data in the database"; }
-	public function input_documentation() { echo "No input"; }
-	public function output_documentation() { echo "List of lost entities: {table,rows:[...]}"; }
+	public function inputDocumentation() { echo "No input"; }
+	public function outputDocumentation() { echo "List of lost entities: {table,rows:[...]}"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");

@@ -1,7 +1,7 @@
 <?php 
 class page_tree_frame extends Page {
 	
-	public function get_required_rights() { return array("consult_curriculum"); }
+	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function execute() {
 		if (isset($_GET["node"])) {
@@ -64,7 +64,7 @@ class page_tree_frame extends Page {
 	<div id="curriculum_tree_container" layout="250">
 		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Classes'>
 			<?php if ($can_edit) { ?>
-			<button class='flat' onclick='create_new_batch();'>
+			<button class='flat' onclick='createNewBatch();'>
 				<img src='<?php echo theme::make_icon("/static/curriculum/batch_16.png", theme::$icons_10["add"]);?>'/>
 				New Batch
 			</button>

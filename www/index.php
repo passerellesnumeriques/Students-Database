@@ -130,7 +130,7 @@ case "dynamic":
 			die();
 		}
 		PNApplication::$instance = &$_SESSION["app"];
-		PNApplication::$instance->init_request();
+		PNApplication::$instance->initRequest();
 	}
 	if (PNApplication::$instance->current_domain == "Dev") {
 		$dev = new DevRequest();

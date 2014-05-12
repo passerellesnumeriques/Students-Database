@@ -1,14 +1,14 @@
 <?php 
 class service_eligibility_rules_get_topic extends Service {
 	
-	public function get_required_rights() { return array("see_exam_subject"); }
+	public function getRequiredRights() { return array("see_exam_subject"); }
 	public function documentation() {
 		echo "Get a json topic object";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>id</code> (number) the topic id";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		echo "JSON topic object if could be retrieved, else return false";
 	}
 	

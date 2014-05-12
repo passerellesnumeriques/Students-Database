@@ -731,7 +731,7 @@ class XML extends XMLObjectImpl {
     }
 
     //    Support experimental Java interface
-    org.w3c.dom.Node toDomNode() {
-        return node.toDomNode();
+    org.w3c.dom.Node toElement() {
+        return node.toElement();
     }
 }

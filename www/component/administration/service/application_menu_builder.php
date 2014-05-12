@@ -1,13 +1,13 @@
 <?php 
 class service_application_menu_builder extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Provides JavaScript to build the application menu"; }
-	public function input_documentation() { echo "No"; }
-	public function output_documentation() { echo "The JavaScript that builds the menu"; }
+	public function inputDocumentation() { echo "No"; }
+	public function outputDocumentation() { echo "The JavaScript that builds the menu"; }
 	
-	public function get_output_format($input) { return "text/javascript"; }
+	public function getOutputFormat($input) { return "text/javascript"; }
 	
 	public function execute(&$component, $input) {
 		echo "resetAllMenus();";

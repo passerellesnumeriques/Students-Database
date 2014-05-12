@@ -1,11 +1,11 @@
 <?php 
 class service_remove_specialization_from_period extends Service {
 	
-	public function get_required_rights() { return array("manage_batches"); }
+	public function getRequiredRights() { return array("manage_batches"); }
 	
 	public function documentation() { echo "Remove a specialization from an academic period"; }
-	public function input_documentation() { echo "specialization, period"; }
-	public function output_documentation() { echo "true on success"; }
+	public function inputDocumentation() { echo "specialization, period"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		SQLQuery::startTransaction();

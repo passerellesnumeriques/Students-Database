@@ -1,13 +1,18 @@
 /** 
- * return true if this string starts with the given string
+ * check if this string starts with the given string
+ * @param {String} s the start
+ * @returns {Boolean} true if the string starts with the given string
  */
 String.prototype.startsWith=function(s){return this.length<s.length?false:this.substring(0,s.length)==s;};
 /** 
- * return true if this string ends with the given string
+ * check if this string ends with the given string
+ * @param {String} s the end
+ * @returns {Boolean} true if this string ends with the given string
  */
 String.prototype.endsWith=function(s){return this.length<s.length?false:this.substring(this.length-s.length)==s;};
 /** 
  * remove leading and trailing spaces, and return the result
+ * @returns {String} a new string without any leading or trailing space
  */
 String.prototype.trim=function() {
 	if (this.length == 0) return "";
@@ -18,6 +23,9 @@ String.prototype.trim=function() {
 		if (!isSpace(this.charAt(end-1))) break;
 	return this.substring(start, end);
 };
+/** Convert this string into HTML (replace special characters)
+ * @returns {String} the HTML string
+ */
 String.prototype.toHTML=function() {
     return this
             .replace(/&/g, '&amp;')
@@ -45,7 +53,7 @@ function isLetter(c) {
 
 /**
 * Set a uniform case according to a given separator
-* @parameter {String} separator separator to use between words
+* @param {String} separator separator to use between words
 * @returns {String} the same string with a capitalized first letter
 */
 String.prototype.firstLetterCapitalizedForSeparator = function(separator) {
@@ -210,8 +218,9 @@ Element.prototype.removeChild = function(e) {
 
 /**
  * Return the absolute position of the left edge, relative to the given element or to the document
- * @param e the element to get the absolute position
- * @param relative the element from which we want the absolute position, or null to get the position in the document
+ * @param {Element} e the element to get the absolute position
+ * @param {Element} relative the element from which we want the absolute position, or null to get the position in the document
+ * @returns {Number} the left offset in pixels
  */
 function absoluteLeft(e,relative) {
 	var left = e.offsetLeft;
@@ -229,8 +238,9 @@ function absoluteLeft(e,relative) {
 }
 /**
  * Return the absolute position of the top edge, relative to the given element or to the document
- * @param e the element to get the absolute position
- * @param relative the element from which we want the absolute position, or null to get the position in the document
+ * @param {Element} e the element to get the absolute position
+ * @param {Element} relative the element from which we want the absolute position, or null to get the position in the document
+ * @returns {Number} the top offset in pixels
  */
 function absoluteTop(e,relative) {
 	var top = e.offsetTop;
@@ -248,7 +258,8 @@ function absoluteTop(e,relative) {
 }
 /**
  * Return the first parent having a CSS attribute position:relative, or the document.body
- * @param e the html element
+ * @param {Element} e the html element
+ * @returns {Element} the first parent having a position set to relative
  */
 function getAbsoluteParent(e) {
 	var p = e.parentNode;
@@ -260,6 +271,10 @@ function getAbsoluteParent(e) {
 	return document.body;
 }
 
+/** Get the coordinates of a frame relative to the top window
+ * @param {window} frame the frame
+ * @returns {Object} contains x and y attributes
+ */
 function getAbsoluteCoordinatesRelativeToWindowTop(frame) {
 	if (frame.parent == null || frame.parent == frame || frame.parent == window.top) return {x:0,y:0};
 	var pos = getAbsoluteCoordinatesRelativeToWindowTop(frame.parent);
@@ -270,9 +285,9 @@ function getAbsoluteCoordinatesRelativeToWindowTop(frame) {
 
 /**
  * Return the list of html elements at the given position in the document
- * @param x
- * @param y
- * @returns {Array}
+ * @param {Number} x horizontal position
+ * @param {Number} y vertical position
+ * @returns {Array} list of HTML elements at the given position
  */
 function getElementsAt(x,y) {
 	var list = [];
@@ -333,7 +348,8 @@ function scrollRight(element, scroll) {
 
 /**
  * Return the first parent of the given element, being scrollable 
- * @param element
+ * @param {Element} element the HTML element
+ * @returns {Element} the scrollable container
  */
 function getScrollableContainer(element) {
 	var parent = element.parentNode;
@@ -668,6 +684,10 @@ function debug_object_to_string(o, indent) {
 	return ""+o;
 }
 
+/** Parse the given SQL date, and returns a Date object
+ * @param {String} s the SQL date to convert
+ * @returns {Date} the date, or null if it cannot be converted
+ */
 function parseSQLDate(s) {
 	if (s == null || s.length == 0) return null;
 	var d = new Date();
@@ -677,27 +697,50 @@ function parseSQLDate(s) {
 		d.setFullYear(parseInt(a[0]), parseInt(a[1])-1, parseInt(a[2]));
 	return d;
 };
+/** Convert the given number into a string, containing at least 2 digits (0 added if less than 10)
+ * @param {Number} n the number to convert
+ * @returns {String} the resulting string with at least 2 digits
+ */
 function _2digits(n) {
 	var s = ""+n;
 	while (s.length < 2) s = "0"+s;
 	return s;
 };
+/** Convert a JavaScript date into a SQL date
+ * @param {Date} d the date to convert
+ * @returns {String} the SQL date, or null if the given date is null
+ */
 function dateToSQL(d) {
 	if (d == null) return null;
 	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
 };
+/** Convert the given number into 2 digits hexadecimal number
+ * @param {Number} val the number to convert
+ * @returns {String} 2 digits hexadecimal
+ */
 function _2Hex(val) {
 	return HexDigit(Math.floor(val/16))+HexDigit(val%16);
 }
+/** Gives the hexadecimal character of the given number
+ * @param {Number} val a number between 0 and 15
+ * @returns {String} the hexadecimal character
+ */
 function HexDigit(val) {
 	if (val < 10) return ""+val;
 	return String.fromCharCode("A".charCodeAt(0)+(val-10));
 }
-
+/** Return a string representation of the given date: 2 digits day, space, month name, space, year
+ * @param {Date} d the date
+ * @returns {String} the string representation
+ */
 function getDateString(d) {
 	return _2digits(d.getDate())+" "+getMonthName(d.getMonth()+1)+" "+d.getFullyear();
 }
 
+/** Return the name of the given month
+ * @param {Number} month between 1 and 12
+ * @returns {String} the full name of the month
+ */
 function getMonthName(month) {
 	switch(month) {
 	case 1: return "January";
@@ -714,6 +757,10 @@ function getMonthName(month) {
 	case 12: return "December";
 	}
 }
+/** Return the short name (3 letters) of the given month
+ * @param {Number} month between 1 and 12
+ * @returns {String} the 3 letters short name of the month
+ */
 function getMonthShortName(month) {
 	switch(month) {
 	case 1: return "Jan";
@@ -730,6 +777,10 @@ function getMonthShortName(month) {
 	case 12: return "Dec";
 	}
 }
+/** Return the full name of the given week day
+ * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
+ * @returns {String} the name of the day
+ */
 function getDayName(d) {
 	switch (d) {
 	case 0: return "Monday";
@@ -741,6 +792,10 @@ function getDayName(d) {
 	case 6: return "Sunday";
 	}
 }
+/** Return the 3 letters short name of the given week day
+ * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
+ * @returns {String} the 3 letters name of the day
+ */
 function getDayShortName(d) {
 	switch (d) {
 	case 0: return "Mon";
@@ -752,6 +807,10 @@ function getDayShortName(d) {
 	case 6: return "Sun";
 	}
 }
+/** Return the 1 letter name of the given week day
+ * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
+ * @returns {String} the 1 letter name of the day
+ */
 function getDayLetter(d) {
 	switch (d) {
 	case 0: return "M";
@@ -762,25 +821,6 @@ function getDayLetter(d) {
 	case 5: return "S";
 	case 6: return "S";
 	}
-}
-
-/**
- * Set the common style to the tables with header
- * @param table the table to set
- * @param th_header
- * @param thead_color the rgb color to display into the header
- */
-function setCommonStyleTable(table,th_header,thead_color){
-	table.style.borderSpacing = "0";
-	table.style.marginLeft = "5px";
-	table.style.marginBottom = "3px";
-	setBorderRadius(table, 5, 5, 5, 5, 5, 5, 5, 5);
-	table.style.border = "1px solid";
-	th_header.style.textAlign = "left";
-	th_header.style.padding = "2px 5px 2px 5px";
-	th_header.style.backgroundColor = thead_color;
-	th_header.style.width = "100%";
-	setBorderRadius(th_header, 5, 5, 5, 5, 0, 0, 0, 0);
 }
 
 /**
@@ -811,6 +851,10 @@ function getObjectSize(object){
 	return s;
 }
 
+/** Get the value of the given cookie name
+ * @param {String} cname name of the cookie
+ * @returns {String} the value of the cookie (or empty string if it does not exist)
+ */
 function getCookie(cname) {
 	var name = cname + "=";
 	var ca = document.cookie.split(';');
@@ -820,6 +864,12 @@ function getCookie(cname) {
 	}
 	return "";
 }
+/** Set the value of a cookie
+ * @param {String} cname name of the cookie
+ * @param {String} cvalue value of the cookie
+ * @param {Number} expires_minutes expiration time in minutes
+ * @param {String} url URL where the cookie is valid
+ */
 function setCookie(cname,cvalue,expires_minutes,url) {
 	var d = new Date();
 	d.setTime(d.getTime()+(expires_minutes*60*1000));
@@ -827,6 +877,12 @@ function setCookie(cname,cvalue,expires_minutes,url) {
 	document.cookie = cname + "=" + cvalue + "; " + expires + "; Path="+url;
 }
 
+/** Wait for things to be initialized in a frame
+ * @param {window} win the window of the frame
+ * @param {Function} test tests if it is ready or not (takes the window as parameter, must return true if the frame is ready)
+ * @param {Function} onready called when the frame is ready
+ * @param {Number} timeout time in milliseconds after which we will not try anymore (if not specified, default is 30 seconds)
+ */
 function waitFrameReady(win, test, onready, timeout) {
 	if (typeof timeout == 'undefined') timeout = 30000;
 	if (timeout < 50) return;
@@ -836,6 +892,10 @@ function waitFrameReady(win, test, onready, timeout) {
 
 if (typeof window.top._current_tooltip == 'undefined')
 	window.top._current_tooltip = null;
+/** Display a tooltip for the given element, any tooltip currently displayed will be removed.
+ * @param {Element} element the HTML element to attach with a tooltip
+ * @param {Element|String} content the content of the tooltip
+ */
 function createTooltip(element, content) {
 	if (!content) return;
 	if (typeof content == 'string') {
@@ -888,6 +948,7 @@ function createTooltip(element, content) {
 	};
 	listenEvent(window,'mouseout',element._listener);
 }
+/** Remove the current tooltip on the window */
 function removeTooltip() {
 	if (!window.top._current_tooltip) return;
 	if (window.top._current_tooltip.parentNode) {
@@ -897,6 +958,10 @@ function removeTooltip() {
 	window.top._current_tooltip._element._tooltip = null;
 	window.top._current_tooltip = null;
 }
+/** Set a tooltip for the given element
+ * @param {Element} element the HTML element to attach the tooltip content
+ * @param {Element|String} content the content of the tooltip
+ */
 function tooltip(element, content) {
 	require("animation.js");
 	element.onmouseover = function() {

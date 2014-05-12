@@ -1,7 +1,7 @@
 <?php 
 class page_check_code extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$this->require_javascript("tree.js");
@@ -152,7 +152,7 @@ function check_js_type(type, descr, item, location) {
 	if (type == "Number") return;
 	if (type == "Boolean") return;
 	if (type == "window") return;
-	if (type == "DOMNode") return;
+	if (type == "Element") return;
 	if (type == "Function") return;
 	if (type == "Object") return;
 	if (type == "null") return;
@@ -230,8 +230,8 @@ function check_name_class(name, descr, item) {
 	}
 	for (var i = 1; i < name.length; ++i) {
 		var c = name.charAt(i);
-		if (!is_letter(c) && !is_digit(c)) {
-			add_error(item, descr+": Must contain only letters or digits");
+		if (!is_letter(c) && !is_digit(c) && c != "_") {
+			add_error(item, descr+": Must contain only letters, digits or underscore");
 			return;
 		}
 	}

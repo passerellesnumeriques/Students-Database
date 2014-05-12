@@ -1,5 +1,5 @@
 /** UI control for a DataDisplay, where the user can switch between editable and non-editable, and save a new value
- * @param {DOMNode} container where to put it
+ * @param {Element} container where to put it
  * @param {DataDisplay} data_display the data
  * @param {String} come_from to column from which we come to access to the table containing the data (to use the right DataDisplayHandler)
  * @param {Number} key the key identifying the row in the table

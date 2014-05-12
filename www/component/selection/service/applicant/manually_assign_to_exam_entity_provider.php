@@ -2,12 +2,12 @@
 require_once 'component/selection/SelectionJSON.inc';
 class service_applicant_manually_assign_to_exam_entity_provider extends Service {
 	
-	public function get_required_rights() {return array("can_access_selection_data");}
+	public function getRequiredRights() {return array("can_access_selection_data");}
 	
 	public function documentation() {
 		echo "Get the data about the targets elements of the manually assign applicants to exam entity page";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<ul>
 		  <li><code>mode</code> string mode of the manually_assign_to_exam_entity page: can be <ul><li><code>center</code> if the page is handling assignment of applicants to exam center</li><li><code>session</code> if the page is handling the assignment of applicants to exam session and rooms for a given center</li></ul></li>
@@ -16,7 +16,7 @@ class service_applicant_manually_assign_to_exam_entity_provider extends Service 
 
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		Object with one attribute: <code>targets</code>
 		Its content depends on mode

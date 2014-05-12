@@ -1,10 +1,10 @@
 <?php 
 class service_save_academic_year extends Service {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function documentation() { echo "Save information about an AcademicYear"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>year</code> year of the AcademicYear</li>";
 		echo "<li><code>name</code> name of the AcademicYear</li>";
@@ -17,7 +17,7 @@ class service_save_academic_year extends Service {
 		echo "</ul></li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "true on success"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		SQLQuery::startTransaction();
@@ -64,7 +64,7 @@ class service_save_academic_year extends Service {
 				SQLQuery::create()->removeKeys("AcademicPeriod", $existing_periods_ids);
 		}
 		
-		if (PNApplication::has_errors()) {
+		if (PNApplication::hasErrors()) {
 			SQLQuery::rollbackTransaction();
 			echo "false";
 		} else {

@@ -1,10 +1,10 @@
 <?php 
 class service_save_datadisplay extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Save or create one or more DataDisplay"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>table</code>: the table containing the DataDisplay</li>";
 		echo "<li><code>sub_model</code>: the sub model if any</li>";
@@ -16,7 +16,7 @@ class service_save_datadisplay extends Service {
 		echo "</ul></li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "return the key on success"; }
+	public function outputDocumentation() { echo "return the key on success"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");

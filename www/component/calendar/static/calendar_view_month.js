@@ -1,7 +1,7 @@
 /**
  * View of one month
  * @param {CalendarView} view the view manager
- * @param {DOMNode} container where to display
+ * @param {Element} container where to display
  */
 function calendar_view_month(view, container) {
 

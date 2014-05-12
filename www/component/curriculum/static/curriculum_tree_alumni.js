@@ -1,5 +1,9 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * Alumni: contains batches which already graduated
+ * @param {CurriculumTreeNode_AllStudents} parent all students node
+ */
 function CurriculumTreeNode_Alumni(parent) {
 	CurriculumTreeNode.call(this, parent, "alumni", true);
 	this.item.cells[0].addStyle({fontWeight:"bold"});
@@ -9,6 +13,10 @@ function CurriculumTreeNode_Alumni(parent) {
 CurriculumTreeNode_Alumni.prototype = new CurriculumTreeNode;
 CurriculumTreeNode_Alumni.prototype.constructor = CurriculumTreeNode_Alumni;
 CurriculumTreeNode_Alumni.prototype.createTitle = function() { return "Alumni"; };
+/**
+ * Return the list of Batch which are alumni
+ * @returns {Array} list of Batch objects
+ */
 CurriculumTreeNode_Alumni.prototype.getBatches = function() {
 	var list = [];
 	for (var i = 0; i < batches.length; ++i) {

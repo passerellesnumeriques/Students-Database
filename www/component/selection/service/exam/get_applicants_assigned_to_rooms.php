@@ -1,12 +1,12 @@
 <?php
 class service_exam_get_applicants_assigned_to_rooms extends Service{
-	public function get_required_rights(){return array("can_access_selection_data");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("can_access_selection_data");}
+	public function inputDocumentation(){
 		?>
 		<code>ids</code> array of exam center room ids
 		<?php
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		?>Array containing objects as:
 		<ul>
 			<li><code>room</code> the exam center room ID</li>

@@ -1,7 +1,7 @@
 <?php 
 class page_edit_import_template_multiple_by_columns extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$id = $_GET["id"];

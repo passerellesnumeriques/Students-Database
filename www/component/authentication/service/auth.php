@@ -3,10 +3,10 @@ class service_auth extends Service {
 	public function documentation() {
 ?>Authenticate a user on a given domain.<?php 		
 	}
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array(); // everyone can access
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 <ul>
 	<li><code>domain</code>: domain of the user to authenticate</li>
@@ -15,7 +15,7 @@ class service_auth extends Service {
 </ul>
 <?php 
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 ?>On success, the service returns a <i>token</i> that may be used for subsequent requests.<?php 
 	}
 	

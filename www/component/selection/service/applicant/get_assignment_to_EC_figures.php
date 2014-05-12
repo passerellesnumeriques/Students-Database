@@ -1,13 +1,13 @@
 <?php 
 class service_applicant_get_assignment_to_EC_figures extends Service {
 	
-	public function get_required_rights() {return array("can_access_selection_data");}
+	public function getRequiredRights() {return array("can_access_selection_data");}
 	
 	public function documentation() {echo "Get the main figures about applicants assignment to exam centers";}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo 'No';
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<ul>
 			<li><code>not_assigned</code> Number of applicants not assigned to any exam center</li>

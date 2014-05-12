@@ -1,7 +1,7 @@
 <?php
 class service_IS_get_partners_array extends Service{
-	public function get_required_rights(){return array("see_information_session_details");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("see_information_session_details");}
+	public function inputDocumentation(){
 		?>
 		<ul>
 			<li>
@@ -10,7 +10,7 @@ class service_IS_get_partners_array extends Service{
 		</ul>
 		<?php
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		?>
 		Array of partners objects. Each object contains:
 		<ul>
@@ -28,7 +28,7 @@ class service_IS_get_partners_array extends Service{
 	public function execute(&$component,$input){
 		if(count($input["partners_id"]) > 0){
 			$names = PNApplication::$instance->contact->getOrganizationsNames($input["partners_id"]);	
-			if(PNApplication::has_errors() || !isset($names[0]["id"])) echo "false";
+			if(PNApplication::hasErrors() || !isset($names[0]["id"])) echo "false";
 			else {
 				echo "[";
 				$first = true;

@@ -1,7 +1,7 @@
 /**
  * View upcoming events of calendars
  * @param {CalendarView} view view manager
- * @param {DOMNode} container where to display
+ * @param {Element} container where to display
  */
 function calendar_view_upcoming(view, container) {
 	/** Starting date to display */ 

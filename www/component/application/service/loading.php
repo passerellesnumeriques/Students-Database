@@ -1,13 +1,13 @@
 <?php 
 class service_loading extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Loading code, to be in dynamic section and not in /"; }
-	public function input_documentation() { echo "None"; }
-	public function output_documentation() { echo "The JavaScript code"; }
+	public function inputDocumentation() { echo "None"; }
+	public function outputDocumentation() { echo "The JavaScript code"; }
 	
-	public function get_output_format($input) { return "text/javascript"; }
+	public function getOutputFormat($input) { return "text/javascript"; }
 	
 	public function execute(&$component, $input) {
 $mandatory = array(

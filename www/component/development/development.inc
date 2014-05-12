@@ -7,7 +7,7 @@ class development extends Component {
 		return $this->requests[count($this->requests)-1];
 	}
 	
-	public function init_request() {
+	public function initRequest() {
 		Component::allow_page_without_login("development", "tools");
 		Component::allow_page_without_login("development", "reset_db");
 		Component::allow_page_without_login("development", "check_code");

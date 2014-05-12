@@ -91,16 +91,17 @@ public class ValueToEvaluate extends Element implements Evaluable {
 					if (type.toLowerCase().equals("function")) {
 						val = new Function(ctx.container, this.location.file, value, doc.description);
 					} else
-						val = new ObjectClass(this.location.file, type, value, doc.description); break;
+						val = new ObjectClass(this.location.file, type, value, doc.description);
 				} else
-					val = new ObjectClass(this.location.file, "null", value, docs); break;
+					val = new ObjectClass(this.location.file, "null", value, docs);
+				break;
 			}
 			case Token.TRUE: val = new ObjectClass(this.location.file, "Boolean", value, docs); break;
 			case Token.FALSE: val = new ObjectClass(this.location.file, "Boolean", value, docs); break;
-			default: System.err.println("Keyword not supported for value: "+value.toSource());
+			default: error("Keyword not supported for value: "+value.toSource(), this.location.file, value);
 			}
 		} else if (value instanceof UnaryExpression) {
-			return sub(((UnaryExpression)value).getOperand(), docs).evaluate(ctx);
+			val = sub(((UnaryExpression)value).getOperand(), docs).evaluate(ctx);
 		} else if (value instanceof NewExpression) {
 			AstNode target = ((NewExpression)value).getTarget();
 			if (target instanceof Name)
@@ -124,19 +125,26 @@ public class ValueToEvaluate extends Element implements Evaluable {
 					for (Map.Entry<String, ContextVariable> e : context.entrySet())
 						known += (known.length() > 0 ? "," : "")+e.getKey();
 					error("Unknown name <i>"+name+"</i>; known in this context: "+known, this.location.file, value);
-					return null;
+				} else if (o instanceof FinalElement) 
+					val = new ObjectClass(this.location.file, ((FinalElement)o).getType(), value, docs);
+				else if (o instanceof ValueToEvaluate)
+					ctx.need_reevaluation = true;
+				else {
+					error("Unexpected element type "+o.getClass().getSimpleName()+" in Name: "+name, this.location.file, value);
 				}
-				if (o instanceof FinalElement) val = new ObjectClass(this.location.file, ((FinalElement)o).getType(), value, docs);
 			}
 		} else if (value instanceof PropertyGet) {
 			FinalElement left = sub(((PropertyGet)value).getLeft(), docs).evaluate(ctx);
 			if (left != null) {
 				Container cont = null;
 				if (left instanceof Container) cont = (Container)left;
-				else if (left instanceof ObjectClass) cont = getContainer(((ObjectClass)left).type, ctx);
-				if (cont == null) {
-					error("Cannot find container of "+value.toSource(), this.location.file, value);
-				} else {
+				else if (left instanceof ObjectClass) {
+					cont = getContainer(((ObjectClass)left).type, ctx);
+					if (cont == null)
+						error("Unknown container type "+((ObjectClass)left).type+" in "+((PropertyGet)value).getLeft().toSource(), this.location.file, value);
+				} else
+					error("Cannot find container "+((PropertyGet)value).getLeft().toSource()+"["+left.getClass().getSimpleName()+"] for "+value.toSource(), this.location.file, value);
+				if (cont != null) {
 					AstNode right = ((PropertyGet)value).getRight();
 					if (!(right instanceof Name)) {
 						error("Unexpected "+right.getClass().getName()+" on the right side of "+value.toSource(), this.location.file, value);
@@ -144,9 +152,13 @@ public class ValueToEvaluate extends Element implements Evaluable {
 						String name = ((Name)right).getIdentifier();
 						Element o = cont.content.get(name);
 						if (o == null)
-							error("Container "+cont.getType()+" does not have element "+name);
+							error("Container "+cont.getType()+" does not have element "+name, this.location.file, value);
 						else if (o instanceof FinalElement) 
 							val = new ObjectClass(this.location.file, ((FinalElement)o).getType(), value, docs);
+						else if (o instanceof ValueToEvaluate)
+							ctx.need_reevaluation = true;
+						else
+							error("Element "+name+" in container "+cont.getType()+": unexpected "+o.getClass().getSimpleName(), this.location.file, value);
 					}
 				}
 			}
@@ -161,7 +173,7 @@ public class ValueToEvaluate extends Element implements Evaluable {
 			if (val == null)
 				error("Cannot evaluate conditional expression: "+value.toSource(), this.location.file, value);
 		} else if (value instanceof ParenthesizedExpression) {
-			return sub(((ParenthesizedExpression)value).getExpression(), docs).evaluate(ctx);
+			val = sub(((ParenthesizedExpression)value).getExpression(), docs).evaluate(ctx);
 		} else if (value instanceof InfixExpression) {
 			AstNode left = ((InfixExpression)value).getLeft();
 			AstNode right = ((InfixExpression)value).getRight();
@@ -176,6 +188,7 @@ public class ValueToEvaluate extends Element implements Evaluable {
 		} else {
 			error("Value not supported: "+value.getClass()+": "+value.toSource(), this.location.file, value);
 		}
+		//if (val == null) error("Evaluation failed ("+value.getClass().getSimpleName()+"): "+value.toSource(), this.location.file, value);
 		return val;
 	}
 	

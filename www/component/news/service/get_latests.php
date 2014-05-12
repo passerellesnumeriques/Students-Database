@@ -1,17 +1,17 @@
 <?php 
 class service_get_latests extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve latests news since last request"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>latests</code>: array of latests news id received last request</li>";
 		echo "<li><code>latests_timestamp</code>: timestamp of the latests</li>";
 		echo "<li><code>sections</code>: list of sections with categories and tags to get the news</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "List of NewsObject"; }
+	public function outputDocumentation() { echo "List of NewsObject"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/news/NewsPlugin.inc");

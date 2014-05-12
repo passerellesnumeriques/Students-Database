@@ -1,10 +1,10 @@
 <?php
 class service_get_json_organizations_by_geographic_area extends Service{
-	public function get_required_rights(){return array();}
-	public function input_documentation(){
+	public function getRequiredRights(){return array();}
+	public function inputDocumentation(){
 		echo "<code>geographic_area</code> the geographic area id";
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		?>
 		Return a JSON object containing two attributes:<ul>
 			<li><code>from_area</code> the array containing the organizations retrieved from the given geographic area</li>

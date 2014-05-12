@@ -34,6 +34,11 @@ public abstract class Container extends FinalElement {
 		this.parent = parent;
 	}
 	
+	public Global getGlobal() {
+		if (this instanceof Global) return (Global)this;
+		return parent.getGlobal();
+	}
+	
 	public void add(String name, Element element) {
 		if (content.containsKey(name)) {
 			Element current = content.get(name);
@@ -42,8 +47,50 @@ public abstract class Container extends FinalElement {
 					content.put(name, new ValuesToEvaluate((Evaluable)current, (Evaluable)element));
 					return;
 				}
+				// element is already defined
+				FinalElement e = (FinalElement)element;
+				if (e.getType() == null || e.getDescription().length() == 0) {
+					Context ctx = new Context();
+					ctx.container = this;
+					ctx.global = getGlobal();
+					Element val = ((Evaluable)current).evaluate(ctx);
+					while (val instanceof Evaluable) val = ((Evaluable)val).evaluate(ctx);
+					if (val != null) {
+						FinalElement v = (FinalElement)val;
+						if (e.getType() == null && v.getType() != null)
+							e.setType(v.getType());
+						if (e.getDescription().length() == 0 && v.getDescription().length() > 0)
+							e.setDescription(v.getDescription());
+					}
+				}
+				content.put(name, element);
+				return;
 			}
-			error("TODO: Duplicate definition of "+name+":\r\n - "+content.get(name).toString()+"\r\n - "+element.toString()+"\r\n", element);
+			// current is already defined, keep it
+			FinalElement e = (FinalElement)current;
+			if (e.getType() == null || e.getDescription().length() == 0) {
+				FinalElement v = null;
+				if (element instanceof FinalElement)
+					v = (FinalElement)element;
+				else {
+					Context ctx = new Context();
+					ctx.container = this;
+					ctx.global = getGlobal();
+					Element val = ((Evaluable)element).evaluate(ctx);
+					while (val instanceof Evaluable) val = ((Evaluable)val).evaluate(ctx);
+					if (val != null)
+						v = (FinalElement)val;
+				}
+				if (v != null) {
+					if (e.getType() == null && v.getType() != null)
+						e.setType(v.getType());
+					if (e.getDescription().length() == 0 && v.getDescription().length() > 0)
+						e.setDescription(v.getDescription());
+				}
+			}
+			return;
+			//Element first = content.get(name);
+			//error("Duplicate definition of "+name+" in "+this.getType()+":<ul><li>"+first.toString()+" in "+(first.location != null ? first.location.getDescription() : "<i>no location</i>")+"</li><li>"+element.toString()+" in "+(element.location != null ? element.location.getDescription() : "<i>no location</i>")+"</li></ul>", element);
 		}
 		content.put(name, element);
 	}
@@ -141,8 +188,9 @@ public abstract class Container extends FinalElement {
 			while (val instanceof Evaluable) val = ((Evaluable)val).evaluate(ctx);
 			if (val != null)
 				content.put(e.getKey(), val);
-			else
-				content.put(e.getKey(), new ObjectClass(te.getLocation().file, "?cannot evaluate?", te.getNode(), te.getDocs()));
+			else if (!ctx.need_reevaluation)
+				content.put(e.getKey(), new ObjectClass(te.getLocation().file, "?cannot evaluate:"+te.getNode().toSource().replace("\"", "\\\"")+"?", te.getNode(), te.getDocs()));
+			has_more |= ctx.need_reevaluation;
 		}
 		for (Map.Entry<String, Element> e : content.entrySet()) {
 			if (e.getValue() instanceof Container)
@@ -259,6 +307,10 @@ public abstract class Container extends FinalElement {
 		if (t.length() > 0) t += ".";
 		t += parent.getName(this);
 		return t;
+	}
+	@Override
+	public void setType(String type) {
+		// Not possible
 	}
 
 	protected abstract String getJSDocConstructor();

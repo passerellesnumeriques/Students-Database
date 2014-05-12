@@ -356,7 +356,7 @@ function Calendar(provider, name, color, show, icon) {
 
 /**
  * UI Control for a calendar: controls its color, visibility, name...
- * @param {DOMNode} container where to put it
+ * @param {Element} container where to put it
  * @param {Calendar} cal the calendar to control
  */
 function CalendarControl(container, cal) {

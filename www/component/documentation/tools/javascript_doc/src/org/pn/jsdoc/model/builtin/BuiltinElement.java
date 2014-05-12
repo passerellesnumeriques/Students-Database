@@ -5,50 +5,50 @@ import org.pn.jsdoc.model.Function;
 import org.pn.jsdoc.model.Global;
 import org.pn.jsdoc.model.ObjectClass;
 
-public class BuiltinDOMNode extends Class implements Builtin {
+public class BuiltinElement extends Class implements Builtin {
 
-	public BuiltinDOMNode(Global global) {
+	public BuiltinElement(Global global) {
 		super(global);
-		add("appendChild", new Function(this, "DOMNode"));
+		add("appendChild", new Function(this, "Element"));
 		add("attributes", new ObjectClass("Array"));
 		add("childNodes", new ObjectClass("Array"));
 		add("className", new ObjectClass("String"));
 		add("clientHeight", new ObjectClass("Number"));
 		add("clientWidth", new ObjectClass("Number"));
-		add("cloneNode", new Function(this, "DOMNode"));
-		add("firstChild", new ObjectClass("DOMNode"));
+		add("cloneNode", new Function(this, "Element"));
+		add("firstChild", new ObjectClass("Element"));
 		add("getAttribute", new Function(this, "String"));
-		add("getAttributeNode", new Function(this, "DOMNode"));
+		add("getAttributeNode", new Function(this, "Element"));
 		add("getElementsByTagName", new Function(this, "Array"));
 		add("hasAttribute", new Function(this, "Boolean"));
 		add("hasAttributes", new Function(this, "Boolean"));
 		add("hasChildNodes", new Function(this, "Boolean"));
 		add("id", new ObjectClass("String"));
 		add("innerHTML", new ObjectClass("String"));
-		add("insertBefore", new Function(this, "DOMNode"));
+		add("insertBefore", new Function(this, "Element"));
 		add("isDefaultNamespace", new Function(this, "Boolean"));
 		add("isEqualsNode", new Function(this, "Boolean"));
 		add("isSameNode", new Function(this, "Boolean"));
 		add("isSupported", new Function(this, "Boolean"));
 		add("lang", new ObjectClass("String"));
-		add("lastChild", new ObjectClass("DOMNode"));
+		add("lastChild", new ObjectClass("Element"));
 		add("namespaceURI", new ObjectClass("String"));
-		add("nextSibling", new ObjectClass("DOMNode"));
+		add("nextSibling", new ObjectClass("Element"));
 		add("nodeName", new ObjectClass("String"));
 		add("nodeType", new ObjectClass("Number"));
 		add("nodeValue", new ObjectClass("String"));
 		add("offsetHeight", new ObjectClass("Number"));
 		add("offsetWidth", new ObjectClass("Number"));
 		add("offsetLeft", new ObjectClass("Number"));
-		add("offsetParent", new ObjectClass("DOMNode"));
+		add("offsetParent", new ObjectClass("Element"));
 		add("offsetTop", new ObjectClass("Number"));
 		add("ownerDocument", new ObjectClass("document"));
-		add("parentNode", new ObjectClass("DOMNode"));
-		add("previousSibling", new ObjectClass("DOMNode"));
+		add("parentNode", new ObjectClass("Element"));
+		add("previousSibling", new ObjectClass("Element"));
 		add("removeAttribute", new Function(this, "String"));
-		add("removeAttributeNode", new Function(this, "DOMNode"));
-		add("removeChild", new Function(this, "DOMNode"));
-		add("replaceChild", new Function(this, "DOMNode"));
+		add("removeAttributeNode", new Function(this, "Element"));
+		add("removeChild", new Function(this, "Element"));
+		add("replaceChild", new Function(this, "Element"));
 		add("scrollHeight", new ObjectClass("Number"));
 		add("scrollWidth", new ObjectClass("Number"));
 		add("scrollLeft", new ObjectClass("Number"));

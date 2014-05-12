@@ -1,7 +1,7 @@
 <?php 
 class page_enter extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	protected function execute() {
 		if (isset($_GET["page"]) && $_GET["page"] == "/dynamic/test/page/ui") {

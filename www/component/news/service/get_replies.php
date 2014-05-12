@@ -1,11 +1,11 @@
 <?php 
 class service_get_replies extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve replies to a root news"; }
-	public function input_documentation() { echo "<code>ids</code>: the root news' ids"; }
-	public function output_documentation() { echo "List of NewsObject, containing reply_to as well"; }
+	public function inputDocumentation() { echo "<code>ids</code>: the root news' ids"; }
+	public function outputDocumentation() { echo "List of NewsObject, containing reply_to as well"; }
 	
 	public function execute(&$component, $input) {
 		$news = SQLQuery::create()->bypassSecurity()

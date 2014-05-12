@@ -1,7 +1,7 @@
 <?php 
 class page_synch_users__list extends Page {
 	
-	public function get_required_rights() { return array("manage_users"); }
+	public function getRequiredRights() { return array("manage_users"); }
 	
 	public function execute() {
 		$domain = $_GET["domain"];

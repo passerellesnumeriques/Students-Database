@@ -1,7 +1,7 @@
 <?php
 class page_role_rights extends Page {
 	
-	public function get_required_rights() { return array("manage_roles"); }
+	public function getRequiredRights() { return array("manage_roles"); }
 	
 	protected function execute() {
 		// get the role we need to display

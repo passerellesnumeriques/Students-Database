@@ -2,7 +2,7 @@
 require_once("selection_page.inc");
 class page_organizations_for_selection extends selection_page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	/**
 	 * Create a data_list with all the selection organizations

@@ -1,7 +1,7 @@
 <?php 
 class page_list extends Page {
 	
-	public function get_required_rights() { return array("consult_staff_list"); }
+	public function getRequiredRights() { return array("consult_staff_list"); }
 	
 	public function execute() {
 		$this->require_javascript("data_list.js");

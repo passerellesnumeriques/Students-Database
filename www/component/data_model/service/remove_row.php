@@ -1,8 +1,8 @@
 <?php
 class service_remove_row extends Service {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function documentation() { echo "Remove an entry in the given table"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 <ul>
 	<li><code>table</code>: table name of the row to remove</li>
@@ -11,7 +11,7 @@ class service_remove_row extends Service {
 </ul>
 <?php		
 	}
-	public function output_documentation() { echo "return true on success"; }
+	public function outputDocumentation() { echo "return true on success"; }
 	public function execute(&$component, $input) {
 		$table = $input["table"];
 		$key = $input["row_key"];
@@ -24,7 +24,7 @@ class service_remove_row extends Service {
 		} catch (Exception $e) {
 			PNApplication::error($e->getMessage());
 		}
-		echo PNApplication::has_errors() ? "false" : "true";
+		echo PNApplication::hasErrors() ? "false" : "true";
 	}
 }
 ?>

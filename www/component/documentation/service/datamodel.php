@@ -1,13 +1,13 @@
 <?php 
 class service_datamodel extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Generate the image of the required datamodel"; }
-	public function input_documentation() { echo "<code>component</code>: component name, or <i>all</i> for the global data model"; }
-	public function output_documentation() { echo "The image of the data model"; }
+	public function inputDocumentation() { echo "<code>component</code>: component name, or <i>all</i> for the global data model"; }
+	public function outputDocumentation() { echo "The image of the data model"; }
 	
-	public function get_output_format($input) { return "image/png"; }
+	public function getOutputFormat($input) { return "image/png"; }
 	
 	public function execute(&$component, $input) {
 		$name = $_GET["component"];

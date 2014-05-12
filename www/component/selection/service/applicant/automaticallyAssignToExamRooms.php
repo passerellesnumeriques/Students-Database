@@ -1,13 +1,13 @@
 <?php 
 class service_applicant_automaticallyAssignToExamRooms extends Service {
 	
-	public function get_required_rights() {return array("can_access_selection_data","manage_applicant");}
+	public function getRequiredRights() {return array("can_access_selection_data","manage_applicant");}
 	
 	public function documentation() {echo 'Automatically assign applicants to exam center rooms for a given session';}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>session_id</code> exam session ID";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<ul>
 		  <li>false if an error occured </li>

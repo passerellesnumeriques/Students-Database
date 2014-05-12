@@ -4,10 +4,10 @@ class service_save_user_rights extends Service {
 	public function documentation() {
 		?>Save the list of rights associated with the given user.<?php
 	}
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array("edit_user_rights");
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 	?>
 	<ul>
 		<li><code>user</code>: id of the user</li>
@@ -16,7 +16,7 @@ class service_save_user_rights extends Service {
 	</ul>
 	<?php 
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 	?>return true on success.<?php 
 	}
 	public function execute(&$component, $input) {

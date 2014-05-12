@@ -44,7 +44,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	/** Set (change) the content of the popup window to be an IFRAME.
 	 * @param {String} url url to load in the frame
 	 * @param {Function} onload if specified, it is called when the frame is loaded
-	 * @returns {DOMNode} the IFRAME element
+	 * @returns {Element} the IFRAME element
 	 */
 	t.setContentFrame = function(url, onload, post_data) {
 		if (!t.content_container)

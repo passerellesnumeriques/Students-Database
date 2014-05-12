@@ -1,10 +1,10 @@
 <?php 
 class service_get_my_calendars extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
-	public function input_documentation() { echo "Nothing"; }
-	public function output_documentation() { echo "A list of calendars: {id,name,color,writable,show,icon}"; }
+	public function inputDocumentation() { echo "Nothing"; }
+	public function outputDocumentation() { echo "A list of calendars: {id,name,color,writable,show,icon}"; }
 	public function documentation() { echo "Get the list of accessible calendars by the user"; }
 	
 	public function execute(&$component, $input) {

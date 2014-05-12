@@ -5,7 +5,7 @@ if (typeof require != 'undefined') {
 
 /**
  * UI Control for an organization
- * @param {DOMNode} container where to display
+ * @param {Element} container where to display
  * @param {Organization} org organization to display
  * @param {Array} existing_types list of {id:...,name:...} listing all existing organization types in database that can be used
  * @param {Boolean} can_edit indicates if the user can modify the organization
@@ -277,7 +277,7 @@ function organization(container, org, existing_types, can_edit) {
 	/**
 	 * Add a contact point to the table
 	 * @param {ContactPoint} point the contact point to add
-	 * @param {DOMNode} tbody the table where to put it
+	 * @param {Element} tbody the table where to put it
 	 */
 	this._addContactPointRow = function(point, tbody) {
 		var tr, td_design, td;

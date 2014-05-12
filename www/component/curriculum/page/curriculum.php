@@ -1,7 +1,7 @@
 <?php 
 class page_curriculum extends Page {
 	
-	public function get_required_rights() { return array("consult_curriculum"); }
+	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function execute() {
 		if (!isset($_GET["batch"])) {
@@ -226,7 +226,7 @@ class page_curriculum extends Page {
 			</div>
 			<?php if ($can_edit) { ?>
 			<div class="page_footer">
-				<button class='action' onclick='edit_batch()'>
+				<button class='action' onclick='editBatch()'>
 					<img src='/static/curriculum/batch_16.png'/>
 					Edit batch: periods and specializations
 				</button>
@@ -248,15 +248,15 @@ class page_curriculum extends Page {
 		if ($period_id <> null)
 			echo "window.top.datamodel.registerCellSpan(window, 'BatchPeriod', 'name', ".$period_id.", document.getElementById('period_name'));"; 
 		?> 
-		function edit_batch() {
+		function editBatch() {
 			require("popup_window.js",function(){
 				var popup = new popup_window("Edit Batch", theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.edit), "");
-				popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&id=<?php echo $batch_id;?>&onsave=batch_saved");
+				popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&id=<?php echo $batch_id;?>&onsave=batchSaved");
 				popup.show();
 			});
 		}
-		function batch_saved(id) {
-			if (window.parent.batch_saved) window.parent.batch_saved(id);
+		function batchSaved(id) {
+			if (window.parent.batchSaved) window.parent.batchSaved(id);
 			location.reload();
 		}
 		var edit = <?php echo $editing ? "true" : "false"; ?>;

@@ -13,11 +13,11 @@ if(!function_exists("getFigure")){
 	}
 }
 class service_exam_subject_status extends Service{
-	public function get_required_rights(){return array("can_access_selection_data");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("can_access_selection_data");}
+	public function inputDocumentation(){
 		echo "No";
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		echo "<code>number_exams</code> number of exam subjects already existing";
 	}
 	public function documentation(){

@@ -1,7 +1,7 @@
 <?php 
 class page_component extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$this->add_stylesheet("/static/documentation/CodeDoc.css");
@@ -115,12 +115,12 @@ class page_component extends Page {
 		echo "</tr>";
 		echo "<th valign=top>Input</th>";
 		echo "<td class='codedoc_comment'>";
-		$c->input_documentation();
+		$c->inputDocumentation();
 		echo "</td>";
 		echo "</tr>";
 		echo "<th valign=top>Output</th>";
 		echo "<td class='codedoc_comment'>";
-		$c->output_documentation();
+		$c->outputDocumentation();
 		echo "</td>";
 		echo "</tr>";
 	}

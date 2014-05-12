@@ -2,14 +2,14 @@
 require_once "component/selection/SelectionJSON.inc";
 class service_exam_remove_session extends Service {
 	
-	public function get_required_rights() { return array("can_access_selection_data","manage_applicant"); }
+	public function getRequiredRights() { return array("can_access_selection_data","manage_applicant"); }
 	public function documentation() {
 		echo "Remove an exam session from its ID, if possible. If any applicants are assigned to this session, they are unassigned (if possible) and then the session is removed. All the query are performed within an SQL transaction";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>id</code> exam session ID";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>Object with two attributes:
 		<ul>
 			<li><code>applicants</code> NULL if no applicant was assigned to this session, else array of objects (one per applicant) with following attributes:<ul><li><code>done</code> {Boolean} true if the applicant was unassigned</li><li><code>error_performing</code> {Boolean} true if an error occured</li><li><code>error_has_grade</code>{String|NULL} NULL if has no exam grade yet, else error message about the grades</li><li><code>applicant</code> {Applicant} JSON applicant object</li></ul></li>
@@ -67,7 +67,7 @@ class service_exam_remove_session extends Service {
 				}
 			
 			}
-			if(PNApplication::has_errors() || $rollback){
+			if(PNApplication::hasErrors() || $rollback){
 				SQLQuery::rollbackTransaction();
 				echo "false";
 			} else {

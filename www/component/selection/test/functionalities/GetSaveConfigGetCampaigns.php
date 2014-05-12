@@ -37,15 +37,15 @@ class GetSaveConfigCampaigns_Can_Manage extends TestFunctionalitiesStep{
 			return "Cannot create campaign. Error was: ".$e->getMessage();
 		}
 		$config = PNApplication::$instance->selection->getConfig();
-		if(PNApplication::$instance->has_errors()) return "Cannot get the config of the campaign";
+		if(PNApplication::$instance->hasErrors()) return "Cannot get the config of the campaign";
 		if($config == null || $config == array()) return "The config attribute was not set properly";
 		
 		$json_campaigns = SelectionJSON::Steps();
-		if(PNApplication::$instance->has_errors()) return "Cannot get the campaigns from database";
+		if(PNApplication::$instance->hasErrors()) return "Cannot get the campaigns from database";
 		if($json_campaigns == "[]") return "The campaigns array was not set properly";
 		
 		$campaigns = PNApplication::$instance->selection->getCampaigns();
-		if(PNApplication::$instance->has_errors()) return "Cannot get the campaigns from database";
+		if(PNApplication::$instance->hasErrors()) return "Cannot get the campaigns from database";
 		if($campaigns == array()) return "The campaigns array was not set properly";
 		
 		PNApplication::$instance->user_management->logout();
@@ -62,16 +62,16 @@ class GetSaveConfigCampaigns_No_Manage extends TestFunctionalitiesStep{
 		PNApplication::$instance->selection->setCampaignId($id);
 		
 		$config = PNApplication::$instance->selection->getConfig();
-		if(PNApplication::has_errors()) return "Cannot get the config of the campaign";
+		if(PNApplication::hasErrors()) return "Cannot get the config of the campaign";
 		if($config == null || $config == array()) return "The config attribute was not set properly";
 		$scenario_data["config"] = $config;
 		
 		$json_campaigns = $json_campaigns = SelectionJSON::Steps();
-		if(PNApplication::$instance->has_errors()) return "Cannot get the campaigns from database";
+		if(PNApplication::$instance->hasErrors()) return "Cannot get the campaigns from database";
 		if($json_campaigns == "[]") return "The campaigns array was not set properly";
 		
 		$campaigns = PNApplication::$instance->selection->getCampaigns();
-		if(PNApplication::$instance->has_errors()) return "Cannot get the campaigns from database";
+		if(PNApplication::$instance->hasErrors()) return "Cannot get the campaigns from database";
 		if($campaigns == array()) return "The campaigns array was not set properly";
 		
 		PNApplication::$instance->user_management->logout();

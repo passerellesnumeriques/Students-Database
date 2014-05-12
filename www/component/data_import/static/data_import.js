@@ -7,7 +7,7 @@ if (typeof require != 'undefined') {
 }
 /**
  * Import data from Excel file
- * @param {DOMNode} container where to put it
+ * @param {Element} container where to put it
  * @param {String} root_table starting point in the data model, to find the list of DataDisplay we can import
  * @param {Array} preset_data values pre-filled
  * @param {String} title title of the page
@@ -427,7 +427,7 @@ function data_import(container, root_table, preset_data, title) {
 	};
 	
 	/** Add a layer to the Excel file
-	 * @param {DOMNode} input the input containing the range
+	 * @param {Element} input the input containing the range
 	 * @param {String} title title to put on the layer
 	 * @param {Number} r red
 	 * @param {Number} g green
@@ -444,7 +444,7 @@ function data_import(container, root_table, preset_data, title) {
 		input.layer = sheet.addLayer(r.range.start_col,r.range.start_row,r.range.end_col,r.range.end_row,r,g,b,title);
 	};
 	/** Get the Excel range, from the text of the given input
-	 * @param {DOMNode} input the input element
+	 * @param {Element} input the input element
 	 */
 	this.getExcelRange = function(input) {
 		var w = getIFrameWindow(t.frame);
@@ -458,7 +458,7 @@ function data_import(container, root_table, preset_data, title) {
 	};
 	
 	
-	/** {DOMNode} Locks the screen to avoid user interactions */
+	/** {Element} Locks the screen to avoid user interactions */
 	this.freezer = null;
 	/** {String} ID of the element containing the message */ 
 	this.freezer_message_id = generateID();

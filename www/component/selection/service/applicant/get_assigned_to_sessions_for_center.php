@@ -1,12 +1,12 @@
 <?php 
 class service_applicant_get_assigned_to_sessions_for_center extends Service {
 	
-	public function get_required_rights() {return array("can_access_selection_data");}
+	public function getRequiredRights() {return array("can_access_selection_data");}
 	
 	public function documentation() {
 		echo "Get the applicants to all the sessions planned into an exam center";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<ul>
 		  <li><code>EC_id</code> the exam center ID</li>
@@ -16,7 +16,7 @@ class service_applicant_get_assigned_to_sessions_for_center extends Service {
 
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<code>data</code> containing the retrieved data. Can be:
 		<ul>

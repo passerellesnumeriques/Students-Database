@@ -2,7 +2,7 @@
 require_once("component/selection/page/selection_page.inc");
 class page_applicant_list extends selection_page {
 	
-	public function get_required_rights() { return array("see_applicant_info"); }
+	public function getRequiredRights() { return array("see_applicant_info"); }
 	
 	/**
 	 * Create a data_list of applicants

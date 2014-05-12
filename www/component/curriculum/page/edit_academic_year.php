@@ -1,11 +1,11 @@
 <?php 
 class page_edit_academic_year extends Page {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function execute() {
 		$id = @$_GET["id"];
-		$conf = PNApplication::$instance->get_domain_descriptor();
+		$conf = PNApplication::$instance->getDomainDescriptor();
 		$conf = $conf["curriculum"];
 		if ($id <> null) {
 			$year = SQLQuery::create()->select("AcademicYear")->whereValue("AcademicYear","id",$id)->executeSingleRow();

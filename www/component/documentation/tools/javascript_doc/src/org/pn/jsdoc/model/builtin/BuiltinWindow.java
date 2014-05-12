@@ -33,6 +33,8 @@ public class BuiltinWindow extends Class implements Builtin {
 		add("setInterval", new Function(this, "Object"));
 		add("clearInterval", new Function(this, "Object"));
 		add("eval", new Function(this, "Object"));
+		add("parseInt", new Function(this, "Number"));
+		add("parseFloat", new Function(this, "Number"));
 	}
 	
 }

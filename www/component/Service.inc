@@ -16,33 +16,35 @@ abstract class Service {
 	 * <li>a function: if it returns true, the user can access to the service</li>
 	 * </ul>
 	 */
-	public abstract function get_required_rights();
+	public abstract function getRequiredRights();
 	/**
 	 * Generate the documentation of the expected input of this service.
 	 */
-	public abstract function input_documentation();
+	public abstract function inputDocumentation();
 	/**
 	 * Return the format of the output of this service (by default: text/json) 
-	 * @return string
+	 * @param array $input the input data of the service
+	 * @return string the MIME format that will be returned by the service
 	 */
-	public function get_output_format($input) { return "text/json"; }
+	public function getOutputFormat($input) { return "text/json"; }
 	/**
 	 * Generate the documentation of the output of this service.
 	 */
-	public abstract function output_documentation();
+	public abstract function outputDocumentation();
 	/**
 	 * Execute the service
 	 * @param Component $component the component this service belongs to
+	 * @param array $input input of the service, from HTTP request (parsed from JSON or from GET)
 	 */
 	public abstract function execute(&$component, $input);
 	
 	/**
 	 * Simulate the execution of a service, and returns the structure, parsed with json_decode
-	 * @param string $component_name
-	 * @param string $service_name
-	 * @param array $input
+	 * @param string $component_name name of the component containing the service to execute
+	 * @param string $service_name name of the service to execute
+	 * @param array $input data to give as input to the service
 	 */
-	public static function internal_execution($component_name, $service_name, $input) {
+	public static function internalExecution($component_name, $service_name, $input) {
 		$current_output = ob_get_contents();
 		ob_end_clean();
 		ob_start();

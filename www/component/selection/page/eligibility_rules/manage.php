@@ -3,7 +3,7 @@ require_once("/../selection_page.inc");
 require_once("component/selection/SelectionJSON.inc");
 
 class page_eligibility_rules_manage extends selection_page {
-	public function get_required_rights() { return array("see_exam_subject"); }
+	public function getRequiredRights() { return array("see_exam_subject"); }
 	public function execute_selection_page(){
 		$this->require_javascript("vertical_layout.js");
 		$this->onload("new vertical_layout('to_vertical_layout');");
@@ -41,7 +41,7 @@ class page_eligibility_rules_manage extends selection_page {
 			$lock_eligibility_rules = $this->performRequiredLocks("EligibilityRule",null,null,$sm);
 			$lock_exam_topics = $this->performRequiredLocks("ExamTopicForEligibilityRule",null,null,$sm);//required by eligibilityrule
 			$lock_exam_subjects = $this->performRequiredLocks("ExamSubject",null,null,$sm);//required by examtopics
-			if(PNApplication::has_errors())//locks not performed well
+			if(PNApplication::hasErrors())//locks not performed well
 				return;
 			
 			//Get all the eligibility rules objects

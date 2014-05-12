@@ -1,7 +1,7 @@
 <?php 
 class page_create_data extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$input = json_decode($_POST["input"], true);

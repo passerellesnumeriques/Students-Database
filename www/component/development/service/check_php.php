@@ -1,11 +1,11 @@
 <?php 
 class service_check_php extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function inputDocumentation() {}
+	public function outputDocumentation() {}
 
 	public function execute(&$component, $input) {
 		require_once("component/Page.inc");
@@ -54,11 +54,11 @@ class service_check_php extends Service {
 			$doc = ob_get_clean();
 			if (strlen($doc) == 0)
 				array_push($output, "Service <b>".$cl->getName()."</b>: No documentation");
-			$service->input_documentation();
+			$service->inputDocumentation();
 			$doc = ob_get_clean();
 			if (strlen($doc) == 0)
 				array_push($output, "Service <b>".$cl->getName()."</b>: No documentation for input");
-			$service->output_documentation();
+			$service->outputDocumentation();
 			$doc = ob_get_clean();
 			if (strlen($doc) == 0)
 				array_push($output, "Service <b>".$cl->getName()."</b>: No documentation for output");

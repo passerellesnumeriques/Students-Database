@@ -1,7 +1,7 @@
 <?php 
 class page_new_class extends Page {
 	
-	public function get_required_rights() { return array("manage_batches"); }
+	public function getRequiredRights() { return array("manage_batches"); }
 	
 	public function execute() {
 		$period_id = $_GET["period"];

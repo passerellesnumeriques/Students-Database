@@ -7,7 +7,7 @@ if (typeof get_script_path != 'undefined') {
 /**
  * View of a single day
  * @param {CalendarView} view the view manager
- * @param {DOMNode} container where to display
+ * @param {Element} container where to display
  */
 function calendar_view_day(view, container) {
 
@@ -232,7 +232,7 @@ function calendar_view_day(view, container) {
 		if (!t.content_.hasAttribute("layout"))
 			t.content_.style.height = y+"px";
 	};
-	/** {DOMNode} line which indicates the actual time */
+	/** {Element} line which indicates the actual time */
 	this._now = null;
 	/** Displays/layout the line indicating the actual time */
 	this._showNow = function() {

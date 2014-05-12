@@ -1,16 +1,16 @@
 <?php 
 class service_save_subject_evaluations extends Service {
 	
-	public function get_required_rights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); } // TODO
 	
 	public function documentation() { echo "Save subject grading information, including students' grades"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>subject_id</code>: id of the subject</li>";
 		echo "<li><code>types</code>: corresponds to the CurriculumSubjectEvaluationType table, including <code>evaluations</code> corresponding to the CurriculumSubjectEvaluation table. Every id less than 0 is considered as a new entry, else an entry to update</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { 
+	public function outputDocumentation() { 
 		echo "On success, returns <code>types</code> and <code>evaluations</code>, as a mapping of new ids: <code>[{input_id,output_id},...]</code> where input_id is a given id less than 0, and output_id is the id of the created entry in database."; 
 	}
 	

@@ -7,6 +7,7 @@ public abstract class FinalElement extends Element {
 	}
 	
 	public abstract String getType();
+	public abstract void setType(String type);
 	public abstract String getDescription();
 	public abstract void setDescription(String doc);
 

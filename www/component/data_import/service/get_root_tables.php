@@ -1,13 +1,13 @@
 <?php 
 class service_get_root_tables extends Service {
 	
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array();
 	}
 	
 	public function documentation() { echo "Return the root tables which can be proposed to the user for an import"; }
-	public function input_documentation() { echo "nothing"; }
-	public function output_documentation() { 
+	public function inputDocumentation() { echo "nothing"; }
+	public function outputDocumentation() { 
 		echo "An array of [{table:xxx,display:yyy}]";
 	}
 	

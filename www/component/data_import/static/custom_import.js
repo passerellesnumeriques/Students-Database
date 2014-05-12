@@ -4,7 +4,7 @@ if (typeof require != 'undefined')
 /**
  * Custom import allows to import manually data from an Excel file.
  * This can be used with import_data.inc, in PHP, which will prepare this import according to given parameters.
- * @param {DOMNode} container where to put it
+ * @param {Element} container where to put it
  * @param {Function} onready called when everything is ready and the object can be used
  */
 function custom_import(container, icon, title, import_button_text, import_button_function, onready) {

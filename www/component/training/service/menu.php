@@ -1,12 +1,12 @@
 <?php 
 class service_menu extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Provides the training menu"; }
-	public function input_documentation() { echo "No"; }
-	public function output_documentation() { echo "The HTML to put in the menu"; }
-	public function get_output_format($input) { return "text/html"; }
+	public function inputDocumentation() { echo "No"; }
+	public function outputDocumentation() { echo "The HTML to put in the menu"; }
+	public function getOutputFormat($input) { return "text/html"; }
 		
 	public function execute(&$component, $input) {
 		//$current_batches = PNApplication::$instance->curriculum->getCurrentBatches();

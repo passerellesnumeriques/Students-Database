@@ -45,7 +45,7 @@ datamodel = {
 	 * @param {String} table table
 	 * @param {String} column column name in the table
 	 * @param {Object} row_key key of the row in the table
-	 * @param {DOMNode} text_node the text node to automatically update when the data changes
+	 * @param {Element} text_node the text node to automatically update when the data changes
 	 */
 	registerCellText: function(win, table, column, row_key, text_node) {
 		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {

@@ -1,7 +1,7 @@
 <?php 
 require_once("/../selection_page.inc");
 class page_exam_subject extends selection_page {
-	public function get_required_rights() { return array("see_exam_subject"); }
+	public function getRequiredRights() { return array("see_exam_subject"); }
 	public function execute_selection_page(){
 		$id = null;
 		if(!isset($_GET["id"]))
@@ -70,11 +70,11 @@ class page_exam_subject extends selection_page {
 				//create an exam subject from an existing one
 				<?php
 					if(isset($campaign_id)){
-						SQLQuery::set_submodel("SelectionCampaign", $campaign_id);
+						SQLQuery::setSubModel("SelectionCampaign", $campaign_id);
 	// 					
 						echo "subject = ".SelectionJSON::ExamSubjectFromID($id).";";
 						//reset the current campaign submodel
-						SQLQuery::set_submodel("SelectionCampaign", $current_campaign);
+						SQLQuery::setSubModel("SelectionCampaign", $current_campaign);
 					}
 				?>
 				//Reset the subject id as -1

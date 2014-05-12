@@ -8,7 +8,7 @@
 require_once("/../selection_page.inc");
 class page_exam_create_subject extends selection_page {
 	
-	public function get_required_rights() {}
+	public function getRequiredRights() {}
 	
 	public function execute_selection_page() {
 		/* Check the rights */
@@ -188,7 +188,7 @@ class page_exam_create_subject extends selection_page {
 		foreach($all_campaigns as $c){
 			$old_exams[$c["name"]] = array();
 			$first = true;
-			SQLQuery::set_submodel("SelectionCampaign", $c["id"]);
+			SQLQuery::setSubModel("SelectionCampaign", $c["id"]);
 			$exams = SQLQuery::create()
 						->select("ExamSubject")
 						->field("ExamSubject","id","id")
@@ -202,7 +202,7 @@ class page_exam_create_subject extends selection_page {
 			}
 		}
 		//reset the current sub model
-		SQLQuery::set_submodel("SelectionCampaign", $current_campaign);
+		SQLQuery::setSubModel("SelectionCampaign", $current_campaign);
 		return $old_exams;
 	}
 	

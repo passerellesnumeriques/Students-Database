@@ -1,15 +1,15 @@
 <?php 
 class service_set_configuration extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Save user's configuration about a calendar"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>calendar</code>: calendar id<br/>";
 		echo "<code>show</code>: optional, set the visibility of the calendar<br/>";
 		echo "<code>color</code>: optional, set the color of the calendar<br/>";
 	}
-	public function output_documentation() { echo "true on success"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		if (!$component->canReadCalendar($input["calendar"])) {
@@ -41,7 +41,7 @@ class service_set_configuration extends Service {
 			if (isset($input["color"])) $data["color"] = $input["color"];
 			SQLQuery::create()->bypassSecurity()->updateByKey("UserCalendarConfiguration", $key, $data);
 		}
-		if (!PNApplication::has_errors()) {
+		if (!PNApplication::hasErrors()) {
 			SQLQuery::commitTransaction();
 			echo "true";
 		} else {

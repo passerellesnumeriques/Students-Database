@@ -4,6 +4,11 @@
  */ 
 class CurriculumJSON {
 	
+	/**
+	 * Returns JSON format of academic years and periods
+	 * @return string a JSON array of AcademicYear
+	 * @no_name_check
+	 */
 	public static function AcademicCalendarJSON() {
 		$years = PNApplication::$instance->curriculum->getAcademicYears();
 		$periods = PNApplication::$instance->curriculum->getAcademicPeriods();
@@ -29,6 +34,12 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/**
+	 * Return a JSON object AcademicPeriod
+	 * @param array $p row from the AcademicPeriod table
+	 * @return string the JSON object AcademicPeriod
+	 * @no_name_check
+	 */
 	public static function AcademicPeriodJSONFromDB($p) {
 		$s = "{";
 		$s .= "year_id:".$p["year"];
@@ -169,6 +180,11 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/**
+	 * Return a list of AcademicClass JSON objects
+	 * @param array $classes rows from AcademicClass table
+	 * @return string a JSON array containing AcademicClass objects
+	 */
 	public static function AcademicClassesJSON($classes) {
 		$s = "[";
 		$first = true;
@@ -249,6 +265,11 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/**
+	 * Return a JSON object TeacherAssigned
+	 * @param array $assignment row from TeacherAssignment table
+	 * @return string a JSON object TeacherAssigned
+	 */
 	public static function TeacherAssignedJSON($assignment) {
 		$s = "{";
 		$s .= "people_id:".$assignment["people"];
@@ -257,6 +278,11 @@ class CurriculumJSON {
 		$s .= "}";
 		return $s;
 	}
+	/**
+	 * Return a JSON array of TeacherAssigned objects
+	 * @param array $assignments rows from TeacherAssignment table
+	 * @return string a JSON array of TeacherAssigned objects
+	 */
 	public static function TeachersAssignedJSON($assignments) {
 		$s = "[";
 		$first = true;

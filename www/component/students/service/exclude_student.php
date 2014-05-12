@@ -1,11 +1,11 @@
 <?php 
 class service_exclude_student extends Service {
 	
-	public function get_required_rights() { return array("manage_batches"); }
+	public function getRequiredRights() { return array("manage_batches"); }
 	
 	public function documentation() { echo "Exclude/Get back a student"; }
-	public function input_documentation() { echo "student,date,reason: if date and reason are null, the student is unexcluded"; }
-	public function output_documentation() { echo "true on success"; }
+	public function inputDocumentation() { echo "student,date,reason: if date and reason are null, the student is unexcluded"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		$people_id = $input["student"];

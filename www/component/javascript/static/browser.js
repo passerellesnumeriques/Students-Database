@@ -133,7 +133,7 @@ if (typeof document.getElementsByClassName!='function') {
     };
 }
 /** Return the document object of the given frame
- * @param {DOMNode} frame iframe
+ * @param {Element} frame iframe
  * @returns {document} the document of the iframe 
  */
 getIFrameDocument = function(frame) {
@@ -142,7 +142,7 @@ getIFrameDocument = function(frame) {
 	return frame.contentWindow.document;
 };
 /** return the window object of the given frame 
- * @param {DOMNode} frame iframe
+ * @param {Element} frame iframe
  * @returns {window} the window of the iframe
  */
 getIFrameWindow = function(frame) {
@@ -192,7 +192,7 @@ HTTP_Status_ConnectionLost = browser.IE > 0 ? 12029 : 0;
 	
 /**
  * Set the opacity of an element (if the browser has a way to support it)
- * @param {DOMNode} element
+ * @param {Element} element
  * @param {Number} opacity from 0 to 1
  */
 function setOpacity(element, opacity) {
@@ -213,7 +213,7 @@ function getOpacity(element) {
 }
 /**
  * Set box-shadow if the browser has a way to support it 
- * @param {DOMNode} elem the HTML element
+ * @param {Element} elem the HTML element
  * @param {Number} a horizontal shadow
  * @param {Number} b vertical shadow
  * @param {Number} c blur distance
@@ -228,7 +228,7 @@ function setBoxShadow(elem,a,b,c,d,color,inset) {
 }
 /**
  * Set a border radius if the browser has a way to support it
- * @param {DOMNode} elem the HTML element
+ * @param {Element} elem the HTML element
  * @param {Number} topleft_width in pixels
  * @param {Number} topleft_height in pixels
  * @param {Number} topright_width in pixels
@@ -280,7 +280,7 @@ function getBorderRadius(elem) {
 }
 /**
  * Set a background gradient if the browser has a way to support it
- * @param {DOMNode} element the HTML element
+ * @param {Element} element the HTML element
  * @param {String} orientation one of: horizontal, vertical, diagonal-topleft, diagonal-bottomleft, radial
  * @param {Array} stops list of objects with 2 attributes: <code>pos</code> between 0 and 100, and <code>color</code> the string defining the color
  */
@@ -357,7 +357,7 @@ function setBackgroundGradient(element, orientation, stops) {
 
 /**
  * Rotate an HTML element
- * @param {DOMNode} element the HTML element
+ * @param {Element} element the HTML element
  * @param {Number} degres degres of rotation
  */
 function setRotation(element, degres) {
@@ -511,7 +511,7 @@ function getFunctionName(f) {
 
 /**
  * Attach a listener to the given event type on the given element
- * @param {DOMNode} elem the HTML element
+ * @param {Element} elem the HTML element
  * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
  * @param {Function} handler the listener to be called when the event occur
  */
@@ -524,7 +524,7 @@ function listenEvent(elem, type, handler) {
 }
 /**
  * Detach a listener
- * @param {DOMNode} elem the HTML element
+ * @param {Element} elem the HTML element
  * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
  * @param {Function} handler the listener to be removed
  */
@@ -551,7 +551,7 @@ function createEvent(type, attributes) {
 }
 /**
  * Trigger an event
- * @param {DOMNode} elem the HTML element
+ * @param {Element} elem the HTML element
  * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
  * @param {Object} attributes attributes to set in the event
  */

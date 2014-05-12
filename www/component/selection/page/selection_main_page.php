@@ -18,7 +18,7 @@ function getArrayStepsToDisplay ($steps_to_display){
 }
 require_once("selection_page.inc");
 class page_selection_main_page extends selection_page {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function execute_selection_page(){
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		

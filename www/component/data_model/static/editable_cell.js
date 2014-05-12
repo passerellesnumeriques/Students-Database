@@ -4,7 +4,7 @@ if (typeof require != 'undefined') {
 }
 	
 /** UI control to display a cell, which can be edited by the user. The user can switch between editable and non-editable. When editable, a lock is first obtain.
- * @param {DOMNode} container where to put it
+ * @param {Element} container where to put it
  * @param {String} table the table to which the data belongs to
  * @param {String} column the column to which the data belongs to
  * @param {Number} row_key key identifying the row

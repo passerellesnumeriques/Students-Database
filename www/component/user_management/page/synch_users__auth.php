@@ -1,7 +1,7 @@
 <?php 
 class page_synch_users__auth extends Page {
 	
-	public function get_required_rights() { return array("manage_users"); }
+	public function getRequiredRights() { return array("manage_users"); }
 	
 	public function execute() {
 ?>
@@ -10,7 +10,7 @@ class page_synch_users__auth extends Page {
 	<td>Synchronize with domain</td>
 	<td>
 		<select onchange='domainChanged();' id='domain'>
-			<?php foreach (PNApplication::$instance->get_domains() as $domain=>$descr) {
+			<?php foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
 				echo "<option value='".$domain."'".($domain == PNApplication::$instance->local_domain ? " selected='selected'" : "").">".$domain."</option>";
 			}?>
 		</select>

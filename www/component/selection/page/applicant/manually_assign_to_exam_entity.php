@@ -3,7 +3,7 @@ require_once("/../selection_page.inc");
 require_once("component/selection/SelectionJSON.inc");
 class page_applicant_manually_assign_to_exam_entity extends selection_page {
 	
-	public function get_required_rights() {return array("manage_applicant");}
+	public function getRequiredRights() {return array("manage_applicant");}
 	
 	public function execute_selection_page() {		
 		$mode = $_GET["mode"];

@@ -6,7 +6,7 @@ if (typeof require != 'undefined')
  * @param {CalendarManager} calendar_manager the manager containing the list of calendars to display
  * @param {String} view_name name of the view to display first, or null for the default view (week)
  * @param {Number} zoom the initial zoom value, or null to use a default value
- * @param {DOMNode} container HTML element, or it's id, where to display calendar
+ * @param {Element} container HTML element, or it's id, where to display calendar
  * @param {Function} onready called when the display is ready
  */
 function CalendarView(calendar_manager, view_name, zoom, container, onready) {

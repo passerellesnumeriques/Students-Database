@@ -1,7 +1,7 @@
 <?php 
 class page_edit_batch extends Page {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function execute() {
 		// lock specializations
@@ -36,7 +36,7 @@ class page_edit_batch extends Page {
 		$academic_years = PNApplication::$instance->curriculum->getAcademicYears();
 		$academic_periods = PNApplication::$instance->curriculum->getAcademicPeriods();
 		
-		$conf = PNApplication::$instance->get_domain_descriptor();
+		$conf = PNApplication::$instance->getDomainDescriptor();
 		$conf = $conf["curriculum"];
 		
 		require_once("component/curriculum/CurriculumJSON.inc");

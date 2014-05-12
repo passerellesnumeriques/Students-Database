@@ -1,7 +1,7 @@
 <?php 
 class test extends Component {
 
-	public function init_request() {
+	public function initRequest() {
 		Component::allow_page_without_login("test", "home");
 		Component::allow_page_without_login("test", "ui");
 		Component::allow_service_without_login("test", "get_tests");

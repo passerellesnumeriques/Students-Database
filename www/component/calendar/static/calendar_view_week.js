@@ -7,7 +7,7 @@ if (typeof get_script_path != 'undefined') {
 /**
  * View of a week
  * @param {CalendarView} view the view manager
- * @param {DOMNode} container where to display
+ * @param {Element} container where to display
  */
 function calendar_view_week(view, container) {
 
@@ -286,7 +286,7 @@ function calendar_view_week(view, container) {
 		if (!t.content_.hasAttribute("layout"))
 			t.content_.style.height = y+"px";
 	};
-	/** {DOMNode} line which indicates the actual time */
+	/** {Element} line which indicates the actual time */
 	this._now = null;
 	/** Displays/layout the line indicating the actual time */
 	this._showNow = function() {
@@ -356,7 +356,7 @@ function calendar_view_week(view, container) {
 			},10);
 	};
 	/** Put the text in the title box of a day (the text will depend on the width available)
-	 * @param {DOMNode} box the title box
+	 * @param {Element} box the title box
 	 * @param {Number} w the width of of box
 	 * @param {Date} date the day
 	 */

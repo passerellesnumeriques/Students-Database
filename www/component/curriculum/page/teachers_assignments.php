@@ -1,7 +1,7 @@
 <?php 
 class page_teachers_assignments extends Page {
 	
-	public function get_required_rights() { return array("consult_curriculum"); }
+	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function execute() {
 		// TODO lock database

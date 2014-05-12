@@ -7,6 +7,7 @@
  */
 function AcademicYear(id,year,name,periods) {
 	this.id = id;
+	/** starting year */
 	this.year = year ? parseInt(year) : 0;
 	this.name = name;
 	this.periods = periods;
@@ -28,7 +29,9 @@ function AcademicPeriod(year_id, id, name, start, end, weeks, weeks_break) {
 	this.name = name;
 	this.start = start;
 	this.end = end;
+	/** number of weeks in the period */
 	this.weeks = weeks ? parseInt(weeks) : 0;
+	/** number of non-worked weeks during the period */
 	this.weeks_break = weeks_break ? parseInt(weeks_break) : 0;
 }
 

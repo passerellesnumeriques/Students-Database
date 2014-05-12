@@ -46,11 +46,11 @@ class selection extends Component {
 	private $config = null;
 	
 	/**
-	 * @method init_request called each time the selection component executes a database query
+	 * @method initRequest called each time the selection component executes a database query
 	 * Check if a cookie selection_campaign exists; if yes, set the campaign_id attribute to its value
 	 * If the campaign_id is set, the matching submodels is selected in the database
 	 */
-	public function init_request() {
+	public function initRequest() {
 		if ($this->campaign_id == null) {
 			if (isset($_COOKIE["selection_campaign"])) {
 				try {
@@ -61,7 +61,7 @@ class selection extends Component {
 			}
 		}
 		if ($this->campaign_id <> null)
-			SQLQuery::set_submodel("SelectionCampaign", $this->campaign_id);
+			SQLQuery::setSubModel("SelectionCampaign", $this->campaign_id);
 	}
 	
 	public function getPluginImplementations() {
@@ -105,7 +105,7 @@ class selection extends Component {
 		/* Reset the config */
 		$this->config = null;
 		setcookie("selection_campaign",$id == null ? "-1" : $id,time()+365*24*60*60,"/dynamic/selection/");
-		SQLQuery::set_submodel("SelectionCampaign", $this->campaign_id);
+		SQLQuery::setSubModel("SelectionCampaign", $this->campaign_id);
 		/* Set the calendar id attribute */
 		$this->calendar_id = SQLQuery::create()->select("SelectionCampaign")->field("calendar")->where("id",$id)->executeSingleValue();
 	}
@@ -159,7 +159,7 @@ class selection extends Component {
 		} catch (Exception $e) {
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			/**
 			 * Manually RollBack
 			 */
@@ -597,9 +597,9 @@ class selection extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(!$transation_started_before && PNApplication::has_errors())
+		if(!$transation_started_before && PNApplication::hasErrors())
 			SQLQuery::rollbackTransaction();
-		else if(!$transation_started_before && !PNApplication::has_errors())
+		else if(!$transation_started_before && !PNApplication::hasErrors())
 			SQLQuery::commitTransaction();
 		//Else the method that had started the transaction must know how to handle the errors, or commit, so nothing is done
 	}
@@ -674,7 +674,7 @@ class selection extends Component {
 		SQLQuery::create()->removeKey("InformationSession",$id);
 		//update the steps
 		$this->updateAllSteps();
-		if(PNApplication::has_errors())
+		if(PNApplication::hasErrors())
 			return;
 		else
 			return true;
@@ -779,7 +779,7 @@ class selection extends Component {
 			}
 		} else
 			PNApplication::error($can_remove[1]);
-		if(PNApplication::has_errors())
+		if(PNApplication::hasErrors())
 			return false;
 		else {
 // 			//update the topics
@@ -986,13 +986,13 @@ class selection extends Component {
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}
-			if(PNApplication::has_errors())
+			if(PNApplication::hasErrors())
 				SQLQuery::rollbackTransaction(); //Rollback
 			else
 				SQLQuery::commitTransaction(); //Commit
 		} else
-			PNApplication::error_html($can_update[1]);
-		if(PNApplication::has_errors())
+			PNApplication::errorHTML($can_update[1]);
+		if(PNApplication::hasErrors())
 			return false;
 		else {
 			//update steps
@@ -1233,7 +1233,7 @@ class selection extends Component {
 		$rights = $this->canUpdateFromRightAndStep("define_topic_for_eligibility_rules", "manage_exam_subject", "You are not allowed to manage the exam topics for eligibility rules");
 		$id = null;
 		if(!$rights[0]){
-			PNApplication::error_html($rights[1]);
+			PNApplication::errorHTML($rights[1]);
 			return false;
 		} else {
 			$parts_fields_values = array();
@@ -1291,7 +1291,7 @@ class selection extends Component {
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}
-			if(PNApplication::has_errors()){
+			if(PNApplication::hasErrors()){
 				SQLQuery::rollbackTransaction();
 				return false;
 			} else {
@@ -1314,7 +1314,7 @@ class selection extends Component {
 		//Check the rights
 		$rights = $this->canUpdateFromRightAndStep("define_topic_for_eligibility_rules", "manage_exam_subject", "You are not allowed to manage the exam topics for eligibility rules");
 		if(!$rights[0]){
-			PNApplication::error_html($rights[1]);
+			PNApplication::errorHTML($rights[1]);
 			return false;
 		} else {
 			try {
@@ -1349,7 +1349,7 @@ class selection extends Component {
 			} catch (Exception $e){
 				PNApplication:error($e);
 			}
-			if(PNApplication::has_errors()){
+			if(PNApplication::hasErrors()){
 				SQLQuery::rollbackTransaction();
 				return false;
 			}
@@ -1603,7 +1603,7 @@ class selection extends Component {
 		//Check the rights
 		$rights = $this->canUpdateFromRightAndStep("define_eligibility_rules", "manage_exam_subject", "You are not allowed to manage the eligibility rules");
 		if(!$rights[0]){
-			PNApplication::error_html($rights[1]);
+			PNApplication::errorHTML($rights[1]);
 			return false;
 		} else {
 			//Start the transaction
@@ -1705,7 +1705,7 @@ class selection extends Component {
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}
-			if(PNApplication::has_errors()){
+			if(PNApplication::hasErrors()){
 				SQLQuery::rollbackTransaction();
 				return false;
 			} else {
@@ -1805,7 +1805,7 @@ class selection extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			return array(false,null,null);
 		} else {
@@ -1842,7 +1842,7 @@ class selection extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			return false;
 		} else {
@@ -1906,7 +1906,7 @@ class selection extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			return false;
 		} else {
@@ -1952,7 +1952,7 @@ class selection extends Component {
 			//Add the host
 			$this->setECHostFromIS($id, $IS_id, false, $lock_id);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			$this->updateAllSteps();
 			return false;
@@ -2093,7 +2093,7 @@ class selection extends Component {
 		//Check the rights
 		$rights = $this->canUpdateFromRightAndStep("exam_center", "manage_exam_center", "You are not allowed to manage the exam centers");
 		if(!$rights[0]){
-			PNApplication::error_html($rights[1]);
+			PNApplication::errorHTML($rights[1]);
 			return false;
 		} else {
 			//Start the transaction
@@ -2154,7 +2154,7 @@ class selection extends Component {
 			}  catch (Exception $e){
 				PNApplication::error($e);
 			}
-			if(PNApplication::has_errors()){
+			if(PNApplication::hasErrors()){
 				SQLQuery::rollbackTransaction();
 				return false;
 			} else {
@@ -2213,7 +2213,7 @@ class selection extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			return false;
 		} else {
@@ -2366,7 +2366,7 @@ class selection extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			return false;
 		}
@@ -2514,7 +2514,7 @@ class selection extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			return false;
 		} else {
@@ -2686,7 +2686,7 @@ class selection extends Component {
 					} catch (Exception $e){
 						PNApplication::error($e);						
 					}
-					if(PNApplication::has_errors()){
+					if(PNApplication::hasErrors()){
 						SQLQuery::rollbackTransaction();
 						return false;
 					} else {
@@ -2785,7 +2785,7 @@ class selection extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			return false;
 		} else {
@@ -2896,7 +2896,7 @@ class selection extends Component {
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}
-			if(PNApplication::has_errors()){
+			if(PNApplication::hasErrors()){
 				SQLQuery::rollbackTransaction();
 				return false;
 			} else {
@@ -2945,7 +2945,7 @@ class selection extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			return false;
 		}

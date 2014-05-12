@@ -13,11 +13,11 @@ if(!function_exists("getFigure")){
 	}
 }
 class service_IS_status extends Service{
-	public function get_required_rights(){return array("can_access_selection_data");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("can_access_selection_data");}
+	public function inputDocumentation(){
 		echo "No";
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		?>Returns a JSON object
 		<ul>
 			<li><code>boys_real</code> {number} number of boys real</li>

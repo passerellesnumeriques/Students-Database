@@ -78,7 +78,7 @@ CurriculumTreeNode.prototype = {
 	 */
 	createTitle: function(editable) { return ""; },
 	/** Create html containing information about this node
-	 * @returns {DOMNode} the html
+	 * @returns {Element} the html
 	 */
 	createInfo: function() {
 	},

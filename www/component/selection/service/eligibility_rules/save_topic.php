@@ -1,9 +1,9 @@
 <?php 
 class service_eligibility_rules_save_topic extends Service {
 	
-	public function get_required_rights() { return array("manage_exam_subject"); }
+	public function getRequiredRights() { return array("manage_exam_subject"); }
 	public function documentation() {echo "Save an existing or a new exam topic for eligibility rules into the database";}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<ul>
 		<li> <code>topic</code> JSON topic object to save</li>
@@ -11,7 +11,7 @@ class service_eligibility_rules_save_topic extends Service {
 		</ul>
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<ul>
 		<li><code>topic</code> a new topic JSON object if the saving was well performed</li>

@@ -1,7 +1,7 @@
 <?php
 class page_roles extends Page {
 	
-	public function get_required_rights() { return array("manage_roles"); }
+	public function getRequiredRights() { return array("manage_roles"); }
 	
 	protected function execute() {
 		$this->add_javascript("/static/widgets/wizard.js");

@@ -2,7 +2,7 @@
 require_once("component/selection/page/selection_page.inc");
 class page_applicant_popup_import extends selection_page {
 	
-	public function get_required_rights() { return array("edit_applicants"); }
+	public function getRequiredRights() { return array("edit_applicants"); }
 	
 	public function execute_selection_page() {
 ?>
