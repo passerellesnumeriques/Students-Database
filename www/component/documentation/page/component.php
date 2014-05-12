@@ -4,8 +4,8 @@ class page_component extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->add_stylesheet("/static/documentation/CodeDoc.css");
-		$this->add_stylesheet("/static/documentation/style.css");
+		$this->addStylesheet("/static/documentation/CodeDoc.css");
+		$this->addStylesheet("/static/documentation/style.css");
 		
 		$name = $_GET["name"];
 		echo "<div style='padding:10px;text-align:center;font-size:x-large'>$name</div>";

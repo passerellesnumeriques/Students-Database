@@ -124,9 +124,9 @@ class page_subject_grades extends Page {
 		
 		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");
 		
-		$this->add_javascript("/static/widgets/header_bar.js");
-		$this->add_javascript("/static/widgets/vertical_layout.js");
-		$this->add_stylesheet("/static/transcripts/grades.css");
+		$this->addJavascript("/static/widgets/header_bar.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
+		$this->addStylesheet("/static/transcripts/grades.css");
 		?>
 		<style type='text/css'>
 		#data_list_container table {

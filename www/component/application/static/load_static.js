@@ -117,7 +117,7 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 				break;
 			}
 		if (script == null) { t._checkEnd(); return; }
-		add_javascript(script.url,function() {
+		addJavascript(script.url,function() {
 			t._scripts_loading--;
 			t.loaded(script.size);
 			for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
@@ -199,7 +199,7 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 			window.top.pn_application_static.images.push(window.top.pn_application_static.loading_images[i]);
 		window.top.pn_application_static.loading_images = [];
 		for (var i = 0; i < window.top.pn_application_static._loaded_scripts.length; ++i)
-			add_javascript(window.top.pn_application_static._loaded_scripts[i]);
+			addJavascript(window.top.pn_application_static._loaded_scripts[i]);
 		for (var i = 0; i < t._max_images_loading; ++i)
 			t._nextImage();
 		for (var i = 0; i < t._max_scripts_loading; ++i)

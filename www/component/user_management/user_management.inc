@@ -109,8 +109,8 @@ class user_management extends Component {
 	public function assign_user_rights($user_id, $rights) {
 		$all_rights = array();
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
-			foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
+			foreach ($c->getReadableRights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
+			foreach ($c->getWritableRights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
 		}
 		foreach ($rights as $name=>$value)
 			if (!isset($all_rights[$name])) {
@@ -242,8 +242,8 @@ class user_management extends Component {
 			// retrieve all possible rights
 			$this->all_rights = array();
 			foreach (PNApplication::$instance->components as $c) {
-				foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
-				foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
+				foreach ($c->getReadableRights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
+				foreach ($c->getWritableRights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
 			}
 		}
 	}
@@ -290,7 +290,7 @@ class user_management extends Component {
 				// if we are not on the local domain, remove all writable rights, to make everything read-only
 				if (PNApplication::$instance->current_domain != PNApplication::$instance->local_domain) {
 					foreach (PNApplication::$instance->components as $cname=>$c)
-						foreach ($c->get_writable_rights() as $rname=>$rtype)
+						foreach ($c->getWritableRights() as $rname=>$rtype)
 							unset($rights[$rname]);
 				}
 				$this->rights[PNApplication::$instance->current_domain] = $rights;
@@ -299,10 +299,10 @@ class user_management extends Component {
 				$is_local = PNApplication::$instance->current_domain == PNApplication::$instance->local_domain;
 				$rights = array();
 				foreach (PNApplication::$instance->components as $cname=>$c) {
-					foreach ($c->get_readable_rights() as $rname=>$rtype)
+					foreach ($c->getReadableRights() as $rname=>$rtype)
 						array_push($rights, $rname);
 					if ($is_local)
-						foreach ($c->get_writable_rights() as $rname=>$rtype)
+						foreach ($c->getWritableRights() as $rname=>$rtype)
 							array_push($rights, $rname);
 				}
 				$this->rights[PNApplication::$instance->current_domain] = $rights;

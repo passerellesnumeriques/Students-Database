@@ -1,8 +1,8 @@
 if (typeof get_script_path != 'undefined') {
 	/** url to access the same directory */
 	var url = get_script_path("calendar_view_day.js");
-	add_javascript(url+"day_column_layout.js");
-	add_javascript(url+"day_row_layout.js");
+	addJavascript(url+"day_column_layout.js");
+	addJavascript(url+"day_row_layout.js");
 }
 /**
  * View of a single day
@@ -186,7 +186,7 @@ function calendar_view_day(view, container) {
 		this.content.appendChild(this.day_content);
 		
 		this._createTimeScale();
-		add_javascript(get_script_path("calendar_view_day.js")+"day_column_layout.js",function(){
+		addJavascript(get_script_path("calendar_view_day.js")+"day_column_layout.js",function(){
 			t.day_column = new DayColumnLayout(view.calendar_manager);
 			t._layout();
 		});

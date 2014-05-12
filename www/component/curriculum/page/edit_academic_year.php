@@ -45,9 +45,9 @@ class page_edit_academic_year extends Page {
 			}
 		}
 		
-		$this->require_javascript("input_utils.js");
-		$this->require_javascript("typed_field.js");
-		$this->require_javascript("field_integer.js");
+		$this->requireJavascript("input_utils.js");
+		$this->requireJavascript("typed_field.js");
+		$this->requireJavascript("field_integer.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
 ?>
 <div style='background-color:white'>

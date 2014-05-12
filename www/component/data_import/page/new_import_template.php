@@ -4,7 +4,7 @@ class page_new_import_template extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->require_javascript("upload.js");
+		$this->requireJavascript("upload.js");
 ?>
 <div id='container'>
 	<div class='wizard_header'>

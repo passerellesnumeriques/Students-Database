@@ -4,8 +4,8 @@ class page_check_code extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->require_javascript("tree.js");
-		$this->add_javascript("/static/documentation/jsdoc.js");
+		$this->requireJavascript("tree.js");
+		$this->addJavascript("/static/documentation/jsdoc.js");
 ?>
 <div id='page_header'>
 	Code Checking

@@ -39,8 +39,8 @@ class service_save_user_rights extends Service {
 		// retrieve all possible rights
 		$all_rights = array();
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
-			foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
+			foreach ($c->getReadableRights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
+			foreach ($c->getWritableRights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
 		}
 		
 		$rights = array();

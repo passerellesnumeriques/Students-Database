@@ -64,8 +64,8 @@ namespace datamodel {
 					$value = $prefilled_values->getDataValue($path->table->getName(), $data);
 				else
 					$value = $data->getNewData();
-				$page->add_javascript("/static/widgets/typed_field/typed_field.js");
-				$page->require_javascript($tf[0].".js");
+				$page->addJavascript("/static/widgets/typed_field/typed_field.js");
+				$page->requireJavascript($tf[0].".js");
 				// TODO check can really edit the columns
 				if ($is_new) {
 					$script .= "field = new ".$tf[0]."(".json_encode($value).",".json_encode($can_edit).",".$tf[1].");\n";
@@ -75,9 +75,9 @@ namespace datamodel {
 				} else if ($can_edit) {
 					$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
 					$key_value = getKeyValue($path->table, $values);
-					$page->add_javascript("/static/data_model/DataDisplay.js");
-					$page->add_javascript("/static/data_model/editable_field.js");
-					$page->add_javascript("/static/data_model/editable_datadisplay.js");
+					$page->addJavascript("/static/data_model/DataDisplay.js");
+					$page->addJavascript("/static/data_model/editable_field.js");
+					$page->addJavascript("/static/data_model/editable_datadisplay.js");
 					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($key_value).", ".json_encode($value).");\n";
 					$script .= "field.editable_field.fillContainer();\n";
 				} else {

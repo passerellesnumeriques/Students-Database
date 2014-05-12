@@ -7,7 +7,7 @@ class page_new_class extends Page {
 		$period_id = $_GET["period"];
 		$period = SQLQuery::getRow("AcademicPeriod", $period_id);
 		$periods_after = SQLQuery::create()->select("AcademicPeriod")->where("batch",$period["batch"])->where("start_date",">",$period["start_date"])->orderBy("AcademicPeriod","start_date")->execute();
-		$this->add_javascript("/static/javascript/validation.js");
+		$this->addJavascript("/static/javascript/validation.js");
 		?>
 		<form name='new_class' onsubmit='return false'>
 		<table>

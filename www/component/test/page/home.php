@@ -6,13 +6,13 @@ class page_home extends Page {
 	public function execute() {
 		$exclude_components = array("development","test");
 		
-		$this->add_javascript("/static/widgets/header_bar.js");
-		$this->add_javascript("/static/widgets/vertical_layout.js");
-		$this->add_javascript("/static/widgets/horizontal_layout.js");
-		$this->add_javascript("/static/widgets/vertical_align.js");
-		$this->add_javascript("/static/widgets/section/section.js");
-		$this->add_javascript("/static/development/debug_status.js");
-		$this->add_javascript("/static/test/browser_control.js");
+		$this->addJavascript("/static/widgets/header_bar.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
+		$this->addJavascript("/static/widgets/horizontal_layout.js");
+		$this->addJavascript("/static/widgets/vertical_align.js");
+		$this->addJavascript("/static/widgets/section/section.js");
+		$this->addJavascript("/static/development/debug_status.js");
+		$this->addJavascript("/static/test/browser_control.js");
 		
 		$components = PNApplication::sortComponentsByDependencies();
 		
@@ -836,7 +836,7 @@ function play_ui_test(component, scenario_index, ondone) {
 		}
 		// execute ui
 		remove_javascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(scenario.path));
-		add_javascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(scenario.path),function() {
+		addJavascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(scenario.path),function() {
 			var actions = window["Test_"+component.name+"_"+scenario.path](res_step.data);
 			browser_control.run(actions, function(action){
 				scenario.result_container.innerHTML = " <img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> "+action;

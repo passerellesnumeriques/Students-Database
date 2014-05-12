@@ -4,8 +4,8 @@ class page_organizations extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->add_javascript("/static/widgets/grid/grid.js");
-		$this->add_javascript("/static/data_model/data_list.js");
+		$this->addJavascript("/static/widgets/grid/grid.js");
+		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
 		$container_id = $this->generateID();
 		

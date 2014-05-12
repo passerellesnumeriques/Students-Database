@@ -4,7 +4,7 @@ class page_list extends Page {
 	public function getRequiredRights() { return array("consult_staff_list"); }
 	
 	public function execute() {
-		$this->require_javascript("data_list.js");
+		$this->requireJavascript("data_list.js");
 		
 		$departments = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();
 		

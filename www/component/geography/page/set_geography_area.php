@@ -10,11 +10,11 @@ class page_set_geography_area extends Page {
 			return;
 		}
 		$country = SQLQuery::create()->select("Country")->where("id",$_GET["country"])->executeSingleRow();
-		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
+		$this->addJavascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("new splitter_vertical('page_split',0.25);");
-		$this->add_javascript("/static/widgets/section/section.js");
-		$this->onload("section_from_html('manage_divisions_section');");
-		$this->onload("section_from_html('tree_section');");
+		$this->addJavascript("/static/widgets/section/section.js");
+		$this->onload("sectionFromHTML('manage_divisions_section');");
+		$this->onload("sectionFromHTML('tree_section');");
 		
 		// example for province:
 		// https://maps.googleapis.com/maps/api/geocode/json?address=Agusan%20del%20Norte&components=country:PH&sensor=false&key=AIzaSyBhG4Hn5zmbXcALGQtAPJDkUj2hDSZdVSU

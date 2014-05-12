@@ -3,20 +3,20 @@ require_once("/../selection_page.inc");
 class page_IS_main_page extends selection_page {
 	public function getRequiredRights() { return array("see_information_session_details"); }
 	public function execute_selection_page(){
-		$this->add_javascript("/static/widgets/grid/grid.js");
-		$this->add_javascript("/static/data_model/data_list.js");
+		$this->addJavascript("/static/widgets/grid/grid.js");
+		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
 		$list_container_id = $this->generateID();
 		$can_create = PNApplication::$instance->user_management->has_right("manage_information_session",true);
 		$status_container_id = $this->generateID();
-		$this->require_javascript("section.js");
-		$this->onload("section_from_html('status_section');");
+		$this->requireJavascript("section.js");
+		$this->onload("sectionFromHTML('status_section');");
 		$steps = PNApplication::$instance->selection->getSteps();
 		if($steps["information_session"]){
 			$this->onload("new IS_status('$status_container_id');");
-			$this->require_javascript("IS_status.js");
+			$this->requireJavascript("IS_status.js");
 		}
-		$this->require_javascript("horizontal_layout.js");
+		$this->requireJavascript("horizontal_layout.js");
 		$this->onload("new horizontal_layout('horizontal_split',true);");
 		
 		?>

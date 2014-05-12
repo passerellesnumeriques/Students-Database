@@ -32,7 +32,7 @@ function facebook_status(container) {
 			});
 	};
 	
-	window.top.add_javascript("/static/facebook/facebook.js",function() {
+	window.top.addJavascript("/static/facebook/facebook.js",function() {
 		window.top.facebook.addConnectionStatusListener(function(){t.updateIcon();});
 		t.updateIcon();
 	});

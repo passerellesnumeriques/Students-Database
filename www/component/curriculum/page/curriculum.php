@@ -71,11 +71,11 @@ class page_curriculum extends Page {
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
 		if ($editing) {
-			$this->require_javascript("curriculum_objects.js");
-			$this->require_javascript("animation.js");
+			$this->requireJavascript("curriculum_objects.js");
+			$this->requireJavascript("animation.js");
 		}
 
-		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
 		$this->onload("new vertical_layout('top_container');");
 		?>
 		<style type='text/css'>

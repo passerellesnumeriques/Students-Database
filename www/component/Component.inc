@@ -4,13 +4,11 @@
  */
 abstract class Component {
 
-	/**
-	 * @var string name of this component
-	 */
+	/** @var string name of this component */
 	public $name;
 	
 	/**
-	 * @param string $name
+	 * @param string $name name of this component
 	 */
 	public function __construct($name) {
 		$this->name = $name;
@@ -28,15 +26,20 @@ abstract class Component {
 	 */
 	public function initRequest() {}
 	
+	/** @var string[] list of pages which can be accessed without being authenticated */
 	private static $allowed_pages_without_login = array();
-	protected static function allow_page_without_login($component_name, $page_path) {
+	/** Add a page which can be accessed without being authenticated
+	 * @param string $component_name component name
+	 * @param string $page_path path of the page in the component
+	 */
+	protected static function allowPageWithoutLogin($component_name, $page_path) {
 		if (!isset(Component::$allowed_pages_without_login[$component_name]))
 			Component::$allowed_pages_without_login[$component_name] = array();
 		array_push(Component::$allowed_pages_without_login[$component_name], $page_path);
 	}
 	/**
 	 * Request for a page on this component: check it exists, the user has necessary rights, then execute it
-	 * @param string $path
+	 * @param string $path path of the page
 	 */
 	public final function page($path) {
 		// check the user is logged
@@ -97,8 +100,13 @@ abstract class Component {
 		restore_error_handler();
 	}
 
+	/** @var string[] list of services which can be accessed without being authenticated */
 	private static $allowed_services_without_login = array();
-	protected static function allow_service_without_login($component_name, $service_path) {
+	/** Add a service which can be accessed without being authenticated
+	 * @param string $component_name component name
+	 * @param string $service_path path of the service in the component
+	 */
+	protected static function allowServiceWithoutLogin($component_name, $service_path) {
 		if (!isset(Component::$allowed_services_without_login[$component_name]))
 			Component::$allowed_services_without_login[$component_name] = array();
 		array_push(Component::$allowed_services_without_login[$component_name], $service_path);
@@ -106,7 +114,7 @@ abstract class Component {
 	
 	/**
 	 * Request for a service on this component: check it exists, the user has necessary rights, then execute it
-	 * @param string $path
+	 * @param string $path path of the service
 	 */
 	public final function service($path) {
 		// check the user is logged
@@ -219,7 +227,7 @@ abstract class Component {
 	/**
 	 * Return the list of components this component depends on.
 	 * Read it from the file <i>dependencies</i> if it exists.
-	 * @return array
+	 * @return string[] list of dependencies
 	 */
 	public final function dependencies() {
 		if (!file_exists("component/".$this->name."/dependencies")) return array();
@@ -236,11 +244,17 @@ abstract class Component {
 		return $deps;
 	}
 	
-	public final function get_readable_rights() {
+	/** Return the list of read rights defined by this component (from readable_rights.inc)
+	 * @return AccessRightCategory[] list of categories, containing the list of rights
+	 */
+	public final function getReadableRights() {
 		if (!file_exists("component/".$this->name."/readable_rights.inc")) return array();
 		return include("component/".$this->name."/readable_rights.inc");
 	}
-	public final function get_writable_rights() {
+	/** Return the list of write rights defined by this component (from writable_rights.inc)
+	 * @return AccessRightCategory[] list of categories, containing the list of rights
+	 */
+	public final function getWritableRights() {
 		if (!file_exists("component/".$this->name."/writable_rights.inc")) return array();
 		return include("component/".$this->name."/writable_rights.inc");
 	}
@@ -249,13 +263,14 @@ abstract class Component {
 	 * Returns all implementations of <i>plug-in</i> for the component. This is used, instead of having the 
 	 * component directly implementing the <i>plug-in</i> interfaces, so the component class is clearer
 	 * (contains only functionalities, without any additional <i>polutant</i> things)
-	 * @return array
+	 * @return array list of plugin instances
 	 */
 	public function getPluginImplementations() { return array(); }
 
 }
 
-class ServiceDone { public $done = false; };
+/** Internal usage: to check if a service successfully terminated, or a fatal error occured during its execution */
+class ServiceDone { /** $var boolean indicates if it succeed */ public $done = false; };
 function service_shutdown_catch($done) {
 	if ($done->done) return;
 	$msg = "The service didn't finish correctly.";

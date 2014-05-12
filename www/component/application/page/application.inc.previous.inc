@@ -1,10 +1,10 @@
 <?php 
 require_once("component/data_model/page/utils.inc");
-$this->add_javascript("/static/widgets/vertical_layout.js");
-$this->add_javascript("/static/widgets/horizontal_menu.js");
-$this->add_javascript("/static/widgets/context_menu.js");
-$this->add_javascript("/static/google/google_status.js");
-//$this->add_javascript("/static/facebook/facebook_status.js");
+$this->addJavascript("/static/widgets/vertical_layout.js");
+$this->addJavascript("/static/widgets/horizontal_menu.js");
+$this->addJavascript("/static/widgets/context_menu.js");
+$this->addJavascript("/static/google/google_status.js");
+//$this->addJavascript("/static/facebook/facebook_status.js");
 $this->onload("new vertical_layout('pn_application_container');");
 $this->onload("new horizontal_menu('application_menu');");
 $this->onload("new google_status('google_status');");
@@ -15,7 +15,7 @@ $this->onload("setBoxShadow(document.forms['app_search'].elements['q'],-1,2,2,0,
 //$this->onload("setBoxShadow(document.getElementById('app_domain'),-1,2,2,0,'#D8D8F0',true);");
 $this->onload("window.top.pn_loading_end();");
 if (PNApplication::$instance->current_domain == "Dev") {
-	$this->add_javascript("/static/development/debug_status.js");
+	$this->addJavascript("/static/development/debug_status.js");
 	$this->onload("new debug_status('debug_status');");
 }
 ?>

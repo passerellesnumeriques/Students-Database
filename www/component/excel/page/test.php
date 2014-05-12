@@ -4,7 +4,7 @@ class page_test extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->add_javascript("/static/excel/excel.js");
+		$this->addJavascript("/static/excel/excel.js");
 		$this->onload("test_excel();");
 ?>
 <div style='width:100%;height:100%' id='test_excel'></div>

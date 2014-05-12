@@ -100,8 +100,8 @@ class widgets extends Component {
 		$t = DataModel::get()->getTable($table);
 		$col = $t->getColumn($column);
 		$tf = $this->get_typed_field($col);
-		$page->add_javascript("/static/widgets/typed_field/typed_field.js");
-		$page->add_javascript("/static/widgets/typed_field/".$tf[0].".js");
+		$page->addJavascript("/static/widgets/typed_field/typed_field.js");
+		$page->addJavascript("/static/widgets/typed_field/".$tf[0].".js");
 		echo $variable_name." = new ".$tf[0]."(".$data.",".$editable.",".$tf[1].");";
 	}
 	

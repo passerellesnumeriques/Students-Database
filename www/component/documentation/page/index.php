@@ -16,9 +16,9 @@ class page_index extends Page {
 				echo "</div>";
 			echo "</div>";
 		echo "</div>";
-		$this->require_javascript("vertical_layout.js");
+		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('doc_top_container');");
-		$this->require_javascript("splitter_vertical.js");
+		$this->requireJavascript("splitter_vertical.js");
 		$this->onload("new splitter_vertical('doc_container',0.2);");
 		?>
 		<script type='text/javascript'>

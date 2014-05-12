@@ -1,12 +1,12 @@
 <?php
-$this->require_javascript("vertical_layout.js");
-$this->require_javascript("horizontal_layout.js");
+$this->requireJavascript("vertical_layout.js");
+$this->requireJavascript("horizontal_layout.js");
 $this->onload("new vertical_layout('application_container');");
 $this->onload("new horizontal_layout('application_horizontal');");
 $this->onload("new vertical_layout('application_left_side',true);");
 $this->onload("new vertical_layout('application_right_side');");
 $this->onload("new horizontal_layout('application_header');");
-$this->require_javascript("fill_height_layout.js");
+$this->requireJavascript("fill_height_layout.js");
 //$this->onload("new fill_height_layout('application_table');");
 //$this->onload("new fill_height_layout('application_frame_container');");
 ?>

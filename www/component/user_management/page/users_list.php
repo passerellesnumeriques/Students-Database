@@ -4,8 +4,8 @@ class page_users_list extends Page {
 	public function getRequiredRights() { return array("consult_user_list"); }
 	
 	public function execute() {
-		$this->add_javascript("/static/widgets/grid/grid.js");
-		$this->add_javascript("/static/data_model/data_list.js");
+		$this->addJavascript("/static/widgets/grid/grid.js");
+		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_users_list();");
 ?>
 <div style='width:100%;height:100%' id='users_list'>

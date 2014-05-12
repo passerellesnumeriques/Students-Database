@@ -5,8 +5,8 @@ class page_php extends Page {
 	
 	public function execute() {
 		require_once("PHPDoc.inc");
-		$this->add_stylesheet("/static/documentation/CodeDoc.css");
-		$this->add_stylesheet("/static/documentation/style.css");
+		$this->addStylesheet("/static/documentation/CodeDoc.css");
+		$this->addStylesheet("/static/documentation/style.css");
 		
 		if (isset($_GET["general"]))
 			$this->general($_GET["general"]);

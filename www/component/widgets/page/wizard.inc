@@ -93,7 +93,7 @@ function wizard_freeze_message(msg) {
 }
 </script>
 <?php
-	$page->add_javascript("/static/widgets/vertical_layout.js");
+	$page->addJavascript("/static/widgets/vertical_layout.js");
 	$page->onload("new vertical_layout('wizard_page');");
 } 
 ?>

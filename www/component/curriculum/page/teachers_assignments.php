@@ -42,7 +42,7 @@ class page_teachers_assignments extends Page {
 		$ap = new AcademicPeriod($academic_period);
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
-		$this->require_javascript("section.js");
+		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		?>
 		<div class='page_title'>
@@ -126,7 +126,7 @@ class page_teachers_assignments extends Page {
 		</tbody></table>
 		<?php $this->onload("TeachersTable('$id');")?>
 		</div>
-		<?php $this->onload("section_from_html('teachers_section');")?>
+		<?php $this->onload("sectionFromHTML('teachers_section');")?>
 		</div></td>
 		</tr></table>
 		<style type='text/css'>

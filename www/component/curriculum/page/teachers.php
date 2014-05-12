@@ -4,13 +4,13 @@ class page_teachers extends Page {
 	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function execute() {
-		$this->require_javascript("vertical_layout.js");
+		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('top_container');");
-		$this->require_javascript("section.js");
+		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
-		$this->onload("section_from_html('current_teachers');");
-		$this->onload("section_from_html('past_teachers');");
-		$this->require_javascript("profile_picture.js");
+		$this->onload("sectionFromHTML('current_teachers');");
+		$this->onload("sectionFromHTML('past_teachers');");
+		$this->requireJavascript("profile_picture.js");
 		
 		$teachers_dates = SQLQuery::create()->select("TeacherDates")->execute();
 		$teachers = array();

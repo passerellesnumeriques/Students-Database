@@ -43,8 +43,8 @@ class page_excel_upload extends Page {
 			PNApplication::error("Invalid file format: ".$e->getMessage());
 			return;
 		}
-		$this->add_javascript("/static/excel/excel.js");
-		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
+		$this->addJavascript("/static/excel/excel.js");
+		$this->addJavascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("setTimeout(init_page,1);");
 		?>
 		<div id='excel_container' style='width:100%;height:100%'>

@@ -10,28 +10,28 @@ class page_exam_center_main_page extends selection_page {
 	 * @see selection_page::execute_selection_page()
 	 */
 	public function execute_selection_page() {
-		$this->add_javascript("/static/widgets/grid/grid.js");
-		$this->add_javascript("/static/data_model/data_list.js");
+		$this->addJavascript("/static/widgets/grid/grid.js");
+		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
 		$list_container_id = $this->generateID();
 		$can_create = PNApplication::$instance->user_management->has_right("manage_exam_center",true);
 		$status_container_id = $this->generateID();
 		$ECIS_status_container_id = $this->generateID();
 		$applicants_assignement_container_id = $this->generateID();
-		$this->require_javascript("horizontal_layout.js");
+		$this->requireJavascript("horizontal_layout.js");
 		$this->onload("new horizontal_layout('horizontal_split',true);");
-		$this->require_javascript("section.js");
-		$this->onload("section_from_html('status_section');");
-		$this->onload("section_from_html('status_ECIS_section');");
-		$this->onload("section_from_html('status_applicants_assignment');");
+		$this->requireJavascript("section.js");
+		$this->onload("sectionFromHTML('status_section');");
+		$this->onload("sectionFromHTML('status_ECIS_section');");
+		$this->onload("sectionFromHTML('status_applicants_assignment');");
 		$steps = PNApplication::$instance->selection->getSteps();
 		if($steps["exam_center"]){			
-			$this->require_javascript("exam_center_status.js");
+			$this->requireJavascript("exam_center_status.js");
 			$this->onload("new exam_center_status('$status_container_id');");
 		}
-		$this->require_javascript("exam_center_and_informations_sessions_status.js");
+		$this->requireJavascript("exam_center_and_informations_sessions_status.js");
 		$this->onload("new exam_center_and_informations_sessions_status('".$ECIS_status_container_id."');");
-		$this->require_javascript("applicants_assignment_to_EC_status.js");
+		$this->requireJavascript("applicants_assignment_to_EC_status.js");
 		$this->onload("new applicants_assignment_to_EC_status('".$applicants_assignement_container_id."');");
 		
 		?>		<script type='text/javascript'>

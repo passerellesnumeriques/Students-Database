@@ -29,7 +29,7 @@ class page_assign_specializations extends Page {
 		$q->field("Student","people");
 		$students_class_spe = $q->executeSingleField();
 		
-		$this->require_javascript("assign_elements.js");
+		$this->requireJavascript("assign_elements.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
 		?>
 		<div id='assign_container' style='width:100%;height:100%'>

@@ -54,7 +54,7 @@ foreach ($mandatory as $s) $total += $s[1];
 foreach ($optional as $s) $total += $s[1];
 ?>
 var _loading_ready = 0;
-function _add_javascript(url, callback) {
+function _addJavascript(url, callback) {
 	var head = document.getElementsByTagName("HEAD")[0];
 	var s = document.createElement("SCRIPT");
 	s.type = "text/javascript";
@@ -69,7 +69,7 @@ var pn_loading_visible = true;
 function __load_enter_page() {
 	next_optional();
 
-	add_stylesheet('/static/theme/default/style/global.css');
+	addStylesheet('/static/theme/default/style/global.css');
 	
 	var frame = document.createElement("IFRAME");
 	frame.frameBorder = "0";
@@ -100,7 +100,7 @@ function update_size() {
 }
 
 function next_mandatory() {
-	_add_javascript(_mandatory_scripts[_loading_ready][0],function() {
+	_addJavascript(_mandatory_scripts[_loading_ready][0],function() {
 		loaded_size += _mandatory_scripts[_loading_ready][1];
 		update_size();
 		if (++_loading_ready == _mandatory_scripts.length) __load_enter_page();
@@ -111,7 +111,7 @@ update_size();
 next_mandatory();
 var optional_index = 0;
 function next_optional() {
-	_add_javascript(_optional_scripts[optional_index][0],function() {
+	_addJavascript(_optional_scripts[optional_index][0],function() {
 		loaded_size += _optional_scripts[optional_index][1];
 		update_size();
 		if (++optional_index == _optional_scripts.length) {
@@ -120,7 +120,7 @@ function next_optional() {
 			window.status_manager.status_ui = new StatusUI_Top(window.status_manager);
 			setTimeout(function(){
 				for (var i = 0; i < _optional_delayed_scripts.length; ++i) {
-					_add_javascript(_optional_delayed_scripts[i][0]);
+					_addJavascript(_optional_delayed_scripts[i][0]);
 				}
 			},5000);
 			return;

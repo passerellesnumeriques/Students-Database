@@ -45,7 +45,7 @@ class page_IS_profile extends selection_page {
 			}
 		}
 		
-		$this->require_javascript("IS_profile.js");
+		$this->requireJavascript("IS_profile.js");
 		?>
 		<div id = "IS_profile_container" style = "width:100%; height:100%">			
 		</div>

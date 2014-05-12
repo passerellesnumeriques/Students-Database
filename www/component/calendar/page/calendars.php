@@ -4,11 +4,11 @@ class page_calendars extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->require_javascript("horizontal_layout.js");
+		$this->requireJavascript("horizontal_layout.js");
 		$this->onload("new horizontal_layout('calendars',true,'top');");
-		$this->add_javascript("/static/calendar/calendar.js");
-		$this->add_javascript("/static/calendar/calendar_view.js");
-		$this->add_javascript("/static/widgets/section/section.js");
+		$this->addJavascript("/static/calendar/calendar.js");
+		$this->addJavascript("/static/calendar/calendar_view.js");
+		$this->addJavascript("/static/widgets/section/section.js");
 		$this->onload("init_calendars();");
 ?>
 <div style='height:100%;width:100%;padding-top:5px' id='calendars'>

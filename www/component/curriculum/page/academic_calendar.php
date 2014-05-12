@@ -4,9 +4,9 @@ class page_academic_calendar extends Page {
 	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function execute() {
-		$this->require_javascript("vertical_layout.js");
+		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('top_container');");
-		$this->require_javascript("tree.js");
+		$this->requireJavascript("tree.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
 ?>
 <div id='top_container' class="page_container" style="width:100%;height:100%">

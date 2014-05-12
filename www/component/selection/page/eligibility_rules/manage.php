@@ -5,7 +5,7 @@ require_once("component/selection/SelectionJSON.inc");
 class page_eligibility_rules_manage extends selection_page {
 	public function getRequiredRights() { return array("see_exam_subject"); }
 	public function execute_selection_page(){
-		$this->require_javascript("vertical_layout.js");
+		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('to_vertical_layout');");
 		?>
 		<div id = "to_vertical_layout" style = "width:100%; height:100%">

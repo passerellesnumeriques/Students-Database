@@ -4,7 +4,7 @@ class page_list extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->require_javascript("data_list.js");
+		$this->requireJavascript("data_list.js");
 		$batches = null;
 		if (isset($_GET["batches"])) {
 			if ($_GET["batches"] == "current") {

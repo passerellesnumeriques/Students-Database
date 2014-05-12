@@ -21,10 +21,10 @@ class page_edit_import_template_multiple_by_columns extends Page {
 			array_push($categories[$cat], $f);
 		}
 		
-		$this->require_javascript("section.js");
-		$this->require_javascript("DataDisplay.js");
-		$this->require_javascript("typed_field.js");
-		$this->require_javascript("field_integer.js");
+		$this->requireJavascript("section.js");
+		$this->requireJavascript("DataDisplay.js");
+		$this->requireJavascript("typed_field.js");
+		$this->requireJavascript("field_integer.js");
 ?>
 <script type='text/javascript'>
 var categories = [<?php

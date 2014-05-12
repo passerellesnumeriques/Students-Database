@@ -66,8 +66,8 @@ class page_build_excel_import extends Page {
 						PNApplication::error("Invalid file format");
 						return;
 					}
-					$this->add_javascript("/static/excel/excel.js");
-					$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
+					$this->addJavascript("/static/excel/excel.js");
+					$this->addJavascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 					$this->onload("init_page();");
 					?>
 					<div id='excel_template_page' style='width:100%;height:100%'>
@@ -213,7 +213,7 @@ class page_build_excel_import extends Page {
 						Data end at row: <input type='text' name='end_row' value='' size=5 onchange='row_end_changed(this.value);'/><br/>
 						Column per information:<br/>
 						<?php
-						$this->add_javascript("/static/widgets/collapsable_section/collapsable_section.js");
+						$this->addJavascript("/static/widgets/collapsable_section/collapsable_section.js");
 						$cats = array();
 						foreach ($paths as $path) {
 							if (!$path->isUnique()) continue;
@@ -332,8 +332,8 @@ class page_build_excel_import extends Page {
 						<div style='padding:2px'>
 						<form name='fields_selection'>
 						<?php
-						$this->add_javascript("/static/widgets/collapsable_section/collapsable_section.js");
-						$this->add_javascript("/static/widgets/typed_field/typed_field.js");
+						$this->addJavascript("/static/widgets/collapsable_section/collapsable_section.js");
+						$this->addJavascript("/static/widgets/typed_field/typed_field.js");
 						$cats = array();
 						foreach ($paths as $path) {
 							if (!$path->isUnique()) continue;
@@ -416,7 +416,7 @@ class page_build_excel_import extends Page {
 								echo "<img src='/static/excel/select_range.png' style='vertical-align:bottom' class='button' onclick=\"select_range('".$id."')\"/>";
 								echo "</span>";
 								echo "<span style='visibility:hidden;position:absolute' id='set_".$id."'>";
-								$this->add_javascript("/static/widgets/typed_field/".$field_classname.".js");
+								$this->addJavascript("/static/widgets/typed_field/".$field_classname.".js");
 								$this->onload("document.getElementById('set_".$id."').appendChild(new ".$field_classname."(null,true,null,null,".$field_args.").getHTMLElement());");
 								echo "</span>";
 								echo "</td>";

@@ -93,7 +93,7 @@ class page_exam_convert_IS_into_center extends selection_page {
 		}
 	
 		//generate the page
-		$this->require_javascript("vertical_layout.js");
+		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('assign_container');");
 		?>
 		<div id = "assign_container" style = "width:100%; height:100%; overflow:hidden;">

@@ -5,8 +5,8 @@
 class facebook extends Component {
 	
 	public function initRequest() {
-		Component::allow_service_without_login("facebook", "get_user");
-		Component::allow_page_without_login("facebook", "auth");
+		Component::allowServiceWithoutLogin("facebook", "get_user");
+		Component::allowPageWithoutLogin("facebook", "auth");
 	}
 	
 }

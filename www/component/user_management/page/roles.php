@@ -4,8 +4,8 @@ class page_roles extends Page {
 	public function getRequiredRights() { return array("manage_roles"); }
 	
 	protected function execute() {
-		$this->add_javascript("/static/widgets/wizard.js");
-		$this->add_javascript("/static/javascript/validation.js");
+		$this->addJavascript("/static/widgets/wizard.js");
+		$this->addJavascript("/static/javascript/validation.js");
 
 		$roles = SQLQuery::create()
 			->select("Role")

@@ -147,7 +147,7 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 	
 	buildDataScreenChildren($page, $root, $values, $prefilled_values, $sections, $structure_name);
 	
-	$page->require_javascript("section.js");
+	$page->requireJavascript("section.js");
 	$html = "";
 	foreach ($sections as $s) {
 		$id = $page->generateID();
@@ -157,7 +157,7 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 		$html .= " collapsable='false' css='soft' style='display:inline-block;margin:10px;vertical-align:top'>";
 		$html .= $s[2];
 		$html .= "</div>";
-		$html .= "<script type='text/javascript'>section_from_html('$id');</script>";
+		$html .= "<script type='text/javascript'>sectionFromHTML('$id');</script>";
 	}
 	return $html;
 }

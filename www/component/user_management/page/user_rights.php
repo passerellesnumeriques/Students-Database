@@ -54,7 +54,7 @@ if ($is_admin) {
 $all_rights = array();
 $categories = array();
 foreach (PNApplication::$instance->components as $component) {
-	foreach ($component->get_readable_rights() as $cat) {
+	foreach ($component->getReadableRights() as $cat) {
 		if (!isset($categories[$cat->display_name]))
 			$categories[$cat->display_name] = array();
 		foreach ($cat->rights as $r) {
@@ -62,7 +62,7 @@ foreach (PNApplication::$instance->components as $component) {
 			$all_rights[$r->name] = $r;
 		}
 	}
-	foreach ($component->get_writable_rights() as $cat) {
+	foreach ($component->getWritableRights() as $cat) {
 		if (!isset($categories[$cat->display_name]))
 			$categories[$cat->display_name] = array();
 		foreach ($cat->rights as $r) {

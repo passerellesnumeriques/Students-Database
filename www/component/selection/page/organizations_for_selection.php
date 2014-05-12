@@ -9,8 +9,8 @@ class page_organizations_for_selection extends selection_page {
 	 * with the possibility to pick any
 	 */
 	public function execute_selection_page() {
-		$this->add_javascript("/static/widgets/grid/grid.js");
-		$this->add_javascript("/static/data_model/data_list.js");
+		$this->addJavascript("/static/widgets/grid/grid.js");
+		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
 		$container_id = $this->generateID();
 		

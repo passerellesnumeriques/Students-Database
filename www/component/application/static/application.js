@@ -403,15 +403,15 @@ function LoadingFrame(frame_element) {
 	layout.addHandler(frame_element, updater);
 }
 
-// override add_javascript and add_stylesheet
-//window._add_javascript_original = window.add_javascript;
-//window.add_javascript = function(url, onload) {
+// override addJavascript and addStylesheet
+//window._addJavascript_original = window.addJavascript;
+//window.addJavascript = function(url, onload) {
 //	if (!window.top._loading_application_status) {
 //		if (window.top.StatusMessage) {
 //			window.top._loading_application_status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING, "Loading...");
 //			window.top._loading_application_nb = 0;
 //		} else {
-//			window._add_javascript_original(url, onload);
+//			window._addJavascript_original(url, onload);
 //			return;
 //		}
 //	}
@@ -422,7 +422,7 @@ function LoadingFrame(frame_element) {
 //		if (window.top._loading_application_nb == 1)
 //			window.top.status_manager.add_status(window.top._loading_application_status);
 //	}
-//	window._add_javascript_original(url, function() {
+//	window._addJavascript_original(url, function() {
 //		if (onload) onload();
 //		if (load) {
 //			window.top._loading_application_nb--;

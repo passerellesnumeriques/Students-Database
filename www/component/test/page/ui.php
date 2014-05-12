@@ -4,8 +4,8 @@ class page_ui extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->add_javascript("/static/widgets/vertical_layout.js");
-		$this->add_javascript("/static/widgets/horizontal_layout.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
+		$this->addJavascript("/static/widgets/horizontal_layout.js");
 		$this->onload("new vertical_layout('test_ui_container');");
 		$this->onload("new horizontal_layout('test_ui_footer');");
 		?>

@@ -4,7 +4,7 @@ class page_navigation extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->require_javascript("tree.js");
+		$this->requireJavascript("tree.js");
 ?>
 	<div id='navigation_tree' style='background-color:white'>
 	</div>
@@ -32,7 +32,13 @@ class page_navigation extends Page {
 	php.addItem(item);
 	var js = new TreeItem("JavaScript",false);
 	intro.addItem(js);
-
+	item = new TreeItem("<a href='static?component=javascript&path=general_doc.html' target='documentation'>General Functionalities</a>",false);
+	js.addItem(item);
+	item = new TreeItem("<a href='static?component=widgets&path=widgets.html' target='documentation'>Widgets</a>",false);
+	js.addItem(item);
+	item = new TreeItem("<a href='static?component=widgets&path=layout.html' target='documentation'>Layout widgets</a>",false);
+	js.addItem(item);
+	
 	item = new TreeItem("<a href='/static/documentation/global_datamodel.html' target='documentation'>Global Data Model</a>",false);
 	global.addItem(item);
 	item = new TreeItem("<a href='/static/documentation/javascript.html' target='documentation'>JavaScript</a>",false);

@@ -2,7 +2,7 @@
 theme::css($this, "application.css");
 
 // mandatory part
-$this->require_javascript("calendar.js");
+$this->requireJavascript("calendar.js");
 ?>
 <script type='text/javascript'>
 window.top.default_country_code = <?php $d = PNApplication::$instance->getDomainDescriptor(); echo json_encode($d["country_code"]).";"; ?>
@@ -39,7 +39,7 @@ if (isset($_GET["page"])) {
 	return;
 } 
 
-$this->require_javascript("frame_header.js");
+$this->requireJavascript("frame_header.js");
 theme::css($this, "frame_header.css");
 ?>
 <div id='pn_application_container'>

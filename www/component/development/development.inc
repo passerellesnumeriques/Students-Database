@@ -8,15 +8,15 @@ class development extends Component {
 	}
 	
 	public function initRequest() {
-		Component::allow_page_without_login("development", "tools");
-		Component::allow_page_without_login("development", "reset_db");
-		Component::allow_page_without_login("development", "check_code");
-		Component::allow_page_without_login("development", "insert_1000000_fake_students");
-		Component::allow_service_without_login("development", "create_db");
-		Component::allow_service_without_login("development", "test_data");
-		Component::allow_service_without_login("development", "get_debug_info");
-		Component::allow_service_without_login("development", "check_php");
-		Component::allow_service_without_login("development", "check_datamodel");
+		Component::allowPageWithoutLogin("development", "tools");
+		Component::allowPageWithoutLogin("development", "reset_db");
+		Component::allowPageWithoutLogin("development", "check_code");
+		Component::allowPageWithoutLogin("development", "insert_1000000_fake_students");
+		Component::allowServiceWithoutLogin("development", "create_db");
+		Component::allowServiceWithoutLogin("development", "test_data");
+		Component::allowServiceWithoutLogin("development", "get_debug_info");
+		Component::allowServiceWithoutLogin("development", "check_php");
+		Component::allowServiceWithoutLogin("development", "check_datamodel");
 		
 		for ($i = 0; $i < 15; $i++) {
 			if ($i >= count($this->requests)) break;

@@ -2,7 +2,7 @@
 theme::css($this, "application.css");
 
 // mandatory part
-$this->require_javascript("calendar.js");
+$this->requireJavascript("calendar.js");
 ?><script type='text/javascript'>
 window.top.default_country_code = <?php $d = PNApplication::$instance->getDomainDescriptor(); echo json_encode($d["geography"]["country_code"]).";"; ?>
 window.top.default_country_id = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo $c["id"]; ?>;

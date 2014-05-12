@@ -35,13 +35,13 @@ $sections = array(
 );
 
 theme::css($this, "application.css");
-$this->require_javascript("vertical_layout.js");
-$this->require_javascript("horizontal_layout.js");
-$this->require_javascript("horizontal_menu.js");
-$this->require_javascript("calendar.js");
+$this->requireJavascript("vertical_layout.js");
+$this->requireJavascript("horizontal_layout.js");
+$this->requireJavascript("horizontal_menu.js");
+$this->requireJavascript("calendar.js");
 
 if (PNApplication::$instance->current_domain == "Dev") {
-	$this->add_javascript("/static/development/debug_status.js");
+	$this->addJavascript("/static/development/debug_status.js");
 	$this->onload("new debug_status('debug_status');");
 }
 ?>

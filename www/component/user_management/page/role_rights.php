@@ -20,7 +20,7 @@ class page_role_rights extends Page {
 		if ($can_edit)
 			DataBaseLock::generateScript($lock_id);
 		
-		$this->require_javascript("vertical_layout.js");
+		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('page');");
 		?>
 		<div id='page' style='width:100%;height:100%'>
@@ -38,7 +38,7 @@ class page_role_rights extends Page {
 		$all_rights = array();
 		$categories = array();
 		foreach (PNApplication::$instance->components as $component) {
-			foreach ($component->get_readable_rights() as $cat) {
+			foreach ($component->getReadableRights() as $cat) {
 				if (!isset($categories[$cat->display_name]))
 					$categories[$cat->display_name] = array();
 				foreach ($cat->rights as $r) {
@@ -46,7 +46,7 @@ class page_role_rights extends Page {
 					$all_rights[$r->name] = $r;
 				}
 			}
-			foreach ($component->get_writable_rights() as $cat) {
+			foreach ($component->getWritableRights() as $cat) {
 				if (!isset($categories[$cat->display_name]))
 					$categories[$cat->display_name] = array();
 				foreach ($cat->rights as $r) {

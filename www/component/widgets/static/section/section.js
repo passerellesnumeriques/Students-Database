@@ -3,7 +3,11 @@ if (typeof require != 'undefined')
 if (typeof theme != 'undefined')
 	theme.css("section.css");
 
-function section_from_html(container) {
+/** Create a section widget, from a HTML div using its attributes
+ * @param {Element} container the div which will be used for the section
+ * @returns {section} the section
+ */
+function sectionFromHTML(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var icon = null;
 	var title = "";
@@ -43,37 +47,61 @@ function section_from_html(container) {
 	return s;
 }
 
+/** Create a new section, but do not put it in the page (created in element attribute)
+ * @param {String} icon URL of the icon or null
+ * @param {String} title title of the section
+ * @param {Element} content html element of the content
+ * @param {Boolean} collapsable indicates if the section can be collapsed or not
+ * @param {Boolean} fill_height if true, the content will fill the height of the section, meaning the container MUST have a fixed height
+ * @param {String} css style or null for the default one
+ * @param {Boolean} collapsed if collapsable is true, it indicates if the section will be collapsed at the beginning or not
+ */
 function section(icon, title, content, collapsable, fill_height, css, collapsed) {
 	var t=this;
+	/** HTML Element of the section, which you can put where you want in the page */
 	this.element = document.createElement("DIV");
 	this.element.className = "section"+(css ? " "+css : "");
 	
+	/** Add an element in the title bar
+	 * @param {Element|String} element the HTML element to add
+	 */
 	this.addTool = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar.appendChild(element);
 		element.style.display = "inline-block";
 		layout.invalidate(this.element);
 	};
+	/** Add an element on the left of the title bar
+	 * @param {Element|String} element the HTML element to add
+	 */
 	this.addToolLeft = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar_left.appendChild(element);
 		element.style.display = "inline-block";
 		layout.invalidate(this.element);
 	};
+	/** Remove all elements on the left of the title bar (previously added using addToolLeft */
 	this.resetToolLeft = function() {
 		while (this.toolbar_left.childNodes.length > 0) this.toolbar_left.removeChild(this.toolbar_left.childNodes[0]);
 		layout.invalidate(this.element);
 	};
+	/** Add an element on the right of the title bar
+	 * @param {Element|String} element the HTML element to add
+	 */
 	this.addToolRight = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar_right.appendChild(element);
 		element.style.display = "inline-block";
 		layout.invalidate(this.element);
 	};
+	/** Remove all elements on the right of the title bar (previously added using addToolRight */
 	this.resetToolRight = function() {
 		while (this.toolbar_right.childNodes.length > 0) this.toolbar_right.removeChild(this.toolbar_right.childNodes[0]);
 		layout.invalidate(this.element);
 	};
+	/** Add an element in the footer. The footer will become visible when the first element will be added.
+	 * @param {Element|String} element the HTML element to add
+	 */
 	this.addToolBottom = function(element) {
 		if (typeof element == 'string') {
 			var div = document.createElement("DIV");
@@ -85,12 +113,14 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		this.footer.className = "footer";
 		layout.invalidate(this.element);
 	};
+	/** Remove all elements on the footer, and hide the footer */
 	this.resetToolBottom = function() {
 		this.footer.className = "footer_empty";
 		while (this.footer.childNodes.length > 0) this.footer.removeChild(this.footer.childNodes[0]);
 		layout.invalidate(this.element);
 	};
 	
+	/** Creates the section */
 	this._init = function() {
 		this.header = document.createElement("DIV");
 		this.header.className = "header";
@@ -173,6 +203,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		});
 	};
 	
+	/** Toogle between collapsed and expanded */
 	this.toggleCollapseExpand = function() {
 		if (this.collapsed) {
 			this.collapse_button.src = get_script_path("section.js")+"collapse.png";

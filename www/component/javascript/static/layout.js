@@ -500,8 +500,8 @@ function _stylePadding(s) {
 	if (s.length == 0) return "0px";
 	return s;
 };
-var _layout_add_css = window.add_stylesheet;
-window.add_stylesheet = function(url, onload) {
+var _layout_add_css = window.addStylesheet;
+window.addStylesheet = function(url, onload) {
 	_layout_add_css(url, function() {
 		layout.invalidate(document.body);
 		if (onload) onload();

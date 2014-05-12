@@ -4,9 +4,9 @@ class page_news extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->add_javascript("/static/news/news.js");
-		$this->add_javascript("/static/widgets/vertical_layout.js");
-		$this->add_javascript("/static/widgets/header_bar.js");
+		$this->addJavascript("/static/news/news.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
+		$this->addJavascript("/static/widgets/header_bar.js");
 		theme::css($this, "header_bar.css");
 		?>
 		<div id='page' style='width:100%;height:100%'>

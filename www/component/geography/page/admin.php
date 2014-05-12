@@ -4,9 +4,9 @@ class page_admin extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->add_javascript("/static/widgets/frame_header.js");
+		$this->addJavascript("/static/widgets/frame_header.js");
 		$this->onload("new frame_header('geography_page',null,null,null,'middle');");
-		$this->add_javascript("/static/widgets/select/select.js");
+		$this->addJavascript("/static/widgets/select/select.js");
 		?>
 		<div id='geography_page' icon='/static/geography/geography_32.png' title='Geography' page='/dynamic/geography/page/set_geography_area'>
 			<div style='margin-left:20px'>

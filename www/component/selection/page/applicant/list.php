@@ -9,8 +9,8 @@ class page_applicant_list extends selection_page {
 	 * The property of datalist can be given by a post "input" variable. This variable can be set using prepare_applicants_list.js script
 	 */
 	public function execute_selection_page() {
-		$this->add_javascript("/static/widgets/grid/grid.js");
-		$this->add_javascript("/static/data_model/data_list.js");
+		$this->addJavascript("/static/widgets/grid/grid.js");
+		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_list();");
 		$container_id = $this->generateID();
 		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : array();

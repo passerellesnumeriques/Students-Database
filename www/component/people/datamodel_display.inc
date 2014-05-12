@@ -25,13 +25,13 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 			echo "<table><tr><td valign=top align=center><div id='$picture_container_id'></div><button id='change_picture' disabled='disabled'>Change picture</button></td><td valign=top>";
 			parent::generate($page, $paths, $values, $prefilled_values, $structure_name);
 			echo "</td></tr></table>";
-			$page->require_javascript("profile_picture.js");
+			$page->requireJavascript("profile_picture.js");
 			echo "<script type='text/javascript'>";
 			echo "var picture = new profile_picture('$picture_container_id',150,150,'center','middle');";
 			echo "picture.loadPeopleID($people_id);";
 			echo "</script>";
 			if (PNApplication::$instance->people->canModify($people_id)) {
-				$page->require_javascript("images_tool.js");
+				$page->requireJavascript("images_tool.js");
 				?>
 				<script type='text/javascript'>
 				var tool = new images_tool();

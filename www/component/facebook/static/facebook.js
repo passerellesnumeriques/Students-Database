@@ -52,7 +52,7 @@ if (!window.top.facebook) {
 	};
 	/** Start loading the Facebook API. Automatically called when this script is loaded. */
 	window.top.loadFacebookAPI = function() {
-		window.top.add_javascript("http://connect.facebook.net/en_US/all.js");
+		window.top.addJavascript("http://connect.facebook.net/en_US/all.js");
 		window.top.setTimeout(function(){
 			if (window.top.facebook.api_loaded) return;
 			window.top.remove_javascript("http://connect.facebook.net/en_US/all.js");

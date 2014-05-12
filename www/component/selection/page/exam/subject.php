@@ -45,7 +45,7 @@ class page_exam_subject extends selection_page {
 				return;
 		}
 		
-		$this->require_javascript("exam_objects.js");
+		$this->requireJavascript("exam_objects.js");
 		?>
 		<script type = "text/javascript">
 			var subject = null;
