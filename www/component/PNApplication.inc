@@ -22,6 +22,7 @@ require_once("Component.inc");
  * @property geography $geography
  * @property google $google
  * @property health $health
+ * @property help $help
  * @property javascript $javascript
  * @property news $news
  * @property people $people 
@@ -32,6 +33,7 @@ require_once("Component.inc");
  * @property test $test
  * @property theme $theme
  * @property transcripts $transcripts
+ * @property user_config $user_config
  * @property user_management $user_management
  * @property user_people $user_people 
  * @property widgets $widgets
@@ -58,6 +60,8 @@ class PNApplication {
 	public $local_domain;
 	/** @var Component[] list of components */
 	public $components = array();
+	/** @var integer timezone offset in minutes */
+	public $timezone_offset = 0;
 
 	/**
 	 * Signal an error
@@ -205,6 +209,7 @@ class PNApplication {
 	 * Called at the beginning of any request, it calls the initRequest on all components
 	 */
 	public function initRequest() {
+		date_default_timezone_set(timezone_name_from_abbr("",$this->timezone_offset*60,1));
 		$done = array();
 		foreach ($this->components as $c) $this->initRequestForComponent($c, $done);
 	}

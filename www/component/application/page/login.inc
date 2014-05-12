@@ -7,6 +7,8 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 	try {
 		setcookie("domain",$_POST["domain"],time()+30*24*60*60,"/dynamic/application/page/enter");
 		setcookie("username",$_POST["username"],time()+30*24*60*60,"/dynamic/application/page/enter");
+		if (isset($_POST["tz_offset"]))
+			PNApplication::$instance->timezone_offset = $_POST["tz_offset"];
 		$error = PNApplication::$instance->user_management->login($_POST["domain"], $_POST["username"], $_POST["password"]);
 		if ($error === null) {
 			echo "<script type='text/javascript'>";
@@ -27,6 +29,7 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 $this->onload("window.top.pn_loading_end();");
 ?>
 <form method="post" style="width:100%;height:100%" onsubmit="login();return false;" name="login_form">
+<input type="hidden" name="tz_offset" id="timezone_input"/>
 <table style="width:100%;height:100%"><tr><td valign=middle align=center>
 <?php
 if (isset($_GET["from"])) {
@@ -138,6 +141,7 @@ if ($message <> null) {
 }
 </style>
 <script type='text/javascript'>
+document.getElementById("timezone_input").value = new Date().getTimezoneOffset();
 window.top.pnapplication.onlogout.fire();
 setBorderRadius(document.getElementById('login_table'),10,10,10,10,10,10,10,10);
 setBorderRadius(document.getElementById('login_table_header'),8,8,8,8,0,0,0,0);

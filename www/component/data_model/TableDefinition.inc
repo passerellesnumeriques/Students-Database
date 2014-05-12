@@ -226,7 +226,7 @@ namespace datamodel {
 		/**
 		 * Set a list of columns as the key of this table (values on those columns can identify uniquely a row)
 		 * @param string[] $columns
-		 * @return Table
+		 * @return Table this
 		 */
 		public function &setKey($columns) {
 			$this->key = $columns;
@@ -336,21 +336,34 @@ namespace datamodel {
 		/**
 		 * Add a filter which will add where conditions in every select
 		 * @param function $filter function taking 2 parameters: the SQLQuery to modify, and the table alias
+		 * @return Table this
 		 */
 		public function &addReadFilter($filter) {
 			array_push($this->read_access_filters, $filter);
 			return $this;
 		}
+		/** Allow everybody to read in this table
+		 * @return \datamodel\Table this
+		 */
 		public function &allowReadAccess() {
 			$this->read_access_rights = null;
 			return $this;
 		}
+		/** Allow to read the given column if the user has the given right
+		 * @param string $column_name column name
+		 * @param string $right_name necessary right
+		 * @param mixed $right_value necessary right value
+		 * @return Table this
+		 */
 		public function &addColumnReadAccess($column_name, $right_name, $right_value) {
 			if (!isset($this->read_column_access_rights[$column_name]))
 				$this->read_column_access_rights[$column_name] = array();
 			array_push($this->read_column_access_rights[$column_name], array($right_name, $right_value));
 			return $this;
 		}
+		/** Return true if the user MAY access to this table, meaning operations are allowed, but may be filtered later on
+		 * @return boolean true if using this table is allowed
+		 */
 		public function canAccess() {
 			if ($this->read_access_rights === null) return true;
 			if (count($this->read_access_filters) > 0) return true;
@@ -428,6 +441,11 @@ namespace datamodel {
 			array_push($this->write_column_access_rights[$column_name], array($right_name, $right_value));
 			return $this;
 		}
+		/** Add a filter for the UPDATE operations
+		 * @param function $prepare_select prepare the SELECT to determine which rows can be updated. Takes 2 parameters: the SQLQuery, and the table alias.
+		 * @param function $filter filter to rows which can be updated. Takes the list of rows as parameter, and returns the list of rows which can be updated.
+		 * @return Table this
+		 */
 		public function &addWriteFilter($prepare_select, $filter) {
 			array_push($this->write_access_filters, array($prepare_select, $filter));
 			return $this;
@@ -481,6 +499,10 @@ namespace datamodel {
 			array_push($this->add_access_rights, array($right_name,$right_value));
 			return $this;
 		}
+		/** Add a filter on INSERT operations
+		 * @param function $filter takes the list of (column=&gt;value) which will be inserted, and returns true if it is allowed
+		 * @return \datamodel\Table this
+		 */
 		public function &addInsertFilter($filter) {
 			array_push($this->add_access_filters, $filter);
 			return $this;
@@ -505,6 +527,11 @@ namespace datamodel {
 			array_push($this->remove_access_rights, array($right_name,$right_value));
 			return $this;
 		}
+		/** Add a filter for DELETE operations
+		 * @param function $prepare_select prepare the SELECT to get rows that will be removed. Takes 3 parameters: the SQLQuery, the table alias, a list of locks created by this function.
+		 * @param function $check takes the list of rows as parameters, and return the list of allowed rows
+		 * @return \datamodel\Table this
+		 */
 		public function &addRemoveFilter($prepare_select, $check) {
 			array_push($this->remove_access_filters, array($prepare_select, $check));
 			return $this;
