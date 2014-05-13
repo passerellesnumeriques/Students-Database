@@ -1,32 +1,37 @@
-<?php 
+<?php
+/**
+ * Utilities to generate JSON objects from DataBase
+ */ 
 class GeographyJSON {
 	
+	/** Prepare an SQL query to generate JSON
+	 * @param SQLQuery $q the query to prepare
+	 * @no_name_check
+	 */
 	public static function GeographicAreaTextSQL(&$q) {
 		$alias = $q->getTableAlias("GeographicArea");
-		$q->field($alias, "id", "geographic_area_id");
+		$q->field($alias, "id", "geographic_area_text_area_id");
 		$div_alias = $q->getTableAlias("CountryDivision");
 		if ($div_alias == null) {
 			$div_alias = $q->generateTableAlias();
 			$q->join($alias, "CountryDivision", array("country_division"=>"id"), $div_alias);
 		}
-		$q->field($div_alias, "id", "country_division_id");
-		$q->field($div_alias, "country", "country_id");
+		$q->field($div_alias, "id", "geographic_area_text_country_division_id");
+		$q->field($div_alias, "country", "geographic_area_text_country_id");
 	}
 	
-	public static function GeographicAreaText($q, $row) {
-		if ($row["geographic_area_id"] == null) return "null";
-		if(!isset($row["country_division_id"])){
-			$row["country_division_id"] = SQLQuery::create()
-				->select("GeographicArea")
-				->field("GeographicArea","country_division",'id')
-				->whereValue("GeographicArea", "id", $row["geographic_area_id"])
-				->executeSingleValue();
-		}
+	/** Generate a JSON object GeographicAreaText
+	 * @param array $row row from database from a query previously prepared by GeographicAreaTextSQL
+	 * @return string the JSON object GeographicAreaText
+	 * @no_name_check
+	 */
+	public static function GeographicAreaText($row) {
+		if ($row["geographic_area_text_area_id"] == null) return "null";
 		return "{".
-			"id:".$row["geographic_area_id"].
-			",division_id:".$row["country_division_id"].
-			",country_id:".$row["country_id"].
-			",text:".json_encode(PNApplication::$instance->geography->getGeographicAreaText($row["geographic_area_id"]))
+			"id:".$row["geographic_area_text_area_id"].
+			",division_id:".$row["geographic_area_text_country_division_id"].
+			",country_id:".$row["geographic_area_text_country_id"].
+			",text:".json_encode(PNApplication::$instance->geography->getGeographicAreaText($row["geographic_area_text_area_id"]))
 		."}";
 	}
 	

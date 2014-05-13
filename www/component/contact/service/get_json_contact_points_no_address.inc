@@ -79,11 +79,11 @@ function get_json_contact_points_no_address($organization, $contacts_details = t
 						$json_result.=  "people_designation:".json_encode($c["designation"]).", ";
 						$json_result.=  "contacts:[";
 						if(isset($c["contact_id"]) && $contacts_details){
-							$json_result.= ContactJSON::Contact(null, $c);
+							$json_result.= ContactJSON::Contact($c);
 						} //else $no_contact_before = true;
 						$current_people = $c["people_id"];
 					} else {
-						$json_result.= ContactJSON::Contact(null, $c);
+						$json_result.= ContactJSON::Contact($c);
 					}
 				} else $no_people_before = true;
 				$current_partner = $c["organization_id"];
@@ -102,12 +102,12 @@ function get_json_contact_points_no_address($organization, $contacts_details = t
 						$json_result.=  "people_designation:".json_encode($c["designation"]).", ";
 						$json_result.=  "contacts:[";
 						if(isset($c["contact_id"]) && $contacts_details){
-							$json_result.= ContactJSON::Contact(null, $c);
+							$json_result.= ContactJSON::Contact($c);
 							$current_people = $c["people_id"];
 						} //else $no_contact_before = true;
 					} else {
 						$json_result.= ", ";
-						ContactJSON::Contact(null, $c);
+						ContactJSON::Contact($c);
 					}
 				}
 			}

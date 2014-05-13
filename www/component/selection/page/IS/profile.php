@@ -58,27 +58,24 @@ class page_IS_profile extends selection_page {
 		var container = document.getElementById("IS_profile_container");
 		var id = <?php echo json_encode($id).";"; ?>
 		var campaign_id = <?php echo json_encode($campaign_id);?>;
-		var data, partners_contacts_points, all_duration;
-		<?php $all_configs = include("component/selection/config.inc");
-		echo "all_duration = ".json_encode($all_configs["default_duration_IS"][2]).";";
-		echo "\n";
-		$IS_data = SelectionJSON::InformationSessionFromID($id);
-		echo "data = ".$IS_data.";";
-		echo "\n";
+		<?php $all_configs = include("component/selection/config.inc"); ?>
+		var all_duration = <?php echo json_encode($all_configs["default_duration_IS"][2]);?>;
+		var data = <?php echo SelectionJSON::InformationSessionFromID($id);?>;
+		<?php
 		//Select all the partners IDs
 		$partners = array();
 		if($id != -1 && $id != "-1")
 			$partners = SQLQuery::create()
-				->select("InformationSessionPartner")
-				->field("organization")
-				->whereValue("InformationSessionPartner","information_session",$id)
-				->executeSingleField();
+			->select("InformationSessionPartner")
+			->field("organization")
+			->whereValue("InformationSessionPartner","information_session",$id)
+			->executeSingleField();
 		require_once("component/contact/service/get_json_contact_points_no_address.inc");
 		echo "\n";
 		if($id != -1 && $id != "-1")
-			echo "partners_contacts_points = ".get_json_contact_points_no_address($partners).";";
+			echo "var partners_contacts_points = ".get_json_contact_points_no_address($partners).";";
 		else
-			echo "partners_contacts_points = [];";
+			echo "var partners_contacts_points = [];";
 		?>
 		var popup = window.parent.get_popup_window_from_frame(window);
 		if((id == -1 || id == "-1") && !can_add){

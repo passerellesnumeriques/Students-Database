@@ -15,7 +15,7 @@ class ContactJSON {
 		self::PostalAddressSQL($q);
 		$row = $q->executeSingleRow();
 		if ($row == null) return null;
-		return self::PostalAddress($q, $row);
+		return self::PostalAddress($row);
 	}
 	
 	/**
@@ -29,37 +29,36 @@ class ContactJSON {
 		require_once("component/geography/GeographyJSON.inc");
 		GeographyJSON::GeographicAreaTextSQL($q);
 		$q
-			->field($alias,"id","address_id")
-			->field($alias,"country","country_id")
-			->field($alias,"street","street")
-			->field($alias,"street_number","street_number")
-			->field($alias,"building","building")
-			->field($alias,"unit","unit")
-			->field($alias,"additional","additional")
-			->field($alias,"address_type","address_type")
+			->field($alias,"id","postal_address__id")
+			->field($alias,"country","postal_address__country_id")
+			->field($alias,"street","postal_address__street")
+			->field($alias,"street_number","postal_address__street_number")
+			->field($alias,"building","postal_address__building")
+			->field($alias,"unit","postal_address__unit")
+			->field($alias,"additional","postal_address__additional")
+			->field($alias,"address_type","postal_address__address_type")
 			;
 	}
 	
 	/**
 	 * Generate a JSON PostalAddress object 
-	 * @param SQLQuery $q the query used
 	 * @param array $row the row corresponding to the postal address
 	 * @return string the PostalAddress object in JSON
 	 * @no_name_check
 	 */
-	public static function PostalAddress($q, $row) {
+	public static function PostalAddress($row) {
 		require_once("component/geography/GeographyJSON.inc");
 		return
 			"{".
-				"id:".$row["address_id"].
-				",country_id:".json_encode(@$row["country_id"]).
-				",geographic_area:".GeographyJSON::GeographicAreaText($q, $row).
-				",street:".json_encode(@$row["street"]).
-				",street_number:".json_encode(@$row["street_number"]).
-				",building:".json_encode(@$row["building"]).
-				",unit:".json_encode(@$row["unit"]).
-				",additional:".json_encode(@$row["additional"]).
-				",address_type:".json_encode(@$row["address_type"]).
+				"id:".$row["postal_address__id"].
+				",country_id:".json_encode(@$row["postal_address__country_id"]).
+				",geographic_area:".GeographyJSON::GeographicAreaText($row).
+				",street:".json_encode(@$row["postal_address__street"]).
+				",street_number:".json_encode(@$row["postal_address__street_number"]).
+				",building:".json_encode(@$row["postal_address__building"]).
+				",unit:".json_encode(@$row["postal_address__unit"]).
+				",additional:".json_encode(@$row["postal_address__additional"]).
+				",address_type:".json_encode(@$row["postal_address__address_type"]).
 			"}"
 			;
 	}
@@ -108,7 +107,7 @@ class ContactJSON {
 	 * @return string the Contact object in JSON
 	 * @no_name_check
 	 */
-	public static function Contact($q, $row) {
+	public static function Contact($row) {
 		return
 			"{".
 				"id:".$row["contact_id"].
@@ -119,9 +118,38 @@ class ContactJSON {
 			;
 	}
 	
-	/**
-	 * Methods about partners
-	 */
+	public static function OrganizationContactsPointsFromDB($organization_id) {
+		$q = SQLQuery::create()
+			->select("ContactPoint")
+			->whereValue("ContactPoint", "organization", $organization_id)
+			->field("ContactPoint", "designation", "contact_point_designation")
+			;
+		require_once("component/people/PeopleJSON.inc");
+		PNApplication::$instance->people->joinPeople($q, "ContactPoint", "people");
+		PeopleJSON::PeopleSQL($q);
+		return self::OrganizationContactsPoints($q->execute());
+	}
+	
+	public static function OrganizationContactPoint($row) {
+		require_once("component/people/PeopleJSON.inc");
+		return "{".
+			"people:".PeopleJSON::People($row).
+			",designation:".json_encode($row["contact_point_designation"]).
+			"}";
+	}
+	
+	public static function OrganizationContactsPoints($rows) {
+		$s = "[";
+		$first = true;
+		foreach ($rows as $row) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= self::OrganizationContactPoint($row);
+		}
+		$s .= "]";
+		return $s;
+	}
+	
+	// Methods about partners
 	
 	/**
 	 * Prepare a JSON structure of entity partners array to be saved into the database (for instance, information session partners)

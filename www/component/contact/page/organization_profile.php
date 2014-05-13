@@ -55,8 +55,8 @@ class page_organization_profile extends Page {
 			$org_structure .= ",types_ids:[]";
 			$org_structure .= ",contacts:[]";
 			if(isset($_GET["address_country_id"]) && isset($_GET["address_area_id"])){
-				$new_address = array("address_id" => -1, "country_id" => $_GET["address_country_id"],"geographic_area_id" =>$_GET["address_area_id"]);
-				$org_structure .= ",addresses:[".ContactJSON::PostalAddress(null, $new_address)."]";
+				$new_address = array("postal_address__id" => -1, "postal_address__country_id" => $_GET["address_country_id"],"geographic_area_text_area_id" =>$_GET["address_area_id"]);
+				$org_structure .= ",addresses:[".ContactJSON::PostalAddress($new_address)."]";
 			} else 
 				$org_structure .= ",addresses:[]";
 			$org_structure .= ",contact_points:[]";

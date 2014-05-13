@@ -40,7 +40,7 @@ class service_exam_get_available_supervisors_for_session extends Service {
 				foreach ($available as $staff){
 					if(!$first) echo ", ";
 					$first = false;
-					echo StaffJSON::Staff(null,$staff);
+					echo StaffJSON::Staff($staff);
 				}
 			}
 			echo "]";
