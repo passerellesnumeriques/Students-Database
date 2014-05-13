@@ -5,12 +5,12 @@
  * - create a subject by importing an excel file
  * - create a subject from previous campaigns
  */
-require_once("/../selection_page.inc");
-class page_exam_create_subject extends selection_page {
+require_once("/../SelectionPage.inc");
+class page_exam_create_subject extends SelectionPage {
 	
 	public function getRequiredRights() {}
 	
-	public function execute_selection_page() {
+	public function executeSelectionPage() {
 		/* Check the rights */
 		if(!PNApplication::$instance->user_management->has_right("manage_exam_subject",true))
 			echo "<div style='font-color:red;'>You are not allowed to add any exam subject</div>'";

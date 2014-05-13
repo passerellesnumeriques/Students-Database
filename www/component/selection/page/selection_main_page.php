@@ -16,10 +16,10 @@ function getArrayStepsToDisplay ($steps_to_display){
 	}
 	return $json;
 }
-require_once("selection_page.inc");
-class page_selection_main_page extends selection_page {
+require_once("SelectionPage.inc");
+class page_selection_main_page extends SelectionPage {
 	public function getRequiredRights() { return array(); }
-	public function execute_selection_page(){
+	public function executeSelectionPage(){
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		
 		$this->addJavascript("/static/widgets/header_bar.js");

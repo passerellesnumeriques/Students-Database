@@ -92,10 +92,12 @@ function Organization(id, name, creator, types_ids, contacts, addresses, contact
 
 /**
  * Contact point of an organization
+ * @param {Number} organization_id ID of the organization this contact point belongs to
  * @param {People} people People object for this contact point
  * @param {String} designation designation of this people in the organization (i.e. director, IT manager...)
  */
-function ContactPoint(people, designation) {
+function ContactPoint(organization_id, people, designation) {
+	this.organization_id = organization_id;
 	this.people = people;
 	this.designation = designation;
 }

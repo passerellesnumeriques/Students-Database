@@ -206,96 +206,6 @@ class contact extends Component {
 	}
 
 	/**
-	 * Get all the organizations existings in a given geographic area (and all its children areas), and the matching addresses
-	 * @param number $area_id
-	 * @return array containing two fields:<ul><li>Organizations found in the given area</li><li>Organizations found in the parent area (all the organizations set in this array are distinct from the ones found in the given area (no double return)</li></ul>
-	 * The structure of these arrays is: array("organization_id" => array("name" => organization_name, "addresses" => array(array(address =>, geographic_area_id =>, geographic_area_text=>))))
-	 */
-	public function getOrganizationsByGeographicArea($area_id){
-		//Get the parent id
-		$parent_id = PNApplication::$instance->geography->getAreaParent($area_id);
-		//Get all the children
-		$children = PNApplication::$instance->geography->getAreaAllChildrenFlat($area_id);
-		array_push($children, $area_id);
-		$organizations_in_this_area = SQLQuery::create()
-			->select("PostalAddress")
-			->field("PostalAddress","id","address_id")
-			->field("PostalAddress","geographic_area","area_id")
-			->join("PostalAddress","OrganizationAddress",array("id" => "address"))
-			->join("OrganizationAddress","Organization",array("organization" => "id"))
-			->field("Organization","id","organization_id")
-			->field("Organization","name","organization_name")
-			->whereIn("PostalAddress", "geographic_area",$children)
-			->execute();
-		
-// 		$all_address_ids_from_area = array();
-		$to_return_from_this_area = array();
-		$to_return_from_parent_area = array();
-		if($organizations_in_this_area <> null){
-			foreach($organizations_in_this_area as $o){
-				if(isset($to_return_from_this_area[$o["organization_id"]])){
-					array_push($to_return_from_this_area[$o["organization_id"]]["addresses"],$this->getArrayAddressIDGeographicAreaText($o["address_id"], $o["area_id"]));
-				} else {
-					$to_return_from_this_area[$o["organization_id"]] = array(
-						"addresses" => array($this->getArrayAddressIDGeographicAreaText($o["address_id"], $o["area_id"])),
-						"name" => $o["organization_name"]
-					);
-				}
-// 				array_push($all_address_ids_from_area, $o["address_id"]);
-			}
-		}
-		if($parent_id <> null){//This is not the root level
-			$children_from_parent = PNApplication::$instance->geography->getAreaAllChildrenFlat($parent_id);
-			array_push($children_from_parent, $parent_id);
-			//Remove all the ids already retrieved
-			for($i = 0; $i < count($children); $i++){
-				$index = array_search($children[$i], $children_from_parent);
-				if($index <> null)
-					array_splice($children_from_parent, $index, 1);
-			}
-			//Get the data
-			if(count($children_from_parent) > 0){
-				$q = SQLQuery::create()
-				->select("PostalAddress")
-				->field("PostalAddress","id","address_id")
-				->field("PostalAddress","geographic_area","area_id")
-				->join("PostalAddress","OrganizationAddress",array("id" => "address"))
-				->join("OrganizationAddress","Organization",array("organization" => "id"))
-				->field("Organization","id","organization_id")
-				->field("Organization","name","organization_name")
-				->whereIn("PostalAddress", "geographic_area",$children_from_parent);
-// 				if(count($all_address_ids_from_area) > 0)
-// 					$q->whereNotIn("PostalAddress","id",$all_address_ids_from_area);
-				 $organizations_in_parent_area = $q->execute();
-				
-				if($organizations_in_parent_area <> null){
-					foreach ($organizations_in_parent_area as $o){
-						if(isset($to_return_from_parent_area[$o["organization_id"]])){
-							array_push($to_return_from_parent_area[$o["organization_id"]]["addresses"],$this->getArrayAddressIDGeographicAreaText($o["address_id"], $o["area_id"]));
-						} else {
-							$to_return_from_parent_area[$o["organization_id"]] = array(
-									"addresses" => array($this->getArrayAddressIDGeographicAreaText($o["address_id"], $o["area_id"])),
-									"name" => $o["organization_name"]
-							);
-						}
-					}
-				}
-			}
-		}
-		return array($to_return_from_this_area, $to_return_from_parent_area);
-	}
-	
-	/**
-	 * Get an array contaning an address, its geographic area, and the matching geographic area text from address id and area id
-	 * @param number $address_id
-	 * @param number $area_id
-	 * @return array containing three attributes:<ul><li><code>address</code> the id of the address</li><li><code>geographic_area_id</code></li><li><code>geographic_area_text</code></li></ul>
-	 */
-	private function getArrayAddressIDGeographicAreaText($address_id, $area_id){
-		return array("address" => $address_id, "geographic_area_id" => $area_id,"geographic_area_text" => PNApplication::$instance->geography->getGeographicAreaText($area_id));
-	}
-	
-	/**
 	 * Get an organization name from its ID
 	 * @param number $id
 	 */
@@ -353,6 +263,46 @@ class contact extends Component {
 			->field("PostalAddress","geographic_area")
 			->whereValue("PostalAddress", "id", $id)
 			->executeSingleValue();
+	}
+	
+	public function joinOrganization(&$q, $from_table, $from_key) {
+		$q->join($from_table, "Organization", array($from_key=>"id"));
+		require_once("component/contact/ContactJSON.inc");
+		ContactJSON::OrganizationSQL($q);
+	}
+	
+	public function getOrganizationsContacts($orgs_ids) {
+		$q = SQLQuery::create()
+			->select("OrganizationContact")
+			->whereIn("OrganizationContact", "organization", $orgs_ids)
+			->join("OrganizationContact", "Contact", array("contact"=>"id"))
+			->field("OrganizationContact", "organization", "contact_organization_id")
+			;
+		require_once("component/contact/ContactJSON.inc");
+		ContactJSON::ContactSQL($q);
+		return $q->execute();
+	}
+
+	public function getOrganizationsAddresses($orgs_ids) {
+		$q = SQLQuery::create()
+			->select("OrganizationAddress")
+			->whereIn("OrganizationAddress", "organization", $orgs_ids)
+			->join("OrganizationAddress", "PostalAddress", array("address"=>"id"))
+			->field("OrganizationAddress", "organization", "address_organization_id")
+			;
+		require_once("component/contact/ContactJSON.inc");
+		ContactJSON::PostalAddressSQL($q);
+		return $q->execute();
+	}
+	
+	public function getOrganizationsContactPoints($orgs_ids) {
+		$q = SQLQuery::create()
+			->select("ContactPoint")
+			->whereIn("ContactPoint", "organization", $orgs_ids)
+			;
+		require_once("component/contact/ContactJSON.inc");
+		ContactJSON::OrganizationContactPointSQL($q);
+		return $q->execute();
 	}
 }
 ?>

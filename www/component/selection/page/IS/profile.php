@@ -1,8 +1,8 @@
 <?php 
-require_once("/../selection_page.inc");
-class page_IS_profile extends selection_page {
+require_once("/../SelectionPage.inc");
+class page_IS_profile extends SelectionPage {
 	public function getRequiredRights() { return array("see_information_session_details"); }
-	public function execute_selection_page(){
+	public function executeSelectionPage(){
 		require_once("component/selection/SelectionJSON.inc");
 		$config = PNApplication::$instance->selection->getConfig();
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();

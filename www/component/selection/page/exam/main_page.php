@@ -1,11 +1,11 @@
 <?php
-require_once("/../selection_page.inc");
+require_once("/../SelectionPage.inc");
 require_once("component/selection/SelectionJSON.inc");
-class page_exam_main_page extends selection_page {
+class page_exam_main_page extends SelectionPage {
 	
 	public function getRequiredRights() {return array("see_exam_subject");}
 	
-	public function execute_selection_page() {
+	public function executeSelectionPage() {
 		//Rights based on the steps
 		$can_see_subject = PNApplication::$instance->user_management->has_right("see_exam_subject",true);
 		$can_manage_subject = PNApplication::$instance->selection->canUpdateFromRightAndStep("manage_exam", "manage_exam_subject", "");

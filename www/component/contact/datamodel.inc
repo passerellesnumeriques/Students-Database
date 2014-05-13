@@ -5,6 +5,8 @@ $model->addTable("Contact")
 	->addEnum("type",array("email","phone","IM"),true,false)
 	->addString("sub_type",10,0,true,false)
 	->addString("contact",100,1,false,false)
+	->addReadAccessFromForeignTable("OrganizationContact") // no need to check again
+	->addReadAccessFromForeignTable("PeopleContact") // no need to check again
 	->addReadFilter(function(&$q, $table_alias) {
 		$table_people = Datamodel::get()->getTable("PeopleContact");
 		$people_alias = $q->getTableAlias("PeopleContact");
@@ -136,6 +138,7 @@ $model->addTable("PeopleContact")
 	->addForeignKey("people","People",true,false,true,false)
 	->setKey(array("contact","people"))
 	->addIndex("people")
+	->addReadAccessFromForeignTable("People") // no need to check again
 	->addReadFilter(function(&$q, $table_alias) {
 		PNApplication::$instance->people->filterReadAccess($q, $table_alias, "people");
 	})
@@ -159,6 +162,8 @@ $model->addTable("PostalAddress")
 	->addString("unit",100,0,true,false)
 	->addString("additional",100,0,true,false)
 	->addString("address_type",100,0,true,false)
+	->addReadAccessFromForeignTable("OrganizationAddress") // no need to check again
+	->addReadAccessFromForeignTable("PeopleAddress") // no need to check again
 	->addReadFilter(function(&$q, $table_alias) {
 		$table_people = Datamodel::get()->getTable("PeopleAddress");
 		$people_alias = $q->getTableAlias("PeopleAddress");
@@ -259,6 +264,7 @@ $model->addTable("PeopleAddress")
 	->addForeignKey("people","People",true,false,true,false)
 	->setKey(array("address","people"))
 	->addIndex("people")
+	->addReadAccessFromForeignTable("People") // no need to check again
 	->addReadFilter(function(&$q, $table_alias) {
 		PNApplication::$instance->people->filterReadAccess($q, $table_alias, "people");
 	})
@@ -520,6 +526,7 @@ $model->addTable("OrganizationContact")
 	->addForeignKey("contact","Contact",true,false,true,false)
 	->setKey(array("organization","contact"))
 	->addIndex("organization")
+	->addReadAccessFromForeignTable("Organization") // if we come already from the organization, no need to check again
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");
 		$org_alias = $q->getTableAlias("Organization");
@@ -560,6 +567,7 @@ $model->addTable("OrganizationAddress")
 	->addForeignKey("address","PostalAddress",true,false,true,false)
 	->setKey(array("organization","address"))
 	->addIndex("organization")
+	->addReadAccessFromForeignTable("Organization") // if we come already from the organization, no need to check again
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");
 		$org_alias = $q->getTableAlias("Organization");
@@ -601,6 +609,7 @@ $model->addTable("ContactPoint")
 	->setKey(array("organization","people"))
 	->addIndex("organization")
 	->addString("designation",100,1,false,false)
+	->addReadAccessFromForeignTable("Organization") // if we come already from the organization, no need to check again
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");
 		$org_alias = $q->getTableAlias("Organization");

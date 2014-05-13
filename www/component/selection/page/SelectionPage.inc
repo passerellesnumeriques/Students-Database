@@ -3,8 +3,8 @@
  * This abstract class is defined in order to oblige the user to select a selection campaign
  * In case the campaign_id attribute of the selection instance is set as null, the selection page is not executed
  */
-abstract class selection_page extends Page{
-	//we don't define getRequiredRights this way we will be obliged to define it in selection_page instances
+abstract class SelectionPage extends Page{
+	//we don't define getRequiredRights this way we will be obliged to define it in SelectionPage instances
 	final public function execute(){
 		$this->addJavascript("/static/selection/selection_utils.js");
 		$id = PNApplication::$instance->components["selection"]->getCampaignId();
@@ -13,7 +13,7 @@ abstract class selection_page extends Page{
 		/* Check the user is allowed to read the selection data */
 		if(!$can_access_selection_data) echo "<div>You are not allowed to access to the selection data</div>";
 		else{
-			if($id <> null) $this->execute_selection_page();
+			if($id <> null) $this->executeSelectionPage();
 			else {
 				$campaigns = SQLQuery::create()->select("SelectionCampaign")->execute();
 				if (count($campaigns) == 0) {
@@ -38,6 +38,6 @@ abstract class selection_page extends Page{
 		}
 	}
 	
-	abstract public function execute_selection_page();
+	abstract public function executeSelectionPage();
 }
 ?>

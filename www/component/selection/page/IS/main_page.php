@@ -1,8 +1,8 @@
 <?php 
-require_once("/../selection_page.inc");
-class page_IS_main_page extends selection_page {
+require_once("/../SelectionPage.inc");
+class page_IS_main_page extends SelectionPage {
 	public function getRequiredRights() { return array("see_information_session_details"); }
-	public function execute_selection_page(){
+	public function executeSelectionPage(){
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
@@ -33,6 +33,7 @@ class page_IS_main_page extends selection_page {
 					?>
 					</div>
 				</div>
+				<a href='#' onclick="testNewIS();return false;">Test new IS</a>
 			</div>
 			<div style="padding: 5px;display:inline-block" layout='fill'>
 				<div id = '<?php echo $list_container_id; ?>' class="section soft">
@@ -45,6 +46,16 @@ class page_IS_main_page extends selection_page {
 				require("popup_window.js",function() {
 					var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
 					popup.setContentFrame("/dynamic/selection/page/IS/profile");
+					popup.onclose = function() {
+						location.reload();
+					};
+					popup.showPercent(95,95);
+				});
+			}
+			function testNewIS() {
+				require("popup_window.js",function() {
+					var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
+					popup.setContentFrame("/dynamic/selection/page/IS/session");
 					popup.onclose = function() {
 						location.reload();
 					};

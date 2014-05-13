@@ -62,6 +62,17 @@ class ContactJSON {
 			"}"
 			;
 	}
+	
+	public static function PostalAddresses($rows) {
+		$s = "[";
+		$first = true;
+		foreach ($rows as $row) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= self::PostalAddress($row);
+		}
+		$s .= "]";
+		return $s;
+	}
 
 	/**
 	 * Convert an array coming from a JSON structure, into an array ready to use with database (insert or update)
@@ -117,28 +128,88 @@ class ContactJSON {
 			"}"
 			;
 	}
+
+	public static function Contacts($rows) {
+		$s = "[";
+		$first = true;
+		foreach ($rows as $row) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= self::Contact($row);
+		}
+		$s .= "]";
+		return $s;
+	}
+	
+	public static function OrganizationSQL(&$q) {
+		$alias = $q->getTableAlias("Organization");
+		$q->field($alias, "id", "organization_id");
+		$q->field($alias, "name", "organization_name");
+		$q->field($alias, "creator", "organization_creator");
+	}
+	
+	public static function OrganizationJSON($org, $types_ids, $contacts, $addresses, $contact_points) {
+		$s = "{";
+		$s .= "id:".$org["organization_id"];
+		$s .= ",name:".json_encode($org["organization_name"]);
+		$s .= ",creator:".json_encode($org["organization_creator"]);
+		$s .= ",types_ids:";
+		if ($types_ids !== null) {
+			$s .= "[";
+			$first = true;
+			foreach ($types_ids as $tid) {
+				if ($first) $first = false; else $s .= ",";
+				$s .= $tid;
+			}
+			$s .= "]";
+		} else
+			$s .= "null";
+		$s .= ",contacts:";
+		if ($contacts !== null) {
+			$s .= self::Contacts($contacts);
+		} else 
+			$s .= "null";
+		$s .= ",addresses:";
+		if ($addresses !== null) {
+			$s .= self::PostalAddresses($addresses);
+		} else 
+			$s .= "null";
+		$s .= ",contact_points:";
+		if ($contact_points !== null) {
+			$s .= self::OrganizationContactPoints($contact_points);
+		} else 
+			$s .= "null";
+		$s .= "}";
+		return $s;
+	}
 	
 	public static function OrganizationContactsPointsFromDB($organization_id) {
 		$q = SQLQuery::create()
 			->select("ContactPoint")
 			->whereValue("ContactPoint", "organization", $organization_id)
-			->field("ContactPoint", "designation", "contact_point_designation")
 			;
+		self::OrganizationContactPointSQL($q);
+		return self::OrganizationContactsPoints($q->execute());
+	}
+	
+	public static function OrganizationContactPointSQL(&$q) {
+		$alias = $q->getTableAlias("ContactPoint");
+		$q->field($alias, "organization", "contact_point_organization_id");
+		$q->field($alias, "designation", "contact_point_designation");
 		require_once("component/people/PeopleJSON.inc");
 		PNApplication::$instance->people->joinPeople($q, "ContactPoint", "people");
 		PeopleJSON::PeopleSQL($q);
-		return self::OrganizationContactsPoints($q->execute());
 	}
 	
 	public static function OrganizationContactPoint($row) {
 		require_once("component/people/PeopleJSON.inc");
 		return "{".
+			"organization_id:".$row["contact_point_organization_id"].
 			"people:".PeopleJSON::People($row).
 			",designation:".json_encode($row["contact_point_designation"]).
 			"}";
 	}
 	
-	public static function OrganizationContactsPoints($rows) {
+	public static function OrganizationContactPoints($rows) {
 		$s = "[";
 		$first = true;
 		foreach ($rows as $row) {

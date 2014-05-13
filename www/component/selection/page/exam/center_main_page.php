@@ -1,15 +1,15 @@
 <?php
-require_once("/../selection_page.inc");
+require_once("/../SelectionPage.inc");
 require_once("component/selection/SelectionJSON.inc");
-class page_exam_center_main_page extends selection_page {
+class page_exam_center_main_page extends SelectionPage {
 	
 	public function getRequiredRights() {return array("see_exam_center_detail");}
 	
 	/**
 	 * Create two sections: one containing the exam center caracteristics and the other one the data related to applicant assignment
-	 * @see selection_page::execute_selection_page()
+	 * @see SelectionPage::executeSelectionPage()
 	 */
-	public function execute_selection_page() {
+	public function executeSelectionPage() {
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");

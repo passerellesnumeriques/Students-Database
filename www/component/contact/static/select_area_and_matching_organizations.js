@@ -3,12 +3,13 @@ theme.css("grid.css");
 /**
  * Create a table containing two lists of partners. One with all the partners from existing in this geographic area,
  * an other one with all the partners in the parent area (but the ones in the given area) 
- * @param {String | HTMLElement}container
- * @param {Number | null} area_id the geographic_area id, in the case of the table lists shall be initialized
- * @param {String | null) row_title the title attribute to set to each list tr elements
- * @param {Number | null} preselected_partner_id the partner id to preselect into the list
+ * @param {String|Element} container
+ * @param {Number|NULL} area_id the geographic_area id, in the case of the table lists shall be initialized
+ * @param {String|NULL) row_title the title attribute to set to each list tr elements
+ * @param {Number|NULL} preselected_partner_id the partner id to preselect into the list
+ * @param {String} creator organization creator
  */
-function select_area_and_matching_organizations(container, area_id, row_title, preselected_partner_id){
+function select_area_and_matching_organizations(container, area_id, row_title, preselected_partner_id, creator){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -69,7 +70,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 		t._tr_list_1.appendChild(t._createLoadingTD());
 		t._tr_list_2.appendChild(t._createLoadingTD());
 		//get the data
-		service.json("contact","get_json_organizations_by_geographic_area",{geographic_area:id},function(r){
+		service.json("contact","get_json_organizations_by_geographic_area",{geographic_area:id,creator:creator},function(r){
 			var td1 = document.createElement("td");
 			var td2 = document.createElement("td");
 			if(r){
@@ -98,8 +99,8 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 	/**
 	 * Create a list from the given list (retrieved from the contact#get_json_organizations_by_geographic_area service)
 	 * The style of the list is computed by grid.css
-	 * @param {Array} data from the contact#get_json_organizations_by_geographic_area service
-	 * @param {HTMLElement} cont the container of the created list
+	 * @param {Array} data array of Organization from the contact/get_json_organizations_by_geographic_area service
+	 * @param {Element} cont the container of the created list
 	 * @param {Number} reference_area_id the id of the area on which the organization selection is based (can be used as a reference)
 	 */
 	t._createListFromData = function(data, cont, reference_area_id){
@@ -120,18 +121,18 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 				 * To avoid having too many data, if the geographic area of the address is the same as the reference_area_id and that this organization row has only one address, the geographic_area_text is not displayed
 				 */
 				var td_area_text = document.createElement("td");
-				if(data[i].addresses.length == 1 && data[i].addresses[0].geographic_area_id != reference_area_id){
+				if(data[i].addresses.length == 1 && data[i].addresses[0].geographic_area.id != reference_area_id){
 					var div = document.createElement("div");
 					div.style.whiteSpace = "nowrap";
 					div.style.fontStyle = "italic";
-					div.appendChild(document.createTextNode("- " + data[i].addresses[0].geographic_area_text));
+					div.appendChild(document.createTextNode("- " + data[i].addresses[0].geographic_area.text));
 					td_area_text.appendChild(div);
 				} else if (data[i].addresses.length > 1){
 					for(var j = 0; j < data[i].addresses.length; j++){
 						var div = document.createElement("div");
 						div.style.whiteSpace = "nowrap";
 						div.style.fontStyle = "italic";
-						div.appendChild(document.createTextNode("- " + data[i].addresses[j].geographic_area_text));
+						div.appendChild(document.createTextNode("- " + data[i].addresses[j].geographic_area.text));
 						td_area_text.appendChild(div);
 					}
 				}

@@ -1,11 +1,11 @@
 <?php
 require_once ("component/selection/SelectionJSON.inc");
-require_once("/../selection_page.inc");
-class page_exam_import_subject extends selection_page {
+require_once("/../SelectionPage.inc");
+class page_exam_import_subject extends SelectionPage {
 	
 	public function getRequiredRights() {return array("manage_exam_subject");}
 	
-	public function execute_selection_page() {
+	public function executeSelectionPage() {
 		/* Check the rights */
 		$can_update = PNApplication::$instance->selection->canManageExamSubjectQuestions();
 		if(!$can_update[0]){

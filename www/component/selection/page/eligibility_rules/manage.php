@@ -1,10 +1,10 @@
 <?php 
-require_once("/../selection_page.inc");
+require_once("/../SelectionPage.inc");
 require_once("component/selection/SelectionJSON.inc");
 
-class page_eligibility_rules_manage extends selection_page {
+class page_eligibility_rules_manage extends SelectionPage {
 	public function getRequiredRights() { return array("see_exam_subject"); }
-	public function execute_selection_page(){
+	public function executeSelectionPage(){
 		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('to_vertical_layout');");
 		?>

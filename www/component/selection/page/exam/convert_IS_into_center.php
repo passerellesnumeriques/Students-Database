@@ -1,16 +1,16 @@
 <?php
-require_once("/../selection_page.inc");
+require_once("/../SelectionPage.inc");
 require_once("component/selection/SelectionJSON.inc");
 /**
  * This page locks ExamCenter, InformationSessionExamCenter, and InformationSession tables
  * This page needs convert_IS_into_center script to handle the content / action required
  * Each time a save is required the page is refreshed and the data to save is given as a GET variable
  */
-class page_exam_convert_IS_into_center extends selection_page {
+class page_exam_convert_IS_into_center extends SelectionPage {
 	
 	public function getRequiredRights() {return array("see_exam_center_detail","see_information_session_details");}
 	
-	public function execute_selection_page() {
+	public function executeSelectionPage() {
 		//Get the locks if already exist
 		$lock_exam_center = @$_GET["lockec"];
 		$lock_information_session = @$_GET["lockis"];

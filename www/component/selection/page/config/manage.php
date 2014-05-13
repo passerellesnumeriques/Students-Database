@@ -1,4 +1,4 @@
-<?php require_once("/../selection_page.inc");class page_config_manage extends selection_page {	public function getRequiredRights() { return array("manage_selection_campaign"); }	public function execute_selection_page(){		/** Start by locking the row in the database
+<?php require_once("/../SelectionPage.inc");class page_config_manage extends SelectionPage {	public function getRequiredRights() { return array("manage_selection_campaign"); }	public function executeSelectionPage(){		/** Start by locking the row in the database
 		 * In case the data is already locked, generate an error message
 		 * The row will be unlocked when leaving from the page
 		 */

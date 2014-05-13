@@ -1,6 +1,6 @@
 <?php 
-require_once("component/selection/page/selection_page.inc");
-class page_applicant_list extends selection_page {
+require_once("component/selection/page/SelectionPage.inc");
+class page_applicant_list extends SelectionPage {
 	
 	public function getRequiredRights() { return array("see_applicant_info"); }
 	
@@ -8,7 +8,7 @@ class page_applicant_list extends selection_page {
 	 * Create a data_list of applicants
 	 * The property of datalist can be given by a post "input" variable. This variable can be set using prepare_applicants_list.js script
 	 */
-	public function execute_selection_page() {
+	public function executeSelectionPage() {
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_list();");

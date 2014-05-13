@@ -61,6 +61,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	/** HTML Element of the section, which you can put where you want in the page */
 	this.element = document.createElement("DIV");
 	this.element.className = "section"+(css ? " "+css : "");
+	this.content = content;
 	
 	/** Add an element in the title bar
 	 * @param {Element|String} element the HTML element to add

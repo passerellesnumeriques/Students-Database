@@ -1,5 +1,5 @@
-if (typeof require != 'undefined')
-	require("animation.js");
+if (typeof window.top.require != 'undefined')
+	window.top.require("animation.js");
 if (typeof theme != 'undefined')
 	theme.css("context_menu.css");
 /**
@@ -254,18 +254,18 @@ function context_menu(menu) {
 //		for (var i = 0; i < document.body.childNodes.length; ++i)
 //			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = -10;
 		menu.style.zIndex = 100;
-		if (typeof animation != 'undefined') {
-			if (menu.anim) animation.stop(menu.anim);
+		if (typeof window.top.animation != 'undefined') {
+			if (menu.anim) window.top.animation.stop(menu.anim);
 		}
-		if (typeof animation != 'undefined')
+		if (typeof window.top.animation != 'undefined')
 			menu.style.visibility = 'hidden';
 		window.top.document.body.appendChild(menu);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);
 			window.top.pnapplication.registerOnclick(window, t._listener);
 		},1);
-		if (typeof animation != 'undefined')
-			menu.anim = animation.fadeIn(menu,300);
+		if (typeof window.top.animation != 'undefined')
+			menu.anim = window.top.animation.fadeIn(menu,300);
 	};
 	/** Hide the menu: call <code>onclose</code> if specified, then hide or remove the html element of the menu depending on <code>removeOnClose</code> 
 	 * @member context_menu#hide
@@ -277,9 +277,9 @@ function context_menu(menu) {
 				t.parent_menu.hide_if_outside_menu = t.parent_menu_listener;
 			},1);
 		}
-		if (typeof animation != 'undefined') {
-			if (menu.anim) animation.stop(menu.anim);
-			menu.anim = animation.fadeOut(menu,300,function() {
+		if (typeof window.top.animation != 'undefined') {
+			if (menu.anim) window.top.animation.stop(menu.anim);
+			menu.anim = window.top.animation.fadeOut(menu,300,function() {
 				if (t.removeOnClose)
 					try { menu.parentNode.removeChild(menu); } catch (e) {}
 			});

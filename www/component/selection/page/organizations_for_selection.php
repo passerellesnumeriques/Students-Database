@@ -1,6 +1,6 @@
 <?php 
-require_once("selection_page.inc");
-class page_organizations_for_selection extends selection_page {
+require_once("SelectionPage.inc");
+class page_organizations_for_selection extends SelectionPage {
 	
 	public function getRequiredRights() { return array(); }
 	
@@ -8,7 +8,7 @@ class page_organizations_for_selection extends selection_page {
 	 * Create a data_list with all the selection organizations
 	 * with the possibility to pick any
 	 */
-	public function execute_selection_page() {
+	public function executeSelectionPage() {
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");

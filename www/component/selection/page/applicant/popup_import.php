@@ -1,10 +1,10 @@
 <?php 
-require_once("component/selection/page/selection_page.inc");
-class page_applicant_popup_import extends selection_page {
+require_once("component/selection/page/SelectionPage.inc");
+class page_applicant_popup_import extends SelectionPage {
 	
 	public function getRequiredRights() { return array("edit_applicants"); }
 	
-	public function execute_selection_page() {
+	public function executeSelectionPage() {
 ?>
 <div id='container' style='background-color:white;padding:10px'>
 	<a href='#' onclick='manual_import(event);return false;'>Import manually from a file</a>
