@@ -44,7 +44,6 @@ $model->addTable("CalendarEvent")
 	->addEnum("role", array("REQUESTED","OPTIONAL","FOR_INFO"), false, false)
 	->addString("app_link", 1024, 0, true, false)
 	->addString("app_link_name", 1024, 0, true, false)
-	->addReadAccessFromForeignTable("ExamSession")
 	;
 $model->addTable("CalendarEventAttendee")
 	->addForeignKey("event", "CalendarEvent", true, false, true)

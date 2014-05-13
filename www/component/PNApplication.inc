@@ -53,6 +53,9 @@ class PNApplication {
 	/** @var Component[] */
 	public $components = array();
 
+	/* DIM new timezone property */
+	public $timezone; 
+	
 	/**
 	 * Signal an error
 	 * @param string $message in plain text, which will be converted into html

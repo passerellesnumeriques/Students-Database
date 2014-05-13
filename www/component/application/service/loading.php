@@ -54,6 +54,7 @@ foreach ($mandatory as $s) $total += $s[1];
 foreach ($optional as $s) $total += $s[1];
 ?>
 var _loading_ready = 0;
+
 function _add_javascript(url, callback) {
 	var head = document.getElementsByTagName("HEAD")[0];
 	var s = document.createElement("SCRIPT");

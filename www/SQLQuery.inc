@@ -175,7 +175,7 @@ class SQLQuery {
 	public function &select() {
 		$nb = func_num_args();
 		if ($nb > 1) {
-			for ($i = 0; i < $nb; $i++)
+			for ($i = 0; $i < $nb; $i++)
 				$this->selectTable(func_get_arg($i), null);
 		} else {
 			$o = func_get_arg(0);

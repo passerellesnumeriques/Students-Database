@@ -273,5 +273,16 @@ class calendar extends Component {
 			->executeSingleValue();
 		return $ev_name;
 	}
+	
+	/**
+	 * Join CalendarEvent with another table
+	 * @param SQLQuery $q 
+	 * @param string $from_table table source
+	 */
+	public function joinCalendarEvent(&$q, $from_table, $from_key) {
+		//require_once("CalendarJSON.inc");
+		$q->join($from_table, "CalendarEvent", array($from_key=>"id"));
+		//CalendarJSON::CalendarEventSQL($q);
+	}
 }
 ?>

@@ -81,6 +81,7 @@ abstract class Page {
 		ob_start();
 		register_shutdown_function("page_shutdown_catch", $this);
 		try {
+		/* DIM : execute page specific code (implemented in the inherited class) */ 
 			$this->execute();
 		} catch (Exception $e) {
 			PNApplication::error($e);

@@ -14,23 +14,37 @@ class page_exam_center_main_page extends selection_page {
 		$this->add_javascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
 		$list_container_id = $this->generateID();
+		
+		/* DIM : ? Pourquoi can_create n'est pas utilisé par la suite ? */
 		$can_create = PNApplication::$instance->user_management->has_right("manage_exam_center",true);
+		
 		$status_container_id = $this->generateID();
 		$ECIS_status_container_id = $this->generateID();
 		$applicants_assignement_container_id = $this->generateID();
+		
+		/* DIM : set the container 'horizontal_split' to layout its children horizontally */
 		$this->require_javascript("horizontal_layout.js");
 		$this->onload("new horizontal_layout('horizontal_split',true);");
+		
+		/* DIM : create 3 sections from html code (see below) */
 		$this->require_javascript("section.js");
 		$this->onload("section_from_html('status_section');");
 		$this->onload("section_from_html('status_ECIS_section');");
 		$this->onload("section_from_html('status_applicants_assignment');");
+		
 		$steps = PNApplication::$instance->selection->getSteps();
+		
+		/* DIM : if an exam center has been created already,
+		display its status */ 
 		if($steps["exam_center"]){			
 			$this->require_javascript("exam_center_status.js");
 			$this->onload("new exam_center_status('$status_container_id');");
 		}
+		 /* Populate the container with the exam centers and informations sessions statistics */
 		$this->require_javascript("exam_center_and_informations_sessions_status.js");
 		$this->onload("new exam_center_and_informations_sessions_status('".$ECIS_status_container_id."');");
+		
+		/* Populate the container with the main data related to applicants assignment into Exam Center */
 		$this->require_javascript("applicants_assignment_to_EC_status.js");
 		$this->onload("new applicants_assignment_to_EC_status('".$applicants_assignement_container_id."');");
 		

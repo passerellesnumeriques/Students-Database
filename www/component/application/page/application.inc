@@ -4,6 +4,15 @@ theme::css($this, "application.css");
 // mandatory part
 $this->require_javascript("calendar.js");
 ?><script type='text/javascript'>
+
+//DIM New : get client Timezone
+if("<?php echo PNApplication::$instance->timezone;?>".length==0)
+{
+    var visitortime = new Date();
+    var visitortimezone =-visitortime.getTimezoneOffset()/60;
+    service.json("application","timezone",visitortimezone,function(r){});
+}
+
 window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["geography"]["country_code"]).";"; ?>
 window.top.default_country_id = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo $c["id"]; ?>;
 window.top.default_country_name = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo json_encode($c["name"]); ?>;
