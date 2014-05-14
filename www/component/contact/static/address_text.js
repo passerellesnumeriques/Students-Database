@@ -59,7 +59,7 @@ function address_text(address){
 		empty &= address.geographic_area.text.trim().length == 0;
 	}
 
-	if (address.country_id != null) {
+	if (address.country_id != null && address.country_id != window.top.default_country_id) {
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
 		window.top.require("geography.js",function() {

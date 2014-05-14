@@ -1,0 +1,8 @@
+table.selection_partners_table td.partner_name {
+	font-weight: bold;
+	font-size: 16px;
+	vertical-align: middle;
+}
+table.selection_partners_table td.partner_contacts .designation {
+	font-color: #606060;
+}

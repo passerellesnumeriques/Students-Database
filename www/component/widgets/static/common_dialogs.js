@@ -231,10 +231,11 @@ function select_dialog(icon,title,message,default_value,possibilities, ok_handle
 }
 
 
-function popup_frame(icon, title, url, post_data, percent_w, percent_h) {
+function popup_frame(icon, title, url, post_data, percent_w, percent_h, onframecreated) {
 	require("popup_window.js", function() {
 		var p = new popup_window(title, icon, "");
-		p.setContentFrame(url, null, post_data);
+		var frame = p.setContentFrame(url, null, post_data);
+		if (onframecreated) onframecreated(frame, p);
 		if (percent_w)
 			p.showPercent(percent_w, percent_h);
 		else

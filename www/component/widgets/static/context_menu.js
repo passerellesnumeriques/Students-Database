@@ -301,27 +301,31 @@ function context_menu(menu) {
 		t.hide_if_outside_menu(ev, win, orig_win);
 	};
 	t.hide_if_outside_menu = function(ev, win, orig_win) {
-		if (win == orig_win) {
-			var is_inside = function(child,parent) {
-				// check if the target is inside
-				if (child) {
-					do {
-						if (child == parent) return true;
-						if (child.parentNode == child) break;
-						child = child.parentNode;
-						if (child == null || child == document.body || child == window) break;
-					} while (true);
-				}
-				return false;
-			};
-			if (is_inside(ev.target, menu)) return;
-			// check if this is inside
-			ev = getCompatibleMouseEvent(ev);
-			var x = absoluteLeft(menu);
-			var y = absoluteTop(menu);
-			if (ev.x >= x && ev.x < x+menu.offsetWidth &&
-				ev.y >= y && ev.y < y+menu.offsetHeight) return;
+		var is_inside = function(child,parent) {
+			// check if the target is inside
+			if (child) {
+				do {
+					if (child == parent) return true;
+					if (child.parentNode == child) break;
+					child = child.parentNode;
+					if (child == null || child == document.body || child == window) break;
+				} while (true);
+			}
+			return false;
+		};
+		var child_win = getWindowFromElement(ev.target);
+		var parent_win = getWindowFromElement(menu);
+		if (child_win != parent_win) {
+			t.hide();
+			return;
 		}
+		if (is_inside(ev.target, menu)) return;
+		// check if this is inside
+		ev = getCompatibleMouseEvent(ev);
+		var x = absoluteLeft(menu);
+		var y = absoluteTop(menu);
+		if (ev.x >= x && ev.x < x+menu.offsetWidth &&
+			ev.y >= y && ev.y < y+menu.offsetHeight) return;
 		t.hide();
 	};
 	

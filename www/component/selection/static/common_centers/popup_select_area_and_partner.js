@@ -56,12 +56,14 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		t._td_info.colSpan = 2;
 		t._td_info.style.textAlign = "center";
 		t._td_info.innerHTML = warning_html;
+		t._td_info.className = "info_header";
 		tr_info.appendChild(t._td_info);
 		t._table.appendChild(tr_info);
 		//Set the body
 		var tr = document.createElement("tr");
 		t._td_area = document.createElement("td");
 		t._td_partners = document.createElement("td");
+		t._td_partners.style.borderLeft = "1px solid #808080";
 		//This td is initialized hidden
 		t._td_partners.style.position = 'absolute';
 		t._td_partners.style.visibility = 'hidden';
@@ -70,7 +72,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		tr.appendChild(t._td_area);//Contains the select area
 		tr.appendChild(t._td_partners);//Contains the select partner
 		t._table.appendChild(tr);
-		t._partners_lists = new select_area_and_matching_organizations(t._td_partners, t.geographic_area, "Select this partner as host",t.host,"Selection");
+		t._partners_lists = new select_area_and_matching_organizations(t._td_partners, t.geographic_area, "Select this partner as host",t.host ? t.host.organization.id : null,"Selection");
 		//Set the partners footer: add a create partner button
 		t._create_partner_button = document.createElement("BUTTON");
 		t._create_partner_button.className = "action";

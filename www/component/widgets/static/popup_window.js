@@ -700,6 +700,13 @@ function popup_window(title,icon,content,hide_close_button) {
 	 */
 	t.close = function(keep_content_hidden) {
 		if (!t.table) return;
+		if (t.content.nodeName == "IFRAME") {
+			var w = getIFrameWindow(t.content);
+			if (w.pnapplication.hasDataUnsaved()) {
+				if (!confirm("This popup contains data which have not been saved. Are your sure you want to close it (your modifications will be lost) ?")) return;
+				w.pnapplication.cancelDataUnsaved();
+			}
+		}
 		if (t.locker)
 			unlock_screen(t.locker);
 		else {

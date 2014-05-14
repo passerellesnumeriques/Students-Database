@@ -1,4 +1,4 @@
-function location_and_partners(popup, section_location, section_other_partners, center_type, center_id, geographic_area_text, partners) {
+function location_and_partners(popup, section_location, section_other_partners, center_type, center_id, geographic_area_text, partners, editable) {
 	
 	this.center_id = center_id;
 	this.geographic_area_text = geographic_area_text;
@@ -62,12 +62,18 @@ function location_and_partners(popup, section_location, section_other_partners, 
 						// a host is selected
 						if (selected.host.center_id == -1) {
 							// the host changed
-							selected.host.center_id = t.center_id;
-							t.setHostPartner(selected.host);
-							window.pnapplication.dataUnsaved("selection_location");
-							t._refreshAddress();
-							t._refreshHost();
-							t._refreshPartners();
+							popup.freeze();
+							service.json("contact","get_organization",{id:selected.host.organization.id},function(org) {
+								popup.unfreeze();
+								if (!org) return;
+								selected.host.center_id = t.center_id;
+								selected.host.organization = org;
+								t.setHostPartner(selected.host);
+								window.pnapplication.dataUnsaved("selection_location");
+								t._refreshAddress();
+								t._refreshHost();
+								t._refreshPartners();
+							});
 							return;
 						}
 						return; // no change
@@ -122,14 +128,17 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		this._host_container = document.createElement("DIV");
 		section_location.content.appendChild(this._host_container);
 		// buttons
-		this._button_set_location = document.createElement("BUTTON");
-		this._button_set_location.className = "action";
-		this._button_set_location.innerHTML = "Select a location";
-		this._button_set_location.t = this;
-		this._button_set_location.onclick = function() { this.t.dialogSelectLocation(); };
-		section_location.addToolBottom(this._button_set_location);
+		if (editable) {
+			this._button_set_location = document.createElement("BUTTON");
+			this._button_set_location.className = "action";
+			this._button_set_location.innerHTML = "Select a location";
+			this._button_set_location.t = this;
+			this._button_set_location.onclick = function() { this.t.dialogSelectLocation(); };
+			section_location.addToolBottom(this._button_set_location);
+		}
 		// refresh with actual values
 		this._refreshAddress();
+		this._refreshHost();
 	};
 	/** Refresh the address part in the Location section */
 	this._refreshAddress = function() {
@@ -155,15 +164,238 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		layout.invalidate(section_location.element);
 	};
 	this._refreshHost = function() {
-		
+		this._host_container.innerHTML = "";
+		var host = this.getHostPartner();
+		if (!host) return;
+		var table = document.createElement("TABLE");
+		table.className = "selection_partners_table";
+		this._host_container.appendChild(table);
+		var tr = document.createElement("TR"); table.appendChild(tr);
+		var th;
+		tr.appendChild(th = document.createElement("TH"));
+		th.appendChild(document.createTextNode("Hosting Partner"));
+		tr.appendChild(th = document.createElement("TH"));
+		th.appendChild(document.createTextNode("Contacts"));
+		new partnerRow(table, host, editable, function(org) {
+			// remove any non-valid contact point
+			for (var i = 0; i < host.selected_contact_points_id.length; ++i) {
+				var found = false;
+				for (var j = 0; j < org.contact_points.length; ++j)
+					if (org.contact_points[j].people.id == host.selected_contact_points_id[i]) {
+						found = true;
+						break;
+					}
+				if (!found) {
+					host.selected_contact_points_id.splice(i,1);
+					i--;
+				}
+			}
+			host.organization = org;
+			window.pnapplication.dataUnsaved("selection_location");
+		});
 	};
 	
 	// Other Partners
 	
-	this._refreshPartners = function() {
+	this._initPartners = function() {
+		// table of partners
+		this._partners_table = document.createElement("TABLE");
+		this._partners_table.className = "selection_partners_table";
+		section_other_partners.content.appendChild(this._partners_table);
 		
+		// button
+		if (editable) {
+			var button = document.createElement("BUTTON");
+			button.className = "action";
+			button.appendChild(document.createTextNode("Select Partners"));
+			section_other_partners.addToolBottom(button);
+			var t=this;
+			button.onclick = function() {
+				require("partners_objects.js");
+				var data = {selected:[],selected_not_changeable:[]};
+				for (var i = 0; i < t.partners.length; ++i) {
+					if (t.partners[i].host)
+						data.selected_not_changeable.push(t.partners[i].organization.id);
+					else
+						data.selected.push(t.partners[i].organization.id);
+				}
+				window.top.popup_frame("/static/contact/organization.png", "Partners", "/dynamic/contact/page/organizations?creator=Selection", data, 95, 95, function(frame,pop) {
+					pop.addOkCancelButtons(function(){
+						var win = getIFrameWindow(frame);
+						var selected = win.selected;
+						pop.close();
+						popup.freeze();
+						// remove partners not anymore selected
+						for (var i = 0; i < t.partners.length; ++i) {
+							if (t.partners[i].host) continue; // this is the host
+							var found = false;
+							for (var j = 0; j < selected.length; ++j)
+								if (selected[j] == t.partners[i].organization.id) {
+									selected.splice(j,1);
+									found = true; 
+									break; 
+								}
+							if (!found) {
+								t.partners.splice(i,1);
+								i--;
+							}
+						}
+						// add new partners
+						service.json("contact","get_organizations",{ids:selected},function(list) {
+							if (!list) { popup.unfreeze(); return; }
+							require("partners_objects.js", function() {
+								for (var i = 0; i < list.length; ++i) {
+									var p = new SelectionPartner(t.center_id, list[i], false, null, []);
+									t.partners.push(p);
+								}
+								t._refreshPartners();
+								popup.unfreeze();
+							});
+						});
+					});
+				});
+			};
+		}
+		
+		this._refreshPartners();
+	};
+	
+	this._refreshPartners = function() {
+		this._partners_table.innerHTML = "";
+		if (this.partners.length == 0 || (this.partners.length == 1) && this.partners[0].host) {
+			this._partners_table.innerHTML = "<tr><td><i>No other partner</i></td></tr>";
+			return;
+		}
+		var tr, th;
+		this._partners_table.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(th = document.createElement("TH"));
+		th.appendChild(document.createTextNode("Partner"));
+		tr.appendChild(th = document.createElement("TH"));
+		th.appendChild(document.createTextNode("Contact Point(s)"));
+		for (var i = 0; i < this.partners.length; ++i) {
+			if (this.partners[i].host) continue;
+			new partnerRow(this._partners_table, this.partners[i], editable, function(org) {
+				// TODO org changed
+			});
+		}
 	};
 	
 	// Initialization
 	this._initLocation();
+	this._initPartners();
+}
+
+function partnerRow(table, partner, editable, onchange) {
+	var tr = document.createElement("TR");
+	tr.className = "selection_partner_row";
+	table.appendChild(tr);
+	this._refresh = function() {
+		tr.innerHTML = "";
+		var td;
+		// name
+		tr.appendChild(td = document.createElement("TD"));
+		td.className = "partner_name black_link";
+		td.title = "Click to see partner details";
+		var name_node = document.createTextNode(partner.organization.name);
+		window.top.datamodel.registerCellText(window, "Organization", "name", partner.organization.id, name_node);
+		td.appendChild(name_node);
+		var t=this;
+		td.onclick = function(){
+			window.top.popup_frame("/static/contact/organization.png","Organization Profile","/dynamic/contact/page/organization_profile?organization="+partner.organization.id+"&onready=orgready", null, null, null, function(frame) {
+				frame.orgready = function(org) {
+					org.onchange.add_listener(function () {
+						if (onchange) onchange(org.getStructure());
+						t._refresh();
+					});
+				};
+			});
+		};
+
+		// contacts
+		tr.appendChild(td = document.createElement("TD"));
+		td.className = "partner_contacts";
+		if (partner.selected_contact_points_id == null || partner.selected_contact_points_id.length == 0) {
+			td.innerHTML = "<i>No contact selected</i>";
+		} else {
+			for (var i = 0; i < partner.selected_contact_points_id.length; ++i) {
+				var contact = null;
+				for (var j = 0; j < partner.organization.contact_points.length; ++j)
+					if (partner.organization.contact_points[j].people.id == partner.selected_contact_points_id[i]) {
+						contact = partner.organization.contact_points[j];
+						break;
+					}
+				var div = document.createElement("DIV"); td.appendChild(div);
+				div.className = "black_link";
+				div.people_id = contact.people.id;
+				div.title = "Click to see details of this contact";
+				div.onclick = function() {
+					window.top.popup_frame("/static/people/profile_16.png", "Profile", "/dynamic/people/page/profile?people="+this.people_id, null, 95, 95);
+				};
+				var span_fn = document.createElement("SPAN"); div.appendChild(span_fn);
+				span_fn.className = "contact_point_name";
+				span_fn.appendChild(document.createTextNode(contact.people.first_name));
+				window.top.datamodel.registerCellSpan(window, "People", "first_name", contact.people.id, span_fn);
+				div.appendChild(document.createTextNode(" "));
+				var span_ln = document.createElement("SPAN"); div.appendChild(span_ln);
+				span_ln.className = "contact_point_name";
+				span_ln.appendChild(document.createTextNode(contact.people.last_name));
+				window.top.datamodel.registerCellSpan(window, "People", "last_name", contact.people.id, span_ln);
+				div.appendChild(document.createTextNode(" "));
+				var span = document.createElement("SPAN"); div.appendChild(span);
+				span.className = "contact_point_designation";
+				span.appendChild(document.createTextNode("("));
+				var span_design = document.createElement("SPAN"); span.appendChild(span_design);
+				span_design.appendChild(document.createTextNode(contact.designation));
+				window.top.datamodel.registerCellSpan(window, "ContactPoint", "designation", contact.people.id, span_design);
+				span.appendChild(document.createTextNode(")"));
+			}
+		}
+		
+		// actions
+		if (editable) {
+			tr.appendChild(td = document.createElement("TD"));
+			var button_select_contacts = document.createElement("BUTTON");
+			td.appendChild(button_select_contacts);
+			button_select_contacts.innerHTML = "<img src='/static/people/people_list_16.png'/>";
+			button_select_contacts.title = "Select contacts from this partner";
+			button_select_contacts.className = "flat";
+			button_select_contacts.onclick = function() {
+				var button = this;
+				require("context_menu.js", function() {
+					var menu = new context_menu();
+					for (var i = 0; i < partner.organization.contact_points.length; ++i) {
+						var cp = partner.organization.contact_points[i];
+						var div = document.createElement("DIV");
+						var cb = document.createElement("INPUT");
+						cb.type = "checkbox";
+						var found = false;
+						for (var j = 0; j < partner.selected_contact_points_id.length; ++j)
+							if (partner.selected_contact_points_id[j] == cp.people.id) { found = true; break; }
+						if (found) cb.checked = "checked";
+						div.appendChild(cb);
+						div.appendChild(document.createTextNode(" "+cp.people.first_name+" "+cp.people.last_name+" ("+cp.designation+")"));
+						menu.addItem(div, true);
+						cb.contact_point_id = cp.people.id;
+						cb.onchange = function() {
+							if (this.checked) {
+								partner.selected_contact_points_id.push(this.contact_point_id);
+							} else {
+								partner.selected_contact_points_id.remove(this.contact_point_id);
+							}
+							if (onchange) onchange(partner.organization);
+							t._refresh();
+						};
+					}
+					if (partner.organization.contact_points.length == 0) {
+						var div = document.createElement("DIV");
+						div.style.padding = "5px";
+						div.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> This partner does not have any contact point<br/>Please edit the partner organization";
+						menu.addItem(div);
+					}
+					menu.showBelowElement(button);
+				});
+			};
+		}
+	};
+	this._refresh();
 }

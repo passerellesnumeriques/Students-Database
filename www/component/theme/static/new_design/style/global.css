@@ -233,12 +233,12 @@ button.small_icon {
 }
 
 /* Links */
-a.black_link {
+a.black_link, .black_link {
 	color: black;
 	cursor: pointer;
 	text-decoration: none;
 }
-a.black_link:hover {
+a.black_link:hover, .black_link:hover {
 	text-decoration: underline;
 }
 

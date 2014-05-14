@@ -6,7 +6,7 @@
  * @param string $center_type one of: InformationSession, ExamCenter, InterviewCenter which will define the name of tables to use
  * @param string $geographic_area_text_json GeographicAreaText JSON structure, or null 
  */
-function locationAndPartners(&$page, $id, $center_type, $geographic_area_text_json) {
+function locationAndPartners(&$page, $id, $center_type, $geographic_area_text_json, $editable) {
 	$page->requireJavascript("section.js");
 	$page->addJavascript("/static/selection/common_centers/location_and_partners.js");
 	?>
@@ -36,7 +36,7 @@ function locationAndPartners(&$page, $id, $center_type, $geographic_area_text_js
 	} else
 		echo "[]"; 
 	?>;
-	new location_and_partners(popup, section_location, section_partners, <?php echo json_encode($center_type);?>, center_id, <?php echo $geographic_area_text_json;?>, partners);
+	new location_and_partners(popup, section_location, section_partners, <?php echo json_encode($center_type);?>, center_id, <?php echo $geographic_area_text_json;?>, partners, <?php echo $editable ? "true" : "false";?>);
 	</script>
 	<?php 
 }

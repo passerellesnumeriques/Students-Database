@@ -27,9 +27,9 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 		t._tr_list_1 = document.createElement("tr");
 		var tr_head_list_2 = document.createElement("tr");
 		t._tr_list_2 = document.createElement("tr");
-		var th_list_1 = document.createElement("td");
+		var th_list_1 = document.createElement("th");
 		th_list_1.innerHTML = "Partners in this area";
-		var th_list_2 = document.createElement("td");
+		var th_list_2 = document.createElement("th");
 		th_list_2.innerHTML = "Partners surrounding";
 		tr_head_list_1.appendChild(th_list_1);
 		tr_head_list_2.appendChild(th_list_2);
@@ -113,7 +113,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 			for(var i = 0; i < data.length; i++){
 				var tr = document.createElement("tr");
 				var td = document.createElement("td");
-				td.innerHTML = data[i].name.uniformFirstLetterCapitalized();
+				td.innerHTML = data[i].name;
 				td.style.verticalAlign = "top";
 				
 				/**
@@ -167,7 +167,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 	
 	/**
 	 * Create a TD with a loading icon inside
-	 * @returns {HTMLElement} td the expected td element
+	 * @returns {Element} td the expected td element
 	 */
 	t._createLoadingTD = function(){
 		var td = document.createElement("td");
@@ -194,7 +194,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 	 */
 	t._rowContainsAtLeastOneAddressInSelectedArea = function(row_data){
 		for(var i = 0; i < row_data.addresses.length; i++){			
-			if(row_data.addresses[i].geographic_area_id == t._geographic_area_selected)
+			if(row_data.addresses[i].geographic_area.id == t._geographic_area_selected)
 				return true;
 		}
 		return false;

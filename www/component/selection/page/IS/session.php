@@ -18,13 +18,15 @@ class page_IS_session extends SelectionPage {
 			$session = $q->execute();
 		} else
 			$session = null;
+		$editable = $id == null || PNApplication::$instance->user_management->has_right("manage_information_session");
 		?>
+		<a href='#' onclick='location.reload();return false;'>Reload</a>
 		<div style='display:inline-block;margin:10px;'>
 		</div>
 		<div style='display:inline-block;margin:10px;' id='location_and_partners'>
 		<?php
 		require_once("component/selection/page/common_centers/location_and_partners.inc");
-		locationAndPartners($this, $id, "InformationSession", $session <> null ? GeographyJSON::GeographicAreaText($session) : "null"); 
+		locationAndPartners($this, $id, "InformationSession", $session <> null ? GeographyJSON::GeographicAreaText($session) : "null", $editable); 
 		?>
 		</div>
 		<?php 

@@ -7,6 +7,7 @@ abstract class SelectionPage extends Page{
 	//we don't define getRequiredRights this way we will be obliged to define it in SelectionPage instances
 	final public function execute(){
 		$this->addJavascript("/static/selection/selection_utils.js");
+		theme::css($this, "selection.css");
 		$id = PNApplication::$instance->components["selection"]->getCampaignId();
 		$can_access_selection_data = null;
 		$can_access_selection_data = PNApplication::$instance->components["user_management"]->has_right("can_access_selection_data",true);

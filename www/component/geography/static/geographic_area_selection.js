@@ -245,7 +245,10 @@ function geographic_area_selection(container, country_id, onready) {
 	*/
 	this.createAutoFillInput = function(parent){
 		require("autocomplete.js",function(){
-			var ac = new autocomplete(parent, 3, 'Manually search', function(val, handler){
+			var div = document.createElement("DIV");
+			parent.appendChild(div);
+			div.style.paddingRight = "3px";
+			var ac = new autocomplete(div, 3, 'Manually search', function(val, handler){
 				handler(t.autoFill(val));
 			}, function(item){
 				t.startFilter(item.value);

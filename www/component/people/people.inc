@@ -117,6 +117,7 @@ class people extends Component {
 	}
 	public function canModifyTypes($types) {
 		if (is_string($types)) $types = $this->parseTypes($types);
+		if ($types == null) $types = array();
 		require_once("PeopleTypePlugin.inc");
 		$plugin = null;
 		foreach (PNApplication::$instance->components as $c)

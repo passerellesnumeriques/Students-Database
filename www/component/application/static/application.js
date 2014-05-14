@@ -204,7 +204,13 @@ if (window == window.top) {
 		 */
 		dataSaved: function(id) {
 			this._data_unsaved.remove(id);
-		}
+		},
+		/** Indicates if any data on the window needs to be saved
+		 * @returns {Boolean} true if some data need to be saved
+		 */
+		hasDataUnsaved: function() { return this._data_unsaved.length > 0; },
+		/** Mark all data as saved */
+		cancelDataUnsaved: function() { this._data_unsaved = []; }
 	};
 	window.top.pnapplication.registerWindow(window);
 }

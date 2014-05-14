@@ -140,6 +140,60 @@ class ContactJSON {
 		return $s;
 	}
 	
+	public static function OrganizationFromID($id) {
+		$q = SQLQuery::create()->select("Organization")->whereValue("Organization","id",$id);
+		self::OrganizationSQL($q);
+		$org = $q->executeSingleRow();
+		$types_ids = SQLQuery::create()->select("OrganizationTypes")->whereValue("OrganizationTypes","organization",$id)->field("OrganizationTypes","type")->executeSingleField();
+		$q = SQLQuery::create()->select("OrganizationContact")->whereValue("OrganizationContact","organization",$id)->join("OrganizationContact","Contact",array("contact"=>"id"));
+		self::ContactSQL($q);
+		$contacts = $q->execute();
+		$q = SQLQuery::create()->select("OrganizationAddress")->whereValue("OrganizationAddress","organization",$id)->join("OrganizationAddress","PostalAddress",array("address"=>"id"));
+		self::PostalAddressSQL($q);
+		$addresses = $q->execute();
+		$q = SQLQuery::create()->select("ContactPoint")->whereValue("ContactPoint","organization",$id);
+		self::OrganizationContactPointSQL($q);
+		$contact_points = $q->execute();
+		return self::OrganizationJSON($org, $types_ids, $contacts, $addresses, $contact_points);
+	}
+	
+	public static function OrganizationsFromIDs($ids) {
+		$q = SQLQuery::create()->select("Organization")->whereIn("Organization","id",$ids);
+		self::OrganizationSQL($q);
+		$orgs = $q->execute();
+		$list_types_ids = SQLQuery::create()->select("OrganizationTypes")->whereIn("OrganizationTypes","organization",$ids)->execute();
+		$q = SQLQuery::create()->select("OrganizationContact")->whereIn("OrganizationContact","organization",$ids)->join("OrganizationContact","Contact",array("contact"=>"id"));
+		$q->field("OrganizationContact", "organization", "organization_id");
+		self::ContactSQL($q);
+		$list_contacts = $q->execute();
+		$q = SQLQuery::create()->select("OrganizationAddress")->whereIn("OrganizationAddress","organization",$ids)->join("OrganizationAddress","PostalAddress",array("address"=>"id"));
+		$q->field("OrganizationAddress", "organization", "organization_id");
+		self::PostalAddressSQL($q);
+		$list_addresses = $q->execute();
+		$q = SQLQuery::create()->select("ContactPoint")->whereIn("ContactPoint","organization",$ids);
+		$q->field("ContactPoint", "organization", "organization_id");
+		self::OrganizationContactPointSQL($q);
+		$list_contact_points = $q->execute();
+		$s = "[";
+		$first = true;
+		foreach ($orgs as $org) {
+			if ($first) $first = false; else $s .= ",";
+			$types_ids = array();
+			foreach ($list_types_ids as $t)
+				if ($t["organization"] == $org["organization_id"])
+					array_push($types_ids, $t);
+			$contacts = array();
+			foreach ($list_contacts as $e) if ($e["organization_id"] == $org["organization_id"]) array_push($contacts, $e);
+			$addresses = array();
+			foreach ($list_addresses as $e) if ($e["organization_id"] == $org["organization_id"]) array_push($addresses, $e);
+			$contact_points = array();
+			foreach ($list_contact_points as $e) if ($e["organization_id"] == $org["organization_id"]) array_push($contact_points, $e);
+			$s .= self::OrganizationJSON($org, $types_ids, $contacts, $addresses, $contact_points);
+		}
+		$s .= "]";
+		return $s;
+	}
+	
 	public static function OrganizationSQL(&$q) {
 		$alias = $q->getTableAlias("Organization");
 		$q->field($alias, "id", "organization_id");
@@ -204,7 +258,7 @@ class ContactJSON {
 		require_once("component/people/PeopleJSON.inc");
 		return "{".
 			"organization_id:".$row["contact_point_organization_id"].
-			"people:".PeopleJSON::People($row).
+			",people:".PeopleJSON::People($row).
 			",designation:".json_encode($row["contact_point_designation"]).
 			"}";
 	}
