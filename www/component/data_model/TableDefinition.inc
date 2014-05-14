@@ -55,6 +55,7 @@ namespace datamodel {
 		private $add_access_filters = array();
 		private $remove_access_rights = array();
 		private $remove_access_filters = array();
+		private $remove_access_from_foreign_table = array();
 		
 		private $row_description_provider = null;
 		
@@ -526,6 +527,13 @@ namespace datamodel {
 		public function &addRemoveAccess($right_name, $right_value) {
 			array_push($this->remove_access_rights, array($right_name,$right_value));
 			return $this;
+		}
+		public function &addRemoveAccessFromForeignTable($foreign_table_name){
+			array_push($this->remove_access_from_foreign_table, $foreign_table_name);
+			return $this;
+		}
+		public function canRemoveFromForeignTable($foreign_table_name) {
+			return in_array($foreign_table_name, $this->remove_access_from_foreign_table);
 		}
 		/** Add a filter for DELETE operations
 		 * @param function $prepare_select prepare the SELECT to get rows that will be removed. Takes 3 parameters: the SQLQuery, the table alias, a list of locks created by this function.

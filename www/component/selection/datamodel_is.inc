@@ -21,6 +21,11 @@ $sm->addTable("InformationSession")
 		} catch (Exception $e) { PNApplication::error($e); }
 	})
 	;
+$model->internalGetTable("CalendarEvent")
+	->addReadAccessFromForeignTable("InformationSession")
+	->addRemoveAccessFromForeignTable("InformationSession")
+	;
+		
 
 $sm->addTable("InformationSessionPartner")
 	->addForeignKey("information_session","InformationSession",true,false,true,false)

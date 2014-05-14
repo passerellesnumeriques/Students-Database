@@ -168,8 +168,12 @@ function popup_window(title,icon,content,hide_close_button) {
 	 */
 	t.disableButton = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i)
-			if (t.buttons[i].id == id)
-				t.buttons[i].disabled = 'disabled';
+			if (t.buttons[i].id == id) {
+				if (t.isFrozen())
+					t.buttons[i].unfrozen_status = 'disabled';
+				else
+					t.buttons[i].disabled = 'disabled';
+			}
 	};
 	
 	/** Return true if the given button is disabled
@@ -180,7 +184,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.getIsDisabled = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i){
 			if (t.buttons[i].id == id)
-				return t.buttons[i].disabled;
+				return t.isForzen() ? t.buttons[i].unfrozen_status : t.buttons[i].disabled;
 		}
 	};
 	/** Enable the given button.
@@ -189,8 +193,12 @@ function popup_window(title,icon,content,hide_close_button) {
 	 */
 	t.enableButton = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i)
-			if (t.buttons[i].id == id)
-				t.buttons[i].disabled = '';
+			if (t.buttons[i].id == id) {
+				if (t.isFrozen())
+					t.buttons[i].unfrozen_status = '';
+				else
+					t.buttons[i].disabled = '';
+			}
 	};
 	/** Simulate a button pressed
 	 * @param {string} id the button id
@@ -220,6 +228,21 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	t.addSaveButton = function(onsave) {
 		t.addIconTextButton(theme.icons_16.save, "Save", 'save', function() { if (onsave) onsave(); });
+	};
+	t.addFrameSaveButton = function(onsave) {
+		t.addSaveButton(onsave);
+		t.disableButton('save');
+		var check_frame = function() {
+			var win = getIFrameWindow(t.content);
+			if (!win || !win.pnapplication || !win._page_ready) {
+				setTimeout(check_frame, 25);
+				return;
+			}
+			if (!win.pnapplication.hasDataUnsaved()) t.disableButton('save'); else t.enableButton('save');
+			win.pnapplication.ondatatosave.add_listener(function() { t.enableButton('save'); });
+			win.pnapplication.onalldatasaved.add_listener(function() { t.disableButton('save'); });
+		};
+		check_frame();
 	};
 	t.addCreateButton = function(onclick) {
 		t.addIconTextButton(theme.icons_16.ok, "Create", 'create', function() { onclick(); });
@@ -651,9 +674,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			set_lock_screen_content(t.freezer, freeze_content);
 		t.content_container.parentNode.style.position = "relative";
 		t.content_container.parentNode.appendChild(t.freezer);
-		t.freeze_button_status = [];
 		for (var i = 0; i < t.buttons.length; ++i) {
-			t.freeze_button_status[i] = t.buttons[i].disabled;
+			t.buttons[i].unfrozen_status = t.buttons[i].disabled;
 			t.buttons[i].disabled = 'disabled';
 		}
 		t.close_button_td.onclick = null;
@@ -684,7 +706,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.content_container.parentNode.removeChild(t.freezer);
 		t.freezer = null;
 		for (var i = 0; i < t.buttons.length; ++i)
-			t.buttons[i].disabled = t.freeze_button_status[i];
+			t.buttons[i].disabled = t.buttons[i].unfrozen_status;
 		t.freeze_button_status = null;
 		t.close_button_td.onclick = function() { t.close(); };
 		if (t.content.nodeName == "IFRAME")
@@ -702,7 +724,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (!t.table) return;
 		if (t.content.nodeName == "IFRAME") {
 			var w = getIFrameWindow(t.content);
-			if (w.pnapplication.hasDataUnsaved()) {
+			if (w && w.pnapplication && w.pnapplication.hasDataUnsaved()) {
 				if (!confirm("This popup contains data which have not been saved. Are your sure you want to close it (your modifications will be lost) ?")) return;
 				w.pnapplication.cancelDataUnsaved();
 			}

@@ -31,12 +31,12 @@ function locationAndPartners(&$page, $id, $center_type, $geographic_area_text_js
 	var center_id = <?php echo json_encode($id);?>;
 	var partners = <?php
 	if ($id <> null) {
-		require_once("component/selection/common_centers/PartnersJSON.inc");
-		echo PartnersJSON::PartnersFromCenterID($center_type, $id);
+		require_once("component/selection/common_centers/SelectionPartnersJSON.inc");
+		echo SelectionPartnersJSON::PartnersFromCenterID($center_type, $id);
 	} else
 		echo "[]"; 
 	?>;
-	new location_and_partners(popup, section_location, section_partners, <?php echo json_encode($center_type);?>, center_id, <?php echo $geographic_area_text_json;?>, partners, <?php echo $editable ? "true" : "false";?>);
+	window.center_location = new location_and_partners(popup, section_location, section_partners, <?php echo json_encode($center_type);?>, center_id, <?php echo $geographic_area_text_json;?>, partners, <?php echo $editable ? "true" : "false";?>);
 	</script>
 	<?php 
 }

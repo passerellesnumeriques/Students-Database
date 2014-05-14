@@ -4,12 +4,13 @@
  * @param {Number | NULL} event_id the ID of the event linked to this information session, if any
  * @param {Number} IS_id the ID of the information session
  * @param {Number} calendar_id the ID of the calendar linked to this selection campaign
- * @param {String} default_duration the preselected duration of an Information Session, ginven by the config attribute
+ * @param {String} default_duration the preselected duration of an Information Session, given by the config attribute
  * @param {Boolean} can_manage
  * @param {Array} all_durations containing all the possible durations for an information session
  */
 function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_manage, all_durations){
 	var t = this;
+	if (typeof container == 'string') container = document.getElementById(container);
 	require(["popup_window.js",["typed_field.js","field_date.js","field_time.js"],"input_utils.js","section.js"],function(){
 		t.container_of_section_content = document.createElement("div");
 		t.section = new section(theme.icons_16.date_picker,"Date",t.container_of_section_content,false,false,"soft");
@@ -139,7 +140,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 				}
 				if(t._duration_selected == null){
 					var dif = parseInt(t._event.end) - parseInt(t._event.start);
-					t._duration_selected = Math.floor(dif / (1000 * 60 * 60));
+					t._duration_selected = Math.floor(dif / (60 * 60));
 				}
 				var temp_ending_date = new Date(t._event.end * 1000);
 				var temp_ending_time = temp_ending_date.getHours() + ":" + temp_ending_date.getMinutes();
@@ -190,6 +191,10 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		remove_button.className = "action important";
 		remove_button.onclick = function(){
 			// var locker = lock_screen();
+			if (event_id == null || event_id <= 0)
+				window.pnapplication.dataSaved("SelectionISDate");
+			else
+				window.pnapplication.dataUnsaved("SelectionISDate");
 			t._resetTableAndEvent();
 		};
 		remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"' /> Unset date";
@@ -211,12 +216,19 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			if(day != null){
 				// t.setEventName();
 				var start_timestamp = t._getStartTimestamp(day);
-				t._event.start = start_timestamp;
-				t._event.end = start_timestamp + 23*3600 + 59*60 + 59;
-				t._event.all_day = true;
+				if (t._event.start != start_timestamp) {
+					t._event.start = start_timestamp;
+					t._event.end = start_timestamp + 23*3600 + 59*60 + 59;
+					t._event.all_day = true;
+					t.resetTable(locker);
+					window.pnapplication.dataUnsaved("SelectionISDate");
+				}
 				pop.close();
-				t.resetTable(locker);
 			} else {
+				if (event_id == null || event_id <= 0)
+					window.pnapplication.dataSaved("SelectionISDate");
+				else
+					window.pnapplication.dataUnsaved("SelectionISDate");
 				t._resetTableAndEvent(locker);
 				pop.close();
 			}
@@ -289,9 +301,14 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 				var duration_hours = parseInt(t._duration_selected);
 				t._event.end = t._event.start + duration_hours * 60 * 60;
 				t._event.all_day = false;
+				window.pnapplication.dataUnsaved("SelectionISDate");
 				pop.close();
 				t.resetTable(locker);
 			} else {
+				if (event_id == null || event_id <= 0)
+					window.pnapplication.dataSaved("SelectionISDate");
+				else
+					window.pnapplication.dataUnsaved("SelectionISDate");
 				t._resetTableAndEvent(locker);
 				pop.close();
 			}

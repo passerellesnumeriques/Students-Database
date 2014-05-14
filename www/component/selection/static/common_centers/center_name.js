@@ -3,13 +3,19 @@
  * @param {String|HTMLElement}container
  * @param {String|NULL} name if any
  * @param {Boolean} can_edit
- * @param {String} title, title of the section element
+ * @param {String} title title of the section element
  */
-function IS_ExamCenter_name(container, name, can_edit,title){
+function center_name(container, name, can_edit, title){
 	if(typeof(container) == "string") container = document.getElementById(container);
 	var t = this;
 	t.table = document.createElement("table");
 	t.onupdate = new Custom_Event();
+	t.onupdate.add_listener(function() {
+		if (t._name == name) // didn't change
+			window.pnapplication.dataSaved("SelectionCenterCustomName");
+		else
+			window.pnapplication.dataUnsaved("SelectionCenterCustomName");
+	});
 	
 	/**
 	 * Get the name attribute
@@ -29,7 +35,7 @@ function IS_ExamCenter_name(container, name, can_edit,title){
 	 */
 	t._setSection = function(){
 		t._container_of_section_content = document.createElement("div");
-		t.section = new section("/static/selection/IS/label.png",title,t._container_of_section_content,false,false,"soft");
+		t.section = new section("/static/selection/common_centers/label.png",title,t._container_of_section_content,false,false,"soft");
 	};
 	
 	/**

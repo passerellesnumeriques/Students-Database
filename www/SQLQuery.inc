@@ -1807,7 +1807,7 @@ class SQLQuery {
 			$to_update = array();
 			$sub_models_to_remove = array();
 			try {
-				$this->browseTablesForRemove($t, $sub_model_instance, $keys, $locks, $to_remove, $to_update, $sub_models_to_remove);
+				$this->browseTablesForRemove($t, $sub_model_instance, $keys, null, $locks, $to_remove, $to_update, $sub_models_to_remove);
 			} catch (Exception $e) {
 				foreach ($locks as $lock) DataBaseLock::unlock($lock);
 				throw new Exception("Remove from table '".$table."': ".$e->getMessage());
@@ -1829,16 +1829,19 @@ class SQLQuery {
 							}
 							$sql .= ")";
 						}					
+						SQLQuery::db()->execute($sql);
 					} else {
-						$sql .= "`".$to_remove_in_table["key_name"]."` IN (";
-						$first = true;
-						foreach ($to_remove_in_table["keys"] as $key) {
-							if ($first) $first = false; else $sql .= ",";
-							$sql .= $key;
+						if (count($to_remove_in_table["keys"]) > 0) {
+							$sql .= "`".$to_remove_in_table["key_name"]."` IN (";
+							$first = true;
+							foreach ($to_remove_in_table["keys"] as $key) {
+								if ($first) $first = false; else $sql .= ",";
+								$sql .= $key;
+							}
+							$sql .= ")";
+							SQLQuery::db()->execute($sql);
 						}
-						$sql .= ")";
 					}
-					SQLQuery::db()->execute($sql);
 				} else {
 					$sql = "DELETE FROM `".$table_name."` WHERE ";
 					$first = true;
@@ -1891,7 +1894,7 @@ class SQLQuery {
 	 * @param array $to_update list of entries to update with NULL value to remove links
 	 * @param array $sub_models_to_remove list of sub models which will be removed
 	 */
-	private function browseTablesForRemove(&$table, $sub_model_instance, $keys, &$locks, &$to_remove, &$to_update, &$sub_models_to_remove) {
+	private function browseTablesForRemove(&$table, $sub_model_instance, $keys, $from_table, &$locks, &$to_remove, &$to_update, &$sub_models_to_remove) {
 		// remove keys that are already marked as to_remove
 		if (isset($to_remove[$table->getSQLNameFor($sub_model_instance)])) {
 			for ($i = 0; $i < count($keys); $i++) {
@@ -1908,7 +1911,7 @@ class SQLQuery {
 			
 		// lock the table to remove
 		$locked_by = null;
-		$lock_id = DataBaseLock::lockTable($table->getSQLNameFor($sub_model_instance), $locked_by, $this->bypass_security);
+		$lock_id = DataBaseLock::lockTable($table->getSQLNameFor($sub_model_instance), $locked_by, $this->bypass_security || ($from_table <> null && $table->canRemoveFromForeignTable($from_table)));
 		if ($lock_id == null)
 			throw new Exception("Table '".$table->getName()."' already locked by ".$locked_by);
 		array_push($locks, $lock_id);
@@ -1929,7 +1932,7 @@ class SQLQuery {
 		}
 
 		// check access rights
-		if (!$this->bypass_security) {
+		if (!$this->bypass_security && ($from_table == null || !$table->canRemoveFromForeignTable($from_table))) {
 			if (!$table->mayRemove())
 				throw new Exception("Access denied: remove in table '".$table->getName()."'");
 			if (!$table->canRemoveAny()) {
@@ -2014,7 +2017,7 @@ class SQLQuery {
 				$ft = DataModel::get()->internalGetTable($col->foreign_table);
 			else
 				$ft = DataModel::get()->getTable($col->foreign_table);
-			$this->browseTablesForRemove($ft, $sub_model, $rows, $locks, $to_remove, $to_update, $sub_models_to_remove);
+			$this->browseTablesForRemove($ft, $sub_model, $rows, $table->getName(), $locks, $to_remove, $to_update, $sub_models_to_remove);
 		}
 		
 		// search for foreign keys in other tables which are linked to the keys we want to remove
@@ -2066,7 +2069,7 @@ class SQLQuery {
 					$q->whereIn($table_alias, $col->name, $keys);
 					$q->field($table_alias, $primary->name);
 					$rows = $q->executeSingleField();
-					$this->browseTablesForRemove($t, $sm, $rows, $locks, $to_remove, $to_update, $sub_models_to_remove);
+					$this->browseTablesForRemove($t, $sm, $rows, $table->getName(), $locks, $to_remove, $to_update, $sub_models_to_remove);
 				} else {
 					// no primary key, this must be done with a where
 					if (!$this->bypass_security && !$t->canRemoveAny()) {

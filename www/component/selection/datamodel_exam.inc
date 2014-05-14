@@ -155,6 +155,10 @@ $sm->addTable("ExamSession")
 	->addReadAccess("see_exam_subject",true)
 	->addInsertAccess("manage_exam_center",true)
 	->addRemoveAccess("manage_exam_center",true);
+$model->internalGetTable("CalendarEvent")
+	->addReadAccessFromForeignTable("ExamSession")
+	->addRemoveAccessFromForeignTable("ExamSession")
+	;
 
 $sm->addTable("ExamCenterRoom")
 	->addPrimaryKey("id")

@@ -33,7 +33,6 @@ class page_IS_main_page extends SelectionPage {
 					?>
 					</div>
 				</div>
-				<a href='#' onclick="testNewIS();return false;">Test new IS</a>
 			</div>
 			<div style="padding: 5px;display:inline-block" layout='fill'>
 				<div id = '<?php echo $list_container_id; ?>' class="section soft">
@@ -46,16 +45,6 @@ class page_IS_main_page extends SelectionPage {
 				require("popup_window.js",function() {
 					var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
 					popup.setContentFrame("/dynamic/selection/page/IS/profile");
-					popup.onclose = function() {
-						location.reload();
-					};
-					popup.showPercent(95,95);
-				});
-			}
-			function testNewIS() {
-				require("popup_window.js",function() {
-					var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
-					popup.setContentFrame("/dynamic/selection/page/IS/session");
 					popup.onclose = function() {
 						location.reload();
 					};
