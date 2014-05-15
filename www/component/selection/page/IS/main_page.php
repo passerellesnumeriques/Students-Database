@@ -74,7 +74,7 @@ class page_IS_main_page extends SelectionPage {
 						
 						var import_applicants = document.createElement("BUTTON");
 						import_applicants.className = "flat";
-						import_applicants.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Applicants";
+						import_applicants.innerHTML = "<img src='"+theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10._import)+"' style='vertical-align:bottom'/> Import Applicants";
 						import_applicants.onclick = function() {
 							window.top.require("popup_window.js",function() {
 								var p = new window.top.popup_window('Import Applicants', theme.icons_16._import, "");
@@ -121,7 +121,7 @@ class page_IS_main_page extends SelectionPage {
 			function loadStatus() {
 				var container = document.getElementById('is_status');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
-				service.html("selection","IS/new_status",null,container);
+				service.html("selection","IS/status",null,container);
 			}
 			function refreshPage() {
 				is_list.reloadData();

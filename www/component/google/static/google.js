@@ -33,11 +33,15 @@ if (!window.top.google) {
 						window.top.google.connection_status = 1;
 						window.top.google.connection_event.fire();
 						var google_id_set = false;
+						var setting_google_id = false;
 						var listener = function() {
-							if (!google_id_set)
+							if (!google_id_set && !setting_google_id) {
+								setting_google_id = true;
 								service.json("google","set_google_id",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){
+									setting_google_id = false;
 									if (res) google_id_set = true;
 								});
+							}
 							window.top.pnapplication.onlogin.remove_listener(listener);
 						};
 						if (window.top.pnapplication.logged_in)

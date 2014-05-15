@@ -56,15 +56,11 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 		tr_head.appendChild(th);
 		t.table.appendChild(tr_head);
 		//set the body
-		if(t.all_exams.length > 0)
-			var ul = document.createElement("ul");
 		for(var i = 0; i < t.all_exams.length; i++){
 			var tr = document.createElement("tr");
 			t._addExamRow(tr,i);
-			ul.appendChild(tr);
+			t.table.appendChild(tr);
 		}
-		if(t.all_exams.length > 0)
-			t.table.appendChild(ul);
 		
 		//set the footer
 		var create_button = document.createElement("button");
@@ -77,13 +73,48 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 										t.container,
 										false
 									);
-			pop.setContentFrame("/dynamic/selection/page/exam/create_subject");
+			pop.setContentFrame("/dynamic/selection/page/exam/subject");
 			pop.onclose = function() {
 				location.reload();
 			};
 			pop.show();
 		};
 		t.section.addToolBottom(create_button);
+		
+		var import_excel = document.createElement("button");
+		import_excel.className = "action";
+		import_excel.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/subject_white.png",theme.icons_10._import,"right_bottom")+"'/> Import subject from Excel";
+		import_excel.onclick = function(){
+// 						location.assign("/dynamic/selection/page/exam/create_subject");
+			var pop = new popup_window("Import Exam Subject",
+										theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10._import,"right_bottom"),
+										t.container,
+										false
+									);
+			pop.setContentFrame("/dynamic/selection/page/exam/import_subject");
+			pop.onclose = function() {
+				location.reload();
+			};
+			pop.show();
+		};
+		t.section.addToolBottom(import_excel);
+
+		var copy_subject = document.createElement("button");
+		copy_subject.className = "action";
+		copy_subject.innerHTML = "<img src = '"+theme.icons_16.copy+"'/> Copy from previous campaign";
+		copy_subject.onclick = function(){
+			var pop = new popup_window("Create Exam Subject",
+										theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
+										t.container,
+										false
+									);
+			pop.setContentFrame("/dynamic/selection/page/exam/copy_subject");
+			pop.onclose = function() {
+				location.reload();
+			};
+			pop.show();
+		};
+		t.section.addToolBottom(copy_subject);
 	};
 
 	/**
@@ -93,13 +124,13 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 	 */
 	t._addExamRow = function(tr,i){
 		var td_name = document.createElement("td");
-		var li = document.createElement("li");
+		td_name.innerHTML = "<img src='"+theme.icons_10.bullet_black+"' style='margin-left:5px'/> ";
 		var link = document.createElement("A");
 		link.title = "See subject";
 		link.className = "black_link";
 		link.href = "/dynamic/selection/page/exam/subject?id="+t.all_exams[i].id+"&readonly=true";
 		link.appendChild(document.createTextNode(t.all_exams[i].name));
-		li.appendChild(link);
+		td_name.appendChild(link);
 		link.onclick = function() {
 			var t=this;
 			require("popup_window.js",function(){
@@ -110,7 +141,6 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 			});
 			return false;
 		};
-		td_name.appendChild(li);
 		td_name.id = t.all_exams[i].id+"_td";
 		tr.appendChild(td_name);
 		tr.menu = []; // menu to display on mouse over

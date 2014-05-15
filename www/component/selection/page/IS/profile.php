@@ -5,10 +5,6 @@ class page_IS_profile extends SelectionPage {
 	public function getRequiredRights() { return array("see_information_session_details"); }
 	
 	public function executeSelectionPage(){
-		$can_read = PNApplication::$instance->user_management->has_right("see_information_session_details",true);
-		if(!$can_read)
-			return;
-		
 		$id = @$_GET["id"];
 		$onsaved = @$_GET["onsaved"];
 		if ($id <> null && $id <= 0) $id = null;
@@ -154,6 +150,7 @@ class page_IS_profile extends SelectionPage {
 					service.json("selection","IS/remove",{id:<?php echo $id;?>},function(r){
 						is_popup.unfreeze();
 						if(r) {
+							<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
 							is_popup.close();
 						} else
 							error_dialog("An error occured");

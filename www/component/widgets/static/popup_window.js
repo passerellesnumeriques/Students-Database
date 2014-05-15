@@ -184,7 +184,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.getIsDisabled = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i){
 			if (t.buttons[i].id == id)
-				return t.isForzen() ? t.buttons[i].unfrozen_status : t.buttons[i].disabled;
+				return t.isFrozen() ? t.buttons[i].unfrozen_status : t.buttons[i].disabled;
 		}
 	};
 	/** Enable the given button.

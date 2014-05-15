@@ -62,6 +62,9 @@ class page_exam_center_main_page extends SelectionPage {
 							menu.showBelowElement(button);
 						});
 					}
+					function testNewCenter() {
+						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "Exam Center", "/dynamic/selection/page/exam/center", null, 95, 95);
+					}
 				</script>
 				<div id='horizontal_split'>
 					<div style ="display:inline-block;">
@@ -85,6 +88,7 @@ class page_exam_center_main_page extends SelectionPage {
 					</div>
 					
 					<div style="padding: 10px;display:inline-block" layout='fill'>
+						<a href='#' onclick='testNewCenter();return false;'>Test New Center</a>
 						<div id = '<?php echo $list_container_id; ?>' class="section soft">
 						</div>
 					</div>

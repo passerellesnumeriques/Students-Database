@@ -60,7 +60,7 @@ class CalendarJSON {
 	 * @return string CalendarEvent JSON object
 	 * @no_name_check
 	 */
-	public static function CalendarEvent($q, $row){
+	public static function CalendarEvent($row){
 		$data = "{";
 		$data .= "id:".$row["id"];
 		$data .= ",calendar_provider_id:'PN'";
@@ -80,6 +80,17 @@ class CalendarJSON {
 		$data .= ",app_link_name:".json_encode($row["app_link_name"]);
 		$data .= "}";
 		return $data;
+	}
+	
+	public static function CalendarEvents($rows) {
+		$s = "[";
+		$first = true;
+		foreach ($rows as $row) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= self::CalendarEvent($row);
+		}
+		$s .= "]";
+		return $s;
 	}
 	
 }

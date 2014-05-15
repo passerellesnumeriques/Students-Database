@@ -40,7 +40,8 @@ class page_exam_subject extends SelectionPage {
 	
 		$db_lock = null;
 		if(!$read_only && $id != -1 && $id != "-1"){
-			$db_lock = $this->performRequiredLocks("ExamSubject",$id,null,$current_campaign);
+			$locked_by = null;
+			$db_lock = $this->performRequiredLocks("ExamSubject",$id,null,$current_campaign, $locked_by);
 			if($db_lock == null)
 				return;
 		}
@@ -86,7 +87,7 @@ class page_exam_subject extends SelectionPage {
 					subject.parts[i].id = -1;
 				}
 				//Reset the name
-				subject.name = "New Exam";
+				//subject.name = "New Exam";
 			} else
 				subject = <?php echo SelectionJSON::ExamSubjectFromID($id);?>;
 			
