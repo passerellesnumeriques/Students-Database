@@ -272,10 +272,10 @@ function getBorderRadius(elem) {
 		return 0;
 	};
 	return [
-		getFinalValue(["border-top-left-radius", "-moz-border-radius-topleft", "-webkit-border-top-left-radius"]),
-		getFinalValue(["border-top-right-radius", "-moz-border-radius-topright", "-webkit-border-top-right-radius"]),
-		getFinalValue(["border-bottom-left-radius", "-moz-border-radius-bottomleft", "-webkit-border-bottom-right-radius"]),
-		getFinalValue(["border-bottom-right-radius", "-moz-border-radius-bottomright", "-webkit-border-bottom-right-radius"])
+		getFinalValue(["borderTopLeftRadius", "MozBorderRadius-Tpleft", "WebkitBorderTopLeftRadius"]),
+		getFinalValue(["borderTopRightRadius", "MozBorderRadiusTopright", "WebkitBorderTopRightRadius"]),
+		getFinalValue(["borderBottomLeftRadius", "MozBorderRadiusBottomleft", "WebkitBorderBottomRightRadius"]),
+		getFinalValue(["borderBottomRightRadius", "MozBorderRadiusBottomright", "WebkitBorderBottomRightRadius"])
 	];
 }
 /**

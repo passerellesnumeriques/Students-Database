@@ -154,7 +154,16 @@ namespace datamodel {
 				return $c;
 			return null;
 		}
-
+		public function internalGetColumnFor($name, $sub_model = null) {
+			if ($sub_model == null || !($this->model instanceof \SubDataModel)) $sub_models = null;
+			else $sub_models = array($this->model->getParentTable()=>$sub_model);
+			$columns = $this->_getColumns($sub_models);
+			foreach ($columns as $c)
+				if ($c->name == $name)
+				return $c;
+			return null;
+		}
+		
 		private function _getColumns($sub_models) {
 			if (!$this->is_customized) return $this->columns;
 			if ($this->model instanceof \SubDataModel) {

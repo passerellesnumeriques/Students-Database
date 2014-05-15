@@ -10,6 +10,7 @@ class page_IS_profile extends SelectionPage {
 			return;
 		
 		$id = @$_GET["id"];
+		$onsaved = @$_GET["onsaved"];
 		if ($id <> null && $id <= 0) $id = null;
 		if ($id <> null) {
 			$q = SQLQuery::create()
@@ -139,6 +140,7 @@ class page_IS_profile extends SelectionPage {
 					window.pnapplication.cancelDataUnsaved(); // everything is saved
 					// TODO add remove button ?
 					is_popup.unfreeze();
+					<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
 				}
 			});
 		}

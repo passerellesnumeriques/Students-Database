@@ -31,7 +31,7 @@ class page_component extends Page {
 			if ($i === FALSE) continue;
 			$ext = strtolower(substr($filename, $i+1));
 			if ($ext == "php" || $ext == "inc") {
-				if ($filename == "datamodel.inc") continue;
+				if (substr($filename, 0, 9) == "datamodel") continue;
 				if ($filename == "init_data.inc") continue;
 				array_push($files, "component/$name/$filename");
 			}

@@ -327,6 +327,9 @@ class SQLQuery {
 		array_push($this->expressions, array($expr, $alias));
 		return $this;
 	}
+	public function &sum($table, $field, $alias) {
+		return $this->expression("SUM(`".DataModel::get()->getTable($table)->getSQLName($this->sub_models)."`.`".$field."`)", $alias);
+	}
 	
 	/** Retrieve the alias used for the given field (either in select, or in a join)
 	 * @param string $table table name
@@ -918,6 +921,7 @@ class SQLQuery {
 					else
 						$sql .= "'".SQLQuery::escape($field_to[0])."'";
 				} else {
+					if (!is_array($field_to)) throw new Exception("Invalid join from ".$source_table." to ".$table->getName().": ".$this->dump());
 					foreach ($field_to as $fi=>$val) {
 						if ($first) $first = false; else $sql .= " AND ";
 						$sql .= "`".($join[3] <> null ? $join[3] : $table->getSQLName($this->sub_models))."`.`".$fi."`";

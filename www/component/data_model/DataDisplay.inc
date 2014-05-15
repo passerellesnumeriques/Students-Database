@@ -624,7 +624,18 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	
 	/**
 	 * @param string $display_name name of this data
-	 * @param string $data_path path to reach the column to display: format is columns' names separated by a dot (.). Example: country.name means use the column 'country' as a foreign key, then in the foreign table get the column 'name'
+	 * @param string $data_path path to reach the column to display.
+	 * The format of the path is a list separated by dots (.).
+	 * Each element of the list can be: <ul>
+	 * 	<li>A column: if not final, this is a foreign key to follow, else this is the final column to display</li>
+	 *  <li>A table containing a foreign key, with a &gt; symbol to separate the table name and the foreign key</li> 
+	 * </ul>
+	 * Moreover, each element can have a condition (WHERE), between parenthesis.
+	 * Examples: <ul>
+	 *  <li>country.name means to follow the foreign key 'country' and display the column 'name' of the country</li>
+	 *  <li>Contact>people.type means to join table 'Contact' using foreign key 'people' on Contact table, then display the column 'type' on the Contact table</li>
+	 *  <li>Contact>people(type=Work).contact means to join table 'Contact' using foreign key 'people' on Contact table and adding a condition on the join, then display the column 'contact' on the Contact table</li>
+	 * </ul>
 	 */
 	public function __construct($display_name, $data_path) {
 		$this->display_name = $display_name;
@@ -640,26 +651,44 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 * @return \datamodel\Column the final column
 	 */
 	private function getColumn($sub_model) {
-		$columns = explode(".", $this->data_path);
-		$t = $this->getTable();
-		for ($i = 0; $i < count($columns); $i++) {
-			$col = $t->getColumnFor($columns[$i], $sub_model);
-			if ($i < count($columns)-1)
-				$t = \DataModel::get()->getTable($col->foreign_table);
-		}
+		$steps = explode(".", $this->data_path);
+		$current_table = $this->getTable();
+		// take the final column name
+		$final_column_name = $steps[count($steps)-1];
+		array_splice($steps, count($steps)-1, 1);
+		// go through each step
+		foreach ($steps as $step)
+			$current_table = $this->nextTable($current_table, $step, $sub_model);
+		// take final column
+		$col = $current_table->internalGetColumnFor($final_column_name, $sub_model);
 		return $col;
+	}
+	/** Internal method to move to the next table on the data path
+	 * @param \datamodel\Table $current_table the current table
+	 * @param string $step how to reach the next table
+	 */
+	private function nextTable($current_table, $step, $sub_model) {
+		$i = strpos($step, "(");
+		if ($i !== false) {
+			// there is a condition => remove it
+			$step  = substr($step, 0, $i);
+		}
+		$i = strpos($step, ">");
+		if ($i !== false) {
+			// this is a reverse join
+			return \DataModel::get()->internalGetTable(substr($step, 0, $i));
+		}
+		// this is a normal join
+		$col = $current_table->internalGetColumnFor($step, $sub_model);
+		return \DataModel::get()->internalGetTable($col->foreign_table);
 	}
 	
 	public function getTypedField($sub_model) {
 		return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($sub_model));
 	}
 	
-	public function isEditable() {
-		return false;
-	}
-	public function getEditLocks($sub_model) {
-		return array();
-	}
+	public function isEditable() { return false; }
+	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() {
 		return false; // TODO
 	}
@@ -668,6 +697,8 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	}
 
 	public function getTypedFilter($sub_model) {
+		return null; // TODO
+		/*
 		$columns = explode(".", $this->data_path);
 		$t = $this->getTable();
 		$last_key = null;
@@ -695,6 +726,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			return $filter;
 		} else
 			return \PNApplication::$instance->widgets->get_typed_filter($this->getColumn($sub_model));
+		*/
 	}
 	
 	public function getSingleCell() { 
@@ -703,27 +735,59 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	}
 	
 	public function buildSQL(&$q, $path, $filters) {
-		$columns = explode(".", $this->data_path);
-		$t = $this->getTable();
-		// go to the table
-		$table_alias = \DataPathSQLBuilder::build($path, $q);
+		$steps = explode(".", $this->data_path);
+		$current_table = $this->getTable();
+		$current_table_alias = \DataPathSQLBuilder::build($path, $q);
+		// take the final column name
+		$final_column_name = $steps[count($steps)-1];
+		array_splice($steps, count($steps)-1, 1);
+		// go through each step
 		$last_key = null;
-		for ($i = 0; $i < count($columns); $i++) {
-			$col = $t->getColumnFor($columns[$i], $path->sub_model);
-			if ($i < count($columns)-1) {
+		foreach ($steps as $step) {
+			// check condition
+			$i = strpos($step, "(");
+			$condition = null;
+			if ($i !== false) {
+				$j = strrpos($step, ")");
+				$condition = substr($step, $i+1, $j-$i-1);
+				$step = substr($step, 0, $i);
+				$i = strpos($condition, "=");
+				$field_cd = trim(substr($condition,0,$i));
+				$field_val = trim(substr($condition,$i+1));
+				if ($field_val == "null") $field_val = null;
+				$condition = array($field_cd=>$field_val);
+			}
+			// make join
+			$i = strpos($step, ">");
+			if ($i !== false) {
+				// reverse join
+				$ft = \DataModel::get()->getTable(substr($step,0,$i));
+				$col = $ft->getColumnFor(substr($step,$i+1), $path->sub_model);
+				// TODO $last_key
+				$fta = $q->generateTableAlias();
+				$q->join($current_table_alias, $ft->getName(), array($current_table->getPrimaryKey()->name => $col->name), $fta, $condition);
+				$current_table = $ft;
+				$current_table_alias = $fta;
+			} else {
+				// normal join
+				$col = $current_table->getColumnFor($step, $path->sub_model);
 				$ft = \DataModel::get()->getTable($col->foreign_table);
 				$last_key = $ft->getPrimaryKey();
 				$fta = $q->generateTableAlias();
-				$q->join($table_alias, $col->foreign_table, array($columns[$i]=>$ft->getPrimaryKey()->name), $fta);
-				$t = $ft;
-				$table_alias = $fta;
+				$q->join($current_table_alias, $col->foreign_table, array($step=>$ft->getPrimaryKey()->name), $fta, $condition);
+				$current_table = $ft;
+				$current_table_alias = $fta;
 			}
 		}
+		// take final column
+		$col = $current_table->internalGetColumnFor($final_column_name, $path->sub_model);
 		$key_alias = $q->generateFieldAlias();
-		$q->field($table_alias, $t->getPrimaryKey()->name, $key_alias);
+		$q->field($current_table_alias, $current_table->getPrimaryKey()->name, $key_alias);
 		$data_alias = $q->generateFieldAlias();
-		$q->field($table_alias, $col->name, $data_alias);
-		if ($last_key == null)
+		$q->field($current_table_alias, $col->name, $data_alias);
+
+		// TODO filters
+		/*if ($last_key == null)
 			$this->applyColumnFilter($table_alias, $col, $filters, $q);
 		else {
 			foreach ($filters as $filter_list) {
@@ -743,12 +807,12 @@ class ReadOnlyDataDisplay extends DataDisplay {
 					$q->where($w);
 			}
 		}
-		
+		*/
 		return array("key"=>$key_alias,"data"=>$data_alias);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
-		
+		// read only
 	}
 	
 }
