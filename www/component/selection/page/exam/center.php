@@ -39,16 +39,18 @@ class page_exam_center extends SelectionPage {
 			$can_remove = $from_steps[0]["remove"];
 			$can_edit = $from_steps[0]["edit"];
 		}
+		
 		$all_configs = include("component/selection/config.inc");
+		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 
 		require_once("component/selection/SelectionExamJSON.inc");
+		require_once("component/selection/SelectionApplicantJSON.inc");
+		require_once("component/selection/SelectionInformationSessionJSON.inc");
 		require_once("component/calendar/CalendarJSON.inc");
 		require_once("component/people/PeopleJSON.inc");
 		if ($id <> null) {
 			$q = SQLQuery::create()->select("Applicant")->whereValue("Application","exam_center", $id);
-			PNApplication::$instance->people->joinPeople($q, "Applicant", "people");
-			$q->field("Applicant", "exam_session", "exam_session");
-			$q->field("Applicant", "exam_center_room", "exam_center_room");
+			SelectionApplicantJSON::ApplicantSQL($q);
 			$applicants = $q->execute();
 			
 			$q = SQLQuery::create()->select("ExamCenterRoom")->whereValue("ExamCenterRoom", "exam_center", $id);
@@ -59,21 +61,29 @@ class page_exam_center extends SelectionPage {
 			PNApplication::$instance->calendar->joinEvent($q, "ExamSession", "event");
 			CalendarJSON::CalendarEventSQL($q);
 			$sessions = $q->execute(); 
+			
+			$linked_is_id = SQLQuery::create()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "exam_center", $id)->field("information_session")->executeSingleField();
 		} else {
 			$applicants = array();
 			$rooms = array();
 			$sessions = array();
+			$linked_is_id = array();
 		}
+		$q = SQLQuery::create()->select("InformationSession");
+		SelectionInformationSessionJSON::InformationSessionSQL($q);
+		$all_is = $q->execute();
 		
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		$this->requireJavascript("exam_center_objects.js");
 		$this->requireJavascript("exam_center_rooms.js");
 		$this->requireJavascript("exam_center_sessions.js");
+		$this->requireJavascript("exam_center_IS.js");
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_text.js");
 		$this->requireJavascript("field_integer.js");
 		?>
+		<div>
 		<div id='section_center' title='Exam Center Information' collapsable='true' style='margin:10px;'>
 			<div>
 				<div style='display:inline-block;margin:10px;vertical-align:top;'>
@@ -97,7 +107,14 @@ class page_exam_center extends SelectionPage {
 						<?php echo SelectionExamJSON::ExamCenterRooms($rooms);?>
 					);
 					</script>
-					<div>TODO: linked IS</div>
+					<div id='IS_container'></div>
+					<script type='text/javascript'>
+					window.linked_is = new exam_center_IS(
+						'IS_container',
+						<?php echo SelectionInformationSessionJSON::InformationSessionsJSON($all_is);?>,
+						<?php echo json_encode($linked_is_id);?>
+					);
+					</script>
 				</div>
 				<div style='display:inline-block;margin:10px;vertical-align:top;' id='location_and_partners'>
 				<?php
@@ -114,10 +131,14 @@ class page_exam_center extends SelectionPage {
 			window.center_sessions = new exam_center_sessions(
 				'exam_sessions_container',
 				<?php echo CalendarJSON::CalendarEvents($sessions); ?>,
-				<?php echo PeopleJSON::Peoples($applicants); ?>,
-				window.center_rooms
+				<?php echo SelectionApplicantJSON::ApplicantsJSON($applicants); ?>,
+				window.center_rooms,
+				window.linked_is,
+				<?php echo intval($this->component->getOneConfigAttributeValue("default_duration_exam_session"))*60;?>,
+				<?php echo $calendar_id;?>
 			);
 			</script>
+		</div>
 		</div>
 		<script type='text/javascript'>
 		var center_popup = window.parent.get_popup_window_from_frame(window);
@@ -125,13 +146,6 @@ class page_exam_center extends SelectionPage {
 		var section_center = sectionFromHTML('section_center');
 		var section_planning = sectionFromHTML('section_planning');
 
-		<?php if ($editable) { ?>
-		var button_new_session = document.createElement("BUTTON");
-		button_new_session.innerHTML = "<img src='"+theme.icons_16.add+"'/> New Session";
-		button_new_session.onclick = function () { window.center_sessions.newSession(); };
-		section_planning.addToolRight(button_new_session);
-		<?php } ?>
-		
 		function save_center() {
 			if (window.center_location.geographic_area_text == null) {
 				error_dialog("You must at set a location before saving");

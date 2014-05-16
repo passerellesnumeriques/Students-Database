@@ -73,10 +73,12 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 			select_option(t.select_year, 0);
 			select_option(t.select_month, 0);
 		}
-		if (t.onchange) t.onchange();
+		if (t.onchange) t.onchange(t);
 	};
 
 	t.setLimits = function(min, max) {
+		if (!min) min = new Date(2004,0,1);
+		if (!max) max = new Date(new Date().getFullYear()+100,11,31);
 		t.minimum = min;
 		t.maximum = max;
 		var prev_sel = t.select_year.value;

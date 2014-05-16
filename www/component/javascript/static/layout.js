@@ -437,6 +437,12 @@ function _getFixedPosition(win,elem) {
 	var y = elem.offsetTop;
 	if (elem.nodeName != 'BODY') {
 		while (elem.offsetParent) {
+			var p = elem.parentNode;
+			while (p != elem.offsetParent) {
+				x -= p.scrollLeft;
+				y -= p.scrollTop;
+				p = p.parentNode;
+			}
 			x -= elem.offsetParent.scrollLeft;
 			y -= elem.offsetParent.scrollTop;
 			if (elem.nodeName == 'BODY') break;
@@ -446,6 +452,8 @@ function _getFixedPosition(win,elem) {
 		}
 	}
 	if (win.frameElement) {
+		if (win.scrollX) x -= win.scrollX;
+		if (win.scrollY) y -= win.scrollY;
 		var pos = _getFixedPosition(getWindowFromElement(win.frameElement), win.frameElement);
 		x += pos.x;
 		y += pos.y;

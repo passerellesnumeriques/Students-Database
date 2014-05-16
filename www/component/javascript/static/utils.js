@@ -734,7 +734,11 @@ function HexDigit(val) {
  * @returns {String} the string representation
  */
 function getDateString(d) {
-	return _2digits(d.getDate())+" "+getMonthName(d.getMonth()+1)+" "+d.getFullyear();
+	return _2digits(d.getDate())+" "+getMonthName(d.getMonth()+1)+" "+d.getFullYear();
+}
+
+function getTimeString(d) {
+	return _2digits(d.getHours())+":"+_2digits(d.getMinutes());
 }
 
 /** Return the name of the given month
@@ -755,6 +759,7 @@ function getMonthName(month) {
 	case 10: return "October";
 	case 11: return "November";
 	case 12: return "December";
+	default: return "Invalid Month ("+month+")";
 	}
 }
 /** Return the short name (3 letters) of the given month

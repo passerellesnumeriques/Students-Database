@@ -48,16 +48,18 @@ datamodel = {
 	 * @param {Element} text_node the text node to automatically update when the data changes
 	 */
 	registerCellText: function(win, table, column, row_key, text_node) {
+		var n=text_node;
 		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
-			text_node.nodeValue = value;
-			if (text_node.parentNode) layout.invalidate(text_node.parentNode);
+			n.nodeValue = value;
+			if (n.parentNode) layout.invalidate(n.parentNode);
 		});
 	},
 	registerCellSpan: function(win, table, column, row_key, span) {
+		var s=span;
 		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
-			span.innerHTML = "";
-			span.appendChild(document.createTextNode(value));
-			if (span.parentNode) layout.invalidate(span.parentNode);
+			s.innerHTML = "";
+			s.appendChild(document.createTextNode(value));
+			if (s.parentNode) layout.invalidate(s.parentNode);
 		});
 	},
 	inputCell: function(input, table, column, row_key) {

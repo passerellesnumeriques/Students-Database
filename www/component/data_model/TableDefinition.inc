@@ -686,6 +686,7 @@ namespace datamodel {
 		public function get_sql() {
 			$sql = "`".$this->name."` ";
 			$sql .= $this->get_sql_type();
+			if (!$this->can_be_null) $sql .= " NOT NULL";
 			return $sql;
 		}
 		public abstract function get_sql_type();
