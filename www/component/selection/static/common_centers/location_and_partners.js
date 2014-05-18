@@ -70,7 +70,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 								selected.host.center_id = t.center_id;
 								selected.host.organization = org;
 								t.setHostPartner(selected.host);
-								win.pnapplication.dataUnsaved("selection_location");
+								win.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 								t._refreshAddress();
 								t._refreshHost();
 								t._refreshPartners();
@@ -83,7 +83,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 						if (host != null) {
 							// one was previously selected: remove it
 							t.setHostPartner(null);
-							win.pnapplication.dataUnsaved("selection_location");
+							win.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 							t._refreshHost();
 							t._refreshPartners();
 						}
@@ -92,7 +92,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 							if (t.geographic_area_text == null || t.geographic_area_text.id != selected.geographic_area) {
 								// it is a different one
 								t.geographic_area_text = null; // temporary
-								win.pnapplication.dataUnsaved("selection_location");
+								win.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 								popup.freeze();
 								window.top.geography.getGeographicAreaText(window.top.default_country_id, selected.geographic_area, function(geo) {
 									t.geographic_area_text = geo;
@@ -104,7 +104,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 							if (t.geographic_area_text) {
 								// there was one before: unselect it
 								geographic_area_text = null;
-								win.pnapplication.dataUnsaved("selection_location");
+								win.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 							}
 						}
 						t._refreshAddress();
@@ -122,7 +122,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	this._initLocation = function() {
 		// if this is a new center, mark it as not saved
 		if (center_id == -1)
-			window.pnapplication.dataUnsaved("selection_location");
+			window.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 		// Location section is composed of 2 elements: the address / geographic area, and the host partner
 		this._address_container = document.createElement("DIV");
 		section_location.content.appendChild(this._address_container);
@@ -145,7 +145,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	/** Refresh the address part in the Location section */
 	this._refreshAddress = function() {
 		// reset content
-		this._address_container.innerHTML = "";
+		this._address_container.removeAllChildren();
 		// 3 possibilities: complete address (from the host), only geographic area, or nothing
 		var address = this.getHostAddress();
 		if (address != null) {
@@ -166,7 +166,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		layout.invalidate(section_location.element);
 	};
 	this._refreshHost = function() {
-		this._host_container.innerHTML = "";
+		this._host_container.removeAllChildren();
 		var host = this.getHostPartner();
 		if (!host) return;
 		var table = document.createElement("TABLE");
@@ -193,7 +193,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 				}
 			}
 			host.organization = org;
-			window.pnapplication.dataUnsaved("selection_location");
+			window.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 		});
 	};
 	
@@ -241,11 +241,11 @@ function location_and_partners(popup, section_location, section_other_partners, 
 							if (!found) {
 								t.partners.splice(i,1);
 								i--;
-								twin.pnapplication.dataUnsaved("SelectionCenterPartners");
+								twin.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 							}
 						}
 						if (selected.length > 0) {
-							twin.pnapplication.dataUnsaved("SelectionCenterPartners");
+							twin.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 							// add new partners
 							service.json("contact","get_organizations",{ids:selected},function(list) {
 								if (!list) { popup.unfreeze(); return; }
@@ -268,7 +268,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	};
 	
 	this._refreshPartners = function() {
-		this._partners_table.innerHTML = "";
+		this._partners_table.removeAllChildren();
 		if (this.partners.length == 0 || (this.partners.length == 1) && this.partners[0].host) {
 			this._partners_table.innerHTML = "<tr><td><i>No other partner</i></td></tr>";
 			return;
@@ -297,7 +297,7 @@ function partnerRow(table, partner, editable, onchange) {
 	tr.className = "selection_partner_row";
 	table.appendChild(tr);
 	this._refresh = function() {
-		tr.innerHTML = "";
+		tr.removeAllChildren();
 		var td;
 		// name
 		tr.appendChild(td = document.createElement("TD"));
@@ -368,6 +368,7 @@ function partnerRow(table, partner, editable, onchange) {
 			button_select_contacts.className = "flat";
 			button_select_contacts.onclick = function() {
 				var button = this;
+				var twin = window;
 				require("context_menu.js", function() {
 					var menu = new context_menu();
 					for (var i = 0; i < partner.organization.contact_points.length; ++i) {
@@ -389,6 +390,7 @@ function partnerRow(table, partner, editable, onchange) {
 							} else {
 								partner.selected_contact_points_id.remove(this.contact_point_id);
 							}
+							twin.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 							if (onchange) onchange(partner.organization);
 							t._refresh();
 						};
@@ -403,6 +405,7 @@ function partnerRow(table, partner, editable, onchange) {
 				});
 			};
 		}
+		layout.invalidate(table);
 	};
 	this._refresh();
 }

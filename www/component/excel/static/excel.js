@@ -924,13 +924,13 @@ function ExcelSheetCursor(sheet) {
 	
 	this.setContent = function(content) {
 		var t=this;
-		t.div.innerHTML = "";
+		t.div.removeAllChildren();
 		t.span_content = document.createElement("SPAN");
 		t.span_content.style.padding = "3px";
 		if (typeof content == 'string')
 			t.span_content.innerHTML = content;
 		else {
-			t.span_content.innerHTML = "";
+			t.span_content.removeAllChildren();
 			t.span_content.appendChild(content);
 		}
 		var t=this;

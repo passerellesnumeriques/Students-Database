@@ -41,6 +41,7 @@ class geography extends Component {
 		$text = "";
 		do {
 			$area = SQLQuery::create()->select("GeographicArea")->where("id",$area_id)->executeSingleRow();
+			if ($area == null) { PNApplication::error("Invalid geographic area"); return null; }
 			if (strlen($text) > 0) $text .= ", ";
 			$text .= $area["name"];
 			$area_id = $area["parent"];

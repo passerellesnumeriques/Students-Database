@@ -14,7 +14,7 @@ function inputAutoresize(input, min_size) {
 	var last = 0;
 	input.onresize = null;
 	var update = function() {
-		input.mirror.innerHTML = "";
+		input.mirror.removeAllChildren();
 		var s = input.value;
 		input.mirror.appendChild(document.createTextNode(s));
 		var w = getWidth(input.mirror);

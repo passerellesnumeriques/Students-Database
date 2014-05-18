@@ -134,7 +134,7 @@ function geographic_area_selection(container, country_id, onready) {
 		level = index.division_index;
 		while(level != this.result.length -1){
 			var select = this.result[level +1].select;
-			select.innerHTML = "";
+			select.removeAllChildren();
 			level++;
 		}
 		for(var i = 0; i < new_result.length; i++){
@@ -233,7 +233,7 @@ function geographic_area_selection(container, country_id, onready) {
 	this.unfilter = function(){
 		var area_id = this.result[0].areas[0].area_id;
 		var select = this.result[0].select;
-		select.innerHTML = "";
+		select.removeAllChildren();
 		this.buildTable(this.result, area_id);
 		var option = this.result[0].areas[0].option;
 		option.selected = false;

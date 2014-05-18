@@ -12,7 +12,7 @@ function header_bar(container, style) {
 	var t=this;
 	
 	this.setTitle = function(icon, text) {
-		this.title.innerHTML = "";
+		this.title.removeAllChildren();
 		if (icon) {
 			var img = document.createElement("IMG");
 			img.src = icon;
@@ -27,7 +27,7 @@ function header_bar(container, style) {
 		if (typeof html == 'string')
 			this.title.innerHTML = html;
 		else {
-			this.title.innerHTML = "";
+			this.title.removeAllChildren();
 			this.title.appendChild(html);
 		}
 		layout.invalidate(container);

@@ -216,6 +216,9 @@ if (window == window.top) {
 		hasDataUnsaved: function() { 
 			return this._data_unsaved.length > 0; 
 		},
+		isDataUnsaved: function(id) {
+			return this._data_unsaved.contains(id);
+		},
 		/** Mark all data as saved */
 		cancelDataUnsaved: function() { 
 			this._data_unsaved = [];

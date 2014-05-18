@@ -83,7 +83,7 @@ function calendar_view_upcoming(view, container) {
 			var row = this._rows[row_i];
 			for (var i = 0; i < row.table.childNodes.length; ++i) {
 				var tr = row.table.childNodes[i];
-				if (tr.event.uid == uid) {
+				if (tr.event && tr.event.uid == uid) {
 					row.table.removeChild(tr);
 					i--;
 				}

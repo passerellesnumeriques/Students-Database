@@ -23,7 +23,7 @@ class CalendarJSON {
 			->whereValue("CalendarEvent", "id", $id);
 		self::CalendarEventSQL($q);
 		$row = $q->executeSingleRow();
-		return self::CalendarEvent($q, $row);
+		return self::CalendarEvent($row);
 	}
 	
 	/**

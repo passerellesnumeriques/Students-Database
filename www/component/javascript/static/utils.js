@@ -205,15 +205,22 @@ function generateID() {
 }
 
 function _domRemoved(e) {
-	if (e.ondomremoved) e.ondomremoved();
+	if (e._ondomremoved) e._ondomremoved.fire(e);
 	if (e.nodeType != 1) return;
 	for (var i = 0; i < e.childNodes.length; ++i)
 		_domRemoved(e.childNodes[i]);
 }
+Element.prototype.ondomremoved = function(listener) {
+	if (!this._ondomremoved) this._ondomremoved = new Custom_Event();
+	this._ondomremoved.add_listener(listener);
+};
 Element.prototype._removeChild = Element.prototype.removeChild;
 Element.prototype.removeChild = function(e) {
 	_domRemoved(e);
 	return this._removeChild(e);
+};
+Element.prototype.removeAllChildren = function() {
+	while (this.childNodes.length > 0) this.removeChild(this.childNodes[0]);
 };
 
 /**
@@ -734,12 +741,35 @@ function HexDigit(val) {
  * @returns {String} the string representation
  */
 function getDateString(d) {
+	if (d == null) return "";
 	return _2digits(d.getDate())+" "+getMonthName(d.getMonth()+1)+" "+d.getFullYear();
 }
 
 function getTimeString(d) {
+	if (d == null) return "";
 	return _2digits(d.getHours())+":"+_2digits(d.getMinutes());
 }
+
+function getMinutesTimeString(minutes) {
+	if (minutes == null) minutes = 0;
+	return _2digits(Math.floor(minutes/60))+":"+_2digits(minutes%60);
+}
+
+function parseTimeStringToMinutes(s) {
+	var i = s.indexOf(':');
+	var h,m;
+	if (i < 0) {
+		h = parseInt(s);
+		m = 0;
+	} else {
+		h = parseInt(s.substring(0,i));
+		m = parseInt(s.substring(i+1));
+	}
+	if (isNaN(h)) h = 0; else if (h > 23) h = 23; else if (h < 0) h = 0;
+	if (isNaN(m)) m = 0; else if (m > 59) m = 59; else if (m < 0) m = 0;
+	return h*60+m;
+}
+
 
 /** Return the name of the given month
  * @param {Number} month between 1 and 12
@@ -880,6 +910,24 @@ function setCookie(cname,cvalue,expires_minutes,url) {
 	d.setTime(d.getTime()+(expires_minutes*60*1000));
 	var expires = "expires="+d.toGMTString();
 	document.cookie = cname + "=" + cvalue + "; " + expires + "; Path="+url;
+}
+
+/** Retrieve TR elements in a table, including THEAD, TFOOT and TBODY
+ * @param {Element} table the table
+ * @returns {Array} list of TR elements
+ */
+function getTableRows(table) {
+	var rows = [];
+	for (var i = 0; i < table.childNodes.length; ++i) {
+		var e = table.childNodes[i];
+		if (e.nodeType != 1) continue;
+		if (e.nodeName == 'TR') rows.push(e);
+		else {
+			var list = getTableRows(e);
+			for (var j = 0; j < list.length; ++j) rows.push(list[j]);
+		}
+	}
+	return rows;
 }
 
 /** Wait for things to be initialized in a frame

@@ -51,19 +51,19 @@ function field_date(data,editable,config) {
 field_date.prototype = new typed_field();
 field_date.prototype.constructor = field_date;		
 field_date.prototype.canBeNull = function() { return this.config && this.config.can_be_empty; };
-field_date.prototype.parseDate = function(d) {
-	var a = d.split("-");
-	if (a.length == 3) return parseSQLDate(d);
-	a = new Date(d);
-	return a;
-};
 field_date.prototype._create = function(data) {
+	this.validate = function() {
+		if (this.config && !this.config.can_be_empty && this.getCurrentData() == null)
+			this.signal_error("Please select a valid date");
+		else
+			this.signal_error(null);
+	};
+
 	if (this.editable) {
 		require("date_picker.js"); require("context_menu.js");
 		this.element.style.whiteSpace = 'nowrap';
 
 		var t=this;
-		this.data = data;
 		this.signal_error = function(error) {
 			this.error = error;
 			if (!t.select) setTimeout(function(){t.signal_error(error);},10);
@@ -74,17 +74,17 @@ field_date.prototype._create = function(data) {
 		require("date_select.js", function() {
 			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
 			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
-			t.select = new date_select(t.element, t.data == null ? null : t.parseDate(t.data), min, max);
+			t.select = new date_select(t.element, parseSQLDate(t.data), min, max);
 			t.select.select_day.style.verticalAlign = "top";
 			t.select.select_month.style.verticalAlign = "top";
 			t.select.select_year.style.verticalAlign = "top";
 			t.select.onchange = function() {
+				t._datachange();
+			};
+			t._getEditedData = function() {
 				var date = t.select.getDate();
 				if (date) date = dateToSQL(date);
-				if (date == t.data) return;
-				t.data = date;
-				t.validate();
-				setTimeout(function() { t._datachange(); },1);
+				return date;
 			};
 			t.icon = document.createElement("IMG");
 			t.icon.src = theme.icons_16.date_picker;
@@ -107,46 +107,31 @@ field_date.prototype._create = function(data) {
 				stopEventPropagation(ev);
 			};
 			t.element.appendChild(t.icon);
-			t.validate = function() {
-				if (t.config && !t.config.can_be_empty && t.data == null)
-					t.signal_error("Please select a valid date");
-				else
-					t.signal_error(null);
-			};
-			t.validate();
 		});
 
-		this.getCurrentData = function() {
-			return t.data;
-		};
-		this.setData = function(data) {
-			if (data == t.data) return;
-			t.data = data;
-			if (t.select) {
-				t.select.selectDate(data == null ? null : t.parseDate(data));
-				t.validate();
+		this._timeoutSetData = null;
+		this._setData = function(data) {
+			if (t.select)
+				t.select.selectDate(parseSQLDate(data));
+			else {
+				if (t._timeoutSetData) clearTimeout(t._timeoutSetData);
+				t._timeoutSetData = setTimeout(function() { t._timeoutSetData = null; t._setData(data); }, 10);
 			}
-			if (data != t.getOriginalData()) setTimeout(function() { t._datachange(); },1);
 		};
 	} else {
-		this.setData = function(data, first) {
-			if (data != null && data.length == 0) data = null;
+		this._setData = function(data) {
 			if (data == null) {
 				if (this.element.innerHTML == "no date") return;
 				this.element.style.fontStyle = 'italic';
 				this.element.innerHTML = "no date";
 			} else {
-				data = dateToSQL(this.parseDate(data));
+				data = dateToSQL(parseSQLDate(data));
 				if (this.element.innerHTML == data) return;
 				this.element.style.fontStyle = 'normal';
 				this.element.innerHTML = data;
 			}
-			if (!first) this._datachange();
 		};
-		this.setData(data, true);
-		this.getCurrentData = function() {
-			return this.element.innerHTML == "no date" ? null : this.element.innerHTML;
-		};
+		this._setData(data);
 		this.signal_error = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";

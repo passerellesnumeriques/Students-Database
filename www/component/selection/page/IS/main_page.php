@@ -66,7 +66,7 @@ class page_IS_main_page extends SelectionPage {
 										sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}
 									}
 								);
-								frame.reload_list = function() { list.reloadData(); };
+								frame.reload_list = function() { refreshPage(); };
 								p.show();
 							});
 						};
@@ -82,9 +82,10 @@ class page_IS_main_page extends SelectionPage {
 									"/dynamic/selection/page/applicant/popup_import?ondone=reload_list",
 									null,
 									{
+										sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}
 									}
 								);
-								frame.reload_list = function() { list.reloadData(); };
+								frame.reload_list = function() { refreshPage(); };
 								p.show();
 							});
 						};
@@ -97,7 +98,6 @@ class page_IS_main_page extends SelectionPage {
 								var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
 								var frame = popup.setContentFrame("/dynamic/selection/page/IS/profile?id="+is_id+"&onsaved=saved");
 								frame.saved = function() { ISchanged(); };
-								popup.onclose = function() { refreshPage(); };
 								popup.showPercent(95,95);
 							});
 						});
@@ -109,9 +109,6 @@ class page_IS_main_page extends SelectionPage {
 					var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
 					var frame = popup.setContentFrame("/dynamic/selection/page/IS/profile?onsaved=saved");
 					frame.saved = function() { ISchanged(); };
-					popup.onclose = function() {
-						location.reload();
-					};
 					popup.showPercent(95,95);
 				});
 			}
@@ -126,6 +123,7 @@ class page_IS_main_page extends SelectionPage {
 			function refreshPage() {
 				is_list.reloadData();
 				loadStatus();
+				layout.invalidate(document.body);
 			}
 		</script>
 	

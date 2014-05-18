@@ -751,7 +751,7 @@ namespace datamodel {
 	class ColumnBoolean extends ColumnInteger {
 
 		public function __construct(&$table, $name, $can_be_null = false) {
-			parent::__construct($table, $name, 1, $can_be_null, false);
+			parent::__construct($table, $name, 1, 0, 1, $can_be_null, false);
 		}
 
 		public function validate($value) {

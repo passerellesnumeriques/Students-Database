@@ -351,7 +351,7 @@ function grid(element) {
 			var td = row.childNodes[index];
 			if (td.field) {
 				var data = td.field.getCurrentData();
-				td.innerHTML = "";
+				td.removeAllChildren();
 				td.field = t._create_cell(column, data, td);
 				td.style.textAlign = column.align;
 			}

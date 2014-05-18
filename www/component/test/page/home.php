@@ -111,7 +111,7 @@ function top_status_widget() {
 		t.span_nb_scenarios.innerHTML = nb+" scenario"+(nb>1?"s":"")+(nb>0?":":"");
 		nb = t.getNbScenariosWaiting();
 		if (nb == 0)
-			t.span_scenarios_waiting.innerHTML = "";
+			t.span_scenarios_waiting.removeAllChildren();
 		else
 			t.span_scenarios_waiting.innerHTML = "<img src='"+theme.icons_16.wait+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" not run";
 		if (nb == 0 || t.waiting_components > 0) {
@@ -123,12 +123,12 @@ function top_status_widget() {
 		}
 		nb = t.getNbScenariosSucceed();
 			if (nb == 0)
-				t.span_scenarios_succeed.innerHTML = "";
+				t.span_scenarios_succeed.removeAllChildren();
 			else
 				t.span_scenarios_succeed.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" succeed";
 		nb = t.getNbScenariosFailed();
 		if (nb == 0)
-			t.span_scenarios_failed.innerHTML = "";
+			t.span_scenarios_failed.removeAllChildren();
 		else
 			t.span_scenarios_failed.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" failed";
 	};
@@ -171,11 +171,11 @@ function load_tests(component, ondone) {
 	var loading = document.createElement("IMG");
 	loading.src = theme.icons_16.loading;
 	var content = component.widget.content;
-	content.innerHTML = "";
+	content.removeAllChildren();
 	content.appendChild(loading);
 	service.json("test","get_tests",{component:component.name},function(tests){
 		component.tests = tests;
-		content.innerHTML = "";
+		content.removeAllChildren();
 		if (!tests) {
 			content.innerHTML = "Error while calling the service"; 
 			if (ondone) ondone();
@@ -510,7 +510,7 @@ function component_widget(component) {
 		t.span_nb_scenarios.innerHTML = nb+" scenario"+(nb>1?"s":"")+(nb>0?":":"");
 		nb = t.getNbScenariosWaiting();
 		if (nb == 0)
-			t.span_scenarios_waiting.innerHTML = "";
+			t.span_scenarios_waiting.removeAllChildren();
 		else
 			t.span_scenarios_waiting.innerHTML = "<img src='"+theme.icons_16.wait+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" not run";
 		if (nb == 0)
@@ -521,12 +521,12 @@ function component_widget(component) {
 		}
 		nb = t.getNbScenariosSucceed();
 			if (nb == 0)
-				t.span_scenarios_succeed.innerHTML = "";
+				t.span_scenarios_succeed.removeAllChildren();
 			else
 				t.span_scenarios_succeed.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" succeed";
 		nb = t.getNbScenariosFailed();
 		if (nb == 0)
-			t.span_scenarios_failed.innerHTML = "";
+			t.span_scenarios_failed.removeAllChildren();
 		else
 			t.span_scenarios_failed.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" failed";
 		top_status.update_status();
@@ -605,9 +605,9 @@ function play_function_test(component, scenario_index, ondone) {
 				scenario.button.component = component;
 				scenario.button.scenario = scenario_index;
 				scenario.button.onclick = function() {
-					scenario.init_step.result_container.innerHTML = "";
+					scenario.init_step.result_container.removeAllChildren();
 					for (var i = 0; i < scenario.steps.length; ++i)
-						scenario.steps[i].result_container.innerHTML = "";
+						scenario.steps[i].result_container.removeAllChildren();
 					play_function_test(this.component, this.scenario);
 				};
 				scenario.icon.parentNode.appendChild(scenario.button);
@@ -667,9 +667,9 @@ function play_service_test(component, scenario_index, ondone) {
 			scenario.button.component = component;
 			scenario.button.scenario = scenario_index;
 			scenario.button.onclick = function() {
-				scenario.init_step.result_container.innerHTML = "";
+				scenario.init_step.result_container.removeAllChildren();
 				for (var i = 0; i < scenario.steps.length; ++i)
-					scenario.steps[i].result_container.innerHTML = "";
+					scenario.steps[i].result_container.removeAllChildren();
 				play_service_test(this.component, this.scenario);
 			};
 			scenario.icon.parentNode.appendChild(scenario.button);
@@ -824,7 +824,7 @@ function play_ui_test(component, scenario_index, ondone) {
 			scenario.button.component = component;
 			scenario.button.scenario = scenario_index;
 			scenario.button.onclick = function() {
-				scenario.result_container.innerHTML = "";
+				scenario.result_container.removeAllChildren();
 				play_ui_test(this.component, this.scenario);
 			};
 			scenario.icon.parentNode.appendChild(scenario.button);
@@ -853,7 +853,7 @@ function play_ui_test(component, scenario_index, ondone) {
 					scenario.button.component = component;
 					scenario.button.scenario = scenario_index;
 					scenario.button.onclick = function() {
-						scenario.result_container.innerHTML = "";
+						scenario.result_container.removeAllChildren();
 						play_ui_test(this.component, this.scenario);
 					};
 					scenario.icon.parentNode.appendChild(scenario.button);

@@ -5,6 +5,7 @@ class page_exam_center extends SelectionPage {
 	public function getRequiredRights() { return array("see_exam_center_detail"); }
 	
 	public function executeSelectionPage() {
+		// TODO assign supervisors to sessions
 		$id = @$_GET["id"];
 		$onsaved = @$_GET["onsaved"];
 		if ($id <> null && $id <= 0) $id = null;
@@ -76,7 +77,6 @@ class page_exam_center extends SelectionPage {
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		$this->requireJavascript("exam_center_objects.js");
-		$this->requireJavascript("exam_center_rooms.js");
 		$this->requireJavascript("exam_center_sessions.js");
 		$this->requireJavascript("exam_center_IS.js");
 		$this->requireJavascript("typed_field.js");
@@ -100,13 +100,6 @@ class page_exam_center extends SelectionPage {
 					); 
 					</script>
 				<?php } ?>
-					<div id='rooms_container'></div>
-					<script type='text/javascript'>
-					window.center_rooms = new exam_center_rooms(
-						'rooms_container',
-						<?php echo SelectionExamJSON::ExamCenterRooms($rooms);?>
-					);
-					</script>
 					<div id='IS_container'></div>
 					<script type='text/javascript'>
 					window.linked_is = new exam_center_IS(
@@ -130,9 +123,9 @@ class page_exam_center extends SelectionPage {
 			<script type='text/javascript'>
 			window.center_sessions = new exam_center_sessions(
 				'exam_sessions_container',
+				<?php echo SelectionExamJSON::ExamCenterRooms($rooms);?>,
 				<?php echo CalendarJSON::CalendarEvents($sessions); ?>,
 				<?php echo SelectionApplicantJSON::ApplicantsJSON($applicants); ?>,
-				window.center_rooms,
 				window.linked_is,
 				<?php echo intval($this->component->getOneConfigAttributeValue("default_duration_exam_session"))*60;?>,
 				<?php echo $calendar_id;?>
@@ -145,14 +138,85 @@ class page_exam_center extends SelectionPage {
 		var center_id = <?php echo $id <> null ? $id : -1;?>;
 		var section_center = sectionFromHTML('section_center');
 		var section_planning = sectionFromHTML('section_planning');
+		if (center_id == -1) window.pnapplication.dataUnsaved("NewExamCenter");
 
 		function save_center() {
 			if (window.center_location.geographic_area_text == null) {
 				error_dialog("You must at set a location before saving");
 				return;
 			}
-			// TODO
-			<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
+			var data = {};
+			data.center = {id:center_id};
+			if (window.pnapplication.isDataUnsaved("SelectionCenterCustomName")) {
+				// custom name changed
+				data.center.name = window.center_name.getName();
+			}
+			if (center_id == -1 || window.pnapplication.isDataUnsaved("SelectionLocationAndPartners")) {
+				// location and partners have been modified
+				data.center.geographic_area = window.center_location.geographic_area_text.id;
+				data.partners = [];
+				for (var i = 0; i < window.center_location.partners.length; ++i) {
+					// add partners, with only organization id
+					var p = objectCopy(window.center_location.partners[i]);
+					delete p.center_id;
+					p.organization = p.organization.id;
+					data.partners.push(p);
+				}
+			}
+			if (window.pnapplication.isDataUnsaved("ExamCenterInformationSession")) {
+				// linked information sessions changed
+				data.linked_is = window.linked_is.linked_ids;
+			}
+			if (window.pnapplication.isDataUnsaved("ExamCenterRooms")) {
+				// rooms changed
+				data.rooms = window.center_sessions.rooms;
+			}
+			if (window.pnapplication.isDataUnsaved("ExamCenterSessions")) {
+				// sessions changed
+				data.sessions = window.center_sessions.sessions;
+			}
+			if (window.pnapplication.isDataUnsaved("ExamCenterApplicants") ||
+				window.pnapplication.isDataUnsaved("ExamCenterSessions") ||
+				window.pnapplication.isDataUnsaved("ExamCenterRooms") ||
+				window.pnapplication.isDataUnsaved("ExamCenterInformationSession")) {
+				// need to save applicants
+				var list = [];
+				for (var i = 0; i < window.center_sessions.applicants.length; ++i) {
+					var app = window.center_sessions.applicants[i];
+					var a = {
+						people_id: app.people.id,
+						exam_session_id: app.exam_session_id,
+						exam_center_room_id: app.exam_center_room_id
+					};
+					list.push(a);
+				}
+				data.applicants = list;
+			}
+			center_popup.freeze("Saving...");
+			service.json("selection","exam/save_center",data,function(res) {
+				if (!res) {
+					center_popup.unfreeze();
+					return;
+				}
+				center_id = res.id;
+				if (res.rooms_ids)
+					for (var i = 0; i < res.rooms_ids.length; ++i)
+						for (var j = 0; j < window.center_sessions.rooms.length; ++j)
+							if (window.center_sessions.rooms[j].id == res.rooms_ids[i].given_id) {
+								window.center_sessions.rooms[j].id = res.rooms_ids[i].new_id;
+								break;
+							}
+				if (res.sessions_ids)
+					for (var i = 0; i < res.sessions_ids.length; ++i)
+						for (var j = 0; j < window.center_sessions.sessions.length; ++j)
+							if (window.center_sessions.sessions[j].id == res.sessions_ids[i].given_id) {
+								window.center_sessions.sessions[j].id = res.sessions_ids[i].new_id;
+								break;
+							}
+				window.pnapplication.cancelDataUnsaved();
+				<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
+				center_popup.unfreeze();
+			});
 		}
 
 		center_popup.removeAllButtons();
@@ -176,7 +240,9 @@ class page_exam_center extends SelectionPage {
 			});
 		});
 		<?php } ?>
+		<?php if ($editable || $id == null) {?>
 		center_popup.addFrameSaveButton(save_center);
+		<?php }?>
 		center_popup.addCloseButton();
 		</script>
 		<?php 

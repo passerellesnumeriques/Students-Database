@@ -175,7 +175,7 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	t._setFooter = function(){
 		var div_set_date = document.createElement("BUTTON");
 		div_set_date.className = "action";
-		div_set_date.innerHTML = "<img src = '/static/selection/IS/date_clock_picker.png' style='vertical-align:bottom'/> Set the date";
+		div_set_date.innerHTML = "<img src = '/static/selection/date_clock_picker.png' style='vertical-align:bottom'/> Set the date";
 		t.section.addToolBottom(div_set_date);
 		div_set_date.onclick = function(){
 			var table = document.createElement("table");

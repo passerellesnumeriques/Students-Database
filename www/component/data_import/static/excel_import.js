@@ -169,7 +169,7 @@ function excel_import(popup, container, onready) {
 						var col = sheet.columns[j];
 						if (!col.header._originalContent) {
 							col.header._originalContent = col.header.innerHTML; 
-							col.header.innerHTML = "";
+							col.header.removeAllChildren();
 							var link = document.createElement("A");
 							link.innerHTML = "Import";
 							link.href = "#";
@@ -303,7 +303,7 @@ function excel_import(popup, container, onready) {
 					return;
 				}
 				
-				td_where.innerHTML = "";
+				td_where.removeAllChildren();
 				where = null;
 				if (cell.isMultiple()) {
 					var r;

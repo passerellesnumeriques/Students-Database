@@ -1646,15 +1646,13 @@ class selection extends Component {
 							foreach($rule["rule_topic_table_update"] as $topic){
 								$topic_id = $topic["exam_topic_for_eligibility_rule"];
 								unset($topic["exam_topic_for_eligibility_rule"]); //We will only update the coefficients and expected fields
-								SQLQuery::create()->updateByKeys("EligibilityRuleExamTopic", array(
-									array(
-										array(
-											"eligibility_rule" => $rule["rule_table"]["id"],
-											"exam_topic_for_eligibility_rule"  => $topic_id
-										),
-										$topic
-									), 
-								));
+								SQLQuery::create()->updateByKey("EligibilityRuleExamTopic", 
+									array( // key
+										"eligibility_rule" => $rule["rule_table"]["id"],
+										"exam_topic_for_eligibility_rule"  => $topic_id
+									),
+									$topic // fields values
+								);
 							}
 						}
 						if(count($rule["rule_topic_table_remove"]) > 0){

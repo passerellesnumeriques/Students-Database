@@ -18,6 +18,7 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 			if ($applicant_id == null) $applicant_id = 1; // first one
 			$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "applicant_id", $applicant_id);
 		}
+		$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "excluded", false);
 	}
 	
 }

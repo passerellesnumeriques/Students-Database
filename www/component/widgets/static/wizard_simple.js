@@ -32,7 +32,7 @@ function wizard_simple(container) {
 		this.header.appendChild(document.createTextNode(title));
 	};
 	
-	this.resetButtons = function() { this.footer.innerHTML = ""; };
+	this.resetButtons = function() { this.footer.removeAllChildren(); };
 	this.addButtonControl = function(control) {
 		this.footer.appendChild(control);
 	};
@@ -88,10 +88,10 @@ function wizard_simple(container) {
 	this.setContent = function(content) {
 		content.style.width = "100%";
 		content.style.height = "100%";
-		this.content.innerHTML = "";
+		this.content.removeAllChildren();
 		this.content.appendChild(content);
 	};
 	this.resetContent = function() {
-		this.content.innerHTML = "";
+		this.content.removeAllChildren();
 	};
 }

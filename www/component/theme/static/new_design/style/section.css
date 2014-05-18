@@ -54,3 +54,10 @@
 	background-color: white;
 	height: 3px;
 }
+.section:not(.sub):not(.soft)>.header button {
+	background: linear-gradient(to bottom, #ffffff 0%, #d0d0d0 100%);
+}
+.section:not(.sub):not(.soft)>.header button:hover {
+	background: #ffffff;
+    box-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+}

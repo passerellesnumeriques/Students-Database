@@ -5,6 +5,7 @@ class page_IS_profile extends SelectionPage {
 	public function getRequiredRights() { return array("see_information_session_details"); }
 	
 	public function executeSelectionPage(){
+		// TODO assign people to do this information session
 		$id = @$_GET["id"];
 		$onsaved = @$_GET["onsaved"];
 		if ($id <> null && $id <= 0) $id = null;
@@ -76,8 +77,8 @@ class page_IS_profile extends SelectionPage {
 				<?php echo json_encode($this->component->getOneConfigAttributeValue("separate_boys_girls_IS"));?>,
 				<?php echo json_encode($editable);?>,
 				<?php echo json_encode(@$session["number_boys_expected"]);?>,
-				<?php echo json_encode(@$session["number_girls_expected"]);?>,
 				<?php echo json_encode(@$session["number_boys_real"]);?>,
+				<?php echo json_encode(@$session["number_girls_expected"]);?>,
 				<?php echo json_encode(@$session["number_girls_real"]);?>
 			); 
 			</script>
@@ -144,7 +145,7 @@ class page_IS_profile extends SelectionPage {
 		is_popup.removeAllButtons();
 		<?php if ($editable && $id <> null && $can_remove) {?>
 		is_popup.addIconTextButton(theme.icons_16.remove, "Remove this session", "remove", function() {
-			confirm_dialog("Remove this information session and all the linked data?",function(res){
+			confirm_dialog("Are you sure you want to remove this information session ?<br/>Note: Any applicant already assigned to this information session will remain in the system, but without information session.",function(res){
 				if(res){
 					is_popup.freeze();
 					service.json("selection","IS/remove",{id:<?php echo $id;?>},function(r){
@@ -164,7 +165,9 @@ class page_IS_profile extends SelectionPage {
 			window.top.popup_frame('/static/people/people_list_16.png','Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{value:<?php echo $id;?>}}]},95,95);
 		});
 		<?php }?>
+		<?php if ($editable || $id == null) {?>
 		is_popup.addFrameSaveButton(save_is);
+		<?php }?>
 		is_popup.addCloseButton();
 		</script>
 		<?php 

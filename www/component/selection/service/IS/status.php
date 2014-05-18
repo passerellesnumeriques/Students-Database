@@ -95,9 +95,12 @@ class service_IS_status extends Service {
 			echo " (".$total_boys_expected." boys and ".$total_girls_expected." girls)";
 		if ($nb_sessions == $sessions_done["nb_sessions"]) {
 			// all sessions done
-			echo $total_real." attendees";
+			echo "<br/>".$total_real." attendees";
 			if ($separate)
 				echo " (".$total_boys_real." boys and ".$total_girls_real." girls)";
+			if ($total_expected > 0)
+				echo " = ".floor($total_real*100/$total_expected)."% of expectation";
+			echo "<br/>";
 		} else {
 			echo "<ul style='padding-left:20px'>";
 				echo "<li>";
@@ -135,6 +138,31 @@ class service_IS_status extends Service {
 		$q->field("InformationSession", "name", "name");
 		$missing_real = $q->execute();
 		$this->createWarningLink($missing_real, "done without a number of attendees");
+		
+		echo "<br/>";
+		
+		// number of applicants
+		$applicants_count = SQLQuery::create()->bypassSecurity()->select("Applicant")->join("Applicant","People",array("people"=>"id"))->groupBy("People","sex")->count("nb")->field("People","sex","sex")->execute();
+		$applicants_M = $applicants_F = 0;
+		foreach ($applicants_count as $a)
+			if ($a["sex"] == "M") $applicants_M = $a["nb"];
+			else if ($a["sex"] == "F") $applicants_F = $a["nb"];
+		$total_applicants = $applicants_M + $applicants_F;
+		$applicants_no_IS = SQLQuery::create()->select("Applicant")->whereNull("Applicant","information_session")->count("nb_applicants")->executeSingleValue();
+		echo $total_applicants." applicant".($total_applicants > 1 ? "s" : "");
+		if ($total_real > 0)
+			echo " (".floor($total_applicants*100/$total_real)."% of attendance)";
+		if ($total_applicants > 0) {
+			echo "<ul style='padding-left:20px'>";
+			echo "<li>".$applicants_F." girl".($applicants_F > 1 ?"s":"")." (".floor($applicants_F*100/$total_applicants)."%)</li>";
+			echo "<li>".$applicants_M." boy".($applicants_M > 1 ?"s":"")." (".floor($applicants_M*100/$total_applicants)."%)</li>";
+			echo "</ul>";
+		} else echo "<br/>";
+		if ($applicants_no_IS > 0) {
+			echo "<a style='color:DarkOrange' href='#' onclick=\"window.top.popup_frame(null,'Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{value:'NULL'}}]},95,95);return false;\">";
+			echo $applicants_no_IS." applicant".(count($applicants_no_IS) > 1 ? "s":"")." not attched to an Information Session";
+			echo "</a><br/>\n";
+		}
 	}
 
 	private $id_counter = 0;

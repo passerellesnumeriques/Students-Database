@@ -262,7 +262,7 @@ class SQLQuery {
 		if ($table == null || strlen($table) == 0) throw new Exception("SQLQuery::field: argument \$table cannot be empty!");
 		if ($name == null)
 			foreach ($this->tables as $t=>$a)
-				$this->field($t, $table);
+				$this->field($a == null ? $t : $a, $table);
 		else {
 			foreach ($this->fields as $f)
 				if ($f[0] == $table && $f[1] == $name && $f[2] == $alias)
@@ -472,6 +472,8 @@ class SQLQuery {
 	 */
 	public function &whereValue($table_name, $field_name, $value) {
 		$w = "`".$this->resolveWhereTable($table_name)."`.`".$field_name."`";
+		if ($value === false) $value = 0;
+		else if ($value === true) $value = 1;
 		if ($value === null) $w .= " IS NULL";
 		else $w .= "='".SQLQuery::escape(utf8_decode($value))."'";
 		array_push($this->where, $w);
@@ -1179,9 +1181,9 @@ class SQLQuery {
 		}
 	}
 
-	/** UPDATE several rows, based on their key
+	/** UPDATE several rows, based on their key. Several keys can be updated with same value.
 	 * @param string $table table name
-	 * @param array $keys_fields_values array of array(array(keys), array(field=&gt;value))
+	 * @param array $keys_fields_values array of array(array(key1,key2...), array(field=&gt;value))
 	 * @param integer|null $lock_id ID of the lock if the table is already locked, if null a new lock will be created (if a lock exists, specifying it will improve performance) 
 	 */
 	public function updateByKeys($table, $keys_fields_values, $lock_id = null) {
@@ -1202,7 +1204,7 @@ class SQLQuery {
 				$ok = true;
 				if (!$t->canModifyEverything())
 					foreach ($keys_fields_values as $k) {
-						$key = $k[0];
+						$keys = $k[0];
 						$fields_values = $k[1];
 						foreach ($fields_values as $colname=>$colvalue)
 							if (!$t->canModifyColumn($colname)) { $ok = false; break; }
@@ -1215,28 +1217,34 @@ class SQLQuery {
 					$q->select(array($table=>$table_alias));
 					$q->selectSubModels($this->sub_models);
 					if ($t->getPrimaryKey() <> null) {
+						$q->field($t->getPrimaryKey()->name);
 						$keys = array();
-						foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
-						$q->whereIn($t->getName(), $t->getPrimaryKey()->name, $keys);
+						foreach ($keys_fields_values as $k) foreach ($k[0] as $key) array_push($keys, $key);
+						$q->whereIn($table_alias, $t->getPrimaryKey()->name, $keys);
 					} else {
-						$keys = $t->getKey();
+						$tkeys = $t->getKey();
+						$q->field($tkeys[0]);
 						$w = "";
 						foreach ($keys_fields_values as $k) {
-							$key = $k[0];
-							$kw = "";
-							foreach ($keys as $key_name) {
-								if (strlen($kw) > 0) $kw .= " AND ";
-								$kw .= "`".$table_alias."`.`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+							$keys = $k[0];
+							foreach ($keys as $key) {
+								$kw = "";
+								foreach ($tkeys as $key_name) {
+									if (strlen($kw) > 0) $kw .= " AND ";
+									$kw .= "`".$table_alias."`.`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+								}
+								if (strlen($w) > 0) $w .= " OR ";
+								$w .= "(".$kw.")";
 							}
-							if (strlen($w) > 0) $w .= " OR ";
-							$w .= "(".$kw.")";
 						}
 						$q->where($w);
 					}
 					if ($t->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
 						$rows = $q->execute();
 						$rows = $t->filterWriteAccess($rows);
-						if (count($rows) == 0) throw new Exception("Access denied to modify this row in table ".$t->getName());
+						$nb_keys = 0;
+						foreach ($keys_fields_values as $k) $nb_keys += count($k[0]);
+						if (count($rows) <> $nb_keys) throw new Exception("Access denied to modify ".($nb_keys-count($rows))." rows among the ".($nb_keys)." to update in table ".$t->getName());
 					}
 				}
 			}
@@ -1247,11 +1255,16 @@ class SQLQuery {
 			if ($lock_id <> null) {
 				$column = null;
 				$columns = array();
-				foreach ($keys_fields_values as $k)
-					$key = $k[0];
+				$key = null;
+				$nb_keys = 0;
+				foreach ($keys_fields_values as $k) {
+					$keys = $k[0];
+					if (count($keys) == 1 && $nb_keys == 0) $key = $keys[0];
+					$nb_keys += count($keys);
 					$fields_values = $k[1];
 					foreach ($fields_values as $field=>$value)
 						if (!in_array($field, $columns)) array_push($columns, $field);
+				}
 				if (count($columns) == 1) $column = $columns[0];
 				$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column);
 				if ($err <> null)
@@ -1259,7 +1272,7 @@ class SQLQuery {
 			} else {
 				$locker = null;
 				$keys = array();
-				foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
+				foreach ($keys_fields_values as $k) foreach ($k[0] as $key) array_push($keys, $key);
 				if (count($keys) == 1)
 					$lock_id = DataBaseLock::lockRow($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
 				else
@@ -1272,7 +1285,7 @@ class SQLQuery {
 			// validate values, and check unicity
 			$columns = array();
 			foreach ($keys_fields_values as $k) {
-				$key = $k[0];
+				$keys = $k[0];
 				$fields_values = $k[1];
 				foreach ($fields_values as $field=>$value) {
 					$col = $t->internalGetColumn($field, $this->sub_models);
@@ -1312,21 +1325,23 @@ class SQLQuery {
 						;
 						if ($t->getPrimaryKey() <> null) {
 							$keys = array();
-							foreach ($keys_fields_values as $k) array_push($keys, $k[0]);
+							foreach ($keys_fields_values as $k) foreach ($k[0] as $key) array_push($keys, $key);
 							$q->whereNotIn($t->getName(), $t->getPrimaryKey()->name, $keys);
 						} else {
-							$keys = $t->getKey();
+							$tkeys = $t->getKey();
 							$w = "";
 							foreach ($keys_fields_values as $k) {
-								$key = $k[0];
-								$kw = "(";
-								foreach ($keys as $key_name) {
-									if (strlen($kw) > 0) $kw .= " OR ";
-									$kw .= "`".$table_alias."`.`".$key_name."`!='".SQLQuery::escape($key[$key_name])."'";
+								$keys = $k[0];
+								foreach ($keys as $key) {
+									$kw = "(";
+									foreach ($tkeys as $key_name) {
+										if (strlen($kw) > 0) $kw .= " AND ";
+										$kw .= "`".$table_alias."`.`".$key_name."`!='".SQLQuery::escape($key[$key_name])."'";
+									}
+									$kw .= ")";
+									if (strlen($w) > 0) $w .= " OR ";
+									$w .= "(".$kw.")";
 								}
-								$kw .= ")";
-								if (strlen($w) > 0) $w .= " AND ";
-								$w .= "(".$kw.")";
 							}
 							$q->where($w);
 						}
@@ -1342,7 +1357,7 @@ class SQLQuery {
 	
 			// everything is valid and allowed, we can perform the update
 			foreach ($keys_fields_values as $k) {
-				$key = $k[0];
+				$keys = $k[0];
 				$fields_values = $k[1];
 				$sql = "UPDATE `".$t->getSQLName($this->sub_models)."` SET ";
 				$first = true;
@@ -1356,14 +1371,31 @@ class SQLQuery {
 				}
 				$sql .= " WHERE ";
 				if ($t->getPrimaryKey() <> null) {
-					$sql .= "`".$t->getPrimaryKey()->name."`='".$key."'";
-				} else {
-					$keys = $t->getKey();
-					$first = true;
-					foreach ($keys as $key_name) {
-						if ($first) $first = false; else $sql .= " AND ";
-						$sql .= "`".$key_name."`='".$key[$key_name]."'";
+					if (count($keys) == 1)
+						$sql .= "`".$t->getPrimaryKey()->name."`='".$keys[0]."'";
+					else {
+						$sql .= "`".$t->getPrimaryKey()->name."` IN (";
+						$fk = true;
+						foreach ($keys as $k) {
+							if ($fk) $fk = false; else $sql .= ",";
+							$sql .= "'".$k."'";
+						}
+						$sql .= ")";
 					}
+				} else {
+					$tkeys = $t->getKey();
+					$w = "";
+					foreach ($keys as $key) {
+						$kw = "(";
+						foreach ($tkeys as $key_name) {
+							if (strlen($kw) > 0) $kw .= " AND ";
+							$kw .= "`".$table_alias."`.`".$key_name."`!='".SQLQuery::escape($key[$key_name])."'";
+						}
+						$kw .= ")";
+						if (strlen($w) > 0) $w .= " OR ";
+						$w .= "(".$kw.")";
+					}
+					$sql .= $w;
 				}
 				SQLQuery::db()->execute($sql);
 			}
@@ -1887,6 +1919,28 @@ class SQLQuery {
 			if (!$in_transaction) SQLQuery::rollbackTransaction();
 			throw $e;
 		}
+	}
+	
+	/** Remove rows from <i>table</i> having a link to the row <i>linked_key</i> in table <i>linked_table</i>.
+	 * @param string $table the table from where to remove
+	 * @param string $linked_table the foreign table
+	 * @param integer $linked_key the key in the foreign table
+	 */
+	public function removeLinkedData($table, $linked_table, $linked_key) {
+		$q = SQLQuery::create()->selectSubModels($this->sub_models)->select($table,"the_table");
+		require_once("component/data_model/Model.inc");
+		$lt = $this->bypass_security ? DataModel::get()->internalGetTable($linked_table) : DataModel::get()->getTable($linked_table);
+		$where = "";
+		$cols = $this->bypass_security ? $lt->internalGetColumns($this->sub_models) : $lt->getColumns($this->sub_models);
+		foreach ($cols as $col)
+			if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table) {
+				if (strlen($where) > 0) $where .= " OR ";
+				$where .= "(`the_table`.`".$col->name."` = '".$linked_key."')";
+			}
+		if (strlen($where) == 0) return; // no link!
+		$q->where($where);
+		$rows = $q->execute();
+		$this->removeRows($table, $rows);
 	}
 	
 	/** Go through the datamodel to determine what should be removed and updated when removing rows from a table

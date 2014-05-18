@@ -19,7 +19,7 @@ function event_date_time_duration(container, start, duration, minimum_date, maxi
 	var t=this;
 	
 	this.date = start ? new Date(start.getTime()) : null;
-	this.time = start ? new Date(start.getTime()) : null;
+	this.time = start ? start.getHours()*60+start.getMinutes() : 0;
 	this.duration = duration;
 	
 	this._init = function() {
@@ -37,7 +37,7 @@ function event_date_time_duration(container, start, duration, minimum_date, maxi
 		
 		container.appendChild(document.createTextNode("Time: "));
 		this._start_time = new field_time(null,true,{can_be_null:can_be_null});
-		if (this.start) this._start_time.setData(this.start.getHours()*60+this.start.getMinutes());
+		this._start_time.setData(this.time);
 		this._start_time.onchange.add_listener(function() { t.time = t._start_time.getCurrentMinutes(); });
 		container.appendChild(this._start_time.getHTMLElement());
 		container.appendChild(document.createTextNode(" Duration: "));

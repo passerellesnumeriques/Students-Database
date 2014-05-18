@@ -305,7 +305,7 @@ var students_list = new data_list(
 							next(index+1);
 							return;
 						}
-						span_message.innerHTML = "";
+						span_message.removeAllChildren();
 						span_message.appendChild(document.createTextNode("Saving picture for "+people.first_name+" "+people.last_name));
 						var data = pictures[index].getResultData();
 						service.json("people", "save_picture", {id:people.id,picture:data}, function(res) {

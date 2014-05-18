@@ -204,9 +204,9 @@ function setOpacity(element, opacity) {
 		element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";
 	} else {
 		var o = new Number(opacity).toFixed(2);
-		if (browser.FireFox < 0.9)
+		if (browser.FireFox > 0 && browser.FireFox < 0.9)
 			element.style.MozOpacity = o;
-		else if (browser.SafariBrowser < 2)
+		else if (browser.SafariBrowser > 0 && browser.SafariBrowser < 2)
 			element.style.KhtmlOpacity = o;
 		else
 			element.style.opacity = o;

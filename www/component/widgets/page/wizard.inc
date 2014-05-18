@@ -80,7 +80,7 @@ function wizard_freeze() {
 	wizard_freeze_div.style.height = getHeight(frame)+"px";
 	wizard_freeze_div.frozen = true;
 	frame.parentNode.appendChild(wizard_freeze_div);
-	document.getElementById('wizard_freezer').innerHTML = "";
+	document.getElementById('wizard_freezer').removeAllChildren();
 }
 function wizard_unfreeze() {
 	if (wizard_freeze_div.frozen) {

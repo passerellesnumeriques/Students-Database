@@ -254,12 +254,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					field:new_field,
 					register: function(data_display, data_key) {
 						var t=this;
-						window.top.datamodel.registerDataWidget(window, data_display.field, data_key, function() {
+						window.top.datamodel.registerDataWidget(window, data_display.field, data_key, this.field.element, function() {
 							return t.field.getCurrentData();
 						}, function(data) {
 							t.field.setData(data);
 						}, function(listener) {
 							t.field.onchange.add_listener(listener);
+						}, function(listener) {
+							t.field.onchange.remove_listener(listener);
 						});
 					}
 				};
@@ -978,12 +980,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						field:td.field,
 						register: function(data_display, data_key) {
 							var t=this;
-							window.top.datamodel.registerDataWidget(window, data_display.field, data_key, function() {
+							window.top.datamodel.registerDataWidget(window, data_display.field, data_key, this.field.element, function() {
 								return t.field.getCurrentData();
 							}, function(data) {
 								t.field.setData(data);
 							}, function(listener) {
 								t.field.onchange.add_listener(listener);
+							}, function(listener) {
+								t.field.onchange.remove_listener(listener);
 							});
 						}
 					};

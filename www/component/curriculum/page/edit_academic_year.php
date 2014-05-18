@@ -172,7 +172,7 @@ function addPeriod(period) {
 		if (Math.floor(current_end) != (period.weeks+period.weeks_break-1)) {
 			var end = new Date(start.getTime()+(period.weeks+period.weeks_break)*7*24*60*60*1000-24*60*60*1000);
 			period.end = dateToSQL(end);
-			span_end.innerHTML = "";
+			span_end.removeAllChildren();
 			span_end.appendChild(document.createTextNode(getDateStringFromSQL(period.end)));
 			var index = periods.indexOf(period);
 			if (index < periods.length-1) {
@@ -180,7 +180,7 @@ function addPeriod(period) {
 				if (next_start.getTime() <= end.getTime()) {
 					next_start = new Date(end.getTime()+24*60*60*1000);
 					periods[index+1].start = dateToSQL(next_start);
-					periods[index+1].span_start.innerHTML = "";
+					periods[index+1].span_start.removeAllChildren();
 					periods[index+1].span_start.appendChild(document.createTextNode(getDateStringFromSQL(periods[index+1].start)));
 					periods[index+1].update_end();
 				}
@@ -204,7 +204,7 @@ function addPeriod(period) {
 			var picker = new window.top.date_picker(parseSQLDate(period.start), min, max);
 			picker.onchange = function(picker, date) {
 				period.start = dateToSQL(date);
-				span_start.innerHTML = "";
+				span_start.removeAllChildren();
 				span_start.appendChild(document.createTextNode(getDateStringFromSQL(period.start)));
 				period.update_end();
 			};
@@ -234,7 +234,7 @@ function addPeriod(period) {
 			var picker = new window.top.date_picker(parseSQLDate(period.end), min, max);
 			picker.onchange = function(picker, date) {
 				period.end = dateToSQL(date);
-				span_end.innerHTML = "";
+				span_end.removeAllChildren();
 				span_end.appendChild(document.createTextNode(getDateStringFromSQL(period.end)));
 				// update number of weeks
 				var start = parseSQLDate(period.start);

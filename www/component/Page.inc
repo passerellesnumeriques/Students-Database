@@ -196,10 +196,7 @@ abstract class Page {
 			$db_lock = DataBaseLock::lockTable($table->getSQLNameFor($sm), $locked_by);
 			$name = "table";
 		}
-		if ($db_lock == null) {
-			PNApplication::error("This ".$name." is already locked by ".$locked_by);
-			return;
-		} else
+		if ($db_lock <> null)
 			DataBaseLock::generateScript($db_lock);
 		return $db_lock;
 	}
