@@ -34,6 +34,9 @@ class page_exam_center_main_page extends SelectionPage {
 		$this->requireJavascript("applicants_assignment_to_EC_status.js");
 		$this->onload("new applicants_assignment_to_EC_status('".$applicants_assignement_container_id."');");
 		
+		$this->onload("sectionFromHTML('exam_status_section');");
+		$this->onload("loadStatus();");
+		
 		?>		<script type='text/javascript'>
 					function onCreateNewCenter(button){
 						require("context_menu.js",function(){
@@ -67,7 +70,11 @@ class page_exam_center_main_page extends SelectionPage {
 					}
 				</script>
 				<div id='horizontal_split'>
-					<div style ="display:inline-block;">
+					<div style ="display:inline-block;padding:5px;">
+						<div id='exam_status_section' title='Status' collapsable='false' css='soft' style='display:inline-block;'>
+							<div id='exam_status'></div>
+						</div>
+					
 						<div id='status_section' title='Exam Centers Status' collapsable='false' css='soft' style='margin:10px; width:360px;'>
 							<div id = '<?php echo $status_container_id; ?>'>
 							<?php 
@@ -87,7 +94,7 @@ class page_exam_center_main_page extends SelectionPage {
 						</div>
 					</div>
 					
-					<div style="padding: 10px;display:inline-block" layout='fill'>
+					<div style="padding:5px;display:inline-block" layout='fill'>
 						<a href='#' onclick='testNewCenter();return false;'>Test New Center</a>
 						<div id = '<?php echo $list_container_id; ?>' class="section soft">
 						</div>
@@ -100,7 +107,9 @@ class page_exam_center_main_page extends SelectionPage {
 							'ExamCenter', <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 							[
 								'Exam Center.Name',
-								'Exam Center.Applicants'
+								'Exam Center.Applicants',
+								'Exam Center.Rooms',
+								'Exam Center.Sessions'
 							],
 							[],
 							-1,
@@ -121,6 +130,11 @@ class page_exam_center_main_page extends SelectionPage {
 						);
 					}
 					
+					function loadStatus() {
+						var container = document.getElementById('exam_status');
+						container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
+						service.html("selection","exam/status",null,container);
+					}
 					
 					
 				</script>				
