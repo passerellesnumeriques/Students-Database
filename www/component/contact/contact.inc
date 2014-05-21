@@ -94,6 +94,11 @@ class contact extends Component {
 		return $address_id;
 	}
 	
+	public function joinPostalAddress(&$q, $from_table, $from_key) {
+		$q->join($from_table, "PostalAddress", array($from_key=>"id"));
+	}
+	
+	
 	/**
 	 * Add a contact to a people
 	 * @param number $people_id the people id

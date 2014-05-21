@@ -250,6 +250,19 @@ class page_exam_center_profile extends SelectionPage {
 		center_popup.addFrameSaveButton(save_center);
 		<?php }?>
 		center_popup.addCloseButton();
+
+		<?php 
+		if (isset($_POST["input"])) {
+			$input = json_decode($_POST["input"], true);
+			if (isset($input["host_is"])) {
+				echo "window.linked_is.linkIS(".$input["host_is"].");\n";
+			}
+			if (isset($input["others_is"])) {
+				foreach ($input["others_is"] as $is_id)
+					echo "window.linked_is.linkIS(".$is_id.");\n";
+			}
+		}
+		?>
 		</script>
 		<?php 
 	}

@@ -18,17 +18,12 @@ function exam_center_IS(container, all_is, linked_is) {
 		button_new.onclick = function() {
 			var t = this.t;
 			var button = this;
-			var twin = window;
 			require("context_menu.js", function() {
 				var menu = new context_menu();
 				for (var i = 0; i < all_is.length; ++i) {
 					if (t.linked_ids.contains(all_is[i].id)) continue;
 					menu.addIconItem(null, all_is[i].name, function(is_id) {
-						t.linked_ids.push(is_id);
-						t._addISRow(is_id);
-						t._loadApplicants(is_id);
-						twin.pnapplication.dataUnsaved("ExamCenterInformationSession");
-						layout.invalidate(t._table);
+						t.linkIS(is_id);
 					}, all_is[i].id);
 				}
 				if (menu.getItems().length == 0) {
@@ -39,6 +34,14 @@ function exam_center_IS(container, all_is, linked_is) {
 		};
 		
 		this.refresh();
+	};
+	
+	this.linkIS = function(is_id) {
+		this.linked_ids.push(is_id);
+		this._addISRow(is_id);
+		this._loadApplicants(is_id);
+		getWindowFromElement(this._table).pnapplication.dataUnsaved("ExamCenterInformationSession");
+		layout.invalidate(this._table);
 	};
 	
 	this.refresh = function() {
