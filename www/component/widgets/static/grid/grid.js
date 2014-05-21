@@ -193,7 +193,11 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this._refresh_title = function() {
 		var url = get_script_path("grid.js");
 		var t=this;
-		this.th.innerHTML = title;
+		this.th.removeAllChildren();
+		if (title instanceof Element)
+			this.th.appendChild(title);
+		else
+			this.th.innerHTML = title;
 		if (this.sort_order) {
 			var img;
 			switch (this.sort_order) {
@@ -344,7 +348,7 @@ function grid(element) {
 	t._addFinalColumn = function(col, level, index) {
 		if (typeof index != 'undefined') {
 			if (index < 0) index = undefined;
-			else if (index >= t.columns.length - 1) index = undefined;
+			else if (index >= t.columns.length) index = undefined;
 		}
 		col.grid = this;
 		if (typeof index == 'undefined') {
@@ -361,7 +365,7 @@ function grid(element) {
 				if (th.col instanceof GridColumnContainer) index -= th.col.getNbFinalColumns();
 				else index--;
 			}
-			if (i >= t.header_rows[level].childNodes.length-1)
+			if (i >= t.header_rows[level].childNodes.length)
 				t.header_rows[level].appendChild(col.th);
 			else
 				t.header_rows[level].insertBefore(col.th, t.header_rows[level].childNodes[i]);
@@ -664,6 +668,11 @@ function grid(element) {
 			if (t.table.childNodes[i] == row) return i;
 		return -1;
 	};
+	t.getRowFromID = function(id) {
+		for (var i = 0; i < t.table.childNodes.length; ++i)
+			if (t.table.childNodes[i].row_id == id) return t.table.childNodes[i];
+		return null;
+	};
 	
 	t.removeRowIndex = function(index) {
 		t.table.removeChild(t.table.childNodes[index]);
@@ -791,7 +800,7 @@ function grid(element) {
 	
 	/* --- internal functions --- */
 	t._createTable = function() {
-		t.form = document.createElement('FORM');
+		t.grid_element = t.form = document.createElement('FORM');
 		var table = document.createElement('TABLE');
 		t.form.appendChild(table);
 		table.style.width = "100%";

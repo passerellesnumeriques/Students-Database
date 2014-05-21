@@ -229,7 +229,7 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 			if (s.event.start.getTime() < now) continue; // do not assign to a session which already started
 			for (var j = 0; j < s._rooms.length; ++j) {
 				var r = s._rooms[j];
-				var slots = r.room.capacity - r.applicants_list.applicants.length;
+				var slots = r.room.capacity - r.applicants_list.getList().length;
 				if (slots > max_slots) {
 					max_slots = slots;
 					max_room = r.room;
@@ -243,7 +243,7 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 	this._assignTo = function(applicant, session, room, already_confirmed_for_past_session) {
 		var s = this._getSessionSection(session.id);
 		var r = s.getRoomSection(room.id);
-		if (r.applicants_list.applicants.length == r.room.capacity)
+		if (r.applicants_list.getList().length == r.room.capacity)
 			return false; // no more seat
 		if (!already_confirmed_for_past_session && session.start.getTime() < new Date().getTime()) {
 			var t=this;
@@ -470,9 +470,6 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 				list.push(this.applicants[i]);
 		var not_assigned_container = document.createElement("DIV");
 		var not_assigned_title = document.createElement("SPAN");
-		var not_assigned_cb = document.createElement("INPUT"); not_assigned_title.appendChild(not_assigned_cb);
-		not_assigned_cb.type = "checkbox";
-		not_assigned_cb.style.marginRight = "3px";
 		var not_assigned_nb = document.createElement("SPAN"); not_assigned_title.appendChild(not_assigned_nb);
 		not_assigned_title.appendChild(document.createTextNode(" applicant(s) without schedule"));
 		this._section_not_assigned = new section(null, not_assigned_title, not_assigned_container, true, false, 'sub', false);
@@ -481,7 +478,20 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 		this._section_not_assigned.element.style.verticalAlign = "top";
 		this._left_div.appendChild(this._section_not_assigned.element);
 		var t=this;
-		this.not_assigned = new ApplicantsList(not_assigned_container, list, not_assigned_nb, not_assigned_cb, function(people_id) {
+		this.not_assigned = new applicant_data_grid(not_assigned_container, function(obj) { return obj; });
+		var listener = function() {
+			not_assigned_nb.innerHTML = t.not_assigned.getList().length;
+			t._section_not_assigned.header.style.background = t.not_assigned.getList().length > 0 ? "#FF8000" : "";
+		};
+		listener();
+		this.not_assigned.object_added.add_listener(listener);
+		this.not_assigned.object_removed.add_listener(listener);
+		this.not_assigned.addDropSupport("applicant", function(people_id) {
+			// check applicant before drop
+			for (var i = 0; i < t.not_assigned.getList().length; ++i)
+				if (t.not_assigned.getList()[i].people.id == people_id) return null; // same target
+			return "move";
+		}, function(people_id) {
 			// applicant dropped
 			var applicant = t.getApplicant(people_id);
 			if (!applicant) return;
@@ -497,14 +507,9 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 			if (!room_section) return;
 			t._unassign(applicant, session_section, room_section);
 		});
-		// make the title red when applicants are there
-		this.not_assigned.__refresh = this.not_assigned._refresh;
-		this.not_assigned._refresh = function() {
-			this.__refresh();
-			t._section_not_assigned.header.style.background = this.applicants.length > 0 ? "#FF8000" : "";
-		};
-		// add remove button for each applicant
-		this.not_assigned.appendApplicantButtons = function(td, applicant) {
+		this.not_assigned.addDragSupport("applicant", function(obj) { return obj.people.id; });
+		this.not_assigned.addPeopleProfileAction();
+		this.not_assigned.addAction(function(container, applicant) {
 			var button = document.createElement("BUTTON");
 			button.className = "flat small";
 			button.title = "Remove this applicant from this exam center";
@@ -513,15 +518,21 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 				confirm_dialog("Are you sure this applicant will not come to this exam center ?", function(yes) {
 					if (yes) t.removeApplicantFromCenter(applicant);
 				});
+				return false;
 			};
-			td.appendChild(button);
-		};
+			container.appendChild(button);
+		});
+		this.not_assigned.makeSelectable();
+		for (var i = 0; i < list.length; ++i)
+			this.not_assigned.addApplicant(list[i]);
+		var not_assigned_header = new ApplicantsListHeader(this.not_assigned);
 		// add assign button
-		this.not_assigned.addSelectionAction("Assign", "action", "Assign selected applicants to a session and room", function(button, app_list) {
+		not_assigned_header.addSelectionAction("Assign", "action", "Assign selected applicants to a session and room", function() {
+			var button = this;
 			require("context_menu.js", function() {
 				var menu = new context_menu();
 				menu.addIconItem(null, "Automatically assign", function() {
-					var applicants = t.not_assigned.getSelectedApplicants();
+					var applicants = t.not_assigned.getSelection();
 					for (var i = 0; i < applicants.length; ++i)
 						if (!t._assignAuto(applicants[i])) {
 							alert("No more available seat in future sessions. Please add a new schedule or a new room.");
@@ -537,7 +548,7 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 						// add the room as a possible assignment
 						var text = "Session on "+getDateString(t.sessions[i].start)+" at "+getTimeString(t.sessions[i].start)+" in room "+t.rooms[j].name;
 						menu.addIconItem(null, text, function(o) {
-							var applicants = t.not_assigned.getSelectedApplicants();
+							var applicants = t.not_assigned.getSelection();
 							var doit = function() {
 								for (var i = 0; i < applicants.length; ++i)
 									if (!t._assignTo(applicants[i], o.session, o.room, true)) {
@@ -559,10 +570,10 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 			});
 		});
 		// add remove button
-		this.not_assigned.addSelectionAction("<img src='/static/selection/common_centers/remove_applicant_from_center.png'/> Remove", "action important", "Remove selected applicants from this exam center", function(button, app_list) {
+		not_assigned_header.addSelectionAction("<img src='/static/selection/common_centers/remove_applicant_from_center.png'/> Remove", "action important", "Remove selected applicants from this exam center", function() {
 			confirm_dialog("Are you sure those applicants will not come to this exam center ?", function(yes) {
 				if (yes) {
-					var applicants = t.not_assigned.getSelectedApplicants();
+					var applicants = t.not_assigned.getSelection();
 					for (var i = 0; i < applicants.length; ++i)
 						t.removeApplicantFromCenter(applicants[i]);
 				}
@@ -588,10 +599,11 @@ function ExamSessionSection(container, event, sessions) {
 			if (this._rooms[i].room.id == room.id) {
 				this._rooms[i].room_section.element.parentNode.removeChild(this._rooms[i].room_section.element);
 				// unassign applicants
-				for (var j = 0; j < this._rooms[i].applicants_list.applicants.length; ++j) {
-					this._rooms[i].applicants_list.applicants[i].exam_session_id = null;
-					this._rooms[i].applicants_list.applicants[i].exam_room_id = null;
-					sessions.not_assigned.addApplicant(this._rooms[i].applicants_list.applicants[j]);
+				var list = this._rooms[i].applicants_list.getList();
+				for (var j = 0; j < list.length; ++j) {
+					list[j].exam_session_id = null;
+					list[j].exam_room_id = null;
+					sessions.not_assigned.addApplicant(list[j]);
 				}
 				this._rooms.splice(i,1);
 				break;
@@ -601,8 +613,8 @@ function ExamSessionSection(container, event, sessions) {
 	};
 	this.roomCapacityChanged = function(room) {
 		var r = this.getRoomSection(room.id);
-		while (r.applicants_list.applicants.length > room.capacity) {
-			var app = r.applicants_list.applicants[room.capacity];
+		while (r.applicants_list.getList().length > room.capacity) {
+			var app = r.applicants_list.getList()[room.capacity];
 			r.applicants_list.removeApplicant(app);
 			app.exam_session_id = null;
 			app.exan_room_id = null;
@@ -762,13 +774,30 @@ function RoomSection(container, room, session_section) {
 		this.room_section.element.style.verticalAlign = "top";
 		container.appendChild(this.room_section.element);
 		var t=this;
-		this.applicants_list = new ApplicantsList(content, [], room_usage, checkbox, function(people_id) {
+		this.applicants_list = new applicant_data_grid(content, function(obj) { return obj; });
+		var listener = function() {
+			room_usage.innerHTML = t.applicants_list.getList().length;
+		};
+		listener();
+		this.applicants_list.object_added.add_listener(listener);
+		this.applicants_list.object_removed.add_listener(listener);
+		this.applicants_list.addDropSupport()
+
+		this.applicants_list.addDropSupport("applicant", function(people_id) {
+			// check applicant before drop
+			for (var i = 0; i < t.not_assigned.getList().length; ++i)
+				if (t.applicants_list.getList()[i].people.id == people_id) return null; // same target
+			return "move";
+		}, function(people_id) {
 			// applicant dropped
 			t.session_section.sessions._moveApplicant(people_id, t.session_section, t);
 		});
+		this.applicants_list.addDragSupport("applicant", function(obj) { return obj.people.id; });
+		this.applicants_list.addPeopleProfileAction();
+		var list_header = new ApplicantsListHeader(this.applicants_list);
 		// add unassign button for selected ones
-		this.applicants_list.addSelectionAction("Unassign", "action", "Unassign selected applicants from this room and session", function(button,app_list) {
-			var list = app_list.getSelectedApplicants();
+		list_header.addSelectionAction("Unassign", "action", "Unassign selected applicants from this room and session", function() {
+			var list = t.applicants_list.getSelection();
 			var doit = function() {
 				for (var i = 0; i < list.length; ++i)
 					t.session_section.sessions._unassign(list[i], t.session_section, t, null, true);
@@ -782,122 +811,40 @@ function RoomSection(container, room, session_section) {
 				doit();
 		});
 		// add unassign button per applicant
-		this.applicants_list.appendApplicantButtons = function(td, applicant) {
+		this.applicants_list.addAction(function(container, applicant) {
 			var button = document.createElement("BUTTON");
 			button.className = "flat small";
 			button.title = "Unassign this applicant";
 			button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
-			td.appendChild(button);
+			container.appendChild(button);
 			button.onclick = function() {
 				t.session_section.sessions._unassign(applicant, t.session_section, t);
+				return false;
 			};
-		};
+		});
 		layout.invalidate(container);
 	};
 	this._init();
 }
 
-function ApplicantsList(container, applicants, nb_span, global_checkbox, ondrop) {
-	this.applicants = applicants;
-	this._checkboxes = [];
-	
-	this.addApplicant = function(applicant) {
-		this.applicants.push(applicant);
-		global_checkbox.checked = "";
-		this.refresh();
-	};
-	this.removeApplicant = function(applicant) {
-		this.applicants.remove(applicant);
-		global_checkbox.checked = "";
-		this.refresh();
-	};
-	this.getSelectedApplicants = function() {
-		var list = [];
-		for (var i = 0; i < this._checkboxes.length; ++i)
-			if (this._checkboxes[i].checked)
-				list.push(this.applicants[i]);
-		return list;
-	};
+function ApplicantsListHeader(data_grid) {
+	this.header = document.createElement("DIV");
+	data_grid.container.insertBefore(this.header, data_grid.grid.grid_element);
+	this.header.className = "header_bar_menubar_style";
+	this.header.style.padding = "3px 5px 3px 5px";
+	this.header.style.height = "22px";
+	this.nb_selected_span = document.createElement("SPAN");
+	this.nb_selected_span.innerHTML = "0/0";
+	this.header.appendChild(this.nb_selected_span);
+	this.header.appendChild(document.createTextNode(" selected "));
 
-	this._refresh_asked = false;
-	this.refresh = function () {
-		if (this._refresh_asked) return;
-		var t=this;
-		setTimeout(function() { t._refresh(); },1);
-	};
-	this._refresh = function() {
-		this._refresh_asked = false;
-		nb_span.innerHTML = this.applicants.length;
-		this.table.removeAllChildren();
-		this.nb_selected_span.innerHTML = "0/0";
-		this.nb_selected = 0;
-		for (var i = 0; i < this._selection_buttons.length; ++i)
-			this._selection_buttons[i].disabled = 'disabled';
-		this._checkboxes = [];
-		if (this.applicants.length == 0) {
-			this.table.innerHTML = "<tr><td align=center><i>No applicant here</i></td></tr>";
-		} else {
-			for (var i = 0; i < this.applicants.length; ++i)
-				this._createRow(this.applicants[i]);
-		}
-		layout.invalidate(this.table);
-	};
-	this._refreshSelection = function() {
-		this.nb_selected = 0;
-		for (var i = 0; i < this._checkboxes.length; ++i)
-			if (this._checkboxes[i].checked)
-				this.nb_selected++;
-		this.nb_selected_span = this.nb_selected + "/" + this.applicants.length;
-		for (var i = 0; i < this._selection_buttons.length; ++i)
-			this._selection_buttons[i].disabled = this.nb_selected > 0 ? "" : "disabled";
-	};
-	this._createRow = function(app) {
-		var tr, td;
-		this.table.appendChild(tr = document.createElement("TR"));
-		tr.appendChild(td = document.createElement("TD"));
-		var cb = document.createElement("INPUT");
-		cb.type = "checkbox";
-		cb.t = this;
-		this._checkboxes.push(cb);
-		td.appendChild(cb);
-		cb.onchange = function() {
-			if (this.checked && !global_checkbox.checked) global_checkbox.checked = 'checked';
-			else if (!this.checked && global_checkbox.checked) global_checkbox.checked = '';
-			this.t._refreshSelection();
-		};
-		tr.appendChild(td = document.createElement("TD"));
-		var name_container = document.createElement("SPAN");
-		var span = document.createElement("SPAN"); name_container.appendChild(span);
-		span.appendChild(document.createTextNode(app.people.first_name));
-		window.top.datamodel.registerCellSpan(window, "People", "first_name", app.people.id, span);
-		name_container.appendChild(document.createTextNode(" "));
-		span = document.createElement("SPAN"); name_container.appendChild(span);
-		span.appendChild(document.createTextNode(app.people.last_name));
-		window.top.datamodel.registerCellSpan(window, "People", "last_name", app.people.id, span);
-		td.appendChild(name_container);
-		name_container.style.cursor = "default";
-		name_container.draggable = true;
-		name_container.ondragstart = function(event) {
-			event.dataTransfer.setData("applicant",app.people.id);
-			event.dataTransfer.effectAllowed = "move";
-			return true;
-		};
-
-		tr.appendChild(td = document.createElement("TD"));
-		var profile_button = document.createElement("BUTTON");
-		profile_button.className = "flat small";
-		profile_button.innerHTML = "<img src='/static/people/profile_16.png'/>";
-		profile_button.title = "See profile of this applicant";
-		td.appendChild(profile_button);
-		profile_button.people_id = app.people.id;
-		profile_button.onclick = function() {
-			window.top.popup_frame("/static/people/profile_16.png", "Applicant Profile", "/dynamic/people/page/profile?people="+this.people_id, null, 95, 95);
-		};
-		this.appendApplicantButtons(td, app);
-	};
-	this.appendApplicantButtons = function(td, applicant) {};
-	
 	this._selection_buttons = [];
+	this.refresh = function() {
+		var sel = data_grid.getSelection();
+		this.nb_selected_span.innerHTML = sel.length + "/" + data_grid.getList().length;
+		for (var i = 0; i < this._selection_buttons.length; ++i)
+			this._selection_buttons[i].disabled = sel.length > 0 ? "" : "disabled";
+	};
 	this.addSelectionAction = function(html, css, tooltip, onclick) {
 		var button = document.createElement("BUTTON");
 		button.className = css;
@@ -906,67 +853,12 @@ function ApplicantsList(container, applicants, nb_span, global_checkbox, ondrop)
 		this.header.appendChild(button);
 		button.disabled = this.nb_selected > 0 ? "" : "disabled";
 		button.t = this;
-		button.onclick = function() {
-			onclick(this, this.t);
-		};
+		button.onclick = onclick;
 		this._selection_buttons.push(button);
 	};
 	
-	this._init = function () {
-		this.header = document.createElement("DIV");
-		container.appendChild(this.header);
-		this.header.className = "header_bar_menubar_style";
-		this.header.style.padding = "3px 5px 3px 5px";
-		this.header.style.height = "22px";
-		this.nb_selected_span = document.createElement("SPAN");
-		this.nb_selected = 0;
-		this.header.appendChild(this.nb_selected_span);
-		this.header.appendChild(document.createTextNode(" selected "));
-		this.table = document.createElement("TABLE");
-		container.appendChild(this.table);
-		this._refresh();
-		global_checkbox.t = this;
-		global_checkbox.onchange = function() {
-			var val = this.checked ? 'checked' : '';
-			for (var i = 0; i < this.t._checkboxes.length; ++i)
-				this.t._checkboxes[i].checked = val;
-			this.t._refreshSelection();
-		};
-		
-		var t=this;
-		container.ondragover = function(event) {
-			if (event.dataTransfer.types.contains("applicant")) {
-				var people_id = event.dataTransfer.getData("applicant");
-				for (var i = 0; i < t.applicants.length; ++i)
-					if (t.applicants[i].people.id == people_id) return true; // same target
-				container.style.outline = "2px dotted #808080";
-				event.dataTransfer.dropEffect = "move";
-				event.preventDefault();
-				return false;
-			}
-		};
-		container.ondragenter = function(event) {
-			if (event.dataTransfer.types.contains("applicant")) {
-				var people_id = event.dataTransfer.getData("applicant");
-				for (var i = 0; i < t.applicants.length; ++i)
-					if (t.applicants[i].people.id == people_id) return true; // same target
-				container.style.outline = "2px dotted #808080";
-				event.dataTransfer.dropEffect = "move";
-				event.preventDefault();
-				return true;
-			}
-		};
-		container.ondragleave = function(event) {
-			container.style.outline = "";
-		};
-		container.ondrop = function(event) {
-			container.style.outline = "";
-			var people_id = event.dataTransfer.getData("applicant");
-			ondrop(people_id);
-			event.stopPropagation();
-			return false;
-		};
-
-	};
-	this._init();
+	var t=this;
+	data_grid.selection_changed.add_listener(function() { t.refresh(); });
+	data_grid.object_added.add_listener(function() { t.refresh(); });
+	data_grid.object_removed.add_listener(function() { t.refresh(); });
 }
