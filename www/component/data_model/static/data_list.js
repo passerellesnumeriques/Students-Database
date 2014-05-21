@@ -235,10 +235,16 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		var f = {field:field,sub_index:sub_index};
 		t.show_fields.push(f);
 		var col = t._createColumn(f);
-		t.grid.addColumn(col, t._col_actions != null ? t.grid.getColumnIndex(t._col_actions) : t.grid.getNbColumns());
-		if (found == -1)
+		if (found == -1) {
+			// first time we have a sub_index for this field: create the parent column
+			var container = new GridColumnContainer(field.name, [col], field);
+			t.grid.addColumnContainer(container, t._col_actions != null ? t.grid.getColumnIndex(t._col_actions) : t.grid.getNbColumns());
 			t._loadData();
-		else {
+		} else {
+			// we already have the parent field
+			// we need to get its container
+			var container = t.grid.getColumnContainerByAttachedData(field);
+			container.addSubColumn(col);
 			// set data of new column
 			var found_col = t.grid.getColumnByAttachedData(t.show_fields[found]);
 			var found_col_index = t.grid.getColumnIndex(found_col);
@@ -272,8 +278,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	t.hideSubField = function(field, sub_index) {
 		for (var i = 0; i < t.show_fields.length; ++i) {
 			if (t.show_fields[i].field == field && t.show_fields[i].sub_index == sub_index) {
+				var col = t.grid.getColumnByAttachedData(t.show_fields[i]);
+				t.grid.removeColumn(t.grid.getColumnIndex(col));
 				t.show_fields.splice(i,1);
-				t.grid.removeColumn(i);
 				break;
 			}
 		}

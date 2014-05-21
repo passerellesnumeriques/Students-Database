@@ -92,6 +92,17 @@ function context_menu(menu) {
 		t.addItem(div);
 		return div;
 	};
+	t.addHtmlItem = function(html, onclick) {
+		if (typeof html == 'string') {
+			var div = document.createElement("DIV");
+			div.innerHTML = html;
+			html = div;
+		}
+		html.className = "context_menu_item";
+		if (onclick) html.onclick = onclick;
+		t.addItem(html);
+		return html;
+	};
 	/**
 	 * Append a title to the menu
 	 * @param {string} icon url of the icon of the item

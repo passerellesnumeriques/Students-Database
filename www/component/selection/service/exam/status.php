@@ -16,7 +16,7 @@ class service_exam_status extends Service {
 		// number of exam centers
 		$nb_centers = SQLQuery::create()->select("ExamCenter")->count("nb_centers")->executeSingleValue();
 		if ($nb_centers == 0) {
-			echo "<i style='color:red'>No exam center yet</i><br/>";
+			echo "<i class='problem'>No exam center yet</i><br/>";
 		} else {
 			// TODO
 		}
@@ -33,9 +33,9 @@ class service_exam_status extends Service {
 			->field("InformationSession", "id")
 			->executeSingleField();
 		if (count($is_not_linked) == 0) {
-			echo "<div style='color:green'>All (".$total_nb_is.") linked to an exam center</div>";
+			echo "<div class='ok'>All (".$total_nb_is.") linked to an exam center</div>";
 		} else {
-			echo "<div style='color:DarkOrange'>".count($is_not_linked)." not linked to an exam center</div>";
+			echo "<div class='need_action'>".count($is_not_linked)." not linked to an exam center</div>";
 		}
 		echo "</div>";
 		
@@ -47,7 +47,20 @@ class service_exam_status extends Service {
 		$nb_applicants_ok = SQLQuery::create()->select("Applicant")->whereNotNull("Applicant","exam_center")->whereNotNull("Applicant", "exam_session")->count("nb")->executeSingleValue();
 		$total_applicants = $nb_applicants_ok + $nb_applicants_no_schedule + $nb_applicants_no_exam_center;
 		echo $total_applicants." applicant(s)<ul style='padding-left:20px'>";
-		// TODO
+		echo "<li>";
+		if ($nb_applicants_no_exam_center == 0)
+			echo "<span class='ok'>All are assigned to an exam center</span>";
+		else 
+			echo "<span class='problem'>".$nb_applicants_no_exam_center." not assigned to an exam center";
+		echo "</li>";
+		if ($nb_applicants_no_schedule > 0 || $total_applicants > $nb_applicants_no_exam_center) {
+			echo "<li>";
+			if ($nb_applicants_no_schedule == 0)
+				echo "<span class='ok'>All ".($nb_applicants_no_exam_center > 0 ? "assigned ": "")."have a schedule</span>";
+			else
+				echo "<span class='problem'>".$nb_applicants_no_schedule." don't have a schedule</span>";
+		}
+		echo "</li>";
 		echo "</ul>";
 		echo "</div>";
 	}

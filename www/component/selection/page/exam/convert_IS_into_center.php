@@ -118,16 +118,17 @@ class page_exam_convert_IS_into_center extends SelectionPage {
 		//Lock the IS and the EC tables, if not already the case
 		require_once("component/data_model/DataBaseLock.inc");
 		$sm = PNApplication::$instance->selection->getCampaignId();
+		$locked_by = null; // TODO
 		if(!isset($lock_exam_center))
-			$lock_exam_center = $this->performRequiredLocks("ExamCenter",null,null,$sm);//Make sure the EC list is up to date
+			$lock_exam_center = $this->performRequiredLocks("ExamCenter",null,null,$sm,$locked_by);//Make sure the EC list is up to date
 		else //script is handled by the page#performRequiredLocks method
 			DataBaseLock::generateScript($lock_exam_center);
 		if(!isset($lock_information_session))
-			$lock_information_session = $this->performRequiredLocks("InformationSession",null,null,$sm);//Make sure the IS list is up to date
+			$lock_information_session = $this->performRequiredLocks("InformationSession",null,null,$sm,$locked_by);//Make sure the IS list is up to date
 		else
 			DataBaseLock::generateScript($lock_information_session);
 		if(!isset($lock_ECIS))
-			$lock_ECIS = $this->performRequiredLocks("ExamCenterInformationSession",null,null,$sm);//This lock is the one used to save the data
+			$lock_ECIS = $this->performRequiredLocks("ExamCenterInformationSession",null,null,$sm,$locked_by);//This lock is the one used to save the data
 		else
 			DataBaseLock::generateScript($lock_ECIS);
 		

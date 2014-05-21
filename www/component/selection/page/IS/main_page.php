@@ -17,7 +17,7 @@ class page_IS_main_page extends SelectionPage {
 		<div id='horizontal_split'>
 			<div style="padding:5px;padding-right:0px;display:inline-block">
 				<div id='status_section' title='Status' collapsable='false' css='soft' style='display:inline-block;'>
-					<div id='is_status' style='padding:10px'></div>
+					<div id='is_status' style='padding:10px' class='selection_status'></div>
 				</div>
 			</div>
 			<div style="padding: 5px;display:inline-block" layout='fill'>

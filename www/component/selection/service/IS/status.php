@@ -45,15 +45,15 @@ class service_IS_status extends Service {
 
 		if ($nb_sessions == 0) {
 			// nothing started yet
-			echo "<center><i>No Information Session Yet</i></center>";
+			echo "<center><i class='problem'>No Information Session Yet</i></center>";
 			return;
 		}
 		echo $nb_sessions." session".($nb_sessions>1?"s":"");
 		if ($nb_sessions == $sessions_done["nb_sessions"]) {
 			// all sessions are done
-			echo ": <span color='green'>All done</span><br/>";
+			echo ": <span class='ok'>All done</span><br/>";
 		} else {
-			echo "<ul style='padding-left:20px'>";
+			echo "<ul>";
 				echo "<li>";
 					echo ($sessions_done["nb_sessions"])." done";
 				echo "</li>";
@@ -62,7 +62,7 @@ class service_IS_status extends Service {
 				echo "</li>";
 				if ($sessions_no_date["nb_sessions"] > 0) {
 					echo "<li>";
-						echo "<span style='color:DarkOrange'>";
+						echo "<span class='problem'>";
 						echo ($sessions_no_date["nb_sessions"])." without date yet";
 						echo "</span>";
 					echo "</li>";
@@ -102,7 +102,7 @@ class service_IS_status extends Service {
 				echo " = ".floor($total_real*100/$total_expected)."% of expectation";
 			echo "<br/>";
 		} else {
-			echo "<ul style='padding-left:20px'>";
+			echo "<ul>";
 				echo "<li>";
 					echo $total_real." attendees so far";
 					if ($separate)
@@ -153,13 +153,13 @@ class service_IS_status extends Service {
 		if ($total_real > 0)
 			echo " (".floor($total_applicants*100/$total_real)."% of attendance)";
 		if ($total_applicants > 0) {
-			echo "<ul style='padding-left:20px'>";
+			echo "<ul>";
 			echo "<li>".$applicants_F." girl".($applicants_F > 1 ?"s":"")." (".floor($applicants_F*100/$total_applicants)."%)</li>";
 			echo "<li>".$applicants_M." boy".($applicants_M > 1 ?"s":"")." (".floor($applicants_M*100/$total_applicants)."%)</li>";
 			echo "</ul>";
 		} else echo "<br/>";
 		if ($applicants_no_IS > 0) {
-			echo "<a style='color:DarkOrange' href='#' onclick=\"window.top.popup_frame(null,'Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{value:'NULL'}}]},95,95);return false;\">";
+			echo "<a class='need_action' href='#' onclick=\"window.top.popup_frame(null,'Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{value:'NULL'}}]},95,95);return false;\">";
 			echo $applicants_no_IS." applicant".(count($applicants_no_IS) > 1 ? "s":"")." not attched to an Information Session";
 			echo "</a><br/>\n";
 		}
@@ -170,7 +170,7 @@ class service_IS_status extends Service {
 	private function createWarningLink($sessions, $message) {
 		if (count($sessions) == 0) return;
 		$fct = "fct".$this->id_counter++;
-		echo "<a style='color:DarkOrange' href='#' onclick='$fct(this);return false;'>";
+		echo "<a class='need_action' href='#' onclick='$fct(this);return false;'>";
 		echo count($sessions)." session".(count($sessions) > 1 ? "s":"")." ".$message;
 		echo "</a><br/>\n";
 		echo "<script type='text/javascript'>\n";

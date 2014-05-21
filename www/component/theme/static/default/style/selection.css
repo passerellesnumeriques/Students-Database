@@ -6,3 +6,16 @@ table.selection_partners_table td.partner_name {
 table.selection_partners_table td.partner_contacts .designation {
 	font-color: #606060;
 }
+
+.selection_status ul {
+	padding-left: 20px;
+}
+.selection_status .ok {
+	color: green;
+}
+.selection_status .problem {
+	color: red;
+}
+.selection_status .need_action {
+	color: DarkOrange;
+}

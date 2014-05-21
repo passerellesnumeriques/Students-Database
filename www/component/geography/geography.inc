@@ -169,5 +169,9 @@ class geography extends Component {
 	public function getArea($id) {
 		return SQLQuery::create()->select("GeographicArea")->whereValue("GeographicArea","id",$id)->executeSingleRow();
 	}
+	
+	public function getAllAreas($country_id, $division_id) {
+		return SQLQuery::create()->select("GeographicArea")->whereValue("GeographicArea", "country_division", $division_id)->execute();
+	}
 }
 ?>

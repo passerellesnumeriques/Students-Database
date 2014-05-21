@@ -108,6 +108,9 @@ class service_exam_save_center extends Service {
 			// remove current links
 			if (!$is_new)
 				SQLQuery::create()->removeLinkedData("ExamCenterInformationSession", "ExamCenter", $center_id);
+			// for linked is, make sure it is not actually linked to another center
+			foreach ($input["linked_is"] as $is_id)
+				SQLQuery::create()->removeLinkedData("ExamCenterInformationSession", "InformationSession", $is_id);
 			// add links
 			$list = array();
 			foreach ($input["linked_is"] as $is_id)

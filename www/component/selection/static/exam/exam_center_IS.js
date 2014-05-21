@@ -81,6 +81,7 @@ function exam_center_IS(container, all_is, linked_is) {
 			});
 		};
 		td.appendChild(button);
+
 		button = document.createElement("BUTTON");
 		button.className = "flat";
 		button.innerHTML = "<img src='/static/selection/IS/IS_16.png'/>";
@@ -88,6 +89,15 @@ function exam_center_IS(container, all_is, linked_is) {
 		td.appendChild(button);
 		button.onclick = function() {
 			window.top.popup_frame("/static/selection/IS/IS_16.png","Information Session","/dynamic/selection/page/IS/profile?id="+is_id+"&readonly=true",null,95,95);
+		};
+
+		button = document.createElement("BUTTON");
+		button.className = "flat";
+		button.innerHTML = "<img src='"+theme.build_icon("/static/contact/address_16.png", theme.icons_10._import)+"'/>";
+		button.title = "Use the location and hosting partner of this Information Session for this Exam Center";
+		td.appendChild(button);
+		button.onclick = function() {
+			// TODO
 		};
 	};
 	
