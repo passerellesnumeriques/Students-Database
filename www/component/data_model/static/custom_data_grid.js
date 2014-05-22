@@ -74,6 +74,7 @@ custom_data_grid.prototype = {
 		var row = this.grid.addRow(id, row_data);
 		if (this._drag_supports.length > 0) {
 			var t=this;
+			row.draggable = true;
 			row.ondragstart = function(event) {
 				for (var i = 0; i < t._drag_supports.length; ++i)
 					event.dataTransfer.setData(t._drag_supports[i].data_type,t._drag_supports[i].data_getter(obj));

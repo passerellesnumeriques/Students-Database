@@ -3,8 +3,9 @@ if (typeof require != 'undefined') {
 	require(["horizontal_layout.js","event_date_time_duration.js","popup_window.js","calendar_objects.js"]);
 }
 
-function exam_center_sessions(container, rooms, sessions, applicants, linked_is, default_duration, calendar_id) {
+function exam_center_sessions(container, rooms_container, rooms, sessions, applicants, linked_is, default_duration, calendar_id) {
 	if (typeof container == 'string') container = document.getElementById(container);
+	if (typeof rooms_container == 'string') rooms_container = document.getElementById(rooms_container);
 	
 	this.rooms = rooms;
 	this.sessions = sessions;
@@ -303,6 +304,7 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 		this.applicants.remove(applicant);
 		if (applicant.exam_session_id == null) {
 			// not assigned
+			window.pnapplication.dataUnsaved("ExamCenterApplicants");
 			this.not_assigned.removeApplicant(applicant);
 			return;
 		}
@@ -319,7 +321,8 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 	
 	this._init = function() {
 		this._initHeader();
-		this._initRoomsAndSessions();
+		this._initRooms();
+		this._initSessions();
 	};
 	this._initHeader = function() {
 		// header
@@ -343,8 +346,8 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 		button_new_session.t = this;
 		button_new_session.onclick = function() { this.t.newSession(); };
 	};
-	this._initRoomsAndSessions = function() {
-		// split into 2 horizontal elements: (1) the rooms and non-assigned applicants, (2) scheduled sessions
+	this._initSessions = function() {
+		// split into 2 horizontal elements: (1) the non-assigned applicants, (2) scheduled sessions
 		this._horiz_div = document.createElement("DIV");
 		this._horiz_div.style.verticalAlign = "top";
 		this._left_div = document.createElement("DIV");
@@ -362,9 +365,6 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 			new horizontal_layout(t._horiz_div);
 		});
 		
-		// left side - rooms list
-		this._initRooms();
-		this._left_div.appendChild(document.createElement("BR"));
 		// left side - not assigned
 		this._initNotAssignedList();
 		
@@ -375,6 +375,7 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 		// listen to events on linked information sessions
 		var t=this;
 		linked_is.onapplicantsadded.add_listener(function(list) {
+			window.pnapplication.dataUnsaved("ExamCenterApplicants");
 			for (var i = 0; i < list.length; ++i) {
 				var app = list[i];
 				// check we don't have it yet
@@ -391,6 +392,7 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 			t._span_total_applicants.innerHTML = t.applicants.length;
 		});
 		linked_is.onapplicantsremoved.add_listener(function(list) {
+			window.pnapplication.dataUnsaved("ExamCenterApplicants");
 			var assigned_and_done = [];
 			var now = new Date().getTime();
 			for (var i = 0; i < list.length; ++i) {
@@ -452,9 +454,7 @@ function exam_center_sessions(container, rooms, sessions, applicants, linked_is,
 	this._initRooms = function() {
 		this._table_rooms = document.createElement("TABLE");
 		this._section_rooms = new section(null, "Available Rooms", this._table_rooms, false, false, "soft", false);
-		this._section_rooms.element.style.display = "inline-block";
-		this._section_rooms.element.style.margin = "5px";
-		this._left_div.appendChild(this._section_rooms.element);
+		rooms_container.appendChild(this._section_rooms.element);
 		var button_new = document.createElement("BUTTON");
 		button_new.className = "action";
 		button_new.innerHTML = "New Room";
@@ -785,7 +785,7 @@ function RoomSection(container, room, session_section) {
 
 		this.applicants_list.addDropSupport("applicant", function(people_id) {
 			// check applicant before drop
-			for (var i = 0; i < t.not_assigned.getList().length; ++i)
+			for (var i = 0; i < t.applicants_list.getList().length; ++i)
 				if (t.applicants_list.getList()[i].people.id == people_id) return null; // same target
 			return "move";
 		}, function(people_id) {
@@ -822,6 +822,11 @@ function RoomSection(container, room, session_section) {
 				return false;
 			};
 		});
+		for (var i = 0; i < session_section.sessions.applicants.length; ++i) {
+			var applicant = session_section.sessions.applicants[i];
+			if (applicant.exam_session_id == session_section.event.id && applicant.exam_center_room_id == room.id)
+				this.applicants_list.addApplicant(applicant);
+		}
 		layout.invalidate(container);
 	};
 	this._init();
@@ -844,6 +849,7 @@ function ApplicantsListHeader(data_grid) {
 		this.nb_selected_span.innerHTML = sel.length + "/" + data_grid.getList().length;
 		for (var i = 0; i < this._selection_buttons.length; ++i)
 			this._selection_buttons[i].disabled = sel.length > 0 ? "" : "disabled";
+		layout.invalidate(this.header);
 	};
 	this.addSelectionAction = function(html, css, tooltip, onclick) {
 		var button = document.createElement("BUTTON");
@@ -855,6 +861,7 @@ function ApplicantsListHeader(data_grid) {
 		button.t = this;
 		button.onclick = onclick;
 		this._selection_buttons.push(button);
+		layout.invalidate(this.header);
 	};
 	
 	var t=this;

@@ -5,15 +5,16 @@ class page_exam_link_IS_with_exam_center extends Page {
 	
 	public function execute() {
 		$this->requireJavascript("section.js");
+		theme::css($this, "grid.css");
 		
 		require_once("component/selection/SelectionInformationSessionJSON.inc");
 		$q = SQLQuery::create()
 			->select("InformationSession")
-			->join("InformationSession", "Applicant", array("id"=>"information_session"))
-			->groupBy("Applicant", "information_session")
-			->countOneField("Applicant", "people", "nb_applicants")
 			->join("InformationSession", "ExamCenterInformationSession", array("id"=>"information_session"))
 			->field("ExamCenterInformationSession", "exam_center", "linked_exam_center_id")
+			->join("InformationSession", "Applicant", array("id"=>"information_session"))
+			->countOneField("Applicant", "people", "nb_applicants")
+			->groupBy("InformationSession", "id")
 			;
 		SelectionInformationSessionJSON::InformationSessionSQL($q);
 		$is_list = $q->execute();
@@ -23,19 +24,34 @@ class page_exam_link_IS_with_exam_center extends Page {
 			->field("id")
 			->field("name")
 			->execute();
+		$applicants_centers = SQLQuery::create()
+			->select("Applicant")
+			->whereNotNull("Applicant", "exam_center")
+			->whereNotNull("Applicant", "exam_session")
+			->groupBy("Applicant", "exam_center")
+			->field("Applicant", "exam_center")
+			->countOneField("Applicant", "people", "nb_assigned")
+			->execute();
 		?>
-		<div>
+		<div style='vertical-align:top'>
+			<div class='info_header'>
+				<img src='<?php echo theme::$icons_16["help"];?>' style='verticala-lign:bottom'/>
+				Select Information Sessions, then an Exam center, and click on the button to link them together.
+			</div>
 			<div id='section_is' 
-				style='display:inline-block;margin:10px'
+				style='display:inline-block;margin:10px;vertical-align:top'
 				icon='/static/selection/IS/IS_16.png'
 				title='Available Information Sessions'
 			>
-				<table><tbody id='is_table'>
+				<table class='grid'><tbody id='is_table'>
 					<tr><th></th><th>Information Session</th><th>Applicants</th></tr>
 				</tbody></table>
 			</div>
+			<button id='link_button' style='margin-top:50px' class='action' disabled='disabled' onclick='addLink();return false;'>
+				<img src='<?php echo theme::$icons_16["link"];?>'/> Link
+			</button>
 			<div id='section_ec' 
-				style='display:inline-block;margin:10px'
+				style='display:inline-block;margin:10px;vertical-align:top'
 				icon='/static/selection/exam/exam_center_16.png'
 				title='Exam Centers'
 			>
@@ -63,24 +79,114 @@ class page_exam_link_IS_with_exam_center extends Page {
 		var section_is = sectionFromHTML('section_is');
 		var section_ec = sectionFromHTML('section_ec');
 
+		var is_rows = [];
+		var exam_divs = [];
+
+		var added_links = [];
+		var removed_links = [];
+		
+		var selected_is = [];
+		var selected_exam = null;
+		function refreshLinkButton() {
+			var button = document.getElementById("link_button");
+			button.disabled = selected_is.length > 0 && selected_exam != null ? "" : "disabled";
+		};
+
+		function refreshSave() {
+			if (added_links.length == 0 && removed_links.length == 0)
+				window.pnapplication.dataSaved("LinkedISWithExamCenters");
+			else
+				window.pnapplication.dataUnsaved("LinkedISWithExamCenters");
+		}
+
+		function addLink() {
+			var exam_div = null;
+			for (var i = 0; i < exam_divs.length; ++i) {
+				if (exam_divs[i].center.id == selected_exam) exam_div = exam_divs[i];
+				// uncheck radio button
+				exam_divs[i].radio.checked = "";
+			}
+			var tr_list = [];
+			for (var i = 0; i < is_rows.length; ++i) {
+				var tr = is_rows[i];
+				if (selected_is.contains(tr.is.id)) {
+					tr_list.push(tr);
+					// remove the row
+					tr.parentNode.removeChild(tr);
+					is_rows.splice(i,1);
+					i--;
+				}
+			}
+			// add the links
+			for (var i = 0; i < selected_is.length; ++i) {
+				// check it was not a removed link
+				var found = false;
+				for (var j = 0; j < removed_links.length; ++j)
+					if (removed_links[j].is == selected_is[i] && removed_links[i].exam == selected_exam) {
+						found = true;
+						removed_links.splice(j,1);
+						break;
+					}
+				if (!found)
+					added_links.push({is:selected_is[i],exam:selected_exam});
+				exam_div.addIS(getIS(selected_is[i]));
+			}
+			refreshSave();
+			// unselect all and disable link button
+			selected_is = [];
+			selected_exam = null;
+			refreshLinkButton();
+			layout.invalidate(document.body);
+		}
+		function removeLink(is_id, center_id) {
+			// check if it was an added link
+			var found = false;
+			for (var i = 0; i < added_links.length; ++i) {
+				if (added_links[i].is == is_id && added_links[i].exam == center_id) {
+					found = true;
+					added_links.splice(i,1);
+					break;
+				}
+			}
+			if (!found)
+				removed_links.push({is:is_id,exam:center_id});
+			// add the row
+			createISRow(getIS(is_id));
+			refreshSave();
+		}
+
 		function createISRow(is) {
 			var table = document.getElementById('is_table');
 			var tr,td;
 			table.appendChild(tr = document.createElement("TR"));
 			tr.appendChild(td = document.createElement("TD"));
 			var cb = document.createElement("INPUT"); cb.type = 'checkbox';
+			cb.onchange = function() {
+				if (this.checked) selected_is.push(is.id);
+				else selected_is.remove(is.id);
+				refreshLinkButton();
+			};
 			td.appendChild(cb);
 			tr.appendChild(td = document.createElement("TD"));
 			td.appendChild(document.createTextNode(is.name));
 			tr.appendChild(td = document.createElement("TD"));
 			td.appendChild(document.createTextNode(is.nb_applicants));
 			td.style.textAlign = 'center';
+			tr.is = is;
+			is_rows.push(tr);
+			layout.invalidate(table);
 		}
 
 		function getLinkedIS(center_id) {
 			var list = [];
 			for (var i = 0; i < is_list.length; ++i) if (is_list[i].linked_exam_center_id == center_id) list.push(is_list[i]);
 			return list;
+		}
+		function getIS(id) {
+			for (var i = 0; i < is_list.length; ++i) 
+				if (is_list[i].id == id)
+					return is_list[i];
+			return;
 		}
 
 		function addCenter(center) {
@@ -89,15 +195,36 @@ class page_exam_link_IS_with_exam_center extends Page {
 			var radio = document.createElement("INPUT");
 			radio.type = 'radio';
 			radio.name = 'exam_center';
+			radio.onchange = function() {
+				if (this.checked) selected_exam = center.id;
+				refreshLinkButton();
+			};
 			div.appendChild(radio);
 			div.appendChild(document.createTextNode(center.name));
-			var is = getLinkedIS(center.id);
-			for (var i = 0; i < is.length; ++i) {
+			div.addIS = function(is) {
 				var is_div = document.createElement("DIV");
 				is_div.style.marginLeft = "20px";
-				is_div.appendChild(document.createTextNode(" - "+is[i].name));
-				div.appendChild(is_div);
-			}
+				is_div.appendChild(document.createTextNode(" - "+is.name+" "));
+				var button = document.createElement("BUTTON");
+				button.className = "flat small";
+				button.innerHTML = "<img src='"+theme.icons_16.unlink+"'/>";
+				button.is = is.id;
+				button.exam = center.id;
+				button.onclick = function() {
+					div.removeChild(is_div);
+					removeLink(this.is, this.exam);
+					layout.invalidate(div);
+				};
+				is_div.appendChild(button);
+				this.appendChild(is_div);
+				layout.invalidate(div);
+			};
+			var is = getLinkedIS(center.id);
+			for (var i = 0; i < is.length; ++i)
+				div.addIS(is[i]);
+			div.radio = radio;
+			div.center = center;
+			exam_divs.push(div);
 		}
 		
 		for (var i = 0; i < is_list.length; ++i)
@@ -106,6 +233,12 @@ class page_exam_link_IS_with_exam_center extends Page {
 
 		for (var i = 0; i < centers.length; ++i)
 			addCenter(centers[i]);
+
+		var popup = window.parent.get_popup_window_from_frame(window);
+		popup.addFrameSaveButton(function() {
+			// TODO
+		});
+		popup.addCloseButton();
 		</script>
 		<?php 
 	}

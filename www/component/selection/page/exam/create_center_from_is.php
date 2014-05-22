@@ -22,12 +22,12 @@ class page_exam_create_center_from_is extends Page {
 			// not yet linked to an exam center
 			->join("InformationSession", "ExamCenterInformationSession", array("id"=>"information_session"))
 			->whereNull("ExamCenterInformationSession", "exam_center")
-			// attach number of applicants
-			->join("InformationSession", "Applicant", array("id"=>"information_session"))
-			->groupBy("Applicant", "information_session")
-			->countOneField("Applicant", "people", "nb_applicants")
 			// attach hosting partner
 			->join("InformationSession", "InformationSessionPartner", array("id"=>"information_session"), null, array("host"=>true))
+			// attach number of applicants
+			->join("InformationSession", "Applicant", array("id"=>"information_session"))
+			->countOneField("Applicant", "people", "nb_applicants")
+			->groupBy("InformationSession", "id")
 			;
 		PNApplication::$instance->contact->joinOrganization($q, "InformationSessionPartner", "organization");
 		PNApplication::$instance->contact->joinPostalAddress($q, "InformationSessionPartner", "host_address");
@@ -139,7 +139,9 @@ class page_exam_create_center_from_is extends Page {
 				var cb = document.getElementById('cb_is_'+all_is_ids[i]);
 				if (cb.checked) linked.push(all_is_ids[i]);
 			}
-			postData("/dynamic/selection/page/exam/center_profile", {host_is:host_id,others_is:linked});
+			var popup = window.parent.get_popup_window_from_frame(window);
+			popup.showPercent(95,95);
+			postData("/dynamic/selection/page/exam/center_profile"<?php if (isset($_GET["onsaved"])) echo "+'?onsaved=".$_GET["onsaved"]."'";?>, {host_is:host_id,others_is:linked});
 		}
 		</script>
 		<?php 

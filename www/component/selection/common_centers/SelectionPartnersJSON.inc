@@ -41,6 +41,40 @@ class SelectionPartnersJSON {
 		}
 		return self::PartnersJSON($partners, $contacts, $addresses, $contact_points, $selected_contact_points);
 	}
+
+	public static function HostingPartnerFromCenterID($center_type, $id) {
+		switch ($center_type) {
+			case "InformationSession": $join_key = "information_session"; break;
+			case "ExamCenter": $join_key = "exam_center"; break;
+			case "InterviewCenter": $join_key = "interview_center"; break;
+		}
+		// get hosting partner
+		$q = SQLQuery::create()
+			->select($center_type."Partner")
+			->whereValue($center_type."Partner", $join_key, $id)
+			->whereValue($center_type."Partner", "host", 1)
+			->field($center_type."Partner", $join_key, "partner_center_id")
+			->field($center_type."Partner", "organization", "organization")
+			->field($center_type."Partner", "host", "host")
+			->field($center_type."Partner", "host_address", "host_address")
+			;
+		// join organization information
+		PNApplication::$instance->contact->joinOrganization($q, $center_type."Partner", "organization");
+		$host = $q->executeSingleRow();
+		if ($host == null) return "null";
+		// get contacts, addresses, and contact points for all partners
+		$org_id = $host["organization"];
+		$contacts = PNApplication::$instance->contact->getOrganizationsContacts(array($org_id));
+		$addresses = PNApplication::$instance->contact->getOrganizationsAddresses(array($org_id));
+		$contact_points = PNApplication::$instance->contact->getOrganizationsContactPoints(array($org_id));
+		$selected_contact_points = SQLQuery::create()
+			->select($center_type."ContactPoint")
+			->whereValue($center_type."ContactPoint", "organization", $org_id)
+			->whereValue($center_type."ContactPoint", $join_key, $id)
+			->field($center_type."ContactPoint", "people", "contact_point_id")
+			->executeSingleField();
+		return self::PartnerJSON($host, $contacts, $addresses, $contact_points, $selected_contact_points);
+	}
 	
 	public static function PartnersJSON($partners, $contacts, $addresses, $contact_points, $selected_contact_points) {
 		$s = "[";

@@ -31,23 +31,31 @@ function location_and_partners(popup, section_location, section_other_partners, 
 				break;
 			}
 		this.geographic_area_text = null;
-		if (host == null) return; // no host selected
-		for (var i = 0; i < host.organization.addresses.length; ++i)
-			if (host.organization.addresses[i].id == host.host_address_id) {
-				this.geographic_area_text = host.organization.addresses[i].geographic_area;
-				break;
+		if (host != null) {
+			for (var i = 0; i < host.organization.addresses.length; ++i)
+				if (host.organization.addresses[i].id == host.host_address_id) {
+					this.geographic_area_text = host.organization.addresses[i].geographic_area;
+					break;
+				}
+			// check if already present in the partners list
+			var present = false;
+			for (var i = 0; i < this.partners.length; ++i) {
+				if (this.partners[i].organization.id == host.organization.id) {
+					// it is present, update it
+					this.partners[i].host = true;
+					this.partners[i].host_address_id = host.host_address_id;
+					present = true;
+					break;
+				}
 			}
-		// check if already present in the partners list
-		for (var i = 0; i < this.partners.length; ++i) {
-			if (this.partners[i].organization.id == host.organization.id) {
-				// it is present, update it
-				this.partners[i].host = true;
-				this.partners[i].host_address_id = host.host_address_id;
-				return;
-			}
+			// not yet a partner, add it in the list
+			if (!present)
+				this.partners.push(host);
 		}
-		// not yet a partner, add it in the list
-		this.partners.push(host);
+		window.pnapplication.dataUnsaved("SelectionLocationAndPartners");
+		this._refreshAddress();
+		this._refreshHost();
+		this._refreshPartners();
 	};
 	
 	this.dialogSelectLocation = function() {
@@ -70,10 +78,6 @@ function location_and_partners(popup, section_location, section_other_partners, 
 								selected.host.center_id = t.center_id;
 								selected.host.organization = org;
 								t.setHostPartner(selected.host);
-								win.pnapplication.dataUnsaved("SelectionLocationAndPartners");
-								t._refreshAddress();
-								t._refreshHost();
-								t._refreshPartners();
 							});
 							return;
 						}
@@ -83,9 +87,6 @@ function location_and_partners(popup, section_location, section_other_partners, 
 						if (host != null) {
 							// one was previously selected: remove it
 							t.setHostPartner(null);
-							win.pnapplication.dataUnsaved("SelectionLocationAndPartners");
-							t._refreshHost();
-							t._refreshPartners();
 						}
 						if (selected.geographic_area) {
 							// an area is selected

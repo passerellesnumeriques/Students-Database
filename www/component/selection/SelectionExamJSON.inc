@@ -22,8 +22,8 @@ class SelectionExamJSON {
 	public static function ExamCenterRoom($row){
 		$data  = "{id:".$row["exam_room_id"];
 		$data .= ",center_id:".$row["exam_room_center_id"];
-		$data .= ",name:".json_encode($row["name"]);
-		$data .= ",capacity:".$row["capacity"];
+		$data .= ",name:".json_encode($row["exam_room_name"]);
+		$data .= ",capacity:".$row["exam_room_capacity"];
 		$data .= "}";
 		return $data;
 	}

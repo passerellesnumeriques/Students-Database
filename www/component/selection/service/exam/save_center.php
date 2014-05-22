@@ -178,7 +178,7 @@ class service_exam_save_center extends Service {
 				// set calendar id
 				$event["calendar"] = $component->getCalendarId();
 				// set the title
-				if (!isset($center["name"])) $center["name"] = SQLQuery::create()->select("ExamCenter")->whereValue("ExamCenter","id",$center_id)->field("name")->executeSingleField();
+				if (!isset($center["name"])) $center["name"] = SQLQuery::create()->select("ExamCenter")->whereValue("ExamCenter","id",$center_id)->field("name")->executeSingleValue();
 				$event["title"] = "Written Exam in ".$center["name"];
 				// set information
 				$event["organizer"] = "Selection";
@@ -249,6 +249,19 @@ class service_exam_save_center extends Service {
 				// change the names
 				$a["exam_session"] = $a["exam_session_id"]; unset($a["exam_session_id"]);
 				$a["exam_center_room"] = $a["exam_center_room_id"]; unset($a["exam_center_room_id"]);
+				// update the ids if needed
+				if ($a["exam_session"] < 0)
+					foreach ($output["sessions_ids"] as $sid)
+						if ($sid["given_id"] == $a["exam_session"]) {
+							$a["exam_session"] = $sid["new_id"];
+							break;
+						}
+				if ($a["exam_center_room"] < 0)
+					foreach ($output["rooms_ids"] as $sid)
+						if ($sid["given_id"] == $a["exam_center_room"]) {
+							$a["exam_center_room"] = $sid["new_id"];
+							break;
+						}
 				// put the center id
 				$a["exam_center"] = $center_id;
 				// if the applicant was assigned to a past session, and it is now in a future session or without session, we must remove all results of the applicant
@@ -281,7 +294,7 @@ class service_exam_save_center extends Service {
 					array_push($applicants_remove_results, $app["people"]);
 			// remove applicants not anymore on this center
 			if (count($current_applicants) > 0)
-				SQLQuery::create()->updateByKeys("Applicant", array($current_applicants, array("exam_center"=>null,"exam_session"=>null,"exam_center_room"=>null)));
+				SQLQuery::create()->updateByKeys("Applicant", array(array($current_applicants, array("exam_center"=>null,"exam_session"=>null,"exam_center_room"=>null))));
 		}
 
 		// TODO remove results

@@ -123,7 +123,11 @@ $sm->addTable("ExamCenterPartner")
 	->addReadAccess("see_exam_center_detail",true)
 	->addInsertAccess("manage_exam_center",true)
 	->addRemoveAccess("manage_exam_center",true);
-		
+$model->internalGetTable("Organization")
+	->addReadAccessFromForeignTable("ExamCenterPartner");
+$model->internalGetTable("PostalAddress")
+	->addReadAccessFromForeignTable("ExamCenterPartner");
+
 $sm->addTable("ExamCenterContactPoint")
 	->addForeignKey("exam_center","ExamCenter",true,false,true,false)
 	->addForeignKey("organization","Organization",true,false,true,false)

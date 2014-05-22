@@ -127,10 +127,9 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 	container.appendChild(t.select_month);
 	container.appendChild(t.select_year);
 	if (date_picker_icon) {
-		t.icon = document.createElement("IMG");
-		t.icon.src = theme.icons_16.date_picker;
-		t.icon.style.verticalAlign = "top";
-		t.icon.style.cursor = "pointer";
+		t.icon = document.createElement("BUTTON");
+		t.icon.className = "flat small";
+		t.icon.innerHTML = "<img src='"+theme.icons_16.date_picker+"'/>";
 		t.icon.onclick = function() {
 			require(["date_picker.js","context_menu.js"],function(){
 				var menu = new context_menu();

@@ -41,6 +41,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.resize();
 		}
 	};
+	t.resize_listener = function() { t.resize(); };
 	/** Set (change) the content of the popup window to be an IFRAME.
 	 * @param {String} url url to load in the frame
 	 * @param {Function} onload if specified, it is called when the frame is loaded
@@ -90,8 +91,9 @@ function popup_window(title,icon,content,hide_close_button) {
 				}
 				var b = win.document.body;
 				win.layout.cancelResizeEvent();
-				win.layout.addHandler(b, t.resize);
-				for (var i = 0; i < b.childNodes.length; ++i) getIFrameWindow(t.content).layout.addHandler(b.childNodes[i], t.resize);
+				win.layout.addHandler(b, t.resize_listener);
+				for (var i = 0; i < b.childNodes.length; ++i) 
+					getIFrameWindow(t.content).layout.addHandler(b.childNodes[i], t.resize_listener);
 				if (onload) onload(t.content);
 			};
 			check_ready();
@@ -345,15 +347,19 @@ function popup_window(title,icon,content,hide_close_button) {
 				layout.invalidate(t.content);
 			}
 		};
+		t.content_container.style.width = "100%";
+		if (t.content.nodeName == "IFRAME") {
+			t.content.style.width = "100%";
+			t.content.style.height = "100%";
+			layout.invalidate(t.content);
+		}
 		var win;
 		if (t.table == null)
 			win = t._buildTable();
 		else
 			win = getWindowFromElement(t.table);
 		t.resize();
-		win.listenEvent(win, "resize", function() {
-			t.resize();
-		});
+		win.listenEvent(win, "resize", t.resize_listener);
 	};
 	
 	/** Display the popup window
@@ -478,7 +484,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			postData(t.content._post_url, t.content._post_data, getIFrameWindow(t.content));
 			t.content._post_data = null;
 		}
-		win.layout.addHandler(t.table, t.resize);
+		win.layout.addHandler(t.table, t.resize_listener);
 		return win;
 	};
 	
@@ -556,7 +562,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			var frame_win = getIFrameWindow(t.content);
 			var frame = frame_win.document;
 			if (!frame_win || !frame_win.layout || !frame || !frame.body) {
-				setTimeout(t.resize, 10);
+				setTimeout(t.resize_listener, 10);
 				t.in_resize = false;
 				return;
 			}
@@ -735,7 +741,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			var parent_popup = get_popup_window_from_frame(window);
 			if(parent_popup && parent_popup.table) parent_popup.unfreeze();
 		}
-		getWindowFromDocument(t.table.ownerDocument).layout.removeHandler(t.table, t.resize);
+		getWindowFromDocument(t.table.ownerDocument).layout.removeHandler(t.table, t.resize_listener);
 		var table = t.table;
 		if (t.onclose) t.onclose();
 		t.table = null;

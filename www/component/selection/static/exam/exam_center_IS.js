@@ -44,6 +44,16 @@ function exam_center_IS(container, all_is, linked_is) {
 		layout.invalidate(this._table);
 	};
 	
+	this.setHostFromIS = function(is_id) {
+		var popup = window.parent.get_popup_window_from_frame(window);
+		popup.freeze("Loading Host information from Information Session...");
+		service.json("selection","IS/get_host",{id:is_id},function(res) {
+			popup.unfreeze();
+			if (!res) return;
+			window.center_location.setHostPartner(res);
+		});
+	};
+	
 	this.refresh = function() {
 		this._table.removeAllChildren();
 		for (var i = 0; i < this.linked_ids.length; ++i)
@@ -99,8 +109,9 @@ function exam_center_IS(container, all_is, linked_is) {
 		button.innerHTML = "<img src='"+theme.build_icon("/static/contact/address_16.png", theme.icons_10._import)+"'/>";
 		button.title = "Use the location and hosting partner of this Information Session for this Exam Center";
 		td.appendChild(button);
+		button.t = this;
 		button.onclick = function() {
-			// TODO
+			this.t.setHostFromIS(is_id);
 		};
 	};
 	

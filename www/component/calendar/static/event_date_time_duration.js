@@ -24,7 +24,7 @@ function event_date_time_duration(container, start, duration, minimum_date, maxi
 	
 	this._init = function() {
 		container.appendChild(document.createTextNode("Date: "));
-		this._date = new date_select(container, this.start, minimum_date, maximum_date, !can_be_null);
+		this._date = new date_select(container, this.start, minimum_date, maximum_date, !can_be_null, true);
 		this._date.onchange = function(ds) { t.date = ds.getDate(); };
 		this.date = this._date.getDate();
 		

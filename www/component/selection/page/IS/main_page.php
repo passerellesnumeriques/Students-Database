@@ -12,7 +12,7 @@ class page_IS_main_page extends SelectionPage {
 		$this->onload("sectionFromHTML('status_section');");
 		$this->requireJavascript("horizontal_layout.js");
 		$this->onload("new horizontal_layout('horizontal_split',true);");
-		$this->onload("loadStatus();");
+		$this->onload("loadISStatus();");
 		?>
 		<div id='horizontal_split'>
 			<div style="padding:5px;padding-right:0px;display:inline-block">
@@ -115,14 +115,14 @@ class page_IS_main_page extends SelectionPage {
 			function ISchanged() {
 				refreshPage();
 			}
-			function loadStatus() {
+			function loadISStatus() {
 				var container = document.getElementById('is_status');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
 				service.html("selection","IS/status",null,container);
 			}
 			function refreshPage() {
 				is_list.reloadData();
-				loadStatus();
+				loadISStatus();
 				layout.invalidate(document.body);
 			}
 		</script>

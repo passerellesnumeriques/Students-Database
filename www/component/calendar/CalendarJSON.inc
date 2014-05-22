@@ -60,14 +60,14 @@ class CalendarJSON {
 	 * @return string CalendarEvent JSON object
 	 * @no_name_check
 	 */
-	public static function CalendarEvent($row){
+	public static function CalendarEvent($row, $use_date_object = false){
 		$data = "{";
 		$data .= "id:".$row["id"];
 		$data .= ",calendar_provider_id:'PN'";
 		$data .= ",calendar_id:".$row["calendar"];
 		$data .= ",uid:".json_encode($row["uid"]);
-		$data .= ",start:".$row["start"];
-		$data .= ",end:".$row["end"];
+		$data .= ",start:".($use_date_object ? "new Date(".$row["start"].")" : $row["start"]);
+		$data .= ",end:".($use_date_object ? "new Date(".$row["end"].")" : $row["end"]);
 		$data .= ",all_day:".($row["all_day"] == "1" ? "true" : "false");
 		$data .= ",last_modified:".json_encode($row["last_modified"]);
 		$data .= ",title:".json_encode($row["title"]);
@@ -82,12 +82,12 @@ class CalendarJSON {
 		return $data;
 	}
 	
-	public static function CalendarEvents($rows) {
+	public static function CalendarEvents($rows, $use_date_object = false) {
 		$s = "[";
 		$first = true;
 		foreach ($rows as $row) {
 			if ($first) $first = false; else $s .= ",";
-			$s .= self::CalendarEvent($row);
+			$s .= self::CalendarEvent($row, $use_date_object);
 		}
 		$s .= "]";
 		return $s;

@@ -74,6 +74,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.width = width;
 	this.align = align ? align : "left";
 	this.field_type = field_type;
+	require([["typed_field.js",field_type+".js"]]);
 	this.editable = editable;
 	this.onchanged = onchanged;
 	this.onunchanged = onunchanged;
@@ -158,8 +159,9 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 						cb.checked = 'checked';
 						item.appendChild(cb);
 						checkboxes.push(cb);
-						var input = t.grid._create_field(t.field_type, false, null, null, t.field_args, item, values[i]);
-						input.disabled = 'disabled';
+						t.grid._create_field(t.field_type, false, null, null, t.field_args, item, values[i], function(input) {
+							input.disabled = 'disabled';
+						});
 						item.style.paddingRight = "2px";
 						menu.addItem(item);
 						item.onclick = null;
@@ -250,6 +252,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			this.actions[i].element = img;
 			this.th.appendChild(img);
 		}
+		layout.invalidate(this.th);
 	};
 	this._onsort = function(sort_order) {
 		// cancel sorting of other columns
@@ -377,8 +380,9 @@ function grid(element) {
 			var td = document.createElement("TD");
 			td.col_id = col.id;
 			tr.appendChild(td);
-			td.field = t._create_cell(col, null, td);
+			t._create_cell(col, null, td);
 		}
+		layout.invalidate(this.table);
 	};
 	t._subColumnAdded = function(container, final_col) {
 		// get the top level
@@ -474,6 +478,7 @@ function grid(element) {
 			}
 		}
 		t.apply_filters();
+		layout.invalidate(this.table);
 	};
 	t.rebuildColumn = function(column) {
 		column._refresh_title();
@@ -485,7 +490,7 @@ function grid(element) {
 			if (td.field) {
 				var data = td.field.getCurrentData();
 				td.removeAllChildren();
-				td.field = t._create_cell(column, data, td);
+				t._create_cell(column, data, td);
 				td.style.textAlign = column.align;
 			}
 		}
@@ -514,6 +519,7 @@ function grid(element) {
 			t.header_rows[0].removeChild(t.header_rows[0].childNodes[0]);
 			t.colgroup.removeChild(t.colgroup.childNodes[0]);
 		}
+		layout.invalidate(this.table);
 	};
 	t.selectAll = function() {
 		if (!t.selectable) return;
@@ -649,11 +655,12 @@ function grid(element) {
 			td.data_id = data.data_id;
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
-				td.field = t._create_cell(t.columns[j], data.data, td);
+				t._create_cell(t.columns[j], data.data, td);
 			if (typeof data.css != 'undefined' && data.css)
 				td.className = data.css;
 		}
 		t.table.appendChild(tr);
+		layout.invalidate(this.table);
 		return tr;
 	};
 	
@@ -676,13 +683,16 @@ function grid(element) {
 	
 	t.removeRowIndex = function(index) {
 		t.table.removeChild(t.table.childNodes[index]);
+		layout.invalidate(this.table);
 	};
 	t.removeRow = function(row) {
 		t.table.removeChild(row);
+		layout.invalidate(this.table);
 	};
 	t.removeAllRows = function() {
 		while (t.table.childNodes.length > 0)
 			t.table.removeChild(t.table.childNodes[0]);
+		layout.invalidate(this.table);
 	};
 	
 	t.getCellContent = function(row,col) {
@@ -744,6 +754,7 @@ function grid(element) {
 		t.columns = [];
 		t.setSelectable(!t.selectable);
 		t.setSelectable(!t.selectable);
+		layout.invalidate(this.table);
 	};
 	
 	t.startLoading = function() {
@@ -816,19 +827,20 @@ function grid(element) {
 		t.element.appendChild(t.form);
 		table.className = "grid";
 	};
-	t._create_cell = function(column, data, parent) {
-		return t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data);
+	t._create_cell = function(column, data, parent, ondone) {
+		t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
+			parent.field = field;
+			if (ondone) ondone(field);
+		});
 	},
-	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data) {
-		var f;
-//		if (data == grid_deactivated_cell)
-//			f = new field_blank(document.createElement("DIV"), grid_deactivated_cell);
-//		else
-			f = new window[field_type](data, editable, field_args);
-		if (onchanged) f.ondatachanged.add_listener(onchanged);
-		if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
-		parent.appendChild(f.getHTMLElement());
-		return f;
+	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {
+		require([["typed_field.js",field_type+".js"]], function() {
+			var f = new window[field_type](data, editable, field_args);
+			if (onchanged) f.ondatachanged.add_listener(onchanged);
+			if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
+			parent.appendChild(f.getHTMLElement());
+			ondone(f);
+		});
 	};
 	
 	/* initialization */

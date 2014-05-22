@@ -14,7 +14,7 @@ class page_exam_center_profile extends SelectionPage {
 				->select("ExamCenter")
 				->whereValue("ExamCenter", "id", $id)
 				;
-			PNApplication::$instance->geography->joinGeographicArea($q, "InformationSession", "geographic_area");
+			PNApplication::$instance->geography->joinGeographicArea($q, "ExamCenter", "geographic_area");
 			require_once("component/geography/GeographyJSON.inc");
 			GeographyJSON::GeographicAreaTextSQL($q);
 			$q->fieldsOfTable("ExamCenter");
@@ -50,7 +50,7 @@ class page_exam_center_profile extends SelectionPage {
 		require_once("component/calendar/CalendarJSON.inc");
 		require_once("component/people/PeopleJSON.inc");
 		if ($id <> null) {
-			$q = SQLQuery::create()->select("Applicant")->whereValue("Application","exam_center", $id);
+			$q = SQLQuery::create()->select("Applicant")->whereValue("Applicant","exam_center", $id);
 			SelectionApplicantJSON::ApplicantSQL($q);
 			$applicants = $q->execute();
 			
@@ -114,6 +114,8 @@ class page_exam_center_profile extends SelectionPage {
 					);
 					</script>
 				</div>
+				<div style='display:inline-block;margin-top:10px;vertical-align:top;' id='rooms'>
+				</div>
 				<div style='display:inline-block;margin:10px;vertical-align:top;' id='location_and_partners'>
 				<?php
 				require_once("component/selection/page/common_centers/location_and_partners.inc");
@@ -128,8 +130,9 @@ class page_exam_center_profile extends SelectionPage {
 			<script type='text/javascript'>
 			window.center_sessions = new exam_center_sessions(
 				'exam_sessions_container',
+				'rooms',
 				<?php echo SelectionExamJSON::ExamCenterRooms($rooms);?>,
-				<?php echo CalendarJSON::CalendarEvents($sessions); ?>,
+				<?php echo CalendarJSON::CalendarEvents($sessions, true); ?>,
 				<?php echo SelectionApplicantJSON::ApplicantsJSON($applicants); ?>,
 				window.linked_is,
 				<?php echo intval($this->component->getOneConfigAttributeValue("default_duration_exam_session"))*60;?>,
@@ -256,6 +259,7 @@ class page_exam_center_profile extends SelectionPage {
 			$input = json_decode($_POST["input"], true);
 			if (isset($input["host_is"])) {
 				echo "window.linked_is.linkIS(".$input["host_is"].");\n";
+				echo "window.linked_is.setHostFromIS(".$input["host_is"].");\n";
 			}
 			if (isset($input["others_is"])) {
 				foreach ($input["others_is"] as $is_id)

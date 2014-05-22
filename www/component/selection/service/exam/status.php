@@ -35,7 +35,7 @@ class service_exam_status extends Service {
 		if (count($is_not_linked) == 0) {
 			echo "<div class='ok'>All (".$total_nb_is.") linked to an exam center</div>";
 		} else {
-			echo "<div class='need_action'>".count($is_not_linked)." not linked to an exam center</div>";
+			echo "<a href='#' class='need_action' onclick=\"popup_frame(null,'Link Information Sessions to Exam Centers','/dynamic/selection/page/exam/link_IS_with_exam_center?onsaved=saved',null,null,null,function(frame,pop){frame.saved=loadExamCenterStatus;});return false;\">".count($is_not_linked)." not linked to an exam center</a><br/>";
 		}
 		echo "</div>";
 		

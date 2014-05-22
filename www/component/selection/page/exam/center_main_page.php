@@ -34,7 +34,7 @@ class page_exam_center_main_page extends SelectionPage {
 		$this->onload("new applicants_assignment_to_EC_status('".$applicants_assignement_container_id."');");
 		
 		$this->onload("sectionFromHTML('exam_status_section');");
-		$this->onload("loadStatus();");
+		$this->onload("loadExamCenterStatus();");
 		
 		$can_create = PNApplication::$instance->user_management->has_right("manage_exam_center",true);
 		?>
@@ -95,7 +95,9 @@ class page_exam_center_main_page extends SelectionPage {
 						<?php } ?>
 						list.makeRowsClickable(function(row){
 							var ec_id = list.getTableKeyForRow('ExamCenter',row.row_id);
-							location.href = "/dynamic/selection/page/exam/center_profile?id="+ec_id;
+							window.top.popup_frame('/static/selection/exam/exam_center_16.png','Exam Center','/dynamic/selection/page/exam/center_profile?onsaved=saved&id='+ec_id,null,95,95,function(frame,pop) {
+								frame.saved = refreshPage;
+							});
 						});
 					}
 				);
@@ -110,7 +112,7 @@ class page_exam_center_main_page extends SelectionPage {
 						});
 					});
 					menu.addHtmlItem("<img src='/static/selection/IS/IS_16.png'/> <img src='"+theme.icons_16.right+"'/> <img src='/static/selection/exam/exam_center_16.png'/> Create a center from an Information Session", function() {
-						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "Create Exam Center From Information Session", "/dynamic/selection/page/exam/create_center_from_is?oncreated=saved", null, null, null, function(frame,pop) {
+						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "Create Exam Center From Information Session", "/dynamic/selection/page/exam/create_center_from_is?onsaved=saved", null, null, null, function(frame,pop) {
 							frame.saved = refreshPage;
 						});
 					});
@@ -118,7 +120,7 @@ class page_exam_center_main_page extends SelectionPage {
 				});
 			}
 
-			function loadStatus() {
+			function loadExamCenterStatus() {
 				var container = document.getElementById('exam_status');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
 				service.html("selection","exam/status",null,container);
@@ -126,7 +128,7 @@ class page_exam_center_main_page extends SelectionPage {
 
 			function refreshPage() {
 				dl.reloadData();
-				loadStatus();
+				loadExamCenterStatus();
 			}
 		</script>				
 		<?php 

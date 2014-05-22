@@ -179,7 +179,7 @@ class SQLQuery {
 	public function &select() {
 		$nb = func_num_args();
 		if ($nb > 1) {
-			for ($i = 0; i < $nb; $i++)
+			for ($i = 0; $i < $nb; $i++)
 				$this->selectTable(func_get_arg($i), null);
 		} else {
 			$o = func_get_arg(0);
@@ -1927,7 +1927,7 @@ class SQLQuery {
 	 * @param integer $linked_key the key in the foreign table
 	 */
 	public function removeLinkedData($table, $linked_table, $linked_key) {
-		$q = SQLQuery::create()->selectSubModels($this->sub_models)->select($table,"the_table");
+		$q = SQLQuery::create()->selectSubModels($this->sub_models)->select(array($table=>"the_table"));
 		require_once("component/data_model/Model.inc");
 		$lt = $this->bypass_security ? DataModel::get()->internalGetTable($linked_table) : DataModel::get()->getTable($linked_table);
 		$where = "";
