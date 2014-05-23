@@ -41,6 +41,18 @@ namespace datamodel {
 			echo $this->generateDataTable($page, $path, $this->display->getDataDisplay($from), $fixed_columns, $values, $prefilled_values, $structure_name, $is_new);
 		}
 		
+		/**
+		 * 
+		 * @param Page $page
+		 * @param DataPath $path
+		 * @param \datamodel\DataDisplay[] $list
+		 * @param array $fixed_columns
+		 * @param DataValues $values
+		 * @param array $prefilled_values
+		 * @param string $structure_name
+		 * @param boolean $is_new
+		 * @return string
+		 */
 		protected function generateDataTable(&$page, $path, $list, $fixed_columns, $values, $prefilled_values, $structure_name, $is_new) {
 			$script = "";
 			$html = "<table>";
@@ -85,6 +97,7 @@ namespace datamodel {
 					$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
 				}
 				$html .= "</td>";
+				$html .= $this->endDataRow($data, $value, $is_new, $can_edit);
 				$html .= "</tr>";
 			}
 			if (!$has_something) return "";
@@ -107,6 +120,17 @@ namespace datamodel {
 			$html .= $script;
 			$html .= "</script>\n";
 			return $html;
+		}
+		
+		/** Optionally add some columns/info at the end of the row for a DataDisplay
+		 * @param \datamodel\DataDisplay $data
+		 * @param unknown $value
+		 * @param boolean $is_new
+		 * @param boolean $can_edit
+		 * @return string
+		 */
+		protected function endDataRow($data, $value, $is_new, $can_edit) {
+			return "";
 		}
 	
 		public function createData($paths, $multiple) {

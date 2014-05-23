@@ -19,12 +19,14 @@ class page_applicant_list extends SelectionPage {
 		?>
 		<div style='width:100%;height:100%' id='page_container'>
 			<div id='list_container' layout='fill'></div>
+			<?php if (PNApplication::$instance->user_management->has_right("manage_applicant")) {?>
 			<div class='page_footer'>
 				<span id='nb_selected'>0 applicant selected</span>: 
-				<button id='button_assign_is' disabled='disabled'>Assign to Information Session</button>
-				<button id='button_assign_exam_center' disabled='disabled'>Assign to Exam Center</button>
-				<button id='button_exclude' disabled='disabled'>Exclude from the process</button>
+				<button class='action' id='button_assign_is' disabled='disabled' onclick='assignIS(this);'>Assign to Information Session</button>
+				<button class='action' id='button_assign_exam_center' disabled='disabled' onclick='assignExamCenter(this);'>Assign to Exam Center</button>
+				<button class='action important' id='button_exclude' disabled='disabled' onclick="alert('TODO');">Exclude from the process</button>
 			</div>
+			<?php } ?>
 		</div>
 		<script type='text/javascript'>
 		var dl;
@@ -61,6 +63,7 @@ class page_applicant_list extends SelectionPage {
 					};
 					list.addTitle("/static/selection/applicant/applicants_16.png", <?php if (isset($input["title"])) echo json_encode($input["title"]); else echo "'Applicants'";?>);
 
+					<?php if (PNApplication::$instance->user_management->has_right("manage_applicant")) {?>
 					var create_applicant = document.createElement("BUTTON");
 					create_applicant.className = "flat";
 					create_applicant.innerHTML = "<img src='"+theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add)+"' style='vertical-align:bottom'/> Create Applicant";
@@ -87,12 +90,14 @@ class page_applicant_list extends SelectionPage {
 					};
 					list.addHeader(import_applicants);
 
+					list.grid.setSelectable(true);
+					list.grid.onselect = selectionChanged;
+
+					<?php } ?>
+
 					list.makeRowsClickable(function(row){
 						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id), {sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}}, 95, 95); 
 					});
-
-					list.grid.setSelectable(true);
-					list.grid.onselect = selectionChanged;
 				}
 			);
 		}
@@ -104,6 +109,19 @@ class page_applicant_list extends SelectionPage {
 			document.getElementById('button_assign_is').disabled = indexes.length > 0 ? "" : "disabled";
 			document.getElementById('button_assign_exam_center').disabled = indexes.length > 0 ? "" : "disabled";
 			document.getElementById('button_exclude').disabled = indexes.length > 0 ? "" : "disabled";
+		}
+		function assignIS(button) {
+			require("assign_is.js", function() {
+				var applicants_rows = dl.grid.getSelectionByRowId();
+				var applicants_ids = [];
+				for (var i = 0; i < applicants_rows.length; ++i)
+					applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
+				assign_is(button, applicants_ids, function() {
+					reload_list();
+				});
+			});
+		}
+		function assignExamCenter(button) {
 		}
 		</script>
 		<?php 

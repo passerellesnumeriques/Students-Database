@@ -48,10 +48,7 @@ foreach ($pages as $p) {
 	echo "<div";
 	echo " icon=\"".htmlentities($p->getIcon())."\"";
 	echo " text=\"".htmlentities($p->getName())."\"";
-	echo " link=\"".htmlentities($p->getURL($people_id));
-	if ($sub_models <> null)
-		echo "&sub_models=".json_encode($sub_models);
-	echo "\"";
+	echo " link=\"".$p->getURL($people_id).($sub_models <> null ? "&sub_models=".urlencode(json_encode($sub_models)) : "")."\"";
 	echo " tooltip=\"".htmlentities($p->getTooltip())."\"";
 	echo "></div>";
 }

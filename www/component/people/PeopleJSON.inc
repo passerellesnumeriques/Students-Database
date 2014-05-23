@@ -38,7 +38,7 @@ class PeopleJSON {
 	 * @param SQLQuery $q
 	 * @no_name_check
 	 */
-	public static function PeopleSQL(&$q){
+	public static function PeopleSQL(&$q, $include_picture_info = true){
 		$alias = $q->getTableAlias("People");
 		if($alias == null)
 			$alias = "People";
@@ -52,7 +52,7 @@ class PeopleJSON {
 			->field($alias,"picture","picture_id")
 			->field($alias,"types","people_types");
 		$alias = $q->getTableAlias("Storage");
-		if($alias == null) {
+		if($alias == null && $include_picture_info) {
 			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
 		}
 	}
