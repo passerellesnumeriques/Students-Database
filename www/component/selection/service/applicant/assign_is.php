@@ -29,7 +29,7 @@ class service_applicant_assign_is extends Service {
 			->whereIn("Applicant", "people", $applicants_ids)
 			;
 		$q->join("Applicant", "ExamSession", array("exam_session"=>"event"));
-		PNApplication::$instance->calendar->joinEvent($q, "ExamSession", "event");
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
 		$q->field("Applicant", "people", "people_id");
 		$q->field("Applicant", "information_session", "is_id");
 		$q->field("Applicant", "exam_center", "exam_center_id");

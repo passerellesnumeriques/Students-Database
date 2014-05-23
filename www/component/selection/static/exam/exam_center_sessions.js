@@ -726,9 +726,9 @@ function ExamSessionSection(container, event, sessions) {
 
 		for (var i = 0; i < sessions.applicants.length; ++i) {
 			if (sessions.applicants[i].exam_session_id != event.id) continue;
-			for (var i = 0; i < this._rooms.length; ++i)
-				if (sessions.applicants[i].exam_room_id == this._rooms[i].room.id)
-					this._rooms[i].applicants_list.addApplicant(sessions.applicants[i]);
+			for (var j = 0; j < this._rooms.length; ++j)
+				if (sessions.applicants[i].exam_room_id == this._rooms[j].room.id)
+					this._rooms[j].applicants_list.addApplicant(sessions.applicants[i]);
 		}
 
 		this.refreshNbApplicants();

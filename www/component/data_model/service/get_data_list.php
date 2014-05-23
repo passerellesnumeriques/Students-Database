@@ -135,44 +135,6 @@ class service_get_data_list extends Service {
 			if (!$found) PNApplication::error("Invalid filter: unknown data '".$filter["name"]."' in category '".$filter["category"]."'");
 		}
 		
-		// check if we have actions, then add necessary fields in the SQL request
-		$actions = null;
-// 		if (isset($input["actions"]) && $input["actions"] && !isset($input["export"])) {
-// 			$actions = array();
-// 			$categories = array();
-// 			foreach ($display_data as $data) {
-// 				$cat_name = $data->getCategoryName();
-// 				if (!in_array($cat_name, $categories))
-// 					array_push($categories, $cat_name);
-// 			}
-// 			$model = DataModel::get();
-// 			foreach ($categories as $cat) {
-// 				$links = $model->getDataCategoryLinks($cat);
-// 				if ($links <> null)
-// 					foreach ($links as $link)
-// 					array_push($actions, array($link->link,$link->icon));
-// 			}
-// 			foreach ($actions as &$action) {
-// 				$k = 0;
-// 				$link = $action[0];
-// 				while (($k = strpos($link, "%", $k)) !== false) {
-// 					$kk = strpos($link, "%", $k+1);
-// 					if ($kk === false) break;
-// 					$s = substr($link, $k+1, $kk-$k-1);
-// 					$l = strpos($s, ".");
-// 					$table = substr($s, 0, $l);
-// 					$col = substr($s, $l+1);
-// 					$alias = $q->getFieldAlias($q->getTableAlias($table), $col);
-// 					if ($alias == null) {
-// 						$alias = $q->generateFieldAlias();
-// 						$q->field($q->getTableAlias($table), $col, $alias);
-// 					}
-// 					$k = $kk+1;
-// 					continue;
-// 				}
-// 			}
-// 		}
-		
 		// handle sort
 		if (isset($input["sort_field"]) && isset($input["sort_order"])) {
 			for ($i = 0; $i < count($display_data); $i++) {
@@ -246,33 +208,6 @@ class service_get_data_list extends Service {
 					echo "}";
 				}
 				echo "]";
-				if ($actions !== null) {
-					echo ",actions:[";
-					$first_action = true;
-					foreach ($actions as &$action) {
-						if ($first_action) $first_action = false; else echo ",";
-						$k = 0;
-						$link = $action[0];
-						while ($k < strlen($link) && ($k = strpos($link, "%", $k)) !== false) {
-							$kk = strpos($link, "%", $k+1);
-							if ($kk === false) break;
-							$s = substr($link, $k+1, $kk-$k-1);
-							$l = strpos($s, ".");
-							$table = substr($s, 0, $l);
-							$col = substr($s, $l+1);
-							$alias = $q->getFieldAlias($q->getTableAlias($table), $col);
-							if ($alias == null) {
-								PNApplication::error("Missing field '".$col."' from table '".$table."' (alias '".$q->getTableAlias($table)."') in SQL request ".$q->generate());
-								$k = $kk+1;
-								continue;
-							}
-							$link = substr($link, 0, $k).$row[$alias].substr($link, $kk+1);
-							$k = $k + strlen($row[$alias]);
-						}
-						echo "{link:".json_encode($link).",icon:".json_encode($action[1])."}";
-					}
-					echo "]";
-				}
 				echo "}";
 			}
 			echo "]";

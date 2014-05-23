@@ -59,7 +59,7 @@ class page_exam_center_profile extends SelectionPage {
 			$rooms = $q->execute();
 			
 			$q = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession", "exam_center", $id);
-			PNApplication::$instance->calendar->joinEvent($q, "ExamSession", "event");
+			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
 			CalendarJSON::CalendarEventSQL($q);
 			$sessions = $q->execute(); 
 			

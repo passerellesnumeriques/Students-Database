@@ -15,7 +15,7 @@ class service_IS_status extends Service {
 		
 		// number of sessions done
 		$q = SQLQuery::create()->select("InformationSession");
-		PNApplication::$instance->calendar->joinEvent($q, "InformationSession","date");
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "InformationSession","date");
 		PNApplication::$instance->calendar->whereEventInThePast($q);
 		$q->count("nb_sessions");
 		$q->sum("InformationSession","number_boys_expected", "boys_expected");
@@ -25,7 +25,7 @@ class service_IS_status extends Service {
 		$sessions_done = $q->executeSingleRow();
 		// number of sessions in the future
 		$q = SQLQuery::create()->select("InformationSession");
-		PNApplication::$instance->calendar->joinEvent($q, "InformationSession","date");
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "InformationSession","date");
 		PNApplication::$instance->calendar->whereEventInTheFuture($q, false);
 		$q->count("nb_sessions");
 		$q->sum("InformationSession","number_boys_expected", "boys_expected");
@@ -137,7 +137,7 @@ class service_IS_status extends Service {
 		$this->createWarningLink($missing_expected, "without expected number");
 		// check all sessions done have a number of attendees
 		$q = SQLQuery::create()->select("InformationSession");
-		PNApplication::$instance->calendar->joinEvent($q, "InformationSession","date");
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "InformationSession","date");
 		PNApplication::$instance->calendar->whereEventInThePast($q);
 		$q->where("NOT `number_boys_real` > 0");
 		$q->where("NOT `number_girls_real` > 0");
