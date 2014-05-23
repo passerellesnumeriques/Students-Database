@@ -360,10 +360,10 @@ function grid(element) {
 			t.header_rows[level].appendChild(col.th);
 		} else {
 			t.columns.splice(index,0,col);
-			t.colgroup.insertBefore(col.col, t.colgroup.childNodes[index]);
+			t.colgroup.insertBefore(col.col, t.colgroup.childNodes[t.selectable ? index +1 : index]);
 			// need to calculate the real index
 			var i;
-			for (i = 0; i < t.header_rows[level].childNodes.length && index > 0; ++i) {
+			for (i = level == 0 && t.selectable ? 1 : 0; i < t.header_rows[level].childNodes.length && index > 0; ++i) {
 				var th = t.header_rows[level].childNodes[i];
 				if (th.col instanceof GridColumnContainer) index -= th.col.getNbFinalColumns();
 				else index--;
@@ -379,7 +379,11 @@ function grid(element) {
 			var tr = t.table.childNodes[i];
 			var td = document.createElement("TD");
 			td.col_id = col.id;
-			tr.appendChild(td);
+			var col_index = index + (t.selectable ? 1 : 0);
+			if (col_index >= tr.childNodes.length)
+				tr.appendChild(td);
+			else
+				tr.insertBefore(td, tr.childNodes[col_index]);
 			t._create_cell(col, null, td);
 		}
 		layout.invalidate(this.table);

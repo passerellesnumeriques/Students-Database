@@ -8,8 +8,10 @@ function people_data_grid(container, people_getter) {
 	if (!container) return;
 	this.people_getter = people_getter;
 	this.addColumn(new CustomDataGridColumn(new GridColumn("people.first_name", "First Name", null, null, "field_text"), function(obj) { return people_getter(obj).first_name; }, true));
+	this.addColumn(new CustomDataGridColumn(new GridColumn("people.middle_name", "Middle Name", null, null, "field_text"), function(obj) { return people_getter(obj).middle_name; }, false));
 	this.addColumn(new CustomDataGridColumn(new GridColumn("people.last_name", "Last Name", null, null, "field_text"), function(obj) { return people_getter(obj).last_name; }, true));
 	this.addColumn(new CustomDataGridColumn(new GridColumn("people.sex", "Gender", null, null, "field_enum", false, null, null, {possible_values:['M','F']}), function(obj) { return people_getter(obj).sex; }, false));
+	this.addColumn(new CustomDataGridColumn(new GridColumn("people.birthdate", "Birth Date", null, null, "field_date", false, null, null, null), function(obj) { return people_getter(obj).birthdate; }, false));
 }
 people_data_grid.prototype = new custom_data_grid;
 people_data_grid.prototype.constructor = people_data_grid;
