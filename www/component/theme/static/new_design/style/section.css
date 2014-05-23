@@ -20,6 +20,9 @@
 .section.sub>.header {
     background: linear-gradient(to bottom, #c0c0c0 0%, #a0a0a0 100%);
 }
+.section.soft {
+	border: 1px solid #b0b0ff;
+}
 .section.soft>.header {
     border-bottom: none;
     background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
@@ -43,7 +46,7 @@
 .section>.footer {
 	border-radius: 0px 0px 5px 5px;
 	padding: 2px;
-	background-color: #E0E0E0;
+	background-color: #F0F0F0;
 	border-top: 1px solid #C0C0C0;
 }
 .section>.footer_empty {

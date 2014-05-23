@@ -1,11 +1,11 @@
 <?php 
 class service_add_organization extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Create a new organization"; }
-	public function input_documentation() { echo "Organization object (defined in contact_objects.js)"; }
-	public function output_documentation() { echo "On success, return the id of the newly created organization"; }
+	public function inputDocumentation() { echo "Organization object (defined in contact_objects.js)"; }
+	public function outputDocumentation() { echo "On success, return the id of the newly created organization"; }
 	
 	public function execute(&$component, $input) {
 
@@ -80,7 +80,7 @@ class service_add_organization extends Service {
 				"root"=>"People",
 				"paths"=>$cp["create_people"]
 			);
-			Service::internal_execution("data_model", "create_data", $create_input);
+			Service::internalExecution("data_model", "create_data", $create_input);
 		}
 		
 		echo "{id:".$org_id."}";

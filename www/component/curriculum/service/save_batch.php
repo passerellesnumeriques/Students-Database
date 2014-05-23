@@ -1,10 +1,10 @@
 <?php 
 class service_save_batch extends Service {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function documentation() { echo "Save or create a batch, with periods and specializations"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 <ul>
 	<li><code>id</code>: optional, if not specified this is a new batch, else it must be the batch id</li>
@@ -24,7 +24,7 @@ class service_save_batch extends Service {
 </ul>
 <?php 
 	}
-	public function output_documentation() { 
+	public function outputDocumentation() { 
 		echo "In case of success, <code>id</code>: the batch id, <code>periods_ids</code>: for created periods contains the mapping of ids : [{given_id,new_id}]"; 
 	}
 	
@@ -92,7 +92,7 @@ class service_save_batch extends Service {
 		if (count($list) > 0)
 			SQLQuery::create()->bypassSecurity()->insertMultiple("BatchPeriodSpecialization", $list);
 		
-		if (PNApplication::has_errors())
+		if (PNApplication::hasErrors())
 			SQLQuery::rollbackTransaction();
 		else {
 			SQLQuery::commitTransaction();

@@ -1,7 +1,13 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * Node for a batch
+ * @param {CurriculumTreeNode} parent parent node (either current students or alumni)
+ * @param {Batch} batch batch object
+ */
 function CurriculumTreeNode_Batch(parent, batch) {
 	this.batch = batch;
+	/** Indicates if this batch already graduated or not */
 	this.is_alumni = parseSQLDate(batch.end_date).getTime() < new Date().getTime();
 	CurriculumTreeNode.call(this, parent, "batch"+batch.id, !this.is_alumni);
 	batch.periods.sort(function(p1,p2) {
@@ -39,7 +45,7 @@ CurriculumTreeNode_Batch.prototype.createInfo = function() {
 	button.title = "Edit batch, periods and specializations";
 	button.batch = batch;
 	button.onclick = function() {
-		edit_batch(this.batch);
+		editBatch(this.batch);
 	};
 	div.appendChild(button);
 	button = document.createElement("BUTTON");
@@ -47,7 +53,7 @@ CurriculumTreeNode_Batch.prototype.createInfo = function() {
 	button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
 	button.batch = batch;
 	button.onclick = function() {
-		remove_batch(this.batch);
+		removeBatch(this.batch);
 	};
 	div.appendChild(button);
 	return div;
@@ -56,54 +62,70 @@ CurriculumTreeNode_Batch.prototype.getURLParameters = function() {
 	return {batch:this.batch.id};
 };
 
-function create_new_batch() {
+/** Open a popup to create a new batch */
+function createNewBatch() {
 	require("popup_window.js",function(){
 		var popup = new popup_window("Create New Batch", theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "");
-		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&onsave=new_batch_created");
+		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&onsave=newBatchCreated");
 		popup.show();
 	});
 }
-function new_batch_created(id) {
+/** Callback when a batch has been created
+ * @param {Number} id the ID of the created batch
+ */
+function newBatchCreated(id) {
 	var node = window.curriculum_root.findTag("batch"+id);
 	if (node) {
 		// batch already created, and saved again
-		batch_saved(id);
+		batchSaved(id);
 		return;
 	}
 	service.json("curriculum","get_academic_calendar",{},function(cal) {
 		academic_years = cal;
 		service.json("curriculum","get_batch",{id:id},function(batch){
-			add_batch(batch);
+			addBatch(batch);
 		});
 		if (window.parent.reloadMenu) window.parent.reloadMenu();
 	});
 }
-function add_batch(batch) {
+/** Add the given batch to the tree
+ * @param {Batch} batch the batch to add
+ */
+function addBatch(batch) {
 	var is_alumni = parseSQLDate(batch.end_date).getTime() < new Date().getTime();
 	var parent;
 	if (is_alumni) parent = window.curriculum_root.findTag("alumni");
 	else parent = window.curriculum_root.findTag("current_students");
 	new CurriculumTreeNode_Batch(parent, batch);
 }
-function edit_batch(batch) {
+/** Open a popup to edit the given batch
+ * @param {Batch} batch the batch to edit
+ */
+function editBatch(batch) {
 	require("popup_window.js",function(){
 		var popup = new popup_window("Edit Batch", theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.edit), "");
-		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&id="+batch.id+"&onsave=batch_saved");
+		popup.setContentFrame("/dynamic/curriculum/page/edit_batch?popup=yes&id="+batch.id+"&onsave=batchSaved");
 		popup.show();
 	});
 }
-function batch_saved(id) {
+/** Callback when a batch is edited and saved
+ * @param {Number} id the ID of the batch
+ */
+function batchSaved(id) {
 	service.json("curriculum","get_academic_calendar",{},function(cal) {
 		academic_years = cal;
 		var node = window.curriculum_root.findTag("batch"+id);
 		node.item.parent.removeItem(node.item);
 		service.json("curriculum","get_batch",{id:id},function(batch){
-			add_batch(batch);
+			addBatch(batch);
 		});
 		if (window.parent.reloadMenu) window.parent.reloadMenu();
 	});
 }
-function remove_batch(batch) {
+/** Ask the user to confirm, then remove from database and from the tree
+ * @param {Batch} batch the batch to remove
+ */
+function removeBatch(batch) {
 	window.top.datamodel.confirm_remove("StudentBatch", batch.id, function() {
 		var node = window.curriculum_root.findTag("batch"+batch.id);
 		node.item.parent.removeItem(node.item);

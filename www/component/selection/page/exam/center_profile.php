@@ -1,18 +1,18 @@
 <?php 
 require_once("/../selection_page.inc");
 class page_exam_center_profile extends selection_page {
-	public function get_required_rights() { return array("see_exam_center_detail"); }
+	public function getRequiredRights() { return array("see_exam_center_detail"); }
 	public function execute_selection_page(){
 	/**
 	 * Create a page with two sections: one for the exam center caracteristics, and one for the applicants assignment into this exam center
 	 */
 	$name = $this->generateID();
-	$this->add_javascript("/static/widgets/vertical_layout.js");
-	$this->add_javascript("/static/widgets/section/section.js");
-	$this->onload("var s_detail = section_from_html('center_detail_section');");
+	$this->addJavascript("/static/widgets/vertical_layout.js");
+	$this->addJavascript("/static/widgets/section/section.js");
+	$this->onload("var s_detail = sectionFromHTML('center_detail_section');");
 	$this->onload("s_detail.addToolBottom('<div class = \"button_verysoft\" id = \"save_center_button\"><img src =\"'+theme.icons_16.save+'\"/> <b>Save</b></div>');");
 	$this->onload("s_detail.addToolBottom('<div class = \"button_verysoft\" id = \"remove_center_button\"><img src =\"'+theme.icons_16.remove+'\"/> <b>Remove Exam Center</b></div>');");
-	$this->onload("section_from_html('center_applicants');");
+	$this->onload("sectionFromHTML('center_applicants');");
 	$this->onload("new vertical_layout('exam_center_profile_container');");
 	$this->onload('onupdateroom = new Custom_Event();');
 	$this->onload('onupdateapplicants = new Custom_Event();');
@@ -25,14 +25,14 @@ class page_exam_center_profile extends selection_page {
 	$read_only = @$_GET["readonly"];
 	$hide_back = @$_GET["hideback"];
 	?>
-		<div id = exam_center_profile_container style = "width:100%; height:100%">
+		<div id = "exam_center_profile_container" style = "width:100%; height:100%">
 			<div id = "page_header">
 			<?php if($hide_back != "true"){?>
 				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/exam/center_main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
 			<?php }?>
 			</div>
 			<div style = "overflow:auto" layout = "fill">
-				<div id = "center_detail_section" title='Exam Centers Caracteristics' collapsable='true'style='margin:10px;'>
+				<div id = "center_detail_section" title='Exam Centers Characteristics' collapsable='true'style='margin:10px;'>
 					<div id='exam_center_<?php echo $name; ?>' ></div>
 				</div>
 				<div id = "center_applicants" title='Exam Centers Applicants' collapsable='true' style='margin:10px;'>
@@ -56,7 +56,7 @@ class page_exam_center_profile extends selection_page {
 	 * @param boolean $read_only indicates if the page shall be in read only mode (user rights restricted)
 	 */
 	private function exam_center_caracteristics($container_id,$id,$save_exam_center_button, $remove_exam_center_button,$read_only){
-		$this->add_javascript("/static/widgets/header_bar.js");
+		$this->addJavascript("/static/widgets/header_bar.js");
 		$this->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('', 'Exam Center Profile');");
 		require_once("component/selection/SelectionJSON.inc");
 		$can_read = PNApplication::$instance->user_management->has_right("see_exam_center_detail",true);
@@ -150,7 +150,7 @@ class page_exam_center_profile extends selection_page {
 			->field("ExamCenter","name")
 			->whereValue("ExamCenter", "id", $center_id)
 			->executeSingleValue();
-		$this->add_javascript("/static/selection/exam/center_exam_sessions_planned.js");
+		$this->addJavascript("/static/selection/exam/center_exam_sessions_planned.js");
 		$this->onload("new center_exam_sessions_planned('".$container_id."',".json_encode($center_id).",".json_encode($EC_name).",".json_encode($can_manage_applicants).",onupdateroom,onupdateapplicants);");
 	}
 }

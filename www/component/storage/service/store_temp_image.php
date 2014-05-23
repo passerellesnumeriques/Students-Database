@@ -1,11 +1,11 @@
 <?php 
 class service_store_temp_image extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Receive a file and store it temporarly"; }
-	public function input_documentation() { echo "A file containing an image, and optionnally a maximum size for the image"; }
-	public function output_documentation() { echo "the id of the temporarly stored file"; }
+	public function inputDocumentation() { echo "A file containing an image, and optionnally a maximum size for the image"; }
+	public function outputDocumentation() { echo "the id of the temporarly stored file"; }
 	
 	/**
 	 * @param storage $component

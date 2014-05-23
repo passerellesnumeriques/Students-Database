@@ -1,18 +1,18 @@
 <?php 
 class service_IS_remove extends Service {
 	
-	public function get_required_rights() { return array("manage_information_session"); }
+	public function getRequiredRights() { return array("manage_information_session"); }
 	public function documentation() {
 		echo "Remove an information session from the database";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<ul>
 			<li><code>id</code> {number} the id of the information session to remove</li>
 		</ul>
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		echo "{boolean} false if an error occured, else return true";
 	}
 	

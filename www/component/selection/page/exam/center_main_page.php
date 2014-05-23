@@ -3,15 +3,15 @@ require_once("/../selection_page.inc");
 require_once("component/selection/SelectionJSON.inc");
 class page_exam_center_main_page extends selection_page {
 	
-	public function get_required_rights() {return array("see_exam_center_detail");}
+	public function getRequiredRights() {return array("see_exam_center_detail");}
 	
 	/**
 	 * Create two sections: one containing the exam center caracteristics and the other one the data related to applicant assignment
 	 * @see selection_page::execute_selection_page()
 	 */
 	public function execute_selection_page() {
-		$this->add_javascript("/static/widgets/grid/grid.js");
-		$this->add_javascript("/static/data_model/data_list.js");
+		$this->addJavascript("/static/widgets/grid/grid.js");
+		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
 		$list_container_id = $this->generateID();
 		
@@ -21,31 +21,29 @@ class page_exam_center_main_page extends selection_page {
 		$status_container_id = $this->generateID();
 		$ECIS_status_container_id = $this->generateID();
 		$applicants_assignement_container_id = $this->generateID();
-		
+
 		/* DIM : set the container 'horizontal_split' to layout its children horizontally */
-		$this->require_javascript("horizontal_layout.js");
+		$this->requireJavascript("horizontal_layout.js");
 		$this->onload("new horizontal_layout('horizontal_split',true);");
-		
 		/* DIM : create 3 sections from html code (see below) */
-		$this->require_javascript("section.js");
-		$this->onload("section_from_html('status_section');");
-		$this->onload("section_from_html('status_ECIS_section');");
-		$this->onload("section_from_html('status_applicants_assignment');");
+		$this->requireJavascript("section.js");
+		$this->onload("sectionFromHTML('status_section');");
+		$this->onload("sectionFromHTML('status_ECIS_section');");
+		$this->onload("sectionFromHTML('status_applicants_assignment');");
 		
 		$steps = PNApplication::$instance->selection->getSteps();
 		
 		/* DIM : if an exam center has been created already,
 		display its status */ 
 		if($steps["exam_center"]){			
-			$this->require_javascript("exam_center_status.js");
+			$this->requireJavascript("exam_center_status.js");
 			$this->onload("new exam_center_status('$status_container_id');");
 		}
-		 /* Populate the container with the exam centers and informations sessions statistics */
-		$this->require_javascript("exam_center_and_informations_sessions_status.js");
+		/* Populate the container with the exam centers and informations sessions statistics */
+		$this->requireJavascript("exam_center_and_informations_sessions_status.js");
 		$this->onload("new exam_center_and_informations_sessions_status('".$ECIS_status_container_id."');");
-		
 		/* Populate the container with the main data related to applicants assignment into Exam Center */
-		$this->require_javascript("applicants_assignment_to_EC_status.js");
+		$this->requireJavascript("applicants_assignment_to_EC_status.js");
 		$this->onload("new applicants_assignment_to_EC_status('".$applicants_assignement_container_id."');");
 		
 		?>		<script type='text/javascript'>
@@ -130,9 +128,6 @@ class page_exam_center_main_page extends selection_page {
 							}
 						);
 					}
-					
-					
-					
 				</script>				
 		<?php 
 	}

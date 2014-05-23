@@ -14,6 +14,7 @@ public interface Evaluable {
 	public static class Context {
 		public Global global;
 		public Container container;
+		public boolean need_reevaluation = false;
 	}
 	
 }

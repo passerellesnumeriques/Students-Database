@@ -1,10 +1,10 @@
 <?php 
 class service_get_more extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve more news (older) since last request"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>olders</code>: array of olders news id received last request</li>";
 		echo "<li><code>olders_timestamp</code>: timestamp of the olders, or 0 for first request</li>";
@@ -12,7 +12,7 @@ class service_get_more extends Service {
 		echo "<li><code>nb</code>: number of news to get</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "List of NewsObject"; }
+	public function outputDocumentation() { echo "List of NewsObject"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/news/NewsPlugin.inc");

@@ -36,7 +36,7 @@ theme = {
 	css: function (name) {
 		for (var i = 0; i < this.css_list.length; ++i)
 			if (this.css_list[i].name == name) {
-				add_stylesheet("/static/theme/"+this.css_list[i].path);
+				addStylesheet("/static/theme/"+this.css_list[i].path);
 				break;
 			}
 		if (window.parent && window.parent != window && window.parent.theme)

@@ -1,14 +1,14 @@
 <?php 
 class service_exam_center_and_informations_sessions_status extends Service {
 	
-	public function get_required_rights() { return array("can_access_selection_data"); }
+	public function getRequiredRights() { return array("can_access_selection_data"); }
 	public function documentation() {
 		echo "Get the main figures about the linked informations sessions and exam centers<br/>All the data are retrieved using bypassSecurity";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "No";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<ul>
 			<li><code>linked_EC</code> number of exam centers linked to any information session</li>

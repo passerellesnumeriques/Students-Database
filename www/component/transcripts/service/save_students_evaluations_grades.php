@@ -1,16 +1,16 @@
 <?php 
 class service_save_students_evaluations_grades extends Service {
 	
-	public function get_required_rights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); } // TODO
 	
 	public function documentation() { echo "Save students' grades for a given subject"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>subject_id</code></li>";
 		echo "<li><code>students</code>: list of {<code>people</code>, <code>grades</code>:[{<code>evaluation</code>, <code>grade</code>}]</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "true on success"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		set_time_limit(120);

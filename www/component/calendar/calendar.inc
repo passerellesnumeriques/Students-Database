@@ -84,6 +84,11 @@ class calendar extends Component {
 		}
 	}
 	
+	/**
+	 * Remove the given shared calendar
+	 * @param integer $id identifier of the calendar to remove
+	 * @return boolean true on success
+	 */
 	public function removeSharedCalendar($id) {
 		if (!$this->canWriteCalendar($id)) {
 			PNApplication::error("You cannot remove this calendar");
@@ -226,7 +231,7 @@ class calendar extends Component {
 			$data["app_link"] = @$event["app_link"];
 			$data["app_link_name"] = @$event["app_link_name"];
 			SQLQuery::create()->bypassSecurity()->updateByKey("CalendarEvent", $event["id"], $data);
-			if (PNApplication::has_errors())
+			if (PNApplication::hasErrors())
 				return false;
 			$event["uid"] = $res["uid"];
 		} else {
@@ -246,7 +251,7 @@ class calendar extends Component {
 			$data["app_link_name"] = @$event["app_link_name"];
 			$event["id"] = SQLQuery::create()->bypassSecurity()->insert("CalendarEvent", $data);
 			$event["uid"] = $data["uid"];
-			if (PNApplication::has_errors()) return false;
+			if (PNApplication::hasErrors()) return false;
 		}
 		if (isset($event["frequency"])) {
 			// TODO

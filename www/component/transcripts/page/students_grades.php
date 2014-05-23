@@ -1,7 +1,7 @@
 <?php 
 class page_students_grades extends Page {
 	
-	public function get_required_rights() { return array("consult_students_grades"); }
+	public function getRequiredRights() { return array("consult_students_grades"); }
 	
 	public function execute() {
 		echo "This section is still under construction";
@@ -99,12 +99,12 @@ class page_students_grades extends Page {
 		} else
 			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","people", $students_ids)->execute();
 		
-		$this->add_javascript("/static/curriculum/curriculum_objects.js");
+		$this->addJavascript("/static/curriculum/curriculum_objects.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
 		
-		$this->add_javascript("/static/widgets/header_bar.js");
+		$this->addJavascript("/static/widgets/header_bar.js");
 		$this->onload("new header_bar('grades_page_header', 'toolbar');");
-		$this->add_stylesheet("/static/transcripts/grades.css");
+		$this->addStylesheet("/static/transcripts/grades.css");
 		?>
 		<style type='text/css'>
 		#data_list_container table {

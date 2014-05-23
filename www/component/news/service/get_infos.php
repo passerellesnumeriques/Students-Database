@@ -1,15 +1,15 @@
 <?php 
 class service_get_infos extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve informations about accessible sections' news"; }
-	public function input_documentation() { 
+	public function inputDocumentation() { 
 		echo "<code>sections</code>: list of requested sections {name,categories} with categories the list of requested categories (null/empty for all sections or categories)";
 		echo "<br/>"; 
 		echo "<code>exclude</code>: (optional) list of sections and categories which should be excluded";
 	}
-	public function output_documentation() { echo "<code>sections</code>: list of {name,display_name,icon,can_write,categories:[{name,display_name,icon,can_write}]}"; }
+	public function outputDocumentation() { echo "<code>sections</code>: list of {name,display_name,icon,can_write,categories:[{name,display_name,icon,can_write}]}"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/news/NewsPlugin.inc");

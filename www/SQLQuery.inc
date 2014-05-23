@@ -54,8 +54,11 @@ class SQLQuery {
  	 * @param string $key_table the table of the sub model
  	 * @param number $key the key value identifying the instance of the sub model
  	 */
- 	public static function set_submodel($key_table, $key) {
- 		SQLQuery::$preselected_submodels[$key_table] = $key;
+ 	public static function setSubModel($key_table, $key) {
+ 		if ($key <> null)
+ 			SQLQuery::$preselected_submodels[$key_table] = $key;
+ 		else
+ 			unset(SQLQuery::$preselected_submodels[$key_table]);
  	}
  	
  	/**
@@ -90,8 +93,9 @@ class SQLQuery {
  	public $count = null;
  	/** @var array array(table_name,column_name,alias) for COUNT(`table_name`.`column_name`) AS `alias` where alias is optional */
  	public $count_one_field = null;
- 	/** @var array list of WHERE string expression, which will be joined by AND */
+ 	/** @var array list of SQL expression with alias that will be added to the select, as a result */
  	public $expressions = array();
+ 	/** @var array list of WHERE string expression, which will be joined by AND */
  	public $where = array();
  	/** @var array list of LEFT JOIN with format (table_from,table_to,fields_matching,alias) */
  	public $joins = array();
@@ -142,7 +146,7 @@ class SQLQuery {
 	/**
 	 * Select a set of sub models
 	 * @param array $sub_models associative array of key_table/key
-	 * @return this
+	 * @return SQLQuery this
 	 */
 	public function &selectSubModels($sub_models) {
 		if ($sub_models <> null) foreach ($sub_models as $key_table=>$key) $this->sub_models[$key_table] = $key;
@@ -151,7 +155,7 @@ class SQLQuery {
 	/** Same as selectSubModel except that the table given is directly the Table object instead of the name of the table
 	 * @param datamodel\Table $table_obj the table defining the sub model
 	 * @param number $sub_model the key defining the sub model instance
-	 * @return this
+	 * @return SQLQuery this
 	 */
 	public function &selectSubModelForTable($table_obj, $sub_model) {
 		if ($sub_model == null) return $this;
@@ -268,6 +272,11 @@ class SQLQuery {
 		return $this;
 	}
 	
+	/**
+	 * Select all fields from the given table
+	 * @param string $table name of the table
+	 * @return SQLQuery this
+	 */
 	public function &fieldsOfTable($table) {
 		$t = DataModel::get()->getTable($table);
 		foreach ($t->getColumns($this->sub_models) as $col)
@@ -294,7 +303,7 @@ class SQLQuery {
 	 * @param string $table table name
 	 * @param string $name field name
 	 * @param string $alias alias or null
-	 * @return SQLQuery
+	 * @return SQLQuery this
 	 */
 	public function &countOneField($table, $name, $alias=null){
 		$this->count_one_field = array($table,$name,$alias);
@@ -309,6 +318,11 @@ class SQLQuery {
 		return $this;
 	}
 	
+	/** Add an expression as a selected field
+	 * @param string $expr SQL expression
+	 * @param string $alias alias
+	 * @return SQLQuery this
+	 */
 	public function &expression($expr, $alias) {
 		array_push($this->expressions, array($expr, $alias));
 		return $this;
@@ -401,6 +415,11 @@ class SQLQuery {
 		return $this;
 	}
 	
+	/**
+	 * Resolve a table name into the alias or table name which should be used in a WHERE
+	 * @param string $table the name to resolve
+	 * @return string the resolved name
+	 */
 	private function resolveWhereTable($table) {
 		// search if this is an alias
 		foreach ($this->tables as $tname=>$talias)
@@ -420,6 +439,11 @@ class SQLQuery {
 			return $table;
 		}
 	}
+	/**
+	 * Resolve a name into a table name: if this is an alias, the corresponding table name is returned
+	 * @param string $name the name to resolve
+	 * @return string the resolved name
+	 */
 	private function resolveTableName($name){
 		// check if really table name
 		require_once("component/data_model/Model.inc");
@@ -437,6 +461,12 @@ class SQLQuery {
 		return null;
 	}
 	
+	/** WHERE `table_name`.`field_name`='value'
+	 * @param string $table_name name of table
+	 * @param string $field_name name of column
+	 * @param string $value value
+	 * @return SQLQuery this
+	 */
 	public function &whereValue($table_name, $field_name, $value) {
 		$w = "`".$this->resolveWhereTable($table_name)."`.`".$field_name."`";
 		if ($value === null) $w .= " IS NULL";
@@ -445,17 +475,32 @@ class SQLQuery {
 		return $this;
 	}
 	
+	/** WHERE `table_name`.`field_name` IS NULL
+	 * @param string $table_name name of table
+	 * @param unknown $field_name name of column
+	 * @return SQLQuery this
+	 */
 	public function &whereNull($table_name, $field_name) {
 		$w = "`".$this->resolveWhereTable($table_name)."`.`".$field_name."` IS NULL";
 		array_push($this->where, $w);
 		return $this;
 	}
+	/** WHERE `table_name`.`field_name` IS NOT NULL
+	 * @param string $table_name name of table
+	 * @param unknown $field_name name of column
+	 * @return SQLQuery this
+	 */
 	public function &whereNotNull($table_name, $field_name) {
 		$w = "`".$this->resolveWhereTable($table_name)."`.`".$field_name."` IS NOT NULL";
 		array_push($this->where, $w);
 		return $this;
 	}
 	
+	/** add a WHERE condition for the key of the given table
+	 * @param string $table table name
+	 * @param integer|array $key the key to select
+	 * @return SQLQuery this
+	 */
 	public function &whereKey($table, $key) {
 		if (!($table instanceof \datamodel\Table)) {
 			require_once("component/data_model/Model.inc");
@@ -475,6 +520,7 @@ class SQLQuery {
 	
 	/**
 	 * Returns a string containing the current WHERE clause, and reset it in this SQLQuery (remove it)
+	 * @return string the current WHERE clause
 	 */
 	public function saveWhere() {
 		$where = "";
@@ -489,7 +535,13 @@ class SQLQuery {
 		return $where;
 	}
 	
-	/** if only one table is used, we can use it as ($field,$values), meaning no need to specify the table */
+	/** WHERE `table`.`field` IN (values,...)
+	 * Can be used with only 2 parameters: (field,values) in case the table does not need to be specified (only one table selected)
+	 * @param string $table name of table
+	 * @param string $field name of column
+	 * @param array $values list of values to select
+	 * @return SQLQuery this
+	 */
 	public function &whereIn($table, $field, $values = null) {
 		if ($values === null) {
 			$values = $field;
@@ -508,7 +560,13 @@ class SQLQuery {
 		return $this;
 	}
 	
-	/** if only one table is used, we can use it as ($field,$values), meaning no need to specify the table */
+	/** WHERE `table`.`field` NOT IN (values,...)
+	 * Can be used with only 2 parameters: (field,values) in case the table does not need to be specified (only one table selected)
+	 * @param string $table name of table
+	 * @param string $field name of column
+	 * @param array $values list of values to do not select
+	 * @return SQLQuery this
+	 */
 	public function &whereNotIn($table, $field, $values = null) {
 		if ($values === null) {
 			$values = $field;
@@ -527,6 +585,14 @@ class SQLQuery {
 		return $this;
 	}
 
+	/** Make a LEFT JOIN
+	 * @param string $table_from name of table from which we are
+	 * @param string $table_to name of table to join
+	 * @param string $fields_matching list of fields which should match (ON ...) in the form (field_from=&gt;field_to). Special cases:<ul><li>field_from is null: it means field_to is a list of (field=&gt;value) to select only specific values on the joined table</li><li>field_to is an array containing a single element: this element is a value, to select only specific value on the from table</li></ul>
+	 * @param string|null $alias alias of the joined table, or null for no alias
+	 * @param array|null $join_on_values list of specific values to join (field_to=&gt;value). This is equivalent to put a field_from null in the matching fields.
+	 * @return SQLQuery this
+	 */
 	public function &join($table_from, $table_to, $fields_matching, $alias = null, $join_on_values = null) {
 		$join = array($table_from, $table_to, $fields_matching, $alias);
 		if ($join_on_values <> null) array_push($join, $join_on_values);
@@ -534,6 +600,12 @@ class SQLQuery {
 		$this->checkTableAccess($table_to);
 		return $this;
 	}
+	/** Return the alias of the joined table corresponding to the given join
+	 * @param string $table_from name of table from which we are
+	 * @param string $table_to name of table to join
+	 * @param string $fields_matching list of fields which should match (ON ...)
+	 * @return SQLQuery this
+	 */
 	public function getJoinAlias($table_from, $table_to, $fields_matching) {
 		foreach ($this->joins as $join) {
 			if ($join[0] <> $table_from) continue;
@@ -553,13 +625,23 @@ class SQLQuery {
 		return null;
 	}
 
+	/** LIMIT from,number
+	 * @param integer $from starting index
+	 * @param integer $number maximum number of rows returned
+	 * @return SQLQuery this
+	 */
 	public function &limit($from, $number) {
 		$this->limit_from = $from;
 		$this->limit_number = $number;
 		return $this;
 	}
 
-	/** If only one parameter, it means that only one table is selected, and we will use this table */
+	/** GROUP BY `table`.`field`
+	 * Can be used with only 1 parameter: the field, in case only one table is selected
+	 * @param string $table name of table
+	 * @param string $field name of column
+	 * @return SQLQuery this 
+	 */
 	public function &groupBy($table, $field=null) {
 		if ($field == null) {
 			$field = $table;
@@ -569,7 +651,12 @@ class SQLQuery {
 		return $this;
 	}
 
-	/** Usage: (table,field,asc) or (alias,asc) or (alias) */
+	/** ORDER BY ... Usage: (table,field,asc) or (alias,asc) or (alias)
+	 * @param string $table name of table
+	 * @param string $field name of column
+	 * @param boolean $asc ASC or DESC
+	 * @return SQLQuery this 
+	 */
 	public function &orderBy($table, $field=null, $asc=true) {
 		if ($field === null) {
 			$field = $table;
@@ -583,6 +670,7 @@ class SQLQuery {
 		return $this;
 	}
 	
+	/** When the SELECT is only used for counting rows, this will remove any unecessary joins */
 	public function removeUnusefulJoinsForCounting() {
 		$used_tables = array();
 		foreach ($this->where as $expr) {
@@ -628,6 +716,9 @@ class SQLQuery {
 		}
 	}
 
+	/** Generate the SELECT
+	 * @return string the SELECT query generated
+	 */
 	public function generate() {
 		require_once("component/data_model/Model.inc");
 
@@ -750,7 +841,7 @@ class SQLQuery {
 		}
 		// check if we have remaining fields that do not exist
 		foreach ($fields as $f)
-			PNApplication::error_html("Field '".$f[1]."' on table '".$f[0]."' does not exist in SQL query: ".$this->dump());
+			PNApplication::errorHTML("Field '".$f[1]."' on table '".$f[0]."' does not exist in SQL query: ".$this->dump());
 
 		$this->fields = $final_fields;
 		
@@ -885,6 +976,9 @@ class SQLQuery {
 		return $sql;
 	}
 
+	/** Execute the SELECT, and return all rows as an array
+	 * @return array rows returned from the database
+	 */
 	public function execute() {
 		$sql = $this->generate();
 		$res = SQLQuery::db()->execute($sql);
@@ -898,6 +992,9 @@ class SQLQuery {
 		return $a;
 	}
 
+	/** Execute a SELECT containing a single field(column) to return, and return an array of values from this field
+	 * @return array list of values
+	 */
 	public function executeSingleField() {
 		$a = $this->execute();
 		if ($a === null) return null;
@@ -906,6 +1003,9 @@ class SQLQuery {
 		return $a2;
 	}
 
+	/** Execute a SELECT which should return a single field in a single row, meaning a single value.
+	 * @return mixed the value or null
+	 */
 	public function executeSingleValue() {
 		$a = $this->executeSingleField();
 		if ($a === null) return null;
@@ -913,6 +1013,9 @@ class SQLQuery {
 		return $a[0];
 	}
 
+	/** Execute a SELECT which should return a single row, and return this row
+	 * @return array the row
+	 */
 	public function executeSingleRow() {
 		$sql = $this->generate();
 		$res = SQLQuery::db()->execute($sql);
@@ -924,6 +1027,11 @@ class SQLQuery {
 		return $r;
 	}
 	
+	/** Only to display error messages, return the name of a column, based on DataDisplay
+	 * @param string $table name of the table
+	 * @param string $column name of the column
+	 * @return string name to display in error messages
+	 */
 	private function getColumnName($table, $column) {
 		$display = DataModel::get()->getTableDataDisplay($table->getName());
 		if ($display == null) return $column;
@@ -934,6 +1042,12 @@ class SQLQuery {
 		return $column;
 	}
 
+	/** UPDATE a row based on its key
+	 * @param string $table name of table to update
+	 * @param integer|array $key key identifying the row to update
+	 * @param array $fields_values list of (column=&gt;value) to update
+	 * @param integer|null $lock_id ID of the lock if the table or row is already locked, if null a new lock will be created (if a lock exists, specifying it will improve performance) 
+	 */
 	public function updateByKey($table, $key, $fields_values, $lock_id = null) {
 		$in_transaction = SQLQuery::isTransactionStarted();
 		try {
@@ -1061,10 +1175,10 @@ class SQLQuery {
 		}
 	}
 
-	/**
+	/** UPDATE several rows, based on their key
 	 * @param string $table table name
-	 * @param array $keys_fields_values array of array(array(keys), array(field=>value))
-	 * @param unknown $lock_id
+	 * @param array $keys_fields_values array of array(array(keys), array(field=&gt;value))
+	 * @param integer|null $lock_id ID of the lock if the table is already locked, if null a new lock will be created (if a lock exists, specifying it will improve performance) 
 	 */
 	public function updateByKeys($table, $keys_fields_values, $lock_id = null) {
 		$in_transaction = SQLQuery::isTransactionStarted();
@@ -1261,6 +1375,10 @@ class SQLQuery {
 	}
 
 	/** Update all given keys with the same given values
+	 * @param string $table table name
+	 * @param array $keys list of keys identifying the rows to update
+	 * @param array $fields_values list of (column=&gt;value) specifying the values to update
+	 * @param integer|null $lock_id ID of the lock if the table is already locked, if null a new lock will be created (if a lock exists, specifying it will improve performance) 
 	 */
 	public function updateAllKeys($table, $keys, $fields_values, $lock_id = null) {
 		if (count($keys) == 0) return;
@@ -1398,10 +1516,10 @@ class SQLQuery {
 	
 	/**
 	 * Insert an entry into the given table.
-	 * @param string $table
-	 * @param array $fields_values associated array with column name => value
-	 * @param number|null $lock_id
-	 * @return integer the ID of the inserted data of any
+	 * @param string $table table name
+	 * @param array $fields_values associated array with column name =&gt; value
+	 * @param integer|null $lock_id ID of the lock if the table is already locked, if null a new lock will be created (if a lock exists, specifying it will improve performance) 
+	 * @return integer the ID of the inserted data if any
 	 * @throws Exception in case of error (security or database)
 	 */
 	public function insert($table, $fields_values, $lock_id = null) {
@@ -1500,9 +1618,10 @@ class SQLQuery {
 	
 	/**
 	 * Insert multiple entries into the given table.
-	 * @param string $table
-	 * @param array $rows array of array of column name => value
-	 * @param number|null $lock_id
+	 * @param string $table table name
+	 * @param array $rows array of array of column name =&gt; value
+	 * @param integer|null $lock_id ID of the lock if the table is already locked, if null a new lock will be created (if a lock exists, specifying it will improve performance)
+	 * @return array list of ID of the inserted rows 
 	 * @throws Exception in case of error (security or database)
 	 */
 	public function insertMultiple($table, $rows, $lock_id = null) {
@@ -1627,11 +1746,17 @@ class SQLQuery {
 		return $ids;
 	}
 	
-	/** Remove the data having the given primary key, and all linked data */
+	/** Remove the data having the given key, and all linked data
+	 * @param string $table table name
+	 * @param integer|array $key key identifying the row to remove 
+	 */
 	public function removeKey($table, $key) {
 		$this->removeKeys($table, array($key));		
 	}
-	/** Remove entries corresponding to the given rows */
+	/** Remove entries corresponding to the given rows
+	 * @param string $table table name
+	 * @param array $rows rows previously retrieved by a SELECT, from which we can extract the keys 
+	 */
 	public function removeRows($table, $rows) {
 		require_once("component/data_model/Model.inc");
 		$keys = array();
@@ -1654,7 +1779,10 @@ class SQLQuery {
 		$this->removeKeys($table, $keys);
 	}
 
-	/** Remove data with given primary keys */
+	/** Remove data with given keys
+	 * @param string $table table name
+	 * @param array $keys list of keys identifying the rows to remove 
+	 */
 	public function removeKeys($table, $keys) {
 		$in_transaction = SQLQuery::isTransactionStarted();
 		try {
@@ -1754,12 +1882,14 @@ class SQLQuery {
 		}
 	}
 	
-	/**
-	 * @param datamodel\Table $table
-	 * @param string $sub_model_instance
-	 * @param array $keys
-	 * @param array $locks
-	 * @param array $to_remove
+	/** Go through the datamodel to determine what should be removed and updated when removing rows from a table
+	 * @param datamodel\Table $table the table where rows are going to be removed
+	 * @param string $sub_model_instance sub model or null
+	 * @param array $keys list of keys identifying the rows which are going to be removed
+	 * @param array $locks list of locks created while going through the datamodel
+	 * @param array $to_remove list of entries to remove
+	 * @param array $to_update list of entries to update with NULL value to remove links
+	 * @param array $sub_models_to_remove list of sub models which will be removed
 	 */
 	private function browseTablesForRemove(&$table, $sub_model_instance, $keys, &$locks, &$to_remove, &$to_update, &$sub_models_to_remove) {
 		// remove keys that are already marked as to_remove
@@ -1908,14 +2038,16 @@ class SQLQuery {
 			}
 		}
 	}
-	/**
-	 * @param datamodel\Table $table
-	 * @param string $sub_model_instance
-	 * @param array $keys
-	 * @param datamodel\Table $t
-	 * @param string $sm
-	 * @param array $to_remove
-	 * @param array $to_update
+	/** Go through foreign keys to find linked data to remove
+	 * @param datamodel\Table $table name of table where data is going to be removed
+	 * @param string $sub_model_instance sub model or null
+	 * @param array $keys list of keys identifying the rows which are going to be removed
+	 * @param datamodel\Table $t linked table
+	 * @param string $sm sub model of linked table
+	 * @param array $locks list of created locks
+	 * @param array $to_remove list of data to remove
+	 * @param array $to_update list of data to update
+	 * @param array $sub_models_to_remove list of sub models to remove
 	 */
 	private function checkForeignKeysForRemove(&$table, $sub_model_instance, $keys, &$t, $sm, &$locks, &$to_remove, &$to_update, &$sub_models_to_remove) {
 		$cols = $t->internalGetColumnsFor($sm);
@@ -1982,7 +2114,9 @@ class SQLQuery {
 		}
 	}
 	
-	
+	/** For debug purpose, generate information about the current SELECT: useful when the generate throws an exception
+	 * @return string HTML containing information about the current SELECT request
+	 */
 	public function dump() {
 		$s = "SQL=<ul>";
 		
@@ -2042,9 +2176,21 @@ class SQLQuery {
 	}
 
 	// some useful shortcuts
+	
+	/** Create a SELECT * FROM the given table
+	 * @param string $table table name
+	 * @param string $sub_models sub models or null
+	 * @return array list of rows
+	 */
 	public static function getTable($table, $sub_models = null) {
 		return SQLQuery::create()->selectSubModels($sub_models)->select($table)->execute();
 	}
+	/** Create a SELECT * for a given row
+	 * @param string|\datamodel\Table $table table or table name
+	 * @param integer|array $key key of the row
+	 * @param string $sub_model sub model or null
+	 * @return array the row
+	 */
 	public static function getRow($table, $key, $sub_model = null) {
 		if (!($table instanceof \datamodel\Table)) {
 			require_once("component/data_model/Model.inc");
@@ -2057,6 +2203,12 @@ class SQLQuery {
 			$q->whereValue($table->getName(), $kname, $kval);
 		return $q->executeSingleRow();
 	}
+	/** Create a SELECT * for the given rows
+	 * @param string|\datamodel\Table $table table or table name
+	 * @param integer|array $keys keys of the rows
+	 * @param string $sub_model sub model or null
+	 * @return array the rows
+	 */
 	public static function getRows($table, $keys, $sub_model = null) {
 		if (count($keys) == 0) return array();
 		if (!($table instanceof \datamodel\Table)) {
@@ -2085,36 +2237,26 @@ class SQLQuery {
 		return $q->execute();
 	}
 	
-	/** @var number indicates the number of transaction started (not only boolean, in the event of several transactions are started in parallel */
+	/** @var number indicates the number of transaction started (nested transactions) */
 	private static $transaction_started = 0;
 	/** @var boolean indicates if one of the transaction started asked for a rollback */
 	private static $rollback = false;
 	
-	/**
-	 * Increments the $transaction_started attribute
-	 * In the case of the $transaction_started was equal to 0 before calling this method, the performStartTransaction method is called
-	 */
+	/** start a transaction, or nested transaction */
 	public static function startTransaction() {
 		if(SQLQuery::$transaction_started == 0)
 			self::performStartTransaction();		
 		SQLQuery::$transaction_started++;
 	}
 	
-	/**
-	 * Decrements the $transaction_started attribute
-	 * In the case of the $transaction_started is now equal to 0, the performEndTransaction method is called
-	 */
+	/** Commit the current transaction. In case it is nested, nothing is commited yet, else everything is committed and the transaction closed. */
 	public static function commitTransaction() {
 		SQLQuery::$transaction_started --;
 		if(SQLQuery::$transaction_started == 0)
 			self::performEndTransaction();
 	}
 	
-	/**
-	 * Decrements the $transaction_started attribute
-	 * The $rollback attribute is set as true
-	 * In the case of the $transaction_started is now equal to 0, the performEndTransaction method is called
-	 */
+	/** Cancel and rollback the current transaction. In case of nested transaction, the root transaction will be rollback. */
 	public static function rollbackTransaction() {
 		self::$rollback = true;
 		self::$transaction_started --;
@@ -2122,36 +2264,27 @@ class SQLQuery {
 			self::performEndTransaction();
 	}
 	
-	/**
-	 * Get if the current query are made into a transaction
-	 * @return boolean
+	/** Indicates if a transaction is currently started
+	 * @return boolean true if a transaction is started
 	 */
 	public static function isTransactionStarted() {
 		return self::$transaction_started == 0 ? false : true;
 	}
 	
-	/**
-	 * Get if the current transaction is flagged as Rollback, meaning that when the performEndTransaction method is called a rollback is performed
-	 * @return boolean
+	/** Indicates if the current transaction will be rollback, due to a nested transaction which failed
+	 * @return boolean true if the current transaction will be rollback
 	 */
 	public static function transactionFlaggedAsRollback(){
 		return self::$rollback;
 	}
 	
-	/**
-	 * Perform the start of the transaction
-	 */
+	/** Start a transaction on the database system */
 	private static function performStartTransaction(){
 		self::getDataBaseAccessWithoutSecurity()->log("START TRANSACTION", 0, 0, 0);
 		self::getDataBaseAccessWithoutSecurity()->startTransaction();
 	}
 	
-	/**
-	 * Perform the end of the transaction
-	 * If $rollback attribute is true, a roolback is performed
-	 * Else a commit is performed
-	 * $rollback attribute is reseted as false at the end of this method
-	 */
+	/** Commit or rollback the root transaction on the database system */
 	private static function performEndTransaction(){
 		if(self::$rollback){
 			self::getDataBaseAccessWithoutSecurity()->log("ROLLBACK", 0, 0, 0);
@@ -2165,10 +2298,21 @@ class SQLQuery {
 	
 }
 
+/**
+ * Used to aggregate UPDATE or INSERT, and execute it with minimum number of SQL query, for performance purpose.
+ */
 class TablesToUpdate {
 
+	/** @var array $list list of things to update */
 	private $list = array();
 	
+	/** Update a cell in a table
+	 * @param string $table table name
+	 * @param string $sub_model sub model or null
+	 * @param integer|array $row_key key identifying the row, or null to do an insert
+	 * @param string $column column name
+	 * @param mixed $value new value
+	 */
 	public function addValue($table, $sub_model, $row_key, $column, $value) {
 		if (!isset($this->list[$table]))
 			$this->list[$table] = array();
@@ -2179,6 +2323,10 @@ class TablesToUpdate {
 		$this->list[$table][$sub_model][$row_key][$column] = $value;
 	}
 	
+	/** Execute with minimum number of SQL queries.
+	 * @param boolean $only_insert if true, everything will be considered as INSERT, else it is a mixed of UPDATE and INSERT based on the key
+	 * @return array list of ID generated by insert
+	 */
 	public function execute($only_insert = false) {
 		$tables_keys = array();
 		foreach ($this->list as $table_name=>$table_content) {

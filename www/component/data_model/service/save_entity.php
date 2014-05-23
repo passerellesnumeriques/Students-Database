@@ -1,12 +1,12 @@
 <?php 
 class service_save_entity extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() {
 		echo "Save or create an entity.";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 <ul>
 	<li><code>table</code>: table.</li>
@@ -17,7 +17,7 @@ class service_save_entity extends Service {
 </ul>
 <?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		echo "<code>key</code> the key of the entity";
 	}
 	

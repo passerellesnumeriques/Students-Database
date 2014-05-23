@@ -1,10 +1,10 @@
 <?php 
 class service_add_contact extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Add a contact to a people or to an organization"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 	<ul>
 		<li><code>owner_type</code>: "people" or "organization"</li>
@@ -13,7 +13,7 @@ class service_add_contact extends Service {
 	</ul>
 <?php
 	}
-	public function output_documentation() { echo "<code>id</code> the id of the contact created"; }
+	public function outputDocumentation() { echo "<code>id</code> the id of the contact created"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");

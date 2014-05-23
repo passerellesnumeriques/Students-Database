@@ -1,13 +1,13 @@
 <?php 
 class service_get extends Service {
 	
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array();
 	}
 	
 	public function documentation() { echo "Return events for the given calendar"; }
-	public function input_documentation() { echo "<code>id</code>: the id of the calendar"; }
-	public function output_documentation() { echo "array of CalendarEvent"; }
+	public function inputDocumentation() { echo "<code>id</code>: the id of the calendar"; }
+	public function outputDocumentation() { echo "array of CalendarEvent"; }
 		
 	public function execute(&$component, $input) {
 		$calendar_id = $input["id"];

@@ -3,10 +3,10 @@ class service_unassign_roles extends Service {
 	public function documentation() {
 ?>Remove the given roles to the given users.<?php		
 	}
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array("assign_roles");
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 <ul>
 	<li><code>users:[user_id]</code>: list of users</li>
@@ -14,7 +14,7 @@ class service_unassign_roles extends Service {
 </ul>
 <?php 
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 ?>return true on success.<?php 
 	}
 	public function execute(&$component, $input) {

@@ -1,17 +1,17 @@
 <?php 
 class service_assign_teacher extends Service {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function documentation() { echo "Assign a teacher to a subject and classes"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>people_id</code>: teacher</li>";
 		echo "<li><code>subject_id</code>: subject</li>";
 		echo "<li><code>classes_ids</code>: the list of classes to assign</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "true on success"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		$people_id = $input["people_id"];
@@ -45,7 +45,7 @@ class service_assign_teacher extends Service {
 		foreach ($classes_ids as $class_id)
 			array_push($rows, array("people"=>$people_id,"subject"=>$subject_id,"class"=>$class_id));
 		SQLQuery::create()->insertMultiple("TeacherAssignment", $rows);
-		if (!PNApplication::has_errors()) {
+		if (!PNApplication::hasErrors()) {
 			SQLQuery::commitTransaction();
 			echo "true";
 		} else

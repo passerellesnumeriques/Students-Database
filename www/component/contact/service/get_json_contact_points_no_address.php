@@ -1,7 +1,7 @@
 <?php
 class service_get_json_contact_points_no_address extends Service{
-	public function get_required_rights(){return array();}
-	public function input_documentation(){
+	public function getRequiredRights(){return array();}
+	public function inputDocumentation(){
 		?>
 		<ul>
 			<li>
@@ -11,7 +11,7 @@ class service_get_json_contact_points_no_address extends Service{
 		</ul>
 		<?php
 	}
-	public function output_documentation(){}//TODO
+	public function outputDocumentation(){}//TODO
 	public function documentation(){}//TODO
 	public function execute(&$component,$input){
 		require_once("get_json_contact_points_no_address.inc");

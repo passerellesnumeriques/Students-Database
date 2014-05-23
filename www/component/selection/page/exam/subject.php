@@ -1,11 +1,8 @@
 <?php 
 require_once("/../selection_page.inc");
 class page_exam_subject extends selection_page {
-	public function get_required_rights() { return array("see_exam_subject"); }
+	public function getRequiredRights() { return array("see_exam_subject"); }
 	public function execute_selection_page(){
-		$container_id = $this->generateID();
-		$this->add_javascript("/static/widgets/vertical_layout.js");
-		$this->onload("new vertical_layout('exam_page_container');");
 		$id = null;
 		if(!isset($_GET["id"]))
 			$id = -1;
@@ -20,15 +17,9 @@ class page_exam_subject extends selection_page {
 			$read_only = $_GET["readonly"];
 		else
 			$read_only = false;
-	?>	<div id = "exam_page_container" style = "width:100%; height:100%">
-			<div id = 'exam_subject_header' ></div>
-			<div id = '<?php echo $container_id; ?>' style = "overflow:auto" layout = "fill"></div>
-		</div>
-	<?php
-		$this->exam_subject($container_id,$id,$campaign_id,$read_only,"exam_subject_header");
-	}
-	
-	public function exam_subject($container_id,$id,$campaign_id,$read_only,$header_id){
+		
+		echo "<div id = 'exam_subject_container'></div>";
+
 		require_once("component/data_model/Model.inc");
 		require_once("component/selection/SelectionJSON.inc");
 		if(!PNApplication::$instance->user_management->has_right("see_exam_subject",true))
@@ -53,12 +44,10 @@ class page_exam_subject extends selection_page {
 			if($db_lock == null)
 				return;
 		}
+		
+		$this->requireJavascript("exam_objects.js");
 		?>
-	<script type = "text/javascript">
-		require("exam_objects.js",function(){
-			<?php echo $fct_name."();";?>
-		});
-		function <?php echo $fct_name;?>(){
+		<script type = "text/javascript">
 			var subject = null;
 			var can_edit = <?php echo json_encode($can_edit);?>;
 			var can_remove = <?php echo json_encode($can_remove);?>;
@@ -69,7 +58,7 @@ class page_exam_subject extends selection_page {
 			var index_correct_answer = findIndexInConfig(config,"set_correct_answer");
 			var index_choices = findIndexInConfig(config,"set_number_choices");
 			
-			var container = document.getElementById(<?php echo json_encode($container_id); ?>);
+			var container = document.getElementById("exam_subject_container");
 			
 			var exam_id = <?php echo json_encode($id); ?>;
 			var campaign_id = <?php echo json_encode($campaign_id); ?>;
@@ -81,11 +70,11 @@ class page_exam_subject extends selection_page {
 				//create an exam subject from an existing one
 				<?php
 					if(isset($campaign_id)){
-						SQLQuery::set_submodel("SelectionCampaign", $campaign_id);
+						SQLQuery::setSubModel("SelectionCampaign", $campaign_id);
 	// 					
 						echo "subject = ".SelectionJSON::ExamSubjectFromID($id).";";
 						//reset the current campaign submodel
-						SQLQuery::set_submodel("SelectionCampaign", $current_campaign);
+						SQLQuery::setSubModel("SelectionCampaign", $current_campaign);
 					}
 				?>
 				//Reset the subject id as -1
@@ -117,15 +106,12 @@ class page_exam_subject extends selection_page {
 											false,
 											current_campaign_id,
 											read_only,
-											<?php echo json_encode($header_id);?>,
 											db_lock
 											);
 				});
 			}
-		}
-	</script>
-	
-	<?php
+		</script>
+		<?php
 	}
 }
 

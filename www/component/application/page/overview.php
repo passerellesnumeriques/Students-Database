@@ -1,10 +1,10 @@
 <?php 
 class page_overview extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->require_javascript("section.js");
+		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 ?>
 <style type="text/css">
@@ -89,7 +89,7 @@ class page_overview extends Page {
 	</div>
 </div>
 <script type='text/javascript'>
-var calendars_section = section_from_html('calendar_events');
+var calendars_section = sectionFromHTML('calendar_events');
 require("calendar_view.js");
 require("calendar_view_week.js");
 function init_calendars() {

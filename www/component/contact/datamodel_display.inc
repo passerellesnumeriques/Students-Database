@@ -327,8 +327,8 @@ class ContactPointDataScreen extends datamodel\DataScreen {
 			$org_id = $values->getColumnValue("ContactPoint", "organization");
 
 		$tf = PNApplication::$instance->widgets->get_typed_field(DataModel::get()->getTable("ContactPoint")->getColumn("designation"));
-		$page->require_javascript("typed_field.js");
-		$page->require_javascript($tf[0].".js");
+		$page->requireJavascript("typed_field.js");
+		$page->requireJavascript($tf[0].".js");
 		
 		if ($people_id == null) {
 			// new people
@@ -364,7 +364,7 @@ class ContactPointDataScreen extends datamodel\DataScreen {
 				echo "Designation for ".htmlentities($row["name"]).": ";
 				echo "<span id='$id'></span>";
 				if ($can_edit) {
-					$page->require_javascript("editable_cell.js");
+					$page->requireJavascript("editable_cell.js");
 					echo "<script type='text/javascript'>";
 					echo "new editable_cell('$id','ContactPoint','designation',{people:".json_encode($people_id).",organization:".json_encode($row["organization"])."},".json_encode($tf[0]).",".$tf[1].",".json_encode($row["designation"]).");";
 					echo "</script>";

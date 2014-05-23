@@ -1,13 +1,13 @@
 <?php 
 class service_what_to_do_for_batch extends Service {
 	
-	public function get_required_rights() { return array("manage_batches"); }
+	public function getRequiredRights() { return array("manage_batches"); }
 	
 	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function inputDocumentation() {}
+	public function outputDocumentation() {}
 	
-	public function get_output_format($input) { return "text/html"; }
+	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
 		$this->batch_id = $input["batch"];

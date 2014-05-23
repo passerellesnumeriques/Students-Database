@@ -1,12 +1,12 @@
 <?php 
 class service_applicant_get_assigned_to_rooms_for_session extends Service {
 	
-	public function get_required_rights() {return array("can_access_selection_data");}
+	public function getRequiredRights() {return array("can_access_selection_data");}
 	
 	public function documentation() {
 		echo "Get the applicants to all the rooms for an exam session";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<ul>
 		  <li><code>session_id</code> the exam session event ID</li>
@@ -15,7 +15,7 @@ class service_applicant_get_assigned_to_rooms_for_session extends Service {
 
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		Object with two attributes:
 		<ul>

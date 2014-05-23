@@ -320,7 +320,7 @@ class contact extends Component {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors())
+		if(PNApplication::hasErrors())
 			return false;
 		else
 			return true;

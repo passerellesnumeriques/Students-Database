@@ -1,7 +1,7 @@
 <?php 
 class page_popup_create_people_step_creation extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$input = json_decode($_POST["input"], true);
@@ -13,7 +13,7 @@ class page_popup_create_people_step_creation extends Page {
 			echo "<div style='background-color:white'>Nobody to create.</div>";
 			echo "<script type='text/javascript'>popup.unfreeze();popup.addCancelButton();</script>";
 		}
-		$this->add_javascript("/static/data_model/DataDisplay.js");
+		$this->addJavascript("/static/data_model/DataDisplay.js");
 ?>
 <div id='container' style='padding:10px'></div>
 <script type='text/javascript'>

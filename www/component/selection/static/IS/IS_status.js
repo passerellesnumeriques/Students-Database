@@ -96,7 +96,7 @@ function IS_status(container){
 		} else {
 			var tr = document.createElement("tr");
 			var td = document.createElement("td");
-			td.appendChild(document.createTextNode("All the informations sessions have an host set"));
+			td.appendChild(document.createTextNode("All sessions have a host"));
 			td.colSpan = 4;
 			td.style.color = "green";
 			td.style.fontStyle = "italic";
@@ -119,7 +119,7 @@ function IS_status(container){
 		t._table.appendChild(tr_head);
 		td_head.colSpan = 4;
 		td_head.style.textAlign = "left";
-		td_head.innerHTML = "<i>Sessions below are not fully completed (<b>no host partner</b>):</i>";
+		td_head.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> The following sessions are not fully completed (no host partner):</i>";
 		for(var i = 0; i < t._no_host.length; i++){
 			var tr = document.createElement("tr");
 			var td = document.createElement("td");//Contains the name (clickable) of the IS to finish
@@ -129,6 +129,18 @@ function IS_status(container){
 			link.appendChild(document.createTextNode(t._no_host[i].name));
 			link.className = "black_link";
 			link.href = "/dynamic/selection/page/IS/profile?id="+t._no_host[i].id;
+			link.onclick = function() {
+				var url = this.href;
+				require("popup_window.js",function() {
+					var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
+					popup.setContentFrame(url);
+					popup.onclose = function() {
+						location.reload();
+					};
+					popup.showPercent(95,95);
+				});
+				return false;
+			};
 			td.appendChild(link);
 			td.colSpan = 4;
 			td.style.textAlign = 'left';

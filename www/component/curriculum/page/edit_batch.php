@@ -1,7 +1,7 @@
 <?php 
 class page_edit_batch extends Page {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function execute() {
 		// lock specializations
@@ -36,12 +36,12 @@ class page_edit_batch extends Page {
 		$academic_years = PNApplication::$instance->curriculum->getAcademicYears();
 		$academic_periods = PNApplication::$instance->curriculum->getAcademicPeriods();
 		
-		$conf = PNApplication::$instance->get_domain_descriptor();
+		$conf = PNApplication::$instance->getDomainDescriptor();
 		$conf = $conf["curriculum"];
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
-		$this->add_javascript("/static/curriculum/curriculum_objects.js");
-		$this->require_javascript("input_utils.js");
+		$this->addJavascript("/static/curriculum/curriculum_objects.js");
+		$this->requireJavascript("input_utils.js");
 		require_once("component/data_model/page/utils.inc");
 ?>
 <table style='background-color:white;border-spacing:0px;margin:0px;border-collapse:collapse;'>

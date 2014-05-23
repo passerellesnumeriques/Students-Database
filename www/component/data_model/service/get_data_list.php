@@ -1,12 +1,12 @@
 <?php 
 class service_get_data_list extends Service {
 	
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array();
 	}
 	
 	public function documentation() { echo "Retrieve data from a list of DataPath"; }
-	public function input_documentation() { echo "
+	public function inputDocumentation() { echo "
 <ul>
 	<li><code>table</code>: name of starting table</li>
 	<li><code>sub_model</code>: sub model of starting table</li>
@@ -14,9 +14,9 @@ class service_get_data_list extends Service {
 	<li>optional: <code>actions</code>: if true, a list of possible links with icon are returned</li>
 </ul>";
 	}
-	public function output_documentation() { echo "TODO"; }
+	public function outputDocumentation() { echo "TODO"; }
 
-	public function get_output_format($input) {
+	public function getOutputFormat($input) {
 		if (isset($input["export"])) {
 			$format = $input["export"];
 			if ($format == 'excel2007')

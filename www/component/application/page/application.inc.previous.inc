@@ -1,10 +1,10 @@
 <?php 
 require_once("component/data_model/page/utils.inc");
-$this->add_javascript("/static/widgets/vertical_layout.js");
-$this->add_javascript("/static/widgets/horizontal_menu.js");
-$this->add_javascript("/static/widgets/context_menu.js");
-$this->add_javascript("/static/google/google_status.js");
-//$this->add_javascript("/static/facebook/facebook_status.js");
+$this->addJavascript("/static/widgets/vertical_layout.js");
+$this->addJavascript("/static/widgets/horizontal_menu.js");
+$this->addJavascript("/static/widgets/context_menu.js");
+$this->addJavascript("/static/google/google_status.js");
+//$this->addJavascript("/static/facebook/facebook_status.js");
 $this->onload("new vertical_layout('pn_application_container');");
 $this->onload("new horizontal_menu('application_menu');");
 $this->onload("new google_status('google_status');");
@@ -15,7 +15,7 @@ $this->onload("setBoxShadow(document.forms['app_search'].elements['q'],-1,2,2,0,
 //$this->onload("setBoxShadow(document.getElementById('app_domain'),-1,2,2,0,'#D8D8F0',true);");
 $this->onload("window.top.pn_loading_end();");
 if (PNApplication::$instance->current_domain == "Dev") {
-	$this->add_javascript("/static/development/debug_status.js");
+	$this->addJavascript("/static/development/debug_status.js");
 	$this->onload("new debug_status('debug_status');");
 }
 ?>
@@ -60,7 +60,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 				</td><td nowrap="nowrap" class='pn_application_header_section' title="Database">
 					<select id='app_domain' style="padding:0px 0px 0px 16px;margin:0px;background:rgba(255,255,255,0) url('/static/application/database.png') no-repeat 0px 1px;border:none;" onchange="service.json('application','set_domain',{domain:this.value},function(result){if(result)location.reload();});">
 					<?php
-					foreach (PNApplication::$instance->get_domains() as $domain=>$descr)
+					foreach (PNApplication::$instance->getDomains() as $domain=>$descr)
 						echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>";
 					?>
 					</select>
@@ -107,7 +107,7 @@ if (PNApplication::$instance->current_domain == "Dev") {
 };
 </style>
 <script type='text/javascript'>
-window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["country_code"]).";"; ?>
+window.top.default_country_code = <?php $d = PNApplication::$instance->getDomainDescriptor(); echo json_encode($d["country_code"]).";"; ?>
 
 /*setInterval(function(){
 	if (window.theme) // check the window is still there

@@ -1,11 +1,11 @@
 <?php 
 class page_edit_academic_year extends Page {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function execute() {
 		$id = @$_GET["id"];
-		$conf = PNApplication::$instance->get_domain_descriptor();
+		$conf = PNApplication::$instance->getDomainDescriptor();
 		$conf = $conf["curriculum"];
 		if ($id <> null) {
 			$year = SQLQuery::create()->select("AcademicYear")->whereValue("AcademicYear","id",$id)->executeSingleRow();
@@ -45,9 +45,9 @@ class page_edit_academic_year extends Page {
 			}
 		}
 		
-		$this->require_javascript("input_utils.js");
-		$this->require_javascript("typed_field.js");
-		$this->require_javascript("field_integer.js");
+		$this->requireJavascript("input_utils.js");
+		$this->requireJavascript("typed_field.js");
+		$this->requireJavascript("field_integer.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
 ?>
 <div style='background-color:white'>

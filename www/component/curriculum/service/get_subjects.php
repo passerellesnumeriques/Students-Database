@@ -1,15 +1,15 @@
 <?php 
 class service_get_subjects extends Service {
 	
-	public function get_required_rights() { return array("consult_curriculum"); }
+	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function documentation() { echo "Retrieve list of existing subjects"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>category</code>: category id to filter subjects only in this category<br/>";
 		echo "<code>specialization</code>: specialization id to filter subjects only for this specialization, or null for subject not related to a specialization<br/>";
 		echo "<code>period_to_exclude</code>: period id, subjects already attached to this period will not be returned<br/>";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		echo "List of subjects: {id,code,name,hours,hours_type}";
 	}
 	

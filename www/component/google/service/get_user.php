@@ -1,11 +1,11 @@
 <?php 
 class service_get_user extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Get user information from Google ID"; }
-	public function input_documentation() { echo "auth_token: the authentication token from Google"; }
-	public function output_documentation() { echo "TODO"; }
+	public function inputDocumentation() { echo "auth_token: the authentication token from Google"; }
+	public function outputDocumentation() { echo "TODO"; }
 	
 	public function execute(&$component, $input) {
 		$ch = curl_init("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=".$input["auth_token"]);

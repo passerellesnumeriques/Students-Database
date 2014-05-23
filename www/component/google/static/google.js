@@ -93,7 +93,7 @@ if (!window.top.google) {
 	};
 	window.top.load_google_api = function() {
 		window.top.google._connecting_time = new Date().getTime();
-		window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
+		window.top.addJavascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 		window.top.setTimeout(function(){
 			if (window.top.google.api_loaded) return;
 			window.top.remove_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
@@ -103,7 +103,7 @@ if (!window.top.google) {
 			window.top.load_google_api();
 		},30000);
 		
-		/*window.top.add_javascript("https://ajax.googleapis.com/jsapi", function() {
+		/*window.top.addJavascript("https://ajax.googleapis.com/jsapi", function() {
 			google.load("identitytoolkit", "2", {packages: ["ac"], callback: function() {
 				var i = 0;
 				i++;

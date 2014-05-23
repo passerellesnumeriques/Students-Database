@@ -1,7 +1,7 @@
 <?php 
 require_once("/../selection_page.inc");
 class page_IS_profile extends selection_page {
-	public function get_required_rights() { return array("see_information_session_details"); }
+	public function getRequiredRights() { return array("see_information_session_details"); }
 	public function execute_selection_page(){
 		require_once("component/selection/SelectionJSON.inc");
 		$config = PNApplication::$instance->selection->getConfig();
@@ -45,7 +45,7 @@ class page_IS_profile extends selection_page {
 			}
 		}
 		
-		$this->require_javascript("IS_profile.js");
+		$this->requireJavascript("IS_profile.js");
 		?>
 		<div id = "IS_profile_container" style = "width:100%; height:100%">			
 		</div>

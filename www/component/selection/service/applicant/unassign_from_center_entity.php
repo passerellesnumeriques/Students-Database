@@ -1,8 +1,8 @@
 <?php
 require_once "component/selection/SelectionJSON.inc";
 class service_applicant_unassign_from_center_entity extends Service{
-	public function get_required_rights(){return array("can_access_selection_data","manage_applicant");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("can_access_selection_data","manage_applicant");}
+	public function inputDocumentation(){
 		?>
 		<ul>
 		<li><code>people_id</code> the people_id (primary key of Applicant table)</li>
@@ -12,7 +12,7 @@ class service_applicant_unassign_from_center_entity extends Service{
 		</ul>
 		<?php
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		?>
 		Object with 6 attributes:
 		<ul>

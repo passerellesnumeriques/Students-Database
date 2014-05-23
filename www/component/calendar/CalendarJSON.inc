@@ -28,7 +28,7 @@ class CalendarJSON {
 	
 	/**
 	 * Prepare a query to retrieve the data from CalendarEvent table
-	 * @param SQLQuery $q
+	 * @param SQLQuery $q query to prepare
 	 * @no_name_check
 	 */
 	public static function CalendarEventSQL(&$q){
@@ -55,7 +55,7 @@ class CalendarJSON {
 	
 	/**
 	 * Get a CalendarEvent JSON object from the data retrieved from the database
-	 * @param SQLQuery $q
+	 * @param SQLQuery $q query used to retrieve the row
 	 * @param Array $row the row retrieved from CalendarEvent table
 	 * @return string CalendarEvent JSON object
 	 * @no_name_check

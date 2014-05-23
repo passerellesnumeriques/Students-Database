@@ -1,7 +1,7 @@
 <?php
 class service_get_address extends Service{
-	public function get_required_rights(){return array();}
-	public function input_documentation(){
+	public function getRequiredRights(){return array();}
+	public function inputDocumentation(){
 		?>
 		Can be<ul>
 		<li><code>id</code> the postal address ID</li>
@@ -9,7 +9,7 @@ class service_get_address extends Service{
 		</ul>
 		<?php
 	}
-	public function output_documentation(){ echo "a PostalAddress object | array of PostalAddress objects"; }
+	public function outputDocumentation(){ echo "a PostalAddress object | array of PostalAddress objects"; }
 	public function documentation() { echo "Return a PostalAddress object given its ID | array of PostalAddress objects"; }
 	public function execute(&$component,$input){
 		require_once("component/contact/ContactJSON.inc");

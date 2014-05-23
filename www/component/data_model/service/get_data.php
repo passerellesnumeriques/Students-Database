@@ -1,11 +1,11 @@
 <?php 
 class service_get_data extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve data from DataDisplay"; }
-	public function input_documentation() { echo "<code>table</code>: table from which to retrieve data<br/><code>data</code>array of DataDisplay names<br/><code>keys</code>: keys of the row to retrieve<br/><code>sub_model</code>: optional, sub model instance"; }
-	public function output_documentation() { echo "array of data"; }
+	public function inputDocumentation() { echo "<code>table</code>: table from which to retrieve data<br/><code>data</code>array of DataDisplay names<br/><code>keys</code>: keys of the row to retrieve<br/><code>sub_model</code>: optional, sub model instance"; }
+	public function outputDocumentation() { echo "array of data"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");

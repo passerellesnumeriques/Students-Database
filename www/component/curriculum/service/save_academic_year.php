@@ -1,11 +1,23 @@
 <?php 
 class service_save_academic_year extends Service {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
-	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function documentation() { echo "Save information about an AcademicYear"; }
+	public function inputDocumentation() {
+		echo "<ul>";
+		echo "<li><code>year</code> year of the AcademicYear</li>";
+		echo "<li><code>name</code> name of the AcademicYear</li>";
+		echo "<li><code>periods</code> list of AcademicPeriod:<ul>";
+			echo "<li><code>name</code> name of the period</li>";
+			echo "<li><code>start</code> start date of the period</li>";
+			echo "<li><code>end</code> end date of the period</li>";
+			echo "<li><code>weeks</code> total number of weeks of the period</li>";
+			echo "<li><code>weeks_break</code> number of weeks that are not worked during the period</li>";
+		echo "</ul></li>";
+		echo "</ul>";
+	}
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		SQLQuery::startTransaction();
@@ -52,7 +64,7 @@ class service_save_academic_year extends Service {
 				SQLQuery::create()->removeKeys("AcademicPeriod", $existing_periods_ids);
 		}
 		
-		if (PNApplication::has_errors()) {
+		if (PNApplication::hasErrors()) {
 			SQLQuery::rollbackTransaction();
 			echo "false";
 		} else {

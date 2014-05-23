@@ -1,7 +1,7 @@
 <?php
 class page_role_rights extends Page {
 	
-	public function get_required_rights() { return array("manage_roles"); }
+	public function getRequiredRights() { return array("manage_roles"); }
 	
 	protected function execute() {
 		// get the role we need to display
@@ -17,29 +17,28 @@ class page_role_rights extends Page {
 
 		$role = SQLQuery::create()->select("Role")->where("id",$role_id)->executeSingleRow();
 
-		$this->add_javascript("/static/widgets/header_bar.js");
-		$this->onload("new header_bar('role_rights_header');");
-		
 		if ($can_edit)
 			DataBaseLock::generateScript($lock_id);
-		?>
-		<div id='role_rights_header' icon='/static/user_management/access_list_32.png' title="Role: &lt;span style='font-family:Courrier New;font-weight:bold;font-style:italic'&gt;<?php echo $role["name"];?>&lt;/span&gt;">
-		<?php 
-			if ($can_edit) {
-				?><div class='button' onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</div><?php
-			}
-			if ($locked <> null) {
-				?><img src='<?php echo theme::$icons_16["lock"];?>'/> This page is already locked by <?php echo $locked;?><?php
-			}
-		?>
-		</div>
-		<?php
 		
+		$this->requireJavascript("vertical_layout.js");
+		$this->onload("new vertical_layout('page');");
+		?>
+		<div id='page' style='width:100%;height:100%'>
+		<div class='page_title'>
+			<img src='/static/user_management/access_list_32.png'/>
+			Role: <span style='font-family:Courrier New;font-weight:bold;font-style:italic'><?php echo $role["name"];?></span>
+		</div>
+		<div style='background-color:white;padding:10px;overflow:auto' layout='fill'>
+			<form name='um_rights' onsubmit='return false' style='height:100%'>
+		<?php
+		if ($locked <> null)
+			echo "<img src='".theme::$icons_16["lock"]."'/> This page is already locked by ".$locked."<br/>";
+				
 		// retrieve all existing rights, and categories
 		$all_rights = array();
 		$categories = array();
 		foreach (PNApplication::$instance->components as $component) {
-			foreach ($component->get_readable_rights() as $cat) {
+			foreach ($component->getReadableRights() as $cat) {
 				if (!isset($categories[$cat->display_name]))
 					$categories[$cat->display_name] = array();
 				foreach ($cat->rights as $r) {
@@ -47,7 +46,7 @@ class page_role_rights extends Page {
 					$all_rights[$r->name] = $r;
 				}
 			}
-			foreach ($component->get_writable_rights() as $cat) {
+			foreach ($component->getWritableRights() as $cat) {
 				if (!isset($categories[$cat->display_name]))
 					$categories[$cat->display_name] = array();
 				foreach ($cat->rights as $r) {
@@ -78,7 +77,6 @@ class page_role_rights extends Page {
 		}
 		
 		// print the table of rights
-		echo "<form name='um_rights' onsubmit='return false'>";
 		echo "<table rules=all cellspacing=0 cellpadding=2>";
 		echo "<tr><th colspan=2>Rights</th><th>Access</th></tr>";
 		foreach ($categories as $cat_name=>$rights) {
@@ -95,11 +93,11 @@ class page_role_rights extends Page {
 				echo "</tr>";
 			}
 		}
-		echo "</table></form>";
+		echo "</table>";
 		?>
+		</form>
 		<style type='text/css'>
 		table {
-			margin: 5px;
 			border: 1px solid black;
 		}
 		tr td:first-of-type {
@@ -188,8 +186,15 @@ class page_role_rights extends Page {
 				}
 			});
 		}
-		<?php }?>
 		</script>
+		<?php }?>
+		</div>
+		<?php if ($can_edit) {?>
+		<div class='page_footer'>
+			<button class='action' onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
+		</div>
+		<?php } ?>
+		</div>
 		<?php		
 	}
 	

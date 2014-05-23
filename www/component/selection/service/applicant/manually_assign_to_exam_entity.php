@@ -2,12 +2,12 @@
 require_once 'component/selection/SelectionJSON.inc';
 class service_applicant_manually_assign_to_exam_entity extends Service {
 	
-	public function get_required_rights() {return array("can_access_selection_data");}
+	public function getRequiredRights() {return array("can_access_selection_data");}
 	
 	public function documentation() {
 		echo "Assign given applicants to an exam center entity (center, session, room)";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<ul>
 			<li><code>mode</code> string can be "center" if the given applicants shall be assigned to an exam center, or "session" if the applicants shall be assigned to an exam session and a room</li>
@@ -16,7 +16,7 @@ class service_applicant_manually_assign_to_exam_entity extends Service {
 		</ul>
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		echo "Returns boolean, true if well assigned, else false";
 	}
 	

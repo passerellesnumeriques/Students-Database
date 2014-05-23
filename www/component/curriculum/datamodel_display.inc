@@ -20,9 +20,9 @@ class TeacherDataScreen extends datamodel\DataScreen {
 		$people_types = PNApplication::$instance->people->parseTypes($people_types);
 		if (!in_array("teacher", $people_types)) return;
 		
-		$page->require_javascript("typed_field.js");
-		$page->require_javascript("field_date.js");
-		if ($structure_name == null) $page->require_javascript("editable_cell.js");
+		$page->requireJavascript("typed_field.js");
+		$page->requireJavascript("field_date.js");
+		if ($structure_name == null) $page->requireJavascript("editable_cell.js");
 		if ($structure_name <> null)
 			$people_id = -1;
 		else 

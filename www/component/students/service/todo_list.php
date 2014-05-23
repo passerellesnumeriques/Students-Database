@@ -1,12 +1,12 @@
 <?php 
 class service_todo_list extends Service {
 	
-	public function get_required_rights() { return array("manage_batches"); }
+	public function getRequiredRights() { return array("manage_batches"); }
 	
 	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
-	public function get_output_format($input) { return "text/html"; }
+	public function inputDocumentation() {}
+	public function outputDocumentation() {}
+	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
 		return;
@@ -27,7 +27,7 @@ class service_todo_list extends Service {
 		// is there any period ?
 		$periods = PNApplication::$instance->curriculum->getAcademicPeriods($batch["id"]);
 		if (count($periods) == 0) {
-			$html .= "<li>No period yet: <a href='#' onclick='edit_batch({id:".$batch["id"]."});return false;'>Edit</a></li>";
+			$html .= "<li>No period yet: <a href='#' onclick='editBatch({id:".$batch["id"]."});return false;'>Edit</a></li>";
 		}
 		// is there any student ?
 		$students = SQLQuery::create()->select("Student")->whereValue("Student", "batch", $batch["id"])->execute();

@@ -4,13 +4,11 @@
  */
 abstract class Component {
 
-	/**
-	 * @var string name of this component
-	 */
+	/** @var string name of this component */
 	public $name;
 	
 	/**
-	 * @param string $name
+	 * @param string $name name of this component
 	 */
 	public function __construct($name) {
 		$this->name = $name;
@@ -26,17 +24,22 @@ abstract class Component {
 	/** Perform operations at the beginning of every request.
 	 * By default it does nothing, but a component may override this function. 
 	 */
-	public function init_request() {}
+	public function initRequest() {}
 	
+	/** @var string[] list of pages which can be accessed without being authenticated */
 	private static $allowed_pages_without_login = array();
-	protected static function allow_page_without_login($component_name, $page_path) {
+	/** Add a page which can be accessed without being authenticated
+	 * @param string $component_name component name
+	 * @param string $page_path path of the page in the component
+	 */
+	protected static function allowPageWithoutLogin($component_name, $page_path) {
 		if (!isset(Component::$allowed_pages_without_login[$component_name]))
 			Component::$allowed_pages_without_login[$component_name] = array();
 		array_push(Component::$allowed_pages_without_login[$component_name], $page_path);
 	}
 	/**
 	 * Request for a page on this component: check it exists, the user has necessary rights, then execute it
-	 * @param string $path
+	 * @param string $path path of the page
 	 */
 	public final function page($path) {
 		// check the user is logged
@@ -52,7 +55,7 @@ abstract class Component {
 		if (!file_exists($file)) {
 			header("Content-Type: text/html;charset=UTF-8");
 			PNApplication::error("Page '$path' does not exist in component '".$this->name."'");
-			PNApplication::print_errors();
+			PNApplication::printErrors();
 			return;
 		}
 		
@@ -64,7 +67,7 @@ abstract class Component {
 		$page = new $classname();
 		
 		// check the page is allowed for the current user
-		$required_rights = $page->get_required_rights();
+		$required_rights = $page->getRequiredRights();
 		if (count($required_rights) == 0) 
 			$final_allowed = true; // no restriction
 		else {
@@ -83,7 +86,7 @@ abstract class Component {
 		}
 		if (!$final_allowed) {
 			PNApplication::error("Access denied to this page");
-			PNApplication::print_errors();
+			PNApplication::printErrors();
 			return;
 		}
 		
@@ -97,8 +100,13 @@ abstract class Component {
 		restore_error_handler();
 	}
 
+	/** @var string[] list of services which can be accessed without being authenticated */
 	private static $allowed_services_without_login = array();
-	protected static function allow_service_without_login($component_name, $service_path) {
+	/** Add a service which can be accessed without being authenticated
+	 * @param string $component_name component name
+	 * @param string $service_path path of the service in the component
+	 */
+	protected static function allowServiceWithoutLogin($component_name, $service_path) {
 		if (!isset(Component::$allowed_services_without_login[$component_name]))
 			Component::$allowed_services_without_login[$component_name] = array();
 		array_push(Component::$allowed_services_without_login[$component_name], $service_path);
@@ -106,7 +114,7 @@ abstract class Component {
 	
 	/**
 	 * Request for a service on this component: check it exists, the user has necessary rights, then execute it
-	 * @param string $path
+	 * @param string $path path of the service
 	 */
 	public final function service($path) {
 		// check the user is logged
@@ -114,7 +122,7 @@ abstract class Component {
 			if (!isset(Component::$allowed_services_without_login[$this->name]) || !in_array($path, Component::$allowed_services_without_login[$this->name])) {
 				header("Content-Type: text/json;charset=UTF-8", true, 403);
 				PNApplication::error("Access denied: you must login before to use services");
-				PNApplication::print_json_result(null);
+				PNApplication::printJSONResult(null);
 				return;
 			}
 		}
@@ -124,7 +132,7 @@ abstract class Component {
 		if (!file_exists($file)) {
 			header("Content-Type: text/json;charset=UTF-8");
 			PNApplication::error("Service '$path' does not exist in component '".$this->name."'");
-			PNApplication::print_json_result(null);
+			PNApplication::printJSONResult(null);
 			return;
 		}
 	
@@ -137,17 +145,18 @@ abstract class Component {
 	
 		// build input
 		if (isset($_SERVER["CONTENT_TYPE"]) && substr($_SERVER["CONTENT_TYPE"],0,9) == "text/json") {
-			$input = json_decode(file_get_contents('php://input'), true);
+			$in = file_get_contents('php://input');
+			$input = json_decode($in, true);
 			$err = json_last_error();
 			if ($input === null && $err <> JSON_ERROR_NONE) {
-				PNApplication::error("Invalid input: JSON error ".$err);
+				PNApplication::error("Invalid input: JSON error ".$err."\nReceived input (length ".strlen($in)."):\n".$in);
 				// get output format
-				$output_format = $service->get_output_format(array());
+				$output_format = $service->getOutputFormat(array());
 				if ($output_format == "text/json") {
 					header("Content-Type: text/json;charset=UTF-8");
-					PNApplication::print_json_result(null);
+					PNApplication::printJSONResult(null);
 				} else {
-					PNApplication::print_errors();
+					PNApplication::printErrors();
 				}
 				return;
 			}			
@@ -160,14 +169,14 @@ abstract class Component {
 		}
 		
 		// get output format
-		$output_format = $service->get_output_format($input);
+		$output_format = $service->getOutputFormat($input);
 		if ($output_format == "text/json")
 			header("Content-Type: text/json;charset=UTF-8");
 		else
 			header("Content-Type: ".$output_format);
 		
 		// check the service is allowed for the current user
-		$required_rights = $service->get_required_rights();
+		$required_rights = $service->getRequiredRights();
 		if (count($required_rights) == 0)
 			$final_allowed = true; // no restriction
 		else {
@@ -186,7 +195,7 @@ abstract class Component {
 		}
 		if (!$final_allowed) {
 			PNApplication::error("Access denied to this service");
-			PNApplication::print_json_result(null);
+			PNApplication::printJSONResult(null);
 			return;
 		}
 	
@@ -209,7 +218,7 @@ abstract class Component {
 			ob_end_clean();
 			if ($result === "" || $result === false) $result = null;
 			restore_error_handler();
-			PNApplication::print_json_result($result);
+			PNApplication::printJSONResult($result);
 			$done->done = true;
 		} else
 			$service->execute($this, $input);
@@ -218,7 +227,7 @@ abstract class Component {
 	/**
 	 * Return the list of components this component depends on.
 	 * Read it from the file <i>dependencies</i> if it exists.
-	 * @return array
+	 * @return string[] list of dependencies
 	 */
 	public final function dependencies() {
 		if (!file_exists("component/".$this->name."/dependencies")) return array();
@@ -235,11 +244,17 @@ abstract class Component {
 		return $deps;
 	}
 	
-	public final function get_readable_rights() {
+	/** Return the list of read rights defined by this component (from readable_rights.inc)
+	 * @return AccessRightCategory[] list of categories, containing the list of rights
+	 */
+	public final function getReadableRights() {
 		if (!file_exists("component/".$this->name."/readable_rights.inc")) return array();
 		return include("component/".$this->name."/readable_rights.inc");
 	}
-	public final function get_writable_rights() {
+	/** Return the list of write rights defined by this component (from writable_rights.inc)
+	 * @return AccessRightCategory[] list of categories, containing the list of rights
+	 */
+	public final function getWritableRights() {
 		if (!file_exists("component/".$this->name."/writable_rights.inc")) return array();
 		return include("component/".$this->name."/writable_rights.inc");
 	}
@@ -248,13 +263,14 @@ abstract class Component {
 	 * Returns all implementations of <i>plug-in</i> for the component. This is used, instead of having the 
 	 * component directly implementing the <i>plug-in</i> interfaces, so the component class is clearer
 	 * (contains only functionalities, without any additional <i>polutant</i> things)
-	 * @return array
+	 * @return array list of plugin instances
 	 */
 	public function getPluginImplementations() { return array(); }
 
 }
 
-class ServiceDone { public $done = false; };
+/** Internal usage: to check if a service successfully terminated, or a fatal error occured during its execution */
+class ServiceDone { /** $var boolean indicates if it succeed */ public $done = false; };
 function service_shutdown_catch($done) {
 	if ($done->done) return;
 	$msg = "The service didn't finish correctly.";
@@ -264,8 +280,8 @@ function service_shutdown_catch($done) {
 	$content = ob_get_clean();
 	if ($content <> "")
 		$msg .= "<br/>Output generated at failing time:<br/>".str_replace("\n", "<br/>", htmlentities($content));
-	PNApplication::error_html($msg);
-	PNApplication::print_json_result(null);
+	PNApplication::errorHTML($msg);
+	PNApplication::printJSONResult(null);
 }
 
 ?>

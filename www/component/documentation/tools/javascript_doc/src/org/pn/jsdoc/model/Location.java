@@ -23,4 +23,13 @@ public class Location {
 		return "new JSDoc_Location(\""+file.replace("\\","\\\\").replace("\"","\\\"")+"\","+line+")";
 	}
 	
+	public String getDescription() {
+		StringBuilder s = new StringBuilder();
+		if (file.length() > 0) s.append("File ").append(this.file);
+		else s.append("Unknown file");
+		if (line > 0)
+			s.append(" line ").append(this.line);
+		return s.toString();
+	}
+	
 }

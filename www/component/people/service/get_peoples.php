@@ -1,11 +1,11 @@
 <?php 
 class service_get_peoples extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve People JSON structures"; }
-	public function input_documentation() { echo "<code>ids</code>: people ids"; }
-	public function output_documentation() { echo "A list of People JSON objects"; }
+	public function inputDocumentation() { echo "<code>ids</code>: people ids"; }
+	public function outputDocumentation() { echo "A list of People JSON objects"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/people/PeopleJSON.inc");

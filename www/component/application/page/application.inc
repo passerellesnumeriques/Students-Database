@@ -2,18 +2,9 @@
 theme::css($this, "application.css");
 
 // mandatory part
-$this->require_javascript("calendar.js");
+$this->requireJavascript("calendar.js");
 ?><script type='text/javascript'>
-
-//DIM New : get client Timezone
-if("<?php echo PNApplication::$instance->timezone;?>".length==0)
-{
-    var visitortime = new Date();
-    var visitortimezone =-visitortime.getTimezoneOffset()/60;
-    service.json("application","timezone",visitortimezone,function(r){});
-}
-
-window.top.default_country_code = <?php $d = PNApplication::$instance->get_domain_descriptor(); echo json_encode($d["geography"]["country_code"]).";"; ?>
+window.top.default_country_code = <?php $d = PNApplication::$instance->getDomainDescriptor(); echo json_encode($d["geography"]["country_code"]).";"; ?>
 window.top.default_country_id = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo $c["id"]; ?>;
 window.top.default_country_name = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo json_encode($c["name"]); ?>;
 
@@ -51,7 +42,7 @@ window.top.pnapplication.onlogout.add_listener(function() {
 });
 document.body.style.overflow = "hidden";
 </script><?php
-if (isset($_GET["page"])) {
+if (isset($_GET["page"]) && !isset($_GET["section"])) {
 	// only the frame
 	echo "<iframe id='application_frame' name='application_frame' src='".$_GET["page"]."' style='width:100%;height:100%;border:none;'></iframe>";
 	return;

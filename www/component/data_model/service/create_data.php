@@ -1,11 +1,11 @@
 <?php 
 class service_create_data extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function inputDocumentation() {}
+	public function outputDocumentation() {}
 	
 	public function execute(&$component, $input) {
 		$root_table_name = $input["root"];
@@ -33,7 +33,7 @@ class service_create_data extends Service {
 		$root = DataPathBuilder::buildPathsTree($paths);
 		SQLQuery::startTransaction();
 		$key = $this->createData($root, $multiple);
-		if (PNApplication::has_errors())
+		if (PNApplication::hasErrors())
 			SQLQuery::rollbackTransaction();
 		else {
 			SQLQuery::commitTransaction();

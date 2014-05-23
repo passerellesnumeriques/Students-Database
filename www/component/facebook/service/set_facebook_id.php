@@ -1,11 +1,11 @@
 <?php 
 class service_set_facebook_id extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Register Google ID to current user"; }
-	public function input_documentation() { echo "auth_token: the authentication token from Google"; }
-	public function output_documentation() { echo "true"; }
+	public function inputDocumentation() { echo "auth_token: the authentication token from Google"; }
+	public function outputDocumentation() { echo "true"; }
 	
 	public function execute(&$component, $input) {
 		$ch = curl_init("https://graph.facebook.com/debug_token?input_token=".$input["auth_token"]."&access_token=316910509803|843ab6b200f732996a72c87557a81843");

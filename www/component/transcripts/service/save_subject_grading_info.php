@@ -1,10 +1,10 @@
 <?php 
 class service_save_subject_grading_info extends Service {
 	
-	public function get_required_rights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); } // TODO
 	
 	public function documentation() { echo "Save subject grading information"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>id</code>: subject id</li>";
 		echo "<li><code>weight</code>: weight of the subject for the period</li>";
@@ -13,7 +13,7 @@ class service_save_subject_grading_info extends Service {
 		echo "<li><code>passing_grade</code>: passing grade of the subject</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "true on success"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		set_time_limit(120);

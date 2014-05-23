@@ -1,12 +1,12 @@
 <?php
-$this->require_javascript("vertical_layout.js");
-$this->require_javascript("horizontal_layout.js");
+$this->requireJavascript("vertical_layout.js");
+$this->requireJavascript("horizontal_layout.js");
 $this->onload("new vertical_layout('application_container');");
 $this->onload("new horizontal_layout('application_horizontal');");
 $this->onload("new vertical_layout('application_left_side',true);");
 $this->onload("new vertical_layout('application_right_side');");
 $this->onload("new horizontal_layout('application_header');");
-$this->require_javascript("fill_height_layout.js");
+$this->requireJavascript("fill_height_layout.js");
 //$this->onload("new fill_height_layout('application_table');");
 //$this->onload("new fill_height_layout('application_frame_container');");
 ?>
@@ -176,6 +176,7 @@ $this->require_javascript("fill_height_layout.js");
     right: -5px;
     top: 0px;
     content: '';
+    z-index: 80;
 }
 .application_left_menu_separator {
 	height: 1px;
@@ -316,12 +317,14 @@ function selectSection(section) {
 	highlightSection(section_name);
 }
 
-function sectionClicked(section) {
+function sectionClicked(section, page) {
 	document.getElementById('application_frame')._loading_application_page = true;
 	highlightSection(section);
 	if (section.hasAttribute("menu"))
 		loadMenu(section.getAttribute("menu"));
-	if (section.hasAttribute("page"))
+	if (page)
+		loadPage(page);
+	else if (section.hasAttribute("page"))
 		loadPage(section.getAttribute("page"));
 }
 
@@ -470,10 +473,8 @@ function pageLoaded(url) {
 initPage();
 
 <?php 
-if (isset($_GET["page"])) {
-	// TODO
-} else if (isset($_GET["section"])) {
-	echo "sectionClicked(getSection(".json_encode($_GET["section"])."));";
+if (isset($_GET["section"])) {
+	echo "sectionClicked(getSection(".json_encode($_GET["section"])."),".(isset($_GET["page"]) ? json_encode($_GET["page"]) : "null").");";
 } else {
 	echo "sectionClicked(getSection('home'));";
 }
@@ -501,6 +502,16 @@ function initFooter() {
 		new debug_status(span_debug_status);
 	});
 	<?php } ?>
+	var span_background_loading = document.createElement("SPAN"); 
+	span_background_loading.style.position = "absolute";
+	span_background_loading.style.bottom = "0px";
+	span_background_loading.style.left = "3px";
+	footer.appendChild(span_background_loading);
+	require("load_static.js",function(){
+		var loading = new load_static_resources(span_background_loading, '#ffffff', '#ffffff', '#ffffff', '#A0A0A0');
+		loading._slow_when_user_active = true;
+		loading._slow_when_services_active = true;
+	});
 }
 initFooter();
 </script>

@@ -2,15 +2,15 @@
 require_once("selection_page.inc");
 class page_organizations_for_selection extends selection_page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	/**
 	 * Create a data_list with all the selection organizations
 	 * with the possibility to pick any
 	 */
 	public function execute_selection_page() {
-		$this->add_javascript("/static/widgets/grid/grid.js");
-		$this->add_javascript("/static/data_model/data_list.js");
+		$this->addJavascript("/static/widgets/grid/grid.js");
+		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_organizations_list();");
 		$container_id = $this->generateID();
 		

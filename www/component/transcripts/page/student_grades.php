@@ -1,7 +1,7 @@
 <?php 
 class page_student_grades extends Page {
 	
-	public function get_required_rights() { return array("consult_students_grades"); }
+	public function getRequiredRights() { return array("consult_students_grades"); }
 	
 	public function execute() {
 		echo "This section is still under construction";

@@ -1,5 +1,9 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * All students: contains current students and alumni batches
+ * @param {CurriculumTreeNode_Root} root the root node
+ */
 function CurriculumTreeNode_AllStudents(root) {
 	CurriculumTreeNode.call(this, root, "all_students", true);
 	this.item.cells[0].addStyle({fontWeight:"bold"});

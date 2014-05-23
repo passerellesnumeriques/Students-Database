@@ -1,14 +1,14 @@
 <?php 
 class service_exam_get_available_supervisors_for_session extends Service {
 	
-	public function get_required_rights() { return array("can_access_selection_data"); }
+	public function getRequiredRights() { return array("can_access_selection_data"); }
 	public function documentation() {
 		echo "Get all the staff not assigned to a given exam session";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>session_id</code> exam session ID";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		JSON array of Staff objects
 		<?php

@@ -74,6 +74,11 @@ class user_people extends Component {
 		$q->join($users_alias, "UserPeople", array("id"=>"user"));
 		PNApplication::$instance->people->joinPeople($q, "UserPeople","people");
 	}
+	public function joinUserToPeople(&$q) {
+		$people_alias = $q->getTableAlias("People");
+		$q->join($people_alias, "UserPeople", array("id"=>"people"));
+		PNApplication::$instance->user_management->joinUser($q, "UserPeople", "user");
+	}
 	
 }
 ?>

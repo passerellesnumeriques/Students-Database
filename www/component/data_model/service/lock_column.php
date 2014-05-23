@@ -1,8 +1,8 @@
 <?php
 class service_lock_column extends Service {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function documentation() { echo "Request a lock for a specific column in a table"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 <ul>
 	<li><code>table</code>: table name of the entity</li>
@@ -11,7 +11,7 @@ class service_lock_column extends Service {
 </ul>
 <?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 ?>
 <ul>
 	<li><code>lock</code>: id of the lock</li>

@@ -1,14 +1,14 @@
 <?php 
 class service_rename_calendar extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Rename a calendar owned by the current user"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>id</code>: calendar id<br/>";
 		echo "<code>name</code>: new name<br/>";
 	}
-	public function output_documentation() { echo "true on success"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		$check = SQLQuery::create()->bypassSecurity()

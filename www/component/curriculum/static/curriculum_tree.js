@@ -1,4 +1,9 @@
-// Tree nodes
+/**
+ * Abstract class representing a node in the curriculum tree
+ * @param {CurriculumTreeNode} parent parent node
+ * @param {String} tag tag of the node
+ * @param {Boolean} expanded indicates if the node should be expanded or collapsed
+ */
 function CurriculumTreeNode(parent, tag, expanded) {
 	if (!parent) return; // only prototype inititalization
 	this.parent = parent;
@@ -6,15 +11,23 @@ function CurriculumTreeNode(parent, tag, expanded) {
 	this.tag = tag;
 	_initCurriculumTreeNode(this);
 }
+/**
+ * Initialize a node
+ * @param {CurriculumTreeNode} node the node to be initialized
+ */
 function _initCurriculumTreeNode(node) {
 	node.item.node = node;
 	node.item.setOnSelect(function() { node._onselect(); });
 	node.parent.item.addItem(node.item);
 }
 CurriculumTreeNode.prototype = {
+	/** {CurriculumTreeNode} parent node */
 	parent: null,
+	/** {String} tag */
 	tag: "",
+	/** {TreeItem} item of the tree widget */
 	item: null,
+	/** Called when the node is selected */
 	_onselect: function() {
 		// Footer
 		var footer = document.getElementById('tree_footer_title');
@@ -39,6 +52,10 @@ CurriculumTreeNode.prototype = {
 		// Update frame
 		nodeSelected(this);
 	},
+	/** Searches the given tag
+	 * @param {String} tag the tag to search
+	 * @returns {CurriculumTreeNode} the node having the searched tag, or null if not found
+	 */
 	findTag: function(tag) {
 		if (this.tag == tag) return this;
 		for (var i = 0; i < this.item.children.length; ++i) {
@@ -47,13 +64,27 @@ CurriculumTreeNode.prototype = {
 		}
 		return null;
 	},
+	/** Remove this node from the tree */
 	remove: function() {
 		this.parent.item.removeItem(this.item);
 	},
+	/** Get the icon URL
+	 * @returns {String} the URL or null if no icon
+	 */
 	getIcon: function() { return null; },
+	/** Create the node title
+	 * @param {Boolean} editable indicates if the title may be editable
+	 * @returns {Object} the title (string or html element)
+	 */
 	createTitle: function(editable) { return ""; },
+	/** Create html containing information about this node
+	 * @returns {Element} the html
+	 */
 	createInfo: function() {
 	},
+	/** Returns parameters that should be given in the URL of sub-pages
+	 * @returns {Object} the parameters
+	 */
 	getURLParameters: function () {
 		return {};
 	}

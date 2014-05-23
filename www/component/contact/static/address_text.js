@@ -8,7 +8,6 @@ if (typeof window.top.require != 'undefined')
 function address_text(address){
 	/** DIV containing everything */ 
 	this.element = document.createElement("DIV");
-
 	var empty = true;
 	if (address.building != null || address.unit != null) {
 		var text = "";

@@ -1,7 +1,7 @@
 <?php
 class page_user_rights extends Page {
 	
-	public function get_required_rights() { return array("consult_user_rights"); }
+	public function getRequiredRights() { return array("consult_user_rights"); }
 	
 	public function execute() {
 // get the user we need to display
@@ -34,34 +34,27 @@ foreach ($roles as $role)
 		break;
 	}
 
-$this->add_javascript("/static/widgets/header_bar.js");
-$this->onload("new header_bar('user_rights_header');");
-
 if ($can_edit)
 	DataBaseLock::generateScript($lock_id);
 ?>
-<div id='user_rights_header' icon='/static/user_management/access_list_32.png' title="User Access Rights: &lt;span style='font-family:Courrier New;font-weight:bold;font-style:italic'&gt;<?php echo $user["domain"]."\\".$user["username"];?>&lt;/span&gt;">
-<?php 
-	if ($can_edit) {
-		?><div class='button' onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</div><?php
-	}
-	if ($locked <> null) {
-		?><img src='<?php echo theme::$icons_16["lock"];?>'/> This page is already locked by <?php echo $locked;?><?php
-	}
-?>
+<div class='page_title'>
+	<img src='/static/user_management/access_list_32.png'/>
+	User Access Rights: <span style='font-family:Courrier New;font-weight:bold;font-style:italic'><?php echo $user["domain"]."\\".$user["username"];?></span>
 </div>
-<?php
+<div style='background-color:white'>
+<?php 
+if ($locked <> null)
+	echo "<img src='".theme::$icons_16["lock"]."'/> This page is already locked by ".$locked."<br/>";
 
 if ($is_admin) {
-	echo "This user is an administrator, it has the right to do everything";
-	return;
-}
+	echo "<div style='padding:10px'>This user is an administrator, it has the right to do everything</div>";
+} else {
 
 // retrieve all existing rights, and categories
 $all_rights = array();
 $categories = array();
 foreach (PNApplication::$instance->components as $component) {
-	foreach ($component->get_readable_rights() as $cat) {
+	foreach ($component->getReadableRights() as $cat) {
 		if (!isset($categories[$cat->display_name]))
 			$categories[$cat->display_name] = array();
 		foreach ($cat->rights as $r) {
@@ -69,7 +62,7 @@ foreach (PNApplication::$instance->components as $component) {
 			$all_rights[$r->name] = $r;
 		}
 	}
-	foreach ($component->get_writable_rights() as $cat) {
+	foreach ($component->getWritableRights() as $cat) {
 		if (!isset($categories[$cat->display_name]))
 			$categories[$cat->display_name] = array();
 		foreach ($cat->rights as $r) {
@@ -254,6 +247,15 @@ function um_rights_save() {
 </script>
 <?php }?>
 <?php
+} // not an admin
+?>
+</div>
+<?php if ($can_edit && !$is_admin) {?>
+<div class='page_footer'>
+	<button onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
+</div>
+<?php }
+
 	}
 	
 }

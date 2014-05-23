@@ -1,17 +1,17 @@
 <?php 
 class service_unassign_teacher extends Service {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function documentation() { echo "Unassign a teacher from a subject/class"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>people_id</code>: teacher</li>";
 		echo "<li><code>subject_id</code>: subject</li>";
 		echo "<li><code>class_id</code>: optional, if specified, only assignment to this class is removed, if not specified, all assignments of the teacher for the subject are removed</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "true on success"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		$people_id = $input["people_id"];
@@ -33,7 +33,7 @@ class service_unassign_teacher extends Service {
 				SQLQuery::create()->removeKeys("TeacherAssignment", $keys);
 			}
 		}
-		if (!PNApplication::has_errors()) echo "true";
+		if (!PNApplication::hasErrors()) echo "true";
 	}
 	
 }

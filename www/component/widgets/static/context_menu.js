@@ -138,37 +138,26 @@ function context_menu(menu) {
 	 */
 	t.showBelowElement = function(from, min_width_is_from) {
 		menu.style.visibility = "visible";
-		menu.style.position = "absolute";
+		menu.style.position = "fixed";
 		t.show_from = from;
+		menu.style.top = "0px";
+		menu.style.left = "0px";
 		menu.style.width = "";
 		menu.style.height = "";
-		document.body.appendChild(menu);
+		window.top.document.body.appendChild(menu);
 		var win = getWindowFromElement(from);
 		var x,y,w,h;
-		if (win != window) {
-			x = win.absoluteLeft(from);
-			y = win.absoluteTop(from);
-			var pw;
-			do {
-				pw = win.parent;
-				x += pw.absoluteLeft(win.frameElement);
-				y += pw.absoluteTop(win.frameElement);
-				x -= win.document.body.scrollLeft;
-				y -= win.document.body.scrollTop;
-				win = pw;
-			} while (pw != window);
-		} else {
-			x = absoluteLeft(from);
-			y = absoluteTop(from);
-		}
+		var pos = win.getFixedPosition(from);
+		x = pos.x;
+		y = pos.y;
 		w = menu.offsetWidth;
 		h = menu.offsetHeight;
 		if (min_width_is_from && w < from.offsetWidth) {
 			setWidth(menu, w = from.offsetWidth);
 		}
-		if (y+from.offsetHeight+h > getWindowHeight()) {
+		if (y+from.offsetHeight+h > window.top.getWindowHeight()) {
 			// not enough space below
-			var space_below = getWindowHeight()-(y+from.offsetHeight);
+			var space_below = window.top.getWindowHeight()-(y+from.offsetHeight);
 			var space_above = y;
 			if (space_above > space_below) {
 				y = y-h;
@@ -188,10 +177,10 @@ function context_menu(menu) {
 			// by default, show it below
 			y = y+from.offsetHeight;
 		}
-		if (x+w > getWindowWidth()) {
-			x = getWindowWidth()-w;
+		if (x+w > window.top.getWindowWidth()) {
+			x = window.top.getWindowWidth()-w;
 		}
-		document.body.removeChild(menu);
+		window.top.document.body.removeChild(menu);
 		t.showAt(x,y,from);
 	};
 	/** Display the menu above the given element
@@ -200,29 +189,18 @@ function context_menu(menu) {
 	 */
 	t.showAboveElement = function(from, min_width_is_from) {
 		menu.style.visibility = "visible";
-		menu.style.position = "absolute";
+		menu.style.position = "fixed";
 		t.show_from = from;
+		menu.style.top = "0px";
+		menu.style.width = "0px";
 		menu.style.width = "";
 		menu.style.height = "";
-		document.body.appendChild(menu);
+		window.top.document.body.appendChild(menu);
 		var win = getWindowFromElement(from);
 		var x,y,w,h;
-		if (win != window) {
-			x = win.absoluteLeft(from);
-			y = win.absoluteTop(from);
-			var pw;
-			do {
-				pw = win.parent;
-				x += pw.absoluteLeft(win.frameElement);
-				y += pw.absoluteTop(win.frameElement);
-				x -= win.document.body.scrollLeft;
-				y -= win.document.body.scrollTop;
-				win = pw;
-			} while (pw != window);
-		} else {
-			x = absoluteLeft(from);
-			y = absoluteTop(from);
-		}
+		var pos = win.getFixedPosition(from);
+		x = pos.x;
+		y = pos.y;
 		w = menu.offsetWidth;
 		h = menu.offsetHeight;
 		if (min_width_is_from && w < from.offsetWidth) {
@@ -230,11 +208,11 @@ function context_menu(menu) {
 		}
 		if (y-h < 0) {
 			// not enough space above
-			var space_below = getWindowHeight()-(y+from.offsetHeight);
+			var space_below = window.top.getWindowHeight()-(y+from.offsetHeight);
 			var space_above = y;
 			if (space_below > space_above) {
 				y = y+from.offsetHeight;
-				if (y+h > getWindowHeight()) {
+				if (y+h > window.top.getWindowHeight()) {
 					// not enough space: scroll bar
 					y = 0;
 					menu.style.overflowY = 'scroll';
@@ -250,10 +228,10 @@ function context_menu(menu) {
 			// by default, show it above
 			y = y-h;
 		}
-		if (x+w > getWindowWidth()) {
-			x = getWindowWidth()-w;
+		if (x+w > window.top.getWindowWidth()) {
+			x = window.top.getWindowWidth()-w;
 		}
-		document.body.removeChild(menu);
+		window.top.document.body.removeChild(menu);
 		t.showAt(x,y,from);
 	};
 	/** Display the menu at the given position (using absolute positioning)
@@ -268,10 +246,8 @@ function context_menu(menu) {
 			t.parent_menu_listener = t.parent_menu.hide_if_outside_menu;
 			t.parent_menu.hide_if_outside_menu = function(){};
 		}
-		y += from.ownerDocument.body.scrollTop;
-		x += from.ownerDocument.body.scrollLeft;
 		menu.style.visibility = "visible";
-		menu.style.position = "absolute";
+		menu.style.position = "fixed";
 		menu.style.top = y+"px";
 		menu.style.left = x+"px";
 		t.show_at = [x,y];
@@ -283,7 +259,7 @@ function context_menu(menu) {
 		}
 		if (typeof animation != 'undefined')
 			menu.style.visibility = 'hidden';
-		document.body.appendChild(menu);
+		window.top.document.body.appendChild(menu);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);
 			window.top.pnapplication.registerOnclick(window, t._listener);
@@ -350,8 +326,8 @@ function context_menu(menu) {
 	};
 	
 	t.resize = function() {
-		if (menu.parentNode != document.body) return;
-		document.body.removeChild(menu);
+		if (menu.parentNode != window.top.document.body) return;
+		window.top.document.body.removeChild(menu);
 		menu.style.top = "";
 		menu.style.left = "";
 		if (t.show_from)

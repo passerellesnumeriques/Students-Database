@@ -2,7 +2,7 @@ if (typeof require != 'undefined')
 	require("typed_field.js");
 	
 /** Generic control to display a field, allow the user to switch between editable and non-editable mode. When the user is in editable mode, the user can save the value or cancel modifications. This is used by editable_cell and editable_datadisplay.
- * @param {DOMNode} container where to put it
+ * @param {Element} container where to put it
  * @param {String} field_classname the typed filed of the data
  * @param {Object} field_arguments (optional) in case this typed_filed needs arguments
  * @param {Object} data the initial data for the typed field
@@ -17,9 +17,9 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	container.editable_cell = this;
 	/** {typed_field} the typed field */
 	t.field = null;
-	/** {DOMNode} the save button when in editable mode */ 
+	/** {Element} the save button when in editable mode */ 
 	t.save_button = null;
-	/** {DOMNode} the cancel edit when in editable mode */
+	/** {Element} the cancel edit when in editable mode */
 	t.unedit_button = null;
 	/** {Array} list of locks when in editable mode */
 	t.locks = null;
@@ -133,8 +133,12 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	t.save = function() {
 		var data = t.field.getCurrentData();
 		container.removeChild(t.field.getHTMLElement());
-		t.field.getHTMLElement().removeChild(t.save_button); t.save_button = null;
-		t.field.getHTMLElement().removeChild(t.unedit_button); t.unedit_button = null;
+		if (t.save_button)
+			t.field.getHTMLElement().removeChild(t.save_button);
+		t.save_button = null;
+		if (t.unedit_button)
+			t.field.getHTMLElement().removeChild(t.unedit_button);
+		t.unedit_button = null;
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);

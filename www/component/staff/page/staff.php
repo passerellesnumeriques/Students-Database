@@ -1,16 +1,16 @@
 <?php 
 class page_staff extends Page {
 
-	public function get_required_rights() { return array("consult_staff_list"); }
+	public function getRequiredRights() { return array("consult_staff_list"); }
 	
 	public function execute() {
-		$this->add_javascript("/static/widgets/header_bar.js");
+		$this->addJavascript("/static/widgets/header_bar.js");
 		$this->onload("new header_bar('staff_header','toolbar_big');");
-		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
 		$this->onload("new vertical_layout('staff_page');");
-		$this->add_javascript("/static/widgets/tree/tree.js");
+		$this->addJavascript("/static/widgets/tree/tree.js");
 		$this->onload("init_staff_tree();");
-		$this->add_javascript("/static/data_model/editable_cell.js");
+		$this->addJavascript("/static/data_model/editable_cell.js");
 
 		$departments = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();
 		

@@ -54,7 +54,7 @@ class RolesFunctionalities_Test_CreateRole_NoRight extends TestFunctionalitiesSt
 		try {
 			if (PNApplication::$instance->user_management->create_role("test_error"))
 				return "Can create role";
-			PNApplication::clear_errors();
+			PNApplication::clearErrors();
 		} catch (Exception $e) {}
 		if (SQLQuery::create()->bypassSecurity()->select("Role")->where("name","test_error")->executeSingleRow() <> null)
 			return "Create role returned error, but the role exists in the database";
@@ -78,7 +78,7 @@ class RolesFunctionalities_Test_CreateRole_Ok extends TestFunctionalitiesStep {
 		try {
 			if (PNApplication::$instance->user_management->create_role("test_ok"))
 				return "Can create 2 times the same role";
-			PNApplication::clear_errors();
+			PNApplication::clearErrors();
 		} catch (Exception $e) { }
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -92,7 +92,7 @@ class RolesFunctionalities_Test_CreateRole_OnlyAssign extends TestFunctionalitie
 		try {
 			if (PNApplication::$instance->user_management->create_role("test_error"))
 				return "Can create role";
-			PNApplication::clear_errors();
+			PNApplication::clearErrors();
 		} catch (Exception $e) {}
 		if (SQLQuery::create()->bypassSecurity()->select("Role")->where("name","test_error")->executeSingleRow() <> null)
 			return "Create role returned error, but the role exists in the database";
@@ -109,7 +109,7 @@ class RolesFunctionalities_Test_SetRoleRights_NoRight extends TestFunctionalitie
 		try {
 			if (PNApplication::$instance->user_management->set_role_rights($scenario_data["create_role_ok_id"],array("assign_role"=>true)))
 				return "Can set role's rights";
-			PNApplication::clear_errors();
+			PNApplication::clearErrors();
 		} catch (Exception $e) {}
 		$rights = SQLQuery::create()->bypassSecurity()->select("RoleRights")->where("role",$scenario_data["create_role_ok_id"])->execute(); 
 		if (count($rights) > 0)
@@ -222,7 +222,7 @@ class RolesFunctionalities_Test_RemoveRole_NoRight extends TestFunctionalitiesSt
 		try {
 			if (PNApplication::$instance->user_management->remove_role($scenario_data["create_role_ok_id"]))
 				return "Can remove role";
-			PNApplication::clear_errors();
+			PNApplication::clearErrors();
 		} catch (Exception $e) {}
 		if (SQLQuery::create()->bypassSecurity()->select("Role")->where("name","test_ok")->executeSingleRow() == null)
 			return "Remove role returned error, but the role does not exist anymore in the database";
@@ -238,7 +238,7 @@ class RolesFunctionalities_Test_RemoveRole_OnlyAssign extends TestFunctionalitie
 		try {
 			if (PNApplication::$instance->user_management->remove_role($scenario_data["create_role_ok_id"]))
 				return "Can remove role";
-			PNApplication::clear_errors();
+			PNApplication::clearErrors();
 		} catch (Exception $e) {}
 		if (SQLQuery::create()->bypassSecurity()->select("Role")->where("name","test_ok")->executeSingleRow() == null)
 			return "Remove role returned error, but the role does not exist anymore in the database";

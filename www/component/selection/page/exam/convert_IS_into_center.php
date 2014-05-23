@@ -8,7 +8,7 @@ require_once("component/selection/SelectionJSON.inc");
  */
 class page_exam_convert_IS_into_center extends selection_page {
 	
-	public function get_required_rights() {return array("see_exam_center_detail","see_information_session_details");}
+	public function getRequiredRights() {return array("see_exam_center_detail","see_information_session_details");}
 	
 	public function execute_selection_page() {
 		//Get the locks if already exist
@@ -93,7 +93,7 @@ class page_exam_convert_IS_into_center extends selection_page {
 		}
 	
 		//generate the page
-		$this->require_javascript("vertical_layout.js");
+		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('assign_container');");
 		?>
 		<div id = "assign_container" style = "width:100%; height:100%; overflow:hidden;">

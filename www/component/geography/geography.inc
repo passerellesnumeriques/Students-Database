@@ -6,7 +6,7 @@ class geography extends Component {
 	private $local_country_divisions;
 	
 	public function init() {
-		$d = PNApplication::$instance->get_domain_descriptor();
+		$d = PNApplication::$instance->getDomainDescriptor();
 		$d = $d["geography"];
 		$this->local_country = SQLQuery::create()->bypassSecurity()->select("Country")->whereValue("Country", "code", strtoupper($d["country_code"]))->executeSingleRow();
 		$this->local_country_divisions = $this->getCountryDivisions($this->local_country["id"]);
@@ -66,7 +66,7 @@ class geography extends Component {
 		
 		// put the countries of PN domains first
 		$PN_countries = array();
-		foreach (PNApplication::$instance->get_domains() as $domain=>$descr) {
+		foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
 			$code = $descr["geography"]["country_code"];
 			$code = strtolower($code);
 			if (!in_array($code, $PN_countries)) array_push($PN_countries, $code);
@@ -82,7 +82,7 @@ class geography extends Component {
 		}
 		
 		// put the domain country first
-		$local_code = PNApplication::$instance->get_domain_descriptor();
+		$local_code = PNApplication::$instance->getDomainDescriptor();
 		$local_code = strtolower($local_code["geography"]["country_code"]);
 		for ($i = 0; $i < count($countries); $i++) {
 			if (strtolower($countries[$i]["country_code"]) == $local_code) {

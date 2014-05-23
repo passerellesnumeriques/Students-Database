@@ -1,8 +1,8 @@
 <?php
 class service_get_countries_list extends Service{
-	public function get_required_rights(){return array();}
-	public function input_documentation(){echo "No";}
-	public function output_documentation(){
+	public function getRequiredRights(){return array();}
+	public function inputDocumentation(){echo "No";}
+	public function outputDocumentation(){
 		?>
 		Returns an array containing javascript objects:
 		<ul>

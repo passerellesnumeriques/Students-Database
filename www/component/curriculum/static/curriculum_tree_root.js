@@ -1,5 +1,8 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * Root node of the tree
+ */
 function CurriculumTreeNode_Root() {
 	this.item = tr;
 	this.item.node = this;

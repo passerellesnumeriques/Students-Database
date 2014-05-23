@@ -1,8 +1,8 @@
 <?php
 require_once "component/selection/SelectionJSON.inc";
 class service_applicant_unassign_all_from_center_entity extends Service{
-	public function get_required_rights(){return array("can_access_selection_data","manage_applicant");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("can_access_selection_data","manage_applicant");}
+	public function inputDocumentation(){
 		?>
 		<ul>
 		<li><code>EC_id</code> NULL | the exam center ID from which the applicants shall be unassigned</li>		
@@ -11,7 +11,7 @@ class service_applicant_unassign_all_from_center_entity extends Service{
 		</ul>
 		<?php
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		?>
 		Array of objects (1 per applicant) with 6 attributes:
 		<ul>

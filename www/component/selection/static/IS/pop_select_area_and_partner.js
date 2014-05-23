@@ -53,7 +53,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 	/**
 	 * Set the popup content
 	 * The content is made of a table, with two rows
-	 * First row contains error_html message if no host is selected (only area is not enough), else contains ok_message
+	 * First row contains errorHTML message if no host is selected (only area is not enough), else contains ok_message
 	 * Second row contains two td elements. First contains geographic area selection, second contains the select_area_and_matching_organizations element, if an area is selected 
 	 */
 	t._setPopContent = function(){
@@ -79,8 +79,8 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 		t._table.appendChild(tr);
 		t._partners_lists = new select_area_and_matching_organizations(t._td_partners, t.geographic_area, "Select this partner as host",t.host);
 		//Set the partners footer: add a create partner button
-		t._create_partner_button = document.createElement("div");
-		t._create_partner_button.className = "button";
+		t._create_partner_button = document.createElement("BUTTON");
+		t._create_partner_button.className = "action";
 		t._create_partner_button.innerHTML = "Create Partner";
 		t._create_partner_button.onclick = function(){
 			var p = new popup_window("New Organization", theme.icons_16.add, "");
@@ -149,7 +149,7 @@ function pop_select_area_and_partner(geographic_area, host, host_address, host_n
 	/**
 	 * Update the buttons and the information row, depending on the fact that a host is selected or not
 	 * If an host is selected, the ok_html message is displayed and the finish button is enabled, and finish_latter_button is disabled
-	 * If no host is selected, the error_html message is displayed and the finish_later button is enabled, and finish is disabled
+	 * If no host is selected, the errorHTML message is displayed and the finish_later button is enabled, and finish is disabled
 	 * Note: the two buttons have the same onclick function. The only distinction is only made to help the user understanding that he must set a host to be done 
 	 */
 	t._updatePopButtonsAndInfoRow = function(){;

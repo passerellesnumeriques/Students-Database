@@ -429,6 +429,29 @@ function getHeight(element) {
 	h += parseInt(s.marginTop) + parseInt(s.marginBottom);
 	return h;
 }
+function getFixedPosition(elem) {
+	return _getFixedPosition(window,elem);
+}
+function _getFixedPosition(win,elem) {
+	var x = elem.offsetLeft;
+	var y = elem.offsetTop;
+	if (elem.nodeName != 'BODY') {
+		while (elem.offsetParent) {
+			x -= elem.offsetParent.scrollLeft;
+			y -= elem.offsetParent.scrollTop;
+			if (elem.nodeName == 'BODY') break;
+			elem = elem.offsetParent;
+			x += elem.offsetLeft;
+			y += elem.offsetTop;
+		}
+	}
+	if (win.frameElement) {
+		var pos = _getFixedPosition(getWindowFromElement(win.frameElement), win.frameElement);
+		x += pos.x;
+		y += pos.y;
+	}
+	return {x:x,y:y};
+}
 function getComputedStyleSizes(e) {
 	if (e.nodeType != 1) {
 		return {
@@ -477,8 +500,8 @@ function _stylePadding(s) {
 	if (s.length == 0) return "0px";
 	return s;
 };
-var _layout_add_css = window.add_stylesheet;
-window.add_stylesheet = function(url, onload) {
+var _layout_add_css = window.addStylesheet;
+window.addStylesheet = function(url, onload) {
 	_layout_add_css(url, function() {
 		layout.invalidate(document.body);
 		if (onload) onload();

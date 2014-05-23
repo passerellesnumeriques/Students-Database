@@ -4,8 +4,8 @@ function import_data(&$page, $icon, $title, $data_list, $fixed_data, $prefilled_
 	$container_id = $page->generateID();
 	echo "<div id='$container_id' style='width:100%;height:100%'></div>";
 	
-	$page->add_javascript("/static/data_import/custom_import.js");
-	$page->add_javascript("/static/data_model/DataDisplay.js");
+	$page->addJavascript("/static/data_import/custom_import.js");
+	$page->addJavascript("/static/data_model/DataDisplay.js");
 	?>
 	<script type="text/javascript">
 	var assist;

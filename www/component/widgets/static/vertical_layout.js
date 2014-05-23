@@ -41,7 +41,7 @@ function vertical_layout(container, keep_width) {
 			if (e.hasAttribute("force_position"))
 				e.style.position = e.getAttribute("force_position");
 			else
-				e.style.position = 'static';
+				e.style.position = 'relative';
 		}
 		if (keep_width) {
 			var h2 = t.container.clientHeight;

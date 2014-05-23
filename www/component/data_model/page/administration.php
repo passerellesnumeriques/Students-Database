@@ -1,12 +1,12 @@
 <?php 
 class page_administration extends Page {
 	
-	public function get_required_rights() { return array(); } // TODO add right
+	public function getRequiredRights() { return array(); } // TODO add right
 	
 	public function execute() {
-		$this->require_javascript("section.js");
-		$this->onload("section_from_html('section_lost_entities');");
-		$this->onload("section_from_html('section_invalid_keys');");
+		$this->requireJavascript("section.js");
+		$this->onload("sectionFromHTML('section_lost_entities');");
+		$this->onload("sectionFromHTML('section_invalid_keys');");
 ?>
 <div id='section_lost_entities' title='Lost data' collapsable='true' style='margin:10px'>
 	<div id='lost_entities'>

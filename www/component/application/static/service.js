@@ -9,6 +9,7 @@ service = {
 	 * @param {Object} input data to send to the service: an object, each attribute being a $_POST. If an attribute is a structure or array, it will be converted into a json string.
 	 * @param {Function} handler callback that will receive the result, or null if an error occured
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
+	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
 	 */
 	json: function(component, service_name, input, handler, foreground, progress_handler) {
 		window.top._last_service_call = new Date().getTime();
@@ -40,6 +41,7 @@ service = {
 	 * @param {Object} input data to send to the service: an object, each attribute being a $_POST. If an attribute is a structure or array, it will be converted into a json string.
 	 * @param {Function} handler callback that will receive the result, or null if an error occured
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
+	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
 	 */
 	xml: function(component, service_name, input, handler, foreground, progress_handler) {
 		window.top._last_service_call = new Date().getTime();
@@ -74,8 +76,11 @@ service = {
 	 * @param {Object} input data to send to the service: an object, each attribute being a $_POST. If an attribute is a structure or array, it will be converted into a json string.
 	 * @param {Function} handler callback that will receive the raw result, or null if a network error occured
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
+	 * @param {Function} error_handler callback to be called when an error occured (the error message is given as parameter)
+	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
+	 * @param {String} override_response_mime_type if specified, the response will be interpreted as the given mime type
 	 */
-	customOutput: function(component, service_name, input, handler, foreground, error_handler, progress_handler, overrideResponseMimeType) {
+	customOutput: function(component, service_name, input, handler, foreground, error_handler, progress_handler, override_response_mime_type) {
 		window.top._last_service_call = new Date().getTime();
 		var data = null;
 		if (input != null)
@@ -93,7 +98,7 @@ service = {
 			},
 			foreground,
 			progress_handler,
-			overrideResponseMimeType
+			override_response_mime_type
 		);
 	},
 
@@ -123,7 +128,7 @@ service = {
 			}
 			s += "}";
 		} else if (typeof input == 'string')
-			s += "\""+input.replace(/"/g, "\\\"")+"\"";
+			s += "\""+input.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")+"\"";
 		else
 			s += input;
 		return s;

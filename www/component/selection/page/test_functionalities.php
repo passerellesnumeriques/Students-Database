@@ -1,7 +1,7 @@
 <?php 
 require_once("selection_page.inc");
 class page_test_functionalities extends selection_page {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function execute_selection_page(){
 		$columns = explode(".", "exam_session.event.start");		
 		require_once 'component/data_model/Model.inc';

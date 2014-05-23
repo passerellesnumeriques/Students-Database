@@ -1,13 +1,11 @@
 <?php
 class page_roles extends Page {
 	
-	public function get_required_rights() { return array("manage_roles"); }
+	public function getRequiredRights() { return array("manage_roles"); }
 	
 	protected function execute() {
-		$this->add_javascript("/static/widgets/header_bar.js");
-		$this->add_javascript("/static/widgets/wizard.js");
-		$this->add_javascript("/static/javascript/validation.js");
-		$this->onload("new header_bar('roles_header');");
+		$this->addJavascript("/static/widgets/wizard.js");
+		$this->addJavascript("/static/javascript/validation.js");
 
 		$roles = SQLQuery::create()
 			->select("Role")
@@ -20,45 +18,34 @@ class page_roles extends Page {
 			->orderBy("Role","name",true)
 			->execute();
 ?>
-		<div id='roles_header' icon="/static/user_management/role_32.png" title="Roles">
-			<div class='button' onclick="new wizard('new_role_wizard').launch()"><img src='<?php echo theme::$icons_16["add"];?>'/> New Role</div>
-		</div>
-		<table rules='all' style='border:1px solid black;margin:5px'>
-			<tr>
-				<th>Role</th>
-				<th>Users</th>
-				<th>Actions</th>
-			</tr>
-			<?php foreach ($roles as $role) {?>
-			<tr>
-				<td><?php echo $role["name"];?></td>
-				<td align=right><?php echo $role["user"] == null ? 0 : $role["nb_users"];?></td>
-				<td>
-					<img src='<?php echo theme::$icons_16["edit"];?>' title="Rename" style='cursor:pointer' onclick="rename_role(<?php echo $role["id"];?>,'<?php echo $role["name"];?>');"/>
-					<img src='/static/user_management/access_list.png' title="Access Rights" style='cursor:pointer' onclick="location='role_rights?role=<?php echo $role["id"];?>';"/>
-					<img src='<?php echo theme::$icons_16["remove"];?>' title="Remove" style='cursor:pointer' onclick="remove_role(<?php echo $role["id"];?>,'<?php echo $role["name"];?>',<?php echo $role["user"] == null ? 0 : $role["nb_users"]?>);"/>
-				</td>
-			</tr>
-			<?php }?>
-		</table>
-		
-<div id='new_role_wizard' class='wizard'
-	title="New Role"
-	icon="<?php echo theme::$icons_16["add"];?>"
-	finish="new_role_finish"
->
-	<div class='wizard_page'
-		title='Role'
-		icon='/static/user_management/role_32.png'
-		validate="new_role_validate"
-	>
-		<form name='new_role_wizard' onsubmit='return false'>
-			Role Name <input type='text' size=30 maxlength=100 name='role_name' onkeyup="wizard_validate(this)"/>
-			<span class='validation_message' id='role_name_validation'></span>
-		</form>
-	</div>
+<div class='page_title'>
+	<img src="/static/user_management/role_32.png"/>
+	Roles
 </div>
-		
+<div style='background-color:white;padding:10px'>
+	<table rules='all' style='border:1px solid black;margin:5px'>
+		<tr>
+			<th>Role</th>
+			<th>Users</th>
+			<th>Actions</th>
+		</tr>
+		<?php foreach ($roles as $role) {?>
+		<tr>
+			<td><?php echo $role["name"];?></td>
+			<td align=right><?php echo $role["user"] == null ? 0 : $role["nb_users"];?></td>
+			<td>
+				<img src='<?php echo theme::$icons_16["edit"];?>' title="Rename" style='cursor:pointer' onclick="rename_role(<?php echo $role["id"];?>,'<?php echo $role["name"];?>');"/>
+				<img src='/static/user_management/access_list.png' title="Access Rights" style='cursor:pointer' onclick="location='role_rights?role=<?php echo $role["id"];?>';"/>
+				<img src='<?php echo theme::$icons_16["remove"];?>' title="Remove" style='cursor:pointer' onclick="remove_role(<?php echo $role["id"];?>,'<?php echo $role["name"];?>',<?php echo $role["user"] == null ? 0 : $role["nb_users"]?>);"/>
+			</td>
+		</tr>
+		<?php }?>
+	</table>
+</div>
+<div class='page_footer'>
+	<button class="action" onclick="new_role();"><img src='<?php echo theme::make_icon("/static/user_management/role.png",theme::$icons_10["add"]);?>'/> New Role</button>
+</div>
+	
 <script type='text/javascript'>
 var existing_roles = [<?php
 $first = true;
@@ -67,34 +54,32 @@ foreach ($roles as $role) {
 	echo json_encode($role["name"]);
 }
 ?>];
-function new_role_validate(wizard,handler) {
-	var form = document.forms['new_role_wizard'];
-	var name = form.elements['role_name'];
-	var ok = true;
-	// check name not empty, and does not exist yet
-	if (name.value.length == 0) {
-		validation_error(name, "Cannot be empty");
-		ok = false;
-	} else {
-		// check the name does not exist yet
-		for (var i = 0; i < existing_roles.length; ++i)
-			if (name.value == existing_roles[i]) {
-				ok = false;
-				validation_error(name, "The role "+name+" already exists");
-			}
-		if (ok)
-			validation_ok(name);
-	}
-	wizard.resize();
-	handler(ok);
-}
-function new_role_finish(wizard) {
-	var form = document.forms['new_role_wizard'];
-	var name = form.elements['role_name'].value;
-	service.json("user_management","create_role",{name:name},function(result){
-		if (result && result.id)
-			location.href = '/dynamic/user_management/page/role_rights?id='+result.id;
-	},true);
+function new_role() {
+	input_dialog(
+		theme.build_icon("/static/user_management/role.png",theme.icons_10.add),
+		"New Role",
+		"Role Name",
+		"",
+		100,
+		function(name) {
+			if (name.trim().length == 0)
+				return "Please enter a name";
+			// check the name does not exist yet
+			for (var i = 0; i < existing_roles.length; ++i)
+				if (name.trim().toLowerCase() == existing_roles[i].toLowerCase())
+					return "A role already exists with this name";
+			return null;		
+		},function(name) {
+			if (!name) return;
+			name = name.trim();
+			var lock = lock_screen(null, "Creating role "+name);
+			service.json("user_management","create_role",{name:name},function(result){
+				unlock_screen(lock);
+				if (result && result.id)
+					location.href = '/dynamic/user_management/page/role_rights?role='+result.id;
+			});
+		}
+	);
 }
 
 function rename_role(id,name) {

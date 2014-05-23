@@ -1,11 +1,11 @@
 <?php 
 class service_exam_add_supervisors_to_session extends Service {
 	
-	public function get_required_rights() { return array("can_access_selection_data"); }
+	public function getRequiredRights() { return array("can_access_selection_data"); }
 	public function documentation() {
 		echo "Add supervisors (staff or custom) to an exam session";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<ul>
 			<li><code>session_id</code> number exam session ID</li>
@@ -14,7 +14,7 @@ class service_exam_add_supervisors_to_session extends Service {
 		</ul>
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		true if well performed, else false
 		<?php
@@ -43,7 +43,7 @@ class service_exam_add_supervisors_to_session extends Service {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			echo "false";
 		} else {

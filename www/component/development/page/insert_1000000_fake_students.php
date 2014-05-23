@@ -1,7 +1,7 @@
 <?php 
 class page_insert_1000000_fake_students extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		for ($j = 0; $j < 100; ++$j) {

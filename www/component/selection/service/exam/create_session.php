@@ -1,14 +1,14 @@
 <?php
 class service_exam_create_session extends Service{
-	public function get_required_rights(){return array("manage_exam_center");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("manage_exam_center");}
+	public function inputDocumentation(){
 		?><ul>
 		<li><code>event</code> CalendarObject event</li>
 		<li><code>EC_id</code> exam center ID</li>
 		</ul>
 		<?php
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		echo "<code>event_id</code> {Number} the event id of the session created";
 	}
 	public function documentation(){

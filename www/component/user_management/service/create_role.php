@@ -3,17 +3,17 @@ class service_create_role extends Service {
 	public function documentation() {
 ?>Create a new role.<?php		
 	}
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array("manage_roles");
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 <ul>
 	<li><code>name</code>: name of the new role</li>
 </ul>
 <?php 
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 ?>return the id of the new role on success.<?php 
 	}
 	public function execute(&$component, $input) {

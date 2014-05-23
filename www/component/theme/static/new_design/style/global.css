@@ -66,6 +66,24 @@ table.all_borders>tbody>tr>th, table.all_borders>tr>th {
     margin-bottom: 5px;
     box-shadow: 0px -3px 5px -2px #DDDDDD inset;
 }
+.page_section_title2 {
+    font-family: Arial;
+    font-size: 16px;
+    color: #404040;
+    font-weight: 100;
+    padding: 5px 10px 5px 10px;
+    margin-bottom: 5px;
+    box-shadow: 0px -3px 5px -2px #DDDDDD inset;
+}
+.page_section_title3 {
+    font-family: Arial;
+    font-size: 14px;
+    color: #404040;
+    font-weight: 100;
+    padding: 5px 10px 5px 10px;
+    margin-bottom: 5px;
+    box-shadow: 0px -3px 5px -2px #DDDDDD inset;
+}
 
 /* Button */
 button img {

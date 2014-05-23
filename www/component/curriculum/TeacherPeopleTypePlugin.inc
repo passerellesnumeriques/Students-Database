@@ -1,5 +1,6 @@
 <?php 
 require_once("component/people/PeopleTypePlugin.inc");
+/** Implementation of PeopleTypePlugin for a teacher */
 class TeacherPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getSecurityPriority() { return 20; }

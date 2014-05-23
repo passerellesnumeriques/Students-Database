@@ -26,15 +26,15 @@ for ($i = 0; $i < count($fields); $i++) {
 	}
 }
 
-$page->require_javascript("typed_field.js");
+$page->requireJavascript("typed_field.js");
 foreach ($fields as $field) {
 	$tf = $field[0]->getTypedField($field[1]->sub_model);
-	$page->require_javascript($tf[0].".js");
+	$page->requireJavascript($tf[0].".js");
 }
-$page->require_javascript("field_html.js");
-$page->require_javascript("DataDisplay.js");
+$page->requireJavascript("field_html.js");
+$page->requireJavascript("DataDisplay.js");
 	
-$page->require_javascript("grid.js");
+$page->requireJavascript("grid.js");
 $grid_id = $page->generateID();
 echo "<div id='$grid_id'></div>";
 ?>

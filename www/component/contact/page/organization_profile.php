@@ -1,7 +1,7 @@
 <?php 
 require_once '/component/contact/ContactJSON.inc';
 class page_organization_profile extends Page {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function execute(){
 		$id = $_GET["organization"];
 		
@@ -70,7 +70,7 @@ class page_organization_profile extends Page {
 			$existing_types .= "{id:".$t["id"].",name:".json_encode($t["name"])."}";
 		}
 		$existing_types .= "]";
-		$this->add_javascript("/static/contact/organization.js");
+		$this->addJavascript("/static/contact/organization.js");
 		$container_id = $this->generateID();
 		$this->onload("window.organization = new organization('$container_id',$org_structure,$existing_types,true);");
 		echo "<center><div id='$container_id' style='margin:5px;display:inline-block;border:1px solid #808080'></div></center>";

@@ -172,8 +172,8 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	 * Populate it with the buttons select date / remove date (if already set)
 	 */
 	t._setFooter = function(){
-		var div_set_date = document.createElement("div");
-		div_set_date.className = "button";
+		var div_set_date = document.createElement("BUTTON");
+		div_set_date.className = "action";
 		div_set_date.innerHTML = "<img src = '/static/selection/IS/date_clock_picker.png' style='vertical-align:bottom'/> Set the date";
 		t.section.addToolBottom(div_set_date);
 		div_set_date.onclick = function(){
@@ -186,8 +186,8 @@ function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			}
 			pop.show();
 		};
-		var remove_button = document.createElement("div");
-		remove_button.className = "button";
+		var remove_button = document.createElement("BUTTON");
+		remove_button.className = "action important";
 		remove_button.onclick = function(){
 			// var locker = lock_screen();
 			t._resetTableAndEvent();

@@ -41,7 +41,7 @@ function require(javascript,handler) {
 	}
 	for (var i = 0; i < javascripts_paths.length; ++i)
 		if (javascripts_paths[i].name == javascript) {
-			add_javascript(javascripts_paths[i].path, handler);
+			addJavascript(javascripts_paths[i].path, handler);
 			return;
 		}
 	alert("Unknown javascript '"+javascript+"'");

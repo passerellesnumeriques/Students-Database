@@ -1,10 +1,10 @@
 <?php 
 class service_update_address extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function inputDocumentation() {}
+	public function outputDocumentation() {}
 	public function execute(&$component, $input) {
 		if(isset($input["address"])){
 			$address = array(
@@ -32,7 +32,7 @@ class service_update_address extends Service {
 				// This is an insert
 				$id = SQLQuery::create()
 					->insert("PostalAddress",$address);
-				if(PNApplication::has_errors())
+				if(PNApplication::hasErrors())
 					echo "false";
 				else
 					echo "{id:".$id."}";
@@ -40,7 +40,7 @@ class service_update_address extends Service {
 				// This is an update
 				$q = SQLQuery::create()
 					->updateByKey("PostalAddress",$input["address"]["id"],$address);
-				if(PNApplication::has_errors())
+				if(PNApplication::hasErrors())
 					echo "false";
 				else
 					echo "true";

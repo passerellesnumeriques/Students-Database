@@ -44,7 +44,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	/** Set (change) the content of the popup window to be an IFRAME.
 	 * @param {String} url url to load in the frame
 	 * @param {Function} onload if specified, it is called when the frame is loaded
-	 * @returns {DOMNode} the IFRAME element
+	 * @returns {Element} the IFRAME element
 	 */
 	t.setContentFrame = function(url, onload, post_data) {
 		if (!t.content_container)
@@ -132,6 +132,23 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.buttons_td.appendChild(b);
 			t.resize();
 		}
+	};
+	t.removeButtons = function() {
+		if (!t.buttons_tr) return;
+		t.table.removeChild(t.buttons_tr);
+		t.buttons_tr = null;
+		t.buttons_td = null;
+	};
+	t.addFooter = function(html) {
+		if (!t.buttons_tr) {
+			t.buttons_tr = t.table.ownerDocument.createElement("TR");
+			t.buttons_tr.className = 'popup_window_buttons';
+			t.table.appendChild(t.buttons_tr);
+			t.buttons_td = t.table.ownerDocument.createElement("TD"); t.buttons_tr.appendChild(t.buttons_td);
+			t.buttons_td.colSpan = 2;
+		}
+		t.buttons_td.appendChild(html);
+		t.resize();
 	};
 	t.addIconTextButton = function(icon, text, id, onclick) {
 		var span = document.createElement("SPAN");
