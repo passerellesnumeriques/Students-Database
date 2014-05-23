@@ -59,7 +59,7 @@ class page_applicant_list extends SelectionPage {
 						}
 						return data;
 					};
-					list.addTitle("/static/selection/applicant/applicants_16.png", "Applicants");
+					list.addTitle("/static/selection/applicant/applicants_16.png", <?php if (isset($input["title"])) echo json_encode($input["title"]); else echo "'Applicants'";?>);
 
 					var create_applicant = document.createElement("BUTTON");
 					create_applicant.className = "flat";

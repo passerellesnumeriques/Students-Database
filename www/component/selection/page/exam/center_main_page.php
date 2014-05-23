@@ -13,26 +13,9 @@ class page_exam_center_main_page extends SelectionPage {
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("initExamCentersList();");
-
-		$status_container_id = $this->generateID();
-		$ECIS_status_container_id = $this->generateID();
-		$applicants_assignement_container_id = $this->generateID();
 		$this->requireJavascript("horizontal_layout.js");
 		$this->onload("new horizontal_layout('horizontal_split',true);");
 		$this->requireJavascript("section.js");
-		$this->onload("sectionFromHTML('status_section');");
-		$this->onload("sectionFromHTML('status_ECIS_section');");
-		$this->onload("sectionFromHTML('status_applicants_assignment');");
-		$steps = PNApplication::$instance->selection->getSteps();
-		if($steps["exam_center"]){			
-			$this->requireJavascript("exam_center_status.js");
-			$this->onload("new exam_center_status('$status_container_id');");
-		}
-		$this->requireJavascript("exam_center_and_informations_sessions_status.js");
-		$this->onload("new exam_center_and_informations_sessions_status('".$ECIS_status_container_id."');");
-		$this->requireJavascript("applicants_assignment_to_EC_status.js");
-		$this->onload("new applicants_assignment_to_EC_status('".$applicants_assignement_container_id."');");
-		
 		$this->onload("sectionFromHTML('exam_status_section');");
 		$this->onload("loadExamCenterStatus();");
 		
@@ -42,24 +25,6 @@ class page_exam_center_main_page extends SelectionPage {
 			<div style ="display:inline-block;padding:5px;">
 				<div id='exam_status_section' title='Status' collapsable='false' css='soft' style='display:inline-block;'>
 					<div id='exam_status' class='selection_status'></div>
-				</div>
-			
-				<div id='status_section' title='Exam Centers Status' collapsable='false' css='soft' style='margin:10px; width:360px;'>
-					<div id = '<?php echo $status_container_id; ?>'>
-					<?php 
-					if(!$steps["exam_center"]){
-					?>
-					<div><i>There is no exam center yet</i><div class = "button" onclick = "onCreateNewCenter(this);" style = "margin-left:3px; margin-top:3px;">Create First</div></div>
-					<?php
-					}
-					?>
-					</div>
-				</div>
-				<div id='status_ECIS_section' title='Exam Centers and Information Sessions' collapsable='false' css='soft' style='margin:10px; width:360px;'>
-					<div id = '<?php echo $ECIS_status_container_id;?>'></div>						
-				</div>
-				<div id='status_applicants_assignment' title='Applicants Assignment to Exam Centers' collapsable='false' css='soft' style='margin:10px; width:360px;'>
-					<div id = '<?php echo $applicants_assignement_container_id;?>'></div>						
 				</div>
 			</div>
 			

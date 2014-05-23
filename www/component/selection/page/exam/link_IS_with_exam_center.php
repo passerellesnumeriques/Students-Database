@@ -24,14 +24,22 @@ class page_exam_link_IS_with_exam_center extends Page {
 			->field("id")
 			->field("name")
 			->execute();
-		$applicants_centers = SQLQuery::create()
+		$q = SQLQuery::create()
 			->select("Applicant")
 			->whereNotNull("Applicant", "exam_center")
 			->whereNotNull("Applicant", "exam_session")
 			->groupBy("Applicant", "exam_center")
 			->field("Applicant", "exam_center")
+			->field("Applicant", "information_session")
 			->countOneField("Applicant", "people", "nb_assigned")
-			->execute();
+			// get date of session
+			->join("Applicant", "InformationSession", array("information_session"=>"id"))
+			;
+		PNApplication::$instance->calendar->joinEvent($q, "InformationSession", "date");
+		$q->field("CalendarEvent", "start", "session_start");
+		$q->field("CalendarEvent", "end", "session_end");
+		$applicants_assigned = $q->execute();
+		// TODO check no results
 		?>
 		<div style='vertical-align:top'>
 			<div class='info_header'>
@@ -61,10 +69,20 @@ class page_exam_link_IS_with_exam_center extends Page {
 		<script type='text/javascript'>
 		var is_list = <?php echo SelectionInformationSessionJSON::InformationSessionsJSON($is_list);?>;
 		<?php 
+		$now = time();
 		// add information to each IS
 		for ($i = 0; $i < count($is_list); $i++) {
 			echo "is_list[$i].nb_applicants = ".$is_list[$i]["nb_applicants"].";\n";
 			echo "is_list[$i].linked_exam_center_id = ".json_encode($is_list[$i]["linked_exam_center_id"]).";\n";
+			$nb_assigned_past = 0;
+			$nb_assigned_future = 0;
+			foreach ($applicants_assigned as $app) {
+				if ($app["information_session"] <> $is_list[$i]["is_id"]) continue;
+				if ($app["session_start"] > $now) $nb_assigned_future++;
+				else $nb_assigned_past++;
+			}
+			echo "is_list[$i].nb_applicants_assigned_future = ".$nb_assigned_future.";\n";
+			echo "is_list[$i].nb_applicants_assigned_past = ".$nb_assigned_past.";\n";
 		}
 		?>
 		
@@ -211,9 +229,21 @@ class page_exam_link_IS_with_exam_center extends Page {
 				button.is = is.id;
 				button.exam = center.id;
 				button.onclick = function() {
-					div.removeChild(is_div);
-					removeLink(this.is, this.exam);
-					layout.invalidate(div);
+					var doit = function() {
+						div.removeChild(is_div);
+						removeLink(button.is, button.exam);
+						layout.invalidate(div);
+					};
+					if (is.nb_applicants_assigned_past > 0 || is.nb_applicants_assigned_future) {
+						if (is.nb_applicants_assigned_past == 0)
+							confirm_dialog(is.nb_applicants_assigned_future+" applicant(s) from this Information Session are already scheduled for an exam session.<br/>If you unlink this Information Session, those applicants will be automatically remove from the scheduled session.<br/>Are you sure you want to do this ?", function(yes){
+								if (yes) doit();
+							});
+						else {
+							error_dialog(is.nb_applicants_assigned_past+" applicant(s) from this Information Session already had their exam (assigned to an exam session in the past).<br/>You cannot unlink this Information Session.<br/>If you really need to do it, you need to go to the Exam Center screen, and unlink the session.");
+						}
+					} else
+						doit();
 				};
 				is_div.appendChild(button);
 				this.appendChild(is_div);

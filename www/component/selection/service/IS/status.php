@@ -10,6 +10,9 @@ class service_IS_status extends Service {
 	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
+		echo "<div class='page_section_title2'>Sessions</div>";
+		echo "<div style='padding:5px'>";
+		
 		// number of sessions done
 		$q = SQLQuery::create()->select("InformationSession");
 		PNApplication::$instance->calendar->joinEvent($q, "InformationSession","date");
@@ -39,7 +42,7 @@ class service_IS_status extends Service {
 		$q->sum("InformationSession","number_boys_real", "boys_real");
 		$q->sum("InformationSession","number_girls_real", "girls_real");
 		$sessions_no_date = $q->executeSingleRow();
-
+		
 		// total number of sessions
 		$nb_sessions = $sessions_done["nb_sessions"] + $sessions_future["nb_sessions"] + $sessions_no_date["nb_sessions"];
 
@@ -80,7 +83,11 @@ class service_IS_status extends Service {
 			->execute();
 		$this->createWarningLink($missing_host, "without hosting partner");
 
-		echo "<br/>";
+		echo "</div>";
+		
+
+		echo "<div class='page_section_title2'>Attendance</div>";
+		echo "<div style='padding:5px'>";
 		
 		// attendance
 		$separate = $component->getOneConfigAttributeValue("separate_boys_girls_IS");
@@ -139,8 +146,11 @@ class service_IS_status extends Service {
 		$missing_real = $q->execute();
 		$this->createWarningLink($missing_real, "done without a number of attendees");
 		
-		echo "<br/>";
+		echo "</div>";
 		
+
+		echo "<div class='page_section_title2'>Applicants</div>";
+		echo "<div style='padding:5px'>";
 		// number of applicants
 		$applicants_count = SQLQuery::create()->bypassSecurity()->select("Applicant")->join("Applicant","People",array("people"=>"id"))->groupBy("People","sex")->count("nb")->field("People","sex","sex")->execute();
 		$applicants_M = $applicants_F = 0;
@@ -163,6 +173,8 @@ class service_IS_status extends Service {
 			echo $applicants_no_IS." applicant".(count($applicants_no_IS) > 1 ? "s":"")." not attched to an Information Session";
 			echo "</a><br/>\n";
 		}
+		
+		echo "</div>";
 	}
 
 	private $id_counter = 0;
