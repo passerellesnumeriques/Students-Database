@@ -26,6 +26,10 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 	}
 } else if (isset($_POST["message"]))
 	$message = $_POST["message"];
+	
+
+
+
 $this->onload("window.top.pn_loading_end();");
 ?>
 <form method="post" style="width:100%;height:100%" onsubmit="login();return false;" name="login_form">
@@ -141,7 +145,7 @@ if ($message <> null) {
 }
 </style>
 <script type='text/javascript'>
-document.getElementById("timezone_input").value = new Date().getTimezoneOffset();
+document.getElementById("timezone_input").value = -(new Date().getTimezoneOffset());
 window.top.pnapplication.onlogout.fire();
 setBorderRadius(document.getElementById('login_table'),10,10,10,10,10,10,10,10);
 setBorderRadius(document.getElementById('login_table_header'),8,8,8,8,0,0,0,0);

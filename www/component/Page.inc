@@ -132,6 +132,7 @@ abstract class Page {
 		ob_start();
 		register_shutdown_function("page_shutdown_catch", $this);
 		try {
+		/* DIM : execute page specific code (implemented in the inherited class) */ 
 			$this->execute();
 		} catch (Exception $e) {
 			PNApplication::error($e);
@@ -215,6 +216,7 @@ function pageHeaderStart() {
 	if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search+location.hash);};
 	</script>
 	<script type="text/javascript" src="/static/javascript/utils.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/javascript/lib_jquery/jquery-1.11.1.min.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript" src="/static/javascript/browser.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript" src="/static/application/application.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript" src="/static/javascript/layout.js" onload="this._loaded=true;"></script>
@@ -226,6 +228,7 @@ function pageHeaderStart() {
 	<script type="text/javascript" src="/static/data_model/databaselock.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript">
 	javascript_loaded("/static/javascript/utils.js");
+	javascript_loaded("/static/javascript/lib_jquery/jquery-1.11.1.min.js");
 	javascript_loaded("/static/javascript/browser.js");
 	javascript_loaded("/static/application/application.js");
 	javascript_loaded("/static/javascript/layout.js");

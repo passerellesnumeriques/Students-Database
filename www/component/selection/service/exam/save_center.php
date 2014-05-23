@@ -133,7 +133,7 @@ class service_exam_save_center extends Service {
 					// this is a new room
 					if (!isset($output["rooms_ids"])) $output["rooms_ids"] = array();
 					$new_id = SQLQuery::create()->insert("ExamCenterRoom", array("exam_center"=>$center_id, "name"=>$room["name"], "capacity"=>$room["capacity"]));
-					array_push($output["rooms_ids"], array("given_id"=>$room["id"],"new_id:".$new_id)); 
+					array_push($output["rooms_ids"], array("given_id"=>$room["id"],"new_id"=>$new_id)); 
 				} else {
 					// still present, remove it from the list of rooms to remove
 					for ($i = 0; $i < count($existing_rooms); $i++)
@@ -154,7 +154,7 @@ class service_exam_save_center extends Service {
 		
 		// Before modifying the sessions, we need to know which previous session was in the past (so applicants may already have results)
 		$q = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession","exam_center",$center_id);
-		PNApplication::$instance->calendar->joinEvent($q, "ExamSession", "event");
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
 		PNApplication::$instance->calendar->whereEventInThePast($q, false);
 		$q->field("ExamSession","event");
 		$past_sessions = $q->executeSingleField();
@@ -192,7 +192,7 @@ class service_exam_save_center extends Service {
 					unset($event["uid"]);
 					PNApplication::$instance->calendar->saveEvent($event);
 					if (!isset($output["sessions_ids"])) $output["sessions_ids"] = array();
-					array_push($output["sessions_ids"], array("given_id"=>$given_id,"new_id:".$event["id"]));
+					array_push($output["sessions_ids"], array("given_id"=>$given_id,"new_id"=>$event["id"]));
 					array_push($insert_sessions, array("event"=>$event["id"],"exam_center"=>$center_id));
 				} else {
 					// still present, remove it from the list of sessions to remove
@@ -233,7 +233,7 @@ class service_exam_save_center extends Service {
 				$current_applicants = SQLQuery::create()->select("Applicant")->whereValue("Applicant","exam_center", $center_id)->field("people")->executeSingleField();
 			// get the list of sessions in the past
 			$q = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession","exam_center",$center_id);
-			PNApplication::$instance->calendar->joinEvent($q, "ExamSession", "event");
+			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
 			PNApplication::$instance->calendar->whereEventInThePast($q, false);
 			$q->field("ExamSession","event");
 			$past_sessions = $q->executeSingleField();

@@ -284,7 +284,7 @@ class calendar extends Component {
 	 * @param string $from_table origin table name
 	 * @param string $from_key foreign key name in the origin table
 	 */
-	public function joinEvent(&$q, $from_table, $from_key) {
+	public function joinCalendarEvent(&$q, $from_table, $from_key) {
 		$q->join($from_table, "CalendarEvent", array($from_key=>"id"));
 	}
 	/** Add a WHERE clause to select only past events

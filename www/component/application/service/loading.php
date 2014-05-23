@@ -43,7 +43,7 @@ if (PNApplication::$instance->user_management->username == null) {
 function get_script_info(&$a) {
 	for ($i = 0; $i < count($a); ++$i) {
 		$j = strpos($a[$i], "/", 8);
-		$a[$i] = array($a[$i], filesize("component/".substr($a[$i],8,$j-8)."/static/".substr($a[$i],$j)));
+		$a[$i] = array($a[$i], filesize("component/".substr($a[$i],8,$j-8)."/static/".substr($a[$i],$j+1)));
 	}
 }
 get_script_info($mandatory);

@@ -14,7 +14,7 @@ if (typeof require != 'undefined') {
 	theme.css("data_list.css");
 }
 /** A data list is a generic view of data: starting from a table, the user can choose what data to display, apply filters, sort data...
- * @param {Element} container where to put it
+ * @param {DOMNode} container where to put it
  * @param {String} root_table starting point in the data model
  * @param {Array} initial_data_shown list of data to show at the beginning, with format 'Category'.'Name' where Category is the category of the DataDisplayHandler, and Name is the display name of the DataDisplay
  * @param {Array} filters list of {category:a,name:b,force:c,data:d,or:e}: category = from DataDisplayHandler; name = display name of the DataDisplay; force = true if the user cannot remove it; data = data of the filter, format depends on filter type; or=another filter data to do a 'or' condition
@@ -25,10 +25,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	if (!page_size) page_size = -1;
 	var t=this;
 	t.container = container;
-	if (!t.container.className || t.container.className.length == 0)
-		t.container.className = "data_list";
-	else
-		t.container.className += " data_list"
+	t.container.className = "data_list";
 	if (!t.container.id) t.container.id = generateID();
 
 	/* Public properties */
@@ -41,7 +38,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	/* Public methods */
 	
 	/** Add some html in the header of the data list
-	 * @param {Element} html element or string
+	 * @param {DOMNode} html element or string
 	 */
 	t.addHeader = function(html) {
 		var item = document.createElement("DIV");
@@ -124,7 +121,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		layout.invalidate(t.header);
 	};
 	/** Set the title, with some html
-	 * @param {Element} html the html element, or a string
+	 * @param {DOMNode} html the html element, or a string
 	 */
 	t.setTitle = function(html) {
 		if (typeof html == 'string') {
@@ -1007,7 +1004,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		});
 	};
 	/** Show the menu to select the columns/fields to display
-	 * @param {Element} button the menu will be display below this element
+	 * @param {DOMNode} button the menu will be display below this element
 	 */
 	t._selectColumnsDialog = function(button) {
 		var categories = [];
@@ -1114,7 +1111,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	};
 	/** Create the display for a filter, inside the given table
 	 * @param {Object} filter the filter
-	 * @param {Element} table the table where to insert a row to display the filter
+	 * @param {DOMNode} table the table where to insert a row to display the filter
 	 */
 	t._createFilter = function(filter, table) {
 		var tr = document.createElement("TR"); table.appendChild(tr);
@@ -1174,7 +1171,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 	},
 	/** Display the menu to edit/add/remove filters
-	 * @param {Element} button the menu will be displayed below this element
+	 * @param {DOMNode} button the menu will be displayed below this element
 	 */
 	t._filtersDialog = function(button) {
 		require("context_menu.js");
@@ -1249,7 +1246,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		});
 	};
 	/** Display the menu to export the list
-	 * @param {Element} button the menu will be displayed below this element
+	 * @param {DOMNode} button the menu will be displayed below this element
 	 */
 	t._exportMenu = function(button) {
 		require("context_menu.js",function(){
@@ -1430,7 +1427,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		});
 	};
 	/** Make the row clickable
-	 * @param {Element} row the TR element corresponding to the row in the grid
+	 * @param {DOMNode} row the TR element corresponding to the row in the grid
 	 */
 	t._makeClickable = function(row) {
 		row.onmouseover = function() { this.className = "selected"; };

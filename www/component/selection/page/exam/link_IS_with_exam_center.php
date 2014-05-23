@@ -35,7 +35,7 @@ class page_exam_link_IS_with_exam_center extends Page {
 			// get date of session
 			->join("Applicant", "InformationSession", array("information_session"=>"id"))
 			;
-		PNApplication::$instance->calendar->joinEvent($q, "InformationSession", "date");
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "InformationSession", "date");
 		$q->field("CalendarEvent", "start", "session_start");
 		$q->field("CalendarEvent", "end", "session_end");
 		$applicants_assigned = $q->execute();

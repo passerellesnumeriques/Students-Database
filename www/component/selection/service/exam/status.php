@@ -20,11 +20,11 @@ class service_exam_status extends Service {
 		} else {
 			echo $nb_centers." exam center".($nb_centers>1?"s":"")."<ul>";
 			$q = SQLQuery::create()->select("ExamSession");
-			PNApplication::$instance->calendar->joinEvent($q, "ExamSession", "event");
+			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
 			PNApplication::$instance->calendar->whereEventInThePast($q, true);
 			$nb_sessions_done = $q->count()->executeSingleValue(); 
 			$q = SQLQuery::create()->select("ExamSession");
-			PNApplication::$instance->calendar->joinEvent($q, "ExamSession", "event");
+			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
 			PNApplication::$instance->calendar->whereEventInTheFuture($q, true);
 			$nb_sessions_future = $q->count()->executeSingleValue();
 			echo "<li>".$nb_sessions_done." session".($nb_sessions_done>1?"s":"")." already done</li>"; 

@@ -68,14 +68,16 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 	
 	protected function generateDataTable(&$page, $path, $list, $fixed_columns, $values, $prefilled_values, $structure_name, $is_new) {
 		$html = parent::generateDataTable($page, $path, $list, $fixed_columns, $values, $prefilled_values, $structure_name, $is_new);
-		$applicant_id = $values->getColumnValue("Applicant", "people");
-		$html .= "<script type='text/javascript'>";
-		$html .= "function changeIS(button) {";
-			$html .= "require('assign_is.js', function() {";
-				$html .= "assign_is(button, [".$applicant_id."], function() {location.reload();});";
-			$html .= "});";
-		$html .= "}";
-		$html .= "</script>";
+		if (!$is_new) {
+			$applicant_id = $values->getColumnValue("Applicant", "people");
+			$html .= "<script type='text/javascript'>";
+			$html .= "function changeIS(button) {";
+				$html .= "require('assign_is.js', function() {";
+					$html .= "assign_is(button, [".$applicant_id."], function() {location.reload();});";
+				$html .= "});";
+			$html .= "}";
+			$html .= "</script>";
+		}
 		return $html;
 	}
 	
