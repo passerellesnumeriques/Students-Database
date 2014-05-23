@@ -124,7 +124,7 @@ function images_tool() {
 	
 	this.reset = function() {
 		this._pictures = [];
-		this.container.innerHTML = "";
+		this.container.removeAllChildren();
 		this.table = null;
 		if (this._use_popup) {
 			if (this._use_popup_on_top) {
@@ -265,7 +265,7 @@ function images_tool() {
 				o.error = true;
 				o.upload_progress.error();
 				global_loading_progress.addAmount(1);
-				o.td_loading.innerHTML = "";
+				o.td_loading.removeAllChildren();
 				if (global_loading_progress.position == global_loading_progress.total) {
 					global_loading_progress.done();
 					if (!t._face_detection)
@@ -434,7 +434,6 @@ function images_tool_picture() {
 	this.tr.appendChild(this.td_result = document.createElement("TD"));
 	
 	this.td_tools.style.verticalAlign = "top";
-	this.td_original.style.position = "relative";
 	
 	this.setName = function(name) {
 		this.name = name;
@@ -479,9 +478,14 @@ function images_tool_picture() {
 		this.original_canvas.style.position = "absolute";
 		this.original_canvas.style.top = "0px";
 		this.original_canvas.style.left = "0px";
-		this.td_original.appendChild(this.original_canvas);
+		this.div_original = document.createElement("DIV");
+		this.div_original.style.position = "relative";
+		this.td_original.appendChild(this.div_original);
+		this.div_original.appendChild(this.original_canvas);
 		this.td_original.style.width = w+'px';
 		this.td_original.style.height = h+'px';
+		this.div_original.style.width = w+'px';
+		this.div_original.style.height = h+'px';
 		
 		var ctx = this.original_canvas.getContext("2d");
 		ctx.drawImage(this.original, 0, 0, w, h);

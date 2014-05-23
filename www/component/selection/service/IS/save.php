@@ -19,7 +19,7 @@ class service_IS_save extends Service{
 		?>
 		<ul>
 			<li><code>data</code> {array} Information session data, coming from IS_profile.js</li>
-			<li><code>event</code> {array} Calendar eevnt object</li>
+			<li><code>event</code> {array} Calendar event object</li>
 		</ul>
 		<?php
 	}
@@ -120,6 +120,7 @@ class service_IS_save extends Service{
 					$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
 					$event["app_link_name"] = "This event is an Information Session: click to see it";
 				}
+				$data["date"] = $event["id"];
 				try{
 					PNApplication::$instance->calendar->saveEvent($event);
 				} catch(Exception $e){
@@ -173,7 +174,7 @@ class service_IS_save extends Service{
 			} else {
 				SQLQuery::commitTransaction();
 				echo "{id:".json_encode($data["id"]);
-				echo ",date:".json_encode($data["date"]);
+				echo ",date:".json_encode(@$data["date"]);
 				echo "}";
 			}
 		}

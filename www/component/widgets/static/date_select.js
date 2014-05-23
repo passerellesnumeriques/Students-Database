@@ -73,10 +73,12 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 			select_option(t.select_year, 0);
 			select_option(t.select_month, 0);
 		}
-		if (t.onchange) t.onchange();
+		if (t.onchange) t.onchange(t);
 	};
 
 	t.setLimits = function(min, max) {
+		if (!min) min = new Date(2004,0,1);
+		if (!max) max = new Date(new Date().getFullYear()+100,11,31);
 		t.minimum = min;
 		t.maximum = max;
 		var prev_sel = t.select_year.value;
@@ -125,10 +127,9 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 	container.appendChild(t.select_month);
 	container.appendChild(t.select_year);
 	if (date_picker_icon) {
-		t.icon = document.createElement("IMG");
-		t.icon.src = theme.icons_16.date_picker;
-		t.icon.style.verticalAlign = "top";
-		t.icon.style.cursor = "pointer";
+		t.icon = document.createElement("BUTTON");
+		t.icon.className = "flat small";
+		t.icon.innerHTML = "<img src='"+theme.icons_16.date_picker+"'/>";
 		t.icon.onclick = function() {
 			require(["date_picker.js","context_menu.js"],function(){
 				var menu = new context_menu();

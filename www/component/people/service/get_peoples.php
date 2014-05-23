@@ -15,7 +15,7 @@ class service_get_peoples extends Service {
 			$rows = $q->execute();
 		else
 			$rows = array();
-		echo PeopleJSON::Peoples($q, $rows);
+		echo PeopleJSON::Peoples($rows);
 	}
 	
 }

@@ -31,7 +31,7 @@ function TreeItem(cells, expanded, onselect) {
 	 */
 	this.setRightFillControl = function(control) {
 		if (this.right_td) {
-			this.right_td.innerHTML = "";
+			this.right_td.removeAllChildren();
 			this.right_td.appendChild(control);
 			return this.right_td;
 		}

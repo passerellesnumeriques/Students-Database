@@ -31,7 +31,7 @@ CurriculumTreeNode.prototype = {
 	_onselect: function() {
 		// Footer
 		var footer = document.getElementById('tree_footer_title');
-		footer.innerHTML = "";
+		footer.removeAllChildren();
 		var icon = this.getIcon();
 		if (icon) {
 			var img = document.createElement("IMG");
@@ -44,7 +44,7 @@ CurriculumTreeNode.prototype = {
 		else
 			footer.appendChild(title);
 		footer = document.getElementById('tree_footer_content');
-		footer.innerHTML = "";
+		footer.removeAllChildren();
 		var info = this.createInfo();
 		if (info) footer.appendChild(info);
 		layout.invalidate(document.getElementById('tree_footer').parentNode);

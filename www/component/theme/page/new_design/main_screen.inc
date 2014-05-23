@@ -402,6 +402,7 @@ function loadPage(url) {
 		frame.src = url;
 	else
 		win.location.reload();
+	layout.invalidate(frame);
 }
 
 function pageLoaded(url) {
@@ -468,6 +469,7 @@ function pageLoaded(url) {
 	if (oks.length > 0)
 		oks[0].className = "application_left_menu_item selected";
 	document.getElementById('application_frame')._loading_application_page = false;
+	layout.invalidate(document.body);
 }
 
 initPage();
@@ -508,7 +510,7 @@ function initFooter() {
 	span_background_loading.style.left = "3px";
 	footer.appendChild(span_background_loading);
 	require("load_static.js",function(){
-		var loading = new load_static_resources(span_background_loading, '#ffffff', '#ffffff', '#ffffff', '#A0A0A0');
+		var loading = new load_static_resources(span_background_loading, '#ffffff', '#ffffff', '#ffffff', '#404040');
 		loading._slow_when_user_active = true;
 		loading._slow_when_services_active = true;
 	});

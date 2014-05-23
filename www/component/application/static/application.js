@@ -196,15 +196,36 @@ if (window == window.top) {
 		 * @param {String} id identifier of the data which must be unique
 		 */
 		dataUnsaved: function(id) {
-			if (!this._data_unsaved.contains(id))
+			if (!this._data_unsaved.contains(id)) {
 				this._data_unsaved.push(id);
+				if (this._data_unsaved.length == 1) // first one
+					this.ondatatosave.fire();
+			}
 		},
 		/** Indicates the the given data has been saved
 		 * @param {String} id identifier of the data which must be unique
 		 */
 		dataSaved: function(id) {
 			this._data_unsaved.remove(id);
-		}
+			if (this._data_unsaved.length == 0)
+				this.onalldatasaved.fire();
+		},
+		/** Indicates if any data on the window needs to be saved
+		 * @returns {Boolean} true if some data need to be saved
+		 */
+		hasDataUnsaved: function() { 
+			return this._data_unsaved.length > 0; 
+		},
+		isDataUnsaved: function(id) {
+			return this._data_unsaved.contains(id);
+		},
+		/** Mark all data as saved */
+		cancelDataUnsaved: function() { 
+			this._data_unsaved = [];
+			this.onalldatasaved.fire();
+		},
+		ondatatosave: new Custom_Event(),
+		onalldatasaved: new Custom_Event()
 	};
 	window.top.pnapplication.registerWindow(window);
 }

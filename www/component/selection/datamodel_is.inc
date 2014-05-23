@@ -21,6 +21,11 @@ $sm->addTable("InformationSession")
 		} catch (Exception $e) { PNApplication::error($e); }
 	})
 	;
+$model->internalGetTable("CalendarEvent")
+	->addReadAccessFromForeignTable("InformationSession")
+	->addRemoveAccessFromForeignTable("InformationSession")
+	;
+		
 
 $sm->addTable("InformationSessionPartner")
 	->addForeignKey("information_session","InformationSession",true,false,true,false)
@@ -32,6 +37,10 @@ $sm->addTable("InformationSessionPartner")
 	->addReadAccess("see_information_session_details",true)
 	->addInsertAccess("manage_information_session",true)
 	->addRemoveAccess("manage_information_session",true);
+$model->internalGetTable("Organization")
+	->addReadAccessFromForeignTable("InformationSessionPartner");
+$model->internalGetTable("PostalAddress")
+	->addReadAccessFromForeignTable("InformationSessionPartner");
 
 $sm->addTable("InformationSessionContactPoint")
 	->addForeignKey("information_session","InformationSession",true,false,true,false)

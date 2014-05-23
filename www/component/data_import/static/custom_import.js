@@ -413,7 +413,7 @@ function custom_import(container, icon, title, import_button_text, import_button
 					stopEventPropagation(ev);
 					return false;
 				};
-				col.header.innerHTML = "";
+				col.header.removeAllChildren();
 				col.header.appendChild(link);
 			}
 		}

@@ -37,10 +37,10 @@ class people extends Component {
 		return null;
 	}
 
-	public function joinPeople(&$q, $from_table, $from_key) {
+	public function joinPeople(&$q, $from_table, $from_key, $include_picture_info = true) {
 		require_once("PeopleJSON.inc");
 		$q->join($from_table, "People", array($from_key=>"id"));
-		PeopleJSON::PeopleSQL($q);
+		PeopleJSON::PeopleSQL($q, $include_picture_info);
 	}
 	
 	public function filterReadAccess(&$q, $from_table_alias, $from_table_foreign_key) {
@@ -117,6 +117,7 @@ class people extends Component {
 	}
 	public function canModifyTypes($types) {
 		if (is_string($types)) $types = $this->parseTypes($types);
+		if ($types == null) $types = array();
 		require_once("PeopleTypePlugin.inc");
 		$plugin = null;
 		foreach (PNApplication::$instance->components as $c)

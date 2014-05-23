@@ -6,7 +6,7 @@ $model->addTable("UserConfig")
 	->addString("component", 50, 1, false, false)
 	->addString("name", 100, 1, false, false)
 	->addString("value", 2000, 0, true, false)
-	->setKey(array("user","component","config"))
+	->setKey(array("user","component","name"))
 	->addReadFilter(function(&$q, $alias) {
 		$q->whereValue($alias, "user", PNApplication::$instance->user_management->user_id);
 	})

@@ -36,20 +36,18 @@ field_enum.prototype._create = function(data) {
 		select.selectedIndex = selected;
 		select.style.margin = "0px";
 		select.style.padding = "0px";
-		var f = function() { setTimeout(function() { t._datachange(); },1); };
-		select.onchange = f;
-		select.onblur = f;
+		select.onchange = function() { t._datachange(); };
+		select.onblur = function() { t._datachange(); };
 		this.element.appendChild(select);
-		this.getCurrentData = function() {
+		this._getEditedData = function() {
 			if (select.selectedIndex < 0) return null;
 			if (this.config.can_be_empty && select.selectedIndex == 0) return null;
 			return select.options[select.selectedIndex].value; 
 		};
-		this.setData = function(data) {
+		this._setData = function(data) {
 			for (var i = 0; i < select.options.length; ++i)
 				if (select.options[i].value == data) {
 					select.selectedIndex = i;
-					f();
 					break;
 				}
 		};
@@ -82,15 +80,8 @@ field_enum.prototype._create = function(data) {
 		};
 		this.element.appendChild(this.text = document.createTextNode(this.get_text_from_data(data)));
 		this.element.style.height = "16px";
-		this.data = data;
-		this.setData = function(data) {
-			if (this.data == data) return;
+		this._setData = function(data) {
 			this.text.nodeValue = this.get_text_from_data(data);
-			this.data = data;
-			this._datachange();
-		};
-		this.getCurrentData = function() {
-			return this.data;
 		};
 		this.signal_error = function(error) {
 			this.error = error;

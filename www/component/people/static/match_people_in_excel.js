@@ -267,9 +267,9 @@ function match_people_in_excel__check_screen(peoples, names, wiz, sheet_index, o
 			if (this.tr != first_tr)
 				table.removeChild(this.tr);
 			else {
-				first_tr.childNodes[0].innerHTML = "";
-				first_tr.childNodes[1].innerHTML = "";
-				first_tr.childNodes[2].innerHTML = "";
+				first_tr.childNodes[0].removeAllChildren();
+				first_tr.childNodes[1].removeAllChildren();
+				first_tr.childNodes[2].removeAllChildren();
 			}
 			this.people.row = -1;
 			nb--;

@@ -55,6 +55,7 @@ namespace datamodel {
 		private $add_access_filters = array();
 		private $remove_access_rights = array();
 		private $remove_access_filters = array();
+		private $remove_access_from_foreign_table = array();
 		
 		private $row_description_provider = null;
 		
@@ -153,7 +154,16 @@ namespace datamodel {
 				return $c;
 			return null;
 		}
-
+		public function internalGetColumnFor($name, $sub_model = null) {
+			if ($sub_model == null || !($this->model instanceof \SubDataModel)) $sub_models = null;
+			else $sub_models = array($this->model->getParentTable()=>$sub_model);
+			$columns = $this->_getColumns($sub_models);
+			foreach ($columns as $c)
+				if ($c->name == $name)
+				return $c;
+			return null;
+		}
+		
 		private function _getColumns($sub_models) {
 			if (!$this->is_customized) return $this->columns;
 			if ($this->model instanceof \SubDataModel) {
@@ -527,6 +537,13 @@ namespace datamodel {
 			array_push($this->remove_access_rights, array($right_name,$right_value));
 			return $this;
 		}
+		public function &addRemoveAccessFromForeignTable($foreign_table_name){
+			array_push($this->remove_access_from_foreign_table, $foreign_table_name);
+			return $this;
+		}
+		public function canRemoveFromForeignTable($foreign_table_name) {
+			return in_array($foreign_table_name, $this->remove_access_from_foreign_table);
+		}
 		/** Add a filter for DELETE operations
 		 * @param function $prepare_select prepare the SELECT to get rows that will be removed. Takes 3 parameters: the SQLQuery, the table alias, a list of locks created by this function.
 		 * @param function $check takes the list of rows as parameters, and return the list of allowed rows
@@ -669,6 +686,7 @@ namespace datamodel {
 		public function get_sql() {
 			$sql = "`".$this->name."` ";
 			$sql .= $this->get_sql_type();
+			if (!$this->can_be_null) $sql .= " NOT NULL";
 			return $sql;
 		}
 		public abstract function get_sql_type();
@@ -733,7 +751,7 @@ namespace datamodel {
 	class ColumnBoolean extends ColumnInteger {
 
 		public function __construct(&$table, $name, $can_be_null = false) {
-			parent::__construct($table, $name, 1, $can_be_null, false);
+			parent::__construct($table, $name, 1, 0, 1, $can_be_null, false);
 		}
 
 		public function validate($value) {

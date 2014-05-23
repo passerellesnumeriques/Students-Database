@@ -4,7 +4,8 @@
 	border-bottom-right-radius: 5px;
 	padding-left: 2px;
 	padding-right: 5px;
-	margin-right: 5px;
+	margin-right: 5px !important;
+	margin-left: 0px !important;
 	padding-top: 3px;
 }
 .data_list_title>img {

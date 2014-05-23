@@ -3,12 +3,13 @@ theme.css("grid.css");
 /**
  * Create a table containing two lists of partners. One with all the partners from existing in this geographic area,
  * an other one with all the partners in the parent area (but the ones in the given area) 
- * @param {String | HTMLElement}container
- * @param {Number | null} area_id the geographic_area id, in the case of the table lists shall be initialized
- * @param {String | null) row_title the title attribute to set to each list tr elements
- * @param {Number | null} preselected_partner_id the partner id to preselect into the list
+ * @param {String|Element} container
+ * @param {Number|NULL} area_id the geographic_area id, in the case of the table lists shall be initialized
+ * @param {String|NULL) row_title the title attribute to set to each list tr elements
+ * @param {Number|NULL} preselected_partner_id the partner id to preselect into the list
+ * @param {String} creator organization creator
  */
-function select_area_and_matching_organizations(container, area_id, row_title, preselected_partner_id){
+function select_area_and_matching_organizations(container, area_id, row_title, preselected_partner_id, creator){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
@@ -26,9 +27,9 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 		t._tr_list_1 = document.createElement("tr");
 		var tr_head_list_2 = document.createElement("tr");
 		t._tr_list_2 = document.createElement("tr");
-		var th_list_1 = document.createElement("td");
+		var th_list_1 = document.createElement("th");
 		th_list_1.innerHTML = "Partners in this area";
-		var th_list_2 = document.createElement("td");
+		var th_list_2 = document.createElement("th");
 		th_list_2.innerHTML = "Partners surrounding";
 		tr_head_list_1.appendChild(th_list_1);
 		tr_head_list_2.appendChild(th_list_2);
@@ -69,7 +70,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 		t._tr_list_1.appendChild(t._createLoadingTD());
 		t._tr_list_2.appendChild(t._createLoadingTD());
 		//get the data
-		service.json("contact","get_json_organizations_by_geographic_area",{geographic_area:id},function(r){
+		service.json("contact","get_json_organizations_by_geographic_area",{geographic_area:id,creator:creator},function(r){
 			var td1 = document.createElement("td");
 			var td2 = document.createElement("td");
 			if(r){
@@ -98,8 +99,8 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 	/**
 	 * Create a list from the given list (retrieved from the contact#get_json_organizations_by_geographic_area service)
 	 * The style of the list is computed by grid.css
-	 * @param {Array} data from the contact#get_json_organizations_by_geographic_area service
-	 * @param {HTMLElement} cont the container of the created list
+	 * @param {Array} data array of Organization from the contact/get_json_organizations_by_geographic_area service
+	 * @param {Element} cont the container of the created list
 	 * @param {Number} reference_area_id the id of the area on which the organization selection is based (can be used as a reference)
 	 */
 	t._createListFromData = function(data, cont, reference_area_id){
@@ -112,7 +113,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 			for(var i = 0; i < data.length; i++){
 				var tr = document.createElement("tr");
 				var td = document.createElement("td");
-				td.innerHTML = data[i].name.uniformFirstLetterCapitalized();
+				td.innerHTML = data[i].name;
 				td.style.verticalAlign = "top";
 				
 				/**
@@ -120,18 +121,18 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 				 * To avoid having too many data, if the geographic area of the address is the same as the reference_area_id and that this organization row has only one address, the geographic_area_text is not displayed
 				 */
 				var td_area_text = document.createElement("td");
-				if(data[i].addresses.length == 1 && data[i].addresses[0].geographic_area_id != reference_area_id){
+				if(data[i].addresses.length == 1 && data[i].addresses[0].geographic_area.id != reference_area_id){
 					var div = document.createElement("div");
 					div.style.whiteSpace = "nowrap";
 					div.style.fontStyle = "italic";
-					div.appendChild(document.createTextNode("- " + data[i].addresses[0].geographic_area_text));
+					div.appendChild(document.createTextNode("- " + data[i].addresses[0].geographic_area.text));
 					td_area_text.appendChild(div);
 				} else if (data[i].addresses.length > 1){
 					for(var j = 0; j < data[i].addresses.length; j++){
 						var div = document.createElement("div");
 						div.style.whiteSpace = "nowrap";
 						div.style.fontStyle = "italic";
-						div.appendChild(document.createTextNode("- " + data[i].addresses[j].geographic_area_text));
+						div.appendChild(document.createTextNode("- " + data[i].addresses[j].geographic_area.text));
 						td_area_text.appendChild(div);
 					}
 				}
@@ -166,7 +167,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 	
 	/**
 	 * Create a TD with a loading icon inside
-	 * @returns {HTMLElement} td the expected td element
+	 * @returns {Element} td the expected td element
 	 */
 	t._createLoadingTD = function(){
 		var td = document.createElement("td");
@@ -193,7 +194,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 	 */
 	t._rowContainsAtLeastOneAddressInSelectedArea = function(row_data){
 		for(var i = 0; i < row_data.addresses.length; i++){			
-			if(row_data.addresses[i].geographic_area_id == t._geographic_area_selected)
+			if(row_data.addresses[i].geographic_area.id == t._geographic_area_selected)
 				return true;
 		}
 		return false;

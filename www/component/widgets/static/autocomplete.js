@@ -102,7 +102,7 @@ function autocomplete_menu(ac, onselectitem) {
 	
 	this.loading = function() {
 		this.highlighted = -1;
-		this.div.innerHTML = "";
+		this.div.removeAllChildren();
 		var img = ac.input.ownerDocument.createElement("IMG");
 		img.onload = function() {
 			t.resize();
@@ -119,7 +119,7 @@ function autocomplete_menu(ac, onselectitem) {
 			this.resize();
 			return;
 		}
-		this.div.innerHTML = "";
+		this.div.removeAllChildren();
 		this.div.style.fontStyle = "";
 		for (var i = 0; i < items.length; ++i) {
 			var d = ac.input.ownerDocument.createElement("DIV");

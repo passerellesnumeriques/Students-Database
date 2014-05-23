@@ -98,7 +98,7 @@ class service_get_more extends Service {
 				$a[$domain] = array();
 				foreach ($res as $r) {
 					$username = PNApplication::$instance->user_management->getSelectedUsername($r);
-					$a[$domain][$username] = array($q,$r);
+					$a[$domain][$username] = $r;
 				}
 			}
 			$people_names = $a;
@@ -119,7 +119,7 @@ class service_get_more extends Service {
 			echo ",html:".json_encode($n["html"]);
 			echo ",user:{domain:".json_encode($n["domain"]).",username:".json_encode($n["username"])."}";
 			$r = $people_names[$n["domain"]][$n["username"]];
-			echo ",people:".PeopleJSON::People($r[0], $r[1]);
+			echo ",people:".PeopleJSON::People($r);
 			echo ",timestamp:".$n["timestamp"];
 			echo ",update_timestamp:".$n["update_timestamp"];
 			echo "}";

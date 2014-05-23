@@ -59,7 +59,7 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 			foreach ($res as $r) {
 				if ($r["JOIN_KEY"] == $key) {
 					if ($first) $first = false; else $values .= ",";
-					$values .= ContactJSON::Contact($q, $r);
+					$values .= ContactJSON::Contact($r);
 				}
 			}
 			$values .= "]";
@@ -139,7 +139,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 			foreach ($res as $r) {
 				if ($r["JOIN_KEY"] == $key) {
 					if ($first) $first = false; else $values .= ",";
-					$values .= ContactJSON::PostalAddress($q, $r);
+					$values .= ContactJSON::PostalAddress($r);
 				}
 			}
 			$values .= "]";

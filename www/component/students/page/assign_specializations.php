@@ -62,7 +62,7 @@ class page_assign_specializations extends Page {
 			});
 			assign.setNonMovableReason("Students who cannot be moved (in gray) are already assigned to a class in a specialization. To change specialization for those students, you must first unassign them from the classes.");
 			<?php foreach ($specializations as $spe) echo "assign.addPossibleAssignment(".$spe["id"].",null,".json_encode($spe["name"]).");\n";?>
-			<?php foreach ($students as $s) echo "assign.addElement(".PeopleJSON::People($q, $s).",".json_encode($s["specialization"]).",".(in_array($s["student_people"],$students_class_spe) ? "false" : "true").");\n";?>
+			<?php foreach ($students as $s) echo "assign.addElement(".PeopleJSON::People($s).",".json_encode($s["specialization"]).",".(in_array($s["student_people"],$students_class_spe) ? "false" : "true").");\n";?>
 		});
 		function save() {
 			var lock = lock_screen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving specializations...");

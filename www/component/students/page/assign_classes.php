@@ -155,7 +155,7 @@ class page_assign_classes extends Page {
 				echo "\tclasses.push({id:".$cl["id"].",name:".json_encode($cl["name"])."});\n";
 			}
 			foreach ($students as &$s) {
-				echo "\tassign.addElement(".PeopleJSON::People($q_students, $s).",".json_encode($s["class"]).",true);\n";
+				echo "\tassign.addElement(".PeopleJSON::People($s).",".json_encode($s["class"]).",true);\n";
 			}
 			echo "\tassign.onchange.add_listener(changed);\n";
 			echo "\tlayout.invalidate(assign.container);\n";

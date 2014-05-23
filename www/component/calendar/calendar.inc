@@ -279,15 +279,37 @@ class calendar extends Component {
 		return $ev_name;
 	}
 	
-	/**
-	 * Join CalendarEvent with another table
-	 * @param SQLQuery $q 
-	 * @param string $from_table table source
+	/** Join the CalendarEvent table.
+	 * @param SQLQuery $q the query to join
+	 * @param string $from_table origin table name
+	 * @param string $from_key foreign key name in the origin table
 	 */
 	public function joinCalendarEvent(&$q, $from_table, $from_key) {
-		//require_once("CalendarJSON.inc");
 		$q->join($from_table, "CalendarEvent", array($from_key=>"id"));
-		//CalendarJSON::CalendarEventSQL($q);
+	}
+	/** Add a WHERE clause to select only past events
+	 * @param SQLQuery $q the query to modify
+	 * @param boolean $based_on_end if true, the event already finished (end in the past) will be returned, if false it will include events in the past and events already started but not yet finished (start in the past) 
+	 */
+	public function whereEventInThePast(&$q, $based_on_end = true) {
+		$event_alias = $q->getTableAlias("CalendarEvent");
+		$now = time();
+		if ($based_on_end)
+			$q->where("`$event_alias`.`end` < '$now'");
+		else
+			$q->where("`$event_alias`.`start` < '$now'");
+	}
+	/** Add a WHERE clause to select only past events
+	 * @param SQLQuery $q the query to modify
+	 * @param boolean $based_on_start if true, the event not yet started (start in the future) will be returned, if false it will include events in the future and events already started but not yet finished (end in the future) 
+	 */
+	public function whereEventInTheFuture(&$q, $based_on_start = true) {
+		$event_alias = $q->getTableAlias("CalendarEvent");
+		$now = time();
+		if ($based_on_start)
+			$q->where("`$event_alias`.`start` > '$now'");
+		else
+			$q->where("`$event_alias`.`end` > '$now'");
 	}
 }
 ?>

@@ -173,7 +173,7 @@ abstract class Page {
 	 * @param string|null $sm sub model or null
 	 * @return null|integer null if the lock cannot be performed, else the lock id 
 	 */
-	public final function performRequiredLocks($table, $row = null, $column = null, $sm = null){
+	public final function performRequiredLocks($table, $row = null, $column = null, $sm = null, &$locked_by){
 		require_once("component/data_model/DataBaseLock.inc");
 		require_once("component/data_model/Model.inc");
 		$model = DataModel::get();
@@ -197,10 +197,7 @@ abstract class Page {
 			$db_lock = DataBaseLock::lockTable($table->getSQLNameFor($sm), $locked_by);
 			$name = "table";
 		}
-		if ($db_lock == null) {
-			PNApplication::error("This ".$name." is already locked by ".$locked_by);
-			return;
-		} else
+		if ($db_lock <> null)
 			DataBaseLock::generateScript($db_lock);
 		return $db_lock;
 	}

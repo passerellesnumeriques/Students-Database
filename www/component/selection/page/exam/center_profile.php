@@ -1,72 +1,37 @@
-<?php 
-require_once("/../selection_page.inc");
-class page_exam_center_profile extends selection_page {
-	public function getRequiredRights() { return array("see_exam_center_detail"); }
-	public function execute_selection_page(){
-	/**
-	 * Create a page with two sections: one for the exam center caracteristics, and one for the applicants assignment into this exam center
-	 */
-	$name = $this->generateID();
-	$this->addJavascript("/static/widgets/vertical_layout.js");
-	$this->addJavascript("/static/widgets/section/section.js");
-	$this->onload("var s_detail = sectionFromHTML('center_detail_section');");
-	$this->onload("s_detail.addToolBottom('<div class = \"button_verysoft\" id = \"save_center_button\"><img src =\"'+theme.icons_16.save+'\"/> <b>Save</b></div>');");
-	$this->onload("s_detail.addToolBottom('<div class = \"button_verysoft\" id = \"remove_center_button\"><img src =\"'+theme.icons_16.remove+'\"/> <b>Remove Exam Center</b></div>');");
-	$this->onload("sectionFromHTML('center_applicants');");
-	$this->onload("new vertical_layout('exam_center_profile_container');");
-	$this->onload('onupdateroom = new Custom_Event();');
-	$this->onload('onupdateapplicants = new Custom_Event();');
-	if(!isset($_GET["id"]))
-		$id = -1;
-	else if($_GET["id"] == "-1")
-		$id = -1;
-	else
-		$id = $_GET["id"];
-	$read_only = @$_GET["readonly"];
-	$hide_back = @$_GET["hideback"];
-	?>
-		<div id = "exam_center_profile_container" style = "width:100%; height:100%">
-			<div id = "page_header">
-			<?php if($hide_back != "true"){?>
-				<div class = "button_verysoft" onclick = "location.assign('/dynamic/selection/page/exam/center_main_page');"><img src = '<?php echo theme::$icons_16['back'];?>'/> Back to list</div>
-			<?php }?>
-			</div>
-			<div style = "overflow:auto" layout = "fill">
-				<div id = "center_detail_section" title='Exam Centers Characteristics' collapsable='true'style='margin:10px;'>
-					<div id='exam_center_<?php echo $name; ?>' ></div>
-				</div>
-				<div id = "center_applicants" title='Exam Centers Applicants' collapsable='true' style='margin:10px;'>
-					<div id = "exam_center_applicants_container"></div>				
-				</div>
-			</div>
-		</div>
-		
-	<?php
-		$this->exam_center_caracteristics("exam_center_".$name,$id,"save_center_button","remove_center_button",$read_only);
-		if($id != -1)
-			$this->exam_applicants("exam_center_applicants_container", $id,$read_only);
-	}
+<?php
+require_once("component/selection/page/SelectionPage.inc"); 
+class page_exam_center_profile extends SelectionPage {
 	
-	/**
-	 * Create the section containing the exam center caracteristics (location, partners, name, rooms)
-	 * @param string $container_id
-	 * @param number $id exam center ID
-	 * @param string $save_exam_center_button save exam center button ID (onclick implemented by the exam_center_profile script)
-	 * @param string $remove_exam_center_button remove exam center button ID (onclick implemented by the exam_center_profile script)
-	 * @param boolean $read_only indicates if the page shall be in read only mode (user rights restricted)
-	 */
-	private function exam_center_caracteristics($container_id,$id,$save_exam_center_button, $remove_exam_center_button,$read_only){
-		$this->addJavascript("/static/widgets/header_bar.js");
-		$this->onload("var header = new header_bar('page_header','toolbar'); header.setTitle('', 'Exam Center Profile');");
-		require_once("component/selection/SelectionJSON.inc");
-		$can_read = PNApplication::$instance->user_management->has_right("see_exam_center_detail",true);
-		if(!$can_read)
-			return;
-		if($read_only == "true"){
-			$can_add = false;
-			$can_edit = false;
-			$can_remove = false;
-		} else {
+	public function getRequiredRights() { return array("see_exam_center_detail"); }
+	
+	public function executeSelectionPage() {
+		// TODO assign supervisors to sessions
+		$id = @$_GET["id"];
+		$onsaved = @$_GET["onsaved"];
+		if ($id <> null && $id <= 0) $id = null;
+		if ($id <> null) {
+			$q = SQLQuery::create()
+				->select("ExamCenter")
+				->whereValue("ExamCenter", "id", $id)
+				;
+			PNApplication::$instance->geography->joinGeographicArea($q, "ExamCenter", "geographic_area");
+			require_once("component/geography/GeographyJSON.inc");
+			GeographyJSON::GeographicAreaTextSQL($q);
+			$q->fieldsOfTable("ExamCenter");
+			$center = $q->executeSingleRow();
+		} else
+			$center = null;
+		if (@$_GET["readonly"] == "true") $editable = false;
+		else $editable = $id == null || PNApplication::$instance->user_management->has_right("manage_exam_center");
+		$db_lock = null;
+		if ($editable && $id <> null) {
+			$locked_by = null;
+			$db_lock = $this->performRequiredLocks("ExamCenter",$id,null,$this->component->getCampaignID(), $locked_by);
+			//if db_lock = null => read only
+			if($db_lock == null){
+				$editable = false;
+				echo "<div class='info_header'>This Exam Center is already open by ".$locked_by.": you cannot edit it</div>";
+			}
 			//Get rights from steps
 			$from_steps = PNApplication::$instance->selection->getRestrictedRightsFromStepsAndUserManagement("exam_center", "manage_exam_center", "manage_exam_center", "manage_exam_center");
 			if($from_steps[1])
@@ -74,83 +39,237 @@ class page_exam_center_profile extends selection_page {
 			$can_add = $from_steps[0]["add"];
 			$can_remove = $from_steps[0]["remove"];
 			$can_edit = $from_steps[0]["edit"];
-		}	
-		$config_name = PNApplication::$instance->selection->getOneConfigAttributeValue("give_name_to_exam_center");
-		$config_name_room = PNApplication::$instance->selection->getOneConfigAttributeValue("give_name_to_exam_center_room");
-		$campaign_id = PNApplication::$instance->selection->getCampaignId();
-	
-		//lock the row if id != -1
-		$db_lock = null;
-		if($id != -1){
-			$db_lock = $this->performRequiredLocks("ExamCenter",$id,null,$campaign_id);
-			//if db_lock = null => read only
-			if($db_lock == null){
-				$can_add = false;
-				$can_edit = false;
-				$can_remove = false;
+		}
+		
+		$all_configs = include("component/selection/config.inc");
+		$calendar_id = PNApplication::$instance->selection->getCalendarId();
+
+		require_once("component/selection/SelectionExamJSON.inc");
+		require_once("component/selection/SelectionApplicantJSON.inc");
+		require_once("component/selection/SelectionInformationSessionJSON.inc");
+		require_once("component/calendar/CalendarJSON.inc");
+		require_once("component/people/PeopleJSON.inc");
+		if ($id <> null) {
+			$q = SQLQuery::create()->select("Applicant")->whereValue("Applicant","exam_center", $id);
+			SelectionApplicantJSON::ApplicantSQL($q);
+			$applicants = $q->execute();
+			
+			$q = SQLQuery::create()->select("ExamCenterRoom")->whereValue("ExamCenterRoom", "exam_center", $id);
+			SelectionExamJSON::ExamCenterRoomSQL($q);
+			$rooms = $q->execute();
+			
+			$q = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession", "exam_center", $id);
+			PNApplication::$instance->calendar->joinEvent($q, "ExamSession", "event");
+			CalendarJSON::CalendarEventSQL($q);
+			$sessions = $q->execute(); 
+			
+			$linked_is_id = SQLQuery::create()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "exam_center", $id)->field("information_session")->executeSingleField();
+		} else {
+			$applicants = array();
+			$rooms = array();
+			$sessions = array();
+			$linked_is_id = array();
+		}
+		$q = SQLQuery::create()->select("InformationSession");
+		SelectionInformationSessionJSON::InformationSessionSQL($q);
+		$all_is = $q->execute();
+		
+		$this->requireJavascript("section.js");
+		theme::css($this, "section.css");
+		$this->requireJavascript("exam_center_objects.js");
+		$this->requireJavascript("exam_center_sessions.js");
+		$this->requireJavascript("exam_center_IS.js");
+		$this->requireJavascript("typed_field.js");
+		$this->requireJavascript("field_text.js");
+		$this->requireJavascript("field_integer.js");
+		
+		$this->requireJavascript("grid.js");
+		$this->requireJavascript("custom_data_grid.js");
+		$this->requireJavascript("people_data_grid.js");
+		$this->requireJavascript("applicant_data_grid.js");
+		?>
+		<div>
+		<div id='section_center' title='Exam Center Information' collapsable='true' style='margin:10px;'>
+			<div>
+				<div style='display:inline-block;margin:10px;vertical-align:top;'>
+				<?php if ($this->component->getOneConfigAttributeValue("give_name_to_exam_center")) {
+					$this->requireJavascript("center_name.js");
+					?>
+					<div id='center_name_container'></div>
+					<script type='text/javascript'>
+					window.center_name = new center_name(
+						'center_name_container', 
+						<?php echo $center <> null ? json_encode($center["name"]) : "null";?>,
+						<?php echo json_encode($editable);?>,
+						"Exam Center name"
+					); 
+					</script>
+				<?php } ?>
+					<div id='IS_container'></div>
+					<script type='text/javascript'>
+					window.linked_is = new exam_center_IS(
+						'IS_container',
+						<?php echo SelectionInformationSessionJSON::InformationSessionsJSON($all_is);?>,
+						<?php echo json_encode($linked_is_id);?>
+					);
+					</script>
+				</div>
+				<div style='display:inline-block;margin-top:10px;vertical-align:top;' id='rooms'>
+				</div>
+				<div style='display:inline-block;margin:10px;vertical-align:top;' id='location_and_partners'>
+				<?php
+				require_once("component/selection/page/common_centers/location_and_partners.inc");
+				locationAndPartners($this, $id, "ExamCenter", $center <> null ? GeographyJSON::GeographicAreaText($center) : "null", $editable, true); 
+				?>
+				</div>
+			</div>
+		</div>
+		<div id='section_planning' title='Exam Sessions Planning' collapsable='true' style='margin:10px;'>
+			<div id='exam_sessions_container'>
+			</div>
+			<script type='text/javascript'>
+			window.center_sessions = new exam_center_sessions(
+				'exam_sessions_container',
+				'rooms',
+				<?php echo SelectionExamJSON::ExamCenterRooms($rooms);?>,
+				<?php echo CalendarJSON::CalendarEvents($sessions, true); ?>,
+				<?php echo SelectionApplicantJSON::ApplicantsJSON($applicants); ?>,
+				window.linked_is,
+				<?php echo intval($this->component->getOneConfigAttributeValue("default_duration_exam_session"))*60;?>,
+				<?php echo $calendar_id;?>
+			);
+			</script>
+		</div>
+		</div>
+		<script type='text/javascript'>
+		var center_popup = window.parent.get_popup_window_from_frame(window);
+		var center_id = <?php echo $id <> null ? $id : -1;?>;
+		var section_center = sectionFromHTML('section_center');
+		var section_planning = sectionFromHTML('section_planning');
+		if (center_id == -1) window.pnapplication.dataUnsaved("NewExamCenter");
+
+		function save_center() {
+			if (window.center_location.geographic_area_text == null) {
+				error_dialog("You must at set a location before saving");
+				return;
+			}
+			var data = {};
+			data.center = {id:center_id};
+			if (window.pnapplication.isDataUnsaved("SelectionCenterCustomName")) {
+				// custom name changed
+				data.center.name = window.center_name.getName();
+			}
+			if (center_id == -1 || window.pnapplication.isDataUnsaved("SelectionLocationAndPartners")) {
+				// location and partners have been modified
+				data.center.geographic_area = window.center_location.geographic_area_text.id;
+				data.partners = [];
+				for (var i = 0; i < window.center_location.partners.length; ++i) {
+					// add partners, with only organization id
+					var p = objectCopy(window.center_location.partners[i]);
+					delete p.center_id;
+					p.organization = p.organization.id;
+					data.partners.push(p);
+				}
+			}
+			if (window.pnapplication.isDataUnsaved("ExamCenterInformationSession")) {
+				// linked information sessions changed
+				data.linked_is = window.linked_is.linked_ids;
+			}
+			if (window.pnapplication.isDataUnsaved("ExamCenterRooms")) {
+				// rooms changed
+				data.rooms = window.center_sessions.rooms;
+			}
+			if (window.pnapplication.isDataUnsaved("ExamCenterSessions")) {
+				// sessions changed
+				data.sessions = window.center_sessions.sessions;
+			}
+			if (window.pnapplication.isDataUnsaved("ExamCenterApplicants") ||
+				window.pnapplication.isDataUnsaved("ExamCenterSessions") ||
+				window.pnapplication.isDataUnsaved("ExamCenterRooms") ||
+				window.pnapplication.isDataUnsaved("ExamCenterInformationSession")) {
+				// need to save applicants
+				var list = [];
+				for (var i = 0; i < window.center_sessions.applicants.length; ++i) {
+					var app = window.center_sessions.applicants[i];
+					var a = {
+						people_id: app.people.id,
+						exam_session_id: app.exam_session_id,
+						exam_center_room_id: app.exam_center_room_id
+					};
+					list.push(a);
+				}
+				data.applicants = list;
+			}
+			center_popup.freeze("Saving...");
+			service.json("selection","exam/save_center",data,function(res) {
+				if (!res) {
+					center_popup.unfreeze();
+					return;
+				}
+				center_id = res.id;
+				if (res.rooms_ids)
+					for (var i = 0; i < res.rooms_ids.length; ++i)
+						for (var j = 0; j < window.center_sessions.rooms.length; ++j)
+							if (window.center_sessions.rooms[j].id == res.rooms_ids[i].given_id) {
+								window.center_sessions.rooms[j].id = res.rooms_ids[i].new_id;
+								break;
+							}
+				if (res.sessions_ids)
+					for (var i = 0; i < res.sessions_ids.length; ++i)
+						for (var j = 0; j < window.center_sessions.sessions.length; ++j)
+							if (window.center_sessions.sessions[j].id == res.sessions_ids[i].given_id) {
+								window.center_sessions.sessions[j].id = res.sessions_ids[i].new_id;
+								break;
+							}
+				window.pnapplication.cancelDataUnsaved();
+				<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
+				center_popup.unfreeze();
+			});
+		}
+
+		center_popup.removeAllButtons();
+		<?php if ($editable && $id <> null && $can_remove) {?>
+		center_popup.addIconTextButton(theme.icons_16.remove, "Remove this exam center", "remove", function() {
+			// TODO we should not remove it if some applicants are still assigned to it => we may need to save the center before to remove it, in order to unassign everyone
+			confirm_dialog("Are you sure you want to remove this exam center ?",function(res){
+				if(res){
+					center_popup.freeze();
+					service.json("selection","exam/remove_center",{id:<?php echo $id;?>},function(r){
+						if(!r){
+							center_popup.unfreeze();
+							error_dialog("An error occured, this center was not removed properly");
+							return;
+						}
+						window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Exam center succesfully removed!", [{action:"close"}], 5000));
+						window.pnapplication.cancelDataUnsaved();
+						<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
+						center_popup.close();
+					});
+				}
+			});
+		});
+		<?php } ?>
+		<?php if ($editable || $id == null) {?>
+		center_popup.addFrameSaveButton(save_center);
+		<?php }?>
+		center_popup.addCloseButton();
+
+		<?php 
+		if (isset($_POST["input"])) {
+			$input = json_decode($_POST["input"], true);
+			if (isset($input["host_is"])) {
+				echo "window.linked_is.linkIS(".$input["host_is"].");\n";
+				echo "window.linked_is.setHostFromIS(".$input["host_is"].");\n";
+			}
+			if (isset($input["others_is"])) {
+				foreach ($input["others_is"] as $is_id)
+					echo "window.linked_is.linkIS(".$is_id.");\n";
 			}
 		}
 		?>
-		
-		<script type='text/javascript'>
-			require("exam_center_profile.js",function(){
-				<?php echo "var config_name = ".json_encode($config_name).";";?>
-				<?php echo "var config_name_room = ".json_encode($config_name).";";?>
-				<?php echo "var can_edit = ".json_encode($can_edit).";"; ?>
-				<?php echo "var can_add = ".json_encode($can_add).";"; ?>
-				<?php echo "var can_remove = ".json_encode($can_remove).";"; ?>
-				var container = document.getElementById(<?php echo json_encode($container_id); ?>);
-				var id = <?php echo json_encode($id).";"; ?>
-				var campaign_id = <?php echo json_encode($campaign_id);?>;
-				var data, partners_contacts_points;
-				<?php
-				echo "\n";
-				$center_data = SelectionJSON::ExamCenterFromID($id);
-				echo "data = ".$center_data.";";
-				echo "\n";
-				//Select all the partners IDs
-				$partners = array();
-				if($id != -1 && $id != "-1")
-					$partners = SQLQuery::create()
-						->select("ExamCenterPartner")
-						->field("organization")
-						->whereValue("ExamCenterPartner","exam_center",$id)
-						->executeSingleField();
-				require_once("component/contact/service/get_json_contact_points_no_address.inc");
-				echo "\n";
-				if($id != -1 && $id != "-1")
-					echo "partners_contacts_points = ".get_json_contact_points_no_address($partners).";";
-				else
-					echo "partners_contacts_points = [];";
-				?>
-				var save_exam_center_button = <?php echo json_encode($save_exam_center_button);?>;
-				var remove_exam_center_button = <?php echo json_encode($remove_exam_center_button);?>;
-				if((id == -1 || id == "-1") && !can_add){
-					// This is a creation so check that the current user is allowed to add an exam center
-						error_dialog("You are not allowed to create an Exam Center");
-				} else new exam_center_profile(id, config_name, can_add, can_edit, can_remove, container, data,partners_contacts_points,campaign_id,save_exam_center_button,remove_exam_center_button,<?php echo json_encode($db_lock);?>,config_name_room,onupdateroom,onupdateapplicants);
-			});
 		</script>
-		<?php
-	
+		<?php 
 	}
 	
-	/**
-	 * Create the exam applicants section: contains all the data related to the applicant assignment for the center (assigned to center, session, room...)
-	 * @param string $container_id
-	 * @param number $center_id exam center ID
-	 * @param boolean $read_only indicates if the page shall be in read only mode (user rights restricted)
-	 */
-	private function exam_applicants($container_id, $center_id, $read_only){
-		$can_manage_applicants = PNApplication::$instance->user_management->has_right("manage_applicant");
-		if($read_only)
-			$can_manage_applicants = false;
-		$EC_name = SQLQuery::create()
-			->select("ExamCenter")
-			->field("ExamCenter","name")
-			->whereValue("ExamCenter", "id", $center_id)
-			->executeSingleValue();
-		$this->addJavascript("/static/selection/exam/center_exam_sessions_planned.js");
-		$this->onload("new center_exam_sessions_planned('".$container_id."',".json_encode($center_id).",".json_encode($EC_name).",".json_encode($can_manage_applicants).",onupdateroom,onupdateapplicants);");
-	}
 }
+?>

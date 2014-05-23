@@ -111,7 +111,7 @@ function StatusUI_Top(manager, margin) {
 	};
 	this.update_status_control = function(c, status) {
 		var t=this;
-		c.innerHTML = "";
+		c.removeAllChildren();
 		c.style.backgroundColor = 
 			status.type == Status_TYPE_INFO ? "#FFFF80" :
 			status.type == Status_TYPE_ERROR ? "#FF8080" :

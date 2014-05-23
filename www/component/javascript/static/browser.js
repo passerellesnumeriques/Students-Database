@@ -196,13 +196,21 @@ HTTP_Status_ConnectionLost = browser.IE > 0 ? 12029 : 0;
  * @param {Number} opacity from 0 to 1
  */
 function setOpacity(element, opacity) {
-	var o = new Number(opacity).toFixed(2);
-	element.style.opacity = o;
-	element.style.MozOpacity = o;
-	element.style.KhtmlOpacity = o;
-	opacity = Math.round(opacity*100);
-	element.style.filter = "alpha(opacity="+opacity+");";
-	element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";	
+	if (browser.IE > 0 && browser.IE < 8) {
+		opacity = Math.round(opacity*100);
+		element.style.filter = "alpha(opacity="+opacity+");";
+	} else if (browser.IE >= 8 && browser.IE < 9) {
+		opacity = Math.round(opacity*100);
+		element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";
+	} else {
+		var o = new Number(opacity).toFixed(2);
+		if (browser.FireFox > 0 && browser.FireFox < 0.9)
+			element.style.MozOpacity = o;
+		else if (browser.SafariBrowser > 0 && browser.SafariBrowser < 2)
+			element.style.KhtmlOpacity = o;
+		else
+			element.style.opacity = o;
+	}	
 }
 function getOpacity(element) {
 	if (typeof element.style == 'undefined') return 1;
@@ -272,10 +280,10 @@ function getBorderRadius(elem) {
 		return 0;
 	};
 	return [
-		getFinalValue(["border-top-left-radius", "-moz-border-radius-topleft", "-webkit-border-top-left-radius"]),
-		getFinalValue(["border-top-right-radius", "-moz-border-radius-topright", "-webkit-border-top-right-radius"]),
-		getFinalValue(["border-bottom-left-radius", "-moz-border-radius-bottomleft", "-webkit-border-bottom-right-radius"]),
-		getFinalValue(["border-bottom-right-radius", "-moz-border-radius-bottomright", "-webkit-border-bottom-right-radius"])
+		getFinalValue(["borderTopLeftRadius", "MozBorderRadius-Tpleft", "WebkitBorderTopLeftRadius"]),
+		getFinalValue(["borderTopRightRadius", "MozBorderRadiusTopright", "WebkitBorderTopRightRadius"]),
+		getFinalValue(["borderBottomLeftRadius", "MozBorderRadiusBottomleft", "WebkitBorderBottomRightRadius"]),
+		getFinalValue(["borderBottomRightRadius", "MozBorderRadiusBottomright", "WebkitBorderBottomRightRadius"])
 	];
 }
 /**

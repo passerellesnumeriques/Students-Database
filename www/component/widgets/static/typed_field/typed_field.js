@@ -14,12 +14,20 @@ function typed_field(data,editable,config){
 	this.onchange = new Custom_Event();
 	this.ondatachanged = new Custom_Event();
 	this.ondataunchanged = new Custom_Event();
+	this._data = data;
+	this._in_change_event = false;
 	this._datachange = function() {
+		var cur = this._getEditedData();
+		if (objectEquals(cur, this._data)) return; // no change
+		this._in_change_event = true;
+		this._data = cur;
+		this.validate();
 		this.onchange.fire(this);
 		if (!this.hasChanged())
 			this.ondataunchanged.fire(this);
 		else
 			this.ondatachanged.fire(this);
+		this._in_change_event = false;
 	};
 	this.hasChanged = function() {
 		var cur = this.getCurrentData();
@@ -28,10 +36,11 @@ function typed_field(data,editable,config){
 	};
 	this.error = null;
 	this.config = config;
-	if (getObjectClassName(this) != 'typed_field' && getObjectClassName(this) != 'typed_field_multiple')
+	if (getObjectClassName(this) != 'typed_field' && getObjectClassName(this) != 'typed_field_multiple') {
 		this._create(data);
+		this.validate();
+	}
 }
-// TODO toggleEditable
 typed_field.prototype = {
 	/** Internal function resetting and creating the field */
 	_create: function(data) { alert("Function _create not implemented in typed_field: "+getObjectClassName(this)); },
@@ -58,7 +67,11 @@ typed_field.prototype = {
 	/**
 	 * @returns the current data (the edited one)
 	 */
-	getCurrentData: function() { return this.originalData; },
+	getCurrentData: function() { return this._data; },
+	/**
+	 * @returns the data from the edited field
+	 */
+	_getEditedData: function() { return this.originalData; },
 	/**
 	 * @returns the original data (at creation time, or set by setOriginalData)
 	 */
@@ -71,7 +84,23 @@ typed_field.prototype = {
 	 *  change data
 	 *  @param data new data value
 	 */
-	setData: function(data) {},
+	setData: function(data) {
+		if (objectEquals(data, this._data)) return; // no change
+		if (this._in_change_event) {
+			var t=this;
+			setTimeout(function () { t.setData(data); },1);
+			return;
+		}
+		this._setData(data);
+		this._datachange();
+		this._data = data;
+		this.validate();
+	},
+	/**
+	 *  change data
+	 *  @param data new data value
+	 */
+	_setData: function(data) {},
 	/**
 	 * highlight the field to signal an error
 	 * @param {Boolean} error if true, the field is highlighted, else it is not
@@ -79,6 +108,7 @@ typed_field.prototype = {
 	signal_error: function(error) {
 		this.error = error;
 	},
+	validate: function() { this.signal_error(null); },
 	getError: function() {
 		return this.error;
 	},
@@ -92,22 +122,26 @@ typed_field.prototype = {
 	
 	register_datamodel_cell: function(table, column, row_key) {
 		var t=this;
-		window.top.datamodel.registerCellWidget(window, table, column, row_key, function(){
+		window.top.datamodel.registerCellWidget(window, table, column, row_key, this.element, function(){
 			return t.getCurrentData();
 		},function(data){
 			t.setData(data);
 		},function(listener) {
 			t.onchange.add_listener(listener);
+		},function(listener) {
+			t.onchange.remove_listener(listener);
 		});
 	},
 	register_datamodel_datadisplay: function(data_display, data_key) {
 		var t=this;
-		window.top.datamodel.registerDataWidget(window, data_display, data_key, function(){
+		window.top.datamodel.registerDataWidget(window, data_display, data_key, this.element, function(){
 			return t.getCurrentData();
 		},function(data){
 			t.setData(data);
 		},function(listener) {
 			t.onchange.add_listener(listener);
+		}, function(listener) {
+			t.onchange.remove_listener(listener);
 		});
 	}
 };

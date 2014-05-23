@@ -52,3 +52,7 @@
 	border-top: 1px solid #808080;
 	text-align: right;
 }
+.popup_window_buttons button {
+	margin-left: 2px;
+	margin-right: 2px;
+}

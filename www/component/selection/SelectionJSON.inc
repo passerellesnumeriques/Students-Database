@@ -87,25 +87,6 @@ class SelectionJSON{
 		return $row; 
 	}
 	
-	/**
-	 * Prepares a SQLQuery to retrieve an information session, to be used with method InformationSession 
-	 * @param SQLQuery $q
-	 * @no_name_check
-	 */
-	public static function InformationSessionSQL(&$q){
-		$alias = $q->getTableAlias("InformationSession");
-		if(!$alias)
-			$alias = "InformationSession";
-		$q
-		->field($alias,"id")
-		->field($alias,"date")
-		->field($alias,"geographic_area")
-		->field($alias,"number_boys_expected")
-		->field($alias,"number_girls_expected")
-		->field($alias,"number_boys_real")
-		->field($alias,"number_girls_real")
-		->field($alias,"name");
-	}
 	
 	/**
 	 * Get all the data from InformationSessionPartner for the given information session

@@ -162,7 +162,7 @@ class AcademicPeriod {
 	
 	public function teachersJSON() {
 		require_once("component/people/PeopleJSON.inc");
-		return PeopleJSON::Peoples($this->teachers_query, $this->teachers);
+		return PeopleJSON::Peoples($this->teachers);
 	}
 }
 ?>

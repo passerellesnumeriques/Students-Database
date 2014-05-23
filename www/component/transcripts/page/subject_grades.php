@@ -944,7 +944,7 @@ class page_subject_grades extends Page {
 				if (!peoples) return;
 				if (!javascript_ready) return;
 				var excel_container = excel_frame.document.getElementById('excel_container');
-				excel_frame.document.body.innerHTML = "";
+				excel_frame.document.body.removeAllChildren();
 				var container = excel_frame.document.createElement("DIV");
 				container.style.width = "100%";
 				container.style.height = "100%";

@@ -38,7 +38,7 @@ class PeopleJSON {
 	 * @param SQLQuery $q
 	 * @no_name_check
 	 */
-	public static function PeopleSQL(&$q){
+	public static function PeopleSQL(&$q, $include_picture_info = true){
 		$alias = $q->getTableAlias("People");
 		if($alias == null)
 			$alias = "People";
@@ -52,19 +52,18 @@ class PeopleJSON {
 			->field($alias,"picture","picture_id")
 			->field($alias,"types","people_types");
 		$alias = $q->getTableAlias("Storage");
-		if($alias == null) {
+		if($alias == null && $include_picture_info) {
 			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
 		}
 	}
 	
 	/**
 	 * Return a People JSON Object, compatible with the People2DB method
-	 * @param SQLQuery $q
 	 * @param Array $row result of executeSingleRow from $q
 	 * @return string
 	 * @no_name_check
 	 */
-	public static function People($q, $row){
+	public static function People($row){
 		$data = "";
 		$data .= "{id:".json_encode($row["people_id"]);
 		$data .= ",first_name:".json_encode($row['first_name']);
@@ -85,12 +84,12 @@ class PeopleJSON {
 	 * @return string
 	 * @no_name_check
 	 */
-	public static function Peoples($q, $rows){
+	public static function Peoples($rows){
 		$data = "[";
 		$first = true;
 		foreach ($rows as $row) {
 			if ($first) $first = false; else $data .= ",";
-			$data .= self::People($q, $row);
+			$data .= self::People($row);
 		}
 		$data .= "]";
 		return $data;

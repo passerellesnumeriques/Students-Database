@@ -29,7 +29,11 @@ function error_dialog_html(content){
  */
 function confirm_dialog(message, handler) {
 	require("popup_window.js",function() {
-		var p = new popup_window("Confirmation", theme.icons_16.question, "<div style='padding:5px'>"+message+"</div>");
+		var content = document.createElement("DIV");
+		content.style.padding = "5px";
+		if (typeof message == 'string') content.innerHTML = message;
+		else content.appendChild(message);
+		var p = new popup_window("Confirmation", theme.icons_16.question, content);
 		var result = false;
 		p.addYesNoButtons(function() {
 			result = true;
@@ -231,10 +235,11 @@ function select_dialog(icon,title,message,default_value,possibilities, ok_handle
 }
 
 
-function popup_frame(icon, title, url, post_data, percent_w, percent_h) {
+function popup_frame(icon, title, url, post_data, percent_w, percent_h, onframecreated) {
 	require("popup_window.js", function() {
 		var p = new popup_window(title, icon, "");
-		p.setContentFrame(url, null, post_data);
+		var frame = p.setContentFrame(url, null, post_data);
+		if (onframecreated) onframecreated(frame, p);
 		if (percent_w)
 			p.showPercent(percent_w, percent_h);
 		else

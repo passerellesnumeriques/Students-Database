@@ -46,7 +46,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 				t.header_title.className = "title";
 				t.header.insertBefore(t.header_title, t.header.childNodes[0]);
 			}
-			t.header_title.innerHTML = "";
+			t.header_title.removeAllChildren();
 			if (icon) {
 				var img = document.createElement("IMG");
 				img.src = icon;
@@ -147,7 +147,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			t.header_menu.widget.removeAll();
 		else {
 			// horizontal_menu not yet loaded
-			t.header_menu.innerHTML = "";
+			t.header_menu.removeAllChildren();
 		}
 	};
 	t.resetLeftControls = function() {

@@ -303,19 +303,15 @@ function organization(container, org, existing_types, can_edit) {
 			});
 		}
 		tr.appendChild(td = document.createElement("TD"));
-		var link = document.createElement("img");
-		link.src = "/static/people/profile_16.png";
+		td.style.whiteSpace = 'nowrap';
+		var link = document.createElement("BUTTON");
+		link.className = "flat";
+		link.innerHTML = "<img src='/static/people/profile_16.png'/>";
 		link.style.verticalAlign = "center";
 		link.title = "See profile";
-		link.style.cursor = "pointer";
 		link.people_id = point.people_id;
 		link.onclick = function(){
-			var people_id = this.people_id;
-			require("popup_window.js",function(){
-				var pop = new popup_window("People Profile","/static/people/people_16.png");
-				pop.setContentFrame("/dynamic/people/page/profile?plugin=people&people="+people_id);
-				pop.show();
-			});
+			window.top.popup_frame("/static/people/people_16.png", "People Profile", "/dynamic/people/page/profile?plugin=people&people="+this.people_id);
 		};
 		var first_name = document.createTextNode(point.first_name);
 		var last_name = document.createTextNode(point.last_name);
@@ -326,9 +322,9 @@ function organization(container, org, existing_types, can_edit) {
 		td.appendChild(last_name);
 		td.appendChild(link);
 		if(can_edit){
-			var remove_button = document.createElement("div");
+			var remove_button = document.createElement("BUTTON");
 			td.appendChild(remove_button);
-			remove_button.className = "button_verysoft";
+			remove_button.className = "flat";
 			remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"' style = 'vertical-align:center;'/>";
 			remove_button.people_id = point.people_id;
 			remove_button.onclick = function(){

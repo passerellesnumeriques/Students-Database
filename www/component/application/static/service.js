@@ -101,6 +101,34 @@ service = {
 			override_response_mime_type
 		);
 	},
+	
+	html: function(component, service_name, input, container, ondone) {
+		service.customOutput(component, service_name, input, function(html) {
+			if (!html) html = "";
+			if (typeof container == 'string') container = document.getElementById(container);
+			// unload scripts
+			if (container._attachedScripts)
+				for (var i = 0; i < container._attachedScripts.length; ++i)
+						container._attachedScripts[i].parentNode.removeChild(container._attachedScripts[i]);
+			container.innerHTML = html;
+			// take scripts and load them into the head
+			container._attachedScripts = [];
+			var scripts = container.getElementsByTagName("SCRIPT");
+			var list = [];
+			for (var i = 0; i < scripts.length; ++i) list.push(scripts[i]);
+			for (var i = 0; i < list.length; ++i) list[i].parentNode.removeChild(list[i]);
+			var head = document.getElementsByTagName("HEAD")[0];
+			for (var i = 0; i < list.length; ++i) {
+				var s = document.createElement("SCRIPT");
+				s.type = "text/javascript";
+				s.textContent = list[i].textContent;
+				head.appendChild(s);
+				container._attachedScripts.push(s);
+			}
+			layout.invalidate(container);
+			if (ondone) ondone();
+		});
+	},
 
 	/**
 	 * Generate a JSON string from the given object.

@@ -22,7 +22,7 @@ browser_control = {
 			if (browser_control.win && browser_control.win.frames && browser_control.win.frames.pn_application_frame) {
 				var doc = getIFrameDocument(browser_control.win && browser_control.win.frames && browser_control.win.frames.pn_application_frame);
 				doc.getElementById('test_ui_action_name').innerHTML = action[0];
-				doc.getElementById('test_ui_wait_time').innerHTML = "";
+				doc.getElementById('test_ui_wait_time').removeAllChildren();
 				doc.getElementById('test_ui_footer').widget.layout();
 			}
 			var fct = browser_control[action[1]];
@@ -52,7 +52,7 @@ browser_control = {
 			if (browser_control.win && browser_control.win.frames && browser_control.win.frames.pn_application_frame) {
 				var doc = getIFrameDocument(browser_control.win.frames.pn_application_frame);
 				var wait_time = doc.getElementById('test_ui_wait_time');
-				if (wait_time) wait_time.innerHTML = "";
+				if (wait_time) wait_time.removeAllChildren();
 				if (doc.getElementById('test_ui_footer').widget) doc.getElementById('test_ui_footer').widget.layout();
 			}
 			this._wait = null;
@@ -94,7 +94,7 @@ browser_control = {
 		var doc = getIFrameDocument(browser_control.win.frames.pn_application_frame);
 		doc.getElementById('test_ui_action_name').innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+message;
 		doc.getElementById('test_ui_action_name').style.color = 'red';
-		doc.getElementById('test_ui_wait_time').innerHTML = "";
+		doc.getElementById('test_ui_wait_time').removeAllChildren();
 		var icon = doc.getElementById('test_ui_play');
 		icon.src = "/static/test/close_50.png";
 		icon.style.cursor = 'pointer';
@@ -181,7 +181,7 @@ browser_control = {
 			icon.style.cursor = '';
 			icon.src = "/static/test/wait_50.gif";
 			icon.onclick = null;
-			doc.getElementById('test_ui_message').innerHTML = "";
+			doc.getElementById('test_ui_message').removeAllChildren();
 			onready();
 		};
 		icon.style.cursor = 'pointer';

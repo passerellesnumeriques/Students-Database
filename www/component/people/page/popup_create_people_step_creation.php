@@ -76,7 +76,7 @@ function next(index, span, pb) {
 		var msg = "Creation of "+first_name+" "+last_name;
 		if (peoples.length > 1)
 			msg += " ("+(index+1)+"/"+peoples.length+")";
-		span.innerHTML = "";
+		span.removeAllChildren();
 		span.appendChild(document.createTextNode(msg));
 		var data = {root:"People",sub_model:null,sub_models:<?php echo json_encode($sub_models);?>,paths:p};
 		<?php if ($multiple) echo "data.multiple = true;"; ?>

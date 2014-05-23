@@ -65,9 +65,9 @@ class StaffJSON {
 	 * @param array $row row retrieved from database containing the data retrieved
 	 * @no_name_check
 	 */
-	public static function Staff($q, $row){
+	public static function Staff($row){
 		$json = "{people:";
-		$json .= PeopleJSON::People($q,$row);
+		$json .= PeopleJSON::People($row);
 		$json .= "}";
 		return $json;
 	}

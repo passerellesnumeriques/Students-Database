@@ -41,6 +41,7 @@ class geography extends Component {
 		$text = "";
 		do {
 			$area = SQLQuery::create()->select("GeographicArea")->where("id",$area_id)->executeSingleRow();
+			if ($area == null) { PNApplication::error("Invalid geographic area"); return null; }
 			if (strlen($text) > 0) $text .= ", ";
 			$text .= $area["name"];
 			$area_id = $area["parent"];
@@ -163,6 +164,14 @@ class geography extends Component {
 			}
 		}
 		return $divisions;
+	}
+	
+	public function getArea($id) {
+		return SQLQuery::create()->select("GeographicArea")->whereValue("GeographicArea","id",$id)->executeSingleRow();
+	}
+	
+	public function getAllAreas($country_id, $division_id) {
+		return SQLQuery::create()->select("GeographicArea")->whereValue("GeographicArea", "country_division", $division_id)->execute();
 	}
 }
 ?>
