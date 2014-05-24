@@ -10,7 +10,7 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("middle_name", "Middle 
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("last_name", "Last Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_first_name", "Khmer First Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_last_name", "Khmer Last Name"));
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("sex", "Gender"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("sex", "Gender", false, true, "center"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("birth", "Birth Date"));
 $display->addJoinToPrimary();
 $model->addTableDataDisplay($display);

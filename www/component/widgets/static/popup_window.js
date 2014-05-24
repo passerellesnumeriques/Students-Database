@@ -137,7 +137,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	t.removeButtons = function() {
 		if (!t.buttons_tr) return;
-		t.table.removeChild(t.buttons_tr);
+		if (t.table) t.table.removeChild(t.buttons_tr);
 		t.buttons_tr = null;
 		t.buttons_td = null;
 	};
@@ -753,8 +753,14 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content.style.top = '-10000px';
 				t.content.ownerDocument.body.appendChild(t.content);
 			}
+			table.removeAllChildren();
 			if (table.parentNode)
 				table.parentNode.removeChild(table);
+			t.content = null;
+			t.content_container = null;
+			t.header = null;
+			t.buttons_tr = null;
+			t.buttons_td = null;
 		};
 		if (t.content.nodeName == "IFRAME") t.content._no_loading = true;
 		if (typeof animation != 'undefined') {

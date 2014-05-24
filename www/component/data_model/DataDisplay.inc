@@ -35,6 +35,7 @@ abstract class DataDisplay {
 	 * @return array (classname, config) classname: string containing the name of the JavaScript class implementing typed_field, config: string containing a JSON representation of the configuration of the typed_field
 	 */
 	public abstract function getTypedField($sub_model);
+	public function getHorizontalAlign() { return null; }
 	/** Indicates if this data can be modified by the user
 	 * @return boolean true if this data is editable
 	 */
@@ -121,6 +122,7 @@ abstract class DataDisplay {
 		$tf = $this->getTypedField($sub_model);
 		$s .= ",".json_encode($tf[0]);
 		$s .= ",".$tf[1];
+		$s .= ",".json_encode($this->getHorizontalAlign());
 		$s .= ",".($this->isEditable() ? "true" : "false");
 		$s .= ",".json_encode($this->getEditLocks($sub_model));
 		$s .= ",".json_encode($this->isSortable());
@@ -225,17 +227,19 @@ class SimpleDataDisplay extends DataDisplay {
 	/** @var boolean indicates if we can edit this column */
 	protected $readonly;
 	protected $editable_for_new;
+	protected $horiz_align;
 	
 	/**
 	 * @param string $column_name name of the column
 	 * @param string $display_name name to display
 	 * @param boolean $readonly indicates if we can edit this column
 	 */
-	public function __construct($column_name, $display_name, $readonly = false, $editable_for_new = null) {
+	public function __construct($column_name, $display_name, $readonly = false, $editable_for_new = null, $horiz_align = null) {
 		$this->column_name = $column_name;
 		$this->display_name = $display_name;
 		$this->readonly = $readonly;
-		$this->editable_for_new = $editable_for_new === null ? !$readonly : $editable_for_new; 
+		$this->editable_for_new = $editable_for_new === null ? !$readonly : $editable_for_new;
+		$this->horiz_align = $horiz_align; 
 	}
 	
 	public function getDisplayName() {
@@ -253,6 +257,7 @@ class SimpleDataDisplay extends DataDisplay {
 		$col = $this->getTable()->getColumnFor($this->column_name, $sub_model);
 		return \PNApplication::$instance->widgets->get_typed_field($col);
 	}
+	public function getHorizontalAlign() { return $this->horiz_align; }
 	
 	public function getTypedFilter($sub_model) {
 		$col = $this->getTable()->getColumnFor($this->column_name, $sub_model);
@@ -339,6 +344,7 @@ class ChoiceDataDisplay extends DataDisplay {
 	/** @var boolean indicates if this can be edited or not */
 	protected $editable;
 	protected $editable_for_new;
+	protected $horiz_align;
 	
 	/**
 	 * @param string $foreign_key_name column's name containing the foreign key
@@ -346,12 +352,13 @@ class ChoiceDataDisplay extends DataDisplay {
 	 * @param string $display_name name of this data
 	 * @param boolean $editable indicates if this can be edited or not
 	 */
-	public function __construct($foreign_key_name, $foreign_column_name, $display_name, $editable = true, $editable_for_new = null) {
+	public function __construct($foreign_key_name, $foreign_column_name, $display_name, $editable = true, $editable_for_new = null, $horiz_align = null) {
 		$this->display_name = $display_name;
 		$this->foreign_key_name = $foreign_key_name;
 		$this->foreign_column_name = $foreign_column_name;
 		$this->editable = $editable;
-		$this->editable_for_new = $editable_for_new === null ? $editable : $editable_for_new; 
+		$this->editable_for_new = $editable_for_new === null ? $editable : $editable_for_new;
+		$this->horiz_align = $horiz_align; 
 	}
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array($this->foreign_key_name); }
@@ -388,6 +395,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		$cfg .= "}";
 		return array("field_enum", $cfg);
 	}
+	public function getHorizontalAlign() { return $this->horiz_align; }
 	
 	public function getTypedFilter($sub_model) {
 		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
@@ -620,6 +628,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	protected $display_name;
 	/** @var string path to reach the column to display */
 	protected $data_path;
+	protected $horiz_align;
 	
 	
 	/**
@@ -637,9 +646,10 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 *  <li>Contact>people(type=Work).contact means to join table 'Contact' using foreign key 'people' on Contact table and adding a condition on the join, then display the column 'contact' on the Contact table</li>
 	 * </ul>
 	 */
-	public function __construct($display_name, $data_path) {
+	public function __construct($display_name, $data_path, $horiz_align = null) {
 		$this->display_name = $display_name;
 		$this->data_path = $data_path;
+		$this->horiz_align = $horiz_align;
 	}
 
 	public function getDisplayName() { return $this->display_name; }
@@ -686,6 +696,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	public function getTypedField($sub_model) {
 		return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($sub_model));
 	}
+	public function getHorizontalAlign(){ return $this->horiz_align; }
 	
 	public function isEditable() { return false; }
 	public function getEditLocks($sub_model) { return array(); }
@@ -992,16 +1003,19 @@ class CalculationDataDisplay extends DataDisplay {
 	
 	private $display_name;
 	private $expression;
+	private $horiz_align;
 	
-	public function __construct($display_name, $expression) {
+	public function __construct($display_name, $expression, $horiz_align = "center") {
 		$this->display_name = $display_name;
 		$this->expression = $expression;
+		$this->horiz_align = $horiz_align;
 	}
 	
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array(); }
 	
 	public function getTypedField($sub_model) { return array("field_text","{}"); }
+	public function getHorizontalAlign() { return $this->horiz_align; }
 	public function isEditable() { return false; }
 	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() { return false; }
@@ -1076,14 +1090,16 @@ class CountLinksDataDisplay extends DataDisplay {
 	protected $display_name;
 	protected $table;
 	protected $foreign_key;
+	protected $horiz_align;
 	
 	/**
 	 * @param string $display_name name of this data
 	 */
-	public function __construct($display_name, $table, $foreign_key) {
+	public function __construct($display_name, $table, $foreign_key, $horiz_align = "center") {
 		$this->display_name = $display_name;
 		$this->table = $table;
 		$this->foreign_key = $foreign_key;
+		$this->horiz_align = $horiz_align;
 	}
 
 	public function getDisplayName() { return $this->display_name; }
@@ -1092,6 +1108,7 @@ class CountLinksDataDisplay extends DataDisplay {
 	public function getTypedField($sub_model) {
 		return array("field_text","{}");
 	}
+	public function getHorizontalAlign() { return $this->horiz_align; }
 	
 	public function isEditable() {
 		return false;

@@ -4,8 +4,8 @@
 $category = $model->getDataCategory("Student");
 
 $display = new datamodel\TableDataDisplay("Student", $category);
-$display->addDataDisplay(new datamodel\ChoiceDataDisplay("batch", "name", "Batch"));
-$display->addDataDisplay(new datamodel\ChoiceDataDisplay("specialization", "name", "Specialization", false));
+$display->addDataDisplay(new datamodel\ChoiceDataDisplay("batch", "name", "Batch", true, null, "center"));
+$display->addDataDisplay(new datamodel\ChoiceDataDisplay("specialization", "name", "Specialization", false, null, "center"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("exclusion_reason", "Exclusion Reason", true));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("exclusion_date", "Exclusion Date", true));
 $display->addFollow("people");
@@ -86,8 +86,8 @@ class StudentDataScreen extends datamodel\GenericDataScreen {
 $model->addDataScreen(new StudentDataScreen($display));
 
 $display = new datamodel\TableDataDisplay("StudentClass", $category);
-$display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Period", "class.period.name"));
-$display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Class", "class.name"));
+$display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Period", "class.period.name", "center"));
+$display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Class", "class.name", "center"));
 $display->addFollow("people");
 $model->addTableDataDisplay($display);
 

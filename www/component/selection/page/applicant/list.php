@@ -40,7 +40,10 @@ class page_applicant_list extends SelectionPage {
 					'Personal Information.First Name',
 					'Personal Information.Last Name',
 					'Personal Information.Gender',
-					'Personal Information.Birth Date'
+					'Personal Information.Birth Date',
+					'Personal Information.Address.0',
+					'Personal Information.Address.1',
+					'Selection.Information Session'
 				],
 				filters,
 				500,

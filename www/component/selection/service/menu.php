@@ -91,7 +91,7 @@ foreach ($campaigns as $c) {
 	<img src='/static/selection/applicant/applicants_white.png'/>
 	Applicants List
 </a>
-<a class='application_left_menu_item' href='/dynamic/selection/page/organizations_for_selection'>
+<a class='application_left_menu_item' href='/dynamic/contact/page/organizations?creator=Selection'>
 	<img src='/static/selection/organizations_white.png'/>
 	Partners List
 </a>

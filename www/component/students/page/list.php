@@ -229,29 +229,26 @@ var students_list = new data_list(
 			import_students.className = "flat";
 			import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
 			import_students.disabled = "disabled";
-			window.top.require("popup_window.js", function() {
-				var container = document.createElement("DIV");
-				container.style.width = "100%";
-				container.style.height = "100%";
-				var popup = new window.top.popup_window("Import Students", theme.icons_16._import, container);
-				window.top.require("excel_import.js", function() {
+			window.top.require(["popup_window.js","excel_import.js"], function() {
+				import_students.disabled = "";
+				import_students.onclick = function(ev) {
+					var container = document.createElement("DIV");
+					container.style.width = "100%";
+					container.style.height = "100%";
+					var popup = new window.top.popup_window("Import Students", theme.icons_16._import, container);
 					new window.top.excel_import(popup, container, function(imp) {
-						import_students.disabled = "";
-						import_students.onclick = function(ev) {
-							popup.removeAllButtons();
-							popup.showPercent(95,95);
-							imp.init();
-							imp.loadImportDataURL(
-								"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list&multiple=true",
-								{
-									prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
-								}
-							);
-							imp.frame_import.reload_list = reload_list;
-							imp.uploadFile(ev);
-						};
+						popup.showPercent(95,95);
+						imp.init();
+						imp.loadImportDataURL(
+							"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list&multiple=true",
+							{
+								prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
+							}
+						);
+						imp.frame_import.reload_list = reload_list;
+						imp.uploadFile(ev);
 					});
-				});
+				};
 			});
 			students_list.addHeader(import_students);
 			var create_student = document.createElement("BUTTON");

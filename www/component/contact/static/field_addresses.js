@@ -1,5 +1,7 @@
 /* #depends[/static/widgets/typed_field/typed_field.js] */
 
+if (typeof require != 'undefined') require("contact_objects.js");
+
 if (!window.top.field_addresses_registry) {
 	// allow to register field_addresses having sub data, so that we can synchronize the sub datas
 	window.top.field_addresses_registry = {
@@ -29,7 +31,7 @@ if (!window.top.field_addresses_registry) {
 				}
 		}
 	};
-	window.top.pnapplication.onwindowclosed.add_listener(function(win) { window.top.field_addresses_registry._clean(win); });
+	window.top.pnapplication.onwindowclosed.add_listener(function(c) {c.top.field_addresses_registry._clean(c.win); });
 }
 
 /**
@@ -52,18 +54,18 @@ field_addresses.prototype._create = function(data) {
 				t.control = new addresses(t.table, false, data.type, data.type_id, data.addresses, true, true, true);
 			});
 			this.addData = function(new_data) {
-				var address;
-				if (typeof new_data == 'object')
-					address = new_data;
-				else if (typeof new_data == 'string')
-					address = parsePostalAddress(new_data);
-				var finalize = function() {
+				var finalize = function(address) {
 					if (t.control)
 						t.control.addAddress(address, true);
 					else
-						setTimeout(finalize,10);
+						setTimeout(function() { finalize(address); },10);
 				};
-				finalize();
+				if (typeof new_data == 'object')
+					finalize(new_data);
+				else if (typeof new_data == 'string')
+					require("contact_objects.js", function() { finalize(parsePostalAddress(new_data)); });
+				else
+					finalize(new_data);
 			};
 			this.getNbData = function() {
 				if (!t.control) return 0;
@@ -100,6 +102,7 @@ field_addresses.prototype._create = function(data) {
 			window.top.field_addresses_registry.changed(window, f);
 		});
 		this._setData = function(data) {
+			this.element.onclick = function(event) { stopEventPropagation(event); return false; };
 			while (this.element.childNodes.length > 0) this.element.removeChild(this.element.childNodes[0]);
 			if (data == null) return;
 			var t=this;
@@ -257,28 +260,30 @@ field_addresses.prototype._create = function(data) {
 				};
 				this.addData = function(new_data) {
 					var division_index = this.config.sub_data_index;
-					var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", "Work");
-					if (typeof new_data == 'string') {
-						window.top.require("geography.js", function() {
-							window.top.geography.searchAreaByNameInDivision(window.top.default_country_id, division_index, new_data, function(area) {
-								if (area) {
-									// found
-									address.geographic_area.country_id = window.top.default_country_id;
-									address.geographic_area.id = area.area_id;
-									window.top.geography.getDivisionIdFromIndex(window.top.default_country_id, division_index, function(division_id) {
-										address.geographic_area.division_id = division_id;
-										t._data.addresses.push(address);
-										t.setData(t._data, true);
-									});
-								} else {
-									// not found
-									// TODO ?
-								}
+					require("contact_objects.js", function() {
+						var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", "Work");
+						if (typeof new_data == 'string') {
+							window.top.require("geography.js", function() {
+								window.top.geography.searchAreaByNameInDivision(window.top.default_country_id, division_index, new_data, function(area) {
+									if (area) {
+										// found
+										address.geographic_area.country_id = window.top.default_country_id;
+										address.geographic_area.id = area.area_id;
+										window.top.geography.getDivisionIdFromIndex(window.top.default_country_id, division_index, function(division_id) {
+											address.geographic_area.division_id = division_id;
+											t._data.addresses.push(address);
+											t.setData(t._data, true);
+										});
+									} else {
+										// not found
+										// TODO ?
+									}
+								});
 							});
-						});
-					} else {
-						// TODO ?
-					}
+						} else {
+							// TODO ?
+						}
+					});
 				};
 
 				var add_button = document.createElement("BUTTON");
@@ -286,10 +291,13 @@ field_addresses.prototype._create = function(data) {
 				add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
 				add_button.title = "Add new address";
 				this.element.appendChild(add_button);
-				add_button.onclick = function() {
-					var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "Work");
-					t._data.addresses.push(address);
-					t.setData(t._data, true);
+				add_button.onclick = function(event) {
+					require("contact_objects.js", function() {
+						var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "Work");
+						t._data.addresses.push(address);
+						t.setData(t._data, true);
+					});
+					stopEventPropagation(event);
 					return false;
 				};
 			}

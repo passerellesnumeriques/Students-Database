@@ -14,12 +14,13 @@
  * @param {Object} new_data structure to use for a new data
  * @returns
  */
-function DataDisplay(category, name, table, field_classname, field_config, editable, edit_locks, sortable, filter_classname, filter_config, cell, new_data, sub_data) {
+function DataDisplay(category, name, table, field_classname, field_config, horiz_align, editable, edit_locks, sortable, filter_classname, filter_config, cell, new_data, sub_data) {
 	this.category = category;
 	this.name = name;
 	this.table = table;
 	this.field_classname = field_classname;
 	this.field_config = field_config;
+	this.horiz_align = horiz_align;
 	this.editable = editable;
 	this.edit_locks = edit_locks;
 	this.sortable = sortable;

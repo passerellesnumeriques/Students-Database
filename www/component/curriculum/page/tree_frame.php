@@ -37,7 +37,7 @@ class page_tree_frame extends Page {
 ?>
 <style type="text/css">
 #curriculum_tree_container {
-	border-left: 1px solid #808080;
+	border-left: 2px solid #808080;
 }
 #tree_footer {
 	width: 100%;

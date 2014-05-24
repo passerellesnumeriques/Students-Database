@@ -685,17 +685,22 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.show_fields = [];
 		for (var i = 0; i < initial_data_shown.length; ++i) {
 			var j = initial_data_shown[i].indexOf('.');
-			var cat, name = null;
+			var cat, name = null, sub_data_index = -1;
 			if (j == -1) cat = initial_data_shown[i];
 			else {
 				cat = initial_data_shown[i].substring(0,j);
 				name = initial_data_shown[i].substring(j+1);
+				j = name.indexOf('.');
+				if (j != -1) {
+					sub_data_index = parseInt(name.substring(j+1));
+					name = name.substring(0,j);
+				}
 			}
 			var found = false;
 			for (var j = 0; j < t._available_fields.length; ++j) {
 				if (t._available_fields[j].category != cat) continue;
 				if (name == null || t._available_fields[j].name == name) {
-					t.show_fields.push({field:t._available_fields[j],sub_index:-1});
+					t.show_fields.push({field:t._available_fields[j],sub_index:sub_data_index});
 					found = true;
 				}
 			}
@@ -705,8 +710,27 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t._loadTypedFields(function(){
 			for (var i = 0; i < t.show_fields.length; ++i) {
 				var f = t.show_fields[i];
+				var found = -1;
+				for (var j = 0; j < i; ++j) if (t.show_fields[j].field == f.field) { found = j; break; };
 				var col = t._createColumn(f);
-				t.grid.addColumn(col);
+				if (found == -1) {
+					if (f.sub_index < 0) {
+						t.grid.addColumn(col);
+					} else {
+						// first time we have a sub_index for this field: create the parent column
+						var container = new GridColumnContainer(f.field.name, [col], f.field);
+						t.grid.addColumnContainer(container);
+					}
+				} else {
+					if (f.sub_index < 0) {
+						// duplicate
+						t.show_fields.splice(i,1);
+						i--;
+						continue;
+					}
+					var container = t.grid.getColumnContainerByAttachedData(f.field);
+					container.addSubColumn(col);
+				}
 			}
 			// signal ready
 			if (t._onready) t._onready(t);
@@ -744,7 +768,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			f.field.category+'.'+f.field.name+'.'+f.sub_index, //id
 			f.sub_index == -1 ? f.field.name : f.field.sub_data.names[f.sub_index], // title
 			null, // width
-			null, // align
+			f.field.horiz_align, // align
 			f.field.field_classname, // field_type 
 			false, // editable
 			null, // onchanged

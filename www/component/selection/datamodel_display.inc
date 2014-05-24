@@ -34,6 +34,8 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 		parent::__construct("applicant_id", "Applicant ID", !$editable);
 	}
 	
+	public function getHorizontalAlign() { return "right"; }
+	
 }
 
 $display = new ApplicantTableDataDisplay($category);
