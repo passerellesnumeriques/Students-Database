@@ -347,17 +347,17 @@ function popup_window(title,icon,content,hide_close_button) {
 				layout.invalidate(t.content);
 			}
 		};
+		var win;
+		if (t.table == null)
+			win = t._buildTable();
+		else
+			win = getWindowFromElement(t.table);
 		t.content_container.style.width = "100%";
 		if (t.content.nodeName == "IFRAME") {
 			t.content.style.width = "100%";
 			t.content.style.height = "100%";
 			layout.invalidate(t.content);
 		}
-		var win;
-		if (t.table == null)
-			win = t._buildTable();
-		else
-			win = getWindowFromElement(t.table);
 		t.resize();
 		win.listenEvent(win, "resize", t.resize_listener);
 	};
@@ -647,11 +647,11 @@ function popup_window(title,icon,content,hide_close_button) {
 	
 	t.blink = function() {
 		t.table.className = "popup_window blink";
-		setTimeout(function() { t.table.className = "popup_window"; },100);
-		setTimeout(function() { t.table.className = "popup_window blink"; },200);
-		setTimeout(function() { t.table.className = "popup_window"; },300);
-		setTimeout(function() { t.table.className = "popup_window blink"; },400);
-		setTimeout(function() { t.table.className = "popup_window"; },500);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window"; },100);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window blink"; },200);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window"; },300);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window blink"; },400);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window"; },500);
 	};
 	
 	t.disableClose = function() {
@@ -779,7 +779,12 @@ function get_popup_window_from_element(e) {
 }
 function get_popup_window_from_frame(win) {
 	if (!win) return null;
-	if (win.frameElement && win.parent.get_popup_window_from_element)
-		return win.parent.get_popup_window_from_element(win.frameElement);
+	if (win.frameElement) {
+		if (win.parent.get_popup_window_from_element) {
+			var pop = win.parent.get_popup_window_from_element(win.frameElement);
+			if (pop != null) return pop;
+		}
+		return get_popup_window_from_frame(win.parent);
+	}
 	return null;
 }

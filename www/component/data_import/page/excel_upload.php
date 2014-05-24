@@ -106,7 +106,18 @@ class page_excel_upload extends Page {
 				for ($row = 0; $row < $rows; $row++) {
 					try {
 						$cell = $sheet->getCellByColumnAndRow($col, $row+1);
-						$val = $cell->getFormattedValue();
+						if (PHPExcel_Shared_Date::isDateTime($cell)) {
+							$val = PHPExcel_Shared_Date::ExcelToPHPObject($cell->getCalculatedValue());
+							$date = getdate($val->getTimestamp());
+							if ($date["seconds"] == 0) {
+								if ($date["minutes"] == 0 && $date["hours"] == 0)
+									$val = $val->format("Y-m-d"); // only a date
+								else
+									$val = $val->format("Y-m-d H:i"); // date time
+							} else
+								$val = $val->format("Y-m-d H:i:s"); // date time including seconds
+						} else
+							$val = $cell->getFormattedValue();
 					} catch (Exception $e) {
 						$val = "ERROR: ".$e->getMessage();
 					}

@@ -16,9 +16,9 @@ function typed_field(data,editable,config){
 	this.ondataunchanged = new Custom_Event();
 	this._data = data;
 	this._in_change_event = false;
-	this._datachange = function() {
+	this._datachange = function(force) {
 		var cur = this._getEditedData();
-		if (objectEquals(cur, this._data)) return; // no change
+		if (!force && objectEquals(cur, this._data)) return; // no change
 		this._in_change_event = true;
 		this._data = cur;
 		this.validate();
@@ -48,6 +48,10 @@ typed_field.prototype = {
 	 * @returns the HTML element representing the field
 	 */
 	getHTMLElement: function() { return this.element; },
+	/** The field must use the full width of its container */
+	fillWidth: function() {
+		this.element.style.width = "100%";
+	},
 	/**
 	 * @returns true if this field is editable
 	 */
@@ -84,15 +88,15 @@ typed_field.prototype = {
 	 *  change data
 	 *  @param data new data value
 	 */
-	setData: function(data) {
-		if (objectEquals(data, this._data)) return; // no change
+	setData: function(data, same_change) {
+		if (!same_change && objectEquals(data, this._data)) return; // no change
 		if (this._in_change_event) {
 			var t=this;
-			setTimeout(function () { t.setData(data); },1);
+			setTimeout(function () { t.setData(data, same_change); },1);
 			return;
 		}
 		this._setData(data);
-		this._datachange();
+		this._datachange(same_change);
 		this._data = data;
 		this.validate();
 	},

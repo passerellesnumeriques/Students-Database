@@ -49,11 +49,12 @@ function datachanged(field) {
 	}
 }
 
-var col;
+var col, col_container, sub_cols;
 col = new GridColumn("remove", "", null, null, "field_html", false, null, null, {}, null);
 grid.addColumn(col);
 <?php 
 foreach ($fields as $field) {
+	/* @var $data \datamodel\DataDisplay */
 	$data = $field[0];
 	$path = $field[1];
 	$tf = $data->getTypedField($path->sub_model);
@@ -71,17 +72,39 @@ foreach ($fields as $field) {
 				break;
 			}
 	}
-	echo "col = new GridColumn(".
-		json_encode($path->getString()."#".$data->getDisplayName()).
-		",".json_encode($data->getDisplayName()).
-		",null".
-		",null".
-		",".json_encode($tf[0]).
-		",".($fixed ? "false" : "true").
-		",datachanged,null".
-		",".$tf[1].
-		",".$data->javascriptDataDisplay($path->sub_model).");\n";
-	echo "grid.addColumn(col);\n";
+	$sub_data = $data->getSubDataDisplay();
+	if ($sub_data == null) {
+		echo "col = new GridColumn(".
+			json_encode($path->getString()."#".$data->getDisplayName()).
+			",".json_encode($data->getDisplayName()).
+			",null".
+			",null".
+			",".json_encode($tf[0]).
+			",".($fixed ? "false" : "true").
+			",datachanged,null".
+			",".$tf[1].
+			",".$data->javascriptDataDisplay($path->sub_model).");\n";
+		echo "grid.addColumn(col);\n";
+	} else {
+		echo "sub_cols = [];";
+		$names = $sub_data->getDisplayNames();
+		for ($i = 0; $i < count($names); $i++) {
+			echo "col = new GridColumn(".
+				json_encode($path->getString()."#".$data->getDisplayName()."#".$i).
+				",".json_encode($names[$i]).
+				",null".
+				",null".
+				",".json_encode($tf[0]).
+				",".($fixed ? "false" : "true").
+				",datachanged,null".
+				",".$tf[1].
+				",{datadisplay:".$data->javascriptDataDisplay($path->sub_model).",sub_data:$i});\n";
+			echo "col.field_args.sub_data_index = $i;\n";
+			echo "sub_cols.push(col);";
+		}
+		echo "col_container = new GridColumnContainer(".json_encode($data->getDisplayName()).",sub_cols,".$data->javascriptDataDisplay($path->sub_model).");\n";
+		echo "grid.addColumnContainer(col_container);\n";
+	}
 }
 ?>
 var fields = [<?php
@@ -151,14 +174,25 @@ function addRow() {
 	row_data.push({
 		col_id: "remove",
 		data_id: null,
-		data: "<span style='white-space:nowrap'><img src='"+theme.icons_16.remove+"' style='vertical-align:middle' class='button_verysoft' onclick='removeRowButton(this);'/> "+(grid.getNbRows()+1)+"-</span>"
+		data: "<span style='white-space:nowrap'><img src='"+theme.icons_16.remove+"' style='vertical-align:middle' class='flat small_icon' onclick='removeRowButton(this);'/> "+(grid.getNbRows()+1)+"-</span>"
 	});
 	for (var i = 0; i < fields.length; ++i) {
-		var data = {};
-		data.col_id = paths[i].path+"#"+fields[i].name;
-		data.data_id = null;
-		data.data = objectCopy(values[i],20);
-		row_data.push(data);
+		if (fields[i].sub_data == null) {
+			var data = {};
+			data.col_id = paths[i].path+"#"+fields[i].name;
+			data.data_id = null;
+			data.data = objectCopy(values[i],20);
+			row_data.push(data);
+		} else {
+			var same_data = objectCopy(values[i],20);
+			for (var j = 0; j < fields[i].sub_data.names.length; ++j) {
+				var data = {};
+				data.col_id = paths[i].path+"#"+fields[i].name+"#"+j;
+				data.data_id = null;
+				data.data = same_data;
+				row_data.push(data);
+			}
+		}
 	}
 	var row = grid.addRow(row_id, row_data);
 	row._is_new = true;

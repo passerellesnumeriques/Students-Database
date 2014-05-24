@@ -217,7 +217,10 @@ Element.prototype.ondomremoved = function(listener) {
 Element.prototype._removeChild = Element.prototype.removeChild;
 Element.prototype.removeChild = function(e) {
 	_domRemoved(e);
-	return this._removeChild(e);
+	try { return this._removeChild(e); }
+	catch (err) {
+		window.top.console.error("Remove child failed: "+e.getMessage());
+	}
 };
 Element.prototype.removeAllChildren = function() {
 	while (this.childNodes.length > 0) this.removeChild(this.childNodes[0]);
@@ -660,6 +663,7 @@ function set_lock_screen_content(div, content) {
 function unlock_screen(div) {
 	if (!div) div = document.getElementById('lock_screen');
 	if (!div) return;
+	if (!div.parentNode) return;
 	if (typeof div.usage_counter != 'undefined') {
 		div.usage_counter--;
 		if (div.usage_counter > 0) return;
@@ -856,6 +860,22 @@ function getDayLetter(d) {
 	case 5: return "S";
 	case 6: return "S";
 	}
+}
+
+function wordsMatch(s1, s2) {
+	var words1 = s1.split(" ");
+	var words2 = s2.split(" ");
+	var words1_in_words2 = 0;
+	var words2_in_words1 = 0;
+	for (var i = 0; i < words1.length; ++i) {
+		for (var j = 0; j < words2.length; ++j)
+			if (words2[j] == words1[i]) { words1_in_words2++; break; }
+	}
+	for (var i = 0; i < words2.length; ++i) {
+		for (var j = 0; j < words1.length; ++j)
+			if (words1[j] == words2[i]) { words2_in_words1++; break; }
+	}
+	return {nb_words_1:words1.length,nb_words_2:words2.length,nb_words1_in_words2:words1_in_words2,nb_words2_in_words1:words2_in_words1};
 }
 
 /**

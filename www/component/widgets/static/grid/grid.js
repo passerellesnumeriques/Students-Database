@@ -303,6 +303,7 @@ function grid(element) {
 	t.selectable = false;
 	t.url = get_script_path("grid.js");
 	t.onrowselectionchange = null;
+	t.oncellcreated = new Custom_Event();
 	
 	t.addColumnContainer = function(column_container, index) {
 		// if more levels, we add new rows in the header
@@ -835,11 +836,13 @@ function grid(element) {
 		t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
 			parent.field = field;
 			if (ondone) ondone(field);
+			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
 		});
 	},
 	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {
 		require([["typed_field.js",field_type+".js"]], function() {
 			var f = new window[field_type](data, editable, field_args);
+			f.fillWidth();
 			if (onchanged) f.ondatachanged.add_listener(onchanged);
 			if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
 			parent.appendChild(f.getHTMLElement());

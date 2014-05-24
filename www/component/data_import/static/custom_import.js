@@ -638,6 +638,10 @@ function custom_import(container, icon, title, import_button_text, import_button
 		
 		require("grid.js",function() {
 			t.grid = new grid(t.grid_container);
+			t.grid.oncellcreated.add_listener(function(cell_info) {
+				// fill width of TD
+				cell_info.field.getHTMLElement().style.width = "100%";
+			});
 			t.grid.addColumn(new GridColumn('#','#',null,null,'field_text',false,null,null,{},'#'));
 			t.grid.addColumn(new GridColumn('##','',null,null,'field_html',false,null,null,{},'##'));
 			onready(t);

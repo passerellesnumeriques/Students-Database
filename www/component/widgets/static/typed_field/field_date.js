@@ -66,7 +66,7 @@ field_date.prototype._create = function(data) {
 		var t=this;
 		this.signal_error = function(error) {
 			this.error = error;
-			if (!t.select) setTimeout(function(){t.signal_error(error);},10);
+			if (!t.select) { setTimeout(function(){t.signal_error(error);},10); return; }
 			t.select.select_year.style.border = error ? "1px solid red" : "";
 			t.select.select_month.style.border = error ? "1px solid red" : "";
 			t.select.select_day.style.border = error ? "1px solid red" : "";
