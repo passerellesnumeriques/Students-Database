@@ -10,32 +10,34 @@ class service_exam_status extends Service {
 	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
-		// overview on exam centers
-		echo "<div class='page_section_title2'>Exam Centers</div>";
-		echo "<div style='padding:5px'>";
 		// number of exam centers
 		$nb_centers = SQLQuery::create()->select("ExamCenter")->count("nb_centers")->executeSingleValue();
+
 		if ($nb_centers == 0) {
-			echo "<i class='problem'>No exam center yet</i><br/>";
-		} else {
-			echo $nb_centers." exam center".($nb_centers>1?"s":"")."<ul>";
-			$q = SQLQuery::create()->select("ExamSession");
-			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
-			PNApplication::$instance->calendar->whereEventInThePast($q, true);
-			$nb_sessions_done = $q->count()->executeSingleValue(); 
-			$q = SQLQuery::create()->select("ExamSession");
-			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
-			PNApplication::$instance->calendar->whereEventInTheFuture($q, true);
-			$nb_sessions_future = $q->count()->executeSingleValue();
-			echo "<li>".$nb_sessions_done." session".($nb_sessions_done>1?"s":"")." already done</li>"; 
-			echo "<li>".$nb_sessions_future." session".($nb_sessions_future>1?"s":"")." scheduled not yet done</li>"; 
-			echo "</ul>";
+			echo "<center><i class='problem' style='padding:5px'>No exam center yet</i></center>";
+			return;
 		}
+		
+		// overview on exam centers
+		echo "<div class='page_section_title2'>Exam Centers</div>";
+		echo "<div style='padding:0px 5px'>";
+		echo $nb_centers." exam center".($nb_centers>1?"s":"")."<ul>";
+		$q = SQLQuery::create()->select("ExamSession");
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
+		PNApplication::$instance->calendar->whereEventInThePast($q, true);
+		$nb_sessions_done = $q->count()->executeSingleValue(); 
+		$q = SQLQuery::create()->select("ExamSession");
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
+		PNApplication::$instance->calendar->whereEventInTheFuture($q, true);
+		$nb_sessions_future = $q->count()->executeSingleValue();
+		echo "<li>".$nb_sessions_done." session".($nb_sessions_done>1?"s":"")." already done</li>"; 
+		echo "<li>".$nb_sessions_future." session".($nb_sessions_future>1?"s":"")." scheduled not yet done</li>"; 
+		echo "</ul>";
 		echo "</div>";
 		
 		// overview on linked information sessions
 		echo "<div class='page_section_title2'>Information Sessions</div>";
-		echo "<div style='padding:5px'>";
+		echo "<div style='padding:0px 5px'>";
 		$total_nb_is = SQLQuery::create()->select("InformationSession")->count("nb")->executeSingleValue();
 		$is_not_linked = SQLQuery::create()
 			->select("InformationSession")
@@ -52,7 +54,7 @@ class service_exam_status extends Service {
 		
 		// overview on applicants
 		echo "<div class='page_section_title2'>Applicants</div>";
-		echo "<div style='padding:5px'>";
+		echo "<div style='padding:0px 5px'>";
 		$nb_applicants_no_exam_center = SQLQuery::create()->select("Applicant")->whereNull("Applicant","exam_center")->count("nb")->executeSingleValue();
 		$nb_applicants_ok = SQLQuery::create()->select("Applicant")->whereNotNull("Applicant","exam_center")->whereNotNull("Applicant", "exam_session")->count("nb")->executeSingleValue();
 		
@@ -82,7 +84,7 @@ class service_exam_status extends Service {
 				postData('/dynamic/selection/page/applicant/list', {
 					title: "Applicants without Exam Center",
 					filters: [
-						{category:"Selection",name:"Exam Center",force:true,data:{value:'NULL'}}
+						{category:"Selection",name:"Exam Center",force:true,data:{values:['NULL']}}
 					]
 				});
 			}

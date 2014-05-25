@@ -31,7 +31,7 @@ function prepare_applicant_list(){
 			value = "NULL";
 		if(value == "set")
 			value = "NOT_NULL";
-		t._filters.push({category:"Selection", name:name, data:{value:value}, force:force});
+		t._filters.push({category:"Selection", name:name, data:{values:[value]}, force:force});
 	};
 	
 	/**

@@ -31,7 +31,7 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 			$editable = false;
 		else
 			$editable = !PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id");
-		parent::__construct("applicant_id", "Applicant ID", !$editable);
+		parent::__construct("applicant_id", "ID", !$editable);
 	}
 	
 	public function getHorizontalAlign() { return "right"; }

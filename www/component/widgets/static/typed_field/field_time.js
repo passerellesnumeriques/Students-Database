@@ -24,7 +24,7 @@ field_time.prototype._create = function(data) {
 		require("input_utils.js",function(){inputAutoresize(input);});
 		var getTimeFromInput = function() {
 			if (input.value.length == 0) {
-				if (t.config && t.config.can_be_nyll) return null;
+				if (t.config && t.config.can_be_null) return null;
 				return 0;
 			}
 			return parseTimeStringToMinutes(input.value);

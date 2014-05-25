@@ -115,7 +115,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param {function} onclick onclick event handler
 	 */
 	t.addButton = function(html, id, onclick) {
-		var b = document.createElement("BUTTON");
+		var b = (t.table ? t.table.ownerDocument : document).createElement("BUTTON");
 		if (typeof html == 'string')
 			b.innerHTML = html;
 		else

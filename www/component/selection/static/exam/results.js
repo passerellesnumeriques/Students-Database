@@ -18,6 +18,7 @@ function createDataList(campaign_id)
            );
 }
 
+if (typeof $ != 'undefined') // handle background loading case
 $(document).ready(function(){
 
    $("#session_info_locationDiv").hide();
@@ -77,8 +78,8 @@ function updateExamSessionInfo(session_name,room_name,exam_center_name) {
 function updateApplicantsList(session_id,room_id) {
    
    window.dl.resetFilters();
-   window.dl.addFilter({category:"Selection",name:"Exam Session",force:true,data:{value:session_id}});
-   window.dl.addFilter({category:"Selection",name:"Exam Center Room",force:true,data:{value:room_id}});
+   window.dl.addFilter({category:"Selection",name:"Exam Session",force:true,data:{values:[session_id]}});
+   window.dl.addFilter({category:"Selection",name:"Exam Center Room",force:true,data:{values:[room_id]}});
 
    window.dl.reloadData();
 }

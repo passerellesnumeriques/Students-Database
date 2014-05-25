@@ -36,7 +36,7 @@ class page_applicant_list extends SelectionPage {
 				'list_container',
 				'Applicant', <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 				[
-					'Selection.Applicant ID',
+					'Selection.ID',
 					'Personal Information.First Name',
 					'Personal Information.Last Name',
 					'Personal Information.Gender',
@@ -46,7 +46,7 @@ class page_applicant_list extends SelectionPage {
 					'Selection.Information Session'
 				],
 				filters,
-				500,
+				<?php echo isset($_GET["all"]) ? "-1" : "100"; ?>,
 				function (list) {
 					var get_creation_data = function() {
 						var data = {

@@ -5,7 +5,7 @@ class page_IS_profile extends SelectionPage {
 	public function getRequiredRights() { return array("see_information_session_details"); }
 	
 	public function executeSelectionPage(){
-		// TODO assign people to do this information session
+		// TODO assign people/staff to do this information session
 		$id = @$_GET["id"];
 		$onsaved = @$_GET["onsaved"];
 		if ($id <> null && $id <= 0) $id = null;
@@ -44,7 +44,7 @@ class page_IS_profile extends SelectionPage {
 		$this->requireJavascript("IS_date.js");
 		$this->requireJavascript("IS_statistics.js");
 		?>
-		<div style='display:inline-block;margin:10px;vertical-align:top;'>
+		<div style='display:inline-block;margin:10px;margin-right:5px;vertical-align:top;'>
 			<?php if ($this->component->getOneConfigAttributeValue("give_name_to_IS")) {
 				$this->requireJavascript("center_name.js");
 			?>
@@ -58,18 +58,6 @@ class page_IS_profile extends SelectionPage {
 				); 
 				</script>
 			<?php } ?>
-			<div id='is_schedule'></div>
-			<script type='text/javascript'>
-			window.is_schedule = new IS_date(
-				'is_schedule', 
-				<?php echo json_encode(@$session["date"]);?>,
-				<?php echo $session <> null ? $session["id"] : "-1";?>,
-				<?php echo $this->component->getCalendarId();?>,
-				<?php echo json_encode($this->component->getOneConfigAttributeValue("default_duration_IS"));?>,
-				<?php echo json_encode($editable);?>,
-				<?php echo json_encode($all_configs["default_duration_IS"][2]);?>
-			); 
-			</script>
 			<div id='is_stats'></div>
 			<script type='text/javascript'>
 			window.is_stats = new IS_statistics(
@@ -83,12 +71,31 @@ class page_IS_profile extends SelectionPage {
 			); 
 			</script>
 		</div>
-		<div style='display:inline-block;margin:10px;vertical-align:top;' id='location_and_partners'>
+		<div style='display:inline-block;margin:10px 0px;vertical-align:top;'>
+			<div id='is_schedule'></div>
+			<script type='text/javascript'>
+			window.is_schedule = new IS_date(
+				'is_schedule', 
+				<?php echo json_encode(@$session["date"]);?>,
+				<?php echo $session <> null ? $session["id"] : "-1";?>,
+				<?php echo $this->component->getCalendarId();?>,
+				<?php echo json_encode($this->component->getOneConfigAttributeValue("default_duration_IS"));?>,
+				<?php echo json_encode($editable);?>,
+				<?php echo json_encode($all_configs["default_duration_IS"][2]);?>
+			); 
+			</script>
+		</div>
+		<div style='display:inline-block;margin:10px;margin-left:0px;vertical-align:top;' id='location_and_partners'>
 		<?php
 		require_once("component/selection/page/common_centers/location_and_partners.inc");
-		locationAndPartners($this, $id, "InformationSession", $session <> null ? GeographyJSON::GeographicAreaText($session) : "null", $editable); 
+		locationAndPartners($this, $id, "InformationSession", $session <> null ? GeographyJSON::GeographicAreaText($session) : "null", $editable, true); 
 		?>
 		</div>
+		<?php if($id <> null){?>
+		<div style='margin:0px 5px 5px 5px;'>
+		<iframe style='display:block;width:100%;height:300px;' class='section soft' name='applicants_frame'></iframe>
+		</div>
+		<?php } ?>
 		<script type='text/javascript'>
 		var is_popup = window.parent.get_popup_window_from_frame(window);
 		var is_id = <?php echo $id <> null ? $id : -1;?>;
@@ -161,9 +168,10 @@ class page_IS_profile extends SelectionPage {
 		});
 		<?php } ?>
 		<?php if($id <> null){?>
-		is_popup.addIconTextButton('/static/people/people_list_16.png', "See Applicants List", "applicants", function() {
-			window.top.popup_frame('/static/people/people_list_16.png','Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{value:<?php echo $id;?>}}]},95,95);
-		});
+		postFrame('/dynamic/selection/page/applicant/list?all=true',{filters:[{category:'Selection',name:'Information Session',force:true,data:{values:[<?php echo $id;?>]}}]}, 'applicants_frame');
+		//is_popup.addIconTextButton('/static/people/people_list_16.png', "See Applicants List", "applicants", function() {
+		//	window.top.popup_frame('/static/people/people_list_16.png','Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{values:[<?php echo $id;?>]}}]},95,95);
+		//});
 		<?php }?>
 		<?php if ($editable || $id == null) {?>
 		is_popup.addFrameSaveButton(save_is);

@@ -184,15 +184,44 @@ abstract class DataDisplay {
 				foreach ($filters as $filter_list) {
 					$w = "";
 					foreach ($filter_list as $filter) {
-						if ($filter["value"] == "") continue;
+						if (!isset($filter["values"]) || !is_array($filter["values"])) continue;
+						foreach ($filter["values"] as $enum_value) {
+							if ($enum_value == "") continue;
+							if (strlen($w) > 0) $w .= " OR ";
+							$w .= "`".$table_alias."`.`".$col->name."`";
+							if ($enum_value == "NULL")
+								$w .= " IS NULL";
+							else if ($enum_value == "NOT_NULL")
+								$w .= " IS NOT NULL";
+							else
+								$w .= "='".\SQLQuery::escape($enum_value)."'";
+						}
+					}
+					if (strlen($w) > 0)
+						$q->where($w);
+				}
+				break;
+			case "filter_comparable":
+				foreach ($filters as $filter_list) {
+					$w = "";
+					foreach ($filter_list as $filter) {
+						$val = trim($filter["value"]);
+						if ($val == "") continue;
+						$cd = "";
+						$col_path = "`".$table_alias."`".".`".$col->name."`";
+						switch ($filter["type"]) {
+							case "equals": $cd = $col_path."='".\SQLQuery::escape($filter["value"])."'"; break;
+							case "not_equals": $cd = $col_path."!='".\SQLQuery::escape($filter["value"])."'"; break;
+							case "less": $cd = $col_path."<'".\SQLQuery::escape($filter["value"])."'"; break;
+							case "more": $cd = $col_path.">'".\SQLQuery::escape($filter["value"])."'"; break;
+							case "less_equals": $cd = $col_path."<='".\SQLQuery::escape($filter["value"])."'"; break;
+							case "more_equals": $cd = $col_path.">='".\SQLQuery::escape($filter["value"])."'"; break;
+							case "between": if (trim($filter["value_to"])<>"") $cd = "(".$col_path.">='".\SQLQuery::escape($filter["value"])."' AND ".$col_path."<='".\SQLQuery::escape($filter["value_to"])."')"; break;
+							case "not_between": if (trim($filter["value_to"])<>"") $cd = "(".$col_path."<'".\SQLQuery::escape($filter["value"])."' OR ".$col_path.">'".\SQLQuery::escape($filter["value_to"])."')"; break;
+						}
+						if (strlen($cd) == 0) continue;
 						if (strlen($w) > 0) $w .= " OR ";
-						$w .= "`".$table_alias."`.`".$col->name."`";
-						if ($filter["value"] == "NULL")
-							$w .= " IS NULL";
-						else if ($filter["value"] == "NOT_NULL")
-							$w .= " IS NOT NULL";
-						else
-							$w .= "='".\SQLQuery::escape($filter["value"])."'";
+						$w .= $cd;
 					}
 					if (strlen($w) > 0)
 						$q->where($w);
@@ -459,15 +488,18 @@ class ChoiceDataDisplay extends DataDisplay {
 		foreach ($filters as $filter_list) {
 			$w = "";
 			foreach ($filter_list as $filter) {
-				if ($filter["value"] == "") continue;
-				if (strlen($w) > 0) $w .= " OR ";
-				$w .= "`".$table_alias."`.`".$foreign_key->name."`";
-				if ($filter["value"] == "NULL")
-					$w .= " IS NULL";
-				else if ($filter["value"] == "NOT_NULL")
-					$w .= " IS NOT NULL";
-				else
-					$w .= "='".\SQLQuery::escape($filter["value"])."'";
+				if (!isset($filter["values"]) || !is_array($filter["values"])) continue;
+				foreach ($filter["values"] as $enum_value) {
+					if ($enum_value == "") continue;
+					if (strlen($w) > 0) $w .= " OR ";
+					$w .= "`".$table_alias."`.`".$foreign_key->name."`";
+					if ($enum_value == "NULL")
+						$w .= " IS NULL";
+					else if ($enum_value == "NOT_NULL")
+						$w .= " IS NOT NULL";
+					else
+						$w .= "='".\SQLQuery::escape($enum_value)."'";
+				}
 			}
 			if (strlen($w) > 0)
 				$q->where($w);
@@ -977,15 +1009,18 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 		foreach ($filters as $filter_list) {
 			$w = "";
 			foreach ($filter_list as $filter) {
-				if ($filter["value"] == "") continue;
-				if (strlen($w) > 0) $w .= " OR ";
-				$w .= "`".$root_alias."`.`".$this->foreign_key_name."`";
-				if ($filter["value"] == "NULL")
-					$w .= " IS NULL";
-				else if ($filter["value"] == "NOT_NULL")
-					$w .= " IS NOT NULL";
-				else
-					$w .= "='".\SQLQuery::escape($filter["value"])."'";
+				if (!isset($filter["values"]) || !is_array($filter["values"])) continue;
+				foreach ($filter["values"] as $enum_value) {
+					if ($enum_value == "") continue;
+					if (strlen($w) > 0) $w .= " OR ";
+					$w .= "`".$root_alias."`.`".$this->foreign_key_name."`";
+					if ($enum_value == "NULL")
+						$w .= " IS NULL";
+					else if ($enum_value == "NOT_NULL")
+						$w .= " IS NOT NULL";
+					else
+						$w .= "='".\SQLQuery::escape($enum_value)."'";
+				}
 			}
 			if (strlen($w) > 0)
 				$q->where($w);

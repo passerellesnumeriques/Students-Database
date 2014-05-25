@@ -56,7 +56,16 @@ ajax = {
 		var aborted = false;
 		var timeouted = false;
 		try { xhr.open(method, url.toString(), !foreground); }
-		catch (e) { log_exception(e, "while creating AJAX request to "+url.toString()); return; }
+		catch (e) {
+			// error opening the AJAX request
+			if (window == window.top) {
+				log_exception(e, "while creating AJAX request to "+url.toString()); 
+			} else {
+				// try on top
+				window.top.ajax.call(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, override_response_mime_type);
+			}
+			return;
+		}
 		xhr.onabort = function() { aborted = true; };
 		xhr.ontimeout = function() { timeouted = true; };
 		if (content_type != null)

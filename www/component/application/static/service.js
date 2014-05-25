@@ -186,6 +186,20 @@ function postData(url, data, win) {
 	win.document.body.appendChild(form);
 	form.submit();
 }
+function postFrame(url, data, frame) {
+	var form = document.createElement("FORM");
+	var i = document.createElement("INPUT");
+	i.type = "hidden";
+	i.name = "input";
+	i.value = service.generateInput(data);
+	form.appendChild(i);
+	form.method = "POST";
+	form.action = url;
+	form.target = typeof frame == 'string' ? frame : frame.name;
+	document.body.appendChild(form);
+	form.submit();
+	document.body.removeChild(form);
+}
 if (typeof ajax != 'undefined')
 	ajax.http_response_handlers.push(function(xhr){
 		if (xhr.status == 403) {

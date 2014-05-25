@@ -10,9 +10,8 @@ class service_IS_status extends Service {
 	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
-		echo "<div class='page_section_title2'>Sessions</div>";
-		echo "<div style='padding:5px'>";
-		
+		// *** Sessions ***
+
 		// number of sessions done
 		$q = SQLQuery::create()->select("InformationSession");
 		PNApplication::$instance->calendar->joinCalendarEvent($q, "InformationSession","date");
@@ -48,14 +47,31 @@ class service_IS_status extends Service {
 
 		if ($nb_sessions == 0) {
 			// nothing started yet
-			echo "<center><i class='problem'>No Information Session Yet</i></center>";
+			echo "<center><i class='problem' style='padding:5px'>No Information Session Yet</i></center>";
 			return;
 		}
-		echo $nb_sessions." session".($nb_sessions>1?"s":"");
+		
+		// check if we have sessions without host
+		$missing_host = SQLQuery::create()
+			->select("InformationSession")
+			->join("InformationSession", "InformationSessionPartner", array("id"=>"information_session"), null, array("host"=>1))
+			->whereNull("InformationSessionPartner", "host")
+			->field("InformationSession", "id", "id")
+			->field("InformationSession", "name", "name")
+			->execute();
+		
 		if ($nb_sessions == $sessions_done["nb_sessions"]) {
 			// all sessions are done
-			echo ": <span class='ok'>All done</span><br/>";
+			echo "<div class='page_section_title2'>Sessions: <span class='ok'>".$nb_sessions.", all done.</span></div>";
+			if (count($missing_host) > 0) {
+				echo "<div style='padding:0px 5px'>";
+				$this->createWarningLink($missing_host, "without hosting partner");
+				echo "</div>";				
+			}
 		} else {
+			echo "<div class='page_section_title2'>Sessions: ".$nb_sessions."</div>";
+			echo "<div style='padding:0px 5px;'>";
+			
 			echo "<ul>";
 				echo "<li>";
 					echo ($sessions_done["nb_sessions"])." done";
@@ -71,25 +87,16 @@ class service_IS_status extends Service {
 					echo "</li>";
 				}
 			echo "</ul>";
+		
+			$this->createWarningLink($missing_host, "without hosting partner");
+	
+			echo "</div>";
 		}
-		
-		// check if we have sessions without host
-		$missing_host = SQLQuery::create()
-			->select("InformationSession")
-			->join("InformationSession", "InformationSessionPartner", array("id"=>"information_session"), null, array("host"=>1))
-			->whereNull("InformationSessionPartner", "host")
-			->field("InformationSession", "id", "id")
-			->field("InformationSession", "name", "name")
-			->execute();
-		$this->createWarningLink($missing_host, "without hosting partner");
 
-		echo "</div>";
-		
-
+		// *** ATTENDANCE ***
 		echo "<div class='page_section_title2'>Attendance</div>";
-		echo "<div style='padding:5px'>";
+		echo "<div style='padding:0px 5px'>";
 		
-		// attendance
 		$separate = $component->getOneConfigAttributeValue("separate_boys_girls_IS");
 		$total_boys_expected = $sessions_done["boys_expected"] + $sessions_future["boys_expected"] + $sessions_no_date["boys_expected"];
 		$total_girls_expected = $sessions_done["girls_expected"] + $sessions_future["girls_expected"] + $sessions_no_date["girls_expected"];
@@ -97,6 +104,7 @@ class service_IS_status extends Service {
 		$total_boys_real = $sessions_done["boys_real"] + $sessions_future["boys_real"] + $sessions_no_date["boys_real"];
 		$total_girls_real = $sessions_done["girls_real"] + $sessions_future["girls_real"] + $sessions_no_date["girls_real"];
 		$total_real = $total_boys_real + $total_girls_real;
+		
 		echo $total_expected." attendees expected";
 		if ($separate)
 			echo " (".$total_boys_expected." boys and ".$total_girls_expected." girls)";
@@ -150,7 +158,7 @@ class service_IS_status extends Service {
 		
 
 		echo "<div class='page_section_title2'>Applicants</div>";
-		echo "<div style='padding:5px'>";
+		echo "<div style='padding:0px 5px'>";
 		// number of applicants
 		$applicants_count = SQLQuery::create()->bypassSecurity()->select("Applicant")->join("Applicant","People",array("people"=>"id"))->groupBy("People","sex")->count("nb")->field("People","sex","sex")->execute();
 		$applicants_M = $applicants_F = 0;
@@ -169,7 +177,7 @@ class service_IS_status extends Service {
 			echo "</ul>";
 		} else echo "<br/>";
 		if ($applicants_no_IS > 0) {
-			echo "<a class='need_action' href='#' onclick=\"window.top.popup_frame(null,'Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{value:'NULL'}}]},95,95);return false;\">";
+			echo "<a class='need_action' href='#' onclick=\"window.top.popup_frame(null,'Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{values:['NULL']}}]},95,95);return false;\">";
 			echo $applicants_no_IS." applicant".(count($applicants_no_IS) > 1 ? "s":"")." not attched to an Information Session";
 			echo "</a><br/>\n";
 		}

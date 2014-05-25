@@ -92,6 +92,13 @@ class widgets extends Component {
 			$cfg .= "}";
 			return array("filter_enum", $cfg);
 		}
+		if ($col instanceof \datamodel\ColumnInteger ||
+			$col instanceof \datamodel\ColumnDecimal ||
+			$col instanceof \datamodel\ColumnDate) {
+			$field = $this->get_typed_field($col);
+			$cfg = "{value_field_classname:".json_encode($field[0]).",value_field_config:".$field[1]."}";
+			return array("filter_comparable", $cfg);
+		}
 		return array(null,"null");
 	}
 	

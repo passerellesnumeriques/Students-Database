@@ -30,3 +30,11 @@
 	text-align: center;
 	padding: 2px;
 }
+.context_menu_item.disabled {
+	color: #808080;
+}
+.context_menu_item.disabled:hover, .context_menu_item.disabled.selected {
+	color: #808080;
+	background-color: #FFFFFF;
+	border: 1px solid #FFFFFF;
+}

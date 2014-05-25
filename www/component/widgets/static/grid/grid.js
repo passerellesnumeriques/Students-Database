@@ -200,6 +200,9 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			this.th.appendChild(title);
 		else
 			this.th.innerHTML = title;
+		var span = document.createElement("SPAN");
+		span.style.whiteSpace = 'nowrap';
+		this.th.appendChild(span);
 		if (this.sort_order) {
 			var img;
 			switch (this.sort_order) {
@@ -210,7 +213,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				img.style.cursor = "pointer";
 				tooltip(img, "Sort by descending order (currently ascending)");
 				img.onclick = function() { t._onsort(2); };
-				this.th.appendChild(img);
+				span.appendChild(img);
 				break;
 			case 2: // descending
 				img = document.createElement("IMG");
@@ -219,7 +222,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				img.style.cursor = "pointer";
 				tooltip(img, "Sort by ascending order (currently descending)");
 				img.onclick = function() { t._onsort(1); };
-				this.th.appendChild(img);
+				span.appendChild(img);
 				break;
 			case 3: // not sorted yet
 				var h = function() { t._onsort(1); };
@@ -229,14 +232,14 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				img.style.cursor = "pointer";
 				tooltip(img, "Sort by descending order");
 				img.onclick = h;
-				this.th.appendChild(img);
+				span.appendChild(img);
 				img = document.createElement("IMG");
 				img.src = url+"/arrow_down_10.gif";
 				img.style.verticalAlign = "middle";
 				img.style.cursor = "pointer";
 				tooltip(img, "Sort by ascending order");
 				img.onclick = h;
-				this.th.appendChild(img);
+				span.appendChild(img);
 				break;
 			}
 		}
@@ -250,7 +253,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				tooltip(img, this.actions[i].tooltip);
 			img.onclick = function(ev) { this.data.onclick(ev, this.data, t); };
 			this.actions[i].element = img;
-			this.th.appendChild(img);
+			span.appendChild(img);
 		}
 		layout.invalidate(this.th);
 	};
@@ -378,14 +381,18 @@ function grid(element) {
 		// add cells
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
-			var td = document.createElement("TD");
-			td.col_id = col.id;
-			var col_index = index + (t.selectable ? 1 : 0);
-			if (col_index >= tr.childNodes.length)
-				tr.appendChild(td);
-			else
-				tr.insertBefore(td, tr.childNodes[col_index]);
-			t._create_cell(col, null, td);
+			if (tr.title_row)
+				tr.childNodes[0].colSpan++;
+			else {
+				var td = document.createElement("TD");
+				td.col_id = col.id;
+				var col_index = index + (t.selectable ? 1 : 0);
+				if (col_index >= tr.childNodes.length)
+					tr.appendChild(td);
+				else
+					tr.insertBefore(td, tr.childNodes[col_index]);
+				t._create_cell(col, null, td);
+			}
 		}
 		layout.invalidate(this.table);
 	};
@@ -458,7 +465,10 @@ function grid(element) {
 		var td_index = index + (t.selectable ? 1 : 0);
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var row = t.table.childNodes[i];
-			row.removeChild(row.childNodes[td_index]);
+			if (row.title_row)
+				row.childNodes[0].colSpan--;
+			else
+				row.removeChild(row.childNodes[td_index]);
 		}
 		if (!col.parent_column)
 			t.header_rows[0].removeChild(col.th);
@@ -547,7 +557,7 @@ function grid(element) {
 			var cb = td.childNodes[0];
 			if (cb.disabled) continue; //do not unselect if the checkbox is disabled
 			cb.checked = '';
-			cb.onchange();
+			if (cb.onchange) cb.onchange();
 		}
 		t._selection_changed();
 	};
@@ -665,7 +675,26 @@ function grid(element) {
 				td.className = data.css;
 		}
 		t.table.appendChild(tr);
-		layout.invalidate(this.table);
+		layout.invalidate(t.table);
+		return tr;
+	};
+	
+	t.addTitleRow = function(title, style) {
+		var tr = document.createElement("TR");
+		tr.title_row = true;
+		tr.className = "title_row";
+		var td = document.createElement("TD");
+		tr.appendChild(td);
+		td.colSpan = t.columns.length+(t.selectable ? 1 : 0);
+		if (typeof title == 'string')
+			td.appendChild(document.createTextNode(title));
+		else
+			td.appendChild(title);
+		if (style)
+			for (var name in style)
+				td.style[name] = style[name];
+		t.table.appendChild(tr);
+		layout.invalidate(t.table);
 		return tr;
 	};
 	
@@ -763,21 +792,15 @@ function grid(element) {
 	};
 	
 	t.startLoading = function() {
-		if (t.loading_back) return;
-		t.loading_back = document.createElement("DIV");
-		t.loading_back.style.backgroundColor = "rgba(192,192,192,0.35)";
-		t.loading_back.style.position = "absolute";
-		t.loading_back.style.top = absoluteTop(t.element)+"px";
-		t.loading_back.style.left = absoluteLeft(t.element)+"px";
-		t.loading_back.style.width = t.element.offsetWidth+"px";
-		t.loading_back.style.height = t.element.offsetHeight+"px";
-		document.body.appendChild(t.loading_back);
-		set_lock_screen_content(t.loading_back, "<img src='"+theme.icons_16.loading+"'/> Loading data...");
+		if (t._loading_hidder) return;
+		if (!t.table) return;
+		t._loading_hidder = new LoadingHeader(t.table);
+		t._loading_hidder.setContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading data...");
 	};
 	t.endLoading = function() {
-		if (!t.loading_back) return;
-		document.body.removeChild(t.loading_back);
-		t.loading_back = null;
+		if (!t._loading_hidder) return;
+		t._loading_hidder.remove();
+		t._loading_hidder = null;
 	};
 	
 	t.apply_filters = function() {
