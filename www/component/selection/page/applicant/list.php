@@ -57,8 +57,8 @@ class page_applicant_list extends SelectionPage {
 						for (var i = 0; i < filters.length; ++i) {
 							if (filters[i].category == "Selection") {
 								if (filters[i].name == "Information Session") {
-									if (!filters[i].or)
-										data.prefilled_data.push({table:"Applicant",data:"Information Session",value:filters[i].data.value});
+									if (filters[i].data.values.length == 1 && filters[i].data.values[0] != 'NULL' && filters[i].data.values != 'NOT_NULL')
+										data.prefilled_data.push({table:"Applicant",data:"Information Session",value:filters[i].data.values[0]});
 								}
 							}
 						}
