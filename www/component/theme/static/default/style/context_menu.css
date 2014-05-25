@@ -2,7 +2,7 @@
 	position: absolute;
 	visibility: hidden;
 	top: -10000px;
-	border: 1px solid black;
+	border: 1px solid #808080;
 	background-color: #FFFFFF;
 	box-shadow: 3px 3px 3px #C0C0D0;
 }

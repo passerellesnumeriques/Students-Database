@@ -11,14 +11,14 @@ function createDataList(campaign_id)
                            "Personal Information.Last Name"
                    ],
                    [],
-                   100,
+                   -1,
                    function(list) {
                            
                    }
            );
 }
 
-if (typeof $ != 'undefined') // handle background loading case
+if (typeof $(document).ready != 'undefined') // handle background loading case
 $(document).ready(function(){
 
    $("#session_info_locationDiv").hide();
