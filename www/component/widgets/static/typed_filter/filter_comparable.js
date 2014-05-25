@@ -12,7 +12,7 @@ function filter_comparable(data, config, editable) {
 	o = document.createElement("OPTION"); o.value = 'less'; o.text = "is less than"; if (data.type == 'less') o.selected = true; this.select_type.add(o);
 	o = document.createElement("OPTION"); o.value = 'more'; o.text = "is greater than"; if (data.type == 'more') o.selected = true; this.select_type.add(o);
 	o = document.createElement("OPTION"); o.value = 'less_equals'; o.text = "is less than or equals to"; if (data.type == 'less_equals') o.selected = true; this.select_type.add(o);
-	o = document.createElement("OPTION"); o.value = 'more_equals'; o.text = "is more than or equals to"; if (data.type == 'more_equals') o.selected = true; this.select_type.add(o);
+	o = document.createElement("OPTION"); o.value = 'more_equals'; o.text = "is greater than or equals to"; if (data.type == 'more_equals') o.selected = true; this.select_type.add(o);
 	o = document.createElement("OPTION"); o.value = 'between'; o.text = "is between"; if (data.type == 'between') o.selected = true; this.select_type.add(o);
 	o = document.createElement("OPTION"); o.value = 'not_between'; o.text = "is not between"; if (data.type == 'not_between') o.selected = true; this.select_type.add(o);
 	
@@ -28,8 +28,8 @@ function filter_comparable(data, config, editable) {
 	};
 	
 	require([["typed_field.js",config.value_field_classname+".js"]], function() {
-		t.field1 = new window[config.value_field_classname](data.value, config.value_field_config, editable);
-		t.field2 = new window[config.value_field_classname](data.value_to, config.value_field_config, editable);
+		t.field1 = new window[config.value_field_classname](data.value, editable, objectCopy(config.value_field_config));
+		t.field2 = new window[config.value_field_classname](data.value_to, editable, objectCopy(config.value_field_config));
 		t.element.appendChild(t.field1.getHTMLElement());
 		t.span_to = document.createElement("SPAN");
 		t.span_to.appendChild(document.createTextNode(" and "));

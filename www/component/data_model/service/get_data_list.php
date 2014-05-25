@@ -236,7 +236,7 @@ class service_get_data_list extends Service {
 					$data = $display_data[$i];
 					$path = $paths[$i];
 					$value = $row[$a["data"]];
-					// TODO make value as exportable...
+					$value = $data->exportValue($value, $path->sub_model);
 					$sheet->setCellValueByColumnAndRow($col_index, $row_index, $value);
 					$col_index++;
 				}

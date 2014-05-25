@@ -670,10 +670,11 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t._ready();
 		});
 		// layout
-		require("vertical_layout.js",function(){
-			new vertical_layout(container);
-			layout.invalidate(container);
-		});
+		if (container.style.height)
+			require("vertical_layout.js",function(){
+				new vertical_layout(container);
+				layout.invalidate(container);
+			});
 		require("horizontal_layout.js",function(){
 			new horizontal_layout(t.header);
 			layout.invalidate(container);
@@ -1260,6 +1261,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t._loadData();
 			if (t._filters.length == 0)
 				container.innerHTML = "<center><i>No filter</i></center>";
+			layout.invalidate(container);
 		};
 		
 		if (is_or) {
@@ -1388,6 +1390,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			menu.showBelowElement(button);
 		});
 	};
+	t._download_frame = null;
 	/** Launch the export in the given format
 	 * @param {String} format format to export
 	 */
@@ -1432,8 +1435,18 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		input.type = 'hidden';
 		input.name = 'export';
 		input.value = format;
+		if (t._download_frame) document.body.removeChild(t._download_frame);
+		var frame = document.createElement("IFRAME");
+		frame.style.position = "absolute";
+		frame.style.top = "-10000px";
+		frame.style.visibility = "hidden";
+		frame.name = "data_list_download";
+		document.body.appendChild(frame);
+		form.target = "data_list_download";
 		document.body.appendChild(form);
 		form.submit();
+		t._download_frame = frame;
+		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
 	};
 	
 	/** List of cells that have been edited (used for the save action) */

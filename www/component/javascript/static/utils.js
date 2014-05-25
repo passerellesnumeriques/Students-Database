@@ -416,7 +416,8 @@ function getMonthShortName(month) {
  * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
  * @returns {String} the name of the day
  */
-function getDayName(d) {
+function getDayName(d, from_date) {
+	if (from_date) d = d==0 ? 6 : d-1;
 	switch (d) {
 	case 0: return "Monday";
 	case 1: return "Tuesday";
@@ -431,7 +432,8 @@ function getDayName(d) {
  * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
  * @returns {String} the 3 letters name of the day
  */
-function getDayShortName(d) {
+function getDayShortName(d, from_date) {
+	if (from_date) d = d==0 ? 6 : d-1;
 	switch (d) {
 	case 0: return "Mon";
 	case 1: return "Tue";
@@ -446,7 +448,8 @@ function getDayShortName(d) {
  * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
  * @returns {String} the 1 letter name of the day
  */
-function getDayLetter(d) {
+function getDayLetter(d, from_date) {
+	if (from_date) d = d==0 ? 6 : d-1;
 	switch (d) {
 	case 0: return "M";
 	case 1: return "T";

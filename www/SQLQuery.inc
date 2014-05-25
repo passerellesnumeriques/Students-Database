@@ -68,10 +68,16 @@ class SQLQuery {
  	public function __construct($copy = null) {
  		$this->warning = PNApplication::$instance->current_domain == "Dev";
  		if ($copy) {
- 			$this->tables = $copy->tables;
- 			$this->fields = $copy->fields;
- 			$this->where = $copy->where;
- 			$this->joins = $copy->joins;
+ 			$this->database = $copy->database;
+ 			$this->sub_models = array_merge($copy->sub_models);
+ 			$this->tables = array_merge($copy->tables);
+ 			$this->fields = array_merge($copy->fields);
+ 			$this->count = $copy->count <> null ? array_merge($copy->count) : null;
+ 			$this->count_one_field = $copy->count_one_field <> null ? array_merge($copy->count_one_field) : null;
+ 			$this->expressions = array_merge($copy->expressions);
+ 			$this->where = array_merge($copy->where);
+ 			$this->having = array_merge($copy->having);
+ 			$this->joins = array_merge($copy->joins);
  			$this->limit_from = $copy->limit_from;
  			$this->limit_number = $copy->limit_number;
  			$this->group_by = $copy->group_by;
@@ -97,6 +103,8 @@ class SQLQuery {
  	public $expressions = array();
  	/** @var array list of WHERE string expression, which will be joined by AND */
  	public $where = array();
+ 	/** @var array list of HAVING string expression, which will be joined by AND */
+ 	public $having = array();
  	/** @var array list of LEFT JOIN with format (table_from,table_to,fields_matching,alias) */
  	public $joins = array();
  	/** @var number to start from a specific index, using LIMIT statment */
@@ -272,6 +280,11 @@ class SQLQuery {
 		return $this;
 	}
 	
+	public function &fieldSubQuery($sub_q, $alias) {
+		array_push($this->fields, array($sub_q, $alias));
+		return $this;
+	}
+	
 	/**
 	 * Select all fields from the given table
 	 * @param string $table name of the table
@@ -338,6 +351,7 @@ class SQLQuery {
 	 */
 	public function getFieldAlias($table, $field) {
 		foreach ($this->fields as $f) {
+			if ($f[0] instanceof SQLQuery) continue; // sub query
 			if ($f[1] <> $field) continue; // not the good field
 			$good_table = false;
 			if ($f[0] == $table) $good_table = true;
@@ -417,6 +431,11 @@ class SQLQuery {
 		}
 		return $this;
 	}
+	
+	public function &having($expr) {
+		array_push($this->having, $expr);
+		return $this;
+	} 
 	
 	/**
 	 * Resolve a table name into the alias or table name which should be used in a WHERE
@@ -587,6 +606,21 @@ class SQLQuery {
 		}
 		$w .= ")";
 		array_push($this->where, $w);
+		return $this;
+	}
+	
+	/** WHERE EXISTS (SELECT ...)
+	 * 
+	 * @param SQLQuery $sub_q the sub query
+	 * @param string $join_query_table how to join the 2 queries: table in this query
+	 * @param string $join_query_field how to join the 2 queries: field in this query
+	 * @param string $join_sub_query_table how to join the 2 queries: table in the sub query
+	 * @param string $join_sub_query_field how to join the 2 queries: field in the sub query
+	 * @return SQLQuery this
+	 */
+	public function &whereExistsInSubQuery(&$sub_q, $join_query_table, $join_query_field, $join_sub_query_table, $join_sub_query_field) {
+		$sub_q->where("`".$join_sub_query_table."`.`".$join_sub_query_field."`=`".$join_query_table."`.`".$join_query_field."`");
+		$this->where("EXISTS (".$sub_q->generate().")");
 		return $this;
 	}
 
@@ -776,6 +810,13 @@ class SQLQuery {
 			} else {
 				for ($i = 0; $i < count($fields); $i++) {
 					$f = $fields[$i];
+					if ($f[0] instanceof SQLQuery) {
+						// sub query will be validated by itself
+						array_push($final_fields, $f);
+						array_splice($fields,$i,1);
+						$i--;
+						continue;
+					}
 					if ($f[0] == $t || $f[0] == $alias) {
 						$table_name = $f[0] == $t ? $table->getSQLName($this->sub_models) : $alias;
 						// check the field is accessible
@@ -866,8 +907,14 @@ class SQLQuery {
 					if($this->distinct)
 						$sql .= "DISTINCT ";
 				} else $sql .= ",";
-				$sql .= "`".$f[0]."`.`".$f[1]."`";
-				if ($f[2] <> null) $sql .= " AS `".$f[2]."`";
+				if ($f[0] instanceof SQLQuery) {
+					// this is a sub query
+					$sql .= "(".$f[0]->generate().") AS `".$f[1]."`";
+				} else {
+					// normal field
+					$sql .= "`".$f[0]."`.`".$f[1]."`";
+					if ($f[2] <> null) $sql .= " AS `".$f[2]."`";
+				}
 			}
 			if ($this->count !== null) {
 				if ($first) $first = false; else $sql .= ",";
@@ -964,6 +1011,14 @@ class SQLQuery {
 			foreach ($this->group_by as $g) {
 				if ($first) $first = false; else $sql .= ",";
 				$sql .= "`".$this->resolveWhereTable($g[0])."`.`".$g[1]."`";
+			}
+		}
+		if (count($this->having) > 0) {
+			$sql .= " HAVING ";
+			$first = true;
+			foreach ($this->having as $w) {
+				if ($first) $first = false; else $sql .= " AND ";
+				$sql .= $w;
 			}
 		}
 		if (count($this->order_by) > 0) {

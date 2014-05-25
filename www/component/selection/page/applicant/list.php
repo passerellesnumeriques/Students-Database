@@ -18,7 +18,7 @@ class page_applicant_list extends SelectionPage {
 		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : array();
 		?>
 		<div style='width:100%;height:100%' id='page_container'>
-			<div id='list_container' layout='fill'></div>
+			<div id='list_container' layout='fill' style="height:20px"></div>
 			<?php if (PNApplication::$instance->user_management->has_right("manage_applicant")) {?>
 			<div class='page_footer'>
 				<span id='nb_selected'>0 applicant selected</span>: 

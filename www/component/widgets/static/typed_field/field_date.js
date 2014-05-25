@@ -74,7 +74,7 @@ field_date.prototype._create = function(data) {
 		require("date_select.js", function() {
 			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
 			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
-			t.select = new date_select(t.element, parseSQLDate(t.data), min, max, false, true);
+			t.select = new date_select(t.element, parseSQLDate(t._data), min, max, false, true);
 			t.select.select_day.style.verticalAlign = "top";
 			t.select.select_month.style.verticalAlign = "top";
 			t.select.select_year.style.verticalAlign = "top";

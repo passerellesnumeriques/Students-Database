@@ -94,7 +94,8 @@ class widgets extends Component {
 		}
 		if ($col instanceof \datamodel\ColumnInteger ||
 			$col instanceof \datamodel\ColumnDecimal ||
-			$col instanceof \datamodel\ColumnDate) {
+			$col instanceof \datamodel\ColumnDate ||
+			$col instanceof \datamodel\ColumnTimestamp) {
 			$field = $this->get_typed_field($col);
 			$cfg = "{value_field_classname:".json_encode($field[0]).",value_field_config:".$field[1]."}";
 			return array("filter_comparable", $cfg);

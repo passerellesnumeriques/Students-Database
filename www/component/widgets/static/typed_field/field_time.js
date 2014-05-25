@@ -18,6 +18,7 @@ field_time.prototype._create = function(data) {
 		var input = document.createElement("INPUT");
 		input.type = "text";
 		input.maxlength = 5;
+		if (typeof data == 'number') data = getMinutesTimeString(data);
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";

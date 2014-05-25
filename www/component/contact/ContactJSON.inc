@@ -46,13 +46,13 @@ class ContactJSON {
 	 * @return string the PostalAddress object in JSON
 	 * @no_name_check
 	 */
-	public static function PostalAddress($row) {
+	public static function PostalAddress($row, $geo_text = null) {
 		require_once("component/geography/GeographyJSON.inc");
 		return
 			"{".
 				"id:".$row["postal_address__id"].
 				",country_id:".json_encode(@$row["postal_address__country_id"]).
-				",geographic_area:".GeographyJSON::GeographicAreaText($row).
+				",geographic_area:".GeographyJSON::GeographicAreaText($row, $geo_text).
 				",street:".json_encode(@$row["postal_address__street"]).
 				",street_number:".json_encode(@$row["postal_address__street_number"]).
 				",building:".json_encode(@$row["postal_address__building"]).
@@ -63,12 +63,14 @@ class ContactJSON {
 			;
 	}
 	
-	public static function PostalAddresses($rows) {
+	public static function PostalAddresses($rows, $texts = null) {
+		if (count($rows) == 0) return "[]";
+		if ($texts == null)
+			$texts = GeographyJSON::prepareGeographicAreasTexts($rows);
 		$s = "[";
-		$first = true;
-		foreach ($rows as $row) {
-			if ($first) $first = false; else $s .= ",";
-			$s .= self::PostalAddress($row);
+		for ($i = 0; $i < count($rows); $i++) {
+			if ($i > 0) $s .= ",";
+			$s .= self::PostalAddress($rows[$i], $texts[$i]);
 		}
 		$s .= "]";
 		return $s;

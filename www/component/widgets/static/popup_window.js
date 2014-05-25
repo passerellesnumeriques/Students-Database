@@ -474,7 +474,12 @@ function popup_window(title,icon,content,hide_close_button) {
 			for (var i = 0; i < t.buttons.length; ++i)
 				t.buttons_td.appendChild(t.buttons[i]);
 		}
+		t.table.style.top = '0px';
+		t.table.style.left = '0px';
+		t.table.style.position = "fixed";
 		doc.body.appendChild(t.table);
+		t.table.style.top = Math.floor(getWindowHeight()/2-t.table.offsetHeight/2)+'px';
+		t.table.style.left = Math.floor(getWindowWidth()/2-t.table.offsetWidth/2)+'px';
 		if (typeof t.content == 'string') t.content_container.innerHTML = t.content;
 		else {
 			t.content_container.appendChild(t.content);

@@ -25,14 +25,21 @@ class GeographyJSON {
 	 * @return string the JSON object GeographicAreaText
 	 * @no_name_check
 	 */
-	public static function GeographicAreaText($row) {
+	public static function GeographicAreaText($row, $text = null) {
 		if ($row["geographic_area_text_area_id"] == null) return "null";
 		return "{".
 			"id:".$row["geographic_area_text_area_id"].
 			",division_id:".$row["geographic_area_text_country_division_id"].
 			",country_id:".$row["geographic_area_text_country_id"].
-			",text:".json_encode(PNApplication::$instance->geography->getGeographicAreaText($row["geographic_area_text_area_id"]))
+			",text:".json_encode($text <> null ? $text : PNApplication::$instance->geography->getGeographicAreaText($row["geographic_area_text_area_id"]))
 		."}";
+	}
+	
+	public static function prepareGeographicAreasTexts($rows) {
+		if (count($rows) == 0) return array();
+		$areas_ids = array();
+		foreach ($rows as $row) array_push($areas_ids, $row["geographic_area_text_area_id"]);
+		return PNApplication::$instance->geography->getGeographicAreasText($areas_ids);
 	}
 	
 }

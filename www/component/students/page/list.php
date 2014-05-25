@@ -32,7 +32,7 @@ var can_manage = <?php echo json_encode($can_manage);?>;
 function build_filters() {
 	var filters = [];
 	if (batches && batches.length > 0) {
-		var filter = {category:'Student',name:'Batch',data:{values:[batches]},force:true};
+		var filter = {category:'Student',name:'Batch',data:{values:batches},force:true};
 		filters.push(filter);
 	}
 	if (url.params['period']) {

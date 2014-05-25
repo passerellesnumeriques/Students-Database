@@ -24,7 +24,12 @@ field_integer.prototype._create = function(data) {
 		t.input.style.margin = "0px";
 		t.input.style.padding = "0px";
 		var onkeyup = new Custom_Event();
-		t.input.onkeyup = function(e) { onkeyup.fire(e); };
+		t.input.onkeyup = function(e) { 
+			onkeyup.fire(e);
+			setTimeout(function() {
+				t.setData(t._getEditedData());
+			},1);
+		};
 		t.input.onkeydown = function(e) {
 			var ev = getCompatibleKeyEvent(e);
 			if (ev.isPrintable) {
@@ -56,7 +61,9 @@ field_integer.prototype._create = function(data) {
 			return value;
 		};
 		t.input.onblur = function(ev) {
-			t.setData(t._getEditedData());
+			var val = t._getEditedData();
+			t.input.value = val;
+			t.setData(val);
 		};
 		require("input_utils.js",function(){inputAutoresize(t.input);});
 		this.element.appendChild(t.input);
