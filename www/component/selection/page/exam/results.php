@@ -19,20 +19,19 @@ class page_exam_results extends SelectionPage {
 		$this->onload("createDataList(".$this->component->getCampaignId().");");
 	?>
 		<!-- main structure of the exam results page -->
-			<div style ="margin:10px;width:80%">
+			<div style ="margin:10px;">
 			      <div id = "sessions_listDiv" title='Exam sessions list' icon="/static/calendar/calendar_16.png" collapsable='true' css="soft">
 				<?php $this->createTableSessionsList();?>
 			      </div>
 			</div>
 
-			<div id='horizontal_split' style ="margin:10px;width:80%" >
-				<div id = "session_infoDiv" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;margin:10px;'  css="soft">
+			<div id='horizontal_split' style="margin:10px;">
+				<div id = "session_infoDiv" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;' css="soft">
 					<div id="session_info_locationDiv" style='padding-left:5px;'></div>
 				 </div>
-				 <div id = "session_applicantsDiv" title='Applicants list' collapsable='true' style='display:inline-block;margin:10px;'  css="soft" layout="fill">
+				 <div id = "session_applicantsDiv" title='Applicants list' collapsable='true' style='display:inline-block;' css="soft" layout="fill">
 					<div id="session_applicants_listDiv"></div>
 				 </div>
-			   
 			</div>
 	<?php
 	}
