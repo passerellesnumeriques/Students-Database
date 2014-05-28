@@ -174,7 +174,7 @@ function addRow() {
 	row_data.push({
 		col_id: "remove",
 		data_id: null,
-		data: "<span style='white-space:nowrap'><img src='"+theme.icons_16.remove+"' style='vertical-align:middle' class='flat small_icon' onclick='removeRowButton(this);'/> "+(grid.getNbRows()+1)+"-</span>"
+		data: "<button class='flat small_icon' onclick='removeRowButton(this);'><img src='"+theme.icons_16.remove+"'/></button> <span style='white-space:nowrap'"+(grid.getNbRows()+1)+"-</span>"
 	});
 	for (var i = 0; i < fields.length; ++i) {
 		if (fields[i].sub_data == null) {
@@ -196,6 +196,7 @@ function addRow() {
 	}
 	var row = grid.addRow(row_id, row_data);
 	row._is_new = true;
+	layout.invalidate(document.body);
 }
 function removeRowButton(button) {
 	var row = grid.getContainingRow(button);

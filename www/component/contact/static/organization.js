@@ -34,6 +34,7 @@ function organization(container, org, existing_types, can_edit) {
 			require("editable_cell.js", function() {
 				t.title = new editable_cell(t.title_container, "Organization", "name", org.id, "field_text", {min_length:1,max_length:100,can_be_null:false,style:{fontSize:"x-large"}}, org.name, null, function(field){
 					org.name = field.getCurrentData();
+					t._refreshGoogle();
 					t.onchange.fire();
 				}, function(edit){
 					if (!can_edit) edit.cancelEditable();
@@ -45,6 +46,7 @@ function organization(container, org, existing_types, can_edit) {
 				t.title_container.appendChild(t.title.getHTMLElement());
 				t.title.onchange.add_listener(function() {
 					org.name = t.title.getCurrentData();
+					t._refreshGoogle();
 					t.onchange.fire();
 				});
 			});
@@ -272,6 +274,15 @@ function organization(container, org, existing_types, can_edit) {
 		for (var i = 0; i < org.contact_points.length; ++i)
 			t._addContactPointRow(org.contact_points[i], tbody);
 		
+		// google
+		var google_title = document.createElement("DIV");
+		container.appendChild(google_title);
+		google_title.innerHTML = "<img src='/static/google/google.png' style='vertical-align:bottom'/> Results From Google";
+		t._google_results_container = document.createElement("DIV");
+		container.appendChild(t._google_results_container);
+		t._google_results_container.style.backgroundColor = "white";
+		t._refreshGoogle();
+		
 		layout.invalidate(container);
 	};
 	/**
@@ -368,6 +379,28 @@ function organization(container, org, existing_types, can_edit) {
 				return i;
 		}
 		return null;
+	};
+	
+	t._google_loading = false;
+	t._timeout_google = null;
+	t._refreshGoogle = function() {
+		if (org.name.length < 3) return;
+		if (t._timeout_google != null) return;
+		if (t._google_loading) {
+			t._google_need_reload = true;
+			return;
+		}
+		t._timeoutGoogle = null;
+		t._google_loading = true;
+		t._google_need_reload = false;
+		t._google_results_container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
+		require("google_places.js", function() {
+			getGooglePlaces(org.name, function(results,status) {
+				t._google_results_container.innerHTML = service.generateInput(results);
+				t._google_loading = false;
+				if (t._google_need_reload && !t._timeout_google) t._timeout_google = setTimeout(function() { t._refreshGoogle(); }, 50);
+			});
+		});
 	};
 	
 	this._init();
