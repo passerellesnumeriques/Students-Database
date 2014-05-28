@@ -23,6 +23,20 @@ if (!window.top.google) {
 			if (window.top.google.connection_status == 0) return;
 			window.top.google.connection_status = 0;
 			window.top.google.connection_event.fire();
+			// remove the very annoying popup frame of Google saying Welcome Back...
+			if (typeof window.top.Element.prototype._insertBefore == 'undefined') {
+				window.top.Element.prototype._insertBefore = window.top.Element.prototype.insertBefore;
+				window.top.Element.prototype.insertBefore = function(e,b) {
+					if (e.nodeName == "IFRAME" && e.src.indexOf('widget/oauthflow/toast') > 0) {
+						e.src = "about:blank";
+						this._insertBefore(e,b);
+						window.top.Element.prototype.insertBefore = window.top.Element.prototype._insertBefore;
+						window.top.Element.prototype._insertBefore = 'undefined';
+						return;
+					}
+					this._insertBefore(e,b);
+				};
+			}
 			window.top.gapi.auth.authorize(
 				{
 					client_id:window.top.google._client_id,
@@ -73,7 +87,7 @@ if (!window.top.google) {
 		window.top.google.connection_status = 0;
 		window.top.google.connection_event.fire();
 		window.top.gapi.client.setApiKey("AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
-		window.top.gapi.auth.init();
+		//window.top.gapi.auth.init();
 		window.top.setInterval(function(){
 			if (window.top.google.connection_status != 0) return;
 			if (window.top.google._connecting_time < new Date().getTime()-30000) {
