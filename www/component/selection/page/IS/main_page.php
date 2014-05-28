@@ -7,7 +7,6 @@ class page_IS_main_page extends SelectionPage {
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("initISList();");
 		$can_create_session = PNApplication::$instance->user_management->has_right("manage_information_session",true);
-		$can_create_applicant = PNApplication::$instance->user_management->has_right("edit_applicants",true);
 		$this->requireJavascript("section.js");
 		$this->onload("sectionFromHTML('status_section');");
 		$this->requireJavascript("horizontal_layout.js");
@@ -21,7 +20,7 @@ class page_IS_main_page extends SelectionPage {
 				</div>
 			</div>
 			<div style="padding: 5px;display:inline-block" layout='fill'>
-				<div id = 'is_list' class="section soft">
+				<div id='is_list' class="section soft">
 				</div>
 			</div>
 		</div>
@@ -52,54 +51,16 @@ class page_IS_main_page extends SelectionPage {
 						list.addHeader(new_IS);
 						<?php } ?>
 
-						<?php if ($can_create_applicant) { ?>
-						var create_applicant = document.createElement("BUTTON");
-						create_applicant.className = "flat";
-						create_applicant.innerHTML = "<img src='"+theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add)+"' style='vertical-align:bottom'/> Create Applicant";
-						create_applicant.onclick = function() {
-							window.top.require("popup_window.js",function() {
-								var p = new window.top.popup_window('New Applicant', theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add), "");
-								var frame = p.setContentFrame(
-									"/dynamic/people/page/popup_create_people?root=Applicant&sub_model=<?php echo PNApplication::$instance->selection->getCampaignId();?>&types=applicant&ondone=reload_list",
-									null,
-									{
-										sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}
-									}
-								);
-								frame.reload_list = function() { refreshPage(); };
-								p.show();
-							});
-						};
-						list.addHeader(create_applicant);
-						
-						var import_applicants = document.createElement("BUTTON");
-						import_applicants.className = "flat";
-						import_applicants.innerHTML = "<img src='"+theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10._import)+"' style='vertical-align:bottom'/> Import Applicants";
-						import_applicants.onclick = function() {
-							window.top.require("popup_window.js",function() {
-								var p = new window.top.popup_window('Import Applicants', theme.icons_16._import, "");
-								var frame = p.setContentFrame(
-									"/dynamic/selection/page/applicant/popup_import?ondone=reload_list",
-									null,
-									{
-										sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}
-									}
-								);
-								frame.reload_list = function() { refreshPage(); };
-								p.show();
-							});
-						};
-						list.addHeader(import_applicants);
-						<?php } ?>
-						
 						list.makeRowsClickable(function(row){
 							var is_id = list.getTableKeyForRow('InformationSession',row.row_id);
-							require("popup_window.js",function() {
-								var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
-								var frame = popup.setContentFrame("/dynamic/selection/page/IS/profile?id="+is_id+"&onsaved=saved");
-								frame.saved = function() { ISchanged(); };
-								popup.showPercent(95,95);
-							});
+							window.top.popup_frame(
+								"/static/selection/IS/IS_16.png",
+								"Information Session",
+								"/dynamic/selection/page/IS/profile?id="+is_id+"&onsaved=saved",
+								null,
+								95, 95,
+								function(frame, pop) { frame.saved = function() { ISchanged(); }; }
+							);
 						});
 					}
 				);

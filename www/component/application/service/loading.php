@@ -13,13 +13,17 @@ class service_loading extends Service {
 $mandatory = array(
 		"/static/javascript/utils.js",
 		"/static/javascript/browser.js",
+		"/static/javascript/utils_js.js",
+		"/static/javascript/utils_html.js",
+		"/static/javascript/utils_dom.js",
+		"/static/javascript/utils_scroll.js",
+		"/static/application/config.js.php",
+		"/static/javascript/layout.js",
 		"/static/application/application.js",
 		"/static/theme/theme.js.php",
 		"/static/javascript/ajax.js",
 		"/static/data_model/databaselock.js",
-		"/static/data_model/datamodel.js",
-		"/static/application/config.js.php",
-		"/static/javascript/layout.js"
+		"/static/data_model/datamodel.js"
 );
 $optional = array("/static/widgets/common_dialogs.js");
 $optional_delayed = array();

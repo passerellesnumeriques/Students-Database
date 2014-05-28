@@ -31,7 +31,7 @@ class page_organizations extends Page {
 			echo "<div><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> Access denied: you are not allowed to see organization from ".$creator."</div>";
 			return;
 		}
-		if (isset($_POST)) $input = json_decode($_POST["input"], true); else $input = array();
+		if (isset($_POST["input"])) $input = json_decode($_POST["input"], true); else $input = array();
 		?>
 		<div style='width:100%;height:100%' id='org_list'>
 		</div>
@@ -46,7 +46,13 @@ class page_organizations extends Page {
 			dl = new data_list(
 				'org_list',
 				'Organization', null,
-				['Organization.Name','Organization.Address','Organization.EMail','Organization.Phone'],
+				[
+					'Organization.Name',
+					'Organization.Address.0',
+					'Organization.Address.1',
+					'Organization.EMail',
+					'Organization.Phone'
+				],
 				[{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"}}],
 				250,
 				function (list) {

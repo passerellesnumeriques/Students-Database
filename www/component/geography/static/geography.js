@@ -80,6 +80,19 @@ if (window == window.top && !window.top.geography) {
 					return country_data[division_index].areas[i];
 			return null;
 		},
+		getDivisionIdFromIndex: function(country_id, division_index, onfound) {
+			this.getCountryData(country_id, function(country_data) {
+				if (country_data.length <= division_index) onfound(null);
+				else onfound(country_data[division_index].division_id);
+			});
+		},
+		getDivisionIndexFromId: function(country_id, division_id, onfound) {
+			this.getCountryData(country_id, function(country_data) {
+				for (var i = 0; i < country_data.length; ++i)
+					if (country_data[i].division_id == division_id) { onfound(i); return; };
+				onfound(null);
+			});
+		},
 		searchArea: function(country_id, area_id, onfound) {
 			this.getCountryData(country_id, function(country_data) {
 				for (var division = 0; division < country_data.length; ++division) {
@@ -88,6 +101,17 @@ if (window == window.top && !window.top.geography) {
 							onfound({division_index:division, area: country_data[division].areas[area]});
 							return;
 						}
+				}
+				onfound(null);
+			});
+		},
+		searchAreaByNameInDivision: function(country_id, division_index, area_name, onfound) {
+			area_name = area_name.trim().toLowerCase();
+			this.getCountryData(country_id, function(country_data) {
+				if (division_index >= country_data.length) { onfound(null); return; }
+				for (var i = 0; i < country_data[division_index].areas.length; ++i) {
+					var area = country_data[division_index].areas[i];
+					if (area.area_name.toLowerCase() == area_name) { onfound(area); return; }
 				}
 				onfound(null);
 			});

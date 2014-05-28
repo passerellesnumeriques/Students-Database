@@ -22,6 +22,9 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 	t.select_day.style.padding = "0px";
 	t.select_month.style.padding = "0px";
 	t.select_year.style.padding = "0px";
+	t.select_day.style.verticalAlign = "bottom";
+	t.select_month.style.verticalAlign = "bottom";
+	t.select_year.style.verticalAlign = "bottom";
 	
 	t.minimum = minimum;
 	t.maximum = maximum;
@@ -129,6 +132,7 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 	if (date_picker_icon) {
 		t.icon = document.createElement("BUTTON");
 		t.icon.className = "flat small";
+		t.icon.style.verticalAlign = "bottom";
 		t.icon.innerHTML = "<img src='"+theme.icons_16.date_picker+"'/>";
 		t.icon.onclick = function() {
 			require(["date_picker.js","context_menu.js"],function(){

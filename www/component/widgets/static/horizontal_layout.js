@@ -32,25 +32,32 @@ function horizontal_layout(container, keep_height, valign) {
 			e.style.height = "";
 			e.style.display = "inline-block";
 			e.style.marginTop = "";
+			e.style.verticalAlign = "top";
 			if (layout == 'fill')
 				e.style.width = "";
 		}
+		// get size of container
 		var size = getComputedStyleSizes(t.container);
 		var w = t.container.clientWidth - parseInt(size.paddingRight) - parseInt(size.paddingLeft);
 		var h = t.container.clientHeight - parseInt(size.paddingTop) - parseInt(size.paddingBottom);
+		// set size of non-fill elements
 		var nb_to_fill = 0;
 		var used = 0;
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];
-			if (e.nodeType != 1) continue;
 			var layout;
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
+			if (!keep_height) setHeight(e, h);
 			if (layout == 'fill')
 				nb_to_fill++;
-			else if (!isNaN(parseInt(layout)))
-				used += parseInt(layout);
-			else {
-				e.style.display = 'inline-block';
+			else if (!isNaN(parseInt(layout))) {
+				var ww = parseInt(layout);
+				if (!e._fixed_size_set || e._fixed_size_set != ww) {
+					setWidth(e, ww);
+					e._fixed_size_set = ww;
+				}
+				used += ww;
+			} else {
 				e.style.width = "";
 				if (!keep_height) 
 					setHeight(e, h);
@@ -62,26 +69,13 @@ function horizontal_layout(container, keep_height, valign) {
 				used += getWidth(e);
 			}
 		}
-		var x = 0;
+		// ditribute remaining size
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];
-			if (e.nodeType != 1) continue;
-			var layout;
-			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
-			e.style.display = 'inline-block';
-			e.style.verticalAlign = "top";
-			if (!keep_height) setHeight(e, h);
-			if (layout == 'fill') {
+			if (e.getAttribute('layout') == 'fill') {
 				var ww = Math.floor((w-used)/nb_to_fill--);
 				setWidth(e, ww);
-				x += ww;
 				used += ww;
-			} else if (!isNaN(parseInt(layout))) {
-				var ww = parseInt(layout);
-				setWidth(e, ww);
-				x += ww;
-			} else {
-				x += getWidth(e);
 			}
 		}
 	};

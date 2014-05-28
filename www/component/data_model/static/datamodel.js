@@ -342,7 +342,7 @@ datamodel = {
 		require("popup_window.js",function() { popup_ready = true; ready(); });
 	}
 };
-window.top.pnapplication.onwindowclosed.add_listener(function(w) { datamodel._windowClosed(w); });
+window.top.pnapplication.onwindowclosed.add_listener(function(c) { c.top.datamodel._windowClosed(c.win); });
 if (!window.top.datamodel_prototype) {
 window.top.datamodel_prototype = {
 	getTable: function(name) {

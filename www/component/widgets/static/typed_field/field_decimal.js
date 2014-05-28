@@ -97,3 +97,19 @@ field_decimal.prototype._create = function(data) {
 		};
 	}
 };
+field_decimal.prototype.setLimits = function(min,max) {
+	if (!this.config) this.config = {};
+	this.config.min = min;
+	this.config.max = max;
+	this.setData(this._getEditedData());
+};
+field_decimal.prototype.setMinimum = function(min) {
+	if (!this.config) this.config = {};
+	this.config.min = min;
+	this.setData(this._getEditedData());
+};
+field_decimal.prototype.setMaximum = function(max) {
+	if (!this.config) this.config = {};
+	this.config.max = max;
+	this.setData(this._getEditedData());
+};

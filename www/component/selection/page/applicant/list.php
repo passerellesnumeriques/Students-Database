@@ -18,7 +18,7 @@ class page_applicant_list extends SelectionPage {
 		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : array();
 		?>
 		<div style='width:100%;height:100%' id='page_container'>
-			<div id='list_container' layout='fill'></div>
+			<div id='list_container' layout='fill' style="height:20px"></div>
 			<?php if (PNApplication::$instance->user_management->has_right("manage_applicant")) {?>
 			<div class='page_footer'>
 				<span id='nb_selected'>0 applicant selected</span>: 
@@ -36,14 +36,17 @@ class page_applicant_list extends SelectionPage {
 				'list_container',
 				'Applicant', <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 				[
-					'Selection.Applicant ID',
+					'Selection.ID',
 					'Personal Information.First Name',
 					'Personal Information.Last Name',
 					'Personal Information.Gender',
-					'Personal Information.Birth Date'
+					'Personal Information.Birth Date',
+					'Personal Information.Address.0',
+					'Personal Information.Address.1',
+					'Selection.Information Session'
 				],
 				filters,
-				500,
+				<?php echo isset($_GET["all"]) ? "-1" : "100"; ?>,
 				function (list) {
 					var get_creation_data = function() {
 						var data = {
@@ -54,8 +57,8 @@ class page_applicant_list extends SelectionPage {
 						for (var i = 0; i < filters.length; ++i) {
 							if (filters[i].category == "Selection") {
 								if (filters[i].name == "Information Session") {
-									if (!filters[i].or)
-										data.prefilled_data.push({table:"Applicant",data:"Information Session",value:filters[i].data.value});
+									if (filters[i].data.values.length == 1 && filters[i].data.values[0] != 'NULL' && filters[i].data.values != 'NOT_NULL')
+										data.prefilled_data.push({table:"Applicant",data:"Information Session",value:filters[i].data.values[0]});
 								}
 							}
 						}

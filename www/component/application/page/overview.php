@@ -65,16 +65,16 @@ class page_overview extends Page {
 			<div>Manage users and access rights, staffs, geographic data...</div>
 		</a>
 	</div>
-	<div class="page_section_title">
+	<div class="page_section_title" style='margin-bottom:0px'>
 		What's happening ?
 	</div>
-	<div>
+	<div style='background-color:#e8e8e8;padding-top:10px'>
 		<div class="section" style="display:inline-block;width:45%;margin-left:10px">
 			<div class="header"><div>
 				<img src='/static/news/news.png'/>
 				Latest Updates
 			</div></div>
-			<div>
+			<div style='background-color:white'>
 				TODO<br/>
 				<a href='#'>Show more</a>
 			</div>

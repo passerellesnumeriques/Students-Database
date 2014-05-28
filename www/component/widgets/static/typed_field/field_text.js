@@ -58,6 +58,14 @@ field_text.prototype._create = function(data) {
 		this._setData = function(data) {
 			if (data == null) data = "";
 			input.value = data;
+			if (input.autoresize) input.autoresize();
+		};
+		this._fillWidth = this.fillWidth;
+		this.fillWidth = function() {
+			this._fillWidth();
+			if (input.autoresize) input.setMinimumSize(-1);
+			else if (!t.config) t.config = {min_size:-1};
+			else t.config.min_size = -1;
 		};
 		this.signal_error = function(error) {
 			this.error = error;

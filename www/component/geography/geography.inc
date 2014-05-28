@@ -49,6 +49,34 @@ class geography extends Component {
 		return $text;
 	}
 	
+	public function getGeographicAreasText($areas_ids) {
+		$texts = array();
+		foreach ($areas_ids as $id) array_push($texts, "");
+		$list = $areas_ids;
+		do {
+			$areas = SQLQuery::create()->select("GeographicArea")->whereIn("id",$areas_ids)->execute();
+			$parents = array();
+			$parents_ids = array();
+			for ($i = 0; $i < count($texts); ++$i) {
+				if ($list[$i] == null) {
+					// we are already done for this one
+					array_push($parents, null);
+					continue;
+				}
+				$area = null;
+				foreach ($areas as $a) if ($a["id"] == $list[$i]) { $area = $a; break; }
+				if ($area == null) $area = array("name"=>"Invalid geographic area", "parent"=>null);
+				if (strlen($texts[$i])>0) $texts[$i] .= ", ";
+				$texts[$i] .= $area["name"];
+				array_push($parents, $area["parent"]);
+				if ($area["parent"] <> null) array_push($parents_ids, $area["parent"]);
+			}
+			$areas_ids = $parents_ids;
+			$list = $parents;
+		} while (count($areas_ids)>0);
+		return $texts;
+	}
+	
 	/**
 	 * Get all the countries set into the database<br/>
 	 * The coutries are ordered:

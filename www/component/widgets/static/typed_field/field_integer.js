@@ -24,7 +24,12 @@ field_integer.prototype._create = function(data) {
 		t.input.style.margin = "0px";
 		t.input.style.padding = "0px";
 		var onkeyup = new Custom_Event();
-		t.input.onkeyup = function(e) { onkeyup.fire(e); };
+		t.input.onkeyup = function(e) { 
+			onkeyup.fire(e);
+			setTimeout(function() {
+				t.setData(t._getEditedData());
+			},1);
+		};
 		t.input.onkeydown = function(e) {
 			var ev = getCompatibleKeyEvent(e);
 			if (ev.isPrintable) {
@@ -56,7 +61,9 @@ field_integer.prototype._create = function(data) {
 			return value;
 		};
 		t.input.onblur = function(ev) {
-			t.setData(t._getEditedData());
+			var val = t._getEditedData();
+			t.input.value = val;
+			t.setData(val);
 		};
 		require("input_utils.js",function(){inputAutoresize(t.input);});
 		this.element.appendChild(t.input);
@@ -111,4 +118,20 @@ field_integer.prototype._create = function(data) {
 			this.element.style.color = error ? "red" : "";
 		};
 	}
+};
+field_integer.prototype.setLimits = function(min,max) {
+	if (!this.config) this.config = {};
+	this.config.min = min;
+	this.config.max = max;
+	this.setData(this._getEditedData());
+};
+field_integer.prototype.setMinimum = function(min) {
+	if (!this.config) this.config = {};
+	this.config.min = min;
+	this.setData(this._getEditedData());
+};
+field_integer.prototype.setMaximum = function(max) {
+	if (!this.config) this.config = {};
+	this.config.max = max;
+	this.setData(this._getEditedData());
 };

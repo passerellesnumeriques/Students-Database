@@ -22,6 +22,7 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 	else{
 		this.geographic_area = {};
 		this.geographic_area.id = null;
+		this.geographic_area.country_id = country_id;
 		this.geographic_area.text = null;
 	}
 	this.street = street;
@@ -30,6 +31,11 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 	this.unit = unit;
 	this.additional = additional;
 	this.address_type = address_type;
+}
+
+function parsePostalAddress(str) {
+	// TODO
+	return new PostalAddress(-1, -1, -1, null, null, null, null, null, "Work");
 }
 
 /**
@@ -43,6 +49,7 @@ function PostalAddressesData(type, type_id, addresses) {
 	this.type_id = type_id;
 	this.addresses = addresses;
 }
+
 
 /**
  * Contact

@@ -66,7 +66,7 @@ field_date.prototype._create = function(data) {
 		var t=this;
 		this.signal_error = function(error) {
 			this.error = error;
-			if (!t.select) setTimeout(function(){t.signal_error(error);},10);
+			if (!t.select) { setTimeout(function(){t.signal_error(error);},10); return; }
 			t.select.select_year.style.border = error ? "1px solid red" : "";
 			t.select.select_month.style.border = error ? "1px solid red" : "";
 			t.select.select_day.style.border = error ? "1px solid red" : "";
@@ -74,7 +74,7 @@ field_date.prototype._create = function(data) {
 		require("date_select.js", function() {
 			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
 			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
-			t.select = new date_select(t.element, parseSQLDate(t.data), min, max);
+			t.select = new date_select(t.element, parseSQLDate(t._data), min, max, false, true);
 			t.select.select_day.style.verticalAlign = "top";
 			t.select.select_month.style.verticalAlign = "top";
 			t.select.select_year.style.verticalAlign = "top";
@@ -86,27 +86,6 @@ field_date.prototype._create = function(data) {
 				if (date) date = dateToSQL(date);
 				return date;
 			};
-			t.icon = document.createElement("IMG");
-			t.icon.src = theme.icons_16.date_picker;
-			t.icon.style.verticalAlign = "top";
-			t.icon.style.cursor = "pointer";
-			t.icon.onclick = function(ev) {
-				require(["date_picker.js","context_menu.js"],function(){
-					var menu = new context_menu();
-					new date_picker(t.select.getDate(),t.select.minimum,t.select.maximum,function(picker){
-						picker.onchange = function(picker, date) {
-							t.select.selectDate(date);
-						};
-						picker.getElement().style.border = 'none';
-						menu.addItem(picker.getElement());
-						picker.getElement().onclick = null;
-						menu.element.className = menu.element.className+" popup_date_picker";
-						menu.showBelowElement(t.element);
-					});
-				});
-				stopEventPropagation(ev);
-			};
-			t.element.appendChild(t.icon);
 		});
 
 		this._timeoutSetData = null;
@@ -137,4 +116,33 @@ field_date.prototype._create = function(data) {
 			this.element.style.color = error ? "red" : "";
 		};
 	}
+};
+field_date.prototype.setLimits = function(min,max) {
+	if (!this.config) this.config = {};
+	this.config.minimun = min;
+	this.config.maximum = max;
+	if (this.select) {
+		min = min ? parseSQLDate(min) : new Date(1900,0,1);
+		max = max ? parseSQLDate(max) : new Date(new Date().getFullYear()+100,11,31);
+		this.select.setLimits(min,max);
+	}
+	this.setData(this._getEditedData());
+};
+field_date.prototype.setMinimum = function(min) {
+	if (!this.config) this.config = {};
+	this.config.minimun = min;
+	if (this.select) {
+		min = min ? parseSQLDate(min) : new Date(1900,0,1);
+		this.select.setLimits(min,this.select.maximum);
+	}
+	this.setData(this._getEditedData());
+};
+field_date.prototype.setMaximum = function(max) {
+	if (!this.config) this.config = {};
+	this.config.maximum = max;
+	if (this.select) {
+		max = max ? parseSQLDate(max) : new Date(new Date().getFullYear()+100,11,31);
+		this.select.setLimits(this.select.minimum, max);
+	}
+	this.setData(this._getEditedData());
 };

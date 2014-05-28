@@ -103,107 +103,6 @@ Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e
  */
 Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){this.splice(i,1);i--;};};
 
-/**
- * Clone an object structure 
- * @param {Object} o the object to clone
- * @param {Number} recursive_depth maximum depth of clone
- * @returns {Object} the clone
- */
-function objectCopy(o, recursive_depth) {
-	if (o == null) return null;
-	if (typeof o == 'string') return ""+o;
-	if (typeof o == 'number') return o;
-	var c = new Object();
-	for (var attr in o) {
-		var value = o[attr];
-		if (!recursive_depth) { c[attr] = value; continue; }
-		if (value == null) { c[attr] = null; continue; }
-		if (typeof value == 'object') {
-			if (value instanceof Date || getObjectClassName(value) == "Date")
-				c[attr] = new Date(value.getTime());
-			else if (value instanceof Array || getObjectClassName(value) == "Array") {
-				c[attr] = [];
-				for (var i = 0; i < value.length; ++i)
-					c[attr].push(valueCopy(value[i], recursive_depth-1));
-			} else {
-				c[attr] = objectCopy(value, recursive_depth-1);
-			}
-		} else
-			c[attr] = value;
-	}
-	return c;
-}
-/**
- * Copy the given value
- * @param {any} value the value to copy
- * @param {Number} obj_depth maximum depth in objects to copy
- * @returns {any} the copy
- */
-function valueCopy(value, obj_depth) {
-	if (value == null) return null;
-	if (typeof value == 'object') {
-		if (value instanceof Date || getObjectClassName(value) == "Date")
-			return new Date(value.getTime());
-		if (value instanceof Array || getObjectClassName(value) == "Array") {
-			var a = [];
-			for (var i = 0; i < value.length; ++i)
-				a.push(valueCopy(value[i], obj_depth-1));
-			return a;
-		}
-		return objectCopy(value, obj_depth);
-	}
-	return value;
-}
-
-function objectMerge(o, add) {
-	for (var name in add) o[name] = add[name];
-}
-
-function objectEquals(o1, o2, done) {
-	if (typeof o1 != typeof o2) return false;
-	if (typeof o1 != 'object') return o1 == o2;
-	if (o1 == null) return o2 == null;
-	var c1 = getObjectClassName(o1);
-	var c2 = getObjectClassName(o2);
-	if (c1 != c2) return false;
-	if (!done) done = [];
-	if (done.contains(o1) || done.contains(o2)) return o1 == o2;
-	done.push(o1); done.push(o2);
-	if (c1 == "Array") return arrayEquals(o1, o2, done);
-	if (c1 == "Date") return o1.getTime() == o2.getTime();
-	for (var name in o1) {
-		var found = false;
-		for (var name2 in o2) if (name2 == name) { found = true; break; }
-		if (!found) return false;
-	}
-	for (var name in o2) {
-		var found = false;
-		for (var name2 in o1) if (name2 == name) { found = true; break; }
-		if (!found) return false;
-	}
-	for (var name in o1) {
-		var v1 = o1[name];
-		var v2 = o2[name];
-		if (!objectEquals(v1, v2, done)) return false;
-	}
-	return true;
-}
-function arrayEquals(a1, a2, done) {
-	if (a1.length != a2.length) return false;
-	for (var i = 0; i < a1.length; ++i)
-		if (!objectEquals(a1[i], a2[i], done)) return false;
-	return true;
-}
-
-var _generate_id_counter = 0;
-/**
- * Generates an unique id. 
- * @returns {String} the generated id
- */
-function generateID() {
-	return "id"+(_generate_id_counter++);
-}
-
 function _domRemoved(e) {
 	if (e._ondomremoved) e._ondomremoved.fire(e);
 	if (e.nodeType != 1) return;
@@ -217,223 +116,14 @@ Element.prototype.ondomremoved = function(listener) {
 Element.prototype._removeChild = Element.prototype.removeChild;
 Element.prototype.removeChild = function(e) {
 	_domRemoved(e);
-	return this._removeChild(e);
+	try { return this._removeChild(e); }
+	catch (err) {
+		window.top.console.error("Remove child failed: "+e.getMessage());
+	}
 };
 Element.prototype.removeAllChildren = function() {
 	while (this.childNodes.length > 0) this.removeChild(this.childNodes[0]);
 };
-
-/**
- * Return the absolute position of the left edge, relative to the given element or to the document
- * @param {Element} e the element to get the absolute position
- * @param {Element} relative the element from which we want the absolute position, or null to get the position in the document
- * @returns {Number} the left offset in pixels
- */
-function absoluteLeft(e,relative) {
-	var left = e.offsetLeft;
-	try { 
-		if (e.offsetParent && e.offsetParent != relative) {
-			var p = e;
-			do {
-				p = p.parentNode;
-				left -= p.scrollLeft;
-			} while (p != e.offsetParent);
-			left += absoluteLeft(e.offsetParent,relative); 
-		}
-	} catch (ex) {}
-	return left;
-}
-/**
- * Return the absolute position of the top edge, relative to the given element or to the document
- * @param {Element} e the element to get the absolute position
- * @param {Element} relative the element from which we want the absolute position, or null to get the position in the document
- * @returns {Number} the top offset in pixels
- */
-function absoluteTop(e,relative) {
-	var top = e.offsetTop;
-	try { 
-		if (e.offsetParent && e.offsetParent != relative) {
-			var p = e;
-			do {
-				p = p.parentNode;
-				top -= p.scrollTop;
-			} while (p != e.offsetParent);
-			top += absoluteTop(e.offsetParent,relative); 
-		}
-	} catch (ex) {}
-	return top;
-}
-/**
- * Return the first parent having a CSS attribute position:relative, or the document.body
- * @param {Element} e the html element
- * @returns {Element} the first parent having a position set to relative
- */
-function getAbsoluteParent(e) {
-	var p = e.parentNode;
-	do {
-		if (getComputedStyle(p).position == 'relative')
-			return p;
-		p = p.parentNode;
-	} while(p != null && p.nodeType == 1);
-	return document.body;
-}
-
-/** Get the coordinates of a frame relative to the top window
- * @param {window} frame the frame
- * @returns {Object} contains x and y attributes
- */
-function getAbsoluteCoordinatesRelativeToWindowTop(frame) {
-	if (frame.parent == null || frame.parent == frame || frame.parent == window.top) return {x:0,y:0};
-	var pos = getAbsoluteCoordinatesRelativeToWindowTop(frame.parent);
-	pos.x += absoluteLeft(frame.frameElement);
-	pos.y += absoluteTop(frame.frameElement);
-	return pos;
-}
-
-/**
- * Return the list of html elements at the given position in the document
- * @param {Number} x horizontal position
- * @param {Number} y vertical position
- * @returns {Array} list of HTML elements at the given position
- */
-function getElementsAt(x,y) {
-	var list = [];
-	var disp = [];
-	do {
-		var e = document.elementFromPoint(x,y);
-		if (e == document || e == document.body || e == window || e.nodeName == "HTML" || e.nodeName == "BODY") break;
-		if (e == null) break;
-		list.push(e);
-		disp.push(e.style.display);
-		e.style.display = "none";
-	} while (true);
-	for (var i = 0; i < list.length; ++i)
-		list[i].style.display = disp[i];
-	return list;
-}
-
-/**
- * Scroll up the given element
- * @param element
- * @param {Number} scroll
- */
-function scrollUp(element, scroll) {
-	// try to set scrollTop
-	var s = element.scrollTop;
-	element.scrollTop = s - scroll;
-	if (element.scrollTop != s) return; // it changed, so it worked
-	// TODO
-}
-/**
- * Scroll down the given element
- * @param element
- * @param {Number} scroll
- */
-function scrollDown(element, scroll) {
-	scrollUp(element, -scroll);
-}
-/**
- * Scroll left the given element
- * @param element
- * @param {Number} scroll
- */
-function scrollLeft(element, scroll) {
-	// try to set scrollTop
-	var s = element.scrollLeft;
-	element.scrollLeft = s - scroll;
-	if (element.scrollLeft != s) return; // it changed, so it worked
-	// TODO
-}
-/**
- * Scroll right the given element
- * @param element
- * @param {Number} scroll
- */
-function scrollRight(element, scroll) {
-	scrollLeft(element, -scroll);
-}
-
-/**
- * Return the first parent of the given element, being scrollable 
- * @param {Element} element the HTML element
- * @returns {Element} the scrollable container
- */
-function getScrollableContainer(element) {
-	var parent = element.parentNode;
-	do {
-		if (parent == document.body) return parent;
-		if (parent.scrollHeight != parent.clientHeight) return parent;
-		if (parent.scrollWidth != parent.clientWidth) return parent;
-		parent = parent.parentNode;
-	} while (parent != null);
-	return document.body;
-}
-
-/**
- * Scroll all necessary scrollable elements to make the given element visible in the screen.
- * @param element
- */
-function scrollToSee(element) {
-	var parent = getScrollableContainer(element);
-	var x1 = absoluteLeft(element, parent);
-	var y1 = absoluteTop(element, parent);
-	var x2 = x1+element.offsetWidth;
-	var y2 = y1+element.offsetHeight;
-	if (y1 < parent.scrollTop) {
-		// the element is before, we need to scroll up
-		scrollUp(parent, parent.scrollTop-y1);
-	} else if (y2 > parent.scrollTop+parent.clientHeight) {
-		// the element is after, we need to scroll down
-		scrollDown(parent, y2-(parent.scrollTop+parent.clientHeight));
-	}
-	if (x1 < parent.scrollLeft) {
-		// the element is before, we need to scroll left
-		scrollLeft(parent, parent.scrollLeft-x1);
-	} else if (x2 > parent.scrollLeft+parent.clientWidth) {
-		// the element is after, we need to scroll down
-		scrollRight(parent, x2-(parent.scrollLeft+parent.clientWidth));
-	}
-	// TODO same with parent, which may not be visible...
-/*
-				var x = absoluteLeft(cell, container);
-				if (x < container.scrollLeft)
-					container.scrollLeft = x;
-				else if (container.scrollLeft+container.clientWidth < x+cell.offsetWidth)
-					container.scrollLeft = x+cell.offsetWidth-container.clientWidth;
-				var y = absoluteTop(cell, container);
-				if (y < container.scrollTop)
-					container.scrollTop = y;
-				else if (container.scrollTop+container.clientHeight < y+cell.offsetHeight)
-					container.scrollTop = y+cell.offsetHeight-container.clientHeight;
- */	
-}
-
-function scrollTo(element) {
-	var parent = getScrollableContainer(element);
-	var x1 = absoluteLeft(element, parent);
-	var y1 = absoluteTop(element, parent);
-	var x2 = x1+element.offsetWidth;
-	var y2 = y1+element.offsetHeight;
-	if (y1 < parent.scrollTop) {
-		// the element is before, we need to scroll up
-		scrollUp(parent, parent.scrollTop-y1);
-	} else if (y2 > parent.scrollTop+parent.clientHeight) {
-		// the element is after, we need to scroll down
-		scrollDown(parent, y2-(parent.scrollTop+parent.clientHeight));
-	} else {
-		scrollDown(parent, -(y1-(parent.scrollTop+parent.clientHeight)));
-	}
-	if (x1 < parent.scrollLeft) {
-		// the element is before, we need to scroll left
-		scrollLeft(parent, parent.scrollLeft-x1);
-	} else if (x2 > parent.scrollLeft+parent.clientWidth) {
-		// the element is after, we need to scroll down
-		scrollRight(parent, x2-(parent.scrollLeft+parent.clientWidth));
-	} else {
-		scrollRight(parent, -(x1-(parent.scrollLeft+parent.clientWidth)));
-	}
-	// TODO same with parent, which may not be visible...
-}
 
 /** Represent an URL
  * @constructor
@@ -601,96 +291,6 @@ function error_dialog(message) {
 	alert(message);
 }
 
-/**
- * Lock the screen by adding a semi-transparent element on top of the window
- * @param onclick called when the user click on the element on top of the window
- * @param content html code or html element to be put in the center of the element
- * @returns the element on top of the window created by this function
- */
-function lock_screen(onclick, content) {
-	var div = document.getElementById('lock_screen');
-	if (div) {
-		div.usage_counter++;
-		return div;
-	}
-	div = document.createElement('DIV');
-	div.usage_counter = 1;
-	div.id = "lock_screen";
-	div.style.backgroundColor = "rgba(128,128,128,0.5)";
-	div.style.position = "fixed";
-	div.style.top = "0px";
-	div.style.left = "0px";
-	div.style.width = getWindowWidth()+"px";
-	div.style.height = getWindowHeight()+"px";
-	div.style.zIndex = 10;
-	if (onclick)
-		div.onclick = onclick;
-	if (content)
-		set_lock_screen_content(div, content);
-	if (typeof animation != 'undefined')
-		div.anim = animation.fadeIn(div,200,null,10,100);
-	div.listener = function() {
-		div.style.width = getWindowWidth()+"px";
-		div.style.height = getWindowHeight()+"px";
-	};
-	listenEvent(window, 'resize', div.listener);
-	return document.body.appendChild(div);
-}
-function set_lock_screen_content(div, content) {
-	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
-	var table = document.createElement("TABLE"); div.appendChild(table);
-	table.style.width = "100%";
-	table.style.height = "100%";
-	var tr = document.createElement("TR"); table.appendChild(tr);
-	var td = document.createElement("TD"); tr.appendChild(td);
-	td.style.verticalAlign = 'middle';
-	td.style.textAlign = 'center';
-	var d = document.createElement("DIV");
-	d.className = 'lock_screen_content';
-	if (typeof content == 'string')
-		d.innerHTML = content;
-	else
-		d.appendChild(content);
-	td.appendChild(d);
-}
-/**
- * Remove the given element, previously created by using the function lock_screen
- * @param div
- */
-function unlock_screen(div) {
-	if (!div) div = document.getElementById('lock_screen');
-	if (!div) return;
-	if (typeof div.usage_counter != 'undefined') {
-		div.usage_counter--;
-		if (div.usage_counter > 0) return;
-	}
-	unlistenEvent(window, 'resize', div.listener);
-	if (typeof animation != 'undefined') {
-		div.id = '';
-		if (div.anim) animation.stop(div.anim);
-		animation.fadeOut(div,200,function(){
-			if (div.parentNode == document.body)
-				document.body.removeChild(div);				
-		},100,0);
-	} else if (div.parentNode == document.body)
-		document.body.removeChild(div);
-}
-
-function debug_object_to_string(o, indent) {
-	if (!indent) indent = "";
-	if (typeof o == 'object') {
-		if (o instanceof Date)
-			return o.toString();
-		var s = "{\r\n";
-		for (var name in o) {
-			s += indent+"    "+name+":"+debug_object_to_string(o[name], indent+"    ")+",\r\n";
-		}
-		s += "}";
-		return s;
-	}
-	return ""+o;
-}
-
 /** Parse the given SQL date, and returns a Date object
  * @param {String} s the SQL date to convert
  * @returns {Date} the date, or null if it cannot be converted
@@ -816,7 +416,8 @@ function getMonthShortName(month) {
  * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
  * @returns {String} the name of the day
  */
-function getDayName(d) {
+function getDayName(d, from_date) {
+	if (from_date) d = d==0 ? 6 : d-1;
 	switch (d) {
 	case 0: return "Monday";
 	case 1: return "Tuesday";
@@ -831,7 +432,8 @@ function getDayName(d) {
  * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
  * @returns {String} the 3 letters name of the day
  */
-function getDayShortName(d) {
+function getDayShortName(d, from_date) {
+	if (from_date) d = d==0 ? 6 : d-1;
 	switch (d) {
 	case 0: return "Mon";
 	case 1: return "Tue";
@@ -846,7 +448,8 @@ function getDayShortName(d) {
  * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
  * @returns {String} the 1 letter name of the day
  */
-function getDayLetter(d) {
+function getDayLetter(d, from_date) {
+	if (from_date) d = d==0 ? 6 : d-1;
 	switch (d) {
 	case 0: return "M";
 	case 1: return "T";
@@ -856,6 +459,22 @@ function getDayLetter(d) {
 	case 5: return "S";
 	case 6: return "S";
 	}
+}
+
+function wordsMatch(s1, s2) {
+	var words1 = s1.split(" ");
+	var words2 = s2.split(" ");
+	var words1_in_words2 = 0;
+	var words2_in_words1 = 0;
+	for (var i = 0; i < words1.length; ++i) {
+		for (var j = 0; j < words2.length; ++j)
+			if (words2[j] == words1[i]) { words1_in_words2++; break; }
+	}
+	for (var i = 0; i < words2.length; ++i) {
+		for (var j = 0; j < words1.length; ++j)
+			if (words1[j] == words2[i]) { words2_in_words1++; break; }
+	}
+	return {nb_words_1:words1.length,nb_words_2:words2.length,nb_words1_in_words2:words1_in_words2,nb_words2_in_words1:words2_in_words1};
 }
 
 /**
@@ -912,117 +531,3 @@ function setCookie(cname,cvalue,expires_minutes,url) {
 	document.cookie = cname + "=" + cvalue + "; " + expires + "; Path="+url;
 }
 
-/** Retrieve TR elements in a table, including THEAD, TFOOT and TBODY
- * @param {Element} table the table
- * @returns {Array} list of TR elements
- */
-function getTableRows(table) {
-	var rows = [];
-	for (var i = 0; i < table.childNodes.length; ++i) {
-		var e = table.childNodes[i];
-		if (e.nodeType != 1) continue;
-		if (e.nodeName == 'TR') rows.push(e);
-		else {
-			var list = getTableRows(e);
-			for (var j = 0; j < list.length; ++j) rows.push(list[j]);
-		}
-	}
-	return rows;
-}
-
-/** Wait for things to be initialized in a frame
- * @param {window} win the window of the frame
- * @param {Function} test tests if it is ready or not (takes the window as parameter, must return true if the frame is ready)
- * @param {Function} onready called when the frame is ready
- * @param {Number} timeout time in milliseconds after which we will not try anymore (if not specified, default is 30 seconds)
- */
-function waitFrameReady(win, test, onready, timeout) {
-	if (typeof timeout == 'undefined') timeout = 30000;
-	if (timeout < 50) return;
-	if (!test(win)) { setTimeout(function() { waitFrameReady(win, test, onready, timeout-50); }, 50); return; }
-	onready(win);
-}
-
-if (typeof window.top._current_tooltip == 'undefined')
-	window.top._current_tooltip = null;
-/** Display a tooltip for the given element, any tooltip currently displayed will be removed.
- * @param {Element} element the HTML element to attach with a tooltip
- * @param {Element|String} content the content of the tooltip
- */
-function createTooltip(element, content) {
-	if (!content) return;
-	if (typeof content == 'string') {
-		var div = document.createElement("DIV");
-		div.innerHTML = content;
-		content = div;
-	}
-	content.style.position = "absolute";
-	var x = absoluteLeft(element);
-	var w = element.offsetWidth;
-	var ww = getWindowWidth();
-	if (x <= ww/2) {
-		content.className = "tooltip";
-		if (w < 44) {
-			x = x-22+Math.floor(w/2);
-			if (x < 0) x = 0;
-		}
-		content.style.left = x+"px";
-	} else {
-		content.className = "tooltip_right";
-		x = (ww-(x+w));
-		if (w < 44) {
-			x = x-22+Math.floor(w/2);
-			if (x >= ww) x = ww-1;
-			if (x < 0) {
-				x = 0;
-				content.className = "tooltip_right tooltip_veryright";
-			}
-		}
-		content.style.right = x+"px";
-	}
-	content.style.top = (absoluteTop(element)+element.offsetHeight+5)+"px";
-	removeTooltip();
-	if (typeof animation != 'undefined') {
-		content.style.visibility = 'hidden';
-		setOpacity(content, 0);
-		animation.fadeIn(content, 200);
-	} else {
-	}
-	document.body.appendChild(content);
-	element._tooltip = window.top._current_tooltip = content;
-	content._element = element;
-	element._tooltip_timeout = setTimeout(function (){
-		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
-			removeTooltip();
-	},10000);
-	element._listener = function() {
-		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
-			removeTooltip();
-	};
-	listenEvent(window,'mouseout',element._listener);
-}
-/** Remove the current tooltip on the window */
-function removeTooltip() {
-	if (!window.top._current_tooltip) return;
-	if (window.top._current_tooltip.parentNode) {
-		window.top._current_tooltip.parentNode.removeChild(window.top._current_tooltip);
-	}
-	unlistenEvent(getWindowFromDocument(window.top._current_tooltip._element.ownerDocument),'mouseout',window.top._current_tooltip._element._listener);
-	window.top._current_tooltip._element._tooltip = null;
-	window.top._current_tooltip = null;
-}
-/** Set a tooltip for the given element
- * @param {Element} element the HTML element to attach the tooltip content
- * @param {Element|String} content the content of the tooltip
- */
-function tooltip(element, content) {
-	require("animation.js");
-	element.onmouseover = function() {
-		createTooltip(element, content);
-	};
-	element.onmouseout = function() {
-		if (this._tooltip && this._tooltip == window.top._current_tooltip)
-			removeTooltip();
-		this._tooltip = null;
-	};
-}

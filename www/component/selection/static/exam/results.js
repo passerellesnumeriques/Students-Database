@@ -11,13 +11,14 @@ function createDataList(campaign_id)
                            "Personal Information.Last Name"
                    ],
                    [],
-                   100,
+                   -1,
                    function(list) {
                            
                    }
            );
 }
 
+if (typeof $(document).ready != 'undefined') // handle background loading case
 $(document).ready(function(){
 
    $("#session_info_locationDiv").hide();
@@ -77,8 +78,8 @@ function updateExamSessionInfo(session_name,room_name,exam_center_name) {
 function updateApplicantsList(session_id,room_id) {
    
    window.dl.resetFilters();
-   window.dl.addFilter({category:"Selection",name:"Exam Session",force:true,data:{value:session_id}});
-   window.dl.addFilter({category:"Selection",name:"Exam Center Room",force:true,data:{value:room_id}});
+   window.dl.addFilter({category:"Selection",name:"Exam Session",force:true,data:{values:[session_id]}});
+   window.dl.addFilter({category:"Selection",name:"Exam Center Room",force:true,data:{values:[room_id]}});
 
    window.dl.reloadData();
 }

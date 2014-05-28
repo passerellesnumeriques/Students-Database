@@ -16,6 +16,9 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 	public function getTypedField($sub_model) {
 		return array("field_contact_type","{type:'".$this->type."'}");
 	}
+	public function getTypedFilter($sub_model) {
+		return array("filter_text","null");
+	}
 	public function isEditable() {
 		return true;
 	}
@@ -26,6 +29,39 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 	}
 	public function isSortable() {
 		return false;
+	}
+	
+	protected function applyFilters(&$q, $path, $filters, $parent_alias, $key_name) {
+		$where = array();
+		foreach ($filters as $filter_list) {
+			$w = "";
+			foreach ($filter_list as $filter) {
+				$val = trim($filter["value"]);
+				if ($val == "") continue;
+				if (strlen($w) > 0) $w .= " OR ";
+				$w .= "`FOREIGN_TABLE`.`contact`";
+				switch ($filter["type"]) {
+					case "contains": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."%'"; break;
+					case "starts": $w .= " LIKE '".\SQLQuery::escape($filter["value"])."%'"; break;
+					case "ends": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."'"; break;
+					case "exact": $w .= " = '".\SQLQuery::escape($filter["value"])."'"; break;
+				}
+			}
+			if (strlen($w) > 0) array_push($where, "(".$w.")");
+		}
+		if (count($where) > 0) {
+			$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
+			$foreign_table = \DataModel::get()->getTable($foreign_table);
+			
+			$sub_q = \SQLQuery::create()
+				->select(array($path->table->getName()=>"PRIMARY"))
+				->join("PRIMARY", $foreign_table->getName(), array($this->foreign_key_name=>$foreign_table->getPrimaryKey()->name), "FOREIGN_TABLE")
+				->field("PRIMARY", $this->foreign_key_name)
+				;
+			foreach ($where as $w) $sub_q->where($w);
+			
+			$q->whereExistsInSubQuery($sub_q, $parent_alias, $key_name, "PRIMARY", $this->joining_key_name);
+		}
 	}
 
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
@@ -40,12 +76,12 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 			$res = array();
 		else {
 			$q = \SQLQuery::create()
-			->select($table_name)
-			->join($table_name, "Contact", array("contact" => "id"), "JOIN_ALIAS")
-			->field($table_name, $this->joining_key_name, "JOIN_KEY")
-			->whereIn($table_name, $this->joining_key_name, $keys)
-			->whereValue("JOIN_ALIAS", "type", $this->type)
-			;
+				->select($table_name)
+				->join($table_name, "Contact", array("contact" => "id"), "JOIN_ALIAS")
+				->field($table_name, $this->joining_key_name, "JOIN_KEY")
+				->whereIn($table_name, $this->joining_key_name, $keys)
+				->whereValue("JOIN_ALIAS", "type", $this->type)
+				;
 			require_once("ContactJSON.inc");
 			ContactJSON::ContactSQL($q);
 			$res = $q->execute();
@@ -97,6 +133,9 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 	public function getTypedField($sub_model) {
 		return array("field_addresses","{}");
 	}
+	public function getTypedFilter($sub_model) {
+		return null; // TODO
+	}
 	public function isEditable() {
 		return true;
 	}
@@ -117,32 +156,33 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 			if (!in_array($row[$sql_aliases["key"]], $keys))
 			array_push($keys, $row[$sql_aliases["key"]]);
 
-		if (count($keys) == 0)
+		if (count($keys) == 0) {
 			$res = array();
-		else {
+			$texts = array();
+		} else {
 			$q = \SQLQuery::create()
-			->select($table_name)
-			->join($table_name, "PostalAddress", array("address" => "id"), "JOIN_ALIAS")
-			->field($table_name, $this->joining_key_name, "JOIN_KEY")
-			->whereIn($table_name, $this->joining_key_name, $keys)
-			;
+				->select($table_name)
+				->join($table_name, "PostalAddress", array("address" => "id"), "JOIN_ALIAS")
+				->field($table_name, $this->joining_key_name, "JOIN_KEY")
+				->whereIn($table_name, $this->joining_key_name, $keys)
+				;
 			require_once("component/contact/ContactJSON.inc");
 			ContactJSON::PostalAddressSQL($q);
 			$res = $q->execute();
+			$texts = GeographyJSON::prepareGeographicAreasTexts($res);
 		}
 
 		$sql_aliases["data"] = $original_query->generateFieldAlias();
 		for ($i = 0; $i < count($rows); $i++) {
 			$key = $rows[$i][$sql_aliases["key"]];
-			$values = "[";
-			$first = true;
-			foreach ($res as $r) {
-				if ($r["JOIN_KEY"] == $key) {
-					if ($first) $first = false; else $values .= ",";
-					$values .= ContactJSON::PostalAddress($r);
-				}
+			$match = array();
+			$match_texts = array();
+			for ($j = 0; $j < count($res); ++$j) {
+				if ($res[$j]["JOIN_KEY"] <> $key) continue; 
+				array_push($match, $res[$j]);
+				array_push($match_texts, $texts[$j]);
 			}
-			$values .= "]";
+			$values = ContactJSON::PostalAddresses($match, $match_texts);
 			require_once("component/Service.inc");
 			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".json_encode($row[$sql_aliases["key"]]).",addresses:".$values."}"));
 		}

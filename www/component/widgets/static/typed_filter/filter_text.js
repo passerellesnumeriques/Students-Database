@@ -13,22 +13,29 @@ function filter_text(data, config, editable) {
 	o = document.createElement("OPTION"); o.value = "exact"; o.text = "Exactly"; if (data.type == 'exact') o.selected = true; select.add(o);
 	input.type = 'text';
 	input.value = data.value;
+	input.last_value = data.value;
 	if (!editable) {
 		select.disabled = 'disabled';
 		input.disabled = 'disabled';
 	}
 	
 	select.onchange = function() {
+		data.type = select.value;
 		t.onchange.fire(t);
 	};
 	input.onchange = function() {
+		data.value = input.value;
 		t.onchange.fire(t);
 	};
-	
-	this.getCurrentData = function() {
-		this.currentData = {type:select.value,value:input.value};
-		return this.currentData;
+	input.onkeyup = function() {
+		setTimeout(function() {
+			if (input.value == input.last_value) return;
+			input.last_value = input.value;
+			data.value = input.value;
+			t.onchange.fire(t);
+		},1);
 	};
 }
 filter_text.prototype = new typed_filter;
 filter_text.prototype.constructor = filter_text;
+filter_text.prototype.can_multiple = true;

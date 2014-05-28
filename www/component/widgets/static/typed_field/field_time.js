@@ -18,13 +18,14 @@ field_time.prototype._create = function(data) {
 		var input = document.createElement("INPUT");
 		input.type = "text";
 		input.maxlength = 5;
+		if (typeof data == 'number') data = getMinutesTimeString(data);
 		if (data) input.value = data;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
 		require("input_utils.js",function(){inputAutoresize(input);});
 		var getTimeFromInput = function() {
 			if (input.value.length == 0) {
-				if (t.config && t.config.can_be_nyll) return null;
+				if (t.config && t.config.can_be_null) return null;
 				return 0;
 			}
 			return parseTimeStringToMinutes(input.value);

@@ -68,7 +68,7 @@ if (window == window.top) {
 					this._onmouseup_listeners.splice(i,1);
 					i--;
 				}
-			window.top.pnapplication.onwindowclosed.fire(w);
+			window.top.pnapplication.onwindowclosed.fire({top:window.top,win:w});
 		},
 		
 		/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */

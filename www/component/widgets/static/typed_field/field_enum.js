@@ -15,11 +15,9 @@ field_enum.prototype._create = function(data) {
 		var select = document.createElement("SELECT");
 		var selected = 0;
 		var o;
-		if (this.config.can_be_empty) {
-			o = document.createElement("OPTION");
-			o.value = "";
-			select.add(o);
-		}
+		o = document.createElement("OPTION");
+		o.value = "";
+		select.add(o);
 		for (var i = 0; i < this.config.possible_values.length; ++i) {
 			o = document.createElement("OPTION");
 			if (this.config.possible_values[i] instanceof Array) {
@@ -30,7 +28,7 @@ field_enum.prototype._create = function(data) {
 				o.text = this.config.possible_values[i];
 			}
 			select.add(o);
-			if (data == o.value) selected = i+(this.config.can_be_empty?1:0);
+			if (data == o.value) selected = i+1;
 		}
 		select.onclick = function(ev) { stopEventPropagation(ev); };
 		select.selectedIndex = selected;
@@ -54,6 +52,12 @@ field_enum.prototype._create = function(data) {
 		this.signal_error = function(error) {
 			this.error = error;
 			select.style.border = error ? "1px solid red" : "";
+		};
+		this.validate = function() {
+			var err = null;
+			if (!this.config.can_be_empty && select.selectedIndex == 0)
+				err = "Please select a value";
+			this.signal_error(err);
 		};
 	} else {
 		this.get_text_from_data = function(data) {
@@ -79,7 +83,7 @@ field_enum.prototype._create = function(data) {
 			return text;
 		};
 		this.element.appendChild(this.text = document.createTextNode(this.get_text_from_data(data)));
-		this.element.style.height = "16px";
+		this.element.style.height = "100%";
 		this._setData = function(data) {
 			this.text.nodeValue = this.get_text_from_data(data);
 		};

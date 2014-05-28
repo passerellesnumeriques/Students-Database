@@ -91,7 +91,7 @@ foreach ($campaigns as $c) {
 	<img src='/static/selection/applicant/applicants_white.png'/>
 	Applicants List
 </a>
-<a class='application_left_menu_item' href='/dynamic/selection/page/organizations_for_selection'>
+<a class='application_left_menu_item' href='/dynamic/contact/page/organizations?creator=Selection'>
 	<img src='/static/selection/organizations_white.png'/>
 	Partners List
 </a>
@@ -108,6 +108,12 @@ $found = false;
 foreach ($campaigns as $c) if ($c["id"] == $id) { $found = true; echo json_encode($c["name"]); break;}
 if (!$found) echo "''";
 ?>;
+function refreshCampaigns() {
+	// refresh menu
+	getIFrameWindow(findFrame('pn_application_frame')).reloadMenu();
+	// refresh page
+	getIFrameWindow(findFrame('application_frame')).location.reload();
+}
 function createCampaign() {
 	input_dialog(theme.icons_16.question,
 		"Create a selection campaign",
@@ -126,7 +132,7 @@ function createCampaign() {
 			service.json("selection","create_campaign",{name:text.trim().uniformFirstLetterCapitalized()},function(res){
 				unlock_screen(div_locker);
 				if(!res) return;
-				location.href = "?section=selection";
+				refreshCampaigns();
 			});
 		}
 	);
@@ -134,7 +140,7 @@ function createCampaign() {
 function changeCampaign(id) {
 	service.json("selection","set_campaign_id",{campaign_id:id},function(res){
 		if(!res) return;
-		location.href = "?section=selection";
+		refreshCampaigns();
 	});
 }
 <?php if ($id <> null && $id > 0) {?>
@@ -160,7 +166,7 @@ function renameCampaign() {
 			service.json("selection","set_campaign_name",{id:<?php echo $id;?>, name:text.trim().uniformFirstLetterCapitalized()},function(res){
 				unlock_screen(div_locker);
 				if(!res) return;
-				location.href = "?section=selection";
+				refreshCampaigns();
 			});
 		}
 	);
@@ -172,7 +178,7 @@ function removeCampaign() {
 		service.json("selection","remove_campaign",{id:<?php echo $id;?>},function(res){
 			unlock_screen(div_locker);
 			if(!res) return;
-			location.href = "?section=selection";
+			refreshCampaigns();
 		});
 	});
 }

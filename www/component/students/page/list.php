@@ -32,22 +32,17 @@ var can_manage = <?php echo json_encode($can_manage);?>;
 function build_filters() {
 	var filters = [];
 	if (batches && batches.length > 0) {
-		var filter = {category:'Student',name:'Batch',data:{value:batches[0]},force:true};
-		var f = filter;
-		for (var i = 1; i < batches.length; ++i) {
-			f.or = {data:{value:batches[i]}};
-			f = f.or; 
-		}
+		var filter = {category:'Student',name:'Batch',data:{values:batches},force:true};
 		filters.push(filter);
 	}
 	if (url.params['period']) {
-		filters.push({category:'Student',name:'Period',data:{value:url.params['period']},force:true});
+		filters.push({category:'Student',name:'Period',data:{values:[url.params['period']]},force:true});
 	}
 	if (url.params['specialization'] != null) {
-		filters.push({category:'Student',name:'Specialization',data:{value:url.params['specialization']},force:true});
+		filters.push({category:'Student',name:'Specialization',data:{values:[url.params['specialization']]},force:true});
 	}
 	if (url.params['class'] != null) {
-		filters.push({category:'Student',name:'Class',data:{value:url.params['class']},force:true});
+		filters.push({category:'Student',name:'Class',data:{values:[url.params['class']]},force:true});
 	}
 	return filters;
 }
@@ -65,7 +60,7 @@ var students_list = new data_list(
 	url.params['period'] || url.params['class'] ? 'StudentClass' : 'Student', null,
 	data_list_fields,
 	build_filters(),
-	batches != null && batches.length > 5 ? 200 : -1,
+	batches != null && batches.length > 1 ? 100 : -1,
 	function (list) {
 		list.addTitle("/static/curriculum/batch_16.png", "Students");
 		list.addPictureSupport("People",function(container,people_id,width,height) {
@@ -229,29 +224,26 @@ var students_list = new data_list(
 			import_students.className = "flat";
 			import_students.innerHTML = "<img src='"+theme.icons_16._import+"' style='vertical-align:bottom'/> Import Students";
 			import_students.disabled = "disabled";
-			window.top.require("popup_window.js", function() {
-				var container = document.createElement("DIV");
-				container.style.width = "100%";
-				container.style.height = "100%";
-				var popup = new window.top.popup_window("Import Students", theme.icons_16._import, container);
-				window.top.require("excel_import.js", function() {
+			window.top.require(["popup_window.js","excel_import.js"], function() {
+				import_students.disabled = "";
+				import_students.onclick = function(ev) {
+					var container = document.createElement("DIV");
+					container.style.width = "100%";
+					container.style.height = "100%";
+					var popup = new window.top.popup_window("Import Students", theme.icons_16._import, container);
 					new window.top.excel_import(popup, container, function(imp) {
-						import_students.disabled = "";
-						import_students.onclick = function(ev) {
-							popup.removeAllButtons();
-							popup.showPercent(95,95);
-							imp.init();
-							imp.loadImportDataURL(
-								"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list&multiple=true",
-								{
-									prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
-								}
-							);
-							imp.frame_import.reload_list = reload_list;
-							imp.uploadFile(ev);
-						};
+						popup.showPercent(95,95);
+						imp.init();
+						imp.loadImportDataURL(
+							"/dynamic/people/page/popup_create_people?types=student&ondone=reload_list&multiple=true",
+							{
+								prefilled_data: [{table:"Student",data:"Batch",value:batches[0]}]
+							}
+						);
+						imp.frame_import.reload_list = reload_list;
+						imp.uploadFile(ev);
 					});
-				});
+				};
 			});
 			students_list.addHeader(import_students);
 			var create_student = document.createElement("BUTTON");
