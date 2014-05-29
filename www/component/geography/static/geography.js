@@ -36,6 +36,16 @@ if (window == window.top && !window.top.geography) {
 				onready(country.country_name);
 			});
 		},
+		getCountryIdFromCode: function(country_code, callback) {
+			this.getCountries(function(countries) {
+				for (var i = 0; i < countries.length; ++i)
+					if (countries[i].country_code.toLowerCase() == country_code.toLowerCase()) {
+						callback(countries[i].country_id);
+						return;
+					}
+				callback(null);
+			});
+		},
 		getCountryData: function(country_id, onready) {
 			for (var i = 0; i < this._countries_data.length; ++i)
 				if (this._countries_data[i].id == country_id) {
@@ -115,6 +125,33 @@ if (window == window.top && !window.top.geography) {
 				}
 				onfound(null);
 			});
+		},
+		searchAreaByNames: function(country_id, areas_names, onready) {
+			this.getCountryData(country_id, function(country_data) {
+				onready(window.top.geography._searchAreaByNames(country_data, areas_names, 0, 0));
+			});
+		},
+		_searchAreaByNames: function(country_data, areas_names, start_division_index, start_names_index) {
+			for (var division_index = start_division_index; division_index < country_data.length; ++division_index) {
+				for (var i = 0; i < country_data[division_index].areas.length; ++i) {
+					if (country_data[division_index].areas[i].area_name.toLowerCase() == areas_names[start_names_index].trim().toLowerCase()) {
+						// found it !
+						if (start_names_index == areas_names.length-1) {
+							// last one => return it
+							return country_data[division_index].areas[i];
+						}
+						// continue with next names
+						for (var next = start_names_index+1; next < areas_names.length; ++next) {
+							var area = window.top.geography._searchAreaByNames(country_data, areas_names, division_index+1, next);
+							if (area != null) return area;
+						}
+						// did not find a next name => return the current one
+						return country_data[division_index].areas[i];
+					}
+				}
+			}
+			// not found
+			return null;
 		},
 		getGeographicAreaText: function(country_id, area_id, onready) {
 			this.searchArea(country_id, area_id, function(area_info) {

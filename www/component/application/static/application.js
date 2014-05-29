@@ -238,7 +238,7 @@ function initPNApplication() {
 		setTimeout(initPNApplication, 100);
 	else {
 		var listener = function() {
-			if (!window || !window.top || !window.top.pnapplication) return;
+			if (!window || !window.top || !window.top.pnapplication || !window.top.pnapplication.userIsActive) return;
 			window.top.pnapplication.userIsActive();
 		};
 		listenEvent(window,'click',listener);

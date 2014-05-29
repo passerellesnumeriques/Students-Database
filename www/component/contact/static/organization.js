@@ -173,8 +173,8 @@ function organization(container, org, existing_types, can_edit) {
 		tr.appendChild(td_contacts = document.createElement("TD"));
 		td_contacts.style.verticalAlign = "top";
 		require("contacts.js", function() {
-			var c = new contacts(td_contacts, "organization", org.id, org.contacts, can_edit, can_edit, can_edit);
-			c.onchange.add_listener(function(c){
+			t._contacts_widget = new contacts(td_contacts, "organization", org.id, org.contacts, can_edit, can_edit, can_edit);
+			t._contacts_widget.onchange.add_listener(function(c){
 				org.contacts = c.getContacts();
 				t.onchange.fire();
 			});
@@ -183,8 +183,8 @@ function organization(container, org, existing_types, can_edit) {
 		tr.appendChild(td_addresses = document.createElement("TD"));
 		td_addresses.style.verticalAlign = "top";
 		require("addresses.js", function() {
-			var a = new addresses(td_addresses, true, "organization", org.id, org.addresses, can_edit, can_edit, can_edit);
-			a.onchange.add_listener(function(a){
+			t._addresses_widget = new addresses(td_addresses, true, "organization", org.id, org.addresses, can_edit, can_edit, can_edit);
+			t._addresses_widget.onchange.add_listener(function(a){
 				org.addresses = a.getAddresses();
 				t.onchange.fire();
 				t.onaddresschange.fire();
@@ -281,6 +281,7 @@ function organization(container, org, existing_types, can_edit) {
 		t._google_results_container = document.createElement("DIV");
 		container.appendChild(t._google_results_container);
 		t._google_results_container.style.backgroundColor = "white";
+		t._google_results_container.style.textAlign = "left";
 		t._refreshGoogle();
 		
 		layout.invalidate(container);
@@ -390,15 +391,104 @@ function organization(container, org, existing_types, can_edit) {
 			t._google_need_reload = true;
 			return;
 		}
-		t._timeoutGoogle = null;
 		t._google_loading = true;
 		t._google_need_reload = false;
 		t._google_results_container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
 		require("google_places.js", function() {
-			getGooglePlaces(org.name, function(results,status) {
-				t._google_results_container.innerHTML = service.generateInput(results);
+			getGooglePlaces(org.name, function(results,error) {
+				if (error != null) {
+					t._google_results_container.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+status;
+				} else {
+					var ul = document.createElement("UL");
+					for (var i = 0; i < results.length; ++i) {
+						var li = document.createElement("LI");
+						ul.appendChild(li);
+						var link = document.createElement("A");
+						link.appendChild(document.createTextNode(results[i].name));
+						link.href = '#';
+						li.appendChild(link);
+						link._google_ref = results[i].reference;
+						link.onclick = function() {
+							getGooglePlaceDetails(this._google_ref, function(place,error) {
+								if (place == null) return;
+								require("contact_objects.js", function() {
+									// add address
+									var a = new PostalAddress(-1,window.top.default_country_id, null, null, null, null, null, null, "Office");
+									var geo = [null,null,null,null,null];
+									var country = null;
+									for (var i = 0; i < place.address_components.length; ++i) {
+										var ac = place.address_components[i];
+										if (ac.types.contains("street_number"))
+											a.street_number = ac.long_name;
+										if (ac.types.contains("route"))
+											a.street = ac.long_name;
+										if (ac.types.contains("country"))
+											country = ac.short_name;
+										if (ac.types.contains("administrative_area_level_1"))
+											geo[0] = ac.long_name;
+										if (ac.types.contains("administrative_area_level_2"))
+											geo[1] = ac.long_name;
+										if (ac.types.contains("administrative_area_level_3"))
+											geo[2] = ac.long_name;
+										if (ac.types.contains("administrative_area_level_4"))
+											geo[3] = ac.long_name;
+										if (ac.types.contains("locality"))
+											geo[4] = ac.long_name;
+									}
+									var add_address = function() {
+										if (a.geographic_area.id != null || a.street_number != null || a.street != null)
+											t._addresses_widget.addAddress(a,false);
+									};
+									var populate_area = function() {
+										a.geographic_area.country_id = a.country_id;
+										var areas = [];
+										for (var i = 0; i < geo.length; ++i)
+											if (geo[i] != null) areas.push(geo[i]);
+										if (areas.length == 0)
+											areas = place.formatted_address.split(",");
+										if (areas.length == 0)
+											add_address();
+										else window.top.geography.searchAreaByNames(a.country_id, areas, function(area) {
+											a.geographic_area.id = area != null ? area.area_id : null;
+											if (area == null)
+												add_address();
+											else window.top.geography.getGeographicAreaText(a.country_id, area.area_id, function(text) {
+												a.geographic_area.text = text;
+												add_address();
+											});
+										});
+									};
+									var populate_country = function() {
+										if (country == null) {
+											a.country_id = window.top.default_country_id;
+											populate_area();
+										} else
+											window.top.geography.getCountryIdFromCode(country, function(id) {
+												a.country_id = id;
+												populate_area();
+											});
+									};
+									populate_country();
+
+									// add phone
+									if (place.formatted_phone_number && place.formatted_phone_number.length > 0) {
+										var phone = new Contact(-1, "phone", "Office", place.formatted_phone_number);
+										t._contacts_widget.phones.addContact(phone);
+									}
+									
+									layout.invalidate(container);
+								});
+							});
+							return false;
+						};
+						li.appendChild(document.createTextNode(" ("+results[i].formatted_address+")"));
+					}
+					t._google_results_container.removeAllChildren();
+					t._google_results_container.appendChild(ul);
+				}
+				layout.invalidate(t._google_results_container);
 				t._google_loading = false;
-				if (t._google_need_reload && !t._timeout_google) t._timeout_google = setTimeout(function() { t._refreshGoogle(); }, 50);
+				if (t._google_need_reload && !t._timeout_google) t._timeout_google = setTimeout(function() { t._timeout_google = null; t._refreshGoogle(); }, 50);
 			});
 		});
 	};

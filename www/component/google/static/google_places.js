@@ -14,8 +14,37 @@ function getGooglePlaces(text, callback) {
 	loadGooglePlaces(function() {
 		var places = new window.top.google.maps.places.PlacesService(window.top.google_map);
 		var request = {
-			query: text
+			query: text+", "+window.top.default_country_name,
+			language: "en",
+			sensor: false
 		};
-		places.textSearch(request, callback);
+		places.textSearch(request, function(results,status) {
+			if (status == "OK") {
+				var list = [];
+				for (var i = 0; i < results.length; ++i) {
+					if (!results[i].formatted_address.toLowerCase().trim().endsWith(", "+window.top.default_country_name.toLowerCase())) {
+						continue;
+					}
+					list.push(results[i]);
+				}
+				callback(list, null);
+			} else if (status == "ZERO_RESULTS")
+				callback([], null);
+			else
+				callback(null, status);
+		});
+	});
+}
+
+function getGooglePlaceDetails(reference, callback) {
+	var places = new window.top.google.maps.places.PlacesService(window.top.google_map);
+	var request = {
+		reference: reference,
+		sensor: false,
+		language: "en"
+	};
+	places.getDetails(request, function(place,status) {
+		if (status == "OK") callback(place, null);
+		else callback(null, status);
 	});
 }

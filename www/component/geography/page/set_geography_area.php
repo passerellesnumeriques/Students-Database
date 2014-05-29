@@ -550,36 +550,36 @@ require('tree.js',function(){
 	 * @parameter root if root == 'root' means we are at the root level, so will call the addRoot method. Else, root == null
 	 */
 	tr.addChild = function(r, area_parent_id, root){
-		if(root == null){
-			input_dialog(theme.icons_16.question,
-									'Add a new child',
-									'Enter the area name',
-									'',
-									50,
-									function(text){
-										if(text.checkVisible()){ 
-											if(!r.checkUnicity(text, "area", area_parent_id, null)){ return "The current area already has a child with this name";}
-											else return;
-										}
-										else return "You must enter at least one visible caracter";
-									},
-									function(text){if (text) r.addArea(text ,area_parent_id);});
-		}
-		if(root == 'root'){
-			input_dialog(theme.icons_16.question,
-									'Add a new child',
-									'Enter the area name',
-									'',
-									50,
-									function(text){
-										if(text.checkVisible()){ 
-											if(!r.checkUnicity(text, "area", area_parent_id, null)){ return "The current area already has a child with this name";}
-											else return;
-										}
-										else return "You must enter at least one visible caracter";
-									},
-									function(text){if (text) r.addRoot(text);});
-		}
+		var content = document.createElement("DIV");
+		content.style.padding = "10px";
+		content.appendChild(document.createTextNode("Please enter new areas (one by line):"));
+		content.appendChild(document.createElement("BR"));
+		var text_area = document.createElement("TEXTAREA");
+		text_area.rows = 10;
+		text_area.cols = 50;
+		content.appendChild(text_area);
+		require("popup_window.js",function() {
+			var popup = new popup_window("New Geographic Area", null, content);
+			popup.addOkCancelButtons(function() {
+				popup.freeze();
+				var text = text_area.value;
+				var lines = text.split("\n");
+				for (var i = 0; i < lines.length; ++i) {
+					var name = lines[i].trim();
+					if (!name.checkVisible()) continue;
+					if (!r.checkUnicity(name, "area", area_parent_id, null)) {
+						alert("Area already exists: "+name);
+						continue;
+					} 
+					if (root == null)
+						r.addArea(name, area_parent_id);
+					else
+						r.addRoot(name);
+				}
+				popup.close();
+			});
+			popup.show();
+		});
 	};
 	
 	/**

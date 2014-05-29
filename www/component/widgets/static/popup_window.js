@@ -291,6 +291,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.onEnter = function(onenter) {
 		var listener = function(ev) {
 			if (!t.table) return;
+			if (ev.target.nodeName == "TEXTAREA") return;
 			var e = getCompatibleKeyEvent(ev);
 			if (e.isEnter) onenter();
 		};
