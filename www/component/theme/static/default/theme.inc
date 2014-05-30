@@ -34,6 +34,7 @@ theme::$icons_16 = array(
 	"no" => 			"/static/theme/default/icons_16/close.png",
 	"no_edit" => 		"/static/theme/default/icons_16/no_edit.png",
 	"ok" => 			"/static/theme/default/icons_16/ok.png",
+	"print" => 			"/static/theme/default/icons_16/print.png",
 	"question" => 		"/static/theme/default/icons_16/question.png",
 	"remove" => 		"/static/theme/default/icons_16/trash.png",
 	"remove_white" => 	"/static/theme/default/icons_16/remove_white.png",

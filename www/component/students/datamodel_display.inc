@@ -86,8 +86,8 @@ class StudentDataScreen extends datamodel\GenericDataScreen {
 $model->addDataScreen(new StudentDataScreen($display));
 
 $display = new datamodel\TableDataDisplay("StudentClass", $category);
-$display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Period", "class.period.name", "center"));
-$display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Class", "class.name", "center"));
+$display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Period", "class.period.name", "center", "class.period"));
+$display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Class", "class.name", "center", "class"));
 $display->addFollow("people");
 $model->addTableDataDisplay($display);
 
