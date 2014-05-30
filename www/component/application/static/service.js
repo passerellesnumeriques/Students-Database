@@ -102,6 +102,14 @@ service = {
 		);
 	},
 	
+	/** Call a service with JSON input, and HTML output. The output will be loaded in the given container.
+	 * The advantage of using this instead of customOutput is that this function automatically loads scripts if there are some in the HTML.
+	 * @param {String} component the component containing the service
+	 * @param {String} service_name the name of the service to call
+	 * @param {Object} input data to send to the service: an object, each attribute being a $_POST. If an attribute is a structure or array, it will be converted into a json string.
+	 * @param {Element|String} container where to put the HTML sent by the service
+	 * @param {Function} ondone callback that will receive the raw result, or null if a network error occured
+	 */
 	html: function(component, service_name, input, container, ondone) {
 		service.customOutput(component, service_name, input, function(html) {
 			if (!html) html = "";
@@ -186,6 +194,11 @@ function postData(url, data, win) {
 	win.document.body.appendChild(form);
 	form.submit();
 }
+/** Send the given object to the given URL into the given frame
+ * @param {String} url the location where to send the data
+ * @param {Object} data the data to send
+ * @param {String|Element} frame the frame (or frame name) where the URL will be loaded
+ */
 function postFrame(url, data, frame) {
 	var form = document.createElement("FORM");
 	var i = document.createElement("INPUT");

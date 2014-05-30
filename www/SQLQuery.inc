@@ -2215,6 +2215,7 @@ class SQLQuery {
 						$q->select(array($t->getName()=>$table_alias));
 						if ($t->getModel() instanceof SubDataModel)
 							$q->selectSubModel($t->getModel()->getParentTable(), $sub_model_instance);
+						$q->whereIn($table_alias, $col->name, $keys);
 						$t->prepareSelectToDetermineWriteAccess($q, $table_alias);
 						$prepared_rows = $q->execute();
 						if (count($prepared_rows) == 0) continue; // nothing to do there

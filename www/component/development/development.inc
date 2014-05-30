@@ -16,6 +16,7 @@ class development extends Component {
 		Component::allowServiceWithoutLogin("development", "test_data");
 		Component::allowServiceWithoutLogin("development", "get_debug_info");
 		Component::allowServiceWithoutLogin("development", "check_php");
+		Component::allowServiceWithoutLogin("development", "check_todo");
 		Component::allowServiceWithoutLogin("development", "check_datamodel");
 		
 		for ($i = 0; $i < 15; $i++) {

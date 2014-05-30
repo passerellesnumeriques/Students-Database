@@ -312,8 +312,8 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		table.appendChild(tbody);
 		var tr_foot = document.createElement('tr');
 		var td_foot = document.createElement('td');
-		var add_button = document.createElement('div');
-		add_button.className = 'button';
+		var add_button = document.createElement('BUTTON');
+		add_button.className = 'action';
 		add_button.innerHTML = "<img src='"+theme.icons_16.add+"'/> Append a new division";
 		add_button.onclick = function(){result.startAddDivision();};
 		td_foot.appendChild(add_button);
@@ -380,9 +380,10 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 	 * @parameter division_id the id that will be removed by clicking on the button
 	 */
 	result.buttonRemoveDivision = function(td_remove, division_id){
-		var remove_button = document.createElement('div');
-		remove_button.className = "button";
+		var remove_button = document.createElement('BUTTON');
+		remove_button.className = "flat";
 		remove_button.innerHTML = "<img src ='"+theme.icons_16.remove+"'/>";
+		remove_button.title = "Remove this division";
 		remove_button.onclick = function(){result.askRemoveDivision(division_id);};
 		td_remove.appendChild(remove_button);
 	};
@@ -481,24 +482,20 @@ require('tree.js',function(){
 	*/
 	tr.addAddButton = function(r, division_index, area_index){
 		if(division_index == null && area_index == null){
-			var add_button = document.createElement('IMG');
-			add_button.className = 'button';
-			add_button.src = theme.icons_10.add;
-			add_button.style.verticalAlign = "bottom";
-			add_button.style.padding = "2px";
-			add_button.title = "Create a sub-area";
+			var add_button = document.createElement('BUTTON');
+			add_button.className = 'flat small_icon';
+			add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+			add_button.title = "Create sub-areas";
 			add_button.onclick = function(){tr.addChild(r, null, 'root');};
 			var div = document.getElementById('root');
 			div.appendChild(add_button);
 		}
 		else{
 			if(division_index != r.length -1){
-				var add_button = document.createElement('IMG');
-				add_button.className = 'button';
-				add_button.src = theme.icons_10.add;
-				add_button.style.verticalAlign = "bottom";
-				add_button.style.padding = "2px";
-				add_button.title = "Create a sub-area";
+				var add_button = document.createElement('BUTTON');
+				add_button.className = 'flat small_icon';
+				add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+				add_button.title = "Create sub-areas";
 				add_button.area_parent_id = r[division_index].areas[area_index].area_id;
 				add_button.onclick = function(){tr.addChild(r, add_button.area_parent_id);};
 				var div = document.getElementById(r[division_index].areas[area_index].area_id);
@@ -515,11 +512,9 @@ require('tree.js',function(){
 	 * @parameter area_index the index of the current area
 	 */
 	tr.addRemoveButton = function(r, division_index, area_index){
-		var remove_button = document.createElement('IMG');
-		remove_button.className = 'button';
-		remove_button.src = theme.icons_10.remove;
-		remove_button.style.verticalAlign = "bottom";
-		remove_button.style.padding = "2px";
+		var remove_button = document.createElement('BUTTON');
+		remove_button.className = 'flat small_icon';
+		remove_button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
 		remove_button.title = "Remove this area and all its content";
 		var div = null;
 		if(division_index == null && area_index == null){

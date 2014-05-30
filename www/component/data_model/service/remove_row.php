@@ -22,7 +22,7 @@ class service_remove_row extends Service {
 			if ($sub_model <> null) $q->selectSubModelForTable(DataModel::get()->getTable($table), $sub_model);
 			$q->removeKey($table, $key);
 		} catch (Exception $e) {
-			PNApplication::error($e->getMessage());
+			PNApplication::error($e);
 		}
 		echo PNApplication::hasErrors() ? "false" : "true";
 	}

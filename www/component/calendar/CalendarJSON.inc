@@ -55,8 +55,8 @@ class CalendarJSON {
 	
 	/**
 	 * Get a CalendarEvent JSON object from the data retrieved from the database
-	 * @param SQLQuery $q query used to retrieve the row
 	 * @param Array $row the row retrieved from CalendarEvent table
+	 * @param Boolean $use_date_object if true, the start and end will be using Date Javascript object, if false this is a timestamp in seconds
 	 * @return string CalendarEvent JSON object
 	 * @no_name_check
 	 */
@@ -82,6 +82,13 @@ class CalendarJSON {
 		return $data;
 	}
 	
+	/**
+	 * Get an array of CalendarEvent JSON object from the data retrieved from the database
+	 * @param Array $rows the rows retrieved from CalendarEvent table
+	 * @param Boolean $use_date_object if true, the start and end will be using Date Javascript object, if false this is a timestamp in seconds
+	 * @return string an array of CalendarEvent JSON object
+	 * @no_name_check
+	 */
 	public static function CalendarEvents($rows, $use_date_object = false) {
 		$s = "[";
 		$first = true;

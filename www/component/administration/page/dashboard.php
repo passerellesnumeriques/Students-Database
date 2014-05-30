@@ -1,7 +1,7 @@
 <?php 
 class page_dashboard extends Page {
 	
-	public function getRequiredRights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 ?>
