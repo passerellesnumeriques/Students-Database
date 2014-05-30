@@ -31,26 +31,26 @@ class CurriculumMenuItem {
 }
 
 function curriculum_tree(&$page, $menu_items) {
-	$page->add_init_script("window.top.require('datamodel.js');");
-	$page->require_javascript("splitter_vertical.js");
-	$page->require_javascript("vertical_layout.js");
-	$page->require_javascript("header_bar.js");
+	$page->addInitScript("window.top.require('datamodel.js');");
+	$page->requireJavascript("splitter_vertical.js");
+	$page->requireJavascript("vertical_layout.js");
+	$page->requireJavascript("header_bar.js");
 	theme::css($page, "header_bar.css");
-	$page->require_javascript("frame_header.js");
+	$page->requireJavascript("frame_header.js");
 	theme::css($page, "frame_header.css");
 	
-	$page->require_javascript("tree.js");
+	$page->requireJavascript("tree.js");
 	theme::css($page, "tree.css");
-	$page->require_javascript("curriculum_objects.js");
-	$page->add_javascript("/static/curriculum/curriculum_tree.js");
-	$page->add_javascript("/static/curriculum/curriculum_tree_root.js");
-	$page->add_javascript("/static/curriculum/curriculum_tree_all_students.js");
-	$page->add_javascript("/static/curriculum/curriculum_tree_current_students.js");
-	$page->add_javascript("/static/curriculum/curriculum_tree_alumni.js");
-	$page->add_javascript("/static/curriculum/curriculum_tree_batch.js");
-	$page->add_javascript("/static/curriculum/curriculum_tree_period.js");
-	$page->add_javascript("/static/curriculum/curriculum_tree_specialization.js");
-	$page->add_javascript("/static/curriculum/curriculum_tree_class.js");
+	$page->requireJavascript("curriculum_objects.js");
+	$page->addJavascript("/static/curriculum/curriculum_tree.js");
+	$page->addJavascript("/static/curriculum/curriculum_tree_root.js");
+	$page->addJavascript("/static/curriculum/curriculum_tree_all_students.js");
+	$page->addJavascript("/static/curriculum/curriculum_tree_current_students.js");
+	$page->addJavascript("/static/curriculum/curriculum_tree_alumni.js");
+	$page->addJavascript("/static/curriculum/curriculum_tree_batch.js");
+	$page->addJavascript("/static/curriculum/curriculum_tree_period.js");
+	$page->addJavascript("/static/curriculum/curriculum_tree_specialization.js");
+	$page->addJavascript("/static/curriculum/curriculum_tree_class.js");
 	
 	require_once("component/curriculum/CurriculumJSON.inc");
 	
@@ -60,7 +60,7 @@ function curriculum_tree(&$page, $menu_items) {
 	<div id='left'>
 		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Classes'>
 			<?php if ($can_edit) { ?>
-			<div class='button_verysoft' onclick='create_new_batch();'>
+			<div class='button_verysoft' onclick='createNewBatch();'>
 				<img src='<?php echo theme::make_icon("/static/curriculum/batch_16.png", theme::$icons_10["add"]);?>'/>
 				New Batch
 			</div>

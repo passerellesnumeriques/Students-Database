@@ -3,10 +3,10 @@ class service_save_role_rights extends Service {
 	public function documentation() {
 ?>Save the list of rights associated with the given role.<?php		
 	}
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array("manage_roles");
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 ?>
 <ul>
 	<li><code>role_id</code>: id of the role</li>
@@ -15,7 +15,7 @@ class service_save_role_rights extends Service {
 </ul>
 <?php 
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 ?>return true on success.<?php 
 	}
 	public function execute(&$component, $input) {

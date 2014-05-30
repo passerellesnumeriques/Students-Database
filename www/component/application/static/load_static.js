@@ -1,9 +1,17 @@
 /**
  * Launch the background loading of all static resources of the application.
- * @param {DOMNode|String} container the html element where to insert the progress bar, or its ID
+ * @param {Element|String} container the html element where to insert the progress bar, or its ID
+ * @param {String} bgcolor color of the progress bar
+ * @param {String} border_color color of the border of the progress bar
+ * @param {String} active_color color of text when the loading is active
+ * @param {String} inactive_color color of the text when the loading is going slowly
  */
-function load_static_resources(container) {
+function load_static_resources(container, bgcolor, border_color, active_color, inactive_color) {
 	if (typeof container == 'string') container = document.getElementById(container);
+	if (!bgcolor) bgcolor = "#22bbea";
+	if (!border_color) border_color = "#8080A0";
+	if (!active_color) active_color = "#000000";
+	if (!inactive_color) inactive_color = "#808080";
 	if (window.top.pn_application_static_loaded) {
 		container.style.visibility = 'hidden';
 		return;
@@ -21,7 +29,7 @@ function load_static_resources(container) {
 	this._pc_container.style.display = "inline-block";
 	this._pc_container.style.height = "8px";
 	this._pc_container.style.width = "250px";
-	this._pc_container.style.border = "1px solid #8080A0";
+	this._pc_container.style.border = "1px solid "+border_color;
 	setBorderRadius(this._pc_container,3,3,3,3,3,3,3,3);
 	this._pc_container.style.marginLeft = "5px";
 	container.appendChild(this._pc_container);
@@ -29,7 +37,7 @@ function load_static_resources(container) {
 	this._pc = document.createElement("DIV");
 	this._pc.style.width = "0px";
 	this._pc.style.height = "8px";
-	this._pc.style.backgroundColor = "#22bbea";
+	this._pc.style.backgroundColor = bgcolor;
 	this._pc_container.appendChild(this._pc);
 	setBorderRadius(this._pc,3,3,3,3,3,3,3,3);
 
@@ -63,14 +71,18 @@ function load_static_resources(container) {
 	this._scripts_loading = 0;
 	/** {Number} maximum number of scripts that can be loaded at the same time */
 	this._max_scripts_loading = 10;
+	/** {Number} maximum number of scripts to be loaded at the same time when we load resources slowly */
 	this._max_scripts_loading_slow = 2;
 	/** {Number} number of images currently loading */
 	this._images_loading = 0;
 	/** {Number} maximum number of images that can be loaded at the same time */
 	this._max_images_loading = 20;
+	/** {Number} maximum number of images to be loaded at the same time when we load resources slowly */
 	this._max_images_loading_slow = 2;
 	
+	/** {Boolean} indicates we should load slowly due to user activity */
 	this._slow_when_user_active = false;
+	/** {Boolean} indicates we should load slowly due to application activity (calls to services) */
 	this._slow_when_services_active = false;
 	
 	/** Start to load another script */
@@ -83,14 +95,14 @@ function load_static_resources(container) {
 			slow = true;
 		}
 		if (slow) {
-			container.style.color = "#808080";
+			container.style.color = inactive_color;
 			setOpacity(t._pc, 0.25);
 			if (t._scripts_loading >= t._max_scripts_loading_slow) {
 				setTimeout(t._nextScript, 250);
 				return;
 			}
 		} else {
-			container.style.color = "#000000";
+			container.style.color = active_color;
 			setOpacity(t._pc, 1);
 		}
 		if (t._stopped) return;
@@ -105,7 +117,7 @@ function load_static_resources(container) {
 				break;
 			}
 		if (script == null) { t._checkEnd(); return; }
-		add_javascript(script.url,function() {
+		addJavascript(script.url,function() {
 			t._scripts_loading--;
 			t.loaded(script.size);
 			for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
@@ -125,14 +137,14 @@ function load_static_resources(container) {
 			slow = true;
 		}
 		if (slow) {
-			container.style.color = "#808080";
+			container.style.color = inactive_color;
 			setOpacity(t._pc, 0.25);
 			if (t._images_loading >= t._max_images_loading_slow) {
 				setTimeout(t._nextImage, 250);
 				return;
 			}
 		} else {
-			container.style.color = "#000000";
+			container.style.color = active_color;
 			setOpacity(t._pc, 1);
 		}
 		if (t._stopped) return;
@@ -187,7 +199,7 @@ function load_static_resources(container) {
 			window.top.pn_application_static.images.push(window.top.pn_application_static.loading_images[i]);
 		window.top.pn_application_static.loading_images = [];
 		for (var i = 0; i < window.top.pn_application_static._loaded_scripts.length; ++i)
-			add_javascript(window.top.pn_application_static._loaded_scripts[i]);
+			addJavascript(window.top.pn_application_static._loaded_scripts[i]);
 		for (var i = 0; i < t._max_images_loading; ++i)
 			t._nextImage();
 		for (var i = 0; i < t._max_scripts_loading; ++i)

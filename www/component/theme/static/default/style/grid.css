@@ -12,7 +12,10 @@ table.grid>thead>tr {
 	background-color: #FFFFFF;
 }
 table.grid>thead>tr>th {
-	border-bottom: 1px solid #D0D0D0;
+	
+}
+table.grid>tbody>tr:first-child>td {
+	border-top: 1px solid #C0C0C0;
 }
 table.grid>tbody>tr>td {
 	border-bottom: 1px solid #E0E0E0;
@@ -29,6 +32,8 @@ table.grid>tbody>tr.selected {
 	background-color: #FFF0D0;
     background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
 }
+/*
 table.grid>tbody>tr>td.disabled {
 	background-color: rgba(0,0,0,0.15);
 }
+*/

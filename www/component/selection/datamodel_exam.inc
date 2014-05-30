@@ -123,7 +123,11 @@ $sm->addTable("ExamCenterPartner")
 	->addReadAccess("see_exam_center_detail",true)
 	->addInsertAccess("manage_exam_center",true)
 	->addRemoveAccess("manage_exam_center",true);
-		
+$model->internalGetTable("Organization")
+	->addReadAccessFromForeignTable("ExamCenterPartner");
+$model->internalGetTable("PostalAddress")
+	->addReadAccessFromForeignTable("ExamCenterPartner");
+
 $sm->addTable("ExamCenterContactPoint")
 	->addForeignKey("exam_center","ExamCenter",true,false,true,false)
 	->addForeignKey("organization","Organization",true,false,true,false)
@@ -155,12 +159,16 @@ $sm->addTable("ExamSession")
 	->addReadAccess("see_exam_subject",true)
 	->addInsertAccess("manage_exam_center",true)
 	->addRemoveAccess("manage_exam_center",true);
+$model->internalGetTable("CalendarEvent")
+	->addReadAccessFromForeignTable("ExamSession")
+	->addRemoveAccessFromForeignTable("ExamSession")
+	;
 
 $sm->addTable("ExamCenterRoom")
 	->addPrimaryKey("id")
 	->addForeignKey("exam_center", "ExamCenter", true, false, true)
 	->addInteger("capacity",32,0,null,false,false)//The capacity of the room cannot be null
-	->addString("name",255,0,false,false)//Can be custom or not, but must be set
+	->addString("name",20,0,false,false)//Can be custom or not, but must be set
 	->addWriteAccess("manage_exam_center",true)
 	->addReadAccess("see_exam_subject",true)
 	->addInsertAccess("manage_exam_center",true)

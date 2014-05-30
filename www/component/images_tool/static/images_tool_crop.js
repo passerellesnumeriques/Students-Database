@@ -378,14 +378,14 @@ function crop_rectangle(pic) {
 	
 	this.remove = function() {
 		if (this.div_top) {
-			pic.td_original.removeChild(this.div_top);
-			pic.td_original.removeChild(this.div_bottom);
-			pic.td_original.removeChild(this.div_left);
-			pic.td_original.removeChild(this.div_right);
-			pic.td_original.removeChild(this.div_top_left);
-			pic.td_original.removeChild(this.div_top_right);
-			pic.td_original.removeChild(this.div_bottom_left);
-			pic.td_original.removeChild(this.div_bottom_right);
+			pic.div_original.removeChild(this.div_top);
+			pic.div_original.removeChild(this.div_bottom);
+			pic.div_original.removeChild(this.div_left);
+			pic.div_original.removeChild(this.div_right);
+			pic.div_original.removeChild(this.div_top_left);
+			pic.div_original.removeChild(this.div_top_right);
+			pic.div_original.removeChild(this.div_bottom_left);
+			pic.div_original.removeChild(this.div_bottom_right);
 			this.div_top = null;
 			this.div_bottom = null;
 			this.div_left = null;
@@ -400,7 +400,7 @@ function crop_rectangle(pic) {
 		var div = document.createElement("DIV");
 		div.style.position = "absolute";
 		div.style.backgroundColor = color;
-		pic.td_original.appendChild(div);
+		pic.div_original.appendChild(div);
 		return div;
 	};
 	this.create = function() {

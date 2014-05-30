@@ -1,6 +1,6 @@
 /**
  * Displays a facebook icon, indicating if the user is connected to its Facebook account
- * @param {DOMNode} container where to put the icon
+ * @param {Element} container where to put the icon
  */
 function facebook_status(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -32,7 +32,7 @@ function facebook_status(container) {
 			});
 	};
 	
-	window.top.add_javascript("/static/facebook/facebook.js",function() {
+	window.top.addJavascript("/static/facebook/facebook.js",function() {
 		window.top.facebook.addConnectionStatusListener(function(){t.updateIcon();});
 		t.updateIcon();
 	});

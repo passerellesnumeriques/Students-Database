@@ -1,11 +1,11 @@
 <?php 
 class service_get_user extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Get user information from Facebook ID"; }
-	public function input_documentation() { echo "auth_token: the authentication token from Facebook"; }
-	public function output_documentation() { echo "TODO"; }
+	public function inputDocumentation() { echo "auth_token: the authentication token from Facebook"; }
+	public function outputDocumentation() { echo "TODO"; }
 	
 	public function execute(&$component, $input) {
 		$ch = curl_init("https://graph.facebook.com/debug_token?input_token=".$input["auth_token"]."&access_token=316910509803|843ab6b200f732996a72c87557a81843");

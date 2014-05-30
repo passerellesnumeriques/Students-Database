@@ -1,6 +1,6 @@
 <?php
 class page_profile_people extends Page {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function execute() {
 		$people_id = $_GET["people"];
 		$sub_models = null;

@@ -84,6 +84,11 @@ class calendar extends Component {
 		}
 	}
 	
+	/**
+	 * Remove the given shared calendar
+	 * @param integer $id identifier of the calendar to remove
+	 * @return boolean true on success
+	 */
 	public function removeSharedCalendar($id) {
 		if (!$this->canWriteCalendar($id)) {
 			PNApplication::error("You cannot remove this calendar");
@@ -226,7 +231,7 @@ class calendar extends Component {
 			$data["app_link"] = @$event["app_link"];
 			$data["app_link_name"] = @$event["app_link_name"];
 			SQLQuery::create()->bypassSecurity()->updateByKey("CalendarEvent", $event["id"], $data);
-			if (PNApplication::has_errors())
+			if (PNApplication::hasErrors())
 				return false;
 			$event["uid"] = $res["uid"];
 		} else {
@@ -246,7 +251,7 @@ class calendar extends Component {
 			$data["app_link_name"] = @$event["app_link_name"];
 			$event["id"] = SQLQuery::create()->bypassSecurity()->insert("CalendarEvent", $data);
 			$event["uid"] = $data["uid"];
-			if (PNApplication::has_errors()) return false;
+			if (PNApplication::hasErrors()) return false;
 		}
 		if (isset($event["frequency"])) {
 			// TODO
@@ -272,6 +277,39 @@ class calendar extends Component {
 			->whereValue("CalendarEvent", "id", $event_id)
 			->executeSingleValue();
 		return $ev_name;
+	}
+	
+	/** Join the CalendarEvent table.
+	 * @param SQLQuery $q the query to join
+	 * @param string $from_table origin table name
+	 * @param string $from_key foreign key name in the origin table
+	 */
+	public function joinCalendarEvent(&$q, $from_table, $from_key) {
+		$q->join($from_table, "CalendarEvent", array($from_key=>"id"));
+	}
+	/** Add a WHERE clause to select only past events
+	 * @param SQLQuery $q the query to modify
+	 * @param boolean $based_on_end if true, the event already finished (end in the past) will be returned, if false it will include events in the past and events already started but not yet finished (start in the past) 
+	 */
+	public function whereEventInThePast(&$q, $based_on_end = true) {
+		$event_alias = $q->getTableAlias("CalendarEvent");
+		$now = time();
+		if ($based_on_end)
+			$q->where("`$event_alias`.`end` < '$now'");
+		else
+			$q->where("`$event_alias`.`start` < '$now'");
+	}
+	/** Add a WHERE clause to select only past events
+	 * @param SQLQuery $q the query to modify
+	 * @param boolean $based_on_start if true, the event not yet started (start in the future) will be returned, if false it will include events in the future and events already started but not yet finished (end in the future) 
+	 */
+	public function whereEventInTheFuture(&$q, $based_on_start = true) {
+		$event_alias = $q->getTableAlias("CalendarEvent");
+		$now = time();
+		if ($based_on_start)
+			$q->where("`$event_alias`.`start` > '$now'");
+		else
+			$q->where("`$event_alias`.`end` > '$now'");
 	}
 }
 ?>

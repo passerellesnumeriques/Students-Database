@@ -1,0 +1,17 @@
+<div id='section_soft'>
+</div>
+<script type='text/javascript'>
+theme.css("section.css");
+require("section.js", function() {
+    var container = document.getElementById('section_soft');
+    var content = document.createElement("DIV");
+    content.style.padding = "5px";
+    content.innerHTML = "This section is not collapsable,<br/>with soft style, and a footer";
+    var sec = new section('/dynamic/documentation/service/static?component=widgets&path=example.png', "Example", content, false, false, "soft");
+    var button_footer = document.createElement("BUTTON");
+    button_footer.className = "action";
+    button_footer.innerHTML = "A button in the footer";
+    sec.addToolBottom(button_footer);
+    container.appendChild(sec.element);
+});
+</script>

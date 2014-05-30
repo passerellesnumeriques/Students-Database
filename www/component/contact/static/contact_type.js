@@ -172,7 +172,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	/**
 	 * Will add a removeButton to the given container
 	 * @param {Contact} contact the contact associated
-	 * @param {DOMNode} container where to put the button
+	 * @param {Element} container where to put the button
 	 * @param {editable_cell} edit the editable cell or null if not editable
 	 */
 	this.addRemoveButton = function (contact, container, edit){
@@ -217,7 +217,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	
 	/**
 	 * Create the category column in the displayed table
-	 * @param {DOMNode} container the one which will contain the category field
+	 * @param {Element} container the one which will contain the category field
 	 * @param {Contact} contact the associated contact
 	 */
 	this._createCategoryField = function (container,contact){
@@ -232,7 +232,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	
 	/**
 	 * Create the context_menu displayed below the category field after clicking
-	 * @param {DOMNode} container the category field: the context menu will be displayed below it
+	 * @param {Element} container the category field: the context menu will be displayed below it
 	 * @param {Contact} contact the associated contact
 	 */
 	this._showCategoryContextMenu = function(container,contact){
@@ -252,7 +252,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	
 	/**
 	 * Add an item to the category context_menu
-	 * @param {DOMNode} container the one which contains the category field
+	 * @param {Element} container the one which contains the category field
 	 * @param {String} data the value of the item
 	 * @param {Contact} contact the associated contact
 	 */
@@ -291,7 +291,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 * Update the database, the result object and the displayed table
 	 * @param {Contact} contact the contact to update
 	 * @param {String} sub_type the updated one
-	 * @param {DOMNode} container the one which contains the category field
+	 * @param {Element} container the one which contains the category field
 	 */
 	this._saveSubType = function(contact, sub_type, container){
 		if (contact.id != -1) {

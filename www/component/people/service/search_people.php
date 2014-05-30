@@ -1,10 +1,10 @@
 <?php 
 class service_search_people extends Service {
 	
-	public function get_required_rights() { return array("see_other_people_details"); }
+	public function getRequiredRights() { return array("see_other_people_details"); }
 	public function documentation() { echo "Search for people similar to the one given"; }
-	public function input_documentation() { echo "The input contains the People table fields to search"; }
-	public function output_documentation() { echo "The output is a list of People objects"; }
+	public function inputDocumentation() { echo "The input contains the People table fields to search"; }
+	public function outputDocumentation() { echo "The output is a list of People objects"; }
 	
 	public function execute(&$component, $input) {
 		// first, strict to all fields

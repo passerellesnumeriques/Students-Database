@@ -876,7 +876,7 @@ class XmlNode implements Serializable {
     }
 
     //    Support experimental Java interface
-    org.w3c.dom.Node toDomNode() {
+    org.w3c.dom.Node toElement() {
         return this.dom;
     }
 }

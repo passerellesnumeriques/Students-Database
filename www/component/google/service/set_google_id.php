@@ -1,11 +1,11 @@
 <?php 
 class service_set_google_id extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Register Google ID to current user"; }
-	public function input_documentation() { echo "auth_token: the authentication token from Google"; }
-	public function output_documentation() { echo "true"; }
+	public function inputDocumentation() { echo "auth_token: the authentication token from Google"; }
+	public function outputDocumentation() { echo "true"; }
 	
 	public function execute(&$component, $input) {
 		$ch = curl_init("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=".$input["auth_token"]);

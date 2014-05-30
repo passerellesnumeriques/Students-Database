@@ -96,8 +96,8 @@ class transcripts extends Component {
 			$grade = null;
 			foreach ($students_grades as $sg) if ($sg["people"] == $s["people"]) { $grade = $sg["final_grade"]; break; }
 			array_push($list, array(
-				array("people"=>$s["people"],"subject"=>$subject_id),
-				array("grade"=>$grade)
+				array(array("people"=>$s["people"],"subject"=>$subject_id)), // key
+				array("grade"=>$grade) // value
 			)); 
 		}
 		if (count($list) > 0)

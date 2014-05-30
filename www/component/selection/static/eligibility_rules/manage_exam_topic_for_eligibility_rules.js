@@ -1125,8 +1125,8 @@ function manage_exam_topic_for_eligibility_rules(topic, container, can_add, can_
 				t.reset,
 				function(){service.json("selection","eligibility_rules/get_topic",{id:topic.id},function(r){if(r) topic = r;},true);}, //must wait for the service before reseting
 				function(){if(topic.id == -1) error_dialog("You cannot go to uneditable mode because the topic has never been saved yet"); else return true;},
-				t.header,
-				'button_verysoft'				
+				function(button) { t.header.addMenuItem(button); },
+				null				
 		);
 		t.editable_manager.setGlobalRights(read_only);
 		t._init();

@@ -42,15 +42,15 @@ function debug_status(container) {
 					td.style.border = '1px solid black';
 					td.style.verticalAlign = "top";
 					td.style.whiteSpace = "nowrap";
-					td.innerHTML = req.url;
+					td.innerHTML = req ? req.url : "<i>empty</i>";
 					tr.appendChild(td = document.createElement("TD"));
 					td.style.border = '1px solid black';
-					td.innerHTML = req.sql_queries.length+" database request(s)";
+					td.innerHTML = req ? req.sql_queries.length+" database request(s)" : "";
 					td.style.whiteSpace = "nowrap";
 					tr.appendChild(td = document.createElement("TD"));
 					td.style.border = '1px solid black';
 					td.style.whiteSpace = "nowrap";
-					if (req.end_time > 0) {
+					if (req && req.end_time > 0) {
 						var time = req.end_time-req.start_time;
 						td.innerHTML = time+"s.";
 						if (time > 1) td.style.color = "#FF0000";
@@ -86,12 +86,13 @@ function debug_status(container) {
 					tr.appendChild(td = document.createElement("TD"));
 					td.style.border = '1px solid black';
 					td.style.whiteSpace = "nowrap";
-					var rowspan = req.sql_queries.length;
+					var rowspan = req ? req.sql_queries.length : 0;
 					if (rowspan == 0) rowspan = 1;
 					td.rowSpan = rowspan;
 					td.style.verticalAlign = "top";
 					td.style.whiteSpace = "nowrap";
-					td.innerHTML = req.url;
+					td.innerHTML = req ? req.url : "<i>No info</i>";
+					if (req)
 					for (var j = 0; j < req.sql_queries.length; ++j) {
 						if (j > 0)
 							table.appendChild(tr = document.createElement("TR"));

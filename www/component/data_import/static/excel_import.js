@@ -169,7 +169,7 @@ function excel_import(popup, container, onready) {
 						var col = sheet.columns[j];
 						if (!col.header._originalContent) {
 							col.header._originalContent = col.header.innerHTML; 
-							col.header.innerHTML = "";
+							col.header.removeAllChildren();
 							var link = document.createElement("A");
 							link.innerHTML = "Import";
 							link.href = "#";
@@ -254,147 +254,91 @@ function excel_import(popup, container, onready) {
 		td_fields.style.verticalAlign = "top";
 		var td_where = document.createElement("TD");
 		td_where.style.verticalAlign = "top";
-		var where = null;
 		var hr = t.header_rows_field.getCurrentData();
 		var radios = [];
+		var matching_field = -1;
+		var matching_sub_data = -1;
+		t._where_selected = null;
+		// find the best match for the column name
+		if (range.start_row == hr && range.start_col == range.end_col) {
+			var perfect_match = -1;
+			var perfect_match_sub_data = -1;
+			var match_words = 0;
+			var match_index = -1;
+			var match_index_sub_data = -1;
+			for (var i = 0; i < fields.length; ++i) {
+				if (fields[i].sub_data == null) {
+					var field_name = fields[i].name.toLowerCase();
+					for (var j = 0; j < hr; ++j) {
+						var col_name = sheet.getCell(range.start_col, j).getValue().trim().toLowerCase();
+						if (col_name == field_name) {
+							perfect_match = i;
+							break;
+						} else {
+							var match = wordsMatch(col_name, field_name);
+							if (match.nb_words1_in_words2 == match.nb_words_1) {
+								match_words = -1;
+								match_index = i;
+								match_index_sub_data = -1;
+							} else if (match.nb_words2_in_words1 == match.nb_words_2) {
+								if (match_words >= 0 && match_words < match.nb_words1_in_words2) {
+									match_words = match.nb_words1_in_words2;
+									match_index = i;
+									match_index_sub_data = -1;
+								}
+							}
+						}
+					}
+					if (perfect_match >= 0) break;
+				} else {
+					for (var sf = 0; sf < fields[i].sub_data.names.length; ++sf) {
+						var field_name = fields[i].sub_data.names[sf].toLowerCase();
+						for (var j = 0; j < hr; ++j) {
+							var col_name = sheet.getCell(range.start_col, j).getValue().trim().toLowerCase();
+							if (col_name == field_name) {
+								perfect_match = i;
+								perfect_match_sub_data = sf;
+								break;
+							} else {
+								var match = wordsMatch(col_name, field_name);
+								if (match.nb_words1_in_words2 == match.nb_words_1) {
+									match_words = -1;
+									match_index = i;
+									match_index_sub_data = sf;
+								} else if (match.nb_words2_in_words1 == match.nb_words_2) {
+									if (match_words >= 0 && match_words < match.nb_words1_in_words2) {
+										match_words = match.nb_words1_in_words2;
+										match_index = i;
+										match_index_sub_data = sf;
+									}
+								}
+							}
+						}
+						if (perfect_match >= 0) break;
+					}
+				}
+			}
+			if (perfect_match >= 0) {
+				matching_field = perfect_match;
+				matching_sub_data = perfect_match_sub_data;
+			} else {
+				matching_field = match_index;
+				matching_sub_data = match_index_sub_data;
+			}
+		}
+		// build list
 		for (var i = 0; i < fields.length; ++i) {
 			var d = document.createElement("DIV"); td_fields.appendChild(d);
 			d.style.whiteSpace = "nowrap";
-			var radio = document.createElement("INPUT"); d.appendChild(radio);
-			radio.type = "radio";
-			radio.name = "select_field_col_"+range.start_col;
-			radio.field = fields[i];
-			var name = document.createElement("SPAN"); d.appendChild(name);
-			name.radio = radio;
-			name.appendChild(document.createTextNode(fields[i].name));
-			name.style.cursor = "pointer";
-			name.onclick = function() {
-				this.radio.checked = "checked";
-				this.radio.onchange();
-			};
-			radios.push(radio);
-			radio.onchange = function() {
-				if (!this.checked) return;
-				var win = getIFrameWindow(t.frame_import);
-				var grid = win.grid;
-				var col_index = -1;
-				for (var i = 0; i < grid.columns.length; ++i)
-					if (grid.columns[i].attached_data != null && grid.columns[i].attached_data.category == this.field.category && grid.columns[i].attached_data.name == this.field.name)
-						{ col_index = i; break; }
-				var cell = grid.getCellField(0,col_index);
-
-				var is_new = true;
-				var first_empty = -1;
-				for (var i = 0; i < grid.getNbRows(); ++i) {
-					var f = grid.getCellField(i, col_index);
-					if (f.isMultiple()) {
-						if (f.getNbData() > 0) { is_new = false; } else if (first_empty == -1) first_empty = i;
-					} else {
-						if (f.hasChanged()) { is_new = false; } else if (first_empty == -1) first_empty = i;
-					}
+			if (fields[i].sub_data != null) {
+				d.appendChild(document.createTextNode(fields[i].name));
+				for (var j = 0; j < fields[i].sub_data.names.length; ++j) {
+					d = document.createElement("DIV"); td_fields.appendChild(d);
+					d.style.whiteSpace = "nowrap";
+					radios.push(t._createImportChoice(d, fields[i], j, range, matching_field == i && matching_sub_data == j, td_where, tr));
 				}
-				if (is_new) {
-					// nothing yet
-					if (td_where.parentNode == tr) {
-						tr.removeChild(td_where);
-						layout.invalidate(content);
-					}
-					where = {type:'add',row:0};
-					return;
-				}
-				
-				td_where.innerHTML = "";
-				where = null;
-				if (cell.isMultiple()) {
-					var r;
-					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
-					td_where.appendChild(document.createTextNode("Add from first row")); td_where.appendChild(document.createElement("BR"));
-					r.onchange = function() {
-						if (!this.checked) return;
-						where = {type:'add',row:0};
-					};
-					r.checked = "checked";
-					r.onchange();
-					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
-					td_where.appendChild(document.createTextNode("Reset previous values from first row")); td_where.appendChild(document.createElement("BR"));
-					r.onchange = function() {
-						if (!this.checked) return;
-						where = {type:'reset',row:0};
-					};
-					if (first_empty < grid.getNbRows()-1) {
-						r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
-						td_where.appendChild(document.createTextNode("Add from first empty row ("+(first_empty+1)+")")); td_where.appendChild(document.createElement("BR"));
-						r.onchange = function() {
-							if (!this.checked) return;
-							where = {type:'reset',row:first_empty};
-						};
-					}
-					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
-					td_where.appendChild(document.createTextNode("Add as new rows")); td_where.appendChild(document.createElement("BR"));
-					r.onchange = function() {
-						if (!this.checked) return;
-						where = {type:'reset',row:grid.getNbRows()-1};
-					};
-					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
-					td_where.appendChild(document.createTextNode("Add from row: "));
-					r.field = new field_integer(1,true,{min:1,max:grid.getNbRows()-1});
-					td_where.appendChild(r.field.getHTMLElement());
-					td_where.appendChild(document.createElement("BR"));
-					r.onchange = function() {
-						if (!this.checked) return;
-						where = {type:'reset',row:-1,row_field:this.field,row_getter:function(){return this.row_field.getCurrentData()-1;}};
-					};
-				} else {
-					var r;
-					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
-					td_where.appendChild(document.createTextNode("Change values from first row")); td_where.appendChild(document.createElement("BR"));
-					r.onchange = function() {
-						if (!this.checked) return;
-						where = {type:'reset',row:0};
-					};
-					if (first_empty < grid.getNbRows()-1) {
-						r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
-						td_where.appendChild(document.createTextNode("Add from first empty row ("+(first_empty+1)+")")); td_where.appendChild(document.createElement("BR"));
-						r.onchange = function() {
-							if (!this.checked) return;
-							where = {type:'reset',row:first_empty};
-						};
-						r.checked = "checked";
-						r.onchange();
-					}
-					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
-					td_where.appendChild(document.createTextNode("Add as new rows")); td_where.appendChild(document.createElement("BR"));
-					r.onchange = function() {
-						if (!this.checked) return;
-						where = {type:'reset',row:grid.getNbRows()-1};
-					};
-					if (where == null) {
-						r.checked = "checked";
-						r.onchange();
-					}
-					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
-					td_where.appendChild(document.createTextNode("Add from row: "));
-					r.field = new field_integer(1,true,{min:1,max:grid.getNbRows()-1});
-					td_where.appendChild(r.field.getHTMLElement());
-					td_where.appendChild(document.createElement("BR"));
-					r.onchange = function() {
-						if (!this.checked) return;
-						where = {type:'reset',row:-1,row_field:this.field,row_getter:function(){return this.row_field.getCurrentData()-1;}};
-					};
-				}
-				if (td_where.parentNode != tr) tr.appendChild(td_where);
-				layout.invalidate(content);
-			};
-			var found = false;
-			if (range.start_row == hr && range.start_col == range.end_col)
-				for (var j = 0; j < hr; ++j)
-					if (sheet.getCell(range.start_col, j).getValue().trim().toLowerCase() == fields[i].name.toLowerCase()) {
-						found = true;
-						break;
-					}
-			if (found) {
-				radio.checked = "checked";
-				radio.onchange();
+			} else {
+				radios.push(t._createImportChoice(d, fields[i], -1, range, matching_field == i, td_where, tr));
 			}
 		}
 		popup.freeze();
@@ -409,16 +353,157 @@ function excel_import(popup, container, onready) {
 				alert('Please select which kind of data it is');
 				return;
 			}
-			if (where == null) {
+			if (t._where_selected == null) {
 				alert('Please select where to add/set values');
 				return;
 			}
 			p.freeze("Importing data...");
-			t._importData(sheet, range, index, where);
+			t._importData(sheet, range, index, t._where_selected);
 			p.close();
 		});
 		p.addCancelButton();
 		p.show();
+	};
+	t._where_selected = null;
+	t._createImportChoice = function(d, field, sub_data_index, range, selected, td_where, tr) {
+		var radio = document.createElement("INPUT"); d.appendChild(radio);
+		radio.type = "radio";
+		radio.name = "select_field_col_"+range.start_col;
+		radio.field = field;
+		radio.sub_data_index = sub_data_index;
+		if (sub_data_index != -1) radio.style.marginLeft = "20px";
+		var name = document.createElement("SPAN"); d.appendChild(name);
+		name.appendChild(document.createTextNode(sub_data_index == -1 ? field.name : field.sub_data.names[sub_data_index]));
+		name.style.cursor = "pointer";
+		name.radio = radio;
+		name.onclick = function() {
+			this.radio.checked = "checked";
+			this.radio.onchange();
+		};
+		radio.onchange = function() {
+			if (!this.checked) return;
+			var win = getIFrameWindow(t.frame_import);
+			var grid = win.grid;
+			var col_index = -1;
+			for (var i = 0; i < grid.columns.length; ++i)
+				if (grid.columns[i].attached_data != null) {
+					if (this.sub_data_index == -1 && typeof grid.columns[i].attached_data.datadisplay == 'undefined' && grid.columns[i].attached_data.category == this.field.category && grid.columns[i].attached_data.name == this.field.name) {
+						col_index = i;
+						break;
+					} else if (this.sub_data_index != -1 && typeof grid.columns[i].attached_data.datadisplay != 'undefined' && grid.columns[i].attached_data.sub_data == this.sub_data_index && grid.columns[i].attached_data.datadisplay.category == this.field.category && grid.columns[i].attached_data.datadisplay.name == this.field.name) {
+						col_index = i;
+						break;
+					}
+				}
+			var cell = grid.getCellField(0,col_index);
+
+			var is_new = true;
+			var first_empty = -1;
+			for (var i = 0; i < grid.getNbRows(); ++i) {
+				var f = grid.getCellField(i, col_index);
+				if (f.isMultiple()) {
+					if (f.getNbData() > 0) { is_new = false; } else if (first_empty == -1) first_empty = i;
+				} else {
+					if (f.hasChanged()) { is_new = false; } else if (first_empty == -1) first_empty = i;
+				}
+			}
+			if (is_new) {
+				// nothing yet
+				if (td_where.parentNode == tr) {
+					tr.removeChild(td_where);
+					layout.invalidate(tr);
+				}
+				t._where_selected = {type:'add',row:0};
+				return;
+			}
+			
+			td_where.removeAllChildren();
+			t._where_selected = null;
+			if (cell.isMultiple()) {
+				var r;
+				r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+				td_where.appendChild(document.createTextNode("Add from first row")); td_where.appendChild(document.createElement("BR"));
+				r.onchange = function() {
+					if (!this.checked) return;
+					t._where_selected = {type:'add',row:0};
+				};
+				r.checked = "checked";
+				r.onchange();
+				r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+				td_where.appendChild(document.createTextNode("Reset previous values from first row")); td_where.appendChild(document.createElement("BR"));
+				r.onchange = function() {
+					if (!this.checked) return;
+					t._where_selected = {type:'reset',row:0};
+				};
+				if (first_empty < grid.getNbRows()-1) {
+					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+					td_where.appendChild(document.createTextNode("Add from first empty row ("+(first_empty+1)+")")); td_where.appendChild(document.createElement("BR"));
+					r.onchange = function() {
+						if (!this.checked) return;
+						t._where_selected = {type:'reset',row:first_empty};
+					};
+				}
+				r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+				td_where.appendChild(document.createTextNode("Add as new rows")); td_where.appendChild(document.createElement("BR"));
+				r.onchange = function() {
+					if (!this.checked) return;
+					t._where_selected = {type:'reset',row:grid.getNbRows()-1};
+				};
+				r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+				td_where.appendChild(document.createTextNode("Add from row: "));
+				r.field = new field_integer(1,true,{min:1,max:grid.getNbRows()-1});
+				td_where.appendChild(r.field.getHTMLElement());
+				td_where.appendChild(document.createElement("BR"));
+				r.onchange = function() {
+					if (!this.checked) return;
+					t._where_selected = {type:'reset',row:-1,row_field:this.field,row_getter:function(){return this.row_field.getCurrentData()-1;}};
+				};
+			} else {
+				var r;
+				r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+				td_where.appendChild(document.createTextNode("Change values from first row")); td_where.appendChild(document.createElement("BR"));
+				r.onchange = function() {
+					if (!this.checked) return;
+					t._where_selected = {type:'reset',row:0};
+				};
+				if (first_empty < grid.getNbRows()-1) {
+					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+					td_where.appendChild(document.createTextNode("Add from first empty row ("+(first_empty+1)+")")); td_where.appendChild(document.createElement("BR"));
+					r.onchange = function() {
+						if (!this.checked) return;
+						t._where_selected = {type:'reset',row:first_empty};
+					};
+					r.checked = "checked";
+					r.onchange();
+				}
+				r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+				td_where.appendChild(document.createTextNode("Add as new rows")); td_where.appendChild(document.createElement("BR"));
+				r.onchange = function() {
+					if (!this.checked) return;
+					t._where_selected = {type:'reset',row:grid.getNbRows()-1};
+				};
+				if (t._where_selected == null) {
+					r.checked = "checked";
+					r.onchange();
+				}
+				r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+				td_where.appendChild(document.createTextNode("Add from row: "));
+				r.field = new field_integer(1,true,{min:1,max:grid.getNbRows()-1});
+				td_where.appendChild(r.field.getHTMLElement());
+				td_where.appendChild(document.createElement("BR"));
+				r.onchange = function() {
+					if (!this.checked) return;
+					t._where_selected = {type:'reset',row:-1,row_field:this.field,row_getter:function(){return this.row_field.getCurrentData()-1;}};
+				};
+			}
+			if (td_where.parentNode != tr) tr.appendChild(td_where);
+			layout.invalidate(tr);
+		};
+		if (selected) {
+			radio.checked = "checked";
+			radio.onchange();
+		}
+		return radio;
 	};
 	
 	t._importData = function(sheet, range, field_index, where) {
@@ -457,6 +542,7 @@ function excel_import(popup, container, onready) {
 			t.excel_info = document.createElement("DIV");
 			t.frame_excel = document.createElement("IFRAME");
 			t.frame_excel.style.border = "0px";
+			t.frame_excel.style.width = "100%";
 			t.left.appendChild(t.excel_header);
 			t.left.appendChild(t.excel_info);
 			t.left.appendChild(t.frame_excel);
@@ -465,6 +551,7 @@ function excel_import(popup, container, onready) {
 			t.data_header = document.createElement("DIV");
 			t.frame_import = document.createElement("IFRAME");
 			t.frame_import.style.border = "0px";
+			t.frame_import.style.width = "100%";
 			t.right.appendChild(t.data_header);
 			t.right.appendChild(t.frame_import);
 			t.frame_import.setAttribute("layout", "fill");

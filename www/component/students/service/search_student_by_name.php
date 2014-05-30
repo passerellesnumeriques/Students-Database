@@ -1,11 +1,11 @@
 <?php 
 class service_search_student_by_name extends Service {
 	
-	public function get_required_rights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); } // TODO
 	
 	public function documentation() { echo "Search students matching the given string"; }
-	public function input_documentation() { echo "<code>name</code>: string to search"; }
-	public function output_documentation() {
+	public function inputDocumentation() { echo "<code>name</code>: string to search"; }
+	public function outputDocumentation() {
 		echo "List of matching student: {";
 		echo "<code>people_id</code>";
 		echo ",<code>first_name</code>";

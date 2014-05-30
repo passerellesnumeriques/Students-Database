@@ -1,15 +1,15 @@
 <?php 
 class page_check_code extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->require_javascript("tree.js");
-		$this->add_javascript("/static/documentation/jsdoc.js");
+		$this->requireJavascript("tree.js");
+		$this->addJavascript("/static/documentation/jsdoc.js");
 ?>
 <div id='page_header'>
 	Code Checking
-	<div class='button' onclick='location.reload();'><img src='<?php echo theme::$icons_16["refresh"];?>'/></div>
+	<button class='flat' onclick='location.reload();'><img src='<?php echo theme::$icons_16["refresh"];?>'/></button>
 </div>
 <div id='tree_container'></div>
 <script type='text/javascript'>
@@ -54,6 +54,16 @@ function build_tree_php(parent_item, path, file) {
 			}
 		}
 	});
+	todo.push({
+		service: "check_todo",
+		data: {path:path+file.name},
+		handler: function(res) {
+			for (var i = 0; i < res.length; ++i) {
+				var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res[i]);
+				items_to_add.push({parent:item,item:e});
+			}
+		}
+	});
 }
 var checking_js = 0;
 var js_todo = [];
@@ -68,6 +78,16 @@ function build_tree_js(parent_item, path, file) {
 			checking_js--;
 			check_end();
 		},1);
+	});
+	todo.push({
+		service: "check_todo",
+		data: {path:path+file.name},
+		handler: function(res) {
+			for (var i = 0; i < res.length; ++i) {
+				var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res[i]);
+				items_to_add.push({parent:item,item:e});
+			}
+		}
 	});
 }
 function check_js_ns(ns_path, ns, item, filename, path) {
@@ -152,7 +172,7 @@ function check_js_type(type, descr, item, location) {
 	if (type == "Number") return;
 	if (type == "Boolean") return;
 	if (type == "window") return;
-	if (type == "DOMNode") return;
+	if (type == "Element") return;
 	if (type == "Function") return;
 	if (type == "Object") return;
 	if (type == "null") return;
@@ -230,8 +250,8 @@ function check_name_class(name, descr, item) {
 	}
 	for (var i = 1; i < name.length; ++i) {
 		var c = name.charAt(i);
-		if (!is_letter(c) && !is_digit(c)) {
-			add_error(item, descr+": Must contain only letters or digits");
+		if (!is_letter(c) && !is_digit(c) && c != "_") {
+			add_error(item, descr+": Must contain only letters, digits or underscore");
 			return;
 		}
 	}
@@ -417,7 +437,7 @@ setTimeout(function() {
 				$this->build_tree_dir($path."/".$filename, $type <> "" ? $type : ($filename == "page" ? "page" : ($filename == "service" ? "service" : "")));
 				echo "}";
 			} else {
-				if ($filename == "datamodel.inc") continue;
+				if (substr($filename, 0, 9) == "datamodel") continue;
 				if ($filename == "init_data.inc") continue;
 				$i = strrpos($filename, ".");
 				if ($i === FALSE) continue;

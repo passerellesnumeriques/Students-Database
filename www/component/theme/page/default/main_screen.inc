@@ -1,5 +1,5 @@
 <?php 
-$this->require_javascript("frame_header.js");
+$this->requireJavascript("frame_header.js");
 theme::css($this, "frame_header.css");
 ?>
 <div id='pn_application_container'>

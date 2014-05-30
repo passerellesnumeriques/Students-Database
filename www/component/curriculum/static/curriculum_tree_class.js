@@ -1,5 +1,10 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * A class in a period or in a specialization
+ * @param {CurriculumTreeNode} parent parent node (either period or specialization)
+ * @param {AcademicClass} cl class object
+ */
 function CurriculumTreeNode_Class(parent, cl) {
 	this.cl = cl;
 	CurriculumTreeNode.call(this, parent, "class"+cl.id, true);
@@ -21,7 +26,7 @@ CurriculumTreeNode_Class.prototype.createInfo = function() {
 	button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
 	button.node = this;
 	button.onclick = function() {
-		remove_class(this.node);
+		removeClass(this.node);
 	};	
 	div.appendChild(button);
 	button = document.createElement("BUTTON");

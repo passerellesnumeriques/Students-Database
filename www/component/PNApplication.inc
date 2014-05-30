@@ -22,6 +22,7 @@ require_once("Component.inc");
  * @property geography $geography
  * @property google $google
  * @property health $health
+ * @property help $help
  * @property javascript $javascript
  * @property news $news
  * @property people $people 
@@ -32,6 +33,7 @@ require_once("Component.inc");
  * @property test $test
  * @property theme $theme
  * @property transcripts $transcripts
+ * @property user_config $user_config
  * @property user_management $user_management
  * @property user_people $user_people 
  * @property widgets $widgets
@@ -40,22 +42,30 @@ class PNApplication {
 
 	/**
 	 * @static 
-	 * @var PNApplication 
+	 * @var PNApplication singleton
 	 */
 	public static $instance;
 
+	/** @static
+	 * @var string[] list of error in HTML format
+	 */
 	public static $errors = array();
+	/** @static
+	 * @var string[] list of warning in HTML format
+	 */
 	public static $warnings = array();
-	/** @var string */
+	/** @var string domain currently selected */
 	public $current_domain;
-	/** @var string */
+	/** @var string local domain */
 	public $local_domain;
-	/** @var Component[] */
+	/** @var Component[] list of components */
 	public $components = array();
+	/** @var integer timezone offset in minutes */
+	public $timezone_offset = 0;
 
 	/**
 	 * Signal an error
-	 * @param string $message in plain text, which will be converted into html
+	 * @param string|Exception $message in plain text, which will be converted into html, or an Exception
 	 */
 	public static function error($message) {
 		if (count(PNApplication::$errors) == 20) {
@@ -71,8 +81,8 @@ class PNApplication {
 			}
 		}
 		$e = $message;
-		$message = htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8");
-		$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';return false;\">details</a>";
+		$message = str_replace("\n", "<br/>", htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8"));
+		$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';if (layout) layout.invalidate(e); else if (window.parent && window.parent.layout) window.parent.layout.invalidate(window.frameElement);return false;\">details</a>";
 		$message .= "<ul style='margin:0px;visibility:hidden;position:absolute;top:-10000px' id='ex_".count(PNApplication::$errors)."'>";
 		foreach ($e->getTrace() as $trace)
 			if (isset($trace["file"]) && isset($trace["line"]))
@@ -82,9 +92,9 @@ class PNApplication {
 	}
 	/**
 	 * Signal an error
-	 * @param string $html_message in html format
+	 * @param string $message in html format
 	 */
-	public static function error_html($message) {
+	public static function errorHTML($message) {
 		try {
 			throw new Exception();
 		} catch (Exception $e) {
@@ -98,23 +108,31 @@ class PNApplication {
 		}
 	}
 	
+	/**
+	 * Signal a warning
+	 * @param string $message in html format
+	 */
 	public static function warning($message) {
 		array_push(self::$warnings, $message);
 	}
 
-	/**
-	 * @return boolean true if there are errors
+	/** Indicates if there is at least one error
+	 * @return boolean true if there is at least one error
 	 */
-	public static function has_errors() { return count(PNApplication::$errors) > 0; }
-	public static function has_warnings() { return count(PNApplication::$warnings) > 0; }
+	public static function hasErrors() { return count(PNApplication::$errors) > 0; }
+	/** Indicates if there is at least one warning
+	 * @return boolean true if there is at least one warning
+	 */
+	public static function hasWarnings() { return count(PNApplication::$warnings) > 0; }
 	
-	public static function clear_errors() { PNApplication::$errors = array(); }
+	/** Remove all errors */
+	public static function clearErrors() { PNApplication::$errors = array(); }
 
 	/**
 	 * Generate error messages to the output in html format
 	 */
-	public static function print_errors() {
-		if (PNApplication::has_errors()) {
+	public static function printErrors() {
+		if (PNApplication::hasErrors()) {
 			foreach (PNApplication::$errors as $e)
 				echo "<div style='color:#C00000;font-familiy:Tahoma;font-size:10pt'><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> ".$e."</div>";
 			echo "<script type='text/javascript'>";
@@ -131,7 +149,7 @@ class PNApplication {
 			echo "];";
 			echo "</script>";
 		}
-		if (PNApplication::has_warnings()) {
+		if (PNApplication::hasWarnings()) {
 			echo "<script type='text/javascript'>";
 			echo "if (typeof window.top.status_manager != 'undefined'){";
 			foreach (PNApplication::$warnings as $e)
@@ -142,9 +160,9 @@ class PNApplication {
 	}
 	/**
 	 * Generate the output of a JSON service: put the list of errors if any, then the given result 
-	 * @param unknown $result
+	 * @param string $result the JSON string corresponding to the result of the service
 	 */
-	public static function print_json_result($result) {
+	public static function printJSONResult($result) {
 		echo "{";
 		if (count(PNApplication::$errors) > 0) {
 			echo "errors:[";
@@ -182,65 +200,87 @@ class PNApplication {
 			if (is_dir("component/".$filename)) array_push($components_names, $filename);
 		}
 		closedir($dir);
-		foreach ($components_names as $name) $this->create_component($name);
+		foreach ($components_names as $name) $this->createComponent($name);
 		$done = array();
-		foreach ($this->components as $c) $this->init_component($c, $done);
-		$this->init_request();
+		foreach ($this->components as $c) $this->initComponent($c, $done);
+		$this->initRequest();
 	}
-	public function init_request() {
+	/**
+	 * Called at the beginning of any request, it calls the initRequest on all components
+	 */
+	public function initRequest() {
+		date_default_timezone_set(timezone_name_from_abbr("",$this->timezone_offset*60,1));
 		$done = array();
-		foreach ($this->components as $c) $this->init_request_for_component($c, $done);
+		foreach ($this->components as $c) $this->initRequestForComponent($c, $done);
 	}
-	private function create_component($name) {
+	/** Instantiate the given component
+	 * @param string $name name of the component
+	 */
+	private function createComponent($name) {
 		require_once("component/".$name."/".$name.".inc");
 		$c = new $name($name);
 		$this->components[$name] = &$c;
 		$this->{$name} = &$c;
 	}
-	private function init_component($c, &$done) {
+	/** Initialize a component: initialize and instantiate any dependency, then call init method on the component
+	 * @param Component $c the component to initialize
+	 * @param array $done lsit of components already initialized
+	 */ 
+	private function initComponent($c, &$done) {
 		if (in_array($c->name, $done)) return;
 		array_push($done, $c->name);
 		foreach ($c->dependencies() as $dep) {
 			if (!isset($this->components[$dep])) die("Missing component '".$dep."' which is a dependency of component '".$c->name."'");
-			$this->init_component($this->components[$dep], $done);
+			$this->initComponent($this->components[$dep], $done);
 		}
 		$c->init();
 	}
-	private function init_request_for_component($c, &$done) {
+	/** Call initRequest on all dependencies, then on the component itself
+	 * @param Component $c the component
+	 * @param array $done list of components on which the initRequest is already called
+	 */
+	private function initRequestForComponent($c, &$done) {
 		if (in_array($c->name, $done)) return;
 		array_push($done, $c->name);
 		foreach ($c->dependencies() as $dep) {
 			if (!isset($this->components[$dep])) die("Missing component '".$dep."' which is a dependency of component '".$c->name."'");
-			$this->init_request_for_component($this->components[$dep], $done);
+			$this->initRequestForComponent($this->components[$dep], $done);
 		}
-		$c->init_request();
+		$c->initRequest();
 	}
 	
-	public static function sort_components_by_dependencies() {
+	/** Return the list of components, in the dependency order (first are the components without dependency) 
+	 * @return Component[] ordered list of components
+	 */
+	public static function sortComponentsByDependencies() {
 		$list = array();
 		foreach (PNApplication::$instance->components as $name=>$c)
-			PNApplication::_sort_components_by_dependencies($c, $list);
+			PNApplication::internalSortComponentsByDependencies($c, $list);
 		return $list;
 	}
-	private static function _sort_components_by_dependencies(&$c, &$list) {
+	/** Go through all dependencies first, then add the component
+	 * @param Component $c the component to add to the list
+	 * @param array $list the list of components
+	 */
+	private static function internalSortComponentsByDependencies(&$c, &$list) {
 		if (in_array($c, $list)) return;
 		foreach ($c->dependencies() as $dep)
-			PNApplication::_sort_components_by_dependencies(PNApplication::$instance->components[$dep], $list);
+			PNApplication::internalSortComponentsByDependencies(PNApplication::$instance->components[$dep], $list);
 		array_push($list, $c);
 	}
 
-	/**
-	 * @return array associative array of domain=>domain_descriptor
+	/** Get the list of domains with their configuration: from file conf/domains
+	 * @return array associative array of domain=&gt;domain_descriptor
 	 */
-	public function get_domains() {
+	public function getDomains() {
 		return include("conf/domains");
 	}
 	
-	/**
+	/** Get the configuration of the given domain
 	 * @param string $domain if null it will return the descriptor of the current domain
 	 * @return array attributes of the domain
 	 */
-	public function get_domain_descriptor($domain = null) {
+	public function getDomainDescriptor($domain = null) {
 		if ($domain == null) $domain = $this->current_domain;
 		$domains = include("conf/domains");
 		return $domains[$domain];

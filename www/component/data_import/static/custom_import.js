@@ -4,7 +4,7 @@ if (typeof require != 'undefined')
 /**
  * Custom import allows to import manually data from an Excel file.
  * This can be used with import_data.inc, in PHP, which will prepare this import according to given parameters.
- * @param {DOMNode} container where to put it
+ * @param {Element} container where to put it
  * @param {Function} onready called when everything is ready and the object can be used
  */
 function custom_import(container, icon, title, import_button_text, import_button_function, onready) {
@@ -413,7 +413,7 @@ function custom_import(container, icon, title, import_button_text, import_button
 					stopEventPropagation(ev);
 					return false;
 				};
-				col.header.innerHTML = "";
+				col.header.removeAllChildren();
 				col.header.appendChild(link);
 			}
 		}
@@ -638,6 +638,10 @@ function custom_import(container, icon, title, import_button_text, import_button
 		
 		require("grid.js",function() {
 			t.grid = new grid(t.grid_container);
+			t.grid.oncellcreated.add_listener(function(cell_info) {
+				// fill width of TD
+				cell_info.field.getHTMLElement().style.width = "100%";
+			});
 			t.grid.addColumn(new GridColumn('#','#',null,null,'field_text',false,null,null,{},'#'));
 			t.grid.addColumn(new GridColumn('##','',null,null,'field_html',false,null,null,{},'##'));
 			onready(t);

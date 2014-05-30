@@ -74,6 +74,13 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 			t._text_girls_real = t._girls_real;
 	};
 	
+	t._datachanged = function(name) {
+		window.pnapplication.dataUnsaved("IS_statistics_"+name);
+	};
+	t._dataunchanged = function(name) {
+		window.pnapplication.dataSaved("IS_statistics_"+name);
+	};
+	
 	/**
 	 * Populate the table body, with one row per sex and one column per category (real / expected)
 	 * All the figures are handled by field_int
@@ -121,11 +128,15 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 				var data22 = parseInt(t._text_boys_expected) + parseInt(t._text_girls_expected);
 				t.field_int_22 = new field_integer(data22,true,field_int_config); 
 				var input22 = t.field_int_22.getHTMLElement();
+				t.field_int_22.ondatachanged.add_listener(function() { t._datachanged('field_int_22'); });
+				t.field_int_22.ondataunchanged.add_listener(function() { t._dataunchanged('field_int_22'); });
 				inputAutoresize(input22);
 				input22.style.marginLeft = "15px";				
 				var data23 = parseInt(t._text_boys_real) + parseInt(t._text_girls_real);
 				t.field_int_23 = new field_integer(data23,true,field_int_config);
 				input23 = t.field_int_23.getHTMLElement();
+				t.field_int_23.ondatachanged.add_listener(function() { t._datachanged('field_int_23'); });
+				t.field_int_23.ondataunchanged.add_listener(function() { t._dataunchanged('field_int_23'); });
 				input23.style.marginLeft = "15px";
 				input23.type = 'text';
 				inputAutoresize(input23);
@@ -147,12 +158,20 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 			if(can_edit){
 				t.field_int_22 = new field_integer(t._text_boys_expected,true,field_int_config);
 				input22 = t.field_int_22.getHTMLElement();
+				t.field_int_22.ondatachanged.add_listener(function() { t._datachanged('field_int_22'); });
+				t.field_int_22.ondataunchanged.add_listener(function() { t._dataunchanged('field_int_22'); });
 				t.field_int_23 = new field_integer(t._text_boys_real,true,field_int_config);
 				input23 = t.field_int_23.getHTMLElement();
+				t.field_int_23.ondatachanged.add_listener(function() { t._datachanged('field_int_23'); });
+				t.field_int_23.ondataunchanged.add_listener(function() { t._dataunchanged('field_int_23'); });
 				t.field_int_32 = new field_integer(t._text_girls_expected,true,field_int_config);
 				input32 = t.field_int_32.getHTMLElement();
+				t.field_int_32.ondatachanged.add_listener(function() { t._datachanged('field_int_32'); });
+				t.field_int_32.ondataunchanged.add_listener(function() { t._dataunchanged('field_int_32'); });
 				t.field_int_33 = new field_integer(t._text_girls_real,true,field_int_config);
 				input33 = t.field_int_33.getHTMLElement();
+				t.field_int_33.ondatachanged.add_listener(function() { t._datachanged('field_int_33'); });
+				t.field_int_33.ondataunchanged.add_listener(function() { t._dataunchanged('field_int_33'); });
 				input22.style.marginLeft = "15px";
 				input23.style.marginLeft = "15px";
 				input32.style.marginLeft = "15px";

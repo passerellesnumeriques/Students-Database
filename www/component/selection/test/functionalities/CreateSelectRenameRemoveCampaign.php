@@ -36,8 +36,8 @@ class Campaign_Create_Campaign_No_Manage extends TestFunctionalitiesStep{
 		if($error <> null) return "Cannot login with user test_createCampaign_can_access";
 		try{
 			PNApplication::$instance->selection->createCampaign("createCampaign_Create_Campaign_No_Manage");
-			if(!PNApplication::has_errors())return "Can create a campaign";
-			else PNApplication::clear_errors();
+			if(!PNApplication::hasErrors())return "Can create a campaign";
+			else PNApplication::clearErrors();
 		} catch (Exception $e){}
 		if(SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("name")->where("name","createCampaign_Create_Campaign_No_Manage")->executeSingleValue() <> null) return "The campaign was created in the database";
 		PNApplication::$instance->user_management->logout();

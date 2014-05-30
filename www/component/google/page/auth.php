@@ -1,7 +1,7 @@
 <?php 
 class page_auth extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$ch = curl_init("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=".$_GET["auth_token"]);

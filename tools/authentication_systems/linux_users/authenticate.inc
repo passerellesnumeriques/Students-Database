@@ -25,8 +25,10 @@ function find_encrypted_password_for($username) {
 
 $enc = find_encrypted_password_for($_POST["username"]);
 if ($enc <> null && crypt($_POST["password"], $enc) === $enc) {
+	session_start();
+	$_SESSION["authenticated_user"] = $_POST["username"];
 	header("Content-Type: text/xml");
-	echo "<authentication result='ok'></authentication>";
+	echo "<authentication result='ok' token='".session_id()."'></authentication>";
 } else
 	echo "<authentication result='fail'></authentication>";
 ?>

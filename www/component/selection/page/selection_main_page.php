@@ -16,32 +16,32 @@ function getArrayStepsToDisplay ($steps_to_display){
 	}
 	return $json;
 }
-require_once("selection_page.inc");
-class page_selection_main_page extends selection_page {
-	public function get_required_rights() { return array(); }
-	public function execute_selection_page(){
+require_once("SelectionPage.inc");
+class page_selection_main_page extends SelectionPage {
+	public function getRequiredRights() { return array(); }
+	public function executeSelectionPage(){
+		
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();
 		
-		$this->add_javascript("/static/widgets/header_bar.js");
+		$this->addJavascript("/static/widgets/header_bar.js");
 		$this->onload("new header_bar('steps_header','small');");
 
-		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
+		$this->addJavascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("new splitter_vertical('selection_main_page_split',0.35);");
 		
-		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
 		$this->onload("new vertical_layout('left');");
 		//TODO set rights to calendar table? bypass_security required above...
 		
-		$this->add_javascript("/static/widgets/section/section.js");
-		$this->add_javascript("/static/news/news.js");
+		$this->addJavascript("/static/widgets/section/section.js");
+		$this->addJavascript("/static/news/news.js");
 		
-		$status_to_display = include("selection_main_page_status_screens.inc");
-		$steps = PNApplication::$instance->selection->getSteps();
-		$unvalid_steps_to_display = array();
-		$valid_steps_to_display = array();
-
-		$this->onload("section_from_html('section_preparation');");
-	?>
+		$this->onload("sectionFromHTML('section_preparation');");
+		$this->onload("sectionFromHTML('section_status_is');");
+		$this->onload("sectionFromHTML('section_status_exam_center');");
+		$this->onload("loadISStatus();");
+		$this->onload("loadExamCenterStatus();");
+		?>
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
 				<div id = 'left'>
 					<div id = 'steps_header' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
@@ -55,30 +55,12 @@ class page_selection_main_page extends selection_page {
 									</button></a>
 								</div>
 							</div>
-						<?php
-						$js_to_run = array();
-						foreach($status_to_display as $s){
-							$id = $this->generateID();
-							echo "<div id = '".$id."' style = 'width:100%'></div>";
-							if(!$steps[$s[0]])
-								array_push($unvalid_steps_to_display,array(
-									"id" => $id,
-									"name" => $s[2]
-								));
-							else {
-								array_push($valid_steps_to_display,array(
-									"id" => $id,
-									"name" => $s[2]
-								));
-								$url = $s[3];
-								$url .= "/";
-								$url .= $s[1];
-								$this->add_javascript("/static/selection/".$url);
-								$js_name = str_replace(".js","",$s[1]);
-								array_push($js_to_run,"new ".$js_name."('content_".$id."');");
-							}
-						}
-						?>
+							<div id='section_status_is' title='Information Sessions' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
+								<div id='status_is' class='selection_status'></div>
+							</div>
+							<div id='section_status_exam_center' title='Exam Centers' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
+								<div id='status_exam_centers' class='selection_status'></div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -104,20 +86,10 @@ class page_selection_main_page extends selection_page {
 		<!--  <a href = "/dynamic/selection/page/test_functionalities">Tests</a>  -->
 		<script type = 'text/javascript'>
 			var calendar_id = null;
-			var steps = null;
 			<?php
 			if(isset($calendar_id)) echo "calendar_id = ".json_encode($calendar_id).";";
-			if(isset($steps)) echo "steps = ".json_encode($steps).";";
-			
-			echo "var unvalid_steps_to_display = ";
-			echo getArrayStepsToDisplay($unvalid_steps_to_display);
-			echo ";";
-			echo "var valid_steps_to_display = ";
-			echo getArrayStepsToDisplay($valid_steps_to_display);
-			echo ";";
-			
 			?>
-			calendar_section = section_from_html('calendar_section');
+			calendar_section = sectionFromHTML('calendar_section');
 			require(["calendar.js","popup_window.js"],function(){
 				if(calendar_id != null){
 					var cal_manager = new CalendarManager();
@@ -156,90 +128,22 @@ class page_selection_main_page extends selection_page {
 				}
 			});
 
-			updates_section = section_from_html('updates_section');
+			updates_section = sectionFromHTML('updates_section');
 			new news('updates_container', [{name:"selection",tags:["campaign<?php echo PNApplication::$instance->selection->getCampaignId();?>"]}], [], function(){
 			}, function(){
 			});
 
-			/**
-			 * Create the left part of the selection main_page
-			 * @param {array} unvalid_steps coming from getArrayStepsToDisplay function
-			 * @param {array} valid_steps coming from getArrayStepsToDisplay function
-			 */
-			function setStatusScreens (unvalid_steps, valid_steps){
-				var t = this;
-
-				/**
-				 * start creating the page
-				 */
-				t._init = function(){
-					//set the unvalid steps
-					for(var i = 0; i < unvalid_steps.length; i++){
-						var content = document.createElement("div");
-						var container = document.getElementById(unvalid_steps[i].id);
-						t._setContainerStyle(container);
-						t._setUnvalidContent(content);
-						var sec = new section("",unvalid_steps[i].name,content,true);
-						container.appendChild(sec.element);
-					}
-					//set the valid steps
-					for(var i = 0; i < valid_steps.length; i++){
-						var content = document.createElement("div");
-						var container = document.getElementById(valid_steps[i].id);
-						t._setContainerStyle(container);
-						t._prepareContainerForValidContent(content, valid_steps[i].id);
-						var sec = new section("",valid_steps[i].name,content,true);
-						container.appendChild(sec.element);
-					}
-					//once everything is set, run the js
-					t._run();
-				};
-
-				/**
-				 * Set the container style
-				 */
-				t._setContainerStyle = function(container){
-					container.style.width = "95%";
-					container.style.marginLeft = "10px";
-					container.style.marginTop = "15px";
-				};
-
-				/**
-				 * The set the section content with the default message when the current step is not validated yet
-				 */
-				t._setUnvalidContent = function(content){
-					var back = document.createElement("div");
-					// back.style.backgroundColor = "rgba(128,128,128,0.5)";
-					back.innerHTML = "<center><i>This step is not started yet</i></center>";
-					content.appendChild(back);
-				};
-
-				/**
-				 * Create the container for the valid content with a suitable id
-				 */
-				t._prepareContainerForValidContent = function(content, id){
-					var div = document.createElement("div");
-					div.id = "content_"+id;
-					content.appendChild(div);
-				};
-
-				/**
-				 * Launch all the scripts defined for each selection sub component
-				 * that appear in the selection_main_page_status_screen array
-				 */
-				t._run = function(){
-					<?php
-					foreach($js_to_run as $js)
-						echo "\n".$js;
-					?>
-				}
-				
-				require("section.js",function(){
-					t._init();
-				});
+			function loadISStatus() {
+				var container = document.getElementById('status_is');
+				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
+				service.html("selection","IS/status",null,container);
+			}
+			function loadExamCenterStatus() {
+				var container = document.getElementById('status_exam_centers');
+				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
+				service.html("selection","exam/status",null,container);
 			}
 			
-			new setStatusScreens(unvalid_steps_to_display, valid_steps_to_display);
 		</script>
 	<?php
 	}

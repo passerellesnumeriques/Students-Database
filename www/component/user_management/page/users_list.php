@@ -1,11 +1,11 @@
 <?php 
 class page_users_list extends Page {
 	
-	public function get_required_rights() { return array("consult_user_list"); }
+	public function getRequiredRights() { return array("consult_user_list"); }
 	
 	public function execute() {
-		$this->add_javascript("/static/widgets/grid/grid.js");
-		$this->add_javascript("/static/data_model/data_list.js");
+		$this->addJavascript("/static/widgets/grid/grid.js");
+		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_users_list();");
 ?>
 <div style='width:100%;height:100%' id='users_list'>
@@ -128,6 +128,19 @@ function init_users_list() {
 					unassign_roles.onclick = unassign_roles.func;
 				}
 			};
+			<?php }?>
+			<?php if (PNApplication::$instance->user_management->has_right("manage_users")) {?>
+			var synch = document.createElement("BUTTON");
+			synch.className = "flat";
+			synch.innerHTML = "<img src='"+theme.icons_16._import+"'/> Synchronize users";
+			synch.onclick = function() {
+				require("popup_window.js",function(){
+					var p = new popup_window("Synchronize Users",theme.icons_16._import,"");
+					p.setContentFrame("/dynamic/user_management/page/synch_users__auth");
+					p.show();
+				});
+			};
+			list.addHeader(synch);
 			<?php }?>
 		}
 	);

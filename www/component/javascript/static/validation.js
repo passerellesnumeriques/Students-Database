@@ -13,7 +13,7 @@ function validation_ok(input) {
 	var id = input.id ? input.id : input.name;
 	var e = document.getElementById(id+'_validation');
 	if (e) {
-		e.innerHTML = "";
+		e.removeAllChildren();
 		e.style.position = 'absolute';
 		e.style.visibility = 'hidden';
 		e.style.top = '-10000px';

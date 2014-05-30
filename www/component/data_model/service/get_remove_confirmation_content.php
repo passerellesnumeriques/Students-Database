@@ -1,13 +1,13 @@
 <?php 
 class service_get_remove_confirmation_content extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Generate explaination about the consequences of a remove"; }
-	public function input_documentation() { echo "<code>table, row_key, [sub_model]</code>: which row in which table is going to be removed"; }
-	public function output_documentation() { echo "HTML code to be displayed as a confirmation message to the user"; }
+	public function inputDocumentation() { echo "<code>table, row_key, [sub_model]</code>: which row in which table is going to be removed"; }
+	public function outputDocumentation() { echo "HTML code to be displayed as a confirmation message to the user"; }
 	
-	public function get_output_format($input) { return "text/html"; }
+	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");
@@ -83,7 +83,7 @@ class service_get_remove_confirmation_content extends Service {
 		} catch (Exception $e) {
 			PNApplication::error("You cannot remove ".$description.": ".$e->getMessage());
 		}
-		PNApplication::print_errors();
+		PNApplication::printErrors();
 	}
 	
 	private function browseTablesForRemove(&$table, $sub_model_instance, $keys, &$to_remove, &$to_update) {

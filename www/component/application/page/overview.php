@@ -1,10 +1,10 @@
 <?php 
 class page_overview extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->require_javascript("section.js");
+		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 ?>
 <style type="text/css">
@@ -65,16 +65,16 @@ class page_overview extends Page {
 			<div>Manage users and access rights, staffs, geographic data...</div>
 		</a>
 	</div>
-	<div class="page_section_title">
+	<div class="page_section_title" style='margin-bottom:0px'>
 		What's happening ?
 	</div>
-	<div>
+	<div style='background-color:#e8e8e8;padding-top:10px'>
 		<div class="section" style="display:inline-block;width:45%;margin-left:10px">
 			<div class="header"><div>
 				<img src='/static/news/news.png'/>
 				Latest Updates
 			</div></div>
-			<div>
+			<div style='background-color:white'>
 				TODO<br/>
 				<a href='#'>Show more</a>
 			</div>
@@ -89,7 +89,7 @@ class page_overview extends Page {
 	</div>
 </div>
 <script type='text/javascript'>
-var calendars_section = section_from_html('calendar_events');
+var calendars_section = sectionFromHTML('calendar_events');
 require("calendar_view.js");
 require("calendar_view_week.js");
 function init_calendars() {

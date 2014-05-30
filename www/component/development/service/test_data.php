@@ -1,10 +1,10 @@
 <?php 
 class service_test_data extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function inputDocumentation() {}
+	public function outputDocumentation() {}
 	public function execute(&$component, $input) {
 		$domain = $input["domain"];
 		
@@ -22,7 +22,7 @@ class service_test_data extends Service {
 		} else {
 			set_time_limit(240);
  			$db_system->execute("USE students_".$domain);
- 			$components = PNApplication::sort_components_by_dependencies();
+ 			$components = PNApplication::sortComponentsByDependencies();
  			if ($domain == PNApplication::$instance->local_domain) {
 	 			foreach ($components as $c) {
 	 				if (file_exists("component/".$c->name."/init_data.inc"))

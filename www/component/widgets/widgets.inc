@@ -6,24 +6,24 @@ class widgets extends Component {
 	 * @return array [classname,arguments_to_append]
 	 */
 	public function get_typed_field($col) {
-		$typed_field = "field_blank";
-		$cfg = "{}";
 		if ($col instanceof \datamodel\ColumnString) {
 			$cfg = "{max_length:".$col->max_length;
 			if ($col->min_length > 0) $cfg .= ",min_length:".$col->min_length;
 			$cfg .= ",can_be_null:".json_encode($col->can_be_null);
 			$cfg .= "}";
-// 			return array("field_text", $cfg);
-			$typed_field = "field_text";
+ 			return array("field_text", $cfg);
 		}		
+		if ($col instanceof \datamodel\ColumnTimestamp) {
+			$cfg = "{show_time:true,data_is_seconds:true}";
+ 			return array("field_timestamp",$cfg);
+		}
 		if ($col instanceof \datamodel\ColumnInteger) {
 			$cfg = "{";
 			$cfg .= "can_be_null:".json_encode($col->can_be_null);
 			if ($col->min !== null) $cfg .= ",min:".json_encode($col->min);
 			if ($col->max !== null) $cfg .= ",max:".json_encode($col->max);
 			$cfg .= "}";
-// 			return array("field_integer",$cfg);
-			$typed_field = "field_integer";
+ 			return array("field_integer",$cfg);
 		}
 		if ($col instanceof \datamodel\ColumnDecimal) {
 			$cfg = "{";
@@ -33,8 +33,7 @@ class widgets extends Component {
 			$cfg .= ",integer_digits:".$col->integer_digits;
 			$cfg .= ",decimal_digits:".$col->decimal_digits;
 			$cfg .= "}";
-// 			return array("field_decimal",$cfg);
-			$typed_field = "field_decimal";
+ 			return array("field_decimal",$cfg);
 		}
 		if ($col instanceof \datamodel\ColumnEnum) {
 			$cfg = "{possible_values:[";
@@ -44,8 +43,7 @@ class widgets extends Component {
 				$cfg .= json_encode($v);
 			}
 			$cfg .= "],can_be_empty:".($col->can_be_null ? "true" : "false")."}";
-// 			return array("field_enum",$args);
-			$typed_field = "field_enum";
+ 			return array("field_enum",$cfg);
 		}
 		if ($col instanceof \datamodel\ColumnDate) {
 			$cfg = "{can_be_empty:".($col->can_be_null ? "true" : "false");
@@ -62,15 +60,9 @@ class widgets extends Component {
 					$cfg .= ",maximum_cell:".json_encode($col->maximum_date);
 			}
 			$cfg .= "}";
-// 			return array("field_date",$cfg);
-			$typed_field = "field_date";
+ 			return array("field_date",$cfg);
 		}
-		if ($col instanceof \datamodel\ColumnTimestamp) {
-			$cfg = "{show_time:true,data_is_seconds:true}";
-// 			return array("field_timestamp",$cfg);
-			$typed_field = "field_timestamp";
-		}
-		return array($typed_field, $cfg);
+		return array("field_blank", "{}");
 	}
 	/**
 	 * @param \datamodel\Column $col
@@ -92,6 +84,14 @@ class widgets extends Component {
 			$cfg .= "}";
 			return array("filter_enum", $cfg);
 		}
+		if ($col instanceof \datamodel\ColumnInteger ||
+			$col instanceof \datamodel\ColumnDecimal ||
+			$col instanceof \datamodel\ColumnDate ||
+			$col instanceof \datamodel\ColumnTimestamp) {
+			$field = $this->get_typed_field($col);
+			$cfg = "{value_field_classname:".json_encode($field[0]).",value_field_config:".$field[1]."}";
+			return array("filter_comparable", $cfg);
+		}
 		return array(null,"null");
 	}
 	
@@ -100,8 +100,8 @@ class widgets extends Component {
 		$t = DataModel::get()->getTable($table);
 		$col = $t->getColumn($column);
 		$tf = $this->get_typed_field($col);
-		$page->add_javascript("/static/widgets/typed_field/typed_field.js");
-		$page->add_javascript("/static/widgets/typed_field/".$tf[0].".js");
+		$page->addJavascript("/static/widgets/typed_field/typed_field.js");
+		$page->addJavascript("/static/widgets/typed_field/".$tf[0].".js");
 		echo $variable_name." = new ".$tf[0]."(".$data.",".$editable.",".$tf[1].");";
 	}
 	

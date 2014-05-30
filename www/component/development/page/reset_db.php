@@ -1,7 +1,7 @@
 <?php
 class page_reset_db extends Page {
 	
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array();
 	}
 	
@@ -15,7 +15,7 @@ if (isset($_GET["dev"]))
 	$domains = array("Dev");
 else {
 	$domains = array();
-	foreach (PNApplication::$instance->get_domains() as $domain=>$descr)
+	foreach (PNApplication::$instance->getDomains() as $domain=>$descr)
 		array_push($domains, $domain);
 }
 

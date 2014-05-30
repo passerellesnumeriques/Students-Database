@@ -8,6 +8,14 @@ html, body {
 	padding: 0px;
 	background-color: #e8e8e8;
 }
+body {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+}
 input[type="text"], input[type="password"] {
 	border: 1px solid #C0C0F0;
 }
@@ -66,6 +74,24 @@ table.all_borders>tbody>tr>th, table.all_borders>tr>th {
     margin-bottom: 5px;
     box-shadow: 0px -3px 5px -2px #DDDDDD inset;
 }
+.page_section_title2 {
+    font-family: Arial;
+    font-size: 16px;
+    color: #404040;
+    font-weight: 100;
+    padding: 5px 10px 5px 10px;
+    margin-bottom: 5px;
+    box-shadow: 0px -3px 5px -2px #DDDDDD inset;
+}
+.page_section_title3 {
+    font-family: Arial;
+    font-size: 14px;
+    color: #404040;
+    font-weight: 100;
+    padding: 5px 10px 5px 10px;
+    margin-bottom: 5px;
+    box-shadow: 0px -3px 5px -2px #DDDDDD inset;
+}
 
 /* Button */
 button img {
@@ -107,6 +133,7 @@ button:disabled {
     border: 1px solid rgba(0,0,0,0.2);
     box-shadow: 1px 1px 1px rgba(170,170,170,0);
     cursor: default;
+    opacity: 0.7;
 }
 button:disabled:hover {
     border: 1px solid rgba(0,0,0,0.2);
@@ -137,13 +164,6 @@ button.flat {
     border-radius: 3px;
     background: transparent;
     background-color: transparent;
-}
-button.flat.small {
-	padding: 0px;
-}
-button.flat.small_icon {
-	padding: 0px;
-	font-size: 1px;
 }
 button.flat:hover {
     border: 1px solid rgba(128,128,128,0.4);
@@ -197,6 +217,21 @@ button.action.important:disabled {
     background: #C0C0C0;
 }
 
+
+button.small {
+    padding: 0px;
+}
+button.small_icon {
+    padding: 0px;
+    font-size: 1px;
+}
+
+/* Remove additional space of Firefox for buttons */
+button::-moz-focus-inner {
+    padding: 0;
+    border: 0
+}
+
 /* Validation */
 
 .validation_message {
@@ -213,12 +248,12 @@ button.action.important:disabled {
 }
 
 /* Links */
-a.black_link {
+a.black_link, .black_link {
 	color: black;
 	cursor: pointer;
 	text-decoration: none;
 }
-a.black_link:hover {
+a.black_link:hover, .black_link:hover {
 	text-decoration: underline;
 }
 

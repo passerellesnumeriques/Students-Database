@@ -1,17 +1,17 @@
 <?php 
 class service_get_latests extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve latests news since last request"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>latests</code>: array of latests news id received last request</li>";
 		echo "<li><code>latests_timestamp</code>: timestamp of the latests</li>";
 		echo "<li><code>sections</code>: list of sections with categories and tags to get the news</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() { echo "List of NewsObject"; }
+	public function outputDocumentation() { echo "List of NewsObject"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/news/NewsPlugin.inc");
@@ -93,7 +93,7 @@ class service_get_latests extends Service {
 				$a[$domain] = array();
 				foreach ($res as $r) {
 					$username = PNApplication::$instance->user_management->getSelectedUsername($r);
-					$a[$domain][$username] = array($q,$r);
+					$a[$domain][$username] = $r;
 				}
 			}
 			$people_names = $a;
@@ -113,7 +113,7 @@ class service_get_latests extends Service {
 			echo ",domain:".json_encode($n["domain"]);
 			echo ",user:{domain:".json_encode($n["domain"]).",username:".json_encode($n["username"])."}";
 			$r = $people_names[$n["domain"]][$n["username"]];
-			echo ",people:".PeopleJSON::People($r[0], $r[1]);
+			echo ",people:".PeopleJSON::People($r);
 			echo ",timestamp:".$n["timestamp"];
 			echo ",update_timestamp:".$n["timestamp"];
 			echo "}";

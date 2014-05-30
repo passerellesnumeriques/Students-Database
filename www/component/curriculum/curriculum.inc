@@ -13,14 +13,23 @@ class curriculum extends Component {
 		);
 	}
 	
+	/** Returns all AcademicYear from database
+	 * @return array rows in the AcademicYear table
+	 */
 	public function getAcademicYears() {
 		return SQLQuery::create()->select("AcademicYear")->orderBy("AcademicYear","year")->execute();
 	}
 	
+	/** Returns all AcademicPeriod from database
+	 * @return array rows in the AcademicPeriod table
+	 */
 	public function getAcademicPeriods() {
 		return SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod", "start")->execute();
 	}
 	
+	/** Returns all AcademicPeriod from database, together with the name of the AcademicYear they belong to
+	 * @return array rows in the AcademicPeriod table
+	 */
 	public function getAcademicPeriodsWithYearName() {
 		return SQLQuery::create()
 			->select("AcademicPeriod")
@@ -31,6 +40,10 @@ class curriculum extends Component {
 			->execute();
 	}
 	
+	/** Retrieve the AcademicPeriod corresponding to the given BatchPeriod
+	 * @param integer $batch_period_id BatchPeriod ID
+	 * @return array the row from the AcademicPeriod table
+	 */
 	public function getAcademicPeriodFromBatchPeriod($batch_period_id) {
 		return SQLQuery::create()
 			->select("BatchPeriod")
@@ -39,6 +52,10 @@ class curriculum extends Component {
 			->fieldsOfTable("AcademicPeriod")
 			->executeSingleRow();
 	}
+	/** Retrieve the AcademicPeriod joined with the given BatchPeriod
+	 * @param integer $batch_period_id BatchPeriod ID
+	 * @return array the row resulting from the join between the AcademicPeriod and BatchPeriod tables
+	 */
 	public function getAcademicPeriodAndBatchPeriod($batch_period_id) {
 		return SQLQuery::create()
 			->select("BatchPeriod")
@@ -54,6 +71,7 @@ class curriculum extends Component {
 	}
 	
 	/** Retrieve the list of existing batches of students
+	 * @param integer[]|null list of StudentBatch ID to retrieve, or null for all batches
 	 * @return array the result from the database
 	 */
 	public function getBatches($ids = null) {
@@ -69,11 +87,17 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();
 	}
 	
+	/** Retrieve batches having an end_date greater than today
+	 * @return array list of rows from StudentBatch table
+	 */
 	public function getCurrentBatches() {
 		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
 		$q->where("end_date >= CURRENT_DATE()");
 		return $q->execute();
 	}
+	/** Retrieve batches having an end_date less than today
+	 * @return array list of rows from StudentBatch table
+	 */
 	public function getAlumniBatches() {
 		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
 		$q->where("end_date < CURRENT_DATE()");
@@ -221,6 +245,10 @@ class curriculum extends Component {
 			->execute();
 	}
 	
+	/** Return all BatchPeriod rows corresponding to the given academic periods
+	 * @param array $academic_periods_ids list of AcademicPeriod ID
+	 * @return array rows from the BatchPeriod table
+	 */
 	public function getBatchPeriodsForAcademicPeriods($academic_periods_ids) {
 		return SQLQuery::create()
 			->select("BatchPeriod")
@@ -250,6 +278,12 @@ class curriculum extends Component {
 		return $q->execute();
 	}
 	
+	/** Retrieve classes
+	 * @param integer $batch_id StudentBatch ID
+	 * @param integer|null $period_id BatchPeriod ID, or null for any period
+	 * @param integer|null|boolean $restrict_specialization Specialization ID, or null to only get classes which are not in a specialization, or false to get all periods
+	 * @return array rows from the AcademicClass table
+	 */
 	public function getAcademicClasses($batch_id, $period_id = null, $restrict_specialization = false) {
 		if ($period_id <> null) return $this->getAcademicClassesForPeriod($period_id, $restrict_specialization);
 		$periods = $this->getBatchPeriods($batch_id);
@@ -306,16 +340,29 @@ class curriculum extends Component {
 		return $q->execute();
 	}
 	
+	/** Retrieve teacher assignments for the given subjects
+	 * @param integer[] $subjects_ids list of CurriculumSubject ID 
+	 * @return array rows from TeacherAssignment table
+	 */
 	public function getTeachersAssigned($subjects_ids) {
 		if (count($subjects_ids) == 0) return array();
 		$q = SQLQuery::create()->select("TeacherAssignment")->whereIn("TeacherAssignment", "subject", $subjects_ids);
 		return $q->execute();
 	}
+	/** Retrieve teacher assignments for the given classes
+	 * @param integer[] $classes_ids list of AcademicClass ID 
+	 * @return array rows from TeacherAssignment table
+	 */
 	public function getTeachersAssignedForClasses($classes_ids) {
 		if (count($subjects_ids) == 0) return array();
 		$q = SQLQuery::create()->select("TeacherAssignment")->whereIn("TeacherAssignment", "class", $classes_ids);
 		return $q->execute();
 	}
+	/** Retrieve teacher assignments for the given periods
+	 * @param integer[] $periods_ids list of BatchPeriod ID
+	 * @param boolean $join_subject true to join the CurriculumSubject table to every assignment 
+	 * @return array rows from joined tables TeacherAssignment, BatchPeriod and AcademicClass (and optionally CurriculumSubject)
+	 */
 	public function getTeacherAssignedForBatchPeriods($periods_ids, $join_subject=false) {
 		$q = SQLQuery::create()
 			->select("BatchPeriod")

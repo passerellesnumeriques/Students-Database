@@ -6,6 +6,7 @@ function component_auto_loader($classname) {
 if (!isset($_SERVER["PATH_INFO"]) || strlen($_SERVER["PATH_INFO"]) == 0) $_SERVER["PATH_INFO"] = "/";
 $path = substr($_SERVER["PATH_INFO"],1);
 
+
 // security: do not allow .. in the path, to avoid trying to access to files which are protected
 if (strpos($path, "..") !== FALSE) die("Access denied");
 
@@ -46,6 +47,7 @@ if ($path == "") {
 	die();
 }
 
+
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
 
 function invalid($message) {
@@ -64,6 +66,7 @@ $i = strpos($path, "/");
 if ($i === FALSE) invalid("Invalid request: no component name");
 $component_name = substr($path, 0, $i);
 $path = substr($path, $i+1);
+
 
 switch ($type) {
 case "static":
@@ -105,7 +108,7 @@ case "dynamic":
 	if ($i === FALSE) invalid("Invalid request: no dynamic type");
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
-
+	
 	spl_autoload_register('component_auto_loader');
 	require_once("component/PNApplication.inc");
 	session_set_cookie_params(24*60*60, "/dynamic/");
@@ -130,7 +133,7 @@ case "dynamic":
 			die();
 		}
 		PNApplication::$instance = &$_SESSION["app"];
-		PNApplication::$instance->init_request();
+		PNApplication::$instance->initRequest();
 	}
 	if (PNApplication::$instance->current_domain == "Dev") {
 		$dev = new DevRequest();
@@ -156,22 +159,7 @@ case "dynamic":
 		$dev->end_time = microtime(true);
 	}
 	die();
-case "help":
-	header('Cache-Control: public', true);
-	header('Pragma: public', true);
-	$date = date("D, d M Y H:i:s",time());
-	header('Date: '.$date, true);
-	$expires = time()+365*24*60*60;
-	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
-	header('Vary: Cookie');
-	header("Content-Type: text/html");
-	require_once("component/Page.inc");
-	pageHeaderStart();
-	pageHeaderEnd();
-	if (!file_exists("component/".$component_name."/page/".$path.".help.html")) invalid("Help not found for page '$path' on component '$component_name'");
-	readfile("component/".$component_name."/page/".$path.".help.html");
-	pageFooter();
-	die();
 default: invalid("Invalid request: unknown resource type ".$type);
 }
+	
 ?>

@@ -1,13 +1,13 @@
 <?php 
 class service_user_picture extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve the picture from the given user"; }
-	public function input_documentation() { echo "domain and username"; }
-	public function output_documentation() { echo "the picture in JPEG format"; }
+	public function inputDocumentation() { echo "domain and username"; }
+	public function outputDocumentation() { echo "the picture in JPEG format"; }
 	
-	public function get_output_format($input) {
+	public function getOutputFormat($input) {
 		return "image/jpeg";
 	}
 	

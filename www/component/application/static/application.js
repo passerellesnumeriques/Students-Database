@@ -68,7 +68,7 @@ if (window == window.top) {
 					this._onmouseup_listeners.splice(i,1);
 					i--;
 				}
-			window.top.pnapplication.onwindowclosed.fire(w);
+			window.top.pnapplication.onwindowclosed.fire({top:window.top,win:w});
 		},
 		
 		/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
@@ -190,36 +190,48 @@ if (window == window.top) {
 		addInactivityListener: function(inactivity_time, listener) {
 			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
 		},
+		/** {Array} list of identifiers of data which need to be saved on the page */
 		_data_unsaved: [],
+		/** Indicates the the given data needs to be saved
+		 * @param {String} id identifier of the data which must be unique
+		 */
 		dataUnsaved: function(id) {
-			if (!this._data_unsaved.contains(id))
+			if (!this._data_unsaved.contains(id)) {
 				this._data_unsaved.push(id);
+				if (this._data_unsaved.length == 1) // first one
+					this.ondatatosave.fire();
+			}
 		},
+		/** Indicates the the given data has been saved
+		 * @param {String} id identifier of the data which must be unique
+		 */
 		dataSaved: function(id) {
 			this._data_unsaved.remove(id);
+			if (this._data_unsaved.length == 0)
+				this.onalldatasaved.fire();
 		},
-		addOverAndOut: function(element, handler) {
-			var w = getWindowFromElement(element);
-			window.top.pnapplication.registerOnMouseMove(w, function(x,y) {
-				var x1 = w.absoluteLeft(element);
-				var y1 = w.absoluteTop(element);
-				var x2 = x1+element.offsetWidth;
-				var y2 = y1+element.offsetHeight;
-				if (element._isover) {
-					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
-					} else {
-						element._isover = false;
-						handler(false);
-					}
-				} else {
-					if (x >= x1 && x < x2 && y >= y1 && y < y2) {
-						element._isover = true;
-						handler(true);
-					}
-				}
-				
-			});
-		}
+		/** Indicates if any data on the window needs to be saved
+		 * @returns {Boolean} true if some data need to be saved
+		 */
+		hasDataUnsaved: function() { 
+			return this._data_unsaved.length > 0; 
+		},
+		/** Check if there are data with given ID to be saved
+		 * @param {String} id identifier of the data
+		 * @returns {Boolean} true if the given data needs to be saved
+		 */
+		isDataUnsaved: function(id) {
+			return this._data_unsaved.contains(id);
+		},
+		/** Mark all data as saved */
+		cancelDataUnsaved: function() { 
+			this._data_unsaved = [];
+			this.onalldatasaved.fire();
+		},
+		/** Event raised when some data need to be saved */
+		ondatatosave: new Custom_Event(),
+		/** Event raised when no more data need to be saved */
+		onalldatasaved: new Custom_Event()
 	};
 	window.top.pnapplication.registerWindow(window);
 }
@@ -232,7 +244,7 @@ function initPNApplication() {
 		setTimeout(initPNApplication, 100);
 	else {
 		var listener = function() {
-			if (!window || !window.top || !window.top.pnapplication) return;
+			if (!window || !window.top || !window.top.pnapplication || !window.top.pnapplication.userIsActive) return;
 			window.top.pnapplication.userIsActive();
 		};
 		listenEvent(window,'click',listener);
@@ -261,12 +273,18 @@ function initPNApplication() {
 };
 initPNApplication();
 
+/**
+ * Hide a frame which is loading, and display a loading image
+ * @param {Element} frame_element the frame which is loading
+ */
 function LoadingFrame(frame_element) {
 	if (!frame_element.ownerDocument) return;
 	if (frame_element._no_loading) return;
 	frame_element._loading_frame = this;
 	var t=this;
+	/** {Number} Indicates what is the status of the frame: 0 for pending, 1 for loading, -1 for unloading */
 	this.step = 0; // pending
+	/** {Element} table containing the loading image in front of the frame */
 	this.table = document.createElement("TABLE");
 	this.table.innerHTML = "<tr><td valign=middle align=center><img src='/static/application/loading_page.gif'/></td></tr>";
 	this.table.style.position = "absolute";
@@ -280,46 +298,74 @@ function LoadingFrame(frame_element) {
 	this.table.style.zIndex = z;
 	this.table.style.backgroundColor = "#d0d0d0";
 
+	/** Check if the page inside the frame is ready (completely loaded) */
 	this._isReady = function() {
 		var win = getIFrameWindow(frame_element);
-		return win && this.step == 1 && win.document && win._page_ready && win.layout && win.layout._invalidated.length == 0 && win.layout.everythingOnPageLoaded();
+		if (!win) return false;
+		if (win._static_page) return true;
+		return this.step == 1 && win.document && win._page_ready && win.layout && win.layout._invalidated.length == 0 && win.layout.everythingOnPageLoaded();
 	};
+	/** Check if the page inside the frame has been closed */
 	this._isClosed = function() {
 		var win = getIFrameWindow(frame_element);
 		return this.step == -1 && !win;
 	};
+	/** Check if the frame is inside a frozen popup window */
+	this._inFrozenPopup = function() {
+		var e = frame_element;
+		while (e.parentNode != null && e.parentNode != e && e.parentNode != document.body && e.parentNode.className != 'popup_window') e = e.parentNode;
+		if (e.parentNode != null && e.parentNode.className == 'popup_window') {
+			var popup = e.parentNode.data;
+			if (popup.isFrozen()) return true;
+		}
+		return false;
+	};
 
+	/** {Animation} fadeIn */
 	this.anim = null;
-	if (typeof animation != 'undefined') {
+	/** {Boolean} indicates if the loading is hidden or not (because inside a frozen popup) */
+	this._hidden = false;
+	if (this._inFrozenPopup()) {
 		setOpacity(this.table, 0);
-		frame_element.ownerDocument.body.appendChild(this.table);
-		this.anim = animation.fadeIn(this.table, 250, null, 0, 90, function() {
-			if (t._isClosed() || t._isReady()) animation.stop(t.anim);
-		});
+		this._hidden = true;
 	} else {
-		setOpacity(this.table, 90);
-		frame_element.ownerDocument.body.appendChild(this.table);
+		if (typeof animation != 'undefined') {
+			setOpacity(this.table, 0);
+			frame_element.ownerDocument.body.appendChild(this.table);
+			this.anim = animation.fadeIn(this.table, 250, null, 0, 90, function() {
+				if (t._isClosed() || t._isReady()) animation.stop(t.anim);
+			});
+		} else {
+			setOpacity(this.table, 90);
+			frame_element.ownerDocument.body.appendChild(this.table);
+		}
 	}
+	/** {Number} timestamp when the frame started to load */
 	this._start = new Date().getTime();
 	
+	/** Indicates the frame starts to load */
 	this.startLoading = function() {
 		this.step = 1;
 		this._start = new Date().getTime();
 	};
+	/** Indicates the frame starts to unload/change page */
 	this.startUnloading = function() {
 		this.step = -1;
 		this._start = new Date().getTime();
 	};
 	
+	/** Refresh the size and position of the loading, according to the size and position of the frame */
 	this._position = function() {
-		this.table.style.top = absoluteTop(frame_element)+"px";
-		this.table.style.left = absoluteLeft(frame_element)+"px";
+		this.table.style.top = (absoluteTop(frame_element))+"px";
+		this.table.style.left = (absoluteLeft(frame_element))+"px";
 		this.table.style.width = frame_element.offsetWidth+"px";
 		this.table.style.height = frame_element.offsetHeight+"px";
 	};
 
+	/** Call the _update function */
 	var updater = function() { t._update(); };
 
+	/** Remove the loading */
 	this.remove = function() {
 		if (frame_element._loading_frame != this) return;
 		layout.removeHandler(frame_element, updater);
@@ -338,6 +384,7 @@ function LoadingFrame(frame_element) {
 		frame_element._loading_frame = null;
 	};
 	
+	/** Check what is the current status, and remove the loading if needed */
 	this._update = function() {
 		if (!frame_element.parentNode ||
 			!frame_element.ownerDocument ||
@@ -355,8 +402,21 @@ function LoadingFrame(frame_element) {
 			this.remove();
 			return;
 		}
+		if (this._hidden && !this._inFrozenPopup()) {
+			// popup not anymore frozen: show the loading
+			setOpacity(this.table, 1);
+		}
 		var now = new Date().getTime();
 		if (now-this._start > 10000) {
+			var win = getIFrameWindow(frame_element);
+			if (!win) console.error("Frame loading timeout: window is null");
+			else if (this.step == 1) {
+				if (!win.document) console.error("Frame loading timeout: window.document is null");
+				else if (!win._page_ready) console.error("Frame loading timeout: _page_ready is false");
+				else if (!win.layout)  console.error("Frame loading timeout: no layout");
+				else if (win.layout._invalidated.length > 0) console.error("Frame loading timeout: still something to layout");
+				else if (!win.layout.everythingOnPageLoaded()) console.error("Frame loading timeout: script or css not yet loaded");
+			} else console.error("Frame loading timeout: step = "+this.step);
 			this.remove();
 			return;
 		}
@@ -370,15 +430,15 @@ function LoadingFrame(frame_element) {
 	layout.addHandler(frame_element, updater);
 }
 
-// override add_javascript and add_stylesheet
-//window._add_javascript_original = window.add_javascript;
-//window.add_javascript = function(url, onload) {
+// override addJavascript and addStylesheet
+//window._addJavascript_original = window.addJavascript;
+//window.addJavascript = function(url, onload) {
 //	if (!window.top._loading_application_status) {
 //		if (window.top.StatusMessage) {
 //			window.top._loading_application_status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING, "Loading...");
 //			window.top._loading_application_nb = 0;
 //		} else {
-//			window._add_javascript_original(url, onload);
+//			window._addJavascript_original(url, onload);
 //			return;
 //		}
 //	}
@@ -389,7 +449,7 @@ function LoadingFrame(frame_element) {
 //		if (window.top._loading_application_nb == 1)
 //			window.top.status_manager.add_status(window.top._loading_application_status);
 //	}
-//	window._add_javascript_original(url, function() {
+//	window._addJavascript_original(url, function() {
 //		if (onload) onload();
 //		if (load) {
 //			window.top._loading_application_nb--;

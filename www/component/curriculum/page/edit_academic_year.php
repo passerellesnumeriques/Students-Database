@@ -1,11 +1,11 @@
 <?php 
 class page_edit_academic_year extends Page {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function execute() {
 		$id = @$_GET["id"];
-		$conf = PNApplication::$instance->get_domain_descriptor();
+		$conf = PNApplication::$instance->getDomainDescriptor();
 		$conf = $conf["curriculum"];
 		if ($id <> null) {
 			$year = SQLQuery::create()->select("AcademicYear")->whereValue("AcademicYear","id",$id)->executeSingleRow();
@@ -45,9 +45,9 @@ class page_edit_academic_year extends Page {
 			}
 		}
 		
-		$this->require_javascript("input_utils.js");
-		$this->require_javascript("typed_field.js");
-		$this->require_javascript("field_integer.js");
+		$this->requireJavascript("input_utils.js");
+		$this->requireJavascript("typed_field.js");
+		$this->requireJavascript("field_integer.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
 ?>
 <div style='background-color:white'>
@@ -172,7 +172,7 @@ function addPeriod(period) {
 		if (Math.floor(current_end) != (period.weeks+period.weeks_break-1)) {
 			var end = new Date(start.getTime()+(period.weeks+period.weeks_break)*7*24*60*60*1000-24*60*60*1000);
 			period.end = dateToSQL(end);
-			span_end.innerHTML = "";
+			span_end.removeAllChildren();
 			span_end.appendChild(document.createTextNode(getDateStringFromSQL(period.end)));
 			var index = periods.indexOf(period);
 			if (index < periods.length-1) {
@@ -180,7 +180,7 @@ function addPeriod(period) {
 				if (next_start.getTime() <= end.getTime()) {
 					next_start = new Date(end.getTime()+24*60*60*1000);
 					periods[index+1].start = dateToSQL(next_start);
-					periods[index+1].span_start.innerHTML = "";
+					periods[index+1].span_start.removeAllChildren();
 					periods[index+1].span_start.appendChild(document.createTextNode(getDateStringFromSQL(periods[index+1].start)));
 					periods[index+1].update_end();
 				}
@@ -204,7 +204,7 @@ function addPeriod(period) {
 			var picker = new window.top.date_picker(parseSQLDate(period.start), min, max);
 			picker.onchange = function(picker, date) {
 				period.start = dateToSQL(date);
-				span_start.innerHTML = "";
+				span_start.removeAllChildren();
 				span_start.appendChild(document.createTextNode(getDateStringFromSQL(period.start)));
 				period.update_end();
 			};
@@ -234,7 +234,7 @@ function addPeriod(period) {
 			var picker = new window.top.date_picker(parseSQLDate(period.end), min, max);
 			picker.onchange = function(picker, date) {
 				period.end = dateToSQL(date);
-				span_end.innerHTML = "";
+				span_end.removeAllChildren();
 				span_end.appendChild(document.createTextNode(getDateStringFromSQL(period.end)));
 				// update number of weeks
 				var start = parseSQLDate(period.start);

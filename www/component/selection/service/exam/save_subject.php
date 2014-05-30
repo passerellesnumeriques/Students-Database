@@ -2,11 +2,11 @@
 require_once("component/selection/SelectionJSON.inc");
 class service_exam_save_subject extends Service {
 	
-	public function get_required_rights() { return array("manage_exam_subject"); }
+	public function getRequiredRights() { return array("manage_exam_subject"); }
 	public function documentation() {
 		echo "Save / insert an exam subject object into the database";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>exam</code> the exam subject JSON structure. <br/>Notes:";
 		?>
 		<ul>
@@ -15,7 +15,7 @@ class service_exam_save_subject extends Service {
 		</ul>
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<ul>
 			<li><code>false</code> if an error occured</li>
@@ -69,7 +69,7 @@ class service_exam_save_subject extends Service {
 				}
 			}
 			$subject = PNApplication::$instance->selection->saveSubject($id, $rows_exam_table, $rows_parts_table, $questions_by_old_part, $questions_by_new_part, $parts_to_insert_indexes);
-			if(PNApplication::has_errors())
+			if(PNApplication::hasErrors())
 				echo "false";
 			else if($subject <> null)
 				echo $subject;

@@ -1,17 +1,19 @@
 <?php 
 class documentation extends Component {
 	
-	public function init_request() {
-		Component::allow_page_without_login("documentation", "index");
-		Component::allow_page_without_login("documentation", "navigation");
-		Component::allow_page_without_login("documentation", "home");
-		Component::allow_page_without_login("documentation", "component");
-		Component::allow_page_without_login("documentation", "php");
-		Component::allow_page_without_login("documentation", "php_search");
+	public function initRequest() {
+		Component::allowPageWithoutLogin("documentation", "index");
+		Component::allowPageWithoutLogin("documentation", "navigation");
+		Component::allowPageWithoutLogin("documentation", "home");
+		Component::allowPageWithoutLogin("documentation", "component");
+		Component::allowPageWithoutLogin("documentation", "php");
+		Component::allowPageWithoutLogin("documentation", "php_search");
+		Component::allowPageWithoutLogin("documentation", "static");
 		
-		Component::allow_service_without_login("documentation", "datamodel");
-		Component::allow_service_without_login("documentation", "component_dependencies");
-		Component::allow_service_without_login("documentation", "get_js");
+		Component::allowServiceWithoutLogin("documentation", "datamodel");
+		Component::allowServiceWithoutLogin("documentation", "component_dependencies");
+		Component::allowServiceWithoutLogin("documentation", "get_js");
+		Component::allowServiceWithoutLogin("documentation", "static");
 	}
 	
 }

@@ -1,11 +1,11 @@
 <?php 
 class service_get_static_resources extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Return all static resources for background loading"; }
-	public function input_documentation() { echo "No input"; }
-	public function output_documentation() { echo "Scripts with dependencies, and images to load"; }
+	public function inputDocumentation() { echo "No input"; }
+	public function outputDocumentation() { echo "Scripts with dependencies, and images to load"; }
 	
 	public function execute(&$component, $input) {
 		$components = $this->getComponents();

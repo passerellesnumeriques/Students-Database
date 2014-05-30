@@ -1,7 +1,7 @@
 <?php 
 class page_auth extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$ch = curl_init("https://graph.facebook.com/debug_token?input_token=".$_GET["auth_token"]."&access_token=316910509803|843ab6b200f732996a72c87557a81843");

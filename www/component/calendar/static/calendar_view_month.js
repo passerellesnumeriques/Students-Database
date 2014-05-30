@@ -1,14 +1,14 @@
 /**
  * View of one month
  * @param {CalendarView} view the view manager
- * @param {DOMNode} container where to display
+ * @param {Element} container where to display
  */
 function calendar_view_month(view, container) {
 
-	/** The first day of the month to display */
+	/** {Date} The first day of the month to display */
 	this.start_date = view.cursor_date;
 	if (this.start_date.getDate() != 1) this.start_date.setDate(1);
-	/** The last day of the month to display */
+	/** {Date} The last day of the month to display */
 	this.end_date = new Date(this.start_date.getTime());
 	this.end_date.setMonth(this.end_date.getMonth()+1);
 	this.end_date.setDate(this.end_date.getDate()-1);

@@ -1,10 +1,10 @@
 <?php
 class service_config_get_all_values_and_default extends Service{
-	public function get_required_rights(){return array("can_access_selection_data");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("can_access_selection_data");}
+	public function inputDocumentation(){
 		echo "<code>name</code> config name attribute";	
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		?>Object with two attributes:
 		<ul>
 		  <li><code>all_values</code> array of all the possible values</li>

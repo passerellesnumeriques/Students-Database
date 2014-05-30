@@ -1,13 +1,13 @@
 <?php 
 class service_get_latests_replies extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve latests replies"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "to_refresh: array of {id,latest} where id is the id of a root news, while latest is the timestamp of the latest reply known (or 0 if no reply is known)";
 	}
-	public function output_documentation() { echo "List of NewsObject, containing reply_to"; }
+	public function outputDocumentation() { echo "List of NewsObject, containing reply_to"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/news/NewsPlugin.inc");
@@ -42,7 +42,7 @@ class service_get_latests_replies extends Service {
 				$a[$domain] = array();
 				foreach ($res as $r) {
 					$username = PNApplication::$instance->user_management->getSelectedUsername($r);
-					$a[$domain][$username] = array($q,$r);
+					$a[$domain][$username] = $r;
 				}
 			}
 			$people_names = $a;
@@ -61,7 +61,7 @@ class service_get_latests_replies extends Service {
 			echo ",domain:".json_encode($n["domain"]);
 			echo ",user:{domain:".json_encode($n["domain"]).",username:".json_encode($n["username"])."}";
 			$r = $people_names[$n["domain"]][$n["username"]];
-			echo ",people:".PeopleJSON::People($r[0], $r[1]);
+			echo ",people:".PeopleJSON::People($r);
 			echo ",timestamp:".$n["timestamp"];
 			echo ",update_timestamp:".$n["timestamp"];
 			echo ",reply_to:".$n["reply_to"];

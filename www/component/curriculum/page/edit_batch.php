@@ -1,7 +1,7 @@
 <?php 
 class page_edit_batch extends Page {
 	
-	public function get_required_rights() { return array("edit_curriculum"); }
+	public function getRequiredRights() { return array("edit_curriculum"); }
 	
 	public function execute() {
 		// lock specializations
@@ -36,12 +36,12 @@ class page_edit_batch extends Page {
 		$academic_years = PNApplication::$instance->curriculum->getAcademicYears();
 		$academic_periods = PNApplication::$instance->curriculum->getAcademicPeriods();
 		
-		$conf = PNApplication::$instance->get_domain_descriptor();
+		$conf = PNApplication::$instance->getDomainDescriptor();
 		$conf = $conf["curriculum"];
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
-		$this->add_javascript("/static/curriculum/curriculum_objects.js");
-		$this->require_javascript("input_utils.js");
+		$this->addJavascript("/static/curriculum/curriculum_objects.js");
+		$this->requireJavascript("input_utils.js");
 		require_once("component/data_model/page/utils.inc");
 ?>
 <table style='background-color:white;border-spacing:0px;margin:0px;border-collapse:collapse;'>
@@ -205,7 +205,7 @@ td_integration.onclick = function() {
 		var picker = new window.top.date_picker(parseSQLDate(integration_date), min, max);
 		picker.onchange = function(picker, date) {
 			integration_date = dateToSQL(date);
-			td_integration.innerHTML = "";
+			td_integration.removeAllChildren();
 			td_integration.appendChild(document.createTextNode(getDateStringFromSQL(integration_date)));
 			updatePeriodRow(periods[0]);
 		};
@@ -237,7 +237,7 @@ td_graduation.onclick = function() {
 
 function setGraduationDate(date) {
 	graduation_date = dateToSQL(date);
-	td_graduation.innerHTML = "";
+	td_graduation.removeAllChildren();
 	td_graduation.appendChild(document.createTextNode(getDateStringFromSQL(graduation_date)));
 	updatePeriodRow(periods[0]);
 }
@@ -256,7 +256,7 @@ function refreshAcademicCalendar() {
 }
 
 function updatePeriodRow(period) {
-	period.td_period.innerHTML = "";
+	period.td_period.removeAllChildren();
 	var index = periods.indexOf(period);
 	var min;
 	if (index == 0) min = parseSQLDate(integration_date);

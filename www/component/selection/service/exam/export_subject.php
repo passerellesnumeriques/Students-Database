@@ -1,8 +1,8 @@
 <?php
 require_once "component/selection/SelectionJSON.inc";
 class service_exam_export_subject extends Service{
-	public function get_required_rights(){return array("see_exam_subject");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("see_exam_subject");}
+	public function inputDocumentation(){
 		?>
 		<ul>
 			<li><code>format</code> The format of the exported file:<ul><li>"excel2007"</li><li>"excel5"</li></ul></li>
@@ -11,10 +11,10 @@ class service_exam_export_subject extends Service{
 		</ul>
 		<?php
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		echo "No";
 	}
-	public function get_output_format($input){
+	public function getOutputFormat($input){
 		return "application/vnd.ms-excel";
 	}
 	

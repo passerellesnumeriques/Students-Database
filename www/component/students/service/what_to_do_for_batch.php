@@ -1,13 +1,13 @@
 <?php 
 class service_what_to_do_for_batch extends Service {
 	
-	public function get_required_rights() { return array("manage_batches"); }
+	public function getRequiredRights() { return array("manage_batches"); }
 	
 	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function inputDocumentation() {}
+	public function outputDocumentation() {}
 	
-	public function get_output_format($input) { return "text/html"; }
+	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
 		$this->batch_id = $input["batch"];
@@ -109,6 +109,7 @@ class service_what_to_do_for_batch extends Service {
 				} else {
 					if (!$spe_checked) {
 						$spe_checked = true;
+						$students = array();
 						foreach ($all_students as $s)
 							if ($s["specialization"] == null && ($s["exclusion_date"] == null || datamodel\ColumnDate::toTimestamp($s["exclusion_date"]) > datamodel\ColumnDate::toTimestamp($p[1]["start"])))
 								array_push($students, $s["people"]);

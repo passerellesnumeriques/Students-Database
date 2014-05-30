@@ -9,9 +9,8 @@ field_html.prototype._create = function(data) {
 		this.element.innerHTML = data;
 	else if (data != null)
 		this.element.appendChild(data);
-	this.getCurrentData = function() { return this.element.innerHTML; };
-	this.setData = function(data) {
-		while (this.element.childNodes.length > 0) this.element.removeChild(this.element.childNodes[0]);
+	this._setData = function(data) {
+		this.element.removeAllChildren();
 		if (typeof data == 'string')
 			this.element.innerHTML = data;
 		else if (data != null)

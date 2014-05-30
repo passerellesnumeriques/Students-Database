@@ -1,10 +1,10 @@
 <?php 
 class service_lock_datadisplay extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Lock a DataDisplay"; }
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>table</code>: the table containing the DataDisplay</li>";
 		echo "<li><code>sub_model</code>: the sub model if any</li>";
@@ -13,7 +13,7 @@ class service_lock_datadisplay extends Service {
 		echo "<li><code>key</code>: the key representing a single data</li>";
 		echo "</ul>";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		echo "<ul>";
 		echo "<li><code>locks</code>: a list of lock id</li>";
 		echo "<li><code>data</code>: the data from the database (updated with latest just after locking it)</li>";

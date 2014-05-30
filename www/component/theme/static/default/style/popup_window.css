@@ -1,7 +1,7 @@
 .popup_window {
 	position: fixed;
 	z-index: 50;
-	box-shadow: 0 0 10px 3px #A0A0D0;
+	box-shadow: 0 0 10px 3px #E0E0FF;
 	background-color: white;
 	border: 1px solid black;
 	border-spacing: 0px;
@@ -51,4 +51,8 @@
 .popup_window_buttons td {
 	border-top: 1px solid #808080;
 	text-align: right;
+}
+.popup_window_buttons button {
+	margin-left: 2px;
+	margin-right: 2px;
 }

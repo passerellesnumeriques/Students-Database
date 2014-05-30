@@ -1,12 +1,12 @@
 <?php 
 class service_menu extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Provides the training menu"; }
-	public function input_documentation() { echo "No"; }
-	public function output_documentation() { echo "The HTML to put in the menu"; }
-	public function get_output_format($input) { return "text/html"; }
+	public function inputDocumentation() { echo "No"; }
+	public function outputDocumentation() { echo "The HTML to put in the menu"; }
+	public function getOutputFormat($input) { return "text/html"; }
 		
 	public function execute(&$component, $input) {
 		//$current_batches = PNApplication::$instance->curriculum->getCurrentBatches();
@@ -46,6 +46,10 @@ foreach ($current_batches as $b) {
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/teachers'>
 	<img src='/static/curriculum/teacher_white.png'/>
 	Teachers
+</a>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/teachers_assignments' style='padding-left:20px'>
+	<img src='/static/curriculum/teacher_assign_white.png'/>
+	Assignments
 </a>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/students_grades'>
 	<img src='/static/transcripts/grades_white.png'/>

@@ -223,4 +223,15 @@ $model->addTable("TeacherAssignment")
  	->addInsertAccess("edit_curriculum", true)
  	->addRemoveAccess("edit_curriculum", true)
 	;
+
+$model->addTable("SubjectClassMerge")
+	->addForeignKey("subject", "CurriculumSubject", true, false, true, false, false)
+	->addForeignKey("class1", "AcademicClass", true, false, true, false, false)
+	->addForeignKey("class2", "AcademicClass", true, false, true, false, false)
+	->setKey(array("subject","class1","class2"))
+ 	->addReadAccess("consult_curriculum", true)
+ 	->addWriteAccess("edit_curriculum", true)
+ 	->addInsertAccess("edit_curriculum", true)
+ 	->addRemoveAccess("edit_curriculum", true)
+	;
 ?>

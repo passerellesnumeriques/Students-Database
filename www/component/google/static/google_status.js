@@ -20,7 +20,7 @@ function google_status(container) {
 		}
 		t.icon.src = url;
 		if (w.top.google.connection_status == 1) {
-			w.top.add_javascript("/static/google/userprofile.js",function(){
+			w.top.addJavascript("/static/google/userprofile.js",function(){
 				w.top.google_userprofile(function(profile){
 					t.profile = profile;
 					t.icon.title = "Google Account: "+profile.name;
@@ -29,7 +29,7 @@ function google_status(container) {
 		}
 	};
 	
-	window.top.add_javascript("/static/google/google.js",function() {
+	window.top.addJavascript("/static/google/google.js",function() {
 		window.top.google.connection_event.add_listener(function(){t.update_icon();});
 		t.update_icon();
 	});

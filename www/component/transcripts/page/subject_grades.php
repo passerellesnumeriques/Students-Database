@@ -1,7 +1,7 @@
 <?php 
 class page_subject_grades extends Page {
 	
-	public function get_required_rights() { return array("consult_students_grades"); }
+	public function getRequiredRights() { return array("consult_students_grades"); }
 	
 	public function execute() {
 		$subject_id = $_GET["subject"];
@@ -124,9 +124,9 @@ class page_subject_grades extends Page {
 		
 		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");
 		
-		$this->add_javascript("/static/widgets/header_bar.js");
-		$this->add_javascript("/static/widgets/vertical_layout.js");
-		$this->add_stylesheet("/static/transcripts/grades.css");
+		$this->addJavascript("/static/widgets/header_bar.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
+		$this->addStylesheet("/static/transcripts/grades.css");
 		?>
 		<style type='text/css'>
 		#data_list_container table {
@@ -944,7 +944,7 @@ class page_subject_grades extends Page {
 				if (!peoples) return;
 				if (!javascript_ready) return;
 				var excel_container = excel_frame.document.getElementById('excel_container');
-				excel_frame.document.body.innerHTML = "";
+				excel_frame.document.body.removeAllChildren();
 				var container = excel_frame.document.createElement("DIV");
 				container.style.width = "100%";
 				container.style.height = "100%";

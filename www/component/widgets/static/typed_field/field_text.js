@@ -34,48 +34,54 @@ field_text.prototype._create = function(data) {
 		this.validate = function() {
 			var err = null;
 			var s = t.getCurrentData();
-			if (s != null && t.config && t.config.min_length) {
-				if (s.length < t.config.min_length)
-					err = "Cannot be empty";
+			if (s == null || s.length == 0) {
+				if (!this.canBeNull()) err = "Cannot be empty";
+			} else {
+				if (t.config && t.config.min_length) {
+					if (s.length < t.config.min_length)
+						err = "Must have at least "+t.config.min_length+" character"+(t.config.min_length>1?"s":"");
+				}
 			}
 			t.signal_error(err);
 		};
-		var f = function() {
-			t.validate();
-			t._datachange();
-		};
-		input.onkeyup = function() { setTimeout(f,1); };
-		input.onblur = f;
-		input.onchange = f;
+		input.onkeyup = function() { setTimeout(function() { t._datachange(); },1); };
+		input.onblur = function() { t._datachange(); };
+		input.onchange = function() { t._datachange(); };
 
 		this.element.appendChild(input);
 		if (this.config && this.config.fixed_size)
 			input.size = this.config.fixed_size;
 		else
 			require("input_utils.js",function(){inputAutoresize(input,t.config && t.config.min_size ? t.config.min_size : 0);});
-		this.getCurrentData = function() {
+		
+		this._getEditedData = function() {
 			var data = input.value;
 			if (data.length == 0 && t.config && t.config.can_be_null) data = null;
 			return data; 
 		};
-		this.setData = function(data) {
+		this._setData = function(data) {
 			if (data == null) data = "";
 			input.value = data;
-			input.onchange();
+			if (input.autoresize) input.autoresize();
+		};
+		this._fillWidth = this.fillWidth;
+		this.fillWidth = function() {
+			this._fillWidth();
+			if (input.autoresize) input.setMinimumSize(-1);
+			else if (!t.config) t.config = {min_size:-1};
+			else t.config.min_size = -1;
 		};
 		this.signal_error = function(error) {
 			this.error = error;
 			input.style.border = error ? "1px solid red" : "";
 			input.title = error ? error : "";
 		};
-		this.validate();
 	} else {
 		this.element.appendChild(document.createTextNode(data));
 		if (this.config && this.config.style)
 			for (var s in this.config.style)
 				this.element.style[s] = this.config.style[s];
-		this.setData = function(data, first) {
-			if (!first && this.element.childNodes[0].nodeValue == data) return;
+		this._setData = function(data) {
 			this.element.childNodes[0].nodeValue = data;
 			if (data == null || data.length == 0) {
 				var e = document.createElement("I");
@@ -84,12 +90,8 @@ field_text.prototype._create = function(data) {
 			} else {
 				if (this.element.childNodes.length == 2) this.element.removeChild(this.element.childNodes[1]);
 			}
-			if (!first) this._datachange();
 		};
-		this.setData(data, true);
-		this.getCurrentData = function() {
-			return this.element.childNodes[0].nodeValue;
-		};
+		this._setData(data);
 		this.signal_error = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";

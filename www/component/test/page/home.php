@@ -1,20 +1,20 @@
 <?php 
 class page_home extends Page {
 
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$exclude_components = array("development","test");
 		
-		$this->add_javascript("/static/widgets/header_bar.js");
-		$this->add_javascript("/static/widgets/vertical_layout.js");
-		$this->add_javascript("/static/widgets/horizontal_layout.js");
-		$this->add_javascript("/static/widgets/vertical_align.js");
-		$this->add_javascript("/static/widgets/section/section.js");
-		$this->add_javascript("/static/development/debug_status.js");
-		$this->add_javascript("/static/test/browser_control.js");
+		$this->addJavascript("/static/widgets/header_bar.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
+		$this->addJavascript("/static/widgets/horizontal_layout.js");
+		$this->addJavascript("/static/widgets/vertical_align.js");
+		$this->addJavascript("/static/widgets/section/section.js");
+		$this->addJavascript("/static/development/debug_status.js");
+		$this->addJavascript("/static/test/browser_control.js");
 		
-		$components = PNApplication::sort_components_by_dependencies();
+		$components = PNApplication::sortComponentsByDependencies();
 		
 		echo "<div id='page' style='height:100%;width:100%'>";
 			echo "<div id='top_status' layout='fixed' icon='/static/test/test_32.png' title='Automatic Tests'></div>";
@@ -49,20 +49,20 @@ function top_status_widget() {
 	var t=this;
 	t.widget = new header_bar(container, "toolbar_big");
 
-	t.refresh = document.createElement("IMG");
-	t.refresh.className = 'button';
-	t.refresh.style.verticalAlign = "bottom";
-	t.refresh.src = theme.icons_16.refresh;
+	t.refresh = document.createElement("BUTTON");
+	t.refresh.className = 'flat';
+	t.refresh.innerHTML = "<img src='"+theme.icons_16.refresh+"'/>";
 	t.refresh.onclick = function() { location.reload(); };
 	t.widget.menu_container.appendChild(t.refresh);
 
-	var span_debug = document.createElement("SPAN");
-	span_debug.className = 'button';
+	var span_debug = document.createElement("BUTTON");
+	span_debug.className = 'flat';
 	t.widget.menu_container.appendChild(span_debug);
 	new debug_status(span_debug);
 
-	t.play_all = document.createElement("DIV");
-	t.play_all.className = 'button disabled';
+	t.play_all = document.createElement("BUTTON");
+	t.play_all.className = 'flat';
+	t.play_all.disabled = "disabled";
 	t.play_all.innerHTML = "<img src='/static/test/play.png' style='vertical-align:bottom'/> Launch all tests";
 	t.widget.menu_container.appendChild(t.play_all);
 
@@ -70,6 +70,12 @@ function top_status_widget() {
 	t.widget.menu_container.appendChild(t.span_scenarios_waiting = document.createElement("SPAN"));
 	t.widget.menu_container.appendChild(t.span_scenarios_succeed = document.createElement("SPAN"));
 	t.widget.menu_container.appendChild(t.span_scenarios_failed = document.createElement("SPAN"));
+
+	t.back = document.createElement("BUTTON");
+	t.back.className = 'flat';
+	t.back.innerHTML = "<img src='"+theme.icons_16.back+"'/> Back to application";
+	t.back.onclick = function() { location.href = "/dynamic/application/page/logout"; };
+	t.widget.menu_container.appendChild(t.back);
 	
 	t.waiting_components = 0;
 	
@@ -105,24 +111,24 @@ function top_status_widget() {
 		t.span_nb_scenarios.innerHTML = nb+" scenario"+(nb>1?"s":"")+(nb>0?":":"");
 		nb = t.getNbScenariosWaiting();
 		if (nb == 0)
-			t.span_scenarios_waiting.innerHTML = "";
+			t.span_scenarios_waiting.removeAllChildren();
 		else
 			t.span_scenarios_waiting.innerHTML = "<img src='"+theme.icons_16.wait+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" not run";
 		if (nb == 0 || t.waiting_components > 0) {
-			t.play_all.className = 'button disabled';
+			t.play_all.disabled = 'disabled';
 			t.play_all.onclick = null;
 		} else {
-			t.play_all.className = 'button';
+			t.play_all.disabled = '';
 			t.play_all.onclick = function() { t.launch_all(); };
 		}
 		nb = t.getNbScenariosSucceed();
 			if (nb == 0)
-				t.span_scenarios_succeed.innerHTML = "";
+				t.span_scenarios_succeed.removeAllChildren();
 			else
 				t.span_scenarios_succeed.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" succeed";
 		nb = t.getNbScenariosFailed();
 		if (nb == 0)
-			t.span_scenarios_failed.innerHTML = "";
+			t.span_scenarios_failed.removeAllChildren();
 		else
 			t.span_scenarios_failed.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" failed";
 	};
@@ -148,7 +154,7 @@ function top_status_widget() {
 
 	t.component_loading = function(component) {
 		t.waiting_components++;
-		t.play_all.className = 'button disabled';
+		t.play_all.disabled = 'disabled';
 		t.play_all.onclick = null;
 		t.update_status();
 	};
@@ -164,12 +170,12 @@ new vertical_layout('page');
 function load_tests(component, ondone) {
 	var loading = document.createElement("IMG");
 	loading.src = theme.icons_16.loading;
-	var content = component.widget.collapsable.content;
-	content.innerHTML = "";
+	var content = component.widget.content;
+	content.removeAllChildren();
 	content.appendChild(loading);
 	service.json("test","get_tests",{component:component.name},function(tests){
 		component.tests = tests;
-		content.innerHTML = "";
+		content.removeAllChildren();
 		if (!tests) {
 			content.innerHTML = "Error while calling the service"; 
 			if (ondone) ondone();
@@ -282,10 +288,9 @@ function build_tests_table(title, component, list, play_function) {
 			td.style.verticalAlign = "top";
 			td.style.whiteSpace = "nowrap";
 			td.innerHTML = ""+(i+1)+"- "+list.scenarios[i].name;
-			list.scenarios[i].button = document.createElement("IMG");
-			list.scenarios[i].button.className = 'button';
-			list.scenarios[i].button.src = '/static/test/play.png';
-			list.scenarios[i].button.style.verticalAlign = "bottom";
+			list.scenarios[i].button = document.createElement("BUTTON");
+			list.scenarios[i].button.className = 'flat';
+			list.scenarios[i].button.innerHTML = "<img src='/static/test/play.png'/>";
 			list.scenarios[i].button.component = component;
 			list.scenarios[i].button.scenario = i;
 			list.scenarios[i].button.onclick = function() {
@@ -345,15 +350,16 @@ function component_widget(component) {
 	t.content.style.padding = "5px";
 	t.content.style.overflowX = "auto";
 
-	t.load = document.createElement("IMG");
-	t.load.style.verticalAlign = "bottom";
-	t.load.src = theme.icons_16.loading;
-	t.load.className = "button disabled";
+	t.load = document.createElement("BUTTON");
+	t.load.className = "flat";
+	t.load.disabled = "disabled";
+	t.load.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
 	t.collapsable.addToolLeft(t.load);
 
-	t.play_all = document.createElement("DIV");
+	t.play_all = document.createElement("BUTTON");
 	t.play_all.innerHTML = "<img src='/static/test/play.png' style='vertical-align:bottom'/> Launch all tests";
-	t.play_all.className = "button disabled";
+	t.play_all.className = "flat";
+	t.play_all.disabled = "disabled";
 	t.collapsable.addToolLeft(t.play_all);
 
 	t.collapsable.addToolLeft(t.span_nb_scenarios = document.createElement("SPAN"));
@@ -425,17 +431,17 @@ function component_widget(component) {
 	};
 
 	t.disable_refresh = function() {
-		t.load.src = theme.icons_16.loading;
-		t.load.className = "button disabled";
+		t.load.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
+		t.load.disabled = "disabled";
 		t.load.onclick = null;
 	};
 	t.enable_refresh = function() {
-		t.load.src = theme.icons_16.refresh;
-		t.load.className = "button";
+		t.load.innerHTML = "<img src='"+theme.icons_16.refresh+"'/>";
+		t.load.disabled = "";
 		t.load.onclick = function(e) { t.reload(); stopEventPropagation(e); return false; };
 	};
 	t.disable_launch_all = function() {
-		t.play_all.className = "button disabled";
+		t.play_all.disabled = "disabled";
 		t.play_all.onclick = null;
 	};
 	t.launch_all = function(ondone) {
@@ -504,26 +510,28 @@ function component_widget(component) {
 		t.span_nb_scenarios.innerHTML = nb+" scenario"+(nb>1?"s":"")+(nb>0?":":"");
 		nb = t.getNbScenariosWaiting();
 		if (nb == 0)
-			t.span_scenarios_waiting.innerHTML = "";
+			t.span_scenarios_waiting.removeAllChildren();
 		else
 			t.span_scenarios_waiting.innerHTML = "<img src='"+theme.icons_16.wait+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" not run";
 		if (nb == 0)
 			t.disable_launch_all();
 		else {
-			t.play_all.className = "button";
+			t.play_all.disabled = "";
 			t.play_all.onclick = function(e) { t.launch_all(); stopEventPropagation(e); return false; };
 		}
 		nb = t.getNbScenariosSucceed();
 			if (nb == 0)
-				t.span_scenarios_succeed.innerHTML = "";
+				t.span_scenarios_succeed.removeAllChildren();
 			else
 				t.span_scenarios_succeed.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" succeed";
 		nb = t.getNbScenariosFailed();
 		if (nb == 0)
-			t.span_scenarios_failed.innerHTML = "";
+			t.span_scenarios_failed.removeAllChildren();
 		else
 			t.span_scenarios_failed.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" failed";
 		top_status.update_status();
+		layout.invalidate(t.content);
+		layout.invalidate(t.collapsable.element);
 	};
 	t.update_status();
 	
@@ -591,16 +599,15 @@ function play_function_test(component, scenario_index, ondone) {
 			}
 			if (!success) {
 				scenario.icon.src = theme.icons_16.error;
-				scenario.button = document.createElement("IMG");
-				scenario.button.className = 'button';
-				scenario.button.src = '/static/test/replay.png';
-				scenario.button.style.verticalAlign = "bottom";
+				scenario.button = document.createElement("BUTTON");
+				scenario.button.className = 'flat';
+				scenario.button.innerHTML = "<img src='/static/test/replay.png'/>";
 				scenario.button.component = component;
 				scenario.button.scenario = scenario_index;
 				scenario.button.onclick = function() {
-					scenario.init_step.result_container.innerHTML = "";
+					scenario.init_step.result_container.removeAllChildren();
 					for (var i = 0; i < scenario.steps.length; ++i)
-						scenario.steps[i].result_container.innerHTML = "";
+						scenario.steps[i].result_container.removeAllChildren();
 					play_function_test(this.component, this.scenario);
 				};
 				scenario.icon.parentNode.appendChild(scenario.button);
@@ -654,16 +661,15 @@ function play_service_test(component, scenario_index, ondone) {
 		}
 		if (!success) {
 			scenario.icon.src = theme.icons_16.error;
-			scenario.button = document.createElement("IMG");
-			scenario.button.className = 'button';
-			scenario.button.src = '/static/test/replay.png';
-			scenario.button.style.verticalAlign = "bottom";
+			scenario.button = document.createElement("BUTTON");
+			scenario.button.className = 'flat';
+			scenario.button.innerHTML = "<img src='/static/test/replay.png'/>";
 			scenario.button.component = component;
 			scenario.button.scenario = scenario_index;
 			scenario.button.onclick = function() {
-				scenario.init_step.result_container.innerHTML = "";
+				scenario.init_step.result_container.removeAllChildren();
 				for (var i = 0; i < scenario.steps.length; ++i)
-					scenario.steps[i].result_container.innerHTML = "";
+					scenario.steps[i].result_container.removeAllChildren();
 				play_service_test(this.component, this.scenario);
 			};
 			scenario.icon.parentNode.appendChild(scenario.button);
@@ -812,14 +818,13 @@ function play_ui_test(component, scenario_index, ondone) {
 		}
 		if (!success) {
 			scenario.icon.src = theme.icons_16.error;
-			scenario.button = document.createElement("IMG");
-			scenario.button.className = 'button';
-			scenario.button.src = '/static/test/replay.png';
-			scenario.button.style.verticalAlign = "bottom";
+			scenario.button = document.createElement("BUTTON");
+			scenario.button.className = 'flat';
+			scenario.button.innerHTML = "<img src='/static/test/replay.png'/>";
 			scenario.button.component = component;
 			scenario.button.scenario = scenario_index;
 			scenario.button.onclick = function() {
-				scenario.result_container.innerHTML = "";
+				scenario.result_container.removeAllChildren();
 				play_ui_test(this.component, this.scenario);
 			};
 			scenario.icon.parentNode.appendChild(scenario.button);
@@ -831,7 +836,7 @@ function play_ui_test(component, scenario_index, ondone) {
 		}
 		// execute ui
 		remove_javascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(scenario.path));
-		add_javascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(scenario.path),function() {
+		addJavascript("/static/test/ui_script.php?component="+component.name+"&path="+encodeURIComponent(scenario.path),function() {
 			var actions = window["Test_"+component.name+"_"+scenario.path](res_step.data);
 			browser_control.run(actions, function(action){
 				scenario.result_container.innerHTML = " <img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> "+action;
@@ -842,14 +847,13 @@ function play_ui_test(component, scenario_index, ondone) {
 					scenario.result_container.innerHTML = " <img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
 				if (error) {
 					scenario.icon.src = theme.icons_16.error;
-					scenario.button = document.createElement("IMG");
-					scenario.button.className = 'button';
-					scenario.button.src = '/static/test/replay.png';
-					scenario.button.style.verticalAlign = "bottom";
+					scenario.button = document.createElement("BUTTON");
+					scenario.button.className = 'flat';
+					scenario.button.src = "<img src='/static/test/replay.png'/>";
 					scenario.button.component = component;
 					scenario.button.scenario = scenario_index;
 					scenario.button.onclick = function() {
-						scenario.result_container.innerHTML = "";
+						scenario.result_container.removeAllChildren();
 						play_ui_test(this.component, this.scenario);
 					};
 					scenario.icon.parentNode.appendChild(scenario.button);

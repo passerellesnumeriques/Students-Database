@@ -2,7 +2,7 @@
 class JSDoc {
 	
 	public static function generate_doc(&$page, $file) {
-		$page->require_javascript("jsdoc.js");
+		$page->requireJavascript("jsdoc.js");
 		$filename = tempnam(sys_get_temp_dir(), "pn");
 		unlink($filename);
 		set_time_limit(120);

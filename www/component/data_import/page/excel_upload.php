@@ -1,7 +1,7 @@
 <?php 
 class page_excel_upload extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		if (isset($_GET["button"])) {
@@ -43,8 +43,8 @@ class page_excel_upload extends Page {
 			PNApplication::error("Invalid file format: ".$e->getMessage());
 			return;
 		}
-		$this->add_javascript("/static/excel/excel.js");
-		$this->add_javascript("/static/widgets/splitter_vertical/splitter_vertical.js");
+		$this->addJavascript("/static/excel/excel.js");
+		$this->addJavascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("setTimeout(init_page,1);");
 		?>
 		<div id='excel_container' style='width:100%;height:100%'>
@@ -106,7 +106,19 @@ class page_excel_upload extends Page {
 				for ($row = 0; $row < $rows; $row++) {
 					try {
 						$cell = $sheet->getCellByColumnAndRow($col, $row+1);
-						$val = $cell->getFormattedValue();
+						$val = $cell->getCalculatedValue();
+						if (PHPExcel_Shared_Date::isDateTime($cell) && is_numeric($val)) {
+							$val = PHPExcel_Shared_Date::ExcelToPHPObject($cell->getCalculatedValue());
+							$date = getdate($val->getTimestamp());
+							if ($date["seconds"] == 0) {
+								if ($date["minutes"] == 0 && $date["hours"] == 0)
+									$val = $val->format("Y-m-d"); // only a date
+								else
+									$val = $val->format("Y-m-d H:i"); // date time
+							} else
+								$val = $val->format("Y-m-d H:i:s"); // date time including seconds
+						} else
+							$val = $cell->getFormattedValue();
 					} catch (Exception $e) {
 						$val = "ERROR: ".$e->getMessage();
 					}

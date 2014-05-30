@@ -20,6 +20,9 @@
 .section.sub>.header {
     background: linear-gradient(to bottom, #c0c0c0 0%, #a0a0a0 100%);
 }
+.section.soft {
+	border: 1px solid #b0b0ff;
+}
 .section.soft>.header {
     border-bottom: none;
     background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
@@ -43,11 +46,18 @@
 .section>.footer {
 	border-radius: 0px 0px 5px 5px;
 	padding: 2px;
-	background-color: #E0E0E0;
+	background-color: #F0F0F0;
 	border-top: 1px solid #C0C0C0;
 }
 .section>.footer_empty {
 	border-radius: 0px 0px 5px 5px;
 	background-color: white;
 	height: 3px;
+}
+.section:not(.sub):not(.soft)>.header button {
+	background: linear-gradient(to bottom, #ffffff 0%, #d0d0d0 100%);
+}
+.section:not(.sub):not(.soft)>.header button:hover {
+	background: #ffffff;
+    box-shadow: 1px 1px 1px rgba(255,255,255,0.3);
 }

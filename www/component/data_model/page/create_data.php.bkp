@@ -1,7 +1,7 @@
 <?php 
 class page_create_data extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$input = json_decode($_POST["input"], true);
@@ -12,7 +12,7 @@ class page_create_data extends Page {
 		$to_create = array();
 		$root_create = $this->create($root_table, $sub_model, $to_create, null, false, null);
 		
-		$this->add_javascript("/static/widgets/vertical_layout.js");
+		$this->addJavascript("/static/widgets/vertical_layout.js");
 		$this->onload("new vertical_layout('wizard_page');");
 		
 		echo "<div id='wizard_page' style='width:100%;height:100%'>";
@@ -256,8 +256,8 @@ class page_create_data extends Page {
 					$id = $this->generateID();
 					$html .= "<td id='$id'></td>";
 					$tf = $data->getTypedField($create->sub_model);
-					$this->add_javascript("/static/widgets/typed_field/typed_field.js");
-					$this->require_javascript($tf[0].".js");
+					$this->addJavascript("/static/widgets/typed_field/typed_field.js");
+					$this->requireJavascript($tf[0].".js");
 					$this->onload("document.getElementById('$id').appendChild(new ".$tf[0]."(".json_encode($data->getNewData()).",true,".$tf[1].").getHTMLElement());");
 				}
 				$html .= "</table>";

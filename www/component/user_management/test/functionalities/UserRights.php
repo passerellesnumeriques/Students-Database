@@ -73,11 +73,11 @@ class UserRights_TestNonExistingRight extends TestFunctionalitiesStep {
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","user_manage_users","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (PNApplication::has_errors()) return "Errors before checking the right";
+		if (PNApplication::hasErrors()) return "Errors before checking the right";
 		PNApplication::$instance->user_management->has_right("toto");
-		if (!PNApplication::has_errors())
+		if (!PNApplication::hasErrors())
 			return "No error when checking a non-existing right";
-		PNApplication::clear_errors();
+		PNApplication::clearErrors();
 		PNApplication::$instance->user_management->logout();
 		return null;
 	}

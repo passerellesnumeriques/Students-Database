@@ -1,10 +1,10 @@
 <?php 
 class page_dashboard extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->require_javascript("section.js");
+		$this->requireJavascript("section.js");
 		theme::css($this, "application.css");
 ?>
 <div style='position:absolute;top:0px;left:0px;width:50%;'>
@@ -27,7 +27,7 @@ class page_dashboard extends Page {
 	</div>
 </div>
 <script type='text/javascript'>
-var calendars_section = section_from_html('calendars');
+var calendars_section = sectionFromHTML('calendars');
 require("calendar_view.js");
 require("calendar_view_week.js");
 function init_calendars() {
@@ -109,7 +109,7 @@ function init_calendars() {
 	});
 }
 
-var general_news_section = section_from_html('general_news');
+var general_news_section = sectionFromHTML('general_news');
 var general_news_loading = document.createElement("IMG");
 general_news_loading.src = "/static/news/loading.gif";
 general_news_loading.style.position = "absolute";
@@ -117,7 +117,7 @@ general_news_loading.style.visibility = "hidden";
 general_news_loading.style.verticalAlign = "bottom";
 general_news_section.addTool(general_news_loading);
 
-var other_news_section = section_from_html('other_news');
+var other_news_section = sectionFromHTML('other_news');
 var other_news_loading = document.createElement("IMG");
 other_news_loading.src = "/static/news/loading.gif";
 other_news_loading.style.position = "absolute";

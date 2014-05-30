@@ -2,16 +2,16 @@
 	position: absolute;
 	visibility: hidden;
 	top: -10000px;
-	border: 1px solid black;
-	background-color: #F0F0F0;
+	border: 1px solid #808080;
+	background-color: #FFFFFF;
 	box-shadow: 3px 3px 3px #C0C0D0;
 }
 .context_menu_item {
-	background-color: #F0F0F0;
+	background-color: #FFFFFF;
 	text-align: left;
 	cursor: pointer;
 	padding: 1px;
-	border: 1px solid #F0F0F0;
+	border: 1px solid #FFFFFF;
 }
 .context_menu_item:hover, .context_menu_item.selected {
 	background-color: #FFF0D0;
@@ -29,4 +29,12 @@
 	border-bottom: 1px solid #8080C0;
 	text-align: center;
 	padding: 2px;
+}
+.context_menu_item.disabled {
+	color: #808080;
+}
+.context_menu_item.disabled:hover, .context_menu_item.disabled.selected {
+	color: #808080;
+	background-color: #FFFFFF;
+	border: 1px solid #FFFFFF;
 }

@@ -17,7 +17,7 @@ import org.pn.jsdoc.model.builtin.BuiltinArray;
 import org.pn.jsdoc.model.builtin.BuiltinBoolean;
 import org.pn.jsdoc.model.builtin.BuiltinDate;
 import org.pn.jsdoc.model.builtin.BuiltinDocument;
-import org.pn.jsdoc.model.builtin.BuiltinDOMNode;
+import org.pn.jsdoc.model.builtin.BuiltinElement;
 import org.pn.jsdoc.model.builtin.BuiltinHistory;
 import org.pn.jsdoc.model.builtin.BuiltinLocation;
 import org.pn.jsdoc.model.builtin.BuiltinMath;
@@ -148,7 +148,7 @@ public class Global extends Container {
 		content.put("Date", new BuiltinDate(this));
 		content.put("Math", new BuiltinMath(this));
 		content.put("Array", new BuiltinArray(this));
-		content.put("DOMNode", new BuiltinDOMNode(this));
+		content.put("Element", new BuiltinElement(this));
 	}
 	
 }

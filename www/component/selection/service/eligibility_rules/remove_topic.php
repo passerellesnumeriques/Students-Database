@@ -1,12 +1,12 @@
 <?php 
 class service_eligibility_rules_remove_topic extends Service {
 	
-	public function get_required_rights() { return array("manage_exam_subject"); }
+	public function getRequiredRights() { return array("manage_exam_subject"); }
 	public function documentation() {echo "Remove an exam topic for eligibility rules from the database";}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>id</code> the id of the topic to remove";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<ul>
 		<li><code>true</code> if well performed</li>

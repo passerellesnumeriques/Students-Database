@@ -99,7 +99,7 @@ function initDatabaselock() {
 		var popup = false;
 		window.databaselock._has_popup = true;
 		if (window.databaselock._locks.length > 0) {
-			add_javascript("/static/widgets/popup_window.js",function() {
+			addJavascript("/static/widgets/popup_window.js",function() {
 				var p = new popup_window("You are inactive",theme.icons_16.warning,null,true);
 				p.setContentFrame("/static/data_model/databaselock_inactivity.html");
 				p.onclose = function() {

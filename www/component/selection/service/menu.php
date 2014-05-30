@@ -1,33 +1,36 @@
 <?php 
 class service_menu extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Provides the selection menu"; }
-	public function input_documentation() { echo "No"; }
-	public function output_documentation() { echo "The HTML to put in the menu"; }
-	public function get_output_format($input) { return "text/html"; }
+	public function inputDocumentation() { echo "No"; }
+	public function outputDocumentation() { echo "The HTML to put in the menu"; }
+	public function getOutputFormat($input) { return "text/html"; }
 		
 	public function execute(&$component, $input) {
 		$campaigns = SQLQuery::create()->select("SelectionCampaign")->execute();
 		$id = $component->getCampaignId();
 		$can_manage = PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
 ?>
-<div style="padding-left:5px;text-align:center;margin-bottom:5px">
+<div style="padding-left:5px;text-align:center;margin-bottom:5px;">
 Selection Campaign:<br/>
-<select onchange="changeCampaign(this.value);"><?php 
+<select onchange="changeCampaign(this.value);">
+<option value='0'></option>
+<?php 
 foreach ($campaigns as $c) {
 	echo "<option value='".$c["id"]."'";
 	if ($c["id"] == $id) echo " selected='selected'";
 	echo ">".htmlentities($c["name"])."</option>";
 }
 ?></select>
+<br/>
 <?php if ($can_manage) { ?>
 	<?php if ($id <> null && $id > 0) {?>
-	<button class='flat' onclick='renameCampaign();' title='Rename this campaign'><img src='<?php echo theme::$icons_16["edit_white"];?>'/></button>
-	<button class='flat' onclick='removeCampaign();' title='Remove this campaign'><img src='<?php echo theme::$icons_16["remove_white"];?>'/></button>
+	<button class='flat' style='margin:0px' onclick='renameCampaign();' title='Rename this campaign'><img src='<?php echo theme::$icons_16["edit_white"];?>'/></button>
+	<button class='flat' style='margin:0px' onclick='removeCampaign();' title='Remove this campaign'><img src='<?php echo theme::$icons_16["remove_white"];?>'/></button>
 	<?php } ?>
-<button class='flat' onclick='createCampaign();' title='Create a new Selection Campaign'><img src='<?php echo theme::$icons_16["add_white"];?>'/></button>
+<button class='flat' style='margin:0px' onclick='createCampaign();' title='Create a new Selection Campaign'><img src='<?php echo theme::$icons_16["add_white"];?>'/></button>
 <?php } ?>
 </div>
 
@@ -88,7 +91,7 @@ foreach ($campaigns as $c) {
 	<img src='/static/selection/applicant/applicants_white.png'/>
 	Applicants List
 </a>
-<a class='application_left_menu_item' href='/dynamic/selection/page/organizations_for_selection'>
+<a class='application_left_menu_item' href='/dynamic/contact/page/organizations?creator=Selection'>
 	<img src='/static/selection/organizations_white.png'/>
 	Partners List
 </a>
@@ -100,6 +103,17 @@ foreach ($campaigns as $c) {
 	echo json_encode($c["name"]);
 }
 ?>];
+var current_campaign_name = <?php 
+$found = false;
+foreach ($campaigns as $c) if ($c["id"] == $id) { $found = true; echo json_encode($c["name"]); break;}
+if (!$found) echo "''";
+?>;
+function refreshCampaigns() {
+	// refresh menu
+	getIFrameWindow(findFrame('pn_application_frame')).reloadMenu();
+	// refresh page
+	getIFrameWindow(findFrame('application_frame')).location.reload();
+}
 function createCampaign() {
 	input_dialog(theme.icons_16.question,
 		"Create a selection campaign",
@@ -115,10 +129,10 @@ function createCampaign() {
 		function(text){
 			if(!text) return;
 			var div_locker = window.top.lock_screen(null,"Creation of the new selection campaign...");
-			service.json("selection","create_campaign",{name:text.trim()},function(res){
+			service.json("selection","create_campaign",{name:text.trim().uniformFirstLetterCapitalized()},function(res){
 				unlock_screen(div_locker);
 				if(!res) return;
-				location.href = "?section=selection";
+				refreshCampaigns();
 			});
 		}
 	);
@@ -126,9 +140,49 @@ function createCampaign() {
 function changeCampaign(id) {
 	service.json("selection","set_campaign_id",{campaign_id:id},function(res){
 		if(!res) return;
-		location.href = "?section=selection";
+		refreshCampaigns();
 	});
 }
+<?php if ($id <> null && $id > 0) {?>
+function renameCampaign() {
+	input_dialog(theme.icons_16.question,
+		"Rename the current selection campaign",
+		"Enter the new name of the selection campaign",
+		current_campaign_name,
+		50,
+		function(text){
+			if(!text.checkVisible()) return "You must enter at least one visible caracter";
+			text = text.trim().toLowerCase();
+			if (text == current_campaign_name.trim().toLowerCase()) return null;
+			for (var i = 0; i < campaign_names.length; ++i) {
+				if (text == campaign_names[i].trim().toLowerCase()) return "A campaign already exists with this name";
+			}
+			return null;
+		},
+		function(text){
+			if (!text) return;
+			if (text.trim().toLowerCase() == current_campaign_name.trim().toLowerCase()) return;
+			var div_locker = lock_screen();
+			service.json("selection","set_campaign_name",{id:<?php echo $id;?>, name:text.trim().uniformFirstLetterCapitalized()},function(res){
+				unlock_screen(div_locker);
+				if(!res) return;
+				refreshCampaigns();
+			});
+		}
+	);
+}
+function removeCampaign() {
+	confirm_dialog("Are you sure you want to remove this campaign?<br/><i><b>All the related data will be removed</i></b>",function(res){
+		if(!res) return;
+		var div_locker = lock_screen();
+		service.json("selection","remove_campaign",{id:<?php echo $id;?>},function(res){
+			unlock_screen(div_locker);
+			if(!res) return;
+			refreshCampaigns();
+		});
+	});
+}
+<?php } ?>
 </script>
 <?php 
 	}

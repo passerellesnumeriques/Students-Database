@@ -14,16 +14,16 @@ function prepareDataAndSaveIS($data,$create){
 }
 
 class service_IS_save extends Service{
-	public function get_required_rights(){return array("manage_information_session");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("manage_information_session");}
+	public function inputDocumentation(){
 		?>
 		<ul>
 			<li><code>data</code> {array} Information session data, coming from IS_profile.js</li>
-			<li><code>event</code> {array} Calendar eevnt object</li>
+			<li><code>event</code> {array} Calendar event object</li>
 		</ul>
 		<?php
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		?>
 		<ul>
 			<li><code>false</code> {boolean} if an error occured</li>
@@ -120,6 +120,7 @@ class service_IS_save extends Service{
 					$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
 					$event["app_link_name"] = "This event is an Information Session: click to see it";
 				}
+				$data["date"] = $event["id"];
 				try{
 					PNApplication::$instance->calendar->saveEvent($event);
 				} catch(Exception $e){
@@ -167,13 +168,13 @@ class service_IS_save extends Service{
 					->savePartnersAndContactsPoints($data["id"],$rows_IS_partner,$rows_IS_contact_point,"InformationSession","information_session");
 			}
 				
-			if(!$everything_ok || PNApplication::has_errors()){
+			if(!$everything_ok || PNApplication::hasErrors()){
 				SQLQuery::rollbackTransaction();
 				echo "false";
 			} else {
 				SQLQuery::commitTransaction();
 				echo "{id:".json_encode($data["id"]);
-				echo ",date:".json_encode($data["date"]);
+				echo ",date:".json_encode(@$data["date"]);
 				echo "}";
 			}
 		}

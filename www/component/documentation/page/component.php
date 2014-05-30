@@ -1,11 +1,11 @@
 <?php 
 class page_component extends Page {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->add_stylesheet("/static/documentation/CodeDoc.css");
-		$this->add_stylesheet("/static/documentation/style.css");
+		$this->addStylesheet("/static/documentation/CodeDoc.css");
+		$this->addStylesheet("/static/documentation/style.css");
 		
 		$name = $_GET["name"];
 		echo "<div style='padding:10px;text-align:center;font-size:x-large'>$name</div>";
@@ -31,7 +31,7 @@ class page_component extends Page {
 			if ($i === FALSE) continue;
 			$ext = strtolower(substr($filename, $i+1));
 			if ($ext == "php" || $ext == "inc") {
-				if ($filename == "datamodel.inc") continue;
+				if (substr($filename, 0, 9) == "datamodel") continue;
 				if ($filename == "init_data.inc") continue;
 				array_push($files, "component/$name/$filename");
 			}
@@ -115,12 +115,12 @@ class page_component extends Page {
 		echo "</tr>";
 		echo "<th valign=top>Input</th>";
 		echo "<td class='codedoc_comment'>";
-		$c->input_documentation();
+		$c->inputDocumentation();
 		echo "</td>";
 		echo "</tr>";
 		echo "<th valign=top>Output</th>";
 		echo "<td class='codedoc_comment'>";
-		$c->output_documentation();
+		$c->outputDocumentation();
 		echo "</td>";
 		echo "</tr>";
 	}

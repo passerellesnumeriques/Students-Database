@@ -1,11 +1,11 @@
 <?php 
 class service_check_datamodel extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() {}
-	public function input_documentation() {}
-	public function output_documentation() {}
+	public function inputDocumentation() {}
+	public function outputDocumentation() {}
 	
 	public function execute(&$component, $input) {
 		$problems = array();
@@ -49,12 +49,12 @@ class service_check_datamodel extends Service {
 					for ($i = 1; $i < strlen($name); $i++) {
 						$c = substr($name, $i, 1);
 						if ($c == "_") continue;
-						if (!ctype_alpha($c)) {
-							array_push($problems, "Invalid column name '".$name."' in table '".$table->getName()."': must contain only small letters and underscore");
+						if (!ctype_alnum($c)) {
+							array_push($problems, "Invalid column name '".$name."' in table '".$table->getName()."': must contain only small letters, digits and underscore");
 							break;
 						}
 						if (strtolower($c) <> $c) {
-							array_push($problems, "Invalid column name '".$name."' in table '".$table->getName()."': must contain only small letters and underscore");
+							array_push($problems, "Invalid column name '".$name."' in table '".$table->getName()."': must contain only small letters, digits and underscore");
 							break;
 						}
 					}

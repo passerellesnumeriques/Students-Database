@@ -15,11 +15,9 @@ field_enum.prototype._create = function(data) {
 		var select = document.createElement("SELECT");
 		var selected = 0;
 		var o;
-		if (this.config.can_be_empty) {
-			o = document.createElement("OPTION");
-			o.value = "";
-			select.add(o);
-		}
+		o = document.createElement("OPTION");
+		o.value = "";
+		select.add(o);
 		for (var i = 0; i < this.config.possible_values.length; ++i) {
 			o = document.createElement("OPTION");
 			if (this.config.possible_values[i] instanceof Array) {
@@ -30,32 +28,36 @@ field_enum.prototype._create = function(data) {
 				o.text = this.config.possible_values[i];
 			}
 			select.add(o);
-			if (data == o.value) selected = i+(this.config.can_be_empty?1:0);
+			if (data == o.value) selected = i+1;
 		}
 		select.onclick = function(ev) { stopEventPropagation(ev); };
 		select.selectedIndex = selected;
 		select.style.margin = "0px";
 		select.style.padding = "0px";
-		var f = function() { setTimeout(function() { t._datachange(); },1); };
-		select.onchange = f;
-		select.onblur = f;
+		select.onchange = function() { t._datachange(); };
+		select.onblur = function() { t._datachange(); };
 		this.element.appendChild(select);
-		this.getCurrentData = function() {
+		this._getEditedData = function() {
 			if (select.selectedIndex < 0) return null;
 			if (this.config.can_be_empty && select.selectedIndex == 0) return null;
 			return select.options[select.selectedIndex].value; 
 		};
-		this.setData = function(data) {
+		this._setData = function(data) {
 			for (var i = 0; i < select.options.length; ++i)
 				if (select.options[i].value == data) {
 					select.selectedIndex = i;
-					f();
 					break;
 				}
 		};
 		this.signal_error = function(error) {
 			this.error = error;
 			select.style.border = error ? "1px solid red" : "";
+		};
+		this.validate = function() {
+			var err = null;
+			if (!this.config.can_be_empty && select.selectedIndex == 0)
+				err = "Please select a value";
+			this.signal_error(err);
 		};
 	} else {
 		this.get_text_from_data = function(data) {
@@ -81,16 +83,9 @@ field_enum.prototype._create = function(data) {
 			return text;
 		};
 		this.element.appendChild(this.text = document.createTextNode(this.get_text_from_data(data)));
-		this.element.style.height = "16px";
-		this.data = data;
-		this.setData = function(data) {
-			if (this.data == data) return;
+		this.element.style.height = "100%";
+		this._setData = function(data) {
 			this.text.nodeValue = this.get_text_from_data(data);
-			this.data = data;
-			this._datachange();
-		};
-		this.getCurrentData = function() {
-			return this.data;
 		};
 		this.signal_error = function(error) {
 			this.error = error;

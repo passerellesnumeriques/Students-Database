@@ -4,7 +4,7 @@ function google_userprofile(onready) {
 		return;
 	}
 		
-	window.top.add_javascript("/static/google/google.js",function() {
+	window.top.addJavascript("/static/google/google.js",function() {
 		window.top.google.need_connection(function(){
 			window.top.gapi.client.load('oauth2','v1',function(){
 				var req = window.top.gapi.client.oauth2.userinfo.get();

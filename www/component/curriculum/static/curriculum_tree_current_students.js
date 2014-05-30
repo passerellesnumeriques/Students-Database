@@ -1,5 +1,9 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * Current students: batches which did not graduate yet
+ * @param {CurriculumTreeNode_AllStudents} parent parent node
+ */
 function CurriculumTreeNode_CurrentStudents(parent) {
 	CurriculumTreeNode.call(this, parent, "current_students", true);
 	this.item.cells[0].addStyle({fontWeight:"bold"});
@@ -9,6 +13,10 @@ function CurriculumTreeNode_CurrentStudents(parent) {
 CurriculumTreeNode_CurrentStudents.prototype = new CurriculumTreeNode;
 CurriculumTreeNode_CurrentStudents.prototype.constructor = CurriculumTreeNode_CurrentStudents;
 CurriculumTreeNode_CurrentStudents.prototype.createTitle = function() { return "Current Students"; };
+/**
+ * Return the list of Batch which are not yet graduated
+ * @returns {Array} list of Batch objects
+ */
 CurriculumTreeNode_CurrentStudents.prototype.getBatches = function() {
 	var list = [];
 	for (var i = 0; i < batches.length; ++i) {

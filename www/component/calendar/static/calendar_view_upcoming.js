@@ -1,7 +1,7 @@
 /**
  * View upcoming events of calendars
  * @param {CalendarView} view view manager
- * @param {DOMNode} container where to display
+ * @param {Element} container where to display
  */
 function calendar_view_upcoming(view, container) {
 	/** Starting date to display */ 
@@ -12,6 +12,9 @@ function calendar_view_upcoming(view, container) {
 	/** List of rows of the agenda */
 	this._rows = [];
 	
+	/** returns an empty string 
+	 * @returns {String} empty string
+	 */
 	this.getPositionText = function() { return ""; };
 	
 	/** Initialize the display */
@@ -53,7 +56,7 @@ function calendar_view_upcoming(view, container) {
 
 				var tr = document.createElement("TR");
 				var td = document.createElement("TD"); tr.appendChild(td);
-				td.innerHTML = this._2digits(ev.start.getHours())+":"+this._2digits(ev.start.getMinutes())+" - "+this._2digits(ev.end.getHours())+":"+this._2digits(ev.end.getMinutes());
+				td.innerHTML = _2digits(ev.start.getHours())+":"+_2digits(ev.start.getMinutes())+" - "+_2digits(ev.end.getHours())+":"+_2digits(ev.end.getMinutes());
 				td = document.createElement("TD"); tr.appendChild(td);
 				td.innerHTML = ev.title;
 				tr.event = ev;
@@ -80,7 +83,7 @@ function calendar_view_upcoming(view, container) {
 			var row = this._rows[row_i];
 			for (var i = 0; i < row.table.childNodes.length; ++i) {
 				var tr = row.table.childNodes[i];
-				if (tr.event.uid == uid) {
+				if (tr.event && tr.event.uid == uid) {
 					row.table.removeChild(tr);
 					i--;
 				}
@@ -88,15 +91,6 @@ function calendar_view_upcoming(view, container) {
 		}
 	};
 
-	/** Add a 0 if the number is only 1 digit
-	 * @param {Number} n the number
-	 */
-	this._2digits = function(n) {
-		var s = ""+n;
-		while (s.length < 2) s = "0"+s;
-		return s;
-	};
-	
 	this._init();
 	
 }

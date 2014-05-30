@@ -15,6 +15,7 @@ class DataBaseSystem_MySQL extends DataBaseSystem {
 		return DataBaseSystem::ERR_OK;
 	}
 
+	/** @var resource $conn the connection to MySQL server */
 	private $conn = null;
 
 	public function selectDatabase($db_name) {

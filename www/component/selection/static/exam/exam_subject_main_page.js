@@ -56,22 +56,16 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 		tr_head.appendChild(th);
 		t.table.appendChild(tr_head);
 		//set the body
-		if(t.all_exams.length > 0)
-			var ul = document.createElement("ul");
 		for(var i = 0; i < t.all_exams.length; i++){
 			var tr = document.createElement("tr");
 			t._addExamRow(tr,i);
-			ul.appendChild(tr);
+			t.table.appendChild(tr);
 		}
-		if(t.all_exams.length > 0)
-			t.table.appendChild(ul);
 		
 		//set the footer
-		var tr_foot = document.createElement("tr");
-		var td_foot = document.createElement("td");
-		var create_button = document.createElement("div");
-		create_button.className = "button";
-		create_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom")+"'/> Create a subject";
+		var create_button = document.createElement("button");
+		create_button.className = "action";
+		create_button.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/subject_white.png",theme.icons_10.add,"right_bottom")+"'/> Create a subject";
 		create_button.onclick = function(){
 // 						location.assign("/dynamic/selection/page/exam/create_subject");
 			var pop = new popup_window("Create an Exam Subject",
@@ -79,12 +73,48 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 										t.container,
 										false
 									);
-			pop.setContentFrame("/dynamic/selection/page/exam/create_subject");
+			pop.setContentFrame("/dynamic/selection/page/exam/subject");
+			pop.onclose = function() {
+				location.reload();
+			};
 			pop.show();
 		};
-		td_foot.appendChild(create_button);
-		tr_foot.appendChild(td_foot);
-		t.table.appendChild(tr_foot);
+		t.section.addToolBottom(create_button);
+		
+		var import_excel = document.createElement("button");
+		import_excel.className = "action";
+		import_excel.innerHTML = "<img src = '"+theme.build_icon("/static/selection/exam/subject_white.png",theme.icons_10._import,"right_bottom")+"'/> Import subject from Excel";
+		import_excel.onclick = function(){
+// 						location.assign("/dynamic/selection/page/exam/create_subject");
+			var pop = new popup_window("Import Exam Subject",
+										theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10._import,"right_bottom"),
+										t.container,
+										false
+									);
+			pop.setContentFrame("/dynamic/selection/page/exam/import_subject");
+			pop.onclose = function() {
+				location.reload();
+			};
+			pop.show();
+		};
+		t.section.addToolBottom(import_excel);
+
+		var copy_subject = document.createElement("button");
+		copy_subject.className = "action";
+		copy_subject.innerHTML = "<img src = '"+theme.icons_16.copy+"'/> Copy from previous campaign";
+		copy_subject.onclick = function(){
+			var pop = new popup_window("Create Exam Subject",
+										theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
+										t.container,
+										false
+									);
+			pop.setContentFrame("/dynamic/selection/page/exam/copy_subject");
+			pop.onclose = function() {
+				location.reload();
+			};
+			pop.show();
+		};
+		t.section.addToolBottom(copy_subject);
 	};
 
 	/**
@@ -94,9 +124,23 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 	 */
 	t._addExamRow = function(tr,i){
 		var td_name = document.createElement("td");
-		var li = document.createElement("li");
-		li.innerHTML = "<a title = 'See subject' class = 'black_link' href = '/dynamic/selection/page/exam/subject?id="+t.all_exams[i].id+"&readonly=true'/>"+t.all_exams[i].name+"</a>";
-		td_name.appendChild(li);
+		td_name.innerHTML = "<img src='"+theme.icons_10.bullet_black+"' style='margin-left:5px'/> ";
+		var link = document.createElement("A");
+		link.title = "See subject";
+		link.className = "black_link";
+		link.href = "/dynamic/selection/page/exam/subject?id="+t.all_exams[i].id+"&readonly=true";
+		link.appendChild(document.createTextNode(t.all_exams[i].name));
+		td_name.appendChild(link);
+		link.onclick = function() {
+			var t=this;
+			require("popup_window.js",function(){
+				var p = new popup_window("Exam Subject", "/static/selection/exam/exam_16.png", "");
+				p.setContentFrame(t.href);
+				p.onclose = function() { location.reload(); };
+				p.show();
+			});
+			return false;
+		};
 		td_name.id = t.all_exams[i].id+"_td";
 		tr.appendChild(td_name);
 		tr.menu = []; // menu to display on mouse over
@@ -113,7 +157,7 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 			menu.showBelowElement(document.getElementById(this.id+"_td"));
 		};
 		export_button.style.visibility = "hidden";
-		export_button.className = "button_verysoft";
+		export_button.className = "flat";
 		td_export = document.createElement("td");
 		td_export.appendChild(export_button);
 		tr.appendChild(td_export);
@@ -134,11 +178,17 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 		if(t.can_manage){
 			edit_button = t._createButton("<img src = '"+theme.icons_16.edit+"'/>",t.all_exams[i].id);
 			edit_button.onclick = function(){
-				location.assign("/dynamic/selection/page/exam/subject?id="+this.id);
+				var t=this;
+				require("popup_window.js",function(){
+					var p = new popup_window("Exam Subject", "/static/selection/exam/exam_16.png", "");
+					p.setContentFrame("/dynamic/selection/page/exam/subject?id="+t.id);
+					p.onclose = function() { location.reload(); };
+					p.show();
+				});
 			};
 			edit_button.title = "Edit this subject";
 			edit_button.style.visibility = "hidden";
-			edit_button.className = "button_verysoft";
+			edit_button.className = "flat";
 			td_edit = document.createElement("td");
 			td_edit.appendChild(edit_button);
 			tr.appendChild(td_edit);
@@ -147,7 +197,7 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 			remove_button = t._createButton("<img src = '"+theme.icons_16.remove+"'/>", t.all_exams[i].id);
 			remove_button.title = "Remove this subject";
 			remove_button.style.visibility = "hidden";
-			remove_button.className = "button_verysoft";
+			remove_button.className = "flat";
 			remove_button.onclick = function(){
 				var subject_id = this.id;
 				confirm_dialog("Do you really want to remove this exam subject and all the linked data?<br/><i>Parts, questions, topics...</i>",function(r){
@@ -181,9 +231,8 @@ function exam_subject_main_page(container, can_see, can_manage, all_exams){
 	 * @returns {HTML} the created button
 	 */
 	t._createButton = function(content, id){
-		var div = document.createElement("div");
+		var div = document.createElement("BUTTON");
 		div.innerHTML = content;
-		div.className = "button";
 		div.id = id;
 		return div;
 	};			

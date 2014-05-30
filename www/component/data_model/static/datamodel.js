@@ -11,17 +11,31 @@ datamodel = {
 	 * @param {window} win the window where the widget is (given, so when the window is closed, we can unregister it automatically)
 	 * @param {DataDisplay} data_display the data
 	 * @param {Object} data_key key of the data
+	 * @param {Element} element the element representing the widget. When this element is removed, it is automatically unregistered.
 	 * @param {Function} data_getter function allowing to get the current value of the data on the widget
 	 * @param {Function} data_setter function allowing to set the value of the data on the widget
 	 * @param {Function} register_listener function that needs to be called to register a listener to be called when the widget is changing the value of the data
+	 * @param {Function} unregister_listener function that needs to be called to unregister a listener
 	 */
-	registerDataWidget: function(win, data_display, data_key, data_getter, data_setter, register_listener) {
-		this._data_widgets.push({win:win,data_display:data_display,data_key:data_key,data_getter:data_getter,data_setter:data_setter});
-		register_listener(function(){
+	registerDataWidget: function(win, data_display, data_key, element, data_getter, data_setter, register_listener, unregister_listener) {
+		var listener = function(){
 			window.top.datamodel.dataChanged(data_display, data_key, data_getter());
+		};
+		this._data_widgets.push({win:win,data_display:data_display,data_key:data_key,data_getter:data_getter,data_setter:data_setter,element:element,unregister_listener:unregister_listener,listener:listener});
+		register_listener(listener);
+		element.ondomremoved(function(element) {
+			window.top.datamodel.unregisterDataWidget(element);
 		});
 		if (data_display.cell)
-			this.registerCellWidget(win, data_display.cell.table, data_display.cell.column, data_key, data_getter, data_setter, register_listener);
+			this.registerCellWidget(win, data_display.cell.table, data_display.cell.column, data_key, element, data_getter, data_setter, register_listener, unregister_listener);
+	},
+	unregisterDataWidget: function(element) {
+		for (var i = 0; i < this._data_widgets.length; ++i)
+			if (this._data_widgets[i].element == element) {
+				this._data_widgets[i].unregister_listener(this._data_widgets[i].listener);
+				this._data_widgets.splice(i,1);
+				i--;
+			}
 	},
 	/** List of components registered as containing a cell */
 	_cell_widgets: [],
@@ -30,34 +44,50 @@ datamodel = {
 	 * @param {String} table table
 	 * @param {String} column column name in the table
 	 * @param {Object} row_key key of the row in the table
+	 * @param {Element} element the element representing the widget. When this element is removed, it is automatically unregistered.
 	 * @param {Function} data_getter function allowing to get the current value of the data on the widget
 	 * @param {Function} data_setter function allowing to set the value of the data on the widget
 	 * @param {Function} register_listener function that needs to be called to register a listener to be called when the widget is changing the value of the data
+	 * @param {Function} unregister_listener function that needs to be called to unregister a listener
 	 */
-	registerCellWidget: function(win, table, column, row_key, data_getter, data_setter, register_listener) {
-		this._cell_widgets.push({win:win,table:table,column:column,row_key:row_key,data_getter:data_getter,data_setter:data_setter});
-		register_listener(function(){
+	registerCellWidget: function(win, table, column, row_key, element, data_getter, data_setter, register_listener, unregister_listener) {
+		var listener = function(){
 			window.top.datamodel.cellChanged(table, column, row_key, data_getter());
+		};
+		this._cell_widgets.push({win:win,table:table,column:column,row_key:row_key,element:element,data_getter:data_getter,data_setter:data_setter,unregister_listener:unregister_listener,listener:listener});
+		register_listener(listener);
+		element.ondomremoved(function(element) {
+			window.top.datamodel.unregisterCellWidget(element);
 		});
+	},
+	unregisterCellWidget: function(element) {
+		for (var i = 0; i < this._cell_widgets.length; ++i)
+			if (this._cell_widgets[i].element == element) {
+				this._cell_widgets[i].unregister_listener(this._cell_widgets[i].listener);
+				this._cell_widgets.splice(i,1);
+				i--;
+			}
 	},
 	/** Register a text node displaying the data of a cell
 	 * @param {window} win the window where the widget is (given, so when the window is closed, we can unregister it automatically)
 	 * @param {String} table table
 	 * @param {String} column column name in the table
 	 * @param {Object} row_key key of the row in the table
-	 * @param {DOMNode} text_node the text node to automatically update when the data changes
+	 * @param {Element} text_node the text node to automatically update when the data changes
 	 */
 	registerCellText: function(win, table, column, row_key, text_node) {
+		var n=text_node;
 		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
-			text_node.nodeValue = value;
-			if (text_node.parentNode) layout.invalidate(text_node.parentNode);
+			n.nodeValue = value;
+			if (n.parentNode) layout.invalidate(n.parentNode);
 		});
 	},
 	registerCellSpan: function(win, table, column, row_key, span) {
+		var s=span;
 		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
-			span.innerHTML = "";
-			span.appendChild(document.createTextNode(value));
-			if (span.parentNode) layout.invalidate(span.parentNode);
+			s.removeAllChildren();
+			s.appendChild(document.createTextNode(value));
+			if (s.parentNode) layout.invalidate(s.parentNode);
 		});
 	},
 	inputCell: function(input, table, column, row_key) {
@@ -72,7 +102,7 @@ datamodel = {
 				input.onchange();
 			}
 		});
-		datamodel.registerCellWidget(win, table, column, row_key, function() {
+		datamodel.registerCellWidget(win, table, column, row_key, input, function() {
 			return input.value;
 		}, function(value) {
 			input.value = value;
@@ -88,6 +118,8 @@ datamodel = {
 				listener();
 				if (prev_keyup) prev_keyup(ev);
 			};
+		},function(listener) {
+			// no need as the input is removed
 		});
 	},
 	dateSelectCell: function(date_select, table, column, row_key) {
@@ -103,7 +135,7 @@ datamodel = {
 			}
 		});
 		var prev = date_select.onchange;
-		datamodel.registerCellWidget(win, table, column, row_key, function() {
+		datamodel.registerCellWidget(win, table, column, row_key, date_select.select_day, function() {
 			return dateToSQL(date_select.getDate());
 		}, function(value) {
 			date_select.selectDate(parseSQLDate(value));
@@ -112,6 +144,8 @@ datamodel = {
 				listener();
 				if (prev) prev();
 			};
+		}, function(listener) {
+			// no need as it is removed from the page
 		});
 	},
 	
@@ -308,7 +342,7 @@ datamodel = {
 		require("popup_window.js",function() { popup_ready = true; ready(); });
 	}
 };
-window.top.pnapplication.onwindowclosed.add_listener(function(w) { datamodel._windowClosed(w); });
+window.top.pnapplication.onwindowclosed.add_listener(function(c) { c.top.datamodel._windowClosed(c.win); });
 if (!window.top.datamodel_prototype) {
 window.top.datamodel_prototype = {
 	getTable: function(name) {

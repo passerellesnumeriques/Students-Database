@@ -4,7 +4,8 @@
 	border-bottom-right-radius: 5px;
 	padding-left: 2px;
 	padding-right: 5px;
-	margin-right: 5px;
+	margin-right: 5px !important;
+	margin-left: 0px !important;
 	padding-top: 3px;
 }
 .data_list_title>img {
@@ -20,7 +21,7 @@
 .data_list>.header {
 	height: 30px;
 	background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
-	border-bottom: 1px solid #808080;
+	border-bottom: 1px solid #808080 !important;
 }
 .data_list>.header>.header_left {
 }
@@ -36,4 +37,38 @@
 }
 .data_list>.footer>.footer_tools {
 	padding: 1px 5px 1px 5px;
+}
+table.data_list_select_fields_menu {
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+table.data_list_select_fields_menu tr.header {
+	background-color: #C0C0FF;
+}
+table.data_list_select_fields_menu tr.header>td {
+	border-bottom: 1px solid black;
+	border-left: 1px solid black;
+	text-align: center;
+	margin: 0px;
+	padding: 2px;
+}
+table.data_list_select_fields_menu tr.header>td:first-child {
+	border-left: 0px;
+}
+table.data_list_select_fields_menu tr.content>td {
+	vertical-align: top;
+	margin: 0px;
+	padding: 2px;
+	border-left: 1px solid black;
+}
+table.data_list_select_fields_menu tr.content>td:first-child {
+	border-left: 0px;
+}
+table.data_list_select_fields_menu tr.content>td>.sub_data {
+	margin-left: 20px;
+}
+.data_list_filter {
+}
+.data_list_filter>.or_container {
+	margin-left: 30px;
 }

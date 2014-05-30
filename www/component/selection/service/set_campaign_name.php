@@ -1,13 +1,13 @@
 <?php
 class service_set_campaign_name extends Service{
-	public function get_required_rights(){return array("manage_selection_campaign");}
-	public function input_documentation(){
+	public function getRequiredRights(){return array("manage_selection_campaign");}
+	public function inputDocumentation(){
 		echo "<ul>";
 		echo "<li>id = the campaign id</li>";
 		echo "<li>name = the new campaign name</li>";
 		echo "</ul>";
 	}
-	public function output_documentation(){
+	public function outputDocumentation(){
 		echo "<ul>";
 		echo "<li>{boolean} true if done</li>";
 		echo "<li>{boolean} else false</li>";
@@ -21,7 +21,7 @@ class service_set_campaign_name extends Service{
 			} catch(Exception $e) {
 				PNApplication::error($e->getMessage());
 			}
-			$to_echo = PNApplication::has_errors() ? "false" : "true";
+			$to_echo = PNApplication::hasErrors() ? "false" : "true";
 			echo $to_echo;
 		}
 		else echo "false";

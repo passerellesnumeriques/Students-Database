@@ -1,7 +1,7 @@
 <?php 
 class page_assign_classes extends Page {
 	
-	public function get_required_rights() { return array("manage_batches"); }
+	public function getRequiredRights() { return array("manage_batches"); }
 	
 	public function execute() {
 		/* different cases:
@@ -95,9 +95,9 @@ class page_assign_classes extends Page {
 			array_push($sections, array(null, $classes, $students));
 		}
 		
-		$this->require_javascript("assign_elements.js");
-		$this->require_javascript("fill_height_layout.js");
-		$this->require_javascript("section.js");
+		$this->requireJavascript("assign_elements.js");
+		$this->requireJavascript("fill_height_layout.js");
+		$this->requireJavascript("section.js");
 		?>
 		<div id='top_container' style='width:100%;height:100%;overflow-x:auto'>
 		</div>
@@ -155,7 +155,7 @@ class page_assign_classes extends Page {
 				echo "\tclasses.push({id:".$cl["id"].",name:".json_encode($cl["name"])."});\n";
 			}
 			foreach ($students as &$s) {
-				echo "\tassign.addElement(".PeopleJSON::People($q_students, $s).",".json_encode($s["class"]).",true);\n";
+				echo "\tassign.addElement(".PeopleJSON::People($s).",".json_encode($s["class"]).",true);\n";
 			}
 			echo "\tassign.onchange.add_listener(changed);\n";
 			echo "\tlayout.invalidate(assign.container);\n";

@@ -1,14 +1,14 @@
 <?php 
 class service_eligibility_rules_get_json_all_topics extends Service {
 	
-	public function get_required_rights() { return array("see_exam_subject"); }
+	public function getRequiredRights() { return array("see_exam_subject"); }
 	public function documentation() {
 		echo "Get a json object containing all the topics set into the database";
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "<code>exclude_id</code> (number|null) the topic id to exclude when the data is retrieved";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		echo "{array} containing all the retrieved JSON topic objects";
 	}
 	

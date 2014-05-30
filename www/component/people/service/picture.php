@@ -1,10 +1,10 @@
 <?php
 class service_picture extends Service {
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	public function documentation() { echo "Retrieve the profile picture of a people"; }
-	public function input_documentation() { echo "<code>people</code>: id of the people to get the picture"; }
-	public function output_documentation() { echo "The picture"; }
-	public function get_output_format($input) { return "image/jpeg"; }
+	public function inputDocumentation() { echo "<code>people</code>: id of the people to get the picture"; }
+	public function outputDocumentation() { echo "The picture"; }
+	public function getOutputFormat($input) { return "image/jpeg"; }
 	public function execute(&$component, $input) {
 		$people_id = $_GET["people"];
 		if (!$component->canRead($people_id)) {

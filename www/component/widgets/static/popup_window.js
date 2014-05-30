@@ -41,10 +41,11 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.resize();
 		}
 	};
+	t.resize_listener = function() { t.resize(); };
 	/** Set (change) the content of the popup window to be an IFRAME.
 	 * @param {String} url url to load in the frame
 	 * @param {Function} onload if specified, it is called when the frame is loaded
-	 * @returns {DOMNode} the IFRAME element
+	 * @returns {Element} the IFRAME element
 	 */
 	t.setContentFrame = function(url, onload, post_data) {
 		if (!t.content_container)
@@ -90,8 +91,9 @@ function popup_window(title,icon,content,hide_close_button) {
 				}
 				var b = win.document.body;
 				win.layout.cancelResizeEvent();
-				win.layout.addHandler(b, t.resize);
-				for (var i = 0; i < b.childNodes.length; ++i) getIFrameWindow(t.content).layout.addHandler(b.childNodes[i], t.resize);
+				win.layout.addHandler(b, t.resize_listener);
+				for (var i = 0; i < b.childNodes.length; ++i) 
+					getIFrameWindow(t.content).layout.addHandler(b.childNodes[i], t.resize_listener);
 				if (onload) onload(t.content);
 			};
 			check_ready();
@@ -113,7 +115,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param {function} onclick onclick event handler
 	 */
 	t.addButton = function(html, id, onclick) {
-		var b = document.createElement("BUTTON");
+		var b = (t.table ? t.table.ownerDocument : document).createElement("BUTTON");
 		if (typeof html == 'string')
 			b.innerHTML = html;
 		else
@@ -133,6 +135,23 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.resize();
 		}
 	};
+	t.removeButtons = function() {
+		if (!t.buttons_tr) return;
+		if (t.table) t.table.removeChild(t.buttons_tr);
+		t.buttons_tr = null;
+		t.buttons_td = null;
+	};
+	t.addFooter = function(html) {
+		if (!t.buttons_tr) {
+			t.buttons_tr = t.table.ownerDocument.createElement("TR");
+			t.buttons_tr.className = 'popup_window_buttons';
+			t.table.appendChild(t.buttons_tr);
+			t.buttons_td = t.table.ownerDocument.createElement("TD"); t.buttons_tr.appendChild(t.buttons_td);
+			t.buttons_td.colSpan = 2;
+		}
+		t.buttons_td.appendChild(html);
+		t.resize();
+	};
 	t.addIconTextButton = function(icon, text, id, onclick) {
 		var span = document.createElement("SPAN");
 		if (icon) {
@@ -151,8 +170,12 @@ function popup_window(title,icon,content,hide_close_button) {
 	 */
 	t.disableButton = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i)
-			if (t.buttons[i].id == id)
-				t.buttons[i].disabled = 'disabled';
+			if (t.buttons[i].id == id) {
+				if (t.isFrozen())
+					t.buttons[i].unfrozen_status = 'disabled';
+				else
+					t.buttons[i].disabled = 'disabled';
+			}
 	};
 	
 	/** Return true if the given button is disabled
@@ -163,7 +186,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.getIsDisabled = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i){
 			if (t.buttons[i].id == id)
-				return t.buttons[i].disabled;
+				return t.isFrozen() ? t.buttons[i].unfrozen_status : t.buttons[i].disabled;
 		}
 	};
 	/** Enable the given button.
@@ -172,8 +195,12 @@ function popup_window(title,icon,content,hide_close_button) {
 	 */
 	t.enableButton = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i)
-			if (t.buttons[i].id == id)
-				t.buttons[i].disabled = '';
+			if (t.buttons[i].id == id) {
+				if (t.isFrozen())
+					t.buttons[i].unfrozen_status = '';
+				else
+					t.buttons[i].disabled = '';
+			}
 	};
 	/** Simulate a button pressed
 	 * @param {string} id the button id
@@ -203,6 +230,21 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	t.addSaveButton = function(onsave) {
 		t.addIconTextButton(theme.icons_16.save, "Save", 'save', function() { if (onsave) onsave(); });
+	};
+	t.addFrameSaveButton = function(onsave) {
+		t.addSaveButton(onsave);
+		t.disableButton('save');
+		var check_frame = function() {
+			var win = getIFrameWindow(t.content);
+			if (!win || !win.pnapplication || !win._page_ready) {
+				setTimeout(check_frame, 25);
+				return;
+			}
+			if (!win.pnapplication.hasDataUnsaved()) t.disableButton('save'); else t.enableButton('save');
+			win.pnapplication.ondatatosave.add_listener(function() { t.enableButton('save'); });
+			win.pnapplication.onalldatasaved.add_listener(function() { t.disableButton('save'); });
+		};
+		check_frame();
 	};
 	t.addCreateButton = function(onclick) {
 		t.addIconTextButton(theme.icons_16.ok, "Create", 'create', function() { onclick(); });
@@ -249,6 +291,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.onEnter = function(onenter) {
 		var listener = function(ev) {
 			if (!t.table) return;
+			if (ev.target.nodeName == "TEXTAREA") return;
 			var e = getCompatibleKeyEvent(ev);
 			if (e.isEnter) onenter();
 		};
@@ -310,10 +353,14 @@ function popup_window(title,icon,content,hide_close_button) {
 			win = t._buildTable();
 		else
 			win = getWindowFromElement(t.table);
+		t.content_container.style.width = "100%";
+		if (t.content.nodeName == "IFRAME") {
+			t.content.style.width = "100%";
+			t.content.style.height = "100%";
+			layout.invalidate(t.content);
+		}
 		t.resize();
-		win.listenEvent(win, "resize", function() {
-			t.resize();
-		});
+		win.listenEvent(win, "resize", t.resize_listener);
 	};
 	
 	/** Display the popup window
@@ -428,7 +475,12 @@ function popup_window(title,icon,content,hide_close_button) {
 			for (var i = 0; i < t.buttons.length; ++i)
 				t.buttons_td.appendChild(t.buttons[i]);
 		}
+		t.table.style.top = '0px';
+		t.table.style.left = '0px';
+		t.table.style.position = "fixed";
 		doc.body.appendChild(t.table);
+		t.table.style.top = Math.floor(getWindowHeight()/2-t.table.offsetHeight/2)+'px';
+		t.table.style.left = Math.floor(getWindowWidth()/2-t.table.offsetWidth/2)+'px';
 		if (typeof t.content == 'string') t.content_container.innerHTML = t.content;
 		else {
 			t.content_container.appendChild(t.content);
@@ -438,7 +490,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			postData(t.content._post_url, t.content._post_data, getIFrameWindow(t.content));
 			t.content._post_data = null;
 		}
-		win.layout.addHandler(t.table, t.resize);
+		win.layout.addHandler(t.table, t.resize_listener);
 		return win;
 	};
 	
@@ -516,7 +568,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			var frame_win = getIFrameWindow(t.content);
 			var frame = frame_win.document;
 			if (!frame_win || !frame_win.layout || !frame || !frame.body) {
-				setTimeout(t.resize, 10);
+				setTimeout(t.resize_listener, 10);
 				t.in_resize = false;
 				return;
 			}
@@ -601,11 +653,11 @@ function popup_window(title,icon,content,hide_close_button) {
 	
 	t.blink = function() {
 		t.table.className = "popup_window blink";
-		setTimeout(function() { t.table.className = "popup_window"; },100);
-		setTimeout(function() { t.table.className = "popup_window blink"; },200);
-		setTimeout(function() { t.table.className = "popup_window"; },300);
-		setTimeout(function() { t.table.className = "popup_window blink"; },400);
-		setTimeout(function() { t.table.className = "popup_window"; },500);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window"; },100);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window blink"; },200);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window"; },300);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window blink"; },400);
+		setTimeout(function() { if (t.table) t.table.className = "popup_window"; },500);
 	};
 	
 	t.disableClose = function() {
@@ -634,9 +686,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			set_lock_screen_content(t.freezer, freeze_content);
 		t.content_container.parentNode.style.position = "relative";
 		t.content_container.parentNode.appendChild(t.freezer);
-		t.freeze_button_status = [];
 		for (var i = 0; i < t.buttons.length; ++i) {
-			t.freeze_button_status[i] = t.buttons[i].disabled;
+			t.buttons[i].unfrozen_status = t.buttons[i].disabled;
 			t.buttons[i].disabled = 'disabled';
 		}
 		t.close_button_td.onclick = null;
@@ -667,7 +718,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.content_container.parentNode.removeChild(t.freezer);
 		t.freezer = null;
 		for (var i = 0; i < t.buttons.length; ++i)
-			t.buttons[i].disabled = t.freeze_button_status[i];
+			t.buttons[i].disabled = t.buttons[i].unfrozen_status;
 		t.freeze_button_status = null;
 		t.close_button_td.onclick = function() { t.close(); };
 		if (t.content.nodeName == "IFRAME")
@@ -683,13 +734,20 @@ function popup_window(title,icon,content,hide_close_button) {
 	 */
 	t.close = function(keep_content_hidden) {
 		if (!t.table) return;
+		if (t.content.nodeName == "IFRAME") {
+			var w = getIFrameWindow(t.content);
+			if (w && w.pnapplication && w.pnapplication.hasDataUnsaved()) {
+				if (!confirm("This popup contains data which have not been saved. Are your sure you want to close it (your modifications will be lost) ?")) return;
+				w.pnapplication.cancelDataUnsaved();
+			}
+		}
 		if (t.locker)
 			unlock_screen(t.locker);
 		else {
 			var parent_popup = get_popup_window_from_frame(window);
 			if(parent_popup && parent_popup.table) parent_popup.unfreeze();
 		}
-		getWindowFromDocument(t.table.ownerDocument).layout.removeHandler(t.table, t.resize);
+		getWindowFromDocument(t.table.ownerDocument).layout.removeHandler(t.table, t.resize_listener);
 		var table = t.table;
 		if (t.onclose) t.onclose();
 		t.table = null;
@@ -701,8 +759,14 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content.style.top = '-10000px';
 				t.content.ownerDocument.body.appendChild(t.content);
 			}
+			table.removeAllChildren();
 			if (table.parentNode)
 				table.parentNode.removeChild(table);
+			t.content = null;
+			t.content_container = null;
+			t.header = null;
+			t.buttons_tr = null;
+			t.buttons_td = null;
 		};
 		if (t.content.nodeName == "IFRAME") t.content._no_loading = true;
 		if (typeof animation != 'undefined') {
@@ -727,7 +791,12 @@ function get_popup_window_from_element(e) {
 }
 function get_popup_window_from_frame(win) {
 	if (!win) return null;
-	if (win.frameElement && win.parent.get_popup_window_from_element)
-		return win.parent.get_popup_window_from_element(win.frameElement);
+	if (win.frameElement) {
+		if (win.parent.get_popup_window_from_element) {
+			var pop = win.parent.get_popup_window_from_element(win.frameElement);
+			if (pop != null) return pop;
+		}
+		return get_popup_window_from_frame(win.parent);
+	}
 	return null;
 }

@@ -1,7 +1,7 @@
 <?php 
 class page_tools extends Page {
 	
-	public function get_required_rights() {
+	public function getRequiredRights() {
 		return array();
 	}
 	

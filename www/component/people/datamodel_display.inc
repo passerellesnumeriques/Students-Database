@@ -10,7 +10,7 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("middle_name", "Middle 
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("last_name", "Last Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_first_name", "Khmer First Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_last_name", "Khmer Last Name"));
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("sex", "Gender"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("sex", "Gender", false, true, "center"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("birth", "Birth Date"));
 $display->addJoinToPrimary();
 $model->addTableDataDisplay($display);
@@ -22,16 +22,16 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 			// existing people => add the picture
 			$picture_container_id = $page->generateID();
 			$people_id = $values->getColumnValue("People", "id");
-			echo "<table><tr><td valign=top align=center><div id='$picture_container_id'></div><div class='button disabled' id='change_picture'>Change picture</div></td><td valign=top>";
+			echo "<table><tr><td valign=top align=center><div id='$picture_container_id'></div><button id='change_picture' disabled='disabled'>Change picture</button></td><td valign=top>";
 			parent::generate($page, $paths, $values, $prefilled_values, $structure_name);
 			echo "</td></tr></table>";
-			$page->require_javascript("profile_picture.js");
+			$page->requireJavascript("profile_picture.js");
 			echo "<script type='text/javascript'>";
 			echo "var picture = new profile_picture('$picture_container_id',150,150,'center','middle');";
 			echo "picture.loadPeopleID($people_id);";
 			echo "</script>";
 			if (PNApplication::$instance->people->canModify($people_id)) {
-				$page->require_javascript("images_tool.js");
+				$page->requireJavascript("images_tool.js");
 				?>
 				<script type='text/javascript'>
 				var tool = new images_tool();
@@ -56,7 +56,7 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 				});
 				tool.init(function() {
 					var button = document.getElementById('change_picture');
-					button.className = "button";
+					button.disabled = "";
 					button.onclick = function(ev) {
 						tool.reset();
 						tool.launchUpload(ev, false);

@@ -46,7 +46,7 @@ function load_google_calendars(ondone, feedback_handler) {
 	var googleApiNotReady = function() {
 		if (window.top.google) { googleApiReady(); return; }
 		if (feedback_handler) feedback_handler("Loading...");
-		window.top.add_javascript("/static/google/google.js",function() {
+		window.top.addJavascript("/static/google/google.js",function() {
 			googleApiReady();
 		});
 	};

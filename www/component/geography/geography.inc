@@ -6,7 +6,7 @@ class geography extends Component {
 	private $local_country_divisions;
 	
 	public function init() {
-		$d = PNApplication::$instance->get_domain_descriptor();
+		$d = PNApplication::$instance->getDomainDescriptor();
 		$d = $d["geography"];
 		$this->local_country = SQLQuery::create()->bypassSecurity()->select("Country")->whereValue("Country", "code", strtoupper($d["country_code"]))->executeSingleRow();
 		$this->local_country_divisions = $this->getCountryDivisions($this->local_country["id"]);
@@ -41,11 +41,40 @@ class geography extends Component {
 		$text = "";
 		do {
 			$area = SQLQuery::create()->select("GeographicArea")->where("id",$area_id)->executeSingleRow();
+			if ($area == null) { PNApplication::error("Invalid geographic area"); return null; }
 			if (strlen($text) > 0) $text .= ", ";
 			$text .= $area["name"];
 			$area_id = $area["parent"];
 		} while ($area_id <> null);
 		return $text;
+	}
+	
+	public function getGeographicAreasText($areas_ids) {
+		$texts = array();
+		foreach ($areas_ids as $id) array_push($texts, "");
+		$list = $areas_ids;
+		do {
+			$areas = SQLQuery::create()->select("GeographicArea")->whereIn("id",$areas_ids)->execute();
+			$parents = array();
+			$parents_ids = array();
+			for ($i = 0; $i < count($texts); ++$i) {
+				if ($list[$i] == null) {
+					// we are already done for this one
+					array_push($parents, null);
+					continue;
+				}
+				$area = null;
+				foreach ($areas as $a) if ($a["id"] == $list[$i]) { $area = $a; break; }
+				if ($area == null) $area = array("name"=>"Invalid geographic area", "parent"=>null);
+				if (strlen($texts[$i])>0) $texts[$i] .= ", ";
+				$texts[$i] .= $area["name"];
+				array_push($parents, $area["parent"]);
+				if ($area["parent"] <> null) array_push($parents_ids, $area["parent"]);
+			}
+			$areas_ids = $parents_ids;
+			$list = $parents;
+		} while (count($areas_ids)>0);
+		return $texts;
 	}
 	
 	/**
@@ -66,7 +95,7 @@ class geography extends Component {
 		
 		// put the countries of PN domains first
 		$PN_countries = array();
-		foreach (PNApplication::$instance->get_domains() as $domain=>$descr) {
+		foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
 			$code = $descr["geography"]["country_code"];
 			$code = strtolower($code);
 			if (!in_array($code, $PN_countries)) array_push($PN_countries, $code);
@@ -82,7 +111,7 @@ class geography extends Component {
 		}
 		
 		// put the domain country first
-		$local_code = PNApplication::$instance->get_domain_descriptor();
+		$local_code = PNApplication::$instance->getDomainDescriptor();
 		$local_code = strtolower($local_code["geography"]["country_code"]);
 		for ($i = 0; $i < count($countries); $i++) {
 			if (strtolower($countries[$i]["country_code"]) == $local_code) {
@@ -163,6 +192,14 @@ class geography extends Component {
 			}
 		}
 		return $divisions;
+	}
+	
+	public function getArea($id) {
+		return SQLQuery::create()->select("GeographicArea")->whereValue("GeographicArea","id",$id)->executeSingleRow();
+	}
+	
+	public function getAllAreas($country_id, $division_id) {
+		return SQLQuery::create()->select("GeographicArea")->whereValue("GeographicArea", "country_division", $division_id)->execute();
 	}
 }
 ?>

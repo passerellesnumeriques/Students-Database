@@ -1,7 +1,13 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * Period of a batch
+ * @param {CurriculumTreeNode_Batch} parent batch node
+ * @param {BatchPeriod} period period information
+ */
 function CurriculumTreeNode_BatchPeriod(parent, period) {
 	this.period = period;
+	/** {AcademicPeriod} academic period corresponding to the batch period */ 
 	this.academic = getAcademicPeriod(period.academic_period);
 	var now = new Date().getTime();
 	CurriculumTreeNode.call(this, parent, "period"+period.id, parseSQLDate(this.academic.end).getTime() > now && parseSQLDate(this.academic.start).getTime() < now);
@@ -47,7 +53,7 @@ CurriculumTreeNode_BatchPeriod.prototype.createInfo = function() {
 	button.title = "Edit batch";
 	button.node = this;
 	button.onclick = function() {
-		edit_batch(this.node.parent.batch);
+		editBatch(this.node.parent.batch);
 	};
 	buttons.appendChild(button);
 	if (this.period.available_specializations.length == 0) {
@@ -57,7 +63,7 @@ CurriculumTreeNode_BatchPeriod.prototype.createInfo = function() {
 		button.title = "Create a new class in period "+this.period.name;
 		button.node = this;
 		button.onclick = function() {
-			new_class(this.node, null);
+			newClass(this.node, null);
 		};
 		buttons.appendChild(button);
 	}
@@ -67,7 +73,11 @@ CurriculumTreeNode_BatchPeriod.prototype.getURLParameters = function() {
 	return {batch:this.parent.batch.id,period:this.period.id};
 };
 
-function new_class(period_node, spe) {
+/** Open a popup to create a new AcademicClass
+ * @param {CurriculumTreeNode_Period} period_node node of the period where the class will be created
+ * @param {Specialization} spe Specialization object or null
+ */
+function newClass(period_node, spe) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
 		content.style.padding = "10px";
@@ -169,7 +179,10 @@ function new_class(period_node, spe) {
 		input.focus();
 	});
 }
-function remove_class(class_node) {
+/** Ask the user to confirm, then remove the AcademicClass from database and from the tree
+ * @param {CurriculumTreeNode_Class} class_node tree node of the class to remove
+ */
+function removeClass(class_node) {
 	confirm_dialog("Are you sure you want to remove the class '"+class_node.cl.name+"' ?",function(yes){
 		if (!yes) return;
 		var lock = lock_screen();

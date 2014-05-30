@@ -1,0 +1,13 @@
+<div id='section_normal'>
+</div>
+<script type='text/javascript'>
+theme.css("section.css");
+require("section.js", function() {
+    var container = document.getElementById('section_normal');
+    var content = document.createElement("DIV");
+    content.style.padding = "5px";
+    content.innerHTML = "This section is collapsable,<br/>with normal style";
+    var sec = new section('/dynamic/documentation/service/static?component=widgets&path=example.png', "Example", content, true);
+    container.appendChild(sec.element);
+});
+</script>

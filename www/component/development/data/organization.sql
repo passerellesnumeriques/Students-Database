@@ -20,15 +20,19 @@ SET time_zone = "+00:00";
 -- Database: `students_dev`
 --
 
+INSERT INTO `People` (`id`, `first_name`, `last_name`) VALUES
+(1001, 'Jean-Michel', 'Robert'),
+(1002, 'Micheline', 'Roberte'),
+(1003, 'Paul', 'Dupont');
 
 --
 -- Dumping data for table `ContactPoint`
 --
 
 INSERT INTO `ContactPoint` (`organization`, `people`, `designation`) VALUES
-(1, 91, 'chef'),
-(1, 92, 'boss'),
-(3, 93, 'CEO');
+(1, 1001, 'chef'),
+(1, 1002, 'boss'),
+(3, 1003, 'CEO');
 
 --
 -- Dumping data for table `organization`

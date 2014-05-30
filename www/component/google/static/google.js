@@ -23,6 +23,20 @@ if (!window.top.google) {
 			if (window.top.google.connection_status == 0) return;
 			window.top.google.connection_status = 0;
 			window.top.google.connection_event.fire();
+			// remove the very annoying popup frame of Google saying Welcome Back...
+			if (typeof window.top.Element.prototype._insertBefore == 'undefined') {
+				window.top.Element.prototype._insertBefore = window.top.Element.prototype.insertBefore;
+				window.top.Element.prototype.insertBefore = function(e,b) {
+					if (e.nodeName == "IFRAME" && e.src.indexOf('widget/oauthflow/toast') > 0) {
+						e.src = "about:blank";
+						this._insertBefore(e,b);
+						window.top.Element.prototype.insertBefore = window.top.Element.prototype._insertBefore;
+						window.top.Element.prototype._insertBefore = 'undefined';
+						return;
+					}
+					this._insertBefore(e,b);
+				};
+			}
 			window.top.gapi.auth.authorize(
 				{
 					client_id:window.top.google._client_id,
@@ -33,11 +47,15 @@ if (!window.top.google) {
 						window.top.google.connection_status = 1;
 						window.top.google.connection_event.fire();
 						var google_id_set = false;
+						var setting_google_id = false;
 						var listener = function() {
-							if (!google_id_set)
+							if (!google_id_set && !setting_google_id) {
+								setting_google_id = true;
 								service.json("google","set_google_id",{auth_token:window.top.gapi.auth.getToken()["access_token"]},function(res){
+									setting_google_id = false;
 									if (res) google_id_set = true;
 								});
+							}
 							window.top.pnapplication.onlogin.remove_listener(listener);
 						};
 						if (window.top.pnapplication.logged_in)
@@ -69,7 +87,7 @@ if (!window.top.google) {
 		window.top.google.connection_status = 0;
 		window.top.google.connection_event.fire();
 		window.top.gapi.client.setApiKey("AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
-		window.top.gapi.auth.init();
+		//window.top.gapi.auth.init();
 		window.top.setInterval(function(){
 			if (window.top.google.connection_status != 0) return;
 			if (window.top.google._connecting_time < new Date().getTime()-30000) {
@@ -93,7 +111,7 @@ if (!window.top.google) {
 	};
 	window.top.load_google_api = function() {
 		window.top.google._connecting_time = new Date().getTime();
-		window.top.add_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
+		window.top.addJavascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 		window.top.setTimeout(function(){
 			if (window.top.google.api_loaded) return;
 			window.top.remove_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
@@ -103,7 +121,7 @@ if (!window.top.google) {
 			window.top.load_google_api();
 		},30000);
 		
-		/*window.top.add_javascript("https://ajax.googleapis.com/jsapi", function() {
+		/*window.top.addJavascript("https://ajax.googleapis.com/jsapi", function() {
 			google.load("identitytoolkit", "2", {packages: ["ac"], callback: function() {
 				var i = 0;
 				i++;

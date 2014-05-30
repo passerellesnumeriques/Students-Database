@@ -22,6 +22,7 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 	else{
 		this.geographic_area = {};
 		this.geographic_area.id = null;
+		this.geographic_area.country_id = country_id;
 		this.geographic_area.text = null;
 	}
 	this.street = street;
@@ -30,6 +31,11 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 	this.unit = unit;
 	this.additional = additional;
 	this.address_type = address_type;
+}
+
+function parsePostalAddress(str) {
+	// TODO
+	return new PostalAddress(-1, -1, -1, null, null, null, null, null, "Work");
 }
 
 /**
@@ -43,6 +49,7 @@ function PostalAddressesData(type, type_id, addresses) {
 	this.type_id = type_id;
 	this.addresses = addresses;
 }
+
 
 /**
  * Contact
@@ -79,7 +86,6 @@ function ContactsData(type, type_id, contacts) {
  * @param {Array} contacts list of Contact
  * @param {Array} addresses list of PostalAddress
  * @param {Array} contact_points list of ContactPoint
- * @returns
  */
 function Organization(id, name, creator, types_ids, contacts, addresses, contact_points) {
 	this.id = id;
@@ -93,14 +99,12 @@ function Organization(id, name, creator, types_ids, contacts, addresses, contact
 
 /**
  * Contact point of an organization
- * @param {Number} people_id people id of this contact point
- * @param {String} first_name first name of the people (taken from the people table in database)
- * @param {String} last_name last name of the people (taken from the people table in database)
+ * @param {Number} organization_id ID of the organization this contact point belongs to
+ * @param {People} people People object for this contact point
  * @param {String} designation designation of this people in the organization (i.e. director, IT manager...)
  */
-function ContactPoint(people_id, first_name, last_name, designation) {
-	this.people_id = people_id;
-	this.first_name = first_name;
-	this.last_name = last_name;
+function ContactPoint(organization_id, people, designation) {
+	this.organization_id = organization_id;
+	this.people = people;
 	this.designation = designation;
 }

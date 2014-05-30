@@ -1,8 +1,8 @@
 <?php 
-require_once("selection_page.inc");
-class page_test_functionalities extends selection_page {
-	public function get_required_rights() { return array(); }
-	public function execute_selection_page(){
+require_once("SelectionPage.inc");
+class page_test_functionalities extends SelectionPage {
+	public function getRequiredRights() { return array(); }
+	public function executeSelectionPage(){
 		$columns = explode(".", "exam_session.event.start");		
 		require_once 'component/data_model/Model.inc';
 		$t = DataModel::get()->getTable("Applicant");

@@ -1,14 +1,14 @@
 <?php 
 class service_exam_unassign_supervisor_from_session extends Service {
 	
-	public function get_required_rights() { return array("can_access_selection_data"); }
+	public function getRequiredRights() { return array("can_access_selection_data"); }
 	public function documentation() {
 	}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		?>
 		<?php
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 		<?php
 	}
@@ -34,7 +34,7 @@ class service_exam_unassign_supervisor_from_session extends Service {
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}
-		if(PNApplication::has_errors()){
+		if(PNApplication::hasErrors()){
 			SQLQuery::rollbackTransaction();
 			echo "false";
 		} else {

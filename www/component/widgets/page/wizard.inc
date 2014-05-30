@@ -80,7 +80,7 @@ function wizard_freeze() {
 	wizard_freeze_div.style.height = getHeight(frame)+"px";
 	wizard_freeze_div.frozen = true;
 	frame.parentNode.appendChild(wizard_freeze_div);
-	document.getElementById('wizard_freezer').innerHTML = "";
+	document.getElementById('wizard_freezer').removeAllChildren();
 }
 function wizard_unfreeze() {
 	if (wizard_freeze_div.frozen) {
@@ -93,7 +93,7 @@ function wizard_freeze_message(msg) {
 }
 </script>
 <?php
-	$page->add_javascript("/static/widgets/vertical_layout.js");
+	$page->addJavascript("/static/widgets/vertical_layout.js");
 	$page->onload("new vertical_layout('wizard_page');");
 } 
 ?>

@@ -1,13 +1,18 @@
 /** 
- * return true if this string starts with the given string
+ * check if this string starts with the given string
+ * @param {String} s the start
+ * @returns {Boolean} true if the string starts with the given string
  */
 String.prototype.startsWith=function(s){return this.length<s.length?false:this.substring(0,s.length)==s;};
 /** 
- * return true if this string ends with the given string
+ * check if this string ends with the given string
+ * @param {String} s the end
+ * @returns {Boolean} true if this string ends with the given string
  */
 String.prototype.endsWith=function(s){return this.length<s.length?false:this.substring(this.length-s.length)==s;};
 /** 
  * remove leading and trailing spaces, and return the result
+ * @returns {String} a new string without any leading or trailing space
  */
 String.prototype.trim=function() {
 	if (this.length == 0) return "";
@@ -18,6 +23,9 @@ String.prototype.trim=function() {
 		if (!isSpace(this.charAt(end-1))) break;
 	return this.substring(start, end);
 };
+/** Convert this string into HTML (replace special characters)
+ * @returns {String} the HTML string
+ */
 String.prototype.toHTML=function() {
     return this
             .replace(/&/g, '&amp;')
@@ -45,7 +53,7 @@ function isLetter(c) {
 
 /**
 * Set a uniform case according to a given separator
-* @parameter {String} separator separator to use between words
+* @param {String} separator separator to use between words
 * @returns {String} the same string with a capitalized first letter
 */
 String.prototype.firstLetterCapitalizedForSeparator = function(separator) {
@@ -95,322 +103,27 @@ Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e
  */
 Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){this.splice(i,1);i--;};};
 
-/**
- * Clone an object structure 
- * @param {Object} o the object to clone
- * @param {Number} recursive_depth maximum depth of clone
- * @returns {Object} the clone
- */
-function objectCopy(o, recursive_depth) {
-	if (o == null) return null;
-	if (typeof o == 'string') return ""+o;
-	if (typeof o == 'number') return o;
-	var c = new Object();
-	for (var attr in o) {
-		var value = o[attr];
-		if (!recursive_depth) { c[attr] = value; continue; }
-		if (value == null) { c[attr] = null; continue; }
-		if (typeof value == 'object') {
-			if (value instanceof Date || getObjectClassName(value) == "Date")
-				c[attr] = new Date(value.getTime());
-			else if (value instanceof Array || getObjectClassName(value) == "Array") {
-				c[attr] = [];
-				for (var i = 0; i < value.length; ++i)
-					c[attr].push(valueCopy(value[i], recursive_depth-1));
-			} else {
-				c[attr] = objectCopy(value, recursive_depth-1);
-			}
-		} else
-			c[attr] = value;
-	}
-	return c;
-}
-/**
- * Copy the given value
- * @param {any} value the value to copy
- * @param {Number} obj_depth maximum depth in objects to copy
- * @returns {any} the copy
- */
-function valueCopy(value, obj_depth) {
-	if (value == null) return null;
-	if (typeof value == 'object') {
-		if (value instanceof Date || getObjectClassName(value) == "Date")
-			return new Date(value.getTime());
-		if (value instanceof Array || getObjectClassName(value) == "Array") {
-			var a = [];
-			for (var i = 0; i < value.length; ++i)
-				a.push(valueCopy(value[i], obj_depth-1));
-			return a;
-		}
-		return objectCopy(value, obj_depth);
-	}
-	return value;
-}
-
-function objectMerge(o, add) {
-	for (var name in add) o[name] = add[name];
-}
-
-function objectEquals(o1, o2, done) {
-	if (typeof o1 != typeof o2) return false;
-	if (typeof o1 != 'object') return o1 == o2;
-	if (o1 == null) return o2 == null;
-	var c1 = getObjectClassName(o1);
-	var c2 = getObjectClassName(o2);
-	if (c1 != c2) return false;
-	if (!done) done = [];
-	if (done.contains(o1) || done.contains(o2)) return o1 == o2;
-	done.push(o1); done.push(o2);
-	if (c1 == "Array") return arrayEquals(o1, o2, done);
-	if (c1 == "Date") return o1.getTime() == o2.getTime();
-	for (var name in o1) {
-		var found = false;
-		for (var name2 in o2) if (name2 == name) { found = true; break; }
-		if (!found) return false;
-	}
-	for (var name in o2) {
-		var found = false;
-		for (var name2 in o1) if (name2 == name) { found = true; break; }
-		if (!found) return false;
-	}
-	for (var name in o1) {
-		var v1 = o1[name];
-		var v2 = o2[name];
-		if (!objectEquals(v1, v2, done)) return false;
-	}
-	return true;
-}
-function arrayEquals(a1, a2, done) {
-	if (a1.length != a2.length) return false;
-	for (var i = 0; i < a1.length; ++i)
-		if (!objectEquals(a1[i], a2[i], done)) return false;
-	return true;
-}
-
-var _generate_id_counter = 0;
-/**
- * Generates an unique id. 
- * @returns {String} the generated id
- */
-function generateID() {
-	return "id"+(_generate_id_counter++);
-}
-
 function _domRemoved(e) {
-	if (e.ondomremoved) e.ondomremoved();
+	if (e._ondomremoved) e._ondomremoved.fire(e);
 	if (e.nodeType != 1) return;
 	for (var i = 0; i < e.childNodes.length; ++i)
 		_domRemoved(e.childNodes[i]);
 }
+Element.prototype.ondomremoved = function(listener) {
+	if (!this._ondomremoved) this._ondomremoved = new Custom_Event();
+	this._ondomremoved.add_listener(listener);
+};
 Element.prototype._removeChild = Element.prototype.removeChild;
 Element.prototype.removeChild = function(e) {
 	_domRemoved(e);
-	return this._removeChild(e);
+	try { return this._removeChild(e); }
+	catch (err) {
+		window.top.console.error("Remove child failed: "+e.getMessage());
+	}
 };
-
-/**
- * Return the absolute position of the left edge, relative to the given element or to the document
- * @param e the element to get the absolute position
- * @param relative the element from which we want the absolute position, or null to get the position in the document
- */
-function absoluteLeft(e,relative) {
-	var left = e.offsetLeft;
-	try { 
-		if (e.offsetParent && e.offsetParent != relative) {
-			var p = e;
-			do {
-				p = p.parentNode;
-				left -= p.scrollLeft;
-			} while (p != e.offsetParent);
-			left += absoluteLeft(e.offsetParent,relative); 
-		}
-	} catch (ex) {}
-	return left;
-}
-/**
- * Return the absolute position of the top edge, relative to the given element or to the document
- * @param e the element to get the absolute position
- * @param relative the element from which we want the absolute position, or null to get the position in the document
- */
-function absoluteTop(e,relative) {
-	var top = e.offsetTop;
-	try { 
-		if (e.offsetParent && e.offsetParent != relative) {
-			var p = e;
-			do {
-				p = p.parentNode;
-				top -= p.scrollTop;
-			} while (p != e.offsetParent);
-			top += absoluteTop(e.offsetParent,relative); 
-		}
-	} catch (ex) {}
-	return top;
-}
-/**
- * Return the first parent having a CSS attribute position:relative, or the document.body
- * @param e the html element
- */
-function getAbsoluteParent(e) {
-	var p = e.parentNode;
-	do {
-		if (getComputedStyle(p).position == 'relative')
-			return p;
-		p = p.parentNode;
-	} while(p != null && p.nodeType == 1);
-	return document.body;
-}
-
-function getAbsoluteCoordinatesRelativeToWindowTop(frame) {
-	if (frame.parent == null || frame.parent == frame || frame.parent == window.top) return {x:0,y:0};
-	var pos = getAbsoluteCoordinatesRelativeToWindowTop(frame.parent);
-	pos.x += absoluteLeft(frame.frameElement);
-	pos.y += absoluteTop(frame.frameElement);
-	return pos;
-}
-
-/**
- * Return the list of html elements at the given position in the document
- * @param x
- * @param y
- * @returns {Array}
- */
-function getElementsAt(x,y) {
-	var list = [];
-	var disp = [];
-	do {
-		var e = document.elementFromPoint(x,y);
-		if (e == document || e == document.body || e == window || e.nodeName == "HTML" || e.nodeName == "BODY") break;
-		if (e == null) break;
-		list.push(e);
-		disp.push(e.style.display);
-		e.style.display = "none";
-	} while (true);
-	for (var i = 0; i < list.length; ++i)
-		list[i].style.display = disp[i];
-	return list;
-}
-
-/**
- * Scroll up the given element
- * @param element
- * @param {Number} scroll
- */
-function scrollUp(element, scroll) {
-	// try to set scrollTop
-	var s = element.scrollTop;
-	element.scrollTop = s - scroll;
-	if (element.scrollTop != s) return; // it changed, so it worked
-	// TODO
-}
-/**
- * Scroll down the given element
- * @param element
- * @param {Number} scroll
- */
-function scrollDown(element, scroll) {
-	scrollUp(element, -scroll);
-}
-/**
- * Scroll left the given element
- * @param element
- * @param {Number} scroll
- */
-function scrollLeft(element, scroll) {
-	// try to set scrollTop
-	var s = element.scrollLeft;
-	element.scrollLeft = s - scroll;
-	if (element.scrollLeft != s) return; // it changed, so it worked
-	// TODO
-}
-/**
- * Scroll right the given element
- * @param element
- * @param {Number} scroll
- */
-function scrollRight(element, scroll) {
-	scrollLeft(element, -scroll);
-}
-
-/**
- * Return the first parent of the given element, being scrollable 
- * @param element
- */
-function getScrollableContainer(element) {
-	var parent = element.parentNode;
-	do {
-		if (parent == document.body) return parent;
-		if (parent.scrollHeight != parent.clientHeight) return parent;
-		if (parent.scrollWidth != parent.clientWidth) return parent;
-		parent = parent.parentNode;
-	} while (parent != null);
-	return document.body;
-}
-
-/**
- * Scroll all necessary scrollable elements to make the given element visible in the screen.
- * @param element
- */
-function scrollToSee(element) {
-	var parent = getScrollableContainer(element);
-	var x1 = absoluteLeft(element, parent);
-	var y1 = absoluteTop(element, parent);
-	var x2 = x1+element.offsetWidth;
-	var y2 = y1+element.offsetHeight;
-	if (y1 < parent.scrollTop) {
-		// the element is before, we need to scroll up
-		scrollUp(parent, parent.scrollTop-y1);
-	} else if (y2 > parent.scrollTop+parent.clientHeight) {
-		// the element is after, we need to scroll down
-		scrollDown(parent, y2-(parent.scrollTop+parent.clientHeight));
-	}
-	if (x1 < parent.scrollLeft) {
-		// the element is before, we need to scroll left
-		scrollLeft(parent, parent.scrollLeft-x1);
-	} else if (x2 > parent.scrollLeft+parent.clientWidth) {
-		// the element is after, we need to scroll down
-		scrollRight(parent, x2-(parent.scrollLeft+parent.clientWidth));
-	}
-	// TODO same with parent, which may not be visible...
-/*
-				var x = absoluteLeft(cell, container);
-				if (x < container.scrollLeft)
-					container.scrollLeft = x;
-				else if (container.scrollLeft+container.clientWidth < x+cell.offsetWidth)
-					container.scrollLeft = x+cell.offsetWidth-container.clientWidth;
-				var y = absoluteTop(cell, container);
-				if (y < container.scrollTop)
-					container.scrollTop = y;
-				else if (container.scrollTop+container.clientHeight < y+cell.offsetHeight)
-					container.scrollTop = y+cell.offsetHeight-container.clientHeight;
- */	
-}
-
-function scrollTo(element) {
-	var parent = getScrollableContainer(element);
-	var x1 = absoluteLeft(element, parent);
-	var y1 = absoluteTop(element, parent);
-	var x2 = x1+element.offsetWidth;
-	var y2 = y1+element.offsetHeight;
-	if (y1 < parent.scrollTop) {
-		// the element is before, we need to scroll up
-		scrollUp(parent, parent.scrollTop-y1);
-	} else if (y2 > parent.scrollTop+parent.clientHeight) {
-		// the element is after, we need to scroll down
-		scrollDown(parent, y2-(parent.scrollTop+parent.clientHeight));
-	} else {
-		scrollDown(parent, -(y1-(parent.scrollTop+parent.clientHeight)));
-	}
-	if (x1 < parent.scrollLeft) {
-		// the element is before, we need to scroll left
-		scrollLeft(parent, parent.scrollLeft-x1);
-	} else if (x2 > parent.scrollLeft+parent.clientWidth) {
-		// the element is after, we need to scroll down
-		scrollRight(parent, x2-(parent.scrollLeft+parent.clientWidth));
-	} else {
-		scrollRight(parent, -(x1-(parent.scrollLeft+parent.clientWidth)));
-	}
-	// TODO same with parent, which may not be visible...
-}
+Element.prototype.removeAllChildren = function() {
+	while (this.childNodes.length > 0) this.removeChild(this.childNodes[0]);
+};
 
 /** Represent an URL
  * @constructor
@@ -578,96 +291,10 @@ function error_dialog(message) {
 	alert(message);
 }
 
-/**
- * Lock the screen by adding a semi-transparent element on top of the window
- * @param onclick called when the user click on the element on top of the window
- * @param content html code or html element to be put in the center of the element
- * @returns the element on top of the window created by this function
+/** Parse the given SQL date, and returns a Date object
+ * @param {String} s the SQL date to convert
+ * @returns {Date} the date, or null if it cannot be converted
  */
-function lock_screen(onclick, content) {
-	var div = document.getElementById('lock_screen');
-	if (div) {
-		div.usage_counter++;
-		return div;
-	}
-	div = document.createElement('DIV');
-	div.usage_counter = 1;
-	div.id = "lock_screen";
-	div.style.backgroundColor = "rgba(128,128,128,0.5)";
-	div.style.position = "fixed";
-	div.style.top = "0px";
-	div.style.left = "0px";
-	div.style.width = getWindowWidth()+"px";
-	div.style.height = getWindowHeight()+"px";
-	div.style.zIndex = 10;
-	if (onclick)
-		div.onclick = onclick;
-	if (content)
-		set_lock_screen_content(div, content);
-	if (typeof animation != 'undefined')
-		div.anim = animation.fadeIn(div,200,null,10,100);
-	div.listener = function() {
-		div.style.width = getWindowWidth()+"px";
-		div.style.height = getWindowHeight()+"px";
-	};
-	listenEvent(window, 'resize', div.listener);
-	return document.body.appendChild(div);
-}
-function set_lock_screen_content(div, content) {
-	while (div.childNodes.length > 0) div.removeChild(div.childNodes[0]);
-	var table = document.createElement("TABLE"); div.appendChild(table);
-	table.style.width = "100%";
-	table.style.height = "100%";
-	var tr = document.createElement("TR"); table.appendChild(tr);
-	var td = document.createElement("TD"); tr.appendChild(td);
-	td.style.verticalAlign = 'middle';
-	td.style.textAlign = 'center';
-	var d = document.createElement("DIV");
-	d.className = 'lock_screen_content';
-	if (typeof content == 'string')
-		d.innerHTML = content;
-	else
-		d.appendChild(content);
-	td.appendChild(d);
-}
-/**
- * Remove the given element, previously created by using the function lock_screen
- * @param div
- */
-function unlock_screen(div) {
-	if (!div) div = document.getElementById('lock_screen');
-	if (!div) return;
-	if (typeof div.usage_counter != 'undefined') {
-		div.usage_counter--;
-		if (div.usage_counter > 0) return;
-	}
-	unlistenEvent(window, 'resize', div.listener);
-	if (typeof animation != 'undefined') {
-		div.id = '';
-		if (div.anim) animation.stop(div.anim);
-		animation.fadeOut(div,200,function(){
-			if (div.parentNode == document.body)
-				document.body.removeChild(div);				
-		},100,0);
-	} else if (div.parentNode == document.body)
-		document.body.removeChild(div);
-}
-
-function debug_object_to_string(o, indent) {
-	if (!indent) indent = "";
-	if (typeof o == 'object') {
-		if (o instanceof Date)
-			return o.toString();
-		var s = "{\r\n";
-		for (var name in o) {
-			s += indent+"    "+name+":"+debug_object_to_string(o[name], indent+"    ")+",\r\n";
-		}
-		s += "}";
-		return s;
-	}
-	return ""+o;
-}
-
 function parseSQLDate(s) {
 	if (s == null || s.length == 0) return null;
 	var d = new Date();
@@ -677,27 +304,77 @@ function parseSQLDate(s) {
 		d.setFullYear(parseInt(a[0]), parseInt(a[1])-1, parseInt(a[2]));
 	return d;
 };
+/** Convert the given number into a string, containing at least 2 digits (0 added if less than 10)
+ * @param {Number} n the number to convert
+ * @returns {String} the resulting string with at least 2 digits
+ */
 function _2digits(n) {
 	var s = ""+n;
 	while (s.length < 2) s = "0"+s;
 	return s;
 };
+/** Convert a JavaScript date into a SQL date
+ * @param {Date} d the date to convert
+ * @returns {String} the SQL date, or null if the given date is null
+ */
 function dateToSQL(d) {
 	if (d == null) return null;
 	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
 };
+/** Convert the given number into 2 digits hexadecimal number
+ * @param {Number} val the number to convert
+ * @returns {String} 2 digits hexadecimal
+ */
 function _2Hex(val) {
 	return HexDigit(Math.floor(val/16))+HexDigit(val%16);
 }
+/** Gives the hexadecimal character of the given number
+ * @param {Number} val a number between 0 and 15
+ * @returns {String} the hexadecimal character
+ */
 function HexDigit(val) {
 	if (val < 10) return ""+val;
 	return String.fromCharCode("A".charCodeAt(0)+(val-10));
 }
-
+/** Return a string representation of the given date: 2 digits day, space, month name, space, year
+ * @param {Date} d the date
+ * @returns {String} the string representation
+ */
 function getDateString(d) {
-	return _2digits(d.getDate())+" "+getMonthName(d.getMonth()+1)+" "+d.getFullyear();
+	if (d == null) return "";
+	return _2digits(d.getDate())+" "+getMonthName(d.getMonth()+1)+" "+d.getFullYear();
 }
 
+function getTimeString(d) {
+	if (d == null) return "";
+	return _2digits(d.getHours())+":"+_2digits(d.getMinutes());
+}
+
+function getMinutesTimeString(minutes) {
+	if (minutes == null) minutes = 0;
+	return _2digits(Math.floor(minutes/60))+":"+_2digits(minutes%60);
+}
+
+function parseTimeStringToMinutes(s) {
+	var i = s.indexOf(':');
+	var h,m;
+	if (i < 0) {
+		h = parseInt(s);
+		m = 0;
+	} else {
+		h = parseInt(s.substring(0,i));
+		m = parseInt(s.substring(i+1));
+	}
+	if (isNaN(h)) h = 0; else if (h > 23) h = 23; else if (h < 0) h = 0;
+	if (isNaN(m)) m = 0; else if (m > 59) m = 59; else if (m < 0) m = 0;
+	return h*60+m;
+}
+
+
+/** Return the name of the given month
+ * @param {Number} month between 1 and 12
+ * @returns {String} the full name of the month
+ */
 function getMonthName(month) {
 	switch(month) {
 	case 1: return "January";
@@ -712,8 +389,13 @@ function getMonthName(month) {
 	case 10: return "October";
 	case 11: return "November";
 	case 12: return "December";
+	default: return "Invalid Month ("+month+")";
 	}
 }
+/** Return the short name (3 letters) of the given month
+ * @param {Number} month between 1 and 12
+ * @returns {String} the 3 letters short name of the month
+ */
 function getMonthShortName(month) {
 	switch(month) {
 	case 1: return "Jan";
@@ -730,7 +412,12 @@ function getMonthShortName(month) {
 	case 12: return "Dec";
 	}
 }
-function getDayName(d) {
+/** Return the full name of the given week day
+ * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
+ * @returns {String} the name of the day
+ */
+function getDayName(d, from_date) {
+	if (from_date) d = d==0 ? 6 : d-1;
 	switch (d) {
 	case 0: return "Monday";
 	case 1: return "Tuesday";
@@ -741,7 +428,12 @@ function getDayName(d) {
 	case 6: return "Sunday";
 	}
 }
-function getDayShortName(d) {
+/** Return the 3 letters short name of the given week day
+ * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
+ * @returns {String} the 3 letters name of the day
+ */
+function getDayShortName(d, from_date) {
+	if (from_date) d = d==0 ? 6 : d-1;
 	switch (d) {
 	case 0: return "Mon";
 	case 1: return "Tue";
@@ -752,7 +444,12 @@ function getDayShortName(d) {
 	case 6: return "Sun";
 	}
 }
-function getDayLetter(d) {
+/** Return the 1 letter name of the given week day
+ * @param {Number} d the day between 0 (Monday) and 6 (Sunday)
+ * @returns {String} the 1 letter name of the day
+ */
+function getDayLetter(d, from_date) {
+	if (from_date) d = d==0 ? 6 : d-1;
 	switch (d) {
 	case 0: return "M";
 	case 1: return "T";
@@ -764,23 +461,20 @@ function getDayLetter(d) {
 	}
 }
 
-/**
- * Set the common style to the tables with header
- * @param table the table to set
- * @param th_header
- * @param thead_color the rgb color to display into the header
- */
-function setCommonStyleTable(table,th_header,thead_color){
-	table.style.borderSpacing = "0";
-	table.style.marginLeft = "5px";
-	table.style.marginBottom = "3px";
-	setBorderRadius(table, 5, 5, 5, 5, 5, 5, 5, 5);
-	table.style.border = "1px solid";
-	th_header.style.textAlign = "left";
-	th_header.style.padding = "2px 5px 2px 5px";
-	th_header.style.backgroundColor = thead_color;
-	th_header.style.width = "100%";
-	setBorderRadius(th_header, 5, 5, 5, 5, 0, 0, 0, 0);
+function wordsMatch(s1, s2) {
+	var words1 = s1.split(" ");
+	var words2 = s2.split(" ");
+	var words1_in_words2 = 0;
+	var words2_in_words1 = 0;
+	for (var i = 0; i < words1.length; ++i) {
+		for (var j = 0; j < words2.length; ++j)
+			if (words2[j] == words1[i]) { words1_in_words2++; break; }
+	}
+	for (var i = 0; i < words2.length; ++i) {
+		for (var j = 0; j < words1.length; ++j)
+			if (words1[j] == words2[i]) { words2_in_words1++; break; }
+	}
+	return {nb_words_1:words1.length,nb_words_2:words2.length,nb_words1_in_words2:words1_in_words2,nb_words2_in_words1:words2_in_words1};
 }
 
 /**
@@ -811,6 +505,10 @@ function getObjectSize(object){
 	return s;
 }
 
+/** Get the value of the given cookie name
+ * @param {String} cname name of the cookie
+ * @returns {String} the value of the cookie (or empty string if it does not exist)
+ */
 function getCookie(cname) {
 	var name = cname + "=";
 	var ca = document.cookie.split(';');
@@ -820,6 +518,12 @@ function getCookie(cname) {
 	}
 	return "";
 }
+/** Set the value of a cookie
+ * @param {String} cname name of the cookie
+ * @param {String} cvalue value of the cookie
+ * @param {Number} expires_minutes expiration time in minutes
+ * @param {String} url URL where the cookie is valid
+ */
 function setCookie(cname,cvalue,expires_minutes,url) {
 	var d = new Date();
 	d.setTime(d.getTime()+(expires_minutes*60*1000));
@@ -827,84 +531,3 @@ function setCookie(cname,cvalue,expires_minutes,url) {
 	document.cookie = cname + "=" + cvalue + "; " + expires + "; Path="+url;
 }
 
-function waitFrameReady(win, test, onready, timeout) {
-	if (typeof timeout == 'undefined') timeout = 30000;
-	if (timeout < 50) return;
-	if (!test(win)) { setTimeout(function() { waitFrameReady(win, test, onready, timeout-50); }, 50); return; }
-	onready(win);
-}
-
-if (typeof window.top._current_tooltip == 'undefined')
-	window.top._current_tooltip = null;
-function createTooltip(element, content) {
-	if (!content) return;
-	if (typeof content == 'string') {
-		var div = document.createElement("DIV");
-		div.innerHTML = content;
-		content = div;
-	}
-	content.style.position = "absolute";
-	var x = absoluteLeft(element);
-	var w = element.offsetWidth;
-	var ww = getWindowWidth();
-	if (x <= ww/2) {
-		content.className = "tooltip";
-		if (w < 44) {
-			x = x-22+Math.floor(w/2);
-			if (x < 0) x = 0;
-		}
-		content.style.left = x+"px";
-	} else {
-		content.className = "tooltip_right";
-		x = (ww-(x+w));
-		if (w < 44) {
-			x = x-22+Math.floor(w/2);
-			if (x >= ww) x = ww-1;
-			if (x < 0) {
-				x = 0;
-				content.className = "tooltip_right tooltip_veryright";
-			}
-		}
-		content.style.right = x+"px";
-	}
-	content.style.top = (absoluteTop(element)+element.offsetHeight+5)+"px";
-	removeTooltip();
-	if (typeof animation != 'undefined') {
-		content.style.visibility = 'hidden';
-		setOpacity(content, 0);
-		animation.fadeIn(content, 200);
-	} else {
-	}
-	document.body.appendChild(content);
-	element._tooltip = window.top._current_tooltip = content;
-	content._element = element;
-	element._tooltip_timeout = setTimeout(function (){
-		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
-			removeTooltip();
-	},10000);
-	element._listener = function() {
-		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
-			removeTooltip();
-	};
-	listenEvent(window,'mouseout',element._listener);
-}
-function removeTooltip() {
-	if (!window.top._current_tooltip) return;
-	if (window.top._current_tooltip.parentNode) {
-		window.top._current_tooltip.parentNode.removeChild(window.top._current_tooltip);
-	}
-	unlistenEvent(getWindowFromDocument(window.top._current_tooltip._element.ownerDocument),'mouseout',window.top._current_tooltip._element._listener);
-	window.top._current_tooltip._element._tooltip = null;
-	window.top._current_tooltip = null;
-}
-function tooltip(element, content) {
-	require("animation.js");
-	element.onmouseover = function() {
-		createTooltip(element, content);
-	};
-	element.onmouseout = function() {
-		if (this._tooltip && this._tooltip == window.top._current_tooltip)
-			removeTooltip();
-		this._tooltip = null;
-	};
-}

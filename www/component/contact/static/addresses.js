@@ -5,7 +5,7 @@ if (typeof require != 'undefined') {
 
 /**
  * UI Control to display a list of addresses, that can be edited depending on the given rights
- * @param {DOMNode} container where to put this control
+ * @param {Element} container where to put this control
  * @param {Boolean} header if true, an header with icon and title is displayed at the beginning
  * @param {String} type either "people" or "organization"
  * @param {Number} type_id people id, or organization id, or -1 for a new entity (if new, addresses are only kept in memory but not synchronized with the database)
@@ -216,7 +216,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	
 	/** Add the remove button to the address row
 	 * @param {PostalAddress} address the address
-	 * @param {DOMNode} container where to put the button
+	 * @param {Element} container where to put the button
 	 */
 	this._addRemoveButton = function (address, container){
 		var remove_button = document.createElement('img');
@@ -255,7 +255,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	};
 	
 	/** Add a 'type' field (Work, Home...) to an address row
-	 * @param {DOMNode} container where to put it
+	 * @param {Element} container where to put it
 	 * @param {PostalAddress} address the associated address object
 	 */
 	this._createCategoryField = function (container,address){
@@ -267,7 +267,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	
 	/**
 	 * Create the context_menu displayed below the category field after clicking
-	 * @param {DOMNode} container the category field: the menu will be displayed below this element
+	 * @param {Element} container the category field: the menu will be displayed below this element
 	 * @param {PostalAddress} address the associated address object
 	 */
 	this._showAddressTypeContextMenu = function(container,address){
@@ -287,7 +287,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	
 	/**
 	 * Add an item to the category context_menu
-	 * @param {DOMNode} container the one which contains the category field
+	 * @param {Element} container the one which contains the category field
 	 * @param {String} data the value of the item
 	 * @param {PostalAddress} address the associated address object
 	 */
@@ -326,7 +326,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 * displayed table
 	 * @param {PostalAddress} address the address to update
 	 * @param {String} address_type the new value
-	 * @param {DOMNode} container the one which contains the category field
+	 * @param {Element} container the one which contains the category field
 	 */
 	this._saveSubType = function(address, address_type, container){
 		if (type_id != null && type_id > 0) {

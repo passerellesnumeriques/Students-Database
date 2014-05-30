@@ -1,10 +1,10 @@
 <?php
 class service_home_menu extends Service {
-    public function get_required_rights() { return array(); }
+    public function getRequiredRights() { return array(); }
 	public function documentation() { echo "Provides the application home menu"; }
-	public function input_documentation() { echo "No"; }
-	public function output_documentation() { echo "The HTML to put in the menu"; }
-	public function get_output_format($input) { return "text/html"; }
+	public function inputDocumentation() { echo "No"; }
+	public function outputDocumentation() { echo "The HTML to put in the menu"; }
+	public function getOutputFormat($input) { return "text/html"; }
     public function execute(&$component, $input) {
 ?>
 <a class='application_left_menu_item' href='/dynamic/application/page/overview'>

@@ -14,18 +14,30 @@ function inputAutoresize(input, min_size) {
 	var last = 0;
 	input.onresize = null;
 	var update = function() {
-		input.mirror.innerHTML = "";
+		input.mirror.removeAllChildren();
 		var s = input.value;
 		input.mirror.appendChild(document.createTextNode(s));
 		var w = getWidth(input.mirror);
-		var min = input._min_size ? input._min_size * 10 : 15;
-		if (w < min) w = min;
-		input.style.width = w+"px";
-		if (last != w) {
-			layout.invalidate(input);
-			if (input.onresize) input.onresize();
+		if (input._min_size < 0) {
+			// must fill the width of its container
+			input.style.width = "100%";
+			if (w < 15) w = 15;
+			input.style.minWidth = w+"px";
+			if (input.offsetWidth != last) {
+				layout.invalidate(input);
+				if (input.onresize) input.onresize();
+				last = input.offsetWidth;
+			}
+		} else {
+			var min = input._min_size ? input._min_size * 10 : 15;
+			if (w < min) w = min;
+			input.style.width = w+"px";
+			if (last != w) {
+				layout.invalidate(input);
+				if (input.onresize) input.onresize();
+			}
+			last = w;
 		}
-		last = w;
 	};
 	var prev_onkeydown = input.onkeydown;
 	input.onkeydown = function(e) { if (prev_onkeydown) prev_onkeydown(e); update(); };
@@ -40,6 +52,7 @@ function inputAutoresize(input, min_size) {
 	update();
 	input.autoresize = update;
 	input.setMinimumSize = function(min_size) {
+		last = 0;
 		this._min_size = min_size;
 		update();
 	};

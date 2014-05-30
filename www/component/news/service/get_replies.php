@@ -1,11 +1,11 @@
 <?php 
 class service_get_replies extends Service {
 	
-	public function get_required_rights() { return array(); }
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Retrieve replies to a root news"; }
-	public function input_documentation() { echo "<code>ids</code>: the root news' ids"; }
-	public function output_documentation() { echo "List of NewsObject, containing reply_to as well"; }
+	public function inputDocumentation() { echo "<code>ids</code>: the root news' ids"; }
+	public function outputDocumentation() { echo "List of NewsObject, containing reply_to as well"; }
 	
 	public function execute(&$component, $input) {
 		$news = SQLQuery::create()->bypassSecurity()
@@ -75,7 +75,7 @@ class service_get_replies extends Service {
 				$a[$domain] = array();
 				foreach ($res as $r) {
 					$username = PNApplication::$instance->user_management->getSelectedUsername($r);
-					$a[$domain][$username] = array($q,$r);
+					$a[$domain][$username] = $r;
 				}
 			}
 			$people_names = $a;
@@ -92,7 +92,7 @@ class service_get_replies extends Service {
 			echo ",html:".json_encode($n["html"]);
 			echo ",user:{domain:".json_encode($n["domain"]).",username:".json_encode($n["username"])."}";
 			$r = $people_names[$n["domain"]][$n["username"]];
-			echo ",people:".PeopleJSON::People($r[0], $r[1]);
+			echo ",people:".PeopleJSON::People($r);
 			echo ",timestamp:".$n["timestamp"];
 			echo ",reply_to:".$n["reply_to"];
 			echo "}";

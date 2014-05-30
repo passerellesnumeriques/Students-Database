@@ -7,17 +7,12 @@
  * @constructor
  * @param container the container (either the HTMLElement or its id)
  */
-function vertical_layout(container, keep_width) {
+function vertical_layout(container) {
 	var t = this;
 	t.container = container;
 	if (typeof t.container == 'string') t.container = document.getElementById(t.container);
 	t.container.widget = this;
-	if (typeof t.container.style.overflow == 'undefined' && typeof t.container.style.overflowX == 'undefined' && typeof t.container.style.overflowY == 'undefined') {
-		if (!keep_width)
-			t.container.style.overflow = "hidden";
-		else
-			t.container.style.overflowY = "hidden";
-	}
+	t.container.overflowY = "hidden";
 	
 	t.removeLayout = function() {
 		t.container.widget = null;
@@ -25,36 +20,15 @@ function vertical_layout(container, keep_width) {
 	};
 	
 	t.layout = function() {
-		// remove all to get the container size
-		for (var i = 0; i < t.container.childNodes.length; ++i) {
-			var e = t.container.childNodes[i];
-			if (e.nodeType != 1) continue;
-			e._save_scrollTop = e.scrollTop;
-			e._save_scrollLeft = e.scrollLeft;
-			e.style.position = 'fixed';
-		}
-		var w = t.container.clientWidth;
+		// get the container size
 		var h = t.container.clientHeight;
-		for (var i = 0; i < t.container.childNodes.length; ++i) {
-			var e = t.container.childNodes[i];
-			if (e.nodeType != 1) continue;
-			if (e.hasAttribute("force_position"))
-				e.style.position = e.getAttribute("force_position");
-			else
-				e.style.position = 'static';
-		}
-		if (keep_width) {
-			var h2 = t.container.clientHeight;
-			if (h2 < h) h = h2; // an horizontal scroll bar appears
-		}
 		// reset
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];
 			if (e.nodeType != 1) continue;
+			e.style.display = "block";
 			var layout;
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
-			if (layout == 'fill')
-				e.style.height = "";
 		}
 		var nb_to_fill = 0;
 		var used = 0;
@@ -65,43 +39,27 @@ function vertical_layout(container, keep_width) {
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
 			if (layout == 'fill')
 				nb_to_fill++;
-			else if (!isNaN(parseInt(layout)))
-				used += parseInt(layout);
-			else {
-				if (!keep_width) {
-					e.style.display = "block";
-					setWidth(e, w);
+			else if (!isNaN(parseInt(layout))) {
+				var hh = parseInt(layout);
+				if (!e._fixed_size_set || e._fixed_size_set != hh) {
+					setHeight(e, hh);
+					e._fixed_size_set = hh;
 				}
-				e.style.height = "";
+				used += hh;
+			} else {
 				used += getHeight(e);
 			}
 		}
-		var y = 0;
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];
 			if (e.nodeType != 1) continue;
-			var layout;
-			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
-			if (!keep_width) {
-				e.style.display = "block";
-				setWidth(e, w);
-			}
-			if (layout == 'fill') {
+			if (e.getAttribute('layout') == 'fill') {
 				var hh = Math.floor((h-used)/nb_to_fill--);
 				setHeight(e, hh);
-				y += hh;
-			} else if (!isNaN(parseInt(layout))) {
-				var hh = parseInt(layout);
-				setHeight(e, hh);
-				y += hh;
-			} else {
-				y += getHeight(e);
 			}
-			e.scrollTop = e._save_scrollTop;
-			e.scrollLeft = e._save_scrollLeft;
 		}
 	};
-	
+
 	t.layout();
 	layout.addHandler(t.container, t.layout);
 }

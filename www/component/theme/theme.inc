@@ -16,9 +16,9 @@ class theme extends Component {
 	public static function css(&$page, $name) {
 		global $theme;
 		if (file_exists("component/theme/static/".$theme."/style/".$name))
-			$page->add_stylesheet("/static/theme/".$theme."/style/".$name);
+			$page->addStylesheet("/static/theme/".$theme."/style/".$name);
 		else
-			$page->add_stylesheet("/static/theme/default/style/".$name);
+			$page->addStylesheet("/static/theme/default/style/".$name);
 	}
 	
 	public static function make_icon($main, $small, $where = "right_bottom") {

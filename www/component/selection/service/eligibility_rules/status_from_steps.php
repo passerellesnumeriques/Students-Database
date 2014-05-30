@@ -2,12 +2,12 @@
 <?php 
 class service_eligibility_rules_status_from_steps extends Service {
 	
-	public function get_required_rights() {return array();}
+	public function getRequiredRights() {return array();}
 	public function documentation() {echo "Get the steps status of the eligibility rules in a JSON object";}
-	public function input_documentation() {
+	public function inputDocumentation() {
 		echo "No";
 	}
-	public function output_documentation() {
+	public function outputDocumentation() {
 		?>
 	<ul>
 	<li> {Boolean} <code>rule_exist</code> true if any rule exist into the database</li>

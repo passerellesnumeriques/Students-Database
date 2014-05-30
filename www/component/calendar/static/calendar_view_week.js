@@ -1,13 +1,13 @@
 if (typeof get_script_path != 'undefined') {
 	/** url to access the same directory */
 	var url = get_script_path("calendar_view_week.js");
-	add_javascript(url+"day_column_layout.js");
-	add_javascript(url+"day_row_layout.js");
+	addJavascript(url+"day_column_layout.js");
+	addJavascript(url+"day_row_layout.js");
 }
 /**
  * View of a week
  * @param {CalendarView} view the view manager
- * @param {DOMNode} container where to display
+ * @param {Element} container where to display
  */
 function calendar_view_week(view, container) {
 
@@ -168,9 +168,9 @@ function calendar_view_week(view, container) {
 		this.corner.innerHTML = "GMT";
 		if (tz != 0) {
 			if (tz > 0) this.corner.innerHTML += "+"; else { this.corner.innerHTML += "-"; tz=-tz; }
-			this.corner.innerHTML += this._2digits(Math.floor(tz/60));
+			this.corner.innerHTML += _2digits(Math.floor(tz/60));
 			tz -= Math.floor(tz/60)*60;
-			if (tz > 0) this.corner.innerHTML += ":"+this._2digits(tz);
+			if (tz > 0) this.corner.innerHTML += ":"+_2digits(tz);
 		}
 		this.header.appendChild(this.corner);
 		this.day_title = [];
@@ -235,7 +235,7 @@ function calendar_view_week(view, container) {
 				scrollTo(this.time_title.childNodes[i]);
 				break;
 			}*/
-		add_javascript(get_script_path("calendar_view_week.js")+"day_column_layout.js",function(){
+		addJavascript(get_script_path("calendar_view_week.js")+"day_column_layout.js",function(){
 			t.day_column = [];
 			for (var i = 0; i < 7; ++i)
 				t.day_column[i] = new DayColumnLayout(view.calendar_manager);
@@ -269,7 +269,7 @@ function calendar_view_week(view, container) {
 			var d = document.createElement("DIV");
 			var date = new Date();
 			date.setHours(0, time, 0, 0);
-			d.innerHTML = this._2digits(date.getHours())+":"+this._2digits(date.getMinutes());
+			d.innerHTML = _2digits(date.getHours())+":"+_2digits(date.getMinutes());
 			d.time = date;
 			d.style.top = (y-8)+"px";
 			d.style.position = "absolute";
@@ -286,7 +286,7 @@ function calendar_view_week(view, container) {
 		if (!t.content_.hasAttribute("layout"))
 			t.content_.style.height = y+"px";
 	};
-	/** {DOMNode} line which indicates the actual time */
+	/** {Element} line which indicates the actual time */
 	this._now = null;
 	/** Displays/layout the line indicating the actual time */
 	this._showNow = function() {
@@ -312,14 +312,6 @@ function calendar_view_week(view, container) {
 			break;
 		}
 		t._showNowTimeout = setTimeout(t._showNow,10000);
-	};
-	/** Add a 0 if the number is only 1 digit
-	 * @param {Number} n the number
-	 */
-	this._2digits = function(n) {
-		var s = ""+n;
-		while (s.length < 2) s = "0"+s;
-		return s;
 	};
 	/** Layout and display the events */
 	this._layout = function() {
@@ -364,7 +356,7 @@ function calendar_view_week(view, container) {
 			},10);
 	};
 	/** Put the text in the title box of a day (the text will depend on the width available)
-	 * @param {DOMNode} box the title box
+	 * @param {Element} box the title box
 	 * @param {Number} w the width of of box
 	 * @param {Date} date the day
 	 */
