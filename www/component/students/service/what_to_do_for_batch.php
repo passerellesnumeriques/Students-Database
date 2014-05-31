@@ -26,6 +26,7 @@ class service_what_to_do_for_batch extends Service {
 
 		if (count($periods) > 0) {
 			// no classes in period(s)/specialization(s)
+			$problems = array();
 			$periods_ids = array(); foreach ($periods as $p) array_push($periods_ids, $p["id"]);
 			$periods_spes = PNApplication::$instance->curriculum->getBatchPeriodsSpecializations($periods_ids);
 			$classes = PNApplication::$instance->curriculum->getAcademicClasses($this->batch_id);
@@ -37,15 +38,35 @@ class service_what_to_do_for_batch extends Service {
 					$list = array();
 					foreach ($classes as $cl) if ($cl["period"] == $period["id"]) array_push($list, $cl);
 					if (count($list) == 0) {
-						echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> No class in period ".htmlentities($period["name"])." for batch ".htmlentities($this->getBatchName())."<br/>";
+						$problems[$period["name"]] = array();
 					}
 				} else {
 					foreach ($spe_list as $spe_id) {
 						$list = array();
 						foreach ($classes as $cl) if ($cl["period"] == $period["id"] && $cl["specialization"] == $spe_id) array_push($list, $cl);
 						if (count($list) == 0) {
-							echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> No class in specialization ".htmlentities($this->getSpecializationName($spe_id))." in period ".htmlentities($period["name"])." for batch ".htmlentities($this->getBatchName())."<br/>";
+							if (!isset($problems[$period["name"]])) $problems[$period["name"]] = array();
+							array_push($problems[$period["name"]],$this->getSpecializationName($spe_id));
 						}
+					}
+				}
+			}
+			if (count($problems > 0)) {
+				echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> Batch ".htmlentities($this->getBatchName()).": No class in ";
+				$first = true;
+				foreach ($problems as $period_name=>$spe_list) {
+					if ($first) $first = false; else echo ", ";
+					echo htmlentities($period_name);
+					if (count($spe_list) > 0) {
+						echo " (specialization";
+						if (count($spe_list) > 1) echo "s";
+						echo " ";
+						$first_spe = true;
+						foreach ($spe_list as $spe_name) {
+							if ($first_spe) $first_spe = false; else echo ",";
+							echo htmlentities($spe_name);
+						}
+						echo ")";
 					}
 				}
 			}

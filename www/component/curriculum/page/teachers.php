@@ -39,7 +39,7 @@ class page_teachers extends Page {
 		<img src='/static/curriculum/teacher_32.png' style="vertical-align:top"/>
 		Teachers
 	</div>
-	<div id='list_container' style='overflow:auto' layout='fill'>
+	<div id='list_container' style='overflow:auto;background-color:#e8e8e8;' layout='fill'>
 		<div id='current_teachers'
 			title='Current Teachers'
 			collapsable='true'
@@ -84,7 +84,8 @@ function new_teacher() {
 	 */
 	private function buildTeachersList($teachers_ids, $teachers_dates, $peoples) {
 ?>
-<table style='margin:10px'><tbody>
+<div style='background-color:white;padding:10px'>
+<table><tbody>
 <?php 
 foreach ($teachers_ids as $people_id) {
 	$people = null;
@@ -105,6 +106,7 @@ foreach ($teachers_ids as $people_id) {
 }
 ?>
 </tbody></table>
+</div>
 <?php 
 	}
 	

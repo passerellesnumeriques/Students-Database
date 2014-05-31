@@ -31,7 +31,8 @@ class page_teachers_assignments extends Page {
 						->executeSingleRow();
 				}
 			}
-			$academic_period_id = $academic_period["id"];
+			$academic_period_id = @$academic_period["id"];
+			if ($academic_period_id == null) $academic_period_id = 0;
 		} else
 			$academic_period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$academic_period_id);
 		
@@ -39,7 +40,7 @@ class page_teachers_assignments extends Page {
 		$periods = SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod","start")->execute();
 
 		require_once("AcademicPeriod.inc");
-		$ap = new AcademicPeriod($academic_period);
+		$ap = $academic_period <> null ? new AcademicPeriod($academic_period) : null;
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
 		$this->requireJavascript("section.js");
@@ -49,6 +50,12 @@ class page_teachers_assignments extends Page {
 			<img src='/static/curriculum/teacher_assign_32.png'/>
 			Teachers Assignments
 		</div>
+		<?php
+		if ($ap == null) {
+			echo "<div style='background-color:white;padding:15px;'><center><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> <i>No academic period defined yet.</i><center></div>";
+			return;
+		} 
+		?>
 		<div class='page_section_title' style='background-color:white'>
 			Academic Period: <select onchange="if (this.value == <?php echo $academic_period_id;?>) return; location.href='?period='+this.value;">
 			<?php
@@ -65,6 +72,7 @@ class page_teachers_assignments extends Page {
 		<table style='width:100%'><tr>
 		<td valign=top>
 		<?php 
+		if ($ap <> null)
 		foreach ($ap->batch_periods as $bp) {
 			echo "<div style='display:inline-block;background-color:white' class='section'>";
 			echo "<div class='page_section_title'>";
@@ -149,7 +157,7 @@ class page_teachers_assignments extends Page {
 		}
 		</style>
 		<script type='text/javascript'>
-		var academic_period = <?php echo CurriculumJSON::AcademicPeriodJSONFromDB($ap->academic_period);?>;
+		var academic_period = <?php CurriculumJSON::AcademicPeriodJSONFromDB($ap->academic_period);?>;
 		var nb_weeks = (academic_period.weeks-academic_period.weeks_break);
 		var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON($ap->categories);?>;
 		var classes = <?php echo CurriculumJSON::AcademicClassesJSON($ap->classes);?>;

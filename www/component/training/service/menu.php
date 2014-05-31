@@ -68,6 +68,10 @@ foreach ($current_batches as $b) {
 <div class="application_left_menu_separator"></div>
 <div id="search_student_container" style="width:100%;padding:2px 5px 2px 5px;"></div>
 <script type='text/javascript'>
+require("search_student.js", function() {
+	new search_student('search_student_container');
+});
+/*
 require("autocomplete.js",function() {
 	var container = document.getElementById('search_student_container');
 	var ac = new autocomplete(container, 3, 'Search a student', function(name, handler) {
@@ -89,7 +93,7 @@ require("autocomplete.js",function() {
 	ac.input.style.background = "#ffffff url('"+theme.icons_16.search+"') no-repeat 3px 1px";
 	ac.input.style.padding = "2px 4px 2px 23px";
 	ac.input.style.width = "130px";
-});
+});*/
 </script>
 <?php 
 	}

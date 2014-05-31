@@ -87,8 +87,7 @@ class page_edit_batch extends Page {
 var popup = window.parent.get_popup_window_from_element(window.frameElement);
 popup.addIconTextButton(theme.build_icon("/static/calendar/calendar_16.png",theme.icons_10.add), "Add Period", "add_period", function() { addPeriod(); });
 popup.addIconTextButton("/static/curriculum/curriculum_16.png", "Edit Specializations", "spe", editSpecializations);
-popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
-popup.addCancelButton();
+popup.addFrameSaveButton(save);
 
 function getDateStringFromSQL(sql_date) {
 	if (sql_date == null) return "no date";
@@ -181,6 +180,7 @@ if ($batch <> null) {
 		echo "periods.push({id:new_period_id_counter--,name:".json_encode($conf["period_name"]." ".($i+1)).",academic_period:0});";
 	}
 	echo "graduation_date = null;";
+	echo "pnapplication.dataUnsaved('Batch');";
 }
 ?>
 
@@ -190,7 +190,10 @@ inputDefaultText(input_batch_name, "Batch Name");
 inputAutoresize(input_batch_name, 10);
 if (batch_id > 0)
 	window.top.datamodel.inputCell(input_batch_name, "StudentBatch", "name", batch_id);
-listenEvent(input_batch_name, 'change', function() { batch_name = input_batch_name.value; });
+listenEvent(input_batch_name, 'change', function() { 
+	batch_name = input_batch_name.value;
+	pnapplication.dataUnsaved('Batch');
+});
 
 var td_integration = document.getElementById('integration');
 td_integration.appendChild(document.createTextNode(getDateStringFromSQL(integration_date)));
@@ -208,6 +211,7 @@ td_integration.onclick = function() {
 			td_integration.removeAllChildren();
 			td_integration.appendChild(document.createTextNode(getDateStringFromSQL(integration_date)));
 			updatePeriodRow(periods[0]);
+			pnapplication.dataUnsaved('Batch');
 		};
 		menu.addItem(picker.element, true);
 		menu.element.style.border = "none";
@@ -240,6 +244,7 @@ function setGraduationDate(date) {
 	td_graduation.removeAllChildren();
 	td_graduation.appendChild(document.createTextNode(getDateStringFromSQL(graduation_date)));
 	updatePeriodRow(periods[0]);
+	pnapplication.dataUnsaved('Batch');
 }
 
 function refreshAcademicCalendar() {
@@ -312,9 +317,13 @@ function updatePeriodRow(period) {
 				select.add(o);
 			}
 			if (selected >= 0) select.selectedIndex = selected;
-			else period.academic_period = list[0].id;
+			else {
+				period.academic_period = list[0].id;
+				pnapplication.dataUnsaved('Batch');
+			}
 			period.td_period.appendChild(select);
 			select.onchange = function() {
+				pnapplication.dataUnsaved('Batch');
 				period.academic_period = select.options[select.selectedIndex].value;
 				if (index < periods.length-1)
 					updatePeriodRow(periods[index+1]);
@@ -379,6 +388,7 @@ function createPeriodRow(period) {
 	period.remove_button.title = "Remove this period";
 	td.appendChild(period.remove_button);
 	period.remove_button.onclick = function() {
+		pnapplication.dataUnsaved('Batch');
 		periods.remove(period);
 		period.tr.parentNode.removeChild(period.tr);
 		if (periods.length > 0) {
@@ -437,6 +447,7 @@ function addPeriod() {
 	periods.push(period);
 	createPeriodRow(period);
 	updatePeriodRow(period);
+	pnapplication.dataUnsaved('Batch');
 }
 
 function editSpecializations() {
@@ -531,10 +542,13 @@ function editSpecializations() {
 			for (var i = 0; i < checkboxes.length; ++i)
 				if (checkboxes[i].checked) list.push(checkboxes[i].spe.id);
 			if (list.length == 0) {
+				if (spe_period_start != null) pnapplication.dataUnsaved('Batch');
 				spe_period_start = null;
 			} else {
+				if (spe_period_start != periods[from.selectedIndex].id) pnapplication.dataUnsaved('Batch');
 				spe_period_start = periods[from.selectedIndex].id;
 			}
+			if (!arrayEquals(selected_specializations, list)) pnapplication.dataUnsaved('Batch');
 			selected_specializations = list;
 			refreshSpecializations();
 			layout.invalidate(document.body);
@@ -579,6 +593,7 @@ function save() {
 	service.json("curriculum", "save_batch", data, function(res) {
 		unlock_screen(ls);
 		if (!res) return;
+		pnapplication.dataSaved('Batch');
 		if (input_batch_name.cellSaved) input_batch_name.cellSaved();
 		for (var i = 0; i < periods.length; ++i) {
 			if (periods[i].input_name.cellSaved) periods[i].input_name.cellSaved();
