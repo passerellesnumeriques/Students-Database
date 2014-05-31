@@ -63,45 +63,8 @@ var students_list = new data_list(
 	batches != null && batches.length > 1 ? 100 : -1,
 	function (list) {
 		list.addTitle("/static/curriculum/batch_16.png", "Students");
-		list.addPictureSupport("People",function(container,people_id,width,height) {
-			while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
-			require("profile_picture.js",function() {
-				new profile_picture(container,width,height,"center","middle").loadPeopleID(people_id);
-			});
-		},function(handler)  {
-			require("profile_picture.js");
-			var people_ids = [];
-			for (var i = 0; i < list.grid.getNbRows(); ++i) {
-				var row = list.grid.getRow(i);
-				if (typeof row.row_id == 'undefined') continue;
-				people_ids.push(list.getTableKeyForRow("People",i));
-			}
-			service.json("people","get_peoples",{ids:people_ids},function(peoples) {
-				require("profile_picture.js",function() {
-					var pics = [];
-					for (var i = 0; i < peoples.length; ++i) {
-						var pic = {people:peoples[i]};
-						pic.picture_provider = function(container,width,height,onloaded) {
-							this.pic = new profile_picture(container,width,height,"center","bottom");
-							this.pic.loadPeopleObject(this.people,onloaded);
-							return this.pic;
-						};
-						pic.name_provider = function() {
-							return this.people.first_name+"<br/>"+this.people.last_name;
-						};
-						pic.onclick_title = "Click to see profile of "+pic.people.first_name+" "+pic.people.last_name;
-						pic.onclick = function(ev,pic) {
-							window.top.require("popup_window.js", function() {
-								var p = new window.top.popup_window("Profile", null, "");
-								p.setContentFrame("/dynamic/people/page/profile?people="+pic.people.id);
-								p.showPercent(95,95);
-							});
-						};
-						pics.push(pic);
-					}
-					handler(pics);
-				});
-			});
+		require("profile_picture.js",function() {
+			addDataListPeoplePictureSupport(list);
 		});
 	
 		var remove_button = document.createElement("BUTTON");
@@ -269,81 +232,13 @@ var students_list = new data_list(
 			students_list.addHeader(create_student);
 		}
 
-		var import_pictures;
-		import_pictures = document.createElement("BUTTON");
-		import_pictures.className = "flat";
-		import_pictures.disabled = "disabled";
-		import_pictures.innerHTML = "<img src='/static/images_tool/people_picture.png'/> Import Pictures";
-		require("images_tool.js",function() {
-			var tool = new images_tool();
-			tool.usePopup(true, function() {
-				var pictures = [];
-				for (var i = 0; i < tool.getPictures().length; ++i) pictures.push(tool.getPictures()[i]);
-				var nb = 0;
-				for (var i = 0; i < pictures.length; ++i)
-					if (tool.getTool("people").getPeople(pictures[i]))
-						nb++;
-				if (nb == 0) return;
-				tool.popup.freeze_progress("Saving pictures...", nb, function(span_message, progress_bar) {
-					var next = function(index) {
-						if (index == pictures.length) {
-							if (tool.getPictures().length > 0) {
-								tool.popup.unfreeze();
-								return;
-							}
-							tool.popup.close();
-							list.reloadData();
-							return;
-						}
-						var people = tool.getTool("people").getPeople(pictures[index]);
-						if (!people) {
-							next(index+1);
-							return;
-						}
-						span_message.removeAllChildren();
-						span_message.appendChild(document.createTextNode("Saving picture for "+people.first_name+" "+people.last_name));
-						var data = pictures[index].getResultData();
-						service.json("people", "save_picture", {id:people.id,picture:data}, function(res) {
-							if (res)
-								tool.removePicture(pictures[index]);
-							progress_bar.addAmount(1);
-							next(index+1);
-						});
-					};
-					next(0);
-				});
-			});
-			tool.useUpload();
-			tool.useFaceDetection();
-			tool.addTool("crop",function() {
-				tool.setToolValue("crop", null, {aspect_ratio:0.75}, true);
-			});
-			tool.addTool("scale", function() {
-				tool.setToolValue("scale", null, {max_width:300,max_height:300}, false);
-			});
-			tool.addTool("people", function() {});
-			tool.init(function() {
-				import_pictures.disabled = "";
-				import_pictures.onclick = function(ev) {
-					tool.reset();
-					var people_ids = [];
-					for (var i = 0; i < list.grid.getNbRows(); ++i)
-						people_ids.push(list.getTableKeyForRow("People",i));
-					if (people_ids.length == 0) {
-						alert("Nobody in the list");
-						return;
-					}
-					service.json("people","get_peoples",{ids:people_ids},function(peoples) {
-						tool.setToolValue("people", null, peoples, false);
-					});
-					tool.launchUpload(ev, true);
-				};
-			});
-		});
 		if (can_manage)
-			list.addHeader(import_pictures);
-
+			require("profile_picture.js",function() {
+				addDataListImportPicturesButton(list);
+			});
+		
 		list.makeRowsClickable(function(row){
+			if (typeof row.row_id == 'undefined') return;
 			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
 		});
 		layout.invalidate(list.container);

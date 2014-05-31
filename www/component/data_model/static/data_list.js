@@ -474,6 +474,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						t.grid.addColumn(col_picture, 0);
 						for (var i = 0; i < t.grid.getNbRows(); ++i) {
 							var field = t.grid.getCellField(i, 0);
+							if (field == null) continue;
 							picture_provider(field.getHTMLElement(), t.getTableKeyForRow(table, i), t._pic_width, t._pic_height);
 						}
 					} else

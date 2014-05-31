@@ -25,42 +25,8 @@ var list = new data_list(
 	[],
 	null,
 	function (list) {
-		list.addPictureSupport("People",function(container,people_id,width,height) {
-			while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
-			require("profile_picture.js",function() {
-				new profile_picture(container,width,height,"center","middle").loadPeopleID(people_id);
-			});
-		},function(handler)  {
-			require("profile_picture.js");
-			var people_ids = [];
-			for (var i = 0; i < list.grid.getNbRows(); ++i)
-				people_ids.push(list.getTableKeyForRow("People",i));
-			service.json("people","get_peoples",{ids:people_ids},function(peoples) {
-				require("profile_picture.js",function() {
-					var pics = [];
-					for (var i = 0; i < peoples.length; ++i) {
-						var pic = {people:peoples[i]};
-						pic.picture_provider = function(container,width,height,onloaded) {
-							this.pic = new profile_picture(container,width,height,"center","bottom");
-							this.pic.loadPeopleObject(this.people,onloaded);
-							return this.pic;
-						};
-						pic.name_provider = function() {
-							return this.people.first_name+"<br/>"+this.people.last_name;
-						};
-						pic.onclick_title = "Click to see profile of "+pic.people.first_name+" "+pic.people.last_name;
-						pic.onclick = function(ev,pic) {
-							window.top.require("popup_window.js", function() {
-								var p = new window.top.popup_window("Profile", null, "");
-								p.setContentFrame("/dynamic/people/page/profile?people="+pic.people.id);
-								p.showPercent(95,95);
-							});
-						};
-						pics.push(pic);
-					}
-					handler(pics);
-				});
-			});
+		require("profile_picture.js",function() {
+			addDataListPeoplePictureSupport(list);
 		});
 		<?php if ($can_edit) {?>
 		var edit_depts = document.createElement("BUTTON");
