@@ -1285,6 +1285,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			div_or_text.style.display = "inline-block";
 			div_or_text.style.verticalAlign = "bottom";
 			div_or_text.style.marginRight = "4px";
+			div_or_text.style.fontStyle = "italic";
 			div_or_text.appendChild(document.createTextNode("Or"));
 			div.appendChild(div_or_text);
 		}
@@ -1322,7 +1323,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			
 			var last_or = filter;
 			while (last_or.or) {
-				t._createFilter(last_or.or, or_div);
+				t._createFilter(last_or.or, or_div, true);
 				last_or = last_or.or;
 			}
 			

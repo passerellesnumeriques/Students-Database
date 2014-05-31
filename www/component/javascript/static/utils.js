@@ -477,6 +477,53 @@ function wordsMatch(s1, s2) {
 	return {nb_words_1:words1.length,nb_words_2:words2.length,nb_words1_in_words2:words1_in_words2,nb_words2_in_words1:words2_in_words1};
 }
 
+function matchScore(ref, needle) {
+	return matchScorePrepared(ref, prepareMatchScore(ref), needle, prepareMatchScore(needle))
+}
+function prepareMatchScore(s) {
+	var words = s.split(" ");
+	for (var i = 0; i < words.length; ++i) {
+		words[i] = words[i].trim();
+		if (words[i].length == 0) {
+			words.splice(i,1);
+			i--;
+		}
+	}
+	return words;
+}
+function matchScorePrepared(ref, ref_words, needle, needle_words) {
+	// same = 100% match
+	if (ref == needle) return 100;
+	// starts with needle = 95% match
+	if (ref.startsWith(needle)) return 95;
+	// calculate number of words which are the same, starts with, or contains
+	var nb_words = 0;
+	var nb_starts = 0;
+	var nb_contains = 0;
+	for (var i = 0; i < needle_words.length; ++i) {
+		if (ref_words.contains(needle_words[i])) nb_words++;
+		else {
+			var found = false;
+			for (var j = 0; j < ref_words.length; ++j)
+				if (ref_words[j].startsWith(needle_words[i])) {
+					nb_starts++;
+					found = true;
+					break;
+				}
+			if (!found)
+				for (var j = 0; j < ref_words.length; ++j)
+					if (ref_words[j].indexOf(needle_words[i]) > 0) {
+						nb_contains++;
+						found = true;
+						break;
+					}
+		}
+	}
+	var score = nb_words+nb_starts*0.75+nb_contains*0.5;
+	score /= needle_words.length;
+	return score*90;
+}
+
 /**
  * Add an "s" or not to the given word, in case the given figure is greater than 1
  * @param {String} word the word to set

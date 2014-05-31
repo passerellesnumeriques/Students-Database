@@ -13,7 +13,7 @@ class page_set_geography_area extends Page {
 		$this->addJavascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("new splitter_vertical('page_split',0.25);");
 		$this->addJavascript("/static/widgets/section/section.js");
-		$this->onload("sectionFromHTML('manage_divisions_section');");
+		$this->onload("window.divisions_section = sectionFromHTML('manage_divisions_section');");
 		$this->onload("sectionFromHTML('tree_section');");
 		
 		// example for province:
@@ -25,9 +25,9 @@ class page_set_geography_area extends Page {
 			<div id ='manage_divisions' ></div>
 		</div>
 	</div>
-	<div style='overflow:auto;'>
-		<div id='tree_section' title="Geographic Areas" style='margin:10px'>
-			<div id='set_geography_area' style = "padding:10px"></div>
+	<div style='height:100%;padding:10px'>
+		<div id='tree_section' title="Geographic Areas" style='height:100%' fill_height="true">
+			<div id='set_geography_area' style = "overflow:auto;height:100%"></div>
 		</div>
 	</div>
 </div>
@@ -110,20 +110,19 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 	 * @parameter area_name: the name of the adding area. This method will set the case of the given name, according to the uniformFirstLetterCapitalized string method
 	 * @parameter area_parent_id
 	 */
-	result.addArea = function(area_name, area_parent_id, ondone){
-		var parent_index = this.findIndex(area_parent_id);
-		var country_division = this[parent_index.division_index + 1].division_id;
+	result.addArea = function(area_name, parent_area, parent_division_index, ondone){
+		var country_division = this[parent_division_index + 1].division_id;
 		var name = area_name.uniformFirstLetterCapitalized();
 		var field_saved_id = null;
 		var t=this;
-		service.json("data_model","save_entity", {table:"GeographicArea", field_name:name, field_parent:area_parent_id, field_country_division:country_division}, function(res){
+		service.json("data_model","save_entity", {table:"GeographicArea", field_name:name, field_parent:parent_area.area_id, field_country_division:country_division}, function(res){
 			if(!res) return;
 			field_saved_id = res.key;
 			/*We now add the new area to result and tree*/
-			var div_index = parent_index.division_index + 1;
+			var div_index = parent_division_index + 1;
 			var ar_index = t[div_index].areas.length;
-			t[div_index].areas[ar_index] = {area_id: field_saved_id, area_name: name, area_parent_id: area_parent_id};
-			tr.buildItem(t, div_index, ar_index);
+			t[div_index].areas[ar_index] = {area_id: field_saved_id, area_name: name, area_parent_id: parent_area.area_id};
+			tr.createItem(t, div_index, ar_index, parent_area.item);
 			ondone();
 		});
 	};
@@ -144,7 +143,7 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 			var div_index = 0;
 			var ar_index = t[div_index].areas.length;
 			t[div_index].areas[ar_index] = {area_id: field_saved_id, area_name: name, area_parent_id: null};
-			tr.buildItem(t, div_index, ar_index);
+			tr.createItem(t, div_index, ar_index, tr.root);
 			ondone();
 		});
 	};
@@ -237,26 +236,21 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		var container = document.getElementById(this[division_index].areas[area_index].area_id);
 		var edit = new editable_cell(div, 'GeographicArea', 'name', this[division_index].areas[area_index].area_id, 'field_text', null, this[division_index].areas[area_index].area_name);
 		var area_parent_id = this[division_index].areas[area_index].area_parent_id;
-		var parent_name = null;
-		if(area_parent_id != null){
-			parent_index = this.findIndex(area_parent_id);
-			parent_name = this[parent_index.division_index].areas[parent_index.area_index].area_name;
-		}
-		else parent_name = country_name;
 		edit.onsave = function(text){
-						if(text.checkVisible() && result.checkUnicity(text, "area", area_parent_id, null)){
-							/*We update result*/
-							result[division_index].areas[area_index].area_name = text.uniformFirstLetterCapitalized();
-							return text.uniformFirstLetterCapitalized();
-						}
-						if(!text.checkVisible()){
-							error_dialog("You must enter at least one visible caracter");
-							return result[division_index].areas[area_index].area_name;
-						}
-						else {error_dialog(parent_name + " already has one child called " + text);
-							return result[division_index].areas[area_index].area_name;
-						}
-						};
+			if(text.checkVisible() && result.checkUnicity(text, "area", area_parent_id, null)){
+				/*We update result*/
+				result[division_index].areas[area_index].area_name = text.uniformFirstLetterCapitalized();
+				return text.uniformFirstLetterCapitalized();
+			}
+			if(!text.checkVisible()){
+				error_dialog("You must enter at least one visible caracter");
+				return result[division_index].areas[area_index].area_name;
+			}
+			else {
+				error_dialog("A sub-area already exists with name " + text);
+				return result[division_index].areas[area_index].area_name;
+			}
+		};
 		container.appendChild(div);
 	};
 	
@@ -271,16 +265,6 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		var table = document.createElement('table');
 		table.id = "table_manage_divisions";
 		var tbody = document.createElement('tbody');
-		var thead = document.createElement('thead');
-		var tfoot = document.createElement('tfoot');
-		//var th = document.createElement('th');
-		//var th_remove = document.createElement('th');
-		//th.innerHTML = "Manage country divisions";
-		//var tr_header = document.createElement('tr');
-		//tr_header.appendChild(th);
-		//tr_header.appendChild(th_remove);
-		//thead.appendChild(tr_header);
-		table.appendChild(thead);
 		if(result !={}){
 			for(var i = 0; i < this.length; i++){
 				var division_id = this[i].division_id;
@@ -316,16 +300,11 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 			}
 		}
 		table.appendChild(tbody);
-		var tr_foot = document.createElement('tr');
-		var td_foot = document.createElement('td');
 		var add_button = document.createElement('BUTTON');
 		add_button.className = 'action';
 		add_button.innerHTML = "<img src='"+theme.icons_16.add+"'/> Append a new division";
 		add_button.onclick = function(){result.startAddDivision();};
-		td_foot.appendChild(add_button);
-		tr_foot.appendChild(td_foot);
-		tfoot.appendChild(tr_foot);
-		table.appendChild(tfoot);
+		window.divisions_section.addToolBottom(add_button);
 		container.appendChild(table);
 		var form_reload = document.createElement('form');
 		form_reload.id = "form_reload";
@@ -479,20 +458,20 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 
 require('tree.js',function(){
 	tr = new tree('set_geography_area');
+	tr.table.style.margin = "10px";
 	
 	/**
 	* Create the add button on the tree, except for the last division
 	* @method set_geography_area#tree#addAddButton
 	* @parameter r = result object
 	*/
-	tr.addAddButton = function(r, division_index, area_index){
+	tr.addAddButton = function(r, division_index, area_index, div){
 		if(division_index == null && area_index == null){
 			var add_button = document.createElement('BUTTON');
 			add_button.className = 'flat small_icon';
 			add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
 			add_button.title = "Create sub-areas";
-			add_button.onclick = function(){tr.addChild(r, null, 'root');};
-			var div = document.getElementById('root');
+			add_button.onclick = function(){tr.addChild(r, null);};
 			div.appendChild(add_button);
 		}
 		else{
@@ -501,9 +480,8 @@ require('tree.js',function(){
 				add_button.className = 'flat small_icon';
 				add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
 				add_button.title = "Create sub-areas";
-				add_button.area_parent_id = r[division_index].areas[area_index].area_id;
-				add_button.onclick = function(){tr.addChild(r, add_button.area_parent_id);};
-				var div = document.getElementById(r[division_index].areas[area_index].area_id);
+				add_button.area = r[division_index].areas[area_index];
+				add_button.onclick = function(){tr.addChild(r, this.area, division_index);};
 				div.appendChild(add_button);
 			}
 		}
@@ -516,21 +494,16 @@ require('tree.js',function(){
 	 * @parameter division_index the level in the tree
 	 * @parameter area_index the index of the current area
 	 */
-	tr.addRemoveButton = function(r, division_index, area_index){
+	tr.addRemoveButton = function(r, division_index, area_index, div){
 		var remove_button = document.createElement('BUTTON');
 		remove_button.className = 'flat small_icon';
 		remove_button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
 		remove_button.title = "Remove this area and all its content";
-		var div = null;
-		if(division_index == null && area_index == null){
-			div = document.getElementById('root');
-		}
-		else{
-			div = document.getElementById(r[division_index].areas[area_index].area_id);
+		if(division_index != null && area_index != null){
 			remove_button.area_id = r[division_index].areas[area_index].area_id;
 			remove_button.onclick = function(){tr.removeChildren(r, remove_button.area_id);};
+			div.appendChild(remove_button);
 		}
-		div.appendChild(remove_button);
 	};
 	
 	/**
@@ -549,7 +522,7 @@ require('tree.js',function(){
 	 * @parameter area_parent_id the id of the area to which the user is trying to add a child
 	 * @parameter root if root == 'root' means we are at the root level, so will call the addRoot method. Else, root == null
 	 */
-	tr.addChild = function(r, area_parent_id, root){
+	tr.addChild = function(r, parent_area, parent_division_index){
 		var content = document.createElement("DIV");
 		content.style.padding = "10px";
 		content.appendChild(document.createTextNode("Please enter new areas (one by line):"));
@@ -569,7 +542,7 @@ require('tree.js',function(){
 					for (var i = 0; i < lines.length; ++i) {
 						var name = lines[i].trim();
 						if (!name.checkVisible()) continue;
-						if (!r.checkUnicity(name, "area", area_parent_id, null)) {
+						if (!r.checkUnicity(name, "area", parent_area.area_id, null)) {
 							alert("Area already exists: "+name);
 							continue;
 						}
@@ -586,8 +559,8 @@ require('tree.js',function(){
 									popup.close();
 								}
 							};
-							if (root == null)
-								r.addArea(names[i], area_parent_id, added);
+							if (parent_area != null)
+								r.addArea(names[i], parent_area, parent_division_index, added);
 							else
 								r.addRoot(names[i], added);
 								
@@ -609,44 +582,40 @@ require('tree.js',function(){
 		var div = document.createElement('div');
 		div.id ='root';
 		div.style.display ='inline-block';
-		div.innerHTML = country_name;
+		div.appendChild(document.createTextNode(country_name));
 		var item = new TreeItem([new TreeCell(div)]);
 		this.root = item;
 		this.addItem(item);
-		this.addAddButton(r,null,null);
+		this.addAddButton(r,null,null,div);
 		/*We manage the other levels*/
-		for(var i =0; i < r.length; i++){
-			for(var j =0; j < r[i].areas.length; j++){
-				if(r[i].areas[j] != null){
-					tr.buildItem(r,i,j);
-				}
+		for(var division_index=0; division_index < r.length; division_index++){
+			for (var area_index = 0; area_index < r[division_index].areas.length; ++area_index) {
+				var area = r[division_index].areas[area_index];
+				var parent_item;
+				if (division_index == 0) parent_item = this.root;
+				else for (var i = 0; i < r[division_index-1].areas.length; ++i)
+					if (r[division_index-1].areas[i].area_id == area.area_parent_id) {
+						parent_item = r[division_index-1].areas[i].item;
+						break;
+					}
+				tr.createItem(r, division_index, area_index, parent_item);
 			}
-		}		
+		}
 	};
-	
-	/**
-	 * Build an item in the tree
-	 * @parameter r the result object
-	 * @parameter division_index
-	 * @parameter area_index
-	 */
-	tr.buildItem = function(r, division_index, area_index){
-		var div = document.createElement('div');
-		div.id = r[division_index].areas[area_index].area_id;
+
+	tr.createItem = function(r, division_index, area_index, parent_item) {
+		var div = document.createElement('DIV');
 		div.style.display ='inline-block';
-		r[division_index].areas[area_index].item = new TreeItem([new TreeCell(div)]);
-		var parent_index = r.findIndex(r[division_index].areas[area_index].area_parent_id);
-		if(typeof(parent_index.division_index) != 'undefined'){
-			r[parent_index.division_index].areas[parent_index.area_index].item.addItem(r[division_index].areas[area_index].item);
-		}
-		else{
-			this.root.addItem(r[division_index].areas[area_index].item);
-		}
+		div.id = r[division_index].areas[area_index].area_id;
+		var item = new TreeItem([new TreeCell(div)]);
+		r[division_index].areas[area_index].item = item;
+		parent_item.addItem(item);
 		r.createEditable(division_index, area_index);
-		tr.addAddButton(r, division_index, area_index);
-		tr.addRemoveButton(r, division_index, area_index);
+		tr.addAddButton(r, division_index, area_index, div);
+		tr.addRemoveButton(r, division_index, area_index, div);
+		return item;
 	};
-	
+
 	if (result != null && editable != null) everything_ready();
 });
 
