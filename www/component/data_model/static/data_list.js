@@ -136,8 +136,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		layout.invalidate(t.header);
 	};
 	/** Force to refresh the data from the server */
-	t.reloadData = function() {
-		t._loadData();
+	t.reloadData = function(ondone) {
+		t._loadData(ondone);
 	};
 	/** Get the key if we found it, or the value, for a given table.column of the data model, for the given row of the grid
 	 * @param {Number} row row index

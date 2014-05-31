@@ -116,6 +116,18 @@ function nodeSelected(node) {
 	}
 	window.onhashchange();
 }
+function getSelectedNodeTag() {
+	var item = tr.getSelectedItem();
+	if (item == null) return null;
+	if (!item.node) return null;
+	return item.node.tag;
+}
+function selectNodeByTag(tag) {
+	var node = window.curriculum_root.findTag(tag);
+	if (!node) return;
+	node.item.select();
+	window.onhashchange();
+}
 
 listenEvent(frame,'load',function() {
 	var win = getIFrameWindow(frame);

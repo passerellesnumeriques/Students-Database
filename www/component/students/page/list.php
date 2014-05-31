@@ -55,13 +55,16 @@ var data_list_fields = [
 	'Student.Specialization',
 ];
 if (url.params['period']) data_list_fields.push("Student.Class");
-var students_list = new data_list(
+window.students_list = null;
+new data_list(
 	'list_container',
 	url.params['period'] || url.params['class'] ? 'StudentClass' : 'Student', null,
 	data_list_fields,
 	build_filters(),
 	batches != null && batches.length > 1 ? 100 : -1,
 	function (list) {
+		window.students_list = list;
+		
 		list.addTitle("/static/curriculum/batch_16.png", "Students");
 		require("profile_picture.js",function() {
 			addDataListPeoplePictureSupport(list);
@@ -165,7 +168,7 @@ var students_list = new data_list(
 						p.show();
 					});
 				};
-				students_list.addFooterTool(assign_spe);
+				list.addFooterTool(assign_spe);
 				<?php 
 			}
 		}
@@ -182,7 +185,7 @@ var students_list = new data_list(
 					p.show();
 				});
 			};
-			students_list.addFooterTool(assign);
+			list.addFooterTool(assign);
 		}
 
 		if (batches && batches.length == 1 && can_manage) {
@@ -211,7 +214,7 @@ var students_list = new data_list(
 					});
 				};
 			});
-			students_list.addHeader(import_students);
+			list.addHeader(import_students);
 			var create_student = document.createElement("BUTTON");
 			create_student.className = "flat";
 			create_student.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.add+"&where=right_bottom' style='vertical-align:bottom'/> Create Student";
@@ -229,7 +232,7 @@ var students_list = new data_list(
 					p.show();
 				});
 			};
-			students_list.addHeader(create_student);
+			list.addHeader(create_student);
 		}
 
 		if (can_manage)
@@ -256,7 +259,7 @@ var students_list = new data_list(
 );
 
 function reload_list() {
-	students_list.reloadData();
+	window.students_list.reloadData();
 }
 
 </script>

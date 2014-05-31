@@ -158,6 +158,22 @@ function waitFrameContentReady(frame, test, onready, timeout) {
 	onready(win);
 }
 
+function waitForFrame(frame_name, onready, timeout) {
+	if (typeof timeout == 'undefined') timeout = 30000;
+	if (timeout < 50) return;
+	var frame = findFrame(frame_name);
+	if (frame) {
+		var win = getIFrameWindow(frame);
+		if (win) {
+			if (win._page_ready) {
+				onready(win);
+				return;
+			}
+		}
+	}
+	setTimeout(function() { waitForFrame(frame_name, onready, timeout-50); }, 50);
+}
+
 if (typeof window.top._current_tooltip == 'undefined')
 	window.top._current_tooltip = null;
 /** Display a tooltip for the given element, any tooltip currently displayed will be removed.
