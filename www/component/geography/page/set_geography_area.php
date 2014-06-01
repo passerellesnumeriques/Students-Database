@@ -1056,53 +1056,87 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 	};
 
 	var stop_searching = false;
-	result.searchMissingCoordinates = function() {
+	result.searchMissingCoordinates = function(search_division) {
 		stop_searching = false;
-		var total = parseInt(window.span_nb_total.innerHTML);
-		var ok = parseInt(window.span_nb_have_coordinates.innerHTML);
-		var missing = total-ok;
-		if (missing == 0) return;
-		var lock = lock_screen(null, "");
-		set_lock_screen_content_progress(lock, missing, "Searching missing coordinates from Internet...<br/>This will take a while, please be patient", true, function(span, pb, sub) {
-			var span_nb_found = document.createElement("SPAN");
-			span_nb_found.innerHTML = "0";
-			var span_nb_remaining = document.createElement("SPAN");
-			span_nb_remaining.innerHTML = missing;
-			sub.appendChild(span_nb_found);
-			sub.appendChild(document.createTextNode(" found, "));
-			sub.appendChild(span_nb_remaining);
-			sub.appendChild(document.createTextNode(" remaining."));
-			sub.appendChild(document.createElement("BR"));
-			var button = document.createElement("BUTTON");
-			button.innerHTML = "<img src='"+theme.icons_16.cancel+"'/> Stop";
-			button.onclick = function() {
-				this.innerHTML = "<img src='"+theme.icons_16.loading+"'/> Please wait while we are waiting for pending results...";
-				this.disabled = "disabled";
-				stop_searching = true;
-			};
-			sub.appendChild(button);
-			// start from the top, going to the leaves, then back to the top
-			var i1 = 0;
-			var i2 = res_size-1;
-			var done = function() {
-				unlock_screen(lock);
-			};
-			var doit2 = function() {
-				if (stop_searching) done();
-				result._searchCoordinatesDivision(i2, pb, span_nb_found, span_nb_remaining, function() {
-					if (--i2 < 0) done();
-					else doit2();
+		if (typeof search_division == 'undefined') {
+			var total = parseInt(window.span_nb_total.innerHTML);
+			var ok = parseInt(window.span_nb_have_coordinates.innerHTML);
+			var missing = total-ok;
+			if (missing == 0) return;
+			var lock = lock_screen(null, "");
+			set_lock_screen_content_progress(lock, missing, "Searching missing coordinates from Internet...<br/>This will take a while, please be patient", true, function(span, pb, sub) {
+				var span_nb_found = document.createElement("SPAN");
+				span_nb_found.innerHTML = "0";
+				var span_nb_remaining = document.createElement("SPAN");
+				span_nb_remaining.innerHTML = missing;
+				sub.appendChild(span_nb_found);
+				sub.appendChild(document.createTextNode(" found, "));
+				sub.appendChild(span_nb_remaining);
+				sub.appendChild(document.createTextNode(" remaining."));
+				sub.appendChild(document.createElement("BR"));
+				var button = document.createElement("BUTTON");
+				button.innerHTML = "<img src='"+theme.icons_16.cancel+"'/> Stop";
+				button.onclick = function() {
+					this.innerHTML = "<img src='"+theme.icons_16.loading+"'/> Please wait while we are waiting for pending results...";
+					this.disabled = "disabled";
+					stop_searching = true;
+				};
+				sub.appendChild(button);
+				// start from the top, going to the leaves, then back to the top
+				var i1 = 0;
+				var i2 = res_size-1;
+				var done = function() {
+					unlock_screen(lock);
+				};
+				var doit2 = function() {
+					if (stop_searching) done();
+					result._searchCoordinatesDivision(i2, pb, span_nb_found, span_nb_remaining, function() {
+						if (--i2 < 0) done();
+						else doit2();
+					});
+				};
+				var doit1 = function() {
+					if (stop_searching) done();
+					result._searchCoordinatesDivision(i1, pb, span_nb_found, span_nb_remaining, function() {
+						if (++i1 >= res_size) doit2();
+						else doit1();
+					});
+				};
+				doit1();
+			});
+		} else {
+			var total = 0;
+			var missing = 0;
+			for (var i = 0; i < result[search_division].areas.length; ++i) {
+				total++;
+				if (result[search_division].areas[i].north) continue; // already set
+				missing++;
+			}
+			var lock = lock_screen(null, "");
+			set_lock_screen_content_progress(lock, missing, "Searching missing coordinates from Internet...<br/>This will take a while, please be patient", true, function(span, pb, sub) {
+				var span_nb_found = document.createElement("SPAN");
+				span_nb_found.innerHTML = "0";
+				var span_nb_remaining = document.createElement("SPAN");
+				span_nb_remaining.innerHTML = missing;
+				sub.appendChild(span_nb_found);
+				sub.appendChild(document.createTextNode(" found, "));
+				sub.appendChild(span_nb_remaining);
+				sub.appendChild(document.createTextNode(" remaining."));
+				sub.appendChild(document.createElement("BR"));
+				var button = document.createElement("BUTTON");
+				button.innerHTML = "<img src='"+theme.icons_16.cancel+"'/> Stop";
+				button.onclick = function() {
+					this.innerHTML = "<img src='"+theme.icons_16.loading+"'/> Please wait while we are waiting for pending results...";
+					this.disabled = "disabled";
+					stop_searching = true;
+				};
+				sub.appendChild(button);
+				// search the division
+				result._searchCoordinatesDivision(search_division, pb, span_nb_found, span_nb_remaining, function() {
+					unlock_screen(lock);
 				});
-			};
-			var doit1 = function() {
-				if (stop_searching) done();
-				result._searchCoordinatesDivision(i1, pb, span_nb_found, span_nb_remaining, function() {
-					if (++i1 >= res_size) doit2();
-					else doit1();
-				});
-			};
-			doit1();
-		});
+			});
+		}
 	};
 	result._searchCoordinatesDivision = function(division_index, pb, span_nb_found, span_nb_remaining, ondone) {
 		var todo = [];
@@ -1330,6 +1364,66 @@ require('tree.js',function(){
 			button.title = "Set geographic coordinates";
 		}
 	};
+	tr.addSearchCoordinatesButton = function(r, division_index, area_index, div){
+		if(division_index == null && area_index == null) return;
+		var area = r[division_index].areas[area_index];
+		var button = document.createElement('BUTTON');
+		button.className = 'flat small_icon';
+		button.title = "Search missing coordinates inside "+area.area_name;
+		button.innerHTML = "<img src='"+theme.build_icon('/static/geography/earth_12.png','/static/geography/search_9.png')+"'/>";
+		button.onclick = function() { 
+			var p_ids = [area.area_id];
+			var p_div = division_index;
+			var todo = [];
+			while (p_div < r.length-1) {
+				var ids = [];
+				for (var i = 0; i < r[p_div+1].areas.length; ++i) {
+					var a = r[p_div+1].areas[i];
+					if (!p_ids.contains(a.area_parent_id)) continue;
+					ids.push(a.area_id);
+					if (a.north) continue;
+					todo.push({area:a,division_index:p_div+1,area_index:i});
+				}
+				p_ids = ids;
+				p_div++;
+			}
+			stop_searching = false;
+			var lock = lock_screen(null, "");
+			set_lock_screen_content_progress(lock, todo.length, "Searching missing coordinates from Internet...<br/>This will take a while, please be patient", true, function(span, pb, sub) {
+				var span_nb_found = document.createElement("SPAN");
+				span_nb_found.innerHTML = "0";
+				var span_nb_remaining = document.createElement("SPAN");
+				span_nb_remaining.innerHTML = todo.length;
+				sub.appendChild(span_nb_found);
+				sub.appendChild(document.createTextNode(" found, "));
+				sub.appendChild(span_nb_remaining);
+				sub.appendChild(document.createTextNode(" remaining."));
+				sub.appendChild(document.createElement("BR"));
+				var button = document.createElement("BUTTON");
+				button.innerHTML = "<img src='"+theme.icons_16.cancel+"'/> Stop";
+				button.onclick = function() {
+					this.innerHTML = "<img src='"+theme.icons_16.loading+"'/> Please wait while we are waiting for pending results...";
+					this.disabled = "disabled";
+					stop_searching = true;
+				};
+				sub.appendChild(button);
+				// search
+				var next = function() {
+					if (todo.length == 0 || stop_searching) {
+						unlock_screen(lock);
+						return;
+					}
+					var a = todo[0];
+					todo.splice(0,1);
+					if (a.area.north) { next(); return; }
+					result._seachCoordinatesArea(a.division_index, a.area_index, pb, span_nb_found, span_nb_remaining, next);
+				};
+				next();
+			});
+			return false; 
+		};
+		div.appendChild(button);
+	};
 	
 	/**
 	 * Ask for user opinion before removing one area
@@ -1461,7 +1555,23 @@ require('tree.js',function(){
 		button = document.createElement("BUTTON");
 		button.appendChild(document.createTextNode("Search missing"));
 		window.areas_section.addToolRight(button);
-		button.onclick = function() { r.searchMissingCoordinates(); return false; };
+		button.onclick = function() {
+			var button = this;
+			require("context_menu.js", function() {
+				var menu = new context_menu();
+				menu.addIconItem(null, "Search all", function() {
+					r.searchMissingCoordinates();
+				});
+				for (var i = 0; i < r.length; ++i) {
+					menu.addIconItem(null, "Search only: "+r[i].division_name, function(division) {
+						r.searchMissingCoordinates(division);
+					},i);
+				}
+				menu.showBelowElement(button);
+			});
+			
+			return false; 
+		};
 
 		button = document.createElement("BUTTON");
 		button.appendChild(document.createTextNode("Open next missing"));
@@ -1490,6 +1600,7 @@ require('tree.js',function(){
 		tr.addAddButton(r, division_index, area_index, div);
 		tr.addRemoveButton(r, division_index, area_index, div);
 		tr.addCoordinatesButton(r, division_index, area_index, div);
+		tr.addSearchCoordinatesButton(r, division_index, area_index, div);
 		return item;
 	};
 

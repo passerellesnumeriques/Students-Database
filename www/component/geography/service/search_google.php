@@ -59,29 +59,8 @@ class service_search_google extends Service {
 	}
 	
 	private function searchGoogle($country, $query) {
-		set_time_limit(300);
-		$url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=".urlencode($query);
-		$url .= "&components=country:".$country["code"];
-		$url .= "&types=political";
-		$url .= "&sensor=false";
-		$url .= "&key=AIzaSyBhG4Hn5zmbXcALGQtAPJDkUj2hDSZdVSU";
-		//echo $url."<br/><br/>\r\n\r\n";
-		$c = curl_init($url);
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		$result = curl_exec($c);
-		if ($result === false) {
-			PNApplication::error("Error connecting to Google: ".curl_error($c));
-			curl_close($c);
-			return null;
-		}
-		curl_close($c);
-		//echo $result."<br/><br/>\r\n\r\n";
-		$result = json_decode($result, true);
-		if (isset($result["status"]) && $result["status"] <> "OK" && $result["status"] <> "ZERO_RESULTS")
-			PNApplication::error("Google replied ".$result["status"].(isset($result["error_message"]) ? ": ".$result["error_message"] : ""));
-		if (!isset($result["results"])) return array();
-		return $result["results"];
+		require_once("component/google/GoogleAPI.inc");
+		return GoogleAPI::PlacesTextSearch($query, $country["code"]);
 	}
 	
 	private function mergeResults(&$results, $new_results) {

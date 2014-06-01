@@ -310,41 +310,26 @@ class service_search_coordinates extends Service {
 	}
 	
 	private function searchGoogle($country, $areas) {
-		set_time_limit(300);
 		$query = "";
 		for ($i = 0; $i < count($areas); $i++) {
 			if ($i > 0) $query .= " ";
 			$query .= $areas[$i]["name"];
 		}
 		$query .= " ".$country["name"];
-		$url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=".urlencode($query);
-		$url .= "&components=country:".$country["code"];
-		$url .= "&types=political";
-		$url .= "&sensor=false";
-		$url .= "&key=AIzaSyBhG4Hn5zmbXcALGQtAPJDkUj2hDSZdVSU";
-		if ($this->debug) echo "   === Search Google: ".$url."\r\n";
-		$c = curl_init($url);
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		$result = curl_exec($c);
-		curl_close($c);
+		require_once("component/google/GoogleAPI.inc");
+		$results = GoogleAPI::PlacesTextSearch($query, $country["code"]);
+		if ($results == null) return array();
 		$google = array();
-		if ($result !== false) {
-			$result = json_decode($result, true);
-			if (isset($result["status"]) && $result["status"] <> "OK" && $result["status"] <> "ZERO_RESULTS")
-				PNApplication::error("Google replied ".$result["status"].(isset($result["error_message"]) ? ": ".$result["error_message"] : ""));
-			if (isset($result["results"]))
-				foreach ($result["results"] as $res) {
-					if (!isset($res["geometry"]["viewport"])) continue;
-					array_push($google, array(
-						"full_name"=>$res["formatted_address"],
-						"north"=>$res["geometry"]["viewport"]["northeast"]["lat"],
-						"east"=>$res["geometry"]["viewport"]["northeast"]["lng"],
-						"south"=>$res["geometry"]["viewport"]["southwest"]["lat"],
-						"west"=>$res["geometry"]["viewport"]["southwest"]["lng"]
-					));
-				}
-		} 
+		foreach ($results as $res) {
+			if (!isset($res["geometry"]["viewport"])) continue;
+			array_push($google, array(
+				"full_name"=>$res["formatted_address"],
+				"north"=>$res["geometry"]["viewport"]["northeast"]["lat"],
+				"east"=>$res["geometry"]["viewport"]["northeast"]["lng"],
+				"south"=>$res["geometry"]["viewport"]["southwest"]["lat"],
+				"west"=>$res["geometry"]["viewport"]["southwest"]["lng"]
+			));
+		}
 		if ($this->debug) echo "   === Google results: ".count($google)."\r\n";
 		return $google;
 	}
