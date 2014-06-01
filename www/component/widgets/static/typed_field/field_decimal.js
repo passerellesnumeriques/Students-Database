@@ -63,7 +63,8 @@ field_decimal.prototype._create = function(data) {
 		input.onblur = function(ev) {
 			t.setData(t._getEditedData());
 		};
-		require("input_utils.js",function(){inputAutoresize(input);});
+		var _fw=false;
+		require("input_utils.js",function(){inputAutoresize(input);if (_fw) input.setMinimumSize(-1); });
 		this.element.appendChild(input);
 		this._getEditedData = function() {
 			var value = getValueFromInput();
@@ -83,6 +84,11 @@ field_decimal.prototype._create = function(data) {
 				var ev = getCompatibleKeyEvent(e);
 				if (ev.isEnter) listener(t);
 			});
+		};
+		this.fillWidth = function() {
+			_fw = true;
+			this.element.style.width = "100%";
+			if (typeof input.setMinimumSize) input.setMinimumSize(-1);
 		};
 	} else {
 		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));

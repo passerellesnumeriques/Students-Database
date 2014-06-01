@@ -12,7 +12,7 @@ function TreeColumn(title) {
  * @param {Boolean} expanded indicates if the item will be expanded or collapsed at the beginning
  * @param {Function} onselect callback when the item is selected, or null if the item is not selectable
  */
-function TreeItem(cells, expanded, onselect) {
+function TreeItem(cells, expanded, onselect, children_on_demand) {
 	if (typeof cells == 'string') cells = [new TreeCell(cells)];
 	else if (typeof cells == 'object' && !(cells instanceof Array) && getObjectClassName(cells) != "Array")
 		cells = [new TreeCell(cells)];
@@ -23,7 +23,14 @@ function TreeItem(cells, expanded, onselect) {
 	if (onselect) this.cells[0].element.className += " tree_cell_selectable";
 	for (var i = 1; i < this.cells.length; ++i) this.cells[i].element.className = "tree_cell";
 	/** {Array} list of TreeItem: the children of this item */
-	this.children = [];
+	if (children_on_demand) {
+		this.children_on_demand = children_on_demand;
+		if (expanded) {
+			this.children = [];
+			children_on_demand(this);
+		}
+	} else
+		this.children = [];
 	this.expanded = expanded;
 	/** Add or change an HTML element that will be displayed at the right, taking the height of this item and all its children
 	 * @param {Element} control the HTML element to add on the right
@@ -133,6 +140,7 @@ function TreeItem(cells, expanded, onselect) {
 		item.tr.style.position = 'absolute';
 		item.tr.style.top = "-10000px";
 		item.tr.style.left = "-10000px";
+		if (item.children)
 		for (var i = 0; i < item.children.length; ++i)
 			this._hide(item.children[i]);
 	};
@@ -400,8 +408,9 @@ function tree(container) {
 				item.onselect();
 			};
 		}
-		for (var i = 0; i < item.children.length; ++i)
-			this._create_item(item.children[i]);
+		if (typeof item.children != 'undefined')
+			for (var i = 0; i < item.children.length; ++i)
+				this._create_item(item.children[i]);
 	};
 	this._refresh_heads_activated = false;
 	this._refresh_heads = function() {
@@ -542,6 +551,10 @@ function tree(container) {
 					item.head.appendChild(line);
 				}
 				// box
+				if (typeof item.children == 'undefined' && item.children_on_demand) {
+					item.children = [];
+					item.children_on_demand(item);
+				}
 				if (item.children.length > 0) {
 					var img = document.createElement("IMG");
 					img.src = url+(item.expanded ? "minus" : "plus")+".png";

@@ -11,7 +11,7 @@ service = {
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
 	 */
-	json: function(component, service_name, input, handler, foreground, progress_handler) {
+	json: function(component, service_name, input, handler, foreground, progress_handler, onerror) {
 		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null)
@@ -29,6 +29,7 @@ service = {
 					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
 				else for (var i = 0; i < error.length; ++i)
 					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error[i],10000));
+				if (onerror) onerror(error);
 			},
 			progress_handler
 		);
