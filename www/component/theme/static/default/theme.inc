@@ -92,6 +92,7 @@ theme::$icons_32 = array(
 	"dashboard" => 		"/static/theme/default/icons_32/dashboard.png",
 	"help" => 			"/static/theme/default/icons_32/help.png",
 	"home" => 			"/static/theme/default/icons_32/home.png",
+	"_import" => 		"/static/theme/default/icons_32/import.png",
 );
 
 ?>

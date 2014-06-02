@@ -146,6 +146,13 @@ if (window == window.top && !window.top.geography) {
 				}
 			return null;
 		},
+		getAreaChildren: function(country_data, division_index, parent_id) {
+			var list = [];
+			for (var i = 0; i < country_data[division_index].areas.length; ++i)
+				if (country_data[division_index].areas[i].area_parent_id == parent_id)
+					list.push(country_data[division_index].areas[i]);
+			return list;
+		},
 		
 		
 		/* Functions to get information about areas and divisions */

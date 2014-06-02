@@ -72,8 +72,10 @@ field_decimal.prototype._create = function(data) {
 			return parseFloat(value).toFixed(this.config.decimal_digits);
 		};
 		this._setData = function(data) {
+			if (typeof data == 'string') data = parseFloat(data);
+			if (isNaN(data)) data = null;
 			if (data == null) input.value = "";
-			else input.value = data;
+			else input.value = data.toFixed(t.config.decimal_digits);
 		};
 		this.signal_error = function(error) {
 			this.error = error;

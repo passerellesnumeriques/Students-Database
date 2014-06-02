@@ -23,13 +23,9 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 	if (onselect) this.cells[0].element.className += " tree_cell_selectable";
 	for (var i = 1; i < this.cells.length; ++i) this.cells[i].element.className = "tree_cell";
 	/** {Array} list of TreeItem: the children of this item */
-	if (children_on_demand) {
+	if (children_on_demand)
 		this.children_on_demand = children_on_demand;
-		if (expanded) {
-			this.children = [];
-			children_on_demand(this);
-		}
-	} else
+	else
 		this.children = [];
 	this.expanded = expanded;
 	/** Add or change an HTML element that will be displayed at the right, taking the height of this item and all its children
@@ -551,19 +547,24 @@ function tree(container) {
 					item.head.appendChild(line);
 				}
 				// box
+				var img = document.createElement("IMG");
+				img.style.position = 'absolute';
+				img.style.right = '4px';
+				img.style.bottom = '1px';
+				img.style.cursor = 'pointer';
+				img.item = item;
 				if (typeof item.children == 'undefined' && item.children_on_demand) {
-					item.children = [];
-					item.children_on_demand(item);
-				}
-				if (item.children.length > 0) {
-					var img = document.createElement("IMG");
-					img.src = url+(item.expanded ? "minus" : "plus")+".png";
-					img.style.position = 'absolute';
-					img.style.right = '4px';
-					img.style.bottom = '1px';
+					img.src = url+"loading.gif";
 					item.head.appendChild(img);
-					img.style.cursor = 'pointer';
-					img.item = item;
+					item.children = [];
+					item.children_on_demand(item, function() {
+						img.src = url+(item.expanded ? "minus" : "plus")+".png";
+						img.onclick = function() { this.item.toggleExpand(); };
+					});
+				} else
+				if (item.children.length > 0) {
+					img.src = url+(item.expanded ? "minus" : "plus")+".png";
+					item.head.appendChild(img);
 					img.onclick = function() { this.item.toggleExpand(); };
 				}
 			}
