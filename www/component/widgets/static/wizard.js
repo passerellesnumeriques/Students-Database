@@ -10,7 +10,7 @@ function wizard(container) {
 	t.icon = null;
 	t.title = "Wizard";
 	t.pages = [];
-	t.current_page = -1;
+	t.current_page = 0;
 	t.element = document.createElement("TABLE");
 	t.element.className = "wizard_table";
 	t.element.data = t;

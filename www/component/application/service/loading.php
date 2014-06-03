@@ -57,7 +57,7 @@ $total = 0;
 foreach ($mandatory as $s) $total += $s[1];
 foreach ($optional as $s) $total += $s[1];
 ?>
-var _loading_ready = 0;
+var _mandatory_index = 0;
 function _addJavascript(url, callback) {
 	var head = document.getElementsByTagName("HEAD")[0];
 	var s = document.createElement("SCRIPT");
@@ -70,9 +70,12 @@ function _addJavascript(url, callback) {
 }
 window.pn_loading = document.all ? document.all['__loading_table'] : document.getElementById('__loading_table');
 var pn_loading_visible = true;
+var enter_page_called = false;
 function __load_enter_page() {
 	next_optional();
-
+	if (enter_page_called) return;
+	enter_page_called = true;
+	
 	addStylesheet('/static/theme/default/style/global.css');
 	
 	var frame = document.createElement("IFRAME");
@@ -103,22 +106,33 @@ function update_size() {
 	document.getElementById('loading_status').innerHTML = "Loading ("+pc+"%)";
 }
 
+var mandatory_loaded = 0;
 function next_mandatory() {
-	_addJavascript(_mandatory_scripts[_loading_ready][0],function() {
-		loaded_size += _mandatory_scripts[_loading_ready][1];
+	if (_mandatory_index >= _mandatory_scripts.length) { __load_enter_page(); return; }
+	var i = _mandatory_index++;
+	_addJavascript(_mandatory_scripts[i][0],function() {
+		loaded_size += _mandatory_scripts[i][1];
 		update_size();
-		if (++_loading_ready == _mandatory_scripts.length) __load_enter_page();
+		if (++mandatory_loaded >= _mandatory_scripts.length) __load_enter_page();
 		else next_mandatory(); 
 	});
 }
 update_size();
 next_mandatory();
+setTimeout(next_mandatory, 50);
+setTimeout(next_mandatory, 200);
+setTimeout(next_mandatory, 400);
+setTimeout(next_mandatory, 500);
+setTimeout(next_mandatory, 700);
 var optional_index = 0;
+var optional_loaded = 0;
 function next_optional() {
-	_addJavascript(_optional_scripts[optional_index][0],function() {
-		loaded_size += _optional_scripts[optional_index][1];
+	if (optional_index >= _optional_scripts.length) return;
+	var i = optional_index++;
+	_addJavascript(_optional_scripts[i][0],function() {
+		loaded_size += _optional_scripts[i][1];
 		update_size();
-		if (++optional_index == _optional_scripts.length) {
+		if (++optional_loaded >= _optional_scripts.length) {
 			document.getElementById('loading_status').innerHTML = "<?php echo PNApplication::$instance->user_management->username <> null ? "Starting Application" : "Loading Authentication Page";?>...";
 			window.status_manager = new StatusManager();
 			window.status_manager.status_ui = new StatusUI_Top(window.status_manager);

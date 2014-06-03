@@ -45,7 +45,37 @@ function setEntityCoordinates(entity, coord) {
 	entity.east = coord.east;
 }
 
-function handleResults(results, entities, entity_name_getter) {
+function boxContains(area1, area2) {
+	var b1 = parseFloat(area2.south) >= parseFloat(area1.south);
+	var b2 = parseFloat(area2.south) <= parseFloat(area1.north);
+	var b3 = parseFloat(area2.north) >= parseFloat(area1.south);
+	var b4 = parseFloat(area2.north) <= parseFloat(area1.north);
+	var b5 = parseFloat(area2.west) >= parseFloat(area1.west);
+	var b6 = parseFloat(area2.west) <= parseFloat(area1.east);
+	var b7 = parseFloat(area2.east) >= parseFloat(area1.west);
+	var b8 = parseFloat(area2.east) <= parseFloat(area1.east);
+	var b = b1 && b2 && b3 && b4 && b5 && b6 && b7 && b8;
+	return b;
+};
+
+function removeAlreadyDoneMatching(results, done, name_getter) {
+	for (var i = 0; i < done.length; ++i) {
+		for (var j = 0; j < results.length; ++j) {
+			var same = false;
+			if (done[i].north == results[j].north && done[i].south == results[j].south && done[i].west == results[j].west && done[i].east == results[j].east)
+				same = true;
+			else if (name_getter(done[i]).trim().toLowerCase() == results[j].name.trim().toLowerCase())
+				same = true;
+			else if (boxContains(done[i], results[j]))
+				same = true;
+			if (same) {
+				results.splice(j,1);
+				j--;
+			}
+		}
+	}
+}
+function handleResultsExactMatch(results, entities, entity_name_getter) {
 	for (var i = 0; i < entities.length; ++i) {
 		var matches = searchExactMatch(results, entity_name_getter(entities[i]));
 		if (matches.length == 1) {
@@ -55,7 +85,6 @@ function handleResults(results, entities, entity_name_getter) {
 			continue;
 		}
 	}
-	// TODO continue
 }
 
 function ImportCountry(wiz, country, country_data, map) {
@@ -75,7 +104,7 @@ function ImportCountry(wiz, country, country_data, map) {
 		handler(true);
 	};
 	new ImportKML(page.content, function(results, content) {
-		handleResults(results, [country], function(c) { return c.country_name; });
+		handleResultsExactMatch(results, [country], function(c) { return c.country_name; });
 		wiz.validate();
 		if (country.north) {
 			page.content.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Coordinates successfully imported. You can continue to next step.";
@@ -88,9 +117,12 @@ function ImportCountry(wiz, country, country_data, map) {
 function ImportDivision(wiz, country, country_data, division_index, map) {
 	var total_areas = country_data[division_index].areas.length;
 	var to_search = [];
+	var already_done = [];
 	for (var i = 0; i < country_data[division_index].areas.length; ++i)
 		if (!country_data[division_index].areas[i].north)
 			to_search.push(country_data[division_index].areas[i]);
+		else
+			already_done.push(country_data[division_index].areas[i]);
 	
 	if (to_search.length == 0) {
 		new PageCoordinatesDone(wiz, "the "+total_areas+" areas in division "+country_data[division_index].division_name);
@@ -114,13 +146,16 @@ function ImportDivision(wiz, country, country_data, division_index, map) {
 		handler(to_search.length == 0);
 	};
 	new ImportKML(page.content, function(results, content) {
-		handleResults(results, to_search, function(obj) {
+		// remove from results the one already done
+		removeAlreadyDoneMatching(results, already_done, function(obj) { return obj.area_name; });
+		handleResultsExactMatch(results, to_search, function(obj) {
 			return obj.area_name;
 		});
 		var done = [];
 		for (var i = 0; i < to_search.length; ++i) {
 			if (to_search[i].north) {
 				done.push(to_search[i]);
+				already_done.push(to_search[i]);
 				to_search.splice(i,1);
 				i--;
 			}
@@ -129,16 +164,16 @@ function ImportDivision(wiz, country, country_data, division_index, map) {
 			page.content.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Coordinates successfully imported. You can continue to next step.";
 		} else {
 			page.content.innerHTML = "We found coordinates for "+done.length+" areas, "+to_search.length+" not found.";
-			if (results.length > 0) {
+			/*if (results.length > 0) {
 				// we still have some results, so we ask the user to try to match them
 				new AskToMatch()
-			}
-			s += "<ul>";
+			}*/
+			s = "<ul>";
 			for (var i = 0; i < to_search.length; ++i) s += "<li>"+to_search[i].area_name+"</li>";
 			s += "</ul>Remaining results:<ul>";
 			for (var i = 0; i < results.length; ++i) s += "<li>"+results[i].name+"</li>";
 			s += "</ul>";
-			page.content.innerHTML = s;
+			page.content.innerHTML += s;
 		}
 		wiz.validate();
 	});
