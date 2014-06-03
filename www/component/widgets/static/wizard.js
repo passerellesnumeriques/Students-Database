@@ -6,7 +6,7 @@ if (typeof theme != 'undefined')
 function wizard(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t = this;
-	
+
 	t.icon = null;
 	t.title = "Wizard";
 	t.pages = [];
@@ -27,14 +27,14 @@ function wizard(container) {
 		wizard_container.appendChild(t.element);
 	};
 	t.showPage = function(index) {
-		while (t.page_container.childNodes.length > 0)
-			t.page_container.removeChild(t.page_container.childNodes[0]);
+		t.page_container.removeAllChildren();
 		t.page_icon.src = t.pages[index].icon;
 		t.page_title_td.innerHTML = t.pages[index].title;
 		t.page_container.appendChild(t.pages[index].content);
 		t.current_page = index;
 		t.validate();
 		t._refresh_buttons();
+		if (t.pages[index].onshown) t.pages[index].onshow(t,t.pages[index]);
 		t.resize();
 	};
 	t.validate = function() {
@@ -130,6 +130,16 @@ function wizard(container) {
 		t.validate();
 		t._refresh_buttons();
 	};
+	t.removePage = function(index) {
+		t.pages.splice(index,1);
+		if (t.current_page == index) {
+			t.showPage(index < t.pages.length ? index : index-1);
+		} else if (t.current_page > index) {
+			t.current_page--;
+		}
+		t.validate();
+		t._refresh_buttons();
+	};
 	
 	t._createTable = function() {
 		var tr = document.createElement("TR"); t.element.appendChild(tr);
@@ -140,8 +150,11 @@ function wizard(container) {
 		t.page_title_td = document.createElement("TD"); tr.appendChild(t.page_title_td);
 		tr = document.createElement("TR"); t.element.appendChild(tr);
 		tr.className = "wizard_content";
-		t.page_container = document.createElement("TD"); tr.appendChild(t.page_container);
-		t.page_container.colSpan = 2;
+		t.page_container_td = document.createElement("TD"); tr.appendChild(t.page_container_td);
+		t.page_container_td.colSpan = 2;
+		t.page_container = document.createElement("DIV");
+		t.page_container.style.overflow = "auto";
+		t.page_container_td.appendChild(t.page_container);
 		tr = document.createElement("TR"); t.element.appendChild(tr);
 		tr.className = "wizard_buttons";
 		var td = document.createElement("TD"); tr.appendChild(td);

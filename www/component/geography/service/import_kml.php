@@ -90,13 +90,13 @@ class service_import_kml extends Service {
 	private function mergeBounds($list) {
 		if (count($list) == 0) return null;
 		$bounds = $list[0];
-		/*for ($i = 1; $i < count($list); $i++) {
+		for ($i = 1; $i < count($list); $i++) {
 			$b = $list[$i];
 			if ($b[0] > $bounds[0]) $bounds[0] = $b[0];
 			if ($b[3] > $bounds[3]) $bounds[3] = $b[3];
 			if ($b[1] < $bounds[1]) $bounds[1] = $b[1];
 			if ($b[2] < $bounds[2]) $bounds[2] = $b[2];
-		}*/
+		}
 		return $bounds;
 	}
 	

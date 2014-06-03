@@ -70,23 +70,8 @@ function GeographicAreasTree(areas_section, country_id) {
 		button.appendChild(document.createTextNode("Import coordinates"));
 		areas_section.addToolRight(button);
 		button.onclick = function() {
-			var button = this;
-			require("context_menu.js", function() {
-				var menu = new context_menu();
-				menu.addIconItem(null, "Import Country", function() {
-					require("import_coordinates.js", function() {
-						import_coordinates(t.country, t.country_data);
-					});
-				});
-				for (var i = 0; i < t.country_data.length; ++i) {
-					menu.addIconItem(null, "Import "+t.country_data[i].division_name, function(division) {
-						require("import_coordinates.js", function() {
-							import_coordinates(t.country, t.country_data, division);
-						});
-					},i);
-				}
-				menu.showBelowElement(button);
-				require("import_coordinates.js");
+			require("import_coordinates.js", function() {
+				import_coordinates(t.country, t.country_data);
 			});
 			return false; 
 		};

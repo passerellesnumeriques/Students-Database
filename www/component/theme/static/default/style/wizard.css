@@ -12,6 +12,8 @@
 	border: 0px;
 	border-spacing: 0px;
 	border-collapse: collapse;
+	border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
 }
 .wizard_table td {
 	padding: 0px;
@@ -36,6 +38,12 @@
 	border-top: 1px solid #808080;
 	height: 30px;
 	text-align: right;
+	border-bottom-right-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+.wizard_buttons>td {
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
 }
 .wizard_buttons button {
 	margin-left: 5px;

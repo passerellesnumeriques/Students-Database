@@ -20,7 +20,15 @@
 .popup_window_title>td:last-child {
 	border-top-right-radius: 5px;
 }
-.popup_window>tbody>tr:last-child, .popup_window>tr:last-child, .popup_window>tr:last-child>td, .popup_window>tbody>tr:last-child>td>div>iframe, .popup_window>tr:last-child>td>div>iframe {
+.popup_window>tr:last-child, 
+.popup_window>tbody>tr:last-child, 
+.popup_window>tr:last-child>td, 
+.popup_window>tbody>tr:last-child>td, 
+.popup_window>tr:last-child>td>div 
+.popup_window>tbody>tr:last-child>td>div 
+.popup_window>tr:last-child>td>div>iframe, 
+.popup_window>tbody>tr:last-child>td>div>iframe
+{
 	border-bottom-left-radius: 5px;
 	border-bottom-right-radius: 5px;
 }

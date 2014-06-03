@@ -29,7 +29,7 @@ function GoogleMap(container, onready) {
 	};
 	
 	this.fitToBounds = function(south, west, north, east) {
-		this.map.fitBounds(this.createBound(south, west, north, east));
+		this.map.fitBounds(this.createBounds(south, west, north, east));
 	};
 	
 	this.fitToShapes = function() {
