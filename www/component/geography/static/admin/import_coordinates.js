@@ -41,6 +41,13 @@ function createTitle(title, num) {
 	return div;
 }
 
+var map_colors = [
+  {border:"#00F000",fill:"#D0F0D0"}, // green
+  {border:"#F00000",fill:"#F0D0D0"}, // red
+  {border:"#800080",fill:"#F0D0F0"}, // purple
+  {border:"#F0F000",fill:"#F0F0D0"} // yellow
+];
+
 function import_country(popup, country, country_data) {
 	if (country.north) {
 		// already set, continue
@@ -74,6 +81,13 @@ function import_country(popup, country, country_data) {
 			var td_results = document.createElement("TD"); tr.appendChild(td_results);
 			var td_coord = document.createElement("TD"); tr.appendChild(td_coord);
 			new EditCoordinatesWithMap(td_coord, country, function(coord, map) {
+				var div = document.createElement("DIV"); td_results.appendChild(div);
+				div.style.width = "300px";
+				div.style.height = "100%";
+				div.style.overflow = "auto";
+				new ResultsList(div, "gadm.org", gadm, map_colors[0], coord, map);
+				new ResultsList(div, "geonames.org", geonames, map_colors[1], coord, map);
+				new ResultsList(div, "Google", google, map_colors[2], coord, map);
 				// TODO
 			});
 		});
@@ -122,6 +136,38 @@ function import_country_step1(container, country, country_data, ondone) {
 
 function import_first_division(popup, country, country_data) {
 	// TODO
+}
+
+function ResultsList(container, from, results, color, coord, map) {
+	this.title = document.createElement("DIV"); container.appendChild(this.title);
+	this.title.appendChild(document.createTextNode("Results from "+from));
+	this.title.style.fontWeight = "bold";
+	this.title.style.backgroundColor = "#C0C0C0";
+	this.title.style.color = color.border;
+	this.results = document.createElement("DIV"); container.appendChild(this.results);
+	for (var i = 0; i < results.length; ++i) {
+		var line = document.createElement("DIV"); this.results.appendChild(line);
+		var cb = document.createElement("INPUT"); cb.type = "checkbox"; line.appendChild(cb);
+		line.appendChild(document.createTextNode(" "+results[i].name));
+		cb.result = results[i];
+		cb.onchange = function() {
+			if (this.checked) {
+				this.rect = new window.top.google.maps.Rectangle({
+					bounds: map.createBounds(parseFloat(this.result.south), parseFloat(this.result.west), parseFloat(this.result.north), parseFloat(this.result.east)),
+					strokeColor: color.border,
+					strokeWeight: 2,
+					strokeOpacity: 0.7,
+					fillColor: color.fill,
+					fillOpacity: 0.2,
+					editable: false,
+				});
+				map.addShape(this.rect);
+			} else {
+				map.removeShape(this.rect);
+				this.rect = null;
+			}
+		};
+	}
 }
 
 function ImportKML(container, ondone) {
@@ -217,6 +263,7 @@ function SearchGoogle(container, country_id, name, types, ondone) {
 	service.json("geography", "search_google", data, function(res) {
 		var count = res ? res.length : 0;
 		div.innerHTML = count+" result(s) found.";
+		// TODO interpret the results, filter results?
 		ondone(res, div);
 	});
 }
