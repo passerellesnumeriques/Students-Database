@@ -1,32 +1,27 @@
 if (typeof require != 'undefined') {
-	require("wizard.js");
+	require("popup_window.js");
 	require("upload.js");
 	require("google_maps.js", function() { loadGoogleMaps(function() {}); });
 }
 
 function import_coordinates(country, country_data) {
-	require("wizard.js", function() {
-		var wiz = new wizard();
-		var init_page = {
-			icon: theme.icons_32.loading,
-			title: "Loading, please wait...",
-			content: document.createElement("DIV")
-		};
-		wiz.addPage(init_page);
-		require(["google_maps.js","upload.js"], function() {
-			var map_container = document.createElement("DIV");
-			map_container.style.width = "400px";
-			map_container.style.height = "300px";
-			new GoogleMap(map_container, function(map) {
-				new ImportCountry(wiz, country, country_data, map);
-				for (var i = 0; i < country_data.length; ++i)
-					new ImportDivision(wiz, country, country_data, i, map);
-				// remove the init page
-				wiz.removePage(0);
-			});
-		});
-		wiz.launch();
+	require("popup_window.js", function() {
+		var content = document.createElement("DIV");
+		var popup = new popup_window("Import Coordinates", "/static/geography/geography_16.png", content);
+		popup.show();
+		import_country(popup, country, country_data);
 	});
+}
+
+function getCoordinatesContaining(boxes) {
+	var max = { north: boxes[0].north, east: boxes[0].east, south: boxes[0].south, west: boxes[0].west };
+	for (var i = 1; i < boxes.length; ++i) {
+		if (boxes[i].north > max.north) max.north = boxes[i].north;
+		if (boxes[i].east > max.east) max.east = boxes[i].east;
+		if (boxes[i].south < max.south) max.south = boxes[i].south;
+		if (boxes[i].west < max.west) max.west = boxes[i].west;
+	}
+	return max;
 }
 
 function searchExactMatch(results, name) {
@@ -38,167 +33,108 @@ function searchExactMatch(results, name) {
 	return list;
 }
 
-function setEntityCoordinates(entity, coord) {
-	entity.north = coord.north;
-	entity.south = coord.south;
-	entity.west = coord.west;
-	entity.east = coord.east;
+
+function createTitle(title, num) {
+	var div = document.createElement("DIV");
+	div.className = "page_section_title"+(num ? num : "");
+	div.appendChild(document.createTextNode(title));
+	return div;
 }
 
-function boxContains(area1, area2) {
-	var b1 = parseFloat(area2.south) >= parseFloat(area1.south);
-	var b2 = parseFloat(area2.south) <= parseFloat(area1.north);
-	var b3 = parseFloat(area2.north) >= parseFloat(area1.south);
-	var b4 = parseFloat(area2.north) <= parseFloat(area1.north);
-	var b5 = parseFloat(area2.west) >= parseFloat(area1.west);
-	var b6 = parseFloat(area2.west) <= parseFloat(area1.east);
-	var b7 = parseFloat(area2.east) >= parseFloat(area1.west);
-	var b8 = parseFloat(area2.east) <= parseFloat(area1.east);
-	var b = b1 && b2 && b3 && b4 && b5 && b6 && b7 && b8;
-	return b;
+function import_country(popup, country, country_data) {
+	if (country.north) {
+		// already set, continue
+		import_first_division(popup, country, country_data);
+		return;
+	}
+	popup.content.removeAllChildren();
+	popup.removeButtons();
+	popup.content.appendChild(createTitle("Import Country "+country.country_name));
+
+	// step 1- search from all sources
+	var search_container = document.createElement("DIV");
+	popup.content.appendChild(search_container);
+	import_country_step1(search_container, country, country_data, function(gadm, geonames, google) {
+		var bounds = [];
+		if (gadm.length == 1) bounds.push(gadm[0]);
+		if (geonames.length == 1) bounds.push(geonames[0]);
+		if (google.length == 1) bounds.push(google[0]);
+		if (bounds.length > 0) {
+			bounds = getCoordinatesContaining(bounds);
+			country.north = bounds.north;
+			country.east = bounds.east;
+			country.south = bounds.south;
+			country.west = bounds.west;
+		}
+		// step 2- display the results, by default take the largest bounds to contain results
+		require("edit_coordinates.js", function() {
+			search_container.removeAllChildren();
+			var table = document.createElement("TABLE"); search_container.appendChild(table);
+			var tr = document.createElement("TR"); table.appendChild(tr);
+			var td_results = document.createElement("TD"); tr.appendChild(td_results);
+			var td_coord = document.createElement("TD"); tr.appendChild(td_coord);
+			new EditCoordinatesWithMap(td_coord, country, function(coord, map) {
+				// TODO
+			});
+		});
+	});
+}
+function import_country_step1(container, country, country_data, ondone) {
+	var search_container = document.createElement("DIV");
+	container.appendChild(search_container);
+	
+	var gadm = undefined;
+	var geonames = undefined;
+	var google = undefined;
+	
+	var check_done = function() {
+		if (typeof gadm == 'undefined') return;
+		if (typeof geonames == 'undefined') return;
+		if (typeof google == 'undefined') return;
+		ondone(gadm, geonames, google);
+	};
+	
+	var kml_container = document.createElement("DIV");
+	kml_container.appendChild(createTitle("Import from gadm.org",2));
+	search_container.appendChild(kml_container);
+	new ImportKML(kml_container, function(results, div) {
+		// we should find the exact match
+		var match = searchExactMatch(results, country.country_name);
+		if (match.length == 1) gadm = match;
+		else gadm = results;
+		check_done();
+	});
+	var geonames_container = document.createElement("DIV");
+	geonames_container.appendChild(createTitle("Import from geonames.org",2));
+	search_container.appendChild(geonames_container);
+	new SearchGeonames(geonames_container, country.country_id, country.country_name, "PCLI", function(results, div) {
+		geonames = results;
+		check_done();
+	});
+	var google_container = document.createElement("DIV");
+	google_container.appendChild(createTitle("Import from Google",2));
+	search_container.appendChild(google_container);
+	new SearchGoogle(google_container, country.country_id, country.country_name, "country", function(results, div) {
+		google = results;
+		check_done();
+	});
 };
 
-function removeAlreadyDoneMatching(results, done, name_getter) {
-	for (var i = 0; i < done.length; ++i) {
-		for (var j = 0; j < results.length; ++j) {
-			var same = false;
-			if (done[i].north == results[j].north && done[i].south == results[j].south && done[i].west == results[j].west && done[i].east == results[j].east)
-				same = true;
-			else if (name_getter(done[i]).trim().toLowerCase() == results[j].name.trim().toLowerCase())
-				same = true;
-			else if (boxContains(done[i], results[j]))
-				same = true;
-			if (same) {
-				results.splice(j,1);
-				j--;
-			}
-		}
-	}
-}
-function handleResultsExactMatch(results, entities, entity_name_getter) {
-	for (var i = 0; i < entities.length; ++i) {
-		var matches = searchExactMatch(results, entity_name_getter(entities[i]));
-		if (matches.length == 1) {
-			// we have one !
-			results.remove(matches[0]);
-			setEntityCoordinates(entities[i], matches[0]);
-			continue;
-		}
-	}
-}
-
-function ImportCountry(wiz, country, country_data, map) {
-	if (country.north) {
-		new PageCoordinatesDone(wiz, "Country "+country.country_name);
-		return;
-	}
-	var page = {
-		icon: "/static/geography/geography_32.png",
-		title: "Country "+country.country_name
-	};
-	page.content = document.createElement("DIV");
-	page.content.style.padding = "10px";
-	page.validate = function(wiz, handler) {
-		if (!country.north)
-			handler(false);
-		handler(true);
-	};
-	new ImportKML(page.content, function(results, content) {
-		handleResultsExactMatch(results, [country], function(c) { return c.country_name; });
-		wiz.validate();
-		if (country.north) {
-			page.content.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Coordinates successfully imported. You can continue to next step.";
-			return;
-		}
-	});
-	wiz.addPage(page);
-}
-
-function ImportDivision(wiz, country, country_data, division_index, map) {
-	var total_areas = country_data[division_index].areas.length;
-	var to_search = [];
-	var already_done = [];
-	for (var i = 0; i < country_data[division_index].areas.length; ++i)
-		if (!country_data[division_index].areas[i].north)
-			to_search.push(country_data[division_index].areas[i]);
-		else
-			already_done.push(country_data[division_index].areas[i]);
-	
-	if (to_search.length == 0) {
-		new PageCoordinatesDone(wiz, "the "+total_areas+" areas in division "+country_data[division_index].division_name);
-		return;
-	}
-	
-	var page = {
-		icon: "/static/geography/geography_32.png",
-		title: "Division "+country_data[division_index].division_name
-	};
-	page.content = document.createElement("DIV");
-	page.content.style.padding = "10px";
-	page.content.appendChild(document.createTextNode(total_areas+" areas in this division, "));
-	var span_nb_missing = document.createElement("SPAN");
-	span_nb_missing.innerHTML = to_search.length;
-	page.content.appendChild(span_nb_missing);
-	page.content.appendChild(document.createTextNode(" don't have coordinates."));
-	page.content.appendChild(document.createElement("BR"));
-	
-	page.validate = function(wiz, handler) {
-		handler(to_search.length == 0);
-	};
-	new ImportKML(page.content, function(results, content) {
-		// remove from results the one already done
-		removeAlreadyDoneMatching(results, already_done, function(obj) { return obj.area_name; });
-		handleResultsExactMatch(results, to_search, function(obj) {
-			return obj.area_name;
-		});
-		var done = [];
-		for (var i = 0; i < to_search.length; ++i) {
-			if (to_search[i].north) {
-				done.push(to_search[i]);
-				already_done.push(to_search[i]);
-				to_search.splice(i,1);
-				i--;
-			}
-		}
-		if (to_search.length == 0) {
-			page.content.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Coordinates successfully imported. You can continue to next step.";
-		} else {
-			page.content.innerHTML = "We found coordinates for "+done.length+" areas, "+to_search.length+" not found.";
-			/*if (results.length > 0) {
-				// we still have some results, so we ask the user to try to match them
-				new AskToMatch()
-			}*/
-			s = "<ul>";
-			for (var i = 0; i < to_search.length; ++i) s += "<li>"+to_search[i].area_name+"</li>";
-			s += "</ul>Remaining results:<ul>";
-			for (var i = 0; i < results.length; ++i) s += "<li>"+results[i].name+"</li>";
-			s += "</ul>";
-			page.content.innerHTML += s;
-		}
-		wiz.validate();
-	});
-	wiz.addPage(page);
-}
-
-function PageCoordinatesDone(wiz, message) {
-	this.icon = "/static/geography/geography_32.png";
-	this.title = message;
-	this.content = document.createElement("DIV");
-	this.content.style.padding = "10px";
-	this.validate = function() { return null; };
-	
-	this.content.innerHTML = "The coordinates of "+message+" are already set, you can move to the next step.";
+function import_first_division(popup, country, country_data) {
+	// TODO
 }
 
 function ImportKML(container, ondone) {
 	this.div = document.createElement("DIV");
+	this.div.style.padding = "5px";
 	container.appendChild(this.div);
 	
 	this._init = function() {
 		var link = document.createElement("A");
 		link.href = '#';
 		link.className = "black_link";
-		link.innerHTML = "Import from KML file (Google Earth Format)";
+		link.style.fontWeight = "bold";
+		link.innerHTML = "Upload KML file (Google Earth Format)";
 		link._t = this;
 		link.onclick = function(ev) {
 			this._t.startUpload(this, ev);
@@ -216,13 +152,16 @@ function ImportKML(container, ondone) {
 			t.div.innerHTML = "Uploading file...";
 			onready();
 		};
+		var done = false;
 		up.onprogressfile = function(file, uploaded, total) {
+			if (done) return;
 			if (uploaded < total)
 				t.div.innerHTML = "Uploading file ("+Math.floor(uploaded*100/total)+"%)...";
 			else
 				t.div.innerHTML = "Analyzing file...";
 		};
 		up.ondonefile = function(file, output, errors) {
+			done = true;
 			if (errors.length > 0) {
 				t.div.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> An error occured.";
 				t.div.appendChild(document.createElement("BR"));
@@ -235,10 +174,49 @@ function ImportKML(container, ondone) {
 				t.div.appendChild(link);
 				return;
 			}
+			t.div.innerHTML = output.length+" result(s) found.";
 			ondone(output, t.div);
 		};
 		up.openDialog(ev);
 	};
 	
 	this._init();
+}
+
+function SearchGeonames(container, country_id, name, featureCode, ondone) {
+	var div = document.createElement("DIV");
+	div.style.padding = "5px";
+	container.appendChild(div);
+	
+	div.innerHTML = "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Searching...";
+	
+	var data = {
+		country_id: country_id,
+		name: name
+	};
+	if (featureCode) data.featureCode = featureCode;
+	service.json("geography", "search_geonames", data, function(res) {
+		var count = res ? res.length : 0;
+		div.innerHTML = count+" result(s) found.";
+		ondone(res, div);
+	});
+}
+
+function SearchGoogle(container, country_id, name, types, ondone) {
+	var div = document.createElement("DIV");
+	div.style.padding = "5px";
+	container.appendChild(div);
+	
+	div.innerHTML = "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Searching...";
+	
+	var data = {
+		country_id: country_id,
+		name: name,
+		types: types ? types : "political"
+	};
+	service.json("geography", "search_google", data, function(res) {
+		var count = res ? res.length : 0;
+		div.innerHTML = count+" result(s) found.";
+		ondone(res, div);
+	});
 }

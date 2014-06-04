@@ -102,8 +102,12 @@ var total_size = <?php echo $total;?>;
 var loaded_size = 0;
 
 function update_size() {
-	var pc = Math.floor(loaded_size*100/total_size);
-	document.getElementById('loading_status').innerHTML = "Loading ("+pc+"%)";
+	if (loaded_size < total_size) {
+		var pc = Math.floor(loaded_size*100/total_size);
+		document.getElementById('loading_status').innerHTML = "Loading ("+pc+"%)";
+	} else {
+		document.getElementById('loading_status').innerHTML = "<?php echo PNApplication::$instance->user_management->username <> null ? "Starting Application" : "Loading Authentication Page";?>...";
+	}
 }
 
 var mandatory_loaded = 0;
@@ -133,7 +137,6 @@ function next_optional() {
 		loaded_size += _optional_scripts[i][1];
 		update_size();
 		if (++optional_loaded >= _optional_scripts.length) {
-			document.getElementById('loading_status').innerHTML = "<?php echo PNApplication::$instance->user_management->username <> null ? "Starting Application" : "Loading Authentication Page";?>...";
 			window.status_manager = new StatusManager();
 			window.status_manager.status_ui = new StatusUI_Top(window.status_manager);
 			setTimeout(function(){

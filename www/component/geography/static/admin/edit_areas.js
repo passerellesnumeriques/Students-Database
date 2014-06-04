@@ -339,9 +339,11 @@ function GeographicAreasTree(areas_section, country_id) {
 	};
 	
 	// load info in background
-	window.top.geography.getCountryName(country_id, function(name){});
-	window.top.geography.getCountryData(country_id, function(data){ t.country_data = data; });
-	require(["editable_cell.js"]);
-	// create tree
-	this.reset();
+	window.top.require("geography.js", function() {
+		window.top.geography.getCountryName(country_id, function(name){});
+		window.top.geography.getCountryData(country_id, function(data){ t.country_data = data; });
+		require(["editable_cell.js"]);
+		// create tree
+		t.reset();
+	});
 }

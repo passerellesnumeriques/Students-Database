@@ -36,7 +36,7 @@ function GoogleMap(container, onready) {
 		if (this.shapes.length == 0) return;
 		var bounds = this.shapes[0].getBounds();
 		for (var i = 1; i < this.shapes.length; ++i)
-			bounds = maxBounds(bounds, this.shapes[i].getBounds());
+			bounds = maxGoogleBounds(bounds, this.shapes[i].getBounds());
 		this.map.fitBounds(bounds);
 	};
 	
@@ -77,7 +77,7 @@ function GoogleMap(container, onready) {
 	this._init();
 }
 
-function maxBounds(b1,b2) {
+function maxGoogleBounds(b1,b2) {
 	var north1 = b1.getNorthEast().lat();
 	var south1 = b1.getSouthWest().lat();
 	var west1 = b1.getSouthWest().lng();

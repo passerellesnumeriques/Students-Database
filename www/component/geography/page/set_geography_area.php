@@ -67,8 +67,10 @@ class page_set_geography_area extends Page {
 		?>
 		<script type='text/javascript'>
 		var loading_lock = lock_screen(null, "Loading Geographic Information...");
-		window.top.geography.getCountryData(country_id, function(data) {
-			unlock_screen(loading_lock);
+		window.top.require("geography.js", function() {
+			window.top.geography.getCountryData(country_id, function(data) {
+				unlock_screen(loading_lock);
+			});
 		});
 		</script>
 		<?php

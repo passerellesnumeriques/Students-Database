@@ -128,8 +128,10 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 	};
 	
 	// load country data, and initialize the display
-	window.top.geography.getCountryData(country_id, function(data) {
-		t.country_data = data;
-		t._initDisplay();
+	window.top.require("geography.js", function() {
+		window.top.geography.getCountryData(country_id, function(data) {
+			t.country_data = data;
+			t._initDisplay();
+		});
 	});
 }

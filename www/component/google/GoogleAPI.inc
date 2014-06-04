@@ -1,7 +1,7 @@
 <?php 
 class GoogleAPI {
 	
-	public static function PlacesTextSearch($query, $country_code) {
+	public static function PlacesTextSearch($query, $country_code, $types = "political") {
 		$key = PNApplication::$instance->google->getAPIKey(google::$PLACES_API);
 		if ($key == null) {
 			PNApplication::error("Google API quota reached, we cannot use the service for now");
@@ -10,7 +10,7 @@ class GoogleAPI {
 		set_time_limit(300);
 		$url = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=".urlencode($query);
 		$url .= "&components=country:".$country_code;
-		$url .= "&types=political";
+		$url .= "&types=".$types;
 		$url .= "&sensor=false";
 		$url .= "&key=".$key;
 		//echo $url."<br/><br/>\r\n\r\n";

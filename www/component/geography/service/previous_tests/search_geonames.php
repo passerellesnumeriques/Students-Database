@@ -9,24 +9,23 @@ class service_search_geonames extends Service {
 	
 	public function execute(&$component, $input) {
 		$country_id = $input["country_id"];
-		$search_name = $input["name"];
+		$id = $input["area_id"];
+		
 		$country = SQLQuery::create()->select("Country")->whereValue("Country", "id", $country_id)->executeSingleRow();
 		
+		$area = SQLQuery::create()->
+			select("GeographicArea")
+			->whereValue("GeographicArea", "id", $id)
+			->executeSingleRow();
+
 		set_time_limit(300);
-		$url = "http://api.geonames.org/search";
-		$url .= "?q=".urlencode(strtolower($search_name));
-		$url .= "&country=".$country["code"];
-		if (isset($input["featureCode"]))
-			$url .= "&featureCode=".$input["featureCode"];
-		$url .= "&lang=en";
-		$url .= "&username=pnsdb&style=FULL&type=json";
+		$url = "http://api.geonames.org/search?q=".urlencode(strtolower($area["name"]))."&country=".$country["code"]."&username=pnsdb&style=FULL&type=json";
 		$c = curl_init($url);
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		$result = curl_exec($c);
 		if ($result === false) {
 			PNApplication::error("Error connecting to GeoNames: ".curl_error($c));
 			curl_close($c);
-			echo "[]";
 			return;
 		}
 		curl_close($c);
@@ -63,5 +62,6 @@ class service_search_geonames extends Service {
 		}
 		echo "]";
 	}
+	
 }
 ?>
