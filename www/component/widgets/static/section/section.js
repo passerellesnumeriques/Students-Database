@@ -39,11 +39,28 @@ function sectionFromHTML(container) {
 		css = container.getAttribute("css");
 		container.removeAttribute("css");
 	}
-	var content = document.createElement("DIV");
-	while (container.childNodes.length > 0) content.appendChild(container.childNodes[0]);
+	var content = -1;
+	for (var i = 0; i < container.childNodes.length; ++i) {
+		var child = container.childNodes[i];
+		if (child.nodeType != 1) continue;
+		if (content == -1) content = i;
+		else content = -2;
+	}
+	if (content >= 0)
+		content = container.childNodes[content];
+	else {
+		content = document.createElement("DIV");
+		while (container.childNodes.length > 0) content.appendChild(container.childNodes[0]);
+	}
 	var s = new section(icon,title,content,collapsable,fill_height,css,collapsed);
-	container.appendChild(s.element);
-	layout.invalidate(container);
+	if (container.style)
+		for (var name in container.style)
+			s.element.style[name] = container.style[name];
+	if (container.id) s.element.id = container.id;
+	var parent = container.parentNode;
+	parent.insertBefore(s.element, container);
+	parent.removeChild(container);
+	layout.invalidate(parent);
 	return s;
 }
 

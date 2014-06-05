@@ -59,6 +59,27 @@ function set_lock_screen_content(div, content) {
 		d.appendChild(content);
 	td.appendChild(d);
 }
+function set_lock_screen_content_progress(lock_div, total, message, sub_div, onready) {
+	require("progress_bar.js", function() {
+		var div = document.createElement("DIV");
+		div.style.textAlign = "center";
+		var span = document.createElement("SPAN");
+		span.innerHTML = message;
+		div.appendChild(span);
+		div.appendChild(document.createElement("BR"));
+		var pb = new progress_bar(200, 17);
+		pb.element.style.display = "inline-block";
+		div.appendChild(pb.element);
+		pb.setTotal(total);
+		var sub = null;
+		if (sub_div) {
+			sub = document.createElement("DIV");
+			div.appendChild(sub);
+		}
+		set_lock_screen_content(lock_div, div);
+		onready(span, pb, sub);
+	});
+}
 /**
  * Remove the given element, previously created by using the function lock_screen
  * @param div
@@ -156,6 +177,22 @@ function waitFrameContentReady(frame, test, onready, timeout) {
 	var win = getIFrameWindow(frame);
 	if (!win || !test(win)) { setTimeout(function() { waitFrameContentReady(frame, test, onready, timeout-50); }, 50); return; }
 	onready(win);
+}
+
+function waitForFrame(frame_name, onready, timeout) {
+	if (typeof timeout == 'undefined') timeout = 30000;
+	if (timeout < 50) return;
+	var frame = findFrame(frame_name);
+	if (frame) {
+		var win = getIFrameWindow(frame);
+		if (win) {
+			if (win._page_ready) {
+				onready(win);
+				return;
+			}
+		}
+	}
+	setTimeout(function() { waitForFrame(frame_name, onready, timeout-50); }, 50);
 }
 
 if (typeof window.top._current_tooltip == 'undefined')

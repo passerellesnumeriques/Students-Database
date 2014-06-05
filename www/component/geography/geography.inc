@@ -89,6 +89,10 @@ class geography extends Component {
 		->field("Country","id","country_id")
 		->field("Country","code","country_code")
 		->field("Country","name","country_name")
+		->field("Country","north","north")
+		->field("Country","west","west")
+		->field("Country","south","south")
+		->field("Country","east","east")
 		->orderBy("Country", "name", true)
 		;
 		$countries = $q->execute();

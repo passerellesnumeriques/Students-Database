@@ -61,7 +61,7 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
 		content.innerHTML = message+"<br/>";
-		content.style.padding = "3px";
+		content.style.margin = "10px";
 		var input = document.createElement("INPUT");
 		input.type = 'text';
 		input.value = default_value;

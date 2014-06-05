@@ -342,7 +342,7 @@ class SubDataModel extends DataModel {
 	
 	private $instances = null;
 	public function getExistingInstances() {
-		if ($this->instances == null) {
+		if ($this->instances === null) {
 			$t = $this->parent_model->internalGetTable($this->parent_table);
 			$this->instances = SQLQuery::create()->bypassSecurity()->select($this->parent_table)->field($this->parent_table, $t->getPrimaryKey()->name)->executeSingleField();
 		}

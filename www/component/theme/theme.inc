@@ -1,8 +1,12 @@
 <?php
 global $theme; 
-if (isset($_COOKIE["theme"]))
+if (isset($_COOKIE["theme"])) {
 	$theme = $_COOKIE["theme"];
-else {
+	if ($theme == "" || !file_exists("component/theme/static/".$theme)) {
+		$theme = "default";
+		setcookie("theme",$theme,time()+365*24*60*60,"/");
+	}
+} else {
 	$theme = "default";
 	setcookie("theme",$theme,time()+365*24*60*60,"/");
 }
