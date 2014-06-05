@@ -109,6 +109,7 @@ class service_what_to_do_for_batch extends Service {
 				} else {
 					if (!$spe_checked) {
 						$spe_checked = true;
+						$students = array();
 						foreach ($all_students as $s)
 							if ($s["specialization"] == null && ($s["exclusion_date"] == null || datamodel\ColumnDate::toTimestamp($s["exclusion_date"]) > datamodel\ColumnDate::toTimestamp($p[1]["start"])))
 								array_push($students, $s["people"]);

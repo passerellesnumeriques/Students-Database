@@ -29,8 +29,6 @@ function vertical_layout(container) {
 			e.style.display = "block";
 			var layout;
 			if (e.getAttribute('layout')) layout = e.getAttribute('layout'); else layout = 'fixed';
-			if (layout == 'fill')
-				e.style.height = "0px";
 		}
 		var nb_to_fill = 0;
 		var used = 0;

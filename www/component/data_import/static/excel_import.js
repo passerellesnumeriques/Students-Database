@@ -411,7 +411,7 @@ function excel_import(popup, container, onready) {
 				// nothing yet
 				if (td_where.parentNode == tr) {
 					tr.removeChild(td_where);
-					layout.invalidate(content);
+					layout.invalidate(tr);
 				}
 				t._where_selected = {type:'add',row:0};
 				return;
@@ -497,7 +497,7 @@ function excel_import(popup, container, onready) {
 				};
 			}
 			if (td_where.parentNode != tr) tr.appendChild(td_where);
-			layout.invalidate(content);
+			layout.invalidate(tr);
 		};
 		if (selected) {
 			radio.checked = "checked";
@@ -542,6 +542,7 @@ function excel_import(popup, container, onready) {
 			t.excel_info = document.createElement("DIV");
 			t.frame_excel = document.createElement("IFRAME");
 			t.frame_excel.style.border = "0px";
+			t.frame_excel.style.width = "100%";
 			t.left.appendChild(t.excel_header);
 			t.left.appendChild(t.excel_info);
 			t.left.appendChild(t.frame_excel);
@@ -550,6 +551,7 @@ function excel_import(popup, container, onready) {
 			t.data_header = document.createElement("DIV");
 			t.frame_import = document.createElement("IFRAME");
 			t.frame_import.style.border = "0px";
+			t.frame_import.style.width = "100%";
 			t.right.appendChild(t.data_header);
 			t.right.appendChild(t.frame_import);
 			t.frame_import.setAttribute("layout", "fill");

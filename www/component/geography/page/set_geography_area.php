@@ -39,7 +39,9 @@ var editable = null;
 var country_id = <?php echo $country['id'];?>;
 var country_code = "<?php echo $country['code'];?>";
 var country_name = "<?php echo $country['name'];?>";
+var lock = lock_screen(null, "Loading data for "+country_name+"...");
 service.json("geography","get_country_data", {country_id:country_id}, function(res){
+	unlock_screen(lock);
 	if(!res) return;
 	result = res;
 	var res_size = 0;
@@ -108,39 +110,43 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 	 * @parameter area_name: the name of the adding area. This method will set the case of the given name, according to the uniformFirstLetterCapitalized string method
 	 * @parameter area_parent_id
 	 */
-	result.addArea = function(area_name, area_parent_id){
+	result.addArea = function(area_name, area_parent_id, ondone){
 		var parent_index = this.findIndex(area_parent_id);
 		var country_division = this[parent_index.division_index + 1].division_id;
 		var name = area_name.uniformFirstLetterCapitalized();
 		var field_saved_id = null;
+		var t=this;
 		service.json("data_model","save_entity", {table:"GeographicArea", field_name:name, field_parent:area_parent_id, field_country_division:country_division}, function(res){
 			if(!res) return;
 			field_saved_id = res.key;
-		},true);
-		/*We now add the new area to result and tree*/
-		var div_index = parent_index.division_index + 1;
-		var ar_index = this[div_index].areas.length;
-		this[div_index].areas[ar_index] = {area_id: field_saved_id, area_name: name, area_parent_id: area_parent_id};
-		tr.buildItem(this, div_index, ar_index);
+			/*We now add the new area to result and tree*/
+			var div_index = parent_index.division_index + 1;
+			var ar_index = t[div_index].areas.length;
+			t[div_index].areas[ar_index] = {area_id: field_saved_id, area_name: name, area_parent_id: area_parent_id};
+			tr.buildItem(t, div_index, ar_index);
+			ondone();
+		});
 	};
 	
 	/**
 	 * Add one area, but at the root level: there is no parent_id since we are at the root level
 	 * @parameter area_name: the name of the adding area. This method will set the case of the given name, according to the uniformFirstLetterCapitalized string method
 	 */
-	result.addRoot = function(area_name){
+	result.addRoot = function(area_name, ondone){
 		var name = area_name.uniformFirstLetterCapitalized();
 		var field_saved_id = null;
 		//var area_parent_id = null;
 		var country_division = this[0].division_id;
+		var t=this;
 		service.json("data_model","save_entity", {table:"GeographicArea", field_name:name, field_parent:null, field_country_division:country_division}, function(res){
 			if(!res) return;
 			field_saved_id = res.key;
-		},true);
-		var div_index = 0;
-		var ar_index = this[div_index].areas.length;
-		this[div_index].areas[ar_index] = {area_id: field_saved_id, area_name: name, area_parent_id: null};
-		tr.buildItem(this, div_index, ar_index);
+			var div_index = 0;
+			var ar_index = t[div_index].areas.length;
+			t[div_index].areas[ar_index] = {area_id: field_saved_id, area_name: name, area_parent_id: null};
+			tr.buildItem(t, div_index, ar_index);
+			ondone();
+		});
 	};
 	
 	/**
@@ -312,8 +318,8 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 		table.appendChild(tbody);
 		var tr_foot = document.createElement('tr');
 		var td_foot = document.createElement('td');
-		var add_button = document.createElement('div');
-		add_button.className = 'button';
+		var add_button = document.createElement('BUTTON');
+		add_button.className = 'action';
 		add_button.innerHTML = "<img src='"+theme.icons_16.add+"'/> Append a new division";
 		add_button.onclick = function(){result.startAddDivision();};
 		td_foot.appendChild(add_button);
@@ -380,9 +386,10 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 	 * @parameter division_id the id that will be removed by clicking on the button
 	 */
 	result.buttonRemoveDivision = function(td_remove, division_id){
-		var remove_button = document.createElement('div');
-		remove_button.className = "button";
+		var remove_button = document.createElement('BUTTON');
+		remove_button.className = "flat";
 		remove_button.innerHTML = "<img src ='"+theme.icons_16.remove+"'/>";
+		remove_button.title = "Remove this division";
 		remove_button.onclick = function(){result.askRemoveDivision(division_id);};
 		td_remove.appendChild(remove_button);
 	};
@@ -433,13 +440,12 @@ service.json("geography","get_country_data", {country_id:country_id}, function(r
 			}
 			if(parent_index.division_index != null){
 				for(var i = 0; i < result[parent_index.division_index + 1].areas.length; i++){
-					if(result[parent_index.division_index + 1].areas[i] != null){
-						var temp_name = result[parent_index.division_index +1].areas[i].area_name.toLowerCase();
-						var temp_parent = this.findParent(result[parent_index.division_index +1].areas[i].area_id);
-						if(area_parent_id == temp_parent.area_id && temp_name == name){
-							is_unique = false;
-							break;
-						}
+					if (result[parent_index.division_index + 1].areas[i] == null) continue;
+					if (result[parent_index.division_index + 1].areas[i].area_parent_id != area_parent_id) continue;
+					var temp_name = result[parent_index.division_index +1].areas[i].area_name.toLowerCase();
+					if(temp_name == name){
+						is_unique = false;
+						break;
 					}
 				}
 			}
@@ -481,24 +487,20 @@ require('tree.js',function(){
 	*/
 	tr.addAddButton = function(r, division_index, area_index){
 		if(division_index == null && area_index == null){
-			var add_button = document.createElement('IMG');
-			add_button.className = 'button';
-			add_button.src = theme.icons_10.add;
-			add_button.style.verticalAlign = "bottom";
-			add_button.style.padding = "2px";
-			add_button.title = "Create a sub-area";
+			var add_button = document.createElement('BUTTON');
+			add_button.className = 'flat small_icon';
+			add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+			add_button.title = "Create sub-areas";
 			add_button.onclick = function(){tr.addChild(r, null, 'root');};
 			var div = document.getElementById('root');
 			div.appendChild(add_button);
 		}
 		else{
 			if(division_index != r.length -1){
-				var add_button = document.createElement('IMG');
-				add_button.className = 'button';
-				add_button.src = theme.icons_10.add;
-				add_button.style.verticalAlign = "bottom";
-				add_button.style.padding = "2px";
-				add_button.title = "Create a sub-area";
+				var add_button = document.createElement('BUTTON');
+				add_button.className = 'flat small_icon';
+				add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+				add_button.title = "Create sub-areas";
 				add_button.area_parent_id = r[division_index].areas[area_index].area_id;
 				add_button.onclick = function(){tr.addChild(r, add_button.area_parent_id);};
 				var div = document.getElementById(r[division_index].areas[area_index].area_id);
@@ -515,11 +517,9 @@ require('tree.js',function(){
 	 * @parameter area_index the index of the current area
 	 */
 	tr.addRemoveButton = function(r, division_index, area_index){
-		var remove_button = document.createElement('IMG');
-		remove_button.className = 'button';
-		remove_button.src = theme.icons_10.remove;
-		remove_button.style.verticalAlign = "bottom";
-		remove_button.style.padding = "2px";
+		var remove_button = document.createElement('BUTTON');
+		remove_button.className = 'flat small_icon';
+		remove_button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
 		remove_button.title = "Remove this area and all its content";
 		var div = null;
 		if(division_index == null && area_index == null){
@@ -550,36 +550,53 @@ require('tree.js',function(){
 	 * @parameter root if root == 'root' means we are at the root level, so will call the addRoot method. Else, root == null
 	 */
 	tr.addChild = function(r, area_parent_id, root){
-		if(root == null){
-			input_dialog(theme.icons_16.question,
-									'Add a new child',
-									'Enter the area name',
-									'',
-									50,
-									function(text){
-										if(text.checkVisible()){ 
-											if(!r.checkUnicity(text, "area", area_parent_id, null)){ return "The current area already has a child with this name";}
-											else return;
-										}
-										else return "You must enter at least one visible caracter";
-									},
-									function(text){if (text) r.addArea(text ,area_parent_id);});
-		}
-		if(root == 'root'){
-			input_dialog(theme.icons_16.question,
-									'Add a new child',
-									'Enter the area name',
-									'',
-									50,
-									function(text){
-										if(text.checkVisible()){ 
-											if(!r.checkUnicity(text, "area", area_parent_id, null)){ return "The current area already has a child with this name";}
-											else return;
-										}
-										else return "You must enter at least one visible caracter";
-									},
-									function(text){if (text) r.addRoot(text);});
-		}
+		var content = document.createElement("DIV");
+		content.style.padding = "10px";
+		content.appendChild(document.createTextNode("Please enter new areas (one by line):"));
+		content.appendChild(document.createElement("BR"));
+		var text_area = document.createElement("TEXTAREA");
+		text_area.rows = 10;
+		text_area.cols = 50;
+		content.appendChild(text_area);
+		require("popup_window.js",function() {
+			var popup = new popup_window("New Geographic Area", null, content);
+			popup.addOkCancelButtons(function() {
+				popup.freeze("Checking names...");
+				setTimeout(function(){
+					var text = text_area.value;
+					var lines = text.split("\n");
+					var names = [];
+					for (var i = 0; i < lines.length; ++i) {
+						var name = lines[i].trim();
+						if (!name.checkVisible()) continue;
+						if (!r.checkUnicity(name, "area", area_parent_id, null)) {
+							alert("Area already exists: "+name);
+							continue;
+						}
+						names.push(name);
+					}
+					popup.unfreeze();
+					popup.freeze_progress("Creation of "+names.length+" Geographic Area(s)", names.length, function(span,pb) {
+						var done = 0;
+						for (var i = 0; i < names.length; ++i) {
+							var added = function() {
+								pb.addAmount(1);
+								done++;
+								if (done == names.length) {
+									popup.close();
+								}
+							};
+							if (root == null)
+								r.addArea(names[i], area_parent_id, added);
+							else
+								r.addRoot(names[i], added);
+								
+						}
+					});
+				},1);
+			});
+			popup.show();
+		});
 	};
 	
 	/**

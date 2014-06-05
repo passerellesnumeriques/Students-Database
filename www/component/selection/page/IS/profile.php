@@ -91,11 +91,8 @@ class page_IS_profile extends SelectionPage {
 		locationAndPartners($this, $id, "InformationSession", $session <> null ? GeographyJSON::GeographicAreaText($session) : "null", $editable, true); 
 		?>
 		</div>
-		<?php if($id <> null){?>
-		<div style='margin:0px 5px 5px 5px;'>
-		<iframe style='display:block;width:100%;height:300px;' class='section soft' name='applicants_frame'></iframe>
+		<div style='margin:0px 5px 5px 5px;' id='applicants_list_container'>
 		</div>
-		<?php } ?>
 		<script type='text/javascript'>
 		var is_popup = window.parent.get_popup_window_from_frame(window);
 		var is_id = <?php echo $id <> null ? $id : -1;?>;
@@ -139,7 +136,11 @@ class page_IS_profile extends SelectionPage {
 				} else {
 					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Information session successfuly saved!", [{action:"close"}], 5000));
 					// Update the data on the page (some ids have been generated)
-					is_id = res.id;
+					if (is_id == -1) {
+						// first save
+						is_id = res.id;
+						displayApplicantsList();
+					}
 					if (res.date) window.is_schedule.setEventId(res.date);
 					window.pnapplication.cancelDataUnsaved(); // everything is saved
 					// TODO add remove button ?
@@ -147,6 +148,17 @@ class page_IS_profile extends SelectionPage {
 					<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
 				}
 			});
+		}
+
+		function displayApplicantsList() {
+			var frame = document.createElement("IFRAME");
+			frame.style.display = "block";
+			frame.style.width = "100%";
+			frame.style.height = "300px";
+			frame.className = "section soft";
+			frame.name = "applicants_frame";
+			document.getElementById('applicants_list_container').appendChild(frame);
+			postFrame('/dynamic/selection/page/applicant/list?all=true',{filters:[{category:'Selection',name:'Information Session',force:true,data:{values:[is_id]}}]}, 'applicants_frame');
 		}
 		
 		is_popup.removeAllButtons();
@@ -168,10 +180,7 @@ class page_IS_profile extends SelectionPage {
 		});
 		<?php } ?>
 		<?php if($id <> null){?>
-		postFrame('/dynamic/selection/page/applicant/list?all=true',{filters:[{category:'Selection',name:'Information Session',force:true,data:{values:[<?php echo $id;?>]}}]}, 'applicants_frame');
-		//is_popup.addIconTextButton('/static/people/people_list_16.png', "See Applicants List", "applicants", function() {
-		//	window.top.popup_frame('/static/people/people_list_16.png','Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{values:[<?php echo $id;?>]}}]},95,95);
-		//});
+		displayApplicantsList();
 		<?php }?>
 		<?php if ($editable || $id == null) {?>
 		is_popup.addFrameSaveButton(save_is);

@@ -216,6 +216,10 @@ if (window == window.top) {
 		hasDataUnsaved: function() { 
 			return this._data_unsaved.length > 0; 
 		},
+		/** Check if there are data with given ID to be saved
+		 * @param {String} id identifier of the data
+		 * @returns {Boolean} true if the given data needs to be saved
+		 */
 		isDataUnsaved: function(id) {
 			return this._data_unsaved.contains(id);
 		},
@@ -224,7 +228,9 @@ if (window == window.top) {
 			this._data_unsaved = [];
 			this.onalldatasaved.fire();
 		},
+		/** Event raised when some data need to be saved */
 		ondatatosave: new Custom_Event(),
+		/** Event raised when no more data need to be saved */
 		onalldatasaved: new Custom_Event()
 	};
 	window.top.pnapplication.registerWindow(window);
@@ -238,7 +244,7 @@ function initPNApplication() {
 		setTimeout(initPNApplication, 100);
 	else {
 		var listener = function() {
-			if (!window || !window.top || !window.top.pnapplication) return;
+			if (!window || !window.top || !window.top.pnapplication || !window.top.pnapplication.userIsActive) return;
 			window.top.pnapplication.userIsActive();
 		};
 		listenEvent(window,'click',listener);

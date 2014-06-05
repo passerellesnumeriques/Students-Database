@@ -738,6 +738,7 @@ function grid(element) {
 	t.getCellField = function(row,col) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
+		if (col >= tr.childNodes.length) return null;
 		var td = tr.childNodes[col];
 		return td.field ? td.field : null;
 	};

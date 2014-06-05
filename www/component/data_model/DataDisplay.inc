@@ -507,6 +507,7 @@ class ChoiceDataDisplay extends DataDisplay {
 			$q->field($table_alias, $foreign_key->name, $data_alias);
 		}
 		
+		if ($filters <> null)
 		foreach ($filters as $filter_list) {
 			$w = "";
 			foreach ($filter_list as $filter) {
@@ -754,6 +755,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	/** @var string path to reach the column to display */
 	protected $data_path;
 	protected $horiz_align;
+	protected $filter_path;
 	
 	
 	/**
@@ -770,11 +772,14 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 *  <li>Contact>people.type means to join table 'Contact' using foreign key 'people' on Contact table, then display the column 'type' on the Contact table</li>
 	 *  <li>Contact>people(type=Work).contact means to join table 'Contact' using foreign key 'people' on Contact table and adding a condition on the join, then display the column 'contact' on the Contact table</li>
 	 * </ul>
+	 * @param string $horiz_align horizontal alignment
+	 * @param string $filter_path if specified, the filter will be an enum using the foreign key in the given path (which should be a sub-part of the data path)
 	 */
-	public function __construct($display_name, $data_path, $horiz_align = null) {
+	public function __construct($display_name, $data_path, $horiz_align = "left", $filter_path = null) {
 		$this->display_name = $display_name;
 		$this->data_path = $data_path;
 		$this->horiz_align = $horiz_align;
+		$this->filter_path = $filter_path;
 	}
 
 	public function getDisplayName() { return $this->display_name; }
@@ -785,8 +790,8 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 * @param number|null $sub_model sub model instance
 	 * @return \datamodel\Column the final column
 	 */
-	private function getColumn($sub_model) {
-		$steps = explode(".", $this->data_path);
+	private function getColumn($path, $sub_model) {
+		$steps = explode(".", $path);
 		$current_table = $this->getTable();
 		// take the final column name
 		$final_column_name = $steps[count($steps)-1];
@@ -819,7 +824,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	}
 	
 	public function getTypedField($sub_model) {
-		return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($sub_model));
+		return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($this->data_path, $sub_model));
 	}
 	public function getHorizontalAlign(){ return $this->horiz_align; }
 	
@@ -832,12 +837,89 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return false; // TODO
 	}
 
+	private $possible_values = array();
+	private function get_possible_values($sub_model) {
+		if (!isset($this->possible_values[$sub_model])) {
+			// get the foreign key used for the enum
+			$foreign_key = $this->getColumn($this->filter_path, $sub_model);
+			// take the foreign table
+			$t = \DataModel::get()->getTable($foreign_key->foreign_table);
+			
+			// the choice is the primary key of the foreign table
+			$q = \SQLQuery::create()->select($t->getName());
+			if ($sub_model <> null && ($t->getModel() instanceof \SubDataModel) && ($this->getTable()->getModel() instanceof \SubDataModel) && $t->getModel()->getParentTable() == $this->getTable()->getModel()->getParentTable())
+				$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
+			$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
+			
+			// continue the steps to have the value
+			$next_part = substr($this->data_path, strlen($this->filter_path)+1);
+			$steps = explode(".", $next_part);
+			$current_table = $t;
+			// take the final column name
+			$final_column_name = $steps[count($steps)-1];
+			array_splice($steps, count($steps)-1, 1);
+			// go through each step
+			foreach ($steps as $step) {
+				// check condition
+				$i = strpos($step, "(");
+				$condition = null;
+				if ($i !== false) {
+					$j = strrpos($step, ")");
+					$condition = substr($step, $i+1, $j-$i-1);
+					$step = substr($step, 0, $i);
+					$i = strpos($condition, "=");
+					$field_cd = trim(substr($condition,0,$i));
+					$field_val = trim(substr($condition,$i+1));
+					if ($field_val == "null") $field_val = null;
+					$condition = array($field_cd=>$field_val);
+				}
+				// make join
+				$i = strpos($step, ">");
+				if ($i !== false) {
+					// reverse join
+					$ft = \DataModel::get()->getTable(substr($step,0,$i));
+					$col = $ft->getColumnFor(substr($step,$i+1), $sub_model);
+					$q->join($current_table->getName(), $ft->getName(), array($current_table->getPrimaryKey()->name => $col->name), null, $condition);
+					$current_table = $ft;
+				} else {
+					// normal join
+					$col = $current_table->getColumnFor($step, $sub_model);
+					$ft = \DataModel::get()->getTable($col->foreign_table);
+					$q->join($current_table->getName(), $col->foreign_table, array($step=>$ft->getPrimaryKey()->name), null, $condition);
+					$current_table = $ft;
+				}
+			}
+			// take final column
+			$col = $current_table->internalGetColumnFor($final_column_name, $sub_model);
+			$q->field($current_table->getName(), $col->name, "VALUE");
+			
+			$this->possible_values[$sub_model] = $q->execute();
+		}
+		return $this->possible_values[$sub_model];
+	}
 	public function getTypedFilter($sub_model) {
-		return \PNApplication::$instance->widgets->get_typed_filter($this->getColumn($sub_model));
+		if ($this->filter_path == null)
+			return \PNApplication::$instance->widgets->get_typed_filter($this->getColumn($this->data_path, $sub_model));
+		$foreign_key = $this->getColumn($this->filter_path, $sub_model);
+		$cfg = "{";
+		$cfg .= "possible_values:[";
+		$res = $this->get_possible_values($sub_model);
+		$first = true;
+		foreach ($res as $row) {
+			if ($first) $first = false; else $cfg .= ",";
+			$cfg .= "[";
+			$cfg .= json_encode($row["KEY"]);
+			$cfg .= ",".json_encode($row["VALUE"]);
+			$cfg .= "]";
+		}
+		$cfg .= "]";
+		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= "}";
+		return array("filter_enum", $cfg);
 	}
 	
 	public function getSingleCell() { 
-		$col = $this->getColumn(null); 
+		$col = $this->getColumn($this->data_path, null); 
 		return array("table"=>$col->table->getName(), "column"=>$col->name);
 	}
 	
@@ -893,7 +975,33 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		$data_alias = $q->generateFieldAlias();
 		$q->field($current_table_alias, $col->name, $data_alias);
 
-		$this->applyColumnFilter($current_table_alias, $col, $filters, $q);
+		if ($this->filter_path == null)
+			$this->applyColumnFilter($current_table_alias, $col, $filters, $q);
+		else {
+			// enum filter
+			$foreign_key = $this->getColumn($this->filter_path, $path->sub_model);
+			$table_alias = $q->getTableAlias($foreign_key->table->getName());
+			
+			foreach ($filters as $filter_list) {
+				$w = "";
+				foreach ($filter_list as $filter) {
+					if (!isset($filter["values"]) || !is_array($filter["values"])) continue;
+					foreach ($filter["values"] as $enum_value) {
+						if ($enum_value == "") continue;
+						if (strlen($w) > 0) $w .= " OR ";
+						$w .= "`".$table_alias."`.`".$foreign_key->name."`";
+						if ($enum_value == "NULL")
+							$w .= " IS NULL";
+						else if ($enum_value == "NOT_NULL")
+							$w .= " IS NOT NULL";
+						else
+							$w .= "='".\SQLQuery::escape($enum_value)."'";
+					}
+				}
+				if (strlen($w) > 0)
+					$q->where($w);
+			}
+		}
 
 		return array("key"=>$key_alias,"data"=>$data_alias);
 	}
@@ -905,8 +1013,10 @@ class ReadOnlyDataDisplay extends DataDisplay {
 }
 
 /**
- * Implementation of DataDisplay, when we have a foreign key representing a choice where the data is not directly reached by the foreign_key, but with a harder business that makes it not editable.<br/>
- * The data displayed is given by the data_path, but the key handled is the foreignkey in the foreign table (pointed by the foreign key in the root table)
+ * Implementation of DataDisplay, when we have a foreign key representing a choice where the data is 
+ * not directly reached by the foreign_key, but with a harder business that makes it not editable.<br/>
+ * The data displayed is given by the data_path, but the key handled is the foreignkey in the foreign 
+ * table (pointed by the foreign key in the root table)
  */
 class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	
@@ -916,16 +1026,18 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	protected $data_path;
 	/** @var string column's name containing the foreign key */
 	protected $foreign_key_name;
+	protected $horiz_align;
 	
 	/**
 	 * @param string $display_name name of the datadisplay
 	 * @param string $foreign_key_name name of the foreign key in the root table
 	 * @param string $data_path first must be the foreign key and then all the columns name that we will browse through until the column to display. The names must be separated by a dot
 	 */
-	public function __construct($display_name, $foreign_key_name, $data_path) {
+	public function __construct($display_name, $foreign_key_name, $data_path, $horiz_align = "left") {
 		$this->display_name = $display_name;
 		$this->data_path = $data_path;
 		$this->foreign_key_name = $foreign_key_name;
+		$this->horiz_align = $horiz_align;
 	}
 	
 	public function getDisplayName() { return $this->display_name; }
@@ -963,10 +1075,13 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	public function isMandatory($sub_model) {
 		return false; // TODO
 	}
+	public function getHorizontalAlign() { return $this->horiz_align; }
 	
 	/**
 	 * Internal method to get the possible values to display in the enum for filtering
-	 * The possibilities are enumerated by all the existing keys in the table pointed by the foreign_key (choice datadisplay aspect) and the displayed names are found into the last table of the datapath (aspect readonly datadisplay)
+	 * The possibilities are enumerated by all the existing keys in the table pointed by the 
+	 * foreign_key (choice datadisplay aspect) and the displayed names are found into the last 
+	 * table of the datapath (aspect readonly datadisplay)
 	 * @param number|null $sub_model
 	 * @returns array | null null if no value, else array containing array("KEY" =>, "VALUE") for each possible values
 	 */

@@ -71,8 +71,11 @@ var students_list = new data_list(
 		},function(handler)  {
 			require("profile_picture.js");
 			var people_ids = [];
-			for (var i = 0; i < list.grid.getNbRows(); ++i)
+			for (var i = 0; i < list.grid.getNbRows(); ++i) {
+				var row = list.grid.getRow(i);
+				if (typeof row.row_id == 'undefined') continue;
 				people_ids.push(list.getTableKeyForRow("People",i));
+			}
 			service.json("people","get_peoples",{ids:people_ids},function(peoples) {
 				require("profile_picture.js",function() {
 					var pics = [];

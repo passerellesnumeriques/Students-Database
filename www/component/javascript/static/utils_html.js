@@ -144,6 +144,19 @@ function waitFrameReady(win, test, onready, timeout) {
 	if (!test(win)) { setTimeout(function() { waitFrameReady(win, test, onready, timeout-50); }, 50); return; }
 	onready(win);
 }
+/** Wait for things to be initialized in a frame
+ * @param {Element} frame the iframe element
+ * @param {Function} test tests if it is ready or not (takes the window as parameter, must return true if the frame is ready)
+ * @param {Function} onready called when the frame is ready
+ * @param {Number} timeout time in milliseconds after which we will not try anymore (if not specified, default is 30 seconds)
+ */
+function waitFrameContentReady(frame, test, onready, timeout) {
+	if (typeof timeout == 'undefined') timeout = 30000;
+	if (timeout < 50) return;
+	var win = getIFrameWindow(frame);
+	if (!win || !test(win)) { setTimeout(function() { waitFrameContentReady(frame, test, onready, timeout-50); }, 50); return; }
+	onready(win);
+}
 
 if (typeof window.top._current_tooltip == 'undefined')
 	window.top._current_tooltip = null;
@@ -227,4 +240,17 @@ function tooltip(element, content) {
 			removeTooltip();
 		this._tooltip = null;
 	};
+}
+
+function printContent(container) {
+	if (typeof container == 'string') container = document.getElementById(container);
+	window.top.popup_frame(theme.icons_16.print, "Print", "/dynamic/application/page/print", null, 95, 95, function(frame,pop){
+		waitFrameContentReady(frame, 
+			function(win) {
+				return win.printing_ready;
+			}, function(win) {
+				win.setPrintContent(container);
+			}
+		);
+	});
 }

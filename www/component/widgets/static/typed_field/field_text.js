@@ -34,9 +34,13 @@ field_text.prototype._create = function(data) {
 		this.validate = function() {
 			var err = null;
 			var s = t.getCurrentData();
-			if (s != null && t.config && t.config.min_length) {
-				if (s.length < t.config.min_length)
-					err = "Cannot be empty";
+			if (s == null || s.length == 0) {
+				if (!this.canBeNull()) err = "Cannot be empty";
+			} else {
+				if (t.config && t.config.min_length) {
+					if (s.length < t.config.min_length)
+						err = "Must have at least "+t.config.min_length+" character"+(t.config.min_length>1?"s":"");
+				}
 			}
 			t.signal_error(err);
 		};

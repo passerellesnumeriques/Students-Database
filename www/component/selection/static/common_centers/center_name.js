@@ -60,7 +60,7 @@ function center_name(container, name, can_edit, title){
 		td1.innerHTML = "<font color='#808080'><b>Custom name: </b></font>"
 		if(t._name == null){
 			t._text = "";
-		} else t._text = t._name.uniformFirstLetterCapitalized();
+		} else t._text = t._name;
 		if(can_edit){
 			var input = document.createElement("input");
 			input.type = 'text';
@@ -68,7 +68,7 @@ function center_name(container, name, can_edit, title){
 			inputAutoresize(input,15);
 			input.oninput = function(){
 				if(this.value.checkVisible()){
-					t._name = this.value.uniformFirstLetterCapitalized();
+					t._name = this.value;
 				} else t._name = null;
 				t.onupdate.fire();
 			};

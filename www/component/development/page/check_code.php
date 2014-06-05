@@ -54,6 +54,16 @@ function build_tree_php(parent_item, path, file) {
 			}
 		}
 	});
+	todo.push({
+		service: "check_todo",
+		data: {path:path+file.name},
+		handler: function(res) {
+			for (var i = 0; i < res.length; ++i) {
+				var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res[i]);
+				items_to_add.push({parent:item,item:e});
+			}
+		}
+	});
 }
 var checking_js = 0;
 var js_todo = [];
@@ -68,6 +78,16 @@ function build_tree_js(parent_item, path, file) {
 			checking_js--;
 			check_end();
 		},1);
+	});
+	todo.push({
+		service: "check_todo",
+		data: {path:path+file.name},
+		handler: function(res) {
+			for (var i = 0; i < res.length; ++i) {
+				var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res[i]);
+				items_to_add.push({parent:item,item:e});
+			}
+		}
 	});
 }
 function check_js_ns(ns_path, ns, item, filename, path) {

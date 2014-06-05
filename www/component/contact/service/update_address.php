@@ -2,9 +2,15 @@
 class service_update_address extends Service {
 	
 	public function getRequiredRights() { return array(); }
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() {
+		echo "Save a PostalAddress";
+	}
+	public function inputDocumentation() {
+		echo "A PostalAddress JSON object";
+	}
+	public function outputDocumentation() {
+		echo "true on success";
+	}
 	public function execute(&$component, $input) {
 		if(isset($input["address"])){
 			$address = array(

@@ -1,6 +1,9 @@
 <?php
 class service_get_json_contact_points_no_address extends Service{
 	public function getRequiredRights(){return array();}
+	public function documentation(){
+		echo "Return contact points with their contacts, but not their addresses, from one or several organizations";
+	}
 	public function inputDocumentation(){
 		?>
 		<ul>
@@ -11,8 +14,21 @@ class service_get_json_contact_points_no_address extends Service{
 		</ul>
 		<?php
 	}
-	public function outputDocumentation(){}//TODO
-	public function documentation(){}//TODO
+	public function outputDocumentation(){
+		?>
+		List of:<ul>
+			<li><code>organization</code>: organization ID</li>
+			<li><code>organization_name</code>: name of the organization</li>
+			<li><code>contact_points</code>: array of<ul>
+				<li><code>people_id</code>: People ID</li>
+				<li><code>people_last_name</code>: Last Name</li>
+				<li><code>people_first_name</code>: First Name</li>
+				<li><code>people_designation</code>: Designation in the organization</li>
+				<li><code>contacts</code>: list of Contact JSON objects</li>
+			</ul></li>
+		</ul>
+		<?php 
+	}
 	public function execute(&$component,$input){
 		require_once("get_json_contact_points_no_address.inc");
 		if(isset($input["organizations"])){
