@@ -1040,7 +1040,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			var row = t.grid.getRow(i);
 			for (var j = 0; j < row.childNodes.length; ++j)
 				if (row.childNodes[j].col_id == "actions") {
-					var html_field = tow.childNodes[j].field;
+					var html_field = row.childNodes[j].field;
 					var container = document.createElement("DIV");
 					for (var k = 0; k < t._action_providers.length; ++k)
 						t._action_providers[k](t, row, container);

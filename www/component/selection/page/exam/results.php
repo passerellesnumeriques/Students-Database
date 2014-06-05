@@ -18,26 +18,50 @@ class page_exam_results extends SelectionPage {
 		$this->requireJavascript("data_list.js");
 		$this->onload("createDataList(".$this->component->getCampaignId().");");
 	?>
-		<!-- main structure of the exam results page -->
-			<div style ="margin:10px;width:80%">
+	
+			<!--TODO : sort this css in a file more neatly -->
+		<style>
+			table.grid>tbody>tr>td {
+				text-align: center;
+			}
+			table.grid>tbody>tr.clickable_row:hover{
+			background-color: #FFF0D0;
+			background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
+			}
+			
+			table.grid>tbody>tr.selectedRow{
+			background-color: #FFF0D0;
+			background: linear-gradient(to bottom, #FFF0D0 0%, orange 100%);
+			}
+		</style>
+			
+	<!-- main structure of the exam results page -->
+	<div id='horizontal_split' style="margin:10px;">
+		<div id="sessions_with_button" style="display: inline-block;vertical-align: top;" layout="fill">
+			<div style ="max-height: 300px;overflow: auto">
 			      <div id = "sessions_listDiv" title='Exam sessions list' icon="/static/calendar/calendar_16.png" collapsable='true' css="soft">
 				<?php $this->createTableSessionsList();?>
 			      </div>
 			</div>
-
-			<div id='horizontal_split' style ="margin:10px;width:80%" >
-				<div id = "session_infoDiv" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;margin:10px;'  css="soft">
-					<div id="session_info_locationDiv" style='padding-left:5px;'></div>
-				 </div>
-				 <div id = "session_applicantsDiv" title='Applicants list' collapsable='true' style='display:inline-block;margin:10px;'  css="soft" layout="fill">
-					<div id="session_applicants_listDiv"></div>
-				 </div>
-			   
+			<div id="sessions_buttonsDiv" style="text-align: right;">
+				<button id="edit_notes" class="action">EDIT NOTES</button>
 			</div>
+		</div>
+		<div id = "session_infoDiv" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;vertical-align: top;' css="soft">
+				<div id="session_info_locationDiv" style='padding-left:5px;'></div>
+		</div>
+	</div>
+		
+
+	<!--List of applicants-->		
+	<div id = "session_applicantsDiv" title='Applicants list' icon="/static/selection/applicant/applicants_16.png" collapsable='true' css="soft" style="width: 500px;margin-left:10px;" >
+	       <div id="session_applicants_listDiv"></div>
+	</div>
+
 	<?php
 	}
 	/*
-	 * Generate html Table element displaying Sessions List grouped by Exam Center
+	 * Generate html Table element displaying Sessions List (grouped by Exam Center)
 	 */
 	private function createTableSessionsList()
 		{
@@ -59,29 +83,14 @@ class page_exam_results extends SelectionPage {
 			if ($exam_sessions===null)
 				echo " No result yet !";
 		?>
-			<!--TODO : sort this css in a file more neatly -->
-			<style>
-				table.grid>tbody>tr>td {
-					text-align: center;
-				}
-				table.grid>tbody>tr.clickable_row:hover{
-				background-color: #FFF0D0;
-				background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
-				}
-				
-				table.grid>tbody>tr.selectedRow{
-				background-color: #FFF0D0;
-				background: linear-gradient(to bottom, #FFF0D0 0%, orange 100%);
-				}
-			</style>
-			
+		
 			<table class="grid" id="table_exam_results" style="width: 100%">
 				<thead>
 					<tr>
 					      <th>Exam Session</th>
 					      <th>Room</th>
 					      <th>Applicants</th>
-					      <th>Status</th>
+					      <th>Status</th>					      
 					</tr>
 				</thead>
 				<tbody>

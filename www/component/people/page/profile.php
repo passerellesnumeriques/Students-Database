@@ -26,7 +26,7 @@ class page_profile extends Page {
 			;
 		$people = $q->executeSingleRow();
 		$types = PNApplication::$instance->people->parseTypes($people["people_types"]);
-
+		
 		$pages = array();
 		foreach (PNApplication::$instance->components as $cname=>$c) {
 			foreach ($c->getPluginImplementations() as $pi) {
