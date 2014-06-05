@@ -65,4 +65,6 @@ $sm->addTable("ApplicantMoreInfo")//This table contains all the custom data (bas
 		->addForeignKey("people", "People", true, false, false, false, true)
 		->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities
 		->setPrimary("people");//The primary key is the people_id
+		
+include "datamodel_applicant_exam.inc";
 ?>
