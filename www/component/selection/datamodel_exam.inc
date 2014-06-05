@@ -1,12 +1,20 @@
 <?php 
 $sm->addTable("ExamSubject")
 	->addPrimaryKey("id")
+        /*->addInteger("nb_versions",8,1,255,false,true)*/        //no more nb_versions (June 04 2014)
 	->addString("name",255,1,false,false) //cannot have two exam with the same name on the same campaign
 	->addDecimal("max_score",10,2,0,null,false,false) // must be calculated
 	->addWriteAccess("manage_exam_subject",true)
 	->addReadAccess("see_exam_subject",true)
 	->addInsertAccess("manage_exam_subject",true)
 	->addRemoveAccess("manage_exam_subject",true);
+
+// (June 04 2014) Adding new table ExamSubjectVersion
+$sm->addTable("ExamSubjectVersion")
+	->addPrimaryKey("id")
+        ->addForeignKey("exam_subject","ExamSubject",true,false,true,false)
+        //TODO : Access Rights ?
+      ;
 
 $sm->addTable("ExamSubjectPart")
 	->addPrimaryKey("id")
@@ -22,15 +30,53 @@ $sm->addTable("ExamSubjectPart")
 $sm->addTable("ExamSubjectQuestion")
 	->addPrimaryKey("id")
 	->addForeignKey("exam_subject_part","ExamSubjectPart",true,false,true)
-	->addInteger("index",32,null,null,false,false) // index of the question in this part(in case the parts index is updated)
+	->addInteger("index",8,null,null,false,false) // index of the question in this part(in case the parts index is updated)
 	->addDecimal("max_score",10,2,0,null,false,false) // must be editable
-	->addString("correct_answer") //optional
-	->addString("choices") //optional
+	->addString("type_config") // (June 04 2014 : depend of type )
+        ->addEnum("type",array("mcq_single","mcq_multi","number","text"),false,false) //  (June 02 2014) 
 	->addReadAccess("see_exam_subject",true)
 	;
 	//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...
-	
-$sm->addTable("ExamTopicForEligibilityRule")
+
+// (June 04 2014) Adding new table ExamSubjectAnswer
+$sm->addTable("ExamSubjectAnswer")
+         ->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true)
+         ->addForeignKey("exam_subject_version","ExamSubjectVersion",true,false,true)
+         ->addString("answer",255,0,true) // eg. "{A,C}" or "127.8" or "toto titi"  depending on question type
+         ->setKey(array("exam_subject_question","exam_subject_version"))
+         //TODO : Access Rights ?
+         ;
+        
+// (June 04 2014) Adding new table ApplicantExam
+$sm->addTable("ApplicantExamSubject")  
+      ->addForeignKey("applicant","Applicant",true,false,true)
+      ->addForeignKey("exam_subject","ExamSubject",true,false,true,false) // for faster computing
+      ->addForeignKey("exam_subject_version","ExamSubjectVersion",true,false,true,false)
+      ->setKey(array("applicant","exam_subject")) // also create index automatically
+      ->addDecimal("score",10,2,0,null,false,false)
+       //TODO : Access Rights ?
+      ;
+// (June 04 2014) Adding new table ApplicantExamPart
+$sm->addTable("ApplicantExamSubjectPart")
+      ->addForeignKey("applicant","Applicant",true,false,true)
+      ->addForeignKey("exam_subject_part","ExamSubjectPart",true,false,true)
+      ->setKey(array("applicant","exam_subject_part"))
+      ->addDecimal("score",10,2,0,null,false,false)
+      //TODO : Access Rights ?
+      ;
+
+// (June 04 2014) Adding new table ApplicantExamAnswer
+$sm->addTable("ApplicantExamAnswer")
+      ->addForeignKey("applicant","Applicant",true,false,true)
+      ->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true)
+       ->setKey(array("applicant","exam_subject_question"))
+      ->addString("answer") // the answer given by the applicant
+      ->addDecimal("score",10,2,0,null,false,false)
+       //TODO : Access Rights ?
+        ;
+
+        
+$sm->addTable("ExamTopicForEligibilityRule") /* Dim : eg. : "logic" or "math" or ..whatever */
 	/**
 	 * As exam topics and exam subject are synchronized by some functionalities,
 	* the rights must be exactly the same!
@@ -44,7 +90,7 @@ $sm->addTable("ExamTopicForEligibilityRule")
 	->addInsertAccess("manage_exam_subject",true)
 	->addRemoveAccess("manage_exam_subject",true);
 
-$sm->addTable("ExamTopicFullSubject")
+$sm->addTable("ExamTopicFullSubject") /* Dim : eg.: english ? */
 	/** Table to match an exam topic with exam(s) subject(s)
 	 * if a topic is set in this table, it will be considered as
 	* "full subject" for all the matching exams subjects
@@ -78,7 +124,7 @@ $sm->addTable("ExamPartTopic")
 
 //TODO Exam_part_result, exam_subject_result (reduce the calculation time for statistics...)
 
-$sm->addTable("EligibilityRule")
+$sm->addTable("EligibilityRule") /* Dim : ??? */
 	->addPrimaryKey("id")
 	->addForeignKey("parent", "EligibilityRule", true, false, false, true)//Can only have one parent. If null, root level
 	->addWriteAccess("manage_exam_subject",true)
@@ -98,6 +144,15 @@ $sm->addTable("EligibilityRuleExamTopic")
 	->addInsertAccess("manage_exam_subject",true)
 	->addRemoveAccess("manage_exam_subject",true);
 
+
+// (June 04 2014) Adding new table ApplicantExamTopic
+$sm->addTable("ApplicantExamTopic")
+      ->addForeignKey("applicant","Applicant",true,false,true)
+      ->addForeignKey("exam_topic_for_eligibility_rule","ExamTopicForEligibilityRule",true,false,true,false)
+      ->setKey(array("applicant","exam_topic_for_eligibility_rule"))
+      ->addDecimal("score",10,2,0,null,false,false)
+      //TODO : Access Rights ?
+      ;
 
 $sm->addTable("ExamCenter")
 	->addPrimaryKey("id")

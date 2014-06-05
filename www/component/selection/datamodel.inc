@@ -49,6 +49,7 @@ $sm->addTable("Applicant")
 		->addString("automatic_exclusion_reason",255,0,true,false)//This field must be filled up by functionalities ("missing",...) to explain the automatic exclusion step
 		->addString("custom_exclusion",255,0,true,false)//This field can be filled up by user
 		->addBoolean("excluded",false)
+		->addDecimal("exam_total_score",10,2,0,null,false,false) // sum of all subject (to be calculated)
 		->addForeignKey("information_session", "InformationSession", false, false, true, true, false)//An applicant can be assigned to an information session
 		->addForeignKey("exam_center", "ExamCenter", false, false, true, true, false)//An applicant can be assigned to an exam center (maybe after importing applicant data
 		->addForeignKey("exam_center_room", "ExamCenterRoom", false, false, true, true, false) //An applicant can be assigned to an exam center room after(maybe after importing applicant data
