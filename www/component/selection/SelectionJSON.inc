@@ -259,6 +259,7 @@ class SelectionJSON{
 		self::ExamSubjectSQL($q);
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectQuestionSQL($q);
+		// TODO
 		
 		$rows = $q->execute();
 		if($rows == null)
@@ -310,8 +311,8 @@ class SelectionJSON{
 			->field($alias,"id","question_id")
 			->field($alias,"index","question_index")
 			->field($alias,"max_score","question_max_score")
-			->field($alias,"correct_answer","question_correct_answer")
-			->field($alias,"choices","question_choices");
+			->field($alias,"type","question_type")
+			->field($alias,"type_config","question_type_config");
 	}
 	
 	/**

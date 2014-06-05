@@ -183,7 +183,7 @@ class ContactJSON {
 			$types_ids = array();
 			foreach ($list_types_ids as $t)
 				if ($t["organization"] == $org["organization_id"])
-					array_push($types_ids, $t);
+					array_push($types_ids, $t["type"]);
 			$contacts = array();
 			foreach ($list_contacts as $e) if ($e["organization_id"] == $org["organization_id"]) array_push($contacts, $e);
 			$addresses = array();

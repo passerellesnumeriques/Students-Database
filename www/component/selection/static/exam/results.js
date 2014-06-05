@@ -1,4 +1,4 @@
-/* global variables containing data about selected items */
+/* global variable containing data about selected items */
 var selected={};
 
 /*

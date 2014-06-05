@@ -78,10 +78,7 @@ class page_exam_results extends SelectionPage {
 					->join("Applicant","ExamCenterRoom",array("exam_center_room"=>"id"));
 			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
 			$exam_sessions=$q->groupBy("ExamSession","event")->groupBy("ExamCenterRoom","id")->execute();
-		 
-			/* TODO : improve this display (in case of no results) */
-			if ($exam_sessions===null)
-				echo " No result yet !";
+
 		?>
 		
 			<table class="grid" id="table_exam_results" style="width: 100%">
