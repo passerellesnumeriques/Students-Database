@@ -121,6 +121,31 @@ function linkEditCoordinatesWithMap(edit_coordinates, map) {
 			}
 		}
 	};
+	this.addResetOriginalButton = function(original) {
+		var original_button = document.createElement("BUTTON");
+		original_button.className = "action";
+		original_button.innerHTML = "Back to original";
+		original_button.onclick = function() { edit_coordinates.setCoordinates(original.north,original.east,original.south,original.west); };
+		this._buttons.appendChild(original_button);
+	};
+	this._init = function() {
+		this._buttons = document.createElement("DIV");
+		var reset_button = document.createElement("BUTTON");
+		reset_button.className = "action important";
+		reset_button.innerHTML = "Reset";
+		reset_button.onclick = function() { edit_coordinates.setCoordinates(null,null,null,null); };
+		this._buttons.appendChild(reset_button);
+		var map_button = document.createElement("BUTTON");
+		map_button.className = "action";
+		map_button.innerHTML = "Use map bounds";
+		map_button.onclick = function() {
+			var bounds = map.map.getBounds();
+			edit_coordinates.setCoordinates(bounds.getNorthEast().lat(), bounds.getNorthEast().lng(), bounds.getSouthWest().lat(), bounds.getSouthWest().lng());
+		};
+		this._buttons.appendChild(map_button);
+		edit_coordinates.element.appendChild(this._buttons);
+	};
+	this._init();
 	this.updateMap();
 	var t=this;
 	edit_coordinates.field_north.onchange.add_listener(function() { t.updateMap(); });
