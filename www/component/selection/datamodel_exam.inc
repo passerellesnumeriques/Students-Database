@@ -33,7 +33,7 @@ $sm->addTable("ExamSubjectQuestion")
 	->addInteger("index",8,null,null,false,false) // index of the question in this part(in case the parts index is updated)
 	->addDecimal("max_score",10,2,0,null,false,false) // must be editable
 	->addString("type_config") // eg. "5" meaning 5 possibles choices in case type is mcq 
-        ->addEnum("type",array("mcq_single","mcq_multi","number","text"),false,false) //  (June 02 2014) 
+	->addEnum("type",array("mcq_single","mcq_multi","number","text"),true,false) //  (June 02 2014) 
 	->addReadAccess("see_exam_subject",true)
 	;
 	//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...

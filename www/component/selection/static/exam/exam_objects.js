@@ -45,7 +45,7 @@ function ExamSubjectQuestion(id, index, max_score, type, type_config){
 * @param {ExamSubjectQuestion} question
 * @returns {String} field type of grid widget
 */
-ExamSubjectQuestion.prototype.gridFieldType=function(question)
+function questionGridFieldType(question)
 {
 	var field_type;
     
@@ -71,7 +71,7 @@ ExamSubjectQuestion.prototype.gridFieldType=function(question)
    * @param {ExamSubjectQuestion} question 
    * @returns {Object} field args of grid widget
   */
-ExamSubjectQuestion.prototype.gridFieldArgs=function(question){
+function questionGridFieldArgs(question){
 switch (question.type){
  case 'mcq_single':
     var field_args={

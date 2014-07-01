@@ -135,9 +135,9 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 		}
 		if(display_questions_detail){
 			if(!can_edit)
-				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score);
+				t.th_head.innerHTML = "PART "+part.index+" - "+part.name+" - "+max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length);
 			else{
-				text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score));
+				text2 = document.createTextNode(" - "+max_score+" "+getGoodSpelling("point",part.max_score)+" - "+part.questions.length+" "+getGoodSpelling("question", part.questions.length));
 			}
 		} else {
 			

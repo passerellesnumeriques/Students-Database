@@ -41,7 +41,7 @@ function pictures_list(container) {
 		this.pictures = [];
 		var ready_count = pictures.length;
 		var ready = function() {
-			if (--ready_count == 0)
+			if (--ready_count == 0 || (ready_count%10)==0)
 				t.adjustSizes();
 		};
 		for (var i = 0; i < pictures.length; ++i) {

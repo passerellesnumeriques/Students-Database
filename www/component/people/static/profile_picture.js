@@ -100,6 +100,8 @@ function profile_picture(container, width, height, halign, valign) {
 			t.picture = document.createElement("IMG");
 			t.picture.onload = function() {
 				t.adjustPicture();
+				if (img.parentNode)
+					t.picture_container.removeChild(img);
 				if (onloaded) onloaded();
 			};
 			t.picture.onerror = function() {

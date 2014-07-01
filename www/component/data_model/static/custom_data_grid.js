@@ -93,8 +93,8 @@ custom_data_grid.prototype = {
 		return this.list;
 	},
 	
-	makeSelectable: function() {
-		this.grid.setSelectable(true);
+	makeSelectable: function(unique) {
+		this.grid.setSelectable(true, unique);
 		var t=this;
 		this.grid.onselect = function() {
 			t.selection_changed.fire();
