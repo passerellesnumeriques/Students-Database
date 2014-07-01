@@ -1264,21 +1264,23 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 		
 		// remove button
-		var remove = document.createElement("BUTTON");
-		remove.className = "flat";
-		remove.title = "Remove this filter on "+field.name;
-		remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
-		if (filter.force) remove.disabled = 'disabled';
-		div.appendChild(remove);
-		remove.filter = filter;
-		remove.onclick = function() {
-			t.removeFilter(filter);
-			container.removeChild(div);
-			t._loadData();
-			if (t._filters.length == 0)
-				container.innerHTML = "<center><i>No filter</i></center>";
-			layout.invalidate(container);
-		};
+		if (!filter.force) {
+			var remove = document.createElement("BUTTON");
+			remove.className = "flat";
+			remove.title = "Remove this filter on "+field.name;
+			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+			if (filter.force) remove.disabled = 'disabled';
+			div.appendChild(remove);
+			remove.filter = filter;
+			remove.onclick = function() {
+				t.removeFilter(filter);
+				container.removeChild(div);
+				t._loadData();
+				if (t._filters.length == 0)
+					container.innerHTML = "<center><i>No filter</i></center>";
+				layout.invalidate(container);
+			};
+		}
 		
 		if (is_or) {
 			var div_or_text = document.createElement("DIV");
@@ -1328,21 +1330,23 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 			
 			// add or button
-			var add_or = document.createElement("BUTTON");
-			add_or.innerHTML = "Or...";
-			or_div.appendChild(add_or);
-			add_or.onclick = function() {
-				t._contextMenuAddFilter(this, function(field, new_filter) {
-					last_or = filter;
-					while (last_or.or) last_or = last_or.or;
-					last_or.or = new_filter;
-					t._createFilter(new_filter, or_div, true);
-					or_div.removeChild(add_or);
-					or_div.appendChild(add_or);
-					layout.invalidate(container);
-					t._loadData();
-				});
-			};
+			if (!filter.force) {
+				var add_or = document.createElement("BUTTON");
+				add_or.innerHTML = "Or...";
+				or_div.appendChild(add_or);
+				add_or.onclick = function() {
+					t._contextMenuAddFilter(this, function(field, new_filter) {
+						last_or = filter;
+						while (last_or.or) last_or = last_or.or;
+						last_or.or = new_filter;
+						t._createFilter(new_filter, or_div, true);
+						or_div.removeChild(add_or);
+						or_div.appendChild(add_or);
+						layout.invalidate(container);
+						t._loadData();
+					});
+				};
+			}
 		}
 	},
 	/** Display the menu to edit/add/remove filters

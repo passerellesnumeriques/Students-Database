@@ -231,7 +231,6 @@ function location_and_partners(popup, section_location, section_other_partners, 
 						popup.freeze();
 						// remove partners not anymore selected
 						for (var i = 0; i < t.partners.length; ++i) {
-							if (t.partners[i].host) continue; // this is the host
 							var found = false;
 							for (var j = 0; j < selected.length; ++j)
 								if (selected[j] == t.partners[i].organization.id) {
@@ -239,6 +238,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 									found = true; 
 									break; 
 								}
+							if (t.partners[i].host) continue; // this is the host
 							if (!found) {
 								t.partners.splice(i,1);
 								i--;
