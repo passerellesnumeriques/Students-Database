@@ -65,6 +65,7 @@ field_integer.prototype._create = function(data) {
 			t.input.value = val;
 			t.setData(val);
 		};
+		listenEvent(t.input, 'focus', function() { t.onfocus.fire(); });
 		require("input_utils.js",function(){inputAutoresize(t.input);});
 		this.element.appendChild(t.input);
 		this._getEditedData = function() {
@@ -85,6 +86,11 @@ field_integer.prototype._create = function(data) {
 				var ev = getCompatibleKeyEvent(e);
 				if (ev.isEnter) listener(t);
 			});
+		};
+		this.fillWidth = function() {
+			_fw = true;
+			this.element.style.width = "100%";
+			if (typeof input.setMinimumSize != 'undefined') input.setMinimumSize(-1);
 		};
 		if (t.config) {
 			var prev = data;

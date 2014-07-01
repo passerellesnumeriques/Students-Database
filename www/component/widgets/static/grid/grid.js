@@ -304,9 +304,11 @@ function grid(element) {
 	t.element = element;
 	t.columns = [];
 	t.selectable = false;
+	t.selectable_unique = false;
 	t.url = get_script_path("grid.js");
 	t.onrowselectionchange = null;
 	t.oncellcreated = new Custom_Event();
+	t.onrowfocus = new Custom_Event();
 	
 	t.addColumnContainer = function(column_container, index) {
 		// if more levels, we add new rows in the header
@@ -391,7 +393,9 @@ function grid(element) {
 					tr.appendChild(td);
 				else
 					tr.insertBefore(td, tr.childNodes[col_index]);
-				t._create_cell(col, null, td);
+				t._create_cell(col, null, td, function(field){
+					field.onfocus.add_listener(function() { t.onrowfocus.fire(tr); });
+				});
 			}
 		}
 		layout.invalidate(this.table);
@@ -455,9 +459,15 @@ function grid(element) {
 	t._getColumnContainerByAttachedData = function(container, data) {
 		if (container.attached_data == data) return container;
 		if (!container.parent_column) return null;
-		t._getColumnContainerByAttachedData(container.parent_column, data);
+		return t._getColumnContainerByAttachedData(container.parent_column, data);
 	};
 	t.getColumnIndex = function(col) { return t.columns.indexOf(col); };
+	t.getColumnIndexById = function(col_id) {
+		for (var i = 0; i < t.columns.length; ++i)
+			if (t.columns[i].id == col_id)
+				return i;
+		return -1;
+	};
 	t.removeColumn = function(index) {
 		var col = t.columns[index];
 		t.columns.splice(index,1);
@@ -505,21 +515,35 @@ function grid(element) {
 			if (td.field) {
 				var data = td.field.getCurrentData();
 				td.removeAllChildren();
-				t._create_cell(column, data, td);
+				t._create_cell(column, data, td, function(field){
+					field.onfocus.add_listener(function() { t.onrowfocus.fire(row); });
+				});
 				td.style.textAlign = column.align;
 			}
 		}
 	};
 	
-	t.setSelectable = function(selectable) {
-		if (t.selectable == selectable) return;
+	t.setSelectable = function(selectable, unique) {
+		if (!unique) unique = false;
+		if (t.selectable == selectable && t.selectable_unique == unique) return;
+		if ((t.selectable && !selectable) || (t.selectable && selectable && unique != t.selectable_unique)) {
+			if (t.header_rows[0].childNodes.length > 0) {
+				t.header_rows[0].removeChild(t.header_rows[0].childNodes[0]);
+				t.colgroup.removeChild(t.colgroup.childNodes[0]);
+				for (var i = 0; i < t.table.childNodes.length; ++i)
+					t.table.childNodes[i].removeChild(t.table.childNodes[i].childNodes[0]);
+			}
+		}
 		t.selectable = selectable;
+		t.selectable_unique = unique;
 		if (selectable) {
 			var th = document.createElement('TH');
-			var cb = document.createElement("INPUT");
-			cb.type = 'checkbox';
-			cb.onchange = function() { if (this.checked) t.selectAll(); else t.unselectAll(); };
-			th.appendChild(cb);
+			if (!unique) {
+				var cb = document.createElement("INPUT");
+				cb.type = 'checkbox';
+				cb.onchange = function() { if (this.checked) t.selectAll(); else t.unselectAll(); };
+				th.appendChild(cb);
+			}
 			var col = document.createElement('COL');
 			col.width = 20;
 			if (t.header_rows[0].childNodes.length == 0) {
@@ -530,9 +554,8 @@ function grid(element) {
 				t.colgroup.insertBefore(col, t.colgroup.childNodes[0]);
 			}
 			th.rowSpan = t.header_rows.length;
-		} else if (t.header_rows[0].childNodes.length > 0) {
-			t.header_rows[0].removeChild(t.header_rows[0].childNodes[0]);
-			t.colgroup.removeChild(t.colgroup.childNodes[0]);
+			for (var i = 0; i < t.table.childNodes.length; ++i)
+				t.table.childNodes[i].insertBefore(t._createSelectionTD(), t.table.childNodes[i].childNodes[0]);
 		}
 		layout.invalidate(this.table);
 	};
@@ -598,11 +621,29 @@ function grid(element) {
 	};
 	t.selectByIndex = function(index, selected) {
 		if (!t.selectable) return;
-		var tr = t.table.childNodes[index];
-		var td = tr.childNodes[0];
-		var cb = td.childNodes[0];
-		cb.checked = selected ? 'checked' : '';
-		tr.className = selected ? "selected" : "";
+		if (t.selectable_unique && selected) {
+			for (var i = 0; i < t.table.childNodes.length; i++) {
+				var tr = t.table.childNodes[i];
+				var td = tr.childNodes[0];
+				var cb = td.childNodes[0];
+				if ((tr.className == 'selected') != (i==index)) {
+					if (t.onrowselectionchange)
+						t.onrowselectionchange(tr.row_id, i==index);
+					cb.checked = i==index ? 'checked' : '';
+					tr.className = i==index ? "selected" : "";
+				}
+			}
+		} else {
+			var tr = t.table.childNodes[index];
+			var td = tr.childNodes[0];
+			var cb = td.childNodes[0];
+			if (cb.checked != selected) {
+				cb.checked = selected ? 'checked' : '';
+				tr.className = selected ? "selected" : "";
+				if (t.onrowselectionchange)
+					t.onrowselectionchange(tr.row_id, selected);
+			}
+		}
 	};
 	t.disableByIndex = function(index, disabled){
 		if(!t.selectable) return;
@@ -615,12 +656,24 @@ function grid(element) {
 		if (!t.selectable) return;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
-			if (tr.row_id != row_id) continue;
+			if (tr.row_id != row_id && (!t.selectable_unique || !selected)) continue;
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
-			cb.checked = selected ? 'checked' : '';
-			tr.className = selected ? "selected" : "";
-			break;
+			if (t.selectable_unique && tr.row_id != row_id) {
+				if (tr.className == 'selected') {
+					cb.checked = "";
+					tr.className = "";
+					if (t.onrowselectionchange)
+						t.onrowselectionchange(tr.row_id, false);
+				}
+			} else {
+				if (cb.checked != selected) {
+					cb.checked = selected ? 'checked' : '';
+					tr.className = selected ? "selected" : "";
+					if (t.onrowselectionchange)
+						t.onrowselectionchange(tr.row_id, selected);
+				}
+			}
 		}
 	};
 
@@ -641,23 +694,10 @@ function grid(element) {
 	};
 	t.addRow = function(row_id, row_data) {
 		var tr = document.createElement("TR");
+		listenEvent(tr, 'click', function() { t.onrowfocus.fire(tr); });
 		tr.row_id = row_id;
-		if (t.selectable) {
-			var td = document.createElement("TD");
-			tr.appendChild(td);
-			var cb = document.createElement("INPUT");
-			cb.type = 'checkbox';
-			cb.style.marginTop = "0px";
-			cb.style.marginBottom = "0px";
-			cb.style.verticalAlign = "middle";
-			cb.onchange = function(ev) {
-				this.parentNode.parentNode.className = this.checked ? "selected" : "";
-				if (t.onrowselectionchange)
-					t.onrowselectionchange(tr.row_id, this.checked);
-				t._selection_changed();
-			};
-			td.appendChild(cb);
-		}
+		if (t.selectable)
+			tr.appendChild(t._createSelectionTD());
 		for (var j = 0; j < t.columns.length; ++j) {
 			var td = document.createElement("TD");
 			tr.appendChild(td);
@@ -665,18 +705,50 @@ function grid(element) {
 			for (var k = 0; k < row_data.length; ++k)
 				if (t.columns[j].id == row_data[k].col_id) { data = row_data[k]; break; }
 			if (data == null)
-				data = {data_id:null,data:"No data found for this colum"};
+				data = {data_id:null,data:"No data found for this column"};
 			td.col_id = t.columns[j].id;
 			td.data_id = data.data_id;
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
-				t._create_cell(t.columns[j], data.data, td);
+				t._create_cell(t.columns[j], data.data, td, function(field){
+					field.onfocus.add_listener(function() { t.onrowfocus.fire(tr); });
+				});
 			if (typeof data.css != 'undefined' && data.css)
 				td.className = data.css;
 		}
 		t.table.appendChild(tr);
 		layout.invalidate(t.table);
 		return tr;
+	};
+	t._createSelectionTD = function() {
+		var td = document.createElement("TD");
+		var cb = document.createElement("INPUT");
+		if (t.selectable_unique) {
+			cb.type = 'radio';
+			if (!t.table.id) t.table.id = generateID();
+			cb.name = t.table.id+'_selection';
+		} else
+			cb.type = 'checkbox';
+		cb.style.marginTop = "0px";
+		cb.style.marginBottom = "0px";
+		cb.style.verticalAlign = "middle";
+		cb.onchange = function(ev) {
+			var tr = this.parentNode.parentNode;
+			tr.className = this.checked ? "selected" : "";
+			if (t.onrowselectionchange)
+				t.onrowselectionchange(tr.row_id, this.checked);
+			if (t.selectable_unique && this.checked) {
+				for (var i = 0; i < t.table.childNodes.length; ++i)
+					if (tr != t.table.childNodes[i] && t.table.childNodes[i].className == "selected") {
+						t.table.childNodes[i].className = "";
+						if (t.onrowselectionchange)
+							t.onrowselectionchange(t.table.childNodes[i].row_id, false);
+					}
+			}
+			t._selection_changed();
+		};
+		td.appendChild(cb);
+		return td;
 	};
 	
 	t.addTitleRow = function(title, style) {
@@ -714,6 +786,11 @@ function grid(element) {
 			if (t.table.childNodes[i].row_id == id) return t.table.childNodes[i];
 		return null;
 	};
+	t.getRowIndexById = function(row_id) {
+		for (var i = 0; i < t.table.childNodes.length; ++i)
+			if (t.table.childNodes[i].row_id == row_id) return i;
+		return -1;
+	};
 	
 	t.removeRowIndex = function(index) {
 		t.table.removeChild(t.table.childNodes[index]);
@@ -735,12 +812,15 @@ function grid(element) {
 		var td = tr.childNodes[col];
 		return td.childNodes[0];
 	};
-	t.getCellField = function(row,col) {
-		if (t.selectable) col++;
-		var tr = t.table.childNodes[row];
-		if (col >= tr.childNodes.length) return null;
-		var td = tr.childNodes[col];
+	t.getCellField = function(row_index,col_index) {
+		if (t.selectable) col_index++;
+		var tr = t.table.childNodes[row_index];
+		if (col_index >= tr.childNodes.length) return null;
+		var td = tr.childNodes[col_index];
 		return td.field ? td.field : null;
+	};
+	t.getCellFieldById = function(row_id,col_id) {
+		return t.getCellField(t.getRowIndexById(row_id), t.getColumnIndexById(col_id));	
 	};
 	t.getCellDataId = function(row,col) {
 		if (t.selectable) col++;

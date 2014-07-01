@@ -1060,7 +1060,7 @@ class SQLQuery {
 		$a = $this->execute();
 		if ($a === null) return null;
 		$a2 = array();
-		foreach ($a as $r) array_push($a2, $r[0]);
+		foreach ($a as $r) foreach ($r as $col=>$val) { array_push($a2, $val); break; }
 		return $a2;
 	}
 

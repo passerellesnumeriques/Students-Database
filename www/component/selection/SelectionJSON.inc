@@ -255,16 +255,35 @@ class SelectionJSON{
 			->join("ExamSubject","ExamSubjectPart",array("id" => "exam_subject"))
 			->join("ExamSubjectPart","ExamSubjectQuestion",array("id" => "exam_subject_part"))
 			->whereValue("ExamSubject","id",$id)
-			->orderBy("ExamSubjectPart","id");
+			->orderBy("ExamSubjectPart","id");//TODO : better to order by index ?
 		self::ExamSubjectSQL($q);
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectQuestionSQL($q);
 		// TODO
 		
 		$rows = $q->execute();
+		
 		if($rows == null)
 			return "{}";
-		return self::ExamSubject($q, $rows, $id);
+		return self::ExamSubjectJSON($rows);
+	}
+	
+	/**
+	 * ExamSubjectFullSQL
+	 * Prepares query to get the full exam(s) subject(s)  (i.e join exam sub parts) 
+	 */
+	public static function ExamSubjectFullSQL(&$q){
+		$q = SQLQuery::create()
+			->select("ExamSubject")
+			->join("ExamSubject","ExamSubjectPart",array("id" => "exam_subject"))
+			->join("ExamSubjectPart","ExamSubjectQuestion",array("id" => "exam_subject_part"))
+			->OrderBy("ExamSubject","id")
+			->OrderBy("ExamSubjectPart","index")
+			->OrderBy("ExamSubjectQuestion","index");
+			
+		self::ExamSubjectSQL($q);
+		self::ExamSubjectPartSQL($q);
+		self::ExamSubjectQuestionSQL($q);
 	}
 	
 	/**
@@ -281,6 +300,7 @@ class SelectionJSON{
 			->field($alias,"name","subject_name")
 			->field($alias,"max_score","subject_max_score");
 	}
+	
 	
 	/**
 	 * Prepares a query to retrieve the exam subject parts data from table ExamSubjectPart
@@ -315,18 +335,58 @@ class SelectionJSON{
 			->field($alias,"type_config","question_type_config");
 	}
 	
+	/* get an array of ExamSubject JSON object
+	 * @param $rows array of {subj_id,subj_name,..part_id,part_name,..question_id,..} records
+	 */
+	public static function ExamSubjectsJSON($rows){
+
+		$subject_id=-1;
+		$part_id=-1;
+		$subject_counter=-1;
+		$parts_counter=-1;
+		$question_counter=-1;
+		
+		foreach ($rows as $row){
+			/* new subject ?*/
+			if($row['subject_id']!=$subject_id){
+				$tab[++$subject_counter]['id']=$row['subject_id'];
+				$tab[$subject_counter]['name']=$row['subject_name'];
+				$tab[$subject_counter]['max_score']=$row['subject_max_score'];
+				$subject_id=$row['subject_id'];
+				$parts_counter=-1;
+			}
+			/* new part ? */
+			if($row['part_id']!=$part_id){
+				$tab[$subject_counter]['parts'][++$parts_counter]['id']=$row['part_id'];
+				$tab[$subject_counter]['parts'][$parts_counter]['index']=$row['part_index'];
+				$tab[$subject_counter]['parts'][$parts_counter]['name']=$row['part_name'];
+				$tab[$subject_counter]['parts'][$parts_counter]['max_score']=$row['part_max_score'];
+				$part_id=$row['part_id'];
+				$question_counter=-1;
+			}
+			/* add question */
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][++$question_counter]['id']=$row['question_id'];
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][$question_counter]['index']=$row['question_index'];
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][$question_counter]['max_score']=$row['question_max_score'];
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][$question_counter]['type']=$row['question_type'];
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][$question_counter]['type_config']=$row['question_type_config'];			
+		}
+		
+		return json_encode($tab);
+	}
+	
+	
 	/**
 	 * Get the exam subject JSON structure
-	 * @param SQLQuery $q
 	 * @param array $rows the rows corresponding to the exam subject
-	 * @param number $exam_id the id of the exam
 	 * @return string JSON exam subject structure
 	 * @no_name_check
 	 */
-	public static function ExamSubject($q, $rows, $exam_id){
+	public static function ExamSubjectJSON($rows){
 		$json = "";
+			
 		if(isset($rows[0]["subject_name"])){
-			$json.= "{id:".json_encode($exam_id);
+			$json.= "{id:".json_encode($rows[0]["subject_id"]);
 			$json.= ", name:".json_encode($rows[0]["subject_name"]);
 			$json.= ", max_score:".json_encode($rows[0]["subject_max_score"]);
 			$json.= ", parts:";
@@ -384,8 +444,8 @@ class SelectionJSON{
 								$json.= "id:".json_encode($d["question_id"]);
 								$json.= ", index:".json_encode($d["question_index"]);
 								$json.= ", max_score:".json_encode($d["question_max_score"]);
-								$json.= ", correct_answer:".json_encode($d["question_correct_answer"]);
-								$json.= ", choices:".json_encode($d["question_choices"]);
+								$json.= ", type:".json_encode($d["question_type"]);
+								$json.= ", type_config:".json_encode($d["question_type_config"]);
 							}
 						} else {
 							if(!$first_part){
@@ -393,8 +453,8 @@ class SelectionJSON{
 								$json.= "id:".json_encode($d["question_id"]);
 								$json.= ", index:".json_encode($d["question_index"]);
 								$json.= ", max_score:".json_encode($d["question_max_score"]);
-								$json.= ", correct_answer:".json_encode($d["question_correct_answer"]);
-								$json.= ", choices:".json_encode($d["question_choices"]);
+								$json.= ", type:".json_encode($d["question_type"]);
+								$json.= ", type_config:".json_encode($d["question_type_config"]);
 							} else {
 								$json.= "{";
 								$json.= "id:".json_encode($d["part_id"]);
@@ -408,8 +468,8 @@ class SelectionJSON{
 									$json.= "{id:".json_encode($d["question_id"]);
 									$json.= ", index:".json_encode($d["question_index"]);
 									$json.= ", max_score:".json_encode($d["question_max_score"]);
-									$json.= ", correct_answer:".json_encode($d["question_correct_answer"]);
-									$json.= ", choices:".json_encode($d["question_choices"]);
+									$json.= ", type:".json_encode($d["question_type"]);
+									$json.= ", type_config:".json_encode($d["question_type_config"]);
 								}
 							}
 							$first_part = false;
@@ -426,8 +486,9 @@ class SelectionJSON{
 			$json.= "}";
 		} else
 			$json = "{}";
-		return $json;
 	}
+
+	
 	
 	/**
 	 * Convert the exam data from the JSON exam subject structures to the database one
@@ -1462,4 +1523,5 @@ class SelectionJSON{
 		$data .= "}";
 		return $data;
 	}
+	
 }

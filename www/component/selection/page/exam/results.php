@@ -19,7 +19,7 @@ class page_exam_results extends SelectionPage {
 		$this->onload("createDataList(".$this->component->getCampaignId().");");
 	?>
 	
-			<!--TODO : sort this css in a file more neatly -->
+			<!--TODO : css cleanup (= merge it with the right css file) -->
 		<style>
 			table.grid>tbody>tr>td {
 				text-align: center;
@@ -73,6 +73,7 @@ class page_exam_results extends SelectionPage {
 					->field("ExamCenterRoom","id","room_id")
 					->countOneField("Applicant","applicant_id","applicants")
 					->join("ExamCenter","ExamSession",array("id"=>"exam_center"))
+					->whereNotNull("ExamSession","event")
 					->join("ExamSession","Applicant",array("event"=>"exam_session"))
 					->field("ExamSession","event","session_id")
 					->join("Applicant","ExamCenterRoom",array("exam_center_room"=>"id"));
@@ -80,7 +81,6 @@ class page_exam_results extends SelectionPage {
 			$exam_sessions=$q->groupBy("ExamSession","event")->groupBy("ExamCenterRoom","id")->execute();
 
 		?>
-		
 			<table class="grid" id="table_exam_results" style="width: 100%">
 				<thead>
 					<tr>

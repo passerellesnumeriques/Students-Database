@@ -27,6 +27,5 @@ class service_applicant_get_applicants extends Service {
 		$rows = $q->execute();
 		echo SelectionApplicantJSON::ApplicantsJSON($rows);
 	}
-	
 }
 ?>

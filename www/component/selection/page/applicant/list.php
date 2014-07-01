@@ -129,6 +129,5 @@ class page_applicant_list extends SelectionPage {
 		</script>
 		<?php 
 	}
-	
 }
 ?>

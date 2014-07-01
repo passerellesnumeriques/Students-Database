@@ -63,6 +63,7 @@ field_decimal.prototype._create = function(data) {
 		input.onblur = function(ev) {
 			t.setData(t._getEditedData());
 		};
+		listenEvent(input, 'focus', function() { t.onfocus.fire(); });
 		var _fw=false;
 		require("input_utils.js",function(){inputAutoresize(input);if (_fw) input.setMinimumSize(-1); });
 		this.element.appendChild(input);
@@ -90,7 +91,7 @@ field_decimal.prototype._create = function(data) {
 		this.fillWidth = function() {
 			_fw = true;
 			this.element.style.width = "100%";
-			if (typeof input.setMinimumSize) input.setMinimumSize(-1);
+			if (typeof input.setMinimumSize != 'undefined') input.setMinimumSize(-1);
 		};
 	} else {
 		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));

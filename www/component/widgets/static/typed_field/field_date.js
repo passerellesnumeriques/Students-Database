@@ -78,6 +78,9 @@ field_date.prototype._create = function(data) {
 			t.select.select_day.style.verticalAlign = "top";
 			t.select.select_month.style.verticalAlign = "top";
 			t.select.select_year.style.verticalAlign = "top";
+			listenEvent(t.select.select_day, 'focus', function() { t.onfocus.fire(); });
+			listenEvent(t.select.select_month, 'focus', function() { t.onfocus.fire(); });
+			listenEvent(t.select.select_year, 'focus', function() { t.onfocus.fire(); });
 			t.select.onchange = function() {
 				t._datachange();
 			};
