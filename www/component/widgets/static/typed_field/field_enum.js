@@ -36,6 +36,7 @@ field_enum.prototype._create = function(data) {
 		select.style.padding = "0px";
 		select.onchange = function() { t._datachange(); };
 		select.onblur = function() { t._datachange(); };
+		listenEvent(select, 'focus', function() { t.onfocus.fire(); });
 		this.element.appendChild(select);
 		this._getEditedData = function() {
 			if (select.selectedIndex < 0) return null;
@@ -58,6 +59,10 @@ field_enum.prototype._create = function(data) {
 			if (!this.config.can_be_empty && select.selectedIndex == 0)
 				err = "Please select a value";
 			this.signal_error(err);
+		};
+		this.fillWidth = function() {
+			this.element.style.width = "100%";
+			select.style.width = "100%";
 		};
 	} else {
 		this.get_text_from_data = function(data) {

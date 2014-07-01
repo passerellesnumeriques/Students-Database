@@ -228,6 +228,7 @@ function manage_exam_subject_part_questions(part, container, can_edit, can_remov
 					td1.innerHTML += part.questions[t.ordered[i]].max_score + "pt(s)";
 				}
 				tr.appendChild(td1);
+				// TODO
 				if(display_correct_answer)
 					t._addOptionalData("correct_answer", i, tr_head, tr);
 				if(display_choices)

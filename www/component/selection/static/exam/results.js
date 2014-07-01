@@ -1,4 +1,4 @@
-/* global variables containing data about selected items */
+/* global variable containing data about selected items */
 var selected={};
 
 /*
@@ -14,7 +14,6 @@ function createDataList(campaign_id)
                            "Personal Information.Last Name",
                            "Personal Information.Gender",
                            "Personal Information.Birth Date"
-                           
                    ],
                    [],
                    -1,
@@ -64,20 +63,21 @@ $(document).ready(function(){
    
    /* Edit Notes button has been clicked */
    $("#edit_notes").click(function(){
-      
+     
    /*  Check if an exam session row is selected */ 
      if(selected["session_id"] != null)
       {
-      window.top.popup_frame(
-                                 "/static/selection/exam/results_edit.jpg",
-                                 "Exam Session Results",
-                                 "/dynamic/selection/page/exam/results_edit",
-                                 selected,
-                                 95, 95,
-                                 function(frame, pop) {}
-                                   );   
+         
+            /* open a new window pop up for results edition */
+            window.top.popup_frame(
+                              "/static/selection/exam/results_edit.jpg",
+                              "Exam Session Results",
+                              "/dynamic/selection/page/exam/results_edit",
+                              selected,
+                              95, 95,
+                              function(frame, pop) {}
+                                );
       }
-      
    });
    
 /*
@@ -98,8 +98,6 @@ function updateExamSessionInfo() {
                 $("#session_info_locationDiv").html(ec_addr_Div.element);
          });
       });
-      
-      
 }
 
 function updateApplicantsList() {

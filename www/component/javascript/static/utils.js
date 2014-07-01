@@ -577,4 +577,3 @@ function setCookie(cname,cvalue,expires_minutes,url) {
 	var expires = "expires="+d.toGMTString();
 	document.cookie = cname + "=" + cvalue + "; " + expires + "; Path="+url;
 }
-

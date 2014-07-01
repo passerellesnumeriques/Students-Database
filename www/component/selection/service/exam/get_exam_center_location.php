@@ -28,8 +28,6 @@ class service_exam_get_exam_center_location extends Service {
 		echo $ec_partner_host;
 		
 	}
-					
-	
 
 }
 ?>

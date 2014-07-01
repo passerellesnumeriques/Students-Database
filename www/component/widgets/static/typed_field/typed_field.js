@@ -14,6 +14,7 @@ function typed_field(data,editable,config){
 	this.onchange = new Custom_Event();
 	this.ondatachanged = new Custom_Event();
 	this.ondataunchanged = new Custom_Event();
+	this.onfocus = new Custom_Event();
 	this._data = data;
 	this._in_change_event = false;
 	this._datachange = function(force) {

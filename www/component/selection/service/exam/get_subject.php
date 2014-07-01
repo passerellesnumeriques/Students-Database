@@ -11,6 +11,7 @@ class service_exam_get_subject extends Service {
 		if(isset($input['id'])){
 			try {
 				$subject = SelectionJSON::ExamSubjectFromID($input["id"]);
+				
 			} catch (Exception $e){
 				PNApplication::error($e);
 			}

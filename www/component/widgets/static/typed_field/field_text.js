@@ -47,7 +47,7 @@ field_text.prototype._create = function(data) {
 		input.onkeyup = function() { setTimeout(function() { t._datachange(); },1); };
 		input.onblur = function() { t._datachange(); };
 		input.onchange = function() { t._datachange(); };
-
+		listenEvent(input, 'focus', function() { t.onfocus.fire(); });
 		this.element.appendChild(input);
 		if (this.config && this.config.fixed_size)
 			input.size = this.config.fixed_size;
