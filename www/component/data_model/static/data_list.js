@@ -511,10 +511,25 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		printContent(t.header.nextSibling);
 	};
 	
+	t.orderBy = function(field_category, field_name, field_sub_index, asc) {
+		for (var i = 0; i < t.grid.columns.length; ++i) {
+			if (t.grid.columns[i].id == field_category+'.'+field_name+'.'+field_sub_index) {
+				t.grid.columns[i].sort_order = asc ? 1 : 2;
+				t.grid.columns[i]._refresh_title();
+				t._sort_column = t.grid.columns[i];
+				t._sort_order = asc ? 1 : 2;
+				if (t._data_loaded) t._loadData(); // reload to apply the sorting
+				return;
+			}
+		}
+		// no corresponding column: TODO support it ?
+	};
+	
 	/* Private properties */
 	t._root_table = root_table;
 	t._sub_model = sub_model;
 	t._onready = onready;
+	t._data_loaded = false;
 	/** {Array} List of available fields retrieved through the service get_available_fields */
 	t._available_fields = null;
 	/** Page number */
@@ -898,6 +913,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 
 	/** (Re)load the data from the server */
 	t._loadData = function(onready) {
+		t._data_loaded = true;
 		t.startLoading();
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i) {

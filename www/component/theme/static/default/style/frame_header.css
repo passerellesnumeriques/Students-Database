@@ -1,3 +1,7 @@
+.frame_header {
+	white-space: nowrap;
+	overflow: hidden;
+}
 .frame_header .title {
     font-size: 12pt;
     display: inline-block;

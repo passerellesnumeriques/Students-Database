@@ -28,7 +28,7 @@ class StudentDataScreen extends datamodel\GenericDataScreen {
 			// => exclude button
 			$batch = PNApplication::$instance->curriculum->getBatch($values->getColumnValue("Student","batch"));
 			if ($values->getColumnValue("Student","exclusion_date") == null) {
-				echo "<div class='button' onclick='exclude();'><img src='".theme::make_icon("/static/students/student_16.png", theme::$icons_10["forbidden"])."'/> Exclude</div>";
+				echo "<button class='action important' onclick='exclude();'><img src='".theme::make_icon("/static/students/student_16.png", theme::$icons_10["forbidden"])."'/> Exclude</button>";
 				?>
 				<script type='text/javascript'>
 				function exclude() {
@@ -62,7 +62,7 @@ class StudentDataScreen extends datamodel\GenericDataScreen {
 				</script>
 				<?php 
 			} else {
-				echo "<div class='button' onclick='unexclude();'><img src='".theme::make_icon("/static/students/student_16.png", theme::$icons_10["add"])."'/> Back after exclusion</div>";
+				echo "<button class='action important' onclick='unexclude();'><img src='".theme::make_icon("/static/students/student_16.png", theme::$icons_10["add"])."'/> Back after exclusion</button>";
 				?>
 				<script type='text/javascript'>
 				function unexclude() {
