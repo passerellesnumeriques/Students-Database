@@ -40,7 +40,8 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 					var data = tool.getPictures()[0].getResultData();
 					service.json("people", "save_picture", {id:<?php echo $people_id;?>,picture:data}, function(res) {
 						if (res) {
-							picture.reload();
+							window.top.datamodel.cellChanged("People","picture",<?php echo $people_id;?>,-1);
+							//picture.reload();
 							tool.popup.close();
 						} else
 							tool.popup.unfreeze();
