@@ -72,7 +72,7 @@ $this->requireJavascript("fill_height_layout.js");
 #application_footer {
 	height: 16px;
 	text-align: center;
-	font-size: 9pt;
+	font-size: 8pt;
 	font-family: Verdana;
 	color: white;
 }
@@ -266,7 +266,7 @@ $this->requireJavascript("fill_height_layout.js");
 		</div>
 	</div>
 	<div id="application_footer">
-			Copyright (c) 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
+			© 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
 	</div>
 </div>
 <script type='text/javascript'>
