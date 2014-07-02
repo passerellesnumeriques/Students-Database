@@ -151,8 +151,8 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		t.more(function(has_more) {
 			while (t._more_container.childNodes.length > 0) t._more_container.removeChild(t._more_container.childNodes[0]);
 			if (has_more) {
-				var button = document.createElement("SPAN");
-				button.className = "button";
+				var button = document.createElement("BUTTON");
+				button.className = "action";
 				button.appendChild(document.createTextNode("Show More"));
 				t._more_container.appendChild(button);
 				button.onclick = function() {
