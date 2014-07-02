@@ -522,7 +522,7 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 					t.events.push(event);
 					t.on_event_added.fire(event);
 				} else if (event.uid && res) {
-					for (var i = 0; i < cal.events.length; ++i)
+					for (var i = 0; i < t.events.length; ++i)
 						if (t.events[i].uid == event.uid) {
 							t.events.splice(i,1,event);
 							t.on_event_updated.fire(event);

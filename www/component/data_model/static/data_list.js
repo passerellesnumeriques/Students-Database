@@ -852,9 +852,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t._cellUnchanged(field);
 		};
 		if (f.field.editable) {
-			col.addAction(new GridColumnAction(theme.icons_16.edit,function(ev,action,col){
+			col.addAction(new GridColumnAction(theme.icons_10.edit,function(ev,action,col){
 				var edit_col = function() {
-					action.icon = col.editable ? theme.icons_16.edit : theme.icons_16.no_edit;
+					action.icon = col.editable ? theme.icons_10.edit : theme.icons_10.no_edit;
 					action.tooltip = col.editable ? "Edit data on this column" : "Cancel modifications and stop editing this column";
 					col.toggleEditable();
 					layout.invalidate(container);
