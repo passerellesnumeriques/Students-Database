@@ -879,7 +879,7 @@ function grid(element) {
 	t.startLoading = function() {
 		if (t._loading_hidder) return;
 		if (!t.table) return;
-		t._loading_hidder = new LoadingHeader(t.table);
+		t._loading_hidder = new LoadingHidder(t.table);
 		t._loading_hidder.setContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading data...");
 	};
 	t.endLoading = function() {
