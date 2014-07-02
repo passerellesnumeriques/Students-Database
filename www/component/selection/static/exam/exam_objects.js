@@ -45,7 +45,7 @@ function ExamSubjectQuestion(id, index, max_score, type, type_config){
 * @param {ExamSubjectQuestion} question
 * @returns {String} field type of grid widget
 */
-ExamSubjectQuestion.prototype.gridFieldType=function(question)
+function questionGridFieldType(question)
 {
 	var field_type;
     
@@ -71,36 +71,36 @@ ExamSubjectQuestion.prototype.gridFieldType=function(question)
    * @param {ExamSubjectQuestion} question 
    * @returns {Object} field args of grid widget
   */
-ExamSubjectQuestion.prototype.gridFieldArgs=function(question){
-switch (question.type){
- case 'mcq_single':
-    var field_args={
-     "possible_values":[],
-      "can_be_empty":false};            
-    //type_config contains the number of possible choices
-     for(j=0;j<question.type_config;++j)
-    {
-       var car=String.fromCharCode(j+65);// 65 is for letter 'A'
-       field_args.possible_values.push(car);
-    }
-    break;
- case 'mcq_multi':
-    //TODO
-    break;
- case 'number':
-    /* assuming field type_config is formatted as "integer_digits,decimal_digits"*/
-    var str=question.type_config.split(",");
-    var field_args={
-       can_be_null:true,
-       integer_digits:parseInt(str[0]),
-       decimal_digits:parseInt(str[1]),
-       };
-       break;
-
- case 'text':
-    //TODO
-    break;
-}
-
-return field_args;
+function questionGridFieldArgs(question){
+	switch (question.type){
+	 case 'mcq_single':
+	    var field_args={
+	     "possible_values":[],
+	      "can_be_empty":false};            
+	    //type_config contains the number of possible choices
+	     for(j=0;j<question.type_config;++j)
+	    {
+	       var car=String.fromCharCode(j+65);// 65 is for letter 'A'
+	       field_args.possible_values.push(car);
+	    }
+	    break;
+	 case 'mcq_multi':
+	    //TODO
+	    break;
+	 case 'number':
+	    /* assuming field type_config is formatted as "integer_digits,decimal_digits"*/
+	    var str=question.type_config.split(",");
+	    var field_args={
+	       can_be_null:true,
+	       integer_digits:parseInt(str[0]),
+	       decimal_digits:parseInt(str[1]),
+	       };
+	       break;
+	
+	 case 'text':
+	    //TODO
+	    break;
+	}
+	
+	return field_args;
 }

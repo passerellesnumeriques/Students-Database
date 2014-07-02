@@ -8,7 +8,7 @@ class page_exam_results_edit extends SelectionPage {
 			$input = json_decode($_POST["input"], true);
 		}
 		else
-			return; // TODO : error handling ?
+			return; 
 		
 		theme::css($this, "section.css");
 		theme::css($this, "grid.css");
@@ -35,7 +35,7 @@ class page_exam_results_edit extends SelectionPage {
 	
 		<!-- main structure of the results edit page -->
 		<div id='main_container' style="width:100%;height:100%">
-			<div id="header_results">
+			<div id="header_results" style="height:200px">
 			      <div id="exam_session_info" title='Exam session' icon="/static/theme/default/icons_16/info.png" collapsable='true' css="soft" style="display:inline-block;margin:10px 0 0 10px;vertical-align: top;">
 				<?php $this->createExamSessionInfoBox($input); ?>
 			      </div>
@@ -43,9 +43,9 @@ class page_exam_results_edit extends SelectionPage {
 				<?php $this->createApplicantInfoBox($input); ?>
 			      </div>
 			</div>
-			<div layout="fill" style="overflow:auto;">
-				<div id="subj_results" style="margin:10px;display: none;"></div>
-			</div>
+			<!--<div layout="fill" style="overflow:auto;">-->
+				<div id="subj_results" style="margin:10px;display:none;"></div>
+			<!--</div>-->
 			<div id="footer_results" style="margin-right: 10px;">
 			</div>
 		</div>
@@ -53,15 +53,17 @@ class page_exam_results_edit extends SelectionPage {
 	}
 
 	
+	
+	
 	/*
 	 * Generating html elements of Applicant Info Box
 	 */
 	private function createApplicantInfoBox(&$input)
 	{	
 		/* fields from people that we want to display */
-		$fields=array("first_name","middle_name","last_name","sex","birth");
+		$fields=array("first_name","middle_name","khmer_first_name","khmer_last_name","last_name","sex","birthdate");
 		
-		?><img id='applicant_photo' style='margin:5px;width:50px;height:50px;display:none'/>
+		?><img id='applicant_photo' style='margin:5px;width:50px;height:50px;display:none;float:left;'/>
 		<table id='applicant_table' class="align_left" style='display: none'>
 			<?php foreach ($fields as $field) {?>
 			<tr>
@@ -73,7 +75,7 @@ class page_exam_results_edit extends SelectionPage {
 	}
 	
 	/*
-	 *Generating html elements of Exam Session Info Box
+	 * Generating html elements of Exam Session Info Box
 	 */
 	private function createExamSessionInfoBox(&$input)
 	{

@@ -5,10 +5,10 @@ if (typeof require != 'undefined')
 /* results_grid : class to manage the exam subject results
  * @param {String} subject_name : name of the exam subject
  * @param {array} applicants : array of applicants objects
- * @param {function} onready : the function to call once the results_grid created
+ * @param {String} grid_height : the height of the inside grid
 */
 
-function results_grid(subject,applicants) {
+function results_grid(subject,applicants,grid_height) {
    var t=this;
    
     /* html elements */   
@@ -20,7 +20,7 @@ function results_grid(subject,applicants) {
       
    t.subject=subject;
    t.applicants = applicants;
-   t.grid_res=new grid (t.elt.grid); // creating grid 
+   t.grid_res=new grid (t.elt.grid); // creating grid   
    t.index_applicant=-1; // index of selected applicant
  
 
@@ -72,7 +72,8 @@ function results_grid(subject,applicants) {
       /* Appending html elements into main container */
       t.elt.container.appendChild(t.elt.grid);
       t.elt.container.appendChild(t.elt.footer);
-            
+         
+         
     /* creating applicant ID column */  
       t._createApplicantColumn();
       
@@ -84,6 +85,29 @@ function results_grid(subject,applicants) {
       
       /* creating footer toolbar */
       t._createFooterToolbar();
+      
+      /* Some CSS :
+      making the rows scrollable but not the grid header */   
+         
+      $(t.elt.container).css({
+      "position":"relative",
+      "margin":"0 auto 3em auto",
+      "padding-top":"2.5em",
+      "box-shadow":" 10px 10px 5px #888888"
+    });
+     
+      $(t.elt.grid).css({
+      "height":grid_height,
+      "overflow":"auto",
+    });
+      
+      $(t.elt.grid).find("thead").css({
+      "position":"absolute",
+      "top":"0",
+       "display":"inherit",
+      "width":"100%",
+    });
+      
       }
    
    /* creating applicant ID column */
@@ -104,8 +128,8 @@ function results_grid(subject,applicants) {
             var question=part.questions[j];
             
             /* convert question field for grid widget */
-            var grid_field=ExamSubjectQuestion.prototype.gridFieldType(question);
-            var grid_args=ExamSubjectQuestion.prototype.gridFieldArgs(question);
+            var grid_field=questionGridFieldType(question);
+            var grid_args=questionGridFieldArgs(question);
                        
             /* create the new question Column */
             sub_cols.push(new GridColumn('part'+part.index+'q'+question.index,'Question '+question.index,null,null,grid_field,true,null,null,grid_args,'#'));
@@ -137,12 +161,14 @@ function results_grid(subject,applicants) {
      foot_content.button_valid.innerHTML='Validate';
      foot_content.button_valid.className='action';
      
-     /* Some CSS (jQuery notation for better readibility) */
+     /* Some CSS (jQuery notation for better readability) */
+     
       $(t.elt.footer).css({
          "height":"30px",
          "width":"100%",
          "display":"table",
-         "background-color":"lightgrey"
+         "background-color":"rgb(229,190,212)",
+         "border-radius":"3px",
          });
 
      $(foot_content.button_wrapper).css({

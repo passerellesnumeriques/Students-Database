@@ -9,24 +9,31 @@ $(document).ready(function(){
    var session_id=document.getElementById("session_id").textContent.trim();
    var room_id=document.getElementById("room_id").textContent.trim();
 
-   /* creating tab element */
-   var subj_tabs= new tabs('subj_results',false);
+   
+    //Show a loader gif while waiting for results_grids creation
+   var loader_img = $("<img>", {id: "loaderResultsGridImg", src: "/static/selection/exam/loader_results.gif"});
+   loader_img.css({
+      "display":"block",
+      "margin":"0 auto"});
+   $("#subj_results").html(loader_img);
    
    service.json("selection","applicant/get_applicants",{exam_session:session_id,exam_center_room:room_id},function(applicants){
          /* creating one tab for each exam subject */
       //service.json("selection","exam/get_all_subject_names",{},function(names){
       service.json("selection","exam/get_subjects",{},function(subjects){
          
-         ////DEBUG
-         //console.log(subjects);
+         /* Remove Loader picture */
+         loader_img.remove();
+         
+         /* creating tab element */
+         var subj_tabs= new tabs('subj_results',false);
          
          var grids=[];
          var g;
          for (var j=0; j<subjects.length; ++j){
             /* create the results_grid  */
-            g = new results_grid(subjects[j],applicants);
+            g = new results_grid(subjects[j],applicants,'250px');
                
-            //TODO : add a loader gif during grid creation 
             
             /* update ApplicantInfoBox on new row selection event */
             g.onRowApplicantSelection(updateApplicantInfoBox);
@@ -36,9 +43,6 @@ $(document).ready(function(){
             grids.push(g);
          }
          
-      /* Compute height for subj_tabs container */
-     //     TODO : maybe a more direct way to set the height ? */
-        //setTabHeight(g);
         $('#subj_results').show();
          
          /* when a new tab selected : updateApplicantInfoBox */
@@ -57,6 +61,9 @@ $(document).ready(function(){
  */
 function updateApplicantInfoBox(people)
 {
+   
+   //DEBUG
+   console.log(people);
    if (!people) 
       return;
    
@@ -64,7 +71,7 @@ function updateApplicantInfoBox(people)
    $("#applicant_photo").attr("src","/dynamic/people/service/picture?people="+people.people_id);
    
   /* The people fields we want to display */
-   var fields = {first_name:"First Name",middle_name:"Middle Name",last_name:"Last Name",sex:"Gender",birth:"Birth"}; 
+   var fields = {first_name:"First Name",middle_name:"Middle Name",khmer_first_name:"Khmer first name",khmer_last_name:"Khmer last name",last_name:"Last Name",sex:"Gender",birthdate:"Birth"}; 
  
    var key;
    for (key in fields) {
@@ -81,25 +88,4 @@ function updateApplicantInfoBox(people)
      $("#applicant_photo").show();
      $("#applicant_table").show();
         
-}
-
-/* Compute height for subj_tabs container
- * @param result_grid
-*/
-//     TODO : maybe a more direct way to set the height ? */
-function setTabHeight(result_grid)
-{
-           
-   //var h;
-   //h=$('#subj_results').children().eq(0).outerHeight(); // tab widget height
-   //h+=$('table.grid').outerHeight(); // table grid height
-   ////// border (of div containing table grid)
-   //h+=parseInt($("#subj_results").children().eq(1).css('border-width'))*2;
-   ////footer results_grid toolbar
-   //h+=$(result_grid.elt.footer).outerHeight();
-   //
-   
-   ///* setting height */
-   //$('#subj_results').css('height',h+'px');
-   $('#subj_results').css('height','200px');
 }
