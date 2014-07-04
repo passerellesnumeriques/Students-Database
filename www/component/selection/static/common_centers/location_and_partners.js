@@ -259,6 +259,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 									popup.unfreeze();
 								});
 							});
+						} else {
+							t._refreshPartners();
+							popup.unfreeze();
 						}
 					});
 				});

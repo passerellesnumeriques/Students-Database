@@ -751,6 +751,11 @@ function grid(element) {
 			}
 			t._selection_changed();
 		};
+		td.onclick = function(ev) {
+			cb.checked = cb.checked ? "" : "checked";
+			stopEventPropagation(ev);
+			return false;
+		};
 		td.appendChild(cb);
 		return td;
 	};
