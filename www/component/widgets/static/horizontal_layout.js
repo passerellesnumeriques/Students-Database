@@ -34,7 +34,7 @@ function horizontal_layout(container, keep_height, valign) {
 			e.style.marginTop = "";
 			e.style.verticalAlign = "top";
 			if (layout == 'fill')
-				e.style.width = "";
+				e.style.width = "1px";
 		}
 		// get size of container
 		var size = getComputedStyleSizes(t.container);

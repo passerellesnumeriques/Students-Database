@@ -50,7 +50,7 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 				tool.useUpload();
 				tool.useFaceDetection();
 				tool.addTool("crop",function() {
-					tool.setToolValue("crop", null, {aspect_ratio:0.75}, true);
+					//tool.setToolValue("crop", null, {aspect_ratio:0.75}, true);
 				});
 				tool.addTool("scale", function() {
 					tool.setToolValue("scale", null, {max_width:300,max_height:300}, false);

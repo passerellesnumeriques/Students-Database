@@ -44,6 +44,37 @@ class SelectionExamJSON {
 		return $data;
 	}
 	
+	/**
+	 * Prepares a query to retrieve the exam subject data from table ExamSubject
+	 * @param SQLQuery $q
+	 * @no_name_check
+	 */
+	public static function ExamSubjectSQL(&$q){
+		$alias = $q->getTableAlias("ExamSubject");
+		if(!$alias) $alias = "ExamSubject";
+		$q	->field($alias, "id","subject_id")
+			->field($alias,"name","subject_name")
+			->field($alias,"max_score","subject_max_score");
+	}
+	
+	public static function ExamSubjectJSON($row) {
+		$s = "{";
+		$s .= "id:".$row["subject_id"];
+		$s .= ",name:".json_encode($row["subject_name"]);
+		$s .= ",max_score:".json_encode($row["subject_max_score"]);
+		$s .= "}";
+		return $s;
+	}
+	public static function ExamSubjectsJSON($rows) {
+		$s = "[";
+		$first = true;
+		foreach ($rows as $row) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= self::ExamSubjectJSON($row);
+		}
+		$s .= "]";
+		return $s;
+	}
 	
 }
 ?>

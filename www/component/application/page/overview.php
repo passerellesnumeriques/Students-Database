@@ -55,9 +55,19 @@ class page_overview extends Page {
 			<div>Consult the curriculum, students list by batch and class, grades...</div>
 		</a>
 		<a class="section_box">
-			<div><img src='/static/students/student_32.png'/></div>
+			<div><img src='/static/education/education_32.png'/></div>
 			<div>Education</div>
 			<div>Students information and life in PN: discipline, health, finance, housing...</div>
+		</a>
+		<a class="section_box">
+			<div><img src='/static/internship/internship_32.png'/></div>
+			<div>Internship</div>
+			<div>Companies information, internships follow-up...</div>
+		</a>
+		<a class="section_box">
+			<div><img src='/static/students/student_32.png'/></div>
+			<div>Alumni</div>
+			<div>Alumni current situation and contacts</div>
 		</a>
 		<a class="section_box" href='/dynamic/administration/page/dashboard'>
 			<div><img src='/static/administration/admin_32.png'/></div>

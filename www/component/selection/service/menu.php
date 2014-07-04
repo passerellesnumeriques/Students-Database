@@ -52,9 +52,16 @@ foreach ($campaigns as $c) {
 	<img src='/static/selection/exam/exam_white.png'/>
 	Written Exams
 </a>
-	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/main_page'>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/subjects'>
 		<img src='/static/selection/exam/subject_white.png'/>
-		Subjects and rules
+		Subjects
+	</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/eligibility_rules'>
+		<img src='/static/selection/exam/rules_16_white.png'/>
+		Eligibility rules
+	</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/main_page'>
+		<i>Old version screen</i>
 	</a>
 	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/center_main_page'>
 		<img src='/static/selection/exam/center_white.png'/>

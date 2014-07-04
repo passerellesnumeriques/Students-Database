@@ -125,6 +125,10 @@ Element.prototype.removeAllChildren = function() {
 	while (this.childNodes.length > 0) this.removeChild(this.childNodes[0]);
 };
 
+function urldecode(s) {
+	return decodeURIComponent(s).replace(/\+/g, " ");
+}
+
 /** Represent an URL
  * @constructor
  * @param {String} s string containing the URL to be parsed
@@ -175,16 +179,16 @@ function URL(s) {
 			s = s.substr(i+1);
 			i = p.indexOf('=');
 			if (i > 0)
-				this.params[decodeURIComponent(p.substr(0,i))] = decodeURIComponent(p.substr(i+1));
+				this.params[urldecode(p.substr(0,i))] = urldecode(p.substr(i+1));
 			else
-				this.params[decodeURIComponent(p)] = "";
+				this.params[urldecode(p)] = "";
 		}
 		if (s.length > 0) {
 			i = s.indexOf('=');
 			if (i > 0)
-				this.params[decodeURIComponent(s.substr(0,i))] = decodeURIComponent(s.substr(i+1));
+				this.params[urldecode(s.substr(0,i))] = urldecode(s.substr(i+1));
 			else
-				this.params[decodeURIComponent(s)] = "";
+				this.params[urldecode(s)] = "";
 		}
 	} else
 		this.path = s;
