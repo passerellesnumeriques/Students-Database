@@ -75,8 +75,6 @@ class page_curriculum extends Page {
 			$this->requireJavascript("animation.js");
 		}
 
-		$this->addJavascript("/static/widgets/vertical_layout.js");
-		$this->onload("new vertical_layout('top_container');");
 		?>
 		<style type='text/css'>
 		#curriculum_table {
@@ -120,8 +118,8 @@ class page_curriculum extends Page {
 		}
 		<?php } ?>
 		</style>
-		<div id="top_container" style="width:100%;height:100%;background-color:white">
-			<div class="page_title">
+		<div style="width:100%;height:100%;background-color:white;display:flex;flex-direction:column;">
+			<div class="page_title" style="flex:none">
 				<img src='/static/curriculum/curriculum_32.png'/>
 				Curriculum for Batch <span id='batch_name'><?php echo htmlentities($batch_info["name"]);?></span><?php if ($period_id <> null) echo ", <span id='period_name'>".$single_period["name"]."</span>";?>
 				<?php if ($can_edit) {
@@ -140,7 +138,7 @@ class page_curriculum extends Page {
 				}
 				?>
 			</div>
-			<div id="page_container" style="overflow:auto" layout="fill">
+			<div id="page_container" style="overflow:auto;flex:1 1 auto;">
 				<table id='curriculum_table'><tbody>
 				<?php 
 				$script_init = "";
@@ -225,7 +223,7 @@ class page_curriculum extends Page {
 				</tbody></table>
 			</div>
 			<?php if ($can_edit) { ?>
-			<div class="page_footer">
+			<div class="page_footer" style="flex:none;">
 				<button class='action' onclick='editBatch()'>
 					<img src='/static/curriculum/batch_16.png'/>
 					Edit batch: periods and specializations

@@ -13,22 +13,20 @@ class page_exam_center_main_page extends SelectionPage {
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("initExamCentersList();");
-		$this->requireJavascript("horizontal_layout.js");
-		$this->onload("new horizontal_layout('horizontal_split',true);");
 		$this->requireJavascript("section.js");
 		$this->onload("sectionFromHTML('exam_status_section');");
 		$this->onload("loadExamCenterStatus();");
 		
 		$can_create = PNApplication::$instance->user_management->has_right("manage_exam_center",true);
 		?>
-		<div id='horizontal_split'>
-			<div style ="display:inline-block;padding:5px;">
+		<div style="display:flex;flex-direction:row">
+			<div style ="display:inline-block;padding:5px;flex:none">
 				<div id='exam_status_section' title='Status' collapsable='false' css='soft' style='display:inline-block;'>
 					<div id='exam_status' class='selection_status'></div>
 				</div>
 			</div>
 			
-			<div style="padding:5px;display:inline-block" layout='fill'>
+			<div style="padding:5px;display:inline-block;flex:1 1 auto;">
 				<div id='exam_centers_list' class="section soft">
 				</div>
 			</div>

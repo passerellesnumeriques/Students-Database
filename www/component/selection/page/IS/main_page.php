@@ -9,17 +9,15 @@ class page_IS_main_page extends SelectionPage {
 		$can_create_session = PNApplication::$instance->user_management->has_right("manage_information_session",true);
 		$this->requireJavascript("section.js");
 		$this->onload("sectionFromHTML('status_section');");
-		$this->requireJavascript("horizontal_layout.js");
-		$this->onload("new horizontal_layout('horizontal_split',true);");
 		$this->onload("loadISStatus();");
 		?>
-		<div id='horizontal_split'>
-			<div style="padding:5px;padding-right:0px;display:inline-block">
+		<div style="display:flex;flex-direction:row;">
+			<div style="padding:5px;padding-right:0px;display:inline-block;flex:none;">
 				<div id='status_section' title='Status' collapsable='false' css='soft' style='display:inline-block;'>
 					<div id='is_status' class='selection_status'></div>
 				</div>
 			</div>
-			<div style="padding: 5px;display:inline-block" layout='fill'>
+			<div style="padding: 5px;display:inline-block;flex:1 1 auto;">
 				<div id='is_list' class="section soft">
 				</div>
 			</div>

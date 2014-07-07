@@ -3,8 +3,6 @@ require_once("/../SelectionPage.inc");
 class page_exam_eligibility_rules extends SelectionPage {
 	public function getRequiredRights() { return array("see_exam_subject"); }
 	public function executeSelectionPage(){
-		$this->requireJavascript("vertical_layout.js");
-		$this->onload("new vertical_layout('rules_page_container');");
 		$this->requireJavascript("section.js");
 		
 		require_once("component/selection/SelectionExamJSON.inc");
@@ -29,11 +27,11 @@ class page_exam_eligibility_rules extends SelectionPage {
 		}
 		
 		?>
-		<div id='rules_page_container' style='width:100%;height:100%;overflow:hidden'>
-			<div class='page_title'>
+		<div style='width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column;'>
+			<div class='page_title' style='flex:none'>
 				Eligibility rules for written exams
 			</div>
-			<div layout="fill" id='rules_page_content' style="padding:10px;overflow:hidden">
+			<div id='rules_page_content' style="padding:10px;overflow:hidden;flex:1 1 auto">
 				<div 
 					id='subjects_section'
 					title='Subjects'

@@ -76,7 +76,8 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.field_type = field_type;
 	this._loaded = false;
 	this.onloaded = new Custom_Event();
-	require([["typed_field.js",field_type+".js"]], function() { this._loaded = true; this.onloaded.fire(); });
+	var t=this;
+	require([["typed_field.js",field_type+".js"]], function() { t._loaded = true; t.onloaded.fire(); });
 	this.editable = editable;
 	this.onchanged = onchanged;
 	this.onunchanged = onunchanged;
@@ -964,7 +965,7 @@ function grid(element) {
 			parent.field = field;
 			if (ondone) ondone(field);
 			t._cells_loading--;
-			t._check_loading();
+			t._check_loaded();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
 		});
 	},

@@ -1,3 +1,7 @@
+.data_list {
+	display: flex;
+	flex-direction: column;
+}
 .data_list_title {
 	background-color: rgba(255,255,255,0.3);
 	border-right: 1px solid rgba(255,255,255,0.7);
@@ -7,6 +11,7 @@
 	margin-right: 5px !important;
 	margin-left: 0px !important;
 	padding-top: 3px;
+	flex: none;
 }
 .data_list_title>img {
 	vertical-align: top;
@@ -20,23 +25,44 @@
 
 .data_list>.header {
 	height: 30px;
+	flex: none;
 	background: linear-gradient(to bottom, #ebf1f6 0%, #d6e6ff 100%);
 	border-bottom: 1px solid #808080 !important;
+	display: flex;
+	flex-direction: row;
 }
 .data_list>.header>.header_left {
+	flex: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
 }
 .data_list>.header>.header_center {
 	border-left: 1px solid #808080;
+	flex: 1 1 auto;
 }
 .data_list>.header>.header_right {
 	border-left: 1px solid #808080;
+	flex: none;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+.data_list>.grid_container {
+	flex: 1 1 auto;
+	overflow: auto;
 }
 .data_list>.footer {
 	border-top: 1px solid #808080;
 	background-color: #FFFFFF;
+	flex:none;
 }
 .data_list>.footer>.footer_tools {
 	padding: 1px 5px 1px 5px;
+	display: flex;
+	flex-direction: row;
 }
 table.data_list_select_fields_menu {
 	border-collapse: collapse;
