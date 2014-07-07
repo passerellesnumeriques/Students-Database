@@ -18,7 +18,7 @@ class page_exam_subject extends SelectionPage {
 		else
 			$read_only = false;
 		
-		echo "<div id = 'exam_subject_container' style='min-width:500px;background-color:white;text-align:center'></div>";
+		echo "<div style='background-color:white;height:100%'><div id = 'exam_subject_container' style='background-color:white;'></div></div>";
 
 		require_once("component/data_model/Model.inc");
 		require_once("component/selection/SelectionJSON.inc");
@@ -97,7 +97,7 @@ class page_exam_subject extends SelectionPage {
 			} else {
 				require("manage_exam_subject.js",function(){
 					var current_campaign_id = <?php echo $current_campaign;?>;
-					new manage_exam_subject(subject,
+					window.exam_subject_manager = new manage_exam_subject(subject,
 											container,
 											can_edit,
 											can_remove,

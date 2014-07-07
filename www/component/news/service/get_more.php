@@ -23,7 +23,7 @@ class service_get_more extends Service {
 		} else {
 			$q->where("update_timestamp", "<=", $input["olders_timestamp"]);
 			$q->limit(0, intval($input["nb"])+count($input["olders"])+10);
-		} 
+		}
 		$q->orderBy("News", "update_timestamp", false);
 		
 		$where = "(";

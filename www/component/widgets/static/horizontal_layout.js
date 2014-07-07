@@ -74,7 +74,10 @@ function horizontal_layout(container, keep_height, valign) {
 			var e = t.container.childNodes[i];
 			if (e.getAttribute('layout') == 'fill') {
 				var ww = Math.floor((w-used)/nb_to_fill--);
-				setWidth(e, ww);
+				//if (getWidth(e) > ww)
+				//	ww = getWidth(e);
+				//else
+					setWidth(e, ww);
 				used += ww;
 			}
 		}

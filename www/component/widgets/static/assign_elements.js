@@ -232,7 +232,7 @@ function assign_elements_section(assign,icon,title,css, element_display_provider
 	};
 	
 	this._init = function() {
-		var span = document.createElement("SPAN");
+		var span = document.createElement("DIV");
 		this.cb = document.createElement("INPUT");
 		this.cb.type = "checkbox";
 		this.cb.style.marginRight = "3px";

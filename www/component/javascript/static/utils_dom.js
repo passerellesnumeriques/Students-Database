@@ -146,6 +146,14 @@ function getHeight(element) {
 	h += parseInt(s.marginTop) + parseInt(s.marginBottom);
 	return h;
 }
+function getInnerHeight(element) {
+	var win = getWindowFromElement(element);
+	if (win != window) return win.getInnerHeight(element);
+	var s = getComputedStyleSizes(element);
+	var h = element.clientHeight;
+	h -= parseInt(s.paddingTop) + parseInt(s.paddingBottom);
+	return h;
+}
 function getFixedPosition(elem) {
 	return _getFixedPosition(window,elem);
 }

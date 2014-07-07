@@ -114,16 +114,21 @@ $this->requireJavascript("fill_height_layout.js");
 }
 #application_right_menu #user_picture {
 	width: 25px;
-	height:25px;
+	height: 25px;
     border: 1px solid rgba(0,0,0,0);
     cursor: pointer;
     border-radius: 5px;
     vertical-align: top;
+    display: inline-block;
 }
 #application_right_menu #user_picture:hover {
     background-color: rgba(255,255,255,0.4);
     border: 1px solid rgba(255,255,255,0.6);
 }
+#application_right_menu #user_picture img {
+	border-radius: 5px;
+}
+
 #application_right_menu>img {
 	vertical-align:middle;
 	margin-right: 3px;
@@ -254,7 +259,7 @@ $this->requireJavascript("fill_height_layout.js");
 				</div>
 				<div id="application_right_menu">
 					<input type='text' id='application_search'/>
-					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' target='application_frame'><img id='user_picture'/></a>
+					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' target='application_frame'><div id='user_picture'></div></a>
 					<button class="flat"><img id='notifications' src='/static/application/menu/notifications.png'/></button>
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat"><img id='calendars' src='/static/calendar/calendar_white.png'/></button></a>
 					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat"><img id='logout' src='/static/application/logout_white.png'/></button></a>
@@ -271,7 +276,9 @@ $this->requireJavascript("fill_height_layout.js");
 </div>
 <script type='text/javascript'>
 user_picture = document.getElementById('user_picture');
-user_picture.src = "/dynamic/people/service/picture?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>";
+require("profile_picture.js",function() {
+	new profile_picture(user_picture, 25, 25, "center", "middle").loadPeopleID(<?php echo PNApplication::$instance->user_people->user_people_id;?>);
+});
 tooltip(user_picture, "Your profile");
 
 tooltip(document.getElementById('notifications'), "See notifications");

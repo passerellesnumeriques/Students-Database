@@ -104,10 +104,11 @@ class page_organizations extends Page {
 		}
 		function organizations_selection_changed(row_id, sel) {
 			if (selected != null) {
-				var org_id = dl.getTableKeyForRow("Organization", row_id);
-				if (sel)
-					selected.push(org_id);
-				else
+				var org_id = parseInt(dl.getTableKeyForRow("Organization", row_id));
+				if (sel) {
+					if (!selected.contains(org_id))
+						selected.push(org_id);
+				} else
 					selected.remove(org_id);
 			}
 		}

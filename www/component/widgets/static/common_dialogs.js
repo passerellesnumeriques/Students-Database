@@ -108,7 +108,7 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 				p.enableButton('ok');
 				input.style.border = "";
 				error_div.style.visibility = 'hidden';
-				error_div.style.position = 'absolute';
+				//error_div.style.position = 'absolute'; // commented because it is strange to the user to have the popup resized like that...
 				p.resize();
 			}
 		};

@@ -1,5 +1,4 @@
 .section {
-	border: none; /* TODO remove */
 	box-shadow: 2px 2px 2px #D0D0D0;
 	margin-right: 5px;
 	margin-bottom: 5px;
@@ -60,4 +59,13 @@
 .section:not(.sub):not(.soft)>.header button:hover {
 	background: #ffffff;
     box-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+}
+
+.section_block {
+    box-shadow: 2px 2px 2px #D0D0D0;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    border-radius: 5px 5px 5px 5px;
+    padding-top: 3px;
+    padding-bottom: 3px;
 }

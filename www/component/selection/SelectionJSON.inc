@@ -58,71 +58,6 @@ class SelectionJSON{
 /**
  * Methods about Information Sessions (IS)
  */
-	/**
-	 * Build a JSON information structure for the given id
-	 * @param number $id
-	 * @return string json InformationSession structure
-	 * @no_name_check
-	 */	
-	public static function InformationSessionFromID($id){
-		if($id == -1 || $id == "-1")
-			return "{id:-1, geographic_area:null, date:null, number_boys_expected:null, number_boys_real:null, number_girls_expected:null, number_girls_real:null, name:null, partners:[]}";
-		$IS_row = self::InformationSessionTableDataFromID($id);
-		$IS_partners_row = self::PartnersDataFromID($id);
-		return self::InformationSession($IS_row, $IS_partners_row);
-	}
-	
-	/**
-	 * Get all the data from InformationSession table for the given id
-	 * @param number $id
-	 * @return array the row coming from the database
-	 * @no_name_check
-	 */
-	public static function InformationSessionTableDataFromID($id){
-		$q = SQLQuery::create()
-			->select("InformationSession")
-			->whereValue("InformationSession","id",$id);
-		self::InformationSessionSQL($q);
-		$row = $q->executeSingleRow();
-		return $row; 
-	}
-	
-	
-	/**
-	 * Get all the data from InformationSessionPartner for the given information session
-	 * @param unknown $id of the information session
-	 * @return array the rows coming from the database
-	 * @no_name_check
-	 */
-	public static function PartnersDataFromID($id){
-		$q = SQLQuery::create()
-		->select("InformationSessionPartner")
-		->join("InformationSessionPartner","InformationSessionContactPoint",array("information_session"=>"information_session","organization"=>"organization"))
-		->whereValue("InformationSessionPartner","information_session",$id)
-		->orderBy("InformationSessionPartner","organization");
-		self::ISPartnersSQL($q);
-		$rows = $q->execute();
-		return $rows;
-	}
-	
-	/**
-	 * Prepares the given SQLQuery to retrieve all the information session partners data
-	 * @param SQLQuery $q
-	 * @no_name_check
-	 */
-	public static function ISPartnersSQL(&$q){
-		$alias = $q->getTableAlias("InformationSessionPartner");
-		if(!$alias)
-			$alias = "InformationSessionPartner";
-		$alias_contact_point = $q->getTableAlias("InformationSessionContactPoint");
-		if(!$alias_contact_point)
-			$alias_contact_point = "InformationSessionContactPoint";
-		$q
-		->field($alias,"organization","organization")
-		->field($alias,"host","host")
-		->field($alias,"host_address","host_address")
-		->field($alias_contact_point,"people","contact_point");
-	}
 	
 	/**
 	 * Get the Information json structure
@@ -256,7 +191,8 @@ class SelectionJSON{
 			->join("ExamSubjectPart","ExamSubjectQuestion",array("id" => "exam_subject_part"))
 			->whereValue("ExamSubject","id",$id)
 			->orderBy("ExamSubjectPart","id");//TODO : better to order by index ?
-		self::ExamSubjectSQL($q);
+		require_once("SelectionExamJSON.inc");
+		SelectionExamJSON::ExamSubjectSQL($q);
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectQuestionSQL($q);
 		// TODO
@@ -280,26 +216,12 @@ class SelectionJSON{
 			->OrderBy("ExamSubject","id")
 			->OrderBy("ExamSubjectPart","index")
 			->OrderBy("ExamSubjectQuestion","index");
-			
-		self::ExamSubjectSQL($q);
+		require_once("SelectionExamJSON.inc");
+		SelectionExamJSON::ExamSubjectSQL($q);
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectQuestionSQL($q);
 	}
 	
-	/**
-	 * Prepares a query to retrieve the exam subject data from table ExamSubject
-	 * @param SQLQuery $q
-	 * @no_name_check
-	 */
-	public static function ExamSubjectSQL(&$q){
-		$alias = $q->getTableAlias("ExamSubject");
-		if(!$alias)
-			$alias = "ExamSubject";
-		$q
-			->field($alias, "id","subject_id")
-			->field($alias,"name","subject_name")
-			->field($alias,"max_score","subject_max_score");
-	}
 	
 	
 	/**
@@ -584,7 +506,8 @@ class SelectionJSON{
 			->orderBy("ExamSubjectPart","index");
 		self::ExamTopicSQL($q);
 		self::ExamSubjectPartSQL($q);
-		self::ExamSubjectSQL($q);
+		require_once("SelectionExamJSON.inc");
+		SelectionExamJSON::ExamSubjectSQL($q);
 		$rows = $q->execute();
 		if($rows <> null)
 			return self::ExamTopic($q, $rows, $id);
