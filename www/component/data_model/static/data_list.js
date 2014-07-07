@@ -1,10 +1,7 @@
 if (typeof require != 'undefined') {
 	require("DataDisplay.js");
 	require("grid.js");
-	require("vertical_layout.js");
-	require("horizontal_layout.js");
 	require("horizontal_menu.js");
-	require("vertical_align.js");
 	require("typed_field.js",function(){
 		require("field_text.js");
 		require("field_html.js");
@@ -71,7 +68,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.footer_tools.className = "footer_tools";
 			t.addFooter(t.footer_tools);
 			t.footer.appendChild(t.footer_tools);
-			new horizontal_layout(t.footer_tools);
 			layout.invalidate(container);
 		}
 		t.footer_tools.appendChild(item);
@@ -116,7 +112,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			span.appendChild(document.createTextNode(text));
 			div.appendChild(span);
 		}
-		div.setAttribute("layout", "fixed");
 		t.header.insertBefore(div, t.header_left);
 		layout.invalidate(t.header);
 	};
@@ -131,7 +126,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			html = div;
 		}
 		html.className = "data_list_title";
-		html.setAttribute("layout", "fixed");
 		t.header.insertBefore(html, t.header_left);
 		layout.invalidate(t.header);
 	};
@@ -414,7 +408,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			
 			var col_picture = new GridColumn('data_list_picture', "Picture", null, "center", "field_html", false, null, null, {}, null);
 			var thumb_container = document.createElement("DIV");
-			thumb_container.setAttribute("layout","fill");
 			thumb_container.style.overflow = "auto";
 
 			var div_picture_size = document.createElement("DIV");
@@ -496,7 +489,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						thumbnail_provider(function(pics) {
 							pic_list.setPictures(pics);
 						});
-						thumb_container.setAttribute("layout","fill");
 						thumb_container.style.overflow = "auto";
 						container.insertBefore(thumb_container, t.header.nextSibling);
 					}
@@ -562,15 +554,12 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.header.className = "header";
 		t.header_left = document.createElement("DIV");
 		t.header_left.className = "header_left";
-		t.header_left.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_left);
 		t.header_center = document.createElement("DIV");
 		t.header_center.className = "header_center";
-		t.header_center.setAttribute("layout","fill");
 		t.header.appendChild(t.header_center);
 		t.header_right = document.createElement("DIV");
 		t.header_right.className = "header_right";
-		t.header_right.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_right);
 		container.appendChild(t.header);
 		// init header buttons
@@ -621,8 +610,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						t._loadData();
 					});
 					_page_size_div.appendChild(t._page_size_field.getHTMLElement());
-					if (t.header && t.header.widget && t.header.widget.layout)
-						t.header.widget.layout();
 				});
 			});
 		}
@@ -692,30 +679,15 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.more_menu = div;
 		// init grid
 		t.grid_container = document.createElement("DIV");
-		t.grid_container.setAttribute("layout","fill");
-		t.grid_container.style.overflow = "auto";
+		t.grid_container.className = "grid_container";
 		container.appendChild(t.grid_container);
 		require("grid.js",function(){
 			t.grid = new grid(t.grid_container);
 			t._ready();
 		});
 		// layout
-		if (container.style.height)
-			require("vertical_layout.js",function(){
-				new vertical_layout(container);
-				layout.invalidate(container);
-			});
-		require("horizontal_layout.js",function(){
-			new horizontal_layout(t.header);
-			layout.invalidate(container);
-		});
 		require("horizontal_menu.js",function(){
 			new horizontal_menu(t.header_center, "middle");
-			layout.invalidate(container);
-		});
-		require("vertical_align.js",function(){
-			new vertical_align(t.header_left, "middle");
-			new vertical_align(t.header_right, "middle");
 			layout.invalidate(container);
 		});
 	};

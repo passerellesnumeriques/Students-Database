@@ -46,7 +46,8 @@ class page_teachers_assignments extends Page {
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		?>
-		<div class='page_title'>
+		<div style="width:100%;height:100%;display:flex;flex-direction:column">
+		<div class='page_title' style='flex:none'>
 			<img src='/static/curriculum/teacher_assign_32.png'/>
 			Teachers Assignments
 		</div>
@@ -56,7 +57,7 @@ class page_teachers_assignments extends Page {
 			return;
 		} 
 		?>
-		<div class='page_section_title' style='background-color:white'>
+		<div class='page_section_title' style='background-color:white;flex:none'>
 			Academic Period: <select onchange="if (this.value == <?php echo $academic_period_id;?>) return; location.href='?period='+this.value;">
 			<?php
 			foreach ($periods as $period) {
@@ -69,8 +70,8 @@ class page_teachers_assignments extends Page {
 			?>
 			</select>
 		</div>
-		<table style='width:100%'><tr>
-		<td valign=top>
+		<div style="flex:1 1 auto;overflow:auto;display:flex;flex-direction:row">
+		<div style="flex:1 1 auto">
 		<?php 
 		if ($ap <> null)
 		foreach ($ap->batch_periods as $bp) {
@@ -124,9 +125,8 @@ class page_teachers_assignments extends Page {
 			echo "</div>";
 		}
 		?>
-		</td>
-		<td valign=top align=right>
-		<div id='teachers_section' style='display:inline-block;text-align:left' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
+		</div>
+		<div id='teachers_section' style='display:inline-block;flex:1 1 auto' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
 		<div style='background-color:white'>
 		<?php $id = $this->generateID();?>
 		<table class='teachers_table'><tbody id='<?php echo $id;?>'>
@@ -135,8 +135,9 @@ class page_teachers_assignments extends Page {
 		<?php $this->onload("TeachersTable('$id');")?>
 		</div>
 		<?php $this->onload("sectionFromHTML('teachers_section');")?>
-		</div></td>
-		</tr></table>
+		</div>
+		</div>
+		</div>
 		<style type='text/css'>
 		.subjects_table {
 			border-collapse: collapse;

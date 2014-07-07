@@ -388,6 +388,7 @@ function LoadingFrame(frame_element) {
 				this.table.parentNode.removeChild(this.table);
 		}
 		frame_element._loading_frame = null;
+		console.log("Frame "+frame_element.name+" loaded in "+(new Date().getTime()-this._start)+"ms.");
 	};
 	
 	/** Check what is the current status, and remove the loading if needed */

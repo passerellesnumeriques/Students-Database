@@ -1,26 +1,11 @@
 <?php
-$this->requireJavascript("vertical_layout.js");
-$this->requireJavascript("horizontal_layout.js");
-$this->onload("new vertical_layout('application_container');");
-$this->onload("new horizontal_layout('application_horizontal');");
-$this->onload("new vertical_layout('application_left_side',true);");
-$this->onload("new vertical_layout('application_right_side');");
-$this->onload("new horizontal_layout('application_header');");
-$this->requireJavascript("fill_height_layout.js");
 ?>
 <style type="text/css">
 #application_container {
-	width: 100%;
-	height: 100%;
 	background-color:#009DE1;
 	z-index: 3;
 }
 
-/* Left Side */
-#application_left_side {
-	height: 100%;
-	overflow-x: visible;
-}
 #application_title {
 	white-space: nowrap;
 	height: 49px;
@@ -52,25 +37,14 @@ $this->requireJavascript("fill_height_layout.js");
 	font-family: Verdana;
 }
 
-/* Right Side */
-#application_right_side {
-	height: 100%;
-}
 #application_header {
 	height:27px;
-}
-#application_page {
-	background-color: #e8e8e8;
-	vertical-align: top;
-	width: 100%;
-	border-bottom-right-radius: 5px;
 }
 #application_frame {
 	border-radius: 5px;
 	z-index: 1;
 }
 #application_footer {
-	height: 16px;
 	text-align: center;
 	font-size: 8pt;
 	font-family: Verdana;
@@ -188,19 +162,19 @@ $this->requireJavascript("fill_height_layout.js");
 	margin: 5px 0px 5px 5%;
 }
 </style>
-<div id="application_container">
-	<div id="application_horizontal" layout="fill">
-		<div id='application_left_side'>
-			<div id='application_title'>
+<div id="application_container" style="width:100%;height:100%;display:flex;flex-direction:column">
+	<div style="flex:1 1 auto;display:flex;flex-direction:row;">
+		<div style="flex:none;display:flex;flex-direction:column;">
+			<div id='application_title' style="flex:none">
 				<img src='/static/application/logo.png'/>
 				<div id="application_title_text">Students<br/>Management</div>
 			</div>
-			<div id="application_left_menu" layout="fill">
+			<div id="application_left_menu" style="flex:1 1 auto;">
 			</div>
 		</div>
-		<div id='application_right_side' layout="fill">
-			<div id="application_header">
-				<div id="application_menu" layout="fill">
+		<div style="flex:1 1 auto;display:flex;flex-direction:column;">
+			<div id="application_header" style="flex:none;display:flex;flex-direction:row;">
+				<div id="application_menu" style="flex:1 1 auto;">
 					<div class="application_menu_item" 
 						section="home" 
 						components="application,calendar,people"
@@ -257,7 +231,7 @@ $this->requireJavascript("fill_height_layout.js");
 						Admin
 					</div>
 				</div>
-				<div id="application_right_menu">
+				<div id="application_right_menu" style="flex:none;">
 					<input type='text' id='application_search'/>
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' target='application_frame'><div id='user_picture'></div></a>
 					<button class="flat"><img id='notifications' src='/static/application/menu/notifications.png'/></button>
@@ -265,12 +239,10 @@ $this->requireJavascript("fill_height_layout.js");
 					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat"><img id='logout' src='/static/application/logout_white.png'/></button></a>
 				</div>
 			</div>
-			<div id="application_frame_container" style="overflow:hidden" layout="fill">
-				<iframe id="application_frame" name="application_frame" style="border:none;width:100%;height:100%;"></iframe>
-			</div>
+			<iframe id="application_frame" name="application_frame" style="flex:1 1 auto;border:none;"></iframe>
 		</div>
 	</div>
-	<div id="application_footer">
+	<div id="application_footer" style="flex:none;height:16px;">
 			© 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
 	</div>
 </div>

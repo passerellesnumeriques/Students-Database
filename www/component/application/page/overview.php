@@ -78,8 +78,8 @@ class page_overview extends Page {
 	<div class="page_section_title" style='margin-bottom:0px'>
 		What's happening ?
 	</div>
-	<div style='background-color:#e8e8e8;padding-top:10px'>
-		<div id="updates" style="display:inline-block;width:45%;margin-left:10px"
+	<div style='background-color:#e8e8e8;padding-top:10px;display:flex;flex-direction:row;'>
+		<div id="updates" style="display:inline-block;flex:1 1 auto;margin-left:10px"
 			icon="/static/news/news.png"
 			title="Latest Updates"
 		>
@@ -94,7 +94,7 @@ class page_overview extends Page {
 				</div>
 			</div>
 		</div>
-		<div id="calendar_events" style="display:inline-block;width:45%;margin-left:10px;vertical-align:top"
+		<div id="calendar_events" style="display:inline-block;flex:1 1 auto;margin-left:10px;vertical-align:top"
 			icon="/static/calendar/calendar_16.png"
 			title="Upcoming Events"
 		>

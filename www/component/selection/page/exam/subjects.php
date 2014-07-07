@@ -6,39 +6,32 @@ class page_exam_subjects extends SelectionPage {
 	public function getRequiredRights() {return array("see_exam_subject");}
 	
 	public function executeSelectionPage() {
-		$this->requireJavascript("vertical_layout.js");
-		$this->onload("new vertical_layout('subjects_page_container');");
-		$this->onload("new vertical_layout('subject_container');");
-		$this->requireJavascript("horizontal_layout.js");
-		$this->onload("new horizontal_layout('subjects_page_content');");
 		theme::css($this, "section.css");
 		require_once("component/selection/SelectionExamJSON.inc");
 		$q = SQLQuery::create()->select("ExamSubject");
 		SelectionExamJSON::ExamSubjectSQL($q);
 		$subjects = $q->execute();
 		?>
-		<div id='subjects_page_container' style='width:100%;height:100%;overflow:hidden'>
-			<div class='page_title'>
+		<div style='width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column'>
+			<div class='page_title' style='flex:none'>
 				Written Exam Subjects
 			</div>
-			<div layout="fill" id='subjects_page_content' style="padding:10px;overflow:hidden">
-				<div id='subjects' class='section_block' style="display:inline-block;height:100%;background-color:white;overflow-y:auto;margin-right:10px;" layout="350">
+			<div style="padding:10px;overflow:hidden;flex:1 1 auto;display:flex;flex-direction:row">
+				<div id='subjects' class='section_block' style="display:inline-block;background-color:white;overflow-y:auto;margin-right:10px;width:350px;flex:none">
 					<span id='no_subject' style='display:none;position:absolute;'>
 						<i>No subject defined yet</i>
 					</span>
 				</div>
-				<div id='subject_container' class='section_block' style="display:inline-block;height:100%;background-color:white;overflow:hidden" layout="fill">
-					<div style='height:100%;padding:3px;overflow:hidden' layout="fill">
-						<iframe id='subject_frame' style='height:100%;width:100%;border:none' src='/static/application/message.html?text=<?php echo urlencode("Select a subject to display it here");?>'>
-						</iframe>
-					</div>
-					<div class='page_footer' id='subject_footer' style='visibility:hidden'>
+				<div class='section_block' style="display:inline-block;background-color:white;overflow:hidden;flex:1 1 auto;display:flex;flex-direction:column;">
+					<iframe id='subject_frame' style='flex:1 1 auto;border:none' src='/static/application/message.html?text=<?php echo urlencode("Select a subject to display it here");?>'>
+					</iframe>
+					<div class='page_footer' id='subject_footer' style='visibility:hidden;flex:none;'>
 						<button class="action" id='save_button'><img src='<?php echo theme::$icons_16['save'];?>'/> Save</button>
 						<button class="action" id='cancel_button'><img src='<?php echo theme::$icons_16['cancel'];?>'/> Cancel modifications</button>
 					</div>
 				</div>
 			</div>
-			<div class="page_footer">
+			<div class="page_footer" style="flex:none">
 				<button class='action' onclick="newSubject();"><img src='<?php echo theme::make_icon("/static/selection/exam/subject_white.png",theme::$icons_10['add'],"right_bottom");?>'/> New Subject</button>
 				<button class='action' onclick="copySubject();"><img src='<?php echo theme::$icons_16['copy'];?>'/> Copy a subject from previous campaign</button>
 			</div>
