@@ -486,6 +486,8 @@ class SelectionJSON{
 			$json.= "}";
 		} else
 			$json = "{}";
+		
+		return $json;
 	}
 
 	
@@ -538,8 +540,8 @@ class SelectionJSON{
 			"exam_subject_part" => @$json["exam_subject_part"],
 			"index" => @$json["index"],
 			"max_score" => @$json["max_score"],
-			"correct_answer" => @$json["correct_answer"],
-			"choices" => @$json["choices"]
+			"type" => @$json["type"],
+			"type_config" => @$json["type_config"]
 		);
 		if(isset($json["id"]))
 			$a["id"] = $json["id"];

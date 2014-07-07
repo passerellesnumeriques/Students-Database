@@ -11,7 +11,6 @@ class page_exam_results_edit extends SelectionPage {
 			return; 
 		
 		theme::css($this, "section.css");
-		theme::css($this, "grid.css");
 		
 		$this->requireJavascript("grid.js");
 		$this->requireJavascript("tabs.js");
@@ -34,7 +33,7 @@ class page_exam_results_edit extends SelectionPage {
 		</style>
 	
 		<!-- main structure of the results edit page -->
-		<div id='main_container' style="width:100%;height:100%">
+		<div id='main_container'>
 			<div id="header_results" style="height:200px">
 			      <div id="exam_session_info" title='Exam session' icon="/static/theme/default/icons_16/info.png" collapsable='true' css="soft" style="display:inline-block;margin:10px 0 0 10px;vertical-align: top;">
 				<?php $this->createExamSessionInfoBox($input); ?>
@@ -44,7 +43,7 @@ class page_exam_results_edit extends SelectionPage {
 			      </div>
 			</div>
 			<!--<div layout="fill" style="overflow:auto;">-->
-				<div id="subj_results" style="margin:10px;display:none;"></div>
+				<div id="subj_results" style="margin:10px;display:inline"></div>
 			<!--</div>-->
 			<div id="footer_results" style="margin-right: 10px;">
 			</div>

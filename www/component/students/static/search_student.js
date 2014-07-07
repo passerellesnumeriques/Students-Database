@@ -4,11 +4,13 @@ if (typeof require != 'undefined')
 function search_student(container) {
 	require("custom_search.js", function() {
 		new custom_search(container, 3, "Search a student", function(input, ondone) {
+			var redirected = false;
 			var check = function() {
 				waitForFrame('application_frame', function(app_win) {
 					var app_frame = findFrame('application_frame');
 					var url = new URL(app_frame.src);
 					if (url.path != '/dynamic/curriculum/page/tree_frame') {
+						redirected = true;
 						app_win.location.href = '/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list';
 						app_frame.src = '/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list';
 						setTimeout(function(){check();},50);
@@ -16,6 +18,13 @@ function search_student(container) {
 					}
 					url = new URL(app_win.location.href);
 					if (url.path != '/dynamic/curriculum/page/tree_frame') {
+						if (!redirected) {
+							redirected = true;
+							app_win.location.href = '/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list';
+							app_frame.src = '/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list';
+							setTimeout(function(){check();},50);
+							return;
+						}
 						setTimeout(function(){check();},50);
 						return;
 					}

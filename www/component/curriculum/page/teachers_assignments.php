@@ -157,7 +157,7 @@ class page_teachers_assignments extends Page {
 		}
 		</style>
 		<script type='text/javascript'>
-		var academic_period = <?php CurriculumJSON::AcademicPeriodJSONFromDB($ap->academic_period);?>;
+		var academic_period = <?php echo CurriculumJSON::AcademicPeriodJSONFromDB($ap->academic_period);?>;
 		var nb_weeks = (academic_period.weeks-academic_period.weeks_break);
 		var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON($ap->categories);?>;
 		var classes = <?php echo CurriculumJSON::AcademicClassesJSON($ap->classes);?>;

@@ -511,10 +511,25 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		printContent(t.header.nextSibling);
 	};
 	
+	t.orderBy = function(field_category, field_name, field_sub_index, asc) {
+		for (var i = 0; i < t.grid.columns.length; ++i) {
+			if (t.grid.columns[i].id == field_category+'.'+field_name+'.'+field_sub_index) {
+				t.grid.columns[i].sort_order = asc ? 1 : 2;
+				t.grid.columns[i]._refresh_title();
+				t._sort_column = t.grid.columns[i];
+				t._sort_order = asc ? 1 : 2;
+				if (t._data_loaded) t._loadData(); // reload to apply the sorting
+				return;
+			}
+		}
+		// no corresponding column: TODO support it ?
+	};
+	
 	/* Private properties */
 	t._root_table = root_table;
 	t._sub_model = sub_model;
 	t._onready = onready;
+	t._data_loaded = false;
 	/** {Array} List of available fields retrieved through the service get_available_fields */
 	t._available_fields = null;
 	/** Page number */
@@ -898,6 +913,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 
 	/** (Re)load the data from the server */
 	t._loadData = function(onready) {
+		t._data_loaded = true;
 		t.startLoading();
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i) {
@@ -1264,21 +1280,23 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 		
 		// remove button
-		var remove = document.createElement("BUTTON");
-		remove.className = "flat";
-		remove.title = "Remove this filter on "+field.name;
-		remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
-		if (filter.force) remove.disabled = 'disabled';
-		div.appendChild(remove);
-		remove.filter = filter;
-		remove.onclick = function() {
-			t.removeFilter(filter);
-			container.removeChild(div);
-			t._loadData();
-			if (t._filters.length == 0)
-				container.innerHTML = "<center><i>No filter</i></center>";
-			layout.invalidate(container);
-		};
+		if (!filter.force) {
+			var remove = document.createElement("BUTTON");
+			remove.className = "flat";
+			remove.title = "Remove this filter on "+field.name;
+			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+			if (filter.force) remove.disabled = 'disabled';
+			div.appendChild(remove);
+			remove.filter = filter;
+			remove.onclick = function() {
+				t.removeFilter(filter);
+				container.removeChild(div);
+				t._loadData();
+				if (t._filters.length == 0)
+					container.innerHTML = "<center><i>No filter</i></center>";
+				layout.invalidate(container);
+			};
+		}
 		
 		if (is_or) {
 			var div_or_text = document.createElement("DIV");
@@ -1328,21 +1346,23 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 			
 			// add or button
-			var add_or = document.createElement("BUTTON");
-			add_or.innerHTML = "Or...";
-			or_div.appendChild(add_or);
-			add_or.onclick = function() {
-				t._contextMenuAddFilter(this, function(field, new_filter) {
-					last_or = filter;
-					while (last_or.or) last_or = last_or.or;
-					last_or.or = new_filter;
-					t._createFilter(new_filter, or_div, true);
-					or_div.removeChild(add_or);
-					or_div.appendChild(add_or);
-					layout.invalidate(container);
-					t._loadData();
-				});
-			};
+			if (!filter.force) {
+				var add_or = document.createElement("BUTTON");
+				add_or.innerHTML = "Or...";
+				or_div.appendChild(add_or);
+				add_or.onclick = function() {
+					t._contextMenuAddFilter(this, function(field, new_filter) {
+						last_or = filter;
+						while (last_or.or) last_or = last_or.or;
+						last_or.or = new_filter;
+						t._createFilter(new_filter, or_div, true);
+						or_div.removeChild(add_or);
+						or_div.appendChild(add_or);
+						layout.invalidate(container);
+						t._loadData();
+					});
+				};
+			}
 		}
 	},
 	/** Display the menu to edit/add/remove filters

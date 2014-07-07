@@ -221,7 +221,7 @@ class service_exam_save_center extends Service {
 				SQLQuery::create()->insertMultiple("ExamSession", $insert_sessions);
 			// remove sessions not anymore present
 			if (count($existing_sessions) > 0)
-				SQLQuery::create()->removeByKeys("ExamSession", $existing_sessions);
+				SQLQuery::create()->removeKeys("ExamSession", $existing_sessions);
 		}
 		
 		// 6 - Save applicants

@@ -231,7 +231,13 @@ if (window == window.top) {
 		/** Event raised when some data need to be saved */
 		ondatatosave: new Custom_Event(),
 		/** Event raised when no more data need to be saved */
-		onalldatasaved: new Custom_Event()
+		onalldatasaved: new Custom_Event(),
+		autoDisableSaveButton: function(button) {
+			if (typeof button == 'string') button = document.getElementById(button);
+			button.disabled = this.hasDataUnsaved() ? "" : "disabled"; 
+			this.ondatatosave.add_listener(function() { button.disabled = ""; });
+			this.onalldatasaved.add_listener(function() { button.disabled = "disabled"; });
+		}
 	};
 	window.top.pnapplication.registerWindow(window);
 }

@@ -196,13 +196,17 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		var url = get_script_path("grid.js");
 		var t=this;
 		this.th.removeAllChildren();
+		this.th.style.textAlign = this.align;
 		if (title instanceof Element)
 			this.th.appendChild(title);
 		else
 			this.th.innerHTML = title;
 		var span = document.createElement("SPAN");
 		span.style.whiteSpace = 'nowrap';
-		this.th.appendChild(span);
+		if (this.align == "right")
+			this.th.insertBefore(span, this.th.childNodes[0]);
+		else
+			this.th.appendChild(span);
 		if (this.sort_order) {
 			var img;
 			switch (this.sort_order) {
@@ -875,7 +879,7 @@ function grid(element) {
 	t.startLoading = function() {
 		if (t._loading_hidder) return;
 		if (!t.table) return;
-		t._loading_hidder = new LoadingHeader(t.table);
+		t._loading_hidder = new LoadingHidder(t.table);
 		t._loading_hidder.setContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading data...");
 	};
 	t.endLoading = function() {

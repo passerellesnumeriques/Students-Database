@@ -89,14 +89,16 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		t.field.getHTMLElement().onmouseout = null;
 		t.field.getHTMLElement().onclick = null;
 		var data = t.field.getCurrentData();
-		container.removeChild(t.field.getHTMLElement());
+		//container.removeChild(t.field.getHTMLElement());
+		t.field.getHTMLElement().style.display = 'none';
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);
 		layout.invalidate(container);
 		lock_data(data, function(locks, data){
 			container.removeChild(loading);
-			container.appendChild(t.field.getHTMLElement());
+			//container.appendChild(t.field.getHTMLElement());
+			t.field.getHTMLElement().style.display = '';
 			if (locks == null) {
 				t.unedit();
 				return;
@@ -132,7 +134,8 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	/** Save current data */
 	t.save = function() {
 		var data = t.field.getCurrentData();
-		container.removeChild(t.field.getHTMLElement());
+		//container.removeChild(t.field.getHTMLElement());
+		t.field.getHTMLElement().style.display = 'none';
 		if (t.save_button)
 			t.field.getHTMLElement().removeChild(t.save_button);
 		t.save_button = null;
@@ -145,7 +148,8 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		layout.invalidate(container);
 		save_data(data, function(data) {
 			container.removeChild(loading);
-			container.appendChild(t.field.getHTMLElement());
+			//container.appendChild(t.field.getHTMLElement());
+			t.field.getHTMLElement().style.display = '';
 			t.field.setData(data);
 			t.field.setOriginalData(data);
 			t.unedit();

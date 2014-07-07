@@ -51,7 +51,7 @@ class service_what_to_do_for_batch extends Service {
 					}
 				}
 			}
-			if (count($problems > 0)) {
+			if (count($problems) > 0) {
 				echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> Batch ".htmlentities($this->getBatchName()).": No class in ";
 				$first = true;
 				foreach ($problems as $period_name=>$spe_list) {

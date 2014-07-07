@@ -19,7 +19,6 @@ $(document).ready(function(){
    
    service.json("selection","applicant/get_applicants",{exam_session:session_id,exam_center_room:room_id},function(applicants){
          /* creating one tab for each exam subject */
-      //service.json("selection","exam/get_all_subject_names",{},function(names){
       service.json("selection","exam/get_subjects",{},function(subjects){
          
          /* Remove Loader picture */
@@ -29,12 +28,11 @@ $(document).ready(function(){
          var subj_tabs= new tabs('subj_results',false);
          
          var grids=[];
-         var g;
+         
          for (var j=0; j<subjects.length; ++j){
             /* create the results_grid  */
-            g = new results_grid(subjects[j],applicants,'250px');
+            var g = new results_grid(subjects[j],applicants,'250px');
                
-            
             /* update ApplicantInfoBox on new row selection event */
             g.onRowApplicantSelection(updateApplicantInfoBox);
             
@@ -44,9 +42,11 @@ $(document).ready(function(){
          }
          
         $('#subj_results').show();
+        
          
          /* when a new tab selected : updateApplicantInfoBox */
          subj_tabs.onselect = function() {
+            
            /* updating ApplicantInfoBox on new tab selection */
            updateApplicantInfoBox(grids[subj_tabs.selected].getCurrentApplicant()); 
          };
@@ -61,9 +61,7 @@ $(document).ready(function(){
  */
 function updateApplicantInfoBox(people)
 {
-   
-   //DEBUG
-   console.log(people);
+
    if (!people) 
       return;
    

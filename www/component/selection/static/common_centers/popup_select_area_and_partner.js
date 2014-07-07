@@ -187,7 +187,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 					button.appendChild(text.element);
 					button.address = row_data.addresses[i];
 					button.onclick = function(){
-						this.pop.onclose = null;
+						pop.onclose = null;
 						t.host = new SelectionPartner(
 							-1, // center_id: -1 to indicate it has been changed
 							row_data, // organization
@@ -196,7 +196,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 							[] // no contact point selected yet
 						);
 						t.geographic_area = this.address.geographic_area.id;
-						this.pop.close();
+						pop.close();
 						t._closePop();
 					};
 					button.style.marginTop = "20px";

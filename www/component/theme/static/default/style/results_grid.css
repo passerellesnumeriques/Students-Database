@@ -1,0 +1,33 @@
+
+/* redefining some css property (initially from grid.css) */
+
+table.grid {
+	table-layout:fixed;
+}
+
+
+table.grid>thead>tr>th>{
+	padding-left: 2px;
+	padding-right: 2px;
+}
+
+
+/* Fixing header cells width */
+table.grid th>div.cell_wrapper {
+	width:102px;
+}
+
+
+/* Setting body cells width */
+
+table.grid td>div.cell_wrapper{
+	width: 100px;
+}
+
+
+/* width of applicant selector  */ 
+table.grid td:first-child>div.cell_wrapper,table.grid tr:first-child>th:first-child>div.cell_wrapper
+{
+	width:25px;
+}
+

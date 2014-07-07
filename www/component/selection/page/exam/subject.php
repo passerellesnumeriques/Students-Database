@@ -18,7 +18,7 @@ class page_exam_subject extends SelectionPage {
 		else
 			$read_only = false;
 		
-		echo "<div id = 'exam_subject_container'></div>";
+		echo "<div id = 'exam_subject_container' style='min-width:500px;background-color:white;text-align:center'></div>";
 
 		require_once("component/data_model/Model.inc");
 		require_once("component/selection/SelectionJSON.inc");

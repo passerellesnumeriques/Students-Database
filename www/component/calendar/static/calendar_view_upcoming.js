@@ -19,15 +19,12 @@ function calendar_view_upcoming(view, container) {
 	
 	/** Initialize the display */
 	this._init = function() {
-		this.table = document.createElement("TABLE");
-		this.table.style.borderSpacing = 0;
-		this.table.style.width = "100%";
-		container.appendChild(this.table);
-		this._reloadTable();
+		this.div = document.createElement("DIV");
+		container.appendChild(this.div);
 	};
 	/** Build the content of the display */
-	this._reloadTable = function() {
-		while (this.table.childNodes.length > 0) this.table.removeChild(this.table.childNodes[0]);
+	this._reload = function() {
+		this.div.removeAllChildren();
 		this._rows = [];
 		var date = new Date(this.start_date.getTime());
 		while (date.getTime() <= this.end_date.getTime()) {
@@ -46,33 +43,100 @@ function calendar_view_upcoming(view, container) {
 		}
 	};
 	
+	this._getDateText = function(date) {
+		var today = new Date();
+		today.setHours(0,0,0,0);
+		if (date.getTime() >= today.getTime() && date.getTime() < today.getTime()+24*60*60*1000) {
+			return "Today ("+date.toDateString()+")";
+		}
+		if (date.getTime() >= today.getTime()+24*60*60*1000 && date.getTime() < today.getTime()+2*24*60*60*1000) {
+			return "Tomorrow ("+date.toDateString()+")";
+		}
+		return date.toDateString();
+	};
+	
 	/** Called by the CalendarView when a new event should be displayed.
 	 * @param {Object} ev the event to display
 	 */
 	this.addEvent = function(ev) {
-		for (var i = 0; i < this._rows.length; ++i) {
+		var row = null;
+		for (var i = 0; i < this._rows.length; ++i)
 			if (ev.start.getTime() >= this._rows[i].date.getTime() && ev.start.getTime() < this._rows[i].date.getTime()+24*60*60*1000) {
-				var row = this._rows[i];
+				row = this._rows[i];
+				break;
+			}
+		if (row == null) {
+			var next_row = null;
+			var next_row_index = -1;
+			var row_date = new Date(ev.start.getTime());
+			row_date.setHours(0,0,0,0);
+			for (var i = 0; i < this._rows.length; ++i)
+				if (this._rows[i].date.getTime() > row_date.getTime() && (next_row == null || next_row.date.getTime() > this._rows[i].date.getTime())) {
+					next_row = this._rows[i];
+					next_row_index = i;
+				}
+			row = document.createElement("DIV");
+			row.style.borderBottom = "1px solid #808080";
+			row.date = row_date;
+			row.title_div = document.createElement("DIV");
+			row.title_div.appendChild(document.createTextNode(this._getDateText(row_date)));
+			row.title_div.style.fontWeight = "bold";
+			row.title_div.style.color = "black";
+			row.appendChild(row.title_div);
+			row.ul = document.createElement("UL");
+			row.appendChild(row.ul);
+			if (next_row == null) {
+				this._rows.push(row);
+				this.div.appendChild(row);
+			} else {
+				this._rows.splice(next_row_index,0,row);
+				this.div.insertBefore(row, next_row);
+			}
+		}
 
-				var tr = document.createElement("TR");
-				var td = document.createElement("TD"); tr.appendChild(td);
-				td.innerHTML = _2digits(ev.start.getHours())+":"+_2digits(ev.start.getMinutes())+" - "+_2digits(ev.end.getHours())+":"+_2digits(ev.end.getMinutes());
-				td = document.createElement("TD"); tr.appendChild(td);
-				td.innerHTML = ev.title;
-				tr.event = ev;
-				
-				var index;
-				for (index = 0; index < row.table.childNodes.length; ++index)
-					if (row.table.childNodes[index].event.start.getTime() > ev.start.getTime()) break;
-				
-				if (index >= row.table.childNodes.length)
-					row.table.appendChild(tr);
-				else
-					row.table.insertBefore(tr, row.table.childNodes[index]);
-				
+		var li = document.createElement("LI");
+		li.onmouseover = function() { this.style.textDecoration = "underline"; };
+		li.onmouseout = function() { this.style.textDecoration = "none"; };
+		li.style.cursor = "pointer";
+		li.style.fontSize = "9pt";
+		li.event = ev;
+		if (!ev.all_day) {
+			var span = document.createElement("SPAN");
+			span.appendChild(document.createTextNode(_2digits(ev.start.getHours())+":"+_2digits(ev.start.getMinutes())+" - "+_2digits(ev.end.getHours())+":"+_2digits(ev.end.getMinutes())));
+			span.style.color = "#404040";
+			span.style.fontSize = "8pt";
+			li.appendChild(span);
+			li.appendChild(document.createTextNode(" - "));
+		}
+		li.appendChild(document.createTextNode(ev.title));
+		li.onclick = function(e) {
+			require("event_screen.js",function() {
+				var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);;
+				event_screen(ev.original_event, cal);
+			});
+			stopEventPropagation(e);
+			return false;
+		};
+		
+		var added = false;
+		for (var i = 0; i < row.ul.childNodes.length; ++i) {
+			if (ev.all_day) {
+				if (!row.ul.childNodes[i].event.all_day) {
+					row.ul.insertBefore(li, row.ul.childNodes[i]);
+					added = true;
+					break;
+				}
+				continue;
+			} else {
+				if (row.ul.childNodes[i].event.all_day) continue;
+				if (row.ul.childNodes[i].event.start.getTime() < ev.start.getTime()) continue;
+				row.ul.insertBefore(li, row.ul.childNodes[i]);
+				added = true;
 				break;
 			}
 		}
+		if (!added)
+			row.ul.appendChild(li);
 	};
 	
 	/** Called by the CalendarView when an event needs to be removed from the dislpay.
@@ -81,10 +145,15 @@ function calendar_view_upcoming(view, container) {
 	this.removeEvent = function(uid) {
 		for (var row_i = 0; row_i < this._rows.length; ++row_i) {
 			var row = this._rows[row_i];
-			for (var i = 0; i < row.table.childNodes.length; ++i) {
-				var tr = row.table.childNodes[i];
-				if (tr.event && tr.event.uid == uid) {
-					row.table.removeChild(tr);
+			for (var i = 0; i < row.ul.childNodes.length; ++i) {
+				var li = row.ul.childNodes[i];
+				if (li.event && li.event.uid == uid) {
+					row.ul.removeChild(li);
+					if (row.ul.childNodes.length == 0) {
+						this._rows.remove(row);
+						this.div.removeChild(row);
+						break;
+					}
 					i--;
 				}
 			}

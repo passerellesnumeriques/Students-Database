@@ -1,5 +1,8 @@
-if (typeof require != 'undefined')
-   require ("exam_objects.js"); 
+if (typeof require != 'undefined'){
+   require ("exam_objects.js");
+   theme.css("grid.css");
+   theme.css("results_grid.css"); // need to redefine some css property
+}
 
 
 /* results_grid : class to manage the exam subject results
@@ -22,7 +25,7 @@ function results_grid(subject,applicants,grid_height) {
    t.applicants = applicants;
    t.grid_res=new grid (t.elt.grid); // creating grid   
    t.index_applicant=-1; // index of selected applicant
- 
+   //t.cells_width=[];
 
    /* Getting current applicant
     * return people object matching the applicant
@@ -57,6 +60,7 @@ function results_grid(subject,applicants,grid_height) {
          /* Call user function, passing people object as parameter*/
          user_func(t.applicants[row_id].people);
       }
+      
    }
    
    /* get container html element */
@@ -64,7 +68,7 @@ function results_grid(subject,applicants,grid_height) {
       return t.elt.container;
    }
    
-   
+
    /* --- internal functions --- */
    
    t._init=function(){
@@ -88,7 +92,7 @@ function results_grid(subject,applicants,grid_height) {
       
       /* Some CSS :
       making the rows scrollable but not the grid header */   
-         
+      
       $(t.elt.container).css({
       "position":"relative",
       "margin":"0 auto 3em auto",
@@ -103,16 +107,28 @@ function results_grid(subject,applicants,grid_height) {
       
       $(t.elt.grid).find("thead").css({
       "position":"absolute",
-      "top":"0",
+      "top":"1px",
        "display":"inherit",
-      "width":"100%",
     });
+      
+      
+         /* Clear previously set grid width css property */
+      $(t.elt.grid).find("table.grid").css("width","");
+      
+        /* Inserting some cell wrappers in order to fix table columns width
+        note : need to wait 1s before doing it because it seems the grid is not fully
+        created at this time */
+      setTimeout(function(){
+          $(t.elt.grid).find("table.grid>tbody>tr>td").wrapInner("<div class='cell_wrapper'></div>");
+           $(t.elt.grid).find("table.grid>thead>tr>th").wrapInner("<div class='cell_wrapper'></div>");
+         }, 1000);
       
       }
    
    /* creating applicant ID column */
    t._createApplicantColumn=function(){
-      t.grid_res.addColumn(new GridColumn('col_applic','Applicant ID',null,null,'field_text',false,null,null,{},{}));
+      t.grid_res.addColumn(new GridColumn('col_applic','Applicant ID',null,'center','field_text',false,null,null,{},{}));
+      
    }
    
    /* creating all the columns for each question */
@@ -132,7 +148,7 @@ function results_grid(subject,applicants,grid_height) {
             var grid_args=questionGridFieldArgs(question);
                        
             /* create the new question Column */
-            sub_cols.push(new GridColumn('part'+part.index+'q'+question.index,'Question '+question.index,null,null,grid_field,true,null,null,grid_args,'#'));
+            sub_cols.push(new GridColumn('part'+part.index+'q'+question.index,'Question '+question.index,null,'center',grid_field,true,null,null,grid_args,'#'));
          }
          
          /* push columns into the ColumContainer */

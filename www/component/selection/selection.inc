@@ -67,12 +67,10 @@ class selection extends Component {
 	public function getPluginImplementations() {
 		require_once("SelectionOrganizationPlugin.inc");
 		require_once("SelectionNewsPlugin.inc");
-		require_once("SelectionApplicationPlugin.inc");
 		require_once("ApplicantPeopleTypePlugin.inc");
 		return array(
 			new SelectionOrganizationPlugin(),
 			new SelectionNewsPlugin(),
-			new SelectionApplicationPlugin(),
 			new ApplicantPeopleTypePlugin()
 		);
 	}

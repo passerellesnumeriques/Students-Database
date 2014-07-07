@@ -125,14 +125,11 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 			}, function(item){
 				t.setAreaId(item.value);
 			});
-			div.style.border = "1px solid #C0C0F0";
-			setBorderRadius(div,8,8,8,8,8,8,8,8);
-			setBoxShadow(div,-1,2,2,0,'#D8D8F0',true);
-			div.style.background = "#ffffff url('"+theme.icons_16.search+"') no-repeat 3px 1px";
-			div.style.padding = "2px 4px 2px 23px";
-			ac.input.style.width = "100%";
-			ac.input.style.background = "transparent";
-			ac.input.style.border = "none";
+			setBorderRadius(ac.input,8,8,8,8,8,8,8,8);
+			setBoxShadow(ac.input,-1,2,2,0,'#D8D8F0',true);
+			ac.input.style.background = "#ffffff url('"+theme.icons_16.search+"') no-repeat 3px 1px";
+			ac.input.style.padding = "2px 4px 2px 23px";
+			ac.input.style.width = "90%";
 		});
 	};
 	

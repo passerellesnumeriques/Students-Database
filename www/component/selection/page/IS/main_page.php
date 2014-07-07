@@ -43,6 +43,8 @@ class page_IS_main_page extends SelectionPage {
 					-1,
 					function (list) {
 						list.addTitle("/static/selection/IS/IS_16.png", "Information Sessions");
+						// by default, order the sessions by date
+						list.orderBy("Information Session", "Date", -1, true);
 						<?php if ($can_create_session) { ?>
 						var new_IS = document.createElement("BUTTON");
 						new_IS.className = 'flat';

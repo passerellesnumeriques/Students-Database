@@ -112,7 +112,7 @@ function update_size() {
 
 var mandatory_loaded = 0;
 function next_mandatory() {
-	if (_mandatory_index >= _mandatory_scripts.length) { __load_enter_page(); return; }
+	if (_mandatory_index >= _mandatory_scripts.length) return;
 	var i = _mandatory_index++;
 	_addJavascript(_mandatory_scripts[i][0],function() {
 		loaded_size += _mandatory_scripts[i][1];

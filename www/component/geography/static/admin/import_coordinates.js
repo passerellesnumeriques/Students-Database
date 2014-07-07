@@ -41,6 +41,13 @@ function createTitle(title, num) {
 	return div;
 }
 
+var map_colors = [
+  {border:"#00A000",fill:"#D0F0D0"}, // green
+  {border:"#F00000",fill:"#F0D0D0"}, // red
+  {border:"#800080",fill:"#F0D0F0"}, // purple
+  {border:"#F0F000",fill:"#F0F0D0"} // yellow
+];
+
 function import_country(popup, country, country_data) {
 	if (country.north) {
 		// already set, continue
@@ -65,7 +72,7 @@ function import_country(popup, country, country_data) {
 			country.east = bounds.east;
 			country.south = bounds.south;
 			country.west = bounds.west;
-		}
+		} else bounds = null;
 		// step 2- display the results, by default take the largest bounds to contain results
 		require("edit_coordinates.js", function() {
 			search_container.removeAllChildren();
@@ -73,7 +80,18 @@ function import_country(popup, country, country_data) {
 			var tr = document.createElement("TR"); table.appendChild(tr);
 			var td_results = document.createElement("TD"); tr.appendChild(td_results);
 			var td_coord = document.createElement("TD"); tr.appendChild(td_coord);
-			new EditCoordinatesWithMap(td_coord, country, function(coord, map) {
+			var ec = new EditCoordinatesWithMap(td_coord, country, function(coord, map) {
+				var div = document.createElement("DIV"); td_results.appendChild(div);
+				div.style.width = "300px";
+				div.style.height = "100%";
+				div.style.overflow = "auto";
+				new ResultsList(div, "gadm.org", gadm, map_colors[0], coord, map);
+				new ResultsList(div, "geonames.org", geonames, map_colors[1], coord, map);
+				new ResultsList(div, "Google", google, map_colors[2], coord, map);
+			});
+			if (bounds != null)
+				ec.addResetOriginalButton(bounds);
+			popup.addNextButton(function() {
 				// TODO
 			});
 		});
@@ -122,6 +140,49 @@ function import_country_step1(container, country, country_data, ondone) {
 
 function import_first_division(popup, country, country_data) {
 	// TODO
+}
+
+function ResultsList(container, from, results, color, coord, map) {
+	this.title = document.createElement("DIV"); container.appendChild(this.title);
+	this.title.appendChild(document.createTextNode("Results from "+from));
+	this.title.style.fontWeight = "bold";
+	this.title.style.backgroundColor = "#C0C0C0";
+	this.title.style.color = color.border;
+	this.results = document.createElement("DIV"); container.appendChild(this.results);
+	for (var i = 0; i < results.length; ++i) {
+		var line = document.createElement("DIV"); this.results.appendChild(line);
+		var cb = document.createElement("INPUT"); cb.type = "checkbox"; line.appendChild(cb);
+		cb.result = results[i];
+		cb.onchange = function() {
+			if (this.checked) {
+				this.rect = new window.top.google.maps.Rectangle({
+					bounds: map.createBounds(parseFloat(this.result.south), parseFloat(this.result.west), parseFloat(this.result.north), parseFloat(this.result.east)),
+					strokeColor: color.border,
+					strokeWeight: 2,
+					strokeOpacity: 0.7,
+					fillColor: color.fill,
+					fillOpacity: 0.2,
+					editable: false,
+				});
+				map.addShape(this.rect);
+			} else {
+				map.removeShape(this.rect);
+				this.rect = null;
+			}
+		};
+		cb.style.marginRight = "5px";
+		var link = document.createElement("LINK");
+		link.href = "#";
+		link.className = "black_link";
+		link.appendChild(document.createTextNode(results[i].name));
+		link.title = "Click to use coordinates of this result";
+		line.appendChild(link);
+		link.result = results[i];
+		link.onclick = function() {
+			coord.setCoordinates(this.result.north, this.result.east, this.result.south, this.result.west);
+			return false;
+		};
+	}
 }
 
 function ImportKML(container, ondone) {
@@ -215,6 +276,31 @@ function SearchGoogle(container, country_id, name, types, ondone) {
 		types: types ? types : "political"
 	};
 	service.json("geography", "search_google", data, function(res) {
+		if (res)
+			for (var i = 0; i < res.length; ++i) {
+				if (res[i].geometry) {
+					if (res[i].geometry.viewport) {
+						res[i].north = res[i].geometry.viewport.northeast.lat;
+						res[i].east = res[i].geometry.viewport.northeast.lng;
+						res[i].south = res[i].geometry.viewport.southwest.lat;
+						res[i].west = res[i].geometry.viewport.southwest.lng;
+						// remove fake viewport
+						if (res[i].north == 90 && res[i].south == -90) {
+							res.splice(i,1);
+							i--;
+						} else if (res[i].east == 180 && res[i].west == -180) {
+							res.splice(i,1);
+							i--;
+						}
+					} else {
+						res.splice(i,1);
+						i--;
+					}
+				} else {
+					res.splice(i,1);
+					i--;
+				}
+			}
 		var count = res ? res.length : 0;
 		div.innerHTML = count+" result(s) found.";
 		ondone(res, div);

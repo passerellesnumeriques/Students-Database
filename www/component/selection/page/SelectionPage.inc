@@ -20,7 +20,7 @@ abstract class SelectionPage extends Page{
 				if (count($campaigns) == 0) {
 					?>
 					<div style="margin:10px">
-					<a href='#' onclick="getIFrameWindow(findFrame('pn_application_frame')).createCampaign();return false;">Create a first selection campaign</a>
+					<button class='action' onclick="getIFrameWindow(findFrame('pn_application_frame')).createCampaign();return false;">Create a first selection campaign</button>
 					</div>
 					<?php 
 				} else {
