@@ -42,9 +42,9 @@ class page_exam_results_edit extends SelectionPage {
 				<?php $this->createApplicantInfoBox($input); ?>
 			      </div>
 			</div>
-			<!--<div layout="fill" style="overflow:auto;">-->
-				<div id="subj_results" style="margin:10px;display:inline"></div>
-			<!--</div>-->
+			<div layout="fill">
+				<div id="subj_results" style="margin:10px;display:inline-block"></div>
+			</div>
 			<div id="footer_results" style="margin-right: 10px;">
 			</div>
 		</div>

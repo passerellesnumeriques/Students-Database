@@ -1,33 +1,74 @@
+/* results_grid.css */
 
-/* redefining some css property (initially from grid.css) */
+/* Main container */
 
-table.grid {
-	table-layout:fixed;
+div.container_results{
+	position: relative;
+	margin: 0 auto 3em auto;
+	padding-top : 2.5em;
+	box-shadow: 10px 10px 5px #888888
+}
+
+/* Grid */
+
+div.grid_results{
+	overflow:auto;
 }
 
 
-table.grid>thead>tr>th>{
+.grid_results table {
+	table-layout:fixed;
+}
+
+.grid_results thead{
+	position: absolute;
+	top:1px;
+	display: inherit;
+}
+
+.grid_results thead>tr>th>{
 	padding-left: 2px;
 	padding-right: 2px;
 }
 
 
 /* Fixing header cells width */
-table.grid th>div.cell_wrapper {
+.grid_results th>div.cell_wrapper {
 	width:102px;
 }
 
 
 /* Setting body cells width */
 
-table.grid td>div.cell_wrapper{
+.grid_results td>div.cell_wrapper{
 	width: 100px;
 }
 
 
-/* width of applicant selector  */ 
-table.grid td:first-child>div.cell_wrapper,table.grid tr:first-child>th:first-child>div.cell_wrapper
+/* width of applicant selector cells */ 
+.grid_results td:first-child>div.cell_wrapper,table.grid tr:first-child>th:first-child>div.cell_wrapper
 {
 	width:25px;
 }
 
+/* Footer **/
+
+ div.footer_results{
+	height: 30px;
+	width: 100%;
+	display:table;
+	background-color: rgb(161,203,158);
+	border-radius:3px;
+ }
+
+div.button_wrapper
+{
+	display: table-cell;
+	vertical-align: middle;
+	text-align:center;
+}
+
+div.button_wrapper>button
+{
+	display: inline;
+}

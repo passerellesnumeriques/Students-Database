@@ -38,14 +38,20 @@ $(document).ready(function(){
             
             /* adding grid exam subject to new tab */
             subj_tabs.addTab(subjects[j].name,null,g.getContainer());
+            subj_tabs.content.style.width="";
+            
             grids.push(g);
          }
          
+        //grids[0].putScrollBarOutside(); 
         $('#subj_results').show();
         
          
          /* when a new tab selected : updateApplicantInfoBox */
          subj_tabs.onselect = function() {
+             
+            subj_tabs.content.style.width=""; /* avoid tab width property */
+            //grids[subj_tabs.selected].putScrollBarOutside();
             
            /* updating ApplicantInfoBox on new tab selection */
            updateApplicantInfoBox(grids[subj_tabs.selected].getCurrentApplicant()); 
@@ -66,7 +72,7 @@ function updateApplicantInfoBox(people)
       return;
    
    /* Picture of applicant */
-   $("#applicant_photo").attr("src","/dynamic/people/service/picture?people="+people.people_id);
+   $("#applicant_photo").attr("src","/dynamic/storage/service/get?id="+people.picture_id+"&revision="+people.picture_revision);
    
   /* The people fields we want to display */
    var fields = {first_name:"First Name",middle_name:"Middle Name",khmer_first_name:"Khmer first name",khmer_last_name:"Khmer last name",last_name:"Last Name",sex:"Gender",birthdate:"Birth"}; 

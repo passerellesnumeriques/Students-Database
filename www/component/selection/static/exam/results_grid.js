@@ -16,16 +16,17 @@ function results_grid(subject,applicants,grid_height) {
    
     /* html elements */   
    t.elt = {
-      container : document.createElement("DIV"),
-      grid : document.createElement("DIV"),
-      footer : document.createElement("DIV")
+      container : $("<div class='container_results'></div>")[0],
+      grid : $("<div class='grid_results'></div>")[0],
+      footer : $("<div class='footer_results'></div>")[0],
+      //scroll_bar_outside : false
    };
       
    t.subject=subject;
    t.applicants = applicants;
    t.grid_res=new grid (t.elt.grid); // creating grid   
    t.index_applicant=-1; // index of selected applicant
-   //t.cells_width=[];
+   
 
    /* Getting current applicant
     * return people object matching the applicant
@@ -68,7 +69,17 @@ function results_grid(subject,applicants,grid_height) {
       return t.elt.container;
    }
    
-
+   ///* put scollbar Outside grid */
+   //t.putScrollBarOutside=function(){
+   //   
+   //   if (!t.elt.scroll_bar_outside) {
+   //      //DEBUG
+   //      console.log($(t.elt.grid).outerWidth()+17);
+   //      $(t.elt.container).width($(t.elt.grid).find("theader").outerWidth()+17);
+   //      t.elt.scroll_bar_outside=true;
+   //   }
+   //}
+   
    /* --- internal functions --- */
    
    t._init=function(){
@@ -76,7 +87,6 @@ function results_grid(subject,applicants,grid_height) {
       /* Appending html elements into main container */
       t.elt.container.appendChild(t.elt.grid);
       t.elt.container.appendChild(t.elt.footer);
-         
          
     /* creating applicant ID column */  
       t._createApplicantColumn();
@@ -90,45 +100,17 @@ function results_grid(subject,applicants,grid_height) {
       /* creating footer toolbar */
       t._createFooterToolbar();
       
-      /* Some CSS :
-      making the rows scrollable but not the grid header */   
+      /* set grid height */
+      $(t.elt.grid).height(grid_height);
       
-      $(t.elt.container).css({
-      "position":"relative",
-      "margin":"0 auto 3em auto",
-      "padding-top":"2.5em",
-      "box-shadow":" 10px 10px 5px #888888"
-    });
-     
-      $(t.elt.grid).css({
-      "height":grid_height,
-      "overflow":"auto",
-    });
-      
-      $(t.elt.grid).find("thead").css({
-      "position":"absolute",
-      "top":"1px",
-       "display":"inherit",
-    });
-      
-      
-         /* Clear previously set grid width css property */
+      /* Clear previously set grid width css property (from grid.css) */
       $(t.elt.grid).find("table.grid").css("width","");
-      
-        /* Inserting some cell wrappers in order to fix table columns width
-        note : need to wait 1s before doing it because it seems the grid is not fully
-        created at this time */
-        t.grid_res.onallrowsready(function(){
-             $(t.elt.grid).find("table.grid>tbody>tr>td").wrapInner("<div class='cell_wrapper'></div>");
-             $(t.elt.grid).find("table.grid>thead>tr>th").wrapInner("<div class='cell_wrapper'></div>");
-            });
-        
-        
-      //setTimeout(function(){
-      //    $(t.elt.grid).find("table.grid>tbody>tr>td").wrapInner("<div class='cell_wrapper'></div>");
-      //     $(t.elt.grid).find("table.grid>thead>tr>th").wrapInner("<div class='cell_wrapper'></div>");
-      //   }, 1000);
-      
+
+      /* Inserting some cell wrappers (in order to set table columns width) */
+      t.grid_res.onallrowsready(function(){
+           $(t.elt.grid).find("table.grid>tbody>tr>td").wrapInner("<div class='cell_wrapper'></div>");
+           $(t.elt.grid).find("table.grid>thead>tr>th").wrapInner("<div class='cell_wrapper'></div>");
+          });
       }
    
    /* creating applicant ID column */
@@ -176,33 +158,11 @@ function results_grid(subject,applicants,grid_height) {
    
       /* creating footer content elements */   
       var foot_content={
-          button_wrapper : document.createElement("DIV"),
-          button_valid: document.createElement("BUTTON")
+          button_wrapper :$("<div class='button_wrapper'></div>")[0],
+          button_valid: $("<button class='action'>Validate</button>")[0]
       }
      
-     foot_content.button_valid.innerHTML='Validate';
-     foot_content.button_valid.className='action';
-     
-     /* Some CSS (jQuery notation for better readability) */
-     
-      $(t.elt.footer).css({
-         "height":"30px",
-         "width":"100%",
-         "display":"table",
-         "background-color":"rgb(229,190,212)",
-         "border-radius":"3px",
-         });
-
-     $(foot_content.button_wrapper).css({
-         "display" : "table-cell",
-         "vertical-align" : "middle",
-         "text-align":"center"
-        });
-     
-     $(foot_content.button_valid).css({
-         "display" : "inline",
-        });
-     
+       
      /* Append the elements  */
      foot_content.button_wrapper.appendChild(foot_content.button_valid);
      t.elt.footer.appendChild(foot_content.button_wrapper);
