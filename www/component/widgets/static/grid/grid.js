@@ -74,7 +74,9 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.width = width;
 	this.align = align ? align : "left";
 	this.field_type = field_type;
-	require([["typed_field.js",field_type+".js"]]);
+	this._loaded = false;
+	this.onloaded = new Custom_Event();
+	require([["typed_field.js",field_type+".js"]], function() { this._loaded = true; this.onloaded.fire(); });
 	this.editable = editable;
 	this.onchanged = onchanged;
 	this.onunchanged = onunchanged;
@@ -314,6 +316,13 @@ function grid(element) {
 	t.oncellcreated = new Custom_Event();
 	t.onrowfocus = new Custom_Event();
 	
+	t.onallrowsready = function(listener) {
+		if (t._columns_loading == 0 && t._cells_loading == 0) {
+			listener();
+			return;
+		}
+		t._loaded_listeners.push(listener);
+	};
 	t.addColumnContainer = function(column_container, index) {
 		// if more levels, we add new rows in the header
 		while (t.header_rows.length < column_container.levels)
@@ -384,6 +393,10 @@ function grid(element) {
 				t.header_rows[level].insertBefore(col.th, t.header_rows[level].childNodes[i]);
 		}
 		col._refresh_title();
+		if (!col.loaded) {
+			t._columns_loading++;
+			col.onloaded.add_listener(function() { t._columns_loading--; t._check_loaded(); });
+		}
 		// add cells
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
@@ -946,9 +959,12 @@ function grid(element) {
 		table.className = "grid";
 	};
 	t._create_cell = function(column, data, parent, ondone) {
+		t._cells_loading++;
 		t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
 			parent.field = field;
 			if (ondone) ondone(field);
+			t._cells_loading--;
+			t._check_loading();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
 		});
 	},
@@ -961,6 +977,17 @@ function grid(element) {
 			parent.appendChild(f.getHTMLElement());
 			ondone(f);
 		});
+	};
+
+	t._columns_loading = 0;
+	t._cells_loading = 0;
+	t._loaded_listeners = [];
+	t._check_loaded = function() {
+		if (t._columns_loading == 0 && t._cells_loading == 0) {
+			var list = t._loaded_listeners;
+			t._loaded_listeners = [];
+			for (var i = 0; i < list.length; ++i) list[i]();
+		}
 	};
 	
 	/* initialization */
