@@ -47,6 +47,5 @@ class SelectionApplicantJSON {
 		$s .= "]";
 		return $s;
 	}
-	
 }
 ?>

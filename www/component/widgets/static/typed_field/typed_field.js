@@ -14,6 +14,7 @@ function typed_field(data,editable,config){
 	this.onchange = new Custom_Event();
 	this.ondatachanged = new Custom_Event();
 	this.ondataunchanged = new Custom_Event();
+	this.onfocus = new Custom_Event();
 	this._data = data;
 	this._in_change_event = false;
 	this._datachange = function(force) {
@@ -61,7 +62,10 @@ typed_field.prototype = {
 		if (this.editable == editable) return;
 		var data = this.getCurrentData();
 		this.editable = editable;
-		while (this.element.childNodes.length > 0) this.element.removeChild(this.element.childNodes[0]);
+		this.element.removeAllChildren();
+		// reset some functions which may not be overriden
+		this._getEditedData = function() { return this._data; };
+		// create
 		this._create(data);
 	},
 	/**
@@ -75,7 +79,7 @@ typed_field.prototype = {
 	/**
 	 * @returns the data from the edited field
 	 */
-	_getEditedData: function() { return this.originalData; },
+	_getEditedData: function() { return this._data; },
 	/**
 	 * @returns the original data (at creation time, or set by setOriginalData)
 	 */
@@ -127,9 +131,10 @@ typed_field.prototype = {
 	register_datamodel_cell: function(table, column, row_key) {
 		var t=this;
 		window.top.datamodel.registerCellWidget(window, table, column, row_key, this.element, function(){
-			return t.getCurrentData();
+			return t._getEditedData();
 		},function(data){
-			t.setData(data);
+			t._setData(data);
+			t._data = data;
 		},function(listener) {
 			t.onchange.add_listener(listener);
 		},function(listener) {
@@ -139,9 +144,10 @@ typed_field.prototype = {
 	register_datamodel_datadisplay: function(data_display, data_key) {
 		var t=this;
 		window.top.datamodel.registerDataWidget(window, data_display, data_key, this.element, function(){
-			return t.getCurrentData();
+			return t._getEditedData();
 		},function(data){
-			t.setData(data);
+			t._setData(data);
+			t._data = data;
 		},function(listener) {
 			t.onchange.add_listener(listener);
 		}, function(listener) {

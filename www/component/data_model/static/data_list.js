@@ -1,10 +1,7 @@
 if (typeof require != 'undefined') {
 	require("DataDisplay.js");
 	require("grid.js");
-	require("vertical_layout.js");
-	require("horizontal_layout.js");
 	require("horizontal_menu.js");
-	require("vertical_align.js");
 	require("typed_field.js",function(){
 		require("field_text.js");
 		require("field_html.js");
@@ -71,7 +68,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.footer_tools.className = "footer_tools";
 			t.addFooter(t.footer_tools);
 			t.footer.appendChild(t.footer_tools);
-			new horizontal_layout(t.footer_tools);
 			layout.invalidate(container);
 		}
 		t.footer_tools.appendChild(item);
@@ -116,7 +112,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			span.appendChild(document.createTextNode(text));
 			div.appendChild(span);
 		}
-		div.setAttribute("layout", "fixed");
 		t.header.insertBefore(div, t.header_left);
 		layout.invalidate(t.header);
 	};
@@ -131,7 +126,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			html = div;
 		}
 		html.className = "data_list_title";
-		html.setAttribute("layout", "fixed");
 		t.header.insertBefore(html, t.header_left);
 		layout.invalidate(t.header);
 	};
@@ -414,7 +408,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			
 			var col_picture = new GridColumn('data_list_picture', "Picture", null, "center", "field_html", false, null, null, {}, null);
 			var thumb_container = document.createElement("DIV");
-			thumb_container.setAttribute("layout","fill");
 			thumb_container.style.overflow = "auto";
 
 			var div_picture_size = document.createElement("DIV");
@@ -496,7 +489,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						thumbnail_provider(function(pics) {
 							pic_list.setPictures(pics);
 						});
-						thumb_container.setAttribute("layout","fill");
 						thumb_container.style.overflow = "auto";
 						container.insertBefore(thumb_container, t.header.nextSibling);
 					}
@@ -511,10 +503,25 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		printContent(t.header.nextSibling);
 	};
 	
+	t.orderBy = function(field_category, field_name, field_sub_index, asc) {
+		for (var i = 0; i < t.grid.columns.length; ++i) {
+			if (t.grid.columns[i].id == field_category+'.'+field_name+'.'+field_sub_index) {
+				t.grid.columns[i].sort_order = asc ? 1 : 2;
+				t.grid.columns[i]._refresh_title();
+				t._sort_column = t.grid.columns[i];
+				t._sort_order = asc ? 1 : 2;
+				if (t._data_loaded) t._loadData(); // reload to apply the sorting
+				return;
+			}
+		}
+		// no corresponding column: TODO support it ?
+	};
+	
 	/* Private properties */
 	t._root_table = root_table;
 	t._sub_model = sub_model;
 	t._onready = onready;
+	t._data_loaded = false;
 	/** {Array} List of available fields retrieved through the service get_available_fields */
 	t._available_fields = null;
 	/** Page number */
@@ -547,15 +554,12 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.header.className = "header";
 		t.header_left = document.createElement("DIV");
 		t.header_left.className = "header_left";
-		t.header_left.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_left);
 		t.header_center = document.createElement("DIV");
 		t.header_center.className = "header_center";
-		t.header_center.setAttribute("layout","fill");
 		t.header.appendChild(t.header_center);
 		t.header_right = document.createElement("DIV");
 		t.header_right.className = "header_right";
-		t.header_right.setAttribute("layout","fixed");
 		t.header.appendChild(t.header_right);
 		container.appendChild(t.header);
 		// init header buttons
@@ -606,8 +610,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						t._loadData();
 					});
 					_page_size_div.appendChild(t._page_size_field.getHTMLElement());
-					if (t.header && t.header.widget && t.header.widget.layout)
-						t.header.widget.layout();
 				});
 			});
 		}
@@ -677,30 +679,15 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.more_menu = div;
 		// init grid
 		t.grid_container = document.createElement("DIV");
-		t.grid_container.setAttribute("layout","fill");
-		t.grid_container.style.overflow = "auto";
+		t.grid_container.className = "grid_container";
 		container.appendChild(t.grid_container);
 		require("grid.js",function(){
 			t.grid = new grid(t.grid_container);
 			t._ready();
 		});
 		// layout
-		if (container.style.height)
-			require("vertical_layout.js",function(){
-				new vertical_layout(container);
-				layout.invalidate(container);
-			});
-		require("horizontal_layout.js",function(){
-			new horizontal_layout(t.header);
-			layout.invalidate(container);
-		});
 		require("horizontal_menu.js",function(){
 			new horizontal_menu(t.header_center, "middle");
-			layout.invalidate(container);
-		});
-		require("vertical_align.js",function(){
-			new vertical_align(t.header_left, "middle");
-			new vertical_align(t.header_right, "middle");
 			layout.invalidate(container);
 		});
 	};
@@ -837,9 +824,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t._cellUnchanged(field);
 		};
 		if (f.field.editable) {
-			col.addAction(new GridColumnAction(theme.icons_16.edit,function(ev,action,col){
+			col.addAction(new GridColumnAction(theme.icons_10.edit,function(ev,action,col){
 				var edit_col = function() {
-					action.icon = col.editable ? theme.icons_16.edit : theme.icons_16.no_edit;
+					action.icon = col.editable ? theme.icons_10.edit : theme.icons_10.no_edit;
 					action.tooltip = col.editable ? "Edit data on this column" : "Cancel modifications and stop editing this column";
 					col.toggleEditable();
 					layout.invalidate(container);
@@ -898,6 +885,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 
 	/** (Re)load the data from the server */
 	t._loadData = function(onready) {
+		t._data_loaded = true;
 		t.startLoading();
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i) {
@@ -1040,7 +1028,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			var row = t.grid.getRow(i);
 			for (var j = 0; j < row.childNodes.length; ++j)
 				if (row.childNodes[j].col_id == "actions") {
-					var html_field = tow.childNodes[j].field;
+					var html_field = row.childNodes[j].field;
 					var container = document.createElement("DIV");
 					for (var k = 0; k < t._action_providers.length; ++k)
 						t._action_providers[k](t, row, container);
@@ -1264,27 +1252,30 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 		
 		// remove button
-		var remove = document.createElement("BUTTON");
-		remove.className = "flat";
-		remove.title = "Remove this filter on "+field.name;
-		remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
-		if (filter.force) remove.disabled = 'disabled';
-		div.appendChild(remove);
-		remove.filter = filter;
-		remove.onclick = function() {
-			t.removeFilter(filter);
-			container.removeChild(div);
-			t._loadData();
-			if (t._filters.length == 0)
-				container.innerHTML = "<center><i>No filter</i></center>";
-			layout.invalidate(container);
-		};
+		if (!filter.force) {
+			var remove = document.createElement("BUTTON");
+			remove.className = "flat";
+			remove.title = "Remove this filter on "+field.name;
+			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+			if (filter.force) remove.disabled = 'disabled';
+			div.appendChild(remove);
+			remove.filter = filter;
+			remove.onclick = function() {
+				t.removeFilter(filter);
+				container.removeChild(div);
+				t._loadData();
+				if (t._filters.length == 0)
+					container.innerHTML = "<center><i>No filter</i></center>";
+				layout.invalidate(container);
+			};
+		}
 		
 		if (is_or) {
 			var div_or_text = document.createElement("DIV");
 			div_or_text.style.display = "inline-block";
 			div_or_text.style.verticalAlign = "bottom";
 			div_or_text.style.marginRight = "4px";
+			div_or_text.style.fontStyle = "italic";
 			div_or_text.appendChild(document.createTextNode("Or"));
 			div.appendChild(div_or_text);
 		}
@@ -1322,26 +1313,28 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			
 			var last_or = filter;
 			while (last_or.or) {
-				t._createFilter(last_or.or, or_div);
+				t._createFilter(last_or.or, or_div, true);
 				last_or = last_or.or;
 			}
 			
 			// add or button
-			var add_or = document.createElement("BUTTON");
-			add_or.innerHTML = "Or...";
-			or_div.appendChild(add_or);
-			add_or.onclick = function() {
-				t._contextMenuAddFilter(this, function(field, new_filter) {
-					last_or = filter;
-					while (last_or.or) last_or = last_or.or;
-					last_or.or = new_filter;
-					t._createFilter(new_filter, or_div, true);
-					or_div.removeChild(add_or);
-					or_div.appendChild(add_or);
-					layout.invalidate(container);
-					t._loadData();
-				});
-			};
+			if (!filter.force) {
+				var add_or = document.createElement("BUTTON");
+				add_or.innerHTML = "Or...";
+				or_div.appendChild(add_or);
+				add_or.onclick = function() {
+					t._contextMenuAddFilter(this, function(field, new_filter) {
+						last_or = filter;
+						while (last_or.or) last_or = last_or.or;
+						last_or.or = new_filter;
+						t._createFilter(new_filter, or_div, true);
+						or_div.removeChild(add_or);
+						or_div.appendChild(add_or);
+						layout.invalidate(container);
+						t._loadData();
+					});
+				};
+			}
 		}
 	},
 	/** Display the menu to edit/add/remove filters

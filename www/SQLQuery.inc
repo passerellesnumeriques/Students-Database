@@ -1060,7 +1060,7 @@ class SQLQuery {
 		$a = $this->execute();
 		if ($a === null) return null;
 		$a2 = array();
-		foreach ($a as $r) array_push($a2, $r[0]);
+		foreach ($a as $r) foreach ($r as $col=>$val) { array_push($a2, $val); break; }
 		return $a2;
 	}
 
@@ -1816,7 +1816,7 @@ class SQLQuery {
 			if ($nb_rows == count($rows)) {
 				$res = SQLQuery::db()->execute("SELECT LAST_INSERT_ID()");
 				$row = SQLQuery::db()->nextRow($res);
-				$id = $row[0];
+				$id = $row["LAST_INSERT_ID()"];
 				for ($i = 0; $i < $nb_rows; $i++)
 					array_push($ids, $id+$i);
 			}
@@ -2174,7 +2174,7 @@ class SQLQuery {
 				$primary = $t->getPrimaryKey();
 				if ($primary <> null) {
 					// search keys for rows matching
-					$q = SQLQuery::create()->bypassSecurity($this->bypass_security);
+					$q = SQLQuery::create()->bypassSecurity($this->bypass_security)->noWarning();
 					$table_alias = $q->generateTableAlias();
 					$q->select(array($t->getName()=>$table_alias));
 					if ($sm <> null)
@@ -2186,7 +2186,7 @@ class SQLQuery {
 				} else {
 					// no primary key, this must be done with a where
 					if (!$this->bypass_security && !$t->canRemoveAny()) {
-						$q = SQLQuery::create()->bypassSecurity($this->bypass_security);
+						$q = SQLQuery::create()->bypassSecurity($this->bypass_security)->noWarning();
 						$table_alias = $q->generateTableAlias();
 						$q->select(array($t->getName()=>$table_alias));
 						if ($sm <> null)
@@ -2210,7 +2210,7 @@ class SQLQuery {
 		
 					if (!$t->canModifyEverything()) {
 						// select matching rows
-						$q = SQLQuery::create();
+						$q = SQLQuery::create()->noWarning();
 						$table_alias = $q->generateTableAlias();
 						$q->select(array($t->getName()=>$table_alias));
 						if ($t->getModel() instanceof SubDataModel)

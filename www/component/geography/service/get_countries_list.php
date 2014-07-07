@@ -9,6 +9,10 @@ class service_get_countries_list extends Service{
 			<li><code>country_id</code> the id of the country in the database</li>
 			<li><code>country_code</code> the international country code</li>
 			<li><code>country_name</code> the name of the country</li>
+			<li><code>north</code></li>
+			<li><code>west</code></li>
+			<li><code>south</code></li>
+			<li><code>east</code></li>
 		</ul>
 		<?php
 	}
@@ -17,16 +21,6 @@ class service_get_countries_list extends Service{
 	}
 	public function execute(&$component,$input){
 		$countries = PNApplication::$instance->geography->getCountriesList();
-		
-		echo "[";
-		$first = true;
-		foreach($countries as $country){
-			if(!$first) echo ", ";
-			echo "{country_id:".json_encode($country["country_id"]).", ";
-			echo "country_code:".json_encode($country["country_code"]).", ";
-			echo "country_name:".json_encode($country["country_name"])."}";
-			$first = false;		
-		}
-		echo "]";
+		echo json_encode($countries);
 	}
 }

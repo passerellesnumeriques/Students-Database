@@ -21,6 +21,7 @@ field_timestamp.prototype._create = function(data) {
 			t._field_date.onchange.add_listener(function() { t._datachange(); });
 			t.element.appendChild(t._field_date.getHTMLElement());
 			t._field_date.getHTMLElement().style.verticalAlign = "bottom";
+			t._field_date.onfocus.add_listener(function(){t.onfocus.fire();});
 			if (t.config && t.config.show_time) {
 				var time = 0;
 				if (d != null) time = d.getMinutes()+d.getHours()*60;
@@ -32,6 +33,7 @@ field_timestamp.prototype._create = function(data) {
 				t._field_time.onchange.add_listener(function() { t._datachange(); });
 				t.element.appendChild(t._field_time.getHTMLElement());
 				t._field_time.getHTMLElement().style.verticalAlign = "bottom";
+				t._field_time.onfocus.add_listener(function(){t.onfocus.fire();});
 			}
 		});
 		this._setData = function(data) {

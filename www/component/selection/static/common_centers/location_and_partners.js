@@ -95,8 +95,8 @@ function location_and_partners(popup, section_location, section_other_partners, 
 								t.geographic_area_text = null; // temporary
 								win.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 								popup.freeze();
-								window.top.geography.getGeographicAreaText(window.top.default_country_id, selected.geographic_area, function(geo) {
-									t.geographic_area_text = geo;
+								window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
+									t.geographic_area_text = window.top.geography.getGeographicAreaTextFromId(country_data, selected.geographic_area);
 									t._refreshAddress();
 									popup.unfreeze();
 								});
@@ -231,7 +231,6 @@ function location_and_partners(popup, section_location, section_other_partners, 
 						popup.freeze();
 						// remove partners not anymore selected
 						for (var i = 0; i < t.partners.length; ++i) {
-							if (t.partners[i].host) continue; // this is the host
 							var found = false;
 							for (var j = 0; j < selected.length; ++j)
 								if (selected[j] == t.partners[i].organization.id) {
@@ -239,6 +238,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 									found = true; 
 									break; 
 								}
+							if (t.partners[i].host) continue; // this is the host
 							if (!found) {
 								t.partners.splice(i,1);
 								i--;
@@ -259,6 +259,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 									popup.unfreeze();
 								});
 							});
+						} else {
+							t._refreshPartners();
+							popup.unfreeze();
 						}
 					});
 				});

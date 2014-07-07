@@ -580,6 +580,9 @@ class JoiningTableDataDisplay extends DataDisplay {
 				->field($table_name, $this->foreign_table_column_name, "VALUE")
 				->field($table_name, $foreign_table->getPrimaryKey()->name, "KEY")
 				->execute();
+			$col = $foreign_table->getColumn($this->foreign_table_column_name);
+			for ($i = 0; $i < count($this->possible_values[$sub_model]); $i++)
+				$this->possible_values[$sub_model][$i]["VALUE"] = $col->getDisplayValue($this->possible_values[$sub_model][$i]["VALUE"]);
 		}
 		return $this->possible_values[$sub_model];
 	}
@@ -894,6 +897,8 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			$q->field($current_table->getName(), $col->name, "VALUE");
 			
 			$this->possible_values[$sub_model] = $q->execute();
+			for ($i = 0; $i < count($this->possible_values[$sub_model]); $i++)
+				$this->possible_values[$sub_model][$i]["VALUE"] = $col->getDisplayValue($this->possible_values[$sub_model][$i]["VALUE"]);
 		}
 		return $this->possible_values[$sub_model];
 	}
@@ -1106,6 +1111,9 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 			$q->field($first_table->getName(), $first_table->getPrimaryKey()->name, "KEY");
 			$q->field($last_table->getName(), $columns[count($columns)-1], "VALUE");
 			$this->possible_values[$sub_model] = $q->execute();
+			$col = $last_table->getColumnFor($columns[count($columns)-1], $sub_model);
+			for ($i = 0; $i < count($this->possible_values[$sub_model]); $i++)
+				$this->possible_values[$sub_model][$i]["VALUE"] = $col->getDisplayValue($this->possible_values[$sub_model][$i]["VALUE"]);
 		}
 		return $this->possible_values[$sub_model];
 	}

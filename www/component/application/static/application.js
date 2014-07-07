@@ -231,7 +231,13 @@ if (window == window.top) {
 		/** Event raised when some data need to be saved */
 		ondatatosave: new Custom_Event(),
 		/** Event raised when no more data need to be saved */
-		onalldatasaved: new Custom_Event()
+		onalldatasaved: new Custom_Event(),
+		autoDisableSaveButton: function(button) {
+			if (typeof button == 'string') button = document.getElementById(button);
+			button.disabled = this.hasDataUnsaved() ? "" : "disabled"; 
+			this.ondatatosave.add_listener(function() { button.disabled = ""; });
+			this.onalldatasaved.add_listener(function() { button.disabled = "disabled"; });
+		}
 	};
 	window.top.pnapplication.registerWindow(window);
 }
@@ -382,6 +388,7 @@ function LoadingFrame(frame_element) {
 				this.table.parentNode.removeChild(this.table);
 		}
 		frame_element._loading_frame = null;
+		console.log("Frame "+frame_element.name+" loaded in "+(new Date().getTime()-this._start)+"ms.");
 	};
 	
 	/** Check what is the current status, and remove the loading if needed */

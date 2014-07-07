@@ -12,10 +12,8 @@ class application extends Component {
 	}
 	
 	public function getPluginImplementations() {
-		require_once("ApplicationPlugin.inc");
 		require_once("GeneralNewsPlugin.inc");
 		return array(
-			new ApplicationDashboard(),
 			new GeneralNewsPlugin()
 		);
 	}

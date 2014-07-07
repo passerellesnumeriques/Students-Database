@@ -694,6 +694,8 @@ namespace datamodel {
 		public function validate($value) {
 			return $value;
 		}
+		
+		public function getDisplayValue($value) { return $value; }
 
 	}
 
@@ -953,6 +955,11 @@ namespace datamodel {
 		
 		public function get_sql_type(){
 			return "INT(".$this->size.")";
+		}
+		
+		public function getDisplayValue($value) {
+			if ($value == null) return null;
+			return date("Y-m-d h:i", $value); 
 		}
 	}
 

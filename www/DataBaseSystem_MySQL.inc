@@ -28,7 +28,7 @@ class DataBaseSystem_MySQL extends DataBaseSystem {
 	}
 
 	public function nextRow($query_result) {
-		$row = mysqli_fetch_array($query_result);
+		$row = mysqli_fetch_assoc($query_result);
 		if ($row === NULL) return false;
 		return $row;
 	}

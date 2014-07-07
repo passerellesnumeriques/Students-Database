@@ -628,7 +628,7 @@ function ExamSessionSection(container, event, sessions) {
 			var content = document.createElement("DIV");
 			content.style.backgroundColor = "white";
 			content.style.padding = "10px";
-			var popup = new popup_window("New session", null, content);
+			var popup = new popup_window("Change session schedule", null, content);
 			var date = new event_date_time_duration(content, t.event.start, Math.floor((t.event.end.getTime()-t.event.start.getTime())/60000), null, null, false, false);
 			popup.addOkCancelButtons(function() {
 				if (date.date == null) { alert('Please select a date'); return; }
@@ -751,9 +751,6 @@ function RoomSection(container, room, session_section) {
 	this.session_section = session_section;
 	this._init = function() {
 		var title = document.createElement("SPAN");
-		var checkbox = document.createElement("INPUT"); title.appendChild(checkbox);
-		checkbox.type = "checkbox";
-		checkbox.style.marginRight = "3px";
 		title.appendChild(document.createTextNode("Room "));
 		var room_name = document.createElement("SPAN"); title.appendChild(room_name);
 		room_name.appendChild(document.createTextNode(room.name));
@@ -781,8 +778,6 @@ function RoomSection(container, room, session_section) {
 		listener();
 		this.applicants_list.object_added.add_listener(listener);
 		this.applicants_list.object_removed.add_listener(listener);
-		this.applicants_list.addDropSupport()
-
 		this.applicants_list.addDropSupport("applicant", function(people_id) {
 			// check applicant before drop
 			for (var i = 0; i < t.applicants_list.getList().length; ++i)
@@ -794,6 +789,7 @@ function RoomSection(container, room, session_section) {
 		});
 		this.applicants_list.addDragSupport("applicant", function(obj) { return obj.people.id; });
 		this.applicants_list.addPeopleProfileAction();
+		this.applicants_list.makeSelectable();
 		var list_header = new ApplicantsListHeader(this.applicants_list);
 		// add unassign button for selected ones
 		list_header.addSelectionAction("Unassign", "action", "Unassign selected applicants from this room and session", function() {

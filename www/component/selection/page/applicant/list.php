@@ -12,15 +12,13 @@ class page_applicant_list extends SelectionPage {
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_list();");
-		$this->requireJavascript("vertical_layout.js");
-		$this->onload("new vertical_layout('page_container');");
 		$container_id = $this->generateID();
 		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : array();
 		?>
-		<div style='width:100%;height:100%' id='page_container'>
-			<div id='list_container' layout='fill' style="height:20px"></div>
+		<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
+			<div id='list_container' style="flex:1 1 auto"></div>
 			<?php if (PNApplication::$instance->user_management->has_right("manage_applicant")) {?>
-			<div class='page_footer'>
+			<div class='page_footer' style="flex:none;">
 				<span id='nb_selected'>0 applicant selected</span>: 
 				<button class='action' id='button_assign_is' disabled='disabled' onclick='assignIS(this);'>Assign to Information Session</button>
 				<button class='action' id='button_assign_exam_center' disabled='disabled' onclick='assignExamCenter(this);'>Assign to Exam Center</button>
@@ -129,6 +127,5 @@ class page_applicant_list extends SelectionPage {
 		</script>
 		<?php 
 	}
-	
 }
 ?>

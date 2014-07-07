@@ -21,7 +21,7 @@ function vertical_layout(container) {
 	
 	t.layout = function() {
 		// get the container size
-		var h = t.container.clientHeight;
+		var h = getInnerHeight(t.container);
 		// reset
 		for (var i = 0; i < t.container.childNodes.length; ++i) {
 			var e = t.container.childNodes[i];

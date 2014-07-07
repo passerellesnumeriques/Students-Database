@@ -58,71 +58,6 @@ class SelectionJSON{
 /**
  * Methods about Information Sessions (IS)
  */
-	/**
-	 * Build a JSON information structure for the given id
-	 * @param number $id
-	 * @return string json InformationSession structure
-	 * @no_name_check
-	 */	
-	public static function InformationSessionFromID($id){
-		if($id == -1 || $id == "-1")
-			return "{id:-1, geographic_area:null, date:null, number_boys_expected:null, number_boys_real:null, number_girls_expected:null, number_girls_real:null, name:null, partners:[]}";
-		$IS_row = self::InformationSessionTableDataFromID($id);
-		$IS_partners_row = self::PartnersDataFromID($id);
-		return self::InformationSession($IS_row, $IS_partners_row);
-	}
-	
-	/**
-	 * Get all the data from InformationSession table for the given id
-	 * @param number $id
-	 * @return array the row coming from the database
-	 * @no_name_check
-	 */
-	public static function InformationSessionTableDataFromID($id){
-		$q = SQLQuery::create()
-			->select("InformationSession")
-			->whereValue("InformationSession","id",$id);
-		self::InformationSessionSQL($q);
-		$row = $q->executeSingleRow();
-		return $row; 
-	}
-	
-	
-	/**
-	 * Get all the data from InformationSessionPartner for the given information session
-	 * @param unknown $id of the information session
-	 * @return array the rows coming from the database
-	 * @no_name_check
-	 */
-	public static function PartnersDataFromID($id){
-		$q = SQLQuery::create()
-		->select("InformationSessionPartner")
-		->join("InformationSessionPartner","InformationSessionContactPoint",array("information_session"=>"information_session","organization"=>"organization"))
-		->whereValue("InformationSessionPartner","information_session",$id)
-		->orderBy("InformationSessionPartner","organization");
-		self::ISPartnersSQL($q);
-		$rows = $q->execute();
-		return $rows;
-	}
-	
-	/**
-	 * Prepares the given SQLQuery to retrieve all the information session partners data
-	 * @param SQLQuery $q
-	 * @no_name_check
-	 */
-	public static function ISPartnersSQL(&$q){
-		$alias = $q->getTableAlias("InformationSessionPartner");
-		if(!$alias)
-			$alias = "InformationSessionPartner";
-		$alias_contact_point = $q->getTableAlias("InformationSessionContactPoint");
-		if(!$alias_contact_point)
-			$alias_contact_point = "InformationSessionContactPoint";
-		$q
-		->field($alias,"organization","organization")
-		->field($alias,"host","host")
-		->field($alias,"host_address","host_address")
-		->field($alias_contact_point,"people","contact_point");
-	}
 	
 	/**
 	 * Get the Information json structure
@@ -255,31 +190,39 @@ class SelectionJSON{
 			->join("ExamSubject","ExamSubjectPart",array("id" => "exam_subject"))
 			->join("ExamSubjectPart","ExamSubjectQuestion",array("id" => "exam_subject_part"))
 			->whereValue("ExamSubject","id",$id)
-			->orderBy("ExamSubjectPart","id");
-		self::ExamSubjectSQL($q);
+			->orderBy("ExamSubjectPart","id");//TODO : better to order by index ?
+		require_once("SelectionExamJSON.inc");
+		SelectionExamJSON::ExamSubjectSQL($q);
 		self::ExamSubjectPartSQL($q);
 		self::ExamSubjectQuestionSQL($q);
+		// TODO
 		
 		$rows = $q->execute();
+		
 		if($rows == null)
 			return "{}";
-		return self::ExamSubject($q, $rows, $id);
+		return self::ExamSubjectJSON($rows);
 	}
 	
 	/**
-	 * Prepares a query to retrieve the exam subject data from table ExamSubject
-	 * @param SQLQuery $q
-	 * @no_name_check
+	 * ExamSubjectFullSQL
+	 * Prepares query to get the full exam(s) subject(s)  (i.e join exam sub parts) 
 	 */
-	public static function ExamSubjectSQL(&$q){
-		$alias = $q->getTableAlias("ExamSubject");
-		if(!$alias)
-			$alias = "ExamSubject";
-		$q
-			->field($alias, "id","subject_id")
-			->field($alias,"name","subject_name")
-			->field($alias,"max_score","subject_max_score");
+	public static function ExamSubjectFullSQL(&$q){
+		$q = SQLQuery::create()
+			->select("ExamSubject")
+			->join("ExamSubject","ExamSubjectPart",array("id" => "exam_subject"))
+			->join("ExamSubjectPart","ExamSubjectQuestion",array("id" => "exam_subject_part"))
+			->OrderBy("ExamSubject","id")
+			->OrderBy("ExamSubjectPart","index")
+			->OrderBy("ExamSubjectQuestion","index");
+		require_once("SelectionExamJSON.inc");
+		SelectionExamJSON::ExamSubjectSQL($q);
+		self::ExamSubjectPartSQL($q);
+		self::ExamSubjectQuestionSQL($q);
 	}
+	
+	
 	
 	/**
 	 * Prepares a query to retrieve the exam subject parts data from table ExamSubjectPart
@@ -310,22 +253,62 @@ class SelectionJSON{
 			->field($alias,"id","question_id")
 			->field($alias,"index","question_index")
 			->field($alias,"max_score","question_max_score")
-			->field($alias,"correct_answer","question_correct_answer")
-			->field($alias,"choices","question_choices");
+			->field($alias,"type","question_type")
+			->field($alias,"type_config","question_type_config");
 	}
+	
+	/* get an array of ExamSubject JSON object
+	 * @param $rows array of {subj_id,subj_name,..part_id,part_name,..question_id,..} records
+	 */
+	public static function ExamSubjectsJSON($rows){
+
+		$subject_id=-1;
+		$part_id=-1;
+		$subject_counter=-1;
+		$parts_counter=-1;
+		$question_counter=-1;
+		
+		foreach ($rows as $row){
+			/* new subject ?*/
+			if($row['subject_id']!=$subject_id){
+				$tab[++$subject_counter]['id']=$row['subject_id'];
+				$tab[$subject_counter]['name']=$row['subject_name'];
+				$tab[$subject_counter]['max_score']=$row['subject_max_score'];
+				$subject_id=$row['subject_id'];
+				$parts_counter=-1;
+			}
+			/* new part ? */
+			if($row['part_id']!=$part_id){
+				$tab[$subject_counter]['parts'][++$parts_counter]['id']=$row['part_id'];
+				$tab[$subject_counter]['parts'][$parts_counter]['index']=$row['part_index'];
+				$tab[$subject_counter]['parts'][$parts_counter]['name']=$row['part_name'];
+				$tab[$subject_counter]['parts'][$parts_counter]['max_score']=$row['part_max_score'];
+				$part_id=$row['part_id'];
+				$question_counter=-1;
+			}
+			/* add question */
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][++$question_counter]['id']=$row['question_id'];
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][$question_counter]['index']=$row['question_index'];
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][$question_counter]['max_score']=$row['question_max_score'];
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][$question_counter]['type']=$row['question_type'];
+			$tab[$subject_counter]['parts'][$parts_counter]['questions'][$question_counter]['type_config']=$row['question_type_config'];			
+		}
+		
+		return json_encode($tab);
+	}
+	
 	
 	/**
 	 * Get the exam subject JSON structure
-	 * @param SQLQuery $q
 	 * @param array $rows the rows corresponding to the exam subject
-	 * @param number $exam_id the id of the exam
 	 * @return string JSON exam subject structure
 	 * @no_name_check
 	 */
-	public static function ExamSubject($q, $rows, $exam_id){
+	public static function ExamSubjectJSON($rows){
 		$json = "";
+			
 		if(isset($rows[0]["subject_name"])){
-			$json.= "{id:".json_encode($exam_id);
+			$json.= "{id:".json_encode($rows[0]["subject_id"]);
 			$json.= ", name:".json_encode($rows[0]["subject_name"]);
 			$json.= ", max_score:".json_encode($rows[0]["subject_max_score"]);
 			$json.= ", parts:";
@@ -383,8 +366,8 @@ class SelectionJSON{
 								$json.= "id:".json_encode($d["question_id"]);
 								$json.= ", index:".json_encode($d["question_index"]);
 								$json.= ", max_score:".json_encode($d["question_max_score"]);
-								$json.= ", correct_answer:".json_encode($d["question_correct_answer"]);
-								$json.= ", choices:".json_encode($d["question_choices"]);
+								$json.= ", type:".json_encode($d["question_type"]);
+								$json.= ", type_config:".json_encode($d["question_type_config"]);
 							}
 						} else {
 							if(!$first_part){
@@ -392,8 +375,8 @@ class SelectionJSON{
 								$json.= "id:".json_encode($d["question_id"]);
 								$json.= ", index:".json_encode($d["question_index"]);
 								$json.= ", max_score:".json_encode($d["question_max_score"]);
-								$json.= ", correct_answer:".json_encode($d["question_correct_answer"]);
-								$json.= ", choices:".json_encode($d["question_choices"]);
+								$json.= ", type:".json_encode($d["question_type"]);
+								$json.= ", type_config:".json_encode($d["question_type_config"]);
 							} else {
 								$json.= "{";
 								$json.= "id:".json_encode($d["part_id"]);
@@ -407,8 +390,8 @@ class SelectionJSON{
 									$json.= "{id:".json_encode($d["question_id"]);
 									$json.= ", index:".json_encode($d["question_index"]);
 									$json.= ", max_score:".json_encode($d["question_max_score"]);
-									$json.= ", correct_answer:".json_encode($d["question_correct_answer"]);
-									$json.= ", choices:".json_encode($d["question_choices"]);
+									$json.= ", type:".json_encode($d["question_type"]);
+									$json.= ", type_config:".json_encode($d["question_type_config"]);
 								}
 							}
 							$first_part = false;
@@ -425,8 +408,11 @@ class SelectionJSON{
 			$json.= "}";
 		} else
 			$json = "{}";
+		
 		return $json;
 	}
+
+	
 	
 	/**
 	 * Convert the exam data from the JSON exam subject structures to the database one
@@ -476,8 +462,8 @@ class SelectionJSON{
 			"exam_subject_part" => @$json["exam_subject_part"],
 			"index" => @$json["index"],
 			"max_score" => @$json["max_score"],
-			"correct_answer" => @$json["correct_answer"],
-			"choices" => @$json["choices"]
+			"type" => @$json["type"],
+			"type_config" => @$json["type_config"]
 		);
 		if(isset($json["id"]))
 			$a["id"] = $json["id"];
@@ -520,7 +506,8 @@ class SelectionJSON{
 			->orderBy("ExamSubjectPart","index");
 		self::ExamTopicSQL($q);
 		self::ExamSubjectPartSQL($q);
-		self::ExamSubjectSQL($q);
+		require_once("SelectionExamJSON.inc");
+		SelectionExamJSON::ExamSubjectSQL($q);
 		$rows = $q->execute();
 		if($rows <> null)
 			return self::ExamTopic($q, $rows, $id);
@@ -1461,4 +1448,5 @@ class SelectionJSON{
 		$data .= "}";
 		return $data;
 	}
+	
 }

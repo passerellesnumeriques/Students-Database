@@ -448,14 +448,15 @@ function organization(container, org, existing_types, can_edit) {
 											areas = place.formatted_address.split(",");
 										if (areas.length == 0)
 											add_address();
-										else window.top.geography.searchAreaByNames(a.country_id, areas, function(area) {
-											a.geographic_area.id = area != null ? area.area_id : null;
-											if (area == null)
+										else window.top.geography.getCountryData(a.country_id, function(country_data) {
+											var area = window.top.geography.searchAreaByNames(country_data, areas);
+											if (area == null) {
+												a.geographic_area.id = null;
 												add_address();
-											else window.top.geography.getGeographicAreaText(a.country_id, area.area_id, function(text) {
-												a.geographic_area.text = text;
+											} else {
+												a.geographic_area = window.top.geography.getGeographicAreaText(country_data, area);
 												add_address();
-											});
+											}
 										});
 									};
 									var populate_country = function() {

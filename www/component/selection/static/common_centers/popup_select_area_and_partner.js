@@ -112,24 +112,16 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		if (t._initializing_area) { t._reinit_area = true; return; }
 		t._initializing_area = true;
 		require("geographic_area_selection.js", function() {
-			new geographic_area_selection(t._td_area, t._country_id, function(area) {
-				if (t.geographic_area) {
-					area.setToReturn(t.geographic_area);
-					area.startFilter(t.geographic_area);
-				}
+			new geographic_area_selection(t._td_area, t._country_id, t.geographic_area, function(area) {
 				area.onchange = function() {
 					var a = area.getSelectedArea();
-					t.geographic_area = a != null ? a.id : null;
+					t.geographic_area = a;
 					t._refreshTDPartners(t.geographic_area);
 					//Reset the host if the area is changed
 					t.host = null;
 					//Update the buttons
 					t._updatePopButtonsAndInfoRow();
 				};
-				if (window.get_popup_window_from_element) {
-					var popup = window.get_popup_window_from_element(t._td_area);
-					if (popup != null) popup.resize();
-				}
 				t._initializing_area = false;
 				if (t._reinit_area) {
 					t._reinit_area = false;
@@ -195,7 +187,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 					button.appendChild(text.element);
 					button.address = row_data.addresses[i];
 					button.onclick = function(){
-						this.pop.onclose = null;
+						pop.onclose = null;
 						t.host = new SelectionPartner(
 							-1, // center_id: -1 to indicate it has been changed
 							row_data, // organization
@@ -204,7 +196,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 							[] // no contact point selected yet
 						);
 						t.geographic_area = this.address.geographic_area.id;
-						this.pop.close();
+						pop.close();
 						t._closePop();
 					};
 					button.style.marginTop = "20px";

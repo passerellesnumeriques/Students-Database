@@ -555,7 +555,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		return max;
 	};
 		
-	/** Resize the window according to its content: this is normally automatically called. 
+	/** 
+	 * Resize the window according to its content: this is normally automatically called. 
 	 */
 	t.resize = function() {
 		if (!t.table) return;

@@ -4,18 +4,16 @@ class page_academic_calendar extends Page {
 	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function execute() {
-		$this->requireJavascript("vertical_layout.js");
-		$this->onload("new vertical_layout('top_container');");
 		$this->requireJavascript("tree.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
 ?>
-<div id='top_container' class="page_container" style="width:100%;height:100%">
-	<div class="page_title">
+<div id='top_container' class="page_container" style="width:100%;height:100%;display:flex;flex-direction:column;">
+	<div class="page_title" style="flex:none;">
 		<img src='/static/calendar/calendar_32.png' style="vertical-align:top"/>
 		Academic Calendar: Years and Periods
 	</div>
-	<div id='tree_container' style='background-color:white;' layout='fill'></div>
-	<div class="page_footer">
+	<div id='tree_container' style='background-color:white;flex:1 1 auto;'></div>
+	<div class="page_footer" style="flex:none;">
 		<button class='action' onclick='new_year();'>New Academic Year</button>
 	</div>
 </div>

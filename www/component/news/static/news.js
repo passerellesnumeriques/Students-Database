@@ -151,8 +151,8 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		t.more(function(has_more) {
 			while (t._more_container.childNodes.length > 0) t._more_container.removeChild(t._more_container.childNodes[0]);
 			if (has_more) {
-				var button = document.createElement("SPAN");
-				button.className = "button";
+				var button = document.createElement("BUTTON");
+				button.className = "action";
 				button.appendChild(document.createTextNode("Show More"));
 				t._more_container.appendChild(button);
 				button.onclick = function() {
@@ -235,9 +235,9 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 				}
 			}
 			if (can_reply) {
-				var img = document.createElement("IMG");
-				img.src = "/static/news/reply.png";
-				img.className = "button_verysoft";
+				var img = document.createElement("BUTTON");
+				img.innerHTML = "<img src='/static/news/reply.png'/>";
+				img.className = "flat small_icon";
 				img.style.marginLeft = "5px";
 				img.style.verticalAlign = "bottom";
 				header.appendChild(img);
@@ -262,8 +262,8 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 						    auto_focus: editor.id,
 						    fontsize_formats: "8pt 9pt 10pt 12pt 14pt 18pt 24pt"
 						});
-						var button = document.createElement("DIV");
-						button.className = "button";
+						var button = document.createElement("BUTTON");
+						button.className = "action";
 						button.innerHTML = "Post Reply";
 						div.appendChild(button);
 						button.onclick = function() {

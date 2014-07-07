@@ -4,8 +4,6 @@ class page_teachers extends Page {
 	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function execute() {
-		$this->requireJavascript("vertical_layout.js");
-		$this->onload("new vertical_layout('top_container');");
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		$this->onload("sectionFromHTML('current_teachers');");
@@ -34,12 +32,12 @@ class page_teachers extends Page {
 		$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true);
 
 ?>
-<div id='top_container' class="page_container" style="width:100%;height:100%">
-	<div class="page_title">
+<div class="page_container" style="width:100%;height:100%;display:flex;flex-direction:column;">
+	<div class="page_title" style="flex:none;">
 		<img src='/static/curriculum/teacher_32.png' style="vertical-align:top"/>
 		Teachers
 	</div>
-	<div id='list_container' style='overflow:auto;background-color:#e8e8e8;' layout='fill'>
+	<div id='list_container' style='overflow:auto;background-color:#e8e8e8;flex:1 1 auto;'>
 		<div id='current_teachers'
 			title='Current Teachers'
 			collapsable='true'
@@ -56,7 +54,7 @@ class page_teachers extends Page {
 		<?php $this->buildTeachersList($past_teachers_ids, $teachers, $peoples);?>
 		</div>
 	</div>
-	<div class="page_footer">
+	<div class="page_footer" style="flex:none;">
 		<button class='action' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
 	</div>
 </div>

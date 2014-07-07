@@ -55,8 +55,8 @@ function color_choice(container, current_color) {
 		tr.appendChild(td = document.createElement("TD"));
 		td.colSpan = 2;
 		td.style.textAlign = "center";
-		var button = document.createElement("DIV");
-		button.className = "button";
+		var button = document.createElement("BUTTON");
+		button.className = "action";
 		button.innerHTML = "Custom Color";
 		td.appendChild(button);
 		button.onclick = function() {
@@ -67,7 +67,7 @@ function color_choice(container, current_color) {
 				t.frame = frame;
 				frame.src = "/static/widgets/color_choice/lib_colorpicker/default.html"+color_string(t.color);
 				frame.onload = function() { 
-					layout.invalidate(container); 
+					layout.invalidate(container);
 				};
 				frame.style.height = "280px";
 				frame.style.width = "450px";

@@ -6,26 +6,34 @@ class service_get extends Service {
 	public function documentation() {}
 	public function inputDocumentation() {}
 	public function outputDocumentation() {}
+	private $id = null;
+	private $file = null;
 	public function getOutputFormat($input) {
 		$id = $_GET["id"];
-		$file = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id)->executeSingleRow();
-		if ($file <> null && $file["mime"] <> null) return $file["mime"];
+		if ($this->file == null || $this->id <> $id) {
+			$this->id = $id;
+			$this->file = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id)->executeSingleRow();
+		}
+		if ($this->file <> null && $this->file["mime"] <> null) return $this->file["mime"];
 		return "application/octet-stream";
 	}
 	
 	public function execute(&$component, $input) {
 		$id = $_GET["id"];
-		$file = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id)->executeSingleRow();
-		if ($file == null) {
+		if ($this->file == null || $this->id <> $id) {
+			$this->id = $id;
+			$this->file = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id)->executeSingleRow();
+		}
+		if ($this->file == null) {
 			PNApplication::error("Invalid storage id");
 			return;
 		}
-		if (!$component->canReadFile($file)) {
+		if (!$component->canReadFile($this->file)) {
 			PNApplication::error("Access Denied.");
 			return;
 		}
-		if (!isset($_GET["revision"]) || $_GET["revision"] <> $file["revision"]) {
-			header("Location: ?id=".$id."&revision=".$file["revision"]);
+		if (!isset($_GET["revision"]) || $_GET["revision"] <> $this->file["revision"]) {
+			header("Location: ?id=".$id."&revision=".$this->file["revision"]);
 			return;
 		}
 		header('Cache-Control: public', true);

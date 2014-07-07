@@ -30,7 +30,8 @@ class service_test_data extends Service {
 	 			}
  			}
 			$this->SplitSQL($db_system, "component/development/data/countries.sql");
-			$this->SplitSQL($db_system, "component/development/data/geography.sql");
+			$this->SplitSQL($db_system, "component/development/data/countrydivision.sql");
+			$this->SplitSQL($db_system, "component/development/data/geographicarea.sql");
 			if ($domain == "Dev") {
 				$this->SplitSQL($db_system, "component/development/data/curriculumsubjectcategory.sql");
 				$this->SplitSQL($db_system, "component/development/data/specialization.sql");

@@ -40,7 +40,8 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 					var data = tool.getPictures()[0].getResultData();
 					service.json("people", "save_picture", {id:<?php echo $people_id;?>,picture:data}, function(res) {
 						if (res) {
-							picture.reload();
+							window.top.datamodel.cellChanged("People","picture",<?php echo $people_id;?>,-1);
+							//picture.reload();
 							tool.popup.close();
 						} else
 							tool.popup.unfreeze();
@@ -49,7 +50,7 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 				tool.useUpload();
 				tool.useFaceDetection();
 				tool.addTool("crop",function() {
-					tool.setToolValue("crop", null, {aspect_ratio:0.75}, true);
+					//tool.setToolValue("crop", null, {aspect_ratio:0.75}, true);
 				});
 				tool.addTool("scale", function() {
 					tool.setToolValue("scale", null, {max_width:300,max_height:300}, false);

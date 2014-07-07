@@ -191,7 +191,7 @@ field_addresses.prototype._create = function(data) {
 														// the previous level is not defined
 														// get the latest defined level
 														var latest = levels_areas[levels_areas.length-1];
-														if (!window.top.geography.isAreaIncludedIn(cdata, ar, t.config.sub_data_index, latest.area_id)) continue;
+														if (!window.top.geography.isAreaIncludedIn(cdata, ar, latest.area_id)) continue;
 													}
 												}
 												o = document.createElement("OPTION");
@@ -264,16 +264,15 @@ field_addresses.prototype._create = function(data) {
 						var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", "Work");
 						if (typeof new_data == 'string') {
 							window.top.require("geography.js", function() {
-								window.top.geography.searchAreaByNameInDivision(window.top.default_country_id, division_index, new_data, function(area) {
+								window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
+									var area = window.top.geography.searchAreaByNameInDivision(country_data, division_index, new_data);
 									if (area) {
 										// found
 										address.geographic_area.country_id = window.top.default_country_id;
 										address.geographic_area.id = area.area_id;
-										window.top.geography.getDivisionIdFromIndex(window.top.default_country_id, division_index, function(division_id) {
-											address.geographic_area.division_id = division_id;
-											t._data.addresses.push(address);
-											t.setData(t._data, true);
-										});
+										address.geographic_area.division_id = window.top.geography.getAreaDivisionId(country_data, area);
+										t._data.addresses.push(address);
+										t.setData(t._data, true);
 									} else {
 										// not found
 										// TODO ?

@@ -10,10 +10,6 @@ class page_tree_frame extends Page {
 			return;
 		}
 		$this->addInitScript("window.top.require('datamodel.js');");
-		$this->requireJavascript("horizontal_layout.js");
-		$this->onload("new horizontal_layout('curriculum_tree_frame_container');");
-		$this->requireJavascript("vertical_layout.js");
-		$this->onload("new vertical_layout('curriculum_tree_container');");
 		$this->requireJavascript("header_bar.js");
 		theme::css($this, "header_bar.css");
 		$this->onload("new header_bar('tree_header','toolbar');");
@@ -40,7 +36,6 @@ class page_tree_frame extends Page {
 	border-left: 2px solid #808080;
 }
 #tree_footer {
-	width: 100%;
 	background-color: white;
 	padding: 5px;
 	border-top: 1px solid #A0A0A0;
@@ -59,10 +54,10 @@ class page_tree_frame extends Page {
 	font-size: 11px;
 }
 </style>
-<div id="curriculum_tree_frame_container" style="width:100%;height:100%;overflow:hidden">
-	<iframe name="curriculum_tree_frame" id="curriculum_tree_frame" style="border:none;" layout="fill"></iframe>
-	<div id="curriculum_tree_container" layout="250">
-		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Classes'>
+<div id="curriculum_tree_frame_container" style="width:100%;height:100%;overflow:hidden;display:flex;flex-direction:row">
+	<iframe name="curriculum_tree_frame" id="curriculum_tree_frame" style="border:none;flex:1 1 auto;"></iframe>
+	<div id="curriculum_tree_container" style="flex:none;display:flex;flex-direction:column;">
+		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Classes' style="flex:none">
 			<?php if ($can_edit) { ?>
 			<button class='flat' onclick='createNewBatch();'>
 				<img src='<?php echo theme::make_icon("/static/curriculum/batch_16.png", theme::$icons_10["add"]);?>'/>
@@ -70,8 +65,8 @@ class page_tree_frame extends Page {
 			</button>
 			<?php } ?>
 		</div>
-		<div id='tree' style='overflow-y:auto;overflow-x:auto;background-color:white;width:100%;height:100%' layout='fill'></div>
-		<div id='tree_footer'>
+		<div id='tree' style='background-color:white;flex:1 1 auto;'></div>
+		<div id='tree_footer' style='flex:none'>
 			<div id='tree_footer_title'></div>
 			<div id='tree_footer_content'></div>
 		</div>

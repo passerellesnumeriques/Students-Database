@@ -437,12 +437,14 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 				e.uid = ev.uid;
 			}
 			e.all_day = t.all_day.checked;
-			e.start = t.from_date.parseDate(t.from_date.getCurrentData());
+			e.start = parseSQLDate(t.from_date.getCurrentData());
 			if (!e.all_day)
 				e.start.setHours(0,t.from_time.getCurrentMinutes(),0,0);
-			e.end = t.to_date.parseDate(t.to_date.getCurrentData());
+			e.end = parseSQLDate(t.to_date.getCurrentData());
 			if (!e.all_day)
 				e.end.setHours(0,t.to_time.getCurrentMinutes(),0,0);
+			else
+				e.end.setHours(23,59,59,999);
 			if (e.end.getTime() <= e.start.getTime()) {
 				alert("The end of the event must be after its start ! Please correct the dates and times.");
 				return;

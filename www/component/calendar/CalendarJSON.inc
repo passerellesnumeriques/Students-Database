@@ -66,8 +66,8 @@ class CalendarJSON {
 		$data .= ",calendar_provider_id:'PN'";
 		$data .= ",calendar_id:".$row["calendar"];
 		$data .= ",uid:".json_encode($row["uid"]);
-		$data .= ",start:".($use_date_object ? "new Date(".$row["start"].")" : $row["start"]);
-		$data .= ",end:".($use_date_object ? "new Date(".$row["end"].")" : $row["end"]);
+		$data .= ",start:".($use_date_object ? "new Date(".$row["start"]."*1000)" : $row["start"]);
+		$data .= ",end:".($use_date_object ? "new Date(".$row["end"]."*1000)" : $row["end"]);
 		$data .= ",all_day:".($row["all_day"] == "1" ? "true" : "false");
 		$data .= ",last_modified:".json_encode($row["last_modified"]);
 		$data .= ",title:".json_encode($row["title"]);

@@ -55,9 +55,19 @@ class page_overview extends Page {
 			<div>Consult the curriculum, students list by batch and class, grades...</div>
 		</a>
 		<a class="section_box">
-			<div><img src='/static/students/student_32.png'/></div>
+			<div><img src='/static/education/education_32.png'/></div>
 			<div>Education</div>
 			<div>Students information and life in PN: discipline, health, finance, housing...</div>
+		</a>
+		<a class="section_box">
+			<div><img src='/static/internship/internship_32.png'/></div>
+			<div>Internship</div>
+			<div>Companies information, internships follow-up...</div>
+		</a>
+		<a class="section_box">
+			<div><img src='/static/students/student_32.png'/></div>
+			<div>Alumni</div>
+			<div>Alumni current situation and contacts</div>
 		</a>
 		<a class="section_box" href='/dynamic/administration/page/dashboard'>
 			<div><img src='/static/administration/admin_32.png'/></div>
@@ -68,18 +78,23 @@ class page_overview extends Page {
 	<div class="page_section_title" style='margin-bottom:0px'>
 		What's happening ?
 	</div>
-	<div style='background-color:#e8e8e8;padding-top:10px'>
-		<div class="section" style="display:inline-block;width:45%;margin-left:10px">
-			<div class="header"><div>
-				<img src='/static/news/news.png'/>
-				Latest Updates
-			</div></div>
-			<div style='background-color:white'>
-				TODO<br/>
-				<a href='#'>Show more</a>
+	<div style='background-color:#e8e8e8;padding-top:10px;display:flex;flex-direction:row;'>
+		<div id="updates" style="display:inline-block;flex:1 1 auto;margin-left:10px"
+			icon="/static/news/news.png"
+			title="Latest Updates"
+		>
+			<div>
+				<div class='page_section_title3'>General updates</div>
+				<div id='general_news_container'>
+					<img src='/static/news/loading.gif' id='general_news_loading'/>
+				</div>
+				<div class='page_section_title3'>Other updates</div>
+				<div id='other_news_container'>
+					<img src='/static/news/loading.gif' id='other_news_loading'/>
+				</div>
 			</div>
 		</div>
-		<div id="calendar_events" style="display:inline-block;width:45%;margin-left:10px;vertical-align:top"
+		<div id="calendar_events" style="display:inline-block;flex:1 1 auto;margin-left:10px;vertical-align:top"
 			icon="/static/calendar/calendar_16.png"
 			title="Upcoming Events"
 		>
@@ -90,6 +105,8 @@ class page_overview extends Page {
 </div>
 <script type='text/javascript'>
 var calendars_section = sectionFromHTML('calendar_events');
+var updates_section = sectionFromHTML('updates');
+
 require("calendar_view.js");
 require("calendar_view_week.js");
 function init_calendars() {
@@ -157,6 +174,18 @@ function init_calendars() {
 	});
 }
 init_calendars();
+
+require("news.js",function() {
+	new news('general_news_container', [{name:"application"}], null, function(n) {
+		var loading = document.getElementById('general_news_loading');
+		loading.parentNode.removeChild(loading);
+	});
+	new news('other_news_container', [], [{name:"application"}], function(n) {
+		var loading = document.getElementById('other_news_loading');
+		loading.parentNode.removeChild(loading);
+	});
+});
+
 </script>
 <?php 		
 	}

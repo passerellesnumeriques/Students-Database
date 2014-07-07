@@ -1,0 +1,15 @@
+<html>
+<head>
+    <script type='text/javascript' src='/static/javascript/browser.js'></script>
+    <script type='text/javascript' src='/static/javascript/utils.js'></script>
+    <link rel="stylesheet" type="text/css" href="/static/theme/default/style/global.css"></link>
+</head>
+<body style='background-color:white'>
+<div id='text_container'></div>
+<script type='text/javascript'>
+var u = new URL(location.href);
+if (u.params && u.params.text)
+	document.getElementById('text_container').innerHTML = u.params.text;
+</script>
+</body>
+</html>

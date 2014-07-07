@@ -754,7 +754,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		t.calendar_manager.on_event_added.add_listener(function(ev) { t.addEvent(ev); });
 		t.calendar_manager.on_event_removed.add_listener(function(ev) { t.removeEvent(ev); });
 		t.calendar_manager.on_event_updated.add_listener(function(ev) {
-			t.view.removeEvent(ev);
+			t.view.removeEvent(ev.uid);
 			t.view.addEvent(ev);
 		});
 		t._init();

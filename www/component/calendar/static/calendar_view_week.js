@@ -390,9 +390,10 @@ function calendar_view_week(view, container) {
 	 * @param {Object} ev the event to display
 	 */
 	this.addEvent = function(ev) {
-		var i = ev.start.getDay();
-		if (i == 0) i = 7;
-		this.events[i-1].push(ev);
+		var i = ev.start.getTime()-this.start_date.getTime();
+		i /= 24*60*60*1000;
+		i = Math.floor(i);
+		this.events[i].push(ev);
 		this._layout();
 	};
 	/** Called by the CalendarView when an event needs to be removed from the dislpay.
