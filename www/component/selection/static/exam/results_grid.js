@@ -118,10 +118,16 @@ function results_grid(subject,applicants,grid_height) {
         /* Inserting some cell wrappers in order to fix table columns width
         note : need to wait 1s before doing it because it seems the grid is not fully
         created at this time */
-      setTimeout(function(){
-          $(t.elt.grid).find("table.grid>tbody>tr>td").wrapInner("<div class='cell_wrapper'></div>");
-           $(t.elt.grid).find("table.grid>thead>tr>th").wrapInner("<div class='cell_wrapper'></div>");
-         }, 1000);
+        t.grid_res.onallrowsready(function(){
+             $(t.elt.grid).find("table.grid>tbody>tr>td").wrapInner("<div class='cell_wrapper'></div>");
+             $(t.elt.grid).find("table.grid>thead>tr>th").wrapInner("<div class='cell_wrapper'></div>");
+            });
+        
+        
+      //setTimeout(function(){
+      //    $(t.elt.grid).find("table.grid>tbody>tr>td").wrapInner("<div class='cell_wrapper'></div>");
+      //     $(t.elt.grid).find("table.grid>thead>tr>th").wrapInner("<div class='cell_wrapper'></div>");
+      //   }, 1000);
       
       }
    
