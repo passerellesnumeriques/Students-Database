@@ -85,6 +85,7 @@ function debug_status(container) {
 					table.appendChild(tr = document.createElement("TR"));
 					tr.appendChild(td = document.createElement("TD"));
 					td.style.border = '1px solid black';
+					td.style.borderTop = '2px solid black';
 					td.style.whiteSpace = "nowrap";
 					var rowspan = req ? req.sql_queries.length : 0;
 					if (rowspan == 0) rowspan = 1;
@@ -98,6 +99,7 @@ function debug_status(container) {
 							table.appendChild(tr = document.createElement("TR"));
 						tr.appendChild(td = document.createElement("TD"));
 						td.style.border = '1px solid black';
+						if (j == 0) td.style.borderTop = '2px solid black';
 						td.style.whiteSpace = "nowrap";
 						td.innerHTML = (j+1)+". ";
 						var sql = req.sql_queries[j];
@@ -134,6 +136,7 @@ function debug_status(container) {
 						}
 						tr.appendChild(td = document.createElement("TD"));
 						td.style.border = '1px solid black';
+						if (j == 0) td.style.borderTop = '2px solid black';
 						td.style.whiteSpace = "nowrap";
 						td.innerHTML = sql[3]+"s.";
 						if (sql[3] > 1) td.style.color = "#FF0000";

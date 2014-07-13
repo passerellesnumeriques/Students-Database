@@ -351,6 +351,7 @@ function updatePeriodRow(period) {
 		}
 	} else
 		period.academic_period = 0;
+	layout.invalidate(period.td_period);
 	if (index < periods.length-1)
 		updatePeriodRow(periods[index+1]);
 	else {

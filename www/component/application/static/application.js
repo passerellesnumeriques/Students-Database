@@ -223,6 +223,13 @@ if (window == window.top) {
 		isDataUnsaved: function(id) {
 			return this._data_unsaved.contains(id);
 		},
+		hasDataUnsavedStartingWith: function(start) {
+			for (var i = 0; i < this._data_unsaved.length; ++i)
+				if (this._data_unsaved[i].startsWith(start))
+					return true;
+			return false;
+		},
+		getDataUnsavedIds: function() { return this._data_unsaved; },
 		/** Mark all data as saved */
 		cancelDataUnsaved: function() { 
 			this._data_unsaved = [];

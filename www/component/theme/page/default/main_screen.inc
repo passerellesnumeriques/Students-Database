@@ -417,6 +417,11 @@ function pageLoaded(url) {
 		if (item.hasAttribute("href")) {
 			var iu = new URL(item.getAttribute("href"));
 			if (u.path == iu.path) oks.push(item);
+			else if (item.hasAttribute("alternate_hrefs")) {
+				var hrefs = item.getAttribute("alternate_hrefs").split(";");
+				for (var j = 0; j < hrefs.length; ++j)
+					if (new URL(hrefs[j]).path == u.path) { oks.push(item); break; }
+			}
 			item.className = "application_left_menu_item";
 			var is_ok = u.path == iu.path;
 			if (is_ok && iu.hash) is_ok = iu.hash == u.hash;

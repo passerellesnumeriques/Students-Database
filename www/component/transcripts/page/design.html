@@ -1,0 +1,154 @@
+<style type='text/css'>
+.transcripts {
+	font-family: Verdana;
+	padding:20px;
+}
+.transcripts .title {
+	font-size:22pt;
+}
+.transcripts .student_information {
+	width: 100%;
+}
+.transcripts .grades {
+	table-layout: fixed;
+	empty-cells: hide;
+	margin-top: 20px;
+	width: 100%;
+	border-spacing: 0px;
+	border-collapse: collapse;
+}
+.transcripts .grades td {
+	border: 2px solid black;
+}
+.transcripts .grades tbody>tr:first-child>td:first-child {
+	border: none;
+}
+.transcripts .grades .title {
+	font-weight: bold;
+	font-size: 12pt;
+	text-align: center;
+}
+.transcripts .grades .subject_category {
+	font-weight: bold;
+	font-size: 14pt;
+	padding-top: 10px;
+	-moz-transform: rotate(-90deg);
+	-webkit-transform: rotate(-90deg);
+	-o-transform: rotate(-90deg);
+	transform: rotate(-90deg);
+}
+.transcripts .grades .subject_category_col {
+	width: 24pt;
+}
+.transcripts .grades .total {
+	background-color: #009DE1;
+	color: white;
+}
+.transcripts .grades .total>td:first-child {
+	font-weight: bold;
+	font-size: 14pt;
+}
+.transcripts .grades .total>td {
+}
+.transcripts td.subject_name {
+	text-align: left;
+}
+.transcripts td {
+	text-align: center;
+}
+.transcripts .student_information .name {
+	font-weight: bold;
+}
+.transcripts .general_appreciation {
+	border: 2px solid black;
+}
+.transcripts .general_appreciation th {
+	font-size: 14pt;
+	font-weight: bold;
+	border-bottom: 2px solid black;
+	text-align: center;
+}
+.transcripts .general_appreciation td {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100px;
+	font-size: 12pt;
+}
+.transcripts .signature {
+	font-size: 12pt;
+	padding-left: 30px;
+}
+</style>
+<!-- Header / Title -->
+<div class='title' style='margin-bottom:20px'>
+	<div style='display:inline-block;width:120px'>
+	<img src='/static/application/logo.png' width=80 height=80 style='vertical-align:top'/>
+	</div>
+	<div style='display:inline-block;width:450px;vertical-align:top'>
+		OFFICIAL TRANSCRIPT OF ACADEMIC RECORDS
+	</div>
+</div>
+<!-- Student's information -->
+<table class='student_information'>
+	<tr>
+		<td>First Name:</td>
+		<td class='name'>#First Name#</td>
+		<td>Last Name:</td>
+		<td class='name'>#Last Name#</td>
+	</tr>
+	<tr>
+		<td>Academic Period:</td>
+		<td>#Academic Period#</td>
+		<td>Date:</td>
+		<td>#Academic Period Date#</td>
+	</tr>
+</table>
+<!-- Grades -->
+<table class='grades'>
+	<colgroup>
+		<col class='subject_category_col'/>
+	</colgroup>
+	<tbody>
+	<tr>
+		<td></td>
+		<td><div class='title'>Subject</div></td>
+		<td><div class='title'>Grade</div></td>
+		<td><div class='title'>Class<br/>Average</div></td>
+	</tr>
+	<tr>
+		<td rowspan="2" style='white-space:nowrap;background-color:#009DE1;color:white'><div class='subject_category' style='display:inline-block'>#Subject Category#</div></td>
+		<td class='subject_name'>Subject 1</td>
+		<td>Grade 1</td>
+		<td>Av 1</td>
+	</tr>
+	<tr>
+		<td class='subject_name'>Subject 2</td>
+		<td>Grade 2</td>
+		<td>Av 2</td>
+	</tr>
+	<tr class='total'>
+		<td colspan="2">Total / Average</td>
+		<td>x</td>
+		<td>x</td>
+	</tr>
+	</tbody>
+</table>
+<!-- Global results -->
+TODO: Global results<br/><br/>
+<!-- General appreciation -->
+<table class='general_appreciation' style='width:100%;border-spacing:0px;margin-bottom:20px;'>
+	<tr><th style='background-color:#009DE1;color:white'>General Appreciation</th></tr>
+	<tr><td>
+	<div>#General Appreciation#</div>
+	</td></tr>
+</table>
+<!-- Signature -->
+<div class='signature'>
+	#Location#,<br/>
+	#Signatory Name#,<br/>
+	#Signatory Title#
+</div>
+<script type='text/javascript'>
+$('.transcripts .grades .subject_category').css('height', $('.transcripts .grades .subject_category').width()+10);
+</script>

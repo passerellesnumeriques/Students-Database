@@ -7,6 +7,7 @@ function field_decimal(data,editable,config) {
 	if (typeof data == 'string') data = parseFloat(data);
 	if (isNaN(data)) data = null;
 	if (data == null) data = "";
+	if (config && !config.can_be_null && data == "") data = 0;
 	typed_field.call(this, data, editable, config);
 }
 field_decimal.prototype = new typed_field();
@@ -19,7 +20,7 @@ field_decimal.prototype._create = function(data) {
 		input.type = "text";
 		input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
 		input.maxLength = this.config.integer_digits + 1 + this.config.decimal_digits;
-		if (data) input.value = parseFloat(data).toFixed(t.config.decimal_digits);
+		if (data !== null) input.value = parseFloat(data).toFixed(t.config.decimal_digits);
 		input.style.margin = "0px";
 		input.style.padding = "0px";
 		var onkeyup = new Custom_Event();
@@ -51,8 +52,9 @@ field_decimal.prototype._create = function(data) {
 			var value;
 			if (input.value.length == 0 && t.config.can_be_null) value = null;
 			else {
-				if (input.value.length == 0 && !t.config.can_be_null) value = t.config.min ? t.config.min : 0;
-				var i = parseFloat(input.value);
+				var i;
+				if (input.value.length == 0 && !t.config.can_be_null) i = t.config.min ? t.config.min : 0;
+				else i = parseFloat(input.value);
 				if (isNaN(i)) i = t.config.min ? t.config.min : 0;
 				if (typeof t.config.min != 'undefined' && i < t.config.min) i = t.config.min;
 				if (typeof t.config.max != 'undefined' && i > t.config.max) i = t.config.max;
@@ -61,7 +63,7 @@ field_decimal.prototype._create = function(data) {
 			return value;
 		};
 		input.onblur = function(ev) {
-			t.setData(t._getEditedData());
+			t.setData(input.value);
 		};
 		listenEvent(input, 'focus', function() { t.onfocus.fire(); });
 		var _fw=false;
@@ -75,12 +77,15 @@ field_decimal.prototype._create = function(data) {
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
-			if (data == null) input.value = "";
+			if (data == null && config && config.can_be_null) data = 0;
+			if (data === null) input.value = "";
 			else input.value = data.toFixed(t.config.decimal_digits);
+			if (typeof input.autoresize != 'undefined') input.autoresize();
 		};
 		this.signal_error = function(error) {
 			this.error = error;
 			input.style.border = error ? "1px solid red" : "";
+			input.title = error ? error : "";
 		};
 		this.onenter = function(listener) {
 			onkeyup.add_listener(function(e) {
@@ -92,6 +97,18 @@ field_decimal.prototype._create = function(data) {
 			_fw = true;
 			this.element.style.width = "100%";
 			if (typeof input.setMinimumSize != 'undefined') input.setMinimumSize(-1);
+		};
+		this.validate = function() {
+			if (!this.config) this.error = null;
+			else {
+				var val = parseFloat(input.value);
+				if (isNaN(val)) val = null;
+				if (val == null && !this.config.can_be_null) this.error = "Please specify a value";
+				else if (typeof this.config.min != 'undefined' && val < this.config.min) this.error = "Must be minimum "+this.config.min.toFixed(t.config.decimal_digits);
+				else if (typeof this.config.max != 'undefined' && val > this.config.max) this.error = "Must be maximum "+this.config.max.toFixed(t.config.decimal_digits);
+				else this.error = null;
+			}
+			this.signal_error(this.error);
 		};
 	} else {
 		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));

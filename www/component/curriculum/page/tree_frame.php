@@ -127,6 +127,7 @@ function selectNodeByTag(tag) {
 listenEvent(frame,'load',function() {
 	var win = getIFrameWindow(frame);
 	if (!win || !win.location) return;
+	if (win.location.href == "about:blank") return;
 	var url = new URL(win.location.href);
 	location.hash = "#"+url.path;
 });

@@ -9,7 +9,7 @@ class transcripts extends Component {
 		);
 	}
 	
-	public function set_subject_grading($subject_id, $weight, $only_final_grades, $max_grade, $passing_grade) {
+	public function set_subject_grading($subject_id, $only_final_grades, $max_grade, $passing_grade) {
 		SQLQuery::startTransaction();
 		try {
 			$current = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $subject_id)->executeSingleRow();
@@ -17,7 +17,6 @@ class transcripts extends Component {
 				// first time the subject is configured
 				SQLQuery::create()->insert("CurriculumSubjectGrading", array(
 					"subject"=>$subject_id,
-					"weight"=>$weight,
 					"only_final_grade"=>$only_final_grades,
 					"max_grade"=>$max_grade,
 					"passing_grade"=>$passing_grade
@@ -42,7 +41,6 @@ class transcripts extends Component {
 				}
 				// update the configuration
 				SQLQuery::create()->updateByKey("CurriculumSubjectGrading", $subject_id, array(
-					"weight"=>$weight,
 					"only_final_grade"=>$only_final_grades,
 					"max_grade"=>$max_grade,
 					"passing_grade"=>$passing_grade

@@ -12,6 +12,9 @@ $conf = array(
 	           array("month"=>6,"week"=>1,"weeks_break"=>0),
 	           array("month"=>11,"week"=>1,"weeks_break"=>2)
 	       )
+	   ),
+	   "transcripts"=>array(
+	       "default_grading_system"=>"USC"
 	   )
 	),
     "PNC" => array(
@@ -23,7 +26,10 @@ $conf = array(
            "period_weeks"=>13,
            "periods_number"=>8,
            "periods_per_year"=>4
-       )
+       ),
+	   "transcripts"=>array(
+	       "default_grading_system"=>"Percentage"
+	   )
     ),
     "PNV" => array(
        "geography"=>array(
@@ -34,7 +40,10 @@ $conf = array(
            "period_weeks"=>18,
            "periods_number"=>4,
            "periods_per_year"=>2
-       )
+       ),
+       "transcripts"=>array(
+	       "default_grading_system"=>"/10.00"
+	   )
     ),
 );
 $conf["Test"] = $conf["PNP"];

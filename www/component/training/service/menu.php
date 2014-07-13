@@ -55,6 +55,14 @@ foreach ($current_batches as $b) {
 	<img src='/static/transcripts/grades_white.png'/>
 	Grades
 </a>
+<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/subject_grades' alternate_hrefs='/dynamic/transcripts/page/subject_grades'>
+	<img src='/static/curriculum/curriculum_white.png'/>
+	By subject
+</a>
+<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/configure_transcripts'>
+	<img src='<?php echo theme::$icons_16["config_white"];?>'/>
+	Design transcripts
+</a>
 <?php
 /*
 foreach ($current_batches as $b) {

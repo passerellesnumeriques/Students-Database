@@ -244,8 +244,12 @@ function createTooltip(element, content) {
 	element._tooltip = window.top._current_tooltip = content;
 	content._element = element;
 	element._tooltip_timeout = setTimeout(function (){
-		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
-			removeTooltip();
+		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip) {
+			animation.fadeOut(content, 750, function() {
+				if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
+					removeTooltip();
+			});
+		}
 	},10000);
 	element._listener = function() {
 		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)

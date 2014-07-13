@@ -118,5 +118,17 @@ class students extends Component {
 		return $q;
 	}
 	
+	public function getStudentsQueryForClass($class_id, $include_people_info = true) {
+		$q = SQLQuery::create()
+			->select("StudentClass")
+			->whereValue("StudentClass", "class", $class_id)
+			;
+		if ($include_people_info) {
+			PNApplication::$instance->people->joinPeople($q, "StudentClass", "people");
+			require_once("component/people/PeopleJSON.inc");
+			PeopleJSON::PeopleSQL($q);
+		}
+		return $q;
+	}
 }
 ?>

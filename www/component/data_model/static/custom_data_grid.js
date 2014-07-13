@@ -1,9 +1,53 @@
 // #depends[/static/widgets/grid/grid.js]
 
-function CustomDataGridColumn(grid_column, data_getter, shown) {
+function CustomDataGridColumn(grid_column, data_getter, shown, data_getter_param, select_menu_name) {
 	this.grid_column = grid_column;
 	this.data_getter = data_getter;
+	this.data_getter_param = data_getter_param;
+	this.select_menu_name = select_menu_name;
 	this.shown = shown;
+}
+
+function CustomDataGridColumnContainer(title, sub_columns) {
+	this.title = title;
+	this.grid_column_container = null;
+	this.sub_columns = sub_columns;
+	this.shown = false;
+	this.getColumnById = function(id) {
+		for (var i = 0; i < this.sub_columns.length; ++i) {
+			if (this.sub_columns[i] instanceof CustomDataGridColumn) {
+				if (this.sub_columns[i].grid_column.id == id) return this.sub_columns[i];
+			} else {
+				var col = this.sub_columns[i].getColumnById(id);
+				if (col) return col;
+			}
+		}
+		return null;
+	};
+	this.getNbFinalColumnsShown = function() {
+		if (!this.shown) return 0;
+		var nb = 0;
+		for (var i = 0; i < this.sub_columns.length; ++i) {
+			if (this.sub_columns[i] instanceof CustomDataGridColumn) {
+				if (this.sub_columns[i].shown) nb++;
+			} else {
+				nb += this.sub_columns[i].getNbFinalColumnsShown();
+			}
+		}
+		return nb;
+	};
+	this.getFinalColumns = function() {
+		var list = [];
+		for (var i = 0; i < this.sub_columns.length; ++i) {
+			if (this.sub_columns[i] instanceof CustomDataGridColumn) {
+				list.push(this.sub_columns[i]);
+			} else {
+				var sub_list = this.sub_columns[i].getFinalColumns();
+				for (var j = 0; j < sub_list.length; ++j) list.push(sub_list[j]);
+			}
+		}
+		return list;
+	};
 }
 
 function custom_data_grid(container, id_getter) {
@@ -27,32 +71,109 @@ function custom_data_grid(container, id_getter) {
 		button.innerHTML = "<img src='/static/data_model/table_column.png'/>";
 		button.t = this;
 		button.onclick = function() { this.t._menuColumns(this); return false; };
-		this.col_actions = new GridColumn("#actions", button, null, null, "field_html");
+		this.col_actions = new GridColumn("#actions", button, null, "right", "field_html");
 		this.grid.addColumn(this.col_actions);
 	}
 }
 custom_data_grid.prototype = {
 	list: [],
+	/** List of CustomDataGridColumn, or CustomDataGridColumnContainer */
 	columns: [],
 	addColumn: function(column) {
 		this.columns.push(column);
 		if (column.shown) { column.shown = false; this.showColumn(column.grid_column.id); }
 	},
 	getColumnById: function(col_id) {
-		for (var i = 0; i < this.columns.length; ++i)
-			if (this.columns[i].grid_column.id == col_id)
-				return this.columns[i];
+		for (var i = 0; i < this.columns.length; ++i) {
+			if (this.columns[i] instanceof CustomDataGridColumn) {
+				if (this.columns[i].grid_column.id == col_id)
+					return this.columns[i];
+			} else {
+				var col = this.columns[i].getColumnById(col_id);
+				if (col) return col;
+			}
+		}
 		return null;
+	},
+	getAllFinalColumns: function() {
+		var list = [];
+		for (var i = 0; i < this.columns.length; ++i) {
+			if (this.columns[i] instanceof CustomDataGridColumn)
+				list.push(this.columns[i]);
+			else {
+				var sub_list = this.columns[i].getFinalColumns();
+				for (var j = 0; j < sub_list.length; ++j) list.push(sub_list[j]);
+			}
+		}
+		return list;
 	},
 	showColumn: function(col_id) {
 		var col = this.getColumnById(col_id);
 		if (col.shown) return;
 		col.shown = true;
 		var index = 0;
-		for (var i = 0; i < this.columns.length; ++i)
-			if (this.columns[i].grid_column.id == col_id) break;
-			else if (this.columns[i].shown) index++;
-		this.grid.addColumn(col.grid_column, index);
+		for (var i = 0; i < this.columns.length; ++i) {
+			if (this.columns[i] instanceof CustomDataGridColumn) {
+				if (this.columns[i].grid_column.id == col_id) {
+					this.grid.addColumn(col.grid_column, index);
+					break;
+				} else if (this.columns[i].shown) index++;
+			} else {
+				if (this.columns[i].getColumnById(col_id) != null) {
+					// contains the column
+					this._showColumnInContainer(null, this.columns[i], col_id, index);
+					break;
+				} else {
+					// does not contain the column
+					index += this.columns[i].getNbFinalColumnsShown();
+				}
+			}
+		}
+	},
+	_showColumnInContainer: function(parent_container, container, col_id, index) {
+		if (container.grid_column_container && container.grid_column_container.th.parentNode == null) {
+			container.grid_column_container = null;
+			container.shown = false;
+		}
+		var index_in_container = 0;
+		for (var i = 0; i < container.sub_columns.length; ++i) {
+			if (container.sub_columns[i] instanceof CustomDataGridColumn) {
+				// final column
+				if (container.sub_columns[i].grid_column.id == col_id) {
+					// found the one to show
+					if (!container.shown) {
+						// first one: create the container with the column
+						container.grid_column_container = new GridColumnContainer(container.title, [container.sub_columns[i].grid_column]);
+						container.shown = true;
+						if (!parent_container)
+							this.grid.addColumnContainer(container.grid_column_container, index);
+						return;
+					} else {
+						// already shown
+						container.grid_column_container.addSubColumn(container.sub_columns[i].grid_column, index_in_container);
+						return;
+					}
+				} else {
+					// not this one
+					if (container.sub_columns[i].shown) index_in_container++;
+				}
+			} else {
+				// child is a container
+				if (container.sub_columns[i].getColumnById(col_id) != null) {
+					// it contains it
+					this._showColumnInContainer(container, container.sub_columns[i], col_id, index+index_in_container);
+					if (!container.shown) {
+						container.shown = true;
+						container.grid_column_container = new GridColumnContainer(container.title, [container.sub_columns[i].grid_column_container]);
+						if (!parent_container)
+							this.grid.addColumnContainer(container.grid_column_container, index);
+					}
+					return;
+				}
+				if (container.shown)
+					index_in_container += container.getNbFinalColumnsShown();
+			}
+		}
 	},
 	hideColumn: function(col_id) {
 		var col = this.getColumnById(col_id);
@@ -61,12 +182,21 @@ custom_data_grid.prototype = {
 		var index = this.grid.getColumnIndex(col.grid_column);
 		this.grid.removeColumn(index);
 	},
+	addColumnContainer: function(column_container) {
+		this.columns.push(column_container);
+		var list = column_container.getFinalColumns();
+		for (var i = 0; i < list.length; ++i)
+			if (!list[i].shown) { list.splice(i,1); i--; } else list[i].shown = false;
+		for (var i = 0; i < list.length; ++i)
+			this.showColumn(list[i].grid_column.id);
+	},
 	addObject: function(obj) {
 		this.list.push(obj);
 		var id = this.id_getter(obj);
 		var row_data = [];
-		for (var i = 0; i < this.columns.length; ++i)
-			row_data.push({col_id:this.columns[i].grid_column.id,data_id:id,data:this.columns[i].data_getter(obj)});
+		var columns = this.getAllFinalColumns();
+		for (var i = 0; i < columns.length; ++i)
+			row_data.push({col_id:columns[i].grid_column.id,data_id:id,data:columns[i].data_getter(obj, columns[i].data_getter_param)});
 		var actions_container = document.createElement("DIV");
 		for (var i = 0; i < this._actions.length; ++i)
 			this._actions[i](actions_container, obj);
@@ -77,7 +207,7 @@ custom_data_grid.prototype = {
 			row.draggable = true;
 			row.ondragstart = function(event) {
 				for (var i = 0; i < t._drag_supports.length; ++i)
-					event.dataTransfer.setData(t._drag_supports[i].data_type,t._drag_supports[i].data_getter(obj));
+					event.dataTransfer.setData(t._drag_supports[i].data_type,t._drag_supports[i].data_getter(obj,t._drag_supports[i].data_getter_param));
 				event.dataTransfer.effectAllowed = "move";
 				return true;
 			};
@@ -158,8 +288,8 @@ custom_data_grid.prototype = {
 	},
 
 	_drag_supports: [],
-	addDragSupport: function(data_type, data_getter) {
-		this._drag_supports.push({data_type:data_type, data_getter:data_getter});
+	addDragSupport: function(data_type, data_getter, data_getter_param) {
+		this._drag_supports.push({data_type:data_type, data_getter:data_getter, data_getter_param:data_getter_param});
 	},
 	
 	_actions: [],
@@ -171,22 +301,35 @@ custom_data_grid.prototype = {
 		var t=this;
 		require("context_menu.js", function() {
 			var menu = new context_menu();
-			for (var i = 0; i < t.columns.length; ++i) {
-				var div = document.createElement("DIV");
-				var cb = document.createElement("INPUT"); cb.type = 'checkbox';
-				cb.checked = t.columns[i].shown ? "checked" : "";
-				cb.col = t.columns[i];
-				cb.onchange = function() {
-					if (this.checked)
-						t.showColumn(this.col.grid_column.id);
-					else
-						t.hideColumn(this.col.grid_column.id);
-				};
-				div.appendChild(cb);
-				div.appendChild(document.createTextNode(" "+t.columns[i].grid_column.title));
-				menu.addItem(div, true);
-			}
+			t._fillMenuColumns(menu, t.columns, 0);
 			menu.showBelowElement(button);
 		});
+	},
+	_fillMenuColumns: function(menu, columns, padding) {
+		for (var i = 0; i < columns.length; ++i) {
+			var div = document.createElement("DIV");
+			div.style.paddingLeft = padding+"px";
+			if (columns[i] instanceof CustomDataGridColumn) {
+				var cb = document.createElement("INPUT"); cb.type = 'checkbox';
+				cb.checked = columns[i].shown ? "checked" : "";
+				cb.col = columns[i];
+				cb.g = this;
+				cb.onchange = function() {
+					if (this.checked)
+						this.g.showColumn(this.col.grid_column.id);
+					else
+						this.g.hideColumn(this.col.grid_column.id);
+				};
+				div.appendChild(cb);
+				div.appendChild(document.createTextNode(" "+(columns[i].select_menu_name ? columns[i].select_menu_name : columns[i].grid_column.title)));
+			} else {
+				div.appendChild(document.createTextNode(columns[i].title));
+				div.className = "context_menu_title";
+			}
+			menu.addItem(div, true);
+			if (columns[i] instanceof CustomDataGridColumnContainer) {
+				this._fillMenuColumns(menu, columns[i].sub_columns, padding+20);
+			}
+		}
 	}
 };

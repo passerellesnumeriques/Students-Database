@@ -77,6 +77,7 @@ field_text.prototype._create = function(data) {
 			input.title = error ? error : "";
 		};
 	} else {
+		this.element.style.whiteSpace = "nowrap";
 		this.element.appendChild(document.createTextNode(data));
 		if (this.config && this.config.style)
 			for (var s in this.config.style)
