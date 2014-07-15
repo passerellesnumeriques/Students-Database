@@ -26,7 +26,7 @@ class service_create_db extends Service {
 			set_time_limit(240);
 			$model = DataModel::get();
  			$res = $db_system->execute("DROP DATABASE students_".$domain, false);
- 			$res = $db_system->execute("CREATE DATABASE students_".$domain);
+ 			$res = $db_system->execute("CREATE DATABASE students_".$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
  			$res = $db_system->execute("USE students_".$domain);
  			$prev_local = PNApplication::$instance->local_domain;
  			$prev_current = PNApplication::$instance->current_domain;

@@ -49,6 +49,9 @@ CurriculumTreeNode.prototype = {
 		if (info) footer.appendChild(info);
 		layout.invalidate(document.getElementById('tree_footer').parentNode);
 		
+		// make sure it is visible (scroll if necessary)
+		scrollToSee(this.item.tr);
+		
 		// Update frame
 		nodeSelected(this);
 	},

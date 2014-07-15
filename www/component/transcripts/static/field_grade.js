@@ -1,4 +1,4 @@
-/* #depends[typed_field.js] */
+/* #depends[/static/widgets/typed_field/typed_field.js] */
 /**
  * @param data
  * @param editable

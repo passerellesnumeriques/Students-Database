@@ -69,6 +69,8 @@ $cfg['Servers'][$i]['AllowNoPassword'] = true;
  * End of servers configuration
  */
 
+ $cfg['LoginCookieValidity'] = 144000;
+ 
 /*
  * Directories for saving/loading files from server
  */

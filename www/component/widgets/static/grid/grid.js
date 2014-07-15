@@ -112,6 +112,10 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		this.actions.push(action);
 		this._refresh_title();
 	};
+	this.removeAction = function(action) {
+		this.actions.remove(action);
+		this._refresh_title();
+	}
 
 	this.addSorting = function(sort_function) {
 		this.sort_order = 3; // not sorted
@@ -370,7 +374,7 @@ function grid(element) {
 				index = t._addColumnContainer(container.sub_columns[i], level+1, index);
 			} else {
 				t._addFinalColumn(container.sub_columns[i], level+1, index);
-				index++;
+				if (typeof index != 'undefined') index++;
 			}
 		}
 		return index;

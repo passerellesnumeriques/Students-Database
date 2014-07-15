@@ -10,7 +10,11 @@ function images_tool_people() {
 	};
 	this.getPeople = function(pic) {
 		if (pic.select_people.selectedIndex <= 0) return null;
-		return this.peoples[pic.select_people.selectedIndex-1];
+		var people_id = pic.select_people.value;
+		for (var i = 0; i < this.peoples.length; ++i)
+			if (this.peoples[i].id == people_id)
+				return this.peoples[i];
+		return null;
 	};
 	this._words = function(s) {
 		var words = [];
@@ -64,11 +68,13 @@ function images_tool_people() {
 				if (complete == words.length) {
 					// perfect match
 					pic.select_people.selectedIndex = i;
+					this._updateAvailablePeoples();
 					return;
 				}
 				if (complete + almost == words.length) {
 					// almost perfect match => it's ok
 					pic.select_people.selectedIndex = i;
+					this._updateAvailablePeoples();
 					return;
 				}
 				// TODO continue;
@@ -87,8 +93,40 @@ function images_tool_people() {
 			o.text = this.peoples[i].first_name+" "+this.peoples[i].last_name;
 			select.add(o);
 		}
+		select.t = this;
+		select.onchange = function() {
+			this.t._updateAvailablePeoples();
+		};
 		pic.select_people = select;
 		return select;
+	};
+	this._updateAvailablePeoples = function() {
+		var pics = this.images_tool.getPictures();
+		var available_peoples = [];
+		for (var i = 0; i < this.peoples.length; ++i) available_peoples.push(this.peoples[i]);
+		// remove people already selected
+		for (var i = 0; i < pics.length; ++i) {
+			var p = this.getPeople(pics[i]);
+			if (p != null)
+				available_peoples.remove(p);
+		}
+		// update the selects
+		for (var i = 0; i < pics.length; ++i) {
+			var selected = this.getPeople(pics[i]);
+			var select = pics[i].select_people;
+			var new_selected = -1;
+			while (select.options.length > 1) select.remove(1);
+			for (var j = 0; j < this.peoples.length; ++j) {
+				if (available_peoples.contains(this.peoples[j]) || selected == this.peoples[j]) {
+					var o = document.createElement("OPTION");
+					o.value = this.peoples[j].id;
+					o.text = this.peoples[j].first_name+" "+this.peoples[j].last_name;
+					select.add(o);
+					if (selected == this.peoples[j]) new_selected = select.options.length-1;
+				}
+			}
+			if (new_selected > 0) select.selectedIndex = new_selected;
+		}
 	};
 };
 images_tool_people.prototype = new ImageTool;

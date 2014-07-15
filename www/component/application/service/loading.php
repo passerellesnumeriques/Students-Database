@@ -62,11 +62,11 @@ function _addJavascript(url, callback) {
 	var head = document.getElementsByTagName("HEAD")[0];
 	var s = document.createElement("SCRIPT");
 	s.type = "text/javascript";
+	s.onload = function() { this._loaded = true; if (callback) setTimeout(callback,1); };
+	//s.onerror = function() { alert("Error loading initial javascript file: "+this.src); };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { this._loaded = true; if (callback) setTimeout(callback,1); this.onreadystatechange = null; } };
 	head.appendChild(s);
 	s.src = url;
-	s.onload = function() { this._loaded = true; if (callback) setTimeout(callback,1); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded') { this._loaded = true; if (callback) setTimeout(callback,1); this.onreadystatechange = null; } };
-
 }
 window.pn_loading = document.all ? document.all['__loading_table'] : document.getElementById('__loading_table');
 var pn_loading_visible = true;

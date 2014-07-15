@@ -511,6 +511,7 @@ function excel_import(popup, container, onready) {
 		var grid = win.grid;
 		var row = where.row;
 		if (row == -1) row = where.row_getter();
+		var ambiguous = [];
 		for (var ci = range.start_col; ci <= range.end_col; ci++)
 			for (var ri = range.start_row; ri <= range.end_row; ri++) {
 				var value = sheet.getCell(ci,ri).getValue();
@@ -522,9 +523,81 @@ function excel_import(popup, container, onready) {
 					if (where.type == 'reset') f.resetData();
 					if (value != "")
 						f.addData(value);
-				} else
+				} else {
+					if (typeof f.getPossibleValues != 'undefined') {
+						// support for a list of possible value, we can check
+						var values = f.getPossibleValues();
+						if (!values.contains(value)) {
+							ambiguous.push({
+								field: f,
+								field_index: field_index,
+								value: value,
+								values: values
+							});
+						}
+					}
 					f.setData(value);
+				}
 			}
+		// resolve ambiguous values by field
+		var next_ambiguous = function() {
+			if (ambiguous.length == 0) return;
+			var field_index = ambiguous[0].field_index;
+			var list = [ambiguous[0]];
+			ambiguous.splice(0,1);
+			for (var i = 0; i < ambiguous.length; ++i)
+				if (ambiguous[i].field_index == field_index) {
+					list.push(ambiguous[i]);
+					ambiguous.splice(i,1);
+					i--;
+				}
+			var found_values = [];
+			for (var i = 0; i < list.length; ++i)
+				if (!found_values.contains(list[i].value))
+					found_values.push(list[i].value);
+			var div = document.createElement("DIV");
+			div.innerHTML = ""+found_values.length+" value(s) are ambiguous for field '"+grid.columns[field_index+1].title+"':";
+			var ul = document.createElement("UL");
+			div.appendChild(ul);
+			var selects = [];
+			for (var i = 0; i < found_values.length; ++i) {
+				var li = document.createElement("LI");
+				li.appendChild(document.createTextNode(found_values[i]));
+				var select = document.createElement("SELECT");
+				var o = document.createElement("OPTION");
+				o.value = "";
+				o.text = "";
+				select.add(o);
+				for (var j = 0; j < list[0].values.length; ++j) {
+					o = document.createElement("OPTION");
+					o.value = list[0].values[j];
+					o.text = list[0].values[j];
+					select.add(o);
+				}
+				li.appendChild(select);
+				ul.appendChild(li);
+				selects.push(select);
+			}
+			var pop = new popup_window("Ambiguous data", null, div);
+			pop.addOkCancelButtons(function() {
+				for (var i = 0; i < selects.length; ++i) {
+					var resolved = selects[i].value;
+					if (resolved == "") continue;
+					for (var j = 0; j < list.length; ++j) {
+						if (list[j].value == found_values[i]) {
+							list[j].field.setData(resolved);
+						}
+					}
+				}
+				pop.close();
+				next_ambiguous();
+			});
+			pop.show();
+		};
+		if (ambiguous.length > 0)
+			require("popup_window.js", function() {
+				next_ambiguous();
+			});
 	};
 	
 	this.init = function() {

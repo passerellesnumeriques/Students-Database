@@ -31,8 +31,29 @@ class storage extends Component {
 		return $msg;
 	}
 	
+	public static function reset_storage($domain) {
+		$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/".$domain;
+		if (file_exists($path))
+			self::remove_directory($path);
+		if (!mkdir($path))
+			PNApplication::error("Unable to create storage directory "+$path);
+	}
+	private static function remove_directory($path) {
+		$dir = opendir($path);
+		while (($filename = readdir($dir)) <> null) {
+			if ($filename == ".") continue;
+			if ($filename == "..") continue;
+			if (is_dir($path."/".$filename))
+				self::remove_directory($path."/".$filename);
+			else
+				unlink($path."/".$filename);
+		}
+		closedir($dir);
+		rmdir($path);
+	}
+	
 	private static function storage_path() {
-		return realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data");
+		return realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".PNApplication::$instance->current_domain);
 	}
 	
 	private function remove_old() {

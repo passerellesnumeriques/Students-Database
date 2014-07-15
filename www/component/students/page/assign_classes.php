@@ -105,7 +105,7 @@ class page_assign_classes extends Page {
 		var popup = window.parent.get_popup_window_from_frame(window);
 		popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
 		popup.disableButton('save');
-		popup.addCancelButton();
+		popup.addCloseButton();
 
 		function display_people(people, container) {
 			container.appendChild(document.createTextNode(people.first_name+" "+people.last_name));

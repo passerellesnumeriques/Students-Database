@@ -861,6 +861,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 									for (var j = 0; j < locks.length; ++j)
 										window.databaselock.addLock(locks[j]);
 									col.locks = locks;
+									// additional actions
+									// TODO
+									/*
+									col._setAllAction = new GridColumnAction(theme.icons_10.edit,function(ev,action,col){
+										
+									}, "Set all to a specific value");
+									*/
+									// change editable
 									edit_col();
 								}
 								t.grid.endLoading();

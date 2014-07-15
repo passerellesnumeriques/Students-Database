@@ -5,13 +5,22 @@ $conf = array(
 	       "country_code"=>"ph"
 	   ),
 	   "curriculum"=>array(
-	       "period_name"=>"Semester",
-	       "period_weeks"=>18,
-	       "periods_number"=>6,
-	       "default_year_periods"=>array(
-	           array("month"=>6,"week"=>1,"weeks_break"=>0),
-	           array("month"=>11,"week"=>1,"weeks_break"=>2)
-	       )
+	       "preset_periods"=>array(
+	           array(
+	               "name"=>"Semester",
+	               "weeks"=>18
+	           ),
+	           array(
+	               "name"=>"Summer",
+	               "weeks"=>4
+	           )
+	       ),
+	       "default_academic_year"=>array(
+	           array("period"=>"Semester","month"=>6,"week"=>1,"weeks_break"=>0),
+	           array("period"=>"Semester","month"=>11,"week"=>1,"weeks_break"=>2),
+	           array("period"=>"Summer","month"=>4,"week"=>1,"weeks_break"=>0)
+	       ),
+	       "default_batch_years"=>3
 	   ),
 	   "transcripts"=>array(
 	       "default_grading_system"=>"USC"

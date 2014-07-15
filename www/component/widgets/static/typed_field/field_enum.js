@@ -8,7 +8,17 @@ function field_enum(data,editable,config) {
 }
 field_enum.prototype = new typed_field();
 field_enum.prototype.constructor = field_enum;
-field_enum.prototype.canBeNull = function() { return this.config.can_be_empty; };		
+field_enum.prototype.canBeNull = function() { return this.config.can_be_empty; };
+field_enum.prototype.getPossibleValues = function() {
+	var values = [];
+	for (var i = 0; i < this.config.possible_values.length; ++i) {
+		if (this.config.possible_values[i] instanceof Array)
+			values.push(this.config.possible_values[i][1]);
+		else
+			values.push(this.config.possible_values[i]);
+	}
+	return values;
+};
 field_enum.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;
@@ -61,6 +71,16 @@ field_enum.prototype._create = function(data) {
 			this.signal_error(err);
 		};
 		this.fillWidth = function() {
+			// calculate the minimum width of the select, to be able to see it...
+			var included_in_body = false;
+			if (this.element.parentNode == null) {
+				included_in_body = true;
+				document.body.appendChild(this.element);
+			}
+			select.style.width = "";
+			select.style.minWidth = select.offsetWidth+"px";
+			if (included_in_body) document.body.removeChild(this.element);
+			
 			this.element.style.width = "100%";
 			select.style.width = "100%";
 		};

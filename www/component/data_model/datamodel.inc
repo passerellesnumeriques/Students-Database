@@ -11,7 +11,7 @@ $model->addTable("DataLocks")
 	;
 
 $model->addTable("ApplicationConfig")
-	->addString("name", 512, 1, false, true)
+	->addString("name", 255, 1, false, true)
 	->addString("value", 4096, 0, true, false)
 	->setPrimary("name")
 	;

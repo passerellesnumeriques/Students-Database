@@ -447,9 +447,10 @@ function crop_rectangle(pic) {
 		
 		this.div_top_left.onmousedown = function(ev) {
 			move = function(x,y) {
-				x -= absoluteLeft(pic.original_canvas);
+				var pic_pos = windowScreenPosition(pic.original_canvas);
+				x -= pic_pos.x
 				if (x < 0) x = 0;
-				y -= absoluteTop(pic.original_canvas);
+				y -= pic_pos.y;
 				if (y < 0) y = 0;
 				x = Math.floor(x*pic.original.naturalWidth/pic.original_canvas.width);
 				y = Math.floor(y*pic.original.naturalHeight/pic.original_canvas.height);
@@ -471,9 +472,10 @@ function crop_rectangle(pic) {
 		};
 		this.div_top_right.onmousedown = function(ev) {
 			move = function(x,y) {
-				x -= absoluteLeft(pic.original_canvas);
+				var pic_pos = windowScreenPosition(pic.original_canvas);
+				x -= pic_pos.x
 				if (x < 0) x = 0;
-				y -= absoluteTop(pic.original_canvas);
+				y -= pic_pos.y;
 				if (y < 0) y = 0;
 				x = Math.floor(x*pic.original.naturalWidth/pic.original_canvas.width);
 				y = Math.floor(y*pic.original.naturalHeight/pic.original_canvas.height);
@@ -491,9 +493,10 @@ function crop_rectangle(pic) {
 		};
 		this.div_bottom_left.onmousedown = function(ev) {
 			move = function(x,y) {
-				x -= absoluteLeft(pic.original_canvas);
+				var pic_pos = windowScreenPosition(pic.original_canvas);
+				x -= pic_pos.x
 				if (x < 0) x = 0;
-				y -= absoluteTop(pic.original_canvas);
+				y -= pic_pos.y;
 				if (y < 0) y = 0;
 				x = Math.floor(x*pic.original.naturalWidth/pic.original_canvas.width);
 				y = Math.floor(y*pic.original.naturalHeight/pic.original_canvas.height);
@@ -511,9 +514,10 @@ function crop_rectangle(pic) {
 		};
 		this.div_bottom_right.onmousedown = function(ev) {
 			move = function(x,y) {
-				x -= absoluteLeft(pic.original_canvas);
+				var pic_pos = windowScreenPosition(pic.original_canvas);
+				x -= pic_pos.x
 				if (x < 0) x = 0;
-				y -= absoluteTop(pic.original_canvas);
+				y -= pic_pos.y;
 				if (y < 0) y = 0;
 				x = Math.floor(x*pic.original.naturalWidth/pic.original_canvas.width);
 				y = Math.floor(y*pic.original.naturalHeight/pic.original_canvas.height);
@@ -532,8 +536,10 @@ function crop_rectangle(pic) {
 	pic.original_canvas.onmousedown = function(ev) {
 		if (!t.div_top) return;
 		var e = getCompatibleMouseEvent(ev);
-		if (e.x >= absoluteLeft(t.div_top) && e.x < absoluteLeft(t.div_top)+t.div_top.offsetWidth &&
-			e.y >= absoluteTop(t.div_top) && e.y <= absoluteTop(t.div_bottom)) {
+		var top_pos = windowScreenPosition(t.div_top);
+		var bottom_pos = windowScreenPosition(t.div_bottom);
+		if (e.x >= top_pos.x && e.x < top_pos.x+t.div_top.offsetWidth &&
+			e.y >= top_pos.y && e.y <= bottom_pos.y) {
 			var px = e.x;
 			var py = e.y;
 			move = function(x,y) {

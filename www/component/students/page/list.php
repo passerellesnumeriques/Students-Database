@@ -235,10 +235,11 @@ new data_list(
 			list.addHeader(create_student);
 		}
 
-		if (can_manage)
+		if (can_manage) {
 			require("profile_picture.js",function() {
 				addDataListImportPicturesButton(list);
 			});
+		}
 		
 		list.makeRowsClickable(function(row){
 			if (typeof row.row_id == 'undefined') return;

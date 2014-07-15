@@ -107,7 +107,6 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 		}
 		if (t._stopped) return;
 		if (!window.top.pn_application_static) return;
-		t._scripts_loading++;
 		var script = null;
 		for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
 			if (window.top.pn_application_static.scripts[i].dependencies.length == 0) {
@@ -116,7 +115,23 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 				window.top.pn_application_static.scripts.splice(i,1);
 				break;
 			}
-		if (script == null) { t._checkEnd(); return; }
+		if (script == null) {
+			// check we don't have anymore scripts waiting for a dependency
+			if (window.top.pn_application_static.scripts.length > 0) {
+				for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i) {
+					var s = window.top.pn_application_static.scripts[i];
+					var msg = "JavaScript file "+s.url+" cannot be loaded because it is still waiting for the following dependencies:\r\n";
+					for (var j = 0; j < s.dependencies.length; ++j)
+						msg += " - "+s.dependencies[j]+"\r\n";
+					alert(msg);
+				}
+				// finalize
+				window.top.pn_application_static.scripts = [];
+			}
+			t._checkEnd();
+			return;
+		}
+		t._scripts_loading++;
 		addJavascript(script.url,function() {
 			t._scripts_loading--;
 			t.loaded(script.size);

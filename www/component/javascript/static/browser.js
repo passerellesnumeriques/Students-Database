@@ -628,6 +628,7 @@ function addJavascript(url, onload) {
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
 	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); };
+	//s.onerror = function(ev) { alert("Error loading javascript file: "+this.src); for (var name in ev) alert("Event: "+name+"="+ev[name]); };
 	s.onreadystatechange = function() { if (this.readyState == 'loaded') { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
 	s.src = p;

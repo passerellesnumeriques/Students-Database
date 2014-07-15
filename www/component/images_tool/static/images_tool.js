@@ -422,7 +422,8 @@ ImageTool.prototype = {
 	setValue: function(pic, value, editable) {},
 	update: function(pic, canvas) {},
 	createContent: function(pic) {},
-	createGeneralContent: function() { return null; }
+	createGeneralContent: function() { return null; },
+	images_tool: null // set when the tool is initialized and added
 };
 
 function images_tool_picture() {

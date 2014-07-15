@@ -288,7 +288,7 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 			}
 		}
 		if (stop && t._selectable)
-			this._createCursor();
+			t._createCursor();
 		if (stop) {
 			stopEventPropagation(ev);
 			return false;

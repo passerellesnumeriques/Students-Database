@@ -1,3 +1,15 @@
+function windowScreenPosition(e) {
+	var x = absoluteLeft(e);
+	var y = absoluteTop(e);
+	var p = e.parentNode;
+	while (p && typeof p.scrollLeft != 'undefined') {
+		x -= p.scrollLeft;
+		y -= p.scrollTop;
+		if (p.nodeName == "BODY") break;
+		p = p.parentNode;
+	}
+	return {x:x,y:y};
+}
 /**
  * Return the absolute position of the left edge, relative to the given element or to the document
  * @param {Element} e the element to get the absolute position
@@ -5,18 +17,39 @@
  * @returns {Number} the left offset in pixels
  */
 function absoluteLeft(e,relative) {
-	var left = e.offsetLeft;
-	try { 
-		if (e.offsetParent && e.offsetParent != relative) {
-			var p = e;
-			do {
-				p = p.parentNode;
-				left -= p.scrollLeft;
-			} while (p != e.offsetParent);
-			left += absoluteLeft(e.offsetParent,relative); 
+	if (!relative || relative.nodeName == "BODY") {
+		// absolute position to the document
+		var left = e.offsetLeft;
+		while (e.offsetParent) {
+			e = e.offsetParent;
+			left += e.offsetLeft;
 		}
-	} catch (ex) {}
-	return left;
+		return left;
+	}
+	if (e.offsetParent == relative)
+		return e.offsetLeft;
+	if (!e.offsetParent || e.offsetParent.nodeName == "BODY") {
+		// no intermediate offset parent => difference with relative
+		var rel_pos = absoluteLeft(relative);
+		return e.offsetLeft - rel_pos;
+	}
+	// we have an offsetParent
+	if (relative.offsetParent == e.offsetParent) {
+		// they have the same => difference
+		return e.offsetLeft - relative.offsetLeft;
+	}
+	// they have different
+	var p = e.parentNode;
+	while (p != null && p != e.offsetParent && p != relative) p = p.parentNode;
+	if (p == e.offsetParent) {
+		// e.offsetParent is between e and relative
+		return e.offsetLeft + absoluteLeft(e.offsetParent, relative);
+	} else if (p == relative) {
+		// relative if between e.offsetParent and e
+		return e.offsetLeft - absoluteLeft(relative, e.offsetParent);
+	}
+	// we cannot find... should never happen
+	return e.offsetLeft;
 }
 /**
  * Return the absolute position of the top edge, relative to the given element or to the document
@@ -25,18 +58,39 @@ function absoluteLeft(e,relative) {
  * @returns {Number} the top offset in pixels
  */
 function absoluteTop(e,relative) {
-	var top = e.offsetTop;
-	try { 
-		if (e.offsetParent && e.offsetParent != relative) {
-			var p = e;
-			do {
-				p = p.parentNode;
-				top -= p.scrollTop;
-			} while (p != e.offsetParent);
-			top += absoluteTop(e.offsetParent,relative); 
+	if (!relative || relative.nodeName == "BODY") {
+		// absolute position to the document
+		var top = e.offsetTop;
+		while (e.offsetParent) {
+			e = e.offsetParent;
+			top += e.offsetTop;
 		}
-	} catch (ex) {}
-	return top;
+		return top;
+	}
+	if (e.offsetParent == relative)
+		return e.offsetTop;
+	if (!e.offsetParent || e.offsetParent.nodeName == "BODY") {
+		// no intermediate offset parent => difference with relative
+		var rel_pos = absoluteTop(relative);
+		return e.offsetTop - rel_pos;
+	}
+	// we have an offsetParent
+	if (relative.offsetParent == e.offsetParent) {
+		// they have the same => difference
+		return e.offsetTop - relative.offsetTop;
+	}
+	// they have different
+	var p = e.parentNode;
+	while (p != null && p != e.offsetParent && p != relative) p = p.parentNode;
+	if (p == e.offsetParent) {
+		// e.offsetParent is between e and relative
+		return e.offsetTop + absoluteTop(e.offsetParent, relative);
+	} else if (p == relative) {
+		// relative if between e.offsetParent and e
+		return e.offsetTop - absoluteTop(relative, e.offsetParent);
+	}
+	// we cannot find... should never happen
+	return e.offsetTop;
 }
 /**
  * Return the first parent having a CSS attribute position:relative, or the document.body
