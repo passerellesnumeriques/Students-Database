@@ -46,6 +46,7 @@ class service_find_lost_entities extends Service {
 	 * @param array $tables_done list of tables already analyzed, to avoid infinite recursivity
 	 */
 	private function findLinked($table, $sub_models, &$rows, $tables_done) {
+		set_time_limit(120);
 		if (in_array($table->getSQLName($sub_models), $tables_done)) return;
 		if (count($rows) == 0) return;
 		array_push($tables_done, $table->getSQLName($sub_models));

@@ -10,18 +10,19 @@ class page_export_data extends Page {
 		echo "<div style='background-color:white;padding:10px;text-align:left;display:inline-block;'>";
 		$domain = PNApplication::$instance->local_domain;
 		require_once("component/data_model/Model.inc");
-		if (!isset($_GET["start_table"])) {
-			echo "What is the starting point of the data to export ?<br/><br/>";
-			foreach (DataModel::get()->internalGetTables() as $table) {
-				if (!$table->isRoot()) continue;
-				echo "<a href='?start_table=".$table->getName()."'>";
-				echo $table->getName();
-				echo "</a>";
-				echo "<br/>";
-			}
+		if (!isset($_GET["export"])) {
+			echo "What do you want to export ?<br/><br/>";
+			echo "<a href='?export=students'>Students and curriculum</a><br/>";
+		} else if (!isset($_GET["where"])) {
+			echo "Where do you want to export (name of directory under www/component/development/data):";
+			
 		} else {
+			$tables = array(
+				"students"=>array("Student","CurriculumSubject","AcademicPeriod","BatchPeriod","BatchPeriodSpecialization","AcademicClass","StudentClass")
+			);
 			$exported = array();
 			$result = "";
+			//foreach ($tables[$_GET["export"]])
 			$this->export($_GET["start_table"], null, $exported, $result);
 		}
 		echo "</div>";
