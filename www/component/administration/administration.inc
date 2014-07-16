@@ -8,6 +8,7 @@ class administration extends Component {
 		require_once("AdministrationPlugin.inc");
 		return array(
 			new AdministrationDashboardPlugin(),
+			new ApplicationAdministrationPlugin()
 		);
 	}
 	

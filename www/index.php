@@ -11,7 +11,7 @@ $path = substr($_SERVER["PATH_INFO"],1);
 if (strpos($path, "..") !== FALSE) die("Access denied");
 
 // check last time the user came, it was the same version, in order to refresh its cache if the version changed
-$version = include("version.inc");
+$version = file_get_contents(dirname(__FILE__)."/version");
 if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
 	if (strpos($path, "/page/") || $path == "") {
 		setcookie("pnversion",$version,time()+365*24*60*60,"/");
