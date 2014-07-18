@@ -88,9 +88,9 @@ function import_country(popup, country, country_data) {
 				new ResultsList(div, "gadm.org", gadm, map_colors[0], coord, map);
 				new ResultsList(div, "geonames.org", geonames, map_colors[1], coord, map);
 				new ResultsList(div, "Google", google, map_colors[2], coord, map);
+				if (bounds != null)
+					ec.linkECWithMap.addResetOriginalButton(bounds);
 			});
-			if (bounds != null)
-				ec.addResetOriginalButton(bounds);
 			popup.addNextButton(function() {
 				// TODO
 			});
@@ -259,6 +259,16 @@ function SearchGeonames(container, country_id, name, featureCode, ondone) {
 	service.json("geography", "search_geonames", data, function(res) {
 		var count = res ? res.length : 0;
 		div.innerHTML = count+" result(s) found.";
+		if (count == 0) {
+			var retry = document.createElement("BUTTON");
+			retry.className = "flat";
+			retry.innerHTML = "<img src='"+theme.icons_16.refresh+"'/> Retry";
+			retry.style.marginLeft = "5px";
+			div.appendChild(retry);
+			retry.onclick = function() {
+				new SearchGeonames(container, country_id, name, featureCode, ondone);
+			};
+		}
 		ondone(res, div);
 	});
 }
@@ -303,6 +313,16 @@ function SearchGoogle(container, country_id, name, types, ondone) {
 			}
 		var count = res ? res.length : 0;
 		div.innerHTML = count+" result(s) found.";
+		if (count == 0) {
+			var retry = document.createElement("BUTTON");
+			retry.className = "flat";
+			retry.innerHTML = "<img src='"+theme.icons_16.refresh+"'/> Retry";
+			retry.style.marginLeft = "5px";
+			div.appendChild(retry);
+			retry.onclick = function() {
+				new SearchGeonames(container, country_id, name, types, ondone);
+			};
+		}
 		ondone(res, div);
 	});
 }

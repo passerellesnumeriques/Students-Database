@@ -73,7 +73,7 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 		$result = curl_exec($c);
 		curl_close($c);
 		if ($result === false) return null;
-		$xml = simplexml_load_string($result);
+		$xml = @simplexml_load_string($result);
 		if ($xml === false) return null;
 		return $xml;
 	}

@@ -16,11 +16,12 @@ if (!window.top.google) {
 				window.top.google.connection_event.add_listener(listener);
 			}
 		},
-		_client_id: "459333498575-p8k0toe6hpcjfe29k83ah77adnocqah4.apps.googleusercontent.com",
+		_client_id: "668569616064-8g9srupep9i2gcf3vljlomarokdni6fe.apps.googleusercontent.com",
 		_scopes: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar",
 		//_scopes: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/calendar",
-		_connect: function() {
+		_connect: function(first_auth) {
 			if (window.top.google.connection_status == 0) return;
+			if (typeof first_auth == 'undefined') first_auth = false;
 			window.top.google.connection_status = 0;
 			window.top.google.connection_event.fire();
 			// remove the very annoying popup frame of Google saying Welcome Back...
@@ -41,7 +42,8 @@ if (!window.top.google) {
 				{
 					client_id:window.top.google._client_id,
 					scope:window.top.google._scopes,
-					immediate:true
+					immediate:!first_auth,
+					hd:"passerellesnumeriques.org"
 				},function(auth_result){
 					if (auth_result && !auth_result.error) {
 						window.top.google.connection_status = 1;
@@ -68,10 +70,11 @@ if (!window.top.google) {
 					window.top.google.connection_error = "authentication failed";
 					window.top.google.connection_status = -1;
 					window.top.google.connection_event.fire();
-					setTimeout(function() {
-						window.top.google._connecting_time = new Date().getTime();
-						window.top.google._connect();
-					}, 60000);
+					if (!first_auth)
+						setTimeout(function() {
+							window.top.google._connecting_time = new Date().getTime();
+							window.top.google._connect();
+						}, 60000);
 				}
 			);
 		},
@@ -79,6 +82,21 @@ if (!window.top.google) {
 			if (window.top.google.connection_status != -1) return;
 			window.top.google._connecting_time = new Date().getTime();
 			window.top.google._connect();
+		},
+		connectAccount: function() {
+			if (!window.top.google.api_loaded) {
+				alert("Unable to connect to Google. Please check Internet connection and try again.");
+				return;
+			}
+			input_dialog("/static/google/google.png","Connect to your Google Account","Please enter your PN email address","",200,function(value){
+				value = value.trim();
+				if (value.length == 0) return "Please enter an email address";
+				var i = value.indexOf('@');
+				
+			}, function(value) {
+				
+			})
+			//window.top.google._connect(true);
 		}
 	};
 	window.top.google_api_loaded = function(){
@@ -86,7 +104,7 @@ if (!window.top.google) {
 		window.top.google._connecting_time = new Date().getTime();
 		window.top.google.connection_status = 0;
 		window.top.google.connection_event.fire();
-		window.top.gapi.client.setApiKey("AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
+		window.top.gapi.client.setApiKey("AIzaSyBmCvj7e_p9QwoxBoD08xHKvuTDUaBt6ZQ");
 		//window.top.gapi.auth.init();
 		window.top.setInterval(function(){
 			if (window.top.google.connection_status != 0) return;

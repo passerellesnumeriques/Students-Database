@@ -41,11 +41,22 @@ class user_management extends Component {
 	 */
 	public function login($domain, $username, $password) {
 		if ($this->username <> null) return "You are already authenticated as ".$username;
-		$auth = PNApplication::$instance->authentication->getAuthenticationSystem($domain);
-		if ($auth == null) return "Domain not implemented";
-		$error = "";
-		$this->auth_token = $auth->authenticate($username, $password, $error);
-		if ($this->auth_token === null) return $error;
+		// check first if this is an internal user
+		$internal_user = null;
+		if ($domain == PNApplication::$instance->local_domain) {
+			$internal_user = SQLQuery::create()->bypassSecurity()->select("InternalUser")->whereValue("InternalUser", "username", $username)->executeSingleRow();
+			if ($internal_user <> null) {
+				if ($internal_user["password"] <> sha1($password)) return "Invalid username or password";
+				$this->auth_token = "";
+			}
+		}
+		if ($internal_user == null) {
+			$auth = PNApplication::$instance->authentication->getAuthenticationSystem($domain);
+			if ($auth == null) return "Domain not implemented";
+			$error = "";
+			$this->auth_token = $auth->authenticate($username, $password, $error);
+			if ($this->auth_token === null) return $error;
+		}
 		$user = SQLQuery::create()->bypassSecurity()->select("Users")->where("domain",$domain)->where("username",$username)->executeSingleRow();
 		if ($user == null) {
 			// the user does not exist yet in the database, but exists on the authentication system
@@ -88,6 +99,21 @@ class user_management extends Component {
 		$this->user_id = null;
 		$this->rights = array();
 		$this->is_admin = array();
+	}
+	
+	public function createInternalUser($username, $password) {
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+		$res = $db->execute("INSERT INTO `InternalUser` (`username`,`password`) VALUES ('".$db->escapeString($username)."',SHA1('".$db->escapeString($password)."'))");
+		if ($res === false) {
+			PNApplication::error("Error creating internal user ".$username.": ".$db->getLastErrorMessage());
+			return null;
+		}
+		$user_id = $this->create_user(PNApplication::$instance->local_domain, $username, true);
+		if ($user_id == null) {
+			$db->execute("DELETE FROM `InternalUser` WHERE `username`='".$db->escapeString($username)."'");
+			return null;
+		}
+		return $user_id;
 	}
 	
 	public function create_user($domain, $username, $bypass_security = false) {

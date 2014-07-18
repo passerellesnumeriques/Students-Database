@@ -10,6 +10,11 @@ $model->addTable("Users")
 	->setRoot()
 	->addReadAccess("consult_user_list",true)
 	;
+$model->addTable("InternalUser")
+	->addString("username", 100,1, false, true)
+	->addString("password", 40, 40, false)
+	->setPrimary("username")
+	;
 $model->addTable("UserRights")
 	->addForeignKey("user", "Users", true, false, true)
 	->addString("right", 100, 1, false)

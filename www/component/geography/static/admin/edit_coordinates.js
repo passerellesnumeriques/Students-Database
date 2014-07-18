@@ -1,13 +1,14 @@
 function EditCoordinatesWithMap(container, coordinates, onready) {
 	this.element = document.createElement("DIV");
 	container.appendChild(this.element);
+	var t=this;
 	
 	// we need a map, and edit coordinates
 	var map = null;
 	var coord = null;
 	var check_ready = function() {
 		if (map && coord) {
-			new linkEditCoordinatesWithMap(coord, map);
+			t.linkECWithMap = new linkEditCoordinatesWithMap(coord, map);
 			onready(coord, map);
 		}
 	};

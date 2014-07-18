@@ -75,6 +75,16 @@ class page_overview extends Page {
 			<div>Manage users and access rights, staffs, geographic data...</div>
 		</a>
 	</div>
+<?php
+$google_id = PNApplication::$instance->google->getConnectedAccount();
+if ($google_id == null) {
+?>
+<div style='flex:none' class='page_section_title'>
+	<img src='/static/google/google_32.png' style='vertical-align:bottom'/> <span onclick="window.top.google.connectAccount();" style='cursor:pointer' onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='';">Connect your PN Google account to this application</span>
+</div>
+<?php 
+}
+?>
 	<div class="page_section_title" style='margin-bottom:0px'>
 		What's happening ?
 	</div>

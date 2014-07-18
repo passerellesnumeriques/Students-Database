@@ -7,8 +7,7 @@ class google extends Component {
 	}
 
 	private static $api_keys = array(
-		"AIzaSyBhG4Hn5zmbXcALGQtAPJDkUj2hDSZdVSU",
-		"AIzaSyA0TsNWSK56AfQsNnUyBzvkjPMebDqs8Bg"
+		"AIzaSyCxPeiBwgOJorQ9Vt07Gwtqb4ZWkkc8NvE"
 	);
 	private $api_keys_quotas_reached = array();
 	
@@ -40,6 +39,10 @@ class google extends Component {
 			if (google::$api_keys[$key_index] == $api_key) break;
 		if ($key_index >= count(google::$api_keys)) return;
 		$this->api_keys_quotas_reached[$api_name][$key_index] = time();
+	}
+	
+	public function getConnectedAccount() {
+		return SQLQuery::create()->bypassSecurity()->select("GoogleUser")->whereValue("GoogleUser","user",PNApplication::$instance->user_management->username)->field("google_id")->executeSingleValue();
 	}
 	
 }
