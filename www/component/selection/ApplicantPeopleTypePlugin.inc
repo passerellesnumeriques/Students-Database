@@ -6,6 +6,7 @@ class ApplicantPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "applicant"; }
 	public function getName() { return "Applicant"; }
+	public function isStandalone() { return true; }
 	
 	public function canRead() {
 		return PNApplication::$instance->user_management->has_right("see_applicant_info");

@@ -71,7 +71,9 @@ function GeographicAreasTree(areas_section, country_id) {
 		areas_section.addToolRight(button);
 		button.onclick = function() {
 			require("import_coordinates.js", function() {
-				import_coordinates(t.country, t.country_data);
+				import_coordinates(t.country, t.country_data, function() {
+					location.reload();
+				});
 			});
 			return false; 
 		};
@@ -314,8 +316,8 @@ function GeographicAreasTree(areas_section, country_id) {
 	};
 	
 	this._dialogCoordinates = function(division_index, area_index) {
-		require("dialog_coordinates.js", function() {
-			new dialog_coordinates(t.country, t.country_data, division_index, area_index);
+		require("import_coordinates.js", function() {
+			dialog_coordinates(t.country, t.country_data, division_index, area_index);
 		});
 	};
 	

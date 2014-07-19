@@ -16,6 +16,7 @@ class ContactPointPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "contact_".$this->org_plugin->getOrganizationCreator(); }
 	public function getName() { return "Contact Point"; }
+	public function isStandalone() { return false; }
 	
 	public function canRead() {
 		return $this->org_plugin->canReadOrganization();

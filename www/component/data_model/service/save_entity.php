@@ -40,7 +40,7 @@ class service_save_entity extends Service {
 		
 		$fields = array();
 		foreach ($t->getColumns($sub_models) as $col) {
-			if (!isset($input["field_".$col->name])) continue;
+			if (!array_key_exists("field_".$col->name, $input)) continue;
 			$fields[$col->name] = $input["field_".$col->name];
 		}
 		

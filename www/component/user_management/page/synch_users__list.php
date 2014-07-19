@@ -76,7 +76,9 @@ class page_synch_users__list extends Page {
 				echo "</ul>";
 				echo "</form>";
 			}
+			$users_info = array();
 			if (count($list) > 0) {
+				$people_types = PNApplication::$instance->people->getSupportedPeopleTypes();
 				echo "<form name='new_users' onsubmit='return false'>";
 				echo "The following users exist in ".$domain." but not yet in the software:<ul>";
 				foreach ($list as $user) {
@@ -101,7 +103,6 @@ class page_synch_users__list extends Page {
 						}
 					}
 					echo "<br/>";
-					echo "<input type='radio' name='".$user["username"]."' value='create_user'/> Create the user without any information<br/>";
 					if (isset($user["info"])) {
 						if (isset($user["info"]["People"])) {
 							if (isset($user["info"]["People"]["first_name"]) && isset($user["info"]["People"]["last_name"])) {
@@ -115,14 +116,14 @@ class page_synch_users__list extends Page {
 							}
 						}
 					}
-					echo "<input type='radio' name='".$user["username"]."' value='create_people'/> Create user with the following information:<br/>";
-					echo "<div style='margin-left:20px'>First name: <input type='text' name='".$user["username"]."_first_name' maxlength=100 value='".(isset($user["info"]) && isset($user["info"]["People"]) && isset($user["info"]["People"]["first_name"]) ? $user["info"]["People"]["first_name"] : "")."'/></div>";
-					echo "<div style='margin-left:20px'>Last name: <input type='text' name='".$user["username"]."_last_name' maxlength=100 value='".(isset($user["info"]) && isset($user["info"]["People"]) && isset($user["info"]["People"]["last_name"]) ? $user["info"]["People"]["last_name"] : "")."'/></div>";
-					echo "<div style='margin-left:20px'>Gender: <select name='".$user["username"]."_gender'>";
-					echo "<option value=''></option>";
-					echo "<option value='M'".(isset($user["info"]) && isset($user["info"]["People"]) && isset($user["info"]["People"]["gender"]) && $user["info"]["People"]["gender"] == "M" ? " selected='selected'" : "").">M</option>";
-					echo "<option value='F'".(isset($user["info"]) && isset($user["info"]["People"]) && isset($user["info"]["People"]["gender"]) && $user["info"]["People"]["gender"] == "F" ? " selected='selected'" : "").">F</option>";
-					echo "</select></div>";
+					array_push($users_info, array("username"=>$user["username"],"info"=>@$user["info"]));
+					echo "<input type='radio' name='".$user["username"]."' value='create_user'/> Create as a new ";
+					echo "<select name='type_".$user["username"]."'>";
+					foreach ($people_types as $type) {
+						if (!$type->isStandalone()) continue;
+						echo "<option value=".json_encode($type->getId()).($type->getId() == "user" ? " selected='selected'" : "").">".htmlentities($type->getName())."</option>";
+					}
+					echo "</select>";
 					echo "</li>";
 				}
 				echo "</ul>";
@@ -136,6 +137,8 @@ class page_synch_users__list extends Page {
 		?>
 <script type='text/javascript'>
 var popup = window.parent.get_popup_window_from_frame(window);
+<?php if ($list <> null) {?>
+var users_info = <?php echo json_encode($users_info);?>;
 
 function process_removed_users(ondone) {
 	if (typeof document.forms["removed_users"] == 'undefined') { ondone(); return; }
@@ -188,17 +191,70 @@ function process_new_users(ondone) {
 	var to_link = [];
 	for (var i = 0; i < form.elements.length; ++i) {
 		var e = form.elements[i];
+		if (e.nodeName != "INPUT" || e.type != "radio") continue;
 		if (!e.checked) continue;
 		if (e.value == "create_user") {
-			to_create.push({username:e.name});
+			var type = form.elements["type_"+e.name].value;
+			var username = e.name;
+			var user = null;
+			for (var j = 0; j < users_info.length; ++j) if (users_info[j].username == username) { user = users_info[j]; break; }
+			var tc = null;
+			for (var j = 0; j < to_create.length; ++j)
+				if (to_create[j].type == type) { tc = to_create[j]; break; }
+			if (tc == null) {
+				tc = {type:type,users:[]};
+				to_create.push(tc);
+			}
+			tc.users.push(user);
 		} else if (e.value.substr(0,5) == "link_") {
 			to_link.push({username:e.name,people_id:e.value.substr(5)});
-		} else if (e.value == 'create_people') {
-			// TODO
-			alert("Create user "+e.name+" and people "+e.getAttribute("first_name")+" "+e.getAttribute("last_name"));
 		}
 	}
-	// TODO
+	popup.freeze();
+	var next_to_create = function(index) {
+		if (index == to_create.length) { popup.close(); return; }
+		popup.set_freeze_content("Creation of new users");
+		window.top.require("popup_window.js",function() {
+			var p = new window.top.popup_window('New User', null, "");
+			var type = to_create[index].type != 'user' ? to_create[index].type+",user" : "user";
+			var precreated = [];
+			for (var i = 0; i < to_create[index].users.length; ++i) {
+				var u = to_create[index].users[i];
+				var pc = [];
+				if (typeof u.info.first_name != 'undefined')
+					pc.push({table:"People",data:"First Name",value:u.info.first_name});
+				if (typeof u.info.middle_name != 'undefined')
+					pc.push({table:"People",data:"Middle Name",value:u.info.middle_name});
+				if (typeof u.info.last_name != 'undefined')
+					pc.push({table:"People",data:"Last Name",value:u.info.last_name});
+				pc.push({table:"User",data:"Username",value:u.username});
+				pc.push({table:"User",data:"Domain",value:<?php echo json_encode($domain);?>});
+				precreated.push(pc);
+			}
+			var frame = p.setContentFrame(
+				"/dynamic/people/page/popup_create_people?types="+encodeURIComponent(type)+"&multiple=true&ondone=continue_create_users",
+				null,
+				{
+					precreated: precreated
+				}
+			);
+			frame.continue_create_users = function() { next_to_create(index+1); };
+			p.show();
+		});
+	};
+	var next_to_link = function(index) {
+		if (index == to_link.length) { next_to_create(0); return; }
+		var u = to_link[index];
+		popup.set_freeze_content("Creation of user "+u.username);
+		service.json("user_management","create_user",{
+			authentication_system: <?php echo json_encode($domain);?>,
+			username: u.username,
+			people_id: u.people_id
+		},function(res){
+			next_to_link(index+1);
+		});
+	};
+	next_to_link(0);
 }
 
 popup.addOkButton(function() {
@@ -211,6 +267,7 @@ popup.addOkButton(function() {
 		});
 	});
 });
+<?php } ?>
 popup.addCancelButton();
 </script>
 		<?php 

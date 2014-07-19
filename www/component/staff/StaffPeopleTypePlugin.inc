@@ -6,6 +6,7 @@ class StaffPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "staff"; }
 	public function getName() { return "Staff"; }
+	public function isStandalone() { return true; }
 	
 	public function canRead() { return PNApplication::$instance->user_management->has_right("consult_staff_list"); }
 	public function canWrite() { return PNApplication::$instance->user_management->has_right("manage_staff"); }

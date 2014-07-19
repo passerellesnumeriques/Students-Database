@@ -137,11 +137,17 @@ function init_users_list() {
 				require("popup_window.js",function(){
 					var p = new popup_window("Synchronize Users",theme.icons_16._import,"");
 					p.setContentFrame("/dynamic/user_management/page/synch_users__auth");
+					p.onclose = function() { list.reloadData(); };
 					p.show();
 				});
 			};
 			list.addHeader(synch);
 			<?php }?>
+
+			list.makeRowsClickable(function(row){
+				if (typeof row.row_id == 'undefined') return;
+				window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
+			});
 		}
 	);
 }

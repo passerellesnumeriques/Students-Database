@@ -153,6 +153,21 @@ if (window == window.top && !window.top.geography) {
 					list.push(country_data[division_index].areas[i]);
 			return list;
 		},
+		getSiblingAreas: function(country_data, division_index, area) {
+			var siblings = [];
+			if (division_index == 0) {
+				for (var i = 0; i < country_data[0].areas.length; ++i)
+					if (country_data[0].areas[i] != area) siblings.push(country_data[0].areas[i]);
+			} else {
+				for (var i = 0; i < country_data[division_index].areas.length; ++i) {
+					var a = country_data[division_index].areas[i];
+					if (a == area) continue;
+					if (a.area_parent_id != area.area_parent_id) continue;
+					siblings.push(a);
+				}
+			}
+			return siblings;
+		},
 		
 		
 		/* Functions to get information about areas and divisions */

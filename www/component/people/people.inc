@@ -19,7 +19,7 @@ class people extends Component {
 			$i = strpos($types, "/", 1);
 			if ($i === false) break;
 			$type = substr($types, 1, $i-1);
-			$types = substr($types,$i+1);
+			$types = substr($types,$i);
 			array_push($list, $type);
 		}
 		return $list;
@@ -35,6 +35,33 @@ class people extends Component {
 			}
 		}
 		return null;
+	}
+	
+	public function getSupportedPeopleTypes() {
+		require_once("PeopleTypePlugin.inc");
+		$list = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if ($c == $this) continue;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeopleTypePlugin)) continue;
+				array_push($list, $pi);
+			}
+		}
+		return $list;
+	}
+	
+	public function addPeopleType($people_id, $new_type) {
+		$people = $this->getPeople($people_id);
+		if ($people == null)
+			throw new Exception("Invalid people or no access to this people");
+		$types = $this->parseTypes($people["types"]);
+		if (in_array($type, $types)) return; // already
+		$pi = $this->getPeopleTypePlugin($type);
+		if ($pi == null)
+			throw new Exception("Invalid people type ".$type);
+		if (!$pi->canWrite())
+			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
+		SQLQuery::create()->updateByKey("People", $people_id, array("types"=>$people["types"].$type."/"));
 	}
 
 	public function joinPeople(&$q, $from_table, $from_key, $include_picture_info = true) {

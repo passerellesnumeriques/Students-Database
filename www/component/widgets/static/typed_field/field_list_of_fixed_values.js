@@ -100,6 +100,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 		};
 		this._setData = function(data) {
 			this.element.removeAllChildren();
+			this.element.appendChild(this.add_button);
 			this._elements = [];
 			if (data != null)
 				for (var i = 0; i < data.length; ++i)

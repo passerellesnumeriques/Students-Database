@@ -6,6 +6,7 @@ class UserPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "user"; }
 	public function getName() { return "User"; }
+	public function isStandalone() { return true; }
 	
 	public function canRead() { return PNApplication::$instance->user_management->has_right("consult_user_list"); }
 	public function canWrite() { return PNApplication::$instance->user_management->has_right("manage_users"); }

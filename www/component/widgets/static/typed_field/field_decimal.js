@@ -6,7 +6,7 @@
 function field_decimal(data,editable,config) {
 	if (typeof data == 'string') data = parseFloat(data);
 	if (isNaN(data)) data = null;
-	if (data == null) data = "";
+	if (data == "") data = null;
 	if (config && !config.can_be_null && data == "") data = 0;
 	typed_field.call(this, data, editable, config);
 }
@@ -77,7 +77,7 @@ field_decimal.prototype._create = function(data) {
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
-			if (data == null && config && config.can_be_null) data = 0;
+			if (data == null && t.config && !t.config.can_be_null) data = 0;
 			if (data === null) input.value = "";
 			else input.value = data.toFixed(t.config.decimal_digits);
 			if (typeof input.autoresize != 'undefined') input.autoresize();

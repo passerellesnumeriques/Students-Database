@@ -641,6 +641,15 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	
 	public function buildSQL(&$q, $path, $filters) {
+		if ($path instanceof \DataPath_Table) {
+			$this_alias = $q->getTableAlias($path->table->getName());
+			$alias = $q->getFieldAlias($this_alias, $this->joining_key_name);
+			if ($alias == null) {
+				$alias = $q->generateFieldAlias();
+				$q->field($this_alias, $this->joining_key_name, $alias);
+			}
+			return array("key"=>$alias,"data"=>null);
+		}
 		// we need to go to the parent, and get the joining key
 		$parent_alias = $q->getTableAlias($path->parent->table->getName());
 		if ($parent_alias == null)

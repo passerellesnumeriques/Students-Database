@@ -7,6 +7,7 @@ class TeacherPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "teacher"; }
 	public function getName() { return "Teacher"; }
+	public function isStandalone() { return true; }
 	
 	public function canRead() {
 		return PNApplication::$instance->user_management->has_right("consult_curriculum");

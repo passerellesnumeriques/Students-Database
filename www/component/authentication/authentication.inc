@@ -15,10 +15,10 @@ class authentication extends Component {
 		switch ($domain) {
 			case "PNP":
 				require_once("WebAuthenticationSystem.inc");
-				//if ($local == "PNP")
+				if ($local == "PNP")
 					$url = "authentication";
-				//else
-				//	$url = "authentication.pnp.studentscenter.org:800";
+				else
+					$url = "authentication.pnp.studentscenter.org:800";
 				return new WebAuthenticationSystem("http://$url/",function(&$info,$name,$value) {
 					switch ($name) {
 						case "fullname":
@@ -36,7 +36,7 @@ class authentication extends Component {
 				});
 			case "Dev": // TODO only for testing purposes
 				require_once("WebAuthenticationSystem.inc");
-				return new WebAuthenticationSystem("http://authentication/",function(&$info,$name,$value) {
+				return new WebAuthenticationSystem("http://authentication.pnp.studentscenter.org:800/",function(&$info,$name,$value) {
 					switch ($name) {
 						case "fullname":
 							$i = strpos($value, "/");
