@@ -262,6 +262,75 @@ if (window == window.top && !window.top.geography) {
 				text.splice(0,0,p.area_name);
 			}
 			return text;
+		},
+		
+		boxContains: function(area1, area2) {
+			return this.rectContains(
+				parseFloat(area1.south),
+				parseFloat(area1.north),
+				parseFloat(area1.west),
+				parseFloat(area1.east),
+				parseFloat(area2.south),
+				parseFloat(area2.north),
+				parseFloat(area2.west),
+				parseFloat(area2.east)
+			);
+		},
+		rectContains: function(r1_south, r1_north, r1_west, r1_east, r2_south, r2_north, r2_west, r2_east) {
+			return (
+				r2_south >= r1_south &&
+				r2_south <= r1_north &&
+				r2_north >= r1_south &&
+				r2_north <= r1_north &&
+				r2_west >= r1_west &&
+				r2_west <= r1_east &&
+				r2_east >= r1_west &&
+				r2_east <= r1_east);
+		},
+		boxIntersect: function(a1,a2) {
+			return this.rectIntersect(
+				parseFloat(a1.south),
+				parseFloat(a1.north),
+				parseFloat(a1.west),
+				parseFloat(a1.east),
+				parseFloat(a2.south),
+				parseFloat(a2.north),
+				parseFloat(a2.west),
+				parseFloat(a2.east)
+			);
+		},
+		rectIntersect: function(a1s, a1n, a1w, a1e, a2s, a2n, a2w, a2e) {
+			// order is: south - north, west - east
+			// 1. Intersect if one of the corner is inside
+			// 1.1 Corner of a1 in a2
+			// 1.1.1 south,west
+			if (this.rectContainsPoint(a2s, a2n, a2w, a2e, a1s, a1w)) return true;
+			// 1.1.2 south,east
+			if (this.rectContainsPoint(a2s, a2n, a2w, a2e, a1s, a1e)) return true;
+			// 1.1.3 north,west
+			if (this.rectContainsPoint(a2s, a2n, a2w, a2e, a1n, a1w)) return true;
+			// 1.1.4 north,east
+			if (this.rectContainsPoint(a2s, a2n, a2w, a2e, a1n, a1e)) return true;
+			// 1.2 Corner of a2 in a1
+			if (this.rectContainsPoint(a1s, a1n, a1w, a1e, a2s, a2w)) return true;
+			if (this.rectContainsPoint(a1s, a1n, a1w, a1e, a2s, a2e)) return true;
+			if (this.rectContainsPoint(a1s, a1n, a1w, a1e, a2n, a2w)) return true;
+			if (this.rectContainsPoint(a1s, a1n, a1w, a1e, a2n, a2e)) return true;
+			// 2. Intersect if one rect contains the other
+			if (this.rectContains(a1s,a1n,a1w,a1e,a2s,a2n,a2w,a2e)) return true;
+			if (this.rectContains(a2s,a2n,a2w,a2e,a1s,a1n,a1w,a1e)) return true;
+			return false;
+		},
+		boxContainsPoint: function(box, point_lat, point_lng) {
+			return this.rectContainsPoint(parseFloat(box.south),parseFloat(box.north),parseFloat(box.west),parseFloat(box.east),point_lat,point_lng);
+		},
+		rectContainsPoint: function(rect_south, rect_north, rect_west, rect_east, point_lat, point_lng) {
+			if (point_lat < rect_south) return false;
+			if (point_lat > rect_north) return false;
+			if (point_lng < rect_west) return false;
+			if (point_lng > rect_east) return false;
+			return true;
 		}
+
 	};
 }

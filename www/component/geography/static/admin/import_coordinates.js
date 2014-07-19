@@ -98,7 +98,7 @@ var map_colors = [
 function import_country(popup, country, country_data) {
 	if (country.north) {
 		// already set, continue
-		import_division_level(popup, country, country_data, 0, -1, function() {
+		import_division_level(popup, country, country_data, 0, -1, undefined, function() {
 			import_sub_divisions(popup, country, country_data, 0);			
 		});
 		return;
@@ -153,7 +153,7 @@ function import_country(popup, country, country_data) {
 						field_west: ec.coord.field_west.getCurrentData()
 					},function(res) {
 						popup.unfreeze();
-						import_division_level(popup, country, country_data, 0, -1, function() {
+						import_division_level(popup, country, country_data, 0, -1, undefined, function() {
 							import_sub_divisions(popup, country, country_data, 0);			
 						});
 					});
@@ -203,7 +203,7 @@ function import_country_step1(container, country, country_data, ondone) {
 	}, true);
 };
 
-function import_division_level(popup, country, country_data, division_index, parent_area_index, ondone) {
+function import_division_level(popup, country, country_data, division_index, parent_area_index, gadm, ondone) {
 	if (country_data.length <= division_index) {
 		// this is the end
 		popup.close();
@@ -211,25 +211,25 @@ function import_division_level(popup, country, country_data, division_index, par
 	}
 	popup.content.removeAllChildren();
 	popup.removeButtons();
-	popup.content.appendChild(createTitle("Import Divisions '"+country_data[division_index].division_name+"' in Country "+country.country_name));
-
-	// step 1- search from all sources
-	var container = document.createElement("DIV");
-	popup.content.appendChild(container);
-	var search_container = document.createElement("DIV");
-	container.appendChild(search_container);
-	var results_container = document.createElement("DIV");
-	container.appendChild(results_container);
-	import_division_level_names(search_container, country, country_data, division_index, function(gadm) {
-		results_container.removeAllChildren();
+	
+	var gadm_imported = function(gadm) {
+		container.removeAllChildren();
 		var matches = [];
-		if (match_division_level_names(results_container, country, country_data, division_index, parent_area_index, gadm, matches))
+		if (match_division_level_names(container, country, country_data, division_index, parent_area_index, gadm, matches))
 			import_division_level_coordinates(popup, country, country_data, division_index, parent_area_index, matches, ondone);
 		else
 			popup.addNextButton(function() {
 				import_division_level_coordinates(popup, country, country_data, division_index, parent_area_index, matches, ondone);
 			});
-	});
+	};
+	if (typeof gadm == 'function' || !gadm) {
+		popup.content.appendChild(createTitle("Import Divisions '"+country_data[division_index].division_name+"' in Country "+country.country_name));
+		import_division_level_names(popup.content, country, country_data, division_index, function(g) {
+			if (typeof gadm == 'function') gadm(g);
+			gadm_imported(g);
+		});
+	} else
+		gadm_imported(gadm);
 }
 
 function import_division_level_names(container, country, country_data, division_index, ondone) {
@@ -240,12 +240,34 @@ function import_division_level_names(container, country, country_data, division_
 	kml_container.appendChild(createTitle("Import from gadm.org",2));
 	search_container.appendChild(kml_container);
 	new ImportKML(kml_container, function(results, div) {
-		// we should find the exact match
+		container.removeChild(search_container);
 		ondone(results);
 	});
 }
 
-function match_division_level_names(container, country, country_data, division_index, parent_area_index, names, matches) {
+function match_division_level_names(container, country, country_data, division_index, parent_area_index, gadm, matches) {
+	// get the list of areas
+	var parent_area = division_index > 0 ? country_data[division_index-1].areas[parent_area_index] : country;
+	var areas = [];
+	for (var i = 0; i < country_data[division_index].areas.length; ++i) {
+		if (division_index == 0 || country_data[division_index].areas[i].area_parent_id == parent_area.area_id)
+			areas.push(country_data[division_index].areas[i]);
+	}
+	
+	var names_inside = [];
+	var names_intersect = [];
+	var names_near = [];
+	var other_names = [];
+	
+	for (var i = 0; i < gadm.length; ++i) {
+		if (window.top.geography.boxContains(parent_area, gadm))
+			names_inside.push(gadm[i]);
+		else if (window.top.geography.boxIntersect(parent_area, gadm))
+			names_intersect.push(gadm[i]);
+	}
+	
+	// TODO redo
+	
 	var missing_matches = country_data[division_index].areas.length;
 	for (var i = 0; i < country_data[division_index].areas.length; ++i) {
 		var match = searchExactMatch(names, country_data[division_index].areas[i].area_name);
@@ -277,6 +299,7 @@ function match_division_level_names(container, country, country_data, division_i
 	tr = document.createElement("TR"); table.appendChild(tr);
 	td = document.createElement("TD"); tr.appendChild(td);
 	td.style.borderRight = "1px solid #808080";
+	td.style.verticalAlign = "top";
 	var radios_db = [];
 	for (var i = 0; i < matches.length; ++i) {
 		if (matches[i] != null) continue;
@@ -291,6 +314,7 @@ function match_division_level_names(container, country, country_data, division_i
 		div.appendChild(document.createTextNode(" "+country_data[division_index].areas[i].area_name));
 	}
 	td = document.createElement("TD"); tr.appendChild(td);
+	td.style.verticalAlign = "top";
 	var radios_names = [];
 	for (var i = 0; i < names.length; ++i) {
 		var div = document.createElement("DIV"); td.appendChild(div);
@@ -441,13 +465,14 @@ function import_sub_divisions(popup, country, country_data, division_index) {
 		popup.close();
 		return;
 	}
+	var gadm = undefined;
 	var next = function(index) {
 		if (index == country_data[division_index+1].areas.length) {
 			// all done, go to next division
 			import_sub_divisions(popup, country, country_data, division_index+1);
 			return;
 		}
-		import_division_level(popup, country, country_data, division_index+1, index, function() {
+		import_division_level(popup, country, country_data, division_index+1, index, typeof gadm == 'undefined' ? function(g){gadm=g;} : gadm,function() {
 			next(index_1);
 		});
 	};

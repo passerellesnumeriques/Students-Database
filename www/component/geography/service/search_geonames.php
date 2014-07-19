@@ -51,7 +51,7 @@ class service_search_geonames extends Service {
 		$url = "http://api.geonames.org/search";
 		$url .= "?name=".urlencode(strtolower($search_name));
 		$url .= "&country=".$country_code;
-		if ($featureCode <> null && featureCode <> "")
+		if ($featureCode <> null && $featureCode <> "")
 			$url .= "&featureCode=".$featureCode;
 		$url .= "&lang=en";
 		$url .= "&username=pnsdb&style=FULL&type=json";
