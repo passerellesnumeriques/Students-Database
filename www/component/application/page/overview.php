@@ -10,9 +10,9 @@ class page_overview extends Page {
 <style type="text/css">
 .section_box {
 	display: inline-block;
-    width: 129px;
-    height: 125px;
-    padding: 3px 1px 3px 1px;
+    width: 130px;
+    height: 130px;
+    padding: 3px 3px 3px 3px;
     margin: 3px;
     border: 1px solid rgba(0,0,0,0);
     border-radius: 5px; 
@@ -22,6 +22,14 @@ class page_overview extends Page {
 }
 .section_box:hover {
 	border: 1px solid #808080;
+	box-shadow: 2px 2px 2px 0px #C0C0C0;
+}
+.section_box:active {
+	box-shadow: none;
+	position: relative;
+	top: 2px;
+	left: 2px;
+	background-color: #F0F0F0;
 }
 .section_box>div {
 	text-align: center;
@@ -80,7 +88,7 @@ $google_id = PNApplication::$instance->google->getConnectedAccount();
 if ($google_id == null) {
 ?>
 <div style='flex:none' class='page_section_title'>
-	<img src='/static/google/google_32.png' style='vertical-align:bottom'/> <span onclick="window.top.google.connectAccount();" style='cursor:pointer' onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='';">Connect your PN Google account to this application</span>
+	<img src='/static/google/google_32.png' style='vertical-align:bottom'/> <span onclick="window.top.google.connectAccount(function(){location.reload();});" style='cursor:pointer' onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='';">Connect your PN Google account to this application</span>
 </div>
 <?php 
 }
@@ -89,7 +97,7 @@ if ($google_id == null) {
 		What's happening ?
 	</div>
 	<div style='background-color:#e8e8e8;padding-top:10px;display:flex;flex-direction:row;'>
-		<div id="updates" style="display:inline-block;flex:1 1 auto;margin-left:10px"
+		<div id="updates" style="display:inline-block;flex:1 1 auto;align-self:flex-start;margin-left:10px"
 			icon="/static/news/news.png"
 			title="Latest Updates"
 		>
@@ -104,7 +112,7 @@ if ($google_id == null) {
 				</div>
 			</div>
 		</div>
-		<div id="calendar_events" style="display:inline-block;flex:1 1 auto;margin-left:10px;vertical-align:top"
+		<div id="calendar_events" style="display:inline-block;flex:1 1 auto;align-self:flex-start;margin-left:10px;vertical-align:top"
 			icon="/static/calendar/calendar_16.png"
 			title="Upcoming Events"
 		>
@@ -124,15 +132,19 @@ function init_calendars() {
 	icon_loading.style.verticalAlign = "middle";
 	icon_loading.src = theme.icons_16.loading_white;
 	icon_loading.style.visibility = 'hidden';
+	icon_loading.style.position = 'absolute';
 	icon_loading.counter = 0;
 	calendars_section.addToolRight(icon_loading);
 	window.top.calendar_manager.on_refresh.add_listener(function() {
 		icon_loading.counter++;
 		icon_loading.style.visibility = 'visible';
+		icon_loading.style.position = 'static';
 	});
 	window.top.calendar_manager.on_refresh_done.add_listener(function() {
-		if (--icon_loading.counter == 0)
+		if (--icon_loading.counter == 0) {
 			icon_loading.style.visibility = 'hidden';
+			icon_loading.style.position = 'absolute';
+		}
 	});
 	require("calendar_view.js",function() {
 		new CalendarView(window.top.calendar_manager, "upcoming", 7, 'calendars_container', function() {

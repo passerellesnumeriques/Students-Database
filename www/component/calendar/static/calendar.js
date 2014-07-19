@@ -339,6 +339,7 @@ function Calendar(provider, name, color, show, icon) {
 	this._refresh = function(ondone) {
 		var type = getObjectClassName(this);
 		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar._refresh not implemented: "+type));
+		if (ondone) ondone();
 	};
 	/** {Function} function called to save an event. If it is not defined, it means the calendar is read only. This function takes the event to save as parameter. */
 	this.saveEvent = null; // must be overriden if the calendar supports modifications
@@ -478,30 +479,34 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 		require("calendar_objects.js", function(){
 			service.json("calendar", "get", {id:t.id}, function(result) {
 				if (!result) { ondone(); return; }
-				var removed_events = t.events;
-				t.events = [];
-				for (var i = 0; i < result.length; ++i) {
-					var ev = result[i];
-					ev.start = new Date(parseInt(ev.start)*1000);
-					ev.end = new Date(parseInt(ev.end)*1000);
-					var found = false;
-					for (var j = 0; j < removed_events.length; ++j) {
-						if (ev.uid == removed_events[j].uid) {
-							found = true;
+				try {
+					var removed_events = t.events;
+					t.events = [];
+					for (var i = 0; i < result.length; ++i) {
+						var ev = result[i];
+						ev.start = new Date(parseInt(ev.start)*1000);
+						ev.end = new Date(parseInt(ev.end)*1000);
+						var found = false;
+						for (var j = 0; j < removed_events.length; ++j) {
+							if (ev.uid == removed_events[j].uid) {
+								found = true;
+								t.events.push(ev);
+								if (ev.last_modified != removed_events[j].last_modified)
+									t.on_event_updated.fire(ev);
+								removed_events.splice(j,1);
+								break;
+							}
+						}
+						if (!found) {
 							t.events.push(ev);
-							if (ev.last_modified != removed_events[j].last_modified)
-								t.on_event_updated.fire(ev);
-							removed_events.splice(j,1);
-							break;
+							t.on_event_added.fire(ev);
 						}
 					}
-					if (!found) {
-						t.events.push(ev);
-						t.on_event_added.fire(ev);
-					}
+					for (var i = 0; i < removed_events.length; ++i)
+						t.on_event_removed.fire(removed_events[i]);
+				} catch (e) {
+					log_exception(e, "Error while refreshing PN calendar");
 				}
-				for (var i = 0; i < removed_events.length; ++i)
-					t.on_event_removed.fire(removed_events[i]);
 				ondone();
 			});
 		});

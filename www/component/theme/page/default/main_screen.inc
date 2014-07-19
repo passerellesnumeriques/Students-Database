@@ -41,7 +41,7 @@
 	height:27px;
 }
 #application_frame {
-	border-radius: 5px;
+	border-radius: 8px;
 	z-index: 1;
 }
 #application_footer {

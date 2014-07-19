@@ -142,10 +142,16 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	this._init = function() {
 		this.header = document.createElement("DIV");
 		this.header.className = "header";
+		this.header.style.display = "flex";
+		this.header.style.flexDirection = "row";
 		this.element.appendChild(this.header);
 
 		this.title_container = document.createElement("DIV");
-		this.title_container.setAttribute("layout", "fill");
+		this.title_container.style.flex = "1 1 auto";
+		this.title_container.style.display = "flex";
+		this.title_container.style.flexDirection = "row";
+		this.title_container.style.alignItems = "center";
+		this.title_container.style.height = "100%";
 		this.header.appendChild(this.title_container);
 		if (icon) {
 			this.icon = document.createElement("IMG");
@@ -161,17 +167,14 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		this.title.style.display = "inline-block";
 		this.title_container.appendChild(this.title);
 		this.toolbar_left = document.createElement("DIV");
+		this.toolbar_left.style.flex = "none";
 		this.header.appendChild(this.toolbar_left);
 		this.toolbar = document.createElement("DIV");
+		this.toolbar.style.flex = "none";
 		this.header.appendChild(this.toolbar);
 		this.toolbar_right = document.createElement("DIV");
+		this.toolbar_right.style.flex = "none";
 		this.header.appendChild(this.toolbar_right);
-		require("horizontal_layout.js",function(){
-			new horizontal_layout(t.header);
-		});
-		require("vertical_align.js",function(){
-			new vertical_align(t.title_container, "middle");
-		});
 		
 		this.content_container = document.createElement("DIV");
 		this.content_container.style.backgroundColor = "#ffffff";
@@ -209,7 +212,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 			t.header.style.display = "inline-block";
 			t.content_container.style.display = "inline-block";
 			t.footer.style.display = "inline-block";
-			t.header.style.display = "";
+			t.header.style.display = "flex";
 			t.content_container.style.display = "";
 			t.footer.style.display = "";
 			if (fill_height) {

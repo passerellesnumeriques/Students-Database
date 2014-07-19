@@ -293,6 +293,7 @@ initPNApplication();
 function LoadingFrame(frame_element) {
 	if (!frame_element.ownerDocument) return;
 	if (frame_element._no_loading) return;
+	if (frame_element._loading_frame) return;
 	frame_element._loading_frame = this;
 	var t=this;
 	/** {Number} Indicates what is the status of the frame: 0 for pending, 1 for loading, -1 for unloading */
@@ -301,11 +302,14 @@ function LoadingFrame(frame_element) {
 	this.table = document.createElement("TABLE");
 	this.table.innerHTML = "<tr><td valign=middle align=center><img src='/static/application/loading_page.gif'/></td></tr>";
 	this.table.style.position = "absolute";
+	var radius = getBorderRadius(frame_element);
+	setBorderRadius(this.table, radius[0], radius[0], radius[1], radius[1], radius[3], radius[3], radius[2], radius[2]);
 	var z = 1;
 	var p = frame_element;
 	do {
 		var style = getComputedStyle(p);
-		if (style["z-index"] != "auto") { z = style["z-index"]; break; }
+		var zi = typeof style["z-index"] != 'undefined' ? style["z-index"] : typeof style.zIndex != 'undefined' ? style.zIndex : "auto";
+		if (zi != "auto") { z = zi; break; }
 		p = p.parentNode;
 	} while (p && p.nodeName != "BODY" && p.nodeName != "HTML");
 	this.table.style.zIndex = z;
@@ -399,7 +403,7 @@ function LoadingFrame(frame_element) {
 	};
 	
 	/** Check what is the current status, and remove the loading if needed */
-	this._update = function() {
+	this._update = function(renew) {
 		if (!frame_element.parentNode ||
 			!frame_element.ownerDocument ||
 			!getWindowFromDocument(frame_element.ownerDocument)
@@ -429,17 +433,18 @@ function LoadingFrame(frame_element) {
 				else if (!win._page_ready) console.error("Frame loading timeout: _page_ready is false");
 				else if (!win.layout)  console.error("Frame loading timeout: no layout");
 				else if (win.layout._invalidated.length > 0) console.error("Frame loading timeout: still something to layout");
-				else if (!win.layout.everythingOnPageLoaded()) console.error("Frame loading timeout: script or css not yet loaded");
+				else if (!win.layout.everythingOnPageLoaded()) console.error("Frame loading timeout: script, css or image not yet loaded: "+win.layout.whatIsNotYetLoaded());
 			} else console.error("Frame loading timeout: step = "+this.step);
 			this.remove();
 			return;
 		}
 		this._position();
-		setTimeout(updater, now-this._start < 2000 ? 50 : 100);
+		if (renew)
+			setTimeout(function() { t._update(true); }, now-this._start < 2000 ? 50 : 100);
 	};
 	
 	this._position();
-	this._update();
+	this._update(true);
 	setTimeout(updater, 10);
 	layout.addHandler(frame_element, updater);
 }

@@ -28,21 +28,17 @@ $mandatory = array(
 $optional = array("/static/widgets/common_dialogs.js");
 $optional_delayed = array();
 if (PNApplication::$instance->user_management->username == null) {
-	// if we are not yet logged, to allow google or facebook login, we include them as soon as possible
-	array_push($mandatory, "/static/google/google.js");
-	//array_push($mandatory, "/static/facebook/facebook.js");
-	// then the things that are not mandatory on the login page
 	array_push($optional, "/static/javascript/animation.js");
 	array_push($optional, "/static/application/service.js");
 	array_push($optional, "/static/widgets/Status.js");
 	array_push($optional, "/static/widgets/StatusUI_Top.js");
+	array_push($optional_delayed, "/static/google/google.js");
 } else {
 	array_push($mandatory, "/static/application/service.js");
 	array_push($optional, "/static/javascript/animation.js");
 	array_push($optional, "/static/widgets/Status.js");
 	array_push($optional, "/static/widgets/StatusUI_Top.js");
 	array_push($optional_delayed, "/static/google/google.js");
-	//array_push($optional_delayed, "/static/facebook/facebook.js");
 }
 function get_script_info(&$a) {
 	for ($i = 0; $i < count($a); ++$i) {

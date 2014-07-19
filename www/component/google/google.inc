@@ -42,7 +42,7 @@ class google extends Component {
 	}
 	
 	public function getConnectedAccount() {
-		return SQLQuery::create()->bypassSecurity()->select("GoogleUser")->whereValue("GoogleUser","user",PNApplication::$instance->user_management->username)->field("google_id")->executeSingleValue();
+		return SQLQuery::create()->bypassSecurity()->select("GoogleUser")->whereValue("GoogleUser","user",PNApplication::$instance->user_management->user_id)->executeSingleRow();
 	}
 	
 }

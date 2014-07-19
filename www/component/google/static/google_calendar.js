@@ -23,6 +23,7 @@ function load_google_calendars(ondone, feedback_handler) {
 			window.top.gapi.client.load('calendar','v3',function(){
 				if (window.top.gapi.client.calendar) { calendarApiReady(); return; }
 				if (feedback_handler) feedback_handler("Connected to Google, but cannot connect to Google Calendar");
+				ondone(null);
 				setTimeout(load_calendar_api, 10000);
 			});
 		};
@@ -32,7 +33,7 @@ function load_google_calendars(ondone, feedback_handler) {
 		if (window.top.google.connection_status == 1) { googleConnected(); return; };
 		var listener = function() {
 			switch (window.top.google.connection_status) {
-			case -1: if (feedback_handler) feedback_handler("Not connected to Google"); break;
+			case -1: if (feedback_handler) feedback_handler("Not connected to Google"); ondone(null); break;
 			case 0: if (feedback_handler) feedback_handler("Connecting to Google..."); break;
 			case 1:
 				window.top.google.connection_event.remove_listener(listener);
@@ -222,6 +223,7 @@ function GoogleCalendarsProvider() {
 	var t=this;
 	this._retrieveCalendars = function(handler) {
 		load_google_calendars(function(calendars) {
+			if (calendars == null) return;
 			t.connectionStatus("");
 			handler(calendars);
 		}, function(feedback) {

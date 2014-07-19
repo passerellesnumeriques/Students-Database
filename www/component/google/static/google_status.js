@@ -40,17 +40,24 @@ function google_status(container) {
 			t.menu = new context_menu();
 			t.menu.onclose = function() { t.menu = null; };
 			if (window.top.google.connection_status == -1) {
-				t.menu.addIconItem("/static/google/connect.gif","Connect to Google", function() {
-					if (t.menu) t.menu.hide();
-					window.top.google.try_connect_now();
-				});
+				if (window.top.google.connected_pn_email == null) {
+					t.menu.addIconItem(null, "Connect your PN Google account", function() {
+						if (t.menu) t.menu.hide();
+						window.top.google.connectAccount();
+					});
+				} else {
+					t.menu.addIconItem(null,"Login to Google", function() {
+						if (t.menu) t.menu.hide();
+						window.top.google.connect(window.top.google.connected_pn_email, true);
+					});
+				}
 			} else if (window.top.google.connection_status == 0 || !t.profile) {
-				t.menu.addIconItem(theme.icons_16.loading, "Connection to Google pending...", function() {
+				t.menu.addIconItem(theme.icons_16.loading, "Connection to Google in progress...", function() {
 					if (t.menu)
 						t.menu.hide();
 				});
 			} else {
-				t.menu.addTitleItem("/static/google/google.png", t.profile.name);
+				t.menu.addTitleItem("/static/google/google.png", "Connected ("+t.profile.name+")");
 			}
 			t.menu.showAboveElement(t.icon);
 		});

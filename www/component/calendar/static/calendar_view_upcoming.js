@@ -46,6 +46,9 @@ function calendar_view_upcoming(view, container) {
 	this._getDateText = function(date) {
 		var today = new Date();
 		today.setHours(0,0,0,0);
+		if (date.getTime() >= today.getTime()-24*60*60*1000 && date.getTime() < today.getTime()) {
+			return "Yesterday ("+date.toDateString()+")";
+		}
 		if (date.getTime() >= today.getTime() && date.getTime() < today.getTime()+24*60*60*1000) {
 			return "Today ("+date.toDateString()+")";
 		}
@@ -109,6 +112,15 @@ function calendar_view_upcoming(view, container) {
 			li.appendChild(document.createTextNode(" - "));
 		}
 		li.appendChild(document.createTextNode(ev.title));
+		if (ev.end.getTime()-ev.start.getTime() >= 24*60*60*1000) {
+			var span = document.createElement("SPAN");
+			span.style.marginLeft = "5px";
+			span.style.color = "#404040";
+			span.style.fontSize = "8pt";
+			span.appendChild(document.createTextNode("until "+this._getDateText(ev.end)));
+			li.appendChild(document.createElement("BR"));
+			li.appendChild(span);
+		}
 		li.onclick = function(e) {
 			require("event_screen.js",function() {
 				var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);;
