@@ -5,5 +5,9 @@ $model->addTable("UserPeople")
 	->addForeignKey("people", "People", true, false, false, false, true)
 	->setPrimary("user")
 	->addIndex("people")
-	->allowReadAccess();
+	->allowReadAccess()
+	->onInsert(function($fields_values, $id, $sub_model_instance) {
+		PNApplication::$instance->user_people->assignDefaultRoles($id, $fields_values["people"]);
+	})
+	;
 ?>

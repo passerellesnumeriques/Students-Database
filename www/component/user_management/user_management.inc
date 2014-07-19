@@ -205,13 +205,16 @@ class user_management extends Component {
 		return true;
 	}
 	
-	public function create_role($name, $bypass_security = false) {
-		try { return SQLQuery::create()->bypassSecurity($bypass_security)->insert("Role",array("name"=>$name)); }
+	public function create_role($name, $bypass_security = false, $builtin = false) {
+		try { return SQLQuery::create()->bypassSecurity($bypass_security)->insert("Role",array("name"=>$name,"builtin"=>$builtin)); }
 		catch (Exception $e) { PNApplication::error($e->getMessage()); return null; }
 	}
-	public function remove_role($role_id) {
-		try { SQLQuery::create()->removeKey("Role", $role_id); return true; }
+	public function remove_role($role_id, $bypass_security = false) {
+		try { SQLQuery::create()->bypassSecurity($bypass_security)->removeKey("Role", $role_id); return true; }
 		catch (Exception $e) { PNApplication::error($e->getMessage()); return false; }
+	}
+	public function get_role_id_from_name($role_name, $bypass_security = false) {
+		return SQLQuery::create()->bypassSecurity($bypass_security)->select("Role")->whereValue("Role","name",$role_name)->field("id")->executeSingleValue();
 	}
 	
 	public function set_role_rights($role_id, $rights) {

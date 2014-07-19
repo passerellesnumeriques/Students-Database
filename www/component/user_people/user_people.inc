@@ -80,5 +80,9 @@ class user_people extends Component {
 		PNApplication::$instance->user_management->joinUser($q, "UserPeople", "user");
 	}
 	
+	public function assignDefaultRoles($user_id, $people_id) {
+		// TODO
+	}
+	
 }
 ?>

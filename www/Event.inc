@@ -29,5 +29,7 @@ class Event {
 		}
 	}
 	
+	public function hasListeners() { return count($this->listeners) > 0; }
+	
 }
 ?>
