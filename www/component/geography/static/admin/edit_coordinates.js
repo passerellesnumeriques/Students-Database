@@ -71,7 +71,7 @@ function EditCoordinates(container, coordinates, onready) {
 		t.element.appendChild(document.createTextNode("West "));
 		t.field_west = new field_decimal(coordinates.west, true, {can_be_null:true,integer_digits:3,decimal_digits:6,min:-180,max:180});
 		t.element.appendChild(t.field_west.getHTMLElement());
-		t.field_west.onchange.add_listener(function() { coordinates.east = t.field_west.getCurrentData(); });
+		t.field_west.onchange.add_listener(function() { coordinates.west = t.field_west.getCurrentData(); });
 		
 		onready(t);
 	});

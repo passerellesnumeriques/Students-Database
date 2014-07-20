@@ -65,6 +65,20 @@ function GoogleMap(container, onready) {
 		this.fitToShapes();
 	};
 	
+	this.addRect = function(south, west, north, east, borderColor, fillColor, fillOpacity) {
+		var rect = new window.top.google.maps.Rectangle({
+			bounds: this.createBounds(south, west, north, east),
+			strokeColor: borderColor,
+			strokeWeight: 2,
+			strokeOpacity: 0.8,
+			fillColor: fillColor,
+			fillOpacity: fillOpacity,
+			editable: false
+		});
+		this.addShape(rect);
+		return rect;
+	};
+	
 	this._init = function() {
 		loadGoogleMaps(function() {
 			t.map = new window.top.google.maps.Map(container, { 

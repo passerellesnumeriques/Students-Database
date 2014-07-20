@@ -41,15 +41,62 @@ function GeographicAreasTree(areas_section, country_id) {
 		});
 
 		// create info on the section title
-		var span = document.createElement("SPAN");
-		this.span_nb_have_coordinates = document.createElement("SPAN");
-		span.appendChild(this.span_nb_have_coordinates);
-		span.appendChild(document.createTextNode("/"));
-		this.span_nb_total = document.createElement("SPAN");
-		span.appendChild(this.span_nb_total);
-		span.appendChild(document.createTextNode(" area(s) have geographic coordinates"));
-		span.style.margin = "4px 5px 0px 5px";
-		areas_section.addToolRight(span);
+		if (!this.span_nb_total) {
+			var span = document.createElement("SPAN");
+			this.span_nb_have_coordinates = document.createElement("SPAN");
+			span.appendChild(this.span_nb_have_coordinates);
+			span.appendChild(document.createTextNode("/"));
+			this.span_nb_total = document.createElement("SPAN");
+			span.appendChild(this.span_nb_total);
+			span.appendChild(document.createTextNode(" area(s) have geographic coordinates"));
+			span.style.margin = "4px 5px 0px 5px";
+			areas_section.addToolRight(span);
+	
+			var button;
+	
+			button = document.createElement("BUTTON");
+			button.appendChild(document.createTextNode("Import coordinates"));
+			areas_section.addToolRight(button);
+			button.onclick = function() {
+				require("import_coordinates.js", function() {
+					import_coordinates(t.country, t.country_data, function() {
+						location.reload();
+					});
+				});
+				return false; 
+			};
+			
+	//		button = document.createElement("BUTTON");
+	//		button.appendChild(document.createTextNode("Search missing"));
+	//		window.areas_section.addToolRight(button);
+	//		button.onclick = function() {
+	//			var button = this;
+	//			require("context_menu.js", function() {
+	//				var menu = new context_menu();
+	//				menu.addIconItem(null, "Search all", function() {
+	//					r.searchMissingCoordinates();
+	//				});
+	//				for (var i = 0; i < r.length; ++i) {
+	//					menu.addIconItem(null, "Search only: "+r[i].division_name, function(division) {
+	//						r.searchMissingCoordinates(division);
+	//					},i);
+	//				}
+	//				menu.showBelowElement(button);
+	//			});
+	//			
+	//			return false; 
+	//		};
+	//
+	//		button = document.createElement("BUTTON");
+	//		button.appendChild(document.createTextNode("Open next missing"));
+	//		window.areas_section.addToolRight(button);
+	//		button.onclick = function() { r.nextMissingCoordinates(); return false; };
+	//
+	//		button = document.createElement("BUTTON");
+	//		button.appendChild(document.createTextNode("Check coordinates"));
+	//		window.areas_section.addToolRight(button);
+	//		button.onclick = function() { r.checkCoordinates(); return false; };
+		}
 		window.top.geography.getCountryData(country_id, function(country_data) {
 			var nb_to_set = 0;
 			var nb_total = 0;
@@ -63,51 +110,6 @@ function GeographicAreasTree(areas_section, country_id) {
 			t.span_nb_have_coordinates.innerHTML = (nb_total-nb_to_set);
 			t.span_nb_total.innerHTML = nb_total;
 		});
-
-		var button;
-
-		button = document.createElement("BUTTON");
-		button.appendChild(document.createTextNode("Import coordinates"));
-		areas_section.addToolRight(button);
-		button.onclick = function() {
-			require("import_coordinates.js", function() {
-				import_coordinates(t.country, t.country_data, function() {
-					location.reload();
-				});
-			});
-			return false; 
-		};
-		
-//		button = document.createElement("BUTTON");
-//		button.appendChild(document.createTextNode("Search missing"));
-//		window.areas_section.addToolRight(button);
-//		button.onclick = function() {
-//			var button = this;
-//			require("context_menu.js", function() {
-//				var menu = new context_menu();
-//				menu.addIconItem(null, "Search all", function() {
-//					r.searchMissingCoordinates();
-//				});
-//				for (var i = 0; i < r.length; ++i) {
-//					menu.addIconItem(null, "Search only: "+r[i].division_name, function(division) {
-//						r.searchMissingCoordinates(division);
-//					},i);
-//				}
-//				menu.showBelowElement(button);
-//			});
-//			
-//			return false; 
-//		};
-//
-//		button = document.createElement("BUTTON");
-//		button.appendChild(document.createTextNode("Open next missing"));
-//		window.areas_section.addToolRight(button);
-//		button.onclick = function() { r.nextMissingCoordinates(); return false; };
-//
-//		button = document.createElement("BUTTON");
-//		button.appendChild(document.createTextNode("Check coordinates"));
-//		window.areas_section.addToolRight(button);
-//		button.onclick = function() { r.checkCoordinates(); return false; };
 	};
 	this._createItem = function(parent_item, division_index, area_index) {
 		var div = document.createElement('DIV');
@@ -232,8 +234,22 @@ function GeographicAreasTree(areas_section, country_id) {
 			for (var i = 0; i < lines.length; ++i) {
 				var line = lines[i].trim();
 				if (line.length == 0) continue;
+				if (line.charCodeAt(0) == 9) {
+					// skip and remove next line
+					i++;
+					continue;
+				}
 				var j = line.indexOf('\t');
-				if (j > 0) line = line.substring(0,j);
+				if (j > 0) line = line.substring(0,j).trim();
+				var only_digits = true;
+				for (var j = 0; j < line.length; ++j) {
+					var c = line.charAt(j);
+					if (c == "," || c == "." || isSpace(c)) continue;
+					var cc = line.charCodeAt(j);
+					if (cc < "0".charCodeAt(0) || cc > "9".charCodeAt(0)) { only_digits = false; break; }
+				}
+				if (only_digits) continue;
+				if (line.length == 0) continue;
 				s += line+"\n";
 			}
 			text_area.value = s;
