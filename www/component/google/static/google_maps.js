@@ -21,6 +21,15 @@ function GoogleMap(container, onready) {
 	this.map = null;
 	this.shapes = [];
 	
+	this.getShapeBounds = function(shape) {
+		if (typeof shape.getBounds != 'undefined') return shape.getBounds();
+		if (typeof shape.getPosition != 'undefined') {
+			var pos = shape.getPosition();
+			return this.createBounds(pos.lat(), pos.lng(), pos.lat(), pos.lng());
+		}
+		return null;
+	};
+	
 	this.createBounds = function(south, west, north, east) {
 		return new window.top.google.maps.LatLngBounds(
 			new window.top.google.maps.LatLng(south, west),
@@ -34,9 +43,9 @@ function GoogleMap(container, onready) {
 	
 	this.fitToShapes = function() {
 		if (this.shapes.length == 0) return;
-		var bounds = this.shapes[0].getBounds();
+		var bounds = this.getShapeBounds(this.shapes[0]);
 		for (var i = 1; i < this.shapes.length; ++i)
-			bounds = maxGoogleBounds(bounds, this.shapes[i].getBounds());
+			bounds = maxGoogleBounds(bounds, this.getShapeBounds(this.shapes[i]));
 		this.map.fitBounds(bounds);
 	};
 	
@@ -77,6 +86,18 @@ function GoogleMap(container, onready) {
 		});
 		this.addShape(rect);
 		return rect;
+	};
+	this.addMarker = function(lat, lng, text, opacity) {
+		var m = new window.top.google.maps.Marker({
+			clickable: false,
+			crossOnDrag: false,
+			title: text,
+			opacity: opacity,
+			position: new window.top.google.maps.LatLng(lat, lng),
+			visible: true
+		});
+		this.addShape(m);
+		return m;
 	};
 	
 	this._init = function() {

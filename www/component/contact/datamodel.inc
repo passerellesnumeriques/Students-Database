@@ -162,6 +162,8 @@ $model->addTable("PostalAddress")
 	->addString("unit",100,0,true,false)
 	->addString("additional",100,0,true,false)
 	->addString("address_type",100,0,true,false)
+	->addDecimal("lat", 3, 6, -90, 90, true, false)
+	->addDecimal("lng", 3, 6, -180, 180, true, false)
 	->addReadAccessFromForeignTable("OrganizationAddress") // no need to check again
 	->addReadAccessFromForeignTable("PeopleAddress") // no need to check again
 	->addReadFilter(function(&$q, $table_alias) {

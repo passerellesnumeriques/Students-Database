@@ -221,6 +221,8 @@ function parseRRuleDate(s) {
 function GoogleCalendarsProvider() {
 	CalendarsProvider.call(this,"Google");
 	var t=this;
+	// limit to 10 minutes to avoid reaching the maximum of 100 000 request per day
+	this.minimum_time_to_autorefresh = 10*60*1000;
 	this._retrieveCalendars = function(handler) {
 		load_google_calendars(function(calendars) {
 			if (calendars == null) return;

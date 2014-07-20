@@ -6,8 +6,8 @@ if (!window.top.google) {
 		_connecting_time: 0,
 		_api_loaded_event: new Custom_Event(),
 
-		_client_id: "668569616064-nu94pmbtml2i2qrnhhkajcf82ju6f2mb.apps.googleusercontent.com",
-		_api_key: "AIzaSyBmCvj7e_p9QwoxBoD08xHKvuTDUaBt6ZQ",
+		_client_id: window.top.google_local_config.client_id,
+		_api_key: window.top.google_local_config.api_key,
 		_scopes: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar",
 
 		need_connection: function(on_connected) {

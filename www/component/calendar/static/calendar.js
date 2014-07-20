@@ -152,6 +152,8 @@ CalendarsProvider.prototype = {
 	on_calendar_added: new Custom_Event(),
 	/** {Custom_Event} event raised when a calendar disappears on this provider */
 	on_calendar_removed: new Custom_Event(),
+	/** {Number} minimum time (in milliseconds) before calendars from this provider can be automatically refreshed */
+	minimum_time_to_autorefresh: 5*60*1000,
 	/** Reload the list of calendars from this provider */
 	refreshCalendars: function() {
 		var t=this;
@@ -246,6 +248,7 @@ if (!window.top.CalendarsProviders) {
 		 * @param {CalendarsProvider} provider the new calendar provider
 		 */
 		add: function(provider) {
+			provider._last_auto_refresh = new Date().getTime();
 			for (var i = 0; i < this._providers.length; ++i)
 				if (this._providers[i].getProviderName() == provider.getProviderName())
 					return; // same
@@ -276,12 +279,15 @@ if (!window.top.CalendarsProviders) {
 		},
 		/** Internal function to refresh the list of calendars on all providers */
 		_refresh: function() {
-			for (var i = 0; i < this._providers.length; ++i)
+			var now = new Date().getTime();
+			for (var i = 0; i < this._providers.length; ++i) {
+				if (now - this._providers[i]._last_auto_refresh < this._providers[i].minimum_time_to_autorefresh) continue;
 				for (var j = 0; j < this._providers[i].calendars.length; ++j)
 					this._providers[i].calendars[j].refresh();
+			}
 		}
 	};
-	setTimeout(function() { window.top.CalendarsProviders._refresh(); }, 5*60*1000);
+	setTimeout(function() { window.top.CalendarsProviders._refresh(); }, 60*1000);
 }
 
 /**
@@ -552,6 +558,7 @@ PNCalendar.prototype.constructor = PNCalendar;
 function PNCalendarsProvider() {
 	CalendarsProvider.call(this,"PN");
 	var t=this;
+	this.minimum_time_to_autorefresh = 2*60*1000; // we are in local, we can refresh regularly
 	this._retrieveCalendars = function(handler) {
 		t.connectionStatus("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");
 		service.json("calendar", "get_my_calendars", {}, function(calendars) {

@@ -95,9 +95,9 @@ if (window == window.top && !window.top.geography) {
 						if (typeof country_data[division].areas[area].division_id == 'undefined')
 							country_data[division].areas[area].division = country_data[division];
 						return country_data[division].areas[area];
-						return;
 					}
 			}
+			return null;
 		},
 		getAreaDivisionIndex: function(country_data, area) {
 			if (typeof area.division_index != 'undefined')
@@ -192,24 +192,27 @@ if (window == window.top && !window.top.geography) {
 		},
 
 		searchAreaByNameInDivision: function(country_data, division_index, area_name) {
-			area_name = area_name.trim().toLowerCase();
+			area_name = area_name.trim().latinize().toLowerCase();
 			if (division_index >= country_data.length) return null;
 			for (var i = 0; i < country_data[division_index].areas.length; ++i) {
 				var area = country_data[division_index].areas[i];
 				area.division_index = division_index;
 				area.division = country_data[division_index];
-				if (area.area_name.toLowerCase() == area_name) return area;
+				if (area.area_name.latinize().toLowerCase() == area_name) return area;
 			}
 			return null;
 		},
 		
-		searchAreaByNames: function(country_data, areas_names) {
-			return window.top.geography._searchAreaByNames(country_data, areas_names, 0, 0);
+		searchAreaByNames: function(country_data, areas_names, remaining_names) {
+			return window.top.geography._searchAreaByNames(country_data, areas_names, 0, 0, null, remaining_names);
 		},
-		_searchAreaByNames: function(country_data, areas_names, start_division_index, start_names_index) {
+		_searchAreaByNames: function(country_data, areas_names, start_division_index, start_names_index, parent_area, remaining_names) {
+			var next_name = areas_names[start_names_index].trim().latinize().toLowerCase();
 			for (var division_index = start_division_index; division_index < country_data.length; ++division_index) {
 				for (var i = 0; i < country_data[division_index].areas.length; ++i) {
-					if (country_data[division_index].areas[i].area_name.toLowerCase() == areas_names[start_names_index].trim().toLowerCase()) {
+					if (parent_area && country_data[division_index].areas[i].area_parent_id != parent_area.area_id) continue;
+					var aname = country_data[division_index].areas[i].area_name.latinize().toLowerCase();
+					if (aname == next_name || country_data[division_index].division_name.latinize().toLowerCase()+" "+aname == next_name) {
 						// found it !
 						if (start_names_index == areas_names.length-1) {
 							// last one => return it
@@ -217,10 +220,13 @@ if (window == window.top && !window.top.geography) {
 						}
 						// continue with next names
 						for (var next = start_names_index+1; next < areas_names.length; ++next) {
-							var area = window.top.geography._searchAreaByNames(country_data, areas_names, division_index+1, next);
+							var area = window.top.geography._searchAreaByNames(country_data, areas_names, division_index+1, next, country_data[division_index].areas[i], remaining_names);
 							if (area != null) return area;
 						}
 						// did not find a next name => return the current one
+						if (remaining_names)
+							for (var j = start_names_index+1; j < areas_names.length; ++j)
+								remaining_names.push(areas_names[j]);
 						return country_data[division_index].areas[i];
 					}
 				}
@@ -237,6 +243,7 @@ if (window == window.top && !window.top.geography) {
 				id: -1,
 				text: "Invalid area ID"
 			};
+			return this.getGeographicAreaText(country_data, area);
 		},
 		getGeographicAreaText: function(country_data, area) {
 			var text = area.area_name;
@@ -249,7 +256,7 @@ if (window == window.top && !window.top.geography) {
 			return {
 				country_id: window.top.geography.getCountryIdFromData(country_data),
 				division_id: window.top.geography.getAreaDivisionId(country_data, area),
-				id: area_id,
+				id: area.area_id,
 				text: text
 			};
 		},

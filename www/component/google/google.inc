@@ -7,7 +7,10 @@ class google extends Component {
 	}
 
 	private static $api_keys = array(
-		"AIzaSyCxPeiBwgOJorQ9Vt07Gwtqb4ZWkkc8NvE"
+		"AIzaSyCxPeiBwgOJorQ9Vt07Gwtqb4ZWkkc8NvE", // Students Management Software project
+		"AIzaSyDo1ItI5GgxstCeg-HDjqbfC90Vlb6csaM", // PNP project
+		"AIzaSyADgAEBj2szKGkDgROI44JlfWijJcCBnSQ", // PNC project
+		"AIzaSyDtfnML7BF5ngbMJNoZA-fRE-mDItJdMXQ" // PNV project
 	);
 	private $api_keys_quotas_reached = array();
 	

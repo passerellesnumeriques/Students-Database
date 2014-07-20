@@ -217,6 +217,9 @@ function GeographicAreasTree(areas_section, country_id) {
 		var content = document.createElement("DIV");
 		content.style.padding = "10px";
 		content.appendChild(document.createTextNode("Please enter new areas (one by line):"));
+		var ei = document.createElement("I");
+		ei.appendChild(document.createTextNode("Note: empty lines are ignored, spaces at the beginning or end of a line are ignored"));
+		content.appendChild(ei);
 		content.appendChild(document.createElement("BR"));
 		var text_area = document.createElement("TEXTAREA");
 		text_area.rows = 10;

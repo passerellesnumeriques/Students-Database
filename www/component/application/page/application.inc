@@ -4,6 +4,10 @@ theme::css($this, "application.css");
 // mandatory part
 $this->requireJavascript("calendar.js");
 ?><script type='text/javascript'>
+window.top.google_local_config = <?php
+$d = PNApplication::$instance->getDomainDescriptor(); 
+echo json_encode($d["google"]);
+?>;
 window.top.username = <?php echo json_encode(PNApplication::$instance->user_management->username); ?>;
 window.top.user_id = <?php echo PNApplication::$instance->user_management->user_id; ?>;
 window.top.default_country_code = <?php $d = PNApplication::$instance->getDomainDescriptor(); echo json_encode($d["geography"]["country_code"]).";"; ?>

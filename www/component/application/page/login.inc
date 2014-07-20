@@ -27,9 +27,14 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 } else if (isset($_POST["message"]))
 	$message = $_POST["message"];
 	
-
-
-
+?>
+<script type='text/javascript'>
+window.top.google_local_config = <?php
+$d = PNApplication::$instance->getDomainDescriptor(); 
+echo json_encode($d["google"]);
+?>;
+</script>
+<?php 
 $this->onload("window.top.pn_loading_end();");
 ?>
 <form method="post" style="width:100%;height:100%" onsubmit="login();return false;" name="login_form">

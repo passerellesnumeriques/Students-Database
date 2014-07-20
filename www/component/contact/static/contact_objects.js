@@ -13,8 +13,10 @@ if (typeof require != 'undefined') require("geography_objects.js");
  * @param {String} unit unit name
  * @param {String} additional any additional text
  * @param {String} address_type type (Word, Home...)
+ * @param {Number} lat latitude
+ * @param {Number} lng longitude
  */
-function PostalAddress(id, country_id, geographic_area, street, street_number, building, unit, additional, address_type) {
+function PostalAddress(id, country_id, geographic_area, street, street_number, building, unit, additional, address_type, lat, lng) {
 	this.id = id;
 	this.country_id = country_id;
 	if(geographic_area)
@@ -31,6 +33,8 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 	this.unit = unit;
 	this.additional = additional;
 	this.address_type = address_type;
+	this.lat = lat;
+	this.lng = lng;
 }
 
 function parsePostalAddress(str) {

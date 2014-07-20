@@ -141,7 +141,7 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 	* @param needle = the needle to find in the result object
 	*/
 	this.autoFill = function (needle){
-		needle = needle.toLowerCase();
+		needle = needle.latinize().toLowerCase();
 		var needle_words = prepareMatchScore(needle);
 		if (this._all_areas == null) {
 			// first time => compute everything
@@ -156,7 +156,7 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 					o.full_name = "";
 					for (var i = 0; i < o.names.length; ++i) {
 						if (i > 0) o.full_name += " ";
-						o.full_name += o.names[i].toLowerCase();
+						o.full_name += o.names[i].latinize().toLowerCase();
 					}
 					o.words = prepareMatchScore(o.full_name);
 					this._all_areas.push(o);
