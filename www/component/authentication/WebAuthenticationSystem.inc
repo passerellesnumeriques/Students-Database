@@ -71,10 +71,17 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_POSTFIELDS, array_merge(array("service"=>$service,"token"=>$token), $params));
 		$result = curl_exec($c);
+		if ($result === false) {
+			PNApplication::error("Error calling service ".$service." on authentication system: ".curl_error($c));
+			curl_close($c);
+			return null;
+		}
 		curl_close($c);
-		if ($result === false) return null;
 		$xml = @simplexml_load_string($result);
-		if ($xml === false) return null;
+		if ($xml === false) {
+			PNApplication::error("Invalid response from authentication system");
+			return null;
+		}
 		return $xml;
 	}
 	

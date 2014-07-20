@@ -32,6 +32,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	/** Event when data has been loaded/refreshed */
 	t.ondataloaded = new Custom_Event();
 	
+	t.onfilterschanged = new Custom_Event();
+	
 	/* Public methods */
 	
 	/** Add some html in the header of the data list
@@ -161,25 +163,26 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	 * @param {Boolean} remove_forced true to remove also the filters which cannot be remove by the user 
 	 */
 	t.resetFilters = function(remove_forced) {
-		if (remove_forced)
+		if (remove_forced) {
 			t._filters = [];
-		else
+			t.onfilterschanged.fire();
+		} else {
+			var changed = false;
 			for (var i = 0; i < t._filters.length; ++i)
 				if (!t._filters[i].forced) {
 					t._filters.splice(i,1);
 					i--;
+					changed = true;
 				}
-		if (t._filterNumber) t._filterNumber.style.visibility = "hidden";
+			if (changed) t.onfilterschanged.fire();
+		}
 	};
 	/** Add a new filter
 	 * @param {Object} filter {category,name,force,data,or}
 	 */
 	t.addFilter = function(filter) {
 		t._filters.push(filter);
-		if (t._filterNumber) {
-			t._filterNumber.style.visibility = "visible";
-			t._filterNumber.innerHTML = t._filters.length;
-		}
+		t.onfilterschanged.fire();
 	};
 	t.removeFilter = function(filter) {
 		for (var i = 0; i < t._filters.length; ++i) {
@@ -188,22 +191,31 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				break;
 			}
 			var found = false;
-			var pos = filter;
+			var pos = t._filters[i];
 			while (pos.or) {
 				if (pos.or == filter) {
 					found = true;
 					pos.or = pos.or.or;
 					break;
 				}
+				pos = pos.or;
 			}
 			if (found) break;
 		}
-		if (t._filterNumber) {
-			t._filterNumber.style.visibility = t._filters.length > 0 ? "visible" : "hidden";
-			t._filterNumber.innerHTML = t._filters.length;
-		}
+		t.onfilterschanged.fire();
 	};
 	t.getFilters = function() { return t._filters; };
+	t.hasFilterOn = function(category, name) {
+		for (var i = 0; i < t._filters.length; ++i) {
+			if (t._filters[i].category == category && t._filters[i].name == name) return true;
+			var pos = t._filters[i];
+			while (pos.or) {
+				if (pos.or.category == category && pos.or.name == name) return true;
+				pos = pos.or;
+			}
+		}
+		return false;
+	};
 	
 	t.getField = function(category, name) {
 		for (var i = 0; i < t._available_fields.length; ++i)
@@ -390,9 +402,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		require(["mac_tabs.js","field_html.js","pictures_list.js"], function() {
 			var header = document.createElement("DIV");
 			header.className = "header_right";
-			header.style.display = "inline-block";
+			header.style.display = "flex";
 			header.style.height = "100%";
-			header.style.verticalAlign = "middle";
+			header.style.justifyContent = "center";
+			header.style.alignItems = "center";
 			var tabs = new mac_tabs('compressed');
 			tabs.addItem("<img src='/static/data_model/list_text_16.png'/>","text");
 			if (picture_provider)
@@ -649,11 +662,19 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t._filterNumber.style.fontSize = "8px";
 		t._filterNumber.style.padding = "0px 2px 0px 2px";
 		setBorderRadius(t._filterNumber,2,2,2,2,2,2,2,2);
-		if (t._filters.length > 0)
+		if (t._filters.length > 0) {
 			t._filterNumber.innerHTML = t._filters.length;
-		else
+			t.onfilterschanged.fire();
+		} else
 			t._filterNumber.style.visibility = "hidden";
 		div.appendChild(t._filterNumber);
+		t.onfilterschanged.add_listener(function() {
+			if (t._filters.length > 0) {
+				t._filterNumber.style.visibility = "visible";
+				t._filterNumber.innerHTML = t._filters.length;
+			} else
+				t._filterNumber.style.visibility = "hidden";
+		});
 		// + export
 		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
@@ -877,6 +898,37 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					}
 				}
 			}, "Edit data on this column"));
+		}
+		if (f.field.filter_classname) {
+			var has = t.hasFilterOn(f.field.category, f.field.name);
+			var update_action = function(action) {
+				var has = t.hasFilterOn(f.field.category, f.field.name);
+				action.icon = has ? "/static/widgets/grid/filter_active.png" : "/static/widgets/grid/filter.gif";
+				action.tooltip = has ? "Edit filters (this column is currently filtered)" : "Filter";
+				col._refresh_title();
+				layout.invalidate(container);
+			};
+			var a = new GridColumnAction(has ? "/static/widgets/grid/filter_active.png" : "/static/widgets/grid/filter.gif",function(ev,action,col){
+				var has = t.hasFilterOn(f.field.category, f.field.name);
+				if (has)
+					t._filtersDialog(ev.target);
+				else {
+					require(["context_menu.js",["typed_filter.js",f.field.filter_classname+".js"]], function() {
+						var menu = new context_menu();
+						var div = document.createElement("DIV");
+						var filter = {category:f.field.category,name:f.field.name,data:null};
+						t._createFilter(filter, div, false, true);
+						menu.addItem(div,true);
+						menu.showBelowElement(ev.target);
+						t.addFilter(filter);
+					});
+				}
+				// TODO
+			}, has ? "Edit filters (this column is currently filtered)" : "Filter");
+			col.addAction(a);
+			t.onfilterschanged.add_listener(function() {
+				update_action(a);
+			});
 		}
 		return col;
 	};
@@ -1245,7 +1297,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	 * @param {Object} filter the filter
 	 * @param {DOMNode} container where to display the filter
 	 */
-	t._createFilter = function(filter, container, is_or) {
+	t._createFilter = function(filter, container, is_or, simple) {
 		var div = document.createElement("DIV");
 		container.appendChild(div);
 		div.className = "data_list_filter";
@@ -1260,7 +1312,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 		
 		// remove button
-		if (!filter.force) {
+		if (!filter.force && !simple) {
 			var remove = document.createElement("BUTTON");
 			remove.className = "flat";
 			remove.title = "Remove this filter on "+field.name;
@@ -1289,12 +1341,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		
 		// field name
-		var div_name = document.createElement("DIV");
-		div_name.style.display = "inline-block";
-		div_name.style.verticalAlign = "bottom";
-		div_name.style.marginRight = "4px";
-		div_name.appendChild(document.createTextNode(field.name+(typeof filter.sub_index != 'undefined' && filter.sub_index >= 0 ? "/"+field.sub_data.names[filter.sub_index] : "")+" "));
-		div.appendChild(div_name);
+		if (!simple) {
+			var div_name = document.createElement("DIV");
+			div_name.style.display = "inline-block";
+			div_name.style.verticalAlign = "bottom";
+			div_name.style.marginRight = "4px";
+			div_name.appendChild(document.createTextNode(field.name+(typeof filter.sub_index != 'undefined' && filter.sub_index >= 0 ? "/"+field.sub_data.names[filter.sub_index] : "")+" "));
+			div.appendChild(div_name);
+		}
 		
 		// filter
 		var classname, config;
@@ -1313,7 +1367,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t._loadData();
 		});
 		
-		if (!is_or) {
+		if (!is_or && !simple) {
 			// or
 			var or_div = document.createElement("DIV");
 			or_div.className = "or_container";

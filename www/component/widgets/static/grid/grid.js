@@ -101,6 +101,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		if (this.grid.selectable) index++;
 		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
 			var row = this.grid.table.childNodes[i];
+			if (index >= row.childNodes.length) continue;
 			var td = row.childNodes[index];
 			if (td.field)
 				td.field.setEditable(this.editable);
@@ -115,7 +116,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.removeAction = function(action) {
 		this.actions.remove(action);
 		this._refresh_title();
-	}
+	};
 
 	this.addSorting = function(sort_function) {
 		this.sort_order = 3; // not sorted
@@ -218,55 +219,57 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			this.th.insertBefore(span, this.th.childNodes[0]);
 		else
 			this.th.appendChild(span);
+		var create_action_image = function(url, info, onclick) {
+			var img = document.createElement("IMG");
+			img.src = url;
+			img.style.verticalAlign = "middle";
+			img.style.cursor = "pointer";
+			if (info) tooltip(img, info);
+			img.onclick = onclick;
+			img.style.marginLeft = "1px";
+			img.style.marginRight = "1px";
+			setOpacity(img, 0.65);
+			listenEvent(img, 'mouseover', function() { setOpacity(img, 1); });
+			listenEvent(img, 'mouseout', function() { setOpacity(img, 0.65); });
+			return img;
+		};
 		if (this.sort_order) {
-			var img;
 			switch (this.sort_order) {
 			case 1: // ascending
-				img = document.createElement("IMG");
-				img.src = url+"/arrow_up_10.gif";
-				img.style.verticalAlign = "middle";
-				img.style.cursor = "pointer";
-				tooltip(img, "Sort by descending order (currently ascending)");
-				img.onclick = function() { t._onsort(2); };
-				span.appendChild(img);
+				span.appendChild(create_action_image(
+					url+"/arrow_up_10.gif",
+					"Sort by descending order (currently ascending)",
+					function() { t._onsort(2); }
+				));
 				break;
 			case 2: // descending
-				img = document.createElement("IMG");
-				img.src = url+"/arrow_down_10.gif";
-				img.style.verticalAlign = "middle";
-				img.style.cursor = "pointer";
-				tooltip(img, "Sort by ascending order (currently descending)");
-				img.onclick = function() { t._onsort(1); };
-				span.appendChild(img);
+				span.appendChild(create_action_image(
+					url+"/arrow_down_10.gif",
+					"Sort by ascending order (currently descending)",
+					function() { t._onsort(1); }
+				));
 				break;
 			case 3: // not sorted yet
-				var h = function() { t._onsort(1); };
-				img = document.createElement("IMG");
-				img.src = url+"/arrow_up_10.gif";
-				img.style.verticalAlign = "middle";
-				img.style.cursor = "pointer";
-				tooltip(img, "Sort by descending order");
-				img.onclick = h;
-				span.appendChild(img);
-				img = document.createElement("IMG");
-				img.src = url+"/arrow_down_10.gif";
-				img.style.verticalAlign = "middle";
-				img.style.cursor = "pointer";
-				tooltip(img, "Sort by ascending order");
-				img.onclick = h;
-				span.appendChild(img);
+				span.appendChild(create_action_image(
+					url+"/arrow_up_10.gif",
+					"Sort by descending order",
+					function() { t._onsort(2); }
+				));
+				span.appendChild(create_action_image(
+					url+"/arrow_down_10.gif",
+					"Sort by ascending order",
+					function() { t._onsort(1); }
+				));
 				break;
 			}
 		}
 		for (var i = 0; i < this.actions.length; ++i) {
-			var img = document.createElement("IMG");
-			img.src = this.actions[i].icon;
-			img.style.verticalAlign = "middle";
-			img.style.cursor = "pointer";
+			var img = create_action_image(
+				this.actions[i].icon,
+				this.actions[i].tooltip,
+				function(ev) { this.data.onclick(ev, this.data, t); }
+			);
 			img.data = this.actions[i];
-			if (this.actions[i].tooltip)
-				tooltip(img, this.actions[i].tooltip);
-			img.onclick = function(ev) { this.data.onclick(ev, this.data, t); };
 			this.actions[i].element = img;
 			span.appendChild(img);
 		}
