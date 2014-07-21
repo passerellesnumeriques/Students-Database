@@ -1901,7 +1901,7 @@ class SQLQuery {
 				$this->browseTablesForRemove($t, $sub_model_instance, $keys, null, $locks, $to_remove, $to_update, $sub_models_to_remove);
 			} catch (Exception $e) {
 				foreach ($locks as $lock) DataBaseLock::unlock($lock);
-				throw new Exception("Remove from table '".$table."': ".$e->getMessage());
+				throw new Exception("Remove from table '".$table."': ".$e->getMessage(), null, $e);
 			}
 			
 			// everything is allowed, and all tables are locked: do it
@@ -1932,7 +1932,7 @@ class SQLQuery {
 						}
 					}
 					if ($where <> "") {
-						$dm_table = DataModel::get()->getTableFromSQLName($table_name);
+						$dm_table = DataModel::get()->getTableFromSQLName($table_name, $this->bypass_security);
 						if ($dm_table->hasRemoveListeners()) {
 							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
 							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$where);
@@ -1956,7 +1956,7 @@ class SQLQuery {
 						$w .= ")";
 					}
 					if ($w <> "") {
-						$dm_table = DataModel::get()->getTableFromSQLName($table_name);
+						$dm_table = DataModel::get()->getTableFromSQLName($table_name, $this->bypass_security);
 						if ($dm_table->hasRemoveListeners()) {
 							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
 							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$where);

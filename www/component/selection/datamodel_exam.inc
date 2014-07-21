@@ -40,12 +40,12 @@ $sm->addTable("ExamSubjectQuestion")
 
 // (June 04 2014) Adding new table ExamSubjectAnswer
 $sm->addTable("ExamSubjectAnswer")
-         ->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true)
-         ->addForeignKey("exam_subject_version","ExamSubjectVersion",true,false,true)
-         ->addString("answer",255,0,true) // eg. "{A,C}" or "127.8" or "toto titi"  depending on question type
-         ->setKey(array("exam_subject_question","exam_subject_version"))
-         //TODO : Access Rights ?
-         ;
+	->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true)
+	->addForeignKey("exam_subject_version","ExamSubjectVersion",true,false,true)
+	->addString("answer",255,0,true) // eg. "{A,C}" or "127.8" or "toto titi"  depending on question type
+	->setKey(array("exam_subject_question","exam_subject_version"))
+	//TODO : Access Rights ?
+	;
         
 
         

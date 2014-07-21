@@ -135,7 +135,7 @@ class page_exam_subjects extends SelectionPage {
 								if(!res)
 									error_dialog("An error occured");
 								else {
-									t.div.parentNode.removeChild(t);
+									t.div.parentNode.removeChild(t.div);
 									subjects.remove(subject);
 									subjects_controls.remove(t);
 								}
@@ -153,8 +153,12 @@ class page_exam_subjects extends SelectionPage {
 		function newSubject() {
 			var frame = document.getElementById('subject_frame');
 			new LoadingFrame(frame);
+			var listener = function() {
+				showSubjectActions(null);
+				unlistenEvent(frame,'load',listener);
+			};
+			listenEvent(frame,'load',listener);
 			frame.src = "/dynamic/selection/page/exam/subject?id=-1";
-			showSubjectActions(null);
 		}
 
 		function copySubject() {
@@ -194,6 +198,11 @@ class page_exam_subjects extends SelectionPage {
 							if (subj == null) return; // error case
 							if (subject == null) {
 								// new subject
+								if (subjects.length == 0) {
+									var no_subject = document.getElementById('no_subject');
+									no_subject.style.position = "absolute";
+									no_subject.style.display = "none";
+								}
 								subjects.push(subj);
 								subjects_controls.push(new SubjectControl(subj));
 							} else {
@@ -213,8 +222,7 @@ class page_exam_subjects extends SelectionPage {
 						if (subject == null) {
 							// new subject, let's restart
 							win.pnapplication.cancelDataUnsaved();
-							document.getElementById('subject_frame').src = "about:blank";
-							newSubject();
+							document.getElementById('subject_frame').src = "/static/application/message.html?text=<?php echo urlencode("Select a subject to display it here");?>";
 						} else {
 							win.pnapplication.cancelDataUnsaved();
 							win.location.reload();

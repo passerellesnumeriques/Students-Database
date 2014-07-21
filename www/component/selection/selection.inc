@@ -1326,6 +1326,7 @@ class selection extends Component {
 					->executeSingleField();
 				//Remove the topic
 				SQLQuery::create()
+					->bypassSecurity()
 					->removeKey("ExamTopicForEligibilityRule",$id);
 				//Check there is no empty eligibility rule
 				if($rules_ids_to_check <> null){
@@ -1345,7 +1346,7 @@ class selection extends Component {
 					}
 				}
 			} catch (Exception $e){
-				PNApplication:error($e);
+				PNApplication::error($e);
 			}
 			if(PNApplication::hasErrors()){
 				SQLQuery::rollbackTransaction();
