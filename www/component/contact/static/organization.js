@@ -280,29 +280,30 @@ function organization(container, org, existing_types, can_edit) {
 		var map_container = document.createElement("DIV");
 		map_container.style.width = "300px";
 		map_container.style.height = "200px";
-		map_container.style.position = "absolute";
-		map_container.style.visibility = "hidden";
-		map_container.style.top = "-1000px";
+		//map_container.style.position = "absolute";
+		//map_container.style.visibility = "hidden";
+		//map_container.style.top = "-1000px";
 		td_map.appendChild(map_container);
+		t.map = null;
 		require("google_maps.js", function() {
-			var map = null;
 			var markers = [];
 			var update_map = function() {
 				for (var i = 0; i < markers.length; ++i)
-					map.removeShape(markers[i]);
+					t.map.removeShape(markers[i]);
+				markers = [];
 				var list = t._addresses_widget.getAddresses();
 				if (list.length > 0) {
 					for (var i = 0; i < list.length; ++i) {
 						if (list[i].lat && list[i].lng)
-							map.addMarker(parseFloat(list[i].lat), parseFloat(list[i].lng), list[i].address_type, 1);
+							markers.push(t.map.addMarker(parseFloat(list[i].lat), parseFloat(list[i].lng), 1, list[i].address_type));
 					}
-					map.fitToShapes();
-					map_container.style.position = "static";
-					map_container.style.visibility = "visible";
+					t.map.fitToShapes();
+					//map_container.style.position = "static";
+					//map_container.style.visibility = "visible";
 				} else {
-					map_container.style.position = "absolute";
-					map_container.style.visibility = "hidden";
-					map_container.style.top = "-1000px";
+					//map_container.style.position = "absolute";
+					//map_container.style.visibility = "hidden";
+					//map_container.style.top = "-1000px";
 				}
 			};
 			var link_map_to_addresses = function() {
@@ -314,10 +315,10 @@ function organization(container, org, existing_types, can_edit) {
 				t._addresses_widget.onchange.add_listener(update_map);
 			};
 			new GoogleMap(map_container, function(m) {
-				map = m;
+				t.map = m;
 				window.top.geography.getCountry(window.top.default_country_id, function(country) {
 					if (country && country.north)
-						map.fitToBounds(parseFloat(country.south), parseFloat(country.west), parseFloat(country.north), parseFloat(country.east));
+						t.map.fitToBounds(parseFloat(country.south), parseFloat(country.west), parseFloat(country.north), parseFloat(country.east));
 					link_map_to_addresses();
 				});
 			});
@@ -486,6 +487,21 @@ function organization(container, org, existing_types, can_edit) {
 						link.href = '#';
 						li.appendChild(link);
 						link._google_ref = results[i].reference;
+						link._google_pos = results[i].geometry && results[i].geometry.location ? results[i].geometry.location : null;
+						link.marker = null;
+						link.onmouseover = function() {
+							if (!t.map) return;
+							if (this.marker) return;
+							if (!this._google_pos) return;
+							this.marker = t.map.addMarker(this._google_pos.lat(), this._google_pos.lng(), 1);
+							t.map.zoomOnShape(this.marker);
+						};
+						link.onmouseout = function () {
+							if (!this.marker) return;
+							t.map.removeShape(this.marker);
+							t.map.fitToShapes();
+							this.marker = null;
+						};
 						link.onclick = function() {
 							var locker = lock_screen(null, "Importing data from Google...");
 							getGooglePlaceDetails(this._google_ref, function(place,error) {

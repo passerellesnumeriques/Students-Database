@@ -37,8 +37,8 @@ class ContactJSON {
 			->field($alias,"unit","postal_address__unit")
 			->field($alias,"additional","postal_address__additional")
 			->field($alias,"address_type","postal_address__address_type")
-			->field($alias,"address_type","postal_address__lat")
-			->field($alias,"address_type","postal_address__lng")
+			->field($alias,"lat","postal_address__lat")
+			->field($alias,"lng","postal_address__lng")
 			;
 	}
 	

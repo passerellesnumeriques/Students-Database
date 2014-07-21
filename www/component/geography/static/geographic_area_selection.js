@@ -50,6 +50,49 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 		if (this.onchange) this.onchange();
 	};
 	
+	this.selectByGeographicPosition = function(lat,lng) {
+		if (this.country_data.length == 0) return;
+		// first division
+		var areas_id = [];
+		for (var i = 0; i < this.country_data[0].areas.length; ++i) {
+			var a = this.country_data[0].areas[i];
+			if (!a.north) continue;
+			if (lat < a.south) continue;
+			if (lat > a.north) continue;
+			if (lng < a.west) continue;
+			if (lng > a.east) continue;
+			areas_id.push(a.area_id);
+		}
+		if (areas_id.length == 0) return; // no match
+		// go to next divisions
+		var division_index = 1;
+		while (division_index < this.country_data.length) {
+			var sub_areas = [];
+			var one_found = false;
+			for (var i = 0; i < areas_id.length; ++i) sub_areas.push([]);
+			for (var i = 0; i < this.country_data[division_index].areas.length; ++i) {
+				var a = this.country_data[division_index].areas[i];
+				var parent_index = areas_id.indexOf(a.area_parent_id);
+				if (parent_index < 0) continue;
+				if (!a.north) continue;
+				if (lat < a.south) continue;
+				if (lat > a.north) continue;
+				if (lng < a.west) continue;
+				if (lng > a.east) continue;
+				sub_areas[parent_index].push(a.area_id);
+				one_found = true;
+			}
+			if (!one_found) break;
+			areas_id = [];
+			for (var i = 0; i < sub_areas.length; ++i)
+				if (sub_areas[i].length > 0)
+					for (var j = 0; j < sub_areas[i].length; ++j)
+						areas_id.push(sub_areas[i][j]);
+		}
+		if (areas_id.length == 1)
+			this.setAreaId(areas_id[0]);
+	};
+	
 	this._setDivision = function(division_index, area) {
 		if (this.selects.length == 0) return; // nothing in this country
 		if (division_index > 0) {

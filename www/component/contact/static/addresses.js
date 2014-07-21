@@ -153,7 +153,9 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 											field_street_number: edit.address.street_number,
 											field_building: edit.address.building,
 											field_unit: edit.address.unit,
-											field_additional: edit.address.additional
+											field_additional: edit.address.additional,
+											field_lat: edit.address.lat,
+											field_lng: edit.address.lng
 										},function(res) {
 											if (!res) { p.unfreeze(); return; }
 											window.databaselock.removeLock(lock_id);

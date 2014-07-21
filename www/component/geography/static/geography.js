@@ -31,6 +31,11 @@ if (window == window.top && !window.top.geography) {
 					if (countries[i].country_id == country_id) { onready(countries[i]); return; }
 			});
 		},
+		getCountryFromList: function(country_id, countries) {
+			for (var i = 0; i < countries.length; ++i)
+				if (countries[i].country_id == country_id) return countries[i];
+			return null;
+		},
 		getCountryName: function(country_id, onready) {
 			this.getCountry(country_id, function(country) {
 				onready(country.country_name);
