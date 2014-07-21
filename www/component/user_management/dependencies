@@ -1,3 +1,4 @@
 authentication:Authenticate user on login
 data_model
 administration:menu to access user management
+people:attach people to user

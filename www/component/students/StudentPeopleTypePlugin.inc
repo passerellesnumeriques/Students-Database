@@ -22,5 +22,7 @@ class StudentPeopleTypePlugin implements PeopleTypePlugin {
 		if ($batch == null) return "Student";
 		return "Student of batch ".$batch["name"];
 	}
+	
+	public function getBuiltinDefaultUserRoles() { return array("Student"); }
 }
 ?>

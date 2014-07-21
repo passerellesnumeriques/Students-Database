@@ -53,4 +53,14 @@ $model->addTable("RoleRights")
 	->addInsertAccess("manage_roles",true)
 	->addRemoveAccess("manage_roles",true)
 	;
+$model->addTable("UserPeople")
+	->addForeignKey("user", "Users", true, false, false, false, true)
+	->addForeignKey("people", "People", true, false, false, false, true)
+	->setPrimary("user")
+	->addIndex("people")
+	->allowReadAccess()
+	->onInsert(function($fields_values, $id, $sub_model_instance) {
+		PNApplication::$instance->user_management->assignDefaultRoles($fields_values["user"], $fields_values["people"]);
+	})
+	;
 ?>

@@ -42,11 +42,10 @@ class service_create_user extends Service {
 				return;
 			}
 			$user_id = SQLQuery::create()->bypassSecurity()->insert("Users", array("username"=>$username,"domain"=>$domain));
-			// TODO merge with user_people!
-			SQLQuery::create()->bypassSecurity()->noWarning()->insert("UserPeople", array("user"=>$user_id,"people"=>$people_id));
+			PNApplication::$instance->people->addPeopleType($people_id, "user");
+			SQLQuery::create()->bypassSecurity()->insert("UserPeople", array("user"=>$user_id,"people"=>$people_id));
 			if ($is_internal)
 				SQLQuery::create()->bypassSecurity()->insert("InternalUser", array("username"=>$username,"password"=>sha1($password)));
-			PNApplication::$instance->people->addPeopleType($people_id, "user");
 			echo "{user_id:".$user_id."}";
 			SQLQuery::commitTransaction();
 		} catch (Exception $e) {

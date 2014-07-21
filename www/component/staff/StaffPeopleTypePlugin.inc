@@ -15,5 +15,7 @@ class StaffPeopleTypePlugin implements PeopleTypePlugin {
 	public function getPeopleRowDescription($people) {
 		return "PN Staff";
 	}
+	
+	public function getBuiltinDefaultUserRoles() { return array("Staff"); }
 }
 ?>

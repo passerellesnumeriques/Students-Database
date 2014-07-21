@@ -1,5 +1,5 @@
 <?php 
-function createMultipleDataPage(&$page, $root_table_name, $sub_model, $sub_models, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data) {
+function createMultipleDataPage(&$page, $root_table_name, $sub_model, $sub_models, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data, $precreated_data = null) {
 $known_columns = array();
 foreach ($fixed_columns as $fc) {
 	if (!isset($known_columns[$fc["table"]])) $known_columns[$fc["table"]] = array();
@@ -17,9 +17,27 @@ foreach ($fixed_data as $fd) {
 }
 $fields = PNApplication::$instance->data_model->getAvailableFields($root_table_name, $sub_model, false, $sub_models, $known_columns);
 
-// remove non editable
+// remove non editable, and not fixed
 for ($i = 0; $i < count($fields); $i++) {
 	$data = $fields[$i][0];
+	$is_fixed = false;
+	foreach ($fixed_data as $fd) {
+		if ($fd["table"] == $data->getTableName() && $fd["data"] == $data->getDisplayName()) {
+			$is_fixed = true;
+			break;
+		}
+	}
+	if ($is_fixed) continue;
+	if ($precreated_data <> null) {
+		// check in the precreated data
+		foreach ($precreated_data as $pc)
+			foreach ($pc as $pcd)
+				if ($pcd["category"] == $data->getCategoryName() && $pcd["data"] == $data->getDisplayName() && isset($pcd["forced"]) && $pcd["forced"]) {
+					$is_fixed = true;
+					break;
+				}
+		if ($is_fixed) continue;
+	}
 	if (!$data->isEditableForNewData()) {
 		array_splice($fields, $i, 1);
 		$i--;
@@ -80,7 +98,7 @@ foreach ($fields as $field) {
 			",null".
 			",null".
 			",".json_encode($tf[0]).
-			",".($fixed ? "false" : "true").
+			",".($fixed || !$data->isEditableForNewData() ? "false" : "true").
 			",datachanged,null".
 			",".$tf[1].
 			",".$data->javascriptDataDisplay($path->sub_model).");\n";
@@ -209,6 +227,22 @@ function removeRowButton(button) {
 	}
 }
 addRow();
+<?php if ($precreated_data <> null && count($precreated_data) > 0) { ?>
+var precreated = <?php echo json_encode($precreated_data);?>;
+for (var i = 0; i < precreated.length; ++i) {
+	for (var j = 0; j < precreated[i].length; ++j) {
+		var d = precreated[i][j];
+		var field_index = -1;
+		for (var k = 0; k < fields.length; ++k)
+			if (fields[k].category == d.category && fields[k].name == d.data) { field_index = k; break; }
+		if (field_index < 0) continue;
+		var f = grid.getCellFieldById(i, paths[field_index].path+"#"+fields[field_index].name);
+		if (!f) continue;
+		f.setData(d.value);
+		if (d.forced) f.setEditable(false);
+	}
+}
+<?php } ?>
 </script>
 <?php 
 }

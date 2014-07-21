@@ -35,7 +35,6 @@ require_once("Component.inc");
  * @property transcripts $transcripts
  * @property user_config $user_config
  * @property user_management $user_management
- * @property user_people $user_people 
  * @property widgets $widgets
  */
 class PNApplication {

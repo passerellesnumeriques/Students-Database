@@ -904,6 +904,16 @@ function grid(element) {
 	t.getCellFieldById = function(row_id,col_id) {
 		return t.getCellField(t.getRowIndexById(row_id), t.getColumnIndexById(col_id));	
 	};
+	t.getCellData = function(row_id, col_id) {
+		var f = t.getCellFieldById(row_id, col_id);
+		if (!f) return null;
+		return f.getCurrentData();
+	};
+	t.setCellData = function(row_id, col_id, data) {
+		var f = t.getCellFieldById(row_id, col_id);
+		if (!f) return;
+		f.setData(data);
+	};
 	t.getCellDataId = function(row,col) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];

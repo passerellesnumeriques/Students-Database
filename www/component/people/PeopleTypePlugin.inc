@@ -13,5 +13,7 @@ interface PeopleTypePlugin {
 	public function canRemove();
 	
 	public function getPeopleRowDescription($people);
+	
+	public function getBuiltinDefaultUserRoles();
 }
 ?>

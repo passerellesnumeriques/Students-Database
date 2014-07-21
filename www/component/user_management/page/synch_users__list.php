@@ -107,7 +107,7 @@ class page_synch_users__list extends Page {
 						if (isset($user["info"]["People"])) {
 							if (isset($user["info"]["People"]["first_name"]) && isset($user["info"]["People"]["last_name"])) {
 								$q = PNApplication::$instance->people->searchPeopleByFirstAndLastName($user["info"]["People"]["first_name"], $user["info"]["People"]["last_name"]);
-								PNApplication::$instance->user_people->joinUserToPeople($q);
+								PNApplication::$instance->user_management->joinUserToPeople($q);
 								$q->whereNull("Users", "username");
 								$match = $q->execute();
 								foreach ($match as $row) {
@@ -221,18 +221,18 @@ function process_new_users(ondone) {
 			for (var i = 0; i < to_create[index].users.length; ++i) {
 				var u = to_create[index].users[i];
 				var pc = [];
-				if (typeof u.info.first_name != 'undefined')
-					pc.push({table:"People",data:"First Name",value:u.info.first_name});
-				if (typeof u.info.middle_name != 'undefined')
-					pc.push({table:"People",data:"Middle Name",value:u.info.middle_name});
-				if (typeof u.info.last_name != 'undefined')
-					pc.push({table:"People",data:"Last Name",value:u.info.last_name});
-				pc.push({table:"User",data:"Username",value:u.username});
-				pc.push({table:"User",data:"Domain",value:<?php echo json_encode($domain);?>});
+				if (typeof u.info.People.first_name != 'undefined')
+					pc.push({category:"Personal Information",data:"First Name",value:u.info.People.first_name});
+				if (typeof u.info.People.middle_name != 'undefined')
+					pc.push({category:"Personal Information",data:"Middle Name",value:u.info.People.middle_name});
+				if (typeof u.info.People.last_name != 'undefined')
+					pc.push({category:"Personal Information",data:"Last Name",value:u.info.People.last_name});
+				pc.push({category:"User",data:"Username",value:u.username,forced:true});
+				pc.push({category:"User",data:"Domain",value:<?php echo json_encode($domain);?>,forced:true});
 				precreated.push(pc);
 			}
 			var frame = p.setContentFrame(
-				"/dynamic/people/page/popup_create_people?types="+encodeURIComponent(type)+"&multiple=true&ondone=continue_create_users",
+				"/dynamic/people/page/popup_create_people?types="+encodeURIComponent(type)+"&multiple=true&ondone=continue_create_users&oncancel=continue_create_users",
 				null,
 				{
 					precreated: precreated

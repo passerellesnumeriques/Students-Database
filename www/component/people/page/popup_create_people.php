@@ -52,6 +52,10 @@ class page_popup_create_people extends Page {
 			$prefilled_data = $input["prefilled_data"];
 		else
 			$prefilled_data = array();
+		if ($input <> null && isset($input["precreated"]))
+			$precreated = $input["precreated"];
+		else 
+			$precreated = array();
 		
 		echo "<script type='text/javascript'>";
 		echo "var data = {";
@@ -59,9 +63,11 @@ class page_popup_create_people extends Page {
 		echo ",fixed_data:".json_encode($fixed_data);
 		echo ",prefilled_columns:".json_encode($prefilled_columns);
 		echo ",prefilled_data:".json_encode($prefilled_data);
+		echo ",precreated:".json_encode($precreated);
 		echo ",sub_models:".json_encode(@$input["sub_models"]);
 		if (isset($_GET["ondone"])) echo ",ondone:".json_encode($_GET["ondone"]);
 		if (isset($_GET["donotcreate"])) echo ",donotcreate:".json_encode($_GET["donotcreate"]);
+		if (isset($_GET["oncancel"])) echo ",oncancel:".json_encode($_GET["oncancel"]);
 		echo "};";
 		echo "function go() {";
 		echo "postData('popup_create_people_step_entry',data,window);";
