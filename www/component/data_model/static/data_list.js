@@ -923,7 +923,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						t.addFilter(filter);
 					});
 				}
-				// TODO
 			}, has ? "Edit filters (this column is currently filtered)" : "Filter");
 			col.addAction(a);
 			t.onfilterschanged.add_listener(function() {

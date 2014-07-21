@@ -64,7 +64,7 @@ class service_test_data extends Service {
 			if (is_resource($file) === true) {
 				$query = array();
 				while (feof($file) === false) {
-					$query[] = utf8_decode(fgets($file));
+					$query[] = fgets($file);
 					if (preg_match('~' . preg_quote($delimiter, '~') . '\s*$~iS', end($query)) === 1) {
 						$query = trim(implode('', $query));
 						$db_system->execute($query);

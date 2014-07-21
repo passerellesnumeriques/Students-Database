@@ -338,8 +338,8 @@ function match_division_level_names(container, country, country_data, division_i
 		for (var j = 0; j < other_names.length; ++j) {
 			match = wordsMatch(areas[i].area_name, other_names[j].name);
 			if (match.nb_words1_in_words2 >= match.nb_words_1/2) {
-				names_near_matching.push(other_names[j]);
-				other_names_matching.splice(j,1);
+				other_names_matching.push(other_names[j]);
+				other_names.splice(j,1);
 				j--;
 			}
 		}
