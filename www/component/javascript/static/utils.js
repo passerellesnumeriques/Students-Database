@@ -883,9 +883,13 @@ function isSpace(c) { return (c == ' ' || c == '\t' || c == '\r' || c == '\n'); 
  */
 function isLetter(c) {
 	var ord = c.charCodeAt(0);
-	if (ord >= 'a'.charCodeAt(0) && ord <= 'z'.charCodeAt(0)) return true;
-	if (ord >= 'A'.charCodeAt(0) && ord <= 'Z'.charCodeAt(0)) return true;
+	if (ord >= 97 && ord <= 122) return true;
+	if (ord >= 65 && ord <= 90) return true;
 	return false;
+}
+function isDigit(c) {
+	var ord = c.charCodeAt(0);
+	return ord >= 48 && ord <= 57;
 }
 
 /**
@@ -1319,17 +1323,20 @@ function wordsMatch(s1, s2) {
 }
 
 function matchScore(ref, needle) {
-	return matchScorePrepared(ref, prepareMatchScore(ref), needle, prepareMatchScore(needle))
+	return matchScorePrepared(ref, prepareMatchScore(ref), needle, prepareMatchScore(needle));
 }
 function prepareMatchScore(s) {
-	var words = s.split(" ");
-	for (var i = 0; i < words.length; ++i) {
-		words[i] = words[i].trim();
-		if (words[i].length == 0) {
-			words.splice(i,1);
-			i--;
+	var words = [];
+	var word = "";
+	for (var i = 0; i < s.length; ++i) {
+		var c = s.charAt(i);
+		if (isLetter(c) || isDigit(c)) word += c;
+		else {
+			if (word.length > 0) words.push(word);
+			word = "";
 		}
 	}
+	if (word.length > 0) words.push(word);
 	return words;
 }
 function matchScorePrepared(ref, ref_words, needle, needle_words) {

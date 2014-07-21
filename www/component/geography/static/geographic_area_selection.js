@@ -45,7 +45,15 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 		else {
 			var area = window.top.geography.searchArea(this.country_data, area_id);
 			var division_index = window.top.geography.getAreaDivisionIndex(this.country_data, area);
-			this._setDivision(division_index, area);
+			var areas = [area];
+			while (division_index > 0) {
+				var parent = window.top.geography.getParentArea(this.country_data, area);
+				areas.splice(0,0,parent);
+				area = parent;
+				division_index--;
+			}
+			for (var i = 0; i < areas.length; ++i)
+				this._setDivision(i, areas[i]);
 		}
 		if (this.onchange) this.onchange();
 	};
@@ -95,6 +103,7 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 	
 	this._setDivision = function(division_index, area) {
 		if (this.selects.length == 0) return; // nothing in this country
+		/*
 		if (division_index > 0) {
 			// we need to select the parent
 			if (area != null) {
@@ -104,17 +113,41 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 				// this is an 'unselect' => keep the parent as it is
 			}
 		}
+		*/
 		// select the good option
 		this.selects[division_index].value = area != null ? area.area_id : -1;
 		// update the next select
+		if (division_index < this.country_data.length-1 && area != null) {
+			division_index++;
+			this.selects[division_index].disabled = "";
+			this._fillSelect(division_index);
+		}
+		// disable following selects
+		for (division_index = division_index+1; division_index < this.country_data.length; division_index++) {
+			while (this.selects[division_index].options.length > 1)
+				this.selects[division_index].remove(1);
+			this.selects[division_index].disabled = "disabled";
+		}
+		/*
 		for (division_index = division_index+1; division_index < this.country_data.length; division_index++)
 			this._fillSelect(division_index);
+		*/
 	};
 	
 	this._fillSelect = function(division_index) {
 		var select = this.selects[division_index];
 		var prev = select.value;
 		while (select.options.length > 1) select.remove(1);
+		var parent_id = this.selects[division_index-1].value;
+		var children = window.top.geography.getAreaChildren(this.country_data, division_index, parent_id);
+		for (var i = 0; i < children.length; ++i) {
+			var area = children[i];
+			var o = document.createElement("OPTION");
+			o.value = area.area_id;
+			o.text = area.area_name;
+			select.add(o);
+		}
+		/*
 		var parent_ids = [];
 		if (this.selects[division_index-1].value == -1) {
 			// all are parents
@@ -131,6 +164,7 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 				select.add(o);
 			}
 		}
+		*/
 		select.value = prev;
 	};
 	
@@ -184,11 +218,12 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 	* @param needle = the needle to find in the result object
 	*/
 	this.autoFill = function (needle){
+		// TODO improve the algo which is not performant! make a dictionary of words...
 		needle = needle.latinize().toLowerCase();
 		var needle_words = prepareMatchScore(needle);
-		if (this._all_areas == null) {
+		if (this.country_data.length > 0 && this.country_data[0]._all_areas_search == null) {
 			// first time => compute everything
-			this._all_areas = [];
+			this.country_data[0]._all_areas_search = [];
 			for (var division_index = 0; division_index < this.country_data.length; ++division_index) {
 				var areas = this.country_data[division_index].areas;
 				for (var area_index = 0; area_index < areas.length; ++area_index) {
@@ -202,13 +237,16 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 						o.full_name += o.names[i].latinize().toLowerCase();
 					}
 					o.words = prepareMatchScore(o.full_name);
-					this._all_areas.push(o);
+					this.country_data[0]._all_areas_search.push(o);
 				}
 			}
 		}
+		var all_areas;
+		if (this.country_data.length == 0) all_areas = [];
+		else all_areas = this.country_data[0]._all_areas_search;
 		var matching = [];
-		for (var i = 0; i < this._all_areas.length; ++i) {
-			var a = this._all_areas[i];
+		for (var i = 0; i < all_areas.length; ++i) {
+			var a = all_areas[i];
 			var score = matchScorePrepared(a.full_name, a.words, needle, needle_words);
 			if (score == 0) continue;
 			matching.push({area:a,score:score});
