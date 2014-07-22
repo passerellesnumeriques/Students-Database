@@ -276,6 +276,86 @@ if (window == window.top && !window.top.geography) {
 			return text;
 		},
 		
+		startComputingSearchDictionary: function (country_data) {
+			if (country_data.length == 0) return;
+			country_data[0]._search = {
+				done: false,
+				division: 0,
+				area: 0,
+				result: []
+			};
+			setTimeout(function() { window.top.geography._computeSearchDictionary(country_data); }, 2);
+		},
+		_computeSearchDictionary: function(country_data) {
+			var search = country_data[0]._search;
+			if (search.done) return;
+			// continue current division
+			var computed = 0;
+			while (search.area < country_data[search.division].areas.length && computed < 1000) {
+				var area = country_data[search.division].areas[search.area];
+				var o = new Object();
+				o.area = area;
+				var n = area.area_name.latinize().toLowerCase();
+				o.words = prepareMatchScore(n);
+				o.full_name = n;
+				o.display_name = area.area_name;
+				if (area.area_parent_id) {
+					var a = window.top.geography.getParentArea(country_data, area);
+					for (var i = 0; i < a._search_object.words.length; ++i)
+						o.words.push(a._search_object.words[i]);
+					o.full_name += " "+a.area_name.latinize().toLowerCase();
+					o.display_name += ", "+a.area_name;
+					while (a.area_parent_id) {
+						a = window.top.geography.getParentArea(country_data, a);
+						o.full_name += " "+a.area_name.latinize().toLowerCase();
+						o.display_name += ", "+a.area_name;
+					}
+				}
+				o.words = prepareMatchScore(o.full_name);
+				area._search_object = o;
+				search.result.push(o);
+				// TODO make a dictionary of word
+				computed++;
+				search.area++;
+				if (search.area >= country_data[search.division].areas.length) {
+					search.division++;
+					search.area = 0;
+					if (search.division >= country_data.length) {
+						search.done = true;
+						break;
+					}
+				}
+			}
+			if (!search.done)
+				setTimeout(function() { window.top.geography._computeSearchDictionary(country_data); }, 50);
+		},
+		isSearchDictionaryReady: function(country_data) {
+			if (country_data.length == 0) return true;
+			return country_data[0]._search.done;
+		},
+		searchDictionary: function(country_data, needle) {
+			if (country_data.length == 0) return [];
+			needle = needle.latinize().toLowerCase();
+			var needle_words = prepareMatchScore(needle);
+			var matching = [];
+			for (var i = 0; i < country_data[0]._search.result.length; ++i) {
+				var a = country_data[0]._search.result[i];
+				var score = matchScorePrepared(a.full_name, a.words, needle, needle_words);
+				if (score <= 0) continue;
+				matching.push({area:a.area,name:a.display_name,score:score});
+			}
+			matching.sort(function(a1,a2){
+				if (a1.score > a2.score) return -1;
+				if (a1.score == a2.score) return 0;
+				return 1;
+			});
+			if (matching.length < 100)
+				return matching;
+			var m = [];
+			for (var i = 0; i < 100; ++i) m.push(matching[i]);
+			return m;
+		},
+		
 		boxContains: function(area1, area2) {
 			return this.rectContains(
 				parseFloat(area1.south),

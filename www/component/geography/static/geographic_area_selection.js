@@ -198,7 +198,7 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 			container.appendChild(div);
 			div.style.paddingRight = "3px";
 			var ac = new autocomplete(div, 3, 'Manually search', function(val, handler){
-				handler(t.autoFill(val));
+				t.autoFill(val, handler);
 			}, function(item){
 				t.setAreaId(item.value);
 			});
@@ -217,57 +217,21 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 	* @method geographic_area_selection#autoFill
 	* @param needle = the needle to find in the result object
 	*/
-	this.autoFill = function (needle){
-		// TODO improve the algo which is not performant! make a dictionary of words...
-		needle = needle.latinize().toLowerCase();
-		var needle_words = prepareMatchScore(needle);
-		if (this.country_data.length > 0 && this.country_data[0]._all_areas_search == null) {
-			// first time => compute everything
-			this.country_data[0]._all_areas_search = [];
-			for (var division_index = 0; division_index < this.country_data.length; ++division_index) {
-				var areas = this.country_data[division_index].areas;
-				for (var area_index = 0; area_index < areas.length; ++area_index) {
-					var area = areas[area_index];
-					var o = new Object();
-					o.area = area;
-					o.names = window.top.geography.getGeographicAreaFullName(this.country_data, area);
-					o.full_name = "";
-					for (var i = 0; i < o.names.length; ++i) {
-						if (i > 0) o.full_name += " ";
-						o.full_name += o.names[i].latinize().toLowerCase();
-					}
-					o.words = prepareMatchScore(o.full_name);
-					this.country_data[0]._all_areas_search.push(o);
-				}
-			}
+	this.autoFill = function(needle, handler){
+		if (this.country_data.length == 0) return;
+		if (!window.top.geography.isSearchDictionaryReady(this.country_data)) {
+			setTimeout(function() {
+				t.autoFill(needle,handler);
+			},50);
+			return;
 		}
-		var all_areas;
-		if (this.country_data.length == 0) all_areas = [];
-		else all_areas = this.country_data[0]._all_areas_search;
-		var matching = [];
-		for (var i = 0; i < all_areas.length; ++i) {
-			var a = all_areas[i];
-			var score = matchScorePrepared(a.full_name, a.words, needle, needle_words);
-			if (score == 0) continue;
-			matching.push({area:a,score:score});
-		}
-		matching.sort(function(a1,a2){
-			if (a1.score > a2.score) return -1;
-			if (a1.score == a2.score) return 0;
-			return 1;
-		});
-
+		var matching = window.top.geography.searchDictionary(this.country_data, needle);
 		var items = [];
 		for (var i = 0; i < matching.length; ++i) {
-			var text = "";
-			for (var j = 0; j < matching[i].area.names.length; ++j) {
-				if (j > 0) text += ", ";
-				text += matching[i].area.names[matching[i].area.names.length-1-j];
-			}
-			var item = new autocomplete_item(matching[i].area.area.area_id, text, text);
+			var item = new autocomplete_item(matching[i].area.area_id, matching[i].name, matching[i].name);
 			items.push(item);
 		}
-		return items;
+		handler(items);
 	};
 
 	
@@ -310,6 +274,7 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 			t.createAutoFillInput();
 			if (onready) onready(t);
 			layout.invalidate(container);
+			window.top.geography.startComputingSearchDictionary(country_data);
 		});
 	});
 	
