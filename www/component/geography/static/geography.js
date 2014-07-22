@@ -282,7 +282,8 @@ if (window == window.top && !window.top.geography) {
 				done: false,
 				division: 0,
 				area: 0,
-				result: []
+				result: [],
+				dictionary: {}
 			};
 			setTimeout(function() { window.top.geography._computeSearchDictionary(country_data); }, 2);
 		},
@@ -311,10 +312,14 @@ if (window == window.top && !window.top.geography) {
 						o.display_name += ", "+a.area_name;
 					}
 				}
-				o.words = prepareMatchScore(o.full_name);
+				for (var i = 0; i < o.words.length; ++i) {
+					if (typeof search.dictionary[o.words[i]] == 'undefined')
+						search.dictionary[o.words[i]] = [];
+					if (search.dictionary[o.words[i]].indexOf(search.result.length) < 0)
+						search.dictionary[o.words[i]].push(search.result.length);
+				}
 				area._search_object = o;
 				search.result.push(o);
-				// TODO make a dictionary of word
 				computed++;
 				search.area++;
 				if (search.area >= country_data[search.division].areas.length) {
@@ -337,9 +342,24 @@ if (window == window.top && !window.top.geography) {
 			if (country_data.length == 0) return [];
 			needle = needle.latinize().toLowerCase();
 			var needle_words = prepareMatchScore(needle);
+			var eligibles = [];
+			for (var word in country_data[0]._search.dictionary) {
+				var e = needle.contains(word);
+				if (!e) {
+					for (var i = 0; i < needle_words.length && !e; ++i)
+						if (needle_words[i].indexOf(word) >= 0 || word.indexOf(needle_words[i]) >= 0)
+							e = true;
+				}
+				if (e) {
+					var indexes = country_data[0]._search.dictionary[word];
+					for (var i = 0; i < indexes.length; ++i)
+						if (eligibles.indexOf(indexes[i]) < 0)
+							eligibles.push(indexes[i]);
+				}
+			}
 			var matching = [];
-			for (var i = 0; i < country_data[0]._search.result.length; ++i) {
-				var a = country_data[0]._search.result[i];
+			for (var i = 0; i < eligibles.length; ++i) {
+				var a = country_data[0]._search.result[eligibles[i]];
 				var score = matchScorePrepared(a.full_name, a.words, needle, needle_words);
 				if (score <= 0) continue;
 				matching.push({area:a.area,name:a.display_name,score:score});
