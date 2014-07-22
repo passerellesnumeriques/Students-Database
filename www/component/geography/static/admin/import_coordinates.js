@@ -27,13 +27,23 @@ function getCoordinatesContaining(boxes) {
 
 function searchExactMatch(results, name) {
 	var list = [];
-	name = name.trim().toLowerCase();
+	name = name.trim().latinize().toLowerCase();
 	for (var i = 0; i < results.length; ++i)
-		if (results[i].name.trim().toLowerCase() == name)
+		if (results[i].name.trim().latinize().toLowerCase() == name)
 			list.push(results[i]);
 	return list;
 }
 
+function searchAllWords(results, name) {
+	var list = [];
+	name = name.trim().latinize().toLowerCase();
+	for (var i = 0; i < results.length; ++i) {
+		var n = results[i].name.trim().latinize().toLowerCase();
+		if (n.indexOf(name) >= 0 || name.indexOf(n) >= 0)
+			list.push(results[i]);
+	}
+	return list;
+}
 
 function createTitle(title, num) {
 	var div = document.createElement("DIV");
@@ -241,6 +251,9 @@ function import_division_level(popup, country, country_data, division_index, par
 	};
 	if (typeof gadm == 'function' || !gadm) {
 		popup.content.appendChild(createTitle("Import Divisions '"+country_data[division_index].division_name+"' in Country "+country.country_name));
+		popup.addIconTextButton(null, "Skip and go to next division", "skip", function() {
+			ondone();
+		});
 		import_division_level_names(popup.content, country, country_data, division_index, function(g) {
 			if (typeof gadm == 'function') gadm(g);
 			gadm_imported(g);
@@ -318,15 +331,88 @@ function match_division_level_names(container, country, country_data, division_i
 			names_inside.remove(match[0]);
 			continue;
 		}
+		matches.push(null);
+	}
+	// match with names having intersection
+	for (var i = 0; i < areas.length; ++i) {
+		if (matches[i] != null) continue;
 		match = searchExactMatch(names_intersect, areas[i].area_name);
 		if (match.length == 1) {
-			matches.push(match[0]);
+			matches[i] = match[0];
 			missing_matches--;
 			gadm.remove(match[0]);
 			names_intersect.remove(match[0]);
 			continue;
 		}
-		matches.push(null);
+	}
+	// match inside with all words
+	for (var i = 0; i < areas.length; ++i) {
+		if (matches[i] != null) continue;
+		match = searchAllWords(names_inside, areas[i].area_name);
+		if (match.length == 1) {
+			matches[i] = match[0];
+			missing_matches--;
+			gadm.remove(match[0]);
+			names_inside.remove(match[0]);
+			continue;
+		}
+	}
+	// match intersection with all words
+	for (var i = 0; i < areas.length; ++i) {
+		if (matches[i] != null) continue;
+		match = searchAllWords(names_intersect, areas[i].area_name);
+		if (match.length == 1) {
+			matches[i] = match[0];
+			missing_matches--;
+			gadm.remove(match[0]);
+			names_intersect.remove(match[0]);
+			continue;
+		}
+	}
+	// match with geographic coordinates, in case we already imported
+	for (var i = 0; i < areas.length; ++i) {
+		if (matches[i] != null) continue;
+		if (!areas[i].north) continue;
+		var exact = false;
+		var intersect = [];
+		for (var j = 0; j < names_inside.length; ++j) {
+			if (names_inside[j].north == areas[i].north &&
+				names_inside[j].south == areas[i].south &&
+				names_inside[j].west == areas[i].west &&
+				names_inside[j].east == areas[i].east) {
+				exact = true;
+				break;
+			}
+			if (window.top.geography.rectIntersect(names_inside[j].south, names_inside[j].north, names_inside[j].west, names_inside[j].east, areas[i].south, areas[i].north, areas[i].west, areas[i].east))
+				intersect.push(names_inside[j]);
+		}
+		if (intersect.length == 1) {
+			matches[i] = intersect[0];
+			missing_matches--;
+			gadm.remove(intersect[0]);
+			names_inside.remove(intersect[0]);
+		} else if (intersect.length > 0) {
+			match = searchExactMatch(intersect, areas[i].area_name);
+			if (match.length == 1) {
+				matches[i] = match[0];
+				missing_matches--;
+				gadm.remove(match[0]);
+				names_inside.remove(match[0]);
+				continue;
+			}
+			match = searchAllWords(intersect, areas[i].area_name);
+			if (match.length == 1) {
+				matches[i] = match[0];
+				missing_matches--;
+				gadm.remove(match[0]);
+				names_inside.remove(match[0]);
+				continue;
+			}
+		}
+	}	
+	// match with other names
+	for (var i = 0; i < areas.length; ++i) {
+		if (matches[i] != null) continue;
 		for (var j = 0; j < names_near.length; ++j) {
 			match = wordsMatch(areas[i].area_name, names_near[j].name);
 			if (match.nb_words1_in_words2 >= match.nb_words_1/2) {

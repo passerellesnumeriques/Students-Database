@@ -261,6 +261,28 @@ function GeographicAreasTree(areas_section, country_id) {
 			return false;
 		};
 		content.appendChild(link_clean);
+		content.appendChild(document.createTextNode("  "));
+		var link_clean2 = document.createElement("A");
+		link_clean2.className = "black_link";
+		link_clean2.appendChild(document.createTextNode("Remove leading numbers"));
+		link_clean2.href = '#';
+		link_clean2.onclick = function() {
+			var s = text_area.value;
+			var lines = s.split("\n");
+			s = "";
+			for (var i = 0; i < lines.length; ++i) {
+				var line = lines[i].trim();
+				if (line.length == 0) continue;
+				var j = 0;
+				while (isSpace(line.charAt(j)) || isDigit(line.charAt(j))) j++;
+				if (j > 0) line = line.substring(j).trim();
+				if (line.length == 0) continue;
+				s += line+"\n";
+			}
+			text_area.value = s;
+			return false;
+		};
+		content.appendChild(link_clean2);
 		content.appendChild(document.createElement("BR"));
 		content.appendChild(document.createTextNode("Remove end of lines starting from: "));
 		var input_end = document.createElement("INPUT");
