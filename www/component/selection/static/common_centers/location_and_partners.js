@@ -56,6 +56,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		this._refreshAddress();
 		this._refreshHost();
 		this._refreshPartners();
+		this._refreshMap();
 	};
 	
 	this.dialogSelectLocation = function() {
@@ -98,6 +99,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 								window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
 									t.geographic_area_text = window.top.geography.getGeographicAreaTextFromId(country_data, selected.geographic_area);
 									t._refreshAddress();
+									t._refreshMap();
 									popup.unfreeze();
 								});
 							}
@@ -109,6 +111,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 							}
 						}
 						t._refreshAddress();
+						t._refreshMap();
 					}
 				},
 				"<img style = 'vertical-align:bottom;'src = '"+theme.icons_16.info+"'/> <i>To be fully completed a host partner must be attached</i>",
@@ -139,9 +142,17 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			this._button_set_location.onclick = function() { this.t.dialogSelectLocation(); };
 			section_location.addToolBottom(this._button_set_location);
 		}
+		this._map_container = document.createElement("DIV");
+		section_location.content.appendChild(this._map_container);
+		this._map_container.style.visibility = "hidden";
+		this._map_container.style.position = "absolute";
+		this._map_container.style.top = "-1000px";
+		this._map_container.style.width = "100%";
+		this._map_container.style.height = "200px";
 		// refresh with actual values
 		this._refreshAddress();
 		this._refreshHost();
+		this._refreshMap();
 	};
 	/** Refresh the address part in the Location section */
 	this._refreshAddress = function() {
@@ -165,6 +176,63 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			this._address_container.innerHTML = "<center style='color:red'><img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> <i>Please select a location</i></center>";
 		}
 		layout.invalidate(section_location.element);
+	};
+	this._map = null;
+	this._marker = null;
+	this._refreshMap = function() {
+		var address = this.getHostAddress();
+		if (address == null && this.geographic_area_text == null) {
+			// nothing => hide the map
+			this._map_container.style.visibility = "hidden";
+			this._map_container.style.position = "absolute";
+			this._map_container.style.top = "-1000px";
+		} else {
+			// show the map
+			this._map_container.style.visibility = "visible";
+			this._map_container.style.position = "static";
+			var t=this;
+			var update_map = function() {
+				// fit to area
+				var area_id;
+				if (address != null)
+					area_id = address.geographic_area.id;
+				else
+					area_id = t.geographic_area_text.id;
+				window.top.geography.getCountry(window.top.default_country_id, function(country) {
+					window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
+						var area = window.top.geography.searchArea(country_data, area_id);
+						while (!area.north && area.area_parent_id > 0)
+							area = window.top.geography.getParentArea(country_data, area);
+						if (!area.north)
+							area = country;
+						if (area.north)
+							t._map.fitToBounds(area.south, area.west, area.north, area.east);
+						if (address && address.lat != null) {
+							if (t._marker) {
+								t._marker.setPosition(new window.top.google.maps.LatLng(address.lat, address.lng));
+							} else {
+								t._marker = t._map.addMarker(address.lat, address.lng, 1);
+							}
+						} else {
+							if (t._marker) {
+								t._map.removeShape(t._marker);
+								t._marker = null;
+							}
+						}
+					});
+				});
+			};
+			if (this._map != null)
+				update_map();
+			else {
+				require("google_maps.js", function() {
+					new GoogleMap(t._map_container, function(m) {
+						t._map = m;
+						update_map();
+					});
+				});
+			}
+		}
 	};
 	this._refreshHost = function() {
 		this._host_container.removeAllChildren();

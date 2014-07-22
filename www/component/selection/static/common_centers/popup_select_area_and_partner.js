@@ -51,6 +51,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		});
 	};
 	
+	t._host_marker = null;
 	t._refreshMap = function() {
 		if (!t._map) return; // map not yet ready
 		if (!t._country_id) return; // not yet initialized
@@ -65,6 +66,25 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		if (area == null) area = window.top.geography.getCountryFromList(t._country_id, t._countries);
 		if (area.north)
 			t._map.fitToBounds(area.south, area.west, area.north, area.east);
+		var host_address = null;
+		if (t.host && t.host.host_address_id) {
+			for (var i = 0; i < t.host.organization.addresses.length; ++i)
+				if (t.host.organization.addresses[i].id == t.host.host_address_id) {
+					if (t.host.organization.addresses[i].lat != null)
+						host_address = t.host.organization.addresses[i];
+					break;
+				}
+		}
+		if (host_address) {
+			if (t._host_marker) {
+				t._host_marker.setPosition(new window.top.google.maps.LatLng(host_address.lat, host_address.lng));
+			} else {
+				t._host_marker = t._map.addMarker(host_address.lat, host_address.lng, 1);
+			}
+		} else if (t._host_marker) {
+			t._map.removeShape(t._host_marker);
+			t._host_marker = null;
+		}
 	};
 	
 	/**
