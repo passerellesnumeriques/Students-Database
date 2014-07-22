@@ -27,8 +27,15 @@ class service_get_json_organizations_by_geographic_area extends Service{
 		$area_id = $input["geographic_area"];
 		$creator = $input["creator"];
 		
+		// get info about this area, and its country
+		$area = PNApplication::$instance->geography->getArea($area_id);
+		$divisions = PNApplication::$instance->geography->getCountryDivisionsFromArea($area);
+		for ($area_division = 0; $area_division < count($divisions); $area_division++)
+			if ($divisions[$area_division]["id"] == $area["country_division"])
+				break;
+		
 		//Get all the children
-		$children = PNApplication::$instance->geography->getAreaAllChildrenFlat($area_id);
+		$children = PNApplication::$instance->geography->getAreaAllChildrenFlat($area_id, $area_division, $divisions);
 		array_push($children, $area_id);
 		
 		$q = SQLQuery::create()
@@ -54,10 +61,10 @@ class service_get_json_organizations_by_geographic_area extends Service{
 		}
 
 		//Get the parent id
-		$parent_id = PNApplication::$instance->geography->getAreaParent($area_id);
+		$parent_id = $area["parent"];
 		$parent_organizations = array();
 		if ($parent_id <> null) { // not the root level
-			$children_from_parent = PNApplication::$instance->geography->getAreaAllChildrenFlat($parent_id);
+			$children_from_parent = PNApplication::$instance->geography->getAreaAllChildrenFlat($parent_id, $area_division-1, $divisions);
 			array_push($children_from_parent, $parent_id);
 			//Remove all the ids already retrieved
 			for($i = 0; $i < count($children); $i++){
