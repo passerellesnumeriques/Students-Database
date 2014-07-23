@@ -1039,6 +1039,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 	var div_buttons = document.createElement("DIV");
 	div_buttons.style.display = "inline-block";
 	div_buttons.style.margin = "5px";
+	div_buttons.style.verticalAlign = "top";
 	popup.content.appendChild(div_buttons);
 	div_buttons.appendChild(document.createTextNode("You can try to import automatically:"));
 	div_buttons.appendChild(document.createElement("BR"));
