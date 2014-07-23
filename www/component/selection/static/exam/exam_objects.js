@@ -76,7 +76,7 @@ function questionGridFieldArgs(question){
 	 case 'mcq_single':
 	    var field_args={
 	     "possible_values":[],
-	      "can_be_empty":false};            
+	      "can_be_empty":true};            
 	    //type_config contains the number of possible choices
 	     for(j=0;j<question.type_config;++j)
 	    {

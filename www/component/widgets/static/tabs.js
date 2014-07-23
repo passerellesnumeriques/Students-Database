@@ -103,8 +103,11 @@ function tabs(container, fill_tab_content) {
 				setHeight(t.tabs[t.selected].content, t.content.clientHeight);
 			}
 		}
+
 	};
 	t._init();
 	t._layout();
-	layout.addHandler(container, function() { t._layout(); });
+	layout.addHandler(container, function() {
+		
+		t._layout(); });
 }

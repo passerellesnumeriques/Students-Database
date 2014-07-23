@@ -17,6 +17,7 @@ class page_exam_results extends SelectionPage {
 		$this->addJavascript("/static/selection/exam/results.js");
 		$this->requireJavascript("data_list.js");
 		$this->onload("createDataList(".$this->component->getCampaignId().");");
+		$this->onload("initResults()");
 	?>
 	
 			<!--TODO : css cleanup (= merge it with the right css file) -->

@@ -6,10 +6,14 @@ div.container_results{
 	position: relative;
 	margin: 0 auto 3em auto;
 	padding-top : 2.5em;
-	box-shadow: 10px 10px 5px #888888
+	box-shadow: 10px 10px 5px #888888;
+	width:calc(100% + 17px); /* Scroll bar outside of the grid */
+	background-color: white;
+	border-top:1px black solid;
 }
 
 /* Grid */
+
 
 div.grid_results{
 	overflow:auto;
@@ -20,6 +24,20 @@ div.grid_results{
 	table-layout:fixed;
 }
 
+
+/* setting width of columns */
+th.applicant_cb>div.cell_wrapper { width:20px; }
+
+col.applicant_id { width:80px; }
+th.applicant_id>div.cell_wrapper { width:78px; }
+
+col.version{ width:60px; }
+th.version>div.cell_wrapper { width:58px; }
+
+col.questions{ width:80px; }
+th.questions>div.cell_wrapper { width:78px; }
+
+/* absolute positionning of thead to make only the rows scrollable */
 .grid_results thead{
 	position: absolute;
 	top:1px;
@@ -31,25 +49,6 @@ div.grid_results{
 	padding-right: 2px;
 }
 
-
-/* Fixing header cells width */
-.grid_results th>div.cell_wrapper {
-	width:102px;
-}
-
-
-/* Setting body cells width */
-
-.grid_results td>div.cell_wrapper{
-	width: 100px;
-}
-
-
-/* width of applicant selector cells */ 
-.grid_results td:first-child>div.cell_wrapper,table.grid tr:first-child>th:first-child>div.cell_wrapper
-{
-	width:25px;
-}
 
 /* Footer **/
 
@@ -72,3 +71,4 @@ div.button_wrapper>button
 {
 	display: inline;
 }
+

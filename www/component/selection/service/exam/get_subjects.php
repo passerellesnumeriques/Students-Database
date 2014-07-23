@@ -27,7 +27,7 @@ class service_exam_get_subjects extends Service {
 			return;
 		}
 
-		echo SelectionJSON::ExamSubjectsJSON($rows);
+		echo SelectionJSON::ExamSubjectsFullJSON($rows);
 	}
 }
 ?>

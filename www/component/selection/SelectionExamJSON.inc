@@ -75,6 +75,5 @@ class SelectionExamJSON {
 		$s .= "]";
 		return $s;
 	}
-	
 }
 ?>

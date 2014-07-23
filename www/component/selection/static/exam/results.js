@@ -23,8 +23,7 @@ function createDataList(campaign_id)
            );
 }
 
-if (typeof $(document).ready != 'undefined') // handle background loading case
-$(document).ready(function(){
+function initResults(){
 
    $("#session_info_locationDiv").hide();
    $("#session_applicants_listDiv").hide();
@@ -80,7 +79,7 @@ $(document).ready(function(){
                                 );
       }
    });
-   
+
 /*
 *
 * update display of exam session information box
@@ -115,5 +114,5 @@ function updateApplicantsList() {
    window.dl.addFilter({category:"Selection",name:"Exam Center Room",force:true,data:{values:[selected["room_id"]]}});
 
    window.dl.reloadData();
+   }
 }
-});

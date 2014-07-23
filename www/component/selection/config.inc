@@ -19,6 +19,7 @@ return array(
 	"default_duration_IS" => array("Pre-selected duration of an Information Session<br/><i>Note: if you select \"All day\" a session won't have specific starting and ending time</i>","3 hours",array("1 hour","2 hours","3 hours","4 hours","6 hours","8 hours","All day"),"enum","Information Session",array()),
 	"set_correct_answer" => array("Set / display the correct answer of an exam subject question",false,array(true,false),"boolean","Exam Subject",array()),
 	"set_number_choices" => array("Set / display the number of choices of an exam subject question",false,array(true,false),"boolean","Exam Subject",array()),
+        "use_subject_version" => array("use version numbering for an exam subject",false,array(true,false),"boolean","Exam Subject",array()),
 	"generate_applicant_id" => array("Automatically generate the selection applicant ID.<br/><i>Note: Otherwize, you will have to manually set it (only <b>numbers</b> are allowed)</i>",true,array(true,false),"boolean","Applicant",array()),
 	// "number_of_applicant_id_digits" => array("Number of digits for the generated applicant ID<br><i>Note: be aware that you need at least one ID per student</i>","4",array("4","5","6"),"enum","Applicant",array("generate_applicant_id"=>true)),
 	"forbid_too_old_applicants" => array("Set a maximum age for the applicants",false,array(true,false),"boolean","Applicant",array()),
