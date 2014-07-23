@@ -53,6 +53,11 @@ $total = 0;
 foreach ($mandatory as $s) $total += $s[1];
 foreach ($optional as $s) $total += $s[1];
 ?>
+window.top.google_local_config = <?php
+$d = PNApplication::$instance->getDomainDescriptor(); 
+echo json_encode($d["google"]);
+?>;
+
 var _mandatory_index = 0;
 function _addJavascript(url, callback) {
 	var head = document.getElementsByTagName("HEAD")[0];

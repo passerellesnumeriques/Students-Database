@@ -1,10 +1,10 @@
 <?php
 require_once("component/contact/ContactJSON.inc");
-require_once("component/selection/SelectionJSON.inc");
+require_once("component/selection/SelectionInformationSessionJSON.inc");
 function prepareDataAndSaveIS($data,$create){
 	if($create && isset($data["id"]))
 		unset($data["id"]);
-	$fields_values_IS = SelectionJSON::InformationSessionTableData2DB($data);
+	$fields_values_IS = SelectionInformationSessionJSON::InformationSessionTableData2DB($data);
 	if(!$create){
 		PNApplication::$instance->selection->saveIS($data["id"],$fields_values_IS);
 	} else {

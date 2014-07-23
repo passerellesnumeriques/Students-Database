@@ -39,16 +39,16 @@ function inputAutoresize(input, min_size) {
 			last = w;
 		}
 	};
-	var prev_onkeydown = input.onkeydown;
-	input.onkeydown = function(e) { if (prev_onkeydown) prev_onkeydown(e); update(); };
-	var prev_onkeyup = input.onkeyup;
-	input.onkeyup = function(e) { if (prev_onkeyup) prev_onkeyup(e); update(); };
-	var prev_oninput = input.oninput;
-	input.oninput = function(e) { if (prev_oninput) prev_oninput(e); update(); };
-	var prev_onpropertychange = input.onpropertychange;
-	input.onpropertychange = function(e) { if (prev_onpropertychange) prev_onpropertychange(e); update(); };
-	var prev_onchange = input.onchange;
-	input.onchange = function(e) { if (prev_onchange) prev_onchange(e); update(); };
+	input.inputAutoresize_prev_onkeydown = input.onkeydown;
+	input.onkeydown = function(e) { if (this.inputAutoresize_prev_onkeydown) this.inputAutoresize_prev_onkeydown(e); update(); };
+	input.inputAutoresize_prev_onkeyup = input.onkeyup;
+	input.onkeyup = function(e) { if (this.inputAutoresize_prev_onkeyup) this.inputAutoresize_prev_onkeyup(e); update(); };
+	input.inputAutoresize_prev_oninput = input.oninput;
+	input.oninput = function(e) { if (this.inputAutoresize_prev_oninput) this.inputAutoresize_prev_oninput(e); update(); };
+	input.inputAutoresize_prev_onpropertychange = input.onpropertychange;
+	input.onpropertychange = function(e) { if (this.inputAutoresize_prev_onpropertychange) this.inputAutoresize_prev_onpropertychange(e); update(); };
+	input.inputAutoresize_prev_onchange = input.onchange;
+	input.onchange = function(e) { if (this.inputAutoresize_prev_onchange) this.inputAutoresize_prev_onchange(e); update(); };
 	update();
 	input.autoresize = update;
 	input.setMinimumSize = function(min_size) {
@@ -61,15 +61,15 @@ function inputAutoresize(input, min_size) {
 function inputDefaultText(input, default_text) {
 	var is_default = false;
 	var original_class = input.className;
-	var prev_onfocus = input.onfocus; 
+	input.inputDefaultText_prev_onfocus = input.onfocus; 
 	input.onfocus = function(ev) {
 		if (is_default) {
 			input.value = "";
 			input.className = original_class;
 		}
-		if (prev_onfocus) prev_onfocus(ev);
+		if (this.inputDefaultText_prev_onfocus) this.inputDefaultText_prev_onfocus(ev);
 	};
-	var prev_onblur = input.onblur;
+	input.inputDefaultText_prev_onblur = input.onblur;
 	input.onblur = function(ev) {
 		input.value = input.value.trim();
 		if (input.value.length == 0) {
@@ -80,7 +80,7 @@ function inputDefaultText(input, default_text) {
 			input.className = original_class;
 			is_default = false;
 		}
-		if (prev_onblur) prev_onblur(ev);
+		if (this.inputDefaultText_prev_onblur) this.inputDefaultText_prev_onblur(ev);
 		if (input.onchange) input.onchange();
 	};
 	input.getValue = function() {

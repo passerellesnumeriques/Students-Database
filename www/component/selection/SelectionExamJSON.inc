@@ -76,5 +76,75 @@ class SelectionExamJSON {
 		return $s;
 	}
 	
+	public static function ExamSubjectsFullJSON() {
+		$subjects = SQLQuery::create()->select("ExamSubject")->execute();
+		$versions = SQLQuery::create()->select("ExamSubjectVersion")->orderBy("ExamSubjectVersion", "exam_subject")->execute();
+		$parts = SQLQuery::create()->select("ExamSubjectPart")->orderBy("ExamSubjectPart", "exam_subject")->orderBy("ExamSubjectPart", "index")->execute();
+		$questions = SQLQuery::create()->select("ExamSubjectQuestion")->orderBy("ExamSubjectQuestion", "exam_subject_part")->orderBy("ExamSubjectQuestion", "index")->execute();
+		return self::ExamSubjectsFullJSONFromDB($subjects, $versions, $parts, $questions);
+	}
+	public static function ExamSubjectFullJSON($subject_id) {
+		$subjects = SQLQuery::create()->select("ExamSubject")->whereValue("ExamSubject","id",$subject_id)->execute();
+		$versions = SQLQuery::create()->select("ExamSubjectVersion")->orderBy("ExamSubjectVersion", "exam_subject")->whereValue("ExamSubjectVersion", "exam_subject", $subject_id)->execute();
+		$parts = SQLQuery::create()->select("ExamSubjectPart")->orderBy("ExamSubjectPart", "exam_subject")->orderBy("ExamSubjectPart", "index")->whereValue("ExamSubjectPart","exam_subject",$subject_id)->execute();
+		$parts_ids = array();
+		foreach ($parts as $part) array_push($parts_ids, $part["id"]);
+		$questions = count($parts_ids) == 0 ? array() : SQLQuery::create()->select("ExamSubjectQuestion")->orderBy("ExamSubjectQuestion", "exam_subject_part")->orderBy("ExamSubjectQuestion", "index")->whereIn("ExamSubjectQuestion","exam_subject_part",$parts_ids)->execute();
+		return self::ExamSubjectsFullJSONFromDB($subjects, $versions, $parts, $questions, true);
+	}
+	public static function ExamSubjectsFullJSONFromDB($subjects, $versions, $parts, $questions, $single = false) {
+		// merge everything into a single list
+		if (!$single) $s = "["; else $s = "";
+		$subject_i = 0;
+		$version_i = 0;
+		$part_i = 0;
+		$question_i = 0;
+		while ($subject_i < count($subjects)) {
+			if ($subject_i > 0) $s .= ",";
+			$s = "{";
+			$s .= "id:".$subjects[$subject_i]["id"];
+			$s .= ",name:".json_encode($subjects[$subject_i]["name"]);
+			$s .= ",max_score:".json_encode($subjects[$subject_i]["max_score"]);
+			$s .= ",parts:[";
+			$first_part = true;
+			while ($part_i < count($parts) && $parts[$part_i]["exam_subject"] == $subjects[$subject_i]["id"]) {
+				if ($first_part) $first_part = false; else $s .= ",";
+				$s .= "{";
+				$s .= "id:".$parts[$part_i]["id"];
+				$s .= ",index:".$parts[$part_i]["index"];
+				$s .= ",max_score:".$parts[$part_i]["max_score"];
+				$s .= ",name:".json_encode($parts[$part_i]["name"]);
+				$s .= ",questions:[";
+				$first_question = true;
+				while ($question_i < count($questions) && $questions[$question_i]["exam_subject_part"] == $parts[$part_i]["id"]) {
+					if ($first_question) $first_question = false; else $s .= ",";
+					$s .= "{";
+					$s .= "id:".$questions[$question_i]["id"];
+					$s .= ",index:".$questions[$question_i]["index"];
+					$s .= ",max_score:".$questions[$question_i]["max_score"];
+					$s .= ",type:".json_encode($questions[$question_i]["type"]);
+					$s .= ",type_config:".json_encode($questions[$question_i]["type_config"]);
+					$s .= "}";
+					$question_i++;
+				}
+				$s .= "]";
+				$s .= "}";
+				$part_i++;
+			}
+			$s .= "],versions:[";
+			$first_version = true;
+			while ($version_i < count($versions) && $versions[$version_i]["exam_subject"] == $subjects[$subject_i]["id"]) {
+				if ($first_version) $first_version = false; else $s .= ",";
+				$s .= $versions[$version_i]["id"];
+				$version_i++;
+			}
+			$s .= "]";
+			$s .= "}";
+			$subject_i++;
+		}
+		if (!$single) $s .= "]";
+		return $s;
+	}
+	
 }
 ?>

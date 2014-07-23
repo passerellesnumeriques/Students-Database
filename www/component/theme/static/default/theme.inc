@@ -67,6 +67,7 @@ theme::$icons_10 = array(
 	"arrow_down_context_menu" => "/static/theme/default/icons_10/arrow_down_context_menu.gif",
 	"bullet_black" =>	"/static/theme/default/icons_10/bullet_black.png",
 	"close" => 			"/static/theme/default/icons_10/close.png",
+	"down" => 			"/static/theme/default/icons_10/down.png",
 	"edit" => 			"/static/theme/default/icons_10/edit.gif",
 	"error" => 			"/static/theme/default/icons_10/error.png",
 	"forbidden" =>		"/static/theme/default/icons_10/forbidden_10.png",
@@ -85,6 +86,7 @@ theme::$icons_10 = array(
 	"save" => 			"/static/theme/default/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/default/icons_10/semi_online.gif",
 	"split" => 			"/static/theme/default/icons_10/split.gif",
+	"up" => 			"/static/theme/default/icons_10/up.png",
 	"warning" => 		"/static/theme/default/icons_10/warning.png",
 );
 

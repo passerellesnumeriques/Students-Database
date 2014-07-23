@@ -13,7 +13,6 @@ class page_exam_import_subject extends SelectionPage {
 		} else {
 			$all_names = SelectionJSON::getAllExamSubjectNames();
 			$correct_answer = PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer");
-			$choices = PNApplication::$instance->selection->getOneConfigAttributeValue("set_number_choices");
 			
 			/** Lock the exam table because this page will perform some checks on the
 			 * exam names, so must be sure that no one is updating it;

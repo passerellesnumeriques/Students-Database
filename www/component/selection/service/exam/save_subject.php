@@ -7,21 +7,12 @@ class service_exam_save_subject extends Service {
 		echo "Save / insert an exam subject object into the database";
 	}
 	public function inputDocumentation() {
-		echo "<code>exam</code> the exam subject JSON structure. <br/>Notes:";
-		?>
-		<ul>
-			<li>all the ids set to -1 (subject, part, question) are considered as new by this service, so are inserted into the DB instead of updated</li>
-			<li>The questions are always removed first from DB then the input questions are inserted (no update)</li>
-		</ul>
-		<?php
+		echo "<code>exam</code> the ExamSubject JSON structure.<br/>";
+		echo "<code>answers</code> A list of list of object <code>{q:xxx,a:yyy}</code>: each item of the list corresponds to one subject version, and is itself a list of question_id/answer.<br/>";
+		echo "All ids less or equals to 0 are considered as new items.";
 	}
 	public function outputDocumentation() {
-		?>
-		<ul>
-			<li><code>false</code> if an error occured</li>
-			<li><code>exam_subject</code> else exam_subject object</li>
-		</ul>
-		<?php
+		echo "<code>exam</code> and <code>answers</code>: same as input, but ids are updated for the new items.";
 	}
 	
 	/**
@@ -29,53 +20,144 @@ class service_exam_save_subject extends Service {
 	 * @see Service::execute()
 	 */
 	public function execute(&$component, $input) {
-		if(isset($input["exam"])){
-			//prepare the inputs
-			$rows_exam_table = array();
-			$rows_parts_table = array();
-			$questions_by_new_part = array();
-			$questions_by_old_part = array();
-			$parts_to_insert_indexes = array();
-			
-			$id = $input["exam"]["id"];
-			if($id == -1 || $id == "-1")
-				unset($input["exam"]["id"]);
-			$rows_exam_table = SelectionJSON::ExamSubject2DB($input["exam"]);
-			
-			if(isset($input["exam"]["parts"])){
-				foreach($input["exam"]["parts"] as $part){
-					$part["exam_subject"] = $id;
-					$array_part = SelectionJSON::ExamSubjectPart2DB($part);
-					array_push($rows_parts_table,$array_part); 					
-					if(isset($part["questions"]) && count($part["questions"]) > 0){
-						foreach($part["questions"] as $q){
-							if(isset($q["id"]))
-								unset($q["id"]);//The method saveSubject need questions without ids
-							$q["exam_subject_part"] = $part["id"];
-							$array_question = SelectionJSON::ExamSubjectQuestion2DB($q);
-							if($part["id"] == -1 || $part["id"] == "-1"){
-								if(!isset($questions_by_new_part[$part["index"]][0])){
-									$questions_by_new_part[$part["index"]] = array();
-									array_push($parts_to_insert_indexes,$part["index"]); // must store the index because the parts can be set not in order in the exam object
-								}
-								array_push($questions_by_new_part[$part["index"]],$array_question);
-							} else {
-								if(!isset($questions_by_old_part[$part["id"]][0]))
-									$questions_by_old_part[$part["id"]] = array();
-								array_push($questions_by_old_part[$part["id"]], $array_question);
-							}
+		SQLQuery::startTransaction();
+		$subject = &$input["exam"];
+		
+		// re-calculate scores and indexes on back-end side to make sure everything is coherent
+		$total_score = 0;
+		$part_index = 1;
+		foreach ($subject["parts"] as &$part) {
+			$part["index"] = $part_index++;
+			$part_score = 0;
+			$q_index = 1;
+			foreach ($part["questions"] as &$q) {
+				$part_score += floatval($q["max_score"]);
+				$q["index"] = $q_index++;
+			}
+			$part["max_score"] = $part_score;
+			$total_score += $part_score;
+		}
+		$subject["max_score"] = $total_score;
+		
+		// ExamSubject
+		if ($subject["id"] <= 0) {
+			$subject["id"] = SQLQuery::create()->bypassSecurity()->insert("ExamSubject", array("name"=>$subject["name"],"max_score"=>$subject["max_score"]));
+		} else {
+			$s = SQLQuery::create()->bypassSecurity()->select("ExamSubject")->whereValue("ExamSubject","id",$subject["id"])->executeSingleRow();
+			if ($s == null) {
+				PNApplication::error("Invalid subject");
+				return;
+			}
+			if ($s["name"] <> $subject["name"] || $s["max_score"] <> $subject["max_score"])
+				SQLQuery::create()->bypassSecurity()->updateByKey("ExamSubject", $subject["id"], array("name"=>$subject["name"],"max_score"=>$subject["max_score"]));
+		}
+		
+		// versions
+		$current_ids = SQLQuery::create()->bypassSecurity()->select("ExamSubjectVersion")->whereValue("ExamSubjectVersion","exam_subject",$subject["id"])->field("id")->executeSingleField();
+		for ($i = 0; $i < count($subject["versions"]); $i++) {
+			$id = $subject["versions"][$i];
+			if ($id <= 0) {
+				$id = SQLQuery::create()->bypassSecurity()->insert("ExamSubjectVersion", array("exam_subject"=>$subject["id"]));
+				$subject["versions"][$i] = $id;
+			} else {
+				$found = false;
+				for ($j = 0; $j < count($current_ids); $j++)
+					if ($current_ids[$j] == $id) {
+						array_splice($current_ids, $j, 1);
+						$found = true;
+						break;
+					}
+				if (!$found) {
+					PNApplication::error("Invalid subject version id");
+					return;
+				}
+			}
+		}
+		if (count($current_ids) > 0)
+			SQLQuery::create()->bypassSecurity()->removeKeys("ExamSubjectVersion", $current_ids);
+		
+		// parts
+		$current_parts = SQLQuery::create()->bypassSecurity()->select("ExamSubjectPart")->whereValue("ExamSubjectPart","exam_subject",$subject["id"])->execute();
+		foreach ($subject["parts"] as &$part) {
+			$id = $part["id"];
+			if ($id <= 0) {
+				$id = SQLQuery::create()->bypassSecurity()->insert("ExamSubjectPart", array("exam_subject"=>$subject["id"],"index"=>$part["index"],"max_score"=>$part["max_score"],"name"=>$part["name"]));
+				$part["id"] = $id;
+			} else {
+				$found = false;
+				for ($j = 0; $j < count($current_parts); $j++)
+					if ($current_parts[$j]["id"] == $id) {
+						$c = $current_parts[$j];
+						array_splice($current_parts, $j, 1);
+						$found = true;
+						if ($c["name"] <> $part["name"] || $c["max_score"] <> $part["max_score"] || $c["index"] <> $part["index"])
+							SQLQuery::create()->bypassSecurity()->updateByKey("ExamSubjectPart", $id, array("index"=>$part["index"],"max_score"=>$part["max_score"],"name"=>$part["name"]));
+						break;
+					}
+				if (!$found) {
+					PNApplication::error("Invalid subject part id");
+					return;
+				}
+			}
+		}
+		$remaining_parts_ids = array();
+		foreach ($current_parts as $c) array_push($remaining_parts_ids, $c["id"]);
+		if (count($remaining_parts_ids) > 0)
+			SQLQuery::create()->bypassSecurity()->removeKeys("ExamSubjectPart", $remaining_parts_ids);
+		
+		// questions
+		$questions_ids_mapping = array();
+		foreach ($subject["parts"] as &$part) {
+			$current_questions = SQLQuery::create()->bypassSecurity()->select("ExamSubjectQuestion")->whereValue("ExamSubjectQuestion","exam_subject_part",$part["id"])->execute();
+			foreach ($part["questions"] as &$q) {
+				$id = $q["id"];
+				if ($id <= 0) {
+					$new_id = SQLQuery::create()->bypassSecurity()->insert("ExamSubjectQuestion", array("exam_subject_part"=>$part["id"],"index"=>$q["index"],"max_score"=>$q["max_score"],"type"=>$q["type"],"type_config"=>$q["type_config"]));
+					$questions_ids_mapping[$id] = $new_id;
+				} else {
+					$questions_ids_mapping[$id] = $id;
+					$found = false;
+					for ($j = 0; $j < count($current_questions); $j++)
+						if ($current_questions[$j]["id"] == $id) {
+							$c = $current_questions[$j];
+							array_splice($current_questions, $j, 1);
+							$found = true;
+							if ($c["type"] <> $q["type"] || $c["type_config"] <> $q["type_config"] || $c["max_score"] <> $q["max_score"] || $c["index"] <> $q["index"])
+								SQLQuery::create()->bypassSecurity()->updateByKey("ExamSubjectQuestion", $id, array("index"=>$q["index"],"max_score"=>$q["max_score"],"type"=>$q["type"],"type_config"=>$q["type_config"]));
+							break;
 						}
+					if (!$found) {
+						PNApplication::error("Invalid question id");
+						return;
 					}
 				}
 			}
-			$subject = PNApplication::$instance->selection->saveSubject($id, $rows_exam_table, $rows_parts_table, $questions_by_old_part, $questions_by_new_part, $parts_to_insert_indexes);
-			if(PNApplication::hasErrors())
-				echo "false";
-			else if($subject <> null)
-				echo $subject;
-			else
-				echo "false";
-		} else echo "false";
+			$remaining_ids = array();
+			foreach ($current_questions as $c) array_push($remaining_ids, $c["id"]);
+			if (count($remaining_ids) > 0)
+				SQLQuery::create()->bypassSecurity()->removeKeys("ExamSubjectQuestion", $remaining_ids);
+		}
+		
+		// answers
+		// remove all
+		$rows = SQLQuery::create()->bypassSecurity()->select("ExamSubjectAnswer")->whereIn("ExamSubjectAnswer","exam_subject_version",$subject["versions"])->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("ExamSubjectAnswer", $rows);
+		// create
+		$answers = &$input["answers"];
+		$to_insert = array();
+		for ($version_index = 0; $version_index < count($answers); $version_index++) {
+			foreach ($answers[$version_index] as &$a) {
+				$a["q"] = $questions_ids_mapping[$a["q"]];
+				array_push($to_insert, array("exam_subject_version"=>$subject["versions"][$version_index],"exam_subject_question"=>$a["q"],"answer"=>$a["a"]));
+			}
+		}
+		if (count($to_insert) > 0)
+			SQLQuery::create()->bypassSecurity()->insertMultiple("ExamSubjectAnswer", $to_insert);
+		
+		if (!PNApplication::hasErrors()) {
+			SQLQuery::commitTransaction();
+			echo "{exam:".json_encode($subject).",answers:".json_encode($answers)."}";
+		}
 	}
 	
 }

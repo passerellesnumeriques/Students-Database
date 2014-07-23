@@ -4,17 +4,19 @@ $sm->addTable("ExamSubject")
         /*->addInteger("nb_versions",8,1,255,false,true)*/        //no more nb_versions (June 04 2014)
 	->addString("name",255,1,false,false) //cannot have two exam with the same name on the same campaign
 	->addDecimal("max_score",10,2,0,null,false,false) // must be calculated
-	->addWriteAccess("manage_exam_subject",true)
+	->addColumnWriteAccess("name","manage_exam_subject",true)
 	->addReadAccess("see_exam_subject",true)
 	->addInsertAccess("manage_exam_subject",true)
-	->addRemoveAccess("manage_exam_subject",true);
+	->addRemoveAccess("manage_exam_subject",true)
+	;
 
 // (June 04 2014) Adding new table ExamSubjectVersion
 $sm->addTable("ExamSubjectVersion")
 	->addPrimaryKey("id")
-        ->addForeignKey("exam_subject","ExamSubject",true,false,true,false)
-        //TODO : Access Rights ?
-      ;
+    ->addForeignKey("exam_subject","ExamSubject",true,false,true,false)
+    ->addReadAccess("see_exam_subject",true)
+    ;
+	//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...
 
 $sm->addTable("ExamSubjectPart")
 	->addPrimaryKey("id")
@@ -22,10 +24,9 @@ $sm->addTable("ExamSubjectPart")
 	->addInteger("index",32,null,null,false,false)
 	->addDecimal("max_score",10,2,0,null,false,false) // must be calculated
 	->addString("name",255,0,true)
-	->addWriteAccess("manage_exam_subject",true)
 	->addReadAccess("see_exam_subject",true)
-	->addInsertAccess("manage_exam_subject",true)
-	->addRemoveAccess("manage_exam_subject",true);
+	;
+	//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...
 
 $sm->addTable("ExamSubjectQuestion")
 	->addPrimaryKey("id")
@@ -44,9 +45,9 @@ $sm->addTable("ExamSubjectAnswer")
 	->addForeignKey("exam_subject_version","ExamSubjectVersion",true,false,true)
 	->addString("answer",255,0,true) // eg. "{A,C}" or "127.8" or "toto titi"  depending on question type
 	->setKey(array("exam_subject_question","exam_subject_version"))
-	//TODO : Access Rights ?
+	->addReadAccess("see_exam_subject",true) // TODO special right ?
 	;
-        
+	//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...
 
         
 $sm->addTable("ExamTopicForEligibilityRule") /* Dim : eg. : "logic" or "math" or ..whatever */
@@ -58,10 +59,8 @@ $sm->addTable("ExamTopicForEligibilityRule") /* Dim : eg. : "logic" or "math" or
 	->addString("name",255,0,false)
 	->addDecimal("max_score",10,2,0,null,false,false) //calculated
 	->addInteger("number_questions",32,null,null,false,false)
-	->addWriteAccess("manage_exam_subject",true)
 	->addReadAccess("see_exam_subject",true)
-	->addInsertAccess("manage_exam_subject",true)
-	->addRemoveAccess("manage_exam_subject",true);
+	;
 
 $sm->addTable("ExamTopicFullSubject") /* Dim : eg.: english ? */
 	/** Table to match an exam topic with exam(s) subject(s)
@@ -71,10 +70,8 @@ $sm->addTable("ExamTopicFullSubject") /* Dim : eg.: english ? */
 	->addForeignKey("exam_subject","ExamSubject",true,false,false,false,true)//An exam subject can be set as full subject for only one topic, because otherwize it means the subject parts would appear in several topics
 	->addForeignKey("exam_topic_for_eligibility_rule","ExamTopicForEligibilityRule",true,false,true,false)
 	->setKey(array("exam_subject","exam_topic_for_eligibility_rule"))
-	->addWriteAccess("manage_exam_subject",true)
 	->addReadAccess("see_exam_subject",true)
-	->addInsertAccess("manage_exam_subject",true)
-	->addRemoveAccess("manage_exam_subject",true);
+	;
 
 $sm->addTable("ExamPartTopic")
 	->addForeignKey("exam_topic_for_eligibility_rule","ExamTopicForEligibilityRule",true,false,true,false)
@@ -82,10 +79,8 @@ $sm->addTable("ExamPartTopic")
 	/** cannot be multiple because cannot appear in several topics (otherwize the rules are biased...)
 	 */
 	->setKey(array("exam_topic_for_eligibility_rule","exam_subject_part"))
-	->addWriteAccess("manage_exam_subject",true)
 	->addReadAccess("see_exam_subject",true)
-	->addInsertAccess("manage_exam_subject",true)
-	->addRemoveAccess("manage_exam_subject",true);
+	;
 
 // 	$sm->addTable("ExamQuestionResult")
 // 		->addForeignKey("applicant","Applicant",true,false,true,false)

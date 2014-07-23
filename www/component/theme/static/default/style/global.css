@@ -332,6 +332,12 @@ a.black_link:hover, .black_link:hover {
 	border-top: 1px solid #A0A060;
 	padding: 2px;
 }
+.warning_box {
+    background-color: #FFFFD8;
+    border: 1px solid #C0C0A0;
+    margin: 5px;
+    padding: 3px;
+}
 .error {
 	background-color: #FFD8D8;
 }

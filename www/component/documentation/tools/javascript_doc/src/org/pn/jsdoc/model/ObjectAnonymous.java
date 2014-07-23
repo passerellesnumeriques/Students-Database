@@ -1,9 +1,12 @@
 package org.pn.jsdoc.model;
 
 import org.mozilla.javascript.Node;
+import org.mozilla.javascript.ast.AstNode;
 import org.mozilla.javascript.ast.Name;
+import org.mozilla.javascript.ast.NumberLiteral;
 import org.mozilla.javascript.ast.ObjectLiteral;
 import org.mozilla.javascript.ast.ObjectProperty;
+import org.mozilla.javascript.ast.StringLiteral;
 
 public class ObjectAnonymous extends Container {
 
@@ -14,7 +17,16 @@ public class ObjectAnonymous extends Container {
 		JSDoc doc = new JSDoc(obj, docs);
 		this.description = doc.description;
 		for (ObjectProperty p : obj.getElements()) {
-			String n = ((Name)p.getLeft()).getIdentifier();
+			AstNode left = p.getLeft();
+			String n;
+			if (left instanceof Name)
+				n = ((Name)left).getIdentifier();
+			else if (left instanceof StringLiteral)
+				n = ((StringLiteral)left).getValue();
+			else if (left instanceof NumberLiteral)
+				n = ((NumberLiteral)left).getValue();
+			else
+				throw new RuntimeException("Unexpected type for object property name: "+left.getClass());
 			add(n, new ValueToEvaluate(file, p.getRight(), p, p.getLeft()));
 		}
 	}
