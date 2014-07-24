@@ -23,6 +23,8 @@ class service_exam_save_subject extends Service {
 		SQLQuery::startTransaction();
 		$subject = &$input["exam"];
 		
+		// TODO check we can modify subjects (no result imported yet...)
+		
 		// re-calculate scores and indexes on back-end side to make sure everything is coherent
 		$total_score = 0;
 		$part_index = 1;

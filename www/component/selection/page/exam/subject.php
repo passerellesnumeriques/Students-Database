@@ -15,6 +15,7 @@ class page_exam_subject extends SelectionPage {
 		$can_add = $from_steps[0]["add"];
 		$can_remove = $from_steps[0]["remove"];
 		$can_edit = $from_steps[0]["edit"];
+		// TODO replace the step thing
 		
 		if (!$can_edit) $readonly = true;
 	
@@ -438,8 +439,9 @@ class page_exam_subject extends SelectionPage {
 			td.appendChild(insert_after);
 			this.tr.appendChild(td);
 			this.answers = [];
-			for (var i = 0; i < subject.versions.length; ++i)
-				this.answers.push(new AnswerControl(this, i));
+			if (display_correct_answers)
+				for (var i = 0; i < subject.versions.length; ++i)
+					this.answers.push(new AnswerControl(this, i));
 
 			this.remove = function() {
 				for (var i = 0; i < answers.length; ++i)
@@ -483,6 +485,11 @@ class page_exam_subject extends SelectionPage {
 				}
 				break;
 			}
+
+			this.remove = function() {
+				this.td.parentNode.removeChild(this.td);
+				question.answers.splice(question.answers.indexOf(this),1);
+			};
 		}
 		
 		function buildTable() {
@@ -499,6 +506,17 @@ class page_exam_subject extends SelectionPage {
 				for (var i = 0; i < subject.versions.length; ++i) {
 					if (i > 0) span.appendChild(document.createTextNode(","));
 					span.appendChild(document.createTextNode(String.fromCharCode("A".charCodeAt(0)+i)));
+					if (subject.versions.length > 1) {
+						var button = document.createElement("BUTTON");
+						button.className = "flat small_icon";
+						button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+						button.title = "Remove version "+String.fromCharCode("A".charCodeAt(0)+i);
+						button.version_index = i;
+						button.onclick = function() {
+							removeVersion(this.version_index);
+						};
+						span.appendChild(button);
+					}
 				}
 			}
 			// total number of parts
@@ -596,7 +614,20 @@ class page_exam_subject extends SelectionPage {
 			update();
 		}
 
-		// TODO remove a version
+		function removeVersion(version_index) {
+			pnapplication.dataUnsaved('subject');
+			subject.versions.splice(version_index,1);
+			answers.splice(version_index,1);
+			if (display_correct_answers) {
+				for (var i = 0; i < parts.length; ++i) {
+					parts[i].tr.childNodes[0].colSpan = 4+subject.versions.length;
+					parts[i].tr_title.removeChild(parts[i].tr_title.childNodes[3+version_index]);
+					for (var j = 0; j < parts[i].questions.length; ++j)
+						parts[i].questions[j].answers[version_index].remove();
+				}
+			}
+			update();
+		}
 
 		buildTable();
 		update();

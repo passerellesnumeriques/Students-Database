@@ -34,6 +34,7 @@ $sm->addTable("ExamSubjectQuestion")
 	->addString("type_config") // eg. "5" meaning 5 possibles choices in case type is mcq 
 	->addEnum("type",array("mcq_single","mcq_multi","number","text"),true,false) 
 	->addReadAccess("see_exam_subject",true)
+	;
 	//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...
 
 $sm->addTable("ExamSubjectAnswer")
