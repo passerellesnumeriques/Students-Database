@@ -19,7 +19,7 @@ class page_exam_subject extends SelectionPage {
 		if (!$can_edit) $readonly = true;
 	
 		$display_correct_answers = PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer");
-		$multiple_versions = PNApplication::$instance->selection->getOneConfigAttributeValue("exam_multiple_versions");
+		$multiple_versions = PNApplication::$instance->selection->getOneConfigAttributeValue("use_subject_version");
 		$current_campaign = PNApplication::$instance->selection->getCampaignId();
 	
 		if ($display_correct_answers) {
