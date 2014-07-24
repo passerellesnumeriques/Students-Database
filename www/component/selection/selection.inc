@@ -306,6 +306,7 @@ class selection extends Component {
 	 * This method must be called every time a saving / remove method is called
 	 */
 	public function updateAllSteps(){
+		/*
 		$all_steps = include("steps.inc");
 		$steps = $this->getSteps();
 		foreach($steps as $name => $value){
@@ -326,6 +327,7 @@ class selection extends Component {
 						->updateByKey("Steps",$name, array('value' => false));
 			}
 		}
+		*/
 	}
 	
 	/**
