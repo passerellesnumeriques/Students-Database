@@ -306,26 +306,26 @@ class selection extends Component {
 	 * This method must be called every time a saving / remove method is called
 	 */
 	public function updateAllSteps(){
-		$all_steps = include("steps.inc");
-		$steps = $this->getSteps();
-		foreach($steps as $name => $value){
-		$r = SQLQuery::create()
-			->bypassSecurity() //mandatory
-			->select($all_steps[$name][1])
-			->count() //just check if empty or not, no need of more data
-			->executeSingleValue();
-			if($r <> null && $r != 0 && $r != "0"){
-				if(!$steps[$name]) //must be updated
-					SQLQuery::create()
-						->bypassSecurity()
-						->updateByKey("Steps",$name, array('value' => true));
-			} else {
-				if($steps[$name]) //must be updated
-					SQLQuery::create()
-						->bypassSecurity()
-						->updateByKey("Steps",$name, array('value' => false));
-			}
-		}
+	//	$all_steps = include("steps.inc");
+	//	$steps = $this->getSteps();
+	//	foreach($steps as $name => $value){
+	//	$r = SQLQuery::create()
+	//		->bypassSecurity() //mandatory
+	//		->select($all_steps[$name][1])
+	//		->count() //just check if empty or not, no need of more data
+	//		->executeSingleValue();
+	//		if($r <> null && $r != 0 && $r != "0"){
+	//			if(!$steps[$name]) //must be updated
+	//				SQLQuery::create()
+	//					->bypassSecurity()
+	//					->updateByKey("Steps",$name, array('value' => true));
+	//		} else {
+	//			if($steps[$name]) //must be updated
+	//				SQLQuery::create()
+	//					->bypassSecurity()
+	//					->updateByKey("Steps",$name, array('value' => false));
+	//		}
+	//	}
 	}
 	
 	/**
