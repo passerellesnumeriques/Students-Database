@@ -46,7 +46,7 @@ class page_applicant_list extends SelectionPage {
 				filters,
 				<?php echo isset($_GET["all"]) ? "-1" : "100"; ?>,
 				function (list) {
-					list.makeScrollable();
+					list.grid.makeScrollable();
 					var get_creation_data = function() {
 						var data = {
 							sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>},
