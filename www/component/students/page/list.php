@@ -64,6 +64,8 @@ new data_list(
 	batches != null && batches.length > 1 ? 100 : -1,
 	function (list) {
 		window.students_list = list;
+
+		list.grid.makeScrollable();
 		
 		list.addTitle("/static/curriculum/batch_16.png", "Students");
 		require("profile_picture.js",function() {

@@ -13,6 +13,8 @@ table.grid>thead>tr {
 }
 table.grid>thead>tr>th {
 	vertical-align: bottom;
+    padding-left: 2px;
+    padding-right: 2px;
 }
 table.grid>thead>tr>th.container, table.grid>thead>tr>th.last_in_container {
 	border-right: 1px solid #C0C0C0;

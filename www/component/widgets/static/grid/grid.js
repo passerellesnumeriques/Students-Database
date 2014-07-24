@@ -612,6 +612,7 @@ function grid(element) {
 		t.selectable_unique = unique;
 		if (selectable) {
 			var th = document.createElement('TH');
+			th.style.textAlign = "left";
 			if (!unique) {
 				var cb = document.createElement("INPUT");
 				cb.type = 'checkbox';
@@ -750,6 +751,58 @@ function grid(element) {
 				}
 			}
 		}
+	};
+	
+	t.makeScrollable = function() {
+		var update = function() {
+			// put back the thead, so we can get the width of every th
+			t.element.style.paddingTop = "0px";
+			t.element.style.position = "static";
+			t.grid_element.style.overflow = "auto";
+			t.thead.style.position = "static";
+			// remove fixed width
+			for (var i = 0; i < t.thead.childNodes.length; ++i)
+				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j)
+					t.thead.childNodes[i].childNodes[j].width = "";
+			// put back original fixed col width
+			for (var i = 0; i < t.colgroup.childNodes.length; ++i) {
+				if (t.colgroup.childNodes[i]._width)
+					t.colgroup.childNodes[i].style.width = t.colgroup.childNodes[i]._width;
+				else
+					t.colgroup.childNodes[i].style.width = "";
+			}
+			// take the width of each th
+			for (var i = 0; i < t.thead.childNodes.length; ++i)
+				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j)
+					t.thead.childNodes[i].childNodes[j]._width = getWidth(t.thead.childNodes[i].childNodes[j]);
+			// take the width of each column
+			var widths = [];
+			if (t.selectable)
+				widths.push(t.thead.childNodes[0].childNodes[0]._width);
+			for (var i = 0; i < t.columns.length; ++i)
+				widths.push(t.columns[i].th._width);
+			// fix the width of each th
+			for (var i = 0; i < t.thead.childNodes.length; ++i)
+				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j)
+					setWidth(t.thead.childNodes[i].childNodes[j].width, t.thead.childNodes[i].childNodes[j]._width);
+			// fix the width of each column
+			for (var i = 0; i < t.colgroup.childNodes.length; ++i) {
+				if (t.colgroup.childNodes[i].style.width)
+					 t.colgroup.childNodes[i]._width = t.colgroup.childNodes[i].style.width;
+				t.colgroup.childNodes[i].style.width = widths[i]+"px";
+			}
+			// put the thead as relative
+			t.element.style.paddingTop = t.thead.offsetHeight+"px";
+			t.element.style.position = "relative";
+			t.grid_element.style.overflow = "auto";
+			t.thead.style.position = "absolute";
+			t.thead.style.top = "0px";
+			t.thead.style.left = "0px";
+		};
+		t.element.style.display = "flex";
+		t.element.style.flexDirection = "column";
+		t.grid_element.style.flex = "1 1 auto";
+		layout.addHandler(t.element, update);
 	};
 
 	/**
@@ -1014,20 +1067,20 @@ function grid(element) {
 	
 	/* --- internal functions --- */
 	t._createTable = function() {
-		t.grid_element = t.form = document.createElement('FORM');
+		t.grid_element = document.createElement("DIV"); 
 		var table = document.createElement('TABLE');
-		t.form.appendChild(table);
 		table.style.width = "100%";
+		t.grid_element.appendChild(table);
 		t.colgroup = document.createElement('COLGROUP');
 		table.appendChild(t.colgroup);
-		var thead = document.createElement('THEAD');
+		t.thead = document.createElement('THEAD');
 		t.header_rows = [];
 		t.header_rows.push(document.createElement('TR'));
-		thead.appendChild(t.header_rows[0]);
-		table.appendChild(thead);
+		t.thead.appendChild(t.header_rows[0]);
+		table.appendChild(t.thead);
 		t.table = document.createElement('TBODY');
 		table.appendChild(t.table);
-		t.element.appendChild(t.form);
+		t.element.appendChild(t.grid_element);
 		table.className = "grid";
 	};
 	t._create_cell = function(column, data, parent, ondone) {

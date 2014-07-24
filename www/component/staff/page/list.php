@@ -25,6 +25,7 @@ var list = new data_list(
 	[],
 	null,
 	function (list) {
+		list.grid.makeScrollable();
 		require("profile_picture.js",function() {
 			addDataListPeoplePictureSupport(list);
 		});
