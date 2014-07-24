@@ -79,6 +79,7 @@ theme::$icons_10 = array(
 	"ok" => 			"/static/theme/default/icons_10/ok.png",
 	"online" => 		"/static/theme/default/icons_10/online.gif",
 	"offline" => 		"/static/theme/default/icons_10/offline.gif",
+	"minus" => 			"/static/theme/default/icons_10/minus.png",
 	"paste" =>	 		"/static/theme/default/icons_10/paste.png",
 	"popup" =>	 		"/static/theme/default/icons_10/popup.png",
 	"refresh" => 		"/static/theme/default/icons_10/refresh.png",

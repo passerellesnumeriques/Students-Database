@@ -75,6 +75,19 @@ class page_exam_subject extends SelectionPage {
 				<?php }?>
 			</div>
 			<?php }?>
+			<?php if ($display_correct_answers && !$readonly) {?>
+			<div style="margin:5px">
+				Default number of choices: <select id='default_nb_choices'>
+				<option value='2'>2</option>
+				<option value='3'>3</option>
+				<option value='4'>4</option>
+				<option value='5' selected='selected'>5</option>
+				<option value='6'>6</option>
+				<option value='7'>7</option>
+				<option value='8'>8</option>
+				</select>
+			</div>
+			<?php }?>
 			<table><tbody id="table"></tbody></table>
 			<?php if (!$readonly) {?>
 			<div style="margin:5px">
@@ -192,7 +205,7 @@ class page_exam_subject extends SelectionPage {
 			this.tr.appendChild(td = document.createElement("TD"));
 			td.style.whiteSpace = "nowrap";
 			td.style.paddingTop = "15px";
-			td.colSpan = 4+(display_correct_answers ? subject.versions.length : 0);
+			td.colSpan = (readonly ? 2 : 4)+(display_correct_answers ? subject.versions.length : 0);
 			this.part_number = document.createElement("SPAN");
 			td.appendChild(this.part_number);
 			td.appendChild(document.createTextNode(" - "));
@@ -254,7 +267,8 @@ class page_exam_subject extends SelectionPage {
 			this.tr_title = document.createElement("TR");
 			this.tr_title.className = "questions_header";
 			var th;
-			this.tr_title.appendChild(th = document.createElement("TH"));
+			if (!readonly)
+				this.tr_title.appendChild(th = document.createElement("TH"));
 			this.tr_title.appendChild(th = document.createElement("TH"));
 			th.innerHTML = "Question";
 			th.style.textAlign = "right";
@@ -276,7 +290,8 @@ class page_exam_subject extends SelectionPage {
 					}
 				}
 			}
-			this.tr_title.appendChild(th = document.createElement("TH"));
+			if (!readonly)
+				this.tr_title.appendChild(th = document.createElement("TH"));
 			table.insertBefore(this.tr_title, this.tr.nextSibling);
 			
 			this.questions = [];
@@ -335,24 +350,27 @@ class page_exam_subject extends SelectionPage {
 				table.insertBefore(this.tr, part.questions[index].tr);
 				part.questions.splice(index,0,this);
 			}
-			var td = document.createElement("TD");
-			td.style.paddingLeft = "25px";
-			td.style.textAlign = "right";
+			var td;
 			var t=this;
-			var insert_before = document.createElement("BUTTON");
-			insert_before.className = "flat small_icon";
-			insert_before.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
-			insert_before.title = "Insert a question before this one";
-			insert_before.onclick = function() {
-				var index = part.questions.indexOf(t);
-				var q = new ExamSubjectQuestion(new_question_id_counter--, index, 1, "mcq_single", "A,B,C,D");
-				part.part.questions.splice(index,0,q);
-				new QuestionControl(part, index);
-				pnapplication.dataUnsaved('subject');
-				update();
-			};
-			td.appendChild(insert_before);
-			this.tr.appendChild(td);
+			if (!readonly) {
+				td  = document.createElement("TD");
+				td.style.paddingLeft = "25px";
+				td.style.textAlign = "right";
+				var insert_before = document.createElement("BUTTON");
+				insert_before.className = "flat small_icon";
+				insert_before.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+				insert_before.title = "Insert a question before this one";
+				insert_before.onclick = function() {
+					var index = part.questions.indexOf(t);
+					var q = new ExamSubjectQuestion(new_question_id_counter--, index, 1, "mcq_single", document.getElementById('default_nb_choices').value);
+					part.part.questions.splice(index,0,q);
+					new QuestionControl(part, index);
+					pnapplication.dataUnsaved('subject');
+					update();
+				};
+				td.appendChild(insert_before);
+				this.tr.appendChild(td);
+			}
 			this.question_num = document.createElement("TD");
 			this.question_num.style.textAlign = "right";
 			this.question_num.style.whiteSpace = "nowrap";
@@ -375,69 +393,72 @@ class page_exam_subject extends SelectionPage {
 					update();
 				});
 			}
-			var td = document.createElement("TD");
-			this.button_up = document.createElement("BUTTON");
-			this.button_up.className = "flat small_icon";
-			this.button_up.innerHTML = "<img src='"+theme.icons_10.up+"'/>";
-			this.button_up.title = "Move this question before";
-			this.button_up.onclick = function() {
-				var index = part.questions.indexOf(t);
-				part.part.questions.splice(index,1);
-				part.part.questions.splice(index-1,0,t.question);
-				part.questions.splice(index,1);
-				part.questions.splice(index-1,0,t);
-				table.insertBefore(t.tr, t.tr.previousSibling);
-				pnapplication.dataUnsaved('subject');
-				update();
-			};
-			this.button_up.style.marginRight = "3px";
-			td.appendChild(this.button_up);
-			this.button_down = document.createElement("BUTTON");
-			this.button_down.className = "flat small_icon";
-			this.button_down.innerHTML = "<img src='"+theme.icons_10.down+"'/>";
-			this.button_down.title = "Move this question after";
-			this.button_down.onclick = function() {
-				var index = part.questions.indexOf(t);
-				part.part.questions.splice(index,1);
-				part.part.questions.splice(index+1,0,t.question);
-				part.questions.splice(index,1);
-				part.questions.splice(index+1,0,t);
-				table.insertBefore(t.tr, t.tr.nextSibling.nextSibling);
-				pnapplication.dataUnsaved('subject');
-				update();
-			};
-			this.button_down.style.marginRight = "3px";
-			td.appendChild(this.button_down);
-			var button_remove = document.createElement("BUTTON");
-			button_remove.className = "flat small_icon";
-			button_remove.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
-			button_remove.title = "Remove this question";
-			button_remove.onclick = function() {
-				if (part.questions.length > 1)
-					t.remove();
-				else
-					confirm_dialog("This is the last question of this part. If you remove it, the part will be removed as well. Do you want to do this ?", function(yes) {
-						if (!yes) return;
-						part.remove();
-					}); 
-			};
-			button_remove.style.marginRight = "3px";
-			td.appendChild(button_remove);
-			var insert_after = document.createElement("BUTTON");
-			insert_after.className = "flat small_icon";
-			insert_after.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
-			insert_after.title = "Add a question after this one";
-			insert_after.onclick = function() {
-				var index = part.questions.indexOf(t)+1;
-				var q = new ExamSubjectQuestion(new_question_id_counter--, index, 1, "mcq_single", "A,B,C,D");
-				part.part.questions.splice(index,0,q);
-				new QuestionControl(part, index);
-				pnapplication.dataUnsaved('subject');
-				update();
-			};
-			insert_after.style.marginRight = "3px";
-			td.appendChild(insert_after);
-			this.tr.appendChild(td);
+			if (!readonly) {
+				td = document.createElement("TD");
+				td.style.whiteSpace = "nowrap";
+				this.button_up = document.createElement("BUTTON");
+				this.button_up.className = "flat small_icon";
+				this.button_up.innerHTML = "<img src='"+theme.icons_10.up+"'/>";
+				this.button_up.title = "Move this question before";
+				this.button_up.onclick = function() {
+					var index = part.questions.indexOf(t);
+					part.part.questions.splice(index,1);
+					part.part.questions.splice(index-1,0,t.question);
+					part.questions.splice(index,1);
+					part.questions.splice(index-1,0,t);
+					table.insertBefore(t.tr, t.tr.previousSibling);
+					pnapplication.dataUnsaved('subject');
+					update();
+				};
+				this.button_up.style.marginRight = "3px";
+				td.appendChild(this.button_up);
+				this.button_down = document.createElement("BUTTON");
+				this.button_down.className = "flat small_icon";
+				this.button_down.innerHTML = "<img src='"+theme.icons_10.down+"'/>";
+				this.button_down.title = "Move this question after";
+				this.button_down.onclick = function() {
+					var index = part.questions.indexOf(t);
+					part.part.questions.splice(index,1);
+					part.part.questions.splice(index+1,0,t.question);
+					part.questions.splice(index,1);
+					part.questions.splice(index+1,0,t);
+					table.insertBefore(t.tr, t.tr.nextSibling.nextSibling);
+					pnapplication.dataUnsaved('subject');
+					update();
+				};
+				this.button_down.style.marginRight = "3px";
+				td.appendChild(this.button_down);
+				var button_remove = document.createElement("BUTTON");
+				button_remove.className = "flat small_icon";
+				button_remove.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+				button_remove.title = "Remove this question";
+				button_remove.onclick = function() {
+					if (part.questions.length > 1)
+						t.remove();
+					else
+						confirm_dialog("This is the last question of this part. If you remove it, the part will be removed as well. Do you want to do this ?", function(yes) {
+							if (!yes) return;
+							part.remove();
+						}); 
+				};
+				button_remove.style.marginRight = "3px";
+				td.appendChild(button_remove);
+				var insert_after = document.createElement("BUTTON");
+				insert_after.className = "flat small_icon";
+				insert_after.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+				insert_after.title = "Add a question after this one";
+				insert_after.onclick = function() {
+					var index = part.questions.indexOf(t)+1;
+					var q = new ExamSubjectQuestion(new_question_id_counter--, index, 1, "mcq_single", document.getElementById('default_nb_choices').value);
+					part.part.questions.splice(index,0,q);
+					new QuestionControl(part, index);
+					pnapplication.dataUnsaved('subject');
+					update();
+				};
+				insert_after.style.marginRight = "3px";
+				td.appendChild(insert_after);
+				this.tr.appendChild(td);
+			}
 			this.answers = [];
 			if (display_correct_answers)
 				for (var i = 0; i < subject.versions.length; ++i)
@@ -463,33 +484,83 @@ class page_exam_subject extends SelectionPage {
 			this.td = document.createElement("TD");
 			this.td.style.whiteSpace = "nowrap";
 			this.td.style.paddingRight = "5px";
-			question.tr.insertBefore(this.td, question.tr.childNodes[question.tr.childNodes.length-1]);
+			if (readonly)
+				question.tr.appendChild(this.td);
+			else
+				question.tr.insertBefore(this.td, question.tr.childNodes[question.tr.childNodes.length-1]);
 			var answer = getAnswer(this.version_id, question.question.id);
 			switch (question.question.type) {
 			case "mcq_single":
-				var possible_answers = question.question.type_config.split(",");
+				var nb_answers = parseInt(question.question.type_config);
 				var id = generateID();
-				for (var i = 0; i < possible_answers.length; ++i) {
+				for (var i = 0; i < nb_answers; ++i) {
 					var cb = document.createElement("INPUT");
 					cb.type = "radio";
 					cb.name = id;
-					cb.value = possible_answers[i];
+					cb.value = String.fromCharCode("A".charCodeAt(0)+i);
 					if (readonly) cb.disabled = "disabled";
 					this.td.appendChild(cb);
-					this.td.appendChild(document.createTextNode(possible_answers[i]));
-					if (possible_answers[i] == answer) cb.checked = "checked";
+					this.td.appendChild(document.createTextNode(String.fromCharCode("A".charCodeAt(0)+i)));
+					if (cb.value == answer) cb.checked = "checked";
 					var t=this;
 					cb.onchange = function() {
 						setAnswer(t.version_id, question.question.id, this.value);
 					};
 				}
+				this.addControls = function() {
+					this.plus = document.createElement("BUTTON");
+					this.plus.className = "flat small_icon";
+					this.plus.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+					this.plus.title = "Add an answer";
+					this.plus.onclick = function() {
+						if (nb_answers >= 8) { alert("You cannot have more than 8 answers!"); return; }
+						nb_answers++;
+						question.question.type_config = nb_answers;
+						pnapplication.dataUnsaved('subject');
+						while (question.answers.length > 0)
+							question.answers[0].remove();
+						for (var i = 0; i < subject.versions.length; ++i)
+							question.answers.push(new AnswerControl(question,i));
+					};
+					this.td.appendChild(this.plus);
+					this.minus = document.createElement("BUTTON");
+					this.minus.className = "flat small_icon";
+					this.minus.innerHTML = "<img src='"+theme.icons_10.minus+"'/>";
+					this.minus.title = "Remove an answer";
+					this.minus.onclick = function() {
+						if (nb_answers < 3) { alert("You cannot have less than 2 answers!"); return; }
+						nb_answers--;
+						question.question.type_config = nb_answers;
+						pnapplication.dataUnsaved('subject');
+						while (question.answers.length > 0)
+							question.answers[0].remove();
+						for (var i = 0; i < subject.versions.length; ++i)
+							question.answers.push(new AnswerControl(question,i));
+					};
+					this.td.appendChild(this.minus);
+				};
+				this.removeControls = function() {
+					this.td.removeChild(this.plus);
+					this.plus = null;
+					this.td.removeChild(this.minus);
+					this.minus = null;
+				};
 				break;
 			}
 
 			this.remove = function() {
 				this.td.parentNode.removeChild(this.td);
-				question.answers.splice(question.answers.indexOf(this),1);
+				var i = question.answers.indexOf(this);
+				question.answers.splice(i,1);
+				if (i == 0 && question.answers.length > 0)
+					question.answers[0].addControls();
 			};
+
+			if (version_index == 0 && !readonly) {
+				if (question.answers.length > 0)
+					question.answers[0].removeControls();
+				this.addControls();
+			}
 		}
 		
 		function buildTable() {
@@ -506,7 +577,7 @@ class page_exam_subject extends SelectionPage {
 				for (var i = 0; i < subject.versions.length; ++i) {
 					if (i > 0) span.appendChild(document.createTextNode(","));
 					span.appendChild(document.createTextNode(String.fromCharCode("A".charCodeAt(0)+i)));
-					if (subject.versions.length > 1) {
+					if (subject.versions.length > 1 && !readonly) {
 						var button = document.createElement("BUTTON");
 						button.className = "flat small_icon";
 						button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
@@ -521,7 +592,6 @@ class page_exam_subject extends SelectionPage {
 			}
 			// total number of parts
 			document.getElementById('nb_parts').innerHTML = (subject.parts.length)+" part"+(subject.parts.length > 1 ? "s" : "");
-			var total_questions = 0;
 			var total_score = 0;
 			var q_total = 0;
 			for (var part_i = 0; part_i < subject.parts.length; ++part_i) {
@@ -532,7 +602,7 @@ class page_exam_subject extends SelectionPage {
 				// versions titles
 				if (display_correct_answers && multiple_versions) {
 					for (var i = 0; i < subject.versions.length; ++i)
-						parts[part_i].tr_title.childNodes[i+3].innerHTML = "Version "+String.fromCharCode("A".charCodeAt(0)+i);
+						parts[part_i].tr_title.childNodes[i+(readonly ? 2 : 3)].innerHTML = "Version "+String.fromCharCode("A".charCodeAt(0)+i);
 				}
 				// score
 				var part_score = 0;
@@ -542,19 +612,23 @@ class page_exam_subject extends SelectionPage {
 					total_score += subject.parts[part_i].questions[q].max_score;
 					subject.parts[part_i].questions[q].index = q+1;
 					parts[part_i].questions[q].question_num.innerHTML = "Question "+q_total;
-					if (q > 0) {
-						parts[part_i].questions[q].button_up.style.visibility = "visible";
-						parts[part_i].questions[q].button_up.style.disabled = "";
-					} else {
-						parts[part_i].questions[q].button_up.style.visibility = "hidden";
-						parts[part_i].questions[q].button_up.style.disabled = "disabled";
-					}
-					if (q < subject.parts[part_i].questions.length-1) {
-						parts[part_i].questions[q].button_down.style.visibility = "visible";
-						parts[part_i].questions[q].button_down.style.disabled = "";
-					} else {
-						parts[part_i].questions[q].button_down.style.visibility = "hidden";
-						parts[part_i].questions[q].button_down.style.disabled = "disabled";
+					if (!readonly) {
+						if (parts[part_i].questions[q].field_score)
+							parts[part_i].questions[q].field_score.input.tabIndex = q_total;
+						if (q > 0) {
+							parts[part_i].questions[q].button_up.style.visibility = "visible";
+							parts[part_i].questions[q].button_up.style.disabled = "";
+						} else {
+							parts[part_i].questions[q].button_up.style.visibility = "hidden";
+							parts[part_i].questions[q].button_up.style.disabled = "disabled";
+						}
+						if (q < subject.parts[part_i].questions.length-1) {
+							parts[part_i].questions[q].button_down.style.visibility = "visible";
+							parts[part_i].questions[q].button_down.style.disabled = "";
+						} else {
+							parts[part_i].questions[q].button_down.style.visibility = "hidden";
+							parts[part_i].questions[q].button_down.style.disabled = "disabled";
+						}
 					}
 				}
 				subject.parts[part_i].max_score = part_score;
@@ -577,14 +651,14 @@ class page_exam_subject extends SelectionPage {
 				}
 			}
 			// total numbers
-			document.getElementById('nb_questions').innerHTML = total_questions+" question"+(total_questions > 1 ? "s" : "");
+			document.getElementById('nb_questions').innerHTML = q_total+" question"+(q_total > 1 ? "s" : "");
 			document.getElementById('max_score').innerHTML = total_score.toFixed(2)+" point"+(total_score > 1 ? "s" : "");
 			subject.max_score = total_score;
 		}
 
 		function newPart() {
 			var part = new ExamSubjectPart(new_part_id_counter--, subject.parts.length+1, "", 1, [
-			    new ExamSubjectQuestion(new_question_id_counter--, 1, 1, "mcq_single", "A,B,C,D")
+			    new ExamSubjectQuestion(new_question_id_counter--, 1, 1, "mcq_single", display_correct_answers ? document.getElementById('default_nb_choices').value : "4")
 			]);
 			subject.parts.push(part);
 			var p = new ExamPartControl(subject.parts.length-1);
@@ -633,6 +707,17 @@ class page_exam_subject extends SelectionPage {
 		update();
 
 		function save(onsaved) {
+			if (subject.name.trim().length == 0) {
+				alert("Please enter a name for this subject");
+				onsaved(null);
+				return;
+			}
+			for (var i = 0; i < subject.parts.length; ++i)
+				if (subject.parts[i].name.trim().length == 0) {
+					alert("Please enter a name for the part number "+(i+1));
+					onsaved(null);
+					return;
+				}
 			service.json("selection","exam/save_subject",{exam:subject,answers:answers},function(res) {
 				if (!res || !res.exam) { onsaved(null); return; }
 				subject = res.exam;
@@ -651,7 +736,14 @@ class page_exam_subject extends SelectionPage {
 		if (isset($_GET["onready"]))
 			echo "window.frameElement.".$_GET["onready"]."();"; 
 		?>
-		
+
+		window.onuserinactive = function() {
+			if (subject.id > 0) {
+				var u = new URL(location.href);
+				u.params.readonly = "true";
+				location.href = u.toString();
+			}
+		};
 		</script>
 		<?php
 	}

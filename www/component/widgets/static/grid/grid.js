@@ -826,6 +826,7 @@ function grid(element) {
 			t._selection_changed();
 		};
 		td.onclick = function(ev) {
+			if (ev.target == cb) return;
 			cb.checked = cb.checked ? "" : "checked";
 			stopEventPropagation(ev);
 			return false;
