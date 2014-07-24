@@ -35,7 +35,7 @@ $sm->addTable("ExamSubjectQuestion")
 	->addEnum("type",array("mcq_single","mcq_multi","number","text"),true,false) 
 	->addReadAccess("see_exam_subject",true)
 	//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...
-
+        ;
 $sm->addTable("ExamSubjectAnswer")
 	->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true)
 	->addForeignKey("exam_subject_version","ExamSubjectVersion",true,false,true)

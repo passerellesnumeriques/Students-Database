@@ -53,8 +53,6 @@ class page_exam_results_edit extends SelectionPage {
 	}
 
 	
-	
-	
 	/*
 	 * Generating html elements of Applicant Info Box
 	 */

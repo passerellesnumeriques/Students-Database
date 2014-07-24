@@ -26,6 +26,8 @@ class service_applicant_get_results extends Service {
 		/* Computing exam score */
 		array_walk($applicants_answers,array($this,'computeApplicantExamScore'));
 		
+		
+		
 		//TODO : storing everything into database
 	
 	}
