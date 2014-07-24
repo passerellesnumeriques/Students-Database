@@ -784,7 +784,7 @@ function grid(element) {
 			// fix the width of each th
 			for (var i = 0; i < t.thead.childNodes.length; ++i)
 				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j)
-					t.thead.childNodes[i].childNodes[j].width = t.thead.childNodes[i].childNodes[j]._width+"px";
+					setWidth(t.thead.childNodes[i].childNodes[j].width, t.thead.childNodes[i].childNodes[j]._width);
 			// fix the width of each column
 			for (var i = 0; i < t.colgroup.childNodes.length; ++i) {
 				if (t.colgroup.childNodes[i].style.width)
