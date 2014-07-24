@@ -663,7 +663,7 @@ function match_division_level_names(container, country, country_data, division_i
 				north: null, south: null, east: null, west:null
 			};
 			var area_popup = new popup_window("Add area", null, div);
-			import_area_coordinates(div, area, division_index, country, country_data, name, function(ec, input_name) {
+			import_area_coordinates(div, area, division_index, country, country_data, name, null, null, function(ec, input_name) {
 				area_popup.addOkCancelButtons(function() {
 					// check name
 					var name = input_name.value.trim();
@@ -953,6 +953,12 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 	popup.content.removeAllChildren();
 	popup.removeButtons();
 
+	// title
+	if (parent_area) {
+		var title = createTitle("Import areas in "+parent_area.area_name);
+		popup.content.appendChild(title);
+	}
+	
 	// list of areas to be imported
 	var div = document.createElement("DIV");
 	div.style.display = "inline-block";
@@ -973,7 +979,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 		div.appendChild(d);
 	}
 	
-	var manual = function() {
+	var manual = function(google_results, geonames_results) {
 		var next = function(index) {
 			if (index == areas.length) {
 				ondone();
@@ -987,7 +993,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 			popup.content.removeAllChildren();
 			popup.removeButtons();
 			//popup.content.appendChild(createTitleForArea(country, country_data, division_index, index));
-			import_area_coordinates(popup.content, areas[index], division_index, country, country_data, matches[index], function(ec) {
+			import_area_coordinates(popup.content, areas[index], division_index, country, country_data, matches[index], google_results ? google_results[index] : null, geonames_results ? geonames_results[index] : null, function(ec) {
 				popup.addNextButton(function() {
 					var north = ec.coord.field_north.getCurrentData();
 					var south = ec.coord.field_south.getCurrentData();
@@ -1033,33 +1039,37 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 					if (isEverythingDone())
 						ondone();
 					else
-						manual(); // TODO reuse google and geonames results for the manual process
+						manual(google_results, geonames_results);
 					return;
 				}
 				popup.set_freeze_content("Try to match coordinates for "+areas[i].area_name);
 				if (areas[i].north) { next(i+1); return; }
 				if (matches[i] == null) { next(i+1); return; } // nothing from gadm.org, need manual
 				// find in google something matching within 5%
+				matches[i].south = parseFloat(matches[i].south);
+				matches[i].north = parseFloat(matches[i].south);
+				matches[i].west = parseFloat(matches[i].south);
+				matches[i].east = parseFloat(matches[i].south);
 				var south = matches[i].south-(matches[i].north-matches[i].south)/2/20;
 				var north = matches[i].north+(matches[i].north-matches[i].south)/2/20;
 				var west = matches[i].west-(matches[i].east-matches[i].west)/2/20;
 				var east = matches[i].east+(matches[i].east-matches[i].west)/2/20;
-				for (var j = 0; j < google_results.length; ++j) {
-					if (window.top.geography.rectContains(south, north, west, east, google_results[j].south, google_results[j].north, google_results[j].west, google_results[j].east)) {
+				for (var j = 0; j < google_results[i].length; ++j) {
+					if (window.top.geography.rectContains(south, north, west, east, google_results[i][j].south, google_results[i][j].north, google_results[i][j].west, google_results[i][j].east)) {
 						// found one !
 						popup.set_freeze_content("Saving geographic coordinates for "+areas[i].area_name);
-						areas[i].north = Math.max(matches[i].north, google_results[j].north);
-						areas[i].south = Math.min(matches[i].south, google_results[j].south);
-						areas[i].west = Math.min(matches[i].west, google_results[j].west);
-						areas[i].east = Math.max(matches[i].east, google_results[j].east);
+						areas[i].north = Math.max(matches[i].north, google_results[i][j].north);
+						areas[i].south = Math.min(matches[i].south, google_results[i][j].south);
+						areas[i].west = Math.min(matches[i].west, google_results[i][j].west);
+						areas[i].east = Math.max(matches[i].east, google_results[i][j].east);
 						service.json("data_model","save_entity",{
 							table: "GeographicArea",
 							key: areas[i].area_id,
 							lock: -1,
-							field_north: Math.max(matches[i].north, google_results[j].north),
-							field_south: Math.min(matches[i].south, google_results[j].south),
-							field_west: Math.min(matches[i].west, google_results[j].west),
-							field_east: Math.max(matches[i].east, google_results[j].east)
+							field_north: areas[i].north,
+							field_south: areas[i].south,
+							field_west: areas[i].west,
+							field_east: areas[i].east
 						},function(res) {
 							next(i+1);
 						});
@@ -1174,7 +1184,7 @@ function dialog_coordinates(country, country_data, division_index, area_index) {
 		else
 			area = country_data[division_index].areas[area_index];
 		popup.show();
-		import_area_coordinates(content, area, division_index, country, country_data, null, function(ec) {
+		import_area_coordinates(content, area, division_index, country, country_data, null, null, null, function(ec) {
 			popup.addSaveButton(function() {
 				var north = ec.coord.field_north.getCurrentData();
 				var south = ec.coord.field_south.getCurrentData();
@@ -1199,7 +1209,7 @@ function dialog_coordinates(country, country_data, division_index, area_index) {
 	});
 }
 
-function import_area_coordinates(container, area, division_index, country, country_data, from_kml, onready) {
+function import_area_coordinates(container, area, division_index, country, country_data, from_kml, from_google, from_geonames, onready) {
 	require("edit_coordinates.js", function() {
 		var table = document.createElement("TABLE"); container.appendChild(table);
 		var tr = document.createElement("TR"); table.appendChild(tr);
@@ -1373,31 +1383,41 @@ function import_area_coordinates(container, area, division_index, country, count
 			if (from_kml)
 				new ResultsList(div, "gadm.org", [from_kml], map_colors[color_index++], ec.coord, ec.map);
 			// Geonames
-			var search_geonames_title = document.createElement("DIV"); div.appendChild(search_geonames_title);
-			search_geonames_title.appendChild(document.createTextNode("geonames.org"));
-			search_geonames_title.style.fontWeight = "bold";
-			search_geonames_title.style.backgroundColor = "#C0C0C0";
-			var geonames_color = map_colors[color_index++];
-			search_geonames_title.style.color = geonames_color.border;
-			var search_geonames_div = document.createElement("DIV"); div.appendChild(search_geonames_div);
-			new SearchGeonames(search_geonames_div, country.country_id, area.area_name, null, function(res) {
-				div.removeChild(search_geonames_title);
-				search_geonames_div.removeAllChildren();
-				new ResultsList(search_geonames_div, "geonames.org", res, geonames_color, ec.coord, ec.map);
-			});
+			if (from_geonames) {
+				var search_geonames_div = document.createElement("DIV"); div.appendChild(search_geonames_div);
+				new ResultsList(search_geonames_div, "geonames.org", from_geonames, geonames_color, ec.coord, ec.map);
+			} else {
+				var search_geonames_title = document.createElement("DIV"); div.appendChild(search_geonames_title);
+				search_geonames_title.appendChild(document.createTextNode("geonames.org"));
+				search_geonames_title.style.fontWeight = "bold";
+				search_geonames_title.style.backgroundColor = "#C0C0C0";
+				var geonames_color = map_colors[color_index++];
+				search_geonames_title.style.color = geonames_color.border;
+				var search_geonames_div = document.createElement("DIV"); div.appendChild(search_geonames_div);
+				new SearchGeonames(search_geonames_div, country.country_id, area.area_name, null, function(res) {
+					div.removeChild(search_geonames_title);
+					search_geonames_div.removeAllChildren();
+					new ResultsList(search_geonames_div, "geonames.org", res, geonames_color, ec.coord, ec.map);
+				});
+			}
 			// Google
-			var search_google_title = document.createElement("DIV"); div.appendChild(search_google_title);
-			search_google_title.appendChild(document.createTextNode("Google"));
-			search_google_title.style.fontWeight = "bold";
-			search_google_title.style.backgroundColor = "#C0C0C0";
-			var google_color = map_colors[color_index++];
-			search_google_title.style.color = google_color.border;
-			var search_google_div = document.createElement("DIV"); div.appendChild(search_google_div);
-			new SearchGoogle(search_google_div, country.country_id, area.area_name, null, area, function(res) {
-				div.removeChild(search_google_title);
-				search_google_div.removeAllChildren();
-				new ResultsList(search_google_div, "Google", res, google_color, ec.coord, ec.map);
-			});
+			if (from_google) {
+				var search_google_div = document.createElement("DIV"); div.appendChild(search_google_div);
+				new ResultsList(search_google_div, "Google", from_google, google_color, ec.coord, ec.map);
+			} else {
+				var search_google_title = document.createElement("DIV"); div.appendChild(search_google_title);
+				search_google_title.appendChild(document.createTextNode("Google"));
+				search_google_title.style.fontWeight = "bold";
+				search_google_title.style.backgroundColor = "#C0C0C0";
+				var google_color = map_colors[color_index++];
+				search_google_title.style.color = google_color.border;
+				var search_google_div = document.createElement("DIV"); div.appendChild(search_google_div);
+				new SearchGoogle(search_google_div, country.country_id, area.area_name, null, area, function(res) {
+					div.removeChild(search_google_title);
+					search_google_div.removeAllChildren();
+					new ResultsList(search_google_div, "Google", res, google_color, ec.coord, ec.map);
+				});
+			}
 			onready(ec, input_name);
 		});
 	});
@@ -1613,10 +1633,10 @@ function SearchGoogle(container, country_id, name, types, area, ondone, auto_lau
 			for (var i = 0; i < res.length; ++i) {
 				if (res[i].geometry) {
 					if (res[i].geometry.viewport) {
-						res[i].north = res[i].geometry.viewport.northeast.lat;
-						res[i].east = res[i].geometry.viewport.northeast.lng;
-						res[i].south = res[i].geometry.viewport.southwest.lat;
-						res[i].west = res[i].geometry.viewport.southwest.lng;
+						res[i].north = parseFloat(res[i].geometry.viewport.northeast.lat);
+						res[i].east = parseFloat(res[i].geometry.viewport.northeast.lng);
+						res[i].south = parseFloat(res[i].geometry.viewport.southwest.lat);
+						res[i].west = parseFloat(res[i].geometry.viewport.southwest.lng);
 						res[i].fullname = res[i].formatted_address;
 						// remove fake viewport
 						if (res[i].north == 90 && res[i].south == -90) {
