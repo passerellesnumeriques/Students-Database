@@ -36,7 +36,7 @@ function getGooglePlaces(text, callback) {
 }
 
 function getGooglePlaceDetails(reference, callback) {
-	var places = new window.top.google.maps.places.PlacesService(window.top.google_map);
+	var places = new window.top.google.maps.places.PlacesService(window.top.google_map_for_places);
 	var request = {
 		reference: reference,
 		sensor: false,

@@ -32,15 +32,59 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		});
 		t._updatePopButtonsAndInfoRow();
 		t._pop.show();
-		/*Get the current domain country id */
+		/*Load data to initialize area and map*/
 		window.top.require("geography.js", function() {
 			window.top.geography.getCountries(function(countries) {
+				t._countries = countries;
 				t._country_id = countries[0].country_id;
-				var after_area_set = function(){t._refreshTDPartners(t.geographic_area);};
-				t._initArea(after_area_set);
-				
+				t._initArea(function(){
+					t._refreshTDPartners(t.geographic_area);
+					t._refreshMap();
+				});
 			});
-		});		
+		});
+		require("google_maps.js", function() {
+			new GoogleMap(t._map_container, function (m) {
+				t._map = m;
+				t._refreshMap();
+			});
+		});
+	};
+	
+	t._host_marker = null;
+	t._refreshMap = function() {
+		if (!t._map) return; // map not yet ready
+		if (!t._country_id) return; // not yet initialized
+		if (!t._area_selection) return;
+		var country_data = t._area_selection.country_data;
+		var area = null;
+		if (t.geographic_area > 0) {
+			area = window.top.geography.searchArea(country_data, t.geographic_area);
+			while (!area.north && area.area_parent_id > 0) area = window.top.geography.getParentArea(country_data, area);
+			if (!area.north) area = null;
+		}
+		if (area == null) area = window.top.geography.getCountryFromList(t._country_id, t._countries);
+		if (area.north)
+			t._map.fitToBounds(area.south, area.west, area.north, area.east);
+		var host_address = null;
+		if (t.host && t.host.host_address_id) {
+			for (var i = 0; i < t.host.organization.addresses.length; ++i)
+				if (t.host.organization.addresses[i].id == t.host.host_address_id) {
+					if (t.host.organization.addresses[i].lat != null)
+						host_address = t.host.organization.addresses[i];
+					break;
+				}
+		}
+		if (host_address) {
+			if (t._host_marker) {
+				t._host_marker.setPosition(new window.top.google.maps.LatLng(host_address.lat, host_address.lng));
+			} else {
+				t._host_marker = t._map.addMarker(host_address.lat, host_address.lng, 1);
+			}
+		} else if (t._host_marker) {
+			t._map.removeShape(t._host_marker);
+			t._host_marker = null;
+		}
 	};
 	
 	/**
@@ -62,7 +106,18 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		//Set the body
 		var tr = document.createElement("tr");
 		t._td_area = document.createElement("td");
+		t._td_area.style.verticalAlign = "top";
+		t._area_selection_container = document.createElement("DIV");
+		t._td_area.appendChild(t._area_selection_container);
+		t._map_container = document.createElement("DIV");
+		t._map_container.style.width = "100%";
+		t._map_container.style.minWidth = "300px";
+		t._map_container.style.height = "250px";
+		t._td_area.appendChild(t._map_container);
+		t._map = null;
+		require("google_maps.js");
 		t._td_partners = document.createElement("td");
+		t._td_partners.style.verticalAlign = "top";
 		t._td_partners.style.borderLeft = "1px solid #808080";
 		//This td is initialized hidden
 		t._td_partners.style.position = 'absolute';
@@ -106,17 +161,18 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 	 * @param {Function} ondone called when the geographic area is selected / updated 
 	 */
 	t._initArea = function(ondone) {
-		while (t._td_area.childNodes.length > 0) t._td_area.removeChild(t._td_area.childNodes[0]);
+		t._area_selection_container.removeAllChildren();
 		if(!t._country_id)
 			return;
 		if (t._initializing_area) { t._reinit_area = true; return; }
 		t._initializing_area = true;
 		require("geographic_area_selection.js", function() {
-			new geographic_area_selection(t._td_area, t._country_id, t.geographic_area, function(area) {
+			t._area_selection = new geographic_area_selection(t._area_selection_container, t._country_id, t.geographic_area, function(area) {
 				area.onchange = function() {
 					var a = area.getSelectedArea();
 					t.geographic_area = a;
 					t._refreshTDPartners(t.geographic_area);
+					t._refreshMap();
 					//Reset the host if the area is changed
 					t.host = null;
 					//Update the buttons

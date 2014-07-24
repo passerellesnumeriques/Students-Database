@@ -34,7 +34,7 @@ function organization(container, org, existing_types, can_edit) {
 			require("editable_cell.js", function() {
 				t.title = new editable_cell(t.title_container, "Organization", "name", org.id, "field_text", {min_length:1,max_length:100,can_be_null:false,style:{fontSize:"x-large"}}, org.name, null, function(field){
 					org.name = field.getCurrentData();
-					t._refreshGoogle();
+					t._refreshGoogle1();
 					t.onchange.fire();
 				}, function(edit){
 					if (!can_edit) edit.cancelEditable();
@@ -46,7 +46,7 @@ function organization(container, org, existing_types, can_edit) {
 				t.title_container.appendChild(t.title.getHTMLElement());
 				t.title.onchange.add_listener(function() {
 					org.name = t.title.getCurrentData();
-					t._refreshGoogle();
+					t._refreshGoogle1();
 					t.onchange.fire();
 				});
 			});
@@ -165,12 +165,15 @@ function organization(container, org, existing_types, can_edit) {
 		t.types_container.style.marginBottom = "5px";
 		t.types_container.style.borderBottom = "1px solid #A0A0A0";
 		
-		// content: addresses, contacts, contact points
+		// content: addresses, contacts, contact points, map
 		container.appendChild(t.content_container = document.createElement("TABLE"));
-		var tr, td_contacts, td_addresses;
+		var tr, td_contacts, td_addresses, td_points, td_map;
 		t.content_container.appendChild(tr = document.createElement("TR"));
-			// contacts
 		tr.appendChild(td_contacts = document.createElement("TD"));
+		tr.appendChild(td_addresses = document.createElement("TD"));
+		tr.appendChild(td_points = document.createElement("TD"));
+		tr.appendChild(td_map = document.createElement("TD"));
+			// contacts
 		td_contacts.style.verticalAlign = "top";
 		require("contacts.js", function() {
 			t._contacts_widget = new contacts(td_contacts, "organization", org.id, org.contacts, can_edit, can_edit, can_edit);
@@ -180,7 +183,6 @@ function organization(container, org, existing_types, can_edit) {
 			});
 		});
 			// addresses
-		tr.appendChild(td_addresses = document.createElement("TD"));
 		td_addresses.style.verticalAlign = "top";
 		require("addresses.js", function() {
 			t._addresses_widget = new addresses(td_addresses, true, "organization", org.id, org.addresses, can_edit, can_edit, can_edit);
@@ -192,7 +194,6 @@ function organization(container, org, existing_types, can_edit) {
 		});
 			// contact points
 		t._contact_points_rows = [];
-		tr.appendChild(td_points = document.createElement("TD"));
 		td_points.style.verticalAlign = "top";
 		var table = document.createElement("TABLE");
 		table.style.backgroundColor = "white";
@@ -274,14 +275,70 @@ function organization(container, org, existing_types, can_edit) {
 		for (var i = 0; i < org.contact_points.length; ++i)
 			t._addContactPointRow(org.contact_points[i], tbody);
 		
+		// map
+		td_map.style.verticalAlign = "top";
+		var map_container = document.createElement("DIV");
+		map_container.style.width = "300px";
+		map_container.style.height = "200px";
+		//map_container.style.position = "absolute";
+		//map_container.style.visibility = "hidden";
+		//map_container.style.top = "-1000px";
+		td_map.appendChild(map_container);
+		t.map = null;
+		require("google_maps.js", function() {
+			var markers = [];
+			var update_map = function() {
+				for (var i = 0; i < markers.length; ++i)
+					t.map.removeShape(markers[i]);
+				markers = [];
+				var list = t._addresses_widget.getAddresses();
+				if (list.length > 0) {
+					for (var i = 0; i < list.length; ++i) {
+						if (list[i].lat && list[i].lng)
+							markers.push(t.map.addMarker(parseFloat(list[i].lat), parseFloat(list[i].lng), 1, list[i].address_type));
+					}
+					t.map.fitToShapes();
+					//map_container.style.position = "static";
+					//map_container.style.visibility = "visible";
+				} else {
+					//map_container.style.position = "absolute";
+					//map_container.style.visibility = "hidden";
+					//map_container.style.top = "-1000px";
+				}
+			};
+			var link_map_to_addresses = function() {
+				if (!t._addresses_widget) {
+					setTimeout(link_map_to_addresses, 100);
+					return;
+				}
+				update_map();
+				t._addresses_widget.onchange.add_listener(update_map);
+			};
+			new GoogleMap(map_container, function(m) {
+				t.map = m;
+				window.top.geography.getCountry(window.top.default_country_id, function(country) {
+					if (country && country.north)
+						t.map.fitToBounds(parseFloat(country.south), parseFloat(country.west), parseFloat(country.north), parseFloat(country.east));
+					link_map_to_addresses();
+				});
+			});
+		});
+		
 		// google
 		var google_title = document.createElement("DIV");
 		container.appendChild(google_title);
 		google_title.innerHTML = "<img src='/static/google/google.png' style='vertical-align:bottom'/> Results From Google";
+		google_title.style.borderTop = "1px solid #808080";
+		google_title.style.borderBottom = "1px solid #808080";
+		google_title.style.padding = "3px";
+		google_title.style.backgroundColor = "#D0F0D0";
 		t._google_results_container = document.createElement("DIV");
 		container.appendChild(t._google_results_container);
 		t._google_results_container.style.backgroundColor = "white";
 		t._google_results_container.style.textAlign = "left";
+		t._google_results_container.style.maxWidth = "600px";
+		t._google_results_container.style.maxHeight = "250px";
+		t._google_results_container.style.overflowY = "auto";
 		t._refreshGoogle();
 		
 		layout.invalidate(container);
@@ -384,9 +441,29 @@ function organization(container, org, existing_types, can_edit) {
 	
 	t._google_loading = false;
 	t._timeout_google = null;
+	t._last_google = 0;
+	t._last_google1 = 0;
+	t._google1_timeout = null;
+	t._refreshGoogle1 = function() {
+		t._last_google1 = new Date().getTime();
+		if (t._google1_timeout) return;
+		t._google1_timeout = setTimeout(function() {
+			t._google1_timeout = null;
+			if (new Date().getTime() - t._last_google1 < 500) {
+				// the user is still typing, let's wait
+				t._refreshGoogle1();
+				return;
+			}
+			t._refreshGoogle();
+		},500);
+	};
 	t._refreshGoogle = function() {
 		if (org.name.length < 3) return;
 		if (t._timeout_google != null) return;
+		if (new Date().getTime() - t._last_google < 1000) {
+			t._timeout_google = setTimeout(function() { t._timeout_google = null; t._refreshGoogle(); }, 1000);
+			return;
+		}
 		if (t._google_loading) {
 			t._google_need_reload = true;
 			return;
@@ -394,10 +471,12 @@ function organization(container, org, existing_types, can_edit) {
 		t._google_loading = true;
 		t._google_need_reload = false;
 		t._google_results_container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
+		layout.invalidate(container);
 		require("google_places.js", function() {
 			getGooglePlaces(org.name, function(results,error) {
 				if (error != null) {
 					t._google_results_container.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+status;
+					layout.invalidate(container);
 				} else {
 					var ul = document.createElement("UL");
 					for (var i = 0; i < results.length; ++i) {
@@ -408,10 +487,31 @@ function organization(container, org, existing_types, can_edit) {
 						link.href = '#';
 						li.appendChild(link);
 						link._google_ref = results[i].reference;
+						link._google_pos = results[i].geometry && results[i].geometry.location ? results[i].geometry.location : null;
+						link.marker = null;
+						link.onmouseover = function() {
+							if (!t.map) return;
+							if (this.marker) return;
+							if (!this._google_pos) return;
+							this.marker = t.map.addMarker(this._google_pos.lat(), this._google_pos.lng(), 1);
+							t.map.zoomOnShape(this.marker);
+						};
+						link.onmouseout = function () {
+							if (!this.marker) return;
+							t.map.removeShape(this.marker);
+							t.map.fitToShapes();
+							this.marker = null;
+						};
 						link.onclick = function() {
+							var locker = lock_screen(null, "Importing data from Google...");
 							getGooglePlaceDetails(this._google_ref, function(place,error) {
-								if (place == null) return;
+								if (place == null) { unlock_screen(locker); return; }
 								require("contact_objects.js", function() {
+									var done = 0;
+									var check_done = function() {
+										if (++done == 2)
+											unlock_screen(locker);
+									};
 									// add address
 									var a = new PostalAddress(-1,window.top.default_country_id, null, null, null, null, null, null, "Office");
 									var geo = [null,null,null,null,null];
@@ -435,9 +535,15 @@ function organization(container, org, existing_types, can_edit) {
 										if (ac.types.contains("locality"))
 											geo[4] = ac.long_name;
 									}
+									if (place.geometry && place.geometry.location) {
+										a.lat = place.geometry.location.lat();
+										a.lng = place.geometry.location.lng();
+									}
 									var add_address = function() {
+										// TODO first check it does not exist yet
 										if (a.geographic_area.id != null || a.street_number != null || a.street != null)
 											t._addresses_widget.addAddress(a,false);
+										check_done();
 									};
 									var populate_area = function() {
 										a.geographic_area.country_id = a.country_id;
@@ -448,16 +554,37 @@ function organization(container, org, existing_types, can_edit) {
 											areas = place.formatted_address.split(",");
 										if (areas.length == 0)
 											add_address();
-										else window.top.geography.getCountryData(a.country_id, function(country_data) {
-											var area = window.top.geography.searchAreaByNames(country_data, areas);
-											if (area == null) {
-												a.geographic_area.id = null;
-												add_address();
-											} else {
-												a.geographic_area = window.top.geography.getGeographicAreaText(country_data, area);
-												add_address();
-											}
-										});
+										else {
+											areas.reverse();
+											window.top.geography.getCountryName(a.country_id, function(country_name) {
+												if (areas[0].trim().toLowerCase() == country_name.toLowerCase())
+													areas.splice(0,1);
+												if (areas.length == 0)
+													add_address();
+												else {
+													window.top.geography.getCountryData(a.country_id, function(country_data) {
+														var remaining = [];
+														var area = window.top.geography.searchAreaByNames(country_data, areas, remaining);
+														if (area == null) remaining = areas;
+														if (remaining.length > 0) {
+															remaining.reverse();
+															a.additional = "";
+															for (var i = 0; i < remaining.length; ++i) {
+																if (i > 0) a.additional += ", ";
+																a.additional += remaining[i];
+															}
+														}
+														if (area == null) {
+															a.geographic_area.id = null;
+															add_address();
+														} else {
+															a.geographic_area = window.top.geography.getGeographicAreaText(country_data, area);
+															add_address();
+														}
+													});
+												}
+											});
+										}
 									};
 									var populate_country = function() {
 										if (country == null) {
@@ -473,9 +600,28 @@ function organization(container, org, existing_types, can_edit) {
 
 									// add phone
 									if (place.formatted_phone_number && place.formatted_phone_number.length > 0) {
-										var phone = new Contact(-1, "phone", "Office", place.formatted_phone_number);
-										t._contacts_widget.phones.addContact(phone);
+										var onlyDigits = function(s) {
+											var r = "";
+											for (var i = 0; i < s.length; ++i) {
+												var c = s.charCodeAt(i);
+												if (c >= "0".charCodeAt(0) && c <= "9".charCodeAt(0))
+													r += s.charAt(i);
+											}
+											return r;
+										};
+										var num = onlyDigits(place.formatted_phone_number);
+										if (num.length > 0) {
+											var found = false;
+											var existing = t._contacts_widget.phones.getContacts();
+											for (var i = 0; i < existing.length; ++i)
+												if (onlyDigits(existing[i].contact) == num) { found = true; break; }
+											if (!found) {
+												var phone = new Contact(-1, "phone", "Office", place.formatted_phone_number);
+												t._contacts_widget.phones.addContact(phone);
+											}
+										}
 									}
+									check_done();
 									
 									layout.invalidate(container);
 								});
@@ -489,7 +635,7 @@ function organization(container, org, existing_types, can_edit) {
 				}
 				layout.invalidate(t._google_results_container);
 				t._google_loading = false;
-				if (t._google_need_reload && !t._timeout_google) t._timeout_google = setTimeout(function() { t._timeout_google = null; t._refreshGoogle(); }, 50);
+				if (t._google_need_reload && !t._timeout_google) t._timeout_google = setTimeout(function() { t._timeout_google = null; t._refreshGoogle(); }, 1000);
 			});
 		});
 	};

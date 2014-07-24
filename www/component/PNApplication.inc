@@ -35,7 +35,6 @@ require_once("Component.inc");
  * @property transcripts $transcripts
  * @property user_config $user_config
  * @property user_management $user_management
- * @property user_people $user_people 
  * @property widgets $widgets
  */
 class PNApplication {
@@ -84,9 +83,13 @@ class PNApplication {
 		$message = str_replace("\n", "<br/>", htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8"));
 		$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';if (layout) layout.invalidate(e); else if (window.parent && window.parent.layout) window.parent.layout.invalidate(window.frameElement);return false;\">details</a>";
 		$message .= "<ul style='margin:0px;visibility:hidden;position:absolute;top:-10000px' id='ex_".count(PNApplication::$errors)."'>";
-		foreach ($e->getTrace() as $trace)
-			if (isset($trace["file"]) && isset($trace["line"]))
-				$message .= "<li>".$trace["file"]." line ".$trace["line"]."</li>";
+		do {
+			foreach ($e->getTrace() as $trace)
+				if (isset($trace["file"]) && isset($trace["line"]))
+					$message .= "<li>".$trace["file"]." line ".$trace["line"]."</li>";
+			$e = $e->getPrevious();
+			if ($e <> null) $message .= "<li><b>CAUSED BY:</b></li>";
+		} while ($e <> null);
 		$message .= "</ul>";
 		array_push(PNApplication::$errors, $message);
 	}
@@ -100,9 +103,13 @@ class PNApplication {
 		} catch (Exception $e) {
 			$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';if (typeof layout != 'undefined') layout.invalidate(e); return false;\">details</a>";
 			$message .= "<ul style='margin:0px;visibility:hidden;position:absolute;top:-10000px' id='ex_".count(PNApplication::$errors)."'>";
-			foreach ($e->getTrace() as $trace)
-				if (isset($trace["file"]))
-					$message .= "<li>".htmlentities($trace["file"]." line ".$trace["line"])."</li>";
+			do {
+				foreach ($e->getTrace() as $trace)
+					if (isset($trace["file"]))
+						$message .= "<li>".htmlentities($trace["file"]." line ".$trace["line"])."</li>";
+				$e = $e->getPrevious();
+				if ($e <> null) $message .= "<li><b>CAUSED BY:</b></li>";
+			} while ($e <> null);
 			$message .= "</ul>";
 			array_push(PNApplication::$errors, $message);
 		}

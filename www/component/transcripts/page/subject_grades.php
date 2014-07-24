@@ -4,1072 +4,407 @@ class page_subject_grades extends Page {
 	public function getRequiredRights() { return array("consult_students_grades"); }
 	
 	public function execute() {
-		$subject_id = $_GET["subject"];
-		
+		if (!isset($_GET["subject"])) {
+			// direct from menu, we need to select a subject
+			if (isset($_GET["batches"])) {
+				echo "<div class='info_box'><img src='".theme::$icons_16["question"]."' style='vertical-align:bottom'/> Please select a batch, period or class to display the subjects</div>";
+				return;
+			}
+			if (!isset($_GET["batch"])) {
+				// in order to select a subject, we want to be inside the tree_frame
+				header("Location: /dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/subject_grades");
+				return;
+			}
+			$batch_id = $_GET["batch"];
+			if (isset($_GET["class"])) {
+				$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
+				$period_id = $class["period"];
+				$spe_id = $class["specialization"];
+			} else if (isset($_GET["period"])) {
+				$period_id = $_GET["period"];
+				$spe_id = isset($_GET["specialization"]) ? $_GET["specialization"] : null;
+			} else {
+				$period_id = null;
+				$spe_id = null;
+			}
+			$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id, $spe_id);
+			echo "<div class='info_box'>";
+			echo "<img src='".theme::$icons_16["question"]."' style='vertical-align:bottom'/> ";
+			echo "Please select a subject to display the grades: ";
+			echo "<select onchange=\"if (this.value == '') return; window.parent.frameElement.src='/dynamic/transcripts/page/subject_grades?subject='+this.value";
+			if (isset($_GET["class"])) echo "+'&class=".$_GET["class"]."'";
+			echo ";\">";
+			echo "<option value=''></option>";
+			foreach ($subjects as $s) {
+				echo "<option value='".$s["id"]."'>";
+				echo htmlentities($s["code"]." - ".$s["name"]);
+				echo "</option>";
+			}
+			echo "</select>";
+			echo "</div>";
+			return;
+		}
+
 		// get subject
-		$subject = SQLQuery::create()
-		->select("CurriculumSubject")
-		->whereValue("CurriculumSubject", "id", $_GET["subject"])
-		->executeSingleRow();
-		$subject_grading = SQLQuery::create()
-		->select("CurriculumSubjectGrading")
-		->where("subject", $subject["id"])
-		->executeSingleRow();
+		$subject_id = $_GET["subject"];
+		$q = PNApplication::$instance->curriculum->getSubjectQuery($subject_id);
+		$q->join("CurriculumSubject", "CurriculumSubjectGrading", array("id"=>"subject"));
+		$subject = $q->executeSingleRow();
 		
-		// get period
-		$period = SQLQuery::create()
-		->select("AcademicPeriod")
-		->whereValue("AcademicPeriod", "id", $subject["period"])
-		->executeSingleRow();
+		$edit = false;
+		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades"); // TODO teacher assigned
+		$locker = null;
+		if ($can_edit && isset($_GET["edit"])) {
+			require_once("component/data_model/DataBaseLock.inc");
+			$lock_id = DataBaseLock::lockRow("CurriculumSubjectGrading", $subject["id"], $locker);
+			if ($lock_id <> null)
+				$edit = true;
+		}
 		
-		// get specialization or null
-		$specialization = $subject["specialization"] <> null ? SQLQuery::create()->select("Specialization")->where("id",$subject["specialization"])->executeSingleRow() : null;
-		
-		// get batch
-		$batch = SQLQuery::create()->select("StudentBatch")->where("id", $period["batch"])->executeSingleRow();
-		
-		// get list of classes
-		$class_id = @$_GET["class"];
-		if ($class_id == null) {
-			$q = SQLQuery::create()
-			->select("AcademicClass")
-			->where("period", $subject["period"])
-			;
-			if ($specialization <> null)
-				$q->whereValue("AcademicClass", "specialization", $specialization["id"]);
-			else
-				$q->whereNull("AcademicClass", "specialization");
-			$classes = $q->execute();
-			$class = null;
+		// get batch, period, class and specialization
+		if (isset($_GET["class"])) {
+			$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($class["period"]);
+			$spe = $class["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($class["specialization"]) : null;
 		} else {
-			$class = SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->executeSingleRow();
-			$classes = array($class);
+			$class = null;
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($subject["period"]);
+			$spe = $subject["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($subject["specialization"]) : null;
 		}
-		$classes_ids = array();
-		foreach ($classes as $c) array_push($classes_ids, $c["id"]);
-		
-		// build the table with students info
-		require_once("component/data_model/page/custom_data_list.inc");
-		$available_fields = PNApplication::$instance->data_model->getAvailableFields("StudentClass");
-		for ($i = 0; $i < count($available_fields); $i++) {
-			$f = $available_fields[$i];
-			if ($f[0]->handler->category <> "Personal Information" &&
-				$f[0]->handler->category <> "Student") {
-				array_splice($available_fields, $i, 1);
-				$i--;
-			}
+		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+
+		// get the list of students
+		if ($class <> null) {
+			$q = PNApplication::$instance->students->getStudentsQueryForClass($class["id"], true);
+		} else {
+			$q = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period["id"], true, false, $spe <> null ? $spe["id"] : false);
 		}
-		$filters = array();
-		array_push($filters, array(
-			"category"=>"Student",
-			"name"=>"Period",
-			"data"=>array("value"=>$period["id"])
-		));
-		if ($specialization <> null)
-			array_push($filters, array(
-				"category"=>"Student",
-				"name"=>"Specialization",
-				"data"=>array("value"=>$specialization["id"])
-			));
-		if ($class_id <> null)
-			array_push($filters, array(
-				"category"=>"Student",
-				"name"=>"Class",
-				"data"=>array("value"=>$class_id)
-			));
-		$data = custom_data_list($this, "StudentClass", null, $available_fields, $filters);
-		
-		// get evaluations
-		if ($subject_grading <> null && !$subject_grading["only_final_grade"]) {
-			$types = SQLQuery::create()
-				->select("CurriculumSubjectEvaluationType")
-				->where("subject", $subject_id)
-				->execute();
-			foreach ($types as &$type) {
-				$type["evaluations"] = SQLQuery::create()
-					->select("CurriculumSubjectEvaluation")
-					->where("type", $type["id"])
-					->execute();
-			}			
-		} else
-			$types = array();
-		$types_ids = array();
-		$evaluations_ids = array();
-		foreach ($types as &$type) {
-			array_push($types_ids, $type["id"]);
-			foreach ($type["evaluations"] as $eval)
-				array_push($evaluations_ids, $eval["id"]);
-		}
-		
-		// get students grades
-		$people_id_alias = $data["query"]->getFieldAlias("People", "id");
+		$students = $q->execute();
 		$students_ids = array();
-		foreach ($data["data"] as $row)
-			array_push($students_ids, $row[$people_id_alias]);
-		$final_grades = count($students_ids) == 0 ? array() : SQLQuery::create()
-			->select("StudentSubjectGrade")
-			->whereValue("StudentSubjectGrade", "subject", $subject_id)
-			->whereIn("StudentSubjectGrade", "people", $students_ids)
-			->execute();
-		$types_grades = count($types_ids) == 0 || count($students_ids) == 0 ? array() : SQLQuery::create()
-			->select("StudentSubjectEvaluationTypeGrade")
-			->whereIn("StudentSubjectEvaluationTypeGrade", "type", $types_ids)
-			->whereIn("StudentSubjectEvaluationTypeGrade", "people", $students_ids)
-			->execute();
-		$eval_grades = count($evaluations_ids) == 0 || count($students_ids) == 0 ? array() : SQLQuery::create()
-			->select("StudentSubjectEvaluationGrade")
-			->whereIn("StudentSubjectEvaluationGrade", "evaluation", $evaluations_ids)
-			->whereIn("StudentSubjectEvaluationGrade", "people", $students_ids)
-			->execute();
+		foreach ($students as $s) array_push($students_ids, $s["people_id"]);
+
+		// get students' grades
+		$final_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade","subject",$subject["id"])->whereIn("StudentSubjectGrade","people",$students_ids)->execute();
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");
+		// get all subjects and classes available to switch
+		$all_subjects = PNApplication::$instance->curriculum->getSubjects($batch["id"], $period["id"], $spe <> null ? $spe["id"] : null);
+		$all_classes = PNApplication::$instance->curriculum->getAcademicClasses($batch["id"], $period["id"], $spe <> null ? $spe["id"] : null);
 		
-		$this->addJavascript("/static/widgets/header_bar.js");
-		$this->addJavascript("/static/widgets/vertical_layout.js");
-		$this->addStylesheet("/static/transcripts/grades.css");
+		// grading systems
+		$grading_systems = include("component/transcripts/GradingSystems.inc");
+		if (isset($_COOKIE["grading_system"]))
+			$grading_system = $_COOKIE["grading_system"];
+		else {
+			$d = PNApplication::$instance->getDomainDescriptor();
+			$grading_system = $d["transcripts"]["default_grading_system"];
+		}
+		
+		require_once("component/curriculum/CurriculumJSON.inc");
+		$this->requireJavascript("grid.js");
+		$this->requireJavascript("custom_data_grid.js");
+		$this->requireJavascript("people_data_grid.js");
+		theme::css($this, "grid.css");
+		if ($edit) {
+			$this->requireJavascript("typed_field.js");
+			$this->requireJavascript("field_decimal.js");
+		}
 		?>
-		<style type='text/css'>
-		#data_list_container table {
-			border-collapse: collapse;
-			border-spacing: 0px;
-		}
-		#data_list_container th, #data_list_container td {
-			border: 1px solid black;
-			padding: 1px;
-		}
-		.subject_header_table, .subject_header_table input {
-			font-size:8pt;
-			font-family:Verdana;
-		}
-		table.subject_header_table {
-			border-collapse: collapse;
-			border-spacing: 0px;
-		}
-		.subject_header_field {
-			background-color:#FFFFFF;
-		}
-		.subject_header_field input {
-			padding: 0px;
-			margin: 0px;
-		}
-		</style>
-		<div id='page_container' style='width:100%;height:100%'>
-			<div id='subject_grades_header'>
-				<?php if ($can_edit) {?>
-					<div class='button' onclick="edit();" id='edit_button'><img src='<?php echo theme::$icons_16["edit"];?>'/> Edit</div>
-					<div class='button' onclick="save();" id='save_button' style='visibility:hidden;position:absolute'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</div>
-				<?php } ?>
-				<div class='button' onclick="location.href='/dynamic/transcripts/page/students_grades?<?php if ($class <> null) echo "class=".$class_id; else echo "period=".$period["id"];?>';">
-					<img src='<?php echo theme::$icons_16["left"];?>'/>
-					Back to general grades
-				</div>
-			</div>
-			<div id='header2'>
-				<form name='only_final_grade_selection' onsubmit='return false;'>
-				<table class='subject_header_table'>
-					<tr>
-						<td>Subject Code</td>
-						<td class='subject_header_field'><?php echo $subject["code"];?></td>
-						<td>Maximum Grade</td>
-						<td id='subject_max_grade' class='subject_header_field'></td>
-						<td>
-							<input type='radio' name='only_final_grade' value='true' disabled='disabled' onchange='grade_type_changed();'/> Give only a final grade for this subject
-						</td>
-					</tr>
-					<tr>
-						<td>Subject Name</td>
-						<td class='subject_header_field'><?php echo $subject["name"];?></td>
-						<td>Passing Grade</td>
-						<td id='subject_passing_grade' class='subject_header_field'></td>
-						<td>
-							<input type='radio' name='only_final_grade' value='false' disabled='disabled' onchange='grade_type_changed();'/> Specify evaluations, and automatically compute the final grade<br/>
-						</td>
-					</tr>
-					<tr>
-						<td>Coefficient</td>
-						<td id='subject_weight' class='subject_header_field'></td>
-						<td></td>
-						<td style=''></td>
-						<td></td>
-					</tr>
-				</table>
-				</form>
-				<div style='border-top: 1px solid #E0E0F0'>
-					<div class='button' onclick='select_students_columns(this);'><img src='/static/data_model/table_column.png'/>Select students information to display</div>
-					<?php if ($can_edit) {?>
-					<div class='button' id='new_evaluation_type_button' onclick='new_evaluation_type();' style='visibility:hidden;position:absolute;top:-10000px'>New type of evaluation</div>
-					<div class='button' id='new_evaluation_button' onclick='new_evaluation_menu(this);' style='visibility:hidden;position:absolute;top:-10000px'>New evaluation</div>
-					<div class='button' id='import_grades_button' onclick='import_grades();' style='visibility:hidden;position:absolute;top:-10000px'><img src='/static/data_import/import_excel_16.png'/> Import grades</div>
-					<?php } ?>
-				</div>
-			</div>
-			<div id='grades_container' layout='fill' style='overflow:auto'>
-				<div id='data_list_container'>
-				</div>
-			</div>
+<div style='width:100%;height:100%;display:flex;flex-direction:column;background-color:white'>
+	<div class='page_title' style='flex:none'>
+		<img src='/static/transcripts/grades_32.png'/>
+		Grades
+		<span style='margin-left:10px;font-size:12pt;font-style:italic;'>
+		<a class='black_link' onclick='selectAnotherSubject(this);return false;' id='select_subject'>
+		Subject <b style='font-weight:bold'>
+		<?php echo htmlentities($subject["code"]." - ".$subject["name"]);
+		?></b></a>
+		<?php
+		echo " (";
+		echo "Batch ".htmlentities($batch["name"]);
+		echo ", ".htmlentities($period["name"]);
+		if ($spe <> null) echo ", Specialization ".htmlentities($spe["name"]);
+		?>,
+		<a class='black_link' onclick='selectAnotherClass(this);return false;' id='select_class'>
+		<?php 
+		if ($class <> null)
+			echo "Class ".htmlentities($class["name"]);
+		else
+			echo "All classes";
+		?></a>
+		)
+		</span>
+	</div>
+	<?php if ($can_edit && !$edit && $locker <> null) {?>
+	<div style='flex:none;'>
+		<div class='info_box'>
+			<img src='<?php echo theme::$icons_16["warning"];?>' style='vertical-align:bottom'/> You cannot edit the grades of this subject because <i><b><?php echo $locker;?></b></i> is currently editing them
 		</div>
-		
-		<script type='text/javascript'>
-		function style() {
-			var e = document.getElementById("header2");
-			setBackgroundGradient(e, "vertical", [{pos:0,color:"#F0F0F0"},{pos:100,color:"#D0D0D0"}]);
-			e.style.borderBottom = "1px solid #D0D0F0";
-			setBorderRadius(e, 0, 0, 0, 0, 8, 8, 8, 8);
-			e.style.marginBottom = "5px";
-			setBoxShadow(e, 3, 3, 3, 0, "#E0E0F0");
+	</div>
+	<?php } ?>
+	<div style='flex:none;background-color:white;box-shadow: 1px 2px 5px 0px #808080;margin-bottom:5px;padding:5px'>
+		Maximum grade
+		<?php if ($edit) {?>
+		<span id='max_grade_container'></span>
+		<?php } else { ?>
+		<span style='font-family:Courier New'><?php echo $subject["max_grade"] <> null ? $subject["max_grade"] : "<i>Not specified</i>";?></span>
+		<?php } ?>
+		<span style='margin-right: 10px'></span>
+		Passing grade
+		<?php if ($edit) {?>
+		<span id='passing_grade_container'></span>
+		<?php } else { ?>
+		<span style='font-family:Courier New'><?php echo $subject["passing_grade"] <> null ? $subject["passing_grade"] : "<i>Not specified</i>";?></span>
+		<?php } ?>
+		<span style='margin-right: 10px'></span>
+		Grading system <select onchange="changeGradingSystem(this.options[this.selectedIndex].text,this.value);">
+		<?php
+		foreach($grading_systems as $name=>$spec) {
+			echo "<option value=\"".$spec."\"";
+			if ($name == $grading_system) echo " selected='selected'";
+			echo ">".htmlentities($name)."</option>";
 		}
-		style();
-		var subject_info = <?php
-			if ($subject_grading == null) echo "{id:".$subject_id.",weight:1,passing_grade:50,max_grade:100,only_final_grade:true}";
-			else {
-				echo "{";
-				echo "id:".$subject_id;
-				echo ",weight:".$subject_grading["weight"];
-				echo ",passing_grade:".$subject_grading["passing_grade"];
-				echo ",max_grade:".$subject_grading["max_grade"];
-				echo ",only_final_grade:".($subject_grading["only_final_grade"] == 1 ? "true" : "false");
-				echo "}";
-			} 
-		?>;
-		var types = [<?php
-		$first_type = true;
-		foreach ($types as &$type) {
-			if ($first_type) $first_type = false; else echo ",";
-			echo "{";
-			echo "id:".$type["id"];
-			echo ",name:".json_encode($type["name"]);
-			echo ",weight:".$type["weight"];
-			echo ",evaluations:[";
-			$first_eval = true;
-			foreach ($type["evaluations"] as $eval) {
-				if ($first_eval) $first_eval = false; else echo ",";
-				echo "{";
-				echo "id:".$eval["id"];
-				echo ",name:".json_encode($eval["name"]);
-				echo ",weight:".$eval["weight"];
-				echo ",max_grade:".$eval["max_grade"];
-				echo "}";
-			}
-			echo "]";
-			echo "}";
+		?>
+		</select>
+		<span style='margin-right: 10px'></span>
+		<input type='checkbox'
+		<?php if ($subject["only_final_grade"] == 1) echo " checked='checked'";?>
+		<?php
+		if ($edit) {
+			echo " onchange=\"if (this.checked) switchToOnlyFinalGradeMode(); else switchToEvaluationsMode();\"";
+		} else {
+			echo " disabled='disabled'";
 		} 
-		?>];
-		var students_grades = [<?php
-		$first_student = true;
-		foreach ($students_ids as $student_id) {
-			if ($first_student) $first_student = false; else echo ",";
-			echo "{";
-			echo "people:".$student_id;
-			echo ",final_grade:";
-			$found = false;
-			foreach ($final_grades as $grade)
-				if ($grade["people"] == $student_id) { echo json_encode($grade["grade"]); $found = true; break; }
-			if (!$found) echo "null";
-			echo ",types_grades:[";
-			$first_grade = true;
-			foreach ($types_grades as $grade) {
-				if ($grade["people"] <> $student_id) continue;
-				if ($first_grade) $first_grade = false; else echo ",";
-				echo "{";
-				echo "type_id:".$grade["type"];
-				echo ",grade:".json_encode($grade["grade"]);
-				echo "}";
-			}
-			echo "]";
-			echo ",eval_grades:[";
-			$first_grade = true;
-			foreach ($eval_grades as $grade) {
-				if ($grade["people"] <> $student_id) continue;
-				if ($first_grade) $first_grade = false; else echo ",";
-				echo "{";
-				echo "eval_id:".$grade["evaluation"];
-				echo ",grade:".json_encode($grade["grade"]);
-				echo "}";
-			}
-			echo "]";
-			echo "}";
-		} 
-		?>];
-		var field_subject_weight, field_subject_max_grade, field_subject_passing_grade;
-		function init_page() {
-			var header = new header_bar('subject_grades_header', 'small');
-			var title = document.createElement("SPAN");
-			title.innerHTML = "<img src='/static/transcripts/grades.gif' style='vertical-align:bottom;padding-right:3px'/>";
-			title.style.fontWeight = 'normal';
-			title.appendChild(document.createTextNode("Grades for Period "));
-			var e = document.createElement("B");
-			e.appendChild(document.createTextNode(<?php echo json_encode($period["name"]);?>));
-			title.appendChild(e);
-			<?php if ($class <> null) {?>
-			title.appendChild(document.createTextNode(", Class "));
-			var e = document.createElement("B");
-			e.appendChild(document.createTextNode(<?php echo json_encode($class["name"]);?>));
-			title.appendChild(e);
-			<?php } ?>
-			<?php if ($specialization <> null) {?>
-			title.appendChild(document.createTextNode(", Specialization "));
-			var e = document.createElement("B");
-			e.appendChild(document.createTextNode(<?php echo json_encode($specialization["name"]);?>));
-			title.appendChild(e);
-			<?php } ?>
-			title.appendChild(document.createTextNode(", Batch "));
-			var e = document.createElement("B");
-			e.appendChild(document.createTextNode(<?php echo json_encode($batch["name"]);?>));
-			title.appendChild(e);
-			header.setTitle(title);
+		?>
+		/> Enter only final grade for this subject
+	</div>
+	<div style='flex:1 1 auto;overflow:auto;background-color:white' id='grades_container'>
+	</div>
+	<div class='page_footer' style='flex:none;'>
+		<?php
+		if (!$edit && $can_edit) {
+			echo "<button class='action' onclick=\"var u = new window.URL(location.href);u.params.edit='true';location.href=u.toString();\">";
+			echo "<img src='".theme::$icons_16["edit"]."'/> Edit";
+			echo "</button>";
+		} else if ($edit) {
+			echo "<button class='action' onclick=\"window.pnapplication.cancelDataUnsaved();var u = new window.URL(location.href);delete u.params.edit;location.href=u.toString();\">";
+			echo "<img src='".theme::$icons_16["no_edit"]."'/> Cancel changes and stop editing";
+			echo "</button>";
+			echo "<button id='save_button' class='action important' onclick=\"save();\">";
+			echo "<img src='".theme::$icons_16["save"]."'/> Save";
+			echo "</button>";
+		}
+		?>
+	</div>
+</div>
+<script type='text/javascript'>
+var subject_id = <?php echo $subject["id"];?>;
+var subjects = <?php echo CurriculumJSON::SubjectsJSON($all_subjects);?>;
+var classes = <?php echo CurriculumJSON::AcademicClassesJSON($all_classes);?>;
+var students = <?php echo PeopleJSON::Peoples($students);?>;
+var only_final = <?php echo $subject["only_final_grade"] == 1 ? "true" : "false";?>;
+var original_only_final = only_final;
+var final_grades = [<?php
+$first = true; 
+foreach ($final_grades as $g) {
+	if ($first) $first = false; else echo ",";
+	echo "{";
+	echo "id:".$g["people"];
+	echo ",grade:".($g["grade"] === null ? "null" : $g["grade"]);
+	echo "}";
+}
+foreach ($students as $s) {
+	$found = false;
+	foreach ($final_grades as $g)
+		if ($g["people"] == $s["people_id"]) { $found = true; break; }
+	if (!$found) {
+		if ($first) $first = false; else echo ",";
+		echo "{";
+		echo "id:".$s["people_id"];
+		echo ",grade:null";
+		echo "}";
+	}
+}
+?>];
 
-			<?php PNApplication::$instance->widgets->create_typed_field($this, "field_subject_weight", "CurriculumSubjectGrading", "weight", "false", $subject_grading == null || $subject_grading["weight"] == null ? "1" : $subject_grading["weight"]);?>
-			document.getElementById('subject_weight').appendChild(field_subject_weight.getHTMLElement());
-			field_subject_weight.onchange.add_listener(function(f){
-				subject_info.weight = f.getCurrentData();
-			});
-			<?php PNApplication::$instance->widgets->create_typed_field($this, "field_subject_max_grade", "CurriculumSubjectGrading", "max_grade", "false", $subject_grading == null || $subject_grading["max_grade"] == null ? "100" : $subject_grading["max_grade"]);?>
-			document.getElementById('subject_max_grade').appendChild(field_subject_max_grade.getHTMLElement());
-			field_subject_max_grade.onchange.add_listener(function(f){
-				subject_info.max_grade = f.getCurrentData();
-				for (var i = 0; i < students_grades.length; ++i) {
-					students_grades[i].field_final_grade.config.max = subject_info.max_grade;
-					if (subject_info.only_final_grade) {
-						if (students_grades[i].field_final_grade.getCurrentData() > subject_info.max_grade) {
-							students_grades[i].field_final_grade.setData(subject_info.max_grade);
-							students_grades[i].final_grade = subject_info.max_grade;
-							update_grade_color(students_grades[i].td_final_grade, students_grades[i].final_grade, subject_info.passing_grade, subject_info.max_grade);
-						}
-					} else
-						calculate_all_grades();
+function getPeople(people_id) {
+	for (var i = 0; i < students.length; ++i)
+		if (students[i].id == people_id)
+			return students[i];
+	return null;
+}
+function getFinalGrade(people_id) {
+	for (var i = 0; i < final_grades.length; ++i)
+		if (final_grades[i].id == people_id)
+			return final_grades[i];
+	return null;
+}
+
+tooltip(document.getElementById('select_subject'), "Click to select another subject");
+tooltip(document.getElementById('select_class'), "Click to select another class");
+
+var grades_grid = new people_data_grid('grades_container', function(people_id) { return getPeople(people_id); }, "Student");
+grades_grid.grid.element.style.marginLeft = "5px";
+grades_grid.grid.table.parentNode.style.width = "";
+grades_grid.addPeopleProfileAction();
+
+<?php if ($edit) {?>
+pnapplication.autoDisableSaveButton(document.getElementById('save_button'));
+
+var field_max_grade = new field_decimal(<?php echo json_encode($subject["max_grade"]);?>,true,{integer_digits:3,decimal_digits:2,can_be_null:false,min:1,max:100});
+var field_passing_grade = new field_decimal(<?php echo json_encode($subject["passing_grade"]);?>,true,{integer_digits:3,decimal_digits:2,can_be_null:false,min:1,max:<?php if ($subject["max_grade"] <> null) echo $subject["max_grade"]; else echo "100";?>});
+
+field_max_grade.ondatachanged.add_listener(function() {window.pnapplication.dataUnsaved("subject_max_grade");});
+field_max_grade.ondataunchanged.add_listener(function() {window.pnapplication.dataSaved("subject_max_grade");});
+field_max_grade.onchange.add_listener(function() {
+	field_passing_grade.config.max = parseFloat(field_max_grade.getCurrentData());
+	field_passing_grade.validate();
+	// refresh final grades
+	var col_index = grades_grid.grid.getColumnIndexById('final_grade');
+	for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
+		var field = grades_grid.grid.getCellField(row, col_index);
+		field.config.max = field_passing_grade.config.max;
+		field._setData(field.getCurrentData());
+		field.validate();
+	}
+});
+document.getElementById('max_grade_container').appendChild(field_max_grade.getHTMLElement());
+field_passing_grade.ondatachanged.add_listener(function() {window.pnapplication.dataUnsaved("subject_passing_grade");});
+field_passing_grade.ondataunchanged.add_listener(function() {window.pnapplication.dataSaved("subject_passing_grade");});
+field_passing_grade.onchange.add_listener(function() {
+	// refresh final grades
+	var col_index = grades_grid.grid.getColumnIndexById('final_grade');
+	for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
+		var field = grades_grid.grid.getCellField(row, col_index);
+		field.config.passing = parseFloat(field_passing_grade.getCurrentData());
+		field._setData(field.getCurrentData());
+		field.validate();
+	}
+});
+document.getElementById('passing_grade_container').appendChild(field_passing_grade.getHTMLElement());
+<?php }?>
+
+function selectAnotherSubject(link) {
+	require("context_menu.js", function() {
+		var menu = new context_menu();
+		for (var i = 0; i < subjects.length; ++i)
+			menu.addIconItem(null, subjects[i].code+" - "+subjects[i].name, function(p) {
+				location.href = "?subject="+p.subject_id+(typeof p.class_id != 'undefined' ? "&class="+p.class_id : "");
+			}, {subject_id:subjects[i].id<?php if ($class <> null) echo ",class_id:".$class["id"];?>});
+		menu.showBelowElement(link);
+	});
+}
+function selectAnotherClass(link) {
+	require("context_menu.js", function() {
+		var menu = new context_menu();
+		for (var i = 0; i < classes.length; ++i)
+			menu.addIconItem(null, classes[i].name, function(class_id) {
+				location.href = "?subject=<?php echo $subject["id"];?>&class="+class_id;
+			}, classes[i].id);
+		menu.addIconItem(null, "All classes", function() {
+			location.href = "?subject=<?php echo $subject["id"];?>";
+		});
+		menu.showBelowElement(link);
+	});
+}
+
+function changeGradingSystem(name, system) {
+	setCookie("grading_system",name,365*24*60,"/dynamic/transcripts/page/");
+	// refresh final grades
+	var col_index = grades_grid.grid.getColumnIndexById('final_grade');
+	for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
+		var field = grades_grid.grid.getCellField(row, col_index);
+		field.setGradingSystem(system);
+	}
+}
+
+<?php if ($edit) {?>
+
+function switchToOnlyFinalGradeMode() {
+	only_final = true;
+	if (only_final != original_only_final) pnapplication.dataUnsaved("only_final"); else pnapplication.dataSaved("only_final");
+	var col = grades_grid.grid.getColumnById("final_grade");
+	col.toggleEditable();
+}
+
+function switchToEvaluationsMode() {
+	only_final = false;
+	if (only_final != original_only_final) pnapplication.dataUnsaved("only_final"); else pnapplication.dataSaved("only_final");
+	var col = grades_grid.grid.getColumnById("final_grade");
+	col.toggleEditable();
+}
+
+function finalGradeChanged(field) {
+	var people_id = field.getHTMLElement().parentNode.parentNode.row_id;
+	pnapplication.dataUnsaved("final_grade_student_"+people_id);
+	getFinalGrade(people_id).grade = field.getCurrentData();
+}
+function finalGradeUnchanged(field) {
+	var people_id = field.getHTMLElement().parentNode.parentNode.row_id;
+	pnapplication.dataSaved("final_grade_student_"+people_id);
+	getFinalGrade(people_id).grade = field.getCurrentData();
+}
+
+function save() {
+	if (field_max_grade.error != null) { alert("Please enter a valid maximum grade"); return; }
+	if (field_passing_grade.error != null) { alert("Please enter a valid passing grade"); return; }
+	var locker = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving...");
+	var save_final_grades = function() {
+		if (!pnapplication.hasDataUnsavedStartingWith("final_grade_student_")) {
+			unlock_screen(locker);
+			return;
+		}
+		var data = {subject_id:subject_id,students:[]};
+		for (var i = 0; i < final_grades.length; ++i) {
+			if (!pnapplication.hasDataUnsaved("final_grade_student_"+final_grades[i].id)) continue;
+			data.students.push({people:final_grades[i].id,final_grade:final_grades[i].grade});
+		}
+		service.json("transcripts","save_students_final_grade",data,function(res) {
+			if (res) {
+				for (var i = 0; i < final_grades.length; ++i)
+					pnapplication.dataSaved("final_grade_student_"+final_grades[i].id);
+			}
+			unlock_screen(locker);
+		});
+	};
+	var save_evaluations_grades = function() {
+		// TODO
+		unlock_screen(locker);
+	};
+	var save_grades = function() {
+		if (only_final)
+			save_final_grades();
+		else
+			save_evaluations_grades();
+	};
+	var save_subject_grading = function() {
+		if (pnapplication.isDataUnsaved("subject_max_grade") || pnapplication.isDataUnsaved("subject_passing_grade") || pnapplication.isDataUnsaved("only_final")) {
+			service.json("transcripts","save_subject_grading_info",{id:subject_id,only_final_grade:only_final,max_grade:field_max_grade.getCurrentData(),passing_grade:field_passing_grade.getCurrentData()},function(res) {
+				if (!res) {
+					unlock_screen(locker);
+					return;
 				}
+				pnapplication.dataSaved("subject_max_grade");
+				pnapplication.dataSaved("subject_passing_grade");
+				pnapplication.dataSaved("only_final");
+				save_grades();
 			});
-			<?php PNApplication::$instance->widgets->create_typed_field($this, "field_subject_passing_grade", "CurriculumSubjectGrading", "passing_grade", "false", $subject_grading == null || $subject_grading["passing_grade"] == null ? "50" : $subject_grading["passing_grade"]);?>
-			document.getElementById('subject_passing_grade').appendChild(field_subject_passing_grade.getHTMLElement());
-			field_subject_passing_grade.onchange.add_listener(function(f){
-				subject_info.passing_grade = f.getCurrentData();
-				for (var i = 0; i < students_grades.length; ++i)
-					update_grade_color(students_grades[i].td_final_grade, students_grades[i].final_grade, subject_info.passing_grade, subject_info.max_grade);
-			});
-
-			custom_data_list.init('data_list_container');
-			custom_data_list.select_field('Personal Information', 'First Name', true, customize_student_header);
-			custom_data_list.select_field('Personal Information', 'Last Name', true, customize_student_header);
-			<?php if (count($classes) > 1) {?>
-			custom_data_list.select_field('Student', 'Class', true, customize_student_header);
-			<?php } ?>
-			
-			var only_final_grade = document.forms['only_final_grade_selection'].elements['only_final_grade'];
-			if (subject_info.only_final_grade) {
-				only_final_grade.value = 'true';
-				show_only_final_grades();
-			} else {
-				only_final_grade.value = 'false';
-				show_evaluations();
-			}
-
-			new vertical_layout('page_container');
+			return;
 		}
-		function customize_student_header(th) {
-			th.className = "grades_student_info_header";
-		}
-		init_page();
+		save_grades();
+	}
+	save_subject_grading();
+}
 
-		function select_students_columns(button) {
-			var div = document.createElement("DIV");
-			for (var i = 0; i < custom_data_list.fields_from_request.length; ++i) {
-				var f = custom_data_list.fields_from_request[i];
-				var cb = document.createElement("INPUT");
-				cb.type = 'checkbox';
-				cb.checked = custom_data_list.selected_fields_from_request.contains(i) ? 'checked' : '';
-				cb.f = f;
-				cb.onchange = function() {
-					custom_data_list.select_field(this.f.category, this.f.name, this.checked, customize_student_header);
-				};
-				div.appendChild(cb);
-				div.appendChild(document.createTextNode(f.name));
-				div.appendChild(document.createElement("BR"));
-			}
-			require("context_menu.js",function() {
-				var menu = new context_menu();
-				menu.addItem(div, true);
-				menu.showBelowElement(button);
-			});
-		}
+<?php } ?> // if editable mode
 
-		var edit_mode = false;
-		function edit() {
-			edit_mode = true;
-			// subject info
-			field_subject_weight.setEditable(true);
-			field_subject_max_grade.setEditable(true);
-			field_subject_passing_grade.setEditable(true);
-			var radios = document.forms['only_final_grade_selection'].elements['only_final_grade'];
-			for (var i = 0; i < radios.length; ++i)
-				radios[i].disabled = '';
+// init grid
 
-			if (!subject_info.only_final_grade)
-				show_evaluations();
-			else
-				show_only_final_grades();
-			
-			var button = document.getElementById('edit_button');
-			button.innerHTML = "<img src='"+theme.icons_16.no_edit+"'/> Cancel";
-			button.onclick = function() { location.reload(); };
-			button = document.getElementById('save_button');
-			button.style.visibility = 'visible';
-			button.style.position = 'static';
+grades_grid.addColumn(new CustomDataGridColumn(new GridColumn("final_grade","Final Grade", 43, "center", "field_grade",<?php echo $edit && $subject["only_final_grade"] == 1 ? "true" : "false";?>,<?php echo $edit ? "finalGradeChanged" : "null";?>,<?php echo $edit ? "finalGradeUnchanged" : "null";?>,{max:<?php echo json_encode($subject["max_grade"]);?>,passing:<?php echo json_encode($subject["passing_grade"]);?>,system:<?php echo json_encode($grading_systems[$grading_system]);?>}), function(people_id){ return getFinalGrade(people_id).grade; }, true));
 
-			require(["upload.js","popup_window.js"],function() {
-				button = document.getElementById("import_grades_button");
-				button.style.visibility = 'visible';
-				button.style.position = 'static';
-			});			
-		}
-		function save() {
-			var locker = lock_screen(null, "Saving subject information");
-			service.json("transcripts","save_subject_grading_info",subject_info,function(res){
-				if (!res) { unlock_screen(locker); return; }
-				if (subject_info.only_final_grade) {
-					set_lock_screen_content(locker, "Saving students' grades");
-					var students = [];
-					for (var i = 0; i < students_grades.length; ++i) {
-						var s = {
-							people:students_grades[i].people,
-							final_grade:students_grades[i].final_grade
-						};
-						students.push(s);
-					}
-					service.json("transcripts","save_students_final_grade",{subject_id:subject_info.id,students:students},function(res){
-						if (!res) { unlock_screen(locker); return; }
-						set_lock_screen_content(locker, "Grades successfully saved<br/>Reloading data...");
-						location.reload();
-					});
-				} else {
-					set_lock_screen_content(locker, "Saving evaluations");
-					service.json("transcripts","save_subject_evaluations",{subject_id:subject_info.id, types:types},function(res){
-						if (!res) { unlock_screen(locker); return; }
-						// update ids in types, evaluations and students_grades
-						for (var i = 0; i < types.length; ++i) {
-							if (types[i].id < 0) {
-								for (var j = 0; j < res.types.length; ++j)
-									if (res.types[j].input_id == types[i].id) {
-										types[i].id = res.types[j].output_id;
-										for (var k = 0; k < students_grades.length; ++k) {
-											for (var l = 0; l < students_grades[k].types_grades.length; ++l) {
-												if (students_grades[k].types_grades[l].type_id == res.types[j].input_id) {
-													students_grades[k].types_grades[l].type_id = res.types[j].output_id;
-													break;
-												}
-											}
-										}
-										break;
-									}
-							}
-							for (var j = 0; j < types[i].evaluations.length; ++j) {
-								if (types[i].evaluations[j].id < 0) {
-									for (var k = 0; k < res.evaluations.length; ++k) {
-										if (res.evaluations[k].input_id == types[i].evaluations[j].id) {
-											types[i].evaluations[j].id = res.evaluations[k].output_id;
-											for (var l = 0; l < students_grades.length; ++l) {
-												for (var m = 0; m < students_grades[l].eval_grades.length; ++m) {
-													if (students_grades[l].eval_grades[m].eval_id == res.evaluations[k].input_id) {
-														students_grades[l].eval_grades[m].eval_id = res.evaluations[k].output_id;
-														break;
-													}
-												}
-											}
-											break;
-										}
-									}
-								}
-							}
-						}
-						// save students grades
-						set_lock_screen_content(locker, "Saving students' grades");
-						var students = [];
-						for (var i = 0; i < students_grades.length; ++i) {
-							var s = {
-								people:students_grades[i].people,
-								grades: []
-							};
-							for (var j = 0; j < students_grades[i].eval_grades.length; ++j)
-								s.grades.push({evaluation:students_grades[i].eval_grades[j].eval_id, grade: students_grades[i].eval_grades[j].grade});
-							students.push(s);
-						}
-						service.json("transcripts","save_students_evaluations_grades",{subject_id:subject_info.id,students:students},function(res){
-							if (!res) { unlock_screen(locker); return; }
-							set_lock_screen_content(locker, "Grades successfully saved<br/>Reloading data...");
-							location.reload();
-						});
-					});
-				} 
-			});
-		}
+for (var i = 0; i < students.length; ++i)
+	grades_grid.addObject(students[i].id);
 
-		function grade_type_changed() {
-			var grade_type = document.forms['only_final_grade_selection'].elements['only_final_grade'].value;
-			if (grade_type == 'true') {
-				subject_info.only_final_grade = true;
-				show_only_final_grades();
-			} else {
-				// remove all final grades
-				for (var i = 0; i < students_grades.length; ++i)
-					students_grades[i].final_grade = null; 
-				subject_info.only_final_grade = false;
-				show_evaluations();
-			}
-		}
-		
-		function update_grade_color(element, grade, passing, max) {
-			if (grade == null)
-				element.style.backgroundColor = "#C0C0C0";
-			else if (grade < passing)
-				element.style.backgroundColor = "#FF4040";
-			else if (grade < passing+(max-passing)/5) // until than 20% above passing grade
-				element.style.backgroundColor = "#FFA040";
-			else
-				element.style.backgroundColor = "#40FF40";
-		}
-
-		function show_only_final_grades() {
-			if (edit_mode) {
-				var e = document.getElementById('new_evaluation_type_button');
-				e.style.visibility = 'hidden';
-				e.style.position = 'absolute';
-				e = document.getElementById('new_evaluation_button');
-				e.style.visibility = 'hidden';
-				e.style.position = 'absolute';
-			}
-			custom_data_list.resetColumns();
-			custom_data_list.addColumn("final_grade","Final Grade",function(td,index) {
-				var grade = students_grades[index].final_grade;
-				<?php PNApplication::$instance->widgets->create_typed_field($this, "students_grades[index].field_final_grade", "StudentSubjectGrade", "grade", "edit_mode", "grade");?>
-				td.appendChild(students_grades[index].field_final_grade.getHTMLElement());
-				td.style.textAlign = 'right';
-				students_grades[index].td_final_grade = td;
-				update_grade_color(td, grade, subject_info.passing_grade, subject_info.max_grade);				
-				students_grades[index].field_final_grade.onchange.add_listener(function(){
-					students_grades[index].final_grade = students_grades[index].field_final_grade.getCurrentData();
-					update_grade_color(td, students_grades[index].final_grade, subject_info.passing_grade, subject_info.max_grade);
-				});
-			},null,function(th){
-				th.className = "grades_total_header";
-			});
-		}
-		function show_evaluations() {
-			if (edit_mode) {
-				var e = document.getElementById('new_evaluation_type_button');
-				e.style.visibility = 'visible';
-				e.style.position = 'static';
-				e = document.getElementById('new_evaluation_button');
-				e.style.visibility = 'visible';
-				e.style.position = 'static';
-			}
-			custom_data_list.resetColumns();
-			custom_data_list.addColumn("final_grade","Final<br/>Grade",function(td,index) {
-				var grade = students_grades[index].final_grade;
-				<?php PNApplication::$instance->widgets->create_typed_field($this, "students_grades[index].field_final_grade", "StudentSubjectGrade", "grade", "false", "grade");?>
-				td.appendChild(students_grades[index].field_final_grade.getHTMLElement());
-				td.style.textAlign = 'right';
-				td.style.fontWeight = "bold";
-				update_grade_color(td, grade, subject_info.passing_grade, subject_info.max_grade);
-				students_grades[index].td_final_grade = td;
-			},null,function(th){
-				th.className = "grades_total_header";
-			});
-			for (var i = 0; i < types.length; ++i) {
-				var type = types[i];
-				add_type_column(type);
-				for (var j = 0; j < type.evaluations.length; ++j)
-					add_eval_column(type, type.evaluations[j]);
-			}
-			calculate_all_grades();
-		}
-		var col_id_counter = 0;
-		function add_type_column(type) {
-			if (!type.col_id)
-				type.col_id = ++col_id_counter;
-
-			var name_node = document.createTextNode(type.name);
-			var coef_node = document.createTextNode(type.weight);
-			
-			var div = document.createElement("DIV");
-			div.appendChild(name_node);
-			if (edit_mode) {
-				var menu_icon = document.createElement("IMG");
-				menu_icon.className = "button";
-				menu_icon.style.padding = "0px";
-				menu_icon.src = theme.icons_10.arrow_down_context_menu;
-				menu_icon.style.verticalAlign = "bottom";
-				menu_icon.onclick = function() {
-					require("context_menu.js", function() {
-						var menu = new context_menu();
-						menu.addIconItem(theme.icons_16.edit, "Edit", function() {
-							edit_evaluation_type(type, function() {
-								name_node.nodeValue = type.name;
-								coef_node.nodeValue = type.weight;
-								calculate_all_grades();
-							});
-						});
-						menu.addIconItem(theme.icons_16.remove, "Remove", function() {
-							confirm_dialog("Are you sure to remove the evaluation type '"+type.name+"', and all its content (evaluations and grades) ?",function(yes) {
-								if (yes) {
-									alert('Remove not yet done');
-									//types.remove(type);
-									//custom_data_list.removeColumn(type.col_id); // TODO does not work
-								}
-							});
-						});
-						menu.addSeparator();
-						menu.addIconItem(theme.icons_16.add, "Create a new evaluation", function() {
-							new_evaluation(type);
-						});
-						menu.showBelowElement(menu_icon);
-					});
-				};
-				div.appendChild(menu_icon);
-			}
-			div.appendChild(document.createElement("BR"));
-			var span = document.createElement("SPAN");
-			span.style.fontWeight = "normal";
-			span.appendChild(document.createTextNode("Coefficient "));
-			span.appendChild(coef_node);
-			div.appendChild(span);
-
-			custom_data_list.addColumn("col_"+type.col_id, div, function(td,index){
-			},"final_grade",function(th){
-				th.className = "grades_category_header";
-			});
-			custom_data_list.addSubColumn("col_"+type.col_id, "col_"+type.col_id+"_total", "Total<br/>(%)", function(td,index) {
-				var tg = null;
-				for (var i = 0; i < students_grades[index].types_grades.length; ++i)
-					if (students_grades[index].types_grades[i].type_id == type.id) { tg = students_grades[index].types_grades[i]; break; }
-				if (tg == null) {
-					tg = {type_id:type.id,grade:null};
-					students_grades[index].types_grades.push(tg);
-				}
-				<?php PNApplication::$instance->widgets->create_typed_field($this, "tg.field", "StudentSubjectEvaluationTypeGrade", "grade", "false", "tg.grade");?>
-				td.appendChild(tg.field.getHTMLElement());
-				td.style.fontWeight = "bold";
-				update_grade_color(td, tg.grade, subject_info.passing_grade, subject_info.max_grade);
-				tg.td = td;
-				td.style.textAlign = 'right';
-			},null,function(th){
-				th.className = "grades_total_header";
-			});
-		}
-		function add_eval_column(type, eval) {
-			if (!eval.col_id) eval.col_id = ++col_id_counter;
-
-			var name_node = document.createTextNode(eval.name);
-			var weight_node = document.createTextNode(eval.weight);
-			var max_grade_node = document.createTextNode(eval.max_grade);
-			
-			var div = document.createElement("DIV");
-			div.appendChild(name_node);
-			
-			if (edit_mode) {
-				var menu_icon = document.createElement("IMG");
-				menu_icon.className = "button";
-				menu_icon.style.padding = "0px";
-				menu_icon.src = theme.icons_10.arrow_down_context_menu;
-				menu_icon.style.verticalAlign = "bottom";
-				menu_icon.onclick = function() {
-					require("context_menu.js", function() {
-						var menu = new context_menu();
-						menu.addIconItem(theme.icons_16.edit, "Edit", function() {
-							edit_evaluation(eval, function() {
-								name_node.nodeValue = eval.name;
-								weight_node.nodeValue = eval.weight;
-								max_grade_node.nodeValue = eval.max_grade;
-								calculate_all_grades();
-							});
-						});
-						menu.addIconItem(theme.icons_16.remove, "Remove", function() {
-							confirm_dialog("Are you sure to remove the evaluation type '"+type.name+"', and all its content (evaluations and grades) ?",function(yes) {
-								if (yes) {
-									// TODO
-									alert('Remove not yet done');
-								}
-							});
-						});
-						menu.showBelowElement(menu_icon);
-					});
-				};
-				div.appendChild(menu_icon);
-			}
-
-			var sub_div = document.createElement("DIV");
-			sub_div.style.fontWeight = "normal";
-			div.appendChild(sub_div);
-			sub_div.appendChild(document.createTextNode("Coef "));
-			sub_div.appendChild(weight_node);
-			sub_div.appendChild(document.createElement("BR"));
-			sub_div.appendChild(document.createTextNode("Max "));
-			sub_div.appendChild(max_grade_node);
-			
-			custom_data_list.addSubColumn("col_"+type.col_id, "col_"+eval.col_id, div, function(td,index) {
-				var eg = null;
-				for (var i = 0; i < students_grades[index].eval_grades.length; ++i)
-					if (students_grades[index].eval_grades[i].eval_id == eval.id) { eg = students_grades[index].eval_grades[i]; break; }
-				if (eg == null) {
-					eg = {eval_id:eval.id,grade:null};
-					students_grades[index].eval_grades.push(eg);
-				}
-				<?php PNApplication::$instance->widgets->create_typed_field($this, "eg.field", "StudentSubjectEvaluationGrade", "grade", "edit_mode", "eg.grade");?>
-				td.appendChild(eg.field.getHTMLElement());
-				td.style.textAlign = 'right';
-				update_grade_color(td, eg.grade, subject_info.passing_grade * eval.max_grade / subject_info.max_grade, eval.max_grade);
-				eg.field.onchange.add_listener(function(f){
-					eg.grade = f.getCurrentData();
-					update_grade_color(td, eg.grade, subject_info.passing_grade*eval.max_grade/subject_info.max_grade, eval.max_grade);
-					calculate_grades(students_grades[index]);
-				});
-				calculate_grades(students_grades[index]);
-			}, "col_"+type.col_id+"_total",function(th){
-				th.className = "grades_sub_category_header";
-			});
-		}
-
-		function calculate_all_grades() {
-			for (var i = 0; i < students_grades.length; ++i)
-				calculate_grades(students_grades[i]);
-		}
-		function calculate_grades(student) {
-			var final_total = 0;
-			var final_weights = 0;
-			for (var i = 0; i < types.length; ++i) {
-				var tg = null;
-				for (var j = 0; j < student.types_grades.length; ++j)
-					if (student.types_grades[j].type_id == types[i].id) { tg = student.types_grades[j]; break; }
-				if (tg == null) {
-					tg = {type_id:types[i].id,grade:null};
-					student.types_grades.push(tg);
-				}
-				var total = 0;
-				var weights = 0;
-				for (var j = 0; j < types[i].evaluations.length; ++j) {
-					var eg = null;
-					for (var k = 0; k < student.eval_grades.length; ++k)
-						if (student.eval_grades[k].eval_id == types[i].evaluations[j].id) { eg = student.eval_grades[k]; break; }
-					if (eg == null) {
-						eg = {eval_id:types[i].evaluations[j].id, grade:null};
-						student.eval_grades.push(eg);
-					}
-					if (eg.grade == null) { total = null; break; }
-					total += eg.grade * 100 / types[i].evaluations[j].max_grade * types[i].evaluations[j].weight;
-					weights += types[i].evaluations[j].weight;
-				}
-				if (weights == 0) total = null;
-				if (total == null) {
-					final_total = null;
-					tg.grade = null;
-				} else {
-					tg.grade = total * subject_info.max_grade / 100 / weights;
-					if (tg.field)
-						tg.field.setData(tg.grade);
-					if (tg.td)
-						update_grade_color(tg.td, tg.grade, subject_info.passing_grade, subject_info.max_grade);
-					if (final_total != null) {
-						final_total += tg.grade * types[i].weight;
-						final_weights += types[i].weight;
-					}
-				}
-			}
-			if (final_weights == 0) final_total = null;
-			if (final_total != null) {
-				final_total /= final_weights;
-				student.final_grade = final_total;
-				if (student.field_final_grade)
-					student.field_final_grade.setData(student.final_grade);
-			} else {
-				student.final_grade = null;
-				if (student.field_final_grade)
-					student.field_final_grade.setData(null);
-			}
-			if (student.td_final_grade)
-				update_grade_color(student.td_final_grade, student.final_grade, subject_info.passing_grade, subject_info.max_grade);
-		}
-
-		var type_id_counter = -1, eval_id_counter = -1;
-		function edit_evaluation_type(type, onok) {
-			require("popup_window.js",function() {
-				var table = document.createElement("TABLE");
-				var tr_error = document.createElement("TR"); table.appendChild(tr_error);
-				var td_error = document.createElement("TD"); tr_error.appendChild(td_error);
-				td_error.colSpan = 2;
-				tr_error.style.visibility = "hidden";
-				tr_error.style.position = "absolute";
-				var tr, td;
-				table.appendChild(tr = document.createElement("TR"));
-				tr.appendChild(td = document.createElement("TD"));
-				td.innerHTML = "Name";
-				tr.appendChild(td = document.createElement("TD"));
-				var input_name = document.createElement("INPUT"); td.appendChild(input_name);
-				input_name.maxLength = 100;
-				input_name.value = type.name;
-				table.appendChild(tr = document.createElement("TR"));
-				tr.appendChild(td = document.createElement("TD"));
-				td.innerHTML = "Coefficient";
-				tr.appendChild(td = document.createElement("TD"));
-				var input_weight = document.createElement("INPUT"); td.appendChild(input_weight);
-				input_weight.maxLength = 100;
-				input_weight.value = type.weight;
-				var popup = new popup_window("Evaluation Type", null, table, false);
-				popup.addOkCancelButtons(function() {
-					var error = null;
-					var name = input_name.value;
-					name = name.trim();
-					if (name.length == 0) error = "Please enter a name";
-					else {
-						for (var i = 0; i < types.length; ++i) {
-							if (types[i].name.toLowerCase() == name.toLowerCase() && types[i].id != type.id) {
-								error = "A type of evaluation already exists with this name";
-								break;
-							}
-						}
-					}
-					var weight = input_weight.value.trim();
-					if (!error) {
-						if (weight.length == 0) error = "Please enter a coefficient";
-						else {
-							weight = parseInt(weight);
-							if (isNaN(weight) || weight <= 0) error = "Invalid coefficient";
-						}
-					}
-					if (!error) {
-						type.name = name;
-						type.weight = weight;
-						popup.close();
-						onok();
-						return;
-					}
-					tr_error.style.visibility = "visible";
-					tr_error.style.position = "static";
-					td_error.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
-					td_error.style.color = 'red';
-				});
-				popup.show();
-			});
-		}
-		function new_evaluation_type() {
-			var type = {id:type_id_counter--,name:"",weight:"",evaluations:[]};
-			edit_evaluation_type(type, function() {
-				types.push(type);
-				add_type_column(type);
-			});
-		}
-		function edit_evaluation(eval, onok) {
-			require("popup_window.js",function() {
-				var table = document.createElement("TABLE");
-				var tr_error = document.createElement("TR"); table.appendChild(tr_error);
-				var td_error = document.createElement("TD"); tr_error.appendChild(td_error);
-				td_error.colSpan = 2;
-				tr_error.style.visibility = "hidden";
-				tr_error.style.position = "absolute";
-				var tr, td;
-				table.appendChild(tr = document.createElement("TR"));
-				tr.appendChild(td = document.createElement("TD"));
-				td.innerHTML = "Name";
-				tr.appendChild(td = document.createElement("TD"));
-				var input_name = document.createElement("INPUT"); td.appendChild(input_name);
-				input_name.maxLength = 100;
-				input_name.value = eval.name;
-
-				table.appendChild(tr = document.createElement("TR"));
-				tr.appendChild(td = document.createElement("TD"));
-				td.innerHTML = "Coefficient";
-				tr.appendChild(td = document.createElement("TD"));
-				var input_weight = document.createElement("INPUT"); td.appendChild(input_weight);
-				input_weight.maxLength = 100;
-				input_weight.value = eval.weight;
-
-				table.appendChild(tr = document.createElement("TR"));
-				tr.appendChild(td = document.createElement("TD"));
-				td.innerHTML = "Maximum Grade";
-				tr.appendChild(td = document.createElement("TD"));
-				var input_max_grade = document.createElement("INPUT"); td.appendChild(input_max_grade);
-				input_max_grade.maxLength = 100;
-				input_max_grade.value = eval.max_grade;
-
-				var popup = new popup_window("Evaluation", null, table, false);
-				popup.addOkCancelButtons(function() {
-					var error = null;
-					var name = input_name.value;
-					name = name.trim();
-					if (name.length == 0) error = "Please enter a name";
-					var weight = input_weight.value.trim();
-					if (!error) {
-						if (weight.length == 0) error = "Please enter a coefficient";
-						else {
-							weight = parseInt(weight);
-							if (isNaN(weight) || weight <= 0) error = "Invalid coefficient";
-						}
-					}
-					var max_grade = input_max_grade.value.trim();
-					if (!error) {
-						if (max_grade.length == 0) error = "Please enter a maximum grade";
-						else {
-							max_grade = parseInt(max_grade);
-							if (isNaN(max_grade) || max_grade <= 0) error = "Invalid maximum grade";
-						}
-					}
-					if (!error) {
-						eval.name = name;
-						eval.weight = weight;
-						eval.max_grade = max_grade;
-						popup.close();
-						onok();
-						return;
-					}
-					tr_error.style.visibility = "visible";
-					tr_error.style.position = "static";
-					td_error.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
-					td_error.style.color = 'red';
-				});
-				popup.show();
-			});
-		}
-		function new_evaluation(type) {
-			var eval = {id:eval_id_counter--,name:"",weight:1,max_grade:100};
-			edit_evaluation(eval, function() {
-				type.evaluations.push(eval);
-				add_eval_column(type,eval);			
-			});
-		}
-
-		function import_grades() {
-			require("people_objects.js");
-			var excel_frame = null;
-			var peoples = null;
-			var javascript_ready = false;
-			var ready = function() {
-				if (!excel_frame) return;
-				if (!peoples) return;
-				if (!javascript_ready) return;
-				var excel_container = excel_frame.document.getElementById('excel_container');
-				excel_frame.document.body.removeAllChildren();
-				var container = excel_frame.document.createElement("DIV");
-				container.style.width = "100%";
-				container.style.height = "100%";
-				excel_frame.document.body.appendChild(container);
-				var wiz = new wizard_simple(container);
-				require("splitter_vertical.js");
-				match_people_in_excel(peoples, excel_frame, excel_container, wiz, function(matched_peoples, sheet_index) {
-					wiz.resetContent();
-					wiz.resetButtons();
-					wiz.setTitle("/static/transcripts/grades_32.gif", "Select a column in the Excel file, and import the grades from this column");
-					var split = document.createElement("DIV");
-					var right = document.createElement("DIV");
-					split.appendChild(excel_container);
-					split.appendChild(right);
-					wiz.setContent(split);
-					require("splitter_vertical.js",function() {
-						new splitter_vertical(split, 0.5);
-					});
-					right.style.overflow = "auto";
-					// keep only the sheet containing the names, and so the grades
-					for (var i = 0; i < sheet_index; ++i) excel_frame.excel.removeSheet(0);
-					while (excel_frame.excel.sheets.length > 1) excel_frame.excel.removeSheet(1);
-					var sheet = excel_frame.excel.sheets[0];
-					// keep only the rows containing the names
-					var first_row = sheet.rows.length;
-					var last_row = -1;
-					for (var i = 0; i < matched_peoples.length; ++i) {
-						if (matched_peoples[i].row < first_row) first_row = matched_peoples[i].row; 
-						if (matched_peoples[i].row > last_row) last_row = matched_peoples[i].row; 
-					}
-					// put the grades that can be imported
-					var table = document.createElement("TABLE"); right.appendChild(table);
-					table.className = 'all_borders';
-					var tbody = document.createElement("TBODY"); table.appendChild(tbody);
-					var tr, td;
-					var import_grades = function(col) {
-						var sel = sheet.getSelection();
-						if (sel == null) return;
-						for (var i = 0; i < matched_peoples.length; ++i) {
-							tr = tbody.childNodes[2+i];
-							td = tr.childNodes[col];
-							var cell = sheet.getCell(sel.start_col,matched_peoples[i].row);
-							if (cell != null)
-								td.innerHTML = cell.getValue();
-						}
-					};
-					tbody.appendChild(tr = document.createElement("TR"));
-					tr.appendChild(td = document.createElement("TH"));
-					td.style.verticalAlign = "bottom";
-					td.rowSpan = 2;
-					td.innerHTML = "First Name";
-					tr.appendChild(td = document.createElement("TH"));
-					td.style.verticalAlign = "bottom";
-					td.rowSpan = 2;
-					td.innerHTML = "Last Name";
-					if (subject_info.only_final_grade) {
-						tr.appendChild(td = document.createElement("TH"));
-						td.style.verticalAlign = "bottom";
-						td.innerHTML = "Final Grade";
-						tbody.appendChild(tr = document.createElement("TR"));
-						tr.appendChild(td = document.createElement("TD"));
-						td.style.textAlign = "center";
-						var button = document.createElement("IMG");
-						button.src = theme.icons_16._import;
-						button.className = "button";
-						button.onclick = function() {
-							import_grades(2);
-						};
-						td.appendChild(button);
-					} else {
-						// TODO
-					}
-					for (var i = 0; i < matched_peoples.length; ++i) {
-						tbody.appendChild(tr = document.createElement("TR"));
-						tr.appendChild(td = document.createElement("TD"));
-						td.appendChild(document.createTextNode(matched_peoples[i].first_name));
-						tr.appendChild(td = document.createElement("TD"));
-						td.appendChild(document.createTextNode(matched_peoples[i].last_name));
-						if (subject_info.only_final_grade) {
-							tr.appendChild(td = document.createElement("TD"));
-						} else {
-							// TODO
-						}
-					}
-					layout.invalidate(split);
-				});
-			};
-			require(["match_people_in_excel.js","wizard_simple.js"], function() { javascript_ready = true; ready(); });
-			upload_temp_file_now(function (temp_id) {
-				var popup = new popup_window("Import Grades", "/static/data_import/import_excel_16.png", "");
-				popup.setContentFrame("/dynamic/data_import/page/excel_upload?id="+temp_id);
-				popup.showPercent(90,90);
-				popup.freeze("Opening Excel file...");
-				var check = function() {
-					var w = getIFrameWindow(popup.content);
-					if (!w.excel || !w.excel.tabs) {
-						if (w.page_errors) {
-							popup.unfreeze();
-							return;
-						}
-						setTimeout(check, 100);
-						return;
-					}
-					popup.unfreeze();
-					excel_frame = w;
-					ready();
-				};
-				setTimeout(check, 100);
-				require("people_objects.js",function() {
-					var list = [];
-					for (var i = 0; i < students_grades.length; ++i) {
-						var people_id = students_grades[i].people;
-						var row_index = custom_data_list.getDataIndex("People", people_id);
-						var first_name = custom_data_list.getData(row_index, "Personal Information", "First Name");
-						var last_name = custom_data_list.getData(row_index, "Personal Information", "Last Name");
-						var middle_name = custom_data_list.getData(row_index, "Personal Information", "Middle Name");
-						var people = new People(people_id, first_name, last_name, middle_name);
-						list.push(people);
-					}
-					peoples = list;
-					ready();
-				});
-			});
-		}
-		</script>
+</script>
 		<?php 
 	}
 	

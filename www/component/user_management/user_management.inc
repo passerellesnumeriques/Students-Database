@@ -11,7 +11,9 @@ class user_management extends Component {
 	public $auth_token = null;
 	/** @var integer ID of the user logged in */
 	public $user_id;
-
+	/** @var integer people ID of the user logged in */
+	public $people_id;
+	
 	/** @var Event raised when a user logged in */
 	public $logged_in;
 	/** @var Event raised when the user logout */
@@ -27,8 +29,12 @@ class user_management extends Component {
 	
 	public function getPluginImplementations() {
 		require_once("UserManagementAdministrationPlugin.inc");
+		require_once("UserPeopleTypePlugin.inc");
+		require_once("UserPeopleProfilePagePlugin.inc");
 		return array(
-			new UserManagementAdministartionPlugin()
+			new UserManagementAdministartionPlugin(),
+			new UserPeopleTypePlugin(),
+			new UserPeopleProfilePagePlugin()
 		);
 	}
 
@@ -41,11 +47,22 @@ class user_management extends Component {
 	 */
 	public function login($domain, $username, $password) {
 		if ($this->username <> null) return "You are already authenticated as ".$username;
-		$auth = PNApplication::$instance->authentication->getAuthenticationSystem($domain);
-		if ($auth == null) return "Domain not implemented";
-		$error = "";
-		$this->auth_token = $auth->authenticate($username, $password, $error);
-		if ($this->auth_token === null) return $error;
+		// check first if this is an internal user
+		$internal_user = null;
+		if ($domain == PNApplication::$instance->local_domain) {
+			$internal_user = SQLQuery::create()->bypassSecurity()->select("InternalUser")->whereValue("InternalUser", "username", $username)->executeSingleRow();
+			if ($internal_user <> null) {
+				if ($internal_user["password"] <> sha1($password)) return "Invalid username or password";
+				$this->auth_token = "";
+			}
+		}
+		if ($internal_user == null) {
+			$auth = PNApplication::$instance->authentication->getAuthenticationSystem($domain);
+			if ($auth == null) return "Domain not implemented";
+			$error = "";
+			$this->auth_token = $auth->authenticate($username, $password, $error);
+			if ($this->auth_token === null) return $error;
+		}
 		$user = SQLQuery::create()->bypassSecurity()->select("Users")->where("domain",$domain)->where("username",$username)->executeSingleRow();
 		if ($user == null) {
 			// the user does not exist yet in the database, but exists on the authentication system
@@ -55,6 +72,23 @@ class user_management extends Component {
 		$this->domain = $domain;
 		$this->username = $username;
 		$this->user_id = $user["id"];
+		
+		// get people information
+		$q = SQLQuery::create()
+			->bypassSecurity() // here we just get name of the user, no need to check if he can see it
+			->database("students_".$this->domain)
+			->select("UserPeople")
+			->where("user",$this->user_id)
+			;
+		$people = $q->executeSingleRow();
+		if ($people <> null) {
+			if ($this->domain == PNApplication::$instance->current_domain)
+				$this->people_id = $people["people"];
+		} else if ($this->domain == PNApplication::$instance->local_domain) {
+			// we have a local user without a People
+			$this->people_id = -1;
+		}
+		
 		$this->logged_in->fire();
 		return null;
 	}
@@ -88,6 +122,21 @@ class user_management extends Component {
 		$this->user_id = null;
 		$this->rights = array();
 		$this->is_admin = array();
+	}
+	
+	public function createInternalUser($username, $password) {
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+		$res = $db->execute("INSERT INTO `InternalUser` (`username`,`password`) VALUES ('".$db->escapeString($username)."',SHA1('".$db->escapeString($password)."'))");
+		if ($res === false) {
+			PNApplication::error("Error creating internal user ".$username.": ".$db->getLastErrorMessage());
+			return null;
+		}
+		$user_id = $this->create_user(PNApplication::$instance->local_domain, $username, true);
+		if ($user_id == null) {
+			$db->execute("DELETE FROM `InternalUser` WHERE `username`='".$db->escapeString($username)."'");
+			return null;
+		}
+		return $user_id;
 	}
 	
 	public function create_user($domain, $username, $bypass_security = false) {
@@ -179,13 +228,16 @@ class user_management extends Component {
 		return true;
 	}
 	
-	public function create_role($name, $bypass_security = false) {
-		try { return SQLQuery::create()->bypassSecurity($bypass_security)->insert("Role",array("name"=>$name)); }
+	public function create_role($name, $bypass_security = false, $builtin = false) {
+		try { return SQLQuery::create()->bypassSecurity($bypass_security)->insert("Role",array("name"=>$name,"builtin"=>$builtin)); }
 		catch (Exception $e) { PNApplication::error($e->getMessage()); return null; }
 	}
-	public function remove_role($role_id) {
-		try { SQLQuery::create()->removeKey("Role", $role_id); return true; }
+	public function remove_role($role_id, $bypass_security = false) {
+		try { SQLQuery::create()->bypassSecurity($bypass_security)->removeKey("Role", $role_id); return true; }
 		catch (Exception $e) { PNApplication::error($e->getMessage()); return false; }
+	}
+	public function get_role_id_from_name($role_name, $bypass_security = false) {
+		return SQLQuery::create()->bypassSecurity($bypass_security)->select("Role")->whereValue("Role","name",$role_name)->field("id")->executeSingleValue();
 	}
 	
 	public function set_role_rights($role_id, $rights) {
@@ -368,6 +420,57 @@ class user_management extends Component {
 	
 	public function joinUser(&$q, $from_table, $from_key) {
 		$q->join($from_table, "Users", array($from_key=>"id"));
+	}
+	
+	public function get_user_from_people($people_id) {
+		$r = SQLQuery::create()->select("UserPeople")->field("user")->where("people",$people_id)->executeSingleRow();
+		if ($r <> null)
+			return $r["user"];
+		return null;
+	}
+	public function get_people_from_user($user_id) {
+		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->executeSingleValue();
+	}
+	
+	public function isPeopleUser($people_id) { return $this->get_user_from_people($people_id) <> null; }
+	
+	public function joinPeopleToUsers(&$q) {
+		$users_alias = $q->getTableAlias("Users");
+		$q->join($users_alias, "UserPeople", array("id"=>"user"));
+		PNApplication::$instance->people->joinPeople($q, "UserPeople","people");
+	}
+	public function joinUserToPeople(&$q) {
+		$people_alias = $q->getTableAlias("People");
+		$q->join($people_alias, "UserPeople", array("id"=>"people"));
+		$this->joinUser($q, "UserPeople", "user");
+	}
+	
+	public function assignDefaultRoles($user_id, $people_id) {
+		SQLQuery::startTransaction();
+		$people = PNApplication::$instance->people->getPeople($people_id);
+		$types = PNApplication::$instance->people->parseTypes($people["types"]);
+		$roles = array();
+		foreach ($types as $type) {
+			$pi = PNApplication::$instance->people->getPeopleTypePlugin($type);
+			if ($pi == null) continue;
+			$list = $pi->getBuiltinDefaultUserRoles();
+			foreach ($list as $role)
+				if (!in_array($role, $roles))
+					array_push($roles, $role);
+		}
+		if (count($roles) > 0) {
+			$roles = SQLQuery::create()->bypassSecurity()->select("Role")->whereIn("Role", "name", $roles)->field("Role","id")->executeSingleField();
+			$current = SQLQuery::create()->bypassSecurity()->select("UserRole")->whereValue("UserRole", "user", $user_id)->field("UserRole","role")->executeSingleField();
+			foreach ($current as $role_id)
+				for ($i = 0; $i < count($roles); $i++)
+					if ($roles[$i] == $role_id) { array_splice($roles, $i, 1); break; }
+			if (count($roles) > 0) {
+				$to_insert = array();
+				foreach ($roles as $role_id) array_push($to_insert, array("role"=>$role_id,"user"=>$user_id));
+				SQLQuery::create()->bypassSecurity()->insertMultiple("UserRole", $to_insert);
+			}
+		}
+		SQLQuery::commitTransaction();
 	}
 }
 

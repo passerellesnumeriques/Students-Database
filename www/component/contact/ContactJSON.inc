@@ -37,6 +37,8 @@ class ContactJSON {
 			->field($alias,"unit","postal_address__unit")
 			->field($alias,"additional","postal_address__additional")
 			->field($alias,"address_type","postal_address__address_type")
+			->field($alias,"lat","postal_address__lat")
+			->field($alias,"lng","postal_address__lng")
 			;
 	}
 	
@@ -59,6 +61,8 @@ class ContactJSON {
 				",unit:".json_encode(@$row["postal_address__unit"]).
 				",additional:".json_encode(@$row["postal_address__additional"]).
 				",address_type:".json_encode(@$row["postal_address__address_type"]).
+				",lat:".json_encode(@$row["postal_address__lat"]).
+				",lng:".json_encode(@$row["postal_address__lng"]).
 			"}"
 			;
 	}
@@ -91,7 +95,9 @@ class ContactJSON {
 			"building"=>@$json["building"],
 			"unit"=>@$json["unit"],
 			"additional"=>@$json["additional"],
-			"address_type"=>@$json["address_type"] 
+			"address_type"=>@$json["address_type"],
+			"lat"=>@$json["lat"],
+			"lng"=>@$json["lng"]
 		);
 		if (isset($json["id"]))
 			$a["id"] = $json["id"];

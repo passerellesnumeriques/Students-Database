@@ -6,6 +6,7 @@ class StudentPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "student"; }
 	public function getName() { return "Student"; }
+	public function isStandalone() { return true; }
 	
 	public function canRead() { return PNApplication::$instance->user_management->has_right("consult_students_list"); }
 	public function canWrite() { return PNApplication::$instance->user_management->has_right("manage_batches"); }
@@ -21,5 +22,7 @@ class StudentPeopleTypePlugin implements PeopleTypePlugin {
 		if ($batch == null) return "Student";
 		return "Student of batch ".$batch["name"];
 	}
+	
+	public function getBuiltinDefaultUserRoles() { return array("Student"); }
 }
 ?>

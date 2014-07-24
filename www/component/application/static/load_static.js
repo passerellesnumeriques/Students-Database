@@ -107,7 +107,6 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 		}
 		if (t._stopped) return;
 		if (!window.top.pn_application_static) return;
-		t._scripts_loading++;
 		var script = null;
 		for (var i = 0; i < window.top.pn_application_static.scripts.length; ++i)
 			if (window.top.pn_application_static.scripts[i].dependencies.length == 0) {
@@ -116,7 +115,21 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 				window.top.pn_application_static.scripts.splice(i,1);
 				break;
 			}
-		if (script == null) { t._checkEnd(); return; }
+		if (script == null) {
+			// check we don't have anymore scripts waiting for a dependency
+			while (window.top.pn_application_static.scripts.length > 0) {
+				var s = window.top.pn_application_static.scripts[0];
+				var msg = "JavaScript file "+s.url+" cannot be loaded because it is still waiting for the following dependencies:\r\n";
+				for (var j = 0; j < s.dependencies.length; ++j)
+					msg += " - "+s.dependencies[j]+"\r\n";
+				window.top.pn_application_static.scripts.splice(0,1);
+				alert(msg);
+			}
+			window.top.pn_application_static.scripts = [];
+			t._checkEnd();
+			return;
+		}
+		t._scripts_loading++;
 		addJavascript(script.url,function() {
 			t._scripts_loading--;
 			t.loaded(script.size);
@@ -125,7 +138,7 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 			window.top.pn_application_static._loaded_scripts.push(script.url);
 			window.top.pn_application_static.loading_scripts.remove(script);
 			t._nextScript();
-		});
+		},{_bg:true});
 	};
 	/** Start to load another image */
 	this._nextImage = function() {
@@ -155,6 +168,7 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 		window.top.pn_application_static.images.splice(0,1);
 		window.top.pn_application_static.loading_images.push(image);
 		var i = document.createElement("IMG");
+		i._bg = true;
 		i.data = image;
 		i.onload = function() { window.top.pn_application_static.loading_images.remove(this.data); t._images_loading--; t.loaded(this.data.size); t._nextImage(); try { document.body.removeChild(this); } catch (e){} };
 		i.onerror = function() { t._images_loading--; t.loaded(this.data); t._nextImage(); document.body.removeChild(this); };

@@ -152,6 +152,8 @@ CalendarsProvider.prototype = {
 	on_calendar_added: new Custom_Event(),
 	/** {Custom_Event} event raised when a calendar disappears on this provider */
 	on_calendar_removed: new Custom_Event(),
+	/** {Number} minimum time (in milliseconds) before calendars from this provider can be automatically refreshed */
+	minimum_time_to_autorefresh: 5*60*1000,
 	/** Reload the list of calendars from this provider */
 	refreshCalendars: function() {
 		var t=this;
@@ -246,6 +248,7 @@ if (!window.top.CalendarsProviders) {
 		 * @param {CalendarsProvider} provider the new calendar provider
 		 */
 		add: function(provider) {
+			provider._last_auto_refresh = new Date().getTime();
 			for (var i = 0; i < this._providers.length; ++i)
 				if (this._providers[i].getProviderName() == provider.getProviderName())
 					return; // same
@@ -276,12 +279,15 @@ if (!window.top.CalendarsProviders) {
 		},
 		/** Internal function to refresh the list of calendars on all providers */
 		_refresh: function() {
-			for (var i = 0; i < this._providers.length; ++i)
+			var now = new Date().getTime();
+			for (var i = 0; i < this._providers.length; ++i) {
+				if (now - this._providers[i]._last_auto_refresh < this._providers[i].minimum_time_to_autorefresh) continue;
 				for (var j = 0; j < this._providers[i].calendars.length; ++j)
 					this._providers[i].calendars[j].refresh();
+			}
 		}
 	};
-	setTimeout(function() { window.top.CalendarsProviders._refresh(); }, 5*60*1000);
+	setTimeout(function() { window.top.CalendarsProviders._refresh(); }, 60*1000);
 }
 
 /**
@@ -339,6 +345,7 @@ function Calendar(provider, name, color, show, icon) {
 	this._refresh = function(ondone) {
 		var type = getObjectClassName(this);
 		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar._refresh not implemented: "+type));
+		if (ondone) ondone();
 	};
 	/** {Function} function called to save an event. If it is not defined, it means the calendar is read only. This function takes the event to save as parameter. */
 	this.saveEvent = null; // must be overriden if the calendar supports modifications
@@ -478,30 +485,34 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 		require("calendar_objects.js", function(){
 			service.json("calendar", "get", {id:t.id}, function(result) {
 				if (!result) { ondone(); return; }
-				var removed_events = t.events;
-				t.events = [];
-				for (var i = 0; i < result.length; ++i) {
-					var ev = result[i];
-					ev.start = new Date(parseInt(ev.start)*1000);
-					ev.end = new Date(parseInt(ev.end)*1000);
-					var found = false;
-					for (var j = 0; j < removed_events.length; ++j) {
-						if (ev.uid == removed_events[j].uid) {
-							found = true;
+				try {
+					var removed_events = t.events;
+					t.events = [];
+					for (var i = 0; i < result.length; ++i) {
+						var ev = result[i];
+						ev.start = new Date(parseInt(ev.start)*1000);
+						ev.end = new Date(parseInt(ev.end)*1000);
+						var found = false;
+						for (var j = 0; j < removed_events.length; ++j) {
+							if (ev.uid == removed_events[j].uid) {
+								found = true;
+								t.events.push(ev);
+								if (ev.last_modified != removed_events[j].last_modified)
+									t.on_event_updated.fire(ev);
+								removed_events.splice(j,1);
+								break;
+							}
+						}
+						if (!found) {
 							t.events.push(ev);
-							if (ev.last_modified != removed_events[j].last_modified)
-								t.on_event_updated.fire(ev);
-							removed_events.splice(j,1);
-							break;
+							t.on_event_added.fire(ev);
 						}
 					}
-					if (!found) {
-						t.events.push(ev);
-						t.on_event_added.fire(ev);
-					}
+					for (var i = 0; i < removed_events.length; ++i)
+						t.on_event_removed.fire(removed_events[i]);
+				} catch (e) {
+					log_exception(e, "Error while refreshing PN calendar");
 				}
-				for (var i = 0; i < removed_events.length; ++i)
-					t.on_event_removed.fire(removed_events[i]);
 				ondone();
 			});
 		});
@@ -547,6 +558,7 @@ PNCalendar.prototype.constructor = PNCalendar;
 function PNCalendarsProvider() {
 	CalendarsProvider.call(this,"PN");
 	var t=this;
+	this.minimum_time_to_autorefresh = 2*60*1000; // we are in local, we can refresh regularly
 	this._retrieveCalendars = function(handler) {
 		t.connectionStatus("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");
 		service.json("calendar", "get_my_calendars", {}, function(calendars) {

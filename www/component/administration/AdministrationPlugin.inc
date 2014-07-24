@@ -68,4 +68,12 @@ class AdministrationDashboardPlugin implements AdministrationPlugin {
 	}
 	
 }
+
+class ApplicationAdministrationPlugin implements AdministrationPlugin {
+	public function getAdministrationPages() {
+		return array(
+				new AdministrationPage("Application", "/dynamic/administration/page/app_admin", "/static/application/logo_16.png", "/static/application/logo_32.png", "Manage the application, deploy new version...")
+		);
+	}
+}
 ?>

@@ -72,11 +72,11 @@ class page_edit_batch extends Page {
 		<td align=center>
 			<table style='border-spacing:3px;margin-bottom:10px'>
 				<tr>
-					<td align=right style="font-weight:bold">Integration</td>
+					<td align=right style="font-weight:bold" colspan=2>Integration</td>
 					<td id='integration'></td>
 				</tr>
 				<tr id='after_periods'>
-					<td align=right style="font-weight:bold">Graduation</td>
+					<td align=right style="font-weight:bold" colspan=2>Graduation</td>
 					<td id='graduation'></td>
 				</tr>
 			</table>
@@ -128,6 +128,12 @@ function getAcademicYear(id) {
 			return academic_years[i];
 	return null;
 }
+function getAcademicYearStartingIn(year) {
+	for (var i = 0; i < academic_years.length; ++i)
+		if (academic_years[i].year == year) 
+			return academic_years[i];
+	return null;
+}
 function getAcademicPeriod(id) {
 	for (var i = 0; i < academic_periods.length; ++i)
 		if (academic_periods[i].id == id)
@@ -176,8 +182,18 @@ if ($batch <> null) {
 	echo "batch_id=-1;";
 	echo "batch_name='';";
 	echo "integration_date=dateToSQL(new Date());";
-	for ($i = 0; $i < $conf["periods_number"]; $i++) {
-		echo "periods.push({id:new_period_id_counter--,name:".json_encode($conf["period_name"]." ".($i+1)).",academic_period:0});";
+	// create default batch
+	$period_name_numbers = array();
+	for ($year = 0; $year < $conf["default_batch_years"]; $year++) {
+		// create periods based on default academic year
+		foreach ($conf["default_academic_year"] as $default_period) {
+			// get period name
+			if (!isset($period_name_numbers[$default_period["period"]]))
+				$period_name_numbers[$default_period["period"]] = 1;
+			$period_name = $default_period["period"]." ".$period_name_numbers[$default_period["period"]];
+			$period_name_numbers[$default_period["period"]]++;
+			echo "periods.push({id:new_period_id_counter--,name:".json_encode($period_name).",academic_period:0});";
+		}
 	}
 	echo "graduation_date = null;";
 	echo "pnapplication.dataUnsaved('Batch');";
@@ -328,7 +344,7 @@ function updatePeriodRow(period) {
 				if (index < periods.length-1)
 					updatePeriodRow(periods[index+1]);
 			};
-			if (getAcademicYear(list[0].year_id).year != min.getFullYear()) {
+			if (getAcademicYear(list[0].year_id).year != min.getFullYear() && getAcademicYearStartingIn(min.getFullYear()) == null) {
 				var link = document.createElement("A");
 				link.href = "#";
 				link.appendChild(document.createTextNode("Create Academic Year "+min.getFullYear()));
@@ -351,6 +367,7 @@ function updatePeriodRow(period) {
 		}
 	} else
 		period.academic_period = 0;
+	layout.invalidate(period.td_period);
 	if (index < periods.length-1)
 		updatePeriodRow(periods[index+1]);
 	else {
@@ -361,7 +378,7 @@ function updatePeriodRow(period) {
 	}
 }
 
-function createPeriodRow(period) {
+function createPeriodRow(period, before) {
 	period.input_name = document.createElement("INPUT");
 	period.input_name.type = "text";
 	period.input_name.value = period.name;
@@ -369,13 +386,24 @@ function createPeriodRow(period) {
 	inputAutoresize(period.input_name, 10);
 	listenEvent(period.input_name, 'change', function() {
 		period.name = period.input_name.value;
+		pnapplication.dataUnsaved('Batch');
 	});
 	if (period.id > 0) window.top.datamodel.inputCell(period.input_name, "BatchPeriod", "name", period.id);
 
 	var tr, td;
-	var last_row = document.getElementById('after_periods');
-	last_row.parentNode.insertBefore(tr = document.createElement("TR"), last_row);
+	if (!before) before = document.getElementById('after_periods');
+	before.parentNode.insertBefore(tr = document.createElement("TR"), before);
 	period.tr = tr;
+	tr.appendChild(td = document.createElement("TD"));
+	period.insert_button = document.createElement("BUTTON");
+	period.insert_button.className = "flat small_icon";
+	period.insert_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+	period.insert_button.title = "Insert a period before";
+	period.insert_button.before = period;
+	period.insert_button.onclick = function() {
+		addPeriod(period);
+	};
+	td.appendChild(period.insert_button);
 	tr.appendChild(td = document.createElement("TD"));
 	td.appendChild(period.input_name);
 	tr.appendChild(td = document.createElement("TD"));
@@ -391,24 +419,22 @@ function createPeriodRow(period) {
 		pnapplication.dataUnsaved('Batch');
 		periods.remove(period);
 		period.tr.parentNode.removeChild(period.tr);
-		if (periods.length > 0) {
-			periods[periods.length-1].remove_button.disabled = "";
-			periods[periods.length-1].remove_button.style.visibility = "visible";
+		if (periods.length > 0)
 			updatePeriodRow(periods[periods.length-1]);
-		}
 		if (period.id == spe_period_start) {
 			spe_period_start = null;
 			selected_specializations = [];
 			refreshSpecializations();
 		}
-		layout.invalidate(last_row.parentNode);
+		layout.invalidate(before.parentNode);
 	};
-	// disable remove of previous periods
+/*	// disable remove of previous periods
 	for (var i = 0; i < periods.length; ++i) {
 		if (periods[i] == period) break;
 		periods[i].remove_button.disabled = "disabled";
 		periods[i].remove_button.style.visibility = "hidden";
 	}
+*/
 }
 
 var spe_row = null;
@@ -442,10 +468,13 @@ for (var i = 0; i < periods.length; ++i)
 updatePeriodRow(periods[0]);
 refreshSpecializations();
 
-function addPeriod() {
-	var period = {id:new_period_id_counter--,name:<?php echo json_encode($conf["period_name"]);?>+" "+(periods.length+1),academic_period:0};
-	periods.push(period);
-	createPeriodRow(period);
+function addPeriod(before) {
+	var period = {id:new_period_id_counter--,name:"",academic_period:0};
+	if (before)
+		periods.splice(periods.indexOf(before),0,period);
+	else
+		periods.push(period);
+	createPeriodRow(period, before ? before.tr : null);
 	updatePeriodRow(period);
 	pnapplication.dataUnsaved('Batch');
 }

@@ -22,10 +22,10 @@ class page_exam_subjects extends SelectionPage {
 						<i>No subject defined yet</i>
 					</span>
 				</div>
-				<div class='section_block' style="display:inline-block;background-color:white;overflow:hidden;flex:1 1 auto;display:flex;flex-direction:column;">
-					<iframe id='subject_frame' style='flex:1 1 auto;border:none' src='/static/application/message.html?text=<?php echo urlencode("Select a subject to display it here");?>'>
+				<div class='section_block' style="display:inline-block;overflow:hidden;flex:1 1 auto;display:flex;flex-direction:column;border: 1px solid #C0C0C0;padding-top:0px;padding-bottom:0px;">
+					<iframe id='subject_frame' style='flex:1 1 auto;border:none' src='/static/application/message.html?padding=5&text=<?php echo urlencode("Select a subject to display it here");?>'>
 					</iframe>
-					<div class='page_footer' id='subject_footer' style='visibility:hidden;flex:none;'>
+					<div class='page_footer' id='subject_footer' style='visibility:hidden;flex:none;background-color:white;'>
 						<button class="action" id='save_button'><img src='<?php echo theme::$icons_16['save'];?>'/> Save</button>
 						<button class="action" id='cancel_button'><img src='<?php echo theme::$icons_16['cancel'];?>'/> Cancel modifications</button>
 					</div>
@@ -77,6 +77,7 @@ class page_exam_subjects extends SelectionPage {
 		<script type='text/javascript'>
 		var subjects = <?php echo SelectionExamJSON::ExamSubjectsJSON($subjects); ?>;
 		var subjects_controls = [];
+		var selected_index = -1;
 
 		function SubjectControl(subject) {
 			var t=this;
@@ -102,9 +103,13 @@ class page_exam_subjects extends SelectionPage {
 				this.box.onclick = function() {
 					var frame = document.getElementById('subject_frame');
 					new LoadingFrame(frame);
-					frame.src = "/dynamic/selection/page/exam/subject?id="+subject.id;
-					showSubjectActions(subject);
+					frame.ready = function() {
+						showSubjectActions(subject);
+						this.ready = null;
+					};
+					frame.src = "/dynamic/selection/page/exam/subject?id="+subject.id+"&onready=ready";
 					this.className = "subject_box selected";
+					selected_index = subjects.indexOf(subject);
 					for (var i = 0; i < subjects_controls.length; ++i)
 						if (subjects_controls[i] != t) subjects_controls[i].box.className = "subject_box";
 				};
@@ -135,7 +140,13 @@ class page_exam_subjects extends SelectionPage {
 								if(!res)
 									error_dialog("An error occured");
 								else {
-									t.div.parentNode.removeChild(t);
+									if (selected_index == subjects.indexOf(subject)) {
+										var frame = document.getElementById('subject_frame');
+										getIFrameWindow(frame).pnapplication.cancelDataUnsaved();
+										frame.src = "/static/application/message.html?padding=5&text=<?php echo urlencode("Select a subject to display it here");?>";
+										selected_index = -1;
+									}
+									t.div.parentNode.removeChild(t.div);
 									subjects.remove(subject);
 									subjects_controls.remove(t);
 								}
@@ -153,8 +164,11 @@ class page_exam_subjects extends SelectionPage {
 		function newSubject() {
 			var frame = document.getElementById('subject_frame');
 			new LoadingFrame(frame);
-			frame.src = "/dynamic/selection/page/exam/subject?id=-1";
-			showSubjectActions(null);
+			frame.ready = function() {
+				showSubjectActions(null);
+				this.ready = null;
+			};
+			frame.src = "/dynamic/selection/page/exam/subject?id=-1&onready=ready";
 		}
 
 		function copySubject() {
@@ -178,50 +192,49 @@ class page_exam_subjects extends SelectionPage {
 			save_button.disabled = "disabled";
 			var cancel_button = document.getElementById('cancel_button');
 			cancel_button.disabled = "disabled";
-			waitFrameContentReady(
-				document.getElementById('subject_frame'),
-				function(win) {
-					if (typeof win.exam_subject_manager == 'undefined') return false;
-					return true;
-				},
-				function(win) {
-					win.pnapplication.autoDisableSaveButton(save_button);
-					win.pnapplication.autoDisableSaveButton(cancel_button);
-					save_button.onclick = function() {
-						var locker = lock_screen(null, "Saving subject...");
-						win.exam_subject_manager.save(function(subj) {
-							unlock_screen(locker);
-							if (subj == null) return; // error case
-							if (subject == null) {
-								// new subject
-								subjects.push(subj);
-								subjects_controls.push(new SubjectControl(subj));
-							} else {
-								// updated subject
-								for (var i = 0; i < subjects.length; ++i) {
-									if (subjects[i].id == subj.id) {
-										subjects[i].name = subj.name;
-										window.top.datamodel.cellChanged("ExamSubject", "name", subj.id, subj.name);
-										subjects[i].max_score = subj.max_score;
-										window.top.datamodel.cellChanged("ExamSubject", "max_score", subj.id, subj.max_score);
-									}
-								}
-							}
-						});
-					};
-					cancel_button.onclick = function() {
-						if (subject == null) {
-							// new subject, let's restart
-							win.pnapplication.cancelDataUnsaved();
-							document.getElementById('subject_frame').src = "about:blank";
-							newSubject();
-						} else {
-							win.pnapplication.cancelDataUnsaved();
-							win.location.reload();
+			var frame = document.getElementById('subject_frame');
+			var win = getIFrameWindow(frame);
+			win.pnapplication.autoDisableSaveButton(save_button);
+			win.pnapplication.autoDisableSaveButton(cancel_button);
+			save_button.onclick = function() {
+				var locker = lock_screen(null, "Saving subject...");
+				win.save(function(subj) {
+					unlock_screen(locker);
+					if (subj == null) return; // error case
+					if (subject == null) {
+						// new subject
+						if (subjects.length == 0) {
+							var no_subject = document.getElementById('no_subject');
+							no_subject.style.position = "absolute";
+							no_subject.style.display = "none";
 						}
-					};
+						selected_index = subjects.length;
+						subjects.push(subj);
+						subjects_controls.push(new SubjectControl(subj));
+					} else {
+						// updated subject
+						for (var i = 0; i < subjects.length; ++i) {
+							if (subjects[i].id == subj.id) {
+								subjects[i].name = subj.name;
+								window.top.datamodel.cellChanged("ExamSubject", "name", subj.id, subj.name);
+								subjects[i].max_score = subj.max_score;
+								window.top.datamodel.cellChanged("ExamSubject", "max_score", subj.id, subj.max_score);
+							}
+						}
+					}
+				});
+			};
+			cancel_button.onclick = function() {
+				if (subject == null) {
+					// new subject, let's restart
+					win.pnapplication.cancelDataUnsaved();
+					document.getElementById('subject_frame').src = "/static/application/message.html?padding=5&text=<?php echo urlencode("Select a subject to display it here");?>";
+					selected_index = -1;
+				} else {
+					win.pnapplication.cancelDataUnsaved();
+					win.location.reload();
 				}
-			);
+			};
 		}
 
 		if (subjects.length == 0) {

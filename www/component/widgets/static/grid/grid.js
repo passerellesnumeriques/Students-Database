@@ -17,6 +17,7 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 	this.sub_columns = sub_columns;
 	this.attached_data = attached_data;
 	this.th = document.createElement("TH");
+	this.th.className = "container";
 	this.th.innerHTML = title;
 	this.th.col = this;
 	this._updateLevels = function() {
@@ -55,8 +56,11 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		}
 		return list;
 	};
-	this.addSubColumn = function(final_col) {
-		this.sub_columns.push(final_col);
+	this.addSubColumn = function(final_col, index) {
+		if (typeof index == 'undefined' || index >= this.sub_columns.length)
+			this.sub_columns.push(final_col);
+		else
+			this.sub_columns.splice(index,0,final_col);
 		this._updateLevels();
 		this.grid._subColumnAdded(this, final_col);
 	};
@@ -66,7 +70,6 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	// check parameters
 	if (!id) id = generateID();
 	if (!field_type) field_type = "field_text";
-	require(field_type+".js");
 	if (!field_args) field_args = {};
 	// put values in the object
 	this.id = id;
@@ -88,6 +91,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.th.rowSpan = 1;
 	this.th.col = this;
 	this.col = document.createElement('COL');
+	if (this.width) this.col.style.width = this.width+"px";
 	this.onclick = new Custom_Event();
 	this.actions = [];
 	
@@ -97,6 +101,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		if (this.grid.selectable) index++;
 		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
 			var row = this.grid.table.childNodes[i];
+			if (index >= row.childNodes.length) continue;
 			var td = row.childNodes[index];
 			if (td.field)
 				td.field.setEditable(this.editable);
@@ -106,6 +111,10 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	
 	this.addAction = function(action) {
 		this.actions.push(action);
+		this._refresh_title();
+	};
+	this.removeAction = function(action) {
+		this.actions.remove(action);
 		this._refresh_title();
 	};
 
@@ -210,55 +219,57 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			this.th.insertBefore(span, this.th.childNodes[0]);
 		else
 			this.th.appendChild(span);
+		var create_action_image = function(url, info, onclick) {
+			var img = document.createElement("IMG");
+			img.src = url;
+			img.style.verticalAlign = "middle";
+			img.style.cursor = "pointer";
+			if (info) tooltip(img, info);
+			img.onclick = onclick;
+			img.style.marginLeft = "1px";
+			img.style.marginRight = "1px";
+			setOpacity(img, 0.65);
+			listenEvent(img, 'mouseover', function() { setOpacity(img, 1); });
+			listenEvent(img, 'mouseout', function() { setOpacity(img, 0.65); });
+			return img;
+		};
 		if (this.sort_order) {
-			var img;
 			switch (this.sort_order) {
 			case 1: // ascending
-				img = document.createElement("IMG");
-				img.src = url+"/arrow_up_10.gif";
-				img.style.verticalAlign = "middle";
-				img.style.cursor = "pointer";
-				tooltip(img, "Sort by descending order (currently ascending)");
-				img.onclick = function() { t._onsort(2); };
-				span.appendChild(img);
+				span.appendChild(create_action_image(
+					url+"/arrow_up_10.gif",
+					"Sort by descending order (currently ascending)",
+					function() { t._onsort(2); }
+				));
 				break;
 			case 2: // descending
-				img = document.createElement("IMG");
-				img.src = url+"/arrow_down_10.gif";
-				img.style.verticalAlign = "middle";
-				img.style.cursor = "pointer";
-				tooltip(img, "Sort by ascending order (currently descending)");
-				img.onclick = function() { t._onsort(1); };
-				span.appendChild(img);
+				span.appendChild(create_action_image(
+					url+"/arrow_down_10.gif",
+					"Sort by ascending order (currently descending)",
+					function() { t._onsort(1); }
+				));
 				break;
 			case 3: // not sorted yet
-				var h = function() { t._onsort(1); };
-				img = document.createElement("IMG");
-				img.src = url+"/arrow_up_10.gif";
-				img.style.verticalAlign = "middle";
-				img.style.cursor = "pointer";
-				tooltip(img, "Sort by descending order");
-				img.onclick = h;
-				span.appendChild(img);
-				img = document.createElement("IMG");
-				img.src = url+"/arrow_down_10.gif";
-				img.style.verticalAlign = "middle";
-				img.style.cursor = "pointer";
-				tooltip(img, "Sort by ascending order");
-				img.onclick = h;
-				span.appendChild(img);
+				span.appendChild(create_action_image(
+					url+"/arrow_up_10.gif",
+					"Sort by descending order",
+					function() { t._onsort(2); }
+				));
+				span.appendChild(create_action_image(
+					url+"/arrow_down_10.gif",
+					"Sort by ascending order",
+					function() { t._onsort(1); }
+				));
 				break;
 			}
 		}
 		for (var i = 0; i < this.actions.length; ++i) {
-			var img = document.createElement("IMG");
-			img.src = this.actions[i].icon;
-			img.style.verticalAlign = "middle";
-			img.style.cursor = "pointer";
+			var img = create_action_image(
+				this.actions[i].icon,
+				this.actions[i].tooltip,
+				function(ev) { this.data.onclick(ev, this.data, t); }
+			);
 			img.data = this.actions[i];
-			if (this.actions[i].tooltip)
-				tooltip(img, this.actions[i].tooltip);
-			img.onclick = function(ev) { this.data.onclick(ev, this.data, t); };
 			this.actions[i].element = img;
 			span.appendChild(img);
 		}
@@ -345,28 +356,31 @@ function grid(element) {
 	};
 	t._addColumnContainer = function(container, level, index) {
 		container.grid = this;
-		if (typeof index != 'undefined' && level == 0) {
-			// this is first level, we need to calculate what is the real index in first TR
-			var real_index = t.selectable ? 1 : 0;
-			while (index > 0) {
-				index -= t.header_rows[0].childNodes[real_index].colSpan;
-				real_index++;
+		// insert the container TH
+		if (typeof index != 'undefined') {
+			// calculate the real index in the TR for the header
+			var i = index;
+			var tr_index = t.selectable ? 1 : 0;
+			while (i > 0) {
+				i -= t.header_rows[level].childNodes[tr_index].colSpan;
+				tr_index++;
 			}
-			if (index < 0) index = undefined;
-			else if (index > t.header_rows[0].childNodes.length-1) index = undefined;
-			else index = real_index;
-		} else index = undefined;
-		if (typeof index != 'undefined')
-			t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[index]);
-		else
+			if (tr_index < t.header_rows[level].childNodes.length)
+				t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[tr_index]);
+			else
+				t.header_rows[level].appendChild(container.th);
+		} else
 			t.header_rows[level].appendChild(container.th);
+		// continue insertion
 		for (var i = 0; i < container.sub_columns.length; ++i) {
 			if (container.sub_columns[i] instanceof GridColumnContainer) {
-				t._addColumnContainer(container.sub_columns[i], level+1);
-				continue;
+				index = t._addColumnContainer(container.sub_columns[i], level+1, index);
+			} else {
+				t._addFinalColumn(container.sub_columns[i], level+1, index);
+				if (typeof index != 'undefined') index++;
 			}
-			t._addFinalColumn(container.sub_columns[i], level+1);
 		}
+		return index;
 	};
 	t._addFinalColumn = function(col, level, index) {
 		if (typeof index != 'undefined') {
@@ -381,17 +395,37 @@ function grid(element) {
 		} else {
 			t.columns.splice(index,0,col);
 			t.colgroup.insertBefore(col.col, t.colgroup.childNodes[t.selectable ? index +1 : index]);
-			// need to calculate the real index
+			// need to calculate the real index inside the container
+			var index_in_container = index;
 			var i;
-			for (i = level == 0 && t.selectable ? 1 : 0; i < t.header_rows[level].childNodes.length && index > 0; ++i) {
+			for (i = level == 0 && t.selectable ? 1 : 0; i < t.header_rows[level].childNodes.length && index_in_container > 0; ++i) {
 				var th = t.header_rows[level].childNodes[i];
-				if (th.col instanceof GridColumnContainer) index -= th.col.getNbFinalColumns();
-				else index--;
+				if (th.col instanceof GridColumnContainer) index_in_container -= th.col.getNbFinalColumns();
+				else index_in_container--;
 			}
 			if (i >= t.header_rows[level].childNodes.length)
 				t.header_rows[level].appendChild(col.th);
 			else
 				t.header_rows[level].insertBefore(col.th, t.header_rows[level].childNodes[i]);
+		}
+		if (level > 0) {
+			if (col.parent_column.sub_columns[col.parent_column.sub_columns.length-1] == col) {
+				col.th.className = "last_in_container";
+				if (col.parent_column.sub_columns.length > 1) {
+					var prev_col = col.parent_column.sub_columns[col.parent_column.sub_columns.length-2];
+					prev_col.th.className = "";
+					for (var i = 0; i < t.table.childNodes.length; ++i) {
+						var tr = t.table.childNodes[i];
+						for (var j = 0; j < tr.childNodes.length; ++j) {
+							var td = tr.childNodes[j];
+							if (td.col_id == prev_col.id) {
+								td.className = "";
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
 		col._refresh_title();
 		if (!col.loaded) {
@@ -406,12 +440,17 @@ function grid(element) {
 			else {
 				var td = document.createElement("TD");
 				td.col_id = col.id;
+				if (col.th.className == "last_in_container")
+					td.className = "last_in_container";
 				var col_index = index + (t.selectable ? 1 : 0);
 				if (col_index >= tr.childNodes.length)
 					tr.appendChild(td);
 				else
 					tr.insertBefore(td, tr.childNodes[col_index]);
-				t._create_cell(col, null, td, function(field){
+				var data = null;
+				for (var k = 0; k < tr.row_data.length; ++k)
+					if (col.id == tr.row_data[k].col_id) { data = tr.row_data[k].data; break; }
+				t._create_cell(col, data, td, function(field){
 					field.onfocus.add_listener(function() { t.onrowfocus.fire(tr); });
 				});
 			}
@@ -440,12 +479,12 @@ function grid(element) {
 		}
 		// finally, add the final column
 		var list = container.getFinalColumns();
-		var last_index = this.getColumnIndex(list[list.length-2]);
+		var first_index = this.getColumnIndex(list[0]);
 		var level;
 		for (level = 0; level < t.header_rows.length-1; level++) {
 			if (t.header_rows[level] == container.th.parentNode) break;
 		}
-		t._addFinalColumn(final_col, level+1, last_index+1);
+		t._addFinalColumn(final_col, level+1, first_index+list.indexOf(final_col));
 	};
 	
 	t.addColumn = function(column, index) {
@@ -513,7 +552,24 @@ function grid(element) {
 			while (p) {
 				p.sub_columns.remove(c);
 				c.th.parentNode.removeChild(c.th);
-				if (p.sub_columns.length > 0) break; // still something
+				if (p.sub_columns.length > 0) {
+					// still something
+					var last_col = p.sub_columns[p.sub_columns.length-1];
+					if (last_col.th.className != "last_in_container") {
+						last_col.th.className = "last_in_container";
+						for (var i = 0; i < t.table.childNodes.length; ++i) {
+							var tr = t.table.childNodes[i];
+							for (var j = 0; j < tr.childNodes.length; ++j) {
+								var td = tr.childNodes[j];
+								if (td.col_id == last_col.id) {
+									td.className = "last_in_container";
+									break;
+								}
+							}
+						}
+					}
+					break;
+				}
 				// no more sub column -> remove it
 				p.th.parentNode.removeChild(p.th);
 				p = p.parent_column;
@@ -715,6 +771,7 @@ function grid(element) {
 		var tr = document.createElement("TR");
 		listenEvent(tr, 'click', function() { t.onrowfocus.fire(tr); });
 		tr.row_id = row_id;
+		tr.row_data = row_data;
 		if (t.selectable)
 			tr.appendChild(t._createSelectionTD());
 		for (var j = 0; j < t.columns.length; ++j) {
@@ -727,6 +784,8 @@ function grid(element) {
 				data = {data_id:null,data:"No data found for this column"};
 			td.col_id = t.columns[j].id;
 			td.data_id = data.data_id;
+			if (t.columns[j].th.className == "last_in_container")
+				td.className = "last_in_container";
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
 				t._create_cell(t.columns[j], data.data, td, function(field){
@@ -846,6 +905,16 @@ function grid(element) {
 	t.getCellFieldById = function(row_id,col_id) {
 		return t.getCellField(t.getRowIndexById(row_id), t.getColumnIndexById(col_id));	
 	};
+	t.getCellData = function(row_id, col_id) {
+		var f = t.getCellFieldById(row_id, col_id);
+		if (!f) return null;
+		return f.getCurrentData();
+	};
+	t.setCellData = function(row_id, col_id, data) {
+		var f = t.getCellFieldById(row_id, col_id);
+		if (!f) return;
+		f.setData(data);
+	};
 	t.getCellDataId = function(row,col) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
@@ -964,6 +1033,7 @@ function grid(element) {
 		t._cells_loading++;
 		t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
 			parent.field = field;
+			field.grid_column_id = column.id;
 			if (ondone) ondone(field);
 			t._cells_loading--;
 			t._check_loaded();

@@ -27,13 +27,14 @@ class page_popup_create_people_step_check extends Page {
 							$last_name = $d["value"];
 					$similar = SQLQuery::create()->bypassSecurity()
 						->select("People")
-						->where("LOWER(`first_name`) = '".SQLQuery::escape(strtolower($first_name))."'")
-						->where("LOWER(`last_name`) = '".SQLQuery::escape(strtolower($last_name))."'")
+						->where("LOWER(`first_name`) = '".SQLQuery::escape(strtolower(utf8_decode($first_name)))."'")
+						->where("LOWER(`last_name`) = '".SQLQuery::escape(strtolower(utf8_decode($last_name)))."'")
 						->execute();
 					if (count($similar) == 0)
 						array_push($ok, $people);
-					else
+					else {
 						array_push($to_check, array($people,$similar));
+					}
 					break;
 				}
 			}
@@ -57,6 +58,7 @@ class page_popup_create_people_step_check extends Page {
 			<?php 
 			if (isset($input["ondone"])) echo "data.ondone = ".json_encode($input["ondone"]).";";
 			else if (isset($input["donotcreate"])) echo "data.donotcreate = ".json_encode($input["donotcreate"]).";";
+			if (isset($input["oncancel"])) echo "data.oncancel = ".json_encode($input["oncancel"]).";";
 			?>
 			postData("popup_create_people_step_creation",data,window);
 		}
@@ -164,7 +166,9 @@ class page_popup_create_people_step_check extends Page {
 				}
 				send();
 			});
-			window.popup.addCancelButton();
+			window.popup.addCancelButton(function() {
+				<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]; ?>
+			});
 			</script>
 			<?php 
 		} else {

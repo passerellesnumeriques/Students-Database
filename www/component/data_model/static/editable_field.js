@@ -45,18 +45,14 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 				window.databaselock.removeLock(locks[i]);
 			}
 		}
-		if (t.save_button) { t.field.getHTMLElement().removeChild(t.save_button); t.save_button = null; }
-		if (t.unedit_button) { t.field.getHTMLElement().removeChild(t.unedit_button); t.unedit_button = null; }
+		if (t.save_button) { container.removeChild(t.save_button); t.save_button = null; }
+		if (t.unedit_button) { container.removeChild(t.unedit_button); t.unedit_button = null; }
 		var config_field = function() {
 			if (t.editable) {
 				t.field.getHTMLElement().title = "Click to edit";
 				t.field.getHTMLElement().onmouseover = function(ev) { this.style.outline = '1px solid #C0C0F0'; stopEventPropagation(ev); return false; };
 				t.field.getHTMLElement().onmouseout = function(ev) { this.style.outline = 'none'; stopEventPropagation(ev); return false; };
 				t.field.getHTMLElement().onclick = function(ev) { t.edit(); stopEventPropagation(ev); return false; };
-			}
-			if (t._fill_container) {
-				t.field.getHTMLElement().style.width = "100%";
-				//t.field.getHTMLElement().style.height = "100%";
 			}
 		};
 		if (t.field) {
@@ -65,6 +61,8 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			config_field();
 			layout.invalidate(container);
 			if (onready) onready(t);
+			if (t._fill_container)
+				t.field.getHTMLElement().style.width = "100%";
 		} else {
 			require("typed_field.js",function() { 
 				require(field_classname+".js",function(){
@@ -74,6 +72,8 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 					t.field.onchange.add_listener(function() {
 						t._changed();
 					});
+					if (t._fill_container)
+						t.field.getHTMLElement().style.width = "100%";
 					config_field();
 					layout.invalidate(container);
 					if (onready) onready(t);
@@ -88,6 +88,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		t.field.getHTMLElement().onmouseover = null;
 		t.field.getHTMLElement().onmouseout = null;
 		t.field.getHTMLElement().onclick = null;
+		t.field.getHTMLElement().style.width = '';
 		var data = t.field.getCurrentData();
 		//container.removeChild(t.field.getHTMLElement());
 		t.field.getHTMLElement().style.display = 'none';
@@ -98,7 +99,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		lock_data(data, function(locks, data){
 			container.removeChild(loading);
 			//container.appendChild(t.field.getHTMLElement());
-			t.field.getHTMLElement().style.display = '';
+			t.field.getHTMLElement().style.display = 'inline-block';
 			if (locks == null) {
 				t.unedit();
 				return;
@@ -118,13 +119,13 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.save_button.style.verticalAlign = 'top';
 			t.save_button.style.cursor = 'pointer';
 			t.save_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.save(); stopEventPropagation(ev); return false; };
-			t.field.getHTMLElement().appendChild(t.save_button);
+			container.insertBefore(t.save_button, t.field.getHTMLElement().nextSibling);
 			t.unedit_button = document.createElement("IMG");
 			t.unedit_button.src = theme.icons_16.no_edit;
 			t.unedit_button.style.verticalAlign = 'top';
 			t.unedit_button.style.cursor = 'pointer';
 			t.unedit_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.unedit(); stopEventPropagation(ev); return false; };
-			t.field.getHTMLElement().appendChild(t.unedit_button);
+			container.insertBefore(t.unedit_button, t.save_button.nextSibling);
 			t.unedit_button.ondomremoved(function() {
 				if (t.save_button) t.unedit();
 			});
@@ -137,10 +138,10 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		//container.removeChild(t.field.getHTMLElement());
 		t.field.getHTMLElement().style.display = 'none';
 		if (t.save_button)
-			t.field.getHTMLElement().removeChild(t.save_button);
+			container.removeChild(t.save_button);
 		t.save_button = null;
 		if (t.unedit_button)
-			t.field.getHTMLElement().removeChild(t.unedit_button);
+			container.removeChild(t.unedit_button);
 		t.unedit_button = null;
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
@@ -149,7 +150,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		save_data(data, function(data) {
 			container.removeChild(loading);
 			//container.appendChild(t.field.getHTMLElement());
-			t.field.getHTMLElement().style.display = '';
+			t.field.getHTMLElement().style.display = 'inline-block';
 			t.field.setData(data);
 			t.field.setOriginalData(data);
 			t.unedit();

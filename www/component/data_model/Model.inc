@@ -155,8 +155,8 @@ class DataModel {
 	 * @throws \Exception
 	 * @return datamodel\Table
 	 */
-	public function getTableFromSQLName($name) {
-		if ($this instanceof SubDataModel) return $this->parent_model->getTableFromSQLName($name);
+	public function getTableFromSQLName($name, $bypass_security = false) {
+		if ($this instanceof SubDataModel) return $this->parent_model->getTableFromSQLName($name, $bypass_security);
 		
 		if (isset($this->tables[$name]))
 			$t = $this->tables[$name];
@@ -176,7 +176,7 @@ class DataModel {
 			}
 		}
 		if ($t == null) throw new \Exception("Table '".$name."' does not exist");
-		if ($t->canAccess()) return $t;
+		if ($bypass_security || $t->canAccess()) return $t;
 		throw new \Exception("Access denied: table ".$t->getName());
 	}
 	public function getSubModelInstanceFromSQLName($name) {

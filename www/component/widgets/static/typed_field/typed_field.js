@@ -104,6 +104,7 @@ typed_field.prototype = {
 		this._data = data;
 		this.validate();
 	},
+	getPossibleValues: undefined,
 	/**
 	 *  change data
 	 *  @param data new data value

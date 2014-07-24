@@ -12,8 +12,9 @@ class page_popup_create_people_step_entry extends Page {
 			$fixed_data = $input["fixed_data"];
 			$prefilled_columns = $input["prefilled_columns"];
 			$prefilled_data = $input["prefilled_data"];
+			$precreated = $input["precreated"];
 				
-			createMultipleDataPage($this, "People", null, @$input["sub_models"], $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data);
+			createMultipleDataPage($this, "People", null, @$input["sub_models"], $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data, $precreated);
 			?>
 			<script type='text/javascript'>
 			var fixed_columns = [<?php
@@ -136,10 +137,13 @@ class page_popup_create_people_step_entry extends Page {
 				<?php 
 				if (isset($input["ondone"])) echo "data.ondone = ".json_encode($input["ondone"]).";";
 				else if (isset($input["donotcreate"])) echo "data.donotcreate = ".json_encode($input["donotcreate"]).";";
+				if (isset($input["oncancel"])) echo "data.oncancel = ".json_encode($input["oncancel"]).";";
 				?>
 				postData("popup_create_people_step_check", data, window);
 			});
-			popup.addCancelButton();
+			popup.addCancelButton(function() {
+				<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]; ?>
+			});
 			if (popup.isFrozen()) popup.unfreeze();
 			</script>
 			<?php

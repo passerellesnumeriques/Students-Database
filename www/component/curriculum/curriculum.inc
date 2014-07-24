@@ -273,7 +273,10 @@ class curriculum extends Component {
 	public function getAcademicClassesForPeriod($period_id, $restrict_specialization = false) {
 		$q = SQLQuery::create()->select("AcademicClass")->where("period", $period_id);
 		if ($restrict_specialization !== false) {
-			$q->where("specialization", $restrict_specialization);
+			if ($restrict_specialization === null)
+				$q->whereNull("AcademicClass","specialization");
+			else
+				$q->where("specialization", $restrict_specialization);
 		}
 		return $q->execute();
 	}
@@ -292,7 +295,10 @@ class curriculum extends Component {
 		foreach ($periods as $period) array_push($ids, $period["id"]);
 		$q = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass", "period", $ids);
 		if ($restrict_specialization !== false) {
-			$q->where("specialization", $restrict_specialization);
+			if ($restrict_specialization === null)
+				$q->whereNull("AcademicClass","specialization");
+			else
+				$q->where("specialization", $restrict_specialization);
 		}
 		return $q->execute();
 	}
@@ -338,6 +344,10 @@ class curriculum extends Component {
 		if ($category_id <> null) $q->whereValue("CurriculumSubject", "category", $category_id);
 		$q->orderBy("CurriculumSubject","code");
 		return $q->execute();
+	}
+	
+	public function getSubjectQuery($subject_id) {
+		return SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject", "id", $subject_id);
 	}
 	
 	/** Retrieve teacher assignments for the given subjects

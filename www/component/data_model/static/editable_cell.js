@@ -28,12 +28,12 @@ function editable_cell(container, table, column, row_key, field_classname, field
 		}, function(data, handler) {
 			var new_data = data;
 			if (onsave)
-				new_data = onsave(new_data);
+				new_data = onsave(new_data,t);
 			service.json("data_model", "save_cell", {lock:t.lock,table:table,row_key:row_key,column:column,value:new_data},function(result) {
 				handler(new_data);
 			});
 		},function(ef) {
-			if (onchange) ef.field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
+			if (onchange) ef.field.onchange.add_listener(function(f) { onchange(f.getCurrentData(), t); });
 			ef.field.register_datamodel_cell(table,column,row_key);
 			if (onready) onready(t);
 		});

@@ -13,6 +13,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	td.appendChild(this.input_code);
 	this.element.appendChild(this.tr_code_error = document.createElement("TR"));
 	this.tr_code_error.appendChild(td = document.createElement("TD"));
+	td.colSpan = 2;
 	
 	this.element.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TD"));
@@ -26,6 +27,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	td.appendChild(this.input_name);
 	this.element.appendChild(this.tr_name_error = document.createElement("TR"));
 	this.tr_name_error.appendChild(td = document.createElement("TD"));
+	td.colSpan = 2;
 
 	this.element.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TD"));
@@ -52,6 +54,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	td.appendChild(this.select_hours_type);
 	this.element.appendChild(this.tr_hours_error = document.createElement("TR"));
 	this.tr_hours_error.appendChild(td = document.createElement("TD"));
+	td.colSpan = 2;
 	
 	this.element.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TD"));
@@ -66,6 +69,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	td.appendChild(this.input_coef);
 	this.element.appendChild(this.tr_coef_error = document.createElement("TR"));
 	this.tr_coef_error.appendChild(td = document.createElement("TD"));
+	td.colSpan = 2;
 	
 	this._error = function(tr, msg) {
 		var title = tr.previousSibling;

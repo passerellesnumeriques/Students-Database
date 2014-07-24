@@ -37,7 +37,7 @@ class service_get_latests_replies extends Service {
 			$a = array();
 			foreach ($people_names as $domain=>$users) {
 				$q = PNApplication::$instance->user_management->selectUsers($users, $domain);
-				PNApplication::$instance->user_people->joinPeopleToUsers($q);
+				PNApplication::$instance->user_management->joinPeopleToUsers($q);
 				$res = $q->execute();
 				$a[$domain] = array();
 				foreach ($res as $r) {

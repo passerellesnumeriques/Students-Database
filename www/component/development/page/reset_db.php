@@ -24,6 +24,7 @@ foreach ($domains as $domain) {
 	if ($domain == "Test") continue;
 	if ($first) $first = false; else echo ",";
 	echo "{service:'create_db',data:{domain:'".$domain."'},message:'Initialize database for domain ".$domain."'}";
+	echo ",{service:'reset_storage',data:{domain:'".$domain."'},message:'Removing stored data for domain ".$domain."'}";
 	echo ",{service:'test_data',data:{domain:'".$domain."'},message:'Insert test data in domain ".$domain."'}";
 }?>
 ];

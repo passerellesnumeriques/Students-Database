@@ -41,7 +41,7 @@
 	height:27px;
 }
 #application_frame {
-	border-radius: 5px;
+	border-radius: 8px;
 	z-index: 1;
 }
 #application_footer {
@@ -233,7 +233,7 @@
 				</div>
 				<div id="application_right_menu" style="flex:none;">
 					<input type='text' id='application_search'/>
-					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>' target='application_frame'><div id='user_picture'></div></a>
+					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>' target='application_frame'><div id='user_picture'></div></a>
 					<button class="flat"><img id='notifications' src='/static/application/menu/notifications.png'/></button>
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat"><img id='calendars' src='/static/calendar/calendar_white.png'/></button></a>
 					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat"><img id='logout' src='/static/application/logout_white.png'/></button></a>
@@ -249,7 +249,7 @@
 <script type='text/javascript'>
 user_picture = document.getElementById('user_picture');
 require("profile_picture.js",function() {
-	new profile_picture(user_picture, 25, 25, "center", "middle").loadPeopleID(<?php echo PNApplication::$instance->user_people->user_people_id;?>);
+	new profile_picture(user_picture, 25, 25, "center", "middle").loadPeopleID(<?php echo PNApplication::$instance->user_management->people_id;?>);
 });
 tooltip(user_picture, "Your profile");
 
@@ -417,6 +417,11 @@ function pageLoaded(url) {
 		if (item.hasAttribute("href")) {
 			var iu = new URL(item.getAttribute("href"));
 			if (u.path == iu.path) oks.push(item);
+			else if (item.hasAttribute("alternate_hrefs")) {
+				var hrefs = item.getAttribute("alternate_hrefs").split(";");
+				for (var j = 0; j < hrefs.length; ++j)
+					if (new URL(hrefs[j]).path == u.path) { oks.push(item); break; }
+			}
 			item.className = "application_left_menu_item";
 			var is_ok = u.path == iu.path;
 			if (is_ok && iu.hash) is_ok = iu.hash == u.hash;

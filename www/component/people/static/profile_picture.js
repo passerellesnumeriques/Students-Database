@@ -99,7 +99,7 @@ function profile_picture(container, width, height, halign, valign) {
 		});
 	};
 	this.loadUser = function(domain, username, onloaded) {
-		service.json("user_people", "people_from_user", {domain:domain,username:username}, function(res) {
+		service.json("user_management", "people_from_user", {domain:domain,username:username}, function(res) {
 			if (!res) {
 				img.src = theme.icons_16.error;
 				t.picture = null;

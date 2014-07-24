@@ -81,6 +81,7 @@ namespace datamodel {
 				// TODO check can really edit the columns
 				if ($is_new) {
 					$script .= "field = new ".$tf[0]."(".json_encode($value).",".json_encode($can_edit).",".$tf[1].");\n";
+					$script .= "field.fillWidth();\n";
 					$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
 					if ($structure_name <> null)
 						$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",field:field,getValue:function(){return this.field.getCurrentData();},validate:function(){ return this.field.error; }});\n";

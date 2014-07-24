@@ -44,7 +44,7 @@ $model->addTable("People")
 	->addReadFilter(function(&$q, $table_alias) {
 		if (PNApplication::$instance->user_management->has_right("see_anybody")) return;
 		// allow to read user own info
-		$w = "(`".$table_alias."`.`id`='".PNApplication::$instance->user_people->user_people_id."')";
+		$w = "(`".$table_alias."`.`id`='".PNApplication::$instance->user_management->people_id."')";
 		// restrict by type of people
 		$types = array();
 		require_once("PeopleTypePlugin.inc");

@@ -21,6 +21,15 @@ function GoogleMap(container, onready) {
 	this.map = null;
 	this.shapes = [];
 	
+	this.getShapeBounds = function(shape) {
+		if (typeof shape.getBounds != 'undefined') return shape.getBounds();
+		if (typeof shape.getPosition != 'undefined') {
+			var pos = shape.getPosition();
+			return this.createBounds(pos.lat(), pos.lng(), pos.lat(), pos.lng());
+		}
+		return null;
+	};
+	
 	this.createBounds = function(south, west, north, east) {
 		return new window.top.google.maps.LatLngBounds(
 			new window.top.google.maps.LatLng(south, west),
@@ -34,9 +43,42 @@ function GoogleMap(container, onready) {
 	
 	this.fitToShapes = function() {
 		if (this.shapes.length == 0) return;
-		var bounds = this.shapes[0].getBounds();
+		var bounds = this.getShapeBounds(this.shapes[0]);
 		for (var i = 1; i < this.shapes.length; ++i)
-			bounds = maxGoogleBounds(bounds, this.shapes[i].getBounds());
+			bounds = maxGoogleBounds(bounds, this.getShapeBounds(this.shapes[i]));
+		var diff = bounds.getNorthEast().lat() - bounds.getSouthWest().lat();
+		if (diff < 0.01) {
+			bounds = new window.top.google.maps.LatLngBounds(
+				new window.top.google.maps.LatLng(bounds.getSouthWest().lat()-(0.01-diff)/2, bounds.getSouthWest().lng()),
+				new window.top.google.maps.LatLng(bounds.getNorthEast().lat()+(0.01-diff)/2, bounds.getNorthEast().lng())
+			);
+		}
+		diff = bounds.getNorthEast().lng() - bounds.getSouthWest().lng();
+		if (diff < 0.01) {
+			bounds = new window.top.google.maps.LatLngBounds(
+				new window.top.google.maps.LatLng(bounds.getSouthWest().lat(), bounds.getSouthWest().lng()-(0.01-diff)/2),
+				new window.top.google.maps.LatLng(bounds.getNorthEast().lat(), bounds.getNorthEast().lng()+(0.01-diff)/2)
+			);
+		}
+		this.map.fitBounds(bounds);
+	};
+	
+	this.zoomOnShape = function(shape) {
+		var bounds = this.getShapeBounds(shape);
+		var diff = bounds.getNorthEast().lat() - bounds.getSouthWest().lat();
+		if (diff < 0.01) {
+			bounds = new window.top.google.maps.LatLngBounds(
+				new window.top.google.maps.LatLng(bounds.getSouthWest().lat()-(0.01-diff)/2, bounds.getSouthWest().lng()),
+				new window.top.google.maps.LatLng(bounds.getNorthEast().lat()+(0.01-diff)/2, bounds.getNorthEast().lng())
+			);
+		}
+		diff = bounds.getNorthEast().lng() - bounds.getSouthWest().lng();
+		if (diff < 0.01) {
+			bounds = new window.top.google.maps.LatLngBounds(
+				new window.top.google.maps.LatLng(bounds.getSouthWest().lat(), bounds.getSouthWest().lng()-(0.01-diff)/2),
+				new window.top.google.maps.LatLng(bounds.getNorthEast().lat(), bounds.getNorthEast().lng()+(0.01-diff)/2)
+			);
+		}
 		this.map.fitBounds(bounds);
 	};
 	
@@ -65,6 +107,32 @@ function GoogleMap(container, onready) {
 		this.fitToShapes();
 	};
 	
+	this.addRect = function(south, west, north, east, borderColor, fillColor, fillOpacity) {
+		var rect = new window.top.google.maps.Rectangle({
+			bounds: this.createBounds(south, west, north, east),
+			strokeColor: borderColor,
+			strokeWeight: 2,
+			strokeOpacity: 0.8,
+			fillColor: fillColor,
+			fillOpacity: fillOpacity,
+			editable: false
+		});
+		this.addShape(rect);
+		return rect;
+	};
+	this.addMarker = function(lat, lng, opacity, title) {
+		var m = new window.top.google.maps.Marker({
+			//clickable: false,
+			//crossOnDrag: false,
+			opacity: opacity,
+			position: new window.top.google.maps.LatLng(lat, lng),
+			//visible: true,
+			title: title
+		});
+		this.addShape(m);
+		return m;
+	};
+	
 	this._init = function() {
 		loadGoogleMaps(function() {
 			t.map = new window.top.google.maps.Map(container, { 
@@ -87,7 +155,7 @@ function maxGoogleBounds(b1,b2) {
 	var west2 = b2.getSouthWest().lng();
 	var east2 = b2.getNorthEast().lng();
 	return new window.top.google.maps.LatLngBounds(
-			new window.top.google.maps.LatLng(Math.min(south1, south2), Math.min(west1, west2)),
-			new window.top.google.maps.LatLng(Math.max(north1, north2), Math.max(east1, east2))
-		);
+		new window.top.google.maps.LatLng(Math.min(south1, south2), Math.min(west1, west2)),
+		new window.top.google.maps.LatLng(Math.max(north1, north2), Math.max(east1, east2))
+	);
 }

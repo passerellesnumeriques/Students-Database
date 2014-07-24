@@ -1,15 +1,25 @@
 <html>
 <head>
-    <script type='text/javascript' src='/static/javascript/browser.js'></script>
-    <script type='text/javascript' src='/static/javascript/utils.js'></script>
+    <script type='text/javascript' src='/static/javascript/browser.js' onload="this._loaded = true;"></script>
+    <script type='text/javascript' src='/static/javascript/utils.js' onload="this._loaded = true;"></script>
+    <script type='text/javascript' src='/static/application/application.js' onload="this._loaded = true;"></script>
     <link rel="stylesheet" type="text/css" href="/static/theme/default/style/global.css"></link>
 </head>
-<body style='background-color:white'>
+<body>
 <div id='text_container'></div>
 <script type='text/javascript'>
 var u = new URL(location.href);
 if (u.params && u.params.text)
 	document.getElementById('text_container').innerHTML = u.params.text;
+
+if (u.params && u.params.background)
+	document.body.style.backgroundColor = u.params.background;
+
+if (u.params && u.params.padding)
+    document.getElementById('text_container').style.padding = u.params.padding+"px";
+
+window._page_ready = true;
+window.layout = { _invalidated: [], everythingOnPageLoaded: function() { return true; } };
 </script>
 </body>
 </html>

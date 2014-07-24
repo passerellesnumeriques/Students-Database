@@ -134,7 +134,7 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 		t.icon.className = "flat small";
 		t.icon.style.verticalAlign = "bottom";
 		t.icon.innerHTML = "<img src='"+theme.icons_16.date_picker+"'/>";
-		t.icon.onclick = function() {
+		t.icon.onclick = function(ev) {
 			require(["date_picker.js","context_menu.js"],function(){
 				var menu = new context_menu();
 				new date_picker(t.getDate(),t.minimum,t.maximum,function(picker){
@@ -148,6 +148,8 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 					menu.showBelowElement(t.select_day);
 				});
 			});
+			stopEventPropagation(ev);
+			return false;
 		};
 		container.appendChild(t.icon);
 	}

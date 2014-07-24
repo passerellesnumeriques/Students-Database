@@ -50,6 +50,12 @@ $model->addTable("StudentBatch")
   			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$fields["name"]." created.");
   		} catch (Exception $e) { PNApplication::error($e); }
    	})
+   	->onRemove(function($row,$sub_model_instance) {
+   		try {
+   			PNApplication::$instance->news->post("students", "batch", null, "Batch ".$row["name"]." removed.");
+   		} catch (Exception $e) { PNApplication::error($e); }
+   	})
+   	// TODO on update
  	->setRowDescriptionProvider(function($row) {
  		return "Batch <i>".htmlentities($row["name"])."</i>";
  	})

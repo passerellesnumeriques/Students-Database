@@ -22,7 +22,7 @@ class service_home_menu extends Service {
     <img src='/static/calendar/calendar_white.png'/>
     Your Calendars
 </a>
-<a class='application_left_menu_item' href="/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id;?>">
+<a class='application_left_menu_item' href="/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>">
     <img src='/static/people/profile_white.png'/>
     Your Profile
 </a>

@@ -14,4 +14,14 @@ $display->addDataDisplay(new datamodel\JoiningTableDataDisplay("Roles", "user", 
 $display->addJoinFromAll();
 $model->addTableDataDisplay($display);
 
+$display = new datamodel\TableDataDisplay("UserPeople", $category);
+$display->addFollowAll();
+$display->addJoinFrom("user");
+$display->addJoinFrom("people", array("types"), function($columns) {
+	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
+	return in_array("user", $types);
+});
+$display->addJoinToPrimary();
+$model->addTableDataDisplay($display);
+
 ?>

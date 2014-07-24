@@ -8,9 +8,9 @@ class page_dashboard extends Page {
 <style type="text/css">
 .section_box {
 	display: inline-block;
-    width: 129px;
-    height: 125px;
-    padding: 3px 1px 3px 1px;
+    width: 130px;
+    height: 130px;
+    padding: 3px 3px 3px 3px;
     margin: 3px;
     border: 1px solid rgba(0,0,0,0);
     border-radius: 5px; 
@@ -20,6 +20,14 @@ class page_dashboard extends Page {
 }
 .section_box:hover {
 	border: 1px solid #808080;
+	box-shadow: 2px 2px 2px 0px #C0C0C0;
+}
+.section_box:active {
+	box-shadow: none;
+	position: relative;
+	top: 2px;
+	left: 2px;
+	background-color: #F0F0F0;
 }
 .section_box>div {
 	text-align: center;

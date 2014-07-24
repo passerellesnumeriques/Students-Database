@@ -27,8 +27,7 @@ SET time_zone = "+00:00";
 INSERT INTO `countrydivision` (`id`, `country`, `parent`, `name`) VALUES
 (1, 1, NULL, 'Province'),
 (2, 1, 1, 'Municipality'),
-(3, 1, 2, 'Baranguay'),
-(4, 1, 3, 'Sitio');
+(3, 1, 2, 'Barangay');
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

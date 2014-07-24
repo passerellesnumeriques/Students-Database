@@ -2,7 +2,6 @@
 /* @var $model DataModel */
 $model->addTable("CurriculumSubjectGrading")
 	->addForeignKey("subject", "CurriculumSubject", true, false, false, false, true)
-	->addInteger("weight",8,0,200,false,false)
 	->addDecimal("max_grade",3,2,0,100,false,false)
 	->addDecimal("passing_grade",3,2,0,100,false,false)
 	->addBoolean("only_final_grade", false)
@@ -74,5 +73,4 @@ $model->addTable("StudentSubjectGrade")
 	->addRemoveAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_curriculum", true)
 	;
-
 ?>

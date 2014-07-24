@@ -1901,52 +1901,70 @@ class SQLQuery {
 				$this->browseTablesForRemove($t, $sub_model_instance, $keys, null, $locks, $to_remove, $to_update, $sub_models_to_remove);
 			} catch (Exception $e) {
 				foreach ($locks as $lock) DataBaseLock::unlock($lock);
-				throw new Exception("Remove from table '".$table."': ".$e->getMessage());
+				throw new Exception("Remove from table '".$table."': ".$e->getMessage(), null, $e);
 			}
 			
 			// everything is allowed, and all tables are locked: do it
 			foreach ($to_remove as $table_name=>$to_remove_in_table) {
 				if (isset($to_remove_in_table["keys"])) {
-					$sql = "DELETE FROM `".$table_name."` WHERE ";
+					$where = "";
 					if (is_array($to_remove_in_table["key_name"])) {
 						$first_key = true;
 						foreach ($to_remove_in_table["keys"] as $key) {
-							if ($first_key) $first_key = false; else $sql .= " OR ";
-							$sql .= "(";
+							if ($first_key) $first_key = false; else $where .= " OR ";
+							$where .= "(";
 							$first = true;
 							foreach ($to_remove_in_table["key_name"] as $key_name) {
-								if ($first) $first = false; else $sql .= " AND ";
-								$sql .= "`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+								if ($first) $first = false; else $where .= " AND ";
+								$where .= "`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
 							}
-							$sql .= ")";
+							$where .= ")";
 						}					
-						SQLQuery::db()->execute($sql);
 					} else {
 						if (count($to_remove_in_table["keys"]) > 0) {
-							$sql .= "`".$to_remove_in_table["key_name"]."` IN (";
+							$where .= "`".$to_remove_in_table["key_name"]."` IN (";
 							$first = true;
 							foreach ($to_remove_in_table["keys"] as $key) {
-								if ($first) $first = false; else $sql .= ",";
-								$sql .= $key;
+								if ($first) $first = false; else $where .= ",";
+								$where .= $key;
 							}
-							$sql .= ")";
-							SQLQuery::db()->execute($sql);
+							$where .= ")";
 						}
+					}
+					if ($where <> "") {
+						$dm_table = DataModel::get()->getTableFromSQLName($table_name, $this->bypass_security);
+						if ($dm_table->hasRemoveListeners()) {
+							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
+							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$where);
+							while (($row = SQLQuery::db()->nextRow($res)) <> null)
+								$dm_table->fireRemove($row, $sub_model);
+						}
+						$sql = "DELETE FROM `".$table_name."` WHERE ".$where;
+						SQLQuery::db()->execute($sql);
 					}
 				} else {
-					$sql = "DELETE FROM `".$table_name."` WHERE ";
+					$w = "";
 					$first = true;
 					foreach ($to_remove_in_table["where"] as $where) {
-						if ($first) $first = false; else $sql .= " OR ";
-						$sql .= "(";
+						if ($first) $first = false; else $w .= " OR ";
+						$w .= "(";
 						$f = true;
 						foreach ($where as $col=>$val) {
-							if ($f) $f = false; else $sql .= " AND ";
-							$sql .= "`".$col."`='".SQLQuery::escape(utf8_decode($val))."'";
+							if ($f) $f = false; else $w .= " AND ";
+							$w .= "`".$col."`='".SQLQuery::escape(utf8_decode($val))."'";
 						}
-						$sql .= ")";
+						$w .= ")";
 					}
-					SQLQuery::db()->execute($sql);
+					if ($w <> "") {
+						$dm_table = DataModel::get()->getTableFromSQLName($table_name, $this->bypass_security);
+						if ($dm_table->hasRemoveListeners()) {
+							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
+							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$where);
+							while (($row = SQLQuery::db()->nextRow($res)) <> null)
+								$dm_table->fireRemove($row, $sub_model);
+						}
+						SQLQuery::db()->execute("DELETE FROM `".$table_name."` WHERE ".$w);
+					}
 				}
 			}
 			foreach ($to_update as $update) {

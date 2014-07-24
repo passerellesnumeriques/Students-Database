@@ -70,11 +70,14 @@ namespace datamodel {
 		// events
 		/** @var Event */
 		private $oninsert;
+		/** @var Event */
+		private $onremove;
 
 		public function __construct(&$model, $name) {
 			$this->model = &$model;
 			$this->name = $name;
 			$this->oninsert = new \Event();
+			$this->onremove = new \Event();
 		}
 
 		public function _key_for_submodel(&$sm) {
@@ -302,6 +305,10 @@ namespace datamodel {
 			return $this;
 		}
 		
+		/**
+		 * @param function $fct takes 3 parameters: fields_values, id, sub_model_instance
+		 * @return \datamodel\Table
+		 */
 		public function onInsert($fct) {
 			$this->oninsert->listenFunction($fct);
 			return $this;
@@ -309,7 +316,21 @@ namespace datamodel {
 		public function fireInsert($fields_values, $id, $sub_model_instance) {
 			$this->oninsert->fire(array($fields_values,$id,$sub_model_instance));
 		}
-
+		/**
+		 * @param function $fct takes 2 parameters: row, sub_model_instance
+		 * @return \datamodel\Table
+		 */
+		public function onRemove($fct) {
+			$this->onremove->listenFunction($fct);
+			return $this;
+		}
+		public function fireRemove($row, $sub_model_instance) {
+			$this->onremove->fire(array($row,$sub_model_instance));
+		}
+		public function hasRemoveListeners() {
+			return $this->onremove->hasListeners();
+		}
+		
 		/** Indicate one or several columns should be indexed for faster access.
 		 * As parameters, this method expects the list of columns to be indexed together.
 		 * @return \datamodel\Table

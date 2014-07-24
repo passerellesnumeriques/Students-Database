@@ -126,7 +126,7 @@ class page_teachers_assignments extends Page {
 		}
 		?>
 		</div>
-		<div id='teachers_section' style='display:inline-block;flex:1 1 auto' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
+		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
 		<div style='background-color:white'>
 		<?php $id = $this->generateID();?>
 		<table class='teachers_table'><tbody id='<?php echo $id;?>'>

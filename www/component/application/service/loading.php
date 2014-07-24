@@ -28,21 +28,17 @@ $mandatory = array(
 $optional = array("/static/widgets/common_dialogs.js");
 $optional_delayed = array();
 if (PNApplication::$instance->user_management->username == null) {
-	// if we are not yet logged, to allow google or facebook login, we include them as soon as possible
-	array_push($mandatory, "/static/google/google.js");
-	//array_push($mandatory, "/static/facebook/facebook.js");
-	// then the things that are not mandatory on the login page
 	array_push($optional, "/static/javascript/animation.js");
 	array_push($optional, "/static/application/service.js");
 	array_push($optional, "/static/widgets/Status.js");
 	array_push($optional, "/static/widgets/StatusUI_Top.js");
+	array_push($optional_delayed, "/static/google/google.js");
 } else {
 	array_push($mandatory, "/static/application/service.js");
 	array_push($optional, "/static/javascript/animation.js");
 	array_push($optional, "/static/widgets/Status.js");
 	array_push($optional, "/static/widgets/StatusUI_Top.js");
 	array_push($optional_delayed, "/static/google/google.js");
-	//array_push($optional_delayed, "/static/facebook/facebook.js");
 }
 function get_script_info(&$a) {
 	for ($i = 0; $i < count($a); ++$i) {
@@ -57,16 +53,21 @@ $total = 0;
 foreach ($mandatory as $s) $total += $s[1];
 foreach ($optional as $s) $total += $s[1];
 ?>
+window.top.google_local_config = <?php
+$d = PNApplication::$instance->getDomainDescriptor(); 
+echo json_encode($d["google"]);
+?>;
+
 var _mandatory_index = 0;
 function _addJavascript(url, callback) {
 	var head = document.getElementsByTagName("HEAD")[0];
 	var s = document.createElement("SCRIPT");
 	s.type = "text/javascript";
+	s.onload = function() { this._loaded = true; if (callback) setTimeout(callback,1); };
+	//s.onerror = function() { alert("Error loading initial javascript file: "+this.src); };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { this._loaded = true; if (callback) setTimeout(callback,1); this.onreadystatechange = null; } };
 	head.appendChild(s);
 	s.src = url;
-	s.onload = function() { this._loaded = true; if (callback) setTimeout(callback,1); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded') { this._loaded = true; if (callback) setTimeout(callback,1); this.onreadystatechange = null; } };
-
 }
 window.pn_loading = document.all ? document.all['__loading_table'] : document.getElementById('__loading_table');
 var pn_loading_visible = true;

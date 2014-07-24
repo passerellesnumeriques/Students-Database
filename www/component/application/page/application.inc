@@ -4,6 +4,8 @@ theme::css($this, "application.css");
 // mandatory part
 $this->requireJavascript("calendar.js");
 ?><script type='text/javascript'>
+window.top.username = <?php echo json_encode(PNApplication::$instance->user_management->username); ?>;
+window.top.user_id = <?php echo PNApplication::$instance->user_management->user_id; ?>;
 window.top.default_country_code = <?php $d = PNApplication::$instance->getDomainDescriptor(); echo json_encode($d["geography"]["country_code"]).";"; ?>
 window.top.default_country_id = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo $c["id"]; ?>;
 window.top.default_country_name = <?php $c = PNApplication::$instance->geography->getLocalCountry(); echo json_encode($c["name"]); ?>;
@@ -41,6 +43,11 @@ window.top.pnapplication.onlogout.add_listener(function() {
 	window.top.calendar_manager = null;
 });
 document.body.style.overflow = "hidden";
+<?php 
+$google_account = PNApplication::$instance->google->getConnectedAccount();
+if ($google_account <> null)
+	echo "window.top.require('google.js',function(){window.top.google.connect(".json_encode($google_account["google_login"]).");});";
+?>
 </script><?php
 if (isset($_GET["page"]) && !isset($_GET["section"])) {
 	// only the frame

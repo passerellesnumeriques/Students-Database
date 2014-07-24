@@ -65,7 +65,7 @@ class page_tree_frame extends Page {
 			</button>
 			<?php } ?>
 		</div>
-		<div id='tree' style='background-color:white;flex:1 1 auto;'></div>
+		<div id='tree' style='background-color:white;flex:1 1 auto;overflow:auto'></div>
 		<div id='tree_footer' style='flex:none'>
 			<div id='tree_footer_title'></div>
 			<div id='tree_footer_content'></div>
@@ -127,6 +127,7 @@ function selectNodeByTag(tag) {
 listenEvent(frame,'load',function() {
 	var win = getIFrameWindow(frame);
 	if (!win || !win.location) return;
+	if (win.location.href == "about:blank") return;
 	var url = new URL(win.location.href);
 	location.hash = "#"+url.path;
 });

@@ -57,7 +57,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			this.thead.appendChild(tr_head);
 		}
 		for(var i = 0; i < this.addresses.length; i++)
-			this.addAddress(this.addresses[i]);
+			this._createAddressRow(this.addresses[i]);
 		
 		if (can_add){
 			var td_foot_1 = document.createElement('td');
@@ -81,7 +81,16 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 * @param {PostalAddress} address the new postal address
 	 * @param {Boolean} is_new if true, the popup dialog to edit the address will be automatically displayed
 	 */
-	this.addAddress = function(address, is_new){
+	this.addAddress = function(address) {
+		t._createAddressRow(address);
+		t.addresses.push(address);
+		t.onchange.fire(t);
+	};
+	/** Add a new address
+	 * @param {PostalAddress} address the new postal address
+	 * @param {Boolean} is_new if true, the popup dialog to edit the address will be automatically displayed
+	 */
+	this._createAddressRow = function(address, is_new){
 		var tr = document.createElement("tr");
 		tr.address = address;
 		var td_category = document.createElement("td");
@@ -144,7 +153,9 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 											field_street_number: edit.address.street_number,
 											field_building: edit.address.building,
 											field_unit: edit.address.unit,
-											field_additional: edit.address.additional
+											field_additional: edit.address.additional,
+											field_lat: edit.address.lat,
+											field_lng: edit.address.lng
 										},function(res) {
 											if (!res) { p.unfreeze(); return; }
 											window.databaselock.removeLock(lock_id);
@@ -200,16 +211,14 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 					var l = t.addresses.length;
 					t.addresses[l] = address;
 					/* Update the table */
-					t.addAddress(address, true);
-					t.onchange.fire(t);
+					t._createAddressRow(address, true);
 				});
 			} else {
 				/* Update the result object */
 				var l = t.addresses.length;
 				t.addresses[l] = address;
 				/* Update the table */
-				t.addAddress(address, true);
-				t.onchange.fire(t);
+				t._createAddressRow(address, true);
 			}
 		});
 	};

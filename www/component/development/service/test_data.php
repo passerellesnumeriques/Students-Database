@@ -36,6 +36,12 @@ class service_test_data extends Service {
 				$this->SplitSQL($db_system, "component/development/data/curriculumsubjectcategory.sql");
 				$this->SplitSQL($db_system, "component/development/data/specialization.sql");
 				$this->SplitSQL($db_system, "component/development/data/organization.sql");
+				$this->SplitSQL($db_system, "component/development/data/PNP_AcademicYearsAndBatches.sql");
+				$this->SplitSQL($db_system, "component/development/data/PNP_Batch2012_Curriculum.sql");
+				$this->SplitSQL($db_system, "component/development/data/PNP_Batch2012.sql");
+				$this->importStorage($db_system, "PNP_Batch2012", $domain);
+				$this->SplitSQL($db_system, "component/development/data/PNP_Batch2013.sql");
+				$this->importStorage($db_system, "PNP_Batch2013", $domain);
 				// generate events accordingly to data added
 				PNApplication::$instance->user_management->login("Dev", "admin", "");
 				$model = DataModel::get();
@@ -70,6 +76,34 @@ class service_test_data extends Service {
 			}
 		}
 		return false;
+	}
+	
+	private function importStorage(&$db_system, $name, $domain) {
+		set_time_limit(240);
+		$src_path = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/component/development/data/storage/$name");
+		$dir = opendir($src_path);
+		while (($filename = readdir($dir)) <> null) {
+			if (is_dir($src_path."/".$filename)) continue;
+			if ($filename == "insert.sql") continue;
+			
+			$id = $filename;
+			$dir1 = $id%100;
+			$dir2 = ($id/100)%100;
+			$dir3 = ($id/10000)%100;
+			$filename = intval($id/1000000);
+			
+			$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/$domain";
+			$path .= "/$dir1";
+			@mkdir($path);
+			$path .= "/$dir2";
+			@mkdir($path);
+			$path .= "/$dir3";
+			@mkdir($path);
+			
+			copy($src_path."/".$id, $path."/".$filename);	
+		}
+		closedir($dir);
+		$this->SplitSQL($db_system, $src_path."/insert.sql");
 	}
 	
 }

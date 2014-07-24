@@ -584,7 +584,7 @@ var _scripts_loaded = [];
  * @param {String} url URL of the JavaScript file to load
  * @param {Function} onload called once the javascript is loaded
  */
-function addJavascript(url, onload) {
+function addJavascript(url, onload, additional_attributes) {
 	var p = new URL(url).toString();
 	if (_scripts_loaded.contains(p)) {
 		if (onload) onload();
@@ -624,10 +624,14 @@ function addJavascript(url, onload) {
 	}
 	// this is a new script
 	var s = document.createElement("SCRIPT");
+	if (additional_attributes)
+		for (var name in additional_attributes)
+			s[name] = additional_attributes[name];
 	s.data = new Custom_Event();
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
 	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); };
+	//s.onerror = function(ev) { alert("Error loading javascript file: "+this.src); for (var name in ev) alert("Event: "+name+"="+ev[name]); };
 	s.onreadystatechange = function() { if (this.readyState == 'loaded') { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
 	s.src = p;

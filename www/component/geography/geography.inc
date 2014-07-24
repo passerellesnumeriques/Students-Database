@@ -143,42 +143,24 @@ class geography extends Component {
 	}
 	
 	/**
-	 * Get all the children ids that belong to the level below the one of the given area
-	 * @param number | null $area_id null if root level
-	 * @return array containing the children ids, empty array if no children
-	 */
-	public function getAreaChildrenLevelBelow ($area_id){
-		$children = array();
-		$q = SQLQuery::create()
-			->select("GeographicArea")
-			->field("GeographicArea","id")
-			->whereValue("GeographicArea", "parent", $area_id)
-			->executeSingleField();
-		if($q <> null)
-			$children = $q;
-		return $children;
-	}
-	
-	/**
 	 * Get all the children (until highest level) of a geographic area in a flat array (no hierarchy between the ids)
 	 * @param number | null $area_id null if root level
 	 * @return array the ids list, empty array if no children
 	 */
-	public function getAreaAllChildrenFlat($area_id){
-		$children = array();
-		$to_browse = $this->getAreaChildrenLevelBelow($area_id);
-		while(count($to_browse) > 0){
-			//Get all the children of the first to_browse id
-			$new_children = $this->getAreaChildrenLevelBelow($to_browse[0]);
-			//Add this first id to the children array
-			array_push($children, $to_browse[0]);
-			//Remove this first id from to_browse array
-			array_splice($to_browse, 0,1);
-			//Push all the new children into to_browse array
-			foreach ($new_children as $child)
-				array_push($to_browse, $child);
+	public function getAreaAllChildrenFlat($area_id, $area_division_index, $country_divisions){
+		if ($area_division_index >= count($country_divisions)-1) return array(); // last division => no children
+		$list = array($area_id);
+		$prev_division = array($area_id);
+		for ($i = $area_division_index+1; $i < count($country_divisions); $i++) {
+			$children = SQLQuery::create()
+				->select("GeographicArea")
+				->whereIn("GeographicArea", "parent", $prev_division)
+				->field("GeographicArea", "id")
+				->executeSingleField();
+			$list = array_merge($list, $children);
+			$prev_division = $children;
 		}
-		return $children;
+		return $list;
 	}
 	
 	public function getCountryDivisions($country_id) {
@@ -196,6 +178,11 @@ class geography extends Component {
 			}
 		}
 		return $divisions;
+	}
+	
+	public function getCountryDivisionsFromArea($area) {
+		$division = SQLQuery::create()->select("CountryDivision")->whereValue("CountryDivision","id",$area["country_division"])->executeSingleRow();
+		return $this->getCountryDivisions($division["country"]);
 	}
 	
 	public function getArea($id) {

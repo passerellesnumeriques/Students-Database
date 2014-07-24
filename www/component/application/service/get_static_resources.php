@@ -74,6 +74,7 @@ class service_get_static_resources extends Service {
 	 * @param array[] $images list of images found: array('url'=>x,'size'=>y)
 	 */
 	private function browse($path, $url, &$scripts, &$images) {
+		if (strpos($path, "lib_")) return;
 		$dir = @opendir($path);
 		if ($dir == null) return;
 		while (($filename = readdir($dir)) <> null) {

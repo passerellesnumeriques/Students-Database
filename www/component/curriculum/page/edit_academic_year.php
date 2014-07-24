@@ -19,29 +19,51 @@ class page_edit_academic_year extends Page {
 			);
 			$periods = array();
 			$last_year = $_GET["year"];
-			for ($i = 0; $i < count($conf["default_year_periods"]); $i++) {
+			// create default academic year
+			$default_academic_year = $conf["default_academic_year"];
+			$periods_number = array();
+			foreach ($default_academic_year as $default_period) {
 				$period = array(
 					"id"=>-1,
 					"year"=>-1,
-					"name"=>$conf["period_name"]." ".($i+1),
-					"weeks"=>$conf["period_weeks"]
+					"name"=>"",
+					"weeks"=>1
 				);
-				$c = $conf["default_year_periods"][$i];
-				$start = mktime(0,0,0,$c["month"],1,$last_year);
-				$start += ($c["week"]-1)*7*24*60*60;
+				// set name of period
+				$period["name"] = $default_period["period"];
+				if (!isset($periods_number[$default_period["period"]]))
+					$periods_number[$default_period["period"]] = 1;
+				$period["name"] .= " ".$periods_number[$default_period["period"]];
+				$periods_number[$default_period["period"]]++;
+				// get the configuration of this type of period
+				$preset_period = null;
+				foreach ($conf["preset_periods"] as $pp)
+					if ($pp["name"] == $default_period["period"]) { $preset_period = $pp; break; }
+				if ($preset_period <> null) {
+					$period["weeks"] = $preset_period["weeks"];
+				}
+				// set the start and end dates of the period
+				$start = mktime(0,0,0,$default_period["month"],1,$last_year);
+				$start += ($default_period["week"]-1)*7*24*60*60;
 				$date = getdate($start);
 				while ($date["wday"] <> 1) {
 					$start += 24*60*60;
 					$date = getdate($start);
 				}
-				$end = $start + ($conf["period_weeks"]+$c["weeks_break"])*7*24*60*60;
+				$end = $start + ($period["weeks"]+$default_period["weeks_break"])*7*24*60*60;
 				$end -= 24*60*60;
 				$period["start"] = date("Y-m-d", $start);
 				$period["end"] = date("Y-m-d", $end);
-				$period["weeks_break"] = $c["weeks_break"];
+				$period["weeks_break"] = $default_period["weeks_break"];
 				$last_year = getdate($end);
 				$last_year = $last_year["year"];
 				array_push($periods, $period);
+			}
+			// remove the number when only one period of same type
+			foreach ($periods_number as $name=>$nb) {
+				if ($nb <> 2) continue;
+				for ($i = 0; $i < count($periods); $i++)
+					if ($periods[$i]["name"] == $name." 1") { $periods[$i]["name"] = $name; break; }
 			}
 		}
 		
@@ -97,8 +119,8 @@ function addPeriod(period) {
 		period = {
 			id: -1,
 			year_id: <?php echo $id <> null ? $id : "-1"; ?>,
-			name: <?php echo json_encode($conf["period_name"]);?>+" "+(periods.length+1),
-			weeks: <?php echo $conf["period_weeks"]; ?>,
+			name: "",
+			weeks: 1,
 			weeks_break: 0,
 			start: periods.length > 0 ? dateToSQL(new Date(parseSQLDate(periods[periods.length-1].end).getTime()+24*60*60*1000)) : year_object.year+"-01-01",
 		};
