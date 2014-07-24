@@ -139,6 +139,38 @@ function GoogleMap(container, onready) {
 				center: new window.top.google.maps.LatLng(0, 0), 
 				zoom: 0 
 			});
+			var div = document.createElement("DIV");
+			var button = document.createElement("BUTTON");
+			button.className = "flat";
+			button.innerHTML = "<img src='"+theme.icons_16.window_popup+"'/>";
+			button.title = "Open map in new window";
+			div.appendChild(button);
+			div.style.marginRight = "2px";
+			button.onclick = function() {
+				var init_map = function(win) {
+					if (!win.document || !win.document.body || !win.document.getElementById('map_container')) {
+						setTimeout(function() { init_map(win); }, 100);
+						return;
+					}
+					win.map = new window.top.google.maps.Map(win.document.getElementById('map_container'), {
+						center: t.map.getCenter(),
+						zoom: t.map.getZoom()
+					});
+					for (var i = 0; i < t.shapes.length; ++i) {
+						var shape = t.shapes[i];
+						if (shape instanceof window.top.google.maps.Marker) {
+							new window.top.google.maps.Marker({
+								opacity: shape.getOpacity(),
+								position: shape.getPosition(),
+								map:win.map
+							});
+						}
+						// TODO add other shapes
+					}
+				};
+				init_map(window.open("/static/google/google_big_map.html"));
+			};
+			t.map.controls[window.top.google.maps.ControlPosition.RIGHT_TOP].push(div);
 			onready(t);
 		});
 	};

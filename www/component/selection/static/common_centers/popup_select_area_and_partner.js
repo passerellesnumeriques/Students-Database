@@ -168,6 +168,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		t._initializing_area = true;
 		require("geographic_area_selection.js", function() {
 			t._area_selection = new geographic_area_selection(t._area_selection_container, t._country_id, t.geographic_area, function(area) {
+				t._area_selection = area;
 				area.onchange = function() {
 					var a = area.getSelectedArea();
 					t.geographic_area = a;

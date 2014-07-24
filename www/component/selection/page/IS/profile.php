@@ -58,20 +58,6 @@ class page_IS_profile extends SelectionPage {
 				); 
 				</script>
 			<?php } ?>
-			<div id='is_stats'></div>
-			<script type='text/javascript'>
-			window.is_stats = new IS_statistics(
-				'is_stats', 
-				<?php echo json_encode($this->component->getOneConfigAttributeValue("separate_boys_girls_IS"));?>,
-				<?php echo json_encode($editable);?>,
-				<?php echo json_encode(@$session["number_boys_expected"]);?>,
-				<?php echo json_encode(@$session["number_boys_real"]);?>,
-				<?php echo json_encode(@$session["number_girls_expected"]);?>,
-				<?php echo json_encode(@$session["number_girls_real"]);?>
-			); 
-			</script>
-		</div>
-		<div style='display:inline-block;margin:10px 0px;vertical-align:top;'>
 			<div id='is_schedule'></div>
 			<script type='text/javascript'>
 			window.is_schedule = new IS_date(
@@ -82,6 +68,18 @@ class page_IS_profile extends SelectionPage {
 				<?php echo json_encode($this->component->getOneConfigAttributeValue("default_duration_IS"));?>,
 				<?php echo json_encode($editable);?>,
 				<?php echo json_encode($all_configs["default_duration_IS"][2]);?>
+			); 
+			</script>
+			<div id='is_stats'></div>
+			<script type='text/javascript'>
+			window.is_stats = new IS_statistics(
+				'is_stats', 
+				<?php echo json_encode($this->component->getOneConfigAttributeValue("separate_boys_girls_IS"));?>,
+				<?php echo json_encode($editable);?>,
+				<?php echo json_encode(@$session["number_boys_expected"]);?>,
+				<?php echo json_encode(@$session["number_boys_real"]);?>,
+				<?php echo json_encode(@$session["number_girls_expected"]);?>,
+				<?php echo json_encode(@$session["number_girls_real"]);?>
 			); 
 			</script>
 		</div>

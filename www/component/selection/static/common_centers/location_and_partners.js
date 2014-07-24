@@ -148,7 +148,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		this._map_container.style.position = "absolute";
 		this._map_container.style.top = "-1000px";
 		this._map_container.style.width = "100%";
-		this._map_container.style.height = "200px";
+		this._map_container.style.height = "150px";
 		// refresh with actual values
 		this._refreshAddress();
 		this._refreshHost();
@@ -190,6 +190,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			// show the map
 			this._map_container.style.visibility = "visible";
 			this._map_container.style.position = "static";
+			this._map_container.style.top = "";
 			var t=this;
 			var update_map = function() {
 				// fit to area
