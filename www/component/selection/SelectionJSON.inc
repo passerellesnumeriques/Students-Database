@@ -86,12 +86,54 @@ class SelectionJSON{
 	}
 	
 	/**
+	 * ExamSubjectVersionSQL
+	 * Prepares query to get the exam subjects versions 
+	 */
+	public static function ExamSubjectVersionSQL(&$q){
+		$alias = $q->getTableAlias("ExamSubjectVersion");
+		if(!$alias)
+			$alias = "ExamSubjectVersion";
+		
+		$q 	->select("ExamSubjectVersion")
+			->join("ExamSubjectVersion","ExamSubject",array("exam_subject" => "id"))
+			->OrderBy("ExamSubjectVersion","exam_subject")
+			->OrderBy("ExamSubjectVersion","id")
+			->field($alias,"id","version_id")
+			->field($alias,"exam_subject","exam_subject");
+	}
+	
+	
+	/* Format an array of ExamSubjectVersion JSON object
+	 * @param $rows array of {exam_subject,version_id} records
+	 */
+	public static function ExamSubjectVersionJSON($rows){
+	/* grouping by exam subject */
+		$tmp = array();
+		
+		foreach($rows as $row)
+		    $tmp[$row['exam_subject']][] = $row['version_id'];
+		
+		$output = array();
+		
+		foreach($tmp as $exam_subject => $versions)
+		{
+		    $output[] = array(
+			'exam_subject' => $exam_subject,
+			'version_ids' => $versions
+		    );
+		}
+		
+		return json_encode($output);
+	}
+	
+	
+	
+	/**
 	 * ExamSubjectFullSQL
 	 * Prepares query to get the full exam(s) subject(s)  (i.e join exam sub parts) 
 	 */
 	public static function ExamSubjectFullSQL(&$q){
-		$q = SQLQuery::create()
-			->select("ExamSubject")
+		$q 	->select("ExamSubject")
 			->join("ExamSubject","ExamSubjectPart",array("id" => "exam_subject"))
 			->join("ExamSubjectPart","ExamSubjectQuestion",array("id" => "exam_subject_part"))
 			->OrderBy("ExamSubject","id")
@@ -138,11 +180,11 @@ class SelectionJSON{
 			->field($alias,"type_config","question_type_config");
 	}
 	
-	/* get an array of ExamSubject JSON object
+	/* Format an array of ExamSubject JSON object
 	 * @param $rows array of {subj_id,subj_name,..part_id,part_name,..question_id,..} records
 	 */
-	public static function ExamSubjectsJSON($rows){
-
+	public static function ExamSubjectsFullJSON($rows){
+	
 		$subject_id=-1;
 		$part_id=-1;
 		$subject_counter=-1;
@@ -150,7 +192,7 @@ class SelectionJSON{
 		$question_counter=-1;
 		
 		foreach ($rows as $row){
-			/* new subject ?*/
+			/* new subject ? */
 			if($row['subject_id']!=$subject_id){
 				$tab[++$subject_counter]['id']=$row['subject_id'];
 				$tab[$subject_counter]['name']=$row['subject_name'];
@@ -158,6 +200,7 @@ class SelectionJSON{
 				$subject_id=$row['subject_id'];
 				$parts_counter=-1;
 			}
+			
 			/* new part ? */
 			if($row['part_id']!=$part_id){
 				$tab[$subject_counter]['parts'][++$parts_counter]['id']=$row['part_id'];

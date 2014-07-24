@@ -17,6 +17,7 @@ class page_exam_results extends SelectionPage {
 		$this->addJavascript("/static/selection/exam/results.js");
 		$this->requireJavascript("data_list.js");
 		$this->onload("createDataList(".$this->component->getCampaignId().");");
+		$this->onload("initResults()");
 	?>
 	
 			<!--TODO : css cleanup (= merge it with the right css file) -->
@@ -43,8 +44,10 @@ class page_exam_results extends SelectionPage {
 				<?php $this->createTableSessionsList();?>
 			      </div>
 			</div>
-			<div id="sessions_buttonsDiv" style="text-align: right;">
-				<button id="edit_notes" class="action">EDIT NOTES</button>
+			<div id="sessions_buttonsDiv" style="display:table;width:100%;height:28px;background-color:rgb(229,190,212);border-radius:3px;">
+				<div id="buttonEditWrapper" style="display:table-cell;;vertical-align:middle;text-align: center;">
+					<button id="edit_notes" class="action" style="display:inline" >EDIT NOTES</button>
+				</div>
 			</div>
 		</div>
 		<div id = "session_infoDiv" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;vertical-align: top;' css="soft">
@@ -54,7 +57,7 @@ class page_exam_results extends SelectionPage {
 		
 
 	<!--List of applicants-->		
-	<div id = "session_applicantsDiv" title='Applicants list' icon="/static/selection/applicant/applicants_16.png" collapsable='true' css="soft" style="width: 500px;margin-left:10px;" >
+	<div id = "session_applicantsDiv" title='Applicants list' icon="/static/selection/applicant/applicants_16.png" collapsable='true' css="soft" style="width:500px;margin: 20px 0 0 10px;" >
 	       <div id="session_applicants_listDiv"></div>
 	</div>
 

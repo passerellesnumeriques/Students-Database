@@ -93,6 +93,7 @@ function profile_picture(container, width, height, halign, valign) {
 					t.picture = null;
 					if (onloaded) onloaded();
 				};
+
 				t.picture.src = "/static/people/default_"+(res.sex == 'F' ? "female" : "male")+".jpg";
 			}
 		});

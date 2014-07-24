@@ -23,8 +23,7 @@ function createDataList(campaign_id)
            );
 }
 
-if (typeof $(document).ready != 'undefined') // handle background loading case
-$(document).ready(function(){
+function initResults(){
 
    $("#session_info_locationDiv").hide();
    $("#session_applicants_listDiv").hide();
@@ -45,7 +44,8 @@ $(document).ready(function(){
       selected["exam_center_name"]=$(this).prevAll(".exam_center_row").first().children().eq(0).text();
 
       //Show a loader gif while waiting for updating
-      var loader_img = $("<img>", {class: "loader-image", id: "loaderResultsImg", src: "/static/application/loading_100.gif"});
+      var loader_img = $("<img>", {id: "loaderResultsImg", src: "/static/application/loading_100.gif"});
+      loader_img.css({"display":"block","margin":"0 auto"});
       $("#session_info_locationDiv").html(loader_img);
       
       // update exam session information box
@@ -79,7 +79,7 @@ $(document).ready(function(){
                                 );
       }
    });
-   
+
 /*
 *
 * update display of exam session information box
@@ -114,5 +114,5 @@ function updateApplicantsList() {
    window.dl.addFilter({category:"Selection",name:"Exam Center Room",force:true,data:{values:[selected["room_id"]]}});
 
    window.dl.reloadData();
+   }
 }
-});

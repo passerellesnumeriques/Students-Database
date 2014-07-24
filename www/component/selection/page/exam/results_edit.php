@@ -8,10 +8,9 @@ class page_exam_results_edit extends SelectionPage {
 			$input = json_decode($_POST["input"], true);
 		}
 		else
-			return; // TODO : error handling ?
+			return; 
 		
 		theme::css($this, "section.css");
-		theme::css($this, "grid.css");
 		
 		$this->requireJavascript("grid.js");
 		$this->requireJavascript("tabs.js");
@@ -21,6 +20,7 @@ class page_exam_results_edit extends SelectionPage {
 		$this->addJavascript("/static/selection/exam/results_edit.js");
 		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('main_container');");
+		$this->onload("initResultsEdit(".$input["session_id"].",".$input["room_id"].")");
 
 	?>
 	      <!-- TODO : css clean up (merge with the right css file)-->
@@ -34,8 +34,8 @@ class page_exam_results_edit extends SelectionPage {
 		</style>
 	
 		<!-- main structure of the results edit page -->
-		<div id='main_container' style="width:100%;height:100%">
-			<div id="header_results">
+		<div id='main_container'>
+			<div id="header_results" style="height:200px">
 			      <div id="exam_session_info" title='Exam session' icon="/static/theme/default/icons_16/info.png" collapsable='true' css="soft" style="display:inline-block;margin:10px 0 0 10px;vertical-align: top;">
 				<?php $this->createExamSessionInfoBox($input); ?>
 			      </div>
@@ -43,8 +43,8 @@ class page_exam_results_edit extends SelectionPage {
 				<?php $this->createApplicantInfoBox($input); ?>
 			      </div>
 			</div>
-			<div layout="fill" style="overflow:auto;">
-				<div id="subj_results" style="margin:10px;display: none;"></div>
+			<div layout="fill">
+				<div id="subj_results" style="margin:10px;display:inline-block"></div>
 			</div>
 			<div id="footer_results" style="margin-right: 10px;">
 			</div>
@@ -53,15 +53,17 @@ class page_exam_results_edit extends SelectionPage {
 	}
 
 	
+	
+	
 	/*
 	 * Generating html elements of Applicant Info Box
 	 */
 	private function createApplicantInfoBox(&$input)
 	{	
 		/* fields from people that we want to display */
-		$fields=array("first_name","middle_name","last_name","sex","birth");
+		$fields=array("first_name","middle_name","khmer_first_name","khmer_last_name","last_name","sex","birthdate");
 		
-		?><img id='applicant_photo' style='margin:5px;width:50px;height:50px;display:none'/>
+		?><div id='applicant_picture' style='padding:5px 0 0 5px;display:none;'></div>
 		<table id='applicant_table' class="align_left" style='display: none'>
 			<?php foreach ($fields as $field) {?>
 			<tr>
@@ -73,7 +75,7 @@ class page_exam_results_edit extends SelectionPage {
 	}
 	
 	/*
-	 *Generating html elements of Exam Session Info Box
+	 * Generating html elements of Exam Session Info Box
 	 */
 	private function createExamSessionInfoBox(&$input)
 	{
@@ -88,15 +90,6 @@ class page_exam_results_edit extends SelectionPage {
 				<th><?php echo $description; ?></th><td><?php echo $input[$field];?></td>
 			</tr>
 		<?php } //end of foreach statement ?>
-		<!--Putting some useful data into hidden fields-->
-			<tr>
-				<td id="session_id" style="display:none;">
-					<?php echo htmlspecialchars($input["session_id"]); ?>
-				</td>
-				<td id="room_id" style="display:none;">
-					<?php echo htmlspecialchars($input["room_id"]); ?>
-				</td>
-			</tr>
 		</table>
 	<?php	
 	}

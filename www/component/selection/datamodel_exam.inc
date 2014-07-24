@@ -1,7 +1,6 @@
 <?php 
 $sm->addTable("ExamSubject")
 	->addPrimaryKey("id")
-        /*->addInteger("nb_versions",8,1,255,false,true)*/        //no more nb_versions (June 04 2014)
 	->addString("name",255,1,false,false) //cannot have two exam with the same name on the same campaign
 	->addDecimal("max_score",10,2,0,null,false,false) // must be calculated
 	->addColumnWriteAccess("name","manage_exam_subject",true)
@@ -10,7 +9,6 @@ $sm->addTable("ExamSubject")
 	->addRemoveAccess("manage_exam_subject",true)
 	;
 
-// (June 04 2014) Adding new table ExamSubjectVersion
 $sm->addTable("ExamSubjectVersion")
 	->addPrimaryKey("id")
     ->addForeignKey("exam_subject","ExamSubject",true,false,true,false)
@@ -34,12 +32,10 @@ $sm->addTable("ExamSubjectQuestion")
 	->addInteger("index",8,null,null,false,false) // index of the question in this part(in case the parts index is updated)
 	->addDecimal("max_score",10,2,0,null,false,false) // must be editable
 	->addString("type_config") // eg. "5" meaning 5 possibles choices in case type is mcq 
-	->addEnum("type",array("mcq_single","mcq_multi","number","text"),true,false) //  (June 02 2014) 
+	->addEnum("type",array("mcq_single","mcq_multi","number","text"),true,false) 
 	->addReadAccess("see_exam_subject",true)
-	;
 	//no insert / write / remove right: must pass by a functionality that checks the steps, the exam topic linked...
 
-// (June 04 2014) Adding new table ExamSubjectAnswer
 $sm->addTable("ExamSubjectAnswer")
 	->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true)
 	->addForeignKey("exam_subject_version","ExamSubjectVersion",true,false,true)
@@ -82,13 +78,7 @@ $sm->addTable("ExamPartTopic")
 	->addReadAccess("see_exam_subject",true)
 	;
 
-// 	$sm->addTable("ExamQuestionResult")
-// 		->addForeignKey("applicant","Applicant",true,false,true,false)
-// 		->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true,false)
-// 		->addString("answer")//optional
-// 		->addDecimal("score",10,2,0,null,false,false)
-// 		->setKey(array("applicant","exam_subject_question"));
-// 		//TODO finish + update steps.inc
+
 
 //TODO Exam_part_result, exam_subject_result (reduce the calculation time for statistics...)
 

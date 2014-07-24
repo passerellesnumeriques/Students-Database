@@ -1,0 +1,74 @@
+/* results_grid.css */
+
+/* Main container */
+
+div.container_results{
+	position: relative;
+	margin: 0 auto 3em auto;
+	padding-top : 2.5em;
+	box-shadow: 10px 10px 5px #888888;
+	width:calc(100% + 17px); /* Scroll bar outside of the grid */
+	background-color: white;
+	border-top:1px black solid;
+}
+
+/* Grid */
+
+
+div.grid_results{
+	overflow:auto;
+}
+
+
+.grid_results table {
+	table-layout:fixed;
+}
+
+
+/* setting width of columns */
+th.applicant_cb>div.cell_wrapper { width:20px; }
+
+col.applicant_id { width:80px; }
+th.applicant_id>div.cell_wrapper { width:78px; }
+
+col.version{ width:60px; }
+th.version>div.cell_wrapper { width:58px; }
+
+col.questions{ width:80px; }
+th.questions>div.cell_wrapper { width:78px; }
+
+/* absolute positionning of thead to make only the rows scrollable */
+.grid_results thead{
+	position: absolute;
+	top:1px;
+	display: inherit;
+}
+
+.grid_results thead>tr>th>{
+	padding-left: 2px;
+	padding-right: 2px;
+}
+
+
+/* Footer **/
+
+ div.footer_results{
+	height: 30px;
+	width: 100%;
+	display:table;
+	background-color: rgb(161,203,158);
+	border-radius:3px;
+ }
+
+div.button_wrapper
+{
+	display: table-cell;
+	vertical-align: middle;
+	text-align:center;
+}
+
+div.button_wrapper>button
+{
+	display: inline;
+}
+

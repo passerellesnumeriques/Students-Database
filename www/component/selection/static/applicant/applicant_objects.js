@@ -11,3 +11,10 @@ function Applicant(people, applicant_id, exclusion_reason, automatic_exclusion_s
 	this.exam_center_room_id = exam_center_room_id;
 	this.exam_session_id = exam_session_id;
 }
+
+function ApplicantExamAnswer(applicant,exam_subject_question,answer,score){
+	this.applicant=applicant;
+	this.exam_subject_question=exam_subject_question;
+	this.answer=answer;
+	this.score=score;
+}

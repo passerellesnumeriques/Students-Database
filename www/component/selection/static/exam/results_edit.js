@@ -1,54 +1,75 @@
-if (typeof require != 'undefined')
-   require ("results_grid.js"); // class for managing exam results
+if (typeof require != 'undefined'){
+   require("results_grid.js"); // class for managing exam results
+}
+
+var applicant_picture;
 
 /* Main */
-if (typeof $(document).ready != 'undefined') // handle background loading case
-$(document).ready(function(){
+function initResultsEdit(session_id,room_id){
 
-   /* Get useful data (previously hidden into the DOM) */
-   var session_id=document.getElementById("session_id").textContent.trim();
-   var room_id=document.getElementById("room_id").textContent.trim();
-
-   /* creating tab element */
-   var subj_tabs= new tabs('subj_results',false);
    
+   /* Profile picture */
+      require("profile_picture.js",function(){
+         applicant_picture= new profile_picture('applicant_picture','50','50', 'left', 'top');
+      });
+   
+    //Show a loader gif while waiting for results_grids creation
+   var loader_img = $("<img>",{class:"loader_img",src: "/static/selection/exam/loader_results.gif"});
+   loader_img.appendTo($("#subj_results"));
+
+   
+   /* getting all applicants for this particular exam session */
    service.json("selection","applicant/get_applicants",{exam_session:session_id,exam_center_room:room_id},function(applicants){
-         /* creating one tab for each exam subject */
-      //service.json("selection","exam/get_all_subject_names",{},function(names){
+         /* getting all exam subjects */
       service.json("selection","exam/get_subjects",{},function(subjects){
-         
-         ////DEBUG
-         //console.log(subjects);
-         
-         var grids=[];
-         var g;
-         for (var j=0; j<subjects.length; ++j){
-            /* create the results_grid  */
-            g = new results_grid(subjects[j],applicants);
+         /* getting all subjects versions */
+            service.json("selection","exam/get_versions",{},function(versions){
                
-            //TODO : add a loader gif during grid creation 
-            
-            /* update ApplicantInfoBox on new row selection event */
-            g.onRowApplicantSelection(updateApplicantInfoBox);
-            
-            /* adding grid exam subject to new tab */
-            subj_tabs.addTab(subjects[j].name,null,g.getContainer());
-            grids.push(g);
-         }
-         
-      /* Compute height for subj_tabs container */
-     //     TODO : maybe a more direct way to set the height ? */
-        //setTabHeight(g);
-        $('#subj_results').show();
-         
-         /* when a new tab selected : updateApplicantInfoBox */
-         subj_tabs.onselect = function() {
-           /* updating ApplicantInfoBox on new tab selection */
-           updateApplicantInfoBox(grids[subj_tabs.selected].getCurrentApplicant()); 
-         };
+               //DEBUG
+               console.log(versions);
+                           
+               /* Remove Loader picture */
+               loader_img.remove();
+               
+               /* creating tab element */
+               var subj_tabs= new tabs('subj_results',false);
+               
+               var grids=[];
+               
+               
+               for (var j=0; j<subjects.length; ++j){
+                  /* create the results_grid  */
+                  var g = new results_grid(subjects[j],applicants,versions[j].version_ids,'250px');
+                 
+                  /* update ApplicantInfoBox on new row selection event */
+                  g.onRowApplicantSelection(updateApplicantInfoBox);
+                  
+                  /* Some CSS needed here */
+                  g.elt.container.style.marginTop="-1px" // to pass over the tab widget border
+                  
+                  /* adding grid exam subject to new tab */
+                  subj_tabs.addTab(subjects[j].name,null,g.getContainer());
+                  
+                  grids.push(g);
+               }
+                // avoid width computing from tab widget
+                //layout.removeHandler('subj_results',layout._getHandlers('subj_results')[0]);
+                  subj_tabs.content.style.width=""; 
+               
+              $('#subj_results').show();
+              
+               /* when a new tab selected : updateApplicantInfoBox */
+               subj_tabs.onselect = function() {
+                   
+                  subj_tabs.content.style.width=""; // avoid width computing from tab widget
+                  
+                 /* updating ApplicantInfoBox on new tab selection */
+                 updateApplicantInfoBox(grids[subj_tabs.selected].getCurrentApplicant()); 
+               };
+            });
       });
    });
-});
+}
 
 
 /*
@@ -57,14 +78,16 @@ $(document).ready(function(){
  */
 function updateApplicantInfoBox(people)
 {
+
    if (!people) 
       return;
    
-   /* Picture of applicant */
-   $("#applicant_photo").attr("src","/dynamic/people/service/picture?people="+people.people_id);
+   /* Getting applicant picture */
    
-  /* The people fields we want to display */
-   var fields = {first_name:"First Name",middle_name:"Middle Name",last_name:"Last Name",sex:"Gender",birth:"Birth"}; 
+   applicant_picture.loadPeopleObject(people,function(){
+   
+      /* The people fields we want to display */
+   var fields = {first_name:"First Name",middle_name:"Middle Name",khmer_first_name:"Khmer first name",khmer_last_name:"Khmer last name",last_name:"Last Name",sex:"Gender",birthdate:"Birth"}; 
  
    var key;
    for (key in fields) {
@@ -78,28 +101,7 @@ function updateApplicantInfoBox(people)
       $("#"+key).parent().show();
    }
        
-     $("#applicant_photo").show();
+     $("#applicant_picture").show();
      $("#applicant_table").show();
-        
-}
-
-/* Compute height for subj_tabs container
- * @param result_grid
-*/
-//     TODO : maybe a more direct way to set the height ? */
-function setTabHeight(result_grid)
-{
-           
-   //var h;
-   //h=$('#subj_results').children().eq(0).outerHeight(); // tab widget height
-   //h+=$('table.grid').outerHeight(); // table grid height
-   ////// border (of div containing table grid)
-   //h+=parseInt($("#subj_results").children().eq(1).css('border-width'))*2;
-   ////footer results_grid toolbar
-   //h+=$(result_grid.elt.footer).outerHeight();
-   //
-   
-   ///* setting height */
-   //$('#subj_results').css('height',h+'px');
-   $('#subj_results').css('height','200px');
+      });   
 }
