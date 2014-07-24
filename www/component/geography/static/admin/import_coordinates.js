@@ -373,20 +373,25 @@ function match_division_level_names(container, country, country_data, division_i
 	for (var i = 0; i < areas.length; ++i) {
 		if (matches[i] != null) continue;
 		if (!areas[i].north) continue;
-		var exact = false;
+		var exact = null;
 		var intersect = [];
 		for (var j = 0; j < names_inside.length; ++j) {
 			if (names_inside[j].north == areas[i].north &&
 				names_inside[j].south == areas[i].south &&
 				names_inside[j].west == areas[i].west &&
 				names_inside[j].east == areas[i].east) {
-				exact = true;
+				exact = names_inside[j];
 				break;
 			}
 			if (window.top.geography.rectIntersect(names_inside[j].south, names_inside[j].north, names_inside[j].west, names_inside[j].east, areas[i].south, areas[i].north, areas[i].west, areas[i].east))
 				intersect.push(names_inside[j]);
 		}
-		if (intersect.length == 1) {
+		if (exact) {
+			matches[i] = exact;
+			missing_matches--;
+			gadm.remove(exac);
+			names_inside.remove(exact);
+		} else if (intersect.length == 1) {
 			matches[i] = intersect[0];
 			missing_matches--;
 			gadm.remove(intersect[0]);
@@ -499,7 +504,8 @@ function match_division_level_names(container, country, country_data, division_i
 	cb_show.type = "checkbox";
 	div.appendChild(cb_show);
 	div.appendChild(document.createTextNode("Show all on map"));
-	div.onclick = function() {
+	div.onclick = function(ev) {
+		if (ev.target == cb_show) return;
 		cb_show.checked = cb_show.checked ? "" : "checked";
 		cb_show.onchange();
 	};
@@ -522,9 +528,6 @@ function match_division_level_names(container, country, country_data, division_i
 			this.rects = null;
 		}
 	};
-	cb_show.onclick = function(ev) {
-		stopEventPropagation(ev);
-	};
 	col.appendChild(div);
 	col_content = document.createElement("DIV");
 	col_content.style.flex = "1 1 auto";
@@ -542,7 +545,10 @@ function match_division_level_names(container, country, country_data, division_i
 		link.onmouseover = function() {
 			if (!map) return;
 			if (this.rect) return;
-			this.rect = map.addRect(match.south, match.west, match.north, match.east, map_colors[1].border, map_colors[1].fill, 0.3);
+			if (area.north)
+				this.rect = map.addRect(area.south, area.west, area.north, area.east, map_colors[1].border, map_colors[1].fill, 0.3);
+			else
+				this.rect = map.addRect(match.south, match.west, match.north, match.east, map_colors[1].border, map_colors[1].fill, 0.3);
 			map.fitToShapes();
 		};
 		link.onmouseout = function() {
@@ -552,6 +558,13 @@ function match_division_level_names(container, country, country_data, division_i
 			map.fitToShapes();
 		};
 		div.appendChild(link);
+		if (area.north) {
+			var img = document.createElement("IMG");
+			img.src = theme.icons_10.ok;
+			img.style.verticalAlign = "bottom";
+			img.style.marginLeft = "3px";
+			div.appendChild(img);
+		}
 		matching_content.appendChild(div);
 	};
 	for (var i = 0; i < areas.length; ++i) {
@@ -607,6 +620,26 @@ function match_division_level_names(container, country, country_data, division_i
 						return text;
 					}
 				).area = areas[i];
+				if (areas[i].north) {
+					var img = document.createElement("IMG");
+					img.src = theme.icons_10.ok;
+					img.style.verticalAlign = "bottom";
+					img.style.marginLeft = "3px";
+					div.appendChild(img);
+					img.area = areas[i];
+					img.onmouseover = function() {
+						if (!map) return;
+						if (this.rect) return;
+						this.rect = map.addRect(this.area.south, this.area.west, this.area.north, this.area.east, map_colors[1].border, map_colors[1].fill, 0.3);
+						map.fitToShapes();
+					};
+					img.onmouseout = function() {
+						if (!this.rect) return;
+						map.removeShape(this.rect);
+						this.rect = null;
+						map.fitToShapes();
+					};
+				}
 			}
 		});
 	}
@@ -940,61 +973,6 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 		div.appendChild(d);
 	}
 	
-	var auto = function () {
-		popup.freeze("Importing information for Google (0%) and Geonames (0%)");
-		var google_results = [];
-		var geonames_results = [];
-		var update_message = function() {
-			var nb = areas.length;
-			var google = google_results.length;
-			google = Math.floor(google*100/nb);
-			var geonames = geonames_results.length;
-			geonames = Math.floor(geonames*100/nb);
-			popup.set_freeze_content("Importing information for Google ("+google+"%) and Geonames ("+geonames+"%)");
-		};
-		var finish = function() {
-			// TODO
-		};
-		var next_google = function(index) {
-			if (index == areas.length) {
-				if (geonames_results.length == areas.length)
-					finish();
-				return;
-			}
-			if (areas[index].north) {
-				google_results.push(null);
-				update_message();
-				next_google(index+1);
-				return;
-			}
-			new SearchGoogle(null, country.country_id, areas[index].area_name, null, areas[index], function(res) {
-				google_results.push(res);
-				update_message();
-				next_google(index+1);
-			}, true);
-		};
-		var next_geonames = function(index) {
-			if (index == areas.length) {
-				if (google_results.length == areas.length)
-					finish();
-				return;
-			}
-			if (areas[index].north) {
-				geonames_results.push(null);
-				update_message();
-				next_geonames(index+1);
-				return;
-			}
-			new SearchGeonames(null, country.country_id, areas[index].area_name, null, function(res) {
-				geonames_results.push(res);
-				update_message();
-				next_geonames(index+1);
-			}, true);
-		};
-		next_geonames(0);
-		next_google(0);
-	};
-	
 	var manual = function() {
 		var next = function(index) {
 			if (index == areas.length) {
@@ -1034,6 +1012,104 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 			});
 		};
 		next(0);
+	};
+	
+	var auto = function () {
+		popup.freeze("Importing information for Google (0%) and Geonames (0%)");
+		var google_results = [];
+		var geonames_results = [];
+		var update_message = function() {
+			var nb = areas.length;
+			var google = google_results.length;
+			google = Math.floor(google*100/nb);
+			var geonames = geonames_results.length;
+			geonames = Math.floor(geonames*100/nb);
+			popup.set_freeze_content("Importing information from Google ("+google+"%) and Geonames ("+geonames+"%)");
+		};
+		var finish = function() {
+			var next = function(i) {
+				if (i == areas.length) {
+					popup.unfreeze();
+					if (isEverythingDone())
+						ondone();
+					else
+						manual(); // TODO reuse google and geonames results for the manual process
+					return;
+				}
+				popup.set_freeze_content("Try to match coordinates for "+areas[i].area_name);
+				if (areas[i].north) { next(i+1); return; }
+				if (matches[i] == null) { next(i+1); return; } // nothing from gadm.org, need manual
+				// find in google something matching within 5%
+				var south = matches[i].south-(matches[i].north-matches[i].south)/2/20;
+				var north = matches[i].north+(matches[i].north-matches[i].south)/2/20;
+				var west = matches[i].west-(matches[i].east-matches[i].west)/2/20;
+				var east = matches[i].east+(matches[i].east-matches[i].west)/2/20;
+				for (var j = 0; j < google_results.length; ++j) {
+					if (window.top.geography.rectContains(south, north, west, east, google_results[j].south, google_results[j].north, google_results[j].west, google_results[j].east)) {
+						// found one !
+						popup.set_freeze_content("Saving geographic coordinates for "+areas[i].area_name);
+						areas[i].north = Math.max(matches[i].north, google_results[j].north);
+						areas[i].south = Math.min(matches[i].south, google_results[j].south);
+						areas[i].west = Math.min(matches[i].west, google_results[j].west);
+						areas[i].east = Math.max(matches[i].east, google_results[j].east);
+						service.json("data_model","save_entity",{
+							table: "GeographicArea",
+							key: areas[i].area_id,
+							lock: -1,
+							field_north: Math.max(matches[i].north, google_results[j].north),
+							field_south: Math.min(matches[i].south, google_results[j].south),
+							field_west: Math.min(matches[i].west, google_results[j].west),
+							field_east: Math.max(matches[i].east, google_results[j].east)
+						},function(res) {
+							next(i+1);
+						});
+						return;
+					};
+					// TODO geonames
+				}
+				// not found
+				next(i+1);
+			};
+			next(0);
+		};
+		var next_google = function(index) {
+			if (index == areas.length) {
+				if (geonames_results.length == areas.length)
+					finish();
+				return;
+			}
+			if (areas[index].north) {
+				google_results.push(null);
+				update_message();
+				next_google(index+1);
+				return;
+			}
+			new SearchGoogle(null, country.country_id, areas[index].area_name, null, areas[index], function(res) {
+				google_results.push(res);
+				update_message();
+				next_google(index+1);
+			}, true);
+		};
+		var next_geonames = function(index) {
+			if (index == areas.length) {
+				if (google_results.length == areas.length)
+					finish();
+				return;
+			}
+			if (areas[index].north) {
+				geonames_results.push(null);
+				update_message();
+				next_geonames(index+1);
+				return;
+			}
+			new SearchGeonames(null, country.country_id, areas[index].area_name, null, function(res) {
+				geonames_results.push(res);
+				update_message();
+				next_geonames(index+1);
+			}, true);
+		};
+		next_geonames(0);
+		next_google(0);
 	};
 	
 	var div_buttons = document.createElement("DIV");
