@@ -29,7 +29,7 @@ service = {
 					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
 				else for (var i = 0; i < error.length; ++i)
 					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error[i],10000));
-				if (onerror) onerror(error);
+				if (onerror) onerror(error, input);
 			},
 			progress_handler
 		);

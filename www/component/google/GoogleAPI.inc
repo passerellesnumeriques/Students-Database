@@ -27,9 +27,11 @@ class GoogleAPI {
 		//echo $result."<br/><br/>\r\n\r\n";
 		$result = json_decode($result, true);
 		if (isset($result["status"]) && $result["status"] <> "OK" && $result["status"] <> "ZERO_RESULTS") {
-			PNApplication::error("Google replied ".$result["status"].(isset($result["error_message"]) ? ": ".$result["error_message"] : ""));
-			if ($result["status"] == "OVER_QUERY_LIMIT")
+			if ($result["status"] == "OVER_QUERY_LIMIT") {
+				PNApplication::error("Google replied ".$result["status"].": Too much requests on Google today, they don't want to reply to us anymore or we need to pay... so let's try tomorrow!");
 				PNApplication::$instance->google->signalAPIQuotaReached(google::$PLACES_API, $key);
+			} else
+				PNApplication::error("Google replied ".$result["status"].(isset($result["error_message"]) ? ": ".$result["error_message"] : ""));
 		}
 		if (!isset($result["results"])) return array();
 		return $result["results"];

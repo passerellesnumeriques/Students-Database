@@ -694,10 +694,12 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.close_button_td.onclick = null;
 	};
 	t.freeze_progress = function(message, total, onready) {
+		theme.css("progress_bar.css"); // to make it available, even if we are starting a lot of AJAX requests
 		require("progress_bar.js", function() {
 			var div = document.createElement("DIV");
 			div.style.textAlign = "center";
 			var span = document.createElement("SPAN");
+			span.style.marginBottom = "2px";
 			span.innerHTML = message;
 			div.appendChild(span);
 			div.appendChild(document.createElement("BR"));
