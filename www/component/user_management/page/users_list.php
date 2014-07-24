@@ -19,6 +19,7 @@ function init_users_list() {
 		null,
 		100,
 		function (list) {
+			list.grid.makeScrollable();
 			<?php if (PNApplication::$instance->user_management->has_right("assign_role")) {?>
 			var roles = [<?php
 			$roles = SQLQuery::create()->select("Role")->execute();

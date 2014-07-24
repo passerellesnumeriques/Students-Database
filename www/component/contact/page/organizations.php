@@ -56,6 +56,7 @@ class page_organizations extends Page {
 				[{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"}}],
 				250,
 				function (list) {
+					list.grid.makeScrollable();
 					if (can_remove || selected != null || selected_no_changeable != null) {
 						list.grid.setSelectable(true);
 						list.ondataloaded.add_listener(organizations_loaded);
