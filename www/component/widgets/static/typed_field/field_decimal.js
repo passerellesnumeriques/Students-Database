@@ -16,16 +16,16 @@ field_decimal.prototype.canBeNull = function() { return this.config && this.conf
 field_decimal.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;
-		var input = document.createElement("INPUT");
-		input.type = "text";
-		input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
-		input.maxLength = this.config.integer_digits + 1 + this.config.decimal_digits;
-		if (data !== null) input.value = parseFloat(data).toFixed(t.config.decimal_digits);
-		input.style.margin = "0px";
-		input.style.padding = "0px";
+		t.input = document.createElement("INPUT");
+		t.input.type = "text";
+		t.input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
+		t.input.maxLength = this.config.integer_digits + 1 + this.config.decimal_digits;
+		if (data !== null) t.input.value = parseFloat(data).toFixed(t.config.decimal_digits);
+		t.input.style.margin = "0px";
+		t.input.style.padding = "0px";
 		var onkeyup = new Custom_Event();
-		input.onkeyup = function(e) { onkeyup.fire(e); };
-		input.onkeydown = function(e) {
+		t.input.onkeyup = function(e) { onkeyup.fire(e); };
+		t.input.onkeydown = function(e) {
 			var ev = getCompatibleKeyEvent(e);
 			if (ev.isPrintable) {
 				if (!isNaN(parseInt(ev.printableChar)) || ev.ctrlKey) {
@@ -33,13 +33,13 @@ field_decimal.prototype._create = function(data) {
 					return true;
 				}
 				// not a digit
-				if (ev.printableChar == "-" && input.value.length == 0) {
+				if (ev.printableChar == "-" && t.input.value.length == 0) {
 					// - at the beginning: ok
 					return true;
 				}
 				if (ev.printableChar == ",") ev.printableChar = e.keyCode = ".";
 				if (ev.printableChar == ".") {
-					if (input.value.length > 0 && input.value.indexOf('.') < 0) {
+					if (t.input.value.length > 0 && t.input.value.indexOf('.') < 0) {
 						return true;
 					}
 				}
@@ -50,11 +50,11 @@ field_decimal.prototype._create = function(data) {
 		};
 		var getValueFromInput = function() {
 			var value;
-			if (input.value.length == 0 && t.config.can_be_null) value = null;
+			if (t.input.value.length == 0 && t.config.can_be_null) value = null;
 			else {
 				var i;
-				if (input.value.length == 0 && !t.config.can_be_null) i = t.config.min ? t.config.min : 0;
-				else i = parseFloat(input.value);
+				if (t.input.value.length == 0 && !t.config.can_be_null) i = t.config.min ? t.config.min : 0;
+				else i = parseFloat(t.input.value);
 				if (isNaN(i)) i = t.config.min ? t.config.min : 0;
 				if (typeof t.config.min != 'undefined' && i < t.config.min) i = t.config.min;
 				if (typeof t.config.max != 'undefined' && i > t.config.max) i = t.config.max;
@@ -62,13 +62,13 @@ field_decimal.prototype._create = function(data) {
 			}
 			return value;
 		};
-		input.onblur = function(ev) {
-			t.setData(input.value);
+		t.input.onblur = function(ev) {
+			t.setData(t.input.value);
 		};
-		listenEvent(input, 'focus', function() { t.onfocus.fire(); });
+		listenEvent(t.input, 'focus', function() { t.onfocus.fire(); });
 		var _fw=false;
-		require("input_utils.js",function(){inputAutoresize(input);if (_fw) input.setMinimumSize(-1); });
-		this.element.appendChild(input);
+		require("input_utils.js",function(){inputAutoresize(t.input);if (_fw) t.input.setMinimumSize(-1); });
+		this.element.appendChild(t.input);
 		this._getEditedData = function() {
 			var value = getValueFromInput();
 			if (value == null) return null;
@@ -78,14 +78,14 @@ field_decimal.prototype._create = function(data) {
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
 			if (data == null && t.config && !t.config.can_be_null) data = 0;
-			if (data === null) input.value = "";
-			else input.value = data.toFixed(t.config.decimal_digits);
-			if (typeof input.autoresize != 'undefined') input.autoresize();
+			if (data === null) t.input.value = "";
+			else t.input.value = data.toFixed(t.config.decimal_digits);
+			if (typeof t.input.autoresize != 'undefined') t.input.autoresize();
 		};
 		this.signal_error = function(error) {
 			this.error = error;
-			input.style.border = error ? "1px solid red" : "";
-			input.title = error ? error : "";
+			t.input.style.border = error ? "1px solid red" : "";
+			t.input.title = error ? error : "";
 		};
 		this.onenter = function(listener) {
 			onkeyup.add_listener(function(e) {
@@ -96,12 +96,12 @@ field_decimal.prototype._create = function(data) {
 		this.fillWidth = function() {
 			_fw = true;
 			this.element.style.width = "100%";
-			if (typeof input.setMinimumSize != 'undefined') input.setMinimumSize(-1);
+			if (typeof t.input.setMinimumSize != 'undefined') t.input.setMinimumSize(-1);
 		};
 		this.validate = function() {
 			if (!this.config) this.error = null;
 			else {
-				var val = parseFloat(input.value);
+				var val = parseFloat(t.input.value);
 				if (isNaN(val)) val = null;
 				if (val == null && !this.config.can_be_null) this.error = "Please specify a value";
 				else if (typeof this.config.min != 'undefined' && val < this.config.min) this.error = "Must be minimum "+this.config.min.toFixed(t.config.decimal_digits);

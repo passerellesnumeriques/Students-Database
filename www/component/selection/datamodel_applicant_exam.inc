@@ -27,11 +27,10 @@ $sm->addTable("ApplicantExamAnswer")
        //TODO : Access Rights ?
         ;
 
-// (June 04 2014) Adding new table ApplicantExamTopic
-$sm->addTable("ApplicantExamTopic")
+$sm->addTable("ApplicantExamExtract")
       ->addForeignKey("applicant","Applicant",true,false,true)
-      ->addForeignKey("exam_topic_for_eligibility_rule","ExamTopicForEligibilityRule",true,false,true,false)
-      ->setKey(array("applicant","exam_topic_for_eligibility_rule"))
+      ->addForeignKey("exam_extract","ExamSubjectExtract",true,false,true,false)
+      ->setKey(array("applicant","exam_extract"))
       ->addDecimal("score",10,2,0,null,false,false)
       //TODO : Access Rights ?
       ;

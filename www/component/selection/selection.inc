@@ -754,24 +754,19 @@ class selection extends Component {
 		//check the rights
 		$can_remove = $this->canManageExamSubjectQuestions();
 		if($can_remove[0]){
-			$parts = SQLQuery::create()
-				->select("ExamSubjectPart")
-				->field("id")
-				->whereValue("ExamSubjectPart","id",$exam_id)
-				->executeSingleField();
 			try{
-				//Before removing, get all the topics declared as full subject for this exam subject
-				$topics_concerned = $this->getTopicsDeclaredFullSubjectForGivenExamSubject($exam_id);
 				//Perform the remove
 				SQLQuery::create()->bypassSecurity()->removeKey("ExamSubject",$exam_id);
-				//In the topics concerned, remove the empty ones which are ONLY declared as full subject for this topic (for instance, case where a subject is created, and the topic full subject as well, then subject removed)
-				if($topics_concerned <> null){
-					foreach ($topics_concerned as $topic_id){
-						if($this->isTopicEmpty($topic_id) && !$this->isTopicDeclaredFullSubjectForAnyOtherExamSubject($topic_id, $exam_id))
-							//Remove it
-							$this->removeTopic($topic_id);		
-					}
-				}
+				// check there is no empty exam extract (if we removed all its parts)
+				$empty_extracts = SQLQuery::create()
+					->select("ExamSubjectExtract")
+					->join("ExamSubjectExtract", "ExamSubjectExtractParts", array("id"=>"extract"))
+					->groupBy("ExamSubjectExtract","id")
+					->whereNull("ExamSubjectExtractParts", "part") // no more part attached
+					->field("ExamSubjectExtract", "id")
+					->executeSingleField();
+				if (count($empty_extracts) > 0)
+					SQLQuery::create()->removeKeys("ExamSubjectExtract", $empty_extracts);
 			} catch (Exception $e) {
 				PNApplication::error($e);
 			}
@@ -783,7 +778,7 @@ class selection extends Component {
 // 			//update the topics
 // 			$this->updateExamTopicsForEligibilityRules($parts,null,$exam_id);
 			//update steps
-			$this->updateAllSteps();
+			//$this->updateAllSteps();
 			return true;
 		}
 	}

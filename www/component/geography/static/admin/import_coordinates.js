@@ -373,20 +373,25 @@ function match_division_level_names(container, country, country_data, division_i
 	for (var i = 0; i < areas.length; ++i) {
 		if (matches[i] != null) continue;
 		if (!areas[i].north) continue;
-		var exact = false;
+		var exact = null;
 		var intersect = [];
 		for (var j = 0; j < names_inside.length; ++j) {
 			if (names_inside[j].north == areas[i].north &&
 				names_inside[j].south == areas[i].south &&
 				names_inside[j].west == areas[i].west &&
 				names_inside[j].east == areas[i].east) {
-				exact = true;
+				exact = names_inside[j];
 				break;
 			}
 			if (window.top.geography.rectIntersect(names_inside[j].south, names_inside[j].north, names_inside[j].west, names_inside[j].east, areas[i].south, areas[i].north, areas[i].west, areas[i].east))
 				intersect.push(names_inside[j]);
 		}
-		if (intersect.length == 1) {
+		if (exact) {
+			matches[i] = exact;
+			missing_matches--;
+			gadm.remove(exac);
+			names_inside.remove(exact);
+		} else if (intersect.length == 1) {
 			matches[i] = intersect[0];
 			missing_matches--;
 			gadm.remove(intersect[0]);
@@ -499,7 +504,8 @@ function match_division_level_names(container, country, country_data, division_i
 	cb_show.type = "checkbox";
 	div.appendChild(cb_show);
 	div.appendChild(document.createTextNode("Show all on map"));
-	div.onclick = function() {
+	div.onclick = function(ev) {
+		if (ev.target == cb_show) return;
 		cb_show.checked = cb_show.checked ? "" : "checked";
 		cb_show.onchange();
 	};
@@ -522,9 +528,6 @@ function match_division_level_names(container, country, country_data, division_i
 			this.rects = null;
 		}
 	};
-	cb_show.onclick = function(ev) {
-		stopEventPropagation(ev);
-	};
 	col.appendChild(div);
 	col_content = document.createElement("DIV");
 	col_content.style.flex = "1 1 auto";
@@ -542,7 +545,10 @@ function match_division_level_names(container, country, country_data, division_i
 		link.onmouseover = function() {
 			if (!map) return;
 			if (this.rect) return;
-			this.rect = map.addRect(match.south, match.west, match.north, match.east, map_colors[1].border, map_colors[1].fill, 0.3);
+			if (area.north)
+				this.rect = map.addRect(area.south, area.west, area.north, area.east, map_colors[1].border, map_colors[1].fill, 0.3);
+			else
+				this.rect = map.addRect(match.south, match.west, match.north, match.east, map_colors[1].border, map_colors[1].fill, 0.3);
 			map.fitToShapes();
 		};
 		link.onmouseout = function() {
@@ -552,6 +558,13 @@ function match_division_level_names(container, country, country_data, division_i
 			map.fitToShapes();
 		};
 		div.appendChild(link);
+		if (area.north) {
+			var img = document.createElement("IMG");
+			img.src = theme.icons_10.ok;
+			img.style.verticalAlign = "bottom";
+			img.style.marginLeft = "3px";
+			div.appendChild(img);
+		}
 		matching_content.appendChild(div);
 	};
 	for (var i = 0; i < areas.length; ++i) {
@@ -607,6 +620,26 @@ function match_division_level_names(container, country, country_data, division_i
 						return text;
 					}
 				).area = areas[i];
+				if (areas[i].north) {
+					var img = document.createElement("IMG");
+					img.src = theme.icons_10.ok;
+					img.style.verticalAlign = "bottom";
+					img.style.marginLeft = "3px";
+					div.appendChild(img);
+					img.area = areas[i];
+					img.onmouseover = function() {
+						if (!map) return;
+						if (this.rect) return;
+						this.rect = map.addRect(this.area.south, this.area.west, this.area.north, this.area.east, map_colors[1].border, map_colors[1].fill, 0.3);
+						map.fitToShapes();
+					};
+					img.onmouseout = function() {
+						if (!this.rect) return;
+						map.removeShape(this.rect);
+						this.rect = null;
+						map.fitToShapes();
+					};
+				}
 			}
 		});
 	}
@@ -630,7 +663,7 @@ function match_division_level_names(container, country, country_data, division_i
 				north: null, south: null, east: null, west:null
 			};
 			var area_popup = new popup_window("Add area", null, div);
-			import_area_coordinates(div, area, division_index, country, country_data, name, function(ec, input_name) {
+			import_area_coordinates(div, area, division_index, country, country_data, name, null, null, function(ec, input_name) {
 				area_popup.addOkCancelButtons(function() {
 					// check name
 					var name = input_name.value.trim();
@@ -920,6 +953,12 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 	popup.content.removeAllChildren();
 	popup.removeButtons();
 
+	// title
+	if (parent_area) {
+		var title = createTitle("Import areas in "+parent_area.area_name);
+		popup.content.appendChild(title);
+	}
+	
 	// list of areas to be imported
 	var div = document.createElement("DIV");
 	div.style.display = "inline-block";
@@ -940,6 +979,47 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 		div.appendChild(d);
 	}
 	
+	var manual = function(google_results, geonames_results) {
+		var next = function(index) {
+			if (index == areas.length) {
+				ondone();
+				return;
+			}
+			if (areas[index].north) {
+				// coordinates are already present, continue to the next area
+				next(index+1);
+				return;
+			}
+			popup.content.removeAllChildren();
+			popup.removeButtons();
+			//popup.content.appendChild(createTitleForArea(country, country_data, division_index, index));
+			import_area_coordinates(popup.content, areas[index], division_index, country, country_data, matches[index], google_results ? google_results[index] : null, geonames_results ? geonames_results[index] : null, function(ec) {
+				popup.addNextButton(function() {
+					var north = ec.coord.field_north.getCurrentData();
+					var south = ec.coord.field_south.getCurrentData();
+					var west = ec.coord.field_west.getCurrentData();
+					var east = ec.coord.field_east.getCurrentData();
+					if (north === null || south === null || west === null || east === null)
+						north = south = west = east = null;
+					popup.freeze("Saving geographic coordinates");
+					service.json("data_model","save_entity",{
+						table: "GeographicArea",
+						key: areas[index].area_id,
+						lock: -1,
+						field_north: north,
+						field_south: south,
+						field_west: west,
+						field_east: east
+					},function(res) {
+						popup.unfreeze();
+						if (res) next(index+1);
+					});
+				});
+			});
+		};
+		next(0);
+	};
+	
 	var auto = function () {
 		popup.freeze("Importing information for Google (0%) and Geonames (0%)");
 		var google_results = [];
@@ -950,10 +1030,57 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 			google = Math.floor(google*100/nb);
 			var geonames = geonames_results.length;
 			geonames = Math.floor(geonames*100/nb);
-			popup.set_freeze_content("Importing information for Google ("+google+"%) and Geonames ("+geonames+"%)");
+			popup.set_freeze_content("Importing information from Google ("+google+"%) and Geonames ("+geonames+"%)");
 		};
 		var finish = function() {
-			// TODO
+			var next = function(i) {
+				if (i == areas.length) {
+					popup.unfreeze();
+					if (isEverythingDone())
+						ondone();
+					else
+						manual(google_results, geonames_results);
+					return;
+				}
+				popup.set_freeze_content("Try to match coordinates for "+areas[i].area_name);
+				if (areas[i].north) { next(i+1); return; }
+				if (matches[i] == null) { next(i+1); return; } // nothing from gadm.org, need manual
+				// find in google something matching within 5%
+				matches[i].south = parseFloat(matches[i].south);
+				matches[i].north = parseFloat(matches[i].south);
+				matches[i].west = parseFloat(matches[i].south);
+				matches[i].east = parseFloat(matches[i].south);
+				var south = matches[i].south-(matches[i].north-matches[i].south)/2/20;
+				var north = matches[i].north+(matches[i].north-matches[i].south)/2/20;
+				var west = matches[i].west-(matches[i].east-matches[i].west)/2/20;
+				var east = matches[i].east+(matches[i].east-matches[i].west)/2/20;
+				for (var j = 0; j < google_results[i].length; ++j) {
+					if (window.top.geography.rectContains(south, north, west, east, google_results[i][j].south, google_results[i][j].north, google_results[i][j].west, google_results[i][j].east)) {
+						// found one !
+						popup.set_freeze_content("Saving geographic coordinates for "+areas[i].area_name);
+						areas[i].north = Math.max(matches[i].north, google_results[i][j].north);
+						areas[i].south = Math.min(matches[i].south, google_results[i][j].south);
+						areas[i].west = Math.min(matches[i].west, google_results[i][j].west);
+						areas[i].east = Math.max(matches[i].east, google_results[i][j].east);
+						service.json("data_model","save_entity",{
+							table: "GeographicArea",
+							key: areas[i].area_id,
+							lock: -1,
+							field_north: areas[i].north,
+							field_south: areas[i].south,
+							field_west: areas[i].west,
+							field_east: areas[i].east
+						},function(res) {
+							next(i+1);
+						});
+						return;
+					};
+					// TODO geonames
+				}
+				// not found
+				next(i+1);
+			};
+			next(0);
 		};
 		var next_google = function(index) {
 			if (index == areas.length) {
@@ -995,50 +1122,10 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 		next_google(0);
 	};
 	
-	var manual = function() {
-		var next = function(index) {
-			if (index == areas.length) {
-				ondone();
-				return;
-			}
-			if (areas[index].north) {
-				// coordinates are already present, continue to the next area
-				next(index+1);
-				return;
-			}
-			popup.content.removeAllChildren();
-			popup.removeButtons();
-			//popup.content.appendChild(createTitleForArea(country, country_data, division_index, index));
-			import_area_coordinates(popup.content, areas[index], division_index, country, country_data, matches[index], function(ec) {
-				popup.addNextButton(function() {
-					var north = ec.coord.field_north.getCurrentData();
-					var south = ec.coord.field_south.getCurrentData();
-					var west = ec.coord.field_west.getCurrentData();
-					var east = ec.coord.field_east.getCurrentData();
-					if (north === null || south === null || west === null || east === null)
-						north = south = west = east = null;
-					popup.freeze("Saving geographic coordinates");
-					service.json("data_model","save_entity",{
-						table: "GeographicArea",
-						key: areas[index].area_id,
-						lock: -1,
-						field_north: north,
-						field_south: south,
-						field_west: west,
-						field_east: east
-					},function(res) {
-						popup.unfreeze();
-						if (res) next(index+1);
-					});
-				});
-			});
-		};
-		next(0);
-	};
-	
 	var div_buttons = document.createElement("DIV");
 	div_buttons.style.display = "inline-block";
 	div_buttons.style.margin = "5px";
+	div_buttons.style.verticalAlign = "top";
 	popup.content.appendChild(div_buttons);
 	div_buttons.appendChild(document.createTextNode("You can try to import automatically:"));
 	div_buttons.appendChild(document.createElement("BR"));
@@ -1097,7 +1184,7 @@ function dialog_coordinates(country, country_data, division_index, area_index) {
 		else
 			area = country_data[division_index].areas[area_index];
 		popup.show();
-		import_area_coordinates(content, area, division_index, country, country_data, null, function(ec) {
+		import_area_coordinates(content, area, division_index, country, country_data, null, null, null, function(ec) {
 			popup.addSaveButton(function() {
 				var north = ec.coord.field_north.getCurrentData();
 				var south = ec.coord.field_south.getCurrentData();
@@ -1122,7 +1209,7 @@ function dialog_coordinates(country, country_data, division_index, area_index) {
 	});
 }
 
-function import_area_coordinates(container, area, division_index, country, country_data, from_kml, onready) {
+function import_area_coordinates(container, area, division_index, country, country_data, from_kml, from_google, from_geonames, onready) {
 	require("edit_coordinates.js", function() {
 		var table = document.createElement("TABLE"); container.appendChild(table);
 		var tr = document.createElement("TR"); table.appendChild(tr);
@@ -1296,31 +1383,41 @@ function import_area_coordinates(container, area, division_index, country, count
 			if (from_kml)
 				new ResultsList(div, "gadm.org", [from_kml], map_colors[color_index++], ec.coord, ec.map);
 			// Geonames
-			var search_geonames_title = document.createElement("DIV"); div.appendChild(search_geonames_title);
-			search_geonames_title.appendChild(document.createTextNode("geonames.org"));
-			search_geonames_title.style.fontWeight = "bold";
-			search_geonames_title.style.backgroundColor = "#C0C0C0";
-			var geonames_color = map_colors[color_index++];
-			search_geonames_title.style.color = geonames_color.border;
-			var search_geonames_div = document.createElement("DIV"); div.appendChild(search_geonames_div);
-			new SearchGeonames(search_geonames_div, country.country_id, area.area_name, null, function(res) {
-				div.removeChild(search_geonames_title);
-				search_geonames_div.removeAllChildren();
-				new ResultsList(search_geonames_div, "geonames.org", res, geonames_color, ec.coord, ec.map);
-			});
+			if (from_geonames) {
+				var search_geonames_div = document.createElement("DIV"); div.appendChild(search_geonames_div);
+				new ResultsList(search_geonames_div, "geonames.org", from_geonames, geonames_color, ec.coord, ec.map);
+			} else {
+				var search_geonames_title = document.createElement("DIV"); div.appendChild(search_geonames_title);
+				search_geonames_title.appendChild(document.createTextNode("geonames.org"));
+				search_geonames_title.style.fontWeight = "bold";
+				search_geonames_title.style.backgroundColor = "#C0C0C0";
+				var geonames_color = map_colors[color_index++];
+				search_geonames_title.style.color = geonames_color.border;
+				var search_geonames_div = document.createElement("DIV"); div.appendChild(search_geonames_div);
+				new SearchGeonames(search_geonames_div, country.country_id, area.area_name, null, function(res) {
+					div.removeChild(search_geonames_title);
+					search_geonames_div.removeAllChildren();
+					new ResultsList(search_geonames_div, "geonames.org", res, geonames_color, ec.coord, ec.map);
+				});
+			}
 			// Google
-			var search_google_title = document.createElement("DIV"); div.appendChild(search_google_title);
-			search_google_title.appendChild(document.createTextNode("Google"));
-			search_google_title.style.fontWeight = "bold";
-			search_google_title.style.backgroundColor = "#C0C0C0";
-			var google_color = map_colors[color_index++];
-			search_google_title.style.color = google_color.border;
-			var search_google_div = document.createElement("DIV"); div.appendChild(search_google_div);
-			new SearchGoogle(search_google_div, country.country_id, area.area_name, null, area, function(res) {
-				div.removeChild(search_google_title);
-				search_google_div.removeAllChildren();
-				new ResultsList(search_google_div, "Google", res, google_color, ec.coord, ec.map);
-			});
+			if (from_google) {
+				var search_google_div = document.createElement("DIV"); div.appendChild(search_google_div);
+				new ResultsList(search_google_div, "Google", from_google, google_color, ec.coord, ec.map);
+			} else {
+				var search_google_title = document.createElement("DIV"); div.appendChild(search_google_title);
+				search_google_title.appendChild(document.createTextNode("Google"));
+				search_google_title.style.fontWeight = "bold";
+				search_google_title.style.backgroundColor = "#C0C0C0";
+				var google_color = map_colors[color_index++];
+				search_google_title.style.color = google_color.border;
+				var search_google_div = document.createElement("DIV"); div.appendChild(search_google_div);
+				new SearchGoogle(search_google_div, country.country_id, area.area_name, null, area, function(res) {
+					div.removeChild(search_google_title);
+					search_google_div.removeAllChildren();
+					new ResultsList(search_google_div, "Google", res, google_color, ec.coord, ec.map);
+				});
+			}
 			onready(ec, input_name);
 		});
 	});
@@ -1536,10 +1633,10 @@ function SearchGoogle(container, country_id, name, types, area, ondone, auto_lau
 			for (var i = 0; i < res.length; ++i) {
 				if (res[i].geometry) {
 					if (res[i].geometry.viewport) {
-						res[i].north = res[i].geometry.viewport.northeast.lat;
-						res[i].east = res[i].geometry.viewport.northeast.lng;
-						res[i].south = res[i].geometry.viewport.southwest.lat;
-						res[i].west = res[i].geometry.viewport.southwest.lng;
+						res[i].north = parseFloat(res[i].geometry.viewport.northeast.lat);
+						res[i].east = parseFloat(res[i].geometry.viewport.northeast.lng);
+						res[i].south = parseFloat(res[i].geometry.viewport.southwest.lat);
+						res[i].west = parseFloat(res[i].geometry.viewport.southwest.lng);
 						res[i].fullname = res[i].formatted_address;
 						// remove fake viewport
 						if (res[i].north == 90 && res[i].south == -90) {

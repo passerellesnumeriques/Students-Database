@@ -227,7 +227,8 @@ function GeographicAreasTree(areas_section, country_id) {
 		text_area.cols = 50;
 		content.appendChild(text_area);
 		content.appendChild(document.createElement("BR"));
-		content.appendChild(document.createTextNode("Cleaning after copy/paste: "));
+		content.appendChild(document.createTextNode("Cleaning after copy/paste:"));
+		content.appendChild(document.createElement("BR"));
 		var link_clean = document.createElement("A");
 		link_clean.className = "black_link";
 		link_clean.appendChild(document.createTextNode("Remove spaces and keep only first column"));
@@ -283,29 +284,29 @@ function GeographicAreasTree(areas_section, country_id) {
 			return false;
 		};
 		content.appendChild(link_clean2);
-		content.appendChild(document.createElement("BR"));
-		content.appendChild(document.createTextNode("Remove end of lines starting from: "));
-		var input_end = document.createElement("INPUT");
-		input_end.type = "text";
-		input_end.size = 5;
-		content.appendChild(input_end);
-		var button_end = document.createElement("BUTTON");
-		button_end.innerHTML = "Go";
-		content.appendChild(button_end);
-		button_end.onclick = function() {
+		content.appendChild(document.createTextNode("  "));
+		var link_clean3 = document.createElement("A");
+		link_clean3.className = "black_link";
+		link_clean3.appendChild(document.createTextNode("Split by comma"));
+		link_clean3.href = '#';
+		link_clean3.onclick = function() {
 			var s = text_area.value;
 			var lines = s.split("\n");
 			s = "";
 			for (var i = 0; i < lines.length; ++i) {
 				var line = lines[i].trim();
 				if (line.length == 0) continue;
-				var j = line.indexOf(input_end.value);
-				if (j > 0) line = line.substring(0,j);
-				s += line+"\n";
+				var ss = line.split(",");
+				for (var j = 0; j < ss.length; ++j) {
+					line = ss[j].trim();
+					if (line.length == 0) continue;
+					s += line+"\n";
+				}
 			}
 			text_area.value = s;
 			return false;
 		};
+		content.appendChild(link_clean3);
 		content.appendChild(document.createElement("BR"));
 		content.appendChild(document.createTextNode("Remove beggining of lines until: "));
 		var input_start = document.createElement("INPUT");
@@ -329,6 +330,29 @@ function GeographicAreasTree(areas_section, country_id) {
 			text_area.value = s;
 			return false;
 		};
+		content.appendChild(document.createTextNode(" Remove end of lines starting from: "));
+		var input_end = document.createElement("INPUT");
+		input_end.type = "text";
+		input_end.size = 5;
+		content.appendChild(input_end);
+		var button_end = document.createElement("BUTTON");
+		button_end.innerHTML = "Go";
+		content.appendChild(button_end);
+		button_end.onclick = function() {
+			var s = text_area.value;
+			var lines = s.split("\n");
+			s = "";
+			for (var i = 0; i < lines.length; ++i) {
+				var line = lines[i].trim();
+				if (line.length == 0) continue;
+				var j = line.indexOf(input_end.value);
+				if (j > 0) line = line.substring(0,j);
+				s += line+"\n";
+			}
+			text_area.value = s;
+			return false;
+		};
+		content.appendChild(document.createElement("BR"));
 		require("popup_window.js",function() {
 			var popup = new popup_window("New Geographic Areas", null, content);
 			popup.addOkCancelButtons(function() {

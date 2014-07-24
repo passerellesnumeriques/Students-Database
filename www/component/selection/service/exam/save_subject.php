@@ -23,6 +23,8 @@ class service_exam_save_subject extends Service {
 		SQLQuery::startTransaction();
 		$subject = &$input["exam"];
 		
+		// TODO check we can modify subjects (no result imported yet...)
+		
 		// re-calculate scores and indexes on back-end side to make sure everything is coherent
 		$total_score = 0;
 		$part_index = 1;
@@ -107,6 +109,7 @@ class service_exam_save_subject extends Service {
 		
 		// questions
 		$questions_ids_mapping = array();
+		$all_questions = array();
 		foreach ($subject["parts"] as &$part) {
 			$current_questions = SQLQuery::create()->bypassSecurity()->select("ExamSubjectQuestion")->whereValue("ExamSubjectQuestion","exam_subject_part",$part["id"])->execute();
 			foreach ($part["questions"] as &$q) {
@@ -114,8 +117,10 @@ class service_exam_save_subject extends Service {
 				if ($id <= 0) {
 					$new_id = SQLQuery::create()->bypassSecurity()->insert("ExamSubjectQuestion", array("exam_subject_part"=>$part["id"],"index"=>$q["index"],"max_score"=>$q["max_score"],"type"=>$q["type"],"type_config"=>$q["type_config"]));
 					$questions_ids_mapping[$id] = $new_id;
+					$all_questions[$new_id] = $q;
 				} else {
 					$questions_ids_mapping[$id] = $id;
+					$all_questions[$id] = $q;
 					$found = false;
 					for ($j = 0; $j < count($current_questions); $j++)
 						if ($current_questions[$j]["id"] == $id) {
@@ -148,11 +153,34 @@ class service_exam_save_subject extends Service {
 		for ($version_index = 0; $version_index < count($answers); $version_index++) {
 			foreach ($answers[$version_index] as &$a) {
 				$a["q"] = $questions_ids_mapping[$a["q"]];
-				array_push($to_insert, array("exam_subject_version"=>$subject["versions"][$version_index],"exam_subject_question"=>$a["q"],"answer"=>$a["a"]));
+				// check the answer is valid
+				$question = $all_questions[$a["q"]];
+				$valid = false;
+				switch ($question["type"]) {
+					case "mcq_single":
+						$start = ord("A");
+						$end = $start+intval($question["type_config"])-1;
+						if (ord($a["a"]) >= $start && ord($a["a"]) <= $end)
+							$valid = true;
+						break;
+				}
+				if ($valid)
+					array_push($to_insert, array("exam_subject_version"=>$subject["versions"][$version_index],"exam_subject_question"=>$a["q"],"answer"=>$a["a"]));
 			}
 		}
 		if (count($to_insert) > 0)
 			SQLQuery::create()->bypassSecurity()->insertMultiple("ExamSubjectAnswer", $to_insert);
+		
+		// check there is no empty exam extract (if we removed all its parts)
+		$empty_extracts = SQLQuery::create()
+			->select("ExamSubjectExtract")
+			->join("ExamSubjectExtract", "ExamSubjectExtractParts", array("id"=>"extract"))
+			->groupBy("ExamSubjectExtract","id")
+			->whereNull("ExamSubjectExtractParts", "part") // no more part attached
+			->field("ExamSubjectExtract", "id")
+			->executeSingleField();
+		if (count($empty_extracts) > 0)
+			SQLQuery::create()->removeKeys("ExamSubjectExtract", $empty_extracts);
 		
 		if (!PNApplication::hasErrors()) {
 			SQLQuery::commitTransaction();
