@@ -66,6 +66,8 @@ class service_search_geonames extends Service {
 		curl_close($c);
 		$result = json_decode($result, true);
 		if (!isset($result["geonames"])) {
+			if ($result["status"])
+				PNApplication::error("Request to geonames error: #".@$result["status"]["value"]." ".@$result["status"]["message"]);
 			return array();
 		}
 		$results = $result["geonames"];

@@ -101,7 +101,7 @@ class SelectionExamJSON {
 		$question_i = 0;
 		while ($subject_i < count($subjects)) {
 			if ($subject_i > 0) $s .= ",";
-			$s = "{";
+			$s .= "{";
 			$s .= "id:".$subjects[$subject_i]["id"];
 			$s .= ",name:".json_encode($subjects[$subject_i]["name"]);
 			$s .= ",max_score:".json_encode($subjects[$subject_i]["max_score"]);

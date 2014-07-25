@@ -20,7 +20,8 @@ class page_exam_results_edit extends SelectionPage {
 		$this->addJavascript("/static/selection/exam/results_edit.js");
 		$this->requireJavascript("vertical_layout.js");
 		$this->onload("new vertical_layout('main_container');");
-		$this->onload("initResultsEdit(".$input["session_id"].",".$input["room_id"].")");
+		require_once("component/selection/SelectionExamJSON.inc");
+		$this->onload("initResultsEdit(".$input["session_id"].",".$input["room_id"].",".SelectionExamJSON::ExamSubjectsFullJSON().")");
 
 	?>
 	      <!-- TODO : css clean up (merge with the right css file)-->

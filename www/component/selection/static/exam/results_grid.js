@@ -9,11 +9,10 @@ if (typeof require != 'undefined'){
 /* results_grid : class to manage the exam subject results
  * @param {object} subject  : exam subject
  * @param {array} applicants : array of applicants objects
- * @param {array} versions : array of versions id for this subject
  * @param {String} grid_height : the height of the inside grid 
 */
 
-function results_grid(subject,applicants,versions,grid_height) {
+function results_grid(subject,applicants,grid_height) {
    var t=this;
    
     /* html elements */   
@@ -25,7 +24,6 @@ function results_grid(subject,applicants,versions,grid_height) {
       
    t.subject=subject;
    t.applicants = applicants;
-   t.versions=versions;
    
    t.grid_res=new grid (t.elt.grid); // creating grid   
    t.index_applicant=-1; // index of selected applicant
@@ -89,7 +87,7 @@ function results_grid(subject,applicants,versions,grid_height) {
       t._createApplicantColumn();
     
     /* Creating Subject version column (if more than one version) */  
-    if (t.versions.length>1) {
+    if (t.subject.versions.length>1) {
       t._createVersionColumn();
     }
       
@@ -134,8 +132,8 @@ function results_grid(subject,applicants,versions,grid_height) {
           "can_be_empty":false
           };            
           
-         for(var j=0;j<t.versions.length;++j)
-           field_args.possible_values.push(new Array(t.versions[j],String.fromCharCode(j+65)));// push key (id) ,value to display
+         for(var j=0;j<t.subject.versions.length;++j)
+           field_args.possible_values.push(new Array(t.subject.versions[j],String.fromCharCode(j+65)));// push key (id) ,value to display
         
       var col_version=new GridColumn('col_version','Version',null,'center','field_enum',true,null,null,field_args,'#');
       
@@ -299,13 +297,13 @@ t._getAnswers=function(){
             var last_part=-1;
    
             //get version id
-            if (t.versions.length>1){
+            if (t.subject.versions.length>1){
                   use_version=1;
                   var cell_field=t.grid_res.getCellFieldById(row,'col_version');
                   version_id=cell_field.getCurrentData();              
             }
             else
-               version_id=t.versions[0];
+               version_id=t.subject.versions[0];
          
             var nb_cols=t.grid_res.getNbColumns();
             for (var col=1+use_version;col<nb_cols;++col){

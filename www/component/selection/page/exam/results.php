@@ -70,6 +70,7 @@ class page_exam_results extends SelectionPage {
 		{
 			$q = SQLQuery::create()->select("ExamCenter")
 					->field("ExamCenter","name")
+					->field("ExamCenter","id","center_id")
 					->field("CalendarEvent","start")
 					->field("CalendarEvent","end")
 					->field("ExamCenterRoom","name","room_name")
@@ -95,15 +96,15 @@ class page_exam_results extends SelectionPage {
 				</thead>
 				<tbody>
 			<?php
-			$exam_center="";
+			$exam_center_id=null;
 			foreach($exam_sessions as $exam_session){
 				$session_name=date("Y.m.d",$exam_session['start'])." (".date("h:i:a",$exam_session['start'])." to ".date("h:i:a",$exam_session['end']).")";
-				if ($exam_center<>$exam_session['name']){ // Group for a same exam center
-				       $exam_center=$exam_session['name'] ?>
+				if ($exam_center_id<>$exam_session['center_id']){ // Group for a same exam center
+				       $exam_center_id=$exam_session['center_id'] ?>
 				       <tr class="exam_center_row" >
-					       <th colspan="4" ><?php echo $exam_center?></th>
+					       <th colspan="4" ><?php echo $exam_session['name'];?></th>
 				       </tr><?php } //end of if statement ?> 
-					<tr  class="clickable_row" style="cursor: pointer" session_id="<?php echo $exam_session['session_id'];?>" room_id="<?php echo $exam_session['room_id'];?>" > 
+					<tr  class="clickable_row" style="cursor: pointer" session_id="<?php echo $exam_session['session_id'];?>" room_id="<?php echo $exam_session['room_id'];?>" exam_center_id="<?php echo $exam_center_id;?>" > 
 						<td><?php echo $session_name ?></td>
 						<td><?php echo $exam_session['room_name'] ?></td>
 						<td><?php echo $exam_session['applicants'] ?></td>

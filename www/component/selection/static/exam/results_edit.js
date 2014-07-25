@@ -5,7 +5,7 @@ if (typeof require != 'undefined'){
 var applicant_picture;
 
 /* Main */
-function initResultsEdit(session_id,room_id){
+function initResultsEdit(session_id,room_id,subjects){
 
    
    /* Profile picture */
@@ -20,51 +20,45 @@ function initResultsEdit(session_id,room_id){
    
    /* getting all applicants for this particular exam session */
    service.json("selection","applicant/get_applicants",{exam_session:session_id,exam_center_room:room_id},function(applicants){
-         /* getting all exam subjects */
-      service.json("selection","exam/get_subjects",{},function(subjects){
-         /* getting all subjects versions */
-            service.json("selection","exam/get_versions",{},function(versions){
                            
-               /* Remove Loader picture */
-               loader_img.remove();
-               
-               /* creating tab element */
-               var subj_tabs= new tabs('subj_results',false);
-               
-               var grids=[];
-               
-               
-               for (var j=0; j<subjects.length; ++j){
-                  /* create the results_grid  */
-                  var g = new results_grid(subjects[j],applicants,versions[j].version_ids,'250px');
-                 
-                  /* update ApplicantInfoBox on new row selection event */
-                  g.onRowApplicantSelection(updateApplicantInfoBox);
-                  
-                  /* Some CSS needed here */
-                  g.elt.container.style.marginTop="-1px" // to pass over the tab widget border
-                  
-                  /* adding grid exam subject to new tab */
-                  subj_tabs.addTab(subjects[j].name,null,g.getContainer());
-                  
-                  grids.push(g);
-               }
-                // avoid width computing from tab widget
-                //layout.removeHandler('subj_results',layout._getHandlers('subj_results')[0]);
-                  subj_tabs.content.style.width=""; 
-               
-              $('#subj_results').show();
-              
-               /* when a new tab selected : updateApplicantInfoBox */
-               subj_tabs.onselect = function() {
-                   
-                  subj_tabs.content.style.width=""; // avoid width computing from tab widget
-                  
-                 /* updating ApplicantInfoBox on new tab selection */
-                 updateApplicantInfoBox(grids[subj_tabs.selected].getCurrentApplicant()); 
-               };
-            });
-      });
+       /* Remove Loader picture */
+       loader_img.remove();
+       
+       /* creating tab element */
+       var subj_tabs= new tabs('subj_results',false);
+       
+       var grids=[];
+       
+       
+       for (var j=0; j<subjects.length; ++j){
+          /* create the results_grid  */
+          var g = new results_grid(subjects[j],applicants,'250px');
+         
+          /* update ApplicantInfoBox on new row selection event */
+          g.onRowApplicantSelection(updateApplicantInfoBox);
+          
+          /* Some CSS needed here */
+          g.elt.container.style.marginTop="-1px" // to pass over the tab widget border
+          
+          /* adding grid exam subject to new tab */
+          subj_tabs.addTab(subjects[j].name,null,g.getContainer());
+          
+          grids.push(g);
+       }
+        // avoid width computing from tab widget
+        //layout.removeHandler('subj_results',layout._getHandlers('subj_results')[0]);
+          subj_tabs.content.style.width=""; 
+       
+      $('#subj_results').show();
+      
+       /* when a new tab selected : updateApplicantInfoBox */
+       subj_tabs.onselect = function() {
+           
+          subj_tabs.content.style.width=""; // avoid width computing from tab widget
+          
+         /* updating ApplicantInfoBox on new tab selection */
+         updateApplicantInfoBox(grids[subj_tabs.selected].getCurrentApplicant()); 
+       };
    });
 }
 

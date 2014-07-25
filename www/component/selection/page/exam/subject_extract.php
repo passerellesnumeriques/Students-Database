@@ -35,11 +35,12 @@ class page_exam_subject_extract extends SelectionPage {
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;
 		if ($id > 0) {
-			$lock_extract_id = DataBaseLock::lockRow("ExamSubjectExtract", $id, $locked_by);
+			$campaign_id = PNApplication::$instance->selection->getCampaignId();
+			$lock_extract_id = DataBaseLock::lockRow("ExamSubjectExtract_".$campaign_id, $id, $locked_by);
 			if ($lock_extract_id == null)
 				$edit = false;
 			else {
-				$lock_subject_id = DataBaseLock::lockRow("ExamSubject", $subject_id, $locked_by);
+				$lock_subject_id = DataBaseLock::lockRow("ExamSubject_".$campaign_id, $subject_id, $locked_by);
 				if ($lock_subject_id == null) {
 					DataBaseLock::unlock($lock_extract_id);
 					$edit = false;
@@ -78,10 +79,14 @@ class page_exam_subject_extract extends SelectionPage {
 		</div>
 		<script type='text/javascript'>
 		var extract_id = <?php echo $id;?>;
+		var extract_name = <?php echo json_encode($id > 0 ? $extract["name"] : "");?>;
 		var popup = window.parent.get_popup_window_from_frame(window);
 		<?php if ($edit) { ?>
 		var input_name = document.getElementById('extract_name');
 		input_name.onchange = function() {
+			var n = input_name.value.trim();
+			if (extract_name == n) return;
+			extract_name = n;
 			pnapplication.dataUnsaved('extract');
 		};
 		inputDefaultText(input_name, "Name");
@@ -97,8 +102,8 @@ class page_exam_subject_extract extends SelectionPage {
 				if (!res) return;
 				if (extract_id <= 0) extract_id = res.id;
 				pnapplication.dataSaved('extract');
+				window.parent.location.reload();
 			});
-			window.parent.location.reload();
 		});
 		popup.addCancelButton();
 		<?php } else { ?>
