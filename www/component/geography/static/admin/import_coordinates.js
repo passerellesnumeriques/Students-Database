@@ -238,7 +238,7 @@ function import_division_level(popup, country, country_data, division_index, par
 
 	popup.content.removeAllChildren();
 	popup.removeButtons();
-	if (parent_area)
+	if (division_index>0 && parent_area)
 		popup.addIconTextButton(null, "Skip "+parent_area.area_name, "skip", function() {
 			ondone();
 		});
