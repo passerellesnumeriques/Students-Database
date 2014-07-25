@@ -67,7 +67,7 @@ function questionGridFieldType(question)
 function questionGridFieldArgs(question){
 	switch (question.type){
 	case 'mcq_single':
-		var field_args={"possible_values":[], "can_be_empty":false};            
+		var field_args={"possible_values":[], "can_be_empty":true};            
 		//type_config contains the number of possible choices
 		for(var j=0;j<question.type_config;++j) {
 			var car=String.fromCharCode(j+65);// 65 is for letter 'A'

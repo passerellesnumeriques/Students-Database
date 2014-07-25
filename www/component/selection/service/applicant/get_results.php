@@ -8,13 +8,11 @@ class service_applicant_get_results extends Service {
 	public function getRequiredRights() { return array("see_applicant_info"); }
 	
 	public function documentation() { return "Compute results of applicants answers"; }
-	public function inputDocumentation() { echo "Object containing Applicants answers for one given subject
-	i.e {exam_subject:xx,applicants_answers:[{applicant:xx,subject_version:xx,parts:[{exam_subject_part:xx,score:xx,answers:[{exam_subject_question:xx,answer:xx,score:xx},{}]}]},{}]}";
-	}
+	public function inputDocumentation() { echo "Object containing subject and applicants answers "; }
 	public function outputDocumentation() { echo "Same JSON object fully completed with computed scores"; }
 	
 	public function execute(&$component, $input) {
-			
+		
 		extract($input,EXTR_REFS); // $subject and $applicants_exam
 		$this->subject=$subject;
 		
@@ -26,10 +24,9 @@ class service_applicant_get_results extends Service {
 		/* Computing exam score */
 		array_walk($applicants_answers,array($this,'computeApplicantExamScore'));
 		
+		//Storing everything into database
 		
-		
-		//TODO : storing everything into database
-	
+		$this->storeApplicantsExam($applicants_answers);
 	}
 	
 	/* 
@@ -112,14 +109,11 @@ class service_applicant_get_results extends Service {
 			/* finding the correct answer for this question and this version  */
 			if (($correct_answer["question_id"]==$question["id"]) && ($correct_answer["version_id"]==$this->current_applicant["subject_version"]))
 			{
-				
-				if ($applicant_answer==null || $applicant_answer==""){
+				if ($applicant_answer==null || $applicant_answer=="")
 					return 0; // no answer => 0 points
-				}
 			
-				if($applicant_answer==$correct_answer["answer"]){
+				if($applicant_answer==$correct_answer["answer"])
 					return $question["max_score"]; // correct answer => max_score
-				}
 				
 				/* wrong answer */
 				 
@@ -130,7 +124,7 @@ class service_applicant_get_results extends Service {
 					break;
 					case 'number':
 						return -1; //TODO : configuration parameter ? 
-					/* TODO : other cases to implement (not used at the moment) */
+					/* TODO : other cases to implement (not used at the time) */
 				}
 			}		
 		}	
@@ -158,6 +152,45 @@ class service_applicant_get_results extends Service {
 		$this->correct_answers = $q->execute();
 		
 	}
+	
+	
+	/* storing datas into tables */
+	private function storeApplicantsExam(&$applicants_answers)
+	{
+	
+	   /* Preparing datas into arrays for SQL insertions */
+	   
+		$rows_exam=array();
+		$rows_parts=array();
+		$rows_answers=array();
+		
+		foreach($applicants_answers as $applicant_answers)
+		{
+			array_push($rows_exam,array('applicant'=>$applicant_answers['applicant'],'exam_subject'=>$this->subject['id'],'exam_subject_version'=>$applicant_answers['subject_version'],'score'=>$applicant_answers['score']));
+			foreach($applicant_answers['parts'] as $part)
+			{
+				/* pushing part records for ApplicantExamSubjectPart table */
+				array_push($rows_parts,array('applicant'=>$applicant_answers['applicant'],'exam_subject_part'=>$part['exam_subject_part'],'score'=>$part['score']));
+				
+				/* pushing answers records for ApplicantExamAnswer table */
+				foreach($part['answers'] as $answer)
+					array_push($rows_answers,array('applicant'=>$applicant_answers['applicant'],'exam_subject_question'=>$answer['exam_subject_question'],'answer'=>$answer['answer'],'score'=>$answer['score']));
+			}
+		}
+		
+	   /* Inserting into SQL tables */
+	
+	
+	SQLQuery::create()->bypassSecurity()->removeRows("ApplicantExamSubject", $rows_exam);
+	$ids = SQLQuery::create()->bypassSecurity()->insertMultiple("ApplicantExamSubject", $rows_exam);
+	
+	SQLQuery::create()->bypassSecurity()->removeRows("ApplicantExamSubjectPart", $rows_parts);
+	$ids = SQLQuery::create()->bypassSecurity()->insertMultiple("ApplicantExamSubjectPart", $rows_parts);
+	
+	SQLQuery::create()->bypassSecurity()->removeRows("ApplicantExamAnswer", $rows_answers);
+	$ids = SQLQuery::create()->bypassSecurity()->insertMultiple("ApplicantExamAnswer", $rows_answers);	
+	}
+	
 	
 }
 ?>

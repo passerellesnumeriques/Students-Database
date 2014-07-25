@@ -38,16 +38,16 @@ col.questions{ width:80px; }
 th.questions>div.cell_wrapper { width:78px; }
 
 /* absolute positionning of thead to make only the rows scrollable */
-.grid_results thead{
+/*.grid_results thead{
 	position: absolute;
 	top:1px;
 	display: inherit;
 }
-
-.grid_results thead>tr>th>{
+*/
+/*.grid_results thead>tr>th>{
 	padding-left: 2px;
 	padding-right: 2px;
-}
+}*/
 
 
 /* Footer **/

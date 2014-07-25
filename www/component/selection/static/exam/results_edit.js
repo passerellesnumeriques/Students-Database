@@ -24,9 +24,6 @@ function initResultsEdit(session_id,room_id){
       service.json("selection","exam/get_subjects",{},function(subjects){
          /* getting all subjects versions */
             service.json("selection","exam/get_versions",{},function(versions){
-               
-               //DEBUG
-               console.log(versions);
                            
                /* Remove Loader picture */
                loader_img.remove();
