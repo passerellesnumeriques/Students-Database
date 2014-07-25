@@ -362,7 +362,10 @@ class page_exam_subject extends SelectionPage {
 				insert_before.title = "Insert a question before this one";
 				insert_before.onclick = function() {
 					var index = part.questions.indexOf(t);
-					var q = new ExamSubjectQuestion(new_question_id_counter--, index, 1, "mcq_single", document.getElementById('default_nb_choices').value);
+					var config = null;
+					if (display_correct_answers)
+						config = document.getElementById('default_nb_choices').value;
+					var q = new ExamSubjectQuestion(new_question_id_counter--, index, 1, "mcq_single", config);
 					part.part.questions.splice(index,0,q);
 					new QuestionControl(part, index);
 					pnapplication.dataUnsaved('subject');
@@ -449,7 +452,10 @@ class page_exam_subject extends SelectionPage {
 				insert_after.title = "Add a question after this one";
 				insert_after.onclick = function() {
 					var index = part.questions.indexOf(t)+1;
-					var q = new ExamSubjectQuestion(new_question_id_counter--, index, 1, "mcq_single", document.getElementById('default_nb_choices').value);
+					var config = null;
+					if (display_correct_answers)
+						config = document.getElementById('default_nb_choices').value;
+					var q = new ExamSubjectQuestion(new_question_id_counter--, index, 1, "mcq_single", config);
 					part.part.questions.splice(index,0,q);
 					new QuestionControl(part, index);
 					pnapplication.dataUnsaved('subject');
@@ -491,7 +497,13 @@ class page_exam_subject extends SelectionPage {
 			var answer = getAnswer(this.version_id, question.question.id);
 			switch (question.question.type) {
 			case "mcq_single":
-				var nb_answers = parseInt(question.question.type_config);
+				var nb_answers = document.getElementById('default_nb_choices').value;
+				var config = question.question.type_config;
+				if (config != null) {
+					config = parseInt(config);
+					if (isNaN(config)) config = null;
+				}
+				if (config != null && config > 1) nb_answers = config;
 				var id = generateID();
 				for (var i = 0; i < nb_answers; ++i) {
 					var cb = document.createElement("INPUT");
@@ -657,8 +669,11 @@ class page_exam_subject extends SelectionPage {
 		}
 
 		function newPart() {
+			var config = null;
+			if (display_correct_answers)
+				config = document.getElementById('default_nb_choices').value;
 			var part = new ExamSubjectPart(new_part_id_counter--, subject.parts.length+1, "", 1, [
-			    new ExamSubjectQuestion(new_question_id_counter--, 1, 1, "mcq_single", display_correct_answers ? document.getElementById('default_nb_choices').value : "4")
+			    new ExamSubjectQuestion(new_question_id_counter--, 1, 1, "mcq_single", config)
 			]);
 			subject.parts.push(part);
 			var p = new ExamPartControl(subject.parts.length-1);

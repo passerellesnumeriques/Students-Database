@@ -1916,7 +1916,11 @@ class SQLQuery {
 							$first = true;
 							foreach ($to_remove_in_table["key_name"] as $key_name) {
 								if ($first) $first = false; else $where .= " AND ";
-								$where .= "`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
+								$where .= "`".$key_name."`";
+								if ($key[$key_name] == null)
+									$where .= " IS NULL";
+								else
+									$where .= "='".SQLQuery::escape($key[$key_name])."'";
 							}
 							$where .= ")";
 						}					

@@ -62,17 +62,17 @@ $sm->addTable("ExamSubjectExtractParts")
 $sm->addTable("ExamEligibilityRule")
 	->addPrimaryKey("id")
 	->addForeignKey("parent", "ExamEligibilityRule", true, false, false, true)//Can only have one parent. If null, root level
+	->addDecimal("expected",3,2,null,null,false,false) // expected grade
 	->addWriteAccess("manage_exam_subject",true)
 	->addReadAccess("see_exam_subject",true)
 	->addInsertAccess("manage_exam_subject",true)
 	->addRemoveAccess("manage_exam_subject",true)
 	;
 
-$sm->addTable("ExamEligibilityRuleValue")
+$sm->addTable("ExamEligibilityRuleTopic")
 	->addForeignKey("rule", "ExamEligibilityRule", true, false, true)
 	->addForeignKey("subject", "ExamSubject", true, false, true, true)
 	->addForeignKey("extract", "ExamSubjectExtract", true, false, true, true)
-	->addDecimal("expected",3,2,null,null,false,false) // expected grade
 	->addDecimal("coefficient",3,2,null,null,true,false) //optional. If empty, considered as 1
 	->setKey(array("rule","subject","extract"))
 	->addWriteAccess("manage_exam_subject",true)

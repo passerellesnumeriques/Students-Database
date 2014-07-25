@@ -108,7 +108,7 @@ class DataBaseLock {
 				if ($t->mayModify()) {
 					$q = SQLQuery::create();
 					$table_alias = $q->generateTableAlias();
-					$q->select(array($table=>$table_alias));
+					$q->select(array($t->getName()=>$table_alias));
 					if ($t->getPrimaryKey() <> null)
 						$q->whereValue($table_alias, $t->getPrimaryKey()->name, $row_key);
 					else {
