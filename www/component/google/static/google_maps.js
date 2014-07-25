@@ -38,6 +38,80 @@ function GoogleMap(container, onready) {
 	};
 	
 	this.fitToBounds = function(south, west, north, east) {
+		var cur_bounds = this.map.getBounds();
+		var cur_center = this.map.getCenter();
+		if (cur_center.lat() == 0 || cur_center.lng() == 0) {
+			this.map.fitBounds(this.createBounds(south, west, north, east));
+			setTimeout(function() {
+				var cur_center = t.map.getCenter();
+				if (cur_center.lat() == 0 || cur_center.lng() == 0)
+					t.map.fitBounds(t.createBounds(south, west, north, east));
+			},1000);
+			return;
+		}
+		if (cur_bounds) {
+			var cur_south = cur_bounds.getSouthWest().lat();
+			var cur_west = cur_bounds.getSouthWest().lng();
+			var cur_north = cur_bounds.getNorthEast().lat();
+			var cur_east = cur_bounds.getNorthEast().lng();
+			var cur_width = cur_north - cur_south;
+			var cur_height = cur_east - cur_west;
+			var cur_zoom = this.map.getZoom();
+			var t=this;
+			var new_center = new window.top.google.maps.LatLng(south+(north-south)/2, west+(east-west)/2);
+			if (new_center.lat() < cur_south || new_center.lat() > cur_north) {
+				var lat = new_center.lat() < cur_south ? cur_south : cur_north;
+				var lng;
+				if (new_center.lng() < cur_west) lng = cur_west;
+				else if (new_center.lng() > cur_east) lng = cur_east;
+				else lng = new_center.lng();
+				this.map.setCenter(new window.top.google.maps.LatLng(lat,lng));
+				if (cur_zoom > 1)
+					this.map.setZoom(cur_zoom-1);
+				setTimeout(function() {
+					t.fitToBounds(south, west, north, east);
+				},400);
+				return;
+			} else if (new_center.lng() < cur_west || new_center.lng() > cur_east) {
+				var lng = new_center.lng() < cur_west ? cur_west : cur_east;
+				this.map.setCenter(new window.top.google.maps.LatLng(new_center.lat(),lng));
+				if (cur_zoom > 1)
+					this.map.setZoom(cur_zoom-1);
+				setTimeout(function() {
+					t.fitToBounds(south, west, north, east);
+				},400);
+				return;
+			}
+			var new_width = north-south;
+			var new_height = east-west;
+			if (new_width < cur_width && new_height < cur_height) {
+				// we are zooming in
+				if (new_width < cur_width*0.1 || new_height < cur_height*0.1) {
+					// we are zooming a lot, let's do it in several step
+					this.map.setCenter(new_center);
+					setTimeout(function() {
+						t.map.setZoom(cur_zoom+1);
+						setTimeout(function() {
+							t.fitToBounds(south,west,north,east);
+						},300);
+					},50);
+					return;
+				}
+			} else {
+				// we are zooming out
+				if (new_width > cur_width*2 || new_height > cur_height*2) {
+					// we are zooming a lot, let's do it in several step
+					this.map.setCenter(new_center);
+					setTimeout(function() {
+						t.map.setZoom(cur_zoom-1);
+						setTimeout(function() {
+							t.fitToBounds(south,west,north,east);
+						},300);
+					},50);
+					return;
+				}
+			}
+		}
 		this.map.fitBounds(this.createBounds(south, west, north, east));
 	};
 	
@@ -60,7 +134,7 @@ function GoogleMap(container, onready) {
 				new window.top.google.maps.LatLng(bounds.getNorthEast().lat(), bounds.getNorthEast().lng()+(0.01-diff)/2)
 			);
 		}
-		this.map.fitBounds(bounds);
+		this.fitToBounds(bounds.getSouthWest().lat(), bounds.getSouthWest().lng(), bounds.getNorthEast().lat(), bounds.getNorthEast().lng());
 	};
 	
 	this.zoomOnShape = function(shape) {
