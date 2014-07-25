@@ -55,7 +55,7 @@ public class Global extends Container {
 			VariableDeclaration vd = (VariableDeclaration)node;
 			for (VariableInitializer vi : vd.getVariables()) {
 				String name = ((Name)vi.getTarget()).getIdentifier();
-				add(name, new ValueToEvaluate(file, vi.getInitializer(), (AstNode)node));
+				add(name, vi.getInitializer() != null ? new ValueToEvaluate(file, vi.getInitializer(), (AstNode)node) : new ObjectClass(this.location.file, "undefined", vd));
 			}
 			return;
 		}

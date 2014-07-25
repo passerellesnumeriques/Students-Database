@@ -59,7 +59,7 @@ function createTitleAreaElement(country, country_data, division_index, area_inde
 	link.className = "black_link";
 	link.appendChild(document.createTextNode(area.area_name));
 	link.onclick = function() {
-		// TODO open popup
+		dialog_coordinates(country, country_data, division_index, area_index);
 	};
 	return link;
 }
@@ -69,7 +69,7 @@ function createTitleCountry(country) {
 	link.className = "black_link";
 	link.appendChild(document.createTextNode(country.country_name));
 	link.onclick = function() {
-		// TODO open popup
+		dialog_coordinates(country, country_data);
 	};
 	return link;
 }
@@ -1287,7 +1287,7 @@ function import_area_coordinates(container, area, division_index, country, count
 							var menu = new context_menu();
 							for (var i = 0; i < all_sub_areas.length; ++i) {
 								menu.addIconItem(null, all_sub_areas[i].area_name, function(i) {
-									// TODO
+									dialog_coordinates(country, country_data, division_index+1, country_data[division_index+1].areas.indexOf(all_sub_areas[i]));
 								}, i);
 							}
 							menu.showBelowElement(button);

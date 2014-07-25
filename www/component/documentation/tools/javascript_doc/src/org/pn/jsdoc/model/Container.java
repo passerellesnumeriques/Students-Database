@@ -174,6 +174,7 @@ public abstract class Container extends FinalElement {
 	}
 	
 	public boolean evaluate(Global global, List<Container> done) {
+		try {
 		if (done.contains(this)) return false;
 		done.add(this);
 		boolean has_more = false;
@@ -291,7 +292,11 @@ public abstract class Container extends FinalElement {
 			} while (cont != null);
 		}
 		assignments_to_evaluate.clear();
-		return has_more;		
+		return has_more;
+		} catch (Throwable t) {
+			t.printStackTrace(System.out);
+			return false;
+		}
 	}
 	
 	public String getName(Element e) {
@@ -323,7 +328,7 @@ public abstract class Container extends FinalElement {
 			if (e.getValue() instanceof Builtin) continue;
 			s.append(indent);
 			if (first) first = false; else s.append(",");
-			s.append(e.getKey()+": ");
+			s.append('"').append(e.getKey()).append("\":");
 			if (e.getValue() instanceof FinalElement)
 				s.append(((FinalElement)e.getValue()).generate(indent+"  "));
 			else

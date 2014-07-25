@@ -30,7 +30,14 @@ class service_get_js extends Service {
 		}
 		$jsdoc = file_get_contents($filename);
 		unlink($filename);
-		echo "{js:".json_encode($jsdoc).",out:[";
+		if ($jsdoc == null) {
+			PNApplication::error("Cannot read the JavaScript doc generated");
+		}
+		$js = json_encode(utf8_encode($jsdoc));
+		if ($js == null) {
+			PNApplication::error("Error encoding JavaScript doc into JSON structure");
+		}
+		echo "{js:".$js.",out:[";
 		$first = true;
 		foreach ($out as $line) {
 			if ($first) $first = false; else echo ",";
