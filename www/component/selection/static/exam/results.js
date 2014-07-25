@@ -51,6 +51,7 @@ function initResults(){
       // update exam session information box
       updateExamSessionInfo();
       
+      selected["exam_center_id"]=this.getAttribute("exam_center_id");
       selected["session_id"]=this.getAttribute("session_id");
       selected["room_id"]=this.getAttribute("room_id");
       
@@ -88,7 +89,7 @@ function updateExamSessionInfo() {
 
       
    // Get exam center location from exam center name
-      service.json("selection","exam/get_exam_center_location",selected["exam_center_name"],function(host_addr){   
+      service.json("selection","exam/get_exam_center_location",{id:selected["exam_center_id"]},function(host_addr){   
       
       // Get the Postal Address from host address id's  
          service.json("contact","get_address",{"id":host_addr},function(postal_addr){

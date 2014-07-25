@@ -60,9 +60,6 @@ foreach ($campaigns as $c) {
 		<img src='/static/selection/exam/rules_16_white.png'/>
 		Eligibility rules
 	</a>
-	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/main_page'>
-		<i>Old version screen</i>
-	</a>
 	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/center_main_page'>
 		<img src='/static/selection/exam/center_white.png'/>
 		Centers
