@@ -41,6 +41,7 @@ function GoogleMap(container, onready) {
 		var cur_bounds = this.map.getBounds();
 		var cur_center = this.map.getCenter();
 		if (cur_center.lat() == 0 || cur_center.lng() == 0) {
+			var t=this;
 			this.map.fitBounds(this.createBounds(south, west, north, east));
 			setTimeout(function() {
 				var cur_center = t.map.getCenter();
@@ -50,6 +51,7 @@ function GoogleMap(container, onready) {
 			return;
 		}
 		if (cur_bounds) {
+			var t=this;
 			var cur_south = cur_bounds.getSouthWest().lat();
 			var cur_west = cur_bounds.getSouthWest().lng();
 			var cur_north = cur_bounds.getNorthEast().lat();
@@ -57,7 +59,6 @@ function GoogleMap(container, onready) {
 			var cur_width = cur_north - cur_south;
 			var cur_height = cur_east - cur_west;
 			var cur_zoom = this.map.getZoom();
-			var t=this;
 			var new_center = new window.top.google.maps.LatLng(south+(north-south)/2, west+(east-west)/2);
 			if (new_center.lat() < cur_south || new_center.lat() > cur_north) {
 				var lat = new_center.lat() < cur_south ? cur_south : cur_north;

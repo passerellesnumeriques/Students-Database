@@ -1253,8 +1253,10 @@ function import_area_coordinates(container, area, division_index, country, count
 				for (var i = 0; i < country_data[0].areas.length; ++i)
 					sub_areas.push(country_data[0].areas[i]);
 			}
-			for (var i = 0; i < sub_areas.length; ++i)
-				if (sub_areas[i].north === null) { all_sub_areas.push(sub_areas[i]); sub_areas.splice(i,1); i--; }
+			for (var i = 0; i < sub_areas.length; ++i) {
+				all_sub_areas.push(sub_areas[i]);
+				if (sub_areas[i].north === null) { sub_areas.splice(i,1); i--; }
+			}
 			for (var i = 0; i < sibling_areas.length; ++i)
 				if (sibling_areas[i].north === null) { sibling_areas.splice(i,1); i--; }
 			if (parent_area != null && parent_area.north === null) parent_area = null;
