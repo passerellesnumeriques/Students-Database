@@ -10,6 +10,71 @@ class service_import_kml extends Service {
 	public function execute(&$component, $input) {
 		echo "[";
 		$first = true;
+		$f = fopen('php://input','r');
+		$prev_s = "";
+		$last = "";
+		do {
+			$s = fread($f, 1024*1024);
+			if ($s === false || strlen($s) == 0) break;
+			$s = $prev_s.$s;
+			do {
+				$i = strpos($s, "<Placemark>");
+				if ($i === false) {
+					$i = strrpos($s, "<");
+					if ($i === false) $s = "";
+					else $s = substr($s, $i);
+					break;
+				}
+				$j = strpos($s, "</Placemark>");
+				if ($j === false) {
+					$s = substr($s, $i);
+					break;
+				}
+				$placemark = substr($s, $i, $j-$i+12);
+				$node2 = @simplexml_load_string($placemark);
+				if ($node2 === null || $node2 === false) {
+					$node2 = simplexml_load_string(utf8_encode($placemark));
+					if ($node2 === null || $node2 === false) {
+						throw new Exception("Invalid XML after: ".$last);
+					}
+				}
+				$name = null;
+				$bounds = null;
+				$descr = null;
+				foreach ($node2->children() as $node3) {
+					if ($node3->getName() == "name")
+						$name = "".$node3;
+					else if ($node3->getName() == "MultiGeometry") {
+						$bounds = array();
+						foreach ($node3->children() as $node4) {
+							if ($node4->getName() == "Polygon") {
+								$b = $this->getPolygonBounds($node4);
+								if ($b <> null)
+									array_push($bounds, $b);
+							}
+						}
+						$bounds = $this->mergeBounds($bounds);
+					} else if ($node3->getName() == "description")
+						$descr = "".$node3;
+				}
+				if ($name <> null && $bounds <> null) {
+					if ($first) $first = false; else echo ",";
+					$last = $name;
+					echo "{";
+					echo "name:".json_encode($name);
+					echo ",north:".json_encode($bounds[0]);
+					echo ",west:".json_encode($bounds[1]);
+					echo ",south:".json_encode($bounds[2]);
+					echo ",east:".json_encode($bounds[3]);
+					echo ",description:".json_encode($descr);
+					echo "}";
+				}
+				$s = substr($s, $j+12);
+			} while (true);
+			$prev_s = $s;
+		} while (true);
+		fclose($f);
+		/*
 		$xml = simplexml_load_file('php://input');
 		foreach ($xml->children() as $node) {
 			if ($node->getName() == "Document") {
@@ -49,6 +114,7 @@ class service_import_kml extends Service {
 				}
 			}
 		}
+		*/
 		echo "]";
 	}
 	
