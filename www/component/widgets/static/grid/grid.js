@@ -356,6 +356,7 @@ function grid(element) {
 		// increase rowSpan of first row
 		for (var i = 0; i < t.header_rows[0].childNodes.length; i++)
 			t.header_rows[0].childNodes[i].rowSpan++;
+		layout.invalidate(t.element);
 	};
 	t._addColumnContainer = function(container, level, index) {
 		container.grid = this;
@@ -383,6 +384,7 @@ function grid(element) {
 				if (typeof index != 'undefined') index++;
 			}
 		}
+		layout.invalidate(t.element);
 		return index;
 	};
 	t._addFinalColumn = function(col, level, index) {
@@ -412,21 +414,12 @@ function grid(element) {
 				t.header_rows[level].insertBefore(col.th, t.header_rows[level].childNodes[i]);
 		}
 		if (level > 0) {
-			if (col.parent_column.sub_columns[col.parent_column.sub_columns.length-1] == col) {
-				col.th.className = "last_in_container";
-				if (col.parent_column.sub_columns.length > 1) {
-					var prev_col = col.parent_column.sub_columns[col.parent_column.sub_columns.length-2];
-					prev_col.th.className = "";
-					for (var i = 0; i < t.table.childNodes.length; ++i) {
-						var tr = t.table.childNodes[i];
-						for (var j = 0; j < tr.childNodes.length; ++j) {
-							var td = tr.childNodes[j];
-							if (td.col_id == prev_col.id) {
-								td.className = "";
-								break;
-							}
-						}
-					}
+			if (col.parent_column.sub_columns.length > 1) {
+				for (var i = 0; i < col.parent_column.sub_columns.length; ++i) {
+					if (i == 0) addClassName(col.parent_column.sub_columns[i].th, "first_in_container");
+					else removeClassName(col.parent_column.sub_columns[i].th, "first_in_container");
+					if (i == col.parent_column.sub_columns.length-1) addClassName(col.parent_column.sub_columns[i].th, "last_in_container");
+					else removeClassName(col.parent_column.sub_columns[i].th, "last_in_container");
 				}
 			}
 		}
@@ -443,8 +436,6 @@ function grid(element) {
 			else {
 				var td = document.createElement("TD");
 				td.col_id = col.id;
-				if (col.th.className == "last_in_container")
-					td.className = "last_in_container";
 				var col_index = index + (t.selectable ? 1 : 0);
 				if (col_index >= tr.childNodes.length)
 					tr.appendChild(td);
@@ -458,7 +449,23 @@ function grid(element) {
 				});
 			}
 		}
-		layout.invalidate(this.table);
+		if (level > 0) {
+			if (col.parent_column.sub_columns.length > 1) {
+				var ids = [];
+				for (var i = 0; i < col.parent_column.sub_columns.length; ++i) ids.push(col.parent_column.sub_columns[i].id);
+				for (var i = 0; i < t.table.childNodes.length; ++i) {
+					var tr = t.table.childNodes[i];
+					for (var j = 0; j < tr.childNodes.length; ++j) {
+						var td = tr.childNodes[j];
+						if (td.col_id == col.parent_column.sub_columns[0].id) addClassName(td, "first_in_container");
+						else if (ids.contains(td.col_id)) removeClassName(td, "first_in_container");
+						if (td.col_id == col.parent_column.sub_columns[col.parent_column.sub_columns-1].id) addClassName(td, "last_in_container");
+						else if (ids.contains(td.col_id)) removeClassName(td, "last_in_container");
+					}
+				}
+			}
+		}
+		layout.invalidate(this.element);
 	};
 	t._subColumnAdded = function(container, final_col) {
 		// get the top level
@@ -557,17 +564,30 @@ function grid(element) {
 				c.th.parentNode.removeChild(c.th);
 				if (p.sub_columns.length > 0) {
 					// still something
-					var last_col = p.sub_columns[p.sub_columns.length-1];
-					if (last_col.th.className != "last_in_container") {
-						last_col.th.className = "last_in_container";
+					if (p.sub_columns.length == 1) {
+						var last_col = p.sub_columns[0];
 						for (var i = 0; i < t.table.childNodes.length; ++i) {
 							var tr = t.table.childNodes[i];
 							for (var j = 0; j < tr.childNodes.length; ++j) {
 								var td = tr.childNodes[j];
 								if (td.col_id == last_col.id) {
-									td.className = "last_in_container";
+									removeClassName(td, "last_in_container");
+									removeClassName(td, "first_in_container");
 									break;
 								}
+							}
+						}
+					} else {
+						var ids = [];
+						for (var i = 0; i < col.parent_column.sub_columns.length; ++i) ids.push(col.parent_column.sub_columns[i].id);
+						for (var i = 0; i < t.table.childNodes.length; ++i) {
+							var tr = t.table.childNodes[i];
+							for (var j = 0; j < tr.childNodes.length; ++j) {
+								var td = tr.childNodes[j];
+								if (td.col_id == col.parent_column.sub_columns[0].id) addClassName(td, "first_in_container");
+								else if (ids.contains(td.col_id)) removeClassName(td, "first_in_container");
+								if (td.col_id == col.parent_column.sub_columns[col.parent_column.sub_columns-1].id) addClassName(td, "last_in_container");
+								else if (ids.contains(td.col_id)) removeClassName(td, "last_in_container");
 							}
 						}
 					}
@@ -580,7 +600,7 @@ function grid(element) {
 			}
 		}
 		t.apply_filters();
-		layout.invalidate(this.table);
+		layout.invalidate(this.element);
 	};
 	t.rebuildColumn = function(column) {
 		column._refresh_title();
@@ -855,8 +875,10 @@ function grid(element) {
 				data = {data_id:null,data:"No data found for this column"};
 			td.col_id = t.columns[j].id;
 			td.data_id = data.data_id;
-			if (t.columns[j].th.className == "last_in_container")
-				td.className = "last_in_container";
+			if (hasClassName(t.columns[j].th, "first_in_container"))
+				addClassName(td, "first_in_container");
+			else if (hasClassName(t.columns[j].th, "last_in_container"))
+				addClassName(td, "last_in_container");
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
 				t._create_cell(t.columns[j], data.data, td, function(field){
@@ -866,7 +888,7 @@ function grid(element) {
 				td.className = data.css;
 		}
 		t.table.appendChild(tr);
-		layout.invalidate(t.table);
+		layout.invalidate(t.element);
 		return tr;
 	};
 	t._createSelectionTD = function() {
@@ -1110,6 +1132,7 @@ function grid(element) {
 			t._cells_loading--;
 			t._check_loaded();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
+			layout.invalidate(parent);
 		});
 	},
 	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {

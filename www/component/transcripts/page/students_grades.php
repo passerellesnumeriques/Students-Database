@@ -40,11 +40,15 @@ class page_students_grades extends Page {
 		$subjects_ids = array();
 		foreach ($subjects as $s) array_push($subjects_ids, $s["id"]);
 		
-		// get subjects' grading
-		$subjects_grading = SQLQuery::create()->select("CurriculumSubjectGrading")->whereIn("CurriculumSubjectGrading", "subject", $subjects_ids)->execute();
-		
-		// get students grades
-		$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","subject",$subjects_ids)->whereIn("StudentSubjectGrade","people",$students_ids)->execute();
+		if (count($subjects) > 0) {
+			// get subjects' grading
+			$subjects_grading = SQLQuery::create()->select("CurriculumSubjectGrading")->whereIn("CurriculumSubjectGrading", "subject", $subjects_ids)->execute();
+			// get students grades
+			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","subject",$subjects_ids)->whereIn("StudentSubjectGrade","people",$students_ids)->execute();
+		} else {
+			$subjects_grading = array();
+			$students_grades = array();
+		}		
 		
 		// grading systems
 		$grading_systems = include("component/transcripts/GradingSystems.inc");
@@ -140,6 +144,7 @@ function getStudentGrade(people_id, subject_id) {
 }
 
 var grades_grid = new people_data_grid('grades_container', function(people) { return people; }, "Student");
+grades_grid.grid.makeScrollable();
 for (var i = 0; i < categories.length; ++i) {
 	var cat_subjects = [];
 	for (var j = 0; j < subjects.length; ++j)
@@ -148,13 +153,13 @@ for (var i = 0; i < categories.length; ++i) {
 	var columns = [];
 	for (var j = 0; j < cat_subjects.length; ++j) {
 		var title = document.createElement("SPAN");
-		var name = document.createElement("A");
-		name.href = "subject_grades?subject="+cat_subjects[j].id<?php if ($class <> null) echo "+'&class=".$class["id"]."'";?>;
-		name.target = "application_frame";
-		name.appendChild(document.createTextNode(cat_subjects[j].name));
-		name.className = "black_link";
-		tooltip(name, "Open grade for subject "+cat_subjects[j].name);
-		title.appendChild(name);
+		var sname = document.createElement("A");
+		sname.href = "subject_grades?subject="+cat_subjects[j].id<?php if ($class <> null) echo "+'&class=".$class["id"]."'";?>;
+		sname.target = "application_frame";
+		sname.appendChild(document.createTextNode(cat_subjects[j].name));
+		sname.className = "black_link";
+		tooltip(sname, "Open grade for subject "+cat_subjects[j].name);
+		title.appendChild(sname);
 		var span_coef = document.createElement("SPAN");
 		span_coef.style.fontWeight = "normal";
 		span_coef.style.visibility = <?php if ($display_coef == 1) echo "'visible'"; else echo "'hidden'";?>;

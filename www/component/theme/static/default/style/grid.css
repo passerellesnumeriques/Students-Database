@@ -19,6 +19,9 @@ table.grid>thead>tr>th {
 table.grid>thead>tr>th.container, table.grid>thead>tr>th.last_in_container {
 	border-right: 1px solid #C0C0C0;
 }
+table.grid>thead>tr>th.container, table.grid>thead>tr>th.first_in_container {
+	border-left: 1px solid #C0C0C0;
+}
 table.grid>tbody>tr:first-child>td {
 	border-top: 1px solid #C0C0C0;
 }
@@ -33,6 +36,9 @@ table.grid>tbody>tr:last-child>td {
 }
 table.grid>tbody>tr>td.last_in_container {
 	border-right: 1px solid #E0E0E0;
+}
+table.grid>tbody>tr>td.first_in_container {
+	border-left: 1px solid #E0E0E0;
 }
 table.grid>tbody>tr {
 	background-color: #FFFFFF;

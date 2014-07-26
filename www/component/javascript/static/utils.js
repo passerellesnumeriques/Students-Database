@@ -966,6 +966,27 @@ Element.prototype.removeAllChildren = function() {
 	while (this.childNodes.length > 0) this.removeChild(this.childNodes[0]);
 };
 
+function addClassName(element, name) {
+	if (element.className == "") { element.className = name; return; }
+	var names = element.className.split(" ");
+	if (names.contains(name)) return;
+	element.className += " "+name;
+}
+function removeClassName(element, name) {
+	if (element.className == "") return;
+	if (element.className == name) { element.className = ""; return; }
+	var names = element.className.split(" ");
+	if (!names.contains(name)) return;
+	names.remove(name);
+	element.className = names.join(" ");
+}
+function hasClassName(element, name) {
+	if (element.className == "") return false;
+	if (element.className == name) return true;
+	var names = element.className.split(" ");
+	return names.contains(name);
+}
+
 function urldecode(s) {
 	return decodeURIComponent(s).replace(/\+/g, " ");
 }
