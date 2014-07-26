@@ -37,13 +37,16 @@ function GoogleMap(container, onready) {
 		);
 	};
 	
+	this._current_move = null;
 	this.fitToBounds = function(south, west, north, east) {
+		if (this._current_move) clearTimeout(this._current_move);
+		this._current_move = null;
 		var cur_bounds = this.map.getBounds();
 		var cur_center = this.map.getCenter();
 		if (cur_center.lat() == 0 || cur_center.lng() == 0) {
 			var t=this;
 			this.map.fitBounds(this.createBounds(south, west, north, east));
-			setTimeout(function() {
+			this._current_move = setTimeout(function() {
 				var cur_center = t.map.getCenter();
 				if (cur_center.lat() == 0 || cur_center.lng() == 0)
 					t.map.fitBounds(t.createBounds(south, west, north, east));
@@ -69,7 +72,7 @@ function GoogleMap(container, onready) {
 				this.map.setCenter(new window.top.google.maps.LatLng(lat,lng));
 				if (cur_zoom > 1)
 					this.map.setZoom(cur_zoom-1);
-				setTimeout(function() {
+				this._current_move = setTimeout(function() {
 					t.fitToBounds(south, west, north, east);
 				},400);
 				return;
@@ -78,7 +81,7 @@ function GoogleMap(container, onready) {
 				this.map.setCenter(new window.top.google.maps.LatLng(new_center.lat(),lng));
 				if (cur_zoom > 1)
 					this.map.setZoom(cur_zoom-1);
-				setTimeout(function() {
+				this._current_move = setTimeout(function() {
 					t.fitToBounds(south, west, north, east);
 				},400);
 				return;
@@ -90,9 +93,9 @@ function GoogleMap(container, onready) {
 				if (new_width < cur_width*0.1 || new_height < cur_height*0.1) {
 					// we are zooming a lot, let's do it in several step
 					this.map.setCenter(new_center);
-					setTimeout(function() {
+					this._current_move = setTimeout(function() {
 						t.map.setZoom(cur_zoom+1);
-						setTimeout(function() {
+						this._current_move = setTimeout(function() {
 							t.fitToBounds(south,west,north,east);
 						},300);
 					},50);
@@ -103,9 +106,9 @@ function GoogleMap(container, onready) {
 				if (new_width > cur_width*2 || new_height > cur_height*2) {
 					// we are zooming a lot, let's do it in several step
 					this.map.setCenter(new_center);
-					setTimeout(function() {
+					this._current_move = setTimeout(function() {
 						t.map.setZoom(cur_zoom-1);
-						setTimeout(function() {
+						this._current_move = setTimeout(function() {
 							t.fitToBounds(south,west,north,east);
 						},300);
 					},50);

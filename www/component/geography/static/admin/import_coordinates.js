@@ -242,11 +242,14 @@ function import_division_level(popup, country, country_data, division_index, par
 
 	popup.content.removeAllChildren();
 	popup.removeButtons();
-	if (division_index>0 && parent_area)
+	if (division_index>0 && parent_area) {
 		popup.addIconTextButton(null, "Skip "+parent_area.area_name, "skip", function() {
 			ondone();
 		});
-	else
+		popup.addIconTextButton(null, "Skip all areas in this division", "skip_division", function() {
+			ondone(true);
+		});
+	} else
 		popup.addIconTextButton(null, "Skip and go to next division", "skip", function() {
 			ondone();
 		});
@@ -1162,12 +1165,16 @@ function import_sub_divisions(popup, country, country_data, division_index) {
 	}
 	var gadm = undefined;
 	var next = function(index) {
-		if (index == country_data[division_index+1].areas.length) {
+		if (index == country_data[division_index].areas.length) {
 			// all done, go to next division
 			import_sub_divisions(popup, country, country_data, division_index+1);
 			return;
 		}
-		import_division_level(popup, country, country_data, division_index+1, index, typeof gadm == 'undefined' ? function(g){gadm=g;} : gadm,function() {
+		import_division_level(popup, country, country_data, division_index+1, index, typeof gadm == 'undefined' ? function(g){gadm=g;} : gadm,function(skip_all) {
+			if (skip_all) {
+				import_sub_divisions(popup, country, country_data, division_index+1);
+				return;
+			}
 			next(index+1);
 		});
 	};
@@ -1299,9 +1306,30 @@ function import_area_coordinates(container, area, division_index, country, count
 						require("context_menu.js", function() {
 							var menu = new context_menu();
 							for (var i = 0; i < all_sub_areas.length; ++i) {
-								menu.addIconItem(null, all_sub_areas[i].area_name, function(i) {
-									dialog_coordinates(country, country_data, division_index+1, country_data[division_index+1].areas.indexOf(all_sub_areas[i]));
+								var item = menu.addIconItem(null, all_sub_areas[i].area_name, function(i) {
+									var d = typeof division_index == 'undefined' ? 0 : division_index+1;
+									dialog_coordinates(country, country_data, division_index+1, country_data[d].areas.indexOf(all_sub_areas[i]));
 								}, i);
+								item.area = all_sub_areas[i];
+								item.onmouseover = function() {
+									if (this.rect) return;
+									if (!this.area.north) return;
+									this.rect = new window.top.google.maps.Rectangle({
+										bounds: ec.map.createBounds(parseFloat(this.area.south), parseFloat(this.area.west), parseFloat(this.area.north), parseFloat(this.area.east)),
+										strokeColor: map_colors[5].border,
+										strokeWeight: 2,
+										strokeOpacity: 0.7,
+										fillColor: map_colors[5].fill,
+										fillOpacity: 0.2,
+										editable: false,
+									});
+									ec.map.addShape(this.rect);
+								};
+								item.onmouseout = function() {
+									if (!this.rect) return;
+									ec.map.removeShape(this.rect);
+									this.rect = null;
+								};
 							}
 							menu.showBelowElement(button);
 						});

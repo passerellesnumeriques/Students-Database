@@ -59,6 +59,8 @@ class page_set_geography_area extends Page {
 		?>
 		<script type='text/javascript'>
 		divisions.division_removed.add_listener(function(division_index){ areas.reset(); });
+		areas.area_added.add_listener(function(a){ divisions.areaAdded(a.division_index); });
+		areas.area_removed.add_listener(function(a){ divisions.areaRemoved(a.division_index); });
 		</script>
 		<?php
 				

@@ -51,7 +51,7 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 	
 	this._createDivisionRow = function(division_index) {
 		var division = this.country_data[division_index];
-		var tr, td_name, td_remove;
+		var tr, td_name, td_nb, td_remove;
 		this._table.appendChild(tr = document.createElement('TR'));
 		// name
 		tr.appendChild(td_name = document.createElement('TD'));
@@ -74,6 +74,8 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 				return text;
 			};
 		});
+		tr.appendChild(td_nb = document.createElement('TD'));
+		td_nb.innerHTML = division.areas.length;
 		// remove button
 		tr.appendChild(td_remove = document.createElement('TD'));
 		tr.remove_button = document.createElement('BUTTON');
@@ -125,6 +127,13 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 		divisions_section.addToolBottom(add_button);
 		divisions_section.content.removeAllChildren();
 		divisions_section.content.appendChild(this._table);
+	};
+	
+	this.areaAdded = function(division_index) {
+		this._table.childNodes[division_index].childNodes[1].innerHTML = this.country_data[division_index].areas.length;
+	};
+	this.areaRemoved = function(division_index) {
+		this._table.childNodes[division_index].childNodes[1].innerHTML = this.country_data[division_index].areas.length;
 	};
 	
 	// load country data, and initialize the display

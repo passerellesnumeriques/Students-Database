@@ -5,6 +5,8 @@ function GeographicAreasTree(areas_section, country_id) {
 	this.tr = null;
 	this.country_data = null;
 	this.country = null;
+	this.area_added = new Custom_Event();
+	this.area_removed = new Custom_Event();
 	
 	this.reset = function() {
 		require("tree.js", function() {
@@ -380,6 +382,7 @@ function GeographicAreasTree(areas_section, country_id) {
 				// remove in country_data
 				var area_id = t.country_data[division_index].areas[area_index].area_id;
 				t.country_data[division_index].areas.splice(area_index,1);
+				t.area_removed.fire({division_index:division_index,area_id:area_id});
 				var parent_ids = [area_id];
 				var div = division_index+1;
 				while (div < t.country_data.length) {
@@ -389,6 +392,7 @@ function GeographicAreasTree(areas_section, country_id) {
 						if (parent_ids.contains(a.area_parent_id)) {
 							ids.push(a.area_id);
 							t.country_data[div].areas.splice(i,1);
+							t.area_removed.fire({division_index:div,area_id:a.id});
 							i--;
 						}
 					}
@@ -421,6 +425,7 @@ function GeographicAreasTree(areas_section, country_id) {
 				t._createItem(parent_item, division_index, area_index);
 				// update number
 				t.span_nb_total.innerHTML = parseInt(t.span_nb_total.innerHTML)+1;
+				t.area_added.fire({division_index:division_index,area_id:res.key});
 			}
 			ondone();
 		});

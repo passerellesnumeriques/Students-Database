@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jul 26, 2014 at 04:22 AM
+-- Generation Time: Jul 26, 2014 at 10:39 AM
 -- Server version: 5.5.23
 -- PHP Version: 5.4.24
 
@@ -136,7 +136,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (109, 1, 'Camarines Norte', NULL, '122.299294', '123.117600', '14.500610', '13.835947'),
 (110, 1, 'Camarines Sur', NULL, '122.548187', '124.002380', '14.128770', '13.262050'),
 (111, 1, 'Camiguin', NULL, '124.632935', '124.809608', '9.258779', '9.078390'),
-(112, 1, 'Capiz', NULL, '122.199287', '123.100032', '11.645280', '11.140600'),
+(112, 1, 'Capiz', NULL, '122.192645', '123.107214', '11.645280', '11.137477'),
 (113, 1, 'Catanduanes', NULL, '124.012756', '124.426071', '14.109320', '13.516400'),
 (114, 1, 'Cavite', NULL, '120.612778', '121.070847', '14.500280', '14.061330'),
 (115, 1, 'Cebu', NULL, '123.296387', '124.568996', '11.582060', '9.412130'),
@@ -167,8 +167,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (140, 1, 'Misamis Oriental', NULL, '124.245552', '125.255562', '9.093196', '8.235200'),
 (141, 1, 'Mountain Province', NULL, '120.770595', '121.565946', '17.306318', '16.822498'),
 (142, 1, 'Negros Occidental', NULL, '122.363191', '123.593365', '11.044440', '9.419720'),
-(143, 1, 'Negros Oriental', NULL, '122.610115', '123.340047', '10.416358', '9.038180'),
-(144, 1, 'Northern Samar', NULL, '124.000576', '125.344337', '12.758610', '12.138910'),
+(143, 1, 'Negros Oriental', NULL, '122.610115', '123.340047', '10.443585', '9.038180'),
+(144, 1, 'Northern Samar', NULL, '124.000573', '125.345469', '12.758610', '12.138910'),
 (145, 1, 'Nueva Ecija', NULL, '120.611833', '121.378246', '16.130216', '15.165030'),
 (146, 1, 'Nueva Vizcaya', NULL, '120.756631', '121.467644', '16.748970', '15.767200'),
 (147, 1, 'Occidental Mindoro', NULL, '120.017440', '121.250199', '13.899280', '12.151981'),
@@ -180,12 +180,12 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (153, 1, 'Quirino', NULL, '121.293709', '122.131660', '16.641529', '15.916590'),
 (154, 1, 'Rizal', NULL, '121.093407', '121.469825', '14.892270', '14.290240'),
 (155, 1, 'Romblon', NULL, '121.680557', '122.699173', '13.031940', '12.031390'),
-(156, 1, 'Samar', NULL, '124.145218', '125.306557', '12.335320', '11.085570'),
+(156, 1, 'Samar', NULL, '124.145218', '125.317612', '12.340002', '11.085537'),
 (157, 1, 'Sarangani', NULL, '124.352119', '125.538712', '6.469520', '5.566570'),
-(158, 1, 'Siquijor', NULL, '123.452118', '123.701859', '9.300900', '9.094560'),
+(158, 1, 'Siquijor', NULL, '123.452118', '123.701859', '9.301034', '9.094560'),
 (159, 1, 'Sorsogon', NULL, '123.480423', '124.199074', '13.118100', '12.523330'),
 (160, 1, 'South Cotabato', NULL, '124.278951', '125.272583', '6.670990', '5.954760'),
-(161, 1, 'Southern Leyte', NULL, '124.753166', '125.299070', '10.626720', '9.894720'),
+(161, 1, 'Southern Leyte', NULL, '124.752777', '125.299070', '10.626720', '9.894720'),
 (162, 1, 'Sultan Kudarat', NULL, '124.015266', '125.197615', '6.883467', '6.113610'),
 (163, 1, 'Sulu', NULL, '119.638786', '121.949387', '6.440560', '5.442945'),
 (164, 1, 'Surigao Del Norte', NULL, '125.390862', '126.183891', '10.063890', '9.324560'),
@@ -9543,23 +9543,23 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (9529, 3, 'Manuyog', 9471, NULL, NULL, NULL, NULL),
 (9530, 3, 'Mayana', 9471, NULL, NULL, NULL, NULL),
 (9531, 3, 'Poblacion', 9471, NULL, NULL, NULL, NULL),
-(9532, 2, 'Roxas City', 112, NULL, NULL, NULL, NULL),
-(9533, 2, 'Dao', 112, NULL, NULL, NULL, NULL),
-(9534, 2, 'Ivisan', 112, NULL, NULL, NULL, NULL),
-(9535, 2, 'Cuartero', 112, NULL, NULL, NULL, NULL),
-(9536, 2, 'Dumalag', 112, NULL, NULL, NULL, NULL),
-(9537, 2, 'Dumarao', 112, NULL, NULL, NULL, NULL),
-(9538, 2, 'Jamindan', 112, NULL, NULL, NULL, NULL),
-(9539, 2, 'Maayon', 112, NULL, NULL, NULL, NULL),
-(9540, 2, 'Mambusao', 112, NULL, NULL, NULL, NULL),
-(9541, 2, 'Panay', 112, NULL, NULL, NULL, NULL),
-(9542, 2, 'Panitan', 112, NULL, NULL, NULL, NULL),
-(9543, 2, 'Pilar', 112, NULL, NULL, NULL, NULL),
-(9544, 2, 'Pontevedra', 112, NULL, NULL, NULL, NULL),
-(9545, 2, 'President Roxas', 112, NULL, NULL, NULL, NULL),
-(9546, 2, 'Sapian', 112, NULL, NULL, NULL, NULL),
-(9547, 2, 'Sigma', 112, NULL, NULL, NULL, NULL),
-(9548, 2, 'Tapaz', 112, NULL, NULL, NULL, NULL),
+(9532, 2, 'Roxas City', 112, '122.678337', '122.846390', '11.645280', '11.480720'),
+(9533, 2, 'Dao', 112, '122.654533', '122.756462', '11.426460', '11.344490'),
+(9534, 2, 'Ivisan', 112, '122.629227', '122.734709', '11.579314', '11.483930'),
+(9535, 2, 'Cuartero', 112, '122.652733', '122.888893', '11.353750', '11.268430'),
+(9536, 2, 'Dumalag', 112, '122.577278', '122.670647', '11.367520', '11.221160'),
+(9537, 2, 'Dumarao', 112, '122.626605', '122.895576', '11.310350', '11.181880'),
+(9538, 2, 'Jamindan', 112, '122.192645', '122.597702', '11.504332', '11.214840'),
+(9539, 2, 'Ma-Ayon', 112, '122.741962', '122.953405', '11.428879', '11.268430'),
+(9540, 2, 'Mambusao', 112, '122.530346', '122.654892', '11.484040', '11.356760'),
+(9541, 2, 'Panay', 112, '122.764130', '122.930832', '11.610802', '11.477714'),
+(9542, 2, 'Panitan', 112, '122.726593', '122.831526', '11.495230', '11.373750'),
+(9543, 2, 'Pilar', 112, '122.936188', '123.107214', '11.548148', '11.379155'),
+(9544, 2, 'Pontevedra', 112, '122.784111', '122.949806', '11.506030', '11.360590'),
+(9545, 2, 'President Roxas', 112, '122.903893', '123.023701', '11.483610', '11.369200'),
+(9546, 2, 'Sapi-an', 112, '122.524939', '122.676687', '11.555134', '11.470020'),
+(9547, 2, 'Sigma', 112, '122.596607', '122.737198', '11.490202', '11.356760'),
+(9548, 2, 'Tapaz', 112, '122.192688', '122.600708', '11.347936', '11.137477'),
 (9549, 3, 'Bago', 9532, NULL, NULL, NULL, NULL),
 (9550, 3, 'Balijuagan', 9532, NULL, NULL, NULL, NULL),
 (9551, 3, 'Barangay 1', 9532, NULL, NULL, NULL, NULL),
@@ -10311,7 +10311,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (10303, 3, 'Calatagan Tibang', 10033, NULL, NULL, NULL, NULL),
 (10304, 3, 'Capilihan', 10033, NULL, NULL, NULL, NULL),
 (10305, 3, 'Casoocan', 10033, NULL, NULL, NULL, NULL),
-(10306, 3, 'Cavinitan', 10033, NULL, NULL, NULL, NULL),
+(10306, 3, 'Cavinitan', 10033, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (10307, 3, 'Concepcion (Pob.)', 10033, NULL, NULL, NULL, NULL),
 (10308, 3, 'Constantino (Pob.)', 10033, NULL, NULL, NULL, NULL),
 (10309, 3, 'Danicop', 10033, NULL, NULL, NULL, NULL),
@@ -10319,8 +10320,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (10311, 3, 'Dugui San Vicente', 10033, NULL, NULL, NULL, NULL),
 (10312, 3, 'Dugui Too', 10033, NULL, NULL, NULL, NULL),
 (10313, 3, 'F. Tacorda Village', 10033, NULL, NULL, NULL, NULL),
-(10314, 3, 'Francia (Pob.)', 10033, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(10314, 3, 'Francia (Pob.)', 10033, NULL, NULL, NULL, NULL),
 (10315, 3, 'Gogon Centro', 10033, NULL, NULL, NULL, NULL),
 (10316, 3, 'Gogon Sirangan', 10033, NULL, NULL, NULL, NULL),
 (10317, 3, 'Hawan Grande', 10033, NULL, NULL, NULL, NULL),
@@ -11161,7 +11161,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (11152, 3, 'San Miguel 2', 10375, NULL, NULL, NULL, NULL),
 (11153, 3, 'San Vicente 1', 10375, NULL, NULL, NULL, NULL),
 (11154, 3, 'San Vicente 2', 10375, NULL, NULL, NULL, NULL),
-(11155, 3, 'Santol', 10375, NULL, NULL, NULL, NULL),
+(11155, 3, 'Santol', 10375, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (11156, 3, 'Tartaria', 10375, NULL, NULL, NULL, NULL),
 (11157, 3, 'Tibig', 10375, NULL, NULL, NULL, NULL),
 (11158, 3, 'Toledo', 10375, NULL, NULL, NULL, NULL),
@@ -11170,8 +11171,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (11161, 3, 'Tubuan 3', 10375, NULL, NULL, NULL, NULL),
 (11162, 3, 'Ulat', 10375, NULL, NULL, NULL, NULL),
 (11163, 3, 'Yakal', 10375, NULL, NULL, NULL, NULL),
-(11164, 3, 'Amaya 3', 10376, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(11164, 3, 'Amaya 3', 10376, NULL, NULL, NULL, NULL),
 (11165, 3, 'Amaya 1', 10376, NULL, NULL, NULL, NULL),
 (11166, 3, 'Amaya 2', 10376, NULL, NULL, NULL, NULL),
 (11167, 3, 'Amaya 5', 10376, NULL, NULL, NULL, NULL),
@@ -12072,7 +12072,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (12062, 3, 'Yati', 11242, NULL, NULL, NULL, NULL),
 (12063, 3, 'Bunakan', 11243, NULL, NULL, NULL, NULL),
 (12064, 3, 'Kangwayan', 11243, NULL, NULL, NULL, NULL),
-(12065, 3, 'Kodia', 11243, NULL, NULL, NULL, NULL),
+(12065, 3, 'Kodia', 11243, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (12066, 3, 'Maalat', 11243, NULL, NULL, NULL, NULL),
 (12067, 3, 'Malbago', 11243, NULL, NULL, NULL, NULL),
 (12068, 3, 'Kaongkod', 11243, NULL, NULL, NULL, NULL),
@@ -12081,8 +12082,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (12071, 3, 'Poblacion', 11243, NULL, NULL, NULL, NULL),
 (12072, 3, 'San Agustin', 11243, NULL, NULL, NULL, NULL),
 (12073, 3, 'Tabagak', 11243, NULL, NULL, NULL, NULL),
-(12074, 3, 'Talangnan', 11243, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(12074, 3, 'Talangnan', 11243, NULL, NULL, NULL, NULL),
 (12075, 3, 'Tarong', 11243, NULL, NULL, NULL, NULL),
 (12076, 3, 'Tugas', 11243, NULL, NULL, NULL, NULL),
 (12077, 3, 'Armeña (Cansilongan)', 11244, NULL, NULL, NULL, NULL),
@@ -13007,7 +13007,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (12996, 3, 'Garsika', 12737, NULL, NULL, NULL, NULL),
 (12997, 3, 'Guangan', 12737, NULL, NULL, NULL, NULL),
 (12998, 3, 'Indangan', 12737, NULL, NULL, NULL, NULL),
-(12999, 3, 'Jose Rizal', 12737, NULL, NULL, NULL, NULL),
+(12999, 3, 'Jose Rizal', 12737, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (13000, 3, 'Katipunan II', 12737, NULL, NULL, NULL, NULL),
 (13001, 3, 'Kawayanon', 12737, NULL, NULL, NULL, NULL),
 (13002, 3, 'Kisante', 12737, NULL, NULL, NULL, NULL),
@@ -13016,8 +13017,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (13005, 3, 'Luayon', 12737, NULL, NULL, NULL, NULL),
 (13006, 3, 'Luna Norte', 12737, NULL, NULL, NULL, NULL),
 (13007, 3, 'Luna Sur', 12737, NULL, NULL, NULL, NULL),
-(13008, 3, 'Malabuan', 12737, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(13008, 3, 'Malabuan', 12737, NULL, NULL, NULL, NULL),
 (13009, 3, 'Malasila', 12737, NULL, NULL, NULL, NULL),
 (13010, 3, 'Malungon', 12737, NULL, NULL, NULL, NULL),
 (13011, 3, 'New Baguio', 12737, NULL, NULL, NULL, NULL),
@@ -13923,7 +13923,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (13911, 3, 'Bato', 13534, NULL, NULL, NULL, NULL),
 (13912, 3, 'Matutungan', 13534, NULL, NULL, NULL, NULL),
 (13913, 3, 'Melilia', 13534, NULL, NULL, NULL, NULL),
-(13914, 3, 'Saliducon', 13534, NULL, NULL, NULL, NULL),
+(13914, 3, 'Saliducon', 13534, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (13915, 3, 'Sibulan', 13534, NULL, NULL, NULL, NULL),
 (13916, 3, 'Sinoron', 13534, NULL, NULL, NULL, NULL),
 (13917, 3, 'Tagabuli', 13534, NULL, NULL, NULL, NULL),
@@ -13932,8 +13933,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (13920, 3, 'Zone I (Pob.)', 13534, NULL, NULL, NULL, NULL),
 (13921, 3, 'Zone II (Pob.)', 13534, NULL, NULL, NULL, NULL),
 (13922, 3, 'Zone III (Pob.)', 13534, NULL, NULL, NULL, NULL),
-(13923, 3, 'Zone IV (Pob.)', 13534, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(13923, 3, 'Zone IV (Pob.)', 13534, NULL, NULL, NULL, NULL),
 (13924, 3, 'Carre', 13535, NULL, NULL, NULL, NULL),
 (13925, 3, 'Balasinon', 13535, NULL, NULL, NULL, NULL),
 (13926, 3, 'Buguis', 13535, NULL, NULL, NULL, NULL),
@@ -14823,7 +14823,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (14810, 3, 'Factoria', 14371, NULL, NULL, NULL, NULL),
 (14811, 3, 'Gamot', 14371, NULL, NULL, NULL, NULL),
 (14812, 3, 'Iwayan', 14371, NULL, NULL, NULL, NULL),
-(14813, 3, 'Japay', 14371, NULL, NULL, NULL, NULL),
+(14813, 3, 'Japay', 14371, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (14814, 3, 'Kalaw', 14371, NULL, NULL, NULL, NULL),
 (14815, 3, 'Mabuhay', 14371, NULL, NULL, NULL, NULL),
 (14816, 3, 'Malingon', 14371, NULL, NULL, NULL, NULL),
@@ -14832,8 +14833,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (14819, 3, 'Naga', 14371, NULL, NULL, NULL, NULL),
 (14820, 3, 'Pangudtan', 14371, NULL, NULL, NULL, NULL),
 (14821, 3, 'Paypayon (Pob.)', 14371, NULL, NULL, NULL, NULL),
-(14822, 3, 'Riverside (Pob.)', 14371, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(14822, 3, 'Riverside (Pob.)', 14371, NULL, NULL, NULL, NULL),
 (14823, 3, 'Rizal', 14371, NULL, NULL, NULL, NULL),
 (14824, 3, 'Sabang', 14371, NULL, NULL, NULL, NULL),
 (14825, 3, 'San Eduardo', 14371, NULL, NULL, NULL, NULL),
@@ -14986,11 +14986,11 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (14972, 3, 'San Luis', 14377, NULL, NULL, NULL, NULL),
 (14973, 3, 'San Pablo', 14377, NULL, NULL, NULL, NULL),
 (14974, 3, 'San Rafael', 14377, NULL, NULL, NULL, NULL),
-(14975, 2, 'Nueva Valencia', 124, NULL, NULL, NULL, NULL),
-(14976, 2, 'Buenavista', 124, NULL, NULL, NULL, NULL),
-(14977, 2, 'Sibunag', 124, NULL, NULL, NULL, NULL),
-(14978, 2, 'Jordan', 124, NULL, NULL, NULL, NULL),
-(14979, 2, 'San Lorenzo', 124, NULL, NULL, NULL, NULL),
+(14975, 2, 'Nueva Valencia', 124, '122.474213', '122.627642', '10.540900', '10.328450'),
+(14976, 2, 'Buenavista', 124, '122.602364', '122.722069', '10.754443', '10.624850'),
+(14977, 2, 'Sibunag', 124, '122.534286', '122.743820', '10.585610', '10.390692'),
+(14978, 2, 'Jordan', 124, '122.509491', '122.633873', '10.677645', '10.539540'),
+(14979, 2, 'San Lorenzo', 124, '122.602287', '122.727219', '10.663138', '10.525197'),
 (14980, 3, 'Agsanayan', 14976, NULL, NULL, NULL, NULL),
 (14981, 3, 'Avila', 14976, NULL, NULL, NULL, NULL),
 (14982, 3, 'Banban', 14976, NULL, NULL, NULL, NULL),
@@ -15729,7 +15729,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (15715, 3, 'Apatut-Lubong', 15282, NULL, NULL, NULL, NULL),
 (15716, 3, 'Barbar', 15282, NULL, NULL, NULL, NULL),
 (15717, 3, 'Badio', 15282, NULL, NULL, NULL, NULL),
-(15718, 3, 'Buanga', 15282, NULL, NULL, NULL, NULL),
+(15718, 3, 'Buanga', 15282, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (15719, 3, 'Bulbulala', 15282, NULL, NULL, NULL, NULL),
 (15720, 3, 'Bungro', 15282, NULL, NULL, NULL, NULL),
 (15721, 3, 'Cabaroan', 15282, NULL, NULL, NULL, NULL),
@@ -15740,8 +15741,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (15726, 3, 'Liliputen', 15282, NULL, NULL, NULL, NULL),
 (15727, 3, 'Lumbaan-Bicbica', 15282, NULL, NULL, NULL, NULL),
 (15728, 3, 'Nagtrigoan', 15282, NULL, NULL, NULL, NULL),
-(15729, 3, 'Pagdilao (Pob.)', 15282, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(15729, 3, 'Pagdilao (Pob.)', 15282, NULL, NULL, NULL, NULL),
 (15730, 3, 'Pugaoan', 15282, NULL, NULL, NULL, NULL),
 (15731, 3, 'Puritac', 15282, NULL, NULL, NULL, NULL),
 (15732, 3, 'Sacritan', 15282, NULL, NULL, NULL, NULL),
@@ -16634,7 +16634,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (16619, 3, 'Dardarat', 15876, NULL, NULL, NULL, NULL),
 (16620, 3, 'Del Pilar', 15876, NULL, NULL, NULL, NULL),
 (16621, 3, 'Farola', 15876, NULL, NULL, NULL, NULL),
-(16622, 3, 'Gabur', 15876, NULL, NULL, NULL, NULL),
+(16622, 3, 'Gabur', 15876, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (16623, 3, 'Garitan', 15876, NULL, NULL, NULL, NULL),
 (16624, 3, 'Jardin', 15876, NULL, NULL, NULL, NULL),
 (16625, 3, 'Lacong', 15876, NULL, NULL, NULL, NULL),
@@ -16646,8 +16647,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (16631, 3, 'Malacañang', 15876, NULL, NULL, NULL, NULL),
 (16632, 3, 'Pacac', 15876, NULL, NULL, NULL, NULL),
 (16633, 3, 'Pallogan', 15876, NULL, NULL, NULL, NULL),
-(16634, 3, 'Pula', 15876, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(16634, 3, 'Pula', 15876, NULL, NULL, NULL, NULL),
 (16635, 3, 'Pudoc East', 15876, NULL, NULL, NULL, NULL),
 (16636, 3, 'Pudoc West', 15876, NULL, NULL, NULL, NULL),
 (16637, 3, 'Quirino', 15876, NULL, NULL, NULL, NULL),
@@ -17521,7 +17521,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (17505, 3, 'Botongon', 16665, NULL, NULL, NULL, NULL),
 (17506, 3, 'Bulaqueña', 16665, NULL, NULL, NULL, NULL),
 (17507, 3, 'Calapdan', 16665, NULL, NULL, NULL, NULL),
-(17508, 3, 'Lumbia (Ana Cuenca)', 16665, NULL, NULL, NULL, NULL),
+(17508, 3, 'Lumbia (Ana Cuenca)', 16665, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (17509, 3, 'Cano-an', 16665, NULL, NULL, NULL, NULL),
 (17510, 3, 'Daan Banua', 16665, NULL, NULL, NULL, NULL),
 (17511, 3, 'Daculan', 16665, NULL, NULL, NULL, NULL),
@@ -17533,8 +17534,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (17517, 3, 'Pa-on', 16665, NULL, NULL, NULL, NULL),
 (17518, 3, 'Pani-an', 16665, NULL, NULL, NULL, NULL),
 (17519, 3, 'Poblacion Zone 1', 16665, NULL, NULL, NULL, NULL),
-(17520, 3, 'Lonoy (Roman Mosqueda)', 16665, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(17520, 3, 'Lonoy (Roman Mosqueda)', 16665, NULL, NULL, NULL, NULL),
 (17521, 3, 'San Roque', 16665, NULL, NULL, NULL, NULL),
 (17522, 3, 'Santa Ana', 16665, NULL, NULL, NULL, NULL),
 (17523, 3, 'Tabu-an', 16665, NULL, NULL, NULL, NULL),
@@ -18437,7 +18437,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (18420, 3, 'Tagsing', 16685, NULL, NULL, NULL, NULL),
 (18421, 3, 'Talanghauan', 16685, NULL, NULL, NULL, NULL),
 (18422, 3, 'Talongadian', 16685, NULL, NULL, NULL, NULL),
-(18423, 3, 'Tigtig', 16685, NULL, NULL, NULL, NULL),
+(18423, 3, 'Tigtig', 16685, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (18424, 3, 'Tungay', 16685, NULL, NULL, NULL, NULL),
 (18425, 3, 'Tuburan', 16685, NULL, NULL, NULL, NULL),
 (18426, 3, 'Tugas', 16685, NULL, NULL, NULL, NULL),
@@ -18450,8 +18451,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (18433, 3, 'Aposaga', 16686, NULL, NULL, NULL, NULL),
 (18434, 3, 'Arante', 16686, NULL, NULL, NULL, NULL),
 (18435, 3, 'Ardemil', 16686, NULL, NULL, NULL, NULL),
-(18436, 3, 'Aspera', 16686, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(18436, 3, 'Aspera', 16686, NULL, NULL, NULL, NULL),
 (18437, 3, 'Aswe-Pabriaga', 16686, NULL, NULL, NULL, NULL),
 (18438, 3, 'Bagaygay', 16686, NULL, NULL, NULL, NULL),
 (18439, 3, 'Bakabak', 16686, NULL, NULL, NULL, NULL),
@@ -19346,7 +19346,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (19328, 3, 'Arellano', 18615, NULL, NULL, NULL, NULL),
 (19329, 3, 'Aurora', 18615, NULL, NULL, NULL, NULL),
 (19330, 3, 'Dunmon', 18615, NULL, NULL, NULL, NULL),
-(19331, 3, 'Estrada', 18615, NULL, NULL, NULL, NULL),
+(19331, 3, 'Estrada', 18615, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (19332, 3, 'Santos', 18615, NULL, NULL, NULL, NULL),
 (19333, 3, 'Lepanto', 18615, NULL, NULL, NULL, NULL),
 (19334, 3, 'Mangga', 18615, NULL, NULL, NULL, NULL),
@@ -19359,8 +19360,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (19341, 3, 'Camaal', 18616, NULL, NULL, NULL, NULL),
 (19342, 3, 'Dolores', 18616, NULL, NULL, NULL, NULL),
 (19343, 3, 'Luna (Pob.)', 18616, NULL, NULL, NULL, NULL),
-(19344, 3, 'Manaoag', 18616, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(19344, 3, 'Manaoag', 18616, NULL, NULL, NULL, NULL),
 (19345, 3, 'Rizal', 18616, NULL, NULL, NULL, NULL),
 (19346, 3, 'San Isidro', 18616, NULL, NULL, NULL, NULL),
 (19347, 3, 'San Jose', 18616, NULL, NULL, NULL, NULL),
@@ -20254,7 +20254,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (20235, 3, 'Dal-lipaoen', 19859, NULL, NULL, NULL, NULL),
 (20236, 3, 'Daramuangan', 19859, NULL, NULL, NULL, NULL),
 (20237, 3, 'Guesset', 19859, NULL, NULL, NULL, NULL),
-(20238, 3, 'Gusing Norte', 19859, NULL, NULL, NULL, NULL),
+(20238, 3, 'Gusing Norte', 19859, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (20239, 3, 'Gusing Sur', 19859, NULL, NULL, NULL, NULL),
 (20240, 3, 'Imelda', 19859, NULL, NULL, NULL, NULL),
 (20241, 3, 'Lioac Norte', 19859, NULL, NULL, NULL, NULL),
@@ -20266,8 +20267,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (20247, 3, 'Natividad', 19859, NULL, NULL, NULL, NULL),
 (20248, 3, 'Ortiz', 19859, NULL, NULL, NULL, NULL),
 (20249, 3, 'Ribsuan', 19859, NULL, NULL, NULL, NULL),
-(20250, 3, 'San Antonio', 19859, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(20250, 3, 'San Antonio', 19859, NULL, NULL, NULL, NULL),
 (20251, 3, 'San Isidro', 19859, NULL, NULL, NULL, NULL),
 (20252, 3, 'Sili', 19859, NULL, NULL, NULL, NULL),
 (20253, 3, 'Suguidan Norte', 19859, NULL, NULL, NULL, NULL),
@@ -21165,7 +21165,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (21145, 2, 'Matungao', 133, NULL, NULL, NULL, NULL),
 (21146, 2, 'Munai', 133, NULL, NULL, NULL, NULL),
 (21147, 2, 'Nunungan', 133, NULL, NULL, NULL, NULL),
-(21148, 2, 'Pantao Ragat', 133, NULL, NULL, NULL, NULL),
+(21148, 2, 'Pantao Ragat', 133, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (21149, 2, 'Pantar', 133, NULL, NULL, NULL, NULL),
 (21150, 2, 'Poona Piagapo', 133, NULL, NULL, NULL, NULL),
 (21151, 2, 'Salvador', 133, NULL, NULL, NULL, NULL),
@@ -21177,8 +21178,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (21157, 3, 'Babalaya', 21135, NULL, NULL, NULL, NULL),
 (21158, 3, 'Alegria', 21135, NULL, NULL, NULL, NULL),
 (21159, 3, 'Babalayan Townsite', 21135, NULL, NULL, NULL, NULL),
-(21160, 3, 'Binuni', 21135, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(21160, 3, 'Binuni', 21135, NULL, NULL, NULL, NULL),
 (21161, 3, 'Delabayan West', 21135, NULL, NULL, NULL, NULL),
 (21162, 3, 'Demologan', 21135, NULL, NULL, NULL, NULL),
 (21163, 3, 'Demarao', 21135, NULL, NULL, NULL, NULL),
@@ -22078,7 +22078,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (22057, 3, 'Bubong Dangiprampiai', 21631, NULL, NULL, NULL, NULL),
 (22058, 3, 'Buayaan Raya', 21631, NULL, NULL, NULL, NULL),
 (22059, 3, 'Linamon', 21631, NULL, NULL, NULL, NULL),
-(22060, 3, 'Lumbatan Ramain', 21631, NULL, NULL, NULL, NULL),
+(22060, 3, 'Lumbatan Ramain', 21631, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (22061, 3, 'Buayaan Madanding', 21631, NULL, NULL, NULL, NULL),
 (22062, 3, 'Maindig Ditsaan', 21631, NULL, NULL, NULL, NULL),
 (22063, 3, 'Mandara', 21631, NULL, NULL, NULL, NULL),
@@ -22089,8 +22090,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (22068, 3, 'Pugaan', 21631, NULL, NULL, NULL, NULL),
 (22069, 3, 'Ramain Poblacion', 21631, NULL, NULL, NULL, NULL),
 (22070, 3, 'Ramain Proper', 21631, NULL, NULL, NULL, NULL),
-(22071, 3, 'Rantian', 21631, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(22071, 3, 'Rantian', 21631, NULL, NULL, NULL, NULL),
 (22072, 3, 'Sundiga Bayabao', 21631, NULL, NULL, NULL, NULL),
 (22073, 3, 'Talub', 21631, NULL, NULL, NULL, NULL),
 (22074, 3, 'Sultan Pangadapan', 21631, NULL, NULL, NULL, NULL),
@@ -22962,7 +22962,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (22940, 3, 'Barangay 59', 22825, NULL, NULL, NULL, NULL),
 (22941, 3, 'Barangay 60', 22825, NULL, NULL, NULL, NULL),
 (22942, 3, 'Barangay 60-A', 22825, NULL, NULL, NULL, NULL),
-(22943, 3, 'Barangay 61', 22825, NULL, NULL, NULL, NULL),
+(22943, 3, 'Barangay 61', 22825, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (22944, 3, 'Barangay 62', 22825, NULL, NULL, NULL, NULL),
 (22945, 3, 'Barangay 63', 22825, NULL, NULL, NULL, NULL),
 (22946, 3, 'Barangay 64', 22825, NULL, NULL, NULL, NULL),
@@ -22974,8 +22975,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (22952, 3, 'Barangay 69', 22825, NULL, NULL, NULL, NULL),
 (22953, 3, 'Barangay 70', 22825, NULL, NULL, NULL, NULL),
 (22954, 3, 'Barangay 71', 22825, NULL, NULL, NULL, NULL),
-(22955, 3, 'Barangay 72', 22825, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(22955, 3, 'Barangay 72', 22825, NULL, NULL, NULL, NULL),
 (22956, 3, 'Barangay 73', 22825, NULL, NULL, NULL, NULL),
 (22957, 3, 'Barangay 74', 22825, NULL, NULL, NULL, NULL),
 (22958, 3, 'Barangay 75', 22825, NULL, NULL, NULL, NULL),
@@ -23867,7 +23867,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (23844, 3, 'Honan', 22842, NULL, NULL, NULL, NULL),
 (23845, 3, 'Libertad', 22842, NULL, NULL, NULL, NULL),
 (23846, 3, 'Mahayag', 22842, NULL, NULL, NULL, NULL),
-(23847, 3, 'Marvel (Pob.)', 22842, NULL, NULL, NULL, NULL),
+(23847, 3, 'Marvel (Pob.)', 22842, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (23848, 3, 'Matlang', 22842, NULL, NULL, NULL, NULL),
 (23849, 3, 'Monte Alegre', 22842, NULL, NULL, NULL, NULL),
 (23850, 3, 'Puting Bato', 22842, NULL, NULL, NULL, NULL),
@@ -23879,8 +23880,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (23856, 3, 'Tabunok', 22842, NULL, NULL, NULL, NULL),
 (23857, 3, 'Tolingon', 22842, NULL, NULL, NULL, NULL),
 (23858, 3, 'Tubod', 22842, NULL, NULL, NULL, NULL),
-(23859, 3, 'Badiang', 22843, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(23859, 3, 'Badiang', 22843, NULL, NULL, NULL, NULL),
 (23860, 3, 'Batug', 22843, NULL, NULL, NULL, NULL),
 (23861, 3, 'Alahag', 22843, NULL, NULL, NULL, NULL),
 (23862, 3, 'Anibongon', 22843, NULL, NULL, NULL, NULL),
@@ -24788,7 +24788,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (24764, 3, 'Upper Lasangan', 24523, NULL, NULL, NULL, NULL),
 (24765, 3, 'Ahan', 24524, NULL, NULL, NULL, NULL),
 (24766, 3, 'Kalumamis', 24524, NULL, NULL, NULL, NULL),
-(24767, 3, 'Kateman', 24524, NULL, NULL, NULL, NULL),
+(24767, 3, 'Kateman', 24524, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (24768, 3, 'Lambayao', 24524, NULL, NULL, NULL, NULL),
 (24769, 3, 'Bagan', 24524, NULL, NULL, NULL, NULL),
 (24770, 3, 'Datalpandan', 24524, NULL, NULL, NULL, NULL),
@@ -24800,8 +24801,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (24776, 3, 'Bagumbayan', 24525, NULL, NULL, NULL, NULL),
 (24777, 3, 'Buterin', 24525, NULL, NULL, NULL, NULL),
 (24778, 3, 'Dadtumog (Dadtumeg)', 24525, NULL, NULL, NULL, NULL),
-(24779, 3, 'Gambar', 24525, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(24779, 3, 'Gambar', 24525, NULL, NULL, NULL, NULL),
 (24780, 3, 'Ganta', 24525, NULL, NULL, NULL, NULL),
 (24781, 3, 'Katidtuan', 24525, NULL, NULL, NULL, NULL),
 (24782, 3, 'Langeban', 24525, NULL, NULL, NULL, NULL),
@@ -25711,7 +25711,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (25687, 3, 'Maravilla', 25301, NULL, NULL, NULL, NULL),
 (25688, 3, 'Matugnao', 25301, NULL, NULL, NULL, NULL),
 (25689, 3, 'Miabas', 25301, NULL, NULL, NULL, NULL),
-(25690, 3, 'Nabangig', 25301, NULL, NULL, NULL, NULL),
+(25690, 3, 'Nabangig', 25301, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (25691, 3, 'Nipa', 25301, NULL, NULL, NULL, NULL),
 (25692, 3, 'Parina', 25301, NULL, NULL, NULL, NULL),
 (25693, 3, 'Piña', 25301, NULL, NULL, NULL, NULL),
@@ -25723,8 +25724,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (25699, 3, 'Santa Cruz', 25301, NULL, NULL, NULL, NULL),
 (25700, 3, 'Malatawan', 25301, NULL, NULL, NULL, NULL),
 (25701, 3, 'Alegria', 25302, NULL, NULL, NULL, NULL),
-(25702, 3, 'Buenasuerte', 25302, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(25702, 3, 'Buenasuerte', 25302, NULL, NULL, NULL, NULL),
 (25703, 3, 'Bunducan', 25302, NULL, NULL, NULL, NULL),
 (25704, 3, 'Bugang', 25302, NULL, NULL, NULL, NULL),
 (25705, 3, 'Bugtong', 25302, NULL, NULL, NULL, NULL),
@@ -26550,7 +26550,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (26525, 3, 'Barangay 660-A (Ermita)', 25860, NULL, NULL, NULL, NULL),
 (26526, 3, 'Barangay 659 (Ermita)', 25860, NULL, NULL, NULL, NULL),
 (26527, 3, 'Barangay 660 (Ermita)', 25860, NULL, NULL, NULL, NULL),
-(26528, 3, 'Barangay 663 (Ermita)', 25860, NULL, NULL, NULL, NULL),
+(26528, 3, 'Barangay 663 (Ermita)', 25860, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (26529, 3, 'Barangay 661 (Ermita)', 25860, NULL, NULL, NULL, NULL),
 (26530, 3, 'Barangay 659-A (Ermita)', 25860, NULL, NULL, NULL, NULL),
 (26531, 3, 'Barangay 663-A (Ermita)', 25860, NULL, NULL, NULL, NULL),
@@ -26559,8 +26560,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (26534, 3, 'Barangay 667 (Ermita)', 25860, NULL, NULL, NULL, NULL),
 (26535, 3, 'Barangay 668 (Ermita)', 25860, NULL, NULL, NULL, NULL),
 (26536, 3, 'Barangay 669 (Ermita)', 25860, NULL, NULL, NULL, NULL),
-(26537, 3, 'Barangay 670 (Ermita)', 25860, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(26537, 3, 'Barangay 670 (Ermita)', 25860, NULL, NULL, NULL, NULL),
 (26538, 3, 'Barangay 654 (Intramuros)', 25860, NULL, NULL, NULL, NULL),
 (26539, 3, 'Barangay 657 (Intramuros)', 25860, NULL, NULL, NULL, NULL),
 (26540, 3, 'Barangay 656 (Intramuros)', 25860, NULL, NULL, NULL, NULL),
@@ -27290,7 +27290,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (27264, 3, 'Barangay 121 (Tondo)', 25860, NULL, NULL, NULL, NULL),
 (27265, 3, 'Barangay 122 (Tondo)', 25860, NULL, NULL, NULL, NULL),
 (27266, 3, 'Barangay 123 (Tondo)', 25860, NULL, NULL, NULL, NULL),
-(27267, 3, 'Barangay 124 (Tondo)', 25860, NULL, NULL, NULL, NULL),
+(27267, 3, 'Barangay 124 (Tondo)', 25860, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (27268, 3, 'Barangay 125 (Tondo)', 25860, NULL, NULL, NULL, NULL),
 (27269, 3, 'Barangay 126 (Tondo)', 25860, NULL, NULL, NULL, NULL),
 (27270, 3, 'Barangay 127 (Tondo)', 25860, NULL, NULL, NULL, NULL),
@@ -27300,8 +27301,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (27274, 3, 'Barangay 131 (Tondo)', 25860, NULL, NULL, NULL, NULL),
 (27275, 3, 'Barangay 132 (Tondo)', 25860, NULL, NULL, NULL, NULL),
 (27276, 3, 'Barangay 133 (Tondo)', 25860, NULL, NULL, NULL, NULL),
-(27277, 3, 'Barangay 134 (Tondo)', 25860, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(27277, 3, 'Barangay 134 (Tondo)', 25860, NULL, NULL, NULL, NULL),
 (27278, 3, 'Barangay 135 (Tondo)', 25860, NULL, NULL, NULL, NULL),
 (27279, 3, 'Barangay 136 (Tondo)', 25860, NULL, NULL, NULL, NULL),
 (27280, 3, 'Barangay 137 (Tondo)', 25860, NULL, NULL, NULL, NULL),
@@ -28181,7 +28181,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (28154, 3, 'Aplaya', 27929, NULL, NULL, NULL, NULL),
 (28155, 3, 'Danao', 27929, NULL, NULL, NULL, NULL),
 (28156, 3, 'I.S. Cruz', 27929, NULL, NULL, NULL, NULL),
-(28157, 3, 'Kimaya', 27929, NULL, NULL, NULL, NULL),
+(28157, 3, 'Kimaya', 27929, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (28158, 3, 'Jampason', 27929, NULL, NULL, NULL, NULL),
 (28159, 3, 'Korales', 27929, NULL, NULL, NULL, NULL),
 (28160, 3, 'Lower Jasaan (Ubos)', 27929, NULL, NULL, NULL, NULL),
@@ -28193,8 +28194,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (28166, 3, 'Solana', 27929, NULL, NULL, NULL, NULL),
 (28167, 3, 'Upper Jasaan (Ibabaw)', 27929, NULL, NULL, NULL, NULL),
 (28168, 3, 'Buko', 27930, NULL, NULL, NULL, NULL),
-(28169, 3, 'Bolisong', 27930, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(28169, 3, 'Bolisong', 27930, NULL, NULL, NULL, NULL),
 (28170, 3, 'Calubo', 27930, NULL, NULL, NULL, NULL),
 (28171, 3, 'Beray', 27930, NULL, NULL, NULL, NULL),
 (28172, 3, 'Kalitian', 27930, NULL, NULL, NULL, NULL),
@@ -28551,35 +28551,35 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (28523, 2, 'Bacolod', 142, '122.895407', '123.113647', '10.722242', '10.569328'),
 (28524, 2, 'Escalante', 142, '123.347926', '123.568787', '10.888357', '10.738621'),
 (28525, 2, 'Himamaylan', 142, '122.823051', '123.024216', '10.202010', '9.909870'),
-(28526, 2, 'Kabankalan', 142, NULL, NULL, NULL, NULL),
+(28526, 2, 'Kabankalan', 142, '122.717285', '122.991158', '10.063610', '9.576038'),
 (28527, 2, 'Cadiz', 142, '123.146439', '123.374536', '11.044440', '10.659420'),
 (28528, 2, 'Bago', 142, '122.829983', '123.091202', '10.598490', '10.420794'),
 (28529, 2, 'La Carlota', 142, '122.896339', '123.131332', '10.463370', '10.377148'),
 (28530, 2, 'Sagay', 142, '123.226776', '123.593365', '10.982144', '10.631506'),
 (28531, 2, 'San Carlos', 142, '123.129143', '123.449752', '10.575670', '10.382580'),
-(28532, 2, 'Silay', 142, NULL, NULL, NULL, NULL),
-(28533, 2, 'Sipalay', 142, NULL, NULL, NULL, NULL),
-(28534, 2, 'Talisay', 142, NULL, NULL, NULL, NULL),
-(28535, 2, 'Victorias', 142, NULL, NULL, NULL, NULL),
+(28532, 2, 'Silay', 142, '122.942780', '123.254082', '10.855000', '10.650823'),
+(28533, 2, 'Sipalay', 142, '122.365257', '122.574463', '9.834920', '9.643780'),
+(28534, 2, 'Talisay', 142, '122.945267', '123.248718', '10.774830', '10.620624'),
+(28535, 2, 'Victorias', 142, '123.034344', '123.155537', '10.921943', '10.807846'),
 (28536, 2, 'Binalbagan', 142, '122.840553', '123.114059', '10.251240', '10.010580'),
 (28537, 2, 'Calatrava', 142, '123.237907', '123.506861', '10.724480', '10.498060'),
 (28538, 2, 'Candoni', 142, '122.555367', '122.700376', '9.867260', '9.666280'),
 (28539, 2, 'Cauayan', 142, '122.363191', '122.710457', '9.995410', '9.825926'),
-(28540, 2, 'Enrique B. Magalona (Saravia)', 142, NULL, NULL, NULL, NULL),
+(28540, 2, 'Enrique B. Magalona (Saravia)', 142, '122.943947', '123.200943', '10.920280', '10.699600'),
 (28541, 2, 'Hinigaran', 142, '122.841362', '122.991249', '10.331950', '10.202170'),
 (28542, 2, 'Hinoba-an (Asia)', 142, '122.435643', '122.695908', '9.671323', '9.419720'),
 (28543, 2, 'Ilog', 142, '122.688011', '122.809517', '10.070911', '9.545822'),
-(28544, 2, 'Isabela', 142, NULL, NULL, NULL, NULL),
+(28544, 2, 'Isabela', 142, '122.925903', '123.140312', '10.279113', '10.150490'),
 (28545, 2, 'La Castellana', 142, '122.944702', '123.178650', '10.410330', '10.273010'),
 (28546, 2, 'Manapla', 142, '123.074280', '123.210386', '11.003245', '10.816783'),
-(28547, 2, 'Moises Padilla (Magallon)', 142, NULL, NULL, NULL, NULL),
+(28547, 2, 'Moises Padilla (Magallon)', 142, '123.009956', '123.200897', '10.319020', '10.196400'),
 (28548, 2, 'Murcia', 142, '122.973747', '123.233128', '10.663140', '10.410330'),
 (28549, 2, 'Pontevedra', 142, '122.857941', '123.013916', '10.402730', '10.310866'),
 (28550, 2, 'Pulupandan', 142, '122.795448', '122.837791', '10.552791', '10.480140'),
 (28551, 2, 'Salvador Benedicto', 142, '123.145065', '123.348999', '10.637170', '10.520894'),
 (28552, 2, 'San Enrique', 142, '122.829147', '122.902679', '10.439840', '10.395090'),
-(28553, 2, 'Toboso', 142, NULL, NULL, NULL, NULL),
-(28554, 2, 'Valladolid', 142, NULL, NULL, NULL, NULL),
+(28553, 2, 'Toboso', 142, '123.320246', '123.533955', '10.777168', '10.666259'),
+(28554, 2, 'Valladolid', 142, '122.819252', '122.899761', '10.510620', '10.431190'),
 (28555, 3, 'Alangilan', 28523, NULL, NULL, NULL, NULL),
 (28556, 3, 'Alijis', 28523, NULL, NULL, NULL, NULL),
 (28557, 3, 'Banago', 28523, NULL, NULL, NULL, NULL),
@@ -29072,7 +29072,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (29044, 3, 'Amin', 28544, NULL, NULL, NULL, NULL),
 (29045, 3, 'Cabcab', 28544, NULL, NULL, NULL, NULL),
 (29046, 3, 'Camangcamang', 28544, NULL, NULL, NULL, NULL),
-(29047, 3, 'Banogbanog', 28544, NULL, NULL, NULL, NULL),
+(29047, 3, 'Banogbanog', 28544, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (29048, 3, 'Bulad', 28544, NULL, NULL, NULL, NULL),
 (29049, 3, 'Camp Clark', 28544, NULL, NULL, NULL, NULL),
 (29050, 3, 'Cansalongon', 28544, NULL, NULL, NULL, NULL),
@@ -29089,8 +29090,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (29061, 3, 'Barangay 4 (Pob.)', 28544, NULL, NULL, NULL, NULL),
 (29062, 3, 'Barangay 5 (Pob.)', 28544, NULL, NULL, NULL, NULL),
 (29063, 3, 'Barangay 6 (Pob.)', 28544, NULL, NULL, NULL, NULL),
-(29064, 3, 'Barangay 7 (Pob.)', 28544, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(29064, 3, 'Barangay 7 (Pob.)', 28544, NULL, NULL, NULL, NULL),
 (29065, 3, 'Barangay 8 (Pob.)', 28544, NULL, NULL, NULL, NULL),
 (29066, 3, 'Barangay 9 (Pob.)', 28544, NULL, NULL, NULL, NULL),
 (29067, 3, 'Riverside', 28544, NULL, NULL, NULL, NULL),
@@ -29244,31 +29244,31 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (29215, 3, 'Poblacion', 28554, NULL, NULL, NULL, NULL),
 (29216, 3, 'Sagua Banua', 28554, NULL, NULL, NULL, NULL),
 (29217, 3, 'Tabao Proper', 28554, NULL, NULL, NULL, NULL),
-(29218, 2, 'Bayawan City', 143, NULL, NULL, NULL, NULL),
-(29219, 2, 'Dumaguete City', 143, NULL, NULL, NULL, NULL),
-(29220, 2, 'Canlaon City', 143, NULL, NULL, NULL, NULL),
-(29221, 2, 'Bais City', 143, NULL, NULL, NULL, NULL),
-(29222, 2, 'Guihulngan City', 143, NULL, NULL, NULL, NULL),
-(29223, 2, 'Tanjay City', 143, NULL, NULL, NULL, NULL),
-(29224, 2, 'Amlan', 143, NULL, NULL, NULL, NULL),
-(29225, 2, 'Ayungon', 143, NULL, NULL, NULL, NULL),
-(29226, 2, 'Bacong', 143, NULL, NULL, NULL, NULL),
-(29227, 2, 'Basay', 143, NULL, NULL, NULL, NULL),
-(29228, 2, 'Bindoy', 143, NULL, NULL, NULL, NULL),
-(29229, 2, 'Dauin', 143, NULL, NULL, NULL, NULL),
-(29230, 2, 'Jimalalud', 143, NULL, NULL, NULL, NULL),
-(29231, 2, 'La Libertad', 143, NULL, NULL, NULL, NULL),
-(29232, 2, 'Mabinay', 143, NULL, NULL, NULL, NULL),
-(29233, 2, 'Manjuyod', 143, NULL, NULL, NULL, NULL),
-(29234, 2, 'Pamplona', 143, NULL, NULL, NULL, NULL),
-(29235, 2, 'San Jose', 143, NULL, NULL, NULL, NULL),
-(29236, 2, 'Santa Catalina', 143, NULL, NULL, NULL, NULL),
-(29237, 2, 'Siaton', 143, NULL, NULL, NULL, NULL),
-(29238, 2, 'Sibulan', 143, NULL, NULL, NULL, NULL),
-(29239, 2, 'Tayasan', 143, NULL, NULL, NULL, NULL),
-(29240, 2, 'Valencia', 143, NULL, NULL, NULL, NULL),
-(29241, 2, 'Vallehermoso', 143, NULL, NULL, NULL, NULL),
-(29242, 2, 'Zamboanguita', 143, NULL, NULL, NULL, NULL),
+(29218, 2, 'Bayawan City', 143, '122.680496', '122.960014', '9.710420', '9.332078'),
+(29219, 2, 'Dumaguete City', 143, '123.250337', '123.313731', '9.332478', '9.258986'),
+(29220, 2, 'Canlaon City', 143, '123.129143', '123.259735', '10.443585', '10.272660'),
+(29221, 2, 'Bais City', 143, '122.885513', '123.164017', '9.691930', '9.535664'),
+(29222, 2, 'Guihulngan City', 143, '123.089462', '123.331563', '10.279450', '10.067137'),
+(29223, 2, 'Tanjay City', 143, '122.885513', '123.184174', '9.566750', '9.385400'),
+(29224, 2, 'Amlan', 143, '123.112621', '123.239522', '9.482495', '9.372769'),
+(29225, 2, 'Ayungon', 143, '122.914352', '123.152533', '9.948450', '9.794940'),
+(29226, 2, 'Bacong', 143, '123.214245', '123.300278', '9.272320', '9.214472'),
+(29227, 2, 'Basay', 143, '122.612907', '122.732643', '9.539219', '9.374860'),
+(29228, 2, 'Bindoy', 143, '122.936508', '123.157333', '9.883920', '9.708620'),
+(29229, 2, 'Dauin', 143, '123.137512', '123.286555', '9.252666', '9.071380'),
+(29230, 2, 'Jimalalud', 143, '123.029366', '123.227750', '10.074960', '9.947183'),
+(29231, 2, 'La Libertad', 143, '123.059578', '123.253952', '10.128160', '10.002220'),
+(29232, 2, 'Mabinay', 143, '122.815647', '123.040009', '9.845745', '9.576884'),
+(29233, 2, 'Manjuyod', 143, '123.036438', '123.162232', '9.756530', '9.629523'),
+(29234, 2, 'Pamplona', 143, '122.938423', '123.159785', '9.507660', '9.346262'),
+(29235, 2, 'San Jose', 143, '123.167553', '123.260524', '9.460780', '9.365910'),
+(29236, 2, 'Santa Catalina', 143, '122.840248', '123.151993', '9.431028', '9.148436'),
+(29237, 2, 'Siaton', 143, '122.906883', '123.134508', '9.226318', '9.038180'),
+(29238, 2, 'Sibulan', 143, '123.002823', '123.310627', '9.385400', '9.314078'),
+(29239, 2, 'Tayasan', 143, '122.992802', '123.182777', '10.035870', '9.891154'),
+(29240, 2, 'Valencia', 143, '123.084040', '123.274170', '9.333380', '9.237160'),
+(29241, 2, 'Vallehermoso', 143, '123.238533', '123.337818', '10.413440', '10.275470'),
+(29242, 2, 'Zamboanguita', 143, '123.116055', '123.243140', '9.241850', '9.044278'),
 (29243, 3, 'Barangay II (Pob.)', 29221, NULL, NULL, NULL, NULL),
 (29244, 3, 'Barangay I (Pob.)', 29221, NULL, NULL, NULL, NULL),
 (29245, 3, 'Biñohon', 29221, NULL, NULL, NULL, NULL),
@@ -29827,30 +29827,30 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (29798, 3, 'Nasig-id', 29242, NULL, NULL, NULL, NULL),
 (29799, 3, 'Najandig', 29242, NULL, NULL, NULL, NULL),
 (29800, 3, 'Poblacion', 29242, NULL, NULL, NULL, NULL),
-(29801, 2, 'Allen', 144, NULL, NULL, NULL, NULL),
-(29802, 2, 'Biri', 144, NULL, NULL, NULL, NULL),
-(29803, 2, 'Bobon', 144, NULL, NULL, NULL, NULL),
-(29804, 2, 'Catarman', 144, NULL, NULL, NULL, NULL),
-(29805, 2, 'Catubig', 144, NULL, NULL, NULL, NULL),
-(29806, 2, 'Capul', 144, NULL, NULL, NULL, NULL),
-(29807, 2, 'Gamay', 144, NULL, NULL, NULL, NULL),
-(29808, 2, 'Laoang', 144, NULL, NULL, NULL, NULL),
-(29809, 2, 'Lapinig', 144, NULL, NULL, NULL, NULL),
-(29810, 2, 'Las Navas', 144, NULL, NULL, NULL, NULL),
-(29811, 2, 'Lavezares', 144, NULL, NULL, NULL, NULL),
-(29812, 2, 'Lope de Vega', 144, NULL, NULL, NULL, NULL),
-(29813, 2, 'Mapanas', 144, NULL, NULL, NULL, NULL),
-(29814, 2, 'Mondragon', 144, NULL, NULL, NULL, NULL),
-(29815, 2, 'Palapag', 144, NULL, NULL, NULL, NULL),
-(29816, 2, 'Pambujan', 144, NULL, NULL, NULL, NULL),
-(29817, 2, 'Rosario', 144, NULL, NULL, NULL, NULL),
-(29818, 2, 'San Antonio', 144, NULL, NULL, NULL, NULL),
-(29819, 2, 'San Isidro', 144, NULL, NULL, NULL, NULL),
-(29820, 2, 'San Jose', 144, NULL, NULL, NULL, NULL),
-(29821, 2, 'San Roque', 144, NULL, NULL, NULL, NULL),
-(29822, 2, 'San Vicente', 144, NULL, NULL, NULL, NULL),
-(29823, 2, 'Silvino Lobos', 144, NULL, NULL, NULL, NULL),
-(29824, 2, 'Victoria', 144, NULL, NULL, NULL, NULL),
+(29801, 2, 'Allen', 144, '124.260933', '124.407318', '12.585026', '12.466850'),
+(29802, 2, 'Biri', 144, '124.281113', '124.447350', '12.758610', '12.609851'),
+(29803, 2, 'Bobon', 144, '124.458618', '124.586718', '12.532935', '12.288310'),
+(29804, 2, 'Catarman', 144, '124.566490', '124.747396', '12.525345', '12.289311'),
+(29805, 2, 'Catubig', 144, '124.971336', '125.195717', '12.456930', '12.331533'),
+(29806, 2, 'Capul', 144, '124.133110', '124.193413', '12.483153', '12.380780'),
+(29807, 2, 'Gamay', 144, '125.170498', '125.340614', '12.467323', '12.341679'),
+(29808, 2, 'Laoang', 144, '124.960617', '125.099907', '12.686110', '12.445880'),
+(29809, 2, 'Lapinig', 144, '125.213585', '125.345468', '12.351610', '12.256854'),
+(29810, 2, 'Las Navas', 144, '124.905861', '125.166893', '12.383934', '12.229230'),
+(29811, 2, 'Lavezares', 144, '124.279068', '124.407982', '12.628610', '12.467250'),
+(29812, 2, 'Lope de Vega', 144, '124.563744', '124.741602', '12.417010', '12.236933'),
+(29813, 2, 'Mapanas', 144, '125.114622', '125.292531', '12.518060', '12.385024'),
+(29814, 2, 'Mondragon', 144, '124.682220', '124.841530', '12.550080', '12.262820'),
+(29815, 2, 'Palapag', 144, '125.026045', '125.237764', '12.602220', '12.446383'),
+(29816, 2, 'Pambujan', 144, '124.811531', '124.978580', '12.618810', '12.343270'),
+(29817, 2, 'Rosario', 144, '124.403772', '124.480721', '12.582209', '12.436980'),
+(29818, 2, 'San Antonio', 144, '124.239143', '124.285606', '12.460110', '12.361670'),
+(29819, 2, 'San Isidro', 144, '124.322267', '124.482880', '12.417047', '12.280396'),
+(29820, 2, 'San Jose', 144, '124.445427', '124.524021', '12.590167', '12.421630'),
+(29821, 2, 'San Roque', 144, '124.828659', '124.937296', '12.554660', '12.353166'),
+(29822, 2, 'San Vicente', 144, '124.000573', '124.114037', '12.411640', '12.256430'),
+(29823, 2, 'Silvino Lobos', 144, '124.753189', '124.965370', '12.387623', '12.138910'),
+(29824, 2, 'Victoria', 144, '124.282772', '124.496841', '12.474710', '12.343280'),
 (29825, 3, 'Alejandro Village (Santiago)', 29801, NULL, NULL, NULL, NULL),
 (29826, 3, 'Bonifacio', 29801, NULL, NULL, NULL, NULL),
 (29827, 3, 'Cabacungan', 29801, NULL, NULL, NULL, NULL),
@@ -29961,7 +29961,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (29932, 3, 'Trangue', 29804, NULL, NULL, NULL, NULL),
 (29933, 3, 'UEP Zone I', 29804, NULL, NULL, NULL, NULL),
 (29934, 3, 'UEP Zone II', 29804, NULL, NULL, NULL, NULL),
-(29935, 3, 'UEP Zone III', 29804, NULL, NULL, NULL, NULL),
+(29935, 3, 'UEP Zone III', 29804, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (29936, 3, 'Washington', 29804, NULL, NULL, NULL, NULL),
 (29937, 3, 'Yakal (pob.)', 29804, NULL, NULL, NULL, NULL),
 (29938, 3, 'Anongo', 29805, NULL, NULL, NULL, NULL),
@@ -30005,8 +30006,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (29976, 3, 'Vienna Maria', 29805, NULL, NULL, NULL, NULL),
 (29977, 3, 'Barangay 1 (Poblacion)', 29805, NULL, NULL, NULL, NULL),
 (29978, 3, 'Barangay 2 (Pob.)', 29805, NULL, NULL, NULL, NULL),
-(29979, 3, 'Barangay 3 (Pob.)', 29805, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(29979, 3, 'Barangay 3 (Pob.)', 29805, NULL, NULL, NULL, NULL),
 (29980, 3, 'Barangay 4 (Pob.)', 29805, NULL, NULL, NULL, NULL),
 (29981, 3, 'Barangay 5 (Pob.)', 29805, NULL, NULL, NULL, NULL),
 (29982, 3, 'Barangay 6 (Pob.)', 29805, NULL, NULL, NULL, NULL),
@@ -30421,32 +30421,32 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (30391, 3, 'San Lazaro', 29824, NULL, NULL, NULL, NULL),
 (30392, 3, 'San Miguel', 29824, NULL, NULL, NULL, NULL),
 (30393, 3, 'San Roman', 29824, NULL, NULL, NULL, NULL),
-(30394, 2, 'Catbalogan', 156, NULL, NULL, NULL, NULL),
-(30395, 2, 'Calbiga', 156, NULL, NULL, NULL, NULL),
-(30396, 2, 'Almagro', 156, NULL, NULL, NULL, NULL),
-(30397, 2, 'Basey', 156, NULL, NULL, NULL, NULL),
-(30398, 2, 'Daram', 156, NULL, NULL, NULL, NULL),
-(30399, 2, 'Calbayog', 156, NULL, NULL, NULL, NULL),
-(30400, 2, 'Gandara', 156, NULL, NULL, NULL, NULL),
-(30401, 2, 'Hinabangan', 156, NULL, NULL, NULL, NULL),
-(30402, 2, 'Jiabong', 156, NULL, NULL, NULL, NULL),
-(30403, 2, 'Marabut', 156, NULL, NULL, NULL, NULL),
-(30404, 2, 'Matuguinao', 156, NULL, NULL, NULL, NULL),
-(30405, 2, 'Motiong', 156, NULL, NULL, NULL, NULL),
-(30406, 2, 'Pagsanghan', 156, NULL, NULL, NULL, NULL),
-(30407, 2, 'Paranas (Wright)', 156, NULL, NULL, NULL, NULL),
-(30408, 2, 'Pinabacdao', 156, NULL, NULL, NULL, NULL),
-(30409, 2, 'San Jorge', 156, NULL, NULL, NULL, NULL),
-(30410, 2, 'San Jose de Buan', 156, NULL, NULL, NULL, NULL),
-(30411, 2, 'San Sebastian', 156, NULL, NULL, NULL, NULL),
-(30412, 2, 'Santa Margarita', 156, NULL, NULL, NULL, NULL),
-(30413, 2, 'Santa Rita', 156, NULL, NULL, NULL, NULL),
-(30414, 2, 'Santo Niño', 156, NULL, NULL, NULL, NULL),
-(30415, 2, 'Tagapul-an', 156, NULL, NULL, NULL, NULL),
-(30416, 2, 'Talalora', 156, NULL, NULL, NULL, NULL),
-(30417, 2, 'Tarangnan', 156, NULL, NULL, NULL, NULL),
-(30418, 2, 'Villareal', 156, NULL, NULL, NULL, NULL),
-(30419, 2, 'Zumarraga', 156, NULL, NULL, NULL, NULL),
+(30394, 2, 'Catbalogan', 156, '124.672783', '124.967789', '11.916900', '11.684872'),
+(30395, 2, 'Calbiga', 156, '124.970491', '125.242596', '11.686670', '11.557620'),
+(30396, 2, 'Almagro', 156, '124.273193', '124.375488', '11.961075', '11.887120'),
+(30397, 2, 'Basey', 156, '124.975741', '125.317612', '11.575230', '11.254170'),
+(30398, 2, 'Daram', 156, '124.705559', '124.851944', '11.739440', '11.518400'),
+(30399, 2, 'Calbayog', 156, '124.353119', '124.855328', '12.340002', '12.048855'),
+(30400, 2, 'Gandara', 156, '124.667236', '124.981756', '12.198681', '11.940930'),
+(30401, 2, 'Hinabangan', 156, '125.034447', '125.296068', '11.855927', '11.633060'),
+(30402, 2, 'Jiabong', 156, '124.924347', '125.010361', '11.966868', '11.747072'),
+(30403, 2, 'Marabut', 156, '125.158890', '125.307140', '11.387400', '11.085537'),
+(30404, 2, 'Matuguinao', 156, '124.847388', '125.152924', '12.287005', '12.113020'),
+(30405, 2, 'Motiong', 156, '124.957802', '125.093384', '11.994770', '11.764320'),
+(30406, 2, 'Pagsanghan', 156, '124.684115', '124.806770', '11.990797', '11.939278'),
+(30407, 2, 'Paranas (Wright)', 156, '125.008171', '125.269653', '11.997520', '11.720170'),
+(30408, 2, 'Pinabacdao', 156, '124.967171', '125.226202', '11.643050', '11.509360'),
+(30409, 2, 'San Jorge', 156, '124.781084', '124.987633', '12.071330', '11.878690'),
+(30410, 2, 'San Jose de Buan', 156, '124.965317', '125.129814', '12.171834', '11.959800'),
+(30411, 2, 'San Sebastian', 156, '124.984456', '125.049219', '11.741988', '11.660643'),
+(30412, 2, 'Santa Margarita', 156, '124.637893', '124.780054', '12.174518', '11.986993'),
+(30413, 2, 'Santa Rita', 156, '124.848068', '125.115761', '11.526850', '11.292147'),
+(30414, 2, 'Santo Niño', 156, '124.402779', '124.468345', '11.991910', '11.878872'),
+(30415, 2, 'Tagapul-an', 156, '124.145218', '124.240364', '12.096563', '12.030570'),
+(30416, 2, 'Talalora', 156, '124.818748', '124.873781', '11.566570', '11.462977'),
+(30417, 2, 'Tarangnan', 156, '124.615311', '124.871292', '11.964920', '11.840290'),
+(30418, 2, 'Villareal', 156, '124.857903', '125.017548', '11.612522', '11.487342'),
+(30419, 2, 'Zumarraga', 156, '124.820091', '124.895051', '11.710934', '11.615247'),
 (30420, 3, 'Acedillo', 30399, NULL, NULL, NULL, NULL),
 (30421, 3, 'Jose A. Roño', 30399, NULL, NULL, NULL, NULL),
 (30422, 3, 'Anislag', 30399, NULL, NULL, NULL, NULL),
@@ -30854,7 +30854,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (30824, 3, 'Caugbusan', 30400, NULL, NULL, NULL, NULL),
 (30825, 3, 'Concepcion', 30400, NULL, NULL, NULL, NULL),
 (30826, 3, 'Diaz', 30400, NULL, NULL, NULL, NULL),
-(30827, 3, 'Dumalo-ong (Poblacion)', 30400, NULL, NULL, NULL, NULL),
+(30827, 3, 'Dumalo-ong (Poblacion)', 30400, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (30828, 3, 'Elcano', 30400, NULL, NULL, NULL, NULL),
 (30829, 3, 'Gerali', 30400, NULL, NULL, NULL, NULL),
 (30830, 3, 'Gereganan', 30400, NULL, NULL, NULL, NULL),
@@ -30913,8 +30914,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (30883, 3, 'Dalosdoson', 30401, NULL, NULL, NULL, NULL),
 (30884, 3, 'Intik', 30401, NULL, NULL, NULL, NULL),
 (30885, 3, 'Lim-ao', 30401, NULL, NULL, NULL, NULL),
-(30886, 3, 'Osmeña', 30401, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(30886, 3, 'Osmeña', 30401, NULL, NULL, NULL, NULL),
 (30887, 3, 'Poblacion 1 (Barangay 1)', 30401, NULL, NULL, NULL, NULL),
 (30888, 3, 'Poblacion 2 (Barangay 2)', 30401, NULL, NULL, NULL, NULL),
 (30889, 3, 'Rawis', 30401, NULL, NULL, NULL, NULL),
@@ -31402,12 +31402,12 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (31371, 3, 'Marapilit', 30419, NULL, NULL, NULL, NULL),
 (31372, 3, 'Talib', 30419, NULL, NULL, NULL, NULL),
 (31373, 3, 'Igpit opol', 30419, NULL, NULL, NULL, NULL),
-(31374, 2, 'Enrique Villanueva', 158, NULL, NULL, NULL, NULL),
-(31375, 2, 'Lazi', 158, NULL, NULL, NULL, NULL),
-(31376, 2, 'Larena', 158, NULL, NULL, NULL, NULL),
-(31377, 2, 'Siquijor', 158, NULL, NULL, NULL, NULL),
-(31378, 2, 'Maria', 158, NULL, NULL, NULL, NULL),
-(31379, 2, 'San Juan', 158, NULL, NULL, NULL, NULL),
+(31374, 2, 'Enrique Villanueva', 158, '123.599678', '123.666389', '9.300900', '9.213610'),
+(31375, 2, 'Lazi', 158, '123.561462', '123.672142', '9.179190', '9.094560'),
+(31376, 2, 'Larena', 158, '123.568161', '123.635460', '9.301034', '9.179190'),
+(31377, 2, 'Siquijor', 158, '123.454451', '123.606239', '9.240502', '9.128340'),
+(31378, 2, 'Maria', 158, '123.606239', '123.701859', '9.235333', '9.120700'),
+(31379, 2, 'San Juan', 158, '123.452118', '123.565121', '9.199120', '9.100830'),
 (31380, 3, 'Bino-ongan', 31374, NULL, NULL, NULL, NULL),
 (31381, 3, 'Balolong', 31374, NULL, NULL, NULL, NULL),
 (31382, 3, 'Bitaug', 31374, NULL, NULL, NULL, NULL),
@@ -31542,25 +31542,25 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (31511, 3, 'Tebjong', 31377, NULL, NULL, NULL, NULL),
 (31512, 3, 'Tinago', 31377, NULL, NULL, NULL, NULL),
 (31513, 3, 'Tongo', 31377, NULL, NULL, NULL, NULL),
-(31514, 2, 'Hinunangan', 161, NULL, NULL, NULL, NULL),
-(31515, 2, 'Anahawan', 161, NULL, NULL, NULL, NULL),
-(31516, 2, 'Bontoc', 161, NULL, NULL, NULL, NULL),
-(31517, 2, 'Libagon', 161, NULL, NULL, NULL, NULL),
-(31518, 2, 'Liloan', 161, NULL, NULL, NULL, NULL),
-(31519, 2, 'Hinundayan', 161, NULL, NULL, NULL, NULL),
-(31520, 2, 'Limasawa', 161, NULL, NULL, NULL, NULL),
-(31521, 2, 'Maasin City', 161, NULL, NULL, NULL, NULL),
-(31522, 2, 'Macrohon', 161, NULL, NULL, NULL, NULL),
-(31523, 2, 'Malitbog', 161, NULL, NULL, NULL, NULL),
-(31524, 2, 'Padre Burgos', 161, NULL, NULL, NULL, NULL),
-(31525, 2, 'Pintuyan', 161, NULL, NULL, NULL, NULL),
-(31526, 2, 'Saint Bernard', 161, NULL, NULL, NULL, NULL),
-(31527, 2, 'San Francisco', 161, NULL, NULL, NULL, NULL),
-(31528, 2, 'San Juan', 161, NULL, NULL, NULL, NULL),
-(31529, 2, 'San Ricardo', 161, NULL, NULL, NULL, NULL),
-(31530, 2, 'Silago', 161, NULL, NULL, NULL, NULL),
-(31531, 2, 'Sogod', 161, NULL, NULL, NULL, NULL),
-(31532, 2, 'Tomas Oppus', 161, NULL, NULL, NULL, NULL),
+(31514, 2, 'Hinunangan', 161, '125.074821', '125.233240', '10.474266', '10.310020'),
+(31515, 2, 'Anahawan', 161, '125.148654', '125.268059', '10.342405', '10.256040'),
+(31516, 2, 'Bontoc', 161, '124.891121', '124.975883', '10.459622', '10.310480'),
+(31517, 2, 'Libagon', 161, '125.016350', '125.109627', '10.439960', '10.227680'),
+(31518, 2, 'Liloan', 161, '125.076437', '125.239007', '10.252172', '10.049600'),
+(31519, 2, 'Hinundayan', 161, '125.157795', '125.267159', '10.395560', '10.303930'),
+(31520, 2, 'Limasawa', 161, '125.059261', '125.080276', '9.964720', '9.894720'),
+(31521, 2, 'Maasin City', 161, '124.752777', '124.960213', '10.275059', '10.110381'),
+(31522, 2, 'Macrohon', 161, '124.895340', '125.009178', '10.154340', '10.029440'),
+(31523, 2, 'Malitbog', 161, '124.897041', '125.010160', '10.247864', '10.109740'),
+(31524, 2, 'Padre Burgos', 161, '124.953377', '125.029194', '10.128060', '10.004079'),
+(31525, 2, 'Pintuyan', 161, '125.199401', '125.289619', '10.054050', '9.909250'),
+(31526, 2, 'Saint Bernard', 161, '125.081663', '125.159157', '10.386604', '10.199410'),
+(31527, 2, 'San Francisco', 161, '125.116386', '125.218384', '10.135330', '10.008970'),
+(31528, 2, 'San Juan', 161, '125.148954', '125.251915', '10.326066', '10.246130'),
+(31529, 2, 'San Ricardo', 161, '125.215559', '125.299070', '10.066910', '9.909398'),
+(31530, 2, 'Silago', 161, '125.043640', '125.191948', '10.622240', '10.439960'),
+(31531, 2, 'Sogod', 161, '124.917198', '125.078144', '10.525788', '10.371759'),
+(31532, 2, 'Tomas Oppus', 161, '124.897324', '124.986954', '10.333680', '10.223475'),
 (31533, 3, 'Canlabian', 31515, NULL, NULL, NULL, NULL),
 (31534, 3, 'Amagusan', 31515, NULL, NULL, NULL, NULL),
 (31535, 3, 'Capacuhan', 31515, NULL, NULL, NULL, NULL),
@@ -31765,7 +31765,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (31734, 3, 'Nasaug', 31521, NULL, NULL, NULL, NULL),
 (31735, 3, 'Nati', 31521, NULL, NULL, NULL, NULL),
 (31736, 3, 'Nonok Norte', 31521, NULL, NULL, NULL, NULL),
-(31737, 3, 'Nonok Sur', 31521, NULL, NULL, NULL, NULL),
+(31737, 3, 'Nonok Sur', 31521, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (31738, 3, 'Panan-awan', 31521, NULL, NULL, NULL, NULL),
 (31739, 3, 'Pansaan', 31521, NULL, NULL, NULL, NULL),
 (31740, 3, 'Pasay', 31521, NULL, NULL, NULL, NULL),
@@ -31836,8 +31837,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (31805, 3, 'San Antonio', 31523, NULL, NULL, NULL, NULL),
 (31806, 3, 'San Jose', 31523, NULL, NULL, NULL, NULL),
 (31807, 3, 'San Roque', 31523, NULL, NULL, NULL, NULL),
-(31808, 3, 'San Vicente', 31523, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(31808, 3, 'San Vicente', 31523, NULL, NULL, NULL, NULL),
 (31809, 3, 'Sangahon', 31523, NULL, NULL, NULL, NULL),
 (31810, 3, 'Santa Cruz', 31523, NULL, NULL, NULL, NULL),
 (31811, 3, 'Taliwa', 31523, NULL, NULL, NULL, NULL),
@@ -32662,7 +32662,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (32630, 3, 'San Roque', 32051, NULL, NULL, NULL, NULL),
 (32631, 3, 'Santo Domingo', 32051, NULL, NULL, NULL, NULL),
 (32632, 3, 'Ambassador Alzate Village', 32052, NULL, NULL, NULL, NULL),
-(32633, 3, 'Cabaducan East (Pob.)', 32052, NULL, NULL, NULL, NULL),
+(32633, 3, 'Cabaducan East (Pob.)', 32052, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (32634, 3, 'Cabaducan West (Pob.)', 32052, NULL, NULL, NULL, NULL),
 (32635, 3, 'Alemania', 32052, NULL, NULL, NULL, NULL),
 (32636, 3, 'Cabawangan', 32052, NULL, NULL, NULL, NULL),
@@ -32732,8 +32733,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (32700, 3, 'Casilagan', 32056, NULL, NULL, NULL, NULL),
 (32701, 3, 'Aglipay (Curva)', 32056, NULL, NULL, NULL, NULL),
 (32702, 3, 'Del Pilar', 32056, NULL, NULL, NULL, NULL),
-(32703, 3, 'Estrella', 32056, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(32703, 3, 'Estrella', 32056, NULL, NULL, NULL, NULL),
 (32704, 3, 'General Luna', 32056, NULL, NULL, NULL, NULL),
 (32705, 3, 'Macapsing', 32056, NULL, NULL, NULL, NULL),
 (32706, 3, 'Maligaya', 32056, NULL, NULL, NULL, NULL),
@@ -33574,7 +33574,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (33541, 3, 'Maasin', 33384, NULL, NULL, NULL, NULL),
 (33542, 3, 'Maujao', 33384, NULL, NULL, NULL, NULL),
 (33543, 3, 'Milagrosa (Guiob)', 33384, NULL, NULL, NULL, NULL),
-(33544, 3, 'Nasukob (Pob.)', 33384, NULL, NULL, NULL, NULL),
+(33544, 3, 'Nasukob (Pob.)', 33384, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (33545, 3, 'Poblacion', 33384, NULL, NULL, NULL, NULL),
 (33546, 3, 'San Francisco (Alimawan)', 33384, NULL, NULL, NULL, NULL),
 (33547, 3, 'San Isidro', 33384, NULL, NULL, NULL, NULL),
@@ -33646,8 +33647,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (33613, 3, 'Inarawan', 33389, NULL, NULL, NULL, NULL),
 (33614, 3, 'Kalinisan', 33389, NULL, NULL, NULL, NULL),
 (33615, 3, 'Laguna', 33389, NULL, NULL, NULL, NULL),
-(33616, 3, 'Mabini', 33389, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(33616, 3, 'Mabini', 33389, NULL, NULL, NULL, NULL),
 (33617, 3, 'Andres Ylagan', 33389, NULL, NULL, NULL, NULL),
 (33618, 3, 'Mahabang Parang', 33389, NULL, NULL, NULL, NULL),
 (33619, 3, 'Malaya', 33389, NULL, NULL, NULL, NULL),
@@ -34489,7 +34489,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (34455, 3, 'Potrero', 34288, NULL, NULL, NULL, NULL),
 (34456, 3, 'San Antonio', 34288, NULL, NULL, NULL, NULL),
 (34457, 3, 'San Isidro', 34288, NULL, NULL, NULL, NULL),
-(34458, 3, 'San Vicente', 34288, NULL, NULL, NULL, NULL),
+(34458, 3, 'San Vicente', 34288, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (34459, 3, 'Santa Barbara', 34288, NULL, NULL, NULL, NULL),
 (34460, 3, 'Santa Ines', 34288, NULL, NULL, NULL, NULL),
 (34461, 3, 'Talba', 34288, NULL, NULL, NULL, NULL),
@@ -34561,8 +34562,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (34527, 3, 'Solb', 34290, NULL, NULL, NULL, NULL),
 (34528, 3, 'Valdez', 34290, NULL, NULL, NULL, NULL),
 (34529, 3, 'Mawacat', 34290, NULL, NULL, NULL, NULL),
-(34530, 3, 'Bancal', 34291, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(34530, 3, 'Bancal', 34291, NULL, NULL, NULL, NULL),
 (34531, 3, 'Plaza Burgos', 34291, NULL, NULL, NULL, NULL),
 (34532, 3, 'San Rafael', 34291, NULL, NULL, NULL, NULL),
 (34533, 3, 'San Roque', 34291, NULL, NULL, NULL, NULL),
@@ -35397,7 +35397,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (35362, 3, 'Biec', 34860, NULL, NULL, NULL, NULL),
 (35363, 3, 'Buenlag', 34860, NULL, NULL, NULL, NULL),
 (35364, 3, 'Calit', 34860, NULL, NULL, NULL, NULL),
-(35365, 3, 'Caloocan Dupo', 34860, NULL, NULL, NULL, NULL),
+(35365, 3, 'Caloocan Dupo', 34860, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (35366, 3, 'Caloocan Norte', 34860, NULL, NULL, NULL, NULL),
 (35367, 3, 'Caloocan Sur', 34860, NULL, NULL, NULL, NULL),
 (35368, 3, 'Camaley', 34860, NULL, NULL, NULL, NULL),
@@ -35470,8 +35471,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (35435, 3, 'Poblacion', 34862, NULL, NULL, NULL, NULL),
 (35436, 3, 'Polong', 34862, NULL, NULL, NULL, NULL),
 (35437, 3, 'Portic', 34862, NULL, NULL, NULL, NULL),
-(35438, 3, 'Salasa', 34862, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(35438, 3, 'Salasa', 34862, NULL, NULL, NULL, NULL),
 (35439, 3, 'Salomague Norte', 34862, NULL, NULL, NULL, NULL),
 (35440, 3, 'Salomague Sur', 34862, NULL, NULL, NULL, NULL),
 (35441, 3, 'Samat', 34862, NULL, NULL, NULL, NULL),
@@ -36316,7 +36316,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (36280, 2, 'Tiaong', 152, NULL, NULL, NULL, NULL),
 (36281, 2, 'Agdangan', 152, NULL, NULL, NULL, NULL),
 (36282, 2, 'Buenavista', 152, NULL, NULL, NULL, NULL),
-(36283, 2, 'Catanauan', 152, NULL, NULL, NULL, NULL),
+(36283, 2, 'Catanauan', 152, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (36284, 2, 'General Luna', 152, NULL, NULL, NULL, NULL),
 (36285, 2, 'Macalelon', 152, NULL, NULL, NULL, NULL),
 (36286, 2, 'Mulanay', 152, NULL, NULL, NULL, NULL),
@@ -36390,8 +36391,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (36354, 3, 'Pinaglapatan', 36263, NULL, NULL, NULL, NULL),
 (36355, 3, 'Ilog', 36263, NULL, NULL, NULL, NULL),
 (36356, 3, 'Catambungan', 36263, NULL, NULL, NULL, NULL),
-(36357, 3, 'Pilaway', 36263, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(36357, 3, 'Pilaway', 36263, NULL, NULL, NULL, NULL),
 (36358, 3, 'Agos Agos', 36263, NULL, NULL, NULL, NULL),
 (36359, 3, 'Banugao', 36263, NULL, NULL, NULL, NULL),
 (36360, 3, 'Miswa', 36263, NULL, NULL, NULL, NULL),
@@ -37211,7 +37211,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (37174, 3, 'Bantolinao', 36295, NULL, NULL, NULL, NULL),
 (37175, 3, 'Barangay Uno (Poblacion)', 36295, NULL, NULL, NULL, NULL),
 (37176, 3, 'Barangay Dos (Poblacion)', 36295, NULL, NULL, NULL, NULL),
-(37177, 3, 'Barangay Tres (Poblacion)', 36295, NULL, NULL, NULL, NULL),
+(37177, 3, 'Barangay Tres (Poblacion)', 36295, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (37178, 3, 'Barangay Cuatro (Poblacion)', 36295, NULL, NULL, NULL, NULL),
 (37179, 3, 'Barangay Cinco (Poblacion)', 36295, NULL, NULL, NULL, NULL),
 (37180, 3, 'Bigaan', 36295, NULL, NULL, NULL, NULL),
@@ -37281,8 +37282,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (37244, 3, 'Aloneros', 36296, NULL, NULL, NULL, NULL),
 (37245, 3, 'Arbismen', 36296, NULL, NULL, NULL, NULL),
 (37246, 3, 'A. Mabini', 36296, NULL, NULL, NULL, NULL),
-(37247, 3, 'Bukal Maligaya', 36296, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(37247, 3, 'Bukal Maligaya', 36296, NULL, NULL, NULL, NULL),
 (37248, 3, 'Bagong Silang', 36296, NULL, NULL, NULL, NULL),
 (37249, 3, 'Balinarin', 36296, NULL, NULL, NULL, NULL),
 (37250, 3, 'Cabibihan', 36296, NULL, NULL, NULL, NULL),
@@ -38117,7 +38117,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (38080, 3, 'Bucto', 38043, NULL, NULL, NULL, NULL),
 (38081, 3, 'Burboanan', 38043, NULL, NULL, NULL, NULL),
 (38082, 3, 'Caguyao', 38043, NULL, NULL, NULL, NULL),
-(38083, 3, 'Kahayag', 38043, NULL, NULL, NULL, NULL),
+(38083, 3, 'Kahayag', 38043, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (38084, 3, 'Coleto', 38043, NULL, NULL, NULL, NULL),
 (38085, 3, 'Cumawas', 38043, NULL, NULL, NULL, NULL),
 (38086, 3, 'Labisma', 38043, NULL, NULL, NULL, NULL),
@@ -38189,8 +38190,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (38152, 3, 'Lobo', 38045, NULL, NULL, NULL, NULL),
 (38153, 3, 'Magasang', 38045, NULL, NULL, NULL, NULL),
 (38154, 3, 'Magosilom (Pob.)', 38045, NULL, NULL, NULL, NULL),
-(38155, 3, 'Pag-Antayan', 38045, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(38155, 3, 'Pag-Antayan', 38045, NULL, NULL, NULL, NULL),
 (38156, 3, 'Palasao', 38045, NULL, NULL, NULL, NULL),
 (38157, 3, 'Parang', 38045, NULL, NULL, NULL, NULL),
 (38158, 3, 'San Pedro', 38045, NULL, NULL, NULL, NULL),
@@ -39048,7 +39048,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (39010, 3, 'Dolos', 38956, NULL, NULL, NULL, NULL),
 (39011, 3, 'E. Quirino (Pinangomhan)', 38956, NULL, NULL, NULL, NULL),
 (39012, 3, 'Fabrica', 38956, NULL, NULL, NULL, NULL),
-(39013, 3, 'G. Del Pilar (Tanga)', 38956, NULL, NULL, NULL, NULL),
+(39013, 3, 'G. Del Pilar (Tanga)', 38956, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (39014, 3, 'Gate', 38956, NULL, NULL, NULL, NULL),
 (39015, 3, 'Inararan', 38956, NULL, NULL, NULL, NULL),
 (39016, 3, 'J. Gerona (Biton)', 38956, NULL, NULL, NULL, NULL),
@@ -39117,8 +39118,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (39079, 3, 'Santa Barbara', 38960, NULL, NULL, NULL, NULL),
 (39080, 3, 'Sapngan (Pob.)', 38960, NULL, NULL, NULL, NULL),
 (39081, 3, 'Tinampo', 38960, NULL, NULL, NULL, NULL),
-(39082, 3, 'Boton', 38958, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(39082, 3, 'Boton', 38958, NULL, NULL, NULL, NULL),
 (39083, 3, 'Burgos', 38958, NULL, NULL, NULL, NULL),
 (39084, 3, 'Cawit', 38958, NULL, NULL, NULL, NULL),
 (39085, 3, 'Casay', 38958, NULL, NULL, NULL, NULL),
@@ -39959,7 +39959,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (39920, 3, 'Villamonte', 39757, NULL, NULL, NULL, NULL),
 (39921, 3, 'Antong', 39758, NULL, NULL, NULL, NULL),
 (39922, 3, 'Bayasong', 39758, NULL, NULL, NULL, NULL),
-(39923, 3, 'Blingkong', 39758, NULL, NULL, NULL, NULL),
+(39923, 3, 'Blingkong', 39758, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (39924, 3, 'Maindang', 39758, NULL, NULL, NULL, NULL),
 (39925, 3, 'Mamali', 39758, NULL, NULL, NULL, NULL),
 (39926, 3, 'Lutayan Proper', 39758, NULL, NULL, NULL, NULL),
@@ -40032,8 +40033,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (39993, 3, 'Basag', 39761, NULL, NULL, NULL, NULL),
 (39994, 3, 'Gapok', 39761, NULL, NULL, NULL, NULL),
 (39995, 3, 'Bugso', 39761, NULL, NULL, NULL, NULL),
-(39996, 3, 'Buklod', 39761, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(39996, 3, 'Buklod', 39761, NULL, NULL, NULL, NULL),
 (39997, 3, 'Kadi', 39761, NULL, NULL, NULL, NULL),
 (39998, 3, 'Kapatagan', 39761, NULL, NULL, NULL, NULL),
 (39999, 3, 'Kiadsam', 39761, NULL, NULL, NULL, NULL),
@@ -40878,7 +40878,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (40838, 3, 'Tubectubang', 40451, NULL, NULL, NULL, NULL),
 (40839, 3, 'Villa', 40451, NULL, NULL, NULL, NULL),
 (40840, 3, 'Cabaruan', 40452, NULL, NULL, NULL, NULL),
-(40841, 3, 'Cabugbugan', 40452, NULL, NULL, NULL, NULL),
+(40841, 3, 'Cabugbugan', 40452, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (40842, 3, 'Caanamongan', 40452, NULL, NULL, NULL, NULL),
 (40843, 3, 'Baldios', 40452, NULL, NULL, NULL, NULL),
 (40844, 3, 'Botbotones', 40452, NULL, NULL, NULL, NULL),
@@ -40950,8 +40951,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (40910, 3, 'San Felipe', 40455, NULL, NULL, NULL, NULL),
 (40911, 3, 'San Jacinto', 40455, NULL, NULL, NULL, NULL),
 (40912, 3, 'San Miguel', 40455, NULL, NULL, NULL, NULL),
-(40913, 3, 'San Narciso', 40455, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(40913, 3, 'San Narciso', 40455, NULL, NULL, NULL, NULL),
 (40914, 3, 'San Vicente', 40455, NULL, NULL, NULL, NULL),
 (40915, 3, 'Santa Maria', 40455, NULL, NULL, NULL, NULL),
 (40916, 3, 'Balite', 40456, NULL, NULL, NULL, NULL),
@@ -41797,7 +41797,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (41756, 3, 'Linay', 41450, NULL, NULL, NULL, NULL),
 (41757, 3, 'East Poblacion', 41450, NULL, NULL, NULL, NULL),
 (41758, 3, 'Central Poblacion', 41450, NULL, NULL, NULL, NULL),
-(41759, 3, 'Punta Blanca', 41450, NULL, NULL, NULL, NULL),
+(41759, 3, 'Punta Blanca', 41450, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (41760, 3, 'Bogatong', 41450, NULL, NULL, NULL, NULL),
 (41761, 3, 'Upper Disakan', 41450, NULL, NULL, NULL, NULL),
 (41762, 3, 'Saluyong', 41450, NULL, NULL, NULL, NULL),
@@ -41871,8 +41872,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (41830, 3, 'New Sicayab', 41453, NULL, NULL, NULL, NULL),
 (41831, 3, 'Obay', 41453, NULL, NULL, NULL, NULL),
 (41832, 3, 'Pian', 41453, NULL, NULL, NULL, NULL),
-(41833, 3, 'Poblacion North', 41453, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(41833, 3, 'Poblacion North', 41453, NULL, NULL, NULL, NULL),
 (41834, 3, 'Poblacion South', 41453, NULL, NULL, NULL, NULL),
 (41835, 3, 'San Antonio (Paetan)', 41453, NULL, NULL, NULL, NULL),
 (41836, 3, 'San Miguel (Loboc)', 41453, NULL, NULL, NULL, NULL),
@@ -42726,7 +42726,8 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (42684, 3, 'Magsaysay', 42172, NULL, NULL, NULL, NULL),
 (42685, 3, 'Malating', 42172, NULL, NULL, NULL, NULL),
 (42686, 3, 'Paradise', 42172, NULL, NULL, NULL, NULL),
-(42687, 3, 'Pasingkalan', 42172, NULL, NULL, NULL, NULL),
+(42687, 3, 'Pasingkalan', 42172, NULL, NULL, NULL, NULL);
+INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
 (42688, 3, 'Poblacion', 42172, NULL, NULL, NULL, NULL),
 (42689, 3, 'San Fernando', 42172, NULL, NULL, NULL, NULL),
 (42690, 3, 'Santo Rosario', 42172, NULL, NULL, NULL, NULL),
@@ -42800,8 +42801,7 @@ INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`
 (42758, 3, 'Tungawan', 42175, NULL, NULL, NULL, NULL),
 (42759, 3, 'Upper Sicpao', 42175, NULL, NULL, NULL, NULL),
 (42760, 3, 'Baya-baya', 42176, NULL, NULL, NULL, NULL),
-(42761, 3, 'Capisan', 42176, NULL, NULL, NULL, NULL);
-INSERT INTO `geographicarea` (`id`, `country_division`, `name`, `parent`, `west`, `east`, `north`, `south`) VALUES
+(42761, 3, 'Capisan', 42176, NULL, NULL, NULL, NULL),
 (42762, 3, 'Concepcion', 42176, NULL, NULL, NULL, NULL),
 (42763, 3, 'Culabay', 42176, NULL, NULL, NULL, NULL),
 (42764, 3, 'Baganian', 42176, NULL, NULL, NULL, NULL),
