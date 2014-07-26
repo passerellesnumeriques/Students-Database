@@ -59,14 +59,18 @@ field_contact_type.prototype._create = function(data) {
 		if (!data) return;
 		for (var i = 0; i < data.contacts.length; ++i) {
 			if (i > 0) this.element.appendChild(document.createTextNode(", "));
+			var span = document.createElement("SPAN");
+			span.style.whiteSpace = "nowrap";
 			var e = document.createElement("SPAN");
 			e.appendChild(document.createTextNode(data.contacts[i].contact));
-			this.element.appendChild(e);
+			span.appendChild(e);
 			e = document.createElement("SPAN");
 			e.style.fontStyle = "italic";
 			e.style.color = "#808080";
 			e.appendChild(document.createTextNode(" ("+data.contacts[i].sub_type+")"));
-			this.element.appendChild(e);
+			span.appendChild(e);
+			this.element.appendChild(span);
+			layout.invalidate(this.element);
 		}
 	}
 };

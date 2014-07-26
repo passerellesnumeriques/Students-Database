@@ -91,7 +91,10 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.th.rowSpan = 1;
 	this.th.col = this;
 	this.col = document.createElement('COL');
-	if (this.width) this.col.style.width = this.width+"px";
+	if (this.width) {
+		this.col.style.width = this.width+"px";
+		this.col.style.minWidth = this.width+"px";
+	}
 	this.onclick = new Custom_Event();
 	this.actions = [];
 	
@@ -213,11 +216,11 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			this.th.appendChild(title);
 		else
 			this.th.innerHTML = title;
-		var span = document.createElement("SPAN");
+		var span = document.createElement("DIV");
 		span.style.whiteSpace = 'nowrap';
-		if (this.align == "right")
-			this.th.insertBefore(span, this.th.childNodes[0]);
-		else
+		//if (this.align == "right")
+		//	this.th.insertBefore(span, this.th.childNodes[0]);
+		//else
 			this.th.appendChild(span);
 		var create_action_image = function(url, info, onclick) {
 			var img = document.createElement("IMG");
@@ -763,14 +766,19 @@ function grid(element) {
 			t.thead.style.position = "static";
 			// remove fixed width
 			for (var i = 0; i < t.thead.childNodes.length; ++i)
-				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j)
-					t.thead.childNodes[i].childNodes[j].width = "";
+				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j) {
+					t.thead.childNodes[i].childNodes[j].style.width = "";
+					t.thead.childNodes[i].childNodes[j].style.minWidth = "";
+				}
 			// put back original fixed col width
 			for (var i = 0; i < t.colgroup.childNodes.length; ++i) {
-				if (t.colgroup.childNodes[i]._width)
+				if (t.colgroup.childNodes[i]._width) {
 					t.colgroup.childNodes[i].style.width = t.colgroup.childNodes[i]._width;
-				else
+					t.colgroup.childNodes[i].style.minWidth = t.colgroup.childNodes[i]._width;
+				} else {
 					t.colgroup.childNodes[i].style.width = "";
+					t.colgroup.childNodes[i].style.minWidth = "";
+				}
 			}
 			// take the width of each th
 			for (var i = 0; i < t.thead.childNodes.length; ++i)
@@ -784,13 +792,16 @@ function grid(element) {
 				widths.push(t.columns[i].th._width);
 			// fix the width of each th
 			for (var i = 0; i < t.thead.childNodes.length; ++i)
-				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j)
+				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j) {
 					setWidth(t.thead.childNodes[i].childNodes[j], t.thead.childNodes[i].childNodes[j]._width);
+					t.thead.childNodes[i].childNodes[j].style.minWidth = t.thead.childNodes[i].childNodes[j].style.width;
+				}
 			// fix the width of each column
 			for (var i = 0; i < t.colgroup.childNodes.length; ++i) {
 				if (t.colgroup.childNodes[i].style.width)
 					 t.colgroup.childNodes[i]._width = t.colgroup.childNodes[i].style.width;
 				t.colgroup.childNodes[i].style.width = widths[i]+"px";
+				t.colgroup.childNodes[i].style.minWidth = widths[i]+"px";
 			}
 			// put the thead as relative
 			t.element.style.paddingTop = t.thead.offsetHeight+"px";
@@ -799,10 +810,16 @@ function grid(element) {
 			t.thead.style.position = "absolute";
 			t.thead.style.top = "0px";
 			t.thead.style.left = "0px";
+			t.thead.style.width = "100%";
+			t.thead.style.overflow = "hidden";
 		};
 		t.element.style.display = "flex";
 		t.element.style.flexDirection = "column";
 		t.grid_element.style.flex = "1 1 auto";
+		t.grid_element.onscroll = function(ev) {
+			t.thead.style.left = (-t.grid_element.scrollLeft)+"px";
+			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft); 
+		};
 		layout.addHandler(t.element, update);
 	};
 

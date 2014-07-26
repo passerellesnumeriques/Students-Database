@@ -12,50 +12,54 @@ function address_text(address){
 	if (address.building != null || address.unit != null) {
 		var text = "";
 		var first = true;
-		if(address.building != null){
+		if(address.building != null && address.building.trim().length > 0){
 			text += "Building "+address.building;
 			first = false;
 		}
-		if(address.unit != null){
+		if(address.unit != null && address.unit.trim().length > 0){
 			if(!first) text += ", ";
 			text += "Unit "+address.unit;
 			first = false;
 		}
-		var div = document.createElement("DIV");
-		this.element.appendChild(div);
-		div.appendChild(document.createTextNode(text));
-		empty &= text.trim().length == 0;
+		if (text.trim().length > 0) {
+			var div = document.createElement("DIV");
+			this.element.appendChild(div);
+			div.appendChild(document.createTextNode(text));
+			empty = false;
+		}
 	}
 	if(address.street != null || address.street_number != null) {
 		var text = "";
 		var first = true;
-		if(address.street_number != null){
+		if(address.street_number != null && address.street_number.trim().length > 0){
 			text += address.street_number;
 			first = false;
 		}
-		if(address.street != null){
+		if(address.street != null && address.street.trim().length > 0){
 			if(!first) text += ", ";
 			text += address.street;
 			first = false;
 		}
-		var div = document.createElement("DIV");
-		this.element.appendChild(div);
-		div.appendChild(document.createTextNode(text));
-		empty &= text.trim().length == 0;
+		if (text.trim().length > 0) {
+			var div = document.createElement("DIV");
+			this.element.appendChild(div);
+			div.appendChild(document.createTextNode(text));
+			empty = false;
+		}
 	}
 	
-	if(address.additional != null){
+	if(address.additional != null && address.additional.trim().length > 0){
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode(address.additional));
-		empty &= address.additional.trim().length == 0;
+		empty = false;
 	}
 
-	if (address.geographic_area != null && address.geographic_area.text != null) {
+	if (address.geographic_area != null && address.geographic_area.text != null && address.geographic_area.text.trim().length > 0) {
 		var div = document.createElement("DIV");
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode(address.geographic_area.text));
-		empty &= address.geographic_area.text.trim().length == 0;
+		empty = false;
 	}
 
 	if (address.country_id != null && address.country_id != window.top.default_country_id) {

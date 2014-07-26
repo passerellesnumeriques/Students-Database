@@ -117,6 +117,8 @@ field_addresses.prototype._create = function(data) {
 				var addr = data.addresses[i];
 				var area = addr.geographic_area;
 				var div = document.createElement("DIV"); this.element.appendChild(div);
+				div.style.whiteSpace = "nowrap";
+				layout.invalidate(this.element);
 				if (area == null) {
 					div.style.fontStyle = "italic";
 					div.style.color = "#808080";

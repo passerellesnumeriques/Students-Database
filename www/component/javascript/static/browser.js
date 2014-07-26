@@ -501,6 +501,8 @@ if (browser.IE == 0) {
 }
 
 function getObjectClassName(obj) {
+	if (obj == null) return "null";
+	if (obj == undefined) return "undefined";
 	if (typeof obj.constructor != 'undefined') return getFunctionName(obj.constructor);
 	if (typeof obj.__proto__ != 'undefined') {
 		if (typeof obj.__proto__.constructor != 'undefined') return getFunctionName(obj.__proto__.constructor);
