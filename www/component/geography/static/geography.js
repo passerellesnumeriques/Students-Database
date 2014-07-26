@@ -91,7 +91,14 @@ if (window == window.top && !window.top.geography) {
 		 *  - division: in which division index it belongs to  
 		 */
 		
+		/** Optimize same search */
+		_last_search_area: [],
 		searchArea: function(country_data, area_id) {
+			for (var i = 0; i < this._last_search_area.length; ++i)
+				if (this._last_search_area[i].country_data == country_data && this._last_search_area[i].area_id == area_id)
+					return this._last_search_area[i].result;
+			if (this._last_search_area.length == 10)
+				this._last_search_area.splice(0,1);
 			for (var division = 0; division < country_data.length; ++division) {
 				for (var area = 0; area < country_data[division].areas.length; ++area)
 					if (country_data[division].areas[area].area_id == area_id) {
@@ -99,9 +106,11 @@ if (window == window.top && !window.top.geography) {
 							country_data[division].areas[area].division_index = division;
 						if (typeof country_data[division].areas[area].division_id == 'undefined')
 							country_data[division].areas[area].division = country_data[division];
+						this._last_search_area.push({country_data:country_data,area_id:area_id,result:country_data[division].areas[area]});
 						return country_data[division].areas[area];
 					}
 			}
+			this._last_search_area.push({country_data:country_data,area_id:area_id,result:null});
 			return null;
 		},
 		getAreaDivisionIndex: function(country_data, area) {
@@ -196,16 +205,96 @@ if (window == window.top && !window.top.geography) {
 			return null;
 		},
 
+		/** Optimize several identical searches */
+		_last_search_by_name_in_division: null,
 		searchAreaByNameInDivision: function(country_data, division_index, area_name) {
-			area_name = area_name.trim().latinize().toLowerCase();
 			if (division_index >= country_data.length) return null;
+			area_name = area_name.trim().latinize().toLowerCase();
+			if (this._last_search_by_name_in_division && this._last_search_by_name_in_division.country_data == country_data && this._last_search_by_name_in_division.division_index == division_index && this._last_search_by_name_in_division.area_name == area_name)
+				return this._last_search_by_name_in_division.result;
+			this._last_search_by_name_in_division = {
+				country_data: country_data,
+				division_index: division_index,
+				area_name: area_name,
+				result: null
+			};
 			for (var i = 0; i < country_data[division_index].areas.length; ++i) {
 				var area = country_data[division_index].areas[i];
 				area.division_index = division_index;
 				area.division = country_data[division_index];
-				if (area.area_name.latinize().toLowerCase() == area_name) return area;
+				if (area.area_name.latinize().toLowerCase() == area_name) {
+					this._last_search_by_name_in_division.result = area;
+					return area;
+				}
 			}
 			return null;
+		},
+		searchAreaByNameInDivisionBestMatch: function(country_data, division_index, area_name) {
+			if (division_index >= country_data.length) return null;
+			area_name = area_name.trim().latinize().toLowerCase();
+			var area_words = prepareMatchScore(area_name);
+			var best_match = null;
+			var best_score = 0;
+			for (var i = 0; i < country_data[division_index].areas.length; ++i) {
+				var area = country_data[division_index].areas[i];
+				area.division_index = division_index;
+				area.division = country_data[division_index];
+				var n = area.area_name.latinize().toLowerCase();
+				var words = prepareMatchScore(n);
+				var score = matchScorePrepared(n,words,area_name,area_words);
+				if (score > 50 && score > best_score) {
+					best_match = area;
+					best_score = score;
+				}
+			}
+			return best_match;
+		},
+		/** Optimize several identical searches */
+		_last_search_by_name_in_parent: null,
+		searchAreaByNameInParent: function(country_data, parent_id, division_index, area_name) {
+			if (division_index >= country_data.length) return null;
+			area_name = area_name.trim().latinize().toLowerCase();
+			if (this._last_search_by_name_in_parent && this._last_search_by_name_in_parent.country_data == country_data && this._last_search_by_name_in_parent.division_index == division_index && this._last_search_by_name_in_parent.parent_id == parent_id && this._last_search_by_name_in_parent.area_name == area_name)
+				return this._last_search_by_name_in_parent.result;
+			this._last_search_by_name_in_parent = {
+				country_data: country_data,
+				division_index: division_index,
+				area_name: area_name,
+				parent_id: parent_id,
+				result: null
+			};
+			for (var i = 0; i < country_data[division_index].areas.length; ++i) {
+				var area = country_data[division_index].areas[i];
+				if (area.area_parent_id != parent_id) continue;
+				area.division_index = division_index;
+				area.division = country_data[division_index];
+				if (area.area_name.latinize().toLowerCase() == area_name) {
+					this._last_search_by_name_in_parent.result = area;
+					return area;
+				}
+			}
+			return null;
+		},
+		searchAreaByNameInParentBestMatch: function(country_data, parent_id, division_index, area_name) {
+			if (division_index >= country_data.length) return null;
+			area_name = area_name.trim().latinize().toLowerCase();
+			var area_words = prepareMatchScore(area_name);
+			var best_match = null;
+			var best_score = 0;
+			for (var i = 0; i < country_data[division_index].areas.length; ++i) {
+				var area = country_data[division_index].areas[i];
+				if (area.area_parent_id != parent_id) continue;
+				area.division_index = division_index;
+				area.division = country_data[division_index];
+				var n = area.area_name.latinize().toLowerCase();
+				var words = prepareMatchScore(n);
+				var score = matchScorePrepared(n,words,area_name,area_words);
+				if (score > 50 && score > best_score) {
+					best_match = area;
+					best_score = score;
+				}
+			}
+			return best_match;
 		},
 		
 		searchAreaByNames: function(country_data, areas_names, remaining_names) {

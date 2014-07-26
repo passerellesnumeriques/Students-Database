@@ -21,6 +21,14 @@ class service_get_countries_list extends Service{
 	}
 	public function execute(&$component,$input){
 		$countries = PNApplication::$instance->geography->getCountriesList();
+		for ($i = count($countries)-1; $i >= 0; $i--) {
+			if ($countries[$i]["north"] <> null) {
+				$countries[$i]["north"] = floatval($countries[$i]["north"]);
+				$countries[$i]["south"] = floatval($countries[$i]["south"]);
+				$countries[$i]["west"] = floatval($countries[$i]["west"]);
+				$countries[$i]["east"] = floatval($countries[$i]["east"]);
+			}
+		}
 		echo json_encode($countries);
 	}
 }

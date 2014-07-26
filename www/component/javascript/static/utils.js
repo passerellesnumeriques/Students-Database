@@ -1370,8 +1370,9 @@ function matchScorePrepared(ref, ref_words, needle, needle_words) {
 		}
 	}
 	var score = nb_words+nb_starts*0.75+nb_contains*0.5;
-	if (ref_words.length > needle_words.length) score -= (ref_words.length-needle_words.length)*0.05;
-	score /= needle_words.length;
+	//if (ref_words.length > needle_words.length) score -= (ref_words.length-needle_words.length)*0.05;
+	//score /= needle_words.length;
+	score /= ref_words.length;
 	return score*90;
 }
 

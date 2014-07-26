@@ -224,13 +224,15 @@ function location_and_partners(popup, section_location, section_other_partners, 
 				});
 			};
 			if (this._map != null)
-				update_map();
+				setTimout(update_map,1);
 			else {
 				require("google_maps.js", function() {
-					new GoogleMap(t._map_container, function(m) {
-						t._map = m;
-						update_map();
-					});
+					setTimeout(function() {
+						new GoogleMap(t._map_container, function(m) {
+							t._map = m;
+							update_map();
+						});
+					},1);
 				});
 			}
 		}

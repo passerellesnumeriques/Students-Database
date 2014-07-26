@@ -640,6 +640,7 @@ function grid(element) {
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
 			if (tr.style.visibility == "hidden") continue; // do not select filtered/hidden
+			if (tr.className == "title_row") continue;
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
 			if (cb.disabled) continue; //do not select if the checkbox is disabled

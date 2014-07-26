@@ -1,4 +1,7 @@
 <?php 
+/* @var $model DataModel */
+/* @var $sm SubDataModel */
+
 $sm->addTable("ExamSubject")
 	->addPrimaryKey("id")
 	->addString("name",100,1,false,true) //cannot have two exam with the same name on the same campaign

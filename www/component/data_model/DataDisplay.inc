@@ -386,6 +386,7 @@ class ChoiceDataDisplay extends DataDisplay {
 	protected $editable;
 	protected $editable_for_new;
 	protected $horiz_align;
+	protected $filter;
 	
 	/**
 	 * @param string $foreign_key_name column's name containing the foreign key
@@ -393,13 +394,14 @@ class ChoiceDataDisplay extends DataDisplay {
 	 * @param string $display_name name of this data
 	 * @param boolean $editable indicates if this can be edited or not
 	 */
-	public function __construct($foreign_key_name, $foreign_column_name, $display_name, $editable = true, $editable_for_new = null, $horiz_align = null) {
+	public function __construct($foreign_key_name, $foreign_column_name, $display_name, $editable = true, $editable_for_new = null, $horiz_align = null, $filter = null) {
 		$this->display_name = $display_name;
 		$this->foreign_key_name = $foreign_key_name;
 		$this->foreign_column_name = $foreign_column_name;
 		$this->editable = $editable;
 		$this->editable_for_new = $editable_for_new === null ? $editable : $editable_for_new;
-		$this->horiz_align = $horiz_align; 
+		$this->horiz_align = $horiz_align;
+		$this->filter = $filter; 
 	}
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array($this->foreign_key_name); }
@@ -412,6 +414,12 @@ class ChoiceDataDisplay extends DataDisplay {
 			$q = \SQLQuery::create()->select($t->getName());
 			if ($sub_model <> null && ($t->getModel() instanceof \SubDataModel) && ($this->getTable()->getModel() instanceof \SubDataModel) && $t->getModel()->getParentTable() == $this->getTable()->getModel()->getParentTable())
 				$q->selectSubModel($t->getModel()->getParentTable(), $sub_model);
+			if ($this->filter <> null)
+				foreach ($this->filter as $colname=>$value)
+					if ($value === null)
+						$q->whereNull($t->getName(), $colname);
+					else
+						$q->whereValue($t->getName(), $colname, $value);
 			$q->field($t->getName(), $t->getPrimaryKey()->name, "KEY");
 			$q->field($t->getName(), $this->foreign_column_name, "VALUE");
 			$this->possible_values[$sub_model] = $q->execute();

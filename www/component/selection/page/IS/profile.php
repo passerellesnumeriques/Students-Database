@@ -100,7 +100,7 @@ class page_IS_profile extends SelectionPage {
 				error_dialog("You must at set a location before saving");
 				return;
 			}
-			is_popup.freeze();
+			is_popup.freeze("Saving...");
 			// get date (calendar event)
 			var event = window.is_schedule.getEvent();
 			// prepare data of information session

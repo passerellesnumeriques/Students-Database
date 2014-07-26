@@ -34,7 +34,6 @@ function organization(container, org, existing_types, can_edit) {
 			require("editable_cell.js", function() {
 				t.title = new editable_cell(t.title_container, "Organization", "name", org.id, "field_text", {min_length:1,max_length:100,can_be_null:false,style:{fontSize:"x-large"}}, org.name, null, function(field){
 					org.name = field.getCurrentData();
-					t._refreshGoogle1();
 					t.onchange.fire();
 				}, function(edit){
 					if (!can_edit) edit.cancelEditable();
@@ -46,7 +45,6 @@ function organization(container, org, existing_types, can_edit) {
 				t.title_container.appendChild(t.title.getHTMLElement());
 				t.title.onchange.add_listener(function() {
 					org.name = t.title.getCurrentData();
-					t._refreshGoogle1();
 					t.onchange.fire();
 				});
 			});
@@ -278,8 +276,8 @@ function organization(container, org, existing_types, can_edit) {
 		// map
 		td_map.style.verticalAlign = "top";
 		var map_container = document.createElement("DIV");
-		map_container.style.width = "300px";
-		map_container.style.height = "200px";
+		map_container.style.width = "350px";
+		map_container.style.height = "250px";
 		//map_container.style.position = "absolute";
 		//map_container.style.visibility = "hidden";
 		//map_container.style.top = "-1000px";
@@ -327,11 +325,22 @@ function organization(container, org, existing_types, can_edit) {
 		// google
 		var google_title = document.createElement("DIV");
 		container.appendChild(google_title);
-		google_title.innerHTML = "<img src='/static/google/google.png' style='vertical-align:bottom'/> Results From Google";
+		google_title.innerHTML = "<img src='/static/google/google.png' style='vertical-align:middle'/> Search and Import from Google";
 		google_title.style.borderTop = "1px solid #808080";
 		google_title.style.borderBottom = "1px solid #808080";
 		google_title.style.padding = "3px";
 		google_title.style.backgroundColor = "#D0F0D0";
+		var search_button = document.createElement("BUTTON");
+		search_button.innerHTML = "Search";
+		search_button.marginLeft = "10px";
+		google_title.appendChild(search_button);
+		search_button.onclick = function() {
+			this.disabled = "disabled";
+			var b=this;
+			t.searchGoogle(function(){
+				b.disabled = "disabled";
+			});
+		};
 		t._google_results_container = document.createElement("DIV");
 		container.appendChild(t._google_results_container);
 		t._google_results_container.style.backgroundColor = "white";
@@ -339,7 +348,6 @@ function organization(container, org, existing_types, can_edit) {
 		t._google_results_container.style.maxWidth = "600px";
 		t._google_results_container.style.maxHeight = "250px";
 		t._google_results_container.style.overflowY = "auto";
-		t._refreshGoogle();
 		
 		layout.invalidate(container);
 	};
@@ -439,43 +447,14 @@ function organization(container, org, existing_types, can_edit) {
 		return null;
 	};
 	
-	t._google_loading = false;
-	t._timeout_google = null;
-	t._last_google = 0;
-	t._last_google1 = 0;
-	t._google1_timeout = null;
-	t._refreshGoogle1 = function() {
-		t._last_google1 = new Date().getTime();
-		if (t._google1_timeout) return;
-		t._google1_timeout = setTimeout(function() {
-			t._google1_timeout = null;
-			if (new Date().getTime() - t._last_google1 < 500) {
-				// the user is still typing, let's wait
-				t._refreshGoogle1();
-				return;
-			}
-			t._refreshGoogle();
-		},500);
-	};
-	t._refreshGoogle = function() {
+	t.searchGoogle = function(ondone) {
 		if (org.name.length < 3) return;
-		if (t._timeout_google != null) return;
-		if (new Date().getTime() - t._last_google < 1000) {
-			t._timeout_google = setTimeout(function() { t._timeout_google = null; t._refreshGoogle(); }, 1000);
-			return;
-		}
-		if (t._google_loading) {
-			t._google_need_reload = true;
-			return;
-		}
-		t._google_loading = true;
-		t._google_need_reload = false;
 		t._google_results_container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
 		layout.invalidate(container);
 		require("google_places.js", function() {
 			getGooglePlaces(org.name, function(results,error) {
 				if (error != null) {
-					t._google_results_container.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+status;
+					t._google_results_container.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
 					layout.invalidate(container);
 				} else {
 					var ul = document.createElement("UL");
@@ -634,8 +613,7 @@ function organization(container, org, existing_types, can_edit) {
 					t._google_results_container.appendChild(ul);
 				}
 				layout.invalidate(t._google_results_container);
-				t._google_loading = false;
-				if (t._google_need_reload && !t._timeout_google) t._timeout_google = setTimeout(function() { t._timeout_google = null; t._refreshGoogle(); }, 1000);
+				ondone();
 			});
 		});
 	};

@@ -1,4 +1,6 @@
 <?php
+/* @var $model DataModel */
+/* @var $sm SubDataModel */
 
 $sm->addTable("ApplicantExamSubject")  
       ->addForeignKey("applicant","Applicant",true,false,true)

@@ -30,8 +30,8 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		t._pop.addButton("<img src = '"+theme.icons_16.ok+"'/> Finish","finish_button",function(){
 			t._closePop();
 		});
-		t._updatePopButtonsAndInfoRow();
 		t._pop.show();
+		t._updatePopButtonsAndInfoRow();
 		/*Load data to initialize area and map*/
 		window.top.require("geography.js", function() {
 			window.top.geography.getCountries(function(countries) {
@@ -113,6 +113,8 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		t._map_container.style.width = "100%";
 		t._map_container.style.minWidth = "300px";
 		t._map_container.style.height = "250px";
+		t._map_container.style.marginTop = "5px";
+		t._map_container.style.borderTop = "1px solid #808080";
 		t._td_area.appendChild(t._map_container);
 		t._map = null;
 		require("google_maps.js");

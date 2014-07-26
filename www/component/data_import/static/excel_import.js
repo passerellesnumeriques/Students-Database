@@ -421,14 +421,26 @@ function excel_import(popup, container, onready) {
 			t._where_selected = null;
 			if (cell.isMultiple()) {
 				var r;
+				if (sub_data_index != -1) {
+					r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
+					td_where.appendChild(document.createTextNode("In each first "+field.name+" where "+field.sub_data.names[sub_data_index]+" is not set")); td_where.appendChild(document.createElement("BR"));
+					r.onchange = function() {
+						if (!this.checked) return;
+						t._where_selected = {type:'set_sub_data',row:0};
+					};
+					r.checked = "checked";
+					r.onchange();
+				}
 				r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
 				td_where.appendChild(document.createTextNode("Add from first row")); td_where.appendChild(document.createElement("BR"));
 				r.onchange = function() {
 					if (!this.checked) return;
 					t._where_selected = {type:'add',row:0};
 				};
-				r.checked = "checked";
-				r.onchange();
+				if (sub_data_index == -1) {
+					r.checked = "checked";
+					r.onchange();
+				}
 				r = document.createElement("INPUT"); r.type = "radio"; r.name = "import_where"; td_where.appendChild(r);
 				td_where.appendChild(document.createTextNode("Reset previous values from first row")); td_where.appendChild(document.createElement("BR"));
 				r.onchange = function() {
@@ -521,8 +533,23 @@ function excel_import(popup, container, onready) {
 				var f = grid.getCellField(row++, field_index+1);
 				if (f.isMultiple()) {
 					if (where.type == 'reset') f.resetData();
-					if (value != "")
-						f.addData(value);
+					if (value != "") {
+						if (where.type == "set_sub_data") {
+							var nb = f.getNbData();
+							var set = false;
+							for (var i = 0; i < nb; ++i) {
+								var d = f.getDataIndex(i);
+								if (!d) {
+									f.setDataIndex(i, value);
+									set = true;
+									break;
+								}
+							}
+							if (!set)
+								f.addData(value);
+						} else
+							f.addData(value);
+					}
 				} else {
 					if (typeof f.getPossibleValues != 'undefined') {
 						// support for a list of possible value, we can check
