@@ -93,7 +93,11 @@ function createTitleForArea(country, country_data, division_index, area_index) {
 	title.className = "page_section_title";
 	createParentAreaTitle(title, country, country_data, division_index, area_index);
 	var area = country_data[division_index].areas[area_index];
-	title.appendChild(document.createTextNode(area.area_name));
+	var span = document.createElement("SPAN");
+	title.appendChild(span);
+	require("editable_cell.js",function() {
+		new editable_cell(span, "GeographicArea", "name", area.area_id, "field_text", {min_length:1,max_length:100,can_be_null:false}, area.area_name);
+	});
 	return title;
 }
 
@@ -462,9 +466,9 @@ function match_division_level_names(container, country, country_data, division_i
 					// check if there is this name in a
 					var children = window.top.geography.getAreaChildren(country_data, division_index, a.area_id);
 					var found = false;
-					var n = name.name.toLowerCase().trim();
+					var n = name.name.toLowerCase().trim().latinize();
 					for (var j = 0; j < children.length; ++j)
-						if (children[j].area_name.toLowerCase() == n) { found = true; break; } 
+						if (children[j].area_name.toLowerCase().latinize() == n) { found = true; break; } 
 					if (found) {
 						// got it !
 						names_inside_found_somewhere_else++;
@@ -780,7 +784,9 @@ function match_division_level_names(container, country, country_data, division_i
 		link.style.marginLeft = "5px";
 		link.className = "black_link";
 		link.href = "#";
-		link.appendChild(document.createTextNode(name.name));
+		var s = name.name;
+		if (name.description) s += " ["+name.description+"]";
+		link.appendChild(document.createTextNode(s));
 		link.onclick = function() { radio.checked = radio.checked ? "" : "checked"; return false; };
 		link.rect = null;
 		link.onmouseover = function() {
@@ -1168,10 +1174,17 @@ function import_sub_divisions(popup, country, country_data, division_index) {
 	next(0);
 }
 
-function dialog_coordinates(country, country_data, division_index, area_index) {
+function dialog_coordinates(country, country_data, division_index, area_index, onclose, message) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
+		if (message) {
+			var msg_div = document.createElement("DIV");
+			msg_div.className = "info_box";
+			msg_div.innerHTML = message;
+			content.appendChild(msg_div);
+		}
 		var popup = new popup_window("Geographic Coordinates", "/static/geography/geography_16.png", content);
+		if (onclose) popup.onclose = onclose;
 		var area;
 		if (typeof division_index == 'undefined')
 			area = country;
@@ -1515,6 +1528,12 @@ function ImportKML(container, ondone) {
 				t.div.appendChild(link);
 				return;
 			}
+			// filter output
+			for (var i = 0; i < output.length; ++i)
+				if (output[i].description == "Waterbody") {
+					output.splice(i,1);
+					i--;
+				}
 			t.div.innerHTML = output.length+" result(s) found.";
 			var redo = document.createElement("A");
 			redo.innerHTML = "Upload another KML file";

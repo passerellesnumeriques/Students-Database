@@ -17,6 +17,7 @@ class service_import_kml extends Service {
 					if ($node2->getName() == "Placemark") {
 						$name = null;
 						$bounds = null;
+						$descr = null;
 						foreach ($node2->children() as $node3) {
 							if ($node3->getName() == "name")
 								$name = "".$node3;
@@ -30,7 +31,8 @@ class service_import_kml extends Service {
 									}
 								}
 								$bounds = $this->mergeBounds($bounds);
-							}
+							} else if ($node3->getName() == "description")
+								$descr = "".$node3;
 						}
 						if ($name <> null && $bounds <> null) {
 							if ($first) $first = false; else echo ",";
@@ -40,6 +42,7 @@ class service_import_kml extends Service {
 							echo ",west:".json_encode($bounds[1]);
 							echo ",south:".json_encode($bounds[2]);
 							echo ",east:".json_encode($bounds[3]);
+							echo ",description:".json_encode($descr);
 							echo "}";
 						}
 					}

@@ -66,36 +66,10 @@ function GeographicAreasTree(areas_section, country_id) {
 				return false; 
 			};
 			
-	//		button = document.createElement("BUTTON");
-	//		button.appendChild(document.createTextNode("Search missing"));
-	//		window.areas_section.addToolRight(button);
-	//		button.onclick = function() {
-	//			var button = this;
-	//			require("context_menu.js", function() {
-	//				var menu = new context_menu();
-	//				menu.addIconItem(null, "Search all", function() {
-	//					r.searchMissingCoordinates();
-	//				});
-	//				for (var i = 0; i < r.length; ++i) {
-	//					menu.addIconItem(null, "Search only: "+r[i].division_name, function(division) {
-	//						r.searchMissingCoordinates(division);
-	//					},i);
-	//				}
-	//				menu.showBelowElement(button);
-	//			});
-	//			
-	//			return false; 
-	//		};
-	//
-	//		button = document.createElement("BUTTON");
-	//		button.appendChild(document.createTextNode("Open next missing"));
-	//		window.areas_section.addToolRight(button);
-	//		button.onclick = function() { r.nextMissingCoordinates(); return false; };
-	//
-	//		button = document.createElement("BUTTON");
-	//		button.appendChild(document.createTextNode("Check coordinates"));
-	//		window.areas_section.addToolRight(button);
-	//		button.onclick = function() { r.checkCoordinates(); return false; };
+			button = document.createElement("BUTTON");
+			button.appendChild(document.createTextNode("Check coordinates"));
+			areas_section.addToolRight(button);
+			button.onclick = function() { t.checkCoordinates(); return false; };
 		}
 		window.top.geography.getCountryData(country_id, function(country_data) {
 			var nb_to_set = 0;
@@ -451,6 +425,65 @@ function GeographicAreasTree(areas_section, country_id) {
 			ondone();
 		});
 
+	};
+	
+	this.checkCoordinates = function() {
+		if (t.country_data.length == 0) return;
+		if (!t.country.north) return;
+		var locker = lock_screen();
+		var total = 1;
+		for (var i = 0; i < t.country_data.length-1; ++i) total += t.country_data[i].areas.length;
+		set_lock_screen_content_progress(locker, total, "Checking coordinates...", null, function(span,pb,sub) {
+			t._checkCoordinates(undefined, t.country, t.country_data[0].areas, function() {
+				pb.addAmount(1);
+				var next_division = function(division_index) {
+					if (division_index >= t.country_data.length-1) {
+						unlock_screen(locker);
+						return;
+					}
+					var next_area = function(area_index) {
+						if (area_index >= t.country_data[division_index].areas.length) {
+							next_division(division_index+1);
+							return;
+						}
+						var area = t.country_data[division_index].areas[area_index];
+						if (!area.north) {
+							pb.addAmount(1);
+							next_area(area_index+1);
+							return;
+						}
+						var children = window.top.geography.getAreaChildren(t.country_data, division_index+1, area.area_id);
+						t._checkCoordinates(division_index, area, children, function() {
+							pb.addAmount(1);
+							next_area(area_index+1);
+						});
+					};
+					next_area(0);
+				};
+				next_division(0);
+			});
+		});
+	};
+	this._checkCoordinates = function(parent_division_index, parent, children, ondone) {
+		var next_child = function(child_index) {
+			if (child_index >= children.length) {
+				ondone();
+				return;
+			}
+			var child = children[child_index];
+			if (!child.north) { next_child(child_index+1); return; }
+			if (window.top.geography.boxContains(parent, child)) {
+				next_child(child_index+1);
+				return;
+			}
+			require("import_coordinates.js", function() {
+				var area_index = typeof parent_division_index == 'undefined' ? undefined : t.country_data[parent_division_index].areas.indexOf(parent);
+				dialog_coordinates(t.country, t.country_data, parent_division_index, area_index, function() {
+					next_child(child_index+1);
+				},"Sub-area "+child.area_name+" is not fully included ("+child.north+","+child.east+","+child.south+","+child.west+")");
+			});
+		};
+		next_child(0);
 	};
 	
 	// load info in background
