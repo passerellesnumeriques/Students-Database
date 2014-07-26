@@ -378,14 +378,14 @@ if (window == window.top && !window.top.geography) {
 		
 		boxContains: function(area1, area2) {
 			return this.rectContains(
-				parseFloat(area1.south),
-				parseFloat(area1.north),
-				parseFloat(area1.west),
-				parseFloat(area1.east),
-				parseFloat(area2.south),
-				parseFloat(area2.north),
-				parseFloat(area2.west),
-				parseFloat(area2.east)
+				parseFloat(parseFloat(area1.south).toFixed(6)),
+				parseFloat(parseFloat(area1.north).toFixed(6)),
+				parseFloat(parseFloat(area1.west).toFixed(6)),
+				parseFloat(parseFloat(area1.east).toFixed(6)),
+				parseFloat(parseFloat(area2.south).toFixed(6)),
+				parseFloat(parseFloat(area2.north).toFixed(6)),
+				parseFloat(parseFloat(area2.west).toFixed(6)),
+				parseFloat(parseFloat(area2.east).toFixed(6))
 			);
 		},
 		rectContains: function(r1_south, r1_north, r1_west, r1_east, r2_south, r2_north, r2_west, r2_east) {

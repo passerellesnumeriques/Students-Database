@@ -441,7 +441,8 @@ function GeographicAreasTree(areas_section, country_id) {
 						unlock_screen(locker);
 						return;
 					}
-					var next_area = function(area_index) {
+					var area_index = 0;
+					var next_area = function() {
 						if (area_index >= t.country_data[division_index].areas.length) {
 							next_division(division_index+1);
 							return;
@@ -449,16 +450,18 @@ function GeographicAreasTree(areas_section, country_id) {
 						var area = t.country_data[division_index].areas[area_index];
 						if (!area.north) {
 							pb.addAmount(1);
-							next_area(area_index+1);
+							area_index++;
+							setTimeout(next_area,1);
 							return;
 						}
 						var children = window.top.geography.getAreaChildren(t.country_data, division_index+1, area.area_id);
 						t._checkCoordinates(division_index, area, children, function() {
 							pb.addAmount(1);
-							next_area(area_index+1);
+							area_index++;
+							setTimeout(next_area,1);
 						});
 					};
-					next_area(0);
+					next_area();
 				};
 				next_division(0);
 			});
@@ -467,7 +470,7 @@ function GeographicAreasTree(areas_section, country_id) {
 	this._checkCoordinates = function(parent_division_index, parent, children, ondone) {
 		var next_child = function(child_index) {
 			if (child_index >= children.length) {
-				ondone();
+				setTimeout(ondone,1);
 				return;
 			}
 			var child = children[child_index];
