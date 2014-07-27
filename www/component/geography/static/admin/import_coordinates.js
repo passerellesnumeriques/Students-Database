@@ -1736,9 +1736,11 @@ function SearchGeonames(container, country_id, name, featureCode, ondone, auto_l
 			layout.invalidate(div);
 		}
 		
+		var i = name.indexOf('(');
+		var n = i>0 ? name.substring(0,i).trim() : name;
 		var data = {
 			country_id: country_id,
-			name: name
+			name: n
 		};
 		if (featureCode) data.featureCode = featureCode;
 		service.json("geography", "search_geonames", data, function(res) {
@@ -1787,18 +1789,22 @@ function SearchGoogle(container, country_id, name, types, area, ondone, auto_lau
 		}
 		
 		var requests = [];
+		var i = name.indexOf('(');
+		var n = i > 0 ? name.substring(0,i).trim() : name;
 		requests.push({
 			country_id: country_id,
-			name: name,
+			name: n,
 			types: types ? types : "political"
 		});
 		if (area != null) {
-			var fullname = name;
+			var fullname = n;
 			var a = area;
 			window.top.geography.getCountryData(country_id,function(country_data){
 				while (a.area_parent_id > 0) {
 					a = window.top.geography.getParentArea(country_data, a);
-					fullname += ","+a.area_name;
+					i = a.area_name.indexOf('(');
+					var an = i > 0 ? a.area_name.substring(0,i).trim() : a.area_name;
+					fullname += ","+an;
 				}
 			});
 			window.top.geography.getCountryName(country_id,function(country_name){
