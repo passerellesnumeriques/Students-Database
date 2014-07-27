@@ -239,6 +239,16 @@ function import_division_level(popup, country, country_data, division_index, par
 		if (division_index == 0 || country_data[division_index].areas[i].area_parent_id == parent_area.area_id)
 			areas.push(country_data[division_index].areas[i]);
 	}
+	
+	// TODO temp
+	// check if we already imported all
+	var all = true;
+	for (var i = 0; i < areas.length; ++i)
+		if (!areas[i].north) { all = false; break; }
+	if (all) {
+		ondone();
+		return;
+	}
 
 	popup.content.removeAllChildren();
 	popup.removeButtons();
@@ -820,7 +830,7 @@ function match_division_level_names(container, country, country_data, division_i
 		radio._name = name;
 		div.appendChild(radio);
 		radios_names.push(radio);
-		div.appendChild(createGadmLink(name));
+		div.appendChild(createGadmLink(name, radio));
 		createAddButton(div, name);
 	};
 	var add_matching = function(i) {
@@ -912,7 +922,7 @@ function match_division_level_names(container, country, country_data, division_i
 			radio._name = names_near_matching[i];
 			div.appendChild(radio);
 			radios_names.push(radio);
-			div.appendChild(createGadmLink(names_near_matching[i]));
+			div.appendChild(createGadmLink(names_near_matching[i], radio));
 			createAddButton(div, names_near_matching[i]);
 		}
 	}
@@ -943,7 +953,7 @@ function match_division_level_names(container, country, country_data, division_i
 			radio._name = other_names_matching[i];
 			div.appendChild(radio);
 			radios_names.push(radio);
-			div.appendChild(createGadmLink(other_names_matching[i]));
+			div.appendChild(createGadmLink(other_names_matching[i], radio));
 			createAddButton(div, other_names_matching[i]);
 		}
 	}
@@ -991,7 +1001,7 @@ function match_division_level_names(container, country, country_data, division_i
 		radios_names.remove(radio_names);
 		radio_db.parentNode.parentNode.removeChild(radio_db.parentNode);
 		radio_names.parentNode.parentNode.removeChild(radio_names.parentNode);
-		add_matching(areas[radio_db.value], name);
+		add_matching(radio_db.value);
 		cb_show.checked = "";
 		cb_show.onchange();
 	};
@@ -1105,7 +1115,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 			};
 			for (var i = 0; i < areas.length; ++i) {
 				if (areas[i].north) continue;
-				if (matches[i] == null) { next(i+1); return; } // nothing from gadm.org, need manual
+				if (matches[i] == null) continue; // nothing from gadm.org, need manual
 				// find in google something matching within 20% of half the size
 				matches[i].south = parseFloat(matches[i].south);
 				matches[i].north = parseFloat(matches[i].north);
