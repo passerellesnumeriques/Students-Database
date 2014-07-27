@@ -12,7 +12,10 @@ class DataBaseSystem_MySQL extends DataBaseSystem {
 		if ($db_name <> null)
 			if (!mysqli_select_db($db_name, $this->conn))
 				return DataBaseSystem::ERR_DB_DOES_NOT_EXIST;
-		return DataBaseSystem::ERR_OK;
+		mysqli_query($this->conn, "set character_set_client='utf8'"); 
+		mysqli_query($this->conn, "set character_set_results='utf8'"); 
+		mysqli_query($this->conn, "set collation_connection='utf8_general_ci'");
+  		return DataBaseSystem::ERR_OK;
 	}
 
 	/** @var resource $conn the connection to MySQL server */

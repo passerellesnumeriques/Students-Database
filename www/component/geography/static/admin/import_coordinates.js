@@ -350,11 +350,39 @@ function match_division_level_names(container, country, country_data, division_i
 		if (matches[i] != null) continue;
 		match = searchExactMatch(names_intersect, areas[i].area_name);
 		if (match.length == 1) {
-			matches[i] = match[0];
-			missing_matches--;
-			gadm.remove(match[0]);
-			names_intersect.remove(match[0]);
-			continue;
+			// check it is not an exact match of another area
+			var found = false;
+			if (division_index>0) {
+				// 1- search another parent area containing it
+				var gs = parseFloat(match[0].south);
+				var gn = parseFloat(match[0].north);
+				var gw = parseFloat(match[0].west);
+				var ge = parseFloat(match[0].east);
+				for (var j = 0; j < country_data[division_index-1].areas.length; ++j) {
+					var p = country_data[division_index-1].areas[j];
+					if (!p.north) continue;
+					if (p == parent_area) continue;
+					var ps = parseFloat(p.south);
+					var pn = parseFloat(p.north);
+					var pw = parseFloat(p.west);
+					var pe = parseFloat(p.east);
+					if (window.top.geography.rectContains(ps,pn,pw,pe,gs,gn,gw,ge)) {
+						// it is inside also
+						var children = window.top.geography.getAreaChildren(country_data, division_index-1, p.area_id);
+						var n = match[0].name.trim().latinize().toLowerCase();
+						for (var k = 0; k < children.length; ++k)
+							if (n == children[k].area_name.latinize().toLowerCase()) { found = true; break; }
+					}
+					if (found) break;
+				}
+			}
+			if (!found) {
+				matches[i] = match[0];
+				missing_matches--;
+				gadm.remove(match[0]);
+				names_intersect.remove(match[0]);
+				continue;
+			}
 		}
 	}
 	// match inside with all words
@@ -370,6 +398,7 @@ function match_division_level_names(container, country, country_data, division_i
 		}
 	}
 	// match intersection with all words
+	/*
 	for (var i = 0; i < areas.length; ++i) {
 		if (matches[i] != null) continue;
 		match = searchAllWords(names_intersect, areas[i].area_name);
@@ -380,7 +409,7 @@ function match_division_level_names(container, country, country_data, division_i
 			names_intersect.remove(match[0]);
 			continue;
 		}
-	}
+	}*/
 	// match with geographic coordinates, in case we already imported
 	for (var i = 0; i < areas.length; ++i) {
 		if (matches[i] != null) continue;
@@ -460,6 +489,7 @@ function match_division_level_names(container, country, country_data, division_i
 			for (var i = 0; i < country_data[division_index-1].areas.length; ++i) {
 				var a = country_data[division_index-1].areas[i];
 				if (a == parent_area) continue;
+				if (!a.north) continue;
 				var ps = parseFloat(a.south);
 				var pn = parseFloat(a.north);
 				var pw = parseFloat(a.west);
@@ -469,9 +499,9 @@ function match_division_level_names(container, country, country_data, division_i
 					// check if there is this name in a
 					var children = window.top.geography.getAreaChildren(country_data, division_index, a.area_id);
 					var found = false;
-					var n = name.name.toLowerCase().trim().latinize();
+					var n = name.name.trim().latinize().toLowerCase();
 					for (var j = 0; j < children.length; ++j)
-						if (children[j].area_name.toLowerCase().latinize() == n) { found = true; break; } 
+						if (children[j].area_name.latinize().toLowerCase() == n) { found = true; break; } 
 					if (found) {
 						// got it !
 						names_inside_found_somewhere_else++;
@@ -546,117 +576,44 @@ function match_division_level_names(container, country, country_data, division_i
 	col_content.style.overflow = "auto";
 	col.appendChild(col_content);
 	var matching_content = col_content;
-	var add_matching = function(area, match) {
-		var div = document.createElement("DIV");
-		var link = document.createElement("A");
-		link.className = "black_link";
-		link.href = "#";
-		link.appendChild(document.createTextNode(area.area_name));
-		link.onclick = function() { return false; };
-		link.rect = null;
-		link.onmouseover = function() {
-			if (!map) return;
-			if (this.rect) return;
-			if (area.north)
-				this.rect = map.addRect(area.south, area.west, area.north, area.east, map_colors[1].border, map_colors[1].fill, 0.3);
-			else
-				this.rect = map.addRect(match.south, match.west, match.north, match.east, map_colors[1].border, map_colors[1].fill, 0.3);
-			map.fitToShapes();
-		};
-		link.onmouseout = function() {
-			if (!this.rect) return;
-			map.removeShape(this.rect);
-			this.rect = null;
-			map.fitToShapes();
-		};
-		div.appendChild(link);
-		if (area.north) {
-			var img = document.createElement("IMG");
-			img.src = theme.icons_10.ok;
-			img.style.verticalAlign = "bottom";
-			img.style.marginLeft = "3px";
-			div.appendChild(img);
-		}
-		matching_content.appendChild(div);
-	};
-	for (var i = 0; i < areas.length; ++i) {
-		if (matches[i] == null) continue;
-		add_matching(areas[i], matches[i]);
-	}
-
-	var radios_db = [];
-	if (missing_matches > 0) {
-		col.style.borderRight = "1px solid #808080";
-		col = document.createElement("DIV");
-		col.style.flex = "1 1 auto";
-		col.style.display = "flex";
-		col.style.flexDirection = "column";
-		table.appendChild(col);
-		col_title = document.createElement("DIV");
-		col_title.style.flex = "none";
-		col_title.style.textAlign = "center";
-		col_title.style.fontWeight = "bold";
-		col_title.appendChild(document.createTextNode("Remaining areas in database"));
-		col.appendChild(col_title);
-		col_content = document.createElement("DIV");
-		col_content.style.flex = "1 1 auto";
-		col_content.style.overflow = "auto";
-		col.appendChild(col_content);
-		var remaining_db_content = col_content;
-		require("editable_cell.js", function() {
-			for (var i = 0; i < matches.length; ++i) {
-				if (matches[i] != null) continue;
-				var div = document.createElement("DIV");
-				remaining_db_content.appendChild(div);
-				var radio = document.createElement("INPUT");
-				radio.type = "radio";
-				radio.name = "db";
-				radio.value = i;
-				radio.style.marginRight = "5px";
-				div.appendChild(radio);
-				radios_db.push(radio);
-				new editable_cell(div, 'GeographicArea', 'name', areas[i].area_id, 'field_text', {can_be_null:false,max_length:100,min_length:1}, areas[i].area_name, 
-					function(text,ec){
-						text = text.trim();
-						if (!text.checkVisible()) {
-							error_dialog("You must enter at least one visible character");
-							return ec.area.area_name;
-						}
-						// check unicity
-						for (var i = 0; i < areas.length; ++i)
-							if (areas[i] != ec.area && areas[i].area_name.toLowerCase() == text.toLowerCase()) {
-								error_dialog("An area already exists with this name");
-								return ec.area.area_name;
-							}
-						ec.area.area_name = text;
-						return text;
-					}
-				).area = areas[i];
-				if (areas[i].north) {
-					var img = document.createElement("IMG");
-					img.src = theme.icons_10.ok;
-					img.style.verticalAlign = "bottom";
-					img.style.marginLeft = "3px";
-					div.appendChild(img);
-					img.area = areas[i];
-					img.onmouseover = function() {
-						if (!map) return;
-						if (this.rect) return;
-						this.rect = map.addRect(this.area.south, this.area.west, this.area.north, this.area.east, map_colors[1].border, map_colors[1].fill, 0.3);
-						map.fitToShapes();
-					};
-					img.onmouseout = function() {
-						if (!this.rect) return;
-						map.removeShape(this.rect);
-						this.rect = null;
-						map.fitToShapes();
-					};
-				}
-			}
-		});
-	}
+	col.style.borderRight = "1px solid #808080";
+	col = document.createElement("DIV");
+	col.style.flex = "1 1 auto";
+	col.style.display = "flex";
+	col.style.flexDirection = "column";
+	table.appendChild(col);
+	col_title = document.createElement("DIV");
+	col_title.style.flex = "none";
+	col_title.style.textAlign = "center";
+	col_title.style.fontWeight = "bold";
+	col_title.appendChild(document.createTextNode("Remaining areas in database"));
+	col.appendChild(col_title);
+	col_content = document.createElement("DIV");
+	col_content.style.flex = "1 1 auto";
+	col_content.style.overflow = "auto";
+	col.appendChild(col_content);
+	var remaining_db_content = col_content;
+	col.style.borderRight = "1px solid #808080";
+	col = document.createElement("DIV");
+	col.style.flex = "1 1 auto";
+	col.style.display = "flex";
+	col.style.flexDirection = "column";
+	table.appendChild(col);
+	col_title = document.createElement("DIV");
+	col_title.style.flex = "none";
+	col_title.style.textAlign = "center";
+	col_title.style.fontWeight = "bold";
+	col_title.appendChild(document.createTextNode("Remaining areas inside "+parent_name+" from gadm"));
+	col.appendChild(col_title);
+	col_content = document.createElement("DIV");
+	col_content.style.flex = "1 1 auto";
+	col_content.style.overflow = "auto";
+	col.appendChild(col_content);
+	var names_content = col_content;
 	
+	var radios_db = [];
 	var radios_names = [];
+	
 	var createAddButton = function(div, name) {
 		var add_button = document.createElement("BUTTON");
 		add_button.className = "flat small_icon";
@@ -806,37 +763,126 @@ function match_division_level_names(container, country, country_data, division_i
 		};
 		return link;
 	};
-	
-	if (names_inside.length > 0) {
-		col.style.borderRight = "1px solid #808080";
-		col = document.createElement("DIV");
-		col.style.flex = "1 1 auto";
-		col.style.display = "flex";
-		col.style.flexDirection = "column";
-		table.appendChild(col);
-		col_title = document.createElement("DIV");
-		col_title.style.flex = "none";
-		col_title.style.textAlign = "center";
-		col_title.style.fontWeight = "bold";
-		col_title.appendChild(document.createTextNode("Remaining areas inside "+parent_name+" from gadm"));
-		col.appendChild(col_title);
-		col_content = document.createElement("DIV");
-		col_content.style.flex = "1 1 auto";
-		col_content.style.overflow = "auto";
-		col.appendChild(col_content);
-		for (var i = 0; i < names_inside.length; ++i) {
-			var div = document.createElement("DIV");
-			col_content.appendChild(div);
-			var radio = document.createElement("INPUT");
-			radio.type = "radio";
-			radio.name = "names";
-			radio.value = i;
-			radio._name = names_inside[i];
-			div.appendChild(radio);
-			radios_names.push(radio);
-			div.appendChild(createGadmLink(names_inside[i]));
-			createAddButton(div, names_inside[i]);
+	var add_to_db = function(i) {
+		var div = document.createElement("DIV");
+		remaining_db_content.appendChild(div);
+		var radio = document.createElement("INPUT");
+		radio.type = "radio";
+		radio.name = "db";
+		radio.value = i;
+		radio.style.marginRight = "5px";
+		div.appendChild(radio);
+		radios_db.push(radio);
+		new editable_cell(div, 'GeographicArea', 'name', areas[i].area_id, 'field_text', {can_be_null:false,max_length:100,min_length:1}, areas[i].area_name, 
+			function(text,ec){
+				text = text.trim();
+				if (!text.checkVisible()) {
+					error_dialog("You must enter at least one visible character");
+					return ec.area.area_name;
+				}
+				// check unicity
+				for (var i = 0; i < areas.length; ++i)
+					if (areas[i] != ec.area && areas[i].area_name.toLowerCase() == text.toLowerCase()) {
+						error_dialog("An area already exists with this name");
+						return ec.area.area_name;
+					}
+				ec.area.area_name = text;
+				return text;
+			}
+		).area = areas[i];
+		if (areas[i].north) {
+			var img = document.createElement("IMG");
+			img.src = theme.icons_10.ok;
+			img.style.verticalAlign = "bottom";
+			img.style.marginLeft = "3px";
+			div.appendChild(img);
+			img.area = areas[i];
+			img.onmouseover = function() {
+				if (!map) return;
+				if (this.rect) return;
+				this.rect = map.addRect(this.area.south, this.area.west, this.area.north, this.area.east, map_colors[1].border, map_colors[1].fill, 0.3);
+				map.fitToShapes();
+			};
+			img.onmouseout = function() {
+				if (!this.rect) return;
+				map.removeShape(this.rect);
+				this.rect = null;
+				map.fitToShapes();
+			};
 		}
+	};
+	var add_to_match = function(name) {
+		var div = document.createElement("DIV");
+		names_content.appendChild(div);
+		var radio = document.createElement("INPUT");
+		radio.type = "radio";
+		radio.name = "names";
+		radio._name = name;
+		div.appendChild(radio);
+		radios_names.push(radio);
+		div.appendChild(createGadmLink(name));
+		createAddButton(div, name);
+	};
+	var add_matching = function(i) {
+		var div = document.createElement("DIV");
+		var link = document.createElement("A");
+		link.className = "black_link";
+		link.href = "#";
+		link.appendChild(document.createTextNode(areas[i].area_name));
+		link.onclick = function() { return false; };
+		link.rect = null;
+		link.onmouseover = function() {
+			if (!map) return;
+			if (this.rect) return;
+			if (areas[i].north)
+				this.rect = map.addRect(areas[i].south, areas[i].west, areas[i].north, areas[i].east, map_colors[1].border, map_colors[1].fill, 0.3);
+			else
+				this.rect = map.addRect(matches[i].south, matches[i].west, matches[i].north, matches[i].east, map_colors[1].border, map_colors[1].fill, 0.3);
+			map.fitToShapes();
+		};
+		link.onmouseout = function() {
+			if (!this.rect) return;
+			map.removeShape(this.rect);
+			this.rect = null;
+			map.fitToShapes();
+		};
+		div.appendChild(link);
+		if (areas[i].north) {
+			var img = document.createElement("IMG");
+			img.src = theme.icons_10.ok;
+			img.style.verticalAlign = "bottom";
+			img.style.marginLeft = "3px";
+			div.appendChild(img);
+		}
+		var remove = document.createElement("IMG");
+		remove.src = theme.icons_10.remove;
+		remove.style.verticalAlign = "bottom";
+		remove.style.marginLeft = "3px";
+		div.appendChild(remove);
+		remove.onclick = function() {
+			add_to_db(i);
+			add_to_match(matches[i]);
+			matches[i] = null;
+			matching_content.removeChild(div);
+		};
+		
+		matching_content.appendChild(div);
+	};
+	for (var i = 0; i < areas.length; ++i) {
+		if (matches[i] == null) continue;
+		add_matching(i);
+	}
+
+	require("editable_cell.js", function() {
+		for (var i = 0; i < matches.length; ++i) {
+			if (matches[i] != null) continue;
+			add_to_db(i);
+		}
+	});
+	
+	
+	for (var i = 0; i < names_inside.length; ++i) {
+		add_to_match(names_inside[i]);
 	}
 	
 	if (names_near_matching.length > 0) {
