@@ -112,7 +112,8 @@ function getAbsoluteParent(e) {
  * @returns {Object} contains x and y attributes
  */
 function getAbsoluteCoordinatesRelativeToWindowTop(frame) {
-	if (frame.parent == null || frame.parent == frame || frame.parent == window.top) return {x:0,y:0};
+	if (frame.parent == null || frame.parent == frame) return {x:0,y:0};
+	if (frame.parent == window.top) return {x:window.top.absoluteLeft(frame.frameElement),y:window.top.absoluteTop(frame.frameElement)};
 	var pos = getAbsoluteCoordinatesRelativeToWindowTop(frame.parent);
 	pos.x += absoluteLeft(frame.frameElement);
 	pos.y += absoluteTop(frame.frameElement);

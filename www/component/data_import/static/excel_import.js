@@ -637,32 +637,37 @@ function excel_import(popup, container, onready) {
 			/* layout */
 			t.left = document.createElement("DIV");
 			t.right = document.createElement("DIV");
+			t.left.style.display = "flex";
+			t.left.style.flexDirection = "column";
+			t.right.style.display = "flex";
+			t.right.style.flexDirection = "column";
 			
 			t.excel_header = document.createElement("DIV");
+			t.excel_header.style.flex = "none";
 			t.excel_info = document.createElement("DIV");
+			t.excel_info.style.flex = "none";
 			t.frame_excel = document.createElement("IFRAME");
+			t.frame_excel.style.flex = "1 1 auto";
 			t.frame_excel.style.border = "0px";
 			t.frame_excel.style.width = "100%";
 			t.left.appendChild(t.excel_header);
 			t.left.appendChild(t.excel_info);
 			t.left.appendChild(t.frame_excel);
-			t.frame_excel.setAttribute("layout", "fill");
 			
 			t.data_header = document.createElement("DIV");
+			t.data_header.style.flex = "none";
 			t.frame_import = document.createElement("IFRAME");
+			t.frame_import.style.flex = "1 1 auto";
 			t.frame_import.style.border = "0px";
 			t.frame_import.style.width = "100%";
 			t.right.appendChild(t.data_header);
 			t.right.appendChild(t.frame_import);
-			t.frame_import.setAttribute("layout", "fill");
 
 			container.appendChild(t.left);
 			container.appendChild(t.right);
 			t.splitter = new splitter_vertical(container, 0.5);
 			t.excel_bar = new header_bar(t.excel_header, 'toolbar');
 			t.data_bar = new header_bar(t.data_header, 'toolbar');
-			new vertical_layout(t.left);
-			new vertical_layout(t.right);
 			t.excel_bar.setTitle("/static/excel/excel_16.png", "Excel File");
 			t.data_bar.setTitle(theme.icons_16._import, "Data to Import");
 			
@@ -677,7 +682,7 @@ function excel_import(popup, container, onready) {
 	};
 
 	/* prepare */
-	require(["upload.js","splitter_vertical.js","header_bar.js","vertical_layout.js",["typed_field.js","field_integer.js"]], function() {
+	require(["upload.js","splitter_vertical.js","header_bar.js",["typed_field.js","field_integer.js"]], function() {
 		onready(t);
 	});
 }

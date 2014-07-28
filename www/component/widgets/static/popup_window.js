@@ -403,17 +403,26 @@ function popup_window(title,icon,content,hide_close_button) {
 				break;
 			case "fixed":
 				layout.removeHandler(t.content_container, t._layout_content);
+				// handle bug of Chrome when content wants to take 100%
+				t.content_container.style.position = "relative";
+				t.content.style.position = "absolute";
 				break;
 			}
 		}
 	};
+	t._redo_layout = false;
 	t._layout_content = function() {
 		if (!t.popup) return;
-		if (t.content_container.style.overflow == "") return;
-		t.content_container.style.width = "";
-		t.content_container.style.height = "";
+		if (t.content_container.style.overflow == "") {
+			t._redo_layout = true;
+			return;
+		}
+		t._redo_layout = false;
+		t.content_container.style.minWidth = "";
+		t.content_container.style.minHeight = "";
 		t.content_container.style.overflow = "";
 		setTimeout(function() {
+			t._redo_layout = false;
 			var sb = false;
 			var w_content = getWidth(t.content);
 			var h_content = getHeight(t.content);
@@ -422,7 +431,7 @@ function popup_window(title,icon,content,hide_close_button) {
 				if (h_content > t.content_container.clientHeight) {
 					// a vertical scroll bar will appear
 					if (w_content+window.top.browser_scroll_bar_size < t.popup_container.clientWidth) {
-						t.content_container.style.width = (w_content+window.top.browser_scroll_bar_size)+"px";
+						t.content_container.style.minWidth = (w_content+window.top.browser_scroll_bar_size)+"px";
 						sb = true;
 					}
 				}
@@ -432,7 +441,7 @@ function popup_window(title,icon,content,hide_close_button) {
 				if (w_content > t.content_container.clientWidth) {
 					// a horizontal scroll bar will appear
 					if (h_content+window.top.browser_scroll_bar_size < t.popup_container.clientHeight) {
-						t.content_container.style.height = (h_content+window.top.browser_scroll_bar_size)+"px";
+						t.content_container.style.minHeight = (h_content+window.top.browser_scroll_bar_size)+"px";
 						sb = true;
 					}
 				}
@@ -440,6 +449,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (sb) 
 				setTimeout(function() {
 					t.content_container.style.overflow = "auto";
+					if (t._redo_layout) t._layout_content();
 				},1);
 			else
 				t.content_container.style.overflow = "auto";
