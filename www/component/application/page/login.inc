@@ -3,6 +3,11 @@ global $need_app_loading;
 if (isset($_GET["destroy_session"])) {
 	session_destroy();
 }
+if (isset($_GET["uninstall"])) {
+	unlink("install_config.inc");
+	echo "<script type='text/javascript'>window.top.location.reload();</script>";
+	return;
+}
 $message = null;
 if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["password"])) {
 	try {
@@ -113,6 +118,7 @@ if ($development_mode) {
 		<a href="/dynamic/development/page/check_code" target="_blank">Check code</a><br/>
 		<a href="/dynamic/test/page/home" target="_blank">Tests</a><br/>
 		<a href="?destroy_session=true">Destroy session</a><br/>
+		<a href="?uninstall=true">Reset installation</a><br/>
 	</td></tr>
 </table>
 <script type="text/javascript">

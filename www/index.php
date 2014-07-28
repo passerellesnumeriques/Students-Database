@@ -1,4 +1,8 @@
 <?php
+if (!file_exists(dirname(__FILE__)."/install_config.inc")) {
+	include("install.inc");
+	die();
+}
 include("install_config.inc");
 function component_auto_loader($classname) {
 	require_once("component/".$classname."/".$classname.".inc");

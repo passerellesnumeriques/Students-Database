@@ -64,8 +64,11 @@ function next() {
 		a = document.createElement("A");
 		a.href = "#";
 		a.onclick = function() {
+			var link = this;
 			var locker = lock_screen(null, "Inserting test data");
 			service.json("development","test_data",{domain:<?php echo json_encode($domain);?>,password:""},function(res) {
+				link.innerHTML = "Test data inserted";
+				link.onclick = function() { return false; };
 				unlock_screen(locker);
 			});
 			return false;

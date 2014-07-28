@@ -6,10 +6,13 @@ $model->addDataCategory($category);
 
 $display = new datamodel\TableDataDisplay("People", $category);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("first_name", "First Name"));
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("middle_name", "Middle Name"));
+if (PNApplication::$instance->current_domain == "PNP")
+	$display->addDataDisplay(new datamodel\SimpleDataDisplay("middle_name", "Middle Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("last_name", "Last Name"));
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_first_name", "Khmer First Name"));
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_last_name", "Khmer Last Name"));
+if (PNApplication::$instance->current_domain == "PNC")
+	$display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_first_name", "Khmer First Name"));
+if (PNApplication::$instance->current_domain == "PNC")
+	$display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_last_name", "Khmer Last Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("sex", "Gender", false, true, "center"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("birth", "Birth Date"));
 $display->addJoinToPrimary();

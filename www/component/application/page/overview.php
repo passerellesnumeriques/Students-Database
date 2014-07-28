@@ -97,7 +97,7 @@ if ($google_account == null || $google_account["google_login"] == null) {
 		What's happening ?
 	</div>
 	<div style='background-color:#e8e8e8;padding-top:10px;display:flex;flex-direction:row;'>
-		<div id="updates" style="display:inline-block;flex:1 1 auto;align-self:flex-start;margin-left:10px"
+		<div id="updates" style="flex:1 1 auto;align-self:flex-start;margin-left:10px"
 			icon="/static/news/news.png"
 			title="Latest Updates"
 		>
@@ -112,7 +112,7 @@ if ($google_account == null || $google_account["google_login"] == null) {
 				</div>
 			</div>
 		</div>
-		<div id="calendar_events" style="display:inline-block;flex:1 1 auto;align-self:flex-start;margin-left:10px;vertical-align:top"
+		<div id="calendar_events" style="flex:1 1 auto;align-self:flex-start;margin-left:10px;vertical-align:top"
 			icon="/static/calendar/calendar_16.png"
 			title="Upcoming Events"
 		>
@@ -132,18 +132,18 @@ function init_calendars() {
 	icon_loading.style.verticalAlign = "middle";
 	icon_loading.src = theme.icons_16.loading_white;
 	icon_loading.style.visibility = 'hidden';
-	icon_loading.style.position = 'absolute';
+	icon_loading.style.display = 'none';
 	icon_loading.counter = 0;
 	calendars_section.addToolRight(icon_loading);
 	window.top.calendar_manager.on_refresh.add_listener(function() {
 		icon_loading.counter++;
 		icon_loading.style.visibility = 'visible';
-		icon_loading.style.position = 'static';
+		icon_loading.style.display = '';
 	});
 	window.top.calendar_manager.on_refresh_done.add_listener(function() {
 		if (--icon_loading.counter == 0) {
 			icon_loading.style.visibility = 'hidden';
-			icon_loading.style.position = 'absolute';
+			icon_loading.style.display = 'none';
 		}
 	});
 	require("calendar_view.js",function() {

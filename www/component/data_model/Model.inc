@@ -35,21 +35,6 @@ class DataModel {
 		$file = "component/".$c->name."/datamodel.inc";
 		if (file_exists($file))
 			include $file;
-		if (PNApplication::$instance->current_domain <> null) {
-			$file = "component/".$c->name."/datamodel_hidden.inc";
-			if (file_exists($file)) {
-				$hidden = include $file;
-				if (isset($hidden[PNApplication::$instance->current_domain])) {
-					$hidden = $hidden[PNApplication::$instance->current_domain];
-					foreach ($hidden as $field) {
-						$i = strpos($field, ".");
-						$table = substr($field, 0, $i);
-						$field = substr($field, $i+1);
-						$model->hide($table,$field);
-					}
-				}
-			}
-		}
 	}
 	private static function _get_component_display($c, &$done, &$model) {
 		if (in_array($c->name, $done)) return;
@@ -259,10 +244,6 @@ class DataModel {
 		return $this->data_screens;
 	}
 	
-	private function hide($table, $field) {
-		$this->tables[$table]->hide($field);
-	}
-
 }
 
 class DataCategoryLink {

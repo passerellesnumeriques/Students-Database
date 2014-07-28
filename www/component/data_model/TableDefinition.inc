@@ -628,15 +628,6 @@ namespace datamodel {
 		}
 		
 
-		public function hide($field) {
-			for ($i = 0; $i < count($this->columns); $i++)
-				if ($this->columns[$i]->name == $field) {
-				array_splice($this->columns, $i, 1);
-				return;
-			}
-		}
-
-
 		public function &customizable() {
 			$this->is_customized = true;
 			return $this;
