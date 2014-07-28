@@ -341,3 +341,9 @@ a.black_link:hover, .black_link:hover {
 .error {
 	background-color: #FFD8D8;
 }
+.error_box {
+	background-color: #FFD8D8;
+    border: 1px solid #F0A0A0;
+    margin: 5px;
+    padding: 3px;
+}

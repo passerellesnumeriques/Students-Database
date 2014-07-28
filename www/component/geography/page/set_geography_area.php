@@ -19,9 +19,8 @@ class page_set_geography_area extends Page {
 					<div id ='manage_divisions' ></div>
 				</div>
 			</div>
-			<div style='height:100%;padding:10px'>
-				<div id='tree_section' title="Geographic Areas" style='height:100%' fill_height="true">
-					<div id='set_geography_area' style = "overflow:auto;height:100%"></div>
+			<div style='padding:10px'>
+				<div id='tree_section' title="Geographic Areas" style="height:100%" fill_height="true">
 				</div>
 			</div>
 		</div>

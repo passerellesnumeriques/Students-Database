@@ -338,7 +338,7 @@ function organization(container, org, existing_types, can_edit) {
 			this.disabled = "disabled";
 			var b=this;
 			t.searchGoogle(function(){
-				b.disabled = "disabled";
+				b.disabled = "";
 			});
 		};
 		t._google_results_container = document.createElement("DIV");

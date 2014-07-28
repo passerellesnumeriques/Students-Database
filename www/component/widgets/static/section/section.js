@@ -53,9 +53,8 @@ function sectionFromHTML(container) {
 		while (container.childNodes.length > 0) content.appendChild(container.childNodes[0]);
 	}
 	var s = new section(icon,title,content,collapsable,fill_height,css,collapsed);
-	if (container.style)
-		for (var name in container.style)
-			s.element.style[name] = container.style[name];
+	if (container.hasAttribute("style"))
+		s.element.style.cssText = s.element.style.cssText+";"+container.getAttribute("style");
 	if (container.id) s.element.id = container.id;
 	var parent = container.parentNode;
 	parent.insertBefore(s.element, container);
@@ -226,6 +225,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 			this.content_container.style.flex = "1 1 auto";
 			this.content_container.style.display = "flex";
 			this.content_container.style.flexDirection = "row";
+			content.style.flex = "1 1 auto";
 			content.style.paddingRight = window.top.browser_scroll_bar_size+"px";
 			content.style.overflowY = "auto";
 			this.footer.style.flex = "none";

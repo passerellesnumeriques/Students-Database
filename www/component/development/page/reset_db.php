@@ -46,7 +46,6 @@ function next() {
 		});
 	} else {
 		document.body.appendChild(document.createElement("BR"));
-		document.body.appendChild(document.createElement("BR"));
 		document.body.appendChild(document.createTextNode("The database has been reset."));
 		document.body.appendChild(document.createElement("BR"));
 		var a;

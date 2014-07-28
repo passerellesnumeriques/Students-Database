@@ -30,7 +30,7 @@ class service_test_data extends Service {
 			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2013.sql");
 			$this->importStorage($db_system, "PNP_Batch2013", $domain);
 			// generate events accordingly to data added
-			PNApplication::$instance->user_management->login(PNApplication::$instance->local_domain, "admin", $input["password"]);
+			PNApplication::$instance->user_management->login($input["domain"], "admin", $input["password"]);
 			$model = DataModel::get();
 			foreach ($model->internalGetTables() as $t) {
 				if ($t->getModel() instanceof SubDataModel) continue;

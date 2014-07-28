@@ -103,6 +103,7 @@ function linkEditCoordinatesWithMap(edit_coordinates, map) {
 					edit_coordinates.setCoordinates(bounds.getNorthEast().lat(), bounds.getNorthEast().lng(), bounds.getSouthWest().lat(), bounds.getSouthWest().lng());
 				});
 				map.addShape(this.map_rect);
+				map.fitToShapes();
 			} else {
 				var bounds = this.map_rect.getBounds();
 				if (bounds.getNorthEast().lat() != north ||

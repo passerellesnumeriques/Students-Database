@@ -45,7 +45,7 @@ abstract class Component {
 		// check the user is logged
 		if (PNApplication::$instance->user_management->username == null) {
 			if (!isset(Component::$allowed_pages_without_login[$this->name]) || !in_array($path, Component::$allowed_pages_without_login[$this->name])) {
-				echo "<script type='text/javascript'>window.top.location.reload();/* ".$path." // ".var_export(Component::$allowed_pages_without_login,true)." */</script>";
+				echo "<script type='text/javascript'>window.top.location = '/';</script>";
 				return;
 			}
 		}

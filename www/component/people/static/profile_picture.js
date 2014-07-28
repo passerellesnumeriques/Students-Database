@@ -253,10 +253,9 @@ function profile_picture(container, width, height, halign, valign) {
 
 function addDataListPeoplePictureSupport(list) {
 	list.addPictureSupport("People",function(container,people_id,width,height) {
-		while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
-		require("profile_picture.js",function() {
-			new profile_picture(container,width,height,"center","middle").loadPeopleID(people_id);
-		});
+		container.removeAllChildren();
+		container.picture = new profile_picture(container,width,height,"center","middle");
+		container.picture.loadPeopleID(people_id);
 	},function(handler)  {
 		require("profile_picture.js");
 		var people_ids = [];

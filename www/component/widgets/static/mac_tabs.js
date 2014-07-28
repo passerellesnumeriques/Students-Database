@@ -6,6 +6,7 @@ function mac_tabs(css) {
 	t.element = document.createElement("DIV");
 	t.element.className = "mac_tabs"+(css ? " "+css : "");
 	setBorderRadius(t.element, 5, 5, 5, 5, 5, 5, 5, 5);
+	t.selected = null;
 	t.addItem = function(content,id) {
 		var div = document.createElement("DIV");
 		div.className = "mac_tab";
@@ -34,6 +35,7 @@ function mac_tabs(css) {
 			else
 				tab.className = "mac_tab";
 		}
+		t.selected = id;
 		if (t.onselect) t.onselect(id);
 	};
 }

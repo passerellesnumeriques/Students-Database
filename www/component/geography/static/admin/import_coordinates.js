@@ -1500,12 +1500,14 @@ function import_area_coordinates(container, area, division_index, country, count
 									editable: false,
 								});
 								ec.map.addShape(rect);
+								ec.map.fitToShapes();
 								this.rects.push(rect);
 							}
 						} else {
 							for (var i = 0; i < this.rects.length; ++i)
 								ec.map.removeShape(this.rects[i]);
 							this.rects = null;
+							ec.map.fitToShapes();
 						}
 					};
 				}
@@ -1529,9 +1531,11 @@ function import_area_coordinates(container, area, division_index, country, count
 								editable: false,
 							});
 							ec.map.addShape(this.rect);
+							ec.map.fitToShapes();
 						} else {
 							ec.map.removeShape(this.rect);
 							this.rect = null;
+							ec.map.fitToShapes();
 						}
 					};
 				}
@@ -1558,11 +1562,13 @@ function import_area_coordinates(container, area, division_index, country, count
 								});
 								ec.map.addShape(rect);
 								this.rects.push(rect);
+								ec.map.fitToShapes();
 							}
 						} else {
 							for (var i = 0; i < this.rects.length; ++i)
 								ec.map.removeShape(this.rects[i]);
 							this.rects = null;
+							ec.map.fitToShapes();
 						}
 					};
 				}
@@ -1634,9 +1640,11 @@ function ResultsList(container, from, results, color, coord, map) {
 					editable: false,
 				});
 				map.addShape(this.rect);
+				map.fitToShapes();
 			} else {
 				map.removeShape(this.rect);
 				this.rect = null;
+				map.fitToShapes();
 			}
 		};
 		cb.style.marginRight = "5px";

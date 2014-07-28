@@ -1,3 +1,14 @@
+<?php 
+// remove all sessions
+$sessions_path = ini_get("session.save_path");
+$sessions = array();
+$dir = opendir($sessions_path);
+while (($filename = readdir($dir)) <> null) {
+	if (is_dir($filename)) continue;
+	unlink($sessions_path."/".$filename);
+}
+closedir($dir);
+?>
 <html>
 <head>
 <title>Installation</title>
@@ -61,7 +72,14 @@ if (isset($_POST["development_mode"])) {
 		<tr>
 			<td>
 				Initialization of the database:<br/>
-				<iframe src='/dynamic/development/page/reset_db?domain=<?php echo $_POST["local_domain"];?>' style='width:500px;height:150px;'></iframe>
+				<?php 
+				$domains = include("conf/domains");
+				foreach ($domains as $domain=>$conf) {
+				echo $domain.":<br/>";
+				?>
+				<iframe src='/dynamic/development/page/reset_db?domain=<?php echo $domain;?>' style='width:500px;height:140px;'></iframe>
+				<br/>
+				<?php }?>
 			</td>
 		</tr>
 		<tr>

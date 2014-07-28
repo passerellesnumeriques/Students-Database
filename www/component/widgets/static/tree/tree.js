@@ -325,8 +325,8 @@ function tree(container) {
 	};
 	this._selected_item = null;
 	this.selectItem = function(item) {
-		item.cells[0].element.onclick(createEvent("click",{}));
 		item.makeVisible();
+		item.cells[0].element.onclick(createEvent("click",{}));
 	};
 	this.getSelectedItem = function() { return this._selected_item; };
 	this._create_item = function(item, index) {

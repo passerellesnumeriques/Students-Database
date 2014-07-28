@@ -34,21 +34,27 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 	$message = $_POST["message"];
 	
 $this->onload("window.top.pn_loading_end();");
+
+if (isset($_GET["page"]) && !isset($_GET["section"])) {
+	// only the frame
+	echo "<iframe id='application_frame' name='application_frame' src='".$_GET["page"]."' style='width:100%;height:100%;border:none;'></iframe>";
+	return;
+}
 ?>
 <form method="post" style="width:100%;height:100%" onsubmit="login();return false;" name="login_form">
 <input type="hidden" name="tz_offset" id="timezone_input"/>
-<table style="width:100%;height:100%"><tr><td valign=middle align=center>
+<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">
 <?php
 if (isset($_GET["from"])) {
 	switch ($_GET["from"]) {
-	case "inactivity": echo "You have been automatically logged out because you were inactive more than 30 minutes."; break;
+	case "inactivity": echo "You have been automatically logged out because of more than 30 minutes of inactivity."; break;
 	}
 }
 if ($message <> null) {
-	echo "<img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> <span style='color:red'>".$message."</span>";
+	echo "<div class='error_box' style='flex:none;margin-bottom:20px;box-shadow: 2px 2px 2px 0px #A0A0A0;'><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> ".$message."</div>";
 }
 ?>
-<table class='login_table'>
+<table class='login_table' style='flex:none'>
 	<tr>
 		<td colspan=3 class='login_table_header' align=center>
 			PN Students Management Software
@@ -99,7 +105,7 @@ if ($message <> null) {
 global $development_mode;
 if ($development_mode) {
 ?>
-<table class='login_table' style='margin-top:20px'>
+<table class='login_table' style='margin-top:20px;flex:none;'>
 	<tr>
 		<td colspan=3 class='login_table_header' align=center>
 			<img src='/static/development/debug.png'/>
@@ -108,7 +114,7 @@ if ($development_mode) {
 	</tr>
 	<tr><td>
 		<div class='info_box'>
-			<img src='<?php echo theme::$icons_16["help"];?>' style='vertical-align:bottom'/>
+			<img src='<?php echo theme::$icons_16["help"];?>' style='vertical-align:bottom' style='vertical-align:bottom'/>
 			Your version is a development version
 		</div>
 		<a href="#" onclick="resetDB();return false;">Reset Database</a><br/>
@@ -137,7 +143,6 @@ function exportStorage() {
 }
 </script>
 <?php } ?>
-</td></tr></table>
 </form>
 <style type="text/css">
 .login_table {

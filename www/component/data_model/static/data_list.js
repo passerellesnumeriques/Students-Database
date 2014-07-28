@@ -419,9 +419,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.header_left.appendChild(header);
 			layout.invalidate(t.header);
 			
-			var col_picture = new GridColumn('data_list_picture', "Picture", null, "center", "field_html", false, null, null, {}, null);
+			var col_picture = new GridColumn('data_list_picture', "Picture", null, "left", "field_html", false, null, null, {}, null);
 			var thumb_container = document.createElement("DIV");
 			thumb_container.style.overflow = "auto";
+			thumb_container.style.flex = "1 1 auto";
 
 			var div_picture_size = document.createElement("DIV");
 			div_picture_size.appendChild(document.createTextNode("Pic.size"));
@@ -455,7 +456,13 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				case 6: t._pic_width = 300; t._pic_height = 300; break;
 				};
 				pic_list.setSize(t._pic_width, t._pic_height);
-				t._loadData();
+				if (tabs.selected == "detail") {
+					for (var i = 0; i < t.grid.getNbRows(); ++i) {
+						var field = t.grid.getCellField(i, 0);
+						if (field == null) continue;
+						field.getHTMLElement().picture.setSize(t._pic_width, t._pic_height);
+					}
+				}
 			};
 
 			var original_load = t._loadData;

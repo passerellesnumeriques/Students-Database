@@ -1,3 +1,29 @@
+-- phpMyAdmin SQL Dump
+-- version 4.1.6
+-- http://www.phpmyadmin.net
+--
+-- Host: localhost
+-- Generation Time: Jul 28, 2014 at 05:02 PM
+-- Server version: 5.5.23
+-- PHP Version: 5.4.24
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+
+--
+-- Database: `students_pnc`
+--
+
+--
+-- Dumping data for table `country`
+--
+
 INSERT INTO `country` (`id`, `code`, `name`, `west`, `east`, `north`, `south`) VALUES
 (1, 'PH', 'Philippines', '115.766296', '126.605347', '21.120611', '4.586940'),
 (2, 'AD', 'Andorra', NULL, NULL, NULL, NULL),
@@ -88,7 +114,7 @@ INSERT INTO `country` (`id`, `code`, `name`, `west`, `east`, `north`, `south`) V
 (89, 'JP', 'Japan', NULL, NULL, NULL, NULL),
 (90, 'KE', 'Kenya', NULL, NULL, NULL, NULL),
 (91, 'KG', 'Kyrgyzstan', NULL, NULL, NULL, NULL),
-(92, 'KH', 'Cambodia', NULL, NULL, NULL, NULL),
+(92, 'KH', 'Cambodia', '102.333542', '107.629990', '14.690179', '9.276808'),
 (93, 'KI', 'Kiribati', NULL, NULL, NULL, NULL),
 (94, 'KM', 'Comoros', NULL, NULL, NULL, NULL),
 (95, 'KN', 'Saint Kitts and Nevis', NULL, NULL, NULL, NULL),
@@ -192,3 +218,7 @@ INSERT INTO `country` (`id`, `code`, `name`, `west`, `east`, `north`, `south`) V
 (195, 'ZA', 'South Africa', NULL, NULL, NULL, NULL),
 (196, 'ZM', 'Zambia', NULL, NULL, NULL, NULL),
 (197, 'ZW', 'Zimbabwe', NULL, NULL, NULL, NULL);
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

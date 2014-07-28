@@ -63,27 +63,16 @@ function GoogleMap(container, onready) {
 			var cur_height = cur_east - cur_west;
 			var cur_zoom = this.map.getZoom();
 			var new_center = new window.top.google.maps.LatLng(south+(north-south)/2, west+(east-west)/2);
-			if (new_center.lat() < cur_south || new_center.lat() > cur_north) {
-				var lat = new_center.lat() < cur_south ? cur_south : cur_north;
-				var lng;
-				if (new_center.lng() < cur_west) lng = cur_west;
-				else if (new_center.lng() > cur_east) lng = cur_east;
-				else lng = new_center.lng();
+			if (new_center.lat() < cur_south || new_center.lat() > cur_north || new_center.lng() < cur_west || new_center.lng() > cur_east) {
+				// we are going outside, let's do it step by step
+				var lat = new_center.lat() < cur_south ? cur_south+(cur_north-cur_south)/10 : new_center.lat() > cur_north ? cur_north-(cur_north-cur_south)/10 : new_center.lat();
+				var lng = new_center.lng() < cur_west ? cur_west+(cur_east-cur_west)/10 : new_center.lng() > cur_east ? cur_east-(cur_east-cur_west)/10 : new_center.lng();
 				this.map.setCenter(new window.top.google.maps.LatLng(lat,lng));
-				if (cur_zoom > 1)
+				if (cur_zoom > 1 && (new_center.lat() < lat-cur_width/2 || new_center.lat() > lat+cur_width/2 || new_center.lng() < lng-cur_height/2 || new_center.lng() > lng+(cur_height/2)))
 					this.map.setZoom(cur_zoom-1);
 				this._current_move = setTimeout(function() {
 					t.fitToBounds(south, west, north, east);
-				},400);
-				return;
-			} else if (new_center.lng() < cur_west || new_center.lng() > cur_east) {
-				var lng = new_center.lng() < cur_west ? cur_west : cur_east;
-				this.map.setCenter(new window.top.google.maps.LatLng(new_center.lat(),lng));
-				if (cur_zoom > 1)
-					this.map.setZoom(cur_zoom-1);
-				this._current_move = setTimeout(function() {
-					t.fitToBounds(south, west, north, east);
-				},400);
+				},300);
 				return;
 			}
 			var new_width = north-south;
@@ -93,25 +82,21 @@ function GoogleMap(container, onready) {
 				if (new_width < cur_width*0.1 || new_height < cur_height*0.1) {
 					// we are zooming a lot, let's do it in several step
 					this.map.setCenter(new_center);
+					t.map.setZoom(cur_zoom+1);
 					this._current_move = setTimeout(function() {
-						t.map.setZoom(cur_zoom+1);
-						this._current_move = setTimeout(function() {
-							t.fitToBounds(south,west,north,east);
-						},300);
-					},50);
+						t.fitToBounds(south,west,north,east);
+					},300);
 					return;
 				}
-			} else {
+			} else if (new_width > cur_width && new_height > cur_height) {
 				// we are zooming out
 				if (new_width > cur_width*2 || new_height > cur_height*2) {
 					// we are zooming a lot, let's do it in several step
 					this.map.setCenter(new_center);
+					t.map.setZoom(cur_zoom-1);
 					this._current_move = setTimeout(function() {
-						t.map.setZoom(cur_zoom-1);
-						this._current_move = setTimeout(function() {
-							t.fitToBounds(south,west,north,east);
-						},300);
-					},50);
+						t.fitToBounds(south,west,north,east);
+					},300);
 					return;
 				}
 			}
@@ -157,32 +142,28 @@ function GoogleMap(container, onready) {
 				new window.top.google.maps.LatLng(bounds.getNorthEast().lat(), bounds.getNorthEast().lng()+(0.01-diff)/2)
 			);
 		}
-		this.map.fitBounds(bounds);
+		this.fitToBounds(bounds.getSouthWest().lat(), bounds.getSouthWest().lng(), bounds.getNorthEast().lat(), bounds.getNorthEast().lng());
 	};
 	
 	this.addShape = function(shape) {
 		this.shapes.push(shape);
 		shape.setMap(this.map);
-		this.fitToShapes();
 	};
 	this.addShapes = function(shapes) {
 		for (var i = 0; i < shapes.length; ++i) {
 			this.shapes.push(shapes[i]);
 			shapes[i].setMap(this.map);
 		}
-		this.fitToShapes();
 	};
 	this.removeShape = function(shape) {
 		this.shapes.remove(shape);
 		shape.setMap(null);
-		this.fitToShapes();
 	};
 	this.removeShapes = function(shapes) {
 		for (var i = 0; i < shapes.length; ++i) {
 			this.shapes.remove(shapes[i]);
 			shapes[i].setMap(null);
 		}
-		this.fitToShapes();
 	};
 	
 	this.addRect = function(south, west, north, east, borderColor, fillColor, fillOpacity) {
