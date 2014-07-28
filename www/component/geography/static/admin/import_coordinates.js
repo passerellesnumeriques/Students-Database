@@ -241,6 +241,13 @@ function import_division_level(popup, country, country_data, division_index, par
 	}
 	
 	// TODO temp
+	for (var i = 0; i < areas.length; ++i)
+		if (areas[i].north) {
+			ondone();
+			return;
+		}
+	
+	/*
 	// check if we already imported all
 	var all = true;
 	for (var i = 0; i < areas.length; ++i)
@@ -249,6 +256,7 @@ function import_division_level(popup, country, country_data, division_index, par
 		ondone();
 		return;
 	}
+	*/
 
 	popup.content.removeAllChildren();
 	popup.removeButtons();
@@ -820,6 +828,7 @@ function match_division_level_names(container, country, country_data, division_i
 				map.fitToShapes();
 			};
 		}
+		layout.invalidate(remaining_db_content);
 	};
 	var add_to_match = function(name) {
 		var div = document.createElement("DIV");
@@ -832,6 +841,7 @@ function match_division_level_names(container, country, country_data, division_i
 		radios_names.push(radio);
 		div.appendChild(createGadmLink(name, radio));
 		createAddButton(div, name);
+		layout.invalidate(names_content);
 	};
 	var add_matching = function(i) {
 		var div = document.createElement("DIV");
@@ -877,6 +887,7 @@ function match_division_level_names(container, country, country_data, division_i
 		};
 		
 		matching_content.appendChild(div);
+		layout.invalidate(matching_content);
 	};
 	for (var i = 0; i < areas.length; ++i) {
 		if (matches[i] == null) continue;
