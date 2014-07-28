@@ -133,7 +133,9 @@ document.getElementById("timezone_input").value = -(new Date().getTimezoneOffset
 window.top.pnapplication.onlogout.fire();
 setBorderRadius(document.getElementById('login_table'),10,10,10,10,10,10,10,10);
 setBorderRadius(document.getElementById('login_table_header'),8,8,8,8,0,0,0,0);
+<?php if ($need_app_loading) {?>
 setBorderRadius(document.getElementById('login_table_footer'),0,0,0,0,8,8,8,8);
+<?php } ?>
 setBackgroundGradient(document.getElementById('login_table'),"vertical",[{pos:0,color:'#FFFFFF'},{pos:30,color:'#FFFFFF'},{pos:100,color:'#E0E0E0'}]);
 setBoxShadow(document.getElementById('login_table'), 0, 0, 5, 5, "#ffffff");
 function login() {

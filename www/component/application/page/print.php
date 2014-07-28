@@ -4,12 +4,10 @@ class page_print extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->requireJavaScript("vertical_layout.js");
-		$this->onload("new vertical_layout('top_container');");
 		theme::css($this, "header_bar.css");
 ?>
-<div id='top_container' style='width:100%;height:100%'>
-	<div id='header' class='header_bar_toolbar_style' style='padding:2px 5px 2px 5px;height:25px'>
+<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
+	<div id='header' class='header_bar_toolbar_style' style='padding:2px 5px 2px 5px;height:25px;flex:none;'>
 	<!-- Paper Size: 
 	<select id='paper_size' onchange='refreshSize();'>
 		<option value='1' selected='selected'>A4 (210 x 297 mm)</option>
@@ -24,7 +22,7 @@ class page_print extends Page {
 	</select>
 	<button class='action' onclick="getIFrameWindow(document.getElementById('print_content')).print();"><img src='<?php echo theme::$icons_16["print"];?>'/> Print</button>
 	</div>
-	<div id='content' layout='fill' style='overflow:hidden;text-align:center'>
+	<div id='content' style='flex:1 1 auto;overflow:hidden;text-align:center'>
 		<iframe name='print_content' id='print_content' style='border:none' src='/dynamic/application/page/blank'></iframe>
 	</div>
 </div>

@@ -1,13 +1,13 @@
 <?php 
 function create_wizard_page(&$page, $icon, $title, $first_page) {
 ?>
-<div id='wizard_page' style='width:100%;height:100%'>
-	<div id='wizard_page_header' layout='fixed' class='wizard_header' style='padding-top:3px'>
+<div id='wizard_page' style='width:100%;height:100%;display:flex;flex-direction:column;'>
+	<div id='wizard_page_header' class='wizard_header' style='padding-top:3px;flex:none;'>
 		<img src="<?php echo $icon;?>" style='vertical-align:bottom;padding-left:5px;padding-right:5px'/>
 		<span id='wizard_page_title'><?php echo $title;?></span>
 	</div>
-	<iframe id='wizard_page_content' layout='fill' frameBorder=0 src="<?php echo $first_page;?>"></iframe>
-	<div id='wizard_page_footer' layout='fixed' class='wizard_buttons'>
+	<iframe id='wizard_page_content' style='flex:1 1 auto;' frameBorder=0 src="<?php echo $first_page;?>"></iframe>
+	<div id='wizard_page_footer' style="flex:none;" class='wizard_buttons'>
 		<button id='wizard_page_button_previous' disabled='disabled' onclick='wizard_page_previous();'>
 			<img src="<?php echo theme::$icons_16["back"];?>" style='vertical-align:bottom'/>
 			Previous
@@ -93,7 +93,5 @@ function wizard_freeze_message(msg) {
 }
 </script>
 <?php
-	$page->addJavascript("/static/widgets/vertical_layout.js");
-	$page->onload("new vertical_layout('wizard_page');");
 } 
 ?>

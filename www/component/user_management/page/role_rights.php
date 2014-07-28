@@ -20,15 +20,13 @@ class page_role_rights extends Page {
 		if ($can_edit)
 			DataBaseLock::generateScript($lock_id);
 		
-		$this->requireJavascript("vertical_layout.js");
-		$this->onload("new vertical_layout('page');");
 		?>
-		<div id='page' style='width:100%;height:100%'>
-		<div class='page_title'>
+		<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
+		<div class='page_title' style='flex:none;'>
 			<img src='/static/user_management/access_list_32.png'/>
 			Role: <span style='font-family:Courrier New;font-weight:bold;font-style:italic'><?php echo $role["name"];?></span>
 		</div>
-		<div style='background-color:white;padding:10px;overflow:auto' layout='fill'>
+		<div style='background-color:white;padding:10px;overflow:auto;flex:1 1 auto;'>
 			<form name='um_rights' onsubmit='return false' style='height:100%'>
 		<?php
 		if ($locked <> null)
@@ -190,7 +188,7 @@ class page_role_rights extends Page {
 		<?php }?>
 		</div>
 		<?php if ($can_edit) {?>
-		<div class='page_footer'>
+		<div class='page_footer' style='flex:none'>
 			<button class='action' onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
 		</div>
 		<?php } ?>

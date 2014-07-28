@@ -4,16 +4,14 @@ class page_calendars extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$this->requireJavascript("horizontal_layout.js");
-		$this->onload("new horizontal_layout('calendars',true,'top');");
 		$this->addJavascript("/static/calendar/calendar.js");
 		$this->addJavascript("/static/calendar/calendar_view.js");
 		$this->addJavascript("/static/widgets/section/section.js");
 		$this->onload("init_calendars();");
 ?>
-<div style='height:100%;width:100%;padding-top:5px' id='calendars'>
-	<div id='left' style='padding-left:5px;'></div>
-	<div id='calendars_view' style='height:10px;margin:5px;' layout="fill" class='section'></div>
+<div style='height:100%;width:100%;display:flex;flex-direction:row;' id='calendars'>
+	<div id='left' style='margin:5px;flex:none;'></div>
+	<div id='calendars_view' style='margin:5px;flex:1 1 auto;' class='section'></div>
 </div>
 <script type='text/javascript'>
 function init_calendars() {

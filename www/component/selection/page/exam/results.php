@@ -7,9 +7,7 @@ class page_exam_results extends SelectionPage {
 		theme::css($this, "grid.css");
 		theme::css($this, "section.css");
 
-		$this->requireJavascript("horizontal_layout.js");
 		$this->requireJavascript("address_text.js");
-		$this->onload("new horizontal_layout('horizontal_split',true);");
 		$this->addJavascript("/static/widgets/section/section.js");
 		$this->onload("sectionFromHTML('sessions_listDiv');");
 		$this->onload("sectionFromHTML('session_infoDiv');");
@@ -37,8 +35,8 @@ class page_exam_results extends SelectionPage {
 		</style>
 			
 	<!-- main structure of the exam results page -->
-	<div id='horizontal_split' style="margin:10px;">
-		<div id="sessions_with_button" style="display: inline-block;vertical-align: top;" layout="fill">
+	<div style="margin:10px;display:flex;flex-direction:row">
+		<div id="sessions_with_button" style="display: inline-block;vertical-align: top;flex:1 1 auto;">
 			<div style ="max-height: 300px;overflow: auto">
 			      <div id = "sessions_listDiv" title='Exam sessions list' icon="/static/calendar/calendar_16.png" collapsable='true' css="soft">
 				<?php $this->createTableSessionsList();?>
@@ -50,7 +48,7 @@ class page_exam_results extends SelectionPage {
 				</div>
 			</div>
 		</div>
-		<div id = "session_infoDiv" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;vertical-align: top;' css="soft">
+		<div id = "session_infoDiv" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;vertical-align: top;flex:none;' css="soft">
 				<div id="session_info_locationDiv" style='padding-left:5px;'></div>
 		</div>
 	</div>

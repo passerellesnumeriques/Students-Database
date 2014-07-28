@@ -29,8 +29,6 @@ class page_selection_main_page extends SelectionPage {
 		$this->addJavascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("new splitter_vertical('selection_main_page_split',0.35);");
 		
-		$this->addJavascript("/static/widgets/vertical_layout.js");
-		$this->onload("new vertical_layout('left');");
 		//TODO set rights to calendar table? bypass_security required above...
 		
 		$this->addJavascript("/static/widgets/section/section.js");
@@ -43,24 +41,22 @@ class page_selection_main_page extends SelectionPage {
 		$this->onload("loadExamCenterStatus();");
 		?>
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
-				<div id = 'left'>
+				<div style="display:flex;flex-direction:column;">
 					<div id = 'steps_header' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
-					<div style = "overflow:auto" layout = "fill">
-						<div style='width:100%'>
-							<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
-								<div style='text-align:center'>
-									<a href='config/manage'><button>
-										<img src='<?php echo theme::$icons_16["config"];?>'/>
-										Configure how this selection process will work
-									</button></a>
-								</div>
+					<div style="overflow:auto;flex:1 1 auto">
+						<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
+							<div style='text-align:center'>
+								<a href='config/manage'><button>
+									<img src='<?php echo theme::$icons_16["config"];?>'/>
+									Configure how this selection process will work
+								</button></a>
 							</div>
-							<div id='section_status_is' title='Information Sessions' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
-								<div id='status_is' class='selection_status'></div>
-							</div>
-							<div id='section_status_exam_center' title='Exam Centers' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
-								<div id='status_exam_centers' class='selection_status'></div>
-							</div>
+						</div>
+						<div id='section_status_is' title='Information Sessions' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
+							<div id='status_is' class='selection_status'></div>
+						</div>
+						<div id='section_status_exam_center' title='Exam Centers' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
+							<div id='status_exam_centers' class='selection_status'></div>
 						</div>
 					</div>
 				</div>

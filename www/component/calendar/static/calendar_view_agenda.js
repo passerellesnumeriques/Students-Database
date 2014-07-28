@@ -64,6 +64,7 @@ function calendar_view_agenda(view, container) {
 	
 	/** Initialize the display */
 	this._init = function() {
+		container.style.overflow = "auto";
 		this.table = document.createElement("TABLE");
 		this.table.style.borderSpacing = 0;
 		this.table.style.width = "100%";

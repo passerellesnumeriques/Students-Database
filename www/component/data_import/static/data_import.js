@@ -1,9 +1,7 @@
 if (typeof require != 'undefined') {
-	require("vertical_layout.js",function(){
-		require("DataDisplay.js");
-		require("typed_field.js");
-		require("section.js");
-	});
+	require("DataDisplay.js");
+	require("typed_field.js");
+	require("section.js");
 }
 /**
  * Import data from Excel file
@@ -490,14 +488,18 @@ function data_import(container, root_table, preset_data, title) {
 	};
 	/** Initialize the screen */
 	this._createWizard = function() {
-		while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
+		container.removeAllChildren();
+		container.style.display = "flex";
+		container.style.flexDirection = "column";
 		t.header = document.createElement("DIV"); container.appendChild(t.header);
-		t.header.setAttribute("layout","35");
+		t.header.style.flex = "none";
+		t.header.style.height = "35px";
 		t.header.className = "wizard_header";
 		t.header.innerHTML = "<img src='/static/data_import/import_excel_32.png'/> Import Excel - "+title;
 		t.page_container = document.createElement("DIV"); container.appendChild(t.page_container);
-		t.page_container.setAttribute("layout", "fill");
+		t.page_container.style.flex = "auto";
 		t.buttons = document.createElement("DIV"); container.appendChild(t.buttons);
+		t.buttons.style.flex = "none";
 		t.buttons.className = "wizard_buttons";
 		t.previousButton = document.createElement("BUTTON"); t.buttons.appendChild(t.previousButton);
 		t.previousButton.innerHTML = "<img src='"+theme.icons_16.back+"'/> Previous";
@@ -535,9 +537,6 @@ function data_import(container, root_table, preset_data, title) {
 			t.onfinish(); 
 			t.unfreeze();
 		};
-		require("vertical_layout.js",function() {
-			new vertical_layout(container);
-		});
 		t.step1UploadFile();
 	};
 	this._createWizard();

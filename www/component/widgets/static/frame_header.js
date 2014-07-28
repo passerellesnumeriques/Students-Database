@@ -1,6 +1,4 @@
 if (typeof require != 'undefined') {
-	require("vertical_layout.js");
-	require("horizontal_layout.js");
 	require("animation.js");
 }
 if (typeof theme != 'undefined')
@@ -44,6 +42,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			if (!t.header_title) {
 				t.header_title = document.createElement("DIV");
 				t.header_title.className = "title";
+				t.header_title.style.flex = "none";
 				t.header.insertBefore(t.header_title, t.header.childNodes[0]);
 			}
 			t.header_title.removeAllChildren();
@@ -113,12 +112,17 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		if (tooltip_content) tooltip(control, tooltip_content);
 		if (!t.header_left) {
 			t.header_left = document.createElement("DIV");
+			t.header_left.style.flex = "none";
 			t.header_left.className = "left_controls";
 			t.header.insertBefore(t.header_left, t.header_menu);
-			require("vertical_align.js",function() {
-				if (t.header_left.parentNode)
-					t.header_left._valign = new vertical_align(t.header_left, menu_valign);
-			});
+			t.header_left.style.display = "flex";
+			t.header_left.style.flexDirection = "row";
+			switch (menu_valign) {
+			default:
+			case "bottom": t.header_left.style.justifyContent = "flex-end"; break;
+			case "top": t.header_left.style.justifyContent = "flex-start"; break;
+			case "middle": t.header_left.style.justifyContent = "center"; break;
+			}
 		}
 		t.header_left.appendChild(control);
 		layout.invalidate(t.header);
@@ -134,6 +138,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		if (tooltip_content) tooltip(control, tooltip_content);
 		if (!t.header_right) {
 			t.header_right = document.createElement("DIV");
+			t.header_right.style.flex = "none";
 			t.header_right.className = "right_controls";
 			t.header.appendChild(t.header_right);
 			t.header_right.appendChild(control);
@@ -170,11 +175,17 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 	};
 	
 	t._init = function() {
+		container.style.display = "flex";
+		container.style.flexDirection = "column";
 		// header
 		t.header = document.createElement("DIV");
 		t.header.className = "frame_header "+css;
-		if (header_height) t.header.setAttribute("layout", header_height);
+		t.header.style.flex = "none";
+		t.header.style.display = "flex";
+		t.header.style.flexDirection = "row";
+		if (header_height) t.header.style.height = header_height+"px";
 		t.header.appendChild(t.header_menu = document.createElement("DIV"));
+		t.header_menu.style.flex = "1 1 auto";
 
 		// set title if specified
 		if (container.hasAttribute("title")) {
@@ -190,6 +201,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		
 		// frame
 		t.frame = document.createElement("IFRAME");
+		t.frame.style.flex = "1 1 auto";
 		t.frame.onload = function() { t.frame_load(); };
 		if (!frame_name) frame_name = container.id+"_content"; 
 		t.frame.name = frame_name;
@@ -221,14 +233,6 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		// set layout
 		container.appendChild(t.header);
 		container.appendChild(t.frame);
-		t.frame.setAttribute("layout", "fill");
-		require("vertical_layout.js",function(){
-			new vertical_layout(container);
-		});
-		t.header_menu.setAttribute("layout", "fill");
-		require("horizontal_layout.js",function(){
-			new horizontal_layout(t.header);
-		});
 		require("horizontal_menu.js",function(){
 			var div = document.createElement("DIV");
 			div.className = "button";

@@ -56,7 +56,7 @@ class page_tree_frame extends Page {
 </style>
 <div id="curriculum_tree_frame_container" style="width:100%;height:100%;overflow:hidden;display:flex;flex-direction:row">
 	<iframe name="curriculum_tree_frame" id="curriculum_tree_frame" style="border:none;flex:1 1 auto;"></iframe>
-	<div id="curriculum_tree_container" style="flex:none;display:flex;flex-direction:column;">
+	<div id="curriculum_tree_container" style="flex:none;display:flex;flex-direction:column;min-width:240px">
 		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Classes' style="flex:none">
 			<?php if ($can_edit) { ?>
 			<button class='flat' onclick='createNewBatch();'>
@@ -65,7 +65,7 @@ class page_tree_frame extends Page {
 			</button>
 			<?php } ?>
 		</div>
-		<div id='tree' style='background-color:white;flex:1 1 auto;overflow:auto'></div>
+		<div id='tree' style='background-color:white;flex:1 1 auto;overflow-y:auto'></div>
 		<div id='tree_footer' style='flex:none'>
 			<div id='tree_footer_title'></div>
 			<div id='tree_footer_content'></div>
@@ -74,6 +74,7 @@ class page_tree_frame extends Page {
 </div>
 <script type='text/javascript'>
 var tr = new tree('tree');
+tr.table.style.marginRight = window.top.browser_scroll_bar_size+"px";
 tr.addColumn(new TreeColumn(""));
 
 //List of specializations

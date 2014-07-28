@@ -3,23 +3,23 @@ if (typeof theme != 'undefined')
 
 function wizard_simple(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
-	var t=this;
-	
+
 	this.container = container;
+	this.container.style.display = "flex";
+	this.container.style.flexDirection = "column";
 	this.header = document.createElement("DIV");
+	this.header.style.flex = "none";
 	this.header.className = "wizard_header";
 	this.header.style.padding = "2px";
 	this.content = document.createElement("DIV");
 	this.content.style.backgroundColor = 'white';
-	this.content.setAttribute("layout", "fill");
+	this.content.style.flex = "1 1 auto";
 	this.footer = document.createElement("DIV");
 	this.footer.className = 'wizard_buttons';
+	this.footer.style.flex = "none";
 	container.appendChild(this.header);
 	container.appendChild(this.content);
 	container.appendChild(this.footer);
-	require("vertical_layout.js", function() {
-		new vertical_layout(container);
-	});
 	
 	this.setTitle = function(icon_32, title) {
 		while (this.header.childNodes.length > 0) this.header.removeChild(this.header.childNodes[0]);

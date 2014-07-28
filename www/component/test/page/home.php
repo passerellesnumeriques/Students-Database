@@ -7,18 +7,15 @@ class page_home extends Page {
 		$exclude_components = array("development","test");
 		
 		$this->addJavascript("/static/widgets/header_bar.js");
-		$this->addJavascript("/static/widgets/vertical_layout.js");
-		$this->addJavascript("/static/widgets/horizontal_layout.js");
-		$this->addJavascript("/static/widgets/vertical_align.js");
 		$this->addJavascript("/static/widgets/section/section.js");
 		$this->addJavascript("/static/development/debug_status.js");
 		$this->addJavascript("/static/test/browser_control.js");
 		
 		$components = PNApplication::sortComponentsByDependencies();
 		
-		echo "<div id='page' style='height:100%;width:100%'>";
-			echo "<div id='top_status' layout='fixed' icon='/static/test/test_32.png' title='Automatic Tests'></div>";
-			echo "<div style='overflow:auto' layout='fill' id='components'>";
+		echo "<div style='height:100%;width:100%;display:flex;flex-direction:column;'>";
+			echo "<div id='top_status' style='flex:none' icon='/static/test/test_32.png' title='Automatic Tests'></div>";
+			echo "<div style='flex:1 1 auto;overflow:auto' id='components'>";
 			echo "</div>";
 		echo "</div>";
 		
@@ -165,7 +162,6 @@ function top_status_widget() {
 
 }
 var top_status = new top_status_widget();
-new vertical_layout('page');
 
 function load_tests(component, ondone) {
 	var loading = document.createElement("IMG");

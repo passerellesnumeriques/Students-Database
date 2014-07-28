@@ -86,7 +86,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	this.addTool = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar.appendChild(element);
-		element.style.display = "inline-block";
+		element.style.flex = "none";
 		layout.invalidate(this.element);
 	};
 	/** Add an element on the left of the title bar
@@ -95,12 +95,12 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	this.addToolLeft = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar_left.appendChild(element);
-		element.style.display = "inline-block";
+		element.style.flex = "none";
 		layout.invalidate(this.element);
 	};
 	/** Remove all elements on the left of the title bar (previously added using addToolLeft */
 	this.resetToolLeft = function() {
-		while (this.toolbar_left.childNodes.length > 0) this.toolbar_left.removeChild(this.toolbar_left.childNodes[0]);
+		this.toolbar_left.removeAllChildren();
 		layout.invalidate(this.element);
 	};
 	/** Add an element on the right of the title bar
@@ -109,12 +109,12 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	this.addToolRight = function(element) {
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar_right.appendChild(element);
-		element.style.display = "inline-block";
+		element.style.flex = "none";
 		layout.invalidate(this.element);
 	};
 	/** Remove all elements on the right of the title bar (previously added using addToolRight */
 	this.resetToolRight = function() {
-		while (this.toolbar_right.childNodes.length > 0) this.toolbar_right.removeChild(this.toolbar_right.childNodes[0]);
+		this.toolbar_right.removeAllChildren();
 		layout.invalidate(this.element);
 	};
 	/** Add an element in the footer. The footer will become visible when the first element will be added.
@@ -134,7 +134,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	/** Remove all elements on the footer, and hide the footer */
 	this.resetToolBottom = function() {
 		this.footer.className = "footer_empty";
-		while (this.footer.childNodes.length > 0) this.footer.removeChild(this.footer.childNodes[0]);
+		this.footer.removeAllChildren();
 		layout.invalidate(this.element);
 	};
 	
@@ -151,7 +151,6 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		this.title_container.style.display = "flex";
 		this.title_container.style.flexDirection = "row";
 		this.title_container.style.alignItems = "center";
-		this.title_container.style.height = "100%";
 		this.header.appendChild(this.title_container);
 		if (icon) {
 			this.icon = document.createElement("IMG");
@@ -168,12 +167,24 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		this.title_container.appendChild(this.title);
 		this.toolbar_left = document.createElement("DIV");
 		this.toolbar_left.style.flex = "none";
+		this.toolbar_left.style.display = "flex";
+		this.toolbar_left.style.flexDirection = "row";
+		this.toolbar_left.style.justifyContent = "center";
+		this.toolbar_left.style.alignItems = "center";
 		this.header.appendChild(this.toolbar_left);
 		this.toolbar = document.createElement("DIV");
 		this.toolbar.style.flex = "none";
+		this.toolbar.style.display = "flex";
+		this.toolbar.style.flexDirection = "row";
+		this.toolbar.style.justifyContent = "center";
+		this.toolbar.style.alignItems = "center";
 		this.header.appendChild(this.toolbar);
 		this.toolbar_right = document.createElement("DIV");
 		this.toolbar_right.style.flex = "none";
+		this.toolbar_right.style.display = "flex";
+		this.toolbar_right.style.flexDirection = "row";
+		this.toolbar_right.style.justifyContent = "center";
+		this.toolbar_right.style.alignItems = "center";
 		this.header.appendChild(this.toolbar_right);
 		
 		this.content_container = document.createElement("DIV");
@@ -208,20 +219,17 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 			}
 		}
 		
-		layout.addHandler(this.element, function() {
-			t.header.style.display = "inline-block";
-			t.content_container.style.display = "inline-block";
-			t.footer.style.display = "inline-block";
-			t.header.style.display = "flex";
-			t.content_container.style.display = "";
-			t.footer.style.display = "";
-			if (fill_height) {
-				t.content_container.style.height = (t.element.clientHeight-getHeight(t.header)-getHeight(t.footer))+"px";
-				content.style.width = "";
-				if (content.scrollHeight > content.clientHeight)
-					content.style.width = (content.scrollWidth+window.top.browser_scroll_bar_size)+"px";
-			}
-		});
+		if (fill_height) {
+			this.element.style.display = "flex";
+			this.element.style.flexDirection = "column";
+			this.header.style.flex = "none";
+			this.content_container.style.flex = "1 1 auto";
+			this.content_container.style.display = "flex";
+			this.content_container.style.flexDirection = "row";
+			content.style.paddingRight = window.top.browser_scroll_bar_size+"px";
+			content.style.overflowY = "auto";
+			this.footer.style.flex = "none";
+		}
 	};
 	
 	/** Toogle between collapsed and expanded */

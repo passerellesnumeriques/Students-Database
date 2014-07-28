@@ -18,8 +18,6 @@ class page_exam_results_edit extends SelectionPage {
 		$this->onload("sectionFromHTML('applicant_info');"); 
 		$this->onload("sectionFromHTML('exam_session_info');"); 
 		$this->addJavascript("/static/selection/exam/results_edit.js");
-		$this->requireJavascript("vertical_layout.js");
-		$this->onload("new vertical_layout('main_container');");
 		require_once("component/selection/SelectionExamJSON.inc");
 		$this->onload("initResultsEdit(".$input["session_id"].",".$input["room_id"].",".SelectionExamJSON::ExamSubjectsFullJSON().")");
 
@@ -35,8 +33,8 @@ class page_exam_results_edit extends SelectionPage {
 		</style>
 	
 		<!-- main structure of the results edit page -->
-		<div id='main_container'>
-			<div id="header_results" style="height:200px">
+		<div style='display:flex;flex-direction:column;'>
+			<div id="header_results" style="height:200px;flex:none">
 			      <div id="exam_session_info" title='Exam session' icon="/static/theme/default/icons_16/info.png" collapsable='true' css="soft" style="display:inline-block;margin:10px 0 0 10px;vertical-align: top;">
 				<?php $this->createExamSessionInfoBox($input); ?>
 			      </div>
@@ -44,10 +42,10 @@ class page_exam_results_edit extends SelectionPage {
 				<?php $this->createApplicantInfoBox($input); ?>
 			      </div>
 			</div>
-			<div layout="fill">
+			<div style="flex:1 1 auto;">
 				<div id="subj_results" style="margin:10px;display:inline-block"></div>
 			</div>
-			<div id="footer_results" style="margin-right: 10px;">
+			<div id="footer_results" style="margin-right: 10px;flex:none">
 			</div>
 		</div>
 	<?php

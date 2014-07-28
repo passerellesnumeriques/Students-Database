@@ -1,6 +1,6 @@
 if (typeof theme != 'undefined') theme.css("header_bar.css");
 if (typeof require != 'undefined') {
-	require(["horizontal_layout.js","event_date_time_duration.js","popup_window.js","calendar_objects.js"]);
+	require(["event_date_time_duration.js","popup_window.js","calendar_objects.js"]);
 }
 
 function exam_center_sessions(container, rooms_container, rooms, sessions, applicants, linked_is, default_duration, calendar_id) {
@@ -349,21 +349,19 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	this._initSessions = function() {
 		// split into 2 horizontal elements: (1) the non-assigned applicants, (2) scheduled sessions
 		this._horiz_div = document.createElement("DIV");
+		this._horiz_div.style.display = "flex";
 		this._horiz_div.style.verticalAlign = "top";
 		this._left_div = document.createElement("DIV");
+		this._left_div.style.flex = "none";
 		this._left_div.style.verticalAlign = "top";
 		this._horiz_div.appendChild(this._left_div);
 		this._sessions_container = document.createElement("DIV");
-		this._sessions_container.setAttribute('layout','fill');
+		this._sessions_container.style.flex = "1 1 auto";
 		this._sessions_container.style.overflowX = "auto";
 		this._sessions_container.style.verticalAlign = "top";
 		this._sessions_container.style.margin = "5px";
 		this._horiz_div.appendChild(this._sessions_container);
 		container.appendChild(this._horiz_div);
-		var t=this;
-		require("horizontal_layout.js", function() {
-			new horizontal_layout(t._horiz_div);
-		});
 		
 		// left side - not assigned
 		this._initNotAssignedList();

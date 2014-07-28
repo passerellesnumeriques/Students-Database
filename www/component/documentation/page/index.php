@@ -4,20 +4,16 @@ class page_index extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		echo "<div style='width:100%;height:100%' id='doc_top_container'>";
-			echo "<div style='background-color:#C0C0C0' layout='25'>";
+		echo "<div style='width:100%;height:100%;display:flex;flex-direction:column;'>";
+			echo "<div style='background-color:#C0C0C0;flex:none;height:25px;'>";
 			echo "PN Students Database - Technical Documentation";
 			echo " <button onclick='location.reload();'><img src='".theme::$icons_16["refresh"]."'/></button>";
 			echo "</div>";
-			echo "<div layout='fill'>";
-				echo "<div style='width:100%;height:100%' id='doc_container'>";
-					echo "<iframe src='navigation' style='border:none;width:100%;height:100%' frameBorder=0 name='navigation'></iframe>";
-					echo "<iframe src='home' style='border:none;width:100%;height:100%' frameBorder=0 name='documentation'></iframe>";
-				echo "</div>";
+			echo "<div style='flex:1 1 auto;' id='doc_container'>";
+				echo "<iframe src='navigation' style='border:none;width:100%;' frameBorder=0 name='navigation'></iframe>";
+				echo "<iframe src='home' style='border:none;width:100%;' frameBorder=0 name='documentation'></iframe>";
 			echo "</div>";
 		echo "</div>";
-		$this->requireJavascript("vertical_layout.js");
-		$this->onload("new vertical_layout('doc_top_container');");
 		$this->requireJavascript("splitter_vertical.js");
 		$this->onload("new splitter_vertical('doc_container',0.2);");
 		?>

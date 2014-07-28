@@ -167,7 +167,7 @@ new data_list(
 						var p = new window.parent.popup_window("Assign Specializations", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
 						var frame = p.setContentFrame("/dynamic/students/page/assign_specializations?batch=<?php echo $batches[0];?>&onsave=reload_list");
 						frame.reload_list = reload_list;
-						p.show();
+						p.showPercent(95,95);
 					});
 				};
 				list.addFooterTool(assign_spe);
@@ -184,7 +184,7 @@ new data_list(
 					var p = new window.parent.popup_window("Assign Students to Classes", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
 					var frame = p.setContentFrame("/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period'])+"&onsave=reload_list");
 					frame.reload_list = reload_list;
-					p.show();
+					p.showPercent(95,95);
 				});
 			};
 			list.addFooterTool(assign);

@@ -96,7 +96,6 @@ class page_assign_classes extends Page {
 		}
 		
 		$this->requireJavascript("assign_elements.js");
-		$this->requireJavascript("fill_height_layout.js");
 		$this->requireJavascript("section.js");
 		?>
 		<div id='top_container' style='width:100%;height:100%;overflow-x:auto'>
@@ -146,7 +145,6 @@ class page_assign_classes extends Page {
 				echo "sec.element.style.display = 'inline-block';\n";
 				echo "sec.element.style.margin = '5px';\n";
 				echo "document.getElementById('top_container').appendChild(sec.element);\n";
-				echo "new fill_height_layout(sec.element);\n";
 			} else
 				echo "container = document.getElementById('top_container');\n";
 			echo "assign = new assign_elements(container,".($section_name<>null?"'sub'":"null").",null,display_people,function(assign){\n";

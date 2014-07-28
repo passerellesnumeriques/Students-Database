@@ -28,19 +28,20 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	this._init = function() {
 		while (container.childNodes.length > 0)
 			container.removeChild(container.childNodes[0]);
-		var has_fixed_height = getHeight(container) > 0;
+		container.style.display = "flex";
+		container.style.flexDirection = "column";
 		this.header = document.createElement("DIV");
+		this.header.style.flex = "none";
+		this.header.style.height = "28px";
 		this.header.style.fontSize = '9pt';
 		//this.header.style.backgroundColor = "#D8D8D8";
 		this.header.className = "header";
-		this.view_container_container = document.createElement("DIV");
-		this.view_container_container.style.backgroundColor = "white";
 		this.view_container = document.createElement("DIV");
-		this.view_container.style.position = "relative";
-		this.view_container_container.appendChild(this.view_container);
+		this.view_container.style.flex = "1 1 auto";
+		this.view_container.style.backgroundColor = "white";
 		if (view_name != "upcoming")
 			container.appendChild(this.header);
-		container.appendChild(this.view_container_container);
+		container.appendChild(this.view_container);
 		var ready_count = 0;
 		var ready = function() {
 			if (++ready_count == 2) {
@@ -48,21 +49,8 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 				layout.invalidate(container);
 			}
 		};
-		if (has_fixed_height)
-			require("vertical_layout.js",function(){
-				t.header.setAttribute("layout", "28");
-				t.view_container_container.setAttribute("layout", "fill");
-				t.view_container_container.style.overflow = "auto";
-				t.view_container.style.width = "100%";
-				t.view_container.style.height = "100%";
-				new vertical_layout(container);
-				t.changeView(t.view_name, ready);
-				ready();
-			});
-		else {
-			this.changeView(this.view_name, ready);
-			ready();
-		}
+		this.changeView(t.view_name, ready);
+		ready();
 		require("mac_tabs.js",function() {
 			t.view_tabs = new mac_tabs();
 			t.view_tabs.addItem("Day", "day");

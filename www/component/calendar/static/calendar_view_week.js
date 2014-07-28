@@ -130,33 +130,29 @@ function calendar_view_week(view, container) {
 	
 	/** Create the display */
 	this._init = function() {
-		var has_fixed_height = getHeight(container) > 0;
+		container.style.overflow = "";
+		container.style.display = "flex";
+		container.style.flexDirection = "column";
 		this.header = document.createElement("DIV");
+		this.header.style.flex = "none";
+		this.header.style.height = "16px";
 		this.header.style.borderBottom = "1px solid black";
 		this.day_row_container_ = document.createElement("DIV");
 		this.day_row_container = document.createElement("DIV");
+		this.day_row_container_.style.flex = "none";
+		this.day_row_container_.style.height = "10px";
 		this.day_row_container.style.position = "relative";
 		this.day_row_container.style.width = "100%";
-		this.day_row_container.style.height = "100%";
 		this.day_row_container_.appendChild(this.day_row_container);
 		this.content_ = document.createElement("DIV");
+		this.content_.style.flex = "1 1 auto";
+		this.content_.style.overflow = "auto";
 		this.content = document.createElement("DIV");
 		this.content.style.width = "100%";
-		this.content.style.height = "100%";
 		this.content_.appendChild(this.content);
 		container.appendChild(this.header);
 		container.appendChild(this.day_row_container_);
 		container.appendChild(this.content_);
-		if (has_fixed_height) {
-			t.header.setAttribute("layout", "16");
-			t.day_row_container_.setAttribute("layout", "10");
-			t.content_.setAttribute("layout", "fill");
-			t.content.style.overflow = "auto";
-			require("vertical_layout.js", function() { new vertical_layout(container); t._layout(); });
-		} else {
-			t.header.style.height = "16px";
-			t.day_row_container.style.height = "10px";
-		}
 		require("day_row_layout.js", function() { t.row_layout = new day_row_layout(view.calendar_manager); t._layout(); });
 		
 		this.corner = document.createElement("DIV");
@@ -229,12 +225,6 @@ function calendar_view_week(view, container) {
 		}
 		
 		this._createTimeScale();
-		/*if (has_fixed_height)
-		for (var i = 0; i < this.time_title.childNodes.length; ++i)
-			if (this.time_title.childNodes[i].time.getHours() > 6) {
-				scrollTo(this.time_title.childNodes[i]);
-				break;
-			}*/
 		addJavascript(get_script_path("calendar_view_week.js")+"day_column_layout.js",function(){
 			t.day_column = [];
 			for (var i = 0; i < 7; ++i)
@@ -283,8 +273,7 @@ function calendar_view_week(view, container) {
 		this.time_title.style.height = y+"px";
 		for (var i = 0; i < 7; ++i)
 			this.day_content[i].style.height = y+"px";
-		if (!t.content_.hasAttribute("layout"))
-			t.content_.style.height = y+"px";
+		t.content.style.height = y+"px";
 	};
 	/** {Element} line which indicates the actual time */
 	this._now = null;
@@ -319,7 +308,7 @@ function calendar_view_week(view, container) {
 		if (typeof setTimeout == 'undefined') return; // not there anymore
 		if (!t._timeout)
 			t._timeout = setTimeout(function(){
-				var w = container.clientWidth-51;
+				var w = container.clientWidth-51-window.top.browser_scroll_bar_size;
 				w -= (t.content.offsetWidth-t.content.clientWidth);
 				for (var i = 0; i < t._time_lines.length; ++i)
 					t._time_lines[i].style.width = w+"px";
@@ -346,10 +335,7 @@ function calendar_view_week(view, container) {
 						for (var j = 0; j < t.events[i].length; ++j)
 							if (t.events[i][j].all_day) list.push(t.events[i][j]);
 					var h = t.row_layout.layout(list, t.day_box, t.start_date);
-					if (t.day_row_container_.hasAttribute("layout"))
-						t.day_row_container_.setAttribute("layout",h);
-					else
-						t.day_row_container_.style.height = h+"px";
+					t.day_row_container_.style.height = h+"px";
 					if (container.widget) container.widget.layout();
 				}
 				t._timeout = null;

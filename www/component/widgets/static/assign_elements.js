@@ -1,8 +1,5 @@
 if (typeof require != 'undefined') {
 	require("section.js");
-	require("vertical_layout.js");
-	require("fill_height_layout.js");
-	require("vertical_align.js");
 }
 if (typeof theme != 'undefined') {
 	theme.css("section.css");
@@ -24,7 +21,6 @@ function assign_elements(container, sections_css, non_assigned_icon, element_dis
 		unassign.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Unassign";
 		s.section.addToolBottom(unassign);
 		this._sections_container.appendChild(s.section.element);
-		new fill_height_layout(s.section.element);
 		var button = document.createElement("BUTTON");
 		button.style.display = "block";
 		//button.style.width = "100%";
@@ -109,35 +105,35 @@ function assign_elements(container, sections_css, non_assigned_icon, element_dis
 	};
 	
 	this._init = function() {
+		container.style.display = "flex";
+		container.style.flexDirection = "column";
 		this.header = document.createElement("DIV");
 		this.header.innerHTML = "<img src='"+theme.icons_16.info+"' style='vertical-align:bottom'/> Select elements and assign/unassign them, or drag and drop elements";
 		this.header.className = "info_header";
+		this.header.style.flex = "none";
 		container.appendChild(this.header);
 		this._sections_container = document.createElement("DIV");
-		this._sections_container.setAttribute("layout","fill");
+		this._sections_container.style.flex = "1 1 auto";
 		this._sections_container.style.padding = "5px";
-		this._sections_container.style.verticalAlign = "top";
+		this._sections_container.style.display = "flex";
+		this._sections_container.style.flexDirection = "row";
 		container.appendChild(this._sections_container);
 		this._non_assigned = new assign_elements_section(this,non_assigned_icon, "Non-assigned", sections_css, element_display_provider);
 		this._sections_container.appendChild(this._non_assigned.section.element);
-		new fill_height_layout(this._non_assigned.section.element);
-		new vertical_layout(container,true);
 		var div = document.createElement("DIV");
-		div.style.display = "inline-block";
 		div.style.margin = "0px 8px 0px 3px";
-		div.style.verticalAlign = "top";
+		div.style.alignSelf = "center";
+		div.style.flex = "none";
 		this.div_buttons = document.createElement("DIV"); div.appendChild(this.div_buttons);
 		this.div_buttons.style.backgroundColor = "#FFFFFF";
 		setBorderRadius(this.div_buttons, 5,5,5,5,5,5,5,5);
 		setBoxShadow(this.div_buttons, 2,2,2,0, "#C0C0C0");
 		this.div_buttons.style.padding = "2px";
 		this._sections_container.appendChild(div);
-		new vertical_align(div,"middle");
-		new fill_height_layout(div);
 		layout.invalidate(container);
 		if (onready) onready(this);
 	};
-	require(["section.js","vertical_layout.js","fill_height_layout.js","vertical_align.js"], function() {
+	require(["section.js"], function() {
 		t._init();
 	});
 }
@@ -248,11 +244,8 @@ function assign_elements_section(assign,icon,title,css, element_display_provider
 		span.appendChild(this._span_nb);
 		span.appendChild(document.createTextNode(")"));
 		this.content = document.createElement("DIV");
-		this.content.style.overflowY = "auto";
-		this.content.style.height = "100%";
 		this.section = new section(icon, span, this.content, false, true, css);
-		this.section.element.style.display = "inline-block";
-		this.section.element.style.verticalAlign = "top";
+		this.section.element.style.flex = "none";
 		
 		this.content.ondragover = function(event) {
 			if (event.dataTransfer.types.contains("assign_element_"+assign.id)) {

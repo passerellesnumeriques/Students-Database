@@ -116,37 +116,37 @@ function calendar_view_day(view, container) {
 	
 	/** Create the display */
 	this._init = function() {
-		var has_fixed_height = getHeight(container) > 0;
+		container.style.overflow = "";
+		container.style.display = "flex";
+		container.style.flexDirection = "column";
 		this.header = document.createElement("DIV");
+		this.header.style.flex = "none";
+		this.header.style.height = "16px";
 		this.header.style.borderBottom = "1px solid black";
 		this.day_row_container_ = document.createElement("DIV");
+		this.day_row_container_.style.flex = "none";
+		this.day_row_container_.style.height = "10px";
 		this.day_row_container = document.createElement("DIV");
 		this.day_row_container.style.position = "relative";
 		this.day_row_container.style.width = "100%";
-		this.day_row_container.style.height = "100%";
 		this.day_row_container_.appendChild(this.day_row_container);
 		this.content_ = document.createElement("DIV");
+		this.content_.style.flex = "1 1 auto";
+		this.content_.style.overflow = "auto";
 		this.content = document.createElement("DIV");
 		this.content.style.width = "100%";
-		this.content.style.height = "100%";
 		this.content_.appendChild(this.content);
 		container.appendChild(this.header);
 		container.appendChild(this.day_row_container_);
 		container.appendChild(this.content_);
-		if (has_fixed_height) {
-			t.header.setAttribute("layout", "20");
-			t.day_row_container_.setAttribute("layout", "10");
-			t.content_.setAttribute("layout", "fill");
-			t.content.style.overflow = "auto";
-			require("vertical_layout.js", function() { new vertical_layout(container); t._layout(); });
-		} else {
-			t.header.style.height = "20px";
-			t.day_row_container.style.height = "10px";
-		}
 		require("day_row_layout.js", function() { t.row_layout = new day_row_layout(view.calendar_manager); t._layout(); });
 		
+		t.header.style.display = "flex";
+		t.header.style.flexDirection = "row";
 		this.corner = document.createElement("DIV");
-		this.corner.setAttribute("layout", "50");
+		this.corner.style.minWidth = "50px";
+		this.corner.style.maxWidth = "50px";
+		this.corner.style.flex = "none";
 		var tz = -(new Date().getTimezoneOffset());
 		this.corner.innerHTML = "GMT";
 		if (tz != 0) {
@@ -156,7 +156,7 @@ function calendar_view_day(view, container) {
 			if (tz > 0) this.corner.innerHTML += ":"+_2digits(tz);
 		}
 		this.day_title = document.createElement("DIV");
-		this.day_title.setAttribute("layout", "fill");
+		this.day_title.style.flex = "1 1 auto";
 		this.day_title.style.borderLeft = "1px solid black";
 		this.day_title.style.textAlign = "center";
 		this.day_title.innerHTML = this.start_date.toDateString();
@@ -169,7 +169,6 @@ function calendar_view_day(view, container) {
 		this.day_box.style.position = "absolute";
 		this.day_box.style.left = "50px";
 		this.day_row_container.appendChild(this.day_box);
-		require("horizontal_layout.js", function() { new horizontal_layout(t.header); t._layout(); });
 		
 		this.content.style.position = "relative";
 		this.time_title = document.createElement("DIV");
@@ -229,8 +228,7 @@ function calendar_view_day(view, container) {
 		var y = Math.floor(24*60*20/view.zoom);
 		this.time_title.style.height = y+"px";
 		this.day_content.style.height = y+"px";
-		if (!t.content_.hasAttribute("layout"))
-			t.content_.style.height = y+"px";
+		t.content.style.height = y+"px";
 	};
 	/** {Element} line which indicates the actual time */
 	this._now = null;
@@ -261,7 +259,7 @@ function calendar_view_day(view, container) {
 		if (!this.day_content) return;
 		if (!t._timeout)
 			t._timeout = setTimeout(function(){
-				var w = container.clientWidth-51;
+				var w = container.clientWidth-51-window.top.browser_scroll_bar_size;
 				w -= (t.content.offsetWidth-t.content.clientWidth);
 				if (t._now) t._now.style.width = w+"px";
 				t.day_content.style.width = w+"px";
@@ -279,10 +277,7 @@ function calendar_view_day(view, container) {
 					for (var j = 0; j < t.events.length; ++j)
 						if (t.events[j].all_day) list.push(t.events[j]);
 					var h = t.row_layout.layout(list, [t.day_box], t.start_date);
-					if (t.day_row_container.hasAttribute("layout"))
-						t.day_row_container_.setAttribute("layout",h);
-					else
-						t.day_row_container_.style.height = h+"px";
+					t.day_row_container_.style.height = h+"px";
 					if (container.widget) container.widget.layout();
 				}
 				t._timeout = null;

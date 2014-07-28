@@ -1,5 +1,4 @@
 if (typeof require != 'undefined') {
-	require("horizontal_layout.js");
 	require("horizontal_menu.js");
 }
 
@@ -62,12 +61,16 @@ function header_bar(container, style) {
 	};
 	
 	t._init = function() {
+		container.style.display = "flex";
+		container.style.flexDirection = "row";
 		// title section
 		t.title = document.createElement("DIV");
+		t.title.style.flex = "none";
 		t.title.className = "header_bar_title";
 		
 		// menu section
 		t.menu_container = document.createElement("DIV");
+		t.menu_container.style.flex = "1 1 auto";
 		
 		// initialization from HTML, if any
 		if (container.hasAttribute("title")) {
@@ -87,10 +90,9 @@ function header_bar(container, style) {
 		container.appendChild(t.title);
 		container.appendChild(t.menu_container);
 		t.menu_container.setAttribute("layout", "fill");
-		require("horizontal_layout.js", function() { new horizontal_layout(container); });
 		require("horizontal_menu.js",function() { 
-			t.more_menu = document.createElement("DIV");
-			t.more_menu.className = "button";
+			t.more_menu = document.createElement("BUTTON");
+			t.more_menu.className = "flat";
 			t.more_menu.innerHTML = "<img src='"+theme.icons_16.more_menu+"'/> More";
 			t.menu_container.appendChild(t.more_menu);
 			t.menu = new horizontal_menu(t.menu_container, "middle"); 
