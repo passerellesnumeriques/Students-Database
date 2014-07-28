@@ -1,64 +1,60 @@
+.popup_window_layer {
+    z-index: 50;
+}
 .popup_window {
-	position: fixed;
-	z-index: 50;
 	box-shadow: 0 0 10px 3px #E0E0FF;
 	background-color: white;
 	border: 1px solid black;
 	border-spacing: 0px;
 	border-radius: 5px;
+	max-height: 95%;
+	max-width: 95%;
 }
-.popup_window_title {
+.popup_window_header {
 	background-color: #D0D0F0;
 	height: 30px;
 	border-top-left-radius: 5px;
 	border-top-right-radius: 5px;
 	white-space: nowrap;
+	justify-content: center;
+    border-bottom: 1px solid #6060A0;
 }
-.popup_window_title>td:first-child {
+.popup_window_header>*:first-child {
 	border-top-left-radius: 5px;
 }
-.popup_window_title>td:last-child {
+.popup_window_header>*:last-child {
 	border-top-right-radius: 5px;
 }
-.popup_window>tr:last-child, 
-.popup_window>tbody>tr:last-child, 
-.popup_window>tr:last-child>td, 
-.popup_window>tbody>tr:last-child>td, 
-.popup_window>tr:last-child>td>div 
-.popup_window>tbody>tr:last-child>td>div 
-.popup_window>tr:last-child>td>div>iframe, 
-.popup_window>tbody>tr:last-child>td>div>iframe
-{
-	border-bottom-left-radius: 5px;
-	border-bottom-right-radius: 5px;
+.popup_window_title {
+    padding: 2px;
+    color: white;
+    font-weight: bold;
+    font-size: 11pt;
+    text-shadow: black 0.1em 0.1em 0.2em;
+    cursor: move;
 }
+
 .popup_window.blink {
-	box-shadow: 0 0 20px 3px #FFA000;
-	border: 1px solid #FFA000;
+    box-shadow: 0 0 20px 3px #FFA000;
+    border: 1px solid #FFA000;
 }
-.popup_window.blink .popup_window_title {
-	background-color: #FFA000;
+.popup_window.blink .popup_window_header {
+    background-color: #FFA000;
 }
-.popup_window_title td {
-	padding: 2px;
-	color: white;
-	font-weight: bold;
-	font-size: 11pt;
-	text-shadow: black 0.1em 0.1em 0.2em;
-	border-bottom: 1px solid #6060A0;
-	cursor: move;
+
+.popup_window>*:last-child {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
 }
-.popup_window_title td+td {
-	width: 20px;
-	cursor: pointer;
-}
+
 .popup_window_buttons {
 	background-color: #D0D0D0;
-	height: 20px;
-}
-.popup_window_buttons td {
-	border-top: 1px solid #808080;
-	text-align: right;
+    border-top: 1px solid #808080;
+    display: flex;
+    flex-direction: row;
+    padding: 2px 5px;
+    align-items: center;
+    justify-content: flex-end;
 }
 .popup_window_buttons button {
 	margin-left: 2px;

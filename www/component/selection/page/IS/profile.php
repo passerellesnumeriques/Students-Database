@@ -159,7 +159,7 @@ class page_IS_profile extends SelectionPage {
 			postFrame('/dynamic/selection/page/applicant/list?all=true',{filters:[{category:'Selection',name:'Information Session',force:true,data:{values:[is_id]}}]}, 'applicants_frame');
 		}
 		
-		is_popup.removeAllButtons();
+		is_popup.removeButtons();
 		<?php if ($editable && $id <> null && $can_remove) {?>
 		is_popup.addIconTextButton(theme.icons_16.remove, "Remove this session", "remove", function() {
 			confirm_dialog("Are you sure you want to remove this information session ?<br/>Note: Any applicant already assigned to this information session will remain in the system, but without information session.",function(res){

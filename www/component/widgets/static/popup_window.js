@@ -33,15 +33,15 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.setContent = function(content) { 
 		t.content = content;
 		if (t.content_container) {
-			while (t.content_container.childNodes.length > 0) t.content_container.removeChild(t.content_container.childNodes[0]);
+			t.content_container.removeAllChildren();
 			if (typeof content == 'string')
 				t.content_container.innerHTML = content;
 			else
 				t.content_container.appendChild(content);
-			t.resize();
+			layout.invalidate(t.content);
 		}
 	};
-	t.resize_listener = function() { t.resize(); };
+	
 	/** Set (change) the content of the popup window to be an IFRAME.
 	 * @param {String} url url to load in the frame
 	 * @param {Function} onload if specified, it is called when the frame is loaded
@@ -51,7 +51,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (!t.content_container)
 			t.content_container = document.createElement("DIV");
 		else
-			while (t.content_container.childNodes.length > 0) t.content_container.removeChild(t.content_container.childNodes[0]);
+			t.content_container.removeAllChildren();
+
 		t.content = document.createElement("DIV");
 		t.content.style.textAlign = "center";
 		t.content.style.padding = "10px";
@@ -72,31 +73,20 @@ function popup_window(title,icon,content,hide_close_button) {
 			} else {
 				t.content_container.removeChild(t.content);
 				t.content = frame;
-				frame.style.visibility = "visible";
-				//t.table.style.width = "80%";
-				t.content.style.width = "100%";
-				t.content.style.height = "100%";
+				t.content.style.visibility = "visible";
 				if (t.content._post_data) {
 					postData(t.content._post_url, t.content._post_data, getIFrameWindow(t.content));
 					t.content._post_data;
 				}
-				t.resize();
+				t._setSizeType(t._size_type);
+				if (onload) 
+					waitFrameContentReady(frame, function(win) {
+						return win.layout && win._page_ready;
+					}, function() {
+						if (!t.popup) return; // already closed
+						onload(frame);
+					});
 			}
-			var check_ready = function() {
-				if (!t.table) return; // popup has been already closed
-				var win = getIFrameWindow(t.content);
-				if (!win || !win.layout || !win._page_ready) {
-					setTimeout(check_ready, 10);
-					return;
-				}
-				var b = win.document.body;
-				win.layout.cancelResizeEvent();
-				win.layout.addHandler(b, t.resize_listener);
-				for (var i = 0; i < b.childNodes.length; ++i) 
-					getIFrameWindow(t.content).layout.addHandler(b.childNodes[i], t.resize_listener);
-				if (onload) onload(t.content);
-			};
-			check_ready();
 		};
 		if (!post_data) {
 			frame.src = url;
@@ -104,7 +94,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			frame._post_url = url;
 			frame._post_data = post_data;
 		}
-		t.resize();
+		layout.invalidate(t.content_container);
 		return frame;
 	};
 	
@@ -115,7 +105,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param {function} onclick onclick event handler
 	 */
 	t.addButton = function(html, id, onclick) {
-		var b = (t.table ? t.table.ownerDocument : document).createElement("BUTTON");
+		var b = (t.popup ? t.popup.ownerDocument : document).createElement("BUTTON");
 		if (typeof html == 'string')
 			b.innerHTML = html;
 		else
@@ -123,34 +113,24 @@ function popup_window(title,icon,content,hide_close_button) {
 		b.id = id;
 		b.onclick = onclick;
 		t.buttons.push(b);
-		if (t.table) {
-			if (!t.buttons_tr) {
-				t.buttons_tr = t.table.ownerDocument.createElement("TR");
-				t.buttons_tr.className = 'popup_window_buttons';
-				t.table.appendChild(t.buttons_tr);
-				t.buttons_td = t.table.ownerDocument.createElement("TD"); t.buttons_tr.appendChild(t.buttons_td);
-				t.buttons_td.colSpan = 2;
-			}
-			t.buttons_td.appendChild(b);
-			t.resize();
+		if (t.footer) {
+			t.footer.appendChild(b);
+			t.footer.style.display = "";
+			layout.invalidate(t.footer);
 		}
 	};
 	t.removeButtons = function() {
-		if (!t.buttons_tr) return;
-		if (t.table) t.table.removeChild(t.buttons_tr);
-		t.buttons_tr = null;
-		t.buttons_td = null;
+		t.buttons = [];
+		if (t.footer) {
+			t.footer.removeAllChildren();
+			t.footer.display = "none";
+			layout.invalidate(t.popup);
+		}
 	};
 	t.addFooter = function(html) {
-		if (!t.buttons_tr) {
-			t.buttons_tr = t.table.ownerDocument.createElement("TR");
-			t.buttons_tr.className = 'popup_window_buttons';
-			t.table.appendChild(t.buttons_tr);
-			t.buttons_td = t.table.ownerDocument.createElement("TD"); t.buttons_tr.appendChild(t.buttons_td);
-			t.buttons_td.colSpan = 2;
-		}
-		t.buttons_td.appendChild(html);
-		t.resize();
+		t.footer.appendChild(html);
+		t.footer.style.display = "";
+		layout.invalidate(t.footer);
 	};
 	t.addIconTextButton = function(icon, text, id, onclick) {
 		var span = document.createElement("SPAN");
@@ -283,14 +263,9 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.onEscape(function() { t.close(); });
 	};
 	
-	t.removeAllButtons = function() {
-		if (t.buttons_td) while (t.buttons_td.childNodes.length > 0) t.buttons_td.removeChild(t.buttons_td.childNodes[0]);
-		t.buttons = [];
-	};
-	
 	t.onEnter = function(onenter) {
 		var listener = function(ev) {
-			if (!t.table) return;
+			if (!t.popup) return;
 			if (ev.target.nodeName == "TEXTAREA") return;
 			var e = getCompatibleKeyEvent(ev);
 			if (e.isEnter) onenter();
@@ -308,7 +283,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	t.onEscape = function(onescape) {
 		var listener = function(ev) {
-			if (!t.table) return;
+			if (!t.popup) return;
 			var e = getCompatibleKeyEvent(ev);
 			if (e.isEscape) onescape();
 		};
@@ -325,56 +300,31 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	
 	t.isShown = function() {
-		return t.table != null;
+		return t.popup != null;
 	};
 	
 	t.showPercent = function(width, height) {
-		t.resize = function() {
-			if (!t.table) return;
-			var win = getWindowFromElement(t.table);
-			var ww = win.getWindowWidth();
-			var wh = win.getWindowHeight();
-			t.table.style.left = Math.floor(ww*(100-width)/200)+"px";
-			t.table.style.top = Math.floor(wh*(100-height)/200)+"px";
-			t.table.style.width = Math.floor(ww*width/100)+"px";
-			t.table.style.height = Math.floor(wh*height/100)+"px";
-			var h = 0;
-			if (t.header) h += win.getHeight(t.header);
-			if (t.buttons_tr) h += win.getHeight(t.buttons_tr);
-			t.content_container.style.height = Math.floor(wh*height/100-h)+"px";
-			if (t.table._ww != ww || t.table._wh != wh) {
-				t.table._ww = ww;
-				t.table._wh = wh;
-				layout.invalidate(t.content);
-			}
-		};
-		var win;
-		if (t.table == null)
-			win = t._buildTable();
-		else
-			win = getWindowFromElement(t.table);
-		t.content_container.style.width = "100%";
-		if (t.content.nodeName == "IFRAME") {
-			t.content.style.width = "100%";
-			t.content.style.height = "100%";
-			layout.invalidate(t.content);
-		}
-		t.resize();
-		win.listenEvent(win, "resize", t.resize_listener);
+		if (!t.popup)
+			t._buildPopup();
+		t.popup.style.width = width+"%";
+		t.popup.style.height = height+"%";
+		t._setSizeType("fixed");
 	};
 	
 	/** Display the popup window
 	 * @method popup_window#show
 	 */
 	t.show = function(){
-		t._buildTable();
+		t._buildPopup();
+		t._setSizeType("fit");
+
 		var move_handler = function(ev) {
-			var win = getWindowFromDocument(t.table.ownerDocument);
-			if (!t.table) {
+			var win = getWindowFromDocument(t.popup.ownerDocument);
+			if (!t.popup) {
 				// popup closed!
-				unlistenEvent(win,'mousemove',move_handler);
+				unlistenEvent(t.popup_container,'mousemove',move_handler);
 				unlistenEvent(win,'mouseup',up_handler);
-				unlistenEvent(win,'mouseout',up_handler);
+				//unlistenEvent(win,'mouseout',up_handler);
 				return;
 			}
 			if (!ev) ev = win.event;
@@ -383,47 +333,120 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (diff_x == 0 && diff_y == 0) return;
 			t._move_x = ev.clientX;
 			t._move_y = ev.clientY;
-			var x = win.absoluteLeft(t.table);
+			var x = parseInt(t.popup.style.left);
 			x += diff_x;
-			if (x < 5) x = 5;
-			if (x + t.table.offsetWidth > win.getWindowWidth()-10) x = win.getWindowWidth()-5-t.table.offsetWidth;
-			var y = win.absoluteTop(t.table);
+			t.popup.style.left = x+"px";
+			var y = parseInt(t.popup.style.top);
 			y += diff_y;
-			if (y < 5) y = 5;
-			if (y + t.table.offsetHeight > win.getWindowHeight()-10) y = win.getWindowHeight()-5-t.table.offsetHeight;
-			t.table.style.top = y+"px";
-			t.table.style.left = x+"px";
+			t.popup.style.top = y+"px";
 		};
 		var up_handler = null; // only to remove the warning
 		up_handler = function(ev) {
-			var win = getWindowFromDocument(t.table.ownerDocument);
-			unlistenEvent(win,'mousemove',move_handler);
+			var win = getWindowFromDocument(t.popup.ownerDocument);
+			unlistenEvent(t.popup_container,'mousemove',move_handler);
 			unlistenEvent(win,'mouseup',up_handler);
-			unlistenEvent(win,'mouseout',up_handler);
+			//unlistenEvent(win,'mouseout',up_handler);
 		};
 		t.header.onmousedown = function(ev) {
-			var win = getWindowFromDocument(t.table.ownerDocument);
+			if (t.popup.style.position != "relative") {
+				t.popup.style.position = "relative";
+				t.popup.style.top = "0px";
+				t.popup.style.left = "0px";
+			}
+			var win = getWindowFromDocument(t.popup.ownerDocument);
 			if (!ev) ev = win.event;
 			t._move_x = ev.clientX;
 			t._move_y = ev.clientY;
-			listenEvent(win,'mousemove',move_handler);
+			listenEvent(t.popup_container,'mousemove',move_handler);
 			listenEvent(win,'mouseup',up_handler);
-			listenEvent(win,'mouseout',up_handler);
+			//listenEvent(win,'mouseout',up_handler);
 			return false;
 		};
-		t.resize();
-		layout.invalidate(t.content_container);
+		
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);
-			t.anim = animation.fadeIn(t.table, 200);
+			t.anim = animation.fadeIn(t.popup, 200);
 		}
 		pnapplication.onclose.add_listener(function(){
-			if (!t.table) return;
+			if (!t.popup) return;
 			t.close();
 		});
 	};
 	
-	t._buildTable = function() {
+	t._size_type = "fit";
+	t._setSizeType = function(type) {
+		t._size_type = type;
+		if (!t.popup) return;
+		if (t.content.nodeName == "IFRAME") {
+			switch (t._size_type) {
+			case "fit":
+				t.content_container.style.overflow = "auto";
+				t.content_container.style.display = "";
+				layout.autoResizeIFrame(t.content, function() {
+					t._layout_content();
+				});
+				break;
+			case "fixed":
+				t.content_container.style.overflow = "";
+				t.content_container.style.display = "flex";
+				t.content_container.style.flexDirection = "column";
+				t.content.style.flex = "1 1 auto";
+				t.content.style.width = "";
+				t.content.style.height = "";
+				break;
+			};
+		} else {
+			switch (t._size_type) {
+			case "fit":
+				t.content_container.style.overflow = "auto";
+				layout.addHandler(t.content_container, t._layout_content);
+				break;
+			case "fixed":
+				layout.removeHandler(t.content_container, t._layout_content);
+				break;
+			}
+		}
+	};
+	t._layout_content = function() {
+		if (!t.popup) return;
+		if (t.content_container.style.overflow == "") return;
+		t.content_container.style.width = "";
+		t.content_container.style.height = "";
+		t.content_container.style.overflow = "";
+		setTimeout(function() {
+			var sb = false;
+			var w_content = getWidth(t.content);
+			var h_content = getHeight(t.content);
+			if (t.content.style.width) {
+				// a width is defined
+				if (h_content > t.content_container.clientHeight) {
+					// a vertical scroll bar will appear
+					if (w_content+window.top.browser_scroll_bar_size < t.popup_container.clientWidth) {
+						t.content_container.style.width = (w_content+window.top.browser_scroll_bar_size)+"px";
+						sb = true;
+					}
+				}
+			}
+			if (t.content.style.height) {
+				// a height is defined
+				if (w_content > t.content_container.clientWidth) {
+					// a horizontal scroll bar will appear
+					if (h_content+window.top.browser_scroll_bar_size < t.popup_container.clientHeight) {
+						t.content_container.style.height = (h_content+window.top.browser_scroll_bar_size)+"px";
+						sb = true;
+					}
+				}
+			}
+			if (sb) 
+				setTimeout(function() {
+					t.content_container.style.overflow = "auto";
+				},1);
+			else
+				t.content_container.style.overflow = "auto";
+		},1);
+	};
+	
+	t._buildPopup = function() {
 		var parent_popup = get_popup_window_from_frame(window);
 		var win,doc;
 		if (!parent_popup) {
@@ -433,54 +456,91 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.blink();
 			});
 		} else {
-			doc = parent_popup.table.ownerDocument;
+			doc = parent_popup.popup.ownerDocument;
 			win = getWindowFromDocument(doc);
 			parent_popup.freeze();
 		}
-
-		t.table = doc.createElement("TABLE");
-		t.table.className = 'popup_window';
-		t.table.data = t;
-		t.header = doc.createElement("TR"); t.table.appendChild(t.header);
-		t.header.className = "popup_window_title";
 		
-		var td = doc.createElement("TD"); t.header.appendChild(td);
-		td.innerHTML = (t.icon ? "<img src='"+t.icon+"' style='vertical-align:bottom'/> " : "")+t.title;
-		if (hide_close_button)
-			td.colSpan = 2;
-		else {
-			td = doc.createElement("TD"); t.header.appendChild(td);
-			td.onclick = function() { t.close(); };
-			t.close_button_td = td;
-			td.style.backgroundImage = "url(\""+theme.icons_16.close+"\")";
-			td.style.backgroundPosition = "center";
-			td.style.backgroundRepeat = "no-repeat";
+		t.popup_container = doc.createElement("DIV");
+		t.popup_container.className = "popup_window_layer";
+		t.popup_container.style.position = "fixed";
+		t.popup_container.style.top = "0px";
+		t.popup_container.style.left = "0px";
+		t.popup_container.win = win;
+		t.popup_container.listener = function() {
+			t.popup_container.style.width = win.getWindowWidth()+"px";
+			t.popup_container.style.height = win.getWindowHeight()+"px";
+		};
+		listenEvent(win, 'resize', t.popup_container.listener);
+		doc.body.appendChild(t.popup_container);
+		t.popup_container.style.display = "flex";
+		t.popup_container.style.flexDirection = "column";
+		t.popup_container.style.justifyContent = "center";
+		t.popup_container.style.alignItems = "center";
+		t.popup_container.listener();
+
+		t.popup = doc.createElement("DIV");
+		t.popup.style.flex = "none";
+		t.popup.style.display = "flex";
+		t.popup.style.flexDirection = "column";
+		t.popup.className = "popup_window";
+		t.popup_container.appendChild(t.popup);
+		t.popup.data = t;
+		
+		t.header = doc.createElement("DIV");
+		t.header.style.flex = "none";
+		t.header.style.display = "flex";
+		t.header.style.flexDirection = "row";
+		t.popup.appendChild(t.header);
+		t.header.className = "popup_window_header";
+
+		if (t.icon) {
+			t.icon_container = doc.createElement("DIV");
+			t.icon_container.style.flex = "none";
+			t.icon_container.style.display = "flex";
+			t.icon_container.style.flexDirection = "column";
+			t.icon_container.style.justifyContent = "center";
+			t.icon_container.style.paddingLeft = "2px";
+			t.icon_img = doc.createElement("IMG");
+			t.icon_img.src = t.icon;
+			t.icon_img.style.flex = "none";
+			t.icon_container.appendChild(t.icon_img);
+			t.header.appendChild(t.icon_container);
 		}
-		var tr = doc.createElement("TR"); t.table.appendChild(tr);
-		var td = doc.createElement("TD"); tr.appendChild(td);
-		td.colSpan = 2;
+		t.title_container = doc.createElement("DIV");
+		t.title_container.className = "popup_window_title";
+		t.title_container.style.flex = "1 1 auto";
+		t.title_container.style.display = "flex";
+		t.title_container.style.flexDirection = "column";
+		t.title_container.style.justifyContent = "center";
+		t.title_container.appendChild(document.createTextNode(t.title));
+		t.header.appendChild(t.title_container);
+		if (!hide_close_button) {
+			t.close_button = doc.createElement("BUTTON");
+			t.close_button.className = "flat icon";
+			t.close_button.innerHTML = "<img src='"+theme.icons_16.close+"'/>";
+			t.close_button.style.flex = "none";
+			t.header.appendChild(t.close_button);
+			t.close_button.onclick = function() { t.close(); };
+		}
+		
 		if (!t.content_container)
 			t.content_container = doc.createElement("DIV");
-		t.content_container.style.width = "100%";
-		t.content_container.style.height = "100%";
-		td.appendChild(t.content_container);
-		td.style.padding = "0px";
-		td.style.margin = "0px";
+		t.content_container.style.flex = "1 1 auto";
+		t.content_container.style.overflow = "auto";
+		t.popup.appendChild(t.content_container);
+		
+		t.footer = doc.createElement("DIV");
+		t.footer.className = "popup_window_buttons";
+		t.footer.style.flex = "none";
+		t.popup.appendChild(t.footer);
+		
 		if (t.buttons.length > 0) {
-			t.buttons_tr = doc.createElement("TR");
-			t.buttons_tr.className = 'popup_window_buttons';
-			t.table.appendChild(t.buttons_tr);
-			t.buttons_td = doc.createElement("TD"); t.buttons_tr.appendChild(t.buttons_td);
-			t.buttons_td.colSpan = 2;
 			for (var i = 0; i < t.buttons.length; ++i)
-				t.buttons_td.appendChild(t.buttons[i]);
-		}
-		t.table.style.top = '0px';
-		t.table.style.left = '0px';
-		t.table.style.position = "fixed";
-		doc.body.appendChild(t.table);
-		t.table.style.top = Math.floor(getWindowHeight()/2-t.table.offsetHeight/2)+'px';
-		t.table.style.left = Math.floor(getWindowWidth()/2-t.table.offsetWidth/2)+'px';
+				t.footer.appendChild(t.buttons[i]);
+		} else
+			t.footer.style.display = "none";
+		
 		if (typeof t.content == 'string') t.content_container.innerHTML = t.content;
 		else {
 			t.content_container.appendChild(t.content);
@@ -490,182 +550,24 @@ function popup_window(title,icon,content,hide_close_button) {
 			postData(t.content._post_url, t.content._post_data, getIFrameWindow(t.content));
 			t.content._post_data = null;
 		}
-		win.layout.addHandler(t.table, t.resize_listener);
+
 		return win;
 	};
-	
-	t._computeFrameWidth = function(body) {
-		var win = getIFrameWindow(t.content);
-		var max = 0;
-		for (var i = 0; i < body.childNodes.length; ++i) {
-			var e = body.childNodes[i];
-			var w = null;
-			if (e.nodeType != 1) continue;
-			if (e.nodeName == "SCRIPT") continue;
-			if (e.style && e.style.position && (e.style.position == "absolute" || e.style.position == "fixed")) continue;
-			if (e.nodeName == "FORM")
-				w = win.absoluteLeft(e) + t._computeFrameWidth(e);
-			else {
-				e._display = e.style && e.style.display ? e.style.display : "";
-				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
-				e._width = e.style && e.style.width ? e.style.width : "";
-				e.style.display = 'inline-block';
-				e.style.whiteSpace = 'nowrap';
-				if (e._width.indexOf('%') == -1)
-					e.style.width = "";
-			}
-			if (w == null) w = win.absoluteLeft(e)+(win.getWidth ? win.getWidth(e) : getWidth(e));
-			if (w > max) max = w;
-			if (e.nodeName != "FORM") {
-				e.style.display = e._display;
-				e.style.whiteSpace = e._whiteSpace;
-				e.style.width = e._width;
-			}
-		}
-		return max;
-	};
-	t._computeFrameHeight = function(body) {
-		var win = getIFrameWindow(t.content);
-		var max = 0;
-		for (var i = 0; i < body.childNodes.length; ++i) {
-			var e = body.childNodes[i];
-			var h = null;
-			if (e.nodeType != 1) continue;
-			if (e.nodeName == "SCRIPT") continue;
-			if (e.style && e.style.position && (e.style.position == "absolute" || e.style.position == "fixed")) continue;
-			if (e.nodeName == "FORM")
-				h = win.absoluteTop(e) + t._computeFrameHeight(e);
-			else {
-				e._display = e.style && e.style.display ? e.style.display : "";
-				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
-				e._height = e.style && e.style.height ? e.style.height : "";
-				e.style.display = 'inline-block';
-				e.style.whiteSpace = 'nowrap';
-				if (e._height.indexOf('%') == -1)
-					e.style.height = "";
-			}
-			if (h == null) h = win.absoluteTop(e)+(win.getHeight ? win.getHeight(e) : getHeight(e));
-			if (h > max) max = h;
-			if (e.nodeName != "FORM") {
-				e.style.display = e._display;
-				e.style.whiteSpace = e._whiteSpace;
-				e.style.height = e._height;
-			}
-		}
-		return max;
-	};
 		
-	/** 
-	 * Resize the window according to its content: this is normally automatically called. 
-	 */
-	t.resize = function() {
-		if (!t.table) return;
-		if (t.in_resize) return;
-		t.in_resize = true;
-		var x, y;
-		var win = getWindowFromDocument(t.table.ownerDocument);
-		if (t.content.nodeName == "IFRAME") {
-			if (t.freezer) { t.in_resize = false; return; } // avoid resizing when we are loading a new page
-			var frame_win = getIFrameWindow(t.content);
-			var frame = frame_win.document;
-			if (!frame_win || !frame_win.layout || !frame || !frame.body) {
-				setTimeout(t.resize_listener, 10);
-				t.in_resize = false;
-				return;
-			}
-			var h = 0;
-			if (t.header) h += getHeight(t.header);
-			if (t.buttons_tr) h += getHeight(t.buttons_tr);
-			t.content_container.style.width = (win.getWindowWidth()-20)+"px";
-			t.content_container.style.height = (win.getWindowHeight()-20-h)+"px";
-			t.content_container.style.overflow = "";
-			t.content.style.width = (win.getWindowWidth()-20)+"px";
-			t.content.style.height = (win.getWindowHeight()-20-h)+"px";
-			x = t._computeFrameWidth(frame.body);
-			y = t._computeFrameHeight(frame.body);
-			if (x > win.getWindowWidth()-20) {
-				x = win.getWindowWidth()-20;
-				// anticipate scroll bar
-				y += window.top.browser_scroll_bar_size;
-			} else if (frame.body.scrollLeft > 0)
-					frame.body.scrollLeft = 0;
-			if (y > win.getWindowHeight()-20-h) {
-				y = win.getWindowHeight()-20-h;
-				// anticipate scroll bar
-				if (x < win.getWindowWidth()-20) x += window.top.browser_scroll_bar_size;
-				if (x > win.getWindowWidth()-20) x = win.getWindowWidth()-20;
-			} else if (frame.body.scrollTop > 0)
-				frame.body.scrollTop = 0;
-			getIFrameDocument(t.content).body.style.overflow = "hidden";
-			setWidth(t.content_container, x);
-			setHeight(t.content_container, y);
-			setWidth(t.content, x);
-			setHeight(t.content, y);
-			t.content_container.overflow = "hidden";
-			getIFrameDocument(t.content).body.style.overflow = "";
-			if (y < win.getWindowHeight()-20-h) {
-				// there should be no scroll bar, fix Chrome bug
-				if (frame.body.scrollHeight > frame.body.clientHeight) {
-					frame.body.style.position = "fixed";
-					frame.body.style.top = "0px";
-					frame.body.style.left = "0px";
-				}
-			}
-			if (t.content._last_popup_resize_w != t.content.offsetWidth || t.content._last_popup_resize_h != t.content.offsetHeight) {
-				frame_win.layout.invalidate(frame_win.document.body);
-				t.content._last_popup_resize_w = t.content.offsetWidth;
-				t.content._last_popup_resize_h = t.content.offsetHeight;
-			}
-			x = win.getWindowWidth()/2 - x/2;
-			y = win.getWindowHeight()/2 - (y+t.header.scrollHeight+(t.buttons_tr ? t.buttons_tr.scrollHeight : 0))/2;
-		} else {
-			t.content_container.style.height = "";
-			t.content_container.style.width = "";
-			t.content_container.style.overflow = "";
-			var h = 0;
-			if (t.header) h += win.getHeight(t.header);
-			if (t.buttons_tr) h += win.getHeight(t.buttons_tr);
-			var content_h = win.getHeight(t.content_container);
-			y = win.getWindowHeight()/2 - (h+content_h)/2;
-			if (y < 5) {
-				y = 5;
-				t.content_container.style.overflowX = "auto";
-				t.content_container.style.height = (win.getWindowHeight()-20-h)+"px";
-				if (t.content_container.offsetWidth > t.content_container.clientWidth) {
-					t.content_container.style.width = (t.content_container.offsetWidth+(t.content_container.offsetWidth-t.content_container.clientWidth))+"px"; 
-				}
-			}
-			var content_w = win.getWidth(t.content_container);
-			var header_w = win.getWidth(t.header);
-			if (header_w > content_w) content_w = header_w;
-			x = win.getWindowWidth()/2 - content_w/2;
-			if (x < 5) {
-				x = 5;
-				t.content_container.style.overflow = "auto";
-				t.content_container.style.width = (win.getWindowWidth()-20)+"px";
-				t.table.style.width = (win.getWindowWidth()-20)+"px";
-			}
-			t.content_container.style.position = "static";
-		}
-		t.table.style.top = Math.floor(y)+"px";
-		t.table.style.left = Math.floor(x)+"px";
-		t.in_resize = false;
-	};
-	
 	t.blink = function() {
-		t.table.className = "popup_window blink";
-		setTimeout(function() { if (t.table) t.table.className = "popup_window"; },100);
-		setTimeout(function() { if (t.table) t.table.className = "popup_window blink"; },200);
-		setTimeout(function() { if (t.table) t.table.className = "popup_window"; },300);
-		setTimeout(function() { if (t.table) t.table.className = "popup_window blink"; },400);
-		setTimeout(function() { if (t.table) t.table.className = "popup_window"; },500);
+		t.popup.className = "popup_window blink";
+		setTimeout(function() { if (t.popup) t.popup.className = "popup_window"; },100);
+		setTimeout(function() { if (t.popup) t.popup.className = "popup_window blink"; },200);
+		setTimeout(function() { if (t.popup) t.popup.className = "popup_window"; },300);
+		setTimeout(function() { if (t.popup) t.popup.className = "popup_window blink"; },400);
+		setTimeout(function() { if (t.popup) t.popup.className = "popup_window"; },500);
 	};
 	
 	t.disableClose = function() {
-		t.close_button_td.onclick = null;
+		t.close_button.disabled = "disabled";
 	};
 	t.enableClose = function() {
-		t.close_button_td.onclick = function() { t.close(); };
+		t.close_button.disabled = "";
 	};
 	
 	t.freeze = function(freeze_content) {
@@ -675,7 +577,7 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.set_freeze_content(freeze_content);
 			return;
 		}
-		t.freezer = t.table.ownerDocument.createElement("DIV");
+		t.freezer = t.popup.ownerDocument.createElement("DIV");
 		t.freezer.usage_counter = 1;
 		t.freezer.style.position = "absolute";
 		t.freezer.style.top = "0px";
@@ -685,13 +587,13 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.freezer.style.backgroundColor = "rgba(128,128,128,0.5)";
 		if (freeze_content)
 			set_lock_screen_content(t.freezer, freeze_content);
-		t.content_container.parentNode.style.position = "relative";
-		t.content_container.parentNode.appendChild(t.freezer);
+		t.content_container.style.position = "relative";
+		t.content_container.appendChild(t.freezer);
 		for (var i = 0; i < t.buttons.length; ++i) {
 			t.buttons[i].unfrozen_status = t.buttons[i].disabled;
 			t.buttons[i].disabled = 'disabled';
 		}
-		t.close_button_td.onclick = null;
+		t.disableClose();
 	};
 	t.freeze_progress = function(message, total, onready) {
 		theme.css("progress_bar.css"); // to make it available, even if we are starting a lot of AJAX requests
@@ -718,14 +620,12 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.unfreeze = function() {
 		if (!t.freezer) return;
 		if (--t.freezer.usage_counter > 0) return;
-		t.content_container.parentNode.removeChild(t.freezer);
+		t.content_container.removeChild(t.freezer);
 		t.freezer = null;
 		for (var i = 0; i < t.buttons.length; ++i)
 			t.buttons[i].disabled = t.buttons[i].unfrozen_status;
 		t.freeze_button_status = null;
-		t.close_button_td.onclick = function() { t.close(); };
-		if (t.content.nodeName == "IFRAME")
-			t.resize(); // we interrupt resize during freeze
+		t.enableClose();
 	};
 	t.isFrozen = function() {
 		return t.freezer != null;
@@ -736,7 +636,8 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param keep_content_hidden
 	 */
 	t.close = function(keep_content_hidden) {
-		if (!t.table) return;
+		if (!t.popup) return;
+		unlistenEvent(t.popup_container.win, 'resize', t.popup_container.listener);
 		if (t.content.nodeName == "IFRAME") {
 			var w = getIFrameWindow(t.content);
 			if (w && w.pnapplication && w.pnapplication.hasDataUnsaved()) {
@@ -748,12 +649,12 @@ function popup_window(title,icon,content,hide_close_button) {
 			unlock_screen(t.locker);
 		else {
 			var parent_popup = get_popup_window_from_frame(window);
-			if(parent_popup && parent_popup.table) parent_popup.unfreeze();
+			if(parent_popup && parent_popup.popup) parent_popup.unfreeze();
 		}
-		getWindowFromDocument(t.table.ownerDocument).layout.removeHandler(t.table, t.resize_listener);
-		var table = t.table;
+		var popup = t.popup_container;
 		if (t.onclose) t.onclose();
-		t.table = null;
+		t.popup_container = null;
+		t.popup = null;
 		var do_close = function() {
 			if (keep_content_hidden || t.keep_content_on_close) {
 				t.content.parentNode.removeChild(t.content);
@@ -762,19 +663,18 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content.style.top = '-10000px';
 				t.content.ownerDocument.body.appendChild(t.content);
 			}
-			table.removeAllChildren();
-			if (table.parentNode)
-				table.parentNode.removeChild(table);
+			popup.removeAllChildren();
+			if (popup.parentNode)
+				popup.parentNode.removeChild(popup);
 			t.content = null;
 			t.content_container = null;
 			t.header = null;
-			t.buttons_tr = null;
-			t.buttons_td = null;
+			t.footer = null;
 		};
 		if (t.content.nodeName == "IFRAME") t.content._no_loading = true;
 		if (typeof animation != 'undefined') {
 			if (t.anim) animation.stop(t.anim);
-			animation.fadeOut(table, 200, do_close);
+			animation.fadeOut(popup, 200, do_close);
 		} else
 			do_close();
 	};

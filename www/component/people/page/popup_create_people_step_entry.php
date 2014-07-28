@@ -80,7 +80,7 @@ class page_popup_create_people_step_entry extends Page {
 						popup.unfreeze();
 						return;
 					}
-					popup.removeAllButtons();
+					popup.removeButtons();
 					var data = {peoples:peoples};
 					data.sub_models = <?php echo json_encode(@$input["sub_models"]);?>;
 					data.multiple = true;
@@ -131,7 +131,7 @@ class page_popup_create_people_step_entry extends Page {
 					popup.unfreeze();
 					return;
 				}
-				popup.removeAllButtons();
+				popup.removeButtons();
 				var data = {peoples:[people]};
 				data.sub_models = <?php echo json_encode(@$input["sub_models"]);?>;
 				<?php 

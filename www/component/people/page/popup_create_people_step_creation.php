@@ -45,7 +45,7 @@ function next(index, span, pb) {
 				li.appendChild(document.createTextNode(problems[i].fn+" "+problems[i].ln));
 				ul.appendChild(li);
 			}
-			window.popup.removeAllButtons();
+			window.popup.removeButtons();
 			window.popup.addCloseButton();
 			window.popup.unfreeze();
 			window.popup.onclose = function() {

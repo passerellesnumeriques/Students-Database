@@ -80,7 +80,7 @@ class page_new_class extends Page {
 				}
 				if (!err) validation_ok(name);
 			}
-			window.parent.get_popup_window_from_element(window.frameElement).resize();
+			layout.invalidate(document.body);
 			return !err;
 		}
 		function submit(ondone) {

@@ -9,9 +9,7 @@ function picture(container,url,max_width,max_height,title) {
 			var p = new popup_window(title,null,i);
 			i.src = url;
 			p.show();
-			i.onload = function() {
-				p.resize();
-			};
+			i.onload = function() { layout.invalidate(container); };
 		});
 	};
 	container.appendChild(img);

@@ -35,7 +35,7 @@ function wizard(container) {
 		t.validate();
 		t._refresh_buttons();
 		if (t.pages[index].onshown) t.pages[index].onshow(t,t.pages[index]);
-		t.resize();
+		layout.invalidate(t.page_container);
 	};
 	t.validate = function() {
 		var p = t.pages[t.current_page];
@@ -64,7 +64,6 @@ function wizard(container) {
 		t.popup.close(t.keep_on_close);
 		if (t.onfinish) t.onfinish(t);
 	};
-	t.resize = function() { if (t.popup) t.popup.resize(); };
 	
 	if (container) {
 		t.keep_on_close = true;

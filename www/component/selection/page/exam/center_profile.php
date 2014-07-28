@@ -227,7 +227,7 @@ class page_exam_center_profile extends SelectionPage {
 			});
 		}
 
-		center_popup.removeAllButtons();
+		center_popup.removeButtons();
 		<?php if ($editable && $id <> null && $can_remove) {?>
 		center_popup.addIconTextButton(theme.icons_16.remove, "Remove this exam center", "remove", function() {
 			// TODO we should not remove it if some applicants are still assigned to it => we may need to save the center before to remove it, in order to unassign everyone

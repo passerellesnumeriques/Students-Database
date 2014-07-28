@@ -103,13 +103,13 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 				error_message.innerHTML = error;
 				error_div.style.visibility = 'visible';
 				error_div.style.position = 'static';
-				p.resize();
+				layout.invalidate(content);
 			} else {
 				p.enableButton('ok');
 				input.style.border = "";
 				error_div.style.visibility = 'hidden';
 				//error_div.style.position = 'absolute'; // commented because it is strange to the user to have the popup resized like that...
-				p.resize();
+				layout.invalidate(content);
 			}
 		};
 		validate();
@@ -138,7 +138,7 @@ function multiple_input_dialog(icon,title,inputs,ok_handler) {
 				p.enableButton('ok');
 			else
 				p.disableButton('ok');
-			p.resize();
+			layout.invalidate(content);
 		};
 		for (var i = 0; i < inputs.length; ++i) {
 			var tr = document.createElement("TR"); content.appendChild(tr);

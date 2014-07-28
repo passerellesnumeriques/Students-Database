@@ -51,7 +51,7 @@ class page_popup_create_people_step_check extends Page {
 		window.popup = window.parent.get_popup_window_from_frame(window);
 		function send() {
 			if (!popup.freezer) popup.freeze();
-			window.popup.removeAllButtons();
+			window.popup.removeButtons();
 			var data = {peoples:peoples};
 			data.sub_models = <?php echo json_encode($sub_models);?>;
 			<?php if ($multiple) echo "data.multiple = true;";?>

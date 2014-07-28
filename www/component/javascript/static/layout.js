@@ -314,6 +314,79 @@ layout = {
 		}
 	},
 	
+	computeContentSize: function(body) {
+		var win = getWindowFromElement(body);
+		var max_width = 0, max_height = 0;
+		for (var i = 0; i < body.childNodes.length; ++i) {
+			var e = body.childNodes[i];
+			var w = null, h = null;
+			if (e.nodeType != 1) continue;
+			if (e.nodeName == "SCRIPT") continue;
+			if (e.style && e.style.position && (e.style.position == "absolute" || e.style.position == "fixed")) continue;
+			if (e.nodeName == "FORM") {
+				var size = layout.computeContentSize(e);
+				w = win.absoluteLeft(e) + size.x;
+				h = win.absoluteTop(e) + size.y;
+			} else {
+				e._display = e.style && e.style.display ? e.style.display : "";
+				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
+				e._width = e.style && e.style.width ? e.style.width : "";
+				e._height = e.style && e.style.height ? e.style.height : "";
+				e.style.display = 'inline-block';
+				e.style.whiteSpace = 'nowrap';
+				if (e._width.indexOf('%') == -1)
+					e.style.width = "";
+				if (e._height.indexOf('%') == -1)
+					e.style.height = "";
+			}
+			if (w == null) w = win.absoluteLeft(e)+(win.getWidth ? win.getWidth(e) : getWidth(e));
+			if (w > max_width) max_width = w;
+			if (h == null) h = win.absoluteTop(e)+(win.getHeight ? win.getHeight(e) : getHeight(e));
+			if (h > max_height) max_height = h;
+			if (e.nodeName != "FORM") {
+				e.style.display = e._display;
+				e.style.whiteSpace = e._whiteSpace;
+				e.style.width = e._width;
+				e.style.height = e._height;
+			}
+		}
+		return {x:max_width, y:max_height};
+	},
+
+	autoResizeIFrame: function(frame, onresize) {
+		var resize = function() {
+			var win = getIFrameWindow(frame);
+			if (!win) return;
+			frame.style.position = "absolute";
+			frame.style.width = "10000px";
+			frame.style.height = "10000px";
+			var size = layout.computeContentSize(win.document.body);
+			frame.style.position = "static";
+			frame.style.width = size.x+"px";
+			frame.style.height = size.y+"px";
+			if (onresize) onresize(frame);
+		};
+		var check_ready = function() {
+			// check the frame is still there
+			var p = frame.parentNode;
+			while (p != null && p.nodeName != 'BODY') p = p.parentNode;
+			if (!p) return;
+			var win = getIFrameWindow(frame);
+			if (!win || !win.layout || !win._page_ready) {
+				setTimeout(check_ready, 10);
+				return;
+			}
+			var b = win.document.body;
+			win.layout.cancelResizeEvent();
+			win.layout.addHandler(b, resize);
+			for (var i = 0; i < b.childNodes.length; ++i) 
+				win.layout.addHandler(b.childNodes[i], resize);
+			resize();
+		};
+		check_ready();
+		listenEvent(frame, 'load', check_ready);
+	},
+	
 	everythingOnPageLoaded: function() {
 		var head = document.getElementsByTagName("HEAD")[0];
 		for (var i = 0; i < head.childNodes.length; ++i) {
