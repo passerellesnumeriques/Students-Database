@@ -486,6 +486,10 @@ function initFooter() {
 		new debug_status(span_debug_status);
 	});
 	<?php } ?>
+	<?php
+	global $need_app_loading;
+	if ($need_app_loading) { 
+	?>
 	var span_background_loading = document.createElement("SPAN"); 
 	span_background_loading.style.position = "absolute";
 	span_background_loading.style.bottom = "0px";
@@ -496,6 +500,7 @@ function initFooter() {
 		loading._slow_when_user_active = true;
 		loading._slow_when_services_active = true;
 	});
+	<?php } ?>
 }
 initFooter();
 </script>

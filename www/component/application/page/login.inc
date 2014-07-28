@@ -1,4 +1,5 @@
 <?php
+global $need_app_loading;
 if (isset($_GET["destroy_session"])) {
 	session_destroy();
 }
@@ -66,26 +67,28 @@ if ($message <> null) {
 	</tr>
 	<tr align=left>
 		<td>Username</td>
-		<td><input type="text" size=30 maxlength=100 name="username" value='<?php if (isset($_COOKIE["username"])) echo $_COOKIE["username"];?>'/></td>
+		<td><input type="text" size=25 maxlength=100 name="username" value='<?php if (isset($_COOKIE["username"])) echo $_COOKIE["username"];?>'/></td>
 	</tr>
 	<tr align=left>
 		<td>Password</td>
-		<td><input type="password" size=30 maxlength=100 name="password"/></td>
+		<td><input type="password" size=25 maxlength=100 name="password"/></td>
 	</tr>
 	<tr align=left>
 		<td></td>
 		<td>
-			<button onclick="login();">
+			<button onclick="login();" style="padding:2px 5px">
 				Login
 				<img src='/static/application/login.gif' style='vertical-align:bottom'/>
 			</button>
 			<input type='submit' style='position:absolute;top:-10000px'/>
 		</td>
 	</tr>
+	<?php if ($need_app_loading) {?>
 	<tr>
 		<td colspan=3 id='login_table_footer'>
 		</td>
 	</tr>
+	<?php } ?>
 </table>
 <br/>
 <a href="/dynamic/development/page/tools">Development tools</a>
@@ -101,6 +104,8 @@ if ($message <> null) {
 #login_table {
 	border: 1px solid #22bbea;
 	border-spacing: 0;
+	background-color: white;
+	box-shadow: 0 0 5px 3px #A0A0A0;
 }
 #login_table td#login_table_header {
 	background-color: #22bbea;
@@ -140,4 +145,12 @@ function login() {
 	document.forms["login_form"].submit();
 }
 document.forms["login_form"].elements["username"].focus();
+<?php if ($need_app_loading) {?>
+require("load_static.js",function(){
+	setTimeout(function() {
+		if (window.no_loading) return;
+		window.loading = new load_static_resources('login_table_footer');
+	},1000);
+});
+<?php } ?>
 </script>

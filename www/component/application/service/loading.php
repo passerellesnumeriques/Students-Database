@@ -57,6 +57,10 @@ window.top.google_local_config = <?php
 $d = PNApplication::$instance->getDomainDescriptor(); 
 echo json_encode($d["google"]);
 ?>;
+window.top.pn_app_version = <?php
+global $pn_app_version;
+echo json_encode($pn_app_version); 
+?>;
 
 var _mandatory_index = 0;
 function _addJavascript(url, callback) {

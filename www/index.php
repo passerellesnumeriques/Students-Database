@@ -42,6 +42,9 @@ if ($path == "favicon.ico") {
 	die(); 
 }
 
+global $pn_app_version;
+$pn_app_version = $version;
+
 if ($path == "") {
 	include("loading.inc");
 	die();

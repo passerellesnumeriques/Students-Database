@@ -12,6 +12,11 @@ class page_enter extends Page {
 			PNApplication::$instance->local_domain = "Test";
 			PNApplication::$instance->current_domain = "Test";
 		}
+		
+		global $need_app_loading;
+		global $pn_app_version;
+		$need_app_loading = !isset($_COOKIE["pnapp_loaded"]) || $_COOKIE["pnapp_loaded"] <> $pn_app_version;
+		
 		if (PNApplication::$instance->user_management->username == null)
 			include "login.inc";
 		else
