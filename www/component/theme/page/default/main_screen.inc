@@ -476,7 +476,9 @@ function initFooter() {
 	require("google_status.js",function() {
 		new google_status(span_google_status);
 	});
-	<?php if (PNApplication::$instance->current_domain == "Dev") { ?>
+	<?php
+	global $development_mode; 
+	if ($development_mode) { ?>
 	var span_debug_status = document.createElement("SPAN");
 	span_debug_status.style.position = "absolute";
 	span_debug_status.style.bottom = "0px";

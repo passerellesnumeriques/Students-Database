@@ -76,7 +76,8 @@ class DataModel {
 		if (isset($this->tables[$name])) throw new Exception("Table ".$name." already defined in the data model");
 		$table = new \datamodel\Table($this, $name);
 		$this->tables[$name] = &$table;
-		if (PNApplication::$instance->current_domain == "Dev") {
+		global $development_mode;
+		if ($development_mode) {
 			$table->{"declaring_component"} = "unknown";
 			try { throw new Exception(); }
 			catch (Exception $e) {

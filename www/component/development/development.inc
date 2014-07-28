@@ -8,15 +8,16 @@ class development extends Component {
 	}
 	
 	public function initRequest() {
-		Component::allowPageWithoutLogin("development", "tools");
+		//Component::allowPageWithoutLogin("development", "tools");
 		Component::allowPageWithoutLogin("development", "reset_db");
 		Component::allowPageWithoutLogin("development", "clean_storage");
 		Component::allowPageWithoutLogin("development", "export_storage");
-		Component::allowPageWithoutLogin("development", "export_data");
+		//Component::allowPageWithoutLogin("development", "export_data");
 		Component::allowPageWithoutLogin("development", "check_code");
-		Component::allowPageWithoutLogin("development", "insert_1000000_fake_students");
+		//Component::allowPageWithoutLogin("development", "insert_1000000_fake_students");
 		Component::allowServiceWithoutLogin("development", "create_db");
 		Component::allowServiceWithoutLogin("development", "reset_storage");
+		Component::allowServiceWithoutLogin("development", "init_data");
 		Component::allowServiceWithoutLogin("development", "test_data");
 		Component::allowServiceWithoutLogin("development", "get_debug_info");
 		Component::allowServiceWithoutLogin("development", "check_php");

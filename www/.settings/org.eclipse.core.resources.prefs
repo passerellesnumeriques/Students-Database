@@ -1,6 +1,6 @@
 eclipse.preferences.version=1
 encoding//component/application/page/application.inc=UTF-8
-encoding//component/development/data/geographicarea.sql=UTF-8
+encoding//component/geography/data/geographicarea.sql=UTF-8
 encoding//component/javascript/static/utils.js=UTF-8
 encoding//component/selection/page/exam/subject.php=UTF-8
 encoding//component/theme/page/default/main_screen.inc=UTF-8

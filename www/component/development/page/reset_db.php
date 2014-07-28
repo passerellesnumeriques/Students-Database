@@ -11,8 +11,8 @@ class page_reset_db extends Page {
 <script type='text/javascript'>
 var todo = [
 <?php
-if (isset($_GET["dev"]))
-	$domains = array("Dev");
+if (isset($_GET["domain"]))
+	$domains = array($_GET["domain"]);
 else {
 	$domains = array();
 	foreach (PNApplication::$instance->getDomains() as $domain=>$descr)
@@ -25,7 +25,7 @@ foreach ($domains as $domain) {
 	if ($first) $first = false; else echo ",";
 	echo "{service:'create_db',data:{domain:'".$domain."'},message:'Initialize database for domain ".$domain."'}";
 	echo ",{service:'reset_storage',data:{domain:'".$domain."'},message:'Removing stored data for domain ".$domain."'}";
-	echo ",{service:'test_data',data:{domain:'".$domain."'},message:'Insert test data in domain ".$domain."'}";
+	echo ",{service:'init_data',data:{domain:'".$domain."'},message:'Creating initial data for ".$domain."'}";
 }?>
 ];
 function next() {
@@ -45,26 +45,32 @@ function next() {
 			next();
 		});
 	} else {
-		var a = document.createElement("A");
-		a.href = "#";
-		a.onclick = function() {
-			location.href = "/dynamic/application/page/enter";
-		};
-		a.innerHTML = "Back to login page";
-		document.body.appendChild(a);
-		document.body.appendChild(document.createElement("BR"));
-		a = document.createElement("A");
-		a.href = "tools";
-		a.innerHTML = "Back to development tools page";
-		document.body.appendChild(a);
 		document.body.appendChild(document.createElement("BR"));
 		document.body.appendChild(document.createElement("BR"));
+		document.body.appendChild(document.createTextNode("The database has been reset."));
+		document.body.appendChild(document.createElement("BR"));
+		var a;
 		a = document.createElement("A");
 		a.href = "#";
 		a.onclick = function() {
 			location.reload();
+			return false;
 		};
 		a.innerHTML = "Retry to reset Database";
+		document.body.appendChild(a);
+		document.body.appendChild(document.createElement("BR"));
+		document.body.appendChild(document.createElement("BR"));
+		document.body.appendChild(document.createTextNode("Would you like to insert some test data ? "));
+		a = document.createElement("A");
+		a.href = "#";
+		a.onclick = function() {
+			var locker = lock_screen(null, "Inserting test data");
+			service.json("development","test_data",{domain:<?php echo json_encode($domain);?>,password:""},function(res) {
+				unlock_screen(locker);
+			});
+			return false;
+		};
+		a.innerHTML = "Yes, please insert test data";
 		document.body.appendChild(a);
 		document.body.appendChild(document.createElement("BR"));
 	}

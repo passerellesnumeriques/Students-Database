@@ -1,4 +1,5 @@
 <?php
+include("install_config.inc");
 function component_auto_loader($classname) {
 	require_once("component/".$classname."/".$classname.".inc");
 }
@@ -138,7 +139,7 @@ case "dynamic":
 		PNApplication::$instance = &$_SESSION["app"];
 		PNApplication::$instance->initRequest();
 	}
-	if (PNApplication::$instance->current_domain == "Dev") {
+	if ($development_mode) {
 		$dev = new DevRequest();
 		$dev->url = $_SERVER["PATH_INFO"];
 		$dev->start_time = microtime(true);
@@ -158,7 +159,7 @@ case "dynamic":
 		break;
 	default: invalid("Invalid request: unknown request type ".$request_type);
 	}
-	if (PNApplication::$instance->current_domain == "Dev") {
+	if ($development_mode) {
 		$dev->end_time = microtime(true);
 	}
 	die();

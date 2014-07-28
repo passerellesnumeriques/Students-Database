@@ -43,13 +43,13 @@ if ($message <> null) {
 	echo "<img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> <span style='color:red'>".$message."</span>";
 }
 ?>
-<table id='login_table'>
+<table class='login_table'>
 	<tr>
-		<td colspan=3 id='login_table_header' align=center>
+		<td colspan=3 class='login_table_header' align=center>
 			PN Students Management Software
 		</td>
 	</tr>
-	<tr><td rowspan=5 id='login_table_logo'>
+	<tr><td rowspan=5 class='login_table_logo'>
 		<img src='/static/application/logo.png'/>
 	</td></tr>
 	<tr align=left>
@@ -85,59 +85,88 @@ if ($message <> null) {
 	</tr>
 	<?php if ($need_app_loading) {?>
 	<tr>
-		<td colspan=3 id='login_table_footer'>
+		<td colspan=3 class='login_table_footer' id='login_table_footer'>
 		</td>
 	</tr>
 	<?php } ?>
 </table>
-<br/>
-<a href="/dynamic/development/page/tools">Development tools</a>
-<br/>
-<a href="/dynamic/documentation/page/index">Technical Documentation</a>
-<br/>
-<a href="/dynamic/test/page/home">Tests</a>
-<br/>
-<a href="?destroy_session=true">Destroy session</a>
+<?php 
+global $development_mode;
+if ($development_mode) {
+?>
+<table class='login_table' style='margin-top:20px'>
+	<tr>
+		<td colspan=3 class='login_table_header' align=center>
+			<img src='/static/development/debug.png'/>
+			Development
+		</td>
+	</tr>
+	<tr><td>
+		<div class='info_box'>
+			<img src='<?php echo theme::$icons_16["help"];?>' style='vertical-align:bottom'/>
+			Your version is a development version
+		</div>
+		<a href="#" onclick="resetDB();return false;">Reset Database</a><br/>
+		<a href="#" onclick="cleanStorage();return false;">Clean storage</a><br/>
+		<a href="#" onclick="exportStorage();return false;">Export storage</a><br/>
+		<a href="/dynamic/documentation/page/index" target="_blank">Technical Documentation</a><br/>
+		<a href="/dynamic/development/page/check_code" target="_blank">Check code</a><br/>
+		<a href="/dynamic/test/page/home" target="_blank">Tests</a><br/>
+		<a href="?destroy_session=true">Destroy session</a><br/>
+	</td></tr>
+</table>
+<script type="text/javascript">
+function resetDB() {
+	popup_frame(null,"Reset Database", "/dynamic/development/page/reset_db?domain=<?php echo PNApplication::$instance->local_domain;?>", null, 90, 90, function(frame,pop) {
+		pop.onclose = function() { window.top.location.reload(); };
+	});
+}
+function cleanStorage() {
+	popup_frame(null,"Clean Storage", "/dynamic/development/page/clean_storage", null, 90, 90, function(frame,pop) {
+	});
+}
+function exportStorage() {
+	popup_frame(null,"Export Storage", "/dynamic/development/page/export_storage", null, 90, 90, function(frame,pop) {
+	});
+}
+</script>
+<?php } ?>
 </td></tr></table>
 </form>
 <style type="text/css">
-#login_table {
+.login_table {
 	border: 1px solid #22bbea;
 	border-spacing: 0;
-	background-color: white;
 	box-shadow: 0 0 5px 3px #A0A0A0;
+	border-radius: 10px;
+	background: linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 30%, #E0E0E0 100%);
 }
-#login_table td#login_table_header {
+.login_table td.login_table_header {
 	background-color: #22bbea;
 	padding: 2px 10px 2px 10px;
 	font-size: 12pt;
 	font-weight: bold;
 	color: white;
+	border-radius: 8px 8px 0px 0px;
 }
-#login_table td#login_table_footer {
+.login_table td.login_table_footer {
 	border-top: 1px solid #a0d0f0;
 	padding: 2px 10px 2px 10px;
 	height: 10px;
 	font-size: 8pt;
 	text-align: center;
+	border-radius: 0px 0px 8px 8px;
 }
-#login_table td {
+.login_table td {
 	padding: 5px;
 }
-#login_table input, #login_table select {
+.login_table input, .login_table select {
 	border: 1px solid #808080;
 }
 </style>
 <script type='text/javascript'>
 document.getElementById("timezone_input").value = -(new Date().getTimezoneOffset());
 window.top.pnapplication.onlogout.fire();
-setBorderRadius(document.getElementById('login_table'),10,10,10,10,10,10,10,10);
-setBorderRadius(document.getElementById('login_table_header'),8,8,8,8,0,0,0,0);
-<?php if ($need_app_loading) {?>
-setBorderRadius(document.getElementById('login_table_footer'),0,0,0,0,8,8,8,8);
-<?php } ?>
-setBackgroundGradient(document.getElementById('login_table'),"vertical",[{pos:0,color:'#FFFFFF'},{pos:30,color:'#FFFFFF'},{pos:100,color:'#E0E0E0'}]);
-setBoxShadow(document.getElementById('login_table'), 0, 0, 5, 5, "#ffffff");
 function login() {
 	window.no_loading = true;
 	window.top.pn_loading_start();

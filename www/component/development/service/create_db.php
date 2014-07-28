@@ -10,12 +10,12 @@ class service_create_db extends Service {
 		require_once("component/data_model/Model.inc");
 		require_once("component/data_model/DataBaseUtilities.inc");
 		
-		$db_conf = include("conf/local_db");
-		require_once("DataBaseSystem_".$db_conf["type"].".inc");
-		$db_system_class = "DataBaseSystem_".$db_conf["type"];
+		global $db_config;
+		require_once("DataBaseSystem_".$db_config["type"].".inc");
+		$db_system_class = "DataBaseSystem_".$db_config["type"];
 		/* @var $db_system DataBaseSystem */
 		$db_system = new $db_system_class;
-		$res = $db_system->connect($db_conf["server"], $db_conf["user"], $db_conf["password"]);
+		$res = $db_system->connect($db_config["server"], $db_config["user"], $db_config["password"]);
 		if ($res <> DataBaseSystem::ERR_OK) {
 			switch ($res) {
 				case DataBaseSystem::ERR_CANNOT_CONNECT_TO_SERVER: PNApplication::error("Unable to connect to the database server"); break;

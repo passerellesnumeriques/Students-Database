@@ -8,11 +8,11 @@ class service_test_data extends Service {
 	public function execute(&$component, $input) {
 		$domain = $input["domain"];
 		
-		$db_conf = include("conf/local_db");
-		require_once("DataBaseSystem_".$db_conf["type"].".inc");
-		$db_system_class = "DataBaseSystem_".$db_conf["type"];
+		global $db_config;
+		require_once("DataBaseSystem_".$db_config["type"].".inc");
+		$db_system_class = "DataBaseSystem_".$db_config["type"];
 		$db_system = new $db_system_class;
-		$res = $db_system->connect($db_conf["server"], $db_conf["user"], $db_conf["password"]);
+		$res = $db_system->connect($db_config["server"], $db_config["user"], $db_config["password"]);
 		if ($res <> DataBaseSystem::ERR_OK) {
 			switch ($res) {
 				case DataBaseSystem::ERR_CANNOT_CONNECT_TO_SERVER: PNApplication::error("Unable to connect to the database server"); break;
@@ -22,38 +22,24 @@ class service_test_data extends Service {
 		} else {
 			set_time_limit(240);
  			$db_system->execute("USE students_".$domain);
- 			$components = PNApplication::sortComponentsByDependencies();
- 			if ($domain == PNApplication::$instance->local_domain) {
-	 			foreach ($components as $c) {
-	 				if (file_exists("component/".$c->name."/init_data.inc"))
-	 					include("component/".$c->name."/init_data.inc");
-	 			}
- 			}
-			$this->SplitSQL($db_system, "component/development/data/countries.sql");
-			$this->SplitSQL($db_system, "component/development/data/countrydivision.sql");
-			$this->SplitSQL($db_system, "component/development/data/geographicarea.sql");
-			if ($domain == "Dev") {
-				$this->SplitSQL($db_system, "component/development/data/curriculumsubjectcategory.sql");
-				$this->SplitSQL($db_system, "component/development/data/specialization.sql");
-				$this->SplitSQL($db_system, "component/development/data/organization.sql");
-				$this->SplitSQL($db_system, "component/development/data/PNP_AcademicYearsAndBatches.sql");
-				$this->SplitSQL($db_system, "component/development/data/PNP_Batch2012_Curriculum.sql");
-				$this->SplitSQL($db_system, "component/development/data/PNP_Batch2012.sql");
-				$this->importStorage($db_system, "PNP_Batch2012", $domain);
-				$this->SplitSQL($db_system, "component/development/data/PNP_Batch2013.sql");
-				$this->importStorage($db_system, "PNP_Batch2013", $domain);
-				// generate events accordingly to data added
-				PNApplication::$instance->user_management->login("Dev", "admin", "");
-				$model = DataModel::get();
-				foreach ($model->internalGetTables() as $t) {
-					if ($t->getModel() instanceof SubDataModel) continue;
-					$rows = SQLQuery::create()->bypassSecurity()->noWarning()->select($t->getName())->execute();
-					foreach ($rows as $row)
-						$t->fireInsert($row, @$row[$t->getPrimaryKey()->name], null);
-				}
-				
-				PNApplication::$instance->user_management->logout();
+			$this->SplitSQL($db_system, "component/development/data/organization.sql");
+			$this->SplitSQL($db_system, "component/development/data/PNP_AcademicYearsAndBatches.sql");
+			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2012_Curriculum.sql");
+			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2012.sql");
+			$this->importStorage($db_system, "PNP_Batch2012", $domain);
+			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2013.sql");
+			$this->importStorage($db_system, "PNP_Batch2013", $domain);
+			// generate events accordingly to data added
+			PNApplication::$instance->user_management->login(PNApplication::$instance->local_domain, "admin", $input["password"]);
+			$model = DataModel::get();
+			foreach ($model->internalGetTables() as $t) {
+				if ($t->getModel() instanceof SubDataModel) continue;
+				$rows = SQLQuery::create()->bypassSecurity()->noWarning()->select($t->getName())->execute();
+				foreach ($rows as $row)
+					$t->fireInsert($row, @$row[$t->getPrimaryKey()->name], null);
 			}
+			
+			PNApplication::$instance->user_management->logout();
 		}		
 	}
 	

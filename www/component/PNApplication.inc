@@ -198,7 +198,8 @@ class PNApplication {
 	 * Initialize PNApplication: instantiate and initialize every component
 	 */
 	public function init() {
-		$this->local_domain = isset($_GET["testing"]) ? "Test" : file_get_contents("conf/local_domain");
+		global $local_domain;
+		$this->local_domain = isset($_GET["testing"]) ? "Test" : $local_domain;
 		$this->current_domain = $this->local_domain;
 		$components_names = array();
 		$dir = @opendir("component");

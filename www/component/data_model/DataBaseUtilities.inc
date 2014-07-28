@@ -62,5 +62,27 @@ class DataBaseUtilities {
 	public static function dropTable($db_system, &$table, $suffix = null) {
 		$db_system->execute("DROP TABLE `".$table->getName().($suffix <> null ? $suffix : "")."`");
 	}
+	
+	public static function importSQL(&$db_system, $file, $delimiter = ';') {
+		set_time_limit(0);
+		if (is_file($file) === true) {
+			$file = fopen($file, 'r');
+			if (is_resource($file) === true) {
+				$query = array();
+				while (feof($file) === false) {
+					$query[] = fgets($file);
+					if (preg_match('~' . preg_quote($delimiter, '~') . '\s*$~iS', end($query)) === 1) {
+						$query = trim(implode('', $query));
+						$db_system->execute($query);
+					}
+					if (is_string($query) === true)
+						$query = array();
+				}
+				return fclose($file);
+			}
+		}
+		return false;
+	}
+	
 }
 ?>

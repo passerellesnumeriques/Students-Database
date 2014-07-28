@@ -8,7 +8,7 @@ class page_clean_storage extends Page {
 	protected function execute() {
 		foreach (PNApplication::$instance->getDomains() as $domain=>$descr)
 			$this->cleanDomain($domain);
-		echo "<br/>Cleaning done.<br/><br/><a href='tools'>Back to Development tools page</a>";
+		echo "<br/>Cleaning done.<br/>";
 	}
 	private function cleanDomain($domain) {
 		echo "<br/>";

@@ -41,9 +41,9 @@ class DataBase {
 
 }
 
-$db_conf = include("conf/local_db");
-require_once("DataBaseSystem_".$db_conf["type"].".inc");
-$db_system_class = "DataBaseSystem_".$db_conf["type"];
+global $db_config;
+require_once("DataBaseSystem_".$db_config["type"].".inc");
+$db_system_class = "DataBaseSystem_".$db_config["type"];
 DataBase::$conn = new $db_system_class;
-DataBase::$conn->connect($db_conf["server"], $db_conf["user"], $db_conf["password"]);
+DataBase::$conn->connect($db_config["server"], $db_config["user"], $db_config["password"]);
 ?>

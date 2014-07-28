@@ -35,10 +35,19 @@ $conf = array(
            "country_code"=>"kh"
        ),
        "curriculum"=>array(
-           "period_name"=>"Quarter",
-           "period_weeks"=>13,
-           "periods_number"=>8,
-           "periods_per_year"=>4
+           "preset_periods"=>array(
+               array(
+                   "name"=>"Quarter",
+                   "weeks"=>13
+               )
+           ),
+           "default_academic_year"=>array(
+               array("period"=>"Quarter","month"=>9,"week"=>1,"weeks_break"=>0),
+               array("period"=>"Quarter","month"=>12,"week"=>1,"weeks_break"=>0),
+               array("period"=>"Quarter","month"=>3,"week"=>1,"weeks_break"=>0),
+               array("period"=>"Quarter","month"=>6,"week"=>1,"weeks_break"=>0)
+           ),
+           "default_batch_years"=>2
        ),
 	   "transcripts"=>array(
 	       "default_grading_system"=>"Percentage"
@@ -53,10 +62,17 @@ $conf = array(
            "country_code"=>"vn"
        ),
        "curriculum"=>array(
-           "period_name"=>"Semester",
-           "period_weeks"=>18,
-           "periods_number"=>4,
-           "periods_per_year"=>2
+           "preset_periods"=>array(
+               array(
+                   "name"=>"Semester",
+                   "weeks"=>18
+               )
+           ),
+           "default_academic_year"=>array(
+               array("period"=>"Semester","month"=>9,"week"=>1,"weeks_break"=>0),
+               array("period"=>"Semester","month"=>3,"week"=>1,"weeks_break"=>0)
+           ),
+           "default_batch_years"=>2
        ),
        "transcripts"=>array(
 	       "default_grading_system"=>"/10.00"
@@ -67,12 +83,10 @@ $conf = array(
 	   )
     ),
 );
-$conf["Test"] = $conf["PNP"];
-$conf["Dev"] = $conf["PNP"];
-$conf["Dev"]["google"] = $conf["Dev"]["Test"] = array(
-	"client_id"=>"668569616064-nu94pmbtml2i2qrnhhkajcf82ju6f2mb.apps.googleusercontent.com",
-	"api_key"=>"AIzaSyBmCvj7e_p9QwoxBoD08xHKvuTDUaBt6ZQ"
-);
+/*
+    "client_id"=>"668569616064-nu94pmbtml2i2qrnhhkajcf82ju6f2mb.apps.googleusercontent.com",
+    "api_key"=>"AIzaSyBmCvj7e_p9QwoxBoD08xHKvuTDUaBt6ZQ"
+*/
 
 return $conf;
 ?>

@@ -10,13 +10,13 @@ class SQLQuery {
 	/** returns the direct connection to the database
 	 * @return DataBaseSystem the connection to the database
 	 */
-	private static function db() {
+	private static function &db() {
 		if (SQLQuery::$db_system <> null) return SQLQuery::$db_system;
-		$db_conf = include("conf/local_db");
-		require_once("DataBaseSystem_".$db_conf["type"].".inc");
-		$db_system_class = "DataBaseSystem_".$db_conf["type"];
+		global $db_config;
+		require_once("DataBaseSystem_".$db_config["type"].".inc");
+		$db_system_class = "DataBaseSystem_".$db_config["type"];
 		SQLQuery::$db_system = new $db_system_class;
-		$res = SQLQuery::$db_system->connect($db_conf["server"], $db_conf["user"], $db_conf["password"]);
+		$res = SQLQuery::$db_system->connect($db_config["server"], $db_config["user"], $db_config["password"]);
 		if ($res <> DataBaseSystem::ERR_OK) {
 			switch ($res) {
 				case DataBaseSystem::ERR_CANNOT_CONNECT_TO_SERVER: PNApplication::error("Unable to connect to the database server"); break;
@@ -41,7 +41,7 @@ class SQLQuery {
 	 * Returns the directo access to the database. This should almost never be used.
 	 * @return DataBaseSystem the connection to the database
 	 */
-	public static function getDataBaseAccessWithoutSecurity() { return SQLQuery::db(); }
+	public static function &getDataBaseAccessWithoutSecurity() { return SQLQuery::db(); }
 
  	/** utility method to ease chained usage: SQLQuery::create()->select(...)->field(...)->....
  	 * @return SQLQuery a new instance of SQLQuery
@@ -66,7 +66,8 @@ class SQLQuery {
  	 * @param SQLQuery $copy the query to copy
  	 */
  	public function __construct($copy = null) {
- 		$this->warning = PNApplication::$instance->current_domain == "Dev";
+ 		global $development_mode;
+ 		$this->warning = $development_mode;
  		if ($copy) {
  			$this->database = $copy->database;
  			$this->sub_models = array_merge($copy->sub_models);

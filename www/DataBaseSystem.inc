@@ -45,7 +45,8 @@ abstract class DataBaseSystem {
 	 * @param integer $time time in microseconds the execution took
 	 */
 	public function log($query, $error_number, $error_message, $time) {
-		if (PNApplication::$instance->current_domain <> "Dev") return;
+		global $development_mode;
+		if (!$development_mode) return;
 		if (!isset(PNApplication::$instance->components["development"])) return;
 		if (PNApplication::$instance->development->current_request() == null) return;
 		if (count(PNApplication::$instance->development->current_request()->sql_queries) == 200)
