@@ -16,7 +16,7 @@ In order to ensure that someone else will not make modifications at the same tim
 <br/>
 To avoid locking data for long time, it is automatically unlocked if you are inactive.<br/>
 And it seems you are inactive since several minutes. Please click on the button below to continue working,<br/>
-else the data will be automatically unlocked in <span style='font-weight:bold'><span id='seconds'></span> second(s).</span>
+else the data will be automatically unlocked in <span id='timing' style='font-weight:bold'></span>
 , and any modification which has not been saved will be lost.<br/>
 <br/>
 <button onclick='db_lock_still_here();'>I am still there !</button>
@@ -38,10 +38,24 @@ function db_lock_not_there() {
 		if (popup) popup.close();
 	}
 }
-var timing = 60;
+var timing = 150;
 function update_timing() {
 	if (--timing < 0) timing = 0;
-	document.getElementById('seconds').innerHTML = timing;
+	var t = timing;
+	var s = "";
+	if (t >= 60) {
+		var m = Math.floor(t/60);
+		s += m+" minute"+(m > 1 ? "s" : "");
+		t -= m*60;
+	}
+	if (t == 0) {
+		if (s == "") s = "0 second";
+	} else {
+		if (s.length > 0) s += " and ";
+		s += t+" second";
+		if (t > 1) s += "s";
+	}
+	document.getElementById('timing').innerHTML = s;
 	if (timing > 0)
 		setTimeout(update_timing,1000);
 	else

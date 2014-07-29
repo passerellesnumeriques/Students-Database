@@ -60,6 +60,11 @@ class SQLQuery {
  		else
  			unset(SQLQuery::$preselected_submodels[$key_table]);
  	}
+ 	public static function getPreselectedSubModel($key_table) {
+ 		if (isset(SQLQuery::$preselected_submodels[$key_table]))
+ 			return SQLQuery::$preselected_submodels[$key_table];
+ 		return null;
+ 	}
  	
  	/**
  	 * Copy a SQLQuery 
@@ -816,9 +821,9 @@ class SQLQuery {
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
 			if (count($this->fields) == 0 && $this->count === null && count($this->expressions) == 0) {
 				if ($this->bypass_security)
-					$columns = $table->internalGetColumns();
+					$columns = $table->internalGetColumns($this->sub_models);
 				else
-					$columns = $table->getColumns();
+					$columns = $table->getColumns($this->sub_models);
 				foreach ($columns as $col)
 					array_push($final_fields, array($alias, $col->name, null));
 				unset($columns);
@@ -836,9 +841,9 @@ class SQLQuery {
 						$table_name = $f[0] == $t ? $table->getSQLName($this->sub_models) : $alias;
 						// check the field is accessible
 						if ($this->bypass_security)
-							$col = $table->internalGetColumn($f[1]);
+							$col = $table->internalGetColumn($f[1], $this->sub_models);
 						else
-							$col = $table->getColumn($f[1]);
+							$col = $table->getColumn($f[1], $this->sub_models);
 						if ($col == null) {
 							PNApplication::error("Unknown column ".$f[1]." in table ".$table->getName());
 							return null;
@@ -876,9 +881,9 @@ class SQLQuery {
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
 			if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0) {
 				if ($this->bypass_security || $join_allowed)
-					$columns = $table->internalGetColumns();
+					$columns = $table->internalGetColumns($this->sub_models);
 				else
-					$columns = $table->getColumns();
+					$columns = $table->getColumns($this->sub_models);
 				foreach ($columns as $col)
 					array_push($final_fields, array($alias, $col->name, null));
 				unset($columns);
@@ -888,9 +893,9 @@ class SQLQuery {
 					if ($f[0] == $join[1] || $f[0] == $alias) {
 						// check the field is accessible
 						if ($this->bypass_security || $join_allowed)
-							$col = $table->internalGetColumn($f[1]);
+							$col = $table->internalGetColumn($f[1], $this->sub_models);
 						else
-							$col = $table->getColumn($f[1]);
+							$col = $table->getColumn($f[1], $this->sub_models);
 						array_push($final_fields, array($alias, $col->name, $f[2]));
 						unset($col);
 						array_splice($fields,$i,1);
@@ -1111,11 +1116,17 @@ class SQLQuery {
 	private function getColumnName($table, $column) {
 		$display = DataModel::get()->getTableDataDisplay($table->getName());
 		if ($display == null) return $column;
-		foreach ($display->getDataDisplay(null) as $data) {
+		$sub_model = $this->getTableSubModel($table);
+		foreach ($display->getDataDisplay(null,$sub_model) as $data) {
 			foreach ($data->getHandledColumns() as $col)
 				if ($col == $column) return $data->getDisplayName();
 		}
 		return $column;
+	}
+	private function getTableSubModel($table) {
+		if (!($table->getModel() instanceof SubDataModel)) return null;
+		$pt = $table->getModel()->getParentTable();
+		return $this->sub_models[$pt];
 	}
 
 	/** UPDATE a row based on its key

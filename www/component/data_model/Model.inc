@@ -246,35 +246,6 @@ class DataModel {
 	
 }
 
-class DataCategoryLink {
-	
-	public $link;
-	public $icon;
-	
-	public function __construct($link, $icon = null) {
-		$this->link = $link;
-		$this->icon = $icon;
-	}
-	
-	public function getParameters() {
-		$params = array();
-		$i = 0;
-		while (($j = strpos($this->link, "%", $i)) !== FALSE) {
-			$k = strpos($this->link, "%", $j+1);
-			if ($k === FALSE) break;
-			$content = substr($this->link, $j+1, $k-$j-1);
-			$l = strpos($content, ".");
-			if ($l === FALSE) {
-				$i = $k;
-				continue;
-			}
-			array_push($params, array("table"=>substr($content,0,$l),"column"=>substr($content,$l+1),"name"=>$content));
-			$i = $k+1;
-		}
-		return $params;
-	}
-}
-
 class SubDataModel extends DataModel {
 	private $parent_model;
 	private $parent_table;
@@ -286,13 +257,6 @@ class SubDataModel extends DataModel {
 	
 	public function &getParentModel() { return $this->parent_model; }
 	public function getParentTable() { return $this->parent_table; }
-	
-	public function addDataDisplayHandler($handler) {
-		$this->parent_model->addDataDisplayHandler($handler);
-	}
-	public function getDataDisplayHandler($table) {
-		return $this->parent_model->getDataDisplayHandler($table);
-	}
 	
 	public function createTables($key) {
 		if (SQLQuery::isTransactionStarted()) {
@@ -312,8 +276,12 @@ class SubDataModel extends DataModel {
 			return;
 		}
 		require_once("DataBaseUtilities.inc");
-		foreach ($this->tables as $t)
+		$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".PNApplication::$instance->current_domain);
+		foreach ($this->tables as $t) {
 			DataBaseUtilities::dropTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
+			if ($t->isCustomized())
+				@unlink($path."/custom_tables/".$t->getName()."_".$key);
+		}
 		if ($this->instances <> null)
 			for ($i = 0; $i < count($this->instances); $i++)
 			if ($this->instances[$i] == $key) {
@@ -330,6 +298,15 @@ class SubDataModel extends DataModel {
 		}
 		return $this->instances;
 	}
+	
+	// delegate to parent
+	
+	public function addDataCategory($category) { $this->parent_model->addDataCategory($category); }
+	public function getDataCategory($name) { return $this->parent_model->getDataCategory($name); }
+	public function addTableDataDisplay($display) { $this->parent_model->addTableDataDisplay($display); }
+	public function getTableDataDisplay($table_name) { return $this->parent_model->getTableDataDisplay($table_name); }
+	public function addDataScreen($screen) { $this->parent_model->addDataScreen($screen); }
+	public function getDataScreens() { return $this->parent_model->getDataScreens(); }
 	
 }
 ?>

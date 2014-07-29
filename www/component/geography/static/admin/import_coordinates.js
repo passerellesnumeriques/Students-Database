@@ -113,7 +113,7 @@ var map_colors = [
 function import_country(popup, country, country_data) {
 	if (country.north) {
 		// already set, continue
-		import_division_level(popup, country, country_data, 0, -1, undefined, function() {
+		import_division_level(popup, country, country_data, 0, -1, undefined, undefined, function() {
 			import_sub_divisions(popup, country, country_data, 0);			
 		});
 		return;
@@ -168,7 +168,7 @@ function import_country(popup, country, country_data) {
 						field_west: ec.coord.field_west.getCurrentData()
 					},function(res) {
 						popup.unfreeze();
-						import_division_level(popup, country, country_data, 0, -1, undefined, function() {
+						import_division_level(popup, country, country_data, 0, -1, undefined, undefined, function() {
 							import_sub_divisions(popup, country, country_data, 0);			
 						});
 					});
@@ -218,7 +218,7 @@ function import_country_step1(container, country, country_data, ondone) {
 	}, true);
 };
 
-function import_division_level(popup, country, country_data, division_index, parent_area_index, gadm, ondone) {
+function import_division_level(popup, country, country_data, division_index, parent_area_index, areas, gadm, ondone) {
 	if (country_data.length <= division_index) {
 		// this is the end
 		popup.close();
@@ -229,47 +229,43 @@ function import_division_level(popup, country, country_data, division_index, par
 	var parent_area = division_index > 0 ? country_data[division_index-1].areas[parent_area_index] : country;
 	if (!parent_area.north) {
 		// we don't continue here as the parent doesn't have coordinates
-		ondone();
+		setTimeout(ondone,1);
 		return;
 	}
 	
 	// get children
-	var areas = [];
-	for (var i = 0; i < country_data[division_index].areas.length; ++i) {
-		if (division_index == 0 || country_data[division_index].areas[i].area_parent_id == parent_area.area_id)
-			areas.push(country_data[division_index].areas[i]);
+	if (typeof areas == 'undefined') {
+		areas = [];
+		for (var i = 0; i < country_data[division_index].areas.length; ++i) {
+			if (division_index == 0 || country_data[division_index].areas[i].area_parent_id == parent_area.area_id)
+				areas.push(country_data[division_index].areas[i]);
+		}
 	}
 	
-	// TODO temp
-	for (var i = 0; i < areas.length; ++i)
-		if (areas[i].north) {
-			ondone();
-			return;
-		}
-	
-	/*
-	// check if we already imported all
-	var all = true;
-	for (var i = 0; i < areas.length; ++i)
-		if (!areas[i].north) { all = false; break; }
-	if (all) {
-		ondone();
+	if (areas.length == 0) {
+		// nothing there
+		setTimeout(ondone,1);
 		return;
 	}
-	*/
 
 	popup.content.removeAllChildren();
 	popup.removeButtons();
 	if (division_index>0 && parent_area) {
 		popup.addIconTextButton(null, "Skip "+parent_area.area_name, "skip", function() {
-			ondone();
+			setTimeout(ondone,1);
 		});
 		popup.addIconTextButton(null, "Skip all areas in this division", "skip_division", function() {
 			ondone(true);
 		});
+		popup.addIconTextButton(null, "Skip areas already started", "skip_started", function() {
+			ondone(false, true, false);
+		});
+		popup.addIconTextButton(null, "Skip areas already fully imported", "skip_started", function() {
+			ondone(false, false, true);
+		});
 	} else
 		popup.addIconTextButton(null, "Skip and go to next division", "skip", function() {
-			ondone();
+			setTimeout(ondone,1);
 		});
 	
 	var gadm_imported = function(gadm) {
@@ -592,6 +588,7 @@ function match_division_level_names(container, country, country_data, division_i
 	col_content = document.createElement("DIV");
 	col_content.style.flex = "1 1 auto";
 	col_content.style.overflow = "auto";
+	col_content.style.maxHeight = "300px";
 	col.appendChild(col_content);
 	var matching_content = col_content;
 	col.style.borderRight = "1px solid #808080";
@@ -609,6 +606,7 @@ function match_division_level_names(container, country, country_data, division_i
 	col_content = document.createElement("DIV");
 	col_content.style.flex = "1 1 auto";
 	col_content.style.overflow = "auto";
+	col_content.style.maxHeight = "300px";
 	col.appendChild(col_content);
 	var remaining_db_content = col_content;
 	col.style.borderRight = "1px solid #808080";
@@ -626,6 +624,7 @@ function match_division_level_names(container, country, country_data, division_i
 	col_content = document.createElement("DIV");
 	col_content.style.flex = "1 1 auto";
 	col_content.style.overflow = "auto";
+	col_content.style.maxHeight = "300px";
 	col.appendChild(col_content);
 	var names_content = col_content;
 	
@@ -922,6 +921,7 @@ function match_division_level_names(container, country, country_data, division_i
 		col_content = document.createElement("DIV");
 		col_content.style.flex = "1 1 auto";
 		col_content.style.overflow = "auto";
+		col_content.style.maxHeight = "300px";
 		col.appendChild(col_content);
 		for (var i = 0; i < names_near_matching.length; ++i) {
 			var div = document.createElement("DIV");
@@ -953,6 +953,7 @@ function match_division_level_names(container, country, country_data, division_i
 		col_content = document.createElement("DIV");
 		col_content.style.flex = "1 1 auto";
 		col_content.style.overflow = "auto";
+		col_content.style.maxHeight = "300px";
 		col.appendChild(col_content);
 		for (var i = 0; i < other_names_matching.length; ++i) {
 			var div = document.createElement("DIV");
@@ -1027,7 +1028,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 		return true;
 	};
 	if (isEverythingDone()) {
-		ondone();
+		setTimeout(ondone,1);
 		return;
 	}
 	
@@ -1063,7 +1064,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 	var manual = function(google_results, geonames_results) {
 		var next = function(index) {
 			if (index == areas.length) {
-				ondone();
+				setTimeout(ondone,1);
 				return;
 			}
 			if (areas[index].north) {
@@ -1113,7 +1114,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 				if (matching_done && nb_saved == nb_saving) {
 					popup.unfreeze();
 					if (isEverythingDone())
-						ondone();
+						setTimeout(ondone,1);
 					else
 						manual(use_google ? google_results : null, use_geonames ? geonames_results : null);
 				}
@@ -1270,7 +1271,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 				if (pb.position == pb.total) {
 					popup.unfreeze();
 					if (isEverythingDone())
-						ondone();
+						setTimeout(ondone,1);
 					else
 						manual();
 				}
@@ -1300,11 +1301,11 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 	};
 	
 	button_manual.onclick = function() {
-		manual();
+		setTimeout(manual,1);
 	};
 	
 	popup.addIconTextButton(null, "Skip this area", "skip", function() {
-		ondone();
+		setTimeout(ondone,1);
 	});
 }
 
@@ -1315,17 +1316,44 @@ function import_sub_divisions(popup, country, country_data, division_index) {
 		return;
 	}
 	var gadm = undefined;
+	var skip_all_started = false;
+	var skip_all_imported = false;
 	var next = function(index) {
 		if (index == country_data[division_index].areas.length) {
 			// all done, go to next division
 			import_sub_divisions(popup, country, country_data, division_index+1);
 			return;
 		}
-		import_division_level(popup, country, country_data, division_index+1, index, typeof gadm == 'undefined' ? function(g){gadm=g;} : gadm,function(skip_all) {
+		var areas = [];
+		for (var i = 0; i < country_data[division_index+1].areas.length; ++i) {
+			if (country_data[division_index+1].areas[i].area_parent_id == country_data[division_index].areas[index].area_id)
+				areas.push(country_data[division_index+1].areas[i]);
+		}
+
+		if (skip_all_started) {
+			for (var i = 0; i < areas.length; ++i)
+				if (areas[i].north) {
+					next(index+1);
+					return;
+				}
+		}
+		if (skip_all_imported) {
+			var all = true;
+			for (var i = 0; i < areas.length; ++i)
+				if (!areas[i].north) { all = false; break; }
+			if (all) {
+				next(index+1);
+				return;
+			}
+		}
+
+		import_division_level(popup, country, country_data, division_index+1, index, areas, typeof gadm == 'undefined' ? function(g){gadm=g;} : gadm,function(skip_all, skip_started, skip_imported) {
 			if (skip_all) {
 				import_sub_divisions(popup, country, country_data, division_index+1);
 				return;
 			}
+			if (skip_started) skip_all_started = true;
+			if (skip_imported) skip_all_imported = true;
 			next(index+1);
 		});
 	};

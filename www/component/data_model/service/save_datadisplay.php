@@ -37,7 +37,7 @@ class service_save_datadisplay extends Service {
 		$tables_fields = new TablesToUpdate(); 
 		foreach ($list as $data_to_save) {
 			$found = false;
-			foreach ($display->getDataDisplay($come_from) as $data) {
+			foreach ($display->getDataDisplay($come_from, $sub_model) as $data) {
 				if ($data->getDisplayName() == $data_to_save["name"]) {
 					$data->saveData($key, $data_to_save["data"], $sub_model, $tables_fields, null, null);
 					$found = true;

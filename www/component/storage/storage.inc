@@ -37,6 +37,8 @@ class storage extends Component {
 			self::remove_directory($path);
 		if (!mkdir($path))
 			PNApplication::error("Unable to create storage directory "+$path);
+		if (!mkdir($path."/storage"))
+			PNApplication::error("Unable to create storage directory "+$path);
 	}
 	private static function remove_directory($path) {
 		$dir = opendir($path);
@@ -53,7 +55,7 @@ class storage extends Component {
 	}
 	
 	private static function storage_path() {
-		return realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".PNApplication::$instance->current_domain);
+		return realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".PNApplication::$instance->current_domain."/storage");
 	}
 	
 	private function remove_old() {

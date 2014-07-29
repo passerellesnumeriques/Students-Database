@@ -98,7 +98,7 @@ function staff_info(&$page, $people_id, $container_id) {
 			var fake_key = generateID();
 			if (position.id == -1) {
 				var field;
-				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Position", null), null, "field", "fake_key");?>
+				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Position", null, null), null, "field", "fake_key");?>
 				td_position.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					position.position = field.getCurrentData();
@@ -112,7 +112,7 @@ function staff_info(&$page, $people_id, $container_id) {
 			tr.appendChild(td_department);
 			if (position.id == -1) {
 				var field;
-				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Department", null), null, "field", "fake_key");?>
+				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Department", null, null), null, "field", "fake_key");?>
 				td_department.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					var s = field.getCurrentData();
@@ -130,7 +130,7 @@ function staff_info(&$page, $people_id, $container_id) {
 			tr.appendChild(td_start);
 			if (position.id == -1) {
 				var field;
-				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Start", null), null, "field", "fake_key");?>
+				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Start", null, null), null, "field", "fake_key");?>
 				td_start.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					position.start = field.getCurrentData();
@@ -144,7 +144,7 @@ function staff_info(&$page, $people_id, $container_id) {
 			tr.appendChild(td_end);
 			if (position.id == -1) {
 				var field;
-				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("End", null), null, "field", "fake_key");?>
+				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("End", null, null), null, "field", "fake_key");?>
 				td_end.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					position.end = field.getCurrentData();

@@ -33,7 +33,7 @@ class service_lock_datadisplay extends Service {
 			PNApplication::error("No TableDataDisplay on table ".$table);
 			return;
 		}
-		foreach ($display->getDataDisplay($come_from) as $data) {
+		foreach ($display->getDataDisplay($come_from, $sub_model) as $data) {
 			if ($data->getDisplayName() == $input["name"]) {
 				$locks = $data->getEditLocks($sub_model);
 				$ids = array();

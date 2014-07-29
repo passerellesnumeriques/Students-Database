@@ -36,7 +36,7 @@ class service_save_data extends Service {
 						$come_from = $path->foreign_key->name;
 					$display = DataModel::get()->getTableDataDisplay($path->table->getName());
 					$data_found = false;
-					foreach ($display->getDataDisplay($come_from) as $d)
+					foreach ($display->getDataDisplay($come_from, $path->sub_model) as $d)
 						if ($d->getDisplayName() == $t["name"]) {
 							$d->saveData($t["key"], $t["value"], $path->sub_model, $tables_fields, null, null);
 							$data_found = true;

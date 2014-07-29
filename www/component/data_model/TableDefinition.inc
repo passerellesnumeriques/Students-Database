@@ -59,7 +59,8 @@ namespace datamodel {
 		
 		private $row_description_provider = null;
 		
-		private $is_customized = false;
+		private $customization_right = null;
+		private $customization_name = null;
 		private $customization = array();
 		
 		/** @var boolean indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed */
@@ -96,8 +97,9 @@ namespace datamodel {
 		}
 		public function getSQLName($sub_models) {
 			if ($this->model instanceof \SubDataModel) {
-				if (isset($sub_models[$this->model->getParentTable()]))
-					return $this->name."_".$sub_models[$this->model->getParentTable()];
+				if (!isset($sub_models[$this->model->getParentTable()]))
+					throw new \Exception("No sub model ".$this->model->getParentTable()." for table ".$this->name);
+				return $this->name."_".$sub_models[$this->model->getParentTable()];
 			}
 			return $this->name;
 		}
@@ -168,7 +170,7 @@ namespace datamodel {
 		}
 		
 		private function _getColumns($sub_models) {
-			if (!$this->is_customized) return $this->columns;
+			if ($this->customization_right == null) return $this->columns;
 			if ($this->model instanceof \SubDataModel) {
 				$name = $this->getSQLName($sub_models);
 				if (!isset($this->customization[$name])) {
@@ -628,55 +630,29 @@ namespace datamodel {
 		}
 		
 
-		public function &customizable() {
-			$this->is_customized = true;
+		public function &customizable($name, $right_name) {
+			$this->customization_right = $right_name;
+			$this->customization_name = $name;
 			return $this;
 		}
+		public function isCustomized() {
+			return $this->customization_right <> null;
+		}
+		public function getCustomizationName() {
+			return $this->customization_name;
+		}
+		public function getCustomizationRight() {
+			return $this->customization_right;
+		}
 		private function load_customization($table_name) {
-			$cols = array();
-			$res = \SQLQuery::getDataBaseAccessWithoutSecurity()->execute("SHOW FULL COLUMNS FROM `".$table_name."`");
-			if ($res)
-				while (($r = \SQLQuery::getDataBaseAccessWithoutSecurity()->nextRow($res)) <> null) {
-				$col_name = $r["Field"];
-				// check if this column is a normal one
-				$found = false;
-				foreach ($this->columns as $c)
-					if ($c->name == $col_name) {
-					$found = true; break;
-				}
-				if ($found) continue;
-				$col_type = $r["Type"];
-				$col_size = null;
-				$i = strpos($col_type, "(");
-				if ($i !== FALSE) {
-					$j = strpos($col_type, ")");
-					$col_size = intval(substr($col_type, $i+1, $j-$i-1));
-					$col_type = substr($col_type, 0, $i);
-				}
-				$can_be_null = $r["Null"] == "YES";
-				$comment = $r["Comment"];
-				if (strlen($comment) > 0)
-					$comment = json_decode($comment);
-				else
-					$comment = array();
-
-				$col = null;
-				if ($col_type == "int") {
-					if (isset($comment["foreign"]))
-						$col = new ForeignKey($this, $col_name, $comment["foreign"]);
-					else {
-						if ($col_size == 1)
-							$col = new ColumnBoolean($this, $col_name);
-						else
-							$col = new ColumnInteger($this, $col_name, $col_size);
-					}
-				} else if ($col_type == "varchar")
-					$col = new ColumnString($this, $col_name, $col_size);
-				// TODO continue
-				if ($col <> null)
-					array_push($cols, $col);
+			$data_path = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".\PNApplication::$instance->current_domain);
+			if (!file_exists($data_path."/custom_tables/$table_name"))
+				return array();
+			try {
+				return include($data_path."/custom_tables/$table_name");
+			} catch (\Exception $e) {
+				\PNApplication::error("Error in custom table definition of $table_name", $e);
 			}
-			return $cols;
 		}
 
 	}

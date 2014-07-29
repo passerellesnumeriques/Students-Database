@@ -19,6 +19,7 @@ return array(
 		new BooleanRight("manage_exam_center","Manage exam centers",array(true=>array("see_exam_center_detail"=>true,"can_update_step"=>true))),
 		new BooleanRight("edit_applicants","Create, import, remove and edit applicants",array(true=>array("see_applicant_info"=>true))),
 		new BooleanRight("manage_applicant","Manage applicant (personnal info, center assignment, results...)",array(true=>array("can_access_selection_data"=>true,"can_update_step"=>true))),
+		new BooleanRight("edit_application_form_fields","Edit the list of information we can specify for each applicant",array(true=>array("edit_applicants"=>true,"manage_applicants"=>true)))
 	)),
 );
 

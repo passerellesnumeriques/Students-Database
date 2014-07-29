@@ -37,7 +37,7 @@ class data_model extends Component {
 		if ($display == null) return; // nothing accessible
 		$handled = array();
 		if ($display <> null) {
-			$data = $display->getDataDisplay($from);
+			$data = $display->getDataDisplay($from, $path->sub_model);
 			foreach ($data as $d) {
 				array_push($list, array($d, $path));
 				foreach ($d->getHandledColumns() as $col)

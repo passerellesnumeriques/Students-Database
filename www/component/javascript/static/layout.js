@@ -453,18 +453,18 @@ function _layout_auto() {
 	layout._layout_auto();
 	var now = new Date().getTime();
 	var timing;
-	if (now - layout._last_layout_activity < 5000) timing = 1000;
-	else if (now - layout._last_layout_activity < 10000) timing = 2000;
-	else if (now - layout._last_layout_activity < 20000) timing = 4000;
-	else timing = 5000;
+	if (now - layout._last_layout_activity < 1000) timing = 1000;
+	else if (now - layout._last_layout_activity < 5000) timing = 2500;
+	else if (now - layout._last_layout_activity < 20000) timing = 5000;
+	else timing = 10000;
 	if (_layout_interval_time != timing) {
 		clearInterval(_layout_interval);
 		_layout_interval = setInterval(_layout_auto, timing);
 		_layout_interval_time = timing;
 	}
 }
-var _layout_interval_time = 1000;
-var _layout_interval = setInterval(_layout_auto,1000);
+var _layout_interval_time = 5000;
+var _layout_interval = setInterval(_layout_auto,5000);
 
 if (typeof listenEvent != 'undefined') {
 	listenEvent(window, 'load', _all_images_loaded);

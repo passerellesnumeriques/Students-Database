@@ -29,7 +29,7 @@ class page_export_storage extends Page {
 				$dir2 = ($id/100)%100;
 				$dir3 = ($id/10000)%100;
 				$filename = intval($id/1000000);
-				$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/$domain/".$dir1."/".$dir2."/".$dir3."/".$filename;
+				$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/$domain/storage/".$dir1."/".$dir2."/".$dir3."/".$filename;
 				if (!file_exists($path)) {
 					echo "Error for ID ".$id.": file not found (".$path.").<br/>";
 					continue;

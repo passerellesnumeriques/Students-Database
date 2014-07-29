@@ -258,7 +258,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 						else
 							$from = null;
 						$data_aliases = array();
-						foreach ($display->getDataDisplay($from) as $data) {
+						foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
 							$child->parent = new DataPath_Table($path->table, $path->sub_model);
 							$data_aliases[$data->getDisplayName()] = $data->buildSQL($q, $child, array());
 							$child->parent = $path;
@@ -270,7 +270,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 							$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);
 					}
 					if ($display <> null)
-						foreach ($display->getDataDisplay($from) as $data) {
+						foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
 							$values->addTableDataValue($child->table->getName(), $data->getDisplayName(), $data->getData($row, $data_aliases[$data->getDisplayName()]));
 							$cell = $data->getSingleCell();
 							if ($cell <> null)

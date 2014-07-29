@@ -38,7 +38,7 @@ namespace datamodel {
 			$key_value = getKeyValue($path->table, $values);
 			$is_new = $key_value == null || intval($key_value) < 0;
 			$fixed_columns = array_merge($values->getColumns($path->table->getName()));
-			echo $this->generateDataTable($page, $path, $this->display->getDataDisplay($from), $fixed_columns, $values, $prefilled_values, $structure_name, $is_new);
+			echo $this->generateDataTable($page, $path, $this->display->getDataDisplay($from, $path->sub_model), $fixed_columns, $values, $prefilled_values, $structure_name, $is_new);
 		}
 		
 		/**
@@ -154,7 +154,7 @@ namespace datamodel {
 			if ($path->unique)
 				foreach ($path->columns as $cname=>$val)
 					$to_update->addValue($path->table->getName(), $path->sub_model, $key, $cname, $val);
-			foreach ($this->display->getDataDisplay($come_from) as $data) {
+			foreach ($this->display->getDataDisplay($come_from, $path->sub_model) as $data) {
 				$found = false;
 				$val = null;
 				foreach ($path->value as $cd)

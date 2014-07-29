@@ -105,6 +105,16 @@ field_integer.prototype._create = function(data) {
 			if (data != null && data > t.config.max) data = t.config.max;
 			if (data != prev) { t.setData(data); }
 		}
+		this.setMinimum = function(min) {
+			t.config.min = min === null ? undefined : min;
+			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.max < min) t.config.max = min;
+			t.setData(getValueFromInput());
+		};
+		this.setMaximum = function(max) {
+			t.config.max = max === null ? undefined : max;
+			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.min < max) t.config.min = max;
+			t.setData(getValueFromInput());
+		};
 	} else {
 		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));
 		this._setData = function(data) {

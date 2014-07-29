@@ -80,4 +80,15 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 }
 $model->addDataScreen(new ApplicantDataScreen($display));
 
+$category_more_info = new datamodel\DataDisplayCategory("Additional Info");
+$model->addDataCategory($category_more_info);
+$display = new datamodel\TableDataDisplay("ApplicantMoreInfo", $category_more_info);
+$display->addJoinFrom("people", array("types"), function($columns) {
+	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
+	return in_array("applicant", $types);
+});
+$display->addJoinToPrimary();
+$display->addFollowAll();
+$model->addTableDataDisplay($display);
+
 ?>

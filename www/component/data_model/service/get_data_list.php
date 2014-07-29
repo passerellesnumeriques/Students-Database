@@ -58,8 +58,10 @@ class service_get_data_list extends Service {
 		$q = SQLQuery::create();
 		$t = $model->getTable($table);
 		$alias = $q->generateTableAlias();
-		$table_name = $t->getSQLName(null);
+		$table_name = $t->getName();
 		$q->select(array($table_name=>$alias));
+		if (($t->getModel() instanceof SubDataModel) && isset($input["sub_model"]))
+			$q->selectSubModelForTable($t, $input["sub_model"]);
 		
 		// retrieve DataDisplay, filters, and build the request
 		$data_aliases = array();
@@ -81,7 +83,7 @@ class service_get_data_list extends Service {
 				return;
 			}
 			$data = null;
-			foreach ($display->getDataDisplay($from) as $d)
+			foreach ($display->getDataDisplay($from, $path->sub_model) as $d)
 				if ($d->getDisplayName() == $name) { $data = $d; break; }
 			if ($data == null) {
 				PNApplication::error("No displayable data ".$name." on table ".$path->table->getName());
@@ -117,7 +119,7 @@ class service_get_data_list extends Service {
 				$display = DataModel::get()->getTableDataDisplay($path->table->getName());
 				if ($display == null) continue;
 				if ($display->getCategory()->getName() <> $filter["category"]) continue;
-				foreach ($display->getDataDisplay($from) as $data) {
+				foreach ($display->getDataDisplay($from, $path->sub_model) as $data) {
 					if ($data->getDisplayName() <> $filter["name"]) continue;
 					$found = true;
 					$fil = array();

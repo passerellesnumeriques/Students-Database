@@ -437,26 +437,22 @@ function popup_window(title,icon,content,hide_close_button) {
 		setTimeout(function() {
 			t._redo_layout = false;
 			var sb = false;
-			var w_content = getWidth(t.content);
-			var h_content = getHeight(t.content);
-			if (t.content.style.width) {
-				// a width is defined
-				if (h_content > t.content_container.clientHeight) {
-					// a vertical scroll bar will appear
-					if (w_content+window.top.browser_scroll_bar_size < t.popup_container.clientWidth) {
-						t.content_container.style.minWidth = (w_content+window.top.browser_scroll_bar_size)+"px";
-						sb = true;
-					}
+			if (t.content_container.scrollHeight > t.content_container.clientHeight) {
+				// vertical scroll bar needed
+				if (t.content_container.scrollWidth > t.content_container.clientWidth) {
+					// horizontal scroll bar needed
+					t.content_container.style.overflow = "auto";
+					return;
 				}
-			}
-			if (t.content.style.height) {
-				// a height is defined
-				if (w_content > t.content_container.clientWidth) {
-					// a horizontal scroll bar will appear
-					if (h_content+window.top.browser_scroll_bar_size < t.popup_container.clientHeight) {
-						t.content_container.style.minHeight = (h_content+window.top.browser_scroll_bar_size)+"px";
-						sb = true;
-					}
+				if (t.content_container.scrollWidth+window.top.browser_scroll_bar_size < t.popup_container.clientWidth) {
+					t.content_container.style.minWidth = (t.content_container.scrollWidth+window.top.browser_scroll_bar_size)+"px";
+					sb = true;
+				}
+			} else if (t.content_container.scrollWidth > t.content_container.clientWidth) {
+				// horizontal scroll bar needed
+				if (t.content_container.scrollHeight+window.top.browser_scroll_bar_size < t.popup_container.clientHeight) {
+					t.content_container.style.minHeight = (t.content_container.scrollHeight+window.top.browser_scroll_bar_size)+"px";
+					sb = true;
 				}
 			}
 			if (sb) 

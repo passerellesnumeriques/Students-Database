@@ -5,7 +5,7 @@ class TableDataDisplay {
 	
 	private $table_name;
 	private $category;
-	private $data_display = array(null=>array());
+	private $data_display = array();
 	private $join_from = array();
 	private $follow = array();
 	private $join = false;
@@ -19,11 +19,13 @@ class TableDataDisplay {
 	public function getTable() { return \DataModel::get()->getTable($this->table_name); }
 	public function getCategory() { return $this->category; }
 	
-	public function &addDataDisplay($data_display, $come_from = null) {
+	public function &addDataDisplay($data_display, $come_from = null, $specific_sub_model = null) {
 		$data_display->setTableDataDisplay($this);
 		if (!isset($this->data_display[$come_from]))
 			$this->data_display[$come_from] = array();
-		array_push($this->data_display[$come_from], $data_display);
+		if (!isset($this->data_display[$come_from][$specific_sub_model]))
+			$this->data_display[$come_from][$specific_sub_model] = array();
+		array_push($this->data_display[$come_from][$specific_sub_model], $data_display);
 		return $this;
 	}
 	
@@ -53,15 +55,30 @@ class TableDataDisplay {
 		return $this;
 	}
 	
-	public function getDataDisplay($come_from) {
-		if (isset($this->data_display[$come_from]))
-			return $this->data_display[$come_from];
-		return $this->data_display[null];
+	public function getDataDisplay($come_from, $sub_model) {
+		$data = array();
+		if (isset($this->data_display[$come_from])) {
+			if (isset($this->data_display[$come_from][null]))
+				$data = array_merge($data, $this->data_display[$come_from][null]);
+			if ($sub_model <> null && isset($this->data_display[$come_from][$sub_model]))
+				$data = array_merge($data, $this->data_display[$come_from][$sub_model]);
+			return $data;
+		}
+		if ($come_from == null) return array();
+		if (isset($this->data_display[null])) {
+			if (isset($this->data_display[null][null]))
+				$data = array_merge($data, $this->data_display[null][null]);
+			if ($sub_model <> null && isset($this->data_display[null][$sub_model]))
+				$data = array_merge($data, $this->data_display[null][$sub_model]);
+			return $data;
+		}
+		return array();
 	}
 	
-	public function getDataDisplayByName($name, $come_from) {
-		foreach ($this->data_display[$come_from] as $data)
-			if ($data->getDisplayName() == $name) return $data;
+	public function getDataDisplayByName($name, $come_from, $sub_model) {
+		$data = $this->getDataDisplay($come_from, $sub_model);
+		foreach ($data as $d)
+			if ($d->getDisplayName() == $name) return $d;
 		return null;
 	}
 	

@@ -82,7 +82,7 @@ class DataPathBuilder {
 	 * @param array $sub_models list of sub models selection
 	 */
 	private static function addForeignKeys(&$path, &$done, &$final_paths, $sub_models, $go_to_submodels) {
-		foreach ($path->table->internalGetColumns() as $col) {
+		foreach ($path->table->internalGetColumns($sub_models) as $col) {
 			if (!($col instanceof \datamodel\ForeignKey)) continue;
 			if ($col->foreign_table == $path->table->getName()) continue; // link on itself
 			try {
@@ -150,7 +150,7 @@ class DataPathBuilder {
 					}
 				}
 			}
-			foreach ($t->internalGetColumns() as $col) {
+			foreach ($t->internalGetColumns($sub_models) as $col) {
 				if (!($col instanceof \datamodel\ForeignKey)) continue;
 				if ($col->foreign_table <> $path->table->getName()) continue;
 				// we have one

@@ -65,22 +65,27 @@ class PNApplication {
 	/**
 	 * Signal an error
 	 * @param string|Exception $message in plain text, which will be converted into html, or an Exception
+	 * @param Exception the exception causing the error
 	 */
-	public static function error($message) {
+	public static function error($message, $exception = null) {
 		if (count(PNApplication::$errors) == 20) {
 			array_push(PNApplication::$errors, "Too much errors");
 			return;
 		}
 		if (count(PNApplication::$errors) > 50) return;
-		if (!($message instanceof Exception)) {
+		if (!($message instanceof Exception) && $exception == null) {
 			try {
 				throw new Exception($message);
 			} catch (Exception $e) {
 				$message = $e;
 			}
 		}
-		$e = $message;
-		$message = str_replace("\n", "<br/>", htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8"));
+		if ($exception == null) {
+			$e = $message;
+			$message = "";
+		} else
+			$e = $exception;
+		$message .= ": ".str_replace("\n", "<br/>", htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8"));
 		$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';if (layout) layout.invalidate(e); else if (window.parent && window.parent.layout) window.parent.layout.invalidate(window.frameElement);return false;\">details</a>";
 		$message .= "<ul style='margin:0px;visibility:hidden;position:absolute;top:-10000px' id='ex_".count(PNApplication::$errors)."'>";
 		do {

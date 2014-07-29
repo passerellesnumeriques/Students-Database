@@ -3,7 +3,7 @@
  * Provides functionalities to lock data, so several users cannot modify the same data at the same time
  */
 class DataBaseLock {
-
+	
 	/** lock a table
 	 * @param string $table the table to lock
 	 * @param string $locked_by in case the table is already locked by someone else, this will be filled by the user who locked it
@@ -326,7 +326,7 @@ class DataBaseLock {
 		self::$cleant = true;
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		self::mutexLock();
-		$db->execute("DELETE FROM DataLocks WHERE timestamp <= ".(time()-5*60));
+		$db->execute("DELETE FROM DataLocks WHERE timestamp <= ".(time()-7*60));
 		self::mutexUnlock();
 	}
 	
@@ -687,7 +687,7 @@ class DataBaseLock {
 	 * @param string $table table name
 	 * @param integer|array|null $row_key key of the row or null
 	 * @param string|null $column column name or null
-	 * @return strin|null null if this is already locked by the current user, or error message
+	 * @return string|null null if this is already locked by the current user, or error message
 	 */
 	public static function checkLock($lock_id, $table, $row_key, $column) {
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();

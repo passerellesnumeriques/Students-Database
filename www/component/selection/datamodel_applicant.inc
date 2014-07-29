@@ -25,7 +25,10 @@ $sm->addTable("Applicant")
 
 $sm->addTable("ApplicantMoreInfo")//This table contains all the custom data (based on the application form content)
 	->addForeignKey("people", "People", true, false, false, false, true)
+	->customizable("Application Form","edit_application_form_fields")
 	->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities
+	->addInsertAccess("edit_applicants",true)
+	->addRemoveAccess("edit_applicants",true)
 	->setPrimary("people")//The primary key is the people_id
 	;
 

@@ -78,7 +78,7 @@ class service_test_data extends Service {
 			$dir3 = ($id/10000)%100;
 			$filename = intval($id/1000000);
 			
-			$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/$domain";
+			$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/$domain/storage";
 			$path .= "/$dir1";
 			@mkdir($path);
 			$path .= "/$dir2";

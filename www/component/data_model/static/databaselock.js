@@ -94,7 +94,7 @@ function initDatabaselock() {
 	window.pnapplication.onclose.add_listener(function() {
 		w.databaselock._closeWindow();
 	});
-	window.pnapplication.addInactivityListener(2*60*1000, function() {
+	window.pnapplication.addInactivityListener(3*60*1000, function() {
 		if (window.databaselock._has_popup) return;
 		var popup = false;
 		window.databaselock._has_popup = true;

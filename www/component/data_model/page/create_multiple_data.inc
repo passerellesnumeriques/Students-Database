@@ -1,5 +1,15 @@
 <?php 
 function createMultipleDataPage(&$page, $root_table_name, $sub_model, $sub_models, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data, $precreated_data = null) {
+$all_sub_models = array();
+if ($sub_model <> null) {
+	$root_table = DataModel::get()->getTable($root_table_name);
+	if ($root_table->getModel() instanceof SubDataModel)
+		$all_sub_models[$root_table->getModel()->getParentTable()] = $sub_model;
+}
+if ($sub_models <> null)
+	foreach ($sub_models as $k=>$sm)
+		if (!isset($all_sub_models[$k])) $all_sub_models[$k] = $sm;
+
 $known_columns = array();
 foreach ($fixed_columns as $fc) {
 	if (!isset($known_columns[$fc["table"]])) $known_columns[$fc["table"]] = array();
@@ -8,7 +18,11 @@ foreach ($fixed_columns as $fc) {
 foreach ($fixed_data as $fd) {
 	$display = DataModel::get()->getTableDataDisplay($fd["table"]);
 	if ($display == null) continue;
-	$data = $display->getDataDisplayByName($fd["data"], null);
+	$table = $display->getTable();
+	$sm = null;
+	if ($table->getModel() instanceof SubDataModel)
+		$sm = @$all_sub_models[$table->getModel()->getParentTable()];
+	$data = $display->getDataDisplayByName($fd["data"], null, $sm);
 	if ($data == null) continue;
 	$cell = $data->getSingleCell();
 	if ($cell == null) continue;

@@ -110,6 +110,21 @@ field_decimal.prototype._create = function(data) {
 			}
 			this.signal_error(this.error);
 		};
+		this.setMinimum = function(min) {
+			t.config.min = min === null ? undefined : min;
+			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.max < min) t.config.max = min;
+			t.setData(getValueFromInput());
+		};
+		this.setMaximum = function(max) {
+			t.config.max = max === null ? undefined : max;
+			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.min < max) t.config.min = max;
+			t.setData(getValueFromInput());
+		};
+		this.setDecimalDigits = function(nb) {
+			t.config.decimal_digits = nb;
+			t.input.maxLength = t.config.integer_digits + 1 + t.config.decimal_digits;
+			t.setData(getValueFromInput());
+		};
 	} else {
 		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));
 		this._setData = function(data) {

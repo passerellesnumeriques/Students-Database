@@ -8,8 +8,6 @@ function splitter_vertical(element, position) {
 	t.element = element;
 	t.element.style.overflow = "hidden"; // do not allow to scroll, as we must fill all the area
 	t.element.widget = this;
-	t.element.style.display = "flex";
-	t.element.style.flexDirection = "row";
 	t.position = position;
 	t.element.data = t;
 	for (var i = 0; i < element.childNodes.length; ++i) {
@@ -21,11 +19,17 @@ function splitter_vertical(element, position) {
 		}
 	}
 	t.part1 = element.childNodes[0];
-	t.part1.style.flex = "none";
+	t.part1.style.display = "inline-block";
+	t.part1.style.verticalAlign = "top";
 	t.part2 = element.childNodes[1];
-	t.part2.style.flex = "none";
+	t.part2.style.display = "inline-block";
+	t.part2.style.verticalAlign = "top";
 	
 	t._position = function() {
+		var h = t.element.clientHeight;
+		setHeight(t.part1, h);
+		setHeight(t.part2, h);
+		setHeight(t.separator, h);
 		var w = t.element.clientWidth;
 		if (t.part1.style.visibility == "visible") {
 			if (t.part2.style.visibility == "visible") {
@@ -57,7 +61,8 @@ function splitter_vertical(element, position) {
 	t.separator = document.createElement("DIV");
 	t.separator.className = "splitter_vertical_separator";
 	t.separator.style.backgroundImage = "url(\""+get_script_path('splitter_vertical.js')+"splitter_vertical.gif\")";
-	t.separator.style.flex = "none";
+	t.separator.style.display = "inline-block";
+	t.separator.style.verticalAlign = "top";
 	t.part1.style.visibility = "visible";
 	t.part2.style.visibility = "visible";
 	element.insertBefore(t.separator, t.part2);
