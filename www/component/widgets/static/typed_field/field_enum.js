@@ -49,8 +49,7 @@ field_enum.prototype._create = function(data) {
 		listenEvent(select, 'focus', function() { t.onfocus.fire(); });
 		this.element.appendChild(select);
 		this._getEditedData = function() {
-			if (select.selectedIndex < 0) return null;
-			if (this.config.can_be_empty && select.selectedIndex == 0) return null;
+			if (select.selectedIndex <= 0) return null;
 			return select.options[select.selectedIndex].value; 
 		};
 		this._setData = function(data) {

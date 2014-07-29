@@ -201,8 +201,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addIconTextButton(theme.icons_16.ok, "Finish", 'finish', onfinish);
 	};
 	t.addCancelButton = function(oncancel) {
-		t.addIconTextButton(theme.icons_16.cancel, "Cancel", 'cancel', function() { if (oncancel) oncancel(); t.close(); });
-		t.onEscape(function() { if (oncancel) oncancel(); t.close(); });
+		t.addIconTextButton(theme.icons_16.cancel, "Cancel", 'cancel', function() { if (oncancel && !oncancel()) return; t.close(); });
+		t.onEscape(function() { if (oncancel && !oncancel()) return; t.close(); });
 	};
 	t.addCloseButton = function(onclose) {
 		t.addIconTextButton(theme.icons_16.cancel, "Close", 'close', function() { if (onclose) onclose(); t.close(); });
@@ -304,18 +304,30 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	
 	t.showPercent = function(width, height) {
+		var win;
 		if (!t.popup)
-			t._buildPopup();
+			win = t._buildPopup();
+		else
+			win = getWindowFromElement(t.popup);
 		t.popup.style.width = width+"%";
 		t.popup.style.height = height+"%";
 		t._setSizeType("fixed");
+		
+		if (typeof win.animation != 'undefined') {
+			if (t.anim) win.animation.stop(t.anim);
+			t.anim = win.animation.fadeIn(t.popup, 200);
+		}
+		pnapplication.onclose.add_listener(function(){
+			if (!t.popup) return;
+			t.close();
+		});
 	};
 	
 	/** Display the popup window
 	 * @method popup_window#show
 	 */
 	t.show = function(){
-		t._buildPopup();
+		var win = t._buildPopup();
 		t._setSizeType("fit");
 
 		var move_handler = function(ev) {
@@ -348,6 +360,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			//unlistenEvent(win,'mouseout',up_handler);
 		};
 		t.header.onmousedown = function(ev) {
+			if (!t.popup) return; // it is disappearing
 			if (t.popup.style.position != "relative") {
 				t.popup.style.position = "relative";
 				t.popup.style.top = "0px";
@@ -363,9 +376,9 @@ function popup_window(title,icon,content,hide_close_button) {
 			return false;
 		};
 		
-		if (typeof animation != 'undefined') {
-			if (t.anim) animation.stop(t.anim);
-			t.anim = animation.fadeIn(t.popup, 200);
+		if (typeof win.animation != 'undefined') {
+			if (t.anim) win.animation.stop(t.anim);
+			t.anim = win.animation.fadeIn(t.popup, 200);
 		}
 		pnapplication.onclose.add_listener(function(){
 			if (!t.popup) return;
@@ -459,7 +472,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	t._buildPopup = function() {
 		var parent_popup = get_popup_window_from_frame(window);
 		var win,doc;
-		if (!parent_popup) {
+		if (!parent_popup || !parent_popup.popup) {
 			win = window;
 			doc = document;
 			t.locker = lock_screen(function() {
@@ -682,9 +695,10 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.footer = null;
 		};
 		if (t.content.nodeName == "IFRAME") t.content._no_loading = true;
-		if (typeof animation != 'undefined') {
-			if (t.anim) animation.stop(t.anim);
-			animation.fadeOut(popup, 200, do_close);
+		var win = getWindowFromElement(popup);
+		if (typeof win.animation != 'undefined') {
+			if (t.anim) win.animation.stop(t.anim);
+			win.animation.fadeOut(popup, 200, do_close);
 		} else
 			do_close();
 	};

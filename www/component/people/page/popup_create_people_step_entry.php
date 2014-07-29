@@ -90,7 +90,12 @@ class page_popup_create_people_step_entry extends Page {
 					?>
 					postData("popup_create_people_step_check", data, window);
 				});
-				popup.addCancelButton();
+				popup.addCancelButton(function () {
+					confirm_dialog("Cancel creation ?",function(yes){
+						if (yes) popup.close();
+					});
+					return false;
+				});
 				if (popup.isFrozen()) popup.unfreeze();
 			};
 			window.top.require("popup_window.js", function() {

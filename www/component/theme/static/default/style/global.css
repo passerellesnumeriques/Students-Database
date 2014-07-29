@@ -115,6 +115,7 @@ button {
     white-space: nowrap;
     cursor: pointer;
     margin: 1px;
+    outline: 1px solid rgba(0,0,0,0);
 }
 button:hover {
     border: 1px solid rgba(0,0,0,0.6);
@@ -128,8 +129,7 @@ button:active {
     left: 1px;
 }
 button:focus {
-	outline: none;
-	border: 1px solid #4040F0;
+	outline: 1px dotted #404080;
 }
 button:disabled {
 	color: graytext;
@@ -149,11 +149,7 @@ button:disabled:active {
 	left: 0px;
 }
 button:disabled img {
-    -webkit-filter: grayscale(100%) contrast(30%);  /* safari/chrome */
-    -moz-filter: grayscale(100%) contrast(30%); /* firefox */
-    -ms-filter: grayscale(100%) contrast(30%);  /* IE >= 9 */
-    -o-filter: grayscale(100%) contrast(30%); /* Opera, if support CSS3 */
-    filter: gray; filter: grayscale(100%) contrast(30%); /* edge browsers */ 
+    filter: grayscale(100%) contrast(30%); 
 }
 
 button a {
