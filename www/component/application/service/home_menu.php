@@ -11,7 +11,7 @@ class service_home_menu extends Service {
 	<img src='/static/application/overview_white.png'/>
     Overview
 </a>
-<a class='application_left_menu_item'>
+<a class='application_left_menu_item' href='/dynamic/news/page/news'>
 	<img src='/static/news/news_white.png'/>
     Updates
 </a>

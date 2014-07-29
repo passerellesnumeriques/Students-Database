@@ -148,6 +148,11 @@ class DataPathBuilder {
 						} 
 						$p = $p->parent;
 					}
+					if ($sm == null) {
+						// we don't have any sub model here
+						// stop // TODO all sub models?
+						continue;
+					}
 				}
 			}
 			foreach ($t->internalGetColumns($sub_models) as $col) {
