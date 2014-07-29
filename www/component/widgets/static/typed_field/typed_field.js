@@ -105,6 +105,7 @@ typed_field.prototype = {
 		this.validate();
 	},
 	getPossibleValues: undefined,
+	createValue: undefined, // function(value, name, oncreated)
 	/**
 	 *  change data
 	 *  @param data new data value
@@ -126,6 +127,8 @@ typed_field.prototype = {
 	canBeNull: function() {
 		alert("Function canBeNull not implemented in typed_field: "+getObjectClassName(this));
 	},
+	
+	focus: function () { this.element.focus(); },
 	
 	isMultiple: function() { return false; },
 	

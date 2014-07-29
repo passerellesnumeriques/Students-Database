@@ -38,43 +38,47 @@ function excel_import(popup, container, onready) {
 				return;
 			}
 			pb.done();
-			popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
+			popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading Excel page...");
 			// TODO extend expiration time of temporary storage
-			t.frame_excel.src = "about:blank";
-			t.frame_excel.onload = function() {
-				var check_view = function() {
-					var win = getIFrameWindow(t.frame_excel);
-					if (!win.excel || !win.excel.tabs) {
+			waitFrameContentReady(t.frame_excel, function(win) {
+				return win._page_ready && win.is_excel_upload_button;
+			}, function(win) {
+				popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
+				t.frame_excel.onload = function() {
+					var check_view = function() {
+						var win = getIFrameWindow(t.frame_excel);
+						if (!win.excel || !win.excel.tabs) {
+							if (win.page_errors) {
+								popup.unfreeze();
+								return;
+							}
+							setTimeout(check_view, 100);
+							return;
+						}
+						t._prepareExcel();
+						popup.unfreeze();
+					};
+					var check_loaded = function() {
+						var win = getIFrameWindow(t.frame_excel);
+						if (!win) {
+							setTimeout(check_loaded, 100);
+							return;
+						}
 						if (win.page_errors) {
 							popup.unfreeze();
 							return;
 						}
-						setTimeout(check_view, 100);
-						return;
-					}
-					t._prepareExcel();
-					popup.unfreeze();
+						if (!win.excel_uploaded) {
+							setTimeout(check_loaded, 100);
+							return;
+						}
+						popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
+						check_view();
+					};
+					check_loaded();
 				};
-				var check_loaded = function() {
-					var win = getIFrameWindow(t.frame_excel);
-					if (!win) {
-						setTimeout(check_loaded, 100);
-						return;
-					}
-					if (win.page_errors) {
-						popup.unfreeze();
-						return;
-					}
-					if (!win.excel_uploaded) {
-						setTimeout(check_loaded, 100);
-						return;
-					}
-					popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
-					check_view();
-				};
-				check_loaded();
-			};
-			t.frame_excel.src = "/dynamic/data_import/page/excel_upload?id="+output.id;
+				t.frame_excel.src = "/dynamic/data_import/page/excel_upload?id="+output.id;
+			});
 		};
 		t._upl.openDialog(click_event);
 	};
@@ -551,17 +555,23 @@ function excel_import(popup, container, onready) {
 							f.addData(value);
 					}
 				} else {
-					if (typeof f.getPossibleValues != 'undefined') {
+					if (typeof f.getPossibleValues != 'undefined' && value != null && value.trim().length > 0) {
 						// support for a list of possible value, we can check
 						var values = f.getPossibleValues();
-						if (!values.contains(value)) {
+						var values2 = [];
+						for (var i = 0; i < values.length; ++i)
+							values2.push(values[i].trim().latinize().toLowerCase());
+						var v = value.trim().latinize().toLowerCase();
+						var i = values2.indexOf(v);
+						if (i < 0)
 							ambiguous.push({
 								field: f,
 								field_index: field_index,
 								value: value,
 								values: values
 							});
-						}
+						else
+							value = values[i];
 					}
 					f.setData(value);
 				}
@@ -570,6 +580,8 @@ function excel_import(popup, container, onready) {
 		var next_ambiguous = function() {
 			if (ambiguous.length == 0) return;
 			var field_index = ambiguous[0].field_index;
+			var field = ambiguous[0].field;
+			// get the next ambiguous
 			var list = [ambiguous[0]];
 			ambiguous.splice(0,1);
 			for (var i = 0; i < ambiguous.length; ++i)
@@ -578,6 +590,7 @@ function excel_import(popup, container, onready) {
 					ambiguous.splice(i,1);
 					i--;
 				}
+			// get all values we tried to import and which where ambiguous
 			var found_values = [];
 			for (var i = 0; i < list.length; ++i)
 				if (!found_values.contains(list[i].value))
@@ -595,6 +608,7 @@ function excel_import(popup, container, onready) {
 				o.value = "";
 				o.text = "";
 				select.add(o);
+				// TODO sort the values by match score, then by alphabetical order
 				for (var j = 0; j < list[0].values.length; ++j) {
 					o = document.createElement("OPTION");
 					o.value = list[0].values[j];
@@ -602,6 +616,28 @@ function excel_import(popup, container, onready) {
 					select.add(o);
 				}
 				li.appendChild(select);
+				if (typeof field.createValue != 'undefined') {
+					var add = document.createElement("A");
+					add.href = "#";
+					add.appendChild(document.createTextNode("Create New "+grid.columns[field_index+1].title));
+					add.style.marginLeft = "5px";
+					add._value = found_values[i];
+					add._select = select;
+					add.onclick = function() {
+						var select = this._select;
+						field.createValue(this._value, grid.columns[field_index+1].title, function(new_value) {
+							for (var i = 0; i < selects.length; ++i) {
+								o = document.createElement("OPTION");
+								o.value = new_value;
+								o.text = new_value;
+								selects[i].add(o);
+							}
+							select.selectedIndex = select.options.length-1;
+						});
+						return false;
+					};
+					li.appendChild(add);
+				}
 				ul.appendChild(li);
 				selects.push(select);
 			}

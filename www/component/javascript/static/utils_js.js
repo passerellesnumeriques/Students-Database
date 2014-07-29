@@ -90,6 +90,26 @@ function arrayEquals(a1, a2, done) {
 	return true;
 }
 
+function arrayEquivalent(a1, a2) {
+	if (a1 == null) a1 = [];
+	if (a2 == null) a2 = [];
+	if (a1.length != a2.length) return false;
+	var to_match = [];
+	for (var i = 0; i < a2.length; ++i) to_match.push(a2[i]);
+	for (var i = 0; i < a1.length; ++i) {
+		var found = false;
+		for (var j = 0; j < to_match.length; ++j) {
+			if (a1[i] == to_match[j]) {
+				to_match.splice(j,1);
+				found = true;
+				break;
+			}
+		}
+		if (!found) return false;
+	}
+	return true;
+}
+
 function debug_object_to_string(o, indent) {
 	if (!indent) indent = "";
 	if (typeof o == 'object') {

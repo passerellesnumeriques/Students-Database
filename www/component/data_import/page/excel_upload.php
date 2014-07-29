@@ -14,6 +14,7 @@ class page_excel_upload extends Page {
 			<div><img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/> Supported Formats: Microsoft Excel, Open Office Calc, Gnome Gnumeric, and CSV.</div>
 			</td></tr>
 			</table>
+			<script type='text/javascript'>window.is_excel_upload_button = true;</script>
 			<?php 
 			return;
 		}

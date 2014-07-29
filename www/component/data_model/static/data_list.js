@@ -924,10 +924,11 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						var menu = new context_menu();
 						var div = document.createElement("DIV");
 						var filter = {category:f.field.category,name:f.field.name,data:null};
-						t._createFilter(filter, div, false, true);
+						var tf = t._createFilter(filter, div, false, true);
 						menu.addItem(div,true);
 						menu.showBelowElement(ev.target);
 						t.addFilter(filter);
+						tf.focus();
 					});
 				}
 			}, has ? "Edit filters (this column is currently filtered)" : "Filter");
@@ -1404,6 +1405,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				};
 			}
 		}
+		return f;
 	},
 	/** Display the menu to edit/add/remove filters
 	 * @param {DOMNode} button the menu will be displayed below this element

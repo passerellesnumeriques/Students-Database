@@ -3,12 +3,12 @@ require_once '/component/contact/ContactJSON.inc';
 class page_organization_profile extends Page {
 	public function getRequiredRights() { return array(); }
 	public function execute(){
-		$id = $_GET["organization"];
+		$id = isset($_GET["organization"]) ? intval($_GET["organization"]) : -1;
 		
 		require_once("contact.inc");
 		require_once("address.inc");
 		
-		if ($id <> -1) {
+		if ($id > 0) {
 			$org = SQLQuery::create()->select("Organization")->whereValue("Organization","id",$id)->executeSingleRow();
 			$creator = $org["creator"];
 		} else {
@@ -16,8 +16,22 @@ class page_organization_profile extends Page {
 		}
 		$all_types = SQLQuery::create()->select("OrganizationType")->whereValue("OrganizationType", "creator", $creator)->execute();
 		
+		$selected_types = array();
+		if ($id <= 0 && isset($_GET["types_names"])) {
+			$selected_types_names = explode(";", $_GET["types_names"]);
+			foreach ($selected_types_names as $name)
+				foreach ($all_types as $type)
+					if ($type["name"] == $name) {
+						array_push($selected_types, $type["id"]);
+						break;
+					}
+		}
+		$name = "";
+		if ($id <= 0 && isset($_GET["name"]))
+			$name = $_GET["name"];
+		
 		$org_structure = "{";
-		if ($id <> -1) {
+		if ($id > 0) {
 			$org_structure .= "id:".$org["id"];
 			$org_structure .= ",name:".json_encode($org["name"]);
 			$org_types = SQLQuery::create()->select("OrganizationTypes")->whereValue("OrganizationTypes", "organization", $id)->execute();
@@ -51,8 +65,8 @@ class page_organization_profile extends Page {
 			$org_structure .= "]";
 		} else {
 			$org_structure .= "id:-1";
-			$org_structure .= ",name:''";
-			$org_structure .= ",types_ids:[]";
+			$org_structure .= ",name:".json_encode($name);
+			$org_structure .= ",types_ids:".json_encode($selected_types);
 			$org_structure .= ",contacts:[]";
 			if(isset($_GET["address_country_id"]) && isset($_GET["address_area_id"])){
 				$area = PNApplication::$instance->geography->getArea($_GET["address_area_id"]);

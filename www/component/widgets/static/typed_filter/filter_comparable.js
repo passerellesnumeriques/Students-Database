@@ -53,6 +53,14 @@ function filter_comparable(data, config, editable) {
 			t.onchange.fire(t);
 		});
 	});
+	
+	this.focus = function () {
+		if (!t.field1) {
+			setTimeout(t.focus,25);
+			return;
+		}
+		t.field1.focus();
+	};
 }
 filter_comparable.prototype = new typed_filter;
 filter_comparable.prototype.constructor = filter_comparable;

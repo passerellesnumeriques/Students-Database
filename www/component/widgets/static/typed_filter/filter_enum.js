@@ -38,6 +38,14 @@ function filter_enum(data, config, editable) {
 		};
 		if (!editable) t.select.disable();
 	});
+	
+	this.focus = function() {
+		if (!t.select) {
+			setTimeout(t.focus, 25);
+			return;
+		}
+		t.select.focus();
+	};
 }
 filter_enum.prototype = new typed_filter;
 filter_enum.prototype.constructor = filter_enum;

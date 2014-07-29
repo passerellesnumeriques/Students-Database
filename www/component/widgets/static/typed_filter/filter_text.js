@@ -35,6 +35,10 @@ function filter_text(data, config, editable) {
 			t.onchange.fire(t);
 		},1);
 	};
+	
+	this.focus = function() {
+		input.focus();
+	};
 }
 filter_text.prototype = new typed_filter;
 filter_text.prototype.constructor = filter_text;

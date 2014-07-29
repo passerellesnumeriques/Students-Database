@@ -89,6 +89,10 @@ function select_checkboxes(container) {
 		if (this.onchange) this.onchange(this);
 	};
 	
+	this.focus = function () {
+		this._div.onclick();
+	};
+	
 	this._init = function() {
 		this._div = document.createElement("DIV");
 		this._div.style.display = 'inline-block';

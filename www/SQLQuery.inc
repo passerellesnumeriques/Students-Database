@@ -621,7 +621,21 @@ class SQLQuery {
 	 */
 	public function &whereExistsInSubQuery(&$sub_q, $join_query_table, $join_query_field, $join_sub_query_table, $join_sub_query_field) {
 		$sub_q->where("`".$join_sub_query_table."`.`".$join_sub_query_field."`=`".$join_query_table."`.`".$join_query_field."`");
-		$this->where("EXISTS (".$sub_q->generate().")");
+		// replace table aliases in sub query to avoid collisions
+		$aliases = array();
+		foreach ($sub_q->tables as $tname=>$talias)
+			if ($talias <> null) array_push($aliases, $talias);
+		foreach ($sub_q->joins as $join)
+			if ($join[3] <> null)
+				array_push($aliases, $join[3]);
+		$sub_q->table_alias_counter = $this->table_alias_counter;
+		$sql = $sub_q->generate();
+		$this->table_alias_counter = $sub_q->table_alias_counter;
+		foreach ($aliases as $sub_alias) {
+			$new_alias = $this->generateTableAlias();
+			$sql = str_replace("`".$sub_alias."`", "`".$new_alias."`", $sql);
+		}
+		$this->where("EXISTS (".$sql.")");
 		return $this;
 	}
 

@@ -9,5 +9,9 @@ function typed_filter(data, config, editable) {
 typed_filter.prototype = {
 	getHTMLElement: function() { return this.element; },
 	getData: function() { return this.data; },
-	can_multiple: false
+	can_multiple: false,
+	/** Gives the focus to this filter, like the user wants to enter something right now */
+	focus: function() {
+		this.element.focus();
+	}
 };

@@ -68,6 +68,13 @@ if (window == window.top) {
 					this._onmouseup_listeners.splice(i,1);
 					i--;
 				}
+			for (var id in this._customs) {
+				for (var i = 0; i < this._customs[id].length; ++i)
+					if (this._customs[id][i].win == w) {
+						this._customs[id].splice(i,1);
+						i--;
+					}
+			}
 			window.top.pnapplication.onwindowclosed.fire({top:window.top,win:w});
 		},
 		
@@ -127,6 +134,20 @@ if (window == window.top) {
 					this._onmouseup_listeners.splice(i,1);
 					break;
 				}
+		},
+		
+		_customs: {},
+		registerCustom: function(win, id, value) {
+			if (!this._customs[id])
+				this._customs[id] = [];
+			this._customs[id].push({win:win,value:value});
+		},
+		getCustoms: function(id) {
+			var values = [];
+			if (this._customs[id])
+				for (var i = 0; i < this._customs[id].length; ++i)
+					values.push(this._customs[id][i].value);
+			return values;
 		},
 		
 		/** Event when the whole application is closing */

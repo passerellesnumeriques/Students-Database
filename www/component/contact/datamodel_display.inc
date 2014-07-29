@@ -231,6 +231,60 @@ class AddressSubDataDisplay extends datamodel\SubDataDisplay {
 	
 }
 
+class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
+	
+	private $accepted_creators;
+	private $restrict_types;
+	
+	public function __construct($foreign_key_name, $display_name, $accepted_creators, $restrict_types_names = null, $editable = true, $editable_for_new = null) {
+		parent::__construct($foreign_key_name, "name", $display_name, $editable, $editable_for_new, "left", null);
+		$this->accepted_creators = $accepted_creators;
+		$this->restrict_types = $restrict_types_names;
+	}
+	
+	protected function get_possible_values($sub_model) {
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+		if (!isset($this->possible_values[$sub_model])) {
+			$q = \SQLQuery::create()->select("Organization");
+			$q->whereIn("Organization", "creator", $this->accepted_creators);
+			if ($this->restrict_types <> null) {
+				$q->field("Organization", "id");
+				$orgs_ids = $q->executeSingleField();
+				$types_ids = \SQLQuery::create()
+					->select("OrganizationType")
+					->whereIn("OrganizationType", "creator", $this->accepted_creators)
+					->whereIn("OrganizationType", "name", $this->restrict_types)
+					->field("OrganizationType","id")
+					->executeSingleField();
+				$q = \SQLQuery::create()
+					->select("OrganizationTypes")
+					->whereIn("OrganizationTypes", "organization", $orgs_ids)
+					->whereIn("OrganizationTypes", "type", $types_ids)
+					->groupBy("OrganizationTypes", "organization")
+					->join("OrganizationTypes", "Organization", array("organization"=>"id"))
+					->field("Organization", "id", "KEY")
+					->field("Organization", "name", "VALUE")
+					;
+				$this->possible_values[$sub_model] = $q->execute();
+			} else {
+				$q->field("Organization", "id", "KEY");
+				$q->field("Organization", "name", "VALUE");
+				$this->possible_values[$sub_model] = $q->execute();
+			}
+		}
+		return $this->possible_values[$sub_model];
+	}
+	public function getTypedField($sub_model) {
+		$tf = parent::getTypedField($sub_model);
+		$tf[1] = substr($tf[1],0,strlen($tf[1])-1);
+		$tf[1] .= ",creators:".json_encode($this->accepted_creators);
+		$tf[1] .= ",types:".json_encode($this->restrict_types);
+		$tf[1] .= "}";
+		$tf[0] = "field_organization";
+		return $tf;
+	}
+}
+
 $people_category = $model->getDataCategory("Personal Information");
 $display = new datamodel\TableDataDisplay("PeopleContact", $people_category);
 $display->addDataDisplay(new ContactDataDisplay("email", "people"), "people");
@@ -260,6 +314,11 @@ $display = new datamodel\TableDataDisplay("Organization", $org_category);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("name", "Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("creator", "Managed by", true));
 $display->addJoinToPrimary();
+$model->addTableDataDisplay($display);
+
+$display = new datamodel\TableDataDisplay("OrganizationTypes", $org_category);
+$display->addDataDisplay(new datamodel\JoiningTableDataDisplay("Types", "organization", "type", "name"));
+$display->addJoinFromAll();
 $model->addTableDataDisplay($display);
 
 class ContactsScreen extends datamodel\DataScreen {

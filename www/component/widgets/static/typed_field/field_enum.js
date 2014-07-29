@@ -62,6 +62,7 @@ field_enum.prototype._create = function(data) {
 		this.signal_error = function(error) {
 			this.error = error;
 			select.style.border = error ? "1px solid red" : "";
+			select.title = error ? error : "";
 		};
 		this.validate = function() {
 			var err = null;

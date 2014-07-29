@@ -156,7 +156,7 @@ class contact extends Component {
 	 * @param string $name the organization type's name
 	 * @return boolean|number the new type id, or false if it failed
 	 */
-	public function createOrganizationType($creator, $name) {
+	public function createOrganizationType($creator, $name, $builtin = false) {
 		require_once("component/contact/OrganizationPlugin.inc");
 		foreach (PNApplication::$instance->components as $c) {
 			foreach ($c->getPluginImplementations() as $pi) {
@@ -172,7 +172,7 @@ class contact extends Component {
 		}
 		
 		try {
-			return SQLQuery::create()->insert("OrganizationType", array("creator"=>$creator, "name"=>$name));
+			return SQLQuery::create()->insert("OrganizationType", array("creator"=>$creator, "name"=>$name, "builtin"=>$builtin));
 		} catch (Exception $e) {
 			PNApplication::error($e);
 			return false;

@@ -48,6 +48,7 @@ class page_organizations extends Page {
 				'Organization', null,
 				[
 					'Organization.Name',
+					'Organization.Types',
 					'Organization.Address.0',
 					'Organization.Address.1',
 					'Organization.EMail',

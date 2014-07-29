@@ -361,6 +361,7 @@ $model->addTable("OrganizationType")
 	->addPrimaryKey("id")
 	->addString("name",100,1,false,false)
 	->addString("creator",100,1,false,false)
+	->addBoolean("builtin", false)
 	->addIndex("creator")
 	->addReadFilter(function(&$q, $table_alias){
 		require_once("component/contact/OrganizationPlugin.inc");

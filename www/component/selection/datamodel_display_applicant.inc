@@ -34,8 +34,8 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 
 $display = new ApplicantTableDataDisplay($category);
 $display->addDataDisplay(new ApplicantID_DataDisplay());
-// TODO for the high school, make an organization data display: specify creator, specify types, can create if does not exist...
-$display->addDataDisplay(new datamodel\ChoiceDataDisplay("high_school", "name", "High School", true, null, null, array("creator"=>"Selection")));
+require_once("component/contact/datamodel_display.inc");
+$display->addDataDisplay(new OrganizationDataDisplay("high_school", "High School", array("Selection"), array("High School"), true, null));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("information_session", "name", "Information Session", false, true));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", "Exam Center", false, false));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center_room", "name", "Exam Center Room", false, false));

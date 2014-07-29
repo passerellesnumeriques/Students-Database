@@ -406,8 +406,8 @@ class ChoiceDataDisplay extends DataDisplay {
 	public function getDisplayName() { return $this->display_name; }
 	public function getHandledColumns() { return array($this->foreign_key_name); }
 	
-	private $possible_values = array();
-	private function get_possible_values($sub_model) {
+	protected $possible_values = array();
+	protected function get_possible_values($sub_model) {
 		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
 		if (!isset($this->possible_values[$sub_model])) {
 			$t = \DataModel::get()->getTable($foreign_key->foreign_table);

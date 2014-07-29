@@ -23,6 +23,18 @@ String.prototype.trim=function() {
 		if (!isSpace(this.charAt(end-1))) break;
 	return this.substring(start, end);
 };
+String.prototype.parseNumber=function() {
+	if (this.length == 0) return Number.NaN;
+	var value = 0;
+	var mul = 1;
+	for (var i = 0; i < this.length; ++i) {
+		var ord = this.charCodeAt(i);
+		if (ord < 48 || ord > 57) return Number.NaN;
+		value += (ord-48)*mul;
+		mul *= 10;
+	}
+	return value;
+};
 /** Convert this string into HTML (replace special characters)
  * @returns {String} the HTML string
  */
