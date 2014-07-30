@@ -1,5 +1,32 @@
 <?php
 $conf = array(
+    "PNC" => array(
+       "geography"=>array(
+           "country_code"=>"kh"
+       ),
+       "curriculum"=>array(
+           "preset_periods"=>array(
+               array(
+                   "name"=>"Quarter",
+                   "weeks"=>13
+               )
+           ),
+           "default_academic_year"=>array(
+               array("period"=>"Quarter","month"=>9,"week"=>1,"weeks_break"=>0),
+               array("period"=>"Quarter","month"=>12,"week"=>1,"weeks_break"=>0),
+               array("period"=>"Quarter","month"=>3,"week"=>1,"weeks_break"=>0),
+               array("period"=>"Quarter","month"=>6,"week"=>1,"weeks_break"=>0)
+           ),
+           "default_batch_years"=>2
+       ),
+       "transcripts"=>array(
+           "default_grading_system"=>"Percentage"
+       ),
+       "google"=>array(
+            "client_id"=>"522826546811-f5ciks5hf46r69otq0107jo30uv1mrdj.apps.googleusercontent.com",
+            "api_key"=>"AIzaSyBota3grF8-abcdi6gJJRrrkO4KGPUUPrQ"
+       )
+    ),
 	"PNP" => array(
 	   "geography"=>array(
 	       "country_code"=>"ph"
@@ -30,33 +57,6 @@ $conf = array(
 			"api_key"=>"AIzaSyCicuTpXjwNw8K7KJ7kd5-mAlu2fd-RUxI"
 	   )
 	),
-    "PNC" => array(
-       "geography"=>array(
-           "country_code"=>"kh"
-       ),
-       "curriculum"=>array(
-           "preset_periods"=>array(
-               array(
-                   "name"=>"Quarter",
-                   "weeks"=>13
-               )
-           ),
-           "default_academic_year"=>array(
-               array("period"=>"Quarter","month"=>9,"week"=>1,"weeks_break"=>0),
-               array("period"=>"Quarter","month"=>12,"week"=>1,"weeks_break"=>0),
-               array("period"=>"Quarter","month"=>3,"week"=>1,"weeks_break"=>0),
-               array("period"=>"Quarter","month"=>6,"week"=>1,"weeks_break"=>0)
-           ),
-           "default_batch_years"=>2
-       ),
-	   "transcripts"=>array(
-	       "default_grading_system"=>"Percentage"
-	   ),
-	   "google"=>array(
-			"client_id"=>"522826546811-f5ciks5hf46r69otq0107jo30uv1mrdj.apps.googleusercontent.com",
-			"api_key"=>"AIzaSyBota3grF8-abcdi6gJJRrrkO4KGPUUPrQ"
-	   )
-    ),
     "PNV" => array(
        "geography"=>array(
            "country_code"=>"vn"

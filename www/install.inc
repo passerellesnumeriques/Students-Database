@@ -92,11 +92,11 @@ if (isset($_POST["development_mode"])) {
 	<form method='post'>
 	<table class='install_table'>
 		<tr>
-			<td colspan=2 class='header'>Students Management Software - Installation</td>
+			<td colspan=2 class='header'>Students Management Software - Installation of Development version</td>
 		</tr>
 		<tr>
 			<td colspan=2>
-				<input type='checkbox' name='development_mode' checked='checked'/>
+				<input type='checkbox' name='development_mode' checked='checked' disabled='disabled'/>
 				This is a development installation
 			</td>
 		</tr>
