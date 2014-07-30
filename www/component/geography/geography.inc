@@ -2,18 +2,27 @@
 
 class geography extends Component {
 	
-	private $local_country;
-	private $local_country_divisions;
+	private $local_country = null;
+	private $local_country_divisions = null;
 	
 	public function init() {
-		$d = PNApplication::$instance->getDomainDescriptor();
-		$d = $d["geography"];
-		$this->local_country = SQLQuery::create()->bypassSecurity()->select("Country")->whereValue("Country", "code", strtoupper($d["country_code"]))->executeSingleRow();
-		$this->local_country_divisions = $this->getCountryDivisions($this->local_country["id"]);
 	}
 	
-	public function getLocalCountry() { return $this->local_country; }
-	public function getLocalDivisions() { return $this->local_country_divisions; }
+	public function getLocalCountry() { 
+		if ($this->local_country == null) {
+			$d = PNApplication::$instance->getDomainDescriptor();
+			$d = $d["geography"];
+			$this->local_country = SQLQuery::create()->bypassSecurity()->select("Country")->whereValue("Country", "code", strtoupper($d["country_code"]))->executeSingleRow();
+		}
+		return $this->local_country;
+	}
+	public function getLocalDivisions() {
+		if ($this->local_country_divisions == null) {
+			$lc = $this->getLocalCountry();
+			$this->local_country_divisions = $this->getCountryDivisions($this->lc["id"]);
+		}
+		return $this->local_country_divisions;
+	}
 	
 	public function getPluginImplementations() {
 		require_once("GeographyAdministrationPlugin.inc");

@@ -77,7 +77,7 @@ if (isset($_POST["development_mode"])) {
 				foreach ($domains as $domain=>$conf) {
 				echo $domain.":<br/>";
 				?>
-				<iframe src='/dynamic/development/page/reset_db?domain=<?php echo $domain;?>&install_software=yes' style='width:500px;height:140px;'></iframe>
+				<iframe src='/dynamic/development/page/reset_db?domain=<?php echo $domain;?>' style='width:500px;height:140px;'></iframe>
 				<br/>
 				<?php }?>
 			</td>
