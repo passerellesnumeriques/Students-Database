@@ -5,7 +5,7 @@ class service_save_custom_table extends Service {
 	
 	public function documentation() { echo "Customize a table"; }
 	public function inputDocumentation() { echo "table, sub_model, columns and lock_id"; }
-	public function outputDocumentation() { echo "true on success"; }
+	public function outputDocumentation() { echo "list of columns' names"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");
@@ -32,8 +32,21 @@ class service_save_custom_table extends Service {
 			return;
 		}
 		DataBaseLock::update($input["lock_id"]);
-		
-		// TODO check what exists, check no data entered yet
+
+		$col_name_counter = 1;
+		// get the current list of columns in the table
+		$columns = $table->internalGetColumnsFor($sub_model);
+		// filter non-custom columns
+		for ($i = 0; $i < count($columns); $i++) {
+			$name = $columns[$i]->name;
+			if (substr($name,0,1) <> "c" || intval(substr($name,1) <= 0)) {
+				array_splice($columns, $i, 1);
+				$i--;
+			} else {
+				$id = intval(substr($name,1));
+				if ($col_name_counter <= $id) $col_name_counter = $id+1;
+			}
+		}
 		
 		$sql_name = $table->getSQLNameFor($sub_model);
 		
@@ -49,12 +62,40 @@ class service_save_custom_table extends Service {
 		fwrite($f, "<?php\n");
 		fwrite($f, "\$display = \$this->model->getTableDataDisplay(\"".$table->getName()."\");\n");
 		fwrite($f, "\$columns = array();\n");
-		$col_name_counter = 1;
-		foreach ($input["columns"] as $col) {
-			$col_name = "c".($col_name_counter++);
+		foreach ($input["columns"] as &$col) {
+			if ($col["id"] == null) {
+				$col["id"] = $col_name = "c".($col_name_counter++);
+				$col["is_new"] = true;
+			} else {
+				$col_name = $col["id"];
+				$col["is_new"] = false;
+			}
 			switch ($col["type"]) {
 				case "boolean":
 					fwrite($f, "array_push(\$columns, new \datamodel\ColumnBoolean(\$this, \"$col_name\", ".($col["spec"]["can_be_null"] ? "true" : "false")."));\n");
+					break;
+				case "string":
+					fwrite($f, "array_push(\$columns, new \datamodel\ColumnString(\$this, \"$col_name\", ".($col["spec"]["max_length"] == null ? "null" : $col["spec"]["max_length"]).", null, ".($col["spec"]["can_be_null"] ? "true" : "false")."));\n");
+					break;
+				case "integer":
+					$min = $col["spec"]["min"] == null ? "null" : intval($col["spec"]["min"]);
+					$max = $col["spec"]["max"] == null ? "null" : intval($col["spec"]["max"]);
+					$size = 32; // default size
+					// TODO calculate the best size based on min and max
+					fwrite($f, "array_push(\$columns, new \datamodel\ColumnInteger(\$this, \"$col_name\", $size, $min, $max, ".($col["spec"]["can_be_null"] ? "true" : "false")."));\n");
+					break;
+				case "decimal":
+					$decimal_digits = intval($col["spec"]["decimal_digits"]);
+					$min = $col["spec"]["min"] == null ? "null" : intval($col["spec"]["min"]);
+					$max = $col["spec"]["max"] == null ? "null" : intval($col["spec"]["max"]);
+					$integer_digits = 10; // default
+					// TODO calculate integer digits based on min and max 
+					fwrite($f, "array_push(\$columns, new \datamodel\ColumnDecimal(\$this, \"$col_name\", $integer_digits, $decimal_digits, $min, $max, ".($col["spec"]["can_be_null"] ? "true" : "false")."));\n");
+					break;
+				case "date":
+					$min = $col["spec"]["min"] == null ? "null" : "\"".$col["spec"]["min"]."\"";
+					$max = $col["spec"]["max"] == null ? "null" : "\"".$col["spec"]["max"]."\"";
+					fwrite($f, "array_push(\$columns, new \datamodel\ColumnDate(\$this, \"$col_name\", ".($col["spec"]["can_be_null"] ? "true" : "false").", false, $min, $max));\n");
 					break;
 			}
 			fwrite($f, "\$display->addDataDisplay(new \datamodel\SimpleDataDisplay(\"$col_name\",\"".str_replace("\"","\\\"",$col["description"])."\"),null,".($sub_model <> null ? "\"$sub_model\"" : "null").");\n");
@@ -67,7 +108,41 @@ class service_save_custom_table extends Service {
 			unlink($data_path."/custom_tables/$sql_name");
 		rename($data_path."/custom_tables/$sql_name.tmp", $data_path."/custom_tables/$sql_name");
 		
-		echo "true";
+		// read the file
+		$table->forceReloadCustomization($sub_model);
+		
+		// update database structure
+		foreach ($input["columns"] as &$col) {
+			$updated_col = $table->internalGetColumnFor($col["id"], $sub_model);
+			if ($updated_col == null) throw new Exception("Internal error: Column ".$col["id"]." missing after loading customization");
+			if ($col["is_new"]) {
+				// this is a new column
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` ADD COLUMN ".$updated_col->get_sql());
+			} else {
+				// this is an update
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` MODIFY COLUMN ".$updated_col->get_sql());
+				// TODO check data with new constraints
+			}
+			// remove it from the list of previous columns, so it won't be removed at the end
+			for ($i = 0; $i < count($columns); $i++)
+				if ($columns[$i]->name == $col["id"]) {
+					array_splice($columns, $i, 1);
+					$i--;
+				}
+		}
+		unset($col);
+		// remove remaining columns
+		foreach ($columns as $col) {
+			SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` DROP COLUMN `".$col->name."`");
+		}
+		
+		echo "[";
+		$first = true;
+		foreach ($input["columns"] as &$col) {
+			if ($first) $first = false; else echo ",";
+			echo json_encode($col["id"]);
+		}
+		echo "]";
 	}
 	
 }

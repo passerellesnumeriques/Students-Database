@@ -17,6 +17,10 @@ class widgets extends Component {
 			$cfg = "{show_time:true,data_is_seconds:true}";
  			return array("field_timestamp",$cfg);
 		}
+		if ($col instanceof \datamodel\ColumnBoolean) {
+			$cfg = "{can_be_null:".json_encode($col->can_be_null)."}";
+ 			return array("field_boolean",$cfg);
+		}
 		if ($col instanceof \datamodel\ColumnInteger) {
 			$cfg = "{";
 			$cfg .= "can_be_null:".json_encode($col->can_be_null);
@@ -80,6 +84,12 @@ class widgets extends Component {
 				$cfg .= json_encode($v);
 			}
 			$cfg .= "]";
+			$cfg .= ",can_be_empty:".($col->can_be_null ? "true" : "false");
+			$cfg .= "}";
+			return array("filter_enum", $cfg);
+		}
+		if ($col instanceof \datamodel\ColumnBoolean) {
+			$cfg = "{possible_values:['Yes','No']";
 			$cfg .= ",can_be_empty:".($col->can_be_null ? "true" : "false");
 			$cfg .= "}";
 			return array("filter_enum", $cfg);

@@ -30,6 +30,24 @@ class page_edit_customizable_table extends Page {
 		}
 		DataBaseLock::generateScript($lock_id);
 		
+		// get the current list of columns in the table
+		$columns = $table->internalGetColumnsFor($sub_model);
+		// filter non-custom columns
+		for ($i = 0; $i < count($columns); $i++) {
+			$name = $columns[$i]->name;
+			if (substr($name,0,1) <> "c" || intval(substr($name,1) <= 0)) {
+				array_splice($columns, $i, 1);
+				$i--;
+			}
+		}
+		// is there any data in the table ?
+		$has_data = SQLQuery::create()->bypassSecurity(true)->noWarning()->select($table_name)->selectSubModelForTable($table, $sub_model)->limit(0, 1)->executeSingleRow() <> null;
+		$columns_data = array();
+		foreach ($columns as $col) {
+			if (!$has_data) $columns_data[$col->name] = false;
+			else $columns_data[$col->name] = SQLQuery::create()->bypassSecurity()->noWarning()->select($table_name)->selectSubModelForTable($table, $sub_model)->field($table_name, $col->name)->whereNotNull($table_name, $col->name)->limit(0,1)->executeSingleRow() <> null;
+		}
+		
 		?>
 <div style='width:100%;height:100%;background-color:white;display:flex;flex-direction:column;'>
 	<div class='page_title' style='flex:none'>
@@ -105,7 +123,20 @@ class page_edit_customizable_table extends Page {
 			.custom_data td {
 				border: 1px solid black;
 			}
+			.no_impact {
+				background-color: #A0FFA0;
+			}
+			.impact {
+				background-color: #FFA040;
+			}
 			</style>
+			<div style='display:inline-block;border:1px solid black;margin:5px;padding:5px;'>
+				<div style='text-decoration:underline;'>Legend</div>
+				<div class='no_impact' style='border:1px solid black;width:20px;height:14px;display:inline-block;margin-right:5px;margin-top:3px;vertical-align:bottom;'></div>Rows in green already exist, but no data has been filled in yet, so it can be modified without impacting any data<br/>
+				<div class='impact' style='border:1px solid black;width:20px;height:14px;display:inline-block;margin-right:5px;margin-top:3px;vertical-align:bottom;'></div>Rows in orange already exist, and contain already data. Any modification may impact current data.<br/>
+				<div style='border:1px solid black;width:20px;height:14px;display:inline-block;margin-right:5px;margin-top:3px;vertical-align:bottom;'></div>Rows in white are new data that you just added.<br/>
+				<i>Note:</i> The description can be modified without impact on the data. Changing the type will remove any previous data. Changing type specification (minimum value, maximum size...) may impact the data (i.e. you change the minimum from 5 to 10, all values stored between 5 and 10 will become 10).
+			</div><br/>
 			<table class='custom_data'>
 				<tr id='header_row'>
 					<th>Description</th>
@@ -120,8 +151,11 @@ class page_edit_customizable_table extends Page {
 					</td>
 			</table>
 			<script type='text/javascript'>
-			function addData() {
+			function addData(id, has_data, descr, type, spec) {
 				var tr = document.createElement("TR");
+				tr.col_id = id;
+				if (id)
+					tr.className = has_data ? "impact" : "no_impact";
 				var td;
 				// description
 				td = document.createElement("TD");
@@ -129,19 +163,22 @@ class page_edit_customizable_table extends Page {
 				tr.descr.type = "text";
 				tr.descr.size = 25;
 				tr.descr.maxLength = 100;
+				if (descr) tr.descr.value = descr;
 				td.appendChild(tr.descr);
 				tr.appendChild(td);
 
 				// type
 				td = document.createElement("TD");
 				tr.type_select = document.createElement("SELECT");
-				fillTypes(tr.type_select);
+				fillTypes(tr.type_select, type);
 				tr.type_container = document.createElement("DIV");
 				tr.type_container.style.display = "inline-block";
 				tr.type_container.style.marginLeft = "3px";
 				tr.type_select.onchange = function() { updateType(tr); };
 				td.appendChild(tr.type_select);
 				td.appendChild(tr.type_container);
+				if (spec)
+					updateType(tr, spec);
 				tr.appendChild(td);
 
 				// mandatory
@@ -149,6 +186,7 @@ class page_edit_customizable_table extends Page {
 				td.style.textAlign = "center";
 				tr.mand = document.createElement("INPUT");
 				tr.mand.type = "checkbox";
+				if (spec && spec.can_be_null === false) tr.mand.checked = "checked";
 				td.appendChild(tr.mand);
 				tr.appendChild(td);
 
@@ -168,54 +206,55 @@ class page_edit_customizable_table extends Page {
 				next.parentNode.insertBefore(tr, next);
 			}
 
-			function addType(select, value, text) {
+			function addType(select, value, text, selected) {
 				var o = document.createElement("OPTION");
 				o.value = value;
 				o.text = text;
+				if (selected && selected == value) o.selected = true;
 				select.add(o);
 			}
-			function fillTypes(select) {
-				addType(select, "", "");
-				addType(select, "boolean", "Yes / No");
-				addType(select, "string", "Text");
-				addType(select, "integer", "Number - Integer");
-				addType(select, "decimal", "Number - Decimal");
-				addType(select, "date", "Date");
+			function fillTypes(select, selected) {
+				addType(select, "", "", selected);
+				addType(select, "boolean", "Yes / No", selected);
+				addType(select, "string", "Text", selected);
+				addType(select, "integer", "Number - Integer", selected);
+				addType(select, "decimal", "Number - Decimal", selected);
+				addType(select, "date", "Date", selected);
 			}
 			
-			function updateType(tr) {
+			function updateType(tr, spec) {
 				tr.type_container.removeAllChildren();
 				tr.type_container.spec = {};
 				var type = tr.type_select.value;
 				if (type == "") return;
 				switch (type) {
-				case "boolean": createBoolean(tr.type_container); break;
-				case "string": createString(tr.type_container); break;
-				case "integer": createInteger(tr.type_container); break;
-				case "decimal": createDecimal(tr.type_container); break;
-				case "date": createDate(tr.type_container); break;
+				case "boolean": createBoolean(tr.type_container, spec); break;
+				case "string": createString(tr.type_container, spec); break;
+				case "integer": createInteger(tr.type_container, spec); break;
+				case "decimal": createDecimal(tr.type_container, spec); break;
+				case "date": createDate(tr.type_container, spec); break;
 				}
 			}
 
-			function createBoolean(container) {
+			function createBoolean(container, spec) {
 				// nothing, just a boolean
-				container.spec.get = function() { return {}; }
+				container.spec.get = function() { return {}; };
 			}
-			function createString(container) {
+			function createString(container, spec) {
 				container.appendChild(document.createTextNode(" Maximum size "));
-				container.spec.max_size = new field_integer(null,true,{can_be_null:true,min:1,max:2000});
+				container.spec.max_size = new field_integer(spec ? spec.max_length : 50,true,{can_be_null:false,min:1,max:2000});
 				container.appendChild(container.spec.max_size.getHTMLElement());
 				container.spec.get = function() {
 					if (this.max_size.hasError()) return null;
 					return {max_length:this.max_size.getCurrentData()};
 				};
 			}
-			function createInteger(container) {
+			function createInteger(container, spec) {
 				container.appendChild(document.createTextNode(" Minimum "));
-				container.spec.min = new field_integer(null,true,{can_be_null:true});
+				container.spec.min = new field_integer(spec ? spec.min : null,true,{can_be_null:true});
 				container.appendChild(container.spec.min.getHTMLElement());
 				container.appendChild(document.createTextNode(" Maximum "));
-				container.spec.max = new field_integer(null,true,{can_be_null:true});
+				container.spec.max = new field_integer(spec ? spec.max : null,true,{can_be_null:true});
 				container.appendChild(container.spec.max.getHTMLElement());
 				container.spec.min.onchange.add_listener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());
@@ -228,19 +267,19 @@ class page_edit_customizable_table extends Page {
 					return {min:this.min.getCurrentData(),max:this.max.getCurrentData()};
 				};
 			}
-			function createDecimal(container) {
+			function createDecimal(container, spec) {
 				container.appendChild(document.createTextNode(" Number of decimals "));
-				container.spec.digits = new field_integer(2,true,{can_be_null:false,min:1,max:6});
+				container.spec.digits = new field_integer(spec ? spec.decimal_digits : 2,true,{can_be_null:false,min:1,max:6});
 				container.appendChild(container.spec.digits.getHTMLElement());
 				container.spec.digits.onchange.add_listener(function() {
 					container.spec.min.setDecimalDigits(container.spec.digits.getCurrentData());
 					container.spec.max.setDecimalDigits(container.spec.digits.getCurrentData());
 				});
 				container.appendChild(document.createTextNode(" Minimum "));
-				container.spec.min = new field_decimal(null,true,{can_be_null:true,integer_digits:10,decimal_digits:2});
+				container.spec.min = new field_decimal(spec ? spec.min : null,true,{can_be_null:true,integer_digits:10,decimal_digits:2});
 				container.appendChild(container.spec.min.getHTMLElement());
 				container.appendChild(document.createTextNode(" Maximum "));
-				container.spec.max = new field_decimal(null,true,{can_be_null:true,integer_digits:10,decimal_digits:2});
+				container.spec.max = new field_decimal(spec ? spec.max : null,true,{can_be_null:true,integer_digits:10,decimal_digits:2});
 				container.appendChild(container.spec.max.getHTMLElement());
 				container.spec.min.onchange.add_listener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());
@@ -253,12 +292,12 @@ class page_edit_customizable_table extends Page {
 					return {decimal_digits:this.digits.getCurrentData(),min:this.min.getCurrentData(),max:this.max.getCurrentData()};
 				};
 			}
-			function createDate(container) {
+			function createDate(container, spec) {
 				container.appendChild(document.createTextNode(" Minimum "));
-				container.spec.min = new field_date(null,true,{can_be_empty:true});
+				container.spec.min = new field_date(spec ? spec.min : null,true,{can_be_empty:true});
 				container.appendChild(container.spec.min.getHTMLElement());
 				container.appendChild(document.createTextNode(" Maximum "));
-				container.spec.max = new field_date(null,true,{can_be_empty:true});
+				container.spec.max = new field_date(spec ? spec.max : null,true,{can_be_empty:true});
 				container.appendChild(container.spec.max.getHTMLElement());
 				container.spec.min.onchange.add_listener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());
@@ -274,11 +313,13 @@ class page_edit_customizable_table extends Page {
 			
 			function save() {
 				var tr = document.getElementById('header_row');
+				var trs = [];
 				var fields = [];
 				while (tr.nextSibling.id != 'buttons_row') {
 					tr = tr.nextSibling;
 					if (tr.nodeType != 1) continue;
 					var field = {};
+					field.id = tr.col_id ? tr.col_id : null;
 					field.description = tr.descr.value.trim();
 					if (field.description.length == 0) {
 						alert("Please enter a description for every data");
@@ -296,12 +337,51 @@ class page_edit_customizable_table extends Page {
 					}
 					field.spec.can_be_null = tr.mand.checked ? false : true;
 					fields.push(field);
+					trs.push(tr);
 				}
 				var locker = lock_screen(null, "Saving...");
 				service.json("data_model","save_custom_table",{table:<?php echo json_encode($table_name);?>,sub_model:<?php echo json_encode($sub_model);?>,columns:fields,lock_id:<?php echo $lock_id;?>},function(res) {
+					if (res) {
+						// update columns' names
+						for (var i = 0; i < trs.length; ++i)
+							trs[i].col_id = res[i];
+					}
 					unlock_screen(locker);
 				});
 			}
+
+			<?php
+			$display = DataModel::get()->getTableDataDisplay($table_name);
+			$data = $display->getDataDisplay(null, $sub_model);
+			foreach ($columns as $col) {
+				$d = null;
+				foreach ($data as $da) if ($da->getHandledColumns()[0] == $col->name) { $d = $da; break; }
+				if ($d == null) continue; // strange, should not happen
+				$descr = $d->getDisplayName();
+				$type = null;
+				$spec = array("can_be_null"=>$col->can_be_null);
+				if ($col instanceof \datamodel\ColumnBoolean) {
+					$type = "boolean";
+				} else if ($col instanceof \datamodel\ColumnString) {
+					$type = "string";
+					$spec["max_length"] = $col->max_length;
+				} else if ($col instanceof \datamodel\ColumnInteger) {
+					$type = "integer";
+					$spec["min"] = $col->min;
+					$spec["max"] = $col->max;
+				} else if ($col instanceof \datamodel\ColumnDecimal) {
+					$type = "decimal";
+					$spec["decimal_digits"] = $col->decimal_digits;
+					$spec["min"] = $col->min;
+					$spec["max"] = $col->max;
+				} else if ($col instanceof \datamodel\ColumnDate) {
+					$type = "date";
+					$spec["min"] = $col->minimum_date;
+					$spec["max"] = $col->maximum_date;
+				}
+				echo "addData(".json_encode($col->name).",".($columns_data[$col->name] ? "true" : "false").",".json_encode($descr).",".json_encode($type).",".json_encode($spec).");\n";
+			}
+			?>
 			</script>
 		</div>
 	</div>

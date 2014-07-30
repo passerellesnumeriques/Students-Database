@@ -487,15 +487,16 @@ if (!browser.IE >= 9) {
 }
 
 if (browser.IE == 0) {
-	stopEventPropagation = function(evt) {
+	stopEventPropagation = function(evt, do_not_prevent_default) {
 		evt.stopPropagation();
-		evt.preventDefault();
+		if (!do_not_prevent_default)
+			evt.preventDefault();
 		return false;
 	};
 } else {
-	stopEventPropagation = function(evt) {
+	stopEventPropagation = function(evt, do_not_prevent_default) {
 		window.event.cancelBubble = true;
-		window.event.returnValue = false;
+		window.event.returnValue = do_not_prevent_default ? true : false;
 		return false;
 	};
 }
