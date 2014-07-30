@@ -358,8 +358,9 @@ layout = {
 			var win = getIFrameWindow(frame);
 			if (!win) return;
 			frame.style.position = "absolute";
-			frame.style.width = "10000px";
-			frame.style.height = "10000px";
+			var win_container = getWindowFromElement(frame);
+			frame.style.width = Math.floor(win_container.getWindowWidth()*0.95)+"px";
+			frame.style.height = Math.floor(win_container.getWindowHeight()*0.95)+"px";
 			var size = layout.computeContentSize(win.document.body);
 			frame.style.position = "static";
 			frame.style.width = size.x+"px";

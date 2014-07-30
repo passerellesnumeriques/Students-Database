@@ -96,7 +96,7 @@ if (isset($_POST["development_mode"])) {
 		</tr>
 		<tr>
 			<td colspan=2>
-				<input type='checkbox' name='development_mode' checked='checked' disabled='disabled'/>
+				<input type='checkbox' name='development_mode' checked='checked'/>
 				This is a development installation
 			</td>
 		</tr>

@@ -184,6 +184,15 @@ namespace datamodel {
 			return array_merge($this->columns, $this->customization[$this->name]);
 		}
 		
+		/** For internal purpose only, used by table customization functionalities */
+		public function forceReloadCustomization($sub_model) {
+			if ($this->model instanceof \SubDataModel)
+				$name = $this->getSQLNameFor($sub_model);
+			else
+				$name = $this->name;
+			$this->customization[$name] = $this->load_customization($name);
+		}
+		
 		/** Indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed
 		 * @param string $is_root true to mark the table as root table
 		 * @return \datamodel\Table this 
@@ -700,7 +709,19 @@ namespace datamodel {
 		}
 
 		public function get_sql_type() {
-			return "INT(".$this->size.")"; //TODO support BIGINT...
+			if ($this->size == 1)
+				return "BIT(1)";
+			if ($this->size <= 8)
+				return "TINYINT";
+			if ($this->size <= 16)
+				return "SMALLINT";
+			if ($this->size <= 24)
+				return "MEDIUMINT";
+			if ($this->size <= 32)
+				return "INT";
+			if ($this->size <= 64)
+				return "BIGINT";
+			throw new Exception("Size of integer not supported: ".$this->size." bits, maximum is 64 bits");
 		}
 
 		public function validate($value) {

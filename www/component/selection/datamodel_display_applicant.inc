@@ -80,7 +80,7 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 }
 $model->addDataScreen(new ApplicantDataScreen($display));
 
-$category_more_info = new datamodel\DataDisplayCategory("Additional Info");
+$category_more_info = new datamodel\DataDisplayCategory("Selection (Additional Info.)");
 $model->addDataCategory($category_more_info);
 $display = new datamodel\TableDataDisplay("ApplicantMoreInfo", $category_more_info);
 $display->addJoinFrom("people", array("types"), function($columns) {

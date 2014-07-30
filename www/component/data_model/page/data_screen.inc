@@ -265,7 +265,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 						}
 					}
 					$row = $q->executeSingleRow();
-					foreach ($child->table->internalGetColumns($child->sub_model) as $col) {
+					foreach ($child->table->internalGetColumnsFor($child->sub_model) as $col) {
 						if (isset($row[$col->name]))
 							$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);
 					}

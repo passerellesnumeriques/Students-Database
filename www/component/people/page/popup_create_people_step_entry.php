@@ -148,6 +148,7 @@ class page_popup_create_people_step_entry extends Page {
 			});
 			popup.addCancelButton(function() {
 				<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]; ?>
+				return true;
 			});
 			if (popup.isFrozen()) popup.unfreeze();
 			</script>

@@ -168,6 +168,7 @@ class page_popup_create_people_step_check extends Page {
 			});
 			window.popup.addCancelButton(function() {
 				<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]; ?>
+				return true;
 			});
 			</script>
 			<?php 
