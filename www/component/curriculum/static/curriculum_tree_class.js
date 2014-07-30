@@ -16,7 +16,7 @@ CurriculumTreeNode_Class.prototype.createTitle = function(editable) {
 	var span = document.createElement("SPAN");
 	span.appendChild(document.createTextNode("Class "));
 	var cl = this.cl;
-	window.top.datamodel.create_cell("AcademicClass", null, "name", cl.id, cl.name, editable && can_edit_batches, span, function(value) { cl.name = value; });
+	window.top.datamodel.create_cell("AcademicClass", null, "name", cl.id, cl.name, "field_text", {can_be_null:false,max_length:100}, editable && can_edit_batches, span, function(value) { cl.name = value; });
 	return span;
 };
 CurriculumTreeNode_Class.prototype.createInfo = function() {

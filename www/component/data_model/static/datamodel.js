@@ -262,30 +262,7 @@ datamodel = {
 		}
 	},
 	
-	model: null,
-	_model_listeners: [],
-	getModel: function(callback) {
-		if (window.top.datamodel.model != null)
-			callback(window.top.datamodel.model);
-		else {
-			window.top.datamodel._model_listeners.push(callback);
-			if (window.top.datamodel._model_listeners.length == 1)
-				service.json("data_model", "get_model", {}, function(model) {
-					window.top.datamodel.model = model;
-					objectMerge(window.top.datamodel.model, window.top.datamodel_prototype);
-					for (var i = 0; i < model.tables.length; ++i) {
-						objectMerge(model.tables[i], window.top.datamodel_table_prototype);
-						for (var j = 0; j < model.tables[i].columns.length; ++j)
-							objectMerge(model.tables[i].columns[j], window.top.datamodel_column_prototype);
-					}
-					for (var i = 0; i < window.top.datamodel._model_listeners.length; ++i)
-						window.top.datamodel._model_listeners[i](window.top.datamodel.model);
-					window.top.datamodel._model_listeners = null;
-				});
-		}
-	},
-	
-	create_cell: function(table, sub_model, column, row_key, value, editable, container, onchange) {
+	create_cell: function(table, sub_model, column, row_key, value, field_type, field_cfg, editable, container, onchange) {
 		if (!editable) {
 			var node = document.createTextNode(value);
 			window.top.datamodel.addCellChangeListener(getWindowFromElement(container), table+(sub_model ? "_"+sub_model : ""), column, row_key, function(value){
@@ -295,20 +272,14 @@ datamodel = {
 			container.appendChild(node);
 			return;
 		}
-		require("typed_field.js");
-		require("editable_cell.js");
-		this.getModel(function(model) {
-			var t = model.getTable(table);
-			var c = t.getColumn(column);
-			require([["typed_field.js",c.typed_field_classname+".js"],"editable_cell.js"], function() {
-				if (row_key > 0)
-					new editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, c.typed_field_classname, c.typed_field_args, value,null,onchange);
-				else {
-					var field = new window[c.typed_field_classname](value,true,c.typed_field_args);
-					container.appendChild(field.getHTMLElement());
-					if (onchange) field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
-				}
-			});
+		require([["typed_field.js",field_type+".js"],"editable_cell.js"], function() {
+			if (row_key > 0)
+				new editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, field_type, field_cfg, value,null,onchange);
+			else {
+				var field = new window[field_type](value,true,field_cfg);
+				container.appendChild(field.getHTMLElement());
+				if (onchange) field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
+			}
 		});
 	},
 	

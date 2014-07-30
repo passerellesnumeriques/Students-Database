@@ -31,7 +31,7 @@ CurriculumTreeNode_BatchPeriod.prototype.getIcon = function() { return theme.bui
 CurriculumTreeNode_BatchPeriod.prototype.createTitle = function(editable) {
 	var span = document.createElement("SPAN");
 	var period = this.period;
-	window.top.datamodel.create_cell("BatchPeriod", null, "name", period.id, period.name, editable && can_edit_batches, span, function(value) { period.name = value; });
+	window.top.datamodel.create_cell("BatchPeriod", null, "name", period.id, period.name, "field_text", {can_be_null:false,max_length:100}, editable && can_edit_batches, span, function(value) { period.name = value; });
 	return span;
 };
 CurriculumTreeNode_BatchPeriod.prototype.createInfo = function() {
@@ -39,12 +39,12 @@ CurriculumTreeNode_BatchPeriod.prototype.createInfo = function() {
 	var div = document.createElement("DIV");
 	var span = document.createElement("SPAN");
 	var b = document.createElement("B"); b.appendChild(document.createTextNode("Start")); span.appendChild(b); span.appendChild(document.createTextNode(": "));
-	window.top.datamodel.create_cell("BatchPeriod", null, "start", aperiod.id, aperiod.start, false, span, function(value) { aperiod.start = value; });
+	window.top.datamodel.create_cell("BatchPeriod", null, "start", aperiod.id, aperiod.start, "field_date", {}, false, span, function(value) { aperiod.start = value; });
 	div.appendChild(span);
 	span = document.createElement("SPAN");
 	span.style.marginLeft = "5px";
 	var b = document.createElement("B"); b.appendChild(document.createTextNode("End")); span.appendChild(b); span.appendChild(document.createTextNode(": "));
-	window.top.datamodel.create_cell("BatchPeriod", null, "end", aperiod.id, aperiod.end, false, span, function(value) { aperiod.end = value; });
+	window.top.datamodel.create_cell("BatchPeriod", null, "end", aperiod.id, aperiod.end, "field_date", {}, false, span, function(value) { aperiod.end = value; });
 	div.appendChild(span);
 	var buttons = document.createElement("DIV"); div.appendChild(buttons);
 	var button = document.createElement("BUTTON");

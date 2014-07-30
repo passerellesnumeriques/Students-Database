@@ -25,7 +25,7 @@ CurriculumTreeNode_Batch.prototype.createTitle = function(editable) {
 	var span = document.createElement("SPAN");
 	span.appendChild(document.createTextNode("Batch "));
 	var batch = this.batch;
-	window.top.datamodel.create_cell("StudentBatch", null, "name", batch.id, batch.name, editable && can_edit_batches, span, function(value) { batch.name = value; });
+	window.top.datamodel.create_cell("StudentBatch", null, "name", batch.id, batch.name, "field_text", {can_be_null:false,max_length:100}, editable && can_edit_batches, span, function(value) { batch.name = value; });
 	return span;
 };
 CurriculumTreeNode_Batch.prototype.createInfo = function() {
@@ -33,11 +33,11 @@ CurriculumTreeNode_Batch.prototype.createInfo = function() {
 	var div = document.createElement("DIV");
 	var span_integration = document.createElement("DIV");
 	var b = document.createElement("B"); b.appendChild(document.createTextNode("Integration")); span_integration.appendChild(b); span_integration.appendChild(document.createTextNode(": "));
-	window.top.datamodel.create_cell("StudentBatch", null, "start_date", this.batch.id, batch.start_date, false, span_integration, function(value) { batch.start_date = value; });
+	window.top.datamodel.create_cell("StudentBatch", null, "start_date", this.batch.id, batch.start_date, "field_date", {}, false, span_integration, function(value) { batch.start_date = value; });
 	div.appendChild(span_integration);
 	var span_graduation = document.createElement("DIV");
 	var b = document.createElement("B"); b.appendChild(document.createTextNode("Graduation")); span_graduation.appendChild(b); span_graduation.appendChild(document.createTextNode(": "));
-	window.top.datamodel.create_cell("StudentBatch", null, "end_date", this.batch.id, batch.end_date, false, span_graduation, function(value) { batch.end_date = value; });
+	window.top.datamodel.create_cell("StudentBatch", null, "end_date", this.batch.id, batch.end_date, "field_date", {}, false, span_graduation, function(value) { batch.end_date = value; });
 	div.appendChild(span_graduation);
 	var button = document.createElement("BUTTON");
 	button.className = "action";

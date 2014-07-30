@@ -239,7 +239,7 @@ ajax = {
 		        try {
 		        	output = eval("("+xhr.responseText+")");
 		        } catch (e) {
-		        	eh("Invalid json output:<br/>Error: "+e+"<br/>Output:<br/>"+xhr.responseText);
+		        	eh("Invalid json output: "+url+"<br/>Error: "+e+"<br/>Output:<br/>"+xhr.responseText);
 		        	return;
 		        }
 	        	if (output.errors) {
