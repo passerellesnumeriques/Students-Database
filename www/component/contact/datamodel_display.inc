@@ -250,22 +250,30 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 			if ($this->restrict_types <> null) {
 				$q->field("Organization", "id");
 				$orgs_ids = $q->executeSingleField();
-				$types_ids = \SQLQuery::create()
-					->select("OrganizationType")
-					->whereIn("OrganizationType", "creator", $this->accepted_creators)
-					->whereIn("OrganizationType", "name", $this->restrict_types)
-					->field("OrganizationType","id")
-					->executeSingleField();
-				$q = \SQLQuery::create()
-					->select("OrganizationTypes")
-					->whereIn("OrganizationTypes", "organization", $orgs_ids)
-					->whereIn("OrganizationTypes", "type", $types_ids)
-					->groupBy("OrganizationTypes", "organization")
-					->join("OrganizationTypes", "Organization", array("organization"=>"id"))
-					->field("Organization", "id", "KEY")
-					->field("Organization", "name", "VALUE")
-					;
-				$this->possible_values[$sub_model] = $q->execute();
+				if (count($orgs_ids) == 0)
+					$this->possible_values[$sub_model] = array();
+				else {
+					$types_ids = \SQLQuery::create()
+						->select("OrganizationType")
+						->whereIn("OrganizationType", "creator", $this->accepted_creators)
+						->whereIn("OrganizationType", "name", $this->restrict_types)
+						->field("OrganizationType","id")
+						->executeSingleField();
+					if (count($types_ids) == 0)
+						$this->possible_values[$sub_model] = array();
+					else {
+						$q = \SQLQuery::create()
+							->select("OrganizationTypes")
+							->whereIn("OrganizationTypes", "organization", $orgs_ids)
+							->whereIn("OrganizationTypes", "type", $types_ids)
+							->groupBy("OrganizationTypes", "organization")
+							->join("OrganizationTypes", "Organization", array("organization"=>"id"))
+							->field("Organization", "id", "KEY")
+							->field("Organization", "name", "VALUE")
+							;
+						$this->possible_values[$sub_model] = $q->execute();
+					}
+				}
 			} else {
 				$q->field("Organization", "id", "KEY");
 				$q->field("Organization", "name", "VALUE");

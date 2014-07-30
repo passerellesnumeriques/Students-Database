@@ -1,4 +1,5 @@
 <?php
+$this->requireJavascript("vertical_scrolling.js");
 ?>
 <style type="text/css">
 #application_container {
@@ -169,7 +170,7 @@
 				<img src='/static/application/logo.png'/>
 				<div id="application_title_text">Students<br/>Management</div>
 			</div>
-			<div id="application_left_menu" style="flex:1 1 auto;">
+			<div id="application_left_menu_scroll" style="flex:1 1 auto;overflow:hidden;padding-right:5px;margin-right:-5px;">
 			</div>
 		</div>
 		<div style="flex:1 1 auto;display:flex;flex-direction:column;">
@@ -258,6 +259,8 @@ tooltip(document.getElementById('calendars'), "Your calendars");
 tooltip(document.getElementById('logout'), "Logout and exit application");
 
 function initPage() {
+	var vs = new vertical_scrolling('application_left_menu_scroll','#009DE1','white');
+	vs.element.id = 'application_left_menu';
 	var menu = document.getElementById('application_menu');
 	for (var i = 0; i < menu.childNodes.length; ++i) {
 		var s = menu.childNodes[i];
