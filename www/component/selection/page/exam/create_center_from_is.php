@@ -128,7 +128,7 @@ class page_exam_create_center_from_is extends Page {
 			host_id = is_id;
 			for (var i = 0; i < all_is_ids.length; ++i) {
 				var cb = document.getElementById('cb_is_'+all_is_ids[i]);
-				if (all_is_ids[i] == is_id) { cb.disabled = 'disabled'; cb.checked = ''; }
+				if (all_is_ids[i] == is_id) { cb.disabled = 'disabled'; cb.checked = 'checked'; }
 				else cb.disabled = '';
 			}
 			document.getElementById('create_button').disabled = "";
@@ -136,6 +136,7 @@ class page_exam_create_center_from_is extends Page {
 		function create() {
 			var linked = [];
 			for (var i = 0; i < all_is_ids.length; ++i) {
+				if (all_is_ids[i] == host_id) continue;
 				var cb = document.getElementById('cb_is_'+all_is_ids[i]);
 				if (cb.checked) linked.push(all_is_ids[i]);
 			}

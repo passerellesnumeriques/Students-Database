@@ -391,6 +391,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t._size_type = type;
 		if (!t.popup) return;
 		if (t.content.nodeName == "IFRAME") {
+			layout.removeHandler(t.content_container, t._layout_content);
 			switch (t._size_type) {
 			case "fit":
 				t.content_container.style.overflow = "auto";
@@ -400,12 +401,13 @@ function popup_window(title,icon,content,hide_close_button) {
 				});
 				break;
 			case "fixed":
+				layout.stopResizingIFrame(t.content);
 				t.content_container.style.overflow = "";
 				t.content_container.style.display = "flex";
 				t.content_container.style.flexDirection = "column";
 				t.content.style.flex = "1 1 auto";
-				t.content.style.width = "";
-				t.content.style.height = "";
+				t.content.style.width = "100%";
+				t.content.style.height = "100%";
 				break;
 			};
 		} else {

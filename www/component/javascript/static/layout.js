@@ -354,7 +354,9 @@ layout = {
 	},
 
 	autoResizeIFrame: function(frame, onresize) {
-		var resize = function() {
+		if (frame._autoresize) return;
+		frame._autoresize = function() {
+			if (!frame._check_ready) return; // stopped
 			var win = getIFrameWindow(frame);
 			if (!win) return;
 			frame.style.position = "absolute";
@@ -367,25 +369,36 @@ layout = {
 			frame.style.height = size.y+"px";
 			if (onresize) onresize(frame);
 		};
-		var check_ready = function() {
+		frame._check_ready = function() {
 			// check the frame is still there
 			var p = frame.parentNode;
 			while (p != null && p.nodeName != 'BODY') p = p.parentNode;
 			if (!p) return;
 			var win = getIFrameWindow(frame);
 			if (!win || !win.layout || !win._page_ready) {
-				setTimeout(check_ready, 10);
+				setTimeout(frame._check_ready, 10);
 				return;
 			}
+			if (!frame._check_ready) return; // stopped
 			var b = win.document.body;
 			win.layout.cancelResizeEvent();
-			win.layout.addHandler(b, resize);
+			win.layout.addHandler(b, frame._autoresize);
 			for (var i = 0; i < b.childNodes.length; ++i) 
-				win.layout.addHandler(b.childNodes[i], resize);
-			resize();
+				win.layout.addHandler(b.childNodes[i], frame._autoresize);
+			frame._autoresize();
 		};
-		check_ready();
-		listenEvent(frame, 'load', check_ready);
+		frame._check_ready();
+		listenEvent(frame, 'load', frame._check_ready);
+	},
+	stopResizingIFrame: function(frame) {
+		if (!frame._check_ready) return;
+		unlistenEvent(frame, 'load', frame._check_ready);
+		frame._check_ready = null;
+		var win = getIFrameWindow(frame);
+		if (win && win.layout && win.document && win.document.body) {
+			win.layout.removeHandler(win.document.body, frame._autoresize);
+			win.layout._no_resize_event = false;
+		}
 	},
 	
 	everythingOnPageLoaded: function() {
