@@ -673,10 +673,16 @@ function excel_import(popup, container, onready) {
 			/* layout */
 			t.left = document.createElement("DIV");
 			t.right = document.createElement("DIV");
-			t.left.style.display = "flex";
-			t.left.style.flexDirection = "column";
-			t.right.style.display = "flex";
-			t.right.style.flexDirection = "column";
+			t.left_container = document.createElement("DIV");
+			t.left.appendChild(t.left_container);
+			t.right_container = document.createElement("DIV");
+			t.right.appendChild(t.right_container);
+			t.left_container.style.height = "100%";
+			t.left_container.style.display = "flex";
+			t.left_container.style.flexDirection = "column";
+			t.right_container.style.display = "flex";
+			t.right_container.style.flexDirection = "column";
+			t.right_container.style.height = "100%";
 			
 			t.excel_header = document.createElement("DIV");
 			t.excel_header.style.flex = "none";
@@ -686,9 +692,9 @@ function excel_import(popup, container, onready) {
 			t.frame_excel.style.flex = "1 1 auto";
 			t.frame_excel.style.border = "0px";
 			t.frame_excel.style.width = "100%";
-			t.left.appendChild(t.excel_header);
-			t.left.appendChild(t.excel_info);
-			t.left.appendChild(t.frame_excel);
+			t.left_container.appendChild(t.excel_header);
+			t.left_container.appendChild(t.excel_info);
+			t.left_container.appendChild(t.frame_excel);
 			
 			t.data_header = document.createElement("DIV");
 			t.data_header.style.flex = "none";
@@ -696,8 +702,8 @@ function excel_import(popup, container, onready) {
 			t.frame_import.style.flex = "1 1 auto";
 			t.frame_import.style.border = "0px";
 			t.frame_import.style.width = "100%";
-			t.right.appendChild(t.data_header);
-			t.right.appendChild(t.frame_import);
+			t.right_container.appendChild(t.data_header);
+			t.right_container.appendChild(t.frame_import);
 
 			container.appendChild(t.left);
 			container.appendChild(t.right);

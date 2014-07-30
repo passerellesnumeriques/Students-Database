@@ -214,9 +214,11 @@ class PNApplication {
 		}
 		closedir($dir);
 		foreach ($components_names as $name) $this->createComponent($name);
-		$done = array();
-		foreach ($this->components as $c) $this->initComponent($c, $done);
-		$this->initRequest();
+		if (!isset($_GET["install_software"])) { // avoid doing anything while we are installing
+			$done = array();
+			foreach ($this->components as $c) $this->initComponent($c, $done);
+			$this->initRequest();
+		}
 	}
 	/**
 	 * Called at the beginning of any request, it calls the initRequest on all components
