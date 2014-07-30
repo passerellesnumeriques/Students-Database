@@ -42,10 +42,8 @@ class page_exam_results extends SelectionPage {
 				<?php $this->createTableSessionsList();?>
 			      </div>
 			</div>
-			<div id="sessions_buttonsDiv" style="display:table;width:100%;height:28px;background-color:rgb(229,190,212);border-radius:3px;">
-				<div id="buttonEditWrapper" style="display:table-cell;;vertical-align:middle;text-align: center;">
-					<button id="edit_notes" class="action" style="display:inline" >EDIT NOTES</button>
-				</div>
+			<div id="sessions_buttons" style="position:relative;margin-right: 5px;height:28px;background-color:rgb(229,190,212);border-radius:3px;">
+				<button id="edit_notes" class="action" style="position:absolute;top:0;bottom: 0;left:0;right:0;width:9%;height: 58%;margin: auto;" >EDIT NOTES</button>
 			</div>
 		</div>
 		<div id = "session_infoDiv" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;vertical-align: top;flex:none;' css="soft">
