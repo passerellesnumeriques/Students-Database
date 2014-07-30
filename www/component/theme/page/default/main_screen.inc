@@ -1,5 +1,6 @@
 <?php
 $this->requireJavascript("vertical_scrolling.js");
+$this->requireJavascript("horizontal_scrolling.js");
 ?>
 <style type="text/css">
 #application_container {
@@ -175,7 +176,7 @@ $this->requireJavascript("vertical_scrolling.js");
 		</div>
 		<div style="flex:1 1 auto;display:flex;flex-direction:column;">
 			<div id="application_header" style="flex:none;display:flex;flex-direction:row;">
-				<div id="application_menu" style="flex:1 1 auto;">
+				<div id="application_menu_scroll" style="flex:1 1 auto;">
 					<div class="application_menu_item" 
 						section="home" 
 						components="application,calendar,people"
@@ -259,6 +260,8 @@ tooltip(document.getElementById('calendars'), "Your calendars");
 tooltip(document.getElementById('logout'), "Logout and exit application");
 
 function initPage() {
+	var hs = new horizontal_scrolling('application_menu_scroll','#009DE1','white');
+	hs.element.id = 'application_menu';
 	var vs = new vertical_scrolling('application_left_menu_scroll','#009DE1','white');
 	vs.element.id = 'application_left_menu';
 	var menu = document.getElementById('application_menu');

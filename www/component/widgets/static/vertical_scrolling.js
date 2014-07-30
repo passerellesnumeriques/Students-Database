@@ -3,9 +3,13 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	if (!arrow_height) arrow_height = 7;
 	var t=this;
 
+	this.element = document.createElement("DIV");
+	while (container.childNodes.length > 0) this.element.appendChild(container.childNodes[0]);
+	
 	container.style.display = "flex";
 	container.style.flexDirection = "column";
 	container.style.position = "relative";
+	container.style.overflow = "hidden";
 	this.scroll_up = document.createElement("DIV");
 	this.scroll_up.style.display = "none";
 	this.scroll_up.style.flex = "none";
@@ -18,7 +22,6 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	this.scroll_up.style.position = "absolute";
 	this.scroll_up.style.top = "0px";
 	container.appendChild(this.scroll_up);
-	this.element = document.createElement("DIV");
 	this.element.style.flex = "1 1 auto";
 	this.element.style.zIndex = 0;
 	container.appendChild(this.element);
@@ -49,23 +52,48 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	this.scroll_down.onmouseover = function() { setOpacity(t.arrow_down, 1); };
 	this.scroll_down.onmouseout = function() { setOpacity(t.arrow_down, 0.8); };
 	
-	this.scroll_up.onclick = function() {
-		var scroll = 20;
-		if (container.scrollTop - scroll < 0)
-			scroll = container.scrollTop;
-		container.scrollTop -= scroll;
-		t.scroll_up.style.top = (container.scrollTop)+"px";
-		t.scroll_down.style.bottom = (-container.scrollTop)+"px";
-		t.layout();
+	this._scrolling_way = 0;
+	this._scrolling_interval = null;
+	this.startScrolling = function() {
+		this._scrolling_interval = setInterval(function() { t.doScrolling(); }, 10);
 	};
-	this.scroll_down.onclick = function() {
-		var scroll = 20;
-		if (container.scrollTop + scroll + t.element.clientHeight > t.element.scrollHeight)
+	this.stopScrolling = function() {
+		if (!this._scrolling_interval) return;
+		clearInterval(this._scrolling_interval);
+		this._scrolling_interval = null;
+	};
+	this.doScrolling = function() {
+		var scroll = t._scrolling_way;
+		if (t._scrolling_way < 0 && container.scrollTop + scroll < 0)
+			scroll = -container.scrollTop;
+		else if (t._scrolling_way > 0 && container.scrollTop + scroll + t.element.clientHeight > t.element.scrollHeight)
 			scroll = t.element.scrollHeight - container.scrollTop - t.element.clientHeight;
 		container.scrollTop += scroll;
 		t.scroll_up.style.top = (container.scrollTop)+"px";
 		t.scroll_down.style.bottom = (-container.scrollTop)+"px";
 		t.layout();
+	};
+
+	this.scroll_down.onmousedown = function() {
+		t._scrolling_way = 4;
+		t.startScrolling();
+	};
+	this.scroll_down.onmouseup = function() {
+		t.stopScrolling();
+	};
+	this.scroll_down.onmouseout = function() {
+		t.stopScrolling();
+	};
+	
+	this.scroll_up.onmousedown = function() {
+		t._scrolling_way = -4;
+		t.startScrolling();
+	};
+	this.scroll_up.onmouseup = function() {
+		t.stopScrolling();
+	};
+	this.scroll_up.onmouseout = function() {
+		t.stopScrolling();
 	};
 	
 	this.layout = function() {
