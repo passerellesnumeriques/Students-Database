@@ -11,6 +11,7 @@ class SelectionApplicationSection implements ApplicationSectionPlugin {
 	public function getComponentsForURL() { return array("selection"); }
 	public function getMenuURL() { return "/dynamic/selection/service/menu"; }
 	public function getDefaultPageURL() { return "/dynamic/selection/page/selection_main_page"; }
-		
+	public function canAccess() { return PNApplication::$instance->user_management->has_right("can_access_selection_data"); }
+	
 }
 ?>

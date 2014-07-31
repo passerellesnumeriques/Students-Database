@@ -403,6 +403,12 @@ class user_management extends Component {
 		} while ($changed);
 	}
 	
+	public function isAdministrator() { 
+		// ensure is_admin is loaded
+		$this->has_right("consult_user_list");
+		return $this->is_admin[PNApplication::$instance->current_domain];
+	}
+	
 	public function &selectUsers($usernames = null, $domain = null) {
 		$q = SQLQuery::create()->select("Users");
 		if ($domain <> null) $q->database("students_".$domain);

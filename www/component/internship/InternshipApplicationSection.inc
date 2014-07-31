@@ -11,6 +11,7 @@ class InternshipApplicationSection implements ApplicationSectionPlugin {
 	public function getComponentsForURL() { return array("internship"); }
 	public function getMenuURL() { return "/dynamic/internship/service/menu"; }
 	public function getDefaultPageURL() { return "/dynamic/internship/page/home"; }
+	public function canAccess() { return PNApplication::$instance->user_management->has_right("consult_students_list"); }
 	
 }
 ?>

@@ -12,5 +12,15 @@ class AdministrationApplicationSection implements ApplicationSectionPlugin {
 	public function getMenuURL() { return "/dynamic/administration/service/menu"; }
 	public function getDefaultPageURL() { return "/dynamic/administration/page/dashboard"; }
 	
+	public function canAccess() {
+		require_once("component/administration/AdministrationPlugin.inc");
+		foreach (PNApplication::$instance->components as $name=>$c)
+			foreach ($c->getPluginImplementations() as $pi)
+				if ($pi instanceof AdministrationPlugin)
+					foreach ($pi->getAdministrationPages() as $page)
+						if ($page->canAccess()) return true; // at least one page is accessible
+		return false;
+	}
+	
 }
 ?>

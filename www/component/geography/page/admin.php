@@ -1,7 +1,7 @@
 <?php 
 class page_admin extends Page {
 	
-	public function getRequiredRights() { return array(); }
+	public function getRequiredRights() { return array("edit_geography"); }
 	
 	public function execute() {
 		$this->addJavascript("/static/widgets/frame_header.js");

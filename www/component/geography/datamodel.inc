@@ -12,7 +12,7 @@ $model->addTable("Country")
 	->allowReadAccess()
 	->addWriteAccess("edit_geography",true)
 	->addInsertAccess("edit_geography",true)
-	->addRemoveAccess("manage_geography",true);
+	->addRemoveAccess("edit_geography",true);
 	
 $model->addTable("CountryDivision")
 	->addPrimaryKey("id")
@@ -22,7 +22,7 @@ $model->addTable("CountryDivision")
 	->allowReadAccess()
 	->addWriteAccess("edit_geography",true)
 	->addInsertAccess("edit_geography",true)
-	->addRemoveAccess("manage_geography",true);
+	->addRemoveAccess("edit_geography",true);
 	
 $model->addTable("GeographicArea")
 	->addPrimaryKey("id")
@@ -37,5 +37,5 @@ $model->addTable("GeographicArea")
 	->allowReadAccess()
 	->addWriteAccess("edit_geography",true)
 	->addInsertAccess("edit_geography",true)
-	->addRemoveAccess("manage_geography",true);
+	->addRemoveAccess("edit_geography",true);
 ?>

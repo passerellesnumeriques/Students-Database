@@ -54,6 +54,7 @@ foreach (PNApplication::$instance->components as $name=>$c) {
 		if (!($pi instanceof AdministrationPlugin)) continue;
 		if ($pi instanceof AdministrationDashboardPlugin) continue;
 		foreach ($pi->getAdministrationPages() as $page) {
+			if (!$page->canAccess()) continue;
 			echo "<a class='section_box'";
 			echo " href='".$page->getPage()."'";
 			echo ">";

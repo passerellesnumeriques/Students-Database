@@ -19,6 +19,8 @@ interface ApplicationSectionPlugin {
 	public function getMenuURL();
 	/** URL of the default page which will be displayed when the user enter the section */
 	public function getDefaultPageURL();
+	/** Return true if the current user can access this section */
+	public function canAccess();
 	
 }
 
@@ -39,6 +41,7 @@ class HomeApplicationSection implements ApplicationSectionPlugin {
 	}
 	public function getMenuURL() { return "/dynamic/application/service/home_menu"; }
 	public function getDefaultPageURL() { return "/dynamic/application/page/overview"; }
+	public function canAccess() { return true; }
 	
 }
 ?>

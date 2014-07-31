@@ -11,6 +11,7 @@ class TrainingApplicationSection implements ApplicationSectionPlugin {
 	public function getComponentsForURL() { return array("training","transcripts","curriculum"); }
 	public function getMenuURL() { return "/dynamic/training/service/menu"; }
 	public function getDefaultPageURL() { return "/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list"; }
+	public function canAccess() { return PNApplication::$instance->user_management->has_right("consult_students_list"); }
 	
 }
 ?>
