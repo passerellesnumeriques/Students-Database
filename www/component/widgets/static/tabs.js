@@ -95,8 +95,10 @@ function tabs(container, fill_tab_content) {
 			t.select(0);
 	};
 	t._layout = function() {
-		setWidth(t.content, container.clientWidth);
-		setHeight(t.content, container.clientHeight - t.header.offsetHeight);
+		if (fill_tab_content) {
+			setWidth(t.content, container.clientWidth);
+			setHeight(t.content, container.clientHeight - t.header.offsetHeight);
+		}
 		if (t.selected != -1) {
 			if (fill_tab_content) {
 				setWidth(t.tabs[t.selected].content, t.content.clientWidth);
@@ -107,7 +109,5 @@ function tabs(container, fill_tab_content) {
 	};
 	t._init();
 	t._layout();
-	layout.addHandler(container, function() {
-		
-		t._layout(); });
+	layout.addHandler(container, function() { t._layout(); });
 }

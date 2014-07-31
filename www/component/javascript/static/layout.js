@@ -322,6 +322,7 @@ layout = {
 			var w = null, h = null;
 			if (e.nodeType != 1) continue;
 			if (e.nodeName == "SCRIPT") continue;
+			if (e.nodeName == "STYLE") continue;
 			if (e.style && e.style.position && (e.style.position == "absolute" || e.style.position == "fixed")) continue;
 			if (e.nodeName == "FORM") {
 				var size = layout.computeContentSize(e);

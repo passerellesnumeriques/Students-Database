@@ -29,13 +29,12 @@ field_list_of_fixed_values.prototype._create = function(data) {
 			remove.style.paddingLeft = "2px";
 			remove.style.paddingRight = "2px";
 			remove.style.cursor = "pointer";
-			remove.data_index = t.data.length-1;
+			remove.data_index = t._elements.length;
 			remove.onclick = function(ev) {
 				if (this.data_index > 0)
 					t.element.removeChild(t._elements[this.data_index].comma);
 				t.element.removeChild(t._elements[this.data_index].text);
 				t.element.removeChild(t._elements[this.data_index].remove);
-				t.data.splice(this.data_index,1);
 				t._elements.splice(this.data_index,1);
 				for (var i = this.data_index; i < t._elements.length; ++i)
 					t._elements[i].remove.data_index = i;
@@ -43,7 +42,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 				stopEventPropagation(ev);
 			};
 			var comma = null;
-			if (t.data.length > 1) comma = document.createTextNode(", ");
+			if (t._elements.length > 0) comma = document.createTextNode(", ");
 			if (comma != null)
 				this.element.insertBefore(comma, this.add_button);
 			this.element.insertBefore(text, this.add_button);
@@ -60,8 +59,8 @@ field_list_of_fixed_values.prototype._create = function(data) {
 				for (var i = 0; i < t.config.possible_values.length; ++i) {
 					var val = t.config.possible_values[i];
 					var found = false;
-					for (var j = 0; j < t.data.length; ++j)
-						if (t.data[j] == val[0]) { found = true; break; }
+					for (var j = 0; j < t._elements.length; ++j)
+						if (t._elements[j].key == val[0]) { found = true; break; }
 					if (found) continue;
 					var item = document.createElement("DIV");
 					item.className = "context_menu_item";

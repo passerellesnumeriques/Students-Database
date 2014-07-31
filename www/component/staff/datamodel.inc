@@ -12,6 +12,15 @@ $model->addTable("PNDepartment")
 		return "Department ".htmlentities($row["name"]);
 	})
 	;
+$model->addTable("PNDepartmentDefaultRoles")
+	->addForeignKey("department", "PNDepartment", true, false, true)
+	->addForeignKey("user_role", "Role", true, false, true)
+	->setKey(array("department","user_role"))
+	->addReadAccess("consult_staff_list", true)
+	->addWriteAccess("manage_staff", true)
+	->addInsertAccess("manage_staff", true)
+	->addRemoveAccess("manage_staff", true)
+	;
 $model->addTable("Staff")
 	->addForeignKey("people", "People", true, false, false, false, true)
 	->setPrimary("people")

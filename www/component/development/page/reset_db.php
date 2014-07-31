@@ -66,7 +66,8 @@ function next() {
 			var link = this;
 			var locker = lock_screen(null, "Inserting test data");
 			service.json("development","test_data",{domain:<?php echo json_encode($domain);?>,password:""},function(res) {
-				link.innerHTML = "Test data inserted";
+				link.parentNode.insertBefore(document.createTextNode("Test data inserted"), link);
+				link.parentNode.removeChild(link);
 				link.onclick = function() { return false; };
 				unlock_screen(locker);
 			});

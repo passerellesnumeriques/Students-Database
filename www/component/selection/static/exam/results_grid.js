@@ -107,10 +107,12 @@ function results_grid(subject,applicants,grid_height) {
       $(t.elt.grid).find("table.grid").css("width","");
 
       /* Inserting some cell wrappers (in order to set table columns width) */
-      t.grid_res.onallrowsready(function(){
+      /*t.grid_res.onallrowsready(function(){
             t._fixColumnsWidth();
-          });
-      }
+          });*/
+      
+      layout.invalidate(t.elt.container);
+   }
    
    /* creating applicant ID column */
    t._createApplicantColumn=function(){

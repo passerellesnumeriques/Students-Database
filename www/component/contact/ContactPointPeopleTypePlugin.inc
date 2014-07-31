@@ -40,6 +40,6 @@ class ContactPointPeopleTypePlugin implements PeopleTypePlugin {
 		return "contact point of ".$p["name"]." (".$p["designation"].")";
 	}
 	
-	public function getBuiltinDefaultUserRoles() { return array(); }
+	public function getBuiltinDefaultUserRoles($people) { return array(); }
 }
 ?>

@@ -1,4 +1,5 @@
 if (window == window.top) {
+	if (typeof window.top.pnapplication == 'undefined') {
 	/**
 	 * Handle windows events at application level: list of frames, event when a frame is closed, user activity...
 	 */
@@ -187,6 +188,7 @@ if (window == window.top) {
 		}
 	};
 	window.top.pnapplication.registerWindow(window.top);
+	}
 } else if (typeof Custom_Event != 'undefined'){
 	/**
 	 * Handle events on the current window, transfered to the top window

@@ -832,6 +832,7 @@ function grid(element) {
 			t.thead.style.left = "0px";
 			t.thead.style.width = "100%";
 			t.thead.style.overflow = "hidden";
+			t.table.parentNode.style.marginRight = "1px";
 		};
 		t.element.style.display = "flex";
 		t.element.style.flexDirection = "column";

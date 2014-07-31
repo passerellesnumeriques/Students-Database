@@ -22,9 +22,6 @@
 .popup_window_header>*:first-child {
 	border-top-left-radius: 5px;
 }
-.popup_window_header>*:last-child {
-	border-top-right-radius: 5px;
-}
 .popup_window_title {
     padding: 2px;
     color: white;
@@ -42,7 +39,7 @@
     background-color: #FFA000;
 }
 
-.popup_window>*:last-child {
+.popup_window>*:last-child, .popup_window>*:last-child>iframe {
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
 }

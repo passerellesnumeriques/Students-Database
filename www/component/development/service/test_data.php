@@ -31,6 +31,7 @@ class service_test_data extends Service {
 			$this->importStorage($db_system, "PNP_Batch2013", $domain);
 			// generate events accordingly to data added
 			PNApplication::$instance->user_management->login($input["domain"], "admin", $input["password"]);
+			require_once("component/data_model/Model.inc");
 			$model = DataModel::get();
 			foreach ($model->internalGetTables() as $t) {
 				if ($t->getModel() instanceof SubDataModel) continue;
@@ -38,6 +39,17 @@ class service_test_data extends Service {
 				foreach ($rows as $row)
 					$t->fireInsert($row, @$row[$t->getPrimaryKey()->name], null);
 			}
+			
+			// create a user without any right
+			$people_id = PNApplication::$instance->people->createPeople(array("first_name"=>"Guest","last_name"=>"No right","sex"=>"M"), array("user"), true);
+			PNApplication::$instance->user_management->createInternalUser("guest", "", $people_id);
+
+			// create a selection staff, who can access in read-only to all selection data
+			$people_id = PNApplication::$instance->people->createPeople(array("first_name"=>"Selection","last_name"=>"Staff","sex"=>"F"), array("user","staff"), true);
+			SQLQuery::create()->bypassSecurity()->noWarning()->insert("Staff", array("people"=>$people_id));
+			$selection_department_id = SQLQuery::create()->noWarning()->bypassSecurity()->select("PNDepartment")->whereValue("PNDepartment","name","Selection")->field("id")->executeSingleValue();
+			SQLQuery::create()->bypassSecurity()->noWarning()->insert("StaffPosition", array("people"=>$people_id,"department"=>$selection_department_id,"start"=>"2010-01-01","end"=>null,"position"=>"Selection Intern"));
+			PNApplication::$instance->user_management->createInternalUser("selection_staff", "", $people_id);
 			
 			PNApplication::$instance->user_management->logout();
 		}		

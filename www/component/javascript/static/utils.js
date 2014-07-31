@@ -35,6 +35,9 @@ String.prototype.parseNumber=function() {
 	}
 	return value;
 };
+String.prototype.isSame=function(s) {
+	return this.trim().latinize().toLowerCase() == s.trim().latinize().toLowerCase();
+};
 /** Convert this string into HTML (replace special characters)
  * @returns {String} the HTML string
  */
@@ -1114,7 +1117,10 @@ function Custom_Event() {
 	 * Add a listener to this event
 	 * @param listener
 	 */
-	this.add_listener = function(listener) { this.listeners.push(listener); };
+	this.add_listener = function(listener) {
+		if (this.listeners.contains(listener)) return;
+		this.listeners.push(listener); 
+	};
 	this.remove_listener = function(listener) { this.listeners.remove(listener); };
 	/**
 	 * Trigger the event: call all listeners with the given data as parameter

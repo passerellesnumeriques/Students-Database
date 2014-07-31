@@ -19,7 +19,7 @@ class geography extends Component {
 	public function getLocalDivisions() {
 		if ($this->local_country_divisions == null) {
 			$lc = $this->getLocalCountry();
-			$this->local_country_divisions = $this->getCountryDivisions($this->lc["id"]);
+			$this->local_country_divisions = $this->getCountryDivisions($lc["id"]);
 		}
 		return $this->local_country_divisions;
 	}
@@ -166,6 +166,7 @@ class geography extends Component {
 				->whereIn("GeographicArea", "parent", $prev_division)
 				->field("GeographicArea", "id")
 				->executeSingleField();
+			if (count($children) == 0) break;
 			$list = array_merge($list, $children);
 			$prev_division = $children;
 		}

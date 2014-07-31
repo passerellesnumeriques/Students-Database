@@ -77,10 +77,13 @@ $model->addTable("People")
 		usort($types, function ($type1, $type2) {
 			return $type1->getSecurityPriority() - $type2->getSecurityPriority();
 		});
+		$w = "";
 		foreach ($types as $type) {
 			if (!($type->canWrite())) break;
 			$w .= " OR (`".$table_alias."`.'types' LIKE '%/".$type->getId()."/%')";
 		}
+		if ($w == "") $w = "FALSE"; // no right
+		
 		$q->where("(".$w.")");
 	},function($rows) {
 		return $rows;

@@ -63,6 +63,13 @@ class people extends Component {
 			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
 		SQLQuery::create()->updateByKey("People", $people_id, array("types"=>$people["types"].$new_type."/"));
 	}
+	
+	public function createPeople($info, $types, $bypass_security = false) {
+		$t = "";
+		foreach ($types as $type) $t .= "/".$type."/";
+		$info["types"] = $t;
+		return SQLQuery::create()->bypassSecurity($bypass_security)->insert("People", $info);
+	}
 
 	public function joinPeople(&$q, $from_table, $from_key, $include_picture_info = true) {
 		require_once("PeopleJSON.inc");
@@ -94,8 +101,8 @@ class people extends Component {
 		return $table->filterRemoveAccess($rows);
 	}
 	
-	public function getPeople($people_id) {
-		return SQLQuery::create()->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
+	public function getPeople($people_id, $bypass_security = false) {
+		return SQLQuery::create()->bypassSecurity($bypass_security)->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
 	}
 	
 	public function getPeoples($peoples_ids,$include_picture_revision=false) {
