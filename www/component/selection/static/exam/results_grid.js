@@ -15,6 +15,7 @@ if (typeof require != 'undefined'){
 function results_grid(subject,applicants,grid_height) {
    var t=this;
    
+   
     /* html elements */   
    t.elt = {
       container : $("<div class='container_results'></div>")[0],
@@ -118,10 +119,6 @@ function results_grid(subject,applicants,grid_height) {
    t._createApplicantColumn=function(){
       var col_applicant=new GridColumn('col_applic','Applicant ID',null,'center','field_text',false,null,null,{},{});
       
-      /* some CSS needed here (to set column width) */
-      //col_applicant.col.className='applicant_id';
-      //col_applicant.th.className='applicant_id';
-      
       /* adding column into the grid */
       t.grid_res.addColumn(col_applicant);
       
@@ -137,11 +134,7 @@ function results_grid(subject,applicants,grid_height) {
          for(var j=0;j<t.subject.versions.length;++j)
            field_args.possible_values.push(new Array(t.subject.versions[j],String.fromCharCode(j+65)));// push key (id) ,value to display
         
-      var col_version=new GridColumn('col_version','Version',null,'center','field_enum',true,null,null,field_args,'#');
-      
-      /* some CSS needed here (to set column width) */
-      //col_version.col.className='version';
-      //col_version.th.className='version';
+      var col_version=new GridColumn('col_version','Version',null,'center','field_enum',true,null,null,field_args,'#');      
       
       /* adding column into the grid */
       t.grid_res.addColumn(col_version);
@@ -167,8 +160,6 @@ function results_grid(subject,applicants,grid_height) {
                        
             /* create the new question Column */
             var col_question=new GridColumn('p'+part.id+'q'+question.id,'Question '+question.index,null,'center',grid_field,true,null,null,grid_args,'#');
-            //col_question.col.className='questions';
-            //col_question.th.className='questions';
             sub_cols.push(col_question);
          }
          
@@ -205,12 +196,10 @@ function results_grid(subject,applicants,grid_height) {
 	       decimal_digits:2,
 	       };
             
-                      
            /* create the new result Column */
            var col_result=new GridColumn('part'+part.index+'q'+question.index,'Question '+question.index,null,'center','field_decimal',false,null,null,field_args,'#')
-           //col_result.col.className='question';
-           //col_result.th.className='question';
            sub_cols.push(col_result);
+
         }
         
         /* push columns into the ColumContainer */
@@ -221,7 +210,6 @@ function results_grid(subject,applicants,grid_height) {
      //var field_dbg=t.grid_res.getCellFieldById(1,'part0q2');
      //field_dbg.setData(7.1); 
 
-     t._fixColumnsWidth();
    }
    
    
@@ -257,7 +245,7 @@ function results_grid(subject,applicants,grid_height) {
       
       /* getting results from applicants answers */
       service.json("selection","applicant/get_results",{applicants_exam:t.applicants_exam,subject:t.subject},function(res){
-         
+            
          //TODO
          });
       
@@ -271,17 +259,6 @@ function results_grid(subject,applicants,grid_height) {
        });
    }
    
-
-/* Set th cells width (by inserting some div inside) */
-t._fixColumnsWidth=function(){
-   
-      //$(t.elt.grid).find('thead>tr>th').wrapInner($("<div>", {class: 'cell_wrapper'}));
-      //
-      ///* applicant selector */
-      //$(t.elt.grid).find('thead>tr:first-child>th:first-child').addClass('applicant_cb');
-
-  
-   }
 
 /* getting applicants answer */
 t._getAnswers=function(){
@@ -325,7 +302,7 @@ t._getAnswers=function(){
                //getting answer value  
                 var cell_field=t.grid_res.getCellFieldById(row,col_id);
                 var answer=cell_field.getCurrentData();
-
+         
                 if (answer=="No data found for this column")
                   answer=null; 
                
