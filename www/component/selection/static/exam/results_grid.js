@@ -245,8 +245,24 @@ function results_grid(subject,applicants,grid_height) {
       
       /* getting results from applicants answers */
       service.json("selection","applicant/get_results",{applicants_exam:t.applicants_exam,subject:t.subject},function(res){
-            
-         //TODO
+         
+         /* updating t.applicants_exam object with computed scores from server side */
+         for(var i=0;i<res.length;++i)
+         {
+            var applicant_exam=res[i];
+            t.applicants_exam.applicants_answers[i].score=applicant_exam.score;
+            for(var j=0;j<applicant_exam.parts.length;++j)
+            {
+               var part=applicant_exam.parts[j];
+               t.applicants_exam.applicants_answers[i].parts[j].score=part.score;
+                for(var k=0;k<part.answers.length;++k)
+                {
+                  var answer=part.answers[k];
+                  t.applicants_exam.applicants_answers[i].parts[j].answers[k].score=answer.score;
+                }
+            }
+         }
+         
          });
       
       
