@@ -1,4 +1,4 @@
-function exam_center_IS(container, all_is, linked_is) {
+function exam_center_IS(container, all_is, linked_is, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	
 	this.linked_ids = linked_is;
@@ -10,28 +10,30 @@ function exam_center_IS(container, all_is, linked_is) {
 		this._section = new section("/static/selection/IS/IS_16.png", "Information Sessions Linked", this._table, false, false, 'soft');
 		container.appendChild(this._section.element);
 		
-		var button_new = document.createElement("BUTTON");
-		button_new.className = "action";
-		button_new.innerHTML = "<img src='"+theme.icons_16.link+"'/> Link another session";
-		this._section.addToolBottom(button_new);
-		button_new.t = this;
-		button_new.onclick = function() {
-			var t = this.t;
-			var button = this;
-			require("context_menu.js", function() {
-				var menu = new context_menu();
-				for (var i = 0; i < all_is.length; ++i) {
-					if (t.linked_ids.contains(all_is[i].id)) continue;
-					menu.addIconItem(null, all_is[i].name, function(is_id) {
-						t.linkIS(is_id);
-					}, all_is[i].id);
-				}
-				if (menu.getItems().length == 0) {
-					menu.addIconItem(theme.icons_16.info, "No more Information Session available");
-				}
-				menu.showBelowElement(button);
-			});
-		};
+		if (can_edit) {
+			var button_new = document.createElement("BUTTON");
+			button_new.className = "action";
+			button_new.innerHTML = "<img src='"+theme.icons_16.link+"'/> Link another session";
+			this._section.addToolBottom(button_new);
+			button_new.t = this;
+			button_new.onclick = function() {
+				var t = this.t;
+				var button = this;
+				require("context_menu.js", function() {
+					var menu = new context_menu();
+					for (var i = 0; i < all_is.length; ++i) {
+						if (t.linked_ids.contains(all_is[i].id)) continue;
+						menu.addIconItem(null, all_is[i].name, function(is_id) {
+							t.linkIS(is_id);
+						}, all_is[i].id);
+					}
+					if (menu.getItems().length == 0) {
+						menu.addIconItem(theme.icons_16.info, "No more Information Session available");
+					}
+					menu.showBelowElement(button);
+				});
+			};
+		}
 		
 		this.refresh();
 	};
@@ -72,29 +74,32 @@ function exam_center_IS(container, all_is, linked_is) {
 		tr.is_applicants = document.createElement("SPAN");
 		td.appendChild(tr.is_applicants);
 		tr.appendChild(td = document.createElement("TD"));
-		var button = document.createElement("BUTTON");
-		button.className = "flat";
-		button.innerHTML = "<img src='"+theme.icons_16.unlink+"'/>";
-		button.title = "Unlink this Information Session from the Exam Center";
-		button.tr = tr;
-		button.t = this;
-		tr.unlink_button = button;
-		button.disabled = 'disabled'; // will be enabled as soon as we get the list of applicants
-		button.onclick = function() {
-			var t=this.t;
-			var tr=this.tr;
-			var twin = window;
-			confirm_dialog("If you unlink an Information Session, all its associated applicants will be removed from the exam center planning.<br/>Are you sure you want to do this ?", function(yes) {
-				if (!yes) return;
-				if (tr.applicants_list)
-					t.onapplicantsremoved.fire(tr.applicants_list);
-				t._table.removeChild(tr);
-				t.linked_ids.remove(is_id);
-				twin.pnapplication.dataUnsaved("ExamCenterInformationSession");
-			});
-		};
-		td.appendChild(button);
-
+		var button;
+		if (can_edit) {
+			button = document.createElement("BUTTON");
+			button.className = "flat";
+			button.innerHTML = "<img src='"+theme.icons_16.unlink+"'/>";
+			button.title = "Unlink this Information Session from the Exam Center";
+			button.tr = tr;
+			button.t = this;
+			tr.unlink_button = button;
+			button.disabled = 'disabled'; // will be enabled as soon as we get the list of applicants
+			button.onclick = function() {
+				var t=this.t;
+				var tr=this.tr;
+				var twin = window;
+				confirm_dialog("If you unlink an Information Session, all its associated applicants will be removed from the exam center planning.<br/>Are you sure you want to do this ?", function(yes) {
+					if (!yes) return;
+					if (tr.applicants_list)
+						t.onapplicantsremoved.fire(tr.applicants_list);
+					t._table.removeChild(tr);
+					t.linked_ids.remove(is_id);
+					twin.pnapplication.dataUnsaved("ExamCenterInformationSession");
+				});
+			};
+			td.appendChild(button);
+		}
+		
 		button = document.createElement("BUTTON");
 		button.className = "flat";
 		button.innerHTML = "<img src='/static/selection/IS/IS_16.png'/>";
@@ -104,15 +109,17 @@ function exam_center_IS(container, all_is, linked_is) {
 			window.top.popup_frame("/static/selection/IS/IS_16.png","Information Session","/dynamic/selection/page/IS/profile?id="+is_id+"&readonly=true",null,95,95);
 		};
 
-		button = document.createElement("BUTTON");
-		button.className = "flat";
-		button.innerHTML = "<img src='"+theme.build_icon("/static/contact/address_16.png", theme.icons_10._import)+"'/>";
-		button.title = "Use the location and hosting partner of this Information Session for this Exam Center";
-		td.appendChild(button);
-		button.t = this;
-		button.onclick = function() {
-			this.t.setHostFromIS(is_id);
-		};
+		if (can_edit) {
+			button = document.createElement("BUTTON");
+			button.className = "flat";
+			button.innerHTML = "<img src='"+theme.build_icon("/static/contact/address_16.png", theme.icons_10._import)+"'/>";
+			button.title = "Use the location and hosting partner of this Information Session for this Exam Center";
+			td.appendChild(button);
+			button.t = this;
+			button.onclick = function() {
+				this.t.setHostFromIS(is_id);
+			};
+		}
 	};
 	
 	this._loadApplicants = function(is_id) {

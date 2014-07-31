@@ -58,8 +58,8 @@ $model->addTable("People")
 			return $type1->getSecurityPriority() - $type2->getSecurityPriority();
 		});
 		foreach ($types as $type) {
-			if (!($type->canRead())) break;
-			$w .= " OR (`".$table_alias."`.'types' LIKE '%/".$type->getId()."/%')";
+			if (!($type->canRead())) continue;
+			$w .= " OR (`".$table_alias."`.`types` LIKE '%/".$type->getId()."/%')";
 		}
 		$q->where("(".$w.")");
 	})
@@ -79,12 +79,13 @@ $model->addTable("People")
 		});
 		$w = "";
 		foreach ($types as $type) {
-			if (!($type->canWrite())) break;
-			$w .= " OR (`".$table_alias."`.'types' LIKE '%/".$type->getId()."/%')";
+			if (!($type->canWrite()))
+				$q->where("(`".$table_alias."`.`types` NOT LIKE '%/".$type->getId()."/%')");
+			else
+				$w .= " OR (`".$table_alias."`.`types` LIKE '%/".$type->getId()."/%')";
 		}
-		if ($w == "") $w = "FALSE"; // no right
-		
-		$q->where("(".$w.")");
+		if ($w <> "")
+			$q->where("(".$w.")");
 	},function($rows) {
 		return $rows;
 	})

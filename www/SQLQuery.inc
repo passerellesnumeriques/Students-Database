@@ -731,6 +731,8 @@ class SQLQuery {
 	
 	/** When the SELECT is only used for counting rows, this will remove any unecessary joins */
 	public function removeUnusefulJoinsForCounting() {
+		// TODO temporarly deactivated: the problem is when the security checks add some conditions, it may impact so the count will not be accurate
+		/*
 		$used_tables = array();
 		foreach ($this->where as $expr) {
 			$s = $expr;
@@ -773,6 +775,7 @@ class SQLQuery {
 				$i--;
 			}
 		}
+		*/
 	}
 
 	/** Generate the SELECT

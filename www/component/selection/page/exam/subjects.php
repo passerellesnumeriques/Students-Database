@@ -11,6 +11,7 @@ class page_exam_subjects extends SelectionPage {
 		$q = SQLQuery::create()->select("ExamSubject");
 		SelectionExamJSON::ExamSubjectSQL($q);
 		$subjects = $q->execute();
+		$can_edit = PNApplication::$instance->user_management->has_right("manage_exam_subject");
 		?>
 		<div style='width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column'>
 			<div class='page_title' style='flex:none'>
@@ -25,15 +26,17 @@ class page_exam_subjects extends SelectionPage {
 				<div class='section_block' style="display:inline-block;overflow:hidden;flex:1 1 auto;display:flex;flex-direction:column;border: 1px solid #C0C0C0;padding-top:0px;padding-bottom:0px;">
 					<iframe id='subject_frame' style='flex:1 1 auto;border:none' src='/static/application/message.html?padding=5&text=<?php echo urlencode("Select a subject to display it here");?>'>
 					</iframe>
-					<div class='page_footer' id='subject_footer' style='visibility:hidden;flex:none;background-color:white;'>
+					<div class='page_footer' id='subject_footer' style='visibility:hidden;flex:none;background-color:white;<?php if (!$can_edit) echo "display:none;"?>'>
 						<button class="action" id='save_button'><img src='<?php echo theme::$icons_16['save'];?>'/> Save</button>
 						<button class="action" id='cancel_button'><img src='<?php echo theme::$icons_16['cancel'];?>'/> Cancel modifications</button>
 					</div>
 				</div>
 			</div>
-			<div class="page_footer" style="flex:none">
+			<div class="page_footer" style="flex:none;<?php if (!$can_edit) echo "display:none;"?>">
+				<?php if ($can_edit) {?>
 				<button class='action' onclick="newSubject();"><img src='<?php echo theme::make_icon("/static/selection/exam/subject_white.png",theme::$icons_10['add'],"right_bottom");?>'/> New Subject</button>
 				<button class='action' onclick="copySubject();"><img src='<?php echo theme::$icons_16['copy'];?>'/> Copy a subject from previous campaign</button>
+				<?php } ?>
 			</div>
 		</div>
 		<style type='text/css'>
@@ -125,6 +128,7 @@ class page_exam_subjects extends SelectionPage {
 					alert("Not yet implemented."); // TODO
 				};
 
+				<?php if ($can_edit) { ?>
 				var remove_button = document.createElement("BUTTON");
 				this.actions_container.appendChild(remove_button);
 				remove_button.className = "action important";
@@ -154,6 +158,7 @@ class page_exam_subjects extends SelectionPage {
 						}
 					);
 				};
+				<?php } ?>
 				require("animation.js",function() {
 					animation.appearsOnOver(t.div, [t.actions_container]);
 				});
@@ -187,6 +192,7 @@ class page_exam_subjects extends SelectionPage {
 		}
 
 		function showSubjectActions(subject) {
+			<?php if ($can_edit) {?>
 			document.getElementById('subject_footer').style.visibility = "visible";
 			var save_button = document.getElementById('save_button');
 			save_button.disabled = "disabled";
@@ -235,6 +241,7 @@ class page_exam_subjects extends SelectionPage {
 					win.location.reload();
 				}
 			};
+			<?php } ?>
 		}
 
 		if (subjects.length == 0) {

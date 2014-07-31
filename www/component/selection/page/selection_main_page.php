@@ -34,7 +34,8 @@ class page_selection_main_page extends SelectionPage {
 		$this->addJavascript("/static/widgets/section/section.js");
 		$this->addJavascript("/static/news/news.js");
 		
-		$this->onload("sectionFromHTML('section_preparation');");
+		if (PNApplication::$instance->user_management->has_right("manage_selection_campaign"))
+			$this->onload("sectionFromHTML('section_preparation');");
 		$this->onload("sectionFromHTML('section_status_is');");
 		$this->onload("sectionFromHTML('section_status_exam_center');");
 		$this->onload("loadISStatus();");
@@ -44,6 +45,7 @@ class page_selection_main_page extends SelectionPage {
 				<div style="display:flex;flex-direction:column;">
 					<div id = 'steps_header' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
 					<div style="overflow:auto;flex:1 1 auto">
+						<?php if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {?>
 						<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div style='text-align:center'>
 								<a href='config/manage'><button>
@@ -52,6 +54,7 @@ class page_selection_main_page extends SelectionPage {
 								</button></a>
 							</div>
 						</div>
+						<?php } ?>
 						<div id='section_status_is' title='Information Sessions' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div id='status_is' class='selection_status'></div>
 						</div>

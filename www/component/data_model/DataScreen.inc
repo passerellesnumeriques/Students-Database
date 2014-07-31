@@ -57,8 +57,21 @@ namespace datamodel {
 			$script = "";
 			$html = "<table>";
 			$has_something = false;
+			$readonly = false;
+			if (!$is_new) {
+				$key_value = getKeyValue($path->table, $values);
+				if (!$path->table->mayModify())
+					$readonly = true;
+				else {
+					$table_alias = "THE_TABLE";
+					$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
+					$q->whereKey($path->table->getName(), $key_value);
+					$path->table->prepareSelectToDetermineWriteAccess($q, $table_alias);
+					$readonly = $q->limit(0,1)->executeSingleRow() == null;
+				}
+			}
 			foreach ($list as $data) {
-				$can_edit = $is_new ? $data->isEditableForNewData() : $data->isEditable();
+				$can_edit = $is_new ? $data->isEditableForNewData() : $data->isEditable() && !$readonly;
 				if ($is_new && !$can_edit) continue;
 				foreach ($data->getHandledColumns() as $c) {
 					if (isset($fixed_columns[$c]))
@@ -78,7 +91,11 @@ namespace datamodel {
 					$value = $data->getNewData();
 				$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 				$page->requireJavascript($tf[0].".js");
-				// TODO check can really edit the columns
+				// check can really edit the columns
+				if (!$is_new && $can_edit) {
+					foreach ($data->getHandledColumns() as $c)
+						if (!$path->table->canModifyColumn($c)) { $can_edit = false; break; }
+				}
 				if ($is_new) {
 					$script .= "field = new ".$tf[0]."(".json_encode($value).",".json_encode($can_edit).",".$tf[1].");\n";
 					$script .= "field.fillWidth();\n";
@@ -87,7 +104,6 @@ namespace datamodel {
 						$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",field:field,getValue:function(){return this.field.getCurrentData();},validate:function(){ return this.field.error; }});\n";
 				} else if ($can_edit) {
 					$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
-					$key_value = getKeyValue($path->table, $values);
 					$page->addJavascript("/static/data_model/DataDisplay.js");
 					$page->addJavascript("/static/data_model/editable_field.js");
 					$page->addJavascript("/static/data_model/editable_datadisplay.js");
