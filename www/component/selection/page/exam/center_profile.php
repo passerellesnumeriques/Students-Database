@@ -110,7 +110,8 @@ class page_exam_center_profile extends SelectionPage {
 					window.linked_is = new exam_center_IS(
 						'IS_container',
 						<?php echo SelectionInformationSessionJSON::InformationSessionsJSON($all_is);?>,
-						<?php echo json_encode($linked_is_id);?>
+						<?php echo json_encode($linked_is_id);?>,
+						<?php echo $editable ? "true" : "false";?>
 					);
 					</script>
 				</div>
@@ -136,7 +137,8 @@ class page_exam_center_profile extends SelectionPage {
 				<?php echo SelectionApplicantJSON::ApplicantsJSON($applicants); ?>,
 				window.linked_is,
 				<?php echo intval($this->component->getOneConfigAttributeValue("default_duration_exam_session"))*60;?>,
-				<?php echo $calendar_id;?>
+				<?php echo $calendar_id;?>,
+				<?php echo $editable ? "true" : "false";?>
 			);
 			</script>
 		</div>

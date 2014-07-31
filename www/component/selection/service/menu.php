@@ -40,14 +40,18 @@ foreach ($campaigns as $c) {
 	<img src='/static/selection/dashboard_white.png'/>
 	Dashboard
 </a>
+<?php if ($can_manage) {?>
 <a class='application_left_menu_item' href='/dynamic/selection/page/config/manage'>
 	<img src='<?php echo theme::$icons_16["config_white"];?>'/>
 	Configure Process
 </a>
+<?php } ?>
+<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) {?>
 <a class='application_left_menu_item' href='/dynamic/data_model/page/edit_customizable_table?table=ApplicantMoreInfo'>
 	<img src='/static/people/profile_white.png'/>
 	Edit Application Form
 </a>
+<?php } ?>
 <a class='application_left_menu_item' href='/dynamic/selection/page/is/main_page'>
 	<img src='/static/selection/is/is_white.png'/>
 	Information Sessions

@@ -224,7 +224,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 				});
 			};
 			if (this._map != null)
-				setTimout(update_map,1);
+				setTimeout(update_map,1);
 			else {
 				require("google_maps.js", function() {
 					setTimeout(function() {
