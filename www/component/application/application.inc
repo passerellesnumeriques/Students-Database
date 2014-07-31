@@ -13,8 +13,10 @@ class application extends Component {
 	
 	public function getPluginImplementations() {
 		require_once("GeneralNewsPlugin.inc");
+		require_once("ApplicationSectionPlugin.inc");
 		return array(
-			new GeneralNewsPlugin()
+			new GeneralNewsPlugin(),
+			new HomeApplicationSection()
 		);
 	}
 	

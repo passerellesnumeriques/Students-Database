@@ -52,36 +52,25 @@ class page_overview extends Page {
 		Navigate into the different sections of the application
 	</div>
 	<div id="section_menu">
-		<a class="section_box" href='/dynamic/selection/page/selection_main_page'>
-			<div><img src='/static/selection/selection_32.png'/></div>
-			<div>Selection</div>
-			<div>Access to the different steps of the selection process</div>
-		</a>
-		<a class="section_box" href='/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list'>
-			<div><img src='/static/curriculum/curriculum_32.png'/></div>
-			<div>Training</div>
-			<div>Consult the curriculum, students list by batch and class, grades...</div>
-		</a>
-		<a class="section_box">
-			<div><img src='/static/education/education_32.png'/></div>
-			<div>Education</div>
-			<div>Students information and life in PN: discipline, health, finance, housing...</div>
-		</a>
-		<a class="section_box">
-			<div><img src='/static/internship/internship_32.png'/></div>
-			<div>Internship</div>
-			<div>Companies information, internships follow-up...</div>
-		</a>
-		<a class="section_box">
-			<div><img src='/static/students/student_32.png'/></div>
-			<div>Alumni</div>
-			<div>Alumni current situation and contacts</div>
-		</a>
-		<a class="section_box" href='/dynamic/administration/page/dashboard'>
-			<div><img src='/static/administration/admin_32.png'/></div>
-			<div>Administration</div>
-			<div>Manage users and access rights, staffs, geographic data...</div>
-		</a>
+		<?php
+		$sections = array();
+		foreach (PNApplication::$instance->components as $cname=>$comp)
+			foreach ($comp->getPluginImplementations() as $pi)
+				if ($pi instanceof ApplicationSectionPlugin)
+					array_push($sections, $pi);
+		usort($sections, function($s1, $s2) {
+			if ($s1->getPriority() <= $s2->getPriority()) return -1;
+			return 1;
+		});
+		foreach ($sections as $section) {
+			if ($section->getId() == "home") continue; // skip the home as we are already there
+			echo "<a class='section_box' href=\"".$section->getDefaultPageURL()."\">";
+				echo "<div><img src=\"".$section->getIcon32()."\"/></div>";
+				echo "<div>".htmlentities($section->getName())."</div>";
+				echo "<div>".htmlentities($section->getDescription())."</div>";
+			echo "</a>";
+		}
+		?>
 	</div>
 <?php
 $google_account = PNApplication::$instance->google->getConnectedAccount();

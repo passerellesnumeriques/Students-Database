@@ -6,9 +6,11 @@ class administration extends Component {
 
 	public function getPluginImplementations() {
 		require_once("AdministrationPlugin.inc");
+		require_once("AdministrationApplicationSection.inc");
 		return array(
 			new AdministrationDashboardPlugin(),
-			new ApplicationAdministrationPlugin()
+			new ApplicationAdministrationPlugin(),
+			new AdministrationApplicationSection()
 		);
 	}
 	
