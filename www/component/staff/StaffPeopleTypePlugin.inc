@@ -16,6 +16,28 @@ class StaffPeopleTypePlugin implements PeopleTypePlugin {
 		return "PN Staff";
 	}
 	
-	public function getBuiltinDefaultUserRoles() { return array("Staff"); }
+	public function getBuiltinDefaultUserRoles($people) {
+		$list = array("Staff");
+		$last_department = SQLQuery::create()
+			->select("Staff")
+			->whereValue("Staff", "people", $people["id"])
+			->join("Staff","StaffPosition",array("people"=>"people"))
+			->orderBy("StaffPosition", "start", false)
+			->join("StaffPosition", "PNDepartment", array("department"=>"id"))
+			->limit(0, 1)
+			->field("PNDepartment","id")
+			->executeSingleValue();
+		if ($last_department <> null) {
+			$roles = SQLQuery::create()
+				->noWarning()
+				->select("PNDepartmentDefaultRoles")
+				->whereValue("PNDepartmentDefaultRoles", "department", $last_department)
+				->join("PNDepartmentDefaultRoles", "Role", array("user_role"=>"id"))
+				->field("Role", "name")
+				->executeSingleField();
+			$list = array_merge($list, $roles);
+		}
+		return $list;
+	}
 }
 ?>

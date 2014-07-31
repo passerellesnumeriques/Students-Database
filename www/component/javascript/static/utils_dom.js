@@ -165,8 +165,10 @@ function setWidth(element, width) {
 	var win = getWindowFromElement(element);
 	if (win != window) { win.setWidth(element, width); return; }
 	var s = getComputedStyleSizes(element);
-	width -= parseInt(s.borderLeftWidth);
-	width -= parseInt(s.borderRightWidth);
+	// we compute the border, as follow, because using the style may be wrong in case we have a border-collapse
+	var w = element.offsetWidth; // excluding margin
+	w -= element.clientWidth; // remove content width + the padding => remaining is border
+	width -= w;
 	width -= parseInt(s.marginLeft);
 	width -= parseInt(s.marginRight);
 	width -= parseInt(s.paddingLeft);
@@ -177,8 +179,10 @@ function setHeight(element, height) {
 	var win = getWindowFromElement(element);
 	if (win != window) { win.setHeight(element, height); return; }
 	var s = getComputedStyleSizes(element);
-	height -= parseInt(s.borderTopWidth);
-	height -= parseInt(s.borderBottomWidth);
+	// we compute the border, as follow, because using the style may be wrong in case we have a border-collapse
+	var h = element.offsetHeight; // excluding margin
+	h -= element.clientHeight; // remove content width + the padding => remaining is border
+	height -= h;
 	height -= parseInt(s.marginTop);
 	height -= parseInt(s.marginBottom);
 	height -= parseInt(s.paddingTop);
@@ -232,8 +236,8 @@ function _getFixedPosition(win,elem) {
 		}
 	}
 	if (win.frameElement) {
-		if (win.scrollX) x -= win.scrollX;
-		if (win.scrollY) y -= win.scrollY;
+		//if (win.scrollX) x -= win.scrollX; // commented because already computed with the body.scrollTop
+		//if (win.scrollY) y -= win.scrollY;
 		var pos = _getFixedPosition(getWindowFromElement(win.frameElement), win.frameElement);
 		x += pos.x;
 		y += pos.y;

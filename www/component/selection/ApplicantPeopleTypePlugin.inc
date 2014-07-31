@@ -22,6 +22,6 @@ class ApplicantPeopleTypePlugin implements PeopleTypePlugin {
 		return "Applicant"; // TODO
 	}
 	
-	public function getBuiltinDefaultUserRoles() { return array(); }
+	public function getBuiltinDefaultUserRoles($people) { return array(); }
 }
 ?>

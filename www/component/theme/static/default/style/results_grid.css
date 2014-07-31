@@ -3,12 +3,11 @@
 /* Main container */
 
 div.container_results{
-	position: relative;
-	margin: 0 auto 3em auto;
 	padding-top : 1em;
-	box-shadow: 10px 10px 5px #888888;
 	background-color: white;
-	border-top:1px black solid;
+}
+#subj_results>div:nth-child(2) {
+	box-shadow: 10px 10px 5px #888888;
 }
 
 /* Grid */
@@ -17,14 +16,6 @@ div.container_results{
 div.grid_results{
 	overflow:auto;
 }
-
-
-.grid_results table {
-	table-layout:fixed;
-}
-
-
-
 
 /* Footer **/
 

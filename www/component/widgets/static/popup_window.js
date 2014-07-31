@@ -116,6 +116,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (t.footer) {
 			t.footer.appendChild(b);
 			t.footer.style.display = "";
+			if (!t.footer.parentNode)
+				t.popup.appendChild(t.footer);
 			layout.invalidate(t.footer);
 		}
 	};
@@ -124,12 +126,16 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (t.footer) {
 			t.footer.removeAllChildren();
 			t.footer.display = "none";
+			if (t.footer.parentNode)
+				t.popup.removeChild(t.footer);
 			layout.invalidate(t.popup);
 		}
 	};
 	t.addFooter = function(html) {
 		t.footer.appendChild(html);
 		t.footer.style.display = "";
+		if (!t.footer.parentNode)
+			t.popup.appendChild(t.footer);
 		layout.invalidate(t.footer);
 	};
 	t.addIconTextButton = function(icon, text, id, onclick) {
@@ -554,9 +560,9 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.footer = doc.createElement("DIV");
 		t.footer.className = "popup_window_buttons";
 		t.footer.style.flex = "none";
-		t.popup.appendChild(t.footer);
 		
 		if (t.buttons.length > 0) {
+			t.popup.appendChild(t.footer);
 			for (var i = 0; i < t.buttons.length; ++i)
 				t.footer.appendChild(t.buttons[i]);
 		} else

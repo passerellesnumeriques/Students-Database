@@ -7,7 +7,7 @@ class StaffAdministrationPlugin implements AdministrationPlugin {
 	
 	public function getAdministrationPages() {
 		return array(
-			new AdministrationPage("PN Staff", "/dynamic/staff/page/list", "/static/staff/staff_16.png", "/static/staff/staff_32.png", "Manage list of staff and their position in PN"),
+			new AdministrationPage("PN Staff", "/dynamic/staff/page/list", "/static/staff/staff_16.png", "/static/staff/staff_32.png", "Manage list of staff and their position in PN", function() { return PNApplication::$instance->user_management->has_right("consult_staff_list"); }),
 		);
 	}
 	

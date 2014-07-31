@@ -139,7 +139,7 @@ class SQLQuery {
 	public function generateTableAlias() { return "t".($this->table_alias_counter++); }
 	
 	/** Do not generate warnings */
-	public function noWarning() { $this->warning = false; return $this; }
+	public function noWarning($no = true) { $this->warning = !$no; return $this; }
 
 	/** Use a sepcific database, instead of the default one which is the one of the current domain
 	 * @param string $db_name name of the database to use
@@ -1693,7 +1693,7 @@ class SQLQuery {
 					DataBaseLock::unlock($lock);
 					throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
 				}
-				$q = SQLQuery::create();
+				$q = SQLQuery::create()->noWarning(!$this->warning)->bypassSecurity($this->bypass_security);
 				if ($this->bypass_security) $q->bypassSecurity();
 				$r = $q->select($t->getName())->selectSubModels($this->sub_models)->where($col->name,$fields_values[$col->name])->executeSingleRow();
 				if ($r <> null) {

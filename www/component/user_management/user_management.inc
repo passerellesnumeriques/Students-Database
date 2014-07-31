@@ -124,7 +124,13 @@ class user_management extends Component {
 		$this->is_admin = array();
 	}
 	
-	public function createInternalUser($username, $password) {
+	/** Creates an internal user, stored in the software database but not in external authentication system.
+	 * This function does not check if the current user has enough right, so it must be used only in a situation where we know we can do this.
+	 * @param string $username username of the user to create
+	 * @param string $password password
+	 * @return NULL|integer user ID if it succeed or null in case of failure
+	 */
+	public function createInternalUser($username, $password, $people_id) {
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$res = $db->execute("INSERT INTO `InternalUser` (`username`,`password`) VALUES ('".$db->escapeString($username)."',SHA1('".$db->escapeString($password)."'))");
 		if ($res === false) {
@@ -136,6 +142,7 @@ class user_management extends Component {
 			$db->execute("DELETE FROM `InternalUser` WHERE `username`='".$db->escapeString($username)."'");
 			return null;
 		}
+		SQLQuery::create()->bypassSecurity()->insert("UserPeople", array("user"=>$user_id,"people"=>$people_id));
 		return $user_id;
 	}
 	
@@ -228,6 +235,7 @@ class user_management extends Component {
 		return true;
 	}
 	
+	/** Creates a new role for users and return the role ID */
 	public function create_role($name, $bypass_security = false, $builtin = false) {
 		try { return SQLQuery::create()->bypassSecurity($bypass_security)->insert("Role",array("name"=>$name,"builtin"=>$builtin)); }
 		catch (Exception $e) { PNApplication::error($e->getMessage()); return null; }
@@ -276,6 +284,47 @@ class user_management extends Component {
 		return true;
 	}
 	
+	public function add_role_rights($role_id, $rights, $bypass_security = false) {
+		require_once("component/data_model/Model.inc");
+		if (!$bypass_security && !DataModel::get()->getTable("RoleRights")->canRemoveAny()) {
+			PNApplication::error("You are not allowed to set rights on roles");
+			return false;
+		}
+		
+		$this->load_all_rights();
+		foreach ($rights as $name=>$value) {
+			if (!isset($this->all_rights[$name])) {
+				PNApplication::error("Unknown right ".$name);
+				return false;
+			}
+			$rights[$name] = $this->all_rights[$name]->parse_value($value);
+		}
+		// check what is present
+		$existing = SQLQuery::create()->select("RoleRights")->whereValue("RoleRights", "role", $role_id)->execute();
+		$to_update = array();
+		$to_insert = array();
+		foreach ($rights as $name=>$value) {
+			$found = false;
+			foreach ($existing as $e) {
+				if ($e["right"] == $name) {
+					// already exists
+					$found = true;
+					$ev = $this->all_rights[$name]->parse_value($e["value"]);
+					$higher = $this->all_rights[$name]->get_higher_value($ev, $value);
+					if ($higher == $ev) break; // existing is higher
+					array_push($to_update, array(array("role"=>$role_id,"right"=>$name), array("value"=>$value)));
+					break;
+				}
+			}
+			if (!$found)
+				array_push($to_insert, array("role"=>$role_id,"right"=>$name,"value"=>$value));
+		}
+		if (count($to_update) > 0)
+			SQLQuery::create()->bypassSecurity()->updateByKeys("RoleRights", $to_update);
+		if (count($to_insert) > 0)
+			SQLQuery::create()->bypassSecurity()->insertMultiple("RoleRights", $to_insert);
+	}
+	
 	/**
 	 * Once needed, keep the processed list of rights of the user
 	 */
@@ -312,6 +361,7 @@ class user_management extends Component {
 			PNApplication::error("Unknown right '".$right_name."'");
 			return false;
 		}
+		$value = $this->all_rights[$right_name]->parse_value($value);
 		if (!isset($this->rights[PNApplication::$instance->current_domain])) {
 			// get roles of the user
 			$roles = SQLQuery::create()->bypassSecurity()->select("UserRole")->field("role")->where("user",$this->user_id)->executeSingleField();
@@ -403,6 +453,13 @@ class user_management extends Component {
 		} while ($changed);
 	}
 	
+	public function isAdministrator() { 
+		// ensure is_admin is loaded
+		$this->has_right("consult_user_list");
+		if (!isset($this->is_admin[PNApplication::$instance->current_domain])) return false;
+		return $this->is_admin[PNApplication::$instance->current_domain];
+	}
+	
 	public function &selectUsers($usernames = null, $domain = null) {
 		$q = SQLQuery::create()->select("Users");
 		if ($domain <> null) $q->database("students_".$domain);
@@ -447,13 +504,13 @@ class user_management extends Component {
 	
 	public function assignDefaultRoles($user_id, $people_id) {
 		SQLQuery::startTransaction();
-		$people = PNApplication::$instance->people->getPeople($people_id);
+		$people = PNApplication::$instance->people->getPeople($people_id, true);
 		$types = PNApplication::$instance->people->parseTypes($people["types"]);
 		$roles = array();
 		foreach ($types as $type) {
 			$pi = PNApplication::$instance->people->getPeopleTypePlugin($type);
 			if ($pi == null) continue;
-			$list = $pi->getBuiltinDefaultUserRoles();
+			$list = $pi->getBuiltinDefaultUserRoles($people);
 			foreach ($list as $role)
 				if (!in_array($role, $roles))
 					array_push($roles, $role);
@@ -472,6 +529,24 @@ class user_management extends Component {
 		}
 		SQLQuery::commitTransaction();
 	}
+	
+	public function getRolesIdsFromNames($roles_names, $bypass_security = false) {
+		return SQLQuery::create()->bypassSecurity($bypass_security)
+			->select("Role")
+			->whereIn("Role", "name", $roles_names)
+			->field("Role", "id")
+			->executeSingleField();
+	}
+	
+	public function getRoles($ids = null) {
+		$q = SQLQuery::create()->select("Role");
+		if ($ids <> null) {
+			if (count($ids) == 0) return array();
+			$q->whereIn("Role", "id", $ids);
+		}
+		return $q->execute();
+	}
+	
 }
 
 /**

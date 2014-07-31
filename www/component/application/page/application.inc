@@ -34,14 +34,17 @@ window.top.CalendarsProviders.get(function(provider) {
 	},5*60*1000);
 	provider.refreshCalendars();
 });
-window.top.pnapplication.onlogout.add_listener(function() {
-	if (!window.top.calendar_manager) return;
-	while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(window.top.calendar_manager.calendars[0]);
-	window.top.CalendarsProviders.get(function(provider) {
-		clearInterval(provider._refresh_interval);
-	});
-	window.top.calendar_manager = null;
-});
+if (!window.top._logout_remove_calendars) {
+	window.top._logout_remove_calendars = function() {
+		if (!window.top.calendar_manager) return;
+		while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(window.top.calendar_manager.calendars[0]);
+		window.top.CalendarsProviders.get(function(provider) {
+			clearInterval(provider._refresh_interval);
+		});
+		window.top.calendar_manager = null;
+	};
+	window.top.pnapplication.onlogout.add_listener(window.top._logout_remove_calendars);
+}
 document.body.style.overflow = "hidden";
 <?php 
 $google_account = PNApplication::$instance->google->getConnectedAccount();

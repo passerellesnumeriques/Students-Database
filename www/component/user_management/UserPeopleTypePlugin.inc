@@ -16,6 +16,6 @@ class UserPeopleTypePlugin implements PeopleTypePlugin {
 		return null; // TODO
 	}
 	
-	public function getBuiltinDefaultUserRoles() { return array(); }
+	public function getBuiltinDefaultUserRoles($people) { return array(); }
 }
 ?>

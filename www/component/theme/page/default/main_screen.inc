@@ -1,4 +1,5 @@
 <?php
+require_once("component/application/ApplicationSectionPlugin.inc");
 $this->requireJavascript("vertical_scrolling.js");
 $this->requireJavascript("horizontal_scrolling.js");
 ?>
@@ -177,61 +178,29 @@ $this->requireJavascript("horizontal_scrolling.js");
 		<div style="flex:1 1 auto;display:flex;flex-direction:column;">
 			<div id="application_header" style="flex:none;display:flex;flex-direction:row;">
 				<div id="application_menu_scroll" style="flex:1 1 auto;">
-					<div class="application_menu_item" 
-						section="home" 
-						components="application,calendar,people"
-						menu="/dynamic/application/service/home_menu"
-						page="/dynamic/application/page/overview"
-					>
-						<img src='/static/application/home_white.png'/>
-						Home
-					</div>
-					<div class="application_menu_item" 
-						section="selection"
-						components="selection"
-						menu="/dynamic/selection/service/menu"
-						page="/dynamic/selection/page/selection_main_page"
-					>
-						<img src='/static/selection/selection_white.png'/>
-						Selection
-					</div>
-					<div class="application_menu_item" 
-						section="training"
-						components="training,transcripts,curriculum"
-						menu="/dynamic/training/service/menu"
-						page="/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list"
-					>
-						<img src='/static/training/training_white.png'/>
-						Training
-					</div>
-					<div class="application_menu_item" 
-						section="education"
-						components="education,health,discipline"
-					>
-						<img src='/static/education/education_white.png'/>
-						Education
-					</div>
-					<div class="application_menu_item" 
-						section="internship"
-					>
-						<img src='/static/application/menu/internship.png'/>
-						Internship
-					</div>
-					<div class="application_menu_item" 
-						section="alumni"
-					>
-						<img src='/static/application/menu/alumni.png'/>
-						Alumni
-					</div>
-					<div class="application_menu_item" 
-						section="administration"
-						components="administration,geography,user_management"
-						menu="/dynamic/administration/service/menu"
-						page="/dynamic/administration/page/dashboard"
-					>
-						<img src='/static/administration/administration_white.png'/>
-						Admin
-					</div>
+					<?php
+					$sections = array();
+					foreach (PNApplication::$instance->components as $cname=>$comp)
+						foreach ($comp->getPluginImplementations() as $pi)
+							if ($pi instanceof ApplicationSectionPlugin)
+								if ($pi->canAccess())
+									array_push($sections, $pi);
+					usort($sections, function($s1, $s2) {
+						if ($s1->getPriority() <= $s2->getPriority()) return -1;
+						return 1;
+					});
+					foreach ($sections as $section) {
+						echo "<div class='application_menu_item'";
+						echo " section='".$section->getId()."'";
+						echo " components='".implode(",",$section->getComponentsForURL())."'";
+						echo " menu=\"".$section->getMenuURL()."\"";
+						echo " page=\"".$section->getDefaultPageURL()."\"";
+						echo ">";
+						echo "<img src=\"".$section->getIcon16White()."\"/>";
+						echo htmlentities($section->getName());
+						echo "</div>";
+					}
+					?>
 				</div>
 				<div id="application_right_menu" style="flex:none;">
 					<input type='text' id='application_search'/>

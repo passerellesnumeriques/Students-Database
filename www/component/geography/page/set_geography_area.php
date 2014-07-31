@@ -1,9 +1,8 @@
 <?php
 class page_set_geography_area extends Page {
-	public function getRequiredRights(){
-	// TODO
-	return array();
-	}
+
+	public function getRequiredRights(){ return array("edit_geography"); }
+
 	public function execute(){
 		// check a country has been selected
 		if (!isset($_GET['country']) || $_GET['country'] == "") {

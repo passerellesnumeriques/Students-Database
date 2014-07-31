@@ -88,6 +88,7 @@ class service_get_latests extends Service {
 			$a = array();
 			foreach ($people_names as $domain=>$users) {
 				$q = PNApplication::$instance->user_management->selectUsers($users, $domain);
+				$q->bypassSecurity(); // we accept to see the name of the people who post...
 				PNApplication::$instance->user_management->joinPeopleToUsers($q);
 				$res = $q->execute();
 				$a[$domain] = array();

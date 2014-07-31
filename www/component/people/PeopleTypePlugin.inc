@@ -14,6 +14,6 @@ interface PeopleTypePlugin {
 	
 	public function getPeopleRowDescription($people);
 	
-	public function getBuiltinDefaultUserRoles();
+	public function getBuiltinDefaultUserRoles($people);
 }
 ?>

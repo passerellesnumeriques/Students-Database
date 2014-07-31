@@ -14,6 +14,7 @@ class service_menu extends Service {
 			foreach ($c->getPluginImplementations() as $pi) {
 				if (!($pi instanceof AdministrationPlugin)) continue;
 				foreach ($pi->getAdministrationPages() as $page) {
+					if (!$page->canAccess()) continue;
 					echo "<a class='application_left_menu_item'";
 					echo " href='".$page->getPage()."'";
 					echo ">";
