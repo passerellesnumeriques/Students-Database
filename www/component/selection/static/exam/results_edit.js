@@ -38,7 +38,7 @@ function initResultsEdit(session_id,room_id,subjects){
           g.onRowApplicantSelection(updateApplicantInfoBox);
           
           /* Some CSS needed here */
-          g.elt.container.style.marginTop="-1px" // to pass over the tab widget border
+          g.elt.container.style.marginTop="-1px"; // to pass over the tab widget border
           
           /* adding grid exam subject to new tab */
           subj_tabs.addTab(subjects[j].name,null,g.getContainer());

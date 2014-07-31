@@ -459,7 +459,7 @@ function grid(element) {
 						var td = tr.childNodes[j];
 						if (td.col_id == col.parent_column.sub_columns[0].id) addClassName(td, "first_in_container");
 						else if (ids.contains(td.col_id)) removeClassName(td, "first_in_container");
-						if (td.col_id == col.parent_column.sub_columns[col.parent_column.sub_columns-1].id) addClassName(td, "last_in_container");
+						if (td.col_id == col.parent_column.sub_columns[col.parent_column.sub_columns.length-1].id) addClassName(td, "last_in_container");
 						else if (ids.contains(td.col_id)) removeClassName(td, "last_in_container");
 					}
 				}
@@ -586,7 +586,7 @@ function grid(element) {
 								var td = tr.childNodes[j];
 								if (td.col_id == col.parent_column.sub_columns[0].id) addClassName(td, "first_in_container");
 								else if (ids.contains(td.col_id)) removeClassName(td, "first_in_container");
-								if (td.col_id == col.parent_column.sub_columns[col.parent_column.sub_columns-1].id) addClassName(td, "last_in_container");
+								if (td.col_id == col.parent_column.sub_columns[col.parent_column.sub_columns.length-1].id) addClassName(td, "last_in_container");
 								else if (ids.contains(td.col_id)) removeClassName(td, "last_in_container");
 							}
 						}

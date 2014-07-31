@@ -9,7 +9,7 @@ class service_applicant_get_results extends Service {
 	
 	public function documentation() { return "Compute results of applicants answers"; }
 	public function inputDocumentation() { echo "Object containing subject and applicants answers "; }
-	public function outputDocumentation() { echo "Same JSON object fully completed with computed scores"; }
+	public function outputDocumentation() { echo "JSON object containing applicants computed scores"; }
 	
 	public function execute(&$component, $input) {
 		
@@ -24,9 +24,13 @@ class service_applicant_get_results extends Service {
 		/* Computing exam score */
 		array_walk($applicants_answers,array($this,'computeApplicantExamScore'));
 		
-		//Storing everything into database
+		//Storing datas into database
 		
 		$this->storeApplicantsExam($applicants_answers);
+		
+		/* return datas to client side */ 
+		echo json_encode($applicants_answers);
+		
 	}
 	
 	/* 
@@ -46,6 +50,7 @@ class service_applicant_get_results extends Service {
 		/* computing total score of the exam */
 		foreach($parts as $part)
 			$score+=$part['score'];
+			
 		
 	}
 	
