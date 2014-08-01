@@ -19,51 +19,47 @@ function splitter_vertical(element, position) {
 		}
 	}
 	t.part1 = element.childNodes[0];
-	t.part1.style.display = "inline-block";
-	t.part1.style.verticalAlign = "top";
 	t.part2 = element.childNodes[1];
-	t.part2.style.display = "inline-block";
-	t.part2.style.verticalAlign = "top";
 	
 	t._position = function() {
-		var h = t.element.clientHeight;
-		setHeight(t.part1, h);
-		setHeight(t.part2, h);
-		setHeight(t.separator, h);
 		var w = t.element.clientWidth;
+		var h = t.element.clientHeight;
 		if (t.part1.style.visibility == "visible") {
 			if (t.part2.style.visibility == "visible") {
 				// all visible
 				var sw = 7;
 				var x = Math.floor(w*t.position - sw/2);
 				setWidth(t.part1, x);
-				t.part1.style.minWidth = t.part1.style.width;
-				t.part1.style.maxWidth = t.part1.style.width;
+				setHeight(t.part1, h);
 				t.separator.style.left = x+"px";
+				t.separator.style.height = h+"px";
 				t.part2.style.left = (x+sw)+"px";
 				setWidth(t.part2, w-x-sw-1);
-				t.part2.style.minWidth = t.part2.style.width;
-				t.part2.style.maxWidth = t.part2.style.width;
+				setHeight(t.part2, h);
 			} else {
 				// only left part
 				setWidth(t.part1, w);
-				t.part1.style.minWidth = t.part1.style.width;
-				t.part1.style.maxWidth = t.part1.style.width;
+				setHeight(t.part1, h);
 			}
 		} else {
 			// only right part
 			setWidth(t.part2, w);
-			t.part2.style.minWidth = t.part2.style.width;
-			t.part2.style.maxWidth = t.part2.style.width;
+			setHeight(t.part2, h);
 		}
 	};
 	
+	t.element.style.position = "relative";
 	t.separator = document.createElement("DIV");
+	t.separator.style.position = "absolute";
+	t.separator.style.top = "0px";
 	t.separator.className = "splitter_vertical_separator";
 	t.separator.style.backgroundImage = "url(\""+get_script_path('splitter_vertical.js')+"splitter_vertical.gif\")";
-	t.separator.style.display = "inline-block";
-	t.separator.style.verticalAlign = "top";
+	t.part1.style.position = "absolute";
+	t.part1.style.top = "0px";
+	t.part1.style.left = "0px";
 	t.part1.style.visibility = "visible";
+	t.part2.style.position = "absolute";
+	t.part2.style.top = "0px";
 	t.part2.style.visibility = "visible";
 	element.insertBefore(t.separator, t.part2);
 	layout.invalidate(t.element);
@@ -100,46 +96,47 @@ function splitter_vertical(element, position) {
 	
 	t.hide_left = function() {
 		var w = t.element.clientWidth;
+		var h = t.element.clientHeight;
 		t.part1.style.visibility = 'hidden';
-		t.part1.style.width = "0px";
-		t.part1.style.display = 'none';
+		t.part1.style.top = "-10000px";
 		t.separator.style.visibility = 'hidden';
-		t.separator.style.width = "0px";
-		t.separator.style.display = 'none';
+		t.separator.style.left = '-1000px';
+		t.part2.style.left = '0px';
+		t.part2.style.top = '0px';
 		t.part2.style.width = w+'px';
+		t.part2.style.height = h+'px';
 		layout.invalidate(t.element);
 	};
 	t.show_left = function() {
 		t.part1.style.visibility = 'visible';
+		t.part1.style.top = "0px";
 		t.separator.style.visibility = 'visible';
-		t.part1.style.display = '';
-		t.separator.style.display = '';
 		layout.invalidate(t.element);
 	};
 	t.hide_right = function() {
 		var w = t.element.clientWidth;
+		var h = t.element.clientHeight;
 		t.part2.style.visibility = 'hidden';
-		t.part2.style.width = "0px";
-		t.part2.style.display = 'none';
+		t.part2.style.top = "-10000px";
 		t.separator.style.visibility = 'hidden';
-		t.separator.style.width = "0px";
-		t.separator.style.display = 'none';
+		t.part1.style.left = '0px';
+		t.part1.style.top = '0px';
 		t.part1.style.width = w+'px';
+		t.part1.style.height = h+'px';
 		layout.invalidate(t.element);
 	};
 	t.show_right = function() {
 		t.part2.style.visibility = 'visible';
+		t.part2.style.top = "0px";
 		t.separator.style.visibility = 'visible';
-		t.part2.style.display = '';
-		t.separator.style.display = '';
 		layout.invalidate(t.element);
 	};
 	
 	t.remove = function() {
 		layout.removeHandler(t.element, t._position);
 		t.element.removeChild(t.separator);
-		t.part1.style.width = '';
-		t.part2.style.width = '';
+		t.part1.style.position = 'static';
+		t.part2.style.position = 'static';
 		layout.invalidate(t.element);
 	};
 

@@ -32,13 +32,6 @@ class page_IS_profile extends SelectionPage {
 				$editable = false;
 				echo "<div class='info_header'>This Information Session is already open by ".$locked_by.": you cannot edit it</div>";
 			}
-			//Get rights from steps
-			$from_steps = PNApplication::$instance->selection->getRestrictedRightsFromStepsAndUserManagement("information_session", "manage_information_session", "manage_information_session", "edit_information_session");
-			if($from_steps[1])
-				PNApplication::warning($from_steps[2]);
-			$can_add = $from_steps[0]["add"];
-			$can_remove = $from_steps[0]["remove"];
-			$can_edit = $from_steps[0]["edit"];
 		}
 		$all_configs = include("component/selection/config.inc");
 		$this->requireJavascript("IS_date.js");
@@ -160,7 +153,7 @@ class page_IS_profile extends SelectionPage {
 		}
 		
 		is_popup.removeButtons();
-		<?php if ($editable && $id <> null && $can_remove) {?>
+		<?php if ($editable && $id <> null) {?>
 		is_popup.addIconTextButton(theme.icons_16.remove, "Remove this session", "remove", function() {
 			confirm_dialog("Are you sure you want to remove this information session ?<br/>Note: Any applicant already assigned to this information session will remain in the system, but without information session.",function(res){
 				if(res){

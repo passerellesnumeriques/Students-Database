@@ -32,13 +32,6 @@ class page_exam_center_profile extends SelectionPage {
 				$editable = false;
 				echo "<div class='info_header'>This Exam Center is already open by ".$locked_by.": you cannot edit it</div>";
 			}
-			//Get rights from steps
-			$from_steps = PNApplication::$instance->selection->getRestrictedRightsFromStepsAndUserManagement("exam_center", "manage_exam_center", "manage_exam_center", "manage_exam_center");
-			if($from_steps[1])
-				PNApplication::warning($from_steps[2]);
-			$can_add = $from_steps[0]["add"];
-			$can_remove = $from_steps[0]["remove"];
-			$can_edit = $from_steps[0]["edit"];
 		}
 		
 		$all_configs = include("component/selection/config.inc");
@@ -230,7 +223,7 @@ class page_exam_center_profile extends SelectionPage {
 		}
 
 		center_popup.removeButtons();
-		<?php if ($editable && $id <> null && $can_remove) {?>
+		<?php if ($editable && $id <> null) {?>
 		center_popup.addIconTextButton(theme.icons_16.remove, "Remove this exam center", "remove", function() {
 			// TODO we should not remove it if some applicants are still assigned to it => we may need to save the center before to remove it, in order to unassign everyone
 			confirm_dialog("Are you sure you want to remove this exam center ?",function(res){

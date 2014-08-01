@@ -38,12 +38,16 @@ class page_selection_main_page extends SelectionPage {
 			$this->onload("sectionFromHTML('section_preparation');");
 		$this->onload("sectionFromHTML('section_status_is');");
 		$this->onload("sectionFromHTML('section_status_exam_center');");
+		$this->onload("sectionFromHTML('section_status_exam_results');");
+		$this->onload("sectionFromHTML('section_status_interview');");
 		$this->onload("loadISStatus();");
 		$this->onload("loadExamCenterStatus();");
+		$this->onload("loadExamResultsStatus();");
+		$this->onload("loadInterviewStatus();");
 		?>
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
 				<div style="display:flex;flex-direction:column;">
-					<div id = 'steps_header' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
+					<div id='steps_header' style='flex:none;' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
 					<div style="overflow:auto;flex:1 1 auto">
 						<?php if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {?>
 						<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
@@ -60,6 +64,12 @@ class page_selection_main_page extends SelectionPage {
 						</div>
 						<div id='section_status_exam_center' title='Exam Centers' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div id='status_exam_centers' class='selection_status'></div>
+						</div>
+						<div id='section_status_exam_results' title='Exam Results' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
+							<div id='status_exam_results' class='selection_status'></div>
+						</div>
+						<div id='section_status_interview' title='Interview' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
+							<div id='status_interview' class='selection_status'></div>
 						</div>
 					</div>
 				</div>
@@ -141,6 +151,16 @@ class page_selection_main_page extends SelectionPage {
 				var container = document.getElementById('status_exam_centers');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
 				service.html("selection","exam/status",null,container);
+			}
+			function loadExamResultsStatus() {
+				var container = document.getElementById('status_exam_results');
+				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
+				service.html("selection","exam/results_status",null,container);
+			}
+			function loadInterviewStatus() {
+				var container = document.getElementById('status_interview');
+				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
+				service.html("selection","interview/status",null,container);
 			}
 			
 		</script>

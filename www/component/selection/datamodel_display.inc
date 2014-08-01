@@ -9,4 +9,5 @@ $model->addDataCategory($category);
 include "datamodel_display_applicant.inc";
 include "datamodel_display_is.inc";
 include "datamodel_display_exam.inc";
+include "datamodel_display_interview.inc";
 ?>

@@ -90,8 +90,6 @@ class page_exam_eligibility_rules extends SelectionPage {
 					</div>
 				</div>
 			</div>
-			<div class="page_footer">
-			</div>
 		</div>
 		<script type='text/javascript'>
 		var subjects_section = sectionFromHTML('subjects_section');

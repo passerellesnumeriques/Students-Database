@@ -41,7 +41,9 @@ class page_applicant_list extends SelectionPage {
 					'Personal Information.Birth Date',
 					'Personal Information.Address.0',
 					'Personal Information.Address.1',
-					'Selection.Information Session'
+					'Selection.Information Session',
+					'Selection.Exam Center',
+					'Selection.Interview Center'
 				],
 				filters,
 				<?php echo isset($_GET["all"]) ? "-1" : "100"; ?>,
