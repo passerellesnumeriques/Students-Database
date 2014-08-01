@@ -89,7 +89,7 @@ $sm->addTable("ExamCenter")
 	->addPrimaryKey("id")
 	->addString("name",255,0,false)//optional
 	->addForeignKey("geographic_area", "GeographicArea", true, false, true, false, true)//An exam center must be linked to a geographic area, and this area is unique in this table
-	->addReadAccess("see_exam_center_detail", true)
+	->addReadAccess("see_exam_center", true)
 	->addWriteAccess("manage_exam_center", true)
 	->addRemoveAccess("manage_exam_center", true)
 	->addInsertAccess("manage_exam_center", true)
@@ -106,7 +106,7 @@ $sm->addTable("ExamCenterPartner")
 	->addForeignKey("host_address","PostalAddress",false,false,true,true) //this attributes is set only when host attribute == true: can select a praticular address in case the organization has several ones
 	->setKey(array("exam_center","organization"))
 	->addWriteAccess("manage_exam_center",true)
-	->addReadAccess("see_exam_center_detail",true)
+	->addReadAccess("see_exam_center",true)
 	->addInsertAccess("manage_exam_center",true)
 	->addRemoveAccess("manage_exam_center",true);
 $model->internalGetTable("Organization")
@@ -122,7 +122,7 @@ $sm->addTable("ExamCenterContactPoint")
 	//People + orga = foreignKey for ContactPoint table
 	->setKey(array("exam_center","organization","people"))
 	->addWriteAccess("manage_exam_center",true)
-	->addReadAccess("see_exam_center_detail",true)
+	->addReadAccess("see_exam_center",true)
 	->addInsertAccess("manage_exam_center",true)
 	->addRemoveAccess("manage_exam_center",true)
 	;
@@ -165,7 +165,7 @@ $sm->addTable("ExamSessionSupervisor")
 	->addForeignKey("staff", "Staff", true, false, true, false)
 	->setKey(array("session","staff"))
 	->addWriteAccess("manage_exam_center",true)
-	->addReadAccess("see_exam_center_detail",true)
+	->addReadAccess("see_exam_center",true)
 	->addInsertAccess("manage_exam_center",true)
 	->addRemoveAccess("manage_exam_center",true);
 
@@ -174,7 +174,7 @@ $sm->addTable("ExamSessionSupervisorCustom")
 	->addForeignKey("session", "ExamSession", true, false, true, false)
 	->addString("name",100,1,false,true)
 	->addWriteAccess("manage_exam_center",true)
-	->addReadAccess("see_exam_center_detail",true)
+	->addReadAccess("see_exam_center",true)
 	->addInsertAccess("manage_exam_center",true)
 	->addRemoveAccess("manage_exam_center",true);
 ?>

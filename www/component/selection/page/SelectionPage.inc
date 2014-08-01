@@ -18,11 +18,14 @@ abstract class SelectionPage extends Page{
 			else {
 				$campaigns = SQLQuery::create()->select("SelectionCampaign")->execute();
 				if (count($campaigns) == 0) {
+					if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {
 					?>
 					<div style="margin:10px">
 					<button class='action' onclick="getIFrameWindow(findFrame('pn_application_frame')).createCampaign();return false;">Create a first selection campaign</button>
 					</div>
-					<?php 
+					<?php
+					} else
+						echo "<div style='margin:10px'>There is no selection campaign yet</div>"; 
 				} else {
 					?>
 					<div style="margin:10px">
@@ -31,7 +34,9 @@ abstract class SelectionPage extends Page{
 						echo "<li><a href='#' onclick=\"getIFrameWindow(findFrame('pn_application_frame')).changeCampaign(".$c["id"].");return false;\">".$c["name"]."</a></li>";
 					}?>
 					</ul>
+					<?php if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) { ?>
 					Or <a href='#' onclick="getIFrameWindow(findFrame('pn_application_frame')).createCampaign();return false;">Create a new campaign</a>
+					<?php } ?>
 					</div>
 					<?php 
 				}

@@ -17,7 +17,7 @@ class page_applicant_list extends SelectionPage {
 		?>
 		<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
 			<div id='list_container' style="flex:1 1 auto"></div>
-			<?php if (PNApplication::$instance->user_management->has_right("manage_applicant")) {?>
+			<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) {?>
 			<div class='page_footer' style="flex:none;">
 				<span id='nb_selected'>0 applicant selected</span>: 
 				<button class='action' id='button_assign_is' disabled='disabled' onclick='assignIS(this);'>Assign to Information Session</button>
@@ -67,7 +67,7 @@ class page_applicant_list extends SelectionPage {
 					};
 					list.addTitle("/static/selection/applicant/applicants_16.png", <?php if (isset($input["title"])) echo json_encode($input["title"]); else echo "'Applicants'";?>);
 
-					<?php if (PNApplication::$instance->user_management->has_right("manage_applicant")) {?>
+					<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) {?>
 					var create_applicant = document.createElement("BUTTON");
 					create_applicant.className = "flat";
 					create_applicant.innerHTML = "<img src='"+theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add)+"' style='vertical-align:bottom'/> Create Applicant";

@@ -1,7 +1,7 @@
 <?php 
 require_once("/../SelectionPage.inc");
 class page_exam_eligibility_rules extends SelectionPage {
-	public function getRequiredRights() { return array("see_exam_subject"); }
+	public function getRequiredRights() { return array("see_exam_rules"); }
 	public function executeSelectionPage(){
 		$this->requireJavascript("section.js");
 
@@ -38,6 +38,8 @@ class page_exam_eligibility_rules extends SelectionPage {
 		// make a tree of rules
 		$root_rules = $this->buildRulesTree($rules, null);
 		
+		$can_edit = PNApplication::$instance->user_management->has_right("manage_exam_rules") && PNApplication::$instance->selection->canEditExamSubjects();
+		
 		$this->requireJavascript("drawing.js");
 		$script = "";
 		?>
@@ -58,7 +60,9 @@ class page_exam_eligibility_rules extends SelectionPage {
 								<img src='/static/selection/exam/exam_subject_48.png'/><br/>
 								<span style='font-size:12pt;font-weight:bold'><?php echo htmlentities($subject["name"]);?></span><br/>
 							</div>
+							<?php if ($can_edit) { ?>
 							<button class='action' onclick="extractSubject(<?php echo $subject["id"];?>);">Extract...</button>
+							<?php } ?>
 						</div>
 						<?php
 						$list = array();
@@ -71,7 +75,8 @@ class page_exam_eligibility_rules extends SelectionPage {
 									echo "<a class='black_link' href='#' title='Click to edit' onclick='editExtract(".$e["id"].");return false;'>";
 									echo htmlentities($e["name"]);
 									echo "</a>";
-									echo " <button class='flat small_icon' title='Remove' onclick='removeExtract(".$e["id"].");'><img src='".theme::$icons_10["remove"]."'/></button>";
+									if ($can_edit)
+										echo " <button class='flat small_icon' title='Remove' onclick='removeExtract(".$e["id"].");'><img src='".theme::$icons_10["remove"]."'/></button>";
 									echo "</div>";
 									$script .= "drawing.connectElements(document.getElementById('subject_".$subject["id"]."'), document.getElementById('extract_".$e["id"]."'), drawing.CONNECTOR_CIRCLE, drawing.CONNECTOR_ARROW, '#000000');";
 								}
@@ -100,6 +105,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 		var root_rules = <?php echo json_encode($root_rules);?>;
 		var subjects = <?php echo json_encode($subjects);?>;
 		var extracts = <?php echo json_encode($extracts);?>;
+		var can_edit = <?php echo json_encode($can_edit);?>;
 		
 		function extractSubject(subject_id) {
 			popup_frame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?subject='+subject_id);
@@ -142,7 +148,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 			inner_circle.style.marginTop = "2px";
 			setBorderRadius(inner_circle,4,4,4,4,4,4,4,4);
 			circle.appendChild(inner_circle);
-			if (can_add_next) {
+			if (can_add_next && can_edit) {
 				var next = document.createElement("IMG");
 				next.src = theme.icons_10.add;
 				next.title = "Add a new rule";
@@ -215,50 +221,54 @@ class page_exam_eligibility_rules extends SelectionPage {
 				s += "<br/>= "+parseFloat(rule.expected).toFixed(2)+" minimum";
 				node.innerHTML = s;
 			}
-			node.style.cursor = "pointer";
-			node.onmouseover = function() { this.style.border = "1px solid #F0D080"; this.style.boxShadow = "2px 2px 2px 0px #A0A0A0"; };
-			node.onmouseout = function() { this.style.border = "1px solid #000000"; this.style.boxShadow = ""; };
-			node.title = "Click to edit this rule";
-			node.onclick = function() {
-				popup_frame(null,"Edit Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?id="+rule.id);
-			};
+			if (can_edit) {
+				node.style.cursor = "pointer";
+				node.onmouseover = function() { this.style.border = "1px solid #F0D080"; this.style.boxShadow = "2px 2px 2px 0px #A0A0A0"; };
+				node.onmouseout = function() { this.style.border = "1px solid #000000"; this.style.boxShadow = ""; };
+				node.title = "Click to edit this rule";
+				node.onclick = function() {
+					popup_frame(null,"Edit Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?id="+rule.id);
+				};
+			}
 			node_container.appendChild(node);
 
-			var remove = document.createElement("IMG");
-			remove.src = theme.icons_10.remove;
-			remove.style.marginLeft = "3px";
-			node.appendChild(remove);
-			setOpacity(remove, 0.6);
-			remove.style.cursor = "pointer";
-			remove.onmouseover = function() { setOpacity(this,1); };
-			remove.onmouseout = function() { setOpacity(this,0.6); };
-			remove.onclick = function(ev) {
-				confirm_dialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
-					if (!yes) return;
-					lock_screen();
-					service.json("selection","exam/remove_eligibility_rule",{id:rule.id},function(res){
-						window.location.reload();
+			if (can_edit) {
+				var remove = document.createElement("IMG");
+				remove.src = theme.icons_10.remove;
+				remove.style.marginLeft = "3px";
+				node.appendChild(remove);
+				setOpacity(remove, 0.6);
+				remove.style.cursor = "pointer";
+				remove.onmouseover = function() { setOpacity(this,1); };
+				remove.onmouseout = function() { setOpacity(this,0.6); };
+				remove.onclick = function(ev) {
+					confirm_dialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
+						if (!yes) return;
+						lock_screen();
+						service.json("selection","exam/remove_eligibility_rule",{id:rule.id},function(res){
+							window.location.reload();
+						});
 					});
-				});
-				stopEventPropagation(ev);
-				return false;
-			};
-			remove.title = "Remove this rule";
+					stopEventPropagation(ev);
+					return false;
+				};
+				remove.title = "Remove this rule";
 			
-			var add_child = document.createElement("IMG");
-			add_child.src = theme.icons_10.add;
-			add_child.style.marginLeft = "3px";
-			node.appendChild(add_child);
-			setOpacity(add_child, 0.6);
-			add_child.style.cursor = "pointer";
-			add_child.onmouseover = function() { setOpacity(this,1); };
-			add_child.onmouseout = function() { setOpacity(this,0.6); };
-			add_child.onclick = function(ev) {
-				popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?parent="+rule.id);
-				stopEventPropagation(ev);
-				return false;
-			};
-			add_child.title = "Add a new rule after this one";
+				var add_child = document.createElement("IMG");
+				add_child.src = theme.icons_10.add;
+				add_child.style.marginLeft = "3px";
+				node.appendChild(add_child);
+				setOpacity(add_child, 0.6);
+				add_child.style.cursor = "pointer";
+				add_child.onmouseover = function() { setOpacity(this,1); };
+				add_child.onmouseout = function() { setOpacity(this,0.6); };
+				add_child.onclick = function(ev) {
+					popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?parent="+rule.id);
+					stopEventPropagation(ev);
+					return false;
+				};
+				add_child.title = "Add a new rule after this one";
+			}
 			return node;
 		}
 		function buildRulesGraphStep(container, previous_node, nodes, final_nodes) {

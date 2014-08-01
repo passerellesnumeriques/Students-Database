@@ -2,7 +2,7 @@
 require_once("component/selection/page/SelectionPage.inc");
 class page_IS_profile extends SelectionPage {
 	
-	public function getRequiredRights() { return array("see_information_session_details"); }
+	public function getRequiredRights() { return array("see_information_session"); }
 	
 	public function executeSelectionPage(){
 		// TODO assign people/staff to do this information session

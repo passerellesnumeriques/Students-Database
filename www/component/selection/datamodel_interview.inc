@@ -74,4 +74,25 @@ $sm->addTable("InterviewCriterion")
 	->addReadAccess("see_interview_criteria", true)
 	;
 
+$sm->addTable("InterviewEligibilityRule")
+	->addPrimaryKey("id")
+	->addForeignKey("parent", "InterviewEligibilityRule", true, false, false, true)//Can only have one parent. If null, root level
+	->addDecimal("expected",3,2,null,null,false,false) // expected grade
+	->addReadAccess("see_interview_criteria",true)
+	->addWriteAccess("manage_interview_criteria",true)
+	->addInsertAccess("manage_interview_criteria",true)
+	->addRemoveAccess("manage_interview_criteria",true)
+	;
+
+$sm->addTable("InterviewEligibilityRuleCriterion")
+	->addForeignKey("rule", "InterviewEligibilityRule", true, false, true)
+	->addForeignKey("criterion", "InterviewCriterion", true, false, true, false)
+	->addDecimal("coefficient",3,2,null,null,true,false) //optional. If empty, considered as 1
+	->setKey(array("rule","criterion"))
+	->addReadAccess("see_interview_criteria",true)
+	->addWriteAccess("manage_interview_criteria",true)
+	->addInsertAccess("manage_interview_criteria",true)
+	->addRemoveAccess("manage_interview_criteria",true)
+	;
+
 ?>

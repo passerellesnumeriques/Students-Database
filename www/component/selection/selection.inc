@@ -96,7 +96,7 @@ class selection extends Component {
 		 */
 		try{
 			/* Create a calendar for this campaign */
-			$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("edit_information_session"=>true));
+			$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("manage_information_session"=>true));
 			
 			/* if the calendar was properly created, continue */
 			if($calendar_id <> null){

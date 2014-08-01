@@ -1,7 +1,7 @@
 <?php 
 require_once("/../SelectionPage.inc");
 class page_IS_main_page extends SelectionPage {
-	public function getRequiredRights() { return array("see_information_session_details"); }
+	public function getRequiredRights() { return array("see_information_session"); }
 	public function executeSelectionPage(){
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");

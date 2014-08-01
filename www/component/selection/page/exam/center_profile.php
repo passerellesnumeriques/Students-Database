@@ -2,7 +2,7 @@
 require_once("component/selection/page/SelectionPage.inc"); 
 class page_exam_center_profile extends SelectionPage {
 	
-	public function getRequiredRights() { return array("see_exam_center_detail"); }
+	public function getRequiredRights() { return array("see_exam_center"); }
 	
 	public function executeSelectionPage() {
 		// TODO assign supervisors to sessions
