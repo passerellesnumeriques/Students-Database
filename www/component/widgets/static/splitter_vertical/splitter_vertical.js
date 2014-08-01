@@ -48,7 +48,8 @@ function splitter_vertical(element, position) {
 		}
 	};
 	
-	t.element.style.position = "relative";
+	if (t.element.style && (t.element.style.position != 'relative' && t.element.style.position != 'absolute'))
+		t.element.style.position = "relative";
 	t.separator = document.createElement("DIV");
 	t.separator.style.position = "absolute";
 	t.separator.style.top = "0px";
