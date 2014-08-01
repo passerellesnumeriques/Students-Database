@@ -1,7 +1,7 @@
 <?php 
 class service_applicant_assign_is extends Service {
 	
-	public function getRequiredRights() { return array("manage_applicant"); }
+	public function getRequiredRights() { return array("edit_applicants"); }
 	
 	public function documentation() { echo "Assign applicants to an Information Session.<br/><span style='color:red'>Note: this may require 2 steps if we need confirmation from the user</span>"; }
 	public function inputDocumentation() {

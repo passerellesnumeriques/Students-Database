@@ -1,39 +1,4 @@
 <?php
-require_once 'SelectionJSON.inc';
-$all_steps = include("steps.inc");
-
-	/**
-	 * Return an array("add"=>value,"remove"=>value,"update"=>value)
-	 * where the value is set according to the most restrictive one of the parameters
-	 */
-	function getRestrictedRights($restricted_adds,$restricted_removes,$restricted_updates){
-		$rights = array();
-		if(count($restricted_adds) > 0){
-			$rights["add"] = true;
-			$rights["remove"] = true;
-			$rights["update"] = true;
-			foreach($restricted_adds as $r){
-				if(!$r){
-					$rights["add"] = false;
-					break;
-				}
-			}
-			foreach($restricted_removes as $r){
-				if(!$r){
-					$rights["remove"] = false;
-					break;
-				}
-			}
-			foreach($restricted_updates as $r){
-				if(!$r){
-					$rights["update"] = false;
-					break;
-				}
-			}
-		}
-		return $rights;
-	}
-	
 class selection extends Component {
 	private $campaign_id = null;
 	
@@ -121,7 +86,6 @@ class selection extends Component {
 		$campaign_id = null;
 		$fields = array();
 		$all_configs = include("config.inc");
-		$all_steps = include("steps.inc");
 		//check the rights
 		if(!PNApplication::$instance->user_management->has_right("manage_selection_campaign",true)){
 			PNApplication::error("You are not allowed to manage the selection campaigns");
@@ -132,7 +96,7 @@ class selection extends Component {
 		 */
 		try{
 			/* Create a calendar for this campaign */
-			$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("edit_information_session"=>true));
+			$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("manage_information_session"=>true));
 			
 			/* if the calendar was properly created, continue */
 			if($calendar_id <> null){
@@ -149,12 +113,6 @@ class selection extends Component {
 						"value" => json_encode($data[1]),
 					));
 				SQLQuery::create()->insertMultiple("SelectionCampaignConfig",$default_config_rows);
-					
-				/* Insert the default steps in the database */
-				$rows_steps = array();
-				foreach($all_steps as $name => $temp)
-					array_push($rows_steps, array("name" => $name, "value" => false));
-				SQLQuery::create()->insertMultiple("Steps",$rows_steps);
 			}
 		} catch (Exception $e) {
 			PNApplication::error($e);
@@ -278,245 +236,6 @@ class selection extends Component {
 	}
 	
 	/**
-	 * The steps are always checked into the database, to be sure
-	 * that each user is having the same steps values
-	 * @return array [["step_name"] => value,...]
-	 */
-	public function getSteps(){
-			$all_steps = include("steps.inc");
-		$steps = array();
-		$db_steps = SQLQuery::create()
-			->select("Steps")
-			->field("Steps","name","name")
-			->field("Steps","value","value")
-			->execute();
-		foreach($all_steps as $name => $temp){
-			foreach($db_steps as $db){
-				if($db["name"] == $name){
-					if($db["value"] == "0" || $db["value"] == false)
-						$steps[$name] = false;
-					else
-						$steps[$name] = true;
-			}
-		}
-	}
-		return $steps;
-	}
-	
-	/**
-	 * Update all the steps values field in the database according to the data set into the db
-	 * This method must be called every time a saving / remove method is called
-	 */
-	public function updateAllSteps(){
-	//	$all_steps = include("steps.inc");
-	//	$steps = $this->getSteps();
-	//	foreach($steps as $name => $value){
-	//	$r = SQLQuery::create()
-	//		->bypassSecurity() //mandatory
-	//		->select($all_steps[$name][1])
-	//		->count() //just check if empty or not, no need of more data
-	//		->executeSingleValue();
-	//		if($r <> null && $r != 0 && $r != "0"){
-	//			if(!$steps[$name]) //must be updated
-	//				SQLQuery::create()
-	//					->bypassSecurity()
-	//					->updateByKey("Steps",$name, array('value' => true));
-	//		} else {
-	//			if($steps[$name]) //must be updated
-	//				SQLQuery::create()
-	//					->bypassSecurity()
-	//					->updateByKey("Steps",$name, array('value' => false));
-	//		}
-	//	}
-	}
-	
-	/**
-	 * Check the possibility to update (valid/unvalid) a step, based on the steps dependencies
-	 * If the given step is already validated, meaning that the user can potentialy unvalidate it,
-	 * check all the dependencies that need the current step to be valid
-	 * Else, the user can potentialy validate the step, so check that it is allowed by the dependencies
-	 * This method must be called by each "save" and "remove" method to valid the call, as a last check
-	 * Can also be called before creating a saving page such as ExamSubject to temporarly
-	 * update the user rights
-	 * @param string name the step name
-	 * @return array	[0]: {boolean} true if can valid this step
-	 * 					[1]: {boolean} true if can unvalid this step
-	 * 					[2]: {string} error message to display in case cannot be updated
-	 * 					[3]: {array | null} restricted rights if [1] == false
-	 *								["add"]: {boolean} true if can add
-	 *								["remove"]: {boolean} true if can remove
-	 *								["update"]: {boolean} true if can update
-	 */
-	public function canUpdateStep($name){
-		$all_steps = include("steps.inc");
-		$can_valid = true;
-		$can_unvalid = true;
-		$steps = $this->getSteps();
-		$errors_message = "";
-		$first_error = true;
-		$restricted_rights = array();
-		if($steps[$name]){ 
-			/** Check in the dependencies of all the already validated steps
-			 * and give the restricted rights
-			 */
-			$to_check = array();
-			$restricted_adds = array();
-			$restricted_removes = array();
-			$restricted_updates = array();
-			foreach($steps as $step_name => $value){
-				if($value)
-					array_push($to_check,$step_name);
-			}
-			foreach($to_check as $step_name){
-				foreach($all_steps[$step_name][2] as $d){
-					if(isset($d[0]) && $d[0] == $name){
-						if($d[1]){ //means this dependency needs the current step to be validated
-							$can_unvalid = false;
-							if($first_error){
-								$errors_message .= "<center>Your rights have been temporarly updated<br/>because the following steps are already validated:<br/></center>";
-								$first_error = false;
-							}
-							$errors_message.= "<i>".$all_steps[$step_name][0]."</i><br/>";
-							if(isset($d[3]["add"]))
-								array_push($restricted_adds, $d[3]["add"]);
-							if(isset($d[3]["remove"]))
-								array_push($restricted_removes, $d[3]["remove"]);
-							if(isset($d[3]["update"]))
-								array_push($restricted_updates, $d[3]["update"]);
-						}
-					}
-				}
-			}
-			$restricted_rights = getRestrictedRights($restricted_adds,$restricted_removes,$restricted_updates);
-			return array($can_valid,$can_unvalid,$errors_message,$restricted_rights);
-		} else {
-			/** Check the dependencies that allow this validation
-			 */
-			$step_data = $all_steps[$name];
-			foreach($step_data[2] as $d){
-				if(isset($d[0]) && $steps[$d[0]] != $d[1]){
-					$can_valid = false;
-					if(!$first_error)
-						$errors_message.="<br/>";
-					$first_error = false;
-					$errors_message.= $d[2];
-				}
-			}
-			return array($can_valid,$can_unvalid,$errors_message,null);
-		}
-	}
-	
-	/**
-	 * Check that the user can update a data, based on the user rights and on the step values
-	 * This method don't consider the case of the steps can only restrict any rights,
-	 * so is having a all-or-nothing basis
-	 * @param string $step_name
-	 * @param string $right_name the right name that must be ok for updating the data
-	 * @param string $error_message_if_no_right error message added to the errors list in case of missing right_name
-	 * @return array	<ul><li>[0]: boolean <code>$can_update</code> true if steps and rights for user_management ok</li>
-	 * 					<li>[1]: string <code>$error_messages</code> the list of errors to display (error from rights & errors from steps)</li></ul>
-	 */
-	public function canUpdateFromRightAndStep($step_name, $right_name, $error_message_if_no_right){
-		$error_messages = "";
-		$can_update = true;
-		$first_error = true;
-		// check the steps
-		$validation_steps = $this->canUpdateStep($step_name);
-		
-		if(!$validation_steps[0]){
-			$can_update = false;
-			$first_error = false;
-			$error_messages .= $validation_steps[2];
-		} else if(!$validation_steps[1]){
-			//Maybe the dependencies give no restriction. If any restriction is given, cannot update this step (all-or-nothing)
-			$add = true;
-			$edit = true;
-			$remove = true;
-			$this->updateRightsFromStepsDependenciesRestrictions($step_name,$add,$remove,$edit);
-			if(!$add || !$remove || !$edit){//The rights have been restricted
-				$can_update = false;
-				$first_error = false;
-				$error_messages .= $validation_steps[2];
-			}
-		}
-
-		// check the right
-		if(!PNApplication::$instance->user_management->has_right($right_name,true)){
-			if(!$first_error)
-				$error_messages .= "<br/>";
-			$can_update = false;
-			$first_error = false;
-			$error_messages .= $error_message_if_no_right;
-		}
-		return array($can_update, $error_messages);
-	}
-	
-	/**
-	 * Get the user rights from user_management and handle the restrictions due to the steps
-	 * The user rights can only be temporarly restricted (never increased) since the first values comes from
-	 * user_management
-	 * @param string step_name
-	 * @param string remove_right_name the right name for user_management component
-	 * @param string edit_right_name the right name for user_management component
-	 * @param string remove_right_name the right name for user_management component
-	 * @return array 	[0]: array rights values (add =>, remove=>, edit =>)
-	 *					[1]: boolean true if the rights were restricted
-	 *					[2]: string restriction message
-	 */
-	public function getRestrictedRightsFromStepsAndUserManagement($step_name, $add_right_name, $remove_right_name, $edit_right_name){
-		//First get the rights
-		$can_add = PNApplication::$instance->user_management->has_right($add_right_name,true);
-		$can_remove = PNApplication::$instance->user_management->has_right($add_right_name,true);
-		$can_edit = PNApplication::$instance->user_management->has_right($add_right_name,true);
-		//then check the steps
-		$restrictions = array(false,null);
-		if($can_add || $can_remove || $can_edit){ //if no right, nothing to do
-			$restrictions = $this->updateRightsFromStepsDependenciesRestrictions($step_name, $can_add, $can_remove, $can_edit);
-		}
-		return array(array("add" => $can_add, "remove" => $can_remove, "edit" => $can_edit),$restrictions[0], $restrictions[1]);
-	}
-	
-	/**
-	 * @param boolean can_add
-	 * @param boolean can_remove
-	 * @param boolean can_edit
-	 * This method restricts (but never increase) the given rights according to the steps dependencies restrictions
-	 * The rights given as parameters shall be coming from user_management functionalities
-	 * @return  array 	[0]:boolean restricted, true if the steps dependencies have restricted the rights
-	 *					[1]: string restriction message
-	 */
-	public function updateRightsFromStepsDependenciesRestrictions($step_name,&$can_add, &$can_remove, &$can_edit){
-		$validation_step = $this->canUpdateStep($step_name);
-		$restricted = false;
-		if(!$validation_step[0]){
-			//we cannot valid this step, so cannot do anything
-			$can_edit = false;
-			$can_remove = false;
-			$can_add = false;
-			$restricted = true;
-		} else if(!$validation_step[1]){
-			//we cannot unvalid this step, and the forbidden actions on ExamSubject table are given in validation_step
-			/* The rights can only be restricted, not increased */
-			if(!$validation_step[3]["add"]){
-				if($can_add != false)
-					$restricted = true;
-				$can_add = false;
-			}
-			if(!$validation_step[3]["remove"]){
-				if($can_remove != false)
-					$restricted = true;
-				$can_remove = false;
-			}
-			if(!$validation_step[3]["update"]){
-				if($can_remove != false)
-					$restricted = true;
-				$can_edit = false;
-			}
-		}
-		return array($restricted,$validation_step[2]);
-	}
-	
-	/**
 	 * Get all the campaigns set in the database and return an array to be used by a php script
 	 * @param boolean (optional) asc true if the campaigns must be ordered by an ascendant order
 	 * @return array [[id=>"",name=>""],[id=>"",name=>""],...]
@@ -566,8 +285,6 @@ class selection extends Component {
 		} catch (Exception $e) {
 			PNApplication::error($e);
 		}
-		//update the steps
-		$this->updateAllSteps();
 		return $id;
 	}
 	
@@ -672,8 +389,6 @@ class selection extends Component {
 			return;
 		}
 		SQLQuery::create()->removeKey("InformationSession",$id);
-		//update the steps
-		$this->updateAllSteps();
 		if(PNApplication::hasErrors())
 			return;
 		else
@@ -698,15 +413,20 @@ class selection extends Component {
 		return $has_host;
 	}
 	
-	/**
-	 * Check if the questions of an exam subject can be updated,
-	 * calling the selection#canUpdateFromRightAndStep method
-	 * @return array:	[0]: boolean $can_update true if steps and rights for user_management ok
-	 * 					[1]: string $error_messages the list of errors to display
-	 */
-	public function canManageExamSubjectQuestions(){
-		return $this->canUpdateFromRightAndStep("manage_exam","manage_exam_subject","You are not allowed to manage the exam subject questions");
-		}
+	public function canEditExamSubjects() {
+		if (!PNApplication::$instance->user_management->has_right("manage_exam_subject")) return false;
+		$applicant_result = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubject")->limit(0,1)->executeSingleRow();
+		if ($applicant_result <> null) return false; // result already set for at least one applicant
+		$applicant_result = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubjectPart")->limit(0,1)->executeSingleRow();
+		if ($applicant_result <> null) return false; // result already set for at least one applicant
+		return true;
+	}
+		
+	public function canEditInterviewCriteria() {
+		if (!PNApplication::$instance->user_management->has_right("manage_interview_criteria")) return false;
+		// TODO check if results have been already entered
+		return true;
+	}
 		
 	/**
 	 * Remove an exam subject from database and all the related data
@@ -717,8 +437,8 @@ class selection extends Component {
 	public function removeSubject($exam_id){
 		$parts = null;
 		//check the rights
-		$can_remove = $this->canManageExamSubjectQuestions();
-		if($can_remove[0]){
+		$can_remove = $this->canEditExamSubjects();
+		if($can_remove){
 			try{
 				//Perform the remove
 				SQLQuery::create()->bypassSecurity()->removeKey("ExamSubject",$exam_id);
@@ -736,16 +456,10 @@ class selection extends Component {
 				PNApplication::error($e);
 			}
 		} else
-			PNApplication::error($can_remove[1]);
+			PNApplication::error("You cannot modify the exam subjects");
 		if(PNApplication::hasErrors())
 			return false;
-		else {
-// 			//update the topics
-// 			$this->updateExamTopicsForEligibilityRules($parts,null,$exam_id);
-			//update steps
-			//$this->updateAllSteps();
-			return true;
-		}
+		return true;
 	}
 	
 	
@@ -772,10 +486,7 @@ class selection extends Component {
 	 */
 	public function removeExamCenter($id){
 		//Check the right from steps and user management
-		$rights_and_steps = $this->getRestrictedRightsFromStepsAndUserManagement("exam_center", "manage_exam_center", "manage_exam_center", "manage_exam_center");
-		if(!$rights_and_steps[0]["remove"]){
-			if($rights_and_steps[1])
-				PNApplication::warning($rights_and_steps[2]);
+		if (!PNApplication::$instance->user_management->has_right("manage_exam_center")) {
 			PNApplication::error("You are not allowed to remove this Exam Center");
 			return false;
 		}
@@ -813,7 +524,6 @@ class selection extends Component {
 			return false;
 		} else {
 			SQLQuery::commitTransaction();
-			$this->updateAllSteps();
 			return true;
 		}
 	}

@@ -183,6 +183,18 @@ if (window == window.top && !window.top.geography) {
 			return siblings;
 		},
 		
+		searchAreasByCoordinates: function(country_data, division_index, lat, lng, parents_ids) {
+			var list = [];
+			for (var i = 0; i < country_data[division_index].areas.length; ++i) {
+				var area = country_data[division_index].areas[i];
+				if (!area.north) continue;
+				if (parents_ids && !parents_ids.contains(area.area_parent_id)) continue;
+				if (window.top.geography.boxContainsPoint(area, lat, lng))
+					list.push(area);
+			}
+			return list;
+		},
+		
 		
 		/* Functions to get information about areas and divisions */
 		

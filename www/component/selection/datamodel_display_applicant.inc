@@ -16,6 +16,23 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 		// TODO assignment to exam center if assigned to IS...
 	}
 	
+	public function getDataDisplay($come_from, $sub_model) {
+		$list = parent::getDataDisplay($come_from, $sub_model);
+		// add the exam/extract results
+		$subjects = SQLQuery::create()->select("ExamSubject")->selectSubModel("SelectionCampaign", $sub_model)->execute();
+		foreach ($subjects as $subject) {
+			$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$subject["name"], "ApplicantExamSubject>applicant(exam_subject=".$subject["id"].").score");
+			$data_display->setTableDataDisplay($this);
+			array_push($list, $data_display);
+		}
+		$extracts = SQLQuery::create()->select("ExamSubjectExtract")->selectSubModel("SelectionCampaign", $sub_model)->execute();
+		foreach ($extracts as $extract) {
+			$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$extract["name"], "ApplicantExamExtract>applicant(exam_extract=".$extract["id"].").score");
+			$data_display->setTableDataDisplay($this);
+			array_push($list, $data_display);
+		}
+		return $list;
+	}
 }
 
 class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
@@ -40,6 +57,8 @@ $display->addDataDisplay(new datamodel\ChoiceDataDisplay("information_session", 
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", "Exam Center", false, false));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center_room", "name", "Exam Center Room", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Exam Session", "exam_session", "exam_session.event.start"));
+$display->addDataDisplay(new datamodel\ChoiceDataDisplay("interview_center", "name", "Interview Center", false, false));
+$display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Interview Session", "interview_session", "interview_session.event.start"));
 $display->addFollow("people");
 $display->addJoinFrom("people", array("types"), function($columns) {
 	$types = PNApplication::$instance->people->parseTypes($columns["types"]);

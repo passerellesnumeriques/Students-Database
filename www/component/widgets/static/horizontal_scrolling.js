@@ -43,17 +43,11 @@ function horizontal_scrolling(container, bgcolor, color, arrow_width) {
 	
 	this.arrow_left = document.createElement("DIV");
 	this.arrow_left.style.borderRight = arrow_width+"px solid "+color;
-	setOpacity(this.arrow_left, 0.8);
 	this.scroll_left.appendChild(this.arrow_left);
-	this.scroll_left.onmouseover = function() { setOpacity(t.arrow_left, 1); };
-	this.scroll_left.onmouseout = function() { setOpacity(t.arrow_left, 0.8); };
 
 	this.arrow_right = document.createElement("DIV");
 	this.arrow_right.style.borderLeft = arrow_width+"px solid "+color;
-	setOpacity(this.arrow_right, 0.8);
 	this.scroll_right.appendChild(this.arrow_right);
-	this.scroll_right.onmouseover = function() { setOpacity(t.arrow_right, 1); };
-	this.scroll_right.onmouseout = function() { setOpacity(t.arrow_right, 0.8); };
 	
 	this._scrolling_way = 0;
 	this._scrolling_interval = null;
@@ -112,9 +106,9 @@ function horizontal_scrolling(container, bgcolor, color, arrow_width) {
 				this.scroll_right.style.display = "";
 			
 			var height = this.element.clientHeight;
-			if (height > 100) {
-				var diff = height-100;
-				height = 100;
+			if (height > 50) {
+				var diff = height-50;
+				height = 50;
 				this.arrow_left.style.marginTop = Math.floor(diff/2)+"px";
 				this.arrow_left.style.marginBottom = Math.floor(diff/2)+"px";
 				this.arrow_right.style.marginTop = Math.floor(diff/2)+"px";

@@ -77,18 +77,18 @@ foreach ($campaigns as $c) {
 		Results
 	</a>
 <a class='application_left_menu_item'>
-	<img src='/static/selection/interview_white.png'/>
+	<img src='/static/selection/interview/interview_white.png'/>
 	Interviews
 </a>
-	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/main_page'>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/interview/criteria'>
 		<img src='/static/selection/exam/subject_white.png'/>
-		Questions and rules
+		Criteria and rules
 	</a>
-	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/center_main_page'>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/interview/centers'>
 		<img src='/static/selection/exam/center_white.png'/>
 		Centers
 	</a>
-	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/exam/results'>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/interview/results'>
 		<img src='/static/selection/results_white.png'/>
 		Results
 	</a>

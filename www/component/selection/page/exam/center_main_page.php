@@ -3,7 +3,7 @@ require_once("/../SelectionPage.inc");
 require_once("component/selection/SelectionJSON.inc");
 class page_exam_center_main_page extends SelectionPage {
 	
-	public function getRequiredRights() {return array("see_exam_center_detail");}
+	public function getRequiredRights() {return array("see_exam_center");}
 	
 	/**
 	 * Create two sections: one containing the exam center caracteristics and the other one the data related to applicant assignment

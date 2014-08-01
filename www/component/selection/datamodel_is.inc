@@ -11,8 +11,8 @@ $sm->addTable("InformationSession")
 	->addInteger("number_boys_real",10)
 	->addInteger("number_girls_real",10)
 	->addString("name")
-	->addWriteAccess("edit_information_session",true)
-	->addReadAccess("see_information_session_details",true)
+	->addReadAccess("see_information_session",true)
+	->addWriteAccess("manage_information_session",true)
 	->addInsertAccess("manage_information_session",true)
 	->addRemoveAccess("manage_information_session",true)
 	->onInsert(function($fields,$id,$sub_model_instance) {
@@ -33,8 +33,8 @@ $sm->addTable("InformationSessionPartner")
 	->addBoolean("host") //this attributes means that this partner is the one where the IS takes place
 	->addForeignKey("host_address","PostalAddress",false,false,true,true) //this attributes is set only when host attribute == true: can select a praticular address in case the organization has several ones
 	->setKey(array("information_session","organization"))
-	->addWriteAccess("edit_information_session",true)
-	->addReadAccess("see_information_session_details",true)
+	->addReadAccess("see_information_session",true)
+	->addWriteAccess("manage_information_session",true)
 	->addInsertAccess("manage_information_session",true)
 	->addRemoveAccess("manage_information_session",true);
 $model->internalGetTable("Organization")
@@ -49,8 +49,8 @@ $sm->addTable("InformationSessionContactPoint")
 	->addForeignKey("people","People",true,false,true,false)
 	//People + orga = foreignKey for ContactPoint table
 	->setKey(array("information_session","organization","people"))
-	->addWriteAccess("edit_information_session",true)
-	->addReadAccess("see_information_session_details",true)
+	->addReadAccess("see_information_session",true)
+	->addWriteAccess("manage_information_session",true)
 	->addInsertAccess("manage_information_session",true)
 	->addRemoveAccess("manage_information_session",true)
 	;

@@ -15,6 +15,8 @@ $sm->addTable("Applicant")
 	->addForeignKey("exam_center", "ExamCenter", false, false, true, true, false)//An applicant can be assigned to an exam center (maybe after importing applicant data
 	->addForeignKey("exam_center_room", "ExamCenterRoom", false, false, true, true, false) //An applicant can be assigned to an exam center room after(maybe after importing applicant data
 	->addForeignKey("exam_session", "ExamSession", false, false, true, true, false) //An applicant can be assigned to an exam session after being assigned to an exam center, or directly assigned to a session
+	->addForeignKey("interview_center", "InterviewCenter", false, false, true, true, false)//An applicant can be assigned to an exam center (maybe after importing applicant data
+	->addForeignKey("interview_session", "InterviewSession", false, false, true, true, false) //An applicant can be assigned to an exam session after being assigned to an exam center, or directly assigned to a session
 	->addDecimal("exam_total_score",10,2,0,null,true,false) // ( new June 04th 2014 ) sum of all subject
 	->addColumnWriteAccess("information_session", "manage_information_session", true)
 	->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities

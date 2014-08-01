@@ -2,9 +2,17 @@ function inputAutoresize(input, min_size) {
 	input._min_size = min_size;
 	input.mirror = document.createElement("SPAN");
 	var style = getComputedStyle(input);
-	if (style.fontSize) input.mirror.style.fontSize = style.fontSize;
-	if (style.fontWeight) input.mirror.style.fontWeight = style.fontWeight;
-	if (style.fontFamily) input.mirror.style.fontFamily = style.fontFamily;
+	if (input.style) {
+		if (input.style.fontSize)
+			input.mirror.style.fontSize = input.style.fontSize;
+		else if (style.fontSize) input.mirror.style.fontSize = style.fontSize;
+		if (input.style.fontWeight)
+			input.mirror.style.fontWeight = input.style.fontWeight;
+		else if (style.fontWeight) input.mirror.style.fontWeight = style.fontWeight;
+		if (input.style.fontFamily)
+			input.mirror.style.fontFamily = input.style.fontFamily;
+		else if (style.fontFamily) input.mirror.style.fontFamily = style.fontFamily;
+	}
 	input.mirror.style.position = 'absolute';
 	input.mirror.style.whiteSpace = 'pre';
 	input.mirror.style.left = '0px';

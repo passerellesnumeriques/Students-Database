@@ -1,7 +1,7 @@
 <?php 
 class service_exam_save_rule extends Service {
 	
-	public function getRequiredRights() { return array("manage_exam_subject"); } // TODO
+	public function getRequiredRights() { return array("manage_exam_rules"); }
 	
 	public function documentation() { echo "Save an eligibility rule for written exams"; }
 	public function inputDocumentation() {

@@ -1,46 +1,42 @@
 <?php 
 require_once("/../SelectionPage.inc");
-class page_exam_eligibility_rule extends SelectionPage {
+class page_interview_eligibility_rule extends SelectionPage {
 	
-	public function getRequiredRights() { return array("manage_exam_rules"); }
+	public function getRequiredRights() { return array("manage_interview_criteria"); }
 	public function executeSelectionPage(){
 		$id = isset($_GET["id"]) ? intval($_GET["id"]) : -1;
 		$parent = isset($_GET["parent"]) ? intval($_GET["parent"]) : null;
 		
 		// TODO lock rule
 		if ($id > 0) {
-			$rule = SQLQuery::create()->select("ExamEligibilityRule")->whereValue("ExamEligibilityRule","id",$id)->executeSingleRow();
+			$rule = SQLQuery::create()->select("InterviewEligibilityRule")->whereValue("InterviewEligibilityRule","id",$id)->executeSingleRow();
 			$parent = $rule["parent"];
-			$topics = SQLQuery::create()->select("ExamEligibilityRuleTopic")->whereValue("ExamEligibilityRuleTopic","rule",$id)->execute();
+			$rule_criteria = SQLQuery::create()->select("InterviewEligibilityRuleCriterion")->whereValue("InterviewEligibilityRuleCriterion","rule",$id)->execute();
 		} else {
 			$rule = array("id"=>-1, "parent"=>$parent, "expected"=>0);
-			$topics = array();
+			$rule_criteria = array();
 		}
 
-		$subjects = SQLQuery::create()->select("ExamSubject")->execute();
-		$extracts = SQLQuery::create()->select("ExamSubjectExtract")->execute();
-		$extracts_parts = SQLQuery::create()->select("ExamSubjectExtractParts")->join("ExamSubjectExtractParts","ExamSubjectPart",array("part"=>"id"))->execute();
+		$criteria = SQLQuery::create()->select("InterviewCriterion")->execute();
 
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_decimal.js");
 		?>
 <div style='background-color:white;padding:10px;'>
 	<table>
-		<tr id='row_header'><th>Subject</th><th>Coef.</th></tr>
+		<tr id='row_header'><th>Criterion</th><th>Coef.</th></tr>
 		<tr id='row_total'><td colspan=2 style='border-top:1px solid black'> = <span id='total'></span> minimum</td></tr>
 	</table>
 </div>
 <script type='text/javascript'>
 var rule_id = <?php echo $id;?>;
 var parent_id = <?php echo json_encode($parent);?>;
-var subjects = <?php echo json_encode($subjects);?>;
-var extracts = <?php echo json_encode($extracts);?>;
-var extracts_parts = <?php echo json_encode($extracts_parts);?>;
+var criteria = <?php echo json_encode($criteria);?>;
 
 var total_field = new field_decimal(<?php echo $id > 0 ? $rule["expected"] : 0; ?>,true,{min:0,can_be_null:false,integer_digits:4,decimal_digits:1});
 document.getElementById('total').appendChild(total_field.getHTMLElement());
 
-function ValueRow(subject, extract, coef) {
+function ValueRow(criterion, coef) {
 	var t=this;
 	this.tr = document.createElement("TR");
 	this.tr.obj = this;
@@ -54,16 +50,10 @@ function ValueRow(subject, extract, coef) {
 	o.value = ''; o.text = '';
 	this.select.add(o);
 	var selected = 0;
-	for (var i = 0; i < subjects.length; ++i) {
+	for (var i = 0; i < criteria.length; ++i) {
 		o = document.createElement("OPTION");
-		o.value = 'subject_'+subjects[i].id; o.text = subjects[i].name;
-		if (subject == subjects[i].id) selected = this.select.options.length;
-		this.select.add(o);
-	}
-	for (var i = 0; i < extracts.length; ++i) {
-		o = document.createElement("OPTION");
-		o.value = 'extract_'+extracts[i].id; o.text = extracts[i].name;
-		if (extract == extracts[i].id) selected = this.select.options.length;
+		o.value = criteria[i].id; o.text = criteria[i].name;
+		if (criterion == criteria[i].id) selected = this.select.options.length;
 		this.select.add(o);
 	}
 	this.select.selectedIndex = selected;
@@ -94,19 +84,8 @@ function ValueRow(subject, extract, coef) {
 		if (t.tr.nextSibling.id == 'row_total' && ev)
 			new ValueRow();
 		
-		if (sel.startsWith("subject_")) {
-			var id = sel.substring(8);
-			for (var i = 0; i < subjects.length; ++i)
-				if (subjects[i].id == id) { t.max_score.innerHTML = parseFloat(subjects[i].max_score).toFixed(2); break; }
-		} else {
-			var id = sel.substring(8);
-			var max = 0;
-			for (var i = 0; i < extracts_parts.length; ++i)
-				if (extracts_parts[i].extract == id) {
-					max += parseFloat(extracts_parts[i].max_score); 
-				}
-			t.max_score.innerHTML = max.toFixed(2);
-		}
+		for (var i = 0; i < criteria.length; ++i)
+			if (criteria[i].id == sel) { t.max_score.innerHTML = parseFloat(criteria[i].max_score).toFixed(2); break; }
 		layout.invalidate(t.tr);
 	};
 
@@ -122,8 +101,8 @@ function ValueRow(subject, extract, coef) {
 }
 
 <?php
-foreach ($topics as $topic)
-	echo "new ValueRow(".json_encode($topic["subject"]).",".json_encode($topic["extract"]).",".$topic["coefficient"].");"; 
+foreach ($rule_criteria as $c)
+	echo "new ValueRow(".json_encode($c["criterion"]).",".$c["coefficient"].");"; 
 ?>
 new ValueRow();
 
@@ -134,27 +113,22 @@ popup.onclose = function() {
 };
 popup.addSaveButton(function () {
 	if (total_field.hasError()) { alert("The total is invalid"); return; }
-	var topics = [];
+	var criteria = [];
 	var table = document.getElementById('row_header').parentNode;
 	for (var i = 1; i < table.childNodes.length-1; ++i) {
 		var row = table.childNodes[i].obj;
-		var topic = { subject: null, extract: null, coefficient: 1 };
-		var sel = row.select.value;
-		if (sel == "") continue;
-		if (sel.startsWith("subject_"))
-			topic.subject = sel.substring(8);
-		else
-			topic.extract = sel.substring(8);
+		var criterion = { criterion:row.select.value, coefficient: 1 };
+		if (criterion.criterion == "") continue;
 		if (row.field_coef.hasError()) { alert("Invalid coefficient"); return; }
-		topic.coefficient = row.field_coef.getCurrentData();
-		topics.push(topic);
+		criterion.coefficient = row.field_coef.getCurrentData();
+		criteria.push(criterion);
 	}
 	popup.freeze("Saving rule...");
-	service.json("selection","exam/save_rule",{
+	service.json("selection","interview/save_rule",{
 		id: rule_id,
 		parent: parent_id,
 		expected: total_field.getCurrentData(),
-		topics: topics
+		criteria: criteria
 	},function(res){
 		popup.unfreeze();
 		if (res) {

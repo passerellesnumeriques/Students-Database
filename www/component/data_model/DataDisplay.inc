@@ -993,7 +993,18 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		// take final column
 		$col = $current_table->internalGetColumnFor($final_column_name, $path->sub_model);
 		$key_alias = $q->generateFieldAlias();
-		$q->field($current_table_alias, $current_table->getPrimaryKey()->name, $key_alias);
+		if ($current_table->getPrimaryKey() <> null) {
+			$q->field($current_table_alias, $current_table->getPrimaryKey()->name, $key_alias);
+		} else {
+			$columns = $current_table->getKey();
+			$expr = "";
+			foreach ($columns as $c) {
+				if ($expr <> "") $expr .= ",'_',";
+				$expr .= "`".$current_table_alias."`.`".$c."`";
+			}
+			$expr = "CONCAT(".$expr.")";
+			$q->expression($expr, $key_alias);
+		}
 		$data_alias = $q->generateFieldAlias();
 		$q->field($current_table_alias, $col->name, $data_alias);
 

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jul 27, 2014 at 03:01 AM
+-- Generation Time: Aug 01, 2014 at 08:18 AM
 -- Server version: 5.5.23
 -- PHP Version: 5.4.24
 
@@ -17,7 +17,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8 */;
 
 --
--- Database: `students_dev`
+-- Database: `students_pnp`
 --
 
 --
@@ -29,7 +29,7 @@ INSERT INTO `countrydivision` (`id`, `country`, `parent`, `name`) VALUES
 (2, 1, 1, 'Municipality'),
 (3, 1, 2, 'Barangay'),
 (4, 92, NULL, 'Province'),
-(5, 92, 4, 'District/Municipality'),
+(5, 92, 4, 'District'),
 (6, 92, 5, 'Commune'),
 (7, 92, 6, 'Village');
 

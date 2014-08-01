@@ -40,17 +40,11 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	
 	this.arrow_up = document.createElement("DIV");
 	this.arrow_up.style.borderBottom = arrow_height+"px solid "+color;
-	setOpacity(this.arrow_up, 0.8);
 	this.scroll_up.appendChild(this.arrow_up);
-	this.scroll_up.onmouseover = function() { setOpacity(t.arrow_up, 1); };
-	this.scroll_up.onmouseout = function() { setOpacity(t.arrow_up, 0.8); };
 
 	this.arrow_down = document.createElement("DIV");
 	this.arrow_down.style.borderTop = arrow_height+"px solid "+color;
-	setOpacity(this.arrow_down, 0.8);
 	this.scroll_down.appendChild(this.arrow_down);
-	this.scroll_down.onmouseover = function() { setOpacity(t.arrow_down, 1); };
-	this.scroll_down.onmouseout = function() { setOpacity(t.arrow_down, 0.8); };
 	
 	this._scrolling_way = 0;
 	this._scrolling_interval = null;
@@ -96,6 +90,12 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 		t.stopScrolling();
 	};
 	
+	container.onmousewheel = function(ev) {
+		t._scrolling_way = Math.floor(ev.deltaY/5);
+		t.doScrolling();
+		t._scrolling_way = 0;
+	};
+	
 	this.layout = function() {
 		if (this.element.scrollHeight > this.element.clientHeight) {
 			// scrolling
@@ -109,9 +109,9 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 				this.scroll_down.style.display = "";
 			
 			var width = this.element.clientWidth;
-			if (width > 100) {
-				var diff = width-100;
-				width = 100;
+			if (width > 50) {
+				var diff = width-50;
+				width = 50;
 				this.arrow_up.style.marginLeft = Math.floor(diff/2)+"px";
 				this.arrow_up.style.marginRight = Math.floor(diff/2)+"px";
 				this.arrow_down.style.marginLeft = Math.floor(diff/2)+"px";

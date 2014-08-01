@@ -180,7 +180,7 @@ class page_exam_subjects extends SelectionPage {
 			require("popup_window.js",function() {
 				var pop = new popup_window(
 					"Create Exam Subject",
-					theme.build_icon("/static/selection/exam/exam_16.png",theme.icons_10.add,"right_bottom"),
+					theme.build_icon("/static/selection/exam/exam_subject_16.png",theme.icons_10.add,"right_bottom"),
 					""
 				);
 				pop.setContentFrame("/dynamic/selection/page/exam/copy_subject");

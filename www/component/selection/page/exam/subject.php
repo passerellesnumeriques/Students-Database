@@ -8,15 +8,7 @@ class page_exam_subject extends SelectionPage {
 		$campaign_id = isset($_GET["campaign_id"]) ? intval($_GET["campaign_id"]) : null;
 		$readonly = isset($_GET["readonly"]) ? $_GET["readonly"] : false;
 		
-		//Get rights from steps
-		$from_steps = PNApplication::$instance->selection->getRestrictedRightsFromStepsAndUserManagement("manage_exam", "manage_exam_subject", "manage_exam_subject", "manage_exam_subject");
-		if($from_steps[1])
-			PNApplication::warning($from_steps[2]);
-		$can_add = $from_steps[0]["add"];
-		$can_remove = $from_steps[0]["remove"];
-		$can_edit = $from_steps[0]["edit"];
-		// TODO replace the step thing
-		
+		$can_edit = PNApplication::$instance->selection->canEditExamSubjects();
 		if (!$can_edit) $readonly = true;
 	
 		$display_correct_answers = PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer");

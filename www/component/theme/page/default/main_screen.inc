@@ -172,7 +172,7 @@ $this->requireJavascript("horizontal_scrolling.js");
 				<img src='/static/application/logo.png'/>
 				<div id="application_title_text">Students<br/>Management</div>
 			</div>
-			<div id="application_left_menu_scroll" style="flex:1 1 auto;overflow:hidden;padding-right:5px;margin-right:-5px;">
+			<div id="application_left_menu_scroll" style="flex:1 1 auto;overflow:hidden;padding-right:5px;margin-right:-5px;z-index:2;">
 			</div>
 		</div>
 		<div style="flex:1 1 auto;display:flex;flex-direction:column;">

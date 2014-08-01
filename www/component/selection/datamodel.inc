@@ -18,16 +18,6 @@ $model->addTable("SelectionCampaign")
 		
 $sm = $model->addSubModel("SelectionCampaign");
 
-$sm->addTable("Steps")
-		->addString("name",255,1,false,true)
-		->addBoolean("value",false)
-		->setPrimary("name")
-		->setRoot()
-		->addReadAccess("can_access_selection_data",true)
-		->addWriteAccess("can_update_step",true)
-		->addRemoveAccess("manage_selection_campaign",true)
-		->addInsertAccess("manage_selection_campaign",true);
-
 $sm->addTable("SelectionCampaignConfig")
 		->addString("name",255,1,false,true)//the name must be unique (key...)
 		->addString("value",255,1,false,false)
@@ -40,6 +30,8 @@ $sm->addTable("SelectionCampaignConfig")
 
 include "datamodel_is.inc";
 include "datamodel_exam.inc";
+include "datamodel_interview.inc";
 include "datamodel_applicant.inc";		
 include "datamodel_applicant_exam.inc";
+include "datamodel_applicant_interview.inc";
 ?>

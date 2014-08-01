@@ -431,46 +431,29 @@ function popup_window(title,icon,content,hide_close_button) {
 			}
 		}
 	};
-	t._redo_layout = false;
 	t._layout_content = function() {
 		if (!t.popup) return;
-		if (t.content_container.style.overflow == "") {
-			t._redo_layout = true;
-			return;
-		}
-		t._redo_layout = false;
+		if (t.content_container.style.overflow == "") return;
 		t.content_container.style.minWidth = "";
 		t.content_container.style.minHeight = "";
 		t.content_container.style.overflow = "";
-		setTimeout(function() {
-			t._redo_layout = false;
-			var sb = false;
-			if (t.content_container.scrollHeight > t.content_container.clientHeight) {
-				// vertical scroll bar needed
-				if (t.content_container.scrollWidth > t.content_container.clientWidth) {
-					// horizontal scroll bar needed
-					t.content_container.style.overflow = "auto";
-					return;
-				}
-				if (t.content_container.scrollWidth+window.top.browser_scroll_bar_size < t.popup_container.clientWidth) {
-					t.content_container.style.minWidth = (t.content_container.scrollWidth+window.top.browser_scroll_bar_size)+"px";
-					sb = true;
-				}
-			} else if (t.content_container.scrollWidth > t.content_container.clientWidth) {
+		if (t.content_container.scrollHeight > t.content_container.clientHeight) {
+			// vertical scroll bar needed
+			if (t.content_container.scrollWidth > t.content_container.clientWidth) {
 				// horizontal scroll bar needed
-				if (t.content_container.scrollHeight+window.top.browser_scroll_bar_size < t.popup_container.clientHeight) {
-					t.content_container.style.minHeight = (t.content_container.scrollHeight+window.top.browser_scroll_bar_size)+"px";
-					sb = true;
-				}
-			}
-			if (sb) 
-				setTimeout(function() {
-					t.content_container.style.overflow = "auto";
-					if (t._redo_layout) t._layout_content();
-				},1);
-			else
 				t.content_container.style.overflow = "auto";
-		},1);
+				return;
+			}
+			if (t.content_container.scrollWidth+window.top.browser_scroll_bar_size < t.popup_container.clientWidth) {
+				t.content_container.style.minWidth = (t.content_container.scrollWidth+window.top.browser_scroll_bar_size)+"px";
+			}
+		} else if (t.content_container.scrollWidth > t.content_container.clientWidth) {
+			// horizontal scroll bar needed
+			if (t.content_container.scrollHeight+window.top.browser_scroll_bar_size < t.popup_container.clientHeight) {
+				t.content_container.style.minHeight = (t.content_container.scrollHeight+window.top.browser_scroll_bar_size)+"px";
+			}
+		}
+		t.content_container.style.overflow = "auto";
 	};
 	
 	t._buildPopup = function() {

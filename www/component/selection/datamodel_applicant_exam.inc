@@ -8,7 +8,7 @@ $sm->addTable("ApplicantExamSubject")
       ->addForeignKey("exam_subject_version","ExamSubjectVersion",true,false,true,false)
       ->setKey(array("applicant","exam_subject")) // also create index automatically
       ->addDecimal("score",10,2,null,null,false,false)
-       //TODO : Access Rights ?
+      ->addReadAccess("see_applicant_info", true)
       ;
 
 $sm->addTable("ApplicantExamSubjectPart")
@@ -16,7 +16,7 @@ $sm->addTable("ApplicantExamSubjectPart")
       ->addForeignKey("exam_subject_part","ExamSubjectPart",true,false,true)
       ->setKey(array("applicant","exam_subject_part"))
       ->addDecimal("score",10,2,null,null,false,false)
-      //TODO : Access Rights ?
+      ->addReadAccess("see_applicant_info", true)
       ;
 
 
@@ -26,7 +26,7 @@ $sm->addTable("ApplicantExamAnswer")
        ->setKey(array("applicant","exam_subject_question"))
       ->addString("answer") // the answer given by the applicant
       ->addDecimal("score",10,2,null,null,false,false)
-       //TODO : Access Rights ?
+      ->addReadAccess("see_applicant_info", true)
         ;
 
 $sm->addTable("ApplicantExamExtract")
@@ -34,7 +34,7 @@ $sm->addTable("ApplicantExamExtract")
       ->addForeignKey("exam_extract","ExamSubjectExtract",true,false,true,false)
       ->setKey(array("applicant","exam_extract"))
       ->addDecimal("score",10,2,null,null,false,false)
-      //TODO : Access Rights ?
+      ->addReadAccess("see_applicant_info", true)
       ;
 
 ?>
