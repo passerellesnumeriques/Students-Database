@@ -79,9 +79,9 @@ function ValueRow(subject, extract, coef) {
 	td.appendChild(this.field_coef.getHTMLElement());
 	this.tr.appendChild(td);
 
-	this.select.onchange = function() {
+	this.select.onchange = function(ev) {
 		var sel = this.value;
-		if (sel == "") {
+		if (sel == "" && ev) {
 			t.max_score.innerHTML = "";
 			if (t.tr.nextSibling.id != 'row_total') {
 				if (t.tr.previousSibling.id == 'row_header')
@@ -91,7 +91,7 @@ function ValueRow(subject, extract, coef) {
 			layout.invalidate(document.body);
 			return;
 		}
-		if (t.tr.nextSibling.id == 'row_total')
+		if (t.tr.nextSibling.id == 'row_total' && ev)
 			new ValueRow();
 		
 		if (sel.startsWith("subject_")) {
@@ -118,7 +118,7 @@ function ValueRow(subject, extract, coef) {
 	else
 		next.parentNode.childNodes[1].obj.plus.style.visibility = "hidden";
 	next.parentNode.insertBefore(this.tr, next);
-	layout.invalidate(t.tr);
+	this.select.onchange();
 }
 
 <?php

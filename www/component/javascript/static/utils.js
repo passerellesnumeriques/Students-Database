@@ -1415,6 +1415,45 @@ function matchScorePrepared(ref, ref_words, needle, needle_words) {
 	return score*90;
 }
 
+function almostMatching(s1, s2) {
+	s1 = s1.trim().latinize().toLowerCase();
+	s2 = s2.trim().latinize().toLowerCase();
+	if (s1.length <= 2 || s2.length <= 2) return false;
+	// try to remove one letter in each
+	for (var i = 0; i < s1.length; ++i) {
+		var ss1 = s1.substr(0,i)+s1.substr(i+1);
+		if (s2 == ss1) return true;
+	}
+	for (var i = 0; i < s2.length; ++i) {
+		var ss2 = s2.substr(0,i)+s2.substr(i+1);
+		if (s1 == ss2) return true;
+	}
+	// try to remove one letter in both
+	for (var i = 0; i < s1.length; ++i) {
+		var ss1 = s1.substr(0,i)+s1.substr(i+1);
+		for (var j = 0; j < s2.length; ++j) {
+			var ss2 = s2.substr(0,j)+s2.substr(j+1);
+			if (ss1 == ss2) return true;
+		}
+	}
+	var i = s1.indexOf('(');
+	var par = false;
+	if (i > 2) {
+		s1 = s1.substr(0,i).trim();
+		par = true;
+	} 
+	i = s2.indexOf('(');
+	if (i > 2) {
+		s2 = s2.substr(0,i).trim();
+		par = true;
+	}
+	if (par) {
+		if (s1.isSame(s2)) return true;
+		if (almostMatching(s1, s2)) return true;
+	}
+	return false;
+}
+
 /**
  * Add an "s" or not to the given word, in case the given figure is greater than 1
  * @param {String} word the word to set

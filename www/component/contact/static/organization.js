@@ -45,6 +45,8 @@ function organization(container, org, existing_types, can_edit) {
 				t.title_container.appendChild(t.title.getHTMLElement());
 				t.title.onchange.add_listener(function() {
 					org.name = t.title.getCurrentData();
+					if (t.google_search_input)
+						t.google_search_input.value = org.name;
 					t.onchange.fire();
 				});
 			});
@@ -325,7 +327,14 @@ function organization(container, org, existing_types, can_edit) {
 		// google
 		var google_title = document.createElement("DIV");
 		container.appendChild(google_title);
-		google_title.innerHTML = "<img src='/static/google/google.png' style='vertical-align:middle'/> Search and Import from Google";
+		google_title.innerHTML = "<img src='/static/google/google.png' style='vertical-align:middle'/> Search and Import from Google: ";
+		t.google_search_input = document.createElement("INPUT");
+		t.google_search_input.type = "text";
+		t.google_search_input.value = org.name;
+		require("input_utils.js", function() {
+			inputAutoresize(t.google_search_input, 15);
+		});
+		google_title.appendChild(t.google_search_input);
 		google_title.style.borderTop = "1px solid #808080";
 		google_title.style.borderBottom = "1px solid #808080";
 		google_title.style.padding = "3px";
@@ -341,6 +350,10 @@ function organization(container, org, existing_types, can_edit) {
 				b.disabled = "";
 			});
 		};
+		google_title.appendChild(document.createElement("BR"));
+		var note = document.createElement("I");
+		note.innerHTML = "Tip: if you don't find in Google just with the name of the organization, try to add the location (i.e. xxx, Paris)";
+		google_title.appendChild(note);
 		t._google_results_container = document.createElement("DIV");
 		container.appendChild(t._google_results_container);
 		t._google_results_container.style.backgroundColor = "white";
@@ -452,7 +465,7 @@ function organization(container, org, existing_types, can_edit) {
 		t._google_results_container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
 		layout.invalidate(container);
 		require("google_places.js", function() {
-			getGooglePlaces(org.name, function(results,error) {
+			getGooglePlaces(t.google_search_input.value, function(results,error) {
 				if (error != null) {
 					t._google_results_container.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
 					layout.invalidate(container);
@@ -482,101 +495,13 @@ function organization(container, org, existing_types, can_edit) {
 							this.marker = null;
 						};
 						link.onclick = function() {
+							window.top.geography.getCountry(window.top.default_country_id, function(){});
+							window.top.geography.getCountryData(window.top.default_country_id, function(){});
+							require("contact_objects.js");
 							var locker = lock_screen(null, "Importing data from Google...");
 							getGooglePlaceDetails(this._google_ref, function(place,error) {
 								if (place == null) { unlock_screen(locker); return; }
 								require("contact_objects.js", function() {
-									var done = 0;
-									var check_done = function() {
-										if (++done == 2)
-											unlock_screen(locker);
-									};
-									// add address
-									var a = new PostalAddress(-1,window.top.default_country_id, null, null, null, null, null, null, "Office");
-									var geo = [null,null,null,null,null];
-									var country = null;
-									for (var i = 0; i < place.address_components.length; ++i) {
-										var ac = place.address_components[i];
-										if (ac.types.contains("street_number"))
-											a.street_number = ac.long_name;
-										if (ac.types.contains("route"))
-											a.street = ac.long_name;
-										if (ac.types.contains("country"))
-											country = ac.short_name;
-										if (ac.types.contains("administrative_area_level_1"))
-											geo[0] = ac.long_name;
-										if (ac.types.contains("administrative_area_level_2"))
-											geo[1] = ac.long_name;
-										if (ac.types.contains("administrative_area_level_3"))
-											geo[2] = ac.long_name;
-										if (ac.types.contains("administrative_area_level_4"))
-											geo[3] = ac.long_name;
-										if (ac.types.contains("locality"))
-											geo[4] = ac.long_name;
-									}
-									if (place.geometry && place.geometry.location) {
-										a.lat = place.geometry.location.lat();
-										a.lng = place.geometry.location.lng();
-									}
-									var add_address = function() {
-										// TODO first check it does not exist yet
-										if (a.geographic_area.id != null || a.street_number != null || a.street != null)
-											t._addresses_widget.addAddress(a,false);
-										check_done();
-									};
-									var populate_area = function() {
-										a.geographic_area.country_id = a.country_id;
-										var areas = [];
-										for (var i = 0; i < geo.length; ++i)
-											if (geo[i] != null) areas.push(geo[i]);
-										if (areas.length == 0)
-											areas = place.formatted_address.split(",");
-										if (areas.length == 0)
-											add_address();
-										else {
-											areas.reverse();
-											window.top.geography.getCountryName(a.country_id, function(country_name) {
-												if (areas[0].trim().toLowerCase() == country_name.toLowerCase())
-													areas.splice(0,1);
-												if (areas.length == 0)
-													add_address();
-												else {
-													window.top.geography.getCountryData(a.country_id, function(country_data) {
-														var remaining = [];
-														var area = window.top.geography.searchAreaByNames(country_data, areas, remaining);
-														if (area == null) remaining = areas;
-														if (remaining.length > 0) {
-															remaining.reverse();
-															a.additional = "";
-															for (var i = 0; i < remaining.length; ++i) {
-																if (i > 0) a.additional += ", ";
-																a.additional += remaining[i];
-															}
-														}
-														if (area == null) {
-															a.geographic_area.id = null;
-															add_address();
-														} else {
-															a.geographic_area = window.top.geography.getGeographicAreaText(country_data, area);
-															add_address();
-														}
-													});
-												}
-											});
-										}
-									};
-									var populate_country = function() {
-										if (country == null) {
-											a.country_id = window.top.default_country_id;
-											populate_area();
-										} else
-											window.top.geography.getCountryIdFromCode(country, function(id) {
-												a.country_id = id;
-												populate_area();
-											});
-									};
-									populate_country();
-
 									// add phone
 									if (place.formatted_phone_number && place.formatted_phone_number.length > 0) {
 										var onlyDigits = function(s) {
@@ -600,9 +525,185 @@ function organization(container, org, existing_types, can_edit) {
 											}
 										}
 									}
-									check_done();
-									
-									layout.invalidate(container);
+
+									// add address
+									window.top.geography.getCountry(window.top.default_country_id, function(country){
+										window.top.geography.getCountryData(window.top.default_country_id, function(country_data){
+											var the_end = function() {
+												unlock_screen(locker);
+												layout.invalidate(container);
+											};
+											
+											var a = new PostalAddress(-1,window.top.default_country_id, null, null, null, null, null, null, "Office");
+											// google information are not often very accurate, except geographic coordinates
+											// we will do it in several step
+											if (!place.geometry || !place.geometry.location) { the_end(); return; }
+											a.lat = place.geometry.location.lat();
+											a.lng = place.geometry.location.lng();
+											// 1- get the components from the formatted address
+											var components = place.formatted_address.split(",");
+											for (var i = 0; i < components.length; ++i)
+												components[i] = components[i].trim();
+											if (components.length > 0) {
+												// remove the country name
+												if (components[components.length-1].isSame(country.country_name))
+													components.splice(components.length-1,1);
+											}
+											// go division by division
+											var areas = [country];
+											var parents_ids = null;
+											var components_found = [];
+											var last_matching = null;
+											var last_matching_division = -1;
+											for (var division_index = 0; division_index < country_data.length; division_index++) {
+												// get the sub areas containing the position
+												sub_areas = window.top.geography.searchAreasByCoordinates(country_data, division_index, a.lat, a.lng, parents_ids);
+												// check if we have those sub areas in the components
+												var matching = [];
+												for (var i = components.length-1; i >= 0; --i) {
+													var match = [];
+													for (var j = 0; j < sub_areas.length; ++j)
+														if (components[i].isSame(sub_areas[j].area_name))
+															match.push(sub_areas[j]);
+													if (match.length == 0)
+														for (var j = 0; j < sub_areas.length; ++j)
+															if (almostMatching(components[i], sub_areas[j].area_name))
+																match.push(sub_areas[j]);
+													if (match.length > 0) {
+														// ok, found it, remove the components and reduce the scope of the areas
+														last_matching = [].concat(match);
+														last_matching_division = division_index;
+														while (components.length > i) {
+															components_found.push(components[components.length-1]);
+															components.splice(components.length-1,1);
+														}
+														matching = match;
+														break;
+													}
+												}
+												if (matching.length > 0) {
+													// scope reduces to matching components
+													areas = matching;
+													parents_ids = [];
+													for (var i = 0; i < areas.length; ++i) parents_ids.push(areas[i].area_id);
+												} else {
+													// scope is all the areas matching the coordinates so far
+													var list = [];
+													if (parents_ids === null)
+														for (var i = 0; i < country_data[0].areas.length; ++i) list.push(country_data[0].areas[i]);
+													else
+														for (var i = 0; i < country_data[division_index].areas.length; ++i) if (parents_ids.contains(country_data[division_index].areas[i].area_parent_id)) list.push(country_data[division_index].areas[i]);
+													areas = list;
+													parents_ids = [];
+													for (var i = 0; i < areas.length; ++i) parents_ids.push(areas[i].area_id);
+												}
+											}
+											// we have a final list of areas matching the geographic coordinates, together with the components names
+											if (areas.length == 0) {
+												// nothing matching...
+												if (last_matching != null && last_matching.length == 1)
+													a.geographic_area = window.top.geography.getGeographicAreaText(country_data, last_matching[0]);
+											} else if (areas.length == 1) {
+												// we have a single area matching, this is the one !
+												a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
+											} else {
+												// try to finalize only with the components' names
+												var division_index = country_data.length-2;
+												while (areas.length > 1) {
+													for (var i = components.length-1; i >= 0; --i) {
+														var match = [];
+														for (var j = 0; j < areas.length; ++j)
+															if (components[i].isSame(areas[j].area_name))
+																match.push(areas[j]);
+														if (match.length == 0)
+															for (var j = 0; j < areas.length; ++j)
+																if (almostMatching(components[i], areas[j].area_name))
+																	match.push(areas[j]);
+														if (match.length > 0) {
+															// ok, found it, remove the components and reduce the scope of the areas
+															while (components.length > i) {
+																components_found.push(components[components.length-1]);
+																components.splice(components.length-1,1);
+															}
+															areas = match;
+															break;
+														}
+													}
+													if (areas.length == 1) {
+														a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
+														break;
+													}
+													if (division_index < 0) break;
+													var parents = [];
+													for (var i = 0; i < areas.length; ++i) {
+														var p = window.top.geography.getParentArea(country_data, areas[i]);
+														var found = false;
+														for (var j = 0; j < parents.length; ++j) if (parents[j] == p) { found = true; break; }
+														if (!found) parents.push(p);
+													}
+													areas = parents;
+													if (areas.length == 1) {
+														a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
+														break;
+													}
+												}
+												if (areas.length == 1) {
+													a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
+												}
+											}
+											var areas_names = [];
+											if (a.geographic_area.id > 0) {
+												areas_names = a.geographic_area.text.split(",");
+												for (var i = 0; i < areas_names.length; ++i)
+													areas_names[i] = areas_names[i].trim();
+											}
+											// check in the address components given by google
+											var clean_google_info = function(s) {
+												var list = s.split(",");
+												for (var i = 0; i < list.length; ++i) list[i] = list[i].trim();
+												for (var i = 0; i < list.length; ++i) {
+													var found = false;
+													for (var j = 0; j < areas_names.length; ++j)
+														if (areas_names[j].isSame(list[i])) { found = true; break; }
+													if (!found)
+														for (var j = 0; j < components_found.length; ++j)
+															if (components_found[j].isSame(list[i])) { found = true; break; }
+													if (found) {
+														while (list.length > i) list.splice(list.length-1,1);
+														break;
+													}
+												}
+												if (list.length == 0) return "";
+												return list.join(", ");
+											};
+											for (var i = 0; i < place.address_components.length; ++i) {
+												var ac = place.address_components[i];
+												if (ac.types.contains("street_number")) {
+													var s = clean_google_info(ac.long_name);
+													if (s != "")
+														a.street_number = s;
+												}
+												if (ac.types.contains("route")) {
+													var s = clean_google_info(ac.long_name);
+													if (s != "")
+														a.street = s;
+												}
+											}
+											// put the remaining components in additional info
+											for (var i = 0; i < components.length; ++i)
+												if ((a.street_number && components[i].isSame(a.street_number)) || (a.street && components[i].isSame(a.street))) {
+													components.splice(i,1);
+													i--;
+												}
+											if (components.length > 0)
+												a.additional = components.join(", ");
+											// finally, add the address
+											// TODO first check it does not exist yet
+											if (a.geographic_area.id > 0 || a.street_number != null || a.street != null)
+												t._addresses_widget.addAddress(a,false);
+											the_end();
+										});
+									});
 								});
 							});
 							return false;

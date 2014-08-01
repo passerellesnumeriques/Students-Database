@@ -77,7 +77,7 @@ foreach ($campaigns as $c) {
 		Results
 	</a>
 <a class='application_left_menu_item'>
-	<img src='/static/selection/interview_white.png'/>
+	<img src='/static/selection/interview/interview_white.png'/>
 	Interviews
 </a>
 	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/interview/criteria'>

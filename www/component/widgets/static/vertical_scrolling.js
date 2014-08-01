@@ -90,6 +90,12 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 		t.stopScrolling();
 	};
 	
+	container.onmousewheel = function(ev) {
+		t._scrolling_way = Math.floor(ev.deltaY/5);
+		t.doScrolling();
+		t._scrolling_way = 0;
+	};
+	
 	this.layout = function() {
 		if (this.element.scrollHeight > this.element.clientHeight) {
 			// scrolling
