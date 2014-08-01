@@ -197,7 +197,10 @@ function results_grid(subject,applicants,grid_height) {
 	       };
             
            /* create the new result Column */
-           var col_result=new GridColumn('part'+part.index+'q'+question.index,'Question '+question.index,null,'center','field_decimal',false,null,null,field_args,'#')
+           var col_result=new GridColumn('p'+part.id+'q'+question.id,'Question '+question.index,null,'center','field_decimal',false,null,null,field_args,'#')
+           ////DEBUG
+           //console.log('creating col results id:'+'p'+part.id+'q'+question.id);
+           
            sub_cols.push(col_result);
 
         }
@@ -206,10 +209,6 @@ function results_grid(subject,applicants,grid_height) {
         t.grid_res.addColumnContainer(new GridColumnContainer(part.name,sub_cols,'#'));
      }
      
-     //DEBUG (test)
-     //var field_dbg=t.grid_res.getCellFieldById(1,'part0q2');
-     //field_dbg.setData(7.1); 
-
    }
    
    
@@ -271,12 +270,15 @@ function results_grid(subject,applicants,grid_height) {
        
        /* Creating results columns */
         t._createResultsColumns();
+        
+        /* Filling with results */
+        t._fillResultsRows();
 
        });
    }
    
 
-/* getting applicants answer */
+/* Get applicants answer */
 t._getAnswers=function(){
          
           var applicants_res=[];
@@ -339,6 +341,35 @@ t._getAnswers=function(){
          t.applicants_exam={exam_subject:t.subject.id,applicants_answers:applicants_res};
                       
       }
+
+/* Fill rows with applicants results scores */
+t._fillResultsRows=function()
+   {
+      /* for each row (one applicant) */
+      for (var row_id=0;row_id<t.applicants_exam.applicants_answers.length;++row_id) {
+         var applicant_answers=t.applicants_exam.applicants_answers[row_id];
+         
+         // for each part
+         for(var i=0;i<applicant_answers.parts.length;++i)
+         {
+            var part=applicant_answers.parts[i];
+            // for each answer
+            for (var j=0;j<part.answers.length;++j)
+            {
+               var answer=part.answers[j];
+               //DEBUG
+		//console.log('filling col results id:'+'p'+part.exam_subject_part+'q'+answer.exam_subject_question);
+               var cell_field=t.grid_res.getCellFieldById(row_id,'p'+part.exam_subject_part+'q'+answer.exam_subject_question);
+               //DEBUG
+		//console.log('cell field:'+cell_field);
+                // DEBUG : don't know why no cell_field has been gotten TODO
+               cell_field.setData(answer.score);
+          
+            }   
+         }
+      
+      }
+   }
    
    /* Initialization */
    t._init();
