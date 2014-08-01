@@ -502,8 +502,9 @@ namespace datamodel {
 			if (isset($this->write_column_access_rights[$column_name])) {
 				foreach ($this->write_column_access_rights[$column_name] as $r)
 					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+				return false;
 			}
-			return false;
+			return true;
 		}
 		public function canModifyAColumn() {
 			foreach ($this->write_column_access_rights as $column_name=>$rights) {

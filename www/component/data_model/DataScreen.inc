@@ -67,11 +67,12 @@ namespace datamodel {
 					$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
 					$q->whereKey($path->table->getName(), $key_value);
 					$path->table->prepareSelectToDetermineWriteAccess($q, $table_alias);
-					$readonly = $q->limit(0,1)->executeSingleRow() == null;
+					if ($q->limit(0,1)->executeSingleRow() == null)
+						$readonly = true;
 				}
 			}
 			foreach ($list as $data) {
-				$can_edit = $is_new ? $data->isEditableForNewData() : $data->isEditable() && !$readonly;
+				$can_edit = $is_new ? $data->isEditableForNewData() : ($data->isEditable() && !$readonly);
 				if ($is_new && !$can_edit) continue;
 				foreach ($data->getHandledColumns() as $c) {
 					if (isset($fixed_columns[$c]))

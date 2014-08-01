@@ -29,6 +29,9 @@ class service_test_data extends Service {
 			$this->importStorage($db_system, "PNP_Batch2012", $domain);
 			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2013.sql");
 			$this->importStorage($db_system, "PNP_Batch2013", $domain);
+			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2014.sql");
+			$this->importStorage($db_system, "PNP_Batch2014", $domain);
+			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2015.sql");
 			// generate events accordingly to data added
 			PNApplication::$instance->user_management->login($input["domain"], "admin", $input["password"]);
 			require_once("component/data_model/Model.inc");

@@ -308,7 +308,7 @@ class DataBaseLock {
 			if ($nb_rows == count($row_keys)) {
 				$res = $db->execute("SELECT LAST_INSERT_ID()");
 				$row = $db->nextRow($res);
-				$id = $row[0];
+				$id = $row["LAST_INSERT_ID()"];
 				for ($i = 0; $i < $nb_rows; $i++)
 					array_push($ids, $id+$i);
 			}

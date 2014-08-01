@@ -5,7 +5,7 @@ INSERT INTO `people` (`id`, `first_name`, `middle_name`, `last_name`, `khmer_fir
 (1007, 'Luisa', NULL, 'Canayan', NULL, NULL, 'F', NULL, '/student/', 29),
 (1008, 'Jefferson', NULL, 'Cogay', NULL, NULL, 'M', NULL, '/student/', 30),
 (1009, 'Fie Angela', NULL, 'Concepcion', NULL, NULL, 'F', NULL, '/student/', 31),
-(1010, 'Jaizzly Jane', NULL, 'Dela Pena', NULL, NULL, 'F', NULL, '/student/', 32),
+(1010, 'Jaizzly Jane', NULL, 'Dela Peña', NULL, NULL, 'F', NULL, '/student/', 32),
 (1011, 'April Jane', NULL, 'Delabrino', NULL, NULL, 'F', NULL, '/student/', 33),
 (1012, 'Anna Marie', NULL, 'Ebonalo', NULL, NULL, 'F', NULL, '/student/', 34),
 (1013, 'John Rey', NULL, 'Flores', NULL, NULL, 'M', NULL, '/student/', 35),
