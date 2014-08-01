@@ -67,4 +67,11 @@ $model->internalGetTable("CalendarEvent")
 	->addRemoveAccessFromForeignTable("InterviewSession")
 	;
 
+$sm->addTable("InterviewCriterion")
+	->addPrimaryKey("id")
+	->addString("name",100,1,false,true)
+	->addDecimal("max_score",3,2,0,null,false,false)
+	->addReadAccess("see_interview_criteria", true)
+	;
+
 ?>

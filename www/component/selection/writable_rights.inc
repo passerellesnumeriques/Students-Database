@@ -20,6 +20,7 @@ return array(
 		new BooleanRight("manage_applicant","Manage applicant (personnal info, center assignment, results...)",array(true=>array("can_access_selection_data"=>true))),
 		new BooleanRight("edit_application_form_fields","Edit the list of information we can specify for each applicant",array(true=>array("edit_applicants"=>true,"manage_applicants"=>true))),
 		new BooleanRight("manage_interview_center","Manage interview centers",array(true=>array("see_interview_center"=>true))),
+		new BooleanRight("manage_interview_criteria","Manage Interview Criteria and Rules",array(true=>array("see_interview_criteria"=>true))),
 	)),
 );
 

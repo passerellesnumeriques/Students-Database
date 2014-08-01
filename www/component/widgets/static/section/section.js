@@ -130,6 +130,19 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		this.footer.className = "footer";
 		layout.invalidate(this.element);
 	};
+	this.addButton = function(icon, text, css, onclick) {
+		var button = document.createElement("BUTTON");
+		button.className = css;
+		if (icon) {
+			var img = document.createElement("IMG");
+			img.src = icon;
+			button.appendChild(img);
+		}
+		button.appendChild(document.createTextNode(text));
+		button.onclick = onclick;
+		this.addToolBottom(button);
+		return button;
+	};
 	/** Remove all elements on the footer, and hide the footer */
 	this.resetToolBottom = function() {
 		this.footer.className = "footer_empty";

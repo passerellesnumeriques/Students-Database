@@ -422,6 +422,12 @@ class selection extends Component {
 		return true;
 	}
 		
+	public function canEditInterviewCriteria() {
+		if (!PNApplication::$instance->user_management->has_right("manage_interview_criteria")) return false;
+		// TODO check if results have been already entered
+		return true;
+	}
+		
 	/**
 	 * Remove an exam subject from database and all the related data
 	 * This method checks the rights before performing the remove

@@ -7,6 +7,7 @@ return array(
 		new BooleanRight("see_applicant_info","See Applicants Informations",array(true=>array("can_access_selection_data"=>true))),
 		new BooleanRight("see_exam_center_detail", "See Exam Center Data",array(true=>array("can_access_selection_data"=>true))),
 		new BooleanRight("see_interview_center", "See Interview Centers",array(true=>array("can_access_selection_data"=>true))),
+		new BooleanRight("see_interview_criteria", "See Interview Criteria and Rules",array(true=>array("can_access_selection_data"=>true))),
 	)),
 	
 );
