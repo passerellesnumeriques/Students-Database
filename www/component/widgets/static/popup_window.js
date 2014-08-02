@@ -623,6 +623,26 @@ function popup_window(title,icon,content,hide_close_button) {
 			onready(span, pb);
 		});
 	};
+	t.freeze_progress_sub = function(message, total, onready) {
+		theme.css("progress_bar.css"); // to make it available, even if we are starting a lot of AJAX requests
+		require("progress_bar.js", function() {
+			var div = document.createElement("DIV");
+			div.style.textAlign = "center";
+			var span = document.createElement("SPAN");
+			span.style.marginBottom = "2px";
+			span.innerHTML = message;
+			div.appendChild(span);
+			div.appendChild(document.createElement("BR"));
+			var pb = new progress_bar(200, 17);
+			pb.element.style.display = "inline-block";
+			div.appendChild(pb.element);
+			pb.setTotal(total);
+			var sub = document.createElement("DIV");
+			div.appendChild(sub);
+			t.freeze(div);
+			onready(span, pb, sub);
+		});
+	};
 	t.set_freeze_content = function(content) {
 		if (!t.freezer) return;
 		set_lock_screen_content(t.freezer, content);

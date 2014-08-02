@@ -562,8 +562,11 @@ class page_curriculum extends Page {
 		}
 
 		function import_subjects(target_period) {
-			// TODO
-			alert("Not yet implemented");
+			popup_frame(theme.icons_16._import, "Import Subjects", "/dynamic/curriculum/page/import_subjects?period="+target_period+"&onimport=reload", null, null, null, function(frame,popup) {
+				frame.reload = function() {
+					window.location.reload();
+				};
+			});
 		}
 
 		<?php } ?>// if editing

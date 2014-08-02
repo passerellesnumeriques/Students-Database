@@ -504,6 +504,21 @@ class SQLQuery {
 		array_push($this->where, $w);
 		return $this;
 	}
+	/** WHERE `table_name`.`field_name`!='value'
+	 * @param string $table_name name of table
+	 * @param string $field_name name of column
+	 * @param string $value value
+	 * @return SQLQuery this
+	 */
+	public function &whereNotValue($table_name, $field_name, $value) {
+		$w = "`".$this->resolveWhereTable($table_name)."`.`".$field_name."`";
+		if ($value === false) $value = 0;
+		else if ($value === true) $value = 1;
+		if ($value === null) $w .= " IS NOT NULL";
+		else $w .= "!='".SQLQuery::escape($value)."'";
+		array_push($this->where, $w);
+		return $this;
+	}
 	
 	/** WHERE `table_name`.`field_name` IS NULL
 	 * @param string $table_name name of table
