@@ -223,7 +223,8 @@ abstract class Component {
 		} else
 			$service->execute($this, $input);
 	}
-	
+
+#DEV
 	/**
 	 * Return the list of components this component depends on.
 	 * Read it from the file <i>dependencies</i> if it exists.
@@ -243,11 +244,13 @@ abstract class Component {
 		fclose($f);
 		return $deps;
 	}
+#END
 	
 	/** Return the list of read rights defined by this component (from readable_rights.inc)
 	 * @return AccessRightCategory[] list of categories, containing the list of rights
 	 */
 	public final function getReadableRights() {
+		// TODO deployed version
 		if (!file_exists("component/".$this->name."/readable_rights.inc")) return array();
 		return include("component/".$this->name."/readable_rights.inc");
 	}
@@ -255,6 +258,7 @@ abstract class Component {
 	 * @return AccessRightCategory[] list of categories, containing the list of rights
 	 */
 	public final function getWritableRights() {
+		// TODO deployed version
 		if (!file_exists("component/".$this->name."/writable_rights.inc")) return array();
 		return include("component/".$this->name."/writable_rights.inc");
 	}

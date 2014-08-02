@@ -83,9 +83,11 @@ class PNApplication {
 		if ($exception == null) {
 			$e = $message;
 			$message = "";
-		} else
+		} else {
 			$e = $exception;
-		$message .= ": ".str_replace("\n", "<br/>", htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8"));
+			$message .= ": ";
+		}
+		$message .= str_replace("\n", "<br/>", htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8"));
 		$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';if (layout) layout.invalidate(e); else if (window.parent && window.parent.layout) window.parent.layout.invalidate(window.frameElement);return false;\">details</a>";
 		$message .= "<ul style='margin:0px;visibility:hidden;position:absolute;top:-10000px' id='ex_".count(PNApplication::$errors)."'>";
 		do {
@@ -204,8 +206,13 @@ class PNApplication {
 	 */
 	public function init() {
 		global $local_domain;
+#DEV
 		$this->local_domain = isset($_GET["testing"]) ? "Test" : $local_domain;
+#PROD
+		$this->local_domain = $local_domain;
+#END
 		$this->current_domain = $this->local_domain;
+#DEV
 		$components_names = array();
 		$dir = @opendir("component");
 		while (($filename = readdir($dir)) <> null) {
@@ -216,6 +223,11 @@ class PNApplication {
 		foreach ($components_names as $name) $this->createComponent($name);
 		$done = array();
 		foreach ($this->components as $c) $this->initComponent($c, $done);
+#PROD
+# ##CREATE_COMPONENTS##
+# ##COMPONENTS_ORDER##
+#foreach ($components as $c) $c->init();
+#END
 		$this->initRequest();
 	}
 	/**
@@ -223,9 +235,15 @@ class PNApplication {
 	 */
 	public function initRequest() {
 		date_default_timezone_set(timezone_name_from_abbr("",$this->timezone_offset*60,1));
+#DEV
 		$done = array();
 		foreach ($this->components as $c) $this->initRequestForComponent($c, $done);
+#PROD
+# ##COMPONENTS_ORDER##
+#foreach ($component as $c) $c->initRequest();
+#END
 	}
+#DEV
 	/** Instantiate the given component
 	 * @param string $name name of the component
 	 */
@@ -281,7 +299,8 @@ class PNApplication {
 			PNApplication::internalSortComponentsByDependencies(PNApplication::$instance->components[$dep], $list);
 		array_push($list, $c);
 	}
-
+#END
+	
 	/** Get the list of domains with their configuration: from file conf/domains
 	 * @return array associative array of domain=&gt;domain_descriptor
 	 */

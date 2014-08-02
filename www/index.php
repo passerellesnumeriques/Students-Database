@@ -4,9 +4,11 @@ if (!file_exists(dirname(__FILE__)."/install_config.inc")) {
 	die();
 }
 include("install_config.inc");
+#DEV
 function component_auto_loader($classname) {
 	require_once("component/".$classname."/".$classname.".inc");
 }
+#END
 
 if (!isset($_SERVER["PATH_INFO"]) || strlen($_SERVER["PATH_INFO"]) == 0) $_SERVER["PATH_INFO"] = "/";
 $path = substr($_SERVER["PATH_INFO"],1);
@@ -16,7 +18,11 @@ $path = substr($_SERVER["PATH_INFO"],1);
 if (strpos($path, "..") !== FALSE) die("Access denied");
 
 // check last time the user came, it was the same version, in order to refresh its cache if the version changed
+#DEV
 $version = file_get_contents(dirname(__FILE__)."/version");
+#PROD
+#$version = "##VERSION##"; 
+#END
 if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
 	if (strpos($path, "/page/") || $path == "") {
 		setcookie("pnversion",$version,time()+365*24*60*60,"/");
@@ -116,14 +122,16 @@ case "dynamic":
 	if ($i === FALSE) invalid("Invalid request: no dynamic type");
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
-	
+#DEV	
 	spl_autoload_register('component_auto_loader');
+#END
 	require_once("component/PNApplication.inc");
 	session_set_cookie_params(24*60*60, "/dynamic/");
 	session_start();
 	require_once("SQLQuery.inc");
+#DEV
 	spl_autoload_unregister('component_auto_loader');
-
+#END
 	if (!isset($_SESSION["app"])) {
 		PNApplication::$instance = new PNApplication();
 		PNApplication::$instance->init();

@@ -18,21 +18,43 @@ class page_app_admin extends Page {
 <?php 
 $method = ini_get("session.serialize_handler");
 foreach ($sessions as $session) {
+	$id = substr($session,5);
 	echo "<tr>";
 	echo "<td>".$session."</td>";
 	$info = stat($sessions_path."/".$session);
 	echo "<td>".date("Y-m-d h:i A", $info["ctime"])."</td>";
 	echo "<td>".date("Y-m-d h:i A", $info["mtime"])."</td>";
-	$data = self::decode_session(file_get_contents($sessions_path."/".$session));
 	echo "<td>";
-	if ($data <> null) {
-		echo @$data["app"]->user_management->username;
+	if ($id == session_id()) {
+		echo "<b>You</b>";
+	} else {
+		$content = file_get_contents($sessions_path."/".$session);
+		if (strpos($content, "\"PNApplication\"") === false)
+			echo "<i>Another application</i>";
+		else {
+			$data = self::decode_session($content);
+			if ($data <> null) {
+				echo @$data["app"]->user_management->username;
+			}
+		}
 	}
 	echo "</td>";
 	echo "</tr>";
 }
 ?>
 </table>		
+	<?php
+	global $pn_app_version;
+	echo "Current version: ".$pn_app_version."<br/>";
+	echo "Latest version: <span id='latest_version'><img src='".theme::$icons_16["loading"]."'/></span><br/>";
+	?>
+<script type='text/javascript'>
+service.json("administration","latest_version",null,function(res) {
+	if (res && res.version) {
+		document.getElementById('latest_version').innerHTML = res.version;
+	}
+});
+</script>
 	<?php 
 	}
 

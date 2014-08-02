@@ -125,6 +125,7 @@ if ($development_mode) {
 		<a href="/dynamic/test/page/home" target="_blank">Tests</a><br/>
 		<a href="?destroy_session=true">Destroy session</a><br/>
 		<a href="?uninstall=true">Reset installation</a><br/>
+		<a href="/deploy/" target="_blank">Deploy new version</a><br/>
 	</td></tr>
 </table>
 <script type="text/javascript">
