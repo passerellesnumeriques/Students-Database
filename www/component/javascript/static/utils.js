@@ -1184,8 +1184,8 @@ function parseSQLDate(s) {
 	var d = new Date();
 	d.setHours(0,0,0,0);
 	var a = s.split("-");
-	if (a.length == 3)
-		d.setFullYear(parseInt(a[0]), parseInt(a[1])-1, parseInt(a[2]));
+	if (a.length != 3) return null;
+	d.setFullYear(parseInt(a[0]), parseInt(a[1])-1, parseInt(a[2]));
 	return d;
 };
 /** Convert the given number into a string, containing at least 2 digits (0 added if less than 10)

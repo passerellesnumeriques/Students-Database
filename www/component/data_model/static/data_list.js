@@ -29,6 +29,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	
 	/** {grid} the data list use the grid widget to display data, we can access it directly here */
 	t.grid = null;
+	t.show_fields = [];
 	/** Event when data has been loaded/refreshed */
 	t.ondataloaded = new Custom_Event();
 	
@@ -309,6 +310,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				break;
 			}
 		}
+	};
+	t.getColumnIdFromField = function(f, skip_check_visible) {
+		var id = f.field.category+'.'+f.field.name+'.'+f.sub_index;
+		if (skip_check_visible) return id;
+		var found = false;
+		for (var i = 0; i < t.show_fields.length; ++i) if (t.show_fields[i] == f) { found = true; break; }
+		if (!found) return null;
+		return id;
 	};
 	
 	/** Reset everything in the data list
@@ -682,6 +691,19 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			} else
 				t._filterNumber.style.visibility = "hidden";
 		});
+		// + import
+		div = document.createElement("BUTTON");
+		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+		div.title = "Import additional data from file";
+		img.src = theme.icons_16["_import"];
+		div.onclick = function(ev) { 
+			if (t._import_with_match) return;
+			require("import_with_match.js",function() {
+				new import_with_match(t, ev);
+			});
+		};
+		div.appendChild(img);
+		t.header_right.appendChild(div);
 		// + export
 		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
@@ -828,7 +850,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		if (f.sub_index != -1)
 			args.sub_data_index = f.sub_index;
 		var col = new GridColumn(
-			f.field.category+'.'+f.field.name+'.'+f.sub_index, //id
+			t.getColumnIdFromField(f,true), // id
 			f.sub_index == -1 ? f.field.name : f.field.sub_data.names[f.sub_index], // title
 			null, // width
 			f.field.horiz_align, // align
@@ -852,14 +874,20 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t._cellUnchanged(field);
 		};
 		if (f.field.editable) {
-			col.addAction(new GridColumnAction(theme.icons_10.edit,function(ev,action,col){
+			col.addAction(new GridColumnAction('edit', theme.icons_10.edit,function(ev,action,col){
+				if (t.isLoading()) {
+					t.onNotLoading(function() {
+						action.onclick(ev,action,col);
+					});
+					return;
+				}
 				var edit_col = function() {
 					action.icon = col.editable ? theme.icons_10.edit : theme.icons_10.no_edit;
 					action.tooltip = col.editable ? "Edit data on this column" : "Cancel modifications and stop editing this column";
 					col.toggleEditable();
 					layout.invalidate(container);
 				};
-				t.grid.startLoading();
+				t.startLoading();
 				if (col.editable) {
 					service.json("data_model","unlock",{locks:col.locks},function(result){});
 					for (var j = 0; j < col.locks.length; ++j)
@@ -867,7 +895,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					col.locks = null;
 					t._cancelColumnChanges(col);
 					edit_col();
-					t.grid.endLoading();
+					t.endLoading();
 				} else {
 					var locks = [];
 					var done = 0;
@@ -892,14 +920,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 									// additional actions
 									// TODO
 									/*
-									col._setAllAction = new GridColumnAction(theme.icons_10.edit,function(ev,action,col){
+									col._setAllAction = new GridColumnAction('edit',theme.icons_10.edit,function(ev,action,col){
 										
 									}, "Set all to a specific value");
 									*/
 									// change editable
 									edit_col();
 								}
-								t.grid.endLoading();
+								t.endLoading();
 							}
 						});
 					}
@@ -915,7 +943,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				col._refresh_title();
 				layout.invalidate(container);
 			};
-			var a = new GridColumnAction(has ? "/static/widgets/grid/filter_active.png" : "/static/widgets/grid/filter.gif",function(ev,action,col){
+			var a = new GridColumnAction('filter',has ? "/static/widgets/grid/filter_active.png" : "/static/widgets/grid/filter.gif",function(ev,action,col){
 				var has = t.hasFilterOn(f.field.category, f.field.name);
 				if (has)
 					t._filtersDialog(ev.target);
@@ -939,8 +967,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		return col;
 	};
+	t._end_loading_event = null;
 	t.startLoading = function() {
 		if (t._loading_hidder) return;
+		t._end_loading_event = new Custom_Event();
 		t._loading_hidder = new LoadingHidder(container);
 		t._loading_hidder.setContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading data...");
 	};
@@ -948,11 +978,26 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		if (!t._loading_hidder) return;
 		t._loading_hidder.remove();
 		t._loading_hidder = null;
+		t._end_loading_event.fire();
+		t._end_loading_event = null;
+	};
+	t.onNotLoading = function(listener) {
+		if (!t._loading_hidder) { listener(); return; }
+		t._end_loading_event.add_listener(listener);
+	};
+	t.isLoading = function() {
+		return t._loading_hidder != null;
 	};
 
 	/** (Re)load the data from the server */
 	t._loadData = function(onready) {
 		t._data_loaded = true;
+		if (t.isLoading()) {
+			t.onNotLoading(function() {
+				t._loadData(onready);
+			});
+			return;
+		}
 		t.startLoading();
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i) {
@@ -977,7 +1022,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		service.json("data_model","get_data_list",params,function(result){
 			if (!result) {
 				if (onready) onready();
-				t.grid.endLoading();
+				t.endLoading();
 				return;
 			}
 			if (t._page_size > 0) {
@@ -1604,7 +1649,13 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	};
 	/** Save all edited data */
 	t._save = function() {
-		t.grid.startLoading();
+		if (t.isLoading()) {
+			t.onNotLoading(function() {
+				t._save();
+			});
+			return;
+		}
+		t.startLoading();
 		var to_save = [];
 		for (var i = 0; i < t._changed_cells.length; ++i) {
 			var value = t._changed_cells[i].getCurrentData();
@@ -1643,7 +1694,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					window.pnapplication.dataSaved(container.id);
 				}
 			}
-			t.grid.endLoading();
+			t.endLoading();
 		});
 	};
 	/** Make the row clickable

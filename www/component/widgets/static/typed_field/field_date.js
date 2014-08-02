@@ -71,6 +71,13 @@ field_date.prototype._create = function(data) {
 			t.select.select_month.style.border = error ? "1px solid red" : "";
 			t.select.select_day.style.border = error ? "1px solid red" : "";
 		};
+		this._set_date = data;
+		this._getEditedData = function() {
+			if (!t.select) return t._set_date;
+			var date = t.select.getDate();
+			if (date) date = dateToSQL(date);
+			return date;
+		};
 		require("date_select.js", function() {
 			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
 			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
@@ -84,11 +91,6 @@ field_date.prototype._create = function(data) {
 			t.select.onchange = function() {
 				t._datachange();
 			};
-			t._getEditedData = function() {
-				var date = t.select.getDate();
-				if (date) date = dateToSQL(date);
-				return date;
-			};
 		});
 
 		this._timeoutSetData = null;
@@ -97,6 +99,7 @@ field_date.prototype._create = function(data) {
 				t.select.selectDate(parseSQLDate(data));
 			else {
 				if (t._timeoutSetData) clearTimeout(t._timeoutSetData);
+				t._set_date = data;
 				t._timeoutSetData = setTimeout(function() { t._timeoutSetData = null; t._setData(data); }, 10);
 			}
 		};

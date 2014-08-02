@@ -6,6 +6,8 @@ function Excel(container, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 
+	this.onactivesheetchanged = new Custom_Event();
+	
 	this.sheets = [];
 	this.addSheet = function(name, icon, columns, rows, onready) {
 		var sheet = new ExcelSheet(name, icon, columns, rows, onready);
@@ -43,6 +45,9 @@ function Excel(container, onready) {
 	
 	require("tabs.js",function(){
 		t.tabs = new tabs(container, true);
+		t.tabs.onselect = function() {
+			t.onactivesheetchanged.fire(t);
+		};
 		if (onready) onready(t);
 	});
 	
@@ -132,6 +137,11 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	this.layout = function() {
 		this.content.style.width = this.container.clientWidth+"px";
 		this.content.style.height = this.container.clientHeight+"px";
+		for (var col = 0; col < this.columns.length; col++)
+			for (var row = 0; row < this.rows.length; row++) {
+				var cell = this.cells[col][row];
+				cell._refreshSize();
+			}
 	};
 	
 	this.addColumn = function(index) {
@@ -225,6 +235,20 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 			this.content.scrollTop = y1;
 		else if (y2 > this.content.scrollTop+this.content.clientHeight-16)
 			this.content.scrollTop = y2-this.content.clientHeight+16;
+	};
+	
+	this.mergeCells = function(start_col, start_row, end_col, end_row) {
+		var cell = this.cells[start_col][start_row];
+		cell.td.rowSpan = end_row-start_row+1;
+		cell.td.colSpan = end_col-start_col+1;
+		for (var col = start_col; col <= end_col; col++)
+			for (var row = start_row; row <= end_row; row++) {
+				if (col == start_col && row == start_row) continue;
+				this.cells[col][row].td.parentNode.removeChild(this.cells[col][row].td);
+				this.cells[col][row] = cell;
+			}
+		cell._refreshSize();
+		// TODO
 	};
 	
 	this._init();
@@ -379,7 +403,7 @@ function ExcelSheetColumn(sheet, index) {
 		this.width = w;
 		this.header.style.width = w+"px";
 		for (var j = 0; j < sheet.cells[this.index].length; ++j)
-			sheet.cells[this.index][j]._set_width(w);
+			sheet.cells[this.index][j]._refreshSize();
 		var x = 0;
 		for (var i = 0; i <= this.index; ++i) x += sheet.columns[i].width+1;
 		this.resizer.style.left = (x-4)+"px";
@@ -458,7 +482,7 @@ function ExcelSheetRow(sheet, index) {
 		this.height = h;
 		this.header.style.height = h+"px";
 		for (var j = 0; j < sheet.cells.length; ++j)
-			sheet.cells[j][this.index]._set_height(h);
+			sheet.cells[j][this.index]._refreshSize();
 		var y = 0;
 		for (var i = 0; i <= this.index; ++i) y += sheet.rows[i].height+1;
 		this.resizer.style.top = (y-3)+"px";
@@ -542,27 +566,39 @@ function ExcelSheetCell(sheet, column, row) {
 	this.setStyle = function(styles) {
 		for (var name in styles)
 			this.td.style[name] = styles[name];
+		this._refreshSize();
 	};
 
-	this._set_width = function(w) {
-		this.value.style.width = (w-1)+"px";
-	};
-	this._set_height = function(h) {
-		this.value.style.height = (h-0)+"px";
+	this._refreshSize = function() {
+		var w = this.sheet.columns[this.column].width;
+		if (this.td.colSpan)
+			for (var i = 2; i <= this.td.colSpan; ++i)
+				w += this.sheet.columns[this.column+i-1].width+1;
+		var border = this.td.offsetWidth; // excluding margin
+		border -= this.td.clientWidth; // remove content width + the padding => remaining is border
+		w -= border;
+		var h = this.sheet.rows[this.row].height;
+		if (this.td.rowSpan)
+			for (var i = 2; i <= this.td.rowSpan; ++i)
+				h += this.sheet.rows[this.row+i-1].height+1;
+		border = this.td.offsetHeight; // excluding margin
+		border -= this.td.clientHeight; // remove content height + the padding => remaining is border
+		h -= border;
+		this.value.style.width = (w)+"px";
+		this.value.style.height = (h+1)+"px";
 	};
 	
 	this._init = function() {
 		this.td = document.createElement("TD");
-		this.td.style.border = "1px solid black";
+		this.td.style.border = "1px solid #C0C0F0";
 		this.td.style.overflow = "hidden";
 		sheet.rows[this.row].tr.appendChild(this.td);
 		this.value = document.createElement("DIV");
-		this._set_width(sheet.columns[this.column].width);
-		this._set_height(sheet.rows[this.row].height);
 		this.value.style.overflow = "hidden";
 		this.value.style.paddingLeft = "1px";
 		this.td.style.padding = "0px";
 		this.td.appendChild(this.value);
+		this._refreshSize();
 		var t=this;
 		this.td.onmousedown = function(ev) {
 			var e = getCompatibleMouseEvent(ev);

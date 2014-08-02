@@ -6,7 +6,8 @@ if (typeof require != 'undefined') {
 	theme.css("grid.css");
 }
 
-function GridColumnAction(icon,onclick,tooltip) {
+function GridColumnAction(id,icon,onclick,tooltip) {
+	this.id = id;
 	this.icon = icon;
 	this.onclick = onclick;
 	this.tooltip = tooltip;
@@ -120,6 +121,11 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		this.actions.remove(action);
 		this._refresh_title();
 	};
+	this.getAction = function(id) {
+		for (var i = 0; i < this.actions.length; ++i)
+			if (this.actions[i].id == id) return this.actions[i];
+		return null;
+	}
 
 	this.addSorting = function(sort_function) {
 		this.sort_order = 3; // not sorted
@@ -142,7 +148,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.addFiltering = function() {
 		var url = get_script_path("grid.js");
 		var t=this;
-		var a = new GridColumnAction(url+"/filter.gif",function(ev,a,col){
+		var a = new GridColumnAction('filter', url+"/filter.gif",function(ev,a,col){
 			if (t.filtered) {
 				t.filtered = false;
 				a.icon = url+"/filter.gif";
@@ -784,6 +790,7 @@ function grid(element) {
 			t.element.style.position = "static";
 			t.grid_element.style.overflow = "auto";
 			t.thead.style.position = "static";
+			t.element.style.width = "";
 			// remove fixed width
 			for (var i = 0; i < t.thead.childNodes.length; ++i)
 				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j) {
@@ -800,6 +807,8 @@ function grid(element) {
 					t.colgroup.childNodes[i].style.minWidth = "";
 				}
 			}
+			// fix the size of the container
+			setWidth(t.element, getWidth(t.element));
 			// take the width of each th
 			for (var i = 0; i < t.thead.childNodes.length; ++i)
 				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j)

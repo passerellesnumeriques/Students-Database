@@ -15,6 +15,7 @@ if (PNApplication::$instance->current_domain == "PNC")
 	$display->addDataDisplay(new datamodel\SimpleDataDisplay("khmer_last_name", "Khmer Last Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("sex", "Gender", false, true, "center"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("birth", "Birth Date"));
+$display->addDataDisplay(new datamodel\CalculationDataDisplay("Age","TIMESTAMPDIFF(YEAR,`birth`,CURDATE())"));
 $display->addJoinToPrimary();
 $model->addTableDataDisplay($display);
 

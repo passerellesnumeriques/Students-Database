@@ -137,15 +137,96 @@ class page_excel_upload extends Page {
 						$font_style = $font <> null && $font->getItalic() ? "italic" : "normal";
 						$font_color = $font <> null && $font->getColor() <> null ? "#".$font->getColor()->getRGB() : "black";
 						$code .= ",fontFamily:".json_encode($font_name);
-						$code .= ",fontSize:".json_encode($font_size);
+						$code .= ",fontSize:".json_encode($font_size."pt");
 						$code .= ",fontWeight:".json_encode($font_weight);
 						$code .= ",fontStyle:".json_encode($font_style);
 						$code .= ",color:".json_encode($font_color);
 						if ($style->getFill() <> null && $style->getFill()->getFillType() == PHPExcel_Style_Fill::FILL_SOLID && $style->getFill()->getStartColor() <> null)
 							$code .= ",backgroundColor:'#".$style->getFill()->getStartColor()->getRGB()."'";
+						$align = $style->getAlignment();
+						if ($align <> null) {
+							$horiz = $align->getHorizontal();
+							switch ($horiz) {
+							case PHPExcel_Style_Alignment::HORIZONTAL_CENTER: $code .= ",textAlign:'center'"; break;
+							case PHPExcel_Style_Alignment::HORIZONTAL_LEFT: $code .= ",textAlign:'left'"; break;
+							case PHPExcel_Style_Alignment::HORIZONTAL_RIGHT: $code .= ",textAlign:'right'"; break;
+							}
+						}
+						$borders = $style->getBorders();
+						if ($borders <> null) {
+							$bottom = $borders->getBottom();
+							if ($bottom <> null) {
+								$s = $bottom->getBorderStyle();
+								if ($s <> null && $s <> PHPExcel_Style_Border::BORDER_NONE) {
+									switch ($s) {
+										default:
+										case PHPExcel_Style_Border::BORDER_THIN: $border = "1px solid"; break;
+										case PHPExcel_Style_Border::BORDER_MEDIUM: $border = "2px solid"; break;
+										case PHPExcel_Style_Border::BORDER_DOTTED: $border = "1px dotted"; break;
+										// TODO
+									}
+									$border .= " #".$bottom->getColor()->getRGB();
+									$code .= ",borderBottom:'$border'";
+								}
+							}
+							$top = $borders->getTop();
+							if ($top <> null) {
+								$s = $top->getBorderStyle();
+								if ($s <> null && $s <> PHPExcel_Style_Border::BORDER_NONE) {
+									switch ($s) {
+										default:
+										case PHPExcel_Style_Border::BORDER_THIN: $border = "1px solid"; break;
+										case PHPExcel_Style_Border::BORDER_MEDIUM: $border = "2px solid"; break;
+										case PHPExcel_Style_Border::BORDER_DOTTED: $border = "1px dotted"; break;
+										// TODO
+									}
+									$border .= " #".$top->getColor()->getRGB();
+									$code .= ",borderTop:'$border'";
+								}
+							}
+							$left = $borders->getLeft();
+							if ($left <> null) {
+								$s = $left->getBorderStyle();
+								if ($s <> null && $s <> PHPExcel_Style_Border::BORDER_NONE) {
+									switch ($s) {
+										default:
+										case PHPExcel_Style_Border::BORDER_THIN: $border = "1px solid"; break;
+										case PHPExcel_Style_Border::BORDER_MEDIUM: $border = "2px solid"; break;
+										case PHPExcel_Style_Border::BORDER_DOTTED: $border = "1px dotted"; break;
+										// TODO
+									}
+									$border .= " #".$left->getColor()->getRGB();
+									$code .= ",borderLeft:'$border'";
+								}
+							}
+							$right = $borders->getRight();
+							if ($right <> null) {
+								$s = $right->getBorderStyle();
+								if ($s <> null && $s <> PHPExcel_Style_Border::BORDER_NONE) {
+									switch ($s) {
+										default:
+										case PHPExcel_Style_Border::BORDER_THIN: $border = "1px solid"; break;
+										case PHPExcel_Style_Border::BORDER_MEDIUM: $border = "2px solid"; break;
+										case PHPExcel_Style_Border::BORDER_DOTTED: $border = "1px dotted"; break;
+										// TODO
+									}
+									$border .= " #".$right->getColor()->getRGB();
+									$code .= ",borderRight:'$border'";
+								}
+							}
+						}
 					}
 					$code .= "});\n";
 				}
+			}
+			$merges = $sheet->getMergeCells();
+			foreach ($merges as $merge) {
+				list($rangeStart, $rangeEnd) = PHPExcel_Cell::rangeBoundaries($merge);
+				$col_start = $rangeStart[0]-1;
+				$col_end = $rangeEnd[0]-1;
+				$row_start = $rangeStart[1]-1;
+				$row_end = $rangeEnd[1]-1;
+				$code .= "\tsheet.mergeCells($col_start,$row_start,$col_end,$row_end);\n";
 			}
 			$code .= "});\n";
 		} 
