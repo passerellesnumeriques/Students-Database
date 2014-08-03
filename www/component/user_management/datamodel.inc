@@ -9,6 +9,8 @@ $model->addTable("Users")
 	->addIndex("domain","username")
 	->setRoot()
 	->allowReadAccess() // everybody need to be able to know who says what.. so need to access the list of users
+	->addInsertAccess("manage_users", true)
+	->addRemoveAccess("manage_users", true)
 	;
 $model->addTable("InternalUser")
 	->addString("username", 100,1, false, true)
@@ -60,6 +62,8 @@ $model->addTable("UserPeople")
 	->setPrimary("user")
 	->addIndex("people")
 	->allowReadAccess()
+	->addInsertAccess("manage_users", true)
+	->addRemoveAccess("manage_users", true)
 	->onInsert(function($fields_values, $id, $sub_model_instance) {
 		PNApplication::$instance->user_management->assignDefaultRoles($fields_values["user"], $fields_values["people"]);
 	})

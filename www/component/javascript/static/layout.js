@@ -314,7 +314,7 @@ layout = {
 		}
 	},
 	
-	computeContentSize: function(body) {
+	computeContentSize: function(body,keep_styles) {
 		var win = getWindowFromElement(body);
 		var max_width = 0, max_height = 0;
 		for (var i = 0; i < body.childNodes.length; ++i) {
@@ -328,13 +328,13 @@ layout = {
 				var size = layout.computeContentSize(e);
 				w = win.absoluteLeft(e) + size.x;
 				h = win.absoluteTop(e) + size.y;
-			} else {
+			} else if (!keep_styles) {
 				e._display = e.style && e.style.display ? e.style.display : "";
-				e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
+				//e._whiteSpace = e.style && e.style.whiteSpace ? e.style.whiteSpace : "";
 				e._width = e.style && e.style.width ? e.style.width : "";
 				e._height = e.style && e.style.height ? e.style.height : "";
 				e.style.display = 'inline-block';
-				e.style.whiteSpace = 'nowrap';
+				//e.style.whiteSpace = 'nowrap';
 				if (e._width.indexOf('%') == -1)
 					e.style.width = "";
 				if (e._height.indexOf('%') == -1)
@@ -344,9 +344,9 @@ layout = {
 			if (w > max_width) max_width = w;
 			if (h == null) h = win.absoluteTop(e)+(win.getHeight ? win.getHeight(e) : getHeight(e));
 			if (h > max_height) max_height = h;
-			if (e.nodeName != "FORM") {
+			if (e.nodeName != "FORM" && !keep_styles) {
 				e.style.display = e._display;
-				e.style.whiteSpace = e._whiteSpace;
+				//e.style.whiteSpace = e._whiteSpace;
 				e.style.width = e._width;
 				e.style.height = e._height;
 			}
@@ -365,10 +365,17 @@ layout = {
 			frame.style.width = Math.floor(win_container.getWindowWidth()*0.95)+"px";
 			frame.style.height = Math.floor(win_container.getWindowHeight()*0.95)+"px";
 			var size = layout.computeContentSize(win.document.body);
-			frame.style.position = "static";
 			frame.style.width = size.x+"px";
 			frame.style.height = size.y+"px";
+			frame.style.position = "static";
+			// check again the size
+			var size2 = layout.computeContentSize(win.document.body,true);
+			if (size2.y > size.y)
+				frame.style.height = size2.y+"px";
+			if (size2.x > size.x)
+				frame.style.width = size2.x+"px";
 			if (onresize) onresize(frame);
+			if (frame._loading_frame) frame._loading_frame._position();
 		};
 		frame._check_ready = function() {
 			// check the frame is still there

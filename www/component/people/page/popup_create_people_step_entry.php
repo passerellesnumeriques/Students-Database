@@ -92,7 +92,10 @@ class page_popup_create_people_step_entry extends Page {
 				});
 				popup.addCancelButton(function () {
 					confirm_dialog("Cancel creation ?",function(yes){
-						if (yes) popup.close();
+						if (yes) {
+							<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]."();"; ?>
+							popup.close();
+						}
 					});
 					return false;
 				});
@@ -113,6 +116,22 @@ class page_popup_create_people_step_entry extends Page {
 			$prefilled_values = new DataValues();
 			foreach ($input["prefilled_data"] as $v)
 				$prefilled_values->addTableDataValue($v["table"], $v["data"], $v["value"]);
+			foreach ($input["precreated"] as $pc) {
+				$cat = DataModel::get()->getDataCategory($pc["category"]);
+				if ($cat == null) continue;
+				foreach ($cat->getTables() as $table_name) {
+					$display = DataModel::get()->getTableDataDisplay($table_name);
+					$data = $display->getDataDisplayByName($pc["data"], null, @$pc["sub_model"]);
+					if ($data <> null) {
+						// found it
+						if (isset($pc["forced"]) && $pc["forced"])
+							$values->addTableDataValue($table_name, $pc["data"], $pc["value"]);
+						else
+							$prefilled_values->addTableDataValue($table_name, $pc["data"], $pc["value"]);
+						break;
+					}
+				}
+			}
 			
 			$structure_name = createDataPage($this, "People", null, @$input["sub_models"], $values, $prefilled_values);
 			?>
@@ -147,7 +166,7 @@ class page_popup_create_people_step_entry extends Page {
 				postData("popup_create_people_step_check", data, window);
 			});
 			popup.addCancelButton(function() {
-				<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]; ?>
+				<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]."();"; ?>
 				return true;
 			});
 			if (popup.isFrozen()) popup.unfreeze();

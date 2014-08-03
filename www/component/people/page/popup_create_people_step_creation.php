@@ -15,7 +15,7 @@ class page_popup_create_people_step_creation extends Page {
 		}
 		$this->addJavascript("/static/data_model/DataDisplay.js");
 ?>
-<div id='container' style='padding:10px'></div>
+<div id='container' style='padding:10px'><div style='width:300px;height:100px'></div></div>
 <script type='text/javascript'>
 peoples = [<?php 
 $first = true;

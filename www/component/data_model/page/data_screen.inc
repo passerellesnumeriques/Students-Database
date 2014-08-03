@@ -121,6 +121,7 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 	$screens = DataModel::get()->getDataScreens();
 	$screen = null;
 	foreach ($screens as $s) {
+		if (!($s instanceof \datamodel\SimpleDataScreen)) continue;
 		$tables = $s->getTables();
 		if (count($tables) == 1 && $tables[0] == $root->table->getName()) {
 			$screen = $s;
@@ -137,12 +138,16 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 	$screen->generate($page, array($root), $values, $prefilled_values, $structure_name);
 	$h = ob_get_contents();
 	ob_clean();
+	$screen->generateEndOfSection($page, array($root), $values, $prefilled_values, $structure_name);
+	$end = ob_get_contents();
+	ob_clean();
 	echo $ob;
 	if ($h <> "")
 		array_push($sections, array(
 				$screen->getIcon(),
 				$screen->getName(),
-				$h
+				$h,
+				$end
 		));
 	
 	buildDataScreenChildren($page, $root, $values, $prefilled_values, $sections, $structure_name);
@@ -156,6 +161,7 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 		$html .= " title=\"".htmlentities($s[1])."\"";
 		$html .= " collapsable='false' css='soft' style='display:inline-block;margin:10px;vertical-align:top'>";
 		$html .= $s[2];
+		$html .= $s[3];
 		$html .= "</div>";
 		$html .= "<script type='text/javascript'>sectionFromHTML('$id');</script>";
 	}
@@ -168,6 +174,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 	$screens = DataModel::get()->getDataScreens();
 	$avail_screens = array();
 	foreach ($screens as $s) {
+		if (!($s instanceof \datamodel\SimpleDataScreen)) continue;
 		$tables = $s->getTables();
 		$ok = true;
 		$children = array();
@@ -291,6 +298,9 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 		$s[0]->generate($page, $s[1], $values, $prefilled_values, $structure_name);
 		$h = ob_get_contents();
 		ob_clean();
+		$s[0]->generateEndOfSection($page, $s[1], $values, $prefilled_values, $structure_name);
+		$end = ob_get_contents();
+		ob_clean();
 		echo $ob;
 		if ($h <> "") {
 			$sec = null;
@@ -300,10 +310,13 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 				array_push($sections, array(
 					$s[0]->getIcon(),
 					$s[0]->getName(),
-					$h
+					$h,
+					$end
 				));
-			} else
+			} else {
 				$sections[$sec][2] .= $h;
+				$sections[$sec][3] .= $end;
+			}
 		}
 			
 	}

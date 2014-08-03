@@ -13,14 +13,21 @@ class TableDataDisplay {
 	public function __construct($table_name, $category) {
 		$this->table_name = $table_name;
 		$this->category = $category;
+		$this->category->addTable($table_name);
 	}
 	
 	public function getTableName() { return $this->table_name; }
 	public function getTable() { return \DataModel::get()->getTable($this->table_name); }
 	public function getCategory() { return $this->category; }
 	
+	/**
+	 * @param DataDisplay $data_display
+	 * @param string $come_from
+	 * @param string $specific_sub_model
+	 * @return \datamodel\TableDataDisplay
+	 */
 	public function &addDataDisplay($data_display, $come_from = null, $specific_sub_model = null) {
-		$data_display->setTableDataDisplay($this);
+		$data_display->setTableAndCategory(\DataModel::get()->getTable($this->table_name), $this->category);
 		if (!isset($this->data_display[$come_from]))
 			$this->data_display[$come_from] = array();
 		if (!isset($this->data_display[$come_from][$specific_sub_model]))

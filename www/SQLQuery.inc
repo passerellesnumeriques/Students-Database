@@ -862,10 +862,8 @@ class SQLQuery {
 							$col = $table->internalGetColumn($f[1], $this->sub_models);
 						else
 							$col = $table->getColumn($f[1], $this->sub_models);
-						if ($col == null) {
-							PNApplication::error("Unknown column ".$f[1]." in table ".$table->getName());
-							return null;
-						}
+						if ($col == null)
+							throw new Exception("Unknown column ".$f[1]." in table ".$table->getName());
 						array_push($final_fields, array($table_name, $col->name, $f[2]));
 						unset($col);
 						array_splice($fields,$i,1);
@@ -1872,12 +1870,9 @@ class SQLQuery {
 		if($lock_id == null)
 			DataBaseLock::unlock($lock);
 		// events
-		if ($id <> 0) {
-			$i = 0;
-			foreach ($rows as &$fields_values) {
-				$t->fireInsert($fields_values, $ids[$i++], $t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null);
-			}
-		}
+		$i = 0;
+		foreach ($rows as &$fields_values)
+			$t->fireInsert($fields_values, $id <> 0 ? $ids[$i++] : null, $t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null);
 		return $ids;
 	}
 	

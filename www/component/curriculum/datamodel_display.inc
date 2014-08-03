@@ -8,7 +8,7 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("start_date", "Integrat
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("end_date", "Graduation Date", true));
 $model->addTableDataDisplay($display);
 
-class TeacherDataScreen extends datamodel\DataScreen {
+class TeacherDataScreen implements datamodel\SimpleDataScreen {
 	
 	public function getTables() { return array("TeacherDates"); }
 	
@@ -93,6 +93,8 @@ if ($structure_name <> null) {
 </script>
 <?php 
 	}
+	
+	public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name) {}
 	
 	public function createData($paths, $multiple) {
 		$path = $paths[0];

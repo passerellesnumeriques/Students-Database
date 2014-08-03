@@ -44,10 +44,10 @@ class page_synch_users__list extends Page {
 				echo "The following users do not exist anymore in ".$domain.":<ul>";
 				foreach ($current as $user) {
 					echo "<li>";
-					echo $user["username"];
+					echo "<b>".htmlentities($user["username"])."</b>";
 					echo "<br/>";
-					echo "<input type='radio' value='keep' name='".$user["username"]."' selected='selected'/> Keep it<br/>";
-					echo "<input type='radio' value='remove' name='".$user["username"]."' selected='selected'/> Remove it (information about it will be kept, be this user won't be able to login anymore)<br/>";
+					echo "<input type='radio' value='keep' name='".$user["username"]."' checked='checked'/> Keep it<br/>";
+					echo "<input type='radio' value='remove' name='".$user["username"]."'/> Remove it (information about it will be kept, be this user won't be able to login anymore)<br/>";
 					echo "</li>";
 				}
 				echo "</ul>";
@@ -67,9 +67,9 @@ class page_synch_users__list extends Page {
 				echo "The following users are currently internal to the software, but they are now present in the authentication system:<ul>";
 				foreach ($internal_to_as as $user) {
 					echo "<li>";
-					echo htmlentities($user["username"]);
+					echo "<b>".htmlentities($user["username"])."</b>";
 					echo "<br/>";
-					echo "<input type='radio' value='keep_internal' name='".$user["username"]."'/> Keep it internal<br/>";
+					echo "<input type='radio' value='keep_internal' name='".$user["username"]."' checked='checked'/> Keep it internal<br/>";
 					echo "<input type='radio' value='move_to_as' name='".$user["username"]."'/> Use the authentication system now, and remove it from internal users<br/>";
 					echo "</li>";
 				}
@@ -83,7 +83,7 @@ class page_synch_users__list extends Page {
 				echo "The following users exist in ".$domain." but not yet in the software:<ul>";
 				foreach ($list as $user) {
 					echo "<li>";
-					echo htmlentities($user["username"]);
+					echo "<b>".htmlentities($user["username"])."</b>";
 					if (isset($user["info"])) {
 						if (isset($user["info"]["People"])) {
 							if (isset($user["info"]["People"]["first_name"]) && isset($user["info"]["People"]["last_name"])) {
@@ -111,13 +111,13 @@ class page_synch_users__list extends Page {
 								$q->whereNull("Users", "username");
 								$match = $q->execute();
 								foreach ($match as $row) {
-									echo "<input type='radio' name='".$user["username"]."' value='link_".$row["id"]."'/> Create user and link with existing people: ".$row["first_name"]." ".$row["last_name"]."<br/>";
+									echo "<input type='radio' name='".$user["username"]."' value='link_".$row["id"]."' onclick=\"if (this.checked) { if (this._already) { this.checked=''; this._already=false; } else { var list=this.form.elements['".$user["username"]."']; for(var i=0;i<list.length;++i)list[i]._already=false; this._already=true; } }\"/> Create user and link with existing people: ".DataModel::get()->getTable("People")->getRowDescription($row)."<br/>";
 								}
 							}
 						}
 					}
 					array_push($users_info, array("username"=>$user["username"],"info"=>@$user["info"]));
-					echo "<input type='radio' name='".$user["username"]."' value='create_user'/> Create as a new ";
+					echo "<input type='radio' name='".$user["username"]."' value='create_user' onclick=\"if (this.checked) { if (this._already) { this.checked=''; this._already=false; } else { var list=this.form.elements['".$user["username"]."']; for(var i=0;i<list.length;++i)list[i]._already=false; this._already=true; } }\"/> Create as a new ";
 					echo "<select name='type_".$user["username"]."'>";
 					foreach ($people_types as $type) {
 						if (!$type->isStandalone()) continue;
@@ -232,10 +232,10 @@ function process_new_users(ondone) {
 				precreated.push(pc);
 			}
 			var frame = p.setContentFrame(
-				"/dynamic/people/page/popup_create_people?types="+encodeURIComponent(type)+"&multiple=true&ondone=continue_create_users&oncancel=continue_create_users",
+				"/dynamic/people/page/popup_create_people?types="+encodeURIComponent(type)+"&multiple="+(precreated.length > 1 ? "true" : "false")+"&ondone=continue_create_users&oncancel=continue_create_users",
 				null,
 				{
-					precreated: precreated
+					precreated: (precreated.length == 1 ? precreated[0] : precreated)
 				}
 			);
 			frame.continue_create_users = function() { next_to_create(index+1); };

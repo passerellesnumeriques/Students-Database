@@ -21,6 +21,7 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 	private $populate_info;
 
 	public function authenticate($username, $password, &$error) {
+		set_time_limit(30);
 		$c = curl_init($this->system_url);
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
@@ -28,6 +29,7 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_POSTFIELDS, array("service"=>"authenticate","username"=>$username,"password"=>$password));
 		$result = curl_exec($c);
+		set_time_limit(30);
 		if ($result === false) {
 			$error = curl_error($c);
 			curl_close($c);
@@ -64,6 +66,7 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 	 * @return NULL|SimpleXMLElement the XML returned by the server, or null in case of failure
 	 */
 	private function callService($service, $token, $params) {
+		set_time_limit(30);
 		$c = curl_init($this->system_url);
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
@@ -71,6 +74,7 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_POSTFIELDS, array_merge(array("service"=>$service,"token"=>$token), $params));
 		$result = curl_exec($c);
+		set_time_limit(30);
 		if ($result === false) {
 			PNApplication::error("Error calling service ".$service." on authentication system: ".curl_error($c));
 			curl_close($c);

@@ -78,14 +78,18 @@ function popup_window(title,icon,content,hide_close_button) {
 					postData(t.content._post_url, t.content._post_data, getIFrameWindow(t.content));
 					t.content._post_data;
 				}
-				t._setSizeType(t._size_type);
-				if (onload) 
-					waitFrameContentReady(frame, function(win) {
-						return win.layout && win._page_ready;
-					}, function() {
-						if (!t.popup) return; // already closed
-						onload(frame);
-					});
+				// fix the frame size in the mid-time
+				t.content.style.width = "200px";
+				t.content.style.height = "100px";
+				waitFrameContentReady(frame, function(win) {
+					return win.layout && win._page_ready;
+				}, function() {
+					if (!t.popup) return; // already closed
+					t.content.style.width = "";
+					t.content.style.height = "";
+					t._setSizeType(t._size_type);
+					if (onload) onload(frame);
+				});
 			}
 		};
 		if (!post_data) {
@@ -404,6 +408,19 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content_container.style.display = "";
 				layout.autoResizeIFrame(t.content, function() {
 					t._layout_content();
+				});
+				// do not change frame size when the frame is moving to another page
+				listenEvent(t.content, 'unload', function() {
+					layout.stopResizingIFrame(t.content);
+					var w = getIFrameWindow(t.content);
+					if (w) w._popup_frame_unloading = true;
+					waitFrameContentReady(t.content, function(win) {
+						return !win._popup_frame_unloading && win._page_ready_step;
+					}, function() {
+						layout.autoResizeIFrame(t.content, function() {
+							t._layout_content();
+						});
+					});
 				});
 				break;
 			case "fixed":

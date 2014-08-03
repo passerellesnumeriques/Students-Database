@@ -146,6 +146,11 @@ class user_management extends Component {
 		return $user_id;
 	}
 	
+	public function isInternalUser($domain, $username) {
+		if ($domain <> PNApplication::$instance->local_domain) return false;
+		return SQLQuery::create()->bypassSecurity()->select("InternalUser")->whereValue("InternalUser","username",$username)->executeSingleRow() <> null;
+	}
+	
 	public function create_user($domain, $username, $bypass_security = false) {
 		$res = SQLQuery::create()->bypassSecurity($bypass_security)->select("Users")->where("domain",$domain)->where("username",$username)->execute();
 		if (count($res) > 0) {

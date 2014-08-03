@@ -29,7 +29,7 @@ foreach ($fixed_data as $fd) {
 	if (!isset($known_columns[$cell["table"]])) $known_columns[$cell["table"]] = array();
 	$known_columns[$cell["table"]][$cell["column"]] = $fd["value"];
 }
-$fields = PNApplication::$instance->data_model->getAvailableFields($root_table_name, $sub_model, false, $sub_models, $known_columns);
+$fields = PNApplication::$instance->data_model->getAvailableFields($root_table_name, $sub_model, false, $sub_models, $known_columns, true);
 
 // remove non editable, and not fixed
 for ($i = 0; $i < count($fields); $i++) {

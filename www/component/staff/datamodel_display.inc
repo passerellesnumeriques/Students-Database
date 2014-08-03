@@ -82,19 +82,18 @@ class StaffDepartmentDataDisplay extends datamodel\DataDisplay {
 }
 
 $display = new datamodel\TableDataDisplay("StaffPosition", $category);
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("position", "Position"), null);
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("position", "Position", true, false), null);
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("department", "name", "Department"), null);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("start", "Start"), null);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("end", "End"), null);
-$display->addDataDisplay(new StaffPositionDataDisplay(), "people");
-$display->addDataDisplay(new StaffDepartmentDataDisplay(), "people");
+
 $display->addJoinFrom("people", array("types"), function($columns) {
 	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
 	return in_array("staff", $types);
 });
 $model->addTableDataDisplay($display);
 
-class StaffDataScreen extends datamodel\DataScreen {
+class StaffDataScreen implements datamodel\SimpleDataScreen {
 	
 	public function getTables() { return array("Staff","StaffPosition"); }
 	
@@ -124,6 +123,8 @@ class StaffDataScreen extends datamodel\DataScreen {
 		echo "</script>";
 	}
 	
+	public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name) {}
+	
 	public function createData($paths, $multiple) {
 		$path = $paths[0];
 		$people_id = $path->columns["people"];
@@ -139,6 +140,36 @@ class StaffDataScreen extends datamodel\DataScreen {
 	}
 	
 }
-
 $model->addDataScreen(new StaffDataScreen());
+
+class MultipleStaffDataScreen implements \datamodel\MultipleDataScreen {
+	
+	public function getTables() { return array("StaffPosition"); }
+	
+	public function getDataDisplay($come_from, $sub_model, $for_new_data) {
+		$list = array();
+		if ($for_new_data) {
+			array_push($list, new \datamodel\ChoiceDataDisplay("department", "name", "Department", true, true));
+			array_push($list, new \datamodel\SimpleDataDisplay("position", "Position"));
+			array_push($list, new \datamodel\SimpleDataDisplay("start", "Started on"));
+		} else {
+			array_push($list, new StaffPositionDataDisplay());
+			array_push($list, new StaffDepartmentDataDisplay());
+		}
+		foreach ($list as $data) $data->setTableAndCategory(\DataModel::get()->internalGetTable("StaffPosition"), DataModel::get()->getDataCategory("PN Staff"));
+		return $list;
+	}
+	
+	public function createData($paths, $multiple) {
+		$path = $paths[0];
+		$people_id = $path->columns["people"];
+		SQLQuery::create()->insert("Staff", array("people"=>$people_id));
+		foreach ($path->value as $cd)
+			if ($cd["name"] == "Position") $position = $cd["value"];
+			else if ($cd["name"] == "Department") $department = $cd["value"];
+			else if ($cd["name"] == "Started on") $start = $cd["value"];
+		SQLQuery::create()->insert("StaffPosition", array("people"=>$people_id,"position"=>$position,"department"=>$department,"start"=>$start));
+	}
+}
+$model->addDataScreen(new MultipleStaffDataScreen());
 ?>

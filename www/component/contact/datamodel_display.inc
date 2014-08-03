@@ -329,7 +329,7 @@ $display->addDataDisplay(new datamodel\JoiningTableDataDisplay("Types", "organiz
 $display->addJoinFromAll();
 $model->addTableDataDisplay($display);
 
-class ContactsScreen extends datamodel\DataScreen {
+class ContactsScreen implements datamodel\SimpleDataScreen {
 
 	private $type;
 	
@@ -363,6 +363,7 @@ class ContactsScreen extends datamodel\DataScreen {
 		if ($structure_name <> null)
 			echo "<script type='text/javascript'>$structure_name.push({path:".json_encode($paths[1]->getString()).",addresses:$var,getValue:function(){return this.addresses.getAddresses();},validate:function(){return null;}});</script>";
 	}
+	public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name) {}
 	
 	public function createData($paths, $multiple) {
 		$contacts = $paths[0]->value;
@@ -399,7 +400,7 @@ class ContactsScreen extends datamodel\DataScreen {
 $model->addDataScreen(new ContactsScreen("people"));
 $model->addDataScreen(new ContactsScreen("organization"));
 
-class ContactPointDataScreen extends datamodel\DataScreen {
+class ContactPointDataScreen implements datamodel\SimpleDataScreen {
 	
 	public function getTables() { return array("ContactPoint"); }
 	
@@ -486,6 +487,7 @@ class ContactPointDataScreen extends datamodel\DataScreen {
 			echo "TODO: designation of this people for this organization";
 		}
 	}
+	public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name) {}
 	
 	public function createData($paths, $multiple) {
 		$path = $paths[0];

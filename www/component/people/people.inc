@@ -19,7 +19,7 @@ class people extends Component {
 			$i = strpos($types, "/", 1);
 			if ($i === false) break;
 			$type = substr($types, 1, $i-1);
-			$types = substr($types,$i);
+			$types = substr($types,$i+1);
 			array_push($list, $type);
 		}
 		return $list;
@@ -127,8 +127,8 @@ class people extends Component {
 	public function &searchPeopleByFirstAndLastName($first_name, $last_name) {
 		$q = SQLQuery::create()
 			->select("People")
-			->where("LOWER(`People`.`first_name`) LIKE LOWER('%".SQLQuery::escape(utf8_decode($first_name))."%')")
-			->where("LOWER(`People`.`last_name`) LIKE LOWER('%".SQLQuery::escape(utf8_decode($last_name))."%')")
+			->where("LOWER(`People`.`first_name`) LIKE LOWER('%".SQLQuery::escape($first_name)."%')")
+			->where("LOWER(`People`.`last_name`) LIKE LOWER('%".SQLQuery::escape($last_name)."%')")
 			;
 		$q->fieldsOfTable("People");
 		return $q;

@@ -8,17 +8,25 @@ class page_users_list extends Page {
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_users_list();");
 ?>
-<div style='width:100%;height:100%' id='users_list'>
+<div style='width:100%;height:100%;overflow:hidden;position:absolute;top:0px;left:0px;display:flex;flex-direction:column;'>
+	<div id='users_list' style='flex:1 1 auto;'></div>
+	<?php if (PNApplication::$instance->user_management->has_right("manage_users")) {?>
+	<div class='page_footer' style='flex:none'>
+		<button class='action' onclick='synchUsers();'><img src='<?php echo theme::$icons_16["_import"];?>'/> Synchronize Users</button>
+		<button class='action' onclick='newUser();'><img src='<?php echo theme::make_icon("/static/user_management/user_16.png",theme::$icons_10["add"]);?>'/> New User</button>
+	</div>
+	<?php }?>
 </div>
 <script type='text/javascript'>
 function init_users_list() {
-	new data_list(
+	window.list = new data_list(
 		'users_list',
 		'Users', null,
 		['User.Domain','User.Username','Personal Information.First Name','Personal Information.Last Name','User.Roles'],
 		null,
 		100,
 		function (list) {
+			window.list = list;
 			list.grid.makeScrollable();
 			<?php if (PNApplication::$instance->user_management->has_right("assign_role")) {?>
 			var roles = [<?php
@@ -30,11 +38,19 @@ function init_users_list() {
 			}
 			?>];
 			list.grid.setSelectable(true);
+			var nb_selected = document.createElement("SPAN");
+			nb_selected.innerHTML = "0";
+			nb_selected.style.marginRight = "4px";
+			nb_selected.style.marginLeft = "3px";
+			var nb_selected_container = document.createElement("SPAN");
+			nb_selected_container.appendChild(nb_selected);
+			nb_selected_container.appendChild(document.createTextNode("selected:"));
+			list.addHeader(nb_selected_container);
 			var assign_roles = document.createElement("BUTTON");
 			assign_roles.disabled = "disabled";
 			assign_roles.className = "flat";
 			assign_roles.innerHTML = "<img src='/static/user_management/role.png'/> Assign roles";
-			assign_roles.func = function() {
+			assign_roles.onclick = function() {
 				require("popup_window.js",function(){
 					var content = document.createElement("FORM");
 					var checkboxes = [];
@@ -77,7 +93,7 @@ function init_users_list() {
 			unassign_roles.disabled = "disabled";
 			unassign_roles.className = "flat";
 			unassign_roles.innerHTML = "<img src='/static/user_management/role.png'/> Unassign roles";
-			unassign_roles.func = function() {
+			unassign_roles.onclick = function() {
 				require("popup_window.js",function(){
 					var content = document.createElement("FORM");
 					var checkboxes = [];
@@ -116,33 +132,27 @@ function init_users_list() {
 				});
 			};
 			list.addHeader(unassign_roles);
+			var remove = document.createElement("BUTTON");
+			remove.className = "flat";
+			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
+			remove.onclick = function() {
+				alert("TODO");
+			};
+			list.addHeader(remove);
 			list.grid.onselect = function(selection) {
 				if (!selection || selection.length == 0) {
+					nb_selected.innerHTML = "0";
 					assign_roles.disabled = "disabled";
-					assign_roles.onclick = null;
 					unassign_roles.disabled = "disabled";
-					unassign_roles.onclick = null;
+					remove.disabled = "disabled";
 				} else {
+					nb_selected.innerHTML = ""+selection.length;
 					assign_roles.disabled = "";
-					assign_roles.onclick = assign_roles.func;
 					unassign_roles.disabled = "";
-					unassign_roles.onclick = unassign_roles.func;
+					remove.disabled = "";
 				}
+				layout.invalidate(list.header);
 			};
-			<?php }?>
-			<?php if (PNApplication::$instance->user_management->has_right("manage_users")) {?>
-			var synch = document.createElement("BUTTON");
-			synch.className = "flat";
-			synch.innerHTML = "<img src='"+theme.icons_16._import+"'/> Synchronize users";
-			synch.onclick = function() {
-				require("popup_window.js",function(){
-					var p = new popup_window("Synchronize Users",theme.icons_16._import,"");
-					p.setContentFrame("/dynamic/user_management/page/synch_users__auth");
-					p.onclose = function() { list.reloadData(); };
-					p.show();
-				});
-			};
-			list.addHeader(synch);
 			<?php }?>
 
 			list.makeRowsClickable(function(row){
@@ -151,6 +161,17 @@ function init_users_list() {
 			});
 		}
 	);
+}
+function synchUsers() {
+	require("popup_window.js",function(){
+		var p = new popup_window("Synchronize Users",theme.icons_16._import,"");
+		p.setContentFrame("/dynamic/user_management/page/synch_users__auth");
+		p.onclose = function() { window.list.reloadData(); };
+		p.show();
+	});
+}
+function newUser() {
+	alert("TODO");
 }
 </script>
 <?php 

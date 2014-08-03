@@ -21,6 +21,7 @@ abstract class DataBaseSystem {
 	 * @return resource the result of the query
 	 */
 	public function execute($sql_query, $report_errors = true) {
+		if (empty($sql_query)) throw new Exception("Empty SQL Query!");
 		$start = microtime(true);
 		$res = $this->executeSQL($sql_query);
 		$end = microtime(true);

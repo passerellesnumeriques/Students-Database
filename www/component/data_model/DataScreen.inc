@@ -1,20 +1,26 @@
 <?php 
 namespace datamodel {
+
+	interface DataScreen {
+		public function getTables();
+		public function createData($paths, $multiple);
+	}
 	
-	abstract class DataScreen {
+	interface SimpleDataScreen extends DataScreen {
 		
-		public abstract function getTables();
+		public function getIcon();
+		public function getName();
 		
-		public abstract function getIcon();
-		public abstract function getName();
-		
-		public abstract function generate(&$page, $paths, $values, $prefilled_values, $structure_name);
-		
-		public abstract function createData($paths, $multiple);
+		public function generate(&$page, $paths, $values, $prefilled_values, $structure_name);
+		public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name);
 		
 	}
 	
-	class GenericDataScreen extends DataScreen {
+	interface MultipleDataScreen extends DataScreen {
+		public function getDataDisplay($come_from, $sub_model, $for_new_data);
+	}
+	
+	class GenericDataScreen implements DataScreen, SimpleDataScreen, MultipleDataScreen {
 	
 		/** @var \datamodel\TableDataDisplay $display */
 		protected $display;
@@ -31,6 +37,10 @@ namespace datamodel {
 		public function getIcon() { return $this->display->getCategory()->getIcon(); }
 		public function getName() { return $this->display->getCategory()->getName(); }
 		
+		public function getDataDisplay($come_from, $sub_model, $for_new_data) {
+			return $this->display->getDataDisplay($come_from, $sub_model);
+		}
+		
 		public function generate(&$page, $paths, $values, $prefilled_values, $structure_name) {
 			$path = $paths[0];
 			$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
@@ -40,6 +50,8 @@ namespace datamodel {
 			$fixed_columns = array_merge($values->getColumns($path->table->getName()));
 			echo $this->generateDataTable($page, $path, $this->display->getDataDisplay($from, $path->sub_model), $fixed_columns, $values, $prefilled_values, $structure_name, $is_new);
 		}
+		
+		public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name) {}
 		
 		/**
 		 * 
@@ -73,7 +85,7 @@ namespace datamodel {
 			}
 			foreach ($list as $data) {
 				$can_edit = $is_new ? $data->isEditableForNewData() : ($data->isEditable() && !$readonly);
-				if ($is_new && !$can_edit) continue;
+				if ($is_new && !$can_edit && !$values->hasDataValue($path->table->getName(), $data)) continue;
 				foreach ($data->getHandledColumns() as $c) {
 					if (isset($fixed_columns[$c]))
 						unset($fixed_columns[$c]);
@@ -171,7 +183,7 @@ namespace datamodel {
 			if ($path->unique)
 				foreach ($path->columns as $cname=>$val)
 					$to_update->addValue($path->table->getName(), $path->sub_model, $key, $cname, $val);
-			foreach ($this->display->getDataDisplay($come_from, $path->sub_model) as $data) {
+			foreach ($this->getDataDisplay($come_from, $path->sub_model, true) as $data) {
 				$found = false;
 				$val = null;
 				foreach ($path->value as $cd)
@@ -191,6 +203,25 @@ namespace datamodel {
 				$data->saveData($key, $val, $path->sub_model, $to_update, $come_from, $join);
 			}
 			$this->display->finalizeCreateData($key, $path->sub_model, $to_update, $come_from);
+			
+			// check if we are on a table joining 2 tables => if we come from one side, we need first to create the other side so we can join
+			$children_before = array();
+			$children_after = array();
+			if ($come_from <> null) { // we are on a reverse join
+				foreach ($path->children as $child) {
+					if (!$child->isReverse()) // the child is a direct join => we are probably on a joining table
+						array_push($children_before, $child);
+					else
+						array_push($children_after, $child);
+				}
+			} else {
+				foreach ($path->children as $child)
+					array_push($children_after, $child);
+			}
+
+			if (count($children_before) > 0)
+				$this->createChildrenData($children_before, $multiple, $to_update, $path->sub_model);
+			
 			$keys = $to_update->execute(true);
 			if (isset($keys[$path->table->getName()][$path->sub_model][$key]))
 				$key = $keys[$path->table->getName()][$path->sub_model][$key];
@@ -198,32 +229,44 @@ namespace datamodel {
 				if ($child->isReverse())
 					$child->columns[$child->foreign_key->name] = $key;
 			
+			if (count($children_after) > 0)
+				$this->createChildrenData($children_after, $multiple, $to_update, $path->sub_model);
+			
+			return $key;
+		}
+		
+		private function createChildrenData($children, $multiple, &$to_update, $parent_sub_model) {
 			// check DataScreen for children
-			if (!$multiple)
 			foreach (\DataModel::get()->getDataScreens() as $screen) {
+				if (!$multiple && !($screen instanceof \datamodel\SimpleDataScreen)) continue;
+				if ($multiple && !($screen instanceof \datamodel\MultipleDataScreen)) continue;
 				$tables = $screen->getTables();
 				$paths = array();
 				foreach ($tables as $t) {
-					foreach ($path->children as $child)
+					foreach ($children as $child)
 						if ($child->table->getName() == $t) {
-						array_push($paths, $child);
-						break;
-					}
+							array_push($paths, $child);
+							break;
+						}
 				}
 				if (count($paths) == count($tables)) {
-					$screen->createData($paths, $multiple);
+					$key = $screen->createData($paths, $multiple);
 					// remove children handled by the screen
 					foreach ($paths as $p) {
-						for ($i = 0; $i < count($path->children); $i++)
-							if ($path->children[$i] == $p) {
-								array_splice($path->children, $i, 1);
+						if (!$p->isReverse()) {
+							// the key will be interesting for the parent path
+							$to_update->addValue($p->foreign_key->table->getName(), $parent_sub_model, null, $p->foreign_key->name, $key);
+						}
+						for ($i = 0; $i < count($children); $i++)
+							if ($children[$i] == $p) {
+								array_splice($children, $i, 1);
 								break;
 							}
 					}
 				}
 			}
 			// create data for remaining children
-			foreach ($path->children as $child) {
+			foreach ($children as $child) {
 				$come_from = null;
 				if ($child instanceof DataPath_Join) {
 					if ($child->isReverse()) {
@@ -232,22 +275,30 @@ namespace datamodel {
 					}
 				}
 				$found = false;
-				if (!$multiple)
 				foreach (\DataModel::get()->getDataScreens() as $screen) {
+					if (!$multiple && !($screen instanceof \datamodel\SimpleDataScreen)) continue;
+					if ($multiple && !($screen instanceof \datamodel\MultipleDataScreen)) continue;
 					$tables = $screen->getTables();
 					if (count($tables) == 1 && $tables[0] == $child->table->getName()) {
-						$screen->createData(array($child), $multiple);
+						$key = $screen->createData(array($child), $multiple);
+						if ($come_from == null) {
+							// the key will be interesting for the parent path
+							$to_update->addValue($child->foreign_key->table->getName(), $parent_sub_model, null, $child->foreign_key->name, $key);
+						}
 						$found = true;
 						break;
-					}				
+					}
 				}
 				if (!$found) {
 					$display = \DataModel::get()->getTableDataDisplay($child->table->getName());
 					$screen = new GenericDataScreen($display);
-					$screen->createData(array($child), $multiple);
+					$key = $screen->createData(array($child), $multiple);
+					if ($come_from == null) {
+						// the key will be interesting for the parent path
+						$to_update->addValue($child->foreign_key->table->getName(), $parent_sub_model, null, $child->foreign_key->name, $key);
+					}
 				}
-			}
-			return $key;
+			}							
 		}
 	
 	}

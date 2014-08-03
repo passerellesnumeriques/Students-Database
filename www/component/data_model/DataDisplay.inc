@@ -11,16 +11,20 @@ namespace datamodel {
 abstract class DataDisplay {
 	
 	/**
-	 * @var \datamodel\TableDataDisplay $table_data_display the TableDataDisplay this data belongs to
+	 * @var \datamodel\Table $table the Table this data belongs to
 	 */
-	private $table_data_display;
+	private $table;
+	/**
+	 * @var \datamodel\DataDisplayCategory $category the category this data belongs to
+	 */
+	private $category;
 	
-	public function getTableDataDisplay() { return $this->table_data_display; }
-	public function setTableDataDisplay($table_data_display) { $this->table_data_display = $table_data_display; }
-	public function getTableName() { return $this->table_data_display->getTableName(); }
-	public function getTable() { return $this->table_data_display->getTable(); }
-	public function getCategoryName() { return $this->table_data_display->getCategory()->getName(); }
-	public function getCategory() { return $this->table_data_display->getCategory(); }
+	public function getTableName() { return $this->table->getName(); }
+	public function getTable() { return $this->table; }
+	public function getCategoryName() { return $this->category->getName(); }
+	public function getCategory() { return $this->category; }
+
+	public function setTableAndCategory($table, $category) { $this->table = $table; $this->category = $category; }
 	
 	/** Get the string to display for this data
 	 * @return string the display name
@@ -758,9 +762,17 @@ class JoiningTableDataDisplay extends DataDisplay {
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
 		require_once("component/data_model/DataBaseLock.inc");
-		\SQLQuery::create()->remove($this->getTable()->getSQLNameFor($sub_model), array($this->joining_key_name=>$key));
+		if ($key <> null) {
+			$rows = \SQLQuery::create()->select($this->getTable()->getName())->whereValue($this->getTable()->getName(), $this->joining_key_name, $key)->execute();
+			if (count($rows) > 0)
+				\SQLQuery::create()->removeRows($this->getTable()->getName(), $rows);
+		} else
+			$key = $joining_key_value_for_new_data;
+		$to_insert = array();
 		foreach ($value as $v)
-			\SQLQuery::create()->selectSubModelForTable($this->getTable(), $sub_model)->insert($this->getTableName(), array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
+			array_push($to_insert, array($this->joining_key_name=>$key,$this->foreign_key_name=>$v));
+		if (count($to_insert) > 0)
+			\SQLQuery::create()->selectSubModelForTable($this->getTable(), $sub_model)->insertMultiple($this->getTableName(), $to_insert);
 	}
 		
 }

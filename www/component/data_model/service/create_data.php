@@ -47,15 +47,16 @@ class service_create_data extends Service {
 		if ($path instanceof DataPath_Join && $path->isReverse())
 			$come_from = $path->foreign_key->name;
 		$found = false;
-		if (!$multiple)
-			foreach (DataModel::get()->getDataScreens() as $screen) {
-				$tables = $screen->getTables();
-				if (count($tables) == 1 && $tables[0] == $path->table->getName()) {
-					$key = $screen->createData(array($path), $multiple);
-					$found = true;
-					break;
-				}				
-			}
+		foreach (DataModel::get()->getDataScreens() as $screen) {
+			if (!$multiple && !($screen instanceof \datamodel\SimpleDataScreen)) continue;
+			if ($multiple && !($screen instanceof \datamodel\MultipleDataScreen)) continue;
+			$tables = $screen->getTables();
+			if (count($tables) == 1 && $tables[0] == $path->table->getName()) {
+				$key = $screen->createData(array($path), $multiple);
+				$found = true;
+				break;
+			}				
+		}
 		if (!$found) {
 			$display = DataModel::get()->getTableDataDisplay($path->table->getName());
 			$screen = new datamodel\GenericDataScreen($display);

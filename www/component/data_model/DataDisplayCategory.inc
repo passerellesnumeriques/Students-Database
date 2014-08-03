@@ -22,6 +22,10 @@ class DataDisplayCategory {
 		array_push($this->tables, $table_name);
 	}
 	
+	public function getTables() {
+		return $this->tables;
+	}
+	
 }
 
 }

@@ -16,13 +16,15 @@ class data_model extends Component {
 	 * @param string $root_table the table to start from
 	 * @return array of array(DataDisplay, DataPath)
 	 */
-	public function getAvailableFields($root_table, $sub_model, $go_to_submodels = false, $sub_models = null, $known_columns = null) {
+	public function getAvailableFields($root_table, $sub_model, $go_to_submodels = false, $sub_models = null, $known_columns = null, $for_new_data = false) {
 		require_once("component/data_model/DataPath.inc");
 		$paths = DataPathBuilder::searchFrom($root_table, $sub_model, $go_to_submodels, $sub_models);
 		$root = DataPathBuilder::buildPathsTree($paths);
 		$list = array();
-		if ($root <> null)
-			$this->browse($root, null, $list, $known_columns);
+		if ($root <> null) {
+			$tables_done = array();
+			$this->browse($root, null, $list, $known_columns, $for_new_data, $tables_done);
+		}
 		return $list;
 	}
 	
@@ -32,11 +34,28 @@ class data_model extends Component {
 	 * @param string|null $from the column by which we come from 
 	 * @param array $list the list to be filled
 	 */
-	private function browse($path, $from, &$list, $known_columns) {
-		$display = DataModel::get()->getTableDataDisplay($path->table->getName());
-		if ($display == null) return; // nothing accessible
+	private function browse($path, $from, &$list, $known_columns, $for_new_data, &$tables_done) {
+		if (in_array($path->table->getName(), $tables_done)) return;
+		array_push($tables_done, $path->table->getName());
+		
 		$handled = array();
-		if ($display <> null) {
+		$screen_found = false;
+		foreach (DataModel::get()->getDataScreens() as $screen) {
+			if (!($screen instanceof \datamodel\MultipleDataScreen)) continue;
+			$tables = $screen->getTables();
+			if (!in_array($path->table->getName(), $tables)) continue;
+			$screen_found = true;
+			foreach ($tables as $t) if ($t <> $path->table->getName()) array_push($tables_done, $t);
+			$data = $screen->getDataDisplay($from, $path->sub_model, $for_new_data);
+			foreach ($data as $d) {
+				array_push($list, array($d, $path));
+				foreach ($d->getHandledColumns() as $col)
+					array_push($handled, $col);
+			}
+		}
+		$display = DataModel::get()->getTableDataDisplay($path->table->getName());
+		if (!$screen_found) {
+			if ($display == null) return; // nothing accessible
 			$data = $display->getDataDisplay($from, $path->sub_model);
 			foreach ($data as $d) {
 				array_push($list, array($d, $path));
@@ -46,7 +65,7 @@ class data_model extends Component {
 		}
 		foreach ($path->children as $c) {
 			if ($c->isReverse()) {
-				if (!$display->canJoinToPrimary()) continue;
+				if ($display == null || !$display->canJoinToPrimary()) continue;
 				$fd = DataModel::get()->getTableDataDisplay($c->table->getName());
 				if ($fd == null) continue;
 				if (!$fd->canJoinFrom($c->foreign_key->name)) continue;
@@ -67,10 +86,10 @@ class data_model extends Component {
 						if (!$fd->checkJoinFrom($c->foreign_key->name, $values)) continue;
 					}
 				}
-				$this->browse($c, $c->foreign_key->name, $list, $known_columns);
+				$this->browse($c, $c->foreign_key->name, $list, $known_columns, $for_new_data, $tables_done);
 			} else if (!in_array($c->foreign_key->name, $handled)) {
-				if (!$display->canFollow($c->foreign_key->name)) continue;
-				$this->browse($c, null, $list, $known_columns);
+				if ($display == null || !$display->canFollow($c->foreign_key->name)) continue;
+				$this->browse($c, null, $list, $known_columns, $for_new_data, $tables_done);
 			}
 		}
 	}

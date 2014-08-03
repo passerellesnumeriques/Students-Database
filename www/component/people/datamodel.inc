@@ -124,7 +124,11 @@ $model->addTable("People")
 				if (in_array($pi->getId(), $types_ok)) continue;
 				array_push($types_ok, $pi->getId());
 			}
-		if (count($types_ok) <> count($types)) return false;
+		if (count($types_ok) <> count($types)) {
+			var_dump($types_ok);
+			var_dump($types);
+			return false;
+		}
 		return true;
 	})
 	;

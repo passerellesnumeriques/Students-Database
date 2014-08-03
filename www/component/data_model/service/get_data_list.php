@@ -85,6 +85,14 @@ class service_get_data_list extends Service {
 			$data = null;
 			foreach ($display->getDataDisplay($from, $path->sub_model) as $d)
 				if ($d->getDisplayName() == $name) { $data = $d; break; }
+			if ($data == null)
+				foreach (DataModel::get()->getDataScreens() as $screen) {
+					if ($screen instanceof \datamodel\MultipleDataScreen)
+						if (in_array($path->table->getName(), $screen->getTables()))
+							foreach ($screen->getDataDisplay($from, $path->sub_model, false) as $d)
+								if ($d->getDisplayName() == $name) { $data = $d; break; }
+					if ($data <> null) break;
+			}
 			if ($data == null) {
 				PNApplication::error("No displayable data ".$name." on table ".$path->table->getName());
 				return;
