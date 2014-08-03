@@ -1,6 +1,6 @@
 function loadGooglePlaces(callback) {
-	require("google_maps.js", function() {
-		loadGoogleMaps(function() {
+	window.top.require("google_maps.js", function() {
+		window.top.loadGoogleMaps(function() {
 			var tmp = document.createElement("CANVAS");
 			window.top.google_map_for_places = new window.top.google.maps.Map(tmp);
 			callback();

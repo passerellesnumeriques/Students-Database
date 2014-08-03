@@ -20,11 +20,9 @@ function EditCoordinatesWithMap(container, coordinates, onready) {
 	map_container.style.width = "400px";
 	map_container.style.height = "300px";
 	this.element.appendChild(map_container);
-	require("google_maps.js", function() {
-		new GoogleMap(map_container, function(gm) {
-			t.map = gm;
-			check_ready();
-		});
+	window.top.google.loadGoogleMap(map_container, function(m) {
+		t.map = gm;
+		check_ready();
 	});
 }
 

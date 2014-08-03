@@ -285,42 +285,40 @@ function organization(container, org, existing_types, can_edit) {
 		//map_container.style.top = "-1000px";
 		td_map.appendChild(map_container);
 		t.map = null;
-		require("google_maps.js", function() {
-			var markers = [];
-			var update_map = function() {
-				for (var i = 0; i < markers.length; ++i)
-					t.map.removeShape(markers[i]);
-				markers = [];
-				var list = t._addresses_widget.getAddresses();
-				if (list.length > 0) {
-					for (var i = 0; i < list.length; ++i) {
-						if (list[i].lat && list[i].lng)
-							markers.push(t.map.addMarker(parseFloat(list[i].lat), parseFloat(list[i].lng), 1, list[i].address_type));
-					}
-					t.map.fitToShapes();
-					//map_container.style.position = "static";
-					//map_container.style.visibility = "visible";
-				} else {
-					//map_container.style.position = "absolute";
-					//map_container.style.visibility = "hidden";
-					//map_container.style.top = "-1000px";
+		var markers = [];
+		var update_map = function() {
+			for (var i = 0; i < markers.length; ++i)
+				t.map.removeShape(markers[i]);
+			markers = [];
+			var list = t._addresses_widget.getAddresses();
+			if (list.length > 0) {
+				for (var i = 0; i < list.length; ++i) {
+					if (list[i].lat && list[i].lng)
+						markers.push(t.map.addMarker(parseFloat(list[i].lat), parseFloat(list[i].lng), 1, list[i].address_type));
 				}
-			};
-			var link_map_to_addresses = function() {
-				if (!t._addresses_widget) {
-					setTimeout(link_map_to_addresses, 100);
-					return;
-				}
-				update_map();
-				t._addresses_widget.onchange.add_listener(update_map);
-			};
-			new GoogleMap(map_container, function(m) {
-				t.map = m;
-				window.top.geography.getCountry(window.top.default_country_id, function(country) {
-					if (country && country.north)
-						t.map.fitToBounds(parseFloat(country.south), parseFloat(country.west), parseFloat(country.north), parseFloat(country.east));
-					link_map_to_addresses();
-				});
+				t.map.fitToShapes();
+				//map_container.style.position = "static";
+				//map_container.style.visibility = "visible";
+			} else {
+				//map_container.style.position = "absolute";
+				//map_container.style.visibility = "hidden";
+				//map_container.style.top = "-1000px";
+			}
+		};
+		var link_map_to_addresses = function() {
+			if (!t._addresses_widget) {
+				setTimeout(link_map_to_addresses, 100);
+				return;
+			}
+			update_map();
+			t._addresses_widget.onchange.add_listener(update_map);
+		};
+		window.top.google.loadGoogleMap(map_container, function(m) {
+			t.map = m;
+			window.top.geography.getCountry(window.top.default_country_id, function(country) {
+				if (country && country.north)
+					t.map.fitToBounds(parseFloat(country.south), parseFloat(country.west), parseFloat(country.north), parseFloat(country.east));
+				link_map_to_addresses();
 			});
 		});
 		

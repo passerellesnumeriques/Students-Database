@@ -129,6 +129,42 @@ if (!window.top.google) {
 					window.top.google.connection_event.fire();
 				});			
 			});
+		},
+		loadGoogleMap: function(container, onready) {
+			container.style.display = "flex";
+			container.style.flexDirection = "column";
+			container.style.justifyContent = "center";
+			container.style.alignItems = "center";
+			container.style.position = "relative";
+			var loading = document.createElement("IMG");
+			loading.src = "/static/google/map_loading.gif";
+			loading.style.zIndex = 2;
+			container.appendChild(loading);
+			var map_container = document.createElement("DIV");
+			map_container.style.width = container.style.width;
+			map_container.style.height = container.style.height;
+			map_container.style.position = "absolute";
+			map_container.style.left = "0px";
+			map_container.style.top = "0px";
+			container.appendChild(map_container);
+			require("google_maps.js", function() {
+				setTimeout(function() {
+					new GoogleMap(map_container, function(m) {
+						var check = function() {
+							if (map_container.childNodes.length > 0 && map_container.childNodes[0].className == "gm-style") {
+								var gm = map_container.childNodes[0];
+								if (gm.childNodes.length > 3) {
+									onready(m);
+									container.removeChild(loading);
+									return;
+								}
+							}
+							setTimeout(check, 25);
+						};
+						check();
+					});
+				},1);
+			});
 		}
 	};
 	window.top.google_api_loaded = function(){

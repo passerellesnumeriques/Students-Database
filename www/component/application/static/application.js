@@ -343,7 +343,7 @@ function LoadingFrame(frame_element) {
 		var win = getIFrameWindow(frame_element);
 		if (!win) return false;
 		if (win._static_page) return true;
-		return this.step == 1 && win.document && win._page_ready && win.layout && win.layout._invalidated.length == 0 && win.layout.everythingOnPageLoaded();
+		return this.step == 1 && win.document && win._page_ready && win.layout && win.layout._invalidated.length == 0 /*&& win.layout.everythingOnPageLoaded()*/;
 	};
 	/** Check if the page inside the frame has been closed */
 	this._isClosed = function() {
@@ -456,7 +456,7 @@ function LoadingFrame(frame_element) {
 				else if (!win._page_ready) console.error("Frame loading timeout: _page_ready is false");
 				else if (!win.layout)  console.error("Frame loading timeout: no layout");
 				else if (win.layout._invalidated.length > 0) console.error("Frame loading timeout: still something to layout");
-				else if (!win.layout.everythingOnPageLoaded()) console.error("Frame loading timeout: script, css or image not yet loaded: "+win.layout.whatIsNotYetLoaded());
+				//else if (!win.layout.everythingOnPageLoaded()) console.error("Frame loading timeout: script, css or image not yet loaded: "+win.layout.whatIsNotYetLoaded());
 			} else console.error("Frame loading timeout: step = "+this.step);
 			this.remove();
 			return;

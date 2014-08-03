@@ -43,11 +43,9 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 				});
 			});
 		});
-		require("google_maps.js", function() {
-			new GoogleMap(t._map_container, function (m) {
-				t._map = m;
-				t._refreshMap();
-			});
+		window.top.google.loadGoogleMap(t._map_container, function(m) {
+			t._map = m;
+			t._refreshMap();
 		});
 	};
 	
@@ -117,7 +115,6 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		t._map_container.style.borderTop = "1px solid #808080";
 		t._td_area.appendChild(t._map_container);
 		t._map = null;
-		require("google_maps.js");
 		t._td_partners = document.createElement("td");
 		t._td_partners.style.verticalAlign = "top";
 		t._td_partners.style.borderLeft = "1px solid #808080";
