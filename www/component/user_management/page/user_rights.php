@@ -37,11 +37,12 @@ foreach ($roles as $role)
 if ($can_edit)
 	DataBaseLock::generateScript($lock_id);
 ?>
-<div class='page_title'>
+<div style='width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;position:absolute;top:0px;left:0px;'>
+<div class='page_title' style='flex:none'>
 	<img src='/static/user_management/access_list_32.png'/>
 	User Access Rights: <span style='font-family:Courrier New;font-weight:bold;font-style:italic'><?php echo $user["domain"]."\\".$user["username"];?></span>
 </div>
-<div style='background-color:white'>
+<div style='background-color:white;flex:1 1 auto;overflow:auto;'>
 <?php 
 if ($locked <> null)
 	echo "<img src='".theme::$icons_16["lock"]."'/> This page is already locked by ".$locked."<br/>";
@@ -53,6 +54,7 @@ if ($is_admin) {
 // retrieve all existing rights, and categories
 $all_rights = array();
 $categories = array();
+$right_type = array();
 foreach (PNApplication::$instance->components as $component) {
 	foreach ($component->getReadableRights() as $cat) {
 		if (!isset($categories[$cat->display_name]))
@@ -60,6 +62,7 @@ foreach (PNApplication::$instance->components as $component) {
 		foreach ($cat->rights as $r) {
 			array_push($categories[$cat->display_name], $r);
 			$all_rights[$r->name] = $r;
+			$right_type[$r->name] = "readable";
 		}
 	}
 	foreach ($component->getWritableRights() as $cat) {
@@ -68,6 +71,7 @@ foreach (PNApplication::$instance->components as $component) {
 		foreach ($cat->rights as $r) {
 			array_push($categories[$cat->display_name], $r);
 			$all_rights[$r->name] = $r;
+			$right_type[$r->name] = "writable";
 		}
 	}
 }
@@ -107,6 +111,7 @@ function generate_right($prefix, $right, $value, $readonly = true, $visible = tr
 		if ($value) echo " checked='checked'";
 		if ($readonly) echo " disabled='disabled'";
 		echo " style='".($visible ? "visibility:visible;position:static" : "visibility:hidden;position:absolute")."'";
+		echo " onchange=\"if (this.checked == ".($value ? "true" : "false").") pnapplication.dataSaved('right_".$prefix.$right->name."'); else pnapplication.dataUnsaved('right_".$prefix.$right->name."');\"";
 		echo "/>";
 	} else
 		echo "unknown right type";
@@ -125,7 +130,7 @@ echo "</tr>";
 foreach ($categories as $cat_name=>$rights) {
 	echo "<tr><td colspan=".(5+$roles_cols)." class='category_title'>".$cat_name."</td></tr>";
 	foreach ($rights as $r) {
-		echo "<tr>";
+		echo "<tr class='".$right_type[$r->name]."_right'>";
 		echo "<td width='10px'></td>";
 		echo "<td>".$r->display_name."</td>";
 		echo "<td>";
@@ -135,8 +140,8 @@ foreach ($categories as $cat_name=>$rights) {
 		if (isset($user_rights[$r->name]) || !isset($final[$r->name]) || !$r->is_highest($final[$r->name])) {
 			generate_right("user_", $r, isset($user_rights[$r->name]) ? $user_rights[$r->name] : @$final[$r->name], !$can_edit, isset($user_rights[$r->name]));
 			if ($can_edit) {
-				echo "<img src='".theme::$icons_16["remove"]."' id='remove_".$r->name."' onclick=\"um_rights_remove('".$r->name."');\" style='".(isset($user_rights[$r->name]) ? "visibility:visible;position:static" : "visibility:hidden;position:absolute")."'/>";
-				echo "<img src='".theme::$icons_16["add"]."' id='add_".$r->name."' onclick=\"um_rights_add('".$r->name."');\" style='".(isset($user_rights[$r->name]) ? "visibility:hidden;position:absolute" : "visibility:visible;position:static")."'/>";
+				echo "<img src='".theme::$icons_16["remove"]."' id='remove_".$r->name."' onclick=\"um_rights_remove('".$r->name."',".(isset($user_rights[$r->name])?"true":"false").");\" style='".(isset($user_rights[$r->name]) ? "visibility:visible;position:static" : "visibility:hidden;position:absolute")."'/>";
+				echo "<img src='".theme::$icons_16["add"]."' id='add_".$r->name."' onclick=\"um_rights_add('".$r->name."',".(isset($user_rights[$r->name])?"true":"false").");\" style='".(isset($user_rights[$r->name]) ? "visibility:hidden;position:absolute" : "visibility:visible;position:static")."'/>";
 			}
 		}
 		echo "</td>";
@@ -179,10 +184,16 @@ td.category_title {
 img {
 	cursor: pointer;
 }
+tr.readable_right {
+	background-color: #D8FFD8;
+}
+tr.writable_right {
+	background-color: #FFF0D8;
+}
 </style>
 <?php if ($can_edit) {?>
 <script type='text/javascript'>
-function um_rights_add(name) {
+function um_rights_add(name, was_set) {
 	var input = document.forms["um_rights"].elements["user_"+name];
 	var add = document.getElementById("add_"+name);
 	var remove = document.getElementById("remove_"+name);
@@ -192,8 +203,9 @@ function um_rights_add(name) {
 	add.style.position = "absolute";
 	remove.style.visibility = "visible";
 	remove.style.position = "static";
+	if (was_set) pnapplication.dataSaved('add_right_'+name); else pnapplication.dataUnsaved('add_right_'+name);
 }
-function um_rights_remove(name) {
+function um_rights_remove(name, was_set) {
 	var input = document.forms["um_rights"].elements["user_"+name];
 	var add = document.getElementById("add_"+name);
 	var remove = document.getElementById("remove_"+name);
@@ -203,25 +215,12 @@ function um_rights_remove(name) {
 	add.style.position = "static";
 	remove.style.visibility = "hidden";
 	remove.style.position = "absolute";
+	if (!was_set) pnapplication.dataSaved('add_right_'+name); else pnapplication.dataUnsaved('add_right_'+name);
 }
 function um_rights_save() {
-	var saving = document.createElement("DIV");
-	setOpacity(saving, 0.33);
-	saving.style.backgroundColor = "#A0A0A0";
-	saving.style.position = "fixed";
-	saving.style.top = "0px";
-	saving.style.left = "0px";
-	saving.style.width = getWindowWidth()+"px";
-	saving.style.height = getWindowHeight()+"px";
-	document.body.appendChild(saving);
-	var icon = document.createElement("SPAN");
-	icon.innerHTML = "<img src='"+theme.icons_16.save+"'/>Saving...";
-	icon.style.top = (getWindowHeight()/2-icon.offsetHeight)+"px";
-	icon.style.left = (getWindowWidth()/2-icon.offsetWidth)+"px";
-	icon.style.position = "fixed";
-	document.body.appendChild(icon);
+	var locker = lock_screen(null, "<img src='"+theme.icons_16.save+"'/>Saving...");
 	var form = document.forms["um_rights"];
-	var data = "user="+encodeURIComponent(<?php echo json_encode($user_id)?>);
+	data = {lock:<?php echo $lock_id;?>,user:<?php echo $user_id;?>};
 	for (var i = 0; i < form.elements.length; ++i) {
 		var e = form.elements[i];
 		var name = e.name;
@@ -233,14 +232,13 @@ function um_rights_save() {
 			value = e.checked;
 		else
 			value = e.value;
-		data += "&"+encodeURIComponent(right)+"="+encodeURIComponent(value);
+		data[right] = value;
 	}
-	service.json("user_management","save_user_rights?lock=<?php echo $lock_id?>", data, function(result) {
-		if (result != null)
+	service.json("user_management","save_user_rights", data, function(result) {
+		unlock_screen(locker);
+		if (result != null) {
+			pnapplication.cancelDataUnsaved();
 			location.reload();
-		else {
-			document.body.removeChild(icon);
-			document.body.removeChild(saving);
 		}
 	});
 }
@@ -251,8 +249,10 @@ function um_rights_save() {
 ?>
 </div>
 <?php if ($can_edit && !$is_admin) {?>
-<div class='page_footer'>
-	<button onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
+<div class='page_footer' style='flex:none;'>
+	<button id='save_button' class='action' onclick='um_rights_save()'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
+	<script type='text/javascript'>pnapplication.autoDisableSaveButton('save_button');</script>
+</div>
 </div>
 <?php }
 

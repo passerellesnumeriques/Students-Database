@@ -236,8 +236,11 @@ function _getFixedPosition(win,elem) {
 		}
 	}
 	if (win.frameElement) {
-		//if (win.scrollX) x -= win.scrollX; // commented because already computed with the body.scrollTop
-		//if (win.scrollY) y -= win.scrollY;
+		// depending on the browser the scrolling may be on body or the window
+		if (!win.document.body.scrollLeft && !win.document.body.scrollTop) {
+			if (win.scrollX) x -= win.scrollX;
+			if (win.scrollY) y -= win.scrollY;
+		}
 		var pos = _getFixedPosition(getWindowFromElement(win.frameElement), win.frameElement);
 		x += pos.x;
 		y += pos.y;

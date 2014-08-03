@@ -154,7 +154,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.field.setData(data);
 			t.field.setOriginalData(data);
 			t.unedit();
-		});
+		},t);
 	};
 	/** Called when the user is editing the value, to display or not the save button */
 	t._changed = function() {

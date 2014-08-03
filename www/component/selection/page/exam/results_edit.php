@@ -18,6 +18,8 @@ class page_exam_results_edit extends SelectionPage {
 		$this->onload("sectionFromHTML('applicant_info');"); 
 		$this->onload("sectionFromHTML('exam_session_info');"); 
 		$this->addJavascript("/static/selection/exam/results_edit.js");
+		$this->addJavascript("/static/selection/exam/results_grid.js");
+		$this->addJavascript("/static/selection/exam/exam_objects.js");
 		require_once("component/selection/SelectionExamJSON.inc");
 		$this->onload("initResultsEdit(".$input["session_id"].",".$input["room_id"].",".SelectionExamJSON::ExamSubjectsFullJSON().")");
 

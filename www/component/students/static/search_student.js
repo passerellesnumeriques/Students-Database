@@ -1,7 +1,7 @@
 if (typeof require != 'undefined')
 	require("custom_search.js");
 
-function search_student(container) {
+function search_student(container,section) {
 	require("custom_search.js", function() {
 		new custom_search(container, 3, "Search a student", function(input, ondone) {
 			var redirected = false;
@@ -11,8 +11,8 @@ function search_student(container) {
 					var url = new URL(app_frame.src);
 					if (url.path != '/dynamic/curriculum/page/tree_frame') {
 						redirected = true;
-						app_win.location.href = '/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list';
-						app_frame.src = '/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list';
+						app_win.location.href = '/dynamic/curriculum/page/tree_frame?section='+section+'#/dynamic/students/page/list';
+						app_frame.src = '/dynamic/curriculum/page/tree_frame?section='+section+'#/dynamic/students/page/list';
 						setTimeout(function(){check();},50);
 						return;
 					}
@@ -20,8 +20,8 @@ function search_student(container) {
 					if (url.path != '/dynamic/curriculum/page/tree_frame') {
 						if (!redirected) {
 							redirected = true;
-							app_win.location.href = '/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list';
-							app_frame.src = '/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list';
+							app_win.location.href = '/dynamic/curriculum/page/tree_frame?section='+section+'#/dynamic/students/page/list';
+							app_frame.src = '/dynamic/curriculum/page/tree_frame?section='+section+'#/dynamic/students/page/list';
 							setTimeout(function(){check();},50);
 							return;
 						}
@@ -37,7 +37,7 @@ function search_student(container) {
 						}
 						if (app_win.location.hash != '#/dynamic/students/page/list') {
 							app_win.location.hash = '#/dynamic/students/page/list';
-							app_win.onhashchange();
+							triggerEvent(app_win, 'hashchange');
 							setTimeout(function(){check();},50);
 							return;
 						}

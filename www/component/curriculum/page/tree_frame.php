@@ -12,7 +12,6 @@ class page_tree_frame extends Page {
 		$this->addInitScript("window.top.require('datamodel.js');");
 		$this->requireJavascript("header_bar.js");
 		theme::css($this, "header_bar.css");
-		$this->onload("new header_bar('tree_header','toolbar');");
 		
 		$this->requireJavascript("tree.js");
 		theme::css($this, "tree.css");
@@ -73,6 +72,7 @@ class page_tree_frame extends Page {
 	</div>
 </div>
 <script type='text/javascript'>
+new header_bar('tree_header','toolbar');
 var tr = new tree('tree');
 tr.table.style.marginRight = window.top.browser_scroll_bar_size+"px";
 tr.addColumn(new TreeColumn(""));

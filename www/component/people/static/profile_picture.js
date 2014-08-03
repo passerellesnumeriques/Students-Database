@@ -70,6 +70,23 @@ function profile_picture(container, width, height, halign, valign) {
 	}
 	t.picture_container.appendChild(img);
 	
+	this.setNoPicture = function(sex, onloaded) {
+		t.picture = document.createElement("IMG");
+		t.picture.onload = function() {
+			t.adjustPicture();
+			if (img.parentNode)
+				t.picture_container.removeChild(img);
+			if (onloaded) onloaded();
+		};
+		t.picture.onerror = function() {
+			img.src = theme.icons_16.error;
+			t.picture = null;
+			if (onloaded) onloaded();
+		};
+
+		t.picture.src = "/static/people/default_"+(sex == 'F' ? "female" : "male")+".jpg";		
+	};
+	
 	this.loadPeopleID = function(people_id, onloaded) {
 		service.json("people", "picture", {people:people_id}, function(res) {
 			if (!res) {
@@ -80,22 +97,8 @@ function profile_picture(container, width, height, halign, valign) {
 			}
 			if (typeof res.storage_id != 'undefined')
 				t.loadPeopleStorage(people_id, res.storage_id, res.revision, onloaded);
-			else {
-				t.picture = document.createElement("IMG");
-				t.picture.onload = function() {
-					t.adjustPicture();
-					if (img.parentNode)
-						t.picture_container.removeChild(img);
-					if (onloaded) onloaded();
-				};
-				t.picture.onerror = function() {
-					img.src = theme.icons_16.error;
-					t.picture = null;
-					if (onloaded) onloaded();
-				};
-
-				t.picture.src = "/static/people/default_"+(res.sex == 'F' ? "female" : "male")+".jpg";
-			}
+			else
+				t.setNoPicture(res.sex, onloaded);
 		});
 	};
 	this.loadUser = function(domain, username, onloaded) {
@@ -110,8 +113,10 @@ function profile_picture(container, width, height, halign, valign) {
 		});
 	};
 	this.loadPeopleObject = function(people, onloaded) {
-		if (!people.picture_id)
+		if (typeof people.picture_id == 'undefined')
 			this.loadPeopleID(people.id, onloaded);
+		else if (people.picture_id == null)
+			this.setNoPicture(people.sex, onloaded);
 		else
 			this.loadPeopleStorage(people.id, people.picture_id,people.picture_revision,onloaded);
 	};

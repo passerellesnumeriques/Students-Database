@@ -60,6 +60,7 @@ function staff_info(&$page, $people_id, $container_id) {
 			tr.appendChild(th = document.createElement("TH")); th.innerHTML = "Department";
 			tr.appendChild(th = document.createElement("TH")); th.innerHTML = "Start Date";
 			tr.appendChild(th = document.createElement("TH")); th.innerHTML = "End Date";
+			tr.appendChild(th = document.createElement("TH"));
 			table.appendChild(t.table = document.createElement("TBODY"));
 			var foot = document.createElement("TFOOT"); table.appendChild(foot);
 			foot.appendChild(tr = document.createElement("TR"));
@@ -81,9 +82,9 @@ function staff_info(&$page, $people_id, $container_id) {
 				this.positions.push(p);
 				this.addPosition(p);
 			} else {
-				service.json("data_model","save_entity",{table:"StaffPosition",field_position:"Enter Job Position",field_people:<?php echo $people_id;?>},function(res){
+				service.json("data_model","save_entity",{table:"StaffPosition",field_position:"Enter Job Position",field_people:<?php echo $people_id;?>,field_start:dateToSQL(new Date())},function(res){
 					if (!res) return;
-					var p = {id:res.id,position:"Enter Job Position",department:null,start:null,end:null};
+					var p = {id:res.id,position:"Enter Job Position",department:null,start:dateToSQL(new Date()),end:null};
 					t.positions.push(p);
 					t.addPosition(p);
 				});
@@ -154,6 +155,19 @@ function staff_info(&$page, $people_id, $container_id) {
 					new editable_cell(td_end, "StaffPosition", "end", position.id, 'field_date', {}, position.end);
 				});
 			}
+			var td_remove = document.createElement("TD");
+			tr.appendChild(td_remove);
+			var remove = document.createElement("BUTTON");
+			remove.className = "flat icon";
+			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+			remove.onclick = function() {
+				t.positions.remove(position);
+				tr.parentNode.removeChild(tr);
+				if (position.id > 0)
+					service.json("data_model", "remove_row", {table:"StaffPosition",row_key:position.id}, function(res) {
+					});
+			};
+			td_remove.appendChild(remove);
 		};
 
 		this._create();

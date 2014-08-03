@@ -11,19 +11,23 @@ class page_roles extends Page {
 			->select("Role")
 			->field('id')
 			->field('name')
+			->field('builtin')
 			->join("Role","UserRole",array("id"=>"role"))
 			->field("UserRole","user")
 			->count("nb_users")
 			->groupBy("Role","id")
 			->orderBy("Role","name",true)
 			->execute();
+		
+		require_once("component/data_model/page/utils.inc");
 ?>
-<div class='page_title'>
+<div style='width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column;position:absolute;top:0px;left:0px;'>
+<div class='page_title' style='flex:none'>
 	<img src="/static/user_management/role_32.png"/>
 	Roles
 </div>
-<div style='background-color:white;padding:10px'>
-	<table rules='all' style='border:1px solid black;margin:5px'>
+<div style='padding:10px;flex:1 1 auto;'>
+	<table rules='all' style='border:1px solid black;margin:5px;background-color:white;'>
 		<tr>
 			<th>Role</th>
 			<th>Users</th>
@@ -31,19 +35,23 @@ class page_roles extends Page {
 		</tr>
 		<?php foreach ($roles as $role) {?>
 		<tr>
-			<td><?php echo $role["name"];?></td>
+			<td style='padding:0px 2px;'>
+				<?php datamodel_cell_here($this, true, "Role", "name", $role["id"], $role["name"], null);?>
+			</td>
 			<td align=right><?php echo $role["user"] == null ? 0 : $role["nb_users"];?></td>
 			<td>
-				<img src='<?php echo theme::$icons_16["edit"];?>' title="Rename" style='cursor:pointer' onclick="rename_role(<?php echo $role["id"];?>,'<?php echo $role["name"];?>');"/>
-				<img src='/static/user_management/access_list.png' title="Access Rights" style='cursor:pointer' onclick="location='role_rights?role=<?php echo $role["id"];?>';"/>
-				<img src='<?php echo theme::$icons_16["remove"];?>' title="Remove" style='cursor:pointer' onclick="remove_role(<?php echo $role["id"];?>,'<?php echo $role["name"];?>',<?php echo $role["user"] == null ? 0 : $role["nb_users"]?>);"/>
+				<button class='flat icon' title="Access Rights" onclick="location='role_rights?role=<?php echo $role["id"];?>';"><img src='/static/user_management/access_list.png'/></button>
+				<?php if (!$role["builtin"]) {?>
+				<button class='flat icon' title="Remove" onclick="remove_role(<?php echo $role["id"];?>,'<?php echo $role["name"];?>',<?php echo $role["user"] == null ? 0 : $role["nb_users"]?>);"><img src='<?php echo theme::$icons_16["remove"];?>'/></button>
+				<?php } ?>
 			</td>
 		</tr>
 		<?php }?>
 	</table>
 </div>
-<div class='page_footer'>
+<div class='page_footer' style='flex:none'>
 	<button class="action" onclick="new_role();"><img src='<?php echo theme::make_icon("/static/user_management/role.png",theme::$icons_10["add"]);?>'/> New Role</button>
+</div>
 </div>
 	
 <script type='text/javascript'>
@@ -78,32 +86,6 @@ function new_role() {
 				if (result && result.id)
 					location.href = '/dynamic/user_management/page/role_rights?role='+result.id;
 			});
-		}
-	);
-}
-
-function rename_role(id,name) {
-	input_dialog(
-		"/static/user_management/role.png",
-		"Rename role",
-		"Role name",
-		name,
-		100,
-		function(new_name) {
-			if (new_name.length == 0)
-				return "Cannot be empty";
-			// check the name does not exist yet
-			if (new_name == name) return null;
-			for (var i = 0; i < existing_roles.length; ++i)
-				if (new_name == existing_roles[i])
-					return "A role already exists with this name";
-			return null;
-		},function(new_name) {
-			if (new_name == null) return;
-			if (name == new_name) return;
-			service.json("data_model","save_cell",{table:'Role',column:'name',row_key:'id',value:new_name,lock:null},function(result) {
-				if (result) location.reload();
-			}, true);
 		}
 	);
 }

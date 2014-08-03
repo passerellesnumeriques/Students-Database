@@ -594,6 +594,8 @@ abstract class Right {
 	 * @param unknown $value
 	 */
 	public abstract function is_highest($value);
+	
+	public abstract function get_highest_value();
 }
 /**
  * Implementation of Right for a boolean value.
@@ -608,5 +610,6 @@ class BooleanRight extends Right {
 	public function is_highest($value) {
 		return $value;
 	}
+	public function get_highest_value() { return true; }
 }
 ?>

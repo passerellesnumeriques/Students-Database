@@ -243,6 +243,9 @@ function initPage() {
 	listenEvent(frame,'load',function() {
 		pageLoaded(getIFrameWindow(this).location.href);
 	});
+	listenEvent(frame,'hashchange',function() {
+		pageLoaded(getIFrameWindow(this).location.href);
+	});
 }
 
 function getSection(section_name) {
@@ -359,32 +362,49 @@ function loadPage(url) {
 
 function pageLoaded(url) {
 	var u = new URL(url);
-	var component = u.path;
-	var i = component.indexOf('/',1);
-	if (i > 0) {
-		component = component.substring(i+1);
-		i = component.indexOf('/');
-		if (i > 0) component = component.substring(0,i);
-		var menu = document.getElementById('application_menu');
+	// determine section from url
+	var menu = document.getElementById('application_menu');
+	var section = null;
+	if (u.params && u.params.section) {
 		for (var i = 0; i < menu.childNodes.length; ++i) {
 			var s = menu.childNodes[i];
 			if (s.nodeType != 1) continue;
-			if (!s.hasAttribute("components")) continue;
-			var components = s.getAttribute("components").split(",");
-			var found = false;
-			for (var j = 0; j < components.length; ++j)
-				if (component == components[j]) {
-					if (s.className.indexOf("selected") < 0) {
-						highlightSection(s);
-						if (s.hasAttribute("menu"))
-							loadMenu(s.getAttribute("menu"));
-					}
-					found = true;
-				}
-			if (found) break;
+			if (!s.hasAttribute("section")) continue;
+			if (s.getAttribute("section").toLowerCase() == u.params.section) {
+				section = s;
+				break;
+			}
 		}
-	} else
-		component = null;
+	}
+	if (section == null) {
+		// determine based on component
+		var component;
+		if (u.hash && u.hash.startsWith("/dynamic/"))
+			component = u.hash;
+		else
+			component = u.path;
+		var i = component.indexOf('/',1);
+		if (i > 0) {
+			component = component.substring(i+1);
+			i = component.indexOf('/');
+			if (i > 0) component = component.substring(0,i);
+			for (var i = 0; i < menu.childNodes.length; ++i) {
+				var s = menu.childNodes[i];
+				if (s.nodeType != 1) continue;
+				if (!s.hasAttribute("components")) continue;
+				var components = s.getAttribute("components").split(",");
+				for (var j = 0; j < components.length && section == null; ++j)
+					if (component == components[j]) section = s;
+			}
+		}
+	}
+	if (section != null) {
+		if (!hasClassName(section, "selected")) {
+			highlightSection(section);
+			if (section.hasAttribute("menu"))
+				loadMenu(section.getAttribute("menu"));
+		}
+	}
 	var items = document.getElementsByClassName('application_left_menu_item');
 	var oks = [];
 	for (var i = 0; i < items.length; ++i) {

@@ -1,6 +1,6 @@
 <?php 
 return array(
-	new AccessRightCategory("Information Session",array(
+	new AccessRightCategory("Selection",array(
 		// information session
 		new BooleanRight("manage_information_session","Add/Remove/Edit Information Sessions",array(true=>array("see_information_session"=>true))),
 		// exam

@@ -25,11 +25,13 @@ function editable_cell(container, table, column, row_key, field_classname, field
 				if (!result) handler(null);
 				else handler([result.lock], result.value);
 			});
-		}, function(data, handler) {
+		}, function(data, handler, ef) {
+			var orig_data = ef.field.getOriginalData();
 			var new_data = data;
 			if (onsave)
 				new_data = onsave(new_data,t);
 			service.json("data_model", "save_cell", {lock:t.lock,table:table,row_key:row_key,column:column,value:new_data},function(result) {
+				if (!result) new_data = orig_data;
 				handler(new_data);
 			});
 		},function(ef) {

@@ -125,7 +125,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		for (var i = 0; i < this.actions.length; ++i)
 			if (this.actions[i].id == id) return this.actions[i];
 		return null;
-	}
+	};
 
 	this.addSorting = function(sort_function) {
 		this.sort_order = 3; // not sorted
@@ -808,11 +808,13 @@ function grid(element) {
 				}
 			}
 			// fix the size of the container
-			setWidth(t.element, getWidth(t.element));
+			var total_width = getWidth(t.element);
+			setWidth(t.element, total_width-1);
 			// take the width of each th
 			for (var i = 0; i < t.thead.childNodes.length; ++i)
 				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j)
 					t.thead.childNodes[i].childNodes[j]._width = getWidth(t.thead.childNodes[i].childNodes[j]);
+			setWidth(t.element, total_width);
 			// take the width of each column
 			var widths = [];
 			if (t.selectable)
@@ -841,7 +843,7 @@ function grid(element) {
 			t.thead.style.left = "0px";
 			t.thead.style.width = "100%";
 			t.thead.style.overflow = "hidden";
-			t.table.parentNode.style.marginRight = "1px";
+			//t.table.parentNode.style.marginRight = "1px";
 		};
 		t.element.style.display = "flex";
 		t.element.style.flexDirection = "column";

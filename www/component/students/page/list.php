@@ -61,7 +61,7 @@ new data_list(
 	url.params['period'] || url.params['class'] ? 'StudentClass' : 'Student', null,
 	data_list_fields,
 	build_filters(),
-	batches != null && batches.length > 1 ? 100 : -1,
+	batches == null || batches.length > 1 ? 100 : -1,
 	function (list) {
 		window.students_list = list;
 

@@ -1,8 +1,8 @@
 <?php 
 return array(
-	new AccessRightCategory("Contact Informations",array(
+	new AccessRightCategory("Selection",array(
 		// general
-		new BooleanRight("can_access_selection_data","Right that must be valid to read any data about selection"),
+		new BooleanRight("can_access_selection_data","Access to the Selection section"),
 		// information session
 		new BooleanRight("see_information_session","See Information Session Details",array(true=>array("can_access_selection_data"=>true))),
 		// exam

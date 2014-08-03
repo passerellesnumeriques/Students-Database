@@ -23,9 +23,9 @@ class service_save_user_rights extends Service {
 		$user_id = $input["user"];
 		
 		// check data were locked before
-		if (!isset($_GET["lock"]))  { PNApplication::error("missing lock"); return; }
+		if (!isset($input["lock"]))  { PNApplication::error("missing lock"); return; }
 		require_once("component/data_model/DataBaseLock.inc");
-		if (DataBaseLock::checkLock($_GET["lock"], "UserRights", null, null) <> null) {
+		if (DataBaseLock::checkLock($input["lock"], "UserRights", null, null) <> null) {
 			PNApplication::error("You do not have the data locked, meaning you cannot modify them. This may be due to a long inactivity. Please refresh the page and try again");
 			return;
 		}
@@ -45,7 +45,7 @@ class service_save_user_rights extends Service {
 		
 		$rights = array();
 		foreach ($input as $name=>$value) {
-			if ($name == "user") continue;
+			if ($name == "user" || $name == "lock") continue;
 			if (!isset($all_rights[$name])) {
 				PNApplication::error("unknown right ".$name);
 				return;

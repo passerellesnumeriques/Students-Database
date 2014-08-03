@@ -14,6 +14,25 @@ function datamodel_cell(&$page, $container_id, $editable, $table, $column, $key,
 	}
 }
 
+function datamodel_cell_here(&$page, $editable, $table, $column, $key, $value, $sub_model) {
+	if ($editable) {
+		$page->addJavascript("/static/data_model/editable_cell.js");
+		$page->addJavascript("/static/widgets/typed_field/typed_field.js");
+		require_once("component/data_model/Model.inc");
+		$t = DataModel::get()->getTable($table);
+		$col = $t->getColumnFor($column, $sub_model);
+		$typed_field = PNApplication::$instance->widgets->get_typed_field($col);
+		$page->addJavascript("/static/widgets/typed_field/".$typed_field[0].".js");
+		$id = $page->generateID();
+		echo "<span id='$id'></span>";
+		echo "<script type='text/javascript'>";
+		echo "new editable_cell('$id',".json_encode($table).",".json_encode($column).",".json_encode($key).",".json_encode($typed_field[0]).",".$typed_field[1].",".json_encode($value).");";
+		echo "</script>";
+	} else {
+		echo htmlentities($value);
+	}
+}
+
 function datamodel_cell_inline(&$page, $variable_name, $container_variable, $editable, $table, $column, $key_variable, $sub_models, $value_variable, $onchange = null) {
 	$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 	require_once("component/data_model/Model.inc");

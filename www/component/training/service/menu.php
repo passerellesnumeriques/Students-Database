@@ -11,7 +11,7 @@ class service_menu extends Service {
 	public function execute(&$component, $input) {
 		//$current_batches = PNApplication::$instance->curriculum->getCurrentBatches();
 ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/students/page/list'>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/list'>
 	<img src='/static/students/students_white.png'/>
 	Students List
 </a>
@@ -77,7 +77,7 @@ foreach ($current_batches as $b) {
 <div id="search_student_container" style="width:100%;padding:2px 5px 2px 5px;"></div>
 <script type='text/javascript'>
 require("search_student.js", function() {
-	new search_student('search_student_container');
+	new search_student('search_student_container','training');
 });
 /*
 require("autocomplete.js",function() {

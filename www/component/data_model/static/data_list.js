@@ -968,25 +968,30 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		return col;
 	};
 	t._end_loading_event = null;
+	t._loading_count = 0;
 	t.startLoading = function() {
+		t._loading_count++;
 		if (t._loading_hidder) return;
 		t._end_loading_event = new Custom_Event();
 		t._loading_hidder = new LoadingHidder(container);
 		t._loading_hidder.setContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading data...");
 	};
 	t.endLoading = function() {
+		t._loading_count--;
 		if (!t._loading_hidder) return;
+		if (t._loading_count > 0) return;
 		t._loading_hidder.remove();
 		t._loading_hidder = null;
-		t._end_loading_event.fire();
+		var ev = t._end_loading_event;
 		t._end_loading_event = null;
+		ev.fire();
 	};
 	t.onNotLoading = function(listener) {
 		if (!t._loading_hidder) { listener(); return; }
 		t._end_loading_event.add_listener(listener);
 	};
 	t.isLoading = function() {
-		return t._loading_hidder != null;
+		return (typeof t._loading_hidder != 'undefined') && t._loading_hidder != null;
 	};
 
 	/** (Re)load the data from the server */

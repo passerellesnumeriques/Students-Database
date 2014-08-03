@@ -57,6 +57,7 @@ function pictures_list(container) {
 			}
 			t.pictures.push(pic);
 		}
+		t.adjustSizes();
 	};
 	
 	this._init = function() {
