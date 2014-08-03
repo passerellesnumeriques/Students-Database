@@ -2,7 +2,11 @@
 function generate_transcript() {
 	$design = file_get_contents("component/transcripts/page/design.html");
 	
-	$app_conf = SQLQuery::create()->bypassSecurity()->noWarning()->select("ApplicationConfig")->where("`name` LIKE 'transcripts_%'")->execute();
+	$app_conf = SQLQuery::create()->bypassSecurity()
+#DEV
+		->noWarning() // TODO
+#END
+		->select("ApplicationConfig")->where("`name` LIKE 'transcripts_%'")->execute();
 	$config = array();
 	foreach ($app_conf as $ac) $config[substr($ac["name"],12)] = $ac["value"];
 	

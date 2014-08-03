@@ -41,11 +41,19 @@ class page_edit_customizable_table extends Page {
 			}
 		}
 		// is there any data in the table ?
-		$has_data = SQLQuery::create()->bypassSecurity(true)->noWarning()->select($table_name)->selectSubModelForTable($table, $sub_model)->limit(0, 1)->executeSingleRow() <> null;
+		$has_data = SQLQuery::create()->bypassSecurity(true)
+#DEV
+			->noWarning()
+#END
+			->select($table_name)->selectSubModelForTable($table, $sub_model)->limit(0, 1)->executeSingleRow() <> null;
 		$columns_data = array();
 		foreach ($columns as $col) {
 			if (!$has_data) $columns_data[$col->name] = false;
-			else $columns_data[$col->name] = SQLQuery::create()->bypassSecurity()->noWarning()->select($table_name)->selectSubModelForTable($table, $sub_model)->field($table_name, $col->name)->whereNotNull($table_name, $col->name)->limit(0,1)->executeSingleRow() <> null;
+			else $columns_data[$col->name] = SQLQuery::create()->bypassSecurity()
+#DEV
+				->noWarning()
+#END
+				->select($table_name)->selectSubModelForTable($table, $sub_model)->field($table_name, $col->name)->whereNotNull($table_name, $col->name)->limit(0,1)->executeSingleRow() <> null;
 		}
 		
 		?>

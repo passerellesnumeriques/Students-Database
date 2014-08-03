@@ -14,7 +14,10 @@ class students extends Component {
 	public function assign_student_to_specialization($student_people_id, $specialization_id) {
 		if ($specialization_id <> null) {
 			// check this specialization is available for the batch of this student
-			$possible_specializations = SQLQuery::create()->noWarning()
+			$possible_specializations = SQLQuery::create()
+#DEV
+				->noWarning() // TODO
+#END
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
 				->join("Student", "BatchPeriod", array("batch"=>"batch"))
@@ -26,7 +29,10 @@ class students extends Component {
 				return false;
 			}
 			// check the student is not already assigned to a class with a different specialization
-			$different_classes = SQLQuery::create()->noWarning()
+			$different_classes = SQLQuery::create()
+#DEV
+				->noWarning() // TODO
+#END
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
 				->join("Student", "StudentClass", array("people"=>"people"))
@@ -48,7 +54,10 @@ class students extends Component {
 				return false;
 			}
 			// check the student is not already assigned to a class with a specialization
-			$different_classes = SQLQuery::create()->noWarning()
+			$different_classes = SQLQuery::create()
+#DEV
+				->noWarning() // TODO
+#END
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
 				->join("Student", "StudentClass", array("people"=>"people"))

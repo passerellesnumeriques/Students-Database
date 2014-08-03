@@ -102,6 +102,7 @@ if ($message <> null) {
 	<?php } ?>
 </table>
 <?php 
+#DEV
 global $development_mode;
 if ($development_mode) {
 ?>
@@ -143,7 +144,9 @@ function exportStorage() {
 	});
 }
 </script>
-<?php } ?>
+<?php }
+#END 
+?>
 </form>
 <style type="text/css">
 .login_table {

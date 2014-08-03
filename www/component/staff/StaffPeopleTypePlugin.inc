@@ -29,7 +29,9 @@ class StaffPeopleTypePlugin implements PeopleTypePlugin {
 			->executeSingleValue();
 		if ($last_department <> null) {
 			$roles = SQLQuery::create()
+#DEV
 				->noWarning()
+#END
 				->select("PNDepartmentDefaultRoles")
 				->whereValue("PNDepartmentDefaultRoles", "department", $last_department)
 				->join("PNDepartmentDefaultRoles", "Role", array("user_role"=>"id"))

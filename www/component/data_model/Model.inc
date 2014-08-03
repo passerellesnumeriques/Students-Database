@@ -61,6 +61,7 @@ class DataModel {
 		if (isset($this->tables[$name])) throw new Exception("Table ".$name." already defined in the data model");
 		$table = new \datamodel\Table($this, $name);
 		$this->tables[$name] = &$table;
+#DEV
 		global $development_mode;
 		if ($development_mode) {
 			$table->{"declaring_component"} = "unknown";
@@ -80,6 +81,7 @@ class DataModel {
 				}
 			}
 		}
+#END
 		return $table;
 	}
 

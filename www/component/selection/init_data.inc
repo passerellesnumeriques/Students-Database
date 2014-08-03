@@ -19,6 +19,14 @@ PNApplication::$instance->user_management->add_role_rights($selection_staff_role
 // Selection Department for staff
 PNApplication::$instance->staff->createDepartment("Selection", array("Selection Staff"), true);
 // Organization types 
-SQLQuery::create()->bypassSecurity()->noWarning()->insert("OrganizationType", array("creator"=>"Selection", "name"=>"High School", "builtin"=>true));
-SQLQuery::create()->bypassSecurity()->noWarning()->insert("OrganizationType", array("creator"=>"Selection", "name"=>"NGO", "builtin"=>true));
+SQLQuery::create()->bypassSecurity()
+#DEV
+	->noWarning()
+#END
+	->insert("OrganizationType", array("creator"=>"Selection", "name"=>"High School", "builtin"=>true));
+SQLQuery::create()->bypassSecurity()
+#DEV
+	->noWarning()
+#END
+	->insert("OrganizationType", array("creator"=>"Selection", "name"=>"NGO", "builtin"=>true));
 ?>

@@ -43,7 +43,10 @@ class service_find_invalid_keys extends Service {
 			$ft = $col->foreign_table;
 			if ($ft == $table->getName()) {
 				// recursive link
-				$keys = SQLQuery::create()->bypassSecurity()->noWarning()
+				$keys = SQLQuery::create()->bypassSecurity()
+#DEV
+					->noWarning()
+#END
 					->selectSubModelForTable($table, $sub_model)
 					->select($table->getName())
 					->field($col->name)
@@ -51,7 +54,10 @@ class service_find_invalid_keys extends Service {
 					->whereNotNull($table->getName(), $col->name)
 					->executeSingleField();
 				if (count($keys) == 0) continue;
-				$find_keys = SQLQuery::create()->bypassSecurity()->noWarning()
+				$find_keys = SQLQuery::create()->bypassSecurity()
+#DEV
+					->noWarning()
+#END
 					->selectSubModelForTable($table, $sub_model)
 					->select($table->getName())
 					->whereIn($table->getName(), $table->getPrimaryKey()->name, $keys)
@@ -73,7 +79,10 @@ class service_find_invalid_keys extends Service {
 					// we must be in the same
 					$sm = $sub_model;				
 				}
-				$rows = SQLQuery::create()->bypassSecurity()->noWarning()
+				$rows = SQLQuery::create()->bypassSecurity()
+#DEV
+					->noWarning()
+#END
 					->selectSubModelForTable($table, $sub_model)
 					->select($table->getName())
 					->join($table->getName(), $ft->getName(), array($col->name=>$ft->getPrimaryKey()->name))

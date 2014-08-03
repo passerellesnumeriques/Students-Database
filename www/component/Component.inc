@@ -245,12 +245,11 @@ abstract class Component {
 		return $deps;
 	}
 #END
-	
+#DEV	
 	/** Return the list of read rights defined by this component (from readable_rights.inc)
 	 * @return AccessRightCategory[] list of categories, containing the list of rights
 	 */
 	public final function getReadableRights() {
-		// TODO deployed version
 		if (!file_exists("component/".$this->name."/readable_rights.inc")) return array();
 		return include("component/".$this->name."/readable_rights.inc");
 	}
@@ -258,11 +257,13 @@ abstract class Component {
 	 * @return AccessRightCategory[] list of categories, containing the list of rights
 	 */
 	public final function getWritableRights() {
-		// TODO deployed version
 		if (!file_exists("component/".$this->name."/writable_rights.inc")) return array();
 		return include("component/".$this->name."/writable_rights.inc");
 	}
-
+#PROD
+#	public abstract function getReadableRights();
+#	public abstract function getWritableRights();
+#END
 	/**
 	 * Returns all implementations of <i>plug-in</i> for the component. This is used, instead of having the 
 	 * component directly implementing the <i>plug-in</i> interfaces, so the component class is clearer

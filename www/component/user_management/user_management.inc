@@ -72,6 +72,9 @@ class user_management extends Component {
 		$this->domain = $domain;
 		$this->username = $username;
 		$this->user_id = $user["id"];
+		$this->rights = array();
+		$this->is_admin = array();
+		$this->all_rights = null;
 		
 		// get people information
 		$q = SQLQuery::create()

@@ -1,1 +1,1 @@
-exclude:development,test
+exclude:development,test,documentation

@@ -27,7 +27,7 @@ class TableDataDisplay {
 	 * @return \datamodel\TableDataDisplay
 	 */
 	public function &addDataDisplay($data_display, $come_from = null, $specific_sub_model = null) {
-		$data_display->setTableAndCategory(\DataModel::get()->getTable($this->table_name), $this->category);
+		$data_display->setTableAndCategory(\DataModel::get()->internalGetTable($this->table_name), $this->category);
 		if (!isset($this->data_display[$come_from]))
 			$this->data_display[$come_from] = array();
 		if (!isset($this->data_display[$come_from][$specific_sub_model]))

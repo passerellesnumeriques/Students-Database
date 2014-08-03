@@ -60,13 +60,42 @@ class page_app_admin extends Page {
 </div>
 </div>
 <script type='text/javascript'>
-sectionFromHTML('section_updates');
-sectionFromHTML('section_sessions');
+section_updates = sectionFromHTML('section_updates');
+section_sessions = sectionFromHTML('section_sessions');
 
 service.json("administration","latest_version",null,function(res) {
 	if (res && res.version) {
 		document.getElementById('latest_version').innerHTML = res.version;
+		var current = "<?php echo $pn_app_version?>";
+		current = current.split(".");
+		var latest = res.version.split(".");
+		var need_update = false;
+		for (var i = 0; i < current.length; ++i) {
+			if (latest.length <= i) break;
+			var c = parseInt(current[i]);
+			var l = parseInt(latest[i]);
+			if (l > c) { need_update = true; break; }
+			if (l < c) break;
+		}
+		if (need_update) {
+			section_updates.content.appendChild(document.createTextNode("A newer version is available ! "));
+			var button = document.createElement("BUTTON");
+			button.className = "action important";
+			button.innerHTML = "Update Software";
+			section_updates.content.appendChild(button);
+			button.onclick = function() {
+				alert("TODO");
+			};
+		} else {
+			var s = document.createElement("SPAN");
+			s.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> The version is up to date !";
+			section_updates.content.appendChild(s);
+		}
 	}
+});
+
+section_sessions.addButton(null,"Remove all sessions except mine","action",function() {
+	alert("TODO");
 });
 </script>
 	<?php 

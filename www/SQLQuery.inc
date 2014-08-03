@@ -71,8 +71,10 @@ class SQLQuery {
  	 * @param SQLQuery $copy the query to copy
  	 */
  	public function __construct($copy = null) {
+#DEV
  		global $development_mode;
  		$this->warning = $development_mode;
+#END
  		if ($copy) {
  			$this->database = $copy->database;
  			$this->sub_models = array_merge($copy->sub_models);
@@ -123,8 +125,10 @@ class SQLQuery {
  	public $order_by = array();
  	/** @var boolean indicates if we have to skip security checks or not */
  	public $bypass_security = false;
+#DEV
  	/** @var boolean indicates if we generate warning when a table is accessed from a component which does not own the table (only in Dev domain) */
- 	public $warning; 
+ 	public $warning;
+#END 
  	/** @var boolean indicates to use DISTINCT in the select */
 	public $distinct = false;
 
@@ -138,9 +142,14 @@ class SQLQuery {
 	/** Generates a unique table alias name (useful when building a big list) */
 	public function generateTableAlias() { return "t".($this->table_alias_counter++); }
 	
+#DEV
 	/** Do not generate warnings */
-	public function noWarning($no = true) { $this->warning = !$no; return $this; }
-
+	public function noWarning($no = true) {
+		$this->warning = !$no;
+		return $this;
+	}
+#END
+	
 	/** Use a sepcific database, instead of the default one which is the one of the current domain
 	 * @param string $db_name name of the database to use
 	 * @return SQLQuery this
@@ -214,9 +223,12 @@ class SQLQuery {
 	 */
 	public function &selectTable($table_name, $table_alias = null) {
 		$this->tables[$table_name] = $table_alias;
+#DEV
 		$this->checkTableAccess($table_name);
+#END
 		return $this;
 	}
+#DEV
 	/** Check which component is called, and generate a warning if the given table is not owned by this component
 	 * @param string $table_name name of the table which is accessed
 	 */
@@ -259,7 +271,7 @@ class SQLQuery {
 			}
 		}
 	}
-
+#END
 	/**
 	 * Indicates a field should be returned by the query.<br/>
 	 * Usage:<ul>
@@ -671,7 +683,9 @@ class SQLQuery {
 		$join = array($table_from, $table_to, $fields_matching, $alias);
 		if ($join_on_values <> null) array_push($join, $join_on_values);
 		array_push($this->joins, $join);
+#DEV
 		$this->checkTableAccess($table_to);
+#END
 		return $this;
 	}
 	/** Return the alias of the joined table corresponding to the given join
@@ -1172,7 +1186,11 @@ class SQLQuery {
 						if (!$t->canModifyColumn($colname)) { $ok = false; break; }
 				
 				if (!$ok) {
-					$q = SQLQuery::create()->bypassSecurity()->noWarning();
+					$q = SQLQuery::create()->bypassSecurity()
+#DEV
+						->noWarning()
+#END
+						;
 					$table_alias = $q->generateTableAlias();
 					$q->select(array($table=>$table_alias));
 					$q->selectSubModels($this->sub_models);
@@ -1220,7 +1238,11 @@ class SQLQuery {
 					throw new Exception($name.": ".$e->getMessage());
 				}
 				if ($col->unique && !($col instanceof PrimaryKey) && !($col instanceof ForeignKey)) {
-					$q = SQLQuery::create()->bypassSecurity()->noWarning()->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field]);
+					$q = SQLQuery::create()->bypassSecurity()
+#DEV
+						->noWarning()
+#END
+						->select($t->getName())->selectSubModels($this->sub_models)->where($col->name, $fields_values[$field]);
 					$where = "";
 					if ($t->getPrimaryKey() <> null) {
 						$where .= "`".$t->getPrimaryKey()->name."`!='".$key."'";
@@ -1309,7 +1331,11 @@ class SQLQuery {
 					}
 				
 				if (!$ok) {
-					$q = SQLQuery::create()->bypassSecurity()->noWarning();
+					$q = SQLQuery::create()->bypassSecurity()
+#DEV
+						->noWarning()
+#END
+						;
 					$table_alias = $q->generateTableAlias();
 					$q->select(array($table=>$table_alias));
 					$q->selectSubModels($this->sub_models);
@@ -1415,7 +1441,10 @@ class SQLQuery {
 						}
 					}
 					$q = SQLQuery::create()
-						->bypassSecurity()->noWarning()
+						->bypassSecurity()
+#DEV
+						->noWarning()
+#END
 						->select($t->getName())
 						->selectSubModels($this->sub_models)
 						->whereIn($col->name, $values)
@@ -1709,7 +1738,11 @@ class SQLQuery {
 					DataBaseLock::unlock($lock);
 					throw new Exception("Missing column ".$col->name." to insert data in table ".$t->getName());
 				}
-				$q = SQLQuery::create()->noWarning(!$this->warning)->bypassSecurity($this->bypass_security);
+				$q = SQLQuery::create()
+#DEV
+					->noWarning(!$this->warning)		
+#END
+					->bypassSecurity($this->bypass_security);
 				if ($this->bypass_security) $q->bypassSecurity();
 				$r = $q->select($t->getName())->selectSubModels($this->sub_models)->where($col->name,$fields_values[$col->name])->executeSingleRow();
 				if ($r <> null) {
@@ -2235,7 +2268,11 @@ class SQLQuery {
 				$primary = $t->getPrimaryKey();
 				if ($primary <> null) {
 					// search keys for rows matching
-					$q = SQLQuery::create()->bypassSecurity($this->bypass_security)->noWarning();
+					$q = SQLQuery::create()->bypassSecurity($this->bypass_security)
+#DEV
+						->noWarning()
+#END
+						;
 					$table_alias = $q->generateTableAlias();
 					$q->select(array($t->getName()=>$table_alias));
 					if ($sm <> null)
@@ -2247,7 +2284,11 @@ class SQLQuery {
 				} else {
 					// no primary key, this must be done with a where
 					if (!$this->bypass_security && !$t->canRemoveAny()) {
-						$q = SQLQuery::create()->bypassSecurity($this->bypass_security)->noWarning();
+						$q = SQLQuery::create()->bypassSecurity($this->bypass_security)
+#DEV
+							->noWarning()
+#END
+							;
 						$table_alias = $q->generateTableAlias();
 						$q->select(array($t->getName()=>$table_alias));
 						if ($sm <> null)
@@ -2271,7 +2312,11 @@ class SQLQuery {
 		
 					if (!$t->canModifyEverything()) {
 						// select matching rows
-						$q = SQLQuery::create()->noWarning();
+						$q = SQLQuery::create()
+#DEV
+							->noWarning()
+#END
+							;
 						$table_alias = $q->generateTableAlias();
 						$q->select(array($t->getName()=>$table_alias));
 						if ($t->getModel() instanceof SubDataModel)
@@ -2458,17 +2503,23 @@ class SQLQuery {
 	
 	/** Start a transaction on the database system */
 	private static function performStartTransaction(){
+#DEV
 		self::getDataBaseAccessWithoutSecurity()->log("START TRANSACTION", 0, 0, 0);
+#END
 		self::getDataBaseAccessWithoutSecurity()->startTransaction();
 	}
 	
 	/** Commit or rollback the root transaction on the database system */
 	private static function performEndTransaction(){
 		if(self::$rollback){
+#DEV
 			self::getDataBaseAccessWithoutSecurity()->log("ROLLBACK", 0, 0, 0);
+#END
 			self::getDataBaseAccessWithoutSecurity()->rollback();
 		} else {
+#DEV
 			self::getDataBaseAccessWithoutSecurity()->log("COMMIT", 0, 0, 0);
+#END
 			self::getDataBaseAccessWithoutSecurity()->commit();
 		}
 		self::$rollback = false;

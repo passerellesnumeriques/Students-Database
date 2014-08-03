@@ -57,7 +57,8 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 		if (window.top.pn_application_static && window.top.pn_application_static.scripts && window.top.pn_application_static.scripts.length == 0 && window.top.pn_application_static.images.length == 0)
 			window.top.pn_application_static_loaded = true;
 		container.innerHTML = "Application loaded.";
-		setCookie("pnapp_loaded",window.top.pn_app_version,365*24*60,"/dynamic/application/page/enter");
+		if (!t._stopped)
+			setCookie("pnapp_loaded",window.top.pn_app_version,365*24*60,"/dynamic/application/page/enter");
 		require("animation.js",function() {
 			animation.fadeOut(container, 1000);
 		});

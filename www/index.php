@@ -151,12 +151,14 @@ case "dynamic":
 		PNApplication::$instance = &$_SESSION["app"];
 		PNApplication::$instance->initRequest();
 	}
+#DEV
 	if ($development_mode) {
 		$dev = new DevRequest();
 		$dev->url = $_SERVER["PATH_INFO"];
 		$dev->start_time = microtime(true);
 		array_push(PNApplication::$instance->development->requests, $dev);
 	}
+#END
 
 	if (!isset(PNApplication::$instance->components[$component_name])) invalid("Invalid request: unknown component ".$component_name);
 
@@ -171,9 +173,11 @@ case "dynamic":
 		break;
 	default: invalid("Invalid request: unknown request type ".$request_type);
 	}
+#DEV
 	if ($development_mode) {
 		$dev->end_time = microtime(true);
 	}
+#END
 	die();
 default: invalid("Invalid request: unknown resource type ".$type);
 }

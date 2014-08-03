@@ -244,7 +244,11 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 					if ($child->isReverse()) {
 						$values->addTableColumnValue($child->table->getName(), $child->foreign_key->name, $key_value);
 					}
-					$q = SQLQuery::create()->noWarning();
+					$q = SQLQuery::create()
+#DEV
+					->noWarning()
+#END
+					;
 					$q->selectSubModelForTable($path->table, $path->sub_model);
 					$q->selectSubModelForTable($child->table, $child->sub_model);
 					$q->select($path->table->getName());

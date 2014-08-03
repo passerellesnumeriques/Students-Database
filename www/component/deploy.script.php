@@ -29,7 +29,41 @@ function processComponent($name, &$done, &$components_order, &$components_conten
 	$content = file_get_contents(dirname(__FILE__)."/$name/$name.inc");
 	unlink(dirname(__FILE__)."/$name/$name.inc");
 	
-	// TODO process content: rights...
+	$readable_rights = "return array();";
+	if (file_exists(dirname(__FILE__)."/$name/readable_rights.inc")) {
+		$readable_rights = file_get_contents(dirname(__FILE__)."/$name/readable_rights.inc");
+		unlink(dirname(__FILE__)."/$name/readable_rights.inc");
+		$i = strpos($readable_rights, "<?php");
+		$readable_rights = substr($readable_rights,$i+5);
+		$i = strrpos($readable_rights, "?>");
+		$readable_rights = substr($readable_rights,0,$i);
+	}
+	$writable_rights = "return array();";
+	if (file_exists(dirname(__FILE__)."/$name/writable_rights.inc")) {
+		$writable_rights = file_get_contents(dirname(__FILE__)."/$name/writable_rights.inc");
+		unlink(dirname(__FILE__)."/$name/writable_rights.inc");
+		$i = strpos($writable_rights, "<?php");
+		$writable_rights = substr($writable_rights,$i+5);
+		$i = strrpos($writable_rights, "?>");
+		$writable_rights = substr($writable_rights,0,$i);
+	}
+	$i = 0;
+	do {
+		$i = strpos($content, "extends", $i);
+		if ($i === false) throw new Exception("Error in component $name: unable to find where the class begins (expected is extends Component)");
+		$next = trim(substr($content, $i+8));
+		if (substr($next,0,9) <> "Component") {
+			$i += 7;
+			continue;
+		}
+		$i = strpos($content, "{", $i);
+		if ($i === false) throw new Exception("Error in component $name: unable to find where the class begins (no { after extends Component)");
+		$content = 
+			substr($content,0,$i+1).
+			"function getReadableRights(){".$readable_rights."} function getWritableRights(){".$writable_rights."}".
+			substr($content,$i);
+		break;
+	} while ($i > 0);
 	
 	$content = trim($content);
 	
@@ -49,7 +83,8 @@ $components_content = "";
 foreach ($components_names as $name) processComponent($name, $done, $components_order, $components_content);
 
 $s = file_get_contents(dirname(__FILE__)."/PNApplication.inc");
-$s = substr($s,0,strlen($s)-2);
+$i = strrpos($s, "?>");
+$s = substr($s,0,$i);
 
 $create = "";
 $order = "\$components = array(";

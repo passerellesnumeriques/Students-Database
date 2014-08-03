@@ -22,10 +22,14 @@ abstract class DataBaseSystem {
 	 */
 	public function execute($sql_query, $report_errors = true) {
 		if (empty($sql_query)) throw new Exception("Empty SQL Query!");
+#DEV
 		$start = microtime(true);
+#END
 		$res = $this->executeSQL($sql_query);
+#DEV
 		$end = microtime(true);
 		$this->log($sql_query,$this->getLastErrorNumber(),$this->getLastErrorMessage(),$end-$start);
+#END
 		if ($res === false && $report_errors) {
 			$err = $this->getLastErrorNumber();
 			if ($err <> 0) {
@@ -38,7 +42,7 @@ abstract class DataBaseSystem {
 		}
 		return $res;
 	}
-	
+#DEV	
 	/** For debug purposes, log a query in the session
 	 * @param string $query the SQL query executed
 	 * @param integer $error_number the error number after the query has been executed
@@ -62,7 +66,7 @@ abstract class DataBaseSystem {
 			array_push(PNApplication::$instance->development->current_request()->sql_queries, array($query, $error_number, $error_message, $time, $t));
 		}
 	}
-
+#END
 	/** Select a database for sub-sequent queries
 	 * @param string $db_name name of the database
 	 */

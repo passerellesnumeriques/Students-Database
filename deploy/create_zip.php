@@ -33,4 +33,7 @@ $zip->close();
 Version ready: you can put the file <?php echo $_POST["path"]."/".$filename;?> in SourceForge.<br/>
 
 </div>
+<div class='footer' style='flex:none'>
+	<button class='action' onclick="location.href='/deploy/';">Restart deployment</button>
+</div>
 <?php include("footer.inc");?>

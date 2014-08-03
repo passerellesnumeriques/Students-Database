@@ -209,7 +209,7 @@ class PNApplication {
 #DEV
 		$this->local_domain = isset($_GET["testing"]) ? "Test" : $local_domain;
 #PROD
-		$this->local_domain = $local_domain;
+#		$this->local_domain = $local_domain;
 #END
 		$this->current_domain = $this->local_domain;
 #DEV
