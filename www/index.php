@@ -53,6 +53,24 @@ if ($path == "favicon.ico") {
 	die(); 
 }
 
+if ($path == "maintenance/index.php") {
+	include("maintenance/index.php");
+	die();
+}
+if (file_exists("maintenance_in_progress")) {
+	if ($path == "maintenance/maintenance.jpg") {
+		header("Content-Type: image/jpeg");
+		readfile("maintenance/maintenance.jpg");
+		die();
+	}
+	if (strpos($path, "/service/")) {
+		header("HTTP/1.0 403 Maintenance in progress");
+		die();
+	}
+	include("maintenance/maintenance_page.php");
+	die();
+}
+
 global $pn_app_version;
 $pn_app_version = $version;
 

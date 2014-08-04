@@ -21,13 +21,15 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 	private $populate_info;
 
 	public function authenticate($username, $password, &$error) {
-		set_time_limit(30);
+		set_time_limit(45);
 		$c = curl_init($this->system_url);
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
 		curl_setopt($c, CURLOPT_POST, TRUE);
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_POSTFIELDS, array("service"=>"authenticate","username"=>$username,"password"=>$password));
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
+		curl_setopt($c, CURLOPT_TIMEOUT, 25);
 		$result = curl_exec($c);
 		set_time_limit(30);
 		if ($result === false) {

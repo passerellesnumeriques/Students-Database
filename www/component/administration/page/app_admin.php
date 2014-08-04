@@ -7,11 +7,11 @@ class page_app_admin extends Page {
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		
-		$sessions_path = ini_get("session.save_path");
+		$sessions_path = realpath(ini_get("session.save_path"));
 		$sessions = array();
 		$dir = opendir($sessions_path);
 		while (($filename = readdir($dir)) <> null) {
-			if (is_dir($filename)) continue;
+			if (is_dir($sessions_path."/".$filename)) continue;
 			array_push($sessions, $filename);
 		}
 		closedir($dir);
@@ -58,14 +58,31 @@ class page_app_admin extends Page {
 		?>
 	</table>		
 </div>
+<div id='section_maintenance' title='Maintenance' collapsable='true' style='margin-top:10px'>
+	<div style='padding:10px'>
+		You can put the software into <i>Maintenance Mode</i>.<br/>
+		When in maintenance mode, all the users will be disconnected and won't be able to use the software until it will come back into <i>Normal Mode</i>.<br/>
+		To put the software into Maintenance Mode, you need first to inform the users, so they can finish their work and save what they are currently doing,
+		then the application won't be accessible. Only you, using a specific password, will be able to perform operations and put back the application in Normal Mode.<br/>
+		<br/>
+		<form name='maintenance' onsubmit='return false;'> 
+		Inform the users, and put the software into Maintenance Mode in <input name='timing' type='text' size=3 value='5'/> minutes.<br/>
+		I will use the username <i>maintenance</i> with the password <input name='pass1' type='password' size=15/>.<br/>
+		Please re-type the maintenance password to confirm:  <input name='pass2' type='password' size=15/><br/>
+		</form>
+		<button class='action important' onclick="startMaintenance();">Start</button>
+	</div>
+</div>
 </div>
 <script type='text/javascript'>
 section_updates = sectionFromHTML('section_updates');
 section_sessions = sectionFromHTML('section_sessions');
+section_maintenance = sectionFromHTML('section_maintenance');
 
 service.json("administration","latest_version",null,function(res) {
+	var span = document.getElementById('latest_version');
 	if (res && res.version) {
-		document.getElementById('latest_version').innerHTML = res.version;
+		span.innerHTML = res.version;
 		var current = "<?php echo $pn_app_version?>";
 		current = current.split(".");
 		var latest = res.version.split(".");
@@ -91,12 +108,35 @@ service.json("administration","latest_version",null,function(res) {
 			s.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> The version is up to date !";
 			section_updates.content.appendChild(s);
 		}
-	}
+	} else
+		span.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> Error";
 });
 
 section_sessions.addButton(null,"Remove all sessions except mine","action",function() {
 	alert("TODO");
 });
+
+function startMaintenance() {
+	var form = document.forms['maintenance'];
+	var timing = form.elements['timing'].value;
+	timing = parseInt(timing);
+	if (isNaN(timing)) { alert("Please enter a valid number of minutes"); return; }
+	if (timing < 2) { alert("You must give at least 2 mintues to the users before they will be disconnected..."); return; }
+	if (timing > 15) { if (!confirm("Are you sure you want to wait "+timing+" minutes before maintenance mode ?")) return; }
+	var pass1 = form.elements['pass1'].value;
+	if (pass1.length == 0) { alert("Please enter a password"); return; }
+	if (pass1.length < 6) { alert("Password is too short: you must use at least 6 characters."); return; }
+	if (pass1 == "maintenance") { alert("You cannot use maintenance as password, this is too easy to guess..."); return; }
+	var pass2 = form.elements['pass2'].value;
+	if (pass1 != pass2) { alert("The 2 passwords are different. Please retry."); return; }
+	var locker = lock_screen(null, "Starting maintenance mode...");
+	service.json("administration","start_maintenance",{timing:timing,password:pass1},function(res) {
+		unlock_screen(locker);
+		if (res) {
+			window.open("/maintenance");
+		}
+	});
+}
 </script>
 	<?php 
 	}

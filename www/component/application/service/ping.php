@@ -6,7 +6,12 @@ class service_ping extends Service {
 	public function inputDocumentation() { echo "nothing"; }
 	public function outputDocumentation() { echo "nothing"; }
 	public function execute(&$component, $input) {
-		echo "true";
+		echo "{ok:true";
+		if (file_exists("maintenance_time")) {
+			$maintenance = intval(file_get_contents("maintenance_time"));
+			echo ",maintenance_coming:".$maintenance;
+		}
+		echo "}";
 	}
 	
 } 
