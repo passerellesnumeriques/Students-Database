@@ -63,7 +63,6 @@ if (isset($_POST["getsize"])) {
 		if ($name == "content-type") { $type = strtolower(trim(substr($line,$i+1))); continue; }
 	}
 	$size = intval($size);
-	$result = $size.":".$type;//."<br/>".$result;
 	if ($size > 0 && $type == "application/octet-stream")
 		$result = $size;
 	else {

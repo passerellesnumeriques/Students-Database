@@ -123,8 +123,8 @@ function downloading(url, file, size, progress_handler, end_handler) {
 	var next = function(from) {
 		var end = from + 128*1024;
 		if (end >= size) end = size-1;
-		downloadRange(url,file,from,end,function(error) {
-			if (error) { end_handler(error); return; }
+		downloadRange(url,file,from,end,function(error,content) {
+			if (error) { end_handler(content); return; }
 			progress_handler(end+1,size);
 			if (end >= size-1) { end_handler(null); return; }
 			next(end+1);
