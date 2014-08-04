@@ -473,8 +473,7 @@ function initFooter() {
 	});
 	<?php
 #DEV
-	global $development_mode; 
-	if ($development_mode) { ?>
+	?>
 	var span_debug_status = document.createElement("SPAN");
 	span_debug_status.style.position = "absolute";
 	span_debug_status.style.bottom = "0px";
@@ -483,10 +482,8 @@ function initFooter() {
 	require("debug_status.js",function() {
 		new debug_status(span_debug_status);
 	});
-	<?php }
+<?php
 #END 
-?>
-	<?php
 	global $need_app_loading;
 	if ($need_app_loading) { 
 	?>

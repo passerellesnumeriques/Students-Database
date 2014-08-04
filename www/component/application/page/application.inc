@@ -71,7 +71,7 @@ if (!window.top.pingInterval) {
 					var now = new Date().getTime()/1000;
 					var remaining_seconds = res.maintenance_coming-now;
 					if (remaining_seconds > 10) {
-						if (remaining_seconds >= 120) span.innerHTML = "in around "+(Math.floor(remaining_seconds/2))+" minutes";
+						if (remaining_seconds >= 120) span.innerHTML = "in around "+(Math.floor(remaining_seconds/60))+" minutes";
 						else if (remaining_seconds >= 60) span.innerHTML = "in around 1 minute";
 						else span.innerHTML = "in around "+(Math.floor(remaining_seconds/10)*10)+" seconds";
 						setTimeout(update_timing,5000);

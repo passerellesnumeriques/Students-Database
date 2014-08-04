@@ -72,8 +72,7 @@ class SQLQuery {
  	 */
  	public function __construct($copy = null) {
 #DEV
- 		global $development_mode;
- 		$this->warning = $development_mode;
+ 		$this->warning = true;
 #END
  		if ($copy) {
  			$this->database = $copy->database;

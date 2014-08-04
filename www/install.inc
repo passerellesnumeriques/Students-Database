@@ -1,4 +1,21 @@
-<?php 
+<?php
+function removeDirectory($path) {
+	$dir = opendir($path);
+	while (($filename = readdir($dir)) <> null) {
+		if ($filename == ".") continue;
+		if ($filename == "..") continue;
+		if (is_dir($path."/".$filename))
+			removeDirectory($path."/".$filename);
+		else
+			unlink($path."/".$filename);
+	}
+	closedir($dir);
+	rmdir($path);
+}
+
+if (file_exists("installer")) {
+	removeDirectory(realpath("installer"));
+}
 // remove all sessions
 $sessions_path = ini_get("session.save_path");
 $sessions = array();
@@ -44,12 +61,11 @@ html, body, table, input, select {
 <body style="background-color:#E8E8E8;height:100%;">
 <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;">
 <?php 
-if (isset($_POST["development_mode"])) {
+if (isset($_POST["local_domain"])) {
 	$f = fopen(dirname(__FILE__)."/install_config.inc", "w");
 	fwrite($f, 
 		"<?php \n".
-		"global \$development_mode, \$local_domain, \$db_config;\n".
-		"\$development_mode = ".($_POST["development_mode"] == "on" ? "true" : "false").";\n".
+		"global \$local_domain, \$db_config;\n".
 		"\$local_domain = \"".$_POST["local_domain"]."\";\n".
 		"\$db_config = array(\n".
 		"\t\"type\"=>\"".$_POST["db_type"]."\",\n".
@@ -93,12 +109,6 @@ if (isset($_POST["development_mode"])) {
 	<table class='install_table'>
 		<tr>
 			<td colspan=2 class='header'>Students Management Software - Installation of Development version</td>
-		</tr>
-		<tr>
-			<td colspan=2>
-				<input type='checkbox' name='development_mode' checked='checked'/>
-				This is a development installation
-			</td>
 		</tr>
 		<tr>
 			<td>What is your local domain ?</td>
