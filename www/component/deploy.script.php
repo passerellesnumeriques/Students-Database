@@ -61,7 +61,7 @@ function processComponent($name, &$done, &$components_order, &$components_conten
 		$content = 
 			substr($content,0,$i+1).
 			"function getReadableRights(){".$readable_rights."} function getWritableRights(){".$writable_rights."}".
-			substr($content,$i);
+			substr($content,$i+1);
 		break;
 	} while ($i > 0);
 	
