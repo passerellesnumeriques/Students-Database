@@ -1,4 +1,6 @@
-<html>
+<?php
+ob_start();
+?><html>
 <head>
 <style type='text/css'>
 html, body {
@@ -102,6 +104,7 @@ $steps = array(
 	array("description"=>"Checking PHP Extensions","function"=>"checkPHPExtensions"),
 	array("description"=>"Checking file system access","function"=>"checkFSAccess"),
 	array("description"=>"Checking zip functions","function"=>"checkZip"),
+	array("description"=>"Checking PHP sessions","function"=>"checkPHPSessions"),
 	array("description"=>"Checking Internet access","function"=>"checkInternetAccess"),
 	array("description"=>"Download installer","function"=>"downloadInstaller"),
 );
@@ -168,6 +171,22 @@ function checkZip() {
 	if (class_exists("ZipArchive")) return "OK:";
 	if (file_exists("/usr/bin/unzip")) return "OK:";
 	return "Unable to find Zip functionalities on the server";
+}
+function checkPHPSessions() {
+	$sessions_path = ini_get("session.save_path");
+	$i = strrpos($sessions_path, ";");
+	if ($i !== false) $sessions_path = substr($sessions_path, $i+1);
+	$sessions_path = realpath($sessions_path);
+	$dir = @opendir($sessions_path);
+	if ($dir == null)
+		return "We cannot access to the PHP sessions directory.";
+	closedir($dir);
+	$f = @fopen($sessions_path."/tmp","w");
+	if ($f == null)
+		return "We cannot write in the PHP sessions directory.";
+	fclose($f);
+	unlink($sessions_path."/tmp");
+	return "OK:";
 }
 function checkInternetAccess() {
 	$c = curl_init("http://www.google.com/");
@@ -261,7 +280,7 @@ function showStepResult($step) {
 function performStep($step) {
 	global $stop, $steps, $has_errors;
 	if ($step >= count($steps)) $stop = true;
-	else if ($step == 6 && $has_errors) $stop = true;
+	else if ($step == count($steps)-1 && $has_errors) $stop = true; // do not download installer if errors before
 	else {
 		echo $steps[$step]["description"];
 		$result = call_user_func($steps[$step]["function"]);
@@ -302,4 +321,8 @@ form.submit();
 <?php } ?>
 </script>
 </body>
-</html>
+</html><?php
+$result = ob_get_contents();
+ob_end_clean();
+echo $result;
+?>

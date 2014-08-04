@@ -18,11 +18,18 @@ if (file_exists("installer")) {
 }
 // remove all sessions
 $sessions_path = ini_get("session.save_path");
+$i = strrpos($sessions_path, ";");
+if ($i !== false) $sessions_path = substr($sessions_path, $i+1);
+$sessions_path = realpath($sessions_path);
 $sessions = array();
 $dir = opendir($sessions_path);
 while (($filename = readdir($dir)) <> null) {
 	if (is_dir($filename)) continue;
-	unlink($sessions_path."/".$filename);
+	$content = @file_get_contents($sessions_path."/".$filename);
+	if (strpos($content,"PNApplication") !== false) {
+		@unlink($sessions_path."/".$filename);
+		if (file_exists($sessions_path."/".$filename)) $remaining++;
+	}
 }
 closedir($dir);
 ?>
@@ -55,6 +62,9 @@ html, body, table, input, select {
 }
 .install_table input, .install_table select {
 	border: 1px solid #808080;
+}
+ul {
+	margin-top: 0px;
 }
 </style>
 </head>
@@ -107,45 +117,65 @@ if (isset($_POST["local_domain"])) {
 ?>
 	<form method='post'>
 	<table class='install_table'>
+	<colgroup><col style='width:180px'/><col style='width:170px'/><col style='width:150px'/></colgroup>
+	<tbody>
 		<tr>
-			<td colspan=2 class='header'>Students Management Software - Installation of Development version</td>
+			<td colspan=3 class='header'>Students Management Software - Installation of Development version</td>
 		</tr>
 		<tr>
 			<td>What is your local domain ?</td>
-			<td>
+			<td align="left">
 				<select name='local_domain'>
 					<option value='PNC'>PNC</option>
 					<option value='PNP'>PNP</option>
 					<option value='PNV'>PNV</option>
 				</select>
 			</td>
+			<td></td>
 		</tr>
 		<tr>
 			<td>Database type</td>
-			<td>
+			<td align="left">
 				<select name='db_type'>
 					<option value='MySQL'>MySQL</option>
 				</select>
 			</td>
+			<td></td>
 		</tr>
 		<tr>
 			<td>Database server</td>
-			<td><input type='text' name='db_server' value='localhost'/></td>
+			<td align="left"><input type='text' name='db_server' value='localhost'/></td>
+			<td></td>
 		</tr>
 		<tr>
 			<td>Database user</td>
-			<td><input type='text' name='db_user' value='root'/></td>
+			<td align="left"><input type='text' name='db_user' value='root'/></td>
+			<td></td>
 		</tr>
 		<tr>
 			<td>Database password</td>
-			<td><input type='password' name='db_password' value=''/></td>
+			<td align="left"><input type='password' name='db_password' value=''/></td>
+			<td></td>
 		</tr>
 		<tr>
-			<td colspan=2 align=center>
+			<td colspan=3>
+				For the database, you have 2 options:<ul>
+					<li>Specify a user having enough privileges to create and remove databases<br/>
+						<i>Typically for development environment, not production</i>
+					</li>
+					<li>Specify a dedicated user for the software. In this case, you must first:<ul>
+						<li>Create the databases for each domain (students_pnc,students_pnp,students_pnv)</li>
+						<li>The databases must use UTF8</li>
+					</ul></li>
+				</ul>
+			</td>
+		</tr>
+		<tr>
+			<td colspan=3 align=center>
 				<input type='submit' value='Install'/>
 			</td>
 		</tr>
-	</table>
+	</tbody></table>
 	</form>
 <?php } ?>
 </div>

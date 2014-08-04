@@ -1,11 +1,17 @@
 <?php 
-$sessions_path = realpath(ini_get("session.save_path"));
+$sessions_path = ini_get("session.save_path");
+$i = strrpos($sessions_path, ";");
+if ($i !== false) $sessions_path = substr($sessions_path, $i+1);
+$sessions_path = realpath($sessions_path);
 $dir = opendir($sessions_path);
 $remaining = 0;
 while (($filename = readdir($dir)) <> null) {
 	if (is_dir($sessions_path."/".$filename)) continue;
-	@unlink($sessions_path."/".$filename);
-	if (file_exists($sessions_path."/".$filename)) $remaining++;
+	$content = @file_get_contents($sessions_path."/".$filename);
+	if (strpos($content,"PNApplication") !== false) {
+		@unlink($sessions_path."/".$filename);
+		if (file_exists($sessions_path."/".$filename)) $remaining++;
+	}
 }
 closedir($dir);
 if ($remaining > 0) {

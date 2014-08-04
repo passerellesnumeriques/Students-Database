@@ -7,7 +7,10 @@ class page_app_admin extends Page {
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		
-		$sessions_path = realpath(ini_get("session.save_path"));
+		$sessions_path = ini_get("session.save_path");
+		$i = strrpos($sessions_path, ";");
+		if ($i !== false) $sessions_path = substr($sessions_path, $i+1);
+		$sessions_path = realpath($sessions_path);
 		$sessions = array();
 		$dir = opendir($sessions_path);
 		while (($filename = readdir($dir)) <> null) {
