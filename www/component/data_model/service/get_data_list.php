@@ -28,7 +28,7 @@ class service_get_data_list extends Service {
 			if ($format == 'pdf')
 				return "Content-Type: application/pdf";
 		}
-		return "text/json";
+		return "application/json";
 	}
 	
 	public function execute(&$component, $input) {

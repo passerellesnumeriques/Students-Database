@@ -120,7 +120,7 @@ abstract class Component {
 		// check the user is logged
 		if (PNApplication::$instance->user_management->username == null) {
 			if (!isset(Component::$allowed_services_without_login[$this->name]) || !in_array($path, Component::$allowed_services_without_login[$this->name])) {
-				header("Content-Type: text/json;charset=UTF-8", true, 403);
+				header("Content-Type: application/json;charset=UTF-8", true, 403);
 				PNApplication::error("Access denied: you must login before to use services");
 				PNApplication::printJSONResult(null);
 				return;
@@ -130,7 +130,7 @@ abstract class Component {
 		// check the service exists
 		$file = "component/".$this->name."/service/".$path.".php";
 		if (!file_exists($file)) {
-			header("Content-Type: text/json;charset=UTF-8");
+			header("Content-Type: application/json;charset=UTF-8");
 			PNApplication::error("Service '$path' does not exist in component '".$this->name."'");
 			PNApplication::printJSONResult(null);
 			return;
@@ -144,7 +144,7 @@ abstract class Component {
 		$service = new $classname();
 	
 		// build input
-		if (isset($_SERVER["CONTENT_TYPE"]) && substr($_SERVER["CONTENT_TYPE"],0,9) == "text/json") {
+		if (isset($_SERVER["CONTENT_TYPE"]) && substr($_SERVER["CONTENT_TYPE"],0,9) == "application/json") {
 			$in = file_get_contents('php://input');
 			$input = json_decode($in, true);
 			$err = json_last_error();
@@ -152,8 +152,8 @@ abstract class Component {
 				PNApplication::error("Invalid input: JSON error ".$err."\nReceived input (length ".strlen($in)."):\n".$in);
 				// get output format
 				$output_format = $service->getOutputFormat(array());
-				if ($output_format == "text/json") {
-					header("Content-Type: text/json;charset=UTF-8");
+				if ($output_format == "application/json") {
+					header("Content-Type: application/json;charset=UTF-8");
 					PNApplication::printJSONResult(null);
 				} else {
 					PNApplication::printErrors();
@@ -170,8 +170,8 @@ abstract class Component {
 		
 		// get output format
 		$output_format = $service->getOutputFormat($input);
-		if ($output_format == "text/json")
-			header("Content-Type: text/json;charset=UTF-8");
+		if ($output_format == "application/json")
+			header("Content-Type: application/json;charset=UTF-8");
 		else
 			header("Content-Type: ".$output_format);
 		
@@ -200,7 +200,7 @@ abstract class Component {
 		}
 	
 		// execute the service
-		if ($output_format == "text/json") {
+		if ($output_format == "application/json") {
 			$done = new ServiceDone();
 			register_shutdown_function("service_shutdown_catch", $done);
 			set_error_handler(function($severity, $message, $filename, $lineno) {

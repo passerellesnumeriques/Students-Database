@@ -16,7 +16,7 @@ service = {
 		var data = "";
 		if (input != null)
 			data = service.generateInput(input);
-		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json;charset=UTF-8", data, 
+		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "application/json;charset=UTF-8", data, 
 			function(result){
 				if (result && result.warnings)
 					for (var i = 0; i < result.warnings.length; ++i)
@@ -86,7 +86,7 @@ service = {
 		var data = null;
 		if (input != null)
 			data = service.generateInput(input);
-		ajax.call(data ? "POST" : "GET", "/dynamic/"+component+"/service/"+service_name, data ? "text/json" : null, data, 
+		ajax.call(data ? "POST" : "GET", "/dynamic/"+component+"/service/"+service_name, data ? "application/json" : null, data, 
 			function(error){
 				if (error_handler)
 					error_handler(error);

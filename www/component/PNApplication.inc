@@ -179,7 +179,7 @@ class PNApplication {
 	public static function printJSONResult($result) {
 		echo "{";
 		if (count(PNApplication::$errors) > 0) {
-			echo "errors:[";
+			echo "\"errors\":[";
 			$first = true;
 			foreach (PNApplication::$errors as $e) {
 				if ($first) $first = false; else echo ",";
@@ -188,7 +188,7 @@ class PNApplication {
 			echo "],";
 		}
 		if (count(PNApplication::$warnings) > 0) {
-			echo "warnings:[";
+			echo "\"warnings\":[";
 			$first = true;
 			foreach (PNApplication::$warnings as $e) {
 				if ($first) $first = false; else echo ",";
@@ -196,7 +196,7 @@ class PNApplication {
 			}
 			echo "],";
 		}
-		echo "result:";
+		echo "\"result\":";
 		if ($result === null) echo "null"; else echo $result;
 		echo "}";
 	}

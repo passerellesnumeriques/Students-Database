@@ -161,7 +161,7 @@ case "dynamic":
 			if ($request_type == "page") {
 				echo "<script type='text/javascript'>window.top.location.href = '/';</script>";
 			} else {
-				header("Content-Type: text/json");
+				header("Content-Type: application/json");
 				echo "{errors:['The application has been updated to a new version.'],result:null}";
 			}
 			die();
