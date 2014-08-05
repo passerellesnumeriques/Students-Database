@@ -65,6 +65,7 @@ if (isset($_POST["req"])) {
 				DataBaseUtilities::createTable($db, $table);
 			die("OK");
 		case "init_db":
+			// TODO clean data directory.. to be sure
 			global $local_domain, $db_config;
 			$local_domain = $_POST["domain"];
 			$db_config = array(

@@ -144,7 +144,7 @@ abstract class Component {
 		$service = new $classname();
 	
 		// build input
-		if (isset($_SERVER["CONTENT_TYPE"]) && substr($_SERVER["CONTENT_TYPE"],0,9) == "application/json") {
+		if (isset($_SERVER["CONTENT_TYPE"]) && substr($_SERVER["CONTENT_TYPE"],0,16) == "application/json") {
 			$in = file_get_contents('php://input');
 			$input = json_decode($in, true);
 			$err = json_last_error();
