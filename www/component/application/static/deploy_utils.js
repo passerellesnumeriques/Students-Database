@@ -37,7 +37,7 @@ function getURLFileSize(backend_url, download_url, handler) {
 	xhr.send(data);
 }
 function downloading(backend_url, download_url, size, file, progress_handler, end_handler) {
-	var speed = 128*1024; // start with steps of 128K
+	var speed = 256*1024; // start with steps of 256K
 	var next = function(from) {
 		var start_time = new Date().getTime();
 		var end = from + Math.floor(speed);
@@ -47,11 +47,12 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 			progress_handler(end+1,size);
 			if (end >= size-1) { end_handler(null); return; }
 			var end_time = new Date().getTime();
-			if (end_time-start_time < 2000) speed *= 5;
-			else if (end_time-start_time < 4000) speed *= 3;
-			else if (end_time-start_time < 6000) speed *= 2;
-			else if (end_time-start_time < 8000) speed *= 1.5;
-			else if (end_time-start_time > 15000) speed *= 0.9;
+			if (end_time-start_time < 2000) speed *= 10;
+			else if (end_time-start_time < 4000) speed *= 5.5;
+			else if (end_time-start_time < 6000) speed *= 3.5;
+			else if (end_time-start_time < 8000) speed *= 2.5;
+			else if (end_time-start_time < 15000) speed *= 1.3;
+			else if (end_time-start_time > 25000) speed *= 0.85;
 			next(end+1);
 		});
 	};

@@ -16,34 +16,21 @@ class DataModel {
 	public static function &get() {
 		if (DataModel::$model == null) {
 			DataModel::$model = new DataModel();
-			$done = array();
-			foreach (PNApplication::$instance->components as $c) {
-				DataModel::_get_component($c, $done, DataModel::$model);
+			$model = &DataModel::$model;
+			$components = PNApplication::sortComponentsByDependencies();
+			// TODO better for prod version, but data model can include sub files....
+			foreach ($components as $c) {
+				$file = "component/".$c->name."/datamodel.inc";
+				if (file_exists($file))
+					include $file;
 			}
-			$done = array();
-			foreach (PNApplication::$instance->components as $c) {
-				DataModel::_get_component_display($c, $done, DataModel::$model);
+			foreach ($components as $c) {
+				$file = "component/".$c->name."/datamodel_display.inc";
+				if (file_exists($file))
+					include $file;
 			}
 		}
 		return DataModel::$model;
-	}
-	private static function _get_component($c, &$done, &$model) {
-		if (in_array($c->name, $done)) return;
-		array_push($done, $c->name);
-		foreach ($c->dependencies() as $dep)
-			DataModel::_get_component(PNApplication::$instance->components[$dep], $done, $model);
-		$file = "component/".$c->name."/datamodel.inc";
-		if (file_exists($file))
-			include $file;
-	}
-	private static function _get_component_display($c, &$done, &$model) {
-		if (in_array($c->name, $done)) return;
-		array_push($done, $c->name);
-		foreach ($c->dependencies() as $dep)
-			DataModel::_get_component_display(PNApplication::$instance->components[$dep], $done, $model);
-		$file = "component/".$c->name."/datamodel_display.inc";
-		if (file_exists($file))
-			include $file;
 	}
 	
 	protected $tables = array();

@@ -299,6 +299,13 @@ class PNApplication {
 			PNApplication::internalSortComponentsByDependencies(PNApplication::$instance->components[$dep], $list);
 		array_push($list, $c);
 	}
+#PROD
+#public static function sortComponentsByDependencies() {
+# ##COMPONENTS_ORDER##
+#$list = array();
+#foreach ($components as $c) array_push($list, PNApplication::$instance->components[$c]);
+#return $list;
+#}
 #END
 	
 	/** Get the list of domains with their configuration: from file conf/domains

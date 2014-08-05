@@ -53,7 +53,7 @@ if (isset($_POST["req"])) {
 			require_once("SQLQuery.inc");
 			require_once("component/data_model/Model.inc");
 			$model = DataModel::get();
-			$res = $db->execute("CREATE DATABASE IF NOT EXISTS students_".$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
+			$res = $db->execute("CREATE DATABASE IF NOT EXISTS students_".$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
 			$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = 'students_$domain'");
 			$db->execute("USE students_".$domain);
 			while (($sql = $db->nextRowArray($res)) <> null)
@@ -65,6 +65,11 @@ if (isset($_POST["req"])) {
 			$tables = $p->getValue($model);
 			foreach ($tables as $table)
 				DataBaseUtilities::createTable($db, $table);
+			if (PNApplication::hasErrors()) {
+				header("HTTP/1.0 200 Error");
+				PNApplication::printErrors();
+				die();
+			}
 			die("OK");
 		case "init_db":
 			global $local_domain, $db_config;
@@ -88,6 +93,11 @@ if (isset($_POST["req"])) {
 			foreach ($components as $c) {
 				if (file_exists("component/".$c->name."/init_data.inc"))
 					include("component/".$c->name."/init_data.inc");
+			}
+			if (PNApplication::hasErrors()) {
+				header("HTTP/1.0 200 Error");
+				PNApplication::printErrors();
+				die();
 			}
 			die("OK");
 		case "save":
@@ -200,12 +210,12 @@ ul {
 		</tr>
 		<tr>
 			<td>Database user</td>
-			<td align="left"><input type='text' name='db_user' value='root'/></td>
+			<td align="left"><input type='text' name='db_user'/></td>
 			<td></td>
 		</tr>
 		<tr>
 			<td>Database password</td>
-			<td align="left"><input type='password' name='db_password' value=''/></td>
+			<td align="left"><input type='password' name='db_password'/></td>
 			<td></td>
 		</tr>
 		<tr>
