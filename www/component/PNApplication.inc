@@ -240,7 +240,7 @@ class PNApplication {
 		foreach ($this->components as $c) $this->initRequestForComponent($c, $done);
 #PROD
 # ##COMPONENTS_ORDER##
-#foreach ($component as $c) $this->components[$c]->initRequest();
+#foreach ($components as $c) $this->components[$c]->initRequest();
 #END
 	}
 #DEV
