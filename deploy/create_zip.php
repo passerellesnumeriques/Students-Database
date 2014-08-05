@@ -30,7 +30,10 @@ $zip->close();
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
 
-Version ready: you can put the file <?php echo $_POST["path"]."/".$filename;?> in SourceForge.<br/>
+Version ready. You can now:<ul>
+	<li>Put the file <?php echo $_POST["path"]."/".$filename;?> in SourceForge (<a href='https://sourceforge.net/projects/studentsdatabase/files/updates/' target='_blank'>https://sourceforge.net/projects/studentsdatabase/files/updates/</a>).</li>
+	<li>Update the file latest.txt in SourceForge (<a href='https://sourceforge.net/projects/studentsdatabase/files/' target='_blank'>https://sourceforge.net/projects/studentsdatabase/files/</a>).</li>
+</ul>
 
 </div>
 <div class='footer' style='flex:none'>

@@ -81,6 +81,9 @@ function optimize_directory($path) {
 	closedir($dir);
 }
 optimize_directory(realpath($_POST["path"]));
+$f = fopen(realpath($_POST["path"])."/version","w");
+fwrite($f,$_POST["version"]);
+fclose($f);
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>

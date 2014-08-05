@@ -2,6 +2,7 @@
 require_once("component/application/ApplicationSectionPlugin.inc");
 $this->requireJavascript("vertical_scrolling.js");
 $this->requireJavascript("horizontal_scrolling.js");
+global $pn_app_version;
 ?>
 <style type="text/css">
 #application_container {
@@ -214,7 +215,7 @@ $this->requireJavascript("horizontal_scrolling.js");
 		</div>
 	</div>
 	<div id="application_footer" style="flex:none;height:16px;">
-			© 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
+			Students Management Software (version <?php echo $pn_app_version; ?>) - © 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
 	</div>
 </div>
 <script type='text/javascript'>

@@ -226,7 +226,7 @@ class PNApplication {
 #PROD
 # ##CREATE_COMPONENTS##
 # ##COMPONENTS_ORDER##
-#foreach ($components as $c) $c->init();
+#foreach ($components as $c) $this->components[$c]->init();
 #END
 		$this->initRequest();
 	}
@@ -240,7 +240,7 @@ class PNApplication {
 		foreach ($this->components as $c) $this->initRequestForComponent($c, $done);
 #PROD
 # ##COMPONENTS_ORDER##
-#foreach ($component as $c) $c->initRequest();
+#foreach ($component as $c) $this->components[$c]->initRequest();
 #END
 	}
 #DEV
