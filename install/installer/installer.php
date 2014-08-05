@@ -1,5 +1,6 @@
 <html>
 <head>
+<title>PN Students Management Software - Installation</title>
 <script type='text/javascript' src='deploy_utils.js'></script>
 <style type='text/css'>
 html, body {

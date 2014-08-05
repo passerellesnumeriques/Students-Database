@@ -17,7 +17,7 @@ function download($url, $target = null, $from = null, $to = null, $resume_if_exi
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-	curl_setopt($c, CURLOPT_TIMEOUT, 25);
+	curl_setopt($c, CURLOPT_TIMEOUT, 60);
 	if ($from !== null) {
 		curl_setopt($c, CURLOPT_HTTPHEADER, array(
 		"Range: bytes=".$from."-".$to

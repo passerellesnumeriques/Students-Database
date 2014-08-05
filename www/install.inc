@@ -32,6 +32,8 @@ if (isset($_POST["req"])) {
 	switch ($_POST["req"]) {
 		case "check_db": connectDB(); die("OK");		
 		case "create_db":
+			if (file_exists("data")) removeDirectory("data");
+			mkdir("data");
 			global $local_domain, $db_config;
 			$local_domain = $_POST["domain"];
 			$db_config = array(
@@ -65,7 +67,6 @@ if (isset($_POST["req"])) {
 				DataBaseUtilities::createTable($db, $table);
 			die("OK");
 		case "init_db":
-			// TODO clean data directory.. to be sure
 			global $local_domain, $db_config;
 			$local_domain = $_POST["domain"];
 			$db_config = array(

@@ -93,6 +93,7 @@ if (isset($_POST["step"])) {
 }
 ?><html>
 <head>
+<title>PN Students Management Software - Installation</title>
 <style type='text/css'>
 html, body {
 	width: 100%;
@@ -225,8 +226,8 @@ function checkPHPVersion() {
 	request("phpversion","",function(res) {
 		var s = res.split(".");
 		var main = parseInt(s[0]);
-		if (main < 5 || (main == 5 && (s.length == 1 || parseInt(s[1]) < 2))) addError("Too old version ("+res+"), please install at least version 5.2");
-		else if (main == 5 && s.length > 1 && parseInt(s[1]) < 4) addWarning("Version "+res+" found. We recommend at least version 5.4, but it can work starting from version 5.2");
+		if (main < 5 || (main == 5 && (s.length == 1 || parseInt(s[1]) < 3))) addError("Too old version ("+res+"), please install at least version 5.3");
+		else if (main == 5 && s.length > 1 && parseInt(s[1]) < 4) addWarning("Version "+res+" found. We recommend at least version 5.4, but it can work starting from version 5.3");
 		else addOk("Version "+res);
 		checkApacheVersion();
 	});

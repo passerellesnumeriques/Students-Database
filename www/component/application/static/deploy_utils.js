@@ -37,7 +37,7 @@ function getURLFileSize(backend_url, download_url, handler) {
 	xhr.send(data);
 }
 function downloading(backend_url, download_url, size, file, progress_handler, end_handler) {
-	var speed = 512*1024; // start with steps of 512K
+	var speed = 128*1024; // start with steps of 128K
 	var next = function(from) {
 		var start_time = new Date().getTime();
 		var end = from + Math.floor(speed);

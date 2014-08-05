@@ -15,7 +15,7 @@ class authentication extends Component {
 		switch ($domain) {
 			case "PNP":
 				require_once("WebAuthenticationSystem.inc");
-				if ($local == "PNP" && false)
+				if ($local == "PNP")
 					$url = "authentication";
 				else
 					$url = "authentication.pnp.studentscenter.org:800";
