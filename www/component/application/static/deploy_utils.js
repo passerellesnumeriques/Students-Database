@@ -2,6 +2,7 @@ function download(backend_url, file_url, target_file, progress_container, end_ha
 	progress_container.innerHTML = "Starting download...";
 	getURLFileSize(backend_url, file_url, function(error,size) {
 		if (error) { end_handler(size); return; }
+		progress_container.innerHTML = "0% ("+(size/(1024*1024)).toFixed(2)+"M)";
 		downloading(backend_url, file_url, size, target_file, function(pos,total) {
 			progress_container.innerHTML = ""+Math.floor(pos*100/total)+"% ("+(pos/(1024*1024)).toFixed(2)+"M/"+(total/(1024*1024)).toFixed(2)+"M)";
 		}, end_handler);

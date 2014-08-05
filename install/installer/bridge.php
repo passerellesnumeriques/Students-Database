@@ -12,16 +12,23 @@ if (isset($_POST["unzip"])) {
 	die();
 }
 if (isset($_POST["getsize"])) {
-	$size = getURLFileSize($url, "application/octet-stream");
-	if ($size <= 0) {
+	try {
+		$size = getURLFileSize($url, "application/octet-stream");
+		if ($size <= 0) {
+			header("HTTP/1.0 200 Error");
+			die("Unable to find the file on SourceForge");
+		}
+		die("".$size);
+	} catch (Exception $e) {
 		header("HTTP/1.0 200 Error");
-		die("Unable to find the file on SourceForge");
+		die($e->getMessage());
 	}
-	die("".$size);
 }
 
 try {
-	$result = download($url, @$_POST["target"], @$_POST["range_from"], @$_POST["range_to"], true);
+	$from = isset($_POST["range_from"]) ? intval($_POST["range_from"]) : null;
+	$to = isset($_POST["range_to"]) ? intval($_POST["range_to"]) : null;
+	$result = download($url, @$_POST["target"], $from, $to, true);
 	if (!isset($_POST["target"]))
 		die($result);
 } catch (Exception $e) {

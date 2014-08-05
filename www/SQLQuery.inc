@@ -1428,7 +1428,7 @@ class SQLQuery {
 			}
 			foreach ($columns as $field=>&$values) {
 				$col = $t->internalGetColumn($field, $this->sub_models);
-				if ($col->unique) {
+				if ($col->unique && !($col instanceof \datamodel\PrimaryKey)) {
 					for ($i = 0; $i < count($values); $i++) {
 						for ($j = $i+1; $j < count($values); $j++) {
 							if ($values[$i] == $values[$j]) {
@@ -1732,6 +1732,7 @@ class SQLQuery {
 			}
 		// check unicity and presence
 		foreach ($columns as $col) {
+			if ($col instanceof \datamodel\PrimaryKey) continue;
 			if ($col->unique) {
 				if (!isset($fields_values[$col->name])) {
 					DataBaseLock::unlock($lock);
@@ -1834,6 +1835,7 @@ class SQLQuery {
 			}
 		// check unicity and presence
 		foreach ($columns as $col) {
+			if ($col instanceof \datamodel\PrimaryKey) continue;
 			if ($col->unique) {
 				$values = array();
 				foreach ($rows as &$fields_values) {

@@ -1,10 +1,10 @@
 <?php 
 function download($url, $target = null, $from = null, $to = null, $resume_if_exists = true) {
-	if ($target <> null && $from <> null) {
+	if ($target <> null && $from !== null) {
 		if (file_exists($target)) {
 			if ($resume_if_exists) {
 				$size = filesize($target);
-				if ($o < $size) return;
+				if ($to < $size) return;
 				if ($from < $size) $from = $size;
 			} else {
 				unlink($target);
@@ -18,7 +18,7 @@ function download($url, $target = null, $from = null, $to = null, $resume_if_exi
 	curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
 	curl_setopt($c, CURLOPT_TIMEOUT, 25);
-	if ($from <> null) {
+	if ($from !== null) {
 		curl_setopt($c, CURLOPT_HTTPHEADER, array(
 		"Range: bytes=".$from."-".$to
 		));
