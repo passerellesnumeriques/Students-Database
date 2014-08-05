@@ -1,5 +1,6 @@
 <html>
 <head>
+<script type='text/javascript' src='deploy_utils.js'></script>
 <style type='text/css'>
 html, body {
 	width: 100%;
@@ -98,7 +99,7 @@ button:focus {
 var content = document.getElementById('content');
 function request(url,params,handler) {
 	var xhr = new XMLHttpRequest();
-	xhr.open("POST","downloader.php", true);
+	xhr.open("POST","bridge.php", true);
 	xhr.onreadystatechange = function() {
 	    if (this.readyState != 4) return;
 		if (this.statusText == "Error")
@@ -110,57 +111,24 @@ function request(url,params,handler) {
 	var data = "url="+encodeURIComponent(url)+params;
 	xhr.send(data);
 }
-function download(url,handler) {
-	request(url,"",handler);
-}
-function getSize(url,handler) {
-	request(url,"&getsize=true",handler);
-}
-function downloadRange(url, file, from, to, handler) {
-	request(url,"&range_from="+from+"&range_to="+to+"&target="+encodeURIComponent(file),handler);
-}
-function downloading(url, file, size, progress_handler, end_handler) {
-	var next = function(from) {
-		var end = from + 128*1024;
-		if (end >= size) end = size-1;
-		downloadRange(url,file,from,end,function(error,content) {
-			if (error) { end_handler(content); return; }
-			progress_handler(end+1,size);
-			if (end >= size-1) { end_handler(null); return; }
-			next(end+1);
-		});
-	};
-	next(0);
-}
-function sizeString(size) {
-	if (size < 1024) return ""+size;
-	if (size < 1024*1024) return (size/1024).toFixed(1)+"K";
-	return (size/(1024*1024)).toFixed(2)+"M";
-}
 function getLatestVersion() {
 	content.innerHTML = "Retrieving latest version...";
-	download("http://sourceforge.net/projects/studentsdatabase/files/latest.txt/download", function(error,res) {
+	getURLFile("bridge.php", "http://sourceforge.net/projects/studentsdatabase/files/latest.txt/download", function(error,res) {
 		if (error) { content.innerHTML = "Error: "+res; return; }
 		var version = res;
-		content.innerHTML = "Latest version: "+version+"<br/>Starting download...";
-		getSize("http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+version+".zip/download",function(error,res) {
+		content.innerHTML = "Latest version: "+version+"<br/>Downloading Students Management Software "+version+": ";
+		var span_progress = document.createElement("SPAN");
+		content.appendChild(span_progress);
+		download("bridge.php", "http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+version+".zip/download", "Students_Management_Software_"+version+".zip", span_progress, function(error) {
 			if (error) {
 				content.innerHTML = "Latest version: "+version+"<br/>";
-				content.innerHTML += "Error while retrieving file information: "+res;
+				content.innerHTML += "Error downloading: "+error;
 				return;
 			}
-			var size = parseInt(res);
-			content.innerHTML = "Downloading version "+version+": 0% (0/"+sizeString(size)+")";
-			downloading("http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+version+".zip/download","Students_Management_Software_"+version+".zip",size,function(pos,total) {
-				var pc = Math.floor(pos*100/total);
-				content.innerHTML = "Downloading version "+version+": "+pc+"% ("+sizeString(pos)+"/"+sizeString(total)+")";
-			},function(error) {
-				if (error) { content.innerHTML = "Error downloading: "+error; return; }
-				content.innerHTML = "Version "+version+" downloaded.<br/>Extracting files...";
-				request("Students_Management_Software_"+version+".zip","&unzip=true",function(error,res) {
-					if (error) { content.innerHTML += "<br/>Error: "+res; return; }
-					window.location.href = "/";
-				});
+			content.innerHTML = "Version "+version+" downloaded.<br/>Extracting files...";
+			request("Students_Management_Software_"+version+".zip","&unzip=true",function(error,res) {
+				if (error) { content.innerHTML += "<br/>Error: "+res; return; }
+				window.location.href = "/";
 			});
 		});
 	});

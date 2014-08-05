@@ -314,18 +314,33 @@ function downloadInstaller() {
 				addError(res);
 				end();
 			}
-			progress.innerHTML = "50%";
-			request("download","url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/install/installer/downloader.php")+"&file=downloader.php",function(res) {
+			progress.innerHTML = "25%";
+			request("download","url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/install/installer/bridge.php")+"&file=bridge.php",function(res) {
 				if (res.length > 0) {
 					content.removeChild(progress);
 					addError(res);
 					end();
 				}
-				content.removeChild(progress);
-				addOk();
-				end();
+				progress.innerHTML = "50%";
+				request("download","url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/component/application/static/deploy_utils.js")+"&file=deploy_utils.js",function(res) {
+					if (res.length > 0) {
+						content.removeChild(progress);
+						addError(res);
+						end();
+					}
+					progress.innerHTML = "75%";
+					request("download","url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/component/application/service/deploy_utils.inc")+"&file=deploy_utils.inc",function(res) {
+						if (res.length > 0) {
+							content.removeChild(progress);
+							addError(res);
+							end();
+						}
+						content.removeChild(progress);
+						addOk();
+						end();
+					});
+				});
 			});
-			
 		});
 	});
 }
