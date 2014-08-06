@@ -170,13 +170,14 @@ class DataModel {
 	/** should be used only in very specific places, while ensuring that this will not give privileges to the user
 	 * @return datamodel\Table[] 
 	 */
-	public function &internalGetTables() {
+	public function &internalGetTables($include_sub_models = true) {
 		$a = array();
 		foreach ($this->tables as $name=>&$table)
 			$a[$name] = &$table;
-		foreach ($this->sub_models as &$sm)
-			foreach ($sm->tables as $name=>&$table)
-				$a[$name] = &$table;
+		if ($include_sub_models)
+			foreach ($this->sub_models as &$sm)
+				foreach ($sm->tables as $name=>&$table)
+					$a[$name] = &$table;
 		return $a;
 	}
 

@@ -51,6 +51,7 @@ Optimizing and creating deployed version of the files...
 <form name='deploy' method="POST" action="optimize.php">
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
+<input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
 </form>
 
 </div>

@@ -20,10 +20,11 @@ scripts_directory(realpath($_POST["path"]));
 <div style='flex:none;background-color:white;padding:10px'>
 
 Deployed version of files done and scripts executed.<br/>
-Generating zip file...
+Generating zip files and checksums...
 <form name='deploy' method="POST" action="create_zip.php">
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
+<input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
 </form>
 
 </div>

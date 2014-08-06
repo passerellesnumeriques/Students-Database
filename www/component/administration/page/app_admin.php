@@ -21,7 +21,7 @@ class page_app_admin extends Page {
 ?>
 <div style='padding:10px'>
 <div id='section_updates' icon='<?php echo theme::$icons_16["refresh"];?>' title='Software Update'>
-	<div>
+	<div style='padding:5px;'>
 		<?php
 		global $pn_app_version;
 		echo "Current version: ".$pn_app_version."<br/>";
@@ -98,14 +98,91 @@ service.json("administration","latest_version",null,function(res) {
 			if (l < c) break;
 		}
 		if (need_update) {
-			section_updates.content.appendChild(document.createTextNode("A newer version is available ! "));
-			var button = document.createElement("BUTTON");
+			var new_version = res.version;
+			section_updates.content.innerHTML += "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> <span style='color:#806000;font-weight:bold;'>A newer version is available !</span><br/>";
+			var div = document.createElement("DIV");
+			var img = document.createElement("IMG");
+			img.src = theme.icons_16.loading;
+			img.style.verticalAlign = "bottom";
+			img.style.marginRight = "5px";
+			div.appendChild(img);
+			var msg = document.createElement("SPAN");
+			msg.innerHTML = "Checking download...";
+			div.appendChild(msg);
+			section_updates.content.appendChild(div);
+			var download_new_version = function(reset) {
+				var filename_span = document.createElement("SPAN");
+				div.appendChild(filename_span);
+				var progress = document.createElement("SPAN");
+				progress.style.marginLeft = "10px";
+				div.appendChild(progress);
+				require("deploy_utils.js",function() {
+					filename_span.innerHTML = ": Students_Management_Software_"+new_version+".zip";
+					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), "http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+new_version+".zip/download", "data/updates/Students_Management_Software_"+new_version+".zip", progress, function(error) {
+						if (error) {
+							img.src = theme.icons_16.error;
+							msg.innerHTML = error;
+							div.removeChild(filename_span);
+							div.removeChild(progress);
+							return;
+						}
+						filename_span.innerHTML = ": Students_Management_Software_"+new_version+".zip.checksum";
+						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), "http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+new_version+".zip.checksum/download", "data/updates/Students_Management_Software_"+new_version+".zip.checksum", progress, function(error) {
+							div.removeChild(filename_span);
+							div.removeChild(progress);
+							if (error) {
+								img.src = theme.icons_16.error;
+								msg.innerHTML = error;
+								return;
+							}
+							msg.innerHTML = "Checking download...";
+							service.customOutput("administration","download_update",{step:'check_if_done',version:new_version},function(res) {
+								if (res == "not_downloaded") {
+									img.src = theme.icons_16.error;
+									msg.innerHTML = "We cannot find the file after download!";
+									return;
+								}
+								if (res == "invalid_download") {
+									img.src = theme.icons_16.error;
+									msg.innerHTML = "Downloaded file is invalid. Please retry.";
+									return;
+								}
+								if (res == "OK") {
+									// TODO
+									return;
+								}
+								img.src = theme.icons_16.error;
+								msg.innerHTML = "Unexpected answer: "+res;
+							});
+						});
+					});
+				});
+			};
+			service.customOutput("administration","download_update",{step:'check_if_done',version:new_version},function(res) {
+				if (res == "not_downloaded") {
+					msg.innerHTML = "Downloading new version";
+					download_new_version();
+					return;
+				}
+				if (res == "invalid_download") {
+					msg.innerHTML = "Downloaded file is invalid. Re-downloading version "+new_version;
+					download_new_version(true);
+					return;
+				}
+				if (res == "OK") {
+					// TODO
+					return;
+				}
+				img.src = theme.icons_16.error;
+				msg.innerHTML = "Unexpected answer: "+res;
+			});
+			/*var button = document.createElement("BUTTON");
 			button.className = "action important";
 			button.innerHTML = "Update Software";
 			section_updates.content.appendChild(button);
 			button.onclick = function() {
 				alert("TODO");
-			};
+			};*/
 		} else {
 			var s = document.createElement("SPAN");
 			s.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> The version is up to date !";

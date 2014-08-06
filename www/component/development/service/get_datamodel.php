@@ -26,7 +26,7 @@ class service_get_datamodel extends Service {
 		}
 		echo "\"tables\":[";
 		$first = true;
-		foreach ($model->internalGetTables() as $table) {
+		foreach ($model->internalGetTables(false) as $table) {
 			if ($first) $first = false; else echo ",";
 			echo "{";
 			echo "\"name\":".json_encode($table->getName());

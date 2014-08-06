@@ -21,16 +21,18 @@ if (file_exists($_POST["path"])) die("Unable to remove directory ".$_POST["path"
 if (!@mkdir($_POST["path"]))
 	if (!mkdir($_POST["path"])) die("Unable to create directory ".$_POST["path"]);
 if (!file_exists($_POST["path"])) die("Unable to create directory ".$_POST["path"]);
+mkdir($_POST["path"]."/tmp");
 
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
 
 Directory created.<br/>
-Copying files...
-<form name='deploy' method="POST" action="copy.php">
+Retrieving datamodel information...
+<form name='deploy' method="POST" action="datamodel.php">
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
+<input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
 </form>
 
 </div>
