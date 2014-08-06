@@ -1175,6 +1175,13 @@ class SQLQuery {
 			else
 				$t = DataModel::get()->getTable($table);
 			
+			if ($t->hasBeforeUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				$t->fireBeforeUpdate($fields_values, $key, $sub_model_instance);
+			}
+			
 			// check we are allowed to modify this row
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
@@ -1292,6 +1299,12 @@ class SQLQuery {
 				$error = DataBaseLock::unlock($lock_id);
 				if ($error <> null) throw new Exception($error);
 			}
+			if ($t->hasUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				$t->fireUpdate($fields_values, $key, $sub_model_instance);
+			}
 			if (!$in_transaction) SQLQuery::commitTransaction();
 		} catch (Exception $e) {
 			if (!$in_transaction) SQLQuery::rollbackTransaction();
@@ -1315,6 +1328,15 @@ class SQLQuery {
 			else
 				$t = DataModel::get()->getTable($table);
 		
+			if ($t->hasBeforeUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				for ($i = 0; $i < count($keys_fields_values); $i++)
+					for ($j = 0; $j < count($keys_fields_values[$i][0]); $j++)
+						$t->fireBeforeUpdate($keys_fields_values[$i][1], $keys_fields_values[$i][$j], $sub_model_instance);
+			}
+				
 			// check we are allowed to modify this row
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
@@ -1523,6 +1545,13 @@ class SQLQuery {
 					$sql .= $w;
 				}
 				SQLQuery::db()->execute($sql);
+				if ($t->hasUpdateListeners()) {
+					$sub_model_instance = null;
+					if ($t->getModel() instanceof SubDataModel)
+						$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+					foreach ($keys as $k)
+						$t->fireUpdate($fields_values, $k, $sub_model_instance);
+				}
 			}
 			if ($locked) {
 				$error = DataBaseLock::unlock($lock_id);
@@ -1554,6 +1583,14 @@ class SQLQuery {
 			else
 				$t = DataModel::get()->getTable($table);
 		
+			if ($t->hasBeforeUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				foreach ($keys as $key)
+					$t->fireBeforeUpdate($fields_values, $key, $sub_model_instance);
+			}
+				
 			// check we are allowed to modify this row
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
@@ -1664,6 +1701,13 @@ class SQLQuery {
 				}
 			}
 			SQLQuery::db()->execute($sql);
+			if ($t->hasUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				foreach ($keys as $k)
+					$t->fireUpdate($fields_values, $k, $sub_model_instance);
+			}
 			if ($locked) {
 				$error = DataBaseLock::unlock($lock_id);
 				if ($error <> null) throw new Exception($error);
@@ -2053,6 +2097,7 @@ class SQLQuery {
 				}
 				$sql .= ")";
 				SQLQuery::db()->execute($sql);
+				// TODO fire update
 				// $t->getSQLName($this->sub_models)
 			}
 

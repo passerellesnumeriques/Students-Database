@@ -64,17 +64,21 @@ if (window == window.top && !window.top.geography) {
 				}
 			this._countries_data_listeners.push({id:country_id,listeners:[onready]});
 			var t=this;
-			service.json("geography", "get_country_data", {country_id:country_id}, function(result) {
-				if (!result) return;
-				t._countries_data.push({id:country_id,data:result});
-				for (var i = 0; i < t._countries_data_listeners.length; ++i) {
-					if (t._countries_data_listeners[i].id == country_id) {
-						for (var j = 0; j < t._countries_data_listeners[i].listeners.length; ++j)
-							t._countries_data_listeners[i].listeners[j](result);
-						t._countries_data_listeners.splice(i,1);
-						return;
+			service.json("geography", "get_country_timestamp", {country_id:country_id}, function(timestamp) {
+				ajax.call("GET", "/static/geography/country_data.js.php?id="+country_id+"&ts="+timestamp, null, null, function(error) {
+					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_ERROR,error,[{action:"popup"},{action:"close"}],10000));
+				}, function(xhr) {
+					var result = eval("("+xhr.responseText+")");
+					t._countries_data.push({id:country_id,data:result});
+					for (var i = 0; i < t._countries_data_listeners.length; ++i) {
+						if (t._countries_data_listeners[i].id == country_id) {
+							for (var j = 0; j < t._countries_data_listeners[i].listeners.length; ++j)
+								t._countries_data_listeners[i].listeners[j](result);
+							t._countries_data_listeners.splice(i,1);
+							return;
+						}
 					}
-				}
+				}, false);
 			});
 		},
 		getCountryIdFromData: function(country_data) {

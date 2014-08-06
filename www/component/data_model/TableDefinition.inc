@@ -73,12 +73,18 @@ namespace datamodel {
 		private $oninsert;
 		/** @var Event */
 		private $onremove;
-
+		/** @var Event */
+		private $onupdate;
+		/** @var Event */
+		private $onbeforeupdate;
+		
 		public function __construct(&$model, $name) {
 			$this->model = &$model;
 			$this->name = $name;
 			$this->oninsert = new \Event();
 			$this->onremove = new \Event();
+			$this->onupdate = new \Event();
+			$this->onbeforeupdate = new \Event();
 		}
 
 		public function _key_for_submodel(&$sm) {
@@ -340,6 +346,34 @@ namespace datamodel {
 		}
 		public function hasRemoveListeners() {
 			return $this->onremove->hasListeners();
+		}
+		/**
+		 * @param function $fct takes 3 parameters: fields_values, key, sub_model_instance
+		 * @return \datamodel\Table
+		 */
+		public function onUpdate($fct) {
+			$this->onupdate->listenFunction($fct);
+			return $this;
+		}
+		public function fireUpdate($fields_values, $key, $sub_model_instance) {
+			$this->onupdate->fire(array($fields_values,$key,$sub_model_instance));
+		}
+		public function hasUpdateListeners() {
+			return $this->onupdate->hasListeners();
+		}
+		/**
+		 * @param function $fct takes 3 parameters: &amp;fields_values, key, sub_model_instance
+		 * @return \datamodel\Table
+		 */
+		public function onBeforeUpdate($fct) {
+			$this->onbeforeupdate->listenFunction($fct);
+			return $this;
+		}
+		public function fireBeforeUpdate(&$fields_values, $key, $sub_model_instance) {
+			$this->onbeforeupdate->fire(array(&$fields_values,$key,$sub_model_instance));
+		}
+		public function hasBeforeUpdateListeners() {
+			return $this->onbeforeupdate->hasListeners();
 		}
 		
 		/** Indicate one or several columns should be indexed for faster access.
