@@ -40,6 +40,8 @@ if ($path == "reload") {
 	die();
 }
 
+date_default_timezone_set("GMT");
+
 if ($path == "favicon.ico") { 
 	header("Content-Type: image/ico"); 
 	header('Cache-Control: public', true);

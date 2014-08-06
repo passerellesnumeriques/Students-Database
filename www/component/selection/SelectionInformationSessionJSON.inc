@@ -44,7 +44,7 @@ class SelectionInformationSessionJSON {
 	}
 	
 	/**
-	 * Prepare a JSON information session structure to be sent to the database (used by the IS/save service)<br/>
+	 * Prepare a JSON information session structure to be sent to the database (used by the is/save service)<br/>
 	 * This method checks that the IS has a name set. Otherwize, the name by default is the geographic_area_text, from the IS geographic_area attribute
 	 * @param string $json the IS structure
 	 * @return array fields => values to save

@@ -1,5 +1,5 @@
 <?php 
-class page_exam_link_IS_with_exam_center extends Page {
+class page_exam_link_is_with_exam_center extends Page {
 	
 	public function getRequiredRights() { return array("manage_exam_center"); }
 	
@@ -48,7 +48,7 @@ class page_exam_link_IS_with_exam_center extends Page {
 			</div>
 			<div id='section_is' 
 				style='display:inline-block;margin:10px;vertical-align:top'
-				icon='/static/selection/IS/IS_16.png'
+				icon='/static/selection/is/is_16.png'
 				title='Available Information Sessions'
 			>
 				<table class='grid'><tbody id='is_table'>

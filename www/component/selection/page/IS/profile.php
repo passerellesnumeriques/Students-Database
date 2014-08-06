@@ -1,6 +1,6 @@
 <?php
 require_once("component/selection/page/SelectionPage.inc");
-class page_IS_profile extends SelectionPage {
+class page_is_profile extends SelectionPage {
 	
 	public function getRequiredRights() { return array("see_information_session"); }
 	
@@ -34,8 +34,8 @@ class page_IS_profile extends SelectionPage {
 			}
 		}
 		$all_configs = include("component/selection/config.inc");
-		$this->requireJavascript("IS_date.js");
-		$this->requireJavascript("IS_statistics.js");
+		$this->requireJavascript("is_date.js");
+		$this->requireJavascript("is_statistics.js");
 		?>
 		<div style='display:inline-block;margin:10px;margin-right:5px;vertical-align:top;'>
 			<?php if ($this->component->getOneConfigAttributeValue("give_name_to_IS")) {
@@ -53,7 +53,7 @@ class page_IS_profile extends SelectionPage {
 			<?php } ?>
 			<div id='is_schedule'></div>
 			<script type='text/javascript'>
-			window.is_schedule = new IS_date(
+			window.is_schedule = new is_date(
 				'is_schedule', 
 				<?php echo json_encode(@$session["date"]);?>,
 				<?php echo $session <> null ? $session["id"] : "-1";?>,
@@ -65,7 +65,7 @@ class page_IS_profile extends SelectionPage {
 			</script>
 			<div id='is_stats'></div>
 			<script type='text/javascript'>
-			window.is_stats = new IS_statistics(
+			window.is_stats = new is_statistics(
 				'is_stats', 
 				<?php echo json_encode($this->component->getOneConfigAttributeValue("separate_boys_girls_IS"));?>,
 				<?php echo json_encode($editable);?>,
@@ -120,7 +120,7 @@ class page_IS_profile extends SelectionPage {
 				data.partners.push(p);
 			}
 
-			service.json("selection","IS/save",{event:event, data:data},function(res){
+			service.json("selection","is/save",{event:event, data:data},function(res){
 				if(!res) {
 					is_popup.unfreeze();
 					error_dialog("An error occured, your informations were not saved");
@@ -158,7 +158,7 @@ class page_IS_profile extends SelectionPage {
 			confirm_dialog("Are you sure you want to remove this information session ?<br/>Note: Any applicant already assigned to this information session will remain in the system, but without information session.",function(res){
 				if(res){
 					is_popup.freeze();
-					service.json("selection","IS/remove",{id:<?php echo $id;?>},function(r){
+					service.json("selection","is/remove",{id:<?php echo $id;?>},function(r){
 						is_popup.unfreeze();
 						if(r) {
 							<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>

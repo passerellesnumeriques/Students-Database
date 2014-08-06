@@ -1,4 +1,4 @@
-function exam_center_IS(container, all_is, linked_is, can_edit) {
+function exam_center_is(container, all_is, linked_is, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	
 	this.linked_ids = linked_is;
@@ -7,7 +7,7 @@ function exam_center_IS(container, all_is, linked_is, can_edit) {
 	
 	this._init = function() {
 		this._table = document.createElement("TABLE");
-		this._section = new section("/static/selection/IS/IS_16.png", "Information Sessions Linked", this._table, false, false, 'soft');
+		this._section = new section("/static/selection/is/is_16.png", "Information Sessions Linked", this._table, false, false, 'soft');
 		container.appendChild(this._section.element);
 		
 		if (can_edit) {
@@ -49,7 +49,7 @@ function exam_center_IS(container, all_is, linked_is, can_edit) {
 	this.setHostFromIS = function(is_id) {
 		var popup = window.parent.get_popup_window_from_frame(window);
 		popup.freeze("Loading Host information from Information Session...");
-		service.json("selection","IS/get_host",{id:is_id},function(res) {
+		service.json("selection","is/get_host",{id:is_id},function(res) {
 			popup.unfreeze();
 			if (!res) return;
 			window.center_location.setHostPartner(res);
@@ -102,11 +102,11 @@ function exam_center_IS(container, all_is, linked_is, can_edit) {
 		
 		button = document.createElement("BUTTON");
 		button.className = "flat";
-		button.innerHTML = "<img src='/static/selection/IS/IS_16.png'/>";
+		button.innerHTML = "<img src='/static/selection/is/is_16.png'/>";
 		button.title = "Open Information Session profile";
 		td.appendChild(button);
 		button.onclick = function() {
-			window.top.popup_frame("/static/selection/IS/IS_16.png","Information Session","/dynamic/selection/page/IS/profile?id="+is_id+"&readonly=true",null,95,95);
+			window.top.popup_frame("/static/selection/is/is_16.png","Information Session","/dynamic/selection/page/is/profile?id="+is_id+"&readonly=true",null,95,95);
 		};
 
 		if (can_edit) {

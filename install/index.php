@@ -12,6 +12,15 @@ function removeDirectory($path) {
 	closedir($dir);
 	rmdir($path);
 }
+function iniSize($s) {
+	$i = strpos($s,"K");
+	if ($i !== false) return "".(intval(substr($s,0,$i))*1024);
+	$i = strpos($s,"M");
+	if ($i !== false) return "".(intval(substr($s,0,$i))*1024*1024);
+	$i = strpos($s,"G");
+	if ($i !== false) return "".(intval(substr($s,0,$i))*1024*1024*1024);
+	return $s;
+}
 
 if (isset($_POST["step"])) {
 	switch ($_POST["step"]) {
@@ -21,6 +30,21 @@ if (isset($_POST["step"])) {
 			$list = get_loaded_extensions();
 			foreach ($list as $ext) if ($ext == $_POST["ext"]) die("OK");
 			die("KO");
+		case "phpconfig_memory":
+			$mem = iniSize(ini_get("memory_limit"));
+			die($mem);
+		case "phpconfig_post_size":
+			$size = iniSize(ini_get("post_max_size"));
+			die($size);
+		case "phpconfig_upload_max_filesize":
+			$size = iniSize(ini_get("upload_max_filesize"));
+			die($size);
+		case "phpconfig_max_file_uploads":
+			$size = iniSize(ini_get("max_file_uploads"));
+			die($size);
+		case "phpconfig_session_autostart":
+			if (ini_get("session.auto_start") <> "0") die("KO");
+			die("OK");
 		case "checkfs":
 			$path = realpath(dirname(__FILE__));
 			$f = @fopen($path."/test.tmp","w");
@@ -268,7 +292,44 @@ function checkPHPExtensions() {
 				addText(" mysqli");
 				request("phpext","&ext=mysqli",function(res) {
 					if (res == "OK") addOk(null,false); else addError(null,false);
-					checkFSAccess();
+					checkPHPConfig();
+				});
+			});
+		});
+	});
+}
+function checkPHPConfig() {
+	addText("Checking PHP Configuration");
+	request("phpconfig_memory","",function(res) {
+		var size;
+		size = parseInt(res);
+		addText(" memory_limit: ");
+		if (size >= 250*1024*1024) addOk((size/(1024*1024))+"M",true);
+		else if (size >= 64*1024*1024) addWarning((size/(1024*1024))+"M can be short to process Excel files (recommended is at least 128M, 256M is the best)",true);
+		else addError((size/(1024*1024))+"M is too small, we won't be able to process most of the Excel files (recommended is at least 128M, 256M is the best)",true);
+		request("phpconfig_post_size","",function(res) {
+			size = parseInt(res);
+			addText(" post_max_size: ");
+			if (size >= 100*1024*1024) addOk((size/(1024*1024))+"M",true);
+			else if (size >= 32*1024*1024) addWarning((size/(1024*1024))+"M can be short if the user wants to upload big files (recommended is at least 128M, 256M is the best)",true);
+			else addError((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
+			request("phpconfig_upload_max_filesize","",function(res) {
+				size = parseInt(res);
+				addText(" upload_max_filesize: ");
+				if (size >= 100*1024*1024) addOk((size/(1024*1024))+"M",true);
+				else if (size >= 32*1024*1024) addWarning((size/(1024*1024))+"M can be short if the user wants to upload big files (recommended is at least 128M, 256M is the best)",true);
+				else addError((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
+				request("phpconfig_max_file_uploads","",function(res) {
+					size = parseInt(res);
+					addText(" max_file_uploads: ");
+					if (size >= 5) addOk(size,true);
+					else addWarning(size+" is quite small, in case the user wants to upload a batch of files",true);
+					request("phpconfig_session_autostart","",function(res) {
+						addText(" session.auto_start: ");
+						if (res != "OK") addError("must be set to 0, we don't want always a session! especially it will not allow to use caching");
+						else addOk("");
+						checkFSAccess();
+					});
 				});
 			});
 		});
@@ -303,6 +364,7 @@ function checkInternet() {
 	});
 }
 function downloadInstaller() {
+	if (has_errors) { end(); return; }
 	addText("Downloading installer");
 	request("init_download","",function(res) {
 		var progress = document.createElement("SPAN");

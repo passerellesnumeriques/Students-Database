@@ -37,7 +37,7 @@ function custom_data_list(&$page, $root_table, $sub_model, $available_fields, $f
 		$data->performSubRequests($q, $res, $data_aliases[$i], $path, null);
 	}
 	
-	$page->addJavascript("/static/data_model/DataDisplay.js");
+	$page->addJavascript("/static/data_model/datadisplay.js");
 	$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 	foreach ($available_fields as $f) {
 		$tf = $f[0]->getTypedField($sub_model);

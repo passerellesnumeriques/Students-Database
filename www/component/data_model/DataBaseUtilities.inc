@@ -50,6 +50,7 @@ class DataBaseUtilities {
 			$sql .= ")";
 		}
 		$sql .= ")";
+		$sql .= " ENGINE=InnoDB";
 		$db_system->execute($sql);
 	}
 	

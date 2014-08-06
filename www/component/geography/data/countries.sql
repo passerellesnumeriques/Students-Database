@@ -24,7 +24,7 @@ SET time_zone = "+00:00";
 -- Dumping data for table `country`
 --
 
-INSERT INTO `country` (`id`, `code`, `name`, `west`, `east`, `north`, `south`) VALUES
+INSERT INTO `Country` (`id`, `code`, `name`, `west`, `east`, `north`, `south`) VALUES
 (1, 'PH', 'Philippines', '115.766296', '126.605347', '21.120611', '4.586940'),
 (2, 'AD', 'Andorra', NULL, NULL, NULL, NULL),
 (3, 'AE', 'United Arab Emirates', NULL, NULL, NULL, NULL),

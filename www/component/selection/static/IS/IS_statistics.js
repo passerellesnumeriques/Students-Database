@@ -8,7 +8,7 @@
  * @param {Number|NULL} girls_expected if any
  * @param {Number|NULL} girls_real if any
  */
-function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, boys_real, girls_expected, girls_real){
+function is_statistics(container, separate_boys_girls, can_edit, boys_expected, boys_real, girls_expected, girls_real){
 	var t = this;
 	if(typeof(container) == "string") container = document.getElementById(container);
 	t.table = document.createElement("table");
@@ -46,7 +46,7 @@ function IS_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 	 */
 	t._setSection = function(){
 		t.container_of_section_content = document.createElement("div");
-		t.section = new section("/static/selection/IS/statistics.png","Statistics",t.container_of_section_content,false,false,"soft");
+		t.section = new section("/static/selection/is/statistics.png","Statistics",t.container_of_section_content,false,false,"soft");
 	};
 	
 	/**

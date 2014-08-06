@@ -63,7 +63,7 @@ function datamodel_datadisplay(&$page, $data, $data_key, $value, $sub_model, $co
 	$typed_field = $data->getTypedField($sub_model);
 	$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 	$page->addJavascript("/static/widgets/typed_field/".$typed_field[0].".js");
-	$page->addJavascript("/static/data_model/DataDisplay.js");
+	$page->addJavascript("/static/data_model/datadisplay.js");
 	$table = $data->handler->table;
 	if ($data->isEditable() && $can_edit) {
 		$page->addJavascript("/static/data_model/editable_datadisplay.js");
@@ -78,7 +78,7 @@ function datamodel_datadisplay_new(&$page, $data, $sub_model, $variable_name, $f
 	$typed_field = $data->getTypedField($sub_model);
 	$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 	$page->addJavascript("/static/widgets/typed_field/".$typed_field[0].".js");
-	$page->addJavascript("/static/data_model/DataDisplay.js");
+	$page->addJavascript("/static/data_model/datadisplay.js");
 	$table = $data->getTable();
 	echo "$variable_name=new ".$typed_field[0]."(".json_encode($data->getNewData()).",true,".$typed_field[1].");";
 	echo "$variable_name.register_datamodel_datadisplay(".$data->javascriptDataDisplay($sub_model).",$fake_key_variable);";

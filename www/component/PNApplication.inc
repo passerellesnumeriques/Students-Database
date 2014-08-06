@@ -225,8 +225,7 @@ class PNApplication {
 		foreach ($this->components as $c) $this->initComponent($c, $done);
 #PROD
 # ##CREATE_COMPONENTS##
-# ##COMPONENTS_ORDER##
-#foreach ($components as $c) $this->components[$c]->init();
+#foreach (self::getOrderedComponentsNames() as $c) $this->components[$c]->init();
 #END
 		$this->initRequest();
 	}
@@ -239,8 +238,7 @@ class PNApplication {
 		$done = array();
 		foreach ($this->components as $c) $this->initRequestForComponent($c, $done);
 #PROD
-# ##COMPONENTS_ORDER##
-#foreach ($components as $c) $this->components[$c]->initRequest();
+#foreach (self::getOrderedComponentsNames() as $c) $this->components[$c]->initRequest();
 #END
 	}
 #DEV
@@ -301,10 +299,13 @@ class PNApplication {
 	}
 #PROD
 #public static function sortComponentsByDependencies() {
-# ##COMPONENTS_ORDER##
 #$list = array();
-#foreach ($components as $c) array_push($list, PNApplication::$instance->components[$c]);
+#foreach (self::getOrderedComponentsNames() as $c) array_push($list, PNApplication::$instance->components[$c]);
 #return $list;
+#}
+#public static function getOrderedComponentsNames() {
+# ##COMPONENTS_ORDER##
+#return $components;
 #}
 #END
 	

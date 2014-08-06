@@ -1,5 +1,5 @@
 if (typeof require != 'undefined') {
-	require("DataDisplay.js");
+	require("datadisplay.js");
 	require("grid.js");
 	require("horizontal_menu.js");
 	require("typed_field.js",function(){
@@ -743,7 +743,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	};
 	/** Load the available fields for the root table */
 	t._loadFields = function() {
-		require("DataDisplay.js",function() {
+		require("datadisplay.js",function() {
 			service.json("data_model","get_available_fields",{table:t._root_table,sub_model:t._sub_model},function(result){
 				if (result) {
 					t._available_fields = [];

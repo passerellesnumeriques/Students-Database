@@ -30,10 +30,12 @@ function connectDB() {
 }
 if (isset($_POST["req"])) {
 	switch ($_POST["req"]) {
-		case "check_db": connectDB(); die("OK");		
-		case "create_db":
+		case "check_db":
 			if (file_exists("data")) removeDirectory("data");
 			mkdir("data");
+			connectDB();
+			die("OK");		
+		case "create_db":
 			global $local_domain, $db_config;
 			$local_domain = $_POST["domain"];
 			$db_config = array(
@@ -225,7 +227,7 @@ ul {
 						<i>Typically for development environment, not production</i>
 					</li>
 					<li>Specify a dedicated user for the software. In this case, you must first:<ul>
-						<li>Create the databases for each domain (students_pnc,students_pnp,students_pnv)</li>
+						<li>Create the databases for each domain (students_PNC,students_PNP,students_PNV)</li>
 						<li>The databases must use UTF8</li>
 					</ul></li>
 				</ul>

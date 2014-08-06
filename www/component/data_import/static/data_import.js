@@ -1,5 +1,5 @@
 if (typeof require != 'undefined') {
-	require("DataDisplay.js");
+	require("datadisplay.js");
 	require("typed_field.js");
 	require("section.js");
 }
@@ -147,7 +147,7 @@ function data_import(container, root_table, preset_data, title) {
 		};
 		
 		// Fields
-		require("DataDisplay.js",function() {
+		require("datadisplay",function() {
 			service.json("data_model","get_available_fields",{table:t.root_table},function(fields){
 				var categories = [];
 				var javascripts = [];

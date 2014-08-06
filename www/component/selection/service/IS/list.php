@@ -1,5 +1,5 @@
 <?php 
-class service_IS_list extends Service {
+class service_is_list extends Service {
 	
 	public function getRequiredRights() { return array("can_access_selection_data"); }
 	

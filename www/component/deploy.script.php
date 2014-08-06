@@ -11,7 +11,7 @@ closedir($dir);
 function processComponent($name, &$done, &$components_order, &$components_content) {
 	if (in_array($name, $done)) return;
 	array_push($done, $name);
-	
+
 	$deps = array();
 	if (file_exists(dirname(__FILE__)."/$name/dependencies")) {
 		$f = fopen(dirname(__FILE__)."/$name/dependencies","r");
@@ -71,6 +71,19 @@ function processComponent($name, &$done, &$components_order, &$components_conten
 		$content = substr($content,5,strlen($content)-5-2);
 	} else
 		$content = "?>".$content."<?php ";
+	
+	$i = 0;
+	while (($i = strpos($content, "require_once", $i)) !== false) {
+		$j = strpos($content, "\"", $i);
+		if ($j === false || $j <= 0) break;
+		$k = strpos($content, "\"", $j+1);
+		if ($k === false) break;
+		$p = substr($content, $j+1, $k-$j-1);
+		$i += 12;
+		if (substr($p, 0, 10) <> "component/" && file_exists(dirname(__FILE__)."/$name/$p")) {
+			$content = substr($content,0,$j+1)."component/$name/$p".substr($content,$k);
+		}
+	}
 	
 	$components_content .= $content;
 	

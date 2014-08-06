@@ -1,16 +1,16 @@
 <?php
-function scripts_directory($path) {
+function scripts_directory($directory_path) {
 	set_time_limit(240);
-	if (file_exists($path."/deploy.script.php")) {
-		include($path."/deploy.script.php");
-		unlink($path."/deploy.script.php");
+	if (file_exists($directory_path."/deploy.script.php")) {
+		include($directory_path."/deploy.script.php");
+		unlink($directory_path."/deploy.script.php");
 	}
-	$dir = opendir($path);
-	if (!$dir) die("Unable to access to directory ".$path);
+	$dir = opendir($directory_path);
+	if (!$dir) die("Unable to access to directory ".$directory_path);
 	while (($file = readdir($dir)) <> null) {
 		if ($file == "." || $file == "..") continue;
-		if (is_dir($path."/".$file))
-			scripts_directory($path."/".$file);
+		if (is_dir($directory_path."/".$file))
+			scripts_directory($directory_path."/".$file);
 	}
 	closedir($dir);
 }

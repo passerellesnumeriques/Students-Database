@@ -45,6 +45,7 @@ function getURLFileSize($url, $expected_type = null) {
 	curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
 	curl_setopt($c, CURLOPT_TIMEOUT, 25);
+	curl_setopt($c, CURLOPT_NOBODY, TRUE);
 	curl_setopt($c, CURLOPT_CUSTOMREQUEST, "HEAD");
 	curl_setopt($c, CURLOPT_HEADER, TRUE);
 	set_time_limit(240);

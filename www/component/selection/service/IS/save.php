@@ -13,12 +13,12 @@ function prepareDataAndSaveIS($data,$create){
 	}
 }
 
-class service_IS_save extends Service{
+class service_is_save extends Service{
 	public function getRequiredRights(){return array("manage_information_session");}
 	public function inputDocumentation(){
 		?>
 		<ul>
-			<li><code>data</code> {array} Information session data, coming from IS_profile.js</li>
+			<li><code>data</code> {array} Information session data, coming from is_profile.js</li>
 			<li><code>event</code> {array} Calendar event object</li>
 		</ul>
 		<?php
@@ -104,7 +104,7 @@ class service_IS_save extends Service{
 					$event["organizer"] = "Selection";
 					$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 					if (!$insert_IS) {
-						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
+						$event["app_link"] = "/dynamic/selection/page/is/profile?id=".$data["id"];
 						$event["app_link_name"] = "This event is an Information Session: click to see it";
 					}
 					PNApplication::$instance->calendar->saveEvent($event);
@@ -117,7 +117,7 @@ class service_IS_save extends Service{
 			} else if($update_event && $everything_ok){
 				$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 				if (!$insert_IS) {
-					$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
+					$event["app_link"] = "/dynamic/selection/page/is/profile?id=".$data["id"];
 					$event["app_link_name"] = "This event is an Information Session: click to see it";
 				}
 				$data["date"] = $event["id"];
@@ -142,7 +142,7 @@ class service_IS_save extends Service{
 					$new_IS_id = prepareDataAndSaveIS($data,true);
 					$data["id"] = $new_IS_id;
 					if ($add_event) {
-						$event["app_link"] = "/dynamic/selection/page/IS/profile?id=".$data["id"];
+						$event["app_link"] = "/dynamic/selection/page/is/profile?id=".$data["id"];
 						$event["app_link_name"] = "This event is an Information Session: click to see it";
 						PNApplication::$instance->calendar->saveEvent($event);
 					}

@@ -1,5 +1,5 @@
 <?php 
-class service_IS_remove extends Service {
+class service_is_remove extends Service {
 	
 	public function getRequiredRights() { return array("manage_information_session"); }
 	public function documentation() {

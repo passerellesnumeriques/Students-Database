@@ -145,7 +145,7 @@ class page_selection_main_page extends SelectionPage {
 			function loadISStatus() {
 				var container = document.getElementById('status_is');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
-				service.html("selection","IS/status",null,container);
+				service.html("selection","is/status",null,container);
 			}
 			function loadExamCenterStatus() {
 				var container = document.getElementById('status_exam_centers');

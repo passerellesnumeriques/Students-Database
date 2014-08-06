@@ -13,7 +13,7 @@ class page_popup_create_people_step_creation extends Page {
 			echo "<div style='background-color:white'>Nobody to create.</div>";
 			echo "<script type='text/javascript'>popup.unfreeze();popup.addCancelButton();</script>";
 		}
-		$this->addJavascript("/static/data_model/DataDisplay.js");
+		$this->addJavascript("/static/data_model/datadisplay.js");
 ?>
 <div id='container' style='padding:10px'><div style='width:300px;height:100px'></div></div>
 <script type='text/javascript'>

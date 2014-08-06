@@ -1,5 +1,5 @@
 <?php 
-class service_IS_status extends Service {
+class service_is_status extends Service {
 	
 	public function getRequiredRights() { return array("can_access_selection_data"); }
 	
@@ -203,7 +203,7 @@ class service_IS_status extends Service {
 			echo "\t\tmenu.addIconItem("
 				."null"
 				.",".json_encode($s["name"])
-				.",function() { popup_frame('/static/selection/IS/IS_16.png','Information Session','/dynamic/selection/page/IS/profile?id=".$s["id"]."'+(win.ISchanged ? '&onsaved=ISchanged':''),null,95,95,function(frame,pop){if (win.ISchanged) frame.ISchanged=win.ISchanged;}); }"
+				.",function() { popup_frame('/static/selection/is/is_16.png','Information Session','/dynamic/selection/page/is/profile?id=".$s["id"]."'+(win.ISchanged ? '&onsaved=ISchanged':''),null,95,95,function(frame,pop){if (win.ISchanged) frame.ISchanged=win.ISchanged;}); }"
 			.");\n";
 		}
 		echo "\t\tmenu.showBelowElement(link);\n";

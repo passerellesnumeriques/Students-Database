@@ -8,7 +8,7 @@
  * @param {Boolean} can_manage
  * @param {Array} all_durations containing all the possible durations for an information session
  */
-function IS_date(container, event_id, IS_id, calendar_id, default_duration, can_manage, all_durations){
+function is_date(container, event_id, IS_id, calendar_id, default_duration, can_manage, all_durations){
 	var t = this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	require(["popup_window.js",["typed_field.js","field_date.js","field_time.js"],"input_utils.js","section.js"],function(){

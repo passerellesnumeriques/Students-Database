@@ -25,11 +25,19 @@ function copy_directory($src, $dst) {
 	while (($file = readdir($dir)) <> null) {
 		if ($include <> null && !in_arra($file,$include)) continue;
 		if (in_array($file,$exclude)) continue;
+		if (strpos($src,"/page/") !== false || strpos($src,"/service/") !== false || strpos($src,"/static/") !== false) {
+			if (strpos($file,".inc") === false) {
+				if (strtolower($file) <> $file) {
+					die("Error: file $src/$file contains capital letters, but it is supposed to be accessed by URL, meaning no capital letter are allowed. This will not work under Unix systems which have case sensitive file systems.");
+				}
+			}
+		}
 		if (is_dir($src."/".$file)) {
 			if (!mkdir($dst."/".$file)) die("Unable to create directory ".$dst."/".$file);
 			copy_directory($src."/".$file, $dst."/".$file);
-		} else
+		} else {
 			if (!copy($src."/".$file, $dst."/".$file)) die("Unable to copy file ".$src."/".$file);
+		}
 	}
 	closedir($dir);
 }

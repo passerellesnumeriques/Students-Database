@@ -117,7 +117,7 @@ namespace datamodel {
 						$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",field:field,getValue:function(){return this.field.getCurrentData();},validate:function(){ return this.field.error; }});\n";
 				} else if ($can_edit) {
 					$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
-					$page->addJavascript("/static/data_model/DataDisplay.js");
+					$page->addJavascript("/static/data_model/datadisplay.js");
 					$page->addJavascript("/static/data_model/editable_field.js");
 					$page->addJavascript("/static/data_model/editable_datadisplay.js");
 					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($key_value).", ".json_encode($value).");\n";

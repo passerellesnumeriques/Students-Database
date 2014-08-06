@@ -1,6 +1,6 @@
 <?php 
 require_once("/../SelectionPage.inc");
-class page_IS_main_page extends SelectionPage {
+class page_is_main_page extends SelectionPage {
 	public function getRequiredRights() { return array("see_information_session"); }
 	public function executeSelectionPage(){
 		$this->addJavascript("/static/widgets/grid/grid.js");
@@ -40,13 +40,13 @@ class page_IS_main_page extends SelectionPage {
 					[],
 					-1,
 					function (list) {
-						list.addTitle("/static/selection/IS/IS_16.png", "Information Sessions");
+						list.addTitle("/static/selection/is/is_16.png", "Information Sessions");
 						// by default, order the sessions by date
 						list.orderBy("Information Session", "Date", -1, true);
 						<?php if ($can_create_session) { ?>
 						var new_IS = document.createElement("BUTTON");
 						new_IS.className = 'flat';
-						new_IS.innerHTML = "<img src='"+theme.build_icon("/static/selection/IS/IS_16.png",theme.icons_10.add)+"'/> New Information Session";
+						new_IS.innerHTML = "<img src='"+theme.build_icon("/static/selection/is/is_16.png",theme.icons_10.add)+"'/> New Information Session";
 						new_IS.onclick = newIS;
 						list.addHeader(new_IS);
 						<?php } ?>
@@ -54,9 +54,9 @@ class page_IS_main_page extends SelectionPage {
 						list.makeRowsClickable(function(row){
 							var is_id = list.getTableKeyForRow('InformationSession',row.row_id);
 							window.top.popup_frame(
-								"/static/selection/IS/IS_16.png",
+								"/static/selection/is/is_16.png",
 								"Information Session",
-								"/dynamic/selection/page/IS/profile?id="+is_id+"&onsaved=saved",
+								"/dynamic/selection/page/is/profile?id="+is_id+"&onsaved=saved",
 								null,
 								95, 95,
 								function(frame, pop) { frame.saved = function() { ISchanged(); }; }
@@ -67,8 +67,8 @@ class page_IS_main_page extends SelectionPage {
 			}
 			function newIS() {
 				require("popup_window.js",function() {
-					var popup = new popup_window("Information Session", "/static/selection/IS/IS_16.png", "");
-					var frame = popup.setContentFrame("/dynamic/selection/page/IS/profile?onsaved=saved");
+					var popup = new popup_window("Information Session", "/static/selection/is/is_16.png", "");
+					var frame = popup.setContentFrame("/dynamic/selection/page/is/profile?onsaved=saved");
 					frame.saved = function() { ISchanged(); };
 					popup.showPercent(95,95);
 				});
@@ -79,7 +79,7 @@ class page_IS_main_page extends SelectionPage {
 			function loadISStatus() {
 				var container = document.getElementById('is_status');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
-				service.html("selection","IS/status",null,container);
+				service.html("selection","is/status",null,container);
 			}
 			function refreshPage() {
 				is_list.reloadData();

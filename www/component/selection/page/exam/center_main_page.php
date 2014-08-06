@@ -74,7 +74,7 @@ class page_exam_center_main_page extends SelectionPage {
 							frame.saved = refreshPage;
 						});
 					});
-					menu.addHtmlItem("<img src='/static/selection/IS/IS_16.png'/> <img src='"+theme.icons_16.right+"'/> <img src='/static/selection/exam/exam_center_16.png'/> Create a center from an Information Session", function() {
+					menu.addHtmlItem("<img src='/static/selection/is/is_16.png'/> <img src='"+theme.icons_16.right+"'/> <img src='/static/selection/exam/exam_center_16.png'/> Create a center from an Information Session", function() {
 						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "Create Exam Center From Information Session", "/dynamic/selection/page/exam/create_center_from_is?onsaved=saved", null, null, null, function(frame,pop) {
 							frame.saved = refreshPage;
 						});
