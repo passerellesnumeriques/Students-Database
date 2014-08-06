@@ -105,7 +105,7 @@ $first = true;
 foreach ($components_order as $name) {
 	if ($first) $first = false; else $order .= ",";
 	$order .= "\"".$name."\"";
-	$create .= "\$this->components[\"$name\"] = \$this->{".$name."} = new $name(\"$name\");";
+	$create .= "\$this->components[\"$name\"] = \$this->{\"".$name."\"} = new $name(\"$name\");";
 }
 $order .= ");";
 

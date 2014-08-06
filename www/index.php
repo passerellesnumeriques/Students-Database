@@ -13,19 +13,58 @@ function component_auto_loader($classname) {
 if (!isset($_SERVER["PATH_INFO"]) || strlen($_SERVER["PATH_INFO"]) == 0) $_SERVER["PATH_INFO"] = "/";
 $path = substr($_SERVER["PATH_INFO"],1);
 
-
 // security: do not allow .. in the path, to avoid trying to access to files which are protected
 if (strpos($path, "..") !== FALSE) die("Access denied");
 
-// check last time the user came, it was the same version, in order to refresh its cache if the version changed
+global $pn_app_version;
 #DEV
-$version = file_get_contents(dirname(__FILE__)."/version");
+$pn_app_version = file_get_contents(dirname(__FILE__)."/version");
 #PROD
-#$version = "##VERSION##"; 
+#$pn_app_version = "##VERSION##"; 
 #END
-if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
+
+if ($path == "maintenance/index.php") {
+	include("maintenance/index.php");
+	die();
+}
+if (file_exists("maintenance_in_progress")) {
+	if (file_exists("maintenance/password")) {
+		if (isset($_SERVER['PHP_AUTH_USER']) && $_SERVER['PHP_AUTH_USER'] == "maintenance" && sha1($_SERVER['PHP_AUTH_PW']) == file_get_contents("maintenance/password")) {
+			// the administrator is testing the software
+			if (file_exists("maintenance/update/www")) {
+				// and the software is ready to be tested
+				$path = realpath("maintenance");
+				set_include_path($path."/update/www");
+				chdir($path."/update/www");
+				include($path."/update/www/index.php");
+				die();
+			}
+		} else if (isset($_GET["request_to_test_update"])) {
+			// the administrator wants to start testing
+			header('WWW-Authenticate: Basic realm="Students Management Software Maintenance"');
+			header('HTTP/1.0 401 Unauthorized');
+			echo 'Access denied';
+			die();
+		}			
+	}
+	if ($path == "maintenance/maintenance.jpg") {
+		header("Content-Type: image/jpeg");
+		readfile("maintenance/maintenance.jpg");
+		die();
+	}
+	if (strpos($path, "/service/")) {
+		header("HTTP/1.0 403 Maintenance in progress");
+		die();
+	}
+	include("maintenance/maintenance_page.php");
+	die();
+}
+
+
+// check last time the user came, it was the same version, in order to refresh its cache if the version changed
+if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $pn_app_version) {
 	if (strpos($path, "/page/") || $path == "") {
-		setcookie("pnversion",$version,time()+365*24*60*60,"/");
+		setcookie("pnversion",$pn_app_version,time()+365*24*60*60,"/");
 		session_set_cookie_params(24*60*60, "/dynamic/");
 		session_start();
 		session_destroy();
@@ -55,27 +94,6 @@ if ($path == "favicon.ico") {
 	die(); 
 }
 
-if ($path == "maintenance/index.php") {
-	include("maintenance/index.php");
-	die();
-}
-if (file_exists("maintenance_in_progress")) {
-	if ($path == "maintenance/maintenance.jpg") {
-		header("Content-Type: image/jpeg");
-		readfile("maintenance/maintenance.jpg");
-		die();
-	}
-	if (strpos($path, "/service/")) {
-		header("HTTP/1.0 403 Maintenance in progress");
-		die();
-	}
-	include("maintenance/maintenance_page.php");
-	die();
-}
-
-global $pn_app_version;
-$pn_app_version = $version;
-
 if ($path == "") {
 	include("loading.inc");
 	die();
@@ -84,20 +102,20 @@ if ($path == "") {
 
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
 
-function invalid($message) {
+$invalid = function($message) {
 	header("HTTP/1.1 404 ".$message);
 	die($message);
-}
+};
 
 // get type of resource
 $i = strpos($path, "/");
-if ($i === FALSE) invalid("Invalid request: no type of resource");
+if ($i === FALSE) $invalid("Invalid request: no type of resource");
 $type = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
 // get the component name
 $i = strpos($path, "/");
-if ($i === FALSE) invalid("Invalid request: no component name");
+if ($i === FALSE) $invalid("Invalid request: no component name");
 $component_name = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
@@ -105,7 +123,7 @@ $path = substr($path, $i+1);
 switch ($type) {
 case "static":
 	$i = strrpos($path, ".");
-	if ($i === FALSE) invalid("Invalid resource type");
+	if ($i === FALSE) $invalid("Invalid resource type");
 	$ext = substr($path, $i+1);
 	header('Cache-Control: public', true);
 	header('Pragma: public', true);
@@ -122,14 +140,14 @@ case "static":
 	case "js": header("Content-Type: text/javascript"); break;
 	case "html": header("Content-Type: text/html;charset=UTF-8"); break;
 	case "php": 
-		if (!file_exists("component/".$component_name."/static/".$path)) invalid("Static resource not found");
+		if (!file_exists("component/".$component_name."/static/".$path)) $invalid("Static resource not found");
 		include "component/".$component_name."/static/".$path;
 		die();
 	default:
 		if (substr($component_name,0,4) <> "lib_")
-			invalid("Invalid static resource type");
+			$invalid("Invalid static resource type");
 	}
-	if (!file_exists("component/".$component_name."/static/".$path)) invalid("Static resource not found");
+	if (!file_exists("component/".$component_name."/static/".$path)) $invalid("Static resource not found");
 	if ($ext == "css") {
 		require_once("css_cross_browser.inc");
 		parse_css("component/".$component_name."/static/".$path);
@@ -139,7 +157,7 @@ case "static":
 case "dynamic":
 	// get the type of request
 	$i = strpos($path, "/");
-	if ($i === FALSE) invalid("Invalid request: no dynamic type");
+	if ($i === FALSE) $invalid("Invalid request: no dynamic type");
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
 #DEV	
@@ -178,7 +196,7 @@ case "dynamic":
 	array_push(PNApplication::$instance->development->requests, $dev);
 #END
 
-	if (!isset(PNApplication::$instance->components[$component_name])) invalid("Invalid request: unknown component ".$component_name);
+	if (!isset(PNApplication::$instance->components[$component_name])) $invalid("Invalid request: unknown component ".$component_name);
 
 	require_once("SQLQuery.inc"); // avoid to put it everywhere
 	switch ($request_type) {
@@ -189,13 +207,13 @@ case "dynamic":
 	case "service":
 		PNApplication::$instance->components[$component_name]->service($path);
 		break;
-	default: invalid("Invalid request: unknown request type ".$request_type);
+	default: $invalid("Invalid request: unknown request type ".$request_type);
 	}
 #DEV
 	$dev->end_time = microtime(true);
 #END
 	die();
-default: invalid("Invalid request: unknown resource type ".$type);
+default: $invalid("Invalid request: unknown resource type ".$type);
 }
 	
 ?>
