@@ -29,7 +29,7 @@ if (file_exists("maintenance_time") && @$_GET["step"] <> "back_to_normal") {
 	if ($remaining > -5) {
 		echo "The application will enter maintenance mode in ".($remaining < 10 ? "few seconds" : $remaining." seconds");
 		echo "<br/><button onclick=\"location.href='/maintenance?step=back_to_normal';\">Stop it!</button>";
-		echo "<script type='text/javascript'>setTimeout(function(){location.reload()},1000);</script>";
+		echo "<script type='text/javascript'>setTimeout(function(){location.reload()},".($remaining > 30 ? "5000" : $remaining > 10 ? "2000" : "800").");</script>";
 	} else {
 		$f = fopen("maintenance_in_progress", "w");
 		fclose($f);

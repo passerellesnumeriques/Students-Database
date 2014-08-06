@@ -25,6 +25,7 @@ Generating zip files and checksums...
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
+<input type='hidden' name='datamodel' value='<?php echo $_POST["datamodel"];?>'/>
 </form>
 
 </div>

@@ -42,11 +42,20 @@ if (isset($_GET["backup"])) {
 	}
 	if (PNApplication::hasErrors())
 		PNApplication::printErrors();
-		
-	echo "Backup done";
-	echo "<script type='text/javascript'>location.href='?step=install_test';</script>";
+	else {
+		echo "Backup done.<br/>Installing new version for testing...";
+		echo "<form name='install' method='POST' action='?step=install_test'>";
+		echo "<input type='hidden' name='version' value='".$_POST["version"]."'/>";
+		echo "<input type='hidden' name='path' value='".$_POST["path"]."'/>";
+		echo "</form>";
+		echo "<script type='text/javascript'>document.forms['install'].submit();</script>";
+	}
 } else {
 	echo "Backuping database...";
-	echo "<script type='text/javascript'>location.href='?step=backup&backup=true';</script>";
+	echo "<form name='install' method='POST' action='?step=backup&backup=true'>";
+	echo "<input type='hidden' name='version' value='".$_POST["version"]."'/>";
+	echo "<input type='hidden' name='path' value='".$_POST["path"]."'/>";
+	echo "</form>";
+	echo "<script type='text/javascript'>document.forms['install'].submit();</script>";
 }
 ?>

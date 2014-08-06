@@ -39,6 +39,7 @@ $header = "<script type='text/javascript' src='/static/javascript/utils.js'></sc
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
 <input type='hidden' name='changes' value=''/>
+<input type='hidden' name='datamodel' value=''/>
 </form>
 
 <div style='font-size:14pt;padding-bottom:5px;border-bottom: 1px solid #808080;'>
@@ -506,7 +507,7 @@ function ask_remaining_columns(odm,i,ndm,j,parent_table,ondone) {
 
 function finish(odm,ndm) {
 	if (changes.length == 0)
-		panel.innerHTML = "No change in the data model";
+		panel.innerHTML = "No change in the data model<br/>";
 	else {
 		panel.innerHTML = "The changes made to the model are the following:";
 		var ul = document.createElement("UL");
@@ -520,7 +521,14 @@ function finish(odm,ndm) {
 	button.onclick = function() {
 		var form = document.forms['deploy'];
 		form.elements['changes'].value = service.generateInput(changes);
-		form.submit();
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET","/dynamic/development/service/get_datamodel", true);
+		xhr.onreadystatechange = function() {
+		    if (this.readyState != 4) return;
+			form.elements['datamodel'].value = xhr.responseText;
+			form.submit();
+		};
+		xhr.send();
 	};
 }
 function createChangeDescription(change,odm,ndm) {

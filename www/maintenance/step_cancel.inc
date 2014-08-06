@@ -21,6 +21,9 @@ if (isset($_GET["cancel_db"])) {
 			$db_system->execute($sql[0]);
 		// init database
 		require_once("component/data_model/DataBaseUtilities.inc");
+		require_once("component/data_model/Model.inc");
+		require_once("SQLQuery.inc");
+		$model = DataModel::get();
 		$ref = new ReflectionClass("DataModel");
 		$p = $ref->getProperty("tables");
 		$p->setAccessible(true);
@@ -37,9 +40,10 @@ if (isset($_GET["cancel_db"])) {
 	}
 	if (PNApplication::hasErrors())
 		PNApplication::printErrors();
-		
-	echo "Recovery of database done.";
-	echo "<script type='text/javascript'>location.href='?step=destroy_sessions';</script>";
+	else {
+		echo "Recovery of database done.";
+		echo "<script type='text/javascript'>location.href='?step=destroy_sessions';</script>";
+	}
 } else {
 	echo "Recovering previous database...";
 	echo "<script type='text/javascript'>location.href='?step=cancel&cancel_db=true';</script>";

@@ -37,7 +37,7 @@ class page_app_admin extends Page {
 		foreach ($sessions as $session) {
 			$id = substr($session,5);
 			echo "<tr>";
-			echo "<td>".$id."</td>";
+			echo "<td><code>".$id."</code></td>";
 			$info = stat($sessions_path."/".$session);
 			echo "<td>".date("Y-m-d h:i A", $info["ctime"])."</td>";
 			echo "<td>".date("Y-m-d h:i A", $info["mtime"])."</td>";

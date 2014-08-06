@@ -174,9 +174,9 @@ case "dynamic":
 		PNApplication::$instance = new PNApplication();
 		PNApplication::$instance->init();
 		$_SESSION["app"] = &PNApplication::$instance;
-		$_SESSION["version"] = $version;
+		$_SESSION["version"] = $pn_app_version;
 	} else {
-		if (!isset($_SESSION["version"]) || $_SESSION["version"] <> $version) {
+		if (!isset($_SESSION["version"]) || $_SESSION["version"] <> $pn_app_version) {
 			session_destroy();
 			if ($request_type == "page") {
 				echo "<script type='text/javascript'>window.top.location.href = '/';</script>";

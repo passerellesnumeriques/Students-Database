@@ -1,4 +1,8 @@
 <?php 
+require_once("component/PNApplication.inc");
+PNApplication::$instance = new PNApplication();
+PNApplication::$instance->init();
+
 function remove_directory($path) {
 	$dir = opendir($path);
 	while (($filename = readdir($dir)) <> null) {
@@ -29,7 +33,7 @@ if (class_exists("ZipArchive")) {
 	$ret = 0;
 	exec("/usr/bin/unzip \"".realpath("data/updates/Students_Management_Software_".$_POST["version"].".zip")."\" -d \"".realpath("maintenance/update/www")."\"", $output, $ret);
 	if ($ret <> 0)
-		throw new Exception("Error unzipping software (".$ret.")");
+		PNApplication::error("Error unzipping software (".$ret.")");
 }
 
 copy("install_config.inc","maintenance/update/www/install_config.inc");
@@ -59,9 +63,6 @@ while ($index < count($path)) {
 	}
 	if (file_exists("maintenance/update/migrate/datamodel_change.php")) {
 		global $db_config;
-		require_once("component/PNApplication.inc");
-		PNApplication::$instance = new PNApplication();
-		PNApplication::$instance->init();
 		require_once("DataBaseSystem_".$db_config["type"].".inc");
 		$db_system_class = "DataBaseSystem_".$db_config["type"];
 		$db_system = new $db_system_class;
@@ -78,6 +79,9 @@ while ($index < count($path)) {
 	$index++;
 }
 
+if (PNApplication::hasErrors())
+	PNApplication::printErrors();
+else {
 ?>
 Software ready to be tested<br/>
 <a href='/?request_to_test_update=true' target='_blank'>Test it</a><br/>
@@ -85,3 +89,4 @@ Once ready:
 <a href='?step=install'>Install it</a><br/>
 Or
 <a href='?step=cancel'>Cancel (put back previous database)</a>
+<?php } ?>

@@ -86,7 +86,7 @@ if (PNApplication::$instance->user_management->has_right("manage_application")) 
 global $pn_app_version;
 ?>
 <div style='flex:none;display:none;padding:5px 10px;' id='new_version_available'>
-	<div class='info_box'><img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/> A new update is available (<span id='new_version'></span>, current is <?php echo $pn_app_version;?>). As an administrator of the application, you can update the software in the <a href='/dynamic/administration/page/app_admin'>administration section</a></div>
+	<div class='info_box'><img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/> A new update (version <span id='new_version'></span>) is available (current version is <?php echo $pn_app_version;?>). As an administrator of the application, you can update the software in the <a href='/dynamic/administration/page/app_admin'>administration section</a></div>
 </div>
 <script type='text/javascript'>
 service.json("administration","latest_version",null,function(res) {

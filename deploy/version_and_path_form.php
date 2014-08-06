@@ -19,7 +19,7 @@ if ($result == false) echo "Error: ".curl_error($c);
 else echo $result;
 curl_close($c);
 ?>
-<input type='hidden' name='latest' value='<?php echo $result;?>'/>
+<input type='hidden' name='latest' value='<?php echo "0.0.6";/*$result;*/?>'/>
 <br/>
 <br/>
 Enter the new version to deploy: <input type='text' name='version' required/><br/>

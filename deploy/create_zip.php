@@ -81,6 +81,18 @@ do {
 fclose($f);
 fclose($f2);
 
+// create datamodel zip
+$f = fopen(realpath($_POST["path"])."/tmp/new_datamodel.json","w");
+fwrite($f,$_POST["datamodel"]);
+fclose($f);
+$filename_datamodel = "Students_Management_Software_".$_POST["version"]."_datamodel.zip";
+$zip = new ZipArchive();
+if ($zip->open(realpath($_POST["path"])."/".$filename_datamodel, ZipArchive::CREATE)!==TRUE) {
+	die("cannot open $filename_datamodel");
+}
+$zip->addFile(realpath($_POST["path"])."/tmp/new_datamodel.json", "datamodel.json");
+$zip->close();
+
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
@@ -92,6 +104,7 @@ Version ready in directory <?php echo $_POST["path"];?>. You can now:<ul>
 		<li><code><i><?php echo $filename.".checksum";?></i></code></li>
 		<li><code><i><?php echo $filename_migration;?></i></code></li>
 		<li><code><i><?php echo $filename_migration.".checksum";?></i></code></li>
+		<li><code><i><?php echo $filename_datamodel;?></i></code></li>
 	</ul></li>
 	<li>Update the files in SourceForge to signal the new version (<a href='https://sourceforge.net/projects/studentsdatabase/files/' target='_blank'>https://sourceforge.net/projects/studentsdatabase/files/</a>)<ul>
 		<li><code><i>versions.txt</i></code></li>

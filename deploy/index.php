@@ -15,4 +15,4 @@
 <div class='footer' style='flex:none'>
 	<button class='action' onclick="location.href='version_and_path_form.php';">Start</button>
 </div>
-<?php include("footer.inc");?>
+<?php  include("footer.inc");?>
