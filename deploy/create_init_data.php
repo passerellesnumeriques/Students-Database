@@ -1,4 +1,12 @@
 <?php
+global $has_errors;
+$has_errors = false;
+set_error_handler(function($severity, $message, $filename, $lineno) {
+	if (error_reporting() == 0) return true;
+	$has_errors = true;
+	return true;
+});
+
 $path = $_POST["path"]."/www/component";
 $dir = opendir($path);
 while (($file = readdir($dir)) <> null) {
@@ -13,6 +21,8 @@ while (($file = readdir($dir)) <> null) {
 	}
 }
 closedir($dir);
+// TODO compare with previous version, and warning if different
+if ($has_errors) die();
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>

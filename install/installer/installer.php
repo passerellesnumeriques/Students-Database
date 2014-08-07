@@ -139,29 +139,25 @@ function getLatestVersion() {
 				content.appendChild(retry_button);
 				return;
 			}
-			content.innerHTML = "Version "+version+" downloaded.<br/>Extracting files...";
-			request("Students_Management_Software_"+version+".zip","&unzip=true",function(error,res) {
-				if (error) { content.innerHTML += "<br/>Error: "+res; return; }
-				content.innerHTML = "Software ready.<br/>Downloading initial data: ";
-				span_progress = document.createElement("SPAN");
-				content.appendChild(span_progress);
-				url = <?php echo json_encode(getGenericUpdateURL());?>;
-				url = url.replace("##FILE##","Students_Management_Software_"+version+"_init_data.zip");
-				download("bridge.php", url, "Students_Management_Software_"+version+"_init_data.zip", span_progress, function(error) {
-					if (error) {
-						content.innerHTML = "Latest version: "+version+"<br/>";
-						content.innerHTML += "Error downloading: "+error+"<br/>";
-						var retry_button = document.createElement("BUTTON");
-						retry_button.innerHTML = "Retry";
-						retry_button.onclick = function() { window.location.reload(); };
-						content.appendChild(retry_button);
-						return;
-					}
-					content.innerHTML = "Initial data downloaded.<br/>Extracting files...";
-					request("Students_Management_Software_"+version+"_init_data.zip","&unzip=true&unzip_target="+encodeURIComponent("data/init"),function(error,res) {
-						if (error) { content.innerHTML += "<br/>Error: "+res; return; }
-						window.location.href = "/";
-					});
+			url = <?php echo json_encode(getGenericUpdateURL());?>;
+			url = url.replace("##FILE##","Students_Management_Software_"+version+"_init_data.zip");
+			content.innerHTML = "Software downloaded.<br/>Downloading initial data: ";
+			span_progress = document.createElement("SPAN");
+			content.appendChild(span_progress);
+			download("bridge.php", url, "Students_Management_Software_"+version+"_init_data.zip", span_progress, function(error) {
+				if (error) {
+					content.innerHTML = "Latest version: "+version+"<br/>";
+					content.innerHTML += "Error downloading: "+error+"<br/>";
+					var retry_button = document.createElement("BUTTON");
+					retry_button.innerHTML = "Retry";
+					retry_button.onclick = function() { window.location.reload(); };
+					content.appendChild(retry_button);
+					return;
+				}
+				content.innerHTML = "Version "+version+" downloaded.<br/>Extracting files...";
+				request("Students_Management_Software_"+version,"&unzip=true",function(error,res) {
+					if (error) { content.innerHTML += "<br/>Error: "+res; return; }
+					window.location.href = "/";
 				});
 			});
 		});

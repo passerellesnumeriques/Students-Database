@@ -4,11 +4,8 @@ $url = $_POST["url"];
 if (isset($_POST["unzip"])) {
 	@unlink(realpath(dirname(__FILE__)."/../index.php"));
 	try {
-		if (isset($_POST["unzip_target"]))
-			$target = realpath(dirname(__FILE__)."/../".$_POST["unzip_target"]);
-		else
-			$target = realpath(dirname(__FILE__)."/../");
-		unzipFile(realpath(dirname(__FILE__))."/".$url, $target);
+		unzipFile(realpath(dirname(__FILE__)."/".$url.".zip"), realpath(dirname(__FILE__)."/.."));
+		unzipFile(realpath(dirname(__FILE__)."/".$url."_init_data.zip"), realpath(dirname(__FILE__)."/../data/init"));
 	} catch (Exception $e) {
 		header("HTTP/1.0 200 Error");
 		die($e->getMessage());
@@ -32,7 +29,9 @@ if (isset($_POST["getsize"])) {
 try {
 	$from = isset($_POST["range_from"]) ? intval($_POST["range_from"]) : null;
 	$to = isset($_POST["range_to"]) ? intval($_POST["range_to"]) : null;
-	$result = download($url, @$_POST["target"], $from, $to, true);
+	$target = null;
+	if (isset($_POST["target"])) $target = realpath(dirname(__FILE__))."/".$_POST["target"];
+	$result = download($url, $target, $from, $to, true);
 	if (!isset($_POST["target"]))
 		die($result);
 } catch (Exception $e) {

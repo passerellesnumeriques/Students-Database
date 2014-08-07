@@ -1,4 +1,12 @@
 <?php
+global $has_errors;
+$has_errors = false;
+set_error_handler(function($severity, $message, $filename, $lineno) {
+	if (error_reporting() == 0) return true;
+	$has_errors = true;
+	return true;
+});
+
 function scripts_directory($directory_path) {
 	set_time_limit(240);
 	if (file_exists($directory_path."/deploy.script.php")) {
@@ -15,6 +23,8 @@ function scripts_directory($directory_path) {
 	closedir($dir);
 }
 scripts_directory(realpath($_POST["path"]."/www"));
+
+if ($has_errors) die();
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>

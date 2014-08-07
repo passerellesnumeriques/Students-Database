@@ -1,4 +1,12 @@
 <?php
+global $has_errors;
+$has_errors = false;
+set_error_handler(function($severity, $message, $filename, $lineno) {
+	if (error_reporting() == 0) return true;
+	$has_errors = true;
+	return true;
+});
+
 set_time_limit(240);
 
 global $zip;
@@ -109,6 +117,7 @@ $f = fopen($_POST["path"]."/to_deploy/versions.txt", "a");
 fwrite($f,"\n".$_POST["version"]);
 fclose($f);
 
+if ($has_errors) die();
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>

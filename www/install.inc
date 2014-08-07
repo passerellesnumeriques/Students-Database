@@ -31,8 +31,13 @@ function connectDB() {
 if (isset($_POST["req"])) {
 	switch ($_POST["req"]) {
 		case "check_db":
-			if (file_exists("data")) removeDirectory("data");
-			mkdir("data");
+			$dir = opendir("data");
+			while (($file = readdir($dir)) <> null) {
+				if ($file == "." || $file == ".." || $file == "init") continue;
+				if (is_dir("data/$file")) removeDirectory("data/$file");
+				else unlink("data/$file");
+			}
+			closedir($dir);
 			connectDB();
 			die("OK");		
 		case "create_db":

@@ -1,4 +1,12 @@
 <?php 
+global $has_errors;
+$has_errors = false;
+set_error_handler(function($severity, $message, $filename, $lineno) {
+	if (error_reporting() == 0) return true;
+	$has_errors = true;
+	return true;
+});
+
 function copy_directory($src, $dst) {
 	set_time_limit(240);
 	$exclude = array(".","..","deploy.files",".gitignore");
@@ -42,6 +50,8 @@ function copy_directory($src, $dst) {
 	closedir($dir);
 }
 copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]."/www"));
+
+if ($has_errors) die();
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>

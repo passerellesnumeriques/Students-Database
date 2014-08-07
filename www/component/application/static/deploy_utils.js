@@ -2,9 +2,23 @@ function download(backend_url, file_url, target_file, progress_container, end_ha
 	progress_container.innerHTML = "Starting download...";
 	getURLFileSize(backend_url, file_url, function(error,size) {
 		if (error) { end_handler(size); return; }
+		var start_time = new Date().getTime();
 		progress_container.innerHTML = "0% ("+(size/(1024*1024)).toFixed(2)+"M)";
 		downloading(backend_url, file_url, size, target_file, function(pos,total) {
-			progress_container.innerHTML = ""+Math.floor(pos*100/total)+"% ("+(pos/(1024*1024)).toFixed(2)+"M/"+(total/(1024*1024)).toFixed(2)+"M)";
+			var s = "";
+			if (pos > 0) {
+				var now = new Date().getTime();
+				var rem = (total-pos)*(now-start_time)/pos;
+				rem = Math.floor(rem/1000);
+				if (rem >= 120) { s = Math.floor(rem/60)+" mintues "; rem -= Math.floor(rem/60)*60; }
+				else if (rem >= 60) { s = "1 minute "; rem -= 60; }
+				if (rem > 0 || s == "") {
+					s += ""+rem+" second";
+					if (rem > 1) s += "s";
+				}
+				s = ", remaining: "+s;
+			}
+			progress_container.innerHTML = ""+Math.floor(pos*100/total)+"% ("+(pos/(1024*1024)).toFixed(2)+"M/"+(total/(1024*1024)).toFixed(2)+"M)"+s;
 		}, end_handler);
 	});
 }
@@ -29,8 +43,15 @@ function getURLFileSize(backend_url, download_url, handler) {
 	    if (this.readyState != 4) return;
 		if (this.statusText == "Error")
 			handler(true,xhr.responseText);
-		else
-			handler(false,xhr.responseText);
+		else if (xhr.responseText.length == 0)
+				handler(true, "Unable to get size of download ("+download_url+")");
+		else {
+			var size = parseInt(xhr.responseText);
+			if (isNaN(size))
+				handler(true, "Unable to get size of download ("+download_url+"): "+xhr.responseText);
+			else
+				handler(false,size);
+		}
 	};
 	xhr.setRequestHeader('Content-type', "application/x-www-form-urlencoded");
 	var data = "url="+encodeURIComponent(download_url)+"&getsize=true";

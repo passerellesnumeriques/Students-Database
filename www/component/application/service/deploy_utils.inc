@@ -84,7 +84,7 @@ function unzipFile($zip_path, $target_dir, $remove_after_unzip = false) {
 		$ret = 0;
 		exec("/usr/bin/unzip \"".$zip_path."\" -d \"".$target_dir."\"", $output, $ret);
 		if ($ret <> 0)
-			throw new Exception("Error unzipping installer (".$ret.")");
+			throw new Exception("Error unzipping file ".$zip_path." (".$ret.")");
 	}
 	if ($remove_after_unzip)
 		@unlink($url);

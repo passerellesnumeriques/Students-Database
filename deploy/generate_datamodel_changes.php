@@ -1,4 +1,12 @@
 <?php 
+global $has_errors;
+$has_errors = false;
+set_error_handler(function($severity, $message, $filename, $lineno) {
+	if (error_reporting() == 0) return true;
+	$has_errors = true;
+	return true;
+});
+
 // write the new datamodel
 $f = fopen(realpath($_POST["path"])."/datamodel/datamodel.json","w");
 fwrite($f,$_POST["datamodel"]);
@@ -186,6 +194,8 @@ foreach ($rename_columns_sm as $parent_table=>$list) {
 }
 fwrite($f,"?>");
 fclose($f);
+
+if ($has_errors) die();
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>

@@ -1,4 +1,12 @@
 <?php 
+global $has_errors;
+$has_errors = false;
+set_error_handler(function($severity, $message, $filename, $lineno) {
+	if (error_reporting() == 0) return true;
+	$has_errors = true;
+	return true;
+});
+
 function remove_directory($path) {
 	$dir = opendir($path);
 	while (($filename = readdir($dir)) <> null) {
@@ -28,6 +36,8 @@ mkdir($_POST["path"]."/to_deploy"); // here we will generate zip files and check
 mkdir($_POST["path"]."/init_data"); // here we will prepare init data
 mkdir($_POST["path"]."/datamodel"); // here we will prepare new datamodel
 mkdir($_POST["path"]."/migration"); // here we will prepare migration scripts
+
+if ($has_errors) die();
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
