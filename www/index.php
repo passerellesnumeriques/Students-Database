@@ -23,6 +23,30 @@ $pn_app_version = file_get_contents(dirname(__FILE__)."/version");
 #$pn_app_version = "##VERSION##"; 
 #END
 
+#DEV
+if (substr($path,0,7) == "deploy/") {
+	if ($path == "deploy/") $path = "deploy/index.php";
+	set_include_path(realpath("../deploy"));
+	chdir("../deploy");
+	include("../deploy/".substr($path,7));
+	die();
+}
+if (@$_COOKIE["test_deploy"] == "true") {
+	if (file_exists("../test_deploy")) {
+		set_include_path(realpath("../test_deploy"));
+		chdir("../test_deploy");
+		if (substr($path,0,12) == "test_deploy/")
+			$_SERVER["PATH_INFO"] = substr($path,11);
+		$_SERVER["DOCUMENT_ROOT"] = realpath("../test_deploy");
+		$_SERVER["CONTEXT_DOCUMENT_ROOT"] = realpath("../test_deploy");
+		$_SERVER["SCRIPT_FILENAME"] = realpath("../test_deploy/index.php");
+		include("../test_deploy/index.php");
+		die();
+	} else
+		setcookie("test_deploy","",time()+365*24*60*60,"/");
+}
+#END
+
 if ($path == "maintenance/index.php") {
 	include("maintenance/index.php");
 	die();
@@ -59,7 +83,6 @@ if (file_exists("maintenance_in_progress")) {
 	include("maintenance/maintenance_page.php");
 	die();
 }
-
 
 // check last time the user came, it was the same version, in order to refresh its cache if the version changed
 if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $pn_app_version) {
@@ -105,13 +128,13 @@ $invalid = function($message) {
 
 // get type of resource
 $i = strpos($path, "/");
-if ($i === FALSE) $invalid("Invalid request: no type of resource");
+if ($i === FALSE) $invalid("Invalid request: no type of resource ($path)");
 $type = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
 // get the component name
 $i = strpos($path, "/");
-if ($i === FALSE) $invalid("Invalid request: no component name");
+if ($i === FALSE) $invalid("Invalid request: no component name ($path)");
 $component_name = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
@@ -119,7 +142,7 @@ $path = substr($path, $i+1);
 switch ($type) {
 case "static":
 	$i = strrpos($path, ".");
-	if ($i === FALSE) $invalid("Invalid resource type");
+	if ($i === FALSE) $invalid("Invalid resource type ($path)");
 	$ext = substr($path, $i+1);
 	include("cache.inc"); 
 	switch ($ext) {
@@ -147,7 +170,7 @@ case "static":
 case "dynamic":
 	// get the type of request
 	$i = strpos($path, "/");
-	if ($i === FALSE) $invalid("Invalid request: no dynamic type");
+	if ($i === FALSE) $invalid("Invalid request: no dynamic type ($path)");
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
 #DEV	

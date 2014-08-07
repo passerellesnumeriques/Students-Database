@@ -211,9 +211,11 @@ ul {
 			<td colspan=3>
 				What is your local domain ?
 				<select name='local_domain'>
-					<option value='PNC'>PNC</option>
-					<option value='PNP'>PNP</option>
-					<option value='PNV'>PNV</option>
+					<?php
+					$domains = include("conf/domains");
+					foreach ($domains as $domain=>$conf)
+						echo "<option value='$domain'>$domain</option>"; 
+					?>
 				</select>
 			</td>
 		</tr>
@@ -305,7 +307,7 @@ ul {
 var db_type, db_server, db_user, db_password, proxy_server, proxy_port, proxy_user, proxy_pass;
 function request(params, handler) {
 	var xhr = new XMLHttpRequest();
-	xhr.open("POST","/", true);
+	xhr.open("POST","?", true);
 	xhr.onreadystatechange = function() {
 	    if (this.readyState != 4) return;
 		if (this.statusText == "Error")
@@ -320,6 +322,12 @@ function request(params, handler) {
 	params += "&db_server="+encodeURIComponent(db_server);
 	params += "&db_user="+encodeURIComponent(db_user);
 	params += "&db_password="+encodeURIComponent(db_password);
+	params += "&proxy_server="+encodeURIComponent(proxy_server);
+	params += "&proxy_port="+encodeURIComponent(proxy_port);
+	if (proxy_user) {
+		params += "&proxy_user="+encodeURIComponent(proxy_user);
+		params += "&proxy_pass="+encodeURIComponent(proxy_pass);
+	}
 	xhr.send(params);
 }
 <?php if (!isset($_POST["local_domain"])) { ?>
@@ -363,6 +371,10 @@ db_type = <?php echo json_encode($_POST["db_type"]);?>;
 db_server = <?php echo json_encode($_POST["db_server"]);?>;
 db_user = <?php echo json_encode($_POST["db_user"]);?>;
 db_password = <?php echo json_encode($_POST["db_password"]);?>;
+proxy_server = <?php echo json_encode($_POST["proxy_server"]);?>;
+proxy_port = <?php echo json_encode($_POST["proxy_port"]);?>;
+proxy_user = <?php echo isset($_POST["proxy_user"]) ? json_encode($_POST["proxy_user"]) : "null";?>;
+proxy_pass = <?php echo isset($_POST["proxy_user"]) ? json_encode($_POST["proxy_pass"]) : "null";?>;
 var icon_ok = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABlklEQVR42r2Sz0oCURTGz/0zmZYmRRFSgZsiCDJoUzuhRbXJdi19gCChB9Bor0QP4CPUrkUL3Ri1CIV24kKiRULUlDZlM/fezjgaGSgTQQeGO8M5v+87Z+4h8Mcg/y8Q1YIaVwnfhNyzGhD8lQBb43HfmMwMz8ggQfLhhp8SVExgropPHnKm3svV45VZ/7SMaX4FygJ4qbKS8UyjJLBDlXdcQvOJ6q81emSeW6kfcMQXQHhKRIDitwCo3yFcp1HbkPANnhidFxnmVSAMgMYtJh+dpO3sHZE5fwhhDCUB3mtUr+vMzpe+fuLAFs8Gola8VWQCGGWqv1XYtieE886JiFKYQNi8J1AvcxvOd98COg0uipxnWUbsQrvNjwoFPimBaA6ssDujwA/ESfeI5Pusnk1R5LOy1Sq0XTunecWqZlqE++4BifGUtiCTsC4dEBwBdUbBvGRdrfdcJL7PmmpXDHQVHTPDSoshd5uIo/AVcS2SkraW55CCVWBhdK+6E+iIrIqi/WpdsKXOlbkXaIu0zj5wfwGX8QnItKrE+XQVRgAAAABJRU5ErkJggg==";
 var icon_error = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAbwAAAG8B8aLcQwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJqSURBVDjLfZPLT+JQGMW7af8Xlv0PXGjcuDBRE3WhxqQKlAgYqfgIQi6xPhCBFAYoA4jzWszWmDDBTDKrcXRh6kID0bjwNTMZdXx0ZjZnbtsMBoNzk1/a7/acc7+29zIAmKesr6+zpVKJX1tbE4rFolAoFHgK20zbUFADRw3kVaGgbyaT2InH8SUWw0YigaKq6tlslmQyGa5pAF3Bls/ntU8rK/iTzQL5fAPG3MflZSSTSU1RFFtDQC6X41RV1WoLC4Ci/JeqLCMej2uxWIyrB6TTaVIxzIuL+JVK4WJnB/eqatYGD+m0OfeQyZh1mRBEIhFiBtCW2JSi6PrcHEC53t6GMW5OTnBH3/1hdRVXtZo5d727a2p+BwKIyLIuyzLLJBIJ/h1tCxMTFsEgcHZmGY6O8OPw0LzH5SUQCtV1JRoSDod5JhqNChW/H3A4HpEk4PQU9XFxAUxONmjKNCQYDArM0tKS8MHnAwYH69zShzcHB3X/z2oVt080m14vZmdnBWZ+fp5/OTMDdHUB3d24EkV83duznOfnAP0Wxvi+v48bl8vUGNoXNMDv9/MMIYQNh0L6XXs70NqKbxsbltl4hYEBoL8fOD62QsplU3Pf1oYZSdJ9Ph9r/sZAIEDeOp1ASwvQ0QFUKkBPj1UbdHYCW1vWldavBQHj4+Okvg+mp6e5qakpbbuv79H0DJ97e+F2u7WxsTGuYStLkmSjLWlvRkZwT9t8ajTmSsPDcLlcmiiKtqaHyev1ch6Ph0y43fqq3Y73Q0MmEdqyRxR1p9NJHA4H9+xp/AddgaXw1CBQg2C32/nR0dGmx/kvBdTCbxuFDrgAAAAASUVORK5CYII=";
 var icon_loading = "data:image/gif;base64,R0lGODlhEAAQAPQAAP///2t+v/r6/IuazLfA326BwICRyObp9MzS6HeJxK+53Kax2O7w98LK5N3h8JSi0Jyp1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAAFUCAgjmRpnqUwFGwhKoRgqq2YFMaRGjWA8AbZiIBbjQQ8AmmFUJEQhQGJhaKOrCksgEla+KIkYvC6SJKQOISoNSYdeIk1ayA8ExTyeR3F749CACH5BAkKAAAALAAAAAAQABAAAAVoICCKR9KMaCoaxeCoqEAkRX3AwMHWxQIIjJSAZWgUEgzBwCBAEQpMwIDwY1FHgwJCtOW2UDWYIDyqNVVkUbYr6CK+o2eUMKgWrqKhj0FrEM8jQQALPFA3MAc8CQSAMA5ZBjgqDQmHIyEAIfkECQoAAAAsAAAAABAAEAAABWAgII4j85Ao2hRIKgrEUBQJLaSHMe8zgQo6Q8sxS7RIhILhBkgumCTZsXkACBC+0cwF2GoLLoFXREDcDlkAojBICRaFLDCOQtQKjmsQSubtDFU/NXcDBHwkaw1cKQ8MiyEAIfkECQoAAAAsAAAAABAAEAAABVIgII5kaZ6AIJQCMRTFQKiDQx4GrBfGa4uCnAEhQuRgPwCBtwK+kCNFgjh6QlFYgGO7baJ2CxIioSDpwqNggWCGDVVGphly3BkOpXDrKfNm/4AhACH5BAkKAAAALAAAAAAQABAAAAVgICCOZGmeqEAMRTEQwskYbV0Yx7kYSIzQhtgoBxCKBDQCIOcoLBimRiFhSABYU5gIgW01pLUBYkRItAYAqrlhYiwKjiWAcDMWY8QjsCf4DewiBzQ2N1AmKlgvgCiMjSQhACH5BAkKAAAALAAAAAAQABAAAAVfICCOZGmeqEgUxUAIpkA0AMKyxkEiSZEIsJqhYAg+boUFSTAkiBiNHks3sg1ILAfBiS10gyqCg0UaFBCkwy3RYKiIYMAC+RAxiQgYsJdAjw5DN2gILzEEZgVcKYuMJiEAOwAAAAAAAAAAAA==";

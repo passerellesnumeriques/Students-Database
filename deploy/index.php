@@ -1,4 +1,8 @@
-<?php include("header.inc");?>
+<?php
+setcookie("test_deploy","",time()+365*24*60*60,"/");
+setcookie(ini_get("session.name"),"",time()+365*24*60*60,"/dynamic/");
+include("header.inc");
+?>
 <div style='flex:none;background-color:white;padding:10px'>
 	<div style='font-size:14pt;padding-bottom:5px;border-bottom: 1px solid #808080;'>
 		Welcome in this wizard, that will guide you to build a <i>deployed version</i>

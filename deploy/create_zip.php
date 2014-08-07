@@ -122,22 +122,64 @@ if ($has_errors) die();
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
 
-Version ready in directory <?php echo realpath($_POST["path"]."/to_deploy");?>. You can now:<ul>
-	<li>Check the migration scripts in <code><i><?php echo $filename_migration;?></i></code></li>
-	<li>Put the files in SourceForge (<a href='https://sourceforge.net/projects/studentsdatabase/files/updates/' target='_blank'>https://sourceforge.net/projects/studentsdatabase/files/updates/</a>)<ul>
-		<li><code><i><?php echo $filename;?></i></code></li>
-		<li><code><i><?php echo $filename.".checksum";?></i></code></li>
-		<li><code><i><?php echo $filename_migration;?></i></code></li>
-		<li><code><i><?php echo $filename_migration.".checksum";?></i></code></li>
-		<li><code><i><?php echo $filename_datamodel;?></i></code></li>
-		<li><code><i><?php echo $filename_init_data;?></i></code></li>
-		<li><code><i>versions.txt</i></code></li>
-		<li><code><i>latest.txt</i></code></li>
-	</ul></li>
+The new version is now ready.<br/>
+<br/>
+<button onclick='test_fresh();'>Test it as a fresh installation</button> &nbsp; <button onclick='test_update();'>Test it with current database, by updating it</button><br/>
+<span id='message'></span>
+<br/>
+Once tested, you can put the file located from directory <code><i><?php echo realpath($_POST["path"]."/to_deploy");?></i></code> to <a href='https://sourceforge.net/projects/studentsdatabase/files/updates/' target='_blank'>SourceForge</a>:<ul> 
+	<li><code><i><?php echo $filename;?></i></code></li>
+	<li><code><i><?php echo $filename.".checksum";?></i></code></li>
+	<li><code><i><?php echo $filename_migration;?></i></code></li>
+	<li><code><i><?php echo $filename_migration.".checksum";?></i></code></li>
+	<li><code><i><?php echo $filename_datamodel;?></i></code></li>
+	<li><code><i><?php echo $filename_init_data;?></i></code></li>
+	<li><code><i>versions.txt</i></code></li>
+	<li><code><i>latest.txt</i></code></li>
 </ul>
 
 </div>
 <div class='footer' style='flex:none'>
 	<button class='action' onclick="location.href='/deploy/';">Restart deployment</button>
 </div>
+<script type='text/javascript'>
+function test_fresh() {
+	var span = document.getElementById('message');
+	span.innerHTML = "<img src='/static/theme/default/icons_16/loading.gif'/> Deploying new version... Please wait...";
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST","install_test.php?type=fresh", true);
+	xhr.onreadystatechange = function() {
+	    if (this.readyState != 4) return;
+	    if (xhr.responseText == "OK") {
+		    span.innerHTML = "";
+		    document.cookie = "test_deploy=true; Path=/";
+			window.open("/test_deploy/");
+	    } else {
+		    span.innerHTML = "<img src='/static/theme/default/icons_16/error.png'/> Error: "+xhr.responseText;
+	    }
+	};
+	xhr.setRequestHeader('Content-type', "application/x-www-form-urlencoded");
+	var data = "path="+encodeURIComponent(<?php echo json_encode($_POST["path"]);?>)+"&version="+encodeURIComponent(<?php echo json_encode($_POST["version"]); ?>);
+	xhr.send(data);
+}
+function test_update() {
+	var span = document.getElementById('message');
+	span.innerHTML = "<img src='/static/theme/default/icons_16/loading.gif'/> Deploying new version... Please wait...";
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST","install_test.php?type=update", true);
+	xhr.onreadystatechange = function() {
+	    if (this.readyState != 4) return;
+	    if (xhr.responseText == "OK") {
+		    span.innerHTML = "";
+		    document.cookie = "test_deploy=true; Path=/";
+			window.open("/test_deploy/");
+	    } else {
+		    span.innerHTML = "<img src='/static/theme/default/icons_16/error.png'/> Error: "+xhr.responseText;
+	    }
+	};
+	xhr.setRequestHeader('Content-type', "application/x-www-form-urlencoded");
+	var data = "path="+encodeURIComponent(<?php echo json_encode($_POST["path"]);?>)+"&version="+encodeURIComponent(<?php echo json_encode($_POST["version"]); ?>);
+	xhr.send(data);
+}
+</script>
 <?php include("footer.inc");?>

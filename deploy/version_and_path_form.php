@@ -1,9 +1,13 @@
-<?php include("header.inc");?>
+<?php
+$current_version = file_get_contents(dirname(__FILE__)."/../www/version");
+setcookie("pnversion",$current_version,time()+365*24*60*60,"/"); 
+include("header.inc");
+?>
 <div style='flex:none;background-color:white;padding:10px'>
 
 <form name='deploy' method="POST" action="start_deploy.php">
 
-Current development version: <?php echo file_get_contents(dirname(__FILE__)."/../www/version");?><br/>
+Current development version: <?php echo $current_version;?><br/>
 
 Latest deployed version: <?php 
 $here = realpath(dirname(__FILE__));

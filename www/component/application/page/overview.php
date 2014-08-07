@@ -100,6 +100,16 @@ service.json("administration","latest_version",null,function(res) {
 </script>
 <?php 
 }
+if (@$_COOKIE["test_deploy"] == "true") {
+?>
+<div style='flex:none;padding:5px 10px;'>
+	<div class='info_box'>
+		<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/> 
+		You are testing a version for deployment. <a href='#' onclick="document.cookie = 'test_deploy=; Path=/';window.location.assign('/');return false;">Stop testing this version, and go back to development version</a>
+	</div>
+</div>
+<?php 
+}
 ?>
 	<div class="page_section_title" style='margin-bottom:0px'>
 		What's happening ?
