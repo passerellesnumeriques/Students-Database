@@ -41,11 +41,19 @@ if (isset($_GET["cancel_db"])) {
 	if (PNApplication::hasErrors())
 		PNApplication::printErrors();
 	else {
+		include("header.inc");
+		echo "<div style='flex:none;background-color:white;padding:10px'>";
 		echo "Recovery of database done.";
 		echo "<script type='text/javascript'>location.href='?step=destroy_sessions';</script>";
+		echo "</div>";
+		include("footer.inc");
 	}
 } else {
+	include("header.inc");
+	echo "<div style='flex:none;background-color:white;padding:10px'>";
 	echo "Recovering previous database...";
 	echo "<script type='text/javascript'>location.href='?step=cancel&cancel_db=true';</script>";
+	echo "</div>";
+	include("footer.inc");
 }
 ?>

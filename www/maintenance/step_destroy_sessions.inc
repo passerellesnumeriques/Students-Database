@@ -1,3 +1,5 @@
+<?php include("header.inc");?>
+<div style='flex:none;background-color:white;padding:10px'>
 <?php 
 $sessions_path = ini_get("session.save_path");
 $i = strrpos($sessions_path, ";");
@@ -77,5 +79,6 @@ if (file_exists("data/updates")) {
 }
 
 ?>
-<?php 	
-}
+<?php } ?>
+</div>
+<?php include("footer.inc"); ?>

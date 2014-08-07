@@ -4,7 +4,10 @@ function download($url, $target = null, $from = null, $to = null, $resume_if_exi
 		if (file_exists($target)) {
 			if ($resume_if_exists) {
 				$size = filesize($target);
-				if ($to < $size) return;
+				if ($to < $size) {
+					echo "cache";
+					return;
+				}
 				if ($from < $size) $from = $size;
 			} else {
 				unlink($target);

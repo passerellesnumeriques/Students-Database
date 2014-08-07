@@ -72,11 +72,19 @@ if (isset($_GET["copy"])) {
 	if (PNApplication::hasErrors())
 		PNApplication::printErrors();
 	else {
+		include("header.inc");
+		echo "<div style='flex:none;background-color:white;padding:10px'>";
 		echo "New version installed.<br/>";
 		echo "<a href='?step=destroy_sessions'>Ok, go back to main page of maintenance mode</a>";
+		echo "</div>";
+		include("footer.inc");
 	}
 } else {
+	include("header.inc");
+	echo "<div style='flex:none;background-color:white;padding:10px'>";
 	echo "Copying files...";
 	echo "<script type='text/javascript'>location.href='?step=install&copy=true';</script>";
+	echo "</div>";
+	include("footer.inc");
 }
 ?>

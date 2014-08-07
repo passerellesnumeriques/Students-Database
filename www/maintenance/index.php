@@ -3,6 +3,11 @@ if (!file_exists("maintenance/password")) {
 	header('HTTP/1.0 403 Access denied');
 	die("The application is not is maintenance mode.");
 }
+if (isset($_GET["css"])) {
+	header("Content-Type: text/css");
+	readfile(dirname(__FILE__)."/../component/theme/static/default/style/".$_GET["css"].".css");
+	die();
+}
 
 if (!isset($_SERVER['PHP_AUTH_USER'])) {
 	header('WWW-Authenticate: Basic realm="Students Management Software Maintenance"');
@@ -16,14 +21,10 @@ if ($_SERVER['PHP_AUTH_USER'] <> "maintenance" || sha1($_SERVER['PHP_AUTH_PW']) 
 		echo 'Access denied';
 		die();
 }
-?>
-<html>
-<head>
-	<title>Maintenance</title>
-</head>
-<body>
-<?php 
+
 if (file_exists("maintenance_time") && @$_GET["step"] <> "back_to_normal") {
+	include("header.inc");
+	echo "<div style='flex:none;background-color:white;padding:10px'>";
 	$timing = intval(file_get_contents("maintenance_time"));
 	$remaining = $timing-time();
 	if ($remaining > -5) {
@@ -36,10 +37,10 @@ if (file_exists("maintenance_time") && @$_GET["step"] <> "back_to_normal") {
 		unlink("maintenance_time");
 		echo "<script type='text/javascript'>location.href='/maintenance?step=destroy_sessions';</script>";
 	}
+	echo "</div>";
+	include("footer.inc");
 } else {
 	if (!isset($_GET["step"])) $_GET["step"] = "destroy_sessions";
 	include("step_".$_GET["step"].".inc");
 }
 ?>
-</body>
-</html>

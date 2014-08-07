@@ -82,11 +82,17 @@ while ($index < count($path)) {
 if (PNApplication::hasErrors())
 	PNApplication::printErrors();
 else {
+	include("header.inc");
 ?>
-Software ready to be tested<br/>
-<a href='/?request_to_test_update=true' target='_blank'>Test it</a><br/>
-Once ready:
-<a href='?step=install'>Install it</a><br/>
-Or
-<a href='?step=cancel'>Cancel (put back previous database)</a>
-<?php } ?>
+<div style='flex:none;background-color:white;padding:10px'>
+	Software ready to be tested<br/>
+	<a href='/?request_to_test_update=true' target='_blank'>Test it</a><br/>
+	Once ready:
+	<a href='?step=install'>Install it</a><br/>
+	Or
+	<a href='?step=cancel'>Cancel (put back previous database)</a>
+</div>
+<?php
+include("footer.inc"); 
+} 
+?>
