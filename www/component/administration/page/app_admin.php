@@ -147,14 +147,14 @@ function migration(img,msg) {
 				});	
 			};
 			download_migration = function(index,reset) {
-				download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+path[index]+".zip"), "data/updates/Students_Management_Software_"+path[index]+".zip", span_progress, function(error) {
+				download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+path[index]+".zip"), "data/updates/Students_Management_Software_"+path[index]+".zip", span_progress, function(error) {
 					if (error) {
 						img.src = theme.icons_16.error;
 						msg.innerHTML = error;
 						return;
 					}
 					span_file.innerHTML = path[index]+" checksum file";
-					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+path[index]+".zip.checksum"), "data/updates/Students_Management_Software_"+path[index]+".zip.checksum", span_progress, function(error) {
+					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+path[index]+".zip.checksum"), "data/updates/Students_Management_Software_"+path[index]+".zip.checksum", span_progress, function(error) {
 						if (error) {
 							img.src = theme.icons_16.error;
 							msg.innerHTML = error;

@@ -58,6 +58,7 @@ if ($google_account <> null)
 if (!window.top.pingInterval) {
 	window.top._ping_pending = 0;
 	window.top.ping = function() {
+		if (window.top._ping_pending > 10) window.top._ping_pending = 0;
 		if (window.top._ping_pending++ > 0 && window.top._ping_pending != 5) return; // avoid queuing pings when connection problems
 		service.json("application","ping",null,function(res) {
 			window.top._ping_pending = 0;
