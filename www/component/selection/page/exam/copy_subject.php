@@ -1,9 +1,10 @@
 <?php 
-class page_exam_copy_subject extends Page {
+require_once("component/selection/page/SelectionPage.inc");
+class page_exam_copy_subject extends SelectionPage {
 	
 	public function getRequiredRights() { return array("manage_exam_subject"); }
 	
-	public function execute() {
+	public function executeSelectionPage() {
 		$all_campaigns = PNApplication::$instance->selection->getCampaigns();
 		$current_campaign = PNApplication::$instance->selection->getCampaignId();
 		for ($i = 0; $i < count($all_campaigns); $i++)

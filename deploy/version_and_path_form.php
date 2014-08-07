@@ -6,7 +6,11 @@
 Current development version: <?php echo file_get_contents(dirname(__FILE__)."/../www/version");?><br/>
 
 Latest deployed version: <?php 
-$url = "http://sourceforge.net/projects/studentsdatabase/files/latest.txt/download";
+$here = realpath(dirname(__FILE__));
+$www = realpath($here."/../www");
+set_include_path($here . PATH_SEPARATOR . $www);
+require_once("update_urls.inc");
+$url = getLatestVersionURL();
 $c = curl_init($url);
 curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
@@ -15,11 +19,11 @@ curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
 curl_setopt($c, CURLOPT_TIMEOUT, 25);
 set_time_limit(45);
 $result = curl_exec($c);
-if ($result == false) echo "Error: ".curl_error($c);
-else echo $result;
+if ($result == false) die("<span style='color:red'>Error downloading ".$url.": ".curl_error($c)."</span>");
+echo $result;
 curl_close($c);
 ?>
-<input type='hidden' name='latest' value='<?php echo "0.0.6";/*$result;*/?>'/>
+<input type='hidden' name='latest' value='<?php echo $result;?>'/>
 <br/>
 <br/>
 Enter the new version to deploy: <input type='text' name='version' required/><br/>

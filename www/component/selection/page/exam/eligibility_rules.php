@@ -1,5 +1,5 @@
 <?php 
-require_once("/../SelectionPage.inc");
+require_once("component/selection/page/SelectionPage.inc");
 class page_exam_eligibility_rules extends SelectionPage {
 	public function getRequiredRights() { return array("see_exam_rules"); }
 	public function executeSelectionPage(){

@@ -14,18 +14,17 @@ function scripts_directory($directory_path) {
 	}
 	closedir($dir);
 }
-scripts_directory(realpath($_POST["path"]));
+scripts_directory(realpath($_POST["path"]."/www"));
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
 
 Deployed version of files done and scripts executed.<br/>
-Generating zip files and checksums...
-<form name='deploy' method="POST" action="create_zip.php">
+Preparing initial data for fresh installations...
+<form name='deploy' method="POST" action="create_init_data.php">
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
-<input type='hidden' name='datamodel' value='<?php echo $_POST["datamodel"];?>'/>
 </form>
 
 </div>

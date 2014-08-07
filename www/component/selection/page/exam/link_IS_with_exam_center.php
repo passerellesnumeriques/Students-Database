@@ -1,9 +1,10 @@
 <?php 
-class page_exam_link_is_with_exam_center extends Page {
+require_once("component/selection/page/SelectionPage.inc");
+class page_exam_link_is_with_exam_center extends SelectionPage {
 	
 	public function getRequiredRights() { return array("manage_exam_center"); }
 	
-	public function execute() {
+	public function executeSelectionPage() {
 		$this->requireJavascript("section.js");
 		theme::css($this, "grid.css");
 		

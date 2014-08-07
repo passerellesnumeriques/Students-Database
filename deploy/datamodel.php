@@ -1,34 +1,18 @@
 <?php 
-$latest = $_POST["latest"];
-
-$url = "http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_".$latest."_datamodel.zip/download";
-$c = curl_init($url);
-curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-curl_setopt($c, CURLOPT_TIMEOUT, 25);
-set_time_limit(45);
-$result = curl_exec($c);
-if ($result == false) echo "Error: ".curl_error($c);
-curl_close($c);
-$f = fopen($_POST["path"]."/tmp/datamodel.zip","w");
-fwrite($f,$result);
-fclose($f);
-@unlink($_POST["path"]."/tmp/datamodel.json");
+@unlink($_POST["path"]."/latest/datamodel.json");
 if (class_exists("ZipArchive")) {
 	$zip = new ZipArchive();
-	$zip->open($_POST["path"]."/tmp/datamodel.zip");
-	$zip->extractTo($_POST["path"]."/tmp");
+	$zip->open($_POST["path"]."/latest/datamodel.zip");
+	$zip->extractTo($_POST["path"]."/latest");
 	$zip->close();
 } else {
 	$output = array();
 	$ret = 0;
-	exec("/usr/bin/unzip \"".$_POST["path"]."/tmp/datamodel.zip"."\" -d \"".$$_POST["path"]."/tmp"."\"", $output, $ret);
+	exec("/usr/bin/unzip \"".$_POST["path"]."/latest/datamodel.zip"."\" -d \"".$$_POST["path"]."/latest"."\"", $output, $ret);
 	if ($ret <> 0)
 		throw new Exception("Error unzipping installer (".$ret.")");
 }
-$datamodel_json = file_get_contents($_POST["path"]."/tmp/datamodel.json");
+$datamodel_json = file_get_contents($_POST["path"]."/latest/datamodel.json");
 $header = "<script type='text/javascript' src='/static/javascript/utils.js'></script><script type='text/javascript' src='/static/javascript/browser.js'></script><script type='text/javascript' src='/static/javascript/utils_js.js'></script><script type='text/javascript' src='/static/application/service.js'></script>";
 ?>
 <?php include("header.inc");?>
@@ -519,6 +503,7 @@ function finish(odm,ndm) {
 	button.innerHTML = "Confirm all those changes";
 	panel.appendChild(button);
 	button.onclick = function() {
+		panel.innerHTML = "Generating data model migration script...";
 		var form = document.forms['deploy'];
 		form.elements['changes'].value = service.generateInput(changes);
 		var xhr = new XMLHttpRequest();

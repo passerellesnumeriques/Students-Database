@@ -9,7 +9,6 @@ abstract class SelectionPage extends Page{
 		$this->addJavascript("/static/selection/selection_utils.js");
 		theme::css($this, "selection.css");
 		$id = PNApplication::$instance->components["selection"]->getCampaignId();
-		$can_access_selection_data = null;
 		$can_access_selection_data = PNApplication::$instance->components["user_management"]->has_right("can_access_selection_data",true);
 		/* Check the user is allowed to read the selection data */
 		if(!$can_access_selection_data) echo "<div>You are not allowed to access to the selection data</div>";

@@ -1,4 +1,8 @@
-<html>
+<?php
+$path = realpath(dirname(__FILE__)."/..");
+if (!file_exists($path."/data")) mkdir($path."/data");
+if (!file_exists($path."/data/init")) mkdir($path."/data/init"); 
+?><html>
 <head>
 <title>PN Students Management Software - Installation</title>
 <script type='text/javascript' src='deploy_utils.js'></script>
@@ -114,15 +118,18 @@ function request(url,params,handler) {
 	var data = "url="+encodeURIComponent(url)+params;
 	xhr.send(data);
 }
+<?php require_once("update_urls.inc");?>
 function getLatestVersion() {
 	content.innerHTML = "Retrieving latest version...";
-	getURLFile("bridge.php", "http://sourceforge.net/projects/studentsdatabase/files/latest.txt/download", function(error,res) {
+	getURLFile("bridge.php", <?php echo json_encode(getLatestVersionURL());?>, function(error,res) {
 		if (error) { content.innerHTML = "Error: "+res; return; }
 		var version = res;
 		content.innerHTML = "Latest version: "+version+"<br/>Downloading Students Management Software "+version+": ";
 		var span_progress = document.createElement("SPAN");
 		content.appendChild(span_progress);
-		download("bridge.php", "http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+version+".zip/download", "Students_Management_Software_"+version+".zip", span_progress, function(error) {
+		var url = <?php echo json_encode(getGenericUpdateURL());?>;
+		url = url.replace("##FILE##","Students_Management_Software_"+version+".zip");
+		download("bridge.php", url, "Students_Management_Software_"+version+".zip", span_progress, function(error) {
 			if (error) {
 				content.innerHTML = "Latest version: "+version+"<br/>";
 				content.innerHTML += "Error downloading: "+error+"<br/>";
@@ -135,7 +142,27 @@ function getLatestVersion() {
 			content.innerHTML = "Version "+version+" downloaded.<br/>Extracting files...";
 			request("Students_Management_Software_"+version+".zip","&unzip=true",function(error,res) {
 				if (error) { content.innerHTML += "<br/>Error: "+res; return; }
-				window.location.href = "/";
+				content.innerHTML = "Software ready.<br/>Downloading initial data: ";
+				span_progress = document.createElement("SPAN");
+				content.appendChild(span_progress);
+				url = <?php echo json_encode(getGenericUpdateURL());?>;
+				url = url.replace("##FILE##","Students_Management_Software_"+version+"_init_data.zip");
+				download("bridge.php", url, "Students_Management_Software_"+version+"_init_data.zip", span_progress, function(error) {
+					if (error) {
+						content.innerHTML = "Latest version: "+version+"<br/>";
+						content.innerHTML += "Error downloading: "+error+"<br/>";
+						var retry_button = document.createElement("BUTTON");
+						retry_button.innerHTML = "Retry";
+						retry_button.onclick = function() { window.location.reload(); };
+						content.appendChild(retry_button);
+						return;
+					}
+					content.innerHTML = "Initial data downloaded.<br/>Extracting files...";
+					request("Students_Management_Software_"+version+"_init_data.zip","&unzip=true&unzip_target="+encodeURIComponent("data/init"),function(error,res) {
+						if (error) { content.innerHTML += "<br/>Error: "+res; return; }
+						window.location.href = "/";
+					});
+				});
 			});
 		});
 	});

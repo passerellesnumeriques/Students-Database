@@ -93,8 +93,8 @@ if (isset($_POST["req"])) {
 			PNApplication::$instance->init();
 			$components = PNApplication::sortComponentsByDependencies();
 			foreach ($components as $c) {
-				if (file_exists("component/".$c->name."/init_data.inc"))
-					include("component/".$c->name."/init_data.inc");
+				if (file_exists("data/init/".$c->name."/init_data.inc"))
+					include("data/init/".$c->name."/init_data.inc");
 			}
 			if (PNApplication::hasErrors()) {
 				header("HTTP/1.0 200 Error");

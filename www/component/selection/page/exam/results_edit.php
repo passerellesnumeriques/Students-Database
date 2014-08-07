@@ -1,5 +1,5 @@
 <?php 
-require_once("/../SelectionPage.inc");
+require_once("component/selection/page/SelectionPage.inc");
 class page_exam_results_edit extends SelectionPage {
 	public function getRequiredRights() { return array(); }
 	public function executeSelectionPage(){

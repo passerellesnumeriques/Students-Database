@@ -8,7 +8,8 @@ class service_latest_version extends Service {
 	public function outputDocumentation() { echo "<code>version</code>"; }
 	
 	public function execute(&$component, $input) {
-		$url = "http://sourceforge.net/projects/studentsdatabase/files/latest.txt/download";
+		require_once("update_urls.inc");
+		$url = getLatestVersionURL();
 		$c = curl_init($url);
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);

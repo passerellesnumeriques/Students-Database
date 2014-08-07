@@ -1,6 +1,12 @@
 <?php 
+// write the new datamodel
+$f = fopen(realpath($_POST["path"])."/datamodel/datamodel.json","w");
+fwrite($f,$_POST["datamodel"]);
+fclose($f);
+
+// write the migration script
 $changes = json_decode($_POST["changes"],true);
-$f = fopen($_POST["path"]."/tmp/datamodel_update.php","w");
+$f = fopen($_POST["path"]."/migration/datamodel_update.php","w");
 fwrite($f,"<?php \n");
 $new_tables_root = array();
 $new_tables_sm = array();
@@ -184,13 +190,12 @@ fclose($f);
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
 
-Data Model changes generated.<br/>
+Data Model migration script generated.<br/>
 Copying files...
 <form name='deploy' method="POST" action="copy.php">
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
-<input type='hidden' name='datamodel' value='<?php echo $_POST["datamodel"];?>'/>
 </form>
 
 </div>

@@ -42,9 +42,15 @@ function optimize_php($path) {
 }
 function optimize_js($path) {
 	$s = file_get_contents($path);
-	while (($i = strpos($s,"/*")) !== false) {
+	$i = 0;
+	while (($i = strpos($s,"/*",$i)) !== false) {
 		$j = strpos($s, "*/", $i+2);
 		if ($j === false) break;
+		$comment = substr($s, $i+2, $j-$i-2);
+		if (strpos($comment, "#depends") !== false) {
+			$i = $j+2;
+			continue;
+		}
 		$s = substr($s, 0, $i).substr($s,$j+2);
 	}
 	$lines = explode("\n",$s);
@@ -80,8 +86,8 @@ function optimize_directory($path) {
 	}
 	closedir($dir);
 }
-optimize_directory(realpath($_POST["path"]));
-$f = fopen(realpath($_POST["path"])."/version","w");
+optimize_directory(realpath($_POST["path"]."/www"));
+$f = fopen(realpath($_POST["path"])."/www/version","w");
 fwrite($f,$_POST["version"]);
 fclose($f);
 ?>
@@ -94,7 +100,6 @@ Applying deployment scripts...
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
-<input type='hidden' name='datamodel' value='<?php echo $_POST["datamodel"];?>'/>
 </form>
 
 </div>

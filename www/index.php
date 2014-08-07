@@ -69,9 +69,11 @@ if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $pn_app_version) {
 		session_start();
 		session_destroy();
 		echo "<script type='text/javascript'>window.top.location = '/reload';</script>";
-	} else
+		die();
+	} else if (strpos($path, "/service/") && $path <> "/dynamic/application/service/loading") {
 		header("pn_version_changed: yes", true, 403);
-	die();
+		die();
+	} // else we let continue... to avoid blocking everything
 }
 
 if ($path == "reload") {
@@ -82,14 +84,8 @@ if ($path == "reload") {
 date_default_timezone_set("GMT");
 
 if ($path == "favicon.ico") { 
-	header("Content-Type: image/ico"); 
-	header('Cache-Control: public', true);
-	header('Pragma: public', true);
-	$date = date("D, d M Y H:i:s",time());
-	header('Date: '.$date, true);
-	$expires = time()+365*24*60*60;
-	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
-	header('Vary: Cookie');
+	header("Content-Type: image/ico");
+	include("cache.inc"); 
 	readfile("favicon.ico");
 	die(); 
 }
@@ -125,13 +121,7 @@ case "static":
 	$i = strrpos($path, ".");
 	if ($i === FALSE) $invalid("Invalid resource type");
 	$ext = substr($path, $i+1);
-	header('Cache-Control: public', true);
-	header('Pragma: public', true);
-	$date = date("D, d M Y H:i:s",time());
-	header('Date: '.$date, true);
-	$expires = time()+365*24*60*60;
-	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
-	header('Vary: Cookie');
+	include("cache.inc"); 
 	switch ($ext) {
 	case "gif": header("Content-Type: image/gif"); break;
 	case "png": header("Content-Type: image/png"); break;

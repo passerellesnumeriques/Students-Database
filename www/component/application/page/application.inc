@@ -56,8 +56,11 @@ if ($google_account <> null)
 ?>
 // ping
 if (!window.top.pingInterval) {
+	window.top._ping_pending = 0;
 	window.top.ping = function() {
+		if (window.top._ping_pending++ > 0 && window.top._ping_pending != 5) return; // avoid queuing pings when connection problems
 		service.json("application","ping",null,function(res) {
+			window.top._ping_pending = 0;
 			if (!res) return;
 			if (res.maintenance_coming && !window.top.maintenance_coming_msg) {
 				window.top.maintenance_coming_msg = new window.top.StatusMessage(window.top.Status_TYPE_WARNING,"The software will be updated soon, and will be unavailable for few minutes.<br/>Please save your current work.<br/>You will be disconnected <span id='maintenance_timing'></span>",[{action:"close"}],10*60*1000);
@@ -85,6 +88,8 @@ if (!window.top.pingInterval) {
 				window.top.maintenance_coming_msg = null;
 				window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The maintenance has been cancelled. You won't be disconnected so you can continue to work...",[{action:"close"}],15*1000));
 			}
+		}, false, null, function() {
+			window.top._ping_pending = 0;
 		});
 	};
 	window.top.pingInterval = window.top.setInterval(window.top.ping,30000);

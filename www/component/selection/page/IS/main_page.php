@@ -1,5 +1,5 @@
 <?php 
-require_once("/../SelectionPage.inc");
+require_once("component/selection/page/SelectionPage.inc");
 class page_is_main_page extends SelectionPage {
 	public function getRequiredRights() { return array("see_information_session"); }
 	public function executeSelectionPage(){

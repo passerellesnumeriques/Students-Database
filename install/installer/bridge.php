@@ -4,7 +4,11 @@ $url = $_POST["url"];
 if (isset($_POST["unzip"])) {
 	@unlink(realpath(dirname(__FILE__)."/../index.php"));
 	try {
-		unzipFile(realpath(dirname(__FILE__))."/".$url, realpath(dirname(__FILE__)."/../"));
+		if (isset($_POST["unzip_target"]))
+			$target = realpath(dirname(__FILE__)."/../".$_POST["unzip_target"]);
+		else
+			$target = realpath(dirname(__FILE__)."/../");
+		unzipFile(realpath(dirname(__FILE__))."/".$url, $target);
 	} catch (Exception $e) {
 		header("HTTP/1.0 200 Error");
 		die($e->getMessage());

@@ -1,21 +1,4 @@
 <?php 
-function getArrayStepsToDisplay ($steps_to_display){
-	$json = "";
-	if(count($steps_to_display) == 0)
-		$json.= "[];";
-	else {
-		$json.=  "[";
-		$first = true;
-		foreach($steps_to_display as $s){
-			if(!$first)
-				$json.=  ", ";
-			$first = false;
-			$json.=  "{name:".json_encode($s["name"]).", id:".json_encode($s["id"])."}";
-		}
-		$json.=  "]";
-	}
-	return $json;
-}
 require_once("SelectionPage.inc");
 class page_selection_main_page extends SelectionPage {
 	public function getRequiredRights() { return array(); }

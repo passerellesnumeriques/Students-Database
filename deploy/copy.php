@@ -23,7 +23,7 @@ function copy_directory($src, $dst) {
 	$dir = opendir($src);
 	if (!$dir) die("Unable to access to directory ".$src);
 	while (($file = readdir($dir)) <> null) {
-		if ($include <> null && !in_arra($file,$include)) continue;
+		if ($include <> null && !in_array($file,$include)) continue;
 		if (in_array($file,$exclude)) continue;
 		if (strpos($src,"/page/") !== false || strpos($src,"/service/") !== false || strpos($src,"/static/") !== false) {
 			if (strpos($file,".inc") === false) {
@@ -41,7 +41,7 @@ function copy_directory($src, $dst) {
 	}
 	closedir($dir);
 }
-copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]));
+copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]."/www"));
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
@@ -52,7 +52,6 @@ Optimizing and creating deployed version of the files...
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
-<input type='hidden' name='datamodel' value='<?php echo $_POST["datamodel"];?>'/>
 </form>
 
 </div>

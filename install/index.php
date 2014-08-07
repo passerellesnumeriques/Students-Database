@@ -93,6 +93,7 @@ if (isset($_POST["step"])) {
 		case "init_download":
 			if (file_exists("installer")) removeDirectory(realpath(dirname(__FILE__))."/installer");
 			mkdir("installer");
+			mkdir("installer/conf");
 			die();
 		case "download":
 			$c = curl_init($_POST["url"]);
@@ -376,31 +377,53 @@ function downloadInstaller() {
 				content.removeChild(progress);
 				addError(res);
 				end();
+				return;
 			}
-			progress.innerHTML = "25%";
+			progress.innerHTML = "16%";
 			request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/install/installer/bridge.php")+"&file=bridge.php",function(res) {
 				if (res.length > 0) {
 					content.removeChild(progress);
 					addError(res);
 					end();
+					return;
 				}
-				progress.innerHTML = "50%";
+				progress.innerHTML = "33%";
 				request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/component/application/static/deploy_utils.js")+"&file=deploy_utils.js",function(res) {
 					if (res.length > 0) {
 						content.removeChild(progress);
 						addError(res);
 						end();
+						return;
 					}
-					progress.innerHTML = "75%";
+					progress.innerHTML = "49%";
 					request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/component/application/service/deploy_utils.inc")+"&file=deploy_utils.inc",function(res) {
 						if (res.length > 0) {
 							content.removeChild(progress);
 							addError(res);
 							end();
+							return;
 						}
-						content.removeChild(progress);
-						addOk();
-						end();
+						progress.innerHTML = "66%";
+						request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/update_urls.inc")+"&file=update_urls.inc",function(res) {
+							if (res.length > 0) {
+								content.removeChild(progress);
+								addError(res);
+								end();
+								return;
+							}
+							progress.innerHTML = "82%";
+							request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/conf/update_urls")+"&file=conf/update_urls",function(res) {
+								if (res.length > 0) {
+									content.removeChild(progress);
+									addError(res);
+									end();
+									return;
+								}
+								content.removeChild(progress);
+								addOk();
+								end();
+							});
+						});
 					});
 				});
 			});

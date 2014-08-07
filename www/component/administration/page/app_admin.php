@@ -6,6 +6,7 @@ class page_app_admin extends Page {
 	public function execute() {
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
+		require_once("update_urls.inc");
 		
 		$sessions_path = ini_get("session.save_path");
 		$i = strrpos($sessions_path, ";");
@@ -82,10 +83,17 @@ section_updates = sectionFromHTML('section_updates');
 section_sessions = sectionFromHTML('section_sessions');
 section_maintenance = sectionFromHTML('section_maintenance');
 
+var latest_url = <?php echo json_encode(getLatestVersionURL());?>;
+var versions_url = <?php echo json_encode(getVersionsListURL());?>;
+var update_url = <?php echo json_encode(getGenericUpdateURL());?>;
+function getUpdateURL(filename) {
+	return update_url.replace("##FILE##",filename);
+}
+
 function migration(img,msg) {
 	msg.innerHTML = "Retrieving information about how to migrate to the new version...";
 	require("deploy_utils.js",function() {
-		getURLFile("/dynamic/administration/service/download_update?download=true", "http://sourceforge.net/projects/studentsdatabase/files/versions.txt/download", function(error,content) {
+		getURLFile("/dynamic/administration/service/download_update?download=true", versions_url, function(error,content) {
 			if (error) {
 				img.src = theme.icons_16.error;
 				msg.innerHTML = content;
@@ -139,14 +147,14 @@ function migration(img,msg) {
 				});	
 			};
 			download_migration = function(index,reset) {
-				download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), "http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+path[index]+".zip/download", "data/updates/Students_Management_Software_"+path[index]+".zip", span_progress, function(error) {
+				download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+path[index]+".zip"), "data/updates/Students_Management_Software_"+path[index]+".zip", span_progress, function(error) {
 					if (error) {
 						img.src = theme.icons_16.error;
 						msg.innerHTML = error;
 						return;
 					}
 					span_file.innerHTML = path[index]+" checksum file";
-					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), "http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+path[index]+".zip.checksum/download", "data/updates/Students_Management_Software_"+path[index]+".zip.checksum", span_progress, function(error) {
+					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+path[index]+".zip.checksum"), "data/updates/Students_Management_Software_"+path[index]+".zip.checksum", span_progress, function(error) {
 						if (error) {
 							img.src = theme.icons_16.error;
 							msg.innerHTML = error;
@@ -215,7 +223,7 @@ service.json("administration","latest_version",null,function(res) {
 				div.appendChild(progress);
 				require("deploy_utils.js",function() {
 					filename_span.innerHTML = ": Students_Management_Software_"+new_version+".zip";
-					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), "http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+new_version+".zip/download", "data/updates/Students_Management_Software_"+new_version+".zip", progress, function(error) {
+					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_version+".zip"), "data/updates/Students_Management_Software_"+new_version+".zip", progress, function(error) {
 						if (error) {
 							img.src = theme.icons_16.error;
 							msg.innerHTML = error;
@@ -224,7 +232,7 @@ service.json("administration","latest_version",null,function(res) {
 							return;
 						}
 						filename_span.innerHTML = ": Students_Management_Software_"+new_version+".zip.checksum";
-						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), "http://sourceforge.net/projects/studentsdatabase/files/updates/Students_Management_Software_"+new_version+".zip.checksum/download", "data/updates/Students_Management_Software_"+new_version+".zip.checksum", progress, function(error) {
+						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_version+".zip.checksum"), "data/updates/Students_Management_Software_"+new_version+".zip.checksum", progress, function(error) {
 							div.removeChild(filename_span);
 							div.removeChild(progress);
 							if (error) {
