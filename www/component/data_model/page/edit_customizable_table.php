@@ -363,7 +363,10 @@ class page_edit_customizable_table extends Page {
 			$data = $display->getDataDisplay(null, $sub_model);
 			foreach ($columns as $col) {
 				$d = null;
-				foreach ($data as $da) if ($da->getHandledColumns()[0] == $col->name) { $d = $da; break; }
+				foreach ($data as $da) {
+					$hc = $da->getHandledColumns();
+					if ($hc <> null && count($hc) > 0 && $hc[0] == $col->name) { $d = $da; break; }
+				}
 				if ($d == null) continue; // strange, should not happen
 				$descr = $d->getDisplayName();
 				$type = null;

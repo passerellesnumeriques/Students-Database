@@ -15,6 +15,7 @@ class GoogleAPI {
 		$url .= "&key=".$key;
 		//echo $url."<br/><br/>\r\n\r\n";
 		$c = curl_init($url);
+		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 		$result = curl_exec($c);

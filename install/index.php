@@ -76,11 +76,15 @@ if (isset($_POST["step"])) {
 			die("OK");
 		case "internet":
 			$c = curl_init("http://www.google.com/");
+			if (isset($_POST["proxy_server"]))
+				curl_setopt($c, CURLOPT_PROXY, $_POST["proxy_server"].":".$_POST["proxy_port"]);
+			if (isset($_POST["proxy_user"]))
+				curl_setopt($c, CURLOPT_PROXYUSERPWD, str_replace(":","\\:",str_replace("\\","\\\\",$_POST["proxy_user"])).":".str_replace(":","\\:",str_replace("\\","\\\\",$_POST["proxy_pass"])));
 			curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 			curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-			curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-			curl_setopt($c, CURLOPT_TIMEOUT, 25);
+			curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 10);
+			curl_setopt($c, CURLOPT_TIMEOUT, 30);
 			set_time_limit(45);
 			$result = curl_exec($c);
 			if ($result === false) {
@@ -94,9 +98,19 @@ if (isset($_POST["step"])) {
 			if (file_exists("installer")) removeDirectory(realpath(dirname(__FILE__))."/installer");
 			mkdir("installer");
 			mkdir("installer/conf");
+			if (isset($_POST["proxy_server"])) {
+				$f = fopen("installer/conf/proxy","w");
+				fwrite($f, "<?php ");
+				fwrite($f, "curl_setopt(\$c, CURLOPT_PROXY, ".json_encode($_POST["proxy_server"].":".$_POST["proxy_port"]).");");
+				if (isset($_POST["proxy_user"]))
+					fwrite($f, "curl_setopt(\$c, CURLOPT_PROXYUSERPWD, ".json_encode(str_replace(":","\\:",$_POST["proxy_user"]).":".str_replace(":","\\:",$_POST["proxy_pass"])).");");
+				fwrite($f, "?>");
+				fclose($f);
+			}
 			die();
 		case "download":
 			$c = curl_init($_POST["url"]);
+			if (file_exists("installer/conf/proxy")) include("installer/conf/proxy");
 			curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 			curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
@@ -357,17 +371,63 @@ function checkPHPSessions() {
 		checkInternet();
 	});
 }
+var proxy_config = null;
 function checkInternet() {
 	addText("Checking Internet Access");
 	request("internet","",function(res) {
-		if (res == "OK") addOk(); else addError(res);
-		downloadInstaller();
+		if (res == "OK") {
+			addOk();
+			downloadInstaller();
+		} else {
+			var has_other_errors = has_errors;
+			addError(res);
+			end();
+			content.appendChild(document.createTextNode("May be your server needs to go through a Proxy ?"));
+			content.appendChild(document.createElement("BR"));
+			content.appendChild(document.createTextNode("Proxy server"));
+			var proxy_server = document.createElement("INPUT"); content.appendChild(proxy_server);
+			proxy_server.type = 'text';
+			content.appendChild(document.createTextNode(" Port"));
+			var proxy_port = document.createElement("INPUT"); content.appendChild(proxy_port);
+			proxy_port.type = 'text';
+			proxy_port.size = 4;
+			content.appendChild(document.createElement("BR"));
+			var need_auth = document.createElement("INPUT"); content.appendChild(need_auth);
+			need_auth.type = 'checkbox';
+			content.appendChild(document.createTextNode("needs authentication: Username"));
+			var proxy_user = document.createElement("INPUT"); content.appendChild(proxy_user);
+			proxy_user.type = 'text';
+			content.appendChild(document.createTextNode(" Password"));
+			var proxy_pass = document.createElement("INPUT"); content.appendChild(proxy_pass);
+			proxy_pass.type = 'password';
+			content.appendChild(document.createElement("BR"));
+			var button = document.createElement("BUTTON");
+			button.innerHTML = "Try with proxy";
+			content.appendChild(button);
+			button.onclick = function() {
+				content.appendChild(document.createTextNode(" Trying with proxy..."));
+				request("internet","&proxy_server="+encodeURIComponent(proxy_server.value)+"&proxy_port="+encodeURIComponent(proxy_port.value)+(need_auth.checked ? "&proxy_user="+encodeURIComponent(proxy_user.value)+"&proxy_pass="+encodeURIComponent(proxy_pass.value) : ""),function(res) {
+					if (res == "OK") {
+						addOk();
+						if (!has_other_errors) has_errors = false;
+						proxy_config = { server: proxy_server.value, port:proxy_port.value };
+						if (need_auth.checked) {
+							proxy_config.user = proxy_user.value;
+							proxy_config.pass = proxy_pass.value;
+						}
+						downloadInstaller();
+					} else {
+						addError("Still cannot access to Internet even through proxy: "+res);
+					}
+				});
+			};
+		}
 	});
 }
 function downloadInstaller() {
 	if (has_errors) { end(); return; }
 	addText("Downloading installer");
-	request("init_download","",function(res) {
+	request("init_download",proxy_config ? "&proxy_server="+encodeURIComponent(proxy_config.server)+"&proxy_port="+encodeURIComponent(proxy_config.port)+(typeof proxy_config.user != 'undefined' ? "&proxy_user="+proxy_config.user+"&proxy_pass="+proxy_config.pass : "") : "",function(res) {
 		var progress = document.createElement("SPAN");
 		progress.style.marginLeft = "10px";
 		progress.innerHTML = "0%";
@@ -431,11 +491,16 @@ function downloadInstaller() {
 	});
 }
 function end() {
-	var footer = document.createElement("DIV");
-	footer.id = "footer";
-	var button = document.createElement("BUTTON");
-	footer.appendChild(button);
-	content.parentNode.appendChild(footer);
+	var footer = document.getElementById('footer');
+	var button;
+	if (!footer) {
+		footer = document.createElement("DIV");
+		footer.id = "footer";
+		var button = document.createElement("BUTTON");
+		footer.appendChild(button);
+		content.parentNode.appendChild(footer);
+	} else
+		button = footer.childNodes[0];
 	if (has_errors) {
 		button.innerHTML = "Restart checks";
 		button.onclick = function() { location.reload(); };

@@ -11,6 +11,7 @@ class service_latest_version extends Service {
 		require_once("update_urls.inc");
 		$url = getLatestVersionURL();
 		$c = curl_init($url);
+		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);

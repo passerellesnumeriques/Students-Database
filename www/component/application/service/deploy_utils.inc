@@ -16,17 +16,27 @@ function download($url, $target = null, $from = null, $to = null, $resume_if_exi
 	}
 	
 	$c = curl_init($url);
+	if (file_exists("conf/proxy")) include("conf/proxy");
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-	curl_setopt($c, CURLOPT_TIMEOUT, 60);
+	$timeout = 60;
+	if ($from <> null) {
+		$size = intval($to)-intval($from);
+		if ($size >= 4*1024*1024) $timeout = 240;
+		else if ($size >= 2*1024*1024) $timeout = 180;
+		else if ($size >= 1*1024*1024) $timeout = 120;
+		if ($size >= 512*1024) $timeout = 90;
+		set_time_limit($timeout + 60);
+	} else
+		set_time_limit(240);
+	curl_setopt($c, CURLOPT_TIMEOUT, $timeout);
 	if ($from !== null) {
 		curl_setopt($c, CURLOPT_HTTPHEADER, array(
 		"Range: bytes=".$from."-".$to
 		));
 	}
-	set_time_limit(240);
 	$result = curl_exec($c);
 	if ($result === false) {
 		$error = curl_error($c);
@@ -43,6 +53,7 @@ function download($url, $target = null, $from = null, $to = null, $resume_if_exi
 
 function getURLFileSize($url, $expected_type = null) {
 	$c = curl_init($url);
+	if (file_exists("conf/proxy")) include("conf/proxy");
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);

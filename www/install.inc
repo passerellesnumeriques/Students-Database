@@ -141,6 +141,16 @@ if (isset($_POST["req"])) {
 				"?>"
 			);
 			fclose($f);
+			if (!empty($_POST["proxy_server"])) {
+				$f = fopen("conf/proxy","w");
+				fwrite($f, "<?php ");
+				fwrite($f, "curl_setopt(\$c, CURLOPT_PROXY, ".json_encode($_POST["proxy_server"].":".$_POST["proxy_port"]).");");
+				if (isset($_POST["proxy_user"]))
+					fwrite($f, "curl_setopt(\$c, CURLOPT_PROXYUSERPWD, ".json_encode(str_replace(":","\\:",$_POST["proxy_user"]).":".str_replace(":","\\:",$_POST["proxy_pass"])).");");
+				fwrite($f, "?>");
+				fclose($f);
+			} else
+				@unlink("conf/proxy");
 			die("OK");
 		default:
 			header("HTTP/1.0 200 Error");
@@ -172,10 +182,17 @@ html, body, table, input, select {
 	border-radius: 8px 8px 0px 0px;
 }
 .install_table td {
-	padding: 5px;
+	padding: 2px 5px;
 }
 .install_table input, .install_table select {
 	border: 1px solid #808080;
+}
+.install_table td.section_title {
+	padding: 3px;
+	border-top: 1px solid #22bbea;
+	border-bottom: 1px solid #22bbea;
+	font-weight: bold;
+	text-align: center;
 }
 ul {
 	margin-top: 0px;
@@ -191,37 +208,41 @@ ul {
 		</tr>
 		<?php if (!isset($_POST["local_domain"])) { ?>
 		<tr>
-			<td>What is your local domain ?</td>
-			<td align="left">
+			<td colspan=3>
+				What is your local domain ?
 				<select name='local_domain'>
 					<option value='PNC'>PNC</option>
 					<option value='PNP'>PNP</option>
 					<option value='PNV'>PNV</option>
 				</select>
 			</td>
-			<td><div style="width:200px"></div></td>
 		</tr>
 		<tr>
-			<td>Database type</td>
+			<td colspan=3 class='section_title'>
+				Database Configuration
+			</td>
+		</tr>
+		<tr>
+			<td>Server type</td>
 			<td align="left">
 				<select name='db_type'>
 					<option value='MySQL'>MySQL</option>
 				</select>
 			</td>
-			<td></td>
+			<td><div style="width:200px"></div></td>
 		</tr>
 		<tr>
-			<td>Database server</td>
+			<td>Server IP/Hostname</td>
 			<td align="left"><input type='text' name='db_server' value='localhost'/></td>
 			<td></td>
 		</tr>
 		<tr>
-			<td>Database user</td>
+			<td>Username</td>
 			<td align="left"><input type='text' name='db_user'/></td>
 			<td></td>
 		</tr>
 		<tr>
-			<td>Database password</td>
+			<td>Password</td>
 			<td align="left"><input type='password' name='db_password'/></td>
 			<td></td>
 		</tr>
@@ -239,6 +260,34 @@ ul {
 			</td>
 		</tr>
 		<tr>
+			<td colspan=3 class='section_title'>
+				Proxy Settings
+			</td>
+		</tr>
+		<tr>
+			<td>Server</td>
+			<td><input type="text" name="proxy_server"/></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>Port</td>
+			<td><input type="text" name="proxy_port"/></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td colspan=3><input type='checkbox' name='proxy_auth' onchange="this.form.elements['proxy_user'].disabled = this.checked ? '' : 'disabled';this.form.elements['proxy_pass'].disabled = this.checked ? '' : 'disabled';"/> Needs authentication</td>
+		</tr>
+		<tr>
+			<td>Username</td>
+			<td><input type="text" name="proxy_user" disabled='disabled'/></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>Password</td>
+			<td><input type="text" name="proxy_pass" disabled='disabled'/></td>
+			<td></td>
+		</tr>
+		<tr>
 			<td colspan=3 align=center>
 				<input type='submit' value='Install'/>
 			</td>
@@ -253,7 +302,7 @@ ul {
 	</form>
 </div>
 <script type='text/javascript'>
-var db_type, db_server, db_user, db_password;
+var db_type, db_server, db_user, db_password, proxy_server, proxy_port, proxy_user, proxy_pass;
 function request(params, handler) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST","/", true);
@@ -281,6 +330,15 @@ function checkDB() {
 	db_server = form.elements['db_server'].value;
 	db_user = form.elements['db_user'].value;
 	db_password = form.elements['db_password'].value;
+	proxy_server = form.elements['proxy_server'].value;
+	proxy_port = form.elements['proxy_port'].value;
+	if (form.elements['proxy_auth'].checked) {
+		proxy_user = form.elements['proxy_user'].value;
+		proxy_pass = form.elements['proxy_pass'].value;
+	} else {
+		proxy_user = null;
+		proxy_pass = null;
+	}
 	var table = document.getElementById('install_table');
 	if (!message) {
 		message = document.createElement("DIV");
@@ -377,7 +435,16 @@ function checkEnd() {
 		img.style.marginLeft = "5px";
 		div.appendChild(img);
 		img.src = icon_loading;
-		request("req=save&local_domain=<?php echo $_POST["local_domain"];?>",function(error,res) {
+		var req = "req=save&local_domain=<?php echo $_POST["local_domain"];?>";
+		if (proxy_server.trim().length > 0) {
+			req += "&proxy_server="+encodeURIComponent(proxy_server);
+			req += "&proxy_port="+encodeURIComponent(proxy_port);
+			if (proxy_user) {
+				req += "&proxy_user="+encodeURIComponent(proxy_user);
+				req += "&proxy_pass="+encodeURIComponent(proxy_pass);
+			}
+		}
+		request(req,function(error,res) {
 			if (error) {
 				img.src = icon_error;
 				div.appendChild(document.createTextNode(res));

@@ -37,6 +37,7 @@ class page_is_profile extends SelectionPage {
 		$this->requireJavascript("is_date.js");
 		$this->requireJavascript("is_statistics.js");
 		?>
+		<div style='width:100%;height:100%;overflow:auto;'>
 		<div style='display:inline-block;margin:10px;margin-right:5px;vertical-align:top;'>
 			<?php if ($this->component->getOneConfigAttributeValue("give_name_to_IS")) {
 				$this->requireJavascript("center_name.js");
@@ -83,6 +84,7 @@ class page_is_profile extends SelectionPage {
 		?>
 		</div>
 		<div style='margin:0px 5px 5px 5px;' id='applicants_list_container'>
+		</div>
 		</div>
 		<script type='text/javascript'>
 		var is_popup = window.parent.get_popup_window_from_frame(window);

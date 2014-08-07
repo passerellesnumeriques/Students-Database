@@ -8,7 +8,7 @@ while (($filename = readdir($dir)) <> null) {
 }
 closedir($dir);
 
-function processRelativePath($content, $directive) {
+function processRelativePath($component_name, $content, $directive) {
 	$i = 0;
 	while (($i = strpos($content, $directive, $i)) !== false) {
 		$j = strpos($content, "\"", $i);
@@ -17,8 +17,8 @@ function processRelativePath($content, $directive) {
 		if ($k === false) break;
 		$p = substr($content, $j+1, $k-$j-1);
 		$i += strlen($directive);
-		if (substr($p, 0, 10) <> "component/" && file_exists(dirname(__FILE__)."/$name/$p")) {
-			$content = substr($content,0,$j+1)."component/$name/$p".substr($content,$k);
+		if (substr($p, 0, 10) <> "component/" && file_exists(dirname(__FILE__)."/$component_name/$p")) {
+			$content = substr($content,0,$j+1)."component/$component_name/$p".substr($content,$k);
 		}
 	}
 	return $content;
@@ -88,12 +88,12 @@ function processComponent($name, &$done, &$components_order, &$components_conten
 	} else
 		$content = "?>".$content."<?php ";
 	
-	$content = processRelativePath($content, "require_once");
-	$content = processRelativePath($content, "require");
-	$content = processRelativePath($content, "include_once");
-	$content = processRelativePath($content, "include");
-	$content = processRelativePath($content, "file_get_contents");
-	$content = processRelativePath($content, "readfile");
+	$content = processRelativePath($name, $content, "require_once");
+	$content = processRelativePath($name, $content, "require");
+	$content = processRelativePath($name, $content, "include_once");
+	$content = processRelativePath($name, $content, "include");
+	$content = processRelativePath($name, $content, "file_get_contents");
+	$content = processRelativePath($name, $content, "readfile");
 	
 	$components_content .= $content;
 	

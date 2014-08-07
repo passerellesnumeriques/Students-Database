@@ -56,6 +56,7 @@ class service_search_geonames extends Service {
 		$url .= "&lang=en";
 		$url .= "&username=pnsdb&style=FULL&type=json";
 		$c = curl_init($url);
+		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		$result = curl_exec($c);
 		if ($result === false) {

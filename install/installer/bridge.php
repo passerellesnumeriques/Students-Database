@@ -6,6 +6,8 @@ if (isset($_POST["unzip"])) {
 	try {
 		unzipFile(realpath(dirname(__FILE__)."/".$url.".zip"), realpath(dirname(__FILE__)."/.."));
 		unzipFile(realpath(dirname(__FILE__)."/".$url."_init_data.zip"), realpath(dirname(__FILE__)."/../data/init"));
+		if (file_exists("conf/proxy"))
+			copy(realpath("conf/proxy"), realpath(dirname(__FILE__)."/../conf/proxy"));
 	} catch (Exception $e) {
 		header("HTTP/1.0 200 Error");
 		die($e->getMessage());

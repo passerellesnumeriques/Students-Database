@@ -13,12 +13,13 @@ set_include_path($here . PATH_SEPARATOR . $www);
 
 function download($url, $file) {
 	$c = curl_init($url);
+	if (file_exists("conf/proxy")) include("conf/proxy");
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-	curl_setopt($c, CURLOPT_TIMEOUT, 25);
-	set_time_limit(45);
+	curl_setopt($c, CURLOPT_TIMEOUT, 5*60);
+	set_time_limit(6*60);
 	$result = curl_exec($c);
 	if ($result == false) die("<span style='color:red'>Error downloading ".$url.": ".curl_error($c)."</span>");
 	curl_close($c);
