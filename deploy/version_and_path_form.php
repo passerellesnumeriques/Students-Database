@@ -16,7 +16,7 @@ set_include_path($here . PATH_SEPARATOR . $www);
 require_once("update_urls.inc");
 $url = getLatestVersionURL();
 $c = curl_init($url);
-if (file_exists("conf/proxy")) include("conf/proxy");
+if (file_exists("$www/conf/proxy")) include("$www/conf/proxy");
 curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
