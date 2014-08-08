@@ -7,12 +7,14 @@ set_error_handler(function($severity, $message, $filename, $lineno) {
 	return true;
 });
 
+global $www;
 $here = realpath(dirname(__FILE__));
 $www = realpath($here."/../www");
 set_include_path($here . PATH_SEPARATOR . $www);
 
 function download($url, $file) {
 	$c = curl_init($url);
+	global $www;
 	if (file_exists("$www/conf/proxy")) include("$www/conf/proxy");
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
