@@ -43,7 +43,7 @@ class PNApplication {
 	 * @static 
 	 * @var PNApplication singleton
 	 */
-	public static $instance;
+	public static $instance = null;
 
 	/** @static
 	 * @var string[] list of error in HTML format

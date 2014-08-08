@@ -30,6 +30,21 @@ class page_app_admin extends Page {
 		?>
 	</div>
 </div>
+<div id='section_maintenance' title='Maintenance' collapsable='true' style='margin-top:10px'>
+	<div style='padding:10px'>
+		You can put the software into <i>Maintenance Mode</i>.<br/>
+		When in maintenance mode, all the users will be disconnected and won't be able to use the software until it will come back into <i>Normal Mode</i>.<br/>
+		To put the software into Maintenance Mode, you need first to inform the users, so they can finish their work and save what they are currently doing,
+		then the application won't be accessible. Only you, using a specific password, will be able to perform operations and put back the application in Normal Mode.<br/>
+		<br/>
+		<form name='maintenance' onsubmit='return false;'> 
+		Inform the users, and put the software into Maintenance Mode in <input name='timing' type='text' size=3 value='5'/> minutes.<br/>
+		I will use the username <i>maintenance</i> with the password <input name='pass1' type='password' size=15/>.<br/>
+		Please re-type the maintenance password to confirm:  <input name='pass2' type='password' size=15/><br/>
+		</form>
+		<button class='action important' onclick="startMaintenance();">Start</button>
+	</div>
+</div>
 <div id='section_sessions' title='Open Sessions' collapsable='true' style='margin-top:10px'>
 	<table>
 		<tr><th>Session ID</th><th>Creation</th><th>Last modification</th><th>User</th></tr>
@@ -61,21 +76,6 @@ class page_app_admin extends Page {
 		}
 		?>
 	</table>		
-</div>
-<div id='section_maintenance' title='Maintenance' collapsable='true' style='margin-top:10px'>
-	<div style='padding:10px'>
-		You can put the software into <i>Maintenance Mode</i>.<br/>
-		When in maintenance mode, all the users will be disconnected and won't be able to use the software until it will come back into <i>Normal Mode</i>.<br/>
-		To put the software into Maintenance Mode, you need first to inform the users, so they can finish their work and save what they are currently doing,
-		then the application won't be accessible. Only you, using a specific password, will be able to perform operations and put back the application in Normal Mode.<br/>
-		<br/>
-		<form name='maintenance' onsubmit='return false;'> 
-		Inform the users, and put the software into Maintenance Mode in <input name='timing' type='text' size=3 value='5'/> minutes.<br/>
-		I will use the username <i>maintenance</i> with the password <input name='pass1' type='password' size=15/>.<br/>
-		Please re-type the maintenance password to confirm:  <input name='pass2' type='password' size=15/><br/>
-		</form>
-		<button class='action important' onclick="startMaintenance();">Start</button>
-	</div>
 </div>
 </div>
 <script type='text/javascript'>

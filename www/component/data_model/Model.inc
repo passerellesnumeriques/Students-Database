@@ -196,6 +196,9 @@ class DataModel {
 		return $a;
 	}
 	
+	/**
+	 * @return SubDataModel[]
+	 */
 	public function getSubModels() {
 		return $this->sub_models;
 	}
