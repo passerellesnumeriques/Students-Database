@@ -239,6 +239,7 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	
 	this.mergeCells = function(start_col, start_row, end_col, end_row) {
 		var cell = this.cells[start_col][start_row];
+		if (!cell) return;
 		cell.td.rowSpan = end_row-start_row+1;
 		cell.td.colSpan = end_col-start_col+1;
 		for (var col = start_col; col <= end_col; col++)

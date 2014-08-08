@@ -291,6 +291,8 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			t.context.clearItems();
 			t._addAddressTypeToContextMenu(container, "Work", address);
 			t._addAddressTypeToContextMenu(container, "Home", address);
+			t._addAddressTypeToContextMenu(container, "Family", address);
+			t._addAddressTypeToContextMenu(container, "Birthplace", address);
 			t._addAddressTypeToContextMenu(container, "Custom", address);
 			
 			t.context.showBelowElement(container);

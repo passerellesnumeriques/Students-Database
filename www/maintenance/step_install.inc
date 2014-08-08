@@ -72,6 +72,7 @@ if (isset($_GET["copy"])) {
 	if (PNApplication::hasErrors())
 		PNApplication::printErrors();
 	else {
+		remove_directory(realpath("maintenance/update"));
 		include("header.inc");
 		echo "<div style='flex:none;background-color:white;padding:10px'>";
 		echo "New version installed.<br/>";

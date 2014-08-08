@@ -133,6 +133,7 @@ field_date.prototype._create = function(data) {
 		};
 	} else {
 		this._setData = function(data) {
+			this.element.style.whiteSpace = "nowrap";
 			if (data == null) {
 				if (this.element.innerHTML == "no date") return;
 				this.element.style.fontStyle = 'italic';

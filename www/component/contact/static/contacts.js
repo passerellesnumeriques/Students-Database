@@ -81,7 +81,7 @@ function contacts(container, owner_type, owner_id, contacts, can_edit, can_add, 
 		th_head.colSpan = 2;
 		th_head.style.textAlign = "left";
 		th_head.style.padding = "2px 5px 2px 5px";
-		th_head.innerHTML = "<img src='/static/contact/"+contact_type+"_16.png' style='vertical-align:bottom;padding-right:3px'/>"+contact_type_name;
+		th_head.innerHTML = "<img src='/static/contact/"+contact_type.toLowerCase()+"_16.png' style='vertical-align:bottom;padding-right:3px'/>"+contact_type_name;
 		th_head.style.backgroundColor = color_background;
 		setBorderRadius(th_head, 5, 5, 5, 5, 0, 0, 0, 0);
 		tr_head.appendChild(th_head);
