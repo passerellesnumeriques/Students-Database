@@ -58,7 +58,7 @@ function optimize_js($path) {
 	foreach ($lines as $line) {
 		$line = trim($line);
 		if ($line == "") continue;
-		if (substr($line,0,2) == "//") continue; // TODO better, but we need to know if we are in a string or not...
+		if (substr($line,0,2) == "//" && strpos($line,"#depends") === false) continue; // TODO better, but we need to know if we are in a string or not...
 		$s .= $line."\n";
 	}
 	$f = fopen($path, "w");

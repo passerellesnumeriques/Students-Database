@@ -124,8 +124,12 @@ if ($has_errors) die();
 
 The new version is now ready.<br/>
 <br/>
-<button onclick='test_fresh();'>Test it as a fresh installation</button> &nbsp; <button onclick='test_update();'>Test it with current database, by updating it</button><br/>
-<span id='message'></span>
+<button onclick='test_fresh();'>Test it as a fresh installation</button>
+<!-- 
+ &nbsp; <button onclick='test_update();'>Test it with current database, by updating it</button>
+ -->
+<br/>
+<span id='message'></span><br/>
 <br/>
 Once tested, you can put the file located from directory <code><i><?php echo realpath($_POST["path"]."/to_deploy");?></i></code> to <a href='https://sourceforge.net/projects/studentsdatabase/files/updates/' target='_blank'>SourceForge</a>:<ul> 
 	<li><code><i><?php echo $filename;?></i></code></li>

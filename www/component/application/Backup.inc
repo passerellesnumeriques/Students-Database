@@ -25,12 +25,12 @@ class Backup {
 			foreach ($sm->getExistingInstances() as $sub_model)
 				foreach ($sm->internalGetTables() as $table)
 					self::backupTable($table, $table->getSQLNameFor($sub_model), $sub_model, $path."/db");
-		self::zipDirectory($path."/db", $path."/db.zip");
+		self::zipDirectory(realpath($path)."/db", realpath($path)."/db.zip");
 		self::removeDirectory($path."/db");
 		set_time_limit(60*60);
-		self::zipDirectory(realpath("data/$local_domain/storage"), $path."/storage.zip");
+		self::zipDirectory(realpath("data/$local_domain/storage"), realpath($path)."/storage.zip", true);
 		if (file_exists("data/$local_domain/custom_tables"))
-			self::zipDirectory(realpath("data/$local_domain/custom_tables"), $path."/custom_tables.zip");
+			self::zipDirectory(realpath("data/$local_domain/custom_tables"), realpath($path)."/custom_tables.zip", true);
 		return $time;
 	}
 	
@@ -82,7 +82,7 @@ class Backup {
 		}
 	}
 	
-	public static function zipDirectory($dir_path, $zip_path) {
+	public static function zipDirectory($dir_path, $zip_path, $handle_empty = false) {
 		if (class_exists("ZipArchive")) {
 			$zip = new ZipArchive();
 			$zip->open($zip_path, ZipArchive::CREATE);
@@ -95,14 +95,14 @@ class Backup {
 				$empty = false;
 			}
 			closedir($dir);
-			if ($empty) $zip->addEmptyDir("empty");
+			if ($empty && $handle_empty) $zip->addEmptyDir("empty");
 			$zip->close();
 		} else {
 			$output = array();
 			$ret = 0;
-			exec("/usr/bin/unzip \"".$zip_path."\" -d \"".$target_dir."\"", $output, $ret);
-			if ($ret <> 0)
-				throw new Exception("Error unzipping file ".$zip_path." (".$ret.")");
+			exec("/usr/bin/zip \"".$zip_path."\" \"".$dir_path."\"/*", $output, $ret);
+			if ($ret <> 0 && (!$handle_empty || $ret <> 18))
+				throw new Exception("Error creating zip file ".$zip_path." from directory ".$dir_path." (".$ret.")");
 		}
 	}
 	
@@ -175,6 +175,7 @@ class Backup {
 			}
 		}
 		
+		@mkdir("data/$local_domain");
 		// recover custom tables
 		if (file_exists("data/$local_domain/custom_tables")) self::removeDirectory("data/$local_domain/custom_tables");
 		if (file_exists("data/backups/$pn_app_version/$time/custom_tables.zip")) {

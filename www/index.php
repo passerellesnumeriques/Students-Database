@@ -47,7 +47,7 @@ if (@$_COOKIE["test_deploy"] == "true") {
 }
 #END
 
-if ($path == "maintenance/index.php") {
+if ($path == "maintenance/index.php" || $path == "maintenance/" || $path == "maintenance") {
 	include("maintenance/index.php");
 	die();
 }
