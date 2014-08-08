@@ -72,9 +72,10 @@ function optimize_directory($path) {
 	if (!$dir) die("Unable to access to directory ".$path);
 	while (($file = readdir($dir)) <> null) {
 		if ($file == "." || $file == "..") continue;
-		if (is_dir($path."/".$file))
+		if (is_dir($path."/".$file)) {
+			if (substr($file,0,4) == "lib_") continue;
 			optimize_directory($path."/".$file);
-		else {
+		} else {
 			$i = strrpos($file, ".");
 			if ($i === false) continue;
 			$ext = substr($file, $i+1);

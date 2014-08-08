@@ -46,8 +46,8 @@ $conf = array(
 				)
 			),
 			"default_academic_year"=>array(
-				array("period"=>"Semester","month"=>6,"week"=>1,"weeks_break"=>0),
-				array("period"=>"Semester","month"=>11,"week"=>1,"weeks_break"=>2),
+				array("period"=>"Semester","month"=>6,"week"=>2,"weeks_break"=>0),
+				array("period"=>"Semester","month"=>11,"week"=>2,"weeks_break"=>2),
 				array("period"=>"Summer","month"=>4,"week"=>1,"weeks_break"=>0)
 			),
 			"default_batch_years"=>array(

@@ -81,6 +81,8 @@ if (isset($_POST["req"])) {
 		case "init_db":
 			global $local_domain, $db_config;
 			$local_domain = $_POST["domain"];
+			@mkdir("data/$local_domain");
+			@mkdir("data/$local_domain/storage");
 			$db_config = array(
 				"type"=>$_POST["db_type"],
 				"server"=>$_POST["db_server"],
