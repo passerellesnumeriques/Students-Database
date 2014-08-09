@@ -2031,7 +2031,7 @@ class SQLQuery {
 							$first = true;
 							foreach ($to_remove_in_table["keys"] as $key) {
 								if ($first) $first = false; else $where .= ",";
-								$where .= $key;
+								$where .= "'".self::escape($key)."'";
 							}
 							$where .= ")";
 						}

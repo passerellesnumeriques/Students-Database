@@ -136,30 +136,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	t.reloadData = function(ondone) {
 		t._loadData(ondone);
 	};
-	/** Get the key if we found it, or the value, for a given table.column of the data model, for the given row of the grid
-	 * @param {Number} row row index
-	 * @param {String} table table name
-	 * @param {String} column column name
-	 * @returns {Object} the key, or the value, or null
-	 */
-	t.getRowData = function(row, table, column) {
-		// search a column where we can get it
-		for (var i = 0; i < t.tables.length; ++i) {
-			if (t.tables[i].name != table) continue;
-			for (var j = 0; j < t.tables[i].keys.length; ++j) {
-				if (t.tables[i].keys[j] == column) {
-					// we found it as a key
-					return t.data[row].values[i].k[j];
-				}
-			}
-		}
-		for (var i = 0; i < t.show_fields.length; ++i) {
-			if (t.show_fields[i].field.path.table != table) continue;
-			if (t.show_fields[i].field.path.column != column) continue;
-			return t.data[row].values[i].v;
-		}
-		return null;
-	};
 	/** Remove all filters
 	 * @param {Boolean} remove_forced true to remove also the filters which cannot be remove by the user 
 	 */
