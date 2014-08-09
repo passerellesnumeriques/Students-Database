@@ -82,19 +82,28 @@ class Backup {
 		}
 	}
 	
+	private static function zipDir($dir_path, $zip_path, &$zip) {
+		$dir = opendir($dir_path);
+		if (!$dir) throw new Exception("Cannot zip directory ".$dir_path.": directory not found.");
+		$empty = true;
+		while (($file = readdir($dir)) <> null) {
+			if ($file == "." || $file == "..") continue;
+			if (is_dir($dir_path."/".$file))
+				$empty &= self::zipDir($dir_path."/".$file, $zip_path <> "" ? $zip_path."/".$file : $file, $zip);
+			else {
+				$zip->addFile($dir_path."/".$file, $zip_path <> "" ? $zip_path."/".$file : $file);
+				$empty = false;
+			}
+		}
+		closedir($dir);
+		return $empty;
+	}
+	
 	public static function zipDirectory($dir_path, $zip_path, $handle_empty = false) {
 		if (class_exists("ZipArchive")) {
 			$zip = new ZipArchive();
-			$zip->open($zip_path, ZipArchive::CREATE);
-			$dir = opendir($dir_path);
-			if (!$dir) throw new Exception("Cannot zip directory ".$dir_path.": directory not found.");
-			$empty = true;
-			while (($file = readdir($dir)) <> null) {
-				if ($file == "." || $file == "..") continue;
-				$zip->addFile($dir_path."/".$file, $file);
-				$empty = false;
-			}
-			closedir($dir);
+			if (!$zip->open($zip_path, ZipArchive::CREATE)) throw new Exception("Unable to create zip file: ".$zip_path);
+			$empty = self::zipDir($dir_path, "", $zip);
 			if ($empty && $handle_empty) $zip->addEmptyDir("empty");
 			$zip->close();
 		} else {

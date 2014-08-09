@@ -49,7 +49,7 @@ function init_users_list() {
 			var assign_roles = document.createElement("BUTTON");
 			assign_roles.disabled = "disabled";
 			assign_roles.className = "flat";
-			assign_roles.innerHTML = "<img src='/static/user_management/role.png'/> Assign roles";
+			assign_roles.innerHTML = "<img src='"+theme.build_icon("/static/user_management/role.png",theme.icons_10.add)+"'/> Assign roles";
 			assign_roles.onclick = function() {
 				require("popup_window.js",function(){
 					var content = document.createElement("FORM");
@@ -75,9 +75,9 @@ function init_users_list() {
 						window.top.status_manager.add_status(status);
 						list.grid.startLoading();
 						var users = [];
-						var sel = list.grid.getSelection();
+						var sel = list.grid.getSelectionByRowId();
 						for (var i = 0; i < sel.length; ++i)
-							users.push(list.getRowData(sel[i], "Users", "id"));
+							users.push(list.getTableKeyForRow("Users", sel[i]));
 						service.json("user_management","assign_roles",{users:users,roles:roles_id},function(result){
 							window.top.status_manager.remove_status(status);
 							list.grid.endLoading();
@@ -92,7 +92,7 @@ function init_users_list() {
 			var unassign_roles = document.createElement("BUTTON");
 			unassign_roles.disabled = "disabled";
 			unassign_roles.className = "flat";
-			unassign_roles.innerHTML = "<img src='/static/user_management/role.png'/> Unassign roles";
+			unassign_roles.innerHTML = "<img src='"+theme.build_icon("/static/user_management/role.png",theme.icons_10.remove)+"'/> Unassign roles";
 			unassign_roles.onclick = function() {
 				require("popup_window.js",function(){
 					var content = document.createElement("FORM");
@@ -118,9 +118,9 @@ function init_users_list() {
 						window.top.status_manager.add_status(status);
 						list.grid.startLoading();
 						var users = [];
-						var sel = list.grid.getSelection();
+						var sel = list.grid.getSelectionByRowId();
 						for (var i = 0; i < sel.length; ++i)
-							users.push(list.getRowData(sel[i], "Users", "id"));
+							users.push(list.getTableKeyForRow("Users", sel[i]));
 						service.json("user_management","unassign_roles",{users:users,roles:roles_id},function(result){
 							window.top.status_manager.remove_status(status);
 							list.grid.endLoading();
@@ -134,9 +134,20 @@ function init_users_list() {
 			list.addHeader(unassign_roles);
 			var remove = document.createElement("BUTTON");
 			remove.className = "flat";
-			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
+			remove.innerHTML = "<img src='"+theme.build_icon("/static/user_management/user_16.png",theme.icons_10.remove)+"'/> Remove";
 			remove.onclick = function() {
-				alert("TODO");
+				confirm_dialog("Are you sure you want to remove those users from this software ?",function(yes) {
+					if (!yes) return;
+					var users = [];
+					var sel = list.grid.getSelectionByRowId();
+					for (var i = 0; i < sel.length; ++i)
+						users.push(list.getTableKeyForRow("Users", sel[i]));
+					var locker = lock_screen(null, "Removing "+users.length+" user"+(users.length>1?"s":""));
+					service.json("user_management","remove_users",{users:users},function(res) {
+						unlock_screen(locker);
+						list.reloadData();
+					});
+				});
 			};
 			list.addHeader(remove);
 			list.grid.onselect = function(selection) {
@@ -163,15 +174,14 @@ function init_users_list() {
 	);
 }
 function synchUsers() {
-	require("popup_window.js",function(){
-		var p = new popup_window("Synchronize Users",theme.icons_16._import,"");
-		p.setContentFrame("/dynamic/user_management/page/synch_users__auth");
-		p.onclose = function() { window.list.reloadData(); };
-		p.show();
+	popup_frame(theme.icons_16._import, "Synchronize Users", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_UserList",url:"/dynamic/user_management/page/synch_users"}, null, null, function(frame,popup){
+		popup.onclose = function() { window.list.reloadData(); };
 	});
 }
 function newUser() {
-	alert("TODO");
+	popup_frame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/user_management/page/new_user",null,null,null,function(frame,popup) {
+		popup.onclose = function() { window.list.reloadData(); };
+	});
 }
 </script>
 <?php 

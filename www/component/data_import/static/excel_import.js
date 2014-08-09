@@ -692,6 +692,7 @@ function excel_import(popup, container, onready) {
 			t.frame_excel.style.flex = "1 1 auto";
 			t.frame_excel.style.border = "0px";
 			t.frame_excel.style.width = "100%";
+			t.frame_excel._no_loading = true;
 			t.left_container.appendChild(t.excel_header);
 			t.left_container.appendChild(t.excel_info);
 			t.left_container.appendChild(t.frame_excel);
@@ -702,6 +703,7 @@ function excel_import(popup, container, onready) {
 			t.frame_import.style.flex = "1 1 auto";
 			t.frame_import.style.border = "0px";
 			t.frame_import.style.width = "100%";
+			t.frame_import._no_loading = true;
 			t.right_container.appendChild(t.data_header);
 			t.right_container.appendChild(t.frame_import);
 

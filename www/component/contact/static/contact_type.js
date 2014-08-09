@@ -46,7 +46,11 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		button.style.color = "#808080";
 		button.style.fontSize = "8pt";
 		button.style.whiteSpace = 'nowrap';
-		button.onclick = function(){t.dialogAddContact();};
+		button.onclick = function(ev){
+			t.dialogAddContact();
+			stopEventPropagation(ev);
+			return false;
+		};
 		tr_foot.appendChild(td_foot_1);
 		tr_foot.appendChild(td_foot_2);
 		this.tfoot.appendChild(tr_foot);

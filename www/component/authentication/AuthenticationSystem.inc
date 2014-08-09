@@ -16,12 +16,20 @@ abstract class AuthenticationSystem {
 	 * @param string $token from the authenticate method
 	 */
 	public function closeSession($token) {}
+	
+}
+
+interface AuthenticationSystem_UserList {
 
 	/** <i>Optional.</i> Retrieve the list of users existing on the authentication system.
 	 * @param string $token from the authenticate method
 	 * @return array of (username,array(people_info_key=>people_info_value)), or NULL if this functionality is not available
 	 */
-	public function getUserList($token) { return null; }
+	public function getUserList($token);
+	
+}
+
+interface AuthenticationSystem_ManageUsers {
 
 	/** <i>Optional.</i> Create a new user on the authentication system.
 	 * @param string $token from the authenticate method
@@ -29,14 +37,14 @@ abstract class AuthenticationSystem {
 	 * @param string $password password
 	 * @return boolean true if successful, false if it fails, null if the functionality is not available
 	 */
-	public function createUser($token, $username, $password) { return null; }
+	public function createUser($token, $username, $password);
 
 	/** <i>Optional.</i> Remove a user on the authentication system.
 	 * @param string $token from the authenticate method
 	 * @param string $username username
 	 * @return boolean true if successful, false if it fails, null if the functionality is not available
 	 */
-	public function removeUser($token, $username) { return null; }
+	public function removeUser($token, $username);
 
 	/** <i>Optional.</i> Change a username.
 	 * @param string $token from the authenticate method
@@ -44,14 +52,18 @@ abstract class AuthenticationSystem {
 	 * @param string $new_username new username
 	 * @return boolean true if successful, false if it fails, null if the functionality is not available
 	 */
-	public function renameUser($token, $username, $new_username) { return null; }
+	public function renameUser($token, $username, $new_username);
+	
+}
+
+interface AuthenticationSystem_ResetPassword {
 
 	/** <i>Optional.</i> Change the password of a user.
 	 * @param string $token from the authenticate method
 	 * @param string $username username
 	 * @param string $password new password
-	 * @return boolean true if successful, false if it fails, null if the functionality is not available
+	 * @return boolean|string|NULL true if successful, string with error message if it fails, null if the functionality is not available
 	 */
-	public function resetPassword($token, $username, $password) { return null; }
+	public function resetPassword($token, $username, $password);
 }
 ?>

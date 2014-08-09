@@ -12,6 +12,8 @@ interface PeopleTypePlugin {
 	public function canWrite();
 	public function canRemove();
 	
+	public function getTables();
+	
 	public function getPeopleRowDescription($people);
 	
 	public function getBuiltinDefaultUserRoles($people);
