@@ -51,7 +51,14 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 		var end = from + Math.floor(speed);
 		if (end >= size) end = size-1;
 		downloadRange(backend_url,download_url,from,end,file,function(error,content) {
-			if (error) { end_handler(content); return; }
+			if (error) {
+				if (content.indexOf("(#28)") > 0) {
+					window.download_init_speed = Math.floor(window.download_init_speed/2);
+					if (window.download_init_speed < 8192) window.download_init_speed = 8192;
+				}
+				end_handler(content);
+				return;
+			}
 			progress_handler(end+1,size);
 			if (end >= size-1) { end_handler(null); return; }
 			if (content != "cache") {

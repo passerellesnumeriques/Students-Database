@@ -31,10 +31,10 @@ curl_close($c);
 <input type='hidden' name='latest' value='<?php echo $result;?>'/>
 <br/>
 <br/>
-Enter the new version to deploy: <input type='text' name='version' required/><br/>
+Enter the new version to deploy: <input type='text' name='version' value='<?php echo $current_version;?>'/><br/>
 <br/>
 Enter the location where to generate the deployed version:<br/>
-<input type='text' name='path' size=50 required/>
+<input type='text' name='path' size=50/>
 
 </form>
 </div>

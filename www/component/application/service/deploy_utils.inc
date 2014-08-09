@@ -21,13 +21,13 @@ function download($url, $target = null, $from = null, $to = null, $resume_if_exi
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-	$timeout = 60;
+	$timeout = 1200;
 	if ($from <> null) {
 		$size = intval($to)-intval($from);
 		if ($size >= 4*1024*1024) $timeout = 240;
-		else if ($size >= 2*1024*1024) $timeout = 180;
-		else if ($size >= 1*1024*1024) $timeout = 120;
-		if ($size >= 512*1024) $timeout = 90;
+		else if ($size >= 2*1024*1024) $timeout = 210;
+		else if ($size >= 1*1024*1024) $timeout = 180;
+		if ($size >= 512*1024) $timeout = 1500;
 		set_time_limit($timeout + 60);
 	} else
 		set_time_limit(240);
@@ -39,7 +39,7 @@ function download($url, $target = null, $from = null, $to = null, $resume_if_exi
 	}
 	$result = curl_exec($c);
 	if ($result === false) {
-		$error = curl_error($c);
+		$error = curl_error($c)." (#".curl_errno($c).")";
 		curl_close($c);
 		throw new Exception($error);
 	}

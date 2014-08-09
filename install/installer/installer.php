@@ -132,15 +132,11 @@ function getLatestVersion() {
 		<?php if (isset($_GET["speed"])) echo "window.download_init_speed = ".$_GET["speed"].";";?>
 		download("bridge.php", url, "Students_Management_Software_"+version+".zip", span_progress, function(error) {
 			if (error) {
-				if (error.indexOf("timed out") > 0) {
-					window.download_init_speed = Math.floor(window.download_init_speed/2);
-					if (window.download_init_speed < 8192) window.download_init_speed = 8192;
-				}
 				content.innerHTML = "Latest version: "+version+"<br/>";
 				content.innerHTML += "Error downloading: "+error+"<br/>";
 				var retry_button = document.createElement("BUTTON");
 				retry_button.innerHTML = "Retry";
-				retry_button.onclick = function() { window.location.assign("?speed="+window.download_init_speed); };
+				retry_button.onclick = function() { getLatestVersion(); };
 				content.appendChild(retry_button);
 				return;
 			}
