@@ -70,26 +70,40 @@ function profile_picture(container, width, height, halign, valign) {
 	}
 	t.picture_container.appendChild(img);
 	
-	this.setNoPicture = function(sex, onloaded) {
+	this._datamodel_cell_listener = null;
+	this._datamodel_storage_cell_listener = null;
+	this.setNoPicture = function(people_id, sex, onloaded) {
+		var prev = t.picture;
 		t.picture = document.createElement("IMG");
 		t.picture.onload = function() {
+			if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
 			t.adjustPicture();
 			if (img.parentNode)
 				t.picture_container.removeChild(img);
 			if (onloaded) onloaded();
 		};
 		t.picture.onerror = function() {
+			if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+			if (!img.parentNode) t.picture_container.appendChild(img);
 			img.src = theme.icons_16.error;
 			t.picture = null;
 			if (onloaded) onloaded();
 		};
 
-		t.picture.src = "/static/people/default_"+(sex == 'F' ? "female" : "male")+".jpg";		
+		t.picture.src = "/static/people/default_"+(sex == 'F' ? "female" : "male")+".jpg";
+		
+		if (!this._datamodel_cell_listener)
+			window.top.datamodel.removeCellChangeListener(this._datamodel_cell_listener);
+		window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, this._datamodel_cell_listener = function(value) {
+			t.loadPeopleID(people_id);
+		});
 	};
 	
 	this.loadPeopleID = function(people_id, onloaded) {
 		service.json("people", "picture", {people:people_id}, function(res) {
 			if (!res) {
+				if (t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
+				if (!img.parentNode) t.picture_container.appendChild(img);
 				img.src = theme.icons_16.error;
 				t.picture = null;
 				if (onloaded) onloaded();
@@ -98,12 +112,14 @@ function profile_picture(container, width, height, halign, valign) {
 			if (typeof res.storage_id != 'undefined')
 				t.loadPeopleStorage(people_id, res.storage_id, res.revision, onloaded);
 			else
-				t.setNoPicture(res.sex, onloaded);
+				t.setNoPicture(people_id, res.sex, onloaded);
 		});
 	};
 	this.loadUser = function(domain, username, onloaded) {
 		service.json("user_management", "people_from_user", {domain:domain,username:username}, function(res) {
 			if (!res) {
+				if (t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
+				if (!img.parentNode) t.picture_container.appendChild(img);
 				img.src = theme.icons_16.error;
 				t.picture = null;
 				if (onloaded) onloaded();
@@ -116,7 +132,7 @@ function profile_picture(container, width, height, halign, valign) {
 		if (typeof people.picture_id == 'undefined')
 			this.loadPeopleID(people.id, onloaded);
 		else if (people.picture_id == null)
-			this.setNoPicture(people.sex, onloaded);
+			this.setNoPicture(people.id, people.sex, onloaded);
 		else
 			this.loadPeopleStorage(people.id, people.picture_id,people.picture_revision,onloaded);
 	};
@@ -124,10 +140,14 @@ function profile_picture(container, width, height, halign, valign) {
 		if (!picture_id)
 			this.loadPeopleID(people_id, onloaded);
 		else {
-			window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, function(value) {
+			if (!this._datamodel_cell_listener)
+				window.top.datamodel.removeCellChangeListener(this._datamodel_cell_listener);
+			window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, this._datamodel_cell_listener = function(value) {
 				t.loadPeopleID(people_id);
 			});
-			window.top.datamodel.addCellChangeListener(window, "Storage", "revision", revision, function(value) {
+			if (!this._datamodel_storage_cell_listener)
+				window.top.datamodel.removeCellChangeListener(this._datamodel_storage_cell_listener);
+			window.top.datamodel.addCellChangeListener(window, "Storage", "revision", revision, this._datamodel_storage_cell_listener = function(value) {
 				t.revision = value;
 				t.reload();
 			});
@@ -141,14 +161,18 @@ function profile_picture(container, width, height, halign, valign) {
 		this.storage_id = storage_id;
 		this.revision = revision;
 		if (typeof window.btoa == 'undefined') {
+			var prev = t.picture;
 			t.picture = document.createElement("IMG");
 			t.picture.onload = function() {
+				if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
 				t.adjustPicture();
 				if (img.parentNode)
 					t.picture_container.removeChild(img);
 				if (onloaded) onloaded();
 			};
 			t.picture.onerror = function() {
+				if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+				if (!img.parentNode) t.picture_container.appendChild(img);
 				img.src = theme.icons_16.error;
 				t.picture = null;
 				if (onloaded) onloaded();
@@ -178,6 +202,7 @@ function profile_picture(container, width, height, halign, valign) {
 					var binary = '';
 					for (var i = 0; i < len; i+=1)
 						binary += String.fromCharCode(bin.charCodeAt(i) & 0xff);
+					var prev = t.picture;
 					t.picture = new Image();
 					t.picture.src = 'data:image/jpeg;base64,' + btoa(binary);
 					if (t.progress) {
@@ -187,6 +212,7 @@ function profile_picture(container, width, height, halign, valign) {
 					}
 					if (img.parentNode)
 						t.picture_container.removeChild(img);
+					if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
 					t.adjustPicture();
 					if (onloaded) onloaded();
 				}, 
@@ -201,6 +227,7 @@ function profile_picture(container, width, height, halign, valign) {
 					img.src = theme.icons_16.error;
 					if (!img.parentNode)
 						t.picture_container.appendChild(img);
+					if (t.picture && t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
 					if (onloaded) onloaded();
 				}, function(loaded, tot) {
 					if (t.progress) {

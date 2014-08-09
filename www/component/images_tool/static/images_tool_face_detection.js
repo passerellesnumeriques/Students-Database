@@ -24,12 +24,17 @@ function images_tool_face_detection(image, ondone) {
 	canvas.height = h;
 	var ctx = canvas.getContext("2d");
 	ctx.drawImage(image, 0, 0, w, h);
-	var detected = ccv.detect_objects({ 
-		"canvas" : ccv.grayscale(canvas),
-		"cascade" : cascade,
-		"interval" : 20,
-		"min_neighbors" : 1,
-	});
+	var detected;
+	try {
+		detected = ccv.detect_objects({ 
+			"canvas" : ccv.grayscale(canvas),
+			"cascade" : cascade,
+			"interval" : 20,
+			"min_neighbors" : 1,
+		});
+	} catch (e) {
+		detected = [];
+	}
 	if (detected.length == 0) {
 		if (ondone) ondone(0,null);
 		return;

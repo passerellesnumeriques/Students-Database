@@ -172,6 +172,13 @@ datamodel = {
 	addCellChangeListener: function(win, table, column, row_key, listener) {
 		this._cell_change_listeners.push({win:win,table:table,column:column,row_key:row_key,listener:listener});
 	},
+	removeCellChangeListener: function(listener) {
+		for (var i = 0; i < this._cell_change_listeners.length; ++i)
+			if (this._cell_change_listeners[i].listener == listener) {
+				this._cell_change_listeners.splice(i,1);
+				i--;
+			}
+	},
 	
 	/** Signal the change of a DataDisplay
 	 * @param {DataDisplay} data_display the data which changed

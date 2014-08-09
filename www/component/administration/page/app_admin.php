@@ -39,7 +39,7 @@ class page_app_admin extends Page {
 		<br/>
 		<form name='maintenance' onsubmit='return false;'> 
 		Inform the users, and put the software into Maintenance Mode in <input name='timing' type='text' size=3 value='5'/> minutes.<br/>
-		I will use the username <i>maintenance</i> with the password <input name='pass1' type='password' size=15/>.<br/>
+		I will use the <b>username <i>maintenance</i></b> with the password <input name='pass1' type='password' size=15/>.<br/>
 		Please re-type the maintenance password to confirm:  <input name='pass2' type='password' size=15/><br/>
 		</form>
 		<button class='action important' onclick="startMaintenance();">Start</button>
@@ -120,7 +120,6 @@ function migration(img,msg) {
 			var download_migration;
 			var next = function(index) {
 				if (index == path.length) {
-					// TODO
 					img.src = theme.icons_16.ok;
 					msg.innerHTML = "New version downloaded and ready to be installed. You can now put the software into <i>Maintenance Mode</i> (see below), then you will have the option to install it.";
 					return;
@@ -151,6 +150,18 @@ function migration(img,msg) {
 					if (error) {
 						img.src = theme.icons_16.error;
 						msg.innerHTML = error;
+						var button = document.createElement("BUTTON");
+						button.className = "action";
+						button.innerHTML = "Retry";
+						button.style.marginLeft = "5px";
+						button.onclick = function() {
+							img.src = theme.icons_16.loading;
+							msg.innerHTML = "Downloading migration scripts: ";
+							msg.appendChild(span_file);
+							msg.appendChild(span_progress);
+							download_migration(index);
+						};
+						msg.appendChild(button);
 						return;
 					}
 					span_file.innerHTML = path[index]+" checksum file";
@@ -227,6 +238,16 @@ service.json("administration","latest_version",null,function(res) {
 						if (error) {
 							img.src = theme.icons_16.error;
 							msg.innerHTML = error;
+							var button = document.createElement("BUTTON");
+							button.className = "action";
+							button.innerHTML = "Retry";
+							button.style.marginLeft = "5px";
+							button.onclick = function() {
+								img.src = theme.icons_16.loading;
+								msg.innerHTML = "Downloading new version";
+								download_new_version();
+							};
+							msg.appendChild(button);
 							div.removeChild(filename_span);
 							div.removeChild(progress);
 							return;
