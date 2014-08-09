@@ -333,6 +333,8 @@ class DataPathSQLBuilder {
 	 * @return string the alias of the table pointed by the path
 	 */
 	public static function build($path, &$q) {
+		$alias = $q->getTableAlias($path->table->getName());
+		if ($alias <> null) return $alias;
 		if ($path instanceof DataPath_Join) {
 			$parent_alias = DataPathSQLBuilder::build($path->parent, $q);
 			$match = array();

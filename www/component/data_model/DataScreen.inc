@@ -100,8 +100,15 @@ namespace datamodel {
 					$value = $values->getDataValue($path->table->getName(), $data);
 				else if ($is_new && $prefilled_values->hasDataValue($path->table->getName(), $data))
 					$value = $prefilled_values->getDataValue($path->table->getName(), $data);
-				else
+				else if ($is_new)
 					$value = $data->getNewData();
+				else {
+					$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
+					$q->whereKey($path->table->getName(), $key_value);
+					$keys = $data->buildSQL($q, $path, null);
+					$row = $q->executeSingleRow();
+					$value = @$row[$keys["data"]];
+				}
 				$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 				$page->requireJavascript($tf[0].".js");
 				// check can really edit the columns
