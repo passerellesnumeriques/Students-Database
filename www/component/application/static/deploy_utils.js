@@ -70,6 +70,7 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 				else if (end_time-start_time < 15000) speed *= 1.3;
 				else if (end_time-start_time > 25000) speed *= 0.85;
 				if (speed > 2.5*1024*1024) speed = 2.5*1024*1024;
+				if (speed < 8192) speed = 8192;
 			}
 			next(end+1);
 		});
