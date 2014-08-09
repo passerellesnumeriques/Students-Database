@@ -64,7 +64,22 @@ if (!window.top.pingInterval) {
 			window.top._ping_pending = 0;
 			if (!res) return;
 			if (res.maintenance_coming && !window.top.maintenance_coming_msg) {
-				window.top.maintenance_coming_msg = new window.top.StatusMessage(window.top.Status_TYPE_WARNING,"The software will be updated soon, and will be unavailable for few minutes.<br/>Please save your current work.<br/>You will be disconnected <span id='maintenance_timing'></span>",[{action:"close"}],10*60*1000);
+				var content = document.createElement("DIV");
+				content.innerHTML = "The software will be updated soon, and will be unavailable for few minutes.<br/>Please save your current work.<br/>You will be disconnected <span id='maintenance_timing'></span><br/>";
+				var link_ask = document.createElement("A");
+				link_ask.innerHTML = "Please, re-schedule it because I really need to work on it right now";
+				link_ask.href = "#";
+				link_ask.style.color = "#0000FF";
+				content.appendChild(link_ask);
+				link_ask.onclick = function() {
+					service.json("administration","ask_cancel_maintenance",null,function(res) {
+						if (!res) return;
+						content.removeChild(link_ask);
+						content.appendChild(document.createTextNode(res.origin+" has been informed you would like to cancel it."));
+					});
+					return false;
+				};
+				window.top.maintenance_coming_msg = new window.top.StatusMessage(window.top.Status_TYPE_WARNING,content,[{action:"close"}],10*60*1000);
 				window.top.status_manager.add_status(window.top.maintenance_coming_msg);
 				var update_timing = function() {
 					var span = window.top.document.getElementById('maintenance_timing');

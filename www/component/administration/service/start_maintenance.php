@@ -24,6 +24,11 @@ class service_start_maintenance extends Service {
 		$f = fopen("maintenance/password","w");
 		fwrite($f,sha1($password));
 		fclose($f);
+		$f = fopen("maintenance/origin","w");
+		$me = PNApplication::$instance->people->getPeople(PNApplication::$instance->user_management->people_id);
+		fwrite($f,$me["first_name"]." ".$me["last_name"]);
+		fclose($f);
+		@unlink("maintenance/ask_cancel");
 		echo "true";
 	}
 	

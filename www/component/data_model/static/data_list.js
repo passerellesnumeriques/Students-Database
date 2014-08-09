@@ -768,29 +768,51 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		setBorderRadius(t.grid.element, 0,0, 0,0, radius[2],radius[2], radius[3], radius[3]);
 		// compute visible fields
 		t.show_fields = [];
-		for (var i = 0; i < initial_data_shown.length; ++i) {
-			var j = initial_data_shown[i].indexOf('.');
-			var cat, name = null, sub_data_index = -1;
-			if (j == -1) cat = initial_data_shown[i];
-			else {
-				cat = initial_data_shown[i].substring(0,j);
-				name = initial_data_shown[i].substring(j+1);
+		var list = getCookie("data_list_fields");
+		if (list != "") {
+			list = list.split(",");
+			for (var i = 0; i < list.length; ++i) {
+				var j = list[i].indexOf('.');
+				if (j<0) continue;
+				var cat = list[i].substring(0,j);
+				var name = list[i].substring(j+1);
+				var sub_data_index = -1;
 				j = name.indexOf('.');
 				if (j != -1) {
 					sub_data_index = parseInt(name.substring(j+1));
 					name = name.substring(0,j);
 				}
-			}
-			var found = false;
-			for (var j = 0; j < t._available_fields.length; ++j) {
-				if (t._available_fields[j].category != cat) continue;
-				if (name == null || t._available_fields[j].name == name) {
+				for (var j = 0; j < t._available_fields.length; ++j) {
+					if (t._available_fields[j].category != cat) continue;
+					if (t._available_fields[j].name != name) continue;
 					t.show_fields.push({field:t._available_fields[j],sub_index:sub_data_index});
-					found = true;
 				}
 			}
-			if (!found) alert("Data '"+initial_data_shown[i]+"' does not exist in the list of available data");
-		}
+		} 
+		if (t.show_fields.length == 0)
+			for (var i = 0; i < initial_data_shown.length; ++i) {
+				var j = initial_data_shown[i].indexOf('.');
+				var cat, name = null, sub_data_index = -1;
+				if (j == -1) cat = initial_data_shown[i];
+				else {
+					cat = initial_data_shown[i].substring(0,j);
+					name = initial_data_shown[i].substring(j+1);
+					j = name.indexOf('.');
+					if (j != -1) {
+						sub_data_index = parseInt(name.substring(j+1));
+						name = name.substring(0,j);
+					}
+				}
+				var found = false;
+				for (var j = 0; j < t._available_fields.length; ++j) {
+					if (t._available_fields[j].category != cat) continue;
+					if (name == null || t._available_fields[j].name == name) {
+						t.show_fields.push({field:t._available_fields[j],sub_index:sub_data_index});
+						found = true;
+					}
+				}
+				if (!found) alert("Data '"+initial_data_shown[i]+"' does not exist in the list of available data");
+			}
 		// initialize grid
 		t._loadTypedFields(function(){
 			for (var i = 0; i < t.show_fields.length; ++i) {
@@ -1154,6 +1176,17 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				}
 		}
 	};
+	t._updateFieldsCookie = function() {
+		var s = "";
+		for (var i = 0; i < t.show_fields.length; ++i) {
+			if (s != "") s += ",";
+			s += t.show_fields[i].field.category+"."+t.show_fields[i].field.name;
+			if (t.show_fields[i].sub_index != -1)
+				s += "."+t.show_fields[i].sub_index;
+		}
+		var u = new URL(location.href);
+		setCookie("data_list_fields",s,15*24*60,u.path);
+	};
 	/** Show the menu to select the columns/fields to display
 	 * @param {DOMNode} button the menu will be display below this element
 	 */
@@ -1206,6 +1239,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 								this._sub_cb[k].disabled = "";
 							}
 					}
+					t._updateFieldsCookie();
 				};
 				td.appendChild(cb);
 				td.appendChild(document.createTextNode(f.name));
@@ -1240,6 +1274,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 							} else {
 								t.hideSubField(this._parent_cb.data, this._index);
 							}
+							t._updateFieldsCookie();
 						};
 					}
 					td.appendChild(sub_div);

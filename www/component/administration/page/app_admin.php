@@ -309,10 +309,18 @@ function startMaintenance() {
 	if (pass1 != pass2) { alert("The 2 passwords are different. Please retry."); return; }
 	var locker = lock_screen(null, "Starting maintenance mode...");
 	service.json("administration","start_maintenance",{timing:timing,password:pass1},function(res) {
-		unlock_screen(locker);
-		if (res) {
-			window.open("/maintenance");
-		}
+		if (!res) { unlock_screen(locker); return; }
+		var div = document.createElement("DIV");
+		div.innerHTML = "Maintenance mode scheduled.<br/>Please ";
+		var link = document.createElement("A");
+		link.href = "/maintenance";
+		link.target = "_blank";
+		link.innerHTML = "click here";
+		div.appendChild(link);
+		set_lock_screen_content(locker, div);
+		link.onclick = function() {
+			unlock_screen(locker);
+		};
 	});
 }
 </script>

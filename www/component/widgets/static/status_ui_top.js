@@ -142,7 +142,10 @@ function StatusUI_Top(manager, margin) {
 		}
 		var div = document.createElement("DIV");
 		div.style.display = "inline-block";
-		div.innerHTML = status.message;
+		if (typeof status.message == 'string')
+			div.innerHTML = status.message;
+		else
+			div.appendChild(status.message);
 		c.appendChild(div);
 		if (div.offsetWidth > getWindowWidth()*80/100) {
 			div.style.width = (getWindowWidth()*80/100)+"px";
