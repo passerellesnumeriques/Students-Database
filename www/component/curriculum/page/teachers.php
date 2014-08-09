@@ -63,7 +63,7 @@ class page_teachers extends Page {
 function new_teacher() {
 	require("popup_window.js", function() {
 		var p = new popup_window("New Teacher", theme.build_icon("/static/curriculum/teacher_16.png",theme.icons_10.add), "");
-		var frame = p.setContentFrame("/dynamic/curriculum/page/popup_create_teacher?ondone=reload");
+		var frame = p.setContentFrame("/dynamic/people/page/popup_new_person?type=teacher&ondone=reload");
 		frame.reload = function() {
 			location.reload();
 		};

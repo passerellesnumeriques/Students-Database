@@ -11,29 +11,10 @@ class authentication extends Component {
 	 * @not_tested
 	 */
 	public function getAuthenticationSystem($domain) {
-		$local = PNApplication::$instance->local_domain;
 		switch ($domain) {
 			case "PNP":
-				require_once("WebAuthenticationSystem.inc");
-				if ($local == "PNP")
-					$url = "authentication";
-				else
-					$url = "authentication.pnp.studentscenter.org:800";
-				return new WebAuthenticationSystem("http://$url/",function(&$info,$name,$value) {
-					switch ($name) {
-						case "fullname":
-							$i = strpos($value, "/");
-							if ($i !== false) {
-								$j = strpos($value, "/", $i+1);
-								if ($j !== false) {
-									$info["People"]["first_name"] = substr($value,0,$i);
-									$info["People"]["middle_name"] = substr($value,$i+1,$j-$i-1);
-									$info["People"]["last_name"] = substr($value,$j+1);
-								}
-							}
-							break;
-					}
-				});
+				require_once("PNPAuthenticationSystem.inc");
+				return new PNPAuthenticationSystem();
 			default:
 				require_once("FakeAuthenticationSystem.inc");
 				return new FakeAuthenticationSystem();

@@ -3,26 +3,22 @@ require_once("AuthenticationSystem.inc");
 /**
  * Connect remotely to the PN Philippines authentication system. 
  */
-class WebAuthenticationSystem extends AuthenticationSystem {
+class PNPAuthenticationSystem extends AuthenticationSystem implements AuthenticationSystem_UserList {
 
 	/**
 	 * Initialize the authentication system
-	 * @param string $system_url URL to access to the authentication system using HTTP protocol
-	 * @param function $populate_info callback to populate user information from server response
 	 */
-	public function __construct($system_url, $populate_info = null) {
-		$this->system_url = $system_url;
-		$this->populate_info = $populate_info;
+	public function __construct() {
+		if (PNApplication::$instance->local_domain == "PNP")
+			$this->system_url = "authentication";
+		else
+			$this->system_url = "authentication.pnp.studentscenter.org:800";
 	}
-
-	/** @var string URL to access to the authentication system using HTTP protocol */
-	private $system_url;
-	/** @var function callback to populate user information from server response */
-	private $populate_info;
 
 	public function authenticate($username, $password, &$error) {
 		set_time_limit(45);
 		$c = curl_init($this->system_url);
+		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
 		curl_setopt($c, CURLOPT_POST, TRUE);
@@ -68,12 +64,15 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 	 * @return NULL|SimpleXMLElement the XML returned by the server, or null in case of failure
 	 */
 	private function callService($service, $token, $params) {
-		set_time_limit(30);
+		set_time_limit(300);
 		$c = curl_init($this->system_url);
+		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
 		curl_setopt($c, CURLOPT_POST, TRUE);
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
+		curl_setopt($c, CURLOPT_TIMEOUT, 240);
 		curl_setopt($c, CURLOPT_POSTFIELDS, array_merge(array("service"=>$service,"token"=>$token), $params));
 		$result = curl_exec($c);
 		set_time_limit(30);
@@ -100,11 +99,19 @@ class WebAuthenticationSystem extends AuthenticationSystem {
 			$username = null;
 			$info = array("People"=>array());
 			foreach ($node->attributes() as $name=>$value) {
+				$value = "".$value;
 				switch ($name) {
-					case "username": $username = "".$value; break;
-					default:
-						if ($this->populate_info <> null)
-							call_user_func_array($this->populate_info, array(&$info, $name, "".$value));
+					case "username": $username = $value; break;
+					case "fullname":
+						$i = strpos($value, "/");
+						if ($i !== false) {
+							$j = strpos($value, "/", $i+1);
+							if ($j !== false) {
+								$info["People"]["first_name"] = substr($value,0,$i);
+								$info["People"]["middle_name"] = substr($value,$i+1,$j-$i-1);
+								$info["People"]["last_name"] = substr($value,$j+1);
+							}
+						}
 						break;
 				}
 			}

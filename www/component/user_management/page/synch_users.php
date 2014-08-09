@@ -1,14 +1,15 @@
 <?php 
-class page_synch_users__list extends Page {
+class page_synch_users extends Page {
 	
 	public function getRequiredRights() { return array("manage_users"); }
 	
 	public function execute() {
-		$domain = $_GET["domain"];
-		$token = $_GET["token"];
+		$input = json_decode($_POST["input"], true);
+		$domain = $input["domain"];
+		$token = $input["token"];
 		echo "<div style='background-color:white;padding:10px'>";
 		$as = PNApplication::$instance->authentication->getAuthenticationSystem($domain);
-		$list = $as->getUserList($token);
+		$list = $as instanceof AuthenticationSystem_UserList ? $as->getUserList($token) : null;
 		if ($list === null) {
 			echo "The authentication system of ".$domain." does not support synchronization";
 		} else {

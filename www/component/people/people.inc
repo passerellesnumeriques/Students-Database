@@ -61,7 +61,7 @@ class people extends Component {
 			throw new Exception("Invalid people type ".$new_type);
 		if (!$pi->canWrite())
 			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
-		SQLQuery::create()->updateByKey("People", $people_id, array("types"=>$people["types"].$new_type."/"));
+		SQLQuery::create()->updateByKey("People", $people_id, array("types"=>$people["types"]."/".$new_type."/"));
 	}
 	
 	public function createPeople($info, $types, $bypass_security = false) {

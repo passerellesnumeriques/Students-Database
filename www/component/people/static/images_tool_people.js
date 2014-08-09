@@ -90,7 +90,7 @@ function images_tool_people() {
 		for (var i = 0; i < this.peoples.length; ++i) {
 			var o = document.createElement("OPTION");
 			o.value = this.peoples[i].id;
-			o.text = this.peoples[i].first_name+" "+this.peoples[i].last_name;
+			o.text = this.peoples[i].last_name+" "+this.peoples[i].first_name;
 			select.add(o);
 		}
 		select.t = this;
@@ -110,6 +110,12 @@ function images_tool_people() {
 			if (p != null)
 				available_peoples.remove(p);
 		}
+		// sort people by last name
+		available_peoples.sort(function(p1,p2) {
+			var n1 = p1.last_name+" "+p1.first_name;
+			var n2 = p2.last_name+" "+p2.first_name;
+			return n1.localeCompare(n2);
+		});
 		// update the selects
 		for (var i = 0; i < pics.length; ++i) {
 			var selected = this.getPeople(pics[i]);

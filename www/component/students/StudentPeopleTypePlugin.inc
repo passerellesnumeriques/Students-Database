@@ -8,6 +8,8 @@ class StudentPeopleTypePlugin implements PeopleTypePlugin {
 	public function getName() { return "Student"; }
 	public function isStandalone() { return true; }
 	
+	public function getTables() { return array("Student"); }
+	
 	public function canRead() { return PNApplication::$instance->user_management->has_right("consult_students_list"); }
 	public function canWrite() { return PNApplication::$instance->user_management->has_right("manage_batches"); }
 	public function canRemove() { return PNApplication::$instance->user_management->has_right("manage_batches"); }

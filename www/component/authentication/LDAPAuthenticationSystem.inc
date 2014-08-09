@@ -3,7 +3,7 @@ require_once("AuthenticationSystem.inc");
 /**
  * Implementation of AuthenticationSystem using LDAP
  */ 
-class LDAPAuthenticationSystem extends AuthenticationSystem {
+class LDAPAuthenticationSystem extends AuthenticationSystem implements AuthenticationSystem_UserList {
 
 	/**
 	 * Initialize the LDAP authentication system

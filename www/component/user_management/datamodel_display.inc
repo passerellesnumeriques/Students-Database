@@ -16,16 +16,36 @@ class UserDataScreen extends datamodel\GenericDataScreen {
 		$people_types = PNApplication::$instance->people->parseTypes($people_types);
 		if (!in_array("user", $people_types)) return;
 
-		if ($values->hasColumnValue("UserPeople","people") && PNApplication::$instance->user_management->has_right("manage_users")) {
-			// not new and can edit
-			echo "<button class='action important' onclick='resetPassword();'><img src='/static/user_management/reset_password.png'/> Reset Password</button>";
-			?>
-			<script type='text/javascript'>
-			function resetPassword() {
-				alert("TODO");
+		if ($values->hasColumnValue("UserPeople","people")) {
+			// not new
+			$people_id = $values->getColumnValue("UserPeople","people");
+			if (PNApplication::$instance->user_management->has_right("manage_users") || $people_id == PNApplication::$instance->user_management->people_id) {
+				// can edit or himself
+				$user_id = $values->getColumnValue("UserPeople","user");
+				$user = SQLQuery::create()->bypassSecurity()->select("Users")->whereValue("Users","id",$user_id)->executeSingleRow();
+				$internal = PNApplication::$instance->user_management->isInternalUser($user["domain"], $user["username"]);
+				$can_reset = false;
+				if ($internal) $can_reset = true;
+				else {
+					$as = PNApplication::$instance->authentication->getAuthenticationSystem($user["domain"]);
+					if ($as instanceof AuthenticationSystem_ResetPassword)
+						$can_reset = true;
+				}
+				if ($can_reset) {
+					echo "<button class='action important' onclick='resetPassword();'><img src='/static/user_management/reset_password.png'/> Reset Password</button>";
+					?>
+					<script type='text/javascript'>
+					function resetPassword() {
+						<?php if ($user["domain"] == PNApplication::$instance->local_domain) {?>
+							popup_frame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/reset_pass?domain=<?php echo PNApplication::$instance->local_domain;?>&username=<?php echo urlencode($user["username"]);?>");
+						<?php } else { ?>
+							popup_frame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_ResetPassword",url:"/dynamic/user_management/page/reset_pass?domain=<?php echo $user["domain"];?>&username=<?php echo urlencode($user["username"]);?>",domain:<?php echo json_encode($user["domain"]);?>});
+						<?php } ?>
+					}
+					</script>
+					<?php 
+				}
 			}
-			</script>
-			<?php 
 		}
 	}
 	

@@ -163,15 +163,14 @@ function init_users_list() {
 	);
 }
 function synchUsers() {
-	require("popup_window.js",function(){
-		var p = new popup_window("Synchronize Users",theme.icons_16._import,"");
-		p.setContentFrame("/dynamic/user_management/page/synch_users__auth");
-		p.onclose = function() { window.list.reloadData(); };
-		p.show();
+	popup_frame(theme.icons_16._import, "Synchronize Users", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_UserList",url:"/dynamic/user_management/page/synch_users"}, null, null, function(frame,popup){
+		popup.onclose = function() { window.list.reloadData(); };
 	});
 }
 function newUser() {
-	alert("TODO");
+	popup_frame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/user_management/page/new_user",null,null,null,function(frame,popup) {
+		popup.onclose = function() { window.list.reloadData(); };
+	});
 }
 </script>
 <?php 
