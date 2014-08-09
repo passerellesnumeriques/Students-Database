@@ -51,7 +51,7 @@ field_addresses.prototype._create = function(data) {
 			this.table = document.createElement("TABLE"); this.element.appendChild(this.table);
 			var t=this;
 			require("addresses.js",function() {
-				t.control = new addresses(t.table, false, data.type, data.type_id, data.addresses, true, true, true);
+				t.control = new addresses(t.table, false, data.type, data.type_id, objectCopy(data.addresses,10), true, true, true);
 				t.control.onchange.add_listener(function() { t._datachange(); });
 			});
 			this.addData = function(new_data) {
@@ -64,7 +64,7 @@ field_addresses.prototype._create = function(data) {
 				if (typeof new_data == 'object')
 					finalize(new_data);
 				else if (typeof new_data == 'string')
-					require("contact_objects.js", function() { finalize(parsePostalAddress(new_data)); });
+					require("contact_objects.js", function() { parsePostalAddress(new_data, function(addr) { if(addr) finalize(addr);}); });
 				else
 					finalize(new_data);
 			};

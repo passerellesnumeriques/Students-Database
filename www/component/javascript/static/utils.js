@@ -1345,9 +1345,13 @@ function getDayLetter(d, from_date) {
 	}
 }
 
-function wordsMatch(s1, s2) {
-	var words1 = s1.split(" ");
-	var words2 = s2.split(" ");
+function wordsMatch(s1, s2, ignore_case) {
+	if (ignore_case) {
+		s1 = s1.latinize().toLowerCase();
+		s2 = s2.latinize().toLowerCase();
+	}
+	var words1 = prepareMatchScore(s1);
+	var words2 = prepareMatchScore(s2);
 	var words1_in_words2 = 0;
 	var words2_in_words1 = 0;
 	for (var i = 0; i < words1.length; ++i) {

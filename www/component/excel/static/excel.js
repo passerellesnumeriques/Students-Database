@@ -593,6 +593,7 @@ function ExcelSheetCell(sheet, column, row) {
 		this.td = document.createElement("TD");
 		this.td.style.border = "1px solid #C0C0F0";
 		this.td.style.overflow = "hidden";
+		this.td.title = "Double-click to edit the content";
 		sheet.rows[this.row].tr.appendChild(this.td);
 		this.value = document.createElement("DIV");
 		this.value.style.overflow = "hidden";
@@ -918,6 +919,12 @@ function ExcelSheetCursor(sheet) {
 		sheet.content.appendChild(this.div);
 		this.refresh();
 		window.focus();
+		this.div.ondblclick = function(ev) {
+			if (t.row_start == t.row_end && t.col_start == t.col_end) {
+				var cell = t.sheet.getCell(t.col_start,t._row_start);
+				if (cell && cell.td && cell.td.ondblclick) cell.td.ondblclick(ev);
+			}
+		};
 	};
 	
 	this.refresh = function() {
