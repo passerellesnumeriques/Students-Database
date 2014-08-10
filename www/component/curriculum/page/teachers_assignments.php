@@ -77,7 +77,7 @@ class page_teachers_assignments extends Page {
 		<?php 
 		if ($ap <> null)
 		foreach ($ap->batch_periods as $bp) {
-			echo "<div style='display:inline-block;background-color:white' class='section'>";
+			echo "<div style='background-color:white;margin-left:5px;' class='section'>";
 			echo "<div class='page_section_title'>";
 			echo "Batch ".htmlentities($bp["batch_name"]).", ".htmlentities($bp["name"]);
 			echo "</div>";
@@ -443,7 +443,7 @@ class page_teachers_assignments extends Page {
 			span.appendChild(document.createTextNode(teacher.first_name+" "+teacher.last_name));
 			span.style.cursor = "default";
 			span.style.whiteSpace = "nowrap";
-			span.title = "Click to see teacher's profile&#13;Drag and drop to assign this teacher to a subject";
+			span.title = "Click to see teacher's profile\nDrag and drop to assign this teacher to a subject";
 			span.draggable = true;
 			span.teacher = teacher;
 			span.ondragstart = function(event) {

@@ -24,13 +24,16 @@
 	border: none;
 }
 .transcripts .grades .title {
-	font-weight: bold;
-	font-size: 12pt;
+	background-color: #COLUMNS_TITLES_BACKGROUND#;
+	color: #COLUMNS_TITLES_COLOR#;
+	font-weight: #COLUMNS_TITLES_WEIGHT#;
+	font-size: #COLUMNS_TITLES_SIZE#pt;
 	text-align: center;
 }
 .transcripts .grades .subject_category {
-	font-weight: bold;
-	font-size: 14pt;
+	color: #SUBJECT_CATEGORY_COLOR#;
+	font-weight: #SUBJECT_CATEGORY_WEIGHT#;
+	font-size: #SUBJECT_CATEGORY_SIZE#pt;
 	padding-top: 10px;
 	-moz-transform: rotate(-90deg);
 	-webkit-transform: rotate(-90deg);
@@ -41,14 +44,16 @@
 	width: 24pt;
 }
 .transcripts .grades .total {
-	background-color: #009DE1;
-	color: white;
+	background-color: #TOTAL_BACKGROUND#;
+	color: #TOTAL_COLOR#;
 }
 .transcripts .grades .total>td:first-child {
+	font-size: #TOTAL_SIZE#pt;
 	font-weight: bold;
-	font-size: 14pt;
 }
 .transcripts .grades .total>td {
+	font-size: #TOTAL_SIZE#pt;
+	font-weight: normal;
 }
 .transcripts td.subject_name {
 	text-align: left;
@@ -80,6 +85,7 @@
 	padding-left: 30px;
 }
 </style>
+<div class='transcripts'>
 <!-- Header / Title -->
 <div class='title' style='margin-bottom:20px'>
 	<div style='display:inline-block;width:120px'>
@@ -105,6 +111,7 @@
 	</tr>
 </table>
 <!-- Grades -->
+#SUBJECT_CATEGORY#
 <table class='grades'>
 	<colgroup>
 		<col class='subject_category_col'/>
@@ -112,43 +119,46 @@
 	<tbody>
 	<tr>
 		<td></td>
-		<td><div class='title'>Subject</div></td>
-		<td><div class='title'>Grade</div></td>
-		<td><div class='title'>Class<br/>Average</div></td>
+		<td class='title'><div>Subject</div></td>
+		<td class='title'><div>Grade</div></td>
+		#IF:class_average#<td class='title'><div>Class<br/>Average</div></td>#ENDIF#
 	</tr>
+	#SUBJECT#
 	<tr>
-		<td rowspan="2" style='white-space:nowrap;background-color:#009DE1;color:white'><div class='subject_category' style='display:inline-block'>#Subject Category#</div></td>
-		<td class='subject_name'>Subject 1</td>
-		<td>Grade 1</td>
-		<td>Av 1</td>
+		#IF:SUBJECT[0]#<td rowspan="#COUNT(SUBJECTS)#" style='white-space:nowrap;background-color:#SUBJECT_CATEGORY_BACKGROUND#;'><div class='subject_category' style='display:inline-block'>#SUBJECT_CATEGORY_NAME#</div></td>#ENDIF#
+		<td class='subject_name'>#SUBJECT_CODE# - #SUBJECT_NAME#</td>
+		<td style='position:relative'>#GRADE#</td>
+		#IF:class_average#<td>#CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
-	<tr>
-		<td class='subject_name'>Subject 2</td>
-		<td>Grade 2</td>
-		<td>Av 2</td>
-	</tr>
+	#END_SUBJECT#
 	<tr class='total'>
 		<td colspan="2">Total / Average</td>
-		<td>x</td>
-		<td>x</td>
+		<td style='position:relative'>#TOTAL_GRADE#</td>
+		#IF:class_average#<td>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
 	</tbody>
 </table>
+#END_SUBJECT_CATEGORY#
 <!-- Global results -->
 TODO: Global results<br/><br/>
 <!-- General appreciation -->
+#IF:general_appreciation#
 <table class='general_appreciation' style='width:100%;border-spacing:0px;margin-bottom:20px;'>
 	<tr><th style='background-color:#009DE1;color:white'>General Appreciation</th></tr>
 	<tr><td>
 	<div>#General Appreciation#</div>
 	</td></tr>
 </table>
+#ENDIF#
 <!-- Signature -->
 <div class='signature'>
 	#Location#,<br/>
 	#Signatory Name#,<br/>
 	#Signatory Title#
 </div>
+</div>
 <script type='text/javascript'>
-$('.transcripts .grades .subject_category').css('height', $('.transcripts .grades .subject_category').width()+10);
+var cats = document.getElementsByClassName("subject_category");
+for (var i = 0; i < cats.length; ++i)
+	cats[i].style.height = (cats[i].offsetWidth+10)+"px";
 </script>

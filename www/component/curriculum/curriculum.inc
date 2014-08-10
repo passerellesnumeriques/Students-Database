@@ -216,8 +216,19 @@ class curriculum extends Component {
 	 * @param integer $period_id the requested period
 	 * @return array the row from the database
 	 */
-	public function getBatchPeriod($period_id) {
-		return SQLQuery::create()->select("BatchPeriod")->where("id",$period_id)->executeSingleRow();
+	public function getBatchPeriod($period_id, $join_academic_period = false) {
+		$q = SQLQuery::create()->select("BatchPeriod")->where("id",$period_id);
+		if ($join_academic_period) {
+			$q->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"));
+			$q->fieldsOfTable("BatchPeriod");
+			$q->field("AcademicPeriod","name","academic_period_name");
+			$q->field("AcademicPeriod","start","academic_period_start");
+			$q->field("AcademicPeriod","end","academic_period_end");
+			$q->field("AcademicPeriod","year","academic_period_year");
+			$q->field("AcademicPeriod","weeks","academic_period_weeks");
+			$q->field("AcademicPeriod","weeks_break","academic_period_weeks_break");
+		}
+		return $q->executeSingleRow();
 	}
 	/** Retrieve periods for a batch
 	 * @param integer $batch_id the requested batch
@@ -348,6 +359,9 @@ class curriculum extends Component {
 	
 	public function getSubjectQuery($subject_id) {
 		return SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject", "id", $subject_id);
+	}
+	public function joinSubjects(&$q, $join_table, $join_key) {
+		$q->join($join_table, "CurriculumSubject", array($join_key=>"id"));
 	}
 	
 	/** Retrieve teacher assignments for the given subjects

@@ -4,6 +4,7 @@ function color_choice(container, current_color) {
 	var t=this;
 	this._init = function() {
 		var page = document.createElement("TABLE"); container.appendChild(page);
+		page.style.display = "inline-block";
 		var tr, td;
 		page.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td = document.createElement("TD"));
@@ -92,6 +93,28 @@ function color_choice(container, current_color) {
 				t.setColor('#'+col);
 			}
 		};
+		
+		var pn_colors = ["#009DE1","#22BBEA","#CC6600","#FF9933"];
+		var div = document.createElement("DIV");
+		div.style.display = "inline-block";
+		div.style.verticalAlign = "top";
+		div.style.textAlign = "center";
+		div.innerHTML = "<b>PN Colors</b><br/>";
+		for (var i = 0; i < pn_colors.length; ++i) {
+			var color = parse_color(pn_colors[i]);
+			var box = document.createElement("DIV");
+			box.color = color;
+			box.style.border = "2px solid white";
+			box.style.backgroundColor = color_string(color);
+			box.style.width = "15px";
+			box.style.height = "15px";
+			box.style.display = "inline-block";
+			div.appendChild(box);
+			div.appendChild(document.createElement("BR"));
+			this.default_boxes[i].push(box);
+			box.onclick = function() { t.setColor(this.color); };
+		}
+		container.appendChild(div);
 	};
 	this.setColor = function(color) {
 		if (typeof color == 'string') color = parse_color(color);
@@ -112,4 +135,33 @@ function color_choice(container, current_color) {
 		if (!current_color) current_color = "#000000";
 		t.setColor(current_color);
 	});
+}
+
+function color_widget(container, color) {
+	if (typeof container == 'string') container = document.getElementById(container);
+	this.color = color;
+	this.onchange = null;
+	var div = document.createElement("DIV");
+	div.style.display = "inline-block";
+	div.style.width = "16px";
+	div.style.height = "12px";
+	div.style.border = "1px solid black";
+	div.style.cursor = "pointer";
+	div.style.backgroundColor = color;
+	container.appendChild(div);
+	var t=this;
+	div.onclick = function() {
+		require("popup_window.js", function() {
+			var content = document.createElement("DIV");
+			var popup = new popup_window("Change Color", theme.icons_16.color, content);
+			var chooser = new color_choice(content, t.color);
+			popup.addOkCancelButtons(function() {
+				t.color = color_string(chooser.color);
+				div.style.backgroundColor = t.color;
+				if (t.onchange) t.onchange(t);
+				popup.close();
+			});
+			popup.show();
+		});
+	};
 }

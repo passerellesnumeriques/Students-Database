@@ -241,13 +241,13 @@ function init_calendars() {
 }
 init_calendars();
 
-var general_updates = null;
+var general_updates = null, other_updates = null;
 require("news.js",function() {
 	general_updates = new news('general_news_container', [{name:"application"}], null, function(n) {
 		var loading = document.getElementById('general_news_loading');
 		loading.parentNode.removeChild(loading);
 	});
-	new news('other_news_container', [], [{name:"application"}], function(n) {
+	other_updates = new news('other_news_container', [], [{name:"application"}], function(n) {
 		var loading = document.getElementById('other_news_loading');
 		loading.parentNode.removeChild(loading);
 	});

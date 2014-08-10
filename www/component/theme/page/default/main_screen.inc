@@ -463,11 +463,22 @@ if (isset($_GET["section"])) {
 /* Status in footer */
 function initFooter() {
 	var footer = document.getElementById('application_footer');
+	// App
+	var span_app_status = document.createElement("DIV");
+	span_app_status.style.position = "absolute";
+	span_app_status.style.bottom = "0px";
+	span_app_status.style.right = "3px";
+	span_app_status.title = "Connection to PN Server";
+	footer.appendChild(span_app_status);
+	require("app_status.js",function() {
+		new app_status(span_app_status);
+	});
 	// Google
 	var span_google_status = document.createElement("SPAN");
 	span_google_status.style.position = "absolute";
 	span_google_status.style.bottom = "0px";
-	span_google_status.style.right = "3px";
+	span_google_status.style.right = "23px";
+	span_google_status.title = "Connection to Google";
 	footer.appendChild(span_google_status);
 	require("google_status.js",function() {
 		new google_status(span_google_status);
@@ -478,7 +489,7 @@ function initFooter() {
 	var span_debug_status = document.createElement("SPAN");
 	span_debug_status.style.position = "absolute";
 	span_debug_status.style.bottom = "0px";
-	span_debug_status.style.right = "23px";
+	span_debug_status.style.right = "43px";
 	footer.appendChild(span_debug_status);
 	require("debug_status.js",function() {
 		new debug_status(span_debug_status);

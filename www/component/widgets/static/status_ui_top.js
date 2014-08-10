@@ -114,7 +114,7 @@ function StatusUI_Top(manager, margin) {
 		c.removeAllChildren();
 		c.style.backgroundColor = 
 			status.type == Status_TYPE_INFO ? "#FFFF80" :
-			status.type == Status_TYPE_ERROR ? "#FF8080" :
+			status.type == Status_TYPE_ERROR || status.type == Status_TYPE_ERROR_NOICON ? "#FF8080" :
 			status.type == Status_TYPE_WARNING ? "#FFC040" :
 			status.type == Status_TYPE_PROCESSING ? "#FFFF80" :
 			status.type == Status_TYPE_OK ? "#C0E0C0" :
@@ -122,6 +122,7 @@ function StatusUI_Top(manager, margin) {
 		var icon = null;
 		if (!status.no_icon)
 			switch (status.type) {
+			case Status_TYPE_ERROR_NOICON: icon = null; break;
 			case Status_TYPE_ERROR: icon = theme.icons_16.error; break;
 			case Status_TYPE_WARNING: icon = theme.icons_16.warning; break;
 			case Status_TYPE_PROCESSING: icon = theme.icons_16.loading; break;

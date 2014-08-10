@@ -57,12 +57,17 @@ if ($google_account <> null)
 // ping
 if (!window.top.pingInterval) {
 	window.top._ping_pending = 0;
+	window.top.ping_time = -1;
+	window.top.ping_event = new Custom_Event();
 	window.top.ping = function() {
 		if (window.top._ping_pending > 10) window.top._ping_pending = 0;
 		if (window.top._ping_pending++ > 0 && window.top._ping_pending != 5) return; // avoid queuing pings when connection problems
+		var sent = new Date().getTime();
 		service.json("application","ping",null,function(res) {
 			window.top._ping_pending = 0;
 			if (!res) return;
+			window.top.ping_time = new Date().getTime()-sent;
+			window.top.ping_event.fire(res);
 			if (res.maintenance_coming && !window.top.maintenance_coming_msg) {
 				var content = document.createElement("DIV");
 				content.innerHTML = "The software will be updated soon, and will be unavailable for few minutes.<br/>Please save your current work.<br/>You will be disconnected <span id='maintenance_timing'></span><br/>";
@@ -105,8 +110,10 @@ if (!window.top.pingInterval) {
 				window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The maintenance has been cancelled. You won't be disconnected so you can continue to work...",[{action:"close"}],15*1000));
 			}
 		}, false, null, function() {
+			window.top.ping_time = -2;
 			window.top._ping_pending = 0;
-		});
+			window.top.ping_event.fire(null);
+		}, true);
 	};
 	window.top.pingInterval = window.top.setInterval(window.top.ping,30000);
 }

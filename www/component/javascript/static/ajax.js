@@ -55,6 +55,8 @@ ajax = {
 			xhr.overrideMimeType(override_response_mime_type);
 		var aborted = false;
 		var timeouted = false;
+		var has_error = false;
+		var is_done = false;
 		try { xhr.open(method, url.toString(), !foreground); }
 		catch (e) {
 			// error opening the AJAX request
@@ -66,18 +68,31 @@ ajax = {
 			}
 			return;
 		}
-		xhr.onabort = function() { aborted = true; };
-		xhr.ontimeout = function() { timeouted = true; };
+		xhr.onabort = function() {
+			aborted = true;
+		};
+		xhr.ontimeout = function() {
+			timeouted = true;
+		};
+		xhr.onerror = function(ev) {
+			has_error = true;
+			if (is_done && !aborted)
+				error_handler("Connection error");
+		};
 		if (content_type != null)
 			xhr.setRequestHeader('Content-type', content_type);
 		var sent = function() {
+			is_done = true;
 	        if (xhr.status != 200) {
 	        	var continu = true;
 	        	for (var i = 0; i < ajax.http_response_handlers.length; ++i)
 	        		continu &= ajax.http_response_handlers[i](xhr);
 	        	if (continu) {
-	        		if (xhr.status == 0)
+	        		if (xhr.status == 0) {
+	        			if (!aborted && has_error)
+	        				error_handler("Connection error");
         				return;
+	        		}
 	        		error_handler("Error "+xhr.status+": "+xhr.statusText);
 	        	}
 	        	return; 
