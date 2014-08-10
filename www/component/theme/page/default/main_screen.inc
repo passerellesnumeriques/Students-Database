@@ -464,6 +464,7 @@ if (isset($_GET["section"])) {
 function initFooter() {
 	var footer = document.getElementById('application_footer');
 	// App
+	/*
 	var span_app_status = document.createElement("DIV");
 	span_app_status.style.position = "absolute";
 	span_app_status.style.bottom = "0px";
@@ -473,6 +474,7 @@ function initFooter() {
 	require("app_status.js",function() {
 		new app_status(span_app_status);
 	});
+	*/
 	// Google
 	var span_google_status = document.createElement("SPAN");
 	span_google_status.style.position = "absolute";

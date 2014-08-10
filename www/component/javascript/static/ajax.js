@@ -76,8 +76,9 @@ ajax = {
 		};
 		xhr.onerror = function(ev) {
 			has_error = true;
-			if (is_done && !aborted)
-				error_handler("Connection error");
+			if (is_done && !aborted) {
+				//error_handler("Connection error");
+			}
 		};
 		if (content_type != null)
 			xhr.setRequestHeader('Content-type', content_type);
@@ -89,8 +90,9 @@ ajax = {
 	        		continu &= ajax.http_response_handlers[i](xhr);
 	        	if (continu) {
 	        		if (xhr.status == 0) {
-	        			if (!aborted && has_error)
-	        				error_handler("Connection error");
+	        			if (!aborted && has_error) {
+	        				//error_handler("Connection error");
+	        			}
         				return;
 	        		}
 	        		error_handler("Error "+xhr.status+": "+xhr.statusText);

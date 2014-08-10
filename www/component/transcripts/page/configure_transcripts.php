@@ -97,7 +97,7 @@ class page_configure_transcripts extends Page {
 		<button style='float:right' onclick="printContent('design');"><img src='<?php echo theme::$icons_16["print"];?>'/></button>
 	</div>
 	<div style='flex:1 1 auto;display:flex;flex-direction:row'>
-		<div style='flex:none;overflow:auto;background-color:white;box-shadow:2px 2px 2px 0px #808080;margin-right:5px;min-width:230px;'>
+		<div style='flex:none;overflow:auto;background-color:white;box-shadow:2px 2px 2px 0px #808080;margin-right:5px;min-width:230px;width:230px;'>
 			<div class='page_section_title'>
 				Information to include
 			</div>
@@ -111,10 +111,11 @@ class page_configure_transcripts extends Page {
 					if ($s["category"] <> $cat["id"]) continue;
 					if ($s["period"] <> $period["id"]) continue;
 					array_push($subjects, $s);
+					echo "<div style='white-space:nowrap'>";
 					echo "<input type='checkbox'";
 					if (in_array($s["id"],$selected_subjects)) echo " checked='checked'";
 					echo "/> ".htmlentities($s["code"])." - ".htmlentities($s["name"]);
-					echo "<br/>";
+					echo "</div>";
 				}
 			}
 			?>

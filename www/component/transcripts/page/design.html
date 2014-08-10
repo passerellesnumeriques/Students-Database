@@ -1,18 +1,19 @@
 <style type='text/css'>
 .transcripts {
 	font-family: Verdana;
-	padding:20px;
+	padding:10px 20px;
 }
 .transcripts .title {
 	font-size:22pt;
 }
 .transcripts .student_information {
 	width: 100%;
+	margin-top:10px;
+	margin-bottom: 10px;
 }
 .transcripts .grades {
 	table-layout: fixed;
 	empty-cells: hide;
-	margin-top: 20px;
 	width: 100%;
 	border-spacing: 0px;
 	border-collapse: collapse;
@@ -20,8 +21,12 @@
 .transcripts .grades td {
 	border: 2px solid black;
 }
-.transcripts .grades tbody>tr:first-child>td:first-child {
+.transcripts .grades .grade {
+	padding: 0px;
+}
+.transcripts .grades td.blank, .transcripts .grades .total td.blank {
 	border: none;
+	background-color: white;
 }
 .transcripts .grades .title {
 	background-color: #COLUMNS_TITLES_BACKGROUND#;
@@ -43,20 +48,30 @@
 .transcripts .grades .subject_category_col {
 	width: 24pt;
 }
-.transcripts .grades .total {
-	background-color: #TOTAL_BACKGROUND#;
-	color: #TOTAL_COLOR#;
+.transcripts .grades .subject_name_col {
 }
-.transcripts .grades .total>td:first-child {
+.transcripts .grades .grade_col {
+	width: 80px;
+}
+.transcripts .grades .subject_row {
+	height: 20px;
+}
+.transcripts .grades .total {
+}
+.transcripts .grades .total>td:nth-child(2) {
 	font-size: #TOTAL_SIZE#pt;
 	font-weight: bold;
 }
 .transcripts .grades .total>td {
+	background-color: #TOTAL_BACKGROUND#;
+	color: #TOTAL_COLOR#;
 	font-size: #TOTAL_SIZE#pt;
 	font-weight: normal;
 }
 .transcripts td.subject_name {
 	text-align: left;
+	white-space: nowrap;
+	height: 24px;
 }
 .transcripts td {
 	text-align: center;
@@ -77,19 +92,20 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 100px;
-	font-size: 12pt;
+	min-height: 70px;
+	font-size: 11pt;
 }
 .transcripts .signature {
-	font-size: 12pt;
+	font-size: 11pt;
 	padding-left: 30px;
+	margin-top: 10px;
 }
 </style>
 <div class='transcripts'>
 <!-- Header / Title -->
-<div class='title' style='margin-bottom:20px'>
+<div class='title'>
 	<div style='display:inline-block;width:120px'>
-	<img src='/static/application/logo.png' width=80 height=80 style='vertical-align:top'/>
+	<img src='/static/application/logo.png' width=70 height=70 style='vertical-align:top;'/>
 	</div>
 	<div style='display:inline-block;width:450px;vertical-align:top'>
 		OFFICIAL TRANSCRIPT OF ACADEMIC RECORDS
@@ -115,24 +131,30 @@
 <table class='grades'>
 	<colgroup>
 		<col class='subject_category_col'/>
+		<col class='subject_name_col'/>
+		<col class='grade_col'/>
+		#IF:class_average#<col class='grade_col'/>#ENDIF#
 	</colgroup>
 	<tbody>
+	#IF:SUBJECT_CATEGORY[0]#
 	<tr>
-		<td></td>
+		<td class='blank'></td>
 		<td class='title'><div>Subject</div></td>
 		<td class='title'><div>Grade</div></td>
 		#IF:class_average#<td class='title'><div>Class<br/>Average</div></td>#ENDIF#
 	</tr>
+	#ENDIF#
 	#SUBJECT#
-	<tr>
+	<tr class='subject_row'>
 		#IF:SUBJECT[0]#<td rowspan="#COUNT(SUBJECTS)#" style='white-space:nowrap;background-color:#SUBJECT_CATEGORY_BACKGROUND#;'><div class='subject_category' style='display:inline-block'>#SUBJECT_CATEGORY_NAME#</div></td>#ENDIF#
 		<td class='subject_name'>#SUBJECT_CODE# - #SUBJECT_NAME#</td>
-		<td style='position:relative'>#GRADE#</td>
-		#IF:class_average#<td>#CLASS_AVERAGE#</td>#ENDIF#
+		<td style='position:relative' class='grade'>#GRADE#</td>
+		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
 	#END_SUBJECT#
 	<tr class='total'>
-		<td colspan="2">Total / Average</td>
+		<td class='blank'></td>
+		<td>Total / Average</td>
 		<td style='position:relative'>#TOTAL_GRADE#</td>
 		#IF:class_average#<td>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
@@ -143,7 +165,7 @@
 TODO: Global results<br/><br/>
 <!-- General appreciation -->
 #IF:general_appreciation#
-<table class='general_appreciation' style='width:100%;border-spacing:0px;margin-bottom:20px;'>
+<table class='general_appreciation' style='width:100%;border-spacing:0px;'>
 	<tr><th style='background-color:#009DE1;color:white'>General Appreciation</th></tr>
 	<tr><td>
 	<div>#General Appreciation#</div>

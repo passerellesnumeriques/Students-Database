@@ -128,12 +128,13 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 		$j = strpos($design, "#END_SUBJECT_CATEGORY#", $i);
 		$content = substr($design,$i+18,$j-$i-18);
 		$result_categories = "";
-		foreach ($cats as $c) {
-			$cat = $c[0];
-			$list = $c[1];
+		for ($category_index = 0; $category_index < count($cats); $category_index++) {
+			$cat = $cats[$category_index][0];
+			$list = $cats[$category_index][1];
 			$cat_content = "".$content;
 			$cat_content = str_replace("#SUBJECT_CATEGORY_NAME#", htmlentities($cat["name"]), $cat_content);
 			$cat_content = str_replace("#COUNT(SUBJECTS)#", count($list), $cat_content);
+			processTranscriptConditionIndex($cat_content, "SUBJECT_CATEGORY", $category_index, count($cats));
 			$total_grade = 0;
 			$total_coef = 0;
 			$passing = 0;
@@ -152,7 +153,7 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 			$passing = $total_coef > 0 ? $passing/$total_coef : "null";
 			$id = "total_grade_".$cat["id"];
 			$cat_content = str_replace("#TOTAL_GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$total_grade</span>", $cat_content);
-			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
+			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_grade).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
 				
 			while (($k = strpos($cat_content, "#SUBJECT#")) !== false) {
 				$l = strpos($cat_content, "#END_SUBJECT#", $k);
