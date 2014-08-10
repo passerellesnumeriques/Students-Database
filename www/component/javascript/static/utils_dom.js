@@ -213,10 +213,10 @@ function getInnerHeight(element) {
 	h -= parseInt(s.paddingTop) + parseInt(s.paddingBottom);
 	return h;
 }
-function getFixedPosition(elem) {
-	return _getFixedPosition(window,elem);
+function getFixedPosition(elem,only_in_window) {
+	return _getFixedPosition(window,elem,only_in_window);
 }
-function _getFixedPosition(win,elem) {
+function _getFixedPosition(win,elem,only_in_window) {
 	var x = elem.offsetLeft;
 	var y = elem.offsetTop;
 	if (elem.nodeName != 'BODY') {
@@ -235,7 +235,7 @@ function _getFixedPosition(win,elem) {
 			y += elem.offsetTop;
 		}
 	}
-	if (win.frameElement) {
+	if (win.frameElement && !only_in_window) {
 		// depending on the browser the scrolling may be on body or the window
 		if (!win.document.body.scrollLeft && !win.document.body.scrollTop) {
 			if (win.scrollX) x -= win.scrollX;

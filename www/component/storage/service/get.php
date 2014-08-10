@@ -25,11 +25,11 @@ class service_get extends Service {
 			$this->file = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id)->executeSingleRow();
 		}
 		if ($this->file == null) {
-			PNApplication::error("Invalid storage id");
+			header("HTTP/1.0 400 Invalid storage id");
 			return;
 		}
 		if (!$component->canReadFile($this->file)) {
-			PNApplication::error("Access Denied.");
+			header("HTTP/1.0 400 Access denied to this file");
 			return;
 		}
 		if (!isset($_GET["revision"]) || $_GET["revision"] <> $this->file["revision"]) {

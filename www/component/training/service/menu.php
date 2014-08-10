@@ -11,6 +11,10 @@ class service_menu extends Service {
 	public function execute(&$component, $input) {
 		//$current_batches = PNApplication::$instance->curriculum->getCurrentBatches();
 ?>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/updates'>
+	<img src='/static/news/news_white.png'/>
+	Updates
+</a>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/list'>
 	<img src='/static/students/students_white.png'/>
 	Students List
@@ -25,6 +29,7 @@ foreach ($current_batches as $b) {
 } 
 */
 ?>
+<?php if (PNApplication::$instance->user_management->has_right("consult_curriculum")) { ?>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/academic_calendar'>
 	<img src='/static/calendar/calendar_white.png'/>
 	Years and Periods
@@ -51,6 +56,8 @@ foreach ($current_batches as $b) {
 	<img src='/static/curriculum/teacher_assign_white.png'/>
 	Assignments
 </a>
+<?php } ?>
+<?php if (PNApplication::$instance->user_management->has_right("consult_students_grades")) { ?>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/students_grades'>
 	<img src='/static/transcripts/grades_white.png'/>
 	Grades
@@ -59,10 +66,13 @@ foreach ($current_batches as $b) {
 	<img src='/static/curriculum/curriculum_white.png'/>
 	By subject
 </a>
+<?php if (PNApplication::$instance->user_management->has_right("edit_transcripts_design")) { ?>
 <a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/configure_transcripts'>
 	<img src='<?php echo theme::$icons_16["config_white"];?>'/>
 	Design transcripts
 </a>
+<?php } ?>
+<?php } ?>
 <?php
 /*
 foreach ($current_batches as $b) {

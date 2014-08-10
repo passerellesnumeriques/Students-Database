@@ -48,11 +48,17 @@
 }
 .news_editor {
 	margin: 0px;
-	padding: 4px;
+	padding: 0px;
     font-family: Arial;
     font-size: 9pt;
     background-color: white;
 }
 .news_editor p {
-	margin: 0px;
+	margin: 0px 4px 0px 4px;
+}
+.news_editor p:first-child {
+	padding-top: 4px;
+}
+.news_editor p:last-child {
+	padding-bottom: 4px;
 }

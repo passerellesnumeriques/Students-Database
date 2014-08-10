@@ -28,11 +28,17 @@ class TeacherDataScreen implements datamodel\SimpleDataScreen {
 		else 
 			$people_id = $values->getColumnValue("People", "id");
 		$dates = array();
-		if ($people_id <> -1) $dates = SQLQuery::create()->select("TeacherDates")->whereValue("TeacherDates", "people", $people_id)->orderBy("TeacherDates", "start")->execute();
+		$can_edit = true;
+		if ($people_id <> -1) {
+			$dates = SQLQuery::create()->select("TeacherDates")->whereValue("TeacherDates", "people", $people_id)->orderBy("TeacherDates", "start")->execute();
+			$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+		}
 ?>
 <table><tbody id='teacher_dates_table'><tr>
 		<td colspan=4>
+			<?php if ($can_edit) {?>
 			<a href='#' style='color:#808080;font-style:italic;' onclick='add_teacher_dates();return false;'>Add dates</a>
+			<?php } ?>
 		</td>
 	</tr></tbody></table>
 <script type='text/javascript'>

@@ -253,25 +253,30 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 							height: 60,
 							content_css: "/static/theme/"+theme.name+"/style/global.css,/static/theme/"+theme.name+"/style/news.css",
 							body_class: "news_editor",
-							plugins: ["spellchecker paste textcolor"],
+							plugins: ["spellchecker paste textcolor emoticons"],
 							menubar: false,
 							statusbar: false,
-							toolbar1: "bold italic underline strikethrough | bullist numlist outdent indent | forecolor backcolor",
+							toolbar1: "bold italic underline strikethrough | bullist numlist outdent indent | forecolor backcolor | emoticons",
 							toolbar2: "fontselect fontsizeselect | cut copy paste | undo redo",
 							toolbar_items_size: 'small',
 						    auto_focus: editor.id,
 						    fontsize_formats: "8pt 9pt 10pt 12pt 14pt 18pt 24pt"
 						});
-						var button = document.createElement("BUTTON");
-						button.className = "action";
-						button.innerHTML = "Post Reply";
-						div.appendChild(button);
-						button.onclick = function() {
+						var button_post = document.createElement("BUTTON");
+						button_post.className = "action";
+						button_post.innerHTML = "Post Reply";
+						div.appendChild(button_post);
+						var button_cancel = document.createElement("BUTTON");
+						button_cancel.className = "action";
+						button_cancel.innerHTML = "Cancel";
+						div.appendChild(button_cancel);
+						button_post.onclick = function() {
 							var ed = tinymce.get(editor.id);
 							var message = ed.getContent();
 							ed.remove();
 							div.removeChild(editor);
-							div.removeChild(button);
+							div.removeChild(button_post);
+							div.removeChild(button_cancel);
 							var sending = document.createElement("IMG");
 							sending.src = "/static/news/loading.gif";
 							div.appendChild(sending);
@@ -279,6 +284,13 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 								div.removeChild(sending);
 								t._refreshReplies();
 							});
+						};
+						button_cancel.onclick = function() {
+							var ed = tinymce.get(editor.id);
+							ed.remove();
+							div.removeChild(editor);
+							div.removeChild(button_post);
+							div.removeChild(button_cancel);
 						};
 					});
 				};
@@ -374,6 +386,148 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 	};
 	this._refreshTiming = function(d) {
 		d.timing_text.nodeValue = t._getTimingString(d.news.timestamp);
+	};
+	
+	this.post = function(sections,categories,tags) {
+		require(["tinymce.min.js","popup_window.js","select.js"], function() {
+			var div = document.createElement("DIV");
+			
+			var header = document.createElement("DIV");
+			header.style.padding = "3px";
+			header.style.backgroundColor = "white";
+			header.style.verticalAlign = "middle";
+			div.appendChild(header);
+			var secs = [];
+			if (typeof sections == 'string') sections = [sections];
+			if (!sections) {
+				for (var i = 0; i < t.sections.length; ++i) secs.push(t.sections[i]);
+			} else for (var i = 0; i < sections.length; ++i)
+				for (var j = 0; j < t.sections.length; ++j)
+					if (t.sections[j].name == sections[i]) { secs.push(t.sections[j]); break; }
+			// filter sections
+			for (var i = 0; i < secs.length; ++i) {
+				if (secs[i].can_write) continue;
+				var ok = false;
+				for (var j = 0; j < secs[i].categories.length; ++j) if (secs[i].categories[j].can_write) { ok = true; break; }
+				if (ok) continue;
+				secs.splice(i,1);
+				i--;
+			}
+			if (secs.length == 0) {
+				error_dialog("You don't have the right to post in any available section");
+				return;
+			}
+			var select_section = null;
+			var select_cat = null;
+			var span_cat = document.createElement("SPAN");
+			var cats = [];
+			if (secs.length > 1) {
+				header.appendChild(document.createTextNode(" Section "));
+				select_section = new select(header);
+				select_section.getHTMLElement().style.verticalAlign = "bottom";
+				for (var i = 0; i < secs.length; ++i)
+					select_section.add(secs[i], "<img src='"+secs[i].icon+"' style='vertical-align:bottom;width:16px;height:16px;'/> "+secs[i].display_name);
+				select_section.onchange = function() {
+					cats = [];
+					for (var i = 0; i < select_section.value.categories.length; ++i) if (select_section.value.categories[i].can_write) cats.push(select_section.value.categories[i]);
+					if (cats.length == 0) {
+						span_cat.style.display = "none";
+					} else {
+						span_cat.style.display = "";
+						if (select_section.value.can_write)
+							select_cat.add(null,"No specific category");
+						for (var i = 0; i < cats.length; ++i)
+							select_cat.add(cats[i].name, "<img src='"+cats[i].icon+"' style='vertical-align:bottom'/> "+cats[i].display_name);
+					}
+				};
+			} else {
+				cats = [];
+				if (!categories) {
+					for (var i = 0; i < secs[0].categories.length; ++i) if (secs[0].categories[i].can_write) cats.push(secs[0].categories[i]);
+				} else for (var i = 0; i < categories.length; ++i)
+					for (var j = 0; j < secs[0].categories.length; ++j)
+						if (secs[0].categories[j].name == categories[i]) {
+							if (secs[0].categories[j].can_write) cats.push(secs[0].categories[j]);
+							break;
+						}
+			}
+			if (secs.length > 1 || cats.length > 0) {
+				header.appendChild(span_cat);
+				span_cat.appendChild(document.createTextNode(" Category "));
+				select_cat = new select(span_cat);
+				select_cat.getHTMLElement().style.verticalAlign = "bottom";
+				if (secs.length > 1)
+					span_cat.style.display = "none";
+				else {
+					span_cat.style.display = "";
+					if (secs[0].can_write)
+						select_cat.add(null,"No specific category");
+					for (var i = 0; i < cats.length; ++i)
+						select_cat.add(cats[i].name, "<img src='"+cats[i].icon+"' style='vertical-align:bottom'/> "+cats[i].display_name);
+				}
+			}
+			var tags_cb = [];
+			if (tags) {
+				header.appendChild(document.createElement("BR"));
+				header.appendChild(document.createTextNode("Related to "));
+				for (var tag in tags) {
+					var cb = document.createElement("INPUT");
+					cb.type = "checkbox";
+					cb.checked = "checked";
+					cb.tag_name = tag;
+					tags_cb.push(cb);
+					header.appendChild(cb);
+					header.appendChild(document.createTextNode(tags[tag]));
+				}
+			}
+			
+			var editor = document.createElement("DIV");
+			editor.id = generateID();
+			div.appendChild(editor);
+			var popup = new popup_window("Post Message","/static/news/write_16.png",div);
+			popup.addIconTextButton(theme.icons_16.ok,"Post",'post',function() {
+				var data = {};
+				if (secs.length > 1) {
+					if (!select_section.value) { alert("Please select a section where to post your message"); return; }
+					data.section = select_section.value.name;
+				} else
+					data.section = secs[0].name;
+				if (cats.length == 0 || !select_cat.value)
+					data.category = null;
+				else
+					data.category = select_cat.value;
+				data.tags = [];
+				for (var i = 0; i < tags_cb.length; ++i) if (tags_cb[i].checked) data.tags.push(tags_cb[i].tag_name);
+				var ed = tinymce.get(editor.id);
+				data.message = ed.getContent();
+				popup.freeze("Posting message...");
+				service.json("news", "post", data, function(res) {
+					t.refresh();
+					popup.close();
+				});				
+			});
+			popup.show();
+			tinymce.init({
+				selector: "#"+editor.id,
+				theme: "modern",
+				width: 400,
+				height: 150,
+				resize: false,
+				nowrap: false,
+				content_css: "/static/theme/"+theme.name+"/style/global.css,/static/theme/"+theme.name+"/style/news.css",
+				body_class: "news_editor",
+				plugins: ["spellchecker paste textcolor emoticons"],
+				menubar: false,
+				statusbar: false,
+				toolbar1: "bold italic underline strikethrough | bullist numlist outdent indent | forecolor backcolor | emoticons",
+				toolbar2: "fontselect fontsizeselect | cut copy paste | undo redo",
+				toolbar_items_size: 'small',
+			    auto_focus: editor.id,
+			    fontsize_formats: "8pt 9pt 10pt 12pt 14pt 18pt 24pt",
+			    init_instance_callback: function() { div.childNodes[0].style.border = "none"; layout.invalidate(div); }
+			});
+		});
+
 	};
 	
 	this._init = function() {

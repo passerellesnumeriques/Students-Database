@@ -215,7 +215,7 @@ global $pn_app_version;
 		</div>
 	</div>
 	<div id="application_footer" style="flex:none;height:16px;">
-			Students Management Software (<?php echo $pn_app_version; ?>) - © 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
+			Students Management Software (<?php echo $pn_app_version; ?>) - © 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - <a href='http://www.passerellesnumeriques.org' target='_blank' style='color:white;text-decoration:none' onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">Passerelles numériques</a>
 	</div>
 </div>
 <script type='text/javascript'>

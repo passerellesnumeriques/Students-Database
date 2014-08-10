@@ -146,10 +146,13 @@ abstract class Component {
 		// build input
 		if (isset($_SERVER["CONTENT_TYPE"]) && substr($_SERVER["CONTENT_TYPE"],0,16) == "application/json") {
 			$in = file_get_contents('php://input');
-			$input = json_decode($in, true);
+			if (strlen($in)==0)
+				$input = array();
+			else
+				$input = json_decode($in, true);
 			$err = json_last_error();
 			if ($input === null && $err <> JSON_ERROR_NONE) {
-				PNApplication::error("Invalid input: JSON error ".$err."\nReceived input (length ".strlen($in)."):\n".$in);
+				PNApplication::error("Invalid input for service ".$path.": JSON error ".$err."\nReceived input (length ".strlen($in)."):\n".$in);
 				// get output format
 				$output_format = $service->getOutputFormat(array());
 				if ($output_format == "application/json") {
@@ -220,8 +223,9 @@ abstract class Component {
 			restore_error_handler();
 			PNApplication::printJSONResult($result);
 			$done->done = true;
-		} else
+		} else {
 			$service->execute($this, $input);
+		}
 	}
 
 #DEV

@@ -34,13 +34,15 @@ class page_teachers_assignments extends Page {
 			$academic_period_id = @$academic_period["id"];
 			if ($academic_period_id == null) $academic_period_id = 0;
 		} else
-			$academic_period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$academic_period_id);
+			$academic_period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$academic_period_id)->executeSingleRow();
 		
 		$years = SQLQuery::create()->select("AcademicYear")->execute();
 		$periods = SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod","start")->execute();
 
 		require_once("AcademicPeriod.inc");
 		$ap = $academic_period <> null ? new AcademicPeriod($academic_period) : null;
+		
+		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
 		$this->requireJavascript("section.js");
@@ -244,6 +246,7 @@ class page_teachers_assignments extends Page {
 				td.appendChild(document.createTextNode(this.getClassesText(classes)));
 				if (!last) td.style.borderBottom = "none";
 				if (!first) td.style.borderTop = "none";
+				<?php if ($can_edit) { ?>
 				if (this.classes.length > 1) {
 					var merge = document.createElement("BUTTON");
 					merge.className = "flat small_icon";
@@ -293,6 +296,7 @@ class page_teachers_assignments extends Page {
 						});
 					};
 				}
+				<?php } ?>
 				tr.appendChild(td = document.createElement("TD"));
 				if (!last) td.style.borderBottom = "none";
 				if (!first) td.style.borderTop = "none";
@@ -311,6 +315,7 @@ class page_teachers_assignments extends Page {
 				}
 				if (!teacher) {
 					td.innerHTML = "<i style='color:red'>No teacher</i>";
+					<?php if ($can_edit) { ?>
 					var assign = document.createElement("BUTTON");
 					assign.className = 'flat small_icon';
 					assign.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
@@ -336,8 +341,10 @@ class page_teachers_assignments extends Page {
 							menu.showBelowElement(button);
 						});
 					};
+					<?php } ?>
 				} else {
 					td.appendChild(document.createTextNode(teacher.first_name+" "+teacher.last_name));
+					<?php if ($can_edit) { ?>
 					var unassign = document.createElement("BUTTON");
 					unassign.className = 'flat small_icon';
 					unassign.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
@@ -354,7 +361,9 @@ class page_teachers_assignments extends Page {
 							updateTeacherRow(teacher.id);
 						});
 					};
+					<?php } ?>
 				}
+				<?php if ($can_edit) { ?>
 				td.ondragenter = function(event) {
 					if (event.dataTransfer.types.contains("teacher")) {
 						this.style.backgroundColor = "#D0D0D0";
@@ -406,6 +415,7 @@ class page_teachers_assignments extends Page {
 					} else
 						assign();
 				};
+				<?php } ?>
 			};
 			this.update();
 		}

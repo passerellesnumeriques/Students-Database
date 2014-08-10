@@ -6,6 +6,7 @@ class page_academic_calendar extends Page {
 	public function execute() {
 		$this->requireJavascript("tree.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
+		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
 ?>
 <div id='top_container' class="page_container" style="width:100%;height:100%;display:flex;flex-direction:column;">
 	<div class="page_title" style="flex:none;">
@@ -13,9 +14,11 @@ class page_academic_calendar extends Page {
 		Academic Calendar: Years and Periods
 	</div>
 	<div id='tree_container' style='background-color:white;flex:1 1 auto;'></div>
+	<?php if ($can_edit) { ?>
 	<div class="page_footer" style="flex:none;">
 		<button class='action' onclick='new_year();'>New Academic Year</button>
 	</div>
+	<?php } ?>
 </div>
 
 <script type='text/javascript'>
@@ -45,6 +48,7 @@ function build_year(year) {
 	var parent = year.year < now.getFullYear() ? past : current_and_future;
 	var item = createTreeItemSingleCell(null, span, true);
 	parent.addItem(item);
+	<?php if ($can_edit) { ?>
 	span.style.cursor = "pointer";
 	span.onmouseover = function() { this.style.textDecoration = "underline"; };
 	span.onmouseout = function() { this.style.textDecoration = "none"; };
@@ -60,6 +64,7 @@ function build_year(year) {
 			popup.show();
 		});
 	};
+	<?php } ?>
 	item.academic_year = year;
 	for (var i = 0; i < year.periods.length; ++i)
 		build_period(item, year.periods[i]);
@@ -106,6 +111,7 @@ function build_period(parent, period) {
 	
 	var item = new TreeItem(cells);
 	parent.addItem(item);
+	<?php if ($can_edit) { ?>
 	item.tr.style.cursor = "pointer";
 	item.tr.onmouseover = function() { this.style.textDecoration = "underline"; };
 	item.tr.onmouseout = function() { this.style.textDecoration = "none"; };
@@ -121,6 +127,7 @@ function build_period(parent, period) {
 			popup.show();
 		});
 	};
+	<?php } ?>
 }
 build_years(<?php echo CurriculumJSON::AcademicCalendarJSON();?>);
 

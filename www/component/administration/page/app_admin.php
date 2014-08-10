@@ -215,7 +215,7 @@ service.json("administration","latest_version",null,function(res) {
 		}
 		if (need_update) {
 			var new_version = res.version;
-			section_updates.content.innerHTML += "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> <span style='color:#806000;font-weight:bold;'>A newer version is available !</span><br/>";
+			section_updates.content.innerHTML += "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> <span style='color:#806000;font-weight:bold;'>A new version is available !</span><br/>";
 			var div = document.createElement("DIV");
 			var img = document.createElement("IMG");
 			img.src = theme.icons_16.loading;
