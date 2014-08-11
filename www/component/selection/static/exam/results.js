@@ -7,7 +7,7 @@ var selected={};
 function createDataList(campaign_id)
 {
    new data_list(
-                   "session_applicants_listDiv",
+                   "session_applicants_list",
                    "Applicant", campaign_id,
                    [
                            "Personal Information.First Name",
@@ -25,14 +25,14 @@ function createDataList(campaign_id)
 
 function initResults(){
 
-   $("#session_info_locationDiv").hide();
-   $("#session_applicants_listDiv").hide();
+   $("#session_info_location").hide();
+   $("#session_applicants_list").hide();
    
 
 // Update the exam session info and applicants list boxes
    $("tr.clickable_row").click(function(){
       
-      $("#session_info_locationDiv").show();
+      $("#session_info_location").show();
       
       // display selected row 
       $(this).addClass("selectedRow");
@@ -46,7 +46,7 @@ function initResults(){
       //Show a loader gif while waiting for updating
       var loader_img = $("<img>", {id: "loaderResultsImg", src: "/static/application/loading_100.gif"});
       loader_img.css({"display":"block","margin":"0 auto"});
-      $("#session_info_locationDiv").html(loader_img);
+      $("#session_info_location").html(loader_img);
       
       // update exam session information box
       updateExamSessionInfo();
@@ -58,7 +58,7 @@ function initResults(){
       // update applicants list
       updateApplicantsList();
       
-      $("#session_applicants_listDiv").show();
+      $("#session_applicants_list").show();
       
    });
    
@@ -93,10 +93,10 @@ function updateExamSessionInfo() {
       
       // Get the Postal Address from host address id's  
          service.json("contact","get_address",{"id":host_addr},function(postal_addr){
-                var ec_addr_Div= new address_text(postal_addr);
-                $(ec_addr_Div.element).prepend("<span><strong>Location :</strong></span>");
-                $(ec_addr_Div.element).append("<span><strong> Status :</strong>TODO !</span>");
-                $("#session_info_locationDiv").html(ec_addr_Div.element);
+                var ec_addr_div= new address_text(postal_addr);
+                $(ec_addr_div.element).prepend("<span><strong>Location :</strong></span>");
+                $(ec_addr_div.element).append("<span><strong> Status :</strong>TODO !</span>");
+                $("#session_info_location").html(ec_addr_div.element);
          });
       });
 }

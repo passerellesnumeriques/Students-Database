@@ -61,7 +61,7 @@ class page_exam_results_edit extends SelectionPage {
 	{	
 		/* fields from people that we want to display */
 		$fields=array("first_name","middle_name","khmer_first_name","khmer_last_name","last_name","sex","birthdate");
-		
+
 		?><div id='applicant_picture' style='padding:5px 0 0 5px;display:none;'></div>
 		<table id='applicant_table' class="align_left" style='display: none'>
 			<?php foreach ($fields as $field) {?>

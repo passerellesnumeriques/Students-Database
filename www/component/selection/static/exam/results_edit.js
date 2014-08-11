@@ -78,6 +78,8 @@ function updateApplicantInfoBox(people)
    
    applicant_picture.loadPeopleObject(people,function(){
    
+   
+   
       /* The people fields we want to display */
    var fields = {first_name:"First Name",middle_name:"Middle Name",khmer_first_name:"Khmer first name",khmer_last_name:"Khmer last name",last_name:"Last Name",sex:"Gender",birthdate:"Birth"}; 
  

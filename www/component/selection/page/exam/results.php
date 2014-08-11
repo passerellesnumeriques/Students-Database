@@ -4,31 +4,30 @@ class page_exam_results extends SelectionPage {
 	public function getRequiredRights() { return array(); }
 	public function executeSelectionPage(){
 			
-		theme::css($this, "grid.css");
 		theme::css($this, "section.css");
 
 		$this->requireJavascript("address_text.js");
 		$this->addJavascript("/static/widgets/section/section.js");
-		$this->onload("sectionFromHTML('sessions_listDiv');");
-		$this->onload("sectionFromHTML('session_infoDiv');");
-		$this->onload("sectionFromHTML('session_applicantsDiv');"); 
+		$this->onload("sectionFromHTML('sessions_list');");
+		$this->onload("sectionFromHTML('session_info');");
+		$this->onload("sectionFromHTML('session_applicants');"); 
 		$this->addJavascript("/static/selection/exam/results.js");
 		$this->requireJavascript("data_list.js");
 		$this->onload("createDataList(".$this->component->getCampaignId().");");
 		$this->onload("initResults()");
 	?>
 	
-			<!--TODO : css cleanup (= merge it with the right css file) -->
+
 		<style>
-			table.grid>tbody>tr>td {
+			table>tbody>tr>td {
 				text-align: center;
 			}
-			table.grid>tbody>tr.clickable_row:hover{
+			table>tbody>tr.clickable_row:hover{
 			background-color: #FFF0D0;
 			background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
 			}
 			
-			table.grid>tbody>tr.selectedRow{
+			table>tbody>tr.selectedRow{
 			background-color: #FFF0D0;
 			background: linear-gradient(to bottom, #FFF0D0 0%, orange 100%);
 			}
@@ -38,7 +37,7 @@ class page_exam_results extends SelectionPage {
 	<div style="margin:10px;display:flex;flex-direction:row">
 		<div id="sessions_with_button" style="display: inline-block;vertical-align: top;flex:1 1 auto;">
 			<div style ="max-height: 300px;overflow: auto">
-			      <div id = "sessions_listDiv" title='Exam sessions list' icon="/static/calendar/calendar_16.png" collapsable='true' css="soft">
+			      <div id = "sessions_list" title='Exam sessions list' icon="/static/calendar/calendar_16.png" collapsable='true' css="soft">
 				<?php $this->createTableSessionsList();?>
 			      </div>
 			</div>
@@ -46,15 +45,15 @@ class page_exam_results extends SelectionPage {
 				<button id="edit_notes" class="action" style="position:absolute;top:0;bottom: 0;left:0;right:0;width:9%;height: 58%;margin: auto;" >EDIT NOTES</button>
 			</div>
 		</div>
-		<div id = "session_infoDiv" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;vertical-align: top;flex:none;' css="soft">
-				<div id="session_info_locationDiv" style='padding-left:5px;'></div>
+		<div id = "session_info" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;vertical-align: top;flex:none;height:100%;' css="soft">
+			<div id="session_info_location" style='padding-left:5px;'></div>
 		</div>
 	</div>
 		
 
 	<!--List of applicants-->		
-	<div id = "session_applicantsDiv" title='Applicants list' icon="/static/selection/applicant/applicants_16.png" collapsable='true' css="soft" style="width:500px;margin: 20px 0 0 10px;" >
-	       <div id="session_applicants_listDiv"></div>
+	<div id = "session_applicants" title='Applicants list' icon="/static/selection/applicant/applicants_16.png" collapsable='true' css="soft" style="width:500px;margin: 20px 0 0 10px;" >
+	       <div id="session_applicants_list"></div>
 	</div>
 
 	<?php

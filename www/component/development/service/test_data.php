@@ -23,6 +23,7 @@ class service_test_data extends Service {
 			set_time_limit(240);
  			$db_system->execute("USE students_".$domain);
 			$this->SplitSQL($db_system, "component/development/data/organization.sql");
+			$this->SplitSQL($db_system, "component/development/data/labtable.sql");
 			$this->SplitSQL($db_system, "component/development/data/PNP_AcademicYearsAndBatches.sql");
 			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2012_Curriculum.sql");
 			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2012.sql");

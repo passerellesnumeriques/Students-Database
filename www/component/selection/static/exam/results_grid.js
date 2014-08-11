@@ -29,7 +29,7 @@ function results_grid(subject,applicants,grid_height) {
    t.grid_res=new grid (t.elt.grid); // creating grid   
    t.index_applicant=-1; // index of selected applicant
    t.applicants_exam=null;
-   
+    t.rows_ready=false;
 
    /* Getting current applicant
     * return people object matching the applicant
@@ -106,11 +106,6 @@ function results_grid(subject,applicants,grid_height) {
       
       /* Clear previously set grid width css property (from grid.css) */
       $(t.elt.grid).find("table.grid").css("width","");
-
-      /* Inserting some cell wrappers (in order to set table columns width) */
-      /*t.grid_res.onallrowsready(function(){
-            t._fixColumnsWidth();
-          });*/
       
       layout.invalidate(t.elt.container);
    }
@@ -198,15 +193,16 @@ function results_grid(subject,applicants,grid_height) {
             
            /* create the new result Column */
            var col_result=new GridColumn('p'+part.id+'q'+question.id,'Question '+question.index,null,'center','field_decimal',false,null,null,field_args,'#')
-           ////DEBUG
+           //DEBUG
            //console.log('creating col results id:'+'p'+part.id+'q'+question.id);
-           
+      
            sub_cols.push(col_result);
 
         }
         
         /* push columns into the ColumContainer */
         t.grid_res.addColumnContainer(new GridColumnContainer(part.name,sub_cols,'#'));
+        
      }
      
    }
@@ -218,7 +214,6 @@ function results_grid(subject,applicants,grid_height) {
         $.each(t.applicants,function(index,obj) {
           /* creating applicant row */
           t.grid_res.addRow(index,[{col_id:'col_applic',data_id:'#',data:obj.applicant_id}]);
-         
         });
    }  
    
@@ -262,6 +257,7 @@ function results_grid(subject,applicants,grid_height) {
             }
          }
          
+         
          });
       
       
@@ -271,8 +267,13 @@ function results_grid(subject,applicants,grid_height) {
        /* Creating results columns */
         t._createResultsColumns();
         
-        /* Filling with results */
-        t._fillResultsRows();
+        
+        /* because of the time to built all the cell fields */
+      t.grid_res.onallrowsready(function(){
+              /* Filling with results */
+                t._fillResultsRows();
+          });
+      
 
        });
    }
@@ -345,6 +346,9 @@ t._getAnswers=function(){
 /* Fill rows with applicants results scores */
 t._fillResultsRows=function()
    {
+        //DEBUG
+          console.log(t.applicants_exam);
+      
       /* for each row (one applicant) */
       for (var row_id=0;row_id<t.applicants_exam.applicants_answers.length;++row_id) {
          var applicant_answers=t.applicants_exam.applicants_answers[row_id];
@@ -358,11 +362,14 @@ t._fillResultsRows=function()
             {
                var answer=part.answers[j];
                //DEBUG
+               //console.log(answer);
+               
+               //DEBUG
 		//console.log('filling col results id:'+'p'+part.exam_subject_part+'q'+answer.exam_subject_question);
                var cell_field=t.grid_res.getCellFieldById(row_id,'p'+part.exam_subject_part+'q'+answer.exam_subject_question);
+  
                //DEBUG
-		//console.log('cell field:'+cell_field);
-                // DEBUG : don't know why no cell_field has been gotten TODO
+		//console.log(answer);
                cell_field.setData(answer.score);
           
             }   
