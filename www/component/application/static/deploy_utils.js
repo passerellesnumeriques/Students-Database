@@ -1,7 +1,8 @@
 function download(backend_url, file_url, target_file, progress_container, end_handler) {
 	progress_container.innerHTML = "Starting download...";
-	getURLFileSize(backend_url, file_url, function(error,size) {
+	getURLFileSize(backend_url, file_url, function(error,size,accept_ranges) {
 		if (error) { end_handler(size); return; }
+		if (accept_ranges != "bytes") { end_handler("Server does not accept partial download: "+accept_ranges); return; }
 		progress_container.innerHTML = "0% ("+(size/(1024*1024)).toFixed(2)+"M)";
 		downloading(backend_url, file_url, size, target_file, function(pos,total) {
 			progress_container.innerHTML = ""+Math.floor(pos*100/total)+"% ("+(pos/(1024*1024)).toFixed(2)+"M/"+(total/(1024*1024)).toFixed(2)+"M)";
@@ -32,11 +33,19 @@ function getURLFileSize(backend_url, download_url, handler) {
 		else if (xhr.responseText.length == 0)
 				handler(true, "Unable to get size of download ("+download_url+")");
 		else {
-			var size = parseInt(xhr.responseText);
+			var i = xhr.responseText.indexOf('/');
+			var accept_ranges = false;
+			var size;
+			if (i < 0)
+				size = parseInt(xhr.responseText);
+			else {
+				size = parseInt(xhr.responseText.substring(0,i));
+				accept_ranges = xhr.responseText.substring(i+1);
+			}
 			if (isNaN(size))
 				handler(true, "Unable to get size of download ("+download_url+"): "+xhr.responseText);
 			else
-				handler(false,size);
+				handler(false,size,accept_ranges);
 		}
 	};
 	xhr.setRequestHeader('Content-type', "application/x-www-form-urlencoded");

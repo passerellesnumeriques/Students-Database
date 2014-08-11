@@ -31,6 +31,7 @@ abstract class Service {
 	 * Generate the documentation of the output of this service.
 	 */
 	public abstract function outputDocumentation();
+	public function mayUpdateSession() { return false; }
 	/**
 	 * Execute the service
 	 * @param Component $component the component this service belongs to

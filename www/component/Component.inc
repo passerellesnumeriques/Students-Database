@@ -66,6 +66,8 @@ abstract class Component {
 		/* @var $service Service */
 		$page = new $classname();
 		
+		if (!$page->mayUpdateSession()) { session_write_close(); }
+		
 		// check the page is allowed for the current user
 		$required_rights = $page->getRequiredRights();
 		if (count($required_rights) == 0) 
@@ -143,6 +145,8 @@ abstract class Component {
 		/* @var $service Service */
 		$service = new $classname();
 	
+		if (!$service->mayUpdateSession()) { session_write_close(); }
+		
 		// build input
 		if (isset($_SERVER["CONTENT_TYPE"]) && substr($_SERVER["CONTENT_TYPE"],0,16) == "application/json") {
 			$in = file_get_contents('php://input');

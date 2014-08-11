@@ -479,7 +479,7 @@ function initFooter() {
 	var span_google_status = document.createElement("SPAN");
 	span_google_status.style.position = "absolute";
 	span_google_status.style.bottom = "0px";
-	span_google_status.style.right = "23px";
+	span_google_status.style.right = "3px";
 	span_google_status.title = "Connection to Google";
 	footer.appendChild(span_google_status);
 	require("google_status.js",function() {
@@ -491,7 +491,7 @@ function initFooter() {
 	var span_debug_status = document.createElement("SPAN");
 	span_debug_status.style.position = "absolute";
 	span_debug_status.style.bottom = "0px";
-	span_debug_status.style.right = "43px";
+	span_debug_status.style.right = "23px";
 	footer.appendChild(span_debug_status);
 	require("debug_status.js",function() {
 		new debug_status(span_debug_status);
