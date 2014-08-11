@@ -9,16 +9,16 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 	 * Initialize the authentication system
 	 */
 	public function __construct() {
-		if (PNApplication::$instance->local_domain == "PNP")
-			$this->system_url = "authentication";
-		else
-			$this->system_url = "authentication.pnp.studentscenter.org:800";
 	}
 
 	public function authenticate($username, $password, &$error) {
 		set_time_limit(45);
-		$c = curl_init($this->system_url);
-		if (file_exists("conf/proxy")) include("conf/proxy");
+		if (PNApplication::$instance->local_domain == "PNP") {
+			$c = curl_init("authentication");
+		} else {
+			$c = curl_init("authentication.pnp.studentscenter.org:800");
+			if (file_exists("conf/proxy")) include("conf/proxy");
+		}
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
 		curl_setopt($c, CURLOPT_POST, TRUE);
@@ -34,9 +34,9 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 			return null;
 		}
 		curl_close($c);
-		$xml = simplexml_load_string($result);
-		if ($xml === false) {
-			$error = "Invalid response from remote system";
+		$xml = @simplexml_load_string($result);
+		if ($xml === false || $xml === null) {
+			$error = "Invalid response from remote system: ".htmlentities($result);
 			return null;
 		}
 		if ($xml->getName() <> "authentication") {
@@ -65,8 +65,12 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 	 */
 	private function callService($service, $token, $params) {
 		set_time_limit(300);
-		$c = curl_init($this->system_url);
-		if (file_exists("conf/proxy")) include("conf/proxy");
+			if (PNApplication::$instance->local_domain == "PNP") {
+			$c = curl_init("authentication");
+		} else {
+			$c = curl_init("authentication.pnp.studentscenter.org:800");
+			if (file_exists("conf/proxy")) include("conf/proxy");
+		}
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
 		curl_setopt($c, CURLOPT_POST, TRUE);

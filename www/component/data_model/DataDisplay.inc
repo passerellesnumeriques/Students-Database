@@ -105,6 +105,8 @@ abstract class DataDisplay {
 	public function getData($row, $resultFromBuildSQL) {
 		return @$row[$resultFromBuildSQL["data"]];
 	}
+	public function getKeyFromTableKey($key) { return $key; }
+	public function selectTableKeyFromKey(&$q, $table, $key) { $q->whereKey($table, $key); }
 	
 	public function exportValue($value, $sub_model) {
 		if ($value == null) return "";
@@ -758,6 +760,14 @@ class JoiningTableDataDisplay extends DataDisplay {
 			->field($this->foreign_key_name)
 			->executeSingleField();
 		return $list;
+	}
+	
+	public function getKeyFromTableKey($key) {
+		if (is_array($key) && isset($key[$this->joining_key_name])) return $key[$this->joining_key_name];
+		return $key; 
+	}
+	public function selectTableKeyFromKey(&$q, $table, $key) {
+		$q->whereValue($table->getName(), $this->joining_key_name, $key);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {

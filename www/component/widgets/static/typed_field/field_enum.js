@@ -108,7 +108,7 @@ field_enum.prototype._create = function(data) {
 			return text;
 		};
 		this.element.appendChild(this.text = document.createTextNode(this.get_text_from_data(data)));
-		this.element.style.height = "100%";
+		//this.element.style.height = "100%";
 		this._setData = function(data) {
 			this.text.nodeValue = this.get_text_from_data(data);
 		};

@@ -72,9 +72,9 @@ namespace datamodel {
 			$readonly = false;
 			if (!$is_new) {
 				$key_value = getKeyValue($path->table, $values);
-				if (!$path->table->mayModify())
+				if (!$path->table->mayModify() && !$path->table->mayInsert() && !$path->table->mayRemove()) {
 					$readonly = true;
-				else {
+				} else {
 					$table_alias = "THE_TABLE";
 					$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
 					$q->whereKey($path->table->getName(), $key_value);
@@ -108,8 +108,11 @@ namespace datamodel {
 					$q->whereKey($path->table->getName(), $key_value);
 					$keys = $data->buildSQL($q, $path, null);
 					$row = $q->executeSingleRow();
+					if ($keys["key"] <> null)
+						$key_value = $row[$keys["key"]];
 					$value = @$row[$keys["data"]];
 				}
+				$key_value = $data->getKeyFromTableKey($key_value);
 				$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 				$page->requireJavascript($tf[0].".js");
 				// check can really edit the columns
