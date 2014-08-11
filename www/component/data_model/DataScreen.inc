@@ -112,7 +112,8 @@ namespace datamodel {
 						$key_value = $row[$keys["key"]];
 					$value = @$row[$keys["data"]];
 				}
-				$key_value = $data->getKeyFromTableKey($key_value);
+				if (!$is_new)
+					$key_value = $data->getKeyFromTableKey($key_value);
 				$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 				$page->requireJavascript($tf[0].".js");
 				// check can really edit the columns
