@@ -249,22 +249,31 @@ new data_list(
 		});
 		layout.invalidate(list.container);
 
-		if (batches && batches.length == 1 && can_manage)
-			service.customOutput("students","what_to_do_for_batch",{batch:batches[0]},function(res){
-				if (res && res.length > 0) {
-					var div = document.createElement("DIV");
-					div.className = "warning_footer";
-					div.innerHTML = res;
-					list.addFooter(div);
-				}
+		if (batches && batches.length == 1 && can_manage) {
+			refreshToDo(function() {
+				list.ondataloaded.add_listener(refreshToDo);
 			});
+		}
 	}
 );
 
 function reload_list() {
 	window.students_list.reloadData();
 }
-
+var to_do_div = null;
+function refreshToDo(ondone) {
+	service.customOutput("students","what_to_do_for_batch",{batch:batches[0]},function(res){
+		if (res && res.length > 0) {
+			if (!to_do_div) {
+				to_do_div = document.createElement("DIV");
+				to_do_div.className = "warning_footer";
+				list.addFooter(to_do_div);
+			}
+			to_do_div.innerHTML = res;
+			if (ondone) ondone();
+		}
+	});
+}
 </script>
 <?php 
 	}
