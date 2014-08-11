@@ -375,7 +375,7 @@ function import_with_match(data_list, ev) {
 			if (!col) continue;
 			var edit_action = col.getAction('edit');
 			if (!edit_action) continue;
-			if (col.editable)
+			if (!col.editable)
 				edit_action.onclick(createEvent('click'),edit_action,col);
 		}
 		var listener = function() {
