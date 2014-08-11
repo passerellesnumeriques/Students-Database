@@ -47,6 +47,11 @@ if (@$_COOKIE["test_deploy"] == "true") {
 }
 #END
 
+if ($path == "maintenance/maintenance.jpg") {
+	header("Content-Type: image/jpeg");
+	readfile("maintenance/maintenance.jpg");
+	die();
+}
 if ($path == "maintenance/index.php" || $path == "maintenance/" || $path == "maintenance") {
 	include("maintenance/index.php");
 	die();
@@ -70,11 +75,6 @@ if (file_exists("maintenance_in_progress")) {
 			echo 'Access denied';
 			die();
 		}			
-	}
-	if ($path == "maintenance/maintenance.jpg") {
-		header("Content-Type: image/jpeg");
-		readfile("maintenance/maintenance.jpg");
-		die();
 	}
 	if (strpos($path, "/service/")) {
 		header("HTTP/1.0 403 Maintenance in progress");

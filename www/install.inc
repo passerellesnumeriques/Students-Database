@@ -288,7 +288,7 @@ ul {
 		</tr>
 		<tr>
 			<td>Password</td>
-			<td><input type="text" name="proxy_pass" disabled='disabled'/></td>
+			<td><input type="password" name="proxy_pass" disabled='disabled'/></td>
 			<td></td>
 		</tr>
 		<tr>
