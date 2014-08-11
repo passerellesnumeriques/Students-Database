@@ -143,8 +143,8 @@ Then, you can finally upload the files located from directory <code><i><?php ech
 	<li><code><i><?php echo $filename_migration.".checksum";?></i></code></li>
 	<li><code><i><?php echo $filename_datamodel;?></i></code></li>
 	<li><code><i><?php echo $filename_init_data;?></i></code></li>
-	<li><code><i>versions.txt</i></code></li>
-	<li><code><i>latest.txt</i></code> (this one should be uploaded when all previous files are already uploaded.)</li>
+	<li><code><i>versions.txt</i></code> (this one should be uploaded when all previous files are already uploaded)</li>
+	<li><code><i>latest.txt</i></code> (this one should be uploaded after versions.txt)</li>
 </ul>
 
 </div>

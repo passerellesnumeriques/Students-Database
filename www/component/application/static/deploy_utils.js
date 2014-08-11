@@ -77,7 +77,7 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 				else if (end_time-start_time < 6000) speed *= 3.5;
 				else if (end_time-start_time < 8000) speed *= 2.5;
 				else if (end_time-start_time < 15000) speed *= 1.3;
-				else if (end_time-start_time > 25000) speed *= 0.85;
+				else if (end_time-start_time > 30000) speed *= 0.85;
 				if (speed > 2.5*1024*1024) speed = 2.5*1024*1024;
 				if (speed < 32768) speed = 32768;
 				else if (speed >= 160*1024) window.download_init_speed = 128*1024;

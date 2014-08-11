@@ -98,7 +98,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 	msg.appendChild(progress);
 	download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip", progress, function(error) {
 		if (error) {
-			img.src = theme.icons_16.error;
+			icon.src = theme.icons_16.error;
 			msg.innerHTML = error;
 			var button = document.createElement("BUTTON");
 			button.className = "action";
@@ -117,7 +117,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 		msg.appendChild(progress);
 		download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum", progress, function(error) {
 			if (error) {
-				img.src = theme.icons_16.error;
+				icon.src = theme.icons_16.error;
 				msg.innerHTML = error;
 				var button = document.createElement("BUTTON");
 				button.className = "action";
@@ -142,7 +142,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 					msg.appendChild(progress);
 					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip", progress, function(error) {
 						if (error) {
-							img.src = theme.icons_16.error;
+							icon.src = theme.icons_16.error;
 							msg.innerHTML = error;
 							var button = document.createElement("BUTTON");
 							button.className = "action";
@@ -161,7 +161,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 						msg.appendChild(progress);
 						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum", progress, function(error) {
 							if (error) {
-								img.src = theme.icons_16.error;
+								icon.src = theme.icons_16.error;
 								msg.innerHTML = error;
 								var button = document.createElement("BUTTON");
 								button.className = "action";
@@ -177,18 +177,18 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 							msg.innerHTML = "Checking migration scripts...";
 							service.customOutput("administration","download_update",{step:'check_if_done',version:prev_version+"_to_"+new_version},function(res) {
 								if (res == "OK") {
-									img.src = theme.icons_16.ok;
+									icon.src = theme.icons_16.ok;
 									msg.innerHTML = "New version downloaded and ready to be installed. You can now put the software into <i>Maintenance Mode</i> (see below), then you will have the option to install it.";
 									return;
 								}
 								if (res == "not_downloaded") {
-									img.src = theme.icons_16.error;
+									icon.src = theme.icons_16.error;
 									msg.innerHTML = "We cannot find the file after download!";
 								} else if (res == "invalid_download") {
-									img.src = theme.icons_16.error;
+									icon.src = theme.icons_16.error;
 									msg.innerHTML = "Downloaded file is invalid. Please retry.";
 								} else {
-									img.src = theme.icons_16.error;
+									icon.src = theme.icons_16.error;
 									msg.innerHTML = "Unexpected answer: "+res;
 								}
 								var button = document.createElement("BUTTON");
@@ -205,13 +205,13 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 					return;
 				}
 				if (res == "not_downloaded") {
-					img.src = theme.icons_16.error;
+					icon.src = theme.icons_16.error;
 					msg.innerHTML = "We cannot find the file after download!";
 				} else if (res == "invalid_download") {
-					img.src = theme.icons_16.error;
+					icon.src = theme.icons_16.error;
 					msg.innerHTML = "Downloaded file is invalid. Please retry.";
 				} else {
-					img.src = theme.icons_16.error;
+					icon.src = theme.icons_16.error;
 					msg.innerHTML = "Unexpected answer: "+res;
 				}
 				var button = document.createElement("BUTTON");

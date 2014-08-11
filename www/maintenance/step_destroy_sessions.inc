@@ -85,7 +85,7 @@ if (file_exists("data/updates")) {
 	closedir($dir);
 
 	foreach ($paths as $path)
-		if (isset($updates[$path[1]])) $updates[$path[1]] = $path[0];
+		if (array_key_exists($path[1], $updates)) $updates[$path[1]] = $path[0];
 }
 $backups = array();
 if (file_exists("data/backups")) {
