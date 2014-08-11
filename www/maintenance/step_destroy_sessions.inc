@@ -96,6 +96,12 @@ if (file_exists("data/updates")) {
 		}
 	}
 	find_updates($versions, $paths, $pn_app_version, array($pn_app_version), $updates);
+	// TODO find reverse ways...
+	foreach ($versions as $ver) {
+		if (!isset($updates[$ver])) {
+			$updates[$ver] = null;
+		}
+	}
 }
 $backups = array();
 if (file_exists("data/backups")) {
@@ -134,13 +140,19 @@ for ($i = 0; $i < count($updates) || $i < count($backups) || $i == 0; $i++) {
 		$version = $version[$i];
 		$path = $updates[$version];
 		echo "<td>".htmlentities($version)."</td>";
-		echo "<td>";
-		echo "<form method='POST' action='?step=backup&ondone=install_test'>";
-		echo "<input type='hidden' name='version' value='".$version."'/>";
-		echo "<input type='hidden' name='path' value='".json_encode($path)."'/>";
-		echo " <input type='submit' value='Install it!'/>";
-		echo "</form>";
-		echo "</td>";
+		if ($path <> null) {
+			echo "<td>";
+			echo "<form method='POST' action='?step=backup&ondone=install_test'>";
+			echo "<input type='hidden' name='version' value='".$version."'/>";
+			echo "<input type='hidden' name='path' value='".json_encode($path)."'/>";
+			echo " <input type='submit' value='Install it!'/>";
+			echo "</form>";
+			echo "</td>";
+		} else {
+			echo "<td>";
+			// TODO remove it
+			echo "</td>";
+		}
 	}
 	if ($i >= count($backups)) {
 		echo "<td>";
@@ -179,6 +191,7 @@ for ($i = 0; $i < count($updates) || $i < count($backups) || $i == 0; $i++) {
 		} else {
 			if ($version <> $current_version) {
 				echo "<i>Different version</i>";
+				echo " <button onclick=\"removeBackup('$version','$time');\">Remove</button>";
 			} else {
 				echo "<button onclick=\"recoverBackup('$time');\">Recover</button>";
 				echo " <button onclick=\"removeBackup('$version','$time');\">Remove</button>";

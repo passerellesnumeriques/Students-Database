@@ -4,6 +4,12 @@ if (isset($_GET["copy"])) {
 	PNApplication::$instance = new PNApplication();
 	PNApplication::$instance->init();
 	
+	set_error_handler(function($severity, $message, $filename, $lineno) {
+		if (error_reporting() == 0) return true;
+		PNApplication::error("PHP Error: ".$message." in ".$filename.":".$lineno);
+		return true;
+	});
+	
 	function remove_directory($path) {
 		$dir = opendir($path);
 		while (($filename = readdir($dir)) <> null) {
