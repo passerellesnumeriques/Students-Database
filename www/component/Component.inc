@@ -66,6 +66,8 @@ abstract class Component {
 		/* @var $service Service */
 		$page = new $classname();
 		
+		if (!$page->mayUpdateSession()) { session_write_close(); }
+		
 		// check the page is allowed for the current user
 		$required_rights = $page->getRequiredRights();
 		if (count($required_rights) == 0) 
@@ -143,13 +145,18 @@ abstract class Component {
 		/* @var $service Service */
 		$service = new $classname();
 	
+		if (!$service->mayUpdateSession()) { session_write_close(); }
+		
 		// build input
 		if (isset($_SERVER["CONTENT_TYPE"]) && substr($_SERVER["CONTENT_TYPE"],0,16) == "application/json") {
 			$in = file_get_contents('php://input');
-			$input = json_decode($in, true);
+			if (strlen($in)==0)
+				$input = array();
+			else
+				$input = json_decode($in, true);
 			$err = json_last_error();
 			if ($input === null && $err <> JSON_ERROR_NONE) {
-				PNApplication::error("Invalid input: JSON error ".$err."\nReceived input (length ".strlen($in)."):\n".$in);
+				PNApplication::error("Invalid input for service ".$path.": JSON error ".$err."\nReceived input (length ".strlen($in)."):\n".$in);
 				// get output format
 				$output_format = $service->getOutputFormat(array());
 				if ($output_format == "application/json") {
@@ -220,8 +227,9 @@ abstract class Component {
 			restore_error_handler();
 			PNApplication::printJSONResult($result);
 			$done->done = true;
-		} else
+		} else {
 			$service->execute($this, $input);
+		}
 	}
 
 #DEV

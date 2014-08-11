@@ -1,7 +1,8 @@
 function download(backend_url, file_url, target_file, progress_container, end_handler) {
 	progress_container.innerHTML = "Starting download...";
-	getURLFileSize(backend_url, file_url, function(error,size) {
+	getURLFileSize(backend_url, file_url, function(error,size,accept_ranges) {
 		if (error) { end_handler(size); return; }
+		if (accept_ranges != "bytes") { end_handler("Server does not accept partial download: "+accept_ranges); return; }
 		progress_container.innerHTML = "0% ("+(size/(1024*1024)).toFixed(2)+"M)";
 		downloading(backend_url, file_url, size, target_file, function(pos,total) {
 			progress_container.innerHTML = ""+Math.floor(pos*100/total)+"% ("+(pos/(1024*1024)).toFixed(2)+"M/"+(total/(1024*1024)).toFixed(2)+"M)";
@@ -32,11 +33,19 @@ function getURLFileSize(backend_url, download_url, handler) {
 		else if (xhr.responseText.length == 0)
 				handler(true, "Unable to get size of download ("+download_url+")");
 		else {
-			var size = parseInt(xhr.responseText);
+			var i = xhr.responseText.indexOf('/');
+			var accept_ranges = false;
+			var size;
+			if (i < 0)
+				size = parseInt(xhr.responseText);
+			else {
+				size = parseInt(xhr.responseText.substring(0,i));
+				accept_ranges = xhr.responseText.substring(i+1);
+			}
 			if (isNaN(size))
 				handler(true, "Unable to get size of download ("+download_url+"): "+xhr.responseText);
 			else
-				handler(false,size);
+				handler(false,size,accept_ranges);
 		}
 	};
 	xhr.setRequestHeader('Content-type', "application/x-www-form-urlencoded");
@@ -54,7 +63,7 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 			if (error) {
 				if (content.indexOf("(#28)") > 0) {
 					window.download_init_speed = Math.floor(window.download_init_speed/2);
-					if (window.download_init_speed < 8192) window.download_init_speed = 8192;
+					if (window.download_init_speed < 32768) window.download_init_speed = 32768;
 				}
 				end_handler(content);
 				return;
@@ -70,8 +79,10 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 				else if (end_time-start_time < 15000) speed *= 1.3;
 				else if (end_time-start_time > 25000) speed *= 0.85;
 				if (speed > 2.5*1024*1024) speed = 2.5*1024*1024;
-				if (speed < 8192) speed = 8192;
-			}
+				if (speed < 32768) speed = 32768;
+				else if (speed >= 160*1024) window.download_init_speed = 128*1024;
+			} else
+				speed *= 1.2;
 			next(end+1);
 		});
 	};

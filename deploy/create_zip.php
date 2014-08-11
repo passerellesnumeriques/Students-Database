@@ -97,6 +97,7 @@ if ($zip->open(realpath($_POST["path"])."/to_deploy/".$filename_datamodel, ZipAr
 	die("cannot open $filename_datamodel");
 }
 $zip->addFile(realpath($_POST["path"])."/datamodel/datamodel.json", "datamodel.json");
+$zip->addFile(realpath($_POST["path"])."/datamodel/datamodel.sql", "datamodel.sql");
 $zip->close();
 
 // create init data zip
@@ -123,6 +124,9 @@ if ($has_errors) die();
 <div style='flex:none;background-color:white;padding:10px'>
 
 The new version is now ready.<br/>
+New list of available versions is:<ul>
+<li><?php echo str_replace("\n","</li><li>", file_get_contents($_POST["path"]."/to_deploy/versions.txt"));?></li>
+</ul>
 <br/>
 <button onclick='test_fresh();'>Test it as a fresh installation</button>
 <!-- 
@@ -131,7 +135,8 @@ The new version is now ready.<br/>
 <br/>
 <span id='message'></span><br/>
 <br/>
-Once tested, you can put the file located from directory <code><i><?php echo realpath($_POST["path"]."/to_deploy");?></i></code> to <a href='https://sourceforge.net/projects/studentsdatabase/files/updates/' target='_blank'>SourceForge</a>:<ul> 
+Once tested, we recommend you to double check the migration scripts.<br/>
+Then, you can finally upload the files located from directory <code><i><?php echo realpath($_POST["path"]."/to_deploy");?></i></code> to <a href='https://sourceforge.net/projects/studentsdatabase/files/updates/' target='_blank'>SourceForge</a>:<ul> 
 	<li><code><i><?php echo $filename;?></i></code></li>
 	<li><code><i><?php echo $filename.".checksum";?></i></code></li>
 	<li><code><i><?php echo $filename_migration;?></i></code></li>
@@ -139,7 +144,7 @@ Once tested, you can put the file located from directory <code><i><?php echo rea
 	<li><code><i><?php echo $filename_datamodel;?></i></code></li>
 	<li><code><i><?php echo $filename_init_data;?></i></code></li>
 	<li><code><i>versions.txt</i></code></li>
-	<li><code><i>latest.txt</i></code></li>
+	<li><code><i>latest.txt</i></code> (this one should be uploaded when all previous files are already uploaded.)</li>
 </ul>
 
 </div>

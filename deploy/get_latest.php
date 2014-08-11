@@ -60,7 +60,7 @@ mkdir($_POST["path"]."/latest/init_data");
 if (class_exists("ZipArchive")) {
 	$zip = new ZipArchive();
 	$zip->open($_POST["path"]."/latest/init_data.zip");
-	$zip->extractTo($_POST["path"]."/init_data");
+	$zip->extractTo($_POST["path"]."/latest/init_data");
 	$zip->close();
 } else {
 	$output = array();

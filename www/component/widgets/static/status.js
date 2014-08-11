@@ -3,6 +3,7 @@ Status_TYPE_ERROR = 1;
 Status_TYPE_WARNING = 2;
 Status_TYPE_PROCESSING = 3;
 Status_TYPE_OK = 4;
+Status_TYPE_ERROR_NOICON = 5;
 
 function StatusMessage(type,message,actions,timeout) {
 	this.id = generateID();

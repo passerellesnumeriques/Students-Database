@@ -215,7 +215,7 @@ global $pn_app_version;
 		</div>
 	</div>
 	<div id="application_footer" style="flex:none;height:16px;">
-			Students Management Software (<?php echo $pn_app_version; ?>) - © 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - Passerelles numériques
+			Students Management Software (<?php echo $pn_app_version; ?>) - © 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - <a href='http://www.passerellesnumeriques.org' target='_blank' style='color:white;text-decoration:none' onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">Passerelles numériques</a>
 	</div>
 </div>
 <script type='text/javascript'>
@@ -463,11 +463,24 @@ if (isset($_GET["section"])) {
 /* Status in footer */
 function initFooter() {
 	var footer = document.getElementById('application_footer');
+	// App
+	/*
+	var span_app_status = document.createElement("DIV");
+	span_app_status.style.position = "absolute";
+	span_app_status.style.bottom = "0px";
+	span_app_status.style.right = "3px";
+	span_app_status.title = "Connection to PN Server";
+	footer.appendChild(span_app_status);
+	require("app_status.js",function() {
+		new app_status(span_app_status);
+	});
+	*/
 	// Google
 	var span_google_status = document.createElement("SPAN");
 	span_google_status.style.position = "absolute";
 	span_google_status.style.bottom = "0px";
 	span_google_status.style.right = "3px";
+	span_google_status.title = "Connection to Google";
 	footer.appendChild(span_google_status);
 	require("google_status.js",function() {
 		new google_status(span_google_status);

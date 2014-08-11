@@ -18,7 +18,11 @@ class StudentsNewsSection implements NewsSection {
 	public function getDisplayName() { return "Students"; }
 	public function getIcon() { return "/static/students/student_32.png"; }
 	public function getAccessRight() {
-		return 2; // TODO
+		if (PNApplication::$instance->user_management->has_right("edit_curriculum"))
+			return 2;
+		if (PNApplication::$instance->user_management->has_right("consult_students_list"))
+			return 1;
+		return 0;
 	}
 	public function getCategories() {
 		$list = array();

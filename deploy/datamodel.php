@@ -23,7 +23,8 @@ $header = "<script type='text/javascript' src='/static/javascript/utils.js'></sc
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
 <input type='hidden' name='changes' value=''/>
-<input type='hidden' name='datamodel' value=''/>
+<input type='hidden' name='datamodel_json' value=''/>
+<input type='hidden' name='datamodel_sql' value=''/>
 </form>
 
 <div style='font-size:14pt;padding-bottom:5px;border-bottom: 1px solid #808080;'>
@@ -507,11 +508,18 @@ function finish(odm,ndm) {
 		var form = document.forms['deploy'];
 		form.elements['changes'].value = service.generateInput(changes);
 		var xhr = new XMLHttpRequest();
-		xhr.open("GET","/dynamic/development/service/get_datamodel", true);
+		xhr.open("GET","/dynamic/development/service/get_datamodel?output=json", true);
 		xhr.onreadystatechange = function() {
 		    if (this.readyState != 4) return;
-			form.elements['datamodel'].value = xhr.responseText;
-			form.submit();
+			form.elements['datamodel_json'].value = xhr.responseText;
+			xhr = new XMLHttpRequest();
+			xhr.open("GET","/dynamic/development/service/get_datamodel?output=sql", true);
+			xhr.onreadystatechange = function() {
+			    if (this.readyState != 4) return;
+				form.elements['datamodel_sql'].value = xhr.responseText;
+				form.submit();
+			};
+			xhr.send();
 		};
 		xhr.send();
 	};
@@ -537,7 +545,7 @@ function createChangeDescription(change,odm,ndm) {
 }
 
 var xhr = new XMLHttpRequest();
-xhr.open("GET","/dynamic/development/service/get_datamodel", true);
+xhr.open("GET","/dynamic/development/service/get_datamodel?output=json", true);
 xhr.onreadystatechange = function() {
     if (this.readyState != 4) return;
     var new_datamodel = eval('('+xhr.responseText+')');

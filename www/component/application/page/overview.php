@@ -42,6 +42,20 @@ class page_overview extends Page {
 .section_box>div:nth-child(3) {
 	color: #808080;
 }
+.section_box.disabled {
+	position: relative;
+	opacity: 0.75;
+	border: 1px solid #A0A0A0;
+	background-color: #E0E0E0;
+}
+.section_box.disabled:hover {
+	border: 1px solid #808080;
+	box-shadow: none;
+}
+.section_box.disabled:active {
+	top: 0px;
+	left: 0px;
+}
 </style>
 <div style="background-color: white">
 	<div class="page_title">
@@ -57,19 +71,26 @@ class page_overview extends Page {
 		foreach (PNApplication::$instance->components as $cname=>$comp)
 			foreach ($comp->getPluginImplementations() as $pi)
 				if ($pi instanceof ApplicationSectionPlugin)
-					if ($pi->canAccess())
-						array_push($sections, $pi);
+					array_push($sections, $pi);
 		usort($sections, function($s1, $s2) {
 			if ($s1->getPriority() <= $s2->getPriority()) return -1;
 			return 1;
 		});
 		foreach ($sections as $section) {
 			if ($section->getId() == "home") continue; // skip the home as we are already there
-			echo "<a class='section_box' href=\"".$section->getDefaultPageURL()."\">";
-				echo "<div><img src=\"".$section->getIcon32()."\"/></div>";
-				echo "<div>".htmlentities($section->getName())."</div>";
-				echo "<div>".htmlentities($section->getDescription())."</div>";
-			echo "</a>";
+			if ($section->canAccess())
+				echo "<a class='section_box' href=\"".$section->getDefaultPageURL()."\">";
+			else
+			echo "<div class='section_box disabled'>";
+			echo "<div><img src=\"".$section->getIcon32()."\"/></div>";
+			echo "<div>".htmlentities($section->getName())."</div>";
+			echo "<div>".htmlentities($section->getDescription())."</div>";
+			if ($section->canAccess())
+				echo "</a>";
+			else {
+				echo "<div style='position:absolute;bottom:0px;right:0px;'><img src='".theme::$icons_16["lock"]."'/></div>";
+				echo "</div>";
+			}
 		}
 		?>
 	</div>
@@ -120,7 +141,12 @@ if (@$_COOKIE["test_deploy"] == "true") {
 			title="Latest Updates"
 		>
 			<div>
-				<div class='page_section_title3'>General updates</div>
+				<div class='page_section_title3'>
+					General updates
+					<?php if (PNApplication::$instance->news->canPostInSection("application")) { ?>
+					<button style='float:right' class='flat icon' title='Post message' onclick="postGeneralUpdate();"><img src='/static/news/write_16.png'/></button>
+					<?php } ?>
+				</div>
 				<div id='general_news_container'>
 					<img src='/static/news/loading.gif' id='general_news_loading'/>
 				</div>
@@ -215,16 +241,22 @@ function init_calendars() {
 }
 init_calendars();
 
+var general_updates = null, other_updates = null;
 require("news.js",function() {
-	new news('general_news_container', [{name:"application"}], null, function(n) {
+	general_updates = new news('general_news_container', [{name:"application"}], null, function(n) {
 		var loading = document.getElementById('general_news_loading');
 		loading.parentNode.removeChild(loading);
 	});
-	new news('other_news_container', [], [{name:"application"}], function(n) {
+	other_updates = new news('other_news_container', [], [{name:"application"}], function(n) {
 		var loading = document.getElementById('other_news_loading');
 		loading.parentNode.removeChild(loading);
 	});
 });
+
+function postGeneralUpdate() {
+	if (!general_updates) { setTimeout(postGeneralUpdate,100); return; }
+	general_updates.post('application');
+}
 
 </script>
 <?php 		

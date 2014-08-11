@@ -223,7 +223,10 @@ case "dynamic":
 	default: $invalid("Invalid request: unknown request type ".$request_type);
 	}
 #DEV
+	@session_start();
+	$_SESSION["app"]->development->requests = PNApplication::$instance->development->requests;
 	$dev->end_time = microtime(true);
+	session_write_close();
 #END
 	die();
 default: $invalid("Invalid request: unknown resource type ".$type);

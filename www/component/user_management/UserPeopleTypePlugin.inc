@@ -2,7 +2,7 @@
 require_once("component/people/PeopleTypePlugin.inc");
 class UserPeopleTypePlugin implements PeopleTypePlugin {
 	
-	public function getSecurityPriority() { return 1; }
+	public function getSecurityPriority() { return 10000; }
 	
 	public function getId() { return "user"; }
 	public function getName() { return "User"; }

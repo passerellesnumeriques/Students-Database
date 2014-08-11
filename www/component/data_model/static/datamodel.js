@@ -270,22 +270,16 @@ datamodel = {
 	},
 	
 	create_cell: function(table, sub_model, column, row_key, value, field_type, field_cfg, editable, container, onchange) {
-		if (!editable) {
-			var node = document.createTextNode(value);
-			window.top.datamodel.addCellChangeListener(getWindowFromElement(container), table+(sub_model ? "_"+sub_model : ""), column, row_key, function(value){
-				node.nodeValue = value;
-				if (onchange) onchange(value);
-			});
-			container.appendChild(node);
-			return;
-		}
-		require([["typed_field.js",field_type+".js"],"editable_cell.js"], function() {
-			if (row_key > 0)
+		var js = [["typed_field.js",field_type+".js"]];
+		if (editable) js.push("editable_cell.js");
+		require(js, function() {
+			if (row_key > 0 && editable)
 				new editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, field_type, field_cfg, value,null,onchange);
 			else {
-				var field = new window[field_type](value,true,field_cfg);
+				var field = new window[field_type](value,editable,field_cfg);
 				container.appendChild(field.getHTMLElement());
 				if (onchange) field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
+				field.register_datamodel_cell(table,column,row_key);
 			}
 		});
 	},

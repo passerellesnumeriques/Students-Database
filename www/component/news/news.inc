@@ -1,6 +1,21 @@
 <?php 
 class news extends Component {
 	
+	public function canPostInSection($section) {
+		require_once("NewsPlugin.inc");
+		$found = false;
+		foreach (PNApplication::$instance->components as $c) {
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof NewsPlugin)) continue;
+				foreach ($pi->getSections() as $s) {
+					if ($s->getName() <> $section) continue;
+					if ($s->getAccessRight() == 2) return true;
+				}
+			}
+		}
+		return false;
+	}
+	
 	public function post($section, $category, $tags, $message) {
 		require_once("NewsPlugin.inc");
 		$found = false;
@@ -9,8 +24,8 @@ class news extends Component {
 				if (!($pi instanceof NewsPlugin)) continue;
 				foreach ($pi->getSections() as $s) {
 					if ($s->getName() <> $section) continue;
-					if ($s->getAccessRight() <> 2) break;
 					if ($category == null) {
+						if ($s->getAccessRight() <> 2) break;
 						$found = true;
 						break;
 					}
@@ -32,7 +47,7 @@ class news extends Component {
 		try {
 			$now = time();
 			$s = "";
-			if ($tags <> null) {
+			if ($tags <> null && count($tags) > 0) {
 				sort($tags);
 				foreach ($tags as $tag) $s .= "/".$tag."/";
 			}

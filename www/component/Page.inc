@@ -26,6 +26,8 @@ abstract class Page {
 	 */
 	public abstract function getRequiredRights();
 
+	public function mayUpdateSession() { return false; }
+	
 	/** Execute the page: generate its content */
 	protected abstract function execute();
 	

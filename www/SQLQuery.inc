@@ -1281,7 +1281,11 @@ class SQLQuery {
 				$first = true;
 				foreach ($keys as $key_name) {
 					if ($first) $first = false; else $sql .= " AND ";
-					$sql .= "`".$key_name."`='".$key[$key_name]."'";
+					$sql .= "`".$key_name."`";
+					if ($key[$key_name] === null)
+						$sql .= " IS NULL";
+					else
+						$sql .= "='".SQLQuery::escape($key[$key_name])."'";
 				}
 			}
 			SQLQuery::db()->execute($sql);

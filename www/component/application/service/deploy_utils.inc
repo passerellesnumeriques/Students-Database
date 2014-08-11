@@ -73,6 +73,7 @@ function getURLFileSize($url, $expected_type = null) {
 	$lines = explode("\n",$result);
 	$size = "-1";
 	$type = "";
+	$accept_ranges = "";
 	foreach ($lines as $line) {
 		$line = trim($line);
 		$i = strpos($line, ":");
@@ -80,10 +81,11 @@ function getURLFileSize($url, $expected_type = null) {
 		$name = strtolower(trim(substr($line,0,$i)));
 		if ($name == "content-length") { $size = trim(substr($line,$i+1)); continue; }
 		if ($name == "content-type") { $type = strtolower(trim(substr($line,$i+1))); continue; }
+		if ($name == "accept-ranges") { $accept_ranges = strtolower(trim(substr($line,$i+1))); continue; }
 	}
 	$size = intval($size);
 	if ($size > 0 && $expected_type <> null && $type == $expected_type)
-		return $size;
+		return $size."/".$accept_ranges;
 	return -1;
 }
 

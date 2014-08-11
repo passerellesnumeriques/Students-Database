@@ -39,23 +39,25 @@ CurriculumTreeNode_Batch.prototype.createInfo = function() {
 	var b = document.createElement("B"); b.appendChild(document.createTextNode("Graduation")); span_graduation.appendChild(b); span_graduation.appendChild(document.createTextNode(": "));
 	window.top.datamodel.create_cell("StudentBatch", null, "end_date", this.batch.id, batch.end_date, "field_date", {}, false, span_graduation, function(value) { batch.end_date = value; });
 	div.appendChild(span_graduation);
-	var button = document.createElement("BUTTON");
-	button.className = "action";
-	button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
-	button.title = "Edit batch, periods and specializations";
-	button.batch = batch;
-	button.onclick = function() {
-		editBatch(this.batch);
-	};
-	div.appendChild(button);
-	button = document.createElement("BUTTON");
-	button.className = "action important";
-	button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
-	button.batch = batch;
-	button.onclick = function() {
-		removeBatch(this.batch);
-	};
-	div.appendChild(button);
+	if (window.can_edit_batches) {
+		var button = document.createElement("BUTTON");
+		button.className = "action";
+		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
+		button.title = "Edit batch, periods and specializations";
+		button.batch = batch;
+		button.onclick = function() {
+			editBatch(this.batch);
+		};
+		div.appendChild(button);
+		button = document.createElement("BUTTON");
+		button.className = "action important";
+		button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
+		button.batch = batch;
+		button.onclick = function() {
+			removeBatch(this.batch);
+		};
+		div.appendChild(button);
+	}
 	return div;
 };
 CurriculumTreeNode_Batch.prototype.getURLParameters = function() {

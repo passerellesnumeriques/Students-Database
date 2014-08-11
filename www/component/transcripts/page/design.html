@@ -1,18 +1,19 @@
 <style type='text/css'>
 .transcripts {
 	font-family: Verdana;
-	padding:20px;
+	padding:10px 20px;
 }
 .transcripts .title {
 	font-size:22pt;
 }
 .transcripts .student_information {
 	width: 100%;
+	margin-top:10px;
+	margin-bottom: 10px;
 }
 .transcripts .grades {
 	table-layout: fixed;
 	empty-cells: hide;
-	margin-top: 20px;
 	width: 100%;
 	border-spacing: 0px;
 	border-collapse: collapse;
@@ -20,17 +21,24 @@
 .transcripts .grades td {
 	border: 2px solid black;
 }
-.transcripts .grades tbody>tr:first-child>td:first-child {
+.transcripts .grades .grade {
+	padding: 0px;
+}
+.transcripts .grades td.blank, .transcripts .grades .total td.blank {
 	border: none;
+	background-color: white;
 }
 .transcripts .grades .title {
-	font-weight: bold;
-	font-size: 12pt;
+	background-color: #COLUMNS_TITLES_BACKGROUND#;
+	color: #COLUMNS_TITLES_COLOR#;
+	font-weight: #COLUMNS_TITLES_WEIGHT#;
+	font-size: #COLUMNS_TITLES_SIZE#pt;
 	text-align: center;
 }
 .transcripts .grades .subject_category {
-	font-weight: bold;
-	font-size: 14pt;
+	color: #SUBJECT_CATEGORY_COLOR#;
+	font-weight: #SUBJECT_CATEGORY_WEIGHT#;
+	font-size: #SUBJECT_CATEGORY_SIZE#pt;
 	padding-top: 10px;
 	-moz-transform: rotate(-90deg);
 	-webkit-transform: rotate(-90deg);
@@ -40,18 +48,30 @@
 .transcripts .grades .subject_category_col {
 	width: 24pt;
 }
-.transcripts .grades .total {
-	background-color: #009DE1;
-	color: white;
+.transcripts .grades .subject_name_col {
 }
-.transcripts .grades .total>td:first-child {
+.transcripts .grades .grade_col {
+	width: 80px;
+}
+.transcripts .grades .subject_row {
+	height: 20px;
+}
+.transcripts .grades .total {
+}
+.transcripts .grades .total>td:nth-child(2) {
+	font-size: #TOTAL_SIZE#pt;
 	font-weight: bold;
-	font-size: 14pt;
 }
 .transcripts .grades .total>td {
+	background-color: #TOTAL_BACKGROUND#;
+	color: #TOTAL_COLOR#;
+	font-size: #TOTAL_SIZE#pt;
+	font-weight: normal;
 }
 .transcripts td.subject_name {
 	text-align: left;
+	white-space: nowrap;
+	height: 24px;
 }
 .transcripts td {
 	text-align: center;
@@ -72,18 +92,20 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 100px;
-	font-size: 12pt;
+	min-height: 70px;
+	font-size: 11pt;
 }
 .transcripts .signature {
-	font-size: 12pt;
+	font-size: 11pt;
 	padding-left: 30px;
+	margin-top: 10px;
 }
 </style>
+<div class='transcripts'>
 <!-- Header / Title -->
-<div class='title' style='margin-bottom:20px'>
+<div class='title'>
 	<div style='display:inline-block;width:120px'>
-	<img src='/static/application/logo.png' width=80 height=80 style='vertical-align:top'/>
+	<img src='/static/application/logo.png' width=70 height=70 style='vertical-align:top;'/>
 	</div>
 	<div style='display:inline-block;width:450px;vertical-align:top'>
 		OFFICIAL TRANSCRIPT OF ACADEMIC RECORDS
@@ -105,50 +127,60 @@
 	</tr>
 </table>
 <!-- Grades -->
+#SUBJECT_CATEGORY#
 <table class='grades'>
 	<colgroup>
 		<col class='subject_category_col'/>
+		<col class='subject_name_col'/>
+		<col class='grade_col'/>
+		#IF:class_average#<col class='grade_col'/>#ENDIF#
 	</colgroup>
 	<tbody>
+	#IF:SUBJECT_CATEGORY[0]#
 	<tr>
-		<td></td>
-		<td><div class='title'>Subject</div></td>
-		<td><div class='title'>Grade</div></td>
-		<td><div class='title'>Class<br/>Average</div></td>
+		<td class='blank'></td>
+		<td class='title'><div>Subject</div></td>
+		<td class='title'><div>Grade</div></td>
+		#IF:class_average#<td class='title'><div>Class<br/>Average</div></td>#ENDIF#
 	</tr>
-	<tr>
-		<td rowspan="2" style='white-space:nowrap;background-color:#009DE1;color:white'><div class='subject_category' style='display:inline-block'>#Subject Category#</div></td>
-		<td class='subject_name'>Subject 1</td>
-		<td>Grade 1</td>
-		<td>Av 1</td>
+	#ENDIF#
+	#SUBJECT#
+	<tr class='subject_row'>
+		#IF:SUBJECT[0]#<td rowspan="#COUNT(SUBJECTS)#" style='white-space:nowrap;background-color:#SUBJECT_CATEGORY_BACKGROUND#;'><div class='subject_category' style='display:inline-block'>#SUBJECT_CATEGORY_NAME#</div></td>#ENDIF#
+		<td class='subject_name'>#SUBJECT_CODE# - #SUBJECT_NAME#</td>
+		<td style='position:relative' class='grade'>#GRADE#</td>
+		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
-	<tr>
-		<td class='subject_name'>Subject 2</td>
-		<td>Grade 2</td>
-		<td>Av 2</td>
-	</tr>
+	#END_SUBJECT#
 	<tr class='total'>
-		<td colspan="2">Total / Average</td>
-		<td>x</td>
-		<td>x</td>
+		<td class='blank'></td>
+		<td>Total / Average</td>
+		<td style='position:relative'>#TOTAL_GRADE#</td>
+		#IF:class_average#<td>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
 	</tbody>
 </table>
+#END_SUBJECT_CATEGORY#
 <!-- Global results -->
 TODO: Global results<br/><br/>
 <!-- General appreciation -->
-<table class='general_appreciation' style='width:100%;border-spacing:0px;margin-bottom:20px;'>
+#IF:general_appreciation#
+<table class='general_appreciation' style='width:100%;border-spacing:0px;'>
 	<tr><th style='background-color:#009DE1;color:white'>General Appreciation</th></tr>
 	<tr><td>
 	<div>#General Appreciation#</div>
 	</td></tr>
 </table>
+#ENDIF#
 <!-- Signature -->
 <div class='signature'>
 	#Location#,<br/>
 	#Signatory Name#,<br/>
 	#Signatory Title#
 </div>
+</div>
 <script type='text/javascript'>
-$('.transcripts .grades .subject_category').css('height', $('.transcripts .grades .subject_category').width()+10);
+var cats = document.getElementsByClassName("subject_category");
+for (var i = 0; i < cats.length; ++i)
+	cats[i].style.height = (cats[i].offsetWidth+10)+"px";
 </script>
