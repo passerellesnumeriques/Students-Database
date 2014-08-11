@@ -18,16 +18,39 @@ function remove_directory($path) {
 			unlink($path."/".$filename);
 	}
 	closedir($dir);
-	if (!@rmdir($path))
-		rmdir($path);
+	if (!@rmdir($path)) {
+		if (file_exists($path)) {
+			@rmdir($path);
+			if (file_exists($path)) {
+				sleep(1);
+				@rmdir($path);
+				if (file_exists($path)) {
+					sleep(1);
+					if (file_exists($path))
+						rmdir($path);
+				}
+			}
+		}
+	}
 }
 
 if (file_exists($_POST["path"]))
 	remove_directory($_POST["path"]);
 if (file_exists($_POST["path"])) die("Unable to remove directory ".$_POST["path"]);
 
-if (!@mkdir($_POST["path"]))
-	if (!mkdir($_POST["path"])) die("Unable to create directory ".$_POST["path"]);
+if (!@mkdir($_POST["path"])) {
+	if (!file_exists($_POST["path"])) {
+		@mkdir($_POST["path"]);
+		if (!file_exists($_POST["path"])) {
+			sleep(1);
+			@mkdir($_POST["path"]);
+			if (!file_exists($_POST["path"])) {
+				sleep(1);
+				@mkdir($_POST["path"]);
+			}
+		}
+	}
+}
 if (!file_exists($_POST["path"])) die("Unable to create directory ".$_POST["path"]);
 
 mkdir($_POST["path"]."/latest"); // here we will download information about latest version

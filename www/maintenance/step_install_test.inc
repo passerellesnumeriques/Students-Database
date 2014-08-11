@@ -63,15 +63,6 @@ if (isset($_GET["install"])) {
 			include("maintenance/update/migrate/before_datamodel.php");
 		}
 		if (file_exists("maintenance/update/migrate/datamodel_change.php")) {
-			global $db_config;
-			require_once("DataBaseSystem_".$db_config["type"].".inc");
-			$db_system_class = "DataBaseSystem_".$db_config["type"];
-			$db_system = new $db_system_class;
-			$res = $db_system->connect($db_config["server"], $db_config["user"], $db_config["password"]);
-			if ($res <> DataBaseSystem::ERR_OK) {
-				echo("Error: unable to migrate because we cannot connect to the database");
-				break;
-			}
 			include("maintenance/update/migrate/datamodel_change.php");
 		}
 		if (file_exists("maintenance/update/migrate/after_datamodel.php")) {

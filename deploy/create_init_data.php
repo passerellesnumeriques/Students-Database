@@ -21,15 +21,15 @@ while (($file = readdir($dir)) <> null) {
 	}
 }
 closedir($dir);
-// TODO compare with previous version, and warning if different
+
 if ($has_errors) die();
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
 
 Initial data prepared.<br/>
-Generating zip files and checksums...
-<form name='deploy' method="POST" action="create_zip.php">
+Analyzing initial data changes...
+<form name='deploy' method="POST" action="compare_init_data.php">
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>

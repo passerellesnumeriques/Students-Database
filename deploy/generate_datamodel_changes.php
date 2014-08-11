@@ -9,13 +9,27 @@ set_error_handler(function($severity, $message, $filename, $lineno) {
 
 // write the new datamodel
 $f = fopen(realpath($_POST["path"])."/datamodel/datamodel.json","w");
-fwrite($f,$_POST["datamodel"]);
+fwrite($f,$_POST["datamodel_json"]);
+fclose($f);
+$f = fopen(realpath($_POST["path"])."/datamodel/datamodel.sql","w");
+fwrite($f,$_POST["datamodel_sql"]);
 fclose($f);
 
 // write the migration script
 $changes = json_decode($_POST["changes"],true);
 $f = fopen($_POST["path"]."/migration/datamodel_update.php","w");
+
 fwrite($f,"<?php \n");
+fwrite($f,"global \$db_config,\$local_domain;\n");
+fwrite($f,"require_once(\"DataBaseSystem_\".\$db_config[\"type\"].\".inc\");\n");
+fwrite($f,"\$db_system_class = \"DataBaseSystem_\".\$db_config[\"type\"];\n");
+fwrite($f,"\$db_system = new \$db_system_class;\n");
+fwrite($f,"\$res = \$db_system->connect(\$db_config[\"server\"], \$db_config[\"user\"], \$db_config[\"password\"]);\n");
+fwrite($f,"if (\$res <> DataBaseSystem::ERR_OK)\n");
+fwrite($f,"\tdie(\"Error: unable to migrate because we cannot connect to the database\");\n");
+fwrite($f,"require_once(\"component/data_model/DataBaseUtilities.inc\");\n");
+fwrite($f,"\$db_system->execute(\"USE students_\".\$local_domain);\n");
+
 $new_tables_root = array();
 $new_tables_sm = array();
 $removed_tables_root = array();

@@ -63,7 +63,7 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 			if (error) {
 				if (content.indexOf("(#28)") > 0) {
 					window.download_init_speed = Math.floor(window.download_init_speed/2);
-					if (window.download_init_speed < 8192) window.download_init_speed = 8192;
+					if (window.download_init_speed < 32768) window.download_init_speed = 32768;
 				}
 				end_handler(content);
 				return;
@@ -79,7 +79,8 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 				else if (end_time-start_time < 15000) speed *= 1.3;
 				else if (end_time-start_time > 25000) speed *= 0.85;
 				if (speed > 2.5*1024*1024) speed = 2.5*1024*1024;
-				if (speed < 8192) speed = 8192;
+				if (speed < 32768) speed = 32768;
+				else if (speed >= 160*1024) window.download_init_speed = 128*1024;
 			} else
 				speed *= 1.2;
 			next(end+1);
