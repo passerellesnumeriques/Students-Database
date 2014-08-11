@@ -259,6 +259,7 @@ class user_management extends Component {
 	}
 	
 	public function set_role_rights($role_id, $rights) {
+		if ($this->all_rights == null) $this->load_all_rights();
 		require_once("component/data_model/Model.inc");
 		if (!DataModel::get()->getTable("RoleRights")->canRemoveAny()) {
 			PNApplication::error("You are not allowed to set rights on roles");
@@ -294,6 +295,7 @@ class user_management extends Component {
 	}
 	
 	public function add_role_rights($role_id, $rights, $bypass_security = false) {
+		if ($this->all_rights == null) $this->load_all_rights();
 		require_once("component/data_model/Model.inc");
 		if (!$bypass_security && !DataModel::get()->getTable("RoleRights")->canRemoveAny()) {
 			PNApplication::error("You are not allowed to set rights on roles");
@@ -356,6 +358,7 @@ class user_management extends Component {
 	}
 	
 	private function load_user_rights() {
+		if ($this->all_rights == null) $this->load_all_rights();
 		$this->rights = array();
 		$this->is_admin = array();
 		foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
@@ -422,6 +425,7 @@ class user_management extends Component {
 	 * @return boolean
 	 */
 	public function has_right($right_name, $value = true) {
+		if ($this->all_rights == null) $this->load_all_rights();
 		if (!isset($this->all_rights[$right_name])) {
 			PNApplication::error("Unknown right '".$right_name."'");
 			return false;
