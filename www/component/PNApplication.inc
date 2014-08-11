@@ -69,10 +69,10 @@ class PNApplication {
 	 */
 	public static function error($message, $exception = null) {
 		if (count(PNApplication::$errors) == 20) {
-			array_push(PNApplication::$errors, "Too much errors");
+			array_push(PNApplication::$errors, "Too many errors");
 			return;
 		}
-		if (count(PNApplication::$errors) > 50) return;
+		if (count(PNApplication::$errors) > 20) return;
 		if (!($message instanceof Exception) && $exception == null) {
 			try {
 				throw new Exception($message);

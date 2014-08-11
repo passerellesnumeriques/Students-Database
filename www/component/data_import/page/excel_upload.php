@@ -118,8 +118,11 @@ class page_excel_upload extends Page {
 									$val = $val->format("Y-m-d H:i"); // date time
 							} else
 								$val = $val->format("Y-m-d H:i:s"); // date time including seconds
-						} else
-							$val = $cell->getFormattedValue();
+						} else {
+							try {
+								$val = $cell->getFormattedValue();
+							} catch (Exception $e) {}
+						}
 						if ($val == "#REF!") $val = $cell->getOldCalculatedValue();
 					} catch (Exception $e) {
 						$val = "ERROR: ".$e->getMessage();

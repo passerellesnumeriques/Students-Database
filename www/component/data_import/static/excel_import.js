@@ -48,7 +48,7 @@ function excel_import(popup, container, onready) {
 					var check_view = function() {
 						var win = getIFrameWindow(t.frame_excel);
 						if (!win.excel || !win.excel.tabs) {
-							if (win.page_errors) {
+							if (win.page_errors && !win.excel_uploaded) {
 								popup.unfreeze();
 								return;
 							}
@@ -64,7 +64,7 @@ function excel_import(popup, container, onready) {
 							setTimeout(check_loaded, 100);
 							return;
 						}
-						if (win.page_errors) {
+						if (win.page_errors && !win.excel_uploaded) {
 							popup.unfreeze();
 							return;
 						}

@@ -39,7 +39,7 @@ function import_with_match(data_list, ev) {
 						var check_view = function() {
 							var win = getIFrameWindow(t.excel_frame);
 							if (!win.excel || !win.excel.tabs) {
-								if (win.page_errors) {
+								if (win.page_errors && !win.excel_uploaded) {
 									unlock_screen(locker);
 									return;
 								}
@@ -55,7 +55,7 @@ function import_with_match(data_list, ev) {
 								setTimeout(check_loaded, 100);
 								return;
 							}
-							if (win.page_errors) {
+							if (win.page_errors && !win.excel_uploaded) {
 								unlock_screen(locker);
 								return;
 							}
