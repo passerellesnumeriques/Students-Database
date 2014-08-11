@@ -66,8 +66,6 @@ All openend sessions have been removed.<br/>
 <?php
 $updates = array();
 if (file_exists("data/updates")) {
-	global $pn_app_version;
-	$versions = array();
 	$paths = array();
 	
 	$dir = opendir("data/updates");
@@ -82,26 +80,12 @@ if (file_exists("data/updates")) {
 		$v = substr($name,29);
 		$i = strpos($v, "_to_");
 		if ($i !== false) array_push($paths, array(substr($v,0,$i),substr($v,$i+4)));
-		else array_push($versions, $v);
+		else $updates[$v] = null;
 	}
 	closedir($dir);
 
-	function find_updates($versions, $paths, $migrated_to, $current_path, &$updates) {
-		foreach ($paths as $path) {
-			if ($path[0] == $migrated_to) {
-				// we have a way to migrate to a new version
-				foreach ($versions as $ver) if ($ver == $path[1]) { $updates[$ver] = array_merge($current_path, array($ver)); break; }
-				find_updates($versions, $paths, $path[1], array_merge($current_path, array($ver)), $updates);
-			}
-		}
-	}
-	find_updates($versions, $paths, $pn_app_version, array($pn_app_version), $updates);
-	// TODO find reverse ways...
-	foreach ($versions as $ver) {
-		if (!isset($updates[$ver])) {
-			$updates[$ver] = null;
-		}
-	}
+	foreach ($paths as $path)
+		if (isset($updates[$path[1]])) $updates[$path[1]] = $path[0];
 }
 $backups = array();
 if (file_exists("data/backups")) {
@@ -140,11 +124,10 @@ for ($i = 0; $i < count($updates) || $i < count($backups) || $i == 0; $i++) {
 		$version = $version[$i];
 		$path = $updates[$version];
 		echo "<td>".htmlentities($version)."</td>";
-		if ($path <> null) {
+		if ($path == $current_version) {
 			echo "<td>";
 			echo "<form method='POST' action='?step=backup&ondone=install_test'>";
 			echo "<input type='hidden' name='version' value='".$version."'/>";
-			echo "<input type='hidden' name='path' value='".json_encode($path)."'/>";
 			echo " <input type='submit' value='Install it!'/>";
 			echo "</form>";
 			echo "</td>";

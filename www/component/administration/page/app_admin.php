@@ -90,151 +90,57 @@ function getUpdateURL(filename) {
 	return update_url.replace("##FILE##",filename);
 }
 
-function migration(img,msg) {
-	msg.innerHTML = "Retrieving information about how to migrate to the new version...";
-	require("deploy_utils.js",function() {
-		getURLFile("/dynamic/administration/service/download_update?download=true", versions_url, function(error,content) {
+function download_new_version(new_versions, new_version_index, icon, msg, reset) {
+	icon.src = theme.icons_16.loading;
+	msg.innerHTML = "Downloading version "+new_versions[new_version_index];
+	var progress = document.createElement("SPAN");
+	progress.style.marginLeft = "10px";
+	msg.appendChild(progress);
+	download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip", progress, function(error) {
+		if (error) {
+			img.src = theme.icons_16.error;
+			msg.innerHTML = error;
+			var button = document.createElement("BUTTON");
+			button.className = "action";
+			button.innerHTML = "Retry";
+			button.style.marginLeft = "5px";
+			button.onclick = function() {
+				download_new_version(new_versions, new_version_index, icon, msg);
+			};
+			msg.appendChild(button);
+			return;
+		}
+		// download checksum
+		msg.innerHTML = "Downloading checksum for version "+new_versions[new_version_index];
+		progress = document.createElement("SPAN");
+		progress.style.marginLeft = "10px";
+		msg.appendChild(progress);
+		download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum", progress, function(error) {
 			if (error) {
 				img.src = theme.icons_16.error;
-				msg.innerHTML = content;
+				msg.innerHTML = error;
+				var button = document.createElement("BUTTON");
+				button.className = "action";
+				button.innerHTML = "Retry";
+				button.style.marginLeft = "5px";
+				button.onclick = function() {
+					download_new_version(new_versions, new_version_index, icon, msg);
+				};
+				msg.appendChild(button);
 				return;
 			}
-			var current = "<?php echo $pn_app_version?>";
-			var versions = content.split("\n");
-			var path = [];
-			var found = false;
-			for (var i = 0; i < versions.length; ++i) {
-				versions[i] = versions[i].trim();
-				if (!found) {
-					if (versions[i] == current) found = true;
-					continue;
-				}
-				path.push(versions[i-1]+"_to_"+versions[i]);
-			}
-			msg.innerHTML = "Downloading migration scripts: ";
-			var span_file = document.createElement("SPAN");
-			var span_progress = document.createElement("SPAN");
-			span_progress.style.marginLeft = "5px";
-			msg.appendChild(span_file);
-			msg.appendChild(span_progress);
-			var download_migration;
-			var next = function(index) {
-				if (index == path.length) {
-					img.src = theme.icons_16.ok;
-					msg.innerHTML = "New version downloaded and ready to be installed. You can now put the software into <i>Maintenance Mode</i> (see below), then you will have the option to install it.";
-					return;
-				}
-				span_file.innerHTML = path[index];
-				// checking if already downloaded
-				span_progress.innerHTML = "Checking download...";
-				service.customOutput("administration","download_update",{step:'check_if_done',version:path[index]},function(res) {
-					if (res == "not_downloaded") {
-						download_migration(index);
-						return;
-					}
-					if (res == "invalid_download") {
-						span_progress.innerHTML = "Downloaded file is invalid. Re-downloading...";
-						download_migration(index,true);
-						return;
-					}
-					if (res == "OK") {
-						next(index+1);
-						return;
-					}
-					img.src = theme.icons_16.error;
-					msg.innerHTML = "Unexpected answer: "+res;
-				});	
-			};
-			download_migration = function(index,reset) {
-				download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+path[index]+".zip"), "data/updates/Students_Management_Software_"+path[index]+".zip", span_progress, function(error) {
-					if (error) {
-						img.src = theme.icons_16.error;
-						msg.innerHTML = error;
-						var button = document.createElement("BUTTON");
-						button.className = "action";
-						button.innerHTML = "Retry";
-						button.style.marginLeft = "5px";
-						button.onclick = function() {
-							img.src = theme.icons_16.loading;
-							msg.innerHTML = "Downloading migration scripts: ";
-							msg.appendChild(span_file);
-							msg.appendChild(span_progress);
-							download_migration(index);
-						};
-						msg.appendChild(button);
-						return;
-					}
-					span_file.innerHTML = path[index]+" checksum file";
-					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+path[index]+".zip.checksum"), "data/updates/Students_Management_Software_"+path[index]+".zip.checksum", span_progress, function(error) {
-						if (error) {
-							img.src = theme.icons_16.error;
-							msg.innerHTML = error;
-							return;
-						}
-						span_progress.innerHTML = "Checking download...";
-						service.customOutput("administration","download_update",{step:'check_if_done',version:path[index]},function(res) {
-							if (res == "not_downloaded") {
-								img.src = theme.icons_16.error;
-								span_progress.innerHTML = "We cannot find the file after download!";
-								return;
-							}
-							if (res == "invalid_download") {
-								img.src = theme.icons_16.error;
-								span_progress.innerHTML = "Downloaded file is invalid. Please retry.";
-								return;
-							}
-							if (res == "OK") {
-								next(index+1);
-								return;
-							}
-							img.src = theme.icons_16.error;
-							msg.innerHTML = "Unexpected answer: "+res;
-						});
-					});
-				});
-			};
-			next(0);
-		});
-	});
-}
-
-service.json("administration","latest_version",null,function(res) {
-	var span = document.getElementById('latest_version');
-	if (res && res.version) {
-		span.innerHTML = res.version;
-		var current = "<?php echo $pn_app_version?>";
-		current = current.split(".");
-		var latest = res.version.split(".");
-		var need_update = false;
-		for (var i = 0; i < current.length; ++i) {
-			if (latest.length <= i) break;
-			var c = parseInt(current[i]);
-			var l = parseInt(latest[i]);
-			if (l > c) { need_update = true; break; }
-			if (l < c) break;
-		}
-		if (need_update) {
-			var new_version = res.version;
-			section_updates.content.innerHTML += "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> <span style='color:#806000;font-weight:bold;'>A new version is available !</span><br/>";
-			var div = document.createElement("DIV");
-			var img = document.createElement("IMG");
-			img.src = theme.icons_16.loading;
-			img.style.verticalAlign = "bottom";
-			img.style.marginRight = "5px";
-			div.appendChild(img);
-			var msg = document.createElement("SPAN");
+			// checking the download is correct
 			msg.innerHTML = "Checking download...";
-			div.appendChild(msg);
-			section_updates.content.appendChild(div);
-			var download_new_version = function(reset) {
-				var filename_span = document.createElement("SPAN");
-				div.appendChild(filename_span);
-				var progress = document.createElement("SPAN");
-				progress.style.marginLeft = "10px";
-				div.appendChild(progress);
-				require("deploy_utils.js",function() {
-					filename_span.innerHTML = ": Students_Management_Software_"+new_version+".zip";
-					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_version+".zip"), "data/updates/Students_Management_Software_"+new_version+".zip", progress, function(error) {
+			service.customOutput("administration","download_update",{step:'check_if_done',version:new_versions[new_version_index]},function(res) {
+				if (res == "OK") {
+					// download migration script
+					var prev_version = new_version_index > 0 ? new_versions[new_version_index-1] : "<?php echo $pn_app_version?>";
+					var new_version = new_versions[new_version_index];
+					msg.innerHTML = "Downloading migration scripts from version "+prev_version+" to version "+new_version;
+					progress = document.createElement("SPAN");
+					progress.style.marginLeft = "10px";
+					msg.appendChild(progress);
+					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip", progress, function(error) {
 						if (error) {
 							img.src = theme.icons_16.error;
 							msg.innerHTML = error;
@@ -243,73 +149,118 @@ service.json("administration","latest_version",null,function(res) {
 							button.innerHTML = "Retry";
 							button.style.marginLeft = "5px";
 							button.onclick = function() {
-								img.src = theme.icons_16.loading;
-								msg.innerHTML = "Downloading new version";
-								download_new_version();
+								download_new_version(new_versions, new_version_index, icon, msg);
 							};
 							msg.appendChild(button);
-							div.removeChild(filename_span);
-							div.removeChild(progress);
 							return;
 						}
-						filename_span.innerHTML = ": Students_Management_Software_"+new_version+".zip.checksum";
-						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_version+".zip.checksum"), "data/updates/Students_Management_Software_"+new_version+".zip.checksum", progress, function(error) {
-							div.removeChild(filename_span);
-							div.removeChild(progress);
+						// download checksum
+						msg.innerHTML = "Downloading checksum for migration scripts";
+						progress = document.createElement("SPAN");
+						progress.style.marginLeft = "10px";
+						msg.appendChild(progress);
+						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum", progress, function(error) {
 							if (error) {
 								img.src = theme.icons_16.error;
 								msg.innerHTML = error;
+								var button = document.createElement("BUTTON");
+								button.className = "action";
+								button.innerHTML = "Retry";
+								button.style.marginLeft = "5px";
+								button.onclick = function() {
+									download_new_version(new_versions, new_version_index, icon, msg);
+								};
+								msg.appendChild(button);
 								return;
 							}
-							msg.innerHTML = "Checking download...";
-							service.customOutput("administration","download_update",{step:'check_if_done',version:new_version},function(res) {
+							// checking the download is correct
+							msg.innerHTML = "Checking migration scripts...";
+							service.customOutput("administration","download_update",{step:'check_if_done',version:prev_version+"_to_"+new_version},function(res) {
+								if (res == "OK") {
+									img.src = theme.icons_16.ok;
+									msg.innerHTML = "New version downloaded and ready to be installed. You can now put the software into <i>Maintenance Mode</i> (see below), then you will have the option to install it.";
+									return;
+								}
 								if (res == "not_downloaded") {
 									img.src = theme.icons_16.error;
 									msg.innerHTML = "We cannot find the file after download!";
-									return;
-								}
-								if (res == "invalid_download") {
+								} else if (res == "invalid_download") {
 									img.src = theme.icons_16.error;
 									msg.innerHTML = "Downloaded file is invalid. Please retry.";
-									return;
+								} else {
+									img.src = theme.icons_16.error;
+									msg.innerHTML = "Unexpected answer: "+res;
 								}
-								if (res == "OK") {
-									migration(img,msg);
-									return;
-								}
-								img.src = theme.icons_16.error;
-								msg.innerHTML = "Unexpected answer: "+res;
+								var button = document.createElement("BUTTON");
+								button.className = "action";
+								button.innerHTML = "Retry";
+								button.style.marginLeft = "5px";
+								button.onclick = function() {
+									download_new_version(new_versions, new_version_index, icon, msg, true); // retry, with reset
+								};
+								msg.appendChild(button);
 							});
 						});
 					});
-				});
-			};
-			service.customOutput("administration","download_update",{step:'check_if_done',version:new_version},function(res) {
+					return;
+				}
 				if (res == "not_downloaded") {
-					msg.innerHTML = "Downloading new version";
-					download_new_version();
-					return;
+					img.src = theme.icons_16.error;
+					msg.innerHTML = "We cannot find the file after download!";
+				} else if (res == "invalid_download") {
+					img.src = theme.icons_16.error;
+					msg.innerHTML = "Downloaded file is invalid. Please retry.";
+				} else {
+					img.src = theme.icons_16.error;
+					msg.innerHTML = "Unexpected answer: "+res;
 				}
-				if (res == "invalid_download") {
-					msg.innerHTML = "Downloaded file is invalid. Re-downloading version "+new_version;
-					download_new_version(true);
-					return;
-				}
-				if (res == "OK") {
-					migration(img,msg);
-					return;
-				}
-				img.src = theme.icons_16.error;
-				msg.innerHTML = "Unexpected answer: "+res;
+				var button = document.createElement("BUTTON");
+				button.className = "action";
+				button.innerHTML = "Retry";
+				button.style.marginLeft = "5px";
+				button.onclick = function() {
+					download_new_version(new_versions, new_version_index, icon, msg, true); // retry, with reset
+				};
+				msg.appendChild(button);
 			});
-		} else {
-			var s = document.createElement("SPAN");
-			s.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> The version is up to date !";
-			section_updates.content.appendChild(s);
+		});
+	});		
+}
+
+require("deploy_utils.js",function() {
+	var span = document.getElementById('latest_version');
+	getURLFile("/dynamic/administration/service/download_update?download=true", versions_url, function(error,content) {
+		if (error) {
+			span.innerHTML = "<img src='"+theme.icons_16.error+"'/> "+content;
+			return;
 		}
-	} else
-		span.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> Error";
+		var current = "<?php echo $pn_app_version?>";
+		var versions = content.split("\n");
+		var new_versions = [];
+		var current_found = false;
+		for (var i = 0; i < versions.length; ++i) {
+			if (!current_found) {
+				if (versions[i] == current) current_found = true;
+				continue;
+			}
+			new_versions.push(versions[i]);
+		}
+		if (new_versions.length == 0) {
+			span.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> The version is up to date !";
+			return;
+		}
+		span.innerHTML = "<img src='"+theme.icons_16.warning+"'/> "+(new_versions.length)+" newer version"+(new_versions.length > 1 ? "s" : "")+" found!";
+		var div = document.createElement("DIV");
+		section_updates.content.appendChild(div);
+		var icon = document.createElement("IMG");
+		icon.style.verticalAlign = "bottom";
+		var msg = document.createElement("SPAN");
+		div.appendChild(icon);
+		div.appendChild(msg);
+		download_new_version(new_versions, 0, icon, msg);
+	});
 });
+
 
 section_sessions.addButton(null,"Remove all sessions except mine","action",function() {
 	alert("TODO");

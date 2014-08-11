@@ -16,9 +16,8 @@ if (isset($_GET["backup"])) {
 		echo "<div style='flex:none;background-color:white;padding:10px'>";
 		echo "Backup created.";
 		echo "<form name='install' method='POST' action='?step=".$_GET["ondone"]."'>";
-		if (isset($_POST["path"])) {
+		if (isset($_POST["version"])) {
 			echo "<input type='hidden' name='version' value='".$_POST["version"]."'/>";
-			echo "<input type='hidden' name='path' value='".$_POST["path"]."'/>";
 		}
 		echo "<input type='hidden' name='backup_time' value='$time'/>";
 		echo "<input type='submit' value='Continue'/>";
@@ -31,9 +30,8 @@ if (isset($_GET["backup"])) {
 	echo "<div style='flex:none;background-color:white;padding:10px'>";
 	echo "Creating backup...";
 	echo "<form name='install' method='POST' action='?step=backup&backup=true&ondone=".$_GET["ondone"]."'>";
-	if (isset($_POST["path"])) {
+	if (isset($_POST["version"])) {
 		echo "<input type='hidden' name='version' value='".$_POST["version"]."'/>";
-		echo "<input type='hidden' name='path' value='".$_POST["path"]."'/>";
 	}
 	echo "</form>";
 	echo "<script type='text/javascript'>document.forms['install'].submit();</script>";

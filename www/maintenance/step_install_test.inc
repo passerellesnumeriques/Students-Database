@@ -55,35 +55,32 @@ if (isset($_GET["install"])) {
 	require_once("component/data_model/Model.inc");
 	
 	// apply migration scripts
-	$path = json_decode($_POST["path"], true);
-	$index = 1;
-	while ($index < count($path)) {
-		if (file_exists($previous_version_path."/maintenance/update/migrate")) remove_directory($previous_version_path."/maintenance/update/migrate");
-		mkdir($previous_version_path."/maintenance/update/migrate");
-		if (class_exists("ZipArchive")) {
-			$zip = new ZipArchive();
-			$zip->open($previous_version_path."/data/updates/Students_Management_Software_".$path[$index-1]."_to_".$path[$index].".zip");
-			$zip->extractTo($previous_version_path."/maintenance/update/migrate");
-			$zip->close();
-		} else {
-			$output = array();
-			$ret = 0;
-			exec("/usr/bin/unzip \"".$previous_version_path."/data/updates/Students_Management_Software_".$path[$index-1]."_to_".$path[$index].".zip"."\" -d \"".$previous_version_path."/maintenance/update/migrate"."\"", $output, $ret);
-			if ($ret <> 0) {
-				PNApplication::error("Error unzipping migration scripts (".$ret.")");
-				break;
-			}
+	$current_version = file_get_contents($previous_version_path."/version");
+	if (file_exists($previous_version_path."/maintenance/update/migrate")) remove_directory($previous_version_path."/maintenance/update/migrate");
+	mkdir($previous_version_path."/maintenance/update/migrate");
+	if (class_exists("ZipArchive")) {
+		$zip = new ZipArchive();
+		$zip->open($previous_version_path."/data/updates/Students_Management_Software_".$current_version."_to_".$_POST["version"].".zip");
+		$zip->extractTo($previous_version_path."/maintenance/update/migrate");
+		$zip->close();
+	} else {
+		$output = array();
+		$ret = 0;
+		exec("/usr/bin/unzip \"".$previous_version_path."/data/updates/Students_Management_Software_".$current_version."_to_".$_POST["version"].".zip"."\" -d \"".$previous_version_path."/maintenance/update/migrate"."\"", $output, $ret);
+		if ($ret <> 0) {
+			PNApplication::error("Error unzipping migration scripts (".$ret.")");
+			break;
 		}
-		if (file_exists($previous_version_path."/maintenance/update/migrate/before_datamodel.php")) {
-			include($previous_version_path."/maintenance/update/migrate/before_datamodel.php");
-		}
-		if (file_exists($previous_version_path."/maintenance/update/migrate/datamodel_update.php")) {
-			include($previous_version_path."/maintenance/update/migrate/datamodel_update.php");
-		}
-		if (file_exists($previous_version_path."/maintenance/update/migrate/after_datamodel.php")) {
-			include($previous_version_path."/maintenance/update/migrate/after_datamodel.php");
-		}
-		$index++;
+	}
+	
+	if (file_exists($previous_version_path."/maintenance/update/migrate/before_datamodel.php")) {
+		include($previous_version_path."/maintenance/update/migrate/before_datamodel.php");
+	}
+	if (file_exists($previous_version_path."/maintenance/update/migrate/datamodel_update.php")) {
+		include($previous_version_path."/maintenance/update/migrate/datamodel_update.php");
+	}
+	if (file_exists($previous_version_path."/maintenance/update/migrate/after_datamodel.php")) {
+		include($previous_version_path."/maintenance/update/migrate/after_datamodel.php");
 	}
 	
 	if (PNApplication::hasErrors())
@@ -92,20 +89,8 @@ if (isset($_GET["install"])) {
 		include($previous_version_path."/maintenance/header.inc");
 		?>
 		<div style='flex:none;background-color:white;padding:10px'>
-			<?php 
-			if (count($path) < 2)
-				echo "Warning: no migration scripts found.";
-			else {
-				echo "Migration done: ";
-				for ($i = 1; $i < count($path); $i++) {
-					if ($i > 1) echo ", ";
-					echo "from ".$path[$i-1]." to ".$path[$i];
-				}
-			}
-			?>
+			Version <?php echo $_POST["version"];?> ready to be tested !<br/>
 			<br/>
-			<br/>
-			Software ready to be tested<br/>
 			<a href='/?request_to_test_update=true' target='_blank'>Test it</a><br/>
 			Once ready:
 			<a href='?step=install'>Install it</a><br/>
@@ -121,7 +106,6 @@ if (isset($_GET["install"])) {
 	echo "Installing new version for testing...";
 	echo "<form name='install' method='POST' action='?step=install_test&install=true'>";
 	echo "<input type='hidden' name='version' value='".$_POST["version"]."'/>";
-	echo "<input type='hidden' name='path' value='".$_POST["path"]."'/>";
 	echo "<input type='hidden' name='backup_time' value='".$_POST["backup_time"]."'/>";
 	echo "</form>";
 	echo "<script type='text/javascript'>document.forms['install'].submit();</script>";
