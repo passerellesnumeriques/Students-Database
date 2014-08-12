@@ -47,6 +47,14 @@ class page_app_admin extends Page {
 </div>
 <div id='section_backup' title='Backups and Remote access' collapsable='true' style='margin-top:10px'>
 	<div style='padding:10px'>
+		<?php
+		if (!file_exists("conf/".PNApplication::$instance->local_domain.".password")) {
+			echo "<img src='".theme::$icons_16["warning"]."'/> You didn't setup a password for remote access. Other domains won't be able to synchronize with your data.<br/>";
+			echo "Setup remote access password: <input type='password' id='remote_password'/> <button class='action' onclick='setRemotePassword();'>Setup</button><br/>";
+		} else {
+			echo "Reset remote access password: <input type='password' id='remote_password'/> <button class='action' onclick='setRemotePassword();'>Reset</button><br/>";
+		} 
+		?>
 	</div>
 </div>
 <div id='section_sessions' title='Open Sessions' collapsable='true' style='margin-top:10px'>
@@ -298,6 +306,13 @@ function startMaintenance() {
 		link.onclick = function() {
 			unlock_screen(locker);
 		};
+	});
+}
+function setRemotePassword() {
+	var pass = document.getElementById('remote_password').value;
+	if (pass.length < 10) { alert("Remote Access Password must have at least 10 characters"); return; }
+	service.json("administration","set_remote_password",{password:pass},function(res) {
+		if (res) location.reload();
 	});
 }
 </script>

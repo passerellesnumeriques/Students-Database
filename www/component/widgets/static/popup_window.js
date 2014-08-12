@@ -12,6 +12,7 @@ if (typeof theme != 'undefined')
  * @param {string|HTMLElement} content content of the window: either an html element, or a string containing the html
  */
 function popup_window(title,icon,content,hide_close_button) {
+	theme.css("popup_window.css");
 	var t = this;
 	t.icon = icon;
 	t.title = title;

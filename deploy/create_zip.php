@@ -129,6 +129,7 @@ New list of available versions is:<ul>
 </ul>
 <br/>
 <button onclick='test_fresh();'>Test it as a fresh installation</button>
+<button onclick='test_update();'>Test to update an existing version</button>
 <!-- 
  &nbsp; <button onclick='test_update();'>Test it with current database, by updating it</button>
  -->
@@ -172,23 +173,7 @@ function test_fresh() {
 	xhr.send(data);
 }
 function test_update() {
-	var span = document.getElementById('message');
-	span.innerHTML = "<img src='/static/theme/default/icons_16/loading.gif'/> Deploying new version... Please wait...";
-	var xhr = new XMLHttpRequest();
-	xhr.open("POST","install_test.php?type=update", true);
-	xhr.onreadystatechange = function() {
-	    if (this.readyState != 4) return;
-	    if (xhr.responseText == "OK") {
-		    span.innerHTML = "";
-		    document.cookie = "test_deploy=true; Path=/";
-			window.open("/test_deploy/");
-	    } else {
-		    span.innerHTML = "<img src='/static/theme/default/icons_16/error.png'/> Error: "+xhr.responseText;
-	    }
-	};
-	xhr.setRequestHeader('Content-type', "application/x-www-form-urlencoded");
-	var data = "path="+encodeURIComponent(<?php echo json_encode($_POST["path"]);?>)+"&version="+encodeURIComponent(<?php echo json_encode($_POST["version"]); ?>);
-	xhr.send(data);
+	window.open("/deploy/test_update/download_installed_version.php?path="+encodeURIComponent(<?php echo json_encode($_POST["path"]);?>));
 }
 </script>
 <?php include("footer.inc");?>

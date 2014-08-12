@@ -94,7 +94,7 @@ if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $pn_app_version) {
 		echo "<script type='text/javascript'>window.top.location = '/reload';</script>";
 		die();
 	} else if (strpos($path, "/service/") && $path <> "/dynamic/application/service/loading") {
-		header("pn_version_changed: yes", true, 403);
+		header("pn_version_changed: ".$pn_app_version, true, 403);
 		die();
 	} // else we let continue... to avoid blocking everything
 }

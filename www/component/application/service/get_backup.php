@@ -69,8 +69,8 @@ class service_get_backup extends Service {
 			return;
 		}
 		header("Accept-Ranges: bytes", true);
-		if ($_SERVER["REQUEST_METHOD"] == "HEAD") {
-			header("Content-Length: ".filesize("data/backups/$version/$time/$file.zip"));
+		if (isset($_GET["get_size"])) {
+			header("File-Size: ".filesize("data/backups/$version/$time/$file.zip"));
 			return;
 		}
 		if (isset($_SERVER["HTTP_RANGE"])) {
