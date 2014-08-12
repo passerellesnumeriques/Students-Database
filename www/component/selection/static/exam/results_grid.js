@@ -128,7 +128,7 @@ function results_grid(subject,applicants,grid_height) {
    t._createVersionColumn=function(){
       var field_args={
          "possible_values":[],
-          "can_be_empty":false
+          "can_be_null":false
           };            
           
          for(var j=0;j<t.subject.versions.length;++j)

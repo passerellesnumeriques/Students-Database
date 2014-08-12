@@ -12,7 +12,7 @@ function filter_enum(data, config, editable) {
 			else
 				data.values.push(config.possible_values[i]);
 		}
-		if (config.can_be_empty) {
+		if (config.can_be_null) {
 			data.values.push("NULL");
 			data.values.push("NOT_NULL");
 		}
@@ -21,7 +21,7 @@ function filter_enum(data, config, editable) {
 	var t=this;
 	require("select_checkboxes.js", function() {
 		t.select = new select_checkboxes(t.element);
-		if (config.can_be_empty) {
+		if (config.can_be_null) {
 			t.select.add("NULL", "(<i>blank / not specified</i>)");
 			t.select.add("NOT_NULL", "(<i>not blank / specified</i>)");
 		}

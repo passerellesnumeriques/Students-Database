@@ -41,7 +41,7 @@ function pop_select_date_and_time(pop_title,pop_icon, duration_choice, preselect
 			var date = new Date(parseInt(t._event.start) * 1000);
 			date_sql = dateToSQL(date);
 		}
-		t._field_date = new field_date(date_sql,true,{can_be_empty:false});
+		t._field_date = new field_date(date_sql,true,{can_be_null:false});
 		var date_picker = t._field_date.getHTMLElement();
 		date_picker.style.marginLeft = "3px";
 		div_date.appendChild(date_picker);

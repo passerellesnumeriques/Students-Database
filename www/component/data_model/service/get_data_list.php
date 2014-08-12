@@ -266,7 +266,7 @@ class service_get_data_list extends Service {
 				$writer = new PHPExcel_Writer_CSV($excel);
 			} else if ($format == 'pdf') {
 				header("Content-Disposition: attachment; filename=\"list.pdf\"");
-				PHPExcel_Settings::setPdfRenderer(PHPExcel_Settings::PDF_RENDERER_MPDF, "common/MPDF");
+				PHPExcel_Settings::setPdfRenderer(PHPExcel_Settings::PDF_RENDERER_MPDF, "component/lib_mpdf/MPDF");
 				$writer = new PHPExcel_Writer_PDF($excel);
 			}
 			// write to output

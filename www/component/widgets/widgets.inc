@@ -46,11 +46,11 @@ class widgets extends Component {
 				if ($first) $first = false; else $cfg .= ",";
 				$cfg .= json_encode($v);
 			}
-			$cfg .= "],can_be_empty:".($col->can_be_null ? "true" : "false")."}";
+			$cfg .= "],can_be_null:".($col->can_be_null ? "true" : "false")."}";
  			return array("field_enum",$cfg);
 		}
 		if ($col instanceof \datamodel\ColumnDate) {
-			$cfg = "{can_be_empty:".($col->can_be_null ? "true" : "false");
+			$cfg = "{can_be_null:".($col->can_be_null ? "true" : "false");
 			if ($col->minimum_date <> null) {
 				if (ctype_digit(substr($col->minimum_date,0,1)))
 					$cfg .= ",minimum:".json_encode($col->minimum_date);
@@ -84,13 +84,13 @@ class widgets extends Component {
 				$cfg .= json_encode($v);
 			}
 			$cfg .= "]";
-			$cfg .= ",can_be_empty:".($col->can_be_null ? "true" : "false");
+			$cfg .= ",can_be_null:".($col->can_be_null ? "true" : "false");
 			$cfg .= "}";
 			return array("filter_enum", $cfg);
 		}
 		if ($col instanceof \datamodel\ColumnBoolean) {
 			$cfg = "{possible_values:['Yes','No']";
-			$cfg .= ",can_be_empty:".($col->can_be_null ? "true" : "false");
+			$cfg .= ",can_be_null:".($col->can_be_null ? "true" : "false");
 			$cfg .= "}";
 			return array("filter_enum", $cfg);
 		}
@@ -99,7 +99,7 @@ class widgets extends Component {
 			$col instanceof \datamodel\ColumnDate ||
 			$col instanceof \datamodel\ColumnTimestamp) {
 			$field = $this->get_typed_field($col);
-			$cfg = "{value_field_classname:".json_encode($field[0]).",value_field_config:".$field[1]."}";
+			$cfg = "{value_field_classname:".json_encode($field[0]).",value_field_config:".$field[1].",can_be_null:".($col->can_be_null ? "true" : "false")."}";
 			return array("filter_comparable", $cfg);
 		}
 		return array(null,"null");

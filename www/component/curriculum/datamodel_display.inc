@@ -71,11 +71,11 @@ function add_teacher_dates(dates) {
 	tr.appendChild(td = document.createElement("TD"));
 	td.appendChild(document.createTextNode("Started on "));
 	tr.appendChild(td = document.createElement("TD"));
-	window.top.datamodel.create_cell("TeacherDates",null,"start",dates.id,dates.start,"field_date", {can_be_empty:false,minimum:"2004-01-01", maximum_cell:"end"}, can_edit_teacher_dates,td,function(value){dates.start = value;});
+	window.top.datamodel.create_cell("TeacherDates",null,"start",dates.id,dates.start,"field_date", {can_be_null:false,minimum:"2004-01-01", maximum_cell:"end"}, can_edit_teacher_dates,td,function(value){dates.start = value;});
 	tr.appendChild(td = document.createElement("TD"));
 	td.appendChild(document.createTextNode("Ended on "));
 	tr.appendChild(td = document.createElement("TD"));
-	window.top.datamodel.create_cell("TeacherDates",null,"end",dates.id,dates.end,"field_date", {can_be_empty:true,minimum_cell:"start"}, can_edit_teacher_dates,td,function(value){dates.end = value;});
+	window.top.datamodel.create_cell("TeacherDates",null,"end",dates.id,dates.end,"field_date", {can_be_null:true,minimum_cell:"start"}, can_edit_teacher_dates,td,function(value){dates.end = value;});
 }
 
 function validateTeacherDates() {

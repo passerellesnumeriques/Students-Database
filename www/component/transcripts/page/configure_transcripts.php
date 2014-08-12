@@ -78,9 +78,11 @@ class page_configure_transcripts extends Page {
 		$all_subjects = PNApplication::$instance->curriculum->getSubjects($batch["id"]);
 		$subjects_ids = array();
 		foreach ($all_subjects as $s) array_push($subjects_ids, $s["id"]);
-		$grading = SQLQuery::create()->select("CurriculumSubjectGrading")->whereIn("CurriculumSubjectGrading","subject",$subjects_ids)->execute();
-		for ($i = 0; $i < count($all_subjects); $i++)
-			foreach ($grading as $g) if ($g["subject"] == $all_subjects[$i]["id"]) { $all_subjects[$i] = array_merge($all_subjects[$i],$g); break; }
+		if (count($subjects_ids) > 0) {
+			$grading = SQLQuery::create()->select("CurriculumSubjectGrading")->whereIn("CurriculumSubjectGrading","subject",$subjects_ids)->execute();
+			for ($i = 0; $i < count($all_subjects); $i++)
+				foreach ($grading as $g) if ($g["subject"] == $all_subjects[$i]["id"]) { $all_subjects[$i] = array_merge($all_subjects[$i],$g); break; }
+		}
 		$categories = PNApplication::$instance->curriculum->getSubjectCategories();
 		
 		$grading_systems = include("component/transcripts/GradingSystems.inc");

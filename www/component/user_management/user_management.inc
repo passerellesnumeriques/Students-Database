@@ -403,7 +403,7 @@ class user_management extends Component {
 				$this->rights[$domain] = $rights;
 			} else {
 				// in case this is an admin, only put names of rights
-				$is_local = $_domain == PNApplication::$instance->local_domain;
+				$is_local = $domain == PNApplication::$instance->local_domain;
 				$rights = array();
 				foreach (PNApplication::$instance->components as $cname=>$c) {
 					foreach ($c->getReadableRights() as $rname=>$rtype)

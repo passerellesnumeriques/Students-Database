@@ -77,18 +77,9 @@ function staff_info(&$page, $people_id, $container_id) {
 		};
 
 		this.newPosition = function() {
-			if (this.people_id == -1) {
-				var p = {id:-1,position:"",department:null,start:null,end:null};
-				this.positions.push(p);
-				this.addPosition(p);
-			} else {
-				service.json("data_model","save_entity",{table:"StaffPosition",field_position:"Enter Job Position",field_people:<?php echo $people_id;?>,field_start:dateToSQL(new Date())},function(res){
-					if (!res) return;
-					var p = {id:res.id,position:"Enter Job Position",department:null,start:dateToSQL(new Date()),end:null};
-					t.positions.push(p);
-					t.addPosition(p);
-				});
-			}
+			var p = {id:-1,position:"",department:null,start:null,end:null};
+			this.positions.push(p);
+			this.addPosition(p);
 		};
 
 		this.addPosition = function(position) {
@@ -96,6 +87,30 @@ function staff_info(&$page, $people_id, $container_id) {
 			t.table.appendChild(tr);
 			var td_position = document.createElement("TD");
 			tr.appendChild(td_position);
+			var check_valid = function(){};
+			if (position.id == -1 && t.people_id != -1)
+				check_valid = function() {
+					if (position.position.trim() == "") return;
+					if (position.department == null) return;
+					if (position.start == null) return;
+					var data = {
+						table:"StaffPosition",
+						field_position:position.position,
+						field_department:position.department,
+						field_start:position.start,
+						field_end:position.end,
+						field_people:t.people_id
+					};
+					if (position.id != -1) {
+						data.key = position.id;
+						data.lock = -1;
+					};
+					var locker = lock_screen(null, "Saving new staff position...");
+					service.json("data_model","save_entity",data,function(res){
+						unlock_screen(locker);
+						if (res && res.key && position.id == -1) position.id = res.key;
+					});
+				};
 			var fake_key = generateID();
 			if (position.id == -1) {
 				var field;
@@ -103,6 +118,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				td_position.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					position.position = field.getCurrentData();
+					check_valid();
 				});
 			} else {
 				require("editable_cell.js",function(){
@@ -118,13 +134,14 @@ function staff_info(&$page, $people_id, $container_id) {
 				field.onchange.add_listener(function(field){
 					var s = field.getCurrentData();
 					position.department = s == null || s.length == 0 ? null : parseInt(s);
+					check_valid();
 				});
 			} else {
 				require("editable_cell.js",function(){
 					var values = [];
 					for (var i = 0; i < t.departments.length; ++i)
 						values.push([t.departments[i].id,t.departments[i].name]);
-					new editable_cell(td_department, "StaffPosition", "department", position.id, 'field_enum', {possible_values:values,can_be_empty:true}, position.department).fillContainer();
+					new editable_cell(td_department, "StaffPosition", "department", position.id, 'field_enum', {possible_values:values,can_be_null:true}, position.department).fillContainer();
 				});
 			}
 			var td_start = document.createElement("TD");
@@ -135,6 +152,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				td_start.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					position.start = field.getCurrentData();
+					check_valid();
 				});
 			} else {
 				require("editable_cell.js",function(){
@@ -149,10 +167,11 @@ function staff_info(&$page, $people_id, $container_id) {
 				td_end.appendChild(field.getHTMLElement());
 				field.onchange.add_listener(function(field){
 					position.end = field.getCurrentData();
+					check_valid();
 				});
 			} else {
 				require("editable_cell.js",function(){
-					new editable_cell(td_end, "StaffPosition", "end", position.id, 'field_date', {}, position.end);
+					new editable_cell(td_end, "StaffPosition", "end", position.id, 'field_date', {can_be_null:true}, position.end);
 				});
 			}
 			var td_remove = document.createElement("TD");

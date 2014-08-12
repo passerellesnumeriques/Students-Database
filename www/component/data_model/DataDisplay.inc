@@ -223,7 +223,7 @@ abstract class DataDisplay {
 					$w = "";
 					foreach ($filter_list as $filter) {
 						$val = trim($filter["value"]);
-						if ($val == "") continue;
+						if ($val == "" && ($filter["type"] <> "is_set" && $filter["type"] <> "is_not_set")) continue;
 						$cd = "";
 						switch ($filter["type"]) {
 							case "equals": $cd = $expression."='".\SQLQuery::escape($filter["value"])."'"; break;
@@ -234,6 +234,8 @@ abstract class DataDisplay {
 							case "more_equals": $cd = $expression.">='".\SQLQuery::escape($filter["value"])."'"; break;
 							case "between": if (trim($filter["value_to"])<>"") $cd = "(".$expression.">='".\SQLQuery::escape($filter["value"])."' AND ".$expression."<='".\SQLQuery::escape($filter["value_to"])."')"; break;
 							case "not_between": if (trim($filter["value_to"])<>"") $cd = "(".$expression."<'".\SQLQuery::escape($filter["value"])."' OR ".$expression.">'".\SQLQuery::escape($filter["value_to"])."')"; break;
+							case "is_set": $cd = $expression." IS NOT NULL"; break;
+							case "is_not_set": $cd = $expression." IS NULL"; break;
 						}
 						if (strlen($cd) == 0) continue;
 						if (strlen($w) > 0) $w .= " OR ";
@@ -446,7 +448,7 @@ class ChoiceDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
 		$cfg .= "}";
 		return array("field_enum", $cfg);
 	}
@@ -466,7 +468,7 @@ class ChoiceDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
 		$cfg .= "}";
 		return array("filter_enum", $cfg);
 	}
@@ -625,7 +627,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:true";
+		$cfg .= ",can_be_null:true";
 		$cfg .= "}";
 		return array("filter_enum", $cfg);
 	}
@@ -957,7 +959,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
 		$cfg .= "}";
 		return array("filter_enum", $cfg);
 	}
@@ -1182,7 +1184,7 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
 		$cfg .= "}";
 		return array("filter_enum", $cfg);
 	}

@@ -302,10 +302,10 @@ class page_edit_customizable_table extends Page {
 			}
 			function createDate(container, spec) {
 				container.appendChild(document.createTextNode(" Minimum "));
-				container.spec.min = new field_date(spec ? spec.min : null,true,{can_be_empty:true});
+				container.spec.min = new field_date(spec ? spec.min : null,true,{can_be_null:true});
 				container.appendChild(container.spec.min.getHTMLElement());
 				container.appendChild(document.createTextNode(" Maximum "));
-				container.spec.max = new field_date(spec ? spec.max : null,true,{can_be_empty:true});
+				container.spec.max = new field_date(spec ? spec.max : null,true,{can_be_null:true});
 				container.appendChild(container.spec.max.getHTMLElement());
 				container.spec.min.onchange.add_listener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());

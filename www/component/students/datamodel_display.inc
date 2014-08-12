@@ -39,7 +39,7 @@ class StudentDataScreen extends datamodel\GenericDataScreen {
 						tr.appendChild(td = document.createElement("TD"));
 						td.appendChild(document.createTextNode("Date of exclusion"));
 						tr.appendChild(td = document.createElement("TD"));
-						var date = new field_date(null,true,{can_be_empty:false,minimum:<?php echo json_encode($batch["start_date"]);?>,maximum:<?php echo json_encode($batch["end_date"]);?>});
+						var date = new field_date(null,true,{can_be_null:false,minimum:<?php echo json_encode($batch["start_date"]);?>,maximum:<?php echo json_encode($batch["end_date"]);?>});
 						td.appendChild(date.getHTMLElement());
 						content.appendChild(tr = document.createElement("TR"));
 						tr.appendChild(td = document.createElement("TD"));
