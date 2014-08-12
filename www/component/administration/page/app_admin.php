@@ -45,6 +45,10 @@ class page_app_admin extends Page {
 		<button class='action important' onclick="startMaintenance();">Start</button>
 	</div>
 </div>
+<div id='section_backup' title='Backups and Remote access' collapsable='true' style='margin-top:10px'>
+	<div style='padding:10px'>
+	</div>
+</div>
 <div id='section_sessions' title='Open Sessions' collapsable='true' style='margin-top:10px'>
 	<table>
 		<tr><th>Session ID</th><th>Creation</th><th>Last modification</th><th>User</th></tr>
@@ -82,6 +86,7 @@ class page_app_admin extends Page {
 section_updates = sectionFromHTML('section_updates');
 section_sessions = sectionFromHTML('section_sessions');
 section_maintenance = sectionFromHTML('section_maintenance');
+section_backup = sectionFromHTML('section_backup');
 
 var latest_url = <?php echo json_encode(getLatestVersionURL());?>;
 var versions_url = <?php echo json_encode(getVersionsListURL());?>;
