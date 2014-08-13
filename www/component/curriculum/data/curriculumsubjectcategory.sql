@@ -24,7 +24,7 @@ SET time_zone = "+00:00";
 -- Dumping data for table `curriculumsubjectcategory`
 --
 
-INSERT INTO `curriculumsubjectcategory` (`id`, `name`) VALUES
+INSERT INTO `CurriculumSubjectCategory` (`id`, `name`) VALUES
 (1, 'IT Training'),
 (2, 'General Training');
 

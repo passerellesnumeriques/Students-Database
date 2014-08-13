@@ -14,7 +14,7 @@ class development extends Component {
 		Component::allowPageWithoutLogin("development", "export_storage");
 		//Component::allowPageWithoutLogin("development", "export_data");
 		Component::allowPageWithoutLogin("development", "check_code");
-		//Component::allowPageWithoutLogin("development", "insert_1000000_fake_students");
+		Component::allowPageWithoutLogin("development", "server_variables");
 		Component::allowServiceWithoutLogin("development", "create_db");
 		Component::allowServiceWithoutLogin("development", "reset_storage");
 		Component::allowServiceWithoutLogin("development", "init_data");
@@ -23,6 +23,7 @@ class development extends Component {
 		Component::allowServiceWithoutLogin("development", "check_php");
 		Component::allowServiceWithoutLogin("development", "check_todo");
 		Component::allowServiceWithoutLogin("development", "check_datamodel");
+		Component::allowServiceWithoutLogin("development", "get_datamodel");
 		
 		for ($i = 0; $i < 15; $i++) {
 			if ($i >= count($this->requests)) break;

@@ -1,1 +1,1 @@
-exclude:install_config.inc,data,version,.project,.buildpath,.settings
+exclude:install_config.inc,data,version,.project,.buildpath,.settings,maintenance_time,maintenance_in_progress

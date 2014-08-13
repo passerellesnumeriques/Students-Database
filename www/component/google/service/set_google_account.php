@@ -25,14 +25,15 @@ class service_set_google_account extends Service {
 		}
 		
 		if (isset($input["auth_token"])) {
-			$ch = curl_init("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=".$input["auth_token"]);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($ch, CURLOPT_HEADER, 0);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($ch,CURLOPT_TIMEOUT,10);
-			curl_setopt($ch,CURLOPT_CONNECTTIMEOUT,5);
-			$data = curl_exec($ch);
-			curl_close($ch);
+			$c = curl_init("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=".$input["auth_token"]);
+			if (file_exists("conf/proxy")) include("conf/proxy");
+			curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($c, CURLOPT_HEADER, 0);
+			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($c,CURLOPT_TIMEOUT,10);
+			curl_setopt($c,CURLOPT_CONNECTTIMEOUT,5);
+			$data = curl_exec($c);
+			curl_close($c);
 			$res = json_decode($data, true);
 			if ($res <> null && isset($res["id"])) {
 				$google_id = $res["id"];

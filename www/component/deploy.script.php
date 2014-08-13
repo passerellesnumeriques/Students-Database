@@ -8,10 +8,26 @@ while (($filename = readdir($dir)) <> null) {
 }
 closedir($dir);
 
+function processRelativePath($component_name, $content, $directive) {
+	$i = 0;
+	while (($i = strpos($content, $directive, $i)) !== false) {
+		$j = strpos($content, "\"", $i);
+		if ($j === false || $j <= 0) break;
+		$k = strpos($content, "\"", $j+1);
+		if ($k === false) break;
+		$p = substr($content, $j+1, $k-$j-1);
+		$i += strlen($directive);
+		if (substr($p, 0, 10) <> "component/" && file_exists(dirname(__FILE__)."/$component_name/$p")) {
+			$content = substr($content,0,$j+1)."component/$component_name/$p".substr($content,$k);
+		}
+	}
+	return $content;
+}
+
 function processComponent($name, &$done, &$components_order, &$components_content) {
 	if (in_array($name, $done)) return;
 	array_push($done, $name);
-	
+
 	$deps = array();
 	if (file_exists(dirname(__FILE__)."/$name/dependencies")) {
 		$f = fopen(dirname(__FILE__)."/$name/dependencies","r");
@@ -61,7 +77,7 @@ function processComponent($name, &$done, &$components_order, &$components_conten
 		$content = 
 			substr($content,0,$i+1).
 			"function getReadableRights(){".$readable_rights."} function getWritableRights(){".$writable_rights."}".
-			substr($content,$i);
+			substr($content,$i+1);
 		break;
 	} while ($i > 0);
 	
@@ -71,6 +87,13 @@ function processComponent($name, &$done, &$components_order, &$components_conten
 		$content = substr($content,5,strlen($content)-5-2);
 	} else
 		$content = "?>".$content."<?php ";
+	
+	$content = processRelativePath($name, $content, "require_once");
+	$content = processRelativePath($name, $content, "require");
+	$content = processRelativePath($name, $content, "include_once");
+	$content = processRelativePath($name, $content, "include");
+	$content = processRelativePath($name, $content, "file_get_contents");
+	$content = processRelativePath($name, $content, "readfile");
 	
 	$components_content .= $content;
 	
@@ -92,7 +115,7 @@ $first = true;
 foreach ($components_order as $name) {
 	if ($first) $first = false; else $order .= ",";
 	$order .= "\"".$name."\"";
-	$create .= "\$this->components[\"$name\"] = \$this->{".$name."} = new $name(\"$name\");";
+	$create .= "\$this->components[\"$name\"] = \$this->{\"".$name."\"} = new $name(\"$name\");";
 }
 $order .= ");";
 

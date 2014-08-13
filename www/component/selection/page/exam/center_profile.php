@@ -71,7 +71,7 @@ class page_exam_center_profile extends SelectionPage {
 		theme::css($this, "section.css");
 		$this->requireJavascript("exam_center_objects.js");
 		$this->requireJavascript("exam_center_sessions.js");
-		$this->requireJavascript("exam_center_IS.js");
+		$this->requireJavascript("exam_center_is.js");
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_text.js");
 		$this->requireJavascript("field_integer.js");
@@ -100,7 +100,7 @@ class page_exam_center_profile extends SelectionPage {
 				<?php } ?>
 					<div id='IS_container'></div>
 					<script type='text/javascript'>
-					window.linked_is = new exam_center_IS(
+					window.linked_is = new exam_center_is(
 						'IS_container',
 						<?php echo SelectionInformationSessionJSON::InformationSessionsJSON($all_is);?>,
 						<?php echo json_encode($linked_is_id);?>,

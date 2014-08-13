@@ -73,12 +73,18 @@ namespace datamodel {
 		private $oninsert;
 		/** @var Event */
 		private $onremove;
-
+		/** @var Event */
+		private $onupdate;
+		/** @var Event */
+		private $onbeforeupdate;
+		
 		public function __construct(&$model, $name) {
 			$this->model = &$model;
 			$this->name = $name;
 			$this->oninsert = new \Event();
 			$this->onremove = new \Event();
+			$this->onupdate = new \Event();
+			$this->onbeforeupdate = new \Event();
 		}
 
 		public function _key_for_submodel(&$sm) {
@@ -149,8 +155,8 @@ namespace datamodel {
 			else $sub_models = array($this->model->getParentTable()=>$sub_model);
 			return $this->_getColumns($sub_models);
 		}
-		public function internalGetColumns($sub_models = null) {
-			return $this->_getColumns($sub_models);
+		public function internalGetColumns($sub_models = null, $include_customization = true) {
+			return $this->_getColumns($sub_models, $include_customization);
 		}
 		public function internalGetColumn($name, $sub_models = null) {
 			$columns = $this->_getColumns($sub_models);
@@ -169,8 +175,8 @@ namespace datamodel {
 			return null;
 		}
 		
-		private function _getColumns($sub_models) {
-			if ($this->customization_right == null) return $this->columns;
+		private function _getColumns($sub_models, $include_customization = true) {
+			if ($this->customization_right == null || !$include_customization) return $this->columns;
 			if ($this->model instanceof \SubDataModel) {
 				$name = $this->getSQLName($sub_models);
 				if (!isset($this->customization[$name])) {
@@ -269,8 +275,8 @@ namespace datamodel {
 			return $this;
 		}
 		
-		public function &addTimestamp($name, $size=32, $min = null, $max = null, $can_be_null = true, $unique = false){
-			$c = new ColumnTimestamp($this, $name, $size, $min, $max, $can_be_null, $unique);
+		public function &addTimestamp($name, $can_be_null = true, $unique = false){
+			$c = new ColumnTimestamp($this, $name, $can_be_null, $unique);
 			array_push($this->columns, $c);
 			return $this;
 		}
@@ -340,6 +346,34 @@ namespace datamodel {
 		}
 		public function hasRemoveListeners() {
 			return $this->onremove->hasListeners();
+		}
+		/**
+		 * @param function $fct takes 3 parameters: fields_values, key, sub_model_instance
+		 * @return \datamodel\Table
+		 */
+		public function onUpdate($fct) {
+			$this->onupdate->listenFunction($fct);
+			return $this;
+		}
+		public function fireUpdate($fields_values, $key, $sub_model_instance) {
+			$this->onupdate->fire(array($fields_values,$key,$sub_model_instance));
+		}
+		public function hasUpdateListeners() {
+			return $this->onupdate->hasListeners();
+		}
+		/**
+		 * @param function $fct takes 3 parameters: &amp;fields_values, key, sub_model_instance
+		 * @return \datamodel\Table
+		 */
+		public function onBeforeUpdate($fct) {
+			$this->onbeforeupdate->listenFunction($fct);
+			return $this;
+		}
+		public function fireBeforeUpdate(&$fields_values, $key, $sub_model_instance) {
+			$this->onbeforeupdate->fire(array(&$fields_values,$key,$sub_model_instance));
+		}
+		public function hasBeforeUpdateListeners() {
+			return $this->onbeforeupdate->hasListeners();
 		}
 		
 		/** Indicate one or several columns should be indexed for faster access.
@@ -694,6 +728,10 @@ namespace datamodel {
 		}
 		
 		public function getDisplayValue($value) { return $value; }
+		
+		public function getJSONSpec() {
+			return "\"can_be_null\":".json_encode($this->can_be_null).",\"unique\":".json_encode($this->unique);
+		}
 
 	}
 
@@ -732,6 +770,10 @@ namespace datamodel {
 			if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max);
 			return $value;
 		}
+		
+		public function getJSONSpec() {
+			return parent::getJSONSpec().",\"size\":".json_encode($this->size).",\"min\":".json_encode($this->min).",\"max\":".json_encode($this->max);
+		}
 	}
 
 	class ColumnDecimal extends Column {
@@ -757,6 +799,10 @@ namespace datamodel {
 			if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min);
 			if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max);
 			return $value;
+		}
+
+		public function getJSONSpec() {
+			return parent::getJSONSpec().",\"integer_digits\":".json_encode($this->integer_digits).",\"decimal_digits\":".json_encode($this->decimal_digits).",\"min\":".json_encode($this->min).",\"max\":".json_encode($this->max);
 		}
 	}
 
@@ -807,6 +853,10 @@ namespace datamodel {
 				throw new \Exception("Cannot be greater than ".$this->max_length);
 			return $value;
 		}
+
+		public function getJSONSpec() {
+			return parent::getJSONSpec().",\"min_length\":".json_encode($this->min_length).",\"max_length\":".json_encode($this->max_length);
+		}
 	}
 
 	class ColumnEnum extends Column {
@@ -845,6 +895,10 @@ namespace datamodel {
 			}
 			$error .= ")";
 			throw new \Exception($error);
+		}
+		
+		public function getJSONSpec() {
+			return parent::getJSONSpec().",\"values\":".json_encode($this->values);
 		}
 	}
 
@@ -923,6 +977,10 @@ namespace datamodel {
 			}
 			return $value;
 		}
+
+		public function getJSONSpec() {
+			return parent::getJSONSpec().",\"minimum_date\":".json_encode($this->minimum_date).",\"maximum_date\":".json_encode($this->maximum_date);
+		}
 	}
 
 	class ColumnTime extends Column {
@@ -950,7 +1008,7 @@ namespace datamodel {
 	class PrimaryKey extends ColumnInteger {
 
 		public function __construct(&$table, $name, $size) {
-			parent::__construct($table, $name, $size, false, true);
+			parent::__construct($table, $name, $size, null, null, false, true);
 		}
 
 		public function get_sql_type() {
@@ -959,12 +1017,8 @@ namespace datamodel {
 	}
 	
 	class ColumnTimestamp extends ColumnInteger {
-		public function __construct(&$table, $name, $size, $min = null, $max = null, $can_be_null = true, $unique = false){
-			parent::__construct($table, $name, $size, $min, $max, $can_be_null, $unique);
-		}
-		
-		public function get_sql_type(){
-			return "INT(".$this->size.")";
+		public function __construct(&$table, $name, $can_be_null = true, $unique = false){
+			parent::__construct($table, $name, 32, null, null, $can_be_null, $unique);
 		}
 		
 		public function getDisplayValue($value) {
@@ -1025,6 +1079,10 @@ namespace datamodel {
 				return null;
 			}
 			return parent::validate($value);
+		}
+		
+		public function getJSONSpec() {
+			return parent::getJSONSpec().",\"foreign_table\":".json_encode($this->foreign_table).",\"remove_foreign_when_primary_removed\":".json_encode($this->remove_foreign_when_primary_removed).",\"remove_primary_when_foreign_removed\":".json_encode($this->remove_primary_when_foreign_removed).",\"multiple\":".json_encode($this->multiple);
 		}
 	}
 

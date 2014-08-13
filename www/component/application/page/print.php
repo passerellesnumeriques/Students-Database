@@ -77,6 +77,26 @@ window.setPrintContent = function(container) {
 			head.appendChild(link);
 		}
 	}
+	var nodes = win.document.getElementsByTagName("STYLE");
+	for (var i = 0; i < nodes.length; ++i) {
+		var node = nodes.item(i);
+		if (node.parentNode == head) continue;
+		node.parentNode.removeChild(node);
+		var n = document.createElement("STYLE");
+		n.type = "text/css";
+		n.appendChild(document.createTextNode(node.textContent));
+		head.appendChild(n);
+	}
+	nodes = win.document.getElementsByTagName("SCRIPT");
+	for (var i = 0; i < nodes.length; ++i) {
+		var node = nodes.item(i);
+		if (node.parentNode == head) continue;
+		node.parentNode.removeChild(node);
+		var n = document.createElement("SCRIPT");
+		n.type = "text/javascript";
+		n.textContent = node.textContent;
+		head.appendChild(n);
+	}
 };
 </script>
 <?php 

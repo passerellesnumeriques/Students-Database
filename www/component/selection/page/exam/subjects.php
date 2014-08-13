@@ -1,5 +1,5 @@
 <?php
-require_once("/../SelectionPage.inc");
+require_once("component/selection/page/SelectionPage.inc");
 require_once("component/selection/SelectionJSON.inc");
 class page_exam_subjects extends SelectionPage {
 	

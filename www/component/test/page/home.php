@@ -700,7 +700,7 @@ function play_service_test(component, scenario_index, ondone) {
 				ajax.call(
 					"POST",
 					"/dynamic/"+component.name+"/service/"+service_name+"?testing=true",
-					"text/json;charset=UTF-8",
+					"application/json;charset=UTF-8",
 					service.generateInput(input),
 					function(error) {
 						update_step_status(scenario, step, {error:error});
@@ -712,7 +712,7 @@ function play_service_test(component, scenario_index, ondone) {
 							if (i > 0) ct = ct.substring(0, i);
 						}
 						if (service_type == "parse_json") {
-							if (ct != "text/json") {
+							if (ct != "application/json") {
 								update_step_status(scenario, step, {error:'Output is expected to be JSON, received is: '+ct});
 								return;
 							}

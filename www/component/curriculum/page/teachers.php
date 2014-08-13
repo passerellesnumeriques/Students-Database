@@ -30,6 +30,7 @@ class page_teachers extends Page {
 				array_push($past_teachers_ids, $people_id);
 		}
 		$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true);
+		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
 
 ?>
 <div class="page_container" style="width:100%;height:100%;display:flex;flex-direction:column;">
@@ -54,16 +55,18 @@ class page_teachers extends Page {
 		<?php $this->buildTeachersList($past_teachers_ids, $teachers, $peoples);?>
 		</div>
 	</div>
+	<?php if ($can_edit) {?>
 	<div class="page_footer" style="flex:none;">
 		<button class='action' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
 	</div>
+	<?php } ?>
 </div>
 
 <script type='text/javascript'>
 function new_teacher() {
 	require("popup_window.js", function() {
 		var p = new popup_window("New Teacher", theme.build_icon("/static/curriculum/teacher_16.png",theme.icons_10.add), "");
-		var frame = p.setContentFrame("/dynamic/curriculum/page/popup_create_teacher?ondone=reload");
+		var frame = p.setContentFrame("/dynamic/people/page/popup_new_person?type=teacher&ondone=reload");
 		frame.reload = function() {
 			location.reload();
 		};
@@ -90,9 +93,9 @@ foreach ($teachers_ids as $people_id) {
 	foreach ($peoples as $p) if ($p["id"] == $people_id) { $people = $p; break; }
 	echo "<tr>";
 	$id = $this->generateID();
-	echo "<td id='$id'></td>";
+	echo "<td id='$id' style='cursor:pointer' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\"></td>";
 	$this->onload("new profile_picture('$id',50,50,'center','middle').loadPeopleStorage($people_id,".json_encode($people["picture"]).",".json_encode($people["picture_revision"]).");");
-	echo "<td>";
+	echo "<td style='cursor:pointer' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\">";
 	$id = $this->generateID();
 	echo "<div id='$id'>".htmlentities($people["first_name"])."</div>";
 	$this->onload("window.top.datamodel.registerCellSpan(window,'People','first_name',$people_id,document.getElementById('$id'));");

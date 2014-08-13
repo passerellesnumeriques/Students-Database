@@ -9,6 +9,8 @@ class application extends Component {
 		Component::allowPageWithoutLogin("application", "logout");
 		Component::allowServiceWithoutLogin("application", "get_static_resources");
 		Component::allowServiceWithoutLogin("application", "loading");
+		Component::allowServiceWithoutLogin("application", "ping");
+		Component::allowServiceWithoutLogin("application", "get_backup");
 	}
 	
 	public function getPluginImplementations() {

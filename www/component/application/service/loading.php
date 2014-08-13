@@ -30,14 +30,14 @@ $optional_delayed = array();
 if (PNApplication::$instance->user_management->username == null) {
 	array_push($optional, "/static/javascript/animation.js");
 	array_push($optional, "/static/application/service.js");
-	array_push($optional, "/static/widgets/Status.js");
-	array_push($optional, "/static/widgets/StatusUI_Top.js");
+	array_push($optional, "/static/widgets/status.js");
+	array_push($optional, "/static/widgets/status_ui_top.js");
 	array_push($optional_delayed, "/static/google/google.js");
 } else {
 	array_push($mandatory, "/static/application/service.js");
 	array_push($optional, "/static/javascript/animation.js");
-	array_push($optional, "/static/widgets/Status.js");
-	array_push($optional, "/static/widgets/StatusUI_Top.js");
+	array_push($optional, "/static/widgets/status.js");
+	array_push($optional, "/static/widgets/status_ui_top.js");
 	array_push($optional_delayed, "/static/google/google.js");
 }
 function get_script_info(&$a) {
@@ -128,11 +128,11 @@ function next_mandatory() {
 }
 update_size();
 next_mandatory();
+next_mandatory();
 setTimeout(next_mandatory, 50);
+setTimeout(next_mandatory, 100);
+setTimeout(next_mandatory, 150);
 setTimeout(next_mandatory, 200);
-setTimeout(next_mandatory, 400);
-setTimeout(next_mandatory, 500);
-setTimeout(next_mandatory, 700);
 var optional_index = 0;
 var optional_loaded = 0;
 function next_optional() {
@@ -169,7 +169,6 @@ function pn_loading_start() {
 function pn_loading_end() {
 	document.getElementById('loading_status').innerHTML = "";
 	if (!pn_loading_visible) return;
-	pn_loading_visible = false;
 	if (typeof animation == 'undefined') {
 		setTimeout(pn_loading_end, 100);
 		return;
@@ -179,6 +178,7 @@ function pn_loading_end() {
 		return;
 	}
 	animation.fadeOut(window.pn_loading,500);
+	pn_loading_visible = false;
 }
 function set_loading_message(msg) {
 	document.getElementById('loading_status').innerHTML = msg;

@@ -22,15 +22,16 @@ abstract class Service {
 	 */
 	public abstract function inputDocumentation();
 	/**
-	 * Return the format of the output of this service (by default: text/json) 
+	 * Return the format of the output of this service (by default: application/json) 
 	 * @param array $input the input data of the service
 	 * @return string the MIME format that will be returned by the service
 	 */
-	public function getOutputFormat($input) { return "text/json"; }
+	public function getOutputFormat($input) { return "application/json"; }
 	/**
 	 * Generate the documentation of the output of this service.
 	 */
 	public abstract function outputDocumentation();
+	public function mayUpdateSession() { return false; }
 	/**
 	 * Execute the service
 	 * @param Component $component the component this service belongs to

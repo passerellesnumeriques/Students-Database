@@ -47,25 +47,27 @@ CurriculumTreeNode_BatchPeriod.prototype.createInfo = function() {
 	window.top.datamodel.create_cell("BatchPeriod", null, "end", aperiod.id, aperiod.end, "field_date", {}, false, span, function(value) { aperiod.end = value; });
 	div.appendChild(span);
 	var buttons = document.createElement("DIV"); div.appendChild(buttons);
-	var button = document.createElement("BUTTON");
-	button.className = "action";
-	button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
-	button.title = "Edit batch";
-	button.node = this;
-	button.onclick = function() {
-		editBatch(this.node.parent.batch);
-	};
-	buttons.appendChild(button);
-	if (this.period.available_specializations.length == 0) {
-		button = document.createElement("BUTTON");
-		button.className = "action important";
-		button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
-		button.title = "Create a new class in period "+this.period.name;
+	if (window.can_edit_batches) {
+		var button = document.createElement("BUTTON");
+		button.className = "action";
+		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
+		button.title = "Edit batch";
 		button.node = this;
 		button.onclick = function() {
-			newClass(this.node, null);
+			editBatch(this.node.parent.batch);
 		};
 		buttons.appendChild(button);
+		if (this.period.available_specializations.length == 0) {
+			button = document.createElement("BUTTON");
+			button.className = "action important";
+			button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
+			button.title = "Create a new class in period "+this.period.name;
+			button.node = this;
+			button.onclick = function() {
+				newClass(this.node, null);
+			};
+			buttons.appendChild(button);
+		}
 	}
 	return div;
 };

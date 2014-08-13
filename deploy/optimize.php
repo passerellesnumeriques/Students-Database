@@ -42,9 +42,15 @@ function optimize_php($path) {
 }
 function optimize_js($path) {
 	$s = file_get_contents($path);
-	while (($i = strpos($s,"/*")) !== false) {
+	$i = 0;
+	while (($i = strpos($s,"/*",$i)) !== false) {
 		$j = strpos($s, "*/", $i+2);
 		if ($j === false) break;
+		$comment = substr($s, $i+2, $j-$i-2);
+		if (strpos($comment, "#depends") !== false) {
+			$i = $j+2;
+			continue;
+		}
 		$s = substr($s, 0, $i).substr($s,$j+2);
 	}
 	$lines = explode("\n",$s);
@@ -52,7 +58,7 @@ function optimize_js($path) {
 	foreach ($lines as $line) {
 		$line = trim($line);
 		if ($line == "") continue;
-		if (substr($line,0,2) == "//") continue; // TODO better, but we need to know if we are in a string or not...
+		if (substr($line,0,2) == "//" && strpos($line,"#depends") === false) continue; // TODO better, but we need to know if we are in a string or not...
 		$s .= $line."\n";
 	}
 	$f = fopen($path, "w");
@@ -66,9 +72,10 @@ function optimize_directory($path) {
 	if (!$dir) die("Unable to access to directory ".$path);
 	while (($file = readdir($dir)) <> null) {
 		if ($file == "." || $file == "..") continue;
-		if (is_dir($path."/".$file))
+		if (is_dir($path."/".$file)) {
+			if (substr($file,0,4) == "lib_") continue;
 			optimize_directory($path."/".$file);
-		else {
+		} else {
 			$i = strrpos($file, ".");
 			if ($i === false) continue;
 			$ext = substr($file, $i+1);
@@ -80,7 +87,10 @@ function optimize_directory($path) {
 	}
 	closedir($dir);
 }
-optimize_directory(realpath($_POST["path"]));
+optimize_directory(realpath($_POST["path"]."/www"));
+$f = fopen(realpath($_POST["path"])."/www/version","w");
+fwrite($f,$_POST["version"]);
+fclose($f);
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
@@ -90,6 +100,7 @@ Applying deployment scripts...
 <form name='deploy' method="POST" action="deploy_scripts.php">
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
+<input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
 </form>
 
 </div>

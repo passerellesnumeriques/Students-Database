@@ -24,7 +24,7 @@ SET time_zone = "+00:00";
 -- Dumping data for table `specialization`
 --
 
-INSERT INTO `specialization` (`id`, `name`) VALUES
+INSERT INTO `Specialization` (`id`, `name`) VALUES
 (1, 'SD'),
 (2, 'SNA');
 

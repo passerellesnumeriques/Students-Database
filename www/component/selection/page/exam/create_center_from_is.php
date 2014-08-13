@@ -1,9 +1,10 @@
 <?php 
-class page_exam_create_center_from_is extends Page {
+require_once("component/selection/page/SelectionPage.inc");
+class page_exam_create_center_from_is extends SelectionPage {
 	
 	public function getRequiredRights() { return array("manage_exam_center"); }
 	
-	public function execute() {
+	public function executeSelectionPage() {
 		theme::css($this,"steps_section.css");
 		theme::css($this,"grid.css");
 		

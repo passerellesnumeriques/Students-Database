@@ -46,7 +46,7 @@ class service_find_lost_entities extends Service {
 	 * @param array $tables_done list of tables already analyzed, to avoid infinite recursivity
 	 */
 	private function findLinked($table, $sub_models, &$rows, $tables_done) {
-		set_time_limit(120);
+		set_time_limit(300);
 		if (in_array($table->getSQLName($sub_models), $tables_done)) return;
 		if (count($rows) == 0) return;
 		array_push($tables_done, $table->getSQLName($sub_models));
@@ -63,6 +63,7 @@ class service_find_lost_entities extends Service {
 			foreach ($rows as $r) if ($r[$col->name] <> null) array_push($keys, $r[$col->name]);
 			if (count($keys) == 0) continue;
 			$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($sub_models)->whereIn($ft->getName(), $ft->getPrimaryKey()->name, $keys)->field($ft->getName(), $ft->getPrimaryKey()->name)->executeSingleField();
+			set_time_limit(300);
 			for ($i = 0; $i < count($rows); $i++) {
 				if (in_array($rows[$i][$col->name], $found)) {
 					// ok, we have a link
@@ -101,6 +102,7 @@ class service_find_lost_entities extends Service {
 						$new_sub_models = array_merge($sub_models);
 						if ($ft_sm <> null) $new_sub_models[$ft->getModel()->getParentTable()] = $ft_sm;
 						$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($new_sub_models)->whereIn($ft->getName(), $col->name, $keys)->field($ft->getName(), $col->name)->executeSingleField();
+						set_time_limit(300);						
 						for ($i = 0; $i < count($rows); $i++) {
 							if (in_array($rows[$i][$pk->name], $found)) {
 								// ok, we have a link
@@ -115,6 +117,7 @@ class service_find_lost_entities extends Service {
 			}
 		}
 		
+		set_time_limit(300);
 		// second step: indirect links
 		// look for foreign keys on this table
 		foreach ($table->internalGetColumnsFor($sm) as $col) {
@@ -132,6 +135,7 @@ class service_find_lost_entities extends Service {
 			// found are the rows which didn't find any link
 			// so keys_found which are not anymore in found are rows which have link
 			foreach ($keys_found as $key) {
+				set_time_limit(300);
 				$has_link = true;
 				foreach ($found as $f) if ($f[$ft->getPrimaryKey()->name] == $key) { $has_link = false; break; }
 				if ($has_link) {
@@ -179,6 +183,7 @@ class service_find_lost_entities extends Service {
 						foreach ($found as $f) array_push($no_link, $f);
 						$this->findLinked($ft, $sub_models, $no_link, $tables_done);
 						foreach ($found as $f) {
+							set_time_limit(300);
 							$has_link = true;
 							foreach ($no_link as $n) if ($n == $f) { $has_link = false; break; }
 							if ($has_link) {
@@ -206,6 +211,7 @@ class service_find_lost_entities extends Service {
 	 * @param array $rows the lost rows found
 	 */
 	private function printRows($table, $sub_model, $rows) {
+		set_time_limit(300);
 		echo "{table:".json_encode($table->getSQLNameFor($sub_model)).",rows:[";
 		$first = true;
 		foreach ($rows as $r) {

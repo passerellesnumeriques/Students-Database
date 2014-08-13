@@ -1,14 +1,14 @@
 /* #depends[typed_field.js] */
 /** Enum field: if editable, it will be a combo box (select element), else only a simple text node
  * @constructor
- * @param config must contain:<ul><li><code>can_be_empty</code>: boolean</li><li><code>possible_values</code>: an array of element, each element can be (1) a string, which will be displayed and used as key, (2) an array of 2 elements: the key and the string to display</li></ul>
+ * @param config must contain:<ul><li><code>can_be_null</code>: boolean</li><li><code>possible_values</code>: an array of element, each element can be (1) a string, which will be displayed and used as key, (2) an array of 2 elements: the key and the string to display</li></ul>
  */
 function field_enum(data,editable,config) {
 	typed_field.call(this, data, editable, config);
 }
 field_enum.prototype = new typed_field();
 field_enum.prototype.constructor = field_enum;
-field_enum.prototype.canBeNull = function() { return this.config.can_be_empty; };
+field_enum.prototype.canBeNull = function() { return this.config.can_be_null; };
 field_enum.prototype.getPossibleValues = function() {
 	var values = [];
 	for (var i = 0; i < this.config.possible_values.length; ++i) {
@@ -66,7 +66,7 @@ field_enum.prototype._create = function(data) {
 		};
 		this.validate = function() {
 			var err = null;
-			if (!this.config.can_be_empty && select.selectedIndex == 0)
+			if (!this.config.can_be_null && select.selectedIndex == 0)
 				err = "Please select a value";
 			this.signal_error(err);
 		};
@@ -108,7 +108,7 @@ field_enum.prototype._create = function(data) {
 			return text;
 		};
 		this.element.appendChild(this.text = document.createTextNode(this.get_text_from_data(data)));
-		this.element.style.height = "100%";
+		//this.element.style.height = "100%";
 		this._setData = function(data) {
 			this.text.nodeValue = this.get_text_from_data(data);
 		};

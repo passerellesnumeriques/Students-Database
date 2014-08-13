@@ -105,6 +105,8 @@ abstract class DataDisplay {
 	public function getData($row, $resultFromBuildSQL) {
 		return @$row[$resultFromBuildSQL["data"]];
 	}
+	public function getKeyFromTableKey($key) { return $key; }
+	public function selectTableKeyFromKey(&$q, $table, $key) { $q->whereKey($table, $key); }
 	
 	public function exportValue($value, $sub_model) {
 		if ($value == null) return "";
@@ -221,7 +223,7 @@ abstract class DataDisplay {
 					$w = "";
 					foreach ($filter_list as $filter) {
 						$val = trim($filter["value"]);
-						if ($val == "") continue;
+						if ($val == "" && ($filter["type"] <> "is_set" && $filter["type"] <> "is_not_set")) continue;
 						$cd = "";
 						switch ($filter["type"]) {
 							case "equals": $cd = $expression."='".\SQLQuery::escape($filter["value"])."'"; break;
@@ -232,6 +234,8 @@ abstract class DataDisplay {
 							case "more_equals": $cd = $expression.">='".\SQLQuery::escape($filter["value"])."'"; break;
 							case "between": if (trim($filter["value_to"])<>"") $cd = "(".$expression.">='".\SQLQuery::escape($filter["value"])."' AND ".$expression."<='".\SQLQuery::escape($filter["value_to"])."')"; break;
 							case "not_between": if (trim($filter["value_to"])<>"") $cd = "(".$expression."<'".\SQLQuery::escape($filter["value"])."' OR ".$expression.">'".\SQLQuery::escape($filter["value_to"])."')"; break;
+							case "is_set": $cd = $expression." IS NOT NULL"; break;
+							case "is_not_set": $cd = $expression." IS NULL"; break;
 						}
 						if (strlen($cd) == 0) continue;
 						if (strlen($w) > 0) $w .= " OR ";
@@ -444,7 +448,7 @@ class ChoiceDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
 		$cfg .= "}";
 		return array("field_enum", $cfg);
 	}
@@ -464,7 +468,7 @@ class ChoiceDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
 		$cfg .= "}";
 		return array("filter_enum", $cfg);
 	}
@@ -623,7 +627,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:true";
+		$cfg .= ",can_be_null:true";
 		$cfg .= "}";
 		return array("filter_enum", $cfg);
 	}
@@ -758,6 +762,14 @@ class JoiningTableDataDisplay extends DataDisplay {
 			->field($this->foreign_key_name)
 			->executeSingleField();
 		return $list;
+	}
+	
+	public function getKeyFromTableKey($key) {
+		if (is_array($key) && isset($key[$this->joining_key_name])) return $key[$this->joining_key_name];
+		return $key; 
+	}
+	public function selectTableKeyFromKey(&$q, $table, $key) {
+		$q->whereValue($table->getName(), $this->joining_key_name, $key);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
@@ -947,7 +959,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
 		$cfg .= "}";
 		return array("filter_enum", $cfg);
 	}
@@ -1172,7 +1184,7 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 			$cfg .= "]";
 		}
 		$cfg .= "]";
-		$cfg .= ",can_be_empty:".($foreign_key->can_be_null ? "true" : "false");
+		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
 		$cfg .= "}";
 		return array("filter_enum", $cfg);
 	}

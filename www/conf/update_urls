@@ -1,0 +1,3 @@
+latest=http://sourceforge.net/projects/studentsdatabase/files/updates/latest.txt/download
+versions=http://sourceforge.net/projects/studentsdatabase/files/updates/versions.txt/download
+update=http://sourceforge.net/projects/studentsdatabase/files/updates/##FILE##/download

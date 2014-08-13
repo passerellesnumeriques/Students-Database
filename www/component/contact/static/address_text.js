@@ -23,6 +23,7 @@ function address_text(address){
 		}
 		if (text.trim().length > 0) {
 			var div = document.createElement("DIV");
+			div.style.whiteSpace = "nowrap";
 			this.element.appendChild(div);
 			div.appendChild(document.createTextNode(text));
 			empty = false;
@@ -42,6 +43,7 @@ function address_text(address){
 		}
 		if (text.trim().length > 0) {
 			var div = document.createElement("DIV");
+			div.style.whiteSpace = "nowrap";
 			this.element.appendChild(div);
 			div.appendChild(document.createTextNode(text));
 			empty = false;
@@ -50,6 +52,7 @@ function address_text(address){
 	
 	if(address.additional != null && address.additional.trim().length > 0){
 		var div = document.createElement("DIV");
+		div.style.whiteSpace = "nowrap";
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode(address.additional));
 		empty = false;
@@ -57,6 +60,7 @@ function address_text(address){
 
 	if (address.geographic_area != null && address.geographic_area.text != null && address.geographic_area.text.trim().length > 0) {
 		var div = document.createElement("DIV");
+		div.style.whiteSpace = "nowrap";
 		this.element.appendChild(div);
 		div.appendChild(document.createTextNode(address.geographic_area.text));
 		empty = false;
@@ -64,6 +68,7 @@ function address_text(address){
 
 	if (address.country_id != null && address.country_id != window.top.default_country_id) {
 		var div = document.createElement("DIV");
+		div.style.whiteSpace = "nowrap";
 		this.element.appendChild(div);
 		window.top.require("geography.js",function() {
 			window.top.geography.getCountryName(address.country_id,function(country_name){

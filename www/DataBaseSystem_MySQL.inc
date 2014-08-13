@@ -35,7 +35,12 @@ class DataBaseSystem_MySQL extends DataBaseSystem {
 		if ($row === NULL) return false;
 		return $row;
 	}
-
+	public function nextRowArray($query_result) {
+		$row = mysqli_fetch_array($query_result);
+		if ($row === NULL) return false;
+		return $row;
+	}
+	
 	public function getInsertID() {
 		return mysqli_insert_id($this->conn);
 	}

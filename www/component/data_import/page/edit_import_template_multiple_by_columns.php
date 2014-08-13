@@ -22,7 +22,7 @@ class page_edit_import_template_multiple_by_columns extends Page {
 		}
 		
 		$this->requireJavascript("section.js");
-		$this->requireJavascript("DataDisplay.js");
+		$this->requireJavascript("datadisplay.js");
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_integer.js");
 ?>

@@ -72,8 +72,7 @@ class SQLQuery {
  	 */
  	public function __construct($copy = null) {
 #DEV
- 		global $development_mode;
- 		$this->warning = $development_mode;
+ 		$this->warning = true;
 #END
  		if ($copy) {
  			$this->database = $copy->database;
@@ -93,6 +92,7 @@ class SQLQuery {
  			$this->table_alias_counter = $copy->table_alias_counter;
  		}
  		$this->sub_models = array_merge(SQLQuery::$preselected_submodels);
+ 		require_once("component/data_model/Model.inc");
  	}
 
  	/** @var string database name, or null to keep the default one (the one of the current domain) */
@@ -182,10 +182,8 @@ class SQLQuery {
 	 */
 	public function &selectSubModelForTable($table_obj, $sub_model) {
 		if ($sub_model == null) return $this;
-		if (!($table_obj instanceof datamodel\Table)) {
-			require_once("component/data_model/Model.inc");
+		if (!($table_obj instanceof datamodel\Table))
 			$table_obj = DataModel::get()->getTable($table_obj);
-		}
 		if (!($table_obj->getModel() instanceof SubDataModel)) return $this;
 		$this->sub_models[$table_obj->getModel()->getParentTable()] = $sub_model;
 		return $this;
@@ -256,7 +254,6 @@ class SQLQuery {
 				//if ($component == "data_model" && (
 				//	substr($file,strlen($root)) == "data_model/page/data_screen.inc"	
 				//)) continue; // generic display, let's see who call it
-				require_once("component/data_model/Model.inc");
 				$decl = DataModel::get()->internalGetTable($table_name)->declaring_component;
 				if ($component <> $decl) {
 					$msg = "Select table ".$table_name." from component ".$component." (".substr($file,strlen($root)).":".$trace["line"]."), but this table is own by ".$decl;
@@ -434,7 +431,6 @@ class SQLQuery {
 			$op = func_get_arg(1);
 			$value = func_get_arg(2);
 			$table = null;
-			require_once("component/data_model/Model.inc");
 			foreach ($this->tables as $t=>$a) {
 				if ($a <> null) $table = $a; else $table = DataModel::get()->internalGetTable($t)->getSQLName($this->sub_models);
 				break;
@@ -468,7 +464,6 @@ class SQLQuery {
 			if ($table == $j[3]) return $table;
 		// not an alias: get sql name
 		try {
-			require_once("component/data_model/Model.inc");
 			if ($this->bypass_security)
 				$t = DataModel::get()->internalGetTable($table);
 			else
@@ -486,7 +481,6 @@ class SQLQuery {
 	 */
 	private function resolveTableName($name){
 		// check if really table name
-		require_once("component/data_model/Model.inc");
 		try {
 			DataModel::get()->internalGetTable($name);
 			return $name;				
@@ -559,10 +553,8 @@ class SQLQuery {
 	 * @return SQLQuery this
 	 */
 	public function &whereKey($table, $key) {
-		if (!($table instanceof \datamodel\Table)) {
-			require_once("component/data_model/Model.inc");
+		if (!($table instanceof \datamodel\Table))
 			$table = DataModel::get()->getTable($table);
-		}
 		$table_alias = $this->getTableAlias($table->getName());
 		$k = $table->getPrimaryKey();
 		if ($k <> null) $this->whereValue($table_alias, $k->name, $key);
@@ -811,8 +803,6 @@ class SQLQuery {
 	 * @return string the SELECT query generated
 	 */
 	public function generate() {
-		require_once("component/data_model/Model.inc");
-
 		// filter the query according to access rights
 		if (!$this->bypass_security) {
 			foreach ($this->tables as $t=>$alias) {
@@ -1169,12 +1159,18 @@ class SQLQuery {
 		$in_transaction = SQLQuery::isTransactionStarted();
 		try {
 			if (!$in_transaction) SQLQuery::startTransaction();
-			require_once("component/data_model/Model.inc");
 			/* @var $t datamodel\Table */
 			if ($this->bypass_security)
 				$t = DataModel::get()->internalGetTable($table);
 			else
 				$t = DataModel::get()->getTable($table);
+			
+			if ($t->hasBeforeUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				$t->fireBeforeUpdate($fields_values, $key, $sub_model_instance);
+			}
 			
 			// check we are allowed to modify this row
 			if (!$this->bypass_security) {
@@ -1285,13 +1281,23 @@ class SQLQuery {
 				$first = true;
 				foreach ($keys as $key_name) {
 					if ($first) $first = false; else $sql .= " AND ";
-					$sql .= "`".$key_name."`='".$key[$key_name]."'";
+					$sql .= "`".$key_name."`";
+					if ($key[$key_name] === null)
+						$sql .= " IS NULL";
+					else
+						$sql .= "='".SQLQuery::escape($key[$key_name])."'";
 				}
 			}
 			SQLQuery::db()->execute($sql);
 			if ($locked) {
 				$error = DataBaseLock::unlock($lock_id);
 				if ($error <> null) throw new Exception($error);
+			}
+			if ($t->hasUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				$t->fireUpdate($fields_values, $key, $sub_model_instance);
 			}
 			if (!$in_transaction) SQLQuery::commitTransaction();
 		} catch (Exception $e) {
@@ -1309,13 +1315,21 @@ class SQLQuery {
 		$in_transaction = SQLQuery::isTransactionStarted();
 		try {
 			if (!$in_transaction) SQLQuery::startTransaction();
-			require_once("component/data_model/Model.inc");
 			/* @var $t datamodel\Table */
 			if ($this->bypass_security)
 				$t = DataModel::get()->internalGetTable($table);
 			else
 				$t = DataModel::get()->getTable($table);
 		
+			if ($t->hasBeforeUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				for ($i = 0; $i < count($keys_fields_values); $i++)
+					for ($j = 0; $j < count($keys_fields_values[$i][0]); $j++)
+						$t->fireBeforeUpdate($keys_fields_values[$i][1], $keys_fields_values[$i][$j], $sub_model_instance);
+			}
+				
 			// check we are allowed to modify this row
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
@@ -1429,7 +1443,7 @@ class SQLQuery {
 			}
 			foreach ($columns as $field=>&$values) {
 				$col = $t->internalGetColumn($field, $this->sub_models);
-				if ($col->unique) {
+				if ($col->unique && !($col instanceof \datamodel\PrimaryKey)) {
 					for ($i = 0; $i < count($values); $i++) {
 						for ($j = $i+1; $j < count($values); $j++) {
 							if ($values[$i] == $values[$j]) {
@@ -1524,6 +1538,13 @@ class SQLQuery {
 					$sql .= $w;
 				}
 				SQLQuery::db()->execute($sql);
+				if ($t->hasUpdateListeners()) {
+					$sub_model_instance = null;
+					if ($t->getModel() instanceof SubDataModel)
+						$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+					foreach ($keys as $k)
+						$t->fireUpdate($fields_values, $k, $sub_model_instance);
+				}
 			}
 			if ($locked) {
 				$error = DataBaseLock::unlock($lock_id);
@@ -1548,13 +1569,20 @@ class SQLQuery {
 		$in_transaction = SQLQuery::isTransactionStarted();
 		try {
 			if (!$in_transaction) SQLQuery::startTransaction();
-			require_once("component/data_model/Model.inc");
 			/* @var $t datamodel\Table */
 			if ($this->bypass_security)
 				$t = DataModel::get()->internalGetTable($table);
 			else
 				$t = DataModel::get()->getTable($table);
 		
+			if ($t->hasBeforeUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				foreach ($keys as $key)
+					$t->fireBeforeUpdate($fields_values, $key, $sub_model_instance);
+			}
+				
 			// check we are allowed to modify this row
 			if (!$this->bypass_security) {
 				if (!$t->mayModify()) throw new Exception("Access denied to modify table ".$t->getName());
@@ -1665,6 +1693,13 @@ class SQLQuery {
 				}
 			}
 			SQLQuery::db()->execute($sql);
+			if ($t->hasUpdateListeners()) {
+				$sub_model_instance = null;
+				if ($t->getModel() instanceof SubDataModel)
+					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
+				foreach ($keys as $k)
+					$t->fireUpdate($fields_values, $k, $sub_model_instance);
+			}
 			if ($locked) {
 				$error = DataBaseLock::unlock($lock_id);
 				if ($error <> null) throw new Exception($error);
@@ -1685,7 +1720,6 @@ class SQLQuery {
 	 * @throws Exception in case of error (security or database)
 	 */
 	public function insert($table, $fields_values, $lock_id = null) {
-		require_once("component/data_model/Model.inc");
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
 			$t = DataModel::get()->internalGetTable($table);
@@ -1733,6 +1767,7 @@ class SQLQuery {
 			}
 		// check unicity and presence
 		foreach ($columns as $col) {
+			if ($col instanceof \datamodel\PrimaryKey) continue;
 			if ($col->unique) {
 				if (!isset($fields_values[$col->name])) {
 					DataBaseLock::unlock($lock);
@@ -1791,7 +1826,6 @@ class SQLQuery {
 	 * @throws Exception in case of error (security or database)
 	 */
 	public function insertMultiple($table, $rows, $lock_id = null) {
-		require_once("component/data_model/Model.inc");
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
 			$t = DataModel::get()->internalGetTable($table);
@@ -1835,6 +1869,7 @@ class SQLQuery {
 			}
 		// check unicity and presence
 		foreach ($columns as $col) {
+			if ($col instanceof \datamodel\PrimaryKey) continue;
 			if ($col->unique) {
 				$values = array();
 				foreach ($rows as &$fields_values) {
@@ -1921,7 +1956,6 @@ class SQLQuery {
 	 * @param array $rows rows previously retrieved by a SELECT, from which we can extract the keys 
 	 */
 	public function removeRows($table, $rows) {
-		require_once("component/data_model/Model.inc");
 		$keys = array();
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
@@ -1950,7 +1984,6 @@ class SQLQuery {
 		$in_transaction = SQLQuery::isTransactionStarted();
 		try {
 			if (!$in_transaction) SQLQuery::startTransaction();
-			require_once("component/data_model/Model.inc");
 			/* @var $t datamodel\Table */
 			if ($this->bypass_security)
 				$t = DataModel::get()->internalGetTable($table);
@@ -2002,7 +2035,7 @@ class SQLQuery {
 							$first = true;
 							foreach ($to_remove_in_table["keys"] as $key) {
 								if ($first) $first = false; else $where .= ",";
-								$where .= $key;
+								$where .= "'".self::escape($key)."'";
 							}
 							$where .= ")";
 						}
@@ -2052,6 +2085,7 @@ class SQLQuery {
 				}
 				$sql .= ")";
 				SQLQuery::db()->execute($sql);
+				// TODO fire update
 				// $t->getSQLName($this->sub_models)
 			}
 
@@ -2077,7 +2111,6 @@ class SQLQuery {
 	 */
 	public function removeLinkedData($table, $linked_table, $linked_key) {
 		$q = SQLQuery::create()->selectSubModels($this->sub_models)->select(array($table=>"the_table"));
-		require_once("component/data_model/Model.inc");
 		$lt = $this->bypass_security ? DataModel::get()->internalGetTable($linked_table) : DataModel::get()->getTable($linked_table);
 		$where = "";
 		$cols = $this->bypass_security ? $lt->internalGetColumns($this->sub_models) : $lt->getColumns($this->sub_models);

@@ -11,12 +11,12 @@ service = {
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
 	 */
-	json: function(component, service_name, input, handler, foreground, progress_handler, onerror) {
+	json: function(component, service_name, input, handler, foreground, progress_handler, onerror, no_status_on_error) {
 		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null)
 			data = service.generateInput(input);
-		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "text/json;charset=UTF-8", data, 
+		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "application/json;charset=UTF-8", data, 
 			function(result){
 				if (result && result.warnings)
 					for (var i = 0; i < result.warnings.length; ++i)
@@ -25,15 +25,25 @@ service = {
 			},
 			foreground,
 			function(error){
-				if (typeof error == 'string')
-					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
-				else for (var i = 0; i < error.length; ++i)
-					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error[i],10000));
+				if (!no_status_on_error) {
+					if (typeof error == 'string') {
+						if (error == "Connection error") {
+							var now = new Date().getTime();
+							if (now-service._last_connection_error > 30000) {
+								window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_ERROR_NOICON,error,[],5000));
+								service._last_connection_error = now;
+							}
+						} else
+							window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+					} else for (var i = 0; i < error.length; ++i)
+						window.top.status_manager.add_status(new window.top.StatusMessageError(null,error[i],10000));
+				}
 				if (onerror) onerror(error, input);
 			},
 			progress_handler
 		);
 	},
+	_last_connection_error: 0,
 	
 	/**
 	 * Call a service using XML output
@@ -86,7 +96,7 @@ service = {
 		var data = null;
 		if (input != null)
 			data = service.generateInput(input);
-		ajax.call(data ? "POST" : "GET", "/dynamic/"+component+"/service/"+service_name, data ? "text/json" : null, data, 
+		ajax.call(data ? "POST" : "GET", "/dynamic/"+component+"/service/"+service_name, data ? "application/json" : null, data, 
 			function(error){
 				if (error_handler)
 					error_handler(error);

@@ -243,7 +243,11 @@ function images_tool() {
 				return;
 			}
 			o.td_analyzing.innerHTML = "Analyzing...";
-			setTimeout(function() {
+			var f = function(times) {
+				if (o.image.naturalWidth <= 0 && times < 400) {
+					setTimeout(function(){f(times+1);},times*5);
+					return;
+				}
 				images_tool_face_detection(o.image, function(nb, face) {
 					o.nb_faces = nb;
 					o.face = face;
@@ -254,7 +258,8 @@ function images_tool() {
 						ready();
 					}
 				});
-			},5);
+			};
+			setTimeout(function(){f(0);},5);
 		};
 		t.upl.ondonefile = function(file, output, errors) {
 			var o = null;
@@ -458,7 +463,12 @@ function images_tool_picture() {
 		t.td_tools.appendChild(sec.element);
 	};
 	
-	this.setImage = function(image) {
+	this.setImage = function(image, times) {
+		if (!times) times = 0;
+		if (image.naturalWidth <= 0 && time < 400) {
+			setTimeout(function() { t.setImage(image, times+1); }, times*5);
+			return;
+		}
 		this.original = image;
 		var max_width = 200, max_height = 200;
 		var w = image.naturalWidth;

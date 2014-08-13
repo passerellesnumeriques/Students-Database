@@ -15,6 +15,10 @@ function filter_comparable(data, config, editable) {
 	o = document.createElement("OPTION"); o.value = 'more_equals'; o.text = "is greater than or equals to"; if (data.type == 'more_equals') o.selected = true; this.select_type.add(o);
 	o = document.createElement("OPTION"); o.value = 'between'; o.text = "is between"; if (data.type == 'between') o.selected = true; this.select_type.add(o);
 	o = document.createElement("OPTION"); o.value = 'not_between'; o.text = "is not between"; if (data.type == 'not_between') o.selected = true; this.select_type.add(o);
+	if (config.can_be_null) {
+		o = document.createElement("OPTION"); o.value = 'is_set'; o.text = "is set (not empty)"; if (data.type == 'is_set') o.selected = true; this.select_type.add(o);
+		o = document.createElement("OPTION"); o.value = 'is_not_set'; o.text = "is not set (empty)"; if (data.type == 'is_not_set') o.selected = true; this.select_type.add(o);
+	}
 	
 	this.element.appendChild(this.select_type);
 	if (!editable) this.select_type.disabled = "disabled";
@@ -22,15 +26,19 @@ function filter_comparable(data, config, editable) {
 	var t=this;
 	this.select_type.onchange = function() {
 		data.type = this.value;
-		if (t.span_to)
+		if (t.span_to) {
+			t.span_from.style.visibility = data.type != "is_set" && data.type != "is_not_set" ? "visible" : "hidden";
 			t.span_to.style.visibility = data.type == "between" || data.type == "not_between" ? "visible" : "hidden";
+		}
 		t.onchange.fire(t);
 	};
 	
 	require([["typed_field.js",config.value_field_classname+".js"]], function() {
 		t.field1 = new window[config.value_field_classname](data.value, editable, objectCopy(config.value_field_config));
 		t.field2 = new window[config.value_field_classname](data.value_to, editable, objectCopy(config.value_field_config));
-		t.element.appendChild(t.field1.getHTMLElement());
+		t.span_from = document.createElement("SPAN");
+		t.span_from.appendChild(t.field1.getHTMLElement());
+		t.element.appendChild(t.span_from);
 		t.span_to = document.createElement("SPAN");
 		t.span_to.appendChild(document.createTextNode(" and "));
 		t.span_to.appendChild(t.field2.getHTMLElement());

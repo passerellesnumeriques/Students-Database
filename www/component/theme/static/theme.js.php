@@ -1,7 +1,11 @@
 <?php 
 header("Content-Type: text/javascript");
+#DEV
 require_once("component/Component.inc");
 require_once("component/theme/theme.inc");
+#PROD
+#require_once("component/PNApplication.inc");
+#END
 
 global $theme;
 

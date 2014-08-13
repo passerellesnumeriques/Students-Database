@@ -39,7 +39,7 @@ function import_with_match(data_list, ev) {
 						var check_view = function() {
 							var win = getIFrameWindow(t.excel_frame);
 							if (!win.excel || !win.excel.tabs) {
-								if (win.page_errors) {
+								if (win.page_errors && !win.excel_uploaded) {
 									unlock_screen(locker);
 									return;
 								}
@@ -55,7 +55,7 @@ function import_with_match(data_list, ev) {
 								setTimeout(check_loaded, 100);
 								return;
 							}
-							if (win.page_errors) {
+							if (win.page_errors && !win.excel_uploaded) {
 								unlock_screen(locker);
 								return;
 							}
@@ -92,16 +92,19 @@ function import_with_match(data_list, ev) {
 		var win = getIFrameWindow(t.excel_frame);
 		this.import_wizard.removeAllChildren();
 		require([["typed_field.js","field_integer.js"]], function() {
-			t.import_wizard.appendChild(document.createTextNode("How many rows are containing the titles ? "));
-			t._header_rows = new field_integer(0,true,{min:0,max:win.excel.getActiveSheet().rows.length});
-			t.import_wizard.appendChild(t._header_rows.getHTMLElement());
-			t.import_wizard.appendChild(document.createElement("BR"));
 			var table = document.createElement("TABLE");
 			table.innerHTML = "<tr id='import_wizard_match_header'><th></th><th>Excel Column</th><th>Data Column</th></tr>";
 			t.import_wizard.appendChild(table);
 			var table2 = document.createElement("TABLE");
 			table2.innerHTML = "<tr id='import_wizard_import_header'><th></th><th>Excel Column</th><th>Data Column</th></tr>";
 			t.import_wizard.appendChild(table2);
+			t.import_wizard.appendChild(document.createTextNode("How many rows are containing the titles ? "));
+			t._header_rows = new field_integer(0,true,{min:0,max:win.excel.getActiveSheet().rows.length});
+			t.import_wizard.appendChild(t._header_rows.getHTMLElement());
+			t._header_rows.onchange.add_listener(function() {
+				if (t._matching.length > 0)
+					t._performMatching();
+			});
 			var button = document.createElement("BUTTON");
 			button.innerHTML = "<img src='"+theme.icons_16._import+"'/> Import data";
 			button.disabled = "disabled";
@@ -114,10 +117,12 @@ function import_with_match(data_list, ev) {
 				var tr = document.createElement("TR");
 				var td = document.createElement("TD");
 				td.style.textAlign = "right";
+				td.style.fontSize = "8pt";
 				td.innerHTML = "Match";
 				tr.appendChild(td);
 				td = document.createElement("TD");
 				var select_excel_column = document.createElement("SELECT");
+				select_excel_column.style.fontSize = "8pt";
 				var o = document.createElement("OPTION");
 				o.value = ""; o.text = "";
 				select_excel_column.add(o);
@@ -132,24 +137,75 @@ function import_with_match(data_list, ev) {
 				tr.appendChild(td);
 				td = document.createElement("TD");
 				var select_data = document.createElement("SELECT");
+				select_data.style.fontSize = "8pt";
 				o = document.createElement("OPTION");
 				o.value = ""; o.text = "";
 				select_data.add(o);
 				for (var i = 0; i < data_list.show_fields.length; ++i) {
 					o = document.createElement("OPTION");
 					o.value = data_list.getColumnIdFromField(data_list.show_fields[i]);
-					o.text = data_list.show_fields[i].field.name;
+					if (data_list.show_fields[i].sub_index != -1)
+						o.text = data_list.show_fields[i].field.sub_data.names[data_list.show_fields[i].sub_index];
+					else
+						o.text = data_list.show_fields[i].field.name;
 					select_data.add(o);
 				}
 				td.appendChild(select_data);
 				tr.appendChild(td);
 				first_tr.parentNode.appendChild(tr);
+				select_data.other_selects = [];
 				var check_complete = function() {
+					var blank = -1;
+					if (select_data.selectedIndex > 0) {
+						for (var i = 0; i < select_data.other_selects.length; ++i) {
+							if (select_data.other_selects[i].selectedIndex == 0) {
+								if (blank >= 0) {
+									var select = select_data.other_selects[blank];
+									select.parentNode.removeChild(select.previousSibling);
+									select.parentNode.removeChild(select);
+									select_data.other_selects.splice(blank,1);
+									i--;
+								}
+								blank = i;
+							}
+						}
+						var last_select = select_data.other_selects.length > 0 ? select_data.other_selects[select_data.other_selects.length-1] : select_data;
+						if (!last_select.nextSibling && blank == -1) {
+							var button = document.createElement("BUTTON");
+							button.className = "flat";
+							button.innerHTML = "+";
+							last_select.parentNode.appendChild(button);
+							button.onclick = function() {
+								if (button.nextSibling) return;
+								var select = document.createElement("SELECT");
+								select.style.fontSize = "8pt";
+								o = document.createElement("OPTION");
+								o.value = ""; o.text = "";
+								select.add(o);
+								for (var i = 0; i < data_list.show_fields.length; ++i) {
+									o = document.createElement("OPTION");
+									o.value = data_list.getColumnIdFromField(data_list.show_fields[i]);
+									if (data_list.show_fields[i].sub_index != -1)
+										o.text = data_list.show_fields[i].field.sub_data.names[data_list.show_fields[i].sub_index];
+									else
+										o.text = data_list.show_fields[i].field.name;
+									select.add(o);
+								}
+								button.parentNode.appendChild(select);
+								select_data.other_selects.push(select);
+								select.onchange = check_complete;
+							};
+						}
+					}
 					for (var i = 0; i < t._matching.length; ++i)
 						if (t._matching[i].tr == tr) { t._matching.splice(i,1); break;}
 					var last_tr = first_tr.parentNode.childNodes[first_tr.parentNode.childNodes.length-1];
 					if (select_excel_column.selectedIndex > 0 && select_data.selectedIndex > 0) {
-						t._matching.push({tr:tr,excel_column:select_excel_column.value,data_column:select_data.value});
+						var data_columns = [select_data.value];
+						for (var i = 0; i < select_data.other_selects.length; ++i)
+							if (select_data.other_selects[i].selectedIndex > 0 && !data_columns.contains(select_data.other_selects[i].value))
+								data_columns.push(select_data.other_selects[i].value);
+						t._matching.push({tr:tr,excel_column:select_excel_column.value,data_columns:data_columns});
 						if (last_tr == tr)
 							addRow();
 					} else {
@@ -166,10 +222,12 @@ function import_with_match(data_list, ev) {
 				var tr = document.createElement("TR");
 				var td = document.createElement("TD");
 				td.style.textAlign = "right";
+				td.style.fontSize = "8pt";
 				td.innerHTML = "Import";
 				tr.appendChild(td);
 				td = document.createElement("TD");
 				var select_excel_column = document.createElement("SELECT");
+				select_excel_column.style.fontSize = "8pt";
 				var o = document.createElement("OPTION");
 				o.value = ""; o.text = "";
 				select_excel_column.add(o);
@@ -184,6 +242,7 @@ function import_with_match(data_list, ev) {
 				tr.appendChild(td);
 				td = document.createElement("TD");
 				var select_data = document.createElement("SELECT");
+				select_data.style.fontSize = "8pt";
 				o = document.createElement("OPTION");
 				o.value = ""; o.text = "";
 				select_data.add(o);
@@ -235,12 +294,24 @@ function import_with_match(data_list, ev) {
 				var matching = true;
 				for (var i = 0; i < t._matching.length && matching; ++i) {
 					var excel_value = sheet.getCell(t._matching[i].excel_column, excel_row).getValue();
-					var data_col = data_list.grid.getColumnIndexById(t._matching[i].data_column);
-					if (data_col < 0) continue;
-					var field = data_list.grid.getCellField(data_row, data_col);
-					if (!field) continue;
-					var data_value = field.getCurrentData(); // TODO current data display ?
-					matching &= excel_value.isSame(""+data_value);
+					var data_str = "";
+					for (var j = 0; j < t._matching[i].data_columns.length; ++j) {
+						var data_col = data_list.grid.getColumnIndexById(t._matching[i].data_columns[j]);
+						if (data_col < 0) continue;
+						var field = data_list.grid.getCellField(data_row, data_col);
+						if (!field) continue;
+						var data_value = field.getCurrentData(); // TODO current data display ?
+						if (data_str != "") data_str += " ";
+						data_str += data_value;
+					}
+					if (!excel_value.isSame(data_str)) {
+						if (t._matching[i].data_columns.length > 1) {
+							var res = wordsMatch(excel_value, data_str, true);
+							if (res.nb_words2_in_words1 != res.nb_words_2)
+								matching = false;
+						} else
+							matching = false;
+					}
 				}
 				if (matching)
 					matches[excel_row-start].push(data_row);
@@ -286,12 +357,13 @@ function import_with_match(data_list, ev) {
 		// check data columns are not used to match and to import at the same time
 		for (var i = 0; i < t._matching.length; ++i) {
 			for (var j = 0; j < t._import.length; ++j)
-				if (t._matching[i].data_column == t._import[j].data_column) {
-					var col = data_list.grid.getColumnById(t._matching[i].data_column);
-					if (!col) continue;
-					alert("Column "+col.title+" cannot be used to match and to import at the same time");
-					return;
-				}
+				for (var k = 0; k < t._matching[i].data_columns.length; ++k)
+					if (t._matching[i].data_columns[k] == t._import[j].data_column) {
+						var col = data_list.grid.getColumnById(t._matching[i].data_columns[k]);
+						if (!col) continue;
+						alert("Column "+col.title+" cannot be used to match and to import at the same time");
+						return;
+					}
 		}
 		button.disabled = "";
 	};
@@ -303,7 +375,8 @@ function import_with_match(data_list, ev) {
 			if (!col) continue;
 			var edit_action = col.getAction('edit');
 			if (!edit_action) continue;
-			edit_action.onclick(createEvent('click'),edit_action,col);
+			if (!col.editable)
+				edit_action.onclick(createEvent('click'),edit_action,col);
 		}
 		var listener = function() {
 			if (data_list.isLoading()) {
@@ -327,7 +400,10 @@ function import_with_match(data_list, ev) {
 					if (!field.editable) continue;
 					var excel_value = sheet.getCell(t._import[i].excel_column, row).getValue();
 					if (!excel_value) continue;
-					field.setData(excel_value);
+					if (field.addData)
+						field.addData(excel_value);
+					else
+						field.setData(excel_value);
 				}
 			}
 		};
@@ -388,6 +464,7 @@ function import_with_match(data_list, ev) {
 		this.excel_frame.style.flex = "1 1 auto";
 		this.excel_frame.style.border = "none";
 		this.excel_frame._upload = function(ev) { t.uploadFile(ev); };
+		this.excel_frame._no_loading = true;
 		listenEvent(this.excel_frame, 'load', function() { layout.invalidate(t.container); });
 		this.excel_frame.src = "/dynamic/data_import/page/excel_upload?button=_upload";
 		this.import_container.appendChild(this.excel_frame);

@@ -64,7 +64,7 @@ foreach ($fields as $field) {
 	$page->requireJavascript($tf[0].".js");
 }
 $page->requireJavascript("field_html.js");
-$page->requireJavascript("DataDisplay.js");
+$page->requireJavascript("datadisplay.js");
 	
 $page->requireJavascript("grid.js");
 $grid_id = $page->generateID();

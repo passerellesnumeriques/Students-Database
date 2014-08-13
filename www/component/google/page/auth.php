@@ -4,12 +4,13 @@ class page_auth extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		$ch = curl_init("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=".$_GET["auth_token"]);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HEADER, 0);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		$data = curl_exec($ch);
-		curl_close($ch);
+		$c = curl_init("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=".$_GET["auth_token"]);
+		if (file_exists("conf/proxy")) include("conf/proxy");
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($c, CURLOPT_HEADER, 0);
+		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+		$data = curl_exec($c);
+		curl_close($c);
 		$res = json_decode($data, true);
 		$error = null;
 		if ($res <> null && isset($res["id"])) {

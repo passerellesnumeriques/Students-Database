@@ -24,24 +24,26 @@ CurriculumTreeNode_Specialization.prototype.createTitle = function(editable) {
 };
 CurriculumTreeNode_Specialization.prototype.createInfo = function() {
 	var div = document.createElement("DIV");
-	var button = document.createElement("BUTTON");
-	button.className = "action";
-	button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
-	button.title = "Edit batch, periods and specializations";
-	button.node = this;
-	button.onclick = function() {
-		editBatch(this.node.parent.parent.batch);
-	};
-	div.appendChild(button);
-	button = document.createElement("BUTTON");
-	button.className = "action important";
-	button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
-	button.title = "Create a new class";
-	button.node = this;
-	button.onclick = function() {
-		newClass(this.node.parent, this.node.spe);
-	};
-	div.appendChild(button);
+	if (window.can_edit_batches) {
+		var button = document.createElement("BUTTON");
+		button.className = "action";
+		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
+		button.title = "Edit batch, periods and specializations";
+		button.node = this;
+		button.onclick = function() {
+			editBatch(this.node.parent.parent.batch);
+		};
+		div.appendChild(button);
+		button = document.createElement("BUTTON");
+		button.className = "action important";
+		button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
+		button.title = "Create a new class";
+		button.node = this;
+		button.onclick = function() {
+			newClass(this.node.parent, this.node.spe);
+		};
+		div.appendChild(button);
+	}
 	return div;
 };
 CurriculumTreeNode_Specialization.prototype.getURLParameters = function() {

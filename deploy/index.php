@@ -1,30 +1,22 @@
-<?php include("header.inc");?>
+<?php
+setcookie("test_deploy","",time()+365*24*60*60,"/");
+setcookie(ini_get("session.name"),"",time()+365*24*60*60,"/dynamic/");
+include("header.inc");
+?>
 <div style='flex:none;background-color:white;padding:10px'>
-
-<form name='deploy' method="POST" action="start_deploy.php">
-
-Current development version: <?php echo file_get_contents(dirname(__FILE__)."/../www/version");?><br/>
-
-Latest deployed version: <?php 
-$url = "http://sourceforge.net/projects/studentsdatabase/files/latest.txt/download";
-$c = curl_init($url);
-curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-$result = curl_exec($c);
-if ($result == false) echo "Error: ".curl_error($c);
-else echo $result;
-curl_close($c);
-?><br/>
-<br/>
-Enter the new version to deploy: <input type='text' name='version' required/><br/>
-<br/>
-Enter the location where to generate the deployed version:<br/>
-<input type='text' name='path' size=50 required/>
-
-</form>
+	<div style='font-size:14pt;padding-bottom:5px;border-bottom: 1px solid #808080;'>
+		Welcome in this wizard, that will guide you to build a <i>deployed version</i>
+	</div>
+	<div style='margin-top:10px;'>
+		The creation of the <i>deployed version</i> will be done in several steps:<ol>
+			<li>Retrieve information about the latest deployed version</li>
+			<li>Compare the data model with previous version, to help you creating a <i>migration script</i> for the data model</li>
+			<li>Create the deployed version, by copying files and optimizing them a bit to improve performance</li>
+			<li>Create the zip files to put in SourceForge</li>
+		</ol>
+	</div>
 </div>
 <div class='footer' style='flex:none'>
-	<button class='action' onclick="document.forms['deploy'].submit();">Start deployment</button>
+	<button class='action' onclick="location.href='version_and_path_form.php';">Start</button>
 </div>
-<?php include("footer.inc");?>
+<?php  include("footer.inc");?>

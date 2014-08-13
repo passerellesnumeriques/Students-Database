@@ -8,14 +8,19 @@ class service_latest_version extends Service {
 	public function outputDocumentation() { echo "<code>version</code>"; }
 	
 	public function execute(&$component, $input) {
-		$url = "http://sourceforge.net/projects/studentsdatabase/files/latest.txt/download";
+		require_once("update_urls.inc");
+		$url = getLatestVersionURL();
 		$c = curl_init($url);
+		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
+		curl_setopt($c, CURLOPT_TIMEOUT, 25);
+		set_time_limit(45);
 		$result = curl_exec($c);
 		if ($result === false) {
-			PNApplication::error(curl_error($c));
+			PNApplication::error("Error connecting to SourceForge (".curl_errno($c)."): ".curl_error($c));
 			curl_close($c);
 			return;
 		}

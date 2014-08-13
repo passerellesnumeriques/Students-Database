@@ -3,6 +3,8 @@ class page_enter extends Page {
 	
 	public function getRequiredRights() { return array(); }
 	
+	public function mayUpdateSession() { return true; }
+	
 	protected function execute() {
 		if (isset($_GET["page"]) && $_GET["page"] == "/dynamic/test/page/ui") {
 			header("Location: /dynamic/test/page/ui");

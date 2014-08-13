@@ -22,28 +22,44 @@ class service_create_user extends Service {
 		if ($domain == "internal") {
 			$is_internal = true;
 			$domain = PNApplication::$instance->current_domain;
+			$password = $input["password"];
 		} else
 			$is_internal = false;
 		
 		SQLQuery::startTransaction();
 		try {
-			$exists = SQLQuery::create()->select("Users")->whereValue("Users","username",$username)->whereValue("Users","domain",$domain)->executeSingleRow();
-			if ($exists <> null) {
-				SQLQuery::rollbackTransaction();
-				PNApplication::error_html("The user <i>".htmlentities($username)."</i> already exists");
-				echo "false";
-				return;
-			}
 			$people = PNApplication::$instance->people->getPeople($people_id);
 			if ($people == null) {
 				SQLQuery::rollbackTransaction();
-				PNApplication::error_html("The user <i>".htmlentities($username)."</i> cannot be created because the given linked people is invalid");
+				PNApplication::errorHTML("The user <i>".htmlentities($username)."</i> cannot be created because the given linked people is invalid");
 				echo "false";
 				return;
 			}
-			$user_id = SQLQuery::create()->bypassSecurity()->insert("Users", array("username"=>$username,"domain"=>$domain));
+			$exists = SQLQuery::create()->select("Users")->whereValue("Users","username",$username)->whereValue("Users","domain",$domain)->executeSingleRow();
+			if ($exists <> null) {
+				if (!$is_internal) {
+					SQLQuery::rollbackTransaction();
+					PNApplication::errorHTML("The user <i>".htmlentities($username)."</i> already exists");
+					echo "false";
+					return;
+				} else {
+					$internal_exists = SQLQuery::create()->bypassSecurity()->select("InternalUser")->whereValue("InternalUser","username",$username)->executeSingleRow();
+					if ($internal_exists <> null) {
+						SQLQuery::rollbackTransaction();
+						PNApplication::errorHTML("The internal user <i>".htmlentities($username)."</i> already exists");
+						echo "false";
+						return;
+					}
+				}
+			}
+			if ($exists == null)
+				$user_id = SQLQuery::create()->bypassSecurity()->insert("Users", array("username"=>$username,"domain"=>$domain));
+			else
+				$user_id = $exists["id"];
 			PNApplication::$instance->people->addPeopleType($people_id, "user");
-			SQLQuery::create()->bypassSecurity()->insert("UserPeople", array("user"=>$user_id,"people"=>$people_id));
+			$link_exists = SQLQuery::create()->bypassSecurity()->select("UserPeople")->whereValue("UserPeople","user",$user_id)->whereValue("UserPeople","people",$people_id)->executeSingleRow();
+			if ($link_exists == null)
+				SQLQuery::create()->bypassSecurity()->insert("UserPeople", array("user"=>$user_id,"people"=>$people_id));
 			if ($is_internal)
 				SQLQuery::create()->bypassSecurity()->insert("InternalUser", array("username"=>$username,"password"=>sha1($password)));
 			echo "{user_id:".$user_id."}";

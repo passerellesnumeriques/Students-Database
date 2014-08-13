@@ -59,6 +59,11 @@ function profile_picture(container, width, height, halign, valign) {
 		if (!t.picture.parentNode) {
 			t.picture_container.appendChild(t.picture);
 		}
+		if (t.width >= 75 && t.height >= 75) {
+			t.controls.style.display = "flex";
+		} else {
+			t.controls.style.display = "none";
+		}
 	};
 	
 	var img = document.createElement("IMG");
@@ -70,26 +75,40 @@ function profile_picture(container, width, height, halign, valign) {
 	}
 	t.picture_container.appendChild(img);
 	
-	this.setNoPicture = function(sex, onloaded) {
+	this._datamodel_cell_listener = null;
+	this._datamodel_storage_cell_listener = null;
+	this.setNoPicture = function(people_id, sex, onloaded) {
+		var prev = t.picture;
 		t.picture = document.createElement("IMG");
 		t.picture.onload = function() {
+			if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
 			t.adjustPicture();
 			if (img.parentNode)
 				t.picture_container.removeChild(img);
 			if (onloaded) onloaded();
 		};
 		t.picture.onerror = function() {
+			if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+			if (!img.parentNode) t.picture_container.appendChild(img);
 			img.src = theme.icons_16.error;
 			t.picture = null;
 			if (onloaded) onloaded();
 		};
 
-		t.picture.src = "/static/people/default_"+(sex == 'F' ? "female" : "male")+".jpg";		
+		t.picture.src = "/static/people/default_"+(sex == 'F' ? "female" : "male")+".jpg";
+		
+		if (!this._datamodel_cell_listener)
+			window.top.datamodel.removeCellChangeListener(this._datamodel_cell_listener);
+		window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, this._datamodel_cell_listener = function(value) {
+			t.loadPeopleID(people_id);
+		});
 	};
 	
 	this.loadPeopleID = function(people_id, onloaded) {
 		service.json("people", "picture", {people:people_id}, function(res) {
 			if (!res) {
+				if (t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
+				if (!img.parentNode) t.picture_container.appendChild(img);
 				img.src = theme.icons_16.error;
 				t.picture = null;
 				if (onloaded) onloaded();
@@ -98,12 +117,14 @@ function profile_picture(container, width, height, halign, valign) {
 			if (typeof res.storage_id != 'undefined')
 				t.loadPeopleStorage(people_id, res.storage_id, res.revision, onloaded);
 			else
-				t.setNoPicture(res.sex, onloaded);
+				t.setNoPicture(people_id, res.sex, onloaded);
 		});
 	};
 	this.loadUser = function(domain, username, onloaded) {
 		service.json("user_management", "people_from_user", {domain:domain,username:username}, function(res) {
 			if (!res) {
+				if (t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
+				if (!img.parentNode) t.picture_container.appendChild(img);
 				img.src = theme.icons_16.error;
 				t.picture = null;
 				if (onloaded) onloaded();
@@ -116,7 +137,7 @@ function profile_picture(container, width, height, halign, valign) {
 		if (typeof people.picture_id == 'undefined')
 			this.loadPeopleID(people.id, onloaded);
 		else if (people.picture_id == null)
-			this.setNoPicture(people.sex, onloaded);
+			this.setNoPicture(people.id, people.sex, onloaded);
 		else
 			this.loadPeopleStorage(people.id, people.picture_id,people.picture_revision,onloaded);
 	};
@@ -124,10 +145,14 @@ function profile_picture(container, width, height, halign, valign) {
 		if (!picture_id)
 			this.loadPeopleID(people_id, onloaded);
 		else {
-			window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, function(value) {
+			if (!this._datamodel_cell_listener)
+				window.top.datamodel.removeCellChangeListener(this._datamodel_cell_listener);
+			window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, this._datamodel_cell_listener = function(value) {
 				t.loadPeopleID(people_id);
 			});
-			window.top.datamodel.addCellChangeListener(window, "Storage", "revision", revision, function(value) {
+			if (!this._datamodel_storage_cell_listener)
+				window.top.datamodel.removeCellChangeListener(this._datamodel_storage_cell_listener);
+			window.top.datamodel.addCellChangeListener(window, "Storage", "revision", revision, this._datamodel_storage_cell_listener = function(value) {
 				t.revision = value;
 				t.reload();
 			});
@@ -141,14 +166,18 @@ function profile_picture(container, width, height, halign, valign) {
 		this.storage_id = storage_id;
 		this.revision = revision;
 		if (typeof window.btoa == 'undefined') {
+			var prev = t.picture;
 			t.picture = document.createElement("IMG");
 			t.picture.onload = function() {
+				if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
 				t.adjustPicture();
 				if (img.parentNode)
 					t.picture_container.removeChild(img);
 				if (onloaded) onloaded();
 			};
 			t.picture.onerror = function() {
+				if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+				if (!img.parentNode) t.picture_container.appendChild(img);
 				img.src = theme.icons_16.error;
 				t.picture = null;
 				if (onloaded) onloaded();
@@ -178,6 +207,7 @@ function profile_picture(container, width, height, halign, valign) {
 					var binary = '';
 					for (var i = 0; i < len; i+=1)
 						binary += String.fromCharCode(bin.charCodeAt(i) & 0xff);
+					var prev = t.picture;
 					t.picture = new Image();
 					t.picture.src = 'data:image/jpeg;base64,' + btoa(binary);
 					if (t.progress) {
@@ -187,6 +217,7 @@ function profile_picture(container, width, height, halign, valign) {
 					}
 					if (img.parentNode)
 						t.picture_container.removeChild(img);
+					if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
 					t.adjustPicture();
 					if (onloaded) onloaded();
 				}, 
@@ -201,6 +232,7 @@ function profile_picture(container, width, height, halign, valign) {
 					img.src = theme.icons_16.error;
 					if (!img.parentNode)
 						t.picture_container.appendChild(img);
+					if (t.picture && t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
 					if (onloaded) onloaded();
 				}, function(loaded, tot) {
 					if (t.progress) {
@@ -254,6 +286,83 @@ function profile_picture(container, width, height, halign, valign) {
 		};
 		p.src = "/dynamic/storage/service/get?id="+t.storage_id+"&revision="+t.revision+"&ts="+new Date().getTime();
 	};
+	
+	this.controls = document.createElement("DIV");
+	this.controls.style.flexDirection = "column";
+	this.controls.style.position = "absolute";
+	this.controls.style.top = "2px";
+	this.controls.style.right = "2px";
+	this.controls.style.zIndex = "1";
+	this.controls.style.display = "none";
+	this.controls.style.visibility = "hidden";
+	this.controls.onclick = function(ev) { stopEventPropagation(ev); };
+	setOpacity(this.controls,0);
+	this.picture_container.appendChild(this.controls);
+	require("animation.js",function() {
+		animation.appearsOnOver(t.picture_container, t.controls);
+	});
+	
+	this.addTool = function(icon,tooltip_text,handler) {
+		var button = document.createElement("BUTTON");
+		button.className = "flat icon";
+		button.style.flex = "none";
+		button.innerHTML = "<img src='"+icon+"' style='background-color:rgba(255,255,255,0.5);'/>";
+		if (tooltip_text) tooltip(button,tooltip_text);
+		button.onclick = handler;
+		this.controls.appendChild(button);
+	};
+	this.addTool("/static/people/enlarge_picture.png", "Enlarge", function() {
+		var div = document.createElement("DIV");
+		div.style.zIndex = "2";
+		var img = document.createElement("IMG");
+		img.src = t.picture.src;
+		div.appendChild(img);
+		
+		var close = document.createElement("IMG");
+		close.src = "/static/people/close_enlarge.png";
+		close.style.backgroundColor = "white";
+		setBorderRadius(close,8,8,8,8,8,8,8,8);
+		close.style.position = "absolute";
+		close.style.right = "-10px";
+		close.style.top = "-10px";
+		close.style.cursor = "pointer";
+		div.appendChild(close);
+		close.onclick = function() {
+			animation.fadeOut(div,500,function() {
+				document.body.removeChild(div);
+			});
+		};
+		
+		var resize_ratio = 1;
+		var h = t.picture.naturalHeight;
+		var w = t.picture.naturalWidth;
+		var wh = getWindowHeight()-20;
+		var ww = getWindowWidth()-20;
+		if (h > wh) resize_ratio = wh/h;
+		if (w > ww) {
+			var r = ww/w;
+			if (r < resize_ratio) resize_ratio = r;
+		}
+		w = Math.floor(w*resize_ratio);
+		h = Math.floor(h*resize_ratio);
+		var ow = t.picture_container.offsetWidth;
+		var oh = t.picture_container.offsetHeight;
+		div.style.position = "fixed";
+		var pos = getFixedPosition(t.picture,true);
+		setOpacity(div,0);
+		div.style.visibility = 'hidden';
+		document.body.appendChild(div);
+		
+		img.style.width = ow+"px";
+		img.style.height = oh+"px";
+		div.style.left = pos.x+"px";
+		div.style.top = pos.y+"px";
+		animation.fadeIn(div,500);
+		animation.create(div,pos.x,getWindowWidth()/2-w/2,500,function(value,element){ element.style.left = Math.floor(value)+"px"; });
+		animation.create(div,pos.y,getWindowHeight()/2-h/2,500,function(value,element){ element.style.top = Math.floor(value)+"px"; });
+		animation.create(img,ow,w,500,function(value,element){ element.style.width = Math.floor(value)+"px"; });
+		animation.create(img,oh,h,500,function(value,element){ element.style.height = Math.floor(value)+"px"; });
+	});
 }
 
 function addDataListPeoplePictureSupport(list) {

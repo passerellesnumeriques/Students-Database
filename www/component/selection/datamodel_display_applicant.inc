@@ -75,7 +75,7 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 			case "Information Session":
 				if ($can_edit) {
 					$html .= "<td>";
-					$html .= "<button class='flat small' title='Change Information Session' onclick='changeIS(this);return false;'><img src='".theme::make_icon("/static/selection/IS/IS_16.png", theme::$icons_10["_import"])."'/></button>";
+					$html .= "<button class='flat small' title='Change Information Session' onclick='changeIS(this);return false;'><img src='".theme::make_icon("/static/selection/is/is_16.png", theme::$icons_10["_import"])."'/></button>";
 					$html .= "</td>";
 				}
 				break;

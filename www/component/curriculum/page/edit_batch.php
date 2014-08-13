@@ -184,14 +184,14 @@ if ($batch <> null) {
 	echo "integration_date=dateToSQL(new Date());";
 	// create default batch
 	$period_name_numbers = array();
-	for ($year = 0; $year < $conf["default_batch_years"]; $year++) {
-		// create periods based on default academic year
-		foreach ($conf["default_academic_year"] as $default_period) {
+	foreach ($conf["default_batch_years"] as $default_year) {
+		foreach ($default_year as $period_number) {
+			$period = $conf["default_academic_year"][$period_number];
 			// get period name
-			if (!isset($period_name_numbers[$default_period["period"]]))
-				$period_name_numbers[$default_period["period"]] = 1;
-			$period_name = $default_period["period"]." ".$period_name_numbers[$default_period["period"]];
-			$period_name_numbers[$default_period["period"]]++;
+			if (!isset($period_name_numbers[$period["period"]]))
+				$period_name_numbers[$period["period"]] = 1;
+			$period_name = $period["period"]." ".$period_name_numbers[$period["period"]];
+			$period_name_numbers[$period["period"]]++;
 			echo "periods.push({id:new_period_id_counter--,name:".json_encode($period_name).",academic_period:0});";
 		}
 	}
@@ -417,10 +417,11 @@ function createPeriodRow(period, before) {
 	td.appendChild(period.remove_button);
 	period.remove_button.onclick = function() {
 		pnapplication.dataUnsaved('Batch');
+		var index = periods.indexOf(period);
 		periods.remove(period);
 		period.tr.parentNode.removeChild(period.tr);
-		if (periods.length > 0)
-			updatePeriodRow(periods[periods.length-1]);
+		if (index < periods.length)
+			updatePeriodRow(periods[index]);
 		if (period.id == spe_period_start) {
 			spe_period_start = null;
 			selected_specializations = [];

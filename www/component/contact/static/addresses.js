@@ -71,7 +71,11 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			button.style.color = "#808080";
 			button.style.fontSize = "8pt";
 			button.style.whiteSpace = 'nowrap';
-			button.onclick = function(){t.createAddress();};
+			button.onclick = function(ev){
+				t.createAddress();
+				stopEventPropagation(ev);
+				return false;
+			};
 			tr_foot.appendChild(td_foot_1);
 			tr_foot.appendChild(td_foot_2);
 			this.tfoot.appendChild(tr_foot);
@@ -99,13 +103,14 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		var td_category = document.createElement("td");
 		td_category.style.textAlign = 'right';
 		td_category.style.color = "#808080";
-		td_category.style.verticalAlign = "top";
+		td_category.style.verticalAlign = "middle";
 		td_category.style.paddingLeft = "5px";
 		td_category.style.paddingRight = '5px';
 		tr.appendChild(td_category);
 		var td_data = document.createElement("td");
 		var div_data = document.createElement("div");
 		div_data.style.display = 'inline-block';
+		div_data.style.verticalAlign = "middle";
 		td_data.appendChild(div_data);
 		tr.appendChild(td_category);
 		tr.appendChild(td_data);
@@ -124,7 +129,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 						text.element.cursor = '';
 					};
 					div_data.address = address;
-					div_data.onclick = function() {
+					div_data.onclick = function(ev,is_new) {
 						require(["popup_window.js","edit_address.js"], function() {
 							var show_popup = function(lock_id) {
 								var content = document.createElement("DIV");
@@ -166,6 +171,9 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 										});
 									} else
 										end();
+								},function() {
+									if (is_new) t.removeAddress(address);
+									return true;
 								});
 								p.show();
 							};
@@ -182,7 +190,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 								show_popup();
 						});
 					};
-					if (is_new) { is_new = false; div_data.onclick(); }
+					if (is_new) { is_new = false; div_data.onclick(null,true); }
 				}
 				layout.invalidate(div_data);
 			};
@@ -192,6 +200,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		if(type_id == null || type_id < 0 || can_remove){
 			var div_remove = document.createElement('div');
 			div_remove.style.display = 'inline-block';
+			div_remove.style.verticalAlign = "middle";
 			this._addRemoveButton(address,div_remove);
 			td_data.appendChild(div_remove);
 		}
@@ -237,8 +246,10 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		remove_button.onmouseout = function(e){this.src = theme.icons_16.remove; stopEventPropagation(e);};
 		remove_button.style.cursor = 'pointer';
 		// remove_button.style.verticalAlign = 'bottom';
-		remove_button.onclick = function(){
+		remove_button.onclick = function(ev){
 			confirm_dialog("Are you sure you want to remove this address?", function(yes){if(yes) t.removeAddress(address);});
+			stopEventPropagation(ev);
+			return false;
 		};
 		container.appendChild(remove_button);
 	};
@@ -274,7 +285,11 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		this.context = null;
 		container.innerHTML = address.address_type;
 		container.style.cursor = "pointer";
-		container.onclick = function(){t._showAddressTypeContextMenu(container,address);};
+		container.onclick = function(ev){
+			t._showAddressTypeContextMenu(container,address);
+			stopEventPropagation(ev);
+			return false;
+		};
 	};
 	
 	/**
@@ -289,9 +304,11 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 				t.context.onclose = function() {t.context = null;};
 			}
 			t.context.clearItems();
-			t._addAddressTypeToContextMenu(container, "Work", address);
+			t._addAddressTypeToContextMenu(container, "Family", address);
 			t._addAddressTypeToContextMenu(container, "Home", address);
-			t._addAddressTypeToContextMenu(container, "Custom", address);
+			t._addAddressTypeToContextMenu(container, "Birthplace", address);
+			t._addAddressTypeToContextMenu(container, "Work", address);
+			t._addAddressTypeToContextMenu(container, "Other:", address);
 			
 			t.context.showBelowElement(container);
 		});
@@ -308,7 +325,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		item.innerHTML = data;
 		
 		if(address.address_type == data) item.style.fontWeight ='bold';
-		if(data == "Custom"){
+		if(data == "Other:"){
 			var input = document.createElement("INPUT");
 			input.type = 'text';
 			input.maxLength = 10;
@@ -330,7 +347,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		}
 		item.className = "context_menu_item";
 		t.context.addItem(item);
-		if(data == "Custom") item.onclick = null;
+		if(data == "Other:") item.onclick = null;
 	};
 	
 	/**

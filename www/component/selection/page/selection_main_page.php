@@ -1,21 +1,4 @@
 <?php 
-function getArrayStepsToDisplay ($steps_to_display){
-	$json = "";
-	if(count($steps_to_display) == 0)
-		$json.= "[];";
-	else {
-		$json.=  "[";
-		$first = true;
-		foreach($steps_to_display as $s){
-			if(!$first)
-				$json.=  ", ";
-			$first = false;
-			$json.=  "{name:".json_encode($s["name"]).", id:".json_encode($s["id"])."}";
-		}
-		$json.=  "]";
-	}
-	return $json;
-}
 require_once("SelectionPage.inc");
 class page_selection_main_page extends SelectionPage {
 	public function getRequiredRights() { return array(); }
@@ -145,7 +128,7 @@ class page_selection_main_page extends SelectionPage {
 			function loadISStatus() {
 				var container = document.getElementById('status_is');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
-				service.html("selection","IS/status",null,container);
+				service.html("selection","is/status",null,container);
 			}
 			function loadExamCenterStatus() {
 				var container = document.getElementById('status_exam_centers');

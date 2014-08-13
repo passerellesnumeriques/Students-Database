@@ -9,6 +9,8 @@ class TeacherPeopleTypePlugin implements PeopleTypePlugin {
 	public function getName() { return "Teacher"; }
 	public function isStandalone() { return true; }
 	
+	public function getTables() { return array("TeacherDates"); }
+	
 	public function canRead() {
 		return PNApplication::$instance->user_management->has_right("consult_curriculum");
 	}
@@ -23,6 +25,6 @@ class TeacherPeopleTypePlugin implements PeopleTypePlugin {
 		return "Teacher";
 	}
 	
-	public function getBuiltinDefaultUserRoles($people) { return array(); }
+	public function getBuiltinDefaultUserRoles($people) { return array("Teacher"); }
 }
 ?>

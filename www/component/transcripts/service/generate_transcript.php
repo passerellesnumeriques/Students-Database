@@ -10,7 +10,7 @@ class service_generate_transcript extends Service {
 	
 	public function execute(&$component, $input) {
 		require_once("component/transcripts/page/design.inc");
-		generate_transcript();
+		generateTranscript($input["period"], @$input["specialization"]);
 	}
 		
 }

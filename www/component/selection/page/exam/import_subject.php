@@ -1,6 +1,6 @@
 <?php
-require_once ("component/selection/SelectionJSON.inc");
-require_once("/../SelectionPage.inc");
+require_once("component/selection/SelectionJSON.inc");
+require_once("component/selection/page/SelectionPage.inc");
 class page_exam_import_subject extends SelectionPage {
 	
 	public function getRequiredRights() {return array("manage_exam_subject");}

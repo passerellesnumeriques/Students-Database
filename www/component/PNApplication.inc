@@ -43,7 +43,7 @@ class PNApplication {
 	 * @static 
 	 * @var PNApplication singleton
 	 */
-	public static $instance;
+	public static $instance = null;
 
 	/** @static
 	 * @var string[] list of error in HTML format
@@ -69,10 +69,10 @@ class PNApplication {
 	 */
 	public static function error($message, $exception = null) {
 		if (count(PNApplication::$errors) == 20) {
-			array_push(PNApplication::$errors, "Too much errors");
+			array_push(PNApplication::$errors, "Too many errors");
 			return;
 		}
-		if (count(PNApplication::$errors) > 50) return;
+		if (count(PNApplication::$errors) > 20) return;
 		if (!($message instanceof Exception) && $exception == null) {
 			try {
 				throw new Exception($message);
@@ -179,7 +179,7 @@ class PNApplication {
 	public static function printJSONResult($result) {
 		echo "{";
 		if (count(PNApplication::$errors) > 0) {
-			echo "errors:[";
+			echo "\"errors\":[";
 			$first = true;
 			foreach (PNApplication::$errors as $e) {
 				if ($first) $first = false; else echo ",";
@@ -188,7 +188,7 @@ class PNApplication {
 			echo "],";
 		}
 		if (count(PNApplication::$warnings) > 0) {
-			echo "warnings:[";
+			echo "\"warnings\":[";
 			$first = true;
 			foreach (PNApplication::$warnings as $e) {
 				if ($first) $first = false; else echo ",";
@@ -196,7 +196,7 @@ class PNApplication {
 			}
 			echo "],";
 		}
-		echo "result:";
+		echo "\"result\":";
 		if ($result === null) echo "null"; else echo $result;
 		echo "}";
 	}
@@ -225,8 +225,7 @@ class PNApplication {
 		foreach ($this->components as $c) $this->initComponent($c, $done);
 #PROD
 # ##CREATE_COMPONENTS##
-# ##COMPONENTS_ORDER##
-#foreach ($components as $c) $c->init();
+#foreach (self::getOrderedComponentsNames() as $c) $this->components[$c]->init();
 #END
 		$this->initRequest();
 	}
@@ -239,8 +238,7 @@ class PNApplication {
 		$done = array();
 		foreach ($this->components as $c) $this->initRequestForComponent($c, $done);
 #PROD
-# ##COMPONENTS_ORDER##
-#foreach ($component as $c) $c->initRequest();
+#foreach (self::getOrderedComponentsNames() as $c) $this->components[$c]->initRequest();
 #END
 	}
 #DEV
@@ -299,6 +297,16 @@ class PNApplication {
 			PNApplication::internalSortComponentsByDependencies(PNApplication::$instance->components[$dep], $list);
 		array_push($list, $c);
 	}
+#PROD
+#public static function sortComponentsByDependencies() {
+#$list = array();
+#foreach (self::getOrderedComponentsNames() as $c) array_push($list, PNApplication::$instance->components[$c]);
+#return $list;
+#}
+#public static function getOrderedComponentsNames() {
+# ##COMPONENTS_ORDER##
+#return $components;
+#}
 #END
 	
 	/** Get the list of domains with their configuration: from file conf/domains

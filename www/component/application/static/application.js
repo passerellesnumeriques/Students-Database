@@ -49,6 +49,7 @@ if (window == window.top) {
 		 * @param {window} w window/frame which has been closed 
 		 */
 		unregisterWindow: function(w) {
+			w.document.body.removeAllChildren();
 			if (w.frameElement && !w.frameElement._loading_frame)
 				new LoadingFrame(w.frameElement);
 			if (w.frameElement && w.frameElement._loading_frame)
@@ -416,7 +417,8 @@ function LoadingFrame(frame_element) {
 		if (this.table.parentNode) {
 			if (typeof animation != 'undefined') {
 				animation.fadeOut(this.table, 200, function() {
-					t.table.parentNode.removeChild(t.table);
+					if (t.table)
+						t.table.parentNode.removeChild(t.table);
 				});
 			} else
 				this.table.parentNode.removeChild(this.table);

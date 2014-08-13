@@ -64,6 +64,7 @@ class TableDataValues {
 			return isset($this->columns_values[$cell["column"]]);
 		}
 		$columns = $data->getHandledColumns();
+		if (count($columns) == 0) return false;
 		$ok = true;
 		foreach ($columns as $cname) if (!isset($this->columns_values[$cname])) { $ok = false; break; }
 		return $ok;

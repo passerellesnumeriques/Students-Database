@@ -77,17 +77,25 @@ datamodel = {
 	 */
 	registerCellText: function(win, table, column, row_key, text_node) {
 		var n=text_node;
-		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
+		var listener = function(value) {
 			n.nodeValue = value;
 			if (n.parentNode) layout.invalidate(n.parentNode);
+		};
+		window.top.datamodel.addCellChangeListener(win, table, column, row_key, listener);
+		n.parentNode.ondomremoved(function(element) {
+			window.top.datamodel.removeCellChangeListener(listener);
 		});
 	},
 	registerCellSpan: function(win, table, column, row_key, span) {
 		var s=span;
-		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
+		var listener = function(value) {
 			s.removeAllChildren();
 			s.appendChild(document.createTextNode(value));
 			if (s.parentNode) layout.invalidate(s.parentNode);
+		};
+		window.top.datamodel.addCellChangeListener(win, table, column, row_key, listener);
+		s.ondomremoved(function(element) {
+			window.top.datamodel.removeCellChangeListener(listener);
 		});
 	},
 	inputCell: function(input, table, column, row_key) {
@@ -171,6 +179,13 @@ datamodel = {
 	 */
 	addCellChangeListener: function(win, table, column, row_key, listener) {
 		this._cell_change_listeners.push({win:win,table:table,column:column,row_key:row_key,listener:listener});
+	},
+	removeCellChangeListener: function(listener) {
+		for (var i = 0; i < this._cell_change_listeners.length; ++i)
+			if (this._cell_change_listeners[i].listener == listener) {
+				this._cell_change_listeners.splice(i,1);
+				i--;
+			}
 	},
 	
 	/** Signal the change of a DataDisplay
@@ -263,22 +278,16 @@ datamodel = {
 	},
 	
 	create_cell: function(table, sub_model, column, row_key, value, field_type, field_cfg, editable, container, onchange) {
-		if (!editable) {
-			var node = document.createTextNode(value);
-			window.top.datamodel.addCellChangeListener(getWindowFromElement(container), table+(sub_model ? "_"+sub_model : ""), column, row_key, function(value){
-				node.nodeValue = value;
-				if (onchange) onchange(value);
-			});
-			container.appendChild(node);
-			return;
-		}
-		require([["typed_field.js",field_type+".js"],"editable_cell.js"], function() {
-			if (row_key > 0)
+		var js = [["typed_field.js",field_type+".js"]];
+		if (editable) js.push("editable_cell.js");
+		require(js, function() {
+			if (row_key > 0 && editable)
 				new editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, field_type, field_cfg, value,null,onchange);
 			else {
-				var field = new window[field_type](value,true,field_cfg);
+				var field = new window[field_type](value,editable,field_cfg);
 				container.appendChild(field.getHTMLElement());
 				if (onchange) field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
+				field.register_datamodel_cell(table,column,row_key);
 			}
 		});
 	},
@@ -313,7 +322,13 @@ datamodel = {
 		require("popup_window.js",function() { popup_ready = true; ready(); });
 	}
 };
-window.top.pnapplication.onwindowclosed.add_listener(function(c) { c.top.datamodel._windowClosed(c.win); });
+function _init_datamodel_js() {
+	if (!window.top.pnapplication) {
+		setTimeout(_init_datamodel_js, 25);
+		return;
+	}
+	window.top.pnapplication.onwindowclosed.add_listener(function(c) { c.top.datamodel._windowClosed(c.win); });
+}
 if (!window.top.datamodel_prototype) {
 window.top.datamodel_prototype = {
 	getTable: function(name) {

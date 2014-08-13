@@ -8,8 +8,7 @@ class service_get_static_resources extends Service {
 	public function outputDocumentation() { echo "Scripts with dependencies, and images to load"; }
 	
 	public function execute(&$component, $input) {
-		$components = $this->getComponents();
-		$components = $this->orderComponents($components);
+		$components = $this->getOrderedComponents();
 		$scripts = array();
 		$images = array();
 		// start with theme, remove libraries
@@ -25,6 +24,12 @@ class service_get_static_resources extends Service {
 			$this->browse("component/".$c."/static/", "/static/".$c."/", $scripts, $images);
 		// result
 		echo "{scripts:".json_encode($scripts).",images:".json_encode($images)."}";
+	}
+#DEV	
+	private function getOrderedComponents() {
+		$components = $this->getComponents();
+		$components = $this->orderComponents($components);
+		return $components;
 	}
 
 	/**
@@ -65,7 +70,11 @@ class service_get_static_resources extends Service {
 			$this->orderComponentsRecurse($dep, $result);
 		array_push($result, $c);
 	}
-	
+#PROD
+#	private function getOrderedComponents() {
+#		return PNApplication::getOrderedComponentsNames();
+#	}
+#END	
 	/**
 	 * Browse the given directory to search javascripts and images files
 	 * @param string $path directory's path

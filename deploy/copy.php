@@ -1,4 +1,12 @@
 <?php 
+global $has_errors;
+$has_errors = false;
+set_error_handler(function($severity, $message, $filename, $lineno) {
+	if (error_reporting() == 0) return true;
+	$has_errors = true;
+	return true;
+});
+
 function copy_directory($src, $dst) {
 	set_time_limit(240);
 	$exclude = array(".","..","deploy.files",".gitignore");
@@ -23,17 +31,27 @@ function copy_directory($src, $dst) {
 	$dir = opendir($src);
 	if (!$dir) die("Unable to access to directory ".$src);
 	while (($file = readdir($dir)) <> null) {
-		if ($include <> null && !in_arra($file,$include)) continue;
+		if ($include <> null && !in_array($file,$include)) continue;
 		if (in_array($file,$exclude)) continue;
+		if (strpos($src,"/page/") !== false || strpos($src,"/service/") !== false || strpos($src,"/static/") !== false) {
+			if (strpos($file,".inc") === false) {
+				if (strtolower($file) <> $file) {
+					die("Error: file $src/$file contains capital letters, but it is supposed to be accessed by URL, meaning no capital letter are allowed. This will not work under Unix systems which have case sensitive file systems.");
+				}
+			}
+		}
 		if (is_dir($src."/".$file)) {
 			if (!mkdir($dst."/".$file)) die("Unable to create directory ".$dst."/".$file);
 			copy_directory($src."/".$file, $dst."/".$file);
-		} else
+		} else {
 			if (!copy($src."/".$file, $dst."/".$file)) die("Unable to copy file ".$src."/".$file);
+		}
 	}
 	closedir($dir);
 }
-copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]));
+copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]."/www"));
+
+if ($has_errors) die();
 ?>
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
@@ -43,6 +61,7 @@ Optimizing and creating deployed version of the files...
 <form name='deploy' method="POST" action="optimize.php">
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
+<input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
 </form>
 
 </div>

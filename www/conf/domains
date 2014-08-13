@@ -1,87 +1,97 @@
 <?php
 $conf = array(
-    "PNC" => array(
-       "geography"=>array(
-           "country_code"=>"kh"
-       ),
-       "curriculum"=>array(
-           "preset_periods"=>array(
-               array(
-                   "name"=>"Quarter",
-                   "weeks"=>13
-               )
-           ),
-           "default_academic_year"=>array(
-               array("period"=>"Quarter","month"=>9,"week"=>1,"weeks_break"=>0),
-               array("period"=>"Quarter","month"=>12,"week"=>1,"weeks_break"=>0),
-               array("period"=>"Quarter","month"=>3,"week"=>1,"weeks_break"=>0),
-               array("period"=>"Quarter","month"=>6,"week"=>1,"weeks_break"=>0)
-           ),
-           "default_batch_years"=>2
-       ),
-       "transcripts"=>array(
-           "default_grading_system"=>"Percentage"
-       ),
-       "google"=>array(
-            "client_id"=>"522826546811-f5ciks5hf46r69otq0107jo30uv1mrdj.apps.googleusercontent.com",
-            "api_key"=>"AIzaSyBota3grF8-abcdi6gJJRrrkO4KGPUUPrQ"
-       )
-    ),
+	"PNC" => array(
+		"geography"=>array(
+			"country_code"=>"kh"
+		),
+		"curriculum"=>array(
+			"preset_periods"=>array(
+				array(
+					"name"=>"Quarter",
+					"weeks"=>13
+				)
+			),
+			"default_academic_year"=>array(
+				array("period"=>"Quarter","month"=>9,"week"=>1,"weeks_break"=>0),
+				array("period"=>"Quarter","month"=>12,"week"=>1,"weeks_break"=>0),
+				array("period"=>"Quarter","month"=>3,"week"=>1,"weeks_break"=>0),
+				array("period"=>"Quarter","month"=>6,"week"=>1,"weeks_break"=>0)
+			),
+			"default_batch_years"=>array(
+				array(0,1,2,3),
+				array(0,1,2,3),
+			)
+		),
+		"transcripts"=>array(
+			"default_grading_system"=>"Percentage"
+		),
+		"google"=>array(
+			"client_id"=>"522826546811-f5ciks5hf46r69otq0107jo30uv1mrdj.apps.googleusercontent.com",
+			"api_key"=>"AIzaSyBota3grF8-abcdi6gJJRrrkO4KGPUUPrQ"
+		)
+	),
 	"PNP" => array(
-	   "geography"=>array(
-	       "country_code"=>"ph"
-	   ),
-	   "curriculum"=>array(
-	       "preset_periods"=>array(
-	           array(
-	               "name"=>"Semester",
-	               "weeks"=>18
-	           ),
-	           array(
-	               "name"=>"Summer",
-	               "weeks"=>4
-	           )
-	       ),
-	       "default_academic_year"=>array(
-	           array("period"=>"Semester","month"=>6,"week"=>1,"weeks_break"=>0),
-	           array("period"=>"Semester","month"=>11,"week"=>1,"weeks_break"=>2),
-	           array("period"=>"Summer","month"=>4,"week"=>1,"weeks_break"=>0)
-	       ),
-	       "default_batch_years"=>3
-	   ),
-	   "transcripts"=>array(
-	       "default_grading_system"=>"USC"
-	   ),
-	   "google"=>array(
+		"geography"=>array(
+			"country_code"=>"ph"
+		),
+		"curriculum"=>array(
+			"preset_periods"=>array(
+				array(
+					"name"=>"Semester",
+					"weeks"=>18
+				),
+				array(
+					"name"=>"Summer",
+					"weeks"=>4
+				)
+			),
+			"default_academic_year"=>array(
+				array("period"=>"Semester","month"=>6,"week"=>2,"weeks_break"=>0),
+				array("period"=>"Semester","month"=>11,"week"=>2,"weeks_break"=>2),
+				array("period"=>"Summer","month"=>4,"week"=>1,"weeks_break"=>0)
+			),
+			"default_batch_years"=>array(
+				array(0,1,2),   // Year 1: the 3 periods
+				array(0,1),     // Year 2: no summer
+				array(0,1)      // Year 3: no summer
+			)
+		),
+		"transcripts"=>array(
+			"default_grading_system"=>"USC"
+		),
+		"google"=>array(
 			"client_id"=>"886486971286-d8l06vatk9thb2cmsk14aijn232r45v4.apps.googleusercontent.com",
 			"api_key"=>"AIzaSyCicuTpXjwNw8K7KJ7kd5-mAlu2fd-RUxI"
-	   )
+		)
 	),
-    "PNV" => array(
-       "geography"=>array(
-           "country_code"=>"vn"
-       ),
-       "curriculum"=>array(
-           "preset_periods"=>array(
-               array(
-                   "name"=>"Semester",
-                   "weeks"=>18
-               )
-           ),
-           "default_academic_year"=>array(
-               array("period"=>"Semester","month"=>9,"week"=>1,"weeks_break"=>0),
-               array("period"=>"Semester","month"=>3,"week"=>1,"weeks_break"=>0)
-           ),
-           "default_batch_years"=>2
-       ),
-       "transcripts"=>array(
-	       "default_grading_system"=>"/10.00"
-	   ),
-	   "google"=>array(
+	"PNV" => array(
+		"geography"=>array(
+			"country_code"=>"vn"
+		),
+		"curriculum"=>array(
+			"preset_periods"=>array(
+				array(
+					"name"=>"Semester",
+					"weeks"=>18
+				)
+			),
+			"default_academic_year"=>array(
+				array("period"=>"Semester","month"=>9,"week"=>1,"weeks_break"=>0),
+				array("period"=>"Semester","month"=>3,"week"=>1,"weeks_break"=>0)
+			),
+			"default_batch_years"=>array(
+				array(0,1),
+				array(0,1)
+			)
+		),
+		"transcripts"=>array(
+			"default_grading_system"=>"/10.00"
+		),
+		"google"=>array(
 			"client_id"=>"1062336655897-n4cv0ipt7lqgioc5c9efaink18k0rrjp.apps.googleusercontent.com",
 			"api_key"=>"AIzaSyAGKZG_GUrR8aKqx6ZR939ZK9VTk12uNsg"
-	   )
-    ),
+		)
+	),
 );
 /*
     "client_id"=>"668569616064-nu94pmbtml2i2qrnhhkajcf82ju6f2mb.apps.googleusercontent.com",

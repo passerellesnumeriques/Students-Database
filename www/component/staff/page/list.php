@@ -28,6 +28,7 @@ var list = new data_list(
 		list.grid.makeScrollable();
 		require("profile_picture.js",function() {
 			addDataListPeoplePictureSupport(list);
+			addDataListImportPicturesButton(list);
 		});
 		<?php if ($can_edit) {?>
 		var edit_depts = document.createElement("BUTTON");

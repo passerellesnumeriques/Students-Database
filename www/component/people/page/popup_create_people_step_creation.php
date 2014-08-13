@@ -13,7 +13,7 @@ class page_popup_create_people_step_creation extends Page {
 			echo "<div style='background-color:white'>Nobody to create.</div>";
 			echo "<script type='text/javascript'>popup.unfreeze();popup.addCancelButton();</script>";
 		}
-		$this->addJavascript("/static/data_model/DataDisplay.js");
+		$this->addJavascript("/static/data_model/datadisplay.js");
 ?>
 <div id='container' style='padding:10px'><div style='width:300px;height:100px'></div></div>
 <script type='text/javascript'>
@@ -62,17 +62,17 @@ function next(index, span, pb) {
 		return;
 	}
 	var p = peoples[index];
-	if (!p.reuse_id) {
-		var first_name = "";
-		var last_name = "";
-		for (var i = 0; i < p.length; ++i) {
-			var path = new DataPath(p[i].path);
-			if (path.lastElement().table != "People") continue;
-			for (var j = 0; j < p[i].value.length; ++j) {
-				if (p[i].value[j].name == "First Name") first_name = p[i].value[j].value;
-				else if (p[i].value[j].name == "Last Name") last_name = p[i].value[j].value;
-			}
+	var first_name = "";
+	var last_name = "";
+	for (var i = 0; i < p.length; ++i) {
+		var path = new DataPath(p[i].path);
+		if (path.lastElement().table != "People") continue;
+		for (var j = 0; j < p[i].value.length; ++j) {
+			if (p[i].value[j].name == "First Name") first_name = p[i].value[j].value;
+			else if (p[i].value[j].name == "Last Name") last_name = p[i].value[j].value;
 		}
+	}
+	if (!p[0].reuse_id) {
 		var msg = "Creation of "+first_name+" "+last_name;
 		if (peoples.length > 1)
 			msg += " ("+(index+1)+"/"+peoples.length+")";
@@ -91,7 +91,22 @@ function next(index, span, pb) {
 			next(index+1, span, pb);
 		});
 	} else {
-		// TODO
+		var msg = "Setting "+first_name+" "+last_name;
+		if (peoples.length > 1)
+			msg += " ("+(index+1)+"/"+peoples.length+")";
+		span.removeAllChildren();
+		span.appendChild(document.createTextNode(msg));
+		var types = p[0].add_types.split(",");
+		service.json("people","add_types",{people:p[0].reuse_id,types:types},function(res){
+			pb.addAmount(1);
+			if (res) {
+				for (var i = 0; i < p.length; ++i)
+					if (p[i].path == "People") { p[i].key = p[0].reuse_id; break; }
+				success.push({fn:first_name,ln:last_name,paths:p,id:p[0].reuse_id});
+			} else
+				problems.push({fn:first_name,ln:last_name,paths:p});
+			next(index+1, span, pb);
+		});
 	}
 }
 window.popup.freeze_progress("Creation of people...", peoples.length, function(span, pb) {

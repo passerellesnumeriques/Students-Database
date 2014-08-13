@@ -45,6 +45,7 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 			else
 				nb++;
 		}
+		return nb;
 	};
 	this.getFinalColumns = function() {
 		var list = [];
@@ -791,6 +792,7 @@ function grid(element) {
 			t.grid_element.style.overflow = "auto";
 			t.thead.style.position = "static";
 			t.element.style.width = "";
+			if (t.table.childNodes.length > 0 && t.table.childNodes[0]._for_fixed) t.table.removeChild(t.table.childNodes[0]);
 			// remove fixed width
 			for (var i = 0; i < t.thead.childNodes.length; ++i)
 				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j) {
@@ -828,20 +830,35 @@ function grid(element) {
 					t.thead.childNodes[i].childNodes[j].style.minWidth = t.thead.childNodes[i].childNodes[j].style.width;
 				}
 			// fix the width of each column
+			var tr = document.createElement("TR");
+			tr._for_fixed = true;
+			tr.title_row = true;
+			if (t.table.childNodes.length > 0)
+				t.table.insertBefore(tr,t.table.childNodes[0]);
+			else
+				t.table.appendChild(tr);
 			for (var i = 0; i < t.colgroup.childNodes.length; ++i) {
 				if (t.colgroup.childNodes[i].style.width)
 					 t.colgroup.childNodes[i]._width = t.colgroup.childNodes[i].style.width;
 				t.colgroup.childNodes[i].style.width = widths[i]+"px";
 				t.colgroup.childNodes[i].style.minWidth = widths[i]+"px";
+				var td = document.createElement("TD");
+				td.style.padding = "0px";
+				var div = document.createElement("DIV");
+				td.appendChild(div);
+				tr.appendChild(td);
+				setWidth(td, widths[i]);
+				setWidth(div, widths[i]);
 			}
+			tr.style.height = "0px";
 			// put the thead as relative
 			t.element.style.paddingTop = t.thead.offsetHeight+"px";
 			t.element.style.position = "relative";
 			t.grid_element.style.overflow = "auto";
 			t.thead.style.position = "absolute";
 			t.thead.style.top = "0px";
-			t.thead.style.left = "0px";
-			t.thead.style.width = "100%";
+			t.thead.style.left = (-t.grid_element.scrollLeft)+"px";
+			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft); 
 			t.thead.style.overflow = "hidden";
 			//t.table.parentNode.style.marginRight = "1px";
 		};

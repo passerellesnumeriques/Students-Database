@@ -103,17 +103,19 @@ class page_popup_create_people_step_check extends Page {
 										break;
 									}
 							}
-							// TODO
 							/*
 							if (count($missing_types) > 0) {
 								echo "<br/>";
-								echo "<input type='radio' name='$id' value='".$s["id"]."'/> Reuse this person, and make it as ";
+								echo "<input type='radio' name='$id' value='".$s["id"]."'/> This is the same person, make it as ";
+								$add_types = "";
 								$first = true;
 								foreach ($missing_types as $t) {
 									$pi = PNApplication::$instance->people->getPeopleTypePlugin($t);
-									if ($first) $first = false; else echo ", ";
+									if ($first) $first = false; else { $add_types .= ","; echo ", "; }
 									echo $pi->getName();
+									$add_types .= $t;
 								}
+								echo "<input type='hidden' name='".$s["id"]."_add_types' value='$add_types'/>";
 							}
 							*/
 							echo "</li>";
@@ -159,9 +161,9 @@ class page_popup_create_people_step_check extends Page {
 					if (value == 'create') {
 						peoples.push(to_include[i]);
 					} else {
-						// TODO
-						//to_include[i].reuse_id = value;
-						//peoples.push(to_include[i]);
+						to_include[i][0].reuse_id = value;
+						to_include[i][0].add_types = form.elements[value+"_add_types"].value;
+						peoples.push(to_include[i]);
 					}
 				}
 				send();

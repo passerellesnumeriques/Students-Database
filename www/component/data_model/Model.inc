@@ -16,34 +16,21 @@ class DataModel {
 	public static function &get() {
 		if (DataModel::$model == null) {
 			DataModel::$model = new DataModel();
-			$done = array();
-			foreach (PNApplication::$instance->components as $c) {
-				DataModel::_get_component($c, $done, DataModel::$model);
+			$model = &DataModel::$model;
+			$components = PNApplication::sortComponentsByDependencies();
+			// TODO better for prod version, but data model can include sub files....
+			foreach ($components as $c) {
+				$file = "component/".$c->name."/datamodel.inc";
+				if (file_exists($file))
+					include $file;
 			}
-			$done = array();
-			foreach (PNApplication::$instance->components as $c) {
-				DataModel::_get_component_display($c, $done, DataModel::$model);
+			foreach ($components as $c) {
+				$file = "component/".$c->name."/datamodel_display.inc";
+				if (file_exists($file))
+					include $file;
 			}
 		}
 		return DataModel::$model;
-	}
-	private static function _get_component($c, &$done, &$model) {
-		if (in_array($c->name, $done)) return;
-		array_push($done, $c->name);
-		foreach ($c->dependencies() as $dep)
-			DataModel::_get_component(PNApplication::$instance->components[$dep], $done, $model);
-		$file = "component/".$c->name."/datamodel.inc";
-		if (file_exists($file))
-			include $file;
-	}
-	private static function _get_component_display($c, &$done, &$model) {
-		if (in_array($c->name, $done)) return;
-		array_push($done, $c->name);
-		foreach ($c->dependencies() as $dep)
-			DataModel::_get_component_display(PNApplication::$instance->components[$dep], $done, $model);
-		$file = "component/".$c->name."/datamodel_display.inc";
-		if (file_exists($file))
-			include $file;
 	}
 	
 	protected $tables = array();
@@ -62,23 +49,20 @@ class DataModel {
 		$table = new \datamodel\Table($this, $name);
 		$this->tables[$name] = &$table;
 #DEV
-		global $development_mode;
-		if ($development_mode) {
-			$table->{"declaring_component"} = "unknown";
-			try { throw new Exception(); }
-			catch (Exception $e) {
-				$root = str_replace("\\","/",realpath("component"))."/";
-				foreach ($e->getTrace() as $trace) {
-					$file = str_replace("\\","/",realpath($trace["file"]));
-					if (substr($file,0,strlen($root)) <> $root) continue;
-					$component = substr($file,strlen($root));
-					$i = strpos($component, "/");
-					if ($i === FALSE) continue;
-					$component = substr($component,0,$i);
-					$table->{"declaring_component"} = $component;
-					//$table->{"file"} = $file;
-					break;
-				}
+		$table->{"declaring_component"} = "unknown";
+		try { throw new Exception(); }
+		catch (Exception $e) {
+			$root = str_replace("\\","/",realpath("component"))."/";
+			foreach ($e->getTrace() as $trace) {
+				$file = str_replace("\\","/",realpath($trace["file"]));
+				if (substr($file,0,strlen($root)) <> $root) continue;
+				$component = substr($file,strlen($root));
+				$i = strpos($component, "/");
+				if ($i === FALSE) continue;
+				$component = substr($component,0,$i);
+				$table->{"declaring_component"} = $component;
+				//$table->{"file"} = $file;
+				break;
 			}
 		}
 #END
@@ -186,13 +170,14 @@ class DataModel {
 	/** should be used only in very specific places, while ensuring that this will not give privileges to the user
 	 * @return datamodel\Table[] 
 	 */
-	public function &internalGetTables() {
+	public function &internalGetTables($include_sub_models = true) {
 		$a = array();
 		foreach ($this->tables as $name=>&$table)
 			$a[$name] = &$table;
-		foreach ($this->sub_models as &$sm)
-			foreach ($sm->tables as $name=>&$table)
-				$a[$name] = &$table;
+		if ($include_sub_models)
+			foreach ($this->sub_models as &$sm)
+				foreach ($sm->tables as $name=>&$table)
+					$a[$name] = &$table;
 		return $a;
 	}
 
@@ -211,6 +196,9 @@ class DataModel {
 		return $a;
 	}
 	
+	/**
+	 * @return SubDataModel[]
+	 */
 	public function getSubModels() {
 		return $this->sub_models;
 	}

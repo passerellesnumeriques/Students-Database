@@ -26,6 +26,8 @@ abstract class Page {
 	 */
 	public abstract function getRequiredRights();
 
+	public function mayUpdateSession() { return false; }
+	
 	/** Execute the page: generate its content */
 	protected abstract function execute();
 	
@@ -204,8 +206,12 @@ abstract class Page {
 }
 
 function pageHeaderStart() {
+#DEV
 	require_once("component/Component.inc");
 	require_once("component/theme/theme.inc");
+#PROD
+#require_once("component/PNApplication.inc");
+#END
 ?>
 <!DOCTYPE HTML>
 <html>

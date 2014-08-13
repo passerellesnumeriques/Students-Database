@@ -50,7 +50,7 @@ class service_save_entity extends Service {
 		} else {
 			// this is an update
 			SQLQuery::create()->selectSubModels($sub_models)->updateByKey($table, $key, $fields, $lock_id == -1 ? null : $lock_id);
-			echo "{key:".$key."}";
+			echo "{key:".json_encode($key)."}";
 		}
 	}
 	

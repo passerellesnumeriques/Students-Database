@@ -72,6 +72,7 @@ class page_tree_frame extends Page {
 	</div>
 </div>
 <script type='text/javascript'>
+window.can_edit_batches = <?php echo $can_edit ? "true" : "false"?>;
 new header_bar('tree_header','toolbar');
 var tr = new tree('tree');
 tr.table.style.marginRight = window.top.browser_scroll_bar_size+"px";

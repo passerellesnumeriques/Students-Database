@@ -22,7 +22,11 @@ class CurriculumNewsCategory implements NewsCategory {
 	public function getDisplayName() { return "Curriculum"; }
 	public function getIcon() { return "/static/curriculum/curriculum_16.png"; }
 	public function getAccessRight() {
-		return 2; // TODO
+		if (PNApplication::$instance->user_management->has_right("edit_curriculum"))
+			return 2;
+		if (PNApplication::$instance->user_management->has_right("consult_curriculum"))
+			return 1;
+		return 0;
 	}
 	
 }
@@ -34,7 +38,11 @@ class BatchNewsCategory implements NewsCategory {
 	public function getDisplayName() { return "Batch"; }
 	public function getIcon() { return "/static/curriculum/batch_16.png"; }
 	public function getAccessRight() {
-		return 2; // TODO
+		if (PNApplication::$instance->user_management->has_right("post_batch_message"))
+			return 2;
+		if (PNApplication::$instance->user_management->has_right("consult_curriculum"))
+			return 1;
+		return 0;
 	}
 	
 }

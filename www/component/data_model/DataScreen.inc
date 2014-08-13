@@ -72,9 +72,9 @@ namespace datamodel {
 			$readonly = false;
 			if (!$is_new) {
 				$key_value = getKeyValue($path->table, $values);
-				if (!$path->table->mayModify())
+				if (!$path->table->mayModify() && !$path->table->mayInsert() && !$path->table->mayRemove()) {
 					$readonly = true;
-				else {
+				} else {
 					$table_alias = "THE_TABLE";
 					$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
 					$q->whereKey($path->table->getName(), $key_value);
@@ -100,8 +100,20 @@ namespace datamodel {
 					$value = $values->getDataValue($path->table->getName(), $data);
 				else if ($is_new && $prefilled_values->hasDataValue($path->table->getName(), $data))
 					$value = $prefilled_values->getDataValue($path->table->getName(), $data);
-				else
+				else if ($is_new)
 					$value = $data->getNewData();
+				else {
+					$table_alias = "THE_TABLE";
+					$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
+					$q->whereKey($path->table->getName(), $key_value);
+					$keys = $data->buildSQL($q, $path, null);
+					$row = $q->executeSingleRow();
+					if ($keys["key"] <> null)
+						$key_value = $row[$keys["key"]];
+					$value = @$row[$keys["data"]];
+				}
+				if (!$is_new)
+					$key_value = $data->getKeyFromTableKey($key_value);
 				$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 				$page->requireJavascript($tf[0].".js");
 				// check can really edit the columns
@@ -117,7 +129,7 @@ namespace datamodel {
 						$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",field:field,getValue:function(){return this.field.getCurrentData();},validate:function(){ return this.field.error; }});\n";
 				} else if ($can_edit) {
 					$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
-					$page->addJavascript("/static/data_model/DataDisplay.js");
+					$page->addJavascript("/static/data_model/datadisplay.js");
 					$page->addJavascript("/static/data_model/editable_field.js");
 					$page->addJavascript("/static/data_model/editable_datadisplay.js");
 					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($key_value).", ".json_encode($value).");\n";

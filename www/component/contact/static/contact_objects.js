@@ -37,9 +37,29 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 	this.lng = lng;
 }
 
-function parsePostalAddress(str) {
-	// TODO
-	return new PostalAddress(-1, -1, -1, null, null, null, null, null, "Work");
+function parsePostalAddress(str, handler) {
+	var names = str.split(",");
+	for (var i = 0; i < names.length; ++i) {
+		names[i] = names[i].trim();
+		if (names[i].length == 0) {
+			names.splice(i,1);
+			i--;
+		}
+	}
+	if (names.length == 0) {
+		handler(null);
+		return;
+	}
+	window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
+		var remaining = [];
+		var area = window.top.geography.searchAreaByNames(country_data, names, remaining);
+		if (!area) {
+			handler(null);
+			return;
+		}
+		var addr = new PostalAddress(-1, window.top.default_country_id, window.top.geography.getGeographicAreaText(country_data, area), null, null, null, null, remaining.length == 0 ? null : remaining.join(", "), "");
+		handler(addr);
+	});
 }
 
 /**

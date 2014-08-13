@@ -1,6 +1,6 @@
 function assign_is(button, applicants_ids, onchanged) {
 	var lock = lock_screen(null, "Loading Information Sessions...");
-	service.json("selection","IS/list",{},function(list) {
+	service.json("selection","is/list",{},function(list) {
 		if (!list) { unlock_screen(lock); return; }
 		require("context_menu.js",function() {
 			unlock_screen(lock);

@@ -13,26 +13,90 @@ function component_auto_loader($classname) {
 if (!isset($_SERVER["PATH_INFO"]) || strlen($_SERVER["PATH_INFO"]) == 0) $_SERVER["PATH_INFO"] = "/";
 $path = substr($_SERVER["PATH_INFO"],1);
 
-
 // security: do not allow .. in the path, to avoid trying to access to files which are protected
 if (strpos($path, "..") !== FALSE) die("Access denied");
 
-// check last time the user came, it was the same version, in order to refresh its cache if the version changed
+global $pn_app_version;
 #DEV
-$version = file_get_contents(dirname(__FILE__)."/version");
+$pn_app_version = file_get_contents(dirname(__FILE__)."/version");
 #PROD
-#$version = "##VERSION##"; 
+#$pn_app_version = "##VERSION##"; 
 #END
-if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
+
+#DEV
+if (substr($path,0,7) == "deploy/") {
+	if ($path == "deploy/") $path = "deploy/index.php";
+	set_include_path(realpath("../deploy"));
+	chdir("../deploy");
+	include("../deploy/".substr($path,7));
+	die();
+}
+if (@$_COOKIE["test_deploy"] == "true") {
+	if (file_exists("../test_deploy")) {
+		set_include_path(realpath("../test_deploy"));
+		chdir("../test_deploy");
+		if (substr($path,0,12) == "test_deploy/")
+			$_SERVER["PATH_INFO"] = substr($path,11);
+		$_SERVER["DOCUMENT_ROOT"] = realpath("../test_deploy");
+		$_SERVER["CONTEXT_DOCUMENT_ROOT"] = realpath("../test_deploy");
+		$_SERVER["SCRIPT_FILENAME"] = realpath("../test_deploy/index.php");
+		include("../test_deploy/index.php");
+		die();
+	} else
+		setcookie("test_deploy","",time()+365*24*60*60,"/");
+}
+#END
+
+if ($path == "maintenance/maintenance.jpg") {
+	header("Content-Type: image/jpeg");
+	readfile("maintenance/maintenance.jpg");
+	die();
+}
+if ($path == "maintenance/index.php" || $path == "maintenance/" || $path == "maintenance") {
+	include("maintenance/index.php");
+	die();
+}
+if (file_exists("maintenance_in_progress")) {
+	if (file_exists("maintenance/password")) {
+		if (isset($_SERVER['PHP_AUTH_USER']) && $_SERVER['PHP_AUTH_USER'] == "maintenance" && sha1($_SERVER['PHP_AUTH_PW']) == file_get_contents("maintenance/password")) {
+			// the administrator is testing the software
+			if (file_exists("maintenance/update/www")) {
+				// and the software is ready to be tested
+				$path = realpath("maintenance");
+				set_include_path($path."/update/www");
+				chdir($path."/update/www");
+				include($path."/update/www/index.php");
+				die();
+			}
+		} else if (isset($_GET["request_to_test_update"])) {
+			// the administrator wants to start testing
+			header('WWW-Authenticate: Basic realm="Students Management Software Maintenance"');
+			header('HTTP/1.0 401 Unauthorized');
+			echo 'Access denied';
+			die();
+		}			
+	}
+	if (strpos($path, "/service/")) {
+		header("HTTP/1.0 403 Maintenance in progress");
+		die();
+	}
+	include("maintenance/maintenance_page.php");
+	die();
+}
+
+// check last time the user came, it was the same version, in order to refresh its cache if the version changed
+if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $pn_app_version) {
 	if (strpos($path, "/page/") || $path == "") {
-		setcookie("pnversion",$version,time()+365*24*60*60,"/");
+		setcookie("pnversion",$pn_app_version,time()+365*24*60*60,"/");
 		session_set_cookie_params(24*60*60, "/dynamic/");
 		session_start();
 		session_destroy();
 		echo "<script type='text/javascript'>window.top.location = '/reload';</script>";
-	} else
-		header("pn_version_changed: yes", true, 403);
-	die();
+		die();
+	} else if (strpos($path, "/service/") && $path <> "/dynamic/application/service/loading") {
+		header("pn_version_changed: ".$pn_app_version, true, 403);
+		die();
+	} // else we let continue... to avoid blocking everything
 }
 
 if ($path == "reload") {
@@ -40,21 +104,14 @@ if ($path == "reload") {
 	die();
 }
 
+date_default_timezone_set("GMT");
+
 if ($path == "favicon.ico") { 
-	header("Content-Type: image/ico"); 
-	header('Cache-Control: public', true);
-	header('Pragma: public', true);
-	$date = date("D, d M Y H:i:s",time());
-	header('Date: '.$date, true);
-	$expires = time()+365*24*60*60;
-	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
-	header('Vary: Cookie');
+	header("Content-Type: image/ico");
+	include("cache.inc"); 
 	readfile("favicon.ico");
 	die(); 
 }
-
-global $pn_app_version;
-$pn_app_version = $version;
 
 if ($path == "") {
 	include("loading.inc");
@@ -64,20 +121,20 @@ if ($path == "") {
 
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
 
-function invalid($message) {
+$invalid = function($message) {
 	header("HTTP/1.1 404 ".$message);
 	die($message);
-}
+};
 
 // get type of resource
 $i = strpos($path, "/");
-if ($i === FALSE) invalid("Invalid request: no type of resource");
+if ($i === FALSE) $invalid("Invalid request: no type of resource ($path)");
 $type = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
 // get the component name
 $i = strpos($path, "/");
-if ($i === FALSE) invalid("Invalid request: no component name");
+if ($i === FALSE) $invalid("Invalid request: no component name ($path)");
 $component_name = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
@@ -85,15 +142,9 @@ $path = substr($path, $i+1);
 switch ($type) {
 case "static":
 	$i = strrpos($path, ".");
-	if ($i === FALSE) invalid("Invalid resource type");
+	if ($i === FALSE) $invalid("Invalid resource type ($path)");
 	$ext = substr($path, $i+1);
-	header('Cache-Control: public', true);
-	header('Pragma: public', true);
-	$date = date("D, d M Y H:i:s",time());
-	header('Date: '.$date, true);
-	$expires = time()+365*24*60*60;
-	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
-	header('Vary: Cookie');
+	include("cache.inc"); 
 	switch ($ext) {
 	case "gif": header("Content-Type: image/gif"); break;
 	case "png": header("Content-Type: image/png"); break;
@@ -102,14 +153,14 @@ case "static":
 	case "js": header("Content-Type: text/javascript"); break;
 	case "html": header("Content-Type: text/html;charset=UTF-8"); break;
 	case "php": 
-		if (!file_exists("component/".$component_name."/static/".$path)) invalid("Static resource not found");
+		if (!file_exists("component/".$component_name."/static/".$path)) $invalid("Static resource not found");
 		include "component/".$component_name."/static/".$path;
 		die();
 	default:
 		if (substr($component_name,0,4) <> "lib_")
-			invalid("Invalid static resource type");
+			$invalid("Invalid static resource type");
 	}
-	if (!file_exists("component/".$component_name."/static/".$path)) invalid("Static resource not found");
+	if (!file_exists("component/".$component_name."/static/".$path)) $invalid("Static resource not found");
 	if ($ext == "css") {
 		require_once("css_cross_browser.inc");
 		parse_css("component/".$component_name."/static/".$path);
@@ -119,7 +170,7 @@ case "static":
 case "dynamic":
 	// get the type of request
 	$i = strpos($path, "/");
-	if ($i === FALSE) invalid("Invalid request: no dynamic type");
+	if ($i === FALSE) $invalid("Invalid request: no dynamic type ($path)");
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
 #DEV	
@@ -136,14 +187,14 @@ case "dynamic":
 		PNApplication::$instance = new PNApplication();
 		PNApplication::$instance->init();
 		$_SESSION["app"] = &PNApplication::$instance;
-		$_SESSION["version"] = $version;
+		$_SESSION["version"] = $pn_app_version;
 	} else {
-		if (!isset($_SESSION["version"]) || $_SESSION["version"] <> $version) {
+		if (!isset($_SESSION["version"]) || $_SESSION["version"] <> $pn_app_version) {
 			session_destroy();
 			if ($request_type == "page") {
 				echo "<script type='text/javascript'>window.top.location.href = '/';</script>";
 			} else {
-				header("Content-Type: text/json");
+				header("Content-Type: application/json");
 				echo "{errors:['The application has been updated to a new version.'],result:null}";
 			}
 			die();
@@ -152,15 +203,13 @@ case "dynamic":
 		PNApplication::$instance->initRequest();
 	}
 #DEV
-	if ($development_mode) {
-		$dev = new DevRequest();
-		$dev->url = $_SERVER["PATH_INFO"];
-		$dev->start_time = microtime(true);
-		array_push(PNApplication::$instance->development->requests, $dev);
-	}
+	$dev = new DevRequest();
+	$dev->url = $_SERVER["PATH_INFO"];
+	$dev->start_time = microtime(true);
+	array_push(PNApplication::$instance->development->requests, $dev);
 #END
 
-	if (!isset(PNApplication::$instance->components[$component_name])) invalid("Invalid request: unknown component ".$component_name);
+	if (!isset(PNApplication::$instance->components[$component_name])) $invalid("Invalid request: unknown component ".$component_name);
 
 	require_once("SQLQuery.inc"); // avoid to put it everywhere
 	switch ($request_type) {
@@ -171,15 +220,16 @@ case "dynamic":
 	case "service":
 		PNApplication::$instance->components[$component_name]->service($path);
 		break;
-	default: invalid("Invalid request: unknown request type ".$request_type);
+	default: $invalid("Invalid request: unknown request type ".$request_type);
 	}
 #DEV
-	if ($development_mode) {
-		$dev->end_time = microtime(true);
-	}
+	@session_start();
+	$_SESSION["app"]->development->requests = PNApplication::$instance->development->requests;
+	$dev->end_time = microtime(true);
+	session_write_close();
 #END
 	die();
-default: invalid("Invalid request: unknown resource type ".$type);
+default: $invalid("Invalid request: unknown resource type ".$type);
 }
 	
 ?>

@@ -10,7 +10,7 @@ class DataBaseUtilities {
 	 * @param datamodel\Table $table the table to create
 	 * @param string|null $suffix any suffix to add at the end of the table name 
 	 */
-	public static function createTable($db_system, &$table, $suffix = null) {
+	public static function createTable($db_system, &$table, $suffix = null, $output = false) {
 		$sql = "CREATE TABLE `".$table->getName().($suffix <> null ? $suffix : "")."` (";
 		
 		$ref = new ReflectionClass("\datamodel\Table");
@@ -50,6 +50,9 @@ class DataBaseUtilities {
 			$sql .= ")";
 		}
 		$sql .= ")";
+		$sql .= " ENGINE=InnoDB";
+		if ($output)
+			return $sql;
 		$db_system->execute($sql);
 	}
 	

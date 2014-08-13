@@ -8,6 +8,8 @@ class ApplicantPeopleTypePlugin implements PeopleTypePlugin {
 	public function getName() { return "Applicant"; }
 	public function isStandalone() { return true; }
 	
+	public function getTables() { return array("Applicant"); }
+	
 	public function canRead() {
 		return PNApplication::$instance->user_management->has_right("see_applicant_info");
 	}
