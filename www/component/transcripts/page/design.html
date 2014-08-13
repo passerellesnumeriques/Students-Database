@@ -17,6 +17,10 @@
 	width: 100%;
 	border-spacing: 0px;
 	border-collapse: collapse;
+	margin-top: 2px;
+}
+.transcripts .grades.total {
+	margin-top: 8px;
 }
 .transcripts .grades td {
 	border: 2px solid black;
@@ -51,7 +55,10 @@
 .transcripts .grades .subject_name_col {
 }
 .transcripts .grades .grade_col {
-	width: 80px;
+	width: 55px;
+}
+.transcripts .grades .info_col {
+	width: 45px;
 }
 .transcripts .grades .subject_row {
 	height: 20px;
@@ -70,7 +77,6 @@
 }
 .transcripts td.subject_name {
 	text-align: left;
-	white-space: nowrap;
 	height: 24px;
 }
 .transcripts td {
@@ -81,6 +87,7 @@
 }
 .transcripts .general_appreciation {
 	border: 2px solid black;
+	margin-top: 8px;
 }
 .transcripts .general_appreciation th {
 	font-size: 14pt;
@@ -92,7 +99,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 70px;
+	min-height: 55px;
 	font-size: 11pt;
 }
 .transcripts .signature {
@@ -132,6 +139,8 @@
 	<colgroup>
 		<col class='subject_category_col'/>
 		<col class='subject_name_col'/>
+		#IF:nb_hours#<col class='info_col'/>#ENDIF#
+		#IF:coefficient#<col class='info_col'/>#ENDIF#
 		<col class='grade_col'/>
 		#IF:class_average#<col class='grade_col'/>#ENDIF#
 	</colgroup>
@@ -140,29 +149,44 @@
 	<tr>
 		<td class='blank'></td>
 		<td class='title'><div>Subject</div></td>
+		#IF:nb_hours#<td class='title'><div>Hrs</div></td>#ENDIF#
+		#IF:coefficient#<td class='title'><div>Coef.</div></td>#ENDIF#
 		<td class='title'><div>Grade</div></td>
-		#IF:class_average#<td class='title'><div>Class<br/>Average</div></td>#ENDIF#
+		#IF:class_average#<td class='title'><div>Class<br/>Avg</div></td>#ENDIF#
 	</tr>
 	#ENDIF#
 	#SUBJECT#
 	<tr class='subject_row'>
 		#IF:SUBJECT[0]#<td rowspan="#COUNT(SUBJECTS)#" style='white-space:nowrap;background-color:#SUBJECT_CATEGORY_BACKGROUND#;'><div class='subject_category' style='display:inline-block'>#SUBJECT_CATEGORY_NAME#</div></td>#ENDIF#
-		<td class='subject_name'>#SUBJECT_CODE# - #SUBJECT_NAME#</td>
+		<td class='subject_name'>#SUBJECT_NAME#</td>
+		#IF:nb_hours#<td class='info'>#SUBJECT_HOURS#</td>#ENDIF#
+		#IF:coefficient#<td class='info'>#SUBJECT_COEFFICIENT#</td>#ENDIF#
 		<td style='position:relative' class='grade'>#GRADE#</td>
-		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
+		#IF:class_average#<td style='position:relative' class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
 	#END_SUBJECT#
 	<tr class='total'>
 		<td class='blank'></td>
 		<td>Total / Average</td>
+		#IF:nb_hours#<td>#TOTAL_HOURS#</td>#ENDIF#
+		#IF:coefficient#<td>#TOTAL_COEFFICIENT#</td>#ENDIF#
 		<td style='position:relative'>#TOTAL_GRADE#</td>
-		#IF:class_average#<td>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
+		#IF:class_average#<td style='position:relative'>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
 	</tbody>
 </table>
 #END_SUBJECT_CATEGORY#
 <!-- Global results -->
-TODO: Global results<br/><br/>
+<table class='grades total'>
+	<colgroup>
+		<col/>
+		<col class='grade_col'/>
+	</colgroup>
+	<tr class='total'>
+		<td>Global Average Grade</td>
+		<td style='position:relative'>#GLOBAL_GRADE#</td>
+	</tr>
+</table>
 <!-- General appreciation -->
 #IF:general_appreciation#
 <table class='general_appreciation' style='width:100%;border-spacing:0px;'>

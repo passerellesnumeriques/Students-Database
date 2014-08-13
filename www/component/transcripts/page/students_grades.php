@@ -44,11 +44,19 @@ class page_students_grades extends Page {
 			// get subjects' grading
 			$subjects_grading = SQLQuery::create()->select("CurriculumSubjectGrading")->whereIn("CurriculumSubjectGrading", "subject", $subjects_ids)->execute();
 			// get students grades
-			$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","subject",$subjects_ids)->whereIn("StudentSubjectGrade","people",$students_ids)->execute();
+			if (count($students) > 0)
+				$students_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereIn("StudentSubjectGrade","subject",$subjects_ids)->whereIn("StudentSubjectGrade","people",$students_ids)->execute();
+			else
+				$students_grades = array();
 		} else {
 			$subjects_grading = array();
 			$students_grades = array();
-		}		
+		}
+		
+		if (count($students) > 0)
+			$students_comments = SQLQuery::create()->select("StudentTranscriptGeneralComment")->whereIn("StudentTranscriptGeneralComment","people",$students_ids)->whereValue("StudentTranscriptGeneralComment","period",$period_id)->execute();
+		else
+			$students_comments = array();
 		
 		// grading systems
 		$grading_systems = include("component/transcripts/GradingSystems.inc");
@@ -83,6 +91,11 @@ class page_students_grades extends Page {
 		if ($class <> null) echo ", Class ".htmlentities($class["name"]);
 		?>
 		</span>
+		<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) { ?>
+		<div style='float:right'>
+			<button class='action' onclick="editGeneralAppreciation(this);">Edit General Appreciations</button>
+		</div>
+		<?php } ?>
 	</div>
 	<div style='flex:none;background-color:white;box-shadow: 1px 2px 5px 0px #808080;margin-bottom:5px;padding:5px'>
 		<img src='<?php echo theme::$icons_16["settings"];?>' style='vertical-align:bottom'/>
@@ -105,6 +118,7 @@ class page_students_grades extends Page {
 </div>
 <script type='text/javascript'>
 var students = <?php echo PeopleJSON::Peoples($students);?>;
+var students_comments = <?php echo json_encode($students_comments);?>;
 var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON($categories);?>;
 var subjects = <?php echo CurriculumJSON::SubjectsJSON($subjects);?>;
 var subjects_grading = [<?php
@@ -142,6 +156,11 @@ function getStudentGrade(people_id, subject_id) {
 			return students_grades[i].grade;
 	return null;
 }
+function getStudentComment(people_id) {
+	for (var i = 0; i < students_comments.length; ++i)
+		if (students_comments[i].people == people_id) return students_comments[i].comment;
+	return null;
+}
 
 var grades_grid = new people_data_grid('grades_container', function(people) { return people; }, "Student");
 grades_grid.grid.makeScrollable();
@@ -173,6 +192,9 @@ for (var i = 0; i < categories.length; ++i) {
 	}
 	grades_grid.addColumnContainer(new CustomDataGridColumnContainer(categories[i].name, columns));
 }
+grades_grid.addColumn(new CustomDataGridColumn(new GridColumn("student_comment","General appreciation",null,"left","field_text",false,null,null,{can_be_null:true,max_length:4000,min_size:30}), function(people) {
+	return getStudentComment(people.id);
+}, true, null));
 for (var i = 0; i < students.length; ++i)
 	grades_grid.addPeople(students[i]);
 
@@ -196,6 +218,30 @@ function setDisplayCoef(display) {
 		columns[i].grid_column.title.span_coef.style.visibility = display ? "visible" : "hidden";
 		columns[i].grid_column.title.span_coef.style.position = display ? "static" : "absolute";
 	}
+}
+function editGeneralAppreciation(button) {
+	button.innerHTML = "<img src='"+theme.icons_16.save+"'/> Save appreciations";
+	button.onclick = function() { saveGeneralAppreciation(this); };
+	var col = grades_grid.grid.getColumnById('student_comment');
+	col.toggleEditable();
+	pnapplication.dataUnsaved('general_appreciation');
+}
+function saveGeneralAppreciation(button) {
+	var locker = lock_screen(null, "Saving general appreciations...");
+	var comments = [];
+	for (var i = 0; i < students.length; ++i) {
+		var cell = grades_grid.grid.getCellFieldById(students[i].id, 'student_comment');
+		comments.push({people:students[i].id,comment:cell.getCurrentData()});
+	}
+	service.json("transcripts","save_general_comments",{period:<?php echo $period_id;?>,students:comments},function(res) {
+		unlock_screen(locker);
+		if (!res) return;
+		button.innerHTML = "Edit General Appreciations";
+		button.onclick = function() { editGeneralAppreciation(this); };
+		var col = grades_grid.grid.getColumnById('student_comment');
+		col.toggleEditable();
+		pnapplication.dataSaved('general_appreciation');
+	});
 }
 </script>
 		<?php 

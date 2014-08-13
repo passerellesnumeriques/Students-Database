@@ -109,7 +109,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 	var progress = document.createElement("SPAN");
 	progress.style.marginLeft = "10px";
 	msg.appendChild(progress);
-	download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip", progress, function(error) {
+	download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip", progress, function(error) {
 		if (error) {
 			icon.src = theme.icons_16.error;
 			msg.innerHTML = error;
@@ -128,7 +128,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 		progress = document.createElement("SPAN");
 		progress.style.marginLeft = "10px";
 		msg.appendChild(progress);
-		download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum", progress, function(error) {
+		download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum", progress, function(error) {
 			if (error) {
 				icon.src = theme.icons_16.error;
 				msg.innerHTML = error;
@@ -153,7 +153,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 					progress = document.createElement("SPAN");
 					progress.style.marginLeft = "10px";
 					msg.appendChild(progress);
-					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip", progress, function(error) {
+					download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip", progress, function(error) {
 						if (error) {
 							icon.src = theme.icons_16.error;
 							msg.innerHTML = error;
@@ -172,7 +172,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 						progress = document.createElement("SPAN");
 						progress.style.marginLeft = "10px";
 						msg.appendChild(progress);
-						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : false), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum", progress, function(error) {
+						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum", progress, function(error) {
 							if (error) {
 								icon.src = theme.icons_16.error;
 								msg.innerHTML = error;
@@ -284,8 +284,7 @@ function startMaintenance() {
 	var timing = form.elements['timing'].value;
 	timing = parseInt(timing);
 	if (isNaN(timing)) { alert("Please enter a valid number of minutes"); return; }
-	if (timing < 2) { alert("You must give at least 2 mintues to the users before they will be disconnected..."); return; }
-	if (timing > 15) { if (!confirm("Are you sure you want to wait "+timing+" minutes before maintenance mode ?")) return; }
+	if (timing < 5) { if (!confirm("Are you sure you want to launch maintenance mode in only "+timing+" minute(s) ? This may be too short notice for the users.")) return; }
 	var pass1 = form.elements['pass1'].value;
 	if (pass1.length == 0) { alert("Please enter a password"); return; }
 	if (pass1.length < 6) { alert("Password is too short: you must use at least 6 characters."); return; }

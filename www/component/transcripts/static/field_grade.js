@@ -19,8 +19,24 @@ field_grade.prototype._create = function(data) {
 	var t=this;
 	var init_system = function() {
 		t.steps = [];
-		var steps_str = t.config.system.split(",");
-		for (var i = 0; i < steps_str.length; ++i) {
+		var i = t.config.system.indexOf('/');
+		var s;
+		t.digits = 2;
+		if (i < 0) {
+			s = t.config.system;
+		} else {
+			s = t.config.system.substr(0,i);
+			var cfg = t.config.system.substring(i+1).split(",");
+			for (var j = 0; j < cfg.length; ++j) {
+				i = cfg[j].indexOf('=');
+				if (i < 0) continue;
+				var name = cfg[j].substr(0,i);
+				var value = cfg[j].substr(i+1);
+				if (name == "digits") t.digits = parseInt(value);
+			}
+		}
+		var steps_str = s.split(",");
+		for (i = 0; i < steps_str.length; ++i) {
 			var j = steps_str[i].indexOf("=");
 			t.steps.push({percent:steps_str[i].substr(0,j),value:parseFloat(steps_str[i].substr(j+1))});
 		}
@@ -49,10 +65,10 @@ field_grade.prototype._create = function(data) {
 			if (grade >= step_grade && grade <= next_step_grade) {
 				if (step_value < next_step_value) {
 					// ascending order
-					return step_value+((grade-step_grade)/(next_step_grade-step_grade))*(next_step_value-step_value);
+					return (step_value+((grade-step_grade)/(next_step_grade-step_grade))*(next_step_value-step_value)).toFixed(t.digits);
 				}
 				// descending order
-				return step_value-((grade-step_grade)/(next_step_grade-step_grade))*(step_value-next_step_value);
+				return (step_value-((grade-step_grade)/(next_step_grade-step_grade))*(step_value-next_step_value)).toFixed(t.digits);
 			}
 			step++;
 		} while (step < t.steps.length-1);

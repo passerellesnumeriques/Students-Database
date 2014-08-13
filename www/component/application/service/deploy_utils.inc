@@ -21,22 +21,24 @@ function download($url, $target = null, $from = null, $to = null, $resume_if_exi
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-	$timeout = 1200;
+	$timeout = 200;
 	if ($from <> null) {
 		$size = intval($to)-intval($from);
 		if ($size >= 4*1024*1024) $timeout = 240;
-		else if ($size >= 2*1024*1024) $timeout = 210;
-		else if ($size >= 1*1024*1024) $timeout = 180;
-		if ($size >= 512*1024) $timeout = 1500;
+		else if ($size >= 2*1024*1024) $timeout = 200;
+		else if ($size >= 1*1024*1024) $timeout = 150;
+		else if ($size >= 512*1024) $timeout = 60;
+		else $timeout = 45;
 		set_time_limit($timeout + 60);
 	} else
 		set_time_limit(240);
 	curl_setopt($c, CURLOPT_TIMEOUT, $timeout);
-	if ($from !== null) {
-		curl_setopt($c, CURLOPT_HTTPHEADER, array(
-		"Range: bytes=".$from."-".$to
-		));
-	}
+	$headers = array(
+		"Connection: close"
+	);
+	if ($from !== null)
+		array_push($headers, "Range: bytes=".$from."-".$to);
+	curl_setopt($c, CURLOPT_HTTPHEADER, $headers);
 	$result = curl_exec($c);
 	if ($result === false) {
 		$error = curl_error($c)." (#".curl_errno($c).")";
@@ -74,6 +76,7 @@ function getURLFileSize($url, $expected_type = null) {
 	$size = "-1";
 	$type = "";
 	$accept_ranges = "";
+	$last_location = "";
 	foreach ($lines as $line) {
 		$line = trim($line);
 		$i = strpos($line, ":");
@@ -82,10 +85,11 @@ function getURLFileSize($url, $expected_type = null) {
 		if ($name == "content-length") { $size = trim(substr($line,$i+1)); continue; }
 		if ($name == "content-type") { $type = strtolower(trim(substr($line,$i+1))); continue; }
 		if ($name == "accept-ranges") { $accept_ranges = strtolower(trim(substr($line,$i+1))); continue; }
+		if ($name == "location") { $last_location = trim(substr($line,$i+1)); continue; }
 	}
 	$size = intval($size);
 	if ($size > 0 && $expected_type <> null && $type == $expected_type)
-		return $size."/".$accept_ranges;
+		return $size."/".$accept_ranges."/".$last_location;
 	return -1;
 }
 

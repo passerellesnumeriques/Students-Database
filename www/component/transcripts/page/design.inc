@@ -1,5 +1,5 @@
 <?php 
-function generateTranscript($period_id, $spe_id = null, $student = null, $student_grades = null) {
+function generateTranscript($period_id, $spe_id = null, $student = null, $student_grades = null, $student_general_appreciation = null) {
 	$config = SQLQuery::create()
 		->select("TranscriptConfig")
 		->whereValue("TranscriptConfig","period",$period_id)
@@ -38,7 +38,7 @@ function generateTranscript($period_id, $spe_id = null, $student = null, $studen
 	
 	$period = PNApplication::$instance->curriculum->getBatchPeriod($period_id, true);
 	
-	generateTranscriptFor($config, $app_config, $categories, $subjects, $period, $student, $student_grades);
+	generateTranscriptFor($config, $app_config, $categories, $subjects, $period, $student, $student_grades, $student_general_appreciation);
 }
 function defaultTranscriptConfig(&$config) {
 	if (@$config["subject_category_background"] == null) $config["subject_category_background"] = "#009DE1";
@@ -58,7 +58,7 @@ function defaultTranscriptConfig(&$config) {
 		$config["grading_system"] = $d["transcripts"]["default_grading_system"];
 	}
 }
-function generateTranscriptFor($config, $app_config, $categories, $subjects, $period, $student = null, $student_grades = null, $class_averages = null) {
+function generateTranscriptFor($config, $app_config, $categories, $subjects, $period, $student = null, $student_grades = null, $student_general_appreciation = null, $class_averages = null) {
 	defaultTranscriptConfig($config);
 	
 	$grading_systems = include("component/transcripts/GradingSystems.inc");
@@ -75,18 +75,35 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 			$grade = array("subject"=>$subject["id"]);
 			$max = floatval($subject["max_grade"]);
 			$passing = floatval($subject["passing_grade"]);
-			switch (($count%4)==0) {
+			switch ($count%4) {
 				case 0: $grade["grade"] = $passing+($max-$passing)*0.8; break;
 				case 1: $grade["grade"] = $passing+($max-$passing)*0.05; break;
 				case 2: $grade["grade"] = $passing*0.8; break;
-				case 3: $grade["grade"] = null;
+				case 3: $grade["grade"] = null; break;
 			}
 			array_push($student_grades, $grade);
 			$count++;
 		}
 	}
 	if ($class_averages == null && @$config["class_average"] == 1) {
-		// TODO
+		$class_averages = array();
+		$count = 0;
+		foreach ($subjects as $subject) {
+			if (!isset($subject["max_grade"])) continue;
+			$max = floatval($subject["max_grade"]);
+			$passing = floatval($subject["passing_grade"]);
+			switch ($count%4) {
+				case 2: $grade = $passing+($max-$passing)*0.82; break;
+				case 0: $grade = $passing+($max-$passing)*0.12; break;
+				case 1: $grade = $passing*0.7; break;
+				case 3: $grade = null; break;
+			}
+			$class_averages[$subject["id"]] = $grade;
+			$count++;
+		}
+	}
+	if ($student_general_appreciation == null) {
+		$student_general_appreciation = "Here will be the general appreciation of the student, describing its performance along the academic period. This can be entered in the grades page.";
 	}
 	
 	$design = file_get_contents("component/transcripts/page/design.html");
@@ -101,6 +118,10 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 	$design = str_replace("#Signatory Name#", @$app_config["signatory_name"], $design);
 	$design = str_replace("#Signatory Title#", @$app_config["signatory_title"], $design);
 	
+	$design = str_replace("#General Appreciation#", htmlentities($student_general_appreciation), $design);
+	
+	processTranscriptCondition($design, "nb_hours", @$config["nb_hours"] == 1);
+	processTranscriptCondition($design, "coefficient", @$config["coefficient"] == 1);
 	processTranscriptCondition($design, "class_average", @$config["class_average"] == 1);
 	processTranscriptCondition($design, "general_appreciation", @$config["general_appreciation"] == 1);
 
@@ -135,8 +156,10 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 			$cat_content = str_replace("#SUBJECT_CATEGORY_NAME#", htmlentities($cat["name"]), $cat_content);
 			$cat_content = str_replace("#COUNT(SUBJECTS)#", count($list), $cat_content);
 			processTranscriptConditionIndex($cat_content, "SUBJECT_CATEGORY", $category_index, count($cats));
+			$total_hours = 0;
 			$total_grade = 0;
 			$total_coef = 0;
+			$total_class_av = 0;
 			$passing = 0;
 			foreach ($list as $subject) {
 				if (!isset($subject["max_grade"])) continue;
@@ -148,13 +171,30 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 				$total_grade += floatval($student_grade)*100/floatval($subject["max_grade"])*intval($subject["coefficient"]);
 				$total_coef += intval($subject["coefficient"]);
 				$passing = floatval($subject["passing_grade"])*intval($subject["coefficient"]);
+				$hours = $subject["hours"];
+				if ($hours !== null) {
+					if (@$config["hours_type"] == "Per period") {
+						if ($subject["hours_type"] == "Per week") {
+							$hours = intval($hours)*(intval($period["academic_period_weeks"])-intval($period["academic_period_weeks_break"]));
+						}
+					} else {
+						if ($subject["hours_type"] == "Per period") {
+							$hours = floor(intval($hours)/(intval($period["academic_period_weeks"])-intval($period["academic_period_weeks_break"])));
+						}
+					}
+				}
+				$total_hours += intval($hours);
+				if (@$config["class_average"] == 1) {
+					$class_av = @$class_averages[$subject["id"]];
+					$total_class_av += $class_av*$subject["coefficient"];
+				}
 			}
 			$total_grade = $total_coef > 0 ? $total_grade/$total_coef : "null";
 			$passing = $total_coef > 0 ? $passing/$total_coef : "null";
 			$id = "total_grade_".$cat["id"];
 			$cat_content = str_replace("#TOTAL_GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$total_grade</span>", $cat_content);
 			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_grade).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
-				
+			
 			while (($k = strpos($cat_content, "#SUBJECT#")) !== false) {
 				$l = strpos($cat_content, "#END_SUBJECT#", $k);
 				$result_subjects = "";
@@ -164,19 +204,67 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 					processTranscriptConditionIndex($subj_content, "SUBJECT", $subject_index, count($list));
 					$subj_content = str_replace("#SUBJECT_CODE#", htmlentities($subject["code"]), $subj_content);
 					$subj_content = str_replace("#SUBJECT_NAME#", htmlentities($subject["name"]), $subj_content);
+					$subj_content = str_replace("#SUBJECT_COEFFICIENT#", isset($subject["coefficient"]) && isset($subject["max_grade"]) ? $subject["coefficient"] : "", $subj_content);
+					$hours = $subject["hours"];
+					if ($hours !== null) {
+						if (@$config["hours_type"] == "Per period") {
+							if ($subject["hours_type"] == "Per week") {
+								$hours = intval($hours)*(intval($period["academic_period_weeks"])-intval($period["academic_period_weeks_break"]));
+							}
+						} else {
+							if ($subject["hours_type"] == "Per period") {
+								$hours = floor(intval($hours)/(intval($period["academic_period_weeks"])-intval($period["academic_period_weeks_break"])));
+							}
+						}
+					}
+					$subj_content = str_replace("#SUBJECT_HOURS#", $hours, $subj_content);
 					$student_grade = null;
 					foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g["grade"]; break; }
 					$id = "grade_subject_".$subject["id"];
 					$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$student_grade</span>", $subj_content);
 					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
+					if (@$config["class_average"] == 1) {
+						$class_av = @$class_averages[$subject["id"]];
+						$id = "class_average_subject_".$subject["id"];
+						$subj_content = str_replace("#CLASS_AVERAGE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$class_av</span>", $subj_content);
+						$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($class_av).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
+					}
 					$result_subjects .= $subj_content;
 				}
+				$cat_content = str_replace("#TOTAL_HOURS#", $total_hours, $cat_content);
+				$cat_content = str_replace("#TOTAL_COEFFICIENT#", $total_coef, $cat_content);
+				if (@$config["class_average"] == 1) {
+					$total_class_av = $total_coef > 0 ? $total_class_av/$total_coef : "";
+					$id = "total_class_average_".$cat["id"];
+					$cat_content = str_replace("#TOTAL_CLASS_AVERAGE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$total_class_av</span>", $cat_content);
+					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_class_av).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
+				}				
 				$cat_content = substr($cat_content,0,$k).$result_subjects.substr($cat_content,$l+13);
 			}
 			$result_categories .= $cat_content;
 		}
 		$design = substr($design, 0, $i).$result_categories.substr($design, $j+22);
 	}
+	
+	$total_grade = 0;
+	$total_coef = 0;
+	$passing = 0;
+	foreach ($subjects as $subject) {
+		if (!isset($subject["max_grade"])) continue;
+		if (!isset($subject["coefficient"])) continue;
+		if (intval($subject["coefficient"])==0) continue;
+		$student_grade = null;
+		foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g["grade"]; break; }
+		if ($student_grade === null) continue;
+		$total_grade += floatval($student_grade)*100/floatval($subject["max_grade"])*intval($subject["coefficient"]);
+		$total_coef += intval($subject["coefficient"]);
+		$passing = floatval($subject["passing_grade"])*intval($subject["coefficient"]);
+	}
+	$total_grade = $total_coef > 0 ? $total_grade/$total_coef : "null";
+	$passing = $total_coef > 0 ? $passing/$total_coef : "null";
+	$id = "global_grade";
+	$design = str_replace("#GLOBAL_GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$total_grade</span>", $design);
+	$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_grade).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
 	
 	echo $design;
 	if ($script_grades <> "") {

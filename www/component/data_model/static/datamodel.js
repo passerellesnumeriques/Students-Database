@@ -77,17 +77,25 @@ datamodel = {
 	 */
 	registerCellText: function(win, table, column, row_key, text_node) {
 		var n=text_node;
-		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
+		var listener = function(value) {
 			n.nodeValue = value;
 			if (n.parentNode) layout.invalidate(n.parentNode);
+		};
+		window.top.datamodel.addCellChangeListener(win, table, column, row_key, listener);
+		n.parentNode.ondomremoved(function(element) {
+			window.top.datamodel.removeCellChangeListener(listener);
 		});
 	},
 	registerCellSpan: function(win, table, column, row_key, span) {
 		var s=span;
-		window.top.datamodel.addCellChangeListener(win, table, column, row_key, function(value) {
+		var listener = function(value) {
 			s.removeAllChildren();
 			s.appendChild(document.createTextNode(value));
 			if (s.parentNode) layout.invalidate(s.parentNode);
+		};
+		window.top.datamodel.addCellChangeListener(win, table, column, row_key, listener);
+		s.ondomremoved(function(element) {
+			window.top.datamodel.removeCellChangeListener(listener);
 		});
 	},
 	inputCell: function(input, table, column, row_key) {
@@ -314,7 +322,13 @@ datamodel = {
 		require("popup_window.js",function() { popup_ready = true; ready(); });
 	}
 };
-window.top.pnapplication.onwindowclosed.add_listener(function(c) { c.top.datamodel._windowClosed(c.win); });
+function _init_datamodel_js() {
+	if (!window.top.pnapplication) {
+		setTimeout(_init_datamodel_js, 25);
+		return;
+	}
+	window.top.pnapplication.onwindowclosed.add_listener(function(c) { c.top.datamodel._windowClosed(c.win); });
+}
 if (!window.top.datamodel_prototype) {
 window.top.datamodel_prototype = {
 	getTable: function(name) {

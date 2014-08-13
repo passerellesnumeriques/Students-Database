@@ -103,6 +103,13 @@ class page_configure_transcripts extends Page {
 			<div class='page_section_title'>
 				Information to include
 			</div>
+				<input type='checkbox' <?php echo @$config["nb_hours"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('nb_hours',this.checked?1:0);"/> Nb of hours
+				<select onchange="saveTranscriptConfig('hours_type',this.value);">
+					<option value="Per week" <?php if (@$config["hours_type"] == "Per week") echo "selected='selected'";?>>Per week</option>
+					<option value="Per period" <?php if (@$config["hours_type"] == "Per period") echo "selected='selected'";?>>Total period</option>
+				</select>
+				<br/>
+				<input type='checkbox' <?php echo @$config["coefficient"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('coefficient',this.checked?1:0);"/> Coefficient<br/>
 				<input type='checkbox' <?php echo @$config["class_average"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_average',this.checked?1:0);"/> Class average<br/>
 				<input type='checkbox' <?php echo @$config["general_appreciation"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('general_appreciation',this.checked?1:0);"/> General appreciation<br/>
 			<?php 
