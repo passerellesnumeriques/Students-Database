@@ -129,10 +129,9 @@ function next_mandatory() {
 update_size();
 next_mandatory();
 next_mandatory();
-setTimeout(next_mandatory, 50);
-setTimeout(next_mandatory, 100);
-setTimeout(next_mandatory, 150);
-setTimeout(next_mandatory, 200);
+next_mandatory();
+next_mandatory();
+next_mandatory();
 var optional_index = 0;
 var optional_loaded = 0;
 function next_optional() {

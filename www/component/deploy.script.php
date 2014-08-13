@@ -24,6 +24,104 @@ function processRelativePath($component_name, $content, $directive) {
 	return $content;
 }
 
+function searchEnding($content, $pos, $open, $close) {
+	$count = 0;
+	$quote = null;
+	while ($pos < strlen($content)) {
+		$c = substr($content,$pos,1);
+		$pos++;
+		if ($quote <> null) {
+			if ($c == "\\") {
+				$pos++;
+				continue;
+			}
+			if ($c == $quote) {
+				$quote = null;
+				continue;
+			}
+			continue;
+		}
+		if ($c == "'") {
+			$quote = "'";
+			continue;
+		}
+		if ($c == "\"") {
+			$quote = "\"";
+			continue;
+		}
+		if ($c == $close) {
+			if ($count == 0) return $pos-1;
+			$count--;
+			continue;
+		}
+		if ($c == $open) {
+			$count++;
+			continue;
+		}
+		if ($c == "{") {
+			$pos = searchEnding($content,$pos,"{","}");
+			if ($pos === false) return false;
+			$pos++;
+			continue;
+		}
+		if ($c == "(") {
+			$pos = searchEnding($content,$pos,"(",")");
+			if ($pos === false) return false;
+			$pos++;
+			continue;
+		}
+	}
+	return false;
+}
+
+function removeFunction(&$content, $fct_name) {
+	$i = 0;
+	while (($i = strpos($content, "function", $i)) !== false) {
+		$j = strpos($content,"(",$i+8);
+		if ($j === false) break;
+		$name = trim(substr($content,$i+8,$j-$i-8));
+		if ($name <> $fct_name) {
+			$i = $j+1;
+			continue;
+		}
+		// search for visibility
+		$k = strrpos($content, "public", $i-1);
+		if ($k !== false) {
+			$between = substr($content,$k+6,$i-$k-6);
+			if (trim($between) == "") $i = $k;
+		}
+		$j = strpos($content,")",$j+1);
+		if ($j === false) break;
+		$j = strpos($content,"{",$j+1);
+		if ($j === false) break;
+		$k = searchEnding($content, $j+1, "{", "}");
+		if ($k === false) break;
+		$content = substr($content,0,$i).substr($content,$k+1);
+	}
+}
+
+function processService($filename) {
+	$content = file_get_contents($filename);
+	removeFunction($content, "documentation");
+	removeFunction($content, "inputDocumentation");
+	removeFunction($content, "outputDocumentation");
+	$f = fopen($filename,"w");
+	fwrite($f,$content);
+	fclose($f);
+}
+
+function processComponentServices($path) {
+	$dir = opendir($path);
+	while (($file = readdir($dir)) <> null) {
+		if ($file == "." || $file == "..") continue;
+		if (is_dir($path."/".$file))
+			processComponentServices($path."/".$file);
+		else if (substr($file,strlen($file)-4) == ".php")
+			processService($path."/".$file);
+	}
+	closedir($dir);
+}
+
 function processComponent($name, &$done, &$components_order, &$components_content) {
 	if (in_array($name, $done)) return;
 	array_push($done, $name);
@@ -96,6 +194,10 @@ function processComponent($name, &$done, &$components_order, &$components_conten
 	$content = processRelativePath($name, $content, "readfile");
 	
 	$components_content .= $content;
+	
+	// process files of component
+	if (file_exists(dirname(__FILE__)."/$name/service"))
+		processComponentServices(dirname(__FILE__)."/$name/service");
 	
 	foreach ($deps as $dep) processComponent($dep, $done, $components_order, $components_content);
 	array_push($components_order, $name);

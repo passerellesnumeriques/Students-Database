@@ -1,4 +1,7 @@
-<?php 
+<?php
+/**
+ * Page to manage the application: updates, backups, maintenance
+ */ 
 class page_app_admin extends Page {
 	
 	public function getRequiredRights() { return array("manage_application"); }
@@ -77,7 +80,7 @@ class page_app_admin extends Page {
 				if (strpos($content, "\"PNApplication\"") === false)
 					echo "<i>Another application</i>";
 				else {
-					$data = self::decode_session($content);
+					$data = self::decodeSession($content);
 					if ($data <> null) {
 						echo @$data["app"]->user_management->username;
 					}
@@ -318,7 +321,11 @@ function setRemotePassword() {
 	<?php 
 	}
 
-	private static function decode_session($session_string){
+	/** Decode a session file
+	 * @param string $session_string content of session file
+	 * @return array decoded content of session
+	 */
+	private static function decodeSession($session_string){
 	    $current_session = session_encode();
 	    foreach ($_SESSION as $key => $value){
 	        unset($_SESSION[$key]);
