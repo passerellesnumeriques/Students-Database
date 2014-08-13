@@ -792,7 +792,10 @@ function grid(element) {
 			t.grid_element.style.overflow = "auto";
 			t.thead.style.position = "static";
 			t.element.style.width = "";
-			if (t.table.childNodes.length > 0 && t.table.childNodes[0]._for_fixed) t.table.removeChild(t.table.childNodes[0]);
+			var footer = null;
+			for (var i = 0; i < t.table.parentNode.childNodes.length; ++i)
+				if (t.table.parentNode.childNodes[i].nodeName == "TFOOT") { footer = t.table.parentNode.childNodes[i]; break; }
+			if (footer && footer.childNodes.length > 0 && footer.childNodes[0]._for_fixed) footer.removeChild(footer.childNodes[0]);
 			// remove fixed width
 			for (var i = 0; i < t.thead.childNodes.length; ++i)
 				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j) {
@@ -833,10 +836,14 @@ function grid(element) {
 			var tr = document.createElement("TR");
 			tr._for_fixed = true;
 			tr.title_row = true;
-			if (t.table.childNodes.length > 0)
-				t.table.insertBefore(tr,t.table.childNodes[0]);
+			if (!footer) {
+				footer = document.createElement("TFOOT");
+				t.table.parentNode.appendChild(footer);
+			}
+			if (footer.childNodes.length > 0)
+				footer.insertBefore(tr,footer.childNodes[0]);
 			else
-				t.table.appendChild(tr);
+				footer.appendChild(tr);
 			for (var i = 0; i < t.colgroup.childNodes.length; ++i) {
 				if (t.colgroup.childNodes[i].style.width)
 					 t.colgroup.childNodes[i]._width = t.colgroup.childNodes[i].style.width;
