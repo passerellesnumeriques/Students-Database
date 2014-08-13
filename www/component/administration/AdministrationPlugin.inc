@@ -27,6 +27,7 @@ class AdministrationPage {
 	private $icon32;
 	/** @var string $info_text The tooltip to explain the page */
 	private $info_text;
+	/** @var function $can_access_function function checking if the current user can access the page: returns true if it can access. */
 	private $can_access_function;
 	
 	/**
@@ -35,6 +36,7 @@ class AdministrationPage {
 	 * @param string $icon16 Icon (16x16 pixels) of the page
 	 * @param string $icon32 Icon (32x32 pixels) of the page
 	 * @param string $info_text text describing the page that will be displayed in a tooltip
+	 * @param function $can_access_function function checking if the current user can access the page: returns true if it can access.
 	 */
 	public function __construct($title, $page, $icon16, $icon32, $info_text, $can_access_function) {
 		$this->title = $title;
@@ -81,6 +83,9 @@ class AdministrationDashboardPlugin implements AdministrationPlugin {
 	
 }
 
+/**
+ * Section to manage the application
+ */
 class ApplicationAdministrationPlugin implements AdministrationPlugin {
 	public function getAdministrationPages() {
 		return array(

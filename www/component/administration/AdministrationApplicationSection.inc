@@ -1,5 +1,8 @@
 <?php 
 require_once("component/application/ApplicationSectionPlugin.inc");
+/**
+ * Administration section
+ */
 class AdministrationApplicationSection implements ApplicationSectionPlugin {
 	
 	public function getId() { return "administration"; }
