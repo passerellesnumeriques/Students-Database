@@ -76,7 +76,10 @@ class service_datamodel extends Service {
 		$dependencies = array();
 		foreach ($model->internalGetTables() as $table) {
 			if ($cname <> null && $table->owner_component->name <> $cname) continue;
-			$cols = $table->internalGetColumns();
+			if ($table->getModel() instanceof SubDataModel)
+				$cols = $table->internalGetColumnsFor(1);
+			else
+				$cols = $table->internalGetColumns();
 			// check if this is a joining table
 			$is_join = false;
 			if (count($cols) == 2 && 
