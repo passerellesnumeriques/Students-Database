@@ -34,23 +34,41 @@ function images_tool_crop() {
 			}
 		}
 	};
-	this._apply_ratio = function(rect, ratio, max_width, max_height) {
+	this._apply_ratio = function(rect, ratio, max_width, max_height, change_rect) {
 		var current = rect.width/rect.height;
 		if (current == ratio) return;
 		if (current < ratio) {
-			// height is bigger => enlarge the width
-			// ratio = w/h => w = ratio*h
-			var w = ratio*rect.height;
-			w -= rect.width;
-			rect.x -= Math.floor(w/2);
-			rect.width += Math.floor(w);
+			// height is bigger
+			if (!change_rect || change_rect.height > 0 || change_rect.width > 0) {
+				// enlarge the width
+				// ratio = w/h => w = ratio*h
+				var w = ratio*rect.height;
+				w -= rect.width;
+				rect.x -= Math.floor(w/2);
+				rect.width += Math.floor(w);
+			} else {
+				// reduce the height
+				var h = rect.width/ratio;
+				h -= rect.height;
+				rect.y -= Math.floor(h/2);
+				rect.height += Math.floor(h);
+			}
 		} else {
-			// width is bigger => enlarge the height
-			// ratio = w/h => ratio*h = w*h/h => h = w*h/h/ratio => h = w/ratio
-			var h = rect.width/ratio;
-			h -= rect.height;
-			rect.y -= Math.floor(h/2);
-			rect.height += Math.floor(h);
+			// width is bigger
+			if (!change_rect || change_rect.height > 0 || change_rect.width > 0) {
+				// enlarge the height
+				// ratio = w/h => ratio*h = w*h/h => h = w*h/h/ratio => h = w/ratio
+				var h = rect.width/ratio;
+				h -= rect.height;
+				rect.y -= Math.floor(h/2);
+				rect.height += Math.floor(h);
+			} else {
+				// reduce the width
+				var w = ratio*rect.height;
+				w -= rect.width;
+				rect.x -= Math.floor(w/2);
+				rect.width += Math.floor(w);
+			}
 		}
 		if (rect.x < 0) {
 			if (rect.width-rect.x <= max_width)
@@ -125,9 +143,9 @@ function images_tool_crop() {
 		if (this.general_crop) rect = this.general_crop; else if (pic.crop_rect) rect = pic.crop_rect;
 		if (rect == null) rect = {x:0,y:0,width:pic.original.naturalWidth,height:pic.original.naturalHeight};
 		if (this.general_ratio)
-			this._apply_ratio(rect, this.general_ratio, pic.original.naturalWidth, pic.original.naturalHeight);
+			this._apply_ratio(rect, this.general_ratio, pic.original.naturalWidth, pic.original.naturalHeight, pic._change_rect);
 		else if (pic.crop_ratio)
-			this._apply_ratio(rect, pic.crop_ratio, pic.original.naturalWidth, pic.original.naturalHeight);
+			this._apply_ratio(rect, pic.crop_ratio, pic.original.naturalWidth, pic.original.naturalHeight, pic._change_rect);
 		pic.crop_rect = rect;
 		// apply crop
 		var ctx = canvas.getContext("2d");
@@ -191,11 +209,16 @@ function images_tool_crop() {
 			}
 			var rect = pic.crop_rect;
 			if (!rect) rect = {x:0,y:0,width:pic.original.naturalWidth,height:pic.original.naturalHeight};
+			var prev_rect = objectCopy(rect,1);
 			rect.height -= value-rect.y;
 			if (rect.height <= 0) rect.height = 1;
 			rect.y = value;
 			if (rect.y+rect.height > pic.original.naturalHeight)
 				rect.height = pic.original.naturalHeight-rect.y;
+			pic._change_rect = {
+				width: rect.width - prev_rect.width,
+				height: rect.height - prev_rect.height,
+			};
 			t.setValue(pic, {rect:rect}, true);
 			pic.update();
 			if (value+rect.height <= pic.original.naturalHeight) {
@@ -226,11 +249,16 @@ function images_tool_crop() {
 			}
 			var rect = pic.crop_rect;
 			if (!rect) rect = {x:0,y:0,width:pic.original.naturalWidth,height:pic.original.naturalHeight};
+			var prev_rect = objectCopy(rect,1);
 			rect.width -= value-rect.x;
 			if (rect.width <= 0) rect.width = 1;
 			rect.x = value;
 			if (rect.x+rect.width > pic.original.naturalWidth)
 				rect.width = pic.original.naturalWidth-rect.x;
+			pic._change_rect = {
+				width: rect.width - prev_rect.width,
+				height: rect.height - prev_rect.height,
+			};
 			t.setValue(pic, {rect:rect}, true);
 			pic.update();
 			if (value+rect.width <= pic.original.naturalWidth) {
@@ -261,9 +289,14 @@ function images_tool_crop() {
 			}
 			var rect = pic.crop_rect;
 			if (!rect) rect = {x:0,y:0,width:pic.original.naturalWidth,height:pic.original.naturalHeight};
+			var prev_rect = objectCopy(rect,1);
 			rect.width = value-rect.x;
 			if (rect.x+rect.width > pic.original.naturalWidth)
 				rect.x = pic.original.naturalWidth-rect.width;
+			pic._change_rect = {
+				width: rect.width - prev_rect.width,
+				height: rect.height - prev_rect.height,
+			};
 			t.setValue(pic, {rect:rect}, true);
 			pic.update();
 			if (value-rect.width >= 0) {
@@ -294,9 +327,14 @@ function images_tool_crop() {
 			}
 			var rect = pic.crop_rect;
 			if (!rect) rect = {x:0,y:0,width:pic.original.naturalWidth,height:pic.original.naturalHeight};
+			var prev_rect = objectCopy(rect,1);
 			rect.height = value-rect.y;
 			if (rect.y+rect.height > pic.original.naturalHeight)
 				rect.y = pic.original.naturalHeight-rect.height;
+			pic._change_rect = {
+				width: rect.width - prev_rect.width,
+				height: rect.height - prev_rect.height,
+			};
 			t.setValue(pic, {rect:rect}, true);
 			pic.update();
 			if (value-rect.height >= 0) {
@@ -421,6 +459,7 @@ function crop_rectangle(pic) {
 	};
 	
 	var move = null;
+	var move_start = null;
 	
 	var t=this;
 
@@ -446,9 +485,10 @@ function crop_rectangle(pic) {
 		this.position(this.div_bottom_right, x+width-3, y+height-3, 5, 5);
 		
 		this.div_top_left.onmousedown = function(ev) {
+			move_start = objectCopy(pic.crop_rect,2);
 			move = function(x,y) {
 				var pic_pos = windowScreenPosition(pic.original_canvas);
-				x -= pic_pos.x
+				x -= pic_pos.x;
 				if (x < 0) x = 0;
 				y -= pic_pos.y;
 				if (y < 0) y = 0;
@@ -471,9 +511,10 @@ function crop_rectangle(pic) {
 			stopEventPropagation(ev);
 		};
 		this.div_top_right.onmousedown = function(ev) {
+			move_start = objectCopy(pic.crop_rect,2);
 			move = function(x,y) {
 				var pic_pos = windowScreenPosition(pic.original_canvas);
-				x -= pic_pos.x
+				x -= pic_pos.x;
 				if (x < 0) x = 0;
 				y -= pic_pos.y;
 				if (y < 0) y = 0;
@@ -492,9 +533,10 @@ function crop_rectangle(pic) {
 			stopEventPropagation(ev);
 		};
 		this.div_bottom_left.onmousedown = function(ev) {
+			move_start = objectCopy(pic.crop_rect,2);
 			move = function(x,y) {
 				var pic_pos = windowScreenPosition(pic.original_canvas);
-				x -= pic_pos.x
+				x -= pic_pos.x;
 				if (x < 0) x = 0;
 				y -= pic_pos.y;
 				if (y < 0) y = 0;
@@ -513,9 +555,10 @@ function crop_rectangle(pic) {
 			stopEventPropagation(ev);
 		};
 		this.div_bottom_right.onmousedown = function(ev) {
+			move_start = objectCopy(pic.crop_rect,2);
 			move = function(x,y) {
 				var pic_pos = windowScreenPosition(pic.original_canvas);
-				x -= pic_pos.x
+				x -= pic_pos.x;
 				if (x < 0) x = 0;
 				y -= pic_pos.y;
 				if (y < 0) y = 0;
@@ -542,6 +585,7 @@ function crop_rectangle(pic) {
 			e.y >= top_pos.y && e.y <= bottom_pos.y) {
 			var px = e.x;
 			var py = e.y;
+			move_start = null;
 			move = function(x,y) {
 				var dx = x-px;
 				var dy = y-py;
@@ -569,6 +613,13 @@ function crop_rectangle(pic) {
 	window.top.pnapplication.registerOnMouseUp(getWindowFromElement(pic.original_canvas), function() {
 		if (move) {
 			move = null;
+			if (move_start) {
+				pic._change_rect = {
+					width: pic.crop_rect.width - move_start.width,
+					height: pic.crop_rect.height - move_start.height,
+				};
+			}
+			move_start = null;
 			pic.update();
 		}
 	});

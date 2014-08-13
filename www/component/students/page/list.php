@@ -251,7 +251,7 @@ new data_list(
 
 		if (batches && batches.length == 1 && can_manage) {
 			refreshToDo(function() {
-				list.ondataloaded.add_listener(refreshToDo);
+				list.ondataloaded.add_listener(function() { refreshToDo(); });
 			});
 		}
 	}
@@ -267,7 +267,7 @@ function refreshToDo(ondone) {
 			if (!to_do_div) {
 				to_do_div = document.createElement("DIV");
 				to_do_div.className = "warning_footer";
-				list.addFooter(to_do_div);
+				window.students_list.addFooter(to_do_div);
 			}
 			to_do_div.innerHTML = res;
 			if (ondone) ondone();
