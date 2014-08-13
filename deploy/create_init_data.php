@@ -28,7 +28,7 @@ if ($has_errors) die();
 <div style='flex:none;background-color:white;padding:10px'>
 
 Initial data prepared.<br/>
-Analyzing initial data changes...
+Analyzing initial data changes, and integrate migration scripts...
 <form name='deploy' method="POST" action="compare_init_data.php">
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>

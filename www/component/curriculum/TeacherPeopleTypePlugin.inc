@@ -25,6 +25,6 @@ class TeacherPeopleTypePlugin implements PeopleTypePlugin {
 		return "Teacher";
 	}
 	
-	public function getBuiltinDefaultUserRoles($people) { return array(); }
+	public function getBuiltinDefaultUserRoles($people) { return array("Teacher"); }
 }
 ?>

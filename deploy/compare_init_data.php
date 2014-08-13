@@ -48,6 +48,62 @@ for ($i = 0; $i < count($previous_files); $i++) {
 }
 $add = $new_files;
 
+function remove_directory($path) {
+	$dir = opendir($path);
+	while (($filename = readdir($dir)) <> null) {
+		if ($filename == ".") continue;
+		if ($filename == "..") continue;
+		if (is_dir($path."/".$filename))
+			remove_directory($path."/".$filename);
+		else
+			unlink($path."/".$filename);
+	}
+	closedir($dir);
+	rmdir($path);
+}
+
+global $migration;
+$migration = array();
+function checkMigrationScripts($component) {
+	global $migration;
+	if (!file_exists(realpath($_POST["path"])."/www/component/$component/updates")) return;
+	$path = realpath($_POST["path"])."/www/component/$component/updates/".$_POST["version"];
+	if (file_exists($path)) {
+		if (file_exists(realpath($_POST["path"])."/www/component/$component/updates/".$_POST["version"]."/before_datamodel.php") || file_exists(realpath($_POST["path"])."/www/component/$component/updates/".$_POST["version"]."/after_datamodel.php")) {
+			$migration[$component] = array("","");
+			if (file_exists(realpath($_POST["path"])."/www/component/$component/updates/".$_POST["version"]."/before_datamodel.php"))
+				$migration[$component][0] = file_get_contents(realpath($_POST["path"])."/www/component/$component/updates/".$_POST["version"]."/before_datamodel.php");
+			if (file_exists(realpath($_POST["path"])."/www/component/$component/updates/".$_POST["version"]."/after_datamodel.php"))
+				$migration[$component][1] = file_get_contents(realpath($_POST["path"])."/www/component/$component/updates/".$_POST["version"]."/after_datamodel.php");
+		}
+	}
+	remove_directory(realpath($_POST["path"])."/www/component/$component/updates");
+}
+$dir = opendir(realpath($_POST["path"])."/www/component");
+while (($file = readdir($dir)) <> null) {
+	if ($file == "." || $file == "..") continue;
+	if (!is_dir(realpath($_POST["path"])."/www/component/$file")) continue;
+	checkMigrationScripts($file);
+}
+closedir($dir);
+
+$before = "";
+$after = "";
+foreach ($migration as $comp=>$content) {
+	$before .= $content[0];
+	$after .= $content[1];
+}
+if ($before <> "") {
+	$f = fopen(realpath($_POST["path"])."/migration/before_datamodel.php","w");
+	fwrite($f,$before);
+	fclose($f);
+}
+if ($after <> "") {
+	$f = fopen(realpath($_POST["path"])."/migration/after_datamodel.php","w");
+	fwrite($f,$after);
+	fclose($f);
+}
+
 if ($has_errors) die();
 
 include("header.inc");
@@ -59,7 +115,14 @@ include("header.inc");
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
 </form>
 <?php 
-if (count($changes) == 0 && count($add) == 0 && count($remove) == 0) {
+if (count($migration) > 0) {
+	echo "We found migration scripts in the following components:<ul>";
+	foreach ($migration as $comp=>$content) {
+		echo "<li>".$comp."</li>";
+	}
+	echo "</ul>";
+}
+if (count($change) == 0 && count($add) == 0 && count($remove) == 0) {
 	// no change
 	?>
 	No change in the initial data.<br/>
@@ -72,9 +135,9 @@ if (count($changes) == 0 && count($add) == 0 && count($remove) == 0) {
 	include("footer.inc");
 	return;
 }
-if (count($changes) > 0) {
+if (count($change) > 0) {
 	echo "The following files changed:<ul>";
-	foreach ($changes as $file) echo "<li>".htmlentities($file)."</li>";
+	foreach ($change as $file) echo "<li>".htmlentities($file)."</li>";
 	echo "</ul>";
 }
 if (count($add) > 0) {

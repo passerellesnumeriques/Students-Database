@@ -65,8 +65,11 @@ $zip = new ZipArchive();
 if ($zip->open(realpath($_POST["path"])."/to_deploy/".$filename_migration, ZipArchive::CREATE)!==TRUE) {
 	die("cannot open $filename_migration");
 }
-// TODO other files
 $zip->addFile(realpath($_POST["path"])."/migration/datamodel_update.php", "datamodel_update.php");
+if (file_exists(realpath($_POST["path"])."/migration/before_datamodel.php"))
+	$zip->addFile(realpath($_POST["path"])."/migration/before_datamodel.php", "before_datamodel.php");
+if (file_exists(realpath($_POST["path"])."/migration/after_datamodel.php"))
+	$zip->addFile(realpath($_POST["path"])."/migration/after_datamodel.php", "after_datamodel.php");
 $zip->close();
 
 // create the checksum
