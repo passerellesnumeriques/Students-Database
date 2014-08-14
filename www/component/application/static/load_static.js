@@ -118,6 +118,7 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 				break;
 			}
 		if (script == null) {
+			if (t._scripts_loading > 0) return;
 			// check we don't have anymore scripts waiting for a dependency
 			while (window.top.pn_application_static.scripts.length > 0) {
 				var s = window.top.pn_application_static.scripts[0];

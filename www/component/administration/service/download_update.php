@@ -56,6 +56,10 @@ class service_download_update extends Service {
 		}
 	}
 	
+	/** Check a downloaded file using checksum
+	 * @param string $path path of the file to check
+	 * @return boolean true if it succeed
+	 */
 	private function checkSum($path) {
 		$f = fopen($path,"r");
 		$f2 = fopen($path.".checksum","r");

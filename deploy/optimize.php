@@ -30,8 +30,7 @@ function optimize_php($path) {
 		}
 		
 		$line = trim($line);
-		if (substr($line,0,2) == "//") continue; // TODO better, but we need to know if we are in a string or not...
-		
+		if (substr($line,0,2) == "//") continue;
 		if ($line == "") continue;
 		$s .= $line."\n";
 	}
@@ -57,8 +56,22 @@ function optimize_js($path) {
 	$s = "";
 	foreach ($lines as $line) {
 		$line = trim($line);
-		if ($line == "") continue;
 		if (substr($line,0,2) == "//" && strpos($line,"#depends") === false) continue; // TODO better, but we need to know if we are in a string or not...
+		if ($line == "") continue;
+		$s .= $line."\n";
+	}
+	$f = fopen($path, "w");
+	if (!$f) die("Unable to write in file ".$path);
+	fwrite($f, $s);
+	fclose($f);
+}
+function optimize_sql($path) {
+	$s = file_get_contents($path);
+	$lines = explode("\n",$s);
+	$s = "";
+	foreach ($lines as $line) {
+		$line = trim($line);
+		if ($line == "") continue;
 		$s .= $line."\n";
 	}
 	$f = fopen($path, "w");
@@ -67,11 +80,11 @@ function optimize_js($path) {
 	fclose($f);
 }
 function optimize_directory($path) {
-	set_time_limit(240);
 	$dir = opendir($path);
 	if (!$dir) die("Unable to access to directory ".$path);
 	while (($file = readdir($dir)) <> null) {
 		if ($file == "." || $file == "..") continue;
+		set_time_limit(300);
 		if (is_dir($path."/".$file)) {
 			if (substr($file,0,4) == "lib_") continue;
 			optimize_directory($path."/".$file);
@@ -82,6 +95,7 @@ function optimize_directory($path) {
 			switch ($ext) {
 				case "inc": case "php": optimize_php($path."/".$file); break;
 				case "js": optimize_js($path."/".$file); break;
+				case "sql": optimize_sql($path."/".$file); break;
 			}
 		}
 	}

@@ -26,6 +26,9 @@ abstract class Page {
 	 */
 	public abstract function getRequiredRights();
 
+	/** Indicates if the page may update the session. If not, the session will be closed before the page execute, so parallel requests can be handled.
+	 * @return boolean true if the session should not be closed before to execute the page
+	 */
 	public function mayUpdateSession() { return false; }
 	
 	/** Execute the page: generate its content */

@@ -5,10 +5,6 @@
 abstract class Service {
 
 	/**
-	 * Generate general documentation (description) of this service.
-	 */
-	public abstract function documentation();
-	/**
 	 * Return an array: to access to this service, the user must comply with at least one of the element of this array.
 	 * Each element can be either <ul>
 	 * <li>the name of a right: the user needs this right</li>
@@ -17,20 +13,29 @@ abstract class Service {
 	 * </ul>
 	 */
 	public abstract function getRequiredRights();
+#DEV
+	/**
+	 * Generate general documentation (description) of this service.
+	 */
+	public abstract function documentation();
 	/**
 	 * Generate the documentation of the expected input of this service.
 	 */
 	public abstract function inputDocumentation();
+	/**
+	 * Generate the documentation of the output of this service.
+	 */
+	public abstract function outputDocumentation();
+#END
 	/**
 	 * Return the format of the output of this service (by default: application/json) 
 	 * @param array $input the input data of the service
 	 * @return string the MIME format that will be returned by the service
 	 */
 	public function getOutputFormat($input) { return "application/json"; }
-	/**
-	 * Generate the documentation of the output of this service.
+	/** Indicates if the service may update the session. If not, the session will be closed before the service execute, so parallel requests can be handled.
+	 * @return boolean true if the session should not be closed before to execute the service
 	 */
-	public abstract function outputDocumentation();
 	public function mayUpdateSession() { return false; }
 	/**
 	 * Execute the service
