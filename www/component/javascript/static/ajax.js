@@ -83,6 +83,7 @@ ajax = {
 		if (content_type != null)
 			xhr.setRequestHeader('Content-type', content_type);
 		var sent = function() {
+			if (window.closing) return;
 			is_done = true;
 	        if (xhr.status != 200) {
 	        	var continu = true;

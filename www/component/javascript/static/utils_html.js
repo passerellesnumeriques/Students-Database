@@ -139,6 +139,7 @@ function LoadingHidder(to_hide) {
 		layout.removeHandler(to_hide, updater);
 		if (this.div.parentNode)
 			this.div.parentNode.removeChild(this.div);
+		this.div = null;
 	};
 	
 	this.setContent = function(content) {

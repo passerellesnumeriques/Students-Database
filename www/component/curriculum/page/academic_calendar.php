@@ -13,7 +13,7 @@ class page_academic_calendar extends Page {
 		<img src='/static/calendar/calendar_32.png' style="vertical-align:top"/>
 		Academic Calendar: Years and Periods
 	</div>
-	<div id='tree_container' style='background-color:white;flex:1 1 auto;'></div>
+	<div id='tree_container' style='background-color:white;flex:1 1 auto;overflow:auto;'></div>
 	<?php if ($can_edit) { ?>
 	<div class="page_footer" style="flex:none;">
 		<button class='action' onclick='new_year();'>New Academic Year</button>

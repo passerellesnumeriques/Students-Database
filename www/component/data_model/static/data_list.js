@@ -21,6 +21,17 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (!page_size) page_size = -1;
 	var t=this;
+	window.to_cleanup.push(t);
+	t.cleanup = function() {
+		t.container = null;
+		t.grid = null;
+		t.show_fields = null;
+		t._available_fields = null;
+		t._sort_column = null;
+		t._filters = null;
+		t._action_providers = null;
+		t._col_actions = null;
+	};
 	t.container = container;
 	t.container.className = t.container.className ? "data_list "+t.container.className : "data_list";
 	if (!t.container.id) t.container.id = generateID();

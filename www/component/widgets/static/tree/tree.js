@@ -272,14 +272,14 @@ function tree(container) {
 		if (item.parent)
 			item.parent.removeItem(item);
 		else {
+			this.items.remove(item);
+			this.children.remove(item);
 			this._removeItem(item);
 			this._refresh_heads();
 		}
 	};
 	this.clearItems = function() {
-		while (this.tbody.childNodes.length > 0)
-			this.tbody.removeChild(this.tbody.childNodes[0]);
-		this.items = [];
+		while (this.items.length > 0) this.removeItem(this.items[0]);
 	};
 	this.addHeader = function(content, collapsable, index) {
 		var container = document.createElement("DIV");
@@ -312,7 +312,10 @@ function tree(container) {
 		return item;
 	};
 	this._removeItem = function(item) {
-		try { this.tbody.removeChild(item.tr); } catch (e) {}
+		try {
+			item.tr.removeAllChildren();
+			this.tbody.removeChild(item.tr); 
+		} catch (e) {}
 		var list = item.children;
 		item.children = [];
 		for (var i = 0; i < list.length; ++i)
@@ -322,6 +325,16 @@ function tree(container) {
 			while (p && !p.onselect) p = p.parent;
 			if (p) this.selectItem(p);
 		}
+		item.parent = null;
+		item.tree = null;
+		item.tr.item = null;
+		item.tr = null;
+		item.head.removeAllChildren();
+		item.head = null;
+		item.children = null;
+		for (var i = 0; i < item.cells.length; ++i)
+			item.cells[i].element = null;
+		item.cells = null;
 	};
 	this._selected_item = null;
 	this.selectItem = function(item) {
@@ -418,6 +431,8 @@ function tree(container) {
 		},10);
 	};
 	this._refresh_heads_ = function() {
+		if (!this.table) return;
+		if (!this.items) return;
 		for (var i = 0; i < this.items.length; ++i)
 			this._clean_heads(this.items[i]);
 		for (var i = 0; i < t.items.length; ++i)
@@ -427,7 +442,7 @@ function tree(container) {
 	};
 	this._clean_heads = function(item) {
 		item.head.style.height = "";
-		while (item.head.childNodes.length > 0) item.head.removeChild(item.head.childNodes[0]);
+		item.head.removeAllChildren();
 		if (item.expanded)
 			for (var i = 0; i < item.children.length; ++i)
 				this._clean_heads(item.children[i]);
@@ -552,20 +567,19 @@ function tree(container) {
 				img.style.right = '4px';
 				img.style.bottom = '1px';
 				img.style.cursor = 'pointer';
-				img.item = item;
 				if (typeof item.children == 'undefined' && item.children_on_demand) {
 					img.src = url+"loading.gif";
 					item.head.appendChild(img);
 					item.children = [];
 					item.children_on_demand(item, function() {
 						img.src = url+(item.expanded ? "minus" : "plus")+".png";
-						img.onclick = function() { this.item.toggleExpand(); };
+						img.onclick = function() { item.toggleExpand(); };
 					});
 				} else
 				if (item.children.length > 0) {
 					img.src = url+(item.expanded ? "minus" : "plus")+".png";
 					item.head.appendChild(img);
-					img.onclick = function() { this.item.toggleExpand(); };
+					img.onclick = function() { item.toggleExpand(); };
 				}
 			}
 		}
@@ -587,6 +601,15 @@ function tree(container) {
 		this.table.appendChild(this.tbody = document.createElement("TBODY"));
 		this.tbody.appendChild(this.tr_columns = document.createElement("TR"));
 		this.setShowColumn(this.show_columns);
+		this.table.ondomremoved(function() {
+			t.table = null;
+			t.clearItems();
+			t.items = null;
+			t.children = null;
+			t.columns = null;
+			t.tbody = null;
+			t.tr_columns = null;
+		});
 	};
 	
 	this._create();

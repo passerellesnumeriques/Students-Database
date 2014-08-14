@@ -1,312 +1,331 @@
-if (window == window.top) {
-	if (typeof window.top.pnapplication == 'undefined') {
-	/**
-	 * Handle windows events at application level: list of frames, event when a frame is closed, user activity...
-	 */
-	window.top.pnapplication = {
-		/** Event raised when the user logout, so we can clean some objects that may be on the top window */
-		onlogout: new Custom_Event(),
-		/** Event raised when the user login */
-		onlogin: new Custom_Event(),
-		/** Indicates if the user is currently logged or not */
-		logged_in: false,
-		/** list of windows (private: registerWindow and unregisterWindow must be used) */
-		_windows: [],
-		/** event when a window/frame is closed. The window is given as parameter to the listeners. */ 
-		onwindowclosed: new Custom_Event(),
-		/** register a new window
-		 * @param {window} w new window/frame 
-		 */
-		registerWindow: function(w) { 
-			if (w.frameElement && !w.frameElement._loading_frame)
-				new LoadingFrame(w.frameElement);
-			if (w.frameElement && w.frameElement._loading_frame)
-				w.frameElement._loading_frame.startLoading();
-			window.top.pnapplication._windows.push(w);
-			listenEvent(w,'click',function(ev){
-				for (var i = 0; i < window.top.pnapplication._onclick_listeners.length; ++i)
-					window.top.pnapplication._onclick_listeners[i][1](ev, w, window.top.pnapplication._onclick_listeners[i][0]);
-			});
-			listenEvent(w,'mousemove',function(ev){
-				if (!window.top.pnapplication) return;
-				var w_pos = getAbsoluteCoordinatesRelativeToWindowTop(w);
-				var cev = getCompatibleMouseEvent(ev);
-				for (var i = 0; i < window.top.pnapplication._onmousemove_listeners.length; ++i) {
-					var target = window.top.pnapplication._onmousemove_listeners[i][0];
-					var listener = window.top.pnapplication._onmousemove_listeners[i][1];
-					var target_pos = getAbsoluteCoordinatesRelativeToWindowTop(target);
-					var x = cev.x + w_pos.x - target_pos.x;
-					var y = cev.y + w_pos.y - target_pos.y;
-					listener(x,y);
-				}
-			});
-			listenEvent(w,'mouseup',function(ev){
-				for (var i = 0; i < window.top.pnapplication._onmouseup_listeners.length; ++i)
-					window.top.pnapplication._onmouseup_listeners[i][1](ev, w, window.top.pnapplication._onmouseup_listeners[i][0]);
-			});
-		},
-		/** unregister a window (when it is closed)
-		 * @param {window} w window/frame which has been closed 
-		 */
-		unregisterWindow: function(w) {
-			w.document.body.removeAllChildren();
-			if (w.frameElement && !w.frameElement._loading_frame)
-				new LoadingFrame(w.frameElement);
-			if (w.frameElement && w.frameElement._loading_frame)
-				w.frameElement._loading_frame.startUnloading();
-			window.top.pnapplication._windows.remove(w);
-			for (var i = 0; i < this._onclick_listeners.length; ++i)
-				if (this._onclick_listeners[i][0] == w) {
-					this._onclick_listeners.splice(i,1);
-					i--;
-				}
-			for (var i = 0; i < this._onmousemove_listeners.length; ++i)
-				if (this._onmousemove_listeners[i][0] == w) {
-					this._onmousemove_listeners.splice(i,1);
-					i--;
-				}
-			for (var i = 0; i < this._onmouseup_listeners.length; ++i)
-				if (this._onmouseup_listeners[i][0] == w) {
-					this._onmouseup_listeners.splice(i,1);
-					i--;
-				}
-			for (var id in this._customs) {
-				for (var i = 0; i < this._customs[id].length; ++i)
-					if (this._customs[id][i].win == w) {
-						this._customs[id].splice(i,1);
-						i--;
-					}
-			}
-			window.top.pnapplication.onwindowclosed.fire({top:window.top,win:w});
-		},
-		
-		/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
-		_onclick_listeners: [],
-		/** Register the given listener, which will be called when the user clicks somewhere in the application (not only on the window, but on all frames)
-		 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
-		 * @param {Function} listener function to be called
-		 */
-		registerOnclick: function(from_window, listener) {
-			this._onclick_listeners.push([from_window,listener]);
-		},
-		/** Remove a listener, previously registered by registerOnclick
-		 * @param {Function} listener function to be removed, previously registered through registerOnclick 
-		 */
-		unregisterOnclick: function(listener) {
-			for (var i = 0; i < this._onclick_listeners.length; ++i)
-				if (this._onclick_listeners[i][1] == listener) {
-					this._onclick_listeners.splice(i,1);
-					break;
-				}
-		},
-		/** List of listeners to be called when the user moves the mouse somewhere in the application.*/
-		_onmousemove_listeners: [],
-		/** Register the given listener, which will be called when the user moves the mouse somewhere in the application (not only on the window, but on all frames)
-		 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
-		 * @param {Function} listener function to be called, it takes 2 parameters: <code>x</code> and <code>y</code>
-		 */
-		registerOnMouseMove: function(from_window, listener) {
-			this._onmousemove_listeners.push([from_window,listener]);
-		},
-		/** Remove a listener, previously registered by registerOnMouseMove
-		 * @param {Function} listener function to be removed, previously registered through registerOnMouseMove 
-		 */
-		unregisterOnMouseMove: function(listener) {
-			for (var i = 0; i < this._onmousemove_listeners.length; ++i)
-				if (this._onmousemove_listeners[i][1] == listener) {
-					this._onmousemove_listeners.splice(i,1);
-					break;
-				}
-		},
-		/** List of listeners to be called when the a mouse button goes up somewhere in the application.*/
-		_onmouseup_listeners: [],
-		/** Register the given listener
-		 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
-		 * @param {Function} listener function to be called
-		 */
-		registerOnMouseUp: function(from_window, listener) {
-			this._onmouseup_listeners.push([from_window,listener]);
-		},
-		/** Remove a listener, previously registered by registerOnMouseUp
-		 * @param {Function} listener function to be removed, previously registered through registerOnMouseUp 
-		 */
-		unregisterOnMouseUp: function(listener) {
-			for (var i = 0; i < this._onmouseup_listeners.length; ++i)
-				if (this._onmouseup_listeners[i][1] == listener) {
-					this._onmouseup_listeners.splice(i,1);
-					break;
-				}
-		},
-		
-		_customs: {},
-		registerCustom: function(win, id, value) {
-			if (!this._customs[id])
-				this._customs[id] = [];
-			this._customs[id].push({win:win,value:value});
-		},
-		getCustoms: function(id) {
-			var values = [];
-			if (this._customs[id])
-				for (var i = 0; i < this._customs[id].length; ++i)
-					values.push(this._customs[id][i].value);
-			return values;
-		},
-		
-		/** Event when the whole application is closing */
-		onclose: new Custom_Event(),
-		/** Called when the top window is closing, meaning the application */
-		closeWindow: function() {
-			window.top.pnapplication.onclose.fire();
-		},
-		/** event fired when user activity is detected */
-		onactivity: new Custom_Event(),
-		/** time of the last activity of the user */
-		last_activity: new Date().getTime(),
-		/** signals the user is active: fire onactivity event on each window */
-		userIsActive: function() {
-			for (var i = 0; i < window.top.pnapplication._windows.length; ++i)
-				if (window.top.pnapplication._windows[i].pnapplication) window.top.pnapplication._windows[i].pnapplication.onactivity.fire();
-			window.top.pnapplication.last_activity = new Date().getTime();
-		},
-		/** check if the user is not inactive since long time: if this is the case, automatically logout */
-		checkInactivity: function() {
-			var time = new Date().getTime();
-			time -= window.top.pnapplication.last_activity;
-			for (var i = 0; i < window.top.pnapplication._windows.length; ++i) {
-				if (window.top.pnapplication._windows[i] == window.top) continue;
-				if (window.top.pnapplication._windows[i].closed) {
-					window.top.pnapplication.unregisterWindow(window.top.pnapplication._windows[i]);
-					window.top.pnapplication.checkInactivity();
-					return;
-				}
-				if (window.top.pnapplication._windows[i].pnapplication)
-					for (var j = 0; j < window.top.pnapplication._windows[i].pnapplication._inactivity_listeners.length; ++j) {
-						var il = window.top.pnapplication._windows[i].pnapplication._inactivity_listeners[j];
-						if (il.time <= time)
-							il.listener();
-					}
-			}
-		}
-	};
-	window.top.pnapplication.registerWindow(window.top);
-	}
-} else if (typeof Custom_Event != 'undefined'){
-	/**
-	 * Handle events on the current window, transfered to the top window
-	 */
-	window.pnapplication = {
-		/** event fired when user activity is detected */
-		onactivity: new Custom_Event(),
-		/** event fired when the current window is closing */
-		onclose: new Custom_Event(),
-		/** indicates the current window is closing */
-		closeWindow: function() {
-			this.onclose.fire();
-			window.top.pnapplication.unregisterWindow(window);
-		},
-		/** Internal list of {time,function} to call when the user is inactive */
-		_inactivity_listeners: [],
-		/**
-		 * Register a listener to be called when the user is inactive for the given amount of time.
-		 * @param {Number} inactivity_time time in milliseconds of the inactivity
-		 * @param {Function} listener function to be called
-		 */
-		addInactivityListener: function(inactivity_time, listener) {
-			this._inactivity_listeners.push({time:inactivity_time,listener:listener});
-		},
-		/** {Array} list of identifiers of data which need to be saved on the page */
-		_data_unsaved: [],
-		/** Indicates the the given data needs to be saved
-		 * @param {String} id identifier of the data which must be unique
-		 */
-		dataUnsaved: function(id) {
-			if (!this._data_unsaved.contains(id)) {
-				this._data_unsaved.push(id);
-				if (this._data_unsaved.length == 1) // first one
-					this.ondatatosave.fire();
-			}
-		},
-		/** Indicates the the given data has been saved
-		 * @param {String} id identifier of the data which must be unique
-		 */
-		dataSaved: function(id) {
-			this._data_unsaved.remove(id);
-			if (this._data_unsaved.length == 0)
-				this.onalldatasaved.fire();
-		},
-		/** Indicates if any data on the window needs to be saved
-		 * @returns {Boolean} true if some data need to be saved
-		 */
-		hasDataUnsaved: function() { 
-			return this._data_unsaved.length > 0; 
-		},
-		/** Check if there are data with given ID to be saved
-		 * @param {String} id identifier of the data
-		 * @returns {Boolean} true if the given data needs to be saved
-		 */
-		isDataUnsaved: function(id) {
-			return this._data_unsaved.contains(id);
-		},
-		hasDataUnsavedStartingWith: function(start) {
-			for (var i = 0; i < this._data_unsaved.length; ++i)
-				if (this._data_unsaved[i].startsWith(start))
-					return true;
-			return false;
-		},
-		getDataUnsavedIds: function() { return this._data_unsaved; },
-		/** Mark all data as saved */
-		cancelDataUnsaved: function() { 
-			this._data_unsaved = [];
-			this.onalldatasaved.fire();
-		},
-		/** Event raised when some data need to be saved */
-		ondatatosave: new Custom_Event(),
-		/** Event raised when no more data need to be saved */
-		onalldatasaved: new Custom_Event(),
-		autoDisableSaveButton: function(button) {
-			if (typeof button == 'string') button = document.getElementById(button);
-			button.disabled = this.hasDataUnsaved() ? "" : "disabled"; 
-			this.ondatatosave.add_listener(function() { button.disabled = ""; });
-			this.onalldatasaved.add_listener(function() { button.disabled = "disabled"; });
-		}
-	};
-	window.top.pnapplication.registerWindow(window);
-}
-
 /**
- * Initialize: listen click, mousemove, beforeunload
+ * Initialize: create structure, listen click, mousemove, beforeunload
  */
 function initPNApplication() {
-	if (typeof listenEvent == 'undefined' || window.top.frames.length == 0)
-		setTimeout(initPNApplication, 100);
-	else {
-		var listener = function() {
-			if (!window || !window.top || !window.top.pnapplication || !window.top.pnapplication.userIsActive) return;
-			window.top.pnapplication.userIsActive();
-		};
-		listenEvent(window,'click',listener);
-		listenEvent(window,'mousemove',listener);
-		var closeRaised = false;
-		if (window.frameElement) {
-			var prev = window.frameElement.onunload; 
-			listenEvent(window.frameElement, 'unload', function(ev) {
-				if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
-				if (prev) prev(ev);
-			});
-		}
-		listenEvent(window, 'unload', function() {
-			if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
-		});
-		listenEvent(window, 'beforeunload', function(ev) {
-			if (window.pnapplication && window.pnapplication._data_unsaved && window.pnapplication._data_unsaved.length > 0) {
-				ev.returnValue = "The page contains unsaved data";
-				return "The page contains unsaved data";
-			}
-			if (!closeRaised && window.pnapplication) window.pnapplication.closeWindow();
-		});
-		if (window==window.top)
-			setInterval(window.pnapplication.checkInactivity, 2000);
+	if (typeof listenEvent == 'undefined' || window.top.frames.length == 0 || typeof Custom_Event == 'undefined') {
+		setTimeout(initPNApplication, 20);
+		return;
 	}
+	if (window == window.top) {
+		if (typeof window.top.pnapplication == 'undefined') {
+		/**
+		 * Handle windows events at application level: list of frames, event when a frame is closed, user activity...
+		 */
+		window.top.pnapplication = {
+			/** Event raised when the user logout, so we can clean some objects that may be on the top window */
+			onlogout: new Custom_Event(),
+			/** Event raised when the user login */
+			onlogin: new Custom_Event(),
+			/** Indicates if the user is currently logged or not */
+			logged_in: false,
+			/** list of windows (private: registerWindow and unregisterWindow must be used) */
+			_windows: [],
+			/** event when a window/frame is closed. The window is given as parameter to the listeners. */ 
+			onwindowclosed: new Custom_Event(),
+			/** register a new window
+			 * @param {window} w new window/frame 
+			 */
+			registerWindow: function(w) { 
+				if (w.frameElement && !w.frameElement._loading_frame)
+					new LoadingFrame(w.frameElement);
+				if (w.frameElement && w.frameElement._loading_frame)
+					w.frameElement._loading_frame.startLoading();
+				window.top.pnapplication._windows.push(w);
+				listenEvent(w,'click',function(ev){
+					for (var i = 0; i < window.top.pnapplication._onclick_listeners.length; ++i)
+						window.top.pnapplication._onclick_listeners[i][1](ev, w, window.top.pnapplication._onclick_listeners[i][0]);
+				});
+				listenEvent(w,'mousemove',function(ev){
+					if (!window.top.pnapplication) return;
+					var w_pos = getAbsoluteCoordinatesRelativeToWindowTop(w);
+					var cev = getCompatibleMouseEvent(ev);
+					for (var i = 0; i < window.top.pnapplication._onmousemove_listeners.length; ++i) {
+						var target = window.top.pnapplication._onmousemove_listeners[i][0];
+						var listener = window.top.pnapplication._onmousemove_listeners[i][1];
+						var target_pos = getAbsoluteCoordinatesRelativeToWindowTop(target);
+						var x = cev.x + w_pos.x - target_pos.x;
+						var y = cev.y + w_pos.y - target_pos.y;
+						listener(x,y);
+					}
+				});
+				listenEvent(w,'mouseup',function(ev){
+					for (var i = 0; i < window.top.pnapplication._onmouseup_listeners.length; ++i)
+						window.top.pnapplication._onmouseup_listeners[i][1](ev, w, window.top.pnapplication._onmouseup_listeners[i][0]);
+				});
+			},
+			/** unregister a window (when it is closed)
+			 * @param {window} w window/frame which has been closed 
+			 */
+			unregisterWindow: function(w) {
+				if (w.frameElement && !w.frameElement._loading_frame)
+					new LoadingFrame(w.frameElement);
+				if (w.frameElement && w.frameElement._loading_frame)
+					w.frameElement._loading_frame.startUnloading();
+				window.top.pnapplication._windows.remove(w);
+				for (var i = 0; i < this._onclick_listeners.length; ++i)
+					if (this._onclick_listeners[i][0] == w) {
+						this._onclick_listeners.splice(i,1);
+						i--;
+					}
+				for (var i = 0; i < this._onmousemove_listeners.length; ++i)
+					if (this._onmousemove_listeners[i][0] == w) {
+						this._onmousemove_listeners.splice(i,1);
+						i--;
+					}
+				for (var i = 0; i < this._onmouseup_listeners.length; ++i)
+					if (this._onmouseup_listeners[i][0] == w) {
+						this._onmouseup_listeners.splice(i,1);
+						i--;
+					}
+				for (var id in this._customs) {
+					for (var i = 0; i < this._customs[id].length; ++i)
+						if (this._customs[id][i].win == w) {
+							this._customs[id].splice(i,1);
+							i--;
+						}
+				}
+				window.top.pnapplication.onwindowclosed.fire({top:window.top,win:w});
+				// clean up
+				w.document.body.removeAllChildren();
+				if (w.to_cleanup) {
+					var list = [];
+					for (var i = 0; i < w.to_cleanup.length; ++i) list.push(w.to_cleanup[i]);
+					w.to_cleanup = [];
+					for (var i = 0; i < list.length; ++i)
+						list[i].cleanup();
+					w.to_cleanup = null;
+				}
+				w.closing = true;
+				for (var name in w) if (name != "closing") w[name] = null;
+			},
+			
+			/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
+			_onclick_listeners: [],
+			/** Register the given listener, which will be called when the user clicks somewhere in the application (not only on the window, but on all frames)
+			 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
+			 * @param {Function} listener function to be called
+			 */
+			registerOnclick: function(from_window, listener) {
+				this._onclick_listeners.push([from_window,listener]);
+			},
+			/** Remove a listener, previously registered by registerOnclick
+			 * @param {Function} listener function to be removed, previously registered through registerOnclick 
+			 */
+			unregisterOnclick: function(listener) {
+				for (var i = 0; i < this._onclick_listeners.length; ++i)
+					if (this._onclick_listeners[i][1] == listener) {
+						this._onclick_listeners.splice(i,1);
+						break;
+					}
+			},
+			/** List of listeners to be called when the user moves the mouse somewhere in the application.*/
+			_onmousemove_listeners: [],
+			/** Register the given listener, which will be called when the user moves the mouse somewhere in the application (not only on the window, but on all frames)
+			 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
+			 * @param {Function} listener function to be called, it takes 2 parameters: <code>x</code> and <code>y</code>
+			 */
+			registerOnMouseMove: function(from_window, listener) {
+				this._onmousemove_listeners.push([from_window,listener]);
+			},
+			/** Remove a listener, previously registered by registerOnMouseMove
+			 * @param {Function} listener function to be removed, previously registered through registerOnMouseMove 
+			 */
+			unregisterOnMouseMove: function(listener) {
+				for (var i = 0; i < this._onmousemove_listeners.length; ++i)
+					if (this._onmousemove_listeners[i][1] == listener) {
+						this._onmousemove_listeners.splice(i,1);
+						break;
+					}
+			},
+			/** List of listeners to be called when the a mouse button goes up somewhere in the application.*/
+			_onmouseup_listeners: [],
+			/** Register the given listener
+			 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
+			 * @param {Function} listener function to be called
+			 */
+			registerOnMouseUp: function(from_window, listener) {
+				this._onmouseup_listeners.push([from_window,listener]);
+			},
+			/** Remove a listener, previously registered by registerOnMouseUp
+			 * @param {Function} listener function to be removed, previously registered through registerOnMouseUp 
+			 */
+			unregisterOnMouseUp: function(listener) {
+				for (var i = 0; i < this._onmouseup_listeners.length; ++i)
+					if (this._onmouseup_listeners[i][1] == listener) {
+						this._onmouseup_listeners.splice(i,1);
+						break;
+					}
+			},
+			
+			_customs: {},
+			registerCustom: function(win, id, value) {
+				if (!this._customs[id])
+					this._customs[id] = [];
+				this._customs[id].push({win:win,value:value});
+			},
+			getCustoms: function(id) {
+				var values = [];
+				if (this._customs[id])
+					for (var i = 0; i < this._customs[id].length; ++i)
+						values.push(this._customs[id][i].value);
+				return values;
+			},
+			
+			/** Event when the whole application is closing */
+			onclose: new Custom_Event(),
+			/** Called when the top window is closing, meaning the application */
+			closeWindow: function() {
+				window.top.pnapplication.onclose.fire();
+			},
+			/** event fired when user activity is detected */
+			onactivity: new Custom_Event(),
+			/** time of the last activity of the user */
+			last_activity: new Date().getTime(),
+			/** signals the user is active: fire onactivity event on each window */
+			userIsActive: function() {
+				for (var i = 0; i < window.top.pnapplication._windows.length; ++i)
+					if (window.top.pnapplication._windows[i].pnapplication) window.top.pnapplication._windows[i].pnapplication.onactivity.fire();
+				window.top.pnapplication.last_activity = new Date().getTime();
+			},
+			/** check if the user is not inactive since long time: if this is the case, automatically logout */
+			checkInactivity: function() {
+				var time = new Date().getTime();
+				time -= window.top.pnapplication.last_activity;
+				for (var i = 0; i < window.top.pnapplication._windows.length; ++i) {
+					if (window.top.pnapplication._windows[i] == window.top) continue;
+					if (window.top.pnapplication._windows[i].closed) {
+						window.top.pnapplication.unregisterWindow(window.top.pnapplication._windows[i]);
+						window.top.pnapplication.checkInactivity();
+						return;
+					}
+					if (window.top.pnapplication._windows[i].pnapplication)
+						for (var j = 0; j < window.top.pnapplication._windows[i].pnapplication._inactivity_listeners.length; ++j) {
+							var il = window.top.pnapplication._windows[i].pnapplication._inactivity_listeners[j];
+							if (il.time <= time)
+								il.listener();
+						}
+				}
+			}
+		};
+		window.top.pnapplication.registerWindow(window.top);
+		setInterval(window.top.pnapplication.checkInactivity, 2000);
+		}
+	} else {
+		/**
+		 * Handle events on the current window, transfered to the top window
+		 */
+		window.pnapplication = {
+			/** event fired when user activity is detected */
+			onactivity: new Custom_Event(),
+			/** event fired when the current window is closing */
+			onclose: new Custom_Event(),
+			/** indicates the current window is closing */
+			closeWindow: function() {
+				this.onclose.fire();
+				window.top.pnapplication.unregisterWindow(window);
+			},
+			/** Internal list of {time,function} to call when the user is inactive */
+			_inactivity_listeners: [],
+			/**
+			 * Register a listener to be called when the user is inactive for the given amount of time.
+			 * @param {Number} inactivity_time time in milliseconds of the inactivity
+			 * @param {Function} listener function to be called
+			 */
+			addInactivityListener: function(inactivity_time, listener) {
+				this._inactivity_listeners.push({time:inactivity_time,listener:listener});
+			},
+			/** {Array} list of identifiers of data which need to be saved on the page */
+			_data_unsaved: [],
+			/** Indicates the the given data needs to be saved
+			 * @param {String} id identifier of the data which must be unique
+			 */
+			dataUnsaved: function(id) {
+				if (!this._data_unsaved.contains(id)) {
+					this._data_unsaved.push(id);
+					if (this._data_unsaved.length == 1) // first one
+						this.ondatatosave.fire();
+				}
+			},
+			/** Indicates the the given data has been saved
+			 * @param {String} id identifier of the data which must be unique
+			 */
+			dataSaved: function(id) {
+				this._data_unsaved.remove(id);
+				if (this._data_unsaved.length == 0)
+					this.onalldatasaved.fire();
+			},
+			/** Indicates if any data on the window needs to be saved
+			 * @returns {Boolean} true if some data need to be saved
+			 */
+			hasDataUnsaved: function() { 
+				return this._data_unsaved.length > 0; 
+			},
+			/** Check if there are data with given ID to be saved
+			 * @param {String} id identifier of the data
+			 * @returns {Boolean} true if the given data needs to be saved
+			 */
+			isDataUnsaved: function(id) {
+				return this._data_unsaved.contains(id);
+			},
+			hasDataUnsavedStartingWith: function(start) {
+				for (var i = 0; i < this._data_unsaved.length; ++i)
+					if (this._data_unsaved[i].startsWith(start))
+						return true;
+				return false;
+			},
+			getDataUnsavedIds: function() { return this._data_unsaved; },
+			/** Mark all data as saved */
+			cancelDataUnsaved: function() { 
+				this._data_unsaved = [];
+				this.onalldatasaved.fire();
+			},
+			/** Event raised when some data need to be saved */
+			ondatatosave: new Custom_Event(),
+			/** Event raised when no more data need to be saved */
+			onalldatasaved: new Custom_Event(),
+			autoDisableSaveButton: function(button) {
+				if (typeof button == 'string') button = document.getElementById(button);
+				button.disabled = this.hasDataUnsaved() ? "" : "disabled"; 
+				this.ondatatosave.add_listener(function() { button.disabled = ""; });
+				this.onalldatasaved.add_listener(function() { button.disabled = "disabled"; });
+			}
+		};
+		window.top.pnapplication.registerWindow(window);
+	}
+		
+	var listener = function() {
+		if (!window || !window.top || !window.top.pnapplication || !window.top.pnapplication.userIsActive) return;
+		window.top.pnapplication.userIsActive();
+	};
+	listenEvent(window,'click',listener);
+	listenEvent(window,'mousemove',listener);
+	var closeRaised = false;
+	if (window.frameElement) {
+		var prev = window.frameElement.onunload; 
+		listenEvent(window.frameElement, 'unload', function(ev) {
+			if (!closeRaised && window.pnapplication) {
+				closeRaised = true;
+				window.pnapplication.closeWindow();
+			}
+			if (prev) prev(ev);
+		});
+	}
+	listenEvent(window, 'unload', function() {
+		if (!closeRaised && window.pnapplication) {
+			closeRaised = true;
+			window.pnapplication.closeWindow();
+		}
+	});
+	listenEvent(window, 'beforeunload', function(ev) {
+		if (window.pnapplication && window.pnapplication._data_unsaved && window.pnapplication._data_unsaved.length > 0) {
+			ev.returnValue = "The page contains unsaved data";
+			return "The page contains unsaved data";
+		}
+		if (!closeRaised && window.pnapplication) {
+			closeRaised = true;
+			window.pnapplication.closeWindow();
+		}
+	});
 };
 initPNApplication();
 

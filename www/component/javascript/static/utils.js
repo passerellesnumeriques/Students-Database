@@ -960,7 +960,7 @@ Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e
 Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){this.splice(i,1);i--;};};
 
 function _domRemoved(e) {
-	if (e._ondomremoved) e._ondomremoved.fire(e);
+	if (e._ondomremoved) { e._ondomremoved.fire(e); e._ondomremoved = null; }
 	if (e.nodeType != 1) return;
 	for (var i = 0; i < e.childNodes.length; ++i)
 		_domRemoved(e.childNodes[i]);
@@ -980,6 +980,7 @@ Element.prototype.removeChild = function(e) {
 Element.prototype.removeAllChildren = function() {
 	while (this.childNodes.length > 0) this.removeChild(this.childNodes[0]);
 };
+if (!window.to_cleanup) window.to_cleanup = [];
 
 function addClassName(element, name) {
 	if (element.className == "") { element.className = name; return; }
@@ -1112,6 +1113,13 @@ URL.prototype = {
  * @constructor
  */
 function Custom_Event() {
+	if (!window.to_cleanup) window.to_cleanup = [];
+	window.to_cleanup.push(this);
+	this.cleanup = function() {
+		this.listeners = null;
+		window.to_cleanup.remove(this);
+	};
+	
 	this.listeners = [];
 	/**
 	 * Add a listener to this event

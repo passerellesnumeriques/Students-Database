@@ -1528,8 +1528,8 @@ class SQLQuery {
 					foreach ($keys as $key) {
 						$kw = "(";
 						foreach ($tkeys as $key_name) {
-							if (strlen($kw) > 0) $kw .= " AND ";
-							$kw .= "`".$table_alias."`.`".$key_name."`!='".SQLQuery::escape($key[$key_name])."'";
+							if (strlen($kw) > 1) $kw .= " AND ";
+							$kw .= "`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
 						}
 						$kw .= ")";
 						if (strlen($w) > 0) $w .= " OR ";

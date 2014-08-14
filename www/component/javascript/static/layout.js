@@ -1,4 +1,13 @@
 layout = {
+	cleanup: function() {
+		if (window._layout_interval) clearInterval(window._layout_interval);
+		window._layout_interval = null;
+		if (layout._process_timeout) clearTimeout(layout._process_timeout);
+		layout._process_timeout = null;
+		this._layout_handlers = null;
+		this._w = null;
+		this._invalidated = null;
+	},
 	// Layout handlers attached to elements
 	_layout_handlers: [],
 	_w: window,
@@ -36,6 +45,7 @@ layout = {
 	// layout process
 	_invalidated: [],
 	invalidate: function(element) {
+		if (this._invalidated == null) return;
 		if (element == null) {
 			try { throw new Error("null element given to layout.invalidate"); }
 			catch (e) { log_exception(e); return; }
@@ -83,6 +93,7 @@ layout = {
 	_layout_needed: function() {
 		if (layout._process_timeout != null) return;
 		var f = function() {
+			if (window.closing) return;
 			if (layout._last_layout_activity < new Date().getTime() - 1000)
 				layout._layouts_short_time = 0;
 			layout._process_timeout = null;
@@ -446,6 +457,8 @@ layout = {
 		return null;
 	}
 };
+if (!window.to_cleanup) window.to_cleanup = [];
+window.to_cleanup.push(layout);
 
 // call onresize of window when all images are loaded, to trigger re-layout if needed
 var resize_triggered = false;
@@ -492,6 +505,7 @@ if (typeof listenEvent != 'undefined') {
 	listenEvent(window, 'load', _all_images_loaded);
 	_init_images();
 	var listener = function(ev) {
+		if (!layout) return;
 		if (layout._noresize_event) {
 			unlistenEvent(window,'resize',listener);
 			return;

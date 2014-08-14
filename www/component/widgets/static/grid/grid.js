@@ -21,6 +21,13 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 	this.th.className = "container";
 	this.th.innerHTML = title;
 	this.th.col = this;
+	window.to_cleanup.push(this);
+	this.cleanup = function() {
+		this.th.col = null;
+		this.th = null;
+		this.attached_data = null;
+		this.sub_columns = null;
+	};
 	this._updateLevels = function() {
 		this.nb_columns = 0;
 		this.levels = 2;
@@ -92,6 +99,19 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.th = document.createElement('TH');
 	this.th.rowSpan = 1;
 	this.th.col = this;
+	window.to_cleanup.push(this);
+	this.cleanup = function() {
+		this.th.col = null;
+		this.th = null;
+		this.attached_data = null;
+		this.grid = null;
+		for (var i = 0; i < this.actions.length; ++i)
+			if (this.actions[i].element) {
+				this.actions[i].element.data = null;
+				this.actions[i].element = null;
+			}
+		this.actions = null;
+	};
 	this.col = document.createElement('COL');
 	if (this.width) {
 		this.col.style.width = this.width+"px";
@@ -282,6 +302,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			img.data = this.actions[i];
 			this.actions[i].element = img;
 			span.appendChild(img);
+			img.ondomremoved(function(img) { img.data.element = null; img.data = null; });
 		}
 		layout.invalidate(this.th);
 	};
@@ -329,6 +350,16 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 function grid(element) {
 	if (typeof element == 'string') element = document.getElementById(element);
 	var t = this;
+	window.to_cleanup.push(t);
+	t.cleanup = function() {
+		t.element = null;
+		t.columns = null;
+		t.table = null;
+		t.thead = null;
+		t.grid_element = null;
+		t.header_rows = null;
+		t.colgroup = null;
+	};
 	t.element = element;
 	t.columns = [];
 	t.selectable = false;
@@ -454,6 +485,7 @@ function grid(element) {
 				t._create_cell(col, data, td, function(field){
 					field.onfocus.add_listener(function() { t.onrowfocus.fire(tr); });
 				});
+				td.ondomremoved(function(td) { td.field = null; });
 			}
 		}
 		if (level > 0) {
@@ -922,9 +954,11 @@ function grid(element) {
 				});
 			if (typeof data.css != 'undefined' && data.css)
 				td.className = data.css;
+			td.ondomremoved(function(td) { td.field = null; td.col_id = null; td.data_id = null; });
 		}
 		t.table.appendChild(tr);
 		layout.invalidate(t.element);
+		tr.ondomremoved(function(tr) { tr.row_data = null; });
 		return tr;
 	};
 	t._createSelectionTD = function() {
@@ -1080,7 +1114,7 @@ function grid(element) {
 	
 	t.reset = function() {
 		// remove data rows
-		while (t.table.childNodes.length > 0) t.table.removeChild(t.table.childNodes[0]);		
+		t.table.removeAllChildren();
 		// remove columns
 		for (var i = 1; i < t.header_rows.length; ++i)
 			t.header_rows[i].parentNode.removeChild(t.header_rows[i]);
@@ -1140,7 +1174,7 @@ function grid(element) {
 	
 	/* --- internal functions --- */
 	t._createTable = function() {
-		t.grid_element = document.createElement("DIV"); 
+		t.grid_element = document.createElement("DIV");
 		var table = document.createElement('TABLE');
 		table.style.width = "100%";
 		t.grid_element.appendChild(table);
