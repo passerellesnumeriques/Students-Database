@@ -106,7 +106,7 @@ namespace datamodel {
 					$table_alias = "THE_TABLE";
 					$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
 					$q->whereKey($path->table->getName(), $key_value);
-					$keys = $data->buildSQL($q, $path, null);
+					$keys = $data->buildSQL($q, $path, array());
 					$row = $q->executeSingleRow();
 					if ($keys["key"] <> null)
 						$key_value = $row[$keys["key"]];

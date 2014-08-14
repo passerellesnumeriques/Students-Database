@@ -85,7 +85,7 @@ function removeFunction(&$content, $fct_name) {
 			continue;
 		}
 		// search for visibility
-		$k = strrpos($content, "public", $i-1);
+		$k = strrpos(substr($content,0,$i), "public");
 		if ($k !== false) {
 			$between = substr($content,$k+6,$i-$k-6);
 			if (trim($between) == "") $i = $k;
@@ -96,7 +96,8 @@ function removeFunction(&$content, $fct_name) {
 		if ($j === false) break;
 		$k = searchEnding($content, $j+1, "{", "}");
 		if ($k === false) break;
-		$content = substr($content,0,$i).substr($content,$k+1);
+		$content = trim(substr($content,0,$i)).trim(substr($content,$k+1));
+		break;
 	}
 }
 
