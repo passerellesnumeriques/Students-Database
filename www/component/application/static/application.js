@@ -96,7 +96,9 @@ function initPNApplication() {
 					w.to_cleanup = null;
 				}
 				w.closing = true;
-				for (var name in w) if (name != "closing") w[name] = null;
+				for (var name in w)
+					if (name != "closing" && name != "name" && name != "frameElement")
+						w[name] = null;
 			},
 			
 			/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
