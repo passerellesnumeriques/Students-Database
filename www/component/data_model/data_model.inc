@@ -89,6 +89,8 @@ class data_model extends Component {
 				$this->browse($c, $c->foreign_key->name, $list, $known_columns, $for_new_data, $tables_done);
 			} else if (!in_array($c->foreign_key->name, $handled)) {
 				if ($display == null || !$display->canFollow($c->foreign_key->name)) continue;
+				$display_foreign = DataModel::get()->getTableDataDisplay($c->table->getName());
+				if ($display_foreign && !$display_foreign->canJoinToPrimary()) continue;
 				$this->browse($c, null, $list, $known_columns, $for_new_data, $tables_done);
 			}
 		}

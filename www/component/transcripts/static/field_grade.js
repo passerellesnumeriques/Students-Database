@@ -48,6 +48,12 @@ field_grade.prototype._create = function(data) {
 		t._setData(t.getCurrentData());
 		t.validate();
 	};
+	this.setMaxAndPassingGrades = function(max,passing) {
+		t.config.max = max;
+		t.config.passing = passing;
+		t._setData(t.getCurrentData());
+		t.validate();
+	};
 	var get_step_grade = function(step_index) {
 		var grade = t.steps[step_index].percent;
 		if (grade == "passing") return t.config.passing != null ? t.config.passing : t.config.max != null ? t.config.max/2 : 0.5;
@@ -107,6 +113,7 @@ field_grade.prototype._create = function(data) {
 		input.size = 3;
 		input.style.margin = "0px";
 		input.style.padding = "0px";
+		input.style.border = "1px solid black";
 		var onkeyup = new Custom_Event();
 		input.onkeyup = function(e) { onkeyup.fire(e); };
 		input.onkeydown = function(e) {
@@ -158,7 +165,7 @@ field_grade.prototype._create = function(data) {
 
 		this.signal_error = function(error) {
 			this.error = error;
-			input.style.border = error ? "1px solid red" : "";
+			input.style.border = error ? "1px solid red" : "1px solid black";
 			input.title = error ? error : "";
 		};
 		this.fillWidth = function() {

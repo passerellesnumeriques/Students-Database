@@ -26,12 +26,11 @@ String.prototype.trim=function() {
 String.prototype.parseNumber=function() {
 	if (this.length == 0) return Number.NaN;
 	var value = 0;
-	var mul = 1;
 	for (var i = 0; i < this.length; ++i) {
 		var ord = this.charCodeAt(i);
 		if (ord < 48 || ord > 57) return Number.NaN;
-		value += (ord-48)*mul;
-		mul *= 10;
+		value *= 10;
+		value += (ord-48);
 	}
 	return value;
 };
@@ -1136,6 +1135,7 @@ function Custom_Event() {
 	 * @param data
 	 */
 	this.fire = function(data) {
+		if (this.listeners == null) return;
 		var list = [];
 		for (var i = 0; i < this.listeners.length; ++i) list.push(this.listeners[i]);
 		for (var i = 0; i < list.length; ++i) 

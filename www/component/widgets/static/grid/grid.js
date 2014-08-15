@@ -18,7 +18,10 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 	this.attached_data = attached_data;
 	this.th = document.createElement("TH");
 	this.th.className = "container";
-	this.th.innerHTML = title;
+	if (title instanceof Element)
+		this.th.appendChild(title);
+	else
+		this.th.innerHTML = title;
 	this.th.col = this;
 	window.to_cleanup.push(this);
 	this.cleanup = function() {
@@ -527,7 +530,7 @@ function grid(element) {
 		}
 		// finally, add the final column
 		var list = container.getFinalColumns();
-		var first_index = this.getColumnIndex(list[0]);
+		var first_index = this.getColumnIndex(final_col == list[0] ? list[1] : list[0]);
 		var level;
 		for (level = 0; level < t.header_rows.length-1; level++) {
 			if (t.header_rows[level] == container.th.parentNode) break;
@@ -1060,7 +1063,7 @@ function grid(element) {
 		var tr = t.table.childNodes[row_index];
 		if (col_index >= tr.childNodes.length) return null;
 		var td = tr.childNodes[col_index];
-		return td.field ? td.field : null;
+		return td && td.field ? td.field : null;
 	};
 	t.getCellFieldById = function(row_id,col_id) {
 		return t.getCellField(t.getRowIndexById(row_id), t.getColumnIndexById(col_id));	

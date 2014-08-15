@@ -8,10 +8,11 @@ function CustomDataGridColumn(grid_column, data_getter, shown, data_getter_param
 	this.shown = shown;
 }
 
-function CustomDataGridColumnContainer(title, sub_columns) {
+function CustomDataGridColumnContainer(title, sub_columns, select_menu_name) {
 	this.title = title;
 	this.grid_column_container = null;
 	this.sub_columns = sub_columns;
+	this.select_menu_name = select_menu_name;
 	this.shown = false;
 	this.getColumnById = function(id) {
 		for (var i = 0; i < this.sub_columns.length; ++i) {
@@ -182,13 +183,97 @@ custom_data_grid.prototype = {
 		var index = this.grid.getColumnIndex(col.grid_column);
 		this.grid.removeColumn(index);
 	},
-	addColumnContainer: function(column_container) {
-		this.columns.push(column_container);
+	addColumnContainer: function(column_container, index) {
+		if (typeof index == 'undefined' || index >= this.columns.length)
+			this.columns.push(column_container);
+		else
+			this.columns.splice(index, 0, column_container);
 		var list = column_container.getFinalColumns();
 		for (var i = 0; i < list.length; ++i)
 			if (!list[i].shown) { list.splice(i,1); i--; } else list[i].shown = false;
 		for (var i = 0; i < list.length; ++i)
 			this.showColumn(list[i].grid_column.id);
+	},
+	addColumnInContainer: function(container, column, index) {
+		if (typeof index == 'undefined' || index >= container.sub_columns.length)
+			container.sub_columns.push(column);
+		else
+			container.sub_columns.splice(index,0,column);
+		if (column.shown) {
+			column.shown = false;
+			this.showColumn(column.grid_column.id);
+		}
+	},
+	removeColumn: function(col_id) {
+		this.hideColumn(col_id);
+		for (var i = 0; i < this.columns.length; ++i) {
+			if (this.columns[i] instanceof CustomDataGridColumn) {
+				if (this.columns[i].grid_column.id == col_id) {
+					this.columns.splice(i,1);
+					return;
+				}
+			} else {
+				if (this.columns[i].getColumnById(col_id) != null) {
+					this.removeColumnFromContainer(col_id, this.columns[i]);
+					return;
+				}
+			}
+		}
+	},
+	removeColumnFromContainer: function(col_id, container) {
+		this.hideColumn(col_id);
+		for (var i = 0; i < container.sub_columns.length; ++i) {
+			if (container.sub_columns[i] instanceof CustomDataGridColumn) {
+				if (container.sub_columns[i].grid_column.id == col_id) {
+					container.sub_columns.splice(i,1);
+					if (container.sub_columns.length == 0 && container.shown) {
+						container.shown = false;
+						// automatically removed by the grid
+					}
+					return;
+				}
+			} else {
+				if (container.sub_columns[i].getColumnById(col_id) != null) {
+					this.removeColumnFromContainer(col_id, container.sub_columns[i]);
+					return;
+				}
+			}
+		}
+	},
+	removeColumnContainer: function(container) {
+		// to remove a container, we need to remove all its content
+		for (var i = 0; i < container.sub_columns.length; ++i) {
+			if (container.sub_columns[i] instanceof CustomDataGridColumn) {
+				this.removeColumnFromContainer(container.sub_columns[i].grid_column.id, container);
+				i--;
+				continue;
+			}
+			removeColumnContainer(container.sub_columns[i]);
+		}
+		// then remove it
+		for (var i = 0; i < this.columns.length; ++i) {
+			if (this.columns[i] == container) {
+				this.columns.splice(i,1);
+				return;
+			}
+			if (this.columns[i] instanceof CustomDataGridColumnContainer) {
+				if (this._removeFromContainer(container, this.columns[i]))
+					return;
+			}
+		}
+	},
+	_removeFromContainer: function(col, container) {
+		for (var i = 0; i < container.sub_columns.length; ++i) {
+			if (container.sub_columns[i] == col) {
+				container.sub_columns.splice(i,1);
+				return true;
+			}
+			if (container.sub_columns[i] instanceof CustomDataGridColumnContainer) {
+				if (container.sub__removeFromContainer(col, container.sub_columns[i]))
+					return true;
+			}
+		}
+		return false;
 	},
 	addObject: function(obj) {
 		this.list.push(obj);
@@ -323,7 +408,7 @@ custom_data_grid.prototype = {
 				div.appendChild(cb);
 				div.appendChild(document.createTextNode(" "+(columns[i].select_menu_name ? columns[i].select_menu_name : columns[i].grid_column.title)));
 			} else {
-				div.appendChild(document.createTextNode(columns[i].title));
+				div.appendChild(document.createTextNode(columns[i].select_menu_name ? columns[i].select_menu_name : columns[i].title));
 				div.className = "context_menu_title";
 			}
 			menu.addItem(div, true);
