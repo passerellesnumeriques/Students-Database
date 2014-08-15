@@ -320,7 +320,7 @@ function tree(container) {
 		item.children = [];
 		for (var i = 0; i < list.length; ++i)
 			this._removeItem(list[i]);
-		if (item == this._selected_item) {
+		if (item == this._selected_item && this.table) {
 			var p = item.parent;
 			while (p && !p.onselect) p = p.parent;
 			if (p) this.selectItem(p);

@@ -684,9 +684,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		div.title = "Import additional data from file";
 		img.src = theme.icons_16["_import"];
 		div.onclick = function(ev) { 
-			if (t._import_with_match) return;
+			if (t.grid._import_with_match) return;
 			require("import_with_match.js",function() {
-				new import_with_match(t, ev);
+				new import_with_match(new import_with_match_provider_data_list(t), ev);
 			});
 		};
 		div.appendChild(img);

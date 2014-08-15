@@ -1,7 +1,8 @@
 layout = {
 	cleanup: function() {
-		if (window._layout_interval) clearInterval(window._layout_interval);
-		window._layout_interval = null;
+		if (!this._w) return;
+		if (this._w._layout_interval) clearInterval(this._w._layout_interval);
+		this._w._layout_interval = null;
 		if (layout._process_timeout) clearTimeout(layout._process_timeout);
 		layout._process_timeout = null;
 		this._layout_handlers = null;
@@ -12,9 +13,12 @@ layout = {
 	_layout_handlers: [],
 	_w: window,
 	addHandler: function(element, handler) {
+		if (!layout._w) return;
 		var w = getWindowFromElement(element);
+		if (!w) return;
 		if (w != layout._w) {
-			w.layout.addHandler(element, handler);
+			if (w.layout)
+				w.layout.addHandler(element, handler);
 			return;
 		}
 		layout._layout_handlers.push({element:element,handler:handler});
@@ -27,6 +31,7 @@ layout = {
 			w.layout.removeHandler(element, handler);
 			return;
 		}
+		if (layout._layout_handlers == null) return;
 		for (var i = 0; i < layout._layout_handlers.length; ++i) {
 			if (layout._layout_handlers[i].element == element && layout._layout_handlers[i].handler == handler) {
 				layout._layout_handlers.splice(i,1);
@@ -212,7 +217,10 @@ layout = {
 				}
 				// if we are in a frame, let's layout the frame
 				var win = getWindowFromDocument(top_elements[i].ownerDocument); 
-				if (win.frameElement) getWindowFromDocument(win.frameElement.ownerDocument).layout.invalidate(win.frameElement);
+				if (win.frameElement) {
+					var win2 = getWindowFromDocument(win.frameElement.ownerDocument);
+					if (win2 && win2.layout) win2.layout.invalidate(win.frameElement);
+				}
 			}
 		}
 		// process the children of the top elements

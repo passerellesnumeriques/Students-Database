@@ -1126,10 +1126,11 @@ function Custom_Event() {
 	 * @param listener
 	 */
 	this.add_listener = function(listener) {
+		if (this.listeners === null) return;
 		if (this.listeners.contains(listener)) return;
 		this.listeners.push(listener); 
 	};
-	this.remove_listener = function(listener) { this.listeners.remove(listener); };
+	this.remove_listener = function(listener) { if (this.listeners === null) return; this.listeners.remove(listener); };
 	/**
 	 * Trigger the event: call all listeners with the given data as parameter
 	 * @param data

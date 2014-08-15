@@ -192,6 +192,9 @@ class page_subject_grades extends Page {
 			echo "<button id='save_button' class='action important' onclick=\"save();\">";
 			echo "<img src='".theme::$icons_16["save"]."'/> Save";
 			echo "</button>";
+			echo "<button id='import_button' class='action' onclick=\"importFromFile(event);\">";
+			echo "<img src='".theme::$icons_16["_import"]."'/> Import Grades From File";
+			echo "</button>";
 		}
 		?>
 	</div>
@@ -284,24 +287,26 @@ document.getElementById('passing_grade_container').appendChild(field_passing_gra
 <?php }?>
 
 function selectAnotherSubject(link) {
+	var w=window;
 	require("context_menu.js", function() {
 		var menu = new context_menu();
 		for (var i = 0; i < subjects.length; ++i)
 			menu.addIconItem(null, subjects[i].code+" - "+subjects[i].name, function(p) {
-				location.href = "?subject="+p.subject_id+(typeof p.class_id != 'undefined' ? "&class="+p.class_id : "");
+				w.location.href = "/dynamic/transcripts/page/subject_grades?subject="+p.subject_id+(typeof p.class_id != 'undefined' ? "&class="+p.class_id : "");
 			}, {subject_id:subjects[i].id<?php if ($class <> null) echo ",class_id:".$class["id"];?>});
 		menu.showBelowElement(link);
 	});
 }
 function selectAnotherClass(link) {
+	var w=window;
 	require("context_menu.js", function() {
 		var menu = new context_menu();
 		for (var i = 0; i < classes.length; ++i)
 			menu.addIconItem(null, classes[i].name, function(class_id) {
-				location.href = "?subject=<?php echo $subject["id"];?>&class="+class_id;
+				w.location.href = "/dynamic/transcripts/page/subject_grades?subject=<?php echo $subject["id"];?>&class="+class_id;
 			}, classes[i].id);
 		menu.addIconItem(null, "All classes", function() {
-			location.href = "?subject=<?php echo $subject["id"];?>";
+			w.location.href = "/dynamic/transcripts/page/subject_grades?subject=<?php echo $subject["id"];?>";
 		});
 		menu.showBelowElement(link);
 	});
@@ -391,8 +396,33 @@ function save() {
 			return;
 		}
 		save_grades();
-	}
+	};
 	save_subject_grading();
+}
+
+function importFromFile(event) {
+	if (grades_grid.grid._import_with_match) return;
+	require("import_with_match.js",function() {
+		var prov = new import_with_match_provider_custom_data_grid(grades_grid);
+		prov.getColumnsCanBeMatched = function() {
+			var cols = [];
+			var gcols = grades_grid.getAllFinalColumns();
+			for (var i = 0; i < gcols.length; ++i) {
+				if (!gcols[i].shown) continue;
+				var id = gcols[i].grid_column.id;
+				if (id == 'final_grade') continue;
+				// TODO continue to remove grades columns, and keep only student info columns
+				cols.push({ id: id, name: gcols[i].select_menu_name ? gcols[i].select_menu_name : gcols[i].grid_column.title });
+			}
+			return cols;
+		};
+		prov.getColumnsCanBeImported = function() {
+			if (only_final)
+				return [{id:'final_grade',name:"Final Grade"}];
+			return []; // TODO
+		};
+		new import_with_match(prov, event, true);
+	});
 }
 
 <?php } ?> // if editable mode

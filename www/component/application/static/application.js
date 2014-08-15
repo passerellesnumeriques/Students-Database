@@ -97,7 +97,10 @@ function initPNApplication() {
 				}
 				w.closing = true;
 				for (var name in w)
-					if (name != "closing" && name != "name" && name != "frameElement")
+					if (name != "closing" && name != "name" && name != "frameElement" &&
+						typeof Window.prototype[name] == 'undefined' &&
+						typeof window.top[name] == 'undefined' &&
+						name != "id" && name != "_domRemoved")
 						w[name] = null;
 			},
 			
@@ -452,7 +455,9 @@ function LoadingFrame(frame_element) {
 	this._update = function(renew) {
 		if (!frame_element.parentNode ||
 			!frame_element.ownerDocument ||
-			!getWindowFromDocument(frame_element.ownerDocument)
+			!getWindowFromDocument(frame_element.ownerDocument) ||
+			getWindowFromDocument(frame_element.ownerDocument).closing ||
+			window.closing
 		) {
 			// frame disappeared
 			this.remove();

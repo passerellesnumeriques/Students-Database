@@ -8,6 +8,7 @@
 function typed_field(data,editable,config){
 	this.element = document.createElement("DIV");
 	this.element.style.display = "inline-block";
+	if (!window.to_cleanup) window.to_cleanup = [];
 	window.to_cleanup.push(this);
 	this.cleanup = function() {
 		this.element = null;

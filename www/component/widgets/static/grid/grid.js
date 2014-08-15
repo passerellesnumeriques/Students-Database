@@ -2,7 +2,6 @@ if (typeof require != 'undefined') {
 	require("typed_field.js",function(){
 		require("field_blank.js");
 	});
-	require("dragndrop.js");
 	theme.css("grid.css");
 }
 
