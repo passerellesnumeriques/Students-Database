@@ -4,12 +4,13 @@ class page_home extends Page {
 	public function getRequiredRights() { return array(); } // TODO
 	
 	public function execute() {
-		/* Step 2 */
+		/* Lab 1 */
 		$this->addJavascript("/static/lab_component/lab.js");
 		$this->onload("initLab();");
 		$this->addJavascript("/static/widgets/section/section.js");
 		$this->onload("sectionFromHTML('lab_section');");
-		//echo "Here the home page of lab_component !";
+		/* Lab 2 */
+		$this->requireJavascript("data_list.js"); 
 		
 		
 	/* Step 2  just  a button to use some javascript */ 	
@@ -20,6 +21,8 @@ class page_home extends Page {
 			<div id="lab_result">
 			</div>
 		</div>
+		<!--Lab 2 (DataDisplay) : datalist-->
+		<div id="lab_list"></div>
 	<?php
 	}
 	
