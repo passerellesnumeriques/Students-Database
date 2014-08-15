@@ -34,14 +34,26 @@ class service_test_data extends Service {
 			$this->SplitSQL($db_system, "component/development/data/PNP_Batch2015.sql");
 			// generate events accordingly to data added
 			PNApplication::$instance->user_management->login($input["domain"], "admin", $input["password"]);
+			
 			require_once("component/data_model/Model.inc");
 			$model = DataModel::get();
+			/*
 			foreach ($model->internalGetTables() as $t) {
 				if ($t->getModel() instanceof SubDataModel) continue;
+				if (!$t->hasInsertListeners()) continue;
 				$rows = SQLQuery::create()->bypassSecurity()->noWarning()->select($t->getName())->execute();
-				foreach ($rows as $row)
-					$t->fireInsert($row, @$row[$t->getPrimaryKey()->name], null);
-			}
+				foreach ($rows as $row) {
+					$key = $t->getPrimaryKey();
+					if ($key == null) {
+						$keys = $t->getKey();
+						$key = array();
+						foreach ($keys as $colname) $key[$colname] = $row[$colname];
+					} else {
+						$key = $row[$key->name];
+					}
+					$t->fireInsert($row, $key, null);
+				}
+			}*/
 			
 			// create a user without any right
 			$people_id = PNApplication::$instance->people->createPeople(array("first_name"=>"Guest","last_name"=>"No right","sex"=>"M"), array("user"), true);
