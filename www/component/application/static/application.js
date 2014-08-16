@@ -98,6 +98,7 @@ function initPNApplication() {
 				w.closing = true;
 				for (var name in w)
 					if (name != "closing" && name != "name" && name != "frameElement" &&
+						name != "self" && name != "parent" && name != "top" &&
 						typeof Window.prototype[name] == 'undefined' &&
 						typeof window.top[name] == 'undefined' &&
 						name != "id" && name != "_domRemoved")
