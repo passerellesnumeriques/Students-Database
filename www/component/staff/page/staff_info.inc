@@ -180,11 +180,15 @@ function staff_info(&$page, $people_id, $container_id) {
 			remove.className = "flat icon";
 			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
 			remove.onclick = function() {
-				t.positions.remove(position);
-				tr.parentNode.removeChild(tr);
-				if (position.id > 0)
-					service.json("data_model", "remove_row", {table:"StaffPosition",row_key:position.id}, function(res) {
-					});
+				confirm_dialog("Remove this position ?",function(yes) {
+					if (!yes) return;
+					t.positions.remove(position);
+					tr.parentNode.removeChild(tr);
+					if (position.id > 0)
+						service.json("data_model", "remove_row", {table:"StaffPosition",row_key:position.id}, function(res) {
+						});
+						
+				});
 			};
 			td_remove.appendChild(remove);
 		};

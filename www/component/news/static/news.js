@@ -222,7 +222,9 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		people_name.className = "author";
 		people_name.appendChild(document.createTextNode(n.people.first_name+" "+n.people.last_name));
 		people_name.style.cursor = "pointer";
-		people_name.onclick = function() { location.href = "/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain; };
+		people_name.onclick = function() {
+			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain,null,95,95);
+		};
 		var timing = document.createElement("SPAN"); header.appendChild(timing);
 		timing.className = "time";
 		timing.appendChild(div.timing_text = document.createTextNode(t._getTimingString(n.timestamp)));

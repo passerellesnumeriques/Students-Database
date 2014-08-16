@@ -201,6 +201,11 @@ class page_curriculum extends Page {
 						}
 						foreach ($categories as $cat) {
 							// Category
+							$cat_subjects = array();
+							foreach ($subjects as $s)
+								if ($s["period"] == $period["id"] && $s["category"] == $cat["id"] && ($spe == null || $s["specialization"] == $spe["id"]))
+								array_push($cat_subjects, $s);
+							if (count($cat_subjects) == 0 && !$editing) continue;
 							$cat_id = $this->generateID();
 							echo "<tr id='$cat_id'>";
 							echo "<td colspan=4 class='category_title' style='padding-left:".(10+$indent*20)."px'>";
@@ -215,10 +220,6 @@ class page_curriculum extends Page {
 							}
 							echo "</td>";
 							echo "</tr>";
-							$cat_subjects = array();
-							foreach ($subjects as $s)
-								if ($s["period"] == $period["id"] && $s["category"] == $cat["id"] && ($spe == null || $s["specialization"] == $spe["id"]))
-									array_push($cat_subjects, $s);
 							foreach ($cat_subjects as $s) {
 								// Subject
 								$script_init .= "addSubjectRow(document.getElementById('$cat_id'),".CurriculumJSON::SubjectJSON($s).");\n";

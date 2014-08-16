@@ -104,7 +104,7 @@ class curriculum extends Component {
 		->field("AcademicPeriod", "start", "academic_period_start")
 		->field("AcademicPeriod", "end", "academic_period_end")
 		->field("AcademicPeriod", "weeks", "academic_period_weeks")
-		->field("AcademicPeriod", "weeks_break", "weeks_break")
+		->field("AcademicPeriod", "weeks_break", "academic_period_weeks_break")
 		->execute();
 	}
 	
