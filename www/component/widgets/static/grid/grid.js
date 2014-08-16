@@ -587,6 +587,12 @@ function grid(element) {
 				row.childNodes[0].colSpan--;
 			else
 				row.removeChild(row.childNodes[td_index]);
+			if (row.row_data)
+				for (var j = 0; j < row.row_data.length; ++j)
+					if (row.row_data[j].col_id == col.id) {
+						row.row_data.splice(j,1);
+						break;
+					}
 		}
 		if (!col.parent_column)
 			t.header_rows[0].removeChild(col.th);

@@ -234,7 +234,8 @@ class transcripts extends Component {
 				));
 			}
 		}
-		SQLQuery::create()->insertMultiple("StudentSubjectEvaluationGrade", $rows);
+		if (count($rows) > 0)
+			SQLQuery::create()->insertMultiple("StudentSubjectEvaluationGrade", $rows);
 		$this->compute_subject_grades($subject_id);
 	}
 	

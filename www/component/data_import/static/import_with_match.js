@@ -44,6 +44,8 @@ function import_with_match_provider_custom_data_grid(custom_grid) {
 	this.addDataChangedListener = function(listener) {
 		custom_grid.object_added.add_listener(listener);
 		custom_grid.object_removed.add_listener(listener);
+		custom_grid.column_shown.add_listener(listener);
+		custom_grid.column_hidden.add_listener(listener);
 	};
 	this.getColumnsCanBeMatched = this.getColumnsCanBeImported = function() {
 		var cols = [];
@@ -150,15 +152,23 @@ function import_with_match(provider, ev, show_after_grid) {
 		var win = getIFrameWindow(t.excel_frame);
 		this.import_wizard.removeAllChildren();
 		require([["typed_field.js","field_integer.js"]], function() {
+			t.import_wizard.style.verticalAlign = "top";
 			var table = document.createElement("TABLE");
+			table.style.display = "inline-block";
+			table.style.verticalAlign = "top";
 			table.innerHTML = "<tr id='import_wizard_match_header'><th></th><th>Excel Column</th><th>Data Column</th></tr>";
 			t.import_wizard.appendChild(table);
 			var table2 = document.createElement("TABLE");
+			table2.style.display = "inline-block";
+			table2.style.verticalAlign = "top";
 			table2.innerHTML = "<tr id='import_wizard_import_header'><th></th><th>Excel Column</th><th>Data Column</th></tr>";
 			t.import_wizard.appendChild(table2);
-			t.import_wizard.appendChild(document.createTextNode("How many rows are containing the titles ? "));
+			var span = document.createElement("SPAN");
+			span.style.whiteSpace = "nowrap";
+			t.import_wizard.appendChild(span);
+			span.appendChild(document.createTextNode("How many rows are containing the titles ? "));
 			t._header_rows = new field_integer(0,true,{min:0,max:win.excel.getActiveSheet().rows.length});
-			t.import_wizard.appendChild(t._header_rows.getHTMLElement());
+			span.appendChild(t._header_rows.getHTMLElement());
 			t._header_rows.onchange.add_listener(function() {
 				if (t._matching.length > 0)
 					t._performMatching();

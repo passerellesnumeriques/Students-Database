@@ -60,6 +60,8 @@ function custom_data_grid(container, id_getter) {
 
 		this.object_added = new Custom_Event();
 		this.object_removed = new Custom_Event();
+		this.column_shown = new Custom_Event();
+		this.column_hidden = new Custom_Event();
 		this.selection_changed = new Custom_Event();
 		this.list = [];
 		this.columns = [];
@@ -130,6 +132,7 @@ custom_data_grid.prototype = {
 				}
 			}
 		}
+		this.column_shown.fire(col);
 	},
 	_showColumnInContainer: function(parent_container, container, col_id, index) {
 		if (container.grid_column_container && container.grid_column_container.th.parentNode == null) {
@@ -182,6 +185,7 @@ custom_data_grid.prototype = {
 		col.shown = false;
 		var index = this.grid.getColumnIndex(col.grid_column);
 		this.grid.removeColumn(index);
+		this.column_hidden.fire(col);
 	},
 	addColumnContainer: function(column_container, index) {
 		if (typeof index == 'undefined' || index >= this.columns.length)

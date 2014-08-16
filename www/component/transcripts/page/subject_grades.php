@@ -483,7 +483,11 @@ function createEvaluation(type, eval) {
 				type.evaluations.remove(eval);
 				grades_grid.removeColumn('eval_'+eval.id);
 				pnapplication.dataUnsaved("evaluations");
-				// TODO remove grades of students
+				for (var i = 0; i < eval_grades.length; ++i)
+					if (eval_grades[i].evaluation == eval.id) {
+						eval_grades.splice(i,1);
+						i--;
+					}
 				computeGrades();
 			});
 			menu.showBelowElement(div);
@@ -573,7 +577,14 @@ function createEvaluationType(eval) {
 				evaluation_types.remove(eval);
 				grades_grid.removeColumnContainer(eval.col_container);
 				pnapplication.dataUnsaved("evaluations_types");
-				// TODO remove grades of students
+				for (var i = 0; i < eval_grades.length; ++i) {
+					var found = false;
+					for (var j = 0; j < eval.evaluations.length; ++j) if (eval.evaluations[j].id == eval_grades[i].evaluation) { found = true; break; }
+					if (found) {
+						eval_grades.splice(i,1);
+						i--;
+					}
+				}
 				computeGrades();
 			});
 			menu.showBelowElement(div);
@@ -602,7 +613,12 @@ function switchToOnlyFinalGradeMode() {
 	var col = grades_grid.grid.getColumnById("final_grade");
 	col.toggleEditable();
 	document.getElementById('actions_evaluations').style.display = "none";
-	// TODO remove the evaluations from the grid
+	if (evaluation_types.length > 0) {
+		pnapplication.dataUnsaved("evaluations");
+		for (var i = 0; i < evaluation_types.length; ++i)
+			grades_grid.removeColumnContainer(evaluation_types[i].col_container);
+	}
+	eval_grades = [];
 }
 
 function switchToEvaluationsMode() {
@@ -613,6 +629,7 @@ function switchToEvaluationsMode() {
 	document.getElementById('actions_evaluations').style.display = "";
 	for (var i = 0; i < evaluation_types.length; ++i)
 		createEvaluationType(evaluation_types[i]);
+	computeGrades();
 }
 
 function finalGradeChanged(field) {
@@ -925,7 +942,8 @@ function importFromFile(event) {
 				if (!gcols[i].shown) continue;
 				var id = gcols[i].grid_column.id;
 				if (id == 'final_grade') continue;
-				// TODO continue to remove grades columns, and keep only student info columns
+				if (id.startsWith("total_eval_type_")) continue;
+				if (id.startsWith("eval_")) continue;
 				cols.push({ id: id, name: gcols[i].select_menu_name ? gcols[i].select_menu_name : gcols[i].grid_column.title });
 			}
 			return cols;
@@ -933,7 +951,11 @@ function importFromFile(event) {
 		prov.getColumnsCanBeImported = function() {
 			if (only_final)
 				return [{id:'final_grade',name:"Final Grade"}];
-			return []; // TODO
+			var cols = [];
+			for (var i = 0; i < evaluation_types.length; ++i)
+				for (var j = 0; j < evaluation_types[i].evaluations.length; ++j)
+					cols.push({id:'eval_'+evaluation_types[i].evaluations[j].id,name:evaluation_types[i].evaluations[j].name});
+			return cols;
 		};
 		new import_with_match(prov, event, true);
 	});
