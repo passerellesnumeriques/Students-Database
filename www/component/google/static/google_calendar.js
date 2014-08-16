@@ -224,6 +224,7 @@ function GoogleCalendarsProvider() {
 	// limit to 10 minutes to avoid reaching the maximum of 100 000 request per day
 	this.minimum_time_to_autorefresh = 10*60*1000;
 	this._retrieveCalendars = function(handler) {
+		if (window.closing) return;
 		load_google_calendars(function(calendars) {
 			if (calendars == null) return;
 			t.connectionStatus("");

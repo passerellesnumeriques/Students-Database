@@ -242,7 +242,7 @@ class transcripts extends Component {
 		// get subject, evaluation types, and evaluations
 		$subject_info = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $subject_id)->executeSingleRow();
 		if ($subject_info == null) throw new Exception("Invalid subject id");
-		$subject = SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject", "id", $subject_id)->executeSingleRow();
+		$subject = PNApplication::$instance->curriculum->getSubjectQuery($subject_id)->executeSingleRow();
 		$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
 		$types_ids = array();
 		foreach ($types as $type) array_push($types_ids, $type["id"]);
@@ -255,17 +255,10 @@ class transcripts extends Component {
 					array_push($type["evaluations"], $eval);
 		}
 		// get all students attached to this subject, with their grades
-		$classes = SQLQuery::create()
-			->select("AcademicClass")
-			->whereValue("AcademicClass", "period", $subject["period"])
-			->whereValue("AcademicClass", "specialization", $subject["specialization"])
-			->execute();
+		$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($subject["period"], $subject["specialization"]);
 		$classes_ids = array();
 		foreach ($classes as $c) array_push($classes_ids, $c["id"]);
-		$students = SQLQuery::create()
-			->select("StudentClass")
-			->whereIn("StudentClass", "class", $classes_ids)
-			->execute();
+		$students = PNApplication::$instance->students->getStudentsForClasses($classes_ids, false);
 		$students_ids = array();
 		foreach ($students as $s) array_push($students_ids, $s["people"]);
 		$evaluations_ids = array();

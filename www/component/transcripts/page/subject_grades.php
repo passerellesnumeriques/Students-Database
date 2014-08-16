@@ -309,6 +309,77 @@ function getEvaluationTypeGrade(people_id, eval_type_id) {
 	return total/total_coef;
 }
 
+function setStudentGrade(people_id, eval_id, grade) {
+	for (var i = 0; i < eval_grades.length; ++i)
+		if (eval_grades[i].people == people_id && eval_grades[i].evaluation == eval_id) {
+			eval_grades[i].grade = grade;
+			return;
+		}
+	eval_grades.push({
+		people: people_id,
+		evaluation: eval_id,
+		grade: grade
+	});
+}
+
+function computeStudentGrades(people_id) {
+	// get student grades
+	var grades = [];
+	for (var i = 0; i < eval_grades.length; ++i) {
+		if (eval_grades[i].people != people_id) continue;
+		grades.push({eval_id:eval_grades[i].evaluation,grade:eval_grades[i].grade});
+	}
+	// compute evaluation types
+	var types_grades = [];
+	for (var i = 0; i < evaluation_types.length; ++i) {
+		var type_coef = 0;
+		var type_grade = 0;
+		for (var j = 0; j < evaluation_types[i].evaluations.length; ++j) {
+			var max = parseFloat(evaluation_types[i].evaluations[j].max_grade);
+			var coef = parseInt(evaluation_types[i].evaluations[j].weight);
+			if (!max || !coef || isNaN(max) || isNaN(coef)) continue;
+			var grade = null;
+			for (var k = 0; k < grades.length; ++k) if (grades[k].eval_id == evaluation_types[i].evaluations[j].id) { grade = grades[k].grade; break; }
+			if (grade != null) {
+				type_coef += coef;
+				type_grade += (grade*100/max)*coef;
+			}
+		}
+		if (type_coef == 0)
+			types_grades.push(null);
+		else
+			types_grades.push(type_grade/type_coef);
+	}
+	// compute final
+	var total_coef = 0;
+	var total_grade = 0;
+	for (var i = 0; i < evaluation_types.length; ++i) {
+		var coef = parseInt(evaluation_types[i].weight);
+		if (!coef || isNaN(coef)) continue;
+		if (types_grades[i] === null) continue;
+		total_coef += coef;
+		total_grade += types_grades[i]*coef;
+	}
+	var final_grade = total_coef > 0 ? total_grade/total_coef : null;
+	var found = false;
+	for (var i = 0; i < final_grades.length; ++i)
+		if (final_grades[i].id == people_id) { found = true; final_grades[i].grade = final_grade; break; }
+	if (!found) final_grades.push({id:people_id,grade:final_grade});
+	// put values in grid
+	for (var i = 0; i < evaluation_types.length; ++i) {
+		var field = grades_grid.grid.getCellFieldById(people_id, 'total_eval_type_'+evaluation_types[i].id);
+		if (!field) continue;
+		field.setData(types_grades[i]);
+	}
+	var field = grades_grid.grid.getCellFieldById(people_id, 'final_grade');
+	if (field) field.setData(final_grade);
+}
+
+function computeGrades() {
+	for (var i = 0; i < students.length; ++i)
+		computeStudentGrades(students[i].id);
+}
+
 tooltip(document.getElementById('select_subject'), "Click to select another subject");
 tooltip(document.getElementById('select_class'), "Click to select another class");
 
@@ -382,13 +453,16 @@ function selectAnotherClass(link) {
 function changeGradingSystem(name, system) {
 	setCookie("grading_system",name,365*24*60,"/dynamic/transcripts/page/");
 	grading_system = system;
-	// refresh final grades
-	var col_index = grades_grid.grid.getColumnIndexById('final_grade');
-	for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
-		var field = grades_grid.grid.getCellField(row, col_index);
-		field.setGradingSystem(system);
+	// refresh all grades
+	for (var i = 0; i < grades_grid.grid.columns.length; ++i) {
+		var col = grades_grid.grid.columns[i];
+		if (col.field_type != "field_grade") continue;
+		if (col.id.startsWith("total_eval_type_")) continue;
+		for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
+			var field = grades_grid.grid.getCellField(row, i);
+			field.setGradingSystem(system);
+		}
 	}
-	// TODO
 }
 
 function createEvaluation(type, eval) {
@@ -409,6 +483,8 @@ function createEvaluation(type, eval) {
 				type.evaluations.remove(eval);
 				grades_grid.removeColumn('eval_'+eval.id);
 				pnapplication.dataUnsaved("evaluations");
+				// TODO remove grades of students
+				computeGrades();
 			});
 			menu.showBelowElement(div);
 		});
@@ -425,7 +501,7 @@ function createEvaluation(type, eval) {
 	eval.div_coef.style.fontWeight = "normal";
 	eval.div_coef.appendChild(document.createTextNode("Coef. "+eval.weight));
 	div.appendChild(eval.div_coef);
-	eval.col = new CustomDataGridColumn(new GridColumn('eval_'+eval.id, div, null, null, "field_grade", <?php if ($edit) echo "true,evalGradeChanged,evalGradeUnchanged"; else echo "false,null,null";?>, {max:eval.max_grade,passing:1,system:"min=0,max="+eval.max_grade+"/digits=2"}), function(people_id) {
+	eval.col = new CustomDataGridColumn(new GridColumn('eval_'+eval.id, div, null, null, "field_grade", <?php if ($edit) echo "true,evalGradeChanged,evalGradeUnchanged"; else echo "false,null,null";?>, {max:eval.max_grade,passing:1,system:"min=0,max="+eval.max_grade+"/digits=2"}, eval), function(people_id) {
 		return getEvaluationGrade(people_id, eval.id);
 	}, true, null, eval.name);
 	var update_passing = function() {
@@ -443,7 +519,7 @@ function createEvaluation(type, eval) {
 			var field = grades_grid.grid.getCellField(row, col_index);
 			field.setMaxAndPassingGrades(eval.max_grade, passing);
 		}
-		// TODO compute total grade, then final grade
+		computeGrades();
 	};
 	<?php if ($edit) { ?>
 	field_max_grade.onchange.add_listener(update_passing);
@@ -456,7 +532,7 @@ function createEvaluation(type, eval) {
 function createEvaluationType(eval) {
 	var next_col = grades_grid.getColumnById('final_grade');
 	var cols = [];
-	var col_total = new CustomDataGridColumn(new GridColumn('total_eval_type_'+eval.id, "Total", null, null, "field_grade", false, null, null, {max:100,passing:50,system:"min=0,max=100/digits=0"}), function(people_id) {
+	eval.col_total = new CustomDataGridColumn(new GridColumn('total_eval_type_'+eval.id, "Total (%)", null, null, "field_grade", false, null, null, {max:100,passing:50,system:"min=0,max=100/digits=2"}), function(people_id) {
 		return getEvaluationTypeGrade(people_id, eval.id);
 	}, true);
 	var update_passing = function() {
@@ -468,19 +544,19 @@ function createEvaluationType(eval) {
 		var passing = <?php echo json_encode($subject["passing_grade"]);?>;
 		<?php } ?>
 		passing = passing*100/max;
-		col_total.grid_column.field_args.passing = passing;
+		eval.col_total.grid_column.field_args.passing = passing;
 		var col_index = grades_grid.grid.getColumnIndexById('total_eval_type_'+eval.id);
 		for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
 			var field = grades_grid.grid.getCellField(row, col_index);
 			field.setMaxAndPassingGrades(100, passing);
 		}
-		// TODO compute final grade
+		computeGrades();
 	};
 	<?php if ($edit) { ?>
 	field_max_grade.onchange.add_listener(update_passing);
 	field_passing_grade.onchange.add_listener(update_passing);
 	<?php } ?>
-	cols.push(col_total);
+	cols.push(eval.col_total);
 	var div = document.createElement("DIV");
 	div.style.display = "inline-block";
 	<?php if ($edit) { ?>
@@ -497,6 +573,8 @@ function createEvaluationType(eval) {
 				evaluation_types.remove(eval);
 				grades_grid.removeColumnContainer(eval.col_container);
 				pnapplication.dataUnsaved("evaluations_types");
+				// TODO remove grades of students
+				computeGrades();
 			});
 			menu.showBelowElement(div);
 		});
@@ -548,10 +626,24 @@ function finalGradeUnchanged(field) {
 	getFinalGrade(people_id).grade = field.getCurrentData();
 }
 function evalGradeChanged(field) {
-	// TODO
+	var col_row = grades_grid.grid.getContainingRowAndColIds(field.getHTMLElement());
+	if (!col_row) return;
+	var col = grades_grid.grid.getColumnById(col_row.col_id);
+	var eval = col.attached_data;
+	var people_id = col_row.row_id;
+	setStudentGrade(people_id, eval.id, field.getCurrentData());
+	computeStudentGrades(people_id);
+	pnapplication.dataUnsaved('student_'+people_id+'_grade_'+eval.id);
 }
 function evalGradeUnchanged(field) {
-	// TODO
+	var col_row = grades_grid.grid.getContainingRowAndColIds(field.getHTMLElement());
+	if (!col_row) return;
+	var col = grades_grid.grid.getColumnById(col_row.col_id);
+	var eval = col.attached_data;
+	var people_id = col_row.row_id;
+	setStudentGrade(people_id, eval.id, field.getCurrentData());
+	computeStudentGrades(people_id);
+	pnapplication.dataSaved('student_'+people_id+'_grade_'+eval.id);
 }
 
 function evaluationTypeDialog(eval,is_new) {
@@ -601,7 +693,7 @@ function evaluationTypeDialog(eval,is_new) {
 					eval.div_coef.appendChild(document.createTextNode("Coef. "+coef));
 					layout.invalidate(eval.div_coef);
 					eval.col_container.select_menu_name = eval.name;
-					// TODO re-compute final grade
+					computeGrades();
 				}
 			}
 			popup.close();
@@ -678,7 +770,7 @@ function evaluationDialog(type,eval,is_new) {
 					eval.div_coef.appendChild(document.createTextNode("Coef. "+coef));
 					layout.invalidate(eval.div_coef);
 					eval.col.select_menu_name = eval.name;
-					// TODO re-compute total grade, then final grade
+					computeGrades();
 				}
 			}
 			popup.close();
@@ -734,8 +826,24 @@ function save() {
 		});
 	};
 	var save_evaluations_grades = function() {
-		// TODO
-		unlock_screen(locker);
+		var data = {subject_id:<?php echo $subject_id;?>,students:[]};
+		for (var i = 0; i < eval_grades.length; ++i) {
+			var student = null;
+			for (var j = 0; j < data.students.length; ++j) if (data.students[j].people == eval_grades[i].people) { student = data.students[j]; break; }
+			if (!student) {
+				student = {people:eval_grades[i].people,grades:[]};
+				data.students.push(student);
+			}
+			student.grades.push({evaluation:eval_grades[i].evaluation,grade:eval_grades[i].grade});
+		}
+		service.json("transcripts","save_students_evaluations_grades",data,function(res){
+			if (res) {
+				for (var i = 0; i < data.students.length; ++i)
+					for (var j = 0; j < data.students[i].grades.length; ++j)
+						pnapplication.dataSaved("student_"+data.students[i].people+"_grade_"+data.students[i].grades[j].evaluation);
+			}
+			unlock_screen(locker);
+		});
 	};
 	var save_evaluations = function() {
 		var data = { subject_id: <?php echo $subject_id;?>, types: []};
@@ -774,9 +882,9 @@ function save() {
 							if (res.evaluations[k].input_id == evaluation_types[i].evaluations[j].id) { evaluation_types[i].evaluations[j].id = res.evaluations[k].output_id; break; }
 			// update evaluations' ids in students grades
 			for (var i = 0; i < eval_grades.length; ++i)
-				if (eval_grades.evaluation.id < 0)
+				if (eval_grades[i].evaluation < 0)
 					for (var k = 0; k < res.evaluations.length; ++k)
-						if (eval_grades.evalution == res.evaluations[k].input_id) { eval_grades.evaluation = res.evaluations[k].output_id; break; }
+						if (eval_grades[i].evalution == res.evaluations[k].input_id) { eval_grades[i].evaluation = res.evaluations[k].output_id; break; }
 			// save students' grades
 			save_evaluations_grades();
 		});

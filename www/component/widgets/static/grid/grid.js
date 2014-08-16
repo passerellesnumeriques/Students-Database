@@ -1037,6 +1037,14 @@ function grid(element) {
 			if (t.table.childNodes[i].row_id == row_id) return i;
 		return -1;
 	};
+	t.getRowID = function(row) {
+		if (row == null) return null;
+		if (typeof row.row_id == 'undefined') return null;
+		return row.row_id;
+	};
+	t.getRowIDFromIndex = function(row_index) {
+		return t.getRowID(t.getRow(row_index));
+	};
 	
 	t.removeRowIndex = function(index) {
 		t.table.removeChild(t.table.childNodes[index]);
@@ -1061,6 +1069,7 @@ function grid(element) {
 	t.getCellField = function(row_index,col_index) {
 		if (t.selectable) col_index++;
 		var tr = t.table.childNodes[row_index];
+		if (!tr) return null;
 		if (col_index >= tr.childNodes.length) return null;
 		var td = tr.childNodes[col_index];
 		return td && td.field ? td.field : null;
@@ -1108,6 +1117,19 @@ function grid(element) {
 				var tr = element.parentNode;
 				for (var i = 0; i < t.table.childNodes.length; ++i)
 					if (t.table.childNodes[i] == tr) return tr;
+			}
+			element = element.parentNode;
+		}
+		return null;
+	};
+	t.getContainingRowAndColIds = function(element) {
+		while (element && element != document.body) {
+			if (element.nodeName == "TD" && element.col_id) {
+				var tr = element.parentNode;
+				for (var i = 0; i < t.table.childNodes.length; ++i)
+					if (t.table.childNodes[i] == tr) {
+						return {col_id:element.col_id, row_id:tr.row_id};
+					}
 			}
 			element = element.parentNode;
 		}

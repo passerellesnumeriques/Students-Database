@@ -973,7 +973,7 @@ Element.prototype.removeChild = function(e) {
 	_domRemoved(e);
 	try { return this._removeChild(e); }
 	catch (err) {
-		window.top.console.error("Remove child failed: "+err.getMessage());
+		log_exception(err, "Remove child failed");
 	}
 };
 Element.prototype.removeAllChildren = function() {
