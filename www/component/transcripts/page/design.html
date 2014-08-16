@@ -2,6 +2,7 @@
 .transcripts {
 	font-family: Verdana;
 	padding:10px 20px;
+	background-color: white;
 }
 .transcripts .title {
 	font-size:22pt;
@@ -170,8 +171,8 @@
 		<td>Total / Average</td>
 		#IF:nb_hours#<td>#TOTAL_HOURS#</td>#ENDIF#
 		#IF:coefficient#<td>#TOTAL_COEFFICIENT#</td>#ENDIF#
-		<td style='position:relative'>#TOTAL_GRADE#</td>
-		#IF:class_average#<td style='position:relative'>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
+		<td>#TOTAL_GRADE#</td>
+		#IF:class_average#<td>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
 	</tbody>
 </table>
@@ -184,7 +185,7 @@
 	</colgroup>
 	<tr class='total'>
 		<td>Global Average Grade</td>
-		<td style='position:relative'>#GLOBAL_GRADE#</td>
+		<td>#GLOBAL_GRADE#</td>
 	</tr>
 </table>
 <!-- General appreciation -->
@@ -207,19 +208,22 @@
 var cats = document.getElementsByClassName("subject_category");
 var enlarge = false;
 for (var i = 0; i < cats.length; ++i) {
+	if (cats[i].hasAttribute("enlarge")) continue;
 	var tbody = cats[i].parentNode.parentNode.parentNode;
 	var nb_subjects = 0;
 	for (var j = 0; j < tbody.childNodes.length; ++j) if (tbody.childNodes[j].nodeType == 1) nb_subjects++;
 	nb_subjects -= 2; // remove header and footer
 	var size = cats[i].offsetWidth+10;
 	if (size > nb_subjects * 24) {
-		var h = cats[i].offsetHeight;
-		cats[i].style.height = (nb_subjects * 28)+"px";
+		//var h = cats[i].offsetHeight;
+		//cats[i].style.height = (nb_subjects * 28)+"px";
 		cats[i].style.whiteSpace = "normal";
-		cats[i].style.width = (h*2)+"px";
-		cats[i].style.position = "relative";
-		cats[i].style.left = "5px";
-		cats[i].enlarged = true;
+		cats[i].style.paddingTop = "0px";
+		cats[i].style.marginLeft = "-14px";
+		//cats[i].style.width = (h*2)+"px";
+		//cats[i].style.position = "relative";
+		//cats[i].style.left = "5px";
+		cats[i].setAttribute("enlarge",true);
 		enlarge = true;
 	} else
 		cats[i].style.height = size+"px";
@@ -229,9 +233,10 @@ if (enlarge) {
 	for (var i = 0; i < cols.length; ++i)
 		cols[i].style.width = "54px";
 	for (var i = 0; i < cats.length; ++i)
-		if (!cats[i].enlarged) {
+		if (!cats[i].hasAttribute("enlarge")) {
 			cats[i].style.position = "relative";
-			cats[i].style.left = "16px";
+			cats[i].style.left = "13px";
+			cats[i].setAttribute("enlarge",true);
 		}
 }
 </script>

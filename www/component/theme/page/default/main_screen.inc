@@ -47,6 +47,7 @@ global $pn_app_version;
 #application_frame {
 	border-radius: 8px;
 	z-index: 1;
+	border: 1px solid #ffffff;
 }
 #application_footer {
 	text-align: center;
@@ -211,7 +212,7 @@ global $pn_app_version;
 					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat"><img id='logout' src='/static/application/logout_white.png'/></button></a>
 				</div>
 			</div>
-			<iframe id="application_frame" name="application_frame" style="flex:1 1 auto;border:none;"></iframe>
+			<iframe id="application_frame" name="application_frame" style="flex:1 1 auto;"></iframe>
 		</div>
 	</div>
 	<div id="application_footer" style="flex:none;height:16px;">

@@ -13,8 +13,8 @@ class page_curriculum extends Page {
 			$period_id = $_GET["period"];
 			$single_period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
 			$batch_id = $single_period["batch"];
-			$start_date = $single_period["start"];
-			$end_date = $single_period["end"];
+			$start_date = $single_period["academic_period_start"];
+			$end_date = $single_period["academic_period_end"];
 			$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
 			$periods = array($single_period);
 		} else {
@@ -277,8 +277,8 @@ class page_curriculum extends Page {
 			echo "{";
 			echo "id:".$period["id"];
 			echo ",academic_period:".$period["academic_period"];
-			echo ",weeks:".$period["weeks"];
-			echo ",weeks_break:".$period["weeks_break"];
+			echo ",weeks:".$period["academic_period_weeks"];
+			echo ",weeks_break:".$period["academic_period_weeks_break"];
 			echo "}";
 		}
 		?>];

@@ -10,7 +10,10 @@ class service_generate_transcript extends Service {
 	
 	public function execute(&$component, $input) {
 		require_once("component/transcripts/page/design.inc");
-		generateTranscript($input["period"], @$input["specialization"]);
+		if (!isset($input["id"]))
+			generateTranscript($input["period"], @$input["specialization"]);
+		else
+			generatePublishedTranscript($input["id"], $input["student"]);
 	}
 		
 }

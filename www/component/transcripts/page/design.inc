@@ -1,4 +1,38 @@
-<?php 
+<?php
+function generatePublishedTranscript($id, $student_id) {
+	$config = SQLQuery::create()->select("PublishedTranscript")->whereValue("PublishedTranscript","id",$id)->executeSingleRow();
+	$categories = PNApplication::$instance->curriculum->getSubjectCategories();
+	$student_grades = SQLQuery::create()->select("PublishedTranscriptStudentSubjectGrade")->whereValue("PublishedTranscriptStudentSubjectGrade","id",$id)->whereValue("PublishedTranscriptStudentSubjectGrade","people",$student_id)->execute();
+	$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($config["period"]);
+	$student = PNApplication::$instance->people->getPeople($student_id);
+	$student_general_appreciation = SQLQuery::create()->select("PublishedTranscriptStudentGeneralComment")->whereValue("PublishedTranscriptStudentGeneralComment","id",$id)->whereValue("PublishedTranscriptStudentGeneralComment","people",$student_id)->field("comment")->executeSingleValue();
+	if ($student_general_appreciation == null) $student_general_appreciation = " ";
+	
+	$subjects_ids = array();
+	foreach ($student_grades as $sg) array_push($subjects_ids, $sg["subject"]);
+	
+	if (count($subjects_ids) > 0)
+		$subjects = PNApplication::$instance->curriculum->getSubjectsQuery($subjects_ids)->join("CurriculumSubject","CurriculumSubjectGrading",array("id"=>"subject"))->execute();
+	else
+		$subjects = array();
+	
+	$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($config["period"], $config["specialization"]);
+	$classes_ids = array();
+	foreach ($classes as $cl) array_push($classes_ids, $cl["id"]);
+	$classes_students = PNApplication::$instance->students->getStudentsForClasses($classes_ids, false);
+	$students_ids = array();
+	foreach ($classes_students as $s) array_push($students_ids, $s["people"]);
+	$class_grades = SQLQuery::create()->select("PublishedTranscriptStudentSubjectGrade")->whereValue("PublishedTranscriptStudentSubjectGrade","id",$id)->whereIn("PublishedTranscriptStudentSubjectGrade","people",$students_ids)->execute();
+	$class_averages = array();
+	foreach ($subjects as $subject) {
+		$total_grade = 0;
+		$nb = 0;
+		foreach ($class_grades as $cg) if ($cg["subject"] == $subject["id"]) { $total_grade += floatval($cg["grade"]); $nb++; }
+		$class_averages[$subject["id"]] = $nb > 0 ? $total_grade/$nb : null;
+	}
+	
+	generateTranscriptFor($config, $categories, $subjects, $period, $student, $student_grades, $student_general_appreciation, $class_averages);
+} 
 function generateTranscript($period_id, $spe_id = null, $student = null, $student_grades = null, $student_general_appreciation = null) {
 	$config = SQLQuery::create()
 		->select("TranscriptConfig")
@@ -13,14 +47,6 @@ function generateTranscript($period_id, $spe_id = null, $student = null, $studen
 		if ($config_spe <> null)
 			foreach ($config_spe as $col=>$value) if ($value !== null) $config[$col] = $value;
 	}
-	
-	$app_conf = SQLQuery::create()->bypassSecurity()
-#DEV
-		->noWarning() // TODO
-#END
-		->select("ApplicationConfig")->where("`name` LIKE 'transcripts_%'")->execute();
-	$app_config = array();
-	foreach ($app_conf as $ac) $app_config[substr($ac["name"],12)] = $ac["value"];
 	
 	$categories = PNApplication::$instance->curriculum->getSubjectCategories();
 	$subjects = SQLQuery::create()
@@ -38,7 +64,7 @@ function generateTranscript($period_id, $spe_id = null, $student = null, $studen
 	
 	$period = PNApplication::$instance->curriculum->getBatchPeriod($period_id, true);
 	
-	generateTranscriptFor($config, $app_config, $categories, $subjects, $period, $student, $student_grades, $student_general_appreciation);
+	generateTranscriptFor($config, $categories, $subjects, $period, $student, $student_grades, $student_general_appreciation);
 }
 function defaultTranscriptConfig(&$config) {
 	if (@$config["subject_category_background"] == null) $config["subject_category_background"] = "#009DE1";
@@ -58,7 +84,7 @@ function defaultTranscriptConfig(&$config) {
 		$config["grading_system"] = $d["transcripts"]["default_grading_system"];
 	}
 }
-function generateTranscriptFor($config, $app_config, $categories, $subjects, $period, $student = null, $student_grades = null, $student_general_appreciation = null, $class_averages = null) {
+function generateTranscriptFor($config, $categories, $subjects, $period, $student = null, $student_grades = null, $student_general_appreciation = null, $class_averages = null) {
 	defaultTranscriptConfig($config);
 	
 	$grading_systems = include("component/transcripts/GradingSystems.inc");
@@ -114,9 +140,9 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 	$design = str_replace("#Academic Period#", $period["name"], $design);
 	$design = str_replace("#Academic Period Date#", date("d M Y",strtotime($period["academic_period_start"]))." to ".date("d M Y",strtotime($period["academic_period_end"])), $design);
 	
-	$design = str_replace("#Location#", @$app_config["location"], $design);
-	$design = str_replace("#Signatory Name#", @$app_config["signatory_name"], $design);
-	$design = str_replace("#Signatory Title#", @$app_config["signatory_title"], $design);
+	$design = str_replace("#Location#", @$config["location"], $design);
+	$design = str_replace("#Signatory Name#", @$config["signatory_name"], $design);
+	$design = str_replace("#Signatory Title#", @$config["signatory_title"], $design);
 	
 	$design = str_replace("#General Appreciation#", htmlentities($student_general_appreciation), $design);
 	
@@ -192,7 +218,7 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 			$total_grade = $total_coef > 0 ? $total_grade/$total_coef : "null";
 			$passing = $total_coef > 0 ? $passing/$total_coef : "null";
 			$id = "total_grade_".$cat["id"];
-			$cat_content = str_replace("#TOTAL_GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$total_grade</span>", $cat_content);
+			$cat_content = str_replace("#TOTAL_GRADE#", "<div id='$id'>$total_grade</div>", $cat_content);
 			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_grade).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
 			
 			while (($k = strpos($cat_content, "#SUBJECT#")) !== false) {
@@ -221,12 +247,12 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 					$student_grade = null;
 					foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g["grade"]; break; }
 					$id = "grade_subject_".$subject["id"];
-					$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$student_grade</span>", $subj_content);
+					$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$student_grade</div>", $subj_content);
 					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
 					if (@$config["class_average"] == 1) {
 						$class_av = @$class_averages[$subject["id"]];
 						$id = "class_average_subject_".$subject["id"];
-						$subj_content = str_replace("#CLASS_AVERAGE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$class_av</span>", $subj_content);
+						$subj_content = str_replace("#CLASS_AVERAGE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$class_av</div>", $subj_content);
 						$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($class_av).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
 					}
 					$result_subjects .= $subj_content;
@@ -236,7 +262,7 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 				if (@$config["class_average"] == 1) {
 					$total_class_av = $total_coef > 0 ? $total_class_av/$total_coef : "";
 					$id = "total_class_average_".$cat["id"];
-					$cat_content = str_replace("#TOTAL_CLASS_AVERAGE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$total_class_av</span>", $cat_content);
+					$cat_content = str_replace("#TOTAL_CLASS_AVERAGE#", "<div id='$id'>$total_class_av</div>", $cat_content);
 					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_class_av).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
 				}				
 				$cat_content = substr($cat_content,0,$k).$result_subjects.substr($cat_content,$l+13);
@@ -263,13 +289,13 @@ function generateTranscriptFor($config, $app_config, $categories, $subjects, $pe
 	$total_grade = $total_coef > 0 ? $total_grade/$total_coef : "null";
 	$passing = $total_coef > 0 ? $passing/$total_coef : "null";
 	$id = "global_grade";
-	$design = str_replace("#GLOBAL_GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$total_grade</span>", $design);
+	$design = str_replace("#GLOBAL_GRADE#", "<div id='$id'>$total_grade</div>", $design);
 	$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_grade).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
 	
 	echo $design;
 	if ($script_grades <> "") {
 		echo "<script type='text/javascript'>";
-		echo "require(['typed_field.js','field_grade.js'],function(){";
+		echo "require([['typed_field.js','field_grade.js']],function(){";
 		echo "var e,f;";
 		echo $script_grades;
 		echo "});";

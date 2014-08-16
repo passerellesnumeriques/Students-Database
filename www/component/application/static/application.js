@@ -99,8 +99,9 @@ function initPNApplication() {
 				for (var name in w)
 					if (name != "closing" && name != "name" && name != "frameElement" &&
 						name != "self" && name != "parent" && name != "top" &&
-						typeof Window.prototype[name] == 'undefined' &&
+						name != "history" && name != "navigator" &&
 						typeof window.top[name] == 'undefined' &&
+						typeof Window.prototype[name] == 'undefined' &&
 						name != "id" && name != "_domRemoved")
 						w[name] = null;
 			},

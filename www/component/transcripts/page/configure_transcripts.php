@@ -8,14 +8,7 @@ class page_configure_transcripts extends Page {
 			echo "<div class='info_box'>Please select a period, a class, or a specialization within a period</div>";
 			return;
 		}
-		
-		$app_conf = SQLQuery::create()->bypassSecurity()
-#DEV
-			->noWarning() // TODO
-#END
-			->select("ApplicationConfig")->where("`name` LIKE 'transcripts_%'")->execute();
-		$app_config = array();
-		foreach ($app_conf as $ac) $app_config[substr($ac["name"],12)] = $ac["value"];
+		// TODO lock;
 		
 		$batch = PNApplication::$instance->curriculum->getBatch($_GET["batch"]);
 		$period = PNApplication::$instance->curriculum->getBatchPeriod($_GET["period"], true);
@@ -31,9 +24,12 @@ class page_configure_transcripts extends Page {
 			->whereValue("TranscriptConfig","period",$_GET["period"])
 			->executeSingleRow();
 		$spes = PNApplication::$instance->curriculum->getBatchPeriodSpecializations($_GET["period"]);
-		if ($config === null) {
+
+		if ($config === null)
 			SQLQuery::create()->insert("TranscriptConfig", array("period"=>$_GET["period"],"specialization"=>null));
-			if (count($spes) == 0) {
+		
+		if (count($spes) == 0) {
+			if ($config === null) {
 				$selected_subjects = PNApplication::$instance->curriculum->getSubjects($period["batch"], $period["id"]);
 				$insert = array();
 				foreach ($selected_subjects as $s)
@@ -41,15 +37,14 @@ class page_configure_transcripts extends Page {
 				if (count($insert) > 0)
 					SQLQuery::create()->insertMultiple("TranscriptSubjects",$insert);
 			}
-		} else {
-			if (count($spes) == 0) {
-				$selected_subjects = SQLQuery::create()
-					->select("TranscriptSubjects")
-					->whereValue("TranscriptSubjects","period",$period["id"])
-					->whereNull("TranscriptSubjects","specialization")
-					->field("TranscriptSubjects","subject","id")
-					->executeSingleField();
-			}				
+			$q = SQLQuery::create()
+				->select("TranscriptSubjects")
+				->whereValue("TranscriptSubjects","period",$period["id"])
+				->whereNull("TranscriptSubjects","specialization")
+				;
+			PNApplication::$instance->curriculum->joinSubjects($q, "TranscriptSubjects", "subject");
+			$q->join("TranscriptSubjects","CurriculumSubjectGrading",array("subject"=>"subject"));
+			$selected_subjects = $q->execute();
 		}
 		if ($spe <> null) {
 			$config_spe = SQLQuery::create()
@@ -64,15 +59,17 @@ class page_configure_transcripts extends Page {
 					array_push($insert, array("period"=>$_GET["period"],"specialization"=>$spe["id"],"subject"=>$s["id"]));
 				if (count($insert) > 0)
 					SQLQuery::create()->insertMultiple("TranscriptSubjects",$insert);
-			} else {
+			} else
 				foreach ($config_spe as $col=>$value) if ($value !== null) $config[$col] = $value;
-				$selected_subjects = SQLQuery::create()
-					->select("TranscriptSubjects")
-					->whereValue("TranscriptSubjects","period",$period["id"])
-					->whereValue("TranscriptSubjects","specialization",$spe["id"])
-					->field("TranscriptSubjects","subject","id")
-					->executeSingleField();
-			}
+			
+			$q = SQLQuery::create()
+				->select("TranscriptSubjects")
+				->whereValue("TranscriptSubjects","period",$period["id"])
+				->whereValue("TranscriptSubjects","specialization",$spe["id"])
+				;
+			PNApplication::$instance->curriculum->joinSubjects($q, "TranscriptSubjects", "subject");
+			$q->join("TranscriptSubjects","CurriculumSubjectGrading",array("subject"=>"subject"));
+			$selected_subjects = $q->execute();
 		}
 
 		$all_subjects = PNApplication::$instance->curriculum->getSubjects($batch["id"]);
@@ -94,9 +91,13 @@ class page_configure_transcripts extends Page {
 		
 		?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column'>
-	<div class='page_title' style='flex:none'>
-		Design transcripts for <?php echo $title;?>
-		<button style='float:right' onclick="printContent('design');"><img src='<?php echo theme::$icons_16["print"];?>'/></button>
+	<div class='page_title' style='flex:none;'>
+		Design transcripts
+		<span style='margin-left:10px;font-size:12pt;font-style:italic;'><?php echo $title;?></span>
+		<div style='float:right;display:inline-block;font-size:1pt;'>
+			<button style='flex:none' onclick="printContent('design');"><img src='<?php echo theme::$icons_16["print"];?>'/> Test Print</button><br/>
+			<button style='flex:none' onclick="publish();"><img src='/static/transcripts/publish.png'/> Publish</button>
+		</div>
 	</div>
 	<div style='flex:1 1 auto;display:flex;flex-direction:row'>
 		<div style='flex:none;overflow:auto;background-color:white;box-shadow:2px 2px 2px 0px #808080;margin-right:5px;min-width:230px;width:230px;'>
@@ -121,8 +122,8 @@ class page_configure_transcripts extends Page {
 					if ($s["period"] <> $period["id"]) continue;
 					array_push($subjects, $s);
 					echo "<div style='white-space:nowrap'>";
-					echo "<input type='checkbox'";
-					if (in_array($s["id"],$selected_subjects)) echo " checked='checked'";
+					echo "<input type='checkbox' onchange='changeSubject(".$s["id"].",this.checked);'";
+					foreach ($selected_subjects as $ss) if ($s["id"] == $ss["subject"]) { echo " checked='checked'"; break; }
 					echo "/> ".htmlentities($s["code"])." - ".htmlentities($s["name"]);
 					echo "</div>";
 				}
@@ -172,33 +173,26 @@ class page_configure_transcripts extends Page {
 			<table>
 				<tr>
 					<td>Location</td>
-					<td><input type='text' size=10 value="<?php echo htmlentities(@$app_config["location"]);?>" onchange="saveAppConfig('location',this.value);"/></td>
+					<td><input type='text' size=10 value="<?php echo htmlentities(@$config["location"]);?>" onchange="saveTranscriptConfig('location',this.value);"/></td>
 				</tr>
 				<tr>
 					<td>Signatory Name</td>
-					<td><input type='text' size=10 value="<?php echo htmlentities(@$app_config["signatory_name"]);?>" onchange="saveAppConfig('signatory_name',this.value);"/></td>
+					<td><input type='text' size=10 value="<?php echo htmlentities(@$config["signatory_name"]);?>" onchange="saveTranscriptConfig('signatory_name',this.value);"/></td>
 				</tr>
 				<tr>
 					<td>Signatory Title</td>
-					<td><input type='text' size=10 value="<?php echo htmlentities(@$app_config["signatory_title"]);?>" onchange="saveAppConfig('signatory_title',this.value);"/></td>
+					<td><input type='text' size=10 value="<?php echo htmlentities(@$config["signatory_title"]);?>" onchange="saveTranscriptConfig('signatory_title',this.value);"/></td>
 				</tr>
 			</table>
 		</div>
 		<div style='flex:1 1 auto;overflow:auto;text-align:center'>
 			<div id='design' style='text-align:left;background-color:white;border-radius:5px;display:inline-block;box-shadow: 2px 2px 2px 0px #808080;width:630px;height:810px;margin-bottom:5px;'>
-				<?php generateTranscriptFor($config,$app_config,$categories,$subjects,$period);?>
+				<?php generateTranscriptFor($config,$categories,$selected_subjects,$period);?>
 			</div>
 		</div>
 	</div>
 </div>
 <script type='text/javascript'>
-function saveAppConfig(name, value) {
-	var locker = lock_screen(null, "Saving");
-	service.json("transcripts","save_transcripts_app_config",{name:name,value:value},function(res) {
-		unlock_screen(locker);
-		refreshDesign();
-	});
-}
 function saveTranscriptConfig(name, value) {
 	var locker = lock_screen(null, "Saving");
 	var data = {
@@ -212,11 +206,26 @@ function saveTranscriptConfig(name, value) {
 		refreshDesign();
 	});
 }
+function changeSubject(subject_id, selected) {
+	var locker = lock_screen(null, "Saving");
+	service.json("transcripts","set_transcript_subject",{
+		period:<?php echo $_GET["period"];?>,
+		specialization:<?php echo isset($_GET["specialization"]) ? $_GET["specialization"] : "null";?>,
+		subject:subject_id,
+		selected:selected
+	},function(res) {
+		unlock_screen(locker);
+		refreshDesign();
+	});
+}
 function refreshDesign() {
 	var locker = lock_screen(null, "Reloading transcript");
 	service.html("transcripts","generate_transcript",{period:<?php echo $_GET["period"];?>,specialization:<?php echo isset($_GET["specialization"]) ? $_GET["specialization"] : "null";?>},document.getElementById('design'),function() {
 		unlock_screen(locker);
 	});
+}
+function publish() {
+	popup_frame("/static/transcripts/publish.png", "Publish Transcripts", "/dynamic/transcripts/page/publish?period=<?php echo $_GET["period"]; if (isset($_GET["specialization"])) echo "&specialization=".$_GET["specialization"];?>");
 }
 </script>
 		<?php 

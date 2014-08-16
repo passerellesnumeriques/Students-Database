@@ -72,6 +72,10 @@ foreach ($current_batches as $b) {
 	Design transcripts
 </a>
 <?php } ?>
+<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/transcripts'>
+	<img src='/static/transcripts/transcript_white.png'/>
+	Transcripts
+</a>
 <?php } ?>
 <?php
 /*

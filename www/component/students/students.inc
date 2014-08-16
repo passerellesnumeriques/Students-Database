@@ -118,7 +118,7 @@ class students extends Component {
 				$q->whereValue("Student", "Specialization", $restrict_specialization);
 		}
 		if (!$include_excluded)
-			$q->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start"]."')");
+			$q->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["academic_period_start"]."')");
 		if ($include_people_info) {
 			PNApplication::$instance->people->joinPeople($q, "Student", "people");
 			require_once("component/people/PeopleJSON.inc");

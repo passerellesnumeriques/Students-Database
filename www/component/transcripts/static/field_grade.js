@@ -191,19 +191,20 @@ field_grade.prototype._create = function(data) {
 			var display_value = grade != null ? get_value_from_system(grade) : "";
 			this.element.removeAllChildren();
 			this.element.appendChild(document.createTextNode(display_value));
-			this.element.style.height = "100%";
-			this.element.style.display = "flex";
-			this.element.style.alignItems = "center";
-			this.element.style.justifyContent = "center";
-			this.element.style.position = "absolute";
-			this.element.style.top = "0px";
-			this.element.style.left = "0px";
-			if (typeof this.config.color == 'undefined' || this.config.color)
+			if (typeof this.config.color == 'undefined' || this.config.color) {
+				this.element.style.height = "100%";
+				this.element.style.display = "flex";
+				this.element.style.alignItems = "center";
+				this.element.style.justifyContent = "center";
+				this.element.style.position = "absolute";
+				this.element.style.top = "0px";
+				this.element.style.left = "0px";
 				this.element.style.backgroundColor =
 					grade == null ? "#C0C0C0" :
-					grade < t.config.passing ? "#FFA0A0" :
+					grade < t.config.passing ? "#FF8080" :
 					grade <= t.config.passing+(25*(t.config.max-t.config.passing)/100) ? "#FFC000" :
-					"#A0FFA0";
+					"#80FF80";
+			}
 		};
 		this._setData(data);
 	}
